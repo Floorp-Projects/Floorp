@@ -129,6 +129,9 @@ public:
     // reference to it to the caller.
     virtual already_AddRefed<nsHttpConnection> TakeHttpConnection() = 0;
 
+    // Like TakeHttpConnection() but do not drop our own ref
+    virtual already_AddRefed<nsHttpConnection> HttpConnection() = 0;
+
     // Get the nsISocketTransport used by the connection without changing
     //  references or ownership.
     virtual nsISocketTransport *Transport() = 0;
@@ -161,7 +164,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
     void DontReuse() override;                            \
     MOZ_MUST_USE nsresult PushBack(const char *, uint32_t) override; \
     already_AddRefed<nsHttpConnection> TakeHttpConnection() override; \
-    /*                                                    \
+    already_AddRefed<nsHttpConnection> HttpConnection() override; \
+    /*                                                                  \
        Thes methods below have automatic definitions that just forward the \
        function to a lower level connection object        \
     */                                                    \

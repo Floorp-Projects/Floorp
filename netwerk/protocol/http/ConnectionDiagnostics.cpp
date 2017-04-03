@@ -67,8 +67,7 @@ nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, ARefBase *)
                           ent->mHalfOpens.Length());
     mLogData.AppendPrintf("   Coalescing Keys Length = %" PRIuSIZE "\n",
                           ent->mCoalescingKeys.Length());
-    mLogData.AppendPrintf("   Spdy using = %d, preferred = %d\n",
-                          ent->mUsingSpdy, ent->mInPreferredHash);
+    mLogData.AppendPrintf("   Spdy using = %d\n", ent->mUsingSpdy);
 
     uint32_t i;
     for (i = 0; i < ent->mActiveConns.Length(); ++i) {

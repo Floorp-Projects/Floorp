@@ -244,12 +244,8 @@ private:
 
         // Spdy sometimes resolves the address in the socket manager in order
         // to re-coalesce sharded HTTP hosts. The dotted decimal address is
-        // combined with the Anonymous flag from the connection information
+        // combined with the Anonymous flag and OA from the connection information
         // to build the hash key for hosts in the same ip pool.
-        //
-        // When a set of hosts are coalesced together one of them is marked
-        // mSpdyPreferred. The mapping is maintained in the connection mananger
-        // mSpdyPreferred hash.
         //
         nsTArray<nsCString> mCoalescingKeys;
 
@@ -257,8 +253,6 @@ private:
         // entry has done NPN=spdy/* at some point. It does not mean every
         // connection is currently using spdy.
         bool mUsingSpdy : 1;
-
-        bool mInPreferredHash : 1;
 
         // Flags to remember our happy-eyeballs decision.
         // Reset only by Ctrl-F5 reload.
@@ -307,6 +301,7 @@ private:
 
 public:
     static nsAHttpConnection *MakeConnectionHandle(nsHttpConnection *aWrapped);
+    void RegisterOriginCoalescingKey(nsHttpConnection *, const nsACString &host, int32_t port);
 
 private:
 
@@ -518,16 +513,14 @@ private:
     MOZ_MUST_USE nsresult MakeNewConnection(nsConnectionEntry *ent,
                                             PendingTransactionInfo *pendingTransInfo);
 
-    // Manage the preferred spdy connection entry for this address
-    nsConnectionEntry *GetSpdyPreferredEnt(nsConnectionEntry *aOriginalEntry);
-    nsConnectionEntry *LookupPreferredHash(nsConnectionEntry *ent);
-    void               StorePreferredHash(nsConnectionEntry *ent);
-    void               RemovePreferredHash(nsConnectionEntry *ent);
-    nsHttpConnection  *GetSpdyPreferredConn(nsConnectionEntry *ent);
-    nsDataHashtable<nsCStringHashKey, nsConnectionEntry *>   mSpdyPreferredHash;
-    nsConnectionEntry *LookupConnectionEntry(nsHttpConnectionInfo *ci,
-                                             nsHttpConnection *conn,
-                                             nsHttpTransaction *trans);
+    // Manage h2 connection coalescing
+    // The hashtable contains arrays of weak pointers to nsHttpConnections
+    nsClassHashtable<nsCStringHashKey, nsTArray<nsWeakPtr> > mCoalescingHash;
+
+    nsHttpConnection *FindCoalescableConnection(nsConnectionEntry *ent, bool justKidding);
+    nsHttpConnection *FindCoalescableConnectionByHashKey(nsConnectionEntry *ent, const nsCString &key, bool justKidding);
+    void UpdateCoalescingForNewConn(nsHttpConnection *conn, nsConnectionEntry *ent);
+    nsHttpConnection *GetSpdyActiveConn(nsConnectionEntry *ent);
 
     void               ProcessSpdyPendingQ(nsConnectionEntry *ent);
     void               DispatchSpdyPendingQ(nsTArray<RefPtr<PendingTransactionInfo>> &pendingQ,

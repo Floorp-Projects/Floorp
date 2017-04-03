@@ -111,6 +111,7 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t versio
   , mGoAwayOnPush(false)
   , mUseH2Deps(false)
   , mAttemptingEarlyData(attemptingEarlyData)
+  , mOriginFrameActivated(false)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -224,7 +225,8 @@ static Http2ControlFx sControlFunctions[] = {
   Http2Session::RecvGoAway,
   Http2Session::RecvWindowUpdate,
   Http2Session::RecvContinuation,
-  Http2Session::RecvAltSvc // extension for type 0x0A
+  Http2Session::RecvAltSvc, // extension for type 0x0A
+  Http2Session::RecvOrigin  // extension for type 0x0B
 };
 
 bool
@@ -1798,26 +1800,23 @@ Http2Session::RecvPushPromise(Http2Session *self)
     return NS_OK;
   }
 
-  RefPtr<nsStandardURL> associatedURL, pushedURL;
-  rv = Http2Stream::MakeOriginURL(associatedStream->Origin(), associatedURL);
+  // does the pushed origin belong on this connection?
+  LOG3(("Http2Session::RecvPushPromise %p origin check %s", self,
+        pushedStream->Origin().get()));
+  RefPtr<nsStandardURL> pushedURL;
+  rv = Http2Stream::MakeOriginURL(pushedStream->Origin(), pushedURL);
+  nsAutoCString pushedHostName;
+  int32_t pushedPort = -1;
   if (NS_SUCCEEDED(rv)) {
-    rv = Http2Stream::MakeOriginURL(pushedStream->Origin(), pushedURL);
+    rv = pushedURL->GetHost(pushedHostName);
   }
-  LOG3(("Http2Session::RecvPushPromise %p checking %s == %s", self,
-        associatedStream->Origin().get(), pushedStream->Origin().get()));
-  bool match = false;
   if (NS_SUCCEEDED(rv)) {
-    rv = associatedURL->Equals(pushedURL, &match);
+    rv = pushedURL->GetPort(&pushedPort);
   }
-  if (NS_FAILED(rv)) {
-    // Fallback to string equality of origins. This won't be guaranteed to be as
-    // liberal as we want it to be, but it will at least be safe
-    match = associatedStream->Origin().Equals(pushedStream->Origin());
-  }
-  if (!match) {
-    LOG3(("Http2Session::RecvPushPromise %p pushed stream mismatched origin "
-          "associated origin %s .. pushed origin %s\n", self,
-          associatedStream->Origin().get(), pushedStream->Origin().get()));
+  if (NS_FAILED(rv) ||
+      !self->TestJoinConnection(pushedHostName, pushedPort)) {
+    LOG3(("Http2Session::RecvPushPromise %p pushed stream mismatched origin %s\n",
+          self, pushedStream->Origin().get()));
     self->CleanupStream(pushedStream, NS_ERROR_FAILURE, REFUSED_STREAM_ERROR);
     self->ResetDownstreamState();
     return NS_OK;
@@ -2287,6 +2286,111 @@ Http2Session::RecvAltSvc(Http2Session *self)
   RefPtr<UpdateAltSvcEvent> event =
     new UpdateAltSvcEvent(altSvcFieldValue, origin, ci, irCallbacks);
   NS_DispatchToMainThread(event);
+  self->ResetDownstreamState();
+  return NS_OK;
+}
+
+void
+Http2Session::Received421(nsHttpConnectionInfo *ci)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  LOG3(("Http2Session::Recevied421 %p %d\n", this, mOriginFrameActivated));
+  if (!mOriginFrameActivated || !ci) {
+    return;
+  }
+
+  nsAutoCString key(ci->GetOrigin());
+  key.Append(':');
+  key.AppendInt(ci->OriginPort());
+  mOriginFrame.Remove(key);
+  LOG3(("Http2Session::Received421 %p key %s removed\n", this, key.get()));
+}
+
+// defined as an http2 extension - origin
+// defines receipt of frame type 0x0b.. http://httpwg.org/http-extensions/origin-frame.html
+// as this is an extension, never generate protocol error - just ignore problems
+nsresult
+Http2Session::RecvOrigin(Http2Session *self)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(self->mInputFrameType == FRAME_TYPE_ORIGIN);
+  LOG3(("Http2Session::RecvOrigin %p Flags 0x%X id 0x%X\n", self,
+        self->mInputFrameFlags, self->mInputFrameID));
+
+  if (self->mInputFrameFlags & 0x0F) {
+    LOG3(("Http2Session::RecvOrigin %p leading flags must be 0", self));
+    self->ResetDownstreamState();
+    return NS_OK;
+  }
+
+  if (self->mInputFrameID) {
+    LOG3(("Http2Session::RecvOrigin %p not stream 0", self));
+    self->ResetDownstreamState();
+    return NS_OK;
+  }
+
+  if (self->ConnectionInfo()->UsingProxy()) {
+    LOG3(("Http2Session::RecvOrigin %p must not use proxy", self));
+    self->ResetDownstreamState();
+    return NS_OK;
+  }
+
+  if (!gHttpHandler->AllowOriginExtension()) {
+    LOG3(("Http2Session::RecvOrigin %p origin extension pref'd off", self));
+    self->ResetDownstreamState();
+    return NS_OK;
+  }
+
+  uint32_t offset = 0;
+  self->mOriginFrameActivated = true;
+
+  while (self->mInputFrameDataSize >= (offset + 2U)) {
+
+    uint16_t originLen = NetworkEndian::readUint16(
+      self->mInputFrameBuffer.get() + kFrameHeaderBytes + offset);
+    LOG3(("Http2Session::RecvOrigin %p origin extension defined as %d bytes\n", self, originLen));
+    if (originLen + 2U + offset > self->mInputFrameDataSize) {
+      LOG3(("Http2Session::RecvOrigin %p origin len too big for frame", self));
+      break;
+    }
+
+    nsAutoCString originString;
+    RefPtr<nsStandardURL> originURL;
+    originString.Assign(self->mInputFrameBuffer.get() + kFrameHeaderBytes + offset + 2, originLen);
+    offset += originLen + 2;
+    if (NS_FAILED(Http2Stream::MakeOriginURL(originString, originURL))){
+      LOG3(("Http2Session::RecvOrigin %p origin frame string %s failed to parse\n", self, originString.get()));
+      continue;
+    }
+
+    LOG3(("Http2Session::RecvOrigin %p origin frame string %s parsed OK\n", self, originString.get()));
+    bool isHttps = false;
+    if (NS_FAILED(originURL->SchemeIs("https", &isHttps)) || !isHttps) {
+      LOG3(("Http2Session::RecvOrigin %p origin frame not https\n", self));
+      continue;
+    }
+
+    int32_t port = -1;
+    originURL->GetPort(&port);
+    if (port == -1) {
+      port = 443;
+    }
+    // dont use ->GetHostPort because we want explicit 443
+    nsAutoCString host;
+    originURL->GetHost(host);
+    nsAutoCString key(host);
+    key.Append(':');
+    key.AppendInt(port);
+    if (!self->mOriginFrame.Get(key)) {
+      self->mOriginFrame.Put(key, true);
+      RefPtr<nsHttpConnection> conn(self->HttpConnection());
+      MOZ_ASSERT(conn.get());
+      gHttpHandler->ConnMgr()->RegisterOriginCoalescingKey(conn, host, port);
+    } else {
+      LOG3(("Http2Session::RecvOrigin %p origin frame already in set\n", self));
+    }
+  }
+
   self->ResetDownstreamState();
   return NS_OK;
 }
@@ -3848,6 +3952,15 @@ Http2Session::TakeHttpConnection()
   return nullptr;
 }
 
+already_AddRefed<nsHttpConnection>
+Http2Session::HttpConnection()
+{
+  if (mConnection) {
+    return mConnection->HttpConnection();
+  }
+  return nullptr;
+}
+
 void
 Http2Session::GetSecurityCallbacks(nsIInterfaceRequestor **aOut)
 {
@@ -4003,6 +4116,103 @@ Http2Session::SendPing()
   }
   GeneratePing(false);
   Unused << ResumeRecv();
+}
+
+bool
+Http2Session::TestOriginFrame(const nsACString &hostname, int32_t port)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  MOZ_ASSERT(mOriginFrameActivated);
+
+  nsAutoCString key(hostname);
+  key.Append (':');
+  key.AppendInt(port);
+  bool rv = mOriginFrame.Get(key);
+  LOG3(("TestOriginFrame() %p %s %d\n", this, key.get(), rv));
+  return rv;
+}
+
+bool
+Http2Session::TestJoinConnection(const nsACString &hostname, int32_t port)
+{
+  if (!mConnection || mClosed || mShouldGoAway) {
+    return false;
+  }
+
+  if (mOriginFrameActivated) {
+    bool originFrameResult = TestOriginFrame(hostname, port);
+    if (!originFrameResult) {
+      return false;
+    }
+  } else {
+    LOG3(("TestJoinConnection %p no origin frame check used.\n", this));
+  }
+
+  nsresult rv;
+  bool isJoined = false;
+
+  nsCOMPtr<nsISupports> securityInfo;
+  nsCOMPtr<nsISSLSocketControl> sslSocketControl;
+
+  mConnection->GetSecurityInfo(getter_AddRefs(securityInfo));
+  sslSocketControl = do_QueryInterface(securityInfo, &rv);
+  if (NS_FAILED(rv) || !sslSocketControl) {
+    return false;
+  }
+
+  // try all the coalescable versions we support.
+  const SpdyInformation *info = gHttpHandler->SpdyInfo();
+  for (uint32_t index = SpdyInformation::kCount; index > 0; --index) {
+    if (info->ProtocolEnabled(index - 1)) {
+      rv = sslSocketControl->TestJoinConnection(info->VersionString[index - 1],
+                                                hostname, port, &isJoined);
+      if (NS_SUCCEEDED(rv) && isJoined) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool
+Http2Session::JoinConnection(const nsACString &hostname, int32_t port)
+{
+  if (!mConnection || mClosed || mShouldGoAway) {
+    return false;
+  }
+  if (mOriginFrameActivated) {
+    bool originFrameResult = TestOriginFrame(hostname, port);
+    if (!originFrameResult) {
+      return false;
+    }
+  } else {
+    LOG3(("JoinConnection %p no origin frame check used.\n", this));
+  }
+
+  nsresult rv;
+  bool isJoined = false;
+
+  nsCOMPtr<nsISupports> securityInfo;
+  nsCOMPtr<nsISSLSocketControl> sslSocketControl;
+
+  mConnection->GetSecurityInfo(getter_AddRefs(securityInfo));
+  sslSocketControl = do_QueryInterface(securityInfo, &rv);
+  if (NS_FAILED(rv) || !sslSocketControl) {
+    return false;
+  }
+
+  // try all the coalescable versions we support.
+  const SpdyInformation *info = gHttpHandler->SpdyInfo();
+  for (uint32_t index = SpdyInformation::kCount; index > 0; --index) {
+    if (info->ProtocolEnabled(index - 1)) {
+      rv = sslSocketControl->JoinConnection(info->VersionString[index - 1],
+                                            hostname, port, &isJoined);
+      if (NS_SUCCEEDED(rv) && isJoined) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 } // namespace net

@@ -222,6 +222,9 @@ public:
     // override of nsAHttpConnection
     virtual uint32_t Version();
 
+    bool TestJoinConnection(const nsACString &hostname, int32_t port);
+    bool JoinConnection(const nsACString &hostname, int32_t port);
+
 private:
     // Value (set in mTCPKeepaliveConfig) indicates which set of prefs to use.
     enum TCPKeepaliveConfig {
