@@ -96,24 +96,24 @@ class TestExecuteContent(MarionetteTestCase):
 
     def test_argument_number(self):
         self.assertEqual(
-            1, self.marionette.execute_script("return arguments[0]", [1]))
+            1, self.marionette.execute_script("return arguments[0]", (1,)))
         self.assertEqual(
-            1.5, self.marionette.execute_script("return arguments[0]", [1.5]))
+            1.5, self.marionette.execute_script("return arguments[0]", (1.5,)))
 
     def test_argument_boolean(self):
-        self.assertTrue(self.marionette.execute_script("return arguments[0]", [True]))
+        self.assertTrue(self.marionette.execute_script("return arguments[0]", (True,)))
 
     def test_argument_string(self):
         self.assertEqual(
-            "foo", self.marionette.execute_script("return arguments[0]", ["foo"]))
+            "foo", self.marionette.execute_script("return arguments[0]", ("foo",)))
 
     def test_argument_array(self):
         self.assertEqual(
-            [1, 2], self.marionette.execute_script("return arguments[0]", [[1, 2]]))
+            [1, 2], self.marionette.execute_script("return arguments[0]", ([1, 2],)))
 
     def test_argument_object(self):
         self.assertEqual({"foo": 1}, self.marionette.execute_script(
-            "return arguments[0]", [{"foo": 1}]))
+            "return arguments[0]", ({"foo": 1},)))
 
     def test_globals(self):
         for property in globals:
