@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint-env mozilla/browser-window */
-/* eslint no-undef: "error" */
 /* global OpenGraphBuilder:false, DynamicResizeWatcher:false */
 
 // the "exported" symbols
