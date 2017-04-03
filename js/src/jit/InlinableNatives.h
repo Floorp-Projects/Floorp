@@ -129,6 +129,8 @@
                                     \
     _(IntrinsicGetNextSetEntryForIterator) \
                                     \
+    _(IntrinsicNewArrayIterator)    \
+                                    \
     _(IntrinsicArrayBufferByteLength) \
     _(IntrinsicPossiblyWrappedArrayBufferByteLength) \
                                     \
