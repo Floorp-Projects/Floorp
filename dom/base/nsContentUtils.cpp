@@ -3079,11 +3079,11 @@ nsContentUtils::SplitQName(const nsIContent* aNamespaceResolver,
     if (*aNamespace == kNameSpaceID_Unknown)
       return NS_ERROR_FAILURE;
 
-    *aLocalName = NS_Atomize(Substring(colon + 1, end)).take();
+    *aLocalName = NS_AtomizeMainThread(Substring(colon + 1, end)).take();
   }
   else {
     *aNamespace = kNameSpaceID_None;
-    *aLocalName = NS_Atomize(aQName).take();
+    *aLocalName = NS_AtomizeMainThread(aQName).take();
   }
   NS_ENSURE_TRUE(aLocalName, NS_ERROR_OUT_OF_MEMORY);
   return NS_OK;
@@ -3108,7 +3108,8 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
     const char16_t* end;
     qName.EndReading(end);
 
-    nsCOMPtr<nsIAtom> prefix = NS_Atomize(Substring(qName.get(), colon));
+    nsCOMPtr<nsIAtom> prefix =
+      NS_AtomizeMainThread(Substring(qName.get(), colon));
 
     rv = aNodeInfoManager->GetNodeInfo(Substring(colon + 1, end), prefix,
                                        nsID, aNodeType, aNodeInfo);
@@ -3168,7 +3169,7 @@ nsContentUtils::SplitExpatName(const char16_t *aExpatName, nsIAtom **aPrefix,
     nameStart = (uriEnd + 1);
     if (nameEnd)  {
       const char16_t *prefixStart = nameEnd + 1;
-      *aPrefix = NS_Atomize(Substring(prefixStart, pos)).take();
+      *aPrefix = NS_AtomizeMainThread(Substring(prefixStart, pos)).take();
     }
     else {
       nameEnd = pos;
@@ -3181,7 +3182,7 @@ nsContentUtils::SplitExpatName(const char16_t *aExpatName, nsIAtom **aPrefix,
     nameEnd = pos;
     *aPrefix = nullptr;
   }
-  *aLocalName = NS_Atomize(Substring(nameStart, nameEnd)).take();
+  *aLocalName = NS_AtomizeMainThread(Substring(nameStart, nameEnd)).take();
 }
 
 // static
@@ -4056,7 +4057,8 @@ nsContentUtils::GetEventMessageAndAtom(const nsAString& aName,
   }
 
   *aEventMessage = eUnidentifiedEvent;
-  nsCOMPtr<nsIAtom> atom = NS_Atomize(NS_LITERAL_STRING("on") + aName);
+  nsCOMPtr<nsIAtom> atom =
+    NS_AtomizeMainThread(NS_LITERAL_STRING("on") + aName);
   sUserDefinedEvents->AppendObject(atom);
   mapping.mAtom = atom;
   mapping.mMessage = eUnidentifiedEvent;
@@ -4089,7 +4091,7 @@ nsContentUtils::GetEventMessageAndAtomForListener(const nsAString& aName,
     if (mapping.mMaybeSpecialSVGorSMILEvent) {
       // Try the atom version so that we should get the right message for
       // SVG/SMIL.
-      atom = NS_Atomize(NS_LITERAL_STRING("on") + aName);
+      atom = NS_AtomizeMainThread(NS_LITERAL_STRING("on") + aName);
       msg = GetEventMessage(atom);
     } else {
       atom = mapping.mAtom;
