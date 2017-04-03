@@ -2909,12 +2909,11 @@ profiler_get_backtrace()
   Thread::tid_t tid = Thread::GetCurrentId();
 
   ProfileBuffer* buffer = new ProfileBuffer(GET_BACKTRACE_DEFAULT_ENTRIES);
-  ThreadInfo* threadInfo =
-    new ThreadInfo("SyncProfile", tid, NS_IsMainThread(), WrapNotNull(stack),
-                   /* stackTop */ nullptr);
-  threadInfo->SetHasProfile();
+  ThreadInfo threadInfo("SyncProfile", tid, NS_IsMainThread(),
+                        WrapNotNull(stack), /* stackTop */ nullptr);
+  threadInfo.SetHasProfile();
 
-  TickSample sample(threadInfo);
+  TickSample sample(&threadInfo);
   sample.mIsSamplingCurrentThread = true;
 
 #if defined(HAVE_NATIVE_UNWIND)
@@ -2930,7 +2929,8 @@ profiler_get_backtrace()
 
   Tick(lock, buffer, &sample);
 
-  return UniqueProfilerBacktrace(new ProfilerBacktrace(buffer, threadInfo));
+  return UniqueProfilerBacktrace(
+    new ProfilerBacktrace("SyncProfile", tid, buffer));
 }
 
 void
