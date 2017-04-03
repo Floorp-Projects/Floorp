@@ -1236,6 +1236,16 @@ public:
     return clone;
   }
 
+  Maybe<Matrix4x4Typed<TargetUnits, SourceUnits>> MaybeInverse() const
+  {
+    typedef Matrix4x4Typed<TargetUnits, SourceUnits> InvertedMatrix;
+    InvertedMatrix clone = InvertedMatrix::FromUnknownMatrix(ToUnknownMatrix());
+    if (clone.Invert()) {
+      return Some(clone);
+    }
+    return Nothing();
+  }
+  
   void Normalize()
   {
       for (int i = 0; i < 4; i++) {

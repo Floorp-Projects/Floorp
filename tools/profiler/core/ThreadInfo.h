@@ -13,12 +13,13 @@
 #include "ProfileBuffer.h"
 #include "platform.h"
 
-class ThreadInfo {
+class ThreadInfo final
+{
 public:
   ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
              mozilla::NotNull<PseudoStack*> aPseudoStack, void* aStackTop);
 
-  virtual ~ThreadInfo();
+  ~ThreadInfo();
 
   const char* Name() const { return mName.get(); }
   int ThreadId() const { return mThreadId; }
@@ -31,14 +32,14 @@ public:
   PlatformData* GetPlatformData() const { return mPlatformData.get(); }
   void* StackTop() const { return mStackTop; }
 
-  virtual void SetPendingDelete();
+  void SetPendingDelete();
   bool IsPendingDelete() const { return mPendingDelete; }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   ProfileBuffer::LastSample& LastSample() { return mLastSample; }
 
- private:
+private:
   mozilla::UniqueFreePtr<char> mName;
   int mThreadId;
   const bool mIsMainThread;
@@ -87,12 +88,6 @@ public:
                                UniqueStacks& aUniqueStacks);
 
 private:
-  FRIEND_TEST(ThreadProfile, InsertOneTag);
-  FRIEND_TEST(ThreadProfile, InsertOneTagWithTinyBuffer);
-  FRIEND_TEST(ThreadProfile, InsertTagsNoWrap);
-  FRIEND_TEST(ThreadProfile, InsertTagsWrap);
-  FRIEND_TEST(ThreadProfile, MemoryMeasure);
-
   bool mHasProfile;
 
   // JS frames in the buffer may require a live JSRuntime to stream (e.g.,

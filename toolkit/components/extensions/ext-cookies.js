@@ -1,67 +1,15 @@
 "use strict";
 
-const {interfaces: Ci, utils: Cu} = Components;
-
-Cu.import("resource://gre/modules/ExtensionUtils.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
                                   "resource://gre/modules/ContextualIdentityService.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
+
+/* globals DEFAULT_STORE, PRIVATE_STORE */
 
 var {
   SingletonEventManager,
 } = ExtensionUtils;
-
-var DEFAULT_STORE = "firefox-default";
-var PRIVATE_STORE = "firefox-private";
-var CONTAINER_STORE = "firefox-container-";
-
-global.getCookieStoreIdForTab = function(data, tab) {
-  if (data.incognito) {
-    return PRIVATE_STORE;
-  }
-
-  if (tab.userContextId) {
-    return getCookieStoreIdForContainer(tab.userContextId);
-  }
-
-  return DEFAULT_STORE;
-};
-
-global.isPrivateCookieStoreId = function(storeId) {
-  return storeId == PRIVATE_STORE;
-};
-
-global.isDefaultCookieStoreId = function(storeId) {
-  return storeId == DEFAULT_STORE;
-};
-
-global.isContainerCookieStoreId = function(storeId) {
-  return storeId !== null && storeId.startsWith(CONTAINER_STORE);
-};
-
-global.getCookieStoreIdForContainer = function(containerId) {
-  return CONTAINER_STORE + containerId;
-};
-
-global.getContainerForCookieStoreId = function(storeId) {
-  if (!isContainerCookieStoreId(storeId)) {
-    return null;
-  }
-
-  let containerId = storeId.substring(CONTAINER_STORE.length);
-  if (ContextualIdentityService.getPublicIdentityFromId(containerId)) {
-    return parseInt(containerId, 10);
-  }
-
-  return null;
-};
-
-global.isValidCookieStoreId = function(storeId) {
-  return isDefaultCookieStoreId(storeId) ||
-         isPrivateCookieStoreId(storeId) ||
-         isContainerCookieStoreId(storeId);
-};
 
 function convert({cookie, isPrivate}) {
   let result = {
@@ -329,157 +277,159 @@ function* query(detailsIn, props, context) {
   }
 }
 
-extensions.registerSchemaAPI("cookies", "addon_parent", context => {
-  let {extension} = context;
-  let self = {
-    cookies: {
-      get: function(details) {
-        // FIXME: We don't sort by length of path and creation time.
-        for (let cookie of query(details, ["url", "name", "storeId"], context)) {
-          return Promise.resolve(convert(cookie));
-        }
-
-        // Found no match.
-        return Promise.resolve(null);
-      },
-
-      getAll: function(details) {
-        let allowed = ["url", "name", "domain", "path", "secure", "session", "storeId"];
-        let result = Array.from(query(details, allowed, context), convert);
-
-        return Promise.resolve(result);
-      },
-
-      set: function(details) {
-        let uri = NetUtil.newURI(details.url).QueryInterface(Ci.nsIURL);
-
-        let path;
-        if (details.path !== null) {
-          path = details.path;
-        } else {
-          // This interface essentially emulates the behavior of the
-          // Set-Cookie header. In the case of an omitted path, the cookie
-          // service uses the directory path of the requesting URL, ignoring
-          // any filename or query parameters.
-          path = uri.directory;
-        }
-
-        let name = details.name !== null ? details.name : "";
-        let value = details.value !== null ? details.value : "";
-        let secure = details.secure !== null ? details.secure : false;
-        let httpOnly = details.httpOnly !== null ? details.httpOnly : false;
-        let isSession = details.expirationDate === null;
-        let expiry = isSession ? Number.MAX_SAFE_INTEGER : details.expirationDate;
-        let isPrivate = context.incognito;
-        let userContextId = 0;
-        if (isDefaultCookieStoreId(details.storeId)) {
-          isPrivate = false;
-        } else if (isPrivateCookieStoreId(details.storeId)) {
-          isPrivate = true;
-        } else if (isContainerCookieStoreId(details.storeId)) {
-          let containerId = getContainerForCookieStoreId(details.storeId);
-          if (containerId === null) {
-            return Promise.reject({message: `Illegal storeId: ${details.storeId}`});
+this.cookies = class extends ExtensionAPI {
+  getAPI(context) {
+    let {extension} = context;
+    let self = {
+      cookies: {
+        get: function(details) {
+          // FIXME: We don't sort by length of path and creation time.
+          for (let cookie of query(details, ["url", "name", "storeId"], context)) {
+            return Promise.resolve(convert(cookie));
           }
-          isPrivate = false;
-          userContextId = containerId;
-        } else if (details.storeId !== null) {
-          return Promise.reject({message: "Unknown storeId"});
-        }
 
-        let cookieAttrs = {host: details.domain, path: path, isSecure: secure};
-        if (!checkSetCookiePermissions(extension, uri, cookieAttrs)) {
-          return Promise.reject({message: `Permission denied to set cookie ${JSON.stringify(details)}`});
-        }
+          // Found no match.
+          return Promise.resolve(null);
+        },
 
-        // The permission check may have modified the domain, so use
-        // the new value instead.
-        Services.cookies.usePrivateMode(isPrivate, () => {
-          Services.cookies.add(cookieAttrs.host, path, name, value,
-                               secure, httpOnly, isSession, expiry, {userContextId});
-        });
+        getAll: function(details) {
+          let allowed = ["url", "name", "domain", "path", "secure", "session", "storeId"];
+          let result = Array.from(query(details, allowed, context), convert);
 
-        return self.cookies.get(details);
-      },
+          return Promise.resolve(result);
+        },
 
-      remove: function(details) {
-        for (let {cookie, isPrivate, storeId} of query(details, ["url", "name", "storeId"], context)) {
+        set: function(details) {
+          let uri = NetUtil.newURI(details.url).QueryInterface(Ci.nsIURL);
+
+          let path;
+          if (details.path !== null) {
+            path = details.path;
+          } else {
+            // This interface essentially emulates the behavior of the
+            // Set-Cookie header. In the case of an omitted path, the cookie
+            // service uses the directory path of the requesting URL, ignoring
+            // any filename or query parameters.
+            path = uri.directory;
+          }
+
+          let name = details.name !== null ? details.name : "";
+          let value = details.value !== null ? details.value : "";
+          let secure = details.secure !== null ? details.secure : false;
+          let httpOnly = details.httpOnly !== null ? details.httpOnly : false;
+          let isSession = details.expirationDate === null;
+          let expiry = isSession ? Number.MAX_SAFE_INTEGER : details.expirationDate;
+          let isPrivate = context.incognito;
+          let userContextId = 0;
+          if (isDefaultCookieStoreId(details.storeId)) {
+            isPrivate = false;
+          } else if (isPrivateCookieStoreId(details.storeId)) {
+            isPrivate = true;
+          } else if (isContainerCookieStoreId(details.storeId)) {
+            let containerId = getContainerForCookieStoreId(details.storeId);
+            if (containerId === null) {
+              return Promise.reject({message: `Illegal storeId: ${details.storeId}`});
+            }
+            isPrivate = false;
+            userContextId = containerId;
+          } else if (details.storeId !== null) {
+            return Promise.reject({message: "Unknown storeId"});
+          }
+
+          let cookieAttrs = {host: details.domain, path: path, isSecure: secure};
+          if (!checkSetCookiePermissions(extension, uri, cookieAttrs)) {
+            return Promise.reject({message: `Permission denied to set cookie ${JSON.stringify(details)}`});
+          }
+
+          // The permission check may have modified the domain, so use
+          // the new value instead.
           Services.cookies.usePrivateMode(isPrivate, () => {
-            Services.cookies.remove(cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
+            Services.cookies.add(cookieAttrs.host, path, name, value,
+                                 secure, httpOnly, isSession, expiry, {userContextId});
           });
 
-          // Todo: could there be multiple per subdomain?
-          return Promise.resolve({
-            url: details.url,
-            name: details.name,
-            storeId,
-          });
-        }
+          return self.cookies.get(details);
+        },
 
-        return Promise.resolve(null);
-      },
+        remove: function(details) {
+          for (let {cookie, isPrivate, storeId} of query(details, ["url", "name", "storeId"], context)) {
+            Services.cookies.usePrivateMode(isPrivate, () => {
+              Services.cookies.remove(cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
+            });
 
-      getAllCookieStores: function() {
-        let data = {};
-        for (let tab of extension.tabManager.query()) {
-          if (!(tab.cookieStoreId in data)) {
-            data[tab.cookieStoreId] = [];
+            // Todo: could there be multiple per subdomain?
+            return Promise.resolve({
+              url: details.url,
+              name: details.name,
+              storeId,
+            });
           }
-          data[tab.cookieStoreId].push(tab.id);
-        }
 
-        let result = [];
-        for (let key in data) {
-          result.push({id: key, tabIds: data[key], incognito: key == PRIVATE_STORE});
-        }
-        return Promise.resolve(result);
-      },
+          return Promise.resolve(null);
+        },
 
-      onChanged: new SingletonEventManager(context, "cookies.onChanged", fire => {
-        let observer = (subject, topic, data) => {
-          let notify = (removed, cookie, cause) => {
-            cookie.QueryInterface(Ci.nsICookie2);
+        getAllCookieStores: function() {
+          let data = {};
+          for (let tab of extension.tabManager.query()) {
+            if (!(tab.cookieStoreId in data)) {
+              data[tab.cookieStoreId] = [];
+            }
+            data[tab.cookieStoreId].push(tab.id);
+          }
 
-            if (extension.whiteListedHosts.matchesCookie(cookie)) {
-              fire.async({removed, cookie: convert({cookie, isPrivate: topic == "private-cookie-changed"}), cause});
+          let result = [];
+          for (let key in data) {
+            result.push({id: key, tabIds: data[key], incognito: key == PRIVATE_STORE});
+          }
+          return Promise.resolve(result);
+        },
+
+        onChanged: new SingletonEventManager(context, "cookies.onChanged", fire => {
+          let observer = (subject, topic, data) => {
+            let notify = (removed, cookie, cause) => {
+              cookie.QueryInterface(Ci.nsICookie2);
+
+              if (extension.whiteListedHosts.matchesCookie(cookie)) {
+                fire.async({removed, cookie: convert({cookie, isPrivate: topic == "private-cookie-changed"}), cause});
+              }
+            };
+
+            // We do our best effort here to map the incompatible states.
+            switch (data) {
+              case "deleted":
+                notify(true, subject, "explicit");
+                break;
+              case "added":
+                notify(false, subject, "explicit");
+                break;
+              case "changed":
+                notify(true, subject, "overwrite");
+                notify(false, subject, "explicit");
+                break;
+              case "batch-deleted":
+                subject.QueryInterface(Ci.nsIArray);
+                for (let i = 0; i < subject.length; i++) {
+                  let cookie = subject.queryElementAt(i, Ci.nsICookie2);
+                  if (!cookie.isSession && cookie.expiry * 1000 <= Date.now()) {
+                    notify(true, cookie, "expired");
+                  } else {
+                    notify(true, cookie, "evicted");
+                  }
+                }
+                break;
             }
           };
 
-          // We do our best effort here to map the incompatible states.
-          switch (data) {
-            case "deleted":
-              notify(true, subject, "explicit");
-              break;
-            case "added":
-              notify(false, subject, "explicit");
-              break;
-            case "changed":
-              notify(true, subject, "overwrite");
-              notify(false, subject, "explicit");
-              break;
-            case "batch-deleted":
-              subject.QueryInterface(Ci.nsIArray);
-              for (let i = 0; i < subject.length; i++) {
-                let cookie = subject.queryElementAt(i, Ci.nsICookie2);
-                if (!cookie.isSession && cookie.expiry * 1000 <= Date.now()) {
-                  notify(true, cookie, "expired");
-                } else {
-                  notify(true, cookie, "evicted");
-                }
-              }
-              break;
-          }
-        };
+          Services.obs.addObserver(observer, "cookie-changed", false);
+          Services.obs.addObserver(observer, "private-cookie-changed", false);
+          return () => {
+            Services.obs.removeObserver(observer, "cookie-changed");
+            Services.obs.removeObserver(observer, "private-cookie-changed");
+          };
+        }).api(),
+      },
+    };
 
-        Services.obs.addObserver(observer, "cookie-changed", false);
-        Services.obs.addObserver(observer, "private-cookie-changed", false);
-        return () => {
-          Services.obs.removeObserver(observer, "cookie-changed");
-          Services.obs.removeObserver(observer, "private-cookie-changed");
-        };
-      }).api(),
-    },
-  };
-
-  return self;
-});
+    return self;
+  }
+};
