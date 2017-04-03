@@ -1708,77 +1708,31 @@ nsNPAPIPluginInstance::GetRunID(uint32_t* aRunID)
 }
 
 nsresult
-nsNPAPIPluginInstance::CreateAudioChannelAgentIfNeeded()
+nsNPAPIPluginInstance::GetOrCreateAudioChannelAgent(nsIAudioChannelAgent** aAgent)
 {
-  if (mAudioChannelAgent) {
-    return NS_OK;
+  if (!mAudioChannelAgent) {
+    nsresult rv;
+    mAudioChannelAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1", &rv);
+    if (NS_WARN_IF(!mAudioChannelAgent)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsPIDOMWindowOuter> window = GetDOMWindow();
+    if (NS_WARN_IF(!window)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    rv = mAudioChannelAgent->Init(window->GetCurrentInnerWindow(),
+                                 (int32_t)AudioChannelService::GetDefaultAudioChannel(),
+                                 this);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
-  nsresult rv;
-  mAudioChannelAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1", &rv);
-  if (NS_WARN_IF(!mAudioChannelAgent)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> window = GetDOMWindow();
-  if (NS_WARN_IF(!window)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = mAudioChannelAgent->Init(window->GetCurrentInnerWindow(),
-                               (int32_t)AudioChannelService::GetDefaultAudioChannel(),
-                               this);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  nsCOMPtr<nsIAudioChannelAgent> agent = mAudioChannelAgent;
+  agent.forget(aAgent);
   return NS_OK;
-}
-
-void
-nsNPAPIPluginInstance::NotifyStartedPlaying()
-{
-  nsresult rv = CreateAudioChannelAgentIfNeeded();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  MOZ_ASSERT(mAudioChannelAgent);
-  dom::AudioPlaybackConfig config;
-  rv = mAudioChannelAgent->NotifyStartedPlaying(&config,
-                                                dom::AudioChannelService::AudibleState::eAudible);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  rv = WindowVolumeChanged(config.mVolume, config.mMuted);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  // Since we only support muting for now, the implementation of suspend
-  // is equal to muting. Therefore, if we have already muted the plugin,
-  // then we don't need to call WindowSuspendChanged() again.
-  if (config.mMuted) {
-    return;
-  }
-
-  rv = WindowSuspendChanged(config.mSuspend);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-}
-
-void
-nsNPAPIPluginInstance::NotifyStoppedPlaying()
-{
-  MOZ_ASSERT(mAudioChannelAgent);
-
-  // Reset the attribute.
-  mMuted = false;
-  nsresult rv = mAudioChannelAgent->NotifyStoppedPlaying();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
 }
 
 NS_IMETHODIMP
