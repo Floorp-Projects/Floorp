@@ -126,17 +126,28 @@ class TestExecuteContent(MarionetteTestCase):
         self.assertEqual({"foo": 1}, self.marionette.execute_script(
             "return arguments[0]", ({"foo": 1},)))
 
-    def test_globals(self):
+    def test_default_sandbox_globals(self):
         for property in globals:
-            self.assert_is_defined(property)
+            self.assert_is_defined(property, sandbox="default")
+
         self.assert_is_defined("Components")
         self.assert_is_defined("window.wrappedJSObject")
 
     def test_system_globals(self):
         for property in globals:
             self.assert_is_defined(property, sandbox="system")
+
         self.assert_is_defined("Components", sandbox="system")
-        self.assert_is_defined("window.wrappedJSObject")
+        self.assert_is_defined("window.wrappedJSObject", sandbox="system")
+
+    def test_mutable_sandbox_globals(self):
+        for property in globals:
+            self.assert_is_defined(property, sandbox=None)
+
+        # Components is there, but will be removed soon
+        self.assert_is_defined("Components", sandbox=None)
+        # wrappedJSObject is always there in sandboxes
+        self.assert_is_defined("window.wrappedJSObject", sandbox=None)
 
     def test_exception(self):
         self.assertRaises(errors.JavascriptException,
