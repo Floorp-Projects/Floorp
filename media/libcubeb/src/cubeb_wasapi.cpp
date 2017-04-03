@@ -757,7 +757,7 @@ refill_callback_duplex(cubeb_stream * stm)
 bool
 refill_callback_input(cubeb_stream * stm)
 {
-  bool rv, consumed_all_buffer;
+  bool rv;
 
   XASSERT(has_input(stm) && !has_output(stm));
 
@@ -780,11 +780,10 @@ refill_callback_input(cubeb_stream * stm)
                      0);
 
   XASSERT(read >= 0);
-  consumed_all_buffer = (unsigned long) read == stm->linear_input_buffer.length();
 
   stm->linear_input_buffer.clear();
 
-  return consumed_all_buffer;
+  return !stm->draining;
 }
 
 bool
