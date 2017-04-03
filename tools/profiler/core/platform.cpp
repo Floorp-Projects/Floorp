@@ -2708,7 +2708,7 @@ profiler_unregister_thread()
   ThreadInfo* info = FindThreadInfo(lock, &i);
   if (info) {
     DEBUG_LOG("profiler_unregister_thread: %s", info->Name());
-    if (gPS->IsActive(lock)) {
+    if (gPS->IsActive(lock) && info->HasProfile()) {
       // We still want to show the results of this thread if you save the
       // profile shortly after a thread is terminated. We defer the delete to
       // profile stop.
