@@ -248,6 +248,17 @@ MacOSFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBo
 }
 
 bool
+MacOSFontEntry::HasVariations()
+{
+    if (!mHasVariationsInitialized) {
+        mHasVariationsInitialized = true;
+        mHasVariations = HasFontTable(TRUETYPE_TAG('f','v','a','r'));
+    }
+
+    return mHasVariations;
+}
+
+bool
 MacOSFontEntry::IsCFF()
 {
     if (!mIsCFFInitialized) {
@@ -268,7 +279,9 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
       mFontRefInitialized(false),
       mRequiresAAT(false),
       mIsCFF(false),
-      mIsCFFInitialized(false)
+      mIsCFFInitialized(false),
+      mHasVariations(false),
+      mHasVariationsInitialized(false)
 {
     mWeight = aWeight;
 }
@@ -285,7 +298,9 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
       mFontRefInitialized(false),
       mRequiresAAT(false),
       mIsCFF(false),
-      mIsCFFInitialized(false)
+      mIsCFFInitialized(false),
+      mHasVariations(false),
+      mHasVariationsInitialized(false)
 {
     mFontRef = aFontRef;
     mFontRefInitialized = true;

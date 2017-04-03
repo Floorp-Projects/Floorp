@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* eslint-env mozilla/browser-window */
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
@@ -943,9 +944,7 @@ DownloadsPlacesView.prototype = {
   },
 
   get selectedNodes() {
-    return [for (element of this._richlistbox.selectedItems)
-            if (element._placesNode)
-            element._placesNode];
+      return this._richlistbox.selectedItems.filter(element => element._placesNode);
   },
 
   get selectedNode() {
@@ -1178,8 +1177,7 @@ DownloadsPlacesView.prototype = {
   },
 
   _copySelectedDownloadsToClipboard() {
-    let urls = [for (element of this._richlistbox.selectedItems)
-                element._shell.download.source.url];
+    let urls = this._richlistbox.selectedItems.map(element => element._shell.download.source.url);
 
     Cc["@mozilla.org/widget/clipboardhelper;1"]
       .getService(Ci.nsIClipboardHelper)
@@ -1211,7 +1209,7 @@ DownloadsPlacesView.prototype = {
   },
 
   _canDownloadClipboardURL() {
-    let [url, name] = this._getURLFromClipboardData();
+    let [url /* ,name */] = this._getURLFromClipboardData();
     return url != "";
   },
 
@@ -1308,8 +1306,7 @@ DownloadsPlacesView.prototype = {
           element._shell.doDefaultCommand();
         }
       }
-    }
-    else if (aEvent.charCode == " ".charCodeAt(0)) {
+    } else if (aEvent.charCode == " ".charCodeAt(0)) {
       // Pause/Resume every selected download
       for (let element of selectedElements) {
         if (element._shell.isCommandEnabled("downloadsCmd_pauseResume")) {
@@ -1409,7 +1406,7 @@ DownloadsPlacesView.prototype = {
 };
 
 for (let methodName of ["load", "applyFilter", "selectNode", "selectItems"]) {
-  DownloadsPlacesView.prototype[methodName] = function () {
+  DownloadsPlacesView.prototype[methodName] = function() {
     throw new Error("|" + methodName +
                     "| is not implemented by the downloads view.");
   }
