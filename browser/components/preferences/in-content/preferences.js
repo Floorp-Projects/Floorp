@@ -10,7 +10,6 @@
 /* import-globals-from privacy.js */
 /* import-globals-from applications.js */
 /* import-globals-from sync.js */
-/* import-globals-from findInPage.js */
 /* import-globals-from ../../../base/content/utilityOverlay.js */
 
 "use strict";
@@ -60,8 +59,6 @@ function init_all() {
   register_module("paneAdvanced", gAdvancedPane);
   register_module("paneApplications", gApplicationsPane);
   register_module("paneSync", gSyncPane);
-  register_module("paneSearchResults", gSearchResultsPane);
-  gSearchResultsPane.init();
 
   let categories = document.getElementById("categories");
   categories.addEventListener("select", event => gotoPref(event.target.value));
@@ -138,7 +135,7 @@ function onHashChange() {
 
 function gotoPref(aCategory) {
   let categories = document.getElementById("categories");
-  const kDefaultCategoryInternalName = "paneGeneral";
+  const kDefaultCategoryInternalName = categories.firstElementChild.value;
   let hash = document.location.hash;
   let category = aCategory || hash.substr(1) || kDefaultCategoryInternalName;
   category = friendlyPrefCategoryNameToInternalName(category);
