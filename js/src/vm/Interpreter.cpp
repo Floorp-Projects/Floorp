@@ -1162,6 +1162,7 @@ enum HandleErrorContinuation
 static HandleErrorContinuation
 ProcessTryNotes(JSContext* cx, EnvironmentIter& ei, InterpreterRegs& regs)
 {
+    bool inForOfIterClose = false;
     for (TryNoteIterInterpreter tni(cx, regs); !tni.done(); ++tni) {
         JSTryNote* tn = *tni;
 
@@ -1170,10 +1171,38 @@ ProcessTryNotes(JSContext* cx, EnvironmentIter& ei, InterpreterRegs& regs)
             /* Catch cannot intercept the closing of a generator. */
             if (cx->isClosingGenerator())
                 break;
+
+            // If IteratorClose due to abnormal completion threw inside a
+            // for-of loop, it is not catchable by try statements inside of
+            // the for-of loop.
+            //
+            // This is handled by this weirdness in the exception handler
+            // instead of in bytecode because it is hard to do so in bytecode:
+            //
+            //   1. IteratorClose emitted due to abnormal completion (break,
+            //   throw, return) are emitted inline, at the source location of
+            //   the break, throw, or return statement. For example:
+            //
+            //     for (x of iter) {
+            //       try { return; } catch (e) { }
+            //     }
+            //
+            //   From the try-note nesting's perspective, the IteratorClose
+            //   resulting from |return| is covered by the inner try, when it
+            //   should not be.
+            //
+            //   2. Try-catch notes cannot be disjoint. That is, we can't have
+            //   multiple notes with disjoint pc ranges jumping to the same
+            //   catch block.
+            if (inForOfIterClose)
+                break;
             SettleOnTryNote(cx, tn, ei, regs);
             return CatchContinuation;
 
           case JSTRY_FINALLY:
+            // See note above.
+            if (inForOfIterClose)
+                break;
             SettleOnTryNote(cx, tn, ei, regs);
             return FinallyContinuation;
 
@@ -1212,7 +1241,14 @@ ProcessTryNotes(JSContext* cx, EnvironmentIter& ei, InterpreterRegs& regs)
             break;
           }
 
+          case JSTRY_FOR_OF_ITERCLOSE:
+            inForOfIterClose = true;
+            break;
+
           case JSTRY_FOR_OF:
+            inForOfIterClose = false;
+            break;
+
           case JSTRY_LOOP:
             break;
 
