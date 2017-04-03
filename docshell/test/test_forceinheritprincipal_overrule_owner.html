@@ -24,18 +24,18 @@ ok(principalToInherit.startsWith("http://mochi.test:8888/"),
    "initial principalToInherit correct");
 
 // reset principals on the loadinfo
-loadInfo.resetPrincipalsToNullPrincipal();
+loadInfo.resetPrincipalToInheritToNullPrincipal();
 
 // 2) verify loadInfo contains the correct principals
-var triggeringPrincipal = channel.loadInfo.triggeringPrincipal;
-var loadingPrincipal = channel.loadInfo.loadingPrincipal;
-var principalToInherit = channel.loadInfo.principalToInherit;
+triggeringPrincipal = channel.loadInfo.triggeringPrincipal.URI.asciiSpec;
+loadingPrincipal = channel.loadInfo.loadingPrincipal.URI.asciiSpec;
+principalToInherit = channel.loadInfo.principalToInherit;
 
-ok(triggeringPrincipal.isNullPrincipal,
+ok(triggeringPrincipal.startsWith("http://mochi.test:8888/"),
    "triggeringPrincipal after resetting correct");
-ok(loadingPrincipal.isNullPrincipal,
-   "triggeringPrincipal after resetting correct");
-ok(triggeringPrincipal.isNullPrincipal,
+ok(loadingPrincipal.startsWith("http://mochi.test:8888/"),
+   "loadingPrincipal after resetting correct");
+ok(principalToInherit.isNullPrincipal,
    "principalToInherit after resetting correct");
 
 // 3) verify that getChannelResultPrincipal returns right principal
