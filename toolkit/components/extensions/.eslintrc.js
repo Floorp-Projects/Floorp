@@ -17,8 +17,11 @@ module.exports = { // eslint-disable-line no-undef
     "TextDecoder": false,
     "TextEncoder": false,
     // Specific to WebExtensions:
+    "AppConstants": true,
     "Extension": true,
+    "ExtensionAPI": true,
     "ExtensionManagement": true,
+    "ExtensionUtils": true,
     "extensions": true,
     "getContainerForCookieStoreId": true,
     "getCookieStoreIdForContainer": true,
