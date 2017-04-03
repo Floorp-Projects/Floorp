@@ -53,7 +53,7 @@ class PublishBalrog(MercurialScript, BuildbotMixin):
         # TODO: version and appVersion should come from repo
         props = self.buildbot_config["properties"]
         for prop in ['product', 'version', 'build_number', 'channels',
-                     'balrog_api_root']:
+                     'balrog_api_root', 'schedule_at', 'background_rate']:
             if props.get(prop):
                 self.info("Overriding %s with %s" % (prop, props[prop]))
                 self.config[prop] = props.get(prop)
@@ -107,6 +107,10 @@ class PublishBalrog(MercurialScript, BuildbotMixin):
         ])
         for r in channel_config["publish_rules"]:
             cmd.extend(["--rules", r])
+        if self.config.get("schedule_at"):
+            cmd.extend(["--schedule-at", self.config["schedule_at"]])
+        if self.config.get("background_rate"):
+            cmd.extend(["--background-rate", str(self.config["background_rate"])])
 
         self.retry(lambda: self.run_command(cmd, halt_on_failure=True))
 
