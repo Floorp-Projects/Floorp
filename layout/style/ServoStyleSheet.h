@@ -90,6 +90,10 @@ public:
     nsIDocument* aCloneDocument,
     nsINode* aCloneOwningNode) const final;
 
+  // nsICSSLoaderObserver interface
+  NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
+                              nsresult aStatus) final;
+
 protected:
   virtual ~ServoStyleSheet();
 
