@@ -33,3 +33,21 @@ def filter_target_tasks(graph, parameters):
     attr = parameters.get('target_tasks_method', 'all_tasks')
     fn = target_tasks.get_method(attr)
     return fn(graph, parameters)
+
+
+@filter_task('check_servo')
+def filter_servo(graph, parameters):
+    """bug 1339542 When Servo vcs sync service lands Servo commits in
+    autoland repo, run linux64-stylo tests but skip other
+    platforms (to  reduce test load)."""
+
+    SERVO_PLATFORMS = {
+        'linux64-stylo',
+    }
+
+    def fltr(task):
+        if parameters.get('owner') != "servo-vcs-sync@mozilla.com":
+            return True
+        return task.attributes.get('build_platform') in SERVO_PLATFORMS
+
+    return [l for l, t in graph.tasks.iteritems() if fltr(t)]
