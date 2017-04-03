@@ -306,12 +306,6 @@ GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
   mVsyncBridge = VsyncBridgeChild::Create(mVsyncIOThread, mProcessToken, Move(vsyncChild));
   mGPUChild->SendInitVsyncBridge(Move(vsyncParent));
 
-  nsTArray<LayerTreeIdMapping> mappings;
-  LayerTreeOwnerTracker::Get()->Iterate([&](uint64_t aLayersId, base::ProcessId aProcessId) {
-    mappings.AppendElement(LayerTreeIdMapping(aLayersId, aProcessId));
-  });
-  mGPUChild->SendAddLayerTreeIdMapping(mappings);
-
 #ifdef MOZ_CRASHREPORTER
   CrashReporter::AnnotateCrashReport(
     NS_LITERAL_CSTRING("GPUProcessStatus"),
@@ -838,9 +832,7 @@ GPUProcessManager::MapLayerTreeId(uint64_t aLayersId, base::ProcessId aOwningId)
   LayerTreeOwnerTracker::Get()->Map(aLayersId, aOwningId);
 
   if (EnsureGPUReady()) {
-    AutoTArray<LayerTreeIdMapping, 1> mappings;
-    mappings.AppendElement(LayerTreeIdMapping(aLayersId, aOwningId));
-    mGPUChild->SendAddLayerTreeIdMapping(mappings);
+    mGPUChild->SendAddLayerTreeIdMapping(LayerTreeIdMapping(aLayersId, aOwningId));
   }
 }
 
