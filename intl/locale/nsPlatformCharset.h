@@ -7,7 +7,7 @@
 
 #include "nsIPlatformCharset.h"
 
-class nsPlatformCharset : public nsIPlatformCharset
+class nsPlatformCharset final : public nsIPlatformCharset
 {
   NS_DECL_ISUPPORTS
 
@@ -17,7 +17,6 @@ public:
 
   NS_IMETHOD Init();
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsACString& oResult) override;
-  NS_IMETHOD GetDefaultCharsetForLocale(const nsAString& localeName, nsACString& oResult) override;
 
 private:
   nsCString mCharset;

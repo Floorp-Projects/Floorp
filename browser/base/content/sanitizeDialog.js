@@ -11,21 +11,18 @@ var {Sanitizer} = Cu.import("resource:///modules/Sanitizer.jsm", {});
 
 var gSanitizePromptDialog = {
 
-  get bundleBrowser()
-  {
+  get bundleBrowser() {
     if (!this._bundleBrowser)
       this._bundleBrowser = document.getElementById("bundleBrowser");
     return this._bundleBrowser;
   },
 
-  get selectedTimespan()
-  {
+  get selectedTimespan() {
     var durList = document.getElementById("sanitizeDurationChoice");
     return parseInt(durList.value);
   },
 
-  get sanitizePreferences()
-  {
+  get sanitizePreferences() {
     if (!this._sanitizePreferences) {
       this._sanitizePreferences =
         document.getElementById("sanitizePreferences");
@@ -33,13 +30,11 @@ var gSanitizePromptDialog = {
     return this._sanitizePreferences;
   },
 
-  get warningBox()
-  {
+  get warningBox() {
     return document.getElementById("sanitizeEverythingWarningBox");
   },
 
-  init: function ()
-  {
+  init() {
     // This is used by selectByTimespan() to determine if the window has loaded.
     this._inited = true;
 
@@ -54,13 +49,11 @@ var gSanitizePromptDialog = {
       this.warningBox.hidden = false;
       document.title =
         this.bundleBrowser.getString("sanitizeDialog2.everything.title");
-    }
-    else
+    } else
       this.warningBox.hidden = true;
   },
 
-  selectByTimespan: function ()
-  {
+  selectByTimespan() {
     // This method is the onselect handler for the duration dropdown.  As a
     // result it's called a couple of times before onload calls init().
     if (!this._inited)
@@ -89,8 +82,7 @@ var gSanitizePromptDialog = {
       window.document.documentElement.getAttribute("noneverythingtitle");
   },
 
-  sanitize: function ()
-  {
+  sanitize() {
     // Update pref values before handing off to the sanitizer (bug 453440)
     this.updatePrefs();
     var s = new Sanitizer();
@@ -114,6 +106,7 @@ var gSanitizePromptDialog = {
       s.sanitize().then(null, Components.utils.reportError)
                   .then(() => window.close())
                   .then(null, Components.utils.reportError);
+      return false;
     } catch (er) {
       Components.utils.reportError("Exception during sanitize: " + er);
       return true; // We *do* want to close immediately on error.
@@ -128,7 +121,7 @@ var gSanitizePromptDialog = {
    *                          True means the item list visibility status should not
    *                          be changed.
    */
-  prepareWarning: function (aDontShowItemList) {
+  prepareWarning(aDontShowItemList) {
     // If the date and time-aware locale warning string is ever used again,
     // initialize it here.  Currently we use the no-visits warning string,
     // which does not include date and time.  See bug 480169 comment 48.
@@ -138,8 +131,7 @@ var gSanitizePromptDialog = {
       warningStringID = "sanitizeSelectedWarning";
       if (!aDontShowItemList)
         this.showItemList();
-    }
-    else {
+    } else {
       warningStringID = "sanitizeEverythingWarning2";
     }
 
@@ -152,8 +144,7 @@ var gSanitizePromptDialog = {
    * Called when the value of a preference element is synced from the actual
    * pref.  Enables or disables the OK button appropriately.
    */
-  onReadGeneric: function ()
-  {
+  onReadGeneric() {
     var found = false;
 
     // Find any other pref that's checked and enabled.
@@ -168,8 +159,7 @@ var gSanitizePromptDialog = {
 
     try {
       document.documentElement.getButton("accept").disabled = !found;
-    }
-    catch (e) { }
+    } catch (e) { }
 
     // Update the warning prompt if needed
     this.prepareWarning(true);
@@ -185,9 +175,7 @@ var gSanitizePromptDialog = {
    * (i.e., Windows).  We must therefore manually set the prefs from their
    * corresponding preference elements.
    */
-  updatePrefs : function ()
-  {
-    var tsPref = document.getElementById("privacy.sanitize.timeSpan");
+  updatePrefs() {
     Sanitizer.prefs.setIntPref("timeSpan", this.selectedTimespan);
 
     // Keep the pref for the download history in sync with the history pref.
@@ -206,7 +194,7 @@ var gSanitizePromptDialog = {
   /**
    * Check if all of the history items have been selected like the default status.
    */
-  hasNonSelectedItems: function () {
+  hasNonSelectedItems() {
     let checkboxes = document.querySelectorAll("#itemList > [preference]");
     for (let i = 0; i < checkboxes.length; ++i) {
       let pref = document.getElementById(checkboxes[i].getAttribute("preference"));
@@ -219,7 +207,7 @@ var gSanitizePromptDialog = {
   /**
    * Show the history items list.
    */
-  showItemList: function () {
+  showItemList() {
     var itemList = document.getElementById("itemList");
     var expanderButton = document.getElementById("detailsExpander");
 
@@ -234,7 +222,7 @@ var gSanitizePromptDialog = {
   /**
    * Hide the history items list.
    */
-  hideItemList: function () {
+  hideItemList() {
     var itemList = document.getElementById("itemList");
     var expanderButton = document.getElementById("detailsExpander");
 
@@ -248,8 +236,7 @@ var gSanitizePromptDialog = {
   /**
    * Called by the item list expander button to toggle the list's visibility.
    */
-  toggleItemList: function ()
-  {
+  toggleItemList() {
     var itemList = document.getElementById("itemList");
 
     if (itemList.collapsed)
