@@ -301,10 +301,45 @@
       ],
     },
     {
+      'target_name': 'nssfuzz-dtls-client',
+      'type': 'executable',
+      'sources': [
+        'tls_client_config.cc',
+        'tls_client_target.cc',
+      ],
+      'defines': [
+        'IS_DTLS'
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports',
+        '<(DEPTH)/cpputil/cpputil.gyp:cpputil',
+        'nssfuzz-tls-base',
+      ],
+    },
+    {
+      'target_name': 'nssfuzz-dtls-server',
+      'type': 'executable',
+      'sources': [
+        'tls_server_certs.cc',
+        'tls_server_config.cc',
+        'tls_server_target.cc',
+      ],
+      'defines': [
+        'IS_DTLS'
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports',
+        '<(DEPTH)/cpputil/cpputil.gyp:cpputil',
+        'nssfuzz-tls-base',
+      ],
+    },
+    {
       'target_name': 'nssfuzz',
       'type': 'none',
       'dependencies': [
         'nssfuzz-certDN',
+        'nssfuzz-dtls-client',
+        'nssfuzz-dtls-server',
         'nssfuzz-pkcs8',
         'nssfuzz-quickder',
         'nssfuzz-tls-client',

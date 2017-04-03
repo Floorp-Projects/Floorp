@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 
 Cu.import("resource://gre/modules/ExtensionParent.jsm");
 
-const {
+var {
   HiddenExtensionPage,
   watchExtensionProxyContextLoad,
 } = ExtensionParent;
@@ -249,7 +249,6 @@ class DevToolsPageDefinition {
   }
 }
 
-/* eslint-disable mozilla/balanced-listeners */
 
 let devToolsInitialized = false;
 initDevTools = function() {
@@ -257,6 +256,7 @@ initDevTools = function() {
     return;
   }
 
+  /* eslint-disable mozilla/balanced-listeners */
   // Create a devtools page context for a new opened toolbox,
   // based on the registered devtools_page definitions.
   gDevTools.on("toolbox-created", (evt, toolbox) => {
@@ -292,22 +292,35 @@ initDevTools = function() {
       devtoolsPageDefinition.shutdownForTarget(target);
     }
   });
+  /* eslint-enable mozilla/balanced-listeners */
 
   devToolsInitialized = true;
 };
 
-// Create and register a new devtools_page definition as specified in the
-// "devtools_page" property in the extension manifest.
-extensions.on("manifest_devtools_page", (type, directive, extension, manifest) => {
-  let devtoolsPageDefinition = new DevToolsPageDefinition(extension, manifest[directive]);
-  devtoolsPageDefinitionMap.set(extension, devtoolsPageDefinition);
-});
+this.devtools = class extends ExtensionAPI {
+  onManifestEntry(entryName) {
+    let {extension} = this;
+    let {manifest} = extension;
 
-// Destroy the registered devtools_page definition on extension shutdown.
-extensions.on("shutdown", (type, extension) => {
-  if (devtoolsPageDefinitionMap.has(extension)) {
-    devtoolsPageDefinitionMap.get(extension).shutdown();
-    devtoolsPageDefinitionMap.delete(extension);
+    // Create and register a new devtools_page definition as specified in the
+    // "devtools_page" property in the extension manifest.
+    let devtoolsPageDefinition = new DevToolsPageDefinition(extension, manifest.devtools_page);
+    devtoolsPageDefinitionMap.set(extension, devtoolsPageDefinition);
   }
-});
-/* eslint-enable mozilla/balanced-listeners */
+
+  onShutdown(reason) {
+    let {extension} = this;
+
+    // Destroy the registered devtools_page definition on extension shutdown.
+    if (devtoolsPageDefinitionMap.has(extension)) {
+      devtoolsPageDefinitionMap.get(extension).shutdown();
+      devtoolsPageDefinitionMap.delete(extension);
+    }
+  }
+
+  getAPI(context) {
+    return {
+      devtools: {},
+    };
+  }
+};

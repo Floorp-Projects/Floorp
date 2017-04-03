@@ -325,13 +325,7 @@ AtomTableMatchKey(const PLDHashEntryHdr* aEntry, const void* aKey)
                          nsDependentAtomString(he->mAtom)) == 0;
   }
 
-  uint32_t length = he->mAtom->GetLength();
-  if (length != k->mLength) {
-    return false;
-  }
-
-  return memcmp(he->mAtom->GetUTF16String(),
-                k->mUTF16String, length * sizeof(char16_t)) == 0;
+  return he->mAtom->Equals(k->mUTF16String, k->mLength);
 }
 
 static void
