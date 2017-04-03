@@ -698,7 +698,7 @@ nsWebBrowserFind::SearchInFrame(nsPIDOMWindowOuter* aWindow, bool aWrapping,
   *aDidFind = false;
 
   // Do security check, to ensure that the frame we're searching is
-  // acccessible from the frame where the Find is being run.
+  // accessible from the frame where the Find is being run.
 
   // get a uri for the window
   nsCOMPtr<nsIDocument> theDoc = aWindow->GetDoc();
