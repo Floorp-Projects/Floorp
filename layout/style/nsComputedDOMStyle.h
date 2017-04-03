@@ -93,17 +93,32 @@ public:
     eWithAnimation,
     eWithoutAnimation,
   };
-  // Similar to the above but ignoring animation rules and with StyleType::eAll.
-  static already_AddRefed<nsStyleContext>
-  GetStyleContextWithoutAnimation(mozilla::dom::Element* aElement,
-                                  nsIAtom* aPseudo,
-                                  nsIPresShell* aPresShell);
 
   static already_AddRefed<nsStyleContext>
   GetStyleContextNoFlush(mozilla::dom::Element* aElement,
                          nsIAtom* aPseudo,
                          nsIPresShell* aPresShell,
-                         StyleType aStyleType = eAll);
+                         StyleType aStyleType = eAll)
+  {
+    return DoGetStyleContextNoFlush(aElement,
+                                    aPseudo,
+                                    aPresShell,
+                                    aStyleType,
+                                    eWithAnimation);
+  }
+
+  static already_AddRefed<nsStyleContext>
+  GetUnanimatedStyleContextNoFlush(mozilla::dom::Element* aElement,
+                                   nsIAtom* aPseudo,
+                                   nsIPresShell* aPresShell,
+                                   StyleType aStyleType = eAll)
+  {
+    return DoGetStyleContextNoFlush(aElement,
+                                    aPseudo,
+                                    aPresShell,
+                                    aStyleType,
+                                    eWithoutAnimation);
+  }
 
   static nsIPresShell*
   GetPresShellForContent(nsIContent* aContent);
