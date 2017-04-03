@@ -1726,11 +1726,11 @@ nsIFrame::UpdateVisibilitySynchronously()
     return;
   }
 
-  bool visible = true;
+  bool visible = StyleVisibility()->IsVisible();
   nsIFrame* f = GetParent();
   nsRect rect = GetRectRelativeToSelf();
   nsIFrame* rectFrame = this;
-  while (f) {
+  while (f && visible) {
     nsIScrollableFrame* sf = do_QueryFrame(f);
     if (sf) {
       nsRect transformedRect =
