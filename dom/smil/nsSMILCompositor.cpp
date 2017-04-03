@@ -173,6 +173,24 @@ nsSMILCompositor::GetCSSPropertyToAnimate() const
   return propID;
 }
 
+bool
+nsSMILCompositor::MightNeedBaseStyle() const
+{
+  if (GetCSSPropertyToAnimate() == eCSSProperty_UNKNOWN) {
+    return false;
+  }
+
+  // We should return true if at least one animation function might build on
+  // the base value.
+  for (const nsSMILAnimationFunction* func : mAnimationFunctions) {
+    if (!func->WillReplace()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 uint32_t
 nsSMILCompositor::GetFirstFuncToAffectSandwich()
 {
