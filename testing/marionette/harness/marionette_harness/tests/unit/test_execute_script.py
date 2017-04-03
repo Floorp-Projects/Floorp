@@ -343,8 +343,8 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
         super(TestExecuteChrome, self).tearDown()
 
     def test_permission(self):
-        self.assertEqual(1, self.marionette.execute_script("""
-            var c = Components.classes["@mozilla.org/preferences-service;1"]; return 1;"""))
+        self.marionette.execute_script(
+            "Components.classes['@mozilla.org/preferences-service;1']")
 
     @skip_if_mobile("New windows not supported in Fennec")
     def test_unmarshal_element_collection(self):
