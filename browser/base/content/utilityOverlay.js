@@ -220,7 +220,6 @@ function openLinkIn(url, where, params) {
   var aUserContextId        = params.userContextId;
   var aIndicateErrorPageLoad = params.indicateErrorPageLoad;
   var aPrincipal            = params.originPrincipal;
-  var aTriggeringPrincipal  = params.triggeringPrincipal;
   var aForceAboutBlankViewerInCurrent =
       params.forceAboutBlankViewerInCurrent;
 
@@ -268,15 +267,6 @@ function openLinkIn(url, where, params) {
     };
     aPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(aPrincipal.URI, attrs);
   }
-  if (aTriggeringPrincipal && aTriggeringPrincipal.isCodebasePrincipal) {
-    let attrs = {
-      userContextId: aUserContextId,
-      privateBrowsingId: aIsPrivate || (w && PrivateBrowsingUtils.isWindowPrivate(w)),
-    };
-    aTriggeringPrincipal =
-      Services.scriptSecurityManager.createCodebasePrincipal(aTriggeringPrincipal.URI, attrs);
-  }
-
 
   if (!w || where == "window") {
     // This propagates to window.arguments.
@@ -321,7 +311,6 @@ function openLinkIn(url, where, params) {
     sa.appendElement(referrerPolicySupports, /* weak =*/ false);
     sa.appendElement(userContextIdSupports, /* weak =*/ false);
     sa.appendElement(aPrincipal, /* weak =*/ false);
-    sa.appendElement(aTriggeringPrincipal, /* weak =*/ false);
 
     let features = "chrome,dialog=no,all";
     if (aIsPrivate) {
@@ -425,7 +414,7 @@ function openLinkIn(url, where, params) {
     }
 
     targetBrowser.loadURIWithFlags(url, {
-      triggeringPrincipal: aTriggeringPrincipal,
+      triggeringPrincipal: aPrincipal,
       flags,
       referrerURI: aNoReferrer ? null : aReferrerURI,
       referrerPolicy: aReferrerPolicy,
@@ -450,7 +439,7 @@ function openLinkIn(url, where, params) {
       noReferrer: aNoReferrer,
       userContextId: aUserContextId,
       originPrincipal: aPrincipal,
-      triggeringPrincipal: aTriggeringPrincipal,
+      triggeringPrincipal: aPrincipal,
     });
     targetBrowser = tabUsedForLoad.linkedBrowser;
 
