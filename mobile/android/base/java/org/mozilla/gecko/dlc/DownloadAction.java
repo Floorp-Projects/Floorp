@@ -55,24 +55,24 @@ public class DownloadAction extends BaseAction {
             return;
         }
 
-        if (!isConnectedToNetwork(context)) {
-            Log.d(LOGTAG, "No connected network available. Postponing download.");
-            // TODO: Reschedule download (bug 1209498)
-            return;
-        }
-
-        if (isActiveNetworkMetered(context)) {
-            Log.d(LOGTAG, "Network is metered. Postponing download.");
-            // TODO: Reschedule download (bug 1209498)
-            return;
-        }
-
         for (DownloadContent content : catalog.getScheduledDownloads()) {
             Log.d(LOGTAG, "Downloading: " + content);
 
             File temporaryFile = null;
 
             try {
+                if (!isConnectedToNetwork(context)) {
+                    Log.d(LOGTAG, "No connected network available. Postponing download.");
+                    // TODO: Reschedule download (bug 1209498)
+                    return;
+                }
+
+                if (isActiveNetworkMetered(context)) {
+                    Log.d(LOGTAG, "Network is metered. Postponing download.");
+                    // TODO: Reschedule download (bug 1209498)
+                    return;
+                }
+
                 File destinationFile = getDestinationFile(context, content);
                 if (destinationFile.exists() && verify(destinationFile, content.getChecksum())) {
                     Log.d(LOGTAG, "Content already exists and is up-to-date.");
