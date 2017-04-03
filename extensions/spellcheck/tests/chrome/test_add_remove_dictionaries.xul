@@ -67,8 +67,7 @@ function RunTest() {
   ok(map.exists());
   hunspell.addDirectory(map);
 
-  Components.utils.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm");
+  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
   onSpellCheck(textbox, function () {
 
     // test that base and map dictionaries are available
