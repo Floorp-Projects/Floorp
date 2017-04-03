@@ -80,7 +80,7 @@ add_task(function* () {
 
     is(labels[0].textContent, "greeting",
       "The first json property name was incorrect.");
-    is(values[0].textContent, "\"Hello oddly-named JSON!\"",
+    is(values[0].textContent, "Hello oddly-named JSON!",
       "The first json property value was incorrect.");
   }
 });
