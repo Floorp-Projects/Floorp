@@ -606,6 +606,22 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
       // pseudo-elements, since then it's not the primary style
       // for this element.
       if (!result->HasPseudoElementData()) {
+        // The existing style context may have animation styles so check if we
+        // need to remove them.
+        if (aAnimationFlag == eWithoutAnimation) {
+          nsPresContext* presContext = presShell->GetPresContext();
+          MOZ_ASSERT(presContext, "Should have a prescontext if we have a frame");
+          MOZ_ASSERT(presContext->StyleSet()->IsGecko(),
+                     "stylo: Need ResolveStyleByRemovingAnimation for stylo");
+          if (presContext && presContext->StyleSet()->IsGecko()) {
+            nsStyleSet* styleSet = presContext->StyleSet()->AsGecko();
+            return styleSet->ResolveStyleByRemovingAnimation(
+                     aElement, result, eRestyle_AllHintsWithAnimations);
+          } else {
+            return nullptr;
+          }
+        }
+
         // this function returns an addrefed style context
         RefPtr<nsStyleContext> ret = result;
         return ret.forget();
