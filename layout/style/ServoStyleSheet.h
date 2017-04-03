@@ -32,7 +32,7 @@ struct ServoStyleSheetInner : public StyleSheetInfo
                        ReferrerPolicy aReferrerPolicy,
                        const dom::SRIMetadata& aIntegrity);
 
-  RefPtr<RawServoStyleSheet> mSheet;
+  RefPtr<const RawServoStyleSheet> mSheet;
 };
 
 
@@ -66,10 +66,10 @@ public:
    */
   void LoadFailed();
 
-  RawServoStyleSheet* RawSheet() const {
+  const RawServoStyleSheet* RawSheet() const {
     return Inner()->mSheet;
   }
-  void SetSheetForImport(RawServoStyleSheet* aSheet) {
+  void SetSheetForImport(const RawServoStyleSheet* aSheet) {
     MOZ_ASSERT(!Inner()->mSheet);
     Inner()->mSheet = aSheet;
   }
@@ -89,6 +89,10 @@ public:
     css::ImportRule* aCloneOwnerRule,
     nsIDocument* aCloneDocument,
     nsINode* aCloneOwningNode) const final;
+
+  // nsICSSLoaderObserver interface
+  NS_IMETHOD StyleSheetLoaded(StyleSheet* aSheet, bool aWasAlternate,
+                              nsresult aStatus) final;
 
 protected:
   virtual ~ServoStyleSheet();

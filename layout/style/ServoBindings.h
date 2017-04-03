@@ -111,12 +111,16 @@ RawGeckoElementBorrowedOrNull Gecko_GetNextSiblingElement(RawGeckoElementBorrowe
 RawGeckoElementBorrowedOrNull Gecko_GetDocumentElement(RawGeckoDocumentBorrowed document);
 void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
                           mozilla::ServoStyleSheet* parent,
-                          RawServoImportRuleBorrowed import_rule,
+                          RawServoStyleSheetBorrowed child_sheet,
                           RawGeckoURLExtraData* base_url_data,
                           const uint8_t* url_bytes,
                           uint32_t url_length,
                           const uint8_t* media_bytes,
                           uint32_t media_length);
+
+// URLExtraData
+// Create a new addrefed URLExtraData.
+RawGeckoURLExtraData* Gecko_URLExtraData_CreateDummy();
 
 // By default, Servo walks the DOM by traversing the siblings of the DOM-view
 // first child. This generally works, but misses anonymous children, which we

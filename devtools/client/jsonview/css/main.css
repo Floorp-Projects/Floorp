@@ -17,10 +17,17 @@
 /******************************************************************************/
 /* Panel Content */
 
+.tab-panel-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .panelContent {
   direction: ltr;
   overflow-y: auto;
   width: 100%;
+  flex: 1;
 }
 
 /* The tree takes the entire horizontal space within the panel content. */
@@ -41,20 +48,9 @@
 /******************************************************************************/
 /* Theme Firebug */
 
-.theme-firebug .panelContent {
-  height: calc(100% - 30px);
-}
-
 /* JSON View is using bigger font-size for the main tabs so,
   let's overwrite the default value. */
 .theme-firebug .tabs .tabs-navigation {
   font-size: 14px;
 }
 
-/******************************************************************************/
-/* Theme Light & Theme Dark*/
-
-.theme-dark .panelContent,
-.theme-light .panelContent {
-  height: calc(100% - 27px);
-}
