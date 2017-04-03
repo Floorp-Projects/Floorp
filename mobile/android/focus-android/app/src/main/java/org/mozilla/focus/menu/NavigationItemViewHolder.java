@@ -10,13 +10,24 @@ import android.view.View;
 import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.BrowserFragment;
 
-public class NavigationItemViewHolder extends BrowserMenuViewHolder {
+public class NavigationItemViewHolder extends BrowserMenuViewHolder
+        implements BrowserFragment.LoadStateListener {
     public static int LAYOUT_ID = R.layout.menu_navigation;
+
+    final View refreshButton;
+    final View stopButton;
 
     public NavigationItemViewHolder(View itemView, BrowserFragment fragment) {
         super(itemView);
 
-        itemView.findViewById(R.id.refresh).setOnClickListener(this);
+        refreshButton = itemView.findViewById(R.id.refresh);
+        refreshButton.setOnClickListener(this);
+
+        stopButton = itemView.findViewById(R.id.stop);
+        stopButton.setOnClickListener(this);
+
+        isLoadingChanged(fragment.isLoading());
+        fragment.setIsLoadingListener(this);
 
         final View forwardView = itemView.findViewById(R.id.forward);
         if (!fragment.canGoForward()) {
@@ -25,5 +36,11 @@ public class NavigationItemViewHolder extends BrowserMenuViewHolder {
         } else {
             forwardView.setOnClickListener(this);
         }
+    }
+
+    @Override
+    public void isLoadingChanged(boolean isLoading) {
+        refreshButton.setVisibility(isLoading ? View.GONE : View.VISIBLE);
+        stopButton.setVisibility(isLoading ? View.VISIBLE : View.GONE);
     }
 }
