@@ -29,6 +29,8 @@ public interface IWebView {
 
     void reload();
 
+    void stopLoading();
+
     String getUrl();
 
     void loadUrl(String url);
