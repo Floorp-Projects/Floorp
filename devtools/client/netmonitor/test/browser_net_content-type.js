@@ -228,7 +228,7 @@ add_task(function* () {
         is(labels[0].textContent, "greeting",
           "The first json property name was incorrect.");
         is(values[0].textContent,
-          "\"Hello JSON!\"", "The first json property value was incorrect.");
+          "Hello JSON!", "The first json property value was incorrect.");
         break;
       }
       case "html": {
