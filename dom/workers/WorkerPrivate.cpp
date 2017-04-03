@@ -3982,7 +3982,7 @@ WorkerPrivateParent<Derived>::FlushReportsToSharedWorkers(
     reportErrorToBrowserConsole = false;
   }
 
-  // Finally report to broswer console if there is no any window or shared
+  // Finally report to browser console if there is no any window or shared
   // worker.
   if (reportErrorToBrowserConsole) {
     aReporter->FlushReportsToConsole(0);
