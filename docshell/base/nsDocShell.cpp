@@ -425,7 +425,7 @@ public:
     mLoadGroup = aLoadGroup;
   }
 
-  nsresult StartTimeout(Dispatcher* aDispatcher);
+  nsresult StartTimeout(DocGroup* aDocGroup);
 
 private:
   ~nsPingListener();
@@ -445,12 +445,12 @@ nsPingListener::~nsPingListener()
 }
 
 nsresult
-nsPingListener::StartTimeout(Dispatcher* aDispatcher)
+nsPingListener::StartTimeout(DocGroup* aDocGroup)
 {
-  NS_ENSURE_ARG(aDispatcher);
+  NS_ENSURE_ARG(aDocGroup);
 
   nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
-  timer->SetTarget(aDispatcher->EventTargetFor(TaskCategory::Network));
+  timer->SetTarget(aDocGroup->EventTargetFor(TaskCategory::Network));
 
   if (timer) {
     nsresult rv = timer->InitWithFuncCallback(OnPingTimeout, mLoadGroup,
