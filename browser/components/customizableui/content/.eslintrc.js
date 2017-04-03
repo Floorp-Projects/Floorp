@@ -1,6 +1,6 @@
 "use strict";
 
-module.exports = {  // eslint-disable-line no-undef
+module.exports = {
   "env": {
     "mozilla/browser-window": true,
   },
