@@ -23,6 +23,8 @@ public class DownloadContentTelemetry {
     private static final String EXTRA_RESULT = "result";
     private static final String EXTRA_CONTENT = "content";
     private static final String EXTRA_ERROR = "error";
+    private static final String EXTRA_UPDATED = "updated";
+    private static final String EXTRA_ACTION_REQUIRED = "action_required";
 
     private static final String ACTION_DOWNLOAD = "dlc_download";
     private static final String ACTION_SYNC = "dlc_sync";
@@ -58,22 +60,7 @@ public class DownloadContentTelemetry {
     }
 
     /* package */ static void eventDownloadFailure(DownloadContent content, RecoverableDownloadContentException e) {
-        switch (e.getErrorType()) {
-            case RecoverableDownloadContentException.DISK_IO:
-                eventDownloadFailure(content, ERROR_DISK_IO);
-                break;
-            case RecoverableDownloadContentException.MEMORY:
-                eventDownloadFailure(content, ERROR_MEMORY);
-                break;
-            case RecoverableDownloadContentException.NETWORK:
-                eventDownloadFailure(content, ERROR_NETWORK_IO);
-                break;
-            case RecoverableDownloadContentException.SERVER:
-                eventDownloadFailure(content, ERROR_SERVER);
-                break;
-            default:
-                throw new AssertionError("Unknown error type: " + e.getErrorType());
-        }
+        eventDownloadFailure(content, translateErrorType(e.getErrorType()));
     }
 
     /* package */ static void eventDownloadFailure(DownloadContent content, @Error String errorType) {
@@ -87,6 +74,52 @@ public class DownloadContentTelemetry {
             Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.SERVICE, extras.toString());
         } catch (JSONException e) {
             throw new AssertionError("Should not happen: Can't build telemetry extra JSON", e);
+        }
+    }
+
+    /* package */ static void eventSyncSuccess(boolean updated, boolean actionRequired) {
+        try {
+            final JSONObject extras = new JSONObject();
+            extras.put(EXTRA_ACTION, ACTION_SYNC);
+            extras.put(EXTRA_RESULT, RESULT_SUCCESS);
+            extras.put(EXTRA_UPDATED, updated);
+            extras.put(EXTRA_ACTION_REQUIRED, actionRequired);
+
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.SERVICE, extras.toString());
+        } catch (JSONException e) {
+            throw new AssertionError("Should not happen: Can't build telemetry extra JSON", e);
+        }
+    }
+
+    /* package */ static void eventSyncFailure(RecoverableDownloadContentException e) {
+        eventSyncFailure(translateErrorType(e.getErrorType()));
+    }
+
+    /* package */ static void eventSyncFailure(@Error String errorType) {
+        try {
+            final JSONObject extras = new JSONObject();
+            extras.put(EXTRA_ACTION, ACTION_SYNC);
+            extras.put(EXTRA_RESULT, RESULT_FAILURE);
+            extras.put(EXTRA_ERROR, errorType);
+
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.SERVICE, extras.toString());
+        } catch (JSONException e) {
+            throw new AssertionError("Should not happen: Can't build telemetry extra JSON", e);
+        }
+    }
+
+    private static String translateErrorType(@RecoverableDownloadContentException.ErrorType int errorType) {
+        switch (errorType) {
+            case RecoverableDownloadContentException.DISK_IO:
+                return ERROR_DISK_IO;
+            case RecoverableDownloadContentException.MEMORY:
+                return ERROR_MEMORY;
+            case RecoverableDownloadContentException.NETWORK:
+                return ERROR_NETWORK_IO;
+            case RecoverableDownloadContentException.SERVER:
+                return ERROR_SERVER;
+            default:
+                throw new AssertionError("Unknown error type: " + errorType);
         }
     }
 }
