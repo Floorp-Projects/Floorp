@@ -116,9 +116,18 @@ public:
   // Allocate an ID that can be used to refer to a layer tree and
   // associated resources that live only on the compositor thread.
   //
-  // Must run on the content main thread.
+  // Must run on the browser main thread.
   uint64_t AllocateLayerTreeId();
 
+  // Allocate a layers ID and connect it to a compositor. If the compositor is null,
+  // the connect operation will not be performed, but an ID will still be allocated.
+  // This must be called from the browser main thread.
+  //
+  // Note that a layer tree id is always allocated, even if this returns false.
+  bool AllocateAndConnectLayerTreeId(
+    PCompositorBridgeChild* aCompositorBridge,
+    base::ProcessId aOtherPid,
+    uint64_t* aOutLayersId);
 
   void OnProcessLaunchComplete(GPUProcessHost* aHost) override;
   void OnProcessUnexpectedShutdown(GPUProcessHost* aHost) override;
