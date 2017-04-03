@@ -21,6 +21,7 @@ DevToolsModules(
     'request-list.js',
     'response-panel.js',
     'security-panel.js',
+    'stack-trace-panel.js',
     'statistics-panel.js',
     'tabbox-panel.js',
     'timings-panel.js',
