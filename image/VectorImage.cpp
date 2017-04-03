@@ -889,10 +889,13 @@ VectorImage::Draw(gfxContext* aContext,
   mIsDrawing = true;
 
   // Apply any 'preserveAspectRatio' override (if specified) to the root
-  // element, and set the animation time:
-  AutoSVGRenderingState autoSVGState(newSVGContext ? newSVGContext : aSVGContext,
-                                     animTime,
-                                     mSVGDocumentWrapper->GetRootSVGElem());
+  // element:
+  AutoPreserveAspectRatioOverride autoPAR(newSVGContext ? newSVGContext : aSVGContext,
+                                          mSVGDocumentWrapper->GetRootSVGElem());
+
+  // Set the animation time:
+  AutoSVGTimeSetRestore autoSVGTime(mSVGDocumentWrapper->GetRootSVGElem(),
+                                    animTime);
 
   // Set context paint (if specified) on the document:
   Maybe<AutoSetRestoreSVGContextPaint> autoContextPaint;
