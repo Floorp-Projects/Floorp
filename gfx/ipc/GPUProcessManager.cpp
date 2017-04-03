@@ -37,6 +37,10 @@
 #include "mozilla/dom/VideoDecoderManagerParent.h"
 #include "MediaPrefs.h"
 
+#ifdef MOZ_CRASHREPORTER
+# include "nsExceptionHandler.h"
+#endif
+
 #if defined(MOZ_WIDGET_ANDROID)
 #include "mozilla/widget/AndroidUiThread.h"
 #include "mozilla/layers/UiCompositorControllerChild.h"
@@ -307,6 +311,12 @@ GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
     mappings.AppendElement(LayerTreeIdMapping(aLayersId, aProcessId));
   });
   mGPUChild->SendAddLayerTreeIdMapping(mappings);
+
+#ifdef MOZ_CRASHREPORTER
+  CrashReporter::AnnotateCrashReport(
+    NS_LITERAL_CSTRING("GPUProcessStatus"),
+    NS_LITERAL_CSTRING("Running"));
+#endif
 }
 
 static bool
@@ -530,6 +540,12 @@ GPUProcessManager::DestroyProcess()
 #if defined(MOZ_WIDGET_ANDROID)
   UiCompositorControllerChild::Shutdown();
 #endif // defined(MOZ_WIDGET_ANDROID)
+
+#ifdef MOZ_CRASHREPORTER
+  CrashReporter::AnnotateCrashReport(
+    NS_LITERAL_CSTRING("GPUProcessStatus"),
+    NS_LITERAL_CSTRING("Destroyed"));
+#endif
 }
 
 RefPtr<CompositorSession>
