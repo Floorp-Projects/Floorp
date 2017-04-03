@@ -665,48 +665,6 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
                                                inDocWithShell);
 }
 
-
-/* static */
-already_AddRefed<nsStyleContext>
-nsComputedDOMStyle::GetStyleContextNoFlush(Element* aElement,
-                                           nsIAtom* aPseudo,
-                                           nsIPresShell* aPresShell,
-                                           StyleType aStyleType)
-{
-  return DoGetStyleContextNoFlush(aElement,
-                                  aPseudo,
-                                  aPresShell,
-                                  aStyleType,
-                                  eWithAnimation);
-}
-
-/* static */
-already_AddRefed<nsStyleContext>
-nsComputedDOMStyle::GetStyleContextWithoutAnimation(Element* aElement,
-                                                    nsIAtom* aPseudo,
-                                                    nsIPresShell* aPresShell)
-{
-  // If the content has a pres shell, we must use it.  Otherwise we'd
-  // potentially mix rule trees by using the wrong pres shell's style
-  // set.  Using the pres shell from the content also means that any
-  // content that's actually *in* a document will get the style from the
-  // correct document.
-  nsCOMPtr<nsIPresShell> presShell = GetPresShellForContent(aElement);
-  if (!presShell) {
-    presShell = aPresShell;
-    if (!presShell)
-      return nullptr;
-  }
-
-  presShell->FlushPendingNotifications(FlushType::Style);
-
-  return DoGetStyleContextNoFlush(aElement,
-                                  aPseudo,
-                                  presShell,
-                                  eAll,
-                                  eWithoutAnimation);
-}
-
 nsMargin
 nsComputedDOMStyle::GetAdjustedValuesForBoxSizing()
 {
