@@ -38,7 +38,7 @@ define(function (require, exports, module) {
       let data = this.props.data;
 
       return (
-        div({className: "headersPanelBox"},
+        div({className: "headersPanelBox tab-panel-inner"},
           HeadersToolbar({actions: this.props.actions}),
           div({className: "panelContent"},
             Headers({data: data})
