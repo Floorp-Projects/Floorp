@@ -7,8 +7,6 @@
 #ifndef __PROFILER_BACKTRACE_H
 #define __PROFILER_BACKTRACE_H
 
-#include "mozilla/UniquePtrExtensions.h"
-
 class ProfileBuffer;
 class SpliceableJSONWriter;
 class ThreadInfo;
@@ -18,7 +16,7 @@ class UniqueStacks;
 class ProfilerBacktrace
 {
 public:
-  ProfilerBacktrace(const char* aName, int aThreadId, ProfileBuffer* aBuffer);
+  explicit ProfilerBacktrace(ProfileBuffer* aBuffer, ThreadInfo* aThreadInfo);
   ~ProfilerBacktrace();
 
   // ProfilerBacktraces' stacks are deduplicated in the context of the
@@ -35,9 +33,8 @@ private:
   ProfilerBacktrace(const ProfilerBacktrace&);
   ProfilerBacktrace& operator=(const ProfilerBacktrace&);
 
-  mozilla::UniqueFreePtr<char> mName;
-  int mThreadId;
   ProfileBuffer* mBuffer;
+  ThreadInfo* mThreadInfo;
 };
 
 #endif // __PROFILER_BACKTRACE_H
