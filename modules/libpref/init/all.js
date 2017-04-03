@@ -198,9 +198,6 @@ pref("dom.gamepad.non_standard_events.enabled", true);
 #endif
 pref("dom.gamepad.extensions.enabled", false);
 
-// Whether the KeyboardEvent.code is enabled
-pref("dom.keyboardevent.code.enabled", true);
-
 // If this is true, TextEventDispatcher dispatches keydown and keyup events
 // even during composition (keypress events are never fired during composition
 // even if this is true).
