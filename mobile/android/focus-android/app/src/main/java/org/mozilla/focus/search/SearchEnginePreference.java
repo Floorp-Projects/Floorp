@@ -18,32 +18,18 @@ import org.mozilla.focus.utils.Settings;
  * Preference for setting the default search engine.
  */
 public class SearchEnginePreference extends DialogPreference {
-    @SuppressWarnings("unused") // Class referenced from XML
-    public SearchEnginePreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-        init();
-    }
-
-    @SuppressWarnings("unused") // Class referenced from XML
-    public SearchEnginePreference(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init();
-    }
-
-    @SuppressWarnings("unused") // Class referenced from XML
     public SearchEnginePreference(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
     }
 
-    @SuppressWarnings("unused") // Class referenced from XML
-    public SearchEnginePreference(Context context) {
-        super(context);
-        init();
+    public SearchEnginePreference(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
     }
 
-    private void init() {
+    @Override
+    protected void onAttachedToActivity() {
         setTitle(SearchEngineManager.getInstance().getDefaultSearchEngine(getContext()).getName());
+        super.onAttachedToActivity();
     }
 
     @Override
