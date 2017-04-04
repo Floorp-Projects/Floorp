@@ -471,6 +471,7 @@ function WorklistEntry(name, safeArguments, stack)
     this.name = name;
     this.safeArguments = safeArguments;
     this.stack = stack;
+    this.parameterNames = {};
 }
 
 WorklistEntry.prototype.readable = function()
@@ -494,6 +495,11 @@ WorklistEntry.prototype.isSafeArgument = function(index)
             return true;
     }
     return false;
+}
+
+WorklistEntry.prototype.setParameterName = function(index, name)
+{
+    this.parameterNames[index] = name;
 }
 
 WorklistEntry.prototype.addSafeArgument = function(index)
@@ -542,11 +548,12 @@ WorklistEntry.prototype.matches = function(matchArray)
     return nameMatchesArray(this.name, matchArray);
 }
 
-function CallSite(callee, safeArguments, location)
+function CallSite(callee, safeArguments, location, parameterNames)
 {
     this.callee = callee;
     this.safeArguments = safeArguments;
     this.location = location;
+    this.parameterNames = parameterNames;
 }
 
 CallSite.prototype.safeString = function()
@@ -555,7 +562,10 @@ CallSite.prototype.safeString = function()
         var str = "";
         for (var i = 0; i < this.safeArguments.length; i++) {
             var arg = this.safeArguments[i];
-            str += " " + ((arg == 0) ? "this" : "arg" + (arg - 1));
+            if (arg in this.parameterNames)
+                str += " " + this.parameterNames[arg];
+            else
+                str += " <" + ((arg == 0) ? "this" : "arg" + (arg - 1)) + ">";
         }
         return " ### SafeArguments:" + str;
     }
@@ -719,6 +729,7 @@ function process(entry, body, addCallee)
             if (index >= 0) {
                 var varName = index ? variableName(defvar.Variable) : "this";
                 assert(varName);
+                entry.setParameterName(index, varName);
                 var csuName = null;
                 var type = defvar.Type;
                 if (type.Kind == "Pointer" && type.Type.Kind == "CSU")
@@ -746,7 +757,7 @@ function process(entry, body, addCallee)
             switch (callee.kind) {
             case "direct":
                 var safeArguments = getEdgeSafeArguments(entry, edge, callee.name);
-                addCallee(new CallSite(callee.name, safeArguments, location));
+                addCallee(new CallSite(callee.name, safeArguments, location, entry.parameterNames));
                 break;
               case "resolved-field":
                 break;
@@ -801,7 +812,7 @@ function maybeProcessMissingFunction(entry, addCallee)
     var name = entry.name;
     if (name.indexOf("::~") > 0 && name.indexOf("()") > 0) {
         var callee = name.replace("()", "(int32)");
-        addCallee(new CallSite(name, entry.safeArguments, entry.stack[0].location));
+        addCallee(new CallSite(name, entry.safeArguments, entry.stack[0].location, entry.parameterNames));
         return true;
     }
 
@@ -817,7 +828,7 @@ function maybeProcessMissingFunction(entry, addCallee)
     // supposed to follow any typedefs itself.
     if (/mozilla::dom::Element/.test(name)) {
         var callee = name.replace("mozilla::dom::Element", "nsIDocument::Element");
-        addCallee(new CallSite(name, entry.safeArguments, entry.stack[0].location));
+        addCallee(new CallSite(name, entry.safeArguments, entry.stack[0].location, entry.parameterNames));
         return true;
     }
 
@@ -827,7 +838,7 @@ function maybeProcessMissingFunction(entry, addCallee)
     // wrong return type in the unmangled name.
     if (/\$nsTextFrame*/.test(name)) {
         var callee = name.replace("nsTextFrame", "nsIFrame");
-        addCallee(new CallSite(name, entry.safeArguments, entry.stack[0].location));
+        addCallee(new CallSite(name, entry.safeArguments, entry.stack[0].location, entry.parameterNames));
         return true;
     }
 
@@ -837,7 +848,7 @@ function maybeProcessMissingFunction(entry, addCallee)
 function processRoot(name)
 {
     var safeArguments = [];
-    var worklist = [new WorklistEntry(name, safeArguments, [new CallSite(name, safeArguments, null)])];
+    var worklist = [new WorklistEntry(name, safeArguments, [new CallSite(name, safeArguments, null, {})])];
 
     while (worklist.length > 0) {
         var entry = worklist.pop();
