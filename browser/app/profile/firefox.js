@@ -337,11 +337,7 @@ pref("browser.urlbar.suggest.history.onlyTyped",    false);
 pref("browser.urlbar.formatting.enabled", true);
 pref("browser.urlbar.trimURLs", true);
 
-#if defined(NIGHTLY_BUILD)
 pref("browser.urlbar.oneOffSearches", true);
-#else
-pref("browser.urlbar.oneOffSearches", false);
-#endif
 
 // If changed to true, copying the entire URL from the location bar will put the
 // human readable (percent-decoded) URL on the clipboard.
