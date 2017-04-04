@@ -10543,7 +10543,7 @@ nsFrame::Trace(const char* aMethod, bool aEnter)
   if (NS_FRAME_LOG_TEST(sFrameLogModule, NS_FRAME_TRACE_CALLS)) {
     char tagbuf[40];
     GetTagName(this, mContent, sizeof(tagbuf), tagbuf);
-    PR_LogPrint("%s: %s %s", tagbuf, aEnter ? "enter" : "exit", aMethod);
+    printf_stderr("%s: %s %s", tagbuf, aEnter ? "enter" : "exit", aMethod);
   }
 }
 
@@ -10553,7 +10553,7 @@ nsFrame::Trace(const char* aMethod, bool aEnter, nsReflowStatus aStatus)
   if (NS_FRAME_LOG_TEST(sFrameLogModule, NS_FRAME_TRACE_CALLS)) {
     char tagbuf[40];
     GetTagName(this, mContent, sizeof(tagbuf), tagbuf);
-    PR_LogPrint("%s: %s %s, status=%scomplete%s",
+    printf_stderr("%s: %s %s, status=%scomplete%s",
                 tagbuf, aEnter ? "enter" : "exit", aMethod,
                 aStatus.IsIncomplete() ? "not" : "",
                 (aStatus.NextInFlowNeedsReflow()) ? "+reflow" : "");
@@ -10573,7 +10573,7 @@ nsFrame::TraceMsg(const char* aFormatString, ...)
 
     char tagbuf[40];
     GetTagName(this, mContent, sizeof(tagbuf), tagbuf);
-    PR_LogPrint("%s: %s", tagbuf, argbuf);
+    printf_stderr("%s: %s", tagbuf, argbuf);
   }
 }
 
