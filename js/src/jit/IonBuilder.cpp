@@ -1961,6 +1961,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_newobject();
 
       case JSOP_NEWARRAY:
+      case JSOP_SPREADCALLARRAY:
         return jsop_newarray(GET_UINT32(pc));
 
       case JSOP_NEWARRAY_COPYONWRITE:
@@ -2011,6 +2012,9 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_FUNAPPLY:
         return jsop_funapply(GET_ARGC(pc));
+
+      case JSOP_SPREADCALL:
+        return jsop_spreadcall();
 
       case JSOP_CALL:
       case JSOP_CALL_IGNORES_RV:
@@ -5048,6 +5052,45 @@ IonBuilder::jsop_funapply(uint32_t argc)
 
     // Use funapply that definitely uses |arguments|
     return jsop_funapplyarguments(argc);
+}
+
+AbortReasonOr<Ok>
+IonBuilder::jsop_spreadcall()
+{
+    // The arguments array is constructed by a JSOP_SPREADCALLARRAY and not
+    // leaked to user. The complications of spread call iterator behaviour are
+    // handled when the user objects are expanded and copied into this hidden
+    // array.
+
+#ifdef DEBUG
+    // If we know class, ensure it is what we expected
+    MDefinition* argument = current->peek(-1);
+    if (TemporaryTypeSet* objTypes = argument->resultTypeSet())
+        if (const Class* clasp = objTypes->getKnownClass(constraints()))
+            MOZ_ASSERT(clasp == &ArrayObject::class_);
+#endif
+
+    MDefinition* argArr = current->pop();
+    MDefinition* argThis = current->pop();
+    MDefinition* argFunc = current->pop();
+
+    // Extract call target.
+    TemporaryTypeSet* funTypes = argFunc->resultTypeSet();
+    JSFunction* target = getSingleCallTarget(funTypes);
+    WrappedFunction* wrappedTarget = target ? new(alloc()) WrappedFunction(target) : nullptr;
+
+    // Dense elements of argument array
+    MElements* elements = MElements::New(alloc(), argArr);
+    current->add(elements);
+
+    MApplyArray* apply = MApplyArray::New(alloc(), wrappedTarget, argFunc, elements, argThis);
+    current->add(apply);
+    current->push(apply);
+    MOZ_TRY(resumeAfter(apply));
+
+    // TypeBarrier the call result
+    TemporaryTypeSet* types = bytecodeTypes(pc);
+    return pushTypeBarrier(apply, types, BarrierKind::TypeSet);
 }
 
 AbortReasonOr<Ok>

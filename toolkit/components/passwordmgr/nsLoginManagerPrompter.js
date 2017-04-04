@@ -1365,7 +1365,7 @@ LoginManagerPrompter.prototype = {
     this.log("promptToChangePasswordWithUsernames with count:", count);
 
     var usernames = logins.map(l => l.username);
-    var dialogText  = this._getLocalizedString("userSelectText");
+    var dialogText  = this._getLocalizedString("userSelectText2");
     var dialogTitle = this._getLocalizedString("passwordChangeTitle");
     var selectedIndex = { value: null };
 

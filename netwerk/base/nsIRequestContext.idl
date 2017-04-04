@@ -30,7 +30,7 @@ interface nsIRequestContext : nsISupports
   /**
    * A unique identifier for this request context
    */
-  [noscript] readonly attribute nsID ID;
+  [noscript] readonly attribute unsigned long long ID;
 
   /**
    * Number of active blocking transactions associated with this context
@@ -81,7 +81,7 @@ interface nsIRequestContextService : nsISupports
   /**
    * Get an existing request context from its ID
    */
-  nsIRequestContext getRequestContext(in nsIDRef id);
+  nsIRequestContext getRequestContext(in unsigned long long id);
 
   /**
    * Create a new request context
@@ -91,5 +91,5 @@ interface nsIRequestContextService : nsISupports
   /**
    * Remove an existing request context from its ID
    */
-  void removeRequestContext(in nsIDRef id);
+  void removeRequestContext(in unsigned long long id);
 };
