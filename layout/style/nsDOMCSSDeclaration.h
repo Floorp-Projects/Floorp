@@ -169,6 +169,10 @@ protected:
 
 protected:
   virtual ~nsDOMCSSDeclaration();
+
+private:
+  template<typename GeckoFunc, typename ServoFunc>
+  inline nsresult ModifyDeclaration(GeckoFunc aGeckoFunc, ServoFunc aServoFunc);
 };
 
 #endif // nsDOMCSSDeclaration_h___
