@@ -101,6 +101,10 @@ treecol {
   list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#advanced");
 }
 
+#category-search-results > .category-icon {
+  list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#searchResults");
+}
+
 @media (max-width: 800px) {
   .category-name {
     display: none;
