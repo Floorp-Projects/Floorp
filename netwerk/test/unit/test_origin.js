@@ -5,6 +5,8 @@ var h2Port;
 var prefs;
 var spdypref;
 var http2pref;
+var extpref;
+var loadGroup;
 
 function run_test() {
   var env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
@@ -18,9 +20,11 @@ function run_test() {
 
   spdypref = prefs.getBoolPref("network.http.spdy.enabled");
   http2pref = prefs.getBoolPref("network.http.spdy.enabled.http2");
+  extpref = prefs.getBoolPref("network.http.originextension");
 
   prefs.setBoolPref("network.http.spdy.enabled", true);
   prefs.setBoolPref("network.http.spdy.enabled.http2", true);
+  prefs.setBoolPref("network.http.originextension", true);
   prefs.setCharPref("network.dns.localDomains", "foo.example.com, alt1.example.com");
 
   // The moz-http2 cert is for {foo, alt1, alt2}.example.com and is signed by CA.cert.der
@@ -35,6 +39,7 @@ function run_test() {
 function resetPrefs() {
   prefs.setBoolPref("network.http.spdy.enabled", spdypref);
   prefs.setBoolPref("network.http.spdy.enabled.http2", http2pref);
+  prefs.setBoolPref("network.http.originextension", extpref);
   prefs.clearUserPref("network.dns.localDomains");
 }
 
@@ -246,9 +251,83 @@ function doTest10()
   // but the cert is not valid for bar. so expect a failure
   dump("doTest10()\n");
   origin = "https://bar.example.com:" + h2Port + "/origin-10";
-  nextTest = testsDone;
+  nextTest = doTest11;
   nextPortExpectedToBeSame = false;
   forceFailListener = true;
   do_test_pending();
   doTest();
+}
+
+var Http2PushApiListener = function() {};
+
+Http2PushApiListener.prototype = {
+  fooOK : false,
+  alt1OK : false,
+
+  getInterface: function(aIID) {
+    return this.QueryInterface(aIID);
+  },
+
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Ci.nsIHttpPushListener) ||
+        aIID.equals(Ci.nsIStreamListener))
+      return this;
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsIHttpPushListener
+  onPush: function onPush(associatedChannel, pushChannel) {
+    dump("push api onpush " + pushChannel.originalURI.spec +
+         " associated to " + associatedChannel.originalURI.spec + "\n");
+
+    do_check_eq(associatedChannel.originalURI.spec, "https://foo.example.com:" + h2Port + "/origin-11-a");
+    do_check_eq(pushChannel.getRequestHeader("x-pushed-request"), "true");
+
+    if (pushChannel.originalURI.spec === "https://foo.example.com:" + h2Port + "/origin-11-b") {
+      this.fooOK = true;
+    } else if (pushChannel.originalURI.spec === "https://alt1.example.com:" + h2Port + "/origin-11-e") {
+      this.alt1OK = true;
+    } else {
+      // any push of bar or madeup should not end up in onPush()
+      do_check_eq(true, false);
+    }
+    pushChannel.cancel(Components.results.NS_ERROR_ABORT);
+  },
+
+ // normal Channel listeners
+  onStartRequest: function pushAPIOnStart(request, ctx) {
+    dump("push api onstart " + request.originalURI.spec + "\n");
+  },
+
+  onDataAvailable: function pushAPIOnDataAvailable(request, ctx, stream, offset, cnt) {
+    var data = read_stream(stream, cnt);
+  },
+
+  onStopRequest: function test_onStopR(request, ctx, status) {
+    dump("push api onstop " + request.originalURI.spec + "\n");
+    do_check_true(this.fooOK);
+    do_check_true(this.alt1OK);
+    nextTest();
+    do_test_finished();
+  }
+};
+
+
+function doTest11()
+{
+  // we are connected with an SNI of foo from test6
+  // but the origin set is alt1, alt2, bar - foo is implied
+  // and bar is not actually covered by the cert
+  //
+  // the server will push foo (b-OK), bar (c-NOT OK), madeup (d-NOT OK), alt1 (e-OK),
+
+  dump("doTest11()\n");
+  do_test_pending();
+  loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(Ci.nsILoadGroup);
+  var chan = makeChan("https://foo.example.com:" + h2Port + "/origin-11-a");
+  chan.loadGroup = loadGroup;
+  var listener = new Http2PushApiListener();
+  nextTest = testsDone;
+  chan.notificationCallbacks = listener;
+  chan.asyncOpen2(listener);
 }

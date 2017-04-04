@@ -4128,7 +4128,13 @@ Http2Session::TestOriginFrame(const nsACString &hostname, int32_t port)
   key.Append (':');
   key.AppendInt(port);
   bool rv = mOriginFrame.Get(key);
-  LOG3(("TestOriginFrame() %p %s %d\n", this, key.get(), rv));
+  LOG3(("TestOriginFrame() hash.get %p %s %d\n", this, key.get(), rv));
+  if (!rv && ConnectionInfo()) {
+    // the SNI is also implicitly in this list, so consult that too
+    nsHttpConnectionInfo *ci = ConnectionInfo();
+    rv = nsCString(hostname).EqualsIgnoreCase(ci->Origin()) && (port == ci->OriginPort());
+    LOG3(("TestOriginFrame() %p sni test %d\n", this, rv));
+  }
   return rv;
 }
 
