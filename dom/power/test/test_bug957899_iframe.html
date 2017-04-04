@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test bug 957899 - Crash in WakeLock</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+ <script type="application/javascript">
+  var wl = navigator.requestWakeLock('a');
+  window.parent.ok(wl, "WakeLock created!");
+  window.parent.ok(!(wl instanceof XPathEvaluator), "Crashing?");
+  window.parent.SimpleTest.finish();
+ </script>
+</body>
+</html>
