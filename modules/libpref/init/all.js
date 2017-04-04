@@ -5031,6 +5031,13 @@ pref("dom.vr.enabled", false);
 #else
 pref("dom.vr.enabled", true);
 #endif
+// Maximum number of milliseconds the browser will wait for content to call
+// VRDisplay.requestPresent after emitting vrdisplayactivate during VR
+// link traversal.  This prevents a long running event handler for
+// vrdisplayactivate from later calling VRDisplay.requestPresent, which would
+// result in a non-responsive browser in the VR headset.
+pref("dom.vr.navigation.timeout", 5000);
+// Oculus device
 pref("dom.vr.oculus.enabled", true);
 // OSVR device
 pref("dom.vr.osvr.enabled", false);
