@@ -13,7 +13,7 @@ const URL = EXAMPLE_URL.replace("http:", "https:");
 const TEST_URL = URL + "service-workers/status-codes.html";
 
 add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(TEST_URL, null, true);
+  let { tab, monitor } = yield initNetMonitor(TEST_URL, true);
   info("Starting test... ");
 
   let { document, gStore, windowRequire } = monitor.panelWin;
