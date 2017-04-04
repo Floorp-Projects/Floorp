@@ -44,6 +44,7 @@ module.exports = createClass({
 
     let rotate = direction &&
                  (direction == "left" || direction == "right") &&
+                 box !== "position" &&
                  textContent.toString().length > LONG_TEXT_ROTATE_LIMIT;
 
     return dom.p(
