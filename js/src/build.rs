@@ -36,7 +36,7 @@ fn main() {
         .expect("Should spawn autospider OK");
     assert!(result.success(), "autospider should exit OK");
 
-    println!("cargo:rustc-link-search=native={}/js/src", out_dir);
+    println!("cargo:rustc-link-search=native={}/js/src/build", out_dir);
 
     if target.contains("windows") {
         println!("cargo:rustc-link-lib=winmm");
