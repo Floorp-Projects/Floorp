@@ -244,8 +244,8 @@ to mochitest command.
     * ... `justify-` [3]
     * test_initial_storage.html `align-` [6]
     * ... `justify-` [6]
-    * test_value_storage.html `align-` [45]
-    * ... `justify-` [34]
+    * test_value_storage.html `align-` [9]
+    * ... `justify-` [14]
 * @page support
   * test_bug887741_at-rules_in_declaration_lists.html [1]
   * test_page_parser.html [30]
