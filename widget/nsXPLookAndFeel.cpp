@@ -9,6 +9,7 @@
 
 #include "nsXPLookAndFeel.h"
 #include "nsLookAndFeel.h"
+#include "HeadlessLookAndFeel.h"
 #include "nsCRT.h"
 #include "nsFont.h"
 #include "mozilla/dom/ContentChild.h"
@@ -250,11 +251,11 @@ bool nsXPLookAndFeel::sUseNativeColors = true;
 bool nsXPLookAndFeel::sUseStandinsForNativeColors = false;
 bool nsXPLookAndFeel::sFindbarModalHighlight = false;
 
-nsLookAndFeel* nsXPLookAndFeel::sInstance = nullptr;
+nsXPLookAndFeel* nsXPLookAndFeel::sInstance = nullptr;
 bool nsXPLookAndFeel::sShutdown = false;
 
 // static
-nsLookAndFeel*
+nsXPLookAndFeel*
 nsXPLookAndFeel::GetInstance()
 {
   if (sInstance) {
@@ -263,7 +264,11 @@ nsXPLookAndFeel::GetInstance()
 
   NS_ENSURE_TRUE(!sShutdown, nullptr);
 
-  sInstance = new nsLookAndFeel();
+  if (gfxPlatform::IsHeadless()) {
+    sInstance = new widget::HeadlessLookAndFeel();
+  } else {
+    sInstance = new nsLookAndFeel();
+  }
   return sInstance;
 }
 
