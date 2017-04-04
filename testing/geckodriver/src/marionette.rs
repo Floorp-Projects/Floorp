@@ -343,11 +343,12 @@ impl MarionetteHandler {
                          .map_err(|_| WebDriverError::new(ErrorStatus::UnknownError,
                                                           "Unable to read profile preferences file")));
 
-        prefs.insert("marionette.defaultPrefs.port", Pref::new(port as i64));
+        for &(ref name, ref value) in prefs::DEFAULT.iter() {
+            if !custom_profile || !prefs.contains_key(name) {
+                prefs.insert((*name).clone(), (*value).clone());
+            }
+        }
 
-        if !custom_profile {
-            prefs.insert_slice(&prefs::DEFAULT[..]);
-        };
         prefs.insert_slice(&extra_prefs[..]);
 
         prefs.insert_slice(&prefs::REQUIRED[..]);
@@ -355,6 +356,8 @@ impl MarionetteHandler {
         if let Some(ref level) = self.current_log_level {
             prefs.insert("marionette.logging", Pref::new(level.to_string()));
         };
+
+        prefs.insert("marionette.defaultPrefs.port", Pref::new(port as i64));
 
         prefs.write().map_err(|_| WebDriverError::new(ErrorStatus::UnknownError,
                                                       "Unable to write Firefox profile"))
