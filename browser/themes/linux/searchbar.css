@@ -228,7 +228,6 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 }
 
 .searchbar-engine-one-off-item > .button-box {
-  border: none;
   padding: 0;
 }
 

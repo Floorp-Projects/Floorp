@@ -80,10 +80,13 @@
   padding: 0 18px;
 }
 
+.downloadButton:-moz-focusring {
+  -moz-outline-radius: 50%;
+}
+
 .downloadButton > .button-box {
   -moz-appearance: none;
   padding: 2px !important;
-  border-radius: 50%;
 }
 
 .downloadButton > .button-box > .button-icon {

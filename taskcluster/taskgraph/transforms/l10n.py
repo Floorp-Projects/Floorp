@@ -79,6 +79,8 @@ l10n_description_schema = Schema({
     # Description of the localized task
     Required('description'): _by_platform(basestring),
 
+    Optional('run-on-projects'): job_description_schema['run-on-projects'],
+
     # task object of the dependent task
     Required('dependent-task'): object,
 
@@ -366,7 +368,7 @@ def make_job_description(config, jobs):
                 'symbol': job['treeherder']['symbol'],
                 'platform': job['treeherder']['platform'],
             },
-            'run-on-projects': [],
+            'run-on-projects': job.get('run-on-projects') if job.get('run-on-projects') else [],
         }
 
         if job.get('index'):
