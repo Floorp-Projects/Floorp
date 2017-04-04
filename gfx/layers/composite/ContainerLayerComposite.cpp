@@ -162,8 +162,8 @@ struct PreparedLayer
 {
   PreparedLayer(LayerComposite *aLayer,
                 RenderTargetIntRect aClipRect,
-                const Maybe<gfx::Polygon>& aGeometry)
-  : mLayer(aLayer), mClipRect(aClipRect), mGeometry(aGeometry) {}
+                Maybe<gfx::Polygon>&& aGeometry)
+  : mLayer(aLayer), mClipRect(aClipRect), mGeometry(Move(aGeometry)) {}
 
   LayerComposite* mLayer;
   RenderTargetIntRect mClipRect;
@@ -192,10 +192,10 @@ ContainerPrepare(ContainerT* aContainer,
     ? ContainerLayerComposite::SortMode::WITH_GEOMETRY
     : ContainerLayerComposite::SortMode::WITHOUT_GEOMETRY;
 
-  const nsTArray<LayerPolygon> polygons =
+  nsTArray<LayerPolygon> polygons =
     aContainer->SortChildrenBy3DZOrder(sortMode);
 
-  for (const LayerPolygon& layer : polygons) {
+  for (LayerPolygon& layer : polygons) {
     LayerComposite* layerToRender =
       static_cast<LayerComposite*>(layer.layer->ImplData());
 
@@ -224,7 +224,8 @@ ContainerPrepare(ContainerT* aContainer,
     CULLING_LOG("Preparing sublayer %p\n", layerToRender->GetLayer());
 
     layerToRender->Prepare(clipRect);
-    aContainer->mPrepared->mLayers.AppendElement(PreparedLayer(layerToRender, clipRect, layer.geometry));
+    aContainer->mPrepared->mLayers.AppendElement(PreparedLayer(layerToRender, clipRect,
+                                                               Move(layer.geometry)));
   }
 
   CULLING_LOG("Preparing container layer %p\n", aContainer->GetLayer());
