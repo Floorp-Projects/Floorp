@@ -155,8 +155,8 @@
   background-color: rgb(102,102,102);
 }
 
-#alertSettings[focusedViaMouse]:-moz-focusring > .button-box {
-  border-color: transparent;
+#alertSettings[focusedViaMouse]:-moz-focusring {
+  outline: none;
 }
 
 #alertSettings > .button-box > .button-menu-dropmarker,
