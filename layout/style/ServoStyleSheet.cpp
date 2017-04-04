@@ -100,6 +100,7 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                                     this, &input, extraData);
   }
 
+  Inner()->mURLData = extraData.forget();
   return NS_OK;
 }
 
@@ -107,6 +108,7 @@ void
 ServoStyleSheet::LoadFailed()
 {
   Inner()->mSheet = Servo_StyleSheet_Empty(mParsingMode).Consume();
+  Inner()->mURLData = URLExtraData::Dummy();
 }
 
 // nsICSSLoaderObserver implementation
