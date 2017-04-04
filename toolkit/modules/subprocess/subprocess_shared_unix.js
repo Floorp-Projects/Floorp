@@ -41,6 +41,14 @@ var libc = new Library("libc", LIBC_CHOICES, {
     ctypes.char.ptr.ptr.ptr,
   ],
 
+  setenv: [
+    ctypes.default_abi,
+    ctypes.int,
+    ctypes.char.ptr,
+    ctypes.char.ptr,
+    ctypes.int,
+  ],
+
   chdir: [
     ctypes.default_abi,
     ctypes.int,

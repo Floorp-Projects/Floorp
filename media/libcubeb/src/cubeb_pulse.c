@@ -142,7 +142,11 @@ sink_info_callback(pa_context * context, const pa_sink_info * info, int eol, voi
 static void
 server_info_callback(pa_context * context, const pa_server_info * info, void * u)
 {
-  WRAP(pa_context_get_sink_info_by_name)(context, info->default_sink_name, sink_info_callback, u);
+  pa_operation * o;
+  o = WRAP(pa_context_get_sink_info_by_name)(context, info->default_sink_name, sink_info_callback, u);
+  if (o) {
+    WRAP(pa_operation_unref)(o);
+  }
 }
 
 static void
@@ -576,6 +580,7 @@ pulse_init(cubeb ** context, char const * context_name)
 {
   void * libpulse = NULL;
   cubeb * ctx;
+  pa_operation * o;
 
   *context = NULL;
 
@@ -614,9 +619,17 @@ pulse_init(cubeb ** context, char const * context_name)
     return CUBEB_ERROR;
   }
 
+  /* server_info_callback performs a second async query, which is
+     responsible for initializing default_sink_info and signalling the
+     mainloop to end the wait. */
   WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
-  WRAP(pa_context_get_server_info)(ctx->context, server_info_callback, ctx);
+  o = WRAP(pa_context_get_server_info)(ctx->context, server_info_callback, ctx);
+  if (o) {
+    operation_wait(ctx, NULL, o);
+    WRAP(pa_operation_unref)(o);
+  }
   WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
+  assert(ctx->default_sink_info);
 
   *context = ctx;
 
@@ -636,12 +649,6 @@ pulse_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
   (void)ctx;
   assert(ctx && max_channels);
 
-  WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
-  while (!ctx->default_sink_info) {
-    WRAP(pa_threaded_mainloop_wait)(ctx->mainloop);
-  }
-  WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
-
   *max_channels = ctx->default_sink_info->channel_map.channels;
 
   return CUBEB_OK;
@@ -653,12 +660,6 @@ pulse_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
   assert(ctx && rate);
   (void)ctx;
 
-  WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
-  while (!ctx->default_sink_info) {
-    WRAP(pa_threaded_mainloop_wait)(ctx->mainloop);
-  }
-  WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
-
   *rate = ctx->default_sink_info->sample_spec.rate;
 
   return CUBEB_OK;
@@ -669,12 +670,6 @@ pulse_get_preferred_channel_layout(cubeb * ctx, cubeb_channel_layout * layout)
 {
   assert(ctx && layout);
   (void)ctx;
-
-  WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
-  while (!ctx->default_sink_info) {
-    WRAP(pa_threaded_mainloop_wait)(ctx->mainloop);
-  }
-  WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
 
   *layout = channel_map_to_layout(&ctx->default_sink_info->channel_map);
 
@@ -711,9 +706,7 @@ pulse_context_destroy(cubeb * ctx)
 static void
 pulse_destroy(cubeb * ctx)
 {
-  if (ctx->context_name) {
-    free(ctx->context_name);
-  }
+  free(ctx->context_name);
   if (ctx->context) {
     pulse_context_destroy(ctx);
   }
@@ -726,9 +719,7 @@ pulse_destroy(cubeb * ctx)
   if (ctx->libpulse) {
     dlclose(ctx->libpulse);
   }
-  if (ctx->default_sink_info) {
-    free(ctx->default_sink_info);
-  }
+  free(ctx->default_sink_info);
   free(ctx);
 }
 
@@ -1058,10 +1049,6 @@ pulse_stream_set_volume(cubeb_stream * stm, float volume)
   }
 
   WRAP(pa_threaded_mainloop_lock)(stm->context->mainloop);
-
-  while (!stm->context->default_sink_info) {
-    WRAP(pa_threaded_mainloop_wait)(stm->context->mainloop);
-  }
 
   /* if the pulse daemon is configured to use flat volumes,
    * apply our own gain instead of changing the input volume on the sink. */

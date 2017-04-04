@@ -57,11 +57,6 @@ class CodeSegment
     uint8_t* outOfBoundsCode_;
     uint8_t* unalignedAccessCode_;
 
-  public:
-#ifdef MOZ_VTUNE
-    unsigned vtune_method_id_; // Zero if unset.
-#endif
-
   protected:
     CodeSegment() { PodZero(this); }
     template <class> friend struct js::MallocProvider;

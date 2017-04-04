@@ -39,7 +39,7 @@
 
 using mozilla::LogLevel;
 
-PRLogModuleInfo* gWin32ClipboardLog = nullptr;
+static mozilla::LazyLogModule gWin32ClipboardLog("nsClipboard");
 
 // oddly, this isn't in the MSVC headers anywhere.
 UINT nsClipboard::CF_HTML = ::RegisterClipboardFormatW(L"HTML Format");
@@ -53,10 +53,6 @@ UINT nsClipboard::CF_CUSTOMTYPES = ::RegisterClipboardFormatW(L"application/x-mo
 //-------------------------------------------------------------------------
 nsClipboard::nsClipboard() : nsBaseClipboard()
 {
-  if (!gWin32ClipboardLog) {
-    gWin32ClipboardLog = PR_NewLogModule("nsClipboard");
-  }
-
   mIgnoreEmptyNotification = false;
   mWindow         = nullptr;
 

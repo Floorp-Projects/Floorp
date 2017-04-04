@@ -20,16 +20,14 @@ public:
   ~ProfileBuffer();
 
   // LastSample is used to record the buffer location of the most recent
-  // sample for each thread.
+  // sample for each thread. It is used for periodic samples stored in the
+  // global ProfileBuffer, but *not* for synchronous samples.
   struct LastSample {
-    explicit LastSample(int aThreadId)
-      : mThreadId(aThreadId)
-      , mGeneration(0)
+    LastSample()
+      : mGeneration(0)
       , mPos(-1)
     {}
 
-    // The thread to which this LastSample pertains.
-    const int mThreadId;
     // The profiler-buffer generation number at which the sample was created.
     uint32_t mGeneration;
     // And its position in the buffer, or -1 meaning "invalid".
@@ -39,9 +37,9 @@ public:
   // Add |aTag| to the buffer, ignoring what kind of entry it is.
   void addTag(const ProfileBufferEntry& aTag);
 
-  // Add to the buffer, a sample start (ThreadId) entry, for the thread that
-  // |aLS| belongs to, and record the resulting generation and index in |aLS|.
-  void addTagThreadId(LastSample& aLS);
+  // Add to the buffer a sample start (ThreadId) entry for aThreadId. Also,
+  // record the resulting generation and index in |aLS| if it's non-null.
+  void addTagThreadId(int aThreadId, LastSample* aLS);
 
   void StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId, double aSinceTime,
                            JSContext* cx, UniqueStacks& aUniqueStacks);
@@ -50,9 +48,9 @@ public:
                            double aSinceTime,
                            UniqueStacks& aUniqueStacks);
 
-  // Find the most recent sample for the thread denoted by |aLS| and clone it,
-  // patching in |aStartTime| as appropriate.
-  bool DuplicateLastSample(const mozilla::TimeStamp& aStartTime,
+  // Find (via |aLS|) the most recent sample for the thread denoted by
+  // |aThreadId| and clone it, patching in |aStartTime| as appropriate.
+  bool DuplicateLastSample(int aThreadId, const mozilla::TimeStamp& aStartTime,
                            LastSample& aLS);
 
   void addStoredMarker(ProfilerMarker* aStoredMarker);
@@ -65,7 +63,7 @@ public:
 
 protected:
   char* processDynamicTag(int readPos, int* tagsConsumed, char* tagBuff);
-  int FindLastSampleOfThread(const LastSample& aLS);
+  int FindLastSampleOfThread(int aThreadId, const LastSample& aLS);
 
 public:
   // Circular buffer 'Keep One Slot Open' implementation for simplicity

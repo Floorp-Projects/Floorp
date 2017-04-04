@@ -1134,6 +1134,17 @@ const Class ArrayIteratorObject::class_ = {
     JSCLASS_HAS_RESERVED_SLOTS(ArrayIteratorSlotCount)
 };
 
+
+ArrayIteratorObject*
+js::NewArrayIteratorObject(JSContext* cx, NewObjectKind newKind)
+{
+    RootedObject proto(cx, GlobalObject::getOrCreateArrayIteratorPrototype(cx, cx->global()));
+    if (!proto)
+        return nullptr;
+
+    return NewObjectWithGivenProto<ArrayIteratorObject>(cx, proto, newKind);
+}
+
 static const JSFunctionSpec array_iterator_methods[] = {
     JS_SELF_HOSTED_FN("next", "ArrayIteratorNext", 0, 0),
     JS_FS_END

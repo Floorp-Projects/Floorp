@@ -47,7 +47,7 @@ class TestAccessibility(MarionetteTestCase):
         # Button5 does not have a correct accessibility role and may not be
         # manipulated via the accessibility API
         "button5",
-        # Button6 is missing an accesible name
+        # Button6 is missing an accessible name
         "button6",
         # Button7 is not currently visible via the accessibility API and may
         # not be manipulated by it

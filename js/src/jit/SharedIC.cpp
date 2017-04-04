@@ -581,6 +581,21 @@ ICStubCompiler::enterStubFrame(MacroAssembler& masm, Register scratch)
 }
 
 void
+ICStubCompiler::assumeStubFrame(MacroAssembler& masm)
+{
+    MOZ_ASSERT(!inStubFrame_);
+    inStubFrame_ = true;
+
+#ifdef DEBUG
+    entersStubFrame_ = true;
+
+    // |framePushed| isn't tracked precisely in ICStubs, so simply assume it to
+    // be STUB_FRAME_SIZE so that assertions don't fail in leaveStubFrame.
+    framePushedAtEnterStubFrame_ = STUB_FRAME_SIZE;
+#endif
+}
+
+void
 ICStubCompiler::leaveStubFrame(MacroAssembler& masm, bool calledIntoIon)
 {
     MOZ_ASSERT(entersStubFrame_ && inStubFrame_);
@@ -2077,18 +2092,11 @@ ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     if (!tailCallVM(DoGetPropFallbackInfo, masm))
         return false;
 
-    // Even though the fallback frame doesn't enter a stub frame, the CallScripted
-    // frame that we are emulating does. Again, we lie.
-#ifdef DEBUG
-    EmitRepushTailCallReg(masm);
-    enterStubFrame(masm, R0.scratchReg());
-#else
-    inStubFrame_ = true;
-#endif
-
-    // What follows is bailout for inlined scripted getters.
-    // The return address pointed to by the baseline stack points here.
-    returnOffset_ = masm.currentOffset();
+    // This is the resume point used when bailout rewrites call stack to undo
+    // Ion inlined frames. The return address pushed onto reconstructed stack
+    // will point here.
+    assumeStubFrame(masm);
+    bailoutReturnOffset_.bind(masm.currentOffset());
 
     leaveStubFrame(masm, true);
 
@@ -2106,8 +2114,9 @@ void
 ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code)
 {
     if (engine_ == Engine::Baseline) {
-        void* address = code->raw() + returnOffset_;
-        cx->compartment()->jitCompartment()->initBaselineGetPropReturnAddr(address);
+        BailoutReturnStub kind = BailoutReturnStub::GetProp;
+        void* address = code->raw() + bailoutReturnOffset_.offset();
+        cx->compartment()->jitCompartment()->initBailoutReturnAddr(address, getKey(), kind);
     }
 }
 

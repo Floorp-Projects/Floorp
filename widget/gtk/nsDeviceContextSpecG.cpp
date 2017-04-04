@@ -41,16 +41,9 @@ using mozilla::gfx::PrintTarget;
 using mozilla::gfx::PrintTargetPDF;
 using mozilla::gfx::PrintTargetPS;
 
-static PRLogModuleInfo *
-GetDeviceContextSpecGTKLog()
-{
-  static PRLogModuleInfo *sLog;
-  if (!sLog)
-    sLog = PR_NewLogModule("DeviceContextSpecGTK");
-  return sLog;
-}
+static LazyLogModule sDeviceContextSpecGTKLog("DeviceContextSpecGTK");
 /* Macro to make lines shorter */
-#define DO_PR_DEBUG_LOG(x) MOZ_LOG(GetDeviceContextSpecGTKLog(), mozilla::LogLevel::Debug, x)
+#define DO_PR_DEBUG_LOG(x) MOZ_LOG(sDeviceContextSpecGTKLog, mozilla::LogLevel::Debug, x)
 
 //----------------------------------------------------------------------------------
 // The printer data is shared between the PrinterEnumerator and the nsDeviceContextSpecGTK
