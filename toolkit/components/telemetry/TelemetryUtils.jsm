@@ -50,13 +50,24 @@ this.TelemetryUtils = {
   },
 
   /**
-   * Takes a date and returns it trunctated to a date with daily precision.
+   * Takes a date and returns it truncated to a date with daily precision.
    */
   truncateToDays(date) {
     return new Date(date.getFullYear(),
                     date.getMonth(),
                     date.getDate(),
                     0, 0, 0, 0);
+  },
+
+  /**
+   * Takes a date and returns it truncated to a date with hourly precision.
+   */
+  truncateToHours(date) {
+    return new Date(date.getFullYear(),
+                    date.getMonth(),
+                    date.getDate(),
+                    date.getHours(),
+                    0, 0, 0);
   },
 
   /**
