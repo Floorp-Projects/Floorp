@@ -1228,7 +1228,10 @@ PurgeEnvironmentChain(JSContext* cx, HandleObject obj, HandleId id)
     return true;
 }
 
-static bool
+enum class IsAddOrChange { Add, AddOrChange };
+
+template <IsAddOrChange AddOrChange>
+static MOZ_ALWAYS_INLINE bool
 AddOrChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
                     Handle<PropertyDescriptor> desc)
 {
@@ -1257,8 +1260,16 @@ AddOrChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
         }
     }
 
-    Shape* shape = NativeObject::putProperty(cx, obj, id, desc.getter(), desc.setter(),
-                                             SHAPE_INVALID_SLOT, desc.attributes(), 0);
+    // If we know this is a new property we can call addProperty instead of
+    // the slower putProperty.
+    Shape* shape;
+    if (AddOrChange == IsAddOrChange::Add) {
+        shape = NativeObject::addProperty(cx, obj, id, desc.getter(), desc.setter(),
+                                          SHAPE_INVALID_SLOT, desc.attributes(), 0);
+    } else {
+        shape = NativeObject::putProperty(cx, obj, id, desc.getter(), desc.setter(),
+                                          SHAPE_INVALID_SLOT, desc.attributes(), 0);
+    }
     if (!shape)
         return false;
 
@@ -1481,7 +1492,7 @@ js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
         // Fill in missing desc fields with defaults.
         CompletePropertyDescriptor(&desc);
 
-        if (!AddOrChangeProperty(cx, obj, id, desc))
+        if (!AddOrChangeProperty<IsAddOrChange::Add>(cx, obj, id, desc))
             return false;
         return result.succeed();
     }
@@ -1627,7 +1638,7 @@ js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     }
 
     // Step 10.
-    if (!AddOrChangeProperty(cx, obj, id, desc))
+    if (!AddOrChangeProperty<IsAddOrChange::AddOrChange>(cx, obj, id, desc))
         return false;
     return result.succeed();
 }

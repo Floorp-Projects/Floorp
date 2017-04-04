@@ -431,6 +431,7 @@ NativeObject::addProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     MOZ_ASSERT(getter != JS_PropertyStub);
     MOZ_ASSERT(setter != JS_StrictPropertyStub);
     MOZ_ASSERT(obj->nonProxyIsExtensible());
+    MOZ_ASSERT(!obj->containsPure(id));
 
     AutoKeepShapeTables keep(cx);
     ShapeTable::Entry* entry = nullptr;
