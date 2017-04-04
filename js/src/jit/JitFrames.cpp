@@ -436,6 +436,8 @@ HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame, ResumeFromEx
     if (!script->hasTrynotes())
         return;
 
+    bool inForOfIterClose = false;
+
     for (TryNoteIterIon tni(cx, frame); !tni.done(); ++tni) {
         JSTryNote* tn = *tni;
 
@@ -447,12 +449,23 @@ HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame, ResumeFromEx
             CloseLiveIteratorIon(cx, frame, tn);
             break;
 
+          case JSTRY_FOR_OF_ITERCLOSE:
+            inForOfIterClose = true;
+            break;
+
           case JSTRY_FOR_OF:
+            inForOfIterClose = false;
+            break;
+
           case JSTRY_LOOP:
             break;
 
           case JSTRY_CATCH:
             if (cx->isExceptionPending()) {
+                // See corresponding comment in ProcessTryNotes.
+                if (inForOfIterClose)
+                    break;
+
                 // Ion can compile try-catch, but bailing out to catch
                 // exceptions is slow. Reset the warm-up counter so that if we
                 // catch many exceptions we won't Ion-compile the script.
@@ -583,6 +596,7 @@ ProcessTryNotesBaseline(JSContext* cx, const JitFrameIterator& frame, Environmen
                         ResumeFromException* rfe, jsbytecode** pc)
 {
     RootedScript script(cx, frame.baselineFrame()->script());
+    bool inForOfIterClose = false;
 
     for (TryNoteIterBaseline tni(cx, frame.baselineFrame(), *pc); !tni.done(); ++tni) {
         JSTryNote* tn = *tni;
@@ -593,7 +607,11 @@ ProcessTryNotesBaseline(JSContext* cx, const JitFrameIterator& frame, Environmen
             // If we're closing a legacy generator, we have to skip catch
             // blocks.
             if (cx->isClosingGenerator())
-                continue;
+                break;
+
+            // See corresponding comment in ProcessTryNotes.
+            if (inForOfIterClose)
+                break;
 
             SettleOnTryNote(cx, tn, frame, ei, rfe, pc);
 
@@ -609,6 +627,10 @@ ProcessTryNotesBaseline(JSContext* cx, const JitFrameIterator& frame, Environmen
           }
 
           case JSTRY_FINALLY: {
+            // See corresponding comment in ProcessTryNotes.
+            if (inForOfIterClose)
+                break;
+
             SettleOnTryNote(cx, tn, frame, ei, rfe, pc);
             rfe->kind = ResumeFromException::RESUME_FINALLY;
             rfe->target = script->baselineScript()->nativeCodeForPC(script, *pc);
@@ -652,7 +674,14 @@ ProcessTryNotesBaseline(JSContext* cx, const JitFrameIterator& frame, Environmen
             break;
           }
 
+          case JSTRY_FOR_OF_ITERCLOSE:
+            inForOfIterClose = true;
+            break;
+
           case JSTRY_FOR_OF:
+            inForOfIterClose = false;
+            break;
+
           case JSTRY_LOOP:
             break;
 
