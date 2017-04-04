@@ -1396,8 +1396,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       break;
     }
 
-    nsStyleChangeData& mutable_data = aChangeList[i];
-    const nsStyleChangeData& data = mutable_data;
+    const nsStyleChangeData& data = aChangeList[i];
     nsIFrame* frame = data.mFrame;
     nsIContent* content = data.mContent;
     nsChangeHint hint = data.mHint;
@@ -1408,11 +1407,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
                  "Reflow hint bits set without actually asking for a reflow");
 
     // skip any frame that has been destroyed due to a ripple effect
-    if (frame && !propTable->HasSkippingBitCheck(frame, ChangeListProperty())) {
-      // Null out the pointer since the frame was already destroyed.
-      // This is important so we don't try to delete its
-      // ChangeListProperty() below.
-      mutable_data.mFrame = nullptr;
+    if (frame && !propTable->Get(frame, ChangeListProperty())) {
       continue;
     }
 
@@ -1480,11 +1475,6 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
     }
 
     if (hint & nsChangeHint_ReconstructFrame) {
-      // We're about to destroy data.mFrame, so null out the pointer.
-      // This is important so we don't try to delete its
-      // ChangeListProperty() below.
-      mutable_data.mFrame = nullptr;
-
       // If we ever start passing true here, be careful of restyles
       // that involve a reframe and animations.  In particular, if the
       // restyle we're processing here is an animation restyle, but
