@@ -1855,6 +1855,17 @@ JS_NewExternalString(JSContext* cx, const char16_t* chars, size_t length,
                      const JSStringFinalizer* fin);
 
 /**
+ * Create a new JSString whose chars member may refer to external memory.
+ * If the returned string refers to the external memory, |*isExternal| is set
+ * to true.  Otherwise the returned string is not an external string and
+ * |*isExternal| is set to false.  If |*isExternal| is false, |fin| won't be
+ * called.
+ */
+extern JS_PUBLIC_API(JSString*)
+JS_NewMaybeExternalString(JSContext* cx, const char16_t* chars, size_t length,
+                          const JSStringFinalizer* fin, bool* isExternal);
+
+/**
  * Return whether 'str' was created with JS_NewExternalString or
  * JS_NewExternalStringWithClosure.
  */
