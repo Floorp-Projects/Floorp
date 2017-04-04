@@ -12,6 +12,7 @@ Cu.import("resource://services-sync/browserid_identity.js");
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://gre/modules/Log.jsm");
@@ -544,6 +545,9 @@ class SyncTelemetryImpl {
     log.debug("recording event", eventDetails);
 
     let { object, method, value, extra } = eventDetails;
+    if (extra && AsyncResource.serverTime && !extra.serverTime) {
+      extra.serverTime = String(AsyncResource.serverTime);
+    }
     let category = "sync";
     let ts = Math.floor(tryGetMonotonicTimestamp());
 
