@@ -9,14 +9,7 @@
   margin-top: 1px;
 }
 
-.identity-popup-expander:-moz-focusring {
-  padding: 2px;
-}
-
-.identity-popup-expander:-moz-focusring > .button-box {
-  box-shadow: var(--focus-ring-box-shadow);
-}
-
+.identity-popup-expander:-moz-focusring,
 .identity-popup-permission-remove-button:-moz-focusring {
   box-shadow: var(--focus-ring-box-shadow);
 }
