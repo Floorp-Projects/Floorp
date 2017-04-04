@@ -30,6 +30,7 @@
 #include "NullPrincipal.h"
 #include "nsIURL.h"
 #include "prlink.h"
+#include "gfxPlatform.h"
 
 NS_IMPL_ISUPPORTS(nsIconChannel,
                   nsIRequest,
@@ -307,6 +308,10 @@ nsIconChannel::Init(nsIURI* aURI)
 {
   nsCOMPtr<nsIMozIconURI> iconURI = do_QueryInterface(aURI);
   NS_ASSERTION(iconURI, "URI is not an nsIMozIconURI");
+
+  if (gfxPlatform::IsHeadless()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   nsAutoCString stockIcon;
   iconURI->GetStockIcon(stockIcon);
