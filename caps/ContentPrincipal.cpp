@@ -127,6 +127,29 @@ ContentPrincipal::GetScriptLocation(nsACString &aStr)
   return mCodebase->GetSpec(aStr);
 }
 
+static nsresult
+AssignFullSpecToOriginNoSuffix(nsIURI* aURI, nsACString& aOriginNoSuffix)
+{
+  nsresult rv = aURI->GetAsciiSpec(aOriginNoSuffix);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // The origin, when taken from the spec, should not contain the ref part of
+  // the URL.
+
+  int32_t pos = aOriginNoSuffix.FindChar('?');
+  int32_t hashPos = aOriginNoSuffix.FindChar('#');
+
+  if (hashPos != kNotFound && (pos == kNotFound || hashPos < pos)) {
+    pos = hashPos;
+  }
+
+  if (pos != kNotFound) {
+    aOriginNoSuffix.Truncate(pos);
+  }
+
+  return NS_OK;
+}
+
 /* static */ nsresult
 ContentPrincipal::GenerateOriginNoSuffixFromURI(nsIURI* aURI,
                                                 nsACString& aOriginNoSuffix)
@@ -143,6 +166,7 @@ ContentPrincipal::GenerateOriginNoSuffixFromURI(nsIURI* aURI,
   MOZ_ASSERT(!NS_IsAboutBlank(origin),
              "The inner URI for about:blank must be moz-safe-about:blank");
 
+  // Handle non-strict file:// uris.
   if (!nsScriptSecurityManager::GetStrictFileOriginPolicy() &&
       NS_URIIsLocalFile(origin)) {
     // If strict file origin policy is not in effect, all local files are
@@ -151,6 +175,18 @@ ContentPrincipal::GenerateOriginNoSuffixFromURI(nsIURI* aURI,
     return NS_OK;
   }
 
+
+  nsresult rv;
+// NB: This is only compiled for Thunderbird/Suite.
+#if IS_ORIGIN_IS_FULL_SPEC_DEFINED
+  bool fullSpec = false;
+  rv = NS_URIChainHasFlags(origin, nsIProtocolHandler::ORIGIN_IS_FULL_SPEC, &fullSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (fullSpec) {
+    return AssignFullSpecToOriginNoSuffix(origin, aOriginNoSuffix);
+  }
+#endif
+
   nsAutoCString hostPort;
 
   // chrome: URLs don't have a meaningful origin, so make
@@ -158,7 +194,7 @@ ContentPrincipal::GenerateOriginNoSuffixFromURI(nsIURI* aURI,
   // XXX this should be removed in favor of the solution in
   // bug 160042.
   bool isChrome;
-  nsresult rv = origin->SchemeIs("chrome", &isChrome);
+  rv = origin->SchemeIs("chrome", &isChrome);
   if (NS_SUCCEEDED(rv) && !isChrome) {
     rv = origin->GetAsciiHostPort(hostPort);
     // Some implementations return an empty string, treat it as no support
@@ -230,24 +266,7 @@ ContentPrincipal::GenerateOriginNoSuffixFromURI(nsIURI* aURI,
     return NS_ERROR_FAILURE;
   }
 
-  rv = origin->GetAsciiSpec(aOriginNoSuffix);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // The origin, when taken from the spec, should not contain the ref part of
-  // the URL.
-
-  int32_t pos = aOriginNoSuffix.FindChar('?');
-  int32_t hashPos = aOriginNoSuffix.FindChar('#');
-
-  if (hashPos != kNotFound && (pos == kNotFound || hashPos < pos)) {
-    pos = hashPos;
-  }
-
-  if (pos != kNotFound) {
-    aOriginNoSuffix.Truncate(pos);
-  }
-
-  return NS_OK;
+  return AssignFullSpecToOriginNoSuffix(origin, aOriginNoSuffix);
 }
 
 bool
