@@ -355,6 +355,8 @@ impl MarionetteHandler {
             prefs.insert("marionette.logging", Pref::new(level.to_string()));
         };
 
+        // fallback can be removed when Firefox 54 becomes stable
+        prefs.insert("marionette.port", Pref::new(port as i64));
         prefs.insert("marionette.defaultPrefs.port", Pref::new(port as i64));
 
         prefs.write().map_err(|_| WebDriverError::new(ErrorStatus::UnknownError,
