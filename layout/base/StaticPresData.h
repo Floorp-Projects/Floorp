@@ -101,6 +101,12 @@ public:
   nsIAtom* GetLangGroup(nsIAtom* aLanguage) const;
 
   /**
+   * Same as GetLangGroup, but will not cache the result
+   *
+   */
+  already_AddRefed<nsIAtom> GetUncachedLangGroup(nsIAtom* aLanguage) const;
+
+  /**
    * Fetch the user's font preferences for the given aLanguage's
    * langugage group.
    *
