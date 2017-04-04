@@ -599,6 +599,10 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvGetA11yContentId(uint32_t* aContentId) override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvA11yHandlerControl(const uint32_t& aPid,
+                         const IHandlerControlHolder& aHandlerControl) override;
+
   virtual int32_t Pid() const override;
 
   virtual PURLClassifierParent*

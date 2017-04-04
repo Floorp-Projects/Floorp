@@ -7,6 +7,7 @@
 #ifndef mozilla_mscom_IHandlerProvider_h
 #define mozilla_mscom_IHandlerProvider_h
 
+#include "mozilla/NotNull.h"
 #include "mozilla/mscom/Ptr.h"
 
 #include <objidl.h>
@@ -16,9 +17,9 @@ namespace mscom {
 
 struct HandlerProvider
 {
-  virtual STDMETHODIMP GetHandler(CLSID* aHandlerClsid) = 0;
-  virtual STDMETHODIMP GetHandlerPayloadSize(DWORD* aOutPayloadSize) = 0;
-  virtual STDMETHODIMP WriteHandlerPayload(IStream* aStream) = 0;
+  virtual STDMETHODIMP GetHandler(NotNull<CLSID*> aHandlerClsid) = 0;
+  virtual STDMETHODIMP GetHandlerPayloadSize(NotNull<DWORD*> aOutPayloadSize) = 0;
+  virtual STDMETHODIMP WriteHandlerPayload(NotNull<IStream*> aStream) = 0;
   virtual STDMETHODIMP_(REFIID) MarshalAs(REFIID aIid) = 0;
 };
 
@@ -27,7 +28,7 @@ struct IHandlerProvider : public IUnknown
 {
   virtual STDMETHODIMP NewInstance(REFIID aIid,
                                    InterceptorTargetPtr<IUnknown> aTarget,
-                                   IHandlerProvider** aOutNewPayload) = 0;
+                                   NotNull<IHandlerProvider**> aOutNewPayload) = 0;
 };
 
 } // namespace mscom

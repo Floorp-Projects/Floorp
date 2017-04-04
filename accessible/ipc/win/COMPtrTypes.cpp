@@ -6,13 +6,19 @@
 
 #include "mozilla/a11y/COMPtrTypes.h"
 
+#include "Accessible2_3.h"
 #include "MainThreadUtils.h"
 #include "mozilla/a11y/Accessible.h"
+#include "mozilla/a11y/HandlerProvider.h"
 #include "mozilla/Move.h"
 #include "mozilla/mscom/MainThreadHandoff.h"
+#include "mozilla/mscom/Utils.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
+#include "nsXULAppAPI.h"
 
 using mozilla::mscom::MainThreadHandoff;
+using mozilla::mscom::ProxyUniquePtr;
 using mozilla::mscom::STAUniquePtr;
 
 namespace mozilla {
@@ -26,24 +32,44 @@ CreateHolderFromAccessible(Accessible* aAccToWrap)
     return nullptr;
   }
 
-  IAccessible* rawNative = nullptr;
-  aAccToWrap->GetNativeInterface((void**)&rawNative);
-  MOZ_ASSERT(rawNative);
-  if (!rawNative) {
+  STAUniquePtr<IAccessible> iaToProxy;
+  aAccToWrap->GetNativeInterface(mscom::getter_AddRefs(iaToProxy));
+  MOZ_ASSERT(iaToProxy);
+  if (!iaToProxy) {
     return nullptr;
   }
 
-  STAUniquePtr<IAccessible> iaToProxy(rawNative);
+  static const bool useHandler =
+    Preferences::GetBool("accessibility.handler.enabled", false);
 
-  IAccessible* rawIntercepted = nullptr;
-  HRESULT hr = MainThreadHandoff::WrapInterface(Move(iaToProxy), &rawIntercepted);
+  RefPtr<HandlerProvider> payload;
+  if (useHandler) {
+    payload = new HandlerProvider(IID_IAccessible,
+                                  mscom::ToInterceptorTargetPtr(iaToProxy));
+  }
+
+  ProxyUniquePtr<IAccessible> intercepted;
+  HRESULT hr = MainThreadHandoff::WrapInterface(Move(iaToProxy), payload,
+                                                (IAccessible**) mscom::getter_AddRefs(intercepted));
   MOZ_ASSERT(SUCCEEDED(hr));
   if (FAILED(hr)) {
     return nullptr;
   }
 
-  IAccessibleHolder::COMPtrType iaIntercepted(rawIntercepted);
-  return IAccessibleHolder(Move(iaIntercepted));
+  return IAccessibleHolder(Move(intercepted));
+}
+
+IHandlerControlHolder
+CreateHolderFromHandlerControl(mscom::ProxyUniquePtr<IHandlerControl> aHandlerControl)
+{
+  MOZ_ASSERT(aHandlerControl);
+  MOZ_ASSERT(XRE_IsContentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!aHandlerControl) {
+    return nullptr;
+  }
+
+  return IHandlerControlHolder(Move(aHandlerControl));
 }
 
 } // namespace a11y
