@@ -366,9 +366,11 @@ PLDHashTable::SearchTable(const void* aKey, PLDHashNumber aKeyHash)
   PLDHashEntryHdr* firstRemoved = nullptr;
 
   for (;;) {
-    if (Reason == ForAdd && !firstRemoved) {
+    if (Reason == ForAdd) {
       if (MOZ_UNLIKELY(EntryIsRemoved(entry))) {
-        firstRemoved = entry;
+        if (!firstRemoved) {
+          firstRemoved = entry;
+        }
       } else {
         entry->mKeyHash |= kCollisionFlag;
       }
