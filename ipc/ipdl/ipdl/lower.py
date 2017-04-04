@@ -2668,7 +2668,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ExprMemberInit(ExprVar('mozilla::ipc::IToplevelProtocol'),
                                [_protocolId(ptype), side]),
                 ExprMemberInit(p.channelVar(), [
-                    ExprLiteral.String(_actorName(p.name, self.side)),
                     ExprCall(ExprVar('ALLOW_THIS_IN_INITIALIZER_LIST'),
                              [ ExprVar.THIS ]) ]),
                 ExprMemberInit(p.stateVar(),
