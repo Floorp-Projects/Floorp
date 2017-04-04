@@ -1,9 +1,9 @@
 function test() {
   const URI = "data:text/plain,bug562649";
-  browserDOMWindow.openURI(makeURI(URI),
-                           null,
-                           Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
-                           Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+  window.browserDOMWindow.openURI(makeURI(URI),
+                                  null,
+                                  Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
+                                  Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
 
   is(gBrowser.userTypedValue, URI, "userTypedValue matches test URI");
   is(gURLBar.value, URI, "location bar value matches test URI");

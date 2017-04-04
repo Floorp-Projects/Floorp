@@ -2,10 +2,14 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/* eslint-env mozilla/frame-script */
+
 add_task(function* () {
   let rooturi = "https://example.com/browser/toolkit/modules/tests/browser/";
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, rooturi + "metadata_simple.html");
   yield ContentTask.spawn(gBrowser.selectedBrowser, { rooturi }, function* (args) {
+    Components.utils.import("resource://gre/modules/PageMetadata.jsm");
+
     let result = PageMetadata.getData(content.document);
     // Result should have description.
     Assert.equal(result.url, args.rooturi + "metadata_simple.html", "metadata url is correct");

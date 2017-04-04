@@ -117,11 +117,6 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
       providersAdded++;
       info("runSocialTestWithProvider: provider added");
 
-      // we want to set the first specified provider as the UI's provider
-      if (provider.origin == manifests[0].origin) {
-        firstProvider = provider;
-      }
-
       // If we've added all the providers we need, call the callback to start
       // the tests (and give it a callback it can call to finish them)
       if (providersAdded == manifests.length) {

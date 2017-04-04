@@ -28,7 +28,7 @@ function* expectFocusOnF6(backward, expectedDocument, expectedElement, onContent
   }
 
   if (onContent) {
-    messageManager.addMessageListener("BrowserTest:FocusChanged", focusChangedListener);
+    window.messageManager.addMessageListener("BrowserTest:FocusChanged", focusChangedListener);
 
     yield ContentTask.spawn(gBrowser.selectedBrowser, { expectedElementId: expectedElement }, function* (arg) {
       let contentExpectedElement = content.document.getElementById(arg.expectedElementId);
@@ -79,7 +79,7 @@ function* expectFocusOnF6(backward, expectedDocument, expectedElement, onContent
   is(fm.focusedElement, expectedElement, desc + " element matches");
 
   if (onContent) {
-    messageManager.removeMessageListener("BrowserTest:FocusChanged", focusChangedListener);
+    window.messageManager.removeMessageListener("BrowserTest:FocusChanged", focusChangedListener);
   }
 }
 

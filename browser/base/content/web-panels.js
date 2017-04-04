@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Via web-panels.xul
+/* import-globals-from browser.js */
+
 const NS_ERROR_MODULE_NETWORK = 2152398848;
 const NS_NET_STATUS_READ_FROM = NS_ERROR_MODULE_NETWORK + 8;
 const NS_NET_STATUS_WROTE_TO  = NS_ERROR_MODULE_NETWORK + 9;
