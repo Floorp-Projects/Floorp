@@ -3204,6 +3204,9 @@ var SessionStoreInternal = {
     let overwriteTabs = aOptions && aOptions.overwriteTabs;
     let isFollowUp = aOptions && aOptions.isFollowUp;
     let firstWindow = aOptions && aOptions.firstWindow;
+    // See SessionStoreInternal.restoreTabs for a description of what
+    // selectTab represents.
+    let selectTab = (overwriteTabs ? parseInt(winData.selected || 1, 10) : 0);
 
     if (isFollowUp) {
       this.windowToFocus = aWindow;
@@ -3280,9 +3283,6 @@ var SessionStoreInternal = {
 
       tabs.push(tab);
 
-      if (winData.tabs[t].pinned)
-        tabbrowser.pinTab(tabs[t]);
-
       if (winData.tabs[t].hidden) {
         tabbrowser.hideTab(tabs[t]);
       } else {
@@ -3292,6 +3292,54 @@ var SessionStoreInternal = {
 
       if (!!winData.tabs[t].muted != tabs[t].linkedBrowser.audioMuted) {
         tabs[t].toggleMuteAudio(winData.tabs[t].muteReason);
+      }
+    }
+
+    if (selectTab > 0) {
+      // The state we're restoring wants to select a particular tab. This
+      // implies that we're overwriting tabs.
+      let currentIndex = tabbrowser.tabContainer.selectedIndex;
+      let targetIndex = selectTab - 1;
+
+      if (currentIndex != targetIndex) {
+        // We need to change the selected tab. There are two ways of doing this:
+        //
+        // 1) The fast path: swap the currently selected tab with the one in the
+        //    position of the selected tab in the restored state. Note that this
+        //    can only work if the user contexts between the two tabs being swapped
+        //    match. This should be the common case.
+        //
+        // 2) The slow path: switch to the selected tab.
+        //
+        // We'll try to do (1), and then fallback to (2).
+
+        let selectedTab = tabbrowser.selectedTab;
+        let tabAtTargetIndex = tabs[targetIndex];
+        let userContextsMatch = selectedTab.userContextId == tabAtTargetIndex.userContextId;
+
+        if (userContextsMatch) {
+          tabbrowser.moveTabTo(selectedTab, targetIndex);
+          tabbrowser.moveTabTo(tabAtTargetIndex, currentIndex);
+          // We also have to do a similar "move" in the aTabs Array to
+          // make sure that the restored content shows up in the right
+          // order.
+          tabs[targetIndex] = tabs[currentIndex];
+          tabs[currentIndex] = tabAtTargetIndex;
+        } else {
+          // Otherwise, go the slow path, and switch to the target tab.
+          tabbrowser.selectedTab = tabs[targetIndex];
+        }
+      }
+    }
+
+    for (let i = 0; i < newTabCount; ++i) {
+      if (winData.tabs[i].pinned) {
+        tabbrowser.pinTab(tabs[i]);
+      } else {
+        // Pinned tabs are clustered at the start of the tab strip. As
+        // soon as we reach a tab that isn't pinned, we know there aren't
+        // any more for this window.
+        break;
       }
     }
 
@@ -3371,8 +3419,7 @@ var SessionStoreInternal = {
 
     // Restore tabs, if any.
     if (winData.tabs.length) {
-      this.restoreTabs(aWindow, tabs, winData.tabs,
-        (overwriteTabs ? (parseInt(winData.selected || "1")) : 0));
+      this.restoreTabs(aWindow, tabs, winData.tabs, selectTab);
     }
 
     // set smoothScroll back to the original value
@@ -3499,10 +3546,7 @@ var SessionStoreInternal = {
     // Let the tab data array have the right number of slots.
     tabsDataArray.length = numTabsInWindow;
 
-    // If provided, set the selected tab.
     if (aSelectTab > 0 && aSelectTab <= aTabs.length) {
-      tabbrowser.selectedTab = aTabs[aSelectTab - 1];
-
       // Update the window state in case we shut down without being notified.
       this._windows[aWindow.__SSi].selected = aSelectTab;
     }
