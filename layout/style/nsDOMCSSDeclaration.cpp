@@ -131,8 +131,8 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
 
   RefPtr<DeclarationBlock> newdecl;
   if (olddecl->IsServo()) {
-    RefPtr<css::URLExtraData> data =
-      new css::URLExtraData(env.mBaseURI, env.mSheetURI, env.mPrincipal);
+    RefPtr<URLExtraData> data =
+      new URLExtraData(env.mBaseURI, env.mSheetURI, env.mPrincipal);
     newdecl = ServoDeclarationBlock::FromCssText(aCssText, data);
   } else {
     RefPtr<css::Declaration> decl(new css::Declaration());
@@ -309,8 +309,8 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSPropertyID aPropID,
   } else {
     NS_ConvertUTF16toUTF8 value(aPropValue);
     // FIXME (bug 1343964): Figure out a better solution for sending the base uri to servo
-    RefPtr<css::URLExtraData> data =
-      new css::URLExtraData(env.mBaseURI, env.mSheetURI, env.mPrincipal);
+    RefPtr<URLExtraData> data =
+      new URLExtraData(env.mBaseURI, env.mSheetURI, env.mPrincipal);
     changed = Servo_DeclarationBlock_SetPropertyById(
       decl->AsServo()->Raw(), aPropID, &value, aIsImportant, data);
   }
@@ -358,8 +358,8 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
   } else {
     NS_ConvertUTF16toUTF8 property(aPropertyName);
     NS_ConvertUTF16toUTF8 value(aPropValue);
-    RefPtr<css::URLExtraData> data =
-      new css::URLExtraData(env.mBaseURI, env.mSheetURI, env.mPrincipal);
+    RefPtr<URLExtraData> data =
+      new URLExtraData(env.mBaseURI, env.mSheetURI, env.mPrincipal);
     changed = Servo_DeclarationBlock_SetProperty(
       decl->AsServo()->Raw(), &property, &value, aIsImportant, data);
   }
