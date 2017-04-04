@@ -69,6 +69,8 @@ class AudioRecordJni {
   explicit AudioRecordJni(AudioManager* audio_manager);
   ~AudioRecordJni();
 
+  void EnsureRecordObject();
+
   int32_t Init();
   int32_t Terminate();
 

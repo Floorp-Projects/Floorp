@@ -99,7 +99,7 @@ syntax or reading a project-specific configuration file).
 
 ``target_tasks_method``
     The method to use to determine the target task set.  This is the suffix of
-    one of the functions in ``tascluster/taskgraph/target_tasks.py``.
+    one of the functions in ``taskcluster/taskgraph/target_tasks.py``.
 
 ``optimize_target_tasks``
    If true, then target tasks are eligible for optimization.

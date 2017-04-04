@@ -33,11 +33,11 @@ Instances of `ObservedDocShell` accumulate markers that are *mostly* about a par
 
 Therefore, the following scenarios arise:
 
-- a). creating a marker on the main thread about a particular dochsell
+- a). creating a marker on the main thread about a particular docshell
 
 - b). creating a marker on the main thread without pinpointing to an affected docshell (unlikely, but allowed; in this case such a marker would have to be stored in all currently existing `ObservedDocShell` instances)
 
-- c). creating a marker off the main thread about a particular dochsell (impossible; docshells can't be referenced outside the main thread, in which case some other type of identification mechanism needs to be put in place).
+- c). creating a marker off the main thread about a particular docshell (impossible; docshells can't be referenced outside the main thread, in which case some other type of identification mechanism needs to be put in place).
 
 - d). creating a marker off the main thread without pinpointing to a particular docshell (same path as c. here, such a marker would have to be stored in all currently existing `ObservedDocShell` instances).
 
@@ -92,6 +92,6 @@ Example: `AutoTimelineMarker marker(aTargetNode->OwnerDoc()->GetDocShell(), "Par
 
 ### mozilla::AutoGlobalTimelineMarker`
 
-Similar to the previous RAII class, but doesn't expect a specific docshell, and the marker will be visible in all timeline consumers. This is useful for generic operations that don't involve a particular dochsell, or where a docshell isn't accessible. May also only be used on the main thread.
+Similar to the previous RAII class, but doesn't expect a specific docshell, and the marker will be visible in all timeline consumers. This is useful for generic operations that don't involve a particular docshell, or where a docshell isn't accessible. May also only be used on the main thread.
 
 Example: `AutoGlobalTimelineMarker marker("Some global operation");`

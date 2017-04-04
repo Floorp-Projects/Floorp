@@ -77,7 +77,6 @@ involved:
     * `gBrowser._callProgressListeners` with `onLocationChange`
     * `gBrowser._callProgressListeners` with `onSecurityChange`
     * `gBrowser._callProgressListeners` with `onUpdateCurrentBrowser`
-    * `gBrowser._recordTabAccess`
     * `gBrowser.updateTitlebar`
     * `gBrowser._callProgressListeners` with `onStateChange`
     * `gBrowser._setCloseKeyState`

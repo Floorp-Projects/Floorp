@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -39,12 +40,14 @@ void ProfileBuffer::addTag(const ProfileBufferEntry& aTag)
   }
 }
 
-void ProfileBuffer::addTagThreadId(LastSample& aLS)
+void ProfileBuffer::addTagThreadId(int aThreadId, LastSample* aLS)
 {
-  // This is the start of a sample, so make a note of its location in |aLS|.
-  aLS.mGeneration = mGeneration;
-  aLS.mPos = mWritePos;
-  addTag(ProfileBufferEntry::ThreadId(aLS.mThreadId));
+  if (aLS) {
+    // This is the start of a sample, so make a note of its location in |aLS|.
+    aLS->mGeneration = mGeneration;
+    aLS->mPos = mWritePos;
+  }
+  addTag(ProfileBufferEntry::ThreadId(aThreadId));
 }
 
 void ProfileBuffer::addStoredMarker(ProfilerMarker *aStoredMarker) {

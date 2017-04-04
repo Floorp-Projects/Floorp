@@ -89,7 +89,7 @@ struct gfxFontStyle {
     RefPtr<nsIAtom> language;
 
     // Features are composed of (1) features from style rules (2) features
-    // from feature setttings rules and (3) family-specific features.  (1) and
+    // from feature settings rules and (3) family-specific features.  (1) and
     // (3) are guaranteed to be mutually exclusive
 
     // custom opentype feature settings

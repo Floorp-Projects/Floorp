@@ -44,8 +44,7 @@ private:
   int mThreadId;
   const bool mIsMainThread;
 
-  // The thread's PseudoStack. This is an owning pointer iff mIsPendingDelete
-  // is set.
+  // The thread's PseudoStack. This is an owning pointer.
   mozilla::NotNull<PseudoStack*> mPseudoStack;
 
   UniquePlatformData mPlatformData;
@@ -56,7 +55,7 @@ private:
 
   // When a thread dies while the profiler is active we keep its ThreadInfo
   // (and its PseudoStack) around for a while, and put it in a "pending delete"
-  // state. In this state, mPseudoStack is an owning pointer.
+  // state.
   bool mPendingDelete;
 
   //
@@ -81,12 +80,6 @@ public:
     mRespInfo.Update(mIsMainThread, mThread);
   }
 
-  void StreamSamplesAndMarkers(ProfileBuffer* aBuffer,
-                               SpliceableJSONWriter& aWriter,
-                               const mozilla::TimeStamp& aStartTime,
-                               double aSinceTime,
-                               UniqueStacks& aUniqueStacks);
-
 private:
   bool mHasProfile;
 
@@ -100,11 +93,20 @@ private:
 
   ThreadResponsiveness mRespInfo;
 
-  // When sampling, this holds the generation number and offset in the
-  // ProfileBuffer of the most recent sample for this thread.
-  // mLastSample.mThreadId duplicates mThreadId in this structure, which
-  // simplifies some uses of mLastSample.
+  // When sampling, this holds the generation number and offset in
+  // ProfilerState::mBuffer of the most recent sample for this thread.
   ProfileBuffer::LastSample mLastSample;
 };
+
+void
+StreamSamplesAndMarkers(const char* aName, int aThreadId,
+                        ProfileBuffer* aBuffer,
+                        SpliceableJSONWriter& aWriter,
+                        const mozilla::TimeStamp& aStartTime,
+                        double aSinceTime,
+                        JSContext* aContext,
+                        char* aSavedStreamedSamples,
+                        char* aSavedStreamedMarkers,
+                        UniqueStacks& aUniqueStacks);
 
 #endif
