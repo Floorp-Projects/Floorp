@@ -660,6 +660,10 @@ class XPCShellTestThread(Thread):
         if self.test_object.get('subprocess') == 'true':
             self.env['PYTHON'] = sys.executable
 
+        if self.test_object.get('headless', False):
+            self.env["MOZ_HEADLESS"] = '1'
+            self.env["DISPLAY"] = '77' # Set a fake display.
+
         testTimeoutInterval = self.harness_timeout
         # Allow a test to request a multiple of the timeout if it is expected to take long
         if 'requesttimeoutfactor' in self.test_object:
