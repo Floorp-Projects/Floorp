@@ -11316,5 +11316,13 @@
     "n_buckets": 40,
     "keyed": true,
     "description": "Measures the number of milliseconds we spend waiting for sync message manager IPC messages to finish sending, keyed by message name. Note: only messages that wait for more than 500 microseconds are included in this probe."
+  },
+  "DISPLAY_ITEM_USAGE_COUNT": {
+    "alert_emails": ["mchang@mozilla.com"],
+    "bug_numbers": [1353521],
+    "expires_in_version": "70",
+    "kind": "enumerated",
+    "n_values": 99,
+    "description": "Count of which display items are being used by type id"
   }
 }
