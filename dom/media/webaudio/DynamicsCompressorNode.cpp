@@ -169,7 +169,7 @@ private:
       float mReduction;
     };
 
-    NS_DispatchToMainThread(new Command(aStream, aReduction));
+    mAbstractMainThread->Dispatch(do_AddRef(new Command(aStream, aReduction)));
   }
 
 private:

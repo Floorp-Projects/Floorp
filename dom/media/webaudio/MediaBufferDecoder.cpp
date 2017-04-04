@@ -104,11 +104,12 @@ private:
       mDecodeJob.OnFailure(aErrorCode);
     } else {
       // Take extra care to cleanup on the main thread
-      NS_DispatchToMainThread(NewRunnableMethod(this, &MediaDecodeTask::Cleanup));
+      mMainThread->Dispatch(NewRunnableMethod(this, &MediaDecodeTask::Cleanup));
+
 
       nsCOMPtr<nsIRunnable> event =
         new ReportResultTask(mDecodeJob, &WebAudioDecodeJob::OnFailure, aErrorCode);
-      NS_DispatchToMainThread(event);
+      mMainThread->Dispatch(event.forget());
     }
   }
 
@@ -142,6 +143,7 @@ private:
   RefPtr<MediaDecoderReader> mDecoderReader;
   MediaInfo mMediaInfo;
   MediaQueue<AudioData> mAudioQueue;
+  RefPtr<AbstractThread> mMainThread;
   bool mFirstFrameDecoded;
 };
 
@@ -201,9 +203,9 @@ MediaDecodeTask::CreateReader()
                             mLength, principal, mContainerType);
 
   MOZ_ASSERT(!mBufferDecoder);
-  RefPtr<AbstractThread> mainThread =
+  mMainThread =
     mDecodeJob.mContext->GetOwnerGlobal()->AbstractMainThreadFor(TaskCategory::Other);
-  mBufferDecoder = new BufferDecoder(resource, mainThread,
+  mBufferDecoder = new BufferDecoder(resource, mMainThread,
                                      new BufferDecoderGMPCrashHelper(parent));
 
   // If you change this list to add support for new decoders, please consider
@@ -441,7 +443,7 @@ MediaDecodeTask::FinishDecode()
   }
 
   mPhase = PhaseEnum::AllocateBuffer;
-  NS_DispatchToMainThread(this);
+  mMainThread->Dispatch(do_AddRef(this));
 }
 
 void
@@ -499,7 +501,7 @@ AsyncDecodeWebAudio(const char* aContentType, uint8_t* aBuffer,
                            &WebAudioDecodeJob::OnFailure,
                            WebAudioDecodeJob::UnknownContent);
     JS_free(nullptr, aBuffer);
-    NS_DispatchToMainThread(event);
+    aDecodeJob.mContext->Dispatch(event.forget());
     return;
   }
 
@@ -510,7 +512,7 @@ AsyncDecodeWebAudio(const char* aContentType, uint8_t* aBuffer,
       new ReportResultTask(aDecodeJob,
                            &WebAudioDecodeJob::OnFailure,
                            WebAudioDecodeJob::UnknownError);
-    NS_DispatchToMainThread(event);
+    aDecodeJob.mContext->Dispatch(event.forget());
   } else {
     // If we did this without a temporary:
     //   task->Reader()->OwnerThread()->Dispatch(task.forget())
