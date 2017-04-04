@@ -15,13 +15,17 @@
 #include <stdlib.h>
 #include <CoreFoundation/CoreFoundation.h>
 
+#include <vector>
+
 #include "mozilla/Assertions.h"
 
 // XXX There are currently problems with the /usr/include/sandbox.h file on
-// some/all of the Macs in Mozilla's build system.  For the time being (until
-// this problem is resolved), we refer directly to what we need from it,
-// rather than including it here.
+// some/all of the Macs in Mozilla's build system. Further,
+// sandbox_init_with_parameters is not included in the header.  For the time
+// being (until this problem is resolved), we refer directly to what we need
+// from it, rather than including it here.
 extern "C" int sandbox_init(const char *profile, uint64_t flags, char **errorbuf);
+extern "C" int sandbox_init_with_parameters(const char *profile, uint64_t flags, const char *const parameters[], char **errorbuf);
 extern "C" void sandbox_free_error(char *errorbuf);
 
 #define MAC_OS_X_VERSION_10_0_HEX  0x00001000
@@ -122,7 +126,16 @@ namespace mozilla {
 
 static const char pluginSandboxRules[] =
   "(version 1)\n"
-  "(deny default %s)\n"
+
+  "(define should-log (param \"SHOULD_LOG\"))\n"
+  "(define plugin-binary-path (param \"PLUGIN_BINARY_PATH\"))\n"
+  "(define app-path (param \"APP_PATH\"))\n"
+  "(define app-binary-path (param \"APP_BINARY_PATH\"))\n"
+
+  "(if (string=? should-log \"TRUE\")\n"
+  "    (deny default)\n"
+  "    (deny default (with no-log)))\n"
+
   "(allow signal (target self))\n"
   "(allow sysctl-read)\n"
   "(allow iokit-open (iokit-user-client-class \"IOHIDParamUserClient\"))\n"
@@ -140,9 +153,9 @@ static const char pluginSandboxRules[] =
   "    (regex #\"^/System/Library/CoreServices/CoreTypes.bundle/*\")\n"
   "    (regex #\"^/System/Library/PrivateFrameworks/*\")\n"
   "    (regex #\"^/usr/lib/libstdc\\+\\+\\..*dylib$\")\n"
-  "    (literal \"%s\")\n"
-  "    (literal \"%s\")\n"
-  "    (literal \"%s\"))\n";
+  "    (literal plugin-binary-path)\n"
+  "    (literal app-path)\n"
+  "    (literal app-binary-path))\n";
 
 static const char widevinePluginSandboxRulesAddend[] =
   "(allow mach-lookup (global-name \"com.apple.windowserver.active\"))\n";
@@ -150,16 +163,18 @@ static const char widevinePluginSandboxRulesAddend[] =
 static const char contentSandboxRules[] =
   "(version 1)\n"
   "\n"
-  "(define sandbox-level %d)\n"
-  "(define macosMinorVersion %d)\n"
-  "(define appPath \"%s\")\n"
-  "(define appBinaryPath \"%s\")\n"
-  "(define appDir \"%s\")\n"
-  "(define appTempDir \"%s\")\n"
-  "(define hasProfileDir %d)\n"
-  "(define profileDir \"%s\")\n"
-  "(define home-path \"%s\")\n"
-  "(define hasFilePrivileges %d)\n"
+  "(define should-log (param \"SHOULD_LOG\"))\n"
+  "(define sandbox-level-1 (param \"SANDBOX_LEVEL_1\"))\n"
+  "(define sandbox-level-2 (param \"SANDBOX_LEVEL_2\"))\n"
+  "(define macosMinorVersion-9 (param \"MAC_OS_MINOR_9\"))\n"
+  "(define appPath (param \"APP_PATH\"))\n"
+  "(define appBinaryPath (param \"APP_BINARY_PATH\"))\n"
+  "(define appDir (param \"APP_DIR\"))\n"
+  "(define appTempDir (param \"APP_TEMP_DIR\"))\n"
+  "(define hasProfileDir (param \"HAS_SANDBOXED_PROFILE\"))\n"
+  "(define profileDir (param \"PROFILE_DIR\"))\n"
+  "(define home-path (param \"HOME_PATH\"))\n"
+  "(define hasFilePrivileges (param \"HAS_FILE_PRIVILEGES\"))\n"
   "\n"
   "; Allow read access to standard system paths.\n"
   "(allow file-read*\n"
@@ -196,7 +211,9 @@ static const char contentSandboxRules[] =
   "(allow sysctl-read)\n"
   "\n"
   "(begin\n"
-  "  (deny default %s)\n"
+  "  (if (string=? should-log \"TRUE\")\n"
+  "    (deny default)\n"
+  "    (deny default (with no-log)))\n"
   "  (debug deny)\n"
   "\n"
   "  (define resolving-literal literal)\n"
@@ -273,7 +290,7 @@ static const char contentSandboxRules[] =
   "      (global-name \"com.apple.DesktopServicesHelper\"))\n"
   "\n"
   "; bug 1312273\n"
-  "  (if (= macosMinorVersion 9)\n"
+  "  (if (string=? macosMinorVersion-9 \"TRUE\")\n"
   "     (allow mach-lookup (global-name \"com.apple.xpcd\")))\n"
   "\n"
   "  (allow iokit-open\n"
@@ -348,18 +365,18 @@ static const char contentSandboxRules[] =
   "; global file-read* permission should be removed from each level.\n"
   "\n"
   "; level 1: global read access permitted, no global write access\n"
-  "  (if (= sandbox-level 1) (allow file-read*))\n"
+  "  (if (string=? sandbox-level-1 \"TRUE\") (allow file-read*))\n"
   "\n"
   "; level 2: global read access permitted, no global write access,\n"
   ";          no read/write access to ~/Library,\n"
   ";          no read/write access to $PROFILE,\n"
   ";          read access permitted to $PROFILE/{extensions,weave,chrome}\n"
-  "  (if (= sandbox-level 2)\n"
-  "    (if (not (zero? hasFilePrivileges))\n"
+  "  (if (string=? sandbox-level-2 \"TRUE\")\n"
+  "    (if (string=? hasFilePrivileges \"TRUE\")\n"
   "      ; This process has blanket file read privileges\n"
   "      (allow file-read*)\n"
   "      ; This process does not have blanket file read privileges\n"
-  "      (if (not (zero? hasProfileDir))\n"
+  "      (if (string=? hasProfileDir \"TRUE\")\n"
   "        ; we have a profile dir\n"
   "        (begin\n"
   "          (allow file-read* (require-all\n"
@@ -412,41 +429,58 @@ static const char contentSandboxRules[] =
 #endif
   ")\n";
 
-static const char* NO_LOGGING_CMD = "(with no-log)";
-
 bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
 {
+  std::vector<const char *> params;
   char *profile = NULL;
+  bool profile_needs_free = false;
   if (aInfo.type == MacSandboxType_Plugin) {
-    asprintf(&profile, pluginSandboxRules,
-             aInfo.shouldLog ? "" : NO_LOGGING_CMD,
-             aInfo.pluginInfo.pluginBinaryPath.c_str(),
-             aInfo.appPath.c_str(),
-             aInfo.appBinaryPath.c_str());
+    profile = const_cast<char *>(pluginSandboxRules);
+    params.push_back("SHOULD_LOG");
+    params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
+    params.push_back("PLUGIN_BINARY_PATH");
+    params.push_back(aInfo.pluginInfo.pluginBinaryPath.c_str());
+    params.push_back("APP_PATH");
+    params.push_back(aInfo.appPath.c_str());
+    params.push_back("APP_BINARY_PATH");
+    params.push_back(aInfo.appBinaryPath.c_str());
 
-    if (profile &&
-      aInfo.pluginInfo.type == MacSandboxPluginType_GMPlugin_EME_Widevine) {
+    if (aInfo.pluginInfo.type == MacSandboxPluginType_GMPlugin_EME_Widevine) {
       char *widevineProfile = NULL;
       asprintf(&widevineProfile, "%s%s", profile,
         widevinePluginSandboxRulesAddend);
-      free(profile);
       profile = widevineProfile;
+      profile_needs_free = true;
     }
   }
   else if (aInfo.type == MacSandboxType_Content) {
     MOZ_ASSERT(aInfo.level >= 1);
     if (aInfo.level >= 1) {
-      asprintf(&profile, contentSandboxRules, aInfo.level,
-               OSXVersion::OSXVersionMinor(),
-               aInfo.appPath.c_str(),
-               aInfo.appBinaryPath.c_str(),
-               aInfo.appDir.c_str(),
-               aInfo.appTempDir.c_str(),
-               aInfo.hasSandboxedProfile ? 1 : 0,
-               aInfo.profileDir.c_str(),
-               getenv("HOME"),
-               aInfo.hasFilePrivileges ? 1 : 0,
-               aInfo.shouldLog ? "" : NO_LOGGING_CMD);
+      profile = const_cast<char *>(contentSandboxRules);
+      params.push_back("SHOULD_LOG");
+      params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
+      params.push_back("SANDBOX_LEVEL_1");
+      params.push_back(aInfo.level == 1 ? "TRUE" : "FALSE");
+      params.push_back("SANDBOX_LEVEL_2");
+      params.push_back(aInfo.level == 2 ? "TRUE" : "FALSE");
+      params.push_back("MAC_OS_MINOR_9");
+      params.push_back(OSXVersion::OSXVersionMinor() == 9 ? "TRUE" : "FALSE");
+      params.push_back("APP_PATH");
+      params.push_back(aInfo.appPath.c_str());
+      params.push_back("APP_BINARY_PATH");
+      params.push_back(aInfo.appBinaryPath.c_str());
+      params.push_back("APP_DIR");
+      params.push_back(aInfo.appDir.c_str());
+      params.push_back("APP_TEMP_DIR");
+      params.push_back(aInfo.appTempDir.c_str());
+      params.push_back("PROFILE_DIR");
+      params.push_back(aInfo.profileDir.c_str());
+      params.push_back("HOME_PATH");
+      params.push_back(getenv("HOME"));
+      params.push_back("HAS_SANDBOXED_PROFILE");
+      params.push_back(aInfo.hasSandboxedProfile ? "TRUE" : "FALSE");
+      params.push_back("HAS_FILE_PRIVILEGES");
+      params.push_back(aInfo.hasFilePrivileges ? "TRUE" : "FALSE");
     } else {
       fprintf(stderr,
         "Content sandbox disabled due to sandbox level setting\n");
@@ -468,8 +502,25 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
     return false;
   }
 
+// In order to avoid relying on any other Mozilla modules (as described at the
+// top of this file), we use our own #define instead of the existing MOZ_LOG
+// infrastructure. This can be used by developers to debug the macOS sandbox
+// policy.
+#define MAC_SANDBOX_PRINT_POLICY 0
+#if MAC_SANDBOX_PRINT_POLICY
+  printf("Sandbox params:\n");
+  for (size_t i = 0; i < params.size() / 2; i++) {
+    printf("  %s = %s\n", params[i * 2], params[(i * 2) + 1]);
+  }
+  printf("Sandbox profile:\n%s\n", profile);
+#endif
+
+  // The parameters array is null terminated.
+  params.push_back(nullptr);
+
   char *errorbuf = NULL;
-  int rv = sandbox_init(profile, 0, &errorbuf);
+  int rv = sandbox_init_with_parameters(profile, 0, params.data(),
+                                        &errorbuf);
   if (rv) {
     if (errorbuf) {
       char *msg = NULL;
@@ -482,7 +533,9 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
       sandbox_free_error(errorbuf);
     }
   }
-  free(profile);
+  if (profile_needs_free) {
+    free(profile);
+  }
   if (rv) {
     return false;
   }
