@@ -936,12 +936,6 @@ NS_IMPL_ISUPPORTS(VsyncChildCreateCallback, nsIIPCBackgroundChildCreateCallback)
 static RefreshDriverTimer* sRegularRateTimer;
 static InactiveRefreshDriverTimer* sThrottledRateTimer;
 
-#ifdef XP_WIN
-static int32_t sHighPrecisionTimerRequests = 0;
-// a bare pointer to avoid introducing a static constructor
-static nsITimer *sDisableHighPrecisionTimersTimer = nullptr;
-#endif
-
 static void
 CreateContentVsyncRefreshTimer(void*)
 {
@@ -1021,16 +1015,6 @@ nsRefreshDriver::Shutdown()
 
   sRegularRateTimer = nullptr;
   sThrottledRateTimer = nullptr;
-
-#ifdef XP_WIN
-  if (sDisableHighPrecisionTimersTimer) {
-    sDisableHighPrecisionTimersTimer->Cancel();
-    NS_RELEASE(sDisableHighPrecisionTimersTimer);
-    timeEndPeriod(1);
-  } else if (sHighPrecisionTimerRequests) {
-    timeEndPeriod(1);
-  }
-#endif
 }
 
 /* static */ int32_t
@@ -1134,7 +1118,6 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
     mNeedToRecomputeVisibility(false),
     mTestControllingRefreshes(false),
     mViewManagerFlushIsPending(false),
-    mRequestedHighPrecision(false),
     mInRefresh(false),
     mWaitingForTransaction(false),
     mSkippedPaints(false),
@@ -1374,89 +1357,6 @@ nsRefreshDriver::StopTimer()
 
   mActiveTimer->RemoveRefreshDriver(this);
   mActiveTimer = nullptr;
-
-  if (mRequestedHighPrecision) {
-    SetHighPrecisionTimersEnabled(false);
-  }
-}
-
-#ifdef XP_WIN
-static void
-DisableHighPrecisionTimersCallback(nsITimer *aTimer, void *aClosure)
-{
-  timeEndPeriod(1);
-  NS_RELEASE(sDisableHighPrecisionTimersTimer);
-}
-#endif
-
-void
-nsRefreshDriver::ConfigureHighPrecision()
-{
-  bool haveUnthrottledFrameRequestCallbacks =
-    mFrameRequestCallbackDocs.Length() > 0;
-
-  // if the only change that's needed is that we need high precision,
-  // then just set that
-  if (!mThrottled && !mRequestedHighPrecision &&
-      haveUnthrottledFrameRequestCallbacks) {
-    SetHighPrecisionTimersEnabled(true);
-  } else if (mRequestedHighPrecision && !haveUnthrottledFrameRequestCallbacks) {
-    SetHighPrecisionTimersEnabled(false);
-  }
-}
-
-void
-nsRefreshDriver::SetHighPrecisionTimersEnabled(bool aEnable)
-{
-  LOG("[%p] SetHighPrecisionTimersEnabled (%s)", this, aEnable ? "true" : "false");
-
-  if (aEnable) {
-    NS_ASSERTION(!mRequestedHighPrecision, "SetHighPrecisionTimersEnabled(true) called when already requested!");
-#ifdef XP_WIN
-    if (++sHighPrecisionTimerRequests == 1) {
-      // If we had a timer scheduled to disable it, that means that it's already
-      // enabled; just cancel the timer.  Otherwise, really enable it.
-      if (sDisableHighPrecisionTimersTimer) {
-        sDisableHighPrecisionTimersTimer->Cancel();
-        NS_RELEASE(sDisableHighPrecisionTimersTimer);
-      } else {
-        timeBeginPeriod(1);
-      }
-    }
-#endif
-    mRequestedHighPrecision = true;
-  } else {
-    NS_ASSERTION(mRequestedHighPrecision, "SetHighPrecisionTimersEnabled(false) called when not requested!");
-#ifdef XP_WIN
-    if (--sHighPrecisionTimerRequests == 0) {
-      // Don't jerk us around between high precision and low precision
-      // timers; instead, only allow leaving high precision timers
-      // after 90 seconds.  This is arbitrary, but hopefully good
-      // enough.
-      NS_ASSERTION(!sDisableHighPrecisionTimersTimer, "We shouldn't have an outstanding disable-high-precision timer !");
-
-      nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
-      if (timer) {
-        if (nsPresContext* pc = GetPresContext()) {
-          timer->SetTarget(
-              pc->Document()->EventTargetFor(TaskCategory::Other));
-        }
-        timer.forget(&sDisableHighPrecisionTimersTimer);
-        sDisableHighPrecisionTimersTimer->
-          InitWithNamedFuncCallback(DisableHighPrecisionTimersCallback,
-                                    nullptr,
-                                    90 * 1000,
-                                    nsITimer::TYPE_ONE_SHOT,
-                                    "DisableHighPrecisionTimersCallback");
-      } else {
-        // might happen if we're shutting down XPCOM; just drop the time period down
-        // immediately
-        timeEndPeriod(1);
-      }
-    }
-#endif
-    mRequestedHighPrecision = false;
-  }
 }
 
 uint32_t
@@ -2058,8 +1958,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     observer->DidRefresh();
   }
 
-  ConfigureHighPrecision();
-
   NS_ASSERTION(mInRefresh, "Still in refresh");
 
   if (mPresContext->IsRoot() && XRE_IsContentProcess() && gfxPrefs::AlwaysPaint()) {
@@ -2335,7 +2233,6 @@ nsRefreshDriver::ScheduleFrameRequestCallbacks(nsIDocument* aDocument)
   }
 
   // make sure that the timer is running
-  ConfigureHighPrecision();
   EnsureTimerStarted();
 }
 
@@ -2344,7 +2241,6 @@ nsRefreshDriver::RevokeFrameRequestCallbacks(nsIDocument* aDocument)
 {
   mFrameRequestCallbackDocs.RemoveElement(aDocument);
   mThrottledFrameRequestCallbackDocs.RemoveElement(aDocument);
-  ConfigureHighPrecision();
   // No need to worry about restarting our timer in slack mode if it's already
   // running; that will happen automatically when it fires.
 }
