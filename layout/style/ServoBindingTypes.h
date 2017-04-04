@@ -20,11 +20,9 @@ struct RawServoStyleSet;
 #undef SERVO_ARC_TYPE
 
 namespace mozilla {
-  class ServoElementSnapshot;
-  struct StyleAnimation;
-namespace css {
+class ServoElementSnapshot;
+struct StyleAnimation;
 struct URLExtraData;
-} // namespace css
 namespace dom {
 class Element;
 class StyleChildrenIterator;
@@ -50,7 +48,7 @@ typedef nsINode RawGeckoNode;
 typedef mozilla::dom::Element RawGeckoElement;
 typedef nsIDocument RawGeckoDocument;
 typedef nsPresContext RawGeckoPresContext;
-typedef mozilla::css::URLExtraData RawGeckoURLExtraData;
+typedef mozilla::URLExtraData RawGeckoURLExtraData;
 typedef nsTArray<mozilla::Keyframe> RawGeckoKeyframeList;
 typedef nsTArray<mozilla::ComputedKeyframeValues> RawGeckoComputedKeyframeValuesList;
 typedef nsTArray<mozilla::PropertyStyleAnimationValuePair> RawGeckoAnimationValueList;

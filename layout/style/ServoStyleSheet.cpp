@@ -87,8 +87,8 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                             nsIPrincipal* aSheetPrincipal,
                             uint32_t aLineNumber)
 {
-  RefPtr<css::URLExtraData> extraData =
-    new css::URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal);
+  RefPtr<URLExtraData> extraData =
+    new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal);
 
   NS_ConvertUTF16toUTF8 input(aInput);
   if (!Inner()->mSheet) {
