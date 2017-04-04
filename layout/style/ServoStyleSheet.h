@@ -12,6 +12,7 @@
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInfo.h"
+#include "mozilla/URLExtraData.h"
 #include "nsStringFwd.h"
 
 namespace mozilla {
@@ -33,6 +34,13 @@ struct ServoStyleSheetInner : public StyleSheetInfo
                        const dom::SRIMetadata& aIntegrity);
 
   RefPtr<const RawServoStyleSheet> mSheet;
+  // XXX StyleSheetInfo already has mSheetURI, mBaseURI, and mPrincipal.
+  // Can we somehow replace them with URLExtraData directly? The issue
+  // is currently URLExtraData is immutable, but URIs in StyleSheetInfo
+  // seems to be mutable, so we probably cannot set them altogether.
+  // Also, this is mostly a duplicate reference of the same url data
+  // inside RawServoStyleSheet. We may want to just use that instead.
+  RefPtr<URLExtraData> mURLData;
 };
 
 
