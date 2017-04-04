@@ -9,8 +9,25 @@
 #include "mozilla/URLExtraData.h"
 
 #include "nsProxyRelease.h"
+#include "NullPrincipalURI.h"
 
 namespace mozilla {
+
+StaticRefPtr<URLExtraData> URLExtraData::sDummy;
+
+/* static */ void
+URLExtraData::InitDummy()
+{
+  sDummy = new URLExtraData(NullPrincipalURI::Create(),
+                            nullptr,
+                            NullPrincipal::Create());
+}
+
+/* static */ void
+URLExtraData::ReleaseDummy()
+{
+  sDummy = nullptr;
+}
 
 URLExtraData::~URLExtraData()
 {

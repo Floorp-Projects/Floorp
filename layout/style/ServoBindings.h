@@ -119,10 +119,6 @@ void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
                           const uint8_t* media_bytes,
                           uint32_t media_length);
 
-// URLExtraData
-// Create a new addrefed URLExtraData.
-RawGeckoURLExtraData* Gecko_URLExtraData_CreateDummy();
-
 // By default, Servo walks the DOM by traversing the siblings of the DOM-view
 // first child. This generally works, but misses anonymous children, which we
 // want to traverse during styling. To support these cases, we create an

@@ -10,6 +10,7 @@
 #define mozilla_URLExtraData_h
 
 #include "mozilla/Move.h"
+#include "mozilla/StaticPtr.h"
 
 #include "nsCOMPtr.h"
 #include "nsIPrincipal.h"
@@ -40,12 +41,21 @@ struct URLExtraData
   nsIURI* GetReferrer() const { return mReferrer; }
   nsIPrincipal* GetPrincipal() const { return mPrincipal; }
 
+  static URLExtraData* Dummy() {
+    MOZ_ASSERT(sDummy);
+    return sDummy;
+  }
+  static void InitDummy();
+  static void ReleaseDummy();
+
 private:
   ~URLExtraData();
 
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsIURI> mReferrer;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+
+  static StaticRefPtr<URLExtraData> sDummy;
 };
 
 } // namespace mozilla
