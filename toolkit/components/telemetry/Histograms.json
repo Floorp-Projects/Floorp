@@ -822,7 +822,7 @@
   },
   "FAMILY_SAFETY": {
     "alert_emails": ["seceng@mozilla.org"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 16,
     "bug_numbers": [1239166],
@@ -4427,28 +4427,28 @@
   "CSP_DOCUMENTS_COUNT": {
     "alert_emails": ["seceng@mozilla.com"],
     "bug_numbers": [1252829],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "count",
     "description": "Number of unique pages that contain a CSP"
   },
   "CSP_UNSAFE_INLINE_DOCUMENTS_COUNT": {
     "alert_emails": ["seceng@mozilla.com"],
     "bug_numbers": [1252829],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "count",
     "description": "Number of unique pages that contain an unsafe-inline CSP directive"
   },
   "CSP_UNSAFE_EVAL_DOCUMENTS_COUNT": {
     "alert_emails": ["seceng@mozilla.com"],
     "bug_numbers": [1252829],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "count",
     "description": "Number of unique pages that contain an unsafe-eval CSP directive"
   },
   "CSP_REFERRER_DIRECTIVE": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [1303685],
-    "expires_in_version": "56",
+    "expires_in_version": "60",
     "kind": "boolean",
     "description": "Whether a document with a CSP policy (report-only or enforcing) contains a referrer directive ('true') or not ('false')."
   },
@@ -7778,7 +7778,7 @@
   },
   "WEBRTC_GET_USER_MEDIA_SECURE_ORIGIN": {
     "alert_emails": ["seceng@mozilla.org"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 15,
     "description": "Origins for getUserMedia calls (0=other, 1=HTTPS, 2=file, 3=app, 4=localhost, 5=loop, 6=privileged)",
@@ -8772,14 +8772,14 @@
   "MIXED_CONTENT_OBJECT_SUBREQUEST": {
     "alert_emails": ["seceng@mozilla.org"],
     "bug_numbers": [1244116],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 10,
     "description": "How often objects load insecure content on secure pages (counting pages, not objects). 0=pages with no mixed object subrequests, 1=pages with mixed object subrequests"
   },
   "COOKIE_SCHEME_SECURITY": {
     "alert_emails": ["seceng@mozilla.org"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 10,
     "releaseChannelCollection": "opt-out",
@@ -8788,7 +8788,7 @@
   "COOKIE_LEAVE_SECURE_ALONE": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [976073, 1325909],
-    "expires_in_version": "57",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 10,
     "releaseChannelCollection": "opt-out",
