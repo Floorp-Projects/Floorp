@@ -21,7 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338427
 /** Test for Bug 338427 **/
 function init() {
     var onSpellCheck =
-      SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm")
+      SpecialPowers.Cu.import(
+        "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
                    .onSpellCheck;
     var textarea = document.getElementById("editor");
     var editor = SpecialPowers.wrap(textarea).editor;

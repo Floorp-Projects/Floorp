@@ -59,7 +59,7 @@ repository:
     [include_toolkit]
     type = hg
     mozilla = mozilla-central
-    repo = http://hg.mozilla.org/
+    repo = https://hg.mozilla.org/
     l10n.ini = toolkit/locales/l10n.ini
 
 This tells the l10n pieces where to find the repository, and where inside
@@ -188,4 +188,4 @@ repositories are on https://hg.mozilla.org/l10n-central/.
 
 You can search inside our localized files on
 `Transvision <https://transvision.mozfr.org/>`_ and
-http://dxr.mozilla.org/l10n-mozilla-aurora/.
+https://dxr.mozilla.org/l10n-mozilla-aurora/source/.

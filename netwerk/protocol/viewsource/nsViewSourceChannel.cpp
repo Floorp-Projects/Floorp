@@ -1002,14 +1002,14 @@ nsViewSourceChannel::RedirectTo(nsIURI *uri)
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::GetRequestContextID(nsID *_retval)
+nsViewSourceChannel::GetRequestContextID(uint64_t *_retval)
 {
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :
         mHttpChannel->GetRequestContextID(_retval);
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::SetRequestContextID(const nsID rcid)
+nsViewSourceChannel::SetRequestContextID(uint64_t rcid)
 {
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :
         mHttpChannel->SetRequestContextID(rcid);
