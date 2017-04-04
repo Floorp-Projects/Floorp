@@ -94,7 +94,15 @@ void
 ServoStyleRuleDeclaration::GetCSSParsingEnvironment(
   CSSParsingEnvironment& aCSSParseEnv)
 {
+  MOZ_ASSERT_UNREACHABLE("GetCSSParsingEnvironment "
+                         "shouldn't be calling for a Servo rule");
   GetCSSParsingEnvironmentForRule(Rule(), aCSSParseEnv);
+}
+
+URLExtraData*
+ServoStyleRuleDeclaration::GetURLData() const
+{
+  return GetURLDataForRule(Rule());
 }
 
 // -- ServoStyleRule --------------------------------------------------

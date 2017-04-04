@@ -117,9 +117,17 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
   }
 
   CSSParsingEnvironment env;
-  GetCSSParsingEnvironment(env);
-  if (!env.mPrincipal) {
-    return NS_ERROR_NOT_AVAILABLE;
+  URLExtraData* urlData = nullptr;
+  if (olddecl->IsGecko()) {
+    GetCSSParsingEnvironment(env);
+    if (!env.mPrincipal) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  } else {
+    urlData = GetURLData();
+    if (!urlData) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
   }
 
   // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to
@@ -131,9 +139,7 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
 
   RefPtr<DeclarationBlock> newdecl;
   if (olddecl->IsServo()) {
-    RefPtr<URLExtraData> data =
-      new URLExtraData(env.mBaseURI, env.mSheetURI, env.mPrincipal);
-    newdecl = ServoDeclarationBlock::FromCssText(aCssText, data);
+    newdecl = ServoDeclarationBlock::FromCssText(aCssText, urlData);
   } else {
     RefPtr<css::Declaration> decl(new css::Declaration());
     decl->InitializeEmpty();
@@ -276,6 +282,15 @@ nsDOMCSSDeclaration::GetCSSParsingEnvironmentForRule(css::Rule* aRule,
   aCSSParseEnv.mCSSLoader = document ? document->CSSLoader() : nullptr;
 }
 
+/* static */ URLExtraData*
+nsDOMCSSDeclaration::GetURLDataForRule(const css::Rule* aRule)
+{
+  if (StyleSheet* sheet = aRule ? aRule->GetStyleSheet() : nullptr) {
+    return sheet->AsServo()->URLData();
+  }
+  return nullptr;
+}
+
 template<typename GeckoFunc, typename ServoFunc>
 nsresult
 nsDOMCSSDeclaration::ModifyDeclaration(GeckoFunc aGeckoFunc,
@@ -287,9 +302,17 @@ nsDOMCSSDeclaration::ModifyDeclaration(GeckoFunc aGeckoFunc,
   }
 
   CSSParsingEnvironment env;
-  GetCSSParsingEnvironment(env);
-  if (!env.mPrincipal) {
-    return NS_ERROR_NOT_AVAILABLE;
+  URLExtraData* urlData = nullptr;
+  if (olddecl->IsGecko()) {
+    GetCSSParsingEnvironment(env);
+    if (!env.mPrincipal) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  } else {
+    urlData = GetURLData();
+    if (!urlData) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
   }
 
   // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to
