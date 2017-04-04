@@ -2037,6 +2037,13 @@
               let getter;
               let setter;
               switch (name) {
+                case "permitUnload":
+                  getter = () => {
+                    return function() {
+                      return { permitUnload: true, timedOut: false };
+                    };
+                  };
+                  break;
                 default:
                   getter = () => {
                     this._insertBrowser(aTab);
@@ -5246,15 +5253,20 @@
                                                        browser.getAttribute("usercontextid") || 0);
               delete browser.registeredOpenURI;
             }
+
             let filter = this._tabFilters.get(tab);
-            let listener = this._tabListeners.get(tab);
+            if (filter) {
+              browser.webProgress.removeProgressListener(filter);
 
-            browser.webProgress.removeProgressListener(filter);
-            filter.removeProgressListener(listener);
-            listener.destroy();
+              let listener = this._tabListeners.get(tab);
+              if (listener) {
+                filter.removeProgressListener(listener);
+                listener.destroy();
+              }
 
-            this._tabFilters.delete(tab);
-            this._tabListeners.delete(tab);
+              this._tabFilters.delete(tab);
+              this._tabListeners.delete(tab);
+            }
           }
           const nsIEventListenerService =
             Components.interfaces.nsIEventListenerService;

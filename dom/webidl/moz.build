@@ -900,7 +900,6 @@ WEBIDL_FILES = [
     'SVGViewElement.webidl',
     'SVGZoomAndPan.webidl',
     'SVGZoomAndPanValues.webidl',
-    'SVGZoomEvent.webidl',
     'TCPServerSocket.webidl',
     'TCPServerSocketEvent.webidl',
     'TCPSocket.webidl',

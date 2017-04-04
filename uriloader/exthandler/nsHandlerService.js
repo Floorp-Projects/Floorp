@@ -29,7 +29,6 @@ const NC_PROTOCOL_SCHEMES   = NC_NS + "Protocol-Schemes";
 
 // nsIHandlerInfo::type
 const NC_VALUE              = NC_NS + "value";
-const NC_DESCRIPTION        = NC_NS + "description";
 
 // additional extensions
 const NC_FILE_EXTENSIONS    = NC_NS + "fileExtensions";
@@ -322,10 +321,6 @@ HandlerService.prototype = {
     if (!this._hasValue(typeID, NC_VALUE))
       throw new Components.Exception("handlerSvc fillHandlerInfo: don't know this type",
                                      Cr.NS_ERROR_NOT_AVAILABLE);
-
-    // Retrieve the human-readable description of the type.
-    if (this._hasValue(typeID, NC_DESCRIPTION))
-      aHandlerInfo.description = this._getValue(typeID, NC_DESCRIPTION);
 
     // Note: for historical reasons, we don't actually check that the type
     // record has a "handlerProp" property referencing the info record.  It's
@@ -933,7 +928,8 @@ HandlerService.prototype = {
   __ds: null,
   get _ds() {
     if (!this.__ds) {
-      var file = this._dirSvc.get("UMimTyp", Ci.nsIFile);
+      var file = this._dirSvc.get("ProfD", Ci.nsIFile);
+      file.append("mimeTypes.rdf");
       // FIXME: make this a memoizing getter if we use it anywhere else.
       var ioService = Cc["@mozilla.org/network/io-service;1"].
                       getService(Ci.nsIIOService);

@@ -25,6 +25,11 @@ UNIFIED_SOURCES += [
     'nsEditorSpellCheck.cpp',
 ]
 
+# Needed because we include HTMLEditor.h which indirectly includes nsDocument.h
+LOCAL_INCLUDES += [
+    '/dom/base',
+]
+
 FINAL_LIBRARY = 'xul'
 RESOURCE_FILES += [
     'res/EditorOverride.css',

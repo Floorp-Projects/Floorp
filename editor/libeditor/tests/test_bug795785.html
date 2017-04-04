@@ -51,12 +51,12 @@ function doKeyEventTest(aElement, aElementDescription, aCallback)
   hitEventLoop(function () {
     is(aElement.scrollTop, 0,
        aElementDescription + "'s scrollTop isn't 0");
-    synthesizeKey("VK_RETURN", { });
-    synthesizeKey("VK_RETURN", { });
-    synthesizeKey("VK_RETURN", { });
-    synthesizeKey("VK_RETURN", { });
-    synthesizeKey("VK_RETURN", { });
-    synthesizeKey("VK_RETURN", { });
+    synthesizeKey("VK_RETURN", { shiftKey: true });
+    synthesizeKey("VK_RETURN", { shiftKey: true });
+    synthesizeKey("VK_RETURN", { shiftKey: true });
+    synthesizeKey("VK_RETURN", { shiftKey: true });
+    synthesizeKey("VK_RETURN", { shiftKey: true });
+    synthesizeKey("VK_RETURN", { shiftKey: true });
     hitEventLoop(function () {
       isnot(aElement.scrollTop, 0,
             aElementDescription + " was not scrolled by inserting line breaks");
