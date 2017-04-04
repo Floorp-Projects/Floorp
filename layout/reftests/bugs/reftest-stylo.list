@@ -441,8 +441,8 @@ fails == 331809-1.html 331809-1.html
 fails == 332557-1.html 332557-1.html
 == 332975-1.html 332975-1.html
 == 333970-1.html 333970-1.html
-fails == 334829-1a.xhtml 334829-1a.xhtml
-fails == 334829-1b.xhtml 334829-1b.xhtml
+== 334829-1a.xhtml 334829-1a.xhtml
+== 334829-1b.xhtml 334829-1b.xhtml
 fails == 335628-1.html 335628-1.html
 == 335628-2.xul 335628-2.xul
 == 336096-1.xul 336096-1.xul
@@ -888,7 +888,7 @@ fails == 403519-1.html 403519-1.html
 == 403656-5.html 403656-5.html
 == 403657-1.html 403657-1.html
 == 403733-1.html 403733-1.html
-fails == 403962-1.xhtml 403962-1.xhtml # Bug 1290276
+== 403962-1.xhtml 403962-1.xhtml
 == 404030-1.html 404030-1.html
 == 404030-1-notref.html 404030-1-notref.html
 == 404030-1-notref2.html 404030-1-notref2.html
