@@ -670,6 +670,10 @@ pref("browser.preferences.instantApply", false);
 #else
 pref("browser.preferences.instantApply", true);
 #endif
+
+// Toggling Search bar on and off in about:preferences
+pref("browser.preferences.search", false);
+
 // Once the Storage Management is completed.
 // (The Storage Management-related prefs are browser.storageManager.* )
 // The Offline(Appcache) Group section in about:preferences will be hidden.
