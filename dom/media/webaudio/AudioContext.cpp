@@ -10,6 +10,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/OwningNonNull.h"
+#include "mozilla/RefPtr.h"
 
 #include "mozilla/dom/AnalyserNode.h"
 #include "mozilla/dom/AnalyserNodeBinding.h"
@@ -762,6 +763,24 @@ private:
   RefPtr<AudioContext> mAudioContext;
 };
 
+
+void
+AudioContext::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIGlobalObject> parentObject =
+    do_QueryInterface(GetParentObject());
+  // It can happen that this runnable took a long time to reach the main thread,
+  // and the global is not valid anymore.
+  if (parentObject) {
+    parentObject->AbstractMainThreadFor(TaskCategory::Other)
+                ->Dispatch(std::move(aRunnable));
+  } else {
+    RefPtr<nsIRunnable> runnable(aRunnable);
+    runnable = nullptr;
+  }
+}
+
 void
 AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState)
 {
@@ -826,9 +845,8 @@ AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState)
   }
 
   if (mAudioContextState != aNewState) {
-    RefPtr<OnStateChangeTask> onStateChangeTask =
-      new OnStateChangeTask(this);
-    NS_DispatchToMainThread(onStateChangeTask);
+    RefPtr<OnStateChangeTask> task = new OnStateChangeTask(this);
+    Dispatch(task.forget());
   }
 
   mAudioContextState = aNewState;
