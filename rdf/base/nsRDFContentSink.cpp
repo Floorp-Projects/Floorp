@@ -441,9 +441,9 @@ RDFContentSinkImpl::HandleEndElement(const char16_t *aName)
           nsAutoString tagStr(aName);
           char* tagCStr = ToNewCString(tagStr);
 
-          PR_LogPrint
+          MOZ_LOG(gLog, LogLevel::Warning,
                  ("rdfxml: extra close tag '%s' at line %d",
-                  tagCStr, 0/*XXX fix me */);
+                  tagCStr, 0/*XXX fix me */));
 
           free(tagCStr);
       }
