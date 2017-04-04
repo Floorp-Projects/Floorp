@@ -227,6 +227,27 @@ public:
    * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
    * permission keys.
    *
+   * Get the permission key corresponding to the given Principal and type. This
+   * method is intentionally infallible, as we want to provide an permission key
+   * to every principal. Principals which don't have meaningful URIs with
+   * http://, https://, or ftp:// schemes are given the default "" Permission
+   * Key.
+   *
+   * This method is different from GetKeyForPrincipal in that it also takes
+   * permissions which must be sent down before loading a document into account.
+   *
+   * @param aPrincipal  The Principal which the key is to be extracted from.
+   * @param aType  The type of the permission to get the key for.
+   * @param aPermissionKey  A string which will be filled with the permission key.
+   */
+  static void GetKeyForPermission(nsIPrincipal* aPrincipal,
+                                  const char* aType,
+                                  nsACString& aPermissionKey);
+
+  /**
+   * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
+   * permission keys.
+   *
    * Get all permissions keys which could correspond to the given principal.
    * This method, like GetKeyForPrincipal, is infallible and should always
    * produce at least one key.
@@ -292,6 +313,15 @@ private:
    */
   nsresult
   RemoveAllModifiedSince(int64_t aModificationTime);
+
+  /**
+   * Returns false if this permission manager wouldn't have the permission
+   * requested avaliable.
+   *
+   * If aType is nullptr, checks that the permission manager would have all
+   * permissions avaliable for the given principal.
+   */
+  bool PermissionAvaliable(nsIPrincipal* aPrincipal, const char* aType);
 
   nsCOMPtr<mozIStorageConnection> mDBConn;
   nsCOMPtr<mozIStorageAsyncStatement> mStmtInsert;
