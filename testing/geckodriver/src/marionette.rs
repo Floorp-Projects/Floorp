@@ -351,8 +351,6 @@ impl MarionetteHandler {
 
         prefs.insert_slice(&extra_prefs[..]);
 
-        prefs.insert_slice(&prefs::REQUIRED[..]);
-
         if let Some(ref level) = self.current_log_level {
             prefs.insert("marionette.logging", Pref::new(level.to_string()));
         };
