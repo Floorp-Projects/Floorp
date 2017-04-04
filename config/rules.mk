@@ -744,11 +744,6 @@ ifndef CROSS_COMPILE
 	$(call CHECK_STDCXX,$@)
 endif
 
-ifdef DTRACE_PROBE_OBJ
-EXTRA_DEPS += $(DTRACE_PROBE_OBJ)
-OBJS += $(DTRACE_PROBE_OBJ)
-endif
-
 $(filter %.$(LIB_SUFFIX),$(LIBRARY)): $(OBJS) $(STATIC_LIBS_DEPS) $(filter %.$(LIB_SUFFIX),$(EXTRA_LIBS)) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 # Always remove both library and library descriptor
@@ -776,16 +771,6 @@ $(HOST_LIBRARY): $(HOST_OBJS) Makefile
 	$(REPORT_BUILD)
 	$(RM) $@
 	$(EXPAND_LIBS_EXEC) --extract -- $(HOST_AR) $(HOST_AR_FLAGS) $(HOST_OBJS)
-
-ifdef HAVE_DTRACE
-ifndef XP_MACOSX
-ifdef DTRACE_PROBE_OBJ
-NON_DTRACE_OBJS := $(filter-out $(DTRACE_PROBE_OBJ),$(OBJS))
-$(DTRACE_PROBE_OBJ): $(NON_DTRACE_OBJS)
-	dtrace -x nolibs -G -C -s $(MOZILLA_DTRACE_SRC) -o $(DTRACE_PROBE_OBJ) $(NON_DTRACE_OBJS)
-endif
-endif
-endif
 
 # On Darwin (Mac OS X), dwarf2 debugging uses debug info left in .o files,
 # so instead of deleting .o files after repacking them into a dylib, we make
