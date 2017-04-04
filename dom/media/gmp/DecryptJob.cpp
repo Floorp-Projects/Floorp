@@ -31,7 +31,7 @@ DecryptJob::PostResult(DecryptStatus aResult)
 
 void
 DecryptJob::PostResult(DecryptStatus aResult,
-                       const nsTArray<uint8_t>& aDecryptedData)
+                       Span<const uint8_t> aDecryptedData)
 {
   if (aDecryptedData.Length() != mSample->Size()) {
     NS_WARNING("CDM returned incorrect number of decrypted bytes");
