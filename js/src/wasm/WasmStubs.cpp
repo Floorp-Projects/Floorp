@@ -32,6 +32,15 @@ using namespace js::wasm;
 using mozilla::ArrayLength;
 
 static void
+FinishOffsets(MacroAssembler& masm, Offsets* offsets)
+{
+    // On old ARM hardware, constant pools could be inserted and they need to
+    // be flushed before considering the size of the masm.
+    masm.flushBuffer();
+    offsets->end = masm.size();
+}
+
+static void
 AssertStackAlignment(MacroAssembler& masm, uint32_t alignment, uint32_t addBeforeAssert = 0)
 {
     MOZ_ASSERT((sizeof(Frame) + masm.framePushed() + addBeforeAssert) % alignment == 0);
@@ -331,7 +340,7 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe)
     masm.move32(Imm32(true), ReturnReg);
     masm.ret();
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }
 
@@ -498,7 +507,7 @@ wasm::GenerateImportFunction(jit::MacroAssembler& masm, const FuncImport& fi, Si
 
     masm.wasmEmitTrapOutOfLineCode();
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }
 
@@ -625,7 +634,7 @@ wasm::GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint3
 
     GenerateExitEpilogue(masm, framePushed, ExitReason::ImportInterp, &offsets);
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }
 
@@ -858,7 +867,7 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
 
     MOZ_ASSERT(masm.framePushed() == 0);
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }
 
@@ -896,7 +905,7 @@ wasm::GenerateTrapExit(MacroAssembler& masm, Trap trap, Label* throwLabel)
 
     GenerateExitEpilogue(masm, framePushed, ExitReason::Trap, &offsets);
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }
 
@@ -926,7 +935,7 @@ GenerateGenericMemoryAccessTrap(MacroAssembler& masm, SymbolicAddress reporter, 
     masm.call(reporter);
     masm.jump(throwLabel);
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }
 
@@ -1109,7 +1118,7 @@ wasm::GenerateInterruptExit(MacroAssembler& masm, Label* throwLabel)
 # error "Unknown architecture!"
 #endif
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }
 
@@ -1147,7 +1156,7 @@ wasm::GenerateThrowStub(MacroAssembler& masm, Label* throwLabel)
     masm.mov(ImmWord(0), ReturnReg);
     masm.ret();
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }
 
@@ -1198,6 +1207,6 @@ wasm::GenerateDebugTrapStub(MacroAssembler& masm, Label* throwLabel)
 
     GenerateExitEpilogue(masm, 0, ExitReason::DebugTrap, &offsets);
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }
