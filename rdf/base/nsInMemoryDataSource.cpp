@@ -806,25 +806,25 @@ InMemoryDataSource::LogOperation(const char* aOperation,
 
     nsXPIDLCString uri;
     aSource->GetValue(getter_Copies(uri));
-    PR_LogPrint
-           ("InMemoryDataSource(%p): %s", this, aOperation);
+    MOZ_LOG(gLog, LogLevel::Debug,
+           ("InMemoryDataSource(%p): %s", this, aOperation));
 
-    PR_LogPrint
-           ("  [(%p)%s]--", aSource, (const char*) uri);
+    MOZ_LOG(gLog, LogLevel::Debug,
+           ("  [(%p)%s]--", aSource, (const char*) uri));
 
     aProperty->GetValue(getter_Copies(uri));
 
     char tv = (aTruthValue ? '-' : '!');
-    PR_LogPrint
-           ("  --%c[(%p)%s]--", tv, aProperty, (const char*) uri);
+    MOZ_LOG(gLog, LogLevel::Debug,
+           ("  --%c[(%p)%s]--", tv, aProperty, (const char*) uri));
 
     nsCOMPtr<nsIRDFResource> resource;
     nsCOMPtr<nsIRDFLiteral> literal;
 
     if ((resource = do_QueryInterface(aTarget)) != nullptr) {
         resource->GetValue(getter_Copies(uri));
-        PR_LogPrint
-           ("  -->[(%p)%s]", aTarget, (const char*) uri);
+        MOZ_LOG(gLog, LogLevel::Debug,
+           ("  -->[(%p)%s]", aTarget, (const char*) uri));
     }
     else if ((literal = do_QueryInterface(aTarget)) != nullptr) {
         nsXPIDLString value;
@@ -832,14 +832,14 @@ InMemoryDataSource::LogOperation(const char* aOperation,
         nsAutoString valueStr(value);
         char* valueCStr = ToNewCString(valueStr);
 
-        PR_LogPrint
-           ("  -->(\"%s\")\n", valueCStr);
+        MOZ_LOG(gLog, LogLevel::Debug,
+           ("  -->(\"%s\")\n", valueCStr));
 
         free(valueCStr);
     }
     else {
-        PR_LogPrint
-           ("  -->(unknown-type)\n");
+        MOZ_LOG(gLog, LogLevel::Debug,
+           ("  -->(unknown-type)\n"));
     }
 }
 
