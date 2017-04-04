@@ -23,11 +23,6 @@ from mozpack.copier import (
     Jarrer,
 )
 
-STARTUP_CACHE_PATHS = [
-    'jsloader',
-    'jssubloader',
-]
-
 '''
 Formatters are classes receiving packaging instructions and creating the
 appropriate package layout.
@@ -321,4 +316,4 @@ class OmniJarSubFormatter(PiecemealFormatter):
             'greprefs.js',
             'hyphenation',
             'update.locale',
-        ] or path[0] in STARTUP_CACHE_PATHS
+        ]
