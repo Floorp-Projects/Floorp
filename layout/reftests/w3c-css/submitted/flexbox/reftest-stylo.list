@@ -13,14 +13,14 @@
 == flexbox-align-content-vert-001b.xhtml flexbox-align-content-vert-001b.xhtml
 
 # Tests for cross-axis alignment (align-self / align-items properties)
-fails == flexbox-align-self-baseline-horiz-001a.xhtml flexbox-align-self-baseline-horiz-001a.xhtml
-fails == flexbox-align-self-baseline-horiz-001b.xhtml flexbox-align-self-baseline-horiz-001b.xhtml
+== flexbox-align-self-baseline-horiz-001a.xhtml flexbox-align-self-baseline-horiz-001a.xhtml
+== flexbox-align-self-baseline-horiz-001b.xhtml flexbox-align-self-baseline-horiz-001b.xhtml
 == flexbox-align-self-baseline-horiz-002.xhtml flexbox-align-self-baseline-horiz-002.xhtml
 == flexbox-align-self-baseline-horiz-003.xhtml flexbox-align-self-baseline-horiz-003.xhtml
 == flexbox-align-self-baseline-horiz-004.xhtml flexbox-align-self-baseline-horiz-004.xhtml
 == flexbox-align-self-baseline-horiz-005.xhtml flexbox-align-self-baseline-horiz-005.xhtml
-fails == flexbox-align-self-baseline-horiz-006.xhtml flexbox-align-self-baseline-horiz-006.xhtml
-fails == flexbox-align-self-baseline-horiz-007.xhtml flexbox-align-self-baseline-horiz-007.xhtml
+== flexbox-align-self-baseline-horiz-006.xhtml flexbox-align-self-baseline-horiz-006.xhtml
+== flexbox-align-self-baseline-horiz-007.xhtml flexbox-align-self-baseline-horiz-007.xhtml
 
 == flexbox-align-self-stretch-vert-001.html flexbox-align-self-stretch-vert-001.html
 == flexbox-align-self-stretch-vert-002.html flexbox-align-self-stretch-vert-002.html
@@ -145,7 +145,7 @@ fails == flexbox-basic-textarea-vert-001.xhtml flexbox-basic-textarea-vert-001.x
 # Tests for min-height:auto / min-width:auto on flex items
 == flexbox-min-height-auto-001.html flexbox-min-height-auto-001.html
 == flexbox-min-height-auto-002a.html flexbox-min-height-auto-002a.html
-== flexbox-min-height-auto-002b.html flexbox-min-height-auto-002b.html
+fails == flexbox-min-height-auto-002b.html flexbox-min-height-auto-002-ref.html # bug 1055354
 == flexbox-min-height-auto-002c.html flexbox-min-height-auto-002c.html
 fails == flexbox-min-height-auto-003.html flexbox-min-height-auto-003.html
 fails == flexbox-min-height-auto-004.html flexbox-min-height-auto-004.html
