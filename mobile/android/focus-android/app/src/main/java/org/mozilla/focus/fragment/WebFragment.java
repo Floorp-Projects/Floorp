@@ -38,6 +38,7 @@ public abstract class WebFragment extends Fragment {
     @Nullable
     public abstract String getInitialUrl();
 
+    @Override
     public final View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflateLayout(inflater, container, savedInstanceState);
 
@@ -45,9 +46,13 @@ public abstract class WebFragment extends Fragment {
         isWebViewAvailable = true;
         webView.setCallback(createCallback());
 
-        final String url = getInitialUrl();
-        if (url != null) {
-            webView.loadUrl(url);
+        if (savedInstanceState == null) {
+            final String url = getInitialUrl();
+            if (url != null) {
+                webView.loadUrl(url);
+            }
+        } else {
+            webView.restoreWebviewState(savedInstanceState);
         }
 
         return view;
@@ -65,6 +70,13 @@ public abstract class WebFragment extends Fragment {
         webView.onResume();
 
         super.onResume();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        webView.onSaveInstanceState(outState);
+
+        super.onSaveInstanceState(outState);
     }
 
     @Override

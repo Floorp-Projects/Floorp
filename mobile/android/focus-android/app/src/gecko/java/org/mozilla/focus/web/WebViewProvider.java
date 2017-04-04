@@ -7,6 +7,7 @@ package org.mozilla.focus.web;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.view.MotionEventCompat;
@@ -101,6 +102,16 @@ public class WebViewProvider {
         @Override
         public void cleanup() {
             // TODO: Remove browsing session/data
+        }
+
+        @Override
+        public void restoreWebviewState(Bundle savedInstanceState) {
+            // TODO: restore navigation history, and reopen previously opened page
+        }
+
+        @Override
+        public void onSaveInstanceState(Bundle outState) {
+            // TODO: save anything needed for navigation history restoration.
         }
 
         private ChromeDelegate createChromeDelegate() {

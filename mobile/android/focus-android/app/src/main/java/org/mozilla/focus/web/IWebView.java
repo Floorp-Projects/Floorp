@@ -5,6 +5,8 @@
 
 package org.mozilla.focus.web;
 
+import android.os.Bundle;
+
 public interface IWebView {
     interface Callback {
         void onPageStarted(String url);
@@ -44,4 +46,8 @@ public interface IWebView {
     boolean canGoForward();
 
     boolean canGoBack();
+
+    void restoreWebviewState(Bundle savedInstanceState);
+
+    void onSaveInstanceState(Bundle outState);
 }
