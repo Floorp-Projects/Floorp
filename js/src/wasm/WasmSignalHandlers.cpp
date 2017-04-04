@@ -142,6 +142,7 @@ class AutoSetHandlingSegFault
 # endif
 # if defined(__linux__) && defined(__aarch64__)
 #  define EPC_sig(p) ((p)->uc_mcontext.pc)
+#  define RFP_sig(p) ((p)->uc_mcontext.regs[29])
 # endif
 # if defined(__linux__) && defined(__mips__)
 #  define EPC_sig(p) ((p)->uc_mcontext.pc)
