@@ -55,6 +55,9 @@ struct LangGroupFontPrefs {
     return n;
   }
 
+  // Initialize this with the data for a given language
+  void Initialize(nsIAtom* aLangGroupAtom);
+
   nsCOMPtr<nsIAtom> mLangGroup;
   nscoord mMinimumFontSize;
   nsFont mDefaultVariableFont;
@@ -89,6 +92,13 @@ public:
    * to actual nscoord values.
    */
   const nscoord* GetBorderWidthTable() { return mBorderWidthTable; }
+
+  /**
+   * Given a language, get the language group name, which can
+   * be used as an argument to LangGroupFontPrefs::Initialize()
+   *
+   */
+  nsIAtom* GetLangGroup(nsIAtom* aLanguage) const;
 
   /**
    * Fetch the user's font preferences for the given aLanguage's
