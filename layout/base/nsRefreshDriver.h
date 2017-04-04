@@ -438,7 +438,6 @@ private:
   bool mNeedToRecomputeVisibility;
   bool mTestControllingRefreshes;
   bool mViewManagerFlushIsPending;
-  bool mRequestedHighPrecision;
   bool mInRefresh;
 
   // True if the refresh driver is suspended waiting for transaction
@@ -487,10 +486,6 @@ private:
                              mozilla::TimeStamp aDesired);
 
   friend class mozilla::RefreshDriverTimer;
-
-  // turn on or turn off high precision based on various factors
-  void ConfigureHighPrecision();
-  void SetHighPrecisionTimersEnabled(bool aEnable);
 
   static void Shutdown();
 
