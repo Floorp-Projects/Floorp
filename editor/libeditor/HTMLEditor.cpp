@@ -1000,6 +1000,8 @@ NS_IMETHODIMP
 HTMLEditor::TypedText(const nsAString& aString,
                       ETypingAction aAction)
 {
+  MOZ_ASSERT(!aString.IsEmpty() || aAction != eTypedText);
+
   AutoPlaceHolderBatch batch(this, nsGkAtoms::TypingTxnName);
 
   if (aAction == eTypedBR) {

@@ -34,6 +34,8 @@
   --highlighter-bubble-background-color: hsl(214, 13%, 24%);
   --highlighter-bubble-border-color: rgba(255, 255, 255, 0.2);
   --highlighter-bubble-arrow-size: 8px;
+  --highlighter-font-family: message-box;
+  --highlighter-font-size: 11px;
 }
 
 /**
@@ -120,8 +122,8 @@
   position: absolute;
   max-width: 95%;
 
-  font: message-box;
-  font-size: 11px;
+  font: var(--highlighter-font-family);
+  font-size: var(--highlighter-font-size);
 }
 
 :-moz-native-anonymous [class$=infobar] {
@@ -322,7 +324,7 @@
 
 :-moz-native-anonymous .geometry-editor-label-text {
   fill: var(--highlighter-bubble-text-color);
-  font: message-box;
+  font: var(--highlighter-font-family);
   font-size: 10px;
   text-anchor: middle;
   dominant-baseline: middle;
@@ -358,7 +360,7 @@
 :-moz-native-anonymous .rulers-highlighter-vertical-labels > text {
   stroke: none;
   fill: #202020;
-  font: message-box;
+  font: var(--highlighter-font-family);
   font-size: 9px;
   dominant-baseline: hanging;
 }
@@ -408,7 +410,7 @@
   border-radius: 4px;
   padding: 4px;
   white-space: pre-line;
-  font: message-box;
+  font: var(--highlighter-font-family);
   font-size: 10px;
   pointer-events: none;
   -moz-user-select: none;
@@ -532,8 +534,52 @@
 
 :-moz-native-anonymous .eye-dropper-color-value {
   text-shadow: 1px 1px 1px #fff;
-  font: message-box;
-  font-size: 11px;
+  font: var(--highlighter-font-family);
+  font-size: var(--highlighter-font-size);
   text-align: center;
   padding: 4px 0;
+}
+
+/* Paused Debugger Overlay */
+
+:-moz-native-anonymous .paused-dbg-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+
+  /* We don't have access to DevTools themes here, but some of these colors come from the
+     themes. Theme variable names are given in comments. */
+  --text-color: #585959; /* --theme-body-color-alt */
+  --toolbar-background: #fcfcfc; /* --theme-toolbar-background */;
+  --toolbar-border: #dde1e4; /* --theme-splitter-color */
+  --toolbar-box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26); /* --rdm-box-shadow */
+  --overlay-background: #dde1e4a8;
+}
+
+:-moz-native-anonymous .paused-dbg-root[overlay] {
+  background-color: var(--overlay-background);
+  pointer-events: auto;
+}
+
+:-moz-native-anonymous .paused-dbg-toolbar {
+  margin-top: 15px;
+  padding: 4px 5px;
+  display: inline-flex;
+  -moz-user-select: none;
+  pointer-events: auto;
+
+  color: var(--text-color);
+  border-radius: 2px;
+  box-shadow: var(--toolbar-box-shadow);
+  background-color: var(--toolbar-background);
+  border: 1px solid var(--toolbar-border);
+
+  font: var(--highlighter-font-family);
+  font-size: var(--highlighter-font-size);
 }

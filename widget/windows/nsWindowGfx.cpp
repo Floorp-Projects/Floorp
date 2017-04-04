@@ -48,6 +48,7 @@ using mozilla::plugins::PluginInstanceParent;
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "ClientLayerManager.h"
+#include "WinCompositorWidget.h"
 
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"

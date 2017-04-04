@@ -28,6 +28,10 @@ job-template:
          default: browser/locales/all-locales
          android-api-15-nightly: mobile/locales/l10n-changesets.json
    chunks: 6
+   run-on-projects:
+     - mozilla-central
+     - mozilla-aurora
+     - mozilla-beta
    run-time:
       by-build-platform:
          default: 36000
