@@ -116,7 +116,7 @@ using mozilla::gfx::Matrix4x4;
 // out to the bounding-box if there are more
 #define MAX_RECTS_IN_REGION 100
 
-PRLogModuleInfo* sCocoaLog = nullptr;
+LazyLogModule sCocoaLog("nsCocoaWidgets");
 
 extern "C" {
   CG_EXTERN void CGContextResetCTM(CGContextRef);
@@ -264,9 +264,6 @@ FlipCocoaScreenCoordinate(NSPoint &inPoint)
 
 void EnsureLogInitialized()
 {
-  if (!sCocoaLog) {
-    sCocoaLog = PR_NewLogModule("nsCocoaWidgets");
-  }
 }
 
 namespace {

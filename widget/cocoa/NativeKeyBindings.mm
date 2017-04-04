@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace widget {
 
-PRLogModuleInfo* gNativeKeyBindingsLog = nullptr;
+static LazyLogModule gNativeKeyBindingsLog("NativeKeyBindings");
 
 NativeKeyBindings* NativeKeyBindings::sInstanceForSingleLineEditor = nullptr;
 NativeKeyBindings* NativeKeyBindings::sInstanceForMultiLineEditor = nullptr;
@@ -64,10 +64,6 @@ NativeKeyBindings::NativeKeyBindings()
 void
 NativeKeyBindings::Init(NativeKeyBindingsType aType)
 {
-  if (!gNativeKeyBindingsLog) {
-    gNativeKeyBindingsLog = PR_NewLogModule("NativeKeyBindings");
-  }
-
   MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
     ("%p NativeKeyBindings::Init", this));
 

@@ -359,35 +359,92 @@ CanNotifyObservers()
 ////////////////////////////////////////////////////////////////////////
 // BEGIN tick/unwinding code
 
-// TickSample captures the information collected for each sample.
+// TickSample contains all the information needed by Tick(). Some of it is
+// pointers to long-lived things, and some of it is sampled just before the
+// call to Tick().
 class TickSample {
 public:
-  explicit TickSample(ThreadInfo* aThreadInfo)
-    : mPC(nullptr)
+  // This constructor is for periodic samples, i.e. those performed in response
+  // to a timer firing. Periodic samples are performed off-thread, i.e. the
+  // SamplerThread samples the thread in question.
+  TickSample(ThreadInfo* aThreadInfo, int64_t aRSSMemory, int64_t aUSSMemory)
+    : mIsSynchronous(false)
+    , mTimeStamp(mozilla::TimeStamp::Now())
+    , mThreadId(aThreadInfo->ThreadId())
+    , mPseudoStack(aThreadInfo->Stack())
+    , mStackTop(aThreadInfo->StackTop())
+    , mLastSample(&aThreadInfo->LastSample())
+    , mPlatformData(aThreadInfo->GetPlatformData())
+    , mRespInfo(aThreadInfo->GetThreadResponsiveness())
+    , mRSSMemory(aRSSMemory)    // may be zero
+    , mUSSMemory(aUSSMemory)    // may be zero
+#if !defined(GP_OS_darwin)
+    , mContext(nullptr)
+#endif
+    , mPC(nullptr)
     , mSP(nullptr)
     , mFP(nullptr)
     , mLR(nullptr)
-    , mContext(nullptr)
-    , mIsSamplingCurrentThread(false)
-    , mThreadInfo(aThreadInfo)
-    , mTimeStamp(mozilla::TimeStamp::Now())
-    , mRSSMemory(0)
-    , mUSSMemory(0)
   {}
 
+  // This constructor is for synchronous samples, i.e. those performed in
+  // response to an explicit sampling request via the API. Synchronous samples
+  // are performed on-thread, i.e. the thread samples itself.
+  TickSample(NotNull<PseudoStack*> aPseudoStack, PlatformData* aPlatformData)
+    : mIsSynchronous(true)
+    , mTimeStamp(mozilla::TimeStamp::Now())
+    , mThreadId(Thread::GetCurrentId())
+    , mPseudoStack(aPseudoStack)
+    , mStackTop(nullptr)
+    , mLastSample(nullptr)
+    , mPlatformData(aPlatformData)
+    , mRespInfo(nullptr)
+    , mRSSMemory(0)
+    , mUSSMemory(0)
+#if !defined(GP_OS_darwin)
+    , mContext(nullptr)
+#endif
+    , mPC(nullptr)
+    , mSP(nullptr)
+    , mFP(nullptr)
+    , mLR(nullptr)
+  {}
+
+  // Fills in mContext, mPC, mSP, mFP, and mLR for a synchronous sample.
   void PopulateContext(tick_context_t* aContext);
 
+  // False for periodic samples, true for synchronous samples.
+  const bool mIsSynchronous;
+
+  const mozilla::TimeStamp mTimeStamp;
+
+  const int mThreadId;
+
+  const NotNull<PseudoStack*> mPseudoStack;
+
+  void* const mStackTop;
+
+  ProfileBuffer::LastSample* const mLastSample;   // may be null
+
+  PlatformData* const mPlatformData;
+
+  ThreadResponsiveness* const mRespInfo;          // may be null
+
+  const int64_t mRSSMemory;                       // may be zero
+  const int64_t mUSSMemory;                       // may be zero
+
+  // The remaining fields are filled in, after construction, by
+  // SamplerThread::SuspendAndSampleAndResume() for periodic samples, and
+  // PopulateContext() for synchronous samples. They are filled in separately
+  // from the other fields in this class because the code that fills them in is
+  // platform-specific.
+#if !defined(GP_OS_darwin)
+  void* mContext; // The context from the signal handler.
+#endif
   Address mPC;    // Instruction pointer.
   Address mSP;    // Stack pointer.
   Address mFP;    // Frame pointer.
   Address mLR;    // ARM link register.
-  void* mContext; // The context from the signal handler, if available. On
-                  // Win32 this may contain the windows thread context.
-  bool mIsSamplingCurrentThread;
-  ThreadInfo* mThreadInfo;
-  mozilla::TimeStamp mTimeStamp;
-  int64_t mRSSMemory;
-  int64_t mUSSMemory;
 };
 
 static void
@@ -519,7 +576,7 @@ static void
 MergeStacksIntoProfile(PS::LockRef aLock, ProfileBuffer* aBuffer,
                        TickSample* aSample, NativeStack& aNativeStack)
 {
-  NotNull<PseudoStack*> pseudoStack = aSample->mThreadInfo->Stack();
+  NotNull<PseudoStack*> pseudoStack = aSample->mPseudoStack;
   volatile js::ProfileEntry* pseudoFrames = pseudoStack->mStack;
   uint32_t pseudoCount = pseudoStack->stackSize();
 
@@ -532,7 +589,7 @@ MergeStacksIntoProfile(PS::LockRef aLock, ProfileBuffer* aBuffer,
   // sampled JIT entries inside the JS engine. See note below concerning 'J'
   // entries.
   uint32_t startBufferGen;
-  startBufferGen = aSample->mIsSamplingCurrentThread
+  startBufferGen = aSample->mIsSynchronous
                  ? UINT32_MAX
                  : aBuffer->mGeneration;
   uint32_t jsCount = 0;
@@ -556,7 +613,7 @@ MergeStacksIntoProfile(PS::LockRef aLock, ProfileBuffer* aBuffer,
                                         startBufferGen);
       for (; jsCount < maxFrames && !jsIter.done(); ++jsIter) {
         // See note below regarding 'J' entries.
-        if (aSample->mIsSamplingCurrentThread || jsIter.isWasm()) {
+        if (aSample->mIsSynchronous || jsIter.isWasm()) {
           uint32_t extracted =
             jsIter.extractStack(jsFrames, jsCount, maxFrames);
           jsCount += extracted;
@@ -671,7 +728,7 @@ MergeStacksIntoProfile(PS::LockRef aLock, ProfileBuffer* aBuffer,
       // JIT code. This means that if we inserted such OptInfoAddr entries into
       // the buffer, nsRefreshDriver would now be holding on to a backtrace
       // with stale JIT code return addresses.
-      if (aSample->mIsSamplingCurrentThread ||
+      if (aSample->mIsSynchronous ||
           jsFrame.kind == JS::ProfilingFrameIterator::Frame_Wasm) {
         AddDynamicCodeLocationTag(aBuffer, jsFrame.label);
       } else {
@@ -699,9 +756,9 @@ MergeStacksIntoProfile(PS::LockRef aLock, ProfileBuffer* aBuffer,
 
   // Update the JS context with the current profile sample buffer generation.
   //
-  // Do not do this for synchronous sampling, which create their own
-  // ProfileBuffers.
-  if (!aSample->mIsSamplingCurrentThread && pseudoStack->mContext) {
+  // Do not do this for synchronous samples, which use their own
+  // ProfileBuffers instead of the global one in ProfilerState.
+  if (!aSample->mIsSynchronous && pseudoStack->mContext) {
     MOZ_ASSERT(aBuffer->mGeneration >= startBufferGen);
     uint32_t lapCount = aBuffer->mGeneration - startBufferGen;
     JS::UpdateJSContextProfilerSampleBufferGen(pseudoStack->mContext,
@@ -747,7 +804,7 @@ DoNativeBacktrace(PS::LockRef aLock, ProfileBuffer* aBuffer,
   uint32_t maxFrames = uint32_t(nativeStack.size - nativeStack.count);
 
 #if defined(GP_OS_darwin) || (defined(GP_PLAT_x86_windows))
-  void* stackEnd = aSample->mThreadInfo->StackTop();
+  void* stackEnd = aSample->mStackTop;
   if (aSample->mFP >= aSample->mSP && aSample->mFP <= stackEnd) {
     FramePointerStackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames,
                           &nativeStack, reinterpret_cast<void**>(aSample->mFP),
@@ -756,7 +813,7 @@ DoNativeBacktrace(PS::LockRef aLock, ProfileBuffer* aBuffer,
 #else
   // Win64 always omits frame pointers so for it we use the slower
   // MozStackWalk().
-  uintptr_t thread = GetThreadHandle(aSample->mThreadInfo->GetPlatformData());
+  uintptr_t thread = GetThreadHandle(aSample->mPlatformData);
   MOZ_ASSERT(thread);
   MozStackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames, &nativeStack,
                thread, /* platformData */ nullptr);
@@ -783,7 +840,7 @@ DoNativeBacktrace(PS::LockRef aLock, ProfileBuffer* aBuffer,
   const mcontext_t* mcontext =
     &reinterpret_cast<ucontext_t*>(aSample->mContext)->uc_mcontext;
   mcontext_t savedContext;
-  NotNull<PseudoStack*> pseudoStack = aSample->mThreadInfo->Stack();
+  NotNull<PseudoStack*> pseudoStack = aSample->mPseudoStack;
 
   // The pseudostack contains an "EnterJIT" frame whenever we enter
   // JIT code with profiling enabled; the stack pointer value points
@@ -827,7 +884,7 @@ DoNativeBacktrace(PS::LockRef aLock, ProfileBuffer* aBuffer,
   // Now unwind whatever's left (starting from either the last EnterJIT frame
   // or, if no EnterJIT was found, the original registers).
   nativeStack.count += EHABIStackWalk(*mcontext,
-                                      aSample->mThreadInfo->StackTop(),
+                                      aSample->mStackTop,
                                       sp_array + nativeStack.count,
                                       pc_array + nativeStack.count,
                                       nativeStack.size - nativeStack.count);
@@ -905,7 +962,7 @@ DoNativeBacktrace(PS::LockRef aLock, ProfileBuffer* aBuffer,
 #else
 #   error "Unknown plat"
 #endif
-    uintptr_t end = reinterpret_cast<uintptr_t>(aSample->mThreadInfo->StackTop());
+    uintptr_t end = reinterpret_cast<uintptr_t>(aSample->mStackTop);
     uintptr_t ws  = sizeof(void*);
     start &= ~(ws-1);
     end   &= ~(ws-1);
@@ -992,15 +1049,12 @@ DoSampleStackTrace(PS::LockRef aLock, ProfileBuffer* aBuffer,
 static void
 Tick(PS::LockRef aLock, ProfileBuffer* aBuffer, TickSample* aSample)
 {
-  ThreadInfo& threadInfo = *aSample->mThreadInfo;
-
-  MOZ_ASSERT(threadInfo.LastSample().mThreadId == threadInfo.ThreadId());
-  aBuffer->addTagThreadId(threadInfo.LastSample());
+  aBuffer->addTagThreadId(aSample->mThreadId, aSample->mLastSample);
 
   mozilla::TimeDuration delta = aSample->mTimeStamp - gPS->StartTime(aLock);
   aBuffer->addTag(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
-  NotNull<PseudoStack*> stack = threadInfo.Stack();
+  NotNull<PseudoStack*> pseudoStack = aSample->mPseudoStack;
 
 #if defined(HAVE_NATIVE_UNWIND)
   if (gPS->FeatureStackWalk(aLock)) {
@@ -1011,10 +1065,11 @@ Tick(PS::LockRef aLock, ProfileBuffer* aBuffer, TickSample* aSample)
     DoSampleStackTrace(aLock, aBuffer, aSample);
   }
 
-  // Don't process the PeudoStack's markers if we're synchronously sampling the
-  // current thread.
-  if (!aSample->mIsSamplingCurrentThread) {
-    ProfilerMarkerLinkedList* pendingMarkersList = stack->getPendingMarkers();
+  // Don't process the PseudoStack's markers if we're synchronously sampling
+  // the current thread.
+  if (!aSample->mIsSynchronous) {
+    ProfilerMarkerLinkedList* pendingMarkersList =
+      pseudoStack->getPendingMarkers();
     while (pendingMarkersList && pendingMarkersList->peek()) {
       ProfilerMarker* marker = pendingMarkersList->popHead();
       aBuffer->addStoredMarker(marker);
@@ -1022,10 +1077,9 @@ Tick(PS::LockRef aLock, ProfileBuffer* aBuffer, TickSample* aSample)
     }
   }
 
-  if (threadInfo.GetThreadResponsiveness()->HasData()) {
+  if (aSample->mRespInfo && aSample->mRespInfo->HasData()) {
     mozilla::TimeDuration delta =
-      threadInfo.GetThreadResponsiveness()->GetUnresponsiveDuration(
-        aSample->mTimeStamp);
+      aSample->mRespInfo->GetUnresponsiveDuration(aSample->mTimeStamp);
     aBuffer->addTag(ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
   }
 
@@ -1621,7 +1675,8 @@ SamplerThread::Run()
           // cheaper than taking a new sample.
           if (info->Stack()->CanDuplicateLastSampleDueToSleep()) {
             bool dup_ok =
-              gPS->Buffer(lock)->DuplicateLastSample(gPS->StartTime(lock),
+              gPS->Buffer(lock)->DuplicateLastSample(info->ThreadId(),
+                                                     gPS->StartTime(lock),
                                                      info->LastSample());
             if (dup_ok) {
               continue;
@@ -1630,15 +1685,17 @@ SamplerThread::Run()
 
           info->UpdateThreadResponsiveness();
 
-          TickSample sample(info);
-
           // We only get the memory measurements once for all threads.
+          int64_t rssMemory = 0;
+          int64_t ussMemory = 0;
           if (i == 0 && gPS->FeatureMemory(lock)) {
-            sample.mRSSMemory = nsMemoryReporterManager::ResidentFast();
+            rssMemory = nsMemoryReporterManager::ResidentFast();
 #if defined(GP_OS_linux) || defined(GP_OS_android)
-            sample.mUSSMemory = nsMemoryReporterManager::ResidentUnique();
+            ussMemory = nsMemoryReporterManager::ResidentUnique();
 #endif
           }
+
+          TickSample sample(info, rssMemory, ussMemory);
 
           SuspendAndSampleAndResumeThread(lock, &sample);
         }
@@ -1807,6 +1864,27 @@ MaybeSetProfile(PS::LockRef aLock, ThreadInfo* aInfo)
   }
 }
 
+// Find the ThreadInfo for the current thread. On success, *aIndexOut is set to
+// the index if it is non-null.
+static ThreadInfo*
+FindThreadInfo(PS::LockRef aLock, int* aIndexOut = nullptr)
+{
+  // This function runs both on and off the main thread.
+
+  Thread::tid_t id = Thread::GetCurrentId();
+  const PS::ThreadVector& threads = gPS->Threads(aLock);
+  for (uint32_t i = 0; i < threads.size(); i++) {
+    ThreadInfo* info = threads.at(i);
+    if (info->ThreadId() == id && !info->IsPendingDelete()) {
+      if (aIndexOut) {
+        *aIndexOut = i;
+      }
+      return info;
+    }
+  }
+  return nullptr;
+}
+
 static void
 locked_register_thread(PS::LockRef aLock, const char* aName, void* stackTop)
 {
@@ -1814,17 +1892,7 @@ locked_register_thread(PS::LockRef aLock, const char* aName, void* stackTop)
 
   MOZ_RELEASE_ASSERT(gPS);
 
-  PS::ThreadVector& threads = gPS->Threads(aLock);
-  Thread::tid_t id = Thread::GetCurrentId();
-  for (uint32_t i = 0; i < threads.size(); i++) {
-    ThreadInfo* info = threads.at(i);
-    if (info->ThreadId() == id && !info->IsPendingDelete()) {
-      // Thread already registered. This means the first unregister will be
-      // too early.
-      MOZ_ASSERT(false);
-      return;
-    }
-  }
+  MOZ_RELEASE_ASSERT(!FindThreadInfo(aLock));
 
   if (!tlsPseudoStack.init()) {
     return;
@@ -1832,8 +1900,8 @@ locked_register_thread(PS::LockRef aLock, const char* aName, void* stackTop)
   NotNull<PseudoStack*> stack = WrapNotNull(new PseudoStack());
   tlsPseudoStack.set(stack);
 
-  ThreadInfo* info =
-    new ThreadInfo(aName, id, NS_IsMainThread(), stack, stackTop);
+  ThreadInfo* info = new ThreadInfo(aName, Thread::GetCurrentId(),
+                                    NS_IsMainThread(), stack, stackTop);
 
   MaybeSetProfile(aLock, info);
 
@@ -1845,7 +1913,7 @@ locked_register_thread(PS::LockRef aLock, const char* aName, void* stackTop)
     stack->pollJSSampling();
   }
 
-  threads.push_back(info);
+  gPS->Threads(aLock).push_back(info);
 }
 
 static void
@@ -2045,11 +2113,8 @@ profiler_shutdown()
     delete gPS;
     gPS = nullptr;
 
-    // We just destroyed gPS and the ThreadInfos it contains, so it is safe to
-    // delete the PseudoStack. tlsPseudoStack is certain to still be the owner
-    // of its PseudoStack because the main thread is never put in a "pending
-    // delete" state.
-    delete tlsPseudoStack.get();
+    // We just destroyed gPS and the ThreadInfos (and PseudoStacks) it
+    // contains, so we can clear this thread's tlsPseudoStack.
     tlsPseudoStack.set(nullptr);
 
 #ifdef MOZ_TASK_TRACER
@@ -2785,37 +2850,39 @@ profiler_unregister_thread()
 
   PS::AutoLock lock(gPSMutex);
 
-  Thread::tid_t id = Thread::GetCurrentId();
-
-  bool wasPseudoStackTransferred = false;
-
-  PS::ThreadVector& threads = gPS->Threads(lock);
-  for (uint32_t i = 0; i < threads.size(); i++) {
-    ThreadInfo* info = threads.at(i);
-    if (info->ThreadId() == id && !info->IsPendingDelete()) {
-      DEBUG_LOG("profiler_unregister_thread: %s", info->Name());
-      if (gPS->IsActive(lock)) {
-        // We still want to show the results of this thread if you save the
-        // profile shortly after a thread is terminated, which requires
-        // transferring ownership of the PseudoStack to |info|. For now we will
-        // defer the delete to profile stop.
-        info->SetPendingDelete();
-        wasPseudoStackTransferred = true;
-      } else {
-        delete info;
-        threads.erase(threads.begin() + i);
-      }
-      break;
-    }
-  }
-
   // We don't call PseudoStack::stopJSSampling() here; there's no point doing
   // that for a JS thread that is in the process of disappearing.
 
-  if (!wasPseudoStackTransferred) {
-    delete tlsPseudoStack.get();
+  int i;
+  ThreadInfo* info = FindThreadInfo(lock, &i);
+  if (info) {
+    DEBUG_LOG("profiler_unregister_thread: %s", info->Name());
+    if (gPS->IsActive(lock)) {
+      // We still want to show the results of this thread if you save the
+      // profile shortly after a thread is terminated. We defer the delete to
+      // profile stop.
+      info->SetPendingDelete();
+    } else {
+      delete info;
+      PS::ThreadVector& threads = gPS->Threads(lock);
+      threads.erase(threads.begin() + i);
+    }
+
+    // Whether or not we just destroyed the PseudoStack (via its owning
+    // ThreadInfo), we no longer need to access it via TLS.
+    tlsPseudoStack.set(nullptr);
+
+  } else {
+    // There are two ways FindThreadInfo() can fail.
+    //
+    // - tlsPseudoStack.init() failed in locked_register_thread().
+    //
+    // - We've already called profiler_unregister_thread() for this thread.
+    //   (Whether or not it should, this does happen in practice.)
+    //
+    // Either way, tlsPseudoStack should be empty.
+    MOZ_RELEASE_ASSERT(!tlsPseudoStack.get());
   }
-  tlsPseudoStack.set(nullptr);
 }
 
 void
@@ -2906,16 +2973,14 @@ profiler_get_backtrace()
     MOZ_ASSERT(stack);
     return nullptr;
   }
+
   Thread::tid_t tid = Thread::GetCurrentId();
 
   ProfileBuffer* buffer = new ProfileBuffer(GET_BACKTRACE_DEFAULT_ENTRIES);
-  ThreadInfo* threadInfo =
-    new ThreadInfo("SyncProfile", tid, NS_IsMainThread(), WrapNotNull(stack),
-                   /* stackTop */ nullptr);
-  threadInfo->SetHasProfile();
 
-  TickSample sample(threadInfo);
-  sample.mIsSamplingCurrentThread = true;
+  UniquePlatformData platformData = AllocPlatformData(tid);
+
+  TickSample sample(WrapNotNull(stack), platformData.get());
 
 #if defined(HAVE_NATIVE_UNWIND)
 #if defined(GP_OS_windows) || defined(GP_OS_linux) || defined(GP_OS_android)
@@ -2930,7 +2995,8 @@ profiler_get_backtrace()
 
   Tick(lock, buffer, &sample);
 
-  return UniqueProfilerBacktrace(new ProfilerBacktrace(buffer, threadInfo));
+  return UniqueProfilerBacktrace(
+    new ProfilerBacktrace("SyncProfile", tid, buffer));
 }
 
 void
@@ -3122,15 +3188,11 @@ profiler_clear_js_context()
   if (gPS->IsActive(lock)) {
     gPS->SetIsPaused(lock, true);
 
-    // Find the ThreadInfo corresponding to this thread, if there is one, and
-    // flush it.
-    const PS::ThreadVector& threads = gPS->Threads(lock);
-    for (size_t i = 0; i < threads.size(); i++) {
-      ThreadInfo* info = threads.at(i);
-      if (info->HasProfile() && !info->IsPendingDelete() &&
-          info->Stack() == stack) {
-        info->FlushSamplesAndMarkers(gPS->Buffer(lock), gPS->StartTime(lock));
-      }
+    // Flush this thread's ThreadInfo, if it is being profiled.
+    ThreadInfo* info = FindThreadInfo(lock);
+    MOZ_RELEASE_ASSERT(info);
+    if (info->HasProfile()) {
+      info->FlushSamplesAndMarkers(gPS->Buffer(lock), gPS->StartTime(lock));
     }
 
     gPS->SetIsPaused(lock, false);

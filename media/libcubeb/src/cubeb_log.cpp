@@ -47,7 +47,7 @@ public:
       return;
     }
     PodCopy(storage, str, length);
-    storage[length + 1] = '\0';
+    storage[length] = '\0';
   }
   char const * get() {
     return storage;

@@ -126,6 +126,11 @@ extern already_AddRefed<nsIAtom> NS_Atomize(const char16_t* aUTF16String);
 extern already_AddRefed<nsIAtom> NS_Atomize(const nsAString& aUTF16String);
 
 /**
+ * An optimized version of the method above for the main thread.
+ */
+extern already_AddRefed<nsIAtom> NS_AtomizeMainThread(const nsAString& aUTF16String);
+
+/**
  * Return a count of the total number of atoms currently
  * alive in the system.
  */
