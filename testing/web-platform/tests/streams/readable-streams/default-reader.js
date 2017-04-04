@@ -350,8 +350,8 @@ promise_test(t => {
     }
   );
 
-}, 'ReadableStreamDefaultReader: if start rejects with no parameter, it should error the stream with an undefined '
-    + 'error');
+}, 'ReadableStreamDefaultReader: if start rejects with no parameter, it should error the stream with an undefined ' +
+    'error');
 
 promise_test(t => {
 
