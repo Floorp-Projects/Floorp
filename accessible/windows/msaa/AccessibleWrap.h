@@ -14,9 +14,11 @@
 #include "ia2AccessibleComponent.h"
 #include "ia2AccessibleHyperlink.h"
 #include "ia2AccessibleValue.h"
+#include "mozilla/a11y/AccessibleHandler.h"
 #include "mozilla/a11y/MsaaIdGenerator.h"
 #include "mozilla/a11y/ProxyAccessible.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/mscom/Utils.h"
 
 #ifdef __GNUC__
 // Inheriting from both XPCOM and MSCOM interfaces causes a lot of warnings
@@ -188,6 +190,8 @@ public: // construction, destruction
   static uint32_t GetContentProcessIdFor(dom::ContentParentId aIPCContentId);
   static void ReleaseContentProcessIdFor(dom::ContentParentId aIPCContentId);
 
+  static void SetHandlerControl(DWORD aPid, RefPtr<IHandlerControl> aCtrl);
+
 protected:
   virtual ~AccessibleWrap();
 
@@ -242,6 +246,39 @@ protected:
     NAVRELATION_ERROR = 0x1017,
     NAVRELATION_ERROR_FOR = 0x1018
   };
+
+  struct HandlerControllerData final
+  {
+    HandlerControllerData(DWORD aPid, RefPtr<IHandlerControl>&& aCtrl)
+      : mPid(aPid)
+      , mCtrl(Move(aCtrl))
+    {
+      mIsProxy = mozilla::mscom::IsProxy(mCtrl);
+    }
+
+    HandlerControllerData(HandlerControllerData&& aOther)
+      : mPid(aOther.mPid)
+      , mIsProxy(aOther.mIsProxy)
+      , mCtrl(Move(aOther.mCtrl))
+    {
+    }
+
+    bool operator==(const HandlerControllerData& aOther) const
+    {
+      return mPid == aOther.mPid;
+    }
+
+    bool operator==(const DWORD& aPid) const
+    {
+      return mPid == aPid;
+    }
+
+    DWORD mPid;
+    bool mIsProxy;
+    RefPtr<IHandlerControl> mCtrl;
+  };
+
+  static StaticAutoPtr<nsTArray<HandlerControllerData>> sHandlerControllers;
 };
 
 static inline AccessibleWrap*
