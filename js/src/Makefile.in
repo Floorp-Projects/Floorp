@@ -18,13 +18,6 @@ DASH_R		= -r
 
 USE_HOST_CXX = 1
 
-ifdef HAVE_DTRACE
-ifneq ($(OS_ARCH),Darwin)
-DTRACE_PROBE_OBJ = $(LIBRARY_NAME)-dtrace.$(OBJ_SUFFIX)
-endif
-MOZILLA_DTRACE_SRC = $(srcdir)/devtools/javascript-trace.d
-endif
-
 # Ensure symbol versions of shared library on Linux do not conflict
 # with those in libxul.
 ifeq (Linux,$(OS_TARGET))
