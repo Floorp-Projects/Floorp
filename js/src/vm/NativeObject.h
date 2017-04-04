@@ -449,7 +449,7 @@ class NativeObject : public ShapedObject
 
     // Update the last property, keeping the number of allocated slots in sync
     // with the object's new slot span.
-    bool setLastProperty(JSContext* cx, Shape* shape);
+    MOZ_ALWAYS_INLINE bool setLastProperty(JSContext* cx, Shape* shape);
 
     // As for setLastProperty(), but allows the number of fixed slots to
     // change. This can only be used when fixed slots are being erased from the
@@ -879,7 +879,7 @@ class NativeObject : public ShapedObject
     static const uint32_t MAX_FIXED_SLOTS = 16;
 
   protected:
-    inline bool updateSlotsForSpan(JSContext* cx, size_t oldSpan, size_t newSpan);
+    MOZ_ALWAYS_INLINE bool updateSlotsForSpan(JSContext* cx, size_t oldSpan, size_t newSpan);
 
   private:
     void prepareElementRangeForOverwrite(size_t start, size_t end) {
