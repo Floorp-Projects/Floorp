@@ -18,6 +18,8 @@ let EXPORTED_SYMBOLS = ["Subprocess"];
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.importGlobalProperties(["TextEncoder"]);
+
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/subprocess/subprocess_common.jsm");
@@ -28,6 +30,19 @@ if (AppConstants.platform == "win") {
 } else {
   XPCOMUtils.defineLazyModuleGetter(this, "SubprocessImpl",
                                     "resource://gre/modules/subprocess/subprocess_unix.jsm");
+}
+
+function encodeEnvVar(name, value) {
+  if (typeof name === "string" && typeof value === "string") {
+    return `${name}=${value}`;
+  }
+
+  let encoder = new TextEncoder("utf-8");
+  function encode(val) {
+    return typeof val === "string" ? encoder.encode(val) : val;
+  }
+
+  return Uint8Array.of(...encode(name), ...encode("="), ...encode(value), 0);
 }
 
 /**
@@ -102,8 +117,8 @@ var Subprocess = {
       Object.assign(environment, options.environment);
     }
 
-    options.environment = Object.keys(environment)
-                                .map(key => `${key}=${environment[key]}`);
+    options.environment = Object.entries(environment)
+                                .map(([key, val]) => encodeEnvVar(key, val));
 
     options.arguments = Array.from(options.arguments || []);
 

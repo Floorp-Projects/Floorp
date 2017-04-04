@@ -106,7 +106,7 @@ public:
   bool HasAccessible(nsIDOMNode* aDOMNode);
 
   /**
-   * Get a string equivalent for an accessilbe role value.
+   * Get a string equivalent for an accessible role value.
    */
   void GetStringRole(uint32_t aRole, nsAString& aString);
 

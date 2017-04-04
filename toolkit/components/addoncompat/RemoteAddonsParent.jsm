@@ -834,7 +834,7 @@ ContentDocumentInterposition.methods.importNode =
   };
 
 // This interposition ensures that calling browser.docShell from an
-// add-on returns a CPOW around the dochell.
+// add-on returns a CPOW around the docshell.
 var RemoteBrowserElementInterposition = new Interposition("RemoteBrowserElementInterposition",
                                                           EventTargetInterposition);
 
