@@ -64,6 +64,7 @@ nsComposerController::RegisterEditorDocStateCommands(
   NS_REGISTER_NEXT_COMMAND(nsSetDocumentStateCommand, "cmd_setDocumentUseCSS")
   NS_REGISTER_NEXT_COMMAND(nsSetDocumentStateCommand, "cmd_setDocumentReadOnly")
   NS_REGISTER_NEXT_COMMAND(nsSetDocumentStateCommand, "cmd_insertBrOnReturn")
+  NS_REGISTER_NEXT_COMMAND(nsSetDocumentStateCommand, "cmd_defaultParagraphSeparator")
   NS_REGISTER_NEXT_COMMAND(nsSetDocumentStateCommand, "cmd_enableObjectResizing")
   NS_REGISTER_LAST_COMMAND(nsSetDocumentStateCommand, "cmd_enableInlineTableEditing")
 

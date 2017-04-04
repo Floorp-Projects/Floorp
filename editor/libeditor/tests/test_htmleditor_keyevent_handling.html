@@ -192,7 +192,7 @@ function runTests()
     synthesizeKey("VK_RETURN", { });
     check(aDescription + "Return",
           true, true, !aIsReadonly);
-    is(aElement.innerHTML, aIsReadonly ? "a" : "a<br><br>",
+    is(aElement.innerHTML, aIsReadonly ? "a" : "<div>a</div><br>",
        aDescription + "Return");
 
     reset("a");

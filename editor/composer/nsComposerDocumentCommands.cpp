@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
+#include "mozilla/HTMLEditor.h"         // for HTMLEditor
 #include "nsCOMPtr.h"                   // for nsCOMPtr, do_QueryInterface, etc
 #include "nsCRT.h"                      // for nsCRT
 #include "nsComposerCommands.h"         // for nsSetDocumentOptionsCommand, etc
@@ -26,6 +27,8 @@
 #include "nsIURI.h"                     // for nsIURI
 #include "nsPresContext.h"              // for nsPresContext
 #include "nscore.h"                     // for NS_IMETHODIMP, nsresult, etc
+
+using namespace mozilla;
 
 class nsISupports;
 
@@ -256,6 +259,42 @@ nsSetDocumentStateCommand::DoCommandParams(const char *aCommandName,
     return htmleditor->SetReturnInParagraphCreatesNewParagraph(!insertBrOnReturn);
   }
 
+  if (!nsCRT::strcmp(aCommandName, "cmd_defaultParagraphSeparator")) {
+    if (NS_WARN_IF(!aParams)) {
+      return NS_ERROR_NULL_POINTER;
+    }
+    nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
+    if (NS_WARN_IF(!editor)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    auto htmlEditor = static_cast<HTMLEditor*>(editor.get());
+
+    nsXPIDLCString newValue;
+    nsresult rv = aParams->GetCStringValue(STATE_ATTRIBUTE,
+                                           getter_Copies(newValue));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (newValue.LowerCaseEqualsLiteral("div")) {
+      htmlEditor->SetDefaultParagraphSeparator(ParagraphSeparator::div);
+      return NS_OK;
+    }
+    if (newValue.LowerCaseEqualsLiteral("p")) {
+      htmlEditor->SetDefaultParagraphSeparator(ParagraphSeparator::p);
+      return NS_OK;
+    }
+    if (newValue.LowerCaseEqualsLiteral("br")) {
+      // Mozilla extension for backwards compatibility
+      htmlEditor->SetDefaultParagraphSeparator(ParagraphSeparator::br);
+      return NS_OK;
+    }
+
+    // This should not be reachable from nsHTMLDocument::ExecCommand
+    NS_WARNING("Invalid default paragraph separator");
+    return NS_ERROR_UNEXPECTED;
+  }
+
   if (!nsCRT::strcmp(aCommandName, "cmd_enableObjectResizing")) {
     NS_ENSURE_ARG_POINTER(aParams);
     nsCOMPtr<nsIHTMLObjectResizer> resizer = do_QueryInterface(refCon);
@@ -336,6 +375,35 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
     bool createPOnReturn;
     htmleditor->GetReturnInParagraphCreatesNewParagraph(&createPOnReturn);
     return aParams->SetBooleanValue(STATE_ATTRIBUTE, !createPOnReturn);
+  }
+
+  if (!nsCRT::strcmp(aCommandName, "cmd_defaultParagraphSeparator")) {
+    if (NS_WARN_IF(!aParams)) {
+      return NS_ERROR_NULL_POINTER;
+    }
+    nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
+    if (NS_WARN_IF(!editor)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    auto htmlEditor = static_cast<HTMLEditor*>(editor.get());
+
+    switch (htmlEditor->GetDefaultParagraphSeparator()) {
+      case ParagraphSeparator::div:
+        aParams->SetCStringValue(STATE_ATTRIBUTE, "div");
+        return NS_OK;
+
+      case ParagraphSeparator::p:
+        aParams->SetCStringValue(STATE_ATTRIBUTE, "p");
+        return NS_OK;
+
+      case ParagraphSeparator::br:
+        aParams->SetCStringValue(STATE_ATTRIBUTE, "br");
+        return NS_OK;
+
+      default:
+        MOZ_ASSERT_UNREACHABLE("Invalid paragraph separator value");
+        return NS_ERROR_UNEXPECTED;
+    }
   }
 
   if (!nsCRT::strcmp(aCommandName, "cmd_enableObjectResizing")) {
