@@ -89,7 +89,7 @@ public:
   already_AddRefed<mozilla::css::URLValue> IntoCssUrl();
   const uint8_t* mURLString;
   uint32_t mURLStringLength;
-  mozilla::css::URLExtraData* mExtraData;
+  mozilla::URLExtraData* mExtraData;
 };
 
 // DOM Traversal.
