@@ -4,16 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * This module is for small observers that we want to register once per content
- * process, usually in order to forward content-based observer service notifications
- * to the chrome process through message passing. Using a JSM avoids having them
- * in content.js and thereby registering N observers for N open tabs, which is bad
- * for perf.
+ * This process script is for small observers that we want to register
+ * once per content process, usually in order to forward content-based
+ * observer service notifications to the chrome process through
+ * message passing. Using a process script avoids having them in
+ * content.js and thereby registering N observers for N open tabs,
+ * which is bad for perf.
  */
 
 "use strict";
-
-this.EXPORTED_SYMBOLS = [];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
