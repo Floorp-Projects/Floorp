@@ -23,10 +23,7 @@ from mozpack.copier import (
     FileCopier,
 )
 from mozpack.packager import SimplePackager
-from mozpack.packager.formats import (
-    FlatFormatter,
-    STARTUP_CACHE_PATHS,
-)
+from mozpack.packager.formats import FlatFormatter
 from urlparse import urlparse
 
 
@@ -188,8 +185,7 @@ def unpack_to_registry(source, registry):
     finder = UnpackFinder(source)
     packager = SimplePackager(FlatFormatter(registry))
     for p, f in finder.find('*'):
-        if mozpath.split(p)[0] not in STARTUP_CACHE_PATHS:
-            packager.add(p, f)
+        packager.add(p, f)
     packager.close()
 
 
