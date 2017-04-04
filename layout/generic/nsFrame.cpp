@@ -1702,7 +1702,7 @@ nsIFrame::GetVisibility() const
   }
 
   bool isSet = false;
-  FrameProperties props = Properties();
+  ConstFrameProperties props = Properties();
   uint32_t visibleCount = props.Get(VisibilityStateProperty(), &isSet);
 
   MOZ_ASSERT(isSet, "Should have a VisibilityStateProperty value "
