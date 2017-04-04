@@ -185,10 +185,6 @@ HandlerService.prototype = {
       askBeforeHandling: handlerInfo.alwaysAskBeforeHandling,
     };
 
-    if (handlerInfo.description) {
-      handlerObj.description = handlerInfo.description;
-    }
-
     let preferredHandler = handlerInfo.preferredApplicationHandler;
     if (preferredHandler) {
       let serializable = this.handlerAppToSerializable(preferredHandler);
@@ -235,7 +231,6 @@ HandlerService.prototype = {
       throw new Components.Exception("handlerSvc fillHandlerInfo: don't know this type",
                                      Cr.NS_ERROR_NOT_AVAILABLE);
     }
-    handlerInfo.description = storedHandlerInfo.description;
 
     // logic from _retrievePreferredAction of nsHandlerService.js
     if (storedHandlerInfo.action == Ci.nsIHandlerInfo.saveToDisk ||

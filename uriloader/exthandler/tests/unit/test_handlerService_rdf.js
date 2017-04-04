@@ -7,8 +7,6 @@
  * Tests the handlerService interfaces using RDF backend.
  */
 
-"use strict"
-
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -23,16 +21,13 @@ Services.scriptloader.loadSubScript(NetUtil.newURI(scriptFile).spec);
 var prepareImportDB = Task.async(function* () {
   yield reloadData();
 
-  let dst = HandlerServiceTest._dirSvc.get("UMimTyp", Ci.nsIFile);
-  yield OS.File.copy(do_get_file("mimeTypes.rdf").path, dst.path);
-  Assert.ok((yield OS.File.exists(dst.path)), "should have a DB now");
+  yield OS.File.copy(do_get_file("mimeTypes.rdf").path, rdfFile.path);
 });
 
 var removeImportDB = Task.async(function* () {
   yield reloadData();
-  HandlerServiceTest._deleteDatasourceFile();
-  let dst = HandlerServiceTest._dirSvc.get("UMimTyp", Ci.nsIFile);
-  Assert.ok(!(yield OS.File.exists(dst.path)), "should not have a DB now");
+
+  yield OS.File.remove(rdfFile.path, { ignoreAbsent: true });
 });
 
 var reloadData = Task.async(function* () {

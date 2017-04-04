@@ -155,8 +155,8 @@ function runTests() {
     "The <ul> list should have been splitted.");
   is(test2.querySelectorAll("ul li").length, 3,
     "No new <li> element should have been created.");
-  is(test2.querySelectorAll("ul+p").length, 1,
-    "A new paragraph should have been created.");
+  is(test2.querySelectorAll("ul+div").length, 1,
+    "A new div should have been created in the <ul>.");
 
   // ordered list
   try2split(test2.querySelector("ol li"), CARET_END);
@@ -164,8 +164,8 @@ function runTests() {
     "The <ol> list should have been splitted.");
   is(test2.querySelectorAll("ol li").length, 3,
     "No new <li> element should have been created.");
-  is(test2.querySelectorAll("ol+p").length, 1,
-    "A new paragraph should have been created.");
+  is(test2.querySelectorAll("ol+div").length, 1,
+    "A new div should have been created in the <ol>.");
 
   // definition list
   try2split(test2.querySelector("dl dd"), CARET_END);
@@ -173,8 +173,8 @@ function runTests() {
     "The <dl> list should have been splitted.");
   is(test2.querySelectorAll("dt").length, 3,
     "No new <dt> element should have been created.");
-  is(test2.querySelectorAll("dl+p").length, 1,
-    "A new paragraph should have been created.");
+  is(test2.querySelectorAll("dl+div").length, 1,
+    "A new div should have been created in the <dl>.");
 
   // done
   SimpleTest.finish();
