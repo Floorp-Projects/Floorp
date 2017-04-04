@@ -15,16 +15,11 @@
 #include "VideoUtils.h"
 #include "TimeUnits.h"
 
-#ifdef PR_LOGGING
 extern mozilla::LazyLogModule gMediaDemuxerLog;
 #define LOG(msg, ...) \
   MOZ_LOG(gMediaDemuxerLog, LogLevel::Debug, ("FlacDemuxer " msg, ##__VA_ARGS__))
 #define LOGV(msg, ...) \
   MOZ_LOG(gMediaDemuxerLog, LogLevel::Verbose, ("FlacDemuxer " msg, ##__VA_ARGS__))
-#else
-#define LOG(msg, ...)  do {} while (false)
-#define LOGV(msg, ...) do {} while (false)
-#endif
 
 using namespace mozilla::media;
 
