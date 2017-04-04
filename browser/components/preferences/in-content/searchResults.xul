@@ -1,0 +1,18 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<stringbundle id="searchResultBundle" src="chrome://browser/locale/preferences/preferences.properties"/>
+
+<hbox id="header-searchResults"
+      class="header"
+      hidden="true"
+      data-category="paneSearchResults">
+  <label class="header-name" flex="1">&paneSearchResults.title;</label>
+  <html:a class="help-button" target="_blank" aria-label="&helpButton.label;"></html:a>
+</hbox>
+
+<groupbox class="no-results-message" align="start" data-category="paneSearchResults" hidden="true">
+  <label id="sorry-message"></label>
+  <label id="need-help"></label>
+</groupbox>
