@@ -324,8 +324,6 @@ server.TCPListener = class {
     let flags = Ci.nsIServerSocket.KeepWhenOffline;
     if (this.forceLocal) {
       flags |= Ci.nsIServerSocket.LoopbackOnly;
-    } else {
-      logger.warn("Server socket is not limited to loopback connections");
     }
     this.listener = new ServerSocket(this.port, flags, 1);
     this.listener.asyncListen(this);
