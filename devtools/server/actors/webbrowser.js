@@ -722,7 +722,7 @@ BrowserTabActor.prototype = {
   },
 
   get _tabbrowser() {
-    if (typeof this._browser.getTabBrowser == "function") {
+    if (this._browser && typeof this._browser.getTabBrowser == "function") {
       return this._browser.getTabBrowser();
     }
     return null;
@@ -764,7 +764,7 @@ BrowserTabActor.prototype = {
    */
   get title() {
     // On Fennec, we can check the session store data for zombie tabs
-    if (this._browser.__SS_restore) {
+    if (this._browser && this._browser.__SS_restore) {
       let sessionStore = this._browser.__SS_data;
       // Get the last selected entry
       let entry = sessionStore.entries[sessionStore.index - 1];
@@ -788,7 +788,7 @@ BrowserTabActor.prototype = {
    */
   get url() {
     // On Fennec, we can check the session store data for zombie tabs
-    if (this._browser.__SS_restore) {
+    if (this._browser && this._browser.__SS_restore) {
       let sessionStore = this._browser.__SS_data;
       // Get the last selected entry
       let entry = sessionStore.entries[sessionStore.index - 1];
