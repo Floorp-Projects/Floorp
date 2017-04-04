@@ -38,12 +38,12 @@ class AvdInfo(object):
     """
 
     def __init__(self, description, name, tooltool_manifest, extra_args,
-                 port):
+                 x86):
         self.description = description
         self.name = name
         self.tooltool_manifest = tooltool_manifest
         self.extra_args = extra_args
-        self.port = port
+        self.x86 = x86
 
 
 """
@@ -58,13 +58,13 @@ AVD_DICT = {
                    'testing/config/tooltool-manifests/androidarm_4_3/mach-emulator.manifest',
                    ['-show-kernel', '-debug',
                     'init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket'],
-                   5554),
+                   False),
     '6.0': AvdInfo('Android 6.0',
                    'mozemulator-6.0',
                    'testing/config/tooltool-manifests/androidarm_6_0/mach-emulator.manifest',
                    ['-show-kernel', '-debug',
                     'init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket'],
-                   5554),
+                   False),
     '7.0': AvdInfo('Android 7.0',
                    'mozemulator-7.0',
                    'testing/config/tooltool-manifests/androidarm_7_0/mach-emulator.manifest',
@@ -72,14 +72,14 @@ AVD_DICT = {
                     'init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket',
                     '-ranchu',
                     '-qemu', '-m', '2048'],
-                   5554),
+                   False),
     'x86': AvdInfo('Android 4.2 x86',
                    'mozemulator-x86',
                    'testing/config/tooltool-manifests/androidx86/mach-emulator.manifest',
                    ['-debug',
                     'init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket',
                     '-qemu', '-m', '1024', '-enable-kvm'],
-                   5554),
+                   True),
     'x86-6.0': AvdInfo('Android 6.0 x86',
                        'mozemulator-x86-6.0',
                        'testing/config/tooltool-manifests/androidx86_6_0/mach-emulator.manifest',
@@ -87,7 +87,7 @@ AVD_DICT = {
                         'init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket',
                         '-ranchu',
                         '-qemu', '-m', '2048'],
-                       5554)
+                       True)
 }
 
 
@@ -339,6 +339,7 @@ class AndroidEmulator(object):
         self.dm = DeviceManagerADB(autoconnect=False, adbPath=adb_path, retryLimit=1,
                                    deviceSerial=device_serial)
         self.dm.default_timeout = 10
+        _log_debug("Running on %s" % platform.platform())
         _log_debug("Emulator created with type %s" % self.avd_type)
 
     def __del__(self):
@@ -486,6 +487,10 @@ class AndroidEmulator(object):
 
         if not self._verify_emulator():
             return False
+        if self.avd_info.x86:
+            _log_info("Running the x86 emulator; be sure to install an x86 APK!")
+        else:
+            _log_info("Running the arm emulator; be sure to install an arm APK!")
         return True
 
     def check_completed(self):
@@ -498,7 +503,7 @@ class AndroidEmulator(object):
                 return False
             _log_warning("Emulator has already completed!")
             log_path = os.path.join(EMULATOR_HOME_DIR, 'emulator.log')
-            _log_warning("See log at %s for more information." % log_path)
+            _log_warning("See log at %s and/or use --verbose for more information." % log_path)
             return True
         return False
 
@@ -561,7 +566,7 @@ class AndroidEmulator(object):
         tn = None
         while(not telnet_ok):
             try:
-                tn = telnetlib.Telnet('localhost', self.avd_info.port, 10)
+                tn = telnetlib.Telnet('localhost', 5554, 10)
                 if tn is not None:
                     tn.read_until('OK', 10)
                     self._telnet_cmd(tn, 'avd status')
@@ -571,7 +576,7 @@ class AndroidEmulator(object):
                     tn.read_all()
                     telnet_ok = True
                 else:
-                    _log_warning("Unable to connect to port %d" % self.avd_info.port)
+                    _log_warning("Unable to connect to port 5554")
             except:
                 _log_warning("Trying again after unexpected exception")
             finally:
@@ -654,6 +659,20 @@ def _find_sdk_exe(substs, exe, tools):
 
     if found:
         _log_debug("%s found at %s" % (exe, exe_path))
+        try:
+            creation_time = os.path.getctime(exe_path)
+            _log_debug("  ...with creation time %s" % time.ctime(creation_time))
+        except:
+            _log_warning("Could not get creation time for %s" % exe_path)
+
+        prop_path = os.path.join(os.path.dirname(exe_path), "source.properties")
+        if os.path.exists(prop_path):
+            with open(prop_path, 'r') as f:
+                for line in f.readlines():
+                    if line.startswith("Pkg.Revision"):
+                        line = line.strip()
+                        _log_debug("  ...with SDK version in %s: %s" % (prop_path, line))
+                        break
     else:
         exe_path = None
     return exe_path
