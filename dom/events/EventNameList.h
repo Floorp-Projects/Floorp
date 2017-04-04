@@ -835,19 +835,6 @@ NON_IDL_EVENT(SVGScroll,
               EventNameType_None,
               eBasicEventClass)
 
-NON_IDL_EVENT(SVGZoom,
-              eSVGZoom,
-              EventNameType_None,
-              eSVGZoomEventClass)
-
-// Only map the ID to the real event name when MESSAGE_TO_EVENT is defined.
-#ifndef MESSAGE_TO_EVENT
-// This is a bit hackish, but SVG's event names are weird.
-NON_IDL_EVENT(zoom,
-              eSVGZoom,
-              EventNameType_SVGSVG,
-              eBasicEventClass)
-#endif
 // Only map the ID to the real event name when MESSAGE_TO_EVENT is defined.
 #ifndef MESSAGE_TO_EVENT
 NON_IDL_EVENT(begin,

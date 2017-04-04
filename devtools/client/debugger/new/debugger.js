@@ -73515,7 +73515,6 @@ return /******/ (function(modules) { // webpackBootstrap
 			"SVGViewSpec": false,
 			"SVGVKernElement": false,
 			"SVGZoomAndPan": false,
-			"SVGZoomEvent": false,
 			"Text": false,
 			"TextDecoder": false,
 			"TextEncoder": false,

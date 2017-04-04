@@ -317,38 +317,6 @@ public:
 };
 
 /******************************************************************************
- * mozilla::InternalSVGZoomEvent
- ******************************************************************************/
-
-class InternalSVGZoomEvent : public WidgetGUIEvent
-{
-public:
-  virtual InternalSVGZoomEvent* AsSVGZoomEvent() override { return this; }
-
-  InternalSVGZoomEvent(bool aIsTrusted, EventMessage aMessage)
-    : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, eSVGZoomEventClass)
-  {
-  }
-
-  virtual WidgetEvent* Duplicate() const override
-  {
-    MOZ_ASSERT(mClass == eSVGZoomEventClass,
-               "Duplicate() must be overridden by sub class");
-    // Not copying widget, it is a weak reference.
-    InternalSVGZoomEvent* result = new InternalSVGZoomEvent(false, mMessage);
-    result->AssignSVGZoomEventData(*this, true);
-    result->mFlags = mFlags;
-    return result;
-  }
-
-  void AssignSVGZoomEventData(const InternalSVGZoomEvent& aEvent,
-                              bool aCopyTargets)
-  {
-    AssignGUIEventData(aEvent, aCopyTargets);
-  }
-};
-
-/******************************************************************************
  * mozilla::InternalSMILTimeEvent
  ******************************************************************************/
 

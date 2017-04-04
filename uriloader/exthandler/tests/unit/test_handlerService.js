@@ -64,7 +64,7 @@ function run_test() {
   // that exists on all platforms (except possibly the application being
   // tested, but there doesn't seem to be a way to get a reference to that
   // from the directory service), we use the temporary directory itself.
-  var executable = HandlerServiceTest._dirSvc.get("TmpD", Ci.nsIFile);
+  var executable = Services.dirsvc.get("TmpD", Ci.nsIFile);
   // XXX We could, of course, create an actual executable in the directory:
   //executable.append("localhandler");
   //if (!executable.exists())
@@ -438,7 +438,6 @@ function run_test() {
   do_check_true(handlerSvc.exists(lolHandler));
 
   // Get a file:// string pointing to mimeTypes.rdf
-  var rdfFile = HandlerServiceTest._dirSvc.get("UMimTyp", Ci.nsIFile);
   var fileHandler = ioService.getProtocolHandler("file").QueryInterface(Ci.nsIFileProtocolHandler);
   var rdfFileURI = fileHandler.getURLSpecFromFile(rdfFile);
 

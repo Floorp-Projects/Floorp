@@ -676,7 +676,7 @@ HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
         return NS_OK;
       }
       aKeyboardEvent->PreventDefault(); // consumed
-      if (aKeyboardEvent->IsShift() && !IsPlaintextEditor()) {
+      if (aKeyboardEvent->IsShift()) {
         // only inserts a br node
         return TypedText(EmptyString(), eTypedBR);
       }
@@ -3170,7 +3170,7 @@ HTMLEditor::DeleteNode(nsIDOMNode* aNode)
 {
   // do nothing if the node is read-only
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  if (!IsModifiableNode(aNode) && !IsMozEditorBogusNode(content)) {
+  if (NS_WARN_IF(!IsModifiableNode(aNode) && !IsMozEditorBogusNode(content))) {
     return NS_ERROR_FAILURE;
   }
 
