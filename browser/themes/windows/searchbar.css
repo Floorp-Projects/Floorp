@@ -206,6 +206,10 @@
   border-bottom: 1px solid var(--panel-separator-color);
 }
 
+.searchbar-engine-one-off-item:-moz-focusring {
+  outline: none;
+}
+
 .search-setting-button-compact {
   border-bottom: none !important;
 }
@@ -225,7 +229,6 @@
 }
 
 .searchbar-engine-one-off-item > .button-box {
-  border: none;
   padding: 0;
 }
 
