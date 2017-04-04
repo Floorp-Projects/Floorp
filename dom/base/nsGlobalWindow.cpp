@@ -13687,7 +13687,12 @@ nsGlobalWindow::DispatchVRDisplayActivate(uint32_t aDisplayID,
       // HMD mounting detection sensors.
       event->SetTrusted(true);
       bool defaultActionEnabled;
+      // VRDisplay.requestPresent normally requires a user gesture; however, an
+      // exception is made to allow it to be called in response to vrdisplayactivate
+      // during VR link traversal.
+      display->StartHandlingVRNavigationEvent();
       Unused << DispatchEvent(event, &defaultActionEnabled);
+      display->StopHandlingVRNavigationEvent();
       // Once we dispatch the event, we must not access any members as an event
       // listener can do anything, including closing windows.
       return;
