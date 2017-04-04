@@ -10,64 +10,11 @@
 <body>
 <script type="text/javascript" src="mock_gamepad.js"></script>
 <script class="testbody" type="text/javascript">
+// This test loads in an iframe, to ensure that the navigator instance is
+// loaded with the correct value of the preference.
 SimpleTest.waitForExplicitFinish();
-// Due to gamepad being a polling API instead of event driven, test ordering
-// ends up being a little weird in order to deal with e10s. Calls to
-// GamepadService are async across processes, so we'll need to make sure
-// we account for timing before checking values.
-window.addEventListener("gamepadconnected", connecthandler);
-var index;
-var testNum = 0;
-
-window.addEventListener("gamepadbuttondown", () => {
-  SpecialPowers.executeSoon(buttontest1);
-});
-
-window.addEventListener("gamepadbuttonup", () => {
-  SpecialPowers.executeSoon(buttontest2);
-});
-
-runGamepadTest(startTest);
-
-function startTest() {
-  // Add a gamepad
-  GamepadService.addGamepad("test gamepad", // id
-                     GamepadService.standardMapping,
-                     GamepadService.noHand,
-                     4,
-                     2,
-                     0).then(function(i) {
-                       index = i;
-                       // Simulate button events on the gamepad we added
-                       GamepadService.newButtonEvent(index, 0, true);
-                     });
-}
-
-function connecthandler(e) {
-  ok(e.gamepad.timestamp <= performance.now(),
-     "gamepad.timestamp should less than or equal to performance.now()");
-  is(e.gamepad.index, 0, "correct gamepad index");
-  is(e.gamepad.id, "test gamepad", "correct gamepad name");
-  is(e.gamepad.mapping, "standard", "standard mapping");
-  is(e.gamepad.buttons.length, 4, "correct number of buttons");
-  is(e.gamepad.axes.length, 2, "correct number of axes");
-}
-
-function buttontest1() {
-  var gamepads = navigator.getGamepads();
-  is(gamepads[0].buttons[0].pressed, true, "gamepad button should register as pressed");
-  GamepadService.newButtonValueEvent(index, 1, true, 0.5);
-}
-
-function buttontest2() {
-  var gamepads = navigator.getGamepads();
-  is(gamepads[0].buttons[1].pressed, true, "gamepad button should register as pressed");
-  is(gamepads[0].buttons[1].value, 0.5, "gamepad button value should be 0.5");
-  GamepadService.removeGamepad(index);
-  SimpleTest.finish();
-}
+setGamepadPreferenceAndCreateIframe("test_gamepad_iframe.html");
 
 </script>
 </body>
 </html>
-
