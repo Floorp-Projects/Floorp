@@ -25,27 +25,15 @@ const PREF_FORCE_LOCAL_FALLBACK = "marionette.force-local";
 
 const DEFAULT_PORT = 2828;
 const DEFAULT_LOG_LEVEL = "info";
-const LOG_LEVELS = new class extends Map {
-  constructor () {
-    super([
-      ["fatal", Log.Level.Fatal],
-      ["error", Log.Level.Error],
-      ["warn", Log.Level.Warn],
-      ["info", Log.Level.Info],
-      ["config", Log.Level.Config],
-      ["debug", Log.Level.Debug],
-      ["trace", Log.Level.Trace],
-    ]);
-  }
-
-  get (level) {
-    let s = new String(level).toLowerCase();
-    if (!this.has(s)) {
-      return DEFAULT_LOG_LEVEL;
-    }
-    return super.get(s);
-  }
-};
+const LOG_LEVELS = new Map([
+  ["fatal", Log.Level.Fatal],
+  ["error", Log.Level.Error],
+  ["warn", Log.Level.Warn],
+  ["info", Log.Level.Info],
+  ["config", Log.Level.Config],
+  ["debug", Log.Level.Debug],
+  ["trace", Log.Level.Trace],
+]);
 
 // Besides starting based on existing prefs in a profile and a command
 // line flag, we also support inheriting prefs out of an env var, and to
@@ -65,15 +53,6 @@ const ServerSocket = CC("@mozilla.org/network/server-socket;1",
     "nsIServerSocket",
     "initSpecialConnection");
 
-// Get preference value of |preferred|, falling back to |fallback|
-// if |preferred| is not user-modified and |fallback| exists.
-function getPref (preferred, fallback) {
-  if (!Preferences.isSet(preferred) && Preferences.has(fallback)) {
-    return Preferences.get(fallback, Preferences.get(preferred));
-  }
-  return Preferences.get(preferred);
-}
-
 // Marionette preferences recently changed names.  This is an abstraction
 // that first looks for the new name, but falls back to using the old name
 // if the new does not exist.
@@ -81,16 +60,38 @@ function getPref (preferred, fallback) {
 // This shim can be removed when Firefox 55 ships.
 const prefs = {
   get port () {
-    return getPref(PREF_PORT, PREF_PORT_FALLBACK);
+    let fallback = Preferences.get(PREF_PORT_FALLBACK, DEFAULT_PORT);
+    return Preferences.get(PREF_PORT, fallback);
   },
 
   get logLevel () {
-    let s = getPref(PREF_LOG_LEVEL, PREF_LOG_LEVEL_FALLBACK);
-    return LOG_LEVELS.get(s);
+    let level = DEFAULT_LOG_LEVEL;
+    let fallback = Preferences.get(PREF_LOG_LEVEL_FALLBACK, level);
+    let p = Preferences.get(PREF_LOG_LEVEL, fallback);
+
+    switch (typeof p) {
+      // Gecko >= 46
+      case "string":
+        let s = p.toLowerCase();
+        if (LOG_LEVELS.has(s)) {
+          level = LOG_LEVELS.get(s);
+        }
+        break;
+
+      // Gecko <= 45
+      case "boolean":
+        if (p) {
+          level = Log.Level.Trace;
+        }
+        break;
+    }
+
+    return level;
   },
 
   get forceLocal () {
-    return getPref(PREF_FORCE_LOCAL, PREF_FORCE_LOCAL_FALLBACK);
+    let fallback = Preferences.get(PREF_FORCE_LOCAL_FALLBACK, true);
+    return Preferences.get(PREF_FORCE_LOCAL, fallback);
   },
 
   readFromEnvironment (key) {
