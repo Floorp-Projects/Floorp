@@ -433,5 +433,6 @@ function enableServiceWorkerDebugging() {
       ["dom.ipc.processCount", 1],
     ]};
     SpecialPowers.pushPrefEnv(options, done);
+    Services.ppmm.releaseCachedProcesses();
   });
 }
