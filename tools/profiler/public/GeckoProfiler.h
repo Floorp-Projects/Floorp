@@ -9,7 +9,9 @@
 // generic cross-platform way without requiring custom tools or kernel support.
 //
 // Samples are collected to form a timeline with optional timeline event
-// (markers) used for filtering.
+// (markers) used for filtering. Both "periodic" (in response to a timer) and
+// "synchronous" (in response to an explicit sampling request via the API)
+// samples are supported.
 //
 // The profiler collects samples that include native stacks and
 // platform-independent "pseudostacks".
@@ -317,11 +319,10 @@ PROFILER_FUNC_VOID(profiler_log(const char *str))
 class nsISupports;
 class ProfilerMarkerPayload;
 
-// Each thread gets its own PseudoStack on thread creation. tlsPseudoStack is
-// the owning reference; ThreadInfo has a non-owning reference. On thread
-// destruction, either (a) the PseudoStack and the ThreadInfo are both
-// destroyed, or (b) neither is destroyed and ownership of PseudoStack is
-// transferred to the ThreadInfo. Either way, tlsPseudoStack is cleared.
+// Each thread gets its own PseudoStack on thread creation. ThreadInfo has the
+// owning reference; tlsPseudoStack is a non-owning reference. On thread
+// destruction, tlsPseudoStack is cleared, and the ThreadInfo (along with its
+// PseudoStack) may or may not be destroyed.
 //
 // Non-owning PseudoStack references are also temporarily used by
 // profiler_call_{enter,exit}() pairs. RAII classes ensure these calls are

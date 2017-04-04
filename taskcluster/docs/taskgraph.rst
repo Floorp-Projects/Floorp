@@ -154,7 +154,7 @@ Mach commands
 -------------
 
 A number of mach subcommands are available aside from ``mach taskgraph
-decision`` to make this complex system more accesssible to those trying to
+decision`` to make this complex system more accessible to those trying to
 understand or modify it.  They allow you to run portions of the
 graph-generation process and output the results.
 

@@ -716,6 +716,33 @@ add_task(function* test_subprocess_environmentAppend() {
   equal(exitCode, 0, "Got expected exit code");
 });
 
+if (AppConstants.platform !== "win") {
+  add_task(function* test_subprocess_nonASCII() {
+    const {libc} = Cu.import("resource://gre/modules/subprocess/subprocess_unix.jsm", {});
+
+    // Use TextDecoder rather than a string with a \xff escape, since
+    // the latter will automatically be normalized to valid UTF-8.
+    let val = new TextDecoder().decode(Uint8Array.of(1, 255));
+
+    libc.setenv("FOO", Uint8Array.from(val + "\0", c => c.charCodeAt(0)), 1);
+
+    let proc = yield Subprocess.call({
+      command: PYTHON,
+      arguments: ["-u", TEST_SCRIPT, "env", "FOO"],
+    });
+
+    let foo = yield read(proc.stdout);
+
+    equal(foo, val, "Got expected $FOO value");
+
+    env.set("FOO", "");
+
+    let {exitCode} = yield proc.wait();
+
+    equal(exitCode, 0, "Got expected exit code");
+  });
+}
+
 
 add_task(function* test_bad_executable() {
   // Test with a non-executable file.

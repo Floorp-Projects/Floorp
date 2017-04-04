@@ -1068,8 +1068,36 @@ nsTextEditorState::nsTextEditorState(nsITextControlElement* aOwningElement)
   , mSelectionRestoreEagerInit(false)
   , mPlaceholderVisibility(false)
   , mIsCommittingComposition(false)
+  // When adding more member variable initializations here, add the same
+  // also to ::Construct.
 {
   MOZ_COUNT_CTOR(nsTextEditorState);
+}
+
+nsTextEditorState*
+nsTextEditorState::Construct(nsITextControlElement* aOwningElement,
+                             nsTextEditorState** aReusedState)
+{
+  if (*aReusedState) {
+    nsTextEditorState* state = *aReusedState;
+    *aReusedState = nullptr;
+    state->mTextCtrlElement = aOwningElement;
+    state->mBoundFrame = nullptr;
+    state->mSelectionProperties = SelectionProperties();
+    state->mEverInited = false;
+    state->mEditorInitialized = false;
+    state->mInitializing = false;
+    state->mValueTransferInProgress = false;
+    state->mSelectionCached = true;
+    state->mSelectionRestoreEagerInit = false;
+    state->mPlaceholderVisibility = false;
+    state->mIsCommittingComposition = false;
+    // When adding more member variable initializations here, add the same
+    // also to the constructor.
+    return state;
+  }
+
+  return new nsTextEditorState(aOwningElement);
 }
 
 nsTextEditorState::~nsTextEditorState()

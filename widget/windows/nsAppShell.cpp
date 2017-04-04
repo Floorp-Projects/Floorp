@@ -36,14 +36,8 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-#define WAKE_LOCK_LOG(...) MOZ_LOG(GetWinWakeLockLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
-PRLogModuleInfo* GetWinWakeLockLog() {
-  static PRLogModuleInfo* log = nullptr;
-  if (!log) {
-    log = PR_NewLogModule("WinWakeLock");
-  }
-  return log;
-}
+#define WAKE_LOCK_LOG(...) MOZ_LOG(gWinWakeLockLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+static mozilla::LazyLogModule gWinWakeLockLog("WinWakeLock");
 
 // A wake lock listener that disables screen saver when requested by
 // Gecko. For example when we're playing video in a foreground tab we

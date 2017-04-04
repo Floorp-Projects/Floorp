@@ -432,6 +432,14 @@ class JitZone
     }
 };
 
+enum class BailoutReturnStub {
+    GetProp,
+    SetProp,
+    Call,
+    New,
+    Count
+};
+
 class JitCompartment
 {
     friend class JitActivation;
@@ -461,9 +469,17 @@ class JitCompartment
 
     // Keep track of offset into various baseline stubs' code at return
     // point from called script.
-    void* baselineCallReturnAddrs_[2];
-    void* baselineGetPropReturnAddr_;
-    void* baselineSetPropReturnAddr_;
+    struct BailoutReturnStubInfo
+    {
+        void* addr;
+        uint32_t key;
+
+        BailoutReturnStubInfo() : addr(nullptr), key(0) { }
+        BailoutReturnStubInfo(void* addr_, uint32_t key_) : addr(addr_), key(key_) { }
+    };
+    mozilla::EnumeratedArray<BailoutReturnStub,
+                             BailoutReturnStub::Count,
+                             BailoutReturnStubInfo> bailoutReturnStubInfo_;
 
     // Stubs to concatenate two strings inline, or perform RegExp calls inline.
     // These bake in zone and compartment specific pointers and can't be stored
@@ -509,7 +525,7 @@ class JitCompartment
     }
 
     JitCode* getStubCode(uint32_t key) {
-        ICStubCodeMap::AddPtr p = stubCodes_->lookupForAdd(key);
+        ICStubCodeMap::Ptr p = stubCodes_->lookup(key);
         if (p)
             return p->value();
         return nullptr;
@@ -538,29 +554,13 @@ class JitCompartment
         MOZ_ASSERT(!p);
         return cacheIRStubCodes_->add(p, Move(key), stubCode);
     }
-    void initBaselineCallReturnAddr(void* addr, bool constructing) {
-        MOZ_ASSERT(baselineCallReturnAddrs_[constructing] == nullptr);
-        baselineCallReturnAddrs_[constructing] = addr;
+    void initBailoutReturnAddr(void* addr, uint32_t key, BailoutReturnStub kind) {
+        MOZ_ASSERT(bailoutReturnStubInfo_[kind].addr == nullptr);
+        bailoutReturnStubInfo_[kind] = BailoutReturnStubInfo { addr, key };
     }
-    void* baselineCallReturnAddr(bool constructing) {
-        MOZ_ASSERT(baselineCallReturnAddrs_[constructing] != nullptr);
-        return baselineCallReturnAddrs_[constructing];
-    }
-    void initBaselineGetPropReturnAddr(void* addr) {
-        MOZ_ASSERT(baselineGetPropReturnAddr_ == nullptr);
-        baselineGetPropReturnAddr_ = addr;
-    }
-    void* baselineGetPropReturnAddr() {
-        MOZ_ASSERT(baselineGetPropReturnAddr_ != nullptr);
-        return baselineGetPropReturnAddr_;
-    }
-    void initBaselineSetPropReturnAddr(void* addr) {
-        MOZ_ASSERT(baselineSetPropReturnAddr_ == nullptr);
-        baselineSetPropReturnAddr_ = addr;
-    }
-    void* baselineSetPropReturnAddr() {
-        MOZ_ASSERT(baselineSetPropReturnAddr_ != nullptr);
-        return baselineSetPropReturnAddr_;
+    void* bailoutReturnAddr(BailoutReturnStub kind) {
+        MOZ_ASSERT(bailoutReturnStubInfo_[kind].addr);
+        return bailoutReturnStubInfo_[kind].addr;
     }
 
     void toggleBarriers(bool enabled);

@@ -288,7 +288,7 @@ this.EventManager.prototype = {
       {
         let position = this.contentControl.vc.position;
         // Check if position is in the subtree of the DOCUMENT_LOAD_COMPLETE
-        // event's dialog accesible or accessible document
+        // event's dialog accessible or accessible document
         let subtreeRoot = aEvent.accessible.role === Roles.DIALOG ?
           aEvent.accessible : aEvent.accessibleDocument;
         if (aEvent.accessible === aEvent.accessibleDocument ||

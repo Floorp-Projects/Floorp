@@ -145,6 +145,9 @@ class ArrayIteratorObject : public JSObject
     static const Class class_;
 };
 
+ArrayIteratorObject*
+NewArrayIteratorObject(JSContext* cx, NewObjectKind newKind = GenericObject);
+
 class StringIteratorObject : public JSObject
 {
   public:

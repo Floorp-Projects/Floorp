@@ -96,9 +96,10 @@ XPCStringConvert::ReadableToJSVal(JSContext* cx,
     uint32_t length = readable.Length();
 
     if (readable.IsLiteral()) {
-        JSString* str = JS_NewExternalString(cx,
-                                             static_cast<const char16_t*>(readable.BeginReading()),
-                                             length, &sLiteralFinalizer);
+        bool ignored;
+        JSString* str = JS_NewMaybeExternalString(cx,
+                                                  static_cast<const char16_t*>(readable.BeginReading()),
+                                                  length, &sLiteralFinalizer, &ignored);
         if (!str)
             return false;
         vp.setString(str);

@@ -28,28 +28,28 @@ std::atomic<bool> load_callback{ false };
 long data_cb(cubeb_stream * stream, void * user, const void * inputbuffer, void * outputbuffer, long nframes)
 {
   if (load_callback) {
-    printf("Sleeping...\n");
+    fprintf(stderr, "Sleeping...\n");
     delay(100000);
-    printf("Sleeping done\n");
+    fprintf(stderr, "Sleeping done\n");
   }
   return nframes;
 }
 
 void state_cb(cubeb_stream * stream, void * /*user*/, cubeb_state state)
 {
-  assert(stream);
+  ASSERT_TRUE(!!stream);
 
   switch (state) {
   case CUBEB_STATE_STARTED:
-    printf("stream started\n"); break;
+    fprintf(stderr, "stream started\n"); break;
   case CUBEB_STATE_STOPPED:
-    printf("stream stopped\n"); break;
+    fprintf(stderr, "stream stopped\n"); break;
   case CUBEB_STATE_DRAINED:
-    assert(false && "this test is not supposed to drain"); break;
+    FAIL() << "this test is not supposed to drain"; break;
   case CUBEB_STATE_ERROR:
-    printf("stream error\n"); break;
+    fprintf(stderr, "stream error\n"); break;
   default:
-    assert(false && "this test is not supposed to have a weird state"); break;
+    FAIL() << "this test is not supposed to have a weird state"; break;
   }
 }
 

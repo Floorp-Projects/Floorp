@@ -16,7 +16,6 @@
 #include "threading/Mutex.h"
 #include "vm/MutexIDs.h"
 #include "vm/Shape.h"
-#include "wasm/WasmCode.h"
 
 #ifdef MOZ_VTUNE
 
@@ -133,13 +132,13 @@ MarkScript(const js::jit::JitCode* code, const JSScript* script, const char* mod
 }
 
 void
-MarkWasm(const js::wasm::CodeSegment& cs, const char* name, void* start, uintptr_t size)
+MarkWasm(unsigned methodId, const char* name, void* start, uintptr_t size)
 {
     if (!IsProfilingActive())
         return;
 
     iJIT_Method_Load_V2 method = {0};
-    method.method_id = cs.vtune_method_id_;
+    method.method_id = methodId;
     method.method_name = const_cast<char*>(name);
     method.method_load_address = start;
     method.method_size = (unsigned)size;

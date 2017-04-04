@@ -147,7 +147,8 @@ GPUParent::NotifyDeviceReset()
 mozilla::ipc::IPCResult
 GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
                     nsTArray<GfxVarUpdate>&& vars,
-                    const DevicePrefs& devicePrefs)
+                    const DevicePrefs& devicePrefs,
+                    nsTArray<LayerTreeIdMapping>&& aMappings)
 {
   const nsTArray<gfxPrefs::Pref*>& globalPrefs = gfxPrefs::all();
   for (auto& setting : prefs) {
@@ -163,6 +164,10 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
   gfxConfig::Inherit(Feature::D3D11_COMPOSITING, devicePrefs.d3d11Compositing());
   gfxConfig::Inherit(Feature::OPENGL_COMPOSITING, devicePrefs.oglCompositing());
   gfxConfig::Inherit(Feature::DIRECT2D, devicePrefs.useD2D1());
+
+  for (const LayerTreeIdMapping& map : aMappings) {
+    LayerTreeOwnerTracker::Get()->Map(map.layersId(), map.ownerId());
+  }
 
 #if defined(XP_WIN)
   if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
@@ -350,11 +355,9 @@ GPUParent::RecvNewContentVideoDecoderManager(Endpoint<PVideoDecoderManagerParent
 }
 
 mozilla::ipc::IPCResult
-GPUParent::RecvAddLayerTreeIdMapping(nsTArray<LayerTreeIdMapping>&& aMappings)
+GPUParent::RecvAddLayerTreeIdMapping(const LayerTreeIdMapping& aMapping)
 {
-  for (const LayerTreeIdMapping& map : aMappings) {
-    LayerTreeOwnerTracker::Get()->Map(map.layersId(), map.ownerId());
-  }
+  LayerTreeOwnerTracker::Get()->Map(aMapping.layersId(), aMapping.ownerId());
   return IPC_OK();
 }
 

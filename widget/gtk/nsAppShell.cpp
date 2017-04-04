@@ -27,13 +27,14 @@
 using mozilla::Unused;
 using mozilla::widget::ScreenHelperGTK;
 using mozilla::widget::ScreenManager;
+using mozilla::LazyLogModule;
 
 #define NOTIFY_TOKEN 0xFA
 
-PRLogModuleInfo *gWidgetLog = nullptr;
-PRLogModuleInfo *gWidgetFocusLog = nullptr;
-PRLogModuleInfo *gWidgetDragLog = nullptr;
-PRLogModuleInfo *gWidgetDrawLog = nullptr;
+LazyLogModule gWidgetLog("Widget");
+LazyLogModule gWidgetFocusLog("WidgetFocus");
+LazyLogModule gWidgetDragLog("WidgetDrag");
+LazyLogModule gWidgetDrawLog("WidgetDraw");
 
 static GPollFunc sPollFunc;
 
@@ -142,15 +143,6 @@ nsAppShell::Init()
     // in any code that uses Glib, Gdk, or Gtk. In later versions of Glib, this call
     // is a no-op.
     g_type_init();
-
-    if (!gWidgetLog)
-        gWidgetLog = PR_NewLogModule("Widget");
-    if (!gWidgetFocusLog)
-        gWidgetFocusLog = PR_NewLogModule("WidgetFocus");
-    if (!gWidgetDragLog)
-        gWidgetDragLog = PR_NewLogModule("WidgetDrag");
-    if (!gWidgetDrawLog)
-        gWidgetDrawLog = PR_NewLogModule("WidgetDraw");
 
 #ifdef MOZ_ENABLE_DBUS
     nsCOMPtr<nsIPowerManagerService> powerManagerService =

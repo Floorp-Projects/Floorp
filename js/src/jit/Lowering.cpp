@@ -244,6 +244,14 @@ LIRGenerator::visitNewArrayDynamicLength(MNewArrayDynamicLength* ins)
 }
 
 void
+LIRGenerator::visitNewArrayIterator(MNewArrayIterator* ins)
+{
+    LNewArrayIterator* lir = new(alloc()) LNewArrayIterator(temp());
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitNewTypedArray(MNewTypedArray* ins)
 {
     LNewTypedArray* lir = new(alloc()) LNewTypedArray(temp(), temp());
