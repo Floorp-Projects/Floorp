@@ -43,6 +43,25 @@ public class TelemetryEvent {
     }
 
     /**
+     * Create a new event with mandatory category, method, object and value.
+     *
+     * @param category identifier. The category is a group name for events and helps to avoid name conflicts.
+     * @param method identifier. This describes the type of event that occured, e.g. click, keydown or focus.
+     * @param object identifier. This is the object the event occured on, e.g. reload_button or urlbar.
+     * @param value This is a user defined value, providing context for the event.
+     */
+    public static TelemetryEvent create(@NonNull String category, @NonNull String method, @Nullable String object, String value) {
+        final TelemetryEvent event = new TelemetryEvent();
+
+        event.category = category;
+        event.method = method;
+        event.object = object;
+        event.value = value;
+
+        return event;
+    }
+
+    /**
      * Create a new event with mandatory category, method, object, value and extras.
      *
      * @param category identifier. The category is a group name for events and helps to avoid name conflicts.
