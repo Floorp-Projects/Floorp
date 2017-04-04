@@ -7,9 +7,9 @@
  * Bug 863102 - Automatically scroll down upon new network requests.
  */
 add_task(function* () {
-  requestLongerTimeout(2);
+  requestLongerTimeout(4);
 
-  let { monitor } = yield initNetMonitor(INFINITE_GET_URL);
+  let { monitor } = yield initNetMonitor(INFINITE_GET_URL, true);
   let { document, gStore, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
 
