@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
+<meta name="timeout" content="long">
 <title>text field selection: select()</title>
 <link rel="author" title="Domenic Denicola" href="mailto:d@domenic.me">
 <link rel=help href="https://html.spec.whatwg.org/multipage/#textFieldSelection">
@@ -34,7 +35,7 @@ const actions = [
   },
   {
     label: "selectionDirection",
-    action: el => el.selectionDirection = "right"
+    action: el => el.selectionDirection = "backward"
   },
   {
     label: "setSelectionRange()",
@@ -75,7 +76,7 @@ for (const el of els) {
         t.step_timeout(() => {
           el.onselect = null;
           resolve();
-        }, 300);
+        }, 200);
       });
     }, `${elLabel}: ${action.label} a second time (must not fire select)`);
   }
