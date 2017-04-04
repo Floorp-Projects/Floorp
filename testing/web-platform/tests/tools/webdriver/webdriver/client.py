@@ -89,30 +89,26 @@ class ActionSequence(object):
             .key_up("a") \
             .perform()
     """
-    def __init__(self, session, action_type, input_id, pointer_params=None):
+    def __init__(self, session, action_type, input_id):
         """Represents a sequence of actions of one type for one input source.
 
         :param session: WebDriver session.
         :param action_type: Action type; may be "none", "key", or "pointer".
         :param input_id: ID of input source.
-        :param pointer_params: Optional dictionary of pointer parameters.
         """
         self.session = session
+        # TODO take advantage of remote end generating uuid
         self._id = input_id
         self._type = action_type
         self._actions = []
-        self._pointer_params = pointer_params
 
     @property
     def dict(self):
-        d = {
-            "type": self._type,
-            "id": self._id,
-            "actions": self._actions,
+        return {
+          "type": self._type,
+          "id": self._id,
+          "actions": self._actions,
         }
-        if self._pointer_params is not None:
-            d["parameters"] = self._pointer_params
-        return d
 
     @command
     def perform(self):
@@ -336,7 +332,8 @@ class UserPrompt(object):
 
 class Session(object):
     def __init__(self, host, port, url_prefix="/", desired_capabilities=None,
-                 required_capabilities=None, extension=None, timeout=None):
+                 required_capabilities=None, timeout=transport.HTTP_TIMEOUT,
+                 extension=None):
         self.transport = transport.HTTPWireProtocol(
             host, port, url_prefix, timeout=timeout)
         self.desired_capabilities = desired_capabilities
