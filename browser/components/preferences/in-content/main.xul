@@ -328,7 +328,7 @@
   <label>&chooseWhichOneToDisplay.label;</label>
 
   <tree id="engineList" flex="1" rows="8" hidecolumnpicker="true" editable="true"
-        seltype="single">
+        seltype="single" allowunderflowscroll="true">
     <treechildren id="engineChildren" flex="1"/>
     <treecols>
       <treecol id="engineShown" type="checkbox" editable="true" sortable="false"/>
