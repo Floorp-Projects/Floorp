@@ -17,12 +17,9 @@ public class FocusApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
-        // Loading preferences depends on the Search Engine manager, because the default search
-        // engine pref uses the search engine manager - we therefore need to ensure
-        // that prefs aren't loaded until search engines are loaded.
-        SearchEngineManager.getInstance().init(this);
-
         PreferenceManager.setDefaultValues(this, R.xml.settings, false);
+
+        SearchEngineManager.getInstance().init(this);
 
         TelemetryWrapper.init(this);
         AdjustHelper.setupAdjustIfNeeded(this);
