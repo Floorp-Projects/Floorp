@@ -821,7 +821,7 @@
     "description": "GPU Device Reset Reason (ok, hung, removed, reset, internal error, invalid call, out of memory)"
   },
   "FAMILY_SAFETY": {
-    "alert_emails": ["seceng@mozilla.org"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
     "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 16,
@@ -4425,21 +4425,21 @@
     "description": "Negative cache duration (ms) received in fullhash response from any v4 provider"
   },
   "CSP_DOCUMENTS_COUNT": {
-    "alert_emails": ["seceng@mozilla.com"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [1252829],
     "expires_in_version": "60",
     "kind": "count",
     "description": "Number of unique pages that contain a CSP"
   },
   "CSP_UNSAFE_INLINE_DOCUMENTS_COUNT": {
-    "alert_emails": ["seceng@mozilla.com"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [1252829],
     "expires_in_version": "60",
     "kind": "count",
     "description": "Number of unique pages that contain an unsafe-inline CSP directive"
   },
   "CSP_UNSAFE_EVAL_DOCUMENTS_COUNT": {
-    "alert_emails": ["seceng@mozilla.com"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [1252829],
     "expires_in_version": "60",
     "kind": "count",
@@ -7777,7 +7777,7 @@
     "description": "The number of times AddIceCandidate failed on a given PeerConnection, given that ICE failed."
   },
   "WEBRTC_GET_USER_MEDIA_SECURE_ORIGIN": {
-    "alert_emails": ["seceng@mozilla.org"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
     "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 15,
@@ -8770,7 +8770,7 @@
     "description": "The amount of time required for HSTS priming requests (ms), keyed by success or failure of the priming request. (success, failure)"
   },
   "MIXED_CONTENT_OBJECT_SUBREQUEST": {
-    "alert_emails": ["seceng@mozilla.org"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [1244116],
     "expires_in_version": "60",
     "kind": "enumerated",
@@ -8778,7 +8778,7 @@
     "description": "How often objects load insecure content on secure pages (counting pages, not objects). 0=pages with no mixed object subrequests, 1=pages with mixed object subrequests"
   },
   "COOKIE_SCHEME_SECURITY": {
-    "alert_emails": ["seceng@mozilla.org"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
     "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 10,
