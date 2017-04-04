@@ -12,6 +12,7 @@ Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/event.js");
+Cu.import("chrome://marionette/content/interaction.js");
 
 this.EXPORTED_SYMBOLS = ["action"];
 
@@ -957,7 +958,8 @@ action.dispatch = function(chain, seenEls, container) {
  */
 action.dispatchTickActions = function(tickActions, tickDuration, seenEls, container) {
   let pendingEvents = tickActions.map(toEvents(tickDuration, seenEls, container));
-  return Promise.all(pendingEvents).then(() => flushEvents(container));
+  return Promise.all(pendingEvents).then(
+      () => interaction.flushEventLoop(container.frame));
 };
 
 /**
@@ -1313,18 +1315,6 @@ function dispatchPause(a, tickDuration) {
 }
 
 // helpers
-/**
- * Force any pending DOM events to fire.
- *
- * @param {?} container
- *     Object with |frame| attribute of type |nsIDOMWindow|.
- *
- * @return {Promise}
- *     Promise to flush DOM events.
- */
-function flushEvents(container) {
-  return new Promise(resolve => container.frame.requestAnimationFrame(resolve));
-}
 
 function capitalize(str) {
   assert.string(str);
