@@ -10,57 +10,10 @@
 <body>
 <script type="text/javascript" src="mock_gamepad.js"></script>
 <script class="testbody" type="text/javascript">
-
-window.addEventListener("gamepadbuttondown", buttonpresshandler);
-
-var index;
-var timea=0;
-var firstPress = true;
-var testOver = false;
-
+// This test loads in an iframe, to ensure that the navigator instance is
+// loaded with the correct value of the preference.
 SimpleTest.waitForExplicitFinish();
-runGamepadTest(checkTimestamp);
-
-function checkTimestamp(){
-  GamepadService.addGamepad("test gamepad 1",
-                            GamepadService.standardMapping,
-                            GamepadService.noHand,
-                            4,
-                            2,
-                            0).then(function(i) {
-                              index = i;
-                              // Press a button to make the gamepad visible
-                              // to the page.
-                              GamepadService.newButtonEvent(index, 0, true);
-                              GamepadService.newButtonEvent(index, 0, true);
-                              ok(true, "test");
-                            });
-}
-
-function cleanup(){
-  SpecialPowers.executeSoon(function() {
-    GamepadService.removeGamepad(index);
-    SimpleTest.finish();
-  });
-}
-
-function buttonpresshandler(e) {
-  if (testOver) {
-    return;
-  }
-  if (timea == 0){
-    timea = e.gamepad.timestamp;
-  } else {
-    ok(timea <= e.gamepad.timestamp, "Timestamp less than last timestamp");
-  }
-  GamepadService.newButtonEvent(index, 0, false);
-  if (!firstPress) {
-    testOver = true;
-    SpecialPowers.executeSoon(cleanup);
-  } else {
-    firstPress = false;
-  }
-}
+setGamepadPreferenceAndCreateIframe("test_check_timestamp_iframe.html");
 
 </script>
 </body>

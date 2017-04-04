@@ -8,13 +8,14 @@
 <body>
  <script type="application/javascript">
   SimpleTest.waitForExplicitFinish();
-  function test() {
-    var wl = navigator.requestWakeLock('a');
-    ok(wl, "WakeLock created!");
-    ok(!(wl instanceof XPathEvaluator), "Crashing?");
-    SimpleTest.finish();
-  }
-  SpecialPowers.pushPrefEnv({"set": [["dom.wakelock.enabled", true]]}, test);
+  // This test loads in an iframe, to ensure that the navigator instance is
+  // loaded with the correct value of the preference.
+  SpecialPowers.pushPrefEnv({"set": [["dom.wakelock.enabled", true]]}, () => {
+    let iframe = document.createElement("iframe");
+    iframe.id = "f1";
+    iframe.src = "test_bug957899_iframe.html";
+    document.body.appendChild(iframe);
+  });
  </script>
 </body>
 </html>
