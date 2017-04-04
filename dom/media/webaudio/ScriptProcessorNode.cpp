@@ -468,8 +468,9 @@ private:
       double mPlaybackTime;
     };
 
-    NS_DispatchToMainThread(new Command(aStream, mInputBuffer.forget(),
-                                        playbackTime));
+    RefPtr<Command> command = new Command(aStream, mInputBuffer.forget(),
+                                          playbackTime);
+    mAbstractMainThread->Dispatch(command.forget());
   }
 
   friend class ScriptProcessorNode;
