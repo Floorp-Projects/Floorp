@@ -19,11 +19,10 @@ button {
 }
 
 .button-box {
-  border: 1px solid transparent;
-  padding-top: 1px;
-  padding-bottom: 2px;
-  padding-inline-start: 3px;
-  padding-inline-end: 4px;
+  padding-top: 2px;
+  padding-bottom: 3px;
+  padding-inline-start: 4px;
+  padding-inline-end: 5px;
 }
 
 .button-text {
@@ -33,8 +32,9 @@ button {
 
 /* .......... focused state .......... */
 
-button:-moz-focusring > .button-box {
-  border: 1px dotted ThreeDDarkShadow;
+button:-moz-focusring {
+  outline: 1px dotted;
+  outline-offset: -3px;
 }
 
 /* .......... default/hover/focused state .......... */
@@ -57,10 +57,10 @@ button:-moz-focusring > .button-box {
 
 @media (-moz-windows-classic) {
   button:-moz-any(:hover:active,[open="true"],[checked="true"]):not([disabled="true"]) > .button-box {
-    padding-top: 2px;
-    padding-bottom: 1px;
-    padding-inline-start: 4px;
-    padding-inline-end: 3px;
+    padding-top: 3px;
+    padding-bottom: 2px;
+    padding-inline-start: 5px;
+    padding-inline-end: 4px;
   }
 }
 

@@ -1257,17 +1257,6 @@ HTMLEditRules::WillInsertText(EditAction aAction,
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (inString->IsEmpty() && aAction != EditAction::insertIMEText) {
-    // HACK: this is a fix for bug 19395
-    // I can't outlaw all empty insertions
-    // because IME transaction depend on them
-    // There is more work to do to make the
-    // world safe for IME.
-    *aCancel = true;
-    *aHandled = false;
-    return NS_OK;
-  }
-
   // initialize out param
   *aCancel = false;
   *aHandled = true;

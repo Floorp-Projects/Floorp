@@ -952,7 +952,13 @@ NS_IMETHODIMP
 InsertPlaintextCommand::DoCommand(const char* aCommandName,
                                   nsISupports* aCommandRefCon)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // No value is equivalent to empty string
+  nsCOMPtr<nsIPlaintextEditor> editor = do_QueryInterface(aCommandRefCon);
+  if (NS_WARN_IF(!editor)) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return editor->InsertText(EmptyString());
 }
 
 NS_IMETHODIMP
@@ -970,10 +976,7 @@ InsertPlaintextCommand::DoCommandParams(const char* aCommandName,
   nsresult rv = aParams->GetStringValue(STATE_DATA, text);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!text.IsEmpty())
-    return editor->InsertText(text);
-
-  return NS_OK;
+  return editor->InsertText(text);
 }
 
 NS_IMETHODIMP
