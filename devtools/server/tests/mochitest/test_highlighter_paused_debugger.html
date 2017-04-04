@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the PausedDebuggerOverlay highlighter.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>PausedDebuggerOverlay test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+"use strict";
+
+window.onload = function () {
+  SimpleTest.waitForExplicitFinish();
+
+  const {utils: Cu} = Components;
+  const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  require("devtools/server/actors/inspector");
+  const {HighlighterEnvironment} = require("devtools/server/actors/highlighters");
+  const {PausedDebuggerOverlay} = require("devtools/server/actors/highlighters/paused-debugger");
+
+  const env = new HighlighterEnvironment();
+  env.initFromWindow(window);
+
+  const highlighter = new PausedDebuggerOverlay(env);
+  const anonymousContent = highlighter.markup.content;
+
+  const id = elementID => `${highlighter.ID_CLASS_PREFIX}${elementID}`;
+
+  function isHidden(elementID) {
+    let attr = anonymousContent.getAttributeForElement(id(elementID), "hidden");
+    return typeof attr === "string" && attr == "true";
+  }
+
+  function getReason() {
+    return anonymousContent.getTextContentForElement(id("reason"));
+  }
+
+  function isOverlayShown() {
+    let attr = anonymousContent.getAttributeForElement(id("root"), "overlay");
+    return typeof attr === "string" && attr == "true";
+  }
+
+  info("Test that the various elements with IDs exist");
+  ok(highlighter.getElement("root"), "The root wrapper element exists");
+  ok(highlighter.getElement("toolbar"), "The toolbar element exists");
+  ok(highlighter.getElement("reason"), "The reason label element exists");
+
+  info("Test that the highlighter is hidden by default");
+  ok(isHidden("root"), "The highlighter is hidden");
+
+  info("Show the highlighter with overlay and toolbar");
+  let didShow = highlighter.show(null, {"reason": "Paused in debugger"});
+  ok(didShow, "Calling show returned true");
+  ok(!isHidden("root"), "The highlighter is shown");
+  ok(isOverlayShown(), "The overlay is shown");
+  is(getReason(), "Paused in debugger", "The reason displayed in the toolbar is correct");
+
+  info("Call show again with another reason");
+  didShow = highlighter.show(null, {"reason": "Paused for another reason"});
+  ok(didShow, "Calling show returned true too");
+  ok(!isHidden("root"), "The highlighter is still shown");
+  is(getReason(), "Paused for another reason",
+     "The reason displayed in the toolbar is correct again");
+  ok(isOverlayShown(), "The overlay is still shown too");
+
+  info("Call show again but with no reason");
+  highlighter.show();
+  ok(isHidden("toolbar"), "The toolbar is hidden");
+  ok(isOverlayShown(), "The overlay is shown however");
+
+  info("Call show again with a reason but no overlay");
+  highlighter.show(null, {reason: "no overlay this time", onlyToolbar: true});
+  ok(!isHidden("toolbar"), "The toolbar is shown this time");
+  is(getReason(), "no overlay this time",
+     "The reason displayed in the toolbar is correct again");
+  ok(!isOverlayShown(), "The overlay is hidden");
+
+  info("Hide the highlighter");
+  highlighter.hide();
+  ok(isHidden("root"), "The highlighter is now hidden");
+
+  SimpleTest.finish();
+};
+</script>
+</pre>
+</body>
+</html>
