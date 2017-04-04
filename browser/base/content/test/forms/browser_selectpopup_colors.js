@@ -130,6 +130,15 @@ const SELECT_STYLE_OF_OPTION_CHANGES_AFTER_FOCUS_EVENT =
   "  select.addEventListener('focus', () => select.style.color = 'red');" +
   "</script></html>";
 
+const SELECT_STYLE_OF_OPTION_CHANGES_AFTER_TRANSITIONEND =
+  "<html><head><style>" +
+  "  select { transition: all .1s; }" +
+  "  select:focus { background-color: orange; }" +
+  "</style></head><body><select id='one'>" +
+  '  <option>{"color": "rgb(0, 0, 0)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
+  '  <option selected="true">{"end": "true"}</option>' +
+  "</select></body></html>";
+
 function getSystemColor(color) {
   // Need to convert system color to RGB color.
   let textarea = document.createElementNS("http://www.w3.org/1999/xhtml", "textarea");
@@ -355,7 +364,7 @@ add_task(function* test_style_of_options_is_dependent_on_focus_of_select() {
   yield testSelectColors(SELECT_STYLE_OF_OPTION_IS_BASED_ON_FOCUS_OF_SELECT, 2, options);
 });
 
-add_task(function* test_style_of_options_is_dependent_on_focus_of_select() {
+add_task(function* test_style_of_options_is_dependent_on_focus_of_select_after_event() {
   let options = {
     skipSelectColorTest: true,
     waitForComputedStyle: {
@@ -365,3 +374,17 @@ add_task(function* test_style_of_options_is_dependent_on_focus_of_select() {
   };
   yield testSelectColors(SELECT_STYLE_OF_OPTION_CHANGES_AFTER_FOCUS_EVENT, 2, options);
 });
+
+add_task(function* test_style_of_options_is_dependent_on_transitionend() {
+  let options = {
+    selectColor: "rgb(0, 0, 0)",
+    selectBgColor: "rgb(255, 165, 0)",
+    waitForComputedStyle: {
+      property: "background-image",
+      value: "linear-gradient(rgb(255, 165, 0), rgb(255, 165, 0))"
+    }
+  };
+
+  yield testSelectColors(SELECT_STYLE_OF_OPTION_CHANGES_AFTER_TRANSITIONEND, 2, options);
+});
+
