@@ -96,48 +96,48 @@ bool operator==(const MozPolygon& lhs, const MozPolygon& rhs)
 
 TEST(PolygonTestUtils, TestSanity)
 {
-  EXPECT_TRUE(FuzzyEquals(Point3D(0.0f, 0.0f, 0.0f),
-                          Point3D(0.0f, 0.0f, 0.0f)));
+  EXPECT_TRUE(FuzzyEquals(Point4D(0.0f, 0.0f, 0.0f, 1.0f),
+                          Point4D(0.0f, 0.0f, 0.0f, 1.0f)));
 
-  EXPECT_TRUE(FuzzyEquals(Point3D(0.0f, 0.0f, 0.0f),
-                          Point3D(0.00001f, 0.00001f, 0.00001f)));
+  EXPECT_TRUE(FuzzyEquals(Point4D(0.0f, 0.0f, 0.0f, 1.0f),
+                          Point4D(0.00001f, 0.00001f, 0.00001f, 1.0f)));
 
-  EXPECT_TRUE(FuzzyEquals(Point3D(0.00001f, 0.00001f, 0.00001f),
-                          Point3D(0.0f, 0.0f, 0.0f)));
+  EXPECT_TRUE(FuzzyEquals(Point4D(0.00001f, 0.00001f, 0.00001f, 1.0f),
+                          Point4D(0.0f, 0.0f, 0.0f, 1.0f)));
 
-  EXPECT_FALSE(FuzzyEquals(Point3D(0.0f, 0.0f, 0.0f),
-                           Point3D(0.01f, 0.01f, 0.01f)));
+  EXPECT_FALSE(FuzzyEquals(Point4D(0.0f, 0.0f, 0.0f, 1.0f),
+                           Point4D(0.01f, 0.01f, 0.01f, 1.0f)));
 
-  EXPECT_FALSE(FuzzyEquals(Point3D(0.01f, 0.01f, 0.01f),
-                           Point3D(0.0f, 0.0f, 0.0f)));
+  EXPECT_FALSE(FuzzyEquals(Point4D(0.01f, 0.01f, 0.01f, 1.0f),
+                           Point4D(0.0f, 0.0f, 0.0f, 1.0f)));
 
   MozPolygon p1 {
-    Point3D(0.0f, 0.0f, 1.0f),
-    Point3D(1.0f, 0.0f, 1.0f),
-    Point3D(1.0f, 1.0f, 1.0f),
-    Point3D(0.0f, 1.0f, 1.0f)
+    Point4D(0.0f, 0.0f, 1.0f, 1.0f),
+    Point4D(1.0f, 0.0f, 1.0f, 1.0f),
+    Point4D(1.0f, 1.0f, 1.0f, 1.0f),
+    Point4D(0.0f, 1.0f, 1.0f, 1.0f)
   };
 
   // Same points as above shifted forward by one position.
   MozPolygon shifted {
-    Point3D(0.0f, 1.0f, 1.0f),
-    Point3D(0.0f, 0.0f, 1.0f),
-    Point3D(1.0f, 0.0f, 1.0f),
-    Point3D(1.0f, 1.0f, 1.0f)
+    Point4D(0.0f, 1.0f, 1.0f, 1.0f),
+    Point4D(0.0f, 0.0f, 1.0f, 1.0f),
+    Point4D(1.0f, 0.0f, 1.0f, 1.0f),
+    Point4D(1.0f, 1.0f, 1.0f, 1.0f)
   };
 
   MozPolygon p2 {
-    Point3D(0.00001f, 0.00001f, 1.00001f),
-    Point3D(1.00001f, 0.00001f, 1.00001f),
-    Point3D(1.00001f, 1.00001f, 1.00001f),
-    Point3D(0.00001f, 1.00001f, 1.00001f)
+    Point4D(0.00001f, 0.00001f, 1.00001f, 1.0f),
+    Point4D(1.00001f, 0.00001f, 1.00001f, 1.0f),
+    Point4D(1.00001f, 1.00001f, 1.00001f, 1.0f),
+    Point4D(0.00001f, 1.00001f, 1.00001f, 1.0f)
   };
 
   MozPolygon p3 {
-    Point3D(0.01f, 0.01f, 1.01f),
-    Point3D(1.01f, 0.01f, 1.01f),
-    Point3D(1.01f, 1.01f, 1.01f),
-    Point3D(0.01f, 1.01f, 1.01f)
+    Point4D(0.01f, 0.01f, 1.01f, 1.0f),
+    Point4D(1.01f, 0.01f, 1.01f, 1.0f),
+    Point4D(1.01f, 1.01f, 1.01f, 1.0f),
+    Point4D(0.01f, 1.01f, 1.01f, 1.0f)
   };
 
   // Trivial equals
