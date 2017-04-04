@@ -158,9 +158,9 @@ struct mixing_wrapper {
 template <typename T>
 struct mixing_impl : public mixing_wrapper {
 
-  typedef std::function<void(T * const, long, T *,
-                             unsigned int, unsigned int,
-                             cubeb_channel_layout, cubeb_channel_layout)> downmix_func;
+  typedef void (*downmix_func)(T * const, long, T *,
+                               unsigned int, unsigned int,
+                               cubeb_channel_layout, cubeb_channel_layout);
 
   mixing_impl(downmix_func dmfunc) {
     downmix_wrapper = dmfunc;
@@ -1224,12 +1224,13 @@ audiounit_get_preferred_channel_layout(cubeb * ctx, cubeb_channel_layout * layou
     // If we already have at least one cubeb stream, then the current channel
     // layout must be updated. We can return it directly.
     if (ctx->active_streams) {
-      return ctx->layout;
+      *layout = ctx->layout;
+      return CUBEB_OK;
     }
 
     // If there is no existed stream, then we create a default ouput unit and
     // use it to get the current used channel layout.
-    AudioUnit output_unit;
+    AudioUnit output_unit = nullptr;
     audiounit_create_unit(&output_unit, OUTPUT, 0);
     *layout = audiounit_get_current_channel_layout(output_unit);
   }
@@ -1823,11 +1824,10 @@ audiounit_create_unit(AudioUnit * unit, io_side side, AudioDeviceID device)
   OSStatus rv;
   int r;
 
-  if (*unit == nullptr) {
-    int r = audiounit_new_unit_instance(unit, side, device);
-    if (r != CUBEB_OK) {
-      return r;
-    }
+  assert(*unit == nullptr);
+  r = audiounit_new_unit_instance(unit, side, device);
+  if (r != CUBEB_OK) {
+    return r;
   }
   assert(*unit);
 

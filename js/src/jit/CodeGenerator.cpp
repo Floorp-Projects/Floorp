@@ -5635,6 +5635,26 @@ CodeGenerator::visitNewArrayDynamicLength(LNewArrayDynamicLength* lir)
     masm.bind(ool->rejoin());
 }
 
+typedef ArrayIteratorObject* (*NewArrayIteratorObjectFn)(JSContext*, NewObjectKind);
+static const VMFunction NewArrayIteratorObjectInfo =
+    FunctionInfo<NewArrayIteratorObjectFn>(NewArrayIteratorObject, "NewArrayIteratorObject");
+
+void
+CodeGenerator::visitNewArrayIterator(LNewArrayIterator* lir)
+{
+    Register objReg = ToRegister(lir->output());
+    Register tempReg = ToRegister(lir->temp());
+    JSObject* templateObject = lir->mir()->templateObject();
+
+    OutOfLineCode* ool = oolCallVM(NewArrayIteratorObjectInfo, lir,
+                                   ArgList(Imm32(GenericObject)),
+                                   StoreRegisterTo(objReg));
+
+    masm.createGCObject(objReg, tempReg, templateObject, gc::DefaultHeap, ool->entry());
+
+    masm.bind(ool->rejoin());
+}
+
 typedef TypedArrayObject* (*TypedArrayConstructorOneArgFn)(JSContext*, HandleObject, int32_t length);
 static const VMFunction TypedArrayConstructorOneArgInfo =
     FunctionInfo<TypedArrayConstructorOneArgFn>(TypedArrayCreateWithTemplate,

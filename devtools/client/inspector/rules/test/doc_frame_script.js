@@ -5,7 +5,7 @@
 
 "use strict";
 
-// A helper frame-script for brower/devtools/styleinspector tests.
+// A helper frame-script for browser/devtools/styleinspector tests.
 //
 // Most listeners in the script expect "Test:"-namespaced messages from chrome,
 // then execute code upon receiving, and immediately send back a message.

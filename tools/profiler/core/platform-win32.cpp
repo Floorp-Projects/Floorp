@@ -160,7 +160,7 @@ void
 SamplerThread::SuspendAndSampleAndResumeThread(PS::LockRef aLock,
                                                TickSample* aSample)
 {
-  uintptr_t thread = GetThreadHandle(aSample->mThreadInfo->GetPlatformData());
+  uintptr_t thread = GetThreadHandle(aSample->mPlatformData);
   HANDLE profiled_thread = reinterpret_cast<HANDLE>(thread);
   if (profiled_thread == nullptr)
     return;
@@ -237,7 +237,9 @@ PlatformInit(PS::LockRef aLock)
 void
 TickSample::PopulateContext(CONTEXT* aContext)
 {
+  MOZ_ASSERT(mIsSynchronous);
   MOZ_ASSERT(aContext);
+
   mContext = aContext;
   RtlCaptureContext(aContext);
 

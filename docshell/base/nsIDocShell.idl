@@ -373,7 +373,7 @@ interface nsIDocShell : nsIDocShellTreeItem
 
   /*
    * The size, in CSS pixels, of the horizontal margins for the <body> of an
-   * HTML document in this docshel; used to implement the marginwidth attribute
+   * HTML document in this docshell; used to implement the marginwidth attribute
    * on HTML <frame>/<iframe> elements.  A value smaller than zero indicates
    * that the attribute was not set.
    */
@@ -381,7 +381,7 @@ interface nsIDocShell : nsIDocShellTreeItem
 
   /*
    * The size, in CSS pixels, of the vertical margins for the <body> of an HTML
-   * document in this docshel; used to implement the marginheight attribute on
+   * document in this docshell; used to implement the marginheight attribute on
    * HTML <frame>/<iframe> elements.  A value smaller than zero indicates that
    * the attribute was not set.
    */

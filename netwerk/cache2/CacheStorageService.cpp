@@ -591,7 +591,7 @@ private:
 bool CleaupCacheDirectoriesRunnable::Post(uint32_t aVersion, uint32_t aActive)
 {
   // CleaupCacheDirectories is called regardless what cache version is set up to use.
-  // To obtain the cache1 directory we must unfortunatelly instantiate the old cache
+  // To obtain the cache1 directory we must unfortunately instantiate the old cache
   // service despite it may not be used at all...  This also initialize nsDeleteDir.
   nsCOMPtr<nsICacheService> service = do_GetService(NS_CACHESERVICE_CONTRACTID);
   if (!service)

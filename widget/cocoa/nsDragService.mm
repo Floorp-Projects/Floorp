@@ -34,7 +34,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-extern PRLogModuleInfo* sCocoaLog;
+extern mozilla::LazyLogModule sCocoaLog;
 
 extern void EnsureLogInitialized();
 

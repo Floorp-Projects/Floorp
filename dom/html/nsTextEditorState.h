@@ -135,10 +135,23 @@ class nsTextEditorState : public mozilla::SupportsWeakPtr<nsTextEditorState> {
 public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsTextEditorState)
   explicit nsTextEditorState(nsITextControlElement* aOwningElement);
+  static nsTextEditorState*
+  Construct(nsITextControlElement* aOwningElement,
+            nsTextEditorState** aReusedState);
   ~nsTextEditorState();
 
   void Traverse(nsCycleCollectionTraversalCallback& cb);
   void Unlink();
+
+  void PrepareForReuse()
+  {
+    Unlink();
+    mValue.reset();
+    mCachedValue.Truncate();
+    mValueBeingSet.Truncate();
+    mTextCtrlElement = nullptr;
+    MOZ_ASSERT(!mMutationObserver);
+  }
 
   nsIEditor* GetEditor();
   nsISelectionController* GetSelectionController() const;
@@ -401,7 +414,7 @@ private:
 
   // The text control element owns this object, and ensures that this object
   // has a smaller lifetime.
-  nsITextControlElement* const MOZ_NON_OWNING_REF mTextCtrlElement;
+  nsITextControlElement* MOZ_NON_OWNING_REF mTextCtrlElement;
   // mSelCon is non-null while we have an mBoundFrame.
   RefPtr<nsTextInputSelectionImpl> mSelCon;
   RefPtr<RestoreSelectionState> mRestoringSelection;

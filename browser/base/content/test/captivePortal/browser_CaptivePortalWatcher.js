@@ -28,7 +28,7 @@ let testCasesForBothSuccessAndAbort = [
 
   /**
    * A portal is detected when multiple browser windows are open but none
-   * have focus. A brower window is focused, then the portal is freed.
+   * have focus. A browser window is focused, then the portal is freed.
    * The portal tab should be added and focused when the window is
    * focused, and closed automatically when the success event is fired.
    * The captive portal notification should be shown in all windows upon

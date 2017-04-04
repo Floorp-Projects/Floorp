@@ -49,7 +49,7 @@ class SETA(object):
         low_value_tasks = []
 
         if not bbb:
-            # we want to get low priority tasklcuster jobs
+            # we want to get low priority taskcluster jobs
             url = SETA_ENDPOINT % (project, 'taskcluster')
         else:
             # we want low priority buildbot jobs

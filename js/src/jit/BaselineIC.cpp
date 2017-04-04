@@ -1641,19 +1641,11 @@ ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     if (!tailCallVM(DoSetPropFallbackInfo, masm))
         return false;
 
-    // Even though the fallback frame doesn't enter a stub frame, the CallScripted
-    // frame that we are emulating does. Again, we lie.
-#ifdef DEBUG
-    EmitRepushTailCallReg(masm);
-    EmitStowICValues(masm, 1);
-    enterStubFrame(masm, R1.scratchReg());
-#else
-    inStubFrame_ = true;
-#endif
-
-    // What follows is bailout-only code for inlined script getters.
-    // The return address pointed to by the baseline stack points here.
-    returnOffset_ = masm.currentOffset();
+    // This is the resume point used when bailout rewrites call stack to undo
+    // Ion inlined frames. The return address pushed onto reconstructed stack
+    // will point here.
+    assumeStubFrame(masm);
+    bailoutReturnOffset_.bind(masm.currentOffset());
 
     leaveStubFrame(masm, true);
     EmitReturnFromIC(masm);
@@ -1664,7 +1656,9 @@ ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 void
 ICSetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code)
 {
-    cx->compartment()->jitCompartment()->initBaselineSetPropReturnAddr(code->raw() + returnOffset_);
+    BailoutReturnStub kind = BailoutReturnStub::SetProp;
+    void* address = code->raw() + bailoutReturnOffset_.offset();
+    cx->compartment()->jitCompartment()->initBailoutReturnAddr(address, getKey(), kind);
 }
 
 //
@@ -1917,6 +1911,11 @@ GetTemplateObjectForNative(JSContext* cx, HandleFunction target, const CallArgs&
     if (native == obj_create && args.length() == 1 && args[0].isObjectOrNull()) {
         RootedObject proto(cx, args[0].toObjectOrNull());
         res.set(ObjectCreateImpl(cx, proto, TenuredObject));
+        return !!res;
+    }
+
+    if (native == js::intrinsic_NewArrayIterator) {
+        res.set(NewArrayIteratorObject(cx, TenuredObject));
         return !!res;
     }
 
@@ -2818,18 +2817,14 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     if (!callVM(DoCallFallbackInfo, masm))
         return false;
 
-    uint32_t framePushed = masm.framePushed();
     leaveStubFrame(masm);
     EmitReturnFromIC(masm);
 
-    // The following asmcode is only used when an Ion inlined frame bails out
-    // into into baseline jitcode. The return address pushed onto the
-    // reconstructed baseline stack points here.
-    returnOffset_ = masm.currentOffset();
-
-    // Here we are again in a stub frame. Marking as so.
-    inStubFrame_ = true;
-    masm.setFramePushed(framePushed);
+    // This is the resume point used when bailout rewrites call stack to undo
+    // Ion inlined frames. The return address pushed onto reconstructed stack
+    // will point here.
+    assumeStubFrame(masm);
+    bailoutReturnOffset_.bind(masm.currentOffset());
 
     // Load passed-in ThisV into R1 just in case it's needed.  Need to do this before
     // we leave the stub frame since that info will be lost.
@@ -2870,8 +2865,10 @@ ICCall_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<Jit
     if (MOZ_UNLIKELY(isSpread_))
         return;
 
-    cx->compartment()->jitCompartment()->initBaselineCallReturnAddr(code->raw() + returnOffset_,
-                                                                    isConstructing_);
+    void* address = code->raw() + bailoutReturnOffset_.offset();
+    BailoutReturnStub kind = isConstructing_ ? BailoutReturnStub::New
+                                             : BailoutReturnStub::Call;
+    cx->compartment()->jitCompartment()->initBailoutReturnAddr(address, getKey(), kind);
 }
 
 typedef bool (*CreateThisFn)(JSContext* cx, HandleObject callee, HandleObject newTarget,
@@ -3153,8 +3150,8 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
     EmitEnterTypeMonitorIC(masm);
 
     // Leave stub frame and restore argc for the next stub.
+    assumeStubFrame(masm);
     masm.bind(&failureLeaveStubFrame);
-    inStubFrame_ = true;
     leaveStubFrame(masm, false);
     if (argcReg != R0.scratchReg())
         masm.movePtr(argcReg, R0.scratchReg());

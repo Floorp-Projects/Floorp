@@ -693,6 +693,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
               unsigned depth = aUniqueStacks.LookupJITFrameDepth(pc);
               if (depth == 0) {
                 StreamJSFramesOp framesOp(pc, stack);
+                MOZ_RELEASE_ASSERT(aContext);
                 JS::ForEachProfiledFrame(aContext, pc, framesOp);
                 aUniqueStacks.AddJITFrameDepth(pc, framesOp.depth());
               } else {
@@ -743,7 +744,7 @@ ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
 }
 
 int
-ProfileBuffer::FindLastSampleOfThread(const LastSample& aLS)
+ProfileBuffer::FindLastSampleOfThread(int aThreadId, const LastSample& aLS)
 {
   // |aLS| has a valid generation number if either it matches the buffer's
   // generation, or is one behind the buffer's generation, since the buffer's
@@ -763,7 +764,7 @@ ProfileBuffer::FindLastSampleOfThread(const LastSample& aLS)
     // is still valid.
     MOZ_RELEASE_ASSERT(0 <= ix && ix < mEntrySize);
     ProfileBufferEntry& entry = mEntries[ix];
-    bool isStillValid = entry.isThreadId() && entry.mTagInt == aLS.mThreadId;
+    bool isStillValid = entry.isThreadId() && entry.mTagInt == aThreadId;
     return isStillValid ? ix : -1;
   }
 
@@ -774,17 +775,18 @@ ProfileBuffer::FindLastSampleOfThread(const LastSample& aLS)
 }
 
 bool
-ProfileBuffer::DuplicateLastSample(const TimeStamp& aStartTime, LastSample& aLS)
+ProfileBuffer::DuplicateLastSample(int aThreadId, const TimeStamp& aStartTime,
+                                   LastSample& aLS)
 {
-  int lastSampleStartPos = FindLastSampleOfThread(aLS);
+  int lastSampleStartPos = FindLastSampleOfThread(aThreadId, aLS);
   if (lastSampleStartPos == -1) {
     return false;
   }
 
   MOZ_ASSERT(mEntries[lastSampleStartPos].isThreadId() &&
-             mEntries[lastSampleStartPos].mTagInt == aLS.mThreadId);
+             mEntries[lastSampleStartPos].mTagInt == aThreadId);
 
-  addTagThreadId(aLS);
+  addTagThreadId(aThreadId, &aLS);
 
   // Go through the whole entry and duplicate it, until we find the next one.
   for (int readPos = (lastSampleStartPos + 1) % mEntrySize;

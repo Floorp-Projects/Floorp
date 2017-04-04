@@ -18,6 +18,7 @@
 #include "jsfriendapi.h"
 #include "jsfun.h"
 #include "jshashutil.h"
+#include "jsiter.h"
 #include "jsstr.h"
 #include "jsweakmap.h"
 #include "jswrapper.h"
@@ -754,17 +755,13 @@ intrinsic_GetIteratorPrototype(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-intrinsic_NewArrayIterator(JSContext* cx, unsigned argc, Value* vp)
+bool
+js::intrinsic_NewArrayIterator(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 0);
 
-    RootedObject proto(cx, GlobalObject::getOrCreateArrayIteratorPrototype(cx, cx->global()));
-    if (!proto)
-        return false;
-
-    JSObject* obj = NewObjectWithGivenProto(cx, &ArrayIteratorObject::class_, proto);
+    JSObject* obj = NewArrayIteratorObject(cx);
     if (!obj)
         return false;
 
@@ -2441,7 +2438,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("GetIteratorPrototype",    intrinsic_GetIteratorPrototype,    0,0),
 
-    JS_FN("NewArrayIterator",        intrinsic_NewArrayIterator,        0,0),
+    JS_INLINABLE_FN("NewArrayIterator", intrinsic_NewArrayIterator,     0,0,
+                    IntrinsicNewArrayIterator),
+
     JS_FN("CallArrayIteratorMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<ArrayIteratorObject>>,      2,0),
 
