@@ -21,6 +21,7 @@ sandbox::BrokerServices *SandboxBroker::sBrokerService = nullptr;
 static LazyLogModule sSandboxBrokerLog("SandboxBroker");
 
 #define LOG_E(...) MOZ_LOG(sSandboxBrokerLog, LogLevel::Error, (__VA_ARGS__))
+#define LOG_W(...) MOZ_LOG(sSandboxBrokerLog, LogLevel::Warning, (__VA_ARGS__))
 
 /* static */
 void
@@ -112,7 +113,13 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
   result = sBrokerService->SpawnTarget(aPath, aArguments, mPolicy,
                                        &last_warning, &last_error, &targetInfo);
   if (sandbox::SBOX_ALL_OK != result) {
+    LOG_E("Failed (ResultCode %d) to SpawnTarget with last_error=%d, last_warning=%d",
+          result, last_error, last_warning);
     return false;
+  } else if (sandbox::SBOX_ALL_OK != last_warning) {
+    // If there was a warning (but the result was still ok), log it and proceed.
+    LOG_W("Warning on SpawnTarget with last_error=%d, last_warning=%d",
+          last_error, last_warning);
   }
 
   // The sandboxed process is started in a suspended state, resume it now that
