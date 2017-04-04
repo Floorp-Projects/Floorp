@@ -34,8 +34,6 @@ import java.util.concurrent.Executors;
     private final BufferStorage bufferStorage;
     private final long syncDeadlineMillis;
 
-    private ExecutorService storeDelegateExecutor = Executors.newSingleThreadExecutor();
-
     /* package-local */ BufferingMiddlewareRepositorySession(
             RepositorySession repositorySession, MiddlewareRepository repository,
             long syncDeadlineMillis, BufferStorage bufferStorage) {
@@ -111,7 +109,7 @@ import java.util.concurrent.Executors;
         // If we don't have enough time now, we keep our buffer and try again later.
         if (!mayProceedToMergeBuffer()) {
             super.abort();
-            storeDelegate.deferredStoreDelegate(storeDelegateExecutor).onStoreFailed(new SyncDeadlineReachedException());
+            storeDelegate.deferredStoreDelegate(storeWorkQueue).onStoreFailed(new SyncDeadlineReachedException());
             return;
         }
 
