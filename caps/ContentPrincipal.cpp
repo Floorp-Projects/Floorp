@@ -187,23 +187,6 @@ ContentPrincipal::GenerateOriginNoSuffixFromURI(nsIURI* aURI,
   }
 #endif
 
-  nsAutoCString hostPort;
-
-  // chrome: URLs don't have a meaningful origin, so make
-  // sure we just get the full spec for them.
-  // XXX this should be removed in favor of the solution in
-  // bug 160042.
-  bool isChrome;
-  rv = origin->SchemeIs("chrome", &isChrome);
-  if (NS_SUCCEEDED(rv) && !isChrome) {
-    rv = origin->GetAsciiHostPort(hostPort);
-    // Some implementations return an empty string, treat it as no support
-    // for asciiHost by that implementation.
-    if (hostPort.IsEmpty()) {
-      rv = NS_ERROR_FAILURE;
-    }
-  }
-
   // We want the invariant that prinA.origin == prinB.origin i.f.f.
   // prinA.equals(prinB). However, this requires that we impose certain constraints
   // on the behavior and origin semantics of principals, and in particular, forbid
@@ -233,14 +216,6 @@ ContentPrincipal::GenerateOriginNoSuffixFromURI(nsIURI* aURI,
     return NS_OK;
   }
 
-  if (NS_SUCCEEDED(rv) && !isChrome) {
-    rv = origin->GetScheme(aOriginNoSuffix);
-    NS_ENSURE_SUCCESS(rv, rv);
-    aOriginNoSuffix.AppendLiteral("://");
-    aOriginNoSuffix.Append(hostPort);
-    return NS_OK;
-  }
-
   // This URL can be a blobURL. In this case, we should use the 'parent'
   // principal instead.
   nsCOMPtr<nsIURIWithPrincipal> uriWithPrincipal = do_QueryInterface(origin);
@@ -266,6 +241,24 @@ ContentPrincipal::GenerateOriginNoSuffixFromURI(nsIURI* aURI,
     return NS_ERROR_FAILURE;
   }
 
+  // See whether we have a useful hostPort. If we do, use that.
+  nsAutoCString hostPort;
+  bool isChrome = false;
+  rv = origin->SchemeIs("chrome", &isChrome);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isChrome) {
+    rv = origin->GetAsciiHostPort(hostPort);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  if (!hostPort.IsEmpty()) {
+    rv = origin->GetScheme(aOriginNoSuffix);
+    NS_ENSURE_SUCCESS(rv, rv);
+    aOriginNoSuffix.AppendLiteral("://");
+    aOriginNoSuffix.Append(hostPort);
+    return NS_OK;
+  }
+
+  // Use the full spec.
   return AssignFullSpecToOriginNoSuffix(origin, aOriginNoSuffix);
 }
 
