@@ -5028,6 +5028,14 @@ pref("dom.vr.enabled", false);
 #else
 pref("dom.vr.enabled", true);
 #endif
+// It is often desirable to automatically start vr presentation when
+// a user puts on the VR headset.  This is done by emitting the
+// Window.vrdisplayactivate event when the headset's sensors detect it
+// being worn.  This can result in WebVR content taking over the headset
+// when the user is using it outside the browser or inadvertent start of
+// presentation due to the high sensitivity of the proximity sensor in some
+// headsets, so it is off by default.
+pref("dom.vr.autoactivate.enabled", false);
 // Maximum number of milliseconds the browser will wait for content to call
 // VRDisplay.requestPresent after emitting vrdisplayactivate during VR
 // link traversal.  This prevents a long running event handler for
