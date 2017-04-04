@@ -84,8 +84,8 @@ class MOZ_STACK_CLASS BytecodeCompiler
     ScriptSource* scriptSource;
 
     Maybe<UsedNameTracker> usedNames;
-    Maybe<Parser<SyntaxParseHandler>> syntaxParser;
-    Maybe<Parser<FullParseHandler>> parser;
+    Maybe<Parser<SyntaxParseHandler, char16_t>> syntaxParser;
+    Maybe<Parser<FullParseHandler, char16_t>> parser;
 
     Directives directives;
     TokenStream::Position startPosition;
@@ -236,8 +236,7 @@ BytecodeCompiler::createParser()
 
     if (canLazilyParse()) {
         syntaxParser.emplace(cx, alloc, options, sourceBuffer.get(), sourceBuffer.length(),
-                             /* foldConstants = */ false, *usedNames,
-                             (Parser<SyntaxParseHandler>*) nullptr, (LazyScript*) nullptr);
+                             /* foldConstants = */ false, *usedNames, nullptr, nullptr);
 
         if (!syntaxParser->checkOptions())
             return false;
@@ -673,8 +672,9 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
     UsedNameTracker usedNames(cx);
     if (!usedNames.init())
         return false;
-    Parser<FullParseHandler> parser(cx, cx->tempLifoAlloc(), options, chars, length,
-                                    /* foldConstants = */ true, usedNames, nullptr, lazy);
+    Parser<FullParseHandler, char16_t> parser(cx, cx->tempLifoAlloc(), options, chars, length,
+                                              /* foldConstants = */ true, usedNames, nullptr,
+                                              lazy);
     if (!parser.checkOptions())
         return false;
 

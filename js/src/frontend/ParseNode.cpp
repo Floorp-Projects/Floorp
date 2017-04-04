@@ -572,7 +572,7 @@ ParseNodeAllocator::allocNode()
 
 ParseNode*
 ParseNode::appendOrCreateList(ParseNodeKind kind, JSOp op, ParseNode* left, ParseNode* right,
-                              FullParseHandler* handler, ParseContext* pc)
+                              FullParseHandlerBase* handler, ParseContext* pc)
 {
     // The asm.js specification is written in ECMAScript grammar terms that
     // specify *only* a binary tree.  It's a royal pain to implement the asm.js
