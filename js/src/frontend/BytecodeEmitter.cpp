@@ -2071,7 +2071,11 @@ class ForOfLoopControl : public LoopControl
 
     bool emitIteratorClose(BytecodeEmitter* bce,
                            CompletionKind completionKind = CompletionKind::Normal) {
-        return bce->emitIteratorClose(completionKind, allowSelfHosted_);
+        ptrdiff_t start = bce->offset();
+        if (!bce->emitIteratorClose(completionKind, allowSelfHosted_))
+            return false;
+        ptrdiff_t end = bce->offset();
+        return bce->tryNoteList.append(JSTRY_FOR_OF_ITERCLOSE, 0, start, end);
     }
 
     bool emitPrepareForNonLocalJump(BytecodeEmitter* bce, bool isTarget) {
@@ -2620,17 +2624,6 @@ BytecodeEmitter::emitUint32Operand(JSOp op, uint32_t operand)
     return true;
 }
 
-bool
-BytecodeEmitter::flushPops(int* npops)
-{
-    MOZ_ASSERT(*npops != 0);
-    if (!emitUint16Operand(JSOP_POPN, *npops))
-        return false;
-
-    *npops = 0;
-    return true;
-}
-
 namespace {
 
 class NonLocalExitControl
@@ -2724,8 +2717,9 @@ NonLocalExitControl::prepareForNonLocalJump(BytecodeEmitter::NestableControl* ta
     bool emitIteratorCloseAtTarget = emitIteratorClose && kind_ != Continue;
 
     auto flushPops = [&npops](BytecodeEmitter* bce) {
-        if (npops && !bce->flushPops(&npops))
+        if (npops && !bce->emitUint16Operand(JSOP_POPN, npops))
             return false;
+        npops = 0;
         return true;
     };
 
