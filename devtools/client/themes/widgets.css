@@ -1322,11 +1322,11 @@ widgets.css is overwritten. */
 }
 
 .table-widget-column-header[sorted=ascending] {
-  background-image: url("chrome://devtools/skin/images/sort-arrows.svg#ascending");
+  background-image: url("chrome://devtools/skin/images/sort-ascending-arrow.svg");
 }
 
 .table-widget-column-header[sorted=descending] {
-  background-image: url("chrome://devtools/skin/images/sort-arrows.svg#descending");
+  background-image: url("chrome://devtools/skin/images/sort-descending-arrow.svg");
 }
 
 .theme-dark .table-widget-column[readonly] {
