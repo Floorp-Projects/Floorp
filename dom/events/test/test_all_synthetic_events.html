@@ -381,13 +381,6 @@ const kEventConstructors = {
                                                        },
                                                chromeOnly: true,
                                              },
-  SVGZoomEvent:                              { create: function (aName, aProps) {
-                                                         var e = document.createEvent("svgzoomevent");
-                                                         e.initUIEvent(aName, aProps.bubbles, aProps.cancelable,
-                                                                       aProps.view, aProps.detail);
-                                                         return e;
-                                                       },
-                                             },
   TCPSocketErrorEvent:                       { create: function(aName, aProps) {
                                                          return new TCPSocketErrorEvent(aName, aProps);
                                                        },
