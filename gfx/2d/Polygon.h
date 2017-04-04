@@ -77,32 +77,22 @@ class PolygonTyped {
 public:
   PolygonTyped() {}
 
-  explicit PolygonTyped(const std::initializer_list<Point3DType>& aPoints)
-    : mNormal(DefaultNormal()),
-      mPoints(ToPoints4D(nsTArray<Point3DType>(aPoints)))
-  {
-#ifdef DEBUG
-    EnsurePlanarPolygon();
-#endif
-  }
-
-  explicit PolygonTyped(const nsTArray<Point3DType>& aPoints)
-    : mNormal(DefaultNormal()), mPoints(ToPoints4D(aPoints))
-  {
-#ifdef DEBUG
-    EnsurePlanarPolygon();
-#endif
-  }
-
   explicit PolygonTyped(const nsTArray<Point4DType>& aPoints,
-                          const Point4DType& aNormal = DefaultNormal())
-    : mNormal(aNormal), mPoints(aPoints)
-  {}
+                        const Point4DType& aNormal = DefaultNormal())
+    : mNormal(aNormal), mPoints(aPoints) {}
 
   explicit PolygonTyped(nsTArray<Point4DType>&& aPoints,
-                          const Point4DType& aNormal = DefaultNormal())
-    : mNormal(aNormal), mPoints(Move(aPoints))
-  {}
+                        const Point4DType& aNormal = DefaultNormal())
+    : mNormal(aNormal), mPoints(Move(aPoints)) {}
+
+  explicit PolygonTyped(const std::initializer_list<Point4DType>& aPoints,
+                        const Point4DType& aNormal = DefaultNormal())
+    : mNormal(aNormal), mPoints(aPoints)
+  {
+    #ifdef DEBUG
+    EnsurePlanarPolygon();
+    #endif
+  }
 
   RectTyped<Units> BoundingBox() const
   {
@@ -199,12 +189,14 @@ public:
 
   static PolygonTyped<Units> FromRect(const RectTyped<Units>& aRect)
   {
-    return PolygonTyped<Units> {
-      Point3DType(aRect.x, aRect.y, 0.0f),
-      Point3DType(aRect.x, aRect.y + aRect.height, 0.0f),
-      Point3DType(aRect.x + aRect.width, aRect.y + aRect.height, 0.0f),
-      Point3DType(aRect.x + aRect.width, aRect.y, 0.0f)
+    nsTArray<Point4DType> points {
+      Point4DType(aRect.x, aRect.y, 0.0f, 1.0f),
+      Point4DType(aRect.x, aRect.YMost(), 0.0f, 1.0f),
+      Point4DType(aRect.XMost(), aRect.YMost(), 0.0f, 1.0f),
+      Point4DType(aRect.XMost(), aRect.y, 0.0f, 1.0f)
     };
+
+    return PolygonTyped<Units>(Move(points));
   }
 
   const Point4DType& GetNormal() const
