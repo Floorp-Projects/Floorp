@@ -448,7 +448,7 @@ MainThreadHandoff::SetInterceptor(IWeakReference* aInterceptor)
 }
 
 HRESULT
-MainThreadHandoff::GetHandler(CLSID* aHandlerClsid)
+MainThreadHandoff::GetHandler(NotNull<CLSID*> aHandlerClsid)
 {
   if (!mHandlerProvider) {
     return E_NOTIMPL;
@@ -457,7 +457,7 @@ MainThreadHandoff::GetHandler(CLSID* aHandlerClsid)
 }
 
 HRESULT
-MainThreadHandoff::GetHandlerPayloadSize(DWORD* aOutPayloadSize)
+MainThreadHandoff::GetHandlerPayloadSize(NotNull<DWORD*> aOutPayloadSize)
 {
   if (!mHandlerProvider) {
     return E_NOTIMPL;
@@ -466,7 +466,7 @@ MainThreadHandoff::GetHandlerPayloadSize(DWORD* aOutPayloadSize)
 }
 
 HRESULT
-MainThreadHandoff::WriteHandlerPayload(IStream* aStream)
+MainThreadHandoff::WriteHandlerPayload(NotNull<IStream*> aStream)
 {
   if (!mHandlerProvider) {
     return E_NOTIMPL;
@@ -567,7 +567,7 @@ MainThreadHandoff::OnWalkInterface(REFIID aIid, PVOID* aInterface,
   if (mHandlerProvider) {
     hr = mHandlerProvider->NewInstance(aIid,
                                        ToInterceptorTargetPtr(origInterface),
-                                       getter_AddRefs(payload));
+                                       WrapNotNull((IHandlerProvider**)getter_AddRefs(payload)));
     MOZ_ASSERT(SUCCEEDED(hr));
     if (FAILED(hr)) {
       return hr;
