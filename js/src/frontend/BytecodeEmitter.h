@@ -452,6 +452,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 
     JSOp strictifySetNameOp(JSOp op);
 
+    MOZ_MUST_USE bool flushPops(int* npops);
+
     MOZ_MUST_USE bool emitCheck(ptrdiff_t delta, ptrdiff_t* offset);
 
     // Emit one bytecode.
