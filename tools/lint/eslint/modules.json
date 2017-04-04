@@ -45,7 +45,7 @@
   "content-server.jsm": ["init"],
   "content.jsm": ["registerContentFrame"],
   "ContentCrashHandlers.jsm": ["TabCrashHandler", "PluginCrashReporter", "UnsubmittedCrashHandler"],
-  "ContentObservers.jsm": [],
+  "ContentObservers.js": [],
   "ContentPrefUtils.jsm": ["ContentPref", "cbHandleResult", "cbHandleError", "cbHandleCompletion", "safeCallback", "_methodsCallableFromChild"],
   "controller.js": ["MozMillController", "globalEventRegistry", "sleep", "windowMap"],
   "cookies.js": ["Cookies"],
