@@ -156,20 +156,20 @@ add_task(function* () {
 
   info("Testing size sort, ascending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-list-size-button"));
-  testHeaders("size", "ascending");
+    document.querySelector("#requests-list-contentSize-button"));
+  testHeaders("contentSize", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing size sort, descending.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-list-size-button"));
-  testHeaders("size", "descending");
+    document.querySelector("#requests-list-contentSize-button"));
+  testHeaders("contentSize", "descending");
   testContents([4, 3, 2, 1, 0]);
 
   info("Testing size sort, ascending. Checking sort loops correctly.");
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelector("#requests-list-size-button"));
-  testHeaders("size", "ascending");
+    document.querySelector("#requests-list-contentSize-button"));
+  testHeaders("contentSize", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing waterfall sort, ascending.");
