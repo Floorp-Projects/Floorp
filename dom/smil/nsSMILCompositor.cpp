@@ -154,12 +154,19 @@ nsSMILCompositor::GetCSSPropertyToAnimate() const
   // (e.g. <rect>) we should animate it as a length attribute.
   // The easiest way to test for an outer SVG element, is to see if it is an
   // SVG-namespace element mapping its width/height attribute to style.
-  bool animateAsAttr = (mKey.mAttributeName == nsGkAtoms::width ||
-                        mKey.mAttributeName == nsGkAtoms::height) &&
-                       mKey.mElement->GetNameSpaceID() == kNameSpaceID_SVG &&
-                       !mKey.mElement->IsAttributeMapped(mKey.mAttributeName);
+  //
+  // If we have animation of 'width' or 'height' on an SVG element that is
+  // NOT mapping that attributes to style then it must not be an outermost SVG
+  // element so we should return eCSSProperty_UNKNOWN to indicate that we
+  // should animate as an attribute instead.
+  if ((mKey.mAttributeName == nsGkAtoms::width ||
+       mKey.mAttributeName == nsGkAtoms::height) &&
+      mKey.mElement->GetNameSpaceID() == kNameSpaceID_SVG &&
+      !mKey.mElement->IsAttributeMapped(mKey.mAttributeName)) {
+    return eCSSProperty_UNKNOWN;
+  }
 
-  return animateAsAttr ? eCSSProperty_UNKNOWN : propID;
+  return propID;
 }
 
 uint32_t
