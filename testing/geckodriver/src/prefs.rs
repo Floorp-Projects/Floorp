@@ -1,7 +1,7 @@
 use mozprofile::preferences::Pref;
 
 lazy_static! {
-    pub static ref DEFAULT: [(&'static str, Pref); 75] = [
+    pub static ref DEFAULT: [(&'static str, Pref); 78] = [
         // Disable automatic downloading of new releases
         ("app.update.auto", Pref::new(false)),
 
@@ -65,6 +65,9 @@ lazy_static! {
         // Skip check for default browser on startup
         ("browser.shell.checkDefaultBrowser", Pref::new(false)),
 
+        // Do not warn when quitting with multiple tabs
+        ("browser.showQuitWarning", Pref::new(false)),
+
         // Disable Android snippets
         ("browser.snippets.enabled", Pref::new(false)),
         ("browser.snippets.syncPromo.enabled", Pref::new(false)),
@@ -88,6 +91,9 @@ lazy_static! {
         // might get unloaded
         ("browser.tabs.disableBackgroundZombification", Pref::new(false)),
 
+        // Do not warn on exit when multiple tabs are open
+        ("browser.tabs.warnOnClose", Pref::new(false)),
+
         // Do not warn when closing all other open tabs
         ("browser.tabs.warnOnCloseOtherTabs", Pref::new(false)),
 
@@ -99,6 +105,9 @@ lazy_static! {
 
         // Disable the UI tour
         ("browser.uitour.enabled", Pref::new(false)),
+
+        // Do not warn on quitting Firefox
+        ("browser.warnOnQuit", Pref::new(false)),
 
         // Do not show datareporting policy notifications which can
         // interfere with tests
@@ -213,23 +222,5 @@ lazy_static! {
 
         // We want to collect telemetry, but we don't want to send in the results
         ("toolkit.telemetry.server", Pref::new("https://%(server)s/dummy/telemetry/")),
-    ];
-
-    pub static ref REQUIRED: [(&'static str, Pref); 5] = [
-        // Do not warn on quitting Firefox
-        ("browser.warnOnQuit", Pref::new(false)),
-
-        // Do not warn on exit when multiple tabs are open
-        ("browser.tabs.warnOnClose", Pref::new(false)),
-
-        // Do not warn when quitting with multiple tabs
-        ("browser.showQuitWarning", Pref::new(false)),
-
-        // Until bug 1238095 is fixed, we have to disable safe CPOW checks
-        ("dom.ipc.cpows.forbid-unsafe-from-browser", Pref::new(false)),
-
-        // TODO(ato): Should not be needed, as Marionette is enabled by
-        // passing the --marionette flag to the binary
-        ("marionette.defaultPrefs.enabled", Pref::new(true)),
     ];
 }
