@@ -131,3 +131,8 @@ user_pref("places.history.enabled", false);
 user_pref("plugin.load_flash_only", false);
 
 user_pref("media.openUnsupportedTypeWithExternalApp", false);
+
+// Disable all recommended Marionette preferences for Gecko tests.
+// The prefs recommended by Marionette are typically geared towards
+// consumer automation; not vendor testing.
+user_pref("marionette.prefs.recommended", false);
