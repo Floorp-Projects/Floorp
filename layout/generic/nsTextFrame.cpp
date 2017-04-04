@@ -3204,7 +3204,7 @@ protected:
   const nsStyleText*              mTextStyle;
   const nsTextFragment*           mFrag;
   const nsIFrame*                 mLineContainer;
-  nsTextFrame*                    mFrame;
+  const nsTextFrame*              mFrame;
   gfxSkipCharsIterator            mStart;  // Offset in original and transformed string
   const gfxSkipCharsIterator      mTempIterator;
 
