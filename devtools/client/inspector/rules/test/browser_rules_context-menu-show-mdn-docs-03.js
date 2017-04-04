@@ -33,7 +33,7 @@ add_task(function* () {
   info("Ensure the pref is true to begin with");
   let initial = Services.prefs.getBoolPref(PREF_ENABLE_MDN_DOCS_TOOLTIP);
   if (initial != true) {
-    setBooleanPref(PREF_ENABLE_MDN_DOCS_TOOLTIP, true);
+    yield setBooleanPref(PREF_ENABLE_MDN_DOCS_TOOLTIP, true);
   }
 
   yield addTab("data:text/html;charset=utf8," + encodeURIComponent(TEST_DOC));
@@ -59,7 +59,7 @@ add_task(function* () {
   info("Ensure the pref is reset to its initial value");
   let eventual = Services.prefs.getBoolPref(PREF_ENABLE_MDN_DOCS_TOOLTIP);
   if (eventual != initial) {
-    setBooleanPref(PREF_ENABLE_MDN_DOCS_TOOLTIP, initial);
+    yield setBooleanPref(PREF_ENABLE_MDN_DOCS_TOOLTIP, initial);
   }
 });
 
