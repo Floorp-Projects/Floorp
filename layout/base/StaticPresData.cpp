@@ -247,6 +247,17 @@ StaticPresData::GetLangGroup(nsIAtom* aLanguage) const
   return langGroupAtom;
 }
 
+already_AddRefed<nsIAtom>
+StaticPresData::GetUncachedLangGroup(nsIAtom* aLanguage) const
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIAtom> langGroupAtom = mLangService->GetUncachedLanguageGroup(aLanguage, &rv);
+  if (NS_FAILED(rv) || !langGroupAtom) {
+    langGroupAtom = nsGkAtoms::x_western; // Assume x-western is safe...
+  }
+  return langGroupAtom.forget();
+}
+
 const LangGroupFontPrefs*
 StaticPresData::GetFontPrefsForLangHelper(nsIAtom* aLanguage,
                                           const LangGroupFontPrefs* aPrefs) const
