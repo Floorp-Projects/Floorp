@@ -8,6 +8,7 @@ package org.mozilla.focus.search;
 import android.content.res.AssetManager;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.support.annotation.VisibleForTesting;
 import android.util.Base64;
 
 import org.mozilla.focus.utils.IOUtils;
@@ -30,21 +31,25 @@ import java.io.InputStreamReader;
     private static final String IMAGE_URI_PREFIX = "data:image/png;base64,";
 
     public static SearchEngine load(AssetManager assetManager, String path) throws IOException {
-        final SearchEngine searchEngine = new SearchEngine();
-
         final InputStream stream = assetManager.open(path);
 
         try {
-            XmlPullParser parser = XmlPullParserFactory.newInstance().newPullParser();
-            parser.setInput(new InputStreamReader(stream));
-            parser.next();
-
-            readSearchPlugin(parser, searchEngine);
+            return load(stream);
         } catch (XmlPullParserException e) {
             throw new AssertionError("Parser exception while reading " + path, e);
         } finally {
             IOUtils.safeClose(stream);
         }
+    }
+
+    @VisibleForTesting static SearchEngine load(InputStream stream) throws IOException, XmlPullParserException {
+        final SearchEngine searchEngine = new SearchEngine();
+
+        XmlPullParser parser = XmlPullParserFactory.newInstance().newPullParser();
+        parser.setInput(new InputStreamReader(stream));
+        parser.next();
+
+        readSearchPlugin(parser, searchEngine);
 
         return searchEngine;
     }
