@@ -33,6 +33,7 @@ protected:
   nsresult SetCSSDeclaration(DeclarationBlock* aDecl) final;
   nsIDocument* DocToUpdate() final;
   void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) final;
+  URLExtraData* GetURLData() const final;
 
 private:
   // For accessing the constructor.
