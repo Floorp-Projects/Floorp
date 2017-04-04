@@ -82,6 +82,8 @@ public:
     Inner()->mSheet = aSheet;
   }
 
+  URLExtraData* URLData() const { return Inner()->mURLData; }
+
   // WebIDL CSSStyleSheet API
   // Can't be inline because we can't include ImportRule here.  And can't be
   // called GetOwnerRule because that would be ambiguous with the ImportRule
