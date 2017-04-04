@@ -291,8 +291,9 @@ Shape::replaceLastProperty(JSContext* cx, StackBaseShape& base,
  * one of lastProperty() or lastProperty()->parent.
  */
 /* static */ Shape*
-NativeObject::getChildPropertyOnDictionary(JSContext* cx, HandleNativeObject obj,
-                                           HandleShape parent, MutableHandle<StackShape> child)
+NativeObject::getChildProperty(JSContext* cx,
+                               HandleNativeObject obj, HandleShape parent,
+                               MutableHandle<StackShape> child)
 {
     /*
      * Shared properties have no slot, but slot_ will reflect that of parent.
@@ -325,11 +326,9 @@ NativeObject::getChildPropertyOnDictionary(JSContext* cx, HandleNativeObject obj
         }
     }
 
-    RootedShape shape(cx);
-
     if (obj->inDictionaryMode()) {
         MOZ_ASSERT(parent == obj->lastProperty());
-        shape = child.isAccessorShape() ? Allocate<AccessorShape>(cx) : Allocate<Shape>(cx);
+        Shape* shape = child.isAccessorShape() ? Allocate<AccessorShape>(cx) : Allocate<Shape>(cx);
         if (!shape)
             return nullptr;
         if (child.hasSlot() && child.slot() >= obj->lastProperty()->base()->slotSpan()) {
@@ -339,28 +338,16 @@ NativeObject::getChildPropertyOnDictionary(JSContext* cx, HandleNativeObject obj
             }
         }
         shape->initDictionaryShape(child, obj->numFixedSlots(), &obj->shape_);
+        return shape;
     }
 
-    return shape;
-}
-
-/* static */ Shape*
-NativeObject::getChildProperty(JSContext* cx,
-                               HandleNativeObject obj, HandleShape parent,
-                               MutableHandle<StackShape> child)
-{
-    Shape* shape = getChildPropertyOnDictionary(cx, obj, parent, child);
-
-    if (!obj->inDictionaryMode()) {
-        shape = cx->zone()->propertyTree().getChild(cx, parent, child);
-        if (!shape)
-            return nullptr;
-        //MOZ_ASSERT(shape->parent == parent);
-        //MOZ_ASSERT_IF(parent != lastProperty(), parent == lastProperty()->parent);
-        if (!obj->setLastProperty(cx, shape))
-            return nullptr;
-    }
-
+    Shape* shape = cx->zone()->propertyTree().getChild(cx, parent, child);
+    if (!shape)
+        return nullptr;
+    //MOZ_ASSERT(shape->parent == parent);
+    //MOZ_ASSERT_IF(parent != lastProperty(), parent == lastProperty()->parent);
+    if (!obj->setLastProperty(cx, shape))
+        return nullptr;
     return shape;
 }
 

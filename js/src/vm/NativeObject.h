@@ -735,8 +735,6 @@ class NativeObject : public ShapedObject
     void freeSlot(JSContext* cx, uint32_t slot);
 
   private:
-    static Shape* getChildPropertyOnDictionary(JSContext* cx, HandleNativeObject obj,
-                                               HandleShape parent, MutableHandle<StackShape> child);
     static Shape* getChildProperty(JSContext* cx, HandleNativeObject obj,
                                    HandleShape parent, MutableHandle<StackShape> child);
 
