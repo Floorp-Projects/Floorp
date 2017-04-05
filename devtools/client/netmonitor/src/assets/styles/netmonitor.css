@@ -854,6 +854,18 @@ body,
   color: var(--theme-selection-color);
 }
 
+.learn-more-link {
+  color: var(--theme-highlight-blue);
+  cursor: pointer;
+  margin: 0 5px;
+  white-space: nowrap;
+  flex-grow: 1;
+}
+
+.learn-more-link:hover {
+  text-decoration: underline;
+}
+
 /* Headers tabpanel */
 
 .headers-overview {
@@ -902,18 +914,6 @@ body,
 
 .headers-summary .status-text {
     width: auto!important;
-}
-
-.headers-summary .learn-more-link {
-  color: var(--theme-highlight-blue);
-  cursor: pointer;
-  margin: 0 5px;
-  white-space: nowrap;
-  flex-grow: 1;
-}
-
-.headers-summary .learn-more-link:hover {
-  text-decoration: underline;
 }
 
 /* Response tabpanel */
