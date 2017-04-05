@@ -2873,6 +2873,11 @@ public:
   static bool
   IsCustomElementsEnabled() { return sIsCustomElementsEnabled; }
 
+  /**
+   * Compose a tab id with process id and a serial number.
+   */
+  static uint64_t GenerateTabId();
+
 private:
   static bool InitializeEventTable();
 
