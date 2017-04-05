@@ -7,7 +7,7 @@
 #ifndef nsStringBuffer_h__
 #define nsStringBuffer_h__
 
-#include "mozilla/Atomics.h"
+#include <atomic>
 #include "mozilla/MemoryReporting.h"
 
 template<class T> struct already_AddRefed;
@@ -26,7 +26,7 @@ class nsStringBuffer
 private:
   friend class CheckStaticAtomSizes;
 
-  mozilla::Atomic<int32_t> mRefCount;
+  std::atomic<uint32_t> mRefCount;
   uint32_t mStorageSize;
 
 public:
@@ -109,7 +109,27 @@ public:
    */
   bool IsReadonly() const
   {
-    return mRefCount > 1;
+    // This doesn't lead to the destruction of the buffer, so we don't
+    // need to perform acquire memory synchronization for the normal
+    // reason that a reference count needs acquire synchronization
+    // (ensuring that all writes to the object made on other threads are
+    // visible to the thread destroying the object).
+    //
+    // We then need to consider the possibility that there were prior
+    // writes to the buffer on a different thread:  one that has either
+    // since released its reference count, or one that also has access
+    // to this buffer through the same reference.  There are two ways
+    // for that to happen: either the buffer pointer or a data structure
+    // (e.g., string object) pointing to the buffer was transferred from
+    // one thread to another, or the data structure pointing to the
+    // buffer was already visible on both threads.  In the first case
+    // (transfer), the transfer of data from one thread to another would
+    // have handled the memory synchronization.  In the latter case
+    // (data structure visible on both threads), the caller needed some
+    // sort of higher level memory synchronization to protect against
+    // the string object being mutated at the same time on multiple
+    // threads.
+    return mRefCount.load(std::memory_order_relaxed) > 1;
   }
 
   /**
