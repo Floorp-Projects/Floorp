@@ -37,7 +37,7 @@ public:
   mozilla::ipc::IPCResult RecvInitVsyncBridge(Endpoint<PVsyncBridgeParent>&& aVsyncEndpoint) override;
   mozilla::ipc::IPCResult RecvInitImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint) override;
   mozilla::ipc::IPCResult RecvInitVRManager(Endpoint<PVRManagerParent>&& aEndpoint) override;
-  mozilla::ipc::IPCResult RecvInitUiCompositorController(Endpoint<PUiCompositorControllerParent>&& aEndpoint) override;
+  mozilla::ipc::IPCResult RecvInitUiCompositorController(const uint64_t& aRootLayerTreeId, Endpoint<PUiCompositorControllerParent>&& aEndpoint) override;
   mozilla::ipc::IPCResult RecvUpdatePref(const GfxPrefSetting& pref) override;
   mozilla::ipc::IPCResult RecvUpdateVar(const GfxVarUpdate& pref) override;
   mozilla::ipc::IPCResult RecvNewWidgetCompositor(

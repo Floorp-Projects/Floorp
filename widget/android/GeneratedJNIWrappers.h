@@ -3374,25 +3374,6 @@ public:
 
     auto ContentDocumentChanged() const -> void;
 
-    struct CreateFrame_t {
-        typedef GeckoLayerClient Owner;
-        typedef mozilla::jni::Object::LocalRef ReturnType;
-        typedef mozilla::jni::Object::Param SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "createFrame";
-        static constexpr char signature[] =
-                "()Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    auto CreateFrame() const -> mozilla::jni::Object::LocalRef;
-
     struct IsContentDocumentDisplayed_t {
         typedef GeckoLayerClient Owner;
         typedef bool ReturnType;
@@ -3430,65 +3411,6 @@ public:
     };
 
     auto OnGeckoReady() const -> void;
-
-    struct SetFirstPaintViewport_t {
-        typedef GeckoLayerClient Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                float,
-                float,
-                float,
-                float,
-                float,
-                float,
-                float> Args;
-        static constexpr char name[] = "setFirstPaintViewport";
-        static constexpr char signature[] =
-                "(FFFFFFF)V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    auto SetFirstPaintViewport(float, float, float, float, float, float, float) const -> void;
-
-    struct SyncFrameMetrics_t {
-        typedef GeckoLayerClient Owner;
-        typedef mozilla::jni::Object::LocalRef ReturnType;
-        typedef mozilla::jni::Object::Param SetterType;
-        typedef mozilla::jni::Args<
-                float,
-                float,
-                float,
-                float,
-                float,
-                float,
-                float,
-                int32_t,
-                int32_t,
-                int32_t,
-                int32_t,
-                float,
-                bool,
-                int32_t> Args;
-        static constexpr char name[] = "syncFrameMetrics";
-        static constexpr char signature[] =
-                "(FFFFFFFIIIIFZI)Lorg/mozilla/gecko/gfx/ViewTransform;";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    auto SyncFrameMetrics(float, float, float, float, float, float, float, int32_t, int32_t, int32_t, int32_t, float, bool, int32_t) const -> mozilla::jni::Object::LocalRef;
 
     struct SynthesizeNativeMouseEvent_t {
         typedef GeckoLayerClient Owner;
@@ -3537,26 +3459,31 @@ public:
 
     auto SynthesizeNativeTouchPoint(int32_t, int32_t, int32_t, int32_t, double, int32_t) const -> void;
 
-    struct ClearColor_t {
+    struct UpdateRootFrameMetrics_t {
         typedef GeckoLayerClient Owner;
-        typedef int32_t ReturnType;
-        typedef int32_t SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "mClearColor";
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                float,
+                float,
+                float,
+                float,
+                float,
+                float,
+                float> Args;
+        static constexpr char name[] = "updateRootFrameMetrics";
         static constexpr char signature[] =
-                "I";
+                "(FFFFFFF)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
         static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
+                mozilla::jni::CallingThread::UI;
         static const mozilla::jni::DispatchTarget dispatchTarget =
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    auto ClearColor() const -> int32_t;
-
-    auto ClearColor(int32_t) const -> void;
+    auto UpdateRootFrameMetrics(float, float, float, float, float, float, float) const -> void;
 
     static const mozilla::jni::CallingThread callingThread =
             mozilla::jni::CallingThread::ANY;
@@ -3607,70 +3534,6 @@ public:
 
 };
 
-class LayerRenderer : public mozilla::jni::ObjectBase<LayerRenderer>
-{
-public:
-    static const char name[];
-
-    explicit LayerRenderer(const Context& ctx) : ObjectBase<LayerRenderer>(ctx) {}
-
-    class Frame;
-
-    static const mozilla::jni::CallingThread callingThread =
-            mozilla::jni::CallingThread::ANY;
-
-};
-
-class LayerRenderer::Frame : public mozilla::jni::ObjectBase<Frame>
-{
-public:
-    static const char name[];
-
-    explicit Frame(const Context& ctx) : ObjectBase<Frame>(ctx) {}
-
-    struct BeginDrawing_t {
-        typedef Frame Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "beginDrawing";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    auto BeginDrawing() const -> void;
-
-    struct EndDrawing_t {
-        typedef Frame Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "endDrawing";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    auto EndDrawing() const -> void;
-
-    static const mozilla::jni::CallingThread callingThread =
-            mozilla::jni::CallingThread::ANY;
-
-};
-
 class LayerView : public mozilla::jni::ObjectBase<LayerView>
 {
 public:
@@ -3699,26 +3562,6 @@ public:
 
     auto GetCompositor() const -> mozilla::jni::Object::LocalRef;
 
-    struct UpdateZoomedView_t {
-        typedef LayerView Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::ByteBuffer::Param> Args;
-        static constexpr char name[] = "updateZoomedView";
-        static constexpr char signature[] =
-                "(Ljava/nio/ByteBuffer;)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::GECKO;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto UpdateZoomedView(mozilla::jni::ByteBuffer::Param) -> void;
-
     struct CompositorCreated_t {
         typedef LayerView Owner;
         typedef bool ReturnType;
@@ -3741,7 +3584,7 @@ public:
     auto CompositorCreated(bool) const -> void;
 
     static const mozilla::jni::CallingThread callingThread =
-            mozilla::jni::CallingThread::ANY;
+            mozilla::jni::CallingThread::UI;
 
 };
 
@@ -3827,6 +3670,24 @@ public:
                 mozilla::jni::DispatchTarget::GECKO;
     };
 
+    struct EnableLayerUpdateNotifications_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                bool> Args;
+        static constexpr char name[] = "enableLayerUpdateNotifications";
+        static constexpr char signature[] =
+                "(Z)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
     struct OnSizeChanged_t {
         typedef Compositor Owner;
         typedef void ReturnType;
@@ -3866,6 +3727,158 @@ public:
     };
 
     auto Reattach() const -> void;
+
+    struct RecvScreenPixels_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t,
+                mozilla::jni::IntArray::Param> Args;
+        static constexpr char name[] = "recvScreenPixels";
+        static constexpr char signature[] =
+                "(II[I)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto RecvScreenPixels(int32_t, int32_t, mozilla::jni::IntArray::Param) const -> void;
+
+    struct RecvToolbarAnimatorMessage_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t> Args;
+        static constexpr char name[] = "recvToolbarAnimatorMessage";
+        static constexpr char signature[] =
+                "(I)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto RecvToolbarAnimatorMessage(int32_t) const -> void;
+
+    struct RequestScreenPixels_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "requestScreenPixels";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    struct SendToolbarAnimatorMessage_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t> Args;
+        static constexpr char name[] = "sendToolbarAnimatorMessage";
+        static constexpr char signature[] =
+                "(I)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    struct SendToolbarPixelsToCompositor_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t,
+                mozilla::jni::IntArray::Param> Args;
+        static constexpr char name[] = "sendToolbarPixelsToCompositor";
+        static constexpr char signature[] =
+                "(II[I)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    struct SetDefaultClearColor_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t> Args;
+        static constexpr char name[] = "setDefaultClearColor";
+        static constexpr char signature[] =
+                "(I)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::UI;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    struct SetMaxToolbarHeight_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t> Args;
+        static constexpr char name[] = "setMaxToolbarHeight";
+        static constexpr char signature[] =
+                "(I)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    struct SetPinned_t {
+        typedef Compositor Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                bool,
+                int32_t> Args;
+        static constexpr char name[] = "setPinned";
+        static constexpr char signature[] =
+                "(ZI)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
 
     struct SyncInvalidateAndScheduleComposite_t {
         typedef Compositor Owner;
@@ -3934,25 +3947,6 @@ public:
 
     explicit NativePanZoomController(const Context& ctx) : ObjectBase<NativePanZoomController>(ctx) {}
 
-    struct AdjustScrollForSurfaceShift_t {
-        typedef NativePanZoomController Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                float,
-                float> Args;
-        static constexpr char name[] = "adjustScrollForSurfaceShift";
-        static constexpr char signature[] =
-                "(FF)V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::UI;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
     struct Destroy_t {
         typedef NativePanZoomController Owner;
         typedef void ReturnType;
@@ -4008,25 +4002,6 @@ public:
         static constexpr char name[] = "handleMotionEvent";
         static constexpr char signature[] =
                 "(IIJI[I[F[F[F[F[F[F)Z";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::UI;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    struct HandleMotionEventVelocity_t {
-        typedef NativePanZoomController Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                int64_t,
-                float> Args;
-        static constexpr char name[] = "handleMotionEventVelocity";
-        static constexpr char signature[] =
-                "(JF)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -4119,26 +4094,6 @@ public:
     };
 
     auto OnSelectionDragState(bool) const -> void;
-
-    struct SetScrollingRootContent_t {
-        typedef NativePanZoomController Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                bool> Args;
-        static constexpr char name[] = "setScrollingRootContent";
-        static constexpr char signature[] =
-                "(Z)V";
-        static const bool isStatic = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::UI;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    auto SetScrollingRootContent(bool) const -> void;
 
     struct UpdateOverscrollOffset_t {
         typedef NativePanZoomController Owner;

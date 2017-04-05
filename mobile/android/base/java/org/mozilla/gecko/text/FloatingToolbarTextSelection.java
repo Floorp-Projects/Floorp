@@ -171,12 +171,13 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
         final double width = (int) message.getDouble("width");
         final double height = (int) message.getDouble("height");
 
+        final float toolbarOffset = layerView.getCurrentToolbarHeight();
         final float zoomFactor = layerView.getZoomFactor();
         layerView.getLocationInWindow(locationInWindow);
 
         contentRect = new Rect(
                 (int) (x * zoomFactor + locationInWindow[0]),
-                (int) (y * zoomFactor + locationInWindow[1]),
+                (int) (y * zoomFactor + locationInWindow[1] + toolbarOffset),
                 (int) ((x + width) * zoomFactor + locationInWindow[0]),
                 (int) ((y + height) * zoomFactor + locationInWindow[1] +
                        (height > 0 ? handlesOffset : 0)));
