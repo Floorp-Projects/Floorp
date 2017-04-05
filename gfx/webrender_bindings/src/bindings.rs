@@ -809,7 +809,10 @@ pub extern "C" fn wr_api_add_external_image_handle(api: &mut RenderApi,
     assert!(unsafe { is_in_compositor_thread() });
     api.add_image(image_key,
                   descriptor.to_descriptor(),
-                  ImageData::ExternalHandle(ExternalImageId(external_image_id)),
+                  ImageData::External(ExternalImageData {
+                      id: ExternalImageId(external_image_id),
+                      image_type: ExternalImageType::Texture2DHandle
+                  }),
                   None);
 }
 
@@ -821,7 +824,10 @@ pub extern "C" fn wr_api_add_external_image_buffer(api: &mut RenderApi,
     assert!(unsafe { is_in_compositor_thread() });
     api.add_image(image_key,
                   descriptor.to_descriptor(),
-                  ImageData::ExternalBuffer(ExternalImageId(external_image_id)),
+                  ImageData::External(ExternalImageData {
+                      id: ExternalImageId(external_image_id),
+                      image_type: ExternalImageType::ExternalBuffer
+                  }),
                   None);
 }
 
