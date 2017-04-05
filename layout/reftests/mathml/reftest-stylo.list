@@ -90,7 +90,7 @@ fails == stretchy-largeop-2.html stretchy-largeop-2.html
 fails == stretchy-largeop-3.html stretchy-largeop-3.html
 fails == table-width-1.xhtml table-width-1.xhtml
 == table-width-2.html table-width-2.html
-== table-width-3.html table-width-3.html
+fails == table-width-3.html table-width-3.html
 fails == table-width-4.html table-width-4.html
 == underbar-width-1.xhtml underbar-width-1.xhtml
 == mathml-type-supported.xhtml mathml-type-supported.xhtml
@@ -209,22 +209,22 @@ fails == multiscripts-1.html multiscripts-1.html
 == mathml-mmultiscript-base.html mathml-mmultiscript-base.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript.html
 == menclose-1a.html menclose-1a.html
-fails == menclose-1b.html menclose-1b.html
+== menclose-1b.html menclose-1b.html
 == menclose-1c.html menclose-1c.html
-fails == menclose-1d.html menclose-1d.html
-fails == menclose-1e.html menclose-1e.html
-fails == menclose-1f.html menclose-1f.html
-fails == menclose-1g.html menclose-1g.html
-fails == menclose-1h.html menclose-1h.html
-fails == menclose-1i.html menclose-1i.html
-fails == menclose-1j.html menclose-1j.html
-fails == menclose-1k.html menclose-1k.html
-fails == menclose-1l.html menclose-1l.html
-fails == menclose-1m.html menclose-1m.html
-fails == menclose-1n.html menclose-1n.html
-fails == menclose-1o.html menclose-1o.html
-fails == menclose-1p.html menclose-1p.html
-fails == menclose-1q.html menclose-1q.html
+== menclose-1d.html menclose-1d.html
+== menclose-1e.html menclose-1e.html
+== menclose-1f.html menclose-1f.html
+== menclose-1g.html menclose-1g.html
+== menclose-1h.html menclose-1h.html
+== menclose-1i.html menclose-1i.html
+== menclose-1j.html menclose-1j.html
+== menclose-1k.html menclose-1k.html
+== menclose-1l.html menclose-1l.html
+== menclose-1m.html menclose-1m.html
+== menclose-1n.html menclose-1n.html
+== menclose-1o.html menclose-1o.html
+== menclose-1p.html menclose-1p.html
+== menclose-1q.html menclose-1q.html
 random-if(gtkWidget) == menclose-2-actuarial.html menclose-2-actuarial.html
 random-if(gtkWidget) == menclose-2-bottom.html menclose-2-bottom.html
 random-if(gtkWidget) == menclose-2-box.html menclose-2-box.html
@@ -246,7 +246,7 @@ fails == menclose-3-box.html menclose-3-box.html
 == menclose-3-radical.html menclose-3-radical.html
 == menclose-3-default.html menclose-3-default.html
 fails == menclose-3-invalid.html menclose-3-invalid.html
-fails == menclose-3-multiple.html menclose-3-multiple.html
+== menclose-3-multiple.html menclose-3-multiple.html
 fails == menclose-3-unknown.html menclose-3-unknown.html
 == menclose-4.html menclose-4.html
 fails == menclose-5-actuarial.html menclose-5-actuarial.html
