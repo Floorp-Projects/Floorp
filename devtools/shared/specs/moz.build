@@ -14,8 +14,6 @@ DevToolsModules(
     'css-properties.js',
     'csscoverage.js',
     'device.js',
-    'director-manager.js',
-    'director-registry.js',
     'emulation.js',
     'environment.js',
     'eventlooplag.js',

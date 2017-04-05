@@ -263,7 +263,7 @@ GradientStop fetch_gradient_stop(int index) {
 
 struct RadialGradient {
     vec4 start_end_center;
-    vec4 start_end_radius_extend_mode;
+    vec4 start_end_radius_ratio_xy_extend_mode;
 };
 
 RadialGradient fetch_radial_gradient(int index) {
@@ -272,7 +272,7 @@ RadialGradient fetch_radial_gradient(int index) {
     ivec2 uv = get_fetch_uv_2(index);
 
     gradient.start_end_center = texelFetchOffset(sData32, uv, 0, ivec2(0, 0));
-    gradient.start_end_radius_extend_mode = texelFetchOffset(sData32, uv, 0, ivec2(1, 0));
+    gradient.start_end_radius_ratio_xy_extend_mode = texelFetchOffset(sData32, uv, 0, ivec2(1, 0));
 
     return gradient;
 }

@@ -5,7 +5,7 @@
 
 struct ClipRect {
     vec4 rect;
-    vec4 dummy;
+    vec4 mode;
 };
 
 ClipRect fetch_clip_rect(int index) {
@@ -14,8 +14,7 @@ ClipRect fetch_clip_rect(int index) {
     ivec2 uv = get_fetch_uv_2(index);
 
     rect.rect = texelFetchOffset(sData32, uv, 0, ivec2(0, 0));
-    //rect.dummy = texelFetchOffset(sData32, uv, 0, ivec2(1, 0));
-    rect.dummy = vec4(0.0, 0.0, 0.0, 0.0);
+    rect.mode = texelFetchOffset(sData32, uv, 0, ivec2(1, 0));
 
     return rect;
 }
@@ -70,6 +69,7 @@ void main(void) {
     vLocalRect = vi.clipped_local_rect;
     vPos = vi.local_pos;
 
+    vClipMode = clip.rect.mode.x;
     vClipRect = vec4(local_rect.xy, local_rect.xy + local_rect.zw);
     vClipRadius = vec4(clip.top_left.outer_inner_radius.x,
                        clip.top_right.outer_inner_radius.x,

@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use byteorder::{LittleEndian, ReadBytesExt};
 use frame::Frame;
 use frame_builder::FrameBuilderConfig;
 use internal_types::{FontTemplate, SourceTexture, ResultMsg, RendererFrame};
@@ -11,7 +10,6 @@ use record::ApiRecordingReceiver;
 use resource_cache::ResourceCache;
 use scene::Scene;
 use std::collections::HashMap;
-use std::io::{Cursor, Read};
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Sender;
 use texture_cache::TextureCache;
@@ -21,7 +19,7 @@ use webgl_types::{GLContextHandleWrapper, GLContextWrapper};
 use webrender_traits::{DeviceIntPoint, DeviceUintPoint, DeviceUintRect, DeviceUintSize, LayerPoint};
 use webrender_traits::{ApiMsg, AuxiliaryLists, BuiltDisplayList, IdNamespace, ImageData};
 use webrender_traits::{PipelineId, RenderNotifier, RenderDispatcher, WebGLCommand, WebGLContextId};
-use webrender_traits::channel::{PayloadHelperMethods, PayloadReceiver, PayloadSender, MsgReceiver};
+use webrender_traits::channel::{PayloadSenderHelperMethods, PayloadReceiverHelperMethods, PayloadReceiver, PayloadSender, MsgReceiver};
 use webrender_traits::{BlobImageRenderer, VRCompositorCommand, VRCompositorHandler};
 #[cfg(feature = "webgl")]
 use offscreen_gl_context::GLContextDispatcher;
@@ -177,60 +175,52 @@ impl RenderBackend {
 
                             sender.send(result).unwrap();
                         }
-                        ApiMsg::SetRootDisplayList(background_color,
-                                                   epoch,
-                                                   pipeline_id,
-                                                   viewport_size,
-                                                   display_list_descriptor,
-                                                   auxiliary_lists_descriptor,
-                                                   preserve_frame_state) => {
-                            profile_scope!("SetRootDisplayList");
+                        ApiMsg::SetDisplayList(background_color,
+                                               epoch,
+                                               pipeline_id,
+                                               viewport_size,
+                                               display_list_descriptor,
+                                               auxiliary_lists_descriptor,
+                                               preserve_frame_state) => {
+                            profile_scope!("SetDisplayList");
                             let mut leftover_auxiliary_data = vec![];
                             let mut auxiliary_data;
                             loop {
-                                auxiliary_data = self.payload_rx.recv().unwrap();
+                                auxiliary_data = self.payload_rx.recv_payload().unwrap();
                                 {
-                                    let mut payload_reader = Cursor::new(&auxiliary_data[..]);
-                                    let payload_epoch =
-                                        payload_reader.read_u32::<LittleEndian>().unwrap();
-                                    if payload_epoch == epoch.0 {
+                                    if auxiliary_data.epoch == epoch &&
+                                       auxiliary_data.pipeline_id == pipeline_id {
                                         break
                                     }
                                 }
                                 leftover_auxiliary_data.push(auxiliary_data)
                             }
                             for leftover_auxiliary_data in leftover_auxiliary_data {
-                                self.payload_tx.send_vec(leftover_auxiliary_data).unwrap()
+                                self.payload_tx.send_payload(leftover_auxiliary_data).unwrap()
                             }
                             if let Some(ref mut r) = self.recorder {
-                                r.write_payload(frame_counter, &auxiliary_data);
+                                r.write_payload(frame_counter, &auxiliary_data.to_data());
                             }
 
-                            let mut auxiliary_data = Cursor::new(&mut auxiliary_data[4..]);
-                            let mut built_display_list_data =
-                                vec![0; display_list_descriptor.size()];
-                            auxiliary_data.read_exact(&mut built_display_list_data[..]).unwrap();
                             let built_display_list =
-                                BuiltDisplayList::from_data(built_display_list_data,
+                                BuiltDisplayList::from_data(auxiliary_data.display_list_data,
                                                             display_list_descriptor);
-                            let mut auxiliary_lists_data =
-                                vec![0; auxiliary_lists_descriptor.size()];
-                            auxiliary_data.read_exact(&mut auxiliary_lists_data[..]).unwrap();
                             let auxiliary_lists =
-                                AuxiliaryLists::from_data(auxiliary_lists_data,
+                                AuxiliaryLists::from_data(auxiliary_data.auxiliary_lists_data,
                                                           auxiliary_lists_descriptor);
 
                             if !preserve_frame_state {
                                 self.discard_frame_state_for_pipeline(pipeline_id);
                             }
-
-                            self.scene.set_root_display_list(pipeline_id,
-                                                             epoch,
-                                                             built_display_list,
-                                                             background_color,
-                                                             viewport_size,
-                                                             auxiliary_lists);
-                            self.build_scene();
+                            profile_counters.total_time.profile(|| {
+                                self.scene.set_display_list(pipeline_id,
+                                                            epoch,
+                                                            built_display_list,
+                                                            background_color,
+                                                            viewport_size,
+                                                            auxiliary_lists);
+                                self.build_scene();
+                            })
                         }
                         ApiMsg::SetRootPipeline(pipeline_id) => {
                             profile_scope!("SetRootPipeline");
@@ -240,7 +230,9 @@ impl RenderBackend {
                                 continue;
                             }
 
-                            self.build_scene();
+                            profile_counters.total_time.profile(|| {
+                                self.build_scene();
+                            })
                         }
                         ApiMsg::Scroll(delta, cursor, move_phase) => {
                             profile_scope!("Scroll");
@@ -383,7 +375,9 @@ impl RenderBackend {
                             //           rebuild of the frame!
                             if let Some(property_bindings) = property_bindings {
                                 self.scene.properties.set_properties(property_bindings);
-                                self.build_scene();
+                                profile_counters.total_time.profile(|| {
+                                    self.build_scene();
+                                });
                             }
 
                             let frame = {

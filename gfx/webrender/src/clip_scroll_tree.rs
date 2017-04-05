@@ -23,7 +23,7 @@ pub struct ClipScrollTree {
     /// The current reference frame id, used for giving a unique id to all new
     /// reference frames. The ClipScrollTree increments this by one every time a
     /// reference frame is created.
-    current_reference_frame_id: usize,
+    current_reference_frame_id: u64,
 
     /// The root reference frame, which is the true root of the ClipScrollTree. Initially
     /// this ID is not valid, which is indicated by ```node``` being empty.

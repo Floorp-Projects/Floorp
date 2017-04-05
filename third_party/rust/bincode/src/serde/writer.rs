@@ -7,6 +7,7 @@ use serde_crate as serde;
 use byteorder::{WriteBytesExt, ByteOrder};
 
 use super::{Result, Error, ErrorKind};
+use super::super::SizeLimit;
 
 /// An Serializer that encodes values directly into a Writer.
 ///
@@ -193,31 +194,24 @@ impl<'a, W: Write, E: ByteOrder> serde::Serializer for &'a mut Serializer<W, E> 
     }
 }
 
-pub struct SizeChecker {
-    pub size_limit: u64,
-    pub written: u64
+pub struct SizeChecker<S: SizeLimit> {
+    pub size_limit: S,
 }
 
-impl SizeChecker {
-    pub fn new(limit: u64) -> SizeChecker {
+impl <S: SizeLimit> SizeChecker<S> {
+    pub fn new(size_limit: S) -> SizeChecker<S> {
         SizeChecker {
-            size_limit: limit,
-            written: 0
+            size_limit: size_limit
         }
     }
 
-    fn add_raw(&mut self, size: usize) -> Result<()> {
-        self.written += size as u64;
-        if self.written <= self.size_limit {
-            Ok(())
-        } else {
-            Err(ErrorKind::SizeLimit.into())
-        }
+    fn add_raw(&mut self, size: u64) -> Result<()> {
+        self.size_limit.add(size)
     }
 
     fn add_value<T>(&mut self, t: T) -> Result<()> {
         use std::mem::size_of_val;
-        self.add_raw(size_of_val(&t))
+        self.add_raw(size_of_val(&t) as u64)
     }
 
     fn add_enum_tag(&mut self, tag: usize) -> Result<()> {
@@ -229,16 +223,16 @@ impl SizeChecker {
     }
 }
 
-impl<'a> serde::Serializer for &'a mut SizeChecker {
+impl<'a, S: SizeLimit> serde::Serializer for &'a mut SizeChecker<S> {
     type Ok = ();
     type Error = Error;
-    type SerializeSeq = SizeCompound<'a>;
-    type SerializeTuple = SizeCompound<'a>;
-    type SerializeTupleStruct = SizeCompound<'a>;
-    type SerializeTupleVariant = SizeCompound<'a>;
-    type SerializeMap = SizeCompound<'a>;
-    type SerializeStruct = SizeCompound<'a>;
-    type SerializeStructVariant = SizeCompound<'a>;
+    type SerializeSeq = SizeCompound<'a, S>;
+    type SerializeTuple = SizeCompound<'a, S>;
+    type SerializeTupleStruct = SizeCompound<'a, S>;
+    type SerializeTupleVariant = SizeCompound<'a, S>;
+    type SerializeMap = SizeCompound<'a, S>;
+    type SerializeStruct = SizeCompound<'a, S>;
+    type SerializeStructVariant = SizeCompound<'a, S>;
 
     fn serialize_unit(self) -> Result<()> { Ok(()) }
 
@@ -290,16 +284,16 @@ impl<'a> serde::Serializer for &'a mut SizeChecker {
 
     fn serialize_str(self, v: &str) -> Result<()> {
         try!(self.add_value(0 as u64));
-        self.add_raw(v.len())
+        self.add_raw(v.len() as u64)
     }
 
     fn serialize_char(self, c: char) -> Result<()> {
-        self.add_raw(encode_utf8(c).as_slice().len())
+        self.add_raw(encode_utf8(c).as_slice().len() as u64)
     }
 
     fn serialize_bytes(self, v: &[u8]) -> Result<()> {
         try!(self.add_value(0 as u64));
-        self.add_raw(v.len())
+        self.add_raw(v.len() as u64)
     }
 
     fn serialize_none(self) -> Result<()> {
@@ -532,11 +526,11 @@ impl<'a, W, E> serde::ser::SerializeStructVariant for Compound<'a, W, E>
 }
 
 #[doc(hidden)]
-pub struct SizeCompound<'a> {
-    ser: &'a mut SizeChecker,
+pub struct SizeCompound<'a, S: SizeLimit + 'a> {
+    ser: &'a mut SizeChecker<S>,
 }
 
-impl<'a> serde::ser::SerializeSeq for SizeCompound<'a> 
+impl<'a, S: SizeLimit> serde::ser::SerializeSeq for SizeCompound<'a, S>
 {
     type Ok = ();
     type Error = Error;
@@ -554,7 +548,7 @@ impl<'a> serde::ser::SerializeSeq for SizeCompound<'a>
     }
 }
 
-impl<'a> serde::ser::SerializeTuple for SizeCompound<'a>
+impl<'a, S: SizeLimit> serde::ser::SerializeTuple for SizeCompound<'a, S>
 {
     type Ok = ();
     type Error = Error;
@@ -572,7 +566,7 @@ impl<'a> serde::ser::SerializeTuple for SizeCompound<'a>
     }
 }
 
-impl<'a> serde::ser::SerializeTupleStruct for SizeCompound<'a> 
+impl<'a, S: SizeLimit> serde::ser::SerializeTupleStruct for SizeCompound<'a, S>
 {
     type Ok = ();
     type Error = Error;
@@ -590,7 +584,7 @@ impl<'a> serde::ser::SerializeTupleStruct for SizeCompound<'a>
     }
 }
 
-impl<'a> serde::ser::SerializeTupleVariant for SizeCompound<'a>
+impl<'a, S: SizeLimit> serde::ser::SerializeTupleVariant for SizeCompound<'a, S>
 {
     type Ok = ();
     type Error = Error;
@@ -608,7 +602,7 @@ impl<'a> serde::ser::SerializeTupleVariant for SizeCompound<'a>
     }
 }
 
-impl<'a> serde::ser::SerializeMap for SizeCompound<'a>
+impl<'a, S: SizeLimit + 'a> serde::ser::SerializeMap for SizeCompound<'a, S>
 {
     type Ok = ();
     type Error = Error;
@@ -633,7 +627,7 @@ impl<'a> serde::ser::SerializeMap for SizeCompound<'a>
     }
 }
 
-impl<'a> serde::ser::SerializeStruct for SizeCompound<'a> 
+impl<'a, S: SizeLimit> serde::ser::SerializeStruct for SizeCompound<'a, S>
 {
     type Ok = ();
     type Error = Error;
@@ -651,7 +645,7 @@ impl<'a> serde::ser::SerializeStruct for SizeCompound<'a>
     }
 }
 
-impl<'a> serde::ser::SerializeStructVariant for SizeCompound<'a>
+impl<'a, S: SizeLimit> serde::ser::SerializeStructVariant for SizeCompound<'a, S>
 {
     type Ok = ();
     type Error = Error;
@@ -668,7 +662,6 @@ impl<'a> serde::ser::SerializeStructVariant for SizeCompound<'a>
         Ok(())
     }
 }
-
 const TAG_CONT: u8    = 0b1000_0000;
 const TAG_TWO_B: u8   = 0b1100_0000;
 const TAG_THREE_B: u8 = 0b1110_0000;
