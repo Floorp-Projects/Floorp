@@ -1570,6 +1570,15 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
     // We warn on failure, but don't handle it, because it might be harmless.
     // Instead we just check that a new block was actually created.
     Unused << NS_WARN_IF(NS_FAILED(rv));
+
+    // Reinitialize node/offset in case they're not inside the new block
+    if (NS_WARN_IF(!aSelection.GetRangeAt(0) ||
+                   !aSelection.GetRangeAt(0)->GetStartParent())) {
+      return NS_ERROR_FAILURE;
+    }
+    node = *aSelection.GetRangeAt(0)->GetStartParent();
+    offset = aSelection.GetRangeAt(0)->StartOffset();
+
     blockParent = mHTMLEditor->GetBlock(node);
     if (NS_WARN_IF(!blockParent)) {
       return NS_ERROR_UNEXPECTED;
