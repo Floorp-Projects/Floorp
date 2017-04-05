@@ -1728,8 +1728,13 @@ class ADBDevice(ADBCommand):
         local = os.path.normpath(local)
         remote = os.path.normpath(remote)
         copy_required = False
-        if self._adb_version >= '1.0.36' and \
-           os.path.isdir(local) and self.is_dir(remote):
+        if os.path.isdir(local):
+            copy_required = True
+            temp_parent = tempfile.mkdtemp()
+            remote_name = os.path.basename(remote)
+            new_local = os.path.join(temp_parent, remote_name)
+            dir_util.copy_tree(local, new_local)
+            local = new_local
             # See do_sync_push in
             # https://android.googlesource.com/platform/system/core/+/master/adb/file_sync_client.cpp
             # Work around change in behavior in adb 1.0.36 where if
@@ -1737,22 +1742,8 @@ class ADBDevice(ADBCommand):
             # copy the source directory *into* the destination
             # directory otherwise it will copy the source directory
             # *onto* the destination directory.
-            #
-            # If the destination directory does exist, push to its
-            # parent directory.  If the source and destination leaf
-            # directory names are different, copy the source directory
-            # to a temporary directory with the same leaf name as the
-            # destination so that when we push to the parent, the
-            # source is copied onto the destination directory.
-            local_name = os.path.basename(local)
-            remote_name = os.path.basename(remote)
-            if local_name != remote_name:
-                copy_required = True
-                temp_parent = tempfile.mkdtemp()
-                new_local = os.path.join(temp_parent, remote_name)
-                dir_util.copy_tree(local, new_local)
-                local = new_local
-            remote = '/'.join(remote.rstrip('/').split('/')[:-1])
+            if self._adb_version >= '1.0.36':
+                remote = '/'.join(remote.rstrip('/').split('/')[:-1])
         try:
             self.command_output(["push", local, remote], timeout=timeout)
         except:

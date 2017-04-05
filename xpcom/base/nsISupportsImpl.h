@@ -20,7 +20,7 @@
 
 #include "nsDebug.h"
 #include "nsXPCOM.h"
-#include "mozilla/Atomics.h"
+#include <atomic>
 #include "mozilla/Attributes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Compiler.h"
@@ -307,24 +307,55 @@ public:
   void operator=(const ThreadSafeAutoRefCnt&) = delete;
 
   // only support prefix increment/decrement
-  MOZ_ALWAYS_INLINE nsrefcnt operator++() { return ++mValue; }
-  MOZ_ALWAYS_INLINE nsrefcnt operator--() { return --mValue; }
+  MOZ_ALWAYS_INLINE nsrefcnt operator++()
+  {
+    // Memory synchronization is not required when incrementing a
+    // reference count.  The first increment of a reference count on a
+    // thread is not important, since the first use of the object on a
+    // thread can happen before it.  What is important is the transfer
+    // of the pointer to that thread, which may happen prior to the
+    // first increment on that thread.  The necessary memory
+    // synchronization is done by the mechanism that transfers the
+    // pointer between threads.
+    return mValue.fetch_add(1, std::memory_order_relaxed) + 1;
+  }
+  MOZ_ALWAYS_INLINE nsrefcnt operator--()
+  {
+    // Since this may be the last release on this thread, we need
+    // release semantics so that prior writes on this thread are visible
+    // to the thread that destroys the object when it reads mValue with
+    // acquire semantics.
+    nsrefcnt result = mValue.fetch_sub(1, std::memory_order_release) - 1;
+    if (result == 0) {
+      // We're going to destroy the object on this thread, so we need
+      // acquire semantics to synchronize with the memory released by
+      // the last release on other threads, that is, to ensure that
+      // writes prior to that release are now visible on this thread.
+      result = mValue.load(std::memory_order_acquire);
+    }
+    return result;
+  }
 
   MOZ_ALWAYS_INLINE nsrefcnt operator=(nsrefcnt aValue)
   {
-    return (mValue = aValue);
+    // Use release semantics since we're not sure what the caller is
+    // doing.
+    mValue.store(aValue, std::memory_order_release);
+    return aValue;
   }
-  MOZ_ALWAYS_INLINE operator nsrefcnt() const { return mValue; }
-  MOZ_ALWAYS_INLINE nsrefcnt get() const { return mValue; }
+  MOZ_ALWAYS_INLINE operator nsrefcnt() const { return get(); }
+  MOZ_ALWAYS_INLINE nsrefcnt get() const
+  {
+    // Use acquire semantics since we're not sure what the caller is
+    // doing.
+    return mValue.load(std::memory_order_acquire);
+  }
 
   static const bool isThreadSafe = true;
 private:
   nsrefcnt operator++(int) = delete;
   nsrefcnt operator--(int) = delete;
-  // In theory, RelaseAcquire consistency (but no weaker) is sufficient for
-  // the counter. Making it weaker could speed up builds on ARM (but not x86),
-  // but could break pre-existing code that assumes sequential consistency.
-  Atomic<nsrefcnt> mValue;
+  std::atomic<nsrefcnt> mValue;
 };
 } // namespace mozilla
 

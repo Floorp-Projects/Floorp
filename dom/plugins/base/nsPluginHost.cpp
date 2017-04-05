@@ -151,11 +151,9 @@ static const char kDirectoryServiceContractID[] = "@mozilla.org/file/directory_s
 
 #define kPluginRegistryFilename NS_LITERAL_CSTRING("pluginreg.dat")
 
-#ifdef PLUGIN_LOGGING
 LazyLogModule nsPluginLogging::gNPNLog(NPN_LOG_NAME);
 LazyLogModule nsPluginLogging::gNPPLog(NPP_LOG_NAME);
 LazyLogModule nsPluginLogging::gPluginLog(PLUGIN_LOG_NAME);
-#endif
 
 // #defines for plugin cache and prefs
 #define NS_PREF_MAX_NUM_CACHED_INSTANCES "browser.plugins.max_num_cached_plugins"

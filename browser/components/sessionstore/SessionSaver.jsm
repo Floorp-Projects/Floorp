@@ -30,22 +30,27 @@ XPCOMUtils.defineLazyModuleGetter(this, "SessionFile",
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-// Minimal interval between two save operations (in milliseconds).
-XPCOMUtils.defineLazyGetter(this, "gInterval", function() {
-  const PREF = "browser.sessionstore.interval";
-
-  // Observer that updates the cached value when the preference changes.
-  Services.prefs.addObserver(PREF, () => {
-    this.gInterval = Services.prefs.getIntPref(PREF);
-
-    // Cancel any pending runs and call runDelayed() with
-    // zero to apply the newly configured interval.
-    SessionSaverInternal.cancel();
-    SessionSaverInternal.runDelayed(0);
-  }, false);
-
-  return Services.prefs.getIntPref(PREF);
-});
+/*
+ * Minimal interval between two save operations (in milliseconds).
+ *
+ * To save system resources, we generally do not save changes immediately when
+ * a change is detected. Rather, we wait a little to see if this change is
+ * followed by other changes, in which case only the last write is necessary.
+ * This delay is defined by "browser.sessionstore.interval".
+ *
+ * Furthermore, when the user is not actively using the computer, webpages
+ * may still perform changes that require (re)writing to sessionstore, e.g.
+ * updating Session Cookies or DOM Session Storage, or refreshing, etc. We
+ * expect that these changes are much less critical to the user and do not
+ * need to be saved as often. In such cases, we increase the delay to
+ *  "browser.sessionstore.interval.idle".
+ *
+ * When the user returns to the computer, if a save is pending, we reschedule
+ * it to happen soon, with "browser.sessionstore.interval".
+ */
+const PREF_INTERVAL_ACTIVE = "browser.sessionstore.interval";
+const PREF_INTERVAL_IDLE = "browser.sessionstore.interval.idle";
+const PREF_IDLE_DELAY = "browser.sessionstore.idleDelay";
 
 // Notify observers about a given topic with a given subject.
 function notify(subject, topic) {
@@ -119,6 +124,36 @@ var SessionSaverInternal = {
   _lastSaveTime: 0,
 
   /**
+   * `true` if the user has been idle for at least
+   * `SessionSaverInternal._intervalWhileIdle` ms. Idleness is computed
+   * with `nsIIdleService`.
+   */
+  _isIdle: false,
+
+  /**
+   * `true` if the user was idle when we last scheduled a delayed save.
+   * See `_isIdle` for details on idleness.
+   */
+  _wasIdle: false,
+
+  /**
+   * Minimal interval between two save operations (in ms), while the user
+   * is active.
+   */
+  _intervalWhileActive: null,
+
+  /**
+   * Minimal interval between two save operations (in ms), while the user
+   * is idle.
+   */
+  _intervalWhileIdle: null,
+
+  /**
+   * How long before we assume that the user is idle (ms).
+   */
+  _idleDelay: null,
+
+  /**
    * Immediately saves the current session to disk.
    */
   run() {
@@ -141,9 +176,11 @@ var SessionSaverInternal = {
     }
 
     // Interval until the next disk operation is allowed.
-    delay = Math.max(this._lastSaveTime + gInterval - Date.now(), delay, 0);
+    let interval = this._isIdle ? this._intervalWhileIdle : this._intervalWhileActive;
+    delay = Math.max(this._lastSaveTime + interval - Date.now(), delay, 0);
 
     // Schedule a state save.
+    this._wasIdle = this._isIdle;
     this._timeoutID = setTimeout(() => this._saveStateAsync(), delay);
   },
 
@@ -161,6 +198,29 @@ var SessionSaverInternal = {
   cancel() {
     clearTimeout(this._timeoutID);
     this._timeoutID = null;
+  },
+
+  /**
+   * Observe idle/ active notifications.
+   */
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "idle":
+        this._isIdle = true;
+        break;
+      case "active":
+        this._isIdle = false;
+        if (this._timeoutID && this._wasIdle) {
+          // A state save has been scheduled while we were idle.
+          // Replace it by an active save.
+          clearTimeout(this._timeoutID);
+          this._timeoutID = null;
+          this.runDelayed();
+        }
+        break;
+      default:
+        throw new Error(`Unexpected change value ${topic}`);
+    }
   },
 
   /**
@@ -268,3 +328,33 @@ var SessionSaverInternal = {
     }, console.error);
   },
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(SessionSaverInternal, "_intervalWhileActive", PREF_INTERVAL_ACTIVE,
+  15000 /* 15 seconds */, () => {
+  // Cancel any pending runs and call runDelayed() with
+  // zero to apply the newly configured interval.
+  SessionSaverInternal.cancel();
+  SessionSaverInternal.runDelayed(0);
+});
+
+XPCOMUtils.defineLazyPreferenceGetter(SessionSaverInternal, "_intervalWhileIdle", PREF_INTERVAL_IDLE,
+  3600000 /* 1 h */);
+
+XPCOMUtils.defineLazyPreferenceGetter(SessionSaverInternal, "_idleDelay", PREF_IDLE_DELAY,
+  180000 /* 3 minutes */, (key, previous, latest) => {
+  // Update the idle observer for the new `PREF_IDLE_DELAY` value. Here we need
+  // to re-fetch the service instead of the original one in use; This is for a
+  // case that the Mock service in the unit test needs to be fetched to
+  // replace the original one.
+  var idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(Ci.nsIIdleService);
+  if (previous != undefined) {
+    idleService.removeIdleObserver(SessionSaverInternal, previous);
+  }
+  if (latest != undefined) {
+    idleService.addIdleObserver(SessionSaverInternal, latest);
+  }
+});
+
+var idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(Ci.nsIIdleService);
+idleService.addIdleObserver(SessionSaverInternal, SessionSaverInternal._idleDelay);
+

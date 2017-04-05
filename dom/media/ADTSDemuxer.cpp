@@ -14,16 +14,11 @@
 #include "prenv.h"
 #include "mozilla/SizePrintfMacros.h"
 
-#ifdef PR_LOGGING
 extern mozilla::LazyLogModule gMediaDemuxerLog;
 #define ADTSLOG(msg, ...) \
   MOZ_LOG(gMediaDemuxerLog, LogLevel::Debug, ("ADTSDemuxer " msg, ##__VA_ARGS__))
 #define ADTSLOGV(msg, ...) \
   MOZ_LOG(gMediaDemuxerLog, LogLevel::Verbose, ("ADTSDemuxer " msg, ##__VA_ARGS__))
-#else
-#define ADTSLOG(msg, ...)  do {} while (false)
-#define ADTSLOGV(msg, ...) do {} while (false)
-#endif
 
 namespace mozilla {
 namespace adts {

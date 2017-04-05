@@ -225,13 +225,13 @@ interface KeyEvent
   const unsigned long DOM_VK_WIN_OEM_CLEAR  = 0xFE;
 
   void initKeyEvent(DOMString type,
-                    boolean canBubble,
-                    boolean cancelable,
-                    Window? view,
-                    boolean ctrlKey,
-                    boolean altKey,
-                    boolean shiftKey,
-                    boolean metaKey,
-                    unsigned long keyCode,
-                    unsigned long charCode);
+                    optional boolean canBubble = false,
+                    optional boolean cancelable = false,
+                    optional Window? view = null,
+                    optional boolean ctrlKey = false,
+                    optional boolean altKey = false,
+                    optional boolean shiftKey = false,
+                    optional boolean metaKey = false,
+                    optional unsigned long keyCode = 0,
+                    optional unsigned long charCode = 0);
 };

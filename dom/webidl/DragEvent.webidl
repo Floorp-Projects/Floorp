@@ -10,21 +10,21 @@ interface DragEvent : MouseEvent
   readonly attribute DataTransfer? dataTransfer;
 
   void initDragEvent(DOMString type,
-                     boolean canBubble,
-                     boolean cancelable,
-                     Window? aView,
-                     long aDetail,
-                     long aScreenX,
-                     long aScreenY,
-                     long aClientX,
-                     long aClientY,
-                     boolean aCtrlKey,
-                     boolean aAltKey,
-                     boolean aShiftKey,
-                     boolean aMetaKey,
-                     unsigned short aButton,
-                     EventTarget? aRelatedTarget,
-                     DataTransfer? aDataTransfer);
+                     optional boolean canBubble = false,
+                     optional boolean cancelable = false,
+                     optional Window? aView = null,
+                     optional long aDetail = 0,
+                     optional long aScreenX = 0,
+                     optional long aScreenY = 0,
+                     optional long aClientX = 0,
+                     optional long aClientY = 0,
+                     optional boolean aCtrlKey = false,
+                     optional boolean aAltKey = false,
+                     optional boolean aShiftKey = false,
+                     optional boolean aMetaKey = false,
+                     optional unsigned short aButton = 0,
+                     optional EventTarget? aRelatedTarget = null,
+                     optional DataTransfer? aDataTransfer = null);
 };
 
 dictionary DragEventInit : MouseEventInit
