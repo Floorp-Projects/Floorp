@@ -10748,13 +10748,6 @@
     "n_values": 10,
     "description": "Media decoder backend (0=WMF Software, 1=DXVA2D3D9, 2=DXVA2D3D11)"
   },
-  "PLUGIN_BLOCKED_FOR_STABILITY": {
-    "alert_emails": ["cpeterson@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "count",
-    "bug_numbers": [1237198],
-    "description": "Count plugins blocked for stability"
-  },
   "IPC_MESSAGE_SIZE": {
     "alert_emails": ["wmccloskey@mozilla.com"],
     "bug_numbers": [1260908],
