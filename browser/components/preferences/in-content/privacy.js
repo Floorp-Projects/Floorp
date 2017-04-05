@@ -262,6 +262,7 @@ var gPrivacyPane = {
               .style.height = bundlePrefs.getString("offlineAppsList.height");
       let offlineGroup = document.getElementById("offlineGroup");
       offlineGroup.hidden = false;
+      offlineGroup.removeAttribute("data-hidden-from-search");
     }
 
     if (Services.prefs.getBoolPref("browser.storageManager.enabled")) {
@@ -276,6 +277,11 @@ var gPrivacyPane = {
                        gPrivacyPane.clearSiteData);
       setEventListener("siteDataSettings", "command",
                        gPrivacyPane.showSiteDataSettings);
+      let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "storage-permissions";
+      document.getElementById("siteDataLearnMoreLink").setAttribute("href", url);
+      let siteDataGroup = document.getElementById("siteDataGroup");
+      siteDataGroup.hidden = false;
+      siteDataGroup.removeAttribute("data-hidden-from-search");
     }
 
 
@@ -1170,7 +1176,7 @@ var gPrivacyPane = {
     }
   },
 
-    showSiteDataSettings() {
+  showSiteDataSettings() {
     gSubDialog.open("chrome://browser/content/preferences/siteDataSettings.xul");
   },
 
@@ -1181,8 +1187,6 @@ var gPrivacyPane = {
         let prefStrBundle = document.getElementById("bundlePreferences");
         let totalSiteDataSizeLabel = document.getElementById("totalSiteDataSize");
         totalSiteDataSizeLabel.textContent = prefStrBundle.getFormattedString("totalSiteDataSize", size);
-        let siteDataGroup = document.getElementById("siteDataGroup");
-        siteDataGroup.hidden = false;
       });
   },
 
@@ -1440,4 +1444,12 @@ var gPrivacyPane = {
     this.updateActualAppCacheSize();
   },
   // Methods for Offline Apps (AppCache) end
+
+  observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "sitedatamanager:sites-updated":
+        this.updateTotalSiteDataSize();
+        break;
+    }
+  },
 };

@@ -292,7 +292,8 @@ public:
     return nullptr;
   }
 
-  virtual nsISMILAttr* GetAnimatedAttr(int32_t aNamespaceID, nsIAtom* aName) override;
+  mozilla::UniquePtr<nsISMILAttr> GetAnimatedAttr(int32_t aNamespaceID,
+                                                  nsIAtom* aName) override;
   void AnimationNeedsResample();
   void FlushAnimations();
 

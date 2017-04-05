@@ -167,10 +167,10 @@ nsSVGAnimatedTransformList::IsExplicitlySet() const
   return mIsAttrSet || !mBaseVal.IsEmpty() || mAnimVal;
 }
 
-nsISMILAttr*
+UniquePtr<nsISMILAttr>
 nsSVGAnimatedTransformList::ToSMILAttr(nsSVGElement* aSVGElement)
 {
-  return new SMILAnimatedTransformList(this, aSVGElement);
+  return MakeUnique<SMILAnimatedTransformList>(this, aSVGElement);
 }
 
 nsresult

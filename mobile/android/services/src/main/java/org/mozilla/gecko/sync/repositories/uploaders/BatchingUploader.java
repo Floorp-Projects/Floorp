@@ -7,8 +7,9 @@ package org.mozilla.gecko.sync.repositories.uploaders;
 import android.net.Uri;
 import android.support.annotation.VisibleForTesting;
 
+import org.json.simple.JSONObject;
 import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.sync.CollectionConcurrentModificationException;
+import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.Server15PreviousPostFailedException;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
@@ -17,7 +18,6 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDeleg
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
 import java.util.ArrayList;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -91,6 +91,16 @@ public class BatchingUploader {
     // - buffers in the Payload object
     private final Object payloadLock = new Object();
 
+    // Maximum size of a BSO's payload field that server will accept during an upload.
+    // Our naming here is somewhat unfortunate, since we're calling two different things a "payload".
+    // In context of the uploader, a "payload" is an entirety of what gets POST-ed to the server in
+    // an individual request.
+    // In context of Sync Storage, "payload" is a BSO (basic storage object) field defined as: "a
+    // string containing the data of the record."
+    // Sync Storage servers place a hard limit on how large a payload _field_ might be, and so we
+    // maintain this limit for a single sanity check.
+    private final long maxPayloadFieldBytes;
+
     public BatchingUploader(
             final RepositorySession repositorySession, final ExecutorService workQueue,
             final RepositorySessionStoreDelegate sessionStoreDelegate, final Uri baseCollectionUri,
@@ -108,6 +118,8 @@ public class BatchingUploader {
 
         this.payloadDispatcher = createPayloadDispatcher(workQueue, localCollectionLastModified);
 
+        this.maxPayloadFieldBytes = infoConfiguration.maxPayloadBytes;
+
         this.executor = workQueue;
     }
 
@@ -120,7 +132,7 @@ public class BatchingUploader {
             return;
         }
 
-        // If a record or a payload failed, we won't let subsequent requests proceed.'
+        // If a record or a payload failed, we won't let subsequent requests proceed.
         // This means that we may bail much earlier.
         if (payloadDispatcher.recordUploadFailed) {
             sessionStoreDelegate.deferredStoreDelegate(executor).onRecordStoreFailed(
@@ -129,14 +141,42 @@ public class BatchingUploader {
             return;
         }
 
-        final byte[] recordBytes = record.toJSONBytes();
-        final long recordDeltaByteCount = recordBytes.length + PER_RECORD_OVERHEAD_BYTE_COUNT;
+        final JSONObject recordJSON = record.toJSONObject();
 
+        final String payloadField = (String) recordJSON.get(CryptoRecord.KEY_PAYLOAD);
+        if (payloadField == null) {
+            sessionStoreDelegate.deferredStoreDelegate(executor).onRecordStoreFailed(
+                    new IllegalRecordException(), guid
+            );
+            return;
+        }
+
+        // We can't upload individual records whose payload fields exceed our payload field byte limit.
+        // UTF-8 uses 1 byte per character for the ASCII range. Contents of the payloadField are
+        // base64 and hex encoded, so character count is sufficient.
+        if (payloadField.length() > this.maxPayloadFieldBytes) {
+            sessionStoreDelegate.deferredStoreDelegate(executor).onRecordStoreFailed(
+                    new PayloadTooLargeToUpload(), guid
+            );
+            return;
+        }
+
+        final byte[] recordBytes = Record.stringToJSONBytes(recordJSON.toJSONString());
+        if (recordBytes == null) {
+            sessionStoreDelegate.deferredStoreDelegate(executor).onRecordStoreFailed(
+                    new IllegalRecordException(), guid
+            );
+            return;
+        }
+
+        final long recordDeltaByteCount = recordBytes.length + PER_RECORD_OVERHEAD_BYTE_COUNT;
         Logger.debug(LOG_TAG, "Processing a record with guid: " + guid);
 
-        // We can't upload individual records which exceed our payload byte limit.
+        // We can't upload individual records which exceed our payload total byte limit.
         if ((recordDeltaByteCount + PER_PAYLOAD_OVERHEAD_BYTE_COUNT) > payload.maxBytes) {
-            sessionStoreDelegate.onRecordStoreFailed(new RecordTooLargeToUpload(), guid);
+            sessionStoreDelegate.deferredStoreDelegate(executor).onRecordStoreFailed(
+                    new RecordTooLargeToUpload(), guid
+            );
             return;
         }
 
@@ -207,7 +247,7 @@ public class BatchingUploader {
     }
 
     /* package-local */ void finished(AtomicLong lastModifiedTimestamp) {
-        repositorySession.storeDone(lastModifiedTimestamp.get());
+        sessionStoreDelegate.deferredStoreDelegate(executor).onStoreCompleted(lastModifiedTimestamp.get());
     }
 
     // Will be called from a thread dispatched by PayloadDispatcher.
@@ -247,7 +287,7 @@ public class BatchingUploader {
         return new PayloadDispatcher(workQueue, this, localCollectionLastModified);
     }
 
-    public static class BatchingUploaderException extends Exception {
+    /* package-local */ static class BatchingUploaderException extends Exception {
         private static final long serialVersionUID = 1L;
     }
     /* package-local */ static class LastModifiedDidNotChange extends BatchingUploaderException {
@@ -258,8 +298,18 @@ public class BatchingUploader {
     }
     /* package-local */ static class TokenModifiedException extends BatchingUploaderException {
         private static final long serialVersionUID = 1L;
-    };
+    }
+    // We may choose what to do about these failures upstream on the delegate level. For now, if a
+    // record is failed by the uploader, current sync stage will be aborted - although, uploader
+    // doesn't depend on this behaviour.
     private static class RecordTooLargeToUpload extends BatchingUploaderException {
+        private static final long serialVersionUID = 1L;
+    }
+    @VisibleForTesting
+    /* package-local */ static class PayloadTooLargeToUpload extends BatchingUploaderException {
+        private static final long serialVersionUID = 1L;
+    }
+    private static class IllegalRecordException extends BatchingUploaderException {
         private static final long serialVersionUID = 1L;
     }
 }

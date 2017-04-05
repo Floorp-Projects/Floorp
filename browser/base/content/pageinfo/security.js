@@ -5,6 +5,8 @@
 
 Components.utils.import("resource://gre/modules/BrowserUtils.jsm");
 
+/* import-globals-from pageInfo.js */
+
 XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
                                   "resource://gre/modules/LoginHelper.jsm");
 

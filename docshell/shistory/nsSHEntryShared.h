@@ -46,14 +46,14 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER
   NS_DECL_NSIBFCACHEENTRY
 
+  nsExpirationState *GetExpirationState() { return &mExpirationState; }
+
 private:
   ~nsSHEntryShared();
 
   friend class nsSHEntry;
 
   friend class HistoryTracker;
-  friend class nsExpirationTracker<nsSHEntryShared, 3>;
-  nsExpirationState *GetExpirationState() { return &mExpirationState; }
 
   static already_AddRefed<nsSHEntryShared> Duplicate(nsSHEntryShared* aEntry);
 

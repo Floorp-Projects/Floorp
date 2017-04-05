@@ -543,6 +543,9 @@ pref("media.getusermedia.audiocapture.enabled", false);
 // TextTrack WebVTT Region extension support.
 pref("media.webvtt.regions.enabled", false);
 
+// WebVTT pseudo element and class support.
+pref("media.webvtt.pseudo.enabled", true);
+
 // AudioTrack and VideoTrack support
 pref("media.track.enabled", false);
 
@@ -1595,6 +1598,9 @@ pref("network.http.altsvc.oe", true);
 
 // Turn on 0RTT data for TLS 1.3
 pref("security.tls.enable_0rtt_data", true);
+
+// the origin extension impacts h2 coalescing
+pref("network.http.originextension", true);
 
 pref("network.http.diagnostics", false);
 

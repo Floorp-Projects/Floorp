@@ -164,11 +164,6 @@ public abstract class MiddlewareRepositorySession extends RepositorySession {
   }
 
   @Override
-  public void storeDone(long storeEnd) {
-    inner.storeDone(storeEnd);
-  }
-
-  @Override
   public boolean shouldSkip() {
     return inner.shouldSkip();
   }

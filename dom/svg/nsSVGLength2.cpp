@@ -469,10 +469,10 @@ SVGAnimatedLength::~SVGAnimatedLength()
   sSVGAnimatedLengthTearoffTable.RemoveTearoff(mVal);
 }
 
-nsISMILAttr*
+UniquePtr<nsISMILAttr>
 nsSVGLength2::ToSMILAttr(nsSVGElement *aSVGElement)
 {
-  return new SMILLength(this, aSVGElement);
+  return MakeUnique<SMILLength>(this, aSVGElement);
 }
 
 nsresult

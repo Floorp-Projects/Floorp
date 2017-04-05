@@ -146,7 +146,7 @@ protected:
               const bool&                aSuspendAfterSynthesizeResponse,
               const bool&                aAllowStaleCacheContent,
               const nsCString&           aContentTypeHint,
-              const nsCString&           aChannelId,
+              const uint64_t&            aChannelId,
               const uint64_t&            aContentWindowId,
               const nsCString&           aPreferredAlternativeType,
               const uint64_t&            aTopLevelOuterContentWindowId);

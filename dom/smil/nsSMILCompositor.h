@@ -8,7 +8,7 @@
 #define NS_SMILCOMPOSITOR_H_
 
 #include "mozilla/Move.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
 #include "nsSMILAnimationFunction.h"
@@ -73,9 +73,12 @@ public:
   }
 
  private:
-  // Create a nsISMILAttr for my target, on the heap.  Caller is responsible
-  // for deallocating the returned object.
-  nsISMILAttr* CreateSMILAttr();
+  // Create a nsISMILAttr for my target, on the heap.
+  mozilla::UniquePtr<nsISMILAttr> CreateSMILAttr();
+
+  // Returns the CSS property this compositor should animate, or
+  // eCSSProperty_UNKNOWN if this compositor does not animate a CSS property.
+  nsCSSPropertyID GetCSSPropertyToAnimate() const;
 
   // Finds the index of the first function that will affect our animation
   // sandwich. Also toggles the 'mForceCompositing' flag if it finds that any
@@ -86,7 +89,7 @@ public:
   // method updates the cached value (and toggles the 'mForceCompositing' flag)
   void UpdateCachedBaseValue(const nsSMILValue& aBaseValue);
 
-  // The hash key (tuple of element/attributeName/attributeType)
+  // The hash key (tuple of element and attributeName)
   KeyType mKey;
 
   // Hash Value: List of animation functions that animate the specified attr
@@ -99,9 +102,10 @@ public:
   bool mForceCompositing;
 
   // Cached base value, so we can detect & force-recompose when it changes
-  // from one sample to the next. (nsSMILAnimationController copies this
-  // forward from the previous sample's compositor.)
-  nsAutoPtr<nsSMILValue> mCachedBaseValue;
+  // from one sample to the next. (nsSMILAnimationController moves this
+  // forward from the previous sample's compositor by calling
+  // StealCachedBaseValue.)
+  nsSMILValue mCachedBaseValue;
 };
 
 #endif // NS_SMILCOMPOSITOR_H_

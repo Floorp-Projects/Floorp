@@ -6,7 +6,7 @@
 
 /* utility functions for drawing borders and backgrounds */
 
-#include "nsCSSRenderingGradients.h"
+#include "nsImageRenderer.h"
 
 #include "mozilla/webrender/WebRenderAPI.h"
 
@@ -14,9 +14,10 @@
 #include "ImageOps.h"
 #include "nsContentUtils.h"
 #include "nsCSSRendering.h"
+#include "nsCSSRenderingGradients.h"
 #include "nsIFrame.h"
-#include "nsImageRenderer.h"
 #include "nsRenderingContext.h"
+#include "nsStyleStructInlines.h"
 #include "nsSVGEffects.h"
 #include "nsSVGIntegrationUtils.h"
 

@@ -8,6 +8,7 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -126,17 +127,20 @@ public class BatchingUploaderTest {
 
     class MockStoreDelegate implements RepositorySessionStoreDelegate {
         int storeFailed = 0;
-        int storeSucceeded = 0;
+        int recordStoreSucceeded = 0;
         int storeCompleted = 0;
+        Exception lastRecordStoreFailedException;
+        Exception lastStoreFailedException;
 
         @Override
         public void onRecordStoreFailed(Exception ex, String recordGuid) {
+            lastRecordStoreFailedException = ex;
             ++storeFailed;
         }
 
         @Override
         public void onRecordStoreSucceeded(String guid) {
-            ++storeSucceeded;
+            ++recordStoreSucceeded;
         }
 
         @Override
@@ -146,12 +150,12 @@ public class BatchingUploaderTest {
 
         @Override
         public void onStoreFailed(Exception e) {
-
+            lastStoreFailedException = e;
         }
 
         @Override
         public RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor) {
-            return null;
+            return this;
         }
     }
 
@@ -226,7 +230,7 @@ public class BatchingUploaderTest {
         };
 
         tests
-                .setTarget(makeConstrainedUploader(2, 4))
+                .setTarget(makeConstrainedUploader(2, 4, false))
                 .run();
 
         // clear up between test runs
@@ -349,9 +353,9 @@ public class BatchingUploaderTest {
     public void testPreemtiveUploadByteCounts() {
         // While processing a record, if we know for sure that another one won't fit,
         // we upload the payload.
-        BatchingUploader uploader = makeConstrainedUploader(3, 6);
+        BatchingUploader uploader = makeConstrainedUploader(3, 6, 1000, false);
 
-        // Payload byte max: 1024; batch byte max: 4096
+        // Payload byte max: 1024; Payload field byte max: 1000, batch byte max: 4096
         MockRecord record = new MockRecord(Utils.generateGuid(), null, 0, false, 400);
 
         uploader.process(record);
@@ -417,6 +421,32 @@ public class BatchingUploaderTest {
             }
             uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, random.nextInt(15000)));
         }
+    }
+
+    @Test
+    public void testRecordPayloadTooLarge() {
+        final long maxPayloadBytes = 10;
+        BatchingUploader uploader = makeConstrainedUploader(2, 4, maxPayloadBytes, false);
+
+        uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 1));
+        assertEquals(0, ((MockStoreDelegate) storeDelegate).storeFailed);
+
+        uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 5));
+        assertEquals(0, ((MockStoreDelegate) storeDelegate).storeFailed);
+
+        uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 10));
+        assertEquals(0, ((MockStoreDelegate) storeDelegate).storeFailed);
+
+        uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 11));
+        assertEquals(1, ((MockStoreDelegate) storeDelegate).storeFailed);
+        assertTrue(((MockStoreDelegate) storeDelegate).lastRecordStoreFailedException instanceof BatchingUploader.PayloadTooLargeToUpload);
+
+        uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 1000));
+        assertEquals(2, ((MockStoreDelegate) storeDelegate).storeFailed);
+        assertTrue(((MockStoreDelegate) storeDelegate).lastRecordStoreFailedException instanceof BatchingUploader.PayloadTooLargeToUpload);
+
+        uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 9));
+        assertEquals(2, ((MockStoreDelegate) storeDelegate).storeFailed);
     }
 
     @Test
@@ -511,15 +541,20 @@ public class BatchingUploaderTest {
     }
 
     private BatchingUploader makeConstrainedUploader(long maxPostRecords, long maxTotalRecords, boolean firstSync) {
+        return makeConstrainedUploader(maxPostRecords, maxTotalRecords, 1000L, firstSync);
+    }
+
+    private BatchingUploader makeConstrainedUploader(long maxPostRecords, long maxTotalRecords, long maxPayloadBytes, boolean firstSync) {
         ExtendedJSONObject infoConfigurationJSON = new ExtendedJSONObject();
         infoConfigurationJSON.put(InfoConfiguration.MAX_TOTAL_BYTES, 4096L);
         infoConfigurationJSON.put(InfoConfiguration.MAX_TOTAL_RECORDS, maxTotalRecords);
         infoConfigurationJSON.put(InfoConfiguration.MAX_POST_RECORDS, maxPostRecords);
         infoConfigurationJSON.put(InfoConfiguration.MAX_POST_BYTES, 1024L);
         infoConfigurationJSON.put(InfoConfiguration.MAX_REQUEST_BYTES, 1024L);
+        infoConfigurationJSON.put(InfoConfiguration.MAX_PAYLOAD_BYTES, maxPayloadBytes);
 
         Server15RepositorySession server15RepositorySession = new Server15RepositorySession(
-                makeCountConstrainedRepository(maxPostRecords, maxTotalRecords, firstSync)
+                makeConstrainedRepository(firstSync)
         );
         server15RepositorySession.setStoreDelegate(storeDelegate);
         return new MockUploader(
@@ -557,20 +592,7 @@ public class BatchingUploaderTest {
         }
     }
 
-    private Server15Repository makeCountConstrainedRepository(long maxPostRecords, long maxTotalRecords, boolean firstSync) {
-        return makeConstrainedRepository(1024, 1024, maxPostRecords, 4096, maxTotalRecords, firstSync);
-    }
-
-    private Server15Repository makeConstrainedRepository(long maxRequestBytes, long maxPostBytes, long maxPostRecords, long maxTotalBytes, long maxTotalRecords, boolean firstSync) {
-        ExtendedJSONObject infoConfigurationJSON = new ExtendedJSONObject();
-        infoConfigurationJSON.put(InfoConfiguration.MAX_TOTAL_BYTES, maxTotalBytes);
-        infoConfigurationJSON.put(InfoConfiguration.MAX_TOTAL_RECORDS, maxTotalRecords);
-        infoConfigurationJSON.put(InfoConfiguration.MAX_POST_RECORDS, maxPostRecords);
-        infoConfigurationJSON.put(InfoConfiguration.MAX_POST_BYTES, maxPostBytes);
-        infoConfigurationJSON.put(InfoConfiguration.MAX_REQUEST_BYTES, maxRequestBytes);
-
-        InfoConfiguration infoConfiguration = new InfoConfiguration(infoConfigurationJSON);
-
+    private Server15Repository makeConstrainedRepository(boolean firstSync) {
         InfoCollections infoCollections;
         if (firstSync) {
             infoCollections = new InfoCollections() {
@@ -595,7 +617,7 @@ public class BatchingUploaderTest {
                     "http://dummy.url/",
                     null,
                     infoCollections,
-                    infoConfiguration,
+                    mock(InfoConfiguration.class),
                     new NonPersistentRepositoryStateProvider()
             );
         } catch (URISyntaxException e) {

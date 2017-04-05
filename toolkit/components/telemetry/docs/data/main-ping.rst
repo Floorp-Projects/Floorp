@@ -44,8 +44,8 @@ Structure:
         subsessionCounter: <unsigned integer>, // the running no. of this subsession since the start of the browser session
         profileSubsessionCounter: <unsigned integer>, // the running no. of all subsessions for the whole profile life time
 
-        sessionStartDate: <ISO date>, // daily precision
-        subsessionStartDate: <ISO date>, // daily precision, ISO date in local time
+        sessionStartDate: <ISO date>, // hourly precision, ISO date in local time
+        subsessionStartDate: <ISO date>, // hourly precision, ISO date in local time
         sessionLength: <integer>, // the session length until now in seconds, monotonic
         subsessionLength: <integer>, // the subsession length in seconds, monotonic
 

@@ -69,7 +69,7 @@ fails == grid-auto-min-sizing-min-content-min-size-003.html grid-auto-min-sizing
 fails == grid-min-content-min-sizing-transferred-size-002.html grid-min-content-min-sizing-transferred-size-002.html
 == grid-min-content-min-sizing-transferred-size-003.html grid-min-content-min-sizing-transferred-size-003.html
 fails == grid-min-content-min-sizing-transferred-size-004.html grid-min-content-min-sizing-transferred-size-004.html
-fails == grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-percent-001.html
+== grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-percent-001.html
 fails == grid-track-intrinsic-sizing-001.html grid-track-intrinsic-sizing-001.html
 fails == grid-track-intrinsic-sizing-002.html grid-track-intrinsic-sizing-002.html
 fails == grid-track-intrinsic-sizing-003.html grid-track-intrinsic-sizing-003.html

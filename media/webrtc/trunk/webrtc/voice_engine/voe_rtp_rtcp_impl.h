@@ -70,6 +70,9 @@ class VoERTP_RTCPImpl : public VoERTP_RTCP {
 
   int GetRTCPStatistics(int channel, CallStatistics& stats) override;
 
+  int GetRTCPPacketTypeCounters(int channel,
+                                RtcpPacketTypeCounter& stats) override;
+
   int GetRemoteRTCPReportBlocks(
       int channel,
       std::vector<ReportBlock>* report_blocks) override;
