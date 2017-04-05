@@ -105,8 +105,8 @@ var PrintUtils = {
 
   getDefaultPrinterName() {
     try {
-      let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"]
-                    .getService(Ci.nsIPrintSettingsService);
+      let PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                            .getService(Components.interfaces.nsIPrintSettingsService);
 
       return PSSVC.defaultPrinterName;
     } catch (e) {
