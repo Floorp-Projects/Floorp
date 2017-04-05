@@ -72,21 +72,23 @@ public:
   GetAllChildProcessById(const ContentParentId& aParentCpId);
 
   /**
-   * Allocate a tab id for the given content process's id.
+   * Register RemoteFrameInfo with given tab id.
    * Used when a content process wants to create a new tab. aOpenerTabId and
    * aContext are saved in RemoteFrameInfo, which is a part of
    * ContentProcessInfo.  We can use the tab id and process id to locate the
    * TabContext for future use.
    */
-  TabId AllocateTabId(const TabId& aOpenerTabId,
-                      const IPCTabContext& aContext,
-                      const ContentParentId& aChildCpId);
+  bool RegisterRemoteFrame(const TabId& aTabId,
+                           const TabId& aOpenerTabId,
+                           const IPCTabContext& aContext,
+                           const ContentParentId& aChildCpId);
+
 
   /**
    * Remove the RemoteFrameInfo by the given process and tab id.
    */
-  void DeallocateTabId(const ContentParentId& aChildCpId,
-                       const TabId& aChildTabId);
+  void UnregisterRemoteFrame(const ContentParentId& aChildCpId,
+                             const TabId& aChildTabId);
 
   /**
    * Get the TabContext by the given content process and tab id.
@@ -151,7 +153,6 @@ public:
 
 private:
   static StaticAutoPtr<ContentProcessManager> sSingleton;
-  TabId mUniqueId;
   std::map<ContentParentId, ContentProcessInfo> mContentParentMap;
 
   ContentProcessManager() {MOZ_COUNT_CTOR(ContentProcessManager);};
