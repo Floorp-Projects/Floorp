@@ -8,6 +8,7 @@ package org.mozilla.gecko.customtabs;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.ColorInt;
@@ -73,6 +74,8 @@ public class ActionBarPresenter {
                 mIdentityPopup.show();
             }
         });
+
+        initIndicator();
     }
 
     /**
@@ -126,6 +129,7 @@ public class ActionBarPresenter {
 
     /**
      * To assign a long-click-listener to text area of ActionBar
+     *
      * @param listener then callback to trigger
      */
     public void setTextLongClickListener(View.OnLongClickListener listener) {
@@ -141,6 +145,13 @@ public class ActionBarPresenter {
     @ColorInt
     public int getTextPrimaryColor() {
         return mTextPrimaryColor;
+    }
+
+    private void initIndicator() {
+        mActionBar.setDisplayHomeAsUpEnabled(true);
+        final Drawable icon = mActionBar.getThemedContext().getDrawable(R.drawable.ic_close_light);
+        DrawableCompat.setTint(icon, mTextPrimaryColor);
+        mActionBar.setHomeAsUpIndicator(icon);
     }
 
     /**

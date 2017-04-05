@@ -94,7 +94,6 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         actionBarPresenter.displayUrlOnly(startIntent.getDataString());
         actionBarPresenter.setBackgroundColor(IntentUtil.getToolbarColor(startIntent), getWindow());
         actionBarPresenter.setTextLongClickListener(new UrlCopyListener());
-        actionBar.setDisplayHomeAsUpEnabled(true);
 
         Tabs.registerOnTabsChangedListener(this);
     }
