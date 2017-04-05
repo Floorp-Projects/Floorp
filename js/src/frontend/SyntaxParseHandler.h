@@ -261,8 +261,6 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
-    Node newBinary(ParseNodeKind kind, JSOp op = JSOP_NOP) { return NodeGeneric; }
-    Node newBinary(ParseNodeKind kind, Node left, JSOp op = JSOP_NOP) { return NodeGeneric; }
     Node newBinary(ParseNodeKind kind, Node left, Node right, JSOp op = JSOP_NOP) {
         return NodeGeneric;
     }
@@ -283,8 +281,8 @@ class SyntaxParseHandler
     MOZ_MUST_USE bool addSpreadElement(Node literal, uint32_t begin, Node inner) { return true; }
     void addArrayElement(Node literal, Node element) { }
 
-    Node newCall() { return NodeFunctionCall; }
-    Node newTaggedTemplate() { return NodeGeneric; }
+    Node newCall(const TokenPos& pos) { return NodeFunctionCall; }
+    Node newTaggedTemplate(const TokenPos& pos) { return NodeGeneric; }
 
     Node newObjectLiteral(uint32_t begin) { return NodeUnparenthesizedObject; }
     Node newClassMethodList(uint32_t begin) { return NodeGeneric; }
@@ -363,9 +361,9 @@ class SyntaxParseHandler
 
     void checkAndSetIsDirectRHSAnonFunction(Node pn) {}
 
-    Node newFunctionStatement() { return NodeFunctionDefinition; }
-    Node newFunctionExpression() { return NodeFunctionDefinition; }
-    Node newArrowFunction() { return NodeFunctionDefinition; }
+    Node newFunctionStatement(const TokenPos& pos) { return NodeFunctionDefinition; }
+    Node newFunctionExpression(const TokenPos& pos) { return NodeFunctionDefinition; }
+    Node newArrowFunction(const TokenPos& pos) { return NodeFunctionDefinition; }
 
     bool setComprehensionLambdaBody(Node pn, Node body) { return true; }
     void setFunctionFormalParametersAndBody(Node pn, Node kid) {}
@@ -410,27 +408,31 @@ class SyntaxParseHandler
         return tokenStream.currentToken().pos;
     }
 
-    Node newList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
+    Node newList(ParseNodeKind kind, const TokenPos& pos, JSOp op = JSOP_NOP) {
         MOZ_ASSERT(kind != PNK_VAR);
         MOZ_ASSERT(kind != PNK_LET);
         MOZ_ASSERT(kind != PNK_CONST);
         return NodeGeneric;
     }
+
+  private:
     Node newList(ParseNodeKind kind, uint32_t begin, JSOp op = JSOP_NOP) {
-        return newList(kind, op);
-    }
-    Node newList(ParseNodeKind kind, Node kid, JSOp op = JSOP_NOP) {
-        return newList(kind, op);
+        return newList(kind, TokenPos(begin, begin + 1), op);
     }
 
-    Node newDeclarationList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
+    template<typename T>
+    Node newList(ParseNodeKind kind, const T& begin, JSOp op = JSOP_NOP) = delete;
+
+  public:
+    Node newList(ParseNodeKind kind, Node kid, JSOp op = JSOP_NOP) {
+        return newList(kind, TokenPos(), op);
+    }
+
+    Node newDeclarationList(ParseNodeKind kind, const TokenPos& pos, JSOp op = JSOP_NOP) {
         if (kind == PNK_VAR)
             return NodeVarDeclaration;
         MOZ_ASSERT(kind == PNK_LET || kind == PNK_CONST);
         return NodeLexicalDeclaration;
-    }
-    Node newDeclarationList(ParseNodeKind kind, Node kid, JSOp op = JSOP_NOP) {
-        return newDeclarationList(kind, op);
     }
 
     bool isDeclarationList(Node node) {
@@ -457,8 +459,8 @@ class SyntaxParseHandler
         return NodeUnparenthesizedName;
     }
 
-    Node newCatchList() {
-        return newList(PNK_CATCHLIST, JSOP_NOP);
+    Node newCatchList(const TokenPos& pos) {
+        return newList(PNK_CATCHLIST, pos, JSOP_NOP);
     }
 
     Node newCommaExpressionList(Node kid) {
@@ -473,6 +475,15 @@ class SyntaxParseHandler
                    list == NodeVarDeclaration ||
                    list == NodeLexicalDeclaration ||
                    list == NodeFunctionCall);
+    }
+
+    Node newNewExpression(uint32_t begin, Node ctor) {
+        Node newExpr = newList(PNK_NEW, begin, JSOP_NEW);
+        if (!newExpr)
+            return newExpr;
+
+        addList(newExpr, ctor);
+        return newExpr;
     }
 
     Node newAssignment(ParseNodeKind kind, Node lhs, Node rhs, JSOp op) {
