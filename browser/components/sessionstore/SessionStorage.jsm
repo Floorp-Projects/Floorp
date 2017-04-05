@@ -29,9 +29,9 @@ this.SessionStorage = Object.freeze({
    *        That tab's docshell (containing the sessionStorage)
    * @param frameTree
    *        The docShell's FrameTree instance.
-   * @return Returns a nested object that will have hosts as keys and per-host
+   * @return Returns a nested object that will have hosts as keys and per-origin
    *         session storage data as strings. For example:
-   *         {"example.com": {"key": "value", "my_number": "123"}}
+   *         {"https://example.com^userContextId=1": {"key": "value", "my_number": "123"}}
    */
   collect(docShell, frameTree) {
     return SessionStorageInternal.collect(docShell, frameTree);
@@ -43,8 +43,8 @@ this.SessionStorage = Object.freeze({
    *        A tab's docshell (containing the sessionStorage)
    * @param aStorageData
    *        A nested object with storage data to be restored that has hosts as
-   *        keys and per-host session storage data as strings. For example:
-   *        {"example.com": {"key": "value", "my_number": "123"}}
+   *        keys and per-origin session storage data as strings. For example:
+   *        {"https://example.com^userContextId=1": {"key": "value", "my_number": "123"}}
    */
   restore(aDocShell, aStorageData) {
     SessionStorageInternal.restore(aDocShell, aStorageData);
@@ -58,9 +58,9 @@ var SessionStorageInternal = {
    *        A tab's docshell (containing the sessionStorage)
    * @param frameTree
    *        The docShell's FrameTree instance.
-   * @return Returns a nested object that will have hosts as keys and per-host
+   * @return Returns a nested object that will have hosts as keys and per-origin
    *         session storage data as strings. For example:
-   *         {"example.com": {"key": "value", "my_number": "123"}}
+   *         {"https://example.com^userContextId=1": {"key": "value", "my_number": "123"}}
    */
   collect(docShell, frameTree) {
     let data = {};
@@ -105,8 +105,8 @@ var SessionStorageInternal = {
    *        A tab's docshell (containing the sessionStorage)
    * @param aStorageData
    *        A nested object with storage data to be restored that has hosts as
-   *        keys and per-host session storage data as strings. For example:
-   *        {"example.com": {"key": "value", "my_number": "123"}}
+   *        keys and per-origin session storage data as strings. For example:
+   *        {"https://example.com^userContextId=1": {"key": "value", "my_number": "123"}}
    */
   restore(aDocShell, aStorageData) {
     for (let origin of Object.keys(aStorageData)) {
@@ -115,9 +115,21 @@ var SessionStorageInternal = {
       let principal;
 
       try {
+        // NOTE: In capture() we record the full origin for the URI which the
+        // sessionStorage is being captured for. As of bug 1235657 this code
+        // stopped parsing any origins which have originattributes correctly, as
+        // it decided to use the origin attributes from the docshell, and try to
+        // interpret the origin as a URI. Since bug 1353844 this code now correctly
+        // parses the full origin, and then discards the origin attributes, to
+        // make the behavior line up with the original intentions in bug 1235657
+        // while preserving the ability to read all session storage from
+        // previous versions. In the future, if this behavior is desired, we may
+        // want to use the spec instead of the origin as the key, and avoid
+        // transmitting origin attribute information which we then discard when
+        // restoring.
         let attrs = aDocShell.getOriginAttributes();
-        let originURI = Services.io.newURI(origin);
-        principal = Services.scriptSecurityManager.createCodebasePrincipal(originURI, attrs);
+        let dataPrincipal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
+        principal = Services.scriptSecurityManager.createCodebasePrincipal(dataPrincipal.URI, attrs);
       } catch (e) {
         console.error(e);
         continue;
