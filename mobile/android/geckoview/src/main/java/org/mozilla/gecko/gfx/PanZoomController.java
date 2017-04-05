@@ -17,8 +17,8 @@ public interface PanZoomController {
     public static final float CLICK_THRESHOLD = 1 / 50f * GeckoAppShell.getDpi();
 
     static class Factory {
-        static PanZoomController create(PanZoomTarget target, View view) {
-            return new NativePanZoomController(target, view);
+        static PanZoomController create(View view) {
+            return new NativePanZoomController(view);
         }
     }
 
@@ -27,11 +27,8 @@ public interface PanZoomController {
 
     public boolean onTouchEvent(MotionEvent event);
     public boolean onMotionEvent(MotionEvent event);
-    public void onMotionEventVelocity(final long aEventTime, final float aSpeedY);
 
     public void setOverscrollHandler(final Overscroll controller);
 
     public void setIsLongpressEnabled(boolean isLongpressEnabled);
-
-    public ImmutableViewportMetrics adjustScrollForSurfaceShift(ImmutableViewportMetrics aMetrics, PointF aShift);
 }

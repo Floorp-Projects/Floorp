@@ -364,7 +364,7 @@ class GeckoInputConnection
         v.getLocationOnScreen(viewCoords);
 
         DynamicToolbarAnimator animator = GeckoAppShell.getLayerView().getDynamicToolbarAnimator();
-        float toolbarHeight = animator.getMaxTranslation() - animator.getToolbarTranslation();
+        float toolbarHeight = (float)animator.getCurrentToolbarHeight();
 
         Matrix matrix = GeckoAppShell.getLayerView().getMatrixForLayerRectToViewRect();
         if (matrix == null) {

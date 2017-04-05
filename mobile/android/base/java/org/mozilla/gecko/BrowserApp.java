@@ -125,7 +125,10 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
@@ -184,7 +187,8 @@ public class BrowserApp extends GeckoApp
                         implements TabsPanel.TabsLayoutChangeListener,
                                    PropertyAnimator.PropertyAnimationListener,
                                    View.OnKeyListener,
-                                   LayerView.DynamicToolbarListener,
+                                   DynamicToolbarAnimator.MetricsListener,
+                                   DynamicToolbarAnimator.ToolbarChromeProxy,
                                    BrowserSearch.OnSearchListener,
                                    BrowserSearch.OnEditSuggestionListener,
                                    OnUrlOpenListener,
@@ -246,7 +250,6 @@ public class BrowserApp extends GeckoApp
     private int mCachedRecentTabsCount;
     private ActionModeCompat mActionMode;
     private TabHistoryController tabHistoryController;
-    private ZoomedView mZoomedView;
 
     private static final int GECKO_TOOLS_MENU = -1;
     private static final int ADDON_MENU_OFFSET = 1000;
@@ -376,9 +379,6 @@ public class BrowserApp extends GeckoApp
                 }
                 // fall through
             case LOCATION_CHANGE:
-                if (mZoomedView != null) {
-                    mZoomedView.stopZoomDisplay(false);
-                }
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     updateHomePagerForTab(tab);
                 }
@@ -1314,24 +1314,14 @@ public class BrowserApp extends GeckoApp
     private void setDynamicToolbarEnabled(boolean enabled) {
         ThreadUtils.assertOnUiThread();
 
-        if (enabled) {
-            if (mLayerView != null) {
-                mLayerView.getDynamicToolbarAnimator().addTranslationListener(this);
-            }
-            setToolbarMargin(0);
-            mHomeScreenContainer.setPadding(0, mBrowserChrome.getHeight(), 0, 0);
-        } else {
-            // Immediately show the toolbar when disabling the dynamic
-            // toolbar.
-            if (mLayerView != null) {
-                mLayerView.getDynamicToolbarAnimator().removeTranslationListener(this);
-            }
-            mHomeScreenContainer.setPadding(0, 0, 0, 0);
-            if (mBrowserChrome != null) {
-                ViewHelper.setTranslationY(mBrowserChrome, 0);
-            }
-            if (mLayerView != null) {
-                mLayerView.setSurfaceTranslation(0);
+        if (mLayerView != null) {
+            if (enabled) {
+                 mDynamicToolbar.setPinned(false, PinReason.DISABLED);
+            } else {
+               // Immediately show the toolbar when disabling the dynamic
+               // toolbar.
+                mDynamicToolbar.setPinned(true, PinReason.DISABLED);
+                mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
             }
         }
 
@@ -1502,10 +1492,6 @@ public class BrowserApp extends GeckoApp
             mAccountsHelper = null;
         }
 
-        if (mZoomedView != null) {
-            mZoomedView.destroy();
-        }
-
         mSearchEngineManager.unregisterListeners();
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
@@ -1604,6 +1590,10 @@ public class BrowserApp extends GeckoApp
         mDoorHangerPopup.setAnchor(mBrowserToolbar.getDoorHangerAnchor());
         mDoorHangerPopup.setOnVisibilityChangeListener(this);
 
+        if (mLayerView != null) {
+            mLayerView.getDynamicToolbarAnimator().addMetricsListener(this);
+            mLayerView.getDynamicToolbarAnimator().setToolbarChromeProxy(this);
+        }
         mDynamicToolbar.setLayerView(mLayerView);
         setDynamicToolbarEnabled(mDynamicToolbar.isEnabled());
 
@@ -1623,34 +1613,6 @@ public class BrowserApp extends GeckoApp
         super.onDoorHangerShow();
     }
 
-    private void setToolbarMargin(int margin) {
-        ((RelativeLayout.LayoutParams) mGeckoLayout.getLayoutParams()).topMargin = margin;
-        mGeckoLayout.requestLayout();
-    }
-
-    @Override
-    public void onTranslationChanged(float aToolbarTranslation, float aLayerViewTranslation) {
-        if (mBrowserChrome == null) {
-            return;
-        }
-
-        final View browserChrome = mBrowserChrome;
-        final ToolbarProgressView progressView = mProgressView;
-
-        ViewHelper.setTranslationY(browserChrome, -aToolbarTranslation);
-        mLayerView.setSurfaceTranslation(mToolbarHeight - aLayerViewTranslation);
-
-        // Stop the progressView from moving all the way up so that we can still see a good chunk of it
-        // when the chrome is offscreen.
-        final float offset = getResources().getDimensionPixelOffset(R.dimen.progress_bar_scroll_offset);
-        final float progressTranslationY = Math.min(aToolbarTranslation, mToolbarHeight - offset);
-        ViewHelper.setTranslationY(progressView, -progressTranslationY);
-
-        if (mFormAssistPopup != null) {
-            mFormAssistPopup.onTranslationChanged();
-        }
-    }
-
     @Override
     public void onMetricsChanged(ImmutableViewportMetrics aMetrics) {
         if (isHomePagerVisible() || mBrowserChrome == null) {
@@ -1662,27 +1624,34 @@ public class BrowserApp extends GeckoApp
         }
     }
 
+    // ToolbarChromeProxy inteface
     @Override
-    public void onPanZoomStopped() {
-        if (!mDynamicToolbar.isEnabled() || isHomePagerVisible() ||
-            mBrowserChrome.getVisibility() != View.VISIBLE) {
-            return;
+    public Bitmap getBitmapOfToolbarChrome() {
+        if (mBrowserChrome == null) {
+            return null;
         }
 
-        // Make sure the toolbar is fully hidden or fully shown when the user
-        // lifts their finger, depending on various conditions.
-        ImmutableViewportMetrics metrics = mLayerView.getViewportMetrics();
-        float toolbarTranslation = mLayerView.getDynamicToolbarAnimator().getToolbarTranslation();
-
-        boolean shortPage = metrics.getPageHeight() < metrics.getHeight();
-        boolean atBottomOfLongPage =
-            FloatUtils.fuzzyEquals(metrics.pageRectBottom, metrics.viewportRectBottom())
-            && (metrics.pageRectBottom > 2 * metrics.getHeight());
-        Log.v(LOGTAG, "On pan/zoom stopped, short page: " + shortPage
-            + "; atBottomOfLongPage: " + atBottomOfLongPage);
-        if (shortPage || atBottomOfLongPage) {
-            mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
+        Bitmap bm = Bitmap.createBitmap(mBrowserChrome.getWidth(), mBrowserChrome.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bm);
+        Drawable bgDrawable = mBrowserChrome.getBackground();
+        if (bgDrawable != null) {
+            bgDrawable.draw(canvas);
+        } else {
+            canvas.drawColor(Color.WHITE);
         }
+
+        mBrowserChrome.draw(canvas);
+        return bm;
+    }
+
+    @Override
+    public boolean isToolbarChromeVisible() {
+       return mBrowserChrome.getVisibility() == View.VISIBLE;
+    }
+
+    @Override
+    public void toggleToolbarChrome(final boolean aShow) {
+        toggleChrome(aShow);
     }
 
     public void refreshToolbarHeight() {
@@ -1693,26 +1662,11 @@ public class BrowserApp extends GeckoApp
             height = mBrowserChrome.getHeight();
         }
 
-        if (!mDynamicToolbar.isEnabled() || isHomePagerVisible()) {
-            // Use aVisibleHeight here so that when the dynamic toolbar is
-            // enabled, the padding will animate with the toolbar becoming
-            // visible.
-            if (mDynamicToolbar.isEnabled()) {
-                // When the dynamic toolbar is enabled, set the padding on the
-                // about:home widget directly - this is to avoid resizing the
-                // LayerView, which can cause visible artifacts.
-                mHomeScreenContainer.setPadding(0, height, 0, 0);
-            } else {
-                setToolbarMargin(height);
-                height = 0;
-            }
-        } else {
-            setToolbarMargin(0);
-        }
+        mHomeScreenContainer.setPadding(0, height, 0, 0);
 
         if (mLayerView != null && height != mToolbarHeight) {
             mToolbarHeight = height;
-            mLayerView.setMaxTranslation(height);
+            mLayerView.setMaxToolbarHeight(height);
             mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
         }
     }
@@ -1785,11 +1739,6 @@ public class BrowserApp extends GeckoApp
 
                 // Force tabs panel inflation once the initial pageload is finished.
                 ensureTabsPanelExists();
-
-                if (AppConstants.NIGHTLY_BUILD && mZoomedView == null) {
-                    ViewStub stub = (ViewStub) findViewById(R.id.zoomed_view_stub);
-                    mZoomedView = (ZoomedView) stub.inflate();
-                }
 
                 if (AppConstants.MOZ_MEDIA_PLAYER) {
                     // Check if the fragment is already added. This should never be true
@@ -3302,21 +3251,11 @@ public class BrowserApp extends GeckoApp
             @Override
             public void run() {
                 if (fullscreen) {
-                    if (mDynamicToolbar.isEnabled()) {
-                        mDynamicToolbar.setVisible(false, VisibilityTransition.IMMEDIATE);
-                        mDynamicToolbar.setPinned(true, PinReason.FULL_SCREEN);
-                    } else {
-                        setToolbarMargin(0);
-                    }
-                    mBrowserChrome.setVisibility(View.GONE);
+                    mDynamicToolbar.setVisible(false, VisibilityTransition.IMMEDIATE);
+                    mDynamicToolbar.setPinned(true, PinReason.FULL_SCREEN);
                 } else {
-                    mBrowserChrome.setVisibility(View.VISIBLE);
-                    if (mDynamicToolbar.isEnabled()) {
-                        mDynamicToolbar.setPinned(false, PinReason.FULL_SCREEN);
-                        mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
-                    } else {
-                        setToolbarMargin(mBrowserChrome.getHeight());
-                    }
+                    mDynamicToolbar.setPinned(false, PinReason.FULL_SCREEN);
+                    mDynamicToolbar.setVisible(true, VisibilityTransition.IMMEDIATE);
                 }
             }
         });
@@ -4097,7 +4036,7 @@ public class BrowserApp extends GeckoApp
             DynamicToolbarAnimator toolbar = mLayerView.getDynamicToolbarAnimator();
 
             // If the toolbar is dynamic and not currently showing, just slide it in
-            if (mDynamicToolbar.isEnabled() && toolbar.getToolbarTranslation() != 0) {
+            if (mDynamicToolbar.isEnabled() && toolbar.getCurrentToolbarHeight() == 0) {
                 mDynamicToolbar.setTemporarilyVisible(true, VisibilityTransition.ANIMATE);
             }
             mDynamicToolbar.setPinned(true, PinReason.ACTION_MODE);

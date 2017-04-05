@@ -19,6 +19,10 @@
 #include "mozilla/TimeStamp.h"          // for mozilla::TimeStamp
 #include "nsCOMPtr.h"                   // for already_AddRefed
 
+#if defined(MOZ_WIDGET_ANDROID)
+#include "mozilla/layers/AndroidDynamicToolbarAnimator.h"
+#endif // defined(MOZ_WIDGET_ANDROID)
+
 
 namespace mozilla {
 class MultiTouchInput;
@@ -525,6 +529,15 @@ private:
   RefPtr<CheckerboardFlushObserver> mFlushObserver;
 
   static float sDPI;
+
+#if defined(MOZ_WIDGET_ANDROID)
+public:
+  void InitializeDynamicToolbarAnimator(const int64_t& aRootLayerTreeId);
+  AndroidDynamicToolbarAnimator* GetAndroidDynamicToolbarAnimator();
+
+private:
+  RefPtr<AndroidDynamicToolbarAnimator> mToolbarAnimator;
+#endif // defined(MOZ_WIDGET_ANDROID)
 };
 
 } // namespace layers

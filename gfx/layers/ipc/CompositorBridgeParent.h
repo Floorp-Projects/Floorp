@@ -40,6 +40,7 @@
 #include "mozilla/widget/CompositorWidget.h"
 #include "nsISupportsImpl.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
+#include "mozilla/layers/UiCompositorControllerParent.h"
 
 class MessageLoop;
 class nsIWidget;
@@ -384,6 +385,7 @@ public:
     CompositorController* GetCompositorController() const;
     MetricsSharingController* CrossProcessSharingController() const;
     MetricsSharingController* InProcessSharingController() const;
+    RefPtr<UiCompositorControllerParent> mUiControllerParent;
   };
 
   /**
@@ -466,6 +468,17 @@ public:
   static void SetWebRenderProfilerEnabled(bool aEnabled);
 
   static CompositorBridgeParent* GetCompositorBridgeParentFromLayersId(const uint64_t& aLayersId);
+
+#if defined(MOZ_WIDGET_ANDROID)
+  gfx::IntSize GetEGLSurfaceSize() {
+    return mEGLSurfaceSize;
+  }
+
+  uint64_t GetRootLayerTreeId() {
+    return mRootLayerTreeID;
+  }
+#endif // defined(MOZ_WIDGET_ANDROID)
+
 private:
 
   void Initialize();

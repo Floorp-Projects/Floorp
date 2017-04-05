@@ -77,6 +77,7 @@
 #include "WheelScrollAnimation.h"
 #if defined(MOZ_WIDGET_ANDROID)
 #include "AndroidAPZ.h"
+#include "mozilla/layers/AndroidDynamicToolbarAnimator.h"
 #endif // defined(MOZ_WIDGET_ANDROID)
 
 #define ENABLE_APZC_LOGGING 0
@@ -1191,12 +1192,6 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
 
 nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) {
   APZC_LOG("%p got a touch-end in state %d\n", this, mState);
-
-  RefPtr<GeckoContentController> controller = GetGeckoContentController();
-  if (controller) {
-    controller->SetScrollingRootContent(false);
-  }
-
   OnTouchEndOrCancel();
 
   // In case no touch behavior triggered previously we can avoid sending
@@ -2437,12 +2432,15 @@ bool AsyncPanZoomController::AttemptScroll(ParentLayerPoint& aStartPoint,
     if (!IsZero(adjustedDisplacement)) {
       ScrollBy(adjustedDisplacement / mFrameMetrics.GetZoom());
       if (CancelableBlockState* block = GetCurrentInputBlock()) {
-        if (block->AsTouchBlock() && (block->GetScrolledApzc() != this)) {
-          RefPtr<GeckoContentController> controller = GetGeckoContentController();
-          if (controller) {
-            controller->SetScrollingRootContent(IsRootContent());
+#if defined(MOZ_WIDGET_ANDROID)
+        if (block->AsTouchBlock() && (block->GetScrolledApzc() != this) && IsRootContent()) {
+          if (APZCTreeManager* manager = GetApzcTreeManager()) {
+            AndroidDynamicToolbarAnimator* animator = manager->GetAndroidDynamicToolbarAnimator();
+            MOZ_ASSERT(animator);
+            animator->SetScrollingRootContent();
           }
         }
+#endif
         block->SetScrolledApzc(this);
       }
       ScheduleCompositeAndMaybeRepaint();
@@ -3454,6 +3452,21 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
   // TODO if we're in a drag and scrollOffsetUpdated is set then we want to
   // ignore it
 
+#if defined(MOZ_WIDGET_ANDROID)
+  if (aLayerMetrics.IsRootContent()) {
+    if (APZCTreeManager* manager = GetApzcTreeManager()) {
+      AndroidDynamicToolbarAnimator* animator = manager->GetAndroidDynamicToolbarAnimator();
+      MOZ_ASSERT(animator);
+      CSSToScreenScale scale = ViewTargetAs<ScreenPixel>(aLayerMetrics.GetZoom().ToScaleFactor(),
+                                                         PixelCastJustification::ScreenIsParentLayerForRoot);
+      ScreenIntSize size = ScreenIntSize::Round(aLayerMetrics.GetRootCompositionSize() * scale);
+      if (animator->SetCompositionSize(size)) {
+        animator->UpdateRootFrameMetrics(aLayerMetrics);
+      }
+    }
+  }
+#endif
+
   if ((aIsFirstPaint && aThisLayerTreeUpdated) || isDefault) {
     // Initialize our internal state to something sane when the content
     // that was just painted is something we knew nothing about previously
@@ -3826,6 +3839,17 @@ void AsyncPanZoomController::DispatchStateChangeNotification(PanZoomState aOldSt
       }
 #endif
     } else if (IsTransformingState(aOldState) && !IsTransformingState(aNewState)) {
+#if defined(MOZ_WIDGET_ANDROID)
+      // The Android UI thread only shows overlay UI elements when the content is not being
+      // panned or zoomed and it is in a steady state. So the FrameMetrics only need to be
+      // updated when the transform ends.
+      if (APZCTreeManager* manager = GetApzcTreeManager()) {
+        AndroidDynamicToolbarAnimator* animator = manager->GetAndroidDynamicToolbarAnimator();
+        MOZ_ASSERT(animator);
+        animator->UpdateRootFrameMetrics(mFrameMetrics);
+      }
+#endif
+
       controller->NotifyAPZStateChange(
           GetGuid(), APZStateChange::eTransformEnd);
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)

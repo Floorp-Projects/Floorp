@@ -1956,8 +1956,6 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void forceUseCounterFlush(in nsIDOMNode aNode);
 
-  void setNextPaintSyncId(in long aSyncId);
-
   /**
    * Enable or disable displayport suppression. This is intended to be used by
    * testing code, to provide more deterministic behaviour over the displayport
