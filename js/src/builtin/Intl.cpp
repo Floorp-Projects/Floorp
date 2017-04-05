@@ -2002,10 +2002,12 @@ GetFieldTypeForNumberField(UNumberFormatFields fieldName, double d)
                                "and scientific notation were never requested");
         break;
 
+#ifndef U_HIDE_DEPRECATED_API
       case UNUM_FIELD_COUNT:
         MOZ_ASSERT_UNREACHABLE("format field sentinel value returned by "
                                "iterator!");
         break;
+#endif
     }
 
     MOZ_ASSERT_UNREACHABLE("unenumerated, undocumented format field returned "
@@ -3323,19 +3325,19 @@ GetFieldTypeForFormatField(UDateFormatField fieldName)
 #ifndef U_HIDE_INTERNAL_API
       case UDAT_RELATED_YEAR_FIELD:
 #endif
-#ifndef U_HIDE_DRAFT_API
       case UDAT_AM_PM_MIDNIGHT_NOON_FIELD:
       case UDAT_FLEXIBLE_DAY_PERIOD_FIELD:
-#endif
 #ifndef U_HIDE_INTERNAL_API
       case UDAT_TIME_SEPARATOR_FIELD:
 #endif
         // These fields are all unsupported.
         return nullptr;
 
+#ifndef U_HIDE_DEPRECATED_API
       case UDAT_FIELD_COUNT:
         MOZ_ASSERT_UNREACHABLE("format field sentinel value returned by "
                                "iterator!");
+#endif
     }
 
     MOZ_ASSERT_UNREACHABLE("unenumerated, undocumented format field returned "
