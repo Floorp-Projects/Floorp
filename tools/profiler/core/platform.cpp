@@ -369,7 +369,7 @@ public:
     , mStackTop(aThreadInfo->StackTop())
     , mLastSample(&aThreadInfo->LastSample())
     , mPlatformData(aThreadInfo->GetPlatformData())
-    , mRespInfo(aThreadInfo->GetThreadResponsiveness())
+    , mResponsiveness(aThreadInfo->GetThreadResponsiveness())
     , mRSSMemory(aRSSMemory)    // may be zero
     , mUSSMemory(aUSSMemory)    // may be zero
 #if !defined(GP_OS_darwin)
@@ -392,7 +392,7 @@ public:
     , mStackTop(nullptr)
     , mLastSample(nullptr)
     , mPlatformData(aPlatformData)
-    , mRespInfo(nullptr)
+    , mResponsiveness(nullptr)
     , mRSSMemory(0)
     , mUSSMemory(0)
 #if !defined(GP_OS_darwin)
@@ -422,7 +422,7 @@ public:
 
   PlatformData* const mPlatformData;
 
-  ThreadResponsiveness* const mRespInfo;          // may be null
+  ThreadResponsiveness* const mResponsiveness;    // may be null
 
   const int64_t mRSSMemory;                       // may be zero
   const int64_t mUSSMemory;                       // may be zero
@@ -1071,9 +1071,9 @@ Tick(PS::LockRef aLock, ProfileBuffer* aBuffer, TickSample* aSample)
     }
   }
 
-  if (aSample->mRespInfo && aSample->mRespInfo->HasData()) {
+  if (aSample->mResponsiveness && aSample->mResponsiveness->HasData()) {
     mozilla::TimeDuration delta =
-      aSample->mRespInfo->GetUnresponsiveDuration(aSample->mTimeStamp);
+      aSample->mResponsiveness->GetUnresponsiveDuration(aSample->mTimeStamp);
     aBuffer->addTag(ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
   }
 
@@ -1664,7 +1664,10 @@ SamplerThread::Run()
             }
           }
 
-          info->UpdateThreadResponsiveness();
+          // We only track responsiveness for the main thread.
+          if (info->IsMainThread()) {
+            info->GetThreadResponsiveness()->Update();
+          }
 
           // We only get the memory measurements once for all threads.
           int64_t rssMemory = 0;

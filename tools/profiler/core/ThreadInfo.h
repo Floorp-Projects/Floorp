@@ -50,9 +50,6 @@ private:
   UniquePlatformData mPlatformData;
   void* mStackTop;
 
-  // May be null for the main thread if the profiler was started during startup.
-  nsCOMPtr<nsIThread> mThread;
-
   // When a thread dies while the profiler is active we keep its ThreadInfo
   // (and its PseudoStack) around for a while, and put it in a "pending delete"
   // state.
@@ -74,10 +71,12 @@ public:
   void FlushSamplesAndMarkers(ProfileBuffer* aBuffer,
                               const mozilla::TimeStamp& aStartTime);
 
-  ThreadResponsiveness* GetThreadResponsiveness() { return &mRespInfo; }
-
-  void UpdateThreadResponsiveness() {
-    mRespInfo.Update(mIsMainThread, mThread);
+  // Returns nullptr if this is not the main thread.
+  ThreadResponsiveness* GetThreadResponsiveness()
+  {
+    ThreadResponsiveness* responsiveness = mResponsiveness.ptrOr(nullptr);
+    MOZ_ASSERT(!!responsiveness == mIsMainThread);
+    return responsiveness;
   }
 
 private:
@@ -91,7 +90,8 @@ private:
   mozilla::UniquePtr<char[]> mSavedStreamedMarkers;
   mozilla::Maybe<UniqueStacks> mUniqueStacks;
 
-  ThreadResponsiveness mRespInfo;
+  // This is only used for the main thread.
+  mozilla::Maybe<ThreadResponsiveness> mResponsiveness;
 
   // When sampling, this holds the generation number and offset in
   // ProfilerState::mBuffer of the most recent sample for this thread.
