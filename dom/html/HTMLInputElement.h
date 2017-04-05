@@ -808,8 +808,13 @@ public:
   void UpdateDateTimePicker(const DateTimeValue& aValue);
   void CloseDateTimePicker();
 
+  /*
+   * Called from datetime input box binding when inner text fields are focused
+   * or blurred.
+   */
+  void SetFocusState(bool aIsFocused);
+
   HTMLInputElement* GetOwnerNumberControl();
-  HTMLInputElement* GetOwnerDateTimeControl();
 
   void StartNumberControlSpinnerSpin();
   enum SpinnerStopState {
