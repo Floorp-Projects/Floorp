@@ -59,27 +59,29 @@ module.exports = createClass({
     const canBeReloaded = target.temporarilyInstalled;
 
     return dom.li(
-      { className: "target-container", "data-addon-id": target.addonID },
-      dom.img({
-        className: "target-icon",
-        role: "presentation",
-        src: target.icon
-      }),
+      { className: "addon-target-container", "data-addon-id": target.addonID },
       dom.div({ className: "target" },
-        dom.div({ className: "target-name", title: target.name }, target.name)
+        dom.img({
+          className: "target-icon",
+          role: "presentation",
+          src: target.icon
+        }),
+        dom.span({ className: "target-name", title: target.name }, target.name)
       ),
-      dom.button({
-        className: "debug-button",
-        onClick: this.debug,
-        disabled: debugDisabled,
-      }, Strings.GetStringFromName("debug")),
-      dom.button({
-        className: "reload-button",
-        onClick: this.reload,
-        disabled: !canBeReloaded,
-        title: !canBeReloaded ?
-          Strings.GetStringFromName("reloadDisabledTooltip") : ""
-      }, Strings.GetStringFromName("reload"))
+      dom.div({className: "addon-target-actions"},
+        dom.button({
+          className: "debug-button addon-target-button",
+          onClick: this.debug,
+          disabled: debugDisabled,
+        }, Strings.GetStringFromName("debug")),
+        dom.button({
+          className: "reload-button addon-target-button",
+          onClick: this.reload,
+          disabled: !canBeReloaded,
+          title: !canBeReloaded ?
+            Strings.GetStringFromName("reloadDisabledTooltip") : ""
+        }, Strings.GetStringFromName("reload"))
+      ),
     );
   }
 });
