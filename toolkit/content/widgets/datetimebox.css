@@ -11,25 +11,30 @@
   cursor: default;
   background-color: inherit;
   color: inherit;
+  font-family: monospace;
 }
 
-.datetime-input {
-  -moz-appearance: none;
+.datetime-edit-field {
+  display: inline;
+  cursor: default;
+  -moz-user-select: none;
   text-align: center;
-  padding: 0;
+  padding: 1px 3px;
   border: 0;
   margin: 0;
   ime-mode: disabled;
-  cursor: default;
-  -moz-user-select: none;
+  font: inherit;
+  outline: none;
 }
 
-.datetime-separator {
-  margin: 0 !important;
+.datetime-edit-field:not([disabled="true"]):focus {
+  background-color: Highlight;
+  color: HighlightText;
+  outline: none;
 }
 
-.datetime-input[readonly],
-.datetime-input[disabled] {
+.datetime-edit-field[disabled="true"],
+.datetime-edit-field[readonly="true"]  {
   color: GrayText;
   -moz-user-select: none;
 }
