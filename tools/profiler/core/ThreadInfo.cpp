@@ -20,12 +20,11 @@
 #endif
 
 ThreadInfo::ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
-                       mozilla::NotNull<PseudoStack*> aPseudoStack,
                        void* aStackTop)
   : mName(strdup(aName))
   , mThreadId(aThreadId)
   , mIsMainThread(aIsMainThread)
-  , mPseudoStack(aPseudoStack)
+  , mPseudoStack(mozilla::WrapNotNull(new PseudoStack()))
   , mPlatformData(AllocPlatformData(aThreadId))
   , mStackTop(aStackTop)
   , mHasProfile(false)
