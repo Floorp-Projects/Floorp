@@ -60,4 +60,9 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     public SessionDurationMeasurement getSessionDurationMeasurement() {
         return sessionDurationMeasurement;
     }
+
+    @Override
+    protected String getUploadPath(final String documentId) {
+        return super.getUploadPath(documentId) + "?v=4";
+    }
 }

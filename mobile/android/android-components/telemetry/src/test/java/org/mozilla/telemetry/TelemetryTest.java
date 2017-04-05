@@ -100,7 +100,7 @@ public class TelemetryTest {
         assertEquals(0, storage.countStoredPings(TelemetryCorePingBuilder.TYPE));
 
         final RecordedRequest request = server.takeRequest();
-        assertEquals("POST /submit/telemetry/ffffffff-0000-0000-ffff-ffffffffffff/core/TelemetryTest/10.0.1/test/123 HTTP/1.1", request.getRequestLine());
+        assertEquals("POST /submit/telemetry/ffffffff-0000-0000-ffff-ffffffffffff/core/TelemetryTest/10.0.1/test/123?v=4 HTTP/1.1", request.getRequestLine());
         assertEquals("application/json; charset=utf-8", request.getHeader("Content-Type"));
         assertEquals(TEST_USER_AGENT, request.getHeader("User-Agent"));
 
@@ -173,7 +173,7 @@ public class TelemetryTest {
         assertEquals(0, storage.countStoredPings(TelemetryEventPingBuilder.TYPE));
 
         final RecordedRequest request = server.takeRequest();
-        assertEquals("POST /submit/telemetry/ffffffff-0000-0000-ffff-ffffffffffff/focus-event/TelemetryTest/12.1.1/test/456 HTTP/1.1", request.getRequestLine());
+        assertEquals("POST /submit/telemetry/ffffffff-0000-0000-ffff-ffffffffffff/focus-event/TelemetryTest/12.1.1/test/456?v=4 HTTP/1.1", request.getRequestLine());
         assertEquals("application/json; charset=utf-8", request.getHeader("Content-Type"));
         assertEquals(TEST_USER_AGENT, request.getHeader("User-Agent"));
 

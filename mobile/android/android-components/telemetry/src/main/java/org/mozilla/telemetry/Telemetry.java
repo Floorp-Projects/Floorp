@@ -90,7 +90,6 @@ public class Telemetry {
 
         final TelemetryCorePingBuilder builder = (TelemetryCorePingBuilder) pingBuilders.get(TelemetryCorePingBuilder.TYPE);
 
-
         builder.getSessionDurationMeasurement().recordSessionStart();
         builder.getSessionCountMeasurement().countSession();
     }
