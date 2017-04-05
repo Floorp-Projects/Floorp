@@ -95,6 +95,9 @@ if not CONFIG['JS_STANDALONE']:
         'probes',
     ]
 
+if CONFIG['COMPILE_ENVIRONMENT']:
+    DIRS += ['js/src']
+
 DIRS += [
     'config/external/fdlibm',
     'config/external/nspr',
@@ -111,7 +114,6 @@ if CONFIG['USE_ICU']:
     DIRS += ['config/external/icu']
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-
     if not CONFIG['JS_STANDALONE']:
         DIRS += [
             'config/external',
@@ -121,7 +123,6 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     if CONFIG['BUILD_CTYPES']:
         DIRS += ['config/external/ffi']
 
-    DIRS += ['js/src']
 else:
     TEST_DIRS += ['js/src/tests']
 

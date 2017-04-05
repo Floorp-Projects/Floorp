@@ -744,11 +744,6 @@ ifndef CROSS_COMPILE
 	$(call CHECK_STDCXX,$@)
 endif
 
-ifdef DTRACE_PROBE_OBJ
-EXTRA_DEPS += $(DTRACE_PROBE_OBJ)
-OBJS += $(DTRACE_PROBE_OBJ)
-endif
-
 $(filter %.$(LIB_SUFFIX),$(LIBRARY)): $(OBJS) $(STATIC_LIBS_DEPS) $(filter %.$(LIB_SUFFIX),$(EXTRA_LIBS)) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 # Always remove both library and library descriptor
@@ -777,18 +772,6 @@ $(HOST_LIBRARY): $(HOST_OBJS) Makefile
 	$(RM) $@
 	$(EXPAND_LIBS_EXEC) --extract -- $(HOST_AR) $(HOST_AR_FLAGS) $(HOST_OBJS)
 
-ifdef HAVE_DTRACE
-ifndef XP_MACOSX
-ifdef DTRACE_PROBE_OBJ
-ifndef DTRACE_LIB_DEPENDENT
-NON_DTRACE_OBJS := $(filter-out $(DTRACE_PROBE_OBJ),$(OBJS))
-$(DTRACE_PROBE_OBJ): $(NON_DTRACE_OBJS)
-	dtrace -x nolibs -G -C -s $(MOZILLA_DTRACE_SRC) -o $(DTRACE_PROBE_OBJ) $(NON_DTRACE_OBJS)
-endif
-endif
-endif
-endif
-
 # On Darwin (Mac OS X), dwarf2 debugging uses debug info left in .o files,
 # so instead of deleting .o files after repacking them into a dylib, we make
 # symlinks back to the originals. The symlinks are a no-op for stabs debugging,
@@ -799,15 +782,7 @@ $(SHARED_LIBRARY): $(OBJS) $(RESFILE) $(RUST_STATIC_LIB_FOR_SHARED_LIB) $(STATIC
 ifndef INCREMENTAL_LINKER
 	$(RM) $@
 endif
-ifdef DTRACE_LIB_DEPENDENT
-ifndef XP_MACOSX
-	dtrace -x nolibs -G -C -s $(MOZILLA_DTRACE_SRC) -o  $(DTRACE_PROBE_OBJ) $(shell $(EXPAND_LIBS) $(MOZILLA_PROBE_LIBS))
-endif
-	$(EXPAND_MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(SUB_SHLOBJS) $(DTRACE_PROBE_OBJ) $(MOZILLA_PROBE_LIBS) $(RESFILE) $(LDFLAGS) $(WRAP_LDFLAGS) $(STATIC_LIBS) $(RUST_STATIC_LIB_FOR_SHARED_LIB) $(SHARED_LIBS) $(EXTRA_DSO_LDOPTS) $(MOZ_GLUE_LDFLAGS) $(EXTRA_LIBS) $(OS_LIBS) $(SHLIB_LDENDFILE)
-	@$(RM) $(DTRACE_PROBE_OBJ)
-else # ! DTRACE_LIB_DEPENDENT
 	$(EXPAND_MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(WRAP_LDFLAGS) $(STATIC_LIBS) $(RUST_STATIC_LIB_FOR_SHARED_LIB) $(SHARED_LIBS) $(EXTRA_DSO_LDOPTS) $(MOZ_GLUE_LDFLAGS) $(EXTRA_LIBS) $(OS_LIBS) $(SHLIB_LDENDFILE)
-endif # DTRACE_LIB_DEPENDENT
 	$(call CHECK_BINARY,$@)
 
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))

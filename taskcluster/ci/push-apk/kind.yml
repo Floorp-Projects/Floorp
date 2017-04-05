@@ -1,0 +1,38 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.push_apk:loader
+
+transforms:
+   - taskgraph.transforms.push_apk:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+  - build-signing
+  - push-apk-breakpoint
+
+jobs:
+    push-apk/opt:
+        description: Publishes APK onto Google Play Store
+        attributes:
+            build_platform: android-nightly
+            nightly: true
+        worker-type: scriptworker-prov-v1/pushapk-v1
+        worker:
+            upstream-artifacts: # see transforms
+            google-play-track: # see transforms
+            implementation: push-apk
+            # TODO unhardcode that line
+            dry-run: true
+        scopes: # see transforms
+        treeherder:
+            symbol: pub(gp)
+            platform: Android/opt
+            tier: 2
+            kind: other
+        run-on-projects:
+            - mozilla-aurora
+            - mozilla-beta
+            - mozilla-release
+        deadline-after: 5 days

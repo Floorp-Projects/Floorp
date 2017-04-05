@@ -75,6 +75,7 @@ MainProcessSingleton.prototype = {
       Services.ppmm.loadProcessScript("chrome://global/content/process-content.js", true);
       Services.ppmm.addMessageListener("Console:Log", this.logConsoleMessage);
       Services.mm.addMessageListener("Search:AddEngine", this.addSearchEngine);
+      Services.ppmm.loadProcessScript("resource:///modules/ContentObservers.js", true);
       break;
     }
 

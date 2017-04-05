@@ -297,15 +297,22 @@ public:
 
   std::vector<unsigned int> GetLocalSSRCs() const override;
   bool SetLocalSSRCs(const std::vector<unsigned int> & ssrcs) override;
-
   bool GetRemoteSSRC(unsigned int* ssrc) override;
   bool SetRemoteSSRC(unsigned int ssrc) override;
   bool SetLocalCNAME(const char* cname) override;
+
+  bool GetSendPacketTypeStats(
+      webrtc::RtcpPacketTypeCounter* aPacketCounts) override;
+
+  bool GetRecvPacketTypeStats(
+      webrtc::RtcpPacketTypeCounter* aPacketCounts) override;
+
   bool GetVideoEncoderStats(double* framerateMean,
                             double* framerateStdDev,
                             double* bitrateMean,
                             double* bitrateStdDev,
-                            uint32_t* droppedFrames) override;
+                            uint32_t* droppedFrames,
+                            uint32_t* framesEncoded) override;
   bool GetVideoDecoderStats(double* framerateMean,
                             double* framerateStdDev,
                             double* bitrateMean,
@@ -360,16 +367,21 @@ private:
      * @param aOutDroppedFrames: the number of dropped frames
      */
     void DroppedFrames(uint32_t& aOutDroppedFrames) const;
+    /**
+     * Returns the number of frames that have been encoded so far
+     */
+    uint32_t FramesEncoded() const {
+      return mFramesEncoded;
+    }
     void Update(const webrtc::VideoSendStream::Stats& aStats);
     /**
      * Call once for every frame delivered for encoding
      */
-    void SentFrame() {
-      ++mSentFrames;
-    }
+    void FrameDeliveredToEncoder() { ++mFramesDeliveredToEncoder; }
   private:
     uint32_t mDroppedFrames = 0;
-    mozilla::Atomic<int32_t> mSentFrames;
+    uint32_t mFramesEncoded = 0;
+    mozilla::Atomic<int32_t> mFramesDeliveredToEncoder;
   };
 
   /** Statistics for receiving streams
@@ -457,12 +469,15 @@ private:
   //Local database of currently applied receive codecs
   nsTArray<UniquePtr<VideoCodecConfig>> mRecvCodecList;
 
-  // protects mCurSendCodecConfig, mInReconfig,mVideoSend/RecvStreamStats, mSend/RecvStreams
+  // protects mCurSendCodecConfig, mInReconfig,mVideoSend/RecvStreamStats, mSend/RecvStreams, mSendPacketCounts, mRecvPacketCounts
   Mutex mCodecMutex;
   nsAutoPtr<VideoCodecConfig> mCurSendCodecConfig;
   bool mInReconfig;
   SendStreamStatistics mSendStreamStats;
   ReceiveStreamStatistics mRecvStreamStats;
+  webrtc::RtcpPacketTypeCounter mSendPacketCounts;
+  webrtc::RtcpPacketTypeCounter mRecvPacketCounts;
+
   // Must call webrtc::Call::DestroyVideoReceive/SendStream to delete these:
   webrtc::VideoReceiveStream* mRecvStream;
   webrtc::VideoSendStream* mSendStream;

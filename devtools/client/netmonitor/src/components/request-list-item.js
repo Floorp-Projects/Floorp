@@ -10,6 +10,8 @@ const {
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
+const I = require("devtools/client/shared/vendor/immutable");
+
 const { getFormattedSize } = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
 const { getAbbreviatedMimeType } = require("../utils/request-utils");
@@ -61,6 +63,7 @@ const RequestListItem = createClass({
   displayName: "RequestListItem",
 
   propTypes: {
+    columns: PropTypes.object.isRequired,
     item: PropTypes.object.isRequired,
     index: PropTypes.number.isRequired,
     isSelected: PropTypes.bool.isRequired,
@@ -81,7 +84,8 @@ const RequestListItem = createClass({
 
   shouldComponentUpdate(nextProps) {
     return !propertiesEqual(UPDATED_REQ_ITEM_PROPS, this.props.item, nextProps.item) ||
-      !propertiesEqual(UPDATED_REQ_PROPS, this.props, nextProps);
+      !propertiesEqual(UPDATED_REQ_PROPS, this.props, nextProps) ||
+      !I.is(this.props.columns, nextProps.columns);
   },
 
   componentDidUpdate(prevProps) {
@@ -95,6 +99,7 @@ const RequestListItem = createClass({
 
   render() {
     const {
+      columns,
       item,
       index,
       isSelected,
@@ -126,15 +131,15 @@ const RequestListItem = createClass({
         onContextMenu,
         onMouseDown,
       },
-        StatusColumn({ item }),
-        MethodColumn({ item }),
-        FileColumn({ item }),
-        DomainColumn({ item, onSecurityIconClick }),
-        CauseColumn({ item, onCauseBadgeClick }),
-        TypeColumn({ item }),
-        TransferredSizeColumn({ item }),
-        ContentSizeColumn({ item }),
-        WaterfallColumn({ item, firstRequestStartedMillis }),
+        columns.get("status") && StatusColumn({ item }),
+        columns.get("method") && MethodColumn({ item }),
+        columns.get("file") && FileColumn({ item }),
+        columns.get("domain") && DomainColumn({ item, onSecurityIconClick }),
+        columns.get("cause") && CauseColumn({ item, onCauseBadgeClick }),
+        columns.get("type") && TypeColumn({ item }),
+        columns.get("transferred") && TransferredSizeColumn({ item }),
+        columns.get("contentSize") && ContentSizeColumn({ item }),
+        columns.get("waterfall") && WaterfallColumn({ item, firstRequestStartedMillis }),
       )
     );
   }

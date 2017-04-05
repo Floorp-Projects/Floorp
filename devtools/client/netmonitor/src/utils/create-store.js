@@ -14,13 +14,19 @@ const { FilterTypes, Filters } = require("../reducers/filters");
 const { Requests } = require("../reducers/requests");
 const { Sort } = require("../reducers/sort");
 const { TimingMarkers } = require("../reducers/timing-markers");
-const { UI } = require("../reducers/ui");
+const { UI, Columns } = require("../reducers/ui");
 
 function configureStore() {
   let activeFilters = {};
   Prefs.filters.forEach((filter) => {
     activeFilters[filter] = true;
   });
+
+  let inactiveColumns = Prefs.hiddenColumns.reduce((acc, col) => {
+    acc[col] = false;
+    return acc;
+  }, {});
+
   const initialState = {
     filters: new Filters({
       requestFilterTypes: new FilterTypes(activeFilters)
@@ -28,7 +34,9 @@ function configureStore() {
     requests: new Requests(),
     sort: new Sort(),
     timingMarkers: new TimingMarkers(),
-    ui: new UI()
+    ui: new UI({
+      columns: new Columns(inactiveColumns)
+    }),
   };
 
   return createStore(

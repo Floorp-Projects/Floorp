@@ -76,7 +76,7 @@ function transferred(first, second) {
   return result || waterfall(first, second);
 }
 
-function size(first, second) {
+function contentSize(first, second) {
   const result = compareValues(first.contentSize, second.contentSize);
   return result || waterfall(first, second);
 }
@@ -89,6 +89,6 @@ exports.Sorters = {
   cause,
   type,
   transferred,
-  size,
+  contentSize,
   waterfall,
 };

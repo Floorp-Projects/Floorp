@@ -11,6 +11,7 @@
 #include "nsError.h"
 #include "nsISMILAttr.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 
 class nsIAtom;
 class nsSMILValue;
@@ -46,8 +47,7 @@ public:
 
   already_AddRefed<mozilla::dom::SVGAnimatedBoolean>
     ToDOMAnimatedBoolean(nsSVGElement* aSVGElement);
-  // Returns a new nsISMILAttr object that the caller must delete
-  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
+  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
 
 private:
 
