@@ -635,4 +635,20 @@ ServiceWorkerRegistrationInfo::SetLoadFlags(nsLoadFlags aLoadFlags)
   mLoadFlags = aLoadFlags;
 }
 
+int64_t
+ServiceWorkerRegistrationInfo::GetLastUpdateTime() const
+{
+  return mLastUpdateTime;
+}
+
+void
+ServiceWorkerRegistrationInfo::SetLastUpdateTime(const int64_t aTime)
+{
+  if (aTime == 0) {
+    return;
+  }
+
+  mLastUpdateTime = aTime;
+}
+
 END_WORKERS_NAMESPACE

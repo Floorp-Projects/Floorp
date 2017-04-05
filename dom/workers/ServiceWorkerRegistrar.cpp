@@ -41,6 +41,7 @@ namespace {
 
 static const char* gSupportedRegistrarVersions[] = {
   SERVICEWORKERREGISTRAR_VERSION,
+  "6",
   "5",
   "4",
   "3",
@@ -380,6 +381,72 @@ ServiceWorkerRegistrar::ReadData()
                  entry->loadFlags() != nsIRequest::VALIDATE_ALWAYS) {
         return NS_ERROR_INVALID_ARG;
       }
+
+      nsAutoCString installedTimeStr;
+      GET_LINE(installedTimeStr);
+      int64_t installedTime = installedTimeStr.ToInteger64(&rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      entry->currentWorkerInstalledTime() = installedTime;
+
+      nsAutoCString activatedTimeStr;
+      GET_LINE(activatedTimeStr);
+      int64_t activatedTime = activatedTimeStr.ToInteger64(&rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      entry->currentWorkerActivatedTime() = activatedTime;
+
+      nsAutoCString lastUpdateTimeStr;
+      GET_LINE(lastUpdateTimeStr);
+      int64_t lastUpdateTime = lastUpdateTimeStr.ToInteger64(&rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      entry->lastUpdateTime() = lastUpdateTime;
+    } else if (version.EqualsLiteral("6")) {
+      nsAutoCString suffix;
+      GET_LINE(suffix);
+
+      OriginAttributes attrs;
+      if (!attrs.PopulateFromSuffix(suffix)) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      GET_LINE(entry->scope());
+
+      entry->principal() =
+        mozilla::ipc::ContentPrincipalInfo(attrs, void_t(), entry->scope());
+
+      GET_LINE(entry->currentWorkerURL());
+
+      nsAutoCString fetchFlag;
+      GET_LINE(fetchFlag);
+      if (!fetchFlag.EqualsLiteral(SERVICEWORKERREGISTRAR_TRUE) &&
+          !fetchFlag.EqualsLiteral(SERVICEWORKERREGISTRAR_FALSE)) {
+        return NS_ERROR_INVALID_ARG;
+      }
+      entry->currentWorkerHandlesFetch() =
+        fetchFlag.EqualsLiteral(SERVICEWORKERREGISTRAR_TRUE);
+
+      nsAutoCString cacheName;
+      GET_LINE(cacheName);
+      CopyUTF8toUTF16(cacheName, entry->cacheName());
+
+      nsAutoCString loadFlags;
+      GET_LINE(loadFlags);
+      entry->loadFlags() = loadFlags.ToInteger(&rv, 16);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      } else if (entry->loadFlags() != nsIRequest::LOAD_NORMAL &&
+                 entry->loadFlags() != nsIRequest::VALIDATE_ALWAYS) {
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      entry->currentWorkerInstalledTime() = 0;
+      entry->currentWorkerActivatedTime() = 0;
+      entry->lastUpdateTime() = 0;
     } else if (version.EqualsLiteral("5")) {
       overwrite = true;
       dedupe = true;
@@ -413,6 +480,10 @@ ServiceWorkerRegistrar::ReadData()
       CopyUTF8toUTF16(cacheName, entry->cacheName());
 
       entry->loadFlags() = nsIRequest::VALIDATE_ALWAYS;
+
+      entry->currentWorkerInstalledTime() = 0;
+      entry->currentWorkerActivatedTime() = 0;
+      entry->lastUpdateTime() = 0;
     } else if (version.EqualsLiteral("4")) {
       overwrite = true;
       dedupe = true;
@@ -440,6 +511,10 @@ ServiceWorkerRegistrar::ReadData()
       CopyUTF8toUTF16(cacheName, entry->cacheName());
 
       entry->loadFlags() = nsIRequest::VALIDATE_ALWAYS;
+
+      entry->currentWorkerInstalledTime() = 0;
+      entry->currentWorkerActivatedTime() = 0;
+      entry->lastUpdateTime() = 0;
     } else if (version.EqualsLiteral("3")) {
       overwrite = true;
       dedupe = true;
@@ -470,6 +545,10 @@ ServiceWorkerRegistrar::ReadData()
       CopyUTF8toUTF16(cacheName, entry->cacheName());
 
       entry->loadFlags() = nsIRequest::VALIDATE_ALWAYS;
+
+      entry->currentWorkerInstalledTime() = 0;
+      entry->currentWorkerActivatedTime() = 0;
+      entry->lastUpdateTime() = 0;
     } else if (version.EqualsLiteral("2")) {
       overwrite = true;
       dedupe = true;
@@ -506,6 +585,10 @@ ServiceWorkerRegistrar::ReadData()
       GET_LINE(unused);
 
       entry->loadFlags() = nsIRequest::VALIDATE_ALWAYS;
+
+      entry->currentWorkerInstalledTime() = 0;
+      entry->currentWorkerActivatedTime() = 0;
+      entry->lastUpdateTime() = 0;
     } else {
       MOZ_ASSERT_UNREACHABLE("Should never get here!");
     }
@@ -821,6 +904,15 @@ ServiceWorkerRegistrar::WriteData()
                   "LOAD_NORMAL matches serialized value.");
     static_assert(nsIRequest::VALIDATE_ALWAYS == (1 << 11),
                   "VALIDATE_ALWAYS matches serialized value");
+
+    buffer.AppendInt(data[i].currentWorkerInstalledTime());
+    buffer.Append('\n');
+
+    buffer.AppendInt(data[i].currentWorkerActivatedTime());
+    buffer.Append('\n');
+
+    buffer.AppendInt(data[i].lastUpdateTime());
+    buffer.Append('\n');
 
     buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR);
     buffer.Append('\n');
