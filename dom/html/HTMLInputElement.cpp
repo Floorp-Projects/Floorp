@@ -2680,6 +2680,21 @@ HTMLInputElement::CloseDateTimePicker()
                                       true, true);
 }
 
+void
+HTMLInputElement::SetFocusState(bool aIsFocused)
+{
+  if (NS_WARN_IF(!IsDateTimeInputType(mType))) {
+    return;
+  }
+
+  EventStates focusStates = NS_EVENT_STATE_FOCUS | NS_EVENT_STATE_FOCUSRING;
+  if (aIsFocused) {
+    AddStates(focusStates);
+  } else {
+    RemoveStates(focusStates);
+  }
+}
+
 bool
 HTMLInputElement::MozIsTextField(bool aExcludePassword)
 {
@@ -2705,29 +2720,6 @@ HTMLInputElement::GetOwnerNumberControl()
   }
   return nullptr;
 }
-
-HTMLInputElement*
-HTMLInputElement::GetOwnerDateTimeControl()
-{
-  if (IsInNativeAnonymousSubtree() &&
-      mType == NS_FORM_INPUT_TEXT &&
-      GetParent() &&
-      GetParent()->GetParent() &&
-      GetParent()->GetParent()->GetParent() &&
-      GetParent()->GetParent()->GetParent()->GetParent()) {
-    // Yes, this is very very deep.
-    HTMLInputElement* ownerDateTimeControl =
-      HTMLInputElement::FromContentOrNull(
-        GetParent()->GetParent()->GetParent()->GetParent());
-    if (ownerDateTimeControl &&
-        (ownerDateTimeControl->mType == NS_FORM_INPUT_TIME ||
-         ownerDateTimeControl->mType == NS_FORM_INPUT_DATE)) {
-      return ownerDateTimeControl;
-    }
-  }
-  return nullptr;
-}
-
 
 NS_IMETHODIMP
 HTMLInputElement::MozIsTextField(bool aExcludePassword, bool* aResult)
@@ -3967,12 +3959,13 @@ HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   // inside of the same element).
   if ((mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) &&
       !IsExperimentalMobileType(mType) &&
+      aVisitor.mEvent->IsTrusted() &&
       (aVisitor.mEvent->mMessage == eFocus ||
        aVisitor.mEvent->mMessage == eFocusIn ||
        aVisitor.mEvent->mMessage == eFocusOut ||
        aVisitor.mEvent->mMessage == eBlur)) {
     nsCOMPtr<nsIContent> originalTarget =
-      do_QueryInterface(aVisitor.mEvent->AsFocusEvent()->mRelatedTarget);
+      do_QueryInterface(aVisitor.mEvent->AsFocusEvent()->mOriginalTarget);
     nsCOMPtr<nsIContent> relatedTarget =
       do_QueryInterface(aVisitor.mEvent->AsFocusEvent()->mRelatedTarget);
 
@@ -6770,11 +6763,6 @@ HTMLInputElement::AddStates(EventStates aStates)
       HTMLInputElement* ownerNumberControl = GetOwnerNumberControl();
       if (ownerNumberControl) {
         ownerNumberControl->AddStates(focusStates);
-      } else {
-        HTMLInputElement* ownerDateTimeControl = GetOwnerDateTimeControl();
-        if (ownerDateTimeControl) {
-          ownerDateTimeControl->AddStates(focusStates);
-        }
       }
     }
   }
@@ -6791,11 +6779,6 @@ HTMLInputElement::RemoveStates(EventStates aStates)
       HTMLInputElement* ownerNumberControl = GetOwnerNumberControl();
       if (ownerNumberControl) {
         ownerNumberControl->RemoveStates(focusStates);
-      } else {
-        HTMLInputElement* ownerDateTimeControl = GetOwnerDateTimeControl();
-        if (ownerDateTimeControl) {
-          ownerDateTimeControl->RemoveStates(focusStates);
-        }
       }
     }
   }

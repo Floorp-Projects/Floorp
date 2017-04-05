@@ -1228,7 +1228,7 @@
       <method name="focusInnerTextBox">
         <body>
         <![CDATA[
-          this.log("focusInnerTextBox");
+          this.log("Focus inner editable field.");
 
           let editRoot =
             document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
@@ -1236,6 +1236,7 @@
           for (let child = editRoot.firstChild; child; child = child.nextSibling) {
             if ((child instanceof HTMLSpanElement) &&
                 child.classList.contains("datetime-edit-field")) {
+              this.mLastFocusedField = child;
               child.focus();
               break;
             }
@@ -1247,9 +1248,22 @@
       <method name="blurInnerTextBox">
         <body>
         <![CDATA[
-          this.log("blurInnerTextBox");
+          this.log("Blur inner editable field.");
+
           if (this.mLastFocusedField) {
             this.mLastFocusedField.blur();
+          } else {
+            // If .mLastFocusedField hasn't been set, blur all editable fields,
+            // so that the bound element will actually be blurred. Note that
+            // blurring on a element that has no focus won't have any effect.
+            let editRoot =
+              document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
+            for (let child = editRoot.firstChild; child; child = child.nextSibling) {
+              if ((child instanceof HTMLSpanElement) &&
+                  child.classList.contains("datetime-edit-field")) {
+                child.blur();
+              }
+            }
           }
         ]]>
         </body>
@@ -1554,6 +1568,10 @@
         <![CDATA[
           this.log("onFocus originalTarget: " + aEvent.originalTarget);
 
+          if (document.activeElement != this.mInputElement) {
+            return;
+          }
+
           let target = aEvent.originalTarget;
           if ((target instanceof HTMLSpanElement) &&
               target.classList.contains("datetime-edit-field")) {
@@ -1561,6 +1579,7 @@
               return;
             }
             this.mLastFocusedField = target;
+            this.mInputElement.setFocusState(true);
           }
         ]]>
         </body>
@@ -1572,9 +1591,14 @@
         <![CDATA[
           this.log("onBlur originalTarget: " + aEvent.originalTarget);
 
+          if (document.activeElement == this.mInputElement) {
+            return;
+          }
+
           let target = aEvent.originalTarget;
           target.setAttribute("typeBuffer", "");
           this.setInputValueFromFields();
+          this.mInputElement.setFocusState(false);
         ]]>
         </body>
       </method>
