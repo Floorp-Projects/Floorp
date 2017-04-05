@@ -214,3 +214,78 @@ button {
 .error-page .error-page-details {
   color: gray;
 }
+
+.addon-target-container {
+  background: #fff;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.12);
+  list-style-type: none;
+  margin: 0 0 8px;
+  padding: 4px 16px;
+  transition: box-shadow 150ms;
+}
+
+.addon-target-container:hover {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.addon-target-container .target {
+  align-items: center;
+  display: flex;
+  margin: 0;
+  padding: 16px 0;
+}
+
+.addon-target-actions {
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.addon-target-container .target-icon {
+  margin-inline-end: 16px;
+}
+
+.addon-target-container .name {
+  align-self: center;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.addon-target-button {
+  background: none;
+  border: none;
+  color: #0087ff;
+  font-size: 14px;
+  margin: 12px;
+  min-width: auto;
+  padding: 4px;
+  transition: color 150ms;
+}
+
+.addon-target-button:active,
+.addon-target-button:hover,
+.addon-target-button:enabled:hover:active {
+  background: none;
+}
+
+.addon-target-button:disabled {
+  color: #999;
+  opacity: 1;
+}
+
+.addon-target-button:enabled:focus,
+.addon-target-button:enabled:hover {
+  background: none;
+  color: #0052cc;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.addon-target-button:enabled:hover:active {
+  color: #003399;
+  text-decoration: none;
+}
+
+.addon-target-button:first-of-type {
+  /* Subtract the start padding so the button is still a bigger click target but
+   * lines up with the icon. */
+  margin-inline-start: -4px;
+}
