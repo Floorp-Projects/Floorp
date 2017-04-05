@@ -1012,10 +1012,10 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
         NS_LITERAL_STRING(" since it was found on an internal Firefox blocklist.");
       console->LogStringMessage(message.get());
     }
-    Telemetry::Accumulate(Telemetry::PLUGIN_BLOCKED_FOR_STABILITY, 1);
     mContentBlockingEnabled = true;
     return NS_ERROR_FAILURE;
   }
+
   if (status == NS_ERROR_TRACKING_URI) {
     mContentBlockingEnabled = true;
     return NS_ERROR_FAILURE;
