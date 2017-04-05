@@ -41,9 +41,9 @@ public class Telemetry {
     }
 
     // TODO: Do queuing asynchronously? (Issue #16)
-    public void queuePing(String pingType) {
+    public Telemetry queuePing(String pingType) {
         if (!configuration.isCollectionEnabled()) {
-            return;
+            return this;
         }
 
         final TelemetryPingBuilder pingBuilder = pingBuilders.get(pingType);
@@ -52,29 +52,31 @@ public class Telemetry {
             // We do not always want to build a ping. Sometimes we want to collect enough data so that
             // it is worth sending a ping. Here we exit early if the ping builder implementation
             // signals that it's not time to build a ping yet.
-            return;
+            return this;
         }
 
         final TelemetryPing ping = pingBuilder.build();
-
         storage.store(ping);
+
+        return this;
     }
 
     public TelemetryPingBuilder getBuilder(String pingType) {
         return pingBuilders.get(pingType);
     }
 
-    public void scheduleUpload(String pingType) {
+    public Telemetry scheduleUpload(String pingType) {
         if (!configuration.isUploadEnabled()) {
-            return;
+            return this;
         }
 
         if (storage.countStoredPings(pingType) == 0) {
             // There are no pings to upload.
-            return;
+            return this;
         }
 
         scheduler.scheduleUpload(configuration, pingType);
+        return this;
     }
 
     public void recordSessionStart() {
@@ -93,9 +95,9 @@ public class Telemetry {
         builder.getSessionCountMeasurement().countSession();
     }
 
-    public void recordSessionEnd() {
+    public Telemetry recordSessionEnd() {
         if (!configuration.isCollectionEnabled()) {
-            return;
+            return this;
         }
 
         if (!pingBuilders.containsKey(TelemetryCorePingBuilder.TYPE)) {
@@ -103,8 +105,9 @@ public class Telemetry {
         }
 
         final TelemetryCorePingBuilder builder = (TelemetryCorePingBuilder) pingBuilders.get(TelemetryCorePingBuilder.TYPE);
-
         builder.getSessionDurationMeasurement().recordSessionEnd();
+
+        return this;
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
