@@ -115,8 +115,9 @@ FileSystemRootDirectoryEntry::GetInternal(const nsAString& aPath,
     if (aSuccessCallback.WasPassed()) {
       RefPtr<EntryCallbackRunnable> runnable =
         new EntryCallbackRunnable(&aSuccessCallback.Value(), entry);
-      DebugOnly<nsresult> rv = NS_DispatchToMainThread(runnable);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
+
+      FileSystemUtils::DispatchRunnable(GetParentObject(), runnable.forget());
+
     }
     return;
   }
