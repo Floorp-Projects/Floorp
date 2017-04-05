@@ -363,6 +363,10 @@ public:
   bool ChromeRulesEnabled() const {
     return mIsChrome;
   }
+  bool UserRulesEnabled() const {
+    return mParsingMode == css::eAgentSheetFeatures ||
+           mParsingMode == css::eUserSheetFeatures;
+  }
 
   CSSEnabledState EnabledState() const {
     static_assert(int(CSSEnabledState::eForAllContent) == 0,
@@ -372,7 +376,7 @@ public:
     if (AgentRulesEnabled()) {
       enabledState |= CSSEnabledState::eInUASheets;
     }
-    if (ChromeRulesEnabled()) {
+    if (mIsChrome) {
       enabledState |= CSSEnabledState::eInChrome;
     }
     return enabledState;
