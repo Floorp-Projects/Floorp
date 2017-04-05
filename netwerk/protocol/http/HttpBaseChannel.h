@@ -115,7 +115,7 @@ public:
                                      nsProxyInfo *aProxyInfo,
                                      uint32_t aProxyResolveFlags,
                                      nsIURI *aProxyURI,
-                                     const nsID& aChannelId);
+                                     uint64_t aChannelId);
 
   // nsIRequest
   NS_IMETHOD GetName(nsACString& aName) override;
@@ -202,8 +202,8 @@ public:
   NS_IMETHOD GetIsMainDocumentChannel(bool* aValue) override;
   NS_IMETHOD SetIsMainDocumentChannel(bool aValue) override;
   NS_IMETHOD GetProtocolVersion(nsACString & aProtocolVersion) override;
-  NS_IMETHOD GetChannelId(nsACString& aChannelId) override;
-  NS_IMETHOD SetChannelId(const nsACString& aChannelId) override;
+  NS_IMETHOD GetChannelId(uint64_t *aChannelId) override;
+  NS_IMETHOD SetChannelId(uint64_t aChannelId) override;
   NS_IMETHOD GetTopLevelContentWindowId(uint64_t *aContentWindowId) override;
   NS_IMETHOD SetTopLevelContentWindowId(uint64_t aContentWindowId) override;
   NS_IMETHOD GetTopLevelOuterContentWindowId(uint64_t *aWindowId) override;
@@ -611,7 +611,7 @@ protected:
   bool mForceMainDocumentChannel;
   bool mIsTrackingResource;
 
-  nsID mChannelId;
+  uint64_t mChannelId;
 
   nsString mIntegrityMetadata;
 

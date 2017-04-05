@@ -502,9 +502,9 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
         severity = 1.f;
       }
       mLayerManager->VisualFrameWarning(severity);
-      PR_LogPrint("LayerTransactionParent::RecvUpdate transaction from process %d took %f ms",
-                  OtherPid(),
-                  latency.ToMilliseconds());
+      printf_stderr("LayerTransactionParent::RecvUpdate transaction from process %d took %f ms",
+                    OtherPid(),
+                    latency.ToMilliseconds());
     }
   }
 

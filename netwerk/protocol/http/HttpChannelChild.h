@@ -145,7 +145,7 @@ protected:
                                              const uint32_t& redirectFlags,
                                              const nsHttpResponseHead& responseHead,
                                              const nsCString& securityInfoSerialization,
-                                             const nsCString& channelId) override;
+                                             const uint64_t& channelId) override;
   mozilla::ipc::IPCResult RecvRedirect3Complete() override;
   mozilla::ipc::IPCResult RecvAssociateApplicationCache(const nsCString& groupID,
                                                         const nsCString& clientID) override;
@@ -361,7 +361,7 @@ private:
                       const uint32_t& redirectFlags,
                       const nsHttpResponseHead& responseHead,
                       const nsACString& securityInfoSerialization,
-                      const nsACString& channelId);
+                      const uint64_t& channelId);
   bool Redirect3Complete(OverrideRunnable* aRunnable);
   void DeleteSelf();
 

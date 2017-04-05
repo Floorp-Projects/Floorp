@@ -32,6 +32,9 @@ public:
 
   static ASpdySession *NewSpdySession(uint32_t version, nsISocketTransport *, bool);
 
+  virtual bool TestJoinConnection(const nsACString &hostname, int32_t port) = 0;
+  virtual bool JoinConnection(const nsACString &hostname, int32_t port) = 0;
+
   // MaybeReTunnel() is called by the connection manager when it cannot
   // dispatch a tunneled transaction. That might be because the tunnels it
   // expects to see are dead (and we may or may not be able to make more),

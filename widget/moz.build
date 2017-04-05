@@ -42,6 +42,8 @@ elif toolkit == 'cocoa':
 
 TEST_DIRS += ['tests']
 
+DIRS += ['headless']
+
 # Don't build the DSO under the 'build' directory as windows does.
 #
 # The DSOs get built in the toolkit dir itself.  Do this so that
@@ -258,6 +260,7 @@ LOCAL_INCLUDES += [
     '/layout/xul',
     '/view',
     '/widget',
+    '/widget/headless',
 ]
 
 if toolkit == 'windows':

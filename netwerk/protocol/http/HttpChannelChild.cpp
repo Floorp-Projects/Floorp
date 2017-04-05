@@ -1421,7 +1421,7 @@ class Redirect1Event : public ChannelEvent
                  const uint32_t& redirectFlags,
                  const nsHttpResponseHead& responseHead,
                  const nsACString& securityInfoSerialization,
-                 const nsACString& channelId)
+                 const uint64_t& channelId)
   : mChild(child)
   , mRegistrarId(registrarId)
   , mNewURI(newURI)
@@ -1450,7 +1450,7 @@ class Redirect1Event : public ChannelEvent
   uint32_t            mRedirectFlags;
   nsHttpResponseHead  mResponseHead;
   nsCString           mSecurityInfoSerialization;
-  nsCString           mChannelId;
+  uint64_t            mChannelId;
 };
 
 mozilla::ipc::IPCResult
@@ -1459,7 +1459,7 @@ HttpChannelChild::RecvRedirect1Begin(const uint32_t& registrarId,
                                      const uint32_t& redirectFlags,
                                      const nsHttpResponseHead& responseHead,
                                      const nsCString& securityInfoSerialization,
-                                     const nsCString& channelId)
+                                     const uint64_t& channelId)
 {
   // TODO: handle security info
   LOG(("HttpChannelChild::RecvRedirect1Begin [this=%p]\n", this));
@@ -1537,7 +1537,7 @@ HttpChannelChild::Redirect1Begin(const uint32_t& registrarId,
                                  const uint32_t& redirectFlags,
                                  const nsHttpResponseHead& responseHead,
                                  const nsACString& securityInfoSerialization,
-                                 const nsACString& channelId)
+                                 const uint64_t& channelId)
 {
   LOG(("HttpChannelChild::Redirect1Begin [this=%p]\n", this));
 
@@ -2418,9 +2418,7 @@ HttpChannelChild::ContinueAsyncOpen()
   EnsureRequestContextID();
   openArgs.requestContextID() = mRequestContextID;
 
-  char chid[NSID_LENGTH];
-  mChannelId.ToProvidedString(chid);
-  openArgs.channelId().AssignASCII(chid);
+  openArgs.channelId() = mChannelId;
 
   openArgs.contentWindowId() = contentWindowId;
   openArgs.topLevelOuterContentWindowId() = mTopLevelOuterContentWindowId;
