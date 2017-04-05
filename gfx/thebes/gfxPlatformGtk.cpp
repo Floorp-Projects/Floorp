@@ -73,12 +73,14 @@ static cairo_user_data_key_t cairo_gdk_drawable_key;
 
 gfxPlatformGtk::gfxPlatformGtk()
 {
-    gtk_init(nullptr, nullptr);
+    if (!gfxPlatform::IsHeadless()) {
+        gtk_init(nullptr, nullptr);
+    }
 
     mMaxGenericSubstitutions = UNINITIALIZED_VALUE;
 
 #ifdef MOZ_X11
-    if (XRE_IsParentProcess()) {
+    if (!gfxPlatform::IsHeadless() && XRE_IsParentProcess()) {
       if (GDK_IS_X11_DISPLAY(gdk_display_get_default()) &&
           mozilla::Preferences::GetBool("gfx.xrender.enabled"))
       {
@@ -97,7 +99,7 @@ gfxPlatformGtk::gfxPlatformGtk()
                      contentMask, BackendType::CAIRO);
 
 #ifdef MOZ_X11
-    if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+    if (gfxPlatform::IsHeadless() && GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
       mCompositorDisplay = XOpenDisplay(nullptr);
       MOZ_ASSERT(mCompositorDisplay, "Failed to create compositor display!");
     } else {

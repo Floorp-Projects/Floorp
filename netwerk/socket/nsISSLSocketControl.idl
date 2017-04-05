@@ -62,10 +62,18 @@ interface nsISSLSocketControl : nsISupports {
 
     /* Determine if a potential SSL connection to hostname:port with
      * a desired NPN negotiated protocol of npnProtocol can use the socket
-     * associated with this object instead of making a new one.
+     * associated with this object instead of making a new one. And if so, combine
+     * them.
      */
     boolean joinConnection(
-      in ACString npnProtocol, /* e.g. "spdy/2" */
+      in ACString npnProtocol, /* e.g. "h2" */
+      in ACString hostname,
+      in long port);
+
+    /* just like JoinConnection() except do not mark a successful test as joined.
+     */
+    boolean testJoinConnection(
+      in ACString npnProtocol, /* e.g. "h2" */
       in ACString hostname,
       in long port);
 

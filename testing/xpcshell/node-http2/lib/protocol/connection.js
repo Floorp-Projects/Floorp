@@ -123,7 +123,7 @@ Connection.prototype._initializeStreamManagement = function _initializeStreamMan
 Connection.prototype._writeControlFrame = function _writeControlFrame(frame) {
   if ((frame.type === 'SETTINGS') || (frame.type === 'PING') ||
       (frame.type === 'GOAWAY') || (frame.type === 'WINDOW_UPDATE') ||
-      (frame.type === 'ALTSVC')) {
+      (frame.type === 'ALTSVC') || (frame.type == 'ORIGIN')) {
     this._log.debug({ frame: frame }, 'Receiving connection level frame');
     this.emit(frame.type, frame);
   } else {
@@ -555,6 +555,17 @@ Connection.prototype._receivePing = function _receivePing(frame) {
       data: frame.data
     });
   }
+};
+
+Connection.prototype.originFrame = function originFrame(originList) {
+  this._log.debug(originList, 'emitting origin frame');
+
+  this.push({
+    type: 'ORIGIN',
+    flags: {},
+    stream: 0,
+    originList : originList,
+  });
 };
 
 // Terminating the connection
