@@ -9,24 +9,12 @@
     list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#general-native");
   }
 
-  #category-search > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#search-native");
-  }
-
-  #category-content > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#content-native");
-  }
-
   #category-application > .category-icon {
     list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#applications-native");
   }
 
   #category-privacy > .category-icon {
     list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#privacy-native");
-  }
-
-  #category-security > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#security-native");
   }
 
   #category-sync > .category-icon {
