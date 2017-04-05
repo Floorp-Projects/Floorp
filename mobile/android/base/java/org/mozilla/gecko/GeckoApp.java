@@ -1780,11 +1780,11 @@ public abstract class GeckoApp
             public void run() {
                 if (TabQueueHelper.TAB_QUEUE_ENABLED && TabQueueHelper.shouldOpenTabQueueUrls(GeckoApp.this)) {
 
-                    getAppEventDispatcher().registerGeckoThreadListener(new BundleEventListener() {
+                    getAppEventDispatcher().registerUiThreadListener(new BundleEventListener() {
                         @Override
                         public void handleMessage(String event, GeckoBundle message, EventCallback callback) {
                             if ("Tabs:TabsOpened".equals(event)) {
-                                getAppEventDispatcher().unregisterGeckoThreadListener(this, "Tabs:TabsOpened");
+                                getAppEventDispatcher().unregisterUiThreadListener(this, "Tabs:TabsOpened");
                                 openTabsRunnable.run();
                             }
                         }
