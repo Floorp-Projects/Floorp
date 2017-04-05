@@ -110,13 +110,10 @@ public final class TelemetryWrapper {
     }
 
     public static void stopMainActivity() {
-        final Telemetry telemetry = TelemetryHolder.get();
-
-        telemetry.queuePing(TelemetryCorePingBuilder.TYPE);
-        telemetry.queuePing(TelemetryEventPingBuilder.TYPE);
-
-        telemetry.scheduleUpload(TelemetryCorePingBuilder.TYPE);
-        telemetry.scheduleUpload(TelemetryEventPingBuilder.TYPE);
+        TelemetryHolder.get()
+                .queuePing(TelemetryCorePingBuilder.TYPE)
+                .queuePing(TelemetryEventPingBuilder.TYPE)
+                .scheduleUpload();
     }
 
     public static void urlBarEvent(boolean isUrl) {
