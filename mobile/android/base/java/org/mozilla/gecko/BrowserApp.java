@@ -1841,7 +1841,8 @@ public class BrowserApp extends GeckoApp
                 break;
 
             case "Menu:Update":
-                updateAddonMenuItem(message.getInt("id"), message.getBundle("options"));
+                updateAddonMenuItem(message.getInt("id") + ADDON_MENU_OFFSET,
+                                    message.getBundle("options"));
                 break;
 
             case "Menu:Add":
