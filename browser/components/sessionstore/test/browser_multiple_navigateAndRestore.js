@@ -26,7 +26,6 @@ add_task(function*() {
   is(entries[0].url, PAGE_2, "Should have PAGE_2 as the sole history entry");
   is(browser.currentURI.spec, PAGE_2, "Should have PAGE_2 as the browser currentURI");
 
-  /* eslint-env mozilla/frame-script */
   yield ContentTask.spawn(browser, PAGE_2, function*(expectedURL) {
     docShell.QueryInterface(Ci.nsIWebNavigation);
     Assert.equal(docShell.currentURI.spec, expectedURL,

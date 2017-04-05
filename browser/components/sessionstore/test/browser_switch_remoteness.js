@@ -1,6 +1,3 @@
-// This file spawns content tasks.
-/* eslint-env mozilla/frame-script */
-
 "use strict";
 
 const URL = "http://example.com/browser_switch_remoteness_";
