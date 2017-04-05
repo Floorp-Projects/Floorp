@@ -15,7 +15,6 @@ namespace gl {
 
 class GLContext;
 class GLLibraryEGL;
-class TextureGarbageBin;
 
 class SharedSurface_EGLImage
     : public SharedSurface
