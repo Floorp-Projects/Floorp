@@ -207,9 +207,9 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
     }
   }
 
-  bool useCache = aOptions.mUseCache.WasPassed() && aOptions.mUseCache.Value();
-  nsLoadFlags loadFlags = useCache ? nsIRequest::LOAD_NORMAL
-                                   : nsIRequest::VALIDATE_ALWAYS;
+  // This is a quick fix for temporarily turning off script loading setting when
+  // registering a service worker. This should be removed in Bug 1353636.
+  nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
 
   // The spec says that the "client" passed to Register() must be the global
   // where the ServiceWorkerContainer was retrieved from.
