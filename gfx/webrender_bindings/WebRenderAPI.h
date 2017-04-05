@@ -94,6 +94,9 @@ public:
   void RunOnRenderThread(UniquePtr<RendererEvent> aEvent);
   void Readback(gfx::IntSize aSize, uint8_t *aBuffer, uint32_t aBufferSize);
 
+  void Pause();
+  bool Resume();
+
   WrIdNamespace GetNamespace();
   GLint GetMaxTextureSize() const { return mMaxTextureSize; }
   bool GetUseANGLE() const { return mUseANGLE; }

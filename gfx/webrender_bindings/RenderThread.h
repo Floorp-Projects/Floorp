@@ -102,6 +102,9 @@ public:
   /// Can only be called from the render thread.
   void UpdateAndRender(wr::WindowId aWindowId);
 
+  void Pause(wr::WindowId aWindowId);
+  bool Resume(wr::WindowId aWindowId);
+
   void RegisterExternalImage(uint64_t aExternalImageId, RenderTextureHost* aTexture);
 
   void UnregisterExternalImage(uint64_t aExternalImageId);

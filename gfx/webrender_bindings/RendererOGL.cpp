@@ -136,6 +136,32 @@ RendererOGL::Render()
 }
 
 void
+RendererOGL::Pause()
+{
+#ifdef MOZ_WIDGET_ANDROID
+  if (!mGL || mGL->IsDestroyed()) {
+    return;
+  }
+  // ReleaseSurface internally calls MakeCurrent.
+  mGL->ReleaseSurface();
+#endif
+}
+
+bool
+RendererOGL::Resume()
+{
+#ifdef MOZ_WIDGET_ANDROID
+  if (!mGL || mGL->IsDestroyed()) {
+    return false;
+  }
+  // RenewSurface internally calls MakeCurrent.
+  return mGL->RenewSurface(mWidget);
+#else
+  return true;
+#endif
+}
+
+void
 RendererOGL::SetProfilerEnabled(bool aEnabled)
 {
   wr_renderer_set_profiler_enabled(mWrRenderer, aEnabled);

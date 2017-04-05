@@ -686,8 +686,11 @@ CompositorBridgeParent::PauseComposition()
   if (!mPaused) {
     mPaused = true;
 
-    mCompositor->Pause();
-
+    if (!gfxVars::UseWebRender()) {
+      mCompositor->Pause();
+    } else {
+      mWrBridge->Pause();
+    }
     TimeStamp now = TimeStamp::Now();
     DidComposite(now, now);
   }
@@ -704,7 +707,8 @@ CompositorBridgeParent::ResumeComposition()
 
   MonitorAutoLock lock(mResumeCompositionMonitor);
 
-  if (!mCompositor->Resume()) {
+  bool resumed = gfxVars::UseWebRender() ? mWrBridge->Resume() : mCompositor->Resume();
+  if (!resumed) {
 #ifdef MOZ_WIDGET_ANDROID
     // We can't get a surface. This could be because the activity changed between
     // the time resume was scheduled and now.
