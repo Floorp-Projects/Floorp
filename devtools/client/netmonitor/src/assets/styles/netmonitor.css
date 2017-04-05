@@ -702,7 +702,8 @@ body,
 .properties-view {
   display: flex;
   flex-direction: column;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .properties-view {
