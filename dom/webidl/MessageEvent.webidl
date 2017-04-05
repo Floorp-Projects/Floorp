@@ -43,10 +43,14 @@ interface MessageEvent : Event {
   [Pure, Cached, Frozen]
   readonly attribute sequence<MessagePort> ports;
 
-  void initMessageEvent(DOMString type, boolean bubbles, boolean cancelable,
-                        any data, DOMString origin, DOMString lastEventId,
-                        MessageEventSource? source,
-                        sequence<MessagePort> ports);
+  void initMessageEvent(DOMString type,
+                        optional boolean bubbles = false,
+                        optional boolean cancelable = false,
+                        optional any data = null,
+                        optional DOMString origin = "",
+                        optional DOMString lastEventId = "",
+                        optional MessageEventSource? source = null,
+                        optional sequence<MessagePort> ports = []);
 };
 
 dictionary MessageEventInit : EventInit {

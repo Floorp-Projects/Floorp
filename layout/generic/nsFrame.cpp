@@ -1702,7 +1702,7 @@ nsIFrame::GetVisibility() const
   }
 
   bool isSet = false;
-  FrameProperties props = Properties();
+  ConstFrameProperties props = Properties();
   uint32_t visibleCount = props.Get(VisibilityStateProperty(), &isSet);
 
   MOZ_ASSERT(isSet, "Should have a VisibilityStateProperty value "
@@ -9982,8 +9982,9 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
       parentReflowInput(aPresContext, parentFrame, aRenderingContext,
                         LogicalSize(parentWM, parentSize),
                         ReflowInput::DUMMY_PARENT_REFLOW_STATE);
-    parentFrame->RemoveStateBits(~nsFrameState(0));
-    parentFrame->AddStateBits(savedState);
+    const nsFrameState bitsToLeaveUntouched = NS_FRAME_HAS_PROPERTIES;
+    parentFrame->RemoveStateBits(~bitsToLeaveUntouched);
+    parentFrame->AddStateBits(savedState & ~bitsToLeaveUntouched);
 
     // This may not do very much useful, but it's probably worth trying.
     if (parentSize.width != NS_INTRINSICSIZE)
@@ -10543,7 +10544,7 @@ nsFrame::Trace(const char* aMethod, bool aEnter)
   if (NS_FRAME_LOG_TEST(sFrameLogModule, NS_FRAME_TRACE_CALLS)) {
     char tagbuf[40];
     GetTagName(this, mContent, sizeof(tagbuf), tagbuf);
-    PR_LogPrint("%s: %s %s", tagbuf, aEnter ? "enter" : "exit", aMethod);
+    printf_stderr("%s: %s %s", tagbuf, aEnter ? "enter" : "exit", aMethod);
   }
 }
 
@@ -10553,7 +10554,7 @@ nsFrame::Trace(const char* aMethod, bool aEnter, nsReflowStatus aStatus)
   if (NS_FRAME_LOG_TEST(sFrameLogModule, NS_FRAME_TRACE_CALLS)) {
     char tagbuf[40];
     GetTagName(this, mContent, sizeof(tagbuf), tagbuf);
-    PR_LogPrint("%s: %s %s, status=%scomplete%s",
+    printf_stderr("%s: %s %s, status=%scomplete%s",
                 tagbuf, aEnter ? "enter" : "exit", aMethod,
                 aStatus.IsIncomplete() ? "not" : "",
                 (aStatus.NextInFlowNeedsReflow()) ? "+reflow" : "");
@@ -10573,7 +10574,7 @@ nsFrame::TraceMsg(const char* aFormatString, ...)
 
     char tagbuf[40];
     GetTagName(this, mContent, sizeof(tagbuf), tagbuf);
-    PR_LogPrint("%s: %s", tagbuf, argbuf);
+    printf_stderr("%s: %s", tagbuf, argbuf);
   }
 }
 

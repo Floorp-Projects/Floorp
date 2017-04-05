@@ -51,9 +51,9 @@
 #include "nsComponentManagerUtils.h"
 #include "nsSocketTransportService2.h"
 #include "nsIOService.h"
-#include "nsIUUIDGenerator.h"
 #include "nsIThrottlingService.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIXULRuntime.h"
 
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/NeckoParent.h"
@@ -215,6 +215,7 @@ nsHttpHandler::nsHttpHandler()
     , mAllowPush(true)
     , mEnableAltSvc(false)
     , mEnableAltSvcOE(false)
+    , mEnableOriginExtension(false)
     , mSpdySendingChunkSize(ASpdySession::kSendingChunkSize)
     , mSpdySendBufferSize(ASpdySession::kTCPSendBufferSize)
     , mSpdyPushAllowance(32768)
@@ -239,11 +240,17 @@ nsHttpHandler::nsHttpHandler()
     , mDefaultHpackBuffer(4096)
     , mMaxHttpResponseHeaderSize(393216)
     , mFocusedWindowTransactionRatio(0.9f)
+    , mProcessId(0)
+    , mNextChannelId(1)
 {
     LOG(("Creating nsHttpHandler [this=%p].\n", this));
 
     MOZ_ASSERT(!gHttpHandler, "HTTP handler already created!");
     gHttpHandler = this;
+    nsCOMPtr<nsIXULRuntime> runtime = do_GetService("@mozilla.org/xre/runtime;1");
+    if (runtime) {
+        runtime->GetProcessID(&mProcessId);
+    }
 }
 
 nsHttpHandler::~nsHttpHandler()
@@ -1375,6 +1382,13 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             mEnableAltSvcOE = cVar;
     }
 
+    if (PREF_CHANGED(HTTP_PREF("originextension"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("originextension"),
+                                &cVar);
+        if (NS_SUCCEEDED(rv))
+            mEnableOriginExtension = cVar;
+    }
+
     if (PREF_CHANGED(HTTP_PREF("spdy.push-allowance"))) {
         rv = prefs->GetIntPref(HTTP_PREF("spdy.push-allowance"), &val);
         if (NS_SUCCEEDED(rv)) {
@@ -1968,8 +1982,8 @@ nsHttpHandler::NewProxiedChannel2(nsIURI *uri,
         net_EnsurePSMInit();
     }
 
-    nsID channelId;
-    rv = NewChannelId(&channelId);
+    uint64_t channelId;
+    rv = NewChannelId(channelId);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = httpChannel->Init(uri, caps, proxyInfo, proxyResolveFlags, proxyURI, channelId);
@@ -2463,16 +2477,11 @@ nsHttpHandler::ShutdownConnectionManager()
 }
 
 nsresult
-nsHttpHandler::NewChannelId(nsID *channelId)
+nsHttpHandler::NewChannelId(uint64_t& channelId)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mUUIDGen) {
-    nsresult rv;
-    mUUIDGen = do_GetService("@mozilla.org/uuid-generator;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return mUUIDGen->GenerateUUIDInPlace(channelId);
+  channelId = ((static_cast<uint64_t>(mProcessId) << 32) & 0xFFFFFFFF00000000LL) | mNextChannelId++;
+  return NS_OK;
 }
 
 } // namespace net

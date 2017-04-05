@@ -1069,25 +1069,23 @@ Deserializer.ALTSVC = function readAltSvc(buffer, frame) {
   }
 };
 
-// BLOCKED
-// ------------------------------------------------------------
-//
-// The BLOCKED frame (type=0xB) indicates that the sender is unable to send data
-// due to a closed flow control window.
-//
-// The BLOCKED frame does not define any flags and contains no payload.
+frameTypes[0xB] = 'ORIGIN';
+frameFlags.ORIGIN = [];
+typeSpecificAttributes.ORIGIN = ['originList'];
 
-frameTypes[0xB] = 'BLOCKED';
-
-frameFlags.BLOCKED = [];
-
-typeSpecificAttributes.BLOCKED = [];
-
-Serializer.BLOCKED = function writeBlocked(frame, buffers) {
+Serializer.ORIGIN = function writeOrigin(frame, buffers) {
+  for (var i = 0; i < frame.originList.length; i++) {
+    var buffer = new Buffer(2);
+    buffer.writeUInt16BE(frame.originList[i].length, 0);
+    buffers.push(buffer);
+    buffers.push(new Buffer(frame.originList[i], 'ascii'));
+  }
 };
 
-Deserializer.BLOCKED = function readBlocked(buffer, frame) {
+Deserializer.ORIGIN = function readOrigin(buffer, frame) {
+    // ignored
 };
+
 
 // [Error Codes](https://tools.ietf.org/html/rfc7540#section-7)
 // ------------------------------------------------------------

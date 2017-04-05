@@ -200,15 +200,13 @@ SpecialPowers.pushPrefEnv({
     [PREF_APP_UPDATE_TIMERMINIMUMDELAY, 0]
   ]
 }, function () {
-  chromeScript.sendSyncMessage("UAO-uninit");
-
   // Sets the OVERRIDES var in the chrome script.
   // We do this to avoid code duplication.
   chromeScript.sendSyncMessage("set-overrides", OVERRIDES);
 
   // testProfileLoad, testDownload, and testProfileSave must run in this order
-  //  because testDownload depends on testProfileLoad to call UAO.init()
-  //  and testProfileSave depends on testDownload to save overrides to the profile
+  // because testDownload depends on testProfileLoad and testProfileSave depends
+  // on testDownload to save overrides to the profile
   chromeScript.sendAsyncMessage("testProfileLoad", location.hostname);
 });
 
@@ -218,12 +216,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
   Components.classes["@mozilla.org/updates/timer-manager;1"].getService(
     Components.interfaces.nsIObserver).observe(null, "utm-test-init", "");
 
-  Components.utils.import("resource://gre/modules/UserAgentOverrides.jsm");
-
   var _notifyOnUpdate = false;
-
-  var UAO = UserAgentOverrides;
-  UAO.uninit();
 
   Components.utils.import("resource://gre/modules/FileUtils.jsm");
   var FU = FileUtils;
@@ -318,8 +311,6 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
   addMessageListener("testProfileSave", testProfileSave);
   addMessageListener("testProfileLoad", testProfileLoad);
   addMessageListener("set-overrides", function(overrides) { OVERRIDES = overrides});
-  addMessageListener("UAO-init", function() { UAO.init(); });
-  addMessageListener("UAO-uninit", function() { UAO.uninit(); });
   addMessageListener("notify-on-update", () => { _notifyOnUpdate = true });
 });
 
@@ -328,9 +319,6 @@ chromeScript.addMessageListener("testProfileLoadDone", function() {
   SpecialPowers.pushPrefEnv({
     set: [[PREF_UPDATES_ENABLED, true]]
   }, function () {
-    // initialize UserAgentOverrides.jsm and
-    // UserAgentUpdates.jsm and load saved file
-    chromeScript.sendSyncMessage("UAO-init");
     (function waitForLoad() {
       var ifr = document.createElement('IFRAME');
       ifr.src = location.origin;
