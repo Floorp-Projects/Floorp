@@ -696,8 +696,8 @@ set_config('SERVO_TARGET_DIR', servo_target_dir)
 option('--enable-webrender', nargs='?', choices=('build',),
        help='Include WebRender in the build and/or enable it at runtime')
 
-@depends('--enable-webrender', milestone, target)
-def webrender(value, milestone, target):
+@depends('--enable-webrender', milestone)
+def webrender(value, milestone):
     build_webrender = None
     enable_webrender = None
 
