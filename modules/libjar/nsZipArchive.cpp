@@ -10,11 +10,6 @@
  * or pointers to it across thread boundaries.
  */
 
-// This must be the first include in the file in order for the
-// PL_ARENA_CONST_ALIGN_MASK macro to be effective.
-#define PL_ARENA_CONST_ALIGN_MASK  (sizeof(void*)-1)
-#include "plarena.h"
-
 #define READTYPE  int32_t
 #include "zlib.h"
 #include "nsISupportsUtils.h"
@@ -356,9 +351,6 @@ nsresult nsZipArchive::OpenArchive(nsZipHandle *aZipHandle, PRFileDesc *aFd)
 {
   mFd = aZipHandle;
 
-  // Initialize our arena
-  PL_INIT_ARENA_POOL(&mArena, "ZipArena", ZIP_ARENABLOCKSIZE);
-
   //-- get table of contents for archive
   nsresult rv = BuildFileList(aFd);
   if (NS_SUCCEEDED(rv)) {
@@ -427,7 +419,7 @@ nsresult nsZipArchive::Test(const char *aEntryName)
 nsresult nsZipArchive::CloseArchive()
 {
   if (mFd) {
-    PL_FinishArenaPool(&mArena);
+    mArena.Clear();
     mFd = nullptr;
   }
 
@@ -667,9 +659,7 @@ static nsresult ResolveSymlink(const char *path)
 nsZipItem* nsZipArchive::CreateZipItem()
 {
   // Arena allocate the nsZipItem
-  void *mem;
-  PL_ARENA_ALLOCATE(mem, &mArena, sizeof(nsZipItem));
-  return (nsZipItem*)mem;
+  return (nsZipItem*)mArena.Allocate(sizeof(nsZipItem));
 }
 
 //---------------------------------------------
