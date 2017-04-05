@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use std::sync::Arc;
+use DeviceUintRect;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -69,12 +70,24 @@ impl ImageDescriptor {
     }
 }
 
+#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, Serialize, Deserialize)]
+pub enum ExternalImageType {
+    Texture2DHandle,    // gl TEXTURE_2D handle
+    TextureRectHandle,  // gl TEXTURE_RECT handle
+    ExternalBuffer,
+}
+
+#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, Serialize, Deserialize)]
+pub struct ExternalImageData {
+    pub id: ExternalImageId,
+    pub image_type: ExternalImageType,
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 pub enum ImageData {
     Raw(Arc<Vec<u8>>),
     Blob(Arc<BlobImageData>),
-    ExternalHandle(ExternalImageId),
-    ExternalBuffer(ExternalImageId),
+    External(ExternalImageData),
 }
 
 impl ImageData {
@@ -99,7 +112,8 @@ pub trait BlobImageRenderer: Send {
     fn request_blob_image(&mut self,
                             key: ImageKey,
                             data: Arc<BlobImageData>,
-                            descriptor: &BlobImageDescriptor);
+                            descriptor: &BlobImageDescriptor,
+                            dirty_rect: Option<DeviceUintRect>);
     fn resolve_blob_image(&mut self, key: ImageKey) -> BlobImageResult;
 }
 

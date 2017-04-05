@@ -33,9 +33,15 @@
 //======================================================================================
 // Shared shader uniforms
 //======================================================================================
+#ifndef WR_FEATURE_TEXTURE_RECT
 uniform sampler2D sColor0;
 uniform sampler2D sColor1;
 uniform sampler2D sColor2;
+#else
+uniform sampler2DRect sColor0;
+uniform sampler2DRect sColor1;
+uniform sampler2DRect sColor2;
+#endif
 uniform sampler2D sDither;
 uniform sampler2D sMask;
 

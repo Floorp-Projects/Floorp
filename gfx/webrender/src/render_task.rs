@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use internal_types::{HardwareCompositeOp, LowLevelFilterOp};
-use mask_cache::MaskCacheInfo;
+use mask_cache::{MaskBounds, MaskCacheInfo};
 use prim_store::{PrimitiveCacheKey, PrimitiveIndex};
 use std::{cmp, f32, i32, mem, usize};
 use tiling::{ClipScrollGroupIndex, PackedLayerIndex, RenderPass, RenderTargetIndex};
@@ -192,19 +192,44 @@ impl RenderTask {
         // We scan through the clip stack and detect if our actual rectangle
         // is in the intersection of all of all the outer bounds,
         // and if it's completely inside the intersection of all of the inner bounds.
-        let result = clips.iter()
-                          .fold(Some(actual_rect), |current, clip| {
-            current.and_then(|rect| rect.intersection(&clip.1.outer_rect))
-        });
+
+        // TODO(gw): If we encounter a clip with unknown bounds, we'll just use
+        // the original rect. This is overly conservative, but can
+        // be optimized later.
+        let mut result = Some(actual_rect);
+        for &(_, ref clip) in clips {
+            match clip.bounds.as_ref().unwrap() {
+                &MaskBounds::OuterInner(ref outer, _) |
+                &MaskBounds::Outer(ref outer) => {
+                    result = result.and_then(|rect| {
+                        rect.intersection(&outer.bounding_rect)
+                    });
+                }
+                &MaskBounds::None => {
+                    result = Some(actual_rect);
+                    break;
+                }
+            }
+        }
 
         let task_rect = match result {
             None => return MaskResult::Outside,
             Some(rect) => rect,
         };
 
+        // Accumulate inner rects. As soon as we encounter
+        // a clip mask where we don't have or don't know
+        // the inner rect, this will become None.
         let inner_rect = clips.iter()
                               .fold(Some(task_rect), |current, clip| {
-            current.and_then(|rect| rect.intersection(&clip.1.inner_rect))
+            current.and_then(|rect| {
+                let inner_rect = match clip.1.bounds.as_ref().unwrap() {
+                    &MaskBounds::Outer(..) |
+                    &MaskBounds::None => DeviceIntRect::zero(),
+                    &MaskBounds::OuterInner(_, ref inner) => inner.bounding_rect
+                };
+                rect.intersection(&inner_rect)
+            })
         });
 
         // TODO(gw): This optimization is very conservative for now.

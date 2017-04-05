@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use bincode::{SizeLimit, serialize};
+use bincode::{Infinite, serialize};
 use std::fmt::Debug;
 use std::mem;
 use std::any::TypeId;
@@ -50,7 +50,7 @@ impl BinaryRecorder {
 impl ApiRecordingReceiver for BinaryRecorder {
     fn write_msg(&mut self, _: u32, msg: &ApiMsg) {
         if should_record_msg(msg) {
-            let buf = serialize(msg, SizeLimit::Infinite).unwrap();
+            let buf = serialize(msg, Infinite).unwrap();
             self.write_length_and_data(&buf);
         }
     }
@@ -71,7 +71,7 @@ pub fn should_record_msg(msg: &ApiMsg) -> bool {
         &ApiMsg::GenerateFrame(..) |
         &ApiMsg::UpdateImage(..) |
         &ApiMsg::DeleteImage(..) |
-        &ApiMsg::SetRootDisplayList(..) |
+        &ApiMsg::SetDisplayList(..) |
         &ApiMsg::SetRootPipeline(..) |
         &ApiMsg::Scroll(..) |
         &ApiMsg::TickScrollingBounce |

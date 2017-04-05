@@ -8,3 +8,4 @@ varying vec3 vPos;
 flat varying vec4 vLocalRect;
 flat varying vec4 vClipRect;
 flat varying vec4 vClipRadius;
+flat varying float vClipMode;

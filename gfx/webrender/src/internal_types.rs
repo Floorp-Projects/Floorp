@@ -17,7 +17,7 @@ use tiling;
 use renderer::BlendMode;
 use webrender_traits::{Epoch, ColorF, PipelineId};
 use webrender_traits::{ImageFormat, NativeFontHandle};
-use webrender_traits::{ExternalImageId, ScrollLayerId};
+use webrender_traits::{ExternalImageData, ExternalImageId, ScrollLayerId};
 use webrender_traits::{ImageData};
 use webrender_traits::{DeviceUintRect};
 
@@ -43,7 +43,7 @@ pub struct CacheTextureId(pub usize);
 pub enum SourceTexture {
     Invalid,
     TextureCache(CacheTextureId),
-    External(ExternalImageId),
+    External(ExternalImageData),
     #[cfg_attr(not(feature = "webgl"), allow(dead_code))]
     /// This is actually a gl::GLuint, with the shared texture id between the
     /// main context and the WebGL context.
@@ -387,13 +387,13 @@ pub enum LowLevelFilterOp {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum HardwareCompositeOp {
-    Alpha,
+    PremultipliedAlpha,
 }
 
 impl HardwareCompositeOp {
     pub fn to_blend_mode(&self) -> BlendMode {
         match self {
-            &HardwareCompositeOp::Alpha => BlendMode::Alpha,
+            &HardwareCompositeOp::PremultipliedAlpha => BlendMode::PremultipliedAlpha,
         }
     }
 }

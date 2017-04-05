@@ -3,19 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "RenderTextureHost.h"
+#include "RenderTextureHostOGL.h"
 
 namespace mozilla {
 namespace wr {
 
-RenderTextureHost::RenderTextureHost()
+RenderTextureHostOGL::RenderTextureHostOGL()
 {
-  MOZ_COUNT_CTOR(RenderTextureHost);
+  MOZ_COUNT_CTOR_INHERITED(RenderTextureHostOGL, RenderTextureHost);
 }
 
-RenderTextureHost::~RenderTextureHost()
+RenderTextureHostOGL::~RenderTextureHostOGL()
 {
-  MOZ_COUNT_DTOR(RenderTextureHost);
+  MOZ_COUNT_DTOR_INHERITED(RenderTextureHostOGL, RenderTextureHost);
 }
 
 } // namespace wr

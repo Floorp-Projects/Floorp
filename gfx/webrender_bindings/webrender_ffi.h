@@ -413,15 +413,14 @@ struct WrExternalImage
 {
   WrExternalImageIdType type;
 
-  // Texture coordinate
+  // external texture handle
+  uint32_t handle;
+  // external texture coordinate
   float u0, v0;
   float u1, v1;
 
-  // external buffer handle
-  uint32_t handle;
-
-  // handle RawData.
-  uint8_t* buff;
+  // external image buffer
+  const uint8_t* buff;
   size_t size;
 };
 
@@ -493,7 +492,7 @@ WR_FUNC;
 
 // It is the responsibility of the caller to manage the dst_buffer memory
 // and also free it at the proper time.
-WR_INLINE const uint8_t*
+WR_INLINE void
 wr_renderer_readback(WrRenderer* renderer,
                      uint32_t width, uint32_t height,
                      uint8_t* dst_buffer, size_t buffer_length)
@@ -546,8 +545,9 @@ wr_api_add_blob_image(WrAPI* api, WrImageKey key, const WrImageDescriptor* descr
 WR_FUNC;
 
 WR_INLINE void
-wr_api_add_external_image_handle(WrAPI* api, WrImageKey key, uint32_t width, uint32_t height,
-                                 WrImageFormat format, uint64_t external_image_id)
+wr_api_add_external_image_handle(WrAPI* api, WrImageKey key,
+                                 const WrImageDescriptor* descriptor,
+                                 uint64_t external_image_id)
 WR_FUNC;
 
 WR_INLINE void
@@ -693,8 +693,7 @@ WR_FUNC;
 
 WR_INLINE void
 wr_dp_push_radial_gradient(WrState* wrState, WrRect bounds, WrClipRegion clip,
-                           WrPoint startCenter, WrPoint endCenter,
-                           float startRadius, float endRadius,
+                           WrPoint center, WrSize radius,
                            const WrGradientStop* stops, size_t stopsCount,
                            WrGradientExtendMode extendMode)
 WR_FUNC;

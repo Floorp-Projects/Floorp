@@ -16,3 +16,9 @@
 ** Moved serde functions into global module
  Since serde is the only supported serialization mechanism, it makes sense to have these
  functions available at the top level.
+
+** Added the ability to chose your own endian encoding.
+ This functionality is located in the endian_choice module.
+
+** Changed SizeLimit to be a trait instead of an enum
+ Mostly for performance reasons.

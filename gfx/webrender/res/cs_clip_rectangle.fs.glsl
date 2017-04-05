@@ -40,5 +40,10 @@ void main(void) {
 
     float clip_alpha = rounded_rect(local_pos);
 
-    oFragColor = vec4(min(alpha, clip_alpha), 0.0, 0.0, 1.0);
+    float combined_alpha = min(alpha, clip_alpha);
+
+    // Select alpha or inverse alpha depending on clip in/out.
+    float final_alpha = mix(combined_alpha, 1.0 - combined_alpha, vClipMode);
+
+    oFragColor = vec4(final_alpha, 0.0, 0.0, 1.0);
 }

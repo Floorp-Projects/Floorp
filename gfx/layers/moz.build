@@ -391,7 +391,8 @@ UNIFIED_SOURCES += [
     'wr/WebRenderLayersLogging.cpp',
     'wr/WebRenderPaintedLayer.cpp',
     'wr/WebRenderTextLayer.cpp',
-    'wr/WebRenderTextureHost.cpp',
+    # XXX here are some unified build error.
+    #'wr/WebRenderTextureHost.cpp'
 ]
 
 SOURCES += [
@@ -400,6 +401,7 @@ SOURCES += [
     'Layers.cpp',
     'LayerTreeInvalidation.cpp',
     'PersistentBufferProvider.cpp',
+    'wr/WebRenderTextureHost.cpp',
 ]
 
 # Disable RTTI in google protocol buffer
