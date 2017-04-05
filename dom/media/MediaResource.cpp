@@ -425,34 +425,41 @@ ChannelMediaResource::OnChannelRedirect(nsIChannel* aOld, nsIChannel* aNew,
   return SetupChannelHeaders();
 }
 
+nsresult
+ChannelMediaResource::CopySegmentToCache(nsIPrincipal* aPrincipal,
+                                         const char* aFromSegment,
+                                         uint32_t aCount,
+                                         uint32_t* aWriteCount)
+{
+  mCallback->NotifyDataArrived();
+
+  // Keep track of where we're up to.
+  CMLOG("CopySegmentToCache at mOffset [%" PRId64 "] add "
+        "[%d] bytes for decoder[%p]",
+        mOffset, aCount, mCallback.get());
+  mOffset += aCount;
+  mCacheStream.NotifyDataReceived(aCount, aFromSegment, aPrincipal);
+  *aWriteCount = aCount;
+  return NS_OK;
+}
+
+
 struct CopySegmentClosure {
   nsCOMPtr<nsIPrincipal> mPrincipal;
   ChannelMediaResource*  mResource;
 };
 
 nsresult
-ChannelMediaResource::CopySegmentToCache(nsIInputStream *aInStream,
-                                         void *aClosure,
-                                         const char *aFromSegment,
+ChannelMediaResource::CopySegmentToCache(nsIInputStream* aInStream,
+                                         void* aClosure,
+                                         const char* aFromSegment,
                                          uint32_t aToOffset,
                                          uint32_t aCount,
-                                         uint32_t *aWriteCount)
+                                         uint32_t* aWriteCount)
 {
   CopySegmentClosure* closure = static_cast<CopySegmentClosure*>(aClosure);
-
-  closure->mResource->mCallback->NotifyDataArrived();
-
-  // Keep track of where we're up to.
-  RESOURCE_LOG("%p [ChannelMediaResource]: CopySegmentToCache at mOffset [%" PRId64 "] add "
-               "[%d] bytes for decoder[%p]",
-               closure->mResource, closure->mResource->mOffset, aCount,
-               closure->mResource->mCallback.get());
-  closure->mResource->mOffset += aCount;
-
-  closure->mResource->mCacheStream.NotifyDataReceived(aCount, aFromSegment,
-                                                      closure->mPrincipal);
-  *aWriteCount = aCount;
-  return NS_OK;
+  return closure->mResource->CopySegmentToCache(
+    closure->mPrincipal, aFromSegment, aCount, aWriteCount);
 }
 
 nsresult
