@@ -5916,6 +5916,16 @@
     "bug_numbers": [775825],
     "description": "Firefox: The type of the selected result in the URL bar popup. See BrowserUsageTelemetry.jsm:URLBAR_SELECTED_RESULT_TYPES for the result types."
   },
+  "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE": {
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 14,
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1345834],
+    "description": "Firefox: The index of the selected result in the URL bar popup by the type of the selected result in the URL bar popup. See BrowserUsageTelemetry.jsm:URLBAR_SELECTED_RESULT_TYPES for the result types."
+  },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "expires_in_version": "never",
     "kind": "boolean",
