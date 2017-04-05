@@ -1030,6 +1030,7 @@ _PREPROCESSED_$1_FILES := $$(call _group_srcs,$1,$$($2))
 # Hack up VPATH so we can reach the sources. Eg: 'make Parser.i' may need to
 # reach $(srcdir)/frontend/Parser.i
 vpath %.$1 $$(addprefix $$(srcdir)/,$$(sort $$(dir $$($2))))
+vpath %.$1 $$(addprefix $$(CURDIR)/,$$(sort $$(dir $$($2))))
 
 $$(_PREPROCESSED_$1_FILES): _DEPEND_CFLAGS=
 $$(_PREPROCESSED_$1_FILES): %.i: %.$1
