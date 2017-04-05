@@ -225,6 +225,10 @@ static const DllBlockInfo sWindowsDllBlocklist[] = {
   // K7TotalSecurity, bug 1339083.
   { "k7pswsen.dll", MAKE_VERSION(15, 2, 2, 95) },
 
+  // Crashes with Internet Download Manager, bug 1333486
+  { "idmcchandler7.dll", ALL_VERSIONS },
+  { "idmcchandler7_64.dll", ALL_VERSIONS },
+
   { nullptr, 0 }
 };
 
