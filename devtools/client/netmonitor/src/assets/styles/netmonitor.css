@@ -151,7 +151,7 @@ body,
 }
 
 .requests-list-perf-notice-button::before {
-  background-image: url(images/profiler-stopwatch.svg);
+  background-image: url(chrome://devtools/skin/images/profiler-stopwatch.svg);
 }
 
 .requests-list-reload-notice-button {
@@ -702,7 +702,8 @@ body,
 .properties-view {
   display: flex;
   flex-direction: column;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .properties-view {
@@ -1018,7 +1019,7 @@ body,
 }
 
 .security-warning-icon {
-  background-image: url(images/alerticon-warning.png);
+  background-image: url(chrome://devtools/skin/images/alerticon-warning.png);
   background-size: 13px 12px;
   margin-inline-start: 5px;
   vertical-align: top;
@@ -1028,7 +1029,7 @@ body,
 
 @media (min-resolution: 1.1dppx) {
   .security-warning-icon {
-    background-image: url(images/alerticon-warning@2x.png);
+    background-image: url(chrome://devtools/skin/images/alerticon-warning@2x.png);
   }
 }
 
@@ -1097,7 +1098,7 @@ body,
 }
 
 .requests-list-network-summary-button > .summary-info-icon {
-  background-image: url(images/profiler-stopwatch.svg);
+  background-image: url(chrome://devtools/skin/images/profiler-stopwatch.svg);
   filter: var(--icon-filter);
   width: 16px;
   height: 16px;

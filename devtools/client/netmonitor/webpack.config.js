@@ -8,7 +8,6 @@
 "use strict";
 
 const path = require("path");
-const { isDevelopment } = require("devtools-config");
 const { NormalModuleReplacementPlugin } = require("webpack");
 const { toolboxConfig } = require("./node_modules/devtools-launchpad/index");
 const { getConfig } = require("./bin/configure");
@@ -33,7 +32,7 @@ let webpackConfig = {
     loaders: [
       {
         test: /\.(png|svg)$/,
-        loader: "file-loader?name=[name].[ext]",
+        loader: "file-loader?name=[path][name].[ext]",
       },
     ]
   },
@@ -57,6 +56,7 @@ let webpackConfig = {
       "devtools/client/shared/components/reps/reps": "devtools-reps",
       "devtools/client/shared/components/search-box": "devtools-modules",
       "devtools/client/shared/components/splitter/split-box": "devtools-modules",
+      "devtools/client/shared/components/stack-trace": "devtools-modules",
       "devtools/client/shared/components/tabs/tabbar": "devtools-modules",
       "devtools/client/shared/components/tabs/tabs": "devtools-modules",
       "devtools/client/shared/components/tree/tree-view": "devtools-modules",
@@ -85,23 +85,31 @@ let webpackConfig = {
       "toolkit/locales": path.join(__dirname, "../../../toolkit/locales/en-US"),
       "Services": "devtools-modules",
     },
-  }
+  },
 };
 
-if (!isDevelopment()) {
-  webpackConfig.output.libraryTarget = "umd";
-  webpackConfig.plugins = [];
+const mappings = [
+  [
+    /chrome:\/\/devtools\/skin/,
+    (result) => {
+      result.request = result.request
+        .replace("./chrome://devtools/skin", path.join(__dirname, "../themes"));
+    }
+  ],
+  [
+    /resource:\/\/devtools/,
+    (result) => {
+      result.request = result.request
+        .replace("./resource://devtools/client", path.join(__dirname, ".."));
+    }
+  ],
+  [/\.\/mocha/, "./mochitest"],
+  [/\.\.\/utils\/mocha/, "../utils/mochitest"],
+  [/\.\/utils\/mocha/, "./utils/mochitest"],
+];
 
-  const mappings = [
-    [/\.\/mocha/, "./mochitest"],
-    [/\.\.\/utils\/mocha/, "../utils/mochitest"],
-    [/\.\/utils\/mocha/, "./utils/mochitest"],
-  ];
-
-  mappings.forEach(([regex, res]) => {
-    webpackConfig.plugins.push(new NormalModuleReplacementPlugin(regex, res));
-  });
-}
+webpackConfig.plugins = mappings.map(([regex, res]) =>
+  new NormalModuleReplacementPlugin(regex, res));
 
 let config = toolboxConfig(webpackConfig, getConfig());
 

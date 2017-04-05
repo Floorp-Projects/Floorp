@@ -6,18 +6,7 @@ use std::sync::Arc;
 use std::collections::HashMap;
 use gleam::gl;
 
-use webrender_traits::{AuxiliaryLists, AuxiliaryListsDescriptor, BorderDetails, BorderRadius};
-use webrender_traits::{BorderSide, BorderStyle, BorderWidths, BoxShadowClipMode, BuiltDisplayList};
-use webrender_traits::{BuiltDisplayListDescriptor, ClipRegion, ColorF, ComplexClipRegion};
-use webrender_traits::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, Epoch, ExtendMode};
-use webrender_traits::{ExternalEvent, ExternalImageId, FilterOp, FontKey, GlyphInstance};
-use webrender_traits::{GradientStop, IdNamespace, ImageBorder, ImageData, ImageDescriptor};
-use webrender_traits::{ImageFormat, ImageKey, ImageMask, ImageRendering, ItemRange, LayerPixel};
-use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform, MixBlendMode};
-use webrender_traits::{BlobImageData, BlobImageRenderer, BlobImageResult, BlobImageError};
-use webrender_traits::{BlobImageDescriptor, RasterizedBlobImage};
-use webrender_traits::{NinePatchDescriptor, NormalBorder, PipelineId, PropertyBinding, RenderApi};
-use webrender_traits::RepeatMode;
+use webrender_traits::*;
 use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
@@ -106,7 +95,7 @@ impl MutByteSlice {
     }
 }
 
-#[repr(C)]
+#[repr(u32)]
 pub enum WrGradientExtendMode {
     Clamp,
     Repeat,
@@ -317,7 +306,7 @@ impl<T: Copy> WrSideOffsets2D<T>
     }
 }
 
-#[repr(C)]
+#[repr(u32)]
 pub enum WrRepeatMode
 {
     Stretch,
@@ -445,16 +434,15 @@ enum WrExternalImageType {
 struct WrExternalImageStruct {
     image_type: WrExternalImageType,
 
-    // Texture coordinate
+    // external texture handle
+    handle: u32,
+    // external texture coordinate
     u0: f32,
     v0: f32,
     u1: f32,
     v1: f32,
 
-    // external buffer handle
-    handle: u32,
-
-    // handle RawData.
+    // external image buffer
     buff: *const u8,
     size: usize,
 }
@@ -628,8 +616,8 @@ impl webrender_traits::RenderNotifier for CppNotifier {
 }
 
 #[no_mangle]
-pub extern fn wr_renderer_set_external_image_handler(renderer: &mut Renderer,
-                                                     external_image_handler: *mut WrExternalImageHandler) {
+pub extern "C" fn wr_renderer_set_external_image_handler(renderer: &mut Renderer,
+                                                         external_image_handler: *mut WrExternalImageHandler) {
     if !external_image_handler.is_null() {
         renderer.set_external_image_handler(Box::new(
             unsafe {
@@ -816,21 +804,15 @@ pub extern "C" fn wr_api_add_blob_image(api: &mut RenderApi,
 #[no_mangle]
 pub extern "C" fn wr_api_add_external_image_handle(api: &mut RenderApi,
                                                    image_key: ImageKey,
-                                                   width: u32,
-                                                   height: u32,
-                                                   format: ImageFormat,
+                                                   descriptor: &WrImageDescriptor,
                                                    external_image_id: u64) {
     assert!(unsafe { is_in_compositor_thread() });
     api.add_image(image_key,
-                  ImageDescriptor {
-                      width: width,
-                      height: height,
-                      stride: None,
-                      format: format,
-                      is_opaque: false,
-                      offset: 0,
-                  },
-                  ImageData::ExternalHandle(ExternalImageId(external_image_id)),
+                  descriptor.to_descriptor(),
+                  ImageData::External(ExternalImageData {
+                      id: ExternalImageId(external_image_id),
+                      image_type: ExternalImageType::Texture2DHandle
+                  }),
                   None);
 }
 
@@ -842,7 +824,10 @@ pub extern "C" fn wr_api_add_external_image_buffer(api: &mut RenderApi,
     assert!(unsafe { is_in_compositor_thread() });
     api.add_image(image_key,
                   descriptor.to_descriptor(),
-                  ImageData::ExternalBuffer(ExternalImageId(external_image_id)),
+                  ImageData::External(ExternalImageData {
+                      id: ExternalImageId(external_image_id),
+                      image_type: ExternalImageType::ExternalBuffer
+                  }),
                   None);
 }
 
@@ -854,7 +839,10 @@ pub extern "C" fn wr_api_update_image(api: &mut RenderApi,
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
 
-    api.update_image(key, descriptor.to_descriptor(), copied_bytes, None);
+    api.update_image(key,
+                     descriptor.to_descriptor(),
+                     ImageData::new(copied_bytes),
+                     None);
 }
 
 #[no_mangle]
@@ -888,7 +876,7 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut RenderApi,
                                                       aux_data: *mut u8,
                                                       aux_size: usize) {
     let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
-    // See the documentation of set_root_display_list in api.rs. I don't think
+    // See the documentation of set_display_list in api.rs. I don't think
     // it makes a difference in gecko at the moment(until APZ is figured out)
     // but I suppose it is a good default.
     let preserve_frame_state = true;
@@ -905,11 +893,11 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut RenderApi,
     aux_vec.extend_from_slice(aux_slice);
     let aux = AuxiliaryLists::from_data(aux_vec, aux_descriptor);
 
-    api.set_root_display_list(Some(root_background_color),
-                              epoch,
-                              LayoutSize::new(viewport_width, viewport_height),
-                              (pipeline_id, dl, aux),
-                              preserve_frame_state);
+    api.set_display_list(Some(root_background_color),
+                         epoch,
+                         LayoutSize::new(viewport_width, viewport_height),
+                         (pipeline_id, dl, aux),
+                         preserve_frame_state);
 }
 
 #[no_mangle]
@@ -920,11 +908,11 @@ pub unsafe extern "C" fn wr_api_clear_root_display_list(api: &mut RenderApi,
     let preserve_frame_state = true;
     let frame_builder = WebRenderFrameBuilder::new(pipeline_id);
 
-    api.set_root_display_list(Some(root_background_color),
-                              epoch,
-                              LayoutSize::new(0.0, 0.0),
-                              frame_builder.dl_builder.finalize(),
-                              preserve_frame_state);
+    api.set_display_list(Some(root_background_color),
+                         epoch,
+                         LayoutSize::new(0.0, 0.0),
+                         frame_builder.dl_builder.finalize(),
+                         preserve_frame_state);
 }
 
 #[no_mangle]
@@ -1271,22 +1259,21 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
     let stops =
         WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
 
+    let gradient = state.frame_builder.dl_builder.create_gradient(start_point.to_point(),
+                                                                  end_point.to_point(),
+                                                                  stops,
+                                                                  extend_mode.to_gradient_extend_mode());
     state.frame_builder.dl_builder.push_gradient(rect.to_rect(),
                                                  clip.to_clip_region(),
-                                                 start_point.to_point(),
-                                                 end_point.to_point(),
-                                                 stops,
-                                                 extend_mode.to_gradient_extend_mode());
+                                                 gradient);
 }
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                              rect: WrRect,
                                              clip: WrClipRegion,
-                                             start_center: WrPoint,
-                                             end_center: WrPoint,
-                                             start_radius: f32,
-                                             end_radius: f32,
+                                             center: WrPoint,
+                                             radius: WrSize,
                                              stops: *const WrGradientStop,
                                              stops_count: usize,
                                              extend_mode: WrGradientExtendMode) {
@@ -1295,14 +1282,13 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
     let stops =
         WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
 
+    let gradient = state.frame_builder.dl_builder.create_radial_gradient(center.to_point(),
+                                                                         radius.to_size(),
+                                                                         stops,
+                                                                         extend_mode.to_gradient_extend_mode());
     state.frame_builder.dl_builder.push_radial_gradient(rect.to_rect(),
                                                         clip.to_clip_region(),
-                                                        start_center.to_point(),
-                                                        start_radius,
-                                                        end_center.to_point(),
-                                                        end_radius,
-                                                        stops,
-                                                        extend_mode.to_gradient_extend_mode());
+                                                        gradient);
 }
 
 #[no_mangle]
@@ -1370,7 +1356,8 @@ impl BlobImageRenderer for Moz2dImageRenderer {
     fn request_blob_image(&mut self,
                           key: ImageKey,
                           data: Arc<BlobImageData>,
-                          descriptor: &BlobImageDescriptor) {
+                          descriptor: &BlobImageDescriptor,
+                          _dirty_rect: Option<DeviceUintRect>) {
         let result = self.render_blob_image(data, descriptor);
         self.images.insert(key, result);
     }

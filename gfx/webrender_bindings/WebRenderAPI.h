@@ -72,8 +72,7 @@ public:
                     Range<uint8_t> aBytes);
 
   void AddExternalImageHandle(ImageKey key,
-                              gfx::IntSize aSize,
-                              gfx::SurfaceFormat aFormat,
+                              const ImageDescriptor& aDescriptor,
                               uint64_t aHandle);
 
   void AddExternalImageBuffer(ImageKey key,
@@ -94,6 +93,9 @@ public:
 
   void RunOnRenderThread(UniquePtr<RendererEvent> aEvent);
   void Readback(gfx::IntSize aSize, uint8_t *aBuffer, uint32_t aBufferSize);
+
+  void Pause();
+  bool Resume();
 
   WrIdNamespace GetNamespace();
   GLint GetMaxTextureSize() const { return mMaxTextureSize; }
@@ -166,10 +168,8 @@ public:
 
   void PushRadialGradient(const WrRect& aBounds,
                           const WrClipRegion& aClip,
-                          const WrPoint& aStartCenter,
-                          const WrPoint& aEndCenter,
-                          float aStartRadius,
-                          float aEndRadius,
+                          const WrPoint& aCenter,
+                          const WrSize& aRadius,
                           const nsTArray<WrGradientStop>& aStops,
                           wr::GradientExtendMode aExtendMode);
 

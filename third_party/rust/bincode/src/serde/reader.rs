@@ -1,3 +1,4 @@
+use std::cmp;
 use std::io::Read;
 use std::marker::PhantomData;
 
@@ -7,6 +8,8 @@ use serde_crate::de::value::ValueDeserializer;
 use serde_crate::de::Error as DeError;
 use ::SizeLimit;
 use super::{Result, Error, ErrorKind};
+
+const BLOCK_SIZE: usize = 65536;
 
 /// A Deserializer that reads bytes from a buffer.
 ///
@@ -18,15 +21,15 @@ use super::{Result, Error, ErrorKind};
 /// serde::Deserialize::deserialize(&mut deserializer);
 /// let bytes_read = d.bytes_read();
 /// ```
-pub struct Deserializer<R, E: ByteOrder> {
+pub struct Deserializer<R, S: SizeLimit, E: ByteOrder> {
     reader: R,
-    size_limit: SizeLimit,
+    size_limit: S,
     read: u64,
     _phantom: PhantomData<E>,
 }
 
-impl<R: Read, E: ByteOrder> Deserializer<R, E> {
-    pub fn new(r: R, size_limit: SizeLimit) -> Deserializer<R, E> {
+impl<R: Read, E: ByteOrder, S: SizeLimit> Deserializer<R, S, E> {
+    pub fn new(r: R, size_limit: S) -> Deserializer<R, S, E> {
         Deserializer {
             reader: r,
             size_limit: size_limit,
@@ -41,12 +44,7 @@ impl<R: Read, E: ByteOrder> Deserializer<R, E> {
     }
 
     fn read_bytes(&mut self, count: u64) -> Result<()> {
-        self.read += count;
-        match self.size_limit {
-            SizeLimit::Infinite => Ok(()),
-            SizeLimit::Bounded(x) if self.read <= x => Ok(()),
-            SizeLimit::Bounded(_) => Err(ErrorKind::SizeLimit.into())
-        }
+        self.size_limit.add(count)
     }
 
     fn read_type<T>(&mut self) -> Result<()> {
@@ -55,14 +53,22 @@ impl<R: Read, E: ByteOrder> Deserializer<R, E> {
     }
 
     fn read_vec(&mut self) -> Result<Vec<u8>> {
-        let len = try!(serde::Deserialize::deserialize(&mut *self));
-        try!(self.read_bytes(len));
+        let mut len: usize = try!(serde::Deserialize::deserialize(&mut *self));
 
-        let len = len as usize;
-        let mut bytes = Vec::with_capacity(len);
-        unsafe { bytes.set_len(len); }
-        try!(self.reader.read_exact(&mut bytes));
-        Ok(bytes)
+        let mut result = Vec::new();
+        let mut off = 0;
+        while len > 0 {
+            let reserve = cmp::min(len, BLOCK_SIZE);
+            try!(self.read_bytes(reserve as u64));
+            unsafe {
+                result.reserve(reserve);
+                result.set_len(off + reserve);
+            }
+            try!(self.reader.read_exact(&mut result[off..]));
+            len -= reserve;
+            off += reserve;
+        }
+        Ok(result)
     }
 
     fn read_string(&mut self) -> Result<String> {
@@ -87,7 +93,8 @@ macro_rules! impl_nums {
     }
 }
 
-impl<'a, R: Read, E: ByteOrder> serde::Deserializer for &'a mut Deserializer<R, E> {
+impl<'a, R, S, E> serde::Deserializer for &'a mut Deserializer<R, S, E>
+where R: Read, S: SizeLimit, E: ByteOrder {
     type Error = Error;
 
     #[inline]
@@ -151,36 +158,26 @@ impl<'a, R: Read, E: ByteOrder> serde::Deserializer for &'a mut Deserializer<R, 
     {
         use std::str;
 
-        let error = ErrorKind::InvalidEncoding{
-            desc: "Invalid char encoding",
-            detail: None
-        }.into();
+        let error = || {
+            ErrorKind::InvalidEncoding{
+                desc: "Invalid char encoding",
+                detail: None,
+            }.into()
+        };
 
-        let mut buf = [0];
+        let mut buf = [0u8; 4];
 
-        let _ = try!(self.reader.read(&mut buf[..]));
-        let first_byte = buf[0];
-        let width = utf8_char_width(first_byte);
-        if width == 1 { return visitor.visit_char(first_byte as char) }
-        if width == 0 { return Err(error)}
+        // Look at the first byte to see how many bytes must be read
+        let _ = try!(self.reader.read_exact(&mut buf[..1]));
+        let width = utf8_char_width(buf[0]);
+        if width == 1 { return visitor.visit_char(buf[0] as char) }
+        if width == 0 { return Err(error())}
 
-        let mut buf = [first_byte, 0, 0, 0];
-        {
-            let mut start = 1;
-            while start < width {
-                match try!(self.reader.read(&mut buf[start .. width])) {
-                    n if n == width - start => break,
-                    n if n < width - start => { start += n; }
-                    _ => return Err(error)
-                }
-            }
+        if self.reader.read_exact(&mut buf[1..width]).is_err() {
+            return Err(error());
         }
 
-        let res = try!(match str::from_utf8(&buf[..width]).ok() {
-            Some(s) => Ok(s.chars().next().unwrap()),
-            None => Err(error)
-        });
-
+        let res = try!(str::from_utf8(&buf[..width]).ok().and_then(|s| s.chars().next()).ok_or(error()));
         visitor.visit_char(res)
     }
 
@@ -214,7 +211,8 @@ impl<'a, R: Read, E: ByteOrder> serde::Deserializer for &'a mut Deserializer<R, 
                      visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
-        impl<'a, R: Read + 'a, E: ByteOrder> serde::de::EnumVisitor for &'a mut Deserializer<R, E> {
+        impl<'a, R: 'a, S, E> serde::de::EnumVisitor for &'a mut Deserializer<R, S, E>
+        where R: Read, S: SizeLimit, E: ByteOrder {
             type Error = Error;
             type Variant = Self;
 
@@ -230,14 +228,12 @@ impl<'a, R: Read, E: ByteOrder> serde::Deserializer for &'a mut Deserializer<R, 
         visitor.visit_enum(self)
     }
     
-    fn deserialize_tuple<V>(self,
-                      _len: usize,
-                      visitor: V) -> Result<V::Value>
+    fn deserialize_tuple<V>(self, _len: usize, visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
-        struct TupleVisitor<'a, R: Read + 'a, E: ByteOrder + 'a>(&'a mut Deserializer<R, E>);
+        struct TupleVisitor<'a, R: Read + 'a, S: SizeLimit + 'a, E: ByteOrder + 'a>(&'a mut Deserializer<R, S, E>);
 
-        impl<'a, 'b: 'a, R: Read + 'b, E: ByteOrder> serde::de::SeqVisitor for TupleVisitor<'a, R, E> {
+        impl<'a, 'b: 'a, R: Read + 'b, S: SizeLimit, E: ByteOrder> serde::de::SeqVisitor for TupleVisitor<'a, R, S, E> {
             type Error = Error;
 
             fn visit_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
@@ -256,12 +252,12 @@ impl<'a, R: Read, E: ByteOrder> serde::Deserializer for &'a mut Deserializer<R, 
                             visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
-        struct SeqVisitor<'a, R: Read + 'a, E: ByteOrder + 'a> {
-            deserializer: &'a mut Deserializer<R, E>,
+        struct SeqVisitor<'a, R: Read + 'a, S: SizeLimit + 'a, E: ByteOrder + 'a> {
+            deserializer: &'a mut Deserializer<R, S, E>,
             len: usize,
         }
 
-        impl<'a, 'b: 'a, R: Read + 'b, E: ByteOrder> serde::de::SeqVisitor for SeqVisitor<'a, R, E> {
+        impl<'a, 'b: 'a, R: Read + 'b, S: SizeLimit, E: ByteOrder> serde::de::SeqVisitor for SeqVisitor<'a, R, S, E> {
             type Error = Error;
 
             fn visit_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
@@ -305,12 +301,12 @@ impl<'a, R: Read, E: ByteOrder> serde::Deserializer for &'a mut Deserializer<R, 
     fn deserialize_map<V>(self, visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
-        struct MapVisitor<'a, R: Read + 'a, E: ByteOrder + 'a> {
-            deserializer: &'a mut Deserializer<R, E>,
+        struct MapVisitor<'a, R: Read + 'a, S: SizeLimit + 'a, E: ByteOrder + 'a> {
+            deserializer: &'a mut Deserializer<R, S, E>,
             len: usize,
         }
 
-        impl<'a, 'b: 'a, R: Read + 'b, E: ByteOrder> serde::de::MapVisitor for MapVisitor<'a, R, E> {
+        impl<'a, 'b: 'a, R: Read + 'b, S: SizeLimit, E: ByteOrder> serde::de::MapVisitor for MapVisitor<'a, R, S, E> {
             type Error = Error;
 
             fn visit_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>>
@@ -389,7 +385,8 @@ impl<'a, R: Read, E: ByteOrder> serde::Deserializer for &'a mut Deserializer<R, 
     }
 }
 
-impl<'a, R: Read, E: ByteOrder> serde::de::VariantVisitor for &'a mut Deserializer<R, E> {
+impl<'a, R, S, E> serde::de::VariantVisitor for &'a mut Deserializer<R, S, E>
+where R: Read, S: SizeLimit, E: ByteOrder {
     type Error = Error;
 
     fn visit_unit(self) -> Result<()> {
