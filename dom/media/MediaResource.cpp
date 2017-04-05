@@ -35,11 +35,9 @@
 using mozilla::media::TimeUnit;
 
 mozilla::LazyLogModule gMediaResourceLog("MediaResource");
-#define RESOURCE_LOG(msg, ...) MOZ_LOG(gMediaResourceLog, mozilla::LogLevel::Debug, \
-                                      (msg, ##__VA_ARGS__))
 // Debug logging macro with object pointer and class name.
-#define CMLOG(msg, ...) \
-        RESOURCE_LOG("%p [ChannelMediaResource]: " msg, this, ##__VA_ARGS__)
+#define CMLOG(msg, ...) MOZ_LOG(gMediaResourceLog, mozilla::LogLevel::Debug, \
+  ("%p " msg, this, ##__VA_ARGS__))
 
 static const uint32_t HTTP_OK_CODE = 200;
 static const uint32_t HTTP_PARTIAL_RESPONSE_CODE = 206;
