@@ -2,8 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* eslint-env mozilla/frame-script */
-
 add_task(function* () {
   let rooturi = "https://example.com/browser/toolkit/modules/tests/browser/";
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, rooturi + "metadata_simple.html");
