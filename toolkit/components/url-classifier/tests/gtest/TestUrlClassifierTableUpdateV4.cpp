@@ -198,10 +198,8 @@ testUpdateFail(nsTArray<TableUpdate*>& tableUpdates)
   UniquePtr<Classifier> classifier(new Classifier());
   classifier->Open(*file);
 
-  RunTestInNewThread([&] () -> void {
-    nsresult rv = classifier->ApplyUpdates(&tableUpdates);
-    ASSERT_TRUE(NS_FAILED(rv));
-  });
+  nsresult rv = SyncApplyUpdates(classifier.get(), &tableUpdates);
+  ASSERT_TRUE(NS_FAILED(rv));
 }
 
 static void
@@ -211,15 +209,22 @@ testUpdate(nsTArray<TableUpdate*>& tableUpdates,
   nsCOMPtr<nsIFile> file;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
 
+  {
+    // Force nsIUrlClassifierUtils loading on main thread
+    // because nsIUrlClassifierDBService will not run in advance
+    // in gtest.
+    nsresult rv;
+    nsCOMPtr<nsIUrlClassifierUtils> dummy =
+      do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID, &rv);
+      ASSERT_TRUE(NS_SUCCEEDED(rv));
+  }
+
   UniquePtr<Classifier> classifier(new Classifier());
   classifier->Open(*file);
 
-  RunTestInNewThread([&] () -> void {
-    nsresult rv = classifier->ApplyUpdates(&tableUpdates);
-    ASSERT_TRUE(rv == NS_OK);
-
-    VerifyPrefixSet(expected);
-  });
+  nsresult rv = SyncApplyUpdates(classifier.get(), &tableUpdates);
+  ASSERT_TRUE(rv == NS_OK);
+  VerifyPrefixSet(expected);
 }
 
 static void
