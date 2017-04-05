@@ -8,6 +8,7 @@
 #include "CallbackRunnables.h"
 #include "FileSystemFileEntry.h"
 #include "mozilla/dom/FileBinding.h"
+#include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/DirectoryBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -100,8 +101,9 @@ public:
         new ErrorCallbackRunnable(mParentEntry->GetParentObject(),
                                   mErrorCallback,
                                   NS_ERROR_DOM_INVALID_STATE_ERR);
-      DebugOnly<nsresult> rv = NS_DispatchToMainThread(runnable);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
+
+      FileSystemUtils::DispatchRunnable(mParentEntry->GetParentObject(),
+                                        runnable.forget());
     }
   }
 
@@ -161,8 +163,8 @@ FileSystemDirectoryReader::ReadEntries(FileSystemEntriesCallback& aSuccessCallba
   if (mAlreadyRead) {
     RefPtr<EmptyEntriesCallbackRunnable> runnable =
       new EmptyEntriesCallbackRunnable(&aSuccessCallback);
-    aRv = NS_DispatchToMainThread(runnable);
-    NS_WARNING_ASSERTION(!aRv.Failed(), "NS_DispatchToMainThread failed");
+
+    FileSystemUtils::DispatchRunnable(GetParentObject(), runnable.forget());
     return;
   }
 

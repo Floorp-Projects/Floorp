@@ -32,17 +32,17 @@ GetFileOrDirectoryTaskChild::Create(FileSystemBase* aFileSystem,
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
 
-  RefPtr<GetFileOrDirectoryTaskChild> task =
-    new GetFileOrDirectoryTaskChild(aFileSystem, aTargetPath);
-
-  // aTargetPath can be null. In this case SetError will be called.
-
   nsCOMPtr<nsIGlobalObject> globalObject =
     do_QueryInterface(aFileSystem->GetParentObject());
   if (NS_WARN_IF(!globalObject)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
+
+  RefPtr<GetFileOrDirectoryTaskChild> task =
+    new GetFileOrDirectoryTaskChild(globalObject, aFileSystem, aTargetPath);
+
+  // aTargetPath can be null. In this case SetError will be called.
 
   task->mPromise = Promise::Create(globalObject, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -52,9 +52,10 @@ GetFileOrDirectoryTaskChild::Create(FileSystemBase* aFileSystem,
   return task.forget();
 }
 
-GetFileOrDirectoryTaskChild::GetFileOrDirectoryTaskChild(FileSystemBase* aFileSystem,
+GetFileOrDirectoryTaskChild::GetFileOrDirectoryTaskChild(nsIGlobalObject* aGlobalObject,
+                                                         FileSystemBase* aFileSystem,
                                                          nsIFile* aTargetPath)
-  : FileSystemTaskChildBase(aFileSystem)
+  : FileSystemTaskChildBase(aGlobalObject, aFileSystem)
   , mTargetPath(aTargetPath)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");

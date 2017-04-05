@@ -7,6 +7,7 @@
 #include "FileSystemFileEntry.h"
 #include "CallbackRunnables.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/MultipartBlobImpl.h"
 #include "mozilla/dom/FileSystemFileEntryBinding.h"
 
@@ -20,7 +21,8 @@ class FileCallbackRunnable final : public Runnable
 public:
   FileCallbackRunnable(FileCallback* aCallback, ErrorCallback* aErrorCallback,
                        File* aFile)
-    : mCallback(aCallback)
+    : Runnable("FileCallbackRunnable")
+    , mCallback(aCallback)
     , mErrorCallback(aErrorCallback)
     , mFile(aFile)
   {
@@ -130,8 +132,8 @@ FileSystemFileEntry::GetFile(FileCallback& aSuccessCallback,
                              aErrorCallback.WasPassed()
                                ? &aErrorCallback.Value() : nullptr,
                              mFile);
-  DebugOnly<nsresult> rv = NS_DispatchToMainThread(runnable);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
+
+  FileSystemUtils::DispatchRunnable(GetParentObject(), runnable.forget());
 }
 
 } // dom namespace
