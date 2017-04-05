@@ -10,10 +10,11 @@
 
 function setup() {
   const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
+  let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, false);
 
   registerCleanupFunction(() => {
-    Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF);
+    Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
   });
 }
 
