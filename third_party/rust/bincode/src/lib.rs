@@ -17,12 +17,12 @@
 //!
 //! ```rust
 //! extern crate bincode;
-//! use bincode::{serialize, deserialize};
+//! use bincode::{serialize, deserialize, Bounded};
 //! fn main() {
 //!     // The object that we will serialize.
 //!     let target = Some("hello world".to_string());
 //!     // The maximum size of the encoded message.
-//!     let limit = bincode::SizeLimit::Bounded(20);
+//!     let limit = Bounded(20);
 //!
 //!     let encoded: Vec<u8>        = serialize(&target, limit).unwrap();
 //!     let decoded: Option<String> = deserialize(&encoded[..]).unwrap();
@@ -44,12 +44,15 @@ pub mod refbox;
 mod serde;
 
 pub mod endian_choice {
-    pub use super::serde::{serialize, serialize_into, deserialize, deserialize_from};
+    pub use super::serde::{Deserializer, Serializer, serialize, serialize_into, deserialize, deserialize_from};
 }
 
 use std::io::{Read, Write};
 
-pub use serde::{Deserializer, Serializer, ErrorKind, Error, Result, serialized_size, serialized_size_bounded};
+pub use serde::{ErrorKind, Error, Result, serialized_size, serialized_size_bounded};
+
+pub type Deserializer<W, S> = serde::Deserializer<W, S, byteorder::LittleEndian>;
+pub type Serializer<W> = serde::Serializer<W, byteorder::LittleEndian>;
 
 /// Deserializes a slice of bytes into an object.
 ///
@@ -70,11 +73,10 @@ pub fn deserialize<T>(bytes: &[u8]) -> serde::Result<T>
 /// If this returns an `Error`, assume that the buffer that you passed
 /// in is in an invalid state, as the error could be returned during any point
 /// in the reading.
-pub fn deserialize_from<R: ?Sized, T>(reader: &mut R, size_limit: SizeLimit) -> serde::Result<T>
-    where R: Read,
-          T: serde_crate::Deserialize,
+pub fn deserialize_from<R: ?Sized, T, S>(reader: &mut R, size_limit: S) -> serde::Result<T>
+    where R: Read, T: serde_crate::Deserialize, S: SizeLimit
 {
-    serde::deserialize_from::<_, _, byteorder::LittleEndian>(reader, size_limit)
+    serde::deserialize_from::<_, _, _, byteorder::LittleEndian>(reader, size_limit)
 }
 
 /// Serializes an object directly into a `Writer`.
@@ -85,20 +87,20 @@ pub fn deserialize_from<R: ?Sized, T>(reader: &mut R, size_limit: SizeLimit) -> 
 /// If this returns an `Error` (other than SizeLimit), assume that the
 /// writer is in an invalid state, as writing could bail out in the middle of
 /// serializing.
-pub fn serialize_into<W: ?Sized, T: ?Sized>(writer: &mut W, value: &T, size_limit: SizeLimit) -> serde::Result<()>
-    where W: Write, T: serde_crate::Serialize
+pub fn serialize_into<W: ?Sized, T: ?Sized, S>(writer: &mut W, value: &T, size_limit: S) -> serde::Result<()>
+    where W: Write, T: serde_crate::Serialize, S: SizeLimit
 {
-    serde::serialize_into::<_, _, byteorder::LittleEndian>(writer, value, size_limit)
+    serde::serialize_into::<_, _, _, byteorder::LittleEndian>(writer, value, size_limit)
 }
 
 /// Serializes a serializable object into a `Vec` of bytes.
 ///
 /// If the serialization would take more bytes than allowed by `size_limit`,
 /// an error is returned.
-pub fn serialize<T: ?Sized>(value: &T, size_limit: SizeLimit) -> serde::Result<Vec<u8>>
-    where T: serde_crate::Serialize
+pub fn serialize<T: ?Sized, S>(value: &T, size_limit: S) -> serde::Result<Vec<u8>>
+    where T: serde_crate::Serialize, S: SizeLimit
 {
-    serde::serialize::<_, byteorder::LittleEndian>(value, size_limit)
+    serde::serialize::<_, _, byteorder::LittleEndian>(value, size_limit)
 }
 
 /// A limit on the amount of bytes that can be read or written.
@@ -119,8 +121,34 @@ pub fn serialize<T: ?Sized>(value: &T, size_limit: SizeLimit) -> serde::Result<V
 /// encoding function, the encoder will verify that the structure can be encoded
 /// within that limit.  This verification occurs before any bytes are written to
 /// the Writer, so recovering from an error is easy.
-#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
-pub enum SizeLimit {
-    Infinite,
-    Bounded(u64)
+pub trait SizeLimit {
+    fn add(&mut self, n: u64) -> Result<()>;
+    fn limit(&self) -> Option<u64>;
+}
+
+#[derive(Copy, Clone)]
+pub struct Bounded(pub u64);
+
+#[derive(Copy, Clone)]
+pub struct Infinite;
+
+impl SizeLimit for Bounded {
+    #[inline(always)]
+    fn add(&mut self, n: u64) -> Result<()> {
+        if self.0 >= n {
+            self.0 -= n;
+            Ok(())
+        } else {
+            Err(Box::new(ErrorKind::SizeLimit))
+        }
+    }
+    #[inline(always)]
+    fn limit(&self) -> Option<u64> { Some(self.0) }
+}
+
+impl SizeLimit for Infinite {
+    #[inline(always)]
+    fn add(&mut self, _: u64) -> Result<()> { Ok (()) }
+    #[inline(always)]
+    fn limit(&self) -> Option<u64> { None }
 }

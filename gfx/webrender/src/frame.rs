@@ -441,7 +441,9 @@ impl Frame {
                                               level == 0,
                                               composition_operations);
 
-        if level == 0 {
+        // For the root pipeline, there's no need to add a full screen rectangle
+        // here, as it's handled by the framebuffer clear.
+        if level == 0 && context.scene.root_pipeline_id.unwrap() != pipeline_id {
             if let Some(pipeline) = context.scene.pipeline_map.get(&pipeline_id) {
                 if let Some(bg_color) = pipeline.background_color {
                     // Note: we don't use the original clip region here,
@@ -656,6 +658,7 @@ impl Frame {
                                                         info.gradient.start_radius,
                                                         info.gradient.end_center,
                                                         info.gradient.end_radius,
+                                                        info.gradient.ratio_xy,
                                                         info.gradient.stops,
                                                         info.gradient.extend_mode);
                 }

@@ -12,5 +12,9 @@ void main(void) {
 #endif
 
     alpha = min(alpha, do_clip());
-    oFragColor = dither(vColor * vec4(1.0, 1.0, 1.0, alpha));
+
+    // TODO(gw): Re-enable the gradient dither once we get the
+    //           reftests passing.
+    //oFragColor = dither(vColor * vec4(1.0, 1.0, 1.0, alpha));
+    oFragColor = vColor * vec4(1.0, 1.0, 1.0, alpha);
 }
