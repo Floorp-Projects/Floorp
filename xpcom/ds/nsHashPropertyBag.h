@@ -39,7 +39,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
 protected:
-  virtual ~nsHashPropertyBag() {}
+  virtual ~nsHashPropertyBag();
 };
 
 /* A cycle collected nsHashPropertyBag for main-thread-only use. */

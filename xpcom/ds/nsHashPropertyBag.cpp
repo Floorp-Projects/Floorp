@@ -9,8 +9,10 @@
 #include "nsArrayEnumerator.h"
 #include "nsIVariant.h"
 #include "nsIProperty.h"
+#include "nsThreadUtils.h"
 #include "nsVariant.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Move.h"
 
 /*
  * nsHashPropertyBagBase implementation.
@@ -265,6 +267,38 @@ NS_INTERFACE_MAP_BEGIN(nsHashPropertyBag)
   NS_INTERFACE_MAP_ENTRY(nsIWritablePropertyBag2)
 NS_INTERFACE_MAP_END
 
+/*
+ * We need to ensure that the hashtable is destroyed on the main thread, as
+ * the nsIVariant values are main-thread only objects.
+ */
+class ProxyHashtableDestructor final : public mozilla::Runnable
+{
+public:
+  using HashtableType = nsInterfaceHashtable<nsStringHashKey, nsIVariant>;
+  explicit ProxyHashtableDestructor(HashtableType&& aTable)
+    : mPropertyHash(mozilla::Move(aTable))
+  {}
+
+  NS_IMETHODIMP
+  Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    HashtableType table(mozilla::Move(mPropertyHash));
+    return NS_OK;
+  }
+
+private:
+  HashtableType mPropertyHash;
+};
+
+nsHashPropertyBag::~nsHashPropertyBag()
+{
+  if (!NS_IsMainThread()) {
+    RefPtr<ProxyHashtableDestructor> runnable =
+      new ProxyHashtableDestructor(mozilla::Move(mPropertyHash));
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
+  }
+}
 
 /*
  * nsHashPropertyBagCC implementation.
