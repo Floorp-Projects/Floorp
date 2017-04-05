@@ -934,6 +934,7 @@ wasm::GenerateBuiltinImportExit(MacroAssembler& masm, ABIFunctionType abiType, v
         StackCopy(masm, i.mirType(), scratch, src, dst);
     }
 
+    AssertStackAlignment(masm, ABIStackAlignment);
     masm.call(ImmPtr(func, ImmPtr::NoCheckToken()));
 
 #if defined(JS_CODEGEN_X86)

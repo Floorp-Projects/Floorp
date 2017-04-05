@@ -454,6 +454,7 @@ MacroAssembler::subFromStackPtr(Imm32 imm32)
 void
 MacroAssembler::setupUnalignedABICall(Register scratch)
 {
+    MOZ_ASSERT(!IsCompilingWasm(), "wasm should only use aligned ABI calls");
     setupABICall();
     dynamicAlignment_ = true;
 
@@ -497,7 +498,7 @@ MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm)
 }
 
 void
-MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
+MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result, bool cleanupArg)
 {
     freeStack(stackAdjust);
     if (dynamicAlignment_)

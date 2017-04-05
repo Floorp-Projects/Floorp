@@ -382,8 +382,8 @@ FuncCast(F* funcPtr, ABIFunctionType abiType)
     return pf;
 }
 
-void*
-wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
+static void*
+AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
 {
     switch (imm) {
       case SymbolicAddress::HandleExecutionInterrupt:
@@ -641,6 +641,90 @@ wasm::Runtime::getBuiltinThunk(JSContext* cx, void* funcPtr, ABIFunctionType abi
 
     return builtinThunkVector_.insert(builtinThunkVector_.begin() + i, Move(thunk)) &&
            builtinThunkMap_.add(ptr, lookup, *thunkPtr);
+}
+
+bool
+wasm::NeedsBuiltinThunk(SymbolicAddress func)
+{
+    // Some functions don't want to a thunk, because they already have one or
+    // they don't have frame info.
+    switch (func) {
+      case SymbolicAddress::HandleExecutionInterrupt: // GenerateInterruptExit
+      case SymbolicAddress::HandleDebugTrap:          // GenerateDebugTrapStub
+      case SymbolicAddress::HandleThrow:              // GenerateThrowStub
+      case SymbolicAddress::ReportTrap:               // GenerateTrapExit
+      case SymbolicAddress::ReportOutOfBounds:        // GenerateOutOfBoundsExit
+      case SymbolicAddress::ReportUnalignedAccess:    // GeneratesUnalignedExit
+      case SymbolicAddress::CallImport_Void:          // GenerateImportInterpExit
+      case SymbolicAddress::CallImport_I32:
+      case SymbolicAddress::CallImport_I64:
+      case SymbolicAddress::CallImport_F64:
+      case SymbolicAddress::CoerceInPlace_ToInt32:    // GenerateImportJitExit
+      case SymbolicAddress::CoerceInPlace_ToNumber:
+        return false;
+      case SymbolicAddress::ToInt32:
+      case SymbolicAddress::DivI64:
+      case SymbolicAddress::UDivI64:
+      case SymbolicAddress::ModI64:
+      case SymbolicAddress::UModI64:
+      case SymbolicAddress::TruncateDoubleToUint64:
+      case SymbolicAddress::TruncateDoubleToInt64:
+      case SymbolicAddress::Uint64ToDouble:
+      case SymbolicAddress::Uint64ToFloat32:
+      case SymbolicAddress::Int64ToDouble:
+      case SymbolicAddress::Int64ToFloat32:
+#if defined(JS_CODEGEN_ARM)
+      case SymbolicAddress::aeabi_idivmod:
+      case SymbolicAddress::aeabi_uidivmod:
+      case SymbolicAddress::AtomicCmpXchg:
+      case SymbolicAddress::AtomicXchg:
+      case SymbolicAddress::AtomicFetchAdd:
+      case SymbolicAddress::AtomicFetchSub:
+      case SymbolicAddress::AtomicFetchAnd:
+      case SymbolicAddress::AtomicFetchOr:
+      case SymbolicAddress::AtomicFetchXor:
+#endif
+      case SymbolicAddress::ModD:
+      case SymbolicAddress::SinD:
+      case SymbolicAddress::CosD:
+      case SymbolicAddress::TanD:
+      case SymbolicAddress::ASinD:
+      case SymbolicAddress::ACosD:
+      case SymbolicAddress::ATanD:
+      case SymbolicAddress::CeilD:
+      case SymbolicAddress::CeilF:
+      case SymbolicAddress::FloorD:
+      case SymbolicAddress::FloorF:
+      case SymbolicAddress::TruncD:
+      case SymbolicAddress::TruncF:
+      case SymbolicAddress::NearbyIntD:
+      case SymbolicAddress::NearbyIntF:
+      case SymbolicAddress::ExpD:
+      case SymbolicAddress::LogD:
+      case SymbolicAddress::PowD:
+      case SymbolicAddress::ATan2D:
+      case SymbolicAddress::GrowMemory:
+      case SymbolicAddress::CurrentMemory:
+        return true;
+      case SymbolicAddress::Limit:
+        break;
+    }
+
+    MOZ_CRASH("unexpected symbolic address");
+}
+
+bool
+wasm::Runtime::getBuiltinThunk(JSContext* cx, SymbolicAddress func, void** thunkPtr)
+{
+    ABIFunctionType abiType;
+    void* funcPtr = AddressOf(func, &abiType);
+
+    if (!NeedsBuiltinThunk(func)) {
+        *thunkPtr = funcPtr;
+        return true;
+    }
+
+    return getBuiltinThunk(cx, funcPtr, abiType, thunkPtr);
 }
 
 static ABIFunctionType

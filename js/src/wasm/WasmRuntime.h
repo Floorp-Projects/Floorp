@@ -34,8 +34,8 @@ namespace jit {
 
 namespace wasm {
 
-void*
-AddressOf(SymbolicAddress imm, jit::ABIFunctionType*);
+bool
+NeedsBuiltinThunk(SymbolicAddress imm);
 
 struct TypedFuncPtr
 {
@@ -92,6 +92,7 @@ class Runtime
     bool init() { return builtinThunkMap_.init(); }
     void destroy();
 
+    bool getBuiltinThunk(JSContext* cx, SymbolicAddress func, void** thunkPtr);
     bool getBuiltinThunk(JSContext* cx, void* funcPtr, const Sig& sig, void** thunkPtr);
     BuiltinThunk* lookupBuiltin(void* pc);
 };
