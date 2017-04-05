@@ -33,13 +33,16 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
   , mLastSample()
 {
   MOZ_COUNT_CTOR(ThreadInfo);
-  mThread = NS_GetCurrentThread();
 
   // We don't have to guess on mac
 #if defined(GP_OS_darwin)
   pthread_t self = pthread_self();
   mStackTop = pthread_get_stackaddr_np(self);
 #endif
+
+  if (aIsMainThread) {
+    mResponsiveness.emplace();
+  }
 
   // I don't know if we can assert this. But we should warn.
   MOZ_ASSERT(aThreadId >= 0, "native thread ID is < 0");
