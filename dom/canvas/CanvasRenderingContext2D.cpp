@@ -1146,8 +1146,9 @@ CanvasRenderingContext2D::ParseColor(const nsAString& aString,
     RefPtr<nsStyleContext> parentContext;
     if (mCanvasElement && mCanvasElement->IsInUncomposedDoc()) {
       // Inherit from the canvas element.
-      parentContext = nsComputedDOMStyle::GetStyleContextForElement(
-        mCanvasElement, nullptr, presShell);
+      parentContext = nsComputedDOMStyle::GetStyleContext(mCanvasElement,
+                                                          nullptr,
+                                                          presShell);
     }
 
     Unused << nsRuleNode::ComputeColor(
@@ -1939,9 +1940,7 @@ CanvasRenderingContext2D::ClearTarget()
     nsCOMPtr<nsIPresShell> presShell = GetPresShell();
     if (presShell) {
       canvasStyle =
-        nsComputedDOMStyle::GetStyleContextForElement(mCanvasElement,
-                                                      nullptr,
-                                                      presShell);
+        nsComputedDOMStyle::GetStyleContext(mCanvasElement, nullptr, presShell);
       if (canvasStyle) {
         WritingMode wm(canvasStyle);
         if (wm.IsVertical() && !wm.IsSideways()) {
@@ -2649,8 +2648,7 @@ GetFontParentStyleContext(Element* aElement, nsIPresShell* aPresShell,
   if (aElement && aElement->IsInUncomposedDoc()) {
     // Inherit from the canvas element.
     RefPtr<nsStyleContext> result =
-      nsComputedDOMStyle::GetStyleContextForElement(aElement, nullptr,
-                                                    aPresShell);
+      nsComputedDOMStyle::GetStyleContext(aElement, nullptr, aPresShell);
     if (!result) {
       aError.Throw(NS_ERROR_FAILURE);
       return nullptr;
@@ -4202,9 +4200,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   if (mCanvasElement && mCanvasElement->IsInUncomposedDoc()) {
     // try to find the closest context
     canvasStyle =
-      nsComputedDOMStyle::GetStyleContextForElement(mCanvasElement,
-                                                    nullptr,
-                                                    presShell);
+      nsComputedDOMStyle::GetStyleContext(mCanvasElement, nullptr, presShell);
     if (!canvasStyle) {
       return NS_ERROR_FAILURE;
     }
