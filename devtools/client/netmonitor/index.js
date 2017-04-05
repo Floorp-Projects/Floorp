@@ -12,10 +12,10 @@
 const React = require("react");
 const ReactDOM = require("react-dom");
 const { bootstrap } = require("devtools-launchpad");
-const { EventEmitter } = require("devtools-sham-modules");
+const { EventEmitter } = require("devtools-modules");
 const { configureStore } = require("./src/utils/create-store");
 
-// require("./src/assets/styles/netmonitor.css");
+require("./src/assets/styles/netmonitor.css");
 
 EventEmitter.decorate(window);
 

@@ -1,5 +1,5 @@
 /**
- * Test for bug 1211726 - prefill list of top web sites for better
+ * Test for bug 1211726 - preload list of top web sites for better
  * autocompletion on empty profiles.
  */
 
@@ -16,7 +16,7 @@ Cu.importGlobalProperties(["fetch"]);
 let yahoooURI = NetUtil.newURI("https://yahooo.com/");
 let gooogleURI = NetUtil.newURI("https://gooogle.com/");
 
-autocompleteObject.populatePrefillSiteStorage([
+autocompleteObject.populatePreloadedSiteStorage([
   [yahoooURI.spec, "Yahooo"],
   [gooogleURI.spec, "Gooogle"],
 ]);
@@ -26,8 +26,8 @@ function *assert_feature_works(condition) {
   yield check_autocomplete({
     search: "ooo",
     matches: [
-      { uri: yahoooURI, title: "Yahooo",  style: ["prefill-site"] },
-      { uri: gooogleURI, title: "Gooogle", style: ["prefill-site"] },
+      { uri: yahoooURI, title: "Yahooo",  style: ["preloaded-top-site"] },
+      { uri: gooogleURI, title: "Gooogle", style: ["preloaded-top-site"] },
     ],
   });
 
@@ -51,7 +51,7 @@ function *assert_feature_does_not_appear(condition) {
   // "autofilled" is what you get in response in the url bar,
   // "completed" is what you get there when you hit enter.
   // So if they are all equal - it's the proof there was no autofill
-  // (knowing we have a suitable prefill site).
+  // (knowing we have a suitable preloaded top site).
   yield check_autocomplete({
     search: "gooo",
     autofilled: "gooo",
@@ -83,14 +83,14 @@ add_task(function* test_sorting_against_bookmark() {
   Services.prefs.setBoolPref(PREF_FEATURE_ENABLED, true);
   Services.prefs.setIntPref(PREF_FEATURE_EXPIRE_DAYS, 14);
 
-  do_print("Prefill Sites are placed lower than Bookmarks");
+  do_print("Preloaded Top Sites are placed lower than Bookmarks");
   yield check_autocomplete({
     checkSorting: true,
     search: "ooo",
     matches: [
       { uri: boookmarkURI, title: "Boookmark",  style: ["bookmark"] },
-      { uri: yahoooURI, title: "Yahooo",  style: ["prefill-site"] },
-      { uri: gooogleURI, title: "Gooogle", style: ["prefill-site"] },
+      { uri: yahoooURI, title: "Yahooo",  style: ["preloaded-top-site"] },
+      { uri: gooogleURI, title: "Gooogle", style: ["preloaded-top-site"] },
     ],
   });
 
@@ -104,14 +104,14 @@ add_task(function* test_sorting_against_history() {
   Services.prefs.setBoolPref(PREF_FEATURE_ENABLED, true);
   Services.prefs.setIntPref(PREF_FEATURE_EXPIRE_DAYS, 14);
 
-  do_print("Prefill Sites are placed lower than History entries");
+  do_print("Preloaded Top Sites are placed lower than History entries");
   yield check_autocomplete({
     checkSorting: true,
     search: "ooo",
     matches: [
       { uri: histoooryURI, title: "Histooory" },
-      { uri: yahoooURI, title: "Yahooo",  style: ["prefill-site"] },
-      { uri: gooogleURI, title: "Gooogle", style: ["prefill-site"] },
+      { uri: yahoooURI, title: "Yahooo",  style: ["preloaded-top-site"] },
+      { uri: gooogleURI, title: "Gooogle", style: ["preloaded-top-site"] },
     ],
   });
 
@@ -131,7 +131,7 @@ add_task(function* test_scheme_and_www() {
 
   let titlesMap = new Map(sites)
 
-  autocompleteObject.populatePrefillSiteStorage(sites);
+  autocompleteObject.populatePreloadedSiteStorage(sites);
 
   let tests =
   [
@@ -177,7 +177,7 @@ add_task(function* test_scheme_and_www() {
       [
       ["https://www.ooops-https-www.com/", "https://www.ooops-https-www.com"],
       "HTTP://www.ooops-HTTP-www.com/",
-      ["https://foo.com/", "Title with www", ["prefill-site"]],
+      ["https://foo.com/", "Title with www", ["preloaded-top-site"]],
       "https://www.bar.com/",
       ]
     ],
@@ -222,7 +222,7 @@ add_task(function* test_scheme_and_www() {
     "https://www.ooops-https.com/",
       [// Only autofill entry gets "www."
       ["https://www.ooops-https.com/", "https://www.ooops-https.com"],
-      "https://ooops-https.com/", // List entry with prefilled URl for match site
+      "https://ooops-https.com/", // List entry with preloaded top URL for match site
       ]
     ],
 
@@ -269,13 +269,13 @@ add_task(function* test_scheme_and_www() {
       return {
         uri: NetUtil.newURI(entry[0]),
         title: entry[1],
-        style: entry[2] || ["autofill", "heuristic"],
+        style: entry[2] || ["autofill", "heuristic", "preloaded-top-site"],
       };
     }
     return {
       uri: NetUtil.newURI(entry),
       title: titlesMap.get(entry),
-      style: ["prefill-site"],
+      style: ["preloaded-top-site"],
     };
   }
 
@@ -304,7 +304,7 @@ add_task(function* test_data_file() {
   let sites = yield response.json();
 
   do_print("Storage is populated");
-  autocompleteObject.populatePrefillSiteStorage(sites);
+  autocompleteObject.populatePreloadedSiteStorage(sites);
 
   let lastSite = sites.pop();
   let uri = NetUtil.newURI(lastSite[0]);

@@ -6,14 +6,11 @@ In multi-process environments, most devtools actors are created and initialized 
 
 Some actors need to exchange messages between the parent and the child process (typically when some components aren't available in the child process).
 
-E.g. the **director-manager** needs to ask the list of installed **director scripts** from
-the **director-registry** running in the parent process.
-
 To that end, there's a parent/child setup mechanism at `DebuggerServer` level that can be used.
 
 When the actor is loaded for the first time in the `DebuggerServer` running in the child process, it may decide to run a setup procedure to load a module in the parent process with which to communicate.
 
-E.g. in the **director-registry**:
+Example code for the actor running in the child process:
 
 ```
   const {DebuggerServer} = require("devtools/server/main");
@@ -26,18 +23,18 @@ E.g. in the **director-registry**:
 
   function setupChildProcess() {
     // `setupInParent`  is defined on DebuggerServerConnection,
-    // your actor receive a reference to one instance in its constructor.
+    // your actor receives a reference to one instance in its constructor.
     conn.setupInParent({
-      module: "devtools/server/actors/director-registry",
+      module: "devtools/server/actors/module-name",
       setupParent: "setupParentProcess"
     });
     // ...
   }
 ```
 
-The `setupChildProcess` helper defined and used in the previous example uses the `DebuggerServerConnection.setupInParent` to run a given setup function in the parent process Debugger Server, e.g. in the **director-registry** module.
+The `setupChildProcess` helper defined and used in the previous example uses the `DebuggerServerConnection.setupInParent` to run a given setup function in the parent process Debugger Server.
 
-With this, the `DebuggerServer` running in the parent process will require the requested module (**director-registry**) and call its `setupParentProcess` function (which should be exported on the module).
+With this, the `DebuggerServer` running in the parent process will require the requested module and call its `setupParentProcess` function (which should be exported on the module).
 
 The `setupParentProcess` function will receive a parameter that contains a reference to the **MessageManager** and a prefix that should be used to send/receive messages between the child and parent processes.
 
