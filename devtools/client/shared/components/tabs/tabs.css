@@ -50,7 +50,8 @@
 
 .tabs .tab-panel {
   height: 100%;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .tabs .tabs-navigation,
