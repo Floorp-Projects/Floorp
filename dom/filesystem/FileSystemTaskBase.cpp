@@ -161,8 +161,10 @@ FileSystemTaskChildBase::ActorCreated(mozilla::ipc::PBackgroundChild* aActor)
   if (HasError()) {
     // In this case we don't want to use IPC at all.
     RefPtr<ErrorRunnable> runnable = new ErrorRunnable(this);
+    // This will be changed in the next patch TODO
     DebugOnly<nsresult> rv = NS_DispatchToCurrentThread(runnable);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToCurrentThread failed");
+
     return;
   }
 

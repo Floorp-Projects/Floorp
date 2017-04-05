@@ -8,6 +8,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/FileBlobImpl.h"
+#include "FileSystemUtils.h"
 #include "nsProxyRelease.h"
 
 namespace mozilla {
@@ -37,7 +38,7 @@ public:
 
     RefPtr<ReleaseRunnable> runnable =
       new ReleaseRunnable(aPromises, aCallbacks, aFiles, global.forget());
-    NS_DispatchToMainThread(runnable);
+    FileSystemUtils::DispatchRunnable(nullptr, runnable.forget());
   }
 
   NS_IMETHOD
@@ -232,7 +233,8 @@ GetFilesHelper::Run()
       return NS_OK;
     }
 
-    return NS_DispatchToMainThread(this);
+    RefPtr<Runnable> runnable = this;
+    return FileSystemUtils::DispatchRunnable(nullptr, runnable.forget());
   }
 
   // We are here, but we should not do anything on this thread because, in the
