@@ -7,6 +7,7 @@
 #include "FileSystemFileEntry.h"
 #include "CallbackRunnables.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/MultipartBlobImpl.h"
 #include "mozilla/dom/FileSystemFileEntryBinding.h"
 
@@ -131,8 +132,8 @@ FileSystemFileEntry::GetFile(FileCallback& aSuccessCallback,
                              aErrorCallback.WasPassed()
                                ? &aErrorCallback.Value() : nullptr,
                              mFile);
-  DebugOnly<nsresult> rv = NS_DispatchToMainThread(runnable);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
+
+  FileSystemUtils::DispatchRunnable(GetParentObject(), runnable.forget());
 }
 
 } // dom namespace
