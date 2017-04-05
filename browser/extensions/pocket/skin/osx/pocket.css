@@ -1,8 +1,7 @@
 @import url("chrome://pocket-shared/skin/pocket.css");
 
-#pocket-button[cui-areatype="toolbar"] > .toolbarbutton-icon {
-  max-width: 18px;
-  margin: 0;
+#nav-bar #pocket-button > .toolbarbutton-icon {
+  padding: calc(var(--toolbarbutton-vertical-inner-padding)) 6px;
 }
 
 #pocket-button[cui-areatype="toolbar"][open] {
