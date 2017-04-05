@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Kin guon fideo’s en websiden fersteure</string>
   <string name="preference_category_performance">Prestaasjes</string>
   <string name="preference_performance_block_webfonts">Weblettertypen blokkearje</string>
+  <string name="preference_performance_block_webfonts_summary">Kin ta ûntbrekkende piktogrammen of ôfbyldingen liede</string>
   <string name="preference_performance_block_images">Ofbyldingen blokkearje</string>
   <string name="preference_default_browser">Standertbrowser meitsje</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">Mear opsjes</string>
   <string name="content_description_forward">Foarút blêdzje</string>
   <string name="content_description_reload">Website opnij lade</string>
+  <string name="content_description_back">Werom blêdzje</string>
+  <string name="content_description_stop">Laden fan website stopje</string>
+  <string name="context_menu_paste_go">Plakke &amp; iepenje</string>
   <string name="firstrun_title">Sneup as oft net ien meisjocht.</string>
   <string name="firstrun_description">Blokkearje automatysk onlinetrackers wylst jo sneupje. Tik dêrnei om besochte siden, sykopdrachten, cookies en wachtwurden op jo apparaat te wiskjen.</string>
   <string name="firstrun_button">Ok, begrepen!</string>

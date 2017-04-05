@@ -3,7 +3,7 @@
   <string name="action_cancel">Cancelar</string>
   <string name="action_ok">OK</string>
   <string name="urlbar_hint">Pesquisar ou navegar</string>
-  <string name="teaser">Navegação privativa automatica.\nNavegar. Apagar. Repetir.</string>
+  <string name="teaser">Navegação privativa automática.\nNavegar. Apagar. Repetir.</string>
   <string name="feedback_erase">Seu histórico de navegação foi apagado.</string>
   <string name="search_hint">Pesquisar por %1$s</string>
   <string name="menu_share">Compartilhar…</string>
@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Pode quebrar alguns vídeos e páginas Web</string>
   <string name="preference_category_performance">Desempenho</string>
   <string name="preference_performance_block_webfonts">Bloquear fontes Web</string>
+  <string name="preference_performance_block_webfonts_summary">Pode resultar em falta de ícones ou imagens</string>
   <string name="preference_performance_block_images">Bloquear imagens</string>
   <string name="preference_default_browser">Definir como navegador padrão</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">Mais opções</string>
   <string name="content_description_forward">Navegar para a frente</string>
   <string name="content_description_reload">Recarregar o site</string>
+  <string name="content_description_back">Navegar de volta</string>
+  <string name="content_description_stop">Parar de carregar o site</string>
+  <string name="context_menu_paste_go">Colar e ir</string>
   <string name="firstrun_title">Navegar como se ninguém estivesse olhando.</string>
   <string name="firstrun_description">Bloqueie automaticamente os rastreadores on-line enquanto navega. Então, toque para apagar páginas visitadas, pesquisas, cookies e senhas do seu dispositivo.</string>
   <string name="firstrun_button">Ok, entendi!</string>

@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">কিছু ভিডিও এবং ওয়েবপেজ ভাঙ্গা ভাঙ্গা আসতে পারে</string>
   <string name="preference_category_performance">কর্মক্ষমতা</string>
   <string name="preference_performance_block_webfonts">ওয়েব ফন্ট ব্লক করুন</string>
+  <string name="preference_performance_block_webfonts_summary">ছবি অথবা আইকন দৃশ্যমান নাও হতে পারে</string>
   <string name="preference_performance_block_images">ইমেজ ব্লক করুন</string>
   <string name="preference_default_browser">ডিফল্ট ব্রাউজার করুন</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">আরও বিকল্পসমূহ</string>
   <string name="content_description_forward">সামনে পরিভ্রমণ করুন</string>
   <string name="content_description_reload">ওয়েবসাইট রিলোড করুন</string>
+  <string name="content_description_back">পেছনে পরিভ্রমণ করুন</string>
+  <string name="content_description_stop">ওয়েবসাইট লোডিং বন্ধ করুন</string>
+  <string name="context_menu_paste_go">প্রতিলেপন করুন এবং অগ্রসর হোন</string>
   <string name="firstrun_title">ব্রাউজ করুন এমন ভাবে, যেনো কেউ দেখছে না।</string>
   <string name="firstrun_description">আপনার ব্রাউজিংয়ের সময় স্বয়ংক্রিয়ভাবে অনলাইন ট্রাকারদেরকে অবরুদ্ধ করা হয়। তারপর আপনার ডিভাইস থেকে দেখা পৃষ্ঠাগুলি, অনুসন্ধান, কুকি এবং পাসওয়ার্ড মুছতে ট্যাপ করুন।</string>
   <string name="firstrun_button">ঠিক আছে, আমি বুঝতে পেরেছি!</string>

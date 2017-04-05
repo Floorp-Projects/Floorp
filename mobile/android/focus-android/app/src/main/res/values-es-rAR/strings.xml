@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Algunos videos y páginas web pueden fallar</string>
   <string name="preference_category_performance">Rendimiento</string>
   <string name="preference_performance_block_webfonts">Bloquear tipografía web</string>
+  <string name="preference_performance_block_webfonts_summary">Puede resultar en que falten iconos o imágenes</string>
   <string name="preference_performance_block_images">Bloquear imágenes</string>
   <string name="preference_default_browser">Establecer navegador predeterminado</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">Más opciones</string>
   <string name="content_description_forward">Navegar hacia adelante</string>
   <string name="content_description_reload">Recargar sitio web</string>
+  <string name="content_description_back">Navegar hacia atrás</string>
+  <string name="content_description_stop">Dejar de cargar el sitio web</string>
+  <string name="context_menu_paste_go">Pegar e ir</string>
   <string name="firstrun_title">Navegar como si nadie estuviera mirando.</string>
   <string name="firstrun_description">Bloqueá automáticamente rastreadores en línea al navegar. Depsués tocá para borrar páginas visitadas, búsquedas, cookies y contraseñas de tu dispositivo.</string>
   <string name="firstrun_button">¡Listo, lo entendí!</string>

@@ -40,6 +40,8 @@
   <string name="content_description_menu">مزید اختیارات</string>
   <string name="content_description_forward">آگے کی جانب گشت کريں</string>
   <string name="content_description_reload">ویب سائٹ دوبارہ لوڈ کریں</string>
+  <string name="content_description_stop">ویبسائَٹ لوڈ کرنا بند کریں</string>
+  <string name="context_menu_paste_go">چسپاں کریں اور چلیں</string>
   <string name="firstrun_title">اس طرح براؤز کریں جیسے کوئی نہیں دیکھ رہا۔</string>
   <string name="firstrun_description">براوز کرنے وقت آنلائن سراغ راہ خودکار طور پر بلاک کریں۔ پھر دورہ شدہ صفحات، تلاش، کوکیاں اور پاسورڈ کو تھپتھپا کر اپنے آلہ سے مٹائیں۔</string>
   <string name="firstrun_button">ٹھیک ہے مجھے سمجھ آگئی ہے!\n</string>

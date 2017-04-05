@@ -13,6 +13,7 @@
   <string name="menu_about">Hakkında</string>
   <string name="menu_help">Yardım</string>
   <string name="menu_rights">Haklarınız</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s kontrol&#252; size verir.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Onu gizlilik odakl&#305; bir taray&#305;c&#305; olarak kullanabilirsiniz:\n  "<ul>"\n    "<li>Do&#287;rudan uygulamada arama yapabilir ve web&#8217;de gezinebilirsiniz</li>"\n    "<li>Takip&#231;ileri engelleyebilirsiniz (veya belli takip&#231;ilere izin verebilirsiniz)</li>"\n    "<li>Tek d&#252;&#287;meyle &#231;erezleri, arama ve gezinti ge&#231;mi&#351;inizi silebilirsiniz</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla taraf&#305;ndan geli&#351;tirilmi&#351;tir. Misyonumuz daha sa&#287;l&#305;kl&#305; ve a&#231;&#305;k bir internet yaratmakt&#305;r.<br/>\n<a href="%2$s">Daha fazla bilgi al&#305;n</a></p>]]></string>
   <string name="preference_category_search">Arama</string>
   <string name="preference_search_engine_default">Varsayılan</string>
   <string name="preference_dialog_title_search_engine">Varsayılan arama</string>
@@ -24,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Bazı videolar ve web sayfaları bozulabilir</string>
   <string name="preference_category_performance">Performans</string>
   <string name="preference_performance_block_webfonts">Web fontlarını engelle</string>
+  <string name="preference_performance_block_webfonts_summary">Simge ve resimlerin görünmemesine yol açabilir</string>
   <string name="preference_performance_block_images">Resimleri engelle</string>
   <string name="preference_default_browser">Varsayılan tarayıcı yap</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -39,10 +41,34 @@
   <string name="content_description_menu">Diğer seçenekler</string>
   <string name="content_description_forward">İleri git</string>
   <string name="content_description_reload">Siteyi tazele</string>
+  <string name="content_description_back">Geri git</string>
+  <string name="content_description_stop">Siteyi yüklemeyi durdur</string>
+  <string name="context_menu_paste_go">Yapıştır ve git</string>
   <string name="firstrun_title">Hiç kimse izlemiyormuş gibi gez.</string>
   <string name="firstrun_description">Siz gezerken çevrimiçi takipçiler otomatik olarak engellenecektir. Girdiğiniz sayfaları, aramalarınızı, çerezleri ve parolaları cihazınızdan silmek için SİL düğmesine dokunmanız yeterli.</string>
   <string name="firstrun_button">Anladım!</string>
   <string name="firstrun_footer">Unutmayın, kullandığınız siteler ve hizmetler nerelere gittiğinizi yine de bilebilir.</string>
+  <string name="your_rights">Haklarınız</string>
+  <string name="external_app_prompt_title">Bağlantıyı farklı uygulamada aç</string>
+  <string name="external_app_prompt">Bu bağlantıyı %2$s ile açmak için %1$s\'tan çıkabilirsiniz.</string>
+  <string name="external_app_prompt_no_app_title">Bağlantıyı açabilecek bir uygulama bul</string>
+  <string name="external_app_prompt_no_app">Cihazınızdaki uygulamalar bu bağlantıyı açamıyor. %2$s mağazasında uygun bir uygulama aramak için %1$s\'tan çıkabilirsiniz.</string>
+  <string name="external_multiple_apps_matched_exit">Gizli Gezinti\'den çıkılsın mı?</string>
+  <string name="errorpage_title">Sayfa yükleme sorunu</string>
+  <string name="errorpage_refresh">Yeniden dene</string>
+  <string name="error_connectionfailure_title">Bağlanılamadı</string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Site ge&#231;ici olarak kapal&#305; olabilir veya &#231;ok me&#351;gul olabilir. Birka&#231; dakika sonra yeniden deneyin.</li>"\n        "<li>Hi&#231;bir sayfa a&#231;&#305;lm&#305;yorsa cihaz&#305;n&#305;z&#305;n mobil internet veya Wi-Fi ba&#287;lant&#305;s&#305;n&#305; kontrol edin.</li>"\n      "</ul>]]></string>
+  <string name="error_timeout_title">Bağlantı zaman aşımına uğradı</string>
+  <string name="error_hostLookup_title">Sunucu bulunamadı</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Adres "<strong>www</strong>".example.com yerine "<strong>ww</strong>.example.com gibi yanl&#305;&#351; yaz&#305;lm&#305;&#351; olabilir.</li>"\n  "<li>Hi&#231;bir sayfa a&#231;&#305;lm&#305;yorsa cihaz&#305;n&#305;z&#305;n mobil internet veya Wi-Fi ba&#287;lant&#305;s&#305;n&#305; kontrol edin.</li>\n</ul>]]></string>
+  <string name="error_malformedURI_title">Adres geçersiz</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Web adresleri genelde "<strong>http://www.example.com/</strong>" bi&#231;iminde yaz&#305;l&#305;r."</li>"\n  "<li>Adreste sa&#287;a yat&#305;k b&#246;l&#252; i&#351;areti (<strong>/</strong>) bulundu&#287;undan emin olun.</li>\n</ul>]]></string>
   <string name="error_redirectLoop_title">Sayfa doğru bir şekilde yönlendirilmiyor</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Bu sorun bazen &#231;erezlerin devre d&#305;&#351;&#305; b&#305;rak&#305;lmas&#305;ndan veya reddedilmesinden kaynaklabilir.</li>\n</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">Adres anlaşılamadı</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Bu adresi a&#231;mak i&#231;in ba&#351;ka bir uygulama y&#252;klemeniz gerekebilir.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Güvenli bağlantı hatası</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" \n  "<li>Sunucunun yap&#305;land&#305;rmas&#305;yla ilgili bir sorun olabilir veya birisi sunucuyu taklit etmeye &#231;al&#305;&#351;&#305;yor olabilir.</li>"\n  "<li>Daha &#246;nce bu sunucuya sorunsuz ba&#287;land&#305;ysan&#305;z sorun ge&#231;ici olabilir ve daha sonra yeniden ba&#287;lanmay&#305; deneyebilirsiniz.</li>\n</ul>]]></string>
+  <string name="error_generic_title">Hata</string>
+  <string name="error_generic_message">Bilinmeyen bir nedenden dolayı bu sayfa yüklenemedi.</string>
 </resources>

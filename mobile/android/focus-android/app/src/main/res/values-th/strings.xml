@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">อาจทำให้บางวิดีโอและหน้าเว็บไม่สมบูรณ์</string>
   <string name="preference_category_performance">ประสิทธิภาพ</string>
   <string name="preference_performance_block_webfonts">ปิดกั้นแบบอักษรเว็บ</string>
+  <string name="preference_performance_block_webfonts_summary">อาจส่งผลให้ไอคอนหรือภาพขาดหายไป</string>
   <string name="preference_performance_block_images">ปิดกั้นภาพ</string>
   <string name="preference_default_browser">ทำให้เป็นเบราว์เซอร์เริ่มต้น</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">ตัวเลือกเพิ่มเติม</string>
   <string name="content_description_forward">นำทางเดินหน้า</string>
   <string name="content_description_reload">โหลดเว็บไซต์ใหม่</string>
+  <string name="content_description_back">นำทางย้อนกลับ</string>
+  <string name="content_description_stop">หยุดการโหลดเว็บไซต์</string>
+  <string name="context_menu_paste_go">วางแล้วไป</string>
   <string name="firstrun_title">ท่องเว็บเหมือนไม่มีใครเฝ้ามองอยู่</string>
   <string name="firstrun_description">ปิดกั้นตัวติดตามออนไลน์โดยอัตโนมัติขณะที่คุณท่องเว็บ จากนั้นแตะเพื่อล้างหน้าที่เยี่ยมชม, การค้นหา, คุกกี้ และรหัสผ่านจากอุปกรณ์ของคุณ</string>
   <string name="firstrun_button">ตกลง เข้าใจแล้ว!</string>

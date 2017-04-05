@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Yezmer ad isewḥel kra n tvidyutin akked kra n isebtar Web ad d-banen akken iwata</string>
   <string name="preference_category_performance">Tamellit</string>
   <string name="preference_performance_block_webfonts">Sewḥel tisefsiyin Web</string>
+  <string name="preference_performance_block_webfonts_summary">Ahat yekka-d seg tigitin neɣ tugniwin yettwattun</string>
   <string name="preference_performance_block_images">Sewḥel tugniwin</string>
   <string name="preference_default_browser">Err-it d iminig amezwer</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">Ugar n iγewwaṛen</string>
   <string name="content_description_forward">Inig ar zdat</string>
   <string name="content_description_reload">Ales asali n usmel web</string>
+  <string name="content_description_back">Inig ar deffir</string>
+  <string name="content_description_stop">Seḥbes asali n usmel</string>
+  <string name="context_menu_paste_go">Senteḍ &amp; kemmel</string>
   <string name="firstrun_title">Inig am akken ulac win i k-id-ittmuqqulen.</string>
   <string name="firstrun_description">Sewḥel s wudem awurman inedfaṛen ticki tettinigeḍ. Senned sakin ɣef tqeffalt Sfeḍ akken ad tekkseḍ isebtar yettwarzan, inadiyen, inagan n tuqqna akked wawalen uffiren.</string>
   <string name="firstrun_button">Ih, gziɣ!</string>

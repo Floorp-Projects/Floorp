@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Toto môže rozbiť niektoré videá a webové stránky</string>
   <string name="preference_category_performance">Výkon</string>
   <string name="preference_performance_block_webfonts">Blokovať webové písma</string>
+  <string name="preference_performance_block_webfonts_summary">Niektoré ikony alebo obrázky sa nemusia zobrazovať</string>
   <string name="preference_performance_block_images">Blokovať obrázky</string>
   <string name="preference_default_browser">Nastaviť ako predvolený prehliadač</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">Ďalšie možnosti</string>
   <string name="content_description_forward">Prejsť dopredu</string>
   <string name="content_description_reload">Obnoviť stránku</string>
+  <string name="content_description_back">Prejsť dozadu</string>
+  <string name="content_description_stop">Zastaviť načítavanie webovej stránky</string>
+  <string name="context_menu_paste_go">Prilepiť a prejsť</string>
   <string name="firstrun_title">Prehliadajte, akoby sa nikto nepozeral.</string>
   <string name="firstrun_description">Automaticky počas prehliadania blokujte sledovacie prvky. Potom jedným ťuknutím z vášho zariadenia vymažte zoznam navštívených stránok, výsledky vyhľadávania, cookies a heslá.</string>
   <string name="firstrun_button">Ok, rozumiem!</string>

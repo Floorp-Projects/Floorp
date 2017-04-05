@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">ممکن است بعضی از ویدئوها یا صفحات وب را دُچار مشکل کند</string>
   <string name="preference_category_performance">کارایی</string>
   <string name="preference_performance_block_webfonts">مسدود کردن قلم‌های وب</string>
+  <string name="preference_performance_block_webfonts_summary">ممکن است باعث بارگیری نشدن برخی از شمایل‌ها و تصاویر بشود</string>
   <string name="preference_performance_block_images">مسدود کردن تصاویر</string>
   <string name="preference_default_browser">تبدیل به مرورگر پیش‌فرض</string>
   <string name="preference_category_mozilla">موزیلا</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">گزینه‌های بیشتر</string>
   <string name="content_description_forward">حرکت به جلو</string>
   <string name="content_description_reload">بارگیری مجدد سایت</string>
+  <string name="content_description_back">بازگشت به عقب</string>
+  <string name="content_description_stop">توقف بارگیری وب‌سایت</string>
+  <string name="context_menu_paste_go">جایگذاری و ارسال</string>
   <string name="firstrun_title">بدون دغدغهٔ نگاه‌ها مرور کنید.</string>
   <string name="firstrun_description">به طور خودکار ردیاب‌های برخط را هنگام مرور مسدود کنید. بعد از آن با یک لمس، صفحات، جست‌وجوها، کوکی‌ها و گذرواژه‌هایی که مشاهده کرده‌اید را از روی دستگاه خود حذف کنید.</string>
   <string name="firstrun_button">باشه، گرفتم!</string>

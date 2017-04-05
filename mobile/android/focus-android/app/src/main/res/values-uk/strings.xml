@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Може пошкодити деякі відео і веб-сторінки</string>
   <string name="preference_category_performance">Швидкодія</string>
   <string name="preference_performance_block_webfonts">Блокувати веб-шрифти</string>
+  <string name="preference_performance_block_webfonts_summary">Може призвести до втрати піктограм чи зображень</string>
   <string name="preference_performance_block_images">Блокувати зображення</string>
   <string name="preference_default_browser">Зробити типовим браузером</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">Додатково</string>
   <string name="content_description_forward">Перехід уперед</string>
   <string name="content_description_reload">Перезавантажити веб-сайт</string>
+  <string name="content_description_back">Перейти назад</string>
+  <string name="content_description_stop">Зупинити завантаження сайту</string>
+  <string name="context_menu_paste_go">Вставити і перейти</string>
   <string name="firstrun_title">Переглядайте без думки, що за вами хтось спостерігає.</string>
   <string name="firstrun_description">Автоматично блокуйте стеження онлайн під час перегляду. Потім торкніться, щоб стерти відвідані сторінки, пошукові запити, куки й паролі з вашого пристрою.</string>
   <string name="firstrun_button">Гаразд, зрозуміло!</string>
