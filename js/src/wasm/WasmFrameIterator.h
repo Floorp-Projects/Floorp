@@ -38,7 +38,6 @@ class Instance;
 class SigIdDesc;
 struct FuncOffsets;
 struct CallableOffsets;
-struct TrapOffset;
 
 // Iterates over the frames of a single WasmActivation, called synchronously
 // from C++ in the thread of the asm.js.

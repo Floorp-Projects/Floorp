@@ -4001,6 +4001,9 @@ class LModD : public LBinaryMath<1>
     bool isCall() const {
         return true;
     }
+    MMod* mir() const {
+        return mir_->toMod();
+    }
 };
 
 // Call a VM function to perform a binary operation.

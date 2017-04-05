@@ -101,6 +101,14 @@ MacroAssembler::call(const wasm::CallSiteDesc& desc, wasm::Trap trap)
     append(desc, l, trap);
 }
 
+void
+MacroAssembler::call(const wasm::CallSiteDesc& desc, wasm::SymbolicAddress imm)
+{
+    MOZ_ASSERT(wasm::NeedsBuiltinThunk(imm), "only for functions which may appear in profiler");
+    call(imm);
+    append(desc, CodeOffset(currentOffset()));
+}
+
 // ===============================================================
 // ABI function calls.
 

@@ -7033,18 +7033,21 @@ CodeGenerator::visitModD(LModD* ins)
 {
     FloatRegister lhs = ToFloatRegister(ins->lhs());
     FloatRegister rhs = ToFloatRegister(ins->rhs());
-    Register temp = ToRegister(ins->temp());
 
     MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
+    MOZ_ASSERT(ins->temp()->isBogusTemp() == gen->compilingWasm());
 
-    masm.setupUnalignedABICall(temp);
-    masm.passABIArg(lhs, MoveOp::DOUBLE);
-    masm.passABIArg(rhs, MoveOp::DOUBLE);
-
-    if (gen->compilingWasm())
-        masm.callWithABI(wasm::SymbolicAddress::ModD, MoveOp::DOUBLE);
-    else
+    if (gen->compilingWasm()) {
+        masm.setupWasmABICall();
+        masm.passABIArg(lhs, MoveOp::DOUBLE);
+        masm.passABIArg(rhs, MoveOp::DOUBLE);
+        masm.callWithABI(ins->mir()->bytecodeOffset(), wasm::SymbolicAddress::ModD, MoveOp::DOUBLE);
+    } else {
+        masm.setupUnalignedABICall(ToRegister(ins->temp()));
+        masm.passABIArg(lhs, MoveOp::DOUBLE);
+        masm.passABIArg(rhs, MoveOp::DOUBLE);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NumberMod), MoveOp::DOUBLE);
+    }
 }
 
 typedef bool (*BinaryFn)(JSContext*, MutableHandleValue, MutableHandleValue, MutableHandleValue);
@@ -9560,7 +9563,7 @@ CodeGenerator::visitRest(LRest* lir)
 }
 
 bool
-CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::TrapOffset trapOffset,
+CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::BytecodeOffset trapOffset,
                             wasm::FuncOffsets* offsets)
 {
     JitSpew(JitSpew_Codegen, "# Emitting wasm code");

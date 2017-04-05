@@ -968,15 +968,19 @@ enum class Trap
 };
 
 // A wrapper around the bytecode offset of a wasm instruction within a whole
-// module. Trap offsets should refer to the first byte of the instruction that
-// triggered the trap and should ultimately derive from OpIter::trapOffset.
+// module, used for trap offsets or call offsets. These offsets should refer to
+// the first byte of the instruction that triggered the trap / did the call and
+// should ultimately derive from OpIter::bytecodeOffset.
 
-struct TrapOffset
+struct BytecodeOffset
 {
+    static const uint32_t INVALID = -1;
     uint32_t bytecodeOffset;
 
-    TrapOffset() = default;
-    explicit TrapOffset(uint32_t bytecodeOffset) : bytecodeOffset(bytecodeOffset) {}
+    BytecodeOffset() : bytecodeOffset(INVALID) {}
+    explicit BytecodeOffset(uint32_t bytecodeOffset) : bytecodeOffset(bytecodeOffset) {}
+
+    bool isValid() const { return bytecodeOffset != INVALID; }
 };
 
 // While the frame-pointer chain allows the stack to be unwound without
@@ -991,9 +995,9 @@ class CallSiteDesc
     uint32_t kind_ : 3;
   public:
     enum Kind {
-        Func,      // pc-relative call to a specific function
-        Dynamic,   // dynamic callee called via register
-        Symbolic,  // call to a single symbolic callee
+        Func,       // pc-relative call to a specific function
+        Dynamic,    // dynamic callee called via register
+        Symbolic,   // call to a single symbolic callee
         TrapExit,   // call to a trap exit
         EnterFrame, // call to a enter frame handler
         LeaveFrame, // call to a leave frame handler
