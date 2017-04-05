@@ -20,6 +20,10 @@ namespace {
 class ReleaseRunnable final : public Runnable
 {
 public:
+  ReleaseRunnable()
+    : Runnable("ReleaseRunnable")
+  {}
+
   static void
   MaybeReleaseOnMainThread(nsTArray<RefPtr<Promise>>& aPromises,
                            nsTArray<RefPtr<GetFilesCallback>>& aCallbacks,
@@ -130,7 +134,8 @@ GetFilesHelper::Create(nsIGlobalObject* aGlobal,
 }
 
 GetFilesHelper::GetFilesHelper(nsIGlobalObject* aGlobal, bool aRecursiveFlag)
-  : GetFilesHelperBase(aRecursiveFlag)
+  : Runnable("GetFilesHelper")
+  , GetFilesHelperBase(aRecursiveFlag)
   , mGlobal(aGlobal)
   , mListingCompleted(false)
   , mErrorResult(NS_OK)

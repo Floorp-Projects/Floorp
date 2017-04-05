@@ -20,7 +20,8 @@ class FileCallbackRunnable final : public Runnable
 public:
   FileCallbackRunnable(FileCallback* aCallback, ErrorCallback* aErrorCallback,
                        File* aFile)
-    : mCallback(aCallback)
+    : Runnable("FileCallbackRunnable")
+    , mCallback(aCallback)
     , mErrorCallback(aErrorCallback)
     , mFile(aFile)
   {
