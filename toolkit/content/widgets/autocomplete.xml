@@ -1086,12 +1086,17 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         <setter>
           <![CDATA[
           this.richlistbox.selectedIndex = val;
-
-          // when clearing the selection (val == -1, so selectedItem will be
-          // null), we want to scroll back to the top.  see bug #406194
-          this.richlistbox.ensureElementIsVisible(
-            this.richlistbox.selectedItem || this.richlistbox.firstChild);
-
+          // Since ensureElementIsVisible may cause an expensive Layout flush,
+          // invoke it only if there may be a scrollbar, so if we could fetch
+          // more results than we can show at once.
+          // maxResults is the maximum number of fetched results, maxRows is the
+          // maximum number of rows we show at once, without a scrollbar.
+          if (this.maxResults > this.maxRows) {
+            // when clearing the selection (val == -1, so selectedItem will be
+            // null), we want to scroll back to the top.  see bug #406194
+            this.richlistbox.ensureElementIsVisible(
+              this.richlistbox.selectedItem || this.richlistbox.firstChild);
+          }
           return val;
         ]]>
         </setter>
