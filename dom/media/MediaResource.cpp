@@ -34,9 +34,11 @@
 
 using mozilla::media::TimeUnit;
 
+#undef LOG
+
 mozilla::LazyLogModule gMediaResourceLog("MediaResource");
 // Debug logging macro with object pointer and class name.
-#define CMLOG(msg, ...) MOZ_LOG(gMediaResourceLog, mozilla::LogLevel::Debug, \
+#define LOG(msg, ...) MOZ_LOG(gMediaResourceLog, mozilla::LogLevel::Debug, \
   ("%p " msg, this, ##__VA_ARGS__))
 
 static const uint32_t HTTP_OK_CODE = 200;
@@ -359,8 +361,8 @@ ChannelMediaResource::ParseContentRangeHeader(nsIHttpChannel * aHttpChan,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  CMLOG("Received bytes [%" PRId64 "] to [%" PRId64 "] of [%" PRId64 "] for decoder[%p]",
-        aRangeStart, aRangeEnd, aRangeTotal, mCallback.get());
+  LOG("Received bytes [%" PRId64 "] to [%" PRId64 "] of [%" PRId64 "] for decoder[%p]",
+      aRangeStart, aRangeEnd, aRangeTotal, mCallback.get());
 
   return NS_OK;
 }
@@ -432,9 +434,9 @@ ChannelMediaResource::CopySegmentToCache(nsIPrincipal* aPrincipal,
   mCallback->NotifyDataArrived();
 
   // Keep track of where we're up to.
-  CMLOG("CopySegmentToCache at mOffset [%" PRId64 "] add "
-        "[%d] bytes for decoder[%p]",
-        mOffset, aCount, mCallback.get());
+  LOG("CopySegmentToCache at mOffset [%" PRId64 "] add "
+      "[%d] bytes for decoder[%p]",
+      mOffset, aCount, mCallback.get());
   mOffset += aCount;
   mCacheStream.NotifyDataReceived(aCount, aFromSegment, aPrincipal);
   *aWriteCount = aCount;
@@ -907,8 +909,8 @@ ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
-  CMLOG("CacheClientSeek requested for aOffset [%" PRId64 "] for decoder [%p]",
-        aOffset, mCallback.get());
+  LOG("CacheClientSeek requested for aOffset [%" PRId64 "] for decoder [%p]",
+      aOffset, mCallback.get());
 
   CloseChannel();
 
@@ -1660,3 +1662,5 @@ MediaResourceIndex::Seek(int32_t aWhence, int64_t aOffset)
 
 } // namespace mozilla
 
+// avoid redefined macro in unified build
+#undef LOG
