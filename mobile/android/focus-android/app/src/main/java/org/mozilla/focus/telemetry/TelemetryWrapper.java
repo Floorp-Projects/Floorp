@@ -12,11 +12,13 @@ import android.preference.PreferenceManager;
 
 import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.R;
+import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.telemetry.Telemetry;
 import org.mozilla.telemetry.TelemetryHolder;
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.event.TelemetryEvent;
 import org.mozilla.telemetry.net.DebugLogClient;
+import org.mozilla.telemetry.net.HttpURLConnectionTelemetryClient;
 import org.mozilla.telemetry.net.TelemetryClient;
 import org.mozilla.telemetry.ping.TelemetryCorePingBuilder;
 import org.mozilla.telemetry.ping.TelemetryEventPingBuilder;
@@ -72,8 +74,11 @@ public final class TelemetryWrapper {
         final Resources resources = context.getResources();
         final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
 
+        final boolean telemetryEnabled = preferences.getBoolean(resources.getString(R.string.pref_key_telemetry), true)
+                && !AppConstants.isDevBuild();
+
         final TelemetryConfiguration configuration = new TelemetryConfiguration(context)
-                .setServerEndpoint("TODO") // TODO: For now we just use DebugLogClient which will only log
+                .setServerEndpoint("https://incoming.telemetry.mozilla.org")
                 .setAppName(TELEMETRY_APP_NAME)
                 .setUpdateChannel(BuildConfig.BUILD_TYPE)
                 .setPreferencesImportantForTelemetry(
@@ -83,35 +88,39 @@ public final class TelemetryWrapper {
                         resources.getString(R.string.pref_key_privacy_block_social),
                         resources.getString(R.string.pref_key_privacy_block_other),
                         resources.getString(R.string.pref_key_performance_block_webfonts))
-                .setCollectionEnabled(true) // TODO: We want to use !AppConstants.isDevBuild() here, but right now we are only logging.
-                .setUploadEnabled(preferences.getBoolean(resources.getString(R.string.pref_key_telemetry), true));
+                .setCollectionEnabled(telemetryEnabled)
+                .setUploadEnabled(telemetryEnabled);
 
         final TelemetryPingSerializer serializer = new JSONPingSerializer();
         final TelemetryStorage storage = new FileTelemetryStorage(configuration, serializer);
-        final TelemetryClient client = new DebugLogClient("Focus/Telemetry");
+        final TelemetryClient client = new HttpURLConnectionTelemetryClient();
         final TelemetryScheduler scheduler = new JobSchedulerTelemetryScheduler();
 
         final Telemetry telemetry = new Telemetry(configuration, storage, client, scheduler)
-                .addPingBuilder(new TelemetryCorePingBuilder(configuration))
+                // TODO: Core ping disabled until all fields are added (#18)
+                //.addPingBuilder(new TelemetryCorePingBuilder(configuration))
                 .addPingBuilder(new TelemetryEventPingBuilder(configuration));
         TelemetryHolder.set(telemetry);
     }
 
     public static void startSession() {
-        TelemetryHolder.get().recordSessionStart();
+        // TODO: Core ping disabled until all fields are added (#18)
+        // TelemetryHolder.get().recordSessionStart();
 
         TelemetryEvent.create(Category.ACTION, Method.FOREGROUND, Object.APP).queue();
     }
 
     public static void stopSession() {
-        TelemetryHolder.get().recordSessionEnd();
+        // TODO: Core ping disabled until all fields are added (#18)
+        // TelemetryHolder.get().recordSessionEnd();
 
         TelemetryEvent.create(Category.ACTION, Method.BACKGROUND, Object.APP).queue();
     }
 
     public static void stopMainActivity() {
         TelemetryHolder.get()
-                .queuePing(TelemetryCorePingBuilder.TYPE)
+                // TODO: Core ping disabled until all fields are added (#18)
+                //.queuePing(TelemetryCorePingBuilder.TYPE)
                 .queuePing(TelemetryEventPingBuilder.TYPE)
                 .scheduleUpload();
     }
