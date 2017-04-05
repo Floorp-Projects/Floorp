@@ -5179,6 +5179,7 @@ MacroAssembler::popReturnAddress()
 void
 MacroAssembler::setupUnalignedABICall(Register scratch)
 {
+    MOZ_ASSERT(!IsCompilingWasm(), "wasm should only use aligned ABI calls");
     setupABICall();
     dynamicAlignment_ = true;
 
@@ -5227,12 +5228,14 @@ MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm)
 }
 
 void
-MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
+MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result, bool callFromWasm)
 {
     if (secondScratchReg_ != lr)
         ma_mov(secondScratchReg_, lr);
 
-    if (!UseHardFpABI()) {
+    // Calls to native functions in wasm pass through a thunk which already
+    // fixes up the return value for us.
+    if (!callFromWasm && !UseHardFpABI()) {
         switch (result) {
           case MoveOp::DOUBLE:
             // Move double from r0/r1 to ReturnFloatReg.
@@ -5577,7 +5580,7 @@ MacroAssemblerARM::wasmTruncateToInt32(FloatRegister input, Register output, MIR
 void
 MacroAssemblerARM::outOfLineWasmTruncateToIntCheck(FloatRegister input, MIRType fromType,
                                                    MIRType toType, bool isUnsigned, Label* rejoin,
-                                                   wasm::TrapOffset trapOffset)
+                                                   wasm::BytecodeOffset trapOffset)
 {
     ScratchDoubleScope scratchScope(asMasm());
     FloatRegister scratch;

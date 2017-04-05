@@ -621,13 +621,17 @@ CodeGeneratorARM::visitSoftDivI(LSoftDivI* ins)
     Label done;
     divICommon(mir, lhs, rhs, output, ins->snapshot(), done);
 
-    masm.setupAlignedABICall();
-    masm.passABIArg(lhs);
-    masm.passABIArg(rhs);
-    if (gen->compilingWasm())
-        masm.callWithABI(wasm::SymbolicAddress::aeabi_idivmod);
-    else
+    if (gen->compilingWasm()) {
+        masm.setupWasmABICall();
+        masm.passABIArg(lhs);
+        masm.passABIArg(rhs);
+        masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::aeabi_idivmod);
+    } else {
+        masm.setupAlignedABICall();
+        masm.passABIArg(lhs);
+        masm.passABIArg(rhs);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, __aeabi_idivmod));
+    }
 
     // idivmod returns the quotient in r0, and the remainder in r1.
     if (!mir->canTruncateRemainder()) {
@@ -780,7 +784,6 @@ CodeGeneratorARM::visitSoftModI(LSoftModI* ins)
     MOZ_ASSERT(callTemp.code() > r3.code() && callTemp.code() < r12.code());
     masm.ma_mov(lhs, callTemp);
 
-
     // Prevent INT_MIN % -1;
     // The integer division will give INT_MIN, but we want -(double)INT_MIN.
     if (mir->canBeNegativeDividend()) {
@@ -806,13 +809,17 @@ CodeGeneratorARM::visitSoftModI(LSoftModI* ins)
 
     modICommon(mir, lhs, rhs, output, ins->snapshot(), done);
 
-    masm.setupAlignedABICall();
-    masm.passABIArg(lhs);
-    masm.passABIArg(rhs);
-    if (gen->compilingWasm())
-        masm.callWithABI(wasm::SymbolicAddress::aeabi_idivmod);
-    else
+    if (gen->compilingWasm()) {
+        masm.setupWasmABICall();
+        masm.passABIArg(lhs);
+        masm.passABIArg(rhs);
+        masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::aeabi_idivmod);
+    } else {
+        masm.setupAlignedABICall();
+        masm.passABIArg(lhs);
+        masm.passABIArg(rhs);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, __aeabi_idivmod));
+    }
 
     // If X%Y == 0 and X < 0, then we *actually* wanted to return -0.0
     if (mir->canBeNegativeDividend()) {
@@ -2230,62 +2237,6 @@ CodeGeneratorARM::visitWasmReinterpret(LWasmReinterpret* lir)
 }
 
 void
-CodeGeneratorARM::emitWasmCall(LWasmCallBase* ins)
-{
-    MWasmCall* mir = ins->mir();
-
-    if (UseHardFpABI() || mir->callee().which() != wasm::CalleeDesc::Builtin) {
-        emitWasmCallBase(ins);
-        return;
-    }
-
-    // The soft ABI passes floating point arguments in GPRs. Since basically
-    // nothing is set up to handle this, the values are placed in the
-    // corresponding VFP registers, then transferred to GPRs immediately
-    // before the call. The mapping is sN <-> rN, where double registers
-    // can be treated as their two component single registers.
-
-    for (unsigned i = 0, e = ins->numOperands(); i < e; i++) {
-        LAllocation* a = ins->getOperand(i);
-        if (a->isFloatReg()) {
-            FloatRegister fr = ToFloatRegister(a);
-            if (fr.isDouble()) {
-                uint32_t srcId = fr.singleOverlay().id();
-                masm.ma_vxfer(fr, Register::FromCode(srcId), Register::FromCode(srcId + 1));
-            } else {
-                uint32_t srcId = fr.id();
-                masm.ma_vxfer(fr, Register::FromCode(srcId));
-            }
-        }
-    }
-
-    emitWasmCallBase(ins);
-
-    switch (mir->type()) {
-      case MIRType::Double:
-        masm.ma_vxfer(r0, r1, d0);
-        break;
-      case MIRType::Float32:
-        masm.as_vxfer(r0, InvalidReg, VFPRegister(d0).singleOverlay(), Assembler::CoreToFloat);
-        break;
-      default:
-        break;
-    }
-}
-
-void
-CodeGeneratorARM::visitWasmCall(LWasmCall* ins)
-{
-    emitWasmCall(ins);
-}
-
-void
-CodeGeneratorARM::visitWasmCallI64(LWasmCallI64* ins)
-{
-    emitWasmCall(ins);
-}
-
-void
 CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
 {
     const MAsmJSLoadHeap* mir = ins->mir();
@@ -2616,13 +2567,13 @@ CodeGeneratorARM::visitAsmJSCompareExchangeCallout(LAsmJSCompareExchangeCallout*
     masm.loadPtr(Address(tls, offsetof(wasm::TlsData, instance)), instance);
     masm.ma_mov(Imm32(mir->access().type()), viewType);
 
-    masm.setupAlignedABICall();
+    masm.setupWasmABICall();
     masm.passABIArg(instance);
     masm.passABIArg(viewType);
     masm.passABIArg(ptr);
     masm.passABIArg(oldval);
     masm.passABIArg(newval);
-    masm.callWithABI(wasm::SymbolicAddress::AtomicCmpXchg);
+    masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::AtomicCmpXchg);
 }
 
 void
@@ -2658,12 +2609,12 @@ CodeGeneratorARM::visitAsmJSAtomicExchangeCallout(LAsmJSAtomicExchangeCallout* i
     masm.loadPtr(Address(tls, offsetof(wasm::TlsData, instance)), instance);
     masm.ma_mov(Imm32(mir->access().type()), viewType);
 
-    masm.setupAlignedABICall();
+    masm.setupWasmABICall();
     masm.passABIArg(instance);
     masm.passABIArg(viewType);
     masm.passABIArg(ptr);
     masm.passABIArg(value);
-    masm.callWithABI(wasm::SymbolicAddress::AtomicXchg);
+    masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::AtomicXchg);
 }
 
 void
@@ -2730,27 +2681,28 @@ CodeGeneratorARM::visitAsmJSAtomicBinopCallout(LAsmJSAtomicBinopCallout* ins)
     masm.loadPtr(Address(tls, offsetof(wasm::TlsData, instance)), instance);
     masm.move32(Imm32(mir->access().type()), viewType);
 
-    masm.setupAlignedABICall();
+    masm.setupWasmABICall();
     masm.passABIArg(instance);
     masm.passABIArg(viewType);
     masm.passABIArg(ptr);
     masm.passABIArg(value);
 
+    wasm::BytecodeOffset bytecodeOffset = mir->bytecodeOffset();
     switch (mir->operation()) {
       case AtomicFetchAddOp:
-        masm.callWithABI(wasm::SymbolicAddress::AtomicFetchAdd);
+        masm.callWithABI(bytecodeOffset, wasm::SymbolicAddress::AtomicFetchAdd);
         break;
       case AtomicFetchSubOp:
-        masm.callWithABI(wasm::SymbolicAddress::AtomicFetchSub);
+        masm.callWithABI(bytecodeOffset, wasm::SymbolicAddress::AtomicFetchSub);
         break;
       case AtomicFetchAndOp:
-        masm.callWithABI(wasm::SymbolicAddress::AtomicFetchAnd);
+        masm.callWithABI(bytecodeOffset, wasm::SymbolicAddress::AtomicFetchAnd);
         break;
       case AtomicFetchOrOp:
-        masm.callWithABI(wasm::SymbolicAddress::AtomicFetchOr);
+        masm.callWithABI(bytecodeOffset, wasm::SymbolicAddress::AtomicFetchOr);
         break;
       case AtomicFetchXorOp:
-        masm.callWithABI(wasm::SymbolicAddress::AtomicFetchXor);
+        masm.callWithABI(bytecodeOffset, wasm::SymbolicAddress::AtomicFetchXor);
         break;
       default:
         MOZ_CRASH("Unknown op");
@@ -2884,13 +2836,18 @@ CodeGeneratorARM::visitSoftUDivOrMod(LSoftUDivOrMod* ins)
     generateUDivModZeroCheck(rhs, output, &done, ins->snapshot(), div);
     generateUDivModZeroCheck(rhs, output, &done, ins->snapshot(), mod);
 
-    masm.setupAlignedABICall();
-    masm.passABIArg(lhs);
-    masm.passABIArg(rhs);
-    if (gen->compilingWasm())
-        masm.callWithABI(wasm::SymbolicAddress::aeabi_uidivmod);
-    else
+    if (gen->compilingWasm()) {
+        masm.setupWasmABICall();
+        masm.passABIArg(lhs);
+        masm.passABIArg(rhs);
+        wasm::BytecodeOffset bytecodeOffset = (div ? div->bytecodeOffset() : mod->bytecodeOffset());
+        masm.callWithABI(bytecodeOffset, wasm::SymbolicAddress::aeabi_uidivmod);
+    } else {
+        masm.setupAlignedABICall();
+        masm.passABIArg(lhs);
+        masm.passABIArg(rhs);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, __aeabi_uidivmod));
+    }
 
     // uidivmod returns the quotient in r0, and the remainder in r1.
     if (div && !div->canTruncateRemainder()) {
@@ -2998,12 +2955,13 @@ CodeGeneratorARM::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
 
     masm.Push(input);
 
-    masm.setupUnalignedABICall(output.high);
+    masm.setupWasmABICall();
     masm.passABIArg(inputDouble, MoveOp::DOUBLE);
+
     if (lir->mir()->isUnsigned())
-        masm.callWithABI(wasm::SymbolicAddress::TruncateDoubleToUint64);
+        masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::TruncateDoubleToUint64);
     else
-        masm.callWithABI(wasm::SymbolicAddress::TruncateDoubleToInt64);
+        masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::TruncateDoubleToInt64);
 
     masm.Pop(input);
 
@@ -3022,7 +2980,7 @@ CodeGeneratorARM::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* oo
 {
     masm.outOfLineWasmTruncateToIntCheck(ool->input(), ool->fromType(), ool->toType(),
                                          ool->isUnsigned(), ool->rejoin(),
-                                         ool->trapOffset());
+                                         ool->bytecodeOffset());
 }
 
 void
@@ -3033,13 +2991,7 @@ CodeGeneratorARM::visitInt64ToFloatingPointCall(LInt64ToFloatingPointCall* lir)
     MInt64ToFloatingPoint* mir = lir->mir();
     MIRType toType = mir->type();
 
-    // We are free to clobber all registers, since this is a call instruction.
-    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-    regs.take(input.low);
-    regs.take(input.high);
-    Register temp = regs.takeAny();
-
-    masm.setupUnalignedABICall(temp);
+    masm.setupWasmABICall();
     masm.passABIArg(input.high);
     masm.passABIArg(input.low);
 
@@ -3050,7 +3002,8 @@ CodeGeneratorARM::visitInt64ToFloatingPointCall(LInt64ToFloatingPointCall* lir)
                                    : (isUnsigned ? wasm::SymbolicAddress::Uint64ToDouble
                                                  : wasm::SymbolicAddress::Int64ToDouble);
 
-    masm.callWithABI(callee, toType == MIRType::Float32 ? MoveOp::FLOAT32 : MoveOp::DOUBLE);
+    MoveOp::Type result = toType == MIRType::Float32 ? MoveOp::FLOAT32 : MoveOp::DOUBLE;
+    masm.callWithABI(mir->bytecodeOffset(), callee, result);
 
     DebugOnly<FloatRegister> output(ToFloatRegister(lir->output()));
     MOZ_ASSERT_IF(toType == MIRType::Double, output.value == ReturnDoubleReg);
@@ -3138,6 +3091,27 @@ CodeGeneratorARM::visitExtendInt32ToInt64(LExtendInt32ToInt64* lir)
         masm.ma_asr(Imm32(31), output.low, output.high);
 }
 
+static Register
+WasmGetTemporaryForDivOrMod(Register64 lhs, Register64 rhs)
+{
+    MOZ_ASSERT(IsCompilingWasm());
+
+    // All inputs are useAtStart for a call instruction. As a result we cannot
+    // ask the register allocator for a non-aliasing temp.
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    regs.take(lhs.low);
+    regs.take(lhs.high);
+
+    // The FramePointer shouldn't be clobbered for profiling.
+    regs.take(FramePointer);
+
+    if (lhs != rhs) {
+        regs.take(rhs.low);
+        regs.take(rhs.high);
+    }
+    return regs.takeAny();
+}
+
 void
 CodeGeneratorARM::visitDivOrModI64(LDivOrModI64* lir)
 {
@@ -3147,29 +3121,23 @@ CodeGeneratorARM::visitDivOrModI64(LDivOrModI64* lir)
 
     MOZ_ASSERT(output == ReturnReg64);
 
-    // All inputs are useAtStart for a call instruction. As a result we cannot
-    // ask for a non-aliasing temp. Using the following to get such a temp.
-    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-    regs.take(lhs.low);
-    regs.take(lhs.high);
-    if (lhs != rhs) {
-        regs.take(rhs.low);
-        regs.take(rhs.high);
-    }
-    Register temp = regs.takeAny();
-
     Label done;
 
     // Handle divide by zero.
-    if (lir->canBeDivideByZero())
-        masm.branchTest64(Assembler::Zero, rhs, rhs, temp, trap(lir, wasm::Trap::IntegerDivideByZero));
+    if (lir->canBeDivideByZero()) {
+        Register temp = WasmGetTemporaryForDivOrMod(lhs, rhs);
+        masm.branchTest64(Assembler::Zero, rhs, rhs, temp,
+                          trap(lir, wasm::Trap::IntegerDivideByZero));
+    }
+
+    auto* mir = lir->mir();
 
     // Handle an integer overflow exception from INT64_MIN / -1.
     if (lir->canBeNegativeOverflow()) {
         Label notmin;
         masm.branch64(Assembler::NotEqual, lhs, Imm64(INT64_MIN), &notmin);
         masm.branch64(Assembler::NotEqual, rhs, Imm64(-1), &notmin);
-        if (lir->mir()->isMod())
+        if (mir->isMod())
             masm.xor64(output, output);
         else
             masm.jump(trap(lir, wasm::Trap::IntegerOverflow));
@@ -3177,17 +3145,16 @@ CodeGeneratorARM::visitDivOrModI64(LDivOrModI64* lir)
         masm.bind(&notmin);
     }
 
-    masm.setupUnalignedABICall(temp);
+    masm.setupWasmABICall();
     masm.passABIArg(lhs.high);
     masm.passABIArg(lhs.low);
     masm.passABIArg(rhs.high);
     masm.passABIArg(rhs.low);
 
-    MOZ_ASSERT(gen->compilingWasm());
-    if (lir->mir()->isMod())
-        masm.callWithABI(wasm::SymbolicAddress::ModI64);
+    if (mir->isMod())
+        masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::ModI64);
     else
-        masm.callWithABI(wasm::SymbolicAddress::DivI64);
+        masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::DivI64);
 
     MOZ_ASSERT(ReturnReg64 == output);
 
@@ -3202,32 +3169,25 @@ CodeGeneratorARM::visitUDivOrModI64(LUDivOrModI64* lir)
 
     MOZ_ASSERT(ToOutRegister64(lir) == ReturnReg64);
 
-    // All inputs are useAtStart for a call instruction. As a result we cannot
-    // ask for a non-aliasing temp. Using the following to get such a temp.
-    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-    regs.take(lhs.low);
-    regs.take(lhs.high);
-    if (lhs != rhs) {
-        regs.take(rhs.low);
-        regs.take(rhs.high);
-    }
-    Register temp = regs.takeAny();
-
     // Prevent divide by zero.
-    if (lir->canBeDivideByZero())
-        masm.branchTest64(Assembler::Zero, rhs, rhs, temp, trap(lir, wasm::Trap::IntegerDivideByZero));
+    if (lir->canBeDivideByZero()) {
+        Register temp = WasmGetTemporaryForDivOrMod(lhs, rhs);
+        masm.branchTest64(Assembler::Zero, rhs, rhs, temp,
+                          trap(lir, wasm::Trap::IntegerDivideByZero));
+    }
 
-    masm.setupUnalignedABICall(temp);
+    masm.setupWasmABICall();
     masm.passABIArg(lhs.high);
     masm.passABIArg(lhs.low);
     masm.passABIArg(rhs.high);
     masm.passABIArg(rhs.low);
 
     MOZ_ASSERT(gen->compilingWasm());
-    if (lir->mir()->isMod())
-        masm.callWithABI(wasm::SymbolicAddress::UModI64);
+    MDefinition* mir = lir->mir();
+    if (mir->isMod())
+        masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::UModI64);
     else
-        masm.callWithABI(wasm::SymbolicAddress::UDivI64);
+        masm.callWithABI(lir->bytecodeOffset(), wasm::SymbolicAddress::UDivI64);
 }
 
 void
