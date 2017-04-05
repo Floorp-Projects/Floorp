@@ -1980,7 +1980,7 @@ public class LocalBrowserDB extends BrowserDB {
                 .appendQueryParameter(BrowserContract.PARAM_LIMIT, String.valueOf(limit))
                 .build();
 
-        return contentResolver.query(uri, null, null, null, null, null);
+        return contentResolver.query(uri, null, null, null, null);
     }
 
     @Override

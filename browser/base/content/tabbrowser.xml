@@ -4,6 +4,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!-- eslint-env mozilla/browser-window -->
+
 <bindings id="tabBrowserBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -5489,10 +5491,13 @@
 
           if (!tab.hasAttribute("soundplaying")) {
             tab.setAttribute("soundplaying", true);
+            modifiedAttrs.push("soundplaying");
+          }
+
+          if (modifiedAttrs.length) {
             // Flush style so that the opacity takes effect immediately, in
             // case the media is stopped before the style flushes naturally.
             getComputedStyle(tab).opacity;
-            modifiedAttrs.push("soundplaying");
           }
 
           this._tabAttrModified(tab, modifiedAttrs);

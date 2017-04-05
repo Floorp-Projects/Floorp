@@ -121,11 +121,11 @@ SVGAnimatedNumberList::ClearAnimValue(nsSVGElement *aElement,
   aElement->DidAnimateNumberList(aAttrEnum);
 }
 
-nsISMILAttr*
+UniquePtr<nsISMILAttr>
 SVGAnimatedNumberList::ToSMILAttr(nsSVGElement *aSVGElement,
                                   uint8_t aAttrEnum)
 {
-  return new SMILAnimatedNumberList(this, aSVGElement, aAttrEnum);
+  return MakeUnique<SMILAnimatedNumberList>(this, aSVGElement, aAttrEnum);
 }
 
 nsresult

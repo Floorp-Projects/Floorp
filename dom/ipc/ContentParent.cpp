@@ -746,6 +746,10 @@ ContentParent::IsMaxProcessCountReached(const nsAString& aContentProcessType)
 /*static*/ void
 ContentParent::ReleaseCachedProcesses()
 {
+  if (!GetPoolSize(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE))) {
+    return;
+  }
+
   // We might want to extend this for other process types as well in the future...
   nsTArray<ContentParent*>& contentParents = GetOrCreatePool(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();

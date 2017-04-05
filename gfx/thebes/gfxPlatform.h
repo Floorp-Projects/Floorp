@@ -185,6 +185,8 @@ public:
 
     static void InitMoz2DLogging();
 
+    static bool IsHeadless();
+
     /**
      * Create an offscreen surface of the given dimensions
      * and image format.

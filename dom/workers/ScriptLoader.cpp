@@ -1154,12 +1154,17 @@ private:
       rv = mWorkerPrivate->SetPrincipalFromChannel(channel);
       NS_ENSURE_SUCCESS(rv, rv);
 
+      nsCOMPtr<nsIContentSecurityPolicy> csp = mWorkerPrivate->GetCSP();
       // We did inherit CSP in bug 1223647. If we do not already have a CSP, we
       // should get it from the HTTP headers on the worker script.
-      if (!mWorkerPrivate->GetCSP() && CSPService::sCSPEnabled) {
-        rv = mWorkerPrivate->SetCSPFromHeaderValues(tCspHeaderValue,
-                                                    tCspROHeaderValue);
-        NS_ENSURE_SUCCESS(rv, rv);
+      if (CSPService::sCSPEnabled) {
+        if (!csp) {
+          rv = mWorkerPrivate->SetCSPFromHeaderValues(tCspHeaderValue,
+                                                      tCspROHeaderValue);
+          NS_ENSURE_SUCCESS(rv, rv);
+        } else {
+          csp->EnsureEventTarget(mWorkerPrivate->MainThreadEventTarget());
+        }
       }
 
       mWorkerPrivate->SetReferrerPolicyFromHeaderValue(tRPHeaderCValue);

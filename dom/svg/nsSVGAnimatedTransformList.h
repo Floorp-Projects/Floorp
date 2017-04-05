@@ -8,6 +8,7 @@
 #define MOZILLA_SVGANIMATEDTRANSFORMLIST_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
 #include "nsISMILAttr.h"
 #include "SVGTransformList.h"
@@ -109,8 +110,7 @@ public:
     return mHadTransformBeforeLastBaseValChange;
   }
 
-  /// Callers own the returned nsISMILAttr
-  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
+  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
 
 private:
 

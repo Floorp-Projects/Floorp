@@ -147,10 +147,10 @@ SVGAnimatedPointList::ClearAnimValue(nsSVGElement *aElement)
   aElement->DidAnimatePointList();
 }
 
-nsISMILAttr*
+UniquePtr<nsISMILAttr>
 SVGAnimatedPointList::ToSMILAttr(nsSVGElement *aElement)
 {
-  return new SMILAnimatedPointList(this, aElement);
+  return MakeUnique<SMILAnimatedPointList>(this, aElement);
 }
 
 nsresult

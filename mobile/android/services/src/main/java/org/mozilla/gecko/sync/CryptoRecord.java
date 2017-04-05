@@ -41,7 +41,8 @@ public class CryptoRecord extends Record {
   // JSON related constants.
   private static final String KEY_ID         = "id";
   private static final String KEY_COLLECTION = "collection";
-  private static final String KEY_PAYLOAD    = "payload";
+  // We need to pluck out payload for size checks during upload to a Sync Storage server.
+  public static final String KEY_PAYLOAD    = "payload";
   private static final String KEY_MODIFIED   = "modified";
   private static final String KEY_SORTINDEX  = "sortindex";
   private static final String KEY_TTL        = "ttl";
@@ -239,6 +240,7 @@ public class CryptoRecord extends Record {
   }
 
   // TODO: this only works with encrypted object, and has other limitations.
+  @Override
   public JSONObject toJSONObject() {
     ExtendedJSONObject o = new ExtendedJSONObject();
     o.put(KEY_PAYLOAD, payload.toJSONString());

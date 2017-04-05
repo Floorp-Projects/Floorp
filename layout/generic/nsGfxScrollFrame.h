@@ -405,7 +405,7 @@ public:
   bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
                              nsRect* aDirtyRect,
                              bool aAllowCreateDisplayPort);
-  void NotifyApproximateFrameVisibilityUpdate();
+  void NotifyApproximateFrameVisibilityUpdate(bool aIgnoreDisplayPort);
   bool GetDisplayPortAtLastApproximateFrameVisibilityUpdate(nsRect* aDisplayPort);
 
   bool AllowDisplayPortExpiration();
@@ -943,8 +943,8 @@ public:
                                      bool aAllowCreateDisplayPort) override {
     return mHelper.DecideScrollableLayer(aBuilder, aDirtyRect, aAllowCreateDisplayPort);
   }
-  virtual void NotifyApproximateFrameVisibilityUpdate() override {
-    mHelper.NotifyApproximateFrameVisibilityUpdate();
+  virtual void NotifyApproximateFrameVisibilityUpdate(bool aIgnoreDisplayPort) override {
+    mHelper.NotifyApproximateFrameVisibilityUpdate(aIgnoreDisplayPort);
   }
   virtual bool GetDisplayPortAtLastApproximateFrameVisibilityUpdate(nsRect* aDisplayPort) override {
     return mHelper.GetDisplayPortAtLastApproximateFrameVisibilityUpdate(aDisplayPort);
@@ -1463,8 +1463,8 @@ public:
                                      bool aAllowCreateDisplayPort) override {
     return mHelper.DecideScrollableLayer(aBuilder, aDirtyRect, aAllowCreateDisplayPort);
   }
-  virtual void NotifyApproximateFrameVisibilityUpdate() override {
-    mHelper.NotifyApproximateFrameVisibilityUpdate();
+  virtual void NotifyApproximateFrameVisibilityUpdate(bool aIgnoreDisplayPort) override {
+    mHelper.NotifyApproximateFrameVisibilityUpdate(aIgnoreDisplayPort);
   }
   virtual bool GetDisplayPortAtLastApproximateFrameVisibilityUpdate(nsRect* aDisplayPort) override {
     return mHelper.GetDisplayPortAtLastApproximateFrameVisibilityUpdate(aDisplayPort);

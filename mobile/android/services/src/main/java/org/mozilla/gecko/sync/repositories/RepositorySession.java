@@ -132,10 +132,11 @@ public abstract class RepositorySession {
     // Our default behavior will be to assume that the Runnable is
     // executed as soon as all the stores synchronously finish, so
     // our end timestamp can just be… now.
-    storeDone(now());
-  }
-
-  public void storeDone(final long end) {
+    // Sessions may override this behavior if the above assumption is incorrect.
+    // For example, a session may choose to build up buffers which will need to be flushed in
+    // storeDone, and so it will need to call onStoreComplete with the end timestamp after those
+    // operations complete.
+    final long end = now();
     Logger.debug(LOG_TAG, "Scheduling onStoreCompleted for after storing is done: " + end);
     Runnable command = new Runnable() {
       @Override

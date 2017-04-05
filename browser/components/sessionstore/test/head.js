@@ -247,13 +247,13 @@ function waitForSaveState(aCallback) {
   return waitForTopic("sessionstore-state-write-complete", timeout, aCallback);
 }
 function promiseSaveState() {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     waitForSaveState(isSuccessful => {
       if (!isSuccessful) {
-        throw new Error("timeout");
+        reject(new Error("Save state timeout"));
+      } else {
+        resolve();
       }
-
-      resolve();
     });
   });
 }

@@ -17,16 +17,11 @@
 #include "TimeUnits.h"
 #include "prenv.h"
 
-#ifdef PR_LOGGING
 extern mozilla::LazyLogModule gMediaDemuxerLog;
 #define MP3LOG(msg, ...) \
   MOZ_LOG(gMediaDemuxerLog, LogLevel::Debug, ("MP3Demuxer " msg, ##__VA_ARGS__))
 #define MP3LOGV(msg, ...) \
   MOZ_LOG(gMediaDemuxerLog, LogLevel::Verbose, ("MP3Demuxer " msg, ##__VA_ARGS__))
-#else
-#define MP3LOG(msg, ...)
-#define MP3LOGV(msg, ...)
-#endif
 
 using mozilla::media::TimeUnit;
 using mozilla::media::TimeInterval;

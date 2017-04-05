@@ -63,6 +63,7 @@ this.SelectContentHelper.prototype = {
     this.global.addEventListener("pagehide", this, { mozSystemGroup: true });
     this.global.addEventListener("mozhidedropdown", this, { mozSystemGroup: true });
     this.element.addEventListener("blur", this, { mozSystemGroup: true });
+    this.element.addEventListener("transitionend", this, { mozSystemGroup: true });
     let MutationObserver = this.element.ownerGlobal.MutationObserver;
     this.mut = new MutationObserver(mutations => {
       // Something changed the <select> while it was open, so
@@ -83,6 +84,7 @@ this.SelectContentHelper.prototype = {
     this.global.removeEventListener("pagehide", this, { mozSystemGroup: true });
     this.global.removeEventListener("mozhidedropdown", this, { mozSystemGroup: true });
     this.element.removeEventListener("blur", this, { mozSystemGroup: true });
+    this.element.removeEventListener("transitionend", this, { mozSystemGroup: true });
     this.element = null;
     this.global = null;
     this.mut.disconnect();
@@ -280,6 +282,9 @@ this.SelectContentHelper.prototype = {
           this.global.sendAsyncMessage("Forms:HideDropDown", {});
           this.uninit();
         }
+        break;
+      case "transitionend":
+        this._update();
         break;
     }
   }

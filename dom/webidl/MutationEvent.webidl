@@ -23,11 +23,11 @@ interface MutationEvent : Event
 
   [Throws]
   void initMutationEvent(DOMString type,
-                         boolean canBubble,
-                         boolean cancelable,
-                         Node? relatedNode,
-                         DOMString prevValue,
-                         DOMString newValue,
-                         DOMString attrName,
-                         unsigned short attrChange);
+                         optional boolean canBubble = false,
+                         optional boolean cancelable = false,
+                         optional Node? relatedNode = null,
+                         optional DOMString prevValue = "",
+                         optional DOMString newValue = "",
+                         optional DOMString attrName = "",
+                         optional unsigned short attrChange = 0);
 };

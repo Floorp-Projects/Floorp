@@ -18,7 +18,7 @@ namespace js {
 /* 2^32-2, inclusive */
 const uint32_t MAX_ARRAY_INDEX = 4294967294u;
 
-inline bool
+MOZ_ALWAYS_INLINE bool
 IdIsIndex(jsid id, uint32_t* indexp)
 {
     if (JSID_IS_INT(id)) {
@@ -31,7 +31,11 @@ IdIsIndex(jsid id, uint32_t* indexp)
     if (MOZ_UNLIKELY(!JSID_IS_STRING(id)))
         return false;
 
-    return js::StringIsArrayIndex(JSID_TO_ATOM(id), indexp);
+    JSAtom* atom = JSID_TO_ATOM(id);
+    if (atom->length() == 0 || !JS7_ISDEC(atom->latin1OrTwoByteChar(0)))
+        return false;
+
+    return js::StringIsArrayIndex(atom, indexp);
 }
 
 // The methods below only create dense boxed arrays.

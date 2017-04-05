@@ -28,7 +28,6 @@ class nsIRequestContextService;
 class nsISiteSecurityService;
 class nsIStreamConverterService;
 class nsIThrottlingService;
-class nsIUUIDGenerator;
 
 
 namespace mozilla {
@@ -124,6 +123,7 @@ public:
     bool           AllowPush()   { return mAllowPush; }
     bool           AllowAltSvc() { return mEnableAltSvc; }
     bool           AllowAltSvcOE() { return mEnableAltSvcOE; }
+    bool           AllowOriginExtension() { return mEnableOriginExtension; }
     uint32_t       ConnectTimeout()  { return mConnectTimeout; }
     uint32_t       ParallelSpeculativeConnectLimit() { return mParallelSpeculativeConnectLimit; }
     bool           CriticalRequestPrioritization() { return mCriticalRequestPrioritization; }
@@ -503,6 +503,7 @@ private:
     uint32_t           mAllowPush : 1;
     uint32_t           mEnableAltSvc : 1;
     uint32_t           mEnableAltSvcOE : 1;
+    uint32_t           mEnableOriginExtension : 1;
 
     // Try to use SPDY features instead of HTTP/1.1 over SSL
     SpdyInformation    mSpdyInfo;
@@ -619,11 +620,12 @@ private:
                                nsIInterfaceRequestor *aCallbacks,
                                bool anonymous);
 
-    // UUID generator for channelIds
-    nsCOMPtr<nsIUUIDGenerator> mUUIDGen;
+    // State for generating channelIds
+    uint32_t mProcessId;
+    uint32_t mNextChannelId;
 
 public:
-    MOZ_MUST_USE nsresult NewChannelId(nsID *channelId);
+    MOZ_MUST_USE nsresult NewChannelId(uint64_t& channelId);
 };
 
 extern nsHttpHandler *gHttpHandler;

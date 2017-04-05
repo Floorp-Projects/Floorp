@@ -2641,6 +2641,19 @@ WorkerPrivateParent<Derived>::GetDocument() const
 }
 
 template <class Derived>
+void
+WorkerPrivateParent<Derived>::SetCSP(nsIContentSecurityPolicy* aCSP)
+{
+  AssertIsOnMainThread();
+  if (!aCSP) {
+    return;
+  }
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+  aCSP->EnsureEventTarget(self->mMainThreadEventTarget);
+  mLoadInfo.mCSP = aCSP;
+}
+
+template <class Derived>
 nsresult
 WorkerPrivateParent<Derived>::SetCSPFromHeaderValues(const nsACString& aCSPHeaderValue,
                                                      const nsACString& aCSPReportOnlyHeaderValue)
@@ -2656,6 +2669,9 @@ WorkerPrivateParent<Derived>::SetCSPFromHeaderValues(const nsACString& aCSPHeade
   if (!csp) {
     return NS_OK;
   }
+
+  WorkerPrivate* self = ParentAsWorkerPrivate();
+  csp->EnsureEventTarget(self->mMainThreadEventTarget);
 
   // If there's a CSP header, apply it.
   if (!cspHeaderValue.IsEmpty()) {

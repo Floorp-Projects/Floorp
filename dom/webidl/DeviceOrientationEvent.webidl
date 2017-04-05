@@ -14,12 +14,12 @@ interface DeviceOrientationEvent : Event
 
   // initDeviceOrientationEvent is a Gecko specific deprecated method.
   void initDeviceOrientationEvent(DOMString type,
-                                  boolean canBubble,
-                                  boolean cancelable,
-                                  double? alpha,
-                                  double? beta,
-                                  double? gamma,
-                                  boolean absolute);
+                                  optional boolean canBubble = false,
+                                  optional boolean cancelable = false,
+                                  optional double? alpha = null,
+                                  optional double? beta = null,
+                                  optional double? gamma = null,
+                                  optional boolean absolute = false);
 };
 
 dictionary DeviceOrientationEventInit : EventInit

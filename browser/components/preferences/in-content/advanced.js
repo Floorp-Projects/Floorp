@@ -356,10 +356,6 @@ var gAdvancedPane = {
         case "nsPref:changed":
           this.updateReadPrefs();
           break;
-
-        case "sitedatamanager:sites-updated":
-          this.updateTotalSiteDataSize();
-          break;
       }
     }
   },

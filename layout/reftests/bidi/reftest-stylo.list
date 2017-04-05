@@ -83,7 +83,7 @@ fails == 267459-2.html 267459-2.html
 == 332655-1.html 332655-1.html
 == 332655-2.html 332655-2.html
 fails == 381279-1.html 381279-1.html
-fails == 386339.html 386339.html
+== 386339.html 386339.html
 == 409375.html 409375.html
 == 413542-1.html 413542-1.html
 == 413542-2.html 413542-2.html

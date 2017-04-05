@@ -11,6 +11,7 @@
 #include "nsError.h"
 #include "nsISMILAttr.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 
 class nsISupports;
 class nsSMILValue;
@@ -70,8 +71,7 @@ public:
   static nsresult ToDOMSVGAngle(nsISupports **aResult);
   already_AddRefed<mozilla::dom::SVGAnimatedAngle>
     ToDOMAnimatedAngle(nsSVGElement* aSVGElement);
-  // Returns a new nsISMILAttr object that the caller must delete
-  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
+  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
 
   static float GetDegreesPerUnit(uint8_t aUnit);
 

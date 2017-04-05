@@ -38,21 +38,21 @@ interface MouseEvent : UIEvent {
   readonly attribute long           movementY;
 
   // Deprecated in DOM Level 3:
-  void                              initMouseEvent(DOMString typeArg, 
-                                                   boolean canBubbleArg, 
-                                                   boolean cancelableArg, 
-                                                   Window? viewArg,
-                                                   long detailArg, 
-                                                   long screenXArg, 
-                                                   long screenYArg, 
-                                                   long clientXArg, 
-                                                   long clientYArg, 
-                                                   boolean ctrlKeyArg, 
-                                                   boolean altKeyArg, 
-                                                   boolean shiftKeyArg, 
-                                                   boolean metaKeyArg, 
-                                                   short buttonArg,
-                                                   EventTarget? relatedTargetArg);
+void initMouseEvent(DOMString typeArg,
+                    optional boolean canBubbleArg = false,
+                    optional boolean cancelableArg = false,
+                    optional Window? viewArg = null,
+                    optional long detailArg = 0,
+                    optional long screenXArg = 0,
+                    optional long screenYArg = 0,
+                    optional long clientXArg = 0,
+                    optional long clientYArg = 0,
+                    optional boolean ctrlKeyArg = false,
+                    optional boolean altKeyArg = false,
+                    optional boolean shiftKeyArg = false,
+                    optional boolean metaKeyArg = false,
+                    optional short buttonArg = 0,
+                    optional EventTarget? relatedTargetArg = null);
   // Introduced in DOM Level 3:
   boolean                           getModifierState(DOMString keyArg);
 };
@@ -91,23 +91,23 @@ partial interface MouseEvent
 
   readonly attribute unsigned short mozInputSource;
 
-  void                initNSMouseEvent(DOMString typeArg,
-                                       boolean canBubbleArg,
-                                       boolean cancelableArg,
-                                       Window? viewArg,
-                                       long detailArg,
-                                       long screenXArg,
-                                       long screenYArg,
-                                       long clientXArg,
-                                       long clientYArg,
-                                       boolean ctrlKeyArg,
-                                       boolean altKeyArg,
-                                       boolean shiftKeyArg,
-                                       boolean metaKeyArg,
-                                       short buttonArg,
-                                       EventTarget? relatedTargetArg,
-                                       float pressure,
-                                       unsigned short inputSourceArg);
+  void initNSMouseEvent(DOMString typeArg,
+                        optional boolean canBubbleArg = false,
+                        optional boolean cancelableArg = false,
+                        optional Window? viewArg = null,
+                        optional long detailArg = 0,
+                        optional long screenXArg = 0,
+                        optional long screenYArg = 0,
+                        optional long clientXArg = 0,
+                        optional long clientYArg = 0,
+                        optional boolean ctrlKeyArg = false,
+                        optional boolean altKeyArg = false,
+                        optional boolean shiftKeyArg = false,
+                        optional boolean metaKeyArg = false,
+                        optional short buttonArg = 0,
+                        optional EventTarget? relatedTargetArg = null,
+                        optional float pressure = 0,
+                        optional unsigned short inputSourceArg = 0);
   [ChromeOnly]
   readonly attribute boolean hitCluster; // True when touch occurs in a cluster of links
 

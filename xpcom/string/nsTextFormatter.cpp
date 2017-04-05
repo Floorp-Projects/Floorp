@@ -726,7 +726,7 @@ BuildArgArray(const char16_t* aFmt, va_list aAp, int* aRv,
 
       case 'C':
         /* XXX not supported I suppose */
-        PR_ASSERT(0);
+        MOZ_ASSERT(0);
         nas[cn].type = NumArgState::UNKNOWN;
         break;
 
@@ -743,7 +743,7 @@ BuildArgArray(const char16_t* aFmt, va_list aAp, int* aRv,
         break;
 
       default:
-        PR_ASSERT(0);
+        MOZ_ASSERT(0);
         nas[cn].type = NumArgState::UNKNOWN;
         break;
     }
@@ -853,7 +853,7 @@ dosprintf(SprintfStateStr* aState, const char16_t* aFmt, va_list aAp)
   nas = BuildArgArray(aFmt, aAp, &rv, nasArray);
   if (rv < 0) {
     /* the aFmt contains error Numbered Argument format, jliu@netscape.com */
-    PR_ASSERT(0);
+    MOZ_ASSERT(0);
     return rv;
   }
 
@@ -1121,7 +1121,7 @@ dosprintf(SprintfStateStr* aState, const char16_t* aFmt, va_list aAp)
         } else if (sizeof(void*) == sizeof(int)) {
           type = NumArgState::UINTN;
         } else {
-          PR_ASSERT(0);
+          MOZ_ASSERT(0);
           break;
         }
         radix = 16;
@@ -1130,7 +1130,7 @@ dosprintf(SprintfStateStr* aState, const char16_t* aFmt, va_list aAp)
 #if 0
       case 'C':
         /* XXX not supported I suppose */
-        PR_ASSERT(0);
+        MOZ_ASSERT(0);
         break;
 #endif
 
@@ -1164,7 +1164,7 @@ dosprintf(SprintfStateStr* aState, const char16_t* aFmt, va_list aAp)
       default:
         /* Not a % token after all... skip it */
 #if 0
-        PR_ASSERT(0);
+        MOZ_ASSERT(0);
 #endif
         char16_t perct = '%';
         rv = (*aState->stuff)(aState, &perct, 1);

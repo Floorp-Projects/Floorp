@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
 #include "nsISMILAttr.h"
 #include "SVGPathData.h"
@@ -87,8 +88,7 @@ public:
     return !!mAnimVal;
   }
 
-  /// Callers own the returned nsISMILAttr
-  nsISMILAttr* ToSMILAttr(nsSVGElement* aElement);
+  UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aElement);
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 

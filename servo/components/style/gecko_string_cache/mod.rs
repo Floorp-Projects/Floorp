@@ -10,7 +10,6 @@ use gecko_bindings::bindings::Gecko_AddRefAtom;
 use gecko_bindings::bindings::Gecko_Atomize;
 use gecko_bindings::bindings::Gecko_ReleaseAtom;
 use gecko_bindings::structs::nsIAtom;
-use heapsize::HeapSizeOf;
 use std::borrow::{Cow, Borrow};
 use std::char::{self, DecodeUtf16};
 use std::fmt::{self, Write};
@@ -198,6 +197,16 @@ impl Atom {
                       "Called from_static for a non-static atom!");
         atom
     }
+
+    /// Creates an atom from a dynamic atom pointer that has already had AddRef
+    /// called on it.
+    #[inline]
+    pub unsafe fn from_addrefed(ptr: *mut nsIAtom) -> Self {
+        debug_assert!(!ptr.is_null());
+        unsafe {
+            Atom(WeakAtom::new(ptr))
+        }
+    }
 }
 
 impl Hash for Atom {
@@ -234,12 +243,6 @@ impl Default for Atom {
     #[inline]
     fn default() -> Self {
         atom!("")
-    }
-}
-
-impl HeapSizeOf for Atom {
-    fn heap_size_of_children(&self) -> usize {
-        0
     }
 }
 

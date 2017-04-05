@@ -9,6 +9,7 @@ interface nsIURI;
 interface nsIChannel;
 interface nsIDocShell;
 interface nsIDOMDocument;
+interface nsIEventTarget;
 interface nsIPrincipal;
 interface nsIURI;
 
@@ -220,6 +221,10 @@ interface nsIContentSecurityPolicy : nsISerializable
   void setRequestContext(in nsIDOMDocument aDocument,
                          in nsIPrincipal aPrincipal);
 
+  /**
+   *  Ensure we have a nsIEventTarget to use to label CSPReportSenderRunnable
+   */
+  [noscript] void ensureEventTarget(in nsIEventTarget aEventTarget);
 
   /*
    * Checks if a CSP requires Subresource Integrity (SRI)
