@@ -144,7 +144,7 @@ HTTP(..) == font-familiy-whitespace-1.html font-familiy-whitespace-1.html
 HTTP(..) == font-familiy-whitespace-1.html font-familiy-whitespace-1.html
 
 == ivs-1.html ivs-1.html
-fails == cjkcisvs-1.html cjkcisvs-1.html
+== cjkcisvs-1.html cjkcisvs-1.html
 
 HTTP(..) == missing-names.html missing-names.html
 
