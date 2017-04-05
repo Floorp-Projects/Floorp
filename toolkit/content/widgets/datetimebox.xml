@@ -60,16 +60,16 @@
           let root =
             document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
 
+          let yearMaxLength = this.mMaxYear.toString().length
           this.mYearField = this.createEditField(this.mYearPlaceHolder,
-            this.mYearLength, true, this.mMinYear, this.mMaxYear,
+            true, this.mYearLength, yearMaxLength, this.mMinYear, this.mMaxYear,
             this.mYearPageUpDownInterval);
-          this.mYearField.maxLength = this.mMaxYear.toString().length;
           this.mMonthField = this.createEditField(this.mMonthPlaceHolder,
-            this.mMonthDayLength, true, this.mMinMonth, this.mMaxMonth,
-            this.mMonthPageUpDownInterval);
+            true, this.mMonthDayLength, this.mMonthDayLength, this.mMinMonth,
+            this.mMaxMonth, this.mMonthPageUpDownInterval);
           this.mDayField = this.createEditField(this.mDayPlaceHolder,
-            this.mMonthDayLength, true, this.mMinDay, this.mMaxDay,
-            this.mDayPageUpDownInterval);
+            true, this.mMonthDayLength, this.mMonthDayLength, this.mMinDay,
+            this.mMaxDay, this.mDayPageUpDownInterval);
 
           let fragment = document.createDocumentFragment();
           let formatter = Intl.DateTimeFormat(this.mLocales, {
@@ -127,7 +127,6 @@
           if (this.mYearField && !this.mYearField.disabled &&
               !this.mYearField.readOnly) {
             this.clearFieldValue(this.mYearField);
-            this.mYearField.size = this.mYearLength;
           }
 
           if (!aFromInputElement) {
@@ -272,7 +271,8 @@
 
             let n = Number(buffer);
             let max = targetField.getAttribute("max");
-            if (buffer.length >= targetField.maxLength || n * 10 > max) {
+            let maxLength = targetField.getAttribute("maxlength");
+            if (buffer.length >= maxLength || n * 10 > max) {
               buffer = "";
               this.advanceToNextField();
             }
@@ -392,7 +392,8 @@
             return;
           }
 
-          if (aValue.length == aField.maxLength) {
+          let maxLength = aField.getAttribute("maxlength");
+          if (aValue.length == maxLength) {
             let min = Number(aField.getAttribute("min"));
             let max = Number(aField.getAttribute("max"));
 
@@ -406,22 +407,13 @@
           aField.setAttribute("rawValue", value);
 
           // Display formatted value based on locale.
-          let minDigits = (aField == this.mYearField ? this.mYearLength
-                                                     : aField.size);
+          let minDigits = aField.getAttribute("mindigits");
           let formatted = value.toLocaleString(this.mLocales, {
             minimumIntegerDigits: minDigits,
             useGrouping: false
           });
 
-          if (aField == this.mYearField) {
-            this.mYearField.size = formatted.length;
-          }
-
-          aField.value = formatted;
-          if (document.activeElement == this.mInputElement &&
-              this.mLastFocusedField && this.mLastFocusedField == aField) {
-            aField.select();
-          }
+          aField.textContent = formatted;
           this.updateResetButtonVisibility();
         ]]>
         </body>
@@ -558,31 +550,29 @@
           };
 
           this.mHourField = this.createEditField(this.mHourPlaceHolder,
-            this.mMaxLength, true, this.mMinHour, this.mMaxHour,
-            this.mHourPageUpDownInterval);
+            true, this.mMaxLength, this.mMaxLength, this.mMinHour,
+            this.mMaxHour, this.mHourPageUpDownInterval);
           this.mMinuteField = this.createEditField(this.mMinutePlaceHolder,
-            this.mMaxLength, true, this.mMinMinute, this.mMaxMinute,
-            this.mMinSecPageUpDownInterval);
+            true, this.mMaxLength, this.mMaxLength, this.mMinMinute,
+            this.mMaxMinute, this.mMinSecPageUpDownInterval);
 
           if (this.mHour12) {
-            let dayPeriodLength =
-              Math.max(this.mAMIndicator.length, this.mPMIndicator.length);
-
             this.mDayPeriodField = this.createEditField(
-              this.mDayPeriodPlaceHolder, dayPeriodLength, false);
+              this.mDayPeriodPlaceHolder, false);
           }
 
           if (second != undefined) {
             options["second"] = "numeric";
             this.mSecondField = this.createEditField(this.mSecondPlaceHolder,
-              this.mMaxLength, true, this.mMinSecond, this.mMaxSecond,
+              true, this.mMaxLength, this.mMaxLength, this.mMinSecond, this.mMaxSecond,
               this.mMinSecPageUpDownInterval);
           }
 
           if (millisecond != undefined) {
             this.mMillisecField = this.createEditField(this.mMillisecPlaceHolder,
-              this.mMillisecMaxLength, true, this.mMinMillisecond,
-              this.mMaxMillisecond, this.mMinSecPageUpDownInterval);
+              true, this.mMillisecMaxLength, this.mMillisecMaxLength,
+              this.mMinMillisecond, this.mMaxMillisecond,
+              this.mMinSecPageUpDownInterval);
           }
 
           let fragment = document.createDocumentFragment();
@@ -713,11 +703,13 @@
             return;
           }
 
-          if (this.isEmpty(this.mHourField.value) ||
-              this.isEmpty(this.mMinuteField.value) ||
-              (this.mDayPeriodField && this.isEmpty(this.mDayPeriodField.value)) ||
-              (this.mSecondField && this.isEmpty(this.mSecondField.value)) ||
-              (this.mMillisecField && this.isEmpty(this.mMillisecField.value))) {
+          let { hour, minute, second, millisecond } = this.getCurrentValue();
+          let dayPeriod = this.getDayPeriodValue();
+
+          if (this.isEmpty(hour) || this.isEmpty(minute) ||
+              (this.mDayPeriodField && this.isEmpty(dayPeriod)) ||
+              (this.mSecondField && this.isEmpty(second)) ||
+              (this.mMillisecField && this.isEmpty(millisecond))) {
             // We still need to notify picker in case any of the field has
             // changed. If we can set input element value, then notifyPicker
             // will be called in setFieldsFromInputValue().
@@ -725,12 +717,9 @@
             return;
           }
 
-          let { hour, minute, second, millisecond } = this.getCurrentValue();
-
           // Convert to a valid time string according to:
           // https://html.spec.whatwg.org/multipage/infrastructure.html#valid-time-string
           if (this.mHour12) {
-            let dayPeriod = this.getDayPeriodValue();
             if (dayPeriod == this.mPMIndicator && hour < this.mMaxHour) {
               hour += this.mMaxHour;
             } else if (dayPeriod == this.mAMIndicator &&
@@ -954,7 +943,8 @@
 
             let n = Number(buffer);
             let max = targetField.getAttribute("max");
-            if (buffer.length >= targetField.maxLength || n * 10 > max) {
+            let maxLength = targetField.getAttribute("maxLength");
+            if (buffer.length >= maxLength || n * 10 > max) {
               buffer = "";
               this.advanceToNextField();
             }
@@ -983,7 +973,8 @@
             if (this.mHour12) {
               // Try to change to 12hr format if user input is 0 or greater
               // than 12.
-              if (value == 0 && aValue.length == aField.maxLength) {
+              let maxLength = aField.getAttribute("maxlength");
+              if (value == 0 && aValue.length == maxLength) {
                 value = this.mMaxHour;
               } else {
                 value = (value > this.mMaxHour) ? value % this.mMaxHour : value;
@@ -995,17 +986,13 @@
 
           aField.setAttribute("rawValue", value);
 
-          let minDigits = aField.size;
+          let minDigits = aField.getAttribute("mindigits");
           let formatted = value.toLocaleString(this.mLocales, {
             minimumIntegerDigits: minDigits,
             useGrouping: false
           });
 
-          aField.value = formatted;
-          if (document.activeElement == this.mInputElement &&
-              this.mLastFocusedField && this.mLastFocusedField == aField) {
-            aField.select();
-          }
+          aField.textContent = formatted;
           this.updateResetButtonVisibility();
         ]]>
         </body>
@@ -1019,7 +1006,10 @@
             return "";
           }
 
-          return this.mDayPeriodField.value;
+          let placeholder = this.mDayPeriodField.placeholder;
+          let value = this.mDayPeriodField.textContent;
+
+          return (value == placeholder ? "" : value);
         ]]>
         </body>
       </method>
@@ -1032,12 +1022,7 @@
             return;
           }
 
-          this.mDayPeriodField.value = aValue;
-          if (document.activeElement == this.mInputElement &&
-              this.mLastFocusedField &&
-              this.mLastFocusedField == this.mDayPeriodField) {
-            this.mDayPeriodField.select();
-          }
+          this.mDayPeriodField.textContent = aValue;
           this.updateResetButtonVisibility();
         ]]>
         </body>
@@ -1180,31 +1165,34 @@
 
       <method name="createEditField">
         <parameter name="aPlaceHolder"/>
-        <parameter name="aLength"/>
         <parameter name="aIsNumeric"/>
-        <parameter name="aMin"/>
-        <parameter name="aMax"/>
+        <parameter name="aMinDigits"/>
+        <parameter name="aMaxLength"/>
+        <parameter name="aMinValue"/>
+        <parameter name="aMaxValue"/>
         <parameter name="aPageUpDownInterval"/>
         <body>
         <![CDATA[
           const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-          let field = document.createElementNS(HTML_NS, "input");
-          field.classList.add("textbox-input", "datetime-input");
+          let field = document.createElementNS(HTML_NS, "span");
+          field.classList.add("datetime-edit-field");
+          field.textContent = aPlaceHolder;
+          field.placeholder = aPlaceHolder;
+          field.tabIndex = this.mInputElement.tabIndex;
+
+          field.setAttribute("readonly", this.mInputElement.readOnly);
+          field.setAttribute("disabled", this.mInputElement.disabled);
+          // Set property as well for convenience.
           field.disabled = this.mInputElement.disabled;
           field.readOnly = this.mInputElement.readOnly;
-          field.tabIndex = this.mInputElement.tabIndex;
-          field.placeholder = aPlaceHolder;
-
-          field.setAttribute("size", aLength);
-          field.setAttribute("maxlength", aLength);
 
           if (aIsNumeric) {
             field.classList.add("numeric");
             // Maximum value allowed.
-            field.setAttribute("min", aMin);
+            field.setAttribute("min", aMinValue);
             // Minumim value allowed.
-            field.setAttribute("max", aMax);
+            field.setAttribute("max", aMaxValue);
             // Interval when pressing pageUp/pageDown key.
             field.setAttribute("pginterval", aPageUpDownInterval);
             // Used to store what the user has already typed in the field,
@@ -1213,6 +1201,11 @@
             // Used to store the non-formatted number, clered when value is
             // cleared.
             field.setAttribute("rawValue", "");
+            // Minimum digits to display, padded with leading 0s.
+            field.setAttribute("mindigits", aMinDigits);
+            // Maximum length for the field, will be advance to the next field
+            // automatically if exceeded.
+            field.setAttribute("maxlength", aMaxLength);
           }
 
           return field;
@@ -1241,7 +1234,8 @@
             document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
 
           for (let child = editRoot.firstChild; child; child = child.nextSibling) {
-            if (child instanceof HTMLInputElement) {
+            if ((child instanceof HTMLSpanElement) &&
+                child.classList.contains("datetime-edit-field")) {
               child.focus();
               break;
             }
@@ -1294,7 +1288,8 @@
           }
 
           while (next) {
-            if (next.type == "text" && !next.disabled) {
+            if ((next instanceof HTMLSpanElement) &&
+                next.classList.contains("datetime-edit-field")) {
               next.focus();
               break;
             }
@@ -1331,8 +1326,26 @@
             document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
 
           for (let child = editRoot.firstChild; child; child = child.nextSibling) {
-            if (child instanceof HTMLInputElement) {
-              child.setAttribute(aName, aValue);
+            if ((child instanceof HTMLSpanElement) &&
+                child.classList.contains("datetime-edit-field")) {
+
+              switch (aName) {
+                case "tabindex":
+                  child.setAttribute(aName, aValue);
+                  break;
+                case "disabled": {
+                  let value = this.mInputElement.disabled;
+                  child.setAttribute("disabled", value);
+                  child.disabled = value;
+                  break;
+                }
+                case "readonly": {
+                  let value = this.mInputElement.readOnly;
+                  child.setAttribute("readonly", value);
+                  child.readOnly = value;
+                  break;
+                }
+              }
             }
           }
         ]]>
@@ -1354,8 +1367,15 @@
             document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
 
           for (let child = editRoot.firstChild; child; child = child.nextSibling) {
-            if (child instanceof HTMLInputElement) {
+            if ((child instanceof HTMLSpanElement) &&
+                child.classList.contains("datetime-edit-field")) {
               child.removeAttribute(aName);
+              // Update property as well.
+              if (aName == "readonly") {
+                child.readOnly = false;
+              } else if (aName == "disabled") {
+                child.disabled = false;
+              }
             }
           }
         ]]>
@@ -1402,7 +1422,7 @@
         <parameter name="aField"/>
         <body>
         <![CDATA[
-          aField.value = "";
+          aField.textContent = aField.placeholder;
           if (aField.classList.contains("numeric")) {
             aField.setAttribute("typeBuffer", "");
             aField.setAttribute("rawValue", "");
@@ -1535,9 +1555,12 @@
           this.log("onFocus originalTarget: " + aEvent.originalTarget);
 
           let target = aEvent.originalTarget;
-          if ((target instanceof HTMLInputElement) && target.type == "text") {
+          if ((target instanceof HTMLSpanElement) &&
+              target.classList.contains("datetime-edit-field")) {
+            if (target.disabled) {
+              return;
+            }
             this.mLastFocusedField = target;
-            target.select();
           }
         ]]>
         </body>
