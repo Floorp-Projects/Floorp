@@ -301,6 +301,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 shareIntent.setType("text/plain");
                 shareIntent.putExtra(Intent.EXTRA_TEXT, webView.getUrl());
                 startActivity(shareIntent);
+
+                TelemetryWrapper.shareEvent();
                 break;
             }
 
@@ -320,6 +322,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(webView.getUrl()));
                 intent.setPackage(browsers.getDefaultBrowser().packageName);
                 startActivity(intent);
+
+                TelemetryWrapper.openDefaultAppEvent();
                 break;
             }
 
@@ -341,6 +345,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                     startActivity(intent);
                 }
 
+                TelemetryWrapper.openFirefoxEvent();
                 break;
             }
 
@@ -356,6 +361,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                         browsers.getInstalledBrowsers(), webView.getUrl());
                 fragment.show(getFragmentManager(),OpenWithFragment.FRAGMENT_TAG);
 
+                TelemetryWrapper.openSelectionEvent();
                 break;
             }
         }

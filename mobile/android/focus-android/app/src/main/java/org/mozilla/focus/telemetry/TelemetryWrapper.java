@@ -12,7 +12,6 @@ import android.preference.PreferenceManager;
 
 import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.R;
-import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.telemetry.Telemetry;
 import org.mozilla.telemetry.TelemetryHolder;
 import org.mozilla.telemetry.config.TelemetryConfiguration;
@@ -44,12 +43,24 @@ public final class TelemetryWrapper {
         private static final String TYPE_QUERY = "type_query";
         private static final String CLICK = "click";
         private static final String CHANGE = "change";
+        private static final String FOREGROUND = "foreground";
+        private static final String BACKGROUND = "background";
+        private static final String SHARE = "share";
+        private static final String OPEN = "open";
     }
 
     private static class Object {
         private static final String SEARCH_BAR = "search_bar";
         private static final String ERASE_BUTTON = "erase_button";
         private static final String SETTING = "setting";
+        private static final String APP = "app";
+        private static final String MENU = "menu";
+    }
+
+    private static class Value {
+        private static final String DEFAULT = "default";
+        private static final String FIREFOX = "firefox";
+        private static final String SELECTION = "selection";
     }
 
     private static class Extra {
@@ -86,10 +97,14 @@ public final class TelemetryWrapper {
 
     public static void startSession() {
         TelemetryHolder.get().recordSessionStart();
+
+        TelemetryEvent.create(Category.ACTION, Method.FOREGROUND, Object.APP).queue();
     }
 
     public static void stopSession() {
         TelemetryHolder.get().recordSessionEnd();
+
+        TelemetryEvent.create(Category.ACTION, Method.BACKGROUND, Object.APP).queue();
     }
 
     public static void stopMainActivity() {
@@ -122,5 +137,21 @@ public final class TelemetryWrapper {
         extras.put(Extra.TO, value);
 
         TelemetryEvent.create(Category.ACTION, Method.CHANGE, Object.SETTING, key, extras).queue();
+    }
+
+    public static void shareEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.SHARE, Object.MENU).queue();
+    }
+
+    public static void openDefaultAppEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.DEFAULT).queue();
+    }
+
+    public static void openFirefoxEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.FIREFOX).queue();
+    }
+
+    public static void openSelectionEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.SELECTION).queue();
     }
 }
