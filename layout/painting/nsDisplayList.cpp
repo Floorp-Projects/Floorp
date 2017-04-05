@@ -5003,6 +5003,13 @@ nsDisplayBoxShadowOuter::CanBuildWebRenderDisplayItems()
   bool hasBorderRadius;
   bool nativeTheme =
       nsCSSRendering::HasBoxShadowNativeTheme(mFrame, hasBorderRadius);
+
+  // We don't support native themed things yet like box shadows around
+  // input buttons.
+  if (nativeTheme) {
+    return false;
+  }
+
   nsPoint offset = ToReferenceFrame();
   nsRect borderRect = mFrame->VisualBorderRectRelativeToSelf() + offset;
   nsRect frameRect =
@@ -5014,11 +5021,15 @@ nsDisplayBoxShadowOuter::CanBuildWebRenderDisplayItems()
     hasBorderRadius = mFrame->GetBorderRadii(sz, sz, Sides(), twipsRadii);
   }
 
-  // WebRender doesn't support clipping properly with a border radius.
-  // We don't support native themed things yet like box shadows around
-  // input buttons.
-  if (hasBorderRadius || nativeTheme) {
-    return false;
+  if (hasBorderRadius) {
+    RectCornerRadii borderRadii;
+    nsCSSRendering::GetBorderRadii(frameRect,
+                                   borderRect,
+                                   mFrame,
+                                   borderRadii);
+    if (!borderRadii.AreRadiiSame()) {
+      return false;
+    }
   }
 
   for (uint32_t j = shadows->Length(); j  > 0; j--) {
