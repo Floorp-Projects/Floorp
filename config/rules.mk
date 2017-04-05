@@ -1020,44 +1020,28 @@ ifneq (,$(filter %.i,$(MAKECMDGOALS)))
 #
 # This way we can match both 'make sub/bar.i' and 'make bar.i'
 _group_srcs = $(sort $(patsubst %.$1,%.i,$(filter %.$1,$2 $(notdir $2))))
-_PREPROCESSED_CPP_FILES := $(call _group_srcs,cpp,$(CPPSRCS))
-_PREPROCESSED_CC_FILES := $(call _group_srcs,cc,$(CPPSRCS))
-_PREPROCESSED_CXX_FILES := $(call _group_srcs,cxx,$(CPPSRCS))
-_PREPROCESSED_C_FILES := $(call _group_srcs,c,$(CSRCS))
-_PREPROCESSED_CMM_FILES := $(call _group_srcs,mm,$(CMMSRCS))
 
 # Hack up VPATH so we can reach the sources. Eg: 'make Parser.i' may need to
 # reach $(srcdir)/frontend/Parser.i
 VPATH += $(addprefix $(srcdir)/,$(sort $(dir $(CPPSRCS) $(CSRCS) $(CMMSRCS))))
 
+define PREPROCESS_RULES
+_PREPROCESSED_$1_FILES := $$(call _group_srcs,$1,$$($2))
 # Make preprocessed files PHONY so they are always executed, since they are
 # manual targets and we don't necessarily write to $@.
-.PHONY: $(_PREPROCESSED_CPP_FILES) $(_PREPROCESSED_CC_FILES) $(_PREPROCESSED_CXX_FILES) $(_PREPROCESSED_C_FILES) $(_PREPROCESSED_CMM_FILES)
+.PHONY: $$(_PREPROCESSED_$1_FILES)
+$$(_PREPROCESSED_$1_FILES): %.i: %.$1 $$(call mkdir_deps,$$(MDDEPDIR))
+	$$(REPORT_BUILD_VERBOSE)
+	$$(addprefix $$(MKDIR) -p ,$$(filter-out .,$$(@D)))
+	$$($3) -C $$(PREPROCESS_OPTION)$$@ $(foreach var,$4,$$($(var))) $$($$(notdir $$<)_FLAGS) $$(_VPATH_SRCS)
 
-$(_PREPROCESSED_CPP_FILES): %.i: %.cpp $(call mkdir_deps,$(MDDEPDIR))
-	$(REPORT_BUILD_VERBOSE)
-	$(addprefix $(MKDIR) -p ,$(filter-out .,$(@D)))
-	$(CCC) -C $(PREPROCESS_OPTION)$@ $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(_VPATH_SRCS)
+endef
 
-$(_PREPROCESSED_CC_FILES): %.i: %.cc $(call mkdir_deps,$(MDDEPDIR))
-	$(REPORT_BUILD_VERBOSE)
-	$(addprefix $(MKDIR) -p ,$(filter-out .,$(@D)))
-	$(CCC) -C $(PREPROCESS_OPTION)$@ $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(_VPATH_SRCS)
-
-$(_PREPROCESSED_CXX_FILES): %.i: %.cxx $(call mkdir_deps,$(MDDEPDIR))
-	$(REPORT_BUILD_VERBOSE)
-	$(addprefix $(MKDIR) -p ,$(filter-out .,$(@D)))
-	$(CCC) -C $(PREPROCESS_OPTION)$@ $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(_VPATH_SRCS)
-
-$(_PREPROCESSED_C_FILES): %.i: %.c $(call mkdir_deps,$(MDDEPDIR))
-	$(REPORT_BUILD_VERBOSE)
-	$(addprefix $(MKDIR) -p ,$(filter-out .,$(@D)))
-	$(CC) -C $(PREPROCESS_OPTION)$@ $(COMPILE_CFLAGS) $($(notdir $<)_FLAGS) $(_VPATH_SRCS)
-
-$(_PREPROCESSED_CMM_FILES): %.i: %.mm $(call mkdir_deps,$(MDDEPDIR))
-	$(REPORT_BUILD_VERBOSE)
-	$(addprefix $(MKDIR) -p ,$(filter-out .,$(@D)))
-	$(CCC) -C $(PREPROCESS_OPTION)$@ $(COMPILE_CXXFLAGS) $(COMPILE_CMMFLAGS) $($(notdir $<)_FLAGS) $(_VPATH_SRCS)
+$(eval $(call PREPROCESS_RULES,cpp,CPPSRCS,CCC,COMPILE_CXXFLAGS))
+$(eval $(call PREPROCESS_RULES,cc,CPPSRCS,CCC,COMPILE_CXXFLAGS))
+$(eval $(call PREPROCESS_RULES,cxx,CPPSRCS,CCC,COMPILE_CXXFLAGS))
+$(eval $(call PREPROCESS_RULES,c,CSRCS,CC,COMPILE_CFLAGS))
+$(eval $(call PREPROCESS_RULES,mm,CMMSRCS,CCC,COMPILE_CXXFLAGS COMPILE_CMMFLAGS))
 
 # Default to pre-processing the actual unified file. This can be overridden
 # at the command-line to pre-process only the individual source file.
