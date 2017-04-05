@@ -65,6 +65,7 @@ const URLBAR_SELECTED_RESULT_TYPES = {
   visiturl: 8,
   remotetab: 9,
   extension: 10,
+  "preloaded-top-site": 11,
 };
 
 function getOpenTabsAndWinsCounts() {
@@ -250,7 +251,7 @@ let urlbarListener = {
     }
     if (!actionType) {
       let styles = new Set(controller.getStyleAt(idx).split(/\s+/));
-      let style = ["autofill", "tag", "bookmark"].find(s => styles.has(s));
+      let style = ["preloaded-top-site", "autofill", "tag", "bookmark"].find(s => styles.has(s));
       actionType = style || "history";
     }
 

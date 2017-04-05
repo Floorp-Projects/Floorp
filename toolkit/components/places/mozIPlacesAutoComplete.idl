@@ -137,10 +137,10 @@ interface mozIPlacesAutoComplete : nsISupports
   void unregisterOpenPage(in nsIURI aURI, in uint32_t aUserContextId);
 
   /**
-   * Populate list of Prefill Sites from JSON.
+   * Populate list of Preloaded Sites from JSON.
    *
    * @param sites
    *        Array of [url,title] to populate from.
    */
-  void populatePrefillSiteStorage(in jsval sites);
+  void populatePreloadedSiteStorage(in jsval sites);
 };
