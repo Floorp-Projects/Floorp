@@ -402,6 +402,9 @@ this.LightweightThemeManager = {
 
     if (id) {
       let theme = this.getUsedTheme(id);
+      // WebExtension themes have an ID, but no LWT wrapper, so bail out here.
+      if (!theme)
+        return;
       _themeIDBeingEnabled = id;
       let wrapper = new AddonWrapper(theme);
       if (aPendingRestart) {
