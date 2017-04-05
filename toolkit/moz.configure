@@ -701,10 +701,7 @@ def webrender(value, milestone, target):
     build_webrender = None
     enable_webrender = None
 
-    if target.os == 'Android':
-        # we can't yet build WebRender on Android, see bug 1323612.
-        pass
-    elif value.origin == 'default':
+    if value.origin == 'default':
         # if nothing is specified, default to just building on Nightly
         build_webrender = milestone.is_nightly
     elif value == 'build':
