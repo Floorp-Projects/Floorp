@@ -12,8 +12,6 @@ const Services = require("Services");
 
 loader.lazyRequireGetter(this, "NetworkHelper",
                                "devtools/shared/webconsole/network-helper");
-loader.lazyRequireGetter(this, "Events",
-                               "sdk/dom/events");
 loader.lazyRequireGetter(this, "Clipboard",
                                "sdk/clipboard");
 loader.lazyRequireGetter(this, "JsonViewUtils",
@@ -140,10 +138,10 @@ Converter.prototype = {
 
     JsonViewUtils.exportIntoContentScope(win, Locale, "Locale");
 
-    Events.once(win, "DOMContentLoaded", event => {
+    win.addEventListener("DOMContentLoaded", event => {
       win.addEventListener("contentMessage",
         this.onContentMessage.bind(this), false, true);
-    });
+    }, {once: true});
 
     // The request doesn't have to be always nsIHttpChannel
     // (e.g. in case of data: URLs)
