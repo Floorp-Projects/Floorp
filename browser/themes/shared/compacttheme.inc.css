@@ -12,6 +12,8 @@
   --space-above-tabbar: 0px;
   --toolbarbutton-text-shadow: none;
   --backbutton-urlbar-overlap: 0px;
+  /* 18px icon + 2 * 5px padding + 1 * 1px border */
+  --forwardbutton-width: 29px;
 }
 
 :root:-moz-lwtheme-brighttext {
@@ -184,6 +186,67 @@ toolbar[brighttext] #downloads-indicator-counter {
 
 #TabsToolbar {
   text-shadow: none !important;
+}
+
+/* Back and forward button */
+
+#back-button > .toolbarbutton-icon,
+#forward-button > .toolbarbutton-icon {
+  background: var(--chrome-nav-buttons-background) !important;
+  border-radius: 0 !important;
+  padding: var(--toolbarbutton-vertical-inner-padding) 5px !important;
+  margin: 0 !important;
+  border: 1px solid var(--chrome-nav-bar-controls-border-color) !important;
+  box-shadow: none !important;
+  height: auto !important;
+}
+
+#back-button > .toolbarbutton-icon {
+  /* 18px icon + 2 * 5px padding + 2 * 1px border */
+  width: 30px !important;
+}
+
+/* the normal theme adds box-shadow: <stuff> !important when the back-button is [open]. Fix: */
+#back-button[open="true"] > .toolbarbutton-icon {
+  box-shadow: none !important;
+}
+
+#forward-button > .toolbarbutton-icon {
+  border-inline-start: none !important;
+}
+
+/* Override a box shadow for disabled back button */
+#main-window:not([customizing]) #back-button[disabled] > .toolbarbutton-icon {
+  box-shadow: none !important;
+}
+
+/* Override !important properties for hovered back button */
+#main-window #back-button:hover:not([disabled="true"]) > .toolbarbutton-icon,
+#main-window #forward-button:hover:not([disabled="true"]) > .toolbarbutton-icon {
+  background: var(--chrome-nav-buttons-hover-background) !important;
+  box-shadow: none !important;
+}
+
+#back-button > .toolbarbutton-icon {
+  border-radius: 2px 0 0 2px !important;
+}
+
+#nav-bar .toolbarbutton-1:not([type=menu-button]),
+#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+#back-button:hover:active:not([disabled="true"]) {
+  -moz-image-region: rect(18px, 54px, 36px, 36px);
+}
+
+/* Use smaller back button icon */
+@media (min-resolution: 2dppx) {
+  #back-button:hover:active:not([disabled="true"]) {
+    -moz-image-region: rect(36px, 108px, 72px, 72px);
+  }
 }
 
 /* URL bar and search bar*/
