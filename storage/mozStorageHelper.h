@@ -9,6 +9,8 @@
 #include "nsAutoPtr.h"
 #include "nsStringGlue.h"
 #include "mozilla/DebugOnly.h"
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
 
 #include "mozIStorageAsyncConnection.h"
 #include "mozIStorageConnection.h"
@@ -205,5 +207,28 @@ protected:
 // statistics, especially PRAGMAs.  We don't include __LINE__ so that
 // queries are stable in the face of source code changes.
 #define MOZ_STORAGE_UNIQUIFY_QUERY_STR "/* " __FILE__ " */ "
+
+// Use this to show a console warning when using deprecated methods.
+#define WARN_DEPRECATED()                                                          \
+  PR_BEGIN_MACRO                                                                   \
+                                                                                   \
+  if (NS_IsMainThread()) {                                                         \
+    nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);  \
+                                                                                   \
+    if (cs) {                                                                      \
+      nsCString msg(__FUNCTION__);                                                 \
+      msg.AppendLiteral(" is deprecated and will be removed soon.");               \
+                                                                                   \
+      nsCOMPtr<nsIScriptError> e = do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);   \
+      if (e && NS_SUCCEEDED(e->Init(NS_ConvertUTF8toUTF16(msg), EmptyString(),     \
+                                    EmptyString(), 0, 0,                           \
+                                    nsIScriptError::errorFlag, "Storage"))) {      \
+        cs->LogMessage(e);                                                         \
+      }                                                                            \
+    }                                                                              \
+  }                                                                                \
+  MOZ_ASSERT(false, "You are trying to use a deprecated mozStorage method. "       \
+                    "Check error message in console to identify the method name.");\
+  PR_END_MACRO
 
 #endif /* MOZSTORAGEHELPER_H */
