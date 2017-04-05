@@ -119,6 +119,7 @@ function init_dynamic_padding() {
 }
 
 function telemetryBucketForCategory(category) {
+  category = category.toLowerCase();
   switch (category) {
     case "applications":
     case "advanced":
@@ -126,6 +127,7 @@ function telemetryBucketForCategory(category) {
     case "general":
     case "privacy":
     case "sync":
+    case "searchresults":
       return category;
     default:
       return "unknown";
