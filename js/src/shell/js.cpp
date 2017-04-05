@@ -5478,25 +5478,31 @@ GetSharedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JSObject* newObj = nullptr;
-    bool rval = true;
 
-    sharedArrayBufferMailboxLock->lock();
-    SharedArrayRawBuffer* buf = sharedArrayBufferMailbox;
-    if (buf) {
-        buf->addReference();
-        // Shared memory is enabled globally in the shell: there can't be a worker
-        // that does not enable it if the main thread has it.
-        MOZ_ASSERT(cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled());
-        newObj = SharedArrayBufferObject::New(cx, buf);
-        if (!newObj) {
-            buf->dropReference();
-            rval = false;
+    {
+        sharedArrayBufferMailboxLock->lock();
+        auto unlockMailbox = MakeScopeExit([]() { sharedArrayBufferMailboxLock->unlock(); });
+
+        SharedArrayRawBuffer* buf = sharedArrayBufferMailbox;
+        if (buf) {
+            if (!buf->addReference()) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SC_SAB_REFCNT_OFLO);
+                return false;
+            }
+
+            // Shared memory is enabled globally in the shell: there can't be a worker
+            // that does not enable it if the main thread has it.
+            MOZ_ASSERT(cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled());
+            newObj = SharedArrayBufferObject::New(cx, buf);
+            if (!newObj) {
+                buf->dropReference();
+                return false;
+            }
         }
     }
-    sharedArrayBufferMailboxLock->unlock();
 
     args.rval().setObjectOrNull(newObj);
-    return rval;
+    return true;
 }
 
 static bool
@@ -5510,18 +5516,24 @@ SetSharedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
     }
     else if (args.get(0).isObject() && args[0].toObject().is<SharedArrayBufferObject>()) {
         newBuffer = args[0].toObject().as<SharedArrayBufferObject>().rawBufferObject();
-        newBuffer->addReference();
+        if (!newBuffer->addReference()) {
+            JS_ReportErrorASCII(cx, "Reference count overflow on SharedArrayBuffer");
+            return false;
+        }
     } else {
         JS_ReportErrorASCII(cx, "Only a SharedArrayBuffer can be installed in the global mailbox");
         return false;
     }
 
-    sharedArrayBufferMailboxLock->lock();
-    SharedArrayRawBuffer* oldBuffer = sharedArrayBufferMailbox;
-    if (oldBuffer)
-        oldBuffer->dropReference();
-    sharedArrayBufferMailbox = newBuffer;
-    sharedArrayBufferMailboxLock->unlock();
+    {
+        sharedArrayBufferMailboxLock->lock();
+        auto unlockMailbox = MakeScopeExit([]() { sharedArrayBufferMailboxLock->unlock(); });
+
+        SharedArrayRawBuffer* oldBuffer = sharedArrayBufferMailbox;
+        if (oldBuffer)
+            oldBuffer->dropReference();
+        sharedArrayBufferMailbox = newBuffer;
+    }
 
     args.rval().setUndefined();
     return true;

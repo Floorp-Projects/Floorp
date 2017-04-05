@@ -1163,7 +1163,10 @@ JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj)
 
     // Avoids a race condition where the parent thread frees the buffer
     // before the child has accepted the transferable.
-    rawbuf->addReference();
+    if (!rawbuf->addReference()) {
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_SAB_REFCNT_OFLO);
+        return false;
+    }
 
     intptr_t p = reinterpret_cast<intptr_t>(rawbuf);
     return out.writePair(SCTAG_SHARED_ARRAY_BUFFER_OBJECT, static_cast<uint32_t>(sizeof(p))) &&
