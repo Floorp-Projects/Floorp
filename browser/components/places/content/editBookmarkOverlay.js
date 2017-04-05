@@ -57,12 +57,14 @@ var gEditItemOverlay = {
       }
     }
     let focusedElement = aInitInfo.focusedElement;
+    let onPanelReady = aInitInfo.onPanelReady;
 
     return this._paneInfo = { itemId, itemGuid, isItem,
                               isURI, uri, title,
                               isBookmark, isFolderShortcut, isParentReadOnly,
                               bulkTagging, uris,
-                              visibleRows, postData, isTag, focusedElement };
+                              visibleRows, postData, isTag, focusedElement,
+                              onPanelReady };
   },
 
   get initialized() {
@@ -207,7 +209,8 @@ var gEditItemOverlay = {
 
     let { itemId, isItem, isURI,
           isBookmark, bulkTagging, uris,
-          visibleRows, focusedElement } = this._setPaneInfo(aInfo);
+          visibleRows, focusedElement,
+          onPanelReady } = this._setPaneInfo(aInfo);
 
     let showOrCollapse =
       (rowId, isAppropriateForInput, nameInHiddenRows = null) => {
@@ -279,26 +282,34 @@ var gEditItemOverlay = {
       this._observersAdded = true;
     }
 
-    // The focusedElement possible values are:
-    //  * preferred: focus the field that the user touched first the last
-    //    time the pane was shown (either namePicker or tagsField)
-    //  * first: focus the first non collapsed textbox
-    // Note: since all controls are collapsed by default, we don't get the
-    // default XUL dialog behavior, that selects the first control, so we set
-    // the focus explicitly.
-    // Note: If focusedElement === "preferred", this file expects gPrefService
-    // to be defined in the global scope.
-    let elt;
-    if (focusedElement === "preferred") {
-      /* eslint-disable no-undef */
-      elt = this._element(gPrefService.getCharPref("browser.bookmarks.editDialog.firstEditField"));
-      /* eslint-enable no-undef */
-    } else if (focusedElement === "first") {
-      elt = document.querySelector("textbox:not([collapsed=true])");
-    }
-    if (elt) {
-      elt.focus();
-      elt.select();
+    let focusElement = () => {
+      // The focusedElement possible values are:
+      //  * preferred: focus the field that the user touched first the last
+      //    time the pane was shown (either namePicker or tagsField)
+      //  * first: focus the first non collapsed textbox
+      // Note: since all controls are collapsed by default, we don't get the
+      // default XUL dialog behavior, that selects the first control, so we set
+      // the focus explicitly.
+      // Note: If focusedElement === "preferred", this file expects gPrefService
+      // to be defined in the global scope.
+      let elt;
+      if (focusedElement === "preferred") {
+        /* eslint-disable no-undef */
+        elt = this._element(gPrefService.getCharPref("browser.bookmarks.editDialog.firstEditField"));
+        /* eslint-enable no-undef */
+      } else if (focusedElement === "first") {
+        elt = document.querySelector("textbox:not([collapsed=true])");
+      }
+      if (elt) {
+        elt.focus();
+        elt.select();
+      }
+    };
+
+    if (onPanelReady) {
+      onPanelReady(focusElement);
+    } else {
+      focusElement();
     }
   },
 
@@ -332,10 +343,23 @@ var gEditItemOverlay = {
     if (aElement.value != aValue) {
       aElement.value = aValue;
 
-      // Clear the undo stack
-      let editor = aElement.editor;
-      if (editor)
-        editor.transactionManager.clear();
+      // Clear the editor's undo stack
+      let transactionManager;
+      try {
+        transactionManager = aElement.editor.transactionManager;
+      } catch (e) {
+        // When retrieving the transaction manager, editor may be null resulting
+        // in a TypeError. Additionally, the transaction manager may not
+        // exist yet, which causes access to it to throw NS_ERROR_FAILURE.
+        // In either event, the transaction manager doesn't exist it, so we
+        // don't need to worry about clearing it.
+        if (!(e instanceof TypeError) && e.result != Cr.NS_ERROR_FAILURE) {
+          throw e;
+        }
+      }
+      if (transactionManager) {
+        transactionManager.clear();
+      }
     }
   },
 
