@@ -16,6 +16,8 @@
 #include "nsICryptoHash.h"
 #include "nsDataHashtable.h"
 
+class nsIThread;
+
 namespace mozilla {
 namespace safebrowsing {
 
@@ -65,32 +67,22 @@ public:
                  LookupResultArray& aResults);
 
   /**
-   * Apply the table updates in the array.  Takes ownership of
-   * the updates in the array and clears it.  Wacky!
+   * Asynchronously apply updates to the in-use databases. When the
+   * update is complete, the caller can be notified by |aCallback|, which
+   * will occur on the caller thread. Note that the ownership of
+   * |aUpdates| will be transferred. This design is inherited from the
+   * previous sync update function (ApplyUpdates) which has been removed.
    */
-  nsresult ApplyUpdates(nsTArray<TableUpdate*>* aUpdates);
+  using AsyncUpdateCallback = std::function<void(nsresult)>;
+  nsresult AsyncApplyUpdates(nsTArray<TableUpdate*>* aUpdates,
+                             AsyncUpdateCallback aCallback);
 
   /**
-   * The "background" part of ApplyUpdates. Once the background update
-   * is called, the foreground update has to be called along with the
-   * background result no matter whether the background update is
-   * successful or not.
+   * Wait until the ongoing async update is finished and callback
+   * is fired. Once this function returns, AsyncApplyUpdates is
+   * no longer available.
    */
-  nsresult ApplyUpdatesBackground(nsTArray<TableUpdate*>* aUpdates,
-                                  nsACString& aFailedTableName);
-
-  /**
-   * The "foreground" part of ApplyUpdates. The in-use data (in-memory and
-   * on-disk) will be touched so this MUST be mutually exclusive to other
-   * member functions.
-   *
-   * If |aBackgroundRv| is successful, the return value is the result of
-   * bringing stuff to the foreground. Otherwise, the foreground table may
-   * be reset according to the background update failed reason and
-   * |aBackgroundRv| will be returned to forward the background update result.
-   */
-  nsresult ApplyUpdatesForeground(nsresult aBackgroundRv,
-                                  const nsACString& aFailedTableName);
+  void FlushAndDisableAsyncUpdate();
 
   /**
    * Apply full hashes retrived from gethash to cache.
@@ -147,10 +139,9 @@ private:
   nsresult RecoverBackups();
   nsresult CleanToDelete();
   nsresult CopyInUseDirForUpdate();
-  nsresult CopyInUseLookupCacheForUpdate();
   nsresult RegenActiveTables();
 
-
+  void MergeNewLookupCaches(); // Merge mNewLookupCaches into mLookupCaches.
 
   // Remove any intermediary for update, including in-memory
   // and on-disk data.
@@ -187,6 +178,28 @@ private:
 
   nsCString GetProvider(const nsACString& aTableName);
 
+  /**
+   * The "background" part of ApplyUpdates. Once the background update
+   * is called, the foreground update has to be called along with the
+   * background result no matter whether the background update is
+   * successful or not.
+   */
+  nsresult ApplyUpdatesBackground(nsTArray<TableUpdate*>* aUpdates,
+                                  nsACString& aFailedTableName);
+
+  /**
+   * The "foreground" part of ApplyUpdates. The in-use data (in-memory and
+   * on-disk) will be touched so this MUST be mutually exclusive to other
+   * member functions.
+   *
+   * If |aBackgroundRv| is successful, the return value is the result of
+   * bringing stuff to the foreground. Otherwise, the foreground table may
+   * be reset according to the background update failed reason and
+   * |aBackgroundRv| will be returned to forward the background update result.
+   */
+  nsresult ApplyUpdatesForeground(nsresult aBackgroundRv,
+                                  const nsACString& aFailedTableName);
+
   // Root dir of the Local profile.
   nsCOMPtr<nsIFile> mCacheDirectory;
   // Main directory where to store the databases.
@@ -212,6 +225,16 @@ private:
 
   // The copy of mLookupCaches for update only.
   nsTArray<LookupCache*> mNewLookupCaches;
+
+  bool mUpdateInterrupted;
+
+  nsCOMPtr<nsIThread> mUpdateThread; // For async update.
+
+  // Identical to mRootStoreDirectory but for update only because
+  // nsIFile is not thread safe and mRootStoreDirectory needs to
+  // be accessed in CopyInUseDirForUpdate().
+  // It will be initialized right before update on the worker thread.
+  nsCOMPtr<nsIFile> mRootStoreDirectoryForUpdate;
 };
 
 } // namespace safebrowsing

@@ -27,8 +27,10 @@ function onDOMContentLoaded(callback) {
 function test() {
   waitForExplicitFinish();
 
-  gBrowser.selectedTab = gBrowser.addTab("http://www.itisatrap.org/firefox/its-an-attack.html");
-  onDOMContentLoaded(testMalware);
+  waitForDBInit(() => {
+    gBrowser.selectedTab = gBrowser.addTab("http://www.itisatrap.org/firefox/its-an-attack.html");
+    onDOMContentLoaded(testMalware);
+  });
 }
 
 function testMalware(data) {
