@@ -179,7 +179,6 @@ def old_configure_options(*options):
     '--enable-gamepad',
     '--enable-gconf',
     '--enable-gczeal',
-    '--enable-gio',
     '--enable-gnomeui',
     '--enable-gold',
     '--enable-hardware-aec-ns',
