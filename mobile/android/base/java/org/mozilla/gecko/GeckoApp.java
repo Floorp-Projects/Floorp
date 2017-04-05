@@ -2057,6 +2057,8 @@ public abstract class GeckoApp
         shortcutIntent.setData(Uri.parse(aURI));
         shortcutIntent.putExtra("MANIFEST_PATH", manifestPath);
         shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, LauncherActivity.class.getName());
+        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU,
+                "pwa_add_to_launcher");
         createHomescreenIcon(shortcutIntent, aTitle, aURI, aIcon);
     }
 
