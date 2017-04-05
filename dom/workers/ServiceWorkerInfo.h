@@ -192,6 +192,38 @@ public:
 
   void
   UpdateRedundantTime();
+
+  int64_t
+  GetInstalledTime() const
+  {
+    return mInstalledTime;
+  }
+
+  void
+  SetInstalledTime(const int64_t aTime)
+  {
+    if (aTime == 0) {
+      return;
+    }
+
+    mInstalledTime = aTime;
+  }
+
+  int64_t
+  GetActivatedTime() const
+  {
+    return mActivatedTime;
+  }
+
+  void
+  SetActivatedTime(const int64_t aTime)
+  {
+    if (aTime == 0) {
+      return;
+    }
+
+    mActivatedTime = aTime;
+  }
 };
 
 } // namespace workers
