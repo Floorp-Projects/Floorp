@@ -12,7 +12,6 @@
 #include <string.h>
 
 #include "frontend/ParseNode.h"
-#include "frontend/TokenStream.h"
 
 namespace js {
 namespace frontend {
@@ -169,8 +168,7 @@ class SyntaxParseHandler
     }
 
   public:
-    SyntaxParseHandler(JSContext* cx, LifoAlloc& alloc,
-                       TokenStreamBase& tokenStream, Parser<SyntaxParseHandler>* syntaxParser,
+    SyntaxParseHandler(JSContext* cx, LifoAlloc& alloc, Parser<SyntaxParseHandler>* syntaxParser,
                        LazyScript* lazyOuterFunction)
       : lastAtom(nullptr)
     {}
