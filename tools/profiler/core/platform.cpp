@@ -1834,17 +1834,15 @@ ThreadSelected(PS::LockRef aLock, const char* aThreadName)
   return false;
 }
 
-static void
-MaybeSetProfile(PS::LockRef aLock, ThreadInfo* aInfo)
+static bool
+ShouldProfileThread(PS::LockRef aLock, ThreadInfo* aInfo)
 {
   // This function runs both on and off the main thread.
 
   MOZ_RELEASE_ASSERT(gPS);
 
-  if ((aInfo->IsMainThread() || gPS->FeatureThreads(aLock)) &&
-      ThreadSelected(aLock, aInfo->Name())) {
-    aInfo->SetHasProfile();
-  }
+  return ((aInfo->IsMainThread() || gPS->FeatureThreads(aLock)) &&
+          ThreadSelected(aLock, aInfo->Name()));
 }
 
 // Find the ThreadInfo for the current thread. On success, *aIndexOut is set to
@@ -1886,14 +1884,15 @@ locked_register_thread(PS::LockRef aLock, const char* aName, void* stackTop)
   ThreadInfo* info = new ThreadInfo(aName, Thread::GetCurrentId(),
                                     NS_IsMainThread(), stack, stackTop);
 
-  MaybeSetProfile(aLock, info);
+  if (ShouldProfileThread(aLock, info)) {
+    info->SetHasProfile();
 
-  // This must come after the MaybeSetProfile() call.
-  if (gPS->IsActive(aLock) && info->HasProfile() && gPS->FeatureJS(aLock)) {
-    // This startJSSampling() call is on-thread, so we can poll manually to
-    // start JS sampling immediately.
-    stack->startJSSampling();
-    stack->pollJSSampling();
+    if (gPS->IsActive(aLock) && gPS->FeatureJS(aLock)) {
+      // This startJSSampling() call is on-thread, so we can poll manually to
+      // start JS sampling immediately.
+      stack->startJSSampling();
+      stack->pollJSSampling();
+    }
   }
 
   gPS->Threads(aLock).push_back(info);
@@ -2305,14 +2304,14 @@ locked_profiler_start(PS::LockRef aLock, int aEntries, double aInterval,
   double interval = aInterval > 0 ? aInterval : PROFILE_DEFAULT_INTERVAL;
   gPS->SetInterval(aLock, interval);
 
-  // Deep copy aFeatures. Must precede the MaybeSetProfile() call below.
+  // Deep copy aFeatures. Must precede the ShouldProfileThread() call below.
   Vector<std::string>& features = gPS->Features(aLock);
   MOZ_ALWAYS_TRUE(features.resize(aFeatureCount));
   for (uint32_t i = 0; i < aFeatureCount; ++i) {
     features[i] = aFeatures[i];
   }
 
-  // Deep copy aThreadNameFilters. Must precede the MaybeSetProfile() call
+  // Deep copy aThreadNameFilters. Must precede the ShouldProfileThread() call
   // below.
   Vector<std::string>& threadNameFilters = gPS->ThreadNameFilters(aLock);
   MOZ_ALWAYS_TRUE(threadNameFilters.resize(aFilterCount));
@@ -2342,7 +2341,7 @@ locked_profiler_start(PS::LockRef aLock, int aEntries, double aInterval,
 #endif
   // Profile non-main threads if we have a filter, because users sometimes ask
   // to filter by a list of threads but forget to explicitly request.
-  // Must precede the MaybeSetProfile() call below.
+  // Must precede the ShouldProfileThread() call below.
   gPS->SetFeatureThreads(aLock, HAS_FEATURE("threads") || aFilterCount > 0);
 
 #undef HAS_FEATURE
@@ -2354,13 +2353,15 @@ locked_profiler_start(PS::LockRef aLock, int aEntries, double aInterval,
   for (uint32_t i = 0; i < threads.size(); i++) {
     ThreadInfo* info = threads.at(i);
 
-    MaybeSetProfile(aLock, info);
+    if (ShouldProfileThread(aLock, info)) {
+      info->SetHasProfile();
 
-    if (info->HasProfile() && !info->IsPendingDelete()) {
-      info->Stack()->reinitializeOnResume();
+      if (!info->IsPendingDelete()) {
+        info->Stack()->reinitializeOnResume();
 
-      if (featureJS) {
-        info->Stack()->startJSSampling();
+        if (featureJS) {
+          info->Stack()->startJSSampling();
+        }
       }
     }
   }
