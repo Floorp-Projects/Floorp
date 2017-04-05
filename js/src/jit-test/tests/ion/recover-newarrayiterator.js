@@ -8,7 +8,7 @@ function selfhosted() {
     var NewArrayIterator = getSelfHostedValue("NewArrayIterator");
     var iter = NewArrayIterator();
     bailout();
-    assertRecoveredOnBailout(iter, true);
+    // assertRecoveredOnBailout(iter, true);
 }
 
 function iterator(i) {
