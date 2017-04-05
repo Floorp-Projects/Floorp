@@ -1,9 +1,16 @@
-#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] {
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] {
   border-bottom: 1px solid var(--panel-separator-color);
-  background-color: hsla(210, 4%, 10%, 0.07);
+  padding-inline-start: 0;
+  padding-inline-end: 6px;
+  min-height: 3em;
+}
+
+/* Opt-in notification */
+
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] > hbox[anonid="search-suggestions-opt-in"] {
   padding: 6px 0;
   padding-inline-start: 44px;
-  padding-inline-end: 6px;
+  background-color: hsla(210, 4%, 10%, 0.07);
   background-image: url("chrome://browser/skin/info.svg");
   background-clip: padding-box;
   background-position: 20px center;
@@ -11,44 +18,146 @@
   background-size: 16px 16px;
 }
 
-#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"]:-moz-locale-dir(rtl) {
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] > hbox[anonid="search-suggestions-opt-in"]:-moz-locale-dir(rtl) {
   background-position: right 20px center;
 }
 
-#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > description {
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] > hbox[anonid="search-suggestions-opt-in"] > description {
   margin: 0;
   padding: 0;
 }
 
-#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > description > label.text-link {
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] > hbox[anonid="search-suggestions-opt-in"] > description > label.text-link {
   margin-inline-start: 0;
 }
 
-#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > button {
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] button {
   -moz-appearance: none;
   min-width: 80px;
   border-radius: 3px;
-  padding: 4px 16px;
   margin: 0;
   margin-inline-start: 10px;
 }
 
-#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > button[anonid="search-suggestions-notification-disable"] {
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] button[anonid="search-suggestions-notification-disable"] {
   color: hsl(210, 0%, 38%);
   background-color: hsl(210, 0%, 88%);
   border: 1px solid hsl(210, 0%, 82%);
 }
-
-#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > button[anonid="search-suggestions-notification-disable"]:hover {
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] button[anonid="search-suggestions-notification-disable"]:hover {
   background-color: hsl(210, 0%, 84%);
 }
 
-#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > button[anonid="search-suggestions-notification-enable"] {
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] button[anonid="search-suggestions-notification-enable"] {
   color: white;
   background-color: hsl(93, 82%, 44%);
   border: 1px solid hsl(93, 82%, 44%);
 }
-
-#PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] > button[anonid="search-suggestions-notification-enable"]:hover {
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] button[anonid="search-suggestions-notification-enable"]:hover {
   background-color: hsl(93, 82%, 40%);
+}
+
+/* Opt-out hint */
+
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] > hbox[anonid="search-suggestions-opt-out"] {
+  font: message-box;
+}
+
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] hbox[anonid="search-suggestions-hint-box"] > description {
+  margin: auto;
+  padding: 4px 8px;
+  background-color: #ffeebe;
+  border: 1px solid #ffdf81;
+  border-radius: 4px;
+  color: #7d3500;
+}
+
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] hbox[anonid="search-suggestions-hint-box"] > description > html|span {
+  unicode-bidi: embed;
+}
+
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"] hbox[anonid="search-suggestions-hint-box"] > description > html|span.prefix {
+  font-weight: bold;
+}
+
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"][animate] > hbox[anonid="search-suggestions-opt-out"] > .ac-site-icon {
+  transform: scale(0);
+  animation-name: search-suggestions-hint-grow;
+  animation-duration: 500ms;
+  animation-delay: 500ms;
+  animation-iteration-count: 1;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes search-suggestions-hint-grow {
+  0%   { transform: scale(0); }
+  40%  { transform: scale(1.5); }
+  60%  { transform: scale(1); }
+  80%  { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"][animate] hbox[anonid="search-suggestions-hint-typing"] > .ac-title-text {
+  text-overflow: clip;
+}
+
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"][animate] hbox[anonid="search-suggestions-hint-typing"] {
+  overflow: hidden;
+  max-width: 8ch;
+  width: 0;
+  animation-name: search-suggestions-hint-typing;
+  animation-duration: 500ms;
+  animation-delay: 750ms;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
+@keyframes search-suggestions-hint-typing {
+  from { width: 0; }
+  to   { width: 8ch; }
+}
+
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"][animate] hbox[anonid="search-suggestions-hint-box"] {
+  opacity: 0;
+  animation-duration: 250ms;
+  animation-delay: 1500ms;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
+/* Margin-inline-start can't be animated yet */
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"][animate] hbox[anonid="search-suggestions-hint-box"]:-moz-locale-dir(ltr) {
+  margin-left: 160px;
+  animation-name: search-suggestions-hint-buildin-ltr;
+}
+
+@keyframes search-suggestions-hint-buildin-ltr {
+  from  { margin-left: 160px; opacity: 0; }
+  to    { margin-left: 0; opacity: 1; }
+}
+
+#PopupAutoCompleteRichResult > deck[anonid="search-suggestions-notification"][animate] hbox[anonid="search-suggestions-hint-box"]:-moz-locale-dir(rtl) {
+  /* Should be margin-inline-start but that can't be animated yet */
+  margin-right: 160px;
+  animation-name: search-suggestions-hint-buildin-rtl;
+}
+
+@keyframes search-suggestions-hint-buildin-rtl {
+  from  { margin-right: 160px; opacity: 0; }
+  to    { margin-right: 0; opacity: 1; }
+}
+
+#search-suggestions-change-settings {
+  opacity: 0;
+  animation-name: search-suggestions-hint-fadein;
+  animation-duration: 500ms;
+  animation-delay: 1800ms;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
+@keyframes search-suggestions-hint-fadein {
+  from  { opacity: 0 }
+  to    { opacity: 1 }
 }
