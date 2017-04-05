@@ -1700,6 +1700,28 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     }
   }
 
+  // Pseudo-elements implemented by JS must have the NODE_IS_NATIVE_ANONYMOUS
+  // flag set on them. For C++-created pseudo-elements, this is done in
+  // nsCSSFrameConstructor::GetAnonymousContent, but any JS that creates
+  // pseudo-elements would run after that. So we set that flag here,
+  // when the element implementing the pseudo is inserted into the document.
+  // We maintain the invariant that any NAC-implemented pseudo-element's
+  // anonymous ancestors are also flagged as NAC, which the style system relies on.
+  if (aDocument) {
+    CSSPseudoElementType pseudoType = GetPseudoElementType();
+    if (pseudoType != CSSPseudoElementType::NotPseudo &&
+        nsCSSPseudoElements::PseudoElementIsJSCreatedNAC(pseudoType)) {
+      SetFlags(NODE_IS_NATIVE_ANONYMOUS);
+      nsIContent* parent = aParent;
+      while (parent && !parent->IsRootOfNativeAnonymousSubtree()) {
+        MOZ_ASSERT(parent->IsInNativeAnonymousSubtree());
+        parent->SetFlags(NODE_IS_NATIVE_ANONYMOUS);
+        parent = parent->GetParent();
+      }
+      MOZ_ASSERT(parent);
+    }
+  }
+
   // XXXbz script execution during binding can trigger some of these
   // postcondition asserts....  But we do want that, since things will
   // generally be quite broken when that happens.

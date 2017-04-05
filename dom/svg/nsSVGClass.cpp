@@ -117,10 +117,10 @@ DOMAnimatedString::GetAnimVal(nsAString& aResult)
   mVal->GetAnimValue(aResult, mSVGElement);
 }
 
-nsISMILAttr*
+UniquePtr<nsISMILAttr>
 nsSVGClass::ToSMILAttr(nsSVGElement *aSVGElement)
 {
-  return new SMILString(this, aSVGElement);
+  return MakeUnique<SMILString>(this, aSVGElement);
 }
 
 nsresult

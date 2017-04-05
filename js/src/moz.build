@@ -52,16 +52,12 @@ TEST_DIRS += ['jsapi-tests', 'tests', 'gdb']
 
 CONFIGURE_SUBST_FILES += [
     'devtools/rootAnalysis/Makefile',
-    'js-config',
-    'js.pc',
 ]
 CONFIGURE_DEFINE_FILES += [
     'js-confdefs.h',
 ]
 
 if not CONFIG['JS_STANDALONE']:
-    LIBRARY_DEFINES['MOZ_HAS_MOZGLUE'] = True
-
     CONFIGURE_SUBST_FILES += [
         '../../config/autoconf-js.mk',
         '../../config/emptyvars-js.mk',
@@ -632,40 +628,11 @@ ReservedWordsGenerated.inputs += [
     'frontend/ReservedWords.h'
 ]
 
-# JavaScript must be built shared, even for static builds, as it is used by
-# other modules which are always built shared. Failure to do so results in
-# the js code getting copied into xpinstall and jsd as well as mozilla-bin,
-# and then the static data cells used for locking no longer work.
-#
-# In fact, we now build both a static and a shared library, as the
-# JS shell would like to link to the static library.
-
-if CONFIG['JS_SHARED_LIBRARY']:
-    GeckoSharedLibrary('js', linkage=None)
-    SHARED_LIBRARY_NAME = CONFIG['JS_LIBRARY_NAME']
-else:
-    Library('js')
-
-FORCE_STATIC_LIB = True
-STATIC_LIBRARY_NAME = 'js_static'
-
-if CONFIG['ENABLE_INTL_API']:
-    if not CONFIG['MOZ_ICU_DATA_ARCHIVE']:
-        USE_LIBS += [
-            'icu',
-        ]
-    else:
-        # Linking 'icu' will pull in the stubdata library,
-        # which the shell doesn't want, so link the other bits.
-        USE_LIBS += [
-            'icui18n',
-            'icuuc',
-        ]
-
-USE_LIBS += [
-    'nspr',
-    'zlib',
+DIRS += [
+    'build',
 ]
+
+FINAL_LIBRARY = 'js'
 
 if CONFIG['NIGHTLY_BUILD']:
     DEFINES['ENABLE_BINARYDATA'] = True
@@ -712,37 +679,8 @@ if CONFIG['_MSC_VER']:
     CXXFLAGS += ['-wd4577']
     CXXFLAGS += ['-wd4312']
 
-if CONFIG['OS_ARCH'] not in ('WINNT', 'HP-UX'):
-    OS_LIBS += [
-        'm',
-    ]
-
-if CONFIG['OS_ARCH'] == 'FreeBSD':
-    OS_LIBS += [
-        '-pthread',
-    ]
-
-if CONFIG['OS_ARCH'] == 'Linux':
-    OS_LIBS += [
-        'dl',
-    ]
-
-if CONFIG['OS_ARCH'] == 'SunOS':
-    OS_LIBS += [
-        'posix4',
-        'dl',
-        'nsl',
-        'socket',
-    ]
-
-OS_LIBS += CONFIG['REALTIME_LIBS']
-
 CFLAGS += CONFIG['MOZ_ICU_CFLAGS']
 CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
-
-NO_EXPAND_LIBS = True
-
-DIST_INSTALL = True
 
 # Prepare self-hosted JS code for embedding
 GENERATED_FILES += [('selfhosted.out.h', 'selfhosted.js')]

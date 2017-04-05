@@ -6,6 +6,7 @@ package org.mozilla.gecko.sync.repositories.domain;
 
 import java.io.UnsupportedEncodingException;
 
+import org.json.simple.JSONObject;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 
@@ -244,9 +245,14 @@ public abstract class Record {
     throw new RuntimeException("Cannot JSONify non-CryptoRecord Records.");
   }
 
-  public byte[] toJSONBytes() {
+  @SuppressWarnings("static-method")
+  public JSONObject toJSONObject() {
+    throw new RuntimeException("Cannot JSONify non-CryptoRecord Records.");
+  }
+
+  public static byte[] stringToJSONBytes(String in) {
     try {
-      return this.toJSONString().getBytes("UTF-8");
+      return in.getBytes("UTF-8");
     } catch (UnsupportedEncodingException e) {
       // Can't happen.
       return null;

@@ -3660,6 +3660,17 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
           s.mPacketsSent.Construct(mp.rtp_packets_sent());
           s.mBytesSent.Construct(mp.rtp_bytes_sent());
 
+          // Fill in packet type statistics
+          webrtc::RtcpPacketTypeCounter counters;
+          if (mp.Conduit()->GetSendPacketTypeStats(&counters)) {
+            s.mNackCount.Construct(counters.nack_packets);
+            // Fill in video only packet type stats
+            if (!isAudio) {
+              s.mFirCount.Construct(counters.fir_packets);
+              s.mPliCount.Construct(counters.pli_packets);
+            }
+          }
+
           // Lastly, fill in video encoder stats if this is video
           if (!isAudio) {
             double framerateMean;
@@ -3667,16 +3678,19 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
             double bitrateMean;
             double bitrateStdDev;
             uint32_t droppedFrames;
+            uint32_t framesEncoded;
             if (mp.Conduit()->GetVideoEncoderStats(&framerateMean,
                                                    &framerateStdDev,
                                                    &bitrateMean,
                                                    &bitrateStdDev,
-                                                   &droppedFrames)) {
+                                                   &droppedFrames,
+                                                   &framesEncoded)) {
               s.mFramerateMean.Construct(framerateMean);
               s.mFramerateStdDev.Construct(framerateStdDev);
               s.mBitrateMean.Construct(bitrateMean);
               s.mBitrateStdDev.Construct(bitrateStdDev);
               s.mDroppedFrames.Construct(droppedFrames);
+              s.mFramesEncoded.Construct(framesEncoded);
             }
           }
           query->report->mOutboundRTPStreamStats.Value().AppendElement(s,
@@ -3746,6 +3760,16 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
                                        &avSyncDelta)) {
             s.mMozJitterBufferDelay.Construct(jitterBufferDelay);
             s.mMozAvSyncDelay.Construct(avSyncDelta);
+          }
+        }
+        // Fill in packet type statistics
+        webrtc::RtcpPacketTypeCounter counters;
+        if (mp.Conduit()->GetRecvPacketTypeStats(&counters)) {
+          s.mNackCount.Construct(counters.nack_packets);
+          // Fill in video only packet type stats
+          if (!isAudio) {
+            s.mFirCount.Construct(counters.fir_packets);
+            s.mPliCount.Construct(counters.pli_packets);
           }
         }
         // Lastly, fill in video decoder stats if this is video

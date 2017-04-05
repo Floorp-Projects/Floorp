@@ -144,10 +144,10 @@ SVGAnimatedPathSegList::ClearAnimValue(nsSVGElement *aElement)
   aElement->DidAnimatePathSegList();
 }
 
-nsISMILAttr*
+UniquePtr<nsISMILAttr>
 SVGAnimatedPathSegList::ToSMILAttr(nsSVGElement *aElement)
 {
-  return new SMILAnimatedPathSegList(this, aElement);
+  return MakeUnique<SMILAnimatedPathSegList>(this, aElement);
 }
 
 nsresult

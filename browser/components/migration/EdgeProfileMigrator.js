@@ -151,14 +151,17 @@ EdgeTypedURLMigrator.prototype = {
   },
 };
 
-function EdgeReadingListMigrator() {
+function EdgeReadingListMigrator(dbOverride) {
+  this.dbOverride = dbOverride;
 }
 
 EdgeReadingListMigrator.prototype = {
   type: MigrationUtils.resourceTypes.BOOKMARKS,
 
+  get db() { return this.dbOverride || gEdgeDatabase },
+
   get exists() {
-    return !!gEdgeDatabase;
+    return !!this.db;
   },
 
   migrate(callback) {
@@ -172,7 +175,7 @@ EdgeReadingListMigrator.prototype = {
   },
 
   _migrateReadingList: Task.async(function*(parentGuid) {
-    if (yield ESEDBReader.dbLocked(gEdgeDatabase)) {
+    if (yield ESEDBReader.dbLocked(this.db)) {
       throw new Error("Edge seems to be running - its database is locked.");
     }
     let columnFn = db => {
@@ -194,7 +197,7 @@ EdgeReadingListMigrator.prototype = {
       return !row.IsDeleted;
     };
 
-    let readingListItems = readTableFromEdgeDB("ReadingList", columnFn, filterFn);
+    let readingListItems = readTableFromEdgeDB("ReadingList", columnFn, filterFn, this.db);
     if (!readingListItems.length) {
       return;
     }
@@ -211,7 +214,7 @@ EdgeReadingListMigrator.prototype = {
       }
       bookmarks.push({ url: item.URL, title: item.Title, dateAdded });
     }
-    yield MigrationUtils.insertManyBookmarksWrapper(readingListItems, destFolderGuid);
+    yield MigrationUtils.insertManyBookmarksWrapper(bookmarks, destFolderGuid);
   }),
 
   _ensureReadingListFolder: Task.async(function*(parentGuid) {
@@ -350,8 +353,12 @@ function EdgeProfileMigrator() {
 
 EdgeProfileMigrator.prototype = Object.create(MigratorPrototype);
 
-EdgeProfileMigrator.prototype.getESEMigratorForTesting = function(dbOverride) {
+EdgeProfileMigrator.prototype.getBookmarksMigratorForTesting = function(dbOverride) {
   return new EdgeBookmarksMigrator(dbOverride);
+};
+
+EdgeProfileMigrator.prototype.getReadingListMigratorForTesting = function(dbOverride) {
+  return new EdgeReadingListMigrator(dbOverride);
 };
 
 EdgeProfileMigrator.prototype.getResources = function() {

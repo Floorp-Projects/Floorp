@@ -45,7 +45,7 @@ index aeeebc65..5c0836a 100644
  num-traits = "0.1.37"
  
 -[build-dependencies]
--rusty-cheddar = "0.3.2"
+-rusty-cheddar = { git = "https://github.com/kinetiknz/rusty-cheddar" }
 -
 -[features]
 -fuzz = ["mp4parse/fuzz"]

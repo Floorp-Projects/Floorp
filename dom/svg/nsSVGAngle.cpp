@@ -350,12 +350,12 @@ SVGAnimatedAngle::~SVGAnimatedAngle()
   sSVGAnimatedAngleTearoffTable.RemoveTearoff(mVal);
 }
 
-nsISMILAttr*
+UniquePtr<nsISMILAttr>
 nsSVGAngle::ToSMILAttr(nsSVGElement *aSVGElement)
 {
   if (aSVGElement->NodeInfo()->Equals(nsGkAtoms::marker, kNameSpaceID_SVG)) {
     SVGMarkerElement *marker = static_cast<SVGMarkerElement*>(aSVGElement);
-    return new SMILOrient(marker->GetOrientType(), this, aSVGElement);
+    return MakeUnique<SMILOrient>(marker->GetOrientType(), this, aSVGElement);
   }
   // SMILOrient would not be useful for general angle attributes (also,
   // "orient" is the only animatable <angle>-valued attribute in SVG 1.1).

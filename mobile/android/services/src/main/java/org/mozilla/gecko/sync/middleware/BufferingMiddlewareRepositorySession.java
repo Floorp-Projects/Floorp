@@ -34,8 +34,6 @@ import java.util.concurrent.Executors;
     private final BufferStorage bufferStorage;
     private final long syncDeadlineMillis;
 
-    private ExecutorService storeDelegateExecutor = Executors.newSingleThreadExecutor();
-
     /* package-local */ BufferingMiddlewareRepositorySession(
             RepositorySession repositorySession, MiddlewareRepository repository,
             long syncDeadlineMillis, BufferStorage bufferStorage) {
@@ -94,37 +92,32 @@ import java.util.concurrent.Executors;
     }
 
     @Override
-    public void storeDone() {
-        storeDone(System.currentTimeMillis());
-    }
-
-    @Override
     public void storeFlush() {
         bufferStorage.flush();
     }
 
     @Override
-    public void storeDone(final long end) {
+    public void storeDone() {
         bufferStorage.flush();
 
         // Determine if we have enough time to merge the buffer data.
         // If we don't have enough time now, we keep our buffer and try again later.
         if (!mayProceedToMergeBuffer()) {
             super.abort();
-            storeDelegate.deferredStoreDelegate(storeDelegateExecutor).onStoreFailed(new SyncDeadlineReachedException());
+            storeDelegate.deferredStoreDelegate(storeWorkQueue).onStoreFailed(new SyncDeadlineReachedException());
             return;
         }
 
-        doMergeBuffer(end);
+        doMergeBuffer();
     }
 
     @VisibleForTesting
-    /* package-local */ void doMergeBuffer(long end) {
+    /* package-local */ void doMergeBuffer() {
         final Collection<Record> bufferData = bufferStorage.all();
 
         // Trivial case of an empty buffer.
         if (bufferData.isEmpty()) {
-            super.storeDone(end);
+            super.storeDone();
             return;
         }
 
@@ -139,7 +132,7 @@ import java.util.concurrent.Executors;
         }
 
         // Let session know that there are no more records to store.
-        super.storeDone(end);
+        super.storeDone();
     }
 
     /**

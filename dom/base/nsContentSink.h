@@ -56,11 +56,11 @@ extern mozilla::LazyLogModule gContentSinkLogModuleInfo;
 #define SINK_LOG_TEST(_lm, _bit) (int((_lm)->Level()) & (_bit))
 
 #define SINK_TRACE(_lm, _bit, _args) \
-  PR_BEGIN_MACRO                     \
+  do {                     \
     if (SINK_LOG_TEST(_lm, _bit)) {  \
-      PR_LogPrint _args;             \
+      printf_stderr _args;             \
     }                                \
-  PR_END_MACRO
+  } while(0)
 
 #else
 #define SINK_TRACE(_lm, _bit, _args)

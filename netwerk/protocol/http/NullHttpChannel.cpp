@@ -58,13 +58,13 @@ NullHttpChannel::Init(nsIURI *aURI,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-NullHttpChannel::GetChannelId(nsACString& aChannelId)
+NullHttpChannel::GetChannelId(uint64_t *aChannelId)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::SetChannelId(const nsACString& aChannelId)
+NullHttpChannel::SetChannelId(uint64_t aChannelId)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

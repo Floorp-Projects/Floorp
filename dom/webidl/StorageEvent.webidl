@@ -21,13 +21,13 @@ interface StorageEvent : Event
 
   // Bug 1016053 - This is not spec compliant.
   void initStorageEvent(DOMString type,
-                        boolean canBubble,
-                        boolean cancelable,
-                        DOMString? key,
-                        DOMString? oldValue,
-                        DOMString? newValue,
-                        DOMString? url,
-                        Storage? storageArea);
+                        optional boolean canBubble = false,
+                        optional boolean cancelable = false,
+                        optional DOMString? key = null,
+                        optional DOMString? oldValue = null,
+                        optional DOMString? newValue = null,
+                        optional DOMString? url = null,
+                        optional Storage? storageArea = null);
 };
 
 dictionary StorageEventInit : EventInit

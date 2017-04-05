@@ -775,7 +775,7 @@ PreparePattern(FcPattern* aPattern, bool aIsPrinterFont)
        cairo_ft_font_options_substitute(options, aPattern);
        cairo_font_options_destroy(options);
        FcPatternAddBool(aPattern, PRINTING_FC_PROPERTY, FcTrue);
-    } else {
+    } else if (!gfxPlatform::IsHeadless()) {
 #ifdef MOZ_WIDGET_GTK
         ApplyGdkScreenFontOptions(aPattern);
 

@@ -77,13 +77,6 @@ XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function() {
 var gClientID = null;
 var gMonotonicNow = 0;
 
-function truncateDateToDays(date) {
-  return new Date(date.getFullYear(),
-                  date.getMonth(),
-                  date.getDate(),
-                  0, 0, 0, 0);
-}
-
 function sendPing() {
   TelemetrySession.gatherStartup();
   if (PingServer.started) {
@@ -571,8 +564,8 @@ add_task(function* test_simplePing() {
   PingServer.start();
   Preferences.set(PREF_SERVER, "http://localhost:" + PingServer.port);
 
-  let now = new Date(2020, 1, 1, 12, 0, 0);
-  let expectedDate = new Date(2020, 1, 1, 0, 0, 0);
+  let now = new Date(2020, 1, 1, 12, 5, 6);
+  let expectedDate = new Date(2020, 1, 1, 12, 0, 0);
   fakeNow(now);
   gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 5000);
 
@@ -765,7 +758,7 @@ add_task(function* test_checkSubsessionHistograms() {
   }
 
   let now = new Date(2020, 1, 1, 12, 0, 0);
-  let expectedDate = new Date(2020, 1, 1, 0, 0, 0);
+  let expectedDate = new Date(2020, 1, 1, 12, 0, 0);
   fakeNow(now);
   yield TelemetryController.testReset();
 
@@ -997,7 +990,7 @@ add_task(function* test_dailyCollection() {
   }
 
   let now = new Date(2030, 1, 1, 12, 0, 0);
-  let nowDay = new Date(2030, 1, 1, 0, 0, 0);
+  let nowHour = new Date(2030, 1, 1, 12, 0, 0);
   let schedulerTickCallback = null;
 
   PingServer.clearRequests();
@@ -1026,8 +1019,8 @@ add_task(function* test_dailyCollection() {
   keyed.add("b", 1);
 
   // Make sure the daily ping gets triggered.
-  let expectedDate = nowDay;
-  now = futureDate(nowDay, MS_IN_ONE_DAY);
+  let expectedDate = nowHour;
+  now = futureDate(nowHour, MS_IN_ONE_DAY);
   fakeNow(now);
 
   Assert.ok(!!schedulerTickCallback);
@@ -1236,7 +1229,7 @@ add_task(function* test_environmentChange() {
 
   // Trigger and collect environment-change ping.
   gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 10 * MILLISECONDS_PER_MINUTE);
-  let startDay = truncateDateToDays(now);
+  let startHour = TelemetryUtils.truncateToHours(now);
   now = fakeNow(futureDate(now, 10 * MILLISECONDS_PER_MINUTE));
 
   Preferences.set(PREF_TEST, 1);
@@ -1247,13 +1240,13 @@ add_task(function* test_environmentChange() {
   Assert.equal(ping.environment.settings.userPrefs[PREF_TEST], undefined);
   Assert.equal(ping.payload.info.reason, REASON_ENVIRONMENT_CHANGE);
   let subsessionStartDate = new Date(ping.payload.info.subsessionStartDate);
-  Assert.equal(subsessionStartDate.toISOString(), startDay.toISOString());
+  Assert.equal(subsessionStartDate.toISOString(), startHour.toISOString());
 
   Assert.equal(ping.payload.histograms[COUNT_ID].sum, 1);
   Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["a"].sum, 1);
 
   // Trigger and collect another ping. The histograms should be reset.
-  startDay = truncateDateToDays(now);
+  startHour = TelemetryUtils.truncateToHours(now);
   gMonotonicNow = fakeMonotonicNow(gMonotonicNow + 10 * MILLISECONDS_PER_MINUTE);
   now = fakeNow(futureDate(now, 10 * MILLISECONDS_PER_MINUTE));
 
@@ -1265,7 +1258,7 @@ add_task(function* test_environmentChange() {
   Assert.equal(ping.environment.settings.userPrefs[PREF_TEST], 1);
   Assert.equal(ping.payload.info.reason, REASON_ENVIRONMENT_CHANGE);
   subsessionStartDate = new Date(ping.payload.info.subsessionStartDate);
-  Assert.equal(subsessionStartDate.toISOString(), startDay.toISOString());
+  Assert.equal(subsessionStartDate.toISOString(), startHour.toISOString());
 
   Assert.equal(ping.payload.histograms[COUNT_ID].sum, 0);
   Assert.ok(!(KEYED_ID in ping.payload.keyedHistograms));

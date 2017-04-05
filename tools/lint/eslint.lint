@@ -78,8 +78,11 @@ def eslint_setup():
     if not npm_path:
         return 1
 
+    extra_parameters = [ "--loglevel=error" ]
+
     # Install ESLint and external plugins
     cmd = [npm_path, "install"]
+    cmd.extend(extra_parameters)
     print("Installing eslint for mach using \"%s\"..." % (" ".join(cmd)))
     if not call_process("eslint", cmd):
         return 1
@@ -87,20 +90,20 @@ def eslint_setup():
     # Install in-tree ESLint plugin mozilla.
     cmd = [npm_path, "install",
            os.path.join(module_path, "eslint-plugin-mozilla")]
+    cmd.extend(extra_parameters)
     print("Installing eslint-plugin-mozilla using \"%s\"..." % (" ".join(cmd)))
     if not call_process("eslint-plugin-mozilla", cmd):
         return 1
 
-    eslint_path = os.path.join(module_path, "node_modules", ".bin", "eslint")
-
     # Install in-tree ESLint plugin spidermonkey.
     cmd = [npm_path, "install",
            os.path.join(module_path, "eslint-plugin-spidermonkey-js")]
+    cmd.extend(extra_parameters)
     print("Installing eslint-plugin-spidermonkey-js using \"%s\"..." % (" ".join(cmd)))
     if not call_process("eslint-plugin-spidermonkey-js", cmd):
         return 1
 
-    eslint_path = os.path.join(module_path, "node_modules", ".bin", "eslint")
+    eslint_path = os.path.join(get_project_root(), "node_modules", ".bin", "eslint")
 
     print("\nESLint and approved plugins installed successfully!")
     print("\nNOTE: Your local eslint binary is at %s\n" % eslint_path)
