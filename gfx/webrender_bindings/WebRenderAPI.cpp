@@ -46,10 +46,10 @@ public:
     layers::AutoCompleteTask complete(mTask);
 
     RefPtr<gl::GLContext> gl;
-    if (gfxVars::UseWebRenderANGLE()) {
+    if (gfx::gfxVars::UseWebRenderANGLE()) {
       gl = gl::GLContextProviderEGL::CreateForCompositorWidget(mCompositorWidget, true);
       if (!gl || !gl->IsANGLE()) {
-        gfxCriticalNote << "Failed ANGLE GL context creation for WebRender: " << hexa(gl.get());
+        gfxCriticalNote << "Failed ANGLE GL context creation for WebRender: " << gfx::hexa(gl.get());
         return;
       }
     }
@@ -57,7 +57,7 @@ public:
       gl = gl::GLContextProvider::CreateForCompositorWidget(mCompositorWidget, true);
     }
     if (!gl || !gl->MakeCurrent()) {
-      gfxCriticalNote << "Failed GL context creation for WebRender: " << hexa(gl.get());
+      gfxCriticalNote << "Failed GL context creation for WebRender: " << gfx::hexa(gl.get());
       return;
     }
 
@@ -264,6 +264,80 @@ WebRenderAPI::Readback(gfx::IntSize size,
 }
 
 void
+WebRenderAPI::Pause()
+{
+    class PauseEvent : public RendererEvent
+    {
+        public:
+            explicit PauseEvent(layers::SynchronousTask* aTask)
+                : mTask(aTask)
+            {
+                MOZ_COUNT_CTOR(PauseEvent);
+            }
+
+            ~PauseEvent()
+            {
+                MOZ_COUNT_DTOR(PauseEvent);
+            }
+
+            virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override
+            {
+                aRenderThread.Pause(aWindowId);
+                layers::AutoCompleteTask complete(mTask);
+            }
+
+            layers::SynchronousTask* mTask;
+    };
+
+    layers::SynchronousTask task("Pause");
+    auto event = MakeUnique<PauseEvent>(&task);
+    // This event will be passed from wr_backend thread to renderer thread. That
+    // implies that all frame data have been processed when the renderer runs this event.
+    RunOnRenderThread(Move(event));
+
+    task.Wait();
+}
+
+bool
+WebRenderAPI::Resume()
+{
+    class ResumeEvent : public RendererEvent
+    {
+        public:
+            explicit ResumeEvent(layers::SynchronousTask* aTask, bool* aResult)
+                : mTask(aTask)
+                , mResult(aResult)
+            {
+                MOZ_COUNT_CTOR(ResumeEvent);
+            }
+
+            ~ResumeEvent()
+            {
+                MOZ_COUNT_DTOR(ResumeEvent);
+            }
+
+            virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override
+            {
+                *mResult = aRenderThread.Resume(aWindowId);
+                layers::AutoCompleteTask complete(mTask);
+            }
+
+            layers::SynchronousTask* mTask;
+            bool* mResult;
+    };
+
+    bool result = false;
+    layers::SynchronousTask task("Resume");
+    auto event = MakeUnique<ResumeEvent>(&task, &result);
+    // This event will be passed from wr_backend thread to renderer thread. That
+    // implies that all frame data have been processed when the renderer runs this event.
+    RunOnRenderThread(Move(event));
+
+    task.Wait();
+    return result;
+}
+
+void
 WebRenderAPI::WaitFlushed()
 {
     class WaitFlushedEvent : public RendererEvent
@@ -291,9 +365,7 @@ WebRenderAPI::WaitFlushed()
     layers::SynchronousTask task("WaitFlushed");
     auto event = MakeUnique<WaitFlushedEvent>(&task);
     // This event will be passed from wr_backend thread to renderer thread. That
-    // implies that all frame data have been processed when the renderer runs this
-    // read-back event. Then, we could make sure this read-back event gets the
-    // latest result.
+    // implies that all frame data have been processed when the renderer runs this event.
     RunOnRenderThread(Move(event));
 
     task.Wait();
@@ -327,14 +399,12 @@ WebRenderAPI::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
 
 void
 WebRenderAPI::AddExternalImageHandle(ImageKey key,
-                                     gfx::IntSize aSize,
-                                     gfx::SurfaceFormat aFormat,
+                                     const ImageDescriptor& aDescriptor,
                                      uint64_t aHandle)
 {
-  auto format = SurfaceFormatToWrImageFormat(aFormat).value();
   wr_api_add_external_image_handle(mWrApi,
                                    key,
-                                   aSize.width, aSize.height, format,
+                                   &aDescriptor,
                                    aHandle);
 }
 
@@ -522,17 +592,14 @@ DisplayListBuilder::PushLinearGradient(const WrRect& aBounds,
 void
 DisplayListBuilder::PushRadialGradient(const WrRect& aBounds,
                                        const WrClipRegion& aClip,
-                                       const WrPoint& aStartCenter,
-                                       const WrPoint& aEndCenter,
-                                       float aStartRadius,
-                                       float aEndRadius,
+                                       const WrPoint& aCenter,
+                                       const WrSize& aRadius,
                                        const nsTArray<WrGradientStop>& aStops,
                                        wr::GradientExtendMode aExtendMode)
 {
   wr_dp_push_radial_gradient(mWrState,
                              aBounds, aClip,
-                             aStartCenter, aEndCenter,
-                             aStartRadius, aEndRadius,
+                             aCenter, aRadius,
                              aStops.Elements(), aStops.Length(),
                              aExtendMode);
 }

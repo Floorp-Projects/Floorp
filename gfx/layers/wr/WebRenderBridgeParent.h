@@ -114,6 +114,9 @@ public:
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void SetWebRenderProfilerEnabled(bool aEnabled);
 
+  void Pause();
+  bool Resume();
+
   void Destroy();
 
   // CompositorVsyncSchedulerOwner
@@ -207,6 +210,7 @@ private:
   uint32_t mWrEpoch;
   uint32_t mIdNameSpace;
 
+  bool mPaused;
   bool mDestroyed;
 
   static uint32_t sIdNameSpace;

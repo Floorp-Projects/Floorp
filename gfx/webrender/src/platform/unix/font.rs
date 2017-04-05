@@ -46,9 +46,7 @@ impl FontContext {
         let mut lib: FT_Library = ptr::null_mut();
         unsafe {
             let result = FT_Init_FreeType(&mut lib);
-            if !result.succeeded() {
-                panic!("Unable to initialize FreeType library {:?}", result);
-            }
+            assert!(result.succeeded(), "Unable to initialize FreeType library {:?}", result);
 
             // TODO(gw): Check result of this to determine if freetype build supports subpixel.
             let result = FT_Library_SetLcdFilter(lib, FT_LcdFilter::FT_LCD_FILTER_DEFAULT);

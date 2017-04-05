@@ -19,18 +19,18 @@ void main(void) {
         vec2 g01_x = mix(gradient.start_end_point.xx, gradient.start_end_point.zz,
                          vec2(g0.offset.x, g1.offset.x));
 
-        // The start and end point of gradient might exceed the geometry rect. So clamp
-        // it to the geometry rect.
-        g01_x = clamp(g01_x, prim.local_rect.p0.xx, prim.local_rect.p0.xx + prim.local_rect.size.xx);
+        // The gradient stops might exceed the geometry rect so clamp them
+        vec2 g01_x_clamped = clamp(g01_x,
+                                   prim.local_rect.p0.xx,
+                                   prim.local_rect.p0.xx + prim.local_rect.size.xx);
 
-        // Calculate the rect using the clamped coords
-        segment_rect.p0 = vec2(g01_x.x, prim.local_rect.p0.y);
-        segment_rect.size = vec2(g01_x.y - g01_x.x, prim.local_rect.size.y);
+        // Calculate the segment rect using the clamped coords
+        segment_rect.p0 = vec2(g01_x_clamped.x, prim.local_rect.p0.y);
+        segment_rect.size = vec2(g01_x_clamped.y - g01_x_clamped.x, prim.local_rect.size.y);
         axis = vec2(1.0, 0.0);
 
-        // We need to adjust the colors of the stops because they may have been clamped
-        vec2 adjusted_offset =
-            (g01_x - segment_rect.p0.xx) / segment_rect.size.xx;
+        // Adjust the stop colors by how much they were clamped
+        vec2 adjusted_offset = (g01_x_clamped - g01_x.xx) / (g01_x.y - g01_x.x);
         adjusted_color_g0 = mix(g0.color, g1.color, adjusted_offset.x);
         adjusted_color_g1 = mix(g0.color, g1.color, adjusted_offset.y);
     } else {
@@ -38,18 +38,18 @@ void main(void) {
         vec2 g01_y = mix(gradient.start_end_point.yy, gradient.start_end_point.ww,
                          vec2(g0.offset.x, g1.offset.x));
 
-        // The start and end point of gradient might exceed the geometry rect. So clamp
-        // it to the geometry rect.
-        g01_y = clamp(g01_y, prim.local_rect.p0.yy, prim.local_rect.p0.yy + prim.local_rect.size.yy);
+        // The gradient stops might exceed the geometry rect so clamp them
+        vec2 g01_y_clamped = clamp(g01_y,
+                                   prim.local_rect.p0.yy,
+                                   prim.local_rect.p0.yy + prim.local_rect.size.yy);
 
-        // Calculate the rect using the clamped coords
-        segment_rect.p0 = vec2(prim.local_rect.p0.x, g01_y.x);
-        segment_rect.size = vec2(prim.local_rect.size.x, g01_y.y - g01_y.x);
+        // Calculate the segment rect using the clamped coords
+        segment_rect.p0 = vec2(prim.local_rect.p0.x, g01_y_clamped.x);
+        segment_rect.size = vec2(prim.local_rect.size.x, g01_y_clamped.y - g01_y_clamped.x);
         axis = vec2(0.0, 1.0);
 
-        // We need to adjust the colors of the stops because they may have been clamped
-        vec2 adjusted_offset =
-            (g01_y - segment_rect.p0.yy) / segment_rect.size.yy;
+        // Adjust the stop colors by how much they were clamped
+        vec2 adjusted_offset = (g01_y_clamped - g01_y.xx) / (g01_y.y - g01_y.x);
         adjusted_color_g0 = mix(g0.color, g1.color, adjusted_offset.x);
         adjusted_color_g1 = mix(g0.color, g1.color, adjusted_offset.y);
     }
