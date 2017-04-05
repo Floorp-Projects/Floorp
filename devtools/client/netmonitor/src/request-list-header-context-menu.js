@@ -35,6 +35,7 @@ class RequestListHeaderContextMenu {
 
     for (let [column, shown] of this.columns) {
       menu.append(new MenuItem({
+        id: `request-list-header-${column}-toggle`,
         label: L10N.getStr(`netmonitor.toolbar.${stringMap[column] || column}`),
         type: "checkbox",
         checked: shown,
@@ -47,6 +48,7 @@ class RequestListHeaderContextMenu {
     menu.append(new MenuItem({ type: "separator" }));
 
     menu.append(new MenuItem({
+      id: "request-list-header-reset-columns",
       label: L10N.getStr("netmonitor.toolbar.resetColumns"),
       click: () => this.resetColumns(),
     }));
