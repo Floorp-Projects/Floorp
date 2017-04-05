@@ -361,8 +361,8 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
     }
   }
   RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContextForElement(aTargetElement, nullptr,
-                                                  aPresContext->PresShell());
+    nsComputedDOMStyle::GetStyleContext(aTargetElement, nullptr,
+                                        aPresContext->PresShell());
   if (!styleContext) {
     return false;
   }
