@@ -774,11 +774,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   }
 
   MOZ_ASSERT(ipcContext);
-  TabId tabId;
-  SendAllocateTabId(openerTabId,
-                    *ipcContext,
-                    GetID(),
-                    &tabId);
+  TabId tabId(nsContentUtils::GenerateTabId());
 
   // We need to assign a TabGroup to the PBrowser actor before we send it to the
   // parent. Otherwise, the parent could send messages to us before we have a

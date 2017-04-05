@@ -24,8 +24,6 @@
 namespace mozilla {
 namespace dom {
 
-static uint64_t gTabId = 0;
-
 /* static */
 StaticAutoPtr<ContentProcessManager>
 ContentProcessManager::sSingleton;
@@ -135,17 +133,18 @@ ContentProcessManager::GetAllChildProcessById(const ContentParentId& aParentCpId
   return Move(cpIdArray);
 }
 
-TabId
-ContentProcessManager::AllocateTabId(const TabId& aOpenerTabId,
-                                     const IPCTabContext& aContext,
-                                     const ContentParentId& aChildCpId)
+bool
+ContentProcessManager::RegisterRemoteFrame(const TabId& aTabId,
+                                           const TabId& aOpenerTabId,
+                                           const IPCTabContext& aContext,
+                                           const ContentParentId& aChildCpId)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   auto iter = mContentParentMap.find(aChildCpId);
   if (NS_WARN_IF(iter == mContentParentMap.end())) {
     ASSERT_UNLESS_FUZZING();
-    return TabId(0);
+    return false;
   }
 
   struct RemoteFrameInfo info;
@@ -156,20 +155,10 @@ ContentProcessManager::AllocateTabId(const TabId& aOpenerTabId,
     auto remoteFrameIter = iter->second.mRemoteFrames.find(aOpenerTabId);
     if (remoteFrameIter == iter->second.mRemoteFrames.end()) {
       ASSERT_UNLESS_FUZZING("Failed to find parent frame's opener id.");
-      return TabId(0);
+      return false;
     }
 
     info.mOpenerTabId = remoteFrameIter->second.mOpenerTabId;
-
-    const PopupIPCTabContext &ipcContext = aContext.get_PopupIPCTabContext();
-    MOZ_ASSERT(ipcContext.opener().type() == PBrowserOrId::TTabId);
-
-    remoteFrameIter = iter->second.mRemoteFrames.find(ipcContext.opener().get_TabId());
-    if (remoteFrameIter == iter->second.mRemoteFrames.end()) {
-      ASSERT_UNLESS_FUZZING("Failed to find tab id.");
-      return TabId(0);
-    }
-
     info.mContext = remoteFrameIter->second.mContext;
   }
   else {
@@ -178,21 +167,19 @@ ContentProcessManager::AllocateTabId(const TabId& aOpenerTabId,
       NS_ERROR(nsPrintfCString("Received an invalid TabContext from "
                                "the child process. (%s)",
                                tc.GetInvalidReason()).get());
-      return TabId(0);
+      return false;
     }
     info.mOpenerTabId = aOpenerTabId;
     info.mContext = tc.GetTabContext();
   }
 
-  mUniqueId = ++gTabId;
-  iter->second.mRemoteFrames[mUniqueId] = info;
-
-  return mUniqueId;
+  iter->second.mRemoteFrames[aTabId] = info;
+  return true;
 }
 
 void
-ContentProcessManager::DeallocateTabId(const ContentParentId& aChildCpId,
-                                       const TabId& aChildTabId)
+ContentProcessManager::UnregisterRemoteFrame(const ContentParentId& aChildCpId,
+                                             const TabId& aChildTabId)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
