@@ -6658,16 +6658,20 @@ class LStoreFixedSlotT : public LInstructionHelper<0, 2, 0>
 };
 
 // Note, Name ICs always return a Value. There are no V/T variants.
-class LGetNameCache : public LInstructionHelper<BOX_PIECES, 1, 0>
+class LGetNameCache : public LInstructionHelper<BOX_PIECES, 1, 1>
 {
   public:
     LIR_HEADER(GetNameCache)
 
-    explicit LGetNameCache(const LAllocation& envObj) {
+    LGetNameCache(const LAllocation& envObj, const LDefinition& temp) {
         setOperand(0, envObj);
+        setTemp(0, temp);
     }
     const LAllocation* envObj() {
         return getOperand(0);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
     }
     const MGetNameCache* mir() const {
         return mir_->toGetNameCache();

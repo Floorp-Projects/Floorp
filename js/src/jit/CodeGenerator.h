@@ -424,7 +424,6 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitGetNameCache(LGetNameCache* ins);
 
     void visitBindNameIC(OutOfLineUpdateCache* ool, DataPtr<BindNameIC>& ic);
-    void visitNameIC(OutOfLineUpdateCache* ool, DataPtr<NameIC>& ic);
 
     void visitAssertRangeI(LAssertRangeI* ins);
     void visitAssertRangeD(LAssertRangeD* ins);
