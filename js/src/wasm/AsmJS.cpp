@@ -7087,7 +7087,7 @@ ParseFunction(ModuleValidator& m, ParseNode** fnOut, unsigned* line)
     if (!name)
         return false;
 
-    ParseNode* fn = m.parser().handler.newFunctionStatement();
+    ParseNode* fn = m.parser().handler.newFunctionStatement(m.parser().pos());
     if (!fn)
         return false;
 
