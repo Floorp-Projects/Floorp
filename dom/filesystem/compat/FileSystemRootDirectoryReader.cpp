@@ -18,7 +18,8 @@ class EntriesCallbackRunnable final : public Runnable
 public:
   EntriesCallbackRunnable(FileSystemEntriesCallback* aCallback,
                           const Sequence<RefPtr<FileSystemEntry>>& aEntries)
-    : mCallback(aCallback)
+    : Runnable("EntriesCallbackRunnable")
+    , mCallback(aCallback)
     , mEntries(aEntries)
   {
     MOZ_ASSERT(aCallback);

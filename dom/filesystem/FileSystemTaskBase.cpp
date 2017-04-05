@@ -84,7 +84,8 @@ class ErrorRunnable final : public CancelableRunnable
 {
 public:
   explicit ErrorRunnable(FileSystemTaskChildBase* aTask)
-    : mTask(aTask)
+    : CancelableRunnable("ErrorRunnable")
+    , mTask(aTask)
   {
     MOZ_ASSERT(aTask);
   }

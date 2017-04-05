@@ -187,6 +187,10 @@ private:
 class FileSystemTaskParentBase : public Runnable
 {
 public:
+  FileSystemTaskParentBase()
+    : Runnable("FileSystemTaskParentBase")
+  {}
+
   /*
    * Start the task. This must be called from the PBackground thread only.
    */

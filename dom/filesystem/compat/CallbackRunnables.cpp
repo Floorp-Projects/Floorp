@@ -26,7 +26,8 @@ namespace dom {
 
 EntryCallbackRunnable::EntryCallbackRunnable(FileSystemEntryCallback* aCallback,
                                              FileSystemEntry* aEntry)
-  : mCallback(aCallback)
+  : Runnable("EntryCallbackRunnable")
+  , mCallback(aCallback)
   , mEntry(aEntry)
 {
   MOZ_ASSERT(aCallback);
@@ -43,7 +44,8 @@ EntryCallbackRunnable::Run()
 ErrorCallbackRunnable::ErrorCallbackRunnable(nsIGlobalObject* aGlobalObject,
                                              ErrorCallback* aCallback,
                                              nsresult aError)
-  : mGlobal(aGlobalObject)
+  : Runnable("ErrorCallbackRunnable")
+  , mGlobal(aGlobalObject)
   , mCallback(aCallback)
   , mError(aError)
 {
@@ -61,7 +63,8 @@ ErrorCallbackRunnable::Run()
 }
 
 EmptyEntriesCallbackRunnable::EmptyEntriesCallbackRunnable(FileSystemEntriesCallback* aCallback)
-  : mCallback(aCallback)
+  : Runnable("EmptyEntriesCallbackRunnable")
+  , mCallback(aCallback)
 {
   MOZ_ASSERT(aCallback);
 }
