@@ -7,7 +7,7 @@ const defaultOptions = { timeZoneName: "short" };
 const tests = [
     {
         timeZone: "UTC",
-        result: "12/6/2012, GMT",
+        result: "12/6/2012, UTC",
     },
     {
         timeZone: "America/Los_Angeles",
