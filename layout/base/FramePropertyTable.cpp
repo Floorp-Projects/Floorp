@@ -22,6 +22,7 @@ FramePropertyTable::SetInternal(
   if (mLastFrame != aFrame || !mLastEntry) {
     mLastFrame = aFrame;
     mLastEntry = mEntries.PutEntry(aFrame);
+    aFrame->AddStateBits(NS_FRAME_HAS_PROPERTIES);
   }
   Entry* entry = mLastEntry;
 
@@ -63,13 +64,18 @@ FramePropertyTable::SetInternal(
 
 void*
 FramePropertyTable::GetInternal(
-  const nsIFrame* aFrame, UntypedDescriptor aProperty, bool* aFoundResult)
+  const nsIFrame* aFrame, UntypedDescriptor aProperty, bool aSkipBitCheck,
+  bool* aFoundResult)
 {
   NS_ASSERTION(aFrame, "Null frame?");
   NS_ASSERTION(aProperty, "Null property?");
 
   if (aFoundResult) {
     *aFoundResult = false;
+  }
+
+  if (!aSkipBitCheck && !(aFrame->GetStateBits() & NS_FRAME_HAS_PROPERTIES)) {
+    return nullptr;
   }
 
   // We can end up here during parallel style traversal, in which case the main
@@ -82,6 +88,8 @@ FramePropertyTable::GetInternal(
     mLastEntry = entry;
   }
 
+  MOZ_ASSERT(entry || aSkipBitCheck,
+             "NS_FRAME_HAS_PROPERTIES bit should match whether entry exists");
   if (!entry)
     return nullptr;
 
@@ -111,7 +119,8 @@ FramePropertyTable::GetInternal(
 
 void*
 FramePropertyTable::RemoveInternal(
-  nsIFrame* aFrame, UntypedDescriptor aProperty, bool* aFoundResult)
+  nsIFrame* aFrame, UntypedDescriptor aProperty, bool aSkipBitCheck,
+  bool* aFoundResult)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ASSERTION(aFrame, "Null frame?");
@@ -121,11 +130,17 @@ FramePropertyTable::RemoveInternal(
     *aFoundResult = false;
   }
 
+  if (!aSkipBitCheck && !(aFrame->GetStateBits() & NS_FRAME_HAS_PROPERTIES)) {
+    return nullptr;
+  }
+
   if (mLastFrame != aFrame) {
     mLastFrame = aFrame;
     mLastEntry = mEntries.GetEntry(aFrame);
   }
   Entry* entry = mLastEntry;
+  MOZ_ASSERT(entry || aSkipBitCheck,
+             "NS_FRAME_HAS_PROPERTIES bit should match whether entry exists");
   if (!entry)
     return nullptr;
 
@@ -136,6 +151,7 @@ FramePropertyTable::RemoveInternal(
     // Here it's ok to use RemoveEntry() -- which may resize mEntries --
     // because we null mLastEntry at the same time.
     mEntries.RemoveEntry(entry);
+    aFrame->RemoveStateBits(NS_FRAME_HAS_PROPERTIES);
     mLastEntry = nullptr;
     if (aFoundResult) {
       *aFoundResult = true;
@@ -176,14 +192,14 @@ FramePropertyTable::RemoveInternal(
 
 void
 FramePropertyTable::DeleteInternal(
-  nsIFrame* aFrame, UntypedDescriptor aProperty)
+  nsIFrame* aFrame, UntypedDescriptor aProperty, bool aSkipBitCheck)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ASSERTION(aFrame, "Null frame?");
   NS_ASSERTION(aProperty, "Null property?");
 
   bool found;
-  void* v = RemoveInternal(aFrame, aProperty, &found);
+  void* v = RemoveInternal(aFrame, aProperty, aSkipBitCheck, &found);
   if (found) {
     PropertyValue pv(aProperty, v);
     pv.DestroyValueFor(aFrame);
@@ -210,7 +226,13 @@ FramePropertyTable::DeleteAllFor(nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "Null frame?");
 
+  if (!(aFrame->GetStateBits() & NS_FRAME_HAS_PROPERTIES)) {
+    return;
+  }
+
   Entry* entry = mEntries.GetEntry(aFrame);
+  MOZ_ASSERT(entry,
+             "NS_FRAME_HAS_PROPERTIES bit should match whether entry exists");
   if (!entry)
     return;
 
@@ -226,6 +248,8 @@ FramePropertyTable::DeleteAllFor(nsIFrame* aFrame)
   // mLastEntry points into mEntries, so we use RawRemoveEntry() which will not
   // resize mEntries.
   mEntries.RawRemoveEntry(entry);
+
+  // Don't bother unsetting NS_FRAME_HAS_PROPERTIES, since aFrame is going away
 }
 
 void
