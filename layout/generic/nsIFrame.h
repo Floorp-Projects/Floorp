@@ -577,6 +577,7 @@ public:
   using Visibility = mozilla::Visibility;
 
   typedef mozilla::FrameProperties FrameProperties;
+  typedef mozilla::ConstFrameProperties ConstFrameProperties;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layout::FrameChildList ChildList;
   typedef mozilla::layout::FrameChildListID ChildListID;
@@ -3251,8 +3252,12 @@ public:
     return mContent == aParentContent;
   }
 
-  FrameProperties Properties() const {
+  FrameProperties Properties() {
     return FrameProperties(PresContext()->PropertyTable(), this);
+  }
+
+  ConstFrameProperties Properties() const {
+    return ConstFrameProperties(PresContext()->PropertyTable(), this);
   }
 
   /**
