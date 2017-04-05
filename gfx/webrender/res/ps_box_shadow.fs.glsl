@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 void main(void) {
+    vec4 clip_scale = vec4(1.0, 1.0, 1.0, do_clip());
+
     // Mirror and stretch the box shadow corner over the entire
     // primitives.
     vec2 uv = vMirrorPoint - abs(vUv.xy - vMirrorPoint);
@@ -16,5 +18,5 @@ void main(void) {
     uv = mix(vCacheUvRectCoords.xy, vCacheUvRectCoords.zw, uv);
 
     // Modulate the box shadow by the color.
-    oFragColor = dither(vColor * texture(sCacheRGBA8, vec3(uv, vUv.z)));
+    oFragColor = clip_scale * dither(vColor * texture(sCacheRGBA8, vec3(uv, vUv.z)));
 }

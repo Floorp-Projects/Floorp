@@ -21,11 +21,6 @@ impl GlesFns
     }
 }
 
-#[cfg(target_os="android")]
-extern {
-    fn glEGLImageTargetTexture2DOES(target: GLenum, image: GLeglImageOES);
-}
-
 impl Gl for GlesFns {
     fn get_type(&self) -> GlType {
         GlType::Gles
@@ -1279,7 +1274,7 @@ impl Gl for GlesFns {
     #[cfg(target_os="android")]
     fn egl_image_target_texture2d_oes(&self, target: GLenum, image: GLeglImageOES) {
         unsafe {
-            glEGLImageTargetTexture2DOES(target, image);
+            self.ffi_gl_.EGLImageTargetTexture2DOES(target, image);
         }
     }
 

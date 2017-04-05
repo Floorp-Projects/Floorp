@@ -197,6 +197,34 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId)
 }
 
 void
+RenderThread::Pause(wr::WindowId aWindowId)
+{
+  MOZ_ASSERT(IsInRenderThread());
+
+  auto it = mRenderers.find(aWindowId);
+  MOZ_ASSERT(it != mRenderers.end());
+  if (it == mRenderers.end()) {
+    return;
+  }
+  auto& renderer = it->second;
+  renderer->Pause();
+}
+
+bool
+RenderThread::Resume(wr::WindowId aWindowId)
+{
+  MOZ_ASSERT(IsInRenderThread());
+
+  auto it = mRenderers.find(aWindowId);
+  MOZ_ASSERT(it != mRenderers.end());
+  if (it == mRenderers.end()) {
+    return false;
+  }
+  auto& renderer = it->second;
+  return renderer->Resume();
+}
+
+void
 RenderThread::RegisterExternalImage(uint64_t aExternalImageId, RenderTextureHost* aTexture)
 {
   MutexAutoLock lock(mRenderTextureMapLock);

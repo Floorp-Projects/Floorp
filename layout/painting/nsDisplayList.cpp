@@ -2754,6 +2754,40 @@ nsDisplaySolidColor::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
   return mBounds;
 }
 
+LayerState
+nsDisplaySolidColor::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters)
+{
+  if (ForceActiveLayers() || gfxPrefs::LayersAllowSolidColorLayers()) {
+    return LAYER_ACTIVE;
+  }
+  return LAYER_NONE;
+}
+
+already_AddRefed<Layer>
+nsDisplaySolidColor::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                LayerManager* aManager,
+                                const ContainerLayerParameters& aContainerParameters)
+{
+  RefPtr<ColorLayer> layer = static_cast<ColorLayer*>
+    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
+  if (!layer) {
+    layer = aManager->CreateColorLayer();
+    if (!layer) {
+      return nullptr;
+    }
+  }
+  layer->SetColor(gfx::Color::FromABGR(mColor));
+
+  const int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  layer->SetBounds(mBounds.ToNearestPixels(appUnitsPerDevPixel));
+  layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
+                                                      aContainerParameters.mOffset.y, 0));
+
+  return layer.forget();
+}
+
 void
 nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
                            nsRenderingContext* aCtx)

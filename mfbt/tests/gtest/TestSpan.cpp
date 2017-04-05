@@ -1177,7 +1177,16 @@ SPAN_TEST(from_cstring)
   {
     const char* str = "abc";
 
-    auto cs = MakeCStringSpan(str);
+    auto cs = MakeStringSpan(str);
+    ASSERT_EQ(cs.size(), 3U);
+    ASSERT_EQ(cs.data(), str);
+    ASSERT_EQ(cs[2], 'c');
+  }
+  {
+    char16_t arr[4] = {'a', 'b', 'c', 0};
+    const char16_t* str = arr;
+
+    auto cs = MakeStringSpan(str);
     ASSERT_EQ(cs.size(), 3U);
     ASSERT_EQ(cs.data(), str);
     ASSERT_EQ(cs[2], 'c');
