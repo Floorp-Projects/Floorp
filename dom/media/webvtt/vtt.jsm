@@ -382,9 +382,12 @@ Cu.import('resource://gre/modules/Services.jsm');
       return hours + ':' + minutes + ':' + seconds + '.' + f;
     }
 
+    var isFirefox = (/firefox/i.test(window.navigator.userAgent));
     var root;
     if (bReturnFrag) {
       root = window.document.createDocumentFragment();
+    } else if (isFirefox) {
+      root = window.document.createElement("div", {pseudo: "::cue"});
     } else {
       root = window.document.createElement("div");
     }
@@ -469,6 +472,8 @@ Cu.import('resource://gre/modules/Services.jsm');
   function CueStyleBox(window, cue, styleOptions) {
     var isIE8 = (typeof navigator !== "undefined") &&
       (/MSIE\s8\.0/).test(navigator.userAgent);
+
+    var isFirefox = (/firefox/i.test(window.navigator.userAgent));
     var color = "rgba(255, 255, 255, 1)";
     var backgroundColor = "rgba(0, 0, 0, 0.8)";
 
@@ -486,13 +491,16 @@ Cu.import('resource://gre/modules/Services.jsm');
     var styles = {
       color: color,
       backgroundColor: backgroundColor,
-      position: "relative",
-      left: 0,
-      right: 0,
-      top: 0,
-      bottom: 0,
-      display: "inline"
+      display: "inline",
+      font: styleOptions.font,
+      whiteSpace: "pre-line",
     };
+    if (isFirefox) {
+      delete styles.color;
+      delete styles.backgroundColor;
+      delete styles.font;
+      delete styles.whiteSpace;
+    }
 
     if (!isIE8) {
       styles.writingMode = cue.vertical === "" ? "horizontal-tb"
@@ -504,13 +512,12 @@ Cu.import('resource://gre/modules/Services.jsm');
 
     // Create an absolutely positioned div that will be used to position the cue
     // div.
-    this.div = window.document.createElement("div");
     styles = {
+      position: "absolute",
       textAlign: cue.align,
-      font: styleOptions.font,
-      whiteSpace: "pre-line",
-      position: "absolute"
     };
+
+    this.div = window.document.createElement("div");
     this.applyStyles(styles);
 
     this.div.appendChild(this.cueDiv);
@@ -958,6 +965,7 @@ Cu.import('resource://gre/modules/Services.jsm');
 
         // Compute the intial position and styles of the cue div.
         styleBox = new CueStyleBox(window, cue, styleOptions);
+        styleBox.cueDiv.style.setProperty("--cue-font-size", fontSize + "px");
         paddedOverlay.appendChild(styleBox.div);
 
         // Move the cue div to it's correct line position.
