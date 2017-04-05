@@ -179,8 +179,14 @@ function search(aQuery, aAttribute) {
   let mainPrefPane = document.getElementById("mainPrefPane");
   let elements = mainPrefPane.children;
   for (let element of elements) {
-    let attributeValue = element.getAttribute(aAttribute);
-    element.hidden = (attributeValue != aQuery);
+    // If the "data-hidden-from-search" is "true", the
+    // element will not get considered during search. This
+    // should only be used when an element is still under
+    // development and should not be shown for any reason.
+    if (element.getAttribute("data-hidden-from-search") != "true") {
+      let attributeValue = element.getAttribute(aAttribute);
+      element.hidden = (attributeValue != aQuery);
+    }
   }
 
   let keysets = mainPrefPane.getElementsByTagName("keyset");

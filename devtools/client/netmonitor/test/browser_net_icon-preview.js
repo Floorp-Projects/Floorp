@@ -28,7 +28,7 @@ add_task(function* () {
   info("Checking the image thumbnail when all items are shown.");
   checkImageThumbnail();
 
-  gStore.dispatch(Actions.sortBy("size"));
+  gStore.dispatch(Actions.sortBy("contentSize"));
   info("Checking the image thumbnail when all items are sorted.");
   checkImageThumbnail();
 

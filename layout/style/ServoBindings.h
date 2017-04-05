@@ -141,6 +141,8 @@ nsIAtom* Gecko_LocalName(RawGeckoElementBorrowed element);
 nsIAtom* Gecko_Namespace(RawGeckoElementBorrowed element);
 nsIAtom* Gecko_GetElementId(RawGeckoElementBorrowed element);
 
+nsIAtom* Gecko_GetXMLLangValue(RawGeckoElementBorrowed element);
+
 // Attributes.
 #define SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(prefix_, implementor_)  \
   nsIAtom* prefix_##AtomAttrValue(implementor_ element, nsIAtom* attribute);  \
@@ -377,6 +379,8 @@ const nsMediaFeature* Gecko_GetMediaFeatures();
 nsCSSFontFaceRule* Gecko_CSSFontFaceRule_Create();
 void Gecko_CSSFontFaceRule_GetCssText(const nsCSSFontFaceRule* rule, nsAString* result);
 NS_DECL_FFI_REFCOUNTING(nsCSSFontFaceRule, CSSFontFaceRule);
+
+RawGeckoElementBorrowedOrNull Gecko_GetBody(RawGeckoPresContextBorrowed pres_context);
 
 // We use an int32_t here instead of a LookAndFeel::ColorID
 // because forward-declaring a nested enum/struct is impossible

@@ -126,10 +126,10 @@ nsSVGNumber2::DOMAnimatedNumber::~DOMAnimatedNumber()
   sSVGAnimatedNumberTearoffTable.RemoveTearoff(mVal);
 }
 
-nsISMILAttr*
+UniquePtr<nsISMILAttr>
 nsSVGNumber2::ToSMILAttr(nsSVGElement *aSVGElement)
 {
-  return new SMILNumber(this, aSVGElement);
+  return MakeUnique<SMILNumber>(this, aSVGElement);
 }
 
 nsresult

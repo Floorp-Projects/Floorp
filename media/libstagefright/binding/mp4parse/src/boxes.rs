@@ -49,7 +49,7 @@ impl From<u32> for FourCC {
     fn from(number: u32) -> FourCC {
         let mut box_chars = Vec::new();
         for x in 0..4 {
-            let c = (number >> x * 8 & 0x000000FF) as u8;
+            let c = (number >> (x * 8) & 0x000000FF) as u8;
             box_chars.push(c);
         }
         box_chars.reverse();

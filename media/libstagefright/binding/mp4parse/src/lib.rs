@@ -26,7 +26,7 @@ use boxes::{BoxType, FourCC};
 mod tests;
 
 // Arbitrary buffer size limit used for raw read_bufs on a box.
-const BUF_SIZE_LIMIT: u64 = 1024 * 1024;
+const BUF_SIZE_LIMIT: usize = 1024 * 1024;
 
 static DEBUG_MODE: std::sync::atomic::AtomicBool = std::sync::atomic::ATOMIC_BOOL_INIT;
 
@@ -1510,9 +1510,6 @@ fn read_esds<T: Read>(src: &mut BMFFBox<T>) -> Result<ES_Descriptor> {
     let (_, _) = read_fullbox_extra(src)?;
 
     let esds_size = src.head.size - src.head.offset - 4;
-    if esds_size > BUF_SIZE_LIMIT {
-        return Err(Error::InvalidData("esds box exceeds BUF_SIZE_LIMIT"));
-    }
     let esds_array = read_buf(src, esds_size as usize)?;
 
     let mut es_data = ES_Descriptor::default();
@@ -1700,9 +1697,6 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
                         return Err(Error::InvalidData("malformed video sample entry"));
                     }
                 let avcc_size = b.head.size - b.head.offset;
-                if avcc_size > BUF_SIZE_LIMIT {
-                    return Err(Error::InvalidData("avcC box exceeds BUF_SIZE_LIMIT"));
-                }
                 let avcc = read_buf(&mut b.content, avcc_size as usize)?;
                 log!("{:?} (avcc)", avcc);
                 // TODO(kinetik): Parse avcC box?  For now we just stash the data.
@@ -1993,6 +1987,9 @@ fn skip<T: Read>(src: &mut T, mut bytes: usize) -> Result<()> {
 
 /// Read size bytes into a Vector or return error.
 fn read_buf<T: ReadBytesExt>(src: &mut T, size: usize) -> Result<Vec<u8>> {
+    if size > BUF_SIZE_LIMIT {
+        return Err(Error::InvalidData("read_buf size exceeds BUF_SIZE_LIMIT"));
+    }
     let mut buf = vec![0; size];
     let r = src.read(&mut buf)?;
     if r != size {

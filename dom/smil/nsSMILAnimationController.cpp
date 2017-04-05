@@ -5,19 +5,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSMILAnimationController.h"
-#include "nsSMILCompositor.h"
-#include "nsSMILCSSProperty.h"
-#include "nsCSSProps.h"
-#include "nsITimer.h"
-#include "mozilla/dom/Element.h"
-#include "nsIDocument.h"
-#include "mozilla/dom/SVGAnimationElement.h"
-#include "nsSMILTimedElement.h"
+
 #include <algorithm>
+
 #include "mozilla/AutoRestore.h"
-#include "RestyleTracker.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/SVGAnimationElement.h"
+#include "nsCSSProps.h"
+#include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
+#include "nsITimer.h"
+#include "nsSMILCompositor.h"
+#include "nsSMILCSSProperty.h"
+#include "nsSMILTimedElement.h"
+#include "RestyleTracker.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

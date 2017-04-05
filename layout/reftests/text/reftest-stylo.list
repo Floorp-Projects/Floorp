@@ -254,25 +254,25 @@ HTTP(..) == graphite-surrogate-selection.html graphite-surrogate-selection.html
 == auto-hyphenation-8.html auto-hyphenation-8.html
 == auto-hyphenation-9.html auto-hyphenation-9.html
 == auto-hyphenation-10.html auto-hyphenation-10.html
-fails == auto-hyphenation-xmllang-1.xhtml auto-hyphenation-xmllang-1.xhtml # Bug 1341714
-fails == auto-hyphenation-xmllang-1.xhtml auto-hyphenation-xmllang-1.xhtml # Bug 1341714
-fails == auto-hyphenation-xmllang-1a.xhtml auto-hyphenation-xmllang-1a.xhtml
-fails == auto-hyphenation-xmllang-2.xhtml auto-hyphenation-xmllang-2.xhtml
+== auto-hyphenation-xmllang-1.xhtml auto-hyphenation-xmllang-1.xhtml # Bug 1341714
+== auto-hyphenation-xmllang-1.xhtml auto-hyphenation-xmllang-1.xhtml # Bug 1341714
+== auto-hyphenation-xmllang-1a.xhtml auto-hyphenation-xmllang-1a.xhtml
+== auto-hyphenation-xmllang-2.xhtml auto-hyphenation-xmllang-2.xhtml
 == auto-hyphenation-xmllang-3.xhtml auto-hyphenation-xmllang-3.xhtml
 == auto-hyphenation-xmllang-4.xhtml auto-hyphenation-xmllang-4.xhtml
-fails == auto-hyphenation-xmllang-5.xhtml auto-hyphenation-xmllang-5.xhtml
-fails == auto-hyphenation-xmllang-6.xhtml auto-hyphenation-xmllang-6.xhtml
-fails == auto-hyphenation-xmllang-7.xhtml auto-hyphenation-xmllang-7.xhtml
+== auto-hyphenation-xmllang-5.xhtml auto-hyphenation-xmllang-5.xhtml
+== auto-hyphenation-xmllang-6.xhtml auto-hyphenation-xmllang-6.xhtml
+== auto-hyphenation-xmllang-7.xhtml auto-hyphenation-xmllang-7.xhtml
 == auto-hyphenation-xmllang-8.xhtml auto-hyphenation-xmllang-8.xhtml
 == auto-hyphenation-xmllang-9.xhtml auto-hyphenation-xmllang-9.xhtml
 == auto-hyphenation-xmllang-10.xhtml auto-hyphenation-xmllang-10.xhtml
-fails == auto-hyphenation-xmllang-11a.xhtml auto-hyphenation-xmllang-11a.xhtml
-fails == auto-hyphenation-xmllang-11b.xhtml auto-hyphenation-xmllang-11b.xhtml
-fails == auto-hyphenation-xmllang-12a.xhtml auto-hyphenation-xmllang-12a.xhtml
-fails == auto-hyphenation-xmllang-12b.xhtml auto-hyphenation-xmllang-12b.xhtml
-fails == auto-hyphenation-xmllang-13a.xhtml auto-hyphenation-xmllang-13a.xhtml
+== auto-hyphenation-xmllang-11a.xhtml auto-hyphenation-xmllang-11a.xhtml
+== auto-hyphenation-xmllang-11b.xhtml auto-hyphenation-xmllang-11b.xhtml
+== auto-hyphenation-xmllang-12a.xhtml auto-hyphenation-xmllang-12a.xhtml
+== auto-hyphenation-xmllang-12b.xhtml auto-hyphenation-xmllang-12b.xhtml
+== auto-hyphenation-xmllang-13a.xhtml auto-hyphenation-xmllang-13a.xhtml
 == auto-hyphenation-xmllang-13b.xhtml auto-hyphenation-xmllang-13b.xhtml
-fails == auto-hyphenation-xmllang-14a.xhtml auto-hyphenation-xmllang-14a.xhtml
+== auto-hyphenation-xmllang-14a.xhtml auto-hyphenation-xmllang-14a.xhtml
 == auto-hyphenation-xmllang-14b.xhtml auto-hyphenation-xmllang-14b.xhtml
 == auto-hyphenation-af-1.html auto-hyphenation-af-1.html
 == auto-hyphenation-bg-1.html auto-hyphenation-bg-1.html

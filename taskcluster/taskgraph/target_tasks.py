@@ -207,7 +207,7 @@ def target_tasks_nightly_fennec(full_task_graph, parameters):
     and, eventually, uploading the tasks to balrog."""
     def filter(task):
         platform = task.attributes.get('build_platform')
-        if platform in ('android-api-15-nightly', 'android-x86-nightly'):
+        if platform in ('android-api-15-nightly', 'android-x86-nightly', 'android-nightly'):
             if not task.attributes.get('nightly', False):
                 return False
             return filter_for_project(task, parameters)
@@ -247,6 +247,7 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
         if task.kind in [
             'balrog', 'beetmover', 'beetmover-checksums', 'beetmover-l10n',
             'checksums-signing', 'nightly-l10n', 'nightly-l10n-signing',
+            'push-apk', 'push-apk-breakpoint',
         ]:
             return False
         return True

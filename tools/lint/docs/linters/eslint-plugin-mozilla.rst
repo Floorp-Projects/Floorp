@@ -16,7 +16,8 @@ http://eslint.org/docs/user-guide/configuring#specifying-environments
 browser-window
 --------------
 
-Defines the environment for scripts that are in the main browser.xul scope.
+Defines the environment for scripts that are in the main browser.xul scope (
+note: includes the places-overlay environment).
 
 places-overlay
 --------------
@@ -55,6 +56,11 @@ balanced-listeners
 Checks that for every occurence of 'addEventListener' or 'on' there is an
 occurence of 'removeEventListener' or 'off' with the same event name.
 
+import-browser-window-globals
+-----------------------------
+
+For scripts included in browser-window, this will automatically inject the
+browser-window global scopes into the file.
 
 import-globals
 --------------

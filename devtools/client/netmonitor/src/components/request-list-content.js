@@ -35,6 +35,7 @@ const RequestListContent = createClass({
   displayName: "RequestListContent",
 
   propTypes: {
+    columns: PropTypes.object.isRequired,
     dispatch: PropTypes.func.isRequired,
     displayedRequests: PropTypes.object.isRequired,
     firstRequestStartedMillis: PropTypes.number.isRequired,
@@ -220,6 +221,7 @@ const RequestListContent = createClass({
 
   render() {
     const {
+      columns,
       displayedRequests,
       firstRequestStartedMillis,
       selectedRequestId,
@@ -238,6 +240,7 @@ const RequestListContent = createClass({
         displayedRequests.map((item, index) => RequestListItem({
           firstRequestStartedMillis,
           fromCache: item.status === "304" || item.fromCache,
+          columns,
           item,
           index,
           isSelected: item.id === selectedRequestId,
@@ -255,6 +258,7 @@ const RequestListContent = createClass({
 
 module.exports = connect(
   (state) => ({
+    columns: state.ui.columns,
     displayedRequests: getDisplayedRequests(state),
     firstRequestStartedMillis: state.requests.firstStartedMillis,
     selectedRequestId: state.requests.selectedId,

@@ -119,13 +119,14 @@ SVGAnimatedLengthList::ClearAnimValue(nsSVGElement *aElement,
   aElement->DidAnimateLengthList(aAttrEnum);
 }
 
-nsISMILAttr*
+UniquePtr<nsISMILAttr>
 SVGAnimatedLengthList::ToSMILAttr(nsSVGElement *aSVGElement,
                                   uint8_t aAttrEnum,
                                   uint8_t aAxis,
                                   bool aCanZeroPadList)
 {
-  return new SMILAnimatedLengthList(this, aSVGElement, aAttrEnum, aAxis, aCanZeroPadList);
+  return MakeUnique<SMILAnimatedLengthList>(this, aSVGElement, aAttrEnum,
+                                            aAxis, aCanZeroPadList);
 }
 
 nsresult

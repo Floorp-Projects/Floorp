@@ -98,10 +98,10 @@ nsSVGInteger::DOMAnimatedInteger::~DOMAnimatedInteger()
   sSVGAnimatedIntegerTearoffTable.RemoveTearoff(mVal);
 }
 
-nsISMILAttr*
+UniquePtr<nsISMILAttr>
 nsSVGInteger::ToSMILAttr(nsSVGElement *aSVGElement)
 {
-  return new SMILInteger(this, aSVGElement);
+  return MakeUnique<SMILInteger>(this, aSVGElement);
 }
 
 nsresult

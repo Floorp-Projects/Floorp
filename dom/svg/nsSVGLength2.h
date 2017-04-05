@@ -8,6 +8,7 @@
 #define __NS_SVGLENGTH2_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCoord.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
@@ -152,11 +153,9 @@ public:
   already_AddRefed<mozilla::dom::SVGAnimatedLength>
   ToDOMAnimatedLength(nsSVGElement* aSVGElement);
 
-  // Returns a new nsISMILAttr object that the caller must delete
-  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
+  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
 
 private:
-  
   float mAnimVal;
   float mBaseVal;
   uint8_t mSpecifiedUnitType;

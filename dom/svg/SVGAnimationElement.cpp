@@ -248,8 +248,7 @@ SVGAnimationElement::ParseAttribute(int32_t aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     // Deal with target-related attributes here
-    if (aAttribute == nsGkAtoms::attributeName ||
-        aAttribute == nsGkAtoms::attributeType) {
+    if (aAttribute == nsGkAtoms::attributeName) {
       aResult.ParseAtom(aValue);
       AnimationNeedsResample();
       return true;

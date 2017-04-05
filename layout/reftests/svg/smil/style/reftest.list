@@ -155,3 +155,6 @@ fuzzy-if(skiaContent,1,170) == anim-css-strokewidth-4-from-by-no-no.svg   anim-c
 # check correct handling of "!important" values
 == important-set-1.svg  anim-standard-ref.svg
 == important-set-2.svg  anim-standard-ref.svg
+
+# check namespaced attribute
+== namespaced-property-1.svg  anim-standard-ref.svg

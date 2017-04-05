@@ -6,6 +6,7 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 function test() {
   waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
   open_preferences(runTest);
 }
 

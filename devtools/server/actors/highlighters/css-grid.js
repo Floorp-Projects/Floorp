@@ -17,8 +17,7 @@ const {
   getCurrentZoom,
   getDisplayPixelRatio,
   setIgnoreLayoutChanges,
-  getWindowDimensions,
-  getMaxSurfaceSize,
+  getViewportDimensions,
 } = require("devtools/shared/layout/utils");
 const { stringifyGridFragments } = require("devtools/server/actors/utils/css-grid-utils");
 
@@ -57,18 +56,22 @@ const GRID_GAP_ALPHA = 0.5;
  */
 const gCachedGridPattern = new Map();
 
-// That's the maximum size we can allocate for the canvas, in bytes. See:
-// http://searchfox.org/mozilla-central/source/gfx/thebes/gfxPrefs.h#401
-// It might become accessible as user preference, but at the moment we have to hard code
-// it (see: https://bugzilla.mozilla.org/show_bug.cgi?id=1282656).
-const MAX_ALLOC_SIZE = 500000000;
-// One pixel on canvas is using 4 bytes (R, G, B and Alpha); we use this to calculate the
-// proper memory allocation below
-const BYTES_PER_PIXEL = 4;
-// The maximum allocable pixels the canvas can have
-const MAX_ALLOC_PIXELS = MAX_ALLOC_SIZE / BYTES_PER_PIXEL;
-// The maximum allocable pixels per side in a square canvas
-const MAX_ALLOC_PIXELS_PER_SIDE = Math.sqrt(MAX_ALLOC_PIXELS)|0;
+// We create a <canvas> element that has always 4096x4096 physical pixels, to displays
+// our grid's overlay.
+// Then, we move the element around when needed, to give the perception that it always
+// covers the screen (See bug 1345434).
+//
+// This canvas size value is the safest we can use because most GPUs can handle it.
+// It's also far from the maximum canvas memory allocation limit (4096x4096x4 is
+// 67.108.864 bytes, where the limit is 500.000.000 bytes, see:
+// http://searchfox.org/mozilla-central/source/gfx/thebes/gfxPrefs.h#401).
+//
+// Note:
+// Once bug 1232491 lands, we could try to refactor this code to use the values from
+// the displayport API instead.
+//
+// Using a fixed value should also solve bug 1348293.
+const CANVAS_SIZE = 4096;
 
 /**
  * The CssGridHighlighter is the class that overlays a visual grid on top of
@@ -132,17 +135,6 @@ const MAX_ALLOC_PIXELS_PER_SIDE = Math.sqrt(MAX_ALLOC_PIXELS)|0;
 function CssGridHighlighter(highlighterEnv) {
   AutoRefreshHighlighter.call(this, highlighterEnv);
 
-  this.maxCanvasSizePerSide = getMaxSurfaceSize(this.highlighterEnv.window);
-
-  // We cache the previous content's size so we're able to understand when it will
-  // change. The `width` and `height` are expressed in physical pixels in order to react
-  // also at any variation of zoom / pixel ratio.
-  // We initialize with `0` so it will check also at the first `_update()` iteration.
-  this._contentSize = {
-    width: 0,
-    height: 0
-  };
-
   this.markup = new CanvasFrameAnonymousContentHelper(this.highlighterEnv,
     this._buildMarkup.bind(this));
 
@@ -155,6 +147,16 @@ function CssGridHighlighter(highlighterEnv) {
 
   let { pageListenerTarget } = highlighterEnv;
   pageListenerTarget.addEventListener("pagehide", this.onPageHide);
+
+  // Initialize the <canvas> position to the top left corner of the page
+  this._canvasPosition = {
+    x: 0,
+    y: 0
+  };
+
+  // Calling `calculateCanvasPosition` anyway since the highlighter could be initialized
+  // on a page that has scrolled already.
+  this.calculateCanvasPosition();
 }
 
 CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
@@ -187,7 +189,9 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       attributes: {
         "id": "canvas",
         "class": "canvas",
-        "hidden": "true"
+        "hidden": "true",
+        "width": CANVAS_SIZE,
+        "height": CANVAS_SIZE
       },
       prefix: this.ID_CLASS_PREFIX
     });
@@ -543,12 +547,15 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     // Hide the root element and force the reflow in order to get the proper window's
     // dimensions without increasing them.
     root.setAttribute("style", "display: none");
-    this.currentNode.offsetWidth;
+    this.win.document.documentElement.offsetWidth;
 
-    let { width, height } = getWindowDimensions(this.win);
+    let { width, height } = this._winDimensions;
 
-    // Clear the canvas the grid area highlights.
-    this.clearCanvas(width, height);
+    // Updates the <canvas> element's position and size.
+    // It also clear the <canvas>'s drawing context.
+    this.updateCanvasElement();
+
+    // Clear the grid area highlights.
     this.clearGridAreas();
     this.clearGridCell();
 
@@ -651,74 +658,94 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     moveInfobar(container, bounds, this.win);
   },
 
-  clearCanvas(width, height) {
+  /**
+   * The <canvas>'s position needs to be updated if the page scrolls too much, in order
+   * to give the illusion that it always covers the viewport.
+   */
+  _scrollUpdate() {
+    let hasPositionChanged = this.calculateCanvasPosition();
+
+    if (hasPositionChanged) {
+      this._update();
+    }
+  },
+
+  /**
+   * This method is responsible to do the math that updates the <canvas>'s position,
+   * in accordance with the page's scroll, document's size, canvas size, and
+   * viewport's size.
+   * It's called when a page's scroll is detected.
+   *
+   * @return {Boolean} `true` if the <canvas> position was updated, `false` otherwise.
+   */
+  calculateCanvasPosition() {
+    let cssCanvasSize = CANVAS_SIZE / this.win.devicePixelRatio;
+    let viewportSize = getViewportDimensions(this.win);
+    let documentSize = this._winDimensions;
+    let pageX = this._scroll.x;
+    let pageY = this._scroll.y;
+    let canvasWidth = cssCanvasSize;
+    let canvasHeight = cssCanvasSize;
+    let hasUpdated = false;
+
+    // Those values indicates the relative horizontal and vertical space the page can
+    // scroll before we have to reposition the <canvas>; they're 1/4 of the delta between
+    // the canvas' size and the viewport's size: that's because we want to consider both
+    // sides (top/bottom, left/right; so 1/2 for each side) and also we don't want to
+    // shown the edges of the canvas in case of fast scrolling (to avoid showing undraw
+    // areas, therefore another 1/2 here).
+    let bufferSizeX = (canvasWidth - viewportSize.width) >> 2;
+    let bufferSizeY = (canvasHeight - viewportSize.height) >> 2;
+
+    let { x, y } = this._canvasPosition;
+
+    // Defines the boundaries for the canvas.
+    let topBoundary = 0;
+    let bottomBoundary = documentSize.height - canvasHeight;
+    let leftBoundary = 0;
+    let rightBoundary = documentSize.width - canvasWidth;
+
+    // Defines the thresholds that triggers the canvas' position to be updated.
+    let topThreshold = pageY - bufferSizeY;
+    let bottomThreshold = pageY - canvasHeight + viewportSize.height + bufferSizeY;
+    let leftThreshold = pageX - bufferSizeX;
+    let rightThreshold = pageX - canvasWidth + viewportSize.width + bufferSizeX;
+
+    if (y < bottomBoundary && y < bottomThreshold) {
+      this._canvasPosition.y = Math.min(topThreshold, bottomBoundary);
+      hasUpdated = true;
+    } else if (y > topBoundary && y > topThreshold) {
+      this._canvasPosition.y = Math.max(bottomThreshold, topBoundary);
+      hasUpdated = true;
+    }
+
+    if (x < rightBoundary && x < rightThreshold) {
+      this._canvasPosition.x = Math.min(leftThreshold, rightBoundary);
+      hasUpdated = true;
+    } else if (x > leftBoundary && x > leftThreshold) {
+      this._canvasPosition.x = Math.max(rightThreshold, leftBoundary);
+      hasUpdated = true;
+    }
+
+    return hasUpdated;
+  },
+
+  /**
+   *  Updates the <canvas> element's style in accordance with the current window's
+   * devicePixelRatio, and the position calculated in `calculateCanvasPosition`; it also
+   * clears the drawing context.
+   */
+  updateCanvasElement() {
     let ratio = parseFloat((this.win.devicePixelRatio || 1).toFixed(2));
+    let size = CANVAS_SIZE / ratio;
+    let { x, y } = this._canvasPosition;
 
-    height *= ratio;
-    width *= ratio;
-
-    let hasResolutionChanged = false;
-    if (height !== this._contentSize.height || width !== this._contentSize.width) {
-      hasResolutionChanged = true;
-      this._contentSize.width = width;
-      this._contentSize.height = height;
-    }
-
-    let isCanvasClipped = false;
-
-    if (height > this.maxCanvasSizePerSide) {
-      height = this.maxCanvasSizePerSide;
-      isCanvasClipped = true;
-    }
-
-    if (width > this.maxCanvasSizePerSide) {
-      width = this.maxCanvasSizePerSide;
-      isCanvasClipped = true;
-    }
-
-    // `maxCanvasSizePerSide` has the maximum size per side, but we have to consider
-    // also the memory allocation limit.
-    // For example, a 16384x16384 canvas will exceeds the current MAX_ALLOC_PIXELS
-    if (width * height > MAX_ALLOC_PIXELS) {
-      isCanvasClipped = true;
-      // We want to keep more or less the same ratio of the document's size.
-      // Therefore we don't only check if `height` is greater than `width`, but also
-      // that `width` is not greater than MAX_ALLOC_PIXELS_PER_SIDE (otherwise we'll end
-      // up to reduce `height` in favor of `width`, for example).
-      if (height > width && width < MAX_ALLOC_PIXELS_PER_SIDE) {
-        height = (MAX_ALLOC_PIXELS / width) |0;
-      } else if (width > height && height < MAX_ALLOC_PIXELS_PER_SIDE) {
-        width = (MAX_ALLOC_PIXELS / height) |0;
-      } else {
-        // fallback to a square canvas with the maximum pixels per side Available
-        height = width = MAX_ALLOC_PIXELS_PER_SIDE;
-      }
-    }
-
-    // We warn the user that we had to clip the canvas, but only if resolution has
-    // changed since the last time.
-    // This is only a temporary workaround, and the warning message is supposed to be
-    // non-localized.
-    // Bug 1345434 will get rid of this.
-    if (hasResolutionChanged && isCanvasClipped) {
-      // We display the warning in the web console, so the user will be able to see it.
-      // Unfortunately that would also display the source, where if clicked , will ends
-      // in a non-existing document.
-      // It's not ideal, but from an highlighter there is no an easy way to show such
-      // notification elsewhere.
-      this.win.console.warn("The CSS Grid Highlighter could have been clipped, due " +
-                            "the size of the document inspected\n" +
-                            "See https://bugzilla.mozilla.org/show_bug.cgi?id=1343217 " +
-                            "for further information.");
-    }
-
-    // Resize the canvas taking the dpr into account so as to have crisp lines.
-    this.canvas.setAttribute("width", width);
-    this.canvas.setAttribute("height", height);
+    // Resize the canvas taking the dpr into account so as to have crisp lines, and
+    // translating it to give the perception that it always covers the viewport.
     this.canvas.setAttribute("style",
-      `width:${width / ratio}px;height:${height / ratio}px;`);
+      `width:${size}px;height:${size}px; transform: translate(${x}px, ${y}px);`);
 
-    this.ctx.clearRect(0, 0, width, height);
+    this.ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
   },
 
   getFirstRowLinePos(fragment) {
@@ -791,19 +818,20 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    */
   renderLines(gridDimension, {bounds}, dimensionType, mainSide, crossSide,
               mainSize, startPos, endPos) {
-    let lineStartPos = (bounds[crossSide] / getCurrentZoom(this.win)) + startPos;
-    let lineEndPos = (bounds[crossSide] / getCurrentZoom(this.win)) + endPos;
+    let currentZoom = getCurrentZoom(this.win);
+    let lineStartPos = (bounds[crossSide] / currentZoom) + startPos;
+    let lineEndPos = (bounds[crossSide] / currentZoom) + endPos;
 
     if (this.options.showInfiniteLines) {
       lineStartPos = 0;
-      lineEndPos = parseInt(this.canvas.getAttribute(mainSize), 10);
+      lineEndPos = Infinity;
     }
 
     let lastEdgeLineIndex = this.getLastEdgeLineIndex(gridDimension.tracks);
 
     for (let i = 0; i < gridDimension.lines.length; i++) {
       let line = gridDimension.lines[i];
-      let linePos = (bounds[mainSide] / getCurrentZoom(this.win)) + line.start;
+      let linePos = (bounds[mainSide] / currentZoom) + line.start;
 
       if (this.options.showGridLineNumbers) {
         this.renderGridLineNumber(line.number, linePos, lineStartPos, dimensionType);
@@ -846,20 +874,24 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     let lineWidth = getDisplayPixelRatio(this.win);
     let offset = (lineWidth / 2) % 1;
 
+    let x = Math.round(this._canvasPosition.x * devicePixelRatio);
+    let y = Math.round(this._canvasPosition.y * devicePixelRatio);
+
     linePos = Math.round(linePos * devicePixelRatio);
     startPos = Math.round(startPos * devicePixelRatio);
-    endPos = Math.round(endPos * devicePixelRatio);
 
     this.ctx.save();
     this.ctx.setLineDash(GRID_LINES_PROPERTIES[lineType].lineDash);
     this.ctx.beginPath();
-    this.ctx.translate(offset, offset);
+    this.ctx.translate(offset - x, offset - y);
     this.ctx.lineWidth = lineWidth;
 
     if (dimensionType === COLUMNS) {
+      endPos = isFinite(endPos) ? endPos * devicePixelRatio : CANVAS_SIZE + y;
       this.ctx.moveTo(linePos, startPos);
       this.ctx.lineTo(linePos, endPos);
     } else {
+      endPos = isFinite(endPos) ? endPos * devicePixelRatio : CANVAS_SIZE + x;
       this.ctx.moveTo(startPos, linePos);
       this.ctx.lineTo(endPos, linePos);
     }
@@ -887,11 +919,14 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   renderGridLineNumber(lineNumber, linePos, startPos, dimensionType) {
     let { devicePixelRatio } = this.win;
     let displayPixelRatio = getDisplayPixelRatio(this.win);
+    let x = Math.round(this._canvasPosition.x * devicePixelRatio);
+    let y = Math.round(this._canvasPosition.y * devicePixelRatio);
 
     linePos = Math.round(linePos * devicePixelRatio);
     startPos = Math.round(startPos * devicePixelRatio);
 
     this.ctx.save();
+    this.ctx.translate(.5 - x, .5 - y);
 
     let fontSize = (GRID_FONT_SIZE * displayPixelRatio);
     this.ctx.font = fontSize + "px " + GRID_FONT_FAMILY;
@@ -926,18 +961,22 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    */
   renderGridGap(linePos, startPos, endPos, breadth, dimensionType) {
     let { devicePixelRatio } = this.win;
+    let x = Math.round(this._canvasPosition.x * devicePixelRatio);
+    let y = Math.round(this._canvasPosition.y * devicePixelRatio);
 
     linePos = Math.round(linePos * devicePixelRatio);
     startPos = Math.round(startPos * devicePixelRatio);
-    endPos = Math.round(endPos * devicePixelRatio);
     breadth = Math.round(breadth * devicePixelRatio);
 
     this.ctx.save();
     this.ctx.fillStyle = this.getGridGapPattern(devicePixelRatio, dimensionType);
+    this.ctx.translate(.5 - x, .5 - y);
 
     if (dimensionType === COLUMNS) {
+      endPos = isFinite(endPos) ? Math.round(endPos * devicePixelRatio) : CANVAS_SIZE + y;
       this.ctx.fillRect(linePos, startPos, breadth, endPos - startPos);
     } else {
+      endPos = isFinite(endPos) ? Math.round(endPos * devicePixelRatio) : CANVAS_SIZE + x;
       this.ctx.fillRect(startPos, linePos, endPos - startPos, breadth);
     }
     this.ctx.restore();

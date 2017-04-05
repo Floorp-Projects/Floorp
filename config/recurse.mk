@@ -60,6 +60,8 @@ export NO_RECURSE_MAKELEVEL=$(word $(MAKELEVEL),2 3 4 5 6 7 8 9 10 11 12 13 14 1
 endif
 endif
 
+RECURSE = $(if $(RECURSE_TRACE_ONLY),@echo $2/$1,$(call SUBMAKE,$1,$2))
+
 # Use the $(*_dirs) variables available in root.mk
 CURRENT_DIRS := $($(CURRENT_TIER)_dirs)
 
@@ -68,7 +70,7 @@ CURRENT_DIRS := $($(CURRENT_TIER)_dirs)
 # Only recurse the paths starting with RECURSE_BASE_DIR when provided.
 .PHONY: $(compile_targets)
 $(compile_targets):
-	$(if $(filter $(RECURSE_BASE_DIR)%,$@),$(call SUBMAKE,$(@F),$(@D)))
+	$(if $(filter $(RECURSE_BASE_DIR)%,$@),$(call RECURSE,$(@F),$(@D)))
 
 # The compile tier has different rules from other tiers.
 ifneq ($(CURRENT_TIER),compile)
@@ -76,7 +78,7 @@ ifneq ($(CURRENT_TIER),compile)
 # Recursion rule for all directories traversed for all subtiers in the
 # current tier.
 $(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS)): %/$(CURRENT_TIER):
-	$(call SUBMAKE,$(CURRENT_TIER),$*)
+	$(call RECURSE,$(CURRENT_TIER),$*)
 
 .PHONY: $(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS))
 

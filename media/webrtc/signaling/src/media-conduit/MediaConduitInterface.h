@@ -251,11 +251,19 @@ public:
   /**
    * Functions returning stats needed by w3c stats model.
    */
+
+  virtual bool
+  GetSendPacketTypeStats(webrtc::RtcpPacketTypeCounter* aPacketCounts) = 0;
+
+  virtual bool
+  GetRecvPacketTypeStats(webrtc::RtcpPacketTypeCounter* aPacketCounts) = 0;
+
   virtual bool GetVideoEncoderStats(double* framerateMean,
                                     double* framerateStdDev,
                                     double* bitrateMean,
                                     double* bitrateStdDev,
-                                    uint32_t* droppedFrames) = 0;
+                                    uint32_t* droppedFrames,
+                                    uint32_t* framesEncoded) = 0;
   virtual bool GetVideoDecoderStats(double* framerateMean,
                                     double* framerateStdDev,
                                     double* bitrateMean,

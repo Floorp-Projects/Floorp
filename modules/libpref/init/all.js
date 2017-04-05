@@ -543,6 +543,9 @@ pref("media.getusermedia.audiocapture.enabled", false);
 // TextTrack WebVTT Region extension support.
 pref("media.webvtt.regions.enabled", false);
 
+// WebVTT pseudo element and class support.
+pref("media.webvtt.pseudo.enabled", true);
+
 // AudioTrack and VideoTrack support
 pref("media.track.enabled", false);
 

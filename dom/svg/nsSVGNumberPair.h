@@ -15,6 +15,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGAnimatedNumber.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/UniquePtr.h"
 
 
 class nsSMILValue;
@@ -65,11 +66,9 @@ public:
   already_AddRefed<mozilla::dom::SVGAnimatedNumber>
     ToDOMAnimatedNumber(PairIndex aIndex,
                         nsSVGElement* aSVGElement);
-  // Returns a new nsISMILAttr object that the caller must delete
-  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
+  mozilla::UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement);
 
 private:
-
   float mAnimVal[2];
   float mBaseVal[2];
   uint8_t mAttrEnum; // element specified tracking for attribute

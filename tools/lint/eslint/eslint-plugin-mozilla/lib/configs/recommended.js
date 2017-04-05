@@ -17,6 +17,7 @@ module.exports = {
   "rules": {
     "mozilla/avoid-removeChild": "error",
     "mozilla/avoid-nsISupportsString-preferences": "error",
+    "mozilla/import-browser-window-globals": "error",
     "mozilla/import-globals": "error",
     "mozilla/no-import-into-var-and-global": "error",
     "mozilla/no-useless-parameters": "error",
@@ -299,6 +300,7 @@ module.exports = {
     "CSSPrimitiveValue": false,
     "CSSValueList": false,
     "dump": true,
+    "ImageDocument": false,
     // Specific to Firefox
     // eslint-disable-next-line max-len
     // https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/InternalError

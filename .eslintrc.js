@@ -8,6 +8,7 @@ module.exports = {
   "rules": {
     "mozilla/avoid-removeChild": "error",
     "mozilla/avoid-nsISupportsString-preferences": "error",
+    "mozilla/import-browser-window-globals": "error",
     "mozilla/import-globals": "warn",
     "mozilla/no-import-into-var-and-global": "error",
     "mozilla/no-useless-parameters": "error",

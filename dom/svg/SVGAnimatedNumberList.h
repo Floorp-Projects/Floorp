@@ -8,6 +8,7 @@
 #define MOZILLA_SVGANIMATEDNUMBERLIST_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
 #include "nsISMILAttr.h"
 #include "SVGNumberList.h"
@@ -82,8 +83,8 @@ public:
     return !!mAnimVal;
   }
 
-  /// Callers own the returned nsISMILAttr
-  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement, uint8_t aAttrEnum);
+  UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement,
+                                    uint8_t aAttrEnum);
 
 private:
 

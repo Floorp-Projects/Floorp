@@ -179,6 +179,10 @@ class WEBRTC_DLLEXPORT VoERTP_RTCP {
   // Gets RTCP statistics for a specific |channel|.
   virtual int GetRTCPStatistics(int channel, CallStatistics& stats) = 0;
 
+  // Gets RTCP packet type counters for a specific channel
+  virtual int GetRTCPPacketTypeCounters(int channel,
+                                        RtcpPacketTypeCounter& stats) = 0;
+
   // Gets the report block parts of the last received RTCP Sender Report (SR),
   // or RTCP Receiver Report (RR) on a specified |channel|. Each vector
   // element also contains the SSRC of the sender in addition to a report

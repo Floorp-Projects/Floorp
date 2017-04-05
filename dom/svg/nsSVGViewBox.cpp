@@ -304,10 +304,10 @@ nsSVGViewBox::DOMBaseVal::SetHeight(float aHeight, ErrorResult& aRv)
   mVal->SetBaseValue(rect, mSVGElement);
 }
 
-nsISMILAttr*
+UniquePtr<nsISMILAttr>
 nsSVGViewBox::ToSMILAttr(nsSVGElement *aSVGElement)
 {
-  return new SMILViewBox(this, aSVGElement);
+  return MakeUnique<SMILViewBox>(this, aSVGElement);
 }
 
 nsresult

@@ -200,3 +200,7 @@ afterEvaluate {
         archives sourcesJarWithGeckoBinaries
     }
 }
+
+// Bug 1353055 - Strip 'vars' debugging information to agree with moz.build.
+apply from: "${topsrcdir}/mobile/android/gradle/debug_level.gradle"
+android.libraryVariants.all configureVariantDebugLevel

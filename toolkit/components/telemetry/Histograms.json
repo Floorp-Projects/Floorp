@@ -1068,7 +1068,6 @@
   "GC_PRETENURE_COUNT": {
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
-    "kind": "linear",
     "kind": "enumerated",
     "n_values": 32,
     "bug_numbers": [1293262],
@@ -2195,7 +2194,6 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 672,
-    "releaseChannelCollection": "opt-out",
     "description": "SSL handshake result, 0=success, 1-255=NSS error offset, 256-511=SEC error offset + 256, 512-639=NSPR error offset + 512, 640-670=PKIX error, 671=unknown err"
   },
   "SSL_TIME_UNTIL_READY": {
@@ -10600,10 +10598,9 @@
   },
   "WEBRTC_ICE_CHECKING_RATE": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1319268],
+    "bug_numbers": [1188391,1319268],
     "expires_in_version": "58",
     "kind": "boolean",
-    "bug_numbers": [1188391],
     "description": "The number of ICE connections which immediately failed (0) vs. reached at least checking state (1)."
   },
   "ALERTS_SERVICE_DND_ENABLED": {
