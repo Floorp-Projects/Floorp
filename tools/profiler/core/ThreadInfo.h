@@ -17,7 +17,7 @@ class ThreadInfo final
 {
 public:
   ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
-             mozilla::NotNull<PseudoStack*> aPseudoStack, void* aStackTop);
+             void* aStackTop);
 
   ~ThreadInfo();
 
@@ -25,6 +25,7 @@ public:
   int ThreadId() const { return mThreadId; }
 
   bool IsMainThread() const { return mIsMainThread; }
+
   mozilla::NotNull<PseudoStack*> Stack() const { return mPseudoStack; }
 
   void SetHasProfile() { mHasProfile = true; }
@@ -41,7 +42,10 @@ private:
   int mThreadId;
   const bool mIsMainThread;
 
-  // The thread's PseudoStack. This is an owning pointer.
+  // The thread's PseudoStack. This is an owning pointer. It could be an inline
+  // member, but we don't do that because PseudoStack is quite large, and we
+  // have ThreadInfo vectors and so we'd end up wasting a lot of space in those
+  // vectors for excess elements.
   mozilla::NotNull<PseudoStack*> mPseudoStack;
 
   UniquePlatformData mPlatformData;
