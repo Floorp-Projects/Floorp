@@ -8,6 +8,7 @@ import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 
@@ -88,7 +89,7 @@ public class TelemetryTest {
         telemetry.recordSessionEnd();
 
         telemetry.queuePing(TelemetryCorePingBuilder.TYPE);
-        telemetry.scheduleUpload(TelemetryCorePingBuilder.TYPE);
+        telemetry.scheduleUpload();
 
         assertEquals(1, storage.countStoredPings(TelemetryCorePingBuilder.TYPE));
 
@@ -163,7 +164,7 @@ public class TelemetryTest {
 
         assertEquals(1, storage.countStoredPings(TelemetryEventPingBuilder.TYPE));
 
-        telemetry.scheduleUpload(TelemetryEventPingBuilder.TYPE);
+        telemetry.scheduleUpload();
 
         assertJobIsScheduled(TelemetryEventPingBuilder.TYPE);
         executePendingJob(TelemetryEventPingBuilder.TYPE);
@@ -219,10 +220,7 @@ public class TelemetryTest {
         assertEquals(1, jobs.size());
 
         final JobInfo job = jobs.get(0);
-
-        final String pingType = job.getExtras().getString(TelemetryJobService.EXTRA_PING_TYPE);
-        assertNotNull(pingType);
-        assertEquals(expectedPingType, pingType);
+        assertNotNull(job);
     }
 
     private void executePendingJob(String pingType) {
@@ -236,7 +234,9 @@ public class TelemetryTest {
         final JobParameters parameters = mock(JobParameters.class);
         doReturn(bundle).when(parameters).getExtras();
 
-        service.performUpload(parameters);
+        AsyncTask task = mock(AsyncTask.class);
+
+        service.uploadPingsInBackground(task, parameters);
 
         verify(service).jobFinished(parameters, false);
     }
