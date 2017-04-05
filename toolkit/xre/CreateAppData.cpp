@@ -57,7 +57,7 @@ XRE_ParseAppData(nsIFile* aINIFile, XREAppData& aAppData)
     return rv;
 
   ReadString(parser, "App", "Vendor", aAppData.vendor);
-  ReadString(parser, "App", "Name", aAppData.name),
+  ReadString(parser, "App", "Name", aAppData.name);
   ReadString(parser, "App", "RemotingName", aAppData.remotingName);
   ReadString(parser, "App", "Version", aAppData.version);
   ReadString(parser, "App", "BuildID", aAppData.buildID);
