@@ -127,6 +127,9 @@ var SessionStorageInternal = {
         // want to use the spec instead of the origin as the key, and avoid
         // transmitting origin attribute information which we then discard when
         // restoring.
+        //
+        // If changing this logic, make sure to also change the principal
+        // computation logic in SessionStore::_sendRestoreHistory.
         let attrs = aDocShell.getOriginAttributes();
         let dataPrincipal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
         principal = Services.scriptSecurityManager.createCodebasePrincipal(dataPrincipal.URI, attrs);
