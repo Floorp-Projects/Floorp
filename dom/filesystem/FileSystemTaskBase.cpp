@@ -112,12 +112,15 @@ NS_IMPL_ISUPPORTS(FileSystemTaskChildBase, nsIIPCBackgroundChildCreateCallback)
  * FileSystemTaskBase class
  */
 
-FileSystemTaskChildBase::FileSystemTaskChildBase(FileSystemBase* aFileSystem)
+FileSystemTaskChildBase::FileSystemTaskChildBase(nsIGlobalObject* aGlobalObject,
+                                                 FileSystemBase* aFileSystem)
   : mErrorValue(NS_OK)
   , mFileSystem(aFileSystem)
+  , mGlobalObject(aGlobalObject)
 {
   MOZ_ASSERT(aFileSystem, "aFileSystem should not be null.");
   aFileSystem->AssertIsOnOwningThread();
+  MOZ_ASSERT(aGlobalObject);
 }
 
 FileSystemTaskChildBase::~FileSystemTaskChildBase()
@@ -161,10 +164,7 @@ FileSystemTaskChildBase::ActorCreated(mozilla::ipc::PBackgroundChild* aActor)
   if (HasError()) {
     // In this case we don't want to use IPC at all.
     RefPtr<ErrorRunnable> runnable = new ErrorRunnable(this);
-    // This will be changed in the next patch TODO
-    DebugOnly<nsresult> rv = NS_DispatchToCurrentThread(runnable);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToCurrentThread failed");
-
+    FileSystemUtils::DispatchRunnable(mGlobalObject, runnable.forget());
     return;
   }
 
@@ -187,11 +187,14 @@ FileSystemTaskChildBase::ActorCreated(mozilla::ipc::PBackgroundChild* aActor)
   // mozilla::ipc::BackgroundChildImpl::DeallocPFileSystemRequestChild.
   NS_ADDREF_THIS();
 
-  mozilla::ipc::PBackgroundChild* actor =
-    mozilla::ipc::BackgroundChild::GetForCurrentThread();
-  MOZ_ASSERT(actor);
+  if (NS_IsMainThread()) {
+    nsIEventTarget* target = mGlobalObject->EventTargetFor(TaskCategory::Other);
+    MOZ_ASSERT(target);
 
-  actor->SendPFileSystemRequestConstructor(this, params);
+    aActor->SetEventTargetForActor(this, target);
+  }
+
+  aActor->SendPFileSystemRequestConstructor(this, params);
 }
 
 void
