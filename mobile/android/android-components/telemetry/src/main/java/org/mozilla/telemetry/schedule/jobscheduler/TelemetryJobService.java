@@ -64,10 +64,9 @@ public class TelemetryJobService extends JobService {
                     return null; // Job will be rescheduled from onStopJob().
                 }
 
-
                 if (storage.countStoredPings(pingType) == 0) {
                     Log.d(LOG_TAG, "No pings of type " + pingType + " to upload");
-                    return null;
+                    continue;
                 }
 
                 if (!performUpload(telemetry, storage, pingType)) {
