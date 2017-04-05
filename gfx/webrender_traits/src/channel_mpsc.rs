@@ -4,7 +4,6 @@
 
 use serde::{Deserialize, Serialize};
 use std::io::{Error, ErrorKind};
-
 use serde::{Deserializer, Serializer};
 
 use std::sync::mpsc;
@@ -13,13 +12,19 @@ use std::sync::mpsc;
 /// Handles the channel implementation when in process channels are enabled.
 ///
 
-pub type PayloadSender = MsgSender<Vec<u8>>;
+pub type PayloadSender = MsgSender<Payload>;
 
-pub type PayloadReceiver = MsgReceiver<Vec<u8>>;
+pub type PayloadReceiver = MsgReceiver<Payload>;
 
-impl PayloadHelperMethods for PayloadSender {
-    fn send_vec(&self, data: Vec<u8>) -> Result<(), Error> {
-        self.send(data)
+impl PayloadSenderHelperMethods for PayloadSender {
+    fn send_payload(&self, payload: Payload) -> Result<(), Error> {
+        self.send(payload)
+    }
+}
+
+impl PayloadReceiverHelperMethods for PayloadReceiver {
+    fn recv_payload(&self) -> Result<Payload, Error> {
+        self.recv()
     }
 }
 

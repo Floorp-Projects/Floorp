@@ -113,15 +113,15 @@ impl Scene {
         self.root_pipeline_id = Some(pipeline_id);
     }
 
-    pub fn set_root_display_list(&mut self,
-                                 pipeline_id: PipelineId,
-                                 epoch: Epoch,
-                                 built_display_list: BuiltDisplayList,
-                                 background_color: Option<ColorF>,
-                                 viewport_size: LayerSize,
-                                 auxiliary_lists: AuxiliaryLists) {
+    pub fn set_display_list(&mut self,
+                            pipeline_id: PipelineId,
+                            epoch: Epoch,
+                            built_display_list: BuiltDisplayList,
+                            background_color: Option<ColorF>,
+                            viewport_size: LayerSize,
+                            auxiliary_lists: AuxiliaryLists) {
         self.pipeline_auxiliary_lists.insert(pipeline_id, auxiliary_lists);
-        self.display_lists.insert(pipeline_id, built_display_list.all_display_items().to_vec());
+        self.display_lists.insert(pipeline_id, built_display_list.into_display_items());
 
         let new_pipeline = ScenePipeline {
             pipeline_id: pipeline_id,

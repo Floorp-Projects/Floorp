@@ -24,12 +24,15 @@ void main(void) {
     // account the spacing in between tiles. We only paint if our fragment does
     // not fall into that spacing.
     vec2 position_in_tile = mod(relative_pos_in_rect, vStretchSize + vTileSpacing);
-    // We clamp the texture coordinates to the half-pixel offset from the borders
-    // in order to avoid sampling outside of the texture area.
     vec2 st = vTextureOffset + ((position_in_tile / vStretchSize) * vTextureSize);
     st = clamp(st, vStRect.xy, vStRect.zw);
 
     alpha = alpha * float(all(bvec2(step(position_in_tile, vStretchSize))));
 
+#ifdef WR_FEATURE_TEXTURE_RECT
+    // textureLod doesn't support sampler2DRect. Use texture() instead.
+    oFragColor = vec4(alpha) * texture(sColor0, st);
+#else
     oFragColor = vec4(alpha) * textureLod(sColor0, st, 0.0);
+#endif
 }

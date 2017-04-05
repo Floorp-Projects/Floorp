@@ -833,7 +833,10 @@ pub extern "C" fn wr_api_update_image(api: &mut RenderApi,
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
 
-    api.update_image(key, descriptor.to_descriptor(), copied_bytes, None);
+    api.update_image(key,
+                     descriptor.to_descriptor(),
+                     ImageData::new(copied_bytes),
+                     None);
 }
 
 #[no_mangle]
@@ -867,7 +870,7 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut RenderApi,
                                                       aux_data: *mut u8,
                                                       aux_size: usize) {
     let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
-    // See the documentation of set_root_display_list in api.rs. I don't think
+    // See the documentation of set_display_list in api.rs. I don't think
     // it makes a difference in gecko at the moment(until APZ is figured out)
     // but I suppose it is a good default.
     let preserve_frame_state = true;
@@ -884,11 +887,11 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut RenderApi,
     aux_vec.extend_from_slice(aux_slice);
     let aux = AuxiliaryLists::from_data(aux_vec, aux_descriptor);
 
-    api.set_root_display_list(Some(root_background_color),
-                              epoch,
-                              LayoutSize::new(viewport_width, viewport_height),
-                              (pipeline_id, dl, aux),
-                              preserve_frame_state);
+    api.set_display_list(Some(root_background_color),
+                         epoch,
+                         LayoutSize::new(viewport_width, viewport_height),
+                         (pipeline_id, dl, aux),
+                         preserve_frame_state);
 }
 
 #[no_mangle]
@@ -899,11 +902,11 @@ pub unsafe extern "C" fn wr_api_clear_root_display_list(api: &mut RenderApi,
     let preserve_frame_state = true;
     let frame_builder = WebRenderFrameBuilder::new(pipeline_id);
 
-    api.set_root_display_list(Some(root_background_color),
-                              epoch,
-                              LayoutSize::new(0.0, 0.0),
-                              frame_builder.dl_builder.finalize(),
-                              preserve_frame_state);
+    api.set_display_list(Some(root_background_color),
+                         epoch,
+                         LayoutSize::new(0.0, 0.0),
+                         frame_builder.dl_builder.finalize(),
+                         preserve_frame_state);
 }
 
 #[no_mangle]
@@ -1349,7 +1352,8 @@ impl BlobImageRenderer for Moz2dImageRenderer {
     fn request_blob_image(&mut self,
                           key: ImageKey,
                           data: Arc<BlobImageData>,
-                          descriptor: &BlobImageDescriptor) {
+                          descriptor: &BlobImageDescriptor,
+                          _dirty_rect: Option<DeviceUintRect>) {
         let result = self.render_blob_image(data, descriptor);
         self.images.insert(key, result);
     }
