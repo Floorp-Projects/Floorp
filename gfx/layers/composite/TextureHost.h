@@ -46,6 +46,7 @@ class CompositorBridgeParent;
 class SurfaceDescriptor;
 class HostIPCAllocator;
 class ISurfaceAllocator;
+class MacIOSurfaceTextureHostOGL;
 class TextureHostOGL;
 class TextureReadLock;
 class TextureSourceOGL;
@@ -584,7 +585,7 @@ public:
   TextureReadLock* GetReadLock() { return mReadLock; }
 
   virtual BufferTextureHost* AsBufferTextureHost() { return nullptr; }
-
+  virtual MacIOSurfaceTextureHostOGL* AsMacIOSurfaceTextureHost() { return nullptr; }
   virtual WebRenderTextureHost* AsWebRenderTextureHost() { return nullptr; }
 
 protected:

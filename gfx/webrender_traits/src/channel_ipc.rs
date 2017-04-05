@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use serde::{Deserialize, Serialize};
-use std::io::Error;
+use std::io::{Error, ErrorKind};
+use std::io;
+use std::error;
 
 use ipc_channel::ipc::{self, IpcSender, IpcReceiver, IpcBytesSender, IpcBytesReceiver};
 
@@ -19,9 +21,16 @@ pub type PayloadSender = IpcBytesSender;
 
 pub type PayloadReceiver = IpcBytesReceiver;
 
-impl PayloadHelperMethods for PayloadSender {
-    fn send_vec(&self, data: Vec<u8>) -> Result<(), Error> {
-        self.send(&data)
+impl PayloadSenderHelperMethods for PayloadSender {
+    fn send_payload(&self, data: Payload) -> Result<(), Error> {
+        self.send(&data.to_data())
+    }
+}
+
+impl PayloadReceiverHelperMethods for PayloadReceiver {
+    fn recv_payload(&self) -> Result<Payload, Error> {
+        self.recv().map(|data| Payload::from_data(data) )
+                   .map_err(|e| io::Error::new(ErrorKind::Other, error::Error::description(&e)))
     }
 }
 

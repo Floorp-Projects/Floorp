@@ -1,6 +1,6 @@
 [package]
 name = "webrender"
-version = "0.26.0"
+version = "0.30.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -14,12 +14,12 @@ webgl = ["offscreen_gl_context", "webrender_traits/webgl"]
 
 [dependencies]
 app_units = "0.4"
-bincode = "1.0.0-alpha2"
+bincode = "1.0.0-alpha6"
 bit-set = "0.4"
 byteorder = "1.0"
 euclid = "0.11"
 fnv = "1.0"
-gleam = "0.4.1"
+gleam = "0.4.2"
 lazy_static = "0.2"
 log = "0.3"
 num-traits = "0.1.32"

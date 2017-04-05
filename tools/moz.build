@@ -4,4 +4,37 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files("**"):
+    BUG_COMPONENT = ("Core", "General")
+
+with Files("coverity/**"):
+    BUG_COMPONENT = ("Core", "Rewriting and Analysis")
+
+with Files("docs/**"):
+    BUG_COMPONENT = ("Core", "Build Config")
+
+with Files("lint/**"):
+    BUG_COMPONENT = ("Testing", "Lint")
+
+with Files("memory-profiler/**"):
+    BUG_COMPONENT = ("Core", "Gecko Profiler")
+
+with Files("mercurial/**"):
+    BUG_COMPONENT = ("Core", "Build Config")
+
+with Files("profiler/**"):
+    BUG_COMPONENT = ("Core", "Gecko Profiler")
+
+with Files("quitter/**"):
+    BUG_COMPONENT = ("Testing", "General")
+
+with Files("rb/**"):
+    BUG_COMPONENT = ("Core", "XPCOM")
+
+with Files("rewriting/**"):
+    BUG_COMPONENT = ("Core", "Rewriting and Analysis")
+
+with Files("update-packaging/**"):
+    BUG_COMPONENT = ("Release Engineering", "Other")
+
 SPHINX_TREES['lint'] = 'lint/docs'

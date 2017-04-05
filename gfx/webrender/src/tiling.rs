@@ -23,10 +23,12 @@ use std::collections::HashMap;
 use std::hash::BuildHasherDefault;
 use texture_cache::TexturePage;
 use util::{TransformedRect, TransformedRectKind};
-use webrender_traits::{AuxiliaryLists, ColorF, DeviceIntPoint, DeviceIntRect, DeviceUintPoint};
+use webrender_traits::{AuxiliaryLists, ColorF, DeviceIntPoint, DeviceIntRect};
+use webrender_traits::{DeviceIntSize, DeviceUintPoint};
 use webrender_traits::{DeviceUintSize, FontRenderMode, ImageRendering, LayerPoint, LayerRect};
 use webrender_traits::{LayerToWorldTransform, MixBlendMode, PipelineId, ScrollLayerId};
 use webrender_traits::{WorldPoint4D, WorldToLayerTransform};
+use webrender_traits::{ExternalImageType};
 
 // Special sentinel value recognized by the shader. It is considered to be
 // a dummy task that doesn't mask out anything.
@@ -69,7 +71,24 @@ impl AlphaBatchHelpers for PrimitiveStore {
         let batch_kind = match metadata.prim_kind {
             PrimitiveKind::Border => AlphaBatchKind::Border,
             PrimitiveKind::BoxShadow => AlphaBatchKind::BoxShadow,
-            PrimitiveKind::Image => AlphaBatchKind::Image,
+            PrimitiveKind::Image => {
+                let image_cpu = &self.cpu_images[metadata.cpu_prim_index.0];
+
+                match image_cpu.color_texture_id {
+                    SourceTexture::External(ext_image) => {
+                        match ext_image.image_type {
+                            ExternalImageType::Texture2DHandle => AlphaBatchKind::Image,
+                            ExternalImageType::TextureRectHandle => AlphaBatchKind::ImageRect,
+                            _ => {
+                                panic!("Non-texture handle type should be handled in other way.");
+                            }
+                        }
+                    }
+                    _ => {
+                        AlphaBatchKind::Image
+                    }
+                }
+            }
             PrimitiveKind::YuvImage => AlphaBatchKind::YuvImage,
             PrimitiveKind::Rectangle => AlphaBatchKind::Rectangle,
             PrimitiveKind::AlignedGradient => AlphaBatchKind::AlignedGradient,
@@ -273,7 +292,8 @@ impl AlphaBatchHelpers for PrimitiveStore {
                             });
                         }
                     }
-                    AlphaBatchKind::Image => {
+                    AlphaBatchKind::Image |
+                    AlphaBatchKind::ImageRect => {
                         let image_cpu = &self.cpu_images[metadata.cpu_prim_index.0];
 
                         data.push(PrimitiveInstance {
@@ -854,6 +874,46 @@ pub struct RenderTargetContext<'a> {
     pub resource_cache: &'a ResourceCache,
 }
 
+struct TextureAllocator {
+    // TODO(gw): Replace this with a simpler allocator for
+    // render target allocation - this use case doesn't need
+    // to deal with coalescing etc that the general texture
+    // cache allocator requires.
+    page_allocator: TexturePage,
+
+    // Track the used rect of the render target, so that
+    // we can set a scissor rect and only clear to the
+    // used portion of the target as an optimization.
+    used_rect: DeviceIntRect,
+}
+
+impl TextureAllocator {
+    fn new(size: DeviceUintSize) -> TextureAllocator {
+        TextureAllocator {
+            page_allocator: TexturePage::new(CacheTextureId(0), size),
+            used_rect: DeviceIntRect::zero(),
+        }
+    }
+
+    fn allocate(&mut self, size: &DeviceUintSize) -> Option<DeviceUintPoint> {
+        let origin = self.page_allocator.allocate(size);
+
+        if let Some(origin) = origin {
+            // TODO(gw): We need to make all the device rects
+            //           be consistent in the use of the
+            //           DeviceIntRect and DeviceUintRect types!
+            let origin = DeviceIntPoint::new(origin.x as i32,
+                                             origin.y as i32);
+            let size = DeviceIntSize::new(size.width as i32,
+                                          size.height as i32);
+            let rect = DeviceIntRect::new(origin, size);
+            self.used_rect = rect.union(&self.used_rect);
+        }
+
+        origin
+    }
+}
+
 pub trait RenderTarget {
     fn new(size: DeviceUintSize) -> Self;
     fn allocate(&mut self, size: DeviceUintSize) -> Option<DeviceUintPoint>;
@@ -866,6 +926,7 @@ pub trait RenderTarget {
                 ctx: &RenderTargetContext,
                 render_tasks: &RenderTaskCollection,
                 pass_index: RenderPassIndex);
+    fn used_rect(&self) -> DeviceIntRect;
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -953,12 +1014,12 @@ pub struct ColorRenderTarget {
     pub horizontal_blurs: Vec<BlurCommand>,
     pub readbacks: Vec<DeviceIntRect>,
     pub isolate_clears: Vec<DeviceIntRect>,
-    page_allocator: TexturePage,
+    allocator: TextureAllocator,
 }
 
 impl RenderTarget for ColorRenderTarget {
     fn allocate(&mut self, size: DeviceUintSize) -> Option<DeviceUintPoint> {
-        self.page_allocator.allocate(&size)
+        self.allocator.allocate(&size)
     }
 
     fn new(size: DeviceUintSize) -> ColorRenderTarget {
@@ -971,8 +1032,12 @@ impl RenderTarget for ColorRenderTarget {
             horizontal_blurs: Vec::new(),
             readbacks: Vec::new(),
             isolate_clears: Vec::new(),
-            page_allocator: TexturePage::new(CacheTextureId(0), size),
+            allocator: TextureAllocator::new(size),
         }
+    }
+
+    fn used_rect(&self) -> DeviceIntRect {
+        self.allocator.used_rect
     }
 
     fn build(&mut self,
@@ -1099,19 +1164,23 @@ impl RenderTarget for ColorRenderTarget {
 
 pub struct AlphaRenderTarget {
     pub clip_batcher: ClipBatcher,
-    page_allocator: TexturePage,
+    allocator: TextureAllocator,
 }
 
 impl RenderTarget for AlphaRenderTarget {
     fn allocate(&mut self, size: DeviceUintSize) -> Option<DeviceUintPoint> {
-        self.page_allocator.allocate(&size)
+        self.allocator.allocate(&size)
     }
 
     fn new(size: DeviceUintSize) -> AlphaRenderTarget {
         AlphaRenderTarget {
             clip_batcher: ClipBatcher::new(),
-            page_allocator: TexturePage::new(CacheTextureId(0), size),
+            allocator: TextureAllocator::new(size),
         }
+    }
+
+    fn used_rect(&self) -> DeviceIntRect {
+        self.allocator.used_rect
     }
 
     fn add_task(&mut self,
@@ -1261,6 +1330,7 @@ pub enum AlphaBatchKind {
     Rectangle,
     TextRun,
     Image,
+    ImageRect,
     YuvImage,
     Border,
     AlignedGradient,
@@ -1391,6 +1461,7 @@ impl PrimitiveBatch {
             AlphaBatchKind::Rectangle |
             AlphaBatchKind::TextRun |
             AlphaBatchKind::Image |
+            AlphaBatchKind::ImageRect |
             AlphaBatchKind::YuvImage |
             AlphaBatchKind::Border |
             AlphaBatchKind::AlignedGradient |

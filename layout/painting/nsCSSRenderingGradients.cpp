@@ -1029,11 +1029,9 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
     stops[i].offset = mStops[i].mPosition;
   }
 
-  double firstStop = mStops[0].mPosition;
-  double lastStop = mStops[mStops.Length() - 1].mPosition;
-
   LayoutDevicePoint lineStart = LayoutDevicePoint(mLineStart.x, mLineStart.y);
   LayoutDevicePoint lineEnd = LayoutDevicePoint(mLineEnd.x, mLineEnd.y);
+  LayoutDeviceSize gradientRadius = LayoutDeviceSize(mRadiusX, mRadiusY);
 
   // Do a naive tiling of the gradient by making multiple display items
   // TODO: this should be done on the WebRender side eventually
@@ -1073,17 +1071,11 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
       } else {
         LayoutDevicePoint relativeGradientCenter = lineStart + tileOffset;
 
-        // TODO: ellipse gradients
-        double innerRadius = mRadiusX * firstStop;
-        double outerRadius = mRadiusX * lastStop;
-
         aBuilder.PushRadialGradient(
           mozilla::wr::ToWrRect(tileRect),
           aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(clipBounds)),
           mozilla::wr::ToWrPoint(relativeGradientCenter),
-          mozilla::wr::ToWrPoint(relativeGradientCenter),
-          innerRadius,
-          outerRadius,
+          mozilla::wr::ToWrSize(gradientRadius),
           stops,
           extendMode);
       }
