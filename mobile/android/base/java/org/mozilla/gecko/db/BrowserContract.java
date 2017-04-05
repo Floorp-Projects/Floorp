@@ -50,6 +50,7 @@ public class BrowserContract {
     public static final String PARAM_IS_SYNC = "sync";
     public static final String PARAM_SHOW_DELETED = "show_deleted";
     public static final String PARAM_IS_TEST = "test";
+    public static final String PARAM_OLD_BOOKMARK_PARENT = "old_bookmark_parent";
     public static final String PARAM_INSERT_IF_NEEDED = "insert_if_needed";
     public static final String PARAM_INCREMENT_VISITS = "increment_visits";
     public static final String PARAM_INCREMENT_REMOTE_AGGREGATES = "increment_remote_aggregates";
