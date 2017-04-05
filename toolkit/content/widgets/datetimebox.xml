@@ -89,11 +89,8 @@
                 fragment.appendChild(this.mDayField);
                 break;
               default:
-                // Remove bidirectional formatting characters, we'll handle
-                // directions on our own.
-                let value = this.stripDirFormattingChars(part.value);
                 let span = document.createElementNS(HTML_NS, "span");
-                span.textContent = value;
+                span.textContent = part.value;
                 fragment.appendChild(span);
                 break;
             }
@@ -600,11 +597,8 @@
                 fragment.appendChild(this.mDayPeriodField);
                 break;
               default:
-                // Remove bidirectional formatting characters, we'll handle
-                // directions on our own.
-                let value = this.stripDirFormattingChars(part.value);
                 let span = document.createElementNS(HTML_NS, "span");
-                span.textContent = value;
+                span.textContent = part.value;
                 fragment.appendChild(span);
                 break;
             }
@@ -1090,7 +1084,7 @@
     </resources>
 
     <content>
-      <html:div class="datetime-input-box-wrapper"
+      <html:div class="datetime-input-box-wrapper" anonid="input-box-wrapper"
                 xbl:inherits="context,disabled,readonly">
         <html:span class="datetime-input-edit-wrapper"
                    anonid="edit-wrapper">
@@ -1109,6 +1103,20 @@
         this.DEBUG = false;
         this.mInputElement = this.parentNode;
         this.mLocales = window.getAppLocalesAsBCP47();
+
+        this.mIsRTL = false;
+        let intlUtils = window.intlUtils;
+        if (intlUtils) {
+          this.mIsRTL =
+            intlUtils.getLocaleInfo(this.mLocales).direction === "rtl";
+        }
+
+        if (this.mIsRTL) {
+          let inputBoxWrapper =
+            document.getAnonymousElementByAttribute(this, "anonid",
+                                                    "input-box-wrapper");
+          inputBoxWrapper.dir = "rtl";
+        }
 
         this.mMin = this.mInputElement.min;
         this.mMax = this.mInputElement.max;
@@ -1206,6 +1214,13 @@
             // Maximum length for the field, will be advance to the next field
             // automatically if exceeded.
             field.setAttribute("maxlength", aMaxLength);
+
+            if (this.mIsRTL) {
+              // Override the numeric field with "ltr", so that it stays in the
+              // same order even when it's empty (with placeholder).
+              field.style.unicodeBidi = "bidi-override";
+              field.style.direction = "ltr";
+            }
           }
 
           return field;
@@ -1400,20 +1415,6 @@
         <parameter name="aValue"/>
         <body>
           return (aValue == undefined || 0 === aValue.length);
-        </body>
-      </method>
-
-      <method name="stripDirFormattingChars">
-        <parameter name="aString"/>
-        <body>
-        <![CDATA[
-          // Strip bidirectional formatting characters.
-          // http://www.unicode.org/reports/tr9/#Directional_Formatting_Characters
-          let str = aString.replace(
-            /[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g, "");
-
-          return str;
-        ]]>
         </body>
       </method>
 
