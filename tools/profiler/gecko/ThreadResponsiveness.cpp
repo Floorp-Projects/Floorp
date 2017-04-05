@@ -95,12 +95,8 @@ ThreadResponsiveness::~ThreadResponsiveness()
 }
 
 void
-ThreadResponsiveness::Update(bool aIsMainThread, nsIThread* aThread)
+ThreadResponsiveness::Update()
 {
-  if (!aIsMainThread) {
-    return;
-  }
-
   if (!mActiveTracerEvent) {
     mActiveTracerEvent = new CheckResponsivenessTask();
     NS_DispatchToMainThread(mActiveTracerEvent);

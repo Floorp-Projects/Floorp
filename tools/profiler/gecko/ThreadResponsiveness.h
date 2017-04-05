@@ -12,14 +12,14 @@
 
 class CheckResponsivenessTask;
 
+// This class should only be used for the main thread.
 class ThreadResponsiveness {
 public:
   explicit ThreadResponsiveness();
 
   ~ThreadResponsiveness();
 
-  // Won't do anything on non-main threads for now.
-  void Update(bool aIsMainThread, nsIThread* aThread);
+  void Update();
 
   mozilla::TimeDuration GetUnresponsiveDuration(const mozilla::TimeStamp& now) const {
     return now - mLastTracerTime;
