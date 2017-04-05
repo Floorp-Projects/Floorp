@@ -275,6 +275,10 @@ RootActor.prototype = {
     let selected;
     return tabList.getList().then((tabActors) => {
       for (let tabActor of tabActors) {
+        if (tabActor.exited) {
+          // Tab actor may have exited while we were gathering the list.
+          continue;
+        }
         if (tabActor.selected) {
           selected = tabActorList.length;
         }

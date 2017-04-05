@@ -12,39 +12,24 @@
 SimpleTest.requestCompleteLog();
 SimpleTest.waitForExplicitFinish();
 
-
-SpecialPowers.pushPrefEnv({
-  set: [
-    [ "dom.disable_open_during_load", false ]
-  ]
-}).then(function() {
-  info("after pref");
-  var sub = encodeURI("data:text/html,<!DOCTYPE html>\n"+
-                      "<html><script>"+
-                      "var context = new AudioContext();"+
-                      "setTimeout(function(){window.close();},1000);\x3C/script></html>");
-  window.onload = function(){
-    info("after onload");
-    var a = window.open(sub);
-    info("after open: " + a);
-    a.onbeforeunload = function(){
-      setTimeout(function(){
-        try {
-          info("before sp");
-          a.context.createScriptProcessor(512, 1, 1);
-          info("after sp");
-        } catch(e) {
-          ok (true,"got exception");
-        }
-        setTimeout(function() {
-          info("finish");
-          ok (true,"no crash");
-          SimpleTest.finish();
-        }, 0);
-      }, 0);
-    };
-  };
-});
+var sub = encodeURI("data:text/html,<!DOCTYPE html>\n"+
+                    "<html><script>"+
+                    "var context = new AudioContext();"+
+                    "setTimeout(function(){window.close();},1000);\x3C/script></html>");
+var a = window.open(sub);
+a.onbeforeunload = function() {
+  setTimeout(function(){
+    try {
+      a.context.createScriptProcessor(512, 1, 1);
+    } catch(e) {
+      ok (true,"got exception");
+    }
+    setTimeout(function() {
+      ok (true,"no crash");
+      SimpleTest.finish();
+    }, 0);
+  }, 0);
+}
 
 
 </script>

@@ -87,6 +87,14 @@ class Span;
 // implementation details
 namespace span_details {
 
+inline size_t strlen16(const char16_t* aZeroTerminated) {
+  size_t len = 0;
+  while (*(aZeroTerminated++)) {
+    len++;
+  }
+  return len;
+}
+
 // C++14 types that we don't have because we build as C++11.
 template<class T>
 using remove_cv_t = typename mozilla::RemoveCV<T>::Type;
@@ -391,11 +399,11 @@ private:
  * (via constructor or MakeSpan()) from a pointer and a length or a pointer
  * and another pointer pointing just past the last element.
  *
- * A Span<const char> can be obtained for const char* pointing to a
- * zero-terminated C string using the MakeCStringSpan() function. A
- * corresponding implicit constructor does not exist in order to avoid
- * accidental construction in cases where const char* does not point to a
- * zero-terminated C string.
+ * A Span<const char> or Span<const char16_t> can be obtained for const char*
+ * or const char16_t pointing to a zero-terminated string using the
+ * MakeStringSpan() function. Corresponding implicit constructor does not exist
+ * in order to avoid accidental construction in cases where const char* or
+ * const char16_t* do not point to a zero-terminated string.
  *
  * Span has methods that follow the Mozilla naming style and methods that
  * don't. The methods that follow the Mozilla naming style are meant to be
@@ -1015,9 +1023,18 @@ MakeSpan(Ptr& aPtr, size_t aLength)
  * Create span from C string.
  */
 inline Span<const char>
-MakeCStringSpan(const char* aStr)
+MakeStringSpan(const char* aZeroTerminated)
 {
-  return Span<const char>(aStr, std::strlen(aStr));
+  return Span<const char>(aZeroTerminated, std::strlen(aZeroTerminated));
+}
+
+/**
+ * Create span from UTF-16 C string.
+ */
+inline Span<const char16_t>
+MakeStringSpan(const char16_t* aZeroTerminated)
+{
+  return Span<const char16_t>(aZeroTerminated, span_details::strlen16(aZeroTerminated));
 }
 
 } // namespace mozilla
