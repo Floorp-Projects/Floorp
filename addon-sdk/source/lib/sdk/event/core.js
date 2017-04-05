@@ -102,7 +102,7 @@ function emitOnObject(target, type, thisArg, ...args) {
   let count = listenerCount;
   for (let [listener, added] of listeners)
     try {
-      // Since our contract unfortuantely requires that we not dispatch to
+      // Since our contract unfortunately requires that we not dispatch to
       // this event to listeners that were either added or removed during this
       // dispatch, we need to check when each listener was added.
       if (added >= count)

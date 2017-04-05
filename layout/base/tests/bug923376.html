@@ -4,8 +4,8 @@
 <script>
 var div = document.body.firstChild;
 div.focus();
-SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm",
-                        window);
+SpecialPowers.Cu.import(
+  "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
 onSpellCheck(div, function() {
   div.innerHTML = 'something missspelled<br>something elsed#';
   onSpellCheck(div, function() {

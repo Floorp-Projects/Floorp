@@ -39,7 +39,7 @@
 /* Toolbars */
 .devtools-toolbar,
 .devtools-sidebar-tabs tabs {
-  -moz-appearance: none; appearance: none;
+  -moz-appearance: none;
   padding: 0;
   border-width: 0;
   border-bottom-width: 1px;
@@ -72,6 +72,11 @@
 .devtools-toolbar checkbox .checkbox-label-box .checkbox-label {
   margin: 0 6px !important; /* overrides .checkbox-label from checkbox.css */
   padding: 0;
+}
+
+.devtools-toolbar-bottom {
+  border-top-width: 1px;
+  border-bottom: none;
 }
 
 .devtools-separator {

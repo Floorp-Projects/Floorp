@@ -58,7 +58,8 @@
           appendMessage(`${event.type}(` +
               `code: ${event.code}, ` +
               `key: ${key}, ` +
-              `which: ${event.which})`);
+              `which: ${event.which}, ` +
+              `keyCode: ${event.keyCode})`);
         }
 
         function recordPointerEvent(event) {

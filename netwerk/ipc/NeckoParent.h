@@ -227,7 +227,7 @@ protected:
                                                 const OriginAttributes& aOriginAttributes) override;
   virtual mozilla::ipc::IPCResult RecvPredReset() override;
 
-  virtual mozilla::ipc::IPCResult RecvRemoveRequestContext(const nsCString& rcid) override;
+  virtual mozilla::ipc::IPCResult RecvRemoveRequestContext(const uint64_t& rcid) override;
 
   /* Throttler messages */
   virtual mozilla::ipc::IPCResult RecvIncreaseThrottlePressure() override;

@@ -210,30 +210,12 @@ ifeq ($(MOZ_PKG_FORMAT),DMG)
   PKG_DMG_SOURCE = $(MOZ_PKG_DIR)
   INNER_MAKE_PACKAGE	= $(call py_action,make_dmg,'$(PKG_DMG_SOURCE)' '$(PACKAGE)')
   INNER_UNMAKE_PACKAGE	= \
-    set -ex; \
-    rm -rf $(ABS_DIST)/unpack.tmp; \
-    mkdir -p $(ABS_DIST)/unpack.tmp; \
-    $(_ABS_MOZSRCDIR)/build/package/mac_osx/unpack-diskimage $(UNPACKAGE) /tmp/$(MOZ_PKG_APPNAME)-unpack $(ABS_DIST)/unpack.tmp; \
-    rsync -a '$(ABS_DIST)/unpack.tmp/$(_APPNAME)' $(MOZ_PKG_DIR); \
-    if test -n '$(MOZ_PKG_MAC_DSSTORE)' ; then \
-      mkdir -p '$(dir $(MOZ_PKG_MAC_DSSTORE))'; \
-      rsync -a '$(ABS_DIST)/unpack.tmp/.DS_Store' '$(MOZ_PKG_MAC_DSSTORE)'; \
-    fi; \
-    if test -n '$(MOZ_PKG_MAC_BACKGROUND)' ; then \
-      mkdir -p '$(dir $(MOZ_PKG_MAC_BACKGROUND))'; \
-      rsync -a '$(ABS_DIST)/unpack.tmp/.background/$(notdir $(MOZ_PKG_MAC_BACKGROUND))' '$(MOZ_PKG_MAC_BACKGROUND)'; \
-    fi; \
-    if test -n '$(MOZ_PKG_MAC_ICON)' ; then \
-      mkdir -p '$(dir $(MOZ_PKG_MAC_ICON))'; \
-      rsync -a '$(ABS_DIST)/unpack.tmp/.VolumeIcon.icns' '$(MOZ_PKG_MAC_ICON)'; \
-    fi; \
-    rm -rf $(ABS_DIST)/unpack.tmp; \
-    if test -n '$(MOZ_PKG_MAC_RSRC)' ; then \
-      cp $(UNPACKAGE) $(MOZ_PKG_APPNAME).tmp.dmg && \
-      hdiutil unflatten $(MOZ_PKG_APPNAME).tmp.dmg && \
-      { /Developer/Tools/DeRez -skip plst -skip blkx $(MOZ_PKG_APPNAME).tmp.dmg > '$(MOZ_PKG_MAC_RSRC)' || { rm -f $(MOZ_PKG_APPNAME).tmp.dmg && false; }; } && \
-      rm -f $(MOZ_PKG_APPNAME).tmp.dmg; \
-    fi
+    $(call py_action,unpack_dmg, \
+        $(if $(MOZ_PKG_MAC_DSSTORE),--dsstore '$(MOZ_PKG_MAC_DSSTORE)') \
+        $(if $(MOZ_PKG_MAC_BACKGROUND),--background '$(MOZ_PKG_MAC_BACKGROUND)') \
+        $(if $(MOZ_PKG_MAC_ICON),--icon '$(MOZ_PKG_MAC_ICON)') \
+        '$(UNPACKAGE)' '$(MOZ_PKG_DIR)' \
+        )
 endif
 
 ifdef MOZ_INTERNAL_SIGNING_FORMAT

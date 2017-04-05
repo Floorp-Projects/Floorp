@@ -264,6 +264,14 @@ CrossProcessCompositorBridgeParent::RecvNotifyChildCreated(const uint64_t& child
   return IPC_FAIL_NO_REASON(this);
 }
 
+mozilla::ipc::IPCResult
+CrossProcessCompositorBridgeParent::RecvMapAndNotifyChildCreated(const uint64_t& child, const base::ProcessId& pid)
+{
+  // This can only be called from the browser process, as the mapping
+  // ensures proper window ownership of layer trees.
+  return IPC_FAIL_NO_REASON(this);
+}
+
 void
 CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
   LayerTransactionParent* aLayerTree,

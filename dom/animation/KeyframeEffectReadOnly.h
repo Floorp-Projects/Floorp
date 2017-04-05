@@ -455,6 +455,11 @@ protected:
   // (i.e. it uses the additive or accumulate composite mode).
   nsDataHashtable<nsUint32HashKey, StyleAnimationValue> mBaseStyleValues;
 
+  // We only want to record telemetry data for "ContentTooLarge" warnings once
+  // per effect:target pair so we use this member to record if we have already
+  // reported a "ContentTooLarge" warning for the current target.
+  bool mRecordedContentTooLarge = false;
+
 private:
   nsChangeHint mCumulativeChangeHint;
 

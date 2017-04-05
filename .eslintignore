@@ -55,11 +55,9 @@ b2g/locales/en-US/b2g-l10n.js
 # browser/ exclusions
 browser/app/**
 browser/branding/**/firefox-branding.js
-browser/base/content/sanitizeDialog.js
 browser/base/content/test/general/file_csp_block_all_mixedcontent.html
 browser/base/content/test/urlbar/file_blank_but_not_blank.html
 browser/base/content/newtab/**
-browser/components/downloads/**
 # Test files that are really json not js, and don't need to be linted.
 browser/components/sessionstore/test/unit/data/sessionstore_valid.js
 browser/components/sessionstore/test/unit/data/sessionstore_invalid.js
@@ -72,6 +70,8 @@ browser/extensions/pdfjs/content/web**
 browser/extensions/pocket/content/panels/js/tmpl.js
 browser/extensions/pocket/content/panels/js/vendor/**
 browser/locales/**
+# vendor library files in activity-stream
+browser/extensions/activity-stream/vendor/**
 # imported from chromium
 browser/extensions/mortar/**
 

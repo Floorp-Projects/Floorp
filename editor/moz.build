@@ -38,7 +38,7 @@ EXPORTS += [
     'nsEditorCID.h',
 ]
 
-EXTRA_JS_MODULES += [
+TESTING_JS_MODULES += [
     'AsyncSpellCheckTestHelper.jsm',
 ]
 

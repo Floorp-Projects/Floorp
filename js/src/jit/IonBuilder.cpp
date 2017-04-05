@@ -1961,6 +1961,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_newobject();
 
       case JSOP_NEWARRAY:
+      case JSOP_SPREADCALLARRAY:
         return jsop_newarray(GET_UINT32(pc));
 
       case JSOP_NEWARRAY_COPYONWRITE:
@@ -2011,6 +2012,9 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_FUNAPPLY:
         return jsop_funapply(GET_ARGC(pc));
+
+      case JSOP_SPREADCALL:
+        return jsop_spreadcall();
 
       case JSOP_CALL:
       case JSOP_CALL_IGNORES_RV:
@@ -5051,6 +5055,45 @@ IonBuilder::jsop_funapply(uint32_t argc)
 }
 
 AbortReasonOr<Ok>
+IonBuilder::jsop_spreadcall()
+{
+    // The arguments array is constructed by a JSOP_SPREADCALLARRAY and not
+    // leaked to user. The complications of spread call iterator behaviour are
+    // handled when the user objects are expanded and copied into this hidden
+    // array.
+
+#ifdef DEBUG
+    // If we know class, ensure it is what we expected
+    MDefinition* argument = current->peek(-1);
+    if (TemporaryTypeSet* objTypes = argument->resultTypeSet())
+        if (const Class* clasp = objTypes->getKnownClass(constraints()))
+            MOZ_ASSERT(clasp == &ArrayObject::class_);
+#endif
+
+    MDefinition* argArr = current->pop();
+    MDefinition* argThis = current->pop();
+    MDefinition* argFunc = current->pop();
+
+    // Extract call target.
+    TemporaryTypeSet* funTypes = argFunc->resultTypeSet();
+    JSFunction* target = getSingleCallTarget(funTypes);
+    WrappedFunction* wrappedTarget = target ? new(alloc()) WrappedFunction(target) : nullptr;
+
+    // Dense elements of argument array
+    MElements* elements = MElements::New(alloc(), argArr);
+    current->add(elements);
+
+    MApplyArray* apply = MApplyArray::New(alloc(), wrappedTarget, argFunc, elements, argThis);
+    current->add(apply);
+    current->push(apply);
+    MOZ_TRY(resumeAfter(apply));
+
+    // TypeBarrier the call result
+    TemporaryTypeSet* types = bytecodeTypes(pc);
+    return pushTypeBarrier(apply, types, BarrierKind::TypeSet);
+}
+
+AbortReasonOr<Ok>
 IonBuilder::jsop_funapplyarray(uint32_t argc)
 {
     MOZ_ASSERT(argc == 2);
@@ -5771,25 +5814,21 @@ IonBuilder::compareTrySharedStub(bool* emitted, JSOp op, MDefinition* left, MDef
     return Ok();
 }
 
-static bool
-IsCallOpcode(JSOp op)
-{
-    // TODO: Support tracking optimizations for inlining a call and regular
-    // optimization tracking at the same time.
-    return op == JSOP_CALL || op == JSOP_CALL_IGNORES_RV || op == JSOP_CALLITER || op == JSOP_NEW ||
-           op == JSOP_SUPERCALL || op == JSOP_EVAL || op == JSOP_STRICTEVAL;
-}
-
 AbortReasonOr<Ok>
 IonBuilder::newArrayTryTemplateObject(bool* emitted, JSObject* templateObject, uint32_t length)
 {
     MOZ_ASSERT(*emitted == false);
 
-    if (!IsCallOpcode(JSOp(*pc)))
+    // TODO: Support tracking optimizations for inlining a call and regular
+    // optimization tracking at the same time. Currently just drop optimization
+    // tracking when that happens.
+    bool canTrackOptimization = !IsCallPC(pc);
+
+    if (canTrackOptimization)
         trackOptimizationAttempt(TrackedStrategy::NewArray_TemplateObject);
 
     if (!templateObject) {
-        if (!IsCallOpcode(JSOp(*pc)))
+        if (canTrackOptimization)
             trackOptimizationOutcome(TrackedOutcome::NoTemplateObject);
         return Ok();
     }
@@ -5797,7 +5836,7 @@ IonBuilder::newArrayTryTemplateObject(bool* emitted, JSObject* templateObject, u
     if (templateObject->is<UnboxedArrayObject>()) {
         MOZ_ASSERT(templateObject->as<UnboxedArrayObject>().capacity() >= length);
         if (!templateObject->as<UnboxedArrayObject>().hasInlineElements()) {
-            if (!IsCallOpcode(JSOp(*pc)))
+            if (canTrackOptimization)
                 trackOptimizationOutcome(TrackedOutcome::TemplateObjectIsUnboxedWithoutInlineElements);
             return Ok();
         }
@@ -5809,7 +5848,7 @@ IonBuilder::newArrayTryTemplateObject(bool* emitted, JSObject* templateObject, u
         gc::GetGCKindSlots(templateObject->asTenured().getAllocKind()) - ObjectElements::VALUES_PER_HEADER;
 
     if (length > arraySlots) {
-        if (!IsCallOpcode(JSOp(*pc)))
+        if (canTrackOptimization)
             trackOptimizationOutcome(TrackedOutcome::LengthTooBig);
         return Ok();
     }
@@ -5824,7 +5863,7 @@ IonBuilder::newArrayTryTemplateObject(bool* emitted, JSObject* templateObject, u
     current->add(ins);
     current->push(ins);
 
-    if (!IsCallOpcode(JSOp(*pc)))
+    if (canTrackOptimization)
         trackOptimizationSuccess();
     *emitted = true;
     return Ok();
@@ -5835,6 +5874,11 @@ IonBuilder::newArrayTrySharedStub(bool* emitted)
 {
     MOZ_ASSERT(*emitted == false);
 
+    // TODO: Support tracking optimizations for inlining a call and regular
+    // optimization tracking at the same time. Currently just drop optimization
+    // tracking when that happens.
+    bool canTrackOptimization = !IsCallPC(pc);
+
     // Try to emit a shared stub cache.
 
     if (JitOptions.disableSharedStubs)
@@ -5843,7 +5887,7 @@ IonBuilder::newArrayTrySharedStub(bool* emitted)
     if (*pc != JSOP_NEWINIT && *pc != JSOP_NEWARRAY)
         return Ok();
 
-    if (!IsCallOpcode(JSOp(*pc)))
+    if (canTrackOptimization)
         trackOptimizationAttempt(TrackedStrategy::NewArray_SharedCache);
 
     MInstruction* stub = MNullarySharedStub::New(alloc());
@@ -5856,7 +5900,7 @@ IonBuilder::newArrayTrySharedStub(bool* emitted)
     current->add(unbox);
     current->push(unbox);
 
-    if (!IsCallOpcode(JSOp(*pc)))
+    if (canTrackOptimization)
         trackOptimizationSuccess();
 
     *emitted = true;
@@ -5868,8 +5912,13 @@ IonBuilder::newArrayTryVM(bool* emitted, JSObject* templateObject, uint32_t leng
 {
     MOZ_ASSERT(*emitted == false);
 
+    // TODO: Support tracking optimizations for inlining a call and regular
+    // optimization tracking at the same time. Currently just drop optimization
+    // tracking when that happens.
+    bool canTrackOptimization = !IsCallPC(pc);
+
     // Emit a VM call.
-    if (!IsCallOpcode(JSOp(*pc)))
+    if (canTrackOptimization)
         trackOptimizationAttempt(TrackedStrategy::NewArray_Call);
 
     gc::InitialHeap heap = gc::DefaultHeap;
@@ -5886,7 +5935,7 @@ IonBuilder::newArrayTryVM(bool* emitted, JSObject* templateObject, uint32_t leng
     current->add(ins);
     current->push(ins);
 
-    if (!IsCallOpcode(JSOp(*pc)))
+    if (canTrackOptimization)
         trackOptimizationSuccess();
     *emitted = true;
     return Ok();
@@ -5911,8 +5960,13 @@ IonBuilder::jsop_newarray(uint32_t length)
 AbortReasonOr<Ok>
 IonBuilder::jsop_newarray(JSObject* templateObject, uint32_t length)
 {
+    // TODO: Support tracking optimizations for inlining a call and regular
+    // optimization tracking at the same time. Currently just drop optimization
+    // tracking when that happens.
+    bool canTrackOptimization = !IsCallPC(pc);
+
     bool emitted = false;
-    if (!IsCallOpcode(JSOp(*pc)))
+    if (canTrackOptimization)
         startTrackingOptimizations();
 
     if (!forceInlineCaches()) {
@@ -5959,16 +6013,21 @@ IonBuilder::newObjectTryTemplateObject(bool* emitted, JSObject* templateObject)
 {
     MOZ_ASSERT(*emitted == false);
 
-    if (!IsCallOpcode(JSOp(*pc)))
+    // TODO: Support tracking optimizations for inlining a call and regular
+    // optimization tracking at the same time. Currently just drop optimization
+    // tracking when that happens.
+    bool canTrackOptimization = !IsCallPC(pc);
+
+    if (canTrackOptimization)
         trackOptimizationAttempt(TrackedStrategy::NewObject_TemplateObject);
     if (!templateObject) {
-        if (!IsCallOpcode(JSOp(*pc)))
+        if (canTrackOptimization)
             trackOptimizationOutcome(TrackedOutcome::NoTemplateObject);
         return Ok();
     }
 
     if (templateObject->is<PlainObject>() && templateObject->as<PlainObject>().hasDynamicSlots()) {
-        if (!IsCallOpcode(JSOp(*pc)))
+        if (canTrackOptimization)
             trackOptimizationOutcome(TrackedOutcome::TemplateObjectIsPlainObjectWithDynamicSlots);
         return Ok();
     }
@@ -5991,7 +6050,7 @@ IonBuilder::newObjectTryTemplateObject(bool* emitted, JSObject* templateObject)
 
     MOZ_TRY(resumeAfter(ins));
 
-    if (!IsCallOpcode(JSOp(*pc)))
+    if (canTrackOptimization)
         trackOptimizationSuccess();
     *emitted = true;
     return Ok();
@@ -6002,12 +6061,17 @@ IonBuilder::newObjectTrySharedStub(bool* emitted)
 {
     MOZ_ASSERT(*emitted == false);
 
+    // TODO: Support tracking optimizations for inlining a call and regular
+    // optimization tracking at the same time. Currently just drop optimization
+    // tracking when that happens.
+    bool canTrackOptimization = !IsCallPC(pc);
+
     // Try to emit a shared stub cache.
 
     if (JitOptions.disableSharedStubs)
         return Ok();
 
-    if (!IsCallOpcode(JSOp(*pc)))
+    if (canTrackOptimization)
         trackOptimizationAttempt(TrackedStrategy::NewObject_SharedCache);
 
     MInstruction* stub = MNullarySharedStub::New(alloc());
@@ -6020,7 +6084,7 @@ IonBuilder::newObjectTrySharedStub(bool* emitted)
     current->add(unbox);
     current->push(unbox);
 
-    if (!IsCallOpcode(JSOp(*pc)))
+    if (canTrackOptimization)
         trackOptimizationSuccess();
     *emitted = true;
     return Ok();
@@ -6032,8 +6096,7 @@ IonBuilder::newObjectTryVM(bool* emitted, JSObject* templateObject)
     // Emit a VM call.
     MOZ_ASSERT(JSOp(*pc) == JSOP_NEWOBJECT || JSOp(*pc) == JSOP_NEWINIT);
 
-    if (!IsCallOpcode(JSOp(*pc)))
-        trackOptimizationAttempt(TrackedStrategy::NewObject_Call);
+    trackOptimizationAttempt(TrackedStrategy::NewObject_Call);
 
     gc::InitialHeap heap = gc::DefaultHeap;
     MConstant* templateConst = MConstant::New(alloc(), NullValue());
@@ -6052,8 +6115,7 @@ IonBuilder::newObjectTryVM(bool* emitted, JSObject* templateObject)
 
     MOZ_TRY(resumeAfter(ins));
 
-    if (!IsCallOpcode(JSOp(*pc)))
-        trackOptimizationSuccess();
+    trackOptimizationSuccess();
     *emitted = true;
     return Ok();
 }

@@ -19,7 +19,6 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsICSSLoaderObserver.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsString.h"
 #include "mozilla/CORSMode.h"
@@ -87,7 +86,6 @@ struct CSSStyleSheetInner : public StyleSheetInfo
 
 
 class CSSStyleSheet final : public StyleSheet
-                          , public nsICSSLoaderObserver
 {
 public:
   typedef net::ReferrerPolicy ReferrerPolicy;

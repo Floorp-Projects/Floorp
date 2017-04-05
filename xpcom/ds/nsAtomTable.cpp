@@ -325,13 +325,7 @@ AtomTableMatchKey(const PLDHashEntryHdr* aEntry, const void* aKey)
                          nsDependentAtomString(he->mAtom)) == 0;
   }
 
-  uint32_t length = he->mAtom->GetLength();
-  if (length != k->mLength) {
-    return false;
-  }
-
-  return memcmp(he->mAtom->GetUTF16String(),
-                k->mUTF16String, length * sizeof(char16_t)) == 0;
+  return he->mAtom->Equals(k->mUTF16String, k->mLength);
 }
 
 static void
@@ -364,17 +358,28 @@ static const PLDHashTableOps AtomTableOps = {
 
 //----------------------------------------------------------------------
 
+#define RECENTLY_USED_MAIN_THREAD_ATOM_CACHE_SIZE 31
+static nsIAtom*
+  sRecentlyUsedMainThreadAtoms[RECENTLY_USED_MAIN_THREAD_ATOM_CACHE_SIZE] = {};
+
 void
 DynamicAtom::GCAtomTable()
 {
-  MutexAutoLock lock(*gAtomTableLock);
-  GCAtomTableLocked(lock, GCKind::RegularOperation);
+  if (NS_IsMainThread()) {
+    MutexAutoLock lock(*gAtomTableLock);
+    GCAtomTableLocked(lock, GCKind::RegularOperation);
+  }
 }
 
 void
 DynamicAtom::GCAtomTableLocked(const MutexAutoLock& aProofOfLock,
                                GCKind aKind)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  for (uint32_t i = 0; i < RECENTLY_USED_MAIN_THREAD_ATOM_CACHE_SIZE; ++i) {
+    sRecentlyUsedMainThreadAtoms[i] = nullptr;
+  }
+
   uint32_t removedCount = 0; // Use a non-atomic temporary for cheaper increments.
   nsAutoCString nonZeroRefcountAtoms;
   uint32_t nonZeroRefcountAtomsCount = 0;
@@ -723,6 +728,40 @@ NS_Atomize(const nsAString& aUTF16String)
   he->mAtom = atom;
 
   return atom.forget();
+}
+
+already_AddRefed<nsIAtom>
+NS_AtomizeMainThread(const nsAString& aUTF16String)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIAtom> retVal;
+  uint32_t hash;
+  AtomTableKey key(aUTF16String.Data(), aUTF16String.Length(), &hash);
+  uint32_t index = hash % RECENTLY_USED_MAIN_THREAD_ATOM_CACHE_SIZE;
+  nsIAtom* atom =
+    sRecentlyUsedMainThreadAtoms[index];
+  if (atom) {
+    uint32_t length = atom->GetLength();
+    if (length == key.mLength &&
+        (memcmp(atom->GetUTF16String(),
+                key.mUTF16String, length * sizeof(char16_t)) == 0)) {
+      retVal = atom;
+      return retVal.forget();
+    }
+  }
+
+  MutexAutoLock lock(*gAtomTableLock);
+  AtomTableEntry* he = static_cast<AtomTableEntry*>(gAtomTable->Add(&key));
+
+  if (he->mAtom) {
+    retVal = he->mAtom;
+  } else {
+    retVal = DynamicAtom::Create(aUTF16String, hash);
+    he->mAtom = retVal;
+  }
+
+  sRecentlyUsedMainThreadAtoms[index] = retVal;
+  return retVal.forget();
 }
 
 nsrefcnt

@@ -3498,8 +3498,13 @@ nsPrintEngine::StartPagePrintTimer(const UniquePtr<nsPrintObject>& aPO)
     int32_t printPageDelay = 50;
     mPrt->mPrintSettings->GetPrintPageDelay(&printPageDelay);
 
+    nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint);
+    NS_ENSURE_TRUE(cv, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDocument> doc = cv->GetDocument();
+    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
     RefPtr<nsPagePrintTimer> timer =
-      new nsPagePrintTimer(this, mDocViewerPrint, printPageDelay);
+      new nsPagePrintTimer(this, mDocViewerPrint, doc, printPageDelay);
     timer.forget(&mPagePrintTimer);
 
     nsCOMPtr<nsIPrintSession> printSession;
@@ -3556,9 +3561,15 @@ private:
 void
 nsPrintEngine::FirePrintCompletionEvent()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIRunnable> event = new nsPrintCompletionEvent(mDocViewerPrint);
-  if (NS_FAILED(NS_DispatchToCurrentThread(event)))
-    NS_WARNING("failed to dispatch print completion event");
+  nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint);
+  NS_ENSURE_TRUE_VOID(cv);
+  nsCOMPtr<nsIDocument> doc = cv->GetDocument();
+  NS_ENSURE_TRUE_VOID(doc);
+
+  NS_ENSURE_SUCCESS_VOID(doc->Dispatch("nsPrintCompletionEvent",
+                                       TaskCategory::Other, event.forget()));
 }
 
 void

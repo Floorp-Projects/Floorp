@@ -9,7 +9,9 @@
 // generic cross-platform way without requiring custom tools or kernel support.
 //
 // Samples are collected to form a timeline with optional timeline event
-// (markers) used for filtering.
+// (markers) used for filtering. Both "periodic" (in response to a timer) and
+// "synchronous" (in response to an explicit sampling request via the API)
+// samples are supported.
 //
 // The profiler collects samples that include native stacks and
 // platform-independent "pseudostacks".
@@ -294,8 +296,6 @@ PROFILER_FUNC_VOID(profiler_js_interrupt_callback())
 // Operates the same whether the profiler is active or inactive.
 PROFILER_FUNC(double profiler_time(), 0)
 
-PROFILER_FUNC(bool profiler_is_active_and_not_in_privacy_mode(), false)
-
 PROFILER_FUNC_VOID(profiler_log(const char *str))
 
 // End of the functions defined whether the profiler is enabled or not.
@@ -319,11 +319,10 @@ PROFILER_FUNC_VOID(profiler_log(const char *str))
 class nsISupports;
 class ProfilerMarkerPayload;
 
-// Each thread gets its own PseudoStack on thread creation. tlsPseudoStack is
-// the owning reference; ThreadInfo has a non-owning reference. On thread
-// destruction, either (a) the PseudoStack and the ThreadInfo are both
-// destroyed, or (b) neither is destroyed and ownership of PseudoStack is
-// transferred to the ThreadInfo. Either way, tlsPseudoStack is cleared.
+// Each thread gets its own PseudoStack on thread creation. ThreadInfo has the
+// owning reference; tlsPseudoStack is a non-owning reference. On thread
+// destruction, tlsPseudoStack is cleared, and the ThreadInfo (along with its
+// PseudoStack) may or may not be destroyed.
 //
 // Non-owning PseudoStack references are also temporarily used by
 // profiler_call_{enter,exit}() pairs. RAII classes ensure these calls are
@@ -355,7 +354,7 @@ static inline void*
 profiler_call_enter(const char* aInfo,
                     js::ProfileEntry::Category aCategory,
                     void *aFrameAddress, bool aCopy, uint32_t line,
-                    const char* aAnnotationString = nullptr)
+                    const char* aDynamicString = nullptr)
 {
   // This function runs both on and off the main thread.
 
@@ -365,7 +364,7 @@ profiler_call_enter(const char* aInfo,
   if (!stack) {
     return stack;
   }
-  stack->push(aInfo, aCategory, aFrameAddress, aCopy, line, aAnnotationString);
+  stack->push(aInfo, aCategory, aFrameAddress, aCopy, line, aDynamicString);
 
   // The handle is meant to support future changes but for now it is simply
   // used to avoid having to call tlsPseudoStack.get() in profiler_call_exit().
@@ -495,17 +494,8 @@ public:
     js::ProfileEntry::Category aCategory, uint32_t aLine,
     const char* aDynamicString)
   {
-    mHandle = Enter(aInfo, aCategory, aLine, aDynamicString);
-  }
-
-  // An alternative constructor that accepts an rvalue string and moves it
-  // into this object (without copying!).
-  SamplerStackFrameDynamicRAII(const char* aInfo,
-    js::ProfileEntry::Category aCategory, uint32_t aLine,
-    nsCString&& aDynamicString)
-    : mDynamicStorage(aDynamicString)
-  {
-    mHandle = Enter(aInfo, aCategory, aLine, mDynamicStorage.get());
+    mHandle = profiler_call_enter(aInfo, aCategory, this, true, aLine,
+                                  aDynamicString);
   }
 
   ~SamplerStackFrameDynamicRAII() {
@@ -513,17 +503,6 @@ public:
   }
 
 private:
-  void* Enter(const char* aInfo, js::ProfileEntry::Category aCategory,
-              uint32_t aLine, const char* aDynamicString)
-  {
-    if (profiler_is_active_and_not_in_privacy_mode()) {
-      return profiler_call_enter(aInfo, aCategory, this, true, aLine, aDynamicString);
-    } else {
-      return profiler_call_enter(aInfo, aCategory, this, false, aLine);
-    }
-  }
-
-  nsCString mDynamicStorage;
   void* mHandle;
 };
 
