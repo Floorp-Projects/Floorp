@@ -17,6 +17,7 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsWeakReference.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
 
 class nsIFile;
