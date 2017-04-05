@@ -700,6 +700,7 @@ function BrowserTabActor(connection, browser) {
   this._conn = connection;
   this._browser = browser;
   this._form = null;
+  this.exited = false;
 }
 
 BrowserTabActor.prototype = {
@@ -712,7 +713,7 @@ BrowserTabActor.prototype = {
           message: "Tab destroyed while performing a BrowserTabActor update"
         });
       }
-      this._form = null;
+      this.exit();
     };
     let connect = DebuggerServer.connectToChild(this._conn, this._browser, onDestroy);
     return connect.then(form => {
@@ -739,7 +740,7 @@ BrowserTabActor.prototype = {
     // If the child happens to be crashed/close/detach, it won't have _form set,
     // so only request form update if some code is still listening on the other
     // side.
-    if (this._form) {
+    if (!this.exited) {
       this._deferredUpdate = promise.defer();
       let onFormUpdate = msg => {
         // There may be more than just one childtab.js up and running
@@ -813,6 +814,8 @@ BrowserTabActor.prototype = {
 
   exit() {
     this._browser = null;
+    this._form = null;
+    this.exited = true;
   },
 };
 
