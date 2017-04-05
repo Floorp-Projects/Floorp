@@ -36,6 +36,10 @@
   #category-advanced > .category-icon {
     list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#advanced-native");
   }
+
+  #category-search-results > .category-icon {
+    list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#searchResults-native");
+  }
 }
 
 .actionsMenu > .menulist-label-box > .menulist-icon {
