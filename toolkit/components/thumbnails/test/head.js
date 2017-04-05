@@ -221,7 +221,7 @@ function whenFileExists(aURL, aCallback = next) {
     callback = () => whenFileExists(aURL, aCallback);
   }
 
-  executeSoon(callback);
+  SimpleTest.executeSoon(callback);
 }
 
 /**
@@ -238,7 +238,7 @@ function whenFileRemoved(aFile, aCallback) {
     callback = () => whenFileRemoved(aFile, aCallback);
   }
 
-  executeSoon(callback || next);
+  SimpleTest.executeSoon(callback || next);
 }
 
 function wait(aMillis) {
