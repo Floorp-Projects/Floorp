@@ -167,7 +167,7 @@ FindCellProperty(const nsIFrame* aCellFrame,
   nsTArray<int8_t>* propertyData = nullptr;
 
   while (currentFrame) {
-    FrameProperties props = currentFrame->Properties();
+    ConstFrameProperties props = currentFrame->Properties();
     propertyData = props.Get(aFrameProperty);
     bool frameIsTable = (currentFrame->GetType() == nsGkAtoms::tableFrame);
 
