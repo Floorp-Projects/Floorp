@@ -122,20 +122,6 @@ uloc_isRightToLeft(const char* locale)
     MOZ_CRASH("uloc_isRightToLeft: Intl API disabled");
 }
 
-struct UFormattable;
-
-void
-ufmt_close(UFormattable* fmt)
-{
-    MOZ_CRASH("ufmt_close: Intl API disabled");
-}
-
-double
-ufmt_getDouble(UFormattable* fmt, UErrorCode *status)
-{
-    MOZ_CRASH("ufmt_getDouble: Intl API disabled");
-}
-
 struct UEnumeration;
 
 int32_t
@@ -332,17 +318,6 @@ unum_setTextAttribute(UNumberFormat* fmt, UNumberFormatTextAttribute tag, const 
                       int32_t newValueLength, UErrorCode* status)
 {
     MOZ_CRASH("unum_setTextAttribute: Intl API disabled");
-}
-
-UFormattable*
-unum_parseToUFormattable(const UNumberFormat* fmt,
-                         UFormattable *result,
-                         const UChar* text,
-                         int32_t textLength,
-                         int32_t* parsePos, /* 0 = start */
-                         UErrorCode* status)
-{
-    MOZ_CRASH("unum_parseToUFormattable: Intl API disabled");
 }
 
 typedef void* UNumberingSystem;
@@ -737,10 +712,10 @@ uplrules_openForType(const char *locale, UPluralType type, UErrorCode *status)
 }
 
 int32_t
-uplrules_select(const UPluralRules *uplrules, double number, UChar *keyword, int32_t capacity,
-                UErrorCode *status)
+uplrules_selectWithFormat(const UPluralRules* uplrules, double number, const UNumberFormat* fmt,
+                          UChar* keyword, int32_t capacity, UErrorCode* status)
 {
-    MOZ_CRASH("uplrules_select: Intl API disabled");
+    MOZ_CRASH("uplrules_selectWithFormat: Intl API disabled");
 }
 
 UEnumeration*
@@ -3709,40 +3684,6 @@ js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp)
 
     double x = args[1].toNumber();
 
-    // We need a NumberFormat in order to format the number
-    // using the number formatting options (minimum/maximum*Digits)
-    // before we push the result to PluralRules.
-    //
-    // This should be fixed in ICU 59 and we'll be able to switch to that
-    // API: http://bugs.icu-project.org/trac/ticket/12763
-    //
-    RootedValue fmtNumValue(cx);
-    if (!intl_FormatNumber(cx, nf, x, &fmtNumValue))
-        return false;
-    AutoStableStringChars stableChars(cx);
-    if (!stableChars.initTwoByte(cx, fmtNumValue.toString()))
-        return false;
-
-    const UChar* uFmtNumValue = stableChars.twoByteRange().begin().get();
-
-    UErrorCode status = U_ZERO_ERROR;
-
-    UFormattable* fmt = unum_parseToUFormattable(nf, nullptr, uFmtNumValue,
-                                                 stableChars.twoByteRange().length(), nullptr,
-                                                 &status);
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return false;
-    }
-
-    ScopedICUObject<UFormattable, ufmt_close> closeUFormattable(fmt);
-
-    double y = ufmt_getDouble(fmt, &status);
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return false;
-    }
-
     UPluralType category;
     if (StringEqualsAscii(type, "cardinal")) {
         category = UPLURAL_TYPE_CARDINAL;
@@ -3752,16 +3693,16 @@ js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // TODO: Cache UPluralRules in PluralRulesObject::UPluralRulesSlot.
+    UErrorCode status = U_ZERO_ERROR;
     UPluralRules* pr = uplrules_openForType(icuLocale(locale.ptr()), category, &status);
     if (U_FAILURE(status)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
     }
-
     ScopedICUObject<UPluralRules, uplrules_close> closePluralRules(pr);
 
-    JSString* str = Call(cx, [pr, y](UChar* chars, int32_t size, UErrorCode* status) {
-        return uplrules_select(pr, y, chars, size, status);
+    JSString* str = Call(cx, [pr, x, nf](UChar* chars, int32_t size, UErrorCode* status) {
+        return uplrules_selectWithFormat(pr, x, nf, chars, size, status);
     });
     if (!str)
         return false;
