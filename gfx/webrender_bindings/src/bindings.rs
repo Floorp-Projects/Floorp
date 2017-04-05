@@ -616,8 +616,8 @@ impl webrender_traits::RenderNotifier for CppNotifier {
 }
 
 #[no_mangle]
-pub extern fn wr_renderer_set_external_image_handler(renderer: &mut Renderer,
-                                                     external_image_handler: *mut WrExternalImageHandler) {
+pub extern "C" fn wr_renderer_set_external_image_handler(renderer: &mut Renderer,
+                                                         external_image_handler: *mut WrExternalImageHandler) {
     if !external_image_handler.is_null() {
         renderer.set_external_image_handler(Box::new(
             unsafe {
