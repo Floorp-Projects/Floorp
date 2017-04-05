@@ -14,36 +14,27 @@
 namespace mozilla {
 namespace wr {
 
+class RenderBufferTextureHost;
+class RenderTextureHostOGL;
+
 class RenderTextureHost
 {
-public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RenderTextureHost)
 
-  RenderTextureHost(uint8_t* aBuffer, const layers::BufferDescriptor& aDescriptor);
+public:
+  RenderTextureHost();
 
-  bool Lock();
+  virtual bool Lock() = 0;
+  virtual void Unlock() = 0;
 
-  void Unlock();
+  virtual gfx::IntSize GetSize() const = 0;
+  virtual gfx::SurfaceFormat GetFormat() const = 0;
 
-  gfx::IntSize GetSize() const { return mSize; }
-
-  gfx::SurfaceFormat GetFormat() const { return mFormat; }
-
-  uint8_t* GetDataForRender() const;
-  size_t GetBufferSizeForRender() const;
+  virtual RenderBufferTextureHost* AsBufferTextureHost() { return nullptr; }
+  virtual RenderTextureHostOGL* AsTextureHostOGL() { return nullptr; }
 
 protected:
-  ~RenderTextureHost();
-  already_AddRefed<gfx::DataSourceSurface> GetAsSurface();
-  uint8_t* GetBuffer() const { return mBuffer; }
-
-  uint8_t* mBuffer;
-  layers::BufferDescriptor mDescriptor;
-  gfx::IntSize mSize;
-  gfx::SurfaceFormat mFormat;
-  RefPtr<gfx::DataSourceSurface> mSurface;
-  gfx::DataSourceSurface::MappedSurface mMap;
-  bool mLocked;
+  virtual ~RenderTextureHost();
 };
 
 } // namespace wr

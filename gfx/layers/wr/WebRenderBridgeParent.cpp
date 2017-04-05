@@ -22,6 +22,10 @@
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 
+#if defined(MOZ_WIDGET_ANDROID)
+# include "mozilla/widget/AndroidCompositorWidget.h"
+#endif
+
 bool is_in_main_thread()
 {
   return NS_IsMainThread();
@@ -115,6 +119,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mParentLayerObserverEpoch(0)
   , mWrEpoch(0)
   , mIdNameSpace(++sIdNameSpace)
+  , mPaused(false)
   , mDestroyed(false)
 {
   MOZ_ASSERT(mCompositableHolder);
@@ -134,6 +139,15 @@ WebRenderBridgeParent::RecvCreate(const gfx::IntSize& aSize)
   }
 
   MOZ_ASSERT(mApi);
+
+#ifdef MOZ_WIDGET_ANDROID
+  // XXX temporary hack.
+  // XXX Remove it when APZ is supported.
+  widget::AndroidCompositorWidget* widget = mWidget->AsAndroid();
+  if (widget) {
+    widget->SetFirstPaintViewport(LayerIntPoint(0, 0), CSSToLayerScale(), CSSRect(0, 0, aSize.width, aSize.height));
+  }
+#endif
 
   return IPC_OK();
 }
@@ -344,15 +358,27 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
         }
         WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
         if (wrTexture) {
-          // XXX handling YUV
-          gfx::SurfaceFormat format =
-            wrTexture->GetFormat() == SurfaceFormat::YUV ? SurfaceFormat::B8G8R8A8 : wrTexture->GetFormat();
-          wr::ImageDescriptor descriptor(wrTexture->GetSize(), wrTexture->GetRGBStride(), format);
-          mApi->AddExternalImageBuffer(key,
-                                       descriptor,
-                                       wrTexture->GetExternalImageKey());
-          mCompositableHolder->HoldExternalImage(mPipelineId, aEpoch, texture->AsWebRenderTextureHost());
-          keysToDelete.push_back(key);
+          if (wrTexture->IsWrappingNativeHandle()) {
+            // XXX only for MacIOSurface right now.
+            // XXX remove the redundant codes for both native handle and yuv case.
+            wr::ImageDescriptor descriptor(wrTexture->GetSize(), wrTexture->GetReadFormat());
+            mApi->AddExternalImageHandle(key,
+                                         descriptor,
+                                         wrTexture->GetExternalImageKey());
+            mCompositableHolder->HoldExternalImage(mPipelineId, aEpoch, texture->AsWebRenderTextureHost());
+            keysToDelete.push_back(key);
+          } else {
+            // XXX handling YUV
+            gfx::SurfaceFormat format =
+              wrTexture->GetFormat() == SurfaceFormat::YUV ? SurfaceFormat::B8G8R8A8 : wrTexture->GetFormat();
+            wr::ImageDescriptor descriptor(wrTexture->GetSize(), wrTexture->GetRGBStride(), format);
+            mApi->AddExternalImageBuffer(key,
+                                         descriptor,
+                                         wrTexture->GetExternalImageKey());
+            mCompositableHolder->HoldExternalImage(mPipelineId, aEpoch, texture->AsWebRenderTextureHost());
+            keysToDelete.push_back(key);
+          }
+
           break;
         }
         RefPtr<DataSourceSurface> dSurf = host->GetAsSurface();
@@ -414,6 +440,7 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture)
   if (mDestroyed) {
     return IPC_OK();
   }
+  MOZ_ASSERT(!mPaused);
 
   RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
   if (!texture) {
@@ -544,6 +571,9 @@ WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 void
 WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
+  if (mPaused) {
+    return;
+  }
   mApi->GenerateFrame();
 }
 
@@ -616,6 +646,36 @@ WebRenderBridgeParent::ScheduleComposition()
   if (mCompositorScheduler) {
     mCompositorScheduler->ScheduleComposition();
   }
+}
+
+void
+WebRenderBridgeParent::Pause()
+{
+  MOZ_ASSERT(mWidget);
+#ifdef MOZ_WIDGET_ANDROID
+  if (!mWidget || mDestroyed) {
+    return;
+  }
+  mApi->Pause();
+#endif
+  mPaused = true;
+}
+
+bool
+WebRenderBridgeParent::Resume()
+{
+  MOZ_ASSERT(mWidget);
+#ifdef MOZ_WIDGET_ANDROID
+  if (!mWidget || mDestroyed) {
+    return false;
+  }
+
+  if (!mApi->Resume()) {
+    return false;
+  }
+#endif
+  mPaused = false;
+  return true;
 }
 
 void

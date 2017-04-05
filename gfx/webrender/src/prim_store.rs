@@ -6,7 +6,7 @@ use app_units::Au;
 use euclid::{Point2D, Size2D};
 use gpu_store::GpuStoreAddress;
 use internal_types::{SourceTexture, PackedTexel};
-use mask_cache::{ClipSource, MaskCacheInfo};
+use mask_cache::{ClipMode, ClipSource, MaskCacheInfo};
 use renderer::{VertexDataStore, GradientDataStore};
 use render_task::{RenderTask, RenderTaskLocation};
 use resource_cache::{CacheItem, ImageProperties, ResourceCache};
@@ -109,7 +109,7 @@ pub enum PrimitiveCacheKey {
 #[derive(Debug)]
 pub struct PrimitiveMetadata {
     pub is_opaque: bool,
-    pub clip_source: Box<ClipSource>,
+    pub clips: Vec<ClipSource>,
     pub clip_cache_info: Option<MaskCacheInfo>,
     pub prim_kind: PrimitiveKind,
     pub cpu_prim_index: SpecificPrimitiveIndex,
@@ -249,8 +249,8 @@ pub struct RadialGradientPrimitiveGpu {
     pub end_center: LayerPoint,
     pub start_radius: f32,
     pub end_radius: f32,
+    pub ratio_xy: f32,
     pub extend_mode: f32,
-    pub padding: [f32; 1],
 }
 
 #[derive(Debug)]
@@ -415,7 +415,8 @@ struct GlyphPrimitive {
 #[repr(C)]
 struct ClipRect {
     rect: LayerRect,
-    padding: [f32; 4],
+    mode: f32,
+    padding: [f32; 3],
 }
 
 #[derive(Debug, Clone)]
@@ -461,7 +462,9 @@ impl ClipData {
         ClipData {
             rect: ClipRect {
                 rect: clip.rect,
-                padding: [0.0, 0.0, 0.0, 0.0],
+                padding: [0.0; 3],
+                // TODO(gw): Support other clip modes for regions?
+                mode: ClipMode::Clip as u32 as f32,
             },
             top_left: ClipCorner {
                 rect: LayerRect::new(
@@ -503,11 +506,12 @@ impl ClipData {
         }
     }
 
-    pub fn uniform(rect: LayerRect, radius: f32) -> ClipData {
+    pub fn uniform(rect: LayerRect, radius: f32, mode: ClipMode) -> ClipData {
         ClipData {
             rect: ClipRect {
                 rect: rect,
-                padding: [0.0; 4],
+                padding: [0.0; 3],
+                mode: mode as u32 as f32,
             },
             top_left: ClipCorner::uniform(
                 LayerRect::new(
@@ -604,7 +608,7 @@ impl PrimitiveStore {
 
     pub fn add_primitive(&mut self,
                          geometry: PrimitiveGeometry,
-                         clip_source: Box<ClipSource>,
+                         clips: Vec<ClipSource>,
                          clip_info: Option<MaskCacheInfo>,
                          container: PrimitiveContainer) -> PrimitiveIndex {
         let prim_index = self.cpu_metadata.len();
@@ -618,7 +622,7 @@ impl PrimitiveStore {
 
                 let metadata = PrimitiveMetadata {
                     is_opaque: is_opaque,
-                    clip_source: clip_source,
+                    clips: clips,
                     clip_cache_info: clip_info,
                     prim_kind: PrimitiveKind::Rectangle,
                     cpu_prim_index: SpecificPrimitiveIndex::invalid(),
@@ -638,7 +642,7 @@ impl PrimitiveStore {
 
                 let metadata = PrimitiveMetadata {
                     is_opaque: false,
-                    clip_source: clip_source,
+                    clips: clips,
                     clip_cache_info: clip_info,
                     prim_kind: PrimitiveKind::TextRun,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_text_runs.len()),
@@ -659,7 +663,7 @@ impl PrimitiveStore {
 
                 let metadata = PrimitiveMetadata {
                     is_opaque: false,
-                    clip_source: clip_source,
+                    clips: clips,
                     clip_cache_info: clip_info,
                     prim_kind: PrimitiveKind::Image,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_images.len()),
@@ -680,7 +684,7 @@ impl PrimitiveStore {
 
                 let metadata = PrimitiveMetadata {
                     is_opaque: true,
-                    clip_source: clip_source,
+                    clips: clips,
                     clip_cache_info: clip_info,
                     prim_kind: PrimitiveKind::YuvImage,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_yuv_images.len()),
@@ -699,7 +703,7 @@ impl PrimitiveStore {
 
                 let metadata = PrimitiveMetadata {
                     is_opaque: false,
-                    clip_source: clip_source,
+                    clips: clips,
                     clip_cache_info: clip_info,
                     prim_kind: PrimitiveKind::Border,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_borders.len()),
@@ -720,7 +724,7 @@ impl PrimitiveStore {
                 let metadata = PrimitiveMetadata {
                     // TODO: calculate if the gradient is actually opaque
                     is_opaque: false,
-                    clip_source: clip_source,
+                    clips: clips,
                     clip_cache_info: clip_info,
                     prim_kind: PrimitiveKind::AlignedGradient,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_gradients.len()),
@@ -741,7 +745,7 @@ impl PrimitiveStore {
                 let metadata = PrimitiveMetadata {
                     // TODO: calculate if the gradient is actually opaque
                     is_opaque: false,
-                    clip_source: clip_source,
+                    clips: clips,
                     clip_cache_info: clip_info,
                     prim_kind: PrimitiveKind::AngleGradient,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_gradients.len()),
@@ -762,7 +766,7 @@ impl PrimitiveStore {
                 let metadata = PrimitiveMetadata {
                     // TODO: calculate if the gradient is actually opaque
                     is_opaque: false,
-                    clip_source: clip_source,
+                    clips: clips,
                     clip_cache_info: clip_info,
                     prim_kind: PrimitiveKind::RadialGradient,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_radial_gradients.len()),
@@ -807,8 +811,8 @@ impl PrimitiveStore {
 
                 let metadata = PrimitiveMetadata {
                     is_opaque: false,
-                    clip_source: clip_source,
-                    clip_cache_info: None,
+                    clips: clips,
+                    clip_cache_info: clip_info,
                     prim_kind: PrimitiveKind::BoxShadow,
                     cpu_prim_index: SpecificPrimitiveIndex::invalid(),
                     gpu_prim_index: gpu_prim_address,
@@ -864,8 +868,8 @@ impl PrimitiveStore {
 
         // Check if an external image that needs to be resolved
         // by the render thread.
-        match image_properties.external_id {
-            Some(external_id) => {
+        match image_properties.external_image {
+            Some(external_image) => {
                 // This is an external texture - we will add it to
                 // the deferred resolves list to be patched by
                 // the render thread...
@@ -874,7 +878,7 @@ impl PrimitiveStore {
                     resource_address: image_uv_address,
                 });
 
-                (SourceTexture::External(external_id), None)
+                (SourceTexture::External(external_image), None)
             }
             None => {
                 let cache_item = resource_cache.get_cached_image(image_key, image_rendering, tile_offset);
@@ -994,21 +998,25 @@ impl PrimitiveStore {
         deferred_resolves
     }
 
-    pub fn set_clip_source(&mut self, index: PrimitiveIndex, source: ClipSource) {
+    pub fn set_clip_source(&mut self, index: PrimitiveIndex, source: Option<ClipSource>) {
         let metadata = &mut self.cpu_metadata[index.0];
-        let (rect, is_complex) = match source {
-            ClipSource::NoClip => (None, false),
-            ClipSource::Complex(rect, radius) => (Some(rect), radius > 0.0),
-            ClipSource::Region(ref region) => (Some(region.main), region.is_complex()),
-        };
-        if let Some(rect) = rect {
-            self.gpu_geometry.get_mut(GpuStoreAddress(index.0 as i32))
-                .local_clip_rect = rect;
-            if is_complex {
-                metadata.clip_cache_info = None; //CLIP TODO: re-use the existing GPU allocation
+        metadata.clips = match source {
+            Some(source) => {
+                let (rect, is_complex) = match source {
+                    ClipSource::Complex(rect, radius, _) => (rect, radius > 0.0),
+                    ClipSource::Region(ref region, _) => (region.main, region.is_complex()),
+                };
+                self.gpu_geometry.get_mut(GpuStoreAddress(index.0 as i32))
+                    .local_clip_rect = rect;
+                if is_complex {
+                    metadata.clip_cache_info = None; //CLIP TODO: re-use the existing GPU allocation
+                }
+                vec![source]
+            }
+            None => {
+                vec![]
             }
         }
-        *metadata.clip_source.as_mut() = source;
     }
 
     pub fn get_metadata(&self, index: PrimitiveIndex) -> &PrimitiveMetadata {
@@ -1054,14 +1062,16 @@ impl PrimitiveStore {
         let mut rebuild_bounding_rect = false;
 
         if let Some(ref mut clip_info) = metadata.clip_cache_info {
-            clip_info.update(&metadata.clip_source,
+            clip_info.update(&metadata.clips,
                              layer_transform,
                              &mut self.gpu_data32,
                              device_pixel_ratio,
                              auxiliary_lists);
-            if let &ClipSource::Region(ClipRegion{ image_mask: Some(ref mask), .. }) = metadata.clip_source.as_ref() {
-                resource_cache.request_image(mask.image, ImageRendering::Auto, None);
-                prim_needs_resolve = true;
+            for clip in &metadata.clips {
+                if let &ClipSource::Region(ClipRegion{ image_mask: Some(ref mask), .. }, _) = clip {
+                    resource_cache.request_image(mask.image, ImageRendering::Auto, None);
+                    prim_needs_resolve = true;
+                }
             }
         }
 
