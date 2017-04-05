@@ -492,7 +492,7 @@ WR_FUNC;
 
 // It is the responsibility of the caller to manage the dst_buffer memory
 // and also free it at the proper time.
-WR_INLINE const uint8_t*
+WR_INLINE void
 wr_renderer_readback(WrRenderer* renderer,
                      uint32_t width, uint32_t height,
                      uint8_t* dst_buffer, size_t buffer_length)
