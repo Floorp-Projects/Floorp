@@ -124,13 +124,13 @@ class HeaderChanger {
 
     this.originalHeaders = new Map();
     this.visitHeaders((name, value) => {
-      this.originalHeaders.set(name.toLowerCase(), value);
+      this.originalHeaders.set(name.toLowerCase(), {name, value});
     });
   }
 
   toArray() {
     return Array.from(this.originalHeaders,
-                      ([name, value]) => ({name, value}));
+                      ([key, {name, value}]) => ({name, value}));
   }
 
   validateHeaders(headers) {
@@ -176,7 +176,8 @@ class HeaderChanger {
       if (binaryValue) {
         value = String.fromCharCode(...binaryValue);
       }
-      if (value !== this.originalHeaders.get(name.toLowerCase())) {
+      let original = this.originalHeaders.get(name.toLowerCase());
+      if (!original || value !== original.value) {
         this.setHeader(name, value);
       }
     }
