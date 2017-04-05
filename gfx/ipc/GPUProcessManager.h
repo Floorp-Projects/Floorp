@@ -31,6 +31,7 @@ class CompositorUpdateObserver;
 class PCompositorBridgeChild;
 class PImageBridgeChild;
 class RemoteCompositorSession;
+class UiCompositorControllerChild;
 } // namespace layers
 namespace widget {
 class CompositorWidget;
@@ -66,6 +67,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener
   typedef layers::PCompositorBridgeChild PCompositorBridgeChild;
   typedef layers::PImageBridgeChild PImageBridgeChild;
   typedef layers::RemoteCompositorSession RemoteCompositorSession;
+  typedef layers::UiCompositorControllerChild UiCompositorControllerChild;
 
 public:
   static void Initialize();
@@ -213,7 +215,10 @@ private:
 
   void EnsureImageBridgeChild();
   void EnsureVRManager();
-  void EnsureUiCompositorController();
+
+#if defined(MOZ_WIDGET_ANDROID)
+  already_AddRefed<UiCompositorControllerChild> CreateUiCompositorController(nsBaseWidget* aWidget, const uint64_t aId);
+#endif // defined(MOZ_WIDGET_ANDROID)
 
   RefPtr<CompositorSession> CreateRemoteSession(
     nsBaseWidget* aWidget,

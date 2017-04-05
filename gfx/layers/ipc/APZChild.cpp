@@ -53,13 +53,6 @@ APZChild::RecvUpdateOverscrollOffset(const float& aX, const float& aY, const boo
 }
 
 mozilla::ipc::IPCResult
-APZChild::RecvSetScrollingRootContent(const bool& aIsRootContent)
-{
-  mController->SetScrollingRootContent(aIsRootContent);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 APZChild::RecvNotifyMozMouseScrollEvent(const ViewID& aScrollId,
                                         const nsString& aEvent)
 {

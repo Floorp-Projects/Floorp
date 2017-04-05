@@ -191,7 +191,6 @@ ShadowLayerForwarder::ShadowLayerForwarder(ClientLayerManager* aClientLayerManag
  , mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC)
  , mIsFirstPaint(false)
  , mWindowOverlayChanged(false)
- , mPaintSyncId(0)
  , mNextLayerHandle(1)
 {
   mTxn = new Transaction();
@@ -736,7 +735,6 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
   info.paintSequenceNumber() = aPaintSequenceNumber;
   info.isRepeatTransaction() = aIsRepeatTransaction;
   info.transactionStart() = aTransactionStart;
-  info.paintSyncId() = mPaintSyncId;
 
   TargetConfig targetConfig(mTxn->mTargetBounds,
                             mTxn->mTargetRotation,
@@ -777,7 +775,6 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
 
   *aSent = true;
   mIsFirstPaint = false;
-  mPaintSyncId = 0;
   MOZ_LAYERS_LOG(("[LayersForwarder] ... done"));
   return true;
 }

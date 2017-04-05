@@ -203,20 +203,6 @@ RemoteContentController::UpdateOverscrollOffset(float aX, float aY, bool aIsRoot
 }
 
 void
-RemoteContentController::SetScrollingRootContent(bool aIsRootContent)
-{
-  if (MessageLoop::current() != mCompositorThread) {
-    mCompositorThread->PostTask(NewRunnableMethod<bool>(this,
-                                             &RemoteContentController::SetScrollingRootContent,
-                                             aIsRootContent));
-    return;
-  }
-  if (mCanSend) {
-    Unused << SendSetScrollingRootContent(aIsRootContent);
-  }
-}
-
-void
 RemoteContentController::NotifyMozMouseScrollEvent(const FrameMetrics::ViewID& aScrollId,
                                                    const nsString& aEvent)
 {
