@@ -942,16 +942,91 @@ using NonOwningCancelableRunnableMethodImpl = RunnableMethodImpl<
 
 } // namespace detail
 
-// Use this template function like so:
+// NewRunnableMethod and friends
+//
+// Very often in Gecko, you'll find yourself in a situation where you want
+// to invoke a method (with or without arguments) asynchronously.  You
+// could write a small helper class inheriting from nsRunnable to handle
+// all these details, or you could let NewRunnableMethod take care of all
+// those details for you.
+//
+// The simplest use of NewRunnableMethod looks like:
 //
 //   nsCOMPtr<nsIRunnable> event =
-//     mozilla::NewRunnableMethod(myObject, &MyClass::HandleEvent);
+//     mozilla::NewRunnableMethod("description", myObject, &MyClass::HandleEvent);
 //   NS_DispatchToCurrentThread(event);
 //
 // Statically enforced constraints:
 //  - myObject must be of (or implicitly convertible to) type MyClass
 //  - MyClass must define AddRef and Release methods
 //
+// The "description" string should specify a human-readable name for the
+// runnable; the provided string is used by various introspection tools
+// in the browser.
+//
+// The created runnable will take a strong reference to `myObject`.  For
+// non-refcounted objects, or refcounted objects with unusual refcounting
+// requirements, and if and only if you are 110% certain that `myObject`
+// will live long enough, you can use NewNonOwningRunnableMethod instead,
+// which will, as its name implies, take a non-owning reference.  If you
+// find yourself having to use this function, you should accompany your use
+// with a proof comment describing why the runnable will not lead to
+// use-after-frees.
+//
+// (If you find yourself writing contorted code to Release() an object
+// asynchronously on a different thread, you should use the
+// NS_ProxyRelease function.)
+//
+// Invoking a method with arguments takes a little more care.  The
+// natural extension of the above:
+//
+//   nsCOMPtr<nsIRunnable> event =
+//     mozilla::NewRunnableMethod("description", myObject, &MyClass::HandleEvent,
+//                                arg1, arg2, ...);
+//
+// can lead to security hazards (e.g. passing in raw pointers to refcounted
+// objects and storing those raw pointers in the runnable).  We therefore
+// require you to specify the storage types used by the runnable, just as
+// you would if you were writing out the class by hand:
+//
+//   nsCOMPtr<nsIRunnable> event =
+//     mozilla::NewRunnableMethod<RefPtr<T>, nsTArray<U>>
+//         ("description", myObject, &MyClass::HandleEvent, arg1, arg2);
+//
+// Please note that you do not have to pass the same argument type as you
+// specify in the template arguments.  For example, if you want to transfer
+// ownership to a runnable, you can write:
+//
+//   RefPtr<T> ptr = ...;
+//   nsTArray<U> array = ...;
+//   nsCOMPtr<nsIRunnable> event =
+//     mozilla::NewRunnableMethod<RefPtr<T>, nsTArray<U>>
+//         ("description", myObject, &MyClass::DoSomething,
+//          Move(ptr), Move(array));
+//
+// and there will be no extra AddRef/Release traffic, or copying of the array.
+//
+// Each type that you specify as a template argument to NewRunnableMethod
+// comes with its own style of storage in the runnable and its own style
+// of argument passing to the invoked method.  See the comment for
+// ParameterStorage above for more details.
+//
+// If you need to customize the storage type and/or argument passing type,
+// you can write your own class to use as a template argument to
+// NewRunnableMethod.  If you find yourself having to do that frequently,
+// please file a bug in Core::XPCOM about adding the custom type to the
+// core code in this file, and/or for custom rules for ParameterStorage
+// to select that strategy.
+//
+// For places that require you to use cancelable runnables, such as
+// workers, there's also NewCancelableRunnableMethod and its non-owning
+// counterpart.  The runnables returned by these methods additionally
+// implement nsICancelableRunnable.
+//
+// Finally, all of the functions discussed above have additional overloads
+// that do not take a `const char*` as their first parameter; you may see
+// these in older code.  The `const char*` overload is preferred and
+// should be used in new code exclusively.
 
 template<typename PtrType, typename Method>
 already_AddRefed<detail::OwningRunnableMethod<PtrType, Method>>
