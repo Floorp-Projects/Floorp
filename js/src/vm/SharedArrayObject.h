@@ -92,7 +92,7 @@ class SharedArrayRawBuffer
 
     uint32_t refcount() const { return refcount_; }
 
-    void addReference();
+    MOZ_MUST_USE bool addReference();
     void dropReference();
 };
 
