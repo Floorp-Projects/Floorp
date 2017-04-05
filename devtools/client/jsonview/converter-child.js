@@ -12,8 +12,6 @@ const Services = require("Services");
 
 loader.lazyRequireGetter(this, "NetworkHelper",
                                "devtools/shared/webconsole/network-helper");
-loader.lazyRequireGetter(this, "Clipboard",
-                               "sdk/clipboard");
 loader.lazyRequireGetter(this, "JsonViewUtils",
                                "devtools/client/jsonview/utils");
 
@@ -279,11 +277,11 @@ Converter.prototype = {
     let value = e.detail.value;
     switch (e.detail.type) {
       case "copy":
-        Clipboard.set(value, "text");
+        copyString(win, value);
         break;
 
       case "copy-headers":
-        this.copyHeaders(value);
+        this.copyHeaders(win, value);
         break;
 
       case "save":
@@ -292,7 +290,7 @@ Converter.prototype = {
     }
   },
 
-  copyHeaders: function (headers) {
+  copyHeaders: function (win, headers) {
     let value = "";
     let eol = (Services.appinfo.OS !== "WINNT") ? "\n" : "\r\n";
 
@@ -310,9 +308,18 @@ Converter.prototype = {
       value += header.name + ": " + header.value + eol;
     }
 
-    Clipboard.set(value, "text");
+    copyString(win, value);
   }
 };
+
+function copyString(win, string) {
+  win.document.addEventListener("copy", event => {
+    event.clipboardData.setData("text/plain", string);
+    event.preventDefault();
+  }, {once: true});
+
+  win.document.execCommand("copy", false, null);
+}
 
 function createInstance() {
   return new Converter();
