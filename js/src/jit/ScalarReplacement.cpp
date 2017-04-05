@@ -134,6 +134,13 @@ IsLambdaEscaped(MLambda* lambda, JSObject* obj)
     return false;
 }
 
+static inline bool
+IsOptimizableObjectInstruction(MInstruction* ins)
+{
+    return ins->isNewObject() || ins->isCreateThisWithTemplate() || ins->isNewCallObject() ||
+           ins->isNewArrayIterator();
+}
+
 // Returns False if the object is not escaped and if it is optimizable by
 // ScalarReplacementOfObject.
 //
@@ -143,8 +150,8 @@ static bool
 IsObjectEscaped(MInstruction* ins, JSObject* objDefault)
 {
     MOZ_ASSERT(ins->type() == MIRType::Object);
-    MOZ_ASSERT(ins->isNewObject() || ins->isGuardShape() || ins->isCreateThisWithTemplate() ||
-               ins->isNewCallObject() || ins->isFunctionEnvironment());
+    MOZ_ASSERT(IsOptimizableObjectInstruction(ins) || ins->isGuardShape() ||
+               ins->isFunctionEnvironment());
 
     JitSpewDef(JitSpew_Escape, "Check object\n", ins);
     JitSpewIndent spewIndent(JitSpew_Escape);
@@ -1311,8 +1318,7 @@ ScalarReplacement(MIRGenerator* mir, MIRGraph& graph)
             return false;
 
         for (MInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
-            if ((ins->isNewObject() || ins->isCreateThisWithTemplate() || ins->isNewCallObject()) &&
-                !IsObjectEscaped(*ins))
+            if (IsOptimizableObjectInstruction(*ins) && !IsObjectEscaped(*ins))
             {
                 ObjectMemoryView view(graph.alloc(), *ins);
                 if (!replaceObject.run(view))
