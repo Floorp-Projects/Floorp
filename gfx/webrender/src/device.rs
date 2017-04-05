@@ -51,6 +51,17 @@ pub enum DepthFunction {
 pub enum TextureTarget {
     Default,
     Array,
+    Rect,
+}
+
+impl TextureTarget {
+    pub fn to_gl_target(&self) -> gl::GLuint {
+        match *self {
+            TextureTarget::Default => gl::TEXTURE_2D,
+            TextureTarget::Array => gl::TEXTURE_2D_ARRAY,
+            TextureTarget::Rect => gl::TEXTURE_RECTANGLE,
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -304,10 +315,10 @@ impl TextureId {
         gl.bind_texture(self.target, self.name);
     }
 
-    pub fn new(name: gl::GLuint) -> TextureId {
+    pub fn new(name: gl::GLuint, texture_target: TextureTarget) -> TextureId {
         TextureId {
             name: name,
-            target: gl::TEXTURE_2D,
+            target: texture_target.to_gl_target(),
         }
     }
 
@@ -1090,15 +1101,10 @@ impl Device {
         let id_list = self.gl.gen_textures(count);
         let mut texture_ids = Vec::new();
 
-        let target = match target {
-            TextureTarget::Default => gl::TEXTURE_2D,
-            TextureTarget::Array => gl::TEXTURE_2D_ARRAY,
-        };
-
         for id in id_list {
             let texture_id = TextureId {
                 name: id,
-                target: target,
+                target: target.to_gl_target(),
             };
 
             let texture = Texture {
@@ -2049,9 +2055,8 @@ impl Device {
     }
 
     pub fn set_blend_mode_alpha(&self) {
-        //self.gl.blend_func(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         self.gl.blend_func_separate(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA,
-                                     gl::ONE, gl::ONE);
+                                    gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
         self.gl.blend_equation(gl::FUNC_ADD);
     }
 

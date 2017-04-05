@@ -70,6 +70,12 @@ public:
               WrRenderer* aWrRenderer,
               layers::CompositorBridgeParentBase* aBridge);
 
+  /// This can be called on the render thread only.
+  void Pause();
+
+  /// This can be called on the render thread only.
+  bool Resume();
+
   layers::CompositorBridgeParentBase* GetCompositorBridge() { return mBridge; }
 
   WrRenderedEpochs* FlushRenderedEpochs();

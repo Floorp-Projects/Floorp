@@ -943,6 +943,33 @@ nsPNGDecoder::DoYield(png_structp aPNGStruct)
     Transition::ContinueUnbufferedAfterYield(State::PNG_DATA, consumedBytes);
 }
 
+nsresult
+nsPNGDecoder::FinishInternal()
+{
+  // We shouldn't be called in error cases.
+  MOZ_ASSERT(!HasError(), "Can't call FinishInternal on error!");
+
+  if (IsMetadataDecode()) {
+    return NS_OK;
+  }
+
+  int32_t loop_count = 0;
+#ifdef PNG_APNG_SUPPORTED
+  if (png_get_valid(mPNG, mInfo, PNG_INFO_acTL)) {
+    int32_t num_plays = png_get_num_plays(mPNG, mInfo);
+    loop_count = num_plays - 1;
+  }
+#endif
+
+  if (InFrame()) {
+    EndImageFrame();
+  }
+  PostDecodeDone(loop_count);
+
+  return NS_OK;
+}
+
+
 #ifdef PNG_APNG_SUPPORTED
 // got the header of a new frame that's coming
 void
@@ -959,7 +986,6 @@ nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
   if (!previousFrameWasHidden && decoder->IsFirstFrameDecode()) {
     // We're about to get a second non-hidden frame, but we only want the first.
     // Stop decoding now. (And avoid allocating the unnecessary buffers below.)
-    decoder->PostDecodeDone();
     return decoder->DoTerminate(png_ptr, TerminalState::SUCCESS);
   }
 
@@ -1025,17 +1051,6 @@ nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
   // We shouldn't get here if we've hit an error
   MOZ_ASSERT(!decoder->HasError(), "Finishing up PNG but hit error!");
 
-  int32_t loop_count = 0;
-#ifdef PNG_APNG_SUPPORTED
-  if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL)) {
-    int32_t num_plays = png_get_num_plays(png_ptr, info_ptr);
-    loop_count = num_plays - 1;
-  }
-#endif
-
-  // Send final notifications.
-  decoder->EndImageFrame();
-  decoder->PostDecodeDone(loop_count);
   return decoder->DoTerminate(png_ptr, TerminalState::SUCCESS);
 }
 

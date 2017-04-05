@@ -21,6 +21,7 @@ WinPointerEvents::GetPointerTypePtr WinPointerEvents::getPointerType = nullptr;
 WinPointerEvents::GetPointerInfoPtr WinPointerEvents::getPointerInfo = nullptr;
 WinPointerEvents::GetPointerPenInfoPtr WinPointerEvents::getPointerPenInfo = nullptr;
 bool WinPointerEvents::sPointerEventEnabled = true;
+bool WinPointerEvents::sFirePointerEventsByWinPointerMessages = false;
 
 WinPointerEvents::WinPointerEvents()
 {
@@ -29,6 +30,9 @@ WinPointerEvents::WinPointerEvents()
   if (!addedPointerEventEnabled) {
     Preferences::AddBoolVarCache(&sPointerEventEnabled,
                                  "dom.w3c_pointer_events.enabled", true);
+    Preferences::AddBoolVarCache(
+      &sFirePointerEventsByWinPointerMessages,
+      "dom.w3c_pointer_events.dispatch_by_pointer_messages", false);
     addedPointerEventEnabled = true;
   }
 }
@@ -67,14 +71,17 @@ WinPointerEvents::InitLibrary()
 }
 
 bool
-WinPointerEvents::ShouldFireCompatibilityMouseEventsForPen(WPARAM aWParam)
+WinPointerEvents::ShouldHandleWinPointerMessages(UINT aMsg, WPARAM aWParam)
 {
+  MOZ_ASSERT(aMsg == WM_POINTERDOWN || aMsg == WM_POINTERUP ||
+             aMsg == WM_POINTERUPDATE || aMsg == WM_POINTERLEAVE);
   if (!sLibraryHandle || !sPointerEventEnabled) {
-    // Firing mouse events by handling Windows WM_POINTER* when preference is on
-    // and the Windows platform supports PointerEvent related interfaces.
     return false;
   }
 
+  // We only handle WM_POINTER* when the input source is pen. This is because
+  // we need some information (e.g. tiltX, tiltY) which can't be retrieved by
+  // WM_*BUTTONDOWN.
   uint32_t pointerId = GetPointerId(aWParam);
   POINTER_INPUT_TYPE pointerType = PT_POINTER;
   if (!GetPointerType(pointerId, &pointerType)) {
@@ -92,6 +99,14 @@ WinPointerEvents::GetPointerType(uint32_t aPointerId,
     return false;
   }
   return getPointerType(aPointerId, aPointerType);
+}
+
+POINTER_INPUT_TYPE
+WinPointerEvents::GetPointerType(uint32_t aPointerId)
+{
+  POINTER_INPUT_TYPE pointerType = PT_POINTER;
+  Unused << GetPointerType(aPointerId, &pointerType);
+  return pointerType;
 }
 
 bool
@@ -123,9 +138,83 @@ WinPointerEvents::ShouldEnableInkCollector()
 }
 
 bool
-WinPointerEvents::ShouldRollupOnPointerEvent(WPARAM aWParam)
+WinPointerEvents::ShouldRollupOnPointerEvent(UINT aMsg, WPARAM aWParam)
 {
+  MOZ_ASSERT(aMsg == WM_POINTERDOWN);
   // Only roll up popups when we handling WM_POINTER* to fire Gecko
   // WidgetMouseEvent and suppress Windows WM_*BUTTONDOWN.
-  return ShouldFireCompatibilityMouseEventsForPen(aWParam);
+  return ShouldHandleWinPointerMessages(aMsg, aWParam) &&
+         ShouldFirePointerEventByWinPointerMessages();
+}
+
+bool
+WinPointerEvents::ShouldFirePointerEventByWinPointerMessages()
+{
+  MOZ_ASSERT(sLibraryHandle && sPointerEventEnabled);
+  return sFirePointerEventsByWinPointerMessages;
+}
+
+WinPointerInfo*
+WinPointerEvents::GetCachedPointerInfo(UINT aMsg, WPARAM aWParam)
+{
+  if (!sLibraryHandle || !sPointerEventEnabled ||
+      MOUSE_INPUT_SOURCE() != nsIDOMMouseEvent::MOZ_SOURCE_PEN ||
+      ShouldFirePointerEventByWinPointerMessages()) {
+    return nullptr;
+  }
+  switch (aMsg) {
+  case WM_LBUTTONDOWN:
+  case WM_MBUTTONDOWN:
+  case WM_RBUTTONDOWN:
+    return &mPenPointerDownInfo;
+  case WM_LBUTTONUP:
+  case WM_MBUTTONUP:
+  case WM_RBUTTONUP:
+    return &mPenPointerDownInfo;
+  case WM_MOUSEMOVE:
+    return &mPenPointerUpdateInfo;
+  default:
+    MOZ_ASSERT(false);
+  }
+  return nullptr;
+}
+
+void
+WinPointerEvents::ConvertAndCachePointerInfo(UINT aMsg, WPARAM aWParam)
+{
+  MOZ_ASSERT(!sFirePointerEventsByWinPointerMessages);
+  // Windows doesn't support chorded buttons for pen, so we can simply keep the
+  // latest information from pen generated pointer messages and use them when
+  // handling mouse messages. Used different pointer info for pointerdown,
+  // pointerupdate, and pointerup because Windows doesn't always interleave
+  // pointer messages and mouse messages.
+  switch (aMsg) {
+  case WM_POINTERDOWN:
+    ConvertAndCachePointerInfo(aWParam, &mPenPointerDownInfo);
+    break;
+  case WM_POINTERUP:
+    ConvertAndCachePointerInfo(aWParam, &mPenPointerUpInfo);
+    break;
+  case WM_POINTERUPDATE:
+    ConvertAndCachePointerInfo(aWParam, &mPenPointerUpdateInfo);
+    break;
+  default:
+    break;
+  }
+}
+
+void
+WinPointerEvents::ConvertAndCachePointerInfo(WPARAM aWParam,
+                                             WinPointerInfo* aInfo)
+{
+  MOZ_ASSERT(!sFirePointerEventsByWinPointerMessages);
+  aInfo->pointerId = GetPointerId(aWParam);
+  MOZ_ASSERT(GetPointerType(aInfo->pointerId) == PT_PEN);
+  POINTER_PEN_INFO penInfo;
+  GetPointerPenInfo(aInfo->pointerId, &penInfo);
+  aInfo->tiltX = penInfo.tiltX;
+  aInfo->tiltY = penInfo.tiltY;
+  // Windows defines the pen pressure is normalized to a range between 0 and
+  // 1024. Convert it to float.
+  aInfo->mPressure = penInfo.pressure ? (float)penInfo.pressure / 1024 : 0;
 }

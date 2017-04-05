@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use byteorder::{LittleEndian, WriteBytesExt};
-use channel::{self, MsgSender, PayloadHelperMethods, PayloadSender};
+use channel::{self, MsgSender, Payload, PayloadSenderHelperMethods, PayloadSender};
 #[cfg(feature = "webgl")]
 use offscreen_gl_context::{GLContextAttributes, GLLimits};
 use std::cell::Cell;
@@ -28,7 +27,7 @@ pub enum ApiMsg {
     /// Adds an image from the resource cache.
     AddImage(ImageKey, ImageDescriptor, ImageData, Option<TileSize>),
     /// Updates the the resource cache with the new image data.
-    UpdateImage(ImageKey, ImageDescriptor, Vec<u8>, Option<DeviceUintRect>),
+    UpdateImage(ImageKey, ImageDescriptor, ImageData, Option<DeviceUintRect>),
     /// Drops an image from the resource cache.
     DeleteImage(ImageKey),
     CloneApi(MsgSender<IdNamespace>),
@@ -36,13 +35,13 @@ pub enum ApiMsg {
     ///
     /// After receiving this message, WebRender will read the display list, followed by the
     /// auxiliary lists, from the payload channel.
-    SetRootDisplayList(Option<ColorF>,
-                       Epoch,
-                       PipelineId,
-                       LayoutSize,
-                       BuiltDisplayListDescriptor,
-                       AuxiliaryListsDescriptor,
-                       bool),
+    SetDisplayList(Option<ColorF>,
+                   Epoch,
+                   PipelineId,
+                   LayoutSize,
+                   BuiltDisplayListDescriptor,
+                   AuxiliaryListsDescriptor,
+                   bool),
     SetPageZoom(ZoomFactor),
     SetPinchZoom(ZoomFactor),
     SetPan(DeviceIntPoint),
@@ -77,7 +76,7 @@ impl fmt::Debug for ApiMsg {
             &ApiMsg::UpdateImage(..) => { write!(f, "ApiMsg::UpdateImage") }
             &ApiMsg::DeleteImage(..) => { write!(f, "ApiMsg::DeleteImage") }
             &ApiMsg::CloneApi(..) => { write!(f, "ApiMsg::CloneApi") }
-            &ApiMsg::SetRootDisplayList(..) => { write!(f, "ApiMsg::SetRootDisplayList") }
+            &ApiMsg::SetDisplayList(..) => { write!(f, "ApiMsg::SetDisplayList") }
             &ApiMsg::SetRootPipeline(..) => { write!(f, "ApiMsg::SetRootPipeline") }
             &ApiMsg::Scroll(..) => { write!(f, "ApiMsg::Scroll") }
             &ApiMsg::ScrollLayerWithId(..) => { write!(f, "ApiMsg::ScrollLayerWithId") }
@@ -250,9 +249,9 @@ impl RenderApi {
     pub fn update_image(&self,
                         key: ImageKey,
                         descriptor: ImageDescriptor,
-                        bytes: Vec<u8>,
+                        data: ImageData,
                         dirty_rect: Option<DeviceUintRect>) {
-        let msg = ApiMsg::UpdateImage(key, descriptor, bytes, dirty_rect);
+        let msg = ApiMsg::UpdateImage(key, descriptor, data, dirty_rect);
         self.api_sender.send(msg).unwrap();
     }
 
@@ -299,26 +298,29 @@ impl RenderApi {
     ///                           position) should be preserved for this new display list.
     ///
     /// [notifier]: trait.RenderNotifier.html#tymethod.new_frame_ready
-    pub fn set_root_display_list(&self,
-                                 background_color: Option<ColorF>,
-                                 epoch: Epoch,
-                                 viewport_size: LayoutSize,
-                                 (pipeline_id, display_list, auxiliary_lists): (PipelineId, BuiltDisplayList, AuxiliaryLists),
-                                 preserve_frame_state: bool) {
-        let msg = ApiMsg::SetRootDisplayList(background_color,
+    pub fn set_display_list(&self,
+                            background_color: Option<ColorF>,
+                            epoch: Epoch,
+                            viewport_size: LayoutSize,
+                            (pipeline_id, display_list, auxiliary_lists): (PipelineId, BuiltDisplayList, AuxiliaryLists),
+                            preserve_frame_state: bool) {
+        let (dl_data, dl_desc) = display_list.into_data();
+        let (aux_data, aux_desc) = auxiliary_lists.into_data();
+        let msg = ApiMsg::SetDisplayList(background_color,
                                              epoch,
                                              pipeline_id,
                                              viewport_size,
-                                             display_list.descriptor().clone(),
-                                             *auxiliary_lists.descriptor(),
+                                             dl_desc,
+                                             aux_desc,
                                              preserve_frame_state);
         self.api_sender.send(msg).unwrap();
 
-        let mut payload = vec![];
-        payload.write_u32::<LittleEndian>(epoch.0).unwrap();
-        payload.extend_from_slice(display_list.data());
-        payload.extend_from_slice(auxiliary_lists.data());
-        self.payload_sender.send_vec(payload).unwrap();
+        self.payload_sender.send_payload(Payload {
+            epoch: epoch,
+            pipeline_id: pipeline_id,
+            display_list_data: dl_data,
+            auxiliary_lists_data: aux_data
+        }).unwrap();
     }
 
     /// Scrolls the scrolling layer under the `cursor`
@@ -489,6 +491,15 @@ pub struct PropertyBindingId {
     uid: u32,
 }
 
+impl PropertyBindingId {
+    pub fn new(value: u64) -> Self {
+        PropertyBindingId {
+            namespace: (value>>32) as u32,
+            uid: value as u32,
+        }
+    }
+}
+
 /// A unique key that is used for connecting animated property
 /// values to bindings in the display list.
 #[repr(C)]
@@ -504,6 +515,15 @@ impl<T: Copy> PropertyBindingKey<T> {
         PropertyValue {
             key: *self,
             value: value,
+        }
+    }
+}
+
+impl<T> PropertyBindingKey<T> {
+    pub fn new(value: u64) -> Self {
+        PropertyBindingKey {
+            id: PropertyBindingId::new(value),
+            _phantom: PhantomData,
         }
     }
 }

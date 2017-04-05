@@ -36,7 +36,8 @@ public:
 
 private:
   // If aDirectoryOnly is set, we should ensure that the target is a directory.
-  GetFilesTaskChild(FileSystemBase* aFileSystem,
+  GetFilesTaskChild(nsIGlobalObject* aGlobalObject,
+                    FileSystemBase* aFileSystem,
                     Directory* aDirectory,
                     nsIFile* aTargetPath,
                     bool aRecursiveFlag);
