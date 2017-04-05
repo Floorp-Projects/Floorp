@@ -27,6 +27,7 @@ public:
 
 protected:
   nsresult InitInternal() override;
+  nsresult FinishInternal() override;
   LexerResult DoDecode(SourceBufferIterator& aIterator,
                        IResumable* aOnResume) override;
 

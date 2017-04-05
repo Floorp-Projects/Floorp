@@ -109,7 +109,8 @@ class FileSystemEntryCallbackHelper
 {
 public:
   static void
-  Call(const Optional<OwningNonNull<FileSystemEntryCallback>>& aEntryCallback,
+  Call(nsIGlobalObject* aGlobalObject,
+       const Optional<OwningNonNull<FileSystemEntryCallback>>& aEntryCallback,
        FileSystemEntry* aEntry);
 };
 

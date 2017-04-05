@@ -78,11 +78,12 @@ FileSystemEntry::GetParent(const Optional<OwningNonNull<FileSystemEntryCallback>
   }
 
   if (mParentEntry) {
-    FileSystemEntryCallbackHelper::Call(aSuccessCallback, mParentEntry);
+    FileSystemEntryCallbackHelper::Call(GetParentObject(), aSuccessCallback,
+                                        mParentEntry);
     return;
   }
 
-  FileSystemEntryCallbackHelper::Call(aSuccessCallback, this);
+  FileSystemEntryCallbackHelper::Call(GetParentObject(), aSuccessCallback, this);
 }
 
 } // dom namespace

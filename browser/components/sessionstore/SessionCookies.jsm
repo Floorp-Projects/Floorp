@@ -132,6 +132,8 @@ var SessionCookiesInternal = {
   observe(subject, topic, data) {
     switch (data) {
       case "added":
+        this._addCookie(subject);
+        break;
       case "changed":
         this._updateCookie(subject);
         break;
@@ -191,7 +193,18 @@ var SessionCookiesInternal = {
   },
 
   /**
-   * Updates or adds a given cookie to the store.
+   * Adds a given cookie to the store.
+   */
+  _addCookie(cookie) {
+    cookie.QueryInterface(Ci.nsICookie2);
+
+    if (cookie.isSession) {
+      CookieStore.set(cookie);
+    }
+  },
+
+  /**
+   * Updates a given cookie.
    */
   _updateCookie(cookie) {
     cookie.QueryInterface(Ci.nsICookie2);
@@ -230,7 +243,7 @@ var SessionCookiesInternal = {
   _reloadCookies() {
     let iter = Services.cookies.enumerator;
     while (iter.hasMoreElements()) {
-      this._updateCookie(iter.getNext());
+      this._addCookie(iter.getNext());
     }
   }
 };
@@ -383,7 +396,24 @@ var CookieStore = {
    *        The nsICookie2 object to be removed from storage.
    */
   delete(cookie) {
-    this._ensureMap(cookie).delete(cookie.name);
+    // Deletion shouldn't create new maps.
+    // Bail out whenever we find that an entry or a map doesn't exist.
+    let map = this._hosts.get(cookie.host);
+    if (!map) {
+      return;
+    }
+
+    map = map.get(ChromeUtils.originAttributesToSuffix(cookie.originAttributes));
+    if (!map) {
+      return;
+    }
+
+    map = map.get(cookie.path);
+    if (!map) {
+      return;
+    }
+
+    map.delete(cookie.name);
   },
 
   /**

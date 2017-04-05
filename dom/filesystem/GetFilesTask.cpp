@@ -44,7 +44,7 @@ GetFilesTaskChild::Create(FileSystemBase* aFileSystem,
   }
 
   RefPtr<GetFilesTaskChild> task =
-    new GetFilesTaskChild(aFileSystem, aDirectory, aTargetPath,
+    new GetFilesTaskChild(globalObject, aFileSystem, aDirectory, aTargetPath,
                           aRecursiveFlag);
 
   // aTargetPath can be null. In this case SetError will be called.
@@ -57,11 +57,12 @@ GetFilesTaskChild::Create(FileSystemBase* aFileSystem,
   return task.forget();
 }
 
-GetFilesTaskChild::GetFilesTaskChild(FileSystemBase* aFileSystem,
+GetFilesTaskChild::GetFilesTaskChild(nsIGlobalObject *aGlobalObject,
+                                     FileSystemBase* aFileSystem,
                                      Directory* aDirectory,
                                      nsIFile* aTargetPath,
                                      bool aRecursiveFlag)
-  : FileSystemTaskChildBase(aFileSystem)
+  : FileSystemTaskChildBase(aGlobalObject, aFileSystem)
   , mDirectory(aDirectory)
   , mTargetPath(aTargetPath)
   , mRecursiveFlag(aRecursiveFlag)

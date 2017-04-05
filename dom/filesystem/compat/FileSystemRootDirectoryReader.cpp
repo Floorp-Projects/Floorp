@@ -7,6 +7,7 @@
 #include "FileSystemRootDirectoryReader.h"
 #include "CallbackRunnables.h"
 #include "nsIGlobalObject.h"
+#include "mozilla/dom/FileSystemUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -18,7 +19,8 @@ class EntriesCallbackRunnable final : public Runnable
 public:
   EntriesCallbackRunnable(FileSystemEntriesCallback* aCallback,
                           const Sequence<RefPtr<FileSystemEntry>>& aEntries)
-    : mCallback(aCallback)
+    : Runnable("EntriesCallbackRunnable")
+    , mCallback(aCallback)
     , mEntries(aEntries)
   {
     MOZ_ASSERT(aCallback);
@@ -78,8 +80,8 @@ FileSystemRootDirectoryReader::ReadEntries(FileSystemEntriesCallback& aSuccessCa
   if (mAlreadyRead) {
     RefPtr<EmptyEntriesCallbackRunnable> runnable =
       new EmptyEntriesCallbackRunnable(&aSuccessCallback);
-    aRv = NS_DispatchToMainThread(runnable);
-    NS_WARNING_ASSERTION(!aRv.Failed(), "NS_DispatchToMainThread failed");
+
+    aRv = FileSystemUtils::DispatchRunnable(GetParentObject(), runnable.forget());
     return;
   }
 
@@ -88,8 +90,8 @@ FileSystemRootDirectoryReader::ReadEntries(FileSystemEntriesCallback& aSuccessCa
 
   RefPtr<EntriesCallbackRunnable> runnable =
     new EntriesCallbackRunnable(&aSuccessCallback, mEntries);
-  aRv = NS_DispatchToMainThread(runnable);
-  NS_WARNING_ASSERTION(!aRv.Failed(), "NS_DispatchToMainThread failed");
+
+  aRv = FileSystemUtils::DispatchRunnable(GetParentObject(), runnable.forget());
 }
 
 } // dom namespace

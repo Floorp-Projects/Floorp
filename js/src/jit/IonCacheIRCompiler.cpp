@@ -410,7 +410,20 @@ IonCacheIRCompiler::init()
         }
         break;
       }
-      case CacheKind::GetName:
+      case CacheKind::GetName: {
+        IonGetNameIC* ic = ic_->asGetNameIC();
+        ValueOperand output = ic->output();
+
+        available.add(output);
+        available.add(ic->temp());
+
+        liveRegs_.emplace(ic->liveRegs());
+        outputUnchecked_.emplace(output);
+
+        MOZ_ASSERT(numInputs == 1);
+        allocator.initInputLocation(0, ic->environment(), JSVAL_TYPE_OBJECT);
+        break;
+      }
       case CacheKind::In:
         MOZ_CRASH("Invalid cache");
     }
@@ -1020,13 +1033,44 @@ IonCacheIRCompiler::emitLoadFrameArgumentResult()
 bool
 IonCacheIRCompiler::emitLoadEnvironmentFixedSlotResult()
 {
-    MOZ_CRASH("Baseline-specific op");
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    int32_t offset = int32StubField(reader.stubOffset());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Check for uninitialized lexicals.
+    Address slot(obj, offset);
+    masm.branchTestMagic(Assembler::Equal, slot, failure->label());
+
+    // Load the value.
+    masm.loadTypedOrValue(slot, output);
+    return true;
 }
 
 bool
 IonCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult()
 {
-    MOZ_CRASH("Baseline-specific op");
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    int32_t offset = int32StubField(reader.stubOffset());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch);
+
+    // Check for uninitialized lexicals.
+    Address slot(scratch, offset);
+    masm.branchTestMagic(Assembler::Equal, slot, failure->label());
+
+    // Load the value.
+    masm.loadTypedOrValue(slot, output);
+    return true;
 }
 
 static bool
