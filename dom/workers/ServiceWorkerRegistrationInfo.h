@@ -191,6 +191,12 @@ public:
   void
   SetLoadFlags(nsLoadFlags aLoadFlags);
 
+  int64_t
+  GetLastUpdateTime() const;
+
+  void
+  SetLastUpdateTime(const int64_t aTime);
+
 private:
   enum TransitionType {
     TransitionToNextState = 0,
