@@ -95,7 +95,7 @@ impl MutByteSlice {
     }
 }
 
-#[repr(C)]
+#[repr(u32)]
 pub enum WrGradientExtendMode {
     Clamp,
     Repeat,
@@ -306,7 +306,7 @@ impl<T: Copy> WrSideOffsets2D<T>
     }
 }
 
-#[repr(C)]
+#[repr(u32)]
 pub enum WrRepeatMode
 {
     Stretch,
