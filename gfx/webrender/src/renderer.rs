@@ -42,14 +42,14 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use texture_cache::TextureCache;
 use threadpool::ThreadPool;
-use tiling::{AlphaBatchKind, BlurCommand, Frame, PrimitiveBatch, PrimitiveBatchData};
+use tiling::{AlphaBatchKind, BlurCommand, Frame, PrimitiveBatch, PrimitiveBatchData, RenderTarget};
 use tiling::{AlphaRenderTarget, CacheClipInstance, PrimitiveInstance, ColorRenderTarget, RenderTargetKind};
 use time::precise_time_ns;
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use util::TransformedRectKind;
 use webgl_types::GLContextHandleWrapper;
 use webrender_traits::{ColorF, Epoch, PipelineId, RenderNotifier, RenderDispatcher};
-use webrender_traits::{ExternalImageId, ImageData, ImageFormat, RenderApiSender};
+use webrender_traits::{ExternalImageId, ExternalImageType, ImageData, ImageFormat, RenderApiSender};
 use webrender_traits::{DeviceIntRect, DevicePoint, DeviceIntPoint, DeviceIntSize, DeviceUintSize};
 use webrender_traits::{ImageDescriptor, BlobImageRenderer};
 use webrender_traits::channel;
@@ -65,6 +65,7 @@ const GPU_TAG_INIT: GpuProfileTag = GpuProfileTag { label: "Init", color: debug_
 const GPU_TAG_SETUP_TARGET: GpuProfileTag = GpuProfileTag { label: "Target", color: debug_colors::SLATEGREY };
 const GPU_TAG_PRIM_RECT: GpuProfileTag = GpuProfileTag { label: "Rect", color: debug_colors::RED };
 const GPU_TAG_PRIM_IMAGE: GpuProfileTag = GpuProfileTag { label: "Image", color: debug_colors::GREEN };
+const GPU_TAG_PRIM_IMAGE_RECT: GpuProfileTag = GpuProfileTag { label: "ImageRect", color: debug_colors::GREENYELLOW };
 const GPU_TAG_PRIM_YUV_IMAGE: GpuProfileTag = GpuProfileTag { label: "YuvImage", color: debug_colors::DARKGREEN };
 const GPU_TAG_PRIM_BLEND: GpuProfileTag = GpuProfileTag { label: "Blend", color: debug_colors::LIGHTBLUE };
 const GPU_TAG_PRIM_HW_COMPOSITE: GpuProfileTag = GpuProfileTag { label: "HwComposite", color: debug_colors::DODGERBLUE };
@@ -223,6 +224,7 @@ pub type GradientDataStore = GpuStore<GradientData, GradientDataTextureLayout>;
 const TRANSFORM_FEATURE: &'static str = "TRANSFORM";
 const SUBPIXEL_AA_FEATURE: &'static str = "SUBPIXEL_AA";
 const CLIP_FEATURE: &'static str = "CLIP";
+const TEXTURE_RECT_FEATURE: &'static str = "TEXTURE_RECT";
 
 enum ShaderKind {
     Primitive,
@@ -465,6 +467,7 @@ pub struct Renderer {
     ps_text_run: PrimitiveShader,
     ps_text_run_subpixel: PrimitiveShader,
     ps_image: PrimitiveShader,
+    ps_image_rect: PrimitiveShader,
     ps_yuv_image: PrimitiveShader,
     ps_border: PrimitiveShader,
     ps_gradient: PrimitiveShader,
@@ -555,12 +558,11 @@ impl From<std::io::Error> for InitError {
 }
 
 impl Renderer {
-    /// Initializes webrender and creates a Renderer and RenderApiSender.
+    /// Initializes webrender and creates a `Renderer` and `RenderApiSender`.
     ///
     /// # Examples
-    /// Initializes a Renderer with some reasonable values. For more information see
-    /// [RendererOptions][rendereroptions].
-    /// [rendereroptions]: struct.RendererOptions.html
+    /// Initializes a `Renderer` with some reasonable values. For more information see
+    /// [`RendererOptions`][rendereroptions].
     ///
     /// ```rust,ignore
     /// # use webrender::renderer::Renderer;
@@ -573,6 +575,7 @@ impl Renderer {
     /// };
     /// let (renderer, sender) = Renderer::new(opts);
     /// ```
+    /// [rendereroptions]: struct.RendererOptions.html
     pub fn new(gl: Rc<gl::Gl>,
                mut options: RendererOptions,
                initial_window_size: DeviceUintSize) -> Result<(Renderer, RenderApiSender), InitError> {
@@ -667,6 +670,13 @@ impl Renderer {
             PrimitiveShader::new("ps_image",
                                  &mut device,
                                  &[],
+                                 options.precache_shaders)
+        };
+
+        let ps_image_rect = try!{
+            PrimitiveShader::new("ps_image",
+                                 &mut device,
+                                 &[ TEXTURE_RECT_FEATURE ],
                                  options.precache_shaders)
         };
 
@@ -912,6 +922,7 @@ impl Renderer {
             ps_text_run: ps_text_run,
             ps_text_run_subpixel: ps_text_run_subpixel,
             ps_image: ps_image,
+            ps_image_rect: ps_image_rect,
             ps_yuv_image: ps_yuv_image,
             ps_border: ps_border,
             ps_box_shadow: ps_box_shadow,
@@ -1039,10 +1050,10 @@ impl Renderer {
     fn resolve_source_texture(&mut self, texture_id: &SourceTexture) -> TextureId {
         match *texture_id {
             SourceTexture::Invalid => TextureId::invalid(),
-            SourceTexture::WebGL(id) => TextureId::new(id),
-            SourceTexture::External(ref key) => {
+            SourceTexture::WebGL(id) => TextureId::new(id, TextureTarget::Default),
+            SourceTexture::External(external_image) => {
                 *self.external_images
-                     .get(key)
+                     .get(&external_image.id)
                      .expect("BUG: External image should be resolved by now!")
             }
             SourceTexture::TextureCache(index) => {
@@ -1065,8 +1076,8 @@ impl Renderer {
 
     /// Renders the current frame.
     ///
-    /// A Frame is supplied by calling [set_root_stacking_context()][newframe].
-    /// [newframe]: ../../webrender_traits/struct.RenderApi.html#method.set_root_stacking_context
+    /// A Frame is supplied by calling [`set_display_list()`][newframe].
+    /// [newframe]: ../../webrender_traits/struct.RenderApi.html#method.set_display_list
     pub fn render(&mut self, framebuffer_size: DeviceUintSize) {
         profile_scope!("render");
 
@@ -1193,24 +1204,31 @@ impl Renderer {
                                                              mode,
                                                              Some(raw.as_slice()));
                                 }
-                                ImageData::ExternalBuffer(id) => {
-                                    let handler = self.external_image_handler
-                                                      .as_mut()
-                                                      .expect("Found external image, but no handler set!");
+                                ImageData::External(ext_image) => {
+                                    match ext_image.image_type {
+                                        ExternalImageType::ExternalBuffer => {
+                                            let handler = self.external_image_handler
+                                                              .as_mut()
+                                                              .expect("Found external image, but no handler set!");
 
-                                    match handler.lock(id).source {
-                                        ExternalImageSource::RawData(raw) => {
-                                            self.device.init_texture(texture_id,
-                                                                     width,
-                                                                     height,
-                                                                     format,
-                                                                     filter,
-                                                                     mode,
-                                                                     Some(raw));
+                                            match handler.lock(ext_image.id).source {
+                                                ExternalImageSource::RawData(raw) => {
+                                                    self.device.init_texture(texture_id,
+                                                                             width,
+                                                                             height,
+                                                                             format,
+                                                                             filter,
+                                                                             mode,
+                                                                             Some(raw));
+                                                }
+                                                _ => panic!("No external buffer found"),
+                                            };
+                                            handler.unlock(ext_image.id);
                                         }
-                                        _ => panic!("No external buffer found"),
-                                    };
-                                    handler.unlock(id);
+                                        _ => {
+                                            panic!("External texture handle should not use TextureUpdateOp::Create.");
+                                        }
+                                    }
                                 }
                                 _ => {
                                     panic!("No suitable image buffer for TextureUpdateOp::Create.");
@@ -1339,6 +1357,10 @@ impl Renderer {
                         let shader = self.ps_image.get(&mut self.device, transform_kind);
                         (GPU_TAG_PRIM_IMAGE, shader)
                     }
+                    AlphaBatchKind::ImageRect => {
+                        let shader = self.ps_image_rect.get(&mut self.device, transform_kind);
+                        (GPU_TAG_PRIM_IMAGE_RECT, shader)
+                    }
                     AlphaBatchKind::YuvImage => {
                         let shader = self.ps_yuv_image.get(&mut self.device, transform_kind);
                         (GPU_TAG_PRIM_YUV_IMAGE, shader)
@@ -1459,11 +1481,27 @@ impl Renderer {
             self.device.enable_depth_write();
             self.device.set_blend(false);
             self.device.set_blend_mode_alpha();
-            self.device.clear_target(clear_color, Some(1.0));
+            match render_target {
+                Some(..) => {
+                    // TODO(gw): Applying a scissor rect and minimal clear here
+                    // is a very large performance win on the Intel and nVidia
+                    // GPUs that I have tested with. It's possible it may be a
+                    // performance penalty on other GPU types - we should test this
+                    // and consider different code paths.
+                    self.device.clear_target_rect(clear_color,
+                                                  Some(1.0),
+                                                  target.used_rect());
+                }
+                None => {
+                    self.device.clear_target(clear_color, Some(1.0));
+                }
+            }
 
             let isolate_clear_color = Some([0.0, 0.0, 0.0, 0.0]);
             for isolate_clear in &target.isolate_clears {
-                self.device.clear_target_rect(isolate_clear_color, None, *isolate_clear);
+                self.device.clear_target_rect(isolate_clear_color,
+                                              None,
+                                              *isolate_clear);
             }
 
             self.device.disable_depth_write();
@@ -1592,8 +1630,15 @@ impl Renderer {
             self.device.disable_depth();
             self.device.disable_depth_write();
 
+            // TODO(gw): Applying a scissor rect and minimal clear here
+            // is a very large performance win on the Intel and nVidia
+            // GPUs that I have tested with. It's possible it may be a
+            // performance penalty on other GPU types - we should test this
+            // and consider different code paths.
             let clear_color = [1.0, 1.0, 1.0, 0.0];
-            self.device.clear_target(Some(clear_color), None);
+            self.device.clear_target_rect(Some(clear_color),
+                                          None,
+                                          target.used_rect());
         }
 
         // Draw the clip items into the tiled alpha mask.
@@ -1642,16 +1687,24 @@ impl Renderer {
             for deferred_resolve in &frame.deferred_resolves {
                 GpuMarker::fire(self.device.gl(), "deferred resolve");
                 let props = &deferred_resolve.image_properties;
-                let external_id = props.external_id
-                                       .expect("BUG: Deferred resolves must be external images!");
-                let image = handler.lock(external_id);
+                let ext_image = props.external_image
+                                     .expect("BUG: Deferred resolves must be external images!");
+                let image = handler.lock(ext_image.id);
+                let texture_target = match ext_image.image_type {
+                    ExternalImageType::Texture2DHandle => TextureTarget::Default,
+                    ExternalImageType::TextureRectHandle => TextureTarget::Rect,
+                    _ => {
+                        panic!("{:?} is not a suitable image type in update_deferred_resolves().",
+                            ext_image.image_type);
+                    }
+                };
 
                 let texture_id = match image.source {
-                    ExternalImageSource::NativeTexture(texture_id) => TextureId::new(texture_id),
+                    ExternalImageSource::NativeTexture(texture_id) => TextureId::new(texture_id, texture_target),
                     _ => panic!("No native texture found."),
                 };
 
-                self.external_images.insert(external_id, texture_id);
+                self.external_images.insert(ext_image.id, texture_id);
                 let resource_rect_index = deferred_resolve.resource_address.0 as usize;
                 let resource_rect = &mut frame.gpu_resource_rects[resource_rect_index];
                 resource_rect.uv0 = DevicePoint::new(image.u0, image.v0);

@@ -11,7 +11,7 @@ use std::ops::Deref;
 
 use bincode::refbox::{RefBox, StrBox, SliceBox};
 
-use bincode::SizeLimit::{Infinite, Bounded};
+use bincode::{Infinite, Bounded};
 use bincode::{serialized_size, ErrorKind, Result};
 use bincode::endian_choice::{serialize, deserialize};
 
@@ -34,7 +34,6 @@ fn the_same<V>(element: V)
     }
 
     let size = serialized_size(&element);
-
     {
         let encoded = serialize_little(&element, Infinite);
         let encoded = encoded.unwrap();
@@ -47,7 +46,7 @@ fn the_same<V>(element: V)
     }
 
     {
-        let encoded = serialize::<_, byteorder::BigEndian>(&element, Infinite);
+        let encoded = serialize::<_, _, byteorder::BigEndian>(&element, Infinite);
         let encoded = encoded.unwrap();
         let decoded = deserialize::<_, byteorder::BigEndian>(&encoded[..]);
         let decoded = decoded.unwrap();
@@ -235,11 +234,11 @@ fn deserializing_errors() {
 #[test]
 fn too_big_deserialize() {
     let serialized = vec![0,0,0,3];
-    let deserialized: Result<u32> = deserialize_from_little::<_, _>(&mut &serialized[..], Bounded(3));
+    let deserialized: Result<u32> = deserialize_from_little::<_, _, _>(&mut &serialized[..], Bounded(3));
     assert!(deserialized.is_err());
 
     let serialized = vec![0,0,0,3];
-    let deserialized: Result<u32> = deserialize_from_little::<_, _>(&mut &serialized[..], Bounded(4));
+    let deserialized: Result<u32> = deserialize_from_little::<_, _, _>(&mut &serialized[..], Bounded(4));
     assert!(deserialized.is_ok());
 }
 
@@ -256,7 +255,7 @@ fn char_serialization() {
 #[test]
 fn too_big_char_deserialize() {
     let serialized = vec![0x41];
-    let deserialized: Result<char> = deserialize_from_little::<_, _>(&mut &serialized[..], Bounded(1));
+    let deserialized: Result<char> = deserialize_from_little::<_, _, _>(&mut &serialized[..], Bounded(1));
     assert!(deserialized.is_ok());
     assert_eq!(deserialized.unwrap(), 'A');
 }
@@ -404,6 +403,6 @@ fn bytes() {
 fn endian_difference() {
     let x = 10u64;
     let little = serialize_little(&x, Infinite).unwrap();
-    let big = serialize::<_, byteorder::BigEndian>(&x, Infinite).unwrap();
+    let big = serialize::<_, _, byteorder::BigEndian>(&x, Infinite).unwrap();
     assert_ne!(little, big);
 }

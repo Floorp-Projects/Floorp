@@ -23,12 +23,19 @@ void main(void) {
     // and not snap here?
     vStartCenter = floor(0.5 + gradient.start_end_center.xy * uDevicePixelRatio) / uDevicePixelRatio;
     vEndCenter = floor(0.5 + gradient.start_end_center.zw * uDevicePixelRatio) / uDevicePixelRatio;
-    vStartRadius = gradient.start_end_radius_extend_mode.x;
-    vEndRadius = gradient.start_end_radius_extend_mode.y;
+    vStartRadius = gradient.start_end_radius_ratio_xy_extend_mode.x;
+    vEndRadius = gradient.start_end_radius_ratio_xy_extend_mode.y;
+
+    // Transform all coordinates by the y scale so the
+    // fragment shader can work with circles
+    float ratio_xy = gradient.start_end_radius_ratio_xy_extend_mode.z;
+    vPos.y *= ratio_xy;
+    vStartCenter.y *= ratio_xy;
+    vEndCenter.y *= ratio_xy;
 
     // V coordinate of gradient row in lookup texture.
     vGradientIndex = float(prim.sub_index);
 
     // Whether to repeat the gradient instead of clamping.
-    vGradientRepeat = float(int(gradient.start_end_radius_extend_mode.z) == EXTEND_MODE_REPEAT);
+    vGradientRepeat = float(int(gradient.start_end_radius_ratio_xy_extend_mode.w) == EXTEND_MODE_REPEAT);
 }
