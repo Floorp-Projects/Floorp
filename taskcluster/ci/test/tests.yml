@@ -531,7 +531,6 @@ mochitest-browser-screenshots:
     run-on-projects:
         by-test-platform:
             linux64/opt: ['mozilla-central', 'try']
-            linux64-nightly/opt: ['mozilla-central', 'try']
             default: []
     e10s: true
     max-run-time: 3600

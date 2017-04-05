@@ -5453,7 +5453,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
       result = DispatchMouseEvent(eMouseMove, wParam, lParam,
                                   false, WidgetMouseEvent::eLeftButton,
-                                  MOUSE_INPUT_SOURCE());
+                                  MOUSE_INPUT_SOURCE(),
+                                  mPointerEvents.GetCachedPointerInfo(msg, wParam));
       if (userMovedMouse) {
         DispatchPendingEvents();
       }
@@ -5471,7 +5472,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     {
       result = DispatchMouseEvent(eMouseDown, wParam, lParam,
                                   false, WidgetMouseEvent::eLeftButton,
-                                  MOUSE_INPUT_SOURCE());
+                                  MOUSE_INPUT_SOURCE(),
+                                  mPointerEvents.GetCachedPointerInfo(msg, wParam));
       DispatchPendingEvents();
     }
     break;
@@ -5480,7 +5482,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     {
       result = DispatchMouseEvent(eMouseUp, wParam, lParam,
                                   false, WidgetMouseEvent::eLeftButton,
-                                  MOUSE_INPUT_SOURCE());
+                                  MOUSE_INPUT_SOURCE(),
+                                  mPointerEvents.GetCachedPointerInfo(msg, wParam));
       DispatchPendingEvents();
     }
     break;
@@ -5631,7 +5634,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       result = DispatchMouseEvent(eMouseDown, wParam,
                                   lParam, false,
                                   WidgetMouseEvent::eRightButton,
-                                  MOUSE_INPUT_SOURCE());
+                                  MOUSE_INPUT_SOURCE(),
+                                  mPointerEvents.GetCachedPointerInfo(msg, wParam));
       DispatchPendingEvents();
       break;
 
@@ -5639,7 +5643,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       result = DispatchMouseEvent(eMouseUp, wParam,
                                   lParam, false,
                                   WidgetMouseEvent::eRightButton,
-                                  MOUSE_INPUT_SOURCE());
+                                  MOUSE_INPUT_SOURCE(),
+                                  mPointerEvents.GetCachedPointerInfo(msg, wParam));
       DispatchPendingEvents();
       break;
 
@@ -7795,7 +7800,7 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
     case WM_POINTERDOWN:
       {
         WinPointerEvents pointerEvents;
-        if (!pointerEvents.ShouldRollupOnPointerEvent(aWParam)) {
+        if (!pointerEvents.ShouldRollupOnPointerEvent(nativeMessage, aWParam)) {
           return false;
         }
         if (!GetPopupsToRollup(rollupListener, &popupsToRollup)) {
@@ -8211,14 +8216,18 @@ nsWindow::OnWindowedPluginKeyEvent(const NativeEventData& aKeyEventData,
 
 bool nsWindow::OnPointerEvents(UINT msg, WPARAM aWParam, LPARAM aLParam)
 {
-  if (!mPointerEvents.ShouldFireCompatibilityMouseEventsForPen(aWParam)) {
-    // We only handle WM_POINTER* when the input source is pen. This is because
-    // we need some information (e.g. tiltX, tiltY) which can't be retrieved by
-    // WM_*BUTTONDOWN. So we fire Gecko WidgetMouseEvent when handling
-    // WM_POINTER* and consume WM_POINTER* to stop Windows fire WM_*BUTTONDOWN.
+  if (!mPointerEvents.ShouldHandleWinPointerMessages(msg, aWParam)) {
     return false;
   }
-
+  if (!mPointerEvents.ShouldFirePointerEventByWinPointerMessages()) {
+    // We have to handle WM_POINTER* to fetch and cache pen related information
+    // and fire WidgetMouseEvent with the cached information the WM_*BUTTONDOWN
+    // handler. This is because Windows doesn't support ::DoDragDrop in the touch
+    // or pen message handlers.
+    mPointerEvents.ConvertAndCachePointerInfo(msg, aWParam);
+    // Don't consume the Windows WM_POINTER* messages
+    return false;
+  }
   // When dispatching mouse events with pen, there may be some
   // WM_POINTERUPDATE messages between WM_POINTERDOWN and WM_POINTERUP with
   // small movements. Those events will reset sLastMousePoint and reset

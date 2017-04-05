@@ -38,18 +38,18 @@ GetDirectoryListingTaskChild::Create(FileSystemBase* aFileSystem,
   MOZ_ASSERT(aDirectory);
   aFileSystem->AssertIsOnOwningThread();
 
-  RefPtr<GetDirectoryListingTaskChild> task =
-    new GetDirectoryListingTaskChild(aFileSystem, aDirectory, aTargetPath,
-                                     aFilters);
-
-  // aTargetPath can be null. In this case SetError will be called.
-
   nsCOMPtr<nsIGlobalObject> globalObject =
     do_QueryInterface(aFileSystem->GetParentObject());
   if (NS_WARN_IF(!globalObject)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
+
+  RefPtr<GetDirectoryListingTaskChild> task =
+    new GetDirectoryListingTaskChild(globalObject, aFileSystem, aDirectory,
+                                     aTargetPath, aFilters);
+
+  // aTargetPath can be null. In this case SetError will be called.
 
   task->mPromise = Promise::Create(globalObject, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -59,11 +59,12 @@ GetDirectoryListingTaskChild::Create(FileSystemBase* aFileSystem,
   return task.forget();
 }
 
-GetDirectoryListingTaskChild::GetDirectoryListingTaskChild(FileSystemBase* aFileSystem,
+GetDirectoryListingTaskChild::GetDirectoryListingTaskChild(nsIGlobalObject* aGlobalObject,
+                                                           FileSystemBase* aFileSystem,
                                                            Directory* aDirectory,
                                                            nsIFile* aTargetPath,
                                                            const nsAString& aFilters)
-  : FileSystemTaskChildBase(aFileSystem)
+  : FileSystemTaskChildBase(aGlobalObject, aFileSystem)
   , mDirectory(aDirectory)
   , mTargetPath(aTargetPath)
   , mFilters(aFilters)

@@ -43,7 +43,8 @@ protected:
   HandlerCallback() override;
 
 private:
-  GetFileOrDirectoryTaskChild(FileSystemBase* aFileSystem,
+  GetFileOrDirectoryTaskChild(nsIGlobalObject* aGlobalObject,
+                              FileSystemBase* aFileSystem,
                               nsIFile* aTargetPath);
 
   RefPtr<Promise> mPromise;

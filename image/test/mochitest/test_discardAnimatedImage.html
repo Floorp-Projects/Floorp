@@ -6,6 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=686905
 <head>
   <title>Test that animated images can be discarded</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
   <script type="text/javascript" src="imgutils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -18,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=686905
     <img id="infinitepng" src="infinite-apng.png">
     <img id="infinitegif" src="animated1.gif">
     <img id="finitepng" src="restore-previous.png">
-    <img id="finitegif" src="restore-previous.gif">
+    <img id="finitegif" src="animated-gif.gif">
   </div>
 </div>
 <pre id="test">
@@ -36,54 +37,116 @@ window.onload = function() {
   }, runTest);
 }
 
-var gImgs = ['finitepng', 'finitegif', 'infinitepng', 'infinitegif'];
+var gImgs = ['infinitepng', 'infinitegif', 'finitepng', 'finitegif'];
+// If we are currently counting frame updates.
+var gCountingFrameUpdates = false;
+// The number of frame update notifications for the images in gImgs that happen
+// after discarding. (The last two images are finite looping so we don't expect
+// them to get incremented but it's possible if they don't finish their
+// animation before we discard them.)
+var gNumFrameUpdates = [0, 0, 0, 0];
+// The last snapshot of the image. Used to check that the image actually changes.
+var gLastSnapShot = [null, null, null, null];
+// Number of observed changes in the snapshot.
+var gNumSnapShotChanges = [0, 0, 0, 0];
+
+// 2 would probably be a good enough test, we arbitrarily choose 4.
+var kNumFrameUpdatesToExpect = 4;
 
 function runTest() {
   var animatedDiscardable =
     SpecialPowers.getBoolPref('image.mem.animated.discardable');
   if (!animatedDiscardable) {
-    ok(true, "discarding of animated images is disabled, nothing to test")
+    ok(true, "discarding of animated images is disabled, nothing to test");
     SimpleTest.finish();
     return;
   }
 
+  setTimeout(step2, 0);
+}
+
+function step2() {
   // Draw the images to canvas to force them to be decoded.
   for (var i = 0; i < gImgs.length; i++) {
     drawCanvas(document.getElementById(gImgs[i]));
   }
 
   for (var i = 0; i < gImgs.length; i++) {
-    addCallback(document.getElementById(gImgs[i]));
+    addCallbacks(document.getElementById(gImgs[i]), i);
   }
 
+  setTimeout(step3, 0);
+}
+
+function step3() {
   document.getElementById("container").style.display = "none";
+  document.documentElement.offsetLeft; // force that style to take effect
 
   for (var i = 0; i < gImgs.length; i++) {
     requestDiscard(document.getElementById(gImgs[i]));
   }
+
+  // the discard observers will call step4
 }
 
-function step2() {
+function step4() {
+  gCountingFrameUpdates = true;
   document.getElementById("container").style.display = "";
 
   // Draw the images to canvas to force them to be decoded again.
   for (var i = 0; i < gImgs.length; i++) {
     drawCanvas(document.getElementById(gImgs[i]));
   }
-
-  SimpleTest.finish();
 }
 
-function addCallback(anImage) {
+function checkIfFinished() {
+  if ((gNumFrameUpdates[0] >= kNumFrameUpdatesToExpect) &&
+      (gNumFrameUpdates[1] >= kNumFrameUpdatesToExpect) &&
+      (gNumSnapShotChanges[0] >= kNumFrameUpdatesToExpect) &&
+      (gNumSnapShotChanges[1] >= kNumFrameUpdatesToExpect)) {
+    ok(true, "got expected frame updates");
+    SimpleTest.finish();
+  }
+}
+
+// arrayIndex is the index into the arrays gNumFrameUpdates and gNumDecodes
+// to increment when a frame update notification is received.
+function addCallbacks(anImage, arrayIndex) {
   var observer = new ImageDecoderObserverStub();
   observer.discard = function () {
-    imgLoadingContent.removeObserver(scriptedObserver);
     gNumDiscards++;
     ok(true, "got image discard");
-    if (gNumDiscards == gImgs.length) {
-      step2();
+    if (arrayIndex >= 2) {
+      // The last two images are finite, so we don't expect any frame updates,
+      // this image is done the test, so remove the observer.
+      imgLoadingContent.removeObserver(scriptedObserver);
     }
-  }
+    if (gNumDiscards == gImgs.length) {
+      step4();
+    }
+  };
+  observer.frameUpdate = function () {
+    if (!gCountingFrameUpdates) {
+      return;
+    }
+    gNumFrameUpdates[arrayIndex]++;
+
+    var r = document.getElementById(gImgs[arrayIndex]).getBoundingClientRect();
+    var snapshot = snapshotRect(window, r, "rgba(0,0,0,0)");
+    if (gLastSnapShot[arrayIndex] != null) {
+      if (snapshot.toDataURL() != gLastSnapShot[arrayIndex].toDataURL()) {
+        gNumSnapShotChanges[arrayIndex]++;
+      }
+    }
+    gLastSnapShot[arrayIndex] = snapshot;
+
+    if (gNumFrameUpdates[arrayIndex] >= kNumFrameUpdatesToExpect &&
+        gNumSnapShotChanges[arrayIndex] >= kNumFrameUpdatesToExpect) {
+      imgLoadingContent.removeObserver(scriptedObserver);
+    }
+    ok(true, "got frame update");
+    checkIfFinished();
+  };
   observer = SpecialPowers.wrapCallbackObject(observer);
 
   var scriptedObserver = SpecialPowers.Cc["@mozilla.org/image/tools;1"]
@@ -104,12 +167,16 @@ function requestDiscard(anImage) {
 }
 
 function drawCanvas(anImage) {
-  dump(anImage + "\n");
   var canvas = document.getElementById('canvas');
   var context = canvas.getContext('2d');
 
+  context.clearRect(0,0,100,100);
+  var cleared = canvas.toDataURL();
+
   context.drawImage(anImage, 0, 0);
   ok(true, "we got through the drawImage call without an exception being thrown");
+
+  ok(cleared != canvas.toDataURL(), "drawImage drew something");
 }
 
 </script>

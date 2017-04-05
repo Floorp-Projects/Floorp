@@ -45,6 +45,7 @@ IonIC::scratchRegisterForEntryJump()
       case CacheKind::SetElem:
         return asSetPropertyIC()->temp();
       case CacheKind::GetName:
+        return asGetNameIC()->temp();
       case CacheKind::In:
         MOZ_CRASH("Baseline-specific for now");
     }
@@ -273,6 +274,49 @@ IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript, IonSetProperty
         if (!attached && !isTemporarilyUnoptimizable)
             ic->state().trackNotAttached();
     }
+
+    return true;
+}
+
+/* static */ bool
+IonGetNameIC::update(JSContext* cx, HandleScript outerScript, IonGetNameIC* ic,
+                     HandleObject envChain, MutableHandleValue res)
+{
+    IonScript* ionScript = outerScript->ionScript();
+
+    if (ic->state().maybeTransition())
+        ic->discardStubs(cx->zone());
+
+    jsbytecode* pc = ic->pc();
+    RootedPropertyName name(cx, ic->script()->getName(pc));
+
+    if (ic->state().canAttachStub()) {
+        bool attached = false;
+        RootedScript script(cx, ic->script());
+        GetNameIRGenerator gen(cx, script, pc, ic->state().mode(), envChain, name);
+        if (gen.tryAttachStub())
+            ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
+
+        if (!attached)
+            ic->state().trackNotAttached();
+    }
+
+    RootedObject obj(cx);
+    RootedObject holder(cx);
+    Rooted<PropertyResult> prop(cx);
+    if (!LookupName(cx, name, envChain, &obj, &holder, &prop))
+        return false;
+
+    if (*GetNextPc(pc) == JSOP_TYPEOF) {
+        if (!FetchName<GetNameMode::TypeOf>(cx, obj, holder, name, prop, res))
+            return false;
+    } else {
+        if (!FetchName<GetNameMode::Normal>(cx, obj, holder, name, prop, res))
+            return false;
+    }
+
+    // No need to call TypeScript::Monitor, IonBuilder always inserts a type
+    // barrier after GetName ICs.
 
     return true;
 }
