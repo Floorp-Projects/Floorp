@@ -42,5 +42,4 @@ partial interface ServiceWorkerContainer {
 
 dictionary RegistrationOptions {
   USVString scope;
-  boolean useCache;
 };
