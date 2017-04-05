@@ -8,8 +8,10 @@ with Files('**'):
     BUG_COMPONENT = ('Core', 'Graphics: WebRender')
 
 EXPORTS.mozilla.webrender += [
+    'RenderBufferTextureHost.h',
     'RendererOGL.h',
     'RenderTextureHost.h',
+    'RenderTextureHostOGL.h',
     'RenderThread.h',
     'webrender_ffi.h',
     'WebRenderAPI.h',
@@ -18,11 +20,21 @@ EXPORTS.mozilla.webrender += [
 
 UNIFIED_SOURCES += [
     'Moz2DImageRenderer.cpp',
+    'RenderBufferTextureHost.cpp',
     'RendererOGL.cpp',
     'RenderTextureHost.cpp',
+    'RenderTextureHostOGL.cpp',
     'RenderThread.cpp',
     'WebRenderAPI.cpp',
 ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    EXPORTS.mozilla.webrender += [
+        'RenderMacIOSurfaceTextureHostOGL.h',
+    ]
+    UNIFIED_SOURCES += [
+        'RenderMacIOSurfaceTextureHostOGL.cpp',
+    ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

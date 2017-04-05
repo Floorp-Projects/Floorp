@@ -89,6 +89,18 @@ public:
   const uint64_t mSerial;
 };
 
+static bool
+WrapWithWebRenderTextureHost(LayersBackend aBackend,
+                             TextureFlags aFlags)
+{
+  if (!gfxVars::UseWebRender() ||
+      (aFlags & TextureFlags::SNAPSHOT) ||
+      (aBackend != LayersBackend::LAYERS_WR)) {
+    return false;
+  }
+  return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 PTextureParent*
 TextureHost::CreateIPDLActor(HostIPCAllocator* aAllocator,
@@ -184,52 +196,55 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
                     LayersBackend aBackend,
                     TextureFlags aFlags)
 {
+  RefPtr<TextureHost> result;
+
   switch (aDesc.type()) {
     case SurfaceDescriptor::TSurfaceDescriptorBuffer:
     case SurfaceDescriptor::TSurfaceDescriptorDIB:
     case SurfaceDescriptor::TSurfaceDescriptorFileMapping:
     case SurfaceDescriptor::TSurfaceDescriptorGPUVideo:
-      return CreateBackendIndependentTextureHost(aDesc, aDeallocator, aBackend, aFlags);
+      result = CreateBackendIndependentTextureHost(aDesc, aDeallocator, aBackend, aFlags);
+      break;
 
     case SurfaceDescriptor::TEGLImageDescriptor:
     case SurfaceDescriptor::TSurfaceTextureDescriptor:
     case SurfaceDescriptor::TSurfaceDescriptorSharedGLTexture:
-      return CreateTextureHostOGL(aDesc, aDeallocator, aBackend, aFlags);
+      result = CreateTextureHostOGL(aDesc, aDeallocator, aBackend, aFlags);
+      break;
 
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface:
       if (aBackend == LayersBackend::LAYERS_OPENGL ||
           aBackend == LayersBackend::LAYERS_WR) {
-        return CreateTextureHostOGL(aDesc, aDeallocator, aBackend, aFlags);
+        result = CreateTextureHostOGL(aDesc, aDeallocator, aBackend, aFlags);
+        break;
       } else {
-        return CreateTextureHostBasic(aDesc, aDeallocator, aBackend, aFlags);
+        result = CreateTextureHostBasic(aDesc, aDeallocator, aBackend, aFlags);
+        break;
       }
 
 #ifdef MOZ_X11
     case SurfaceDescriptor::TSurfaceDescriptorX11: {
       const SurfaceDescriptorX11& desc = aDesc.get_SurfaceDescriptorX11();
-      return MakeAndAddRef<X11TextureHost>(aFlags, desc);
+      result = MakeAndAddRef<X11TextureHost>(aFlags, desc);
+      break;
     }
 #endif
 
 #ifdef XP_WIN
     case SurfaceDescriptor::TSurfaceDescriptorD3D10:
     case SurfaceDescriptor::TSurfaceDescriptorDXGIYCbCr:
-      return CreateTextureHostD3D11(aDesc, aDeallocator, aBackend, aFlags);
+      result = CreateTextureHostD3D11(aDesc, aDeallocator, aBackend, aFlags);
+      break;
 #endif
     default:
       MOZ_CRASH("GFX: Unsupported Surface type host");
   }
-}
 
-bool WrapWithWebRenderTextureHost(LayersBackend aBackend,
-                                  TextureFlags aFlags)
-{
-  if (!gfxVars::UseWebRender() ||
-      (aFlags & TextureFlags::SNAPSHOT) ||
-      (aBackend != LayersBackend::LAYERS_WR)) {
-    return false;
+  if (WrapWithWebRenderTextureHost(aBackend, aFlags)) {
+    result = new WebRenderTextureHost(aDesc, aFlags, result);
   }
-  return true;
+
+  return result.forget();
 }
 
 already_AddRefed<TextureHost>
@@ -249,18 +264,12 @@ CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
                                         bufferDesc.desc(),
                                         aDeallocator,
                                         aFlags);
-          if (WrapWithWebRenderTextureHost(aBackend, aFlags)) {
-            result = new WebRenderTextureHost(aFlags, result);
-          }
           break;
         }
         case MemoryOrShmem::Tuintptr_t: {
           result = new MemoryTextureHost(reinterpret_cast<uint8_t*>(data.get_uintptr_t()),
                                          bufferDesc.desc(),
                                          aFlags);
-          if (WrapWithWebRenderTextureHost(aBackend, aFlags)) {
-            result = new WebRenderTextureHost(aFlags, result);
-          }
           break;
         }
         default:

@@ -20,6 +20,14 @@ impl Add<i32> for GpuStoreAddress {
     }
 }
 
+impl Add<usize> for GpuStoreAddress {
+    type Output = GpuStoreAddress;
+
+    fn add(self, other: usize) -> GpuStoreAddress {
+        GpuStoreAddress(self.0 + other as i32)
+    }
+}
+
 pub trait GpuStoreLayout {
     fn image_format() -> ImageFormat;
 

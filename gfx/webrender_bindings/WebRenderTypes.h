@@ -44,6 +44,9 @@ inline Epoch NewEpoch(uint32_t aEpoch) {
 inline Maybe<WrImageFormat>
 SurfaceFormatToWrImageFormat(gfx::SurfaceFormat aFormat) {
   switch (aFormat) {
+    case gfx::SurfaceFormat::R8G8B8X8:
+      // TODO: use RGBA + opaque flag
+      return Some(WrImageFormat::RGBA8);
     case gfx::SurfaceFormat::B8G8R8X8:
       // TODO: WebRender will have a BGRA + opaque flag for this but does not
       // have it yet (cf. issue #732).
@@ -348,6 +351,27 @@ static inline WrExternalImageId ToWrExternalImageId(uint64_t aID)
   WrExternalImageId id;
   id.id = aID;
   return id;
+}
+
+static inline WrExternalImage RawDataToWrExternalImage(const uint8_t* aBuff,
+                                                       size_t size)
+{
+  return WrExternalImage {
+    WrExternalImageIdType::RawData,
+    0, 0.0f, 0.0f, 0.0f, 0.0f,
+    aBuff, size
+  };
+}
+
+static inline WrExternalImage NativeTextureToWrExternalImage(uint8_t aHandle,
+                                                             float u0, float v0,
+                                                             float u1, float v1)
+{
+  return WrExternalImage {
+    WrExternalImageIdType::NativeTexture,
+    aHandle, u0, v0, u1, v1,
+    nullptr, 0
+  };
 }
 
 struct VecU8 {
