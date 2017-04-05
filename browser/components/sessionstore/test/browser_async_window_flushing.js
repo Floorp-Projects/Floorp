@@ -1,8 +1,5 @@
 "use strict";
 
-// This file generates content tasks.
-/* eslint-env mozilla/frame-script */
-
 const PAGE = "http://example.com/";
 
 /**
