@@ -143,6 +143,9 @@ const SUPPORTED_HTTP_CODES = [
 const GA_PARAMS =
   "?utm_source=mozilla&utm_medium=devtools-netmonitor&utm_campaign=default";
 
+const NETWORK_MONITOR_TIMINGS_MDN_URL =
+  "https://developer.mozilla.org/docs/Tools/Network_Monitor#Timings";
+
 /**
  * Get the MDN URL for the specified header.
  *
@@ -170,7 +173,17 @@ function getHTTPStatusCodeURL(statusCode) {
   return idx > -1 ? `https://developer.mozilla.org/docs/Web/HTTP/Status/${SUPPORTED_HTTP_CODES[idx] + GA_PARAMS}` : null;
 }
 
+/**
+ * Get the MDN URL of the Timings tag for Network Monitor.
+ *
+ * @return {string} the MDN URL of the Timings tag for Network Monitor.
+ */
+function getNetMonitorTimingsURL() {
+  return NETWORK_MONITOR_TIMINGS_MDN_URL;
+}
+
 module.exports = {
   getHeadersURL,
   getHTTPStatusCodeURL,
+  getNetMonitorTimingsURL,
 };
