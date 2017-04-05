@@ -18,6 +18,8 @@
 #include "nsIThread.h"
 #endif
 
+class nsIInputStream;
+
 namespace mozilla {
 class ErrorResult;
 namespace layers {
@@ -180,7 +182,8 @@ public:
   {
     return !mBlobImplArray.IsEmpty() ||
            !mWasmModuleArray.IsEmpty() ||
-           !mClonedSurfaces.IsEmpty();
+           !mClonedSurfaces.IsEmpty() ||
+           !mInputStreamArray.IsEmpty();
   }
 
   nsTArray<RefPtr<BlobImpl>>& BlobImpls()
@@ -193,6 +196,12 @@ public:
   {
     MOZ_ASSERT(mSupportsCloning, "WasmModules cannot be taken/set if cloning is not supported.");
     return mWasmModuleArray;
+  }
+
+  nsTArray<nsCOMPtr<nsIInputStream>>& InputStreams()
+  {
+    MOZ_ASSERT(mSupportsCloning, "InputStreams cannot be taken/set if cloning is not supported.");
+    return mInputStreamArray;
   }
 
   StructuredCloneScope CloneScope() const
@@ -302,6 +311,9 @@ protected:
 
   // Used for cloning JS::WasmModules in the structured cloning algorithm.
   nsTArray<RefPtr<JS::WasmModule>> mWasmModuleArray;
+
+  // Used for cloning InputStream in the structured cloning algorithm.
+  nsTArray<nsCOMPtr<nsIInputStream>> mInputStreamArray;
 
   // This is used for sharing the backend of ImageBitmaps.
   // The DataSourceSurface object must be thread-safely reference-counted.

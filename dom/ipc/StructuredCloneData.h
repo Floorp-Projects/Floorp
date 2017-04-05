@@ -11,6 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "nsISupportsImpl.h"
+#include "nsIInputStream.h"
 
 namespace IPC {
 class Message;
@@ -20,6 +21,7 @@ class PickleIterator;
 namespace mozilla {
 namespace ipc {
 
+class AutoIPCStream;
 class PBackgroundChild;
 class PBackgroundParent;
 
@@ -150,22 +152,19 @@ private:
 class StructuredCloneData : public StructuredCloneHolder
 {
 public:
-  StructuredCloneData()
-    : StructuredCloneData(StructuredCloneHolder::TransferringSupported)
-  {}
+  StructuredCloneData();
 
   StructuredCloneData(const StructuredCloneData&) = delete;
 
-  StructuredCloneData(StructuredCloneData&& aOther) = default;
+  StructuredCloneData(StructuredCloneData&& aOther);
 
-  ~StructuredCloneData()
-  {}
+  ~StructuredCloneData();
 
   StructuredCloneData&
   operator=(const StructuredCloneData& aOther) = delete;
 
   StructuredCloneData&
-  operator=(StructuredCloneData&& aOther) = default;
+  operator=(StructuredCloneData&& aOther);
 
   const nsTArray<RefPtr<BlobImpl>>& BlobImpls() const
   {
@@ -175,6 +174,16 @@ public:
   nsTArray<RefPtr<BlobImpl>>& BlobImpls()
   {
     return mBlobImplArray;
+  }
+
+  const nsTArray<nsCOMPtr<nsIInputStream>>& InputStreams() const
+  {
+    return mInputStreamArray;
+  }
+
+  nsTArray<nsCOMPtr<nsIInputStream>>& InputStreams()
+  {
+    return mInputStreamArray;
   }
 
   bool Copy(const StructuredCloneData& aData);
@@ -276,29 +285,33 @@ public:
     return mSupportsTransferring;
   }
 
+  FallibleTArray<mozilla::ipc::AutoIPCStream>& IPCStreams()
+  {
+    return mIPCStreams;
+  }
+
   // For IPC serialization
   void WriteIPCParams(IPC::Message* aMessage) const;
   bool ReadIPCParams(const IPC::Message* aMessage, PickleIterator* aIter);
 
 protected:
-  explicit StructuredCloneData(TransferringSupport aSupportsTransferring)
-    : StructuredCloneHolder(StructuredCloneHolder::CloningSupported,
-                            aSupportsTransferring,
-                            StructuredCloneHolder::StructuredCloneScope::DifferentProcess)
-    , mInitialized(false)
-  {}
-
+  explicit StructuredCloneData(TransferringSupport aSupportsTransferring);
 
 private:
   JSStructuredCloneData mExternalData;
   RefPtr<SharedJSAllocatedData> mSharedData;
+
+  // This array is needed because AutoIPCStream DTOR must be executed after the
+  // sending of the data via IPC. This will be fixed by bug 1353475.
+  FallibleTArray<mozilla::ipc::AutoIPCStream> mIPCStreams;
   bool mInitialized;
 };
 
 /**
  * For use when transferring should not be supported.
  */
-class StructuredCloneDataNoTransfers : public StructuredCloneData {
+class StructuredCloneDataNoTransfers : public StructuredCloneData
+{
 public:
   StructuredCloneDataNoTransfers()
     : StructuredCloneData(StructuredCloneHolder::TransferringNotSupported)
