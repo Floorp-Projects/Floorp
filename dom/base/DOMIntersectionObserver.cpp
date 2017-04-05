@@ -289,7 +289,12 @@ DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time
           if (!presContext) {
             break;
           }
-          rootFrame = presContext->PresShell()->GetRootScrollFrame();
+          nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
+          if (rootScrollFrame) {
+            rootFrame = rootScrollFrame;
+          } else {
+            break;
+          }
         }
         root = rootFrame->GetContent()->AsElement();
         nsIScrollableFrame* scrollFrame = do_QueryFrame(rootFrame);
