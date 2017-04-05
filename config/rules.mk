@@ -1030,7 +1030,8 @@ _PREPROCESSED_$1_FILES := $$(call _group_srcs,$1,$$($2))
 # Make preprocessed files PHONY so they are always executed, since they are
 # manual targets and we don't necessarily write to $@.
 .PHONY: $$(_PREPROCESSED_$1_FILES)
-$$(_PREPROCESSED_$1_FILES): %.i: %.$1 $$(call mkdir_deps,$$(MDDEPDIR))
+$$(_PREPROCESSED_$1_FILES): _DEPEND_CFLAGS=
+$$(_PREPROCESSED_$1_FILES): %.i: %.$1
 	$$(REPORT_BUILD_VERBOSE)
 	$$(addprefix $$(MKDIR) -p ,$$(filter-out .,$$(@D)))
 	$$($3) -C $$(PREPROCESS_OPTION)$$@ $(foreach var,$4,$$($(var))) $$($$(notdir $$<)_FLAGS) $$(_VPATH_SRCS)
