@@ -18,6 +18,7 @@ import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.event.TelemetryEvent;
 import org.mozilla.telemetry.net.DebugLogClient;
 import org.mozilla.telemetry.net.TelemetryClient;
+import org.mozilla.telemetry.ping.TelemetryCorePingBuilder;
 import org.mozilla.telemetry.ping.TelemetryEventPingBuilder;
 import org.mozilla.telemetry.schedule.TelemetryScheduler;
 import org.mozilla.telemetry.schedule.jobscheduler.JobSchedulerTelemetryScheduler;
@@ -91,6 +92,7 @@ public final class TelemetryWrapper {
         final TelemetryScheduler scheduler = new JobSchedulerTelemetryScheduler();
 
         final Telemetry telemetry = new Telemetry(configuration, storage, client, scheduler)
+                .addPingBuilder(new TelemetryCorePingBuilder(configuration))
                 .addPingBuilder(new TelemetryEventPingBuilder(configuration));
         TelemetryHolder.set(telemetry);
     }
@@ -108,8 +110,13 @@ public final class TelemetryWrapper {
     }
 
     public static void stopMainActivity() {
-        TelemetryHolder.get().queuePing(TelemetryEventPingBuilder.TYPE);
-        TelemetryHolder.get().scheduleUpload(TelemetryEventPingBuilder.TYPE);
+        final Telemetry telemetry = TelemetryHolder.get();
+
+        telemetry.queuePing(TelemetryCorePingBuilder.TYPE);
+        telemetry.queuePing(TelemetryEventPingBuilder.TYPE);
+
+        telemetry.scheduleUpload(TelemetryCorePingBuilder.TYPE);
+        telemetry.scheduleUpload(TelemetryEventPingBuilder.TYPE);
     }
 
     public static void urlBarEvent(boolean isUrl) {
