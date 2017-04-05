@@ -56,7 +56,6 @@ browser.jar:
   skin/classic/browser/places/bookmarksMenu.png       (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png    (places/bookmarksToolbar.png)
   skin/classic/browser/places/bookmarksToolbar-menuPanel.png (places/bookmarksToolbar-menuPanel.png)
-  skin/classic/browser/places/bookmarks-notification-finish.png  (places/bookmarks-notification-finish.png)
   skin/classic/browser/places/bookmarks-menu-arrow.png           (places/bookmarks-menu-arrow.png)
   skin/classic/browser/places/calendar.png            (places/calendar.png)
 * skin/classic/browser/places/editBookmarkOverlay.css (places/editBookmarkOverlay.css)
