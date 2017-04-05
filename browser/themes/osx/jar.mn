@@ -13,8 +13,6 @@ browser.jar:
 * skin/classic/browser/compacttheme.css
   skin/classic/browser/click-to-play-warning-stripes.png
   skin/classic/browser/Info.png
-  skin/classic/browser/keyhole-circle.png
-  skin/classic/browser/keyhole-circle@2x.png
   skin/classic/browser/subtle-pattern.png
   skin/classic/browser/menu-back.png
   skin/classic/browser/menu-forward.png
@@ -88,8 +86,6 @@ browser.jar:
   skin/classic/browser/places/bookmarksMenu.png             (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png          (places/bookmarksToolbar.png)
   skin/classic/browser/places/bookmarksToolbar@2x.png       (places/bookmarksToolbar@2x.png)
-  skin/classic/browser/places/bookmarks-notification-finish.png  (places/bookmarks-notification-finish.png)
-  skin/classic/browser/places/bookmarks-notification-finish@2x.png  (places/bookmarks-notification-finish@2x.png)
   skin/classic/browser/places/bookmarksToolbar-menuPanel.png    (places/bookmarksToolbar-menuPanel.png)
   skin/classic/browser/places/bookmarksToolbar-menuPanel@2x.png (places/bookmarksToolbar-menuPanel@2x.png)
   skin/classic/browser/places/history.png                   (places/history.png)
