@@ -14,6 +14,7 @@ import org.mozilla.telemetry.ping.TelemetryPingBuilder;
 import org.mozilla.telemetry.schedule.TelemetryScheduler;
 import org.mozilla.telemetry.storage.TelemetryStorage;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,17 +66,16 @@ public class Telemetry {
         return pingBuilders.get(pingType);
     }
 
-    public Telemetry scheduleUpload(String pingType) {
+    public Collection<TelemetryPingBuilder> getBuilders() {
+        return pingBuilders.values();
+    }
+
+    public Telemetry scheduleUpload() {
         if (!configuration.isUploadEnabled()) {
             return this;
         }
 
-        if (storage.countStoredPings(pingType) == 0) {
-            // There are no pings to upload.
-            return this;
-        }
-
-        scheduler.scheduleUpload(configuration, pingType);
+        scheduler.scheduleUpload(configuration);
         return this;
     }
 

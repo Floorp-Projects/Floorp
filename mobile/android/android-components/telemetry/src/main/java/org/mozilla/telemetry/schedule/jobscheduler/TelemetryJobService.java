@@ -6,88 +6,97 @@ package org.mozilla.telemetry.schedule.jobscheduler;
 
 import android.app.job.JobParameters;
 import android.app.job.JobService;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
+import android.util.Log;
 
 import org.mozilla.telemetry.Telemetry;
 import org.mozilla.telemetry.TelemetryHolder;
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.net.TelemetryClient;
+import org.mozilla.telemetry.ping.TelemetryPingBuilder;
 import org.mozilla.telemetry.storage.TelemetryStorage;
 
 public class TelemetryJobService extends JobService {
-    public static final String EXTRA_PING_TYPE = "ping_type";
+    private static final String LOG_TAG = "TelemetryJobService";
 
-    private volatile Looper serviceLooper;
-    private volatile ServiceHandler serviceHandler;
-
-    private final class ServiceHandler extends Handler {
-        private ServiceHandler(Looper looper) {
-            super(looper);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            performUpload((JobParameters) msg.obj);
-            stopSelf(msg.arg1);
-        }
-    }
+    private UploadPingsTask uploadTask;
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-        final HandlerThread thread = new HandlerThread("TelemetryService");
-        thread.start();
-
-        serviceLooper = thread.getLooper();
-        serviceHandler = new ServiceHandler(serviceLooper);
-    }
-
-    @Override
-    public void onDestroy() {
-        serviceLooper.quit();
+        uploadTask = new UploadPingsTask();
     }
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        final String pingType = params.getExtras().getString(EXTRA_PING_TYPE);
-        if (TextUtils.isEmpty(pingType)) {
-            return false;
-        }
-
-        final Message msg = serviceHandler.obtainMessage();
-        msg.obj = params;
-        serviceHandler.sendMessage(msg);
-
+        uploadTask.execute(params);
         return true;
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        return false;
+        uploadTask.stopUpload();
+        return true;
     }
 
-    @VisibleForTesting
-    public void performUpload(JobParameters params) {
-        final Telemetry telemetry = TelemetryHolder.get();
-        final TelemetryConfiguration configuration = telemetry.getConfiguration();
-        final TelemetryClient client = telemetry.getClient();
+    private class UploadPingsTask extends AsyncTask<JobParameters, Void, Void> {
+        private volatile boolean hasBeenStopped;
 
-        final String pingType = params.getExtras().getString(EXTRA_PING_TYPE);
+        @Override
+        protected Void doInBackground(JobParameters... params) {
+            final JobParameters parameters = params[0];
+            final Telemetry telemetry = TelemetryHolder.get();
+            final TelemetryStorage storage = telemetry.getStorage();
 
-        final TelemetryStorage storage = telemetry.getStorage();
-        final boolean processed = storage.process(pingType, new TelemetryStorage.TelemetryStorageCallback() {
-            @Override
-            public boolean onTelemetryPingLoaded(String path, String serializedPing) {
-                return client.uploadPing(configuration, path, serializedPing);
+            for (TelemetryPingBuilder builder : telemetry.getBuilders()) {
+                final String pingType = builder.getType();
+                Log.d(LOG_TAG, "Performing upload of ping type: " + pingType);
+
+                if (hasBeenStopped) {
+                    Log.d(LOG_TAG, "Job stopped. Exiting.");
+                    return null; // Job will be rescheduled from onStopJob().
+                }
+
+
+                if (storage.countStoredPings(pingType) == 0) {
+                    Log.d(LOG_TAG, "No pings of type " + pingType + " to upload");
+                    return null;
+                }
+
+                if (!performUpload(telemetry, storage, pingType)) {
+                    Log.i(LOG_TAG, "Upload failed. Rescheduling job.");
+                    jobFinished(parameters, true);
+                    return null;
+                }
             }
-        });
 
-        jobFinished(params, !processed);
+            Log.d(LOG_TAG, "All uploads performed");
+            jobFinished(parameters, false);
+            return null;
+        }
+
+        private boolean performUpload(Telemetry telemetry, TelemetryStorage storage, String pingType) {
+            final TelemetryConfiguration configuration = telemetry.getConfiguration();
+            final TelemetryClient client = telemetry.getClient();
+
+            return storage.process(pingType, new TelemetryStorage.TelemetryStorageCallback() {
+                @Override
+                public boolean onTelemetryPingLoaded(String path, String serializedPing) {
+                    return client.uploadPing(configuration, path, serializedPing);
+                }
+            });
+
+        }
+
+        private void stopUpload() {
+            hasBeenStopped = true;
+        }
     }
 }
