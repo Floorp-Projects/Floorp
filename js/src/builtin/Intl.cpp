@@ -336,8 +336,6 @@ unum_setAttribute(UNumberFormat* fmt, UNumberFormatAttribute  attr, int32_t newV
     MOZ_CRASH("unum_setAttribute: Intl API disabled");
 }
 
-#if defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
-
 int32_t
 unum_formatDoubleForFields(const UNumberFormat* fmt, double number, UChar* result,
                            int32_t resultLength, UFieldPositionIterator* fpositer,
@@ -360,17 +358,6 @@ enum UNumberFormatFields {
     UNUM_EXPONENT_FIELD,
     UNUM_FIELD_COUNT,
 };
-
-#else
-
-int32_t
-unum_formatDouble(const UNumberFormat* fmt, double number, UChar* result,
-                  int32_t resultLength, UFieldPosition* pos, UErrorCode* status)
-{
-    MOZ_CRASH("unum_formatDouble: Intl API disabled");
-}
-
-#endif // defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
 
 void
 unum_close(UNumberFormat* fmt)
@@ -1711,7 +1698,6 @@ CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObjec
     if (!JS_DefineProperties(cx, proto, numberFormat_properties))
         return nullptr;
 
-#if defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
     // If the still-experimental NumberFormat.prototype.formatToParts method is
     // enabled, also add it.
     if (cx->compartment()->creationOptions().experimentalNumberFormatFormatToPartsEnabled()) {
@@ -1727,7 +1713,6 @@ CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObjec
         if (!DefineProperty(cx, proto, cx->names().formatToParts, ftp, nullptr, nullptr, 0))
             return nullptr;
     }
-#endif // defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
@@ -1999,18 +1984,8 @@ PartitionNumberPattern(JSContext* cx, UNumberFormat* nf, double* x,
     if (IsNegativeZero(*x))
         *x = 0.0;
 
-#if !defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
-    MOZ_ASSERT(fpositer == nullptr,
-               "shouldn't be requesting field information from an ICU that "
-               "can't provide it");
-#endif
-
     return Call(cx, [nf, x, fpositer](UChar* chars, int32_t size, UErrorCode* status) {
-#if defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
         return unum_formatDoubleForFields(nf, *x, chars, size, fpositer, status);
-#else
-        return unum_formatDouble(nf, *x, chars, size, nullptr, status);
-#endif
     });
 }
 
@@ -2028,8 +2003,6 @@ intl_FormatNumber(JSContext* cx, UNumberFormat* nf, double x, MutableHandleValue
 }
 
 using FieldType = ImmutablePropertyNamePtr JSAtomState::*;
-
-#if defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
 
 static FieldType
 GetFieldTypeForNumberField(UNumberFormatFields fieldName, double d)
@@ -2421,8 +2394,6 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
     return true;
 }
 
-#endif // defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
-
 bool
 js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -2446,15 +2417,9 @@ js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // Use the UNumberFormat to actually format the number.
-#if defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
     if (args[2].toBoolean()) {
         return intl_FormatNumberToParts(cx, nf, args[1].toNumber(), args.rval());
     }
-#else
-    MOZ_ASSERT(!args[2].toBoolean(),
-               "shouldn't be doing formatToParts without an ICU that "
-               "supports it");
-#endif // defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
     return intl_FormatNumber(cx, nf, args[1].toNumber(), args.rval());
 }
 
