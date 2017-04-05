@@ -1021,15 +1021,16 @@ ifneq (,$(filter %.i,$(MAKECMDGOALS)))
 # This way we can match both 'make sub/bar.i' and 'make bar.i'
 _group_srcs = $(sort $(patsubst %.$1,%.i,$(filter %.$1,$2 $(notdir $2))))
 
-# Hack up VPATH so we can reach the sources. Eg: 'make Parser.i' may need to
-# reach $(srcdir)/frontend/Parser.i
-VPATH += $(addprefix $(srcdir)/,$(sort $(dir $(CPPSRCS) $(CSRCS) $(CMMSRCS))))
-
 define PREPROCESS_RULES
 _PREPROCESSED_$1_FILES := $$(call _group_srcs,$1,$$($2))
 # Make preprocessed files PHONY so they are always executed, since they are
 # manual targets and we don't necessarily write to $@.
 .PHONY: $$(_PREPROCESSED_$1_FILES)
+
+# Hack up VPATH so we can reach the sources. Eg: 'make Parser.i' may need to
+# reach $(srcdir)/frontend/Parser.i
+vpath %.$1 $$(addprefix $$(srcdir)/,$$(sort $$(dir $$($2))))
+
 $$(_PREPROCESSED_$1_FILES): _DEPEND_CFLAGS=
 $$(_PREPROCESSED_$1_FILES): %.i: %.$1
 	$$(REPORT_BUILD_VERBOSE)
