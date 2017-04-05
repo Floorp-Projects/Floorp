@@ -23,15 +23,17 @@ const ParamsPanel = createFactory(require("./params-panel"));
 const PreviewPanel = createFactory(require("./preview-panel"));
 const ResponsePanel = createFactory(require("./response-panel"));
 const SecurityPanel = createFactory(require("./security-panel"));
+const StackTracePanel = createFactory(require("./stack-trace-panel"));
 const TimingsPanel = createFactory(require("./timings-panel"));
 
-const HEADERS_TITLE = L10N.getStr("netmonitor.tab.headers");
 const COOKIES_TITLE = L10N.getStr("netmonitor.tab.cookies");
+const HEADERS_TITLE = L10N.getStr("netmonitor.tab.headers");
 const PARAMS_TITLE = L10N.getStr("netmonitor.tab.params");
-const RESPONSE_TITLE = L10N.getStr("netmonitor.tab.response");
-const TIMINGS_TITLE = L10N.getStr("netmonitor.tab.timings");
-const SECURITY_TITLE = L10N.getStr("netmonitor.tab.security");
 const PREVIEW_TITLE = L10N.getStr("netmonitor.tab.preview");
+const RESPONSE_TITLE = L10N.getStr("netmonitor.tab.response");
+const SECURITY_TITLE = L10N.getStr("netmonitor.tab.security");
+const STACK_TRACE_TITLE = L10N.getStr("netmonitor.tab.stackTrace");
+const TIMINGS_TITLE = L10N.getStr("netmonitor.tab.timings");
 
 /*
  * Tabbox panel component
@@ -83,6 +85,13 @@ function TabboxPanel({
         title: TIMINGS_TITLE,
       },
         TimingsPanel({ request }),
+      ),
+      request.cause.stacktrace && request.cause.stacktrace.length > 0 &&
+      TabPanel({
+        id: "stack-trace",
+        title: STACK_TRACE_TITLE,
+      },
+        StackTracePanel({ request }),
       ),
       request.securityState && request.securityState !== "insecure" &&
       TabPanel({

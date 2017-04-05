@@ -72,7 +72,7 @@
   Initially 'markup' element holds markup for all rules specified by 'ruleset'
   attribute. This allows us to check if the sequence of name computation rules
   is correct. Here 'ruleset' element defines two rules. We get the first rule
-  which means accesible name is computed from value of 'aria-label' attribute.
+  which means accessible name is computed from value of 'aria-label' attribute.
   Then we check accessible name for the test element and remove 'aria-label'
   attribute. After we get the second rule which means we should get IDs from
   'aria-labelledby' attribute and compose accessible name from values of

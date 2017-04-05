@@ -58,9 +58,10 @@ private:
   cdm::Status OutputFrame(cdm::VideoFrame* aVideoFrame);
 
   HRESULT SampleToVideoFrame(IMFSample* aSample,
-                             int32_t aWidth,
-                             int32_t aHeight,
+                             int32_t aPictureWidth,
+                             int32_t aPictureHeight,
                              int32_t aStride,
+                             int32_t aFrameHeight,
                              cdm::VideoFrame* aVideoFrame);
 
   cdm::Host_8* mHost;

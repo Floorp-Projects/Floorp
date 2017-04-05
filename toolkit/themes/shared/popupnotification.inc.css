@@ -101,9 +101,6 @@
 
 .popup-notification-button > .button-box {
   padding: 0;
-  margin: 0;
-  /* prevent double border on windows when focused */
-  border: none;
 }
 
 .popup-notification-dropmarker {

@@ -94,8 +94,8 @@ public:
   }
 
 private:
-  static NS_EXTERNAL_VIS_(TimeStamp) sStartupTimeline[MAX_EVENT_ID];
-  static NS_EXTERNAL_VIS_(const char *) sStartupTimelineDesc[MAX_EVENT_ID];
+  static TimeStamp sStartupTimeline[MAX_EVENT_ID];
+  static const char* sStartupTimelineDesc[MAX_EVENT_ID];
 };
 
 } // namespace mozilla

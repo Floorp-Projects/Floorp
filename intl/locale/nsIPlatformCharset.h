@@ -48,9 +48,6 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPLATFORMCHARSET_IID)
 
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsACString& oResult) = 0;
-
-  NS_IMETHOD GetDefaultCharsetForLocale(const nsAString& localeName, nsACString& oResult) = 0;
-
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIPlatformCharset, NS_IPLATFORMCHARSET_IID)

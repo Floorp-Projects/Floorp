@@ -15,7 +15,6 @@
 #include "jsscript.h"
 
 #include "jit/IonCode.h"
-#include "wasm/WasmCode.h"
 
 namespace js {
 namespace vtune {
@@ -38,7 +37,7 @@ void MarkScript(const js::jit::JitCode* code,
                 const JSScript* script,
                 const char* module);
 
-void MarkWasm(const js::wasm::CodeSegment& cs,
+void MarkWasm(unsigned methodId,
               const char* name,
               void* start,
               uintptr_t size);

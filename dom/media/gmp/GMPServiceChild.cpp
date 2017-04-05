@@ -293,6 +293,13 @@ GeckoMediaPluginServiceChild::UpdateGMPCapabilities(nsTArray<GMPCapabilityData>&
   }
 }
 
+void
+GeckoMediaPluginServiceChild::BeginShutdown()
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+  mShuttingDownOnGMPThread = true;
+}
+
 NS_IMETHODIMP
 GeckoMediaPluginServiceChild::HasPluginForAPI(const nsACString& aAPI,
                                               nsTArray<nsCString>* aTags,
@@ -374,6 +381,13 @@ GeckoMediaPluginServiceChild::GetServiceChild()
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
 
   if (!mServiceChild) {
+    if (mShuttingDownOnGMPThread) {
+      // We have begun shutdown. Don't allow a new connection to the main
+      // process to be instantiated. This also prevents new plugins being
+      // instantiated.
+      return GetServiceChildPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                     __func__);
+    }
     dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
     if (!contentChild) {
       return GetServiceChildPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
@@ -411,6 +425,9 @@ GeckoMediaPluginServiceChild::RemoveGMPContentParent(GMPContentParent* aGMPConte
 
   if (mServiceChild) {
     mServiceChild->RemoveGMPContentParent(aGMPContentParent);
+    if (mShuttingDownOnGMPThread && !mServiceChild->HaveContentParents()) {
+      mServiceChild = nullptr;
+    }
   }
 }
 
@@ -513,6 +530,24 @@ GMPServiceChild::Create(Endpoint<PGMPServiceChild>&& aGMPService)
                                                     Move(aGMPService)),
                            NS_DISPATCH_NORMAL);
   return NS_SUCCEEDED(rv);
+}
+
+ipc::IPCResult
+GMPServiceChild::RecvBeginShutdown()
+{
+  RefPtr<GeckoMediaPluginServiceChild> service =
+    GeckoMediaPluginServiceChild::GetSingleton();
+  MOZ_ASSERT(service && service->mServiceChild.get() == this);
+  if (service) {
+    service->BeginShutdown();
+  }
+  return IPC_OK();
+}
+
+bool
+GMPServiceChild::HaveContentParents() const
+{
+  return mContentParents.Count() > 0;
 }
 
 } // namespace gmp

@@ -431,7 +431,7 @@
      * Push a well-known symbol onto the operand stack.
      *   Category: Literals
      *   Type: Constants
-     *   Operands: uint8_t n, the JS::SymbolCode of the symbol to use
+     *   Operands: uint8_t symbol (the JS::SymbolCode of the symbol to use)
      *   Stack: => symbol
      */ \
     macro(JSOP_SYMBOL,    45, "symbol",     NULL,         2,  0,  1,  JOF_UINT8) \
@@ -586,7 +586,7 @@
      *   Category: Literals
      *   Type: Constants
      *   Operands: uint32_t atomIndex
-     *   Stack: => string
+     *   Stack: => atom
      */ \
     macro(JSOP_STRING,    61, "string",     NULL,         5,  0,  1, JOF_ATOM) \
     /*

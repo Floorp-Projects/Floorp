@@ -81,7 +81,7 @@ add_task(function* () {
 
     is(labels[0].textContent, "greeting",
       "The first json property name was incorrect.");
-    is(values[0].textContent, "\"Hello third-party JSON!\"",
+    is(values[0].textContent, "Hello third-party JSON!",
       "The first json property value was incorrect.");
   }
 });

@@ -54,6 +54,7 @@ const {
 
 const {
   BaseContext,
+  CanOfAPIs,
   LocalAPIImplementation,
   SchemaAPIInterface,
   SchemaAPIManager,
@@ -468,19 +469,12 @@ var apiManager = new class extends SchemaAPIManager {
     this.initialized = false;
   }
 
-  generateAPIs(...args) {
+  lazyInit() {
     if (!this.initialized) {
       this.initialized = true;
       for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_ADDON)) {
         this.loadScript(value);
       }
-    }
-    return super.generateAPIs(...args);
-  }
-
-  registerSchemaAPI(namespace, envType, getAPI) {
-    if (envType == "addon_child") {
-      super.registerSchemaAPI(namespace, envType, getAPI);
     }
   }
 }();
@@ -491,19 +485,12 @@ var devtoolsAPIManager = new class extends SchemaAPIManager {
     this.initialized = false;
   }
 
-  generateAPIs(...args) {
+  lazyInit() {
     if (!this.initialized) {
       this.initialized = true;
       for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_DEVTOOLS)) {
         this.loadScript(value);
       }
-    }
-    return super.generateAPIs(...args);
-  }
-
-  registerSchemaAPI(namespace, envType, getAPI) {
-    if (envType == "devtools_child") {
-      super.registerSchemaAPI(namespace, envType, getAPI);
     }
   }
 }();
@@ -593,7 +580,7 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
 // with the ParentAPIManager singleton in ExtensionParent.jsm. It
 // handles asynchronous function calls as well as event listeners.
 class ChildAPIManager {
-  constructor(context, messageManager, localApis, contextData) {
+  constructor(context, messageManager, localAPICan, contextData) {
     this.context = context;
     this.messageManager = messageManager;
     this.url = contextData.url;
@@ -601,7 +588,8 @@ class ChildAPIManager {
     // The root namespace of all locally implemented APIs. If an extension calls
     // an API that does not exist in this object, then the implementation is
     // delegated to the ParentAPIManager.
-    this.localApis = localApis;
+    this.localApis = localAPICan.root;
+    this.apiCan = localAPICan;
 
     this.id = `${context.extension.id}.${context.contextId}`;
 
@@ -782,9 +770,8 @@ class ChildAPIManager {
   }
 
   getImplementation(namespace, name) {
-    let obj = namespace.split(".").reduce(
-      (object, prop) => object && object[prop],
-      this.localApis);
+    this.apiCan.findAPIPath(`${namespace}.${name}`);
+    let obj = this.apiCan.findAPIPath(namespace);
 
     if (obj && name in obj) {
       return new LocalAPIImplementation(obj, name, this.context);
@@ -944,10 +931,12 @@ class ExtensionPageContextChild extends ExtensionBaseContextChild {
 }
 
 defineLazyGetter(ExtensionPageContextChild.prototype, "childManager", function() {
-  let localApis = {};
-  apiManager.generateAPIs(this, localApis);
+  apiManager.lazyInit();
 
-  let childManager = new ChildAPIManager(this, this.messageManager, localApis, {
+  let localApis = {};
+  let can = new CanOfAPIs(this, apiManager, localApis);
+
+  let childManager = new ChildAPIManager(this, this.messageManager, can, {
     envType: "addon_parent",
     viewType: this.viewType,
     url: this.uri.spec,
@@ -991,10 +980,12 @@ class DevToolsContextChild extends ExtensionBaseContextChild {
 }
 
 defineLazyGetter(DevToolsContextChild.prototype, "childManager", function() {
-  let localApis = {};
-  devtoolsAPIManager.generateAPIs(this, localApis);
+  devtoolsAPIManager.lazyInit();
 
-  let childManager = new ChildAPIManager(this, this.messageManager, localApis, {
+  let localApis = {};
+  let can = new CanOfAPIs(this, apiManager, localApis);
+
+  let childManager = new ChildAPIManager(this, this.messageManager, can, {
     envType: "devtools_parent",
     viewType: this.viewType,
     url: this.uri.spec,
@@ -1062,7 +1053,11 @@ class ContentGlobal {
         }
 
         promiseEvent(this.global, "DOMContentLoaded", true).then(() => {
-          this.global.sendAsyncMessage("Extension:ExtensionViewLoaded");
+          let windowId = getInnerWindowID(this.global.content);
+          let context = ExtensionChild.extensionContexts.get(windowId);
+
+          this.global.sendAsyncMessage("Extension:ExtensionViewLoaded",
+                                       {childId: context && context.childManager.id});
         });
 
         /* FALLTHROUGH */

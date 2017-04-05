@@ -5,20 +5,22 @@
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
                                   "resource://gre/modules/NewTabUtils.jsm");
 
-extensions.registerSchemaAPI("topSites", "addon_parent", context => {
-  return {
-    topSites: {
-      get: function() {
-        let urls = NewTabUtils.links.getLinks()
-                              .filter(link => !!link)
-                              .map(link => {
-                                return {
-                                  url: link.url,
-                                  title: link.title,
-                                };
-                              });
-        return Promise.resolve(urls);
+this.topSites = class extends ExtensionAPI {
+  getAPI(context) {
+    return {
+      topSites: {
+        get: function() {
+          let urls = NewTabUtils.links.getLinks()
+                                .filter(link => !!link)
+                                .map(link => {
+                                  return {
+                                    url: link.url,
+                                    title: link.title,
+                                  };
+                                });
+          return Promise.resolve(urls);
+        },
       },
-    },
-  };
-});
+    };
+  }
+};

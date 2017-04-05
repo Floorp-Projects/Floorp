@@ -64,23 +64,12 @@ struct nsStyleDisplay;
   void Gecko_Release##name_##ArbitraryThread(class_* aPtr)                    \
   { NS_RELEASE(aPtr); }
 
-#define NS_DECL_HOLDER_FFI_REFCOUNTING(class_, name_)                         \
-  typedef nsMainThreadPtrHolder<class_> ThreadSafe##name_##Holder;            \
-  void Gecko_AddRef##name_##ArbitraryThread(ThreadSafe##name_##Holder* aPtr); \
-  void Gecko_Release##name_##ArbitraryThread(ThreadSafe##name_##Holder* aPtr);
-#define NS_IMPL_HOLDER_FFI_REFCOUNTING(class_, name_)                         \
-  void Gecko_AddRef##name_##ArbitraryThread(ThreadSafe##name_##Holder* aPtr)  \
-  { NS_ADDREF(aPtr); }                                                        \
-  void Gecko_Release##name_##ArbitraryThread(ThreadSafe##name_##Holder* aPtr) \
-  { NS_RELEASE(aPtr); }                                                       \
-
 #define NS_DECL_FFI_REFCOUNTING(class_, name_)  \
   void Gecko_##name_##_AddRef(class_* aPtr);    \
   void Gecko_##name_##_Release(class_* aPtr);
 #define NS_IMPL_FFI_REFCOUNTING(class_, name_)                    \
   void Gecko_##name_##_AddRef(class_* aPtr) { NS_ADDREF(aPtr); }  \
   void Gecko_##name_##_Release(class_* aPtr) { NS_RELEASE(aPtr); }
-
 
 #define DEFINE_ARRAY_TYPE_FOR(type_)                                \
   struct nsTArrayBorrowed_##type_ {                                 \
@@ -93,30 +82,13 @@ DEFINE_ARRAY_TYPE_FOR(uintptr_t);
 
 extern "C" {
 
-// Object refcounting.
-NS_DECL_HOLDER_FFI_REFCOUNTING(nsIPrincipal, Principal)
-NS_DECL_HOLDER_FFI_REFCOUNTING(nsIURI, URI)
-
 class ServoBundledURI
 {
 public:
   already_AddRefed<mozilla::css::URLValue> IntoCssUrl();
   const uint8_t* mURLString;
   uint32_t mURLStringLength;
-  ThreadSafeURIHolder* mBaseURI;
-  ThreadSafeURIHolder* mReferrer;
-  ThreadSafePrincipalHolder* mPrincipal;
-};
-
-class GeckoParserExtraData
-{
-public:
-  GeckoParserExtraData(nsIURI* aBaseURI,
-                       nsIURI* aReferrer,
-                       nsIPrincipal* aPrincipal);
-  RefPtr<ThreadSafeURIHolder> mBaseURI;
-  RefPtr<ThreadSafeURIHolder> mReferrer;
-  RefPtr<ThreadSafePrincipalHolder> mPrincipal;
+  mozilla::css::URLExtraData* mExtraData;
 };
 
 // DOM Traversal.
@@ -139,12 +111,16 @@ RawGeckoElementBorrowedOrNull Gecko_GetNextSiblingElement(RawGeckoElementBorrowe
 RawGeckoElementBorrowedOrNull Gecko_GetDocumentElement(RawGeckoDocumentBorrowed document);
 void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
                           mozilla::ServoStyleSheet* parent,
-                          RawServoImportRuleBorrowed import_rule,
-                          nsIURI* base_uri,
+                          RawServoStyleSheetBorrowed child_sheet,
+                          RawGeckoURLExtraData* base_url_data,
                           const uint8_t* url_bytes,
                           uint32_t url_length,
                           const uint8_t* media_bytes,
                           uint32_t media_length);
+
+// URLExtraData
+// Create a new addrefed URLExtraData.
+RawGeckoURLExtraData* Gecko_URLExtraData_CreateDummy();
 
 // By default, Servo walks the DOM by traversing the siblings of the DOM-view
 // first child. This generally works, but misses anonymous children, which we
@@ -346,6 +322,7 @@ void Gecko_nsStyleSVG_CopyDashArray(nsStyleSVG* dst, const nsStyleSVG* src);
 
 mozilla::css::URLValue* Gecko_NewURLValue(ServoBundledURI uri);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::URLValue, CSSURLValue);
+NS_DECL_THREADSAFE_FFI_REFCOUNTING(RawGeckoURLExtraData, URLExtraData);
 
 void Gecko_FillAllBackgroundLists(nsStyleImageLayers* layers, uint32_t max_len);
 void Gecko_FillAllMaskLists(nsStyleImageLayers* layers, uint32_t max_len);

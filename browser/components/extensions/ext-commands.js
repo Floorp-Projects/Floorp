@@ -2,35 +2,34 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-Cu.import("resource://devtools/shared/event-emitter.js");
-Cu.import("resource://gre/modules/ExtensionUtils.jsm");
-
 var {
   SingletonEventManager,
   PlatformInfo,
 } = ExtensionUtils;
 
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-// WeakMap[Extension -> CommandList]
-var commandsMap = new WeakMap();
+this.commands = class extends ExtensionAPI {
+  onManifestEntry(entryName) {
+    let {extension} = this;
 
-function CommandList(manifest, extension) {
-  this.extension = extension;
-  this.id = makeWidgetId(extension.id);
-  this.windowOpenListener = null;
+    this.id = makeWidgetId(extension.id);
+    this.windowOpenListener = null;
 
-  // Map[{String} commandName -> {Object} commandProperties]
-  this.commands = this.loadCommandsFromManifest(manifest);
+    // Map[{String} commandName -> {Object} commandProperties]
+    this.commands = this.loadCommandsFromManifest(this.extension.manifest);
 
-  // WeakMap[Window -> <xul:keyset>]
-  this.keysetsMap = new WeakMap();
+    // WeakMap[Window -> <xul:keyset>]
+    this.keysetsMap = new WeakMap();
 
-  this.register();
-  EventEmitter.decorate(this);
-}
+    this.register();
+    EventEmitter.decorate(this);
+  }
 
-CommandList.prototype = {
+  onShutdown(reason) {
+    this.unregister();
+  }
+
   /**
    * Registers the commands to all open windows and to any which
    * are later created.
@@ -47,7 +46,7 @@ CommandList.prototype = {
     };
 
     windowTracker.addOpenListener(this.windowOpenListener);
-  },
+  }
 
   /**
    * Unregisters the commands from all open windows and stops commands
@@ -61,7 +60,7 @@ CommandList.prototype = {
     }
 
     windowTracker.removeOpenListener(this.windowOpenListener);
-  },
+  }
 
   /**
    * Creates a Map from commands for each command in the manifest.commands object.
@@ -84,7 +83,7 @@ CommandList.prototype = {
       });
     }
     return commands;
-  },
+  }
 
   /**
    * Registers the commands to a document.
@@ -102,7 +101,7 @@ CommandList.prototype = {
     });
     doc.documentElement.appendChild(keyset);
     this.keysetsMap.set(window, keyset);
-  },
+  }
 
   /**
    * Builds a XUL Key element and attaches an onCommand listener which
@@ -147,7 +146,7 @@ CommandList.prototype = {
     /* eslint-enable mozilla/balanced-listeners */
 
     return keyElement;
-  },
+  }
 
   /**
    * Builds a XUL Key element from the provided shortcut.
@@ -177,7 +176,7 @@ CommandList.prototype = {
     }
 
     return keyElement;
-  },
+  }
 
   /**
    * Determines the corresponding XUL keycode from the given chrome key.
@@ -194,7 +193,7 @@ CommandList.prototype = {
    */
   getKeycodeAttribute(chromeKey) {
     return `VK${chromeKey.replace(/([A-Z])/g, "_$&").toUpperCase()}`;
-  },
+  }
 
   /**
    * Determines the corresponding XUL modifiers from the chrome modifiers.
@@ -220,47 +219,31 @@ CommandList.prototype = {
     return Array.from(chromeModifiers, modifier => {
       return modifiersMap[modifier];
     }).join(" ");
-  },
-};
-
-
-/* eslint-disable mozilla/balanced-listeners */
-extensions.on("manifest_commands", (type, directive, extension, manifest) => {
-  commandsMap.set(extension, new CommandList(manifest, extension));
-});
-
-extensions.on("shutdown", (type, extension) => {
-  let commandsList = commandsMap.get(extension);
-  if (commandsList) {
-    commandsList.unregister();
-    commandsMap.delete(extension);
   }
-});
-/* eslint-enable mozilla/balanced-listeners */
 
-extensions.registerSchemaAPI("commands", "addon_parent", context => {
-  let {extension} = context;
-  return {
-    commands: {
-      getAll() {
-        let commands = commandsMap.get(extension).commands;
-        return Promise.resolve(Array.from(commands, ([name, command]) => {
-          return ({
-            name,
-            description: command.description,
-            shortcut: command.shortcut,
-          });
-        }));
+  getAPI(context) {
+    return {
+      commands: {
+        getAll: () => {
+          let commands = this.commands;
+          return Promise.resolve(Array.from(commands, ([name, command]) => {
+            return ({
+              name,
+              description: command.description,
+              shortcut: command.shortcut,
+            });
+          }));
+        },
+        onCommand: new SingletonEventManager(context, "commands.onCommand", fire => {
+          let listener = (eventName, commandName) => {
+            fire.async(commandName);
+          };
+          this.on("command", listener);
+          return () => {
+            this.off("command", listener);
+          };
+        }).api(),
       },
-      onCommand: new SingletonEventManager(context, "commands.onCommand", fire => {
-        let listener = (eventName, commandName) => {
-          fire.async(commandName);
-        };
-        commandsMap.get(extension).on("command", listener);
-        return () => {
-          commandsMap.get(extension).off("command", listener);
-        };
-      }).api(),
-    },
-  };
-});
+    };
+  }
+};

@@ -65,54 +65,6 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsACString& oResult
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACString &oResult)
-{
-  // 
-  // if this locale is the user's locale then use the charset 
-  // we already determined at initialization
-  // 
-  if (mLocale.Equals(localeName) ||
-    // support the 4.x behavior
-    (mLocale.LowerCaseEqualsLiteral("en_us") && 
-     localeName.LowerCaseEqualsLiteral("c"))) {
-    oResult = mCharset;
-    return NS_OK;
-  }
-
-#if HAVE_LANGINFO_CODESET
-  //
-  // This locale appears to be a different locale from the user's locale. 
-  // To do this we would need to lock the global resource we are currently 
-  // using or use a library that provides multi locale support. 
-  // ICU is a possible example of a multi locale library.
-  //     http://oss.software.ibm.com/icu/
-  //
-  // A more common cause of hitting this warning than the above is that 
-  // Mozilla is launched under an ll_CC.UTF-8 locale. In xpLocale, 
-  // we only store the language and the region (ll-CC) losing 'UTF-8', which
-  // leads |mLocale| to be different from |localeName|. Although we lose
-  // 'UTF-8', we init'd |mCharset| with the value obtained via 
-  // |nl_langinfo(CODESET)| so that we're all right here.
-  // 
-  NS_WARNING("GetDefaultCharsetForLocale: need to add multi locale support");
-#ifdef DEBUG_jungshik
-  printf("localeName=%s mCharset=%s\n", NS_ConvertUTF16toUTF8(localeName).get(),
-         mCharset.get());
-#endif
-  // until we add multi locale support: use the the charset of the user's locale
-  oResult = mCharset;
-  return NS_SUCCESS_USING_FALLBACK_LOCALE;
-#else
-  //
-  // convert from locale to charset
-  // using the deprecated locale to charset mapping 
-  //
-  NS_LossyConvertUTF16toASCII localeStr(localeName);
-  return ConvertLocaleToCharsetUsingDeprecatedConfig(localeStr, oResult);
-#endif
-}
-
 nsresult
 nsPlatformCharset::InitGetCharset(nsACString &oString)
 {

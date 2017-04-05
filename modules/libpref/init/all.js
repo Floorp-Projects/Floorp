@@ -198,9 +198,6 @@ pref("dom.gamepad.non_standard_events.enabled", true);
 #endif
 pref("dom.gamepad.extensions.enabled", false);
 
-// Whether the KeyboardEvent.code is enabled
-pref("dom.keyboardevent.code.enabled", true);
-
 // If this is true, TextEventDispatcher dispatches keydown and keyup events
 // even during composition (keypress events are never fired during composition
 // even if this is true).
@@ -2156,10 +2153,155 @@ pref("intl.hyphenation-alias.no-*", "nb");
 pref("intl.hyphenation-alias.nb-*", "nb");
 pref("intl.hyphenation-alias.nn-*", "nn");
 
-pref("font.name.serif.x-math", "Latin Modern Math");
+// All prefs of default font should be "auto".
+pref("font.name.serif.ar", "");;
+pref("font.name.sans-serif.ar", "");
+pref("font.name.monospace.ar", "");
+pref("font.name.cursive.ar", "");
+
+pref("font.name.serif.el", "");
+pref("font.name.sans-serif.el", "");
+pref("font.name.monospace.el", "");
+pref("font.name.cursive.el", "");
+
+pref("font.name.serif.he", "");
+pref("font.name.sans-serif.he", "");
+pref("font.name.monospace.he", "");
+pref("font.name.cursive.he", "");
+
+pref("font.name.serif.ja", "");
+pref("font.name.sans-serif.ja", "");
+pref("font.name.monospace.ja", "");
+pref("font.name.cursive.ja", "");
+
+pref("font.name.serif.ko", "");
+pref("font.name.sans-serif.ko", "");
+pref("font.name.monospace.ko", "");
+pref("font.name.cursive.ko", "");
+
+pref("font.name.serif.th", "");
+pref("font.name.sans-serif.th", "");
+pref("font.name.monospace.th", "");
+pref("font.name.cursive.th", "");
+
+pref("font.name.serif.x-cyrillic", "");
+pref("font.name.sans-serif.x-cyrillic", "");
+pref("font.name.monospace.x-cyrillic", "");
+pref("font.name.cursive.x-cyrillic", "");
+
+pref("font.name.serif.x-unicode", "");
+pref("font.name.sans-serif.x-unicode", "");
+pref("font.name.monospace.x-unicode", "");
+pref("font.name.cursive.x-unicode", "");
+
+pref("font.name.serif.x-western", "");
+pref("font.name.sans-serif.x-western", "");
+pref("font.name.monospace.x-western", "");
+pref("font.name.cursive.x-western", "");
+
+pref("font.name.serif.zh-CN", "");
+pref("font.name.sans-serif.zh-CN", "");
+pref("font.name.monospace.zh-CN", "");
+pref("font.name.cursive.zh-CN", "");
+
+pref("font.name.serif.zh-TW", "");
+pref("font.name.sans-serif.zh-TW", "");
+pref("font.name.monospace.zh-TW", "");
+pref("font.name.cursive.zh-TW", "");
+
+pref("font.name.serif.zh-HK", "");
+pref("font.name.sans-serif.zh-HK", "");
+pref("font.name.monospace.zh-HK", "");
+pref("font.name.cursive.zh-HK", "");
+
+pref("font.name.serif.x-devanagari", "");
+pref("font.name.sans-serif.x-devanagari", "");
+pref("font.name.monospace.x-devanagari", "");
+pref("font.name.cursive.x-devanagari", "");
+
+pref("font.name.serif.x-tamil", "");
+pref("font.name.sans-serif.x-tamil", "");
+pref("font.name.monospace.x-tamil", "");
+pref("font.name.cursive.x-tamil", "");
+
+pref("font.name.serif.x-armn", "");
+pref("font.name.sans-serif.x-armn", "");
+pref("font.name.monospace.x-armn", "");
+pref("font.name.cursive.x-armn", "");
+
+pref("font.name.serif.x-beng", "");
+pref("font.name.sans-serif.x-beng", "");
+pref("font.name.monospace.x-beng", "");
+pref("font.name.cursive.x-beng", "");
+
+pref("font.name.serif.x-cans", "");
+pref("font.name.sans-serif.x-cans", "");
+pref("font.name.monospace.x-cans", "");
+pref("font.name.cursive.x-cans", "");
+
+pref("font.name.serif.x-ethi", "");
+pref("font.name.sans-serif.x-ethi", "");
+pref("font.name.monospace.x-ethi", "");
+pref("font.name.cursive.x-ethi", "");
+
+pref("font.name.serif.x-geor", "");
+pref("font.name.sans-serif.x-geor", "");
+pref("font.name.monospace.x-geor", "");
+pref("font.name.cursive.x-geor", "");
+
+pref("font.name.serif.x-gujr", "");
+pref("font.name.sans-serif.x-gujr", "");
+pref("font.name.monospace.x-gujr", "");
+pref("font.name.cursive.x-gujr", "");
+
+pref("font.name.serif.x-guru", "");
+pref("font.name.sans-serif.x-guru", "");
+pref("font.name.monospace.x-guru", "");
+pref("font.name.cursive.x-guru", "");
+
+pref("font.name.serif.x-khmr", "");
+pref("font.name.sans-serif.x-khmr", "");
+pref("font.name.monospace.x-khmr", "");
+pref("font.name.cursive.x-khmr", "");
+
+pref("font.name.serif.x-mlym", "");
+pref("font.name.sans-serif.x-mlym", "");
+pref("font.name.monospace.x-mlym", "");
+pref("font.name.cursive.x-mlym", "");
+
+pref("font.name.serif.x-orya", "");
+pref("font.name.sans-serif.x-orya", "");
+pref("font.name.monospace.x-orya", "");
+pref("font.name.cursive.x-orya", "");
+
+pref("font.name.serif.x-telu", "");
+pref("font.name.sans-serif.x-telu", "");
+pref("font.name.monospace.x-telu", "");
+pref("font.name.cursive.x-telu", "");
+
+pref("font.name.serif.x-knda", "");
+pref("font.name.sans-serif.x-knda", "");
+pref("font.name.monospace.x-knda", "");
+pref("font.name.cursive.x-knda", "");
+
+pref("font.name.serif.x-sinh", "");
+pref("font.name.sans-serif.x-sinh", "");
+pref("font.name.monospace.x-sinh", "");
+pref("font.name.cursive.x-sinh", "");
+
+pref("font.name.serif.x-tibt", "");
+pref("font.name.sans-serif.x-tibt", "");
+pref("font.name.monospace.x-tibt", "");
+pref("font.name.cursive.x-tibt", "");
+
+pref("font.name.serif.x-math", "");
+pref("font.name.sans-serif.x-math", "");
+pref("font.name.monospace.x-math", "");
+pref("font.name.cursive.x-math", "");
+
 pref("font.name-list.serif.x-math", "Latin Modern Math, STIX Two Math, XITS Math, Cambria Math, Libertinus Math, DejaVu Math TeX Gyre, TeX Gyre Bonum Math, TeX Gyre Pagella Math, TeX Gyre Schola, TeX Gyre Termes Math, STIX Math, Asana Math, STIXGeneral, DejaVu Serif, DejaVu Sans, serif");
-pref("font.name.sans-serif.x-math", "sans-serif");
-pref("font.name.monospace.x-math", "monospace");
+pref("font.name-list.sans-serif.x-math", "sans-serif");
+pref("font.name-list.monospace.x-math", "monospace");
 
 // Some CJK fonts have bad underline offset, their CJK character glyphs are overlapped (or adjoined)  to its underline.
 // These fonts are ignored the underline offset, instead of it, the underline is lowered to bottom of its em descent.
@@ -2219,6 +2361,10 @@ pref("security.cert_pinning.process_headers_from_non_builtin_roots", false);
 // If set to true, allow view-source URIs to be opened from URIs that share
 // their protocol with the inner URI of the view-source URI
 pref("security.view-source.reachable-from-inner-protocol", false);
+
+// If set to true, in some limited circumstances it may be possible to load
+// privileged content in frames inside unprivileged content.
+pref("security.allow_chrome_frames_inside_content", false);
 
 // Services security settings
 pref("services.settings.server", "https://firefox.settings.services.mozilla.com/v1");
@@ -2930,11 +3076,14 @@ pref("dom.ipc.plugins.asyncdrawing.enabled", true);
 pref("dom.ipc.plugins.forcedirect.enabled", true);
 #endif
 
-#ifdef NIGHTLY_BUILD
-pref("dom.ipc.processCount", 4);
-#else
+#ifdef RELEASE_OR_BETA
 pref("dom.ipc.processCount", 1);
+#else
+pref("dom.ipc.processCount", 4);
 #endif
+
+// Default to allow only one file:// URL content process.
+pref("dom.ipc.processCount.file", 1);
 
 // WebExtensions only support a single extension process.
 pref("dom.ipc.processCount.extension", 1);
@@ -3279,194 +3428,137 @@ pref("ui.mouse.radius.inputSource.touchOnly", true);
 
 #ifdef XP_WIN
 
-pref("font.name.serif.ar", "Times New Roman");
-pref("font.name.sans-serif.ar", "Segoe UI");
+pref("font.name-list.serif.ar", "Times New Roman");
 pref("font.name-list.sans-serif.ar", "Segoe UI, Tahoma, Arial");
-pref("font.name.monospace.ar", "Courier New");
-pref("font.name.cursive.ar", "Comic Sans MS");
+pref("font.name-list.monospace.ar", "Courier New");
+pref("font.name-list.cursive.ar", "Comic Sans MS");
 
-pref("font.name.serif.el", "Times New Roman");
-pref("font.name.sans-serif.el", "Arial");
-pref("font.name.monospace.el", "Courier New");
-pref("font.name.cursive.el", "Comic Sans MS");
+pref("font.name-list.serif.el", "Times New Roman");
+pref("font.name-list.sans-serif.el", "Arial");
+pref("font.name-list.monospace.el", "Courier New");
+pref("font.name-list.cursive.el", "Comic Sans MS");
 
-pref("font.name.serif.he", "Narkisim");
-pref("font.name.sans-serif.he", "Arial");
-pref("font.name.monospace.he", "Fixed Miriam Transparent");
-pref("font.name.cursive.he", "Guttman Yad");
 pref("font.name-list.serif.he", "Narkisim, David");
+pref("font.name-list.sans-serif.he", "Arial");
 pref("font.name-list.monospace.he", "Fixed Miriam Transparent, Miriam Fixed, Rod, Courier New");
 pref("font.name-list.cursive.he", "Guttman Yad, Ktav, Arial");
 
-pref("font.name.serif.ja", "MS PMincho");
-pref("font.name.sans-serif.ja", "MS PGothic");
-pref("font.name.monospace.ja", "MS Gothic");
+#ifdef EARLY_BETA_OR_EARLIER
+pref("font.name-list.serif.ja", "Yu Mincho, MS PMincho, MS Mincho, Meiryo, Yu Gothic, MS PGothic, MS Gothic");
+pref("font.name-list.sans-serif.ja", "Meiryo, Yu Gothic, MS PGothic, MS Gothic, Yu Mincho, MS PMincho, MS Mincho");
+pref("font.name-list.monospace.ja", "MS Gothic, MS Mincho, Meiryo, Yu Gothic, Yu Mincho, MS PGothic, MS PMincho");
+#else
 pref("font.name-list.serif.ja", "MS PMincho, MS Mincho, MS PGothic, MS Gothic,Meiryo");
 pref("font.name-list.sans-serif.ja", "MS PGothic, MS Gothic, MS PMincho, MS Mincho,Meiryo");
 pref("font.name-list.monospace.ja", "MS Gothic, MS Mincho, MS PGothic, MS PMincho,Meiryo");
-
-pref("font.name.serif.ko", "Batang");
-pref("font.name.sans-serif.ko", "Gulim");
-pref("font.name.monospace.ko", "GulimChe");
-pref("font.name.cursive.ko", "Gungsuh");
+#endif
 
 pref("font.name-list.serif.ko", "Batang, Gulim");
 pref("font.name-list.sans-serif.ko", "Gulim");
 pref("font.name-list.monospace.ko", "GulimChe");
 pref("font.name-list.cursive.ko", "Gungsuh");
 
-pref("font.name.serif.th", "Tahoma");
-pref("font.name.sans-serif.th", "Tahoma");
-pref("font.name.monospace.th", "Tahoma");
-pref("font.name.cursive.th", "Tahoma");
+pref("font.name-list.serif.th", "Tahoma");
+pref("font.name-list.sans-serif.th", "Tahoma");
+pref("font.name-list.monospace.th", "Tahoma");
+pref("font.name-list.cursive.th", "Tahoma");
 
-pref("font.name.serif.x-cyrillic", "Times New Roman");
-pref("font.name.sans-serif.x-cyrillic", "Arial");
-pref("font.name.monospace.x-cyrillic", "Courier New");
-pref("font.name.cursive.x-cyrillic", "Comic Sans MS");
+pref("font.name-list.serif.x-cyrillic", "Times New Roman");
+pref("font.name-list.sans-serif.x-cyrillic", "Arial");
+pref("font.name-list.monospace.x-cyrillic", "Courier New");
+pref("font.name-list.cursive.x-cyrillic", "Comic Sans MS");
 
-pref("font.name.serif.x-unicode", "Times New Roman");
-pref("font.name.sans-serif.x-unicode", "Arial");
-pref("font.name.monospace.x-unicode", "Courier New");
-pref("font.name.cursive.x-unicode", "Comic Sans MS");
+pref("font.name-list.serif.x-unicode", "Times New Roman");
+pref("font.name-list.sans-serif.x-unicode", "Arial");
+pref("font.name-list.monospace.x-unicode", "Courier New");
+pref("font.name-list.cursive.x-unicode", "Comic Sans MS");
 
-pref("font.name.serif.x-western", "Times New Roman");
-pref("font.name.sans-serif.x-western", "Arial");
-pref("font.name.monospace.x-western", "Courier New");
-pref("font.name.cursive.x-western", "Comic Sans MS");
+pref("font.name-list.serif.x-western", "Times New Roman");
+pref("font.name-list.sans-serif.x-western", "Arial");
+pref("font.name-list.monospace.x-western", "Courier New");
+pref("font.name-list.cursive.x-western", "Comic Sans MS");
 
-pref("font.name.serif.zh-CN", "SimSun");
-pref("font.name.sans-serif.zh-CN", "Microsoft YaHei");
-pref("font.name.monospace.zh-CN", "SimSun");
-pref("font.name.cursive.zh-CN", "KaiTi");
-pref("font.name-list.serif.zh-CN", "MS Song, SimSun, SimSun-ExtB");
+pref("font.name-list.serif.zh-CN", "SimSun, MS Song, SimSun-ExtB");
 pref("font.name-list.sans-serif.zh-CN", "Microsoft YaHei, SimHei");
-pref("font.name-list.monospace.zh-CN", "MS Song, SimSun, SimSun-ExtB");
+pref("font.name-list.monospace.zh-CN", "SimSun, MS Song, SimSun-ExtB");
 pref("font.name-list.cursive.zh-CN", "KaiTi, KaiTi_GB2312");
 
 // Per Taiwanese users' demand. They don't want to use TC fonts for
 // rendering Latin letters. (bug 88579)
-pref("font.name.serif.zh-TW", "Times New Roman");
-pref("font.name.sans-serif.zh-TW", "Arial");
-pref("font.name.monospace.zh-TW", "MingLiU");
-pref("font.name.cursive.zh-TW", "DFKai-SB");
-pref("font.name-list.serif.zh-TW", "PMingLiu, MingLiU, MingLiU-ExtB");
-pref("font.name-list.sans-serif.zh-TW", "PMingLiU, MingLiU, MingLiU-ExtB");
+pref("font.name-list.serif.zh-TW", "Times New Roman, PMingLiu, MingLiU, MingLiU-ExtB");
+pref("font.name-list.sans-serif.zh-TW", "Arial, PMingLiU, MingLiU, MingLiU-ExtB");
 pref("font.name-list.monospace.zh-TW", "MingLiU, MingLiU-ExtB");
+pref("font.name-list.cursive.zh-TW", "DFKai-SB");
 
 // hkscsm3u.ttf (HKSCS-2001) :  http://www.microsoft.com/hk/hkscs
 // Hong Kong users have the same demand about glyphs for Latin letters (bug 88579)
-pref("font.name.serif.zh-HK", "Times New Roman");
-pref("font.name.sans-serif.zh-HK", "Arial");
-pref("font.name.monospace.zh-HK", "MingLiu_HKSCS");
-pref("font.name.cursive.zh-HK", "DFKai-SB");
-pref("font.name-list.serif.zh-HK", "MingLiu_HKSCS, Ming(for ISO10646), MingLiU, MingLiU_HKSCS-ExtB");
-pref("font.name-list.sans-serif.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU, MingLiU_HKSCS-ExtB");
+pref("font.name-list.serif.zh-HK", "Times New Roman, MingLiu_HKSCS, Ming(for ISO10646), MingLiU, MingLiU_HKSCS-ExtB");
+pref("font.name-list.sans-serif.zh-HK", "Arial, MingLiU_HKSCS, Ming(for ISO10646), MingLiU, MingLiU_HKSCS-ExtB");
 pref("font.name-list.monospace.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU, MingLiU_HKSCS-ExtB");
+pref("font.name-list.cursive.zh-HK", "DFKai-SB");
 
-pref("font.name.serif.x-devanagari", "Kokila");
-pref("font.name.sans-serif.x-devanagari", "Nirmala UI");
-pref("font.name.monospace.x-devanagari", "Mangal");
 pref("font.name-list.serif.x-devanagari", "Kokila, Raghindi");
 pref("font.name-list.sans-serif.x-devanagari", "Nirmala UI, Mangal");
 pref("font.name-list.monospace.x-devanagari", "Mangal, Nirmala UI");
 
-pref("font.name.serif.x-tamil", "Latha");
-pref("font.name.sans-serif.x-tamil", "");
-pref("font.name.monospace.x-tamil", "Latha");
 pref("font.name-list.serif.x-tamil", "Latha");
 pref("font.name-list.monospace.x-tamil", "Latha");
 
 # http://www.alanwood.net/unicode/fonts.html
 
-pref("font.name.serif.x-armn", "Sylfaen");
-pref("font.name.sans-serif.x-armn", "Arial AMU");
-pref("font.name.monospace.x-armn", "Arial AMU");
 pref("font.name-list.serif.x-armn", "Sylfaen");
+pref("font.name-list.sans-serif.x-armn", "Arial AMU");
 pref("font.name-list.monospace.x-armn", "Arial AMU");
 
-pref("font.name.serif.x-beng", "Vrinda");
-pref("font.name.sans-serif.x-beng", "Vrinda");
-pref("font.name.monospace.x-beng", "Mitra Mono");
 pref("font.name-list.serif.x-beng", "Vrinda, Akaash, Likhan, Ekushey Punarbhaba");
 pref("font.name-list.sans-serif.x-beng", "Vrinda, Akaash, Likhan, Ekushey Punarbhaba");
-pref("font.name-list.monospace.x-beng", "Likhan, Mukti Narrow");
+pref("font.name-list.monospace.x-beng", "Mitra Mono, Likhan, Mukti Narrow");
 
-pref("font.name.serif.x-cans", "Aboriginal Serif");
-pref("font.name.sans-serif.x-cans", "Aboriginal Sans");
-pref("font.name.monospace.x-cans", "Aboriginal Sans");
 pref("font.name-list.serif.x-cans", "Aboriginal Serif, BJCree Uni");
+pref("font.name-list.sans-serif.x-cans", "Aboriginal Sans");
 pref("font.name-list.monospace.x-cans", "Aboriginal Sans, OskiDakelh, Pigiarniq, Uqammaq");
 
-pref("font.name.serif.x-ethi", "Visual Geez Unicode");
-pref("font.name.sans-serif.x-ethi", "GF Zemen Unicode");
-pref("font.name.cursive.x-ethi", "Visual Geez Unicode Title");
-pref("font.name.monospace.x-ethi", "Ethiopia Jiret");
 pref("font.name-list.serif.x-ethi", "Visual Geez Unicode, Visual Geez Unicode Agazian");
+pref("font.name-list.sans-serif.x-ethi", "GF Zemen Unicode");
 pref("font.name-list.monospace.x-ethi", "Ethiopia Jiret");
+pref("font.name-list.cursive.x-ethi", "Visual Geez Unicode Title");
 
-pref("font.name.serif.x-geor", "Sylfaen");
-pref("font.name.sans-serif.x-geor", "BPG Classic 99U");
-pref("font.name.monospace.x-geor", "BPG Classic 99U");
 pref("font.name-list.serif.x-geor", "Sylfaen, BPG Paata Khutsuri U, TITUS Cyberbit Basic");
+pref("font.name-list.sans-serif.x-geor", "BPG Classic 99U");
 pref("font.name-list.monospace.x-geor", "BPG Classic 99U");
 
-pref("font.name.serif.x-gujr", "Shruti");
-pref("font.name.sans-serif.x-gujr", "Shruti");
-pref("font.name.monospace.x-gujr", "Shruti");
 pref("font.name-list.serif.x-gujr", "Shruti");
+pref("font.name-list.sans-serif.x-gujr", "Shruti");
 pref("font.name-list.monospace.x-gujr", "Shruti");
 
-pref("font.name.serif.x-guru", "Raavi");
-pref("font.name.sans-serif.x-guru", "");
-pref("font.name.monospace.x-guru", "Raavi");
 pref("font.name-list.serif.x-guru", "Raavi, Saab");
+pref("font.name-list.sans-serif.x-guru", "");
 pref("font.name-list.monospace.x-guru", "Raavi, Saab");
 
-pref("font.name.serif.x-khmr", "PhnomPenh OT");
-pref("font.name.sans-serif.x-khmr", "Khmer OS");
-pref("font.name.monospace.x-khmr", "Khmer OS");
 pref("font.name-list.serif.x-khmr", "PhnomPenh OT,.Mondulkiri U GR 1.5, Khmer OS");
+pref("font.name-list.sans-serif.x-khmr", "Khmer OS");
 pref("font.name-list.monospace.x-khmr", "Khmer OS, Khmer OS System");
 
-pref("font.name.serif.x-mlym", "Rachana_w01");
-pref("font.name.sans-serif.x-mlym", "Rachana_w01");
-pref("font.name.monospace.x-mlym", "Rachana_w01");
-pref("font.name-list.serif.x-mlym", "AnjaliOldLipi, Kartika, ThoolikaUnicode");
-pref("font.name-list.sans-serif.x-mlym", "AnjaliOldLipi, Kartika, ThoolikaUnicode");
-pref("font.name-list.monospace.x-mlym", "AnjaliOldLipi, Kartika, ThoolikaUnicode");
+pref("font.name-list.serif.x-mlym", "Rachana_w01, AnjaliOldLipi, Kartika, ThoolikaUnicode");
+pref("font.name-list.sans-serif.x-mlym", "Rachana_w01, AnjaliOldLipi, Kartika, ThoolikaUnicode");
+pref("font.name-list.monospace.x-mlym", "Rachana_w01, AnjaliOldLipi, Kartika, ThoolikaUnicode");
 
-pref("font.name.serif.x-orya", "ori1Uni");
-pref("font.name.sans-serif.x-orya", "ori1Uni");
-pref("font.name.monospace.x-orya", "ori1Uni");
-pref("font.name-list.serif.x-orya", "Kalinga, ori1Uni");
-pref("font.name-list.sans-serif.x-orya", "Kalinga, ori1Uni");
-pref("font.name-list.monospace.x-orya", "Kalinga, ori1Uni");
+pref("font.name-list.serif.x-orya", "ori1Uni, Kalinga");
+pref("font.name-list.sans-serif.x-orya", "ori1Uni, Kalinga");
+pref("font.name-list.monospace.x-orya", "ori1Uni, Kalinga");
 
-pref("font.name.serif.x-telu", "Gautami");
-pref("font.name.sans-serif.x-telu", "Gautami");
-pref("font.name.monospace.x-telu", "Gautami");
 pref("font.name-list.serif.x-telu", "Gautami, Akshar Unicode");
 pref("font.name-list.sans-serif.x-telu", "Gautami, Akshar Unicode");
 pref("font.name-list.monospace.x-telu", "Gautami, Akshar Unicode");
 
-pref("font.name.serif.x-knda", "Tunga");
-pref("font.name.sans-serif.x-knda", "Tunga");
-pref("font.name.monospace.x-knda", "Tunga");
 pref("font.name-list.serif.x-knda", "Tunga, AksharUnicode");
 pref("font.name-list.sans-serif.x-knda", "Tunga, AksharUnicode");
 pref("font.name-list.monospace.x-knda", "Tunga, AksharUnicode");
 
-pref("font.name.serif.x-sinh", "Iskoola Pota");
-pref("font.name.sans-serif.x-sinh", "Iskoola Pota");
-pref("font.name.monospace.x-sinh", "Iskoola Pota");
 pref("font.name-list.serif.x-sinh", "Iskoola Pota, AksharUnicode");
 pref("font.name-list.sans-serif.x-sinh", "Iskoola Pota, AksharUnicode");
 pref("font.name-list.monospace.x-sinh", "Iskoola Pota, AksharUnicode");
 
-pref("font.name.serif.x-tibt", "Tibetan Machine Uni");
-pref("font.name.sans-serif.x-tibt", "Tibetan Machine Uni");
-pref("font.name.monospace.x-tibt", "Tibetan Machine Uni");
 pref("font.name-list.serif.x-tibt", "Tibetan Machine Uni, Jomolhari, Microsoft Himalaya");
 pref("font.name-list.sans-serif.x-tibt", "Tibetan Machine Uni, Jomolhari, Microsoft Himalaya");
 pref("font.name-list.monospace.x-tibt", "Tibetan Machine Uni, Jomolhari, Microsoft Himalaya");
@@ -3474,11 +3566,11 @@ pref("font.name-list.monospace.x-tibt", "Tibetan Machine Uni, Jomolhari, Microso
 pref("font.minimum-size.th", 10);
 
 pref("font.default.x-devanagari", "sans-serif");
-pref("font.name.serif.x-math", "Latin Modern Math");
+
 pref("font.name-list.serif.x-math", "Latin Modern Math, STIX Two Math, XITS Math, Cambria Math, Libertinus Math, DejaVu Math TeX Gyre, TeX Gyre Bonum Math, TeX Gyre Pagella Math, TeX Gyre Schola, TeX Gyre Termes Math, STIX Math, Asana Math, STIXGeneral, DejaVu Serif, DejaVu Sans, Times New Roman");
-pref("font.name.sans-serif.x-math", "Arial");
-pref("font.name.monospace.x-math", "Courier New");
-pref("font.name.cursive.x-math", "Comic Sans MS");
+pref("font.name-list.sans-serif.x-math", "Arial");
+pref("font.name-list.monospace.x-math", "Courier New");
+pref("font.name-list.cursive.x-math", "Comic Sans MS");
 
 // ClearType tuning parameters for directwrite/d2d.
 //
@@ -3689,237 +3781,141 @@ pref("ui.key.saveLink.shift", false); // true = shift, false = meta
 // enable NSPR logging for module fontInfoLog:5
 // canonical names immediately follow '(fontinit) family:' in the log
 
-pref("font.name.serif.ar", "Al Bayan");
-pref("font.name.sans-serif.ar", "Geeza Pro");
-pref("font.name.monospace.ar", "Geeza Pro");
-pref("font.name.cursive.ar", "DecoType Naskh");
-pref("font.name.fantasy.ar", "KufiStandardGK");
 pref("font.name-list.serif.ar", "Al Bayan");
 pref("font.name-list.sans-serif.ar", "Geeza Pro");
 pref("font.name-list.monospace.ar", "Geeza Pro");
 pref("font.name-list.cursive.ar", "DecoType Naskh");
 pref("font.name-list.fantasy.ar", "KufiStandardGK");
 
-pref("font.name.serif.el", "Times");
-pref("font.name.sans-serif.el", "Helvetica");
-pref("font.name.monospace.el", "Courier New");
-pref("font.name.cursive.el", "Lucida Grande");
-pref("font.name.fantasy.el", "Lucida Grande");
-pref("font.name-list.serif.el", "Times,Times New Roman");
-pref("font.name-list.sans-serif.el", "Helvetica,Lucida Grande");
-pref("font.name-list.monospace.el", "Courier New,Lucida Grande");
-pref("font.name-list.cursive.el", "Times,Lucida Grande");
-pref("font.name-list.fantasy.el", "Times,Lucida Grande");
+pref("font.name-list.serif.el", "Times, Times New Roman");
+pref("font.name-list.sans-serif.el", "Helvetica, Lucida Grande");
+pref("font.name-list.monospace.el", "Courier New, Lucida Grande");
+pref("font.name-list.cursive.el", "Lucida Grande, Times");
+pref("font.name-list.fantasy.el", "Lucida Grande, Times");
 
-pref("font.name.serif.he", "Times New Roman");
-pref("font.name.sans-serif.he", "Arial");
-pref("font.name.monospace.he", "Courier New");
-pref("font.name.cursive.he", "Times New Roman");
-pref("font.name.fantasy.he", "Times New Roman");
 pref("font.name-list.serif.he", "Times New Roman");
 pref("font.name-list.sans-serif.he", "Arial");
 pref("font.name-list.monospace.he", "Courier New");
 pref("font.name-list.cursive.he", "Times New Roman");
 pref("font.name-list.fantasy.he", "Times New Roman");
 
-pref("font.name.serif.ja", "Hiragino Mincho ProN");
-pref("font.name.sans-serif.ja", "Hiragino Kaku Gothic ProN");
-pref("font.name.monospace.ja", "Osaka-Mono");
-pref("font.name-list.serif.ja", "Hiragino Mincho ProN,Hiragino Mincho Pro");
-pref("font.name-list.sans-serif.ja", "Hiragino Kaku Gothic ProN,Hiragino Kaku Gothic Pro");
+pref("font.name-list.serif.ja", "Hiragino Mincho ProN, Hiragino Mincho Pro");
+pref("font.name-list.sans-serif.ja", "Hiragino Kaku Gothic ProN, Hiragino Kaku Gothic Pro");
 pref("font.name-list.monospace.ja", "Osaka-Mono");
 
-pref("font.name.serif.ko", "AppleMyungjo");
-pref("font.name.sans-serif.ko", "Apple SD Gothic Neo");
-pref("font.name.monospace.ko", "Apple SD Gothic Neo");
 pref("font.name-list.serif.ko", "AppleMyungjo");
-pref("font.name-list.sans-serif.ko", "Apple SD Gothic Neo,AppleGothic");
-pref("font.name-list.monospace.ko", "Apple SD Gothic Neo,AppleGothic");
+pref("font.name-list.sans-serif.ko", "Apple SD Gothic Neo, AppleGothic");
+pref("font.name-list.monospace.ko", "Apple SD Gothic Neo, AppleGothic");
 
-pref("font.name.serif.th", "Thonburi");
-pref("font.name.sans-serif.th", "Thonburi");
-pref("font.name.monospace.th", "Ayuthaya");
 pref("font.name-list.serif.th", "Thonburi");
 pref("font.name-list.sans-serif.th", "Thonburi");
 pref("font.name-list.monospace.th", "Ayuthaya");
 
-pref("font.name.serif.x-armn", "Mshtakan");
-pref("font.name.sans-serif.x-armn", "Mshtakan");
-pref("font.name.monospace.x-armn", "Mshtakan");
 pref("font.name-list.serif.x-armn", "Mshtakan");
 pref("font.name-list.sans-serif.x-armn", "Mshtakan");
 pref("font.name-list.monospace.x-armn", "Mshtakan");
 
 // SolaimanLipi, Rupali http://ekushey.org/?page/mac_download
-pref("font.name.serif.x-beng", "Bangla MN");
-pref("font.name.sans-serif.x-beng", "Bangla Sangam MN");
-pref("font.name.monospace.x-beng", "Bangla Sangam MN");
 pref("font.name-list.serif.x-beng", "Bangla MN");
 pref("font.name-list.sans-serif.x-beng", "Bangla Sangam MN");
 pref("font.name-list.monospace.x-beng", "Bangla Sangam MN");
 
-pref("font.name.serif.x-cans", "Euphemia UCAS");
-pref("font.name.sans-serif.x-cans", "Euphemia UCAS");
-pref("font.name.monospace.x-cans", "Euphemia UCAS");
 pref("font.name-list.serif.x-cans", "Euphemia UCAS");
 pref("font.name-list.sans-serif.x-cans", "Euphemia UCAS");
 pref("font.name-list.monospace.x-cans", "Euphemia UCAS");
 
-pref("font.name.serif.x-cyrillic", "Times");
-pref("font.name.sans-serif.x-cyrillic", "Helvetica");
-pref("font.name.monospace.x-cyrillic", "Monaco");
-pref("font.name.cursive.x-cyrillic", "Geneva");
-pref("font.name.fantasy.x-cyrillic", "Charcoal CY");
-pref("font.name-list.serif.x-cyrillic", "Times,Times New Roman");
-pref("font.name-list.sans-serif.x-cyrillic", "Helvetica,Arial");
-pref("font.name-list.monospace.x-cyrillic", "Monaco,Courier New");
+pref("font.name-list.serif.x-cyrillic", "Times, Times New Roman");
+pref("font.name-list.sans-serif.x-cyrillic", "Helvetica, Arial");
+pref("font.name-list.monospace.x-cyrillic", "Monaco, Courier New");
 pref("font.name-list.cursive.x-cyrillic", "Geneva");
 pref("font.name-list.fantasy.x-cyrillic", "Charcoal CY");
 
-pref("font.name.serif.x-devanagari", "Devanagari MT");
-pref("font.name.sans-serif.x-devanagari", "Devanagari Sangam MN");
-pref("font.name.monospace.x-devanagari", "Devanagari Sangam MN");
 pref("font.name-list.serif.x-devanagari", "Devanagari MT");
-pref("font.name-list.sans-serif.x-devanagari", "Devanagari Sangam MN,Devanagari MT");
-pref("font.name-list.monospace.x-devanagari", "Devanagari Sangam MN,Devanagari MT");
+pref("font.name-list.sans-serif.x-devanagari", "Devanagari Sangam MN, Devanagari MT");
+pref("font.name-list.monospace.x-devanagari", "Devanagari Sangam MN, Devanagari MT");
 
 // Abyssinica SIL http://scripts.sil.org/AbyssinicaSIL_Download
-pref("font.name.serif.x-ethi", "Kefa");
-pref("font.name.sans-serif.x-ethi", "Kefa");
-pref("font.name.monospace.x-ethi", "Kefa");
-pref("font.name-list.serif.x-ethi", "Kefa,Abyssinica SIL");
-pref("font.name-list.sans-serif.x-ethi", "Kefa,Abyssinica SIL");
-pref("font.name-list.monospace.x-ethi", "Kefa,Abyssinica SIL");
+pref("font.name-list.serif.x-ethi", "Kefa, Abyssinica SIL");
+pref("font.name-list.sans-serif.x-ethi", "Kefa, Abyssinica SIL");
+pref("font.name-list.monospace.x-ethi", "Kefa, Abyssinica SIL");
 
 // no suitable fonts for georgian ship with mac os x
 // however some can be freely downloaded
 // TITUS Cyberbit Basic http://titus.fkidg1.uni-frankfurt.de/unicode/tituut.asp
 // Zuzumbo http://homepage.mac.com/rsiradze/FileSharing91.html
-pref("font.name.serif.x-geor", "TITUS Cyberbit Basic");
-pref("font.name.sans-serif.x-geor", "Zuzumbo");
-pref("font.name.monospace.x-geor", "Zuzumbo");
 pref("font.name-list.serif.x-geor", "TITUS Cyberbit Basic");
 pref("font.name-list.sans-serif.x-geor", "Zuzumbo");
 pref("font.name-list.monospace.x-geor", "Zuzumbo");
 
-pref("font.name.serif.x-gujr", "Gujarati MT");
-pref("font.name.sans-serif.x-gujr", "Gujarati Sangam MN");
-pref("font.name.monospace.x-gujr", "Gujarati Sangam MN");
 pref("font.name-list.serif.x-gujr", "Gujarati MT");
-pref("font.name-list.sans-serif.x-gujr", "Gujarati Sangam MN,Gujarati MT");
-pref("font.name-list.monospace.x-gujr", "Gujarati Sangam MN,Gujarati MT");
+pref("font.name-list.sans-serif.x-gujr", "Gujarati Sangam MN, Gujarati MT");
+pref("font.name-list.monospace.x-gujr", "Gujarati Sangam MN, Gujarati MT");
 
-pref("font.name.serif.x-guru", "Gurmukhi MT");
-pref("font.name.sans-serif.x-guru", "Gurmukhi MT");
-pref("font.name.monospace.x-guru", "Gurmukhi MT");
 pref("font.name-list.serif.x-guru", "Gurmukhi MT");
 pref("font.name-list.sans-serif.x-guru", "Gurmukhi MT");
 pref("font.name-list.monospace.x-guru", "Gurmukhi MT");
 
-pref("font.name.serif.x-khmr", "Khmer MN");
-pref("font.name.sans-serif.x-khmr", "Khmer Sangam MN");
-pref("font.name.monospace.x-khmr", "Khmer Sangam MN");
 pref("font.name-list.serif.x-khmr", "Khmer MN");
 pref("font.name-list.sans-serif.x-khmr", "Khmer Sangam MN");
 pref("font.name-list.monospace.x-khmr", "Khmer Sangam MN");
 
-pref("font.name.serif.x-mlym", "Malayalam MN");
-pref("font.name.sans-serif.x-mlym", "Malayalam Sangam MN");
-pref("font.name.monospace.x-mlym", "Malayalam Sangam MN");
 pref("font.name-list.serif.x-mlym", "Malayalam MN");
 pref("font.name-list.sans-serif.x-mlym", "Malayalam Sangam MN");
 pref("font.name-list.monospace.x-mlym", "Malayalam Sangam MN");
 
-pref("font.name.serif.x-orya", "Oriya MN");
-pref("font.name.sans-serif.x-orya", "Oriya Sangam MN");
-pref("font.name.monospace.x-orya", "Oriya Sangam MN");
 pref("font.name-list.serif.x-orya", "Oriya MN");
 pref("font.name-list.sans-serif.x-orya", "Oriya Sangam MN");
 pref("font.name-list.monospace.x-orya", "Oriya Sangam MN");
 
 // Pothana http://web.nickshanks.com/typography/telugu/
-pref("font.name.serif.x-telu", "Telugu MN");
-pref("font.name.sans-serif.x-telu", "Telugu Sangam MN");
-pref("font.name.monospace.x-telu", "Telugu Sangam MN");
-pref("font.name-list.serif.x-telu", "Telugu MN,Pothana");
-pref("font.name-list.sans-serif.x-telu", "Telugu Sangam MN,Pothana");
-pref("font.name-list.monospace.x-telu", "Telugu Sangam MN,Pothana");
+pref("font.name-list.serif.x-telu", "Telugu MN, Pothana");
+pref("font.name-list.sans-serif.x-telu", "Telugu Sangam MN, Pothana");
+pref("font.name-list.monospace.x-telu", "Telugu Sangam MN, Pothana");
 
 // Kedage http://web.nickshanks.com/typography/kannada/
-pref("font.name.serif.x-knda", "Kannada MN");
-pref("font.name.sans-serif.x-knda", "Kannada Sangam MN");
-pref("font.name.monospace.x-knda", "Kannada Sangam MN");
-pref("font.name-list.serif.x-knda", "Kannada MN,Kedage");
-pref("font.name-list.sans-serif.x-knda", "Kannada Sangam MN,Kedage");
-pref("font.name-list.monospace.x-knda", "Kannada Sangam MN,Kedage");
+pref("font.name-list.serif.x-knda", "Kannada MN, Kedage");
+pref("font.name-list.sans-serif.x-knda", "Kannada Sangam MN, Kedage");
+pref("font.name-list.monospace.x-knda", "Kannada Sangam MN, Kedage");
 
-pref("font.name.serif.x-sinh", "Sinhala MN");
-pref("font.name.sans-serif.x-sinh", "Sinhala Sangam MN");
-pref("font.name.monospace.x-sinh", "Sinhala Sangam MN");
 pref("font.name-list.serif.x-sinh", "Sinhala MN");
 pref("font.name-list.sans-serif.x-sinh", "Sinhala Sangam MN");
 pref("font.name-list.monospace.x-sinh", "Sinhala Sangam MN");
 
-pref("font.name.serif.x-tamil", "InaiMathi");
-pref("font.name.sans-serif.x-tamil", "InaiMathi");
-pref("font.name.monospace.x-tamil", "InaiMathi");
 pref("font.name-list.serif.x-tamil", "InaiMathi");
 pref("font.name-list.sans-serif.x-tamil", "InaiMathi");
 pref("font.name-list.monospace.x-tamil", "InaiMathi");
 
 // Kailasa ships with mac os x >= 10.5
-pref("font.name.serif.x-tibt", "Kailasa");
-pref("font.name.sans-serif.x-tibt", "Kailasa");
-pref("font.name.monospace.x-tibt", "Kailasa");
 pref("font.name-list.serif.x-tibt", "Kailasa");
 pref("font.name-list.sans-serif.x-tibt", "Kailasa");
 pref("font.name-list.monospace.x-tibt", "Kailasa");
 
-pref("font.name.serif.x-unicode", "Times");
-pref("font.name.sans-serif.x-unicode", "Helvetica");
-pref("font.name.monospace.x-unicode", "Courier");
-pref("font.name.cursive.x-unicode", "Apple Chancery");
-pref("font.name.fantasy.x-unicode", "Papyrus");
 pref("font.name-list.serif.x-unicode", "Times");
 pref("font.name-list.sans-serif.x-unicode", "Helvetica");
 pref("font.name-list.monospace.x-unicode", "Courier");
 pref("font.name-list.cursive.x-unicode", "Apple Chancery");
 pref("font.name-list.fantasy.x-unicode", "Papyrus");
 
-pref("font.name.serif.x-western", "Times");
-pref("font.name.sans-serif.x-western", "Helvetica");
-pref("font.name.monospace.x-western", "Courier");
-pref("font.name.cursive.x-western", "Apple Chancery");
-pref("font.name.fantasy.x-western", "Papyrus");
-pref("font.name-list.serif.x-western", "Times,Times New Roman");
-pref("font.name-list.sans-serif.x-western", "Helvetica,Arial");
-pref("font.name-list.monospace.x-western", "Courier,Courier New");
+pref("font.name-list.serif.x-western", "Times, Times New Roman");
+pref("font.name-list.sans-serif.x-western", "Helvetica, Arial");
+pref("font.name-list.monospace.x-western", "Courier, Courier New");
 pref("font.name-list.cursive.x-western", "Apple Chancery");
 pref("font.name-list.fantasy.x-western", "Papyrus");
 
-pref("font.name.serif.zh-CN", "Times");
-pref("font.name.sans-serif.zh-CN", "Helvetica");
-pref("font.name.monospace.zh-CN", "Courier");
-pref("font.name.cursive.zh-CN", "Kaiti SC");
-pref("font.name-list.serif.zh-CN", "Times,STSong,Heiti SC");
-pref("font.name-list.sans-serif.zh-CN", "Helvetica,PingFang SC,STHeiti,Heiti SC");
-pref("font.name-list.monospace.zh-CN", "Courier,PingFang SC,STHeiti,Heiti SC");
+pref("font.name-list.serif.zh-CN", "Times, STSong, Heiti SC");
+pref("font.name-list.sans-serif.zh-CN", "Helvetica, PingFang SC, STHeiti, Heiti SC");
+pref("font.name-list.monospace.zh-CN", "Courier, PingFang SC, STHeiti, Heiti SC");
+pref("font.name-list.cursive.zh-CN", "Kaiti SC");
 
-pref("font.name.serif.zh-TW", "Times");
-pref("font.name.sans-serif.zh-TW", "Helvetica");
-pref("font.name.monospace.zh-TW", "Courier");
-pref("font.name.cursive.zh-TW", "Kaiti TC");
-pref("font.name-list.serif.zh-TW", "Times,LiSong Pro,Heiti TC");
-pref("font.name-list.sans-serif.zh-TW", "Helvetica,PingFang TC,Heiti TC,LiHei Pro");
-pref("font.name-list.monospace.zh-TW", "Courier,PingFang TC,Heiti TC,LiHei Pro");
+pref("font.name-list.serif.zh-TW", "Times, LiSong Pro, Heiti TC");
+pref("font.name-list.sans-serif.zh-TW", "Helvetica, PingFang TC, Heiti TC, LiHei Pro");
+pref("font.name-list.monospace.zh-TW", "Courier, PingFang TC, Heiti TC, LiHei Pro");
+pref("font.name-list.cursive.zh-TW", "Kaiti TC");
 
-pref("font.name.serif.zh-HK", "Times");
-pref("font.name.sans-serif.zh-HK", "Helvetica");
-pref("font.name.monospace.zh-HK", "Courier");
-pref("font.name.cursive.zh-HK", "Kaiti TC");
-pref("font.name-list.serif.zh-HK", "Times,LiSong Pro,Heiti TC");
-pref("font.name-list.sans-serif.zh-HK", "Helvetica,PingFang TC,Heiti TC,LiHei Pro");
-pref("font.name-list.monospace.zh-HK", "Courier,PingFang TC,Heiti TC,LiHei Pro");
+pref("font.name-list.serif.zh-HK", "Times, LiSong Pro, Heiti TC");
+pref("font.name-list.sans-serif.zh-HK", "Helvetica, PingFang TC, Heiti TC, LiHei Pro");
+pref("font.name-list.monospace.zh-HK", "Courier, PingFang TC, Heiti TC, LiHei Pro");
+pref("font.name-list.cursive.zh-HK", "Kaiti TC");
 
 // XP_MACOSX changes to default font sizes
 pref("font.minimum-size.th", 10);
@@ -3927,13 +3923,12 @@ pref("font.size.variable.zh-CN", 15);
 pref("font.size.variable.zh-HK", 15);
 pref("font.size.variable.zh-TW", 15);
 
-pref("font.name.serif.x-math", "Latin Modern Math");
 // Apple's Symbol is Unicode so use it
 pref("font.name-list.serif.x-math", "Latin Modern Math, STIX Two Math, XITS Math, Cambria Math, Libertinus Math, DejaVu Math TeX Gyre, TeX Gyre Bonum Math, TeX Gyre Pagella Math, TeX Gyre Schola, TeX Gyre Termes Math, STIX Math, Asana Math, STIXGeneral, DejaVu Serif, DejaVu Sans, Symbol, Times");
-pref("font.name.sans-serif.x-math", "Helvetica");
-pref("font.name.monospace.x-math", "Courier");
-pref("font.name.cursive.x-math", "Apple Chancery");
-pref("font.name.fantasy.x-math", "Papyrus");
+pref("font.name-list.sans-serif.x-math", "Helvetica");
+pref("font.name-list.monospace.x-math", "Courier");
+pref("font.name-list.cursive.x-math", "Apple Chancery");
+pref("font.name-list.fantasy.x-math", "Papyrus");
 
 // Individual font faces to be treated as independent families,
 // listed as <Postscript name of face:Owning family name>
@@ -4106,124 +4101,124 @@ pref("print.print_extra_margin", 0); // twips
 
 // font names
 
-pref("font.name.serif.ar", "serif");
-pref("font.name.sans-serif.ar", "sans-serif");
-pref("font.name.monospace.ar", "monospace");
+pref("font.name-list.serif.ar", "serif");
+pref("font.name-list.sans-serif.ar", "sans-serif");
+pref("font.name-list.monospace.ar", "monospace");
 pref("font.size.fixed.ar", 12);
 
-pref("font.name.serif.el", "serif");
-pref("font.name.sans-serif.el", "sans-serif");
-pref("font.name.monospace.el", "monospace");
+pref("font.name-list.serif.el", "serif");
+pref("font.name-list.sans-serif.el", "sans-serif");
+pref("font.name-list.monospace.el", "monospace");
 pref("font.size.fixed.el", 12);
 
-pref("font.name.serif.he", "serif");
-pref("font.name.sans-serif.he", "sans-serif");
-pref("font.name.monospace.he", "monospace");
+pref("font.name-list.serif.he", "serif");
+pref("font.name-list.sans-serif.he", "sans-serif");
+pref("font.name-list.monospace.he", "monospace");
 pref("font.size.fixed.he", 12);
 
-pref("font.name.serif.ja", "serif");
-pref("font.name.sans-serif.ja", "sans-serif");
-pref("font.name.monospace.ja", "monospace");
+pref("font.name-list.serif.ja", "serif");
+pref("font.name-list.sans-serif.ja", "sans-serif");
+pref("font.name-list.monospace.ja", "monospace");
 
-pref("font.name.serif.ko", "serif");
-pref("font.name.sans-serif.ko", "sans-serif");
-pref("font.name.monospace.ko", "monospace");
+pref("font.name-list.serif.ko", "serif");
+pref("font.name-list.sans-serif.ko", "sans-serif");
+pref("font.name-list.monospace.ko", "monospace");
 
-pref("font.name.serif.th", "serif");
-pref("font.name.sans-serif.th", "sans-serif");
-pref("font.name.monospace.th", "monospace");
+pref("font.name-list.serif.th", "serif");
+pref("font.name-list.sans-serif.th", "sans-serif");
+pref("font.name-list.monospace.th", "monospace");
 pref("font.minimum-size.th", 13);
 
-pref("font.name.serif.x-armn", "serif");
-pref("font.name.sans-serif.x-armn", "sans-serif");
-pref("font.name.monospace.x-armn", "monospace");
+pref("font.name-list.serif.x-armn", "serif");
+pref("font.name-list.sans-serif.x-armn", "sans-serif");
+pref("font.name-list.monospace.x-armn", "monospace");
 
-pref("font.name.serif.x-beng", "serif");
-pref("font.name.sans-serif.x-beng", "sans-serif");
-pref("font.name.monospace.x-beng", "monospace");
+pref("font.name-list.serif.x-beng", "serif");
+pref("font.name-list.sans-serif.x-beng", "sans-serif");
+pref("font.name-list.monospace.x-beng", "monospace");
 
-pref("font.name.serif.x-cans", "serif");
-pref("font.name.sans-serif.x-cans", "sans-serif");
-pref("font.name.monospace.x-cans", "monospace");
+pref("font.name-list.serif.x-cans", "serif");
+pref("font.name-list.sans-serif.x-cans", "sans-serif");
+pref("font.name-list.monospace.x-cans", "monospace");
 
-pref("font.name.serif.x-cyrillic", "serif");
-pref("font.name.sans-serif.x-cyrillic", "sans-serif");
-pref("font.name.monospace.x-cyrillic", "monospace");
+pref("font.name-list.serif.x-cyrillic", "serif");
+pref("font.name-list.sans-serif.x-cyrillic", "sans-serif");
+pref("font.name-list.monospace.x-cyrillic", "monospace");
 pref("font.size.fixed.x-cyrillic", 12);
 
-pref("font.name.serif.x-devanagari", "serif");
-pref("font.name.sans-serif.x-devanagari", "sans-serif");
-pref("font.name.monospace.x-devanagari", "monospace");
+pref("font.name-list.serif.x-devanagari", "serif");
+pref("font.name-list.sans-serif.x-devanagari", "sans-serif");
+pref("font.name-list.monospace.x-devanagari", "monospace");
 
-pref("font.name.serif.x-ethi", "serif");
-pref("font.name.sans-serif.x-ethi", "sans-serif");
-pref("font.name.monospace.x-ethi", "monospace");
+pref("font.name-list.serif.x-ethi", "serif");
+pref("font.name-list.sans-serif.x-ethi", "sans-serif");
+pref("font.name-list.monospace.x-ethi", "monospace");
 
-pref("font.name.serif.x-geor", "serif");
-pref("font.name.sans-serif.x-geor", "sans-serif");
-pref("font.name.monospace.x-geor", "monospace");
+pref("font.name-list.serif.x-geor", "serif");
+pref("font.name-list.sans-serif.x-geor", "sans-serif");
+pref("font.name-list.monospace.x-geor", "monospace");
 
-pref("font.name.serif.x-gujr", "serif");
-pref("font.name.sans-serif.x-gujr", "sans-serif");
-pref("font.name.monospace.x-gujr", "monospace");
+pref("font.name-list.serif.x-gujr", "serif");
+pref("font.name-list.sans-serif.x-gujr", "sans-serif");
+pref("font.name-list.monospace.x-gujr", "monospace");
 
-pref("font.name.serif.x-guru", "serif");
-pref("font.name.sans-serif.x-guru", "sans-serif");
-pref("font.name.monospace.x-guru", "monospace");
+pref("font.name-list.serif.x-guru", "serif");
+pref("font.name-list.sans-serif.x-guru", "sans-serif");
+pref("font.name-list.monospace.x-guru", "monospace");
 
-pref("font.name.serif.x-khmr", "serif");
-pref("font.name.sans-serif.x-khmr", "sans-serif");
-pref("font.name.monospace.x-khmr", "monospace");
+pref("font.name-list.serif.x-khmr", "serif");
+pref("font.name-list.sans-serif.x-khmr", "sans-serif");
+pref("font.name-list.monospace.x-khmr", "monospace");
 
-pref("font.name.serif.x-knda", "serif");
-pref("font.name.sans-serif.x-knda", "sans-serif");
-pref("font.name.monospace.x-knda", "monospace");
+pref("font.name-list.serif.x-knda", "serif");
+pref("font.name-list.sans-serif.x-knda", "sans-serif");
+pref("font.name-list.monospace.x-knda", "monospace");
 
-pref("font.name.serif.x-mlym", "serif");
-pref("font.name.sans-serif.x-mlym", "sans-serif");
-pref("font.name.monospace.x-mlym", "monospace");
+pref("font.name-list.serif.x-mlym", "serif");
+pref("font.name-list.sans-serif.x-mlym", "sans-serif");
+pref("font.name-list.monospace.x-mlym", "monospace");
 
-pref("font.name.serif.x-orya", "serif");
-pref("font.name.sans-serif.x-orya", "sans-serif");
-pref("font.name.monospace.x-orya", "monospace");
+pref("font.name-list.serif.x-orya", "serif");
+pref("font.name-list.sans-serif.x-orya", "sans-serif");
+pref("font.name-list.monospace.x-orya", "monospace");
 
-pref("font.name.serif.x-sinh", "serif");
-pref("font.name.sans-serif.x-sinh", "sans-serif");
-pref("font.name.monospace.x-sinh", "monospace");
+pref("font.name-list.serif.x-sinh", "serif");
+pref("font.name-list.sans-serif.x-sinh", "sans-serif");
+pref("font.name-list.monospace.x-sinh", "monospace");
 
-pref("font.name.serif.x-tamil", "serif");
-pref("font.name.sans-serif.x-tamil", "sans-serif");
-pref("font.name.monospace.x-tamil", "monospace");
+pref("font.name-list.serif.x-tamil", "serif");
+pref("font.name-list.sans-serif.x-tamil", "sans-serif");
+pref("font.name-list.monospace.x-tamil", "monospace");
 
-pref("font.name.serif.x-telu", "serif");
-pref("font.name.sans-serif.x-telu", "sans-serif");
-pref("font.name.monospace.x-telu", "monospace");
+pref("font.name-list.serif.x-telu", "serif");
+pref("font.name-list.sans-serif.x-telu", "sans-serif");
+pref("font.name-list.monospace.x-telu", "monospace");
 
-pref("font.name.serif.x-tibt", "serif");
-pref("font.name.sans-serif.x-tibt", "sans-serif");
-pref("font.name.monospace.x-tibt", "monospace");
+pref("font.name-list.serif.x-tibt", "serif");
+pref("font.name-list.sans-serif.x-tibt", "sans-serif");
+pref("font.name-list.monospace.x-tibt", "monospace");
 
-pref("font.name.serif.x-unicode", "serif");
-pref("font.name.sans-serif.x-unicode", "sans-serif");
-pref("font.name.monospace.x-unicode", "monospace");
+pref("font.name-list.serif.x-unicode", "serif");
+pref("font.name-list.sans-serif.x-unicode", "sans-serif");
+pref("font.name-list.monospace.x-unicode", "monospace");
 pref("font.size.fixed.x-unicode", 12);
 
-pref("font.name.serif.x-western", "serif");
-pref("font.name.sans-serif.x-western", "sans-serif");
-pref("font.name.monospace.x-western", "monospace");
+pref("font.name-list.serif.x-western", "serif");
+pref("font.name-list.sans-serif.x-western", "sans-serif");
+pref("font.name-list.monospace.x-western", "monospace");
 pref("font.size.fixed.x-western", 12);
 
-pref("font.name.serif.zh-CN", "serif");
-pref("font.name.sans-serif.zh-CN", "sans-serif");
-pref("font.name.monospace.zh-CN", "monospace");
+pref("font.name-list.serif.zh-CN", "serif");
+pref("font.name-list.sans-serif.zh-CN", "sans-serif");
+pref("font.name-list.monospace.zh-CN", "monospace");
 
-pref("font.name.serif.zh-HK", "serif");
-pref("font.name.sans-serif.zh-HK", "sans-serif");
-pref("font.name.monospace.zh-HK", "monospace");
+pref("font.name-list.serif.zh-HK", "serif");
+pref("font.name-list.sans-serif.zh-HK", "sans-serif");
+pref("font.name-list.monospace.zh-HK", "monospace");
 
-pref("font.name.serif.zh-TW", "serif");
-pref("font.name.sans-serif.zh-TW", "sans-serif");
-pref("font.name.monospace.zh-TW", "monospace");
+pref("font.name-list.serif.zh-TW", "serif");
+pref("font.name-list.sans-serif.zh-TW", "sans-serif");
+pref("font.name-list.monospace.zh-TW", "monospace");
 
 /* PostScript print module prefs */
 // pref("print.postscript.enabled",      true);
@@ -4285,165 +4280,127 @@ pref("font.size.fixed.x-western", 12);
 
 // ar
 
-pref("font.name.serif.el", "Droid Serif"); // not Charis SIL Compact, only has a few Greek chars
-pref("font.name.sans-serif.el", "Fira Sans");
-pref("font.name.monospace.el", "Fira Mono");
+pref("font.name-list.serif.el", "Droid Serif"); // not Charis SIL Compact, only has a few Greek chars
+pref("font.name-list.sans-serif.el", "Fira Sans");
+pref("font.name-list.monospace.el", "Fira Mono");
 
-pref("font.name.serif.he", "Charis SIL Compact");
-pref("font.name.sans-serif.he", "Fira Sans");
-pref("font.name.monospace.he", "Fira Mono");
-pref("font.name-list.sans-serif.he", "Droid Sans Hebrew, Fira Sans");
+pref("font.name-list.serif.he", "Charis SIL Compact");
+pref("font.name-list.sans-serif.he", "Fira Sans, Droid Sans Hebrew");
+pref("font.name-list.monospace.he", "Fira Mono");
 
-pref("font.name.serif.ja", "Charis SIL Compact");
-pref("font.name.sans-serif.ja", "Fira Sans");
-pref("font.name.monospace.ja", "MotoyaLMaru");
+pref("font.name-list.serif.ja", "Charis SIL Compact");
 pref("font.name-list.sans-serif.ja", "Fira Sans, MotoyaLMaru, MotoyaLCedar, Droid Sans Japanese");
 pref("font.name-list.monospace.ja", "MotoyaLMaru, MotoyaLCedar, Fira Mono");
 
-pref("font.name.serif.ko", "Charis SIL Compact");
-pref("font.name.sans-serif.ko", "Fira Sans");
-pref("font.name.monospace.ko", "Fira Mono");
+pref("font.name-list.serif.ko", "Charis SIL Compact");
+pref("font.name-list.sans-serif.ko", "Fira Sans");
+pref("font.name-list.monospace.ko", "Fira Mono");
 
-pref("font.name.serif.th", "Charis SIL Compact");
-pref("font.name.sans-serif.th", "Fira Sans");
-pref("font.name.monospace.th", "Fira Mono");
+pref("font.name-list.serif.th", "Charis SIL Compact");
 pref("font.name-list.sans-serif.th", "Fira Sans, Noto Sans Thai, Droid Sans Thai");
+pref("font.name-list.monospace.th", "Fira Mono");
 
-pref("font.name.serif.x-cyrillic", "Charis SIL Compact");
-pref("font.name.sans-serif.x-cyrillic", "Fira Sans");
-pref("font.name.monospace.x-cyrillic", "Fira Mono");
+pref("font.name-list.serif.x-cyrillic", "Charis SIL Compact");
+pref("font.name-list.sans-serif.x-cyrillic", "Fira Sans");
+pref("font.name-list.monospace.x-cyrillic", "Fira Mono");
 
-pref("font.name.serif.x-unicode", "Charis SIL Compact");
-pref("font.name.sans-serif.x-unicode", "Fira Sans");
-pref("font.name.monospace.x-unicode", "Fira Mono");
+pref("font.name-list.serif.x-unicode", "Charis SIL Compact");
+pref("font.name-list.sans-serif.x-unicode", "Fira Sans");
+pref("font.name-list.monospace.x-unicode", "Fira Mono");
 
-pref("font.name.serif.x-western", "Charis SIL Compact");
-pref("font.name.sans-serif.x-western", "Fira Sans");
-pref("font.name.monospace.x-western", "Fira Mono");
+pref("font.name-list.serif.x-western", "Charis SIL Compact");
+pref("font.name-list.sans-serif.x-western", "Fira Sans");
+pref("font.name-list.monospace.x-western", "Fira Mono");
 
-pref("font.name.serif.zh-CN", "Charis SIL Compact");
-pref("font.name.sans-serif.zh-CN", "Fira Sans");
-pref("font.name.monospace.zh-CN", "Fira Mono");
-pref("font.name-list.sans-serif.zh-CN", "Fira Sans,Droid Sans Fallback");
+pref("font.name-list.serif.zh-CN", "Charis SIL Compact");
+pref("font.name-list.sans-serif.zh-CN", "Fira Sans, Droid Sans Fallback");
+pref("font.name-list.monospace.zh-CN", "Fira Mono");
 
-pref("font.name.serif.zh-HK", "Charis SIL Compact");
-pref("font.name.sans-serif.zh-HK", "Fira Sans");
-pref("font.name.monospace.zh-HK", "Fira Mono");
-pref("font.name-list.sans-serif.zh-HK", "Fira Sans,Droid Sans Fallback");
+pref("font.name-list.serif.zh-HK", "Charis SIL Compact");
+pref("font.name-list.sans-serif.zh-HK", "Fira Sans, Droid Sans Fallback");
+pref("font.name-list.monospace.zh-HK", "Fira Mono");
 
-pref("font.name.serif.zh-TW", "Charis SIL Compact");
-pref("font.name.sans-serif.zh-TW", "Fira Sans");
-pref("font.name.monospace.zh-TW", "Fira Mono");
-pref("font.name-list.sans-serif.zh-TW", "Fira Sans,Droid Sans Fallback");
+pref("font.name-list.serif.zh-TW", "Charis SIL Compact");
+pref("font.name-list.sans-serif.zh-TW", "Fira Sans, Droid Sans Fallback");
+pref("font.name-list.monospace.zh-TW", "Fira Mono");
 
-pref("font.name.serif.x-math", "Latin Modern Math");
 pref("font.name-list.serif.x-math", "Latin Modern Math, STIX Two Math, XITS Math, Cambria Math, Libertinus Math, DejaVu Math TeX Gyre, TeX Gyre Bonum Math, TeX Gyre Pagella Math, TeX Gyre Schola, TeX Gyre Termes Math, STIX Math, Asana Math, STIXGeneral, DejaVu Serif, DejaVu Sans, Charis SIL Compact");
-pref("font.name.sans-serif.x-math", "Fira Sans");
-pref("font.name.monospace.x-math", "Fira Mono");
+pref("font.name-list.sans-serif.x-math", "Fira Sans");
+pref("font.name-list.monospace.x-math", "Fira Mono");
 
 #elif defined(ANDROID)
 // We use the bundled fonts for Firefox for Android
 
-pref("font.name.serif.ar", "Noto Naskh Arabic");
-pref("font.name.sans-serif.ar", "Noto Naskh Arabic");
-pref("font.name.monospace.ar", "Noto Naskh Arabic");
 pref("font.name-list.serif.ar", "Noto Naskh Arabic, Noto Serif, Droid Serif");
 pref("font.name-list.sans-serif.ar", "Noto Naskh Arabic, Clear Sans, Roboto, Droid Sans");
+pref("font.name-list.monospace.ar", "Noto Naskh Arabic");
 
-pref("font.name.serif.el", "Droid Serif"); // not Charis SIL Compact, only has a few Greek chars
-pref("font.name.sans-serif.el", "Clear Sans");
-pref("font.name.monospace.el", "Droid Sans Mono");
-pref("font.name-list.serif.el", "Noto Serif");
+pref("font.name-list.serif.el", "Droid Serif, Noto Serif"); // not Charis SIL Compact, only has a few Greek chars
 pref("font.name-list.sans-serif.el", "Clear Sans, Roboto, Droid Sans");
+pref("font.name-list.monospace.el", "Droid Sans Mono");
 
-pref("font.name.serif.he", "Droid Serif");
-pref("font.name.sans-serif.he", "Clear Sans");
-pref("font.name.monospace.he", "Droid Sans Mono");
-pref("font.name-list.serif.he", "Noto Serif");
-pref("font.name-list.sans-serif.he", "Droid Sans Hebrew, Clear Sans, Droid Sans, Arial");
+pref("font.name-list.serif.he", "Droid Serif, Noto Serif");
+pref("font.name-list.sans-serif.he", "Clear Sans, Droid Sans Hebrew, Droid Sans, Arial");
+pref("font.name-list.monospace.he", "Droid Sans Mono");
 
-pref("font.name.serif.ja", "Charis SIL Compact");
-pref("font.name.sans-serif.ja", "Clear Sans");
-pref("font.name.monospace.ja", "MotoyaLMaru");
-pref("font.name-list.serif.ja", "Noto Serif, Droid Serif");
+pref("font.name-list.serif.ja", "Charis SIL Compact, Noto Serif, Droid Serif");
 pref("font.name-list.sans-serif.ja", "Clear Sans, Roboto, Droid Sans, MotoyaLMaru, MotoyaLCedar, Noto Sans JP, Noto Sans CJK JP, Droid Sans Japanese");
 pref("font.name-list.monospace.ja", "MotoyaLMaru, MotoyaLCedar, Droid Sans Mono CJK JP, Droid Sans Mono");
 
-pref("font.name.serif.ko", "Charis SIL Compact");
-pref("font.name.sans-serif.ko", "Clear Sans");
-pref("font.name.monospace.ko", "Droid Sans Mono");
-pref("font.name-list.serif.ko", "Noto Serif, Droid Serif, HYSerif");
-pref("font.name-list.sans-serif.ko", "SmartGothic, NanumGothic, Noto Sans KR, Noto Sans CJK KR, DroidSansFallback, Droid Sans Fallback");
-pref("font.name-list.monospace.ko", "Noto Sans Mono CJK KR");
+pref("font.name-list.serif.ko", "Charis SIL Compact, Noto Serif, Droid Serif, HYSerif");
+pref("font.name-list.sans-serif.ko", "Clear Sans, SmartGothic, NanumGothic, Noto Sans KR, Noto Sans CJK KR, DroidSansFallback, Droid Sans Fallback");
+pref("font.name-list.monospace.ko", "Droid Sans Mono, Noto Sans Mono CJK KR");
 
-pref("font.name.serif.th", "Charis SIL Compact");
-pref("font.name.sans-serif.th", "Clear Sans");
-pref("font.name.monospace.th", "Droid Sans Mono");
-pref("font.name-list.serif.th", "Noto Serif, Droid Serif");
-pref("font.name-list.sans-serif.th", "Droid Sans Thai, Clear Sans, Droid Sans");
+pref("font.name-list.serif.th", "Charis SIL Compact, Noto Serif, Droid Serif");
+pref("font.name-list.sans-serif.th", "Clear Sans, Droid Sans Thai, Droid Sans");
+pref("font.name-list.monospace.th", "Droid Sans Mono");
 
-pref("font.name.serif.x-cyrillic", "Charis SIL Compact");
-pref("font.name.sans-serif.x-cyrillic", "Clear Sans");
-pref("font.name.monospace.x-cyrillic", "Droid Sans Mono");
-pref("font.name-list.serif.x-cyrillic", "Noto Serif, Droid Serif");
+pref("font.name-list.serif.x-cyrillic", "Charis SIL Compact, Noto Serif, Droid Serif");
 pref("font.name-list.sans-serif.x-cyrillic", "Clear Sans, Roboto, Droid Sans");
+pref("font.name-list.monospace.x-cyrillic", "Droid Sans Mono");
 
-pref("font.name.serif.x-unicode", "Charis SIL Compact");
-pref("font.name.sans-serif.x-unicode", "Clear Sans");
-pref("font.name.monospace.x-unicode", "Droid Sans Mono");
-pref("font.name-list.serif.x-unicode", "Noto Serif, Droid Serif");
+pref("font.name-list.serif.x-unicode", "Charis SIL Compact, Noto Serif, Droid Serif");
 pref("font.name-list.sans-serif.x-unicode", "Clear Sans, Roboto, Droid Sans");
+pref("font.name-list.monospace.x-unicode", "Droid Sans Mono");
 
-pref("font.name.serif.x-western", "Charis SIL Compact");
-pref("font.name.sans-serif.x-western", "Clear Sans");
-pref("font.name.monospace.x-western", "Droid Sans Mono");
-pref("font.name-list.serif.x-western", "Noto Serif, Droid Serif");
+pref("font.name-list.serif.x-western", "Charis SIL Compact, Noto Serif, Droid Serif");
 pref("font.name-list.sans-serif.x-western", "Clear Sans, Roboto, Droid Sans");
+pref("font.name-list.monospace.x-western", "Droid Sans Mono");
 
-pref("font.name.serif.zh-CN", "Charis SIL Compact");
-pref("font.name.sans-serif.zh-CN", "Clear Sans");
-pref("font.name.monospace.zh-CN", "Droid Sans Mono");
-pref("font.name-list.serif.zh-CN", "Noto Serif, Droid Serif, Droid Sans Fallback");
-pref("font.name-list.sans-serif.zh-CN", "Roboto, Droid Sans, Noto Sans SC, Noto Sans CJK SC, Droid Sans Fallback");
-pref("font.name-list.monospace.zh-CN", "Noto Sans Mono CJK SC, Droid Sans Fallback");
+pref("font.name-list.serif.zh-CN", "Charis SIL Compact, Noto Serif, Droid Serif, Droid Sans Fallback");
+pref("font.name-list.sans-serif.zh-CN", "Clear Sans, Roboto, Droid Sans, Noto Sans SC, Noto Sans CJK SC, Droid Sans Fallback");
+pref("font.name-list.monospace.zh-CN", "Droid Sans Mono, Noto Sans Mono CJK SC, Droid Sans Fallback");
 
-pref("font.name.serif.zh-HK", "Charis SIL Compact");
-pref("font.name.sans-serif.zh-HK", "Clear Sans");
-pref("font.name.monospace.zh-HK", "Droid Sans Mono");
-pref("font.name-list.serif.zh-HK", "Noto Serif, Droid Serif, Droid Sans Fallback");
-pref("font.name-list.sans-serif.zh-HK", "Roboto, Droid Sans, Noto Sans TC, Noto Sans SC, Noto Sans CJK TC, Droid Sans Fallback");
-pref("font.name-list.monospace.zh-HK", "Noto Sans Mono CJK TC, Droid Sans Fallback");
+pref("font.name-list.serif.zh-HK", "Charis SIL Compact, Noto Serif, Droid Serif, Droid Sans Fallback");
+pref("font.name-list.sans-serif.zh-HK", "Clear Sans, Roboto, Droid Sans, Noto Sans TC, Noto Sans SC, Noto Sans CJK TC, Droid Sans Fallback");
+pref("font.name-list.monospace.zh-HK", "Droid Sans Mono, Noto Sans Mono CJK TC, Droid Sans Fallback");
 
-pref("font.name.serif.zh-TW", "Charis SIL Compact");
-pref("font.name.sans-serif.zh-TW", "Clear Sans");
-pref("font.name.monospace.zh-TW", "Droid Sans Mono");
-pref("font.name-list.serif.zh-TW", "Noto Serif, Droid Serif, Droid Sans Fallback");
-pref("font.name-list.sans-serif.zh-TW", "Roboto, Droid Sans, Noto Sans TC, Noto Sans SC, Noto Sans CJK TC, Droid Sans Fallback");
-pref("font.name-list.monospace.zh-TW", "Noto Sans Mono CJK TC, Droid Sans Fallback");
+pref("font.name-list.serif.zh-TW", "Charis SIL Compact, Noto Serif, Droid Serif, Droid Sans Fallback");
+pref("font.name-list.sans-serif.zh-TW", "Clear Sans, Roboto, Droid Sans, Noto Sans TC, Noto Sans SC, Noto Sans CJK TC, Droid Sans Fallback");
+pref("font.name-list.monospace.zh-TW", "Droid Sans Mono, Noto Sans Mono CJK TC, Droid Sans Fallback");
 
-pref("font.name.serif.x-math", "Latin Modern Math");
 pref("font.name-list.serif.x-math", "Latin Modern Math, STIX Two Math, XITS Math, Cambria Math, Libertinus Math, DejaVu Math TeX Gyre, TeX Gyre Bonum Math, TeX Gyre Pagella Math, TeX Gyre Schola, TeX Gyre Termes Math, STIX Math, Asana Math, STIXGeneral, DejaVu Serif, DejaVu Sans, Charis SIL Compact");
-pref("font.name.sans-serif.x-math", "Clear Sans");
-pref("font.name.monospace.x-math", "Droid Sans Mono");
+pref("font.name-list.sans-serif.x-math", "Clear Sans");
+pref("font.name-list.monospace.x-math", "Droid Sans Mono");
 
 #endif
 
 #if OS_ARCH==AIX
 
 // Override default Japanese fonts
-pref("font.name.serif.ja", "dt-interface system-jisx0208.1983-0");
-pref("font.name.sans-serif.ja", "dt-interface system-jisx0208.1983-0");
-pref("font.name.monospace.ja", "dt-interface user-jisx0208.1983-0");
+pref("font.name-list.serif.ja", "dt-interface system-jisx0208.1983-0");
+pref("font.name-list.sans-serif.ja", "dt-interface system-jisx0208.1983-0");
+pref("font.name-list.monospace.ja", "dt-interface user-jisx0208.1983-0");
 
 // Override default Cyrillic fonts
-pref("font.name.serif.x-cyrillic", "dt-interface system-iso8859-5");
-pref("font.name.sans-serif.x-cyrillic", "dt-interface system-iso8859-5");
-pref("font.name.monospace.x-cyrillic", "dt-interface user-iso8859-5");
+pref("font.name-list.serif.x-cyrillic", "dt-interface system-iso8859-5");
+pref("font.name-list.sans-serif.x-cyrillic", "dt-interface system-iso8859-5");
+pref("font.name-list.monospace.x-cyrillic", "dt-interface user-iso8859-5");
 
 // Override default Unicode fonts
-pref("font.name.serif.x-unicode", "dt-interface system-ucs2.cjk_japan-0");
-pref("font.name.sans-serif.x-unicode", "dt-interface system-ucs2.cjk_japan-0");
-pref("font.name.monospace.x-unicode", "dt-interface user-ucs2.cjk_japan-0");
+pref("font.name-list.serif.x-unicode", "dt-interface system-ucs2.cjk_japan-0");
+pref("font.name-list.sans-serif.x-unicode", "dt-interface system-ucs2.cjk_japan-0");
+pref("font.name-list.monospace.x-unicode", "dt-interface user-ucs2.cjk_japan-0");
 
 # AIX
 #endif
@@ -4741,6 +4698,8 @@ pref("gfx.apitrace.enabled",false);
 #ifdef MOZ_X11
 #ifdef MOZ_WIDGET_GTK
 pref("gfx.xrender.enabled",false);
+pref("widget.chrome.allow-gtk-dark-theme", false);
+pref("widget.content.allow-gtk-dark-theme", false);
 #endif
 #endif
 

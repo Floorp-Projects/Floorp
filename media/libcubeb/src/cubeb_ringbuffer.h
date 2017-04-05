@@ -15,40 +15,6 @@
 #include <memory>
 #include <thread>
 
-/* This enum allows choosing the behaviour of the queue. */
-enum ThreadSafety
-{
-  /* No attempt to synchronize the queue is made. The queue is only safe when
-   * used on a single thread. */
-  Unsafe,
-  /** Atomics are used to synchronize read and write. The queue is safe when
-   * used from two thread: one producer, one consumer. */
-  Safe
-};
-
-/** Policy to enable thread safety on the queue. */
-template<ThreadSafety>
-struct ThreadSafePolicy;
-
-typedef int RingBufferIndex;
-
-/** Policy for thread-safe internal index for the queue. */
-template<>
-struct ThreadSafePolicy<Safe>
-{
-  typedef std::atomic<RingBufferIndex> IndexType;
-};
-
-/**
- * This is the version with a simple `int` for index, for use when only a single
- * thread is producing and releasing data.
- */
-template<>
-struct ThreadSafePolicy<Unsafe>
-{
-  typedef RingBufferIndex IndexType;
-};
-
 /**
  * Single producer single consumer lock-free and wait-free ring buffer.
  *
@@ -82,8 +48,7 @@ struct ThreadSafePolicy<Unsafe>
  *   providing an external buffer to copy into is an easy way to have linear
  *   data for further processing.
  */
-template <typename T,
-          ThreadSafety Safety = ThreadSafety::Safe>
+template <typename T>
 class ring_buffer_base
 {
 public:
@@ -95,12 +60,12 @@ public:
    *
    * @param capacity The maximum number of element this ring buffer will hold.
    */
-  ring_buffer_base(RingBufferIndex capacity)
+  ring_buffer_base(int capacity)
     /* One more element to distinguish from empty and full buffer. */
     : capacity_(capacity + 1)
   {
     assert(storage_capacity() <
-           std::numeric_limits<RingBufferIndex>::max() / 2 &&
+           std::numeric_limits<int>::max() / 2 &&
            "buffer too large for the type of index used.");
     assert(capacity_ > 0);
 
@@ -119,7 +84,7 @@ public:
    * @param count The number of elements to enqueue.
    * @return The number of element enqueued.
    */
-  RingBufferIndex enqueue_default(RingBufferIndex count)
+  int enqueue_default(int count)
   {
     return enqueue(nullptr, count);
   }
@@ -132,7 +97,7 @@ public:
    *
    * @return 1 if the element was inserted, 0 otherwise.
    */
-  RingBufferIndex enqueue(T& element)
+  int enqueue(T& element)
   {
     return enqueue(&element, 1);
   }
@@ -147,27 +112,27 @@ public:
    * @return The number of elements successfully coped from `elements` and inserted
    * into the ring buffer.
    */
-  RingBufferIndex enqueue(T * elements, RingBufferIndex count)
+  int enqueue(T * elements, int count)
   {
 #ifndef NDEBUG
     assert_correct_thread(producer_id);
 #endif
 
-    RingBufferIndex rd_idx = read_index_;
-    RingBufferIndex wr_idx = write_index_;
+    int rd_idx = read_index_.load(std::memory_order::memory_order_relaxed);
+    int wr_idx = write_index_.load(std::memory_order::memory_order_relaxed);
 
     if (full_internal(rd_idx, wr_idx)) {
       return 0;
     }
 
-    RingBufferIndex to_write =
+    int to_write =
       std::min(available_write_internal(rd_idx, wr_idx), count);
 
     /* First part, from the write index to the end of the array. */
-    RingBufferIndex first_part = std::min(storage_capacity() - wr_idx,
+    int first_part = std::min(storage_capacity() - wr_idx,
                                           to_write);
     /* Second part, from the beginning of the array */
-    RingBufferIndex second_part = to_write - first_part;
+    int second_part = to_write - first_part;
 
     if (elements) {
       Copy(data_.get() + wr_idx, elements, first_part);
@@ -177,7 +142,7 @@ public:
       ConstructDefault(data_.get(), second_part);
     }
 
-    write_index_ = increment_index(wr_idx, to_write);
+    write_index_.store(increment_index(wr_idx, to_write), std::memory_order::memory_order_release);
 
     return to_write;
   }
@@ -192,31 +157,31 @@ public:
    * @param count The maximum number of elements to dequeue.
    * @return The number of elements written to `elements`.
    */
-  RingBufferIndex dequeue(T * elements, RingBufferIndex count)
+  int dequeue(T * elements, int count)
   {
 #ifndef NDEBUG
     assert_correct_thread(consumer_id);
 #endif
 
-    RingBufferIndex  wr_idx = write_index_;
-    RingBufferIndex  rd_idx = read_index_;
+    int wr_idx = write_index_.load(std::memory_order::memory_order_acquire);
+    int rd_idx = read_index_.load(std::memory_order::memory_order_relaxed);
 
     if (empty_internal(rd_idx, wr_idx)) {
       return 0;
     }
 
-    RingBufferIndex to_read =
+    int to_read =
       std::min(available_read_internal(rd_idx, wr_idx), count);
 
-    RingBufferIndex first_part = std::min(storage_capacity() - rd_idx, to_read);
-    RingBufferIndex second_part = to_read - first_part;
+    int first_part = std::min(storage_capacity() - rd_idx, to_read);
+    int second_part = to_read - first_part;
 
     if (elements) {
       Copy(elements, data_.get() + rd_idx, first_part);
       Copy(elements + first_part, data_.get(), second_part);
     }
 
-    read_index_ = increment_index(rd_idx, to_read);
+    read_index_.store(increment_index(rd_idx, to_read), std::memory_order::memory_order_relaxed);
 
     return to_read;
   }
@@ -227,12 +192,13 @@ public:
    *
    * @return The number of available elements for reading.
    */
-  RingBufferIndex available_read() const
+  int available_read() const
   {
 #ifndef NDEBUG
     assert_correct_thread(consumer_id);
 #endif
-    return available_read_internal(read_index_, write_index_);
+    return available_read_internal(read_index_.load(std::memory_order::memory_order_relaxed),
+                                   write_index_.load(std::memory_order::memory_order_relaxed));
   }
   /**
    * Get the number of available elements for consuming.
@@ -241,12 +207,13 @@ public:
    *
    * @return The number of empty slots in the buffer, available for writing.
    */
-  RingBufferIndex available_write() const
+  int available_write() const
   {
 #ifndef NDEBUG
     assert_correct_thread(producer_id);
 #endif
-    return available_write_internal(read_index_, write_index_);
+    return available_write_internal(read_index_.load(std::memory_order::memory_order_relaxed),
+                                    write_index_.load(std::memory_order::memory_order_relaxed));
   }
   /**
    * Get the total capacity, for this ring buffer.
@@ -255,7 +222,7 @@ public:
    *
    * @return The maximum capacity of this ring buffer.
    */
-  RingBufferIndex capacity() const
+  int capacity() const
   {
     return storage_capacity() - 1;
   }
@@ -266,8 +233,8 @@ private:
    * @param write_index the write index to consider
    * @return true if the ring buffer is empty, false otherwise.
    **/
-  bool empty_internal(RingBufferIndex read_index,
-                      RingBufferIndex write_index) const
+  bool empty_internal(int read_index,
+                      int write_index) const
   {
     return write_index == read_index;
   }
@@ -280,8 +247,8 @@ private:
    * @param write_index the write index to consider
    * @return true if the ring buffer is full, false otherwise.
    **/
-  bool full_internal(RingBufferIndex read_index,
-                     RingBufferIndex write_index) const
+  bool full_internal(int read_index,
+                     int write_index) const
   {
     return (write_index + 1) % storage_capacity() == read_index;
   }
@@ -300,9 +267,9 @@ private:
    *
    * @return the number of available elements for reading.
    */
-  RingBufferIndex
-  available_read_internal(RingBufferIndex read_index,
-                          RingBufferIndex write_index) const
+  int
+  available_read_internal(int read_index,
+                          int write_index) const
   {
     if (write_index >= read_index) {
       return write_index - read_index;
@@ -315,9 +282,9 @@ private:
    *
    * @return the number of elements that can be written into the array.
    */
-  RingBufferIndex
-  available_write_internal(RingBufferIndex read_index,
-                           RingBufferIndex write_index) const
+  int
+  available_write_internal(int read_index,
+                           int write_index) const
   {
     /* We substract one element here to always keep at least one sample
      * free in the buffer, to distinguish between full and empty array. */
@@ -334,8 +301,8 @@ private:
    * @param increment the number by which `index` is incremented.
    * @return the new index.
    */
-  RingBufferIndex
-  increment_index(RingBufferIndex index, RingBufferIndex increment) const
+  int
+  increment_index(int index, int increment) const
   {
     assert(increment >= 0);
     return (index + increment) % storage_capacity();
@@ -357,10 +324,10 @@ private:
   }
 #endif
   /** Index at which the oldest element is at, in samples. */
-  typename ThreadSafePolicy<Safety>::IndexType read_index_;
+  std::atomic<int> read_index_;
   /** Index at which to write new elements. `write_index` is always at
    * least one element ahead of `read_index_`. */
-  typename ThreadSafePolicy<Safety>::IndexType write_index_;
+  std::atomic<int> write_index_;
   /** Maximum number of elements that can be stored in the ring buffer. */
   const int capacity_;
   /** Data storage */
@@ -376,8 +343,7 @@ private:
 /**
  * Adapter for `ring_buffer_base` that exposes an interface in frames.
  */
-template <typename T,
-          ThreadSafety Safety = ThreadSafety::Safe>
+template <typename T>
 class audio_ring_buffer_base
 {
 public:
@@ -407,7 +373,7 @@ public:
   }
   /**
    * @brief Enqueue `frames_count` frames of audio.
-   * 
+   *
    * Only safely called from the producer thread.
    *
    * @param [in] frames If non-null, the frames to enqueue.
@@ -497,7 +463,7 @@ private:
   /** Number of channels of audio that will stream through this ring buffer. */
   int channel_count;
   /** The underlying ring buffer that is used to store the data. */
-  ring_buffer_base<T, Safety> ring_buffer;
+  ring_buffer_base<T> ring_buffer;
 };
 
 /**
@@ -506,27 +472,13 @@ private:
  * without explicit synchronization.
  */
 template<typename T>
-using lock_free_queue = ring_buffer_base<T, Safe>;
-/**
- * An instantiation of the `ring_buffer_base` type, to be used on a single
- * thread: it is not safe to use from multiple threads without explicit external
- * synchronization.
- */
-template<typename T>
-using queue = ring_buffer_base<T, Unsafe>;
+using lock_free_queue = ring_buffer_base<T>;
 /**
  * Lock-free instantiation of the `audio_ring_buffer` type. This is safe to use
  * from two threads, one producer, one consumer (that never change role),
  * without explicit synchronization.
  */
 template<typename T>
-using lock_free_audio_ring_buffer = audio_ring_buffer_base<T, Safe>;
-/**
- * An instantiation of the `audio_ring_buffer` type, to be used on a single
- * thread: it is not safe to use from multiple threads without explicit external
- * synchronization.
- */
-template<typename T>
-using audio_ring_buffer = audio_ring_buffer_base<T, Unsafe>;
+using lock_free_audio_ring_buffer = audio_ring_buffer_base<T>;
 
 #endif // CUBEB_RING_BUFFER_H

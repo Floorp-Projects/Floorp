@@ -12,7 +12,6 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 #CPP_SOURCES += [
 #    'TestUConv.cpp',
 #    'nsconv.cpp',
-#    'plattest.cpp',
 #]
 #
 #if CONFIG['OS_ARCH'] == 'WINNT':

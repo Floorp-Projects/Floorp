@@ -6,7 +6,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsIObserverService.h"
-#include "nsIUUIDGenerator.h"
+#include "nsIXULRuntime.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "RequestContextService.h"
@@ -26,12 +26,11 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUESTCONTEXT
 
-  explicit RequestContext(const nsID& id);
+  explicit RequestContext(const uint64_t id);
 private:
   virtual ~RequestContext();
 
-  nsID mID;
-  char mCID[NSID_LENGTH];
+  uint64_t mID;
   Atomic<uint32_t>       mBlockingTransactionCount;
   nsAutoPtr<SpdyPushCache> mSpdyCache;
   nsCString mUserAgentOverride;
@@ -39,11 +38,10 @@ private:
 
 NS_IMPL_ISUPPORTS(RequestContext, nsIRequestContext)
 
-RequestContext::RequestContext(const nsID& aID)
-  : mBlockingTransactionCount(0)
+RequestContext::RequestContext(const uint64_t aID)
+  : mID(aID)
+  , mBlockingTransactionCount(0)
 {
-  mID = aID;
-  mID.ToProvidedString(mCID);
 }
 
 RequestContext::~RequestContext()
@@ -89,7 +87,7 @@ RequestContext::SetSpdyPushCache(mozilla::net::SpdyPushCache *aSpdyPushCache)
 }
 
 NS_IMETHODIMP
-RequestContext::GetID(nsID *outval)
+RequestContext::GetID(uint64_t *outval)
 {
   NS_ENSURE_ARG_POINTER(outval);
   *outval = mID;
@@ -117,10 +115,14 @@ RequestContextService *RequestContextService::sSelf = nullptr;
 NS_IMPL_ISUPPORTS(RequestContextService, nsIRequestContextService, nsIObserver)
 
 RequestContextService::RequestContextService()
+  : mNextRCID(1)
 {
   MOZ_ASSERT(!sSelf, "multiple rcs instances!");
   MOZ_ASSERT(NS_IsMainThread());
   sSelf = this;
+
+  nsCOMPtr<nsIXULRuntime> runtime = do_GetService("@mozilla.org/xre/runtime;1");
+  runtime->GetProcessID(&mRCIDNamespace);
 }
 
 RequestContextService::~RequestContextService()
@@ -165,7 +167,7 @@ RequestContextService::Create(nsISupports *aOuter, const nsIID& aIID, void **aRe
 }
 
 NS_IMETHODIMP
-RequestContextService::GetRequestContext(const nsID& rcID, nsIRequestContext **rc)
+RequestContextService::GetRequestContext(const uint64_t rcID, nsIRequestContext **rc)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG_POINTER(rc);
@@ -187,15 +189,7 @@ RequestContextService::NewRequestContext(nsIRequestContext **rc)
   NS_ENSURE_ARG_POINTER(rc);
   *rc = nullptr;
 
-  nsresult rv;
-  if (!mUUIDGen) {
-    mUUIDGen = do_GetService("@mozilla.org/uuid-generator;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  nsID rcID;
-  rv = mUUIDGen->GenerateUUIDInPlace(&rcID);
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint64_t rcID = ((static_cast<uint64_t>(mRCIDNamespace) << 32) & 0xFFFFFFFF00000000LL) | mNextRCID++;
 
   nsCOMPtr<nsIRequestContext> newSC = new RequestContext(rcID);
   mTable.Put(rcID, newSC);
@@ -205,7 +199,7 @@ RequestContextService::NewRequestContext(nsIRequestContext **rc)
 }
 
 NS_IMETHODIMP
-RequestContextService::RemoveRequestContext(const nsID& rcID)
+RequestContextService::RemoveRequestContext(const uint64_t rcID)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mTable.Remove(rcID);

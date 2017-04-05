@@ -27,13 +27,12 @@ use font_metrics::FontMetricsProvider;
 #[cfg(feature = "servo")] use logical_geometry::{LogicalMargin, PhysicalSide};
 use logical_geometry::WritingMode;
 use media_queries::Device;
-use parser::{Parse, ParserContext, ParserContextExtraData};
+use parser::{Parse, ParserContext};
 use properties::animated_properties::TransitionProperty;
 #[cfg(feature = "servo")] use servo_config::prefs::PREFS;
-use servo_url::ServoUrl;
 use shared_lock::StylesheetGuards;
 use style_traits::ToCss;
-use stylesheets::Origin;
+use stylesheets::{Origin, UrlExtraData};
 #[cfg(feature = "servo")] use values::Either;
 use values::{HasViewportPercentage, computed};
 use cascade_info::CascadeInfo;
@@ -296,18 +295,13 @@ impl PropertyDeclarationIdSet {
             % endif
         {
             if let DeclaredValue::WithVariables(ref with_variables) = *value {
-                // FIXME(heycam): A ParserContextExtraData should be built from data
-                // stored in the WithVariables, in case variable expansion results in
-                // a url() value.
-                let extra_data = ParserContextExtraData::default();
                 substitute_variables_${property.ident}_slow(&with_variables.css,
                                                             with_variables.first_token_type,
-                                                            &with_variables.base_url,
+                                                            &with_variables.url_data,
                                                             with_variables.from_shorthand,
                                                             custom_properties,
                                                             f,
-                                                            error_reporter,
-                                                            extra_data);
+                                                            error_reporter);
             } else {
                 f(value);
             }
@@ -318,12 +312,11 @@ impl PropertyDeclarationIdSet {
         fn substitute_variables_${property.ident}_slow<F>(
                 css: &String,
                 first_token_type: TokenSerializationType,
-                base_url: &ServoUrl,
+                url_data: &UrlExtraData,
                 from_shorthand: Option<ShorthandId>,
                 custom_properties: &Option<Arc<::custom_properties::ComputedValuesMap>>,
                 f: F,
-                error_reporter: &ParseErrorReporter,
-                extra_data: ParserContextExtraData)
+                error_reporter: &ParseErrorReporter)
                 % if property.boxed:
                     where F: FnOnce(&DeclaredValue<Box<longhands::${property.ident}::SpecifiedValue>>)
                 % else:
@@ -337,9 +330,7 @@ impl PropertyDeclarationIdSet {
                     //
                     // FIXME(pcwalton): Cloning the error reporter is slow! But so are custom
                     // properties, so whatever...
-                    let context = ParserContext::new_with_extra_data(
-                        ::stylesheets::Origin::Author, base_url, error_reporter,
-                        extra_data);
+                    let context = ParserContext::new(Origin::Author, url_data, error_reporter);
                     Parser::new(&css).parse_entirely(|input| {
                         match from_shorthand {
                             None => {
@@ -652,8 +643,8 @@ pub struct UnparsedValue {
     css: String,
     /// The first token type for this serialization.
     first_token_type: TokenSerializationType,
-    /// The base url.
-    base_url: ServoUrl,
+    /// The url data for resolving url values.
+    url_data: UrlExtraData,
     /// The shorthand this came from.
     from_shorthand: Option<ShorthandId>,
 }
@@ -1976,24 +1967,25 @@ pub fn cascade(device: &Device,
         }
     };
 
-    // Hold locks until after the apply_declarations() call returns.
-    // Use filter_map because the root node has no style source.
-    let declaration_blocks = rule_node.self_and_ancestors().filter_map(|node| {
-        let guard = node.cascade_level().guard(guards);
-        node.style_source().map(|source| (source.read(guard), node.importance()))
-    }).collect::<Vec<_>>();
     let iter_declarations = || {
-        declaration_blocks.iter().flat_map(|&(ref source, source_importance)| {
-            source.declarations().iter()
-            // Yield declarations later in source order (with more precedence) first.
-            .rev()
-            .filter_map(move |&(ref declaration, declaration_importance)| {
-                if declaration_importance == source_importance {
-                    Some(declaration)
-                } else {
-                    None
-                }
-            })
+        rule_node.self_and_ancestors().flat_map(|node| {
+            let declarations = match node.style_source() {
+                Some(source) => source.read(node.cascade_level().guard(guards)).declarations(),
+                // The root node has no style source.
+                None => &[]
+            };
+            let node_importance = node.importance();
+            declarations
+                .iter()
+                // Yield declarations later in source order (with more precedence) first.
+                .rev()
+                .filter_map(move |&(ref declaration, declaration_importance)| {
+                    if declaration_importance == node_importance {
+                        Some(declaration)
+                    } else {
+                        None
+                    }
+                })
         })
     };
     apply_declarations(device,

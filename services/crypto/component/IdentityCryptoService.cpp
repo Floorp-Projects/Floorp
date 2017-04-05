@@ -53,7 +53,8 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIIDENTITYKEYPAIR
 
-  KeyPair(SECKEYPrivateKey* aPrivateKey, SECKEYPublicKey* aPublicKey);
+  KeyPair(SECKEYPrivateKey* aPrivateKey, SECKEYPublicKey* aPublicKey,
+          nsIEventTarget* aOperationThread);
 
 private:
   ~KeyPair() override
@@ -81,6 +82,7 @@ private:
 
   SECKEYPrivateKey * mPrivateKey;
   SECKEYPublicKey * mPublicKey;
+  nsCOMPtr<nsIEventTarget> mThread;
 
   KeyPair(const KeyPair &) = delete;
   void operator=(const KeyPair &) = delete;
@@ -93,7 +95,8 @@ class KeyGenRunnable : public Runnable, public nsNSSShutDownObject
 public:
   NS_DECL_NSIRUNNABLE
 
-  KeyGenRunnable(KeyType keyType, nsIIdentityKeyGenCallback * aCallback);
+  KeyGenRunnable(KeyType keyType, nsIIdentityKeyGenCallback * aCallback,
+                 nsIEventTarget* aOperationThread);
 
 private:
   ~KeyGenRunnable() override
@@ -119,6 +122,7 @@ private:
   nsMainThreadPtrHandle<nsIIdentityKeyGenCallback> mCallback; // in
   nsresult mRv; // out
   nsCOMPtr<nsIIdentityKeyPair> mKeyPair; // out
+  nsCOMPtr<nsIEventTarget> mThread;
 
   KeyGenRunnable(const KeyGenRunnable &) = delete;
   void operator=(const KeyGenRunnable &) = delete;
@@ -179,6 +183,12 @@ public:
       = do_GetService("@mozilla.org/psm;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCOMPtr<nsIThread> thread;
+    rv = NS_NewNamedThread("IdentityCrypto", getter_AddRefs(thread));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mThread = thread.forget();
+
     return NS_OK;
   }
 
@@ -186,6 +196,8 @@ private:
   ~IdentityCryptoService() = default;
   IdentityCryptoService(const KeyPair &) = delete;
   void operator=(const IdentityCryptoService &) = delete;
+
+  nsCOMPtr<nsIEventTarget> mThread;
 };
 
 NS_IMPL_ISUPPORTS(IdentityCryptoService, nsIIdentityCryptoService)
@@ -203,10 +215,8 @@ IdentityCryptoService::GenerateKeyPair(
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsIRunnable> r = new KeyGenRunnable(keyType, callback);
-  nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_NewNamedThread("GenerateKeyPair", getter_AddRefs(thread),
-                                  r);
+  nsCOMPtr<nsIRunnable> r = new KeyGenRunnable(keyType, callback, mThread);
+  nsresult rv = mThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -221,9 +231,11 @@ IdentityCryptoService::Base64UrlEncode(const nsACString & utf8Input,
     Base64URLEncodePaddingPolicy::Include, result);
 }
 
-KeyPair::KeyPair(SECKEYPrivateKey * privateKey, SECKEYPublicKey * publicKey)
+KeyPair::KeyPair(SECKEYPrivateKey * privateKey, SECKEYPublicKey * publicKey,
+                 nsIEventTarget* operationThread)
   : mPrivateKey(privateKey)
   , mPublicKey(publicKey)
+  , mThread(operationThread)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 }
@@ -309,16 +321,16 @@ KeyPair::Sign(const nsACString & textToSign,
   nsCOMPtr<nsIRunnable> r = new SignRunnable(textToSign, mPrivateKey,
                                              callback);
 
-  nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_NewNamedThread("KeyPair Sign", getter_AddRefs(thread), r);
-  return rv;
+  return mThread->Dispatch(r, NS_DISPATCH_NORMAL);
 }
 
 KeyGenRunnable::KeyGenRunnable(KeyType keyType,
-                               nsIIdentityKeyGenCallback * callback)
+                               nsIIdentityKeyGenCallback * callback,
+                               nsIEventTarget* operationThread)
   : mKeyType(keyType)
   , mCallback(new nsMainThreadPtrHolder<nsIIdentityKeyGenCallback>(callback))
   , mRv(NS_ERROR_NOT_INITIALIZED)
+  , mThread(operationThread)
 {
 }
 
@@ -457,7 +469,7 @@ KeyGenRunnable::Run()
           MOZ_ASSERT(privk);
           MOZ_ASSERT(pubk);
 		  // mKeyPair will take over ownership of privk and pubk
-          mKeyPair = new KeyPair(privk, pubk);
+          mKeyPair = new KeyPair(privk, pubk, mThread);
         }
       }
     }

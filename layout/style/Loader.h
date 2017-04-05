@@ -293,8 +293,8 @@ public:
    * @param aGeckoParentRule the @import rule importing this child, when using
    *                         Gecko's style system. This is used to properly
    *                         order the child sheet list of aParentSheet.
-   * @param aServoParentRule the @import rule importing this child, when using
-   *                         Servo's style system.
+   * @param aServoChildSheet the child stylesheet of the @import rule, when
+   *                         using Servo's style system.
    * @param aSavedSheets any saved style sheets which could be reused
    *              for this load
    */
@@ -302,7 +302,7 @@ public:
                           nsIURI* aURL,
                           nsMediaList* aMedia,
                           ImportRule* aGeckoParentRule,
-                          const RawServoImportRule* aServoParentRule,
+                          const RawServoStyleSheet* aServoChildSheet,
                           LoaderReusableStyleSheets* aSavedSheets);
 
   /**
@@ -520,7 +520,7 @@ private:
   nsresult InsertChildSheet(StyleSheet* aSheet,
                             StyleSheet* aParentSheet,
                             ImportRule* aGeckoParentRule,
-                            const RawServoImportRule* aServoParentRule);
+                            const RawServoStyleSheet* aServoChildSheet);
 
   nsresult InternalLoadNonDocumentSheet(nsIURI* aURL,
                                         bool aIsPreload,

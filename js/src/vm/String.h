@@ -1313,6 +1313,10 @@ NewStringCopyUTF8Z(JSContext* cx, const JS::ConstUTF8CharsZ utf8)
     return NewStringCopyUTF8N<allowGC>(cx, JS::UTF8Chars(utf8.c_str(), strlen(utf8.c_str())));
 }
 
+JSString*
+NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n, const JSStringFinalizer* fin,
+                       bool* isExternal);
+
 JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
 
 } /* namespace js */

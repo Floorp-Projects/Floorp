@@ -100,23 +100,9 @@ var FontBuilder = {
         return undefined;
     }
 
-    // The first item will be a reasonable choice only if the font backend
-    // supports language-specific enumaration.
-    let defaultValue = this._langGroupSupported ?
-                       aElement.firstChild.firstChild.getAttribute("value") : "";
-    let fontNameList = preference.name.replace(".name.", ".name-list.");
-    let prefFontNameList = document.getElementById(fontNameList);
-    if (!prefFontNameList || !prefFontNameList.value)
-      return defaultValue;
-
-    let fontNames = prefFontNameList.value.split(",");
-
-    for (let i = 0; i < fontNames.length; ++i) {
-      let fontName = this.enumerator.getStandardFamilyName(fontNames[i].trim());
-      let fontItems = aElement.getElementsByAttribute("value", fontName);
-      if (fontItems.length)
-        return fontItems[0].getAttribute("value");
-    }
-    return defaultValue;
+    // Otherwise, use "default" font of current system which is computed
+    // with "font.name-list.*".  If "font.name.*" is empty string, it means
+    // "default".  So, return empty string in this case.
+    return "";
   }
 };

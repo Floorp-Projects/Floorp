@@ -37,8 +37,8 @@ var script;
  */
 
 var onSpellCheck =
-  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm")
-               .onSpellCheck;
+  SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm").onSpellCheck;
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {

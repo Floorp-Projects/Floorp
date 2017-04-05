@@ -41,6 +41,7 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
   BaseContext,
+  CanOfAPIs,
   SchemaAPIManager,
 } = ExtensionCommon;
 
@@ -48,7 +49,6 @@ var {
   MessageManagerProxy,
   SpreadArgs,
   defineLazyGetter,
-  findPathInObject,
   promiseDocumentLoaded,
   promiseEvent,
   promiseObserved,
@@ -77,6 +77,17 @@ let apiManager = new class extends SchemaAPIManager {
   constructor() {
     super("main");
     this.initialized = null;
+
+    this.on("startup", (event, extension) => { // eslint-disable-line mozilla/balanced-listeners
+      let promises = [];
+      for (let apiName of this.eventModules.get("startup")) {
+        promises.push(this.asyncGetAPI(apiName, extension).then(api => {
+          api.onStartup(extension.startupReason);
+        }));
+      }
+
+      return Promise.all(promises);
+    });
   }
 
   // Loads all the ext-*.js scripts currently registered.
@@ -85,22 +96,32 @@ let apiManager = new class extends SchemaAPIManager {
       return this.initialized;
     }
 
-    // Load order matters here. The base manifest defines types which are
-    // extended by other schemas, so needs to be loaded first.
-    let promise = Schemas.load(BASE_SCHEMA).then(() => {
-      let promises = [];
-      for (let [/* name */, url] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCHEMAS)) {
-        promises.push(Schemas.load(url));
-      }
-      for (let url of schemaURLs) {
-        promises.push(Schemas.load(url));
-      }
-      return Promise.all(promises);
-    });
-
+    let scripts = [];
     for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS)) {
-      this.loadScript(value);
+      scripts.push(value);
     }
+
+    let promise = Promise.all(scripts.map(url => ChromeUtils.compileScript(url))).then(scripts => {
+      for (let script of scripts) {
+        script.executeInGlobal(this.global);
+      }
+
+      // Load order matters here. The base manifest defines types which are
+      // extended by other schemas, so needs to be loaded first.
+      return Schemas.load(BASE_SCHEMA).then(() => {
+        let promises = [];
+        for (let [/* name */, url] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCHEMAS)) {
+          promises.push(Schemas.load(url));
+        }
+        for (let url of this.schemaURLs) {
+          promises.push(Schemas.load(url));
+        }
+        for (let url of schemaURLs) {
+          promises.push(Schemas.load(url));
+        }
+        return Promise.all(promises);
+      });
+    });
 
     /* eslint-disable mozilla/balanced-listeners */
     Services.mm.addMessageListener("Extension:GetTabAndWindowId", this);
@@ -120,13 +141,6 @@ let apiManager = new class extends SchemaAPIManager {
         }
         target.messageManager.sendAsyncMessage("Extension:SetTabAndWindowId", result);
       }
-    }
-  }
-
-  registerSchemaAPI(namespace, envType, getAPI) {
-    if (envType == "addon_parent" || envType == "content_parent" ||
-        envType == "devtools_parent") {
-      super.registerSchemaAPI(namespace, envType, getAPI);
     }
   }
 }();
@@ -275,7 +289,6 @@ GlobalManager = {
   },
 
   injectInObject(context, isChromeCompat, dest) {
-    apiManager.generateAPIs(context, dest);
     SchemaAPIManager.generateAPIs(context, context.extension.apis, dest);
   },
 };
@@ -291,6 +304,8 @@ class ProxyContextParent extends BaseContext {
     this.uri = NetUtil.newURI(params.url);
 
     this.incognito = params.incognito;
+
+    this.listenerPromises = new Set();
 
     // This message manager is used by ParentAPIManager to send messages and to
     // close the ProxyContext if the underlying message manager closes. This
@@ -333,10 +348,15 @@ class ProxyContextParent extends BaseContext {
   }
 }
 
-defineLazyGetter(ProxyContextParent.prototype, "apiObj", function() {
+defineLazyGetter(ProxyContextParent.prototype, "apiCan", function() {
   let obj = {};
+  let can = new CanOfAPIs(this, apiManager, obj);
   GlobalManager.injectInObject(this, false, obj);
-  return obj;
+  return can;
+});
+
+defineLazyGetter(ProxyContextParent.prototype, "apiObj", function() {
+  return this.apiCan.root;
 });
 
 defineLazyGetter(ProxyContextParent.prototype, "sandbox", function() {
@@ -567,7 +587,7 @@ ParentAPIManager = {
     }
   },
 
-  call(data, target) {
+  async call(data, target) {
     let context = this.getContextById(data.childId);
     if (context.parentMessageManager !== target.messageManager) {
       throw new Error("Got message on unexpected message manager");
@@ -590,7 +610,8 @@ ParentAPIManager = {
 
     try {
       let args = Cu.cloneInto(data.args, context.sandbox);
-      let result = findPathInObject(context.apiObj, data.path)(...args);
+      let fun = await context.apiCan.asyncFindAPIPath(data.path);
+      let result = fun(...args);
 
       if (data.callId) {
         result = result || Promise.resolve();
@@ -614,7 +635,7 @@ ParentAPIManager = {
     }
   },
 
-  addListener(data, target) {
+  async addListener(data, target) {
     let context = this.getContextById(data.childId);
     if (context.parentMessageManager !== target.messageManager) {
       throw new Error("Got message on unexpected message manager");
@@ -640,13 +661,27 @@ ParentAPIManager = {
     context.listenerProxies.set(data.listenerId, listener);
 
     let args = Cu.cloneInto(data.args, context.sandbox);
-    findPathInObject(context.apiObj, data.path).addListener(listener, ...args);
+    let promise = context.apiCan.asyncFindAPIPath(data.path);
+
+    // Store pending listener additions so we can be sure they're all
+    // fully initialize before we consider extension startup complete.
+    if (context.viewType === "background" && context.listenerPromises) {
+      const {listenerPromises} = context;
+      listenerPromises.add(promise);
+      let remove = () => { listenerPromises.delete(promise); };
+      promise.then(remove, remove);
+    }
+
+    let handler = await promise;
+    handler.addListener(listener, ...args);
   },
 
-  removeListener(data) {
+  async removeListener(data) {
     let context = this.getContextById(data.childId);
     let listener = context.listenerProxies.get(data.listenerId);
-    findPathInObject(context.apiObj, data.path).removeListener(listener);
+
+    let handler = await context.apiCan.asyncFindAPIPath(data.path);
+    handler.removeListener(listener);
   },
 
   getContextById(childId) {
@@ -817,9 +852,9 @@ class HiddenExtensionPage {
 
 function promiseExtensionViewLoaded(browser) {
   return new Promise(resolve => {
-    browser.messageManager.addMessageListener("Extension:ExtensionViewLoaded", function onLoad() {
+    browser.messageManager.addMessageListener("Extension:ExtensionViewLoaded", function onLoad({data}) {
       browser.messageManager.removeMessageListener("Extension:ExtensionViewLoaded", onLoad);
-      resolve();
+      resolve(data.childId && ParentAPIManager.getContextById(data.childId));
     });
   });
 }

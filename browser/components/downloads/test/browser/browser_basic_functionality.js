@@ -30,7 +30,7 @@ add_task(function* test_basic_functionality() {
   // For testing purposes, show all the download items at once.
   var originalCountLimit = DownloadsView.kItemCountLimit;
   DownloadsView.kItemCountLimit = DownloadData.length;
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     DownloadsView.kItemCountLimit = originalCountLimit;
   });
 

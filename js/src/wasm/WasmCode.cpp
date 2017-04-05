@@ -159,10 +159,8 @@ SendCodeRangesToProfiler(CodeSegment& cs, const Bytes& bytecode, const Metadata&
         }
 #endif
 #ifdef MOZ_VTUNE
-        if (vtune::IsProfilingActive()) {
-            cs.vtune_method_id_ = vtune::GenerateUniqueMethodID();
-            vtune::MarkWasm(cs, name.begin(), (void*)start, size);
-        }
+        if (vtune::IsProfilingActive())
+            vtune::MarkWasm(vtune::GenerateUniqueMethodID(), name.begin(), (void*)start, size);
 #endif
     }
 

@@ -199,6 +199,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mTransferSize(0)
   , mDecodedBodySize(0)
   , mEncodedBodySize(0)
+  , mRequestContextID(0)
   , mContentWindowId(0)
   , mTopLevelOuterContentWindowId(0)
   , mRequireCORSPreflight(false)
@@ -218,7 +219,6 @@ HttpBaseChannel::HttpBaseChannel()
 #endif
   mSelfAddr.raw.family = PR_AF_UNSPEC;
   mPeerAddr.raw.family = PR_AF_UNSPEC;
-  mRequestContextID.Clear();
 }
 
 HttpBaseChannel::~HttpBaseChannel()
@@ -2123,7 +2123,7 @@ HttpBaseChannel::RedirectTo(nsIURI *targetURI)
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::GetRequestContextID(nsID *aRCID)
+HttpBaseChannel::GetRequestContextID(uint64_t *aRCID)
 {
   NS_ENSURE_ARG_POINTER(aRCID);
   *aRCID = mRequestContextID;
@@ -2131,7 +2131,7 @@ HttpBaseChannel::GetRequestContextID(nsID *aRCID)
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::SetRequestContextID(const nsID aRCID)
+HttpBaseChannel::SetRequestContextID(uint64_t aRCID)
 {
   mRequestContextID = aRCID;
   return NS_OK;
@@ -3824,9 +3824,7 @@ HttpBaseChannel::GetThrottleQueue(nsIInputChannelThrottleQueue** aQueue)
 bool
 HttpBaseChannel::EnsureRequestContextID()
 {
-    nsID nullID;
-    nullID.Clear();
-    if (!mRequestContextID.Equals(nullID)) {
+    if (mRequestContextID) {
         // Already have a request context ID, no need to do the rest of this work
         return true;
     }

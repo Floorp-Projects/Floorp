@@ -53,7 +53,8 @@ function runTest() {
   var edit = document.getElementById("edit");
   edit.focus();
 
-  SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm", window);
+  SpecialPowers.Cu.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
   onSpellCheck(edit, function () {
     ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
        "All misspellings before editing are accounted for.");

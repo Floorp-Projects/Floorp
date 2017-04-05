@@ -3,9 +3,9 @@
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-function extensionApiFactory(context) {
-  return {
-    extension: {
+this.extension = class extends ExtensionAPI {
+  getAPI(context) {
+    let api = {
       getURL(url) {
         return context.extension.baseURI.resolve(url);
       },
@@ -17,17 +17,10 @@ function extensionApiFactory(context) {
       get inIncognitoContext() {
         return context.incognito;
       },
-    },
-  };
-}
+    };
 
-extensions.registerSchemaAPI("extension", "addon_child", extensionApiFactory);
-extensions.registerSchemaAPI("extension", "content_child", extensionApiFactory);
-extensions.registerSchemaAPI("extension", "devtools_child", extensionApiFactory);
-extensions.registerSchemaAPI("extension", "addon_child", context => {
-  return {
-    extension: {
-      getViews: function(fetchProperties) {
+    if (context.envType === "addon_child") {
+      api.getViews = function(fetchProperties) {
         let result = Cu.cloneInto([], context.cloneScope);
 
         for (let view of context.extension.views) {
@@ -52,7 +45,9 @@ extensions.registerSchemaAPI("extension", "addon_child", context => {
         }
 
         return result;
-      },
-    },
-  };
-});
+      };
+    }
+
+    return {extension: api};
+  }
+};

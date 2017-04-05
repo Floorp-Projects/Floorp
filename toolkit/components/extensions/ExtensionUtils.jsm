@@ -484,10 +484,12 @@ let IconDetails = {
 };
 
 const LISTENERS = Symbol("listeners");
+const ONCE_MAP = Symbol("onceMap");
 
 class EventEmitter {
   constructor() {
     this[LISTENERS] = new Map();
+    this[ONCE_MAP] = new WeakMap();
   }
 
   /**
@@ -523,11 +525,33 @@ class EventEmitter {
       let set = this[LISTENERS].get(event);
 
       set.delete(listener);
+      set.delete(this[ONCE_MAP].get(listener));
       if (!set.size) {
         this[LISTENERS].delete(event);
       }
     }
   }
+
+  /**
+   * Adds the given function as a listener for the given event once.
+   *
+   * @param {string} event
+   *       The name of the event to listen for.
+   * @param {function(string, ...any)} listener
+   *        The listener to call when events are emitted.
+   */
+  once(event, listener) {
+    let wrapper = (...args) => {
+      this.off(event, wrapper);
+      this[ONCE_MAP].delete(listener);
+
+      return listener(...args);
+    };
+    this[ONCE_MAP].set(listener, wrapper);
+
+    this.on(event, wrapper);
+  }
+
 
   /**
    * Triggers all listeners for the given event, and returns a promise

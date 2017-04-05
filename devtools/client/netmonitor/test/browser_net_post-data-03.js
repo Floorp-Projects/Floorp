@@ -50,11 +50,11 @@ add_task(function* () {
 
   is(labels[labels.length - 2].textContent, "content-type",
     "The first request header name was incorrect.");
-  is(values[values.length - 2].textContent, "\"application/x-www-form-urlencoded\"",
+  is(values[values.length - 2].textContent, "application/x-www-form-urlencoded",
     "The first request header value was incorrect.");
   is(labels[labels.length - 1].textContent, "custom-header",
     "The second request header name was incorrect.");
-  is(values[values.length - 1].textContent, "\"hello world!\"",
+  is(values[values.length - 1].textContent, "hello world!",
     "The second request header value was incorrect.");
 
   // Wait for all tree sections updated by react
@@ -80,9 +80,9 @@ add_task(function* () {
     .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
 
   is(labels[0].textContent, "foo", "The first payload param name was incorrect.");
-  is(values[0].textContent, "\"bar\"", "The first payload param value was incorrect.");
+  is(values[0].textContent, "bar", "The first payload param value was incorrect.");
   is(labels[1].textContent, "baz", "The second payload param name was incorrect.");
-  is(values[1].textContent, "\"123\"", "The second payload param value was incorrect.");
+  is(values[1].textContent, "123", "The second payload param value was incorrect.");
 
   return teardown(monitor);
 });

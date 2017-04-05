@@ -93,6 +93,37 @@ class CSSStyleSheet;
 namespace mozilla {
 namespace css {
 
+struct URLExtraData
+{
+  URLExtraData(already_AddRefed<nsIURI> aBaseURI,
+               already_AddRefed<nsIURI> aReferrer,
+               already_AddRefed<nsIPrincipal> aPrincipal)
+    : mBaseURI(Move(aBaseURI))
+    , mReferrer(Move(aReferrer))
+    , mPrincipal(Move(aPrincipal))
+  {
+    MOZ_ASSERT(mBaseURI);
+  }
+
+  URLExtraData(nsIURI* aBaseURI, nsIURI* aReferrer, nsIPrincipal* aPrincipal)
+    : URLExtraData(do_AddRef(aBaseURI),
+                   do_AddRef(aReferrer),
+                   do_AddRef(aPrincipal)) {}
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(URLExtraData)
+
+  nsIURI* BaseURI() const { return mBaseURI; }
+  nsIURI* GetReferrer() const { return mReferrer; }
+  nsIPrincipal* GetPrincipal() const { return mPrincipal; }
+
+private:
+  ~URLExtraData();
+
+  RefPtr<nsIURI> mBaseURI;
+  RefPtr<nsIURI> mReferrer;
+  RefPtr<nsIPrincipal> mPrincipal;
+};
+
 struct URLValueData
 {
 protected:
@@ -101,19 +132,15 @@ protected:
   // over.
 
   // For both constructors aString must not be null.
-  // For both constructors aOriginPrincipal must not be null.
+  // For both constructors principal of aExtraData must not be null.
   // Construct with a base URI; this will create the actual URI lazily from
-  // aString and aBaseURI.
+  // aString and aExtraData.
   URLValueData(nsStringBuffer* aString,
-               already_AddRefed<PtrHolder<nsIURI>> aBaseURI,
-               already_AddRefed<PtrHolder<nsIURI>> aReferrer,
-               already_AddRefed<PtrHolder<nsIPrincipal>> aOriginPricinpal);
+               already_AddRefed<URLExtraData> aExtraData);
   // Construct with the actual URI.
   URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
                nsStringBuffer* aString,
-               already_AddRefed<PtrHolder<nsIURI>> aBaseURI,
-               already_AddRefed<PtrHolder<nsIURI>> aReferrer,
-               already_AddRefed<PtrHolder<nsIPrincipal>> aOriginPrincipal);
+               already_AddRefed<URLExtraData> aExtraData);
 
 public:
   // Returns true iff all fields of the two URLValueData objects are equal.
@@ -159,10 +186,8 @@ private:
   // invalid, even once resolved.
   mutable PtrHandle<nsIURI> mURI;
 public:
-  PtrHandle<nsIURI> mBaseURI;
   RefPtr<nsStringBuffer> mString;
-  PtrHandle<nsIURI> mReferrer;
-  PtrHandle<nsIPrincipal> mOriginPrincipal;
+  RefPtr<URLExtraData> mExtraData;
 private:
   mutable bool mURIResolved;
   // mIsLocalRef is set when url starts with a U+0023 number sign(#) character.
@@ -188,11 +213,8 @@ struct URLValue final : public URLValueData
 
   // This constructor is safe to call from any thread.
   URLValue(nsStringBuffer* aString,
-           already_AddRefed<PtrHolder<nsIURI>> aBaseURI,
-           already_AddRefed<PtrHolder<nsIURI>> aReferrer,
-           already_AddRefed<PtrHolder<nsIPrincipal>> aOriginPrincipal)
-    : URLValueData(aString, Move(aBaseURI), Move(aReferrer),
-                   Move(aOriginPrincipal)) {}
+           already_AddRefed<URLExtraData> aExtraData)
+    : URLValueData(aString, Move(aExtraData)) {}
 
   URLValue(const URLValue&) = delete;
   URLValue& operator=(const URLValue&) = delete;
@@ -208,16 +230,14 @@ struct ImageValue final : public URLValueData
   // aString must not be null.
   //
   // This constructor is only safe to call from the main thread.
-  ImageValue(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aBaseURI,
-             nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal,
+  ImageValue(nsIURI* aURI, nsStringBuffer* aString,
+             already_AddRefed<URLExtraData> aExtraData,
              nsIDocument* aDocument);
 
   // This constructor is safe to call from any thread, but Initialize
   // must be called later for the object to be useful.
   ImageValue(nsStringBuffer* aString,
-             already_AddRefed<PtrHolder<nsIURI>> aBaseURI,
-             already_AddRefed<PtrHolder<nsIURI>> aReferrer,
-             already_AddRefed<PtrHolder<nsIPrincipal>> aOriginPrincipal);
+             already_AddRefed<URLExtraData> aExtraData);
 
   ImageValue(const ImageValue&) = delete;
   ImageValue& operator=(const ImageValue&) = delete;

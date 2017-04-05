@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* eslint-env mozilla/browser-window */
 
 /**
  * Handles the indicator that displays the progress of ongoing downloads, which
@@ -26,8 +27,7 @@
 
 "use strict";
 
-////////////////////////////////////////////////////////////////////////////////
-//// DownloadsButton
+// DownloadsButton
 
 /**
  * Main entry point for the downloads indicator.  Depending on how the toolbars
@@ -187,8 +187,7 @@ Object.defineProperty(this, "DownloadsButton", {
   writable: false
 });
 
-////////////////////////////////////////////////////////////////////////////////
-//// DownloadsIndicatorView
+// DownloadsIndicatorView
 
 /**
  * Builds and updates the actual downloads status widget, responding to changes
@@ -287,8 +286,7 @@ const DownloadsIndicatorView = {
       });
   },
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// Direct control functions
+  // Direct control functions
 
   /**
    * Set while we are waiting for a notification to fade out.
@@ -357,7 +355,7 @@ const DownloadsIndicatorView = {
     // the notification isn't clipped by overflow properties of the anchor's
     // container.
     let notifier = this.notifier;
-    if (notifier.style.transform == '') {
+    if (notifier.style.transform == "") {
       let anchorRect = anchor.getBoundingClientRect();
       let notifierRect = notifier.getBoundingClientRect();
       let topDiff = anchorRect.top - notifierRect.top;
@@ -366,20 +364,19 @@ const DownloadsIndicatorView = {
       let widthDiff = anchorRect.width - notifierRect.width;
       let translateX = (leftDiff + .5 * widthDiff) + "px";
       let translateY = (topDiff + .5 * heightDiff) + "px";
-      notifier.style.transform = "translate(" +  translateX + ", " + translateY + ")";
+      notifier.style.transform = "translate(" + translateX + ", " + translateY + ")";
     }
     notifier.setAttribute("notification", aType);
     anchor.setAttribute("notification", aType);
     this._notificationTimeout = setTimeout(() => {
       anchor.removeAttribute("notification");
       notifier.removeAttribute("notification");
-      notifier.style.transform = '';
+      notifier.style.transform = "";
       // This value is determined by the overall duration of animation in CSS.
     }, 2000);
   },
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// Callback functions from DownloadsIndicatorData
+  // Callback functions from DownloadsIndicatorData
 
   /**
    * Indicates whether the indicator should be shown because there are some
@@ -524,8 +521,7 @@ const DownloadsIndicatorView = {
   },
   _attention: DownloadsCommon.ATTENTION_NONE,
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// User interface event functions
+  // User interface event functions
 
   onWindowUnload() {
     // This function is registered as an event listener, we can't use "this".

@@ -91,7 +91,7 @@ nsHtml5Portability::releaseString(nsString* str)
 bool
 nsHtml5Portability::localEqualsBuffer(nsIAtom* local, char16_t* buf, int32_t offset, int32_t length)
 {
-  return local->Equals(nsDependentSubstring(buf + offset, buf + offset + length));
+  return local->Equals(buf + offset, length);
 }
 
 bool

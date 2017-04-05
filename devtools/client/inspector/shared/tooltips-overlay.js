@@ -280,7 +280,8 @@ TooltipsOverlay.prototype = {
     let {naturalWidth, naturalHeight} = yield getImageDimensions(doc, imageUrl);
 
     yield setImageTooltip(this.previewTooltip, doc, imageUrl,
-      {hideDimensionLabel: true, maxDim, naturalWidth, naturalHeight});
+      {hideDimensionLabel: true, hideCheckeredBackground: true,
+       maxDim, naturalWidth, naturalHeight});
   }),
 
   _onNewSelection: function () {

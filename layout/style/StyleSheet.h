@@ -14,6 +14,7 @@
 #include "mozilla/CORSMode.h"
 #include "mozilla/ServoUtils.h"
 
+#include "nsICSSLoaderObserver.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsWrapperCache.h"
 
@@ -45,6 +46,7 @@ class Rule;
  * Superclass for data common to CSSStyleSheet and ServoStyleSheet.
  */
 class StyleSheet : public nsIDOMCSSStyleSheet
+                 , public nsICSSLoaderObserver
                  , public nsWrapperCache
 {
 protected:
@@ -56,7 +58,8 @@ protected:
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(StyleSheet)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(StyleSheet,
+                                                         nsIDOMCSSStyleSheet)
 
   void SetOwningNode(nsINode* aOwningNode)
   {

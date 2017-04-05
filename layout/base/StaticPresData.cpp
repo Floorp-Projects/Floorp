@@ -191,6 +191,7 @@ StaticPresData::GetFontPrefsForLangHelper(nsIAtom *aLanguage,
     // set the default variable font (the other fonts are seen as 'generic' fonts
     // in GFX and will be queried there when hunting for alternative fonts)
     if (eType == eDefaultFont_Variable) {
+      // XXX "font.name.variable."?  There is no such pref...
       MAKE_FONT_PREF_KEY(pref, "font.name.variable.", langGroup);
 
       nsAdoptingString value = Preferences::GetString(pref.get());

@@ -508,7 +508,7 @@ class GCSchedulingTunables
  *      to complement MAYBEGC triggers. We track this by counting malloced
  *      bytes; the counter gets reset at every GC since we do not always have a
  *      size at the time we call free. Because of this, the malloc heuristic
- *      is, unfortunatly, not usefully able to augment our other GC heap
+ *      is, unfortunately, not usefully able to augment our other GC heap
  *      triggers and is limited to this singular heuristic.
  *
  *          Assumptions:

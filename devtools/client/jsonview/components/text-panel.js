@@ -32,7 +32,7 @@ define(function (require, exports, module) {
 
     render: function () {
       return (
-        div({className: "textPanelBox"},
+        div({className: "textPanelBox tab-panel-inner"},
           TextToolbar({actions: this.props.actions}),
           div({className: "panelContent"},
             pre({className: "data"},

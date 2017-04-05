@@ -89,7 +89,7 @@ function split(element, caretPos) {
   sel.addRange(range);
   
   // simulates a [Return] keypress
-  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("VK_RETURN", {shiftKey: true});
 }
 
 // count the number of non-BR elements in #content

@@ -27,14 +27,14 @@ public class WebAppIndexer {
 
     public static final String WEBAPP_CLASS = "org.mozilla.gecko.webapps.WebApps$WebApp";
 
-    private final String mPrefNumSavedEntries = "WebAppIndexer.numActivities";
-    private final String mPrefActivityIndex = "WebAppIndexer.index";
-    private final String mPrefActivityId = "WebAppIndexer.manifest";
+    private static final String PREF_NUM_SAVED_ENTRIES = "WebAppIndexer.numActivities";
+    private static final String PREF_ACTIVITY_INDEX = "WebAppIndexer.index";
+    private static final String PREF_ACTIVITY_ID = "WebAppIndexer.manifest";
 
     private static final int MAX_ACTIVITIES = 10;
     private static final int INVALID_INDEX = -1;
 
-    private ArrayList<ActivityEntry> mActivityList = new ArrayList<ActivityEntry>();
+    private ArrayList<ActivityEntry> mActivityList = new ArrayList<>();
 
     private static class ActivityEntry {
         public final int index;
@@ -105,22 +105,32 @@ public class WebAppIndexer {
     private void storeActivityList(Context context) {
         final SharedPreferences prefs = GeckoSharedPrefs.forProfile(context);
         final SharedPreferences.Editor editor = prefs.edit();
-        editor.clear();
-        editor.putInt(mPrefNumSavedEntries, mActivityList.size());
+        clearActivityListPrefs(prefs, editor);
+        editor.putInt(PREF_NUM_SAVED_ENTRIES, mActivityList.size());
         for (int i = 0; i < mActivityList.size(); ++i) {
-            editor.putInt(mPrefActivityIndex + i, mActivityList.get(i).index);
-            editor.putString(mPrefActivityId + i, mActivityList.get(i).manifest);
+            editor.putInt(PREF_ACTIVITY_INDEX + i, mActivityList.get(i).index);
+            editor.putString(PREF_ACTIVITY_ID + i, mActivityList.get(i).manifest);
         }
         editor.apply();
+    }
+
+    private void clearActivityListPrefs(SharedPreferences prefs, SharedPreferences.Editor editor) {
+        int count = prefs.getInt(PREF_NUM_SAVED_ENTRIES, 0);
+
+        for (int i = 0; i < count; ++i) {
+            editor.remove(PREF_ACTIVITY_INDEX + i);
+            editor.remove(PREF_ACTIVITY_ID + i);
+        }
+        editor.remove(PREF_NUM_SAVED_ENTRIES);
     }
 
     @UiThread
     private void loadActivityList(Context context) {
         final SharedPreferences prefs = GeckoSharedPrefs.forProfile(context);
-        final int numSavedEntries = prefs.getInt(mPrefNumSavedEntries, 0);
+        final int numSavedEntries = prefs.getInt(PREF_NUM_SAVED_ENTRIES, 0);
         for (int i = 0; i < numSavedEntries; ++i) {
-          int index = prefs.getInt(mPrefActivityIndex + i, i);
-          String manifest = prefs.getString(mPrefActivityId + i, null);
+          int index = prefs.getInt(PREF_ACTIVITY_INDEX + i, i);
+          String manifest = prefs.getString(PREF_ACTIVITY_ID + i, null);
           ActivityEntry entry = new ActivityEntry(index, manifest);
           mActivityList.add(entry);
         }

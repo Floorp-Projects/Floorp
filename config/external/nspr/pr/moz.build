@@ -19,6 +19,7 @@ if CONFIG['OS_ARCH'] == 'Linux':
     DEFINES.update(
         LINUX=True,
         HAVE_FCNTL_FILE_LOCKING=True,
+        HAVE_POINTER_LOCALTIME_R=True,
         _GNU_SOURCE=True,
     )
     SOURCES += ['/nsprpub/pr/src/md/unix/linux.c']
@@ -33,6 +34,7 @@ elif CONFIG['OS_TARGET'] in ('FreeBSD', 'OpenBSD', 'NetBSD'):
     DEFINES.update(
         HAVE_BSD_FLOCK=True,
         HAVE_SOCKLEN_T=True,
+        HAVE_POINTER_LOCALTIME_R=True,
     )
     DEFINES[CONFIG['OS_TARGET'].upper()] = True
     SOURCES += ['/nsprpub/pr/src/md/unix/%s.c' % CONFIG['OS_TARGET'].lower()]
@@ -42,6 +44,7 @@ elif CONFIG['OS_TARGET'] == 'Darwin':
         DARWIN=True,
         HAVE_BSD_FLOCK=True,
         HAVE_SOCKLEN_T=True,
+        HAVE_POINTER_LOCALTIME_R=True,
     )
     SOURCES += [
         '/nsprpub/pr/src/md/unix/darwin.c',

@@ -793,6 +793,31 @@ gfxPlatformFontList::GetStandardFamilyName(const nsAString& aFontName, nsAString
     return true;
 }
 
+gfxFontFamily*
+gfxPlatformFontList::GetDefaultFontFamily(const nsACString& aLangGroup,
+                                          const nsACString& aGenericFamily)
+{
+    if (NS_WARN_IF(aLangGroup.IsEmpty()) ||
+        NS_WARN_IF(aGenericFamily.IsEmpty())) {
+        return nullptr;
+    }
+
+    AutoTArray<nsString,4> names;
+    nsAutoCString prefName("font.name-list.");
+    prefName.Append(aGenericFamily);
+    prefName.Append('.');
+    prefName.Append(aLangGroup);
+    gfxFontUtils::AppendPrefsFontList(prefName.get(), names);
+
+    for (nsString& name : names) {
+        gfxFontFamily* fontFamily = FindFamily(name);
+        if (fontFamily) {
+            return fontFamily;
+        }
+    }
+    return nullptr;
+}
+
 gfxCharacterMap*
 gfxPlatformFontList::FindCharMap(gfxCharacterMap *aCmap)
 {

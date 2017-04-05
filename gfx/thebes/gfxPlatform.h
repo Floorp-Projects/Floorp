@@ -356,6 +356,16 @@ public:
     virtual nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
 
     /**
+     * Returns default font name (localized family name) for aLangGroup and
+     * aGenericFamily.  The result is typically the first font in
+     * font.name-list.<aGenericFamily>.<aLangGroup>.  However, if it's not
+     * available in the system, this may return second or later font in the
+     * pref.  If there are no available fonts in the pref, returns empty string.
+     */
+    nsString GetDefaultFontName(const nsACString& aLangGroup,
+                                const nsACString& aGenericFamily);
+
+    /**
      * Create the appropriate platform font group
      */
     virtual gfxFontGroup*

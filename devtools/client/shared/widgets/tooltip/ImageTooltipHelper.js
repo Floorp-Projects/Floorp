@@ -56,9 +56,12 @@ function getImageDimensions(doc, imageUrl) {
  *        - {Number} naturalHeight mandatory, height of the image to display
  *        - {Number} maxDim optional, max width/height of the preview
  *        - {Boolean} hideDimensionLabel optional, pass true to hide the label
+ *        - {Boolean} hideCheckeredBackground optional, pass true to hide
+                      the checkered background
  */
 function setImageTooltip(tooltip, doc, imageUrl, options) {
-  let {naturalWidth, naturalHeight, hideDimensionLabel, maxDim} = options;
+  let {naturalWidth, naturalHeight, hideDimensionLabel,
+       hideCheckeredBackground, maxDim} = options;
   maxDim = maxDim || MAX_DIMENSION;
 
   let imgHeight = naturalHeight;
@@ -68,6 +71,11 @@ function setImageTooltip(tooltip, doc, imageUrl, options) {
     // Only allow integer values to avoid rounding errors.
     imgHeight = Math.floor(scale * naturalHeight);
     imgWidth = Math.ceil(scale * naturalWidth);
+  }
+
+  let imageClass = "";
+  if (!hideCheckeredBackground) {
+    imageClass = "devtools-tooltip-tiles";
   }
 
   // Create tooltip content
@@ -85,7 +93,7 @@ function setImageTooltip(tooltip, doc, imageUrl, options) {
                 align-items: center;
                 justify-content: center;
                 min-height: 1px;">
-      <img class="devtools-tooltip-tiles"
+      <img class="${imageClass}"
            style="height: ${imgHeight}px; max-height: 100%;"
            src="${imageUrl}"/>
     </div>`;

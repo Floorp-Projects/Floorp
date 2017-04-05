@@ -64,14 +64,14 @@ add_task(function* () {
     document.querySelector("#response-tab"));
   yield wait;
 
-  testResponseTab("$_0123Fun", "\"Hello JSONP!\"");
+  testResponseTab("$_0123Fun", "Hello JSONP!");
 
   wait = waitForDOM(document, "#response-panel .tree-section");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]);
   yield wait;
 
-  testResponseTab("$_4567Sad", "\"Hello weird JSONP!\"");
+  testResponseTab("$_4567Sad", "Hello weird JSONP!");
 
   yield teardown(monitor);
 

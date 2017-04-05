@@ -46,7 +46,7 @@ using namespace mozilla;
 // Number of seconds in a day.
 #define SECONDS_PER_DAY 86400
 
-static PRLogModuleInfo *sLog = nullptr;
+static LazyLogModule sLog("idleService");
 
 #define LOG_TAG "GeckoIdleService"
 #define LOG_LEVEL ANDROID_LOG_DEBUG
@@ -394,8 +394,6 @@ nsIdleService::nsIdleService() : mCurrentlySetToTimeoutAt(TimeStamp()),
                                  mDeltaToNextIdleSwitchInS(UINT32_MAX),
                                  mLastUserInteraction(TimeStamp::Now())
 {
-  if (sLog == nullptr)
-    sLog = PR_NewLogModule("idleService");
   MOZ_ASSERT(!gIdleService);
   gIdleService = this;
   if (XRE_IsParentProcess()) {

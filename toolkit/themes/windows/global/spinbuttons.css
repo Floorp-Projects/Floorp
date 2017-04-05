@@ -15,10 +15,6 @@ spinbuttons {
   margin: 0 !important;
 }
 
-.spinbuttons-button > .button-box {
-  border: 0;
-}
-
 .spinbuttons-up {
   -moz-appearance: spinner-upbutton;
 }

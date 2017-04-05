@@ -63,8 +63,6 @@ def test(mod, path, entity = None):
     return "error"
 
   # we're in mod == "mobile"
-  if re.match(r"searchplugins\/.+\.xml", path):
-    return "ignore"
   if path == "chrome/region.properties":
     # only region.properties exceptions remain
     if (re.match(r"browser\.search\.order\.[1-9]", entity) or

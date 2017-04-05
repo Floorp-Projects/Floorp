@@ -447,7 +447,7 @@ interface nsIHttpChannel : nsIChannel
     /**
      * Identifies the request context for this load.
      */
-    [noscript, must_use] attribute nsID requestContextID;
+    [noscript, must_use] attribute uint64_t requestContextID;
 
     /**
      * Unique ID of the channel, shared between parent and child. Needed if

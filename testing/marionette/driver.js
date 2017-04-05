@@ -972,7 +972,7 @@ GeckoDriver.prototype.executeJSScript = function* (cmd, resp) {
  * @param {string} url
  *     URL to navigate to.
  */
-GeckoDriver.prototype.get = function*(cmd, resp) {
+GeckoDriver.prototype.get = function* (cmd, resp) {
   assert.content(this.context);
   assert.window(this.getCurrentWindow());
 
@@ -991,7 +991,7 @@ GeckoDriver.prototype.get = function*(cmd, resp) {
       startTime: new Date().getTime(),
     };
     this.mm.broadcastAsyncMessage(
-        "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
+        "Marionette:waitForPageLoaded" + this.curBrowser.curFrameId,
         parameters);
   });
 
@@ -1092,9 +1092,7 @@ GeckoDriver.prototype.goBack = function* (cmd, resp) {
       startTime: new Date().getTime(),
     };
     this.mm.broadcastAsyncMessage(
-        // TODO: combine with
-        // "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
-        "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
+        "Marionette:waitForPageLoaded" + this.curBrowser.curFrameId,
         parameters);
   });
 
@@ -1133,21 +1131,21 @@ GeckoDriver.prototype.goForward = function* (cmd, resp) {
       startTime: new Date().getTime(),
     };
     this.mm.broadcastAsyncMessage(
-        // TODO: combine with
-        // "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
-        "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
+        "Marionette:waitForPageLoaded" + this.curBrowser.curFrameId,
         parameters);
   });
 
   yield goForward;
 };
 
-/** Refresh the page. */
-GeckoDriver.prototype.refresh = function*(cmd, resp) {
+/**
+ * Causes the browser to reload the page in in current top-level browsing context.
+ */
+GeckoDriver.prototype.refresh = function* (cmd, resp) {
   assert.content(this.context);
   assert.window(this.getCurrentWindow());
 
-  yield this.listener.refresh();
+  yield this.listener.refresh({pageTimeout: this.timeouts.pageLoad});
 };
 
 /**

@@ -1073,6 +1073,7 @@ class ICStubCompiler
     // performing a tail call. This is required for the return address
     // to pc mapping to work.
     void enterStubFrame(MacroAssembler& masm, Register scratch);
+    void assumeStubFrame(MacroAssembler& masm);
     void leaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false);
 
     // Some stubs need to emit Gecko Profiler updates.  This emits the guarding
@@ -2346,13 +2347,8 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
     }
 
     class Compiler : public ICStubCompiler {
-      public:
-        static const int32_t BASELINE_KEY =
-            (static_cast<int32_t>(Engine::Baseline)) |
-            (static_cast<int32_t>(ICStub::GetProp_Fallback) << 1);
-
       protected:
-        uint32_t returnOffset_;
+        CodeOffset bailoutReturnOffset_;
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
         void postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code);
 

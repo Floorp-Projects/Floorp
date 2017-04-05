@@ -25,6 +25,9 @@ struct cubeb_stream {
 #if defined(USE_PULSE)
 int pulse_init(cubeb ** context, char const * context_name);
 #endif
+#if defined(USE_PULSE_RUST)
+int pulse_rust_init(cubeb ** contet, char const * context_name);
+#endif
 #if defined(USE_JACK)
 int jack_init (cubeb ** context, char const * context_name);
 #endif
@@ -111,6 +114,10 @@ cubeb_init(cubeb ** context, char const * context_name, char const * backend_nam
     if (!strcmp(backend_name, "pulse")) {
 #if defined(USE_PULSE)
       init_oneshot = pulse_init;
+#endif
+    } else if (!strcmp(backend_name, "pulse-rust")) {
+#if defined(USE_PULSE_RUST)
+      init_oneshot = pulse_rust_init;
 #endif
     } else if (!strcmp(backend_name, "jack")) {
 #if defined(USE_JACK)

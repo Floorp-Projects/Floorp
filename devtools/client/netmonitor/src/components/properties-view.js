@@ -204,6 +204,7 @@ const PropertiesView = createClass({
             },
             enableInput,
             expandableStrings,
+            useQuotes: false,
             expandedNodes: this.getExpandedNodes(object),
             onFilter: (props) => this.onFilter(props, sectionNames),
             renderRow: renderRow || this.renderRowWithEditor,

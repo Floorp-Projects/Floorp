@@ -39,9 +39,24 @@ let whitelist = [
    errorMessage: /Unknown property.*-moz-/i,
    isFromDevTools: false},
   // Reserved to UA sheets unless layout.css.overflow-clip-box.enabled flipped to true.
-  {sourceName: /res\/forms\.css$/i,
+  {sourceName: /(?:res|gre-resources)\/forms\.css$/i,
    errorMessage: /Unknown property.*overflow-clip-box/i,
    isFromDevTools: false},
+  // These variables are declared somewhere else, and error when we load the
+  // files directly. They're all marked intermittent because their appearance
+  // in the error console seems to not be consistent.
+  {sourceName: /jsonview\/css\/general\.css$/i,
+   intermittent: true,
+   errorMessage: /Property contained reference to invalid variable.*color/i,
+   isFromDevTools: true},
+  {sourceName: /webide\/skin\/logs\.css$/i,
+   intermittent: true,
+   errorMessage: /Property contained reference to invalid variable.*color/i,
+   isFromDevTools: true},
+  {sourceName: /devtools\/skin\/animationinspector\.css$/i,
+   intermittent: true,
+   errorMessage: /Property contained reference to invalid variable.*color/i,
+   isFromDevTools: true},
 ];
 
 if (!Services.prefs.getBoolPref("full-screen-api.unprefix.enabled")) {
@@ -93,19 +108,19 @@ function ignoredError(aErrorObject) {
   return false;
 }
 
-function once(target, name) {
-  return new Promise((resolve, reject) => {
-    let cb = () => {
-      target.removeEventListener(name, cb);
-      resolve();
-    };
-    target.addEventListener(name, cb);
-  });
-}
-
 var gChromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
                  .getService(Ci.nsIChromeRegistry);
 var gChromeMap = new Map();
+
+var resHandler = Services.io.getProtocolHandler("resource")
+                         .QueryInterface(Ci.nsIResProtocolHandler);
+var gResourceMap = [];
+function trackResourcePrefix(prefix) {
+  let uri = Services.io.newURI("resource://" + prefix + "/");
+  gResourceMap.unshift([prefix, resHandler.resolveURI(uri)]);
+}
+trackResourcePrefix("gre");
+trackResourcePrefix("app");
 
 function getBaseUriForChromeUri(chromeUri) {
   let chromeFile = chromeUri + "gobbledygooknonexistentfile.reallynothere";
@@ -118,35 +133,34 @@ function parseManifest(manifestUri) {
   return fetchFile(manifestUri.spec).then(data => {
     for (let line of data.split("\n")) {
       let [type, ...argv] = line.split(/\s+/);
-      let component;
       if (type == "content" || type == "skin") {
-        [component] = argv;
-      } else {
-        // skip unrelated lines
-        continue;
+        let chromeUri = `chrome://${argv[0]}/${type}/`;
+        gChromeMap.set(getBaseUriForChromeUri(chromeUri), chromeUri);
+      } else if (type == "resource") {
+        trackResourcePrefix(argv[0]);
       }
-      let chromeUri = `chrome://${component}/${type}/`;
-      gChromeMap.set(getBaseUriForChromeUri(chromeUri), chromeUri);
     }
   });
 }
 
-function convertToChromeUri(fileUri) {
-  let baseUri = fileUri.spec;
+function convertToCodeURI(fileUri) {
+  let baseUri = fileUri;
   let path = "";
   while (true) {
     let slashPos = baseUri.lastIndexOf("/", baseUri.length - 2);
-    if (slashPos < 0) {
-      info(`File not accessible from chrome protocol: ${fileUri.path}`);
+    if (slashPos <= 0) {
+      // File not accessible from chrome protocol, try resource://
+      for (let res of gResourceMap) {
+        if (fileUri.startsWith(res[1]))
+          return fileUri.replace(res[1], "resource://" + res[0] + "/");
+      }
+      // Give up and return the original URL.
       return fileUri;
     }
     path = baseUri.slice(slashPos + 1) + path;
     baseUri = baseUri.slice(0, slashPos + 1);
-    if (gChromeMap.has(baseUri)) {
-      let chromeBaseUri = gChromeMap.get(baseUri);
-      let chromeUri = `${chromeBaseUri}${path}`;
-      return Services.io.newURI(chromeUri);
-    }
+    if (gChromeMap.has(baseUri))
+      return gChromeMap.get(baseUri) + path;
   }
 }
 
@@ -235,10 +249,12 @@ add_task(function* checkAllTheCSS() {
   // Create a clean iframe to load all the files into. This needs to live at a
   // chrome URI so that it's allowed to load and parse any styles.
   let testFile = getRootDirectory(gTestPath) + "dummy_page.html";
-  let windowless = Services.appShell.createWindowlessBrowser();
-  let iframe = windowless.document.createElementNS("http://www.w3.org/1999/xhtml", "html:iframe");
-  windowless.document.documentElement.appendChild(iframe);
-  let iframeLoaded = once(iframe, "load");
+  let HiddenFrame = Cu.import("resource:///modules/HiddenFrame.jsm", {}).HiddenFrame;
+  let hiddenFrame = new HiddenFrame();
+  let win = yield hiddenFrame.get();
+  let iframe = win.document.createElementNS("http://www.w3.org/1999/xhtml", "html:iframe");
+  win.document.documentElement.appendChild(iframe);
+  let iframeLoaded = BrowserTestUtils.waitForEvent(iframe, "load", true);
   iframe.contentWindow.location = testFile;
   yield iframeLoaded;
   let doc = iframe.contentWindow.document;
@@ -285,8 +301,8 @@ add_task(function* checkAllTheCSS() {
       linkEl.addEventListener("load", onLoad);
       linkEl.addEventListener("error", onError);
       linkEl.setAttribute("type", "text/css");
-      let chromeUri = convertToChromeUri(uri);
-      linkEl.setAttribute("href", chromeUri.spec + kPathSuffix);
+      let chromeUri = convertToCodeURI(uri.spec);
+      linkEl.setAttribute("href", chromeUri + kPathSuffix);
     }));
     doc.head.appendChild(linkEl);
   }
@@ -322,7 +338,7 @@ add_task(function* checkAllTheCSS() {
 
   // Confirm that all whitelist rules have been used.
   for (let item of whitelist) {
-    if (!item.used && isDevtools == item.isFromDevTools) {
+    if (!item.used && isDevtools == item.isFromDevTools && !item.intermittent) {
       ok(false, "Unused whitelist item. " +
                 (item.sourceName ? " sourceName: " + item.sourceName : "") +
                 (item.errorMessage ? " errorMessage: " + item.errorMessage : ""));
@@ -344,7 +360,8 @@ add_task(function* checkAllTheCSS() {
   doc.head.innerHTML = "";
   doc = null;
   iframe = null;
-  windowless.close();
-  windowless = null;
+  win = null;
+  hiddenFrame.destroy();
+  hiddenFrame = null;
   imageURIsToReferencesMap = null;
 });

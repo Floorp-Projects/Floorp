@@ -127,17 +127,11 @@ nsLoadGroup::~nsLoadGroup()
     mDefaultLoadRequest = nullptr;
 
     if (mRequestContext) {
-        nsID rcid;
+        uint64_t rcid;
         mRequestContext->GetID(&rcid);
 
         if (IsNeckoChild() && gNeckoChild) {
-            char rcid_str[NSID_LENGTH];
-            rcid.ToProvidedString(rcid_str);
-
-            nsCString rcid_nscs;
-            rcid_nscs.AssignASCII(rcid_str);
-
-            gNeckoChild->SendRemoveRequestContext(rcid_nscs);
+            gNeckoChild->SendRemoveRequestContext(rcid);
         } else {
             mRequestContextService->RemoveRequestContext(rcid);
         }
@@ -703,7 +697,7 @@ nsLoadGroup::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
 }
 
 NS_IMETHODIMP
-nsLoadGroup::GetRequestContextID(nsID *aRCID)
+nsLoadGroup::GetRequestContextID(uint64_t *aRCID)
 {
     if (!mRequestContext) {
         return NS_ERROR_NOT_AVAILABLE;

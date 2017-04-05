@@ -49,11 +49,18 @@ public class WebAppActivity extends GeckoApp {
     private static final String LOGTAG = "WebAppActivity";
 
     private TextView mUrlView;
+    private String mManifestPath;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        loadManifest(getIntent());
+
+        if (savedInstanceState != null) {
+            mManifestPath = savedInstanceState.getString(WebAppActivity.MANIFEST_PATH, null);
+        } else {
+            mManifestPath = getIntent().getStringExtra(WebAppActivity.MANIFEST_PATH);
+        }
+        loadManifest(mManifestPath);
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.actionbar);
         setSupportActionBar(toolbar);
@@ -109,6 +116,13 @@ public class WebAppActivity extends GeckoApp {
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putString(WebAppActivity.MANIFEST_PATH, mManifestPath);
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
@@ -140,23 +154,22 @@ public class WebAppActivity extends GeckoApp {
             .equals(Uri.parse(launchUrl).getHost());
 
         if (!isSameDomain) {
-            loadManifest(externalIntent);
+            mManifestPath = externalIntent.getStringExtra(WebAppActivity.MANIFEST_PATH);
+            loadManifest(mManifestPath);
             Tabs.getInstance().loadUrl(launchUrl);
         }
     }
 
-    private void loadManifest(Intent intent) {
-        String manifestPath = intent.getStringExtra(WebAppActivity.MANIFEST_PATH);
-        if (manifestPath != null) {
-            updateFromManifest(manifestPath);
+    private void loadManifest(String manifestPath) {
+        if (manifestPath == null) {
+            Log.e(LOGTAG, "Missing manifest");
+            return;
         }
-    }
 
-    private void updateFromManifest(String manifestPath) {
         try {
             final File manifestFile = new File(manifestPath);
             final JSONObject manifest = FileUtils.readJSONObjectFromFile(manifestFile);
-            final JSONObject manifestField = (JSONObject) manifest.get("manifest");
+            final JSONObject manifestField = manifest.getJSONObject("manifest");
             final Integer color = readColorFromManifest(manifestField);
             final String name = readNameFromManifest(manifestField);
             final Bitmap icon = readIconFromManifest(manifest);
@@ -180,27 +193,27 @@ public class WebAppActivity extends GeckoApp {
         }
     }
 
-    private Integer readColorFromManifest(JSONObject manifest) throws JSONException {
-        final String colorStr = (String) manifest.get("theme_color");
+    private Integer readColorFromManifest(JSONObject manifest) {
+        final String colorStr = manifest.optString("theme_color", null);
         if (colorStr != null) {
             return ColorUtil.parseStringColor(colorStr);
         }
         return null;
     }
 
-    private String readNameFromManifest(JSONObject manifest) throws JSONException {
-        String name = (String) manifest.get("name");
+    private String readNameFromManifest(JSONObject manifest) {
+        String name = manifest.optString("name", null);
         if (name == null) {
-            name = (String) manifest.get("short_name");
+            name = manifest.optString("short_name", null);
         }
         if (name == null) {
-            name = (String) manifest.get("start_url");
+            name = manifest.optString("start_url", null);
         }
         return name;
     }
 
-    private Bitmap readIconFromManifest(JSONObject manifest) throws JSONException {
-        final String iconStr = (String) manifest.get("cached_icon");
+    private Bitmap readIconFromManifest(JSONObject manifest) {
+        final String iconStr = manifest.optString("cached_icon", null);
         if (iconStr != null) {
             return FaviconDecoder
                 .decodeDataURI(getContext(), iconStr)

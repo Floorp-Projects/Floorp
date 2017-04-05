@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/KeyframeEffectReadOnly.h"
 
+#include "gfxPrefs.h"
 #include "mozilla/dom/KeyframeAnimationOptionsBinding.h"
   // For UnrestrictedDoubleOrKeyframeAnimationOptions;
 #include "mozilla/dom/CSSPseudoElement.h"
@@ -18,6 +19,7 @@
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/KeyframeUtils.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/TypeTraits.h"
 #include "Layers.h" // For Layer
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetStyleContextForElement
@@ -1597,6 +1599,31 @@ KeyframeEffectReadOnly::SetPerformanceWarning(
   nsCSSPropertyID aProperty,
   const AnimationPerformanceWarning& aWarning)
 {
+  if (aWarning.mType == AnimationPerformanceWarning::Type::ContentTooLarge &&
+      !mRecordedContentTooLarge) {
+    // ContentTooLarge stores: frameSize (w x h),
+    //                         relativeLimit (w x h), i.e. =~ viewport size *
+    //                                                          ratioLimit
+    //                         absoluteLimit (w x h)
+    MOZ_ASSERT(aWarning.mParams && aWarning.mParams->Length() >= 4,
+               "ContentTooLarge warning should have at least 4 parameters");
+    const nsTArray<int32_t>& params = aWarning.mParams.ref();
+    uint32_t frameSize = uint32_t(params[0]) * params[1];
+    float viewportRatioX = gfxPrefs::AnimationPrerenderViewportRatioLimitX();
+    float viewportRatioY = gfxPrefs::AnimationPrerenderViewportRatioLimitY();
+    double viewportWidth = viewportRatioX ? params[2] / viewportRatioX
+                                          : params[2];
+    double viewportHeight = viewportRatioY ? params[3] / viewportRatioY
+                                           : params[3];
+    double viewportSize = viewportWidth * viewportHeight;
+    uint32_t frameToViewport = frameSize / viewportSize * 100.0;
+    Telemetry::Accumulate(
+      Telemetry::ASYNC_ANIMATION_CONTENT_TOO_LARGE_FRAME_SIZE, frameSize);
+    Telemetry::Accumulate(
+      Telemetry::ASYNC_ANIMATION_CONTENT_TOO_LARGE_PERCENTAGE, frameToViewport);
+    mRecordedContentTooLarge = true;
+  }
+
   for (AnimationProperty& property : mProperties) {
     if (property.mProperty == aProperty &&
         (!property.mPerformanceWarning ||

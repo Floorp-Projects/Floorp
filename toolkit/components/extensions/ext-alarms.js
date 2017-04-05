@@ -1,17 +1,14 @@
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
-Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   SingletonEventManager,
 } = ExtensionUtils;
 
 // WeakMap[Extension -> Map[name -> Alarm]]
-var alarmsMap = new WeakMap();
+let alarmsMap = new WeakMap();
 
 // WeakMap[Extension -> Set[callback]]
-var alarmCallbacksMap = new WeakMap();
+let alarmCallbacksMap = new WeakMap();
 
 // Manages an alarm created by the extension (alarms API).
 function Alarm(extension, name, alarmInfo) {
@@ -76,80 +73,81 @@ Alarm.prototype = {
   },
 };
 
-/* eslint-disable mozilla/balanced-listeners */
-extensions.on("startup", (type, extension) => {
-  alarmsMap.set(extension, new Map());
-  alarmCallbacksMap.set(extension, new Set());
-});
+this.alarms = class extends ExtensionAPI {
+  onShutdown() {
+    let {extension} = this;
 
-extensions.on("shutdown", (type, extension) => {
-  if (alarmsMap.has(extension)) {
-    for (let alarm of alarmsMap.get(extension).values()) {
-      alarm.clear();
+    if (alarmsMap.has(extension)) {
+      for (let alarm of alarmsMap.get(extension).values()) {
+        alarm.clear();
+      }
+      alarmsMap.delete(extension);
+      alarmCallbacksMap.delete(extension);
     }
-    alarmsMap.delete(extension);
-    alarmCallbacksMap.delete(extension);
   }
-});
-/* eslint-enable mozilla/balanced-listeners */
 
-extensions.registerSchemaAPI("alarms", "addon_parent", context => {
-  let {extension} = context;
-  return {
-    alarms: {
-      create: function(name, alarmInfo) {
-        name = name || "";
-        let alarms = alarmsMap.get(extension);
-        if (alarms.has(name)) {
-          alarms.get(name).clear();
-        }
-        let alarm = new Alarm(extension, name, alarmInfo);
-        alarms.set(alarm.name, alarm);
+  getAPI(context) {
+    let {extension} = context;
+
+    alarmsMap.set(extension, new Map());
+    alarmCallbacksMap.set(extension, new Set());
+
+    return {
+      alarms: {
+        create: function(name, alarmInfo) {
+          name = name || "";
+          let alarms = alarmsMap.get(extension);
+          if (alarms.has(name)) {
+            alarms.get(name).clear();
+          }
+          let alarm = new Alarm(extension, name, alarmInfo);
+          alarms.set(alarm.name, alarm);
+        },
+
+        get: function(name) {
+          name = name || "";
+          let alarms = alarmsMap.get(extension);
+          if (alarms.has(name)) {
+            return Promise.resolve(alarms.get(name).data);
+          }
+          return Promise.resolve();
+        },
+
+        getAll: function() {
+          let result = Array.from(alarmsMap.get(extension).values(), alarm => alarm.data);
+          return Promise.resolve(result);
+        },
+
+        clear: function(name) {
+          name = name || "";
+          let alarms = alarmsMap.get(extension);
+          if (alarms.has(name)) {
+            alarms.get(name).clear();
+            return Promise.resolve(true);
+          }
+          return Promise.resolve(false);
+        },
+
+        clearAll: function() {
+          let cleared = false;
+          for (let alarm of alarmsMap.get(extension).values()) {
+            alarm.clear();
+            cleared = true;
+          }
+          return Promise.resolve(cleared);
+        },
+
+        onAlarm: new SingletonEventManager(context, "alarms.onAlarm", fire => {
+          let callback = alarm => {
+            fire.sync(alarm.data);
+          };
+
+          alarmCallbacksMap.get(extension).add(callback);
+          return () => {
+            alarmCallbacksMap.get(extension).delete(callback);
+          };
+        }).api(),
       },
-
-      get: function(name) {
-        name = name || "";
-        let alarms = alarmsMap.get(extension);
-        if (alarms.has(name)) {
-          return Promise.resolve(alarms.get(name).data);
-        }
-        return Promise.resolve();
-      },
-
-      getAll: function() {
-        let result = Array.from(alarmsMap.get(extension).values(), alarm => alarm.data);
-        return Promise.resolve(result);
-      },
-
-      clear: function(name) {
-        name = name || "";
-        let alarms = alarmsMap.get(extension);
-        if (alarms.has(name)) {
-          alarms.get(name).clear();
-          return Promise.resolve(true);
-        }
-        return Promise.resolve(false);
-      },
-
-      clearAll: function() {
-        let cleared = false;
-        for (let alarm of alarmsMap.get(extension).values()) {
-          alarm.clear();
-          cleared = true;
-        }
-        return Promise.resolve(cleared);
-      },
-
-      onAlarm: new SingletonEventManager(context, "alarms.onAlarm", fire => {
-        let callback = alarm => {
-          fire.sync(alarm.data);
-        };
-
-        alarmCallbacksMap.get(extension).add(callback);
-        return () => {
-          alarmCallbacksMap.get(extension).delete(callback);
-        };
-      }).api(),
-    },
-  };
-});
+    };
+  }
+};

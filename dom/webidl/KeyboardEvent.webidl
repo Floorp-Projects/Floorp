@@ -27,7 +27,6 @@ interface KeyboardEvent : UIEvent
   readonly attribute boolean       isComposing;
 
   readonly attribute DOMString key;
-  [Pref="dom.keyboardevent.code.enabled"]
   readonly attribute DOMString code;
 
   // This returns the initialized dictionary for generating a

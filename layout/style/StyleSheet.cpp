@@ -118,6 +118,7 @@ StyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
 // QueryInterface implementation for StyleSheet
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StyleSheet)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleSheet)
 NS_INTERFACE_MAP_END

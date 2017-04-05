@@ -8,6 +8,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/SizePrintfMacros.h"
 
+#include <cfloat>
 #include <stdarg.h>
 
 #include "jsprf.h"
@@ -60,6 +61,10 @@ BEGIN_TEST(testPrintf)
     CHECK(print_one("h", "%c", 'h'));
     CHECK(print_one("1.500000", "%f", 1.5f));
     CHECK(print_one("1.5", "%g", 1.5));
+
+    // Regression test for bug#1350097.  The bug was an assertion
+    // failure caused by printing a very long floating point value.
+    print_one("ignore", "%lf", DBL_MAX);
 
     CHECK(print_one("2727", "%" PRIu32, (uint32_t) 2727));
     CHECK(print_one("aa7", "%" PRIx32, (uint32_t) 2727));

@@ -162,7 +162,7 @@ function testStates(aAccOrElmOrID, aState, aExtraState, aAbsentState,
 }
 
 /**
- * Tests an acessible and its sub tree for the passed in state bits.
+ * Tests an accessible and its sub tree for the passed in state bits.
  * Used to make sure that states are propagated to descendants, for example the
  * STATE_UNAVAILABLE from a container to its children.
  *

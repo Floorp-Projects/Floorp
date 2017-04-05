@@ -33,6 +33,7 @@ const {
 
 const {
   BaseContext,
+  CanOfAPIs,
   LocalAPIImplementation,
   SchemaAPIManager,
 } = ExtensionCommon;
@@ -228,7 +229,7 @@ class ProxyScriptAPIManager extends SchemaAPIManager {
     this.initialized = false;
   }
 
-  generateAPIs(...args) {
+  lazyInit() {
     if (!this.initialized) {
       for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(
           CATEGORY_EXTENSION_SCRIPTS_CONTENT)) {
@@ -236,20 +237,14 @@ class ProxyScriptAPIManager extends SchemaAPIManager {
       }
       this.initialized = true;
     }
-    return super.generateAPIs(...args);
-  }
-
-  registerSchemaAPI(namespace, envType, getAPI) {
-    if (envType == "proxy_script") {
-      super.registerSchemaAPI(namespace, envType, getAPI);
-    }
   }
 }
 
 class ProxyScriptInjectionContext {
-  constructor(context, localAPIs) {
+  constructor(context, apiCan) {
     this.context = context;
-    this.localAPIs = localAPIs;
+    this.localAPIs = apiCan.root;
+    this.apiCan = apiCan;
   }
 
   shouldInject(namespace, name, allowedContexts) {
@@ -262,9 +257,9 @@ class ProxyScriptInjectionContext {
   }
 
   getImplementation(namespace, name) {
-    let obj = namespace.split(".").reduce(
-      (object, prop) => object && object[prop],
-      this.localAPIs);
+    this.apiCan.findAPIPath(`${namespace}.${name}`);
+    let obj = this.apiCan.findAPIPath(namespace);
+
     if (obj && name in obj) {
       return new LocalAPIImplementation(obj, name, this.context);
     }
@@ -289,10 +284,11 @@ let proxyScriptAPIManager = new ProxyScriptAPIManager();
 
 defineLazyGetter(ProxyScriptContext.prototype, "browserObj", function() {
   let localAPIs = {};
-  proxyScriptAPIManager.generateAPIs(this, localAPIs);
+  let can = new CanOfAPIs(this, proxyScriptAPIManager, localAPIs);
+  proxyScriptAPIManager.lazyInit();
 
   let browserObj = Cu.createObjectIn(this.sandbox);
-  let injectionContext = new ProxyScriptInjectionContext(this, localAPIs);
+  let injectionContext = new ProxyScriptInjectionContext(this, can);
   Schemas.inject(browserObj, injectionContext);
   return browserObj;
 });

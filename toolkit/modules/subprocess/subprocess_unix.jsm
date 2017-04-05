@@ -13,6 +13,8 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.importGlobalProperties(["TextDecoder"]);
+
 var EXPORTED_SYMBOLS = ["SubprocessImpl"];
 
 Cu.import("resource://gre/modules/ctypes.jsm");
@@ -76,6 +78,21 @@ class Process extends BaseProcess {
   }
 }
 
+// Convert a null-terminated char pointer into a sized char array, and then
+// convert that into a JS typed array.
+// The resulting array will not be null-terminated.
+function ptrToUint8Array(input) {
+  let {cast, uint8_t} = ctypes;
+
+  let len = 0;
+  for (let ptr = cast(input, uint8_t.ptr); ptr.contents; ptr = ptr.increment()) {
+    len++;
+  }
+
+  let aryPtr = cast(input, uint8_t.array(len).ptr);
+  return new Uint8Array(aryPtr.contents);
+}
+
 var SubprocessUnix = {
   Process,
 
@@ -91,13 +108,26 @@ var SubprocessUnix = {
       environ = libc.environ;
     }
 
-    for (let envp = environ; !envp.contents.isNull(); envp = envp.increment()) {
-      let str = envp.contents.readString();
+    const EQUAL = "=".charCodeAt(0);
+    let decoder = new TextDecoder("utf-8", {fatal: true});
 
-      let idx = str.indexOf("=");
-      if (idx >= 0) {
-        yield [str.slice(0, idx),
-               str.slice(idx + 1)];
+    function decode(array) {
+      try {
+        return decoder.decode(array);
+      } catch (e) {
+        return array;
+      }
+    }
+
+    for (let envp = environ; !envp.contents.isNull(); envp = envp.increment()) {
+      let buf = ptrToUint8Array(envp.contents);
+
+      for (let i = 0; i < buf.length; i++) {
+        if (buf[i] == EQUAL) {
+          yield [decode(buf.subarray(0, i)),
+                 decode(buf.subarray(i + 1))];
+          break;
+        }
       }
     }
   },
@@ -146,7 +176,7 @@ var SubprocessUnix = {
     }
 
     let dirs = [];
-    if (environment.PATH) {
+    if (typeof environment.PATH === "string") {
       dirs = environment.PATH.split(":");
     }
 

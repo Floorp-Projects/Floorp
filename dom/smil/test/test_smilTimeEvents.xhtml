@@ -322,14 +322,6 @@ d.addEventListener("zoom", function(e) {
   expectedEvents.shift();
 });
 
-var zoomEvent = document.createEvent("svgzoomevent");
-zoomEvent.initEvent("zoom", true, true);
-d.dispatchEvent(zoomEvent);
-zoomEvent = document.createEvent("svgzoomevent");
-zoomEvent.initEvent("SVGZoom", true, true);
-d.dispatchEvent(zoomEvent);
-is(expectedEvents.length, 0, "Got all the expected events.");
-
 ]]>
 </script>
 </pre>

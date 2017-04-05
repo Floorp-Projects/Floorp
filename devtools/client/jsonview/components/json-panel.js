@@ -144,7 +144,7 @@ define(function (require, exports, module) {
       }
 
       return (
-        div({className: "jsonPanelBox"},
+        div({className: "jsonPanelBox tab-panel-inner"},
           JsonToolbar({actions: this.props.actions}),
           div({className: "panelContent"},
             content

@@ -97,7 +97,9 @@ int __android_log_write(int prio, const char *tag, const char *text);
  * Send a formatted string to the log, used like printf(fmt,...)
  */
 int __android_log_print(int prio, const char *tag,  const char *fmt, ...)
-#if defined(__GNUC__)
+#if defined(__MINGW32__)
+    __attribute__ ((format(__MINGW_PRINTF_FORMAT, 3, 4)))
+#elif defined(__GNUC__)
     __attribute__ ((format(printf, 3, 4)))
 #endif
     ;

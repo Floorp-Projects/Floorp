@@ -433,13 +433,9 @@ var testKeyboardProps =
   { keyCode: 11, charCode: 12, which: 13 },
 ];
 
-var codeEnabled = SpecialPowers.getBoolPref("dom.keyboardevent.code.enabled");
 var defaultKeyboardEventValues = {};
 for (var i = 0; i < keyboardEventProps.length; ++i) {
   for (prop in keyboardEventProps[i]) {
-    if (!codeEnabled && prop == "code") {
-      continue;
-    }
     if (!isMethodResultInitializer(prop)) {
       ok(prop in e, "keyboardEvent: KeyboardEvent doesn't have property " + prop + "!");
     }
@@ -451,9 +447,6 @@ while (testKeyboardProps.length) {
   var p = testKeyboardProps.shift();
   e = new KeyboardEvent("foo", p);
   for (var def in defaultKeyboardEventValues) {
-    if (!codeEnabled && def == "code") {
-      continue;
-    }
     if (!(def in p)) {
       is(getPropValue(e, def), defaultKeyboardEventValues[def],
          "KeyboardEvent: Wrong default value for " + def + "!");

@@ -22,6 +22,7 @@
 #include "ClearKeyDecryptionManager.h"
 #include "ClearKeyUtils.h"
 #include "VideoDecoder.h"
+#include "mozilla/CheckedInt.h"
 
 using namespace wmf;
 using namespace cdm;
@@ -172,10 +173,12 @@ Status VideoDecoder::OutputFrame(VideoFrame* aVideoFrame) {
     return Status::kDecodeError;
   }
 
+  const IntRect& picture = mDecoder->GetPictureRegion();
   hr = SampleToVideoFrame(result,
-                          mDecoder->GetFrameWidth(),
-                          mDecoder->GetFrameHeight(),
+                          picture.width,
+                          picture.height,
                           mDecoder->GetStride(),
+                          mDecoder->GetFrameHeight(),
                           aVideoFrame);
   if (FAILED(hr)) {
     CK_LOGD("VideoDecoder::OutputFrame Failed!");
@@ -188,9 +191,10 @@ Status VideoDecoder::OutputFrame(VideoFrame* aVideoFrame) {
 
 HRESULT
 VideoDecoder::SampleToVideoFrame(IMFSample* aSample,
-                                 int32_t aWidth,
-                                 int32_t aHeight,
+                                 int32_t aPictureWidth,
+                                 int32_t aPictureHeight,
                                  int32_t aStride,
+                                 int32_t aFrameHeight,
                                  VideoFrame* aVideoFrame)
 {
   CK_LOGD("[%p] VideoDecoder::SampleToVideoFrame()", this);
@@ -223,36 +227,41 @@ VideoDecoder::SampleToVideoFrame(IMFSample* aSample,
     stride = aStride;
   }
 
-  // The U and V planes are stored 16-row-aligned, so we need to add padding
-  // to the row heights to ensure the Y'CbCr planes are referenced properly.
+  // WMF stores the U and V planes 16-row-aligned, so we need to add padding
+  // to the row heights to ensure the source offsets of the Y'CbCr planes are
+  // referenced properly.
   // YV12, planar format: [YYYY....][UUUU....][VVVV....]
   // i.e., Y, then U, then V.
   uint32_t padding = 0;
-  if (aHeight % 16 != 0) {
-    padding = 16 - (aHeight % 16);
+  if (aFrameHeight % 16 != 0) {
+    padding = 16 - (aFrameHeight % 16);
   }
-  uint32_t ySize = stride * (aHeight + padding);
-  uint32_t uSize = stride * (aHeight + padding) / 4;
+  uint32_t srcYSize = stride * (aFrameHeight + padding);
+  uint32_t srcUVSize = stride * (aFrameHeight + padding) / 4;
   uint32_t halfStride = (stride + 1) / 2;
-  uint32_t halfHeight = (aHeight + 1) / 2;
 
   aVideoFrame->SetStride(VideoFrame::kYPlane, stride);
   aVideoFrame->SetStride(VideoFrame::kUPlane, halfStride);
   aVideoFrame->SetStride(VideoFrame::kVPlane, halfStride);
 
-  aVideoFrame->SetSize(Size(aWidth, aHeight));
+  aVideoFrame->SetSize(Size(aPictureWidth, aPictureHeight));
 
-  uint64_t bufferSize = ySize + 2 * uSize;
+  // Note: We allocate the minimal sized buffer required to send the
+  // frame back over to the parent process. This is so that we request the
+  // same sized frame as the buffer allocator expects.
+  using mozilla::CheckedUint32;
+  CheckedUint32 bufferSize = CheckedUint32(stride) * aPictureHeight +
+                             ((CheckedUint32(stride) * aPictureHeight) / 4) * 2;
 
   // If the buffer is bigger than the max for a 32 bit, fail to avoid buffer
   // overflows.
-  if (bufferSize > UINT32_MAX) {
+  if (!bufferSize.isValid()) {
     CK_LOGD("VideoDecoder::SampleToFrame Buffersize bigger than UINT32_MAX");
     return E_FAIL;
   }
 
   // Get the buffer from the host.
-  Buffer* buffer = mHost->Allocate(bufferSize);
+  Buffer* buffer = mHost->Allocate(bufferSize.value());
   aVideoFrame->SetFrameBuffer(buffer);
 
   // Make sure the buffer is non-null (allocate guarantees it will be of
@@ -266,14 +275,23 @@ VideoDecoder::SampleToVideoFrame(IMFSample* aSample,
 
   aVideoFrame->SetPlaneOffset(VideoFrame::kYPlane, 0);
 
-  // Offset is the size of the copied y data.
-  aVideoFrame->SetPlaneOffset(VideoFrame::kUPlane, ySize);
+  // Offset of U plane is the size of the Y plane, excluding the padding that
+  // WMF adds.
+  uint32_t dstUOffset = stride * aPictureHeight;
+  aVideoFrame->SetPlaneOffset(VideoFrame::kUPlane, dstUOffset);
 
-  // Offset is the size of the copied y data + the size of the copied u data.
-  aVideoFrame->SetPlaneOffset(VideoFrame::kVPlane, ySize + uSize);
+  // Offset of the V plane is the size of the Y plane + the size of the U plane,
+  // excluding any padding WMF adds.
+  uint32_t dstVOffset = stride * aPictureHeight + (stride * aPictureHeight) / 4;
+  aVideoFrame->SetPlaneOffset(VideoFrame::kVPlane, dstVOffset);
 
-  // Copy the data.
-  memcpy(outBuffer, data, ySize + uSize * 2);
+  // Copy the pixel data, excluding WMF's padding.
+  memcpy(outBuffer, data, stride * aPictureHeight);
+  memcpy(
+    outBuffer + dstUOffset, data + srcYSize, (stride * aPictureHeight) / 4);
+  memcpy(outBuffer + dstVOffset,
+         data + srcYSize + srcUVSize,
+         (stride * aPictureHeight) / 4);
 
   if (twoDBuffer) {
     twoDBuffer->Unlock2D();
