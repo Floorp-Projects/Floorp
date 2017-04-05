@@ -13,7 +13,7 @@ namespace mozilla {
 
 void
 FramePropertyTable::SetInternal(
-  const nsIFrame* aFrame, UntypedDescriptor aProperty, void* aValue)
+  nsIFrame* aFrame, UntypedDescriptor aProperty, void* aValue)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ASSERTION(aFrame, "Null frame?");
@@ -111,7 +111,7 @@ FramePropertyTable::GetInternal(
 
 void*
 FramePropertyTable::RemoveInternal(
-  const nsIFrame* aFrame, UntypedDescriptor aProperty, bool* aFoundResult)
+  nsIFrame* aFrame, UntypedDescriptor aProperty, bool* aFoundResult)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ASSERTION(aFrame, "Null frame?");
@@ -176,7 +176,7 @@ FramePropertyTable::RemoveInternal(
 
 void
 FramePropertyTable::DeleteInternal(
-  const nsIFrame* aFrame, UntypedDescriptor aProperty)
+  nsIFrame* aFrame, UntypedDescriptor aProperty)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ASSERTION(aFrame, "Null frame?");
@@ -206,7 +206,7 @@ FramePropertyTable::DeleteAllForEntry(Entry* aEntry)
 }
 
 void
-FramePropertyTable::DeleteAllFor(const nsIFrame* aFrame)
+FramePropertyTable::DeleteAllFor(nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame, "Null frame?");
 

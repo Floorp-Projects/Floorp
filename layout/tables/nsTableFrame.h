@@ -807,7 +807,8 @@ protected:
 
   void SetBorderCollapse(bool aValue);
 
-  BCPropertyData* GetBCProperty(bool aCreateIfNecessary = false) const;
+  BCPropertyData* GetBCProperty() const;
+  BCPropertyData* GetOrCreateBCProperty();
   void SetFullBCDamageArea();
   void CalcBCBorders();
 

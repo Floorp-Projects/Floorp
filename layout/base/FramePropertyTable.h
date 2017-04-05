@@ -165,7 +165,7 @@ public:
    * is destroyed.
    */
   template<typename T>
-  void Set(const nsIFrame* aFrame, Descriptor<T> aProperty,
+  void Set(nsIFrame* aFrame, Descriptor<T> aProperty,
            PropertyType<T> aValue)
   {
     void* ptr = ReinterpretHelper<T>::ToPointer(aValue);
@@ -228,7 +228,7 @@ public:
    * 'property value is null'.
    */
   template<typename T>
-  PropertyType<T> Remove(const nsIFrame* aFrame, Descriptor<T> aProperty,
+  PropertyType<T> Remove(nsIFrame* aFrame, Descriptor<T> aProperty,
                          bool* aFoundResult = nullptr)
   {
     void* ptr = RemoveInternal(aFrame, aProperty, aFoundResult);
@@ -241,7 +241,7 @@ public:
    * property, nothing happens.
    */
   template<typename T>
-  void Delete(const nsIFrame* aFrame, Descriptor<T> aProperty)
+  void Delete(nsIFrame* aFrame, Descriptor<T> aProperty)
   {
     DeleteInternal(aFrame, aProperty);
   }
@@ -249,7 +249,7 @@ public:
    * Remove and destroy all property values for a frame. This requires one
    * hashtable lookup (using the frame as the key).
    */
-  void DeleteAllFor(const nsIFrame* aFrame);
+  void DeleteAllFor(nsIFrame* aFrame);
   /**
    * Remove and destroy all property values for all frames.
    */
@@ -258,16 +258,16 @@ public:
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 protected:
-  void SetInternal(const nsIFrame* aFrame, UntypedDescriptor aProperty,
+  void SetInternal(nsIFrame* aFrame, UntypedDescriptor aProperty,
                    void* aValue);
 
   void* GetInternal(const nsIFrame* aFrame, UntypedDescriptor aProperty,
                     bool* aFoundResult);
 
-  void* RemoveInternal(const nsIFrame* aFrame, UntypedDescriptor aProperty,
+  void* RemoveInternal(nsIFrame* aFrame, UntypedDescriptor aProperty,
                        bool* aFoundResult);
 
-  void DeleteInternal(const nsIFrame* aFrame, UntypedDescriptor aProperty);
+  void DeleteInternal(nsIFrame* aFrame, UntypedDescriptor aProperty);
 
   template<typename T>
   struct ReinterpretHelper
@@ -392,21 +392,20 @@ protected:
 };
 
 /**
- * This class encapsulates the properties of a frame.
+ * The FrameProperties/ConstFrameProperties class encapsulates the
+ * properties of a frame.
+ *
+ * However, since frame properties are like member variables, we have
+ * different versions for whether the frame is |const|, sharing a common
+ * base class.
+ *
+ * CVnsIFrame is either |nsIFrame| or |const nsIFrame|.
  */
-class FrameProperties {
+template<class CVnsIFrame>
+class FramePropertiesBase {
 public:
   template<typename T> using Descriptor = FramePropertyTable::Descriptor<T>;
   template<typename T> using PropertyType = FramePropertyTable::PropertyType<T>;
-
-  FrameProperties(FramePropertyTable* aTable, const nsIFrame* aFrame)
-    : mTable(aTable), mFrame(aFrame) {}
-
-  template<typename T>
-  void Set(Descriptor<T> aProperty, PropertyType<T> aValue) const
-  {
-    mTable->Set(mFrame, aProperty, aValue);
-  }
 
   template<typename T>
   bool Has(Descriptor<T> aProperty) const
@@ -420,21 +419,49 @@ public:
   {
     return mTable->Get(mFrame, aProperty, aFoundResult);
   }
+
+protected:
+  FramePropertiesBase(FramePropertyTable* aTable, CVnsIFrame* aFrame)
+    : mTable(aTable), mFrame(aFrame) {}
+
+  FramePropertyTable* const mTable;
+  CVnsIFrame* const mFrame;
+};
+
+class ConstFrameProperties : public FramePropertiesBase<const nsIFrame> {
+public:
+  ConstFrameProperties(FramePropertyTable* aTable, const nsIFrame* aFrame)
+    : FramePropertiesBase(aTable, aFrame)
+  {
+  }
+};
+
+class FrameProperties : public FramePropertiesBase<nsIFrame> {
+public:
+  FrameProperties(FramePropertyTable* aTable, nsIFrame* aFrame)
+    : FramePropertiesBase(aTable, aFrame)
+  {
+  }
+
+  template<typename T>
+  void Set(Descriptor<T> aProperty, PropertyType<T> aValue) const
+  {
+    mTable->Set(mFrame, aProperty, aValue);
+  }
+
   template<typename T>
   PropertyType<T> Remove(Descriptor<T> aProperty,
                          bool* aFoundResult = nullptr) const
   {
     return mTable->Remove(mFrame, aProperty, aFoundResult);
   }
+
   template<typename T>
-  void Delete(Descriptor<T> aProperty)
+  void Delete(Descriptor<T> aProperty) const
   {
     mTable->Delete(mFrame, aProperty);
   }
 
-private:
-  FramePropertyTable* mTable;
-  const nsIFrame* mFrame;
 };
 
 } // namespace mozilla
