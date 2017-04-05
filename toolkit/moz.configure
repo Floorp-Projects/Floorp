@@ -121,8 +121,8 @@ option('--enable-default-toolkit', nargs=1,
                 'cairo-cocoa', 'cairo-uikit', 'cairo-android', 'cairo-gonk'),
        help='Select default toolkit')
 
-@depends('--enable-default-toolkit', target)
-def toolkit(value, target):
+@depends('--enable-default-toolkit', target, '--help')
+def toolkit(value, target, _):
     # Define possible choices for each platform. The default is the first one
     # listed when there are several.
     os = target.os
@@ -826,13 +826,14 @@ include('nss.configure')
 
 # Network protocol support
 # ==============================================================
-@depends(check_build_environment, '--help')
+@depends(check_build_environment, toolkit_gtk, '--help')
 @imports('os')
 @imports(_from='__builtin__', _import='sorted')
-def all_necko_protocols(build_env, _):
+def all_necko_protocols(build_env, toolkit_gtk, _):
     basedir = os.path.join(build_env.topsrcdir, 'netwerk', 'protocol')
     return tuple(sorted(p for p in os.listdir(basedir)
-                        if os.path.isdir(os.path.join(basedir, p))))
+                        if (os.path.isdir(os.path.join(basedir, p)) and
+                            (p != 'gio' or toolkit_gtk))))
 
 default_necko_protocols = all_necko_protocols
 
