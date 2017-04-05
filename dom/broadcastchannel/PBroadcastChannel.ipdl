@@ -4,6 +4,9 @@
 
 include protocol PBackground;
 include protocol PBlob;
+include protocol PChildToParentStream;
+include protocol PFileDescriptorSet;
+include protocol PParentToChildStream;
 include DOMTypes;
 
 using struct mozilla::SerializedStructuredCloneBuffer from "ipc/IPCMessageUtils.h";
