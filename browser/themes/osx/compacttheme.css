@@ -4,10 +4,6 @@
 
 %include ../shared/compacttheme.inc.css
 
-:root {
-  --forwardbutton-width: 32px;
-}
-
 /* Use only 1px separator between nav toolbox and page content */
 #navigator-toolbox::after {
   border-top-style: none;
@@ -36,60 +32,6 @@
 #main-window[tabsintitlebar] > #titlebar > #titlebar-content > #titlebar-buttonbox-container,
 #main-window[tabsintitlebar] > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > #titlebar-fullscreen-button {
   margin-top: 6px;
-}
-
-/* Square back and forward buttons.  Need !important on these because there
-   are a lot of more specific selectors sprinkled around elsewhere for changing
-   background / shadows for different states */
-#back-button,
-#forward-button {
-  height: 24px !important;
-  box-shadow: none !important;
-  border: 1px solid var(--chrome-nav-bar-controls-border-color) !important;
-  background: var(--chrome-nav-buttons-background) !important;
-}
-
-#forward-button {
-  border-inline-start: none !important;
-  /* browser.css and friends set up the width of the button to be 32px.
-   * They then set margin-left to -2px to ensure the button is not too wide
-   * compared to the back button, and set padding-left to center the icon
-   * correctly.
-   * In our theme, the back and forward buttons are the same width, with the
-   * back button being 32px with 1px border on both sides. To ensure the
-   * forward button's content box looks like it is the same size with width
-   * set to 32px and a 1px border on only 1 side, we overlap by 1px, so both
-   * buttons end up with a content box that looks like it's 30px.
-   */
-  margin-left: -1px;
-  padding-left: 1px;
-}
-
-#forward-button > .toolbarbutton-icon {
-  margin-left: 0;
-  margin-right: 0;
-}
-
-#back-button:hover:not([disabled="true"]),
-#forward-button:hover:not([disabled="true"]) {
-  background: var(--chrome-nav-buttons-hover-background) !important;
-}
-
-#back-button {
-  border-radius: 3px 0 0 3px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
-#back-button:hover:active:not([disabled="true"]) {
-  -moz-image-region: rect(18px, 54px, 36px, 36px);
-}
-
-/* Use smaller back button icon */
-@media (min-resolution: 2dppx) {
-  #back-button:hover:active:not([disabled="true"]) {
-    -moz-image-region: rect(36px, 108px, 72px, 72px);
-  }
 }
 
 /* Prevent the hover styling from on the identity icon from overlapping the
