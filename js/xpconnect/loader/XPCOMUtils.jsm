@@ -296,9 +296,14 @@ this.XPCOMUtils = {
    *        The name of the preference to read.
    * @param aDefaultValue
    *        The default value to use, if the preference is not defined.
+   * @param aOnUpdate
+   *        A function to call upon update. Receives as arguments
+   *         `(aPreference, previousValue, newValue)`
    */
   defineLazyPreferenceGetter: function XPCU_defineLazyPreferenceGetter(
-                                   aObject, aName, aPreference, aDefaultValue = null)
+                                   aObject, aName, aPreference,
+                                   aDefaultValue = null,
+                                   aOnUpdate = null)
   {
     // Note: We need to keep a reference to this observer alive as long
     // as aObject is alive. This means that all of our getters need to
@@ -312,7 +317,18 @@ this.XPCOMUtils = {
 
       observe(subject, topic, data) {
         if (data == aPreference) {
-          this.value = undefined;
+          if (aOnUpdate) {
+            let previous = this.value;
+
+            // Fetch and cache value.
+            this.value = undefined;
+            let latest = lazyGetter();
+            aOnUpdate(data, previous, latest);
+          } else {
+
+            // Empty cache, next call to the getter will cause refetch.
+            this.value = undefined;
+          }
         }
       },
     }

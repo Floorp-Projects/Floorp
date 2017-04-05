@@ -452,8 +452,10 @@ public:
 
   /**
    * Notification that this scroll frame is getting its frame visibility updated.
+   * aIgnoreDisplayPort indicates that the display port was ignored (because
+   * there was no suitable base rect)
    */
-  virtual void NotifyApproximateFrameVisibilityUpdate() = 0;
+  virtual void NotifyApproximateFrameVisibilityUpdate(bool aIgnoreDisplayPort) = 0;
 
   /**
    * Returns true if this scroll frame had a display port at the last frame

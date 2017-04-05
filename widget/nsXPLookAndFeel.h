@@ -42,7 +42,7 @@ class nsXPLookAndFeel: public mozilla::LookAndFeel
 public:
   virtual ~nsXPLookAndFeel();
 
-  static nsLookAndFeel* GetInstance();
+  static nsXPLookAndFeel* GetInstance();
   static void Shutdown();
 
   void Init();
@@ -113,7 +113,7 @@ protected:
   static bool sUseStandinsForNativeColors;
   static bool sFindbarModalHighlight;
 
-  static nsLookAndFeel* sInstance;
+  static nsXPLookAndFeel* sInstance;
   static bool sShutdown;
 };
 

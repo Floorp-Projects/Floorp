@@ -821,8 +821,8 @@
     "description": "GPU Device Reset Reason (ok, hung, removed, reset, internal error, invalid call, out of memory)"
   },
   "FAMILY_SAFETY": {
-    "alert_emails": ["seceng@mozilla.org"],
-    "expires_in_version": "55",
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 16,
     "bug_numbers": [1239166],
@@ -4423,30 +4423,30 @@
     "description": "Negative cache duration (ms) received in fullhash response from any v4 provider"
   },
   "CSP_DOCUMENTS_COUNT": {
-    "alert_emails": ["seceng@mozilla.com"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [1252829],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "count",
     "description": "Number of unique pages that contain a CSP"
   },
   "CSP_UNSAFE_INLINE_DOCUMENTS_COUNT": {
-    "alert_emails": ["seceng@mozilla.com"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [1252829],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "count",
     "description": "Number of unique pages that contain an unsafe-inline CSP directive"
   },
   "CSP_UNSAFE_EVAL_DOCUMENTS_COUNT": {
-    "alert_emails": ["seceng@mozilla.com"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [1252829],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "count",
     "description": "Number of unique pages that contain an unsafe-eval CSP directive"
   },
   "CSP_REFERRER_DIRECTIVE": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [1303685],
-    "expires_in_version": "56",
+    "expires_in_version": "60",
     "kind": "boolean",
     "description": "Whether a document with a CSP policy (report-only or enforcing) contains a referrer directive ('true') or not ('false')."
   },
@@ -7775,8 +7775,8 @@
     "description": "The number of times AddIceCandidate failed on a given PeerConnection, given that ICE failed."
   },
   "WEBRTC_GET_USER_MEDIA_SECURE_ORIGIN": {
-    "alert_emails": ["seceng@mozilla.org"],
-    "expires_in_version": "55",
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 15,
     "description": "Origins for getUserMedia calls (0=other, 1=HTTPS, 2=file, 3=app, 4=localhost, 5=loop, 6=privileged)",
@@ -8768,16 +8768,16 @@
     "description": "The amount of time required for HSTS priming requests (ms), keyed by success or failure of the priming request. (success, failure)"
   },
   "MIXED_CONTENT_OBJECT_SUBREQUEST": {
-    "alert_emails": ["seceng@mozilla.org"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [1244116],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 10,
     "description": "How often objects load insecure content on secure pages (counting pages, not objects). 0=pages with no mixed object subrequests, 1=pages with mixed object subrequests"
   },
   "COOKIE_SCHEME_SECURITY": {
-    "alert_emails": ["seceng@mozilla.org"],
-    "expires_in_version": "55",
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 10,
     "releaseChannelCollection": "opt-out",
@@ -8786,7 +8786,7 @@
   "COOKIE_LEAVE_SECURE_ALONE": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [976073, 1325909],
-    "expires_in_version": "57",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 10,
     "releaseChannelCollection": "opt-out",
@@ -11313,5 +11313,13 @@
     "n_buckets": 40,
     "keyed": true,
     "description": "Measures the number of milliseconds we spend waiting for sync message manager IPC messages to finish sending, keyed by message name. Note: only messages that wait for more than 500 microseconds are included in this probe."
+  },
+  "DISPLAY_ITEM_USAGE_COUNT": {
+    "alert_emails": ["mchang@mozilla.com"],
+    "bug_numbers": [1353521],
+    "expires_in_version": "70",
+    "kind": "enumerated",
+    "n_values": 99,
+    "description": "Count of which display items are being used by type id"
   }
 }
