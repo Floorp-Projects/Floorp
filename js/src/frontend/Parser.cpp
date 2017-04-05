@@ -832,7 +832,7 @@ Parser<ParseHandler>::Parser(JSContext* cx, LifoAlloc& alloc,
                              LazyScript* lazyOuterFunction)
   : ParserBase(cx, alloc, options, chars, length, foldConstants, usedNames, lazyOuterFunction),
     AutoGCRooter(cx, PARSER),
-    handler(cx, alloc, tokenStream, syntaxParser, lazyOuterFunction)
+    handler(cx, alloc, syntaxParser, lazyOuterFunction)
 {
     // The Mozilla specific JSOPTION_EXTRA_WARNINGS option adds extra warnings
     // which are not generated if functions are parsed lazily. Note that the

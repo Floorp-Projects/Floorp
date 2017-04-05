@@ -28,7 +28,6 @@ class SyntaxParseHandler;
 class FullParseHandler
 {
     ParseNodeAllocator allocator;
-    TokenStreamBase& tokenStream;
 
     ParseNode* allocParseNode(size_t size) {
         MOZ_ASSERT(size == sizeof(ParseNode));
@@ -93,11 +92,9 @@ class FullParseHandler
                isParenthesizedDestructuringPattern(node);
     }
 
-    FullParseHandler(JSContext* cx, LifoAlloc& alloc,
-                     TokenStreamBase& tokenStream, Parser<SyntaxParseHandler>* syntaxParser,
+    FullParseHandler(JSContext* cx, LifoAlloc& alloc, Parser<SyntaxParseHandler>* syntaxParser,
                      LazyScript* lazyOuterFunction)
       : allocator(cx, alloc),
-        tokenStream(tokenStream),
         lazyOuterFunction_(cx, lazyOuterFunction),
         lazyInnerFunctionIndex(0),
         lazyClosedOverBindingIndex(0),
