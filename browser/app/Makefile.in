@@ -88,6 +88,7 @@ MAC_BUNDLE_VERSION = $(shell $(PYTHON) $(srcdir)/macversion.py --version=$(MOZ_A
 
 .PHONY: repackage
 tools repackage:: $(DIST)/bin/$(MOZ_APP_NAME)
+	rm -rf $(dist_dest)
 	$(MKDIR) -p $(dist_dest)/Contents/MacOS
 	$(MKDIR) -p $(dist_dest)/$(LPROJ)
 	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents $(dist_dest) --exclude English.lproj
