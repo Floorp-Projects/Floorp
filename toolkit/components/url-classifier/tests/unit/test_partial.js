@@ -27,7 +27,7 @@ complete: function(partialHash, gethashUrl, tableName, cb)
   var self = this;
   var doCallback = function() {
       if (self.alwaysFail) {
-        cb.completionFinished(1);
+        cb.completionFinished(Cr.NS_ERROR_FAILURE);
         return;
       }
       var results;
