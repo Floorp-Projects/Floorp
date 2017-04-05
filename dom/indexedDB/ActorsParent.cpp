@@ -1297,17 +1297,17 @@ UpgradeSchemaFrom4To5(mozIStorageConnection* aConnection)
   {
     mozStorageStatementScoper scoper(stmt);
 
-    rv = stmt->BindStringParameter(0, name);
+    rv = stmt->BindStringByIndex(0, name);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = stmt->BindInt32Parameter(1, intVersion);
+    rv = stmt->BindInt32ByIndex(1, intVersion);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = stmt->BindInt64Parameter(2, dataVersion);
+    rv = stmt->BindInt64ByIndex(2, dataVersion);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
