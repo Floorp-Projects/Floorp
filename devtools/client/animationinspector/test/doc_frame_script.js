@@ -5,7 +5,7 @@
 
 "use strict";
 
-// A helper frame-script for brower/devtools/animationinspector tests.
+// A helper frame-script for browser/devtools/animationinspector tests.
 
 /**
  * Toggle (play or pause) one of the animation players of a given node.

@@ -738,6 +738,10 @@ this.Extension = class extends ExtensionData {
     return this.emitter.off(hook, f);
   }
 
+  once(hook, f) {
+    return this.emitter.once(hook, f);
+  }
+
   emit(event, ...args) {
     if (PROXIED_EVENTS.has(event)) {
       Services.ppmm.broadcastAsyncMessage(this.MESSAGE_EMIT_EVENT, {event, args});
@@ -872,6 +876,8 @@ this.Extension = class extends ExtensionData {
     for (let directive in manifest) {
       if (manifest[directive] !== null) {
         promises.push(Management.emit(`manifest_${directive}`, directive, this, manifest));
+
+        promises.push(Management.asyncEmitManifestEntry(this, directive));
       }
     }
 
@@ -960,6 +966,7 @@ this.Extension = class extends ExtensionData {
       await this.runManifest(this.manifest);
 
       Management.emit("ready", this);
+      this.emit("ready");
     } catch (e) {
       dump(`Extension error: ${e.message} ${e.filename || e.fileName}:${e.lineNumber} :: ${e.stack || new Error().stack}\n`);
       Cu.reportError(e);
@@ -1027,6 +1034,7 @@ this.Extension = class extends ExtensionData {
     ParentAPIManager.shutdownExtension(this.id);
 
     Management.emit("shutdown", this);
+    this.emit("shutdown");
 
     Services.ppmm.broadcastAsyncMessage("Extension:Shutdown", {id: this.id});
 

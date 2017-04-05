@@ -14,8 +14,6 @@
 <pre id="test">
 <script type="application/javascript">
 
-var gCodeEnabled = SpecialPowers.getBoolPref("dom.keyboardevent.code.enabled");
-
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests, window);
 
@@ -126,9 +124,7 @@ function testInitializingUntrustedEvent()
 
     // key and code values cannot be initialized with initKeyEvent().
     is(e.key, "", description + "key must return empty string");
-    if (gCodeEnabled) {
-      is(e.code, "", description + "code must be empty string");
-    }
+    is(e.code, "", description + "code must be empty string");
 
     // getModifierState() tests
     is(e.getModifierState("Shift"), kTest.shiftKey,

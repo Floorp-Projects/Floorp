@@ -3532,6 +3532,33 @@ class MNewObject
     }
 };
 
+
+class MNewArrayIterator
+  : public MUnaryInstruction,
+    public NoTypePolicy::Data
+{
+    explicit MNewArrayIterator(CompilerConstraintList* constraints, MConstant* templateConst)
+      : MUnaryInstruction(templateConst)
+    {
+        setResultType(MIRType::Object);
+        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject()));
+        templateConst->setEmittedAtUses();
+    }
+
+  public:
+    INSTRUCTION_HEADER(NewArrayIterator)
+    TRIVIAL_NEW_WRAPPERS
+
+    JSObject* templateObject() {
+        return getOperand(0)->toConstant()->toObjectOrNull();
+    }
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+};
+
+
 class MNewTypedObject : public MNullaryInstruction
 {
     CompilerGCPointer<InlineTypedObject*> templateObject_;

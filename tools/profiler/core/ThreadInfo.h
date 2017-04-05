@@ -13,12 +13,13 @@
 #include "ProfileBuffer.h"
 #include "platform.h"
 
-class ThreadInfo {
+class ThreadInfo final
+{
 public:
   ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
              mozilla::NotNull<PseudoStack*> aPseudoStack, void* aStackTop);
 
-  virtual ~ThreadInfo();
+  ~ThreadInfo();
 
   const char* Name() const { return mName.get(); }
   int ThreadId() const { return mThreadId; }
@@ -31,20 +32,19 @@ public:
   PlatformData* GetPlatformData() const { return mPlatformData.get(); }
   void* StackTop() const { return mStackTop; }
 
-  virtual void SetPendingDelete();
+  void SetPendingDelete();
   bool IsPendingDelete() const { return mPendingDelete; }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   ProfileBuffer::LastSample& LastSample() { return mLastSample; }
 
- private:
+private:
   mozilla::UniqueFreePtr<char> mName;
   int mThreadId;
   const bool mIsMainThread;
 
-  // The thread's PseudoStack. This is an owning pointer iff mIsPendingDelete
-  // is set.
+  // The thread's PseudoStack. This is an owning pointer.
   mozilla::NotNull<PseudoStack*> mPseudoStack;
 
   UniquePlatformData mPlatformData;
@@ -55,7 +55,7 @@ public:
 
   // When a thread dies while the profiler is active we keep its ThreadInfo
   // (and its PseudoStack) around for a while, and put it in a "pending delete"
-  // state. In this state, mPseudoStack is an owning pointer.
+  // state.
   bool mPendingDelete;
 
   //
@@ -80,19 +80,7 @@ public:
     mRespInfo.Update(mIsMainThread, mThread);
   }
 
-  void StreamSamplesAndMarkers(ProfileBuffer* aBuffer,
-                               SpliceableJSONWriter& aWriter,
-                               const mozilla::TimeStamp& aStartTime,
-                               double aSinceTime,
-                               UniqueStacks& aUniqueStacks);
-
 private:
-  FRIEND_TEST(ThreadProfile, InsertOneTag);
-  FRIEND_TEST(ThreadProfile, InsertOneTagWithTinyBuffer);
-  FRIEND_TEST(ThreadProfile, InsertTagsNoWrap);
-  FRIEND_TEST(ThreadProfile, InsertTagsWrap);
-  FRIEND_TEST(ThreadProfile, MemoryMeasure);
-
   bool mHasProfile;
 
   // JS frames in the buffer may require a live JSRuntime to stream (e.g.,
@@ -105,11 +93,20 @@ private:
 
   ThreadResponsiveness mRespInfo;
 
-  // When sampling, this holds the generation number and offset in the
-  // ProfileBuffer of the most recent sample for this thread.
-  // mLastSample.mThreadId duplicates mThreadId in this structure, which
-  // simplifies some uses of mLastSample.
+  // When sampling, this holds the generation number and offset in
+  // ProfilerState::mBuffer of the most recent sample for this thread.
   ProfileBuffer::LastSample mLastSample;
 };
+
+void
+StreamSamplesAndMarkers(const char* aName, int aThreadId,
+                        ProfileBuffer* aBuffer,
+                        SpliceableJSONWriter& aWriter,
+                        const mozilla::TimeStamp& aStartTime,
+                        double aSinceTime,
+                        JSContext* aContext,
+                        char* aSavedStreamedSamples,
+                        char* aSavedStreamedMarkers,
+                        UniqueStacks& aUniqueStacks);
 
 #endif

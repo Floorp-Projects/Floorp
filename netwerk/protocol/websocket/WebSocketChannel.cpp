@@ -1551,6 +1551,14 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
         break;
 
       payloadLength64 = mFramePtr[2] << 8 | mFramePtr[3];
+
+      if(payloadLength64 < 126){
+        // Section 5.2 says that the minimal number of bytes MUST
+        // be used to encode the length in all cases
+        LOG(("WebSocketChannel:: non-minimal-encoded payload length"));
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
+
     } else {
       // 64 bit length
       framingLength += 8;
@@ -1566,6 +1574,14 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
 
       // copy this in case it is unaligned
       payloadLength64 = NetworkEndian::readInt64(mFramePtr + 2);
+
+      if(payloadLength64 <= 0xffff){
+        // Section 5.2 says that the minimal number of bytes MUST
+        // be used to encode the length in all cases
+        LOG(("WebSocketChannel:: non-minimal-encoded payload length"));
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
+
     }
 
     payload = mFramePtr + framingLength;

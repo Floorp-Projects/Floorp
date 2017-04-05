@@ -105,12 +105,6 @@ WMFH264Decoder::ConfigureVideoFrameGeometry(IMFMediaType* aMediaType)
 }
 
 int32_t
-WMFH264Decoder::GetFrameWidth() const
-{
-  return mVideoWidth;
-}
-
-int32_t
 WMFH264Decoder::GetFrameHeight() const
 {
   return mVideoHeight;

@@ -227,7 +227,7 @@ accessibility.Checks = class {
    *     Accessible object.
    *
    * @return {boolean}
-   *     True if the accesible object has a {@code hidden} attribute,
+   *     True if the accessible object has a {@code hidden} attribute,
    *     false otherwise.
    */
   hasHiddenAttribute(accessible) {

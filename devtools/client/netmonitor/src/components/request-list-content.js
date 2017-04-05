@@ -13,10 +13,7 @@ const {
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { HTMLTooltip } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const Actions = require("../actions/index");
-const {
-  setTooltipImageContent,
-  setTooltipStackTraceContent,
-} = require("../request-list-tooltip");
+const { setTooltipImageContent } = require("../request-list-tooltip");
 const {
   getDisplayedRequests,
   getWaterfallScale,
@@ -42,6 +39,7 @@ const RequestListContent = createClass({
     displayedRequests: PropTypes.object.isRequired,
     firstRequestStartedMillis: PropTypes.number.isRequired,
     fromCache: PropTypes.bool.isRequired,
+    onCauseBadgeClick: PropTypes.func.isRequired,
     onItemMouseDown: PropTypes.func.isRequired,
     onSecurityIconClick: PropTypes.func.isRequired,
     onSelectDelta: PropTypes.func.isRequired,
@@ -157,8 +155,6 @@ const RequestListContent = createClass({
 
     if (requestItem.responseContent && target.closest(".requests-list-icon-and-file")) {
       return setTooltipImageContent(tooltip, itemEl, requestItem);
-    } else if (requestItem.cause && target.closest(".requests-list-cause-stack")) {
-      return setTooltipStackTraceContent(tooltip, requestItem);
     }
 
     return false;
@@ -227,6 +223,7 @@ const RequestListContent = createClass({
       displayedRequests,
       firstRequestStartedMillis,
       selectedRequestId,
+      onCauseBadgeClick,
       onItemMouseDown,
       onSecurityIconClick,
     } = this.props;
@@ -248,6 +245,7 @@ const RequestListContent = createClass({
           onContextMenu: this.onContextMenu,
           onFocusedNodeChange: this.onFocusedNodeChange,
           onMouseDown: () => onItemMouseDown(item.id),
+          onCauseBadgeClick: () => onCauseBadgeClick(item.cause),
           onSecurityIconClick: () => onSecurityIconClick(item.securityState),
         }))
       )
@@ -272,6 +270,14 @@ module.exports = connect(
     onSecurityIconClick: (securityState) => {
       if (securityState && securityState !== "insecure") {
         dispatch(Actions.selectDetailsPanelTab("security"));
+      }
+    },
+    /**
+     * A handler that opens the stack trace tab when a stack trace is available
+     */
+    onCauseBadgeClick: (cause) => {
+      if (cause.stacktrace && cause.stacktrace.length > 0) {
+        dispatch(Actions.selectDetailsPanelTab("stack-trace"));
       }
     },
     onSelectDelta: (delta) => dispatch(Actions.selectDelta(delta)),

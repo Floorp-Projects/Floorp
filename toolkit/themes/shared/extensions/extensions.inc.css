@@ -935,7 +935,6 @@ setting[type="radio"] > radiogroup {
 .download-progress .cancel .button-box {
   /* override in-content/common.css !important rule */
   padding: 0 !important;
-  border: none;
 }
 
 .download-progress .cancel .button-text {

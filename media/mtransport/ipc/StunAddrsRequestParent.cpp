@@ -17,6 +17,7 @@ namespace mozilla {
 namespace net {
 
 StunAddrsRequestParent::StunAddrsRequestParent()
+  : mIPCClosed(false)
 {
   NS_GetMainThread(getter_AddRefs(mMainThread));
 
@@ -30,17 +31,34 @@ StunAddrsRequestParent::RecvGetStunAddrs()
 {
   ASSERT_ON_THREAD(mMainThread);
 
+  if (mIPCClosed) {
+    return IPC_OK();
+  }
+
   RUN_ON_THREAD(mSTSThread,
-                WrapRunnable(this, &StunAddrsRequestParent::GetStunAddrs_s),
+                WrapRunnable(RefPtr<StunAddrsRequestParent>(this),
+                             &StunAddrsRequestParent::GetStunAddrs_s),
                 NS_DISPATCH_NORMAL);
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+StunAddrsRequestParent::Recv__delete__()
+{
+  // see note below in ActorDestroy
+  mIPCClosed = true;
   return IPC_OK();
 }
 
 void
 StunAddrsRequestParent::ActorDestroy(ActorDestroyReason why)
 {
-  // nothing to do here
+  // We may still have refcount>0 if we haven't made it through
+  // GetStunAddrs_s and SendStunAddrs_m yet, but child process
+  // has crashed.  We must not send any more msgs to child, or
+  // IPDL will kill chrome process, too.
+  mIPCClosed = true;
 }
 
 void
@@ -51,9 +69,13 @@ StunAddrsRequestParent::GetStunAddrs_s()
   // get the stun addresses while on STS thread
   NrIceStunAddrArray addrs = NrIceCtx::GetStunAddrs();
 
+  if (mIPCClosed) {
+    return;
+  }
+
   // in order to return the result over IPC, we need to be on main thread
   RUN_ON_THREAD(mMainThread,
-                WrapRunnable(this,
+                WrapRunnable(RefPtr<StunAddrsRequestParent>(this),
                              &StunAddrsRequestParent::SendStunAddrs_m,
                              std::move(addrs)),
                 NS_DISPATCH_NORMAL);
@@ -64,6 +86,12 @@ StunAddrsRequestParent::SendStunAddrs_m(const NrIceStunAddrArray& addrs)
 {
   ASSERT_ON_THREAD(mMainThread);
 
+  if (mIPCClosed) {
+    // nothing to do: child probably crashed
+    return;
+  }
+
+  mIPCClosed = true;
   // send the new addresses back to the child
   Unused << SendOnStunAddrsAvailable(addrs);
 }

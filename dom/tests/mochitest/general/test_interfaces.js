@@ -1119,8 +1119,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "SVGZoomAndPan",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "SVGZoomEvent",
-// IMPORTANT: Do not change this list without review from a DOM peer!
     "Text",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "TextDecoder",

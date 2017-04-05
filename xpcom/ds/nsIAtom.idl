@@ -37,9 +37,15 @@ interface nsIAtom : nsISupports
   size_t SizeOfIncludingThis(in MallocSizeOf aMallocSizeOf);
 
 %{C++
-  // note this is NOT virtual so this won't muck with the vtable!
+  // note these are NOT virtual so they won't muck with the vtable!
+  inline bool Equals(char16ptr_t aString, uint32_t aLength) const
+  {
+    return mLength == aLength &&
+           memcmp(mString, aString, mLength * sizeof(char16_t)) == 0;
+  }
+
   inline bool Equals(const nsAString& aString) const {
-    return aString.Equals(nsDependentString(mString, mLength));
+    return Equals(aString.BeginReading(), aString.Length());
   }
 
   inline bool IsStaticAtom() const {
@@ -118,6 +124,11 @@ extern already_AddRefed<nsIAtom> NS_Atomize(const char16_t* aUTF16String);
  * Find an atom that matches the given UTF-16 string.  Never returns null.
  */
 extern already_AddRefed<nsIAtom> NS_Atomize(const nsAString& aUTF16String);
+
+/**
+ * An optimized version of the method above for the main thread.
+ */
+extern already_AddRefed<nsIAtom> NS_AtomizeMainThread(const nsAString& aUTF16String);
 
 /**
  * Return a count of the total number of atoms currently

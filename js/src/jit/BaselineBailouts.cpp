@@ -468,13 +468,18 @@ IsInlinableFallback(ICFallbackStub* icEntry)
 static inline void*
 GetStubReturnAddress(JSContext* cx, jsbytecode* pc)
 {
+    JitCompartment* jitComp = cx->compartment()->jitCompartment();
+
     if (IsGetPropPC(pc))
-        return cx->compartment()->jitCompartment()->baselineGetPropReturnAddr();
+        return jitComp->bailoutReturnAddr(BailoutReturnStub::GetProp);
     if (IsSetPropPC(pc))
-        return cx->compartment()->jitCompartment()->baselineSetPropReturnAddr();
+        return jitComp->bailoutReturnAddr(BailoutReturnStub::SetProp);
+
     // This should be a call op of some kind, now.
     MOZ_ASSERT(IsCallPC(pc) && !IsSpreadCallPC(pc));
-    return cx->compartment()->jitCompartment()->baselineCallReturnAddr(IsConstructorCallPC(pc));
+    if (IsConstructorCallPC(pc))
+        return jitComp->bailoutReturnAddr(BailoutReturnStub::New);
+    return jitComp->bailoutReturnAddr(BailoutReturnStub::Call);
 }
 
 static inline jsbytecode*
