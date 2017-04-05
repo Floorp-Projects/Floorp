@@ -40,7 +40,7 @@ InactiveFeaturesAndParamsCheck()
   ASSERT_TRUE(!profiler_feature_active("privacy"));
   ASSERT_TRUE(!profiler_feature_active("restyle"));
 
-  profiler_get_start_params(&entries, &interval, &filters, &features);
+  profiler_get_start_params(&entries, &interval, &features, &filters);
 
   ASSERT_TRUE(entries == 0);
   ASSERT_TRUE(interval == 0);

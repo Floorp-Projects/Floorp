@@ -6003,8 +6003,6 @@ PresShell::MarkFramesInSubtreeApproximatelyVisible(nsIFrame* aFrame,
 
   nsIScrollableFrame* scrollFrame = do_QueryFrame(aFrame);
   if (scrollFrame) {
-    scrollFrame->NotifyApproximateFrameVisibilityUpdate();
-
     bool ignoreDisplayPort = false;
     if (nsLayoutUtils::IsMissingDisplayPortBaseRect(aFrame->GetContent())) {
       // We can properly set the base rect for root scroll frames on top level
@@ -6022,6 +6020,8 @@ PresShell::MarkFramesInSubtreeApproximatelyVisible(nsIFrame* aFrame,
         ignoreDisplayPort = true;
       }
     }
+
+    scrollFrame->NotifyApproximateFrameVisibilityUpdate(ignoreDisplayPort);
 
     nsRect displayPort;
     bool usingDisplayport = !ignoreDisplayPort &&

@@ -743,6 +743,60 @@ function handleRequest(req, res) {
      }
    // default response from here
   }
+  else if (u.pathname === "/origin-4") {
+   var originList = [ ];
+   req.stream.connection.originFrame(originList);
+   res.setHeader("x-client-port", req.remotePort);
+  }
+  else if (u.pathname === "/origin-6") {
+   var originList = [ "https://alt1.example.com:" + serverPort,
+		      "https://alt2.example.com:" + serverPort,
+                      "https://bar.example.com:" + serverPort ];
+   req.stream.connection.originFrame(originList);
+   res.setHeader("x-client-port", req.remotePort);
+  }
+  else if (u.pathname === "/origin-11-a") {
+    res.setHeader("x-client-port", req.remotePort);
+
+    pushb = res.push(
+        { hostname: 'foo.example.com:' + serverPort, port: serverPort, path : '/origin-11-b', method : 'GET',
+          headers: {'x-pushed-request': 'true', 'x-foo' : 'bar'}});
+    pushb.writeHead(200, {
+      'pushed' : 'yes',
+      'content-length' : 1
+      });
+    pushb.end('1');
+
+    pushc = res.push(
+        { hostname: 'bar.example.com:' + serverPort, port: serverPort, path : '/origin-11-c', method : 'GET',
+          headers: {'x-pushed-request': 'true', 'x-foo' : 'bar'}});
+    pushc.writeHead(200, {
+      'pushed' : 'yes',
+      'content-length' : 1
+      });
+    pushc.end('1');
+
+    pushd = res.push(
+        { hostname: 'madeup.example.com:' + serverPort, port: serverPort, path : '/origin-11-d', method : 'GET',
+          headers: {'x-pushed-request': 'true', 'x-foo' : 'bar'}});
+    pushd.writeHead(200, {
+      'pushed' : 'yes',
+      'content-length' : 1
+      });
+    pushd.end('1');
+
+    pushe = res.push(
+        { hostname: 'alt1.example.com:' + serverPort, port: serverPort, path : '/origin-11-e', method : 'GET',
+          headers: {'x-pushed-request': 'true', 'x-foo' : 'bar'}});
+    pushe.writeHead(200, {
+      'pushed' : 'yes',
+      'content-length' : 1
+      });
+    pushe.end('1');
+}
+  else if (u.pathname.substring(0,8) === "/origin-") { // test_origin.js coalescing
+    res.setHeader("x-client-port", req.remotePort);
+  }
 
   res.setHeader('Content-Type', 'text/html');
   if (req.httpVersionMajor != 2) {

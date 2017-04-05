@@ -50,7 +50,7 @@ private:
   uint32_t mSuspendPeriod; // How long we should Suspend() channels for
   uint32_t mResumePeriod; // How long we should Resume() channels for
   nsCOMPtr<nsITimer> mTimer;
-  typedef nsInterfaceHashtable<nsIDHashKey, nsIHttpChannel> ChannelHash;
+  typedef nsInterfaceHashtable<nsUint64HashKey, nsIHttpChannel> ChannelHash;
   ChannelHash mChannelHash;
 
   // Used to avoid inconsistencies in the hash and the suspend/resume count of

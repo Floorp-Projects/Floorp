@@ -132,7 +132,7 @@ public:
                                        nsProxyInfo *aProxyInfo,
                                        uint32_t aProxyResolveFlags,
                                        nsIURI *aProxyURI,
-                                       const nsID& aChannelId) override;
+                                       uint64_t aChannelId) override;
 
     MOZ_MUST_USE nsresult OnPush(const nsACString &uri,
                                  Http2PushedStream *pushedStream);

@@ -1599,6 +1599,9 @@ pref("network.http.altsvc.oe", true);
 // Turn on 0RTT data for TLS 1.3
 pref("security.tls.enable_0rtt_data", true);
 
+// the origin extension impacts h2 coalescing
+pref("network.http.originextension", true);
+
 pref("network.http.diagnostics", false);
 
 pref("network.http.pacing.requests.enabled", true);

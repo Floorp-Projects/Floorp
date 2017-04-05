@@ -63,9 +63,6 @@
 #include "nsAccessibilityService.h"
 #endif
 
-#ifdef MOZ_LOGGING
-#define FORCE_PR_LOG 1 /* Allow logging in the release build */
-#endif /* MOZ_LOGGING */
 #include "mozilla/Logging.h"
 
 #ifdef XP_MACOSX

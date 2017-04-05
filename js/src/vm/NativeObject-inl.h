@@ -456,6 +456,58 @@ NativeObject::create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap 
     return nobj;
 }
 
+MOZ_ALWAYS_INLINE bool
+NativeObject::updateSlotsForSpan(JSContext* cx, size_t oldSpan, size_t newSpan)
+{
+    MOZ_ASSERT(oldSpan != newSpan);
+
+    size_t oldCount = dynamicSlotsCount(numFixedSlots(), oldSpan, getClass());
+    size_t newCount = dynamicSlotsCount(numFixedSlots(), newSpan, getClass());
+
+    if (oldSpan < newSpan) {
+        if (oldCount < newCount && !growSlots(cx, oldCount, newCount))
+            return false;
+
+        if (newSpan == oldSpan + 1)
+            initSlotUnchecked(oldSpan, UndefinedValue());
+        else
+            initializeSlotRange(oldSpan, newSpan - oldSpan);
+    } else {
+        /* Trigger write barriers on the old slots before reallocating. */
+        prepareSlotRangeForOverwrite(newSpan, oldSpan);
+        invalidateSlotRange(newSpan, oldSpan - newSpan);
+
+        if (oldCount > newCount)
+            shrinkSlots(cx, oldCount, newCount);
+    }
+
+    return true;
+}
+
+MOZ_ALWAYS_INLINE bool
+NativeObject::setLastProperty(JSContext* cx, Shape* shape)
+{
+    MOZ_ASSERT(!inDictionaryMode());
+    MOZ_ASSERT(!shape->inDictionary());
+    MOZ_ASSERT(shape->zone() == zone());
+    MOZ_ASSERT(shape->numFixedSlots() == numFixedSlots());
+    MOZ_ASSERT(shape->getObjectClass() == getClass());
+
+    size_t oldSpan = lastProperty()->slotSpan();
+    size_t newSpan = shape->slotSpan();
+
+    if (oldSpan == newSpan) {
+        shape_ = shape;
+        return true;
+    }
+
+    if (MOZ_UNLIKELY(!updateSlotsForSpan(cx, oldSpan, newSpan)))
+        return false;
+
+    shape_ = shape;
+    return true;
+}
+
 /* Make an object with pregenerated shape from a NEWOBJECT bytecode. */
 static inline PlainObject*
 CopyInitializerObject(JSContext* cx, HandlePlainObject baseobj, NewObjectKind newKind = GenericObject)

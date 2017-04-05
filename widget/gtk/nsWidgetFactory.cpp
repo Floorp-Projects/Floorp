@@ -88,6 +88,9 @@ static nsresult
 nsNativeThemeGTKConstructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult)
 {
+    if (gfxPlatform::IsHeadless()) {
+        return NS_ERROR_NO_INTERFACE;
+    }
     nsresult rv;
     nsNativeThemeGTK * inst;
 
