@@ -4,13 +4,10 @@
 
 package org.mozilla.telemetry.serialize;
 
-import junit.framework.Assert;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.telemetry.Telemetry;
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.event.TelemetryEvent;
 import org.mozilla.telemetry.measurement.EventsMeasurement;

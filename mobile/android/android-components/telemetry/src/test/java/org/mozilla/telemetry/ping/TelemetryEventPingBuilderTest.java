@@ -27,7 +27,7 @@ public class TelemetryEventPingBuilderTest {
         final TelemetryPing ping = builder.build();
 
         assertUUID(ping.getDocumentId());
-        assertEquals("event", ping.getType());
+        assertEquals("focus-event", ping.getType());
 
         final Map<String, Object> results = ping.getMeasurementResults();
         assertNotNull(results);

@@ -15,7 +15,7 @@ import org.mozilla.telemetry.measurement.SettingsMeasurement;
 import org.mozilla.telemetry.measurement.TimezoneOffsetMeasurement;
 
 public class TelemetryEventPingBuilder extends TelemetryPingBuilder {
-    public static final String TYPE = "event"; // TODO: Define name
+    public static final String TYPE = "focus-event";
     private static final int VERSION = 1;
 
     private EventsMeasurement eventsMeasurement;
@@ -44,15 +44,6 @@ public class TelemetryEventPingBuilder extends TelemetryPingBuilder {
 
     @Override
     protected String getUploadPath(final String documentId) {
-        final TelemetryConfiguration configuration = getConfiguration();
-
-        // TODO: Move to parent class if always the same (Issue #19)
-        return String.format("/submit/telemetry/%s/%s/%s/%s/%s/%s",
-                documentId,
-                getType(),
-                configuration.getAppName(),
-                configuration.getAppVersion(),
-                configuration.getUpdateChannel(),
-                configuration.getBuildId());
+        return super.getUploadPath(documentId) + "?v=4";
     }
 }

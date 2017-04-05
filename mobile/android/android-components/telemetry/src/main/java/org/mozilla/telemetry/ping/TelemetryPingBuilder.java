@@ -62,7 +62,17 @@ public abstract class TelemetryPingBuilder {
                 flushMeasurements());
     }
 
-    protected abstract String getUploadPath(final String documentId);
+    protected String getUploadPath(final String documentId) {
+        final TelemetryConfiguration configuration = getConfiguration();
+
+        return String.format("/submit/telemetry/%s/%s/%s/%s/%s/%s",
+                documentId,
+                getType(),
+                configuration.getAppName(),
+                configuration.getAppVersion(),
+                configuration.getUpdateChannel(),
+                configuration.getBuildId());
+    }
 
     private Map<String, Object> flushMeasurements() {
         final Map<String, Object> measurementResults = new LinkedHashMap<>();

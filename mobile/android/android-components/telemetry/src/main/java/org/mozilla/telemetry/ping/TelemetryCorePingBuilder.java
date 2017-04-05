@@ -60,18 +60,4 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     public SessionDurationMeasurement getSessionDurationMeasurement() {
         return sessionDurationMeasurement;
     }
-
-    @Override
-    protected String getUploadPath(final String documentId) {
-        final TelemetryConfiguration configuration = getConfiguration();
-
-        // TODO: Move to parent class if always the same (Issue #19)
-        return String.format("/submit/telemetry/%s/%s/%s/%s/%s/%s",
-                documentId,
-                getType(),
-                configuration.getAppName(),
-                configuration.getAppVersion(),
-                configuration.getUpdateChannel(),
-                configuration.getBuildId());
-    }
 }

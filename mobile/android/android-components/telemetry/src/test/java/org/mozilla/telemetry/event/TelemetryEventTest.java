@@ -11,8 +11,6 @@ import org.junit.runner.RunWith;
 import org.mozilla.telemetry.Telemetry;
 import org.mozilla.telemetry.TelemetryHolder;
 import org.mozilla.telemetry.measurement.EventsMeasurement;
-import org.mozilla.telemetry.measurement.TelemetryMeasurement;
-import org.mozilla.telemetry.ping.TelemetryCorePingBuilder;
 import org.mozilla.telemetry.ping.TelemetryEventPingBuilder;
 import org.robolectric.RobolectricTestRunner;
 
