@@ -10,13 +10,28 @@ const {
   OPEN_NETWORK_DETAILS,
   OPEN_STATISTICS,
   REMOVE_SELECTED_CUSTOM_REQUEST,
+  RESET_COLUMNS,
   SELECT_DETAILS_PANEL_TAB,
   SEND_CUSTOM_REQUEST,
   SELECT_REQUEST,
+  TOGGLE_COLUMN,
   WATERFALL_RESIZE,
 } = require("../constants");
 
+const Columns = I.Record({
+  status: true,
+  method: true,
+  file: true,
+  domain: true,
+  cause: true,
+  type: true,
+  transferred: true,
+  contentSize: true,
+  waterfall: true,
+});
+
 const UI = I.Record({
+  columns: new Columns(),
   detailsPanelSelectedTab: "headers",
   networkDetailsOpen: false,
   statisticsOpen: false,
@@ -25,6 +40,10 @@ const UI = I.Record({
 
 // Safe bounds for waterfall width (px)
 const REQUESTS_WATERFALL_SAFE_BOUNDS = 90;
+
+function resetColumns(state) {
+  return state.set("columns", new Columns());
+}
 
 function resizeWaterfall(state, action) {
   return state.set("waterfallWidth", action.width - REQUESTS_WATERFALL_SAFE_BOUNDS);
@@ -42,6 +61,19 @@ function setDetailsPanelTab(state, action) {
   return state.set("detailsPanelSelectedTab", action.id);
 }
 
+function toggleColumn(state, action) {
+  let { column } = action;
+
+  if (!state.has(column)) {
+    return state;
+  }
+
+  let newState = state.withMutations(columns => {
+    columns.set(column, !state.get(column));
+  });
+  return newState;
+}
+
 function ui(state = new UI(), action) {
   switch (action.type) {
     case CLEAR_REQUESTS:
@@ -50,6 +82,8 @@ function ui(state = new UI(), action) {
       return openNetworkDetails(state, action);
     case OPEN_STATISTICS:
       return openStatistics(state, action);
+    case RESET_COLUMNS:
+      return resetColumns(state);
     case REMOVE_SELECTED_CUSTOM_REQUEST:
     case SEND_CUSTOM_REQUEST:
       return openNetworkDetails(state, { open: false });
@@ -57,6 +91,8 @@ function ui(state = new UI(), action) {
       return setDetailsPanelTab(state, action);
     case SELECT_REQUEST:
       return openNetworkDetails(state, { open: true });
+    case TOGGLE_COLUMN:
+      return state.set("columns", toggleColumn(state.columns, action));
     case WATERFALL_RESIZE:
       return resizeWaterfall(state, action);
     default:
@@ -65,6 +101,7 @@ function ui(state = new UI(), action) {
 }
 
 module.exports = {
+  Columns,
   UI,
   ui
 };

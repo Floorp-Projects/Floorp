@@ -170,10 +170,10 @@ nsSVGNumberPair::DOMAnimatedNumber::~DOMAnimatedNumber()
   }
 }
 
-nsISMILAttr*
+UniquePtr<nsISMILAttr>
 nsSVGNumberPair::ToSMILAttr(nsSVGElement *aSVGElement)
 {
-  return new SMILNumberPair(this, aSVGElement);
+  return MakeUnique<SMILNumberPair>(this, aSVGElement);
 }
 
 nsresult

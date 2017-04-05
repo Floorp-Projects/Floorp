@@ -8,6 +8,7 @@
 #define MOZILLA_SVGANIMATEDLENGTHLIST_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
 #include "nsISMILAttr.h"
 #include "SVGLengthList.h"
@@ -74,9 +75,9 @@ public:
     return !!mAnimVal;
   }
 
-  /// Callers own the returned nsISMILAttr
-  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement, uint8_t aAttrEnum,
-                          uint8_t aAxis, bool aCanZeroPadList);
+  UniquePtr<nsISMILAttr> ToSMILAttr(nsSVGElement* aSVGElement,
+                                    uint8_t aAttrEnum, uint8_t aAxis,
+                                    bool aCanZeroPadList);
 
 private:
 

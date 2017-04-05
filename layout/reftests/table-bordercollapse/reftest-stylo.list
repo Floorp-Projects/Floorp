@@ -75,21 +75,21 @@
 == borderhandling-6.xhtml borderhandling-6.xhtml
 == borderhandling-7.xhtml borderhandling-7.xhtml
 == borderhandling-8.html borderhandling-8.html
-fails == borderhandling-frame-border.html borderhandling-frame-border.html
-fails == borderhandling-rules-border-empty-quirks.html borderhandling-rules-border-empty-quirks.html
-fails == borderhandling-rules-border-rules-quirks.html borderhandling-rules-border-rules-quirks.html
-fails == borderhandling-rules-border-none-quirks.html borderhandling-rules-border-none-quirks.html
-fails == borderhandling-rules-border-groups-quirks.html borderhandling-rules-border-groups-quirks.html
-fails == borderhandling-rules-border-rows-quirks.html borderhandling-rules-border-rows-quirks.html
-fails == borderhandling-rules-border-cols-quirks.html borderhandling-rules-border-cols-quirks.html
-fails == borderhandling-rules-border-all-quirks.html borderhandling-rules-border-all-quirks.html
-fails == borderhandling-rules-border-empty-strict.html borderhandling-rules-border-empty-strict.html
-fails == borderhandling-rules-border-rules-strict.html borderhandling-rules-border-rules-strict.html
-fails == borderhandling-rules-border-none-strict.html borderhandling-rules-border-none-strict.html
-fails == borderhandling-rules-border-groups-strict.html borderhandling-rules-border-groups-strict.html
-fails == borderhandling-rules-border-rows-strict.html borderhandling-rules-border-rows-strict.html
-fails == borderhandling-rules-border-cols-strict.html borderhandling-rules-border-cols-strict.html
-fails == borderhandling-rules-border-all-strict.html borderhandling-rules-border-all-strict.html
+== borderhandling-frame-border.html borderhandling-frame-border.html
+== borderhandling-rules-border-empty-quirks.html borderhandling-rules-border-empty-quirks.html
+== borderhandling-rules-border-rules-quirks.html borderhandling-rules-border-rules-quirks.html
+== borderhandling-rules-border-none-quirks.html borderhandling-rules-border-none-quirks.html
+== borderhandling-rules-border-groups-quirks.html borderhandling-rules-border-groups-quirks.html
+== borderhandling-rules-border-rows-quirks.html borderhandling-rules-border-rows-quirks.html
+== borderhandling-rules-border-cols-quirks.html borderhandling-rules-border-cols-quirks.html
+== borderhandling-rules-border-all-quirks.html borderhandling-rules-border-all-quirks.html
+== borderhandling-rules-border-empty-strict.html borderhandling-rules-border-empty-strict.html
+== borderhandling-rules-border-rules-strict.html borderhandling-rules-border-rules-strict.html
+== borderhandling-rules-border-none-strict.html borderhandling-rules-border-none-strict.html
+== borderhandling-rules-border-groups-strict.html borderhandling-rules-border-groups-strict.html
+== borderhandling-rules-border-rows-strict.html borderhandling-rules-border-rows-strict.html
+== borderhandling-rules-border-cols-strict.html borderhandling-rules-border-cols-strict.html
+== borderhandling-rules-border-all-strict.html borderhandling-rules-border-all-strict.html
 == bordercolor-1.html bordercolor-1.html
 == bordercolor-2.html bordercolor-2.html
 == bordercolor-3.html bordercolor-3.html

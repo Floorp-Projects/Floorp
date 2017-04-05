@@ -15,6 +15,7 @@ const { getWaterfallScale } = require("../selectors/index");
 const { getFormattedTime } = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
 const WaterfallBackground = require("../waterfall-background");
+const RequestListHeaderContextMenu = require("../request-list-header-context-menu");
 
 const { div, button } = DOM;
 
@@ -29,7 +30,7 @@ const HEADERS = [
   { name: "cause" },
   { name: "type" },
   { name: "transferred" },
-  { name: "size" },
+  { name: "contentSize", boxName: "size" },
   { name: "waterfall" }
 ];
 
@@ -42,11 +43,21 @@ const RequestListHeader = createClass({
   displayName: "RequestListHeader",
 
   propTypes: {
+    columns: PropTypes.object.isRequired,
+    dispatch: PropTypes.func.isRequired,
     sort: PropTypes.object,
     scale: PropTypes.number,
     waterfallWidth: PropTypes.number,
     onHeaderClick: PropTypes.func.isRequired,
     resizeWaterfall: PropTypes.func.isRequired,
+  },
+
+  componentWillMount() {
+    const { dispatch } = this.props;
+    this.contextMenu = new RequestListHeaderContextMenu({
+      toggleColumn: (column) => dispatch(Actions.toggleColumn(column)),
+      resetColumns: () => dispatch(Actions.resetColumns()),
+    });
   },
 
   componentDidMount() {
@@ -67,6 +78,11 @@ const RequestListHeader = createClass({
     window.removeEventListener("resize", this.resizeWaterfall);
   },
 
+  onContextMenu(evt) {
+    evt.preventDefault();
+    this.contextMenu.open(evt);
+  },
+
   resizeWaterfall() {
     // Measure its width and update the 'waterfallWidth' property in the store.
     // The 'waterfallWidth' will be further updated on every window resize.
@@ -77,12 +93,12 @@ const RequestListHeader = createClass({
   },
 
   render() {
-    const { sort, scale, waterfallWidth, onHeaderClick } = this.props;
+    const { sort, scale, waterfallWidth, onHeaderClick, columns } = this.props;
 
     return div(
       { className: "devtools-toolbar requests-list-toolbar" },
       div({ className: "toolbar-labels" },
-        HEADERS.map(header => {
+        HEADERS.filter(h => columns.get(h.name)).map(header => {
           const name = header.name;
           const boxName = header.boxName || name;
           const label = L10N.getStr(`netmonitor.toolbar.${header.label || name}`);
@@ -104,6 +120,7 @@ const RequestListHeader = createClass({
               ref: "header",
               // Used to style the next column.
               "data-active": active,
+              onContextMenu: this.onContextMenu,
             },
             button(
               {
@@ -189,6 +206,7 @@ function WaterfallLabel(waterfallWidth, scale, label) {
 
 module.exports = connect(
   state => ({
+    columns: state.ui.columns,
     sort: state.sort,
     scale: getWaterfallScale(state),
     waterfallWidth: state.ui.waterfallWidth,
@@ -196,6 +214,7 @@ module.exports = connect(
     timingMarkers: state.timingMarkers,
   }),
   dispatch => ({
+    dispatch,
     onHeaderClick: type => dispatch(Actions.sortBy(type)),
     resizeWaterfall: width => dispatch(Actions.resizeWaterfall(width)),
   })

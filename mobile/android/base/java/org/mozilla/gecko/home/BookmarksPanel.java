@@ -273,7 +273,7 @@ public class BookmarksPanel extends HomeFragment {
 
             if (GeckoSharedPrefs.forProfile(getContext()).getBoolean(GeckoPreferences.PREFS_READ_PARTNER_BOOKMARKS_PROVIDER, false)
                     && (isRootFolder || mFolderInfo.id <= Bookmarks.FAKE_PARTNER_BOOKMARKS_START)) {
-                partnerCursor = contentResolver.query(PartnerBookmarksProviderProxy.getUriForBookmarks(getContext(), mFolderInfo.id), null, null, null, null, null);
+                partnerCursor = contentResolver.query(PartnerBookmarksProviderProxy.getUriForBookmarks(getContext(), mFolderInfo.id), null, null, null, null);
             }
 
             if (isRootFolder || mFolderInfo.id > Bookmarks.FAKE_PARTNER_BOOKMARKS_START) {

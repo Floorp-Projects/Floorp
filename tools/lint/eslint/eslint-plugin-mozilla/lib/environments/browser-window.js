@@ -17,6 +17,7 @@ var fs = require("fs");
 var path = require("path");
 var helpers = require("../helpers");
 var globals = require("../globals");
+var placesGlobals = require("./places-overlay").globals;
 
 const rootDir = helpers.getRootDir(module.filename);
 
@@ -108,7 +109,9 @@ function getScriptGlobals() {
 }
 
 function mapGlobals(fileGlobals) {
-  var globalObjects = {};
+  // placesOverlay.xul is also included in the browser scope, so include
+  // those globals here.
+  var globalObjects = Object.assign({}, placesGlobals);
   for (let global of fileGlobals) {
     globalObjects[global.name] = global.writable;
   }

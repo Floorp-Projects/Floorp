@@ -4,6 +4,8 @@
 
 // Note: this file is included in aboutDialog.xul if MOZ_UPDATER is defined.
 
+/* import-globals-from aboutDialog.js */
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 

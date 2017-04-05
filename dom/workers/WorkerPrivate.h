@@ -703,11 +703,7 @@ public:
   }
 
   void
-  SetCSP(nsIContentSecurityPolicy* aCSP)
-  {
-    AssertIsOnMainThread();
-    mLoadInfo.mCSP = aCSP;
-  }
+  SetCSP(nsIContentSecurityPolicy* aCSP);
 
   nsresult
   SetCSPFromHeaderValues(const nsACString& aCSPHeaderValue,
