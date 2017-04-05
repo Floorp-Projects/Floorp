@@ -73,23 +73,11 @@ treecol {
   list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#general");
 }
 
-#category-search > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#search");
-}
-
-#category-content > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#content");
-}
-
 #category-application > .category-icon {
   list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#content");
 }
 
 #category-privacy > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#security");
-}
-
-#category-security > .category-icon {
   list-style-image: url("chrome://browser/skin/preferences/in-content/icons.svg#security");
 }
 
@@ -187,8 +175,6 @@ treecol {
   unicode-bidi: plaintext;
   direction: rtl;
 }
-
-/* Content pane */
 
 #defaultFontSizeLabel {
   /* !important needed to override common !important rule */
