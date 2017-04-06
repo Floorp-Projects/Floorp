@@ -101,6 +101,7 @@ void
 Gamepad::SetPose(const GamepadPoseState& aPose)
 {
   mPose->SetPoseState(aPose);
+  UpdateTimestamp();
 }
 
 void
