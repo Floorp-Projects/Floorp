@@ -603,6 +603,24 @@ js::SubstringKernel(JSContext* cx, HandleString str, int32_t beginInt, int32_t l
     return NewDependentString(cx, str, begin, len);
 }
 
+template <typename CharT>
+static auto
+ReallocChars(JSContext* cx, UniquePtr<CharT[], JS::FreePolicy> chars, size_t oldLength,
+             size_t newLength)
+  -> decltype(chars)
+{
+    using AnyCharPtr = decltype(chars);
+
+    CharT* oldChars = chars.release();
+    CharT* newChars = cx->pod_realloc(oldChars, oldLength, newLength);
+    if (!newChars) {
+        js_free(oldChars);
+        return AnyCharPtr();
+    }
+
+    return AnyCharPtr(newChars);
+}
+
 /**
  * U+03A3 GREEK CAPITAL LETTER SIGMA has two different lower case mappings
  * depending on its context:
@@ -823,11 +841,10 @@ ToLowerCase(JSContext* cx, JSLinearString* str)
                        "Latin-1 strings don't have special lower case mappings");
             resultLength = ToLowerCaseLength(chars, readChars, length);
 
-            AnyCharPtr buf = cx->make_pod_array<CharT>(resultLength + 1);
+            AnyCharPtr buf = ReallocChars(cx, Move(newChars), length + 1, resultLength + 1);
             if (!buf)
                 return nullptr;
 
-            PodCopy(buf.get(), newChars.get(), readChars);
             newChars = Move(buf);
 
             MOZ_ALWAYS_TRUE(length ==
@@ -1125,11 +1142,10 @@ ToUpperCase(JSContext* cx, JSLinearString* str)
             if (readChars < length) {
                 resultLength = ToUpperCaseLength(chars, readChars, length);
 
-                Latin1CharPtr buf2 = cx->make_pod_array<Latin1Char>(resultLength + 1);
+                Latin1CharPtr buf2 = ReallocChars(cx, Move(buf), length + 1, resultLength + 1);
                 if (!buf2)
                     return nullptr;
 
-                CopyChars(buf2.get(), buf.get(), readChars);
                 buf = Move(buf2);
 
                 MOZ_ALWAYS_TRUE(length ==
@@ -1148,11 +1164,10 @@ ToUpperCase(JSContext* cx, JSLinearString* str)
             if (readChars < length) {
                 resultLength = ToUpperCaseLength(chars, readChars, length);
 
-                TwoByteCharPtr buf2 = cx->make_pod_array<char16_t>(resultLength + 1);
+                TwoByteCharPtr buf2 = ReallocChars(cx, Move(buf), length + 1, resultLength + 1);
                 if (!buf2)
                     return nullptr;
 
-                CopyChars(buf2.get(), buf.get(), readChars);
                 buf = Move(buf2);
 
                 MOZ_ALWAYS_TRUE(length ==
