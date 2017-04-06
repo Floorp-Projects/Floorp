@@ -1075,6 +1075,16 @@ class MOZ_RAII AutoResetInShow {
     ~AutoResetInShow() { mFrameLoader->mInShow = false; }
 };
 
+static bool
+ParentWindowIsActive(nsIDocument* aDoc)
+{
+  nsCOMPtr<nsPIWindowRoot> root = nsContentUtils::GetWindowRoot(aDoc);
+  if (root) {
+    nsPIDOMWindowOuter* rootWin = root->GetWindow();
+    return rootWin && rootWin->IsActive();
+  }
+  return false;
+}
 
 bool
 nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
@@ -1266,17 +1276,7 @@ nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
       return false;
     }
 
-    nsPIDOMWindowOuter* win = mOwnerContent->OwnerDoc()->GetWindow();
-    bool parentIsActive = false;
-    if (win) {
-      nsCOMPtr<nsPIWindowRoot> windowRoot =
-        nsGlobalWindow::Cast(win)->GetTopWindowRoot();
-      if (windowRoot) {
-        nsPIDOMWindowOuter* topWin = windowRoot->GetWindow();
-        parentIsActive = topWin && topWin->IsActive();
-      }
-    }
-    mRemoteBrowser->Show(size, parentIsActive);
+    mRemoteBrowser->Show(size, ParentWindowIsActive(mOwnerContent->OwnerDoc()));
     mRemoteBrowserShown = true;
 
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
@@ -1474,6 +1474,12 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
 
   mRemoteBrowser->SetOwnerElement(otherContent);
   aOther->mRemoteBrowser->SetOwnerElement(ourContent);
+
+  // Update window activation state for the swapped owner content.
+  Unused << mRemoteBrowser->Manager()->AsContentParent()->SendParentActivated(
+    mRemoteBrowser, ParentWindowIsActive(otherContent->OwnerDoc()));
+  Unused << aOther->mRemoteBrowser->Manager()->AsContentParent()->SendParentActivated(
+    aOther->mRemoteBrowser, ParentWindowIsActive(ourContent->OwnerDoc()));
 
   MaybeUpdatePrimaryTabParent(eTabParentChanged);
   aOther->MaybeUpdatePrimaryTabParent(eTabParentChanged);
