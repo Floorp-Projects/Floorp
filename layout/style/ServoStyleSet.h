@@ -274,6 +274,9 @@ public:
 
   bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
 
+  already_AddRefed<ServoComputedValues>
+  GetBaseComputedValuesForElement(dom::Element* aElement, nsIAtom* aPseudoTag);
+
 private:
   already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
                                               nsStyleContext* aParentContext,
