@@ -6,10 +6,13 @@
 
 const { addons, createClass, createFactory, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
+const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
+const { KeyCodes } = require("devtools/client/shared/keycodes");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const BoxModelEditable = createFactory(require("./BoxModelEditable"));
+
 // Reps
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const Rep = createFactory(REPS.Rep);
@@ -28,6 +31,7 @@ module.exports = createClass({
 
   propTypes: {
     boxModel: PropTypes.shape(Types.boxModel).isRequired,
+    boxModelContainer: PropTypes.object.isRequired,
     setSelectedNode: PropTypes.func.isRequired,
     onHideBoxModelHighlighter: PropTypes.func.isRequired,
     onShowBoxModelEditor: PropTypes.func.isRequired,
@@ -37,9 +41,88 @@ module.exports = createClass({
 
   mixins: [ addons.PureRenderMixin ],
 
+  getInitialState() {
+    return {
+      activeDescendant: null,
+      focusable: false,
+    };
+  },
+
+  componentDidUpdate() {
+    let displayPosition = this.getDisplayPosition();
+    let isContentBox = this.getContextBox();
+
+    this.layouts = {
+      "position": new Map([
+        [KeyCodes.DOM_VK_ESCAPE, this.positionLayout],
+        [KeyCodes.DOM_VK_DOWN, this.marginLayout],
+        [KeyCodes.DOM_VK_RETURN, this.positionEditable],
+        [KeyCodes.DOM_VK_UP, null],
+        ["click", this.positionLayout]
+      ]),
+      "margin": new Map([
+        [KeyCodes.DOM_VK_ESCAPE, this.marginLayout],
+        [KeyCodes.DOM_VK_DOWN, this.borderLayout],
+        [KeyCodes.DOM_VK_RETURN, this.marginEditable],
+        [KeyCodes.DOM_VK_UP, displayPosition ? this.positionLayout : null],
+        ["click", this.marginLayout]
+      ]),
+      "border": new Map([
+        [KeyCodes.DOM_VK_ESCAPE, this.borderLayout],
+        [KeyCodes.DOM_VK_DOWN, this.paddingLayout],
+        [KeyCodes.DOM_VK_RETURN, this.borderEditable],
+        [KeyCodes.DOM_VK_UP, this.marginLayout],
+        ["click", this.borderLayout]
+      ]),
+      "padding": new Map([
+        [KeyCodes.DOM_VK_ESCAPE, this.paddingLayout],
+        [KeyCodes.DOM_VK_DOWN, isContentBox ? this.contentLayout : null],
+        [KeyCodes.DOM_VK_RETURN, this.paddingEditable],
+        [KeyCodes.DOM_VK_UP, this.borderLayout],
+        ["click", this.paddingLayout]
+      ]),
+      "content": new Map([
+        [KeyCodes.DOM_VK_ESCAPE, this.contentLayout],
+        [KeyCodes.DOM_VK_DOWN, null],
+        [KeyCodes.DOM_VK_RETURN, this.contentEditable],
+        [KeyCodes.DOM_VK_UP, this.paddingLayout],
+        ["click", this.contentLayout]
+      ])
+    };
+  },
+
+  getAriaActiveDescendant() {
+    let { activeDescendant } = this.state;
+
+    if (!activeDescendant) {
+      let displayPosition = this.getDisplayPosition();
+      let nextLayout = displayPosition ? this.positionLayout : this.marginLayout;
+      activeDescendant = nextLayout.getAttribute("data-box");
+      this.setAriaActive(nextLayout);
+    }
+
+    return activeDescendant;
+  },
+
   getBorderOrPaddingValue(property) {
     let { layout } = this.props.boxModel;
     return layout[property] ? parseFloat(layout[property]) : "-";
+  },
+
+  /**
+   * Returns true if the layout box sizing is context box and false otherwise.
+   */
+  getContextBox() {
+    let { layout } = this.props.boxModel;
+    return layout["box-sizing"] == "content-box";
+  },
+
+  /**
+   * Returns true if the position is displayed and false otherwise.
+   */
+  getDisplayPosition() {
+    let { layout } = this.props.boxModel;
+    return layout.position && layout.position != "static";
   },
 
   getHeightValue(property) {
@@ -118,12 +201,63 @@ module.exports = createClass({
   },
 
   /**
+   * Move the focus to the next/previous editable element of the current layout.
+   *
+   * @param  {Element} target
+   *         Node to be observed
+   * @param  {Boolean} shiftKey
+   *         Determines if shiftKey was pressed
+   * @param  {String} level
+   *         Current active layout
+   */
+  moveFocus: function ({ target, shiftKey }, level) {
+    let editBoxes = [
+      ...findDOMNode(this).querySelectorAll(`[data-box="${level}"].boxmodel-editable`)
+    ];
+    let editingMode = target.tagName === "input";
+    // target.nextSibling is input field
+    let position = editingMode ? editBoxes.indexOf(target.nextSibling)
+                               : editBoxes.indexOf(target);
+
+    if (position === editBoxes.length - 1 && !shiftKey) {
+      position = 0;
+    } else if (position === 0 && shiftKey) {
+      position = editBoxes.length - 1;
+    } else {
+      shiftKey ? position-- : position++;
+    }
+
+    let editBox = editBoxes[position];
+    editBox.focus();
+
+    if (editingMode) {
+      editBox.click();
+    }
+  },
+
+  /**
+   * Active aria-level set to current layout.
+   *
+   * @param  {Element} nextLayout
+   *         Element of next layout that user has navigated to
+   */
+  setAriaActive(nextLayout) {
+    let { boxModelContainer } = this.props;
+    // We set this attribute for testing purposes.
+    boxModelContainer.setAttribute("activedescendant", nextLayout.className);
+
+    this.setState({
+      activeDescendant: nextLayout.getAttribute("data-box"),
+    });
+  },
+
+  /**
    * While waiting for a reps fix in https://github.com/devtools-html/reps/issues/92,
    * translate nodeFront to a grip-like object that can be used with an ElementNode rep.
    *
-   * @params  {NodeFront} nodeFront
-   *          The NodeFront for which we want to create a grip-like object.
-   * @returns {Object} a grip-like object that can be used with Reps.
+   * @param  {NodeFront} nodeFront
+   *         The NodeFront for which we want to create a grip-like object.
+   * @return {Object} a grip-like object that can be used with Reps.
    */
   translateNodeFrontToGrip(nodeFront) {
     let {
@@ -180,6 +314,95 @@ module.exports = createClass({
     });
   },
 
+  /**
+   * Handle keyboard navigation and focus for box model layouts.
+   *
+   * Updates active layout on arrow key navigation
+   * Focuses next layout's editboxes on enter key
+   * Unfocuses current layout's editboxes when active layout changes
+   * Controls tabbing between editBoxes
+   *
+   * @param  {Event} event
+   *         The event triggered by a keypress on the box model
+   */
+  onKeyDown(event) {
+    let { target, keyCode } = event;
+    let isEditable = target._editable || target.editor;
+
+    let level = this.getAriaActiveDescendant();
+    let editingMode = target.tagName === "input";
+
+    switch (keyCode) {
+      case KeyCodes.DOM_VK_RETURN:
+        if (!isEditable) {
+          this.setState({ focusable: true });
+          let editableBox = this.layouts[level].get(keyCode);
+          if (editableBox) {
+            editableBox.boxModelEditable.focus();
+          }
+        }
+        break;
+      case KeyCodes.DOM_VK_DOWN:
+      case KeyCodes.DOM_VK_UP:
+        if (!editingMode) {
+          event.preventDefault();
+          this.setState({ focusable: false });
+
+          let nextLayout = this.layouts[level].get(keyCode);
+          this.setAriaActive(nextLayout);
+
+          if (target && target._editable) {
+            target.blur();
+          }
+
+          this.props.boxModelContainer.focus();
+        }
+        break;
+      case KeyCodes.DOM_VK_TAB:
+        if (isEditable) {
+          event.preventDefault();
+          this.moveFocus(event, level);
+        }
+        break;
+      case KeyCodes.DOM_VK_ESCAPE:
+        if (target._editable) {
+          event.preventDefault();
+          event.stopPropagation();
+          this.setState({ focusable: false });
+          this.props.boxModelContainer.focus();
+        }
+        break;
+      default:
+        break;
+    }
+  },
+
+  /**
+   * Update aria-active on mouse click.
+   *
+   * @param  {Event} event
+   *         The event triggered by a mouse click on the box model
+   */
+  onLevelClick(event) {
+    let { target } = event;
+    let displayPosition = this.getDisplayPosition();
+    let isContentBox = this.getContextBox();
+
+    // Avoid switching the aria active descendant to the position or content layout
+    // if those are not editable.
+    if ((!displayPosition && target == this.positionLayout) ||
+        (!isContentBox && target == this.contentLayout)) {
+      return;
+    }
+
+    let nextLayout = this.layouts[target.getAttribute("data-box")].get("click");
+    this.setAriaActive(nextLayout);
+
+    if (target && target._editable) {
+      target.blur();
+    }
+  },
+
   render() {
     let {
       boxModel,
@@ -201,7 +424,7 @@ module.exports = createClass({
     let paddingBottom = this.getBorderOrPaddingValue("padding-bottom");
     let paddingLeft = this.getBorderOrPaddingValue("padding-left");
 
-    let displayPosition = layout.position && layout.position != "static";
+    let displayPosition = this.getDisplayPosition();
     let positionTop = this.getPositionValue("top");
     let positionRight = this.getPositionValue("right");
     let positionBottom = this.getPositionValue("bottom");
@@ -215,6 +438,8 @@ module.exports = createClass({
     height = this.getHeightValue(height);
     width = this.getWidthValue(width);
 
+    let { activeDescendant: level, focusable } = this.state;
+
     let contentBox = layout["box-sizing"] == "content-box" ?
       dom.p(
         {
@@ -222,7 +447,12 @@ module.exports = createClass({
         },
         BoxModelEditable({
           box: "content",
+          focusable,
+          level,
           property: "width",
+          ref: editable => {
+            this.contentEditable = editable;
+          },
           textContent: width,
           onShowBoxModelEditor
         }),
@@ -232,6 +462,8 @@ module.exports = createClass({
         ),
         BoxModelEditable({
           box: "content",
+          focusable,
+          level,
           property: "height",
           textContent: height,
           onShowBoxModelEditor
@@ -253,6 +485,12 @@ module.exports = createClass({
     return dom.div(
       {
         className: "boxmodel-main",
+        "data-box": "position",
+        ref: div => {
+          this.positionLayout = div;
+        },
+        onClick: this.onLevelClick,
+        onKeyDown: this.onKeyDown,
         onMouseOver: this.onHighlightMouseOver,
         onMouseOut: this.props.onHideBoxModelHighlighter,
       },
@@ -301,6 +539,9 @@ module.exports = createClass({
             className: "boxmodel-margins",
             "data-box": "margin",
             title: BOXMODEL_L10N.getStr("boxmodel.margin"),
+            ref: div => {
+              this.marginLayout = div;
+            },
           },
           dom.span(
             {
@@ -315,6 +556,9 @@ module.exports = createClass({
               className: "boxmodel-borders",
               "data-box": "border",
               title: BOXMODEL_L10N.getStr("boxmodel.border"),
+              ref: div => {
+                this.borderLayout = div;
+              },
             },
             dom.span(
               {
@@ -329,11 +573,17 @@ module.exports = createClass({
                 className: "boxmodel-paddings",
                 "data-box": "padding",
                 title: BOXMODEL_L10N.getStr("boxmodel.padding"),
+                ref: div => {
+                  this.paddingLayout = div;
+                },
               },
               dom.div({
                 className: "boxmodel-contents",
                 "data-box": "content",
                 title: BOXMODEL_L10N.getStr("boxmodel.content"),
+                ref: div => {
+                  this.contentLayout = div;
+                },
               })
             )
           )
@@ -343,7 +593,12 @@ module.exports = createClass({
         BoxModelEditable({
           box: "position",
           direction: "top",
+          focusable,
+          level,
           property: "position-top",
+          ref: editable => {
+            this.positionEditable = editable;
+          },
           textContent: positionTop,
           onShowBoxModelEditor,
         })
@@ -353,6 +608,8 @@ module.exports = createClass({
         BoxModelEditable({
           box: "position",
           direction: "right",
+          focusable,
+          level,
           property: "position-right",
           textContent: positionRight,
           onShowBoxModelEditor,
@@ -363,6 +620,8 @@ module.exports = createClass({
         BoxModelEditable({
           box: "position",
           direction: "bottom",
+          focusable,
+          level,
           property: "position-bottom",
           textContent: positionBottom,
           onShowBoxModelEditor,
@@ -373,6 +632,8 @@ module.exports = createClass({
         BoxModelEditable({
           box: "position",
           direction: "left",
+          focusable,
+          level,
           property: "position-left",
           textContent: positionLeft,
           onShowBoxModelEditor,
@@ -382,13 +643,20 @@ module.exports = createClass({
       BoxModelEditable({
         box: "margin",
         direction: "top",
+        focusable,
+        level,
         property: "margin-top",
+        ref: editable => {
+          this.marginEditable = editable;
+        },
         textContent: marginTop,
         onShowBoxModelEditor,
       }),
       BoxModelEditable({
         box: "margin",
         direction: "right",
+        focusable,
+        level,
         property: "margin-right",
         textContent: marginRight,
         onShowBoxModelEditor,
@@ -396,6 +664,8 @@ module.exports = createClass({
       BoxModelEditable({
         box: "margin",
         direction: "bottom",
+        focusable,
+        level,
         property: "margin-bottom",
         textContent: marginBottom,
         onShowBoxModelEditor,
@@ -403,6 +673,8 @@ module.exports = createClass({
       BoxModelEditable({
         box: "margin",
         direction: "left",
+        focusable,
+        level,
         property: "margin-left",
         textContent: marginLeft,
         onShowBoxModelEditor,
@@ -410,13 +682,20 @@ module.exports = createClass({
       BoxModelEditable({
         box: "border",
         direction: "top",
+        focusable,
+        level,
         property: "border-top-width",
+        ref: editable => {
+          this.borderEditable = editable;
+        },
         textContent: borderTop,
         onShowBoxModelEditor,
       }),
       BoxModelEditable({
         box: "border",
         direction: "right",
+        focusable,
+        level,
         property: "border-right-width",
         textContent: borderRight,
         onShowBoxModelEditor,
@@ -424,6 +703,8 @@ module.exports = createClass({
       BoxModelEditable({
         box: "border",
         direction: "bottom",
+        focusable,
+        level,
         property: "border-bottom-width",
         textContent: borderBottom,
         onShowBoxModelEditor,
@@ -431,6 +712,8 @@ module.exports = createClass({
       BoxModelEditable({
         box: "border",
         direction: "left",
+        focusable,
+        level,
         property: "border-left-width",
         textContent: borderLeft,
         onShowBoxModelEditor,
@@ -438,13 +721,20 @@ module.exports = createClass({
       BoxModelEditable({
         box: "padding",
         direction: "top",
+        focusable,
+        level,
         property: "padding-top",
+        ref: editable => {
+          this.paddingEditable = editable;
+        },
         textContent: paddingTop,
         onShowBoxModelEditor,
       }),
       BoxModelEditable({
         box: "padding",
         direction: "right",
+        focusable,
+        level,
         property: "padding-right",
         textContent: paddingRight,
         onShowBoxModelEditor,
@@ -452,6 +742,8 @@ module.exports = createClass({
       BoxModelEditable({
         box: "padding",
         direction: "bottom",
+        focusable,
+        level,
         property: "padding-bottom",
         textContent: paddingBottom,
         onShowBoxModelEditor,
@@ -459,6 +751,8 @@ module.exports = createClass({
       BoxModelEditable({
         box: "padding",
         direction: "left",
+        focusable,
+        level,
         property: "padding-left",
         textContent: paddingLeft,
         onShowBoxModelEditor,
