@@ -87,10 +87,10 @@ VRSystemManager::RemoveGamepad(uint32_t aIndex)
 
 void
 VRSystemManager::NewButtonEvent(uint32_t aIndex, uint32_t aButton,
-                                bool aPressed, double aValue)
+                                bool aPressed, bool aTouched, double aValue)
 {
   dom::GamepadButtonInformation a(aIndex, dom::GamepadServiceType::VR,
-                                  aButton, aPressed, aValue);
+                                  aButton, aValue, aPressed, aTouched);
 
   VRManager* vm = VRManager::Get();
   MOZ_ASSERT(vm);
