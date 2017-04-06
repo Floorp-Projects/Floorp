@@ -7,7 +7,6 @@
 
 /* rendering object for CSS "display: flex" */
 
-#include "mozilla/UniquePtr.h"
 #include "nsFlexContainerFrame.h"
 #include "nsContentUtils.h"
 #include "nsCSSAnonBoxes.h"
@@ -18,10 +17,12 @@
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
 #include "nsStyleContext.h"
+#include "mozilla/CSSOrderAwareFrameIterator.h"
 #include "mozilla/Logging.h"
 #include <algorithm>
 #include "mozilla/LinkedList.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/UniquePtr.h"
 #include "WritingModes.h"
 
 using namespace mozilla;
@@ -99,6 +100,16 @@ IsLegacyBox(const nsIFrame* aFlexContainer)
   MOZ_ASSERT(aFlexContainer->GetType() == nsGkAtoms::flexContainerFrame,
              "only flex containers may be passed to this function");
   return aFlexContainer->HasAnyStateBits(NS_STATE_FLEX_IS_LEGACY_WEBKIT_BOX);
+}
+
+// Returns the OrderingProperty enum that we should pass to
+// CSSOrderAwareFrameIterator (depending on whether it's a legacy box).
+static CSSOrderAwareFrameIterator::OrderingProperty
+OrderingPropertyForIter(const nsFlexContainerFrame* aFlexContainer)
+{
+  return IsLegacyBox(aFlexContainer)
+    ? CSSOrderAwareFrameIterator::OrderingProperty::eUseBoxOrdinalGroup
+    : CSSOrderAwareFrameIterator::OrderingProperty::eUseOrder;
 }
 
 // Returns the "align-items" value that's equivalent to the legacy "box-align"
@@ -1011,196 +1022,6 @@ BuildStrutInfoFromCollapsedItems(const FlexLine* aFirstLine,
       itemIdxInContainer++;
     }
   }
-}
-
-// Convenience function to get either the "order" or the "box-ordinal-group"
-// property-value for a flex item (depending on whether the container is a
-// modern flex container or a legacy box).
-static int32_t
-GetOrderOrBoxOrdinalGroup(nsIFrame* aFlexItem, bool aIsLegacyBox)
-{
-  if (aIsLegacyBox) {
-    // We'll be using mBoxOrdinal, which has type uint32_t. However, the modern
-    // 'order' property (whose functionality we're co-opting) has type int32_t.
-    // So: if we happen to have a uint32_t value that's greater than INT32_MAX,
-    // we clamp it rather than letting it overflow. Chances are, this is just
-    // an author using BIG_VALUE anyway, so the clamped value should be fine.
-    // (particularly since sufficiently-huge values are busted in Chrome/WebKit
-    // per https://bugs.chromium.org/p/chromium/issues/detail?id=599645 )
-    uint32_t clampedBoxOrdinal = std::min(aFlexItem->StyleXUL()->mBoxOrdinal,
-                                          static_cast<uint32_t>(INT32_MAX));
-    return static_cast<int32_t>(clampedBoxOrdinal);
-  }
-
-  // Normal case: just use modern 'order' property.
-  return aFlexItem->StylePosition()->mOrder;
-}
-
-// Helper-function to find the first non-anonymous-box descendent of aFrame.
-static nsIFrame*
-GetFirstNonAnonBoxDescendant(nsIFrame* aFrame)
-{
-  while (aFrame) {
-    nsIAtom* pseudoTag = aFrame->StyleContext()->GetPseudo();
-
-    // If aFrame isn't an anonymous container, then it'll do.
-    if (!pseudoTag ||                                 // No pseudotag.
-        !nsCSSAnonBoxes::IsAnonBox(pseudoTag) ||      // Pseudotag isn't anon.
-        nsCSSAnonBoxes::IsNonElement(pseudoTag)) {    // Text, not a container.
-      break;
-    }
-
-    // Otherwise, descend to its first child and repeat.
-
-    // SPECIAL CASE: if we're dealing with an anonymous table, then it might
-    // be wrapping something non-anonymous in its caption or col-group lists
-    // (instead of its principal child list), so we have to look there.
-    // (Note: For anonymous tables that have a non-anon cell *and* a non-anon
-    // column, we'll always return the column. This is fine; we're really just
-    // looking for a handle to *anything* with a meaningful content node inside
-    // the table, for use in DOM comparisons to things outside of the table.)
-    if (MOZ_UNLIKELY(aFrame->GetType() == nsGkAtoms::tableWrapperFrame)) {
-      nsIFrame* captionDescendant =
-        GetFirstNonAnonBoxDescendant(aFrame->GetChildList(kCaptionList).FirstChild());
-      if (captionDescendant) {
-        return captionDescendant;
-      }
-    } else if (MOZ_UNLIKELY(aFrame->GetType() == nsGkAtoms::tableFrame)) {
-      nsIFrame* colgroupDescendant =
-        GetFirstNonAnonBoxDescendant(aFrame->GetChildList(kColGroupList).FirstChild());
-      if (colgroupDescendant) {
-        return colgroupDescendant;
-      }
-    }
-
-    // USUAL CASE: Descend to the first child in principal list.
-    aFrame = aFrame->PrincipalChildList().FirstChild();
-  }
-  return aFrame;
-}
-
-/**
- * Sorting helper-function that compares two frames' "order" property-values,
- * and if they're equal, compares the DOM positions of their corresponding
- * content nodes. Returns true if aFrame1 is "less than or equal to" aFrame2
- * according to this comparison.
- *
- * Note: This can't be a static function, because we need to pass it as a
- * template argument. (Only functions with external linkage can be passed as
- * template arguments.)
- *
- * @return true if the computed "order" property of aFrame1 is less than that
- *         of aFrame2, or if the computed "order" values are equal and aFrame1's
- *         corresponding DOM node is earlier than aFrame2's in the DOM tree.
- *         Otherwise, returns false.
- */
-bool
-IsOrderLEQWithDOMFallback(nsIFrame* aFrame1,
-                          nsIFrame* aFrame2)
-{
-  MOZ_ASSERT(aFrame1->IsFlexItem() && aFrame2->IsFlexItem(),
-             "this method only intended for comparing flex items");
-  MOZ_ASSERT(aFrame1->GetParent() == aFrame2->GetParent(),
-             "this method only intended for comparing siblings");
-  if (aFrame1 == aFrame2) {
-    // Anything is trivially LEQ itself, so we return "true" here... but it's
-    // probably bad if we end up actually needing this, so let's assert.
-    NS_ERROR("Why are we checking if a frame is LEQ itself?");
-    return true;
-  }
-
-  if (aFrame1->GetType() == nsGkAtoms::placeholderFrame ||
-      aFrame2->GetType() == nsGkAtoms::placeholderFrame) {
-    // Treat placeholders (for abspos/fixedpos frames) as LEQ everything.  This
-    // ensures we don't reorder them w.r.t. one another, which is sufficient to
-    // prevent them from noticeably participating in "order" reordering.
-    return true;
-  }
-
-  const bool isInLegacyBox = IsLegacyBox(aFrame1->GetParent());
-
-  int32_t order1 = GetOrderOrBoxOrdinalGroup(aFrame1, isInLegacyBox);
-  int32_t order2 = GetOrderOrBoxOrdinalGroup(aFrame2, isInLegacyBox);
-
-  if (order1 != order2) {
-    return order1 < order2;
-  }
-
-  // The "order" values are equal, so we need to fall back on DOM comparison.
-  // For that, we need to dig through any anonymous box wrapper frames to find
-  // the actual frame that corresponds to our child content.
-  aFrame1 = GetFirstNonAnonBoxDescendant(aFrame1);
-  aFrame2 = GetFirstNonAnonBoxDescendant(aFrame2);
-  MOZ_ASSERT(aFrame1 && aFrame2,
-             "why do we have an anonymous box without any "
-             "non-anonymous descendants?");
-
-
-  // Special case:
-  // If either frame is for generated content from ::before or ::after, then
-  // we can't use nsContentUtils::PositionIsBefore(), since that method won't
-  // recognize generated content as being an actual sibling of other nodes.
-  // We know where ::before and ::after nodes *effectively* insert in the DOM
-  // tree, though (at the beginning & end), so we can just special-case them.
-  nsIAtom* pseudo1 = aFrame1->StyleContext()->GetPseudo();
-  nsIAtom* pseudo2 = aFrame2->StyleContext()->GetPseudo();
-
-  if (pseudo1 == nsCSSPseudoElements::before ||
-      pseudo2 == nsCSSPseudoElements::after) {
-    // frame1 is ::before and/or frame2 is ::after => frame1 is LEQ frame2.
-    return true;
-  }
-  if (pseudo1 == nsCSSPseudoElements::after ||
-      pseudo2 == nsCSSPseudoElements::before) {
-    // frame1 is ::after and/or frame2 is ::before => frame1 is not LEQ frame2.
-    return false;
-  }
-
-  // Usual case: Compare DOM position.
-  nsIContent* content1 = aFrame1->GetContent();
-  nsIContent* content2 = aFrame2->GetContent();
-  MOZ_ASSERT(content1 != content2,
-             "Two different flex items are using the same nsIContent node for "
-             "comparison, so we may be sorting them in an arbitrary order");
-
-  return nsContentUtils::PositionIsBefore(content1, content2);
-}
-
-/**
- * Sorting helper-function that compares two frames' "order" property-values.
- * Returns true if aFrame1 is "less than or equal to" aFrame2 according to this
- * comparison.
- *
- * Note: This can't be a static function, because we need to pass it as a
- * template argument. (Only functions with external linkage can be passed as
- * template arguments.)
- *
- * @return true if the computed "order" property of aFrame1 is less than or
- *         equal to that of aFrame2.  Otherwise, returns false.
- */
-bool
-IsOrderLEQ(nsIFrame* aFrame1,
-           nsIFrame* aFrame2)
-{
-  MOZ_ASSERT(aFrame1->IsFlexItem() && aFrame2->IsFlexItem(),
-             "this method only intended for comparing flex items");
-  MOZ_ASSERT(aFrame1->GetParent() == aFrame2->GetParent(),
-             "this method only intended for comparing siblings");
-
-  if (aFrame1->GetType() == nsGkAtoms::placeholderFrame ||
-      aFrame2->GetType() == nsGkAtoms::placeholderFrame) {
-    // Treat placeholders (for abspos/fixedpos frames) as LEQ everything.  This
-    // ensures we don't reorder them w.r.t. one another, which is sufficient to
-    // prevent them from noticeably participating in "order" reordering.
-    return true;
-  }
-
-  const bool isInLegacyBox = IsLegacyBox(aFrame1->GetParent());
-
-  int32_t order1 = GetOrderOrBoxOrdinalGroup(aFrame1, isInLegacyBox);
-  int32_t order2 = GetOrderOrBoxOrdinalGroup(aFrame2, isInLegacyBox);
-
-  return order1 <= order2;
 }
 
 uint8_t
@@ -2383,18 +2204,6 @@ nsFlexContainerFrame::Init(nsIContent*       aContent,
   }
 }
 
-template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
-/* static */ bool
-nsFlexContainerFrame::SortChildrenIfNeeded()
-{
-  if (nsIFrame::IsFrameListSorted<IsLessThanOrEqual>(mFrames)) {
-    return false;
-  }
-
-  nsIFrame::SortFrameList<IsLessThanOrEqual>(mFrames);
-  return true;
-}
-
 /* virtual */
 nsIAtom*
 nsFlexContainerFrame::GetType() const
@@ -2446,22 +2255,24 @@ nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                        const nsRect&           aDirtyRect,
                                        const nsDisplayListSet& aLists)
 {
-  // XXXdholbert hacky temporary band-aid for bug 1059138: Trivially pass this
-  // assertion (skip it, basically) if the first child is part of a shadow DOM.
-  // (IsOrderLEQWithDOMFallback doesn't know how to compare tree-position of a
-  // shadow-DOM element vs. a non-shadow-DOM element.)
-  NS_ASSERTION(
-    (!mFrames.IsEmpty() &&
-     mFrames.FirstChild()->GetContent()->GetContainingShadow()) ||
-    nsIFrame::IsFrameListSorted<IsOrderLEQWithDOMFallback>(mFrames),
-    "Child frames aren't sorted correctly");
-
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   // Our children are all block-level, so their borders/backgrounds all go on
   // the BlockBorderBackgrounds list.
   nsDisplayListSet childLists(aLists, aLists.BlockBorderBackgrounds());
-  for (nsIFrame* childFrame : mFrames) {
+
+  typedef CSSOrderAwareFrameIterator::OrderState OrderState;
+  OrderState orderState =
+    HasAnyStateBits(NS_STATE_FLEX_CHILDREN_REORDERED)
+    ? OrderState::eKnownUnordered
+    : OrderState::eKnownOrdered;
+
+  CSSOrderAwareFrameIterator iter(this, kPrincipalList,
+                                  CSSOrderAwareFrameIterator::eIncludeAll,
+                                  orderState,
+                                  OrderingPropertyForIter(this));
+  for (; !iter.AtEnd(); iter.Next()) {
+    nsIFrame* childFrame = *iter;
     BuildDisplayListForChild(aBuilder, childFrame, aDirtyRect, childLists,
                              GetDisplayFlagsForFlexItem(childFrame));
   }
@@ -3764,7 +3575,19 @@ nsFlexContainerFrame::GenerateFlexLines(
   // checked against entries in aStruts.)
   uint32_t itemIdxInContainer = 0;
 
-  for (nsIFrame* childFrame : mFrames) {
+  CSSOrderAwareFrameIterator iter(this, kPrincipalList,
+                                  CSSOrderAwareFrameIterator::eIncludeAll,
+                                  CSSOrderAwareFrameIterator::eUnknownOrder,
+                                  OrderingPropertyForIter(this));
+
+  if (iter.ItemsAreAlreadyInOrder()) {
+    RemoveStateBits(NS_STATE_FLEX_CHILDREN_REORDERED);
+  } else {
+    AddStateBits(NS_STATE_FLEX_CHILDREN_REORDERED);
+  }
+
+  for (; !iter.AtEnd(); iter.Next()) {
+    nsIFrame* childFrame = *iter;
     // Don't create flex items / lines for placeholder frames:
     if (childFrame->GetType() == nsGkAtoms::placeholderFrame) {
       aPlaceholders.AppendElement(childFrame);
@@ -4153,24 +3976,6 @@ nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
        eStyleUnit_Auto != stylePos->mOffset.GetBStartUnit(wm) &&
        eStyleUnit_Auto != stylePos->mOffset.GetBEndUnit(wm))) {
     AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
-  }
-
-  // If we've never reordered our children, then we can trust that they're
-  // already in DOM-order, and we only need to consider their "order" property
-  // when checking them for sortedness & sorting them.
-  //
-  // After we actually sort them, though, we can't trust that they're in DOM
-  // order anymore.  So, from that point on, our sort & sorted-order-checking
-  // operations need to use a fancier LEQ function that also takes DOM order
-  // into account, so that we can honor the spec's requirement that frames w/
-  // equal "order" values are laid out in DOM order.
-
-  if (!HasAnyStateBits(NS_STATE_FLEX_CHILDREN_REORDERED)) {
-    if (SortChildrenIfNeeded<IsOrderLEQ>()) {
-      AddStateBits(NS_STATE_FLEX_CHILDREN_REORDERED);
-    }
-  } else {
-    SortChildrenIfNeeded<IsOrderLEQWithDOMFallback>();
   }
 
   RenumberList();
