@@ -13,22 +13,22 @@ if [ -f /etc/lsb-release ]; then
 
     if [ "${DISTRIB_ID}" = "Ubuntu" -a "${DISTRIB_RELEASE}" = "16.04" ]; then
         HG_DEB=1
-        HG_DIGEST=09c7c80324158b755c23855d47caeb40b953218b1c89c7f5f21bbdea9de1d13a7ed5a7e647022ff626fb9674655baf05f6965361ccef3fa82b94d1fa8a684187
-        HG_SIZE=44956
-        HG_FILENAME=mercurial_3.9.1_amd64.deb
+        HG_DIGEST=e891b46d8e97cb1c6b0c714e037ea78ae3043f49d27655332c615c861ebb94654a064298c7363d318edd7750c45574cc434848ae758adbcd2a41c6c390006053
+        HG_SIZE=159870
+        HG_FILENAME=mercurial_4.1.2_amd64.deb
 
-        HG_COMMON_DIGEST=ef281d1368a8cf2363bc08c050aff3825028ba4d47d491e50e10f4c78574d5e87231a0096c7d9cb3439dd4b5172057a050e02946b4cf8b2bdf239ffd50a85d06
-        HG_COMMON_SIZE=1847796
-        HG_COMMON_FILENAME=mercurial-common_3.9.1_all.deb
+        HG_COMMON_DIGEST=112fab48805f267343c5757af5633ef51e4a8fcc7029b83afb7790ba9600ec185d4857dd1925c9aa724bc191f5f37039a59900b99f95e3427bf5d82c85447b69
+        HG_COMMON_SIZE=1919078
+        HG_COMMON_FILENAME=mercurial-common_4.1.2_all.deb
     elif [ "${DISTRIB_ID}" = "Ubuntu" -a "${DISTRIB_RELEASE}" = "12.04" ]; then
         HG_DEB=1
-        HG_DIGEST=f816a6ca91129c0723527d98a2978c253a3f941f4358f9f8abd6f3ab8e8601ed3efc347828aac8f0d0762f819f9b777299e31037c39eb0c5af05aa76ac25c3bf
-        HG_SIZE=55144
-        HG_FILENAME=mercurial_3.9.1_amd64.deb
+        HG_DIGEST=67823aa455c59dbdc24ec1f044b0afdb5c03520ef3601509cb5466dc0ac332846caf96176f07de501c568236f6909e55dfc8f4b02f8c69fa593a4abca9abfeb8
+        HG_SIZE=167880
+        HG_FILENAME=mercurial_4.1.2_amd64.deb
 
-        HG_COMMON_DIGEST=ac2b2fab9f19438c77147dca8df5020d10b129052e6c5f77ebe9a4c21eb0cedb1acfe25b146577bf5e9b66f3d6cfca2474f7575adfba1b3849b66bf5bc321015
-        HG_COMMON_SIZE=2993590
-        HG_COMMON_FILENAME=mercurial-common_3.9.4_all.deb
+        HG_COMMON_DIGEST=5e1c462a9b699d2068f7a0c14589f347ca719c216181ef7a625033df757185eeb3a8fed57986829a7943f16af5a8d66ddf457cc7fc4af557be88eb09486fe665
+        HG_COMMON_SIZE=3091596
+        HG_COMMON_FILENAME=mercurial-common_4.1.2_all.deb
     fi
 
     CERT_PATH=/etc/ssl/certs/ca-certificates.crt
@@ -46,9 +46,9 @@ elif [ -f /etc/centos-release ]; then
             # below, think long and hard about the implications of limiting
             # Mercurial to TLS 1.0.
             #HG_RPM=1
-            #HG_DIGEST=68f020e5584d58855c46b5e36e7cd7d480a69effcdc927dcb1f97cb9b638d23e058ed113dbfd817a047ba0550d287cedcbec0cee67a9ef2519657339fe2f9426
-            #HG_SIZE=4175628
-            #HG_FILENAME=mercurial-3.9.1-1.x86_64.rpm
+            #HG_DIGEST=c64e00c74402cd9c4ef9792177354fa6ff9c8103f41358f0eab2b15dba900d47d04ea582c6c6ebb80cf52495a28433987ffb67a5f39cd843b6638e3fa46921c8
+            #HG_SIZE=4437360
+            #HG_FILENAME=mercurial-4.1.2.x86_64.rpm
             echo "We currently require Python 2.7 and /usr/bin/pip2.7 to run Mercurial"
             exit 1
         fi
@@ -96,16 +96,16 @@ elif [ -n "${PIP_PATH}" ]; then
 tooltool_fetch <<EOF
 [
 {
-"size": 4797967,
+"size": 5133417,
 "visibility": "public",
-"digest": "d96e45cafd36be692d6ce5259e18140641c24f73d4731ff767df0f39af425b0630c687436fc0f53d5882495ceacacaadd5e19f8f7c701b4b94c48631123b4666",
+"digest": "32b59d23d6b911b7a7e9c9c7659457daf2eba771d5170ad5a44a068d7941939e1d68c72c847e488bf26c14392e5d7ee25e5f660e0330250d0685acce40552745",
 "algorithm": "sha512",
-"filename": "mercurial-3.9.1.tar.gz"
+"filename": "mercurial-4.1.2.tar.gz"
 }
 ]
 EOF
 
-   ${PIP_PATH} install mercurial-3.9.1.tar.gz
+   ${PIP_PATH} install mercurial-4.1.2.tar.gz
 else
     echo "Do not know how to install Mercurial on this OS"
     exit 1
