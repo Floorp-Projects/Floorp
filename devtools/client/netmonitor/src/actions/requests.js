@@ -12,7 +12,6 @@ const {
   SEND_CUSTOM_REQUEST,
   UPDATE_REQUEST,
 } = require("../constants");
-const { NetMonitorController } = require("../netmonitor-controller");
 const { getSelectedRequest } = require("../selectors/index");
 
 function addRequest(id, data, batch) {
@@ -47,7 +46,7 @@ function cloneSelectedRequest() {
  * Send a new HTTP request using the data in the custom request form.
  */
 function sendCustomRequest() {
-  if (!NetMonitorController.supportsCustomRequest) {
+  if (!window.NetMonitorController.supportsCustomRequest) {
     return cloneSelectedRequest();
   }
 
@@ -71,7 +70,7 @@ function sendCustomRequest() {
       data.body = selected.requestPostData.postData.text;
     }
 
-    NetMonitorController.webConsoleClient.sendHTTPRequest(data, (response) => {
+    window.NetMonitorController.webConsoleClient.sendHTTPRequest(data, (response) => {
       return dispatch({
         type: SEND_CUSTOM_REQUEST,
         id: response.eventActor.actor,
