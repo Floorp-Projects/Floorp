@@ -573,20 +573,76 @@ CSSToLayoutDeviceScale nsIWidget::GetDefaultScale()
   return CSSToLayoutDeviceScale(devPixelsPerCSSPixel);
 }
 
+// The number of device pixels per CSS pixel. A value <= 0 means choose
+// automatically based on the DPI. A positive value is used as-is. This effectively
+// controls the size of a CSS "px".
+static double sDevPixelsPerCSSPixel = -1.0;
+
+/* static */
+void nsIWidget::ScaleOverrideChanged()
+{
+  nsAdoptingCString prefString = Preferences::GetCString("layout.css.devPixelsPerPx");
+  if (!prefString.IsEmpty()) {
+    sDevPixelsPerCSSPixel = PR_strtod(prefString, nullptr);
+  } else {
+    sDevPixelsPerCSSPixel = -1.0;
+  }
+}
+
+class ProfileChangeObserver final : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+  static void Init();
+private:
+  ProfileChangeObserver();
+  ~ProfileChangeObserver();
+};
+
+ProfileChangeObserver::ProfileChangeObserver()
+{
+}
+
+ProfileChangeObserver::~ProfileChangeObserver()
+{
+}
+
+/* static */
+void ProfileChangeObserver::Init()
+{
+  nsCOMPtr<nsIObserver> profileChangeObserver = new ProfileChangeObserver();
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  obs->AddObserver(profileChangeObserver, "profile-do-change", false);
+  // We don't have to observe XPCOM shutdown to remove the observer
+  // explicitly. Also, we don't have to hold a strong reference to the
+  // observer on our own. The observer service will do them for us.
+}
+
+NS_IMPL_ISUPPORTS(ProfileChangeObserver,
+                  nsIObserver)
+
+NS_IMETHODIMP
+ProfileChangeObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                               const char16_t* aData)
+{
+  if (!strcmp(aTopic, "profile-do-change")) {
+    nsIWidget::ScaleOverrideChanged();
+  }
+  return NS_OK;
+}
+
 /* static */
 double nsIWidget::DefaultScaleOverride()
 {
-  // The number of device pixels per CSS pixel. A value <= 0 means choose
-  // automatically based on the DPI. A positive value is used as-is. This effectively
-  // controls the size of a CSS "px".
-  double devPixelsPerCSSPixel = -1.0;
-
-  nsAdoptingCString prefString = Preferences::GetCString("layout.css.devPixelsPerPx");
-  if (!prefString.IsEmpty()) {
-    devPixelsPerCSSPixel = PR_strtod(prefString, nullptr);
+  static bool valueCached = false;
+  if (!valueCached) {
+    ScaleOverrideChanged();
+    ProfileChangeObserver::Init();
+    valueCached = true;
   }
 
-  return devPixelsPerCSSPixel;
+  return sDevPixelsPerCSSPixel;
 }
 
 //-------------------------------------------------------------------------
