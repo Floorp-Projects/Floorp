@@ -1310,9 +1310,26 @@
 ; easily called from an elevated instance of the binary. Since this can be
 ; called by an elevated instance logging is not performed in this function.
 Function SetAsDefaultAppUserHKCU
+  ; See if we're using path hash suffixed registry keys for this install
+  ${GetLongPath} "$INSTDIR\${FileMainEXE}" $8
+  ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
+  ClearErrors
+  ReadRegStr $0 HKCU "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
+  ${If} ${Errors}
+  ${OrIf} ${AtMostWin2008R2}
+    ClearErrors
+    ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
+  ${EndIf}
+  StrCpy $0 $0 -2
+  ${If} $0 != $8
+    ${If} $AppUserModelID == ""
+      ${InitHashAppModelId} "$INSTDIR" "Software\Mozilla\${AppName}\TaskBarIDs"
+    ${EndIf}
+    StrCpy $R9 "${AppRegName}-$AppUserModelID"
+  ${EndIf}
+
   ; Only set as the user's StartMenuInternet browser if the StartMenuInternet
   ; registry keys are for this install.
-  StrCpy $R9 "${AppRegName}-$AppUserModelID"
   ClearErrors
   ReadRegStr $0 HKCU "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
   ${If} ${Errors}
@@ -1323,7 +1340,6 @@ Function SetAsDefaultAppUserHKCU
   ${Unless} ${Errors}
     WriteRegStr HKCU "Software\Clients\StartMenuInternet" "" "$R9"
   ${Else}
-    ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
     ClearErrors
     ReadRegStr $0 HKCU "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
     ${If} ${Errors}
