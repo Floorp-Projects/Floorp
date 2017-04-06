@@ -535,6 +535,15 @@ Gecko_GetPositionInSegment(RawGeckoAnimationPropertySegmentBorrowed aSegment,
                                             aBeforeFlag);
 }
 
+RawServoAnimationValueBorrowedOrNull
+Gecko_AnimationGetBaseStyle(void* aBaseStyles, nsCSSPropertyID aProperty)
+{
+  auto base =
+    static_cast<nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>*>
+      (aBaseStyles);
+  return base->GetWeak(aProperty);
+}
+
 void
 Gecko_FillAllBackgroundLists(nsStyleImageLayers* aLayers, uint32_t aMaxLen)
 {
@@ -1173,7 +1182,7 @@ void
 Gecko_EnsureStyleAnimationArrayLength(void* aArray, size_t aLen)
 {
   auto base =
-    reinterpret_cast<nsStyleAutoArray<StyleAnimation>*>(aArray);
+    static_cast<nsStyleAutoArray<StyleAnimation>*>(aArray);
 
   size_t oldLength = base->Length();
 

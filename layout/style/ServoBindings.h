@@ -199,6 +199,13 @@ double Gecko_GetPositionInSegment(
   RawGeckoAnimationPropertySegmentBorrowed aSegment,
   double aProgress,
   mozilla::ComputedTimingFunction::BeforeFlag aBeforeFlag);
+// Get servo's AnimationValue for |aProperty| from the cached base style
+// |aBaseStyles|.
+// |aBaseStyles| is nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>.
+// We use void* to avoid exposing nsRefPtrHashtable in FFI.
+RawServoAnimationValueBorrowedOrNull Gecko_AnimationGetBaseStyle(
+  void* aBaseStyles,
+  nsCSSPropertyID aProperty);
 
 // Atoms.
 nsIAtom* Gecko_Atomize(const char* aString, uint32_t aLength);
