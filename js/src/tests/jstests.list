@@ -868,6 +868,9 @@ skip script test262/language/statements/async-generator/yield-star-async-return.
 skip script test262/language/statements/async-generator/yield-star-async-throw.js
 
 # https://github.com/tc39/test262/pull/947
+skip script test262/intl402/NumberFormat/11.1.1_32.js
+
+# https://github.com/tc39/test262/pull/947
 skip script test262/intl402/DateTimeFormat/prototype/formatToParts/length.js
 
 # https://github.com/tc39/test262/pull/947
