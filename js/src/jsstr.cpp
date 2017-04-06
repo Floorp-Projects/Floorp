@@ -1060,6 +1060,40 @@ CopyChars(CharT* destChars, const CharT* srcChars, size_t length)
     PodCopy(destChars, srcChars, length);
 }
 
+template <typename DestChar, typename SrcChar>
+static inline UniquePtr<DestChar[], JS::FreePolicy>
+ToUpperCase(JSContext* cx, const SrcChar* chars, size_t startIndex, size_t length,
+            size_t* resultLength)
+{
+    MOZ_ASSERT(startIndex < length);
+
+    using DestCharPtr = UniquePtr<DestChar[], JS::FreePolicy>;
+
+    *resultLength = length;
+    DestCharPtr buf = cx->make_pod_array<DestChar>(length + 1);
+    if (!buf)
+        return buf;
+
+    CopyChars(buf.get(), chars, startIndex);
+
+    size_t readChars = ToUpperCaseImpl(buf.get(), chars, startIndex, length, length);
+    if (readChars < length) {
+        size_t actualLength = ToUpperCaseLength(chars, readChars, length);
+
+        *resultLength = actualLength;
+        DestCharPtr buf2 = ReallocChars(cx, Move(buf), length + 1, actualLength + 1);
+        if (!buf2)
+            return buf2;
+
+        buf = Move(buf2);
+
+        MOZ_ALWAYS_TRUE(length ==
+            ToUpperCaseImpl(buf.get(), chars, readChars, length, actualLength));
+    }
+
+    return buf;
+}
+
 template <typename CharT>
 static JSString*
 ToUpperCase(JSContext* cx, JSLinearString* str)
@@ -1131,48 +1165,16 @@ ToUpperCase(JSContext* cx, JSLinearString* str)
         }
 
         if (resultIsLatin1) {
-            resultLength = length;
-            Latin1CharPtr buf = cx->make_pod_array<Latin1Char>(resultLength + 1);
+            Latin1CharPtr buf = ToUpperCase<Latin1Char>(cx, chars, i, length, &resultLength);
             if (!buf)
                 return nullptr;
 
-            CopyChars(buf.get(), chars, i);
-
-            size_t readChars = ToUpperCaseImpl(buf.get(), chars, i, length, resultLength);
-            if (readChars < length) {
-                resultLength = ToUpperCaseLength(chars, readChars, length);
-
-                Latin1CharPtr buf2 = ReallocChars(cx, Move(buf), length + 1, resultLength + 1);
-                if (!buf2)
-                    return nullptr;
-
-                buf = Move(buf2);
-
-                MOZ_ALWAYS_TRUE(length ==
-                    ToUpperCaseImpl(buf.get(), chars, readChars, length, resultLength));
-            }
             newChars.construct<Latin1CharPtr>(Move(buf));
         } else {
-            resultLength = length;
-            TwoByteCharPtr buf = cx->make_pod_array<char16_t>(resultLength + 1);
+            TwoByteCharPtr buf = ToUpperCase<char16_t>(cx, chars, i, length, &resultLength);
             if (!buf)
                 return nullptr;
 
-            CopyChars(buf.get(), chars, i);
-
-            size_t readChars = ToUpperCaseImpl(buf.get(), chars, i, length, resultLength);
-            if (readChars < length) {
-                resultLength = ToUpperCaseLength(chars, readChars, length);
-
-                TwoByteCharPtr buf2 = ReallocChars(cx, Move(buf), length + 1, resultLength + 1);
-                if (!buf2)
-                    return nullptr;
-
-                buf = Move(buf2);
-
-                MOZ_ALWAYS_TRUE(length ==
-                    ToUpperCaseImpl(buf.get(), chars, readChars, length, resultLength));
-            }
             newChars.construct<TwoByteCharPtr>(Move(buf));
         }
     }
