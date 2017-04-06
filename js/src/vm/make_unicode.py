@@ -26,6 +26,7 @@ import re
 import os
 import sys
 from contextlib import closing
+from functools import partial
 
 # ECMAScript 2016
 # §11.2 White Space
@@ -476,30 +477,38 @@ def make_non_bmp_file(version,
 """)
 
 def make_bmp_mapping_test(version, test_table):
+    def unicodeEsc(n):
+        return '\u{:04X}'.format(n)
+
     file_name = '../tests/ecma_5/String/string-upper-lower-mapping.js'
-    with io.open(file_name, mode='wb') as test_mapping:
-        test_mapping.write(warning_message)
-        test_mapping.write(unicode_version_message.format(version))
-        test_mapping.write(public_domain)
-        test_mapping.write('var mapping = [\n')
+    with io.open(file_name, mode='wb') as output:
+        write = partial(print, file=output, sep='', end='')
+        println = partial(print, file=output, sep='', end='\n')
+
+        write(warning_message)
+        write(unicode_version_message.format(version))
+        write(public_domain)
+        println('var mapping = [')
         for code in range(0, MAX_BMP + 1):
             entry = test_table.get(code)
 
             if entry:
                 (upper, lower, name, alias) = entry
-                test_mapping.write('  [' + hex(upper) + ', ' + hex(lower) + '], /* ' +
-                        name + (' (' + alias + ')' if alias else '') + ' */\n')
+                println('  ["{}", "{}"], /* {}{} */'.format(unicodeEsc(upper),
+                                                            unicodeEsc(lower),
+                                                            name,
+                                                            (' (' + alias + ')' if alias else '')))
             else:
-                test_mapping.write('  [' + hex(code) + ', ' + hex(code) + '],\n')
-        test_mapping.write('];')
-        test_mapping.write("""
+                println('  ["{0}", "{0}"],'.format(unicodeEsc(code)))
+        println('];')
+        write("""
 assertEq(mapping.length, 0x10000);
 for (var i = 0; i <= 0xffff; i++) {
     var char = String.fromCharCode(i);
     var info = mapping[i];
 
-    assertEq(char.toUpperCase().charCodeAt(0), info[0]);
-    assertEq(char.toLowerCase().charCodeAt(0), info[1]);
+    assertEq(char.toUpperCase(), info[0]);
+    assertEq(char.toLowerCase(), info[1]);
 }
 
 if (typeof reportCompare === "function")
@@ -695,8 +704,8 @@ def make_unicode_file(version,
  *  stop if you found the best shift
  */
 """
-    def dump(data, name, file):
-        file.write('const uint8_t unicode::' + name + '[] = {\n')
+    def dump(data, name, println):
+        println('const uint8_t unicode::{}[] = {{'.format(name))
 
         line = pad = ' ' * 4
         lines = []
@@ -712,93 +721,75 @@ def make_unicode_file(version,
                 line = line + s + ', '
         lines.append(line.rstrip())
 
-        file.write('\n'.join(lines))
-        file.write('\n};\n')
+        println('\n'.join(lines))
+        println('};')
+
+    def write_table(data_type, name, tbl, idx1_name, idx1, idx2_name, idx2, println):
+        println('const {} unicode::{}[] = {{'.format(data_type, name))
+        for d in tbl:
+            println('    {{ {} }},'.format(', '.join(str(e) for e in d)))
+        println('};')
+        println('')
+
+        dump(idx1, idx1_name, println)
+        println('')
+        dump(idx2, idx2_name, println)
+        println('')
+
+    def write_supplemental_identifier_method(name, group_set, println):
+        println('bool')
+        println('js::unicode::{}(uint32_t codePoint)'.format(name))
+        println('{')
+        for (from_code, to_code) in for_each_non_bmp_group(group_set):
+            println('    if (codePoint >= 0x{:x} && codePoint <= 0x{:x})'.format(from_code,
+                                                                                 to_code))
+            println('        return true;')
+        println('    return false;')
+        println('}')
+        println('')
 
     file_name = 'Unicode.cpp'
     with io.open(file_name, 'wb') as data_file:
-        data_file.write(warning_message)
-        data_file.write(unicode_version_message.format(version))
-        data_file.write(public_domain)
-        data_file.write('#include "vm/Unicode.h"\n\n')
-        data_file.write('using namespace js;\n');
-        data_file.write('using namespace js::unicode;\n')
-        data_file.write(comment)
-        data_file.write('const CharacterInfo unicode::js_charinfo[] = {\n')
-        for d in table:
-            data_file.write('    {')
-            data_file.write(', '.join((str(e) for e in d)))
-            data_file.write('},\n')
-        data_file.write('};\n')
-        data_file.write('\n')
+        write = partial(print, file=data_file, sep='', end='')
+        println = partial(print, file=data_file, sep='', end='\n')
 
-        dump(index1, 'index1', data_file)
-        data_file.write('\n')
-        dump(index2, 'index2', data_file)
-        data_file.write('\n')
+        write(warning_message)
+        write(unicode_version_message.format(version))
+        write(public_domain)
+        println('#include "vm/Unicode.h"')
+        println('')
+        println('using namespace js;')
+        println('using namespace js::unicode;')
+        write(comment)
 
-        data_file.write('const CodepointsWithSameUpperCaseInfo unicode::js_codepoints_with_same_upper_info[] = {\n')
-        for d in same_upper_table:
-            data_file.write('    {')
-            data_file.write(', '.join((str(e) for e in d)))
-            data_file.write('},\n')
-        data_file.write('};\n')
-        data_file.write('\n')
+        write_table('CharacterInfo',
+                    'js_charinfo', table,
+                    'index1', index1,
+                    'index2', index2,
+                    println)
 
-        dump(same_upper_index1, 'codepoints_with_same_upper_index1', data_file)
-        data_file.write('\n')
-        dump(same_upper_index2, 'codepoints_with_same_upper_index2', data_file)
-        data_file.write('\n')
+        write_table('CodepointsWithSameUpperCaseInfo',
+                    'js_codepoints_with_same_upper_info', same_upper_table,
+                    'codepoints_with_same_upper_index1', same_upper_index1,
+                    'codepoints_with_same_upper_index2', same_upper_index2,
+                    println)
 
-        data_file.write('const FoldingInfo unicode::js_foldinfo[] = {\n')
-        for d in folding_table:
-            data_file.write('    {')
-            data_file.write(', '.join((str(e) for e in d)))
-            data_file.write('},\n')
-        data_file.write('};\n')
-        data_file.write('\n')
-
-        dump(folding_index1, 'folding_index1', data_file)
-        data_file.write('\n')
-        dump(folding_index2, 'folding_index2', data_file)
-        data_file.write('\n')
+        write_table('FoldingInfo',
+                    'js_foldinfo', folding_table,
+                    'folding_index1', folding_index1,
+                    'folding_index2', folding_index2,
+                    println)
 
         # If the following assert fails, it means space character is added to
         # non-BMP area.  In that case the following code should be uncommented
         # and the corresponding code should be added to frontend.
         assert len(non_bmp_space_set.keys()) == 0
 
-        data_file.write("""\
-bool
-js::unicode::IsIdentifierStartNonBMP(uint32_t codePoint)
-{
-""")
+        write_supplemental_identifier_method('IsIdentifierStartNonBMP', non_bmp_id_start_set,
+                                             println)
 
-        for (from_code, to_code) in for_each_non_bmp_group(non_bmp_id_start_set):
-            data_file.write("""\
-    if (codePoint >= 0x{:x} && codePoint <= 0x{:x})
-        return true;
-""".format(from_code, to_code))
-
-        data_file.write("""\
-    return false;
-}
-
-bool
-js::unicode::IsIdentifierPartNonBMP(uint32_t codePoint)
-{
-""")
-
-        for (from_code, to_code) in for_each_non_bmp_group(non_bmp_id_cont_set):
-            data_file.write("""\
-    if (codePoint >= 0x{:x} && codePoint <= 0x{:x})
-        return true;
-""".format(from_code, to_code))
-
-        data_file.write("""\
-    return false;
-}
-""")
+        write_supplemental_identifier_method('IsIdentifierPartNonBMP', non_bmp_id_cont_set,
+                                             println)
 
 def getsize(data):
     """ return smallest possible integer size for the given array """
