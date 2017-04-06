@@ -9,6 +9,7 @@ import subprocess
 import sys
 
 import mozinfo
+import mozleak
 from mozprocess import ProcessHandler
 from mozprofile import FirefoxProfile, Preferences
 from mozprofile.permissions import ServerLocations
@@ -77,7 +78,8 @@ def browser_kwargs(test_type, run_info_data, **kwargs):
             "binary_args": kwargs["binary_args"],
             "timeout_multiplier": get_timeout_multiplier(test_type,
                                                          run_info_data,
-                                                         **kwargs)}
+                                                         **kwargs),
+            "leak_check": kwargs["leak_check"]}
 
 
 def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
@@ -127,7 +129,7 @@ class FirefoxBrowser(Browser):
     def __init__(self, logger, binary, prefs_root, extra_prefs=None, debug_info=None,
                  symbols_path=None, stackwalk_binary=None, certutil_binary=None,
                  ca_certificate_path=None, e10s=False, stackfix_dir=None,
-                 binary_args=None, timeout_multiplier=None):
+                 binary_args=None, timeout_multiplier=None, leak_check=False):
         Browser.__init__(self, logger)
         self.binary = binary
         self.prefs_root = prefs_root
@@ -147,12 +149,20 @@ class FirefoxBrowser(Browser):
                                                         self.symbols_path)
         else:
             self.stack_fixer = None
+
         if timeout_multiplier:
             self.init_timeout = self.init_timeout * timeout_multiplier
 
-    def start(self):
-        self.marionette_port = get_free_port(2828, exclude=self.used_ports)
-        self.used_ports.add(self.marionette_port)
+        self.leak_report_file = None
+        self.leak_check = leak_check
+
+    def settings(self, test):
+        return {"check_leaks": self.leak_check and not test.leaks}
+
+    def start(self, **kwargs):
+        if self.marionette_port is None:
+            self.marionette_port = get_free_port(2828, exclude=self.used_ports)
+            self.used_ports.add(self.marionette_port)
 
         env = os.environ.copy()
         env["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "1"
@@ -171,6 +181,14 @@ class FirefoxBrowser(Browser):
                                       "places.history.enabled": False})
         if self.e10s:
             self.profile.set_preferences({"browser.tabs.remote.autostart": True})
+
+        if self.leak_check and kwargs.get("check_leaks", True):
+            self.leak_report_file = os.path.join(self.profile.profile, "runtests_leaks.log")
+            if os.path.exists(self.leak_report_file):
+                os.remove(self.leak_report_file)
+            env["XPCOM_MEM_BLOAT_LOG"] = self.leak_report_file
+        else:
+            self.leak_report_file = None
 
         # Bug 1262954: winxp + e10s, disable hwaccel
         if (self.e10s and platform.system() in ("Windows", "Microsoft") and
@@ -227,6 +245,24 @@ class FirefoxBrowser(Browser):
             except OSError:
                 # This can happen on Windows if the process is already dead
                 pass
+        self.logger.debug("stopped")
+
+    def process_leaks(self):
+        self.logger.debug("PROCESS LEAKS %s" % self.leak_report_file)
+        if self.leak_report_file is None:
+            return
+        mozleak.process_leak_log(
+            self.leak_report_file,
+            leak_thresholds={
+                "default": 0,
+                "tab": 10000,  # See dependencies of bug 1051230.
+                # GMP rarely gets a log, but when it does, it leaks a little.
+                "geckomediaplugin": 20000,
+            },
+            ignore_missing_leaks=["geckomediaplugin"],
+            log=self.logger,
+            stack_fixer=self.stack_fixer
+        )
 
     def pid(self):
         if self.runner.process_handler is None:
@@ -253,6 +289,7 @@ class FirefoxBrowser(Browser):
 
     def cleanup(self):
         self.stop()
+        self.process_leaks()
 
     def executor_browser(self):
         assert self.marionette_port is not None

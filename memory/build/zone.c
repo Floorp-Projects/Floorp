@@ -236,7 +236,7 @@ zone_log(malloc_zone_t *zone, void *address)
 {
 }
 
-#ifdef MOZ_JEMALLOC
+#ifdef MOZ_JEMALLOC4
 
 #include "jemalloc/internal/jemalloc_internal.h"
 

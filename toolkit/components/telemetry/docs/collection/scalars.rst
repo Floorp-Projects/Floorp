@@ -7,6 +7,10 @@ such as flag values, counts, labels and others.
 The scalar measurement types are the suggested way to collect that kind of scalar data.
 The serialized scalar data is submitted with the :doc:`main pings <../data/main-ping>`.
 
+.. important::
+
+    Every new data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`_ from a data collection peer. Just set the feedback? flag for :bsmedberg or one of the other data peers. We try to reply within a business day.
+
 The API
 =======
 Scalar probes can be managed either through the `nsITelemetry interface <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/nsITelemetry.idl>`_
