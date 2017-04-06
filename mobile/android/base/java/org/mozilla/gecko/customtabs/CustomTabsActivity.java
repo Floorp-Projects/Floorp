@@ -205,6 +205,9 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             final Tab tab = tabs.getTab(lastSelectedTabId);
             if (tab == null) {
                 finish();
+            } else {
+                // we are restoring
+                actionBarPresenter.update(tab);
             }
         }
         super.onResume();
