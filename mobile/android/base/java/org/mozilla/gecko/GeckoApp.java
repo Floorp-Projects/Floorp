@@ -129,6 +129,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static org.mozilla.gecko.Tabs.INVALID_TAB_ID;
+
 public abstract class GeckoApp
     extends GeckoActivity
     implements
@@ -214,7 +216,7 @@ public abstract class GeckoApp
     protected boolean mShouldRestore;
     private boolean mSessionRestoreParsingFinished = false;
 
-    protected int lastSelectedTabId = -1;
+    protected int lastSelectedTabId = INVALID_TAB_ID;
 
     private boolean foregrounded = false;
 
@@ -242,7 +244,7 @@ public abstract class GeckoApp
         }
 
         public int getNewTabId(int oldTabId) {
-            return tabIdMap.get(oldTabId, -1);
+            return tabIdMap.get(oldTabId, INVALID_TAB_ID);
         }
 
         @Override
@@ -294,7 +296,7 @@ public abstract class GeckoApp
             });
 
             try {
-                int oldTabId = tabObject.optInt("tabId", -1);
+                int oldTabId = tabObject.optInt("tabId", INVALID_TAB_ID);
                 int newTabId = tab.getId();
                 tabObject.put("tabId", newTabId);
                 if  (oldTabId >= 0) {
@@ -2202,7 +2204,7 @@ public abstract class GeckoApp
 
         if (ACTION_LOAD.equals(action)) {
             Tabs.getInstance().loadUrl(intent.getDataString());
-            lastSelectedTabId = -1;
+            lastSelectedTabId = INVALID_TAB_ID;
         } else if (Intent.ACTION_VIEW.equals(action)) {
             processActionViewIntent(new Runnable() {
                 @Override
@@ -2215,7 +2217,7 @@ public abstract class GeckoApp
                     Tabs.getInstance().loadUrlWithIntentExtras(url, intent, flags);
                 }
             });
-            lastSelectedTabId = -1;
+            lastSelectedTabId = INVALID_TAB_ID;
         } else if (ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
             mLayerView.loadUri(uri, GeckoView.LOAD_SWITCH_TAB);
         } else if (Intent.ACTION_SEARCH.equals(action)) {
@@ -2229,9 +2231,9 @@ public abstract class GeckoApp
             settingsIntent.putExtras(intent.getUnsafe());
             startActivity(settingsIntent);
         } else if (ACTION_SWITCH_TAB.equals(action)) {
-            final int tabId = intent.getIntExtra("TabId", -1);
+            final int tabId = intent.getIntExtra("TabId", INVALID_TAB_ID);
             Tabs.getInstance().selectTab(tabId);
-            lastSelectedTabId = -1;
+            lastSelectedTabId = INVALID_TAB_ID;
         }
 
         recordStartupActionTelemetry(passedUri, action);

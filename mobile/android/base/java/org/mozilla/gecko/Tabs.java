@@ -221,7 +221,7 @@ public class Tabs implements BundleEventListener {
                 return tab.getId();
             }
         }
-        return -1;
+        return INVALID_TAB_ID;
     }
 
     // Must be synchronized to avoid racing on mBookmarksContentObserver.
@@ -389,7 +389,7 @@ public class Tabs implements BundleEventListener {
 
     @RobocopTarget
     public synchronized Tab getTab(int id) {
-        if (id == -1)
+        if (id == INVALID_TAB_ID)
             return null;
 
         if (mTabs.size() == 0)
@@ -552,7 +552,7 @@ public class Tabs implements BundleEventListener {
         }
 
         // All other events handled below should contain a tabID property
-        final int id = message.getInt("tabID", -1);
+        final int id = message.getInt("tabID", INVALID_TAB_ID);
         Tab tab = getTab(id);
 
         // "Tab:Added" is a special case because tab will be null if the tab was just added
@@ -691,7 +691,7 @@ public class Tabs implements BundleEventListener {
             }
 
         } else if ("Tab:SetParentId".equals(event)) {
-            tab.setParentId(message.getInt("parentID", -1));
+            tab.setParentId(message.getInt("parentID", INVALID_TAB_ID));
         }
     }
 
@@ -931,7 +931,7 @@ public class Tabs implements BundleEventListener {
      */
     @RobocopTarget
     public Tab loadUrl(String url, int flags) {
-        return loadUrl(url, null, -1, null, flags);
+        return loadUrl(url, null, INVALID_TAB_ID, null, flags);
     }
 
     public Tab loadUrlWithIntentExtras(final String url, final SafeIntent intent, final int flags) {
@@ -944,7 +944,7 @@ public class Tabs implements BundleEventListener {
 
         // Note: we don't get the URL from the intent so the calling
         // method has the opportunity to change the URL if applicable.
-        return loadUrl(url, null, -1, intent, flags);
+        return loadUrl(url, null, INVALID_TAB_ID, intent, flags);
     }
 
     public Tab loadUrl(final String url, final String searchEngine, final int parentId, final int flags) {
@@ -957,7 +957,7 @@ public class Tabs implements BundleEventListener {
      * @param url          URL of page to load, or search term used if searchEngine is given
      * @param searchEngine if given, the search engine with this name is used
      *                     to search for the url string; if null, the URL is loaded directly
-     * @param parentId     ID of this tab's parent, or -1 if it has no parent
+     * @param parentId     ID of this tab's parent, or INVALID_TAB_ID (-1) if it has no parent
      * @param intent       an intent whose extras are used to modify the request
      * @param flags        flags used to load tab
      *
@@ -1098,7 +1098,7 @@ public class Tabs implements BundleEventListener {
         // getSelectedTab() can return null if no tab has been created yet
         // (i.e., we're restoring a session after a crash). In these cases,
         // don't mark any tabs as a parent.
-        int parentId = -1;
+        int parentId = INVALID_TAB_ID;
         int flags = LOADURL_NEW_TAB;
 
         final Tab selectedTab = getSelectedTab();
