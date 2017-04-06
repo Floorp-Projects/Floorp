@@ -225,7 +225,7 @@ public:
   // Returns true when this stream is can be shared by a new resource load
   bool IsAvailableForSharing() const
   {
-    return !mClosed &&
+    return !mClosed && !mIsPrivateBrowsing &&
       (!mDidNotifyDataEnded || NS_SUCCEEDED(mNotifyDataEndedStatus));
   }
   // Get the principal for this stream. Anything accessing the contents of
