@@ -61,12 +61,12 @@ vector_reader(uint8_t* buffer, uintptr_t size, void* userdata)
 
 TEST(rust, MP4MetadataEmpty)
 {
-  mp4parse_error rv;
+  mp4parse_status rv;
   mp4parse_io io;
 
   // Shouldn't be able to read with no context.
   rv = mp4parse_read(nullptr);
-  EXPECT_EQ(rv, MP4PARSE_ERROR_BADARG);
+  EXPECT_EQ(rv, mp4parse_status_BAD_ARG);
 
   // Shouldn't be able to wrap an mp4parse_io with null members.
   io = { nullptr, nullptr };
@@ -87,7 +87,7 @@ TEST(rust, MP4MetadataEmpty)
   context = mp4parse_new(&io);
   ASSERT_NE(context, nullptr);
   rv = mp4parse_read(context);
-  EXPECT_EQ(rv, MP4PARSE_ERROR_IO);
+  EXPECT_EQ(rv, mp4parse_status_IO);
   mp4parse_free(context);
 
   // Short buffers should fail.
@@ -96,21 +96,21 @@ TEST(rust, MP4MetadataEmpty)
   context = mp4parse_new(&io);
   ASSERT_NE(context, nullptr);
   rv = mp4parse_read(context);
-  EXPECT_EQ(rv, MP4PARSE_ERROR_INVALID);
+  EXPECT_EQ(rv, mp4parse_status_INVALID);
   mp4parse_free(context);
 
   buf.buffer.reserve(4097);
   context = mp4parse_new(&io);
   ASSERT_NE(context, nullptr);
   rv = mp4parse_read(context);
-  EXPECT_EQ(rv, MP4PARSE_ERROR_INVALID);
+  EXPECT_EQ(rv, mp4parse_status_INVALID);
   mp4parse_free(context);
 
   // Empty buffers should fail.
   buf.buffer.resize(4097, 0);
   context = mp4parse_new(&io);
   rv = mp4parse_read(context);
-  EXPECT_EQ(rv, MP4PARSE_ERROR_UNSUPPORTED);
+  EXPECT_EQ(rv, mp4parse_status_UNSUPPORTED);
   mp4parse_free(context);
 }
 
@@ -130,12 +130,12 @@ TEST(rust, MP4Metadata)
   mp4parse_parser* context = mp4parse_new(&io);
   ASSERT_NE(nullptr, context);
 
-  mp4parse_error rv = mp4parse_read(context);
-  EXPECT_EQ(MP4PARSE_OK, rv);
+  mp4parse_status rv = mp4parse_read(context);
+  EXPECT_EQ(mp4parse_status_OK, rv);
 
   uint32_t tracks = 0;
   rv = mp4parse_get_track_count(context, &tracks);
-  EXPECT_EQ(MP4PARSE_OK, rv);
+  EXPECT_EQ(mp4parse_status_OK, rv);
   EXPECT_EQ(2U, tracks);
 
   mp4parse_free(context);
