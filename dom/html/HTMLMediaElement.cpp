@@ -4667,8 +4667,9 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
 
   LOG(LogLevel::Debug, ("%p Created decoder %p for type %s", this, decoder.get(), mimeType.get()));
 
-  RefPtr<MediaResource> resource =
-    MediaResource::Create(decoder->GetResourceCallback(), aChannel);
+  bool isPrivateBrowsing = nsContentUtils::IsInPrivateBrowsing(OwnerDoc());
+  RefPtr<MediaResource> resource = MediaResource::Create(
+    decoder->GetResourceCallback(), aChannel, isPrivateBrowsing);
 
   if (!resource) {
     decoder->Shutdown();

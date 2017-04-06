@@ -363,7 +363,8 @@ MediaCacheFlusher::Observe(nsISupports *aSubject, char const *aTopic, char16_t c
   return NS_OK;
 }
 
-MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient)
+MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient,
+                                   bool aIsPrivateBrowsing)
   : mClient(aClient),
     mInitialized(false),
     mHasHadUpdate(false),
@@ -380,7 +381,8 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient)
     mPinCount(0),
     mCurrentMode(MODE_PLAYBACK),
     mMetadataInPartialBlockBuffer(false),
-    mPartialBlockBuffer(MakeUnique<int64_t[]>(BLOCK_SIZE/sizeof(int64_t)))
+    mPartialBlockBuffer(MakeUnique<int64_t[]>(BLOCK_SIZE/sizeof(int64_t))),
+    mIsPrivateBrowsing(aIsPrivateBrowsing)
 {
 }
 
