@@ -237,3 +237,58 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_APZZoom_Disabled) {
 
   apzc->AssertStateIsReset();
 }
+
+TEST_F(APZCPinchGestureDetectorTester, Pinch_NoSpan) {
+  SCOPED_GFX_PREF(APZAllowZooming, bool, false);
+  SCOPED_GFX_PREF(TouchActionEnabled, bool, false);
+
+  FrameMetrics originalMetrics = GetPinchableFrameMetrics();
+  apzc->SetFrameMetrics(originalMetrics);
+
+  // When APZAllowZooming is false, the ZoomConstraintsClient produces
+  // ZoomConstraints with mAllowZoom set to false.
+  MakeApzcUnzoomable();
+
+  // With APZAllowZooming false, we expect the NotifyPinchGesture function to
+  // get called as the pinch progresses, but the metrics shouldn't change.
+  EXPECT_CALL(*mcc, NotifyPinchGesture(PinchGestureInput::PINCHGESTURE_START, apzc->GetGuid(), LayoutDeviceCoord(0), _)).Times(1);
+  EXPECT_CALL(*mcc, NotifyPinchGesture(PinchGestureInput::PINCHGESTURE_SCALE, apzc->GetGuid(), _, _)).Times(AtLeast(1));
+  EXPECT_CALL(*mcc, NotifyPinchGesture(PinchGestureInput::PINCHGESTURE_END, apzc->GetGuid(), LayoutDeviceCoord(0), _)).Times(1);
+
+  int inputId = 0;
+  ScreenIntPoint focus(250, 300);
+
+  // Do a pinch holding a zero span and moving the focus by y=100
+
+  MultiTouchInput mtiStart = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0);
+  mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId, focus));
+  mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, focus));
+  apzc->ReceiveInputEvent(mtiStart, nullptr);
+
+  focus.y -= 35 + 1; // this is to get over the PINCH_START_THRESHOLD in GestureEventListener.cpp
+  MultiTouchInput mtiMove1 = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
+  mtiMove1.mTouches.AppendElement(CreateSingleTouchData(inputId, focus));
+  mtiMove1.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, focus));
+  apzc->ReceiveInputEvent(mtiMove1, nullptr);
+
+  focus.y -= 100; // do a two-finger scroll of 100 screen pixels
+  MultiTouchInput mtiMove2 = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
+  mtiMove2.mTouches.AppendElement(CreateSingleTouchData(inputId, focus));
+  mtiMove2.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, focus));
+  apzc->ReceiveInputEvent(mtiMove2, nullptr);
+
+  MultiTouchInput mtiEnd = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, TimeStamp(), 0);
+  mtiEnd.mTouches.AppendElement(CreateSingleTouchData(inputId, focus));
+  mtiEnd.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, focus));
+  apzc->ReceiveInputEvent(mtiEnd, nullptr);
+
+  // Done, check the metrics to make sure we scrolled by 100 screen pixels,
+  // which is 50 CSS pixels for the pinchable frame metrics.
+
+  FrameMetrics fm = apzc->GetFrameMetrics();
+  EXPECT_EQ(originalMetrics.GetZoom(), fm.GetZoom());
+  EXPECT_EQ(originalMetrics.GetScrollOffset().x, fm.GetScrollOffset().x);
+  EXPECT_EQ(originalMetrics.GetScrollOffset().y + 50, fm.GetScrollOffset().y);
+
+  apzc->AssertStateIsReset();
+}
