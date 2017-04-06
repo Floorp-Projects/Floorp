@@ -129,23 +129,30 @@ function addCallbacks(anImage, arrayIndex) {
     if (!gCountingFrameUpdates) {
       return;
     }
-    gNumFrameUpdates[arrayIndex]++;
 
-    var r = document.getElementById(gImgs[arrayIndex]).getBoundingClientRect();
-    var snapshot = snapshotRect(window, r, "rgba(0,0,0,0)");
-    if (gLastSnapShot[arrayIndex] != null) {
-      if (snapshot.toDataURL() != gLastSnapShot[arrayIndex].toDataURL()) {
-        gNumSnapShotChanges[arrayIndex]++;
+    // Do this off a setTimeout since nsImageLoadingContent uses a scriptblocker
+    // when it notifies us and calling drawWindow can call will paint observers
+    // which can dispatch a scrollport event, and events assert if dispatched
+    // when there is a scriptblocker.
+    setTimeout(function () {
+      gNumFrameUpdates[arrayIndex]++;
+
+      var r = document.getElementById(gImgs[arrayIndex]).getBoundingClientRect();
+      var snapshot = snapshotRect(window, r, "rgba(0,0,0,0)");
+      if (gLastSnapShot[arrayIndex] != null) {
+        if (snapshot.toDataURL() != gLastSnapShot[arrayIndex].toDataURL()) {
+          gNumSnapShotChanges[arrayIndex]++;
+        }
       }
-    }
-    gLastSnapShot[arrayIndex] = snapshot;
+      gLastSnapShot[arrayIndex] = snapshot;
 
-    if (gNumFrameUpdates[arrayIndex] >= kNumFrameUpdatesToExpect &&
-        gNumSnapShotChanges[arrayIndex] >= kNumFrameUpdatesToExpect) {
-      imgLoadingContent.removeObserver(scriptedObserver);
-    }
-    ok(true, "got frame update");
-    checkIfFinished();
+      if (gNumFrameUpdates[arrayIndex] >= kNumFrameUpdatesToExpect &&
+          gNumSnapShotChanges[arrayIndex] >= kNumFrameUpdatesToExpect) {
+        imgLoadingContent.removeObserver(scriptedObserver);
+      }
+      ok(true, "got frame update");
+      checkIfFinished();
+    }, 0);
   };
   observer = SpecialPowers.wrapCallbackObject(observer);
 

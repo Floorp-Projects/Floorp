@@ -30,6 +30,14 @@ module.exports = createClass({
 
   mixins: [ addons.PureRenderMixin ],
 
+  onKeyDown(event) {
+    let { target } = event;
+
+    if (target == this.boxModelContainer) {
+      this.boxModelMain.onKeyDown(event);
+    }
+  },
+
   render() {
     let {
       boxModel,
@@ -45,10 +53,19 @@ module.exports = createClass({
     return dom.div(
       {
         className: "boxmodel-container",
+        tabIndex: 0,
+        ref: div => {
+          this.boxModelContainer = div;
+        },
+        onKeyDown: this.onKeyDown,
       },
       BoxModelMain({
         boxModel,
+        boxModelContainer: this.boxModelContainer,
         setSelectedNode,
+        ref: boxModelMain => {
+          this.boxModelMain = boxModelMain;
+        },
         onHideBoxModelHighlighter,
         onShowBoxModelEditor,
         onShowBoxModelHighlighter,
