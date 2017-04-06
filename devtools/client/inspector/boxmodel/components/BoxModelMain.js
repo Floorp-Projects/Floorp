@@ -43,13 +43,12 @@ module.exports = createClass({
 
   getInitialState() {
     return {
-      "activedescendant": null,
+      activeDescendant: null,
       focusable: false,
     };
   },
 
   componentDidUpdate() {
-    let { layout } = this.props.boxModel;
     let displayPosition = this.getDisplayPosition();
     let isContentBox = this.getContextBox();
 
@@ -93,10 +92,9 @@ module.exports = createClass({
   },
 
   getAriaActiveDescendant() {
-    let activeDescendant = this.state["activedescendant"];
+    let { activeDescendant } = this.state;
 
     if (!activeDescendant) {
-      let { layout } = this.props.boxModel;
       let displayPosition = this.getDisplayPosition();
       let nextLayout = displayPosition ? this.positionLayout : this.marginLayout;
       activeDescendant = nextLayout.getAttribute("data-box");
@@ -249,7 +247,7 @@ module.exports = createClass({
     boxModelContainer.setAttribute("activedescendant", nextLayout.className);
 
     this.setState({
-      ["activedescendant"]: nextLayout.getAttribute("data-box"),
+      activeDescendant: nextLayout.getAttribute("data-box"),
     });
   },
 
@@ -387,7 +385,6 @@ module.exports = createClass({
    */
   onLevelClick(event) {
     let { target } = event;
-    let { layout } = this.props.boxModel;
     let displayPosition = this.getDisplayPosition();
     let isContentBox = this.getContextBox();
 
@@ -441,8 +438,7 @@ module.exports = createClass({
     height = this.getHeightValue(height);
     width = this.getWidthValue(width);
 
-    let { focusable } = this.state;
-    let level = this.state["activedescendant"];
+    let { activeDescendant: level, focusable } = this.state;
 
     let contentBox = layout["box-sizing"] == "content-box" ?
       dom.p(
