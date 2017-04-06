@@ -7976,13 +7976,13 @@ JitRuntime::generateTLEventVM(JSContext* cx, MacroAssembler& masm, const VMFunct
         }
         if (vmSpecificEventEnabled) {
             TraceLoggerEvent event(f.name());
-            if (!event.hasPayload())
+            if (!event.hasTextId())
                 return false;
 
             if (enter)
-                masm.tracelogStartId(loggerReg, event.payload()->textId(), /* force = */ true);
+                masm.tracelogStartId(loggerReg, event.textId(), /* force = */ true);
             else
-                masm.tracelogStopId(loggerReg, event.payload()->textId(), /* force = */ true);
+                masm.tracelogStopId(loggerReg, event.textId(), /* force = */ true);
         }
 
         masm.Pop(loggerReg);
@@ -9942,22 +9942,22 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
 
     for (uint32_t i = 0; i < patchableTLEvents_.length(); i++) {
         TraceLoggerEvent event(patchableTLEvents_[i].event);
-        if (!event.hasPayload() || !ionScript->addTraceLoggerEvent(event)) {
+        if (!event.hasTextId() || !ionScript->addTraceLoggerEvent(event)) {
             TLFailed = true;
             break;
         }
         Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, patchableTLEvents_[i].offset),
-                ImmPtr((void*) uintptr_t(event.payload()->textId())),
+                ImmPtr((void*) uintptr_t(event.textId())),
                 ImmPtr((void*)0));
     }
 
     if (!TLFailed && patchableTLScripts_.length() > 0) {
         MOZ_ASSERT(TraceLogTextIdEnabled(TraceLogger_Scripts));
         TraceLoggerEvent event(TraceLogger_Scripts, script);
-        if (!event.hasPayload() || !ionScript->addTraceLoggerEvent(event))
+        if (!event.hasTextId() || !ionScript->addTraceLoggerEvent(event))
             TLFailed = true;
         if (!TLFailed) {
-            uint32_t textId = event.payload()->textId();
+            uint32_t textId = event.textId();
             for (uint32_t i = 0; i < patchableTLScripts_.length(); i++) {
                 Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, patchableTLScripts_[i]),
                                                    ImmPtr((void*) uintptr_t(textId)),

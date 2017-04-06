@@ -28,49 +28,65 @@ add_task(function* () {
 
 function* testInitialFocus(inspector, view) {
   info("Test that the focus is on margin layout.");
-  let viewdoc = view.doc;
-  let boxmodel = viewdoc.getElementById("boxmodel-wrapper");
+  let viewdoc = view.document;
+  let boxmodel = viewdoc.querySelector(".boxmodel-container");
   boxmodel.focus();
   EventUtils.synthesizeKey("VK_RETURN", {});
 
-  is(boxmodel.getAttribute("aria-activedescendant"), "boxmodel-margins",
-    "Should be set to the margin layout.");
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-main",
+    "Should be set to the position layout.");
 }
 
 function* testChangingLevels(inspector, view) {
   info("Test that using arrow keys updates level.");
-  let viewdoc = view.doc;
-  let boxmodel = viewdoc.getElementById("boxmodel-wrapper");
+  let viewdoc = view.document;
+  let boxmodel = viewdoc.querySelector(".boxmodel-container");
   boxmodel.focus();
   EventUtils.synthesizeKey("VK_RETURN", {});
   EventUtils.synthesizeKey("VK_ESCAPE", {});
 
   EventUtils.synthesizeKey("VK_DOWN", {});
-  is(boxmodel.getAttribute("aria-activedescendant"), "boxmodel-borders",
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-margins",
+    "Should be set to the margin layout.");
+
+  EventUtils.synthesizeKey("VK_DOWN", {});
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-borders",
     "Should be set to the border layout.");
 
   EventUtils.synthesizeKey("VK_DOWN", {});
-  is(boxmodel.getAttribute("aria-activedescendant"), "boxmodel-padding",
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-paddings",
+    "Should be set to the padding layout.");
+
+  EventUtils.synthesizeKey("VK_DOWN", {});
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-contents",
+    "Should be set to the content layout.");
+
+  EventUtils.synthesizeKey("VK_UP", {});
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-paddings",
     "Should be set to the padding layout.");
 
   EventUtils.synthesizeKey("VK_UP", {});
-  is(boxmodel.getAttribute("aria-activedescendant"), "boxmodel-borders",
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-borders",
     "Should be set to the border layout.");
 
   EventUtils.synthesizeKey("VK_UP", {});
-  is(boxmodel.getAttribute("aria-activedescendant"), "boxmodel-margins",
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-margins",
     "Should be set to the margin layout.");
+
+  EventUtils.synthesizeKey("VK_UP", {});
+  is(boxmodel.getAttribute("activedescendant"), "boxmodel-main",
+    "Should be set to the position layout.");
 }
 
 function* testTabbingWrapAround(inspector, view) {
   info("Test that using arrow keys updates level.");
-  let viewdoc = view.doc;
-  let boxmodel = viewdoc.getElementById("boxmodel-wrapper");
+  let viewdoc = view.document;
+  let boxmodel = viewdoc.querySelector(".boxmodel-container");
   boxmodel.focus();
   EventUtils.synthesizeKey("VK_RETURN", {});
 
-  let editLevel = boxmodel.getAttribute("aria-activedescendant");
-  let dataLevel = viewdoc.getElementById(editLevel).getAttribute("data-box");
+  let editLevel = boxmodel.getAttribute("activedescendant");
+  let dataLevel = viewdoc.querySelector(`.${editLevel}`).getAttribute("data-box");
   let editBoxes = [...viewdoc.querySelectorAll(
     `[data-box="${dataLevel}"].boxmodel-editable`)];
 
@@ -86,18 +102,19 @@ function* testTabbingWrapAround(inspector, view) {
 
 function* testChangingLevelsByClicking(inspector, view) {
   info("Test that clicking on levels updates level.");
-  let viewdoc = view.doc;
-  let boxmodel = viewdoc.getElementById("boxmodel-wrapper");
+  let viewdoc = view.document;
+  let boxmodel = viewdoc.querySelector(".boxmodel-container");
   boxmodel.focus();
 
-  let marginLayout = viewdoc.getElementById("boxmodel-margins");
-  let borderLayout = viewdoc.getElementById("boxmodel-borders");
-  let paddingLayout = viewdoc.getElementById("boxmodel-padding");
-  let layouts = [paddingLayout, borderLayout, marginLayout];
+  let marginLayout = viewdoc.querySelector(".boxmodel-margins");
+  let borderLayout = viewdoc.querySelector(".boxmodel-borders");
+  let paddingLayout = viewdoc.querySelector(".boxmodel-paddings");
+  let contentLayout = viewdoc.querySelector(".boxmodel-contents");
+  let layouts = [contentLayout, paddingLayout, borderLayout, marginLayout];
 
   layouts.forEach(layout => {
     layout.click();
-    is(boxmodel.getAttribute("aria-activedescendant"), layout.id,
+    is(boxmodel.getAttribute("activedescendant"), layout.className,
       "Should be set to" + layout.getAttribute("data-box") + "layout.");
   });
 }
