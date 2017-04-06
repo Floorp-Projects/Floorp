@@ -49,6 +49,7 @@ class TestTimeouts(MarionetteTestCase):
         self.marionette.timeout.implicit = 8
         self.assertEqual(HTMLElement, type(self.marionette.find_element(By.ID, "newDiv")))
 
+    @skip_if_mobile("Bug 1306848 - android emulator is too slow")
     def test_search_timeout_found(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
