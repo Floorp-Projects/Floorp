@@ -5,8 +5,8 @@
 
 @import url(resource://devtools/client/themes/variables.css);
 @import url(resource://devtools/client/themes/common.css);
-@import url(chrome://devtools/skin/toolbars.css);
-@import url(chrome://devtools/skin/tooltips.css);
+@import url(toolbars.css);
+@import url(tooltips.css);
 
 body {
   margin: 0;
