@@ -989,7 +989,8 @@ PresShell::Init(nsIDocument* aDocument,
 
   mSelection = new nsFrameSelection();
 
-  mSelection->Init(this, nullptr);
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  frameSelection->Init(this, nullptr);
 
   // Important: this has to happen after the selection has been set up
 #ifdef SHOW_CARET
@@ -1282,7 +1283,8 @@ PresShell::Destroy()
   }
 
   if (mSelection) {
-    mSelection->DisconnectFromPresShell();
+    RefPtr<nsFrameSelection> frameSelection = mSelection;
+    frameSelection->DisconnectFromPresShell();
   }
 
   if (mAccessibleCaretEventHub) {
@@ -1580,14 +1582,16 @@ PresShell::RemoveSheet(SheetType aType, StyleSheet* aSheet)
 NS_IMETHODIMP
 PresShell::SetDisplaySelection(int16_t aToggle)
 {
-  mSelection->SetDisplaySelection(aToggle);
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  frameSelection->SetDisplaySelection(aToggle);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 PresShell::GetDisplaySelection(int16_t *aToggle)
 {
-  *aToggle = mSelection->GetDisplaySelection();
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  *aToggle = frameSelection->GetDisplaySelection();
   return NS_OK;
 }
 
@@ -1598,8 +1602,9 @@ PresShell::GetSelection(RawSelectionType aRawSelectionType,
   if (!aSelection || !mSelection)
     return NS_ERROR_NULL_POINTER;
 
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
   nsCOMPtr<nsISelection> selection =
-    mSelection->GetSelection(ToSelectionType(aRawSelectionType));
+    frameSelection->GetSelection(ToSelectionType(aRawSelectionType));
 
   if (!selection) {
     return NS_ERROR_INVALID_ARG;
@@ -1615,7 +1620,8 @@ PresShell::GetCurrentSelection(SelectionType aSelectionType)
   if (!mSelection)
     return nullptr;
 
-  return mSelection->GetSelection(aSelectionType);
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  return frameSelection->GetSelection(aSelectionType);
 }
 
 already_AddRefed<nsISelectionController>
@@ -1657,8 +1663,9 @@ PresShell::ScrollSelectionIntoView(RawSelectionType aRawSelectionType,
   if (!mSelection)
     return NS_ERROR_NULL_POINTER;
 
-  return mSelection->ScrollSelectionIntoView(ToSelectionType(aRawSelectionType),
-                                             aRegion, aFlags);
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  return frameSelection->ScrollSelectionIntoView(
+                           ToSelectionType(aRawSelectionType), aRegion, aFlags);
 }
 
 NS_IMETHODIMP
@@ -1667,7 +1674,8 @@ PresShell::RepaintSelection(RawSelectionType aRawSelectionType)
   if (!mSelection)
     return NS_ERROR_NULL_POINTER;
 
-  return mSelection->RepaintSelection(ToSelectionType(aRawSelectionType));
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  return frameSelection->RepaintSelection(ToSelectionType(aRawSelectionType));
 }
 
 // Make shell be a document observer
@@ -2196,31 +2204,36 @@ NS_IMETHODIMP PresShell::GetSelectionFlags(int16_t *aOutEnable)
 NS_IMETHODIMP
 PresShell::PhysicalMove(int16_t aDirection, int16_t aAmount, bool aExtend)
 {
-  return mSelection->PhysicalMove(aDirection, aAmount, aExtend);
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  return frameSelection->PhysicalMove(aDirection, aAmount, aExtend);
 }
 
 NS_IMETHODIMP
 PresShell::CharacterMove(bool aForward, bool aExtend)
 {
-  return mSelection->CharacterMove(aForward, aExtend);
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  return frameSelection->CharacterMove(aForward, aExtend);
 }
 
 NS_IMETHODIMP
 PresShell::CharacterExtendForDelete()
 {
-  return mSelection->CharacterExtendForDelete();
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  return frameSelection->CharacterExtendForDelete();
 }
 
 NS_IMETHODIMP
 PresShell::CharacterExtendForBackspace()
 {
-  return mSelection->CharacterExtendForBackspace();
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  return frameSelection->CharacterExtendForBackspace();
 }
 
 NS_IMETHODIMP
 PresShell::WordMove(bool aForward, bool aExtend)
 {
-  nsresult result = mSelection->WordMove(aForward, aExtend);
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  nsresult result = frameSelection->WordMove(aForward, aExtend);
 // if we can't go down/up any more we must then move caret completely to
 // end/beginning respectively.
   if (NS_FAILED(result))
@@ -2231,13 +2244,15 @@ PresShell::WordMove(bool aForward, bool aExtend)
 NS_IMETHODIMP
 PresShell::WordExtendForDelete(bool aForward)
 {
-  return mSelection->WordExtendForDelete(aForward);
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  return frameSelection->WordExtendForDelete(aForward);
 }
 
 NS_IMETHODIMP
 PresShell::LineMove(bool aForward, bool aExtend)
 {
-  nsresult result = mSelection->LineMove(aForward, aExtend);
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  nsresult result = frameSelection->LineMove(aForward, aExtend);
 // if we can't go down/up any more we must then move caret completely to
 // end/beginning respectively.
   if (NS_FAILED(result))
@@ -2248,7 +2263,8 @@ PresShell::LineMove(bool aForward, bool aExtend)
 NS_IMETHODIMP
 PresShell::IntraLineMove(bool aForward, bool aExtend)
 {
-  return mSelection->IntraLineMove(aForward, aExtend);
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  return frameSelection->IntraLineMove(aForward, aExtend);
 }
 
 
@@ -2261,7 +2277,8 @@ PresShell::PageMove(bool aForward, bool aExtend)
   if (!scrollableFrame)
     return NS_OK;
 
-  mSelection->CommonPageMove(aForward, aExtend, scrollableFrame);
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  frameSelection->CommonPageMove(aForward, aExtend, scrollableFrame);
   // After ScrollSelectionIntoView(), the pending notifications might be
   // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
   return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
@@ -2354,19 +2371,21 @@ PresShell::CompleteMove(bool aForward, bool aExtend)
 {
   // Beware! This may flush notifications via synchronous
   // ScrollSelectionIntoView.
-  nsIContent* limiter = mSelection->GetAncestorLimiter();
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  nsIContent* limiter = frameSelection->GetAncestorLimiter();
   nsIFrame* frame = limiter ? limiter->GetPrimaryFrame()
                             : FrameConstructor()->GetRootElementFrame();
   if (!frame)
     return NS_ERROR_FAILURE;
   nsIFrame::CaretPosition pos =
     frame->GetExtremeCaretPosition(!aForward);
-  mSelection->HandleClick(pos.mResultContent, pos.mContentOffset,
-                          pos.mContentOffset, aExtend, false,
-                          aForward ? CARET_ASSOCIATE_AFTER : CARET_ASSOCIATE_BEFORE);
+  frameSelection->HandleClick(pos.mResultContent, pos.mContentOffset,
+                              pos.mContentOffset, aExtend, false,
+                              aForward ? CARET_ASSOCIATE_AFTER :
+                                         CARET_ASSOCIATE_BEFORE);
   if (limiter) {
     // HandleClick resets ancestorLimiter, so set it again.
-    mSelection->SetAncestorLimiter(limiter);
+    frameSelection->SetAncestorLimiter(limiter);
   }
 
   // After ScrollSelectionIntoView(), the pending notifications might be
@@ -2380,7 +2399,8 @@ PresShell::CompleteMove(bool aForward, bool aExtend)
 NS_IMETHODIMP
 PresShell::SelectAll()
 {
-  return mSelection->SelectAll();
+  RefPtr<nsFrameSelection> frameSelection = mSelection;
+  return frameSelection->SelectAll();
 }
 
 static void
@@ -3158,7 +3178,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
     NS_ASSERTION(node, "No nsIDOMNode for descendant of anchor");
     jumpToRange->SelectNodeContents(node);
     // Select the anchor
-    nsISelection* sel = mSelection->GetSelection(SelectionType::eNormal);
+    RefPtr<Selection> sel = mSelection->GetSelection(SelectionType::eNormal);
     if (sel) {
       sel->RemoveAllRanges();
       sel->AddRange(jumpToRange);
