@@ -20,6 +20,13 @@ add_task(function*() {
   is(prefs.selectedPane, "paneGeneral", "General pane is selected when hash is a nonexistant-category");
   prefs = yield openPreferencesViaHash();
   is(prefs.selectedPane, "paneGeneral", "General pane is selected by default");
+  prefs = yield openPreferencesViaOpenPreferencesAPI("advanced-reports", {leaveOpen: true});
+  is(prefs.selectedPane, "paneAdvanced", "Advanced pane is selected by default");
+  let doc = gBrowser.contentDocument;
+  is(doc.location.hash, "#advanced", "The subcategory should be removed from the URI");
+  ok(doc.querySelector("#updateOthers").hidden, "Search Updates should be hidden when only Reports are requested");
+  ok(!doc.querySelector("#header-advanced").hidden, "The header should be visible when a subcategory is requested");
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 function openPreferencesViaHash(aPane) {
