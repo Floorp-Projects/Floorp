@@ -219,10 +219,10 @@ public:
   struct TrackSize;
   struct GridItemInfo;
   struct GridReflowInput;
-  template<typename Iterator> class GridItemCSSOrderIteratorT;
-  typedef GridItemCSSOrderIteratorT<nsFrameList::iterator>
+  template<typename Iterator> class CSSOrderAwareFrameIteratorT;
+  typedef CSSOrderAwareFrameIteratorT<nsFrameList::iterator>
     GridItemCSSOrderIterator;
-  typedef GridItemCSSOrderIteratorT<nsFrameList::reverse_iterator>
+  typedef CSSOrderAwareFrameIteratorT<nsFrameList::reverse_iterator>
     ReverseGridItemCSSOrderIterator;
   struct FindItemInGridOrderResult
   {
