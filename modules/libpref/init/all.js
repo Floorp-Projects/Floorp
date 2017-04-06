@@ -1162,6 +1162,7 @@ pref("editor.use_css",                       false);
 pref("editor.css.default_length_unit",       "px");
 pref("editor.resizing.preserve_ratio",       true);
 pref("editor.positioning.offset",            0);
+pref("editor.use_div_for_default_newlines",  true);
 
 // Scripts & Windows prefs
 pref("dom.disable_beforeunload",            false);
