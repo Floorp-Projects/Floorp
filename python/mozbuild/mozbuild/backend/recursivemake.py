@@ -524,7 +524,6 @@ class RecursiveMakeBackend(CommonBackend):
                 '.h',
                 '.inc',
                 '.py',
-                '.rs',
             )
             tier = 'export' if any(f.endswith(export_suffixes) for f in obj.outputs) else 'misc'
             self._no_skip[tier].add(backend_file.relobjdir)
