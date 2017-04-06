@@ -25,8 +25,6 @@ add_task(function* () {
 
   let { gStore, windowRequire } = panel.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { NetMonitorController } =
-    windowRequire("devtools/client/netmonitor/src/netmonitor-controller");
   let { getSelectedRequest } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   let selected = getSelectedRequest(gStore.getState());
