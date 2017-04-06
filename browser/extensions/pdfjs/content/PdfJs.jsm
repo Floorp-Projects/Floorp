@@ -190,9 +190,9 @@ var PdfJs = {
 
   updateRegistration: function updateRegistration() {
     if (this.enabled) {
-      this.ensureRegistered();
+      this._ensureRegistered();
     } else {
-      this.ensureUnregistered();
+      this._ensureUnregistered();
     }
   },
 
@@ -205,7 +205,7 @@ var PdfJs = {
       Services.obs.removeObserver(this, TOPIC_PLUGIN_INFO_UPDATED);
       this._initialized = false;
     }
-    this.ensureUnregistered();
+    this._ensureUnregistered();
   },
 
   _migrate: function migrate() {
@@ -324,7 +324,7 @@ var PdfJs = {
     return !enabledPluginFound;
   },
 
-  ensureRegistered: function ensureRegistered() {
+  _ensureRegistered: function _ensureRegistered() {
     if (this._registered) {
       return;
     }
@@ -335,7 +335,7 @@ var PdfJs = {
     this._registered = true;
   },
 
-  ensureUnregistered: function ensureUnregistered() {
+  _ensureUnregistered: function _ensureUnregistered() {
     if (!this._registered) {
       return;
     }
