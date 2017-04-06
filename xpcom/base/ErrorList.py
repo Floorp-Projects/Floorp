@@ -1064,6 +1064,7 @@ with modules["DOM_PUSH"]:
     errors["NS_ERROR_DOM_PUSH_SERVICE_UNREACHABLE"] = FAILURE(4)
     errors["NS_ERROR_DOM_PUSH_INVALID_KEY_ERR"] = FAILURE(5)
     errors["NS_ERROR_DOM_PUSH_MISMATCHED_KEY_ERR"] = FAILURE(6)
+    errors["NS_ERROR_DOM_PUSH_GCM_DISABLED"] = FAILURE(7)
 
 
 # =======================================================================

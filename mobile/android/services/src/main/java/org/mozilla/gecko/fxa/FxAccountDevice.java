@@ -35,16 +35,6 @@ public class FxAccountDevice {
     this.pushAuthKey = pushAuthKey;
   }
 
-  public static FxAccountDevice forRegister(String name, String type, String pushCallback,
-                                            String pushPublicKey, String pushAuthKey) {
-    return new FxAccountDevice(name, null, type, null, pushCallback, pushPublicKey, pushAuthKey);
-  }
-
-  public static FxAccountDevice forUpdate(String id, String name, String pushCallback,
-                                          String pushPublicKey, String pushAuthKey) {
-    return new FxAccountDevice(name, id, null, null, pushCallback, pushPublicKey, pushAuthKey);
-  }
-
   public static FxAccountDevice fromJson(ExtendedJSONObject json) {
     String name = json.getString(JSON_KEY_NAME);
     String id = json.getString(JSON_KEY_ID);
@@ -77,5 +67,48 @@ public class FxAccountDevice {
       body.put(JSON_KEY_PUSH_AUTHKEY, this.pushAuthKey);
     }
     return body;
+  }
+
+  public static class Builder {
+    private String id;
+    private String name;
+    private String type;
+    private Boolean isCurrentDevice;
+    private String pushCallback;
+    private String pushPublicKey;
+    private String pushAuthKey;
+
+    public void id(String id) {
+      this.id = id;
+    }
+
+    public void name(String name) {
+      this.name = name;
+    }
+
+    public void type(String type) {
+      this.type = type;
+    }
+
+    public void isCurrentDevice() {
+      this.isCurrentDevice = Boolean.TRUE;
+    }
+
+    public void pushCallback(String pushCallback) {
+      this.pushCallback = pushCallback;
+    }
+
+    public void pushPublicKey(String pushPublicKey) {
+      this.pushPublicKey = pushPublicKey;
+    }
+
+    public void pushAuthKey(String pushAuthKey) {
+      this.pushAuthKey = pushAuthKey;
+    }
+
+    public FxAccountDevice build() {
+      return new FxAccountDevice(this.name, this.id, this.type, this.isCurrentDevice,
+                                 this.pushCallback, this.pushPublicKey, this.pushAuthKey);
+    }
   }
 }
