@@ -370,7 +370,7 @@ pl_base64_decode_flush(PLBase64Decoder *data)
 static PRUint32
 PL_Base64MaxDecodedLength(PRUint32 size)
 {
-    return ((size * 3) / 4);
+    return size * 0.75;
 }
 
 /*
