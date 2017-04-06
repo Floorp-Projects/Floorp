@@ -5,8 +5,6 @@
 
 include $(topsrcdir)/config/rules.mk
 
-export:: $(CSRCS:.c=.$(OBJ_SUFFIX))
-
 $(CSRCS): %.c: ../inject.c
 	cp $< $@
 

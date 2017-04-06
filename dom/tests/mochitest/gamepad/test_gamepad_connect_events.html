@@ -13,66 +13,10 @@
 <body>
 <script type="text/javascript" src="mock_gamepad.js"></script>
 <script class="testbody" type="text/javascript">
+// This test loads in an iframe, to ensure that the navigator instance is
+// loaded with the correct value of the preference.
 SimpleTest.waitForExplicitFinish();
-
-var gamepad_index;
-
-function pressButton() {
-  GamepadService.newButtonEvent(gamepad_index, 0, true);
-  GamepadService.newButtonEvent(gamepad_index, 0, false);
-}
-
- // Add a gamepad
-function startTests() {
-  window.addEventListener("gamepadbuttondown", function() {
-    // Wait to ensure that all frames received the button press as well.
-    SpecialPowers.executeSoon(tests[testNum++]);
-  });
-
-  GamepadService.addGamepad("test gamepad", // id
-                            GamepadService.standardMapping,
-                            GamepadService.noHand,
-                            4, // buttons
-                            2,
-                            0).then(function(i) {
-                              gamepad_index = i;
-                              gamepad_connected()
-                            });
-}
-
-var f1, f2;
-function gamepad_connected() {
-  f1 = document.getElementById('f1');
-  pressButton();
-}
-
-var testNum = 0;
-var tests = [
-  test1,
-  test2,
-];
-
-function test1() {
-  is(f1.contentWindow.connectedEvents, 1, "right number of connection events in frame 1");
-
-  // Now add another frame.
-  f2 = document.createElement("iframe");
-  f2.addEventListener("load", function() {
-    // When the frame is loaded, press a button again.
-    pressButton();
-  });
-  f2.src = "gamepad_frame.html";
-  document.body.appendChild(f2);
-}
-
-function test2() {
-  is(f1.contentWindow.connectedEvents, 1, "right number of connection events in frame 1");
-  is(f2.contentWindow.connectedEvents, 1, "right number of connection events in frame 2");
-  GamepadService.removeGamepad(gamepad_index);
-  SimpleTest.finish();
-}
-
+setGamepadPreferenceAndCreateIframe("test_check_timestamp_iframe.html");
 </script>
-<iframe id="f1" src="gamepad_frame.html" onload="runGamepadTest(startTests)"></iframe>
 </body>
 </html>

@@ -298,10 +298,14 @@ add_task(function*() {
       initialSelectedTab: 1,
       stateToRestore: SIMPLE_STATE,
       selectedTab: 2,
-      // The initial tab is non-remote and should become remote.
-      // The second and third tabs are new and should be initialized
-      // as remote.
-      expectedFlips: [true, false, false],
+      // The initial tab is non-remote and will flip. The two tabs that
+      // are added after should be initialized as remote. Since the selected
+      // tab is changing, SessionStore should swap the initial tab with the
+      // tab thats in the selectedTab slot. That'll result in a remoteness
+      // state like this:
+      //
+      // [true, false, true]
+      expectedFlips: [false, true, false],
       // All tabs should now be remote.
       expectedRemoteness: [true, true, true],
     },
@@ -313,8 +317,14 @@ add_task(function*() {
       stateToRestore: SIMPLE_STATE,
       selectedTab: 3,
       // The initial tab is remote and should stay that way, even
-      // when put into the background. The second tab should flip
-      // remoteness, and the third one should stay remote.
+      // when put into the background. The initial tab is going to be
+      // swapped into the selectedTab slot, and both of those tabs are
+      // remote already. That will result in the tabs remoteness being
+      // in this order still:
+      //
+      // [true, false, true]
+      //
+      // This means that we'll only need to flip the second tab.
       expectedFlips: [false, true, false],
       // All tabs should now be remote.
       expectedRemoteness: [true, true, true],
@@ -328,12 +338,18 @@ add_task(function*() {
       initialSelectedTab: 1,
       stateToRestore: PINNED_STATE,
       selectedTab: 3,
-      // The initial tab is pinned and will load right away,
-      // so it should flip remoteness. The second tab is new
-      // and pinned, so it should start remote and not flip.
-      // The third tab is not pinned, but it is selected,
-      // so it will start remote, and not flip remoteness.
-      expectedFlips: [true, false, false],
+      // The initial tab is going to swap into the selected slot,
+      // and so after the other two tabs from the PINNED_STATE are
+      // inserted, we'll have a remoteness state like this:
+      //
+      // [true, true, false]
+      //
+      // The two pinned tabs at the start of the PINNED_STATE should
+      // load right away, but should not flip remoteness.
+      //
+      // The third tab is selected, and should load right away, so
+      // it should flip remoteness.
+      expectedFlips: [false, false, true],
       // All tabs should now be remote.
       expectedRemoteness: [true, true, true],
     },

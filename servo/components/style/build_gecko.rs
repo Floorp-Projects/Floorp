@@ -273,6 +273,9 @@ mod bindings {
             .include(add_include("gfxFontConstants.h"))
             .include(add_include("nsThemeConstants.h"))
             .include(add_include("mozilla/dom/AnimationEffectReadOnlyBinding.h"))
+            .include(add_include("mozilla/AnimationPropertySegment.h"))
+            .include(add_include("mozilla/ComputedTiming.h"))
+            .include(add_include("mozilla/ComputedTimingFunction.h"))
             .include(add_include("mozilla/Keyframe.h"))
             .include(add_include("mozilla/ServoElementSnapshot.h"))
             .include(add_include("mozilla/dom/Element.h"))
@@ -308,6 +311,10 @@ mod bindings {
         ];
         let whitelist = [
             "RawGecko.*",
+            "mozilla::AnimationPropertySegment",
+            "mozilla::ComputedTiming",
+            "mozilla::ComputedTimingFunction",
+            "mozilla::ComputedTimingFunction::BeforeFlag",
             "mozilla::ServoStyleSheet",
             "mozilla::ServoElementSnapshot.*",
             "mozilla::CSSPseudoClassType",
@@ -439,6 +446,7 @@ mod bindings {
         let opaque_types = [
             "std::pair__PCCP",
             "std::namespace::atomic___base", "std::atomic__My_base",
+            "std::atomic",
             "std::atomic___base",
             "mozilla::gfx::.*",
             "FallibleTArray",
@@ -590,6 +598,8 @@ mod bindings {
             .whitelisted_function("Gecko_.*");
         let structs_types = [
             "mozilla::css::URLValue",
+            "RawGeckoAnimationPropertySegment",
+            "RawGeckoComputedTiming",
             "RawGeckoDocument",
             "RawGeckoElement",
             "RawGeckoKeyframeList",
@@ -607,6 +617,7 @@ mod bindings {
             "RefPtr",
             "CSSPseudoClassType",
             "TraversalRootBehavior",
+            "ComputedTimingFunction_BeforeFlag",
             "FontFamilyList",
             "FontFamilyType",
             "Keyframe",
@@ -707,7 +718,9 @@ mod bindings {
         let servo_borrow_types = [
             "nsCSSValue",
             "nsTimingFunction",
+            "RawGeckoAnimationPropertySegment",
             "RawGeckoAnimationValueList",
+            "RawGeckoComputedTiming",
             "RawGeckoKeyframeList",
             "RawGeckoComputedKeyframeValuesList",
             "RawGeckoFontFaceRuleList",

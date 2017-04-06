@@ -313,8 +313,8 @@ JsepSessionImpl::SetParameters(const std::string& streamId,
     if (constraintEntry.rid != "") {
       switch (it->mTrack->GetMediaType()) {
         case SdpMediaSection::kVideo: {
-           addVideoExt = static_cast<SdpDirectionAttribute::Direction>(addVideoExt
-                                                                       | it->mTrack->GetDirection());
+          addVideoExt = static_cast<SdpDirectionAttribute::Direction>(addVideoExt
+                                                                      | it->mTrack->GetDirection());
           break;
         }
         case SdpMediaSection::kAudio: {
@@ -2071,7 +2071,8 @@ JsepSessionImpl::ValidateAnswer(const Sdp& offer, const Sdp& answer)
         bool found = false;
         for (const auto& offExt : offerAttrs.GetExtmap().mExtmaps) {
           if (ansExt.extensionname == offExt.extensionname) {
-            if ((ansExt.direction | ~offExt.direction) != ansExt.direction) {
+            if ((ansExt.direction & reverse(offExt.direction))
+                  != ansExt.direction) {
               JSEP_SET_ERROR("Answer has inconsistent direction on extmap "
                              "attribute at level " << i << " ("
                              << ansExt.extensionname << "). Offer had "

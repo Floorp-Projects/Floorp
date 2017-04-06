@@ -144,10 +144,6 @@ var gMainPane = {
 
     // Initializes the fonts dropdowns displayed in this pane.
     this._rebuildFonts();
-    var menulist = document.getElementById("defaultFont");
-    if (menulist.selectedIndex == -1) {
-      menulist.value = FontBuilder.readFontSelection(menulist);
-    }
 
     // Show translation preferences if we may:
     const prefName = "browser.translation.ui.show";

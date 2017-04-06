@@ -8,10 +8,10 @@
 async_test(function(t) {
   var div = addDiv(t);
   div.style.transform = 'translate(0px)';
-  window.getComputedStyle(div).transform;
+  getComputedStyle(div).transform;
   div.style.transition = 'transform 100s';
   div.style.transform = 'translate(10px)';
-  window.getComputedStyle(div).transform;
+  getComputedStyle(div).transform;
 
   var animation = div.getAnimations()[0];
   var originalReadyPromise = animation.ready;
@@ -32,10 +32,10 @@ async_test(function(t) {
 
   // Set up pending transition
   div.style.transform = 'translate(0px)';
-  window.getComputedStyle(div).transform;
+  getComputedStyle(div).transform;
   div.style.transition = 'transform 100s';
   div.style.transform = 'translate(10px)';
-  window.getComputedStyle(div).transform;
+  getComputedStyle(div).transform;
 
   var animation = div.getAnimations()[0];
   assert_equals(animation.playState, 'pending', 'Animation is initially pending');
@@ -54,7 +54,7 @@ async_test(function(t) {
 
   // Now remove transform from transition-property and flush styles
   div.style.transitionProperty = 'none';
-  window.getComputedStyle(div).transitionProperty;
+  getComputedStyle(div).transitionProperty;
 
 }, 'ready promise is rejected when a transition is cancelled by updating'
    + ' transition-property');
@@ -64,10 +64,10 @@ async_test(function(t) {
 
   // Set up pending transition
   div.style.marginLeft = '0px';
-  window.getComputedStyle(div).marginLeft;
+  getComputedStyle(div).marginLeft;
   div.style.transition = 'margin-left 100s';
   div.style.marginLeft = '100px';
-  window.getComputedStyle(div).marginLeft;
+  getComputedStyle(div).marginLeft;
 
   var animation = div.getAnimations()[0];
   assert_equals(animation.playState, 'pending', 'Animation is initially pending');
@@ -86,7 +86,7 @@ async_test(function(t) {
 
   // Now update the transition to animate to something not-interpolable
   div.style.marginLeft = 'auto';
-  window.getComputedStyle(div).marginLeft;
+  getComputedStyle(div).marginLeft;
 
 }, 'ready promise is rejected when a transition is cancelled by changing'
    + ' the transition property to something not interpolable');

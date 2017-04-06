@@ -252,7 +252,7 @@ function waitForAllAnimations(animations) {
  * we actually get a transition instead of that being the initial value.
  */
 function flushComputedStyle(elem) {
-  var cs = window.getComputedStyle(elem);
+  var cs = getComputedStyle(elem);
   cs.marginLeft;
 }
 

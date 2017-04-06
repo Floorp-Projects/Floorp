@@ -21,7 +21,7 @@ promise_test(function(t) {
     transition.effect = null;
     assert_equals(transition.transitionProperty, 'left');
     assert_equals(transition.playState, 'finished');
-    assert_equals(window.getComputedStyle(div).left, '100px');
+    assert_equals(getComputedStyle(div).left, '100px');
     return watcher.wait_for('transitionend');
   });
 }, 'Test for removing a transition effect');
@@ -44,8 +44,8 @@ promise_test(function(t) {
                                            100 * MS_PER_SEC);
     assert_equals(transition.transitionProperty, 'left');
     assert_equals(transition.playState, 'running');
-    assert_equals(window.getComputedStyle(div).left, '100px');
-    assert_equals(window.getComputedStyle(div).marginLeft, '50px');
+    assert_equals(getComputedStyle(div).left, '100px');
+    assert_equals(getComputedStyle(div).marginLeft, '50px');
   });
 }, 'Test for replacing the transition effect by a new keyframe effect');
 

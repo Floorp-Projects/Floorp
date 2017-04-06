@@ -469,9 +469,7 @@ KeyframeUtils::GetKeyframesFromObject(JSContext* aCx,
     return keyframes;
   }
 
-  // FIXME: Bug 1311257: Support missing keyframes for Servo backend.
-  if ((!AnimationUtils::IsCoreAPIEnabled() ||
-       aDocument->IsStyledByServo()) &&
+  if (!AnimationUtils::IsCoreAPIEnabled() &&
       RequiresAdditiveAnimation(keyframes, aDocument)) {
     keyframes.Clear();
     aRv.Throw(NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR);
@@ -1444,8 +1442,6 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
     return;
   }
 
-  bool isServoBackend = aDocument->IsStyledByServo();
-
   // Create a set of keyframes for each property.
   nsCSSParser parser(aDocument->CSSLoader());
   nsClassHashtable<nsFloatHashKey, Keyframe> processedKeyframes;
@@ -1458,9 +1454,8 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
 
     // If we only have one value, we should animate from the underlying value
     // using additive animation--however, we don't support additive animation
-    // for Servo backend (bug 1311257) or when the core animation API pref is
-    // switched off.
-    if ((!AnimationUtils::IsCoreAPIEnabled() || isServoBackend) &&
+    // when the core animation API pref is switched off.
+    if ((!AnimationUtils::IsCoreAPIEnabled()) &&
         count == 1) {
       aRv.Throw(NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR);
       return;

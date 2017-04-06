@@ -535,7 +535,7 @@ public:
                           bool aInDocWithShell)
   {
     MOZ_ASSERT(!aStyleSet->IsServo(),
-      "Bug 1311257: Servo backend does not support the base value yet");
+      "Servo backend should not use this function");
     MOZ_ASSERT(mAnimationFlag == nsComputedDOMStyle::eWithoutAnimation,
       "AnimationFlag should be eWithoutAnimation");
 

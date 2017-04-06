@@ -595,7 +595,7 @@ GetMinAndMaxScaleForAnimationProperty(const nsIFrame* aFrame,
       // will be used on the compositor.
       StyleAnimationValue baseStyle = effect->BaseStyle(prop.mProperty);
       if (!baseStyle.IsNull()) {
-        // FIXME: Bug 1311257: We need to get the baseStyle for
+        // FIXME: Bug 1334036: We need to get the baseStyle for
         //        RawServoAnimationValue.
         UpdateMinMaxScale(aFrame, { baseStyle, nullptr }, aMinScale, aMaxScale);
       }

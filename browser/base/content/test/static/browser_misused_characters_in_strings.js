@@ -104,6 +104,10 @@ let gWhitelist = [{
     file: "aboutNetworking.dtd",
     key: "aboutNetworking.logTutorial",
     type: "single-quote"
+  }, {
+    file: "preferences.properties",
+    key: "searchResults.needHelp",
+    type: "double-quote"
   }
 ];
 

@@ -717,9 +717,19 @@
           this._touchY = -1;
         ]]>
       </handler>
-      <handler event="MozMousePixelScroll" preventdefault="true"/>
-      <handler event="DOMMouseScroll" preventdefault="true">
+      <handler event="MozMousePixelScroll">
         <![CDATA[
+          if (this.getAttribute("allowunderflowscroll") != "true" &&
+              this.getAttribute("hidevscroll") != "true")
+            event.preventDefault();
+        ]]>
+      </handler>
+      <handler event="DOMMouseScroll">
+        <![CDATA[
+          if (this.getAttribute("allowunderflowscroll") != "true" &&
+              this.getAttribute("hidevscroll") != "true")
+            event.preventDefault();
+
           if (this._editingColumn)
             return;
           if (event.axis == event.HORIZONTAL_AXIS)

@@ -224,7 +224,7 @@ inline std::ostream& operator<<(std::ostream& os,
 }
 
 inline SdpDirectionAttribute::Direction
-operator~(SdpDirectionAttribute::Direction d)
+reverse(SdpDirectionAttribute::Direction d)
 {
   switch (d) {
     case SdpDirectionAttribute::Direction::kInactive:

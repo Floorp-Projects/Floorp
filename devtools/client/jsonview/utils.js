@@ -8,7 +8,6 @@
 
 const { Cu, Cc, Ci } = require("chrome");
 const Services = require("Services");
-const { getMostRecentBrowserWindow } = require("sdk/window/utils");
 
 const OPEN_FLAGS = {
   RDONLY: parseInt("0x01", 16),
@@ -35,7 +34,7 @@ exports.getTargetFile = function () {
 
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
 
-    let win = getMostRecentBrowserWindow();
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
     fp.init(win, null, Ci.nsIFilePicker.modeSave);
     fp.appendFilter("JSON Files", "*.json; *.jsonp;");
     fp.appendFilters(Ci.nsIFilePicker.filterText);

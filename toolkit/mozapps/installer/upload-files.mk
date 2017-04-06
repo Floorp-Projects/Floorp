@@ -76,6 +76,13 @@ ifdef WIN_UCRT_REDIST_DIR
   JSSHELL_BINS += ucrtbase.dll
 endif
 
+ifdef LLVM_SYMBOLIZER
+  JSSHELL_BINS += $(notdir $(LLVM_SYMBOLIZER))
+endif
+ifdef MOZ_CLANG_RT_ASAN_LIB_PATH
+  JSSHELL_BINS += $(notdir $(MOZ_CLANG_RT_ASAN_LIB_PATH))
+endif
+
 MAKE_JSSHELL  = $(call py_action,zip,-C $(DIST)/bin --strip $(abspath $(PKG_JSSHELL)) $(JSSHELL_BINS))
 
 JARLOG_DIR = $(topobjdir)/jarlog/

@@ -117,9 +117,14 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
     if (mEventTarget) {
       bool current = false;
-      MOZ_RELEASE_ASSERT(
-        NS_SUCCEEDED(mEventTarget->IsOnCurrentThread(&current)) && current,
-        "Provided event target must be on the main thread");
+      // NOTE: The following check+crash could be condensed into a
+      // MOZ_RELEASE_ASSERT, but that triggers a segfault during compilation in
+      // clang 3.8. Once we don't have to care about clang 3.8 anymore, though,
+      // we can convert to MOZ_RELEASE_ASSERT here.
+      if (MOZ_UNLIKELY(NS_FAILED(mEventTarget->IsOnCurrentThread(&current)) ||
+                       !current)) {
+        MOZ_CRASH("Provided event target must be on the main thread");
+      }
     }
     mObserver = new ExpirationTrackerObserver();
     mObserver->Init(this);

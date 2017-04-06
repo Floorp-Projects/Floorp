@@ -11,7 +11,7 @@ function getMarginLeft(cs) {
 
 async_test(function(t) {
   var div = addDiv(t);
-  var cs = window.getComputedStyle(div);
+  var cs = getComputedStyle(div);
 
   div.style.marginLeft = '0px';
   cs.marginLeft; // Flush style to set up transition start point

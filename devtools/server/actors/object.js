@@ -1652,6 +1652,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       kind: "DOMNode",
       nodeType: rawObj.nodeType,
       nodeName: rawObj.nodeName,
+      isConnected: rawObj.isConnected === true,
     };
 
     if (rawObj instanceof Ci.nsIDOMDocument && rawObj.location) {
