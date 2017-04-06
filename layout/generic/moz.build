@@ -110,6 +110,7 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'CSSAlignUtils.h',
+    'CSSOrderAwareFrameIterator.h',
     'ReflowInput.h',
     'ReflowOutput.h',
     'ViewportFrame.h',
@@ -129,6 +130,7 @@ UNIFIED_SOURCES += [
     'BlockReflowInput.cpp',
     'BRFrame.cpp',
     'CSSAlignUtils.cpp',
+    'CSSOrderAwareFrameIterator.cpp',
     'DetailsFrame.cpp',
     'FrameChildList.cpp',
     'MathMLTextRunFactory.cpp',

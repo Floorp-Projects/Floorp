@@ -23,6 +23,14 @@ nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
 
 namespace mozilla {
+
+// Forward-declare typedefs for grid item iterator helper-class:
+template<typename Iterator> class CSSOrderAwareFrameIteratorT;
+typedef CSSOrderAwareFrameIteratorT<nsFrameList::iterator>
+  CSSOrderAwareFrameIterator;
+typedef CSSOrderAwareFrameIteratorT<nsFrameList::reverse_iterator>
+  ReverseCSSOrderAwareFrameIterator;
+
 /**
  * The number of implicit / explicit tracks and their sizes.
  */
@@ -219,11 +227,6 @@ public:
   struct TrackSize;
   struct GridItemInfo;
   struct GridReflowInput;
-  template<typename Iterator> class CSSOrderAwareFrameIteratorT;
-  typedef CSSOrderAwareFrameIteratorT<nsFrameList::iterator>
-    CSSOrderAwareFrameIterator;
-  typedef CSSOrderAwareFrameIteratorT<nsFrameList::reverse_iterator>
-    ReverseCSSOrderAwareFrameIterator;
   struct FindItemInGridOrderResult
   {
     // The first(last) item in (reverse) grid order.
@@ -238,6 +241,9 @@ protected:
   typedef mozilla::LogicalPoint LogicalPoint;
   typedef mozilla::LogicalRect LogicalRect;
   typedef mozilla::LogicalSize LogicalSize;
+  typedef mozilla::CSSOrderAwareFrameIterator CSSOrderAwareFrameIterator;
+  typedef mozilla::ReverseCSSOrderAwareFrameIterator
+    ReverseCSSOrderAwareFrameIterator;
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::css::GridNamedArea GridNamedArea;
   typedef mozilla::layout::AutoFrameListPtr AutoFrameListPtr;
