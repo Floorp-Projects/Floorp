@@ -15,6 +15,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Browser;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.StyleRes;
@@ -35,6 +36,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SnackbarBuilder;
@@ -46,7 +48,9 @@ import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.ColorUtil;
+import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import java.util.List;
 
@@ -78,6 +82,8 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         } else {
             Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "customtab");
             toolbarColor = getIntent().getIntExtra(EXTRA_TOOLBAR_COLOR, DEFAULT_ACTION_BAR_COLOR);
+            final String host = getReferrerHost();
+            recordCustomTabUsage(host);
         }
 
         // Translucent color does not make sense for toolbar color. Ensure it is 0xFF.
@@ -98,6 +104,17 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         actionBar.setDisplayHomeAsUpEnabled(true);
 
         Tabs.registerOnTabsChangedListener(this);
+    }
+
+    private void recordCustomTabUsage(final String host) {
+        final GeckoBundle data = new GeckoBundle(1);
+        if (host != null) {
+            data.putString("client", host);
+        } else {
+            data.putString("client", "unknown");
+        }
+        // Pass a message to Gecko to send Telemetry data
+        EventDispatcher.getInstance().dispatch("Telemetry:CustomTabsPing", data);
     }
 
     private void setThemeFromToolbarColor() {
@@ -440,6 +457,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         performPendingIntent(pendingIntent);
     }
 
+
     /**
      * Callback for Share menu item.
      */
@@ -473,5 +491,22 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             }
             return true;
         }
+    }
+
+    private String getReferrerHost() {
+        final Intent intent = this.getIntent();
+        String applicationId = IntentUtils.getStringExtraSafe(intent, Browser.EXTRA_APPLICATION_ID);
+        if (applicationId != null) {
+            return applicationId;
+        }
+        Uri referrer = intent.getParcelableExtra("android.intent.extra.REFERRER");
+        if (referrer != null) {
+            return referrer.getHost();
+        }
+        String referrerName = intent.getStringExtra("android.intent.extra.REFERRER_NAME");
+        if (referrerName != null) {
+            return Uri.parse(referrerName).getHost();
+        }
+        return null;
     }
 }
