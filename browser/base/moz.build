@@ -35,6 +35,7 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/urlbar/browser.ini',
     'content/test/webextensions/browser.ini',
     'content/test/webrtc/browser.ini',
+    'content/test/windows/browser.ini',
 ]
 
 if CONFIG['MOZ_UPDATER']:
