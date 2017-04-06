@@ -90,6 +90,11 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const IMAGE_FETCHING_TIMEOUT = 500;
 
+// SKIP_TO_* arguments are used with the DocumentWalker, driving the strategy to use if
+// the starting node is incompatible with the filter function of the walker.
+const SKIP_TO_PARENT = "SKIP_TO_PARENT";
+const SKIP_TO_SIBLING = "SKIP_TO_SIBLING";
+
 // The possible completions to a ':' with added score to give certain values
 // some preference.
 const PSEUDO_SELECTORS = [
@@ -934,12 +939,12 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return "[WalkerActor " + this.actorID + "]";
   },
 
-  getDocumentWalker: function (node, whatToShow) {
+  getDocumentWalker: function (node, whatToShow, skipTo) {
     // Allow native anon content (like <video> controls) if preffed on
     let nodeFilter = this.showAllAnonymousContent
-                        ? allAnonymousContentTreeWalkerFilter
-                        : standardTreeWalkerFilter;
-    return new DocumentWalker(node, this.rootWin, whatToShow, nodeFilter);
+                    ? allAnonymousContentTreeWalkerFilter
+                    : standardTreeWalkerFilter;
+    return new DocumentWalker(node, this.rootWin, whatToShow, nodeFilter, skipTo);
   },
 
   destroy: function () {
@@ -1370,7 +1375,10 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     // We're going to create a few document walkers with the same filter,
     // make it easier.
     let getFilteredWalker = documentWalkerNode => {
-      return this.getDocumentWalker(documentWalkerNode, options.whatToShow);
+      let { whatToShow } = options;
+      // Use SKIP_TO_SIBLING to force the walker to use a sibling of the provided node
+      // in case this one is incompatible with the walker's filter function.
+      return this.getDocumentWalker(documentWalkerNode, whatToShow, SKIP_TO_SIBLING);
     };
 
     // Need to know the first and last child.
@@ -1396,7 +1404,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
     // Start by reading backward from the starting point if we're centering...
     let backwardWalker = getFilteredWalker(start);
-    if (start != firstChild && options.center) {
+    if (backwardWalker.currentNode != firstChild && options.center) {
       backwardWalker.previousSibling();
       let backwardCount = Math.floor(maxNodes / 2);
       let backwardNodes = this._readBackward(backwardWalker, backwardCount);
@@ -1518,9 +1526,14 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    */
   _readForward: function (walker, count) {
     let ret = [];
+
     let node = walker.currentNode;
     do {
-      ret.push(this._ref(node));
+      if (!walker.isSkippedNode(node)) {
+        // The walker can be on a node that would be filtered out if it didn't find any
+        // other node to fallback to.
+        ret.push(this._ref(node));
+      }
       node = walker.nextSibling();
     } while (node && --count);
     return ret;
@@ -1532,9 +1545,14 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    */
   _readBackward: function (walker, count) {
     let ret = [];
+
     let node = walker.currentNode;
     do {
-      ret.push(this._ref(node));
+      if (!walker.isSkippedNode(node)) {
+        // The walker can be on a node that would be filtered out if it didn't find any
+        // other node to fallback to.
+        ret.push(this._ref(node));
+      }
       node = walker.previousSibling();
     } while (node && --count);
     ret.reverse();
@@ -2968,14 +2986,20 @@ function isNodeDead(node) {
  *
  * @param {DOMNode} node
  * @param {Window} rootWin
- * @param {Int} whatToShow See nodeFilterConstants / inIDeepTreeWalker for
- * options.
- * @param {Function} filter A custom filter function Taking in a DOMNode
- *        and returning an Int. See WalkerActor.nodeFilter for an example.
+ * @param {Number} whatToShow
+ *        See nodeFilterConstants / inIDeepTreeWalker for options.
+ * @param {Function} filter
+ *        A custom filter function Taking in a DOMNode and returning an Int. See
+ *        WalkerActor.nodeFilter for an example.
+ * @param {String} skipTo
+ *        Either SKIP_TO_PARENT or SKIP_TO_SIBLING. If the provided node is not compatible
+ *        with the filter function for this walker, try to find a compatible one either
+ *        in the parents or in the siblings of the node.
  */
 function DocumentWalker(node, rootWin,
     whatToShow = nodeFilterConstants.SHOW_ALL,
-    filter = standardTreeWalkerFilter) {
+    filter = standardTreeWalkerFilter,
+    skipTo = SKIP_TO_PARENT) {
   if (!rootWin.location) {
     throw new Error("Got an invalid root window in DocumentWalker");
   }
@@ -2988,20 +3012,20 @@ function DocumentWalker(node, rootWin,
   this.walker.init(rootWin.document, whatToShow);
   this.filter = filter;
 
-  // Make sure that the walker knows about the initial node (which could
-  // be skipped due to a filter).  Note that simply calling parentNode()
-  // causes currentNode to be updated.
-  this.walker.currentNode = node;
-  while (node &&
-         this.filter(node) === nodeFilterConstants.FILTER_SKIP) {
-    node = this.walker.parentNode();
+  if (skipTo === SKIP_TO_PARENT) {
+    while (node && this.isSkippedNode(node)) {
+      node = node.parentNode;
+    }
+  } else if (skipTo === SKIP_TO_SIBLING) {
+    node = this.getClosestAcceptedSibling(node);
   }
+
+  // Make sure that the walker knows about the initial node (which could
+  // be skipped due to a filter).
+  this.walker.currentNode = node;
 }
 
 DocumentWalker.prototype = {
-  get node() {
-    return this.walker.node;
-  },
   get whatToShow() {
     return this.walker.whatToShow;
   },
@@ -3023,8 +3047,7 @@ DocumentWalker.prototype = {
     }
 
     let nextNode = this.walker.nextNode();
-    while (nextNode &&
-           this.filter(nextNode) === nodeFilterConstants.FILTER_SKIP) {
+    while (nextNode && this.isSkippedNode(nextNode)) {
       nextNode = this.walker.nextNode();
     }
 
@@ -3038,8 +3061,7 @@ DocumentWalker.prototype = {
     }
 
     let firstChild = this.walker.firstChild();
-    while (firstChild &&
-           this.filter(firstChild) === nodeFilterConstants.FILTER_SKIP) {
+    while (firstChild && this.isSkippedNode(firstChild)) {
       firstChild = this.walker.nextSibling();
     }
 
@@ -3053,8 +3075,7 @@ DocumentWalker.prototype = {
     }
 
     let lastChild = this.walker.lastChild();
-    while (lastChild &&
-           this.filter(lastChild) === nodeFilterConstants.FILTER_SKIP) {
+    while (lastChild && this.isSkippedNode(lastChild)) {
       lastChild = this.walker.previousSibling();
     }
 
@@ -3063,7 +3084,7 @@ DocumentWalker.prototype = {
 
   previousSibling: function () {
     let node = this.walker.previousSibling();
-    while (node && this.filter(node) === nodeFilterConstants.FILTER_SKIP) {
+    while (node && this.isSkippedNode(node)) {
       node = this.walker.previousSibling();
     }
     return node;
@@ -3071,11 +3092,46 @@ DocumentWalker.prototype = {
 
   nextSibling: function () {
     let node = this.walker.nextSibling();
-    while (node && this.filter(node) === nodeFilterConstants.FILTER_SKIP) {
+    while (node && this.isSkippedNode(node)) {
       node = this.walker.nextSibling();
     }
     return node;
-  }
+  },
+
+  /**
+   * Loop on all of the provided node siblings until finding one that is compliant with
+   * the filter function.
+   */
+  getClosestAcceptedSibling: function (startingNode) {
+    if (this.filter(startingNode) === nodeFilterConstants.FILTER_ACCEPT) {
+      // startingNode is already valid, return immediately.
+      return startingNode;
+    }
+
+    // Loop on starting node siblings.
+    let previous = startingNode;
+    let next = startingNode;
+    while (previous || next) {
+      previous = previous && previous.previousSibling;
+      next = next && next.nextSibling;
+
+      if (this.filter(previous) === nodeFilterConstants.FILTER_ACCEPT) {
+        // A valid node was found in the previous siblings of the startingNode.
+        return previous;
+      }
+
+      if (this.filter(next) === nodeFilterConstants.FILTER_ACCEPT) {
+        // A valid node was found in the next siblings of the startingNode.
+        return next;
+      }
+    }
+
+    return null;
+  },
+
+  isSkippedNode: function (node) {
+    return this.filter(node) === nodeFilterConstants.FILTER_SKIP;
+  },
 };
 
 function isInXULDocument(el) {
