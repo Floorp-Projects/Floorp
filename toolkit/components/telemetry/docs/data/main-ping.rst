@@ -71,7 +71,6 @@ Structure:
       fileIOReports: {...},
       lateWrites: {...},
       addonDetails: {...},
-      addonHistograms: {...},
       UIMeasurements: [...],  // Android only
       slowSQL: {...},
       slowSQLstartup: {...},
@@ -150,7 +149,7 @@ The recorded events are defined in the `Events.yaml <https://dxr.mozilla.org/moz
 
 childPayloads
 -------------
-The Telemetry payloads sent by child processes, recorded on child process shutdown (event ``content-child-shutdown`` observed). They are reduced session payloads, only available with e10s. Among some other things, they don't contain histograms, keyed histograms, addon details, addon histograms, or UI Telemetry.
+The Telemetry payloads sent by child processes, recorded on child process shutdown (event ``content-child-shutdown`` observed). They are reduced session payloads, only available with e10s. Among some other things, they don't contain histograms, keyed histograms, addon details, or UI Telemetry.
 
 Note: Child payloads are not collected and cleared with subsession splits, they are currently only meaningful when analysed from ``saved-session`` or ``main`` pings with ``reason`` set to ``shutdown``.
 
@@ -634,10 +633,6 @@ Structure:
       },
       ...
     }
-
-addonHistograms
----------------
-This section contains the histogram registered by the addons (`see here <https://dxr.mozilla.org/mozilla-central/rev/584870f1cbc5d060a57e147ce249f736956e2b62/toolkit/components/telemetry/nsITelemetry.idl#303>`_). This section is not present if no addon histogram is available.
 
 UITelemetry
 -----------
