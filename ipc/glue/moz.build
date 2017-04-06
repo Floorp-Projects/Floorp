@@ -142,7 +142,6 @@ UNIFIED_SOURCES += [
     'CrashReporterMetadataShmem.cpp',
     'FileDescriptor.cpp',
     'FileDescriptorUtils.cpp',
-    'GeckoChildProcessHost.cpp',
     'InputStreamUtils.cpp',
     'IPCMessageUtils.cpp',
     'IPCStreamChild.cpp',
@@ -159,14 +158,17 @@ UNIFIED_SOURCES += [
     'SharedMemory.cpp',
     'Shmem.cpp',
     'StringUtil.cpp',
-    'URIUtils.cpp',
 ]
 
+# GeckoChildProcessHost.cpp cannot be built in unified mode because it uses plarena.h.
+# URIUtils.cpp cannot be built in unified mode because of name clashes on strdup.
 SOURCES += [
     'BackgroundChildImpl.cpp',
     'BackgroundParentImpl.cpp',
     'FileDescriptorSetChild.cpp',
     'FileDescriptorSetParent.cpp',
+    'GeckoChildProcessHost.cpp',
+    'URIUtils.cpp',
 ]
 
 if CONFIG['_MSC_VER']:
