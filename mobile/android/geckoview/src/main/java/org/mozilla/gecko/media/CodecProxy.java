@@ -63,7 +63,14 @@ public final class CodecProxy {
         }
 
         @Override
-        public void onInputExhausted() throws RemoteException {
+        public synchronized void onInputQueued(long timestamp) throws RemoteException {
+            if (!mEndOfInput) {
+                mCallbacks.onInputExhausted();
+            }
+        }
+
+        @Override
+        public synchronized void onInputPending(long timestamp) throws RemoteException {
             if (!mEndOfInput) {
                 mCallbacks.onInputExhausted();
             }
