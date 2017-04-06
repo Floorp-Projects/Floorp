@@ -245,6 +245,7 @@ async function openContextMenuInFrame(frameId) {
 async function openContextMenu(selector = "#img1") {
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
+  await BrowserTestUtils.synthesizeMouseAtCenter(selector, {type: "mousedown", button: 2}, gBrowser.selectedBrowser);
   await BrowserTestUtils.synthesizeMouseAtCenter(selector, {type: "contextmenu"}, gBrowser.selectedBrowser);
   await popupShownPromise;
   return contentAreaContextMenu;

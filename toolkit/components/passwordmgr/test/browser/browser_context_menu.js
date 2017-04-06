@@ -270,10 +270,17 @@ add_task(function* test_context_menu_username_login_fill() {
  * assertCallback should return true if we should continue or else false.
  */
 function* openPasswordContextMenu(browser, passwordInput, assertCallback = null) {
-  // Synthesize a right mouse click over the password input element.
   let contextMenuShownPromise = BrowserTestUtils.waitForEvent(CONTEXT_MENU, "popupshown");
-  let eventDetails = {type: "contextmenu", button: 2};
-  BrowserTestUtils.synthesizeMouseAtCenter(passwordInput, eventDetails, browser);
+
+  // Synthesize a right mouse click over the password input element, we have to trigger
+  // both events because formfill code relies on this event happening before the contextmenu
+  // (which it does for real user input) in order to not show the password autocomplete.
+  let eventDetails = {type: "mousedown", button: 2};
+  yield BrowserTestUtils.synthesizeMouseAtCenter(passwordInput, eventDetails, browser);
+  // Synthesize a contextmenu event to actually open the context menu.
+  eventDetails = {type: "contextmenu", button: 2};
+  yield BrowserTestUtils.synthesizeMouseAtCenter(passwordInput, eventDetails, browser);
+
   yield contextMenuShownPromise;
 
   if (assertCallback) {
@@ -284,7 +291,7 @@ function* openPasswordContextMenu(browser, passwordInput, assertCallback = null)
   }
 
   // Synthesize a mouse click over the fill login menu header.
-  let popupShownPromise = BrowserTestUtils.waitForEvent(POPUP_HEADER, "popupshown");
+  let popupShownPromise = BrowserTestUtils.waitForCondition(() => POPUP_HEADER.open);
   EventUtils.synthesizeMouseAtCenter(POPUP_HEADER, {});
   yield popupShownPromise;
 }
