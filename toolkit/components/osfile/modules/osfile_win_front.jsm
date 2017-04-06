@@ -343,6 +343,33 @@
 
        mode = OS.Shared.AbstractFile.normalizeOpenMode(mode);
 
+       // The following option isn't a generic implementation of access to paths
+       // of arbitrary lengths. It allows for the specific case of writing to an
+       // Alternate Data Stream on a file whose path length is already close to
+       // MAX_PATH. This implementation is safe with a full path as input, if
+       // the first part of the path comes from local configuration and the
+       // file without the ADS was successfully opened before, so we know the
+       // path is valid.
+       if (options.winAllowLengthBeyondMaxPathWithCaveats) {
+         // Use the \\?\ syntax to allow lengths beyond MAX_PATH. This limited
+         // implementation only supports a DOS local path or UNC path as input.
+         let isUNC = path.length >= 2 && (path[0] == "\\" || path[0] == "/") &&
+                                         (path[1] == "\\" || path[1] == "/");
+         let pathToUse = "\\\\?\\" + (isUNC ? "UNC\\" + path.slice(2) : path);
+         // Use GetFullPathName to normalize slashes into backslashes. This is
+         // required because CreateFile won't do this for the \\?\ syntax.
+         let buffer_size = 512;
+         let array = new (ctypes.ArrayType(ctypes.char16_t, buffer_size))();
+         let expected_size = throw_on_zero("open",
+           WinFile.GetFullPathName(pathToUse, buffer_size, array, 0)
+         );
+         if (expected_size > buffer_size) {
+           // We don't need to allow an arbitrary path length for now.
+           throw new File.Error("open", ctypes.winLastError, path);
+         }
+         path = array.readString();
+       }
+
        if ("winAccess" in options && "winDisposition" in options) {
          access = options.winAccess;
          disposition = options.winDisposition;
