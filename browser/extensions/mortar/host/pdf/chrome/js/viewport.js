@@ -782,6 +782,13 @@ class Viewport {
       case 'goToPage':
         this.page = message.page;
         break;
+      case 'navigate':
+        this._doAction({
+          type: 'openLink',
+          url: message.url,
+          disposition: message.disposition
+        });
+        break;
     }
   }
 }
