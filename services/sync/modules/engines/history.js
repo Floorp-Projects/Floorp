@@ -404,6 +404,7 @@ HistoryStore.prototype = {
   },
 
   remove: function HistStore_remove(record) {
+    this._log.trace("Removing page: " + record.id);
     return PlacesUtils.history.remove(record.id).then(
       (removed) => {
         if (removed) {
@@ -412,7 +413,6 @@ HistoryStore.prototype = {
           this._log.debug("Page already removed: " + record.id);
         }
     });
-    this._log.trace("Removing page: " + record.id);
   },
 
   itemExists: function HistStore_itemExists(id) {

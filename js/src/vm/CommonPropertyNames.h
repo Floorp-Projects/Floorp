@@ -258,6 +258,7 @@
     macro(objectFunction, objectFunction, "[object Function]") \
     macro(objectNull, objectNull, "[object Null]") \
     macro(objectNumber, objectNumber, "[object Number]") \
+    macro(objectObject, objectObject, "[object Object]") \
     macro(objectRegExp, objectRegExp, "[object RegExp]") \
     macro(objects, objects, "objects") \
     macro(objectString, objectString, "[object String]") \
