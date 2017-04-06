@@ -27,6 +27,13 @@ add_task(function*() {
   ok(doc.querySelector("#updateOthers").hidden, "Search Updates should be hidden when only Reports are requested");
   ok(!doc.querySelector("#header-advanced").hidden, "The header should be visible when a subcategory is requested");
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  prefs = yield openPreferencesViaOpenPreferencesAPI("general-search", {leaveOpen: true});
+  is(prefs.selectedPane, "paneGeneral", "General pane is selected by default");
+  doc = gBrowser.contentDocument;
+  is(doc.location.hash, "#general", "The subcategory should be removed from the URI");
+  ok(doc.querySelector("#startupGroup").hidden, "Startup should be hidden when only Search is requested");
+  ok(!doc.querySelector("#engineList").hidden, "The search engine list should be visible when Search is requested");
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 function openPreferencesViaHash(aPane) {

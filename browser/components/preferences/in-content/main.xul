@@ -302,7 +302,7 @@
 </groupbox>
 
 <!-- Default Search Engine -->
-<groupbox id="defaultEngineGroup" align="start" data-category="paneGeneral">
+<groupbox id="defaultEngineGroup" align="start" data-category="paneGeneral" data-subcategory="search">
   <caption label="&defaultSearchEngine.label;"/>
   <label>&chooseYourDefaultSearchEngine.label;</label>
   <menulist id="defaultEngine">
@@ -323,7 +323,7 @@
   </vbox>
 </groupbox>
 
-<groupbox id="oneClickSearchProvidersGroup" data-category="paneGeneral">
+<groupbox id="oneClickSearchProvidersGroup" data-category="paneGeneral" data-subcategory="search">
   <caption label="&oneClickSearchEngines.label;"/>
   <label>&chooseWhichOneToDisplay.label;</label>
 
