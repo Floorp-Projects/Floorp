@@ -315,6 +315,13 @@ SERVO_BINDING_FUNC(Servo_TraverseSubtree, bool,
 // Assert that the tree has no pending or unconsumed restyles.
 SERVO_BINDING_FUNC(Servo_AssertTreeIsClean, void, RawGeckoElementBorrowed root)
 
+// Returns computed values for the given element without any animations rules.
+SERVO_BINDING_FUNC(Servo_StyleSet_GetBaseComputedValuesForElement,
+                   ServoComputedValuesStrong,
+                   RawServoStyleSetBorrowed set,
+                   RawGeckoElementBorrowed element,
+                   nsIAtom* pseudo_tag)
+
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                            \
   struct nsStyle##name;                                             \
