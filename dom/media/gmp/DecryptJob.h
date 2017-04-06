@@ -8,6 +8,7 @@
 #define DecryptJob_h_
 
 #include "mozilla/CDMProxy.h"
+#include "mozilla/Span.h"
 
 namespace mozilla {
 
@@ -17,8 +18,7 @@ public:
 
   explicit DecryptJob(MediaRawData* aSample);
 
-  void PostResult(DecryptStatus aResult,
-                  const nsTArray<uint8_t>& aDecryptedData);
+  void PostResult(DecryptStatus aResult, Span<const uint8_t> aDecryptedData);
   void PostResult(DecryptStatus aResult);
 
   RefPtr<DecryptPromise> Ensure();

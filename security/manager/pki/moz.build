@@ -24,3 +24,15 @@ LOCAL_INCLUDES += [
 ]
 
 FINAL_LIBRARY = 'xul'
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += [
+        '-Wextra',
+        # -Wextra enables this warning, but it's too noisy to be useful.
+        '-Wno-missing-field-initializers',
+    ]
+
+    # Gecko headers aren't warning-free enough for us to enable these warnings.
+    CXXFLAGS += [
+        '-Wno-unused-parameter',
+    ]

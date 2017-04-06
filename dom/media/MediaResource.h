@@ -658,12 +658,17 @@ protected:
 
   void DoNotifyDataReceived();
 
-  static nsresult CopySegmentToCache(nsIInputStream *aInStream,
-                                     void *aClosure,
-                                     const char *aFromSegment,
+  static nsresult CopySegmentToCache(nsIInputStream* aInStream,
+                                     void* aClosure,
+                                     const char* aFromSegment,
                                      uint32_t aToOffset,
                                      uint32_t aCount,
-                                     uint32_t *aWriteCount);
+                                     uint32_t* aWriteCount);
+
+  nsresult CopySegmentToCache(nsIPrincipal* aPrincipal,
+                              const char* aFromSegment,
+                              uint32_t aCount,
+                              uint32_t* aWriteCount);
 
   // Main thread access only
   int64_t            mOffset;

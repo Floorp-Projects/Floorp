@@ -6,6 +6,10 @@
 
 const { DOM, PropTypes } = require("devtools/client/shared/vendor/react");
 const { L10N } = require("../utils/l10n");
+const { getNetMonitorTimingsURL } = require("../utils/mdn-utils");
+
+// Components
+const MDNLink = require("./mdn-link");
 
 const { div, span } = DOM;
 const types = ["blocked", "dns", "connect", "send", "wait", "receive"];
@@ -58,7 +62,14 @@ function TimingsPanel({ request }) {
     );
   });
 
-  return div({ className: "panel-container" }, timelines);
+  return (
+    div({ className: "panel-container" },
+      timelines,
+      MDNLink({
+        url: getNetMonitorTimingsURL(),
+      }),
+    )
+  );
 }
 
 TimingsPanel.displayName = "TimingsPanel";

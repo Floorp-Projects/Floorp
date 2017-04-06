@@ -364,7 +364,8 @@ pref("media.opus.enabled", true);
 pref("media.wave.enabled", true);
 pref("media.webm.enabled", true);
 
-pref("media.eme.chromium-api.enabled", false);
+pref("media.eme.chromium-api.enabled", true);
+pref("media.eme.chromium-api.video-shmems", 3);
 
 #ifdef MOZ_APPLEMEDIA
 #ifdef MOZ_WIDGET_UIKIT
@@ -1700,12 +1701,7 @@ pref("dom.server-events.default-reconnection-time", 5000); // in milliseconds
 // by the jar channel.
 pref("network.jar.open-unsafe-types", false);
 // If true, loading remote JAR files using the jar: protocol will be prevented.
-#ifdef RELEASE_OR_BETA
-// Keep allowing remote JAR files for IBM iNotes (see bug 1255139) for now.
-pref("network.jar.block-remote-files", false);
-#else
 pref("network.jar.block-remote-files", true);
-#endif
 
 // This preference, if true, causes all UTF-8 domain names to be normalized to
 // punycode.  The intention is to allow UTF-8 domain names as input, but never

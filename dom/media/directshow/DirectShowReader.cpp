@@ -312,8 +312,8 @@ DirectShowReader::DecodeAudioData()
 }
 
 bool
-DirectShowReader::DecodeVideoFrame(bool &aKeyframeSkip,
-                                   int64_t aTimeThreshold)
+DirectShowReader::DecodeVideoFrame(bool& aKeyframeSkip,
+                                   const media::TimeUnit& aTimeThreshold)
 {
   MOZ_ASSERT(OnTaskQueue());
   return false;

@@ -63,10 +63,10 @@ static unsigned int kDefaultTimeout = 7000;
 //TODO(nils@mozilla.com): This should get replaced with some non-external
 //solution like discussed in bug 860775.
 const std::string kDefaultStunServerHostname(
-    (char *)"global.stun.twilio.com");
+    (char *)"stun.l.google.com");
 const std::string kBogusStunServerHostname(
     (char *)"stun-server-nonexistent.invalid");
-const uint16_t kDefaultStunServerPort=3478;
+const uint16_t kDefaultStunServerPort=19305;
 const std::string kBogusIceCandidate(
     (char *)"candidate:0 2 UDP 2113601790 192.168.178.20 50769 typ");
 

@@ -65,7 +65,9 @@ protected:
   virtual void MouseClicked(mozilla::WidgetGUIEvent* aEvent) override;
 
   void StartRepeat() {
-    nsRepeatService::GetInstance()->Start(Notify, this);
+    nsRepeatService::GetInstance()->Start(Notify, this,
+                                          mContent->OwnerDoc(),
+                                          NS_LITERAL_CSTRING("nsScrollbarButtonFrame"));
   }
   void StopRepeat() {
     nsRepeatService::GetInstance()->Stop(Notify, this);

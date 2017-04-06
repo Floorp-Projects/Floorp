@@ -328,7 +328,7 @@
   <label>&chooseWhichOneToDisplay.label;</label>
 
   <tree id="engineList" flex="1" rows="8" hidecolumnpicker="true" editable="true"
-        seltype="single">
+        seltype="single" allowunderflowscroll="true">
     <treechildren id="engineChildren" flex="1"/>
     <treecols>
       <treecol id="engineShown" type="checkbox" editable="true" sortable="false"/>
@@ -471,7 +471,7 @@
       <row id="fontRow">
         <hbox align="center">
           <label control="defaultFont" accesskey="&defaultFont.accesskey;">&defaultFont.label;</label>
-          <menulist id="defaultFont" delayprefsave="true"/>
+          <menulist id="defaultFont" delayprefsave="true" onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
           <label id="defaultFontSizeLabel" control="defaultFontSize" accesskey="&defaultSize.accesskey;">&defaultSize.label;</label>
           <menulist id="defaultFontSize" delayprefsave="true">
             <menupopup>
