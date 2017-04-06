@@ -89,6 +89,7 @@
 #include "nsIDocShell.h"
 #include "nsAppShellCID.h"
 #include "mozilla/scache/StartupCache.h"
+#include "gfxPlatform.h"
 #include "gfxPrefs.h"
 
 #include "mozilla/Unused.h"
