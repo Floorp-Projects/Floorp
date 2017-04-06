@@ -21,6 +21,7 @@
 // Execute the full-scope test
 SimpleTest.waitForExplicitFinish();
 
+// Turn off all tokens. This should result in "not allowed" failures
 SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
                                    ["security.webauth.webauthn_enable_softtoken", false],
                                    ["security.webauth.webauthn_enable_usbtoken", false]]},
