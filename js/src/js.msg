@@ -429,6 +429,7 @@ MSG_DEF(JSMSG_SC_UNSUPPORTED_TYPE,     0, JSEXN_TYPEERR, "unsupported type for s
 MSG_DEF(JSMSG_SC_NOT_CLONABLE,         1, JSEXN_TYPEERR, "{0} cannot be cloned in this context")
 MSG_DEF(JSMSG_SC_SAB_TRANSFERABLE,     0, JSEXN_TYPEERR, "SharedArrayBuffer must not be in the transfer list")
 MSG_DEF(JSMSG_SC_SAB_DISABLED,         0, JSEXN_TYPEERR, "SharedArrayBuffer not cloned - shared memory disabled in receiver")
+MSG_DEF(JSMSG_SC_SAB_REFCNT_OFLO,      0, JSEXN_TYPEERR, "SharedArrayBuffer has too many references")
 
 // Debugger
 MSG_DEF(JSMSG_ASSIGN_FUNCTION_OR_NULL, 1, JSEXN_TYPEERR, "value assigned to {0} must be a function or null")
