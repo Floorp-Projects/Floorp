@@ -929,7 +929,7 @@ CARGO_BUILD = env $(rustflags_override) \
 	CLANG_PATH=$(MOZ_CLANG_PATH) \
 	PKG_CONFIG_ALLOW_CROSS=1 \
 	RUST_BACKTRACE=1 \
-	MOZ_OBJDIR=$(topobjdir) \
+	MOZ_TOPOBJDIR=$(topobjdir) \
 	$(CARGO) build $(cargo_build_flags)
 
 ifdef RUST_LIBRARY_FILE
