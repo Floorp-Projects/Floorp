@@ -580,7 +580,11 @@ this.DownloadIntegration = {
         // to match Windows behavior.
         if (zone >= Ci.mozIDownloadPlatform.ZONE_INTERNET) {
           let streamPath = aDownload.target.path + ":Zone.Identifier";
-          let stream = yield OS.File.open(streamPath, { create: true });
+          let stream = yield OS.File.open(
+            streamPath,
+            { create: true },
+            { winAllowLengthBeyondMaxPathWithCaveats: true }
+          );
           try {
             yield stream.write(new TextEncoder().encode("[ZoneTransfer]\r\nZoneId=" + zone + "\r\n"));
           } finally {
