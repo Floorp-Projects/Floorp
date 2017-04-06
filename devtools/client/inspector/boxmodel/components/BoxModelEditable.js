@@ -17,6 +17,8 @@ module.exports = createClass({
   propTypes: {
     box: PropTypes.string.isRequired,
     direction: PropTypes.string,
+    focusable: PropTypes.bool.isRequired,
+    level: PropTypes.string,
     property: PropTypes.string.isRequired,
     textContent: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     onShowBoxModelEditor: PropTypes.func.isRequired,
@@ -28,7 +30,7 @@ module.exports = createClass({
     let { property, onShowBoxModelEditor } = this.props;
 
     editableItem({
-      element: this.refs.span,
+      element: this.boxModelEditable,
     }, (element, event) => {
       onShowBoxModelEditor(element, event, property);
     });
@@ -38,6 +40,8 @@ module.exports = createClass({
     let {
       box,
       direction,
+      focusable,
+      level,
       property,
       textContent,
     } = this.props;
@@ -57,8 +61,11 @@ module.exports = createClass({
         {
           className: "boxmodel-editable",
           "data-box": box,
+          tabIndex: box === level && focusable ? 0 : -1,
           title: property,
-          ref: "span",
+          ref: span => {
+            this.boxModelEditable = span;
+          },
         },
         textContent
       )
