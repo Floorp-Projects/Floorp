@@ -4932,10 +4932,12 @@ MObjectState::templateObjectOf(MDefinition* obj)
         return obj->toNewObject()->templateObject();
     else if (obj->isCreateThisWithTemplate())
         return obj->toCreateThisWithTemplate()->templateObject();
-    else
+    else if (obj->isNewCallObject())
         return obj->toNewCallObject()->templateObject();
+    else if (obj->isNewArrayIterator())
+        return obj->toNewArrayIterator()->templateObject();
 
-    return nullptr;
+    MOZ_CRASH("unreachable");
 }
 
 bool

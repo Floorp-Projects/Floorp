@@ -106,7 +106,7 @@ PingParseError.prototype.constructor = PingParseError;
 var Policy = {
   now: () => new Date(),
   getArchiveQuota: () => ARCHIVE_QUOTA_BYTES,
-  getPendingPingsQuota: () => (AppConstants.platform in ["android", "gonk"])
+  getPendingPingsQuota: () => (AppConstants.platform == "android")
                                 ? PENDING_PINGS_QUOTA_BYTES_MOBILE
                                 : PENDING_PINGS_QUOTA_BYTES_DESKTOP,
 };

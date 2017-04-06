@@ -159,16 +159,16 @@ namespace mozilla {
 namespace mscom {
 
 /* static */ HRESULT
-MainThreadHandoff::Create(IHandlerPayload* aHandlerPayload,
+MainThreadHandoff::Create(IHandlerProvider* aHandlerProvider,
                           IInterceptorSink** aOutput)
 {
-  RefPtr<MainThreadHandoff> handoff(new MainThreadHandoff(aHandlerPayload));
+  RefPtr<MainThreadHandoff> handoff(new MainThreadHandoff(aHandlerProvider));
   return handoff->QueryInterface(IID_IInterceptorSink, (void**) aOutput);
 }
 
-MainThreadHandoff::MainThreadHandoff(IHandlerPayload* aHandlerPayload)
+MainThreadHandoff::MainThreadHandoff(IHandlerProvider* aHandlerProvider)
   : mRefCnt(0)
-  , mHandlerPayload(aHandlerPayload)
+  , mHandlerProvider(aHandlerProvider)
 {
 }
 
@@ -448,43 +448,39 @@ MainThreadHandoff::SetInterceptor(IWeakReference* aInterceptor)
 }
 
 HRESULT
-MainThreadHandoff::GetHandler(CLSID* aHandlerClsid)
+MainThreadHandoff::GetHandler(NotNull<CLSID*> aHandlerClsid)
 {
-  if (!mHandlerPayload) {
+  if (!mHandlerProvider) {
     return E_NOTIMPL;
   }
-  return mHandlerPayload->GetHandler(aHandlerClsid);
+  return mHandlerProvider->GetHandler(aHandlerClsid);
 }
 
 HRESULT
-MainThreadHandoff::GetHandlerPayloadSize(REFIID aIid,
-                                         InterceptorTargetPtr<IUnknown> aTarget,
-                                         DWORD* aOutPayloadSize)
+MainThreadHandoff::GetHandlerPayloadSize(NotNull<DWORD*> aOutPayloadSize)
 {
-  if (!mHandlerPayload) {
+  if (!mHandlerProvider) {
     return E_NOTIMPL;
   }
-  return mHandlerPayload->GetHandlerPayloadSize(aIid, Move(aTarget),
-                                                aOutPayloadSize);
+  return mHandlerProvider->GetHandlerPayloadSize(aOutPayloadSize);
 }
 
 HRESULT
-MainThreadHandoff::WriteHandlerPayload(IStream* aStream, REFIID aIid,
-                                       InterceptorTargetPtr<IUnknown> aTarget)
+MainThreadHandoff::WriteHandlerPayload(NotNull<IStream*> aStream)
 {
-  if (!mHandlerPayload) {
+  if (!mHandlerProvider) {
     return E_NOTIMPL;
   }
-  return mHandlerPayload->WriteHandlerPayload(aStream, aIid, Move(aTarget));
+  return mHandlerProvider->WriteHandlerPayload(aStream);
 }
 
 REFIID
 MainThreadHandoff::MarshalAs(REFIID aIid)
 {
-  if (!mHandlerPayload) {
+  if (!mHandlerProvider) {
     return aIid;
   }
-  return mHandlerPayload->MarshalAs(aIid);
+  return mHandlerProvider->MarshalAs(aIid);
 }
 
 HRESULT
@@ -529,24 +525,31 @@ MainThreadHandoff::OnWalkInterface(REFIID aIid, PVOID* aInterface,
   InterceptorTargetPtr<IUnknown> existingTarget;
   hr = interceptor->GetTargetForIID(aIid, existingTarget);
   if (SUCCEEDED(hr)) {
-    bool areIUnknownsEqual = false;
+    // We'll start by checking the raw pointers. If they are equal, then the
+    // objects are equal. OTOH, if they differ, we must compare their
+    // IUnknown pointers to know for sure.
+    bool areTargetsEqual = existingTarget.get() == origInterface.get();
 
-    // This check must be done on the main thread
-    auto checkFn = [&existingTarget, &origInterface, &areIUnknownsEqual]() -> void {
-      RefPtr<IUnknown> unkExisting;
-      HRESULT hrExisting =
-        existingTarget->QueryInterface(IID_IUnknown,
-                                       (void**)getter_AddRefs(unkExisting));
-      RefPtr<IUnknown> unkNew;
-      HRESULT hrNew =
-        origInterface->QueryInterface(IID_IUnknown,
-                                      (void**)getter_AddRefs(unkNew));
-      areIUnknownsEqual = SUCCEEDED(hrExisting) && SUCCEEDED(hrNew) &&
+    if (!areTargetsEqual) {
+      // This check must be done on the main thread
+      auto checkFn = [&existingTarget, &origInterface, &areTargetsEqual]() -> void {
+        RefPtr<IUnknown> unkExisting;
+        HRESULT hrExisting =
+          existingTarget->QueryInterface(IID_IUnknown,
+                                         (void**)getter_AddRefs(unkExisting));
+        RefPtr<IUnknown> unkNew;
+        HRESULT hrNew =
+          origInterface->QueryInterface(IID_IUnknown,
+                                        (void**)getter_AddRefs(unkNew));
+        areTargetsEqual = SUCCEEDED(hrExisting) && SUCCEEDED(hrNew) &&
                           unkExisting == unkNew;
-    };
+      };
 
-    MainThreadInvoker invoker;
-    if (invoker.Invoke(NS_NewRunnableFunction(checkFn)) && areIUnknownsEqual) {
+      MainThreadInvoker invoker;
+      invoker.Invoke(NS_NewRunnableFunction(checkFn));
+    }
+
+    if (areTargetsEqual) {
       // The existing interface and the new interface both belong to the same
       // target object. Let's just use the existing one.
       void* intercepted = nullptr;
@@ -560,9 +563,11 @@ MainThreadHandoff::OnWalkInterface(REFIID aIid, PVOID* aInterface,
     }
   }
 
-  RefPtr<IHandlerPayload> payload;
-  if (mHandlerPayload) {
-    hr = mHandlerPayload->Clone(getter_AddRefs(payload));
+  RefPtr<IHandlerProvider> payload;
+  if (mHandlerProvider) {
+    hr = mHandlerProvider->NewInstance(aIid,
+                                       ToInterceptorTargetPtr(origInterface),
+                                       WrapNotNull((IHandlerProvider**)getter_AddRefs(payload)));
     MOZ_ASSERT(SUCCEEDED(hr));
     if (FAILED(hr)) {
       return hr;

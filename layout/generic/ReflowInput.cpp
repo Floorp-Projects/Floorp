@@ -534,6 +534,9 @@ IsQuirkContainingBlockHeight(const ReflowInput* rs, nsIAtom* aFrameType)
 void
 ReflowInput::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameType)
 {
+  SetBResize(false);
+  SetIResize(false);
+
   const WritingMode wm = mWritingMode; // just a shorthand
   // We should report that we have a resize in the inline dimension if
   // *either* the border-box size or the content-box size in that

@@ -23,6 +23,14 @@ nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
 
 namespace mozilla {
+
+// Forward-declare typedefs for grid item iterator helper-class:
+template<typename Iterator> class CSSOrderAwareFrameIteratorT;
+typedef CSSOrderAwareFrameIteratorT<nsFrameList::iterator>
+  CSSOrderAwareFrameIterator;
+typedef CSSOrderAwareFrameIteratorT<nsFrameList::reverse_iterator>
+  ReverseCSSOrderAwareFrameIterator;
+
 /**
  * The number of implicit / explicit tracks and their sizes.
  */
@@ -219,11 +227,6 @@ public:
   struct TrackSize;
   struct GridItemInfo;
   struct GridReflowInput;
-  template<typename Iterator> class GridItemCSSOrderIteratorT;
-  typedef GridItemCSSOrderIteratorT<nsFrameList::iterator>
-    GridItemCSSOrderIterator;
-  typedef GridItemCSSOrderIteratorT<nsFrameList::reverse_iterator>
-    ReverseGridItemCSSOrderIterator;
   struct FindItemInGridOrderResult
   {
     // The first(last) item in (reverse) grid order.
@@ -238,6 +241,9 @@ protected:
   typedef mozilla::LogicalPoint LogicalPoint;
   typedef mozilla::LogicalRect LogicalRect;
   typedef mozilla::LogicalSize LogicalSize;
+  typedef mozilla::CSSOrderAwareFrameIterator CSSOrderAwareFrameIterator;
+  typedef mozilla::ReverseCSSOrderAwareFrameIterator
+    ReverseCSSOrderAwareFrameIterator;
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::css::GridNamedArea GridNamedArea;
   typedef mozilla::layout::AutoFrameListPtr AutoFrameListPtr;
@@ -324,7 +330,7 @@ protected:
     eBoth  = eFirst | eLast,
   };
   void CalculateBaselines(BaselineSet                   aBaselineSet,
-                          GridItemCSSOrderIterator*     aIter,
+                          CSSOrderAwareFrameIterator*   aIter,
                           const nsTArray<GridItemInfo>* aGridItems,
                           const Tracks&    aTracks,
                           uint32_t         aFragmentStartTrack,
@@ -351,7 +357,7 @@ protected:
    * axis as aMajor.  Pass zero if that's not the axis we're fragmenting in.
    */
   static FindItemInGridOrderResult
-  FindFirstItemInGridOrder(GridItemCSSOrderIterator& aIter,
+  FindFirstItemInGridOrder(CSSOrderAwareFrameIterator& aIter,
                            const nsTArray<GridItemInfo>& aGridItems,
                            LineRange GridArea::* aMajor,
                            LineRange GridArea::* aMinor,
@@ -365,7 +371,7 @@ protected:
    * Pass the number of tracks if that's not the axis we're fragmenting in.
    */
   static FindItemInGridOrderResult
-  FindLastItemInGridOrder(ReverseGridItemCSSOrderIterator& aIter,
+  FindLastItemInGridOrder(ReverseCSSOrderAwareFrameIterator& aIter,
                           const nsTArray<GridItemInfo>& aGridItems,
                           LineRange GridArea::* aMajor,
                           LineRange GridArea::* aMinor,

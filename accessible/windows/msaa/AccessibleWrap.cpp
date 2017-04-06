@@ -62,6 +62,7 @@ static gAccessibles = 0;
 #endif
 
 MsaaIdGenerator AccessibleWrap::sIDGen;
+StaticAutoPtr<nsTArray<AccessibleWrap::HandlerControllerData>> AccessibleWrap::sHandlerControllers;
 
 static const VARIANT kVarChildIdSelf = {VT_I4};
 
@@ -1606,3 +1607,23 @@ AccessibleWrap::ReleaseContentProcessIdFor(dom::ContentParentId aIPCContentId)
 {
   sIDGen.ReleaseContentProcessIDFor(aIPCContentId);
 }
+
+/* static */
+void
+AccessibleWrap::SetHandlerControl(DWORD aPid, RefPtr<IHandlerControl> aCtrl)
+{
+  MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
+
+  if (!sHandlerControllers) {
+    sHandlerControllers = new nsTArray<HandlerControllerData>();
+    ClearOnShutdown(&sHandlerControllers);
+  }
+
+  HandlerControllerData ctrlData(aPid, Move(aCtrl));
+  if (sHandlerControllers->Contains(ctrlData)) {
+    return;
+  }
+
+  sHandlerControllers->AppendElement(Move(ctrlData));
+}
+

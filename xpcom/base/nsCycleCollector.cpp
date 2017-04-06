@@ -533,13 +533,13 @@ public:
 #endif
 
 #define CC_TELEMETRY(_name, _value)                                            \
-    PR_BEGIN_MACRO                                                             \
+    do {                                                                       \
     if (NS_IsMainThread()) {                                                   \
       Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR##_name, _value);        \
     } else {                                                                   \
       Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_WORKER##_name, _value); \
     }                                                                          \
-    PR_END_MACRO
+    } while(0)
 
 enum NodeColor { black, white, grey };
 

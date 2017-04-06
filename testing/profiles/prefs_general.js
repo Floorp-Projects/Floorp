@@ -370,3 +370,5 @@ user_pref("browser.formautofill.experimental", true);
 // The prefs recommended by Marionette are typically geared towards
 // consumer automation; not vendor testing.
 user_pref("marionette.prefs.recommended", false);
+
+user_pref("extensions.throw_on_docgroup_mismatch.enabled", false);
