@@ -12,8 +12,6 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/InlineSpellChecker.jsm");
-Cu.import("resource://gre/modules/InlineSpellCheckerContent.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
@@ -24,6 +22,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "ContentLinkHandler",
   "resource:///modules/ContentLinkHandler.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ContentWebRTC",
   "resource:///modules/ContentWebRTC.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SpellCheckHelper",
+  "resource://gre/modules/InlineSpellChecker.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "InlineSpellCheckerContent",
+  "resource://gre/modules/InlineSpellCheckerContent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
   "resource://gre/modules/LoginManagerContent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginFormFactory",
