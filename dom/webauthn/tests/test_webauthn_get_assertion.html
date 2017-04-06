@@ -12,80 +12,97 @@
 </head>
 <body>
 
-<h1>Tests for GetAssertion for W3C Web Authentication</h1>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1309284">Mozilla Bug 1309284</a>
+  <h1>Tests for GetAssertion for W3C Web Authentication</h1>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1309284">Mozilla Bug 1309284</a>
 
-<script class="testbody" type="text/javascript">
-"use strict";
+  <script class="testbody" type="text/javascript">
+   "use strict";
 
-// Execute the full-scope test
-SimpleTest.waitForExplicitFinish();
+   // Execute the full-scope test
+   SimpleTest.waitForExplicitFinish();
 
-function arrivingHereIsBad(aResult) {
-  ok(false, "Bad result! Received a: " + aResult);
-  return Promise.resolve();
-}
+   function arrivingHereIsBad(aResult) {
+     ok(false, "Bad result! Received a: " + aResult);
+     return Promise.resolve();
+   }
 
-function expectNotAllowedError(aResult) {
-  ok(aResult.toString().startsWith("NotAllowedError"), "Expecting a NotAllowedError");
-  return Promise.resolve();
-}
+   function expectNotAllowedError(aResult) {
+     ok(aResult.toString().startsWith("NotAllowedError"), "Expecting a NotAllowedError");
+     return Promise.resolve();
+   }
 
-function expectTypeError(aResult) {
-  ok(aResult.toString().startsWith("TypeError"), "Expecting a TypeError");
-  return Promise.resolve();
-}
+   function expectTypeError(aResult) {
+     ok(aResult.toString().startsWith("TypeError"), "Expecting a TypeError");
+     return Promise.resolve();
+   }
 
-SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
-                                   ["security.webauth.webauthn_enable_softtoken", true],
-                                   ["security.webauth.webauthn_enable_usbtoken", false]]},
-function() {
-  isnot(navigator.authentication, undefined, "WebAuthn API endpoint must exist");
-  isnot(navigator.authentication.makeCredential, undefined, "WebAuthn makeCredential API endpoint must exist");
-  isnot(navigator.authentication.getAssertion, undefined, "WebAuthn getAssertion API endpoint must exist");
+   SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
+                                      ["security.webauth.webauthn_enable_softtoken", true],
+                                      ["security.webauth.webauthn_enable_usbtoken", false]]},
+                             runTests);
 
-  let authn = navigator.authentication;
+   function runTests() {
+     isnot(navigator.authentication, undefined, "WebAuthn API endpoint must exist");
+     isnot(navigator.authentication.makeCredential, undefined, "WebAuthn makeCredential API endpoint must exist");
+     isnot(navigator.authentication.getAssertion, undefined, "WebAuthn getAssertion API endpoint must exist");
 
-  let gAssertionChallenge = new Uint8Array(16);
-  window.crypto.getRandomValues(gAssertionChallenge);
+     let authn = navigator.authentication;
 
-  let invalidCred = { type: "Magic", id: base64ToBytes("AAA=") };
-  let unknownCred = { type: "ScopedCred", id: base64ToBytes("AAA=") };
+     let gAssertionChallenge = new Uint8Array(16);
+     window.crypto.getRandomValues(gAssertionChallenge);
 
-  Promise.all([
-    // Test basic good call, but without giving a credential so expect failures
-    // this is OK by the standard, but not supported by U2F-backed authenticators
-    // like the soft token in use here.
-    authn.getAssertion(gAssertionChallenge)
-    .then(arrivingHereIsBad)
-    .catch(expectNotAllowedError),
+     let invalidCred = { type: "Magic", id: base64ToBytes("AAA=") };
+     let unknownCred = { type: "ScopedCred", id: base64ToBytes("AAA=") };
 
-    // Test with an unexpected option
-    authn.getAssertion(gAssertionChallenge, { unknownValue: "hi" })
-    .then(arrivingHereIsBad)
-    .catch(expectNotAllowedError),
+     var testFuncs = [
+       function () {
+         // Test basic good call, but without giving a credential so expect failures
+         // this is OK by the standard, but not supported by U2F-backed authenticators
+         // like the soft token in use here.
+         return authn.getAssertion(gAssertionChallenge)
+                     .then(arrivingHereIsBad)
+                     .catch(expectNotAllowedError);
+       },
+       function () {
+         // Test with an unexpected option
+         return authn.getAssertion(gAssertionChallenge, { unknownValue: "hi" })
+                     .then(arrivingHereIsBad)
+                     .catch(expectNotAllowedError);
+       },
+       function () {
+         // Test with an invalid credential
+         return authn.getAssertion(gAssertionChallenge, { allowList: [invalidCred] })
+                     .then(arrivingHereIsBad)
+                     .catch(expectTypeError);
+       },
+       function () {
+         // Test with an unknown credential
+         return authn.getAssertion(gAssertionChallenge, { allowList: [unknownCred] })
+                     .then(arrivingHereIsBad)
+                     .catch(expectNotAllowedError);
+       },
+       function () {
+         // Test with an unexpected option and an invalid credential
+         return authn.getAssertion(gAssertionChallenge, { unknownValue: "hi" })
+                     .then(arrivingHereIsBad)
+                     .catch(expectNotAllowedError);
+       }
+     ];
 
-    // Test with an invalid credential
-    authn.getAssertion(gAssertionChallenge, { allowList: [invalidCred] })
-    .then(arrivingHereIsBad)
-    .catch(expectTypeError),
+     var i = 0;
+     var runNextTest = () => {
+       if (i == testFuncs.length) {
+         SimpleTest.finish();
+         return;
+       }
+       testFuncs[i]().then(() => { runNextTest(); });
+       i = i + 1;
+     };
+     runNextTest();
 
-    // Test with an unknown credential
-    authn.getAssertion(gAssertionChallenge, { allowList: [unknownCred] })
-    .then(arrivingHereIsBad)
-    .catch(expectNotAllowedError),
+   }
 
-    // Test with an unexpected option and an invalid credential
-    authn.getAssertion(gAssertionChallenge, { unknownValue: "hi" })
-    .then(arrivingHereIsBad)
-    .catch(expectNotAllowedError)
-  ])
-  .then(function(){
-    SimpleTest.finish();
-  });
-});
-
-</script>
+  </script>
 
 </body>
 </html>
