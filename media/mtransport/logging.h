@@ -12,13 +12,14 @@
 #include <sstream>
 #include "mozilla/Logging.h"
 
+#ifdef MOZILLA_INTERNAL_API
+
 #define ML_ERROR            mozilla::LogLevel::Error
 #define ML_WARNING          mozilla::LogLevel::Warning
 #define ML_NOTICE           mozilla::LogLevel::Info
 #define ML_INFO             mozilla::LogLevel::Debug
 #define ML_DEBUG            mozilla::LogLevel::Verbose
 
-#ifdef MOZILLA_INTERNAL_API
 #define MOZ_MTLOG_MODULE(n) \
   static mozilla::LogModule* getLogModule() {   \
     static mozilla::LazyLogModule log(n);       \
@@ -39,6 +40,12 @@
 
 #include "prlog.h"
 
+#define ML_ERROR            PR_LOG_ERROR
+#define ML_WARNING          PR_LOG_WARNING
+#define ML_NOTICE           PR_LOG_INFO
+#define ML_INFO             PR_LOG_DEBUG
+#define ML_DEBUG            PR_LOG_VERBOSE
+
 #define MOZ_MTLOG_MODULE(n) \
   static PRLogModuleInfo* getLogModule() {      \
     static PRLogModuleInfo* log;                \
@@ -49,10 +56,10 @@
 
 #define MOZ_MTLOG(level, b)                                                         \
   do {                                                                              \
-    if (PR_LOG_TEST(getLogModule(), (PRLogModuleLevel)level)) {                     \
+    if (PR_LOG_TEST(getLogModule(), level)) {                                       \
       std::stringstream str;                                                        \
       str << b;                                                                     \
-      PR_LOG(getLogModule(), (PRLogModuleLevel)level, ("%s", str.str().c_str()));   \
+      PR_LOG(getLogModule(), level, ("%s", str.str().c_str()));                     \
     }                                                                               \
   } while(0)
 #endif // MOZILLA_INTERNAL_API
