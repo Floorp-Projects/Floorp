@@ -61,6 +61,12 @@ public class PushService implements BundleEventListener {
     public static final String SERVICE_WEBPUSH = "webpush";
     public static final String SERVICE_FXA = "fxa";
 
+    public static final double ERROR_GCM_DISABLED = 2154627078L; // = NS_ERROR_DOM_PUSH_GCM_DISABLED
+
+    public static final String REPLY_BUNDLE_KEY_ERROR = "error";
+    public static final String ERROR_BUNDLE_KEY_MESSAGE = "message";
+    public static final String ERROR_BUNDLE_KEY_RESULT = "result";
+
     private static PushService sInstance;
 
     private static final String[] GECKO_EVENTS = new String[] {
@@ -170,7 +176,7 @@ public class PushService implements BundleEventListener {
             }
 
             // We'll obtain a new subscription as part of device registration.
-            if (FxAccountDeviceRegistrator.needToRenewRegistration(fxAccount.getDeviceRegistrationTimestamp())) {
+            if (FxAccountDeviceRegistrator.shouldRenewRegistration(fxAccount)) {
                 Log.i(LOG_TAG, "FxA device needs registration renewal");
                 FxAccountDeviceRegistrator.renewRegistration(context);
             }
@@ -467,7 +473,13 @@ public class PushService implements BundleEventListener {
             // with the WebPush?  Perhaps we can show a dialog when interacting with the Push
             // permissions, and then be more aggressive showing this notification when we have
             // registrations and subscriptions that can't be advanced.
-            callback.sendError("To handle event [" + event + "], user interaction is needed to enable Google Play Services.");
+            String msg = "To handle event [" + event + "], user interaction is needed to enable Google Play Services.";
+            GeckoBundle reply = new GeckoBundle();
+            GeckoBundle error = new GeckoBundle();
+            error.putString(ERROR_BUNDLE_KEY_MESSAGE, msg);
+            error.putDouble(ERROR_BUNDLE_KEY_RESULT, ERROR_GCM_DISABLED);
+            reply.putBundle(REPLY_BUNDLE_KEY_ERROR, error);
+            callback.sendError(reply);
         }
     }
 
