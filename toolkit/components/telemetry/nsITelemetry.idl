@@ -315,46 +315,6 @@ interface nsITelemetry : nsISupports
    */
   readonly attribute boolean isOfficialTelemetry;
 
-  /** Addon telemetry hooks */
-
-  /**
-   * Register a histogram for an addon.  Throws an error if the
-   * histogram name has been registered previously.
-   *
-   * @param addon_id - Unique ID of the addon
-   * @param name - Unique histogram name
-   * @param histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR,
-   *        HISTOGRAM_BOOLEAN or HISTOGRAM_COUNT
-   * @param min - Minimal bucket size
-   * @param max - Maximum bucket size
-   * @param bucket_count - number of buckets in the histogram
-   */
-  [optional_argc]
-  void registerAddonHistogram(in ACString addon_id, in ACString name,
-                              in unsigned long histogram_type,
-                              [optional] in uint32_t min,
-                              [optional] in uint32_t max,
-                              [optional] in uint32_t bucket_count);
-
-  /**
-   * Return a histogram previously registered via
-   * registerAddonHistogram.  Throws an error if the id/name combo has
-   * not been registered via registerAddonHistogram.
-   *
-   * @param addon_id - Unique ID of the addon
-   * @param name - Registered histogram name
-   *
-   */
-  [implicit_jscontext]
-  jsval getAddonHistogram(in ACString addon_id, in ACString name);
-
-  /**
-   * Delete all histograms associated with the given addon id.
-   *
-   * @param addon_id - Unique ID of the addon
-   */
-  void unregisterAddonHistograms(in ACString addon_id);
-
   /**
    * Enable/disable recording for this histogram at runtime.
    * Recording is enabled by default, unless listed at kRecordingInitiallyDisabledIDs[].
@@ -364,18 +324,6 @@ interface nsITelemetry : nsISupports
    * @param enabled - whether or not to enable recording from now on.
    */
   void setHistogramRecordingEnabled(in ACString id, in boolean enabled);
-
-  /**
-   * An object containing a snapshot from all of the currently
-   * registered addon histograms.
-   * { addon-id1 : data1, ... }
-   *
-   * where data is an object whose properties are the names of the
-   * addon's histograms and whose corresponding values are as in
-   * histogramSnapshots.
-   */
-  [implicit_jscontext]
-  readonly attribute jsval addonHistogramSnapshots;
 
   /**
    * Read data from the previous run. After the callback is called, the last
