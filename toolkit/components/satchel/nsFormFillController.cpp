@@ -41,7 +41,6 @@
 #include "nsIFrame.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsFocusManager.h"
-#include "nsThreadUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -73,11 +72,11 @@ nsFormFillController::nsFormFillController() :
   // The amount of time a context menu event supresses showing a
   // popup from a focus event in ms. This matches the threshold in
   // toolkit/components/passwordmgr/LoginManagerContent.jsm.
-  mFocusAfterContextMenuThreshold(400),
+  mFocusAfterRightClickThreshold(400),
   mTimeout(50),
   mMinResultsForPopup(1),
   mMaxRows(0),
-  mLastContextMenuEventTimeStamp(TimeStamp()),
+  mLastRightClickTimeStamp(TimeStamp()),
   mDisableAutoComplete(false),
   mCompleteDefaultIndex(false),
   mCompleteSelectedIndex(false),
@@ -957,9 +956,6 @@ nsFormFillController::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
   if (type.EqualsLiteral("contextmenu")) {
-    // Set timestamp to check for a recent contextmenu
-    // call in Focus(), to avoid showing the popup.
-    mLastContextMenuEventTimeStamp = TimeStamp::Now();
     if (mFocusedPopup)
       mFocusedPopup->ClosePopup();
     return NS_OK;
@@ -1043,33 +1039,6 @@ nsFormFillController::MaybeStartControllingInput(nsIDOMHTMLInputElement* aInput)
   }
 }
 
-void
-nsFormFillController::FocusEventDelayedCallback(nsIFormControl* aFormControl)
-{
-  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(mFocusedInputNode);
-
-  if (!formControl || formControl != aFormControl ||
-      formControl->ControlType() != NS_FORM_INPUT_PASSWORD) {
-    return;
-  }
-
-  // If we have not seen a context menu call yet, just show the popup.
-  if (mLastContextMenuEventTimeStamp.IsNull()) {
-   ShowPopup();
-   return;
-  }
-
-  uint64_t timeDiff = fabs((TimeStamp::Now() - mLastContextMenuEventTimeStamp).ToMilliseconds());
-  // If this focus doesn't follow a contextmenu event within our specified
-  // threshold then show the autocomplete popup for all password fields.
-  // This is done to avoid showing both the context menu and the popup
-  // at the same time. The threshold should be a low amount of time that
-  // makes it impossible for the user to accidentally trigger this condition.
-  if (timeDiff > mFocusAfterContextMenuThreshold) {
-   ShowPopup();
-  }
-}
-
 nsresult
 nsFormFillController::Focus(nsIDOMEvent* aEvent)
 {
@@ -1086,8 +1055,28 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(mFocusedInputNode);
   MOZ_ASSERT(formControl);
 
-  NS_DispatchToMainThread(NewRunnableMethod<nsCOMPtr<nsIFormControl>>(
-      this, &nsFormFillController::FocusEventDelayedCallback, formControl));
+  // If this focus doesn't follow a right click within our specified
+  // threshold then show the autocomplete popup for all password fields.
+  // This is done to avoid showing both the context menu and the popup
+  // at the same time.
+  // We use a timestamp instead of a bool to avoid complexity when dealing with
+  // multiple input forms and the fact that a mousedown into an already focused
+  // field does not trigger another focus.
+
+  if (formControl->ControlType() != NS_FORM_INPUT_PASSWORD) {
+    return NS_OK;
+  }
+
+  // If we have not seen a right click yet, just show the popup.
+  if (mLastRightClickTimeStamp.IsNull()) {
+    ShowPopup();
+    return NS_OK;
+  }
+
+  uint64_t timeDiff = (TimeStamp::Now() - mLastRightClickTimeStamp).ToMilliseconds();
+  if (timeDiff > mFocusAfterRightClickThreshold) {
+    ShowPopup();
+  }
 #endif
 
   return NS_OK;
@@ -1219,6 +1208,15 @@ nsFormFillController::MouseDown(nsIDOMEvent* aEvent)
 
   int16_t button;
   mouseEvent->GetButton(&button);
+
+  // In case of a right click we set a timestamp that
+  // will be checked in Focus() to avoid showing
+  // both contextmenu and popup at the same time.
+  if (button == 2) {
+    mLastRightClickTimeStamp = TimeStamp::Now();
+    return NS_OK;
+  }
+
   if (button != 0)
     return NS_OK;
 
