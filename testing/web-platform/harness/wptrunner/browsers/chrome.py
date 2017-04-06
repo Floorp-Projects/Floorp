@@ -67,7 +67,7 @@ class ChromeBrowser(Browser):
         self.binary = binary
         self.server = ChromeDriverServer(self.logger, binary=webdriver_binary)
 
-    def start(self):
+    def start(self, **kwargs):
         self.server.start(block=False)
 
     def stop(self, force=False):
