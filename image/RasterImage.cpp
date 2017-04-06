@@ -471,7 +471,9 @@ RasterImage::OnSurfaceDiscardedInternal(bool aAnimatedFramesDiscarded)
 
   if (aAnimatedFramesDiscarded && mAnimationState) {
     MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
-    mAnimationState->UpdateState(mAnimationFinished, this, mSize);
+    gfx::IntRect rect =
+      mAnimationState->UpdateState(mAnimationFinished, this, mSize);
+    NotifyProgress(NoProgress, rect);
   }
 
   if (mProgressTracker) {
@@ -1084,7 +1086,9 @@ RasterImage::Discard()
   SurfaceCache::RemoveImage(ImageKey(this));
 
   if (mAnimationState) {
-    mAnimationState->UpdateState(mAnimationFinished, this, mSize);
+    gfx::IntRect rect =
+      mAnimationState->UpdateState(mAnimationFinished, this, mSize);
+    NotifyProgress(NoProgress, rect);
   }
 
   // Notify that we discarded.
@@ -1257,6 +1261,11 @@ RasterImage::Decode(const IntSize& aSize,
     task = DecoderFactory::CreateAnimationDecoder(mDecoderType, WrapNotNull(this),
                                                   mSourceBuffer, mSize,
                                                   decoderFlags, surfaceFlags);
+    // We may not be able to send an invalidation right here because of async
+    // notifications but that's not a problem because the first frame
+    // invalidation (when it comes) will invalidate for us. So we can ignore
+    // the return value of UpdateState. This also handles the invalidation
+    // from setting the composited frame as valid below.
     mAnimationState->UpdateState(mAnimationFinished, this, mSize);
     // If the animation is finished we can draw right away because we just draw
     // the final frame all the time from now on. See comment in
@@ -1721,7 +1730,10 @@ RasterImage::NotifyDecodeComplete(const DecoderFinalStatus& aStatus,
     // We've finished a full decode of all animation frames and our AnimationState
     // has been notified about them all, so let it know not to expect anymore.
     mAnimationState->NotifyDecodeComplete();
-    mAnimationState->UpdateState(mAnimationFinished, this, mSize);
+    gfx::IntRect rect = mAnimationState->UpdateState(mAnimationFinished, this, mSize);
+    if (!rect.IsEmpty()) {
+      NotifyProgress(NoProgress, rect);
+    }
   }
 
   // Do some telemetry if this isn't a metadata decode.
