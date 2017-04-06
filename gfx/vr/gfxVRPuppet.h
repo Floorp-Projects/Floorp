@@ -62,6 +62,8 @@ public:
   explicit VRControllerPuppet(dom::GamepadHand aHand);
   void SetButtonPressState(uint32_t aButton, bool aPressed);
   uint64_t GetButtonPressState();
+  void SetButtonTouchState(uint32_t aButton, bool aTouched);
+  uint64_t GetButtonTouchState();
   void SetAxisMoveState(uint32_t aAxis, double aValue);
   double GetAxisMoveState(uint32_t aAxis);
   void SetPoseMoveState(const dom::GamepadPoseState& aPose);
@@ -74,6 +76,7 @@ protected:
 
 private:
   uint64_t mButtonPressState;
+  uint64_t mButtonTouchState;
   float mAxisMoveState[3];
   float mAxisMove[3];
   dom::GamepadPoseState mPoseState;
@@ -109,7 +112,8 @@ private:
   void HandleButtonPress(uint32_t aControllerIdx,
                          uint32_t aButton,
                          uint64_t aButtonMask,
-                         uint64_t aButtonPressed);
+                         uint64_t aButtonPressed,
+                         uint64_t aButtonTouched);
   void HandleAxisMove(uint32_t aControllerIndex, uint32_t aAxis,
                       float aValue);
   void HandlePoseTracking(uint32_t aControllerIndex,

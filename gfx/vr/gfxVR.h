@@ -262,7 +262,8 @@ public:
   virtual void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
                              double aIntensity, double aDuration, uint32_t aPromiseID) = 0;
   virtual void StopVibrateHaptic(uint32_t aControllerIdx) = 0;
-  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed, double aValue);
+  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed, bool aTouched,
+                      double aValue);
   void NewAxisMove(uint32_t aIndex, uint32_t aAxis, double aValue);
   void NewPoseState(uint32_t aIndex, const dom::GamepadPoseState& aPose);
   void AddGamepad(const VRControllerInfo& controllerInfo);

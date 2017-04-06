@@ -1322,7 +1322,9 @@ VRSystemManagerOculus::HandleButtonPress(uint32_t aControllerIdx,
   const uint64_t diff = (controller->GetButtonPressed() ^ aButtonPressed);
 
   if (diff & aButtonMask) {
+    // TODO: Bug 1336003 for button touched support.
     NewButtonEvent(aControllerIdx, aButton, aButtonMask & aButtonPressed,
+                   aButtonMask & aButtonPressed,
                    (aButtonMask & aButtonPressed) ? 1.0L : 0.0L);
   }
 }
@@ -1356,7 +1358,8 @@ VRSystemManagerOculus::HandleTriggerPress(uint32_t aControllerIdx, uint32_t aBut
     MOZ_ASSERT(false, "We only support indexTrigger and handTrigger in Oculus.");
   }
 
-  NewButtonEvent(aControllerIdx, aButton, aValue > 0.1f, aValue);
+  // TODO: Bug 1336003 for button touched support.
+  NewButtonEvent(aControllerIdx, aButton, aValue > 0.1f, aValue > 0.1f, aValue);
 }
 
 void
