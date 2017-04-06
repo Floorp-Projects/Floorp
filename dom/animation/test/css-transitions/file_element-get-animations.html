@@ -13,7 +13,7 @@ async_test(function(t) {
   // Add a couple of transitions
   div.style.left = '0px';
   div.style.top = '0px';
-  window.getComputedStyle(div).transitionProperty;
+  getComputedStyle(div).transitionProperty;
 
   div.style.transition = 'all 100s';
   div.style.left = '100px';
@@ -66,11 +66,11 @@ async_test(function(t) {
 
   // Add a very short transition
   div.style.left = '0px';
-  window.getComputedStyle(div).left;
+  getComputedStyle(div).left;
 
   div.style.transition = 'all 0.01s';
   div.style.left = '100px';
-  window.getComputedStyle(div).left;
+  getComputedStyle(div).left;
 }, 'getAnimations for CSS Transitions that have finished');
 
 test(function(t) {
@@ -78,7 +78,7 @@ test(function(t) {
 
   // Try to transition non-animatable property animation-duration
   div.style.animationDuration = '10s';
-  window.getComputedStyle(div).animationDuration;
+  getComputedStyle(div).animationDuration;
 
   div.style.transition = 'all 100s';
   div.style.animationDuration = '100s';
@@ -92,7 +92,7 @@ test(function(t) {
   var div = addDiv(t);
 
   div.style.setProperty('-vendor-unsupported', '0px', '');
-  window.getComputedStyle(div).transitionProperty;
+  getComputedStyle(div).transitionProperty;
   div.style.transition = 'all 100s';
   div.style.setProperty('-vendor-unsupported', '100px', '');
 

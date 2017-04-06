@@ -83,7 +83,7 @@ promise_test(function(t) {
   // Add an animation
   div.style.backgroundColor = 'red';
   div.style.animation = 'anim1 100s';
-  window.getComputedStyle(div).backgroundColor;
+  getComputedStyle(div).backgroundColor;
 
   // Wait until a frame after the animation starts, then add a transition
   var animations = div.getAnimations();
