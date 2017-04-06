@@ -10,17 +10,18 @@
 
     <ImageView android:id="@+id/icon"
                android:src="@drawable/folder_closed"
-               android:layout_width="24dp"
-               android:layout_height="18dp"
-               android:scaleType="fitXY"
-               android:layout_margin="20dp"/>
+               android:layout_width="@dimen/favicon_small_size"
+               android:layout_height="@dimen/favicon_small_size"
+               android:scaleType="fitCenter" />
 
     <LinearLayout android:layout_width="0dp"
                   android:layout_height="wrap_content"
                   android:layout_weight="1"
                   android:layout_gravity="center_vertical"
-                  android:paddingRight="10dp"
-                  android:paddingEnd="10dp"
+                  android:paddingLeft="16dp"
+                  android:paddingStart="16dp"
+                  android:paddingRight="16dp"
+                  android:paddingEnd="16dp"
                   android:orientation="vertical">
 
         <org.mozilla.gecko.widget.FadedSingleColorTextView
@@ -40,5 +41,11 @@
                   tools:text="1 items"/>
 
     </LinearLayout>
+
+    <ImageView android:id="@+id/indicator"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:layout_gravity="center"
+               android:src="@drawable/arrow" />
 
 </merge>
