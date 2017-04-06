@@ -31,6 +31,8 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.icons.decoders.FaviconDecoder;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.R;
@@ -54,6 +56,8 @@ public class WebAppActivity extends GeckoApp {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "webapp");
 
         if (savedInstanceState != null) {
             mManifestPath = savedInstanceState.getString(WebAppActivity.MANIFEST_PATH, null);
@@ -154,6 +158,7 @@ public class WebAppActivity extends GeckoApp {
             .equals(Uri.parse(launchUrl).getHost());
 
         if (!isSameDomain) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "webapp");
             mManifestPath = externalIntent.getStringExtra(WebAppActivity.MANIFEST_PATH);
             loadManifest(mManifestPath);
             Tabs.getInstance().loadUrl(launchUrl);
