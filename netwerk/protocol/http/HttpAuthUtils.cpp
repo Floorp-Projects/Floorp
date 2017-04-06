@@ -71,14 +71,18 @@ MatchesBaseURI(const nsCSubstring &matchScheme,
 
         // An empty hostname means to accept everything for the schema
         if (!hostName.IsEmpty()) {
-          if (hostName.First() == '.') {
-            if (!StringEndsWith(matchHost, hostName, nsCaseInsensitiveUTF8StringComparator())) {
-              return false;
-            }
-          } else { // host to match doesn't begin with '.', do a full compare
-            if (!matchHost.Equals(hostName, nsCaseInsensitiveUTF8StringComparator())) {
-              return false;
-            }
+          /*
+           host:      bar.com   foo.bar.com   foobar.com  foo.bar.com    bar.com
+           pref:      bar.com       bar.com      bar.com     .bar.com   .bar.com
+           result:     accept        accept       reject       accept     reject
+          */
+          if (!StringEndsWith(matchHost, hostName, nsCaseInsensitiveUTF8StringComparator())) {
+            return false;
+          }
+          if (matchHost.Length() > hostName.Length() &&
+              matchHost[matchHost.Length() - hostName.Length() - 1] != '.' &&
+              hostName[0] != '.') {
+            return false;
           }
         }
       }
