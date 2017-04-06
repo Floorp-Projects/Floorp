@@ -2950,8 +2950,8 @@ IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
     if (sc) {
       sc = styleSet->ResolveStyleFor(elementsToCheck[i], sc, LazyComputeBehavior::Assert);
     } else {
-      sc = nsComputedDOMStyle::GetStyleContextForElementNoFlush(elementsToCheck[i],
-                                                                nullptr, aPresShell);
+      sc = nsComputedDOMStyle::GetStyleContextNoFlush(elementsToCheck[i],
+                                                      nullptr, aPresShell);
     }
     if (sc->StyleDisplay()->mDisplay == StyleDisplay::None) {
       return true;

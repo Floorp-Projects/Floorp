@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Testcase for reordered 'li' flex items</title>
+  <style>
+    .container {
+      list-style: decimal inside;
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body>
+  <ol class="container">
+    <!-- Should be reordered to nearly the end: -->
+    <li style="order: 3">List item 1</li>
+    <li>List item 2</li>
+    <li>List item 3</li>
+    <!-- Should be reordered to the start: -->
+    <li style="order: -2">List item 4</li>
+    <li>List item 5</li>
+    <!-- order has no effect here, since it's not set on the flex item: -->
+    <div><li style="order: -3">List item 6</li></div>
+    <!-- Should be reordered to the end: -->
+    <div style="order: 5"><li>List item 7</li></div>
+    <div><li>List item 8</li></div>
+  </ol>
+</body>
+</html>

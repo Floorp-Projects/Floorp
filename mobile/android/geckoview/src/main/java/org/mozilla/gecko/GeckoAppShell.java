@@ -1737,7 +1737,7 @@ public class GeckoAppShell
 
         /**
          * URI of the underlying chrome window to be opened, or null to use the default GeckoView
-         * XUL container <tt>chrome://browser/content/geckoview.xul</tt>.  See
+         * XUL container <tt>chrome://geckoview/content/geckoview.xul</tt>.  See
          * <a href="https://developer.mozilla.org/en/docs/toolkit.defaultChromeURI">https://developer.mozilla.org/en/docs/toolkit.defaultChromeURI</a>
          *
          * @return URI or null.

@@ -25,6 +25,8 @@
 #define __XMLDocument_FWD_DEFINED__
 #endif // !defined(__XMLDocument_FWD_DEFINED__)
 
+#include <combaseapi.h>
+
 #include "mozilla/a11y/COMPtrTypes.h"
 
 // This define in rpcndr.h messes up our code, so we must undefine it after
@@ -39,6 +41,7 @@ namespace mozilla {
 namespace a11y {
 
 typedef uint32_t IAccessibleHolder;
+typedef uint32_t IHandlerControlHolder;
 
 } // namespace a11y
 } // namespace mozilla

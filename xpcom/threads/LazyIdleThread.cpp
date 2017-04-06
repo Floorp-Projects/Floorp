@@ -17,14 +17,14 @@
 
 #ifdef DEBUG
 #define ASSERT_OWNING_THREAD()                                                 \
-  PR_BEGIN_MACRO                                                               \
+  do {                                                                         \
     nsIThread* currentThread = NS_GetCurrentThread();                          \
     if (currentThread) {                                                       \
       nsCOMPtr<nsISupports> current(do_QueryInterface(currentThread));         \
       nsCOMPtr<nsISupports> test(do_QueryInterface(mOwningThread));            \
       MOZ_ASSERT(current == test, "Wrong thread!");                            \
     }                                                                          \
-  PR_END_MACRO
+  } while(0)
 #else
 #define ASSERT_OWNING_THREAD() /* nothing */
 #endif

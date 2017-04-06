@@ -310,9 +310,9 @@ FRAME_STATE_BIT(Box, 61, NS_FRAME_MOUSE_THROUGH_NEVER)
 
 FRAME_STATE_GROUP(FlexContainer, nsFlexContainerFrame)
 
-// Set for a flex container whose children have been reordered due to 'order'.
-// (Means that we have to be more thorough about checking them for sortedness.)
-FRAME_STATE_BIT(FlexContainer, 20, NS_STATE_FLEX_CHILDREN_REORDERED)
+// True iff the normal flow children are already in CSS 'order' in the
+// order they occur in the child frame list.
+FRAME_STATE_BIT(FlexContainer, 20, NS_STATE_FLEX_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER)
 
 // Set for a flex container that is emulating a legacy
 // 'display:-webkit-{inline-}box' container.

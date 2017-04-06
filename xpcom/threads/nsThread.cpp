@@ -1116,7 +1116,7 @@ void canary_alarm_handler(int signum)
 #endif
 
 #define NOTIFY_EVENT_OBSERVERS(func_, params_)                                 \
-  PR_BEGIN_MACRO                                                               \
+  do {                                                                         \
     if (!mEventObservers.IsEmpty()) {                                          \
       nsAutoTObserverArray<NotNull<nsCOMPtr<nsIThreadObserver>>, 2>::ForwardIterator \
         iter_(mEventObservers);                                                \
@@ -1126,7 +1126,7 @@ void canary_alarm_handler(int signum)
         obs_ -> func_ params_ ;                                                \
       }                                                                        \
     }                                                                          \
-  PR_END_MACRO
+  } while(0)
 
 void
 nsThread::GetIdleEvent(nsIRunnable** aEvent, MutexAutoLock& aProofOfLock)

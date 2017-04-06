@@ -487,28 +487,28 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 // don't see a way to get it out of array_.
 // Note that this macro only works if the array holds pointers to XPCOM objects.
 #define NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(array_, obstype_, func_, params_) \
-  PR_BEGIN_MACRO                                                             \
+  do {                                                                       \
     nsTObserverArray<obstype_ *>::ForwardIterator iter_(array_);             \
     RefPtr<obstype_> obs_;                                                 \
     while (iter_.HasMore()) {                                                 \
       obs_ = iter_.GetNext();                                                \
       obs_ -> func_ params_ ;                                                \
     }                                                                        \
-  PR_END_MACRO
+  } while(0)
 
 // Note that this macro only works if the array holds pointers to XPCOM objects.
 #define NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(array_, obstype_, func_, params_) \
-  PR_BEGIN_MACRO                                                             \
+  do {                                                                       \
     nsTObserverArray<obstype_ *>::ForwardIterator iter_(array_);             \
     obstype_* obs_;                                                          \
     while (iter_.HasMore()) {                                                \
       obs_ = iter_.GetNext();                                                \
       obs_ -> func_ params_ ;                                                \
     }                                                                        \
-  PR_END_MACRO
+  } while(0)
 
 #define NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS_WITH_QI(array_, basetype_, obstype_, func_, params_) \
-  PR_BEGIN_MACRO                                                             \
+  do {                                                                       \
     nsTObserverArray<basetype_ *>::ForwardIterator iter_(array_);            \
     basetype_* obsbase_;                                                     \
     while (iter_.HasMore()) {                                                \
@@ -518,5 +518,5 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
         obs_ -> func_ params_ ;                                              \
       }                                                                      \
     }                                                                        \
-  PR_END_MACRO
+  } while(0)
 #endif // nsTObserverArray_h___

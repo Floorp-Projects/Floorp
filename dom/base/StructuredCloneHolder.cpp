@@ -310,6 +310,7 @@ StructuredCloneHolder::Read(nsISupports* aParent,
     mBlobImplArray.Clear();
     mWasmModuleArray.Clear();
     mClonedSurfaces.Clear();
+    mInputStreamArray.Clear();
     Clear();
   }
 }
@@ -1042,6 +1043,45 @@ WriteWasmModule(JSStructuredCloneWriter* aWriter,
   return false;
 }
 
+JSObject*
+ReadInputStream(JSContext* aCx,
+                uint32_t aIndex,
+                StructuredCloneHolder* aHolder)
+{
+  MOZ_ASSERT(aHolder);
+  MOZ_ASSERT(aIndex < aHolder->InputStreams().Length());
+  nsCOMPtr<nsIInputStream> inputStream = aHolder->InputStreams()[aIndex];
+
+  JS::RootedValue result(aCx);
+  nsresult rv = nsContentUtils::WrapNative(aCx, inputStream,
+                                           &NS_GET_IID(nsIInputStream),
+                                           &result);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return &result.toObject();
+}
+
+bool
+WriteInputStream(JSStructuredCloneWriter* aWriter,
+                 nsIInputStream* aInputStream,
+                 StructuredCloneHolder* aHolder)
+{
+  MOZ_ASSERT(aWriter);
+  MOZ_ASSERT(aInputStream);
+  MOZ_ASSERT(aHolder);
+
+  // We store the position of the inputStream in the array as index.
+  if (JS_WriteUint32Pair(aWriter, SCTAG_DOM_INPUTSTREAM,
+                         aHolder->InputStreams().Length())) {
+    aHolder->InputStreams().AppendElement(aInputStream);
+    return true;
+  }
+
+  return false;
+}
+
 } // anonymous namespace
 
 JSObject*
@@ -1082,6 +1122,10 @@ StructuredCloneHolder::CustomReadHandler(JSContext* aCx,
 
   if (aTag == SCTAG_DOM_WASM) {
     return ReadWasmModule(aCx, aIndex, this);
+  }
+
+  if (aTag == SCTAG_DOM_INPUTSTREAM) {
+    return ReadInputStream(aCx, aIndex, this);
   }
 
   return ReadFullySerializableObjects(aCx, aReader, aTag);
@@ -1147,6 +1191,14 @@ StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
     MOZ_ASSERT(module);
 
     return WriteWasmModule(aWriter, module, this);
+  }
+
+  {
+    nsCOMPtr<nsISupports> base = xpc::UnwrapReflectorToISupports(aObj);
+    nsCOMPtr<nsIInputStream> inputStream = do_QueryInterface(base);
+    if (inputStream) {
+      return WriteInputStream(aWriter, inputStream, this);
+    }
   }
 
   return WriteFullySerializableObjects(aCx, aWriter, aObj);

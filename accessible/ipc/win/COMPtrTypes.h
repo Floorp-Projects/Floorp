@@ -7,6 +7,7 @@
 #ifndef mozilla_a11y_COMPtrTypes_h
 #define mozilla_a11y_COMPtrTypes_h
 
+#include "mozilla/a11y/AccessibleHandler.h"
 #include "mozilla/mscom/COMPtrHolder.h"
 
 #include <oleacc.h>
@@ -20,6 +21,11 @@ class Accessible;
 
 IAccessibleHolder
 CreateHolderFromAccessible(Accessible* aAccToWrap);
+
+typedef mozilla::mscom::COMPtrHolder<IHandlerControl, IID_IHandlerControl> IHandlerControlHolder;
+
+IHandlerControlHolder
+CreateHolderFromHandlerControl(mscom::ProxyUniquePtr<IHandlerControl> aHandlerControl);
 
 } // namespace a11y
 } // namespace mozilla

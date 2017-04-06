@@ -10,6 +10,7 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
+#include "jsiter.h"
 #include "jsmath.h"
 #include "jsobj.h"
 #include "jsstr.h"
@@ -1357,6 +1358,34 @@ RNewArray::recover(JSContext* cx, SnapshotIterator& iter) const
     RootedObjectGroup group(cx, templateObject->group());
 
     JSObject* resultObject = NewFullyAllocatedArrayTryUseGroup(cx, group, count_);
+    if (!resultObject)
+        return false;
+
+    result.setObject(*resultObject);
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
+MNewArrayIterator::writeRecoverData(CompactBufferWriter& writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_NewArrayIterator));
+    return true;
+}
+
+RNewArrayIterator::RNewArrayIterator(CompactBufferReader& reader)
+{
+}
+
+bool
+RNewArrayIterator::recover(JSContext* cx, SnapshotIterator& iter) const
+{
+    RootedObject templateObject(cx, &iter.read().toObject());
+    RootedValue result(cx);
+
+
+    JSObject* resultObject = NewArrayIteratorObject(cx);
     if (!resultObject)
         return false;
 

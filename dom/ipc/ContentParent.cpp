@@ -4925,6 +4925,20 @@ ContentParent::RecvGetA11yContentId(uint32_t* aContentId)
 #endif
 }
 
+mozilla::ipc::IPCResult
+ContentParent::RecvA11yHandlerControl(const uint32_t& aPid,
+                                      const IHandlerControlHolder& aHandlerControl)
+{
+#if defined(XP_WIN32) && defined(ACCESSIBILITY)
+  MOZ_ASSERT(!aHandlerControl.IsNull());
+  RefPtr<IHandlerControl> proxy(aHandlerControl.Get());
+  a11y::AccessibleWrap::SetHandlerControl(aPid, Move(proxy));
+  return IPC_OK();
+#else
+  return IPC_FAIL_NO_REASON(this);
+#endif
+}
+
 } // namespace dom
 } // namespace mozilla
 

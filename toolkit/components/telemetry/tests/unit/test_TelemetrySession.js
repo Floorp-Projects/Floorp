@@ -1584,7 +1584,7 @@ add_task(function* test_invalidSessionData() {
 });
 
 add_task(function* test_abortedSession() {
-  if (gIsAndroid || gIsGonk) {
+  if (gIsAndroid) {
     // We don't have the aborted session ping here.
     return;
   }
@@ -1665,7 +1665,7 @@ add_task(function* test_abortedSession() {
 });
 
 add_task(function* test_abortedSession_Shutdown() {
-  if (gIsAndroid || gIsGonk) {
+  if (gIsAndroid) {
     // We don't have the aborted session ping here.
     return;
   }
@@ -1698,7 +1698,7 @@ add_task(function* test_abortedSession_Shutdown() {
 });
 
 add_task(function* test_abortedDailyCoalescing() {
-  if (gIsAndroid || gIsGonk) {
+  if (gIsAndroid) {
     // We don't have the aborted session or the daily ping here.
     return;
   }
@@ -1751,7 +1751,7 @@ add_task(function* test_abortedDailyCoalescing() {
 });
 
 add_task(function* test_schedulerComputerSleep() {
-  if (gIsAndroid || gIsGonk) {
+  if (gIsAndroid) {
     // We don't have the aborted session or the daily ping here.
     return;
   }
@@ -1808,7 +1808,7 @@ add_task(function* test_schedulerComputerSleep() {
 });
 
 add_task(function* test_schedulerEnvironmentReschedules() {
-  if (gIsAndroid || gIsGonk) {
+  if (gIsAndroid) {
     // We don't have the aborted session or the daily ping here.
     return;
   }
@@ -1854,7 +1854,7 @@ add_task(function* test_schedulerEnvironmentReschedules() {
 });
 
 add_task(function* test_schedulerNothingDue() {
-  if (gIsAndroid || gIsGonk) {
+  if (gIsAndroid) {
     // We don't have the aborted session or the daily ping here.
     return;
   }
@@ -1951,7 +1951,7 @@ add_task(function* test_pingExtendedStats() {
 });
 
 add_task(function* test_schedulerUserIdle() {
-  if (gIsAndroid || gIsGonk) {
+  if (gIsAndroid) {
     // We don't have the aborted session or the daily ping here.
     return;
   }
@@ -1996,7 +1996,7 @@ add_task(function* test_schedulerUserIdle() {
 });
 
 add_task(function* test_DailyDueAndIdle() {
-  if (gIsAndroid || gIsGonk) {
+  if (gIsAndroid) {
     // We don't have the aborted session or the daily ping here.
     return;
   }
@@ -2047,7 +2047,7 @@ add_task(function* test_DailyDueAndIdle() {
 });
 
 add_task(function* test_userIdleAndSchedlerTick() {
-  if (gIsAndroid || gIsGonk) {
+  if (gIsAndroid) {
     // We don't have the aborted session or the daily ping here.
     return;
   }

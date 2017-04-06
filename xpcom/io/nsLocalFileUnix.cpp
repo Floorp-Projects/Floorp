@@ -79,16 +79,16 @@ static nsresult MacErrorMapper(OSErr inErr);
 using namespace mozilla;
 
 #define ENSURE_STAT_CACHE()                     \
-    PR_BEGIN_MACRO                              \
+    do {                                        \
         if (!FillStatCache())                   \
              return NSRESULT_FOR_ERRNO();       \
-    PR_END_MACRO
+    } while(0)
 
 #define CHECK_mPath()                           \
-    PR_BEGIN_MACRO                              \
+    do {                                        \
         if (mPath.IsEmpty())                    \
             return NS_ERROR_NOT_INITIALIZED;    \
-    PR_END_MACRO
+    } while(0)
 
 /* directory enumerator */
 class nsDirEnumeratorUnix final

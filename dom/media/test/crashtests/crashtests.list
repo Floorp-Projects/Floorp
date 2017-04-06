@@ -92,6 +92,7 @@ load audiocontext-double-suspend.html
 load buffer-source-duration-1.html
 load buffer-source-ended-1.html
 load buffer-source-resampling-start-1.html
+load buffer-source-slow-resampling-1.html
 load doppler-1.html
 HTTP load media-element-source-seek-1.html
 load offline-buffer-source-ended-1.html

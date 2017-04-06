@@ -327,6 +327,8 @@ public:
 
   static nsresult RemovePermission(nsIPrincipal* aPrincipal);
   static nsresult OpenSettings(nsIPrincipal* aPrincipal);
+
+  nsresult DispatchToMainThread(already_AddRefed<nsIRunnable>&& aRunnable);
 protected:
   Notification(nsIGlobalObject* aGlobal, const nsAString& aID,
                const nsAString& aTitle, const nsAString& aBody,

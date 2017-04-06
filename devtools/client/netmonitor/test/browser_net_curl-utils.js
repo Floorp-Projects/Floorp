@@ -41,6 +41,7 @@ add_task(function* () {
   data = yield createCurlData(requests.post, getLongString);
   testIsUrlEncodedRequest(data);
   testWritePostDataTextParams(data);
+  testWriteEmptyPostDataTextParams(data);
   testDataArgumentOnGeneratedCommand(data);
 
   data = yield createCurlData(requests.multipart, getLongString);
@@ -101,6 +102,12 @@ function testWritePostDataTextParams(data) {
   let params = CurlUtils.writePostDataTextParams(data.postDataText);
   is(params, "param1=value1&param2=value2&param3=value3",
     "Should return a serialized representation of the request parameters");
+}
+
+function testWriteEmptyPostDataTextParams(data) {
+  let params = CurlUtils.writePostDataTextParams(null);
+  is(params, "",
+    "Should return a empty string when no parameters provided");
 }
 
 function testDataArgumentOnGeneratedCommand(data) {

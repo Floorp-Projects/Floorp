@@ -14,7 +14,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/ToJSValue.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "nsContentUtils.h"
 #include "nsJSEnvironment.h"
 #include "MainThreadUtils.h"
@@ -24,6 +24,37 @@
 namespace mozilla {
 namespace dom {
 namespace ipc {
+
+StructuredCloneData::StructuredCloneData()
+  : StructuredCloneData(StructuredCloneHolder::TransferringSupported)
+{}
+
+StructuredCloneData::StructuredCloneData(StructuredCloneData&& aOther)
+  : StructuredCloneData(StructuredCloneHolder::TransferringSupported)
+{
+  *this = Move(aOther);
+}
+
+StructuredCloneData::StructuredCloneData(TransferringSupport aSupportsTransferring)
+  : StructuredCloneHolder(StructuredCloneHolder::CloningSupported,
+                          aSupportsTransferring,
+                          StructuredCloneHolder::StructuredCloneScope::DifferentProcess)
+  , mInitialized(false)
+{}
+
+StructuredCloneData::~StructuredCloneData()
+{}
+
+StructuredCloneData&
+StructuredCloneData::operator=(StructuredCloneData&& aOther)
+{
+  mExternalData = Move(aOther.mExternalData);
+  mSharedData = Move(aOther.mSharedData);
+  mIPCStreams = Move(aOther.mIPCStreams);
+  mInitialized = aOther.mInitialized;
+
+  return *this;
+}
 
 bool
 StructuredCloneData::Copy(const StructuredCloneData& aData)
@@ -49,6 +80,9 @@ StructuredCloneData::Copy(const StructuredCloneData& aData)
 
   MOZ_ASSERT(GetSurfaces().IsEmpty());
   MOZ_ASSERT(WasmModules().IsEmpty());
+
+  MOZ_ASSERT(InputStreams().IsEmpty());
+  InputStreams().AppendElements(aData.InputStreams());
 
   mInitialized = true;
 
@@ -224,6 +258,26 @@ BuildClonedMessageData(typename ParentManagerTraits<Flavor, ManagerFlavor>::Conc
       blobList.AppendElement(protocolActor);
     }
   }
+
+  const nsTArray<nsCOMPtr<nsIInputStream>>& inputStreams = aData.InputStreams();
+
+  if (!inputStreams.IsEmpty()) {
+    InfallibleTArray<IPCStream>& streams = aClonedData.inputStreams();
+    uint32_t length = inputStreams.Length();
+    streams.SetCapacity(length);
+    for (uint32_t i = 0; i < length; ++i) {
+      AutoIPCStream* stream = aData.IPCStreams().AppendElement(fallible);
+      if (NS_WARN_IF(!stream)) {
+        return false;
+      }
+
+      if (!stream->Serialize(inputStreams[i], aManager)) {
+        return false;
+      }
+      streams.AppendElement(stream->TakeValue());
+    }
+  }
+
   return true;
 }
 
@@ -341,6 +395,16 @@ UnpackClonedMessageData(typename MemoryTraits<MemoryFlavor>::ClonedMessageType& 
       MOZ_ASSERT(blobImpl);
 
       aData.BlobImpls().AppendElement(blobImpl);
+    }
+  }
+
+  const InfallibleTArray<IPCStream>& streams = aClonedData.inputStreams();
+  if (!streams.IsEmpty()) {
+    uint32_t length = streams.Length();
+    aData.InputStreams().SetCapacity(length);
+    for (uint32_t i = 0; i < length; ++i) {
+      nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(streams[i]);
+      aData.InputStreams().AppendElement(stream);
     }
   }
 }

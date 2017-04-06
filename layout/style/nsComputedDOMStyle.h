@@ -85,25 +85,40 @@ public:
   }
 
   static already_AddRefed<nsStyleContext>
-  GetStyleContextForElement(mozilla::dom::Element* aElement, nsIAtom* aPseudo,
-                            nsIPresShell* aPresShell,
-                            StyleType aStyleType = eAll);
+  GetStyleContext(mozilla::dom::Element* aElement, nsIAtom* aPseudo,
+                  nsIPresShell* aPresShell,
+                  StyleType aStyleType = eAll);
 
   enum AnimationFlag {
     eWithAnimation,
     eWithoutAnimation,
   };
-  // Similar to the above but ignoring animation rules and with StyleType::eAll.
-  static already_AddRefed<nsStyleContext>
-  GetStyleContextForElementWithoutAnimation(mozilla::dom::Element* aElement,
-                                            nsIAtom* aPseudo,
-                                            nsIPresShell* aPresShell);
 
   static already_AddRefed<nsStyleContext>
-  GetStyleContextForElementNoFlush(mozilla::dom::Element* aElement,
+  GetStyleContextNoFlush(mozilla::dom::Element* aElement,
+                         nsIAtom* aPseudo,
+                         nsIPresShell* aPresShell,
+                         StyleType aStyleType = eAll)
+  {
+    return DoGetStyleContextNoFlush(aElement,
+                                    aPseudo,
+                                    aPresShell,
+                                    aStyleType,
+                                    eWithAnimation);
+  }
+
+  static already_AddRefed<nsStyleContext>
+  GetUnanimatedStyleContextNoFlush(mozilla::dom::Element* aElement,
                                    nsIAtom* aPseudo,
                                    nsIPresShell* aPresShell,
-                                   StyleType aStyleType = eAll);
+                                   StyleType aStyleType = eAll)
+  {
+    return DoGetStyleContextNoFlush(aElement,
+                                    aPseudo,
+                                    aPresShell,
+                                    aStyleType,
+                                    eWithoutAnimation);
+  }
 
   static nsIPresShell*
   GetPresShellForContent(nsIContent* aContent);
@@ -155,11 +170,11 @@ private:
   void SetFrameStyleContext(nsStyleContext* aContext);
 
   static already_AddRefed<nsStyleContext>
-  DoGetStyleContextForElementNoFlush(mozilla::dom::Element* aElement,
-                                     nsIAtom* aPseudo,
-                                     nsIPresShell* aPresShell,
-                                     StyleType aStyleType,
-                                     AnimationFlag aAnimationFlag);
+  DoGetStyleContextNoFlush(mozilla::dom::Element* aElement,
+                           nsIAtom* aPseudo,
+                           nsIPresShell* aPresShell,
+                           StyleType aStyleType,
+                           AnimationFlag aAnimationFlag);
 
 #define STYLE_STRUCT(name_, checkdata_cb_)                              \
   const nsStyle##name_ * Style##name_() {                               \

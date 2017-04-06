@@ -4,9 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+DIRS += ['geckoview']
+
 EXTRA_JS_MODULES += [
     'Accounts.jsm',
-    'AndroidLog.jsm',
     'dbg-browser-actors.js',
     'DelayedInit.jsm',
     'DownloadNotifications.jsm',
@@ -18,7 +19,6 @@ EXTRA_JS_MODULES += [
     'JNI.jsm',
     'LightweightThemeConsumer.jsm',
     'MediaPlayerApp.jsm',
-    'Messaging.jsm',
     'NetErrorHelper.jsm',
     'Notifications.jsm',
     'PageActions.jsm',
@@ -29,13 +29,4 @@ EXTRA_JS_MODULES += [
     'Snackbars.jsm',
     'SSLExceptions.jsm',
     'WebsiteMetadata.jsm'
-]
-
-# GeckoView-sepcific modules added separately.
-EXTRA_JS_MODULES += [
-    'GeckoViewContent.jsm',
-    'GeckoViewModule.jsm',
-    'GeckoViewNavigation.jsm',
-    'GeckoViewProgress.jsm',
-    'GeckoViewSettings.jsm',
 ]

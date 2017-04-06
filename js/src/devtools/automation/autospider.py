@@ -38,6 +38,8 @@ parser = argparse.ArgumentParser(
     description='Run a spidermonkey shell build job')
 parser.add_argument('--dep', action='store_true',
                     help='do not clobber the objdir before building')
+parser.add_argument('--keep', action='store_true',
+                    help='do not delete the sanitizer output directory (for testing)')
 parser.add_argument('--platform', '-p', type=str, metavar='PLATFORM',
                     default='', help='build platform, including a suffix ("-debug" or "") used by buildbot to override the variant\'s "debug" setting. The platform can be used to specify 32 vs 64 bits.')
 parser.add_argument('--timeout', '-t', type=int, metavar='TIMEOUT',
@@ -275,7 +277,7 @@ timer.daemon = True
 timer.start()
 
 ensure_dir_exists(OBJDIR, clobber=not args.dep and not args.nobuild)
-ensure_dir_exists(OUTDIR)
+ensure_dir_exists(OUTDIR, clobber=not args.keep)
 
 
 def run_command(command, check=False, **kwargs):
@@ -373,6 +375,8 @@ test_suites |= set(normalize_tests(variant.get('extra-tests', {}).get('all', [])
 # Now adjust the variant's default test list with command-line arguments.
 test_suites |= set(normalize_tests(args.run_tests.split(",")))
 test_suites -= set(normalize_tests(args.skip_tests.split(",")))
+if 'all' in args.skip_tests.split(","):
+    test_suites = []
 
 # Always run all enabled tests, even if earlier ones failed. But return the
 # first failed status.
@@ -408,6 +412,7 @@ if args.variant in ('tsan', 'msan'):
 
     # Summarize results
     sites = Counter()
+    errors = Counter()
     for filename in fullfiles:
         with open(os.path.join(OUTDIR, filename), 'rb') as fh:
             for line in fh:
@@ -427,10 +432,47 @@ if args.variant in ('tsan', 'msan'):
             print >> outfh, "%d %s" % (count, location)
     print(open(summary_filename, 'rb').read())
 
+    max_allowed = None
     if 'max-errors' in variant:
-        print("Found %d errors out of %d allowed" % (len(sites), variant['max-errors']))
-        if len(sites) > variant['max-errors']:
+        max_allowed = variant['max-errors']
+    elif 'expect-errors' in variant:
+        max_allowed = len(variant['expect-errors'])
+
+    if max_allowed is not None:
+        print("Found %d errors out of %d allowed" % (len(sites), max_allowed))
+        if len(sites) > max_allowed:
             results.append(1)
+
+    if 'expect-errors' in variant:
+        # Line numbers may shift around between versions, so just look for
+        # matching filenames and function names. This will still produce false
+        # positives when functions are renamed or moved between files, or
+        # things change so that the actual race is in a different place. But it
+        # still seems preferable to saying "You introduced an additional race.
+        # Here are the 21 races detected; please ignore the 20 known ones in
+        # this other list."
+
+        for site in sites:
+            # Grab out the file and function names.
+            m = re.search(r'/([^/]+):\d+ in (.+)', site)
+            if m:
+                error = tuple(m.groups())
+            else:
+                # will get here if eg tsan symbolication fails
+                error = (site, '(unknown)')
+            errors[error] += 1
+
+        remaining = Counter(errors)
+        for expect in variant['expect-errors']:
+            # expect-errors is an array of (filename, function) tuples.
+            expect = tuple(expect)
+            if remaining[expect] == 0:
+                print("Did not see expected error in %s function %s" % expect)
+            else:
+                remaining[expect] -= 1
+
+        for filename, function in (e for e, c in remaining.items() if c > 0):
+            print("*** tsan error in %s function %s" % (filename, function))
 
     # Gather individual results into a tarball. Note that these are
     # distinguished only by pid of the JS process running within each test, so

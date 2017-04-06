@@ -427,10 +427,10 @@ nsComputedDOMStyle::GetAuthoredPropertyValue(const nsAString& aPropertyName,
 
 /* static */
 already_AddRefed<nsStyleContext>
-nsComputedDOMStyle::GetStyleContextForElement(Element* aElement,
-                                              nsIAtom* aPseudo,
-                                              nsIPresShell* aPresShell,
-                                              StyleType aStyleType)
+nsComputedDOMStyle::GetStyleContext(Element* aElement,
+                                    nsIAtom* aPseudo,
+                                    nsIPresShell* aPresShell,
+                                    StyleType aStyleType)
 {
   // If the content has a pres shell, we must use it.  Otherwise we'd
   // potentially mix rule trees by using the wrong pres shell's style
@@ -446,8 +446,7 @@ nsComputedDOMStyle::GetStyleContextForElement(Element* aElement,
 
   presShell->FlushPendingNotifications(FlushType::Style);
 
-  return GetStyleContextForElementNoFlush(aElement, aPseudo, presShell,
-                                          aStyleType);
+  return GetStyleContextNoFlush(aElement, aPseudo, presShell, aStyleType);
 }
 
 namespace {
@@ -574,12 +573,11 @@ private:
 }
 
 already_AddRefed<nsStyleContext>
-nsComputedDOMStyle::DoGetStyleContextForElementNoFlush(
-  Element* aElement,
-  nsIAtom* aPseudo,
-  nsIPresShell* aPresShell,
-  StyleType aStyleType,
-  AnimationFlag aAnimationFlag)
+nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
+                                             nsIAtom* aPseudo,
+                                             nsIPresShell* aPresShell,
+                                             StyleType aStyleType,
+                                             AnimationFlag aAnimationFlag)
 {
   MOZ_ASSERT(aElement, "NULL element");
   // If the content has a pres shell, we must use it.  Otherwise we'd
@@ -599,7 +597,9 @@ nsComputedDOMStyle::DoGetStyleContextForElementNoFlush(
   // XXX the !aElement->IsHTMLElement(nsGkAtoms::area)
   // check is needed due to bug 135040 (to avoid using
   // mPrimaryFrame). Remove it once that's fixed.
-  if (!aPseudo && aStyleType == eAll && inDocWithShell &&
+  if (!aPseudo &&
+      aStyleType == eAll &&
+      inDocWithShell &&
       !aElement->IsHTMLElement(nsGkAtoms::area)) {
     nsIFrame* frame = nsLayoutUtils::GetStyleFrame(aElement);
     if (frame) {
@@ -608,6 +608,22 @@ nsComputedDOMStyle::DoGetStyleContextForElementNoFlush(
       // pseudo-elements, since then it's not the primary style
       // for this element.
       if (!result->HasPseudoElementData()) {
+        // The existing style context may have animation styles so check if we
+        // need to remove them.
+        if (aAnimationFlag == eWithoutAnimation) {
+          nsPresContext* presContext = presShell->GetPresContext();
+          MOZ_ASSERT(presContext, "Should have a prescontext if we have a frame");
+          MOZ_ASSERT(presContext->StyleSet()->IsGecko(),
+                     "stylo: Need ResolveStyleByRemovingAnimation for stylo");
+          if (presContext && presContext->StyleSet()->IsGecko()) {
+            nsStyleSet* styleSet = presContext->StyleSet()->AsGecko();
+            return styleSet->ResolveStyleByRemovingAnimation(
+                     aElement, result, eRestyle_AllHintsWithAnimations);
+          } else {
+            return nullptr;
+          }
+        }
+
         // this function returns an addrefed style context
         RefPtr<nsStyleContext> ret = result;
         return ret.forget();
@@ -647,9 +663,8 @@ nsComputedDOMStyle::DoGetStyleContextForElementNoFlush(
   nsIContent* parent = aPseudo ? aElement : aElement->GetParent();
   // Don't resolve parent context for document fragments.
   if (parent && parent->IsElement()) {
-    parentContext = GetStyleContextForElementNoFlush(parent->AsElement(),
-                                                     nullptr, aPresShell,
-                                                     aStyleType);
+    parentContext = GetStyleContextNoFlush(parent->AsElement(), nullptr,
+                                           aPresShell, aStyleType);
   }
 
   StyleResolver styleResolver(presContext, aAnimationFlag);
@@ -666,49 +681,6 @@ nsComputedDOMStyle::DoGetStyleContextForElementNoFlush(
                                                aElement, type,
                                                parentContext,
                                                inDocWithShell);
-}
-
-
-/* static */
-already_AddRefed<nsStyleContext>
-nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
-                                                     nsIAtom* aPseudo,
-                                                     nsIPresShell* aPresShell,
-                                                     StyleType aStyleType)
-{
-  return DoGetStyleContextForElementNoFlush(aElement,
-                                            aPseudo,
-                                            aPresShell,
-                                            aStyleType,
-                                            eWithAnimation);
-}
-
-/* static */
-already_AddRefed<nsStyleContext>
-nsComputedDOMStyle::GetStyleContextForElementWithoutAnimation(
-  Element* aElement,
-  nsIAtom* aPseudo,
-  nsIPresShell* aPresShell)
-{
-  // If the content has a pres shell, we must use it.  Otherwise we'd
-  // potentially mix rule trees by using the wrong pres shell's style
-  // set.  Using the pres shell from the content also means that any
-  // content that's actually *in* a document will get the style from the
-  // correct document.
-  nsCOMPtr<nsIPresShell> presShell = GetPresShellForContent(aElement);
-  if (!presShell) {
-    presShell = aPresShell;
-    if (!presShell)
-      return nullptr;
-  }
-
-  presShell->FlushPendingNotifications(FlushType::Style);
-
-  return DoGetStyleContextForElementNoFlush(aElement,
-                                            aPseudo,
-                                            presShell,
-                                            eAll,
-                                            eWithoutAnimation);
 }
 
 nsMargin
@@ -886,16 +858,16 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
 #endif
     // Need to resolve a style context
     RefPtr<nsStyleContext> resolvedStyleContext =
-      nsComputedDOMStyle::GetStyleContextForElement(mContent->AsElement(),
-                                                    mPseudo,
-                                                    mPresShell,
-                                                    mStyleType);
+      nsComputedDOMStyle::GetStyleContext(mContent->AsElement(),
+                                          mPseudo,
+                                          mPresShell,
+                                          mStyleType);
     if (!resolvedStyleContext) {
       ClearStyleContext();
       return;
     }
 
-    // No need to re-get the generation, even though GetStyleContextForElement
+    // No need to re-get the generation, even though GetStyleContext
     // will flush, since we flushed style at the top of this function.
     NS_ASSERTION(mPresShell &&
                  currentGeneration ==

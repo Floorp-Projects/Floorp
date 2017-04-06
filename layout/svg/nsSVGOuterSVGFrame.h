@@ -102,13 +102,8 @@ public:
     return PrincipalChildList().FirstChild()->GetContentInsertionFrame();
   }
 
-  virtual bool IsSVGTransformed(Matrix *aOwnTransform,
-                                Matrix *aFromParentTransform) const override {
-    // Our anonymous wrapper performs the transforms. We simply
-    // return whether we are transformed here but don't apply the transforms
-    // themselves.
-    return PrincipalChildList().FirstChild()->IsSVGTransformed();
-  }
+  bool IsSVGTransformed(Matrix* aOwnTransform,
+                        Matrix* aFromParentTransform) const override;
 
   // Update the style on our anonymous box child.
   void DoUpdateStyleOfOwnedAnonBoxes(mozilla::ServoStyleSet& aStyleSet,
@@ -268,6 +263,11 @@ public:
    * @see nsGkAtoms::svgOuterSVGAnonChildFrame
    */
   virtual nsIAtom* GetType() const override;
+
+  bool IsSVGTransformed(Matrix *aOwnTransform,
+                        Matrix *aFromParentTransform) const override {
+    return false;
+  }
 
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM() override {

@@ -1555,10 +1555,8 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
     def hasMembersInSlots(self):
         return self._ownMembersInSlots != 0
 
-    conditionExtendedAttributes = [ "Pref", "ChromeOnly", "Func", "AvailableIn",
-                                    "SecureContext",
-                                    "CheckAnyPermissions",
-                                    "CheckAllPermissions" ]
+    conditionExtendedAttributes = [ "Pref", "ChromeOnly", "Func",
+                                    "SecureContext" ]
     def isExposedConditionally(self, exclusions=[]):
         return any(((not a in exclusions) and self.getExtendedAttribute(a)) for a in self.conditionExtendedAttributes)
 

@@ -66,12 +66,12 @@ public:
  *                  free should be used.
  */
 #define NS_FREE_XPCOM_POINTER_ARRAY(size, array, freeFunc)                    \
-    PR_BEGIN_MACRO                                                            \
+    do {                                                                      \
         int32_t iter_ = int32_t(size);                                        \
         while (--iter_ >= 0)                                                  \
             freeFunc((array)[iter_]);                                         \
         NS_Free((array));                                                     \
-    PR_END_MACRO
+    } while(0)
 
 // convenience macros for commonly used calls.  mmmmm.  syntactic sugar.
 

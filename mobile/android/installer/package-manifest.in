@@ -298,6 +298,8 @@
 @BINPATH@/components/NetworkGeolocationProvider.js
 @BINPATH@/components/EditorUtils.manifest
 @BINPATH@/components/EditorUtils.js
+
+#ifndef MOZ_GECKOVIEW_JAR
 @BINPATH@/components/extensions.manifest
 @BINPATH@/components/utils.manifest
 @BINPATH@/components/simpleServices.js
@@ -309,10 +311,13 @@
 #ifndef RELEASE_OR_BETA
 @BINPATH@/components/TabSource.js
 #endif
+#endif
+
 @BINPATH@/components/webvtt.xpt
 @BINPATH@/components/WebVTT.manifest
 @BINPATH@/components/WebVTTParserWrapper.js
 
+#ifndef MOZ_GECKOVIEW_JAR
 #ifdef MOZ_UPDATER
 @BINPATH@/components/nsUpdateService.manifest
 @BINPATH@/components/nsUpdateService.js
@@ -320,6 +325,8 @@
 #endif
 @BINPATH@/components/nsUpdateTimerManager.manifest
 @BINPATH@/components/nsUpdateTimerManager.js
+#endif
+
 @BINPATH@/components/pluginGlue.manifest
 @BINPATH@/components/ProcessSingleton.manifest
 @BINPATH@/components/MainProcessSingleton.js
@@ -350,8 +357,12 @@
 @BINPATH@/components/nsINIProcessor.manifest
 @BINPATH@/components/nsINIProcessor.js
 @BINPATH@/components/servicesComponents.manifest
+
+#ifndef MOZ_GECKOVIEW_JAR
 @BINPATH@/components/TelemetryStartup.js
 @BINPATH@/components/TelemetryStartup.manifest
+#endif
+
 @BINPATH@/components/XULStore.js
 @BINPATH@/components/XULStore.manifest
 @BINPATH@/components/htmlMenuBuilder.js
@@ -386,6 +397,7 @@
 @BINPATH@/components/Downloads.manifest
 @BINPATH@/components/DownloadLegacy.js
 
+#ifndef MOZ_GECKOVIEW_JAR
 @BINPATH@/components/PresentationDeviceInfoManager.manifest
 @BINPATH@/components/PresentationDeviceInfoManager.js
 @BINPATH@/components/BuiltinProviders.manifest
@@ -399,6 +411,7 @@
 
 @BINPATH@/components/TVSimulatorService.js
 @BINPATH@/components/TVSimulatorService.manifest
+#endif
 
 #ifdef ENABLE_INTL_API
 @BINPATH@/components/mozIntl.manifest
@@ -436,8 +449,10 @@
 @BINPATH@/features/*
 
 ; DevTools
+#ifndef MOZ_GECKOVIEW_JAR
 @BINPATH@/chrome/devtools@JAREXT@
 @BINPATH@/chrome/devtools.manifest
+#endif
 
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
@@ -506,7 +521,16 @@
 @BINPATH@/crashreporter-override.ini
 #endif
 
+@BINPATH@/components/dom_audiochannel.xpt
+
+@BINPATH@/components/RemoteWebNavigation.js
+@BINPATH@/components/remotebrowserutils.manifest
+
 [mobile]
+@BINPATH@/chrome/geckoview@JAREXT@
+@BINPATH@/chrome/geckoview.manifest
+
+#ifndef MOZ_GECKOVIEW_JAR
 @BINPATH@/chrome/chrome@JAREXT@
 @BINPATH@/chrome/chrome.manifest
 @BINPATH@/components/AboutRedirector.js
@@ -531,8 +555,8 @@
 @BINPATH@/components/PromptService.js
 @BINPATH@/components/SessionStore.js
 @BINPATH@/components/Snippets.js
-
 @BINPATH@/components/XPIDialogService.js
+#endif
 
 #ifdef ENABLE_MARIONETTE
 @BINPATH@/chrome/marionette@JAREXT@
@@ -544,8 +568,3 @@
 #ifdef PKG_LOCALE_MANIFEST
 #include @PKG_LOCALE_MANIFEST@
 #endif
-
-@BINPATH@/components/dom_audiochannel.xpt
-
-@BINPATH@/components/RemoteWebNavigation.js
-@BINPATH@/components/remotebrowserutils.manifest
