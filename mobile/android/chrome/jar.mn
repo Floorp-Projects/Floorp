@@ -3,7 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 chrome.jar:
 % content browser %content/ contentaccessible=yes
 
@@ -27,9 +26,6 @@ chrome.jar:
   content/browser.xul                  (content/browser.xul)
   content/browser.css                  (content/browser.css)
   content/browser.js                   (content/browser.js)
-  content/geckoview.xul                (content/geckoview.xul)
-  content/geckoview.js                 (content/geckoview.js)
-  content/GeckoViewContent.js          (content/GeckoViewContent.js)
   content/PresentationView.xul         (content/PresentationView.xul)
   content/PresentationView.js          (content/PresentationView.js)
   content/bindings/checkbox.xml        (content/bindings/checkbox.xml)

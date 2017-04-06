@@ -174,11 +174,11 @@ AssertActivityIsLegal()
   }
 }
 #  define ASSERT_ACTIVITY_IS_LEGAL              \
-  PR_BEGIN_MACRO                                \
+  do {                                          \
     AssertActivityIsLegal();                    \
-  PR_END_MACRO
+  } while(0)
 #else
-#  define ASSERT_ACTIVITY_IS_LEGAL PR_BEGIN_MACRO PR_END_MACRO
+#  define ASSERT_ACTIVITY_IS_LEGAL do { } while(0)
 #endif // DEBUG
 
 // These functions are copied from nsprpub/lib/ds/plhash.c, with changes

@@ -342,9 +342,9 @@ protected:
 
   // Looks up the style context associated with the target element, if any.
   // We need to be careful to *not* call this when we are updating the style
-  // context. That's because calling GetStyleContextForElement when we are in
-  // the process of building a style context may trigger various forms of
-  // infinite recursion.
+  // context. That's because calling GetStyleContext when we are in the process
+  // of building a style context may trigger various forms of infinite
+  // recursion.
   already_AddRefed<nsStyleContext> GetTargetStyleContext();
 
   // A wrapper for marking cascade update according to the current
