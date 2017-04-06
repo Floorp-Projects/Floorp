@@ -1019,6 +1019,11 @@ BuildStrutInfoFromCollapsedItems(const FlexLine* aFirstLine,
 static int32_t
 GetOrderOrBoxOrdinalGroup(nsIFrame* aFlexItem, bool aIsLegacyBox)
 {
+  if (aFlexItem->GetType() == nsGkAtoms::placeholderFrame) {
+    // Always treat placeholders as having the default value, which is
+    // 1 for (legacy) 'box-ordinal-group' and 0 for 'order'.
+    return aIsLegacyBox ? 1 : 0;
+  }
   if (aIsLegacyBox) {
     // We'll be using mBoxOrdinal, which has type uint32_t. However, the modern
     // 'order' property (whose functionality we're co-opting) has type int32_t.
@@ -1109,14 +1114,6 @@ IsOrderLEQWithDOMFallback(nsIFrame* aFrame1,
     return true;
   }
 
-  if (aFrame1->GetType() == nsGkAtoms::placeholderFrame ||
-      aFrame2->GetType() == nsGkAtoms::placeholderFrame) {
-    // Treat placeholders (for abspos/fixedpos frames) as LEQ everything.  This
-    // ensures we don't reorder them w.r.t. one another, which is sufficient to
-    // prevent them from noticeably participating in "order" reordering.
-    return true;
-  }
-
   const bool isInLegacyBox = IsLegacyBox(aFrame1->GetParent());
 
   int32_t order1 = GetOrderOrBoxOrdinalGroup(aFrame1, isInLegacyBox);
@@ -1142,8 +1139,10 @@ IsOrderLEQWithDOMFallback(nsIFrame* aFrame1,
   // recognize generated content as being an actual sibling of other nodes.
   // We know where ::before and ::after nodes *effectively* insert in the DOM
   // tree, though (at the beginning & end), so we can just special-case them.
-  nsIAtom* pseudo1 = aFrame1->StyleContext()->GetPseudo();
-  nsIAtom* pseudo2 = aFrame2->StyleContext()->GetPseudo();
+  nsIAtom* pseudo1 =
+    nsPlaceholderFrame::GetRealFrameFor(aFrame1)->StyleContext()->GetPseudo();
+  nsIAtom* pseudo2 =
+    nsPlaceholderFrame::GetRealFrameFor(aFrame2)->StyleContext()->GetPseudo();
 
   if (pseudo1 == nsCSSPseudoElements::before ||
       pseudo2 == nsCSSPseudoElements::after) {
@@ -1186,14 +1185,6 @@ IsOrderLEQ(nsIFrame* aFrame1,
              "this method only intended for comparing flex items");
   MOZ_ASSERT(aFrame1->GetParent() == aFrame2->GetParent(),
              "this method only intended for comparing siblings");
-
-  if (aFrame1->GetType() == nsGkAtoms::placeholderFrame ||
-      aFrame2->GetType() == nsGkAtoms::placeholderFrame) {
-    // Treat placeholders (for abspos/fixedpos frames) as LEQ everything.  This
-    // ensures we don't reorder them w.r.t. one another, which is sufficient to
-    // prevent them from noticeably participating in "order" reordering.
-    return true;
-  }
 
   const bool isInLegacyBox = IsLegacyBox(aFrame1->GetParent());
 
