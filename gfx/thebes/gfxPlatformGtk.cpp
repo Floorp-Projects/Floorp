@@ -603,6 +603,7 @@ gfxPlatformGtk::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
             return Factory::CreateScaledFontForFontconfigFont(
                     fcFont->GetCairoScaledFont(),
                     fcFont->GetPattern(),
+                    fcFont->GetUnscaledFont(),
                     fcFont->GetAdjustedSize());
         }
         MOZ_FALLTHROUGH;
