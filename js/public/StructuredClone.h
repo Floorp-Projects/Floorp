@@ -17,6 +17,7 @@
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
+#include "js/Vector.h"
 
 struct JSRuntime;
 struct JSStructuredCloneReader;
@@ -188,6 +189,28 @@ enum OwnTransferablePolicy {
     NoTransferables
 };
 
+namespace js
+{
+    class SharedArrayRawBuffer;
+
+    class SharedArrayRawBufferRefs
+    {
+      public:
+        SharedArrayRawBufferRefs() = default;
+        SharedArrayRawBufferRefs(SharedArrayRawBufferRefs&& other) = default;
+        SharedArrayRawBufferRefs& operator=(SharedArrayRawBufferRefs&& other);
+        ~SharedArrayRawBufferRefs();
+
+        MOZ_MUST_USE bool acquire(JSContext* cx, SharedArrayRawBuffer* rawbuf);
+        MOZ_MUST_USE bool acquireAll(JSContext* cx, const SharedArrayRawBufferRefs& that);
+        void takeOwnership(SharedArrayRawBufferRefs&&);
+        void releaseAll();
+
+      private:
+        js::Vector<js::SharedArrayRawBuffer*, 0, js::SystemAllocPolicy> refs_;
+    };
+}
+
 class MOZ_NON_MEMMOVABLE JSStructuredCloneData : public mozilla::BufferList<js::SystemAllocPolicy>
 {
     typedef js::SystemAllocPolicy AllocPolicy;
@@ -200,6 +223,7 @@ class MOZ_NON_MEMMOVABLE JSStructuredCloneData : public mozilla::BufferList<js::
     const JSStructuredCloneCallbacks* callbacks_;
     void* closure_;
     OwnTransferablePolicy ownTransferables_;
+    js::SharedArrayRawBufferRefs refsHeld_;
 
     void setOptionalCallbacks(const JSStructuredCloneCallbacks* callbacks,
                               void* closure,
@@ -278,7 +302,8 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
     void clear(const JSStructuredCloneCallbacks* optionalCallbacks=nullptr, void* closure=nullptr);
 
     /** Copy some memory. It will be automatically freed by the destructor. */
-    bool copy(const JSStructuredCloneData& data, uint32_t version=JS_STRUCTURED_CLONE_VERSION,
+    bool copy(JSContext* cx, const JSStructuredCloneData& data,
+              uint32_t version=JS_STRUCTURED_CLONE_VERSION,
               const JSStructuredCloneCallbacks* callbacks=nullptr, void* closure=nullptr);
 
     /**
