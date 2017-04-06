@@ -26,6 +26,13 @@ using namespace std;
 namespace mozilla {
 namespace gfx {
 
+uint32_t UnscaledFont::sDeletionCounter = 0;
+
+UnscaledFont::~UnscaledFont()
+{
+  sDeletionCounter++;
+}
+
 AntialiasMode
 ScaledFont::GetDefaultAAMode()
 {
@@ -46,8 +53,10 @@ ScaledFontBase::~ScaledFontBase()
 #endif
 }
 
-ScaledFontBase::ScaledFontBase(Float aSize)
-  : mSize(aSize)
+ScaledFontBase::ScaledFontBase(const RefPtr<UnscaledFont>& aUnscaledFont,
+                               Float aSize)
+  : ScaledFont(aUnscaledFont)
+  , mSize(aSize)
 {
 #ifdef USE_SKIA
   mTypeface = nullptr;

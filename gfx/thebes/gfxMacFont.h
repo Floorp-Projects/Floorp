@@ -11,12 +11,15 @@
 #include "cairo.h"
 #include <ApplicationServices/ApplicationServices.h>
 
+#include "mozilla/gfx/UnscaledFontMac.h"
+
 class MacOSFontEntry;
 
 class gfxMacFont : public gfxFont
 {
 public:
-    gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
+    gfxMacFont(const RefPtr<mozilla::gfx::UnscaledFontMac>& aUnscaledFont,
+               MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
                bool aNeedsBold);
 
     virtual ~gfxMacFont();
