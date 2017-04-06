@@ -23,10 +23,7 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIPipe.h"
-#include "nsNetCID.h"
 #include "nsStreamUtils.h"
-
-using namespace mozilla::dom;
 
 namespace mozilla {
 namespace ipc {
