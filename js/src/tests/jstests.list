@@ -44,6 +44,13 @@ skip-if(!Array.prototype.values) include test262/built-ins/Array/prototype/value
 skip-if(release_or_beta) include test262/language/expressions/async-generators/jstests.list
 skip-if(release_or_beta) include test262/language/statements/async-generator/jstests.list
 
+# Requires ICU to detect Final_Sigma case mapping context
+skip-if(!this.hasOwnProperty("Intl")) script test262/built-ins/String/prototype/toLowerCase/Final_Sigma_U180E.js
+skip-if(!this.hasOwnProperty("Intl")) script test262/built-ins/String/prototype/toLowerCase/special_casing_conditional.js
+skip-if(!this.hasOwnProperty("Intl")) script test262/built-ins/String/prototype/toLocaleLowerCase/Final_Sigma_U180E.js
+skip-if(!this.hasOwnProperty("Intl")) script test262/built-ins/String/prototype/toLocaleLowerCase/special_casing_conditional.js
+
+
 #####################################
 # Test262 tests disabled on browser #
 #####################################
@@ -461,22 +468,6 @@ skip script test262/intl402/NumberFormat/prototype/formatToParts/return-abrupt-t
 skip script test262/intl402/Collator/prototype/compare/compare-function-name.js
 skip script test262/intl402/DateTimeFormat/prototype/format/format-function-name.js
 skip script test262/intl402/NumberFormat/prototype/format/format-function-name.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=394604
-skip script test262/intl402/String/prototype/toLocaleLowerCase/capital_I_with_dot.js
-skip script test262/intl402/String/prototype/toLocaleLowerCase/special_casing_Azeri.js
-skip script test262/intl402/String/prototype/toLocaleLowerCase/special_casing_Lithuanian.js
-skip script test262/intl402/String/prototype/toLocaleLowerCase/special_casing_Turkish.js
-skip script test262/intl402/String/prototype/toLocaleUpperCase/special_casing_Azeri.js
-skip script test262/intl402/String/prototype/toLocaleUpperCase/special_casing_Lithuanian.js
-skip script test262/intl402/String/prototype/toLocaleUpperCase/special_casing_Turkish.js
-skip script test262/built-ins/String/prototype/toLocaleLowerCase/Final_Sigma_U180E.js
-skip script test262/built-ins/String/prototype/toLocaleLowerCase/special_casing_conditional.js
-skip script test262/built-ins/String/prototype/toLocaleUpperCase/special_casing.js
-skip script test262/built-ins/String/prototype/toLowerCase/Final_Sigma_U180E.js
-skip script test262/built-ins/String/prototype/toLowerCase/special_casing.js
-skip script test262/built-ins/String/prototype/toLowerCase/special_casing_conditional.js
-skip script test262/built-ins/String/prototype/toUpperCase/special_casing.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317373
 skip script test262/annexB/language/eval-code/direct/global-if-stmt-else-decl-eval-global-exsting-global-init.js
