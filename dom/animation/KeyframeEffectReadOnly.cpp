@@ -512,6 +512,67 @@ KeyframeEffectReadOnly::EnsureBaseStyle(
 }
 
 void
+KeyframeEffectReadOnly::EnsureBaseStyles(
+  const ServoComputedValuesWithParent& aServoValues,
+  const nsTArray<AnimationProperty>& aProperties)
+{
+  if (!mTarget) {
+    return;
+  }
+
+  mBaseStyleValuesForServo.Clear();
+
+  nsPresContext* presContext =
+    nsContentUtils::GetContextForContent(mTarget->mElement);
+  MOZ_ASSERT(presContext,
+             "nsPresContext should not be nullptr since this EnsureBaseStyles "
+             "supposed to be called right after getting computed values with "
+             "a valid nsPresContext");
+
+  RefPtr<ServoComputedValues> baseComputedValues;
+  nsIAtom* pseudoAtom = mTarget->mPseudoType < CSSPseudoElementType::Count
+                      ? nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType)
+                      : nullptr;
+  for (const AnimationProperty& property : aProperties) {
+    EnsureBaseStyle(property,
+                    pseudoAtom,
+                    presContext,
+                    baseComputedValues);
+  }
+}
+
+void
+KeyframeEffectReadOnly::EnsureBaseStyle(
+  const AnimationProperty& aProperty,
+  nsIAtom* aPseudoAtom,
+  nsPresContext* aPresContext,
+  RefPtr<ServoComputedValues>& aBaseComputedValues)
+{
+  bool hasAdditiveValues = false;
+
+  for (const AnimationPropertySegment& segment : aProperty.mSegments) {
+    if (!segment.HasReplaceableValues()) {
+      hasAdditiveValues = true;
+      break;
+    }
+  }
+
+  if (!hasAdditiveValues) {
+    return;
+  }
+
+  if (!aBaseComputedValues) {
+    aBaseComputedValues =
+      aPresContext->StyleSet()->AsServo()->
+        GetBaseComputedValuesForElement(mTarget->mElement, aPseudoAtom);
+  }
+  RefPtr<RawServoAnimationValue> baseValue =
+    Servo_ComputedValues_ExtractAnimationValue(aBaseComputedValues,
+                                               aProperty.mProperty).Consume();
+  mBaseStyleValuesForServo.Put(aProperty.mProperty, baseValue);
+}
+
+void
 KeyframeEffectReadOnly::WillComposeStyle()
 {
   ComputedTiming computedTiming = GetComputedTiming();

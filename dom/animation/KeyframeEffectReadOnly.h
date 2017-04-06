@@ -12,6 +12,7 @@
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSValue.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsRefPtrHashtable.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 #include "mozilla/AnimationPerformanceWarning.h"
@@ -412,10 +413,7 @@ protected:
   void EnsureBaseStyles(nsStyleContext* aStyleContext,
                         const nsTArray<AnimationProperty>& aProperties);
   void EnsureBaseStyles(const ServoComputedValuesWithParent& aServoValues,
-                        const nsTArray<AnimationProperty>& aProperties)
-  {
-    // FIXME: Bug 1311257: Support missing keyframes.
-  }
+                        const nsTArray<AnimationProperty>& aProperties);
 
   // If no base style is already stored for |aProperty|, resolves the base style
   // for |aProperty| using |aStyleContext| and stores it in mBaseStyleValues.
@@ -425,6 +423,12 @@ protected:
   void EnsureBaseStyle(nsCSSPropertyID aProperty,
                        nsStyleContext* aStyleContext,
                        RefPtr<nsStyleContext>& aCachedBaseStyleContext);
+  // Stylo version of the above function that also first checks for an additive
+  // value in |aProperty|'s list of segments.
+  void EnsureBaseStyle(const AnimationProperty& aProperty,
+                       nsIAtom* aPseudoAtom,
+                       nsPresContext* aPresContext,
+                       RefPtr<ServoComputedValues>& aBaseComputedValues);
 
   Maybe<OwningAnimationTarget> mTarget;
 
@@ -454,6 +458,8 @@ protected:
   // least one animation value that is composited with the underlying value
   // (i.e. it uses the additive or accumulate composite mode).
   nsDataHashtable<nsUint32HashKey, StyleAnimationValue> mBaseStyleValues;
+  nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>
+    mBaseStyleValuesForServo;
 
   // We only want to record telemetry data for "ContentTooLarge" warnings once
   // per effect:target pair so we use this member to record if we have already
