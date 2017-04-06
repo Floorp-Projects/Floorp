@@ -415,9 +415,16 @@ RasterImage::WillDrawOpaqueNow()
     return false;
   }
 
-  if (mAnimationState && !gfxPrefs::ImageMemAnimatedDiscardable()) {
-    // We never discard frames of animated images.
-    return true;
+  if (mAnimationState) {
+    if (!gfxPrefs::ImageMemAnimatedDiscardable()) {
+      // We never discard frames of animated images.
+      return true;
+    } else {
+      if (mAnimationState->GetCompositedFrameInvalid()) {
+        // We're not going to draw anything at all.
+        return false;
+      }
+    }
   }
 
   // If we are not locked our decoded data could get discard at any time (ie
