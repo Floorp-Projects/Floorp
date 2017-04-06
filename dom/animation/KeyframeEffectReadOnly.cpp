@@ -439,11 +439,7 @@ KeyframeEffectReadOnly::CompositeValue(
   CompositeOperation aCompositeOperation)
 {
   MOZ_ASSERT(mTarget, "CompositeValue should be called with target element");
-
-  // FIXME: Bug 1311257: Get the base value for the servo backend.
-  if (mDocument->IsStyledByServo()) {
-    return aValueToComposite;
-  }
+  MOZ_ASSERT(!mDocument->IsStyledByServo());
 
   StyleAnimationValue underlyingValue =
     GetUnderlyingStyle(aProperty, aAnimationRule);
@@ -671,13 +667,6 @@ KeyframeEffectReadOnly::ComposeStyleRule(
 {
   // Bug 1329878 - Stylo: Implement accumulate and addition on Servo
   // AnimationValue.
-
-  // For unsupported or non-animatable animation types, we get nullptrs.
-  if (!aSegment.mFromValue.mServo|| !aSegment.mToValue.mServo) {
-    NS_ERROR("Compose style for unsupported or non-animatable property, "
-             "so get invalid RawServoAnimationValues");
-    return;
-  }
 
   Servo_AnimationCompose(&aAnimationValues,
                          &mBaseStyleValuesForServo,
