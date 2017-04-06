@@ -37,7 +37,7 @@ function waitForPaints() {
 
 promise_test(function(t) {
   var div = addDiv(t);
-  var cs = window.getComputedStyle(div);
+  var cs = getComputedStyle(div);
 
   // Test that empty animations actually start.
   //
