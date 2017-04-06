@@ -174,7 +174,6 @@ DEFAULTS = dict(
         'experiments.manifest.uri':
             'https://127.0.0.1/experiments-dummy/manifest',
         'network.http.speculative-parallel-limit': 0,
-        'app.update.badge': False,
         'lightweightThemes.selectedThemeID': "",
         'devtools.webide.widget.enabled': False,
         'devtools.webide.widget.inNavbarByDefault': False,
