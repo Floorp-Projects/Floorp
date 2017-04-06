@@ -516,17 +516,22 @@ js::obj_toString(JSContext* cx, unsigned argc, Value* vp)
         // Non-standard (bug 1277801): Use ClassName as a fallback in the interim
         if (!builtinTag) {
             const char* className = GetObjectClassName(cx, obj);
+            // "[object Object]" is by far the most common case at this point,
+            // so we optimize it here.
+            if (strcmp(className, "Object") == 0) {
+                builtinTag = cx->names().objectObject;
+            } else {
+                StringBuffer sb(cx);
+                if (!sb.append("[object ") || !sb.append(className, strlen(className)) ||
+                    !sb.append("]"))
+                {
+                    return false;
+                }
 
-            StringBuffer sb(cx);
-            if (!sb.append("[object ") || !sb.append(className, strlen(className)) ||
-                !sb.append("]"))
-            {
-                return false;
+                builtinTag = sb.finishString();
+                if (!builtinTag)
+                    return false;
             }
-
-            builtinTag = sb.finishString();
-            if (!builtinTag)
-                return false;
         }
 
         args.rval().setString(builtinTag);
