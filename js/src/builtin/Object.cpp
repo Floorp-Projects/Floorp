@@ -528,7 +528,7 @@ js::obj_toString(JSContext* cx, unsigned argc, Value* vp)
                     return false;
                 }
 
-                builtinTag = sb.finishString();
+                builtinTag = sb.finishAtom();
                 if (!builtinTag)
                     return false;
             }
@@ -543,7 +543,7 @@ js::obj_toString(JSContext* cx, unsigned argc, Value* vp)
     if (!sb.append("[object ") || !sb.append(tag.toString()) || !sb.append("]"))
         return false;
 
-    RootedString str(cx, sb.finishString());
+    JSString* str = sb.finishAtom();
     if (!str)
         return false;
 
