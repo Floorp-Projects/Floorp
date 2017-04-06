@@ -810,60 +810,18 @@ nsFormFillController::PerformInputListAutoComplete(const nsAString& aSearch,
   return NS_OK;
 }
 
-class UpdateSearchResultRunnable : public mozilla::Runnable
-{
-public:
-  UpdateSearchResultRunnable(nsIAutoCompleteObserver* aObserver,
-                             nsIAutoCompleteSearch* aSearch,
-                             nsIAutoCompleteResult* aResult)
-    : mObserver(aObserver)
-    , mSearch(aSearch)
-    , mResult(aResult)
-  {
-    MOZ_ASSERT(mResult, "Should have a valid result");
-    MOZ_ASSERT(mObserver, "You shouldn't call this runnable with a null observer!");
-  }
-
-  NS_IMETHOD Run() override {
-    mObserver->OnUpdateSearchResult(mSearch, mResult);
-    return NS_OK;
-  }
-
-private:
-  nsCOMPtr<nsIAutoCompleteObserver> mObserver;
-  nsCOMPtr<nsIAutoCompleteSearch> mSearch;
-  nsCOMPtr<nsIAutoCompleteResult> mResult;
-};
-
 void nsFormFillController::RevalidateDataList()
 {
   if (!mLastListener) {
     return;
   }
 
-  if (XRE_IsContentProcess()) {
-    nsCOMPtr<nsIAutoCompleteController> controller(do_QueryInterface(mLastListener));
-    if (!controller) {
-      return;
-    }
-
-    controller->StartSearch(mLastSearchString);
+  nsCOMPtr<nsIAutoCompleteController> controller(do_QueryInterface(mLastListener));
+  if (!controller) {
     return;
   }
 
-  nsresult rv;
-  nsCOMPtr <nsIInputListAutoComplete> inputListAutoComplete =
-    do_GetService("@mozilla.org/satchel/inputlist-autocomplete;1", &rv);
-
-  nsCOMPtr<nsIAutoCompleteResult> result;
-
-  rv = inputListAutoComplete->AutoCompleteSearch(mLastSearchString,
-                                                 mFocusedInput,
-                                                 getter_AddRefs(result));
-
-  nsCOMPtr<nsIRunnable> event =
-    new UpdateSearchResultRunnable(mLastListener, this, result);
-  NS_DispatchToCurrentThread(event);
+  controller->StartSearch(mLastSearchString);
 }
 
 NS_IMETHODIMP
