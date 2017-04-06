@@ -1292,16 +1292,6 @@ var CustomStyle = function CustomStyleClosure() {
   };
   return CustomStyle;
 }();
-var RenderingCancelledException = function RenderingCancelledException() {
-  function RenderingCancelledException(msg, type) {
-    this.message = msg;
-    this.type = type;
-  }
-  RenderingCancelledException.prototype = new Error();
-  RenderingCancelledException.prototype.name = 'RenderingCancelledException';
-  RenderingCancelledException.constructor = RenderingCancelledException;
-  return RenderingCancelledException;
-}();
 var hasCanvasTypedArrays;
 hasCanvasTypedArrays = function () {
   return true;
@@ -1390,8 +1380,6 @@ function getDefaultSetting(id) {
       return globalSettings ? globalSettings.externalLinkRel : DEFAULT_LINK_REL;
     case 'enableStats':
       return !!(globalSettings && globalSettings.enableStats);
-    case 'pdfjsNext':
-      return !!(globalSettings && globalSettings.pdfjsNext);
     default:
       throw new Error('Unknown default setting: ' + id);
   }
@@ -1419,7 +1407,6 @@ exports.isExternalLinkTargetSet = isExternalLinkTargetSet;
 exports.isValidUrl = isValidUrl;
 exports.getFilenameFromUrl = getFilenameFromUrl;
 exports.LinkTarget = LinkTarget;
-exports.RenderingCancelledException = RenderingCancelledException;
 exports.hasCanvasTypedArrays = hasCanvasTypedArrays;
 exports.getDefaultSetting = getDefaultSetting;
 exports.DEFAULT_LINK_REL = DEFAULT_LINK_REL;
@@ -2081,7 +2068,6 @@ var FontFaceObject = displayFontLoader.FontFaceObject;
 var FontLoader = displayFontLoader.FontLoader;
 var CanvasGraphics = displayCanvas.CanvasGraphics;
 var Metadata = displayMetadata.Metadata;
-var RenderingCancelledException = displayDOMUtils.RenderingCancelledException;
 var getDefaultSetting = displayDOMUtils.getDefaultSetting;
 var DOMCanvasFactory = displayDOMUtils.DOMCanvasFactory;
 var DOMCMapReaderFactory = displayDOMUtils.DOMCMapReaderFactory;
@@ -3312,7 +3298,7 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
     cancel: function InternalRenderTask_cancel() {
       this.running = false;
       this.cancelled = true;
-      this.callback(new RenderingCancelledException('Rendering cancelled, page ' + this.pageNumber, 'canvas'));
+      this.callback('cancelled');
     },
     operatorListChanged: function InternalRenderTask_operatorListChanged() {
       if (!this.graphicsReady) {
@@ -3377,8 +3363,8 @@ var _UnsupportedManager = function UnsupportedManagerClosure() {
     }
   };
 }();
-exports.version = '1.7.418';
-exports.build = 'a662d268';
+exports.version = '1.7.401';
+exports.build = '57d9a64c';
 exports.getDocument = getDocument;
 exports.PDFDataRangeTransport = PDFDataRangeTransport;
 exports.PDFWorker = PDFWorker;
@@ -4345,8 +4331,8 @@ if (!globalScope.PDFJS) {
   globalScope.PDFJS = {};
 }
 var PDFJS = globalScope.PDFJS;
-PDFJS.version = '1.7.418';
-PDFJS.build = 'a662d268';
+PDFJS.version = '1.7.401';
+PDFJS.build = '57d9a64c';
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
   sharedUtil.setVerbosityLevel(PDFJS.verbosity);
@@ -4406,7 +4392,6 @@ PDFJS.disableWebGL = PDFJS.disableWebGL === undefined ? true : PDFJS.disableWebG
 PDFJS.externalLinkTarget = PDFJS.externalLinkTarget === undefined ? LinkTarget.NONE : PDFJS.externalLinkTarget;
 PDFJS.externalLinkRel = PDFJS.externalLinkRel === undefined ? DEFAULT_LINK_REL : PDFJS.externalLinkRel;
 PDFJS.isEvalSupported = PDFJS.isEvalSupported === undefined ? true : PDFJS.isEvalSupported;
-PDFJS.pdfjsNext = PDFJS.pdfjsNext === undefined ? false : PDFJS.pdfjsNext;
 PDFJS.getDocument = displayAPI.getDocument;
 PDFJS.PDFDataRangeTransport = displayAPI.PDFDataRangeTransport;
 PDFJS.PDFWorker = displayAPI.PDFWorker;
@@ -6685,8 +6670,8 @@ exports.TilingPattern = TilingPattern;
 "use strict";
 
 
-var pdfjsVersion = '1.7.418';
-var pdfjsBuild = 'a662d268';
+var pdfjsVersion = '1.7.401';
+var pdfjsBuild = '57d9a64c';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(8);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);
@@ -6717,7 +6702,6 @@ exports.createObjectURL = pdfjsSharedUtil.createObjectURL;
 exports.removeNullCharacters = pdfjsSharedUtil.removeNullCharacters;
 exports.shadow = pdfjsSharedUtil.shadow;
 exports.createBlob = pdfjsSharedUtil.createBlob;
-exports.RenderingCancelledException = pdfjsDisplayDOMUtils.RenderingCancelledException;
 exports.getFilenameFromUrl = pdfjsDisplayDOMUtils.getFilenameFromUrl;
 exports.addLinkAttributes = pdfjsDisplayDOMUtils.addLinkAttributes;
 
