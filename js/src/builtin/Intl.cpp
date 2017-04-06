@@ -24,6 +24,7 @@
 #include "jsfriendapi.h"
 #include "jsobj.h"
 #include "jsstr.h"
+#include "jsutil.h"
 
 #include "builtin/IntlTimeZoneData.h"
 #include "ds/Sort.h"
@@ -45,6 +46,7 @@
 #include "vm/Interpreter.h"
 #include "vm/SelfHosting.h"
 #include "vm/Stack.h"
+#include "vm/String.h"
 #include "vm/StringBuffer.h"
 #include "vm/Unicode.h"
 
@@ -813,6 +815,20 @@ uplrules_select(const UPluralRules *uplrules, double number, UChar *keyword, int
                 UErrorCode *status)
 {
     MOZ_CRASH("uplrules_select: Intl API disabled");
+}
+
+int32_t
+u_strToLower(UChar* dest, int32_t destCapacity, const UChar* src, int32_t srcLength,
+             const char* locale, UErrorCode* pErrorCode)
+{
+    MOZ_CRASH("u_strToLower: Intl API disabled");
+}
+
+int32_t
+u_strToUpper(UChar* dest, int32_t destCapacity, const UChar* src, int32_t srcLength,
+             const char* locale, UErrorCode* pErrorCode)
+{
+    MOZ_CRASH("u_strToUpper: Intl API disabled");
 }
 
 } // anonymous namespace
@@ -3883,6 +3899,131 @@ js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp)
     } while (true);
 
     args.rval().setObject(*res);
+    return true;
+}
+
+
+/******************** String ********************/
+
+static const char*
+CaseMappingLocale(JSLinearString* locale)
+{
+    MOZ_ASSERT(locale->length() >= 2, "locale is a valid language tag");
+
+    // Lithuanian, Turkish, and Azeri have language dependent case mappings.
+    static const char languagesWithSpecialCasing[][3] = { "lt", "tr", "az" };
+
+    // All strings in |languagesWithSpecialCasing| are of length two, so we
+    // only need to compare the first two characters to find a matching locale.
+    // ES2017 Intl, §9.2.2 BestAvailableLocale
+    if (locale->length() == 2 || locale->latin1OrTwoByteChar(2) == '-') {
+        for (const auto& language : languagesWithSpecialCasing) {
+            if (locale->latin1OrTwoByteChar(0) == language[0] &&
+                locale->latin1OrTwoByteChar(1) == language[1])
+            {
+                return language;
+            }
+        }
+    }
+
+    return ""; // ICU root locale
+}
+
+static bool
+HasLanguageDependentCasing(JSLinearString* locale)
+{
+    return !equal(CaseMappingLocale(locale), "");
+}
+
+bool
+js::intl_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(args[0].isString());
+    MOZ_ASSERT(args[1].isString());
+
+    RootedLinearString linear(cx, args[0].toString()->ensureLinear(cx));
+    if (!linear)
+        return false;
+
+    RootedLinearString locale(cx, args[1].toString()->ensureLinear(cx));
+    if (!locale)
+        return false;
+
+    // Call String.prototype.toLowerCase() for language independent casing.
+    if (!HasLanguageDependentCasing(locale)) {
+        JSString* str = js::StringToLowerCase(cx, linear);
+        if (!str)
+            return false;
+
+        args.rval().setString(str);
+        return true;
+    }
+
+    AutoStableStringChars inputChars(cx);
+    if (!inputChars.initTwoByte(cx, linear))
+        return false;
+    mozilla::Range<const char16_t> input = inputChars.twoByteRange();
+
+    // Maximum case mapping length is three characters.
+    static_assert(JSString::MAX_LENGTH < INT32_MAX / 3,
+                  "Case conversion doesn't overflow int32_t indices");
+
+    JSString* str = Call(cx, [&input, &locale](UChar* chars, int32_t size, UErrorCode* status) {
+        return u_strToLower(chars, size, Char16ToUChar(input.begin().get()), input.length(),
+                            CaseMappingLocale(locale), status);
+    });
+    if (!str)
+        return false;
+
+    args.rval().setString(str);
+    return true;
+}
+
+bool
+js::intl_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(args[0].isString());
+    MOZ_ASSERT(args[1].isString());
+
+    RootedLinearString linear(cx, args[0].toString()->ensureLinear(cx));
+    if (!linear)
+        return false;
+
+    RootedLinearString locale(cx, args[1].toString()->ensureLinear(cx));
+    if (!locale)
+        return false;
+
+    // Call String.prototype.toUpperCase() for language independent casing.
+    if (!HasLanguageDependentCasing(locale)) {
+        JSString* str = js::StringToUpperCase(cx, linear);
+        if (!str)
+            return false;
+
+        args.rval().setString(str);
+        return true;
+    }
+
+    AutoStableStringChars inputChars(cx);
+    if (!inputChars.initTwoByte(cx, linear))
+        return false;
+    mozilla::Range<const char16_t> input = inputChars.twoByteRange();
+
+    // Maximum case mapping length is three characters.
+    static_assert(JSString::MAX_LENGTH < INT32_MAX / 3,
+                  "Case conversion doesn't overflow int32_t indices");
+
+    JSString* str = Call(cx, [&input, &locale](UChar* chars, int32_t size, UErrorCode* status) {
+        return u_strToUpper(chars, size, Char16ToUChar(input.begin().get()), input.length(),
+                            CaseMappingLocale(locale), status);
+    });
+    if (!str)
+        return false;
+
+    args.rval().setString(str);
     return true;
 }
 
