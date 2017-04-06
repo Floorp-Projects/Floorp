@@ -88,8 +88,4 @@ private:
   ;
 };
 
-
-nsresult
-NS_NewPagePrintTimer(nsPagePrintTimer **aResult);
-
 #endif /* nsPagePrintTimer_h___ */
