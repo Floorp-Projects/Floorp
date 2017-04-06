@@ -23,7 +23,6 @@
 
 #include "nsServiceManagerUtils.h"
 #include "nsIScreenManager.h"
-#include "openvr/openvr.h"
 
 #include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/dom/GamepadBinding.h"
@@ -391,14 +390,26 @@ VRDisplayOpenVR::NotifyVSync()
 }
 
 VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aNumButtons,
-                                       uint32_t aNumAxes)
+                                       uint32_t aNumAxes, vr::ETrackedDeviceClass aDeviceType)
   : VRControllerHost(VRDeviceType::OpenVR)
   , mTrigger(0)
   , mVibrateThread(nullptr)
   , mIsVibrateStopped(false)
 {
   MOZ_COUNT_CTOR_INHERITED(VRControllerOpenVR, VRControllerHost);
-  mControllerInfo.mControllerName.AssignLiteral("OpenVR Gamepad");
+
+  switch (aDeviceType) {
+    case vr::TrackedDeviceClass_Controller:
+      mControllerInfo.mControllerName.AssignLiteral("OpenVR Gamepad");
+      break;
+    case vr::TrackedDeviceClass_GenericTracker:
+      mControllerInfo.mControllerName.AssignLiteral("OpenVR Tracker");
+      break;
+    default:
+      MOZ_ASSERT(false);
+      break;
+  }
+
   mControllerInfo.mMappingType = GamepadMappingType::_empty;
   mControllerInfo.mHand = aHand;
   mControllerInfo.mNumButtons = aNumButtons;
@@ -908,6 +919,7 @@ VRSystemManagerOpenVR::ScanForControllers()
 
   vr::TrackedDeviceIndex_t trackedIndexArray[vr::k_unMaxTrackedDeviceCount];
   uint32_t newControllerCount = 0;
+  vr::ETrackedDeviceClass deviceType;
   // Basically, we would have HMDs in the tracked devices,
   // but we are just interested in the controllers.
   for (vr::TrackedDeviceIndex_t trackedDevice = vr::k_unTrackedDeviceIndex_Hmd + 1;
@@ -916,8 +928,10 @@ VRSystemManagerOpenVR::ScanForControllers()
     if (!mVRSystem->IsTrackedDeviceConnected(trackedDevice)) {
       continue;
     }
-    if (mVRSystem->GetTrackedDeviceClass(trackedDevice)
-        != vr::TrackedDeviceClass_Controller) {
+
+    deviceType = mVRSystem->GetTrackedDeviceClass(trackedDevice);
+    if (deviceType != vr::TrackedDeviceClass_Controller
+        && deviceType != vr::TrackedDeviceClass_GenericTracker) {
       continue;
     }
 
@@ -1005,7 +1019,7 @@ VRSystemManagerOpenVR::ScanForControllers()
       }
 
       RefPtr<VRControllerOpenVR> openVRController =
-        new VRControllerOpenVR(hand, numButtons, numAxes);
+        new VRControllerOpenVR(hand, numButtons, numAxes, deviceType);
       openVRController->SetTrackedIndex(trackedDevice);
       mOpenVRController.AppendElement(openVRController);
 
