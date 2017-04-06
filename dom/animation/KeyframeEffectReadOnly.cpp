@@ -671,58 +671,18 @@ KeyframeEffectReadOnly::ComposeStyleRule(
 {
   // Bug 1329878 - Stylo: Implement accumulate and addition on Servo
   // AnimationValue.
-  RawServoAnimationValue* servoFromValue = aSegment.mFromValue.mServo;
-  RawServoAnimationValue* servoToValue = aSegment.mToValue.mServo;
 
   // For unsupported or non-animatable animation types, we get nullptrs.
-  if (!servoFromValue || !servoToValue) {
+  if (!aSegment.mFromValue.mServo|| !aSegment.mToValue.mServo) {
     NS_ERROR("Compose style for unsupported or non-animatable property, "
              "so get invalid RawServoAnimationValues");
     return;
   }
 
-  // Special handling for zero-length segments
-  if (aSegment.mToKey == aSegment.mFromKey) {
-    if (aComputedTiming.mProgress.Value() < 0) {
-      Servo_AnimationValueMap_Push(&aAnimationValues,
-                                   aProperty.mProperty,
-                                   servoFromValue);
-    } else {
-      Servo_AnimationValueMap_Push(&aAnimationValues,
-                                   aProperty.mProperty,
-                                   servoToValue);
-    }
-    return;
-  }
-
-  double positionInSegment =
-    (aComputedTiming.mProgress.Value() - aSegment.mFromKey) /
-    (aSegment.mToKey - aSegment.mFromKey);
-  double valuePosition =
-    ComputedTimingFunction::GetPortion(aSegment.mTimingFunction,
-                                       positionInSegment,
-                                       aComputedTiming.mBeforeFlag);
-
-  MOZ_ASSERT(IsFinite(valuePosition), "Position value should be finite");
-
-  RefPtr<RawServoAnimationValue> interpolated =
-    Servo_AnimationValues_Interpolate(servoFromValue,
-                                      servoToValue,
-                                      valuePosition).Consume();
-
-  if (interpolated) {
-    Servo_AnimationValueMap_Push(&aAnimationValues,
-                                 aProperty.mProperty,
-                                 interpolated);
-  } else if (valuePosition < 0.5) {
-    Servo_AnimationValueMap_Push(&aAnimationValues,
-                                 aProperty.mProperty,
-                                 servoFromValue);
-  } else {
-    Servo_AnimationValueMap_Push(&aAnimationValues,
-                                 aProperty.mProperty,
-                                 servoToValue);
-  }
+  Servo_AnimationCompose(&aAnimationValues,
+                         aProperty.mProperty,
+                         &aSegment,
+                         &aComputedTiming);
 }
 
 template<typename ComposeAnimationResult>
