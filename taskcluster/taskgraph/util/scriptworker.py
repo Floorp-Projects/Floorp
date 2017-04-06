@@ -232,6 +232,11 @@ PUSH_APK_DRY_RUN_OPTION = {
     'default': True,
 }
 
+PUSH_APK_ROLLOUT_PERCENTAGE = {
+    'release': 10,
+    'default': None,
+}
+
 
 # scope functions {{{1
 def get_scope_from_project(alias_to_project_map, alias_to_scope_map, config):
@@ -353,6 +358,12 @@ get_push_apk_dry_run_option = functools.partial(
     get_scope_from_project,
     PUSH_APK_SCOPE_ALIAS_TO_PROJECT,
     PUSH_APK_DRY_RUN_OPTION
+)
+
+get_push_apk_rollout_percentage = functools.partial(
+    get_scope_from_project,
+    PUSH_APK_SCOPE_ALIAS_TO_PROJECT,
+    PUSH_APK_ROLLOUT_PERCENTAGE
 )
 
 
