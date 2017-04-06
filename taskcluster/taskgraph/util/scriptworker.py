@@ -227,7 +227,7 @@ PUSH_APK_BREAKPOINT_WORKER_TYPE = {
 
 PUSH_APK_DRY_RUN_OPTION = {
     'aurora': False,
-    'beta': True,
+    'beta': False,
     'release': True,
     'default': True,
 }
