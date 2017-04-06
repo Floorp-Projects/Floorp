@@ -1749,6 +1749,10 @@ MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData,
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
+  if (mClosed) {
+    return;
+  }
+
   // Update principals before putting the data in the cache. This is important,
   // we want to make sure all principals are updated before any consumer
   // can see the new data.
