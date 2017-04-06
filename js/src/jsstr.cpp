@@ -889,6 +889,7 @@ js::str_toLowerCase(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+#if !EXPOSE_INTL_API
 bool
 js::str_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -922,6 +923,7 @@ js::str_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setString(result);
     return true;
 }
+#endif /* !EXPOSE_INTL_API */
 
 static inline bool
 CanUpperCaseSpecialCasing(Latin1Char charCode)
@@ -1226,6 +1228,7 @@ js::str_toUpperCase(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+#if !EXPOSE_INTL_API
 bool
 js::str_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -1259,6 +1262,7 @@ js::str_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setString(result);
     return true;
 }
+#endif /* !EXPOSE_INTL_API */
 
 #if !EXPOSE_INTL_API
 bool
@@ -3021,11 +3025,13 @@ static const JSFunctionSpec string_methods[] = {
     JS_FN("trim",              str_trim,              0,0),
     JS_FN("trimLeft",          str_trimLeft,          0,0),
     JS_FN("trimRight",         str_trimRight,         0,0),
-    JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0,0),
-    JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0,0),
 #if EXPOSE_INTL_API
+    JS_SELF_HOSTED_FN("toLocaleLowerCase", "String_toLocaleLowerCase", 0,0),
+    JS_SELF_HOSTED_FN("toLocaleUpperCase", "String_toLocaleUpperCase", 0,0),
     JS_SELF_HOSTED_FN("localeCompare", "String_localeCompare", 1,0),
 #else
+    JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0,0),
+    JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0,0),
     JS_FN("localeCompare",     str_localeCompare,     1,0),
 #endif
     JS_SELF_HOSTED_FN("repeat", "String_repeat",      1,0),
