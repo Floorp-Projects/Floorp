@@ -2033,7 +2033,6 @@ ServiceWorkerManager::LoadRegistration(
                             aRegistration.cacheName(),
                             registration->GetLoadFlags()));
     registration->GetActive()->SetHandlesFetch(aRegistration.currentWorkerHandlesFetch());
-    registration->GetActive()->SetActivateStateUncheckedWithoutEvent(ServiceWorkerState::Activated);
   }
 }
 
