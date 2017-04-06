@@ -2650,10 +2650,23 @@ GeckoDriver.prototype.getTextFromDialog = function (cmd, resp) {
 };
 
 /**
+ * Set the user prompt's value field.
+ *
  * Sends keys to the input field of a currently displayed modal, or
  * returns a no such alert error if no modal is currently displayed. If
  * a tab modal is currently displayed but has no means for text input,
  * an element not visible error is returned.
+ *
+ * @param {string} text
+ *     Input to the user prompt's value field.
+ *
+ * @throws {ElementNotInteractableError}
+ *     If the current user prompt is an alert or confirm.
+ * @throws {NoSuchAlertError}
+ *     If there is no current user prompt.
+ * @throws {UnsupportedOperationError}
+ *     If the current user prompt is something other than an alert,
+ *     confirm, or a prompt.
  */
 GeckoDriver.prototype.sendKeysToDialog = function (cmd, resp) {
   let win = assert.window(this.getCurrentWindow());
@@ -2667,7 +2680,7 @@ GeckoDriver.prototype.sendKeysToDialog = function (cmd, resp) {
   }
 
   event.sendKeysToElement(
-      cmd.parameters.value,
+      cmd.parameters.text,
       loginTextbox,
       {ignoreVisibility: true},
       this.dialog.window ? this.dialog.window : win);
