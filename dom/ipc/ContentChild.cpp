@@ -172,6 +172,9 @@
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
+#ifdef XP_WIN
+#include "mozilla/a11y/AccessibleWrap.h"
+#endif
 #endif
 
 #include "mozilla/dom/File.h"

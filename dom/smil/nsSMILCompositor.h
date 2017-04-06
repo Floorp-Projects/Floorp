@@ -74,11 +74,25 @@ public:
 
  private:
   // Create a nsISMILAttr for my target, on the heap.
-  mozilla::UniquePtr<nsISMILAttr> CreateSMILAttr();
+  //
+  // @param aBaseStyleContext  An optional style context which, if set, will be
+  //                           used when fetching the base style.
+  mozilla::UniquePtr<nsISMILAttr>
+  CreateSMILAttr(nsStyleContext* aBaseStyleContext);
 
   // Returns the CSS property this compositor should animate, or
   // eCSSProperty_UNKNOWN if this compositor does not animate a CSS property.
   nsCSSPropertyID GetCSSPropertyToAnimate() const;
+
+  // Returns true if we might need to refer to base styles (i.e. we are
+  // targeting a CSS property and have one or more animation functions that
+  // don't just replace the underlying value).
+  //
+  // This might return true in some cases where we don't actually need the base
+  // style since it doesn't build up the animation sandwich to check if the
+  // functions that appear to need the base style are actually replaced by
+  // a function further up the stack.
+  bool MightNeedBaseStyle() const;
 
   // Finds the index of the first function that will affect our animation
   // sandwich. Also toggles the 'mForceCompositing' flag if it finds that any

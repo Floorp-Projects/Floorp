@@ -12,5 +12,5 @@
 
   <browser id="content" type="content" primary="true" src="https://mozilla.com" flex="1" remote="true"/>
 
-  <script type="application/javascript" src="chrome://browser/content/geckoview.js"/>
+  <script type="application/javascript" src="chrome://geckoview/content/geckoview.js"/>
 </window>

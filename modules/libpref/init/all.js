@@ -5629,7 +5629,7 @@ pref("prompts.authentication_dialog_abuse_limit", 3);
 pref("browser.storageManager.enabled", false);
 pref("browser.storageManager.pressureNotification.minIntervalMS", 1200000);
 pref("browser.storageManager.pressureNotification.usageThresholdGB", 5);
-pref("dom.IntersectionObserver.enabled", false);
+pref("dom.IntersectionObserver.enabled", true);
 
 // Whether module scripts (<script type="module">) are enabled for content.
 pref("dom.moduleScripts.enabled", false);
@@ -5654,3 +5654,7 @@ pref("layers.advanced.boxshadow-outer-layers", 2);
 pref("layers.advanced.caret-layers", 2);
 pref("layers.advanced.displaybuttonborder-layers", 2);
 pref("layers.advanced.outline-layers", 2);
+
+// Determines whether we throw an exception when a frame script
+// accesses the wrong DocGroup. The alternative is to crash.
+user_pref("extensions.throw_on_docgroup_mismatch.enabled", true);

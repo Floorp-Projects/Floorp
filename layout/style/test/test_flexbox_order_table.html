@@ -66,7 +66,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=799775
 
   <div id="flexContainerParent">
     <!-- The flex container that we'll be testing
-         (its  parent is display:none initially) -->
+         (its parent is display:none initially) -->
     <div id="flexContainer">
       <div id="a"></div>
       <div id="b"></div>
@@ -92,13 +92,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=799775
 // ----
 
 // This will store snapshots of our reference divs
-var gRefSnapshots = {};
+let gRefSnapshots = {};
 
 // These are the sets of 'order' values that we'll test.
 // The first three values in each array are the 'order' values that we'll
 // assign to elements a, b, and c (respectively).  The final value in each
 // array is the ID of the expected reference rendering.
-var gOrderTestcases = [
+let gOrderTestcases = [
   // The 6 basic permutations:
   [ 1, 2, 3, "abc"],
   [ 1, 3, 2, "acb"],
@@ -131,18 +131,19 @@ var gOrderTestcases = [
 // ---------
 
 function initRefSnapshots() {
-  var refIds = ["abc", "acb", "bac", "bca", "cab", "cba"];
-  refIds.forEach(function(aRefId) {
-    var elem = document.getElementById(aRefId);
+  let refIds = ["abc", "acb", "bac", "bca", "cab", "cba"];
+  for (let id of refIds) {
+    let elem = document.getElementById(id);
     elem.style.display = "block";
-    gRefSnapshots[aRefId] = snapshotWindow(window, false);
+    gRefSnapshots[id] = snapshotWindow(window, false);
     elem.style.display = "";
-  });
+  }
 }
 
 function complainIfSnapshotsDiffer(aSnap1, aSnap2, aMsg) {
-  var compareResult = compareSnapshots(aSnap1, aSnap2, true);
-  ok(compareResult[0], "flex container rendering should match expected (" + aMsg +")");
+  let compareResult = compareSnapshots(aSnap1, aSnap2, true);
+  ok(compareResult[0],
+     "flex container rendering should match expected (" + aMsg +")");
   if (!compareResult[0]) {
     todo(false, "TESTCASE: " + compareResult[1]);
     todo(false, "REFERENCE: "+ compareResult[2]);
@@ -158,14 +159,14 @@ function runOrderTestcase(aOrderTestcase) {
   document.getElementById("b").style.order = aOrderTestcase[1];
   document.getElementById("c").style.order = aOrderTestcase[2];
 
-  var snapshot = snapshotWindow(window, false);
+  let snapshot = snapshotWindow(window, false);
   complainIfSnapshotsDiffer(snapshot, gRefSnapshots[aOrderTestcase[3]],
                             aOrderTestcase);
 
   // Clean up
-  document.getElementById("a").style.order = "";
-  document.getElementById("b").style.order = "";
-  document.getElementById("c").style.order = "";
+  for (let id of ["a", "b", "c"]) {
+    document.getElementById(id).style.order = "";
+  }
 }
 
 // Main Function
@@ -173,13 +174,14 @@ function main() {
   initRefSnapshots();
 
   // un-hide the flex container's parent
-  var flexContainerParent = document.getElementById("flexContainerParent");
+  let flexContainerParent = document.getElementById("flexContainerParent");
   flexContainerParent.style.display = "block";
 
   // Initial sanity-check: should be in expected document order
-  var initialSnapshot = snapshotWindow(window, false);
+  let initialSnapshot = snapshotWindow(window, false);
   complainIfSnapshotsDiffer(initialSnapshot, gRefSnapshots["abc"],
-                            "initial flex container rendering, no 'order' value yet");
+                            "initial flex container rendering, " +
+                            "no 'order' value yet");
 
   // OK, now we run our tests
   gOrderTestcases.forEach(runOrderTestcase);

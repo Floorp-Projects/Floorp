@@ -1,0 +1,38 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+IA2DIR = $(topsrcdir)/other-licenses/ia2
+MSAADIR = $(topsrcdir)/accessible/interfaces/msaa
+GARBAGE += $(MIDL_GENERATED_FILES) midl_done
+
+MIDL_GENERATED_FILES = \
+  dlldata.c \
+  HandlerData.h \
+  HandlerData_c.c \
+  HandlerData_i.c \
+  HandlerData_p.c \
+  HandlerData.tlb \
+  $(NULL)
+
+export:: $(MIDL_GENERATED_FILES)
+
+$(MIDL_GENERATED_FILES): midl_done
+
+midl_done: HandlerData.acf HandlerData.idl
+	$(MIDL) $(MIDL_FLAGS) -I $(IA2DIR) -I $(MSAADIR) -Oicf -acf $(srcdir)/HandlerData.acf $(srcdir)/HandlerData.idl
+	touch $@
+
+INSTALL_TARGETS += midl
+midl_FILES := HandlerData.h \
+              HandlerData_i.c \
+              $(NULL)
+midl_DEST := $(DIST)/include
+midl_TARGET := midl
+
+export:: midl
+
+register::
+	regsvr32 -s $(DIST)/bin/$(SHARED_LIBRARY)
+
+include $(topsrcdir)/config/rules.mk

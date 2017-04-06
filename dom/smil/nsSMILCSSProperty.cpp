@@ -10,51 +10,22 @@
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/Move.h"
+#include "mozilla/StyleAnimationValue.h"
+#include "nsICSSDeclaration.h"
 #include "nsSMILCSSValueType.h"
 #include "nsSMILValue.h"
-#include "nsComputedDOMStyle.h"
 #include "nsCSSProps.h"
-#include "nsIDOMElement.h"
-#include "nsIDocument.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
-
-// Helper function
-static bool
-GetCSSComputedValue(Element* aElem,
-                    nsCSSPropertyID aPropID,
-                    nsAString& aResult)
-{
-  MOZ_ASSERT(!nsCSSProps::IsShorthand(aPropID),
-             "Can't look up computed value of shorthand property");
-  MOZ_ASSERT(nsSMILCSSProperty::IsPropertyAnimatable(aPropID),
-             "Shouldn't get here for non-animatable properties");
-
-  nsIDocument* doc = aElem->GetUncomposedDoc();
-  if (!doc) {
-    // This can happen if we process certain types of restyles mid-sample
-    // and remove anonymous animated content from the document as a result.
-    // See bug 534975.
-    return false;
-  }
-
-  nsIPresShell* shell = doc->GetShell();
-  if (!shell) {
-    NS_WARNING("Unable to look up computed style -- no pres shell");
-    return false;
-  }
-
-  RefPtr<nsComputedDOMStyle> computedStyle =
-    NS_NewComputedDOMStyle(aElem, EmptyString(), shell);
-
-  computedStyle->GetPropertyValue(aPropID, aResult);
-  return true;
-}
 
 // Class Methods
 nsSMILCSSProperty::nsSMILCSSProperty(nsCSSPropertyID aPropID,
-                                     Element* aElement)
-  : mPropID(aPropID), mElement(aElement)
+                                     Element* aElement,
+                                     nsStyleContext* aBaseStyleContext)
+  : mPropID(aPropID)
+  , mElement(aElement)
+  , mBaseStyleContext(aBaseStyleContext)
 {
   MOZ_ASSERT(IsPropertyAnimatable(mPropID),
              "Creating a nsSMILCSSProperty for a property "
@@ -71,7 +42,10 @@ nsSMILCSSProperty::GetBaseValue() const
 
   // SPECIAL CASE: (a) Shorthands
   //               (b) 'display'
-  if (nsCSSProps::IsShorthand(mPropID) || mPropID == eCSSProperty_display) {
+  //               (c) No base style context
+  if (nsCSSProps::IsShorthand(mPropID) ||
+      mPropID == eCSSProperty_display ||
+      !mBaseStyleContext) {
     // We can't look up the base (computed-style) value of shorthand
     // properties because they aren't guaranteed to have a consistent computed
     // value.
@@ -80,47 +54,26 @@ nsSMILCSSProperty::GetBaseValue() const
     // doing so involves clearing and resetting the property which can cause
     // frames to be recreated which we'd like to avoid.
     //
-    // In either case, just return a dummy value (initialized with the right
+    // Furthermore, if we don't (yet) have a base style context we obviously
+    // can't resolve a base value.
+    //
+    // In any case, just return a dummy value (initialized with the right
     // type, so as not to indicate failure).
     nsSMILValue tmpVal(&nsSMILCSSValueType::sSingleton);
     Swap(baseValue, tmpVal);
     return baseValue;
   }
 
-  // GENERAL CASE: Non-Shorthands
-  // (1) Put empty string in override style for property mPropID
-  // (saving old override style value, so we can set it again when we're done)
-  nsICSSDeclaration* overrideDecl = mElement->GetSMILOverrideStyle();
-  nsAutoString cachedOverrideStyleVal;
-  if (overrideDecl) {
-    overrideDecl->GetPropertyValue(mPropID, cachedOverrideStyleVal);
-    // (Don't bother clearing override style if it's already empty)
-    if (!cachedOverrideStyleVal.IsEmpty()) {
-      overrideDecl->SetPropertyValue(mPropID, EmptyString());
-    }
+  StyleAnimationValue computedValue;
+  if (!StyleAnimationValue::ExtractComputedValue(mPropID,
+                                                 mBaseStyleContext,
+                                                 computedValue)) {
+    return baseValue;
   }
 
-  // (2) Get Computed Style
-  nsAutoString computedStyleVal;
-  bool didGetComputedVal = GetCSSComputedValue(mElement, mPropID,
-                                                 computedStyleVal);
-
-  // (3) Put cached override style back (if it's non-empty)
-  if (overrideDecl && !cachedOverrideStyleVal.IsEmpty()) {
-    overrideDecl->SetPropertyValue(mPropID, cachedOverrideStyleVal);
-  }
-
-  // (4) Populate our nsSMILValue from the computed style
-  if (didGetComputedVal) {
-    // When we parse animation values we check if they are context-sensitive or
-    // not so that we don't cache animation values whose meaning may change.
-    // For base values however this is unnecessary since on each sample the
-    // compositor will fetch the (computed) base value and compare it against
-    // the cached (computed) value and detect changes for us.
-    nsSMILCSSValueType::ValueFromString(mPropID, mElement,
-                                        computedStyleVal, baseValue,
-                                        nullptr);
-  }
+  baseValue =
+    nsSMILCSSValueType::ValueFromAnimationValue(mPropID, mElement,
+                                                computedValue);
   return baseValue;
 }
 

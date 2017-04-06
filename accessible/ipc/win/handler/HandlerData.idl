@@ -1,0 +1,119 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "AccessibleHandler.h"
+
+import "ocidl.idl";
+import "ServProv.idl";
+
+typedef struct _IA2Data
+{
+  long mUniqueId;
+} IA2Data;
+
+interface IGeckoBackChannel;
+
+// We define different CLSIDs and IIDs depending on channel and officiality.
+// This prevents handlers from installing overtop one another when multiple
+// channels are present. Note that we do not do this for all UUIDs in this IDL,
+// just the ones that are written to the registry (coclass and interfaces that
+// have the [object] annotation)
+#if !defined(MOZ_OFFICIAL_BRANDING)
+
+# if defined(DEBUG)
+
+// Local debug builds
+#  define HANDLER_CLSID 398ffd8d-5382-48f7-9e3b-19012762d39a
+#  define IHANDLERCONTROL_IID a218497e-8b10-460b-b668-a92b7ee39ff2
+#  define ASYNCIHANDLERCONTROL_IID ca18b9ab-04b6-41be-87f7-d99913d6a2e8
+#  define IGECKOBACKCHANNEL_IID 231c4946-4479-4c8e-aadc-8a0e48fc4c51
+
+# else
+
+// Local non-debug builds
+#  define HANDLER_CLSID ce573faf-7815-4fc2-a031-b092268ace9e
+#  define IHANDLERCONTROL_IID 2b715cce-1790-4fe1-aef5-48bb5acdf3a1
+#  define ASYNCIHANDLERCONTROL_IID 8e089670-4f57-41a7-89c0-37f17482fa6f
+#  define IGECKOBACKCHANNEL_IID 18e2488d-310f-400f-8339-0e50b513e801
+
+# endif
+
+#elif defined(NIGHTLY_BUILD)
+
+// Official Nightly
+# define IHANDLERCONTROL_IID c57343fc-e011-40c2-b748-da82eabf0f1f
+# define ASYNCIHANDLERCONTROL_IID 648c92a1-ea35-46da-a806-6b55c6247373
+# define HANDLER_CLSID 4629216b-8753-41bf-9527-5bff51401671
+# define IGECKOBACKCHANNEL_IID e61e038d-40dd-464a-9aba-66b206b6911b
+
+#elif defined(RELEASE_OR_BETA)
+
+// Official Beta and Official Release
+# define IHANDLERCONTROL_IID ce30f77e-8847-44f0-a648-a9656bd89c0d
+# define ASYNCIHANDLERCONTROL_IID dca8d857-1a63-4045-8f36-8809eb093d04
+# define HANDLER_CLSID 1baa303d-b4b9-45e5-9ccb-e3fca3e274b6
+# define IGECKOBACKCHANNEL_IID b32983ff-ef84-4945-8f86-fb7491b4f57b
+
+#else
+
+// Official Aurora
+# define IHANDLERCONTROL_IID 3316ce35-f892-4832-97c5-06c52c03cdba
+# define ASYNCIHANDLERCONTROL_IID 15b48b76-ad38-4ad3-bd1a-d3c48a5a9947
+# define HANDLER_CLSID 4a195748-dca2-45fb-9295-0a139e76a9e7
+# define IGECKOBACKCHANNEL_IID dd2e4a89-999e-4d65-8b65-440c923ddb61
+
+#endif
+
+[uuid(2b0e83b3-fd1a-443f-9ed6-c00d39055b58)]
+interface HandlerData
+{
+  typedef struct _IA2Payload
+  {
+    IA2Data mData;
+    IGeckoBackChannel* mGeckoBackChannel;
+  } IA2Payload;
+}
+
+[object,
+ uuid(IHANDLERCONTROL_IID),
+ async_uuid(ASYNCIHANDLERCONTROL_IID),
+ pointer_default(unique)]
+interface IHandlerControl : IUnknown
+{
+  HRESULT Invalidate();
+}
+
+[object,
+ uuid(IGECKOBACKCHANNEL_IID),
+ pointer_default(unique)]
+interface IGeckoBackChannel : IUnknown
+{
+  [propput] HRESULT HandlerControl([in] long aPid, [in] IHandlerControl* aCtrl);
+  HRESULT Refresh([out] IA2Data* aOutData);
+}
+
+[uuid(1e545f07-f108-4912-9471-546827a80983)]
+library AccessibleHandlerTypeLib
+{
+  /**
+   * This definition is required in order for the handler implementation to
+   * support IDispatch (aka Automation). This is used by interpreted language
+   * FFIs to discover which interfaces may be controlled via IDispatch.
+   * (In particular, the python FFI used by NVDA needs this).
+   *
+   * In reality, the only a11y interface that is Automation compliant is
+   * IAccessible; our remaining interfaces are not.
+   *
+   * Once the FFI knows that IAccessible is supported, the FFI queries for
+   * IAccessible and is then able to resolve non-automation interfaces from
+   * there.
+   */
+  [uuid(HANDLER_CLSID)]
+  coclass AccessibleHandler
+  {
+    [default] interface IAccessible;
+  };
+};

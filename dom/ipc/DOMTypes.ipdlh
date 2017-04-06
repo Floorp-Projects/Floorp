@@ -6,6 +6,8 @@
 
 include protocol PBlob;
 include protocol PMemoryStream;
+
+include IPCStream;
 include ProtocolTypes;
 
 using struct mozilla::void_t
@@ -40,6 +42,7 @@ struct ClonedMessageData
 {
   SerializedStructuredCloneBuffer data;
   PBlob[] blobs;
+  IPCStream[] inputStreams;
   MessagePortIdentifier[] identfiers;
 };
 

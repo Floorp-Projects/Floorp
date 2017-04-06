@@ -155,6 +155,14 @@ ToSTAUniquePtr(RefPtr<T>&& aRefPtr)
 
 template <typename T>
 inline STAUniquePtr<T>
+ToSTAUniquePtr(const RefPtr<T>& aRefPtr)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return STAUniquePtr<T>(do_AddRef(aRefPtr).take());
+}
+
+template <typename T>
+inline STAUniquePtr<T>
 ToSTAUniquePtr(T* aRawPtr)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -164,11 +172,28 @@ ToSTAUniquePtr(T* aRawPtr)
   return STAUniquePtr<T>(aRawPtr);
 }
 
+template <typename T, typename U>
+inline STAUniquePtr<T>
+ToSTAUniquePtr(const InterceptorTargetPtr<U>& aTarget)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  RefPtr<T> newRef(static_cast<T*>(aTarget.get()));
+  return ToSTAUniquePtr(Move(newRef));
+}
+
 template <typename T>
 inline MTAUniquePtr<T>
 ToMTAUniquePtr(RefPtr<T>&& aRefPtr)
 {
   return MTAUniquePtr<T>(aRefPtr.forget().take());
+}
+
+template <typename T>
+inline MTAUniquePtr<T>
+ToMTAUniquePtr(const RefPtr<T>& aRefPtr)
+{
+  MOZ_ASSERT(IsCurrentThreadMTA());
+  return MTAUniquePtr<T>(do_AddRef(aRefPtr).take());
 }
 
 template <typename T>
@@ -191,6 +216,17 @@ ToProxyUniquePtr(RefPtr<T>&& aRefPtr)
 
 template <typename T>
 inline ProxyUniquePtr<T>
+ToProxyUniquePtr(const RefPtr<T>& aRefPtr)
+{
+  MOZ_ASSERT(IsProxy(aRawPtr));
+  MOZ_ASSERT((XRE_IsParentProcess() && NS_IsMainThread()) ||
+             (XRE_IsContentProcess() && IsCurrentThreadMTA()));
+
+  return ProxyUniquePtr<T>(do_AddRef(aRefPtr).take());
+}
+
+template <typename T>
+inline ProxyUniquePtr<T>
 ToProxyUniquePtr(T* aRawPtr)
 {
   MOZ_ASSERT(IsProxy(aRawPtr));
@@ -201,6 +237,13 @@ ToProxyUniquePtr(T* aRawPtr)
     aRawPtr->AddRef();
   }
   return ProxyUniquePtr<T>(aRawPtr);
+}
+
+template <typename T, typename Deleter>
+inline InterceptorTargetPtr<T>
+ToInterceptorTargetPtr(const UniquePtr<T, Deleter>& aTargetPtr)
+{
+  return InterceptorTargetPtr<T>(aTargetPtr.get());
 }
 
 template <typename T, typename Deleter>

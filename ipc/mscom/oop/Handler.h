@@ -106,7 +106,7 @@ public:
   static HRESULT Unregister(REFCLSID aClsid);
 
 protected:
-  Handler(IUnknown* aOuter, HRESULT& aResult);
+  Handler(IUnknown* aOuter, HRESULT* aResult);
   virtual ~Handler() {}
   bool HasPayload() const { return mHasPayload; }
   IUnknown* GetOuter() const { return mOuter; }

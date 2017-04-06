@@ -202,6 +202,9 @@ const CurlUtils = {
    *         Post data parameters.
    */
   writePostDataTextParams: function (postDataText) {
+    if (!postDataText) {
+      return "";
+    }
     let lines = postDataText.split("\r\n");
     return lines[lines.length - 1];
   },

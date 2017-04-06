@@ -69,7 +69,7 @@ public:
   // we are in the middle of updating style. If we need to use this when
   // updating style, we should pass the nsStyleContext into this method and use
   // that to update the properties rather than calling
-  // GetStyleContextForElement.
+  // GetStyleContext.
   void SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget);
 
   void GetSpacing(nsString& aRetVal, CallerType aCallerType)
