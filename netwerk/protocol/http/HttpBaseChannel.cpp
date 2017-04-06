@@ -49,6 +49,7 @@
 #include "nsILoadGroupChild.h"
 #include "mozilla/ConsoleReportCollector.h"
 #include "LoadInfo.h"
+#include "NullPrincipal.h"
 #include "nsISSLSocketControl.h"
 #include "mozilla/Telemetry.h"
 #include "nsIURL.h"
@@ -3133,6 +3134,11 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   if (mLoadInfo) {
     nsCOMPtr<nsILoadInfo> newLoadInfo =
       static_cast<mozilla::LoadInfo*>(mLoadInfo.get())->Clone();
+
+    // avoid inheriting the wrong principal, e.g. in case when http
+    // redirects to data: URIs
+    nsCOMPtr<nsIPrincipal> nullPrincipalToInherit = NullPrincipal::Create();
+    newLoadInfo->SetPrincipalToInherit(nullPrincipalToInherit);
 
     // re-compute the origin attributes of the loadInfo if it's top-level load.
     bool isTopLevelDoc =
