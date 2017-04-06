@@ -25,6 +25,7 @@ EXPORTS.mozilla.dom += [
 EXPORTS.mozilla += [
     'AnimationComparator.h',
     'AnimationPerformanceWarning.h',
+    'AnimationPropertySegment.h',
     'AnimationTarget.h',
     'AnimationUtils.h',
     'AnimValuesStyleRule.h',
