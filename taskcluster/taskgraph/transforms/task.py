@@ -12,6 +12,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import time
+from copy import deepcopy
 
 from taskgraph.util.treeherder import split_symbol
 from taskgraph.transforms.base import TransformSequence
@@ -212,10 +213,17 @@ task_description_schema = Schema({
         Optional('retry-exit-status'): int,
 
     }, {
+        # see http://schemas.taskcluster.net/generic-worker/v1/payload.json
+        # and https://docs.taskcluster.net/reference/workers/generic-worker/payload
         Required('implementation'): 'generic-worker',
 
         # command is a list of commands to run, sequentially
-        Required('command'): [taskref_or_string],
+        # on Windows, each command is a string, on OS X and Linux, each command is
+        # a string array
+        Required('command'): Any(
+            [taskref_or_string],   # Windows
+            [[taskref_or_string]]  # Linux / OS X
+        ),
 
         # artifacts to extract from the task image after completion; note that artifacts
         # for the generic worker cannot have names
@@ -223,17 +231,50 @@ task_description_schema = Schema({
             # type of artifact -- simple file, or recursive directory
             'type': Any('file', 'directory'),
 
-            # task image path from which to read artifact
+            # filesystem path from which to read artifact
             'path': basestring,
+
+            # if not specified, path is used for artifact name
+            Optional('name'): basestring
         }],
 
-        # directories and/or files to be mounted
+        # Directories and/or files to be mounted.
+        # The actual allowed combinations are stricter than the model below,
+        # but this provides a simple starting point.
+        # See https://docs.taskcluster.net/reference/workers/generic-worker/payload
         Optional('mounts'): [{
-            # a unique name for the cache volume
-            'cache-name': basestring,
+            # A unique name for the cache volume, implies writable cache directory
+            # (otherwise mount is a read-only file or directory).
+            Optional('cache-name'): basestring,
+            # Optional content for pre-loading cache, or mandatory content for
+            # read-only file or directory. Pre-loaded content can come from either
+            # a task artifact or from a URL.
+            Optional('content'): {
 
-            # task image path for the cache
-            'path': basestring,
+                # *** Either (artifact and task-id) or url must be specified. ***
+
+                # Artifact name that contains the content.
+                Optional('artifact'): basestring,
+                # Task ID that has the artifact that contains the content.
+                Optional('task-id'): taskref_or_string,
+                # URL that supplies the content in response to an unauthenticated
+                # GET request.
+                Optional('url'): basestring
+            },
+
+            # *** Either file or directory must be specified. ***
+
+            # If mounting a cache or read-only directory, the filesystem location of
+            # the directory should be specified as a relative path to the task
+            # directory here.
+            Optional('directory'): basestring,
+            # If mounting a file, specify the relative path within the task
+            # directory to mount the file (the file will be read only).
+            Optional('file'): basestring,
+            # Required if and only if `content` is specified and mounting a
+            # directory (not a file). This should be the archive format of the
+            # content (either pre-loaded cache or read-only directory).
+            Optional('format'): Any('rar', 'tar.bz2', 'tar.gz', 'zip')
         }],
 
         # environment variables
@@ -244,6 +285,9 @@ task_description_schema = Schema({
 
         # os user groups for test task workers
         Optional('os-groups', default=[]): [basestring],
+
+        # optional features
+        Required('chain-of-trust', default=False): bool,
     }, {
         Required('implementation'): 'buildbot-bridge',
 
@@ -557,19 +601,26 @@ def build_generic_worker_payload(config, task, task_def):
     artifacts = []
 
     for artifact in worker['artifacts']:
-        artifacts.append({
+        a = {
             'path': artifact['path'],
             'type': artifact['type'],
             'expires': task_def['expires'],  # always expire with the task
-        })
+        }
+        if 'name' in artifact:
+            a['name'] = artifact['name']
+        artifacts.append(a)
 
-    mounts = []
-
-    for mount in worker.get('mounts', []):
-        mounts.append({
-            'cacheName': mount['cache-name'],
-            'directory': mount['path']
-        })
+    # Need to copy over mounts, but rename keys to respect naming convention
+    #   * 'cache-name' -> 'cacheName'
+    #   * 'task-id'    -> 'taskId'
+    # All other key names are already suitable, and don't need renaming.
+    mounts = deepcopy(worker.get('mounts', []))
+    for mount in mounts:
+        if 'cache-name' in mount:
+            mount['cacheName'] = mount.pop('cache-name')
+        if 'content' in mount:
+            if 'task-id' in mount['content']:
+                mount['content']['taskId'] = mount['content'].pop('task-id')
 
     task_def['payload'] = {
         'command': worker['command'],
@@ -584,6 +635,15 @@ def build_generic_worker_payload(config, task, task_def):
 
     if 'retry-exit-status' in worker:
         raise Exception("retry-exit-status not supported in generic-worker")
+
+    # currently only support one feature (chain of trust) but this will likely grow
+    features = {}
+
+    if worker.get('chain-of-trust'):
+        features['chainOfTrust'] = True
+
+    if features:
+        task_def['payload']['features'] = features
 
 
 @payload_builder('scriptworker-signing')

@@ -145,7 +145,7 @@ def windows_toolchain(config, job, taskdesc):
     svn_cache = 'level-{}-toolchain-clang-cl-build-svn'.format(config.params['level'])
     worker['mounts'] = [{
         'cache-name': svn_cache,
-        'path': r'llvm-sources',
+        'directory': r'llvm-sources',
     }]
     taskdesc['scopes'].extend([
         'generic-worker:cache:' + svn_cache,
