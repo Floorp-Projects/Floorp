@@ -902,16 +902,27 @@ void
 TrackBuffersManager::InitializationSegmentReceived()
 {
   MOZ_ASSERT(mParser->HasCompleteInitData());
+
+  int64_t endInit = mParser->InitSegmentRange().mEnd;
+  if (mInputBuffer->Length() > mProcessedInput ||
+      int64_t(mProcessedInput - mInputBuffer->Length()) > endInit) {
+    // Something is not quite right with the data appended. Refuse it.
+    RejectAppend(MediaResult(NS_ERROR_FAILURE,
+                             "Invalid state following initialization segment"),
+                 __func__);
+    return;
+  }
+
   mCurrentInputBuffer = new SourceBufferResource(mType);
   // The demuxer isn't initialized yet ; we don't want to notify it
   // that data has been appended yet ; so we simply append the init segment
   // to the resource.
   mCurrentInputBuffer->AppendData(mParser->InitData());
-  uint32_t length =
-    mParser->InitSegmentRange().mEnd - (mProcessedInput - mInputBuffer->Length());
+  uint32_t length = endInit - (mProcessedInput - mInputBuffer->Length());
   if (mInputBuffer->Length() == length) {
     mInputBuffer = nullptr;
   } else {
+    MOZ_RELEASE_ASSERT(length <= mInputBuffer->Length());
     mInputBuffer->RemoveElementsAt(0, length);
   }
   CreateDemuxerforMIMEType();
