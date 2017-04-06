@@ -15,13 +15,25 @@ registerCleanupFunction(function() {
   Services.prefs.setCharPref("urlclassifier.malwareTable", originalMalwareTable);
 });
 
+// This test only opens the Preferences once, and then reloads the page
+// each time that it wants to test various preference combinations. We
+// only use one tab (instead of opening/closing for each test) for all
+// to help improve test times on debug builds.
+add_task(function* setup() {
+  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  registerCleanupFunction(function*() {
+    yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  });
+});
+
 // test the safebrowsing preference
 add_task(function*() {
   function* checkPrefSwitch(val1, val2) {
     Services.prefs.setBoolPref("browser.safebrowsing.phishing.enabled", val1);
     Services.prefs.setBoolPref("browser.safebrowsing.malware.enabled", val2);
 
-    yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+    gBrowser.reload();
+    yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
     let doc = gBrowser.selectedBrowser.contentDocument;
     let checkbox = doc.getElementById("enableSafeBrowsing");
@@ -47,8 +59,6 @@ add_task(function*() {
     checked = checkbox.checked;
     is(blockDownloads.hasAttribute("disabled"), !checked, "block downloads checkbox is set correctly");
     is(blockUncommon.hasAttribute("disabled"), !checked || !blockDownloads.checked, "block uncommon checkbox is set correctly");
-
-    yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 
   yield* checkPrefSwitch(true, true);
@@ -62,7 +72,8 @@ add_task(function*() {
   function* checkPrefSwitch(val) {
     Services.prefs.setBoolPref("browser.safebrowsing.downloads.enabled", val);
 
-    yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+    gBrowser.reload();
+    yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
     let doc = gBrowser.selectedBrowser.contentDocument;
     let checkbox = doc.getElementById("blockDownloads");
@@ -83,7 +94,6 @@ add_task(function*() {
     // check if the uncommon warning checkbox has updated
     is(blockUncommon.hasAttribute("disabled"), val, "block uncommon checkbox is set correctly");
 
-    yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 
   yield* checkPrefSwitch(true);
@@ -96,7 +106,8 @@ add_task(function*() {
     Services.prefs.setBoolPref("browser.safebrowsing.downloads.remote.block_potentially_unwanted", val1);
     Services.prefs.setBoolPref("browser.safebrowsing.downloads.remote.block_uncommon", val2);
 
-    yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+    gBrowser.reload();
+    yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
     let doc = gBrowser.selectedBrowser.contentDocument;
     let checkbox = doc.getElementById("blockUncommonUnwanted");
@@ -123,7 +134,6 @@ add_task(function*() {
     sortedMalware.sort();
     Assert.deepEqual(malwareTable, sortedMalware, "malware table has been sorted");
 
-    yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 
   yield* checkPrefSwitch(true, true);
