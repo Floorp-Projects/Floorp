@@ -31,8 +31,6 @@ class ServiceWorkerRegistrationInfo final
   // The time of update is 0, if SWR've never been updated yet.
   PRTime mLastUpdateTime;
 
-  uint64_t mLastUpdateCheckTime;
-
   nsLoadFlags mLoadFlags;
 
   RefPtr<ServiceWorkerInfo> mEvaluatingWorker;
