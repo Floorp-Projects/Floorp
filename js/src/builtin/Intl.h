@@ -667,6 +667,27 @@ intl_GetLocaleInfo(JSContext* cx, unsigned argc, Value* vp);
 extern MOZ_MUST_USE bool
 intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp);
 
+
+/******************** String ********************/
+
+/**
+ * Returns the input string converted to lower case based on the language
+ * specific case mappings for the input locale.
+ *
+ * Usage: lowerCase = intl_toLocaleLowerCase(string, locale)
+ */
+extern MOZ_MUST_USE bool
+intl_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp);
+
+/**
+ * Returns the input string converted to upper case based on the language
+ * specific case mappings for the input locale.
+ *
+ * Usage: upperCase = intl_toLocaleUpperCase(string, locale)
+ */
+extern MOZ_MUST_USE bool
+intl_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp);
+
 #if ENABLE_INTL_API
 /**
  * Cast char16_t* strings to UChar* strings used by ICU.
