@@ -367,10 +367,6 @@ private:
 
   void UpdateInMemoryPluginInfo(nsPluginTag* aPluginTag);
 
-  // On certain platforms, we only want to load certain plugins. This function
-  // centralizes loading rules.
-  bool ShouldAddPlugin(nsPluginTag* aPluginTag);
-
   RefPtr<nsPluginTag> mPlugins;
   RefPtr<nsPluginTag> mCachedPlugins;
   RefPtr<nsInvalidPluginTag> mInvalidPlugins;
