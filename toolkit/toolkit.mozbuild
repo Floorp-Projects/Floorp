@@ -139,6 +139,9 @@ DIRS += [
     '/other-licenses/snappy',
 ]
 
+if CONFIG['MOZ_GIO_COMPONENT']:
+    DIRS += ['/extensions/gio']
+
 if CONFIG['MOZ_RUST']:
     DIRS += [
         '/toolkit/library/gtest/rust',

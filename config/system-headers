@@ -1271,7 +1271,9 @@ hunspell.hxx
 #if MOZ_SYSTEM_BZ2==1
 bzlib.h
 #endif
+#ifdef MOZ_ENABLE_GIO
 gio/gio.h
+#endif
 #if MOZ_SYSTEM_LIBEVENT==1
 event.h
 #else
