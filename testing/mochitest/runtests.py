@@ -2721,8 +2721,9 @@ toolbar#nav-bar {
             return message
 
         def trackLSANLeaks(self, message):
-            if self.lsanLeaks and message['action'] == 'log':
-                self.lsanLeaks.log(message['message'])
+            if self.lsanLeaks and message['action'] in ('log', 'process_output'):
+                line = message['message'] if message['action'] == 'log' else message['data']
+                self.lsanLeaks.log(line)
             return message
 
         def trackShutdownLeaks(self, message):

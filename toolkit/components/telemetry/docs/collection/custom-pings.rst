@@ -19,6 +19,10 @@ Custom pings can be submitted from JavaScript using:
 That ping will be archived locally for use with Shield and inspection in ``about:telemetry``.
 If the preferences allow upload of Telemetry pings, the ping will be uploaded at the next opportunity (this is subject to throttling, retry-on-failure, etc.).
 
+.. important::
+
+    Every new data collection in Firefox needs a `data collection review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`_ from a data collection peer. Just set the feedback? flag for :bsmedberg or one of the other data peers. We try to reply within a business day.
+
 Submission constraints
 ----------------------
 

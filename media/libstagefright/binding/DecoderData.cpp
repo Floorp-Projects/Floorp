@@ -205,7 +205,7 @@ MP4AudioInfo::Update(const mp4parse_track_info* track,
 {
   UpdateTrackProtectedInfo(*this, audio->protected_data);
 
-  if (track->codec == MP4PARSE_CODEC_OPUS) {
+  if (track->codec == mp4parse_codec_OPUS) {
     mMimeType = NS_LITERAL_CSTRING("audio/opus");
     // The Opus decoder expects the container's codec delay or
     // pre-skip value, in microseconds, as a 64-bit int at the
@@ -216,11 +216,11 @@ MP4AudioInfo::Update(const mp4parse_track_info* track,
       LittleEndian::readUint16(audio->codec_specific_config.data + 10);
     OpusDataDecoder::AppendCodecDelay(mCodecSpecificConfig,
         mozilla::FramesToUsecs(preskip, 48000).value());
-  } else if (track->codec == MP4PARSE_CODEC_AAC) {
+  } else if (track->codec == mp4parse_codec_AAC) {
     mMimeType = MEDIA_MIMETYPE_AUDIO_AAC;
-  } else if (track->codec == MP4PARSE_CODEC_FLAC) {
+  } else if (track->codec == mp4parse_codec_FLAC) {
     mMimeType = MEDIA_MIMETYPE_AUDIO_FLAC;
-  } else if (track->codec == MP4PARSE_CODEC_MP3) {
+  } else if (track->codec == mp4parse_codec_MP3) {
     mMimeType = MEDIA_MIMETYPE_AUDIO_MPEG;
   }
 
@@ -254,9 +254,9 @@ MP4VideoInfo::Update(const mp4parse_track_info* track,
                      const mp4parse_track_video_info* video)
 {
   UpdateTrackProtectedInfo(*this, video->protected_data);
-  if (track->codec == MP4PARSE_CODEC_AVC) {
+  if (track->codec == mp4parse_codec_AVC) {
     mMimeType = MEDIA_MIMETYPE_VIDEO_AVC;
-  } else if (track->codec == MP4PARSE_CODEC_VP9) {
+  } else if (track->codec == mp4parse_codec_VP9) {
     mMimeType = NS_LITERAL_CSTRING("video/vp9");
   }
   mTrackId = track->track_id;
