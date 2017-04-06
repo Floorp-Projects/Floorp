@@ -18,13 +18,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(ParameterizedRobolectricTestRunner.class)
 public class SearchEngineParserTest {
-    @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
+    @ParameterizedRobolectricTestRunner.Parameters(name = "{1}")
     public static Collection<Object[]> searchPlugins() {
         final Collection<Object[]> searchPlugins = new ArrayList<>();
         collectSearchPlugins(searchPlugins, getBasePath());
@@ -32,15 +33,18 @@ public class SearchEngineParserTest {
     }
 
     private String searchPluginPath;
+    private String searchEngineIdentifier;
 
-    public SearchEngineParserTest(@SuppressWarnings("UnusedParameters") String pluginName, String searchPluginPath) {
+    public SearchEngineParserTest(String searchPluginPath, String searchEngineIdentifier) {
         this.searchPluginPath = searchPluginPath;
+        this.searchEngineIdentifier = searchEngineIdentifier;
     }
 
     @Test
     public void testParser() throws Exception {
         final InputStream stream = new FileInputStream(searchPluginPath);
-        final SearchEngine searchEngine = SearchEngineParser.load(stream);
+        final SearchEngine searchEngine = SearchEngineParser.load(searchEngineIdentifier, stream);
+        assertEquals(searchEngineIdentifier, searchEngine.getIdentifier());
 
         assertNotNull(searchEngine.getName());
         assertFalse(TextUtils.isEmpty(searchEngine.getName()));
@@ -70,7 +74,7 @@ public class SearchEngineParserTest {
             if (file.isDirectory()) {
                 collectSearchPlugins(searchPlugins, file);
             } else if (entry.endsWith(".xml")) {
-                searchPlugins.add(new Object[] { file.getName(), file.getAbsolutePath() });
+                searchPlugins.add(new Object[] { file.getAbsolutePath(), entry.substring(0, entry.length() - 4) });
             }
         }
     }

@@ -30,11 +30,11 @@ import java.io.InputStreamReader;
 
     private static final String IMAGE_URI_PREFIX = "data:image/png;base64,";
 
-    public static SearchEngine load(AssetManager assetManager, String path) throws IOException {
+    public static SearchEngine load(AssetManager assetManager, String identifier, String path) throws IOException {
         final InputStream stream = assetManager.open(path);
 
         try {
-            return load(stream);
+            return load(identifier, stream);
         } catch (XmlPullParserException e) {
             throw new AssertionError("Parser exception while reading " + path, e);
         } finally {
@@ -42,8 +42,8 @@ import java.io.InputStreamReader;
         }
     }
 
-    @VisibleForTesting static SearchEngine load(InputStream stream) throws IOException, XmlPullParserException {
-        final SearchEngine searchEngine = new SearchEngine();
+    @VisibleForTesting static SearchEngine load(String identifier, InputStream stream) throws IOException, XmlPullParserException {
+        final SearchEngine searchEngine = new SearchEngine(identifier);
 
         XmlPullParser parser = XmlPullParserFactory.newInstance().newPullParser();
         parser.setInput(new InputStreamReader(stream));

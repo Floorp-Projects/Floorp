@@ -94,11 +94,11 @@ public class SearchEngineManager extends BroadcastReceiver {
                 final String fileName = engineName + ".xml";
 
                 if (localeEngines.contains(fileName)) {
-                    searchEngines.add(SearchEngineParser.load(assetManager, localePath + "/" + fileName));
+                    searchEngines.add(SearchEngineParser.load(assetManager, engineName, localePath + "/" + fileName));
                 } else if (languageEngines.contains(fileName)) {
-                    searchEngines.add(SearchEngineParser.load(assetManager, languagePath + "/" + fileName));
+                    searchEngines.add(SearchEngineParser.load(assetManager, engineName, languagePath + "/" + fileName));
                 } else if (defaultEngines.contains(fileName)) {
-                    searchEngines.add(SearchEngineParser.load(assetManager, defaultPath + "/" + fileName));
+                    searchEngines.add(SearchEngineParser.load(assetManager, engineName, defaultPath + "/" + fileName));
                 } else {
                     Log.e(LOG_TAG, "Couldn't find configuration for engine: " + engineName);
                 }

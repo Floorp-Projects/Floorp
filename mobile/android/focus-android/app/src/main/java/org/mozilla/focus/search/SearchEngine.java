@@ -26,17 +26,23 @@ public class SearchEngine {
     private static final String OS_PARAM_OUTPUT_ENCODING = "\\{outputEncoding\\??\\}";
     private static final String OS_PARAM_OPTIONAL = "\\{(?:\\w+:)?\\w+\\?\\}";
 
+    private final String identifier;
     /* package */ String name;
     /* package */ Bitmap icon;
     /* package */ List<Uri> resultsUris;
     /* package */ Uri suggestUri;
 
-    /* package */ SearchEngine() {
-         resultsUris = new ArrayList<>();
+    /* package */ SearchEngine(String identifier) {
+        this.identifier = identifier;
+         this.resultsUris = new ArrayList<>();
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getIdentifier() {
+        return identifier;
     }
 
     public Bitmap getIcon() {
