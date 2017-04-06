@@ -23,8 +23,7 @@ jobs:
             upstream-artifacts: # see transforms
             google-play-track: # see transforms
             implementation: push-apk
-            # TODO unhardcode that line
-            dry-run: true
+            dry-run: # see transforms
         scopes: # see transforms
         treeherder:
             symbol: pub(gp)

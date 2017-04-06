@@ -27,7 +27,7 @@ test(function(t) {
   var div = addDiv(t);
 
   div.style.left = '0px';
-  window.getComputedStyle(div).transitionProperty;
+  getComputedStyle(div).transitionProperty;
   div.style.transition = 'left 100s';
   div.style.left = '100px';
 
@@ -50,7 +50,7 @@ test(function(t) {
   var div = addDiv(t);
 
   div.style.left = '0px';
-  window.getComputedStyle(div).transitionProperty;
+  getComputedStyle(div).transitionProperty;
   div.style.transition = 'left 100s steps(2,end)';
   div.style.left = '100px';
 
@@ -72,7 +72,7 @@ test(function(t) {
 test(function(t) {
   var div = addDiv(t);
   div.style.left = '0px';
-  window.getComputedStyle(div).transitionProperty;
+  getComputedStyle(div).transitionProperty;
   div.style.transition = 'left 100s';
   div.style.left = 'var(--var-100px)';
 

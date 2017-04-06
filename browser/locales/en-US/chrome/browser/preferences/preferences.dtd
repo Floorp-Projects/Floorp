@@ -13,6 +13,7 @@
 <!ENTITY  prefWinMinSize.styleMac       "width: 47em; min-height: 40em;">
 <!ENTITY  prefWinMinSize.styleGNOME     "width: 45.5em; min-height: 40.5em;">
 
+<!ENTITY  paneSearchResults.title       "Search Results">
 <!ENTITY  paneGeneral.title             "General">
 <!ENTITY  paneDownloadLinks.title       "Downloads &amp; Links">
 <!ENTITY  panePrivacySecurity.title     "Privacy &amp; Security">
@@ -23,3 +24,5 @@
 <!ENTITY  paneSync1.title          "Firefox Account">
 
 <!ENTITY  helpButton.label        "Help">
+
+<!ENTITY searchInput.label        "Search">

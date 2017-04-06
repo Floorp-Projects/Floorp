@@ -920,7 +920,7 @@ public:
 
   nsresult GetNextRandomAccessPoint(TimeUnit* aTime) override
   {
-    MutexAutoLock lock(mMutex);
+    AutoLock lock(this, __func__);
     if (NS_SUCCEEDED(mNextRandomAccessPointResult)) {
       *aTime = mNextRandomAccessPoint;
     }
@@ -944,14 +944,32 @@ public:
 
   TimeIntervals GetBuffered() override
   {
-    MutexAutoLock lock(mMutex);
+    AutoLock lock(this, __func__);
     return mBuffered;
   }
 
   void BreakCycles() override { }
 
 private:
+  class AutoLock : public MutexAutoLock
+  {
+  public:
+    AutoLock(Wrapper* aThis, const char* aCallSite)
+      : MutexAutoLock(aThis->mMutex)
+      , mThis(aThis)
+    {
+      mThis->mCallSite = aCallSite;
+    }
+    ~AutoLock()
+    {
+      mThis->mCallSite = nullptr;
+    }
+  private:
+    Wrapper* const mThis;
+  };
+
   Mutex mMutex;
+  const char* mCallSite = nullptr;
   const RefPtr<AutoTaskQueue> mTaskQueue;
   const bool mGetSamplesMayBlock;
   const UniquePtr<TrackInfo> mInfo;
@@ -965,6 +983,9 @@ private:
 
   ~Wrapper()
   {
+    if (mCallSite != nullptr) {
+      MOZ_CRASH_UNSAFE_PRINTF("destroying a still-owned lock! callsite=%s", mCallSite);
+    }
     RefPtr<MediaTrackDemuxer> trackDemuxer = mTrackDemuxer.forget();
     mTaskQueue->Dispatch(NS_NewRunnableFunction(
       [trackDemuxer]() { trackDemuxer->BreakCycles(); }));
@@ -977,7 +998,7 @@ private:
       // Detached.
       return;
     }
-    MutexAutoLock lock(mMutex);
+    AutoLock lock(this, __func__);
     mNextRandomAccessPointResult =
       mTrackDemuxer->GetNextRandomAccessPoint(&mNextRandomAccessPoint);
   }
@@ -989,7 +1010,7 @@ private:
       // Detached.
       return;
     }
-    MutexAutoLock lock(mMutex);
+    AutoLock lock(this, __func__);
     mBuffered = mTrackDemuxer->GetBuffered();
   }
 };
@@ -1515,7 +1536,7 @@ MediaFormatReader::ShouldSkip(bool aSkipToNextKeyframe,
 
 RefPtr<MediaDecoderReader::VideoDataPromise>
 MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
-                                    int64_t aTimeThreshold)
+                                    const media::TimeUnit& aTimeThreshold)
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_DIAGNOSTIC_ASSERT(mSeekPromise.IsEmpty(),
@@ -1524,7 +1545,8 @@ MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
   MOZ_DIAGNOSTIC_ASSERT(!mVideo.mSeekRequest.Exists()
                         || mVideo.mTimeThreshold.isSome());
   MOZ_DIAGNOSTIC_ASSERT(!IsSeeking(), "called mid-seek");
-  LOGV("RequestVideoData(%d, %" PRId64 ")", aSkipToNextKeyframe, aTimeThreshold);
+  LOGV("RequestVideoData(%d, %" PRId64 ")",
+       aSkipToNextKeyframe, aTimeThreshold.ToMicroseconds());
 
   if (!HasVideo()) {
     LOG("called with no video track");
@@ -1544,14 +1566,12 @@ MediaFormatReader::RequestVideoData(bool aSkipToNextKeyframe,
                                              __func__);
   }
 
-  media::TimeUnit timeThreshold{ media::TimeUnit::FromMicroseconds(
-    aTimeThreshold) };
   // Ensure we have no pending seek going as ShouldSkip could return out of date
   // information.
   if (!mVideo.HasInternalSeekPending()
-      && ShouldSkip(aSkipToNextKeyframe, timeThreshold)) {
+      && ShouldSkip(aSkipToNextKeyframe, aTimeThreshold)) {
     RefPtr<VideoDataPromise> p = mVideo.EnsurePromise(__func__);
-    SkipVideoDemuxToNextKeyFrame(timeThreshold);
+    SkipVideoDemuxToNextKeyFrame(aTimeThreshold);
     return p;
   }
 

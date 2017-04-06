@@ -44,7 +44,8 @@ public:
                                                    TrackInfo::kVideoTrack)) override;
 
   bool DecodeAudioData() override;
-  bool DecodeVideoFrame(bool &aKeyframeSkip, int64_t aTimeThreshold) override;
+  bool DecodeVideoFrame(bool& aKeyframeSkip,
+                        const media::TimeUnit& aTimeThreshold) override;
 
   nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) override;
   RefPtr<SeekPromise> Seek(const SeekTarget& aTarget) override;

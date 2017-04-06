@@ -245,7 +245,7 @@ public:
 
   virtual void HandleVideoSuspendTimeout() = 0;
 
-  virtual void HandleResumeVideoDecoding();
+  virtual void HandleResumeVideoDecoding(const TimeUnit& aTarget);
 
   virtual void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) {}
 
@@ -395,7 +395,7 @@ public:
     // Do nothing since no decoders are created yet.
   }
 
-  void HandleResumeVideoDecoding() override
+  void HandleResumeVideoDecoding(const TimeUnit&) override
   {
     // We never suspend video decoding in this state.
     MOZ_ASSERT(false, "Shouldn't have suspended video decoding.");
@@ -459,7 +459,7 @@ public:
     // Do nothing since no decoders are created yet.
   }
 
-  void HandleResumeVideoDecoding() override
+  void HandleResumeVideoDecoding(const TimeUnit&) override
   {
     // We never suspend video decoding in this state.
     MOZ_ASSERT(false, "Shouldn't have suspended video decoding.");
@@ -518,7 +518,7 @@ public:
     // Do nothing since we've released decoders in Enter().
   }
 
-  void HandleResumeVideoDecoding() override
+  void HandleResumeVideoDecoding(const TimeUnit&) override
   {
     // Do nothing since we won't resume decoding until exiting dormant.
   }
@@ -617,7 +617,7 @@ public:
     // dimensions.
   }
 
-  void HandleResumeVideoDecoding() override
+  void HandleResumeVideoDecoding(const TimeUnit&) override
   {
     // We never suspend video decoding in this state.
     MOZ_ASSERT(false, "Shouldn't have suspended video decoding.");
@@ -997,7 +997,7 @@ public:
     // Do nothing since we want a valid video frame to show when seek is done.
   }
 
-  void HandleResumeVideoDecoding() override
+  void HandleResumeVideoDecoding(const TimeUnit&) override
   {
     // We set mVideoDecodeSuspended to false in Enter().
     MOZ_ASSERT(false, "Shouldn't have suspended video decoding.");
@@ -1888,6 +1888,14 @@ public:
     // Do nothing since no decoding is going on.
   }
 
+  void HandleResumeVideoDecoding(const TimeUnit&) override
+  {
+    // Resume the video decoder and seek to the last video frame.
+    // This triggers a video-only seek which won't update the playback position.
+    StateObject::HandleResumeVideoDecoding(
+      TimeUnit::FromMicroseconds(mMaster->mDecodedVideoEndTime));
+  }
+
   void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) override
   {
     if (aPlayState == MediaDecoder::PLAY_STATE_PLAYING) {
@@ -1944,7 +1952,7 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(false, "Already shutting down.");
   }
 
-  void HandleResumeVideoDecoding() override
+  void HandleResumeVideoDecoding(const TimeUnit&) override
   {
     MOZ_DIAGNOSTIC_ASSERT(false, "Already shutting down.");
   }
@@ -2010,7 +2018,7 @@ ReportRecoveryTelemetry(const TimeStamp& aRecoveryStart,
 
 void
 MediaDecoderStateMachine::
-StateObject::HandleResumeVideoDecoding()
+StateObject::HandleResumeVideoDecoding(const TimeUnit& aTarget)
 {
   MOZ_ASSERT(mMaster->mVideoDecodeSuspended);
 
@@ -2028,9 +2036,7 @@ StateObject::HandleResumeVideoDecoding()
                                 ? SeekTarget::Type::Accurate
                                 : SeekTarget::Type::PrevSyncPoint;
 
-  seekJob.mTarget.emplace(mMaster->GetMediaTime(),
-                          type,
-                          true /* aVideoOnly */);
+  seekJob.mTarget.emplace(aTarget, type, true /* aVideoOnly */);
 
   // Hold mMaster->mAbstractMainThread here because this->mMaster will be
   // invalid after the current state object is deleted in SetState();
@@ -3076,7 +3082,7 @@ void MediaDecoderStateMachine::SetVideoDecodeModeInternal(VideoDecodeMode aMode)
   CancelSuspendTimer();
 
   if (mVideoDecodeSuspended) {
-    mStateObj->HandleResumeVideoDecoding();
+    mStateObj->HandleResumeVideoDecoding(GetMediaTime());
   }
 }
 

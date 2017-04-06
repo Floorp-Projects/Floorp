@@ -20,20 +20,27 @@
 #define REPEAT_DELAY        50
 #endif
 
+class nsIDocument;
 class nsITimer;
 
-class nsRepeatService final : public nsITimerCallback
+class nsRepeatService final
 {
 public:
-
   typedef void (* Callback)(void* aData);
-    
-  NS_DECL_NSITIMERCALLBACK
+
+  ~nsRepeatService();
 
   // Start dispatching timer events to the callback. There is no memory
   // management of aData here; it is the caller's responsibility to call
   // Stop() before aData's memory is released.
-  void Start(Callback aCallback, void* aData,
+  //
+  // aCallbackName is the label of the callback, used to pass to
+  // InitWithNamedCallbackFunc.
+  //
+  // aDocument is used to get the event target in Start(). We need an event
+  // target to init mRepeatTimer.
+  void Start(Callback aCallback, void* aCallbackData,
+             nsIDocument* aDocument, const nsACString& aCallbackName,
              uint32_t aInitialDelay = INITAL_REPEAT_DELAY);
   // Stop dispatching timer events to the callback. If the repeat service
   // is not currently configured with the given callback and data, this
@@ -43,17 +50,17 @@ public:
   static nsRepeatService* GetInstance();
   static void Shutdown();
 
-  NS_DECL_ISUPPORTS
-
 protected:
   nsRepeatService();
-  virtual ~nsRepeatService();
 
 private:
+  // helper function to initialize callback function to mRepeatTimer
+  void InitTimerCallback(uint32_t aInitialDelay);
+
   Callback           mCallback;
   void*              mCallbackData;
+  nsCString          mCallbackName;
   nsCOMPtr<nsITimer> mRepeatTimer;
-  static nsRepeatService* gInstance;
 
 }; // class nsRepeatService
 

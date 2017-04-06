@@ -1526,6 +1526,11 @@ SSLServerCertVerificationJob::Dispatch(
     return SECFailure;
   }
 
+  if (!gCertVerificationThreadPool) {
+    PR_SetError(PR_INVALID_STATE_ERROR, 0);
+    return SECFailure;
+  }
+
   // Copy the certificate list so the runnable can take ownership of it in the
   // constructor.
   // We can safely skip checking if NSS has already shut down here since we're
@@ -1544,28 +1549,22 @@ SSLServerCertVerificationJob::Dispatch(
                                      stapledOCSPResponse, sctsFromTLSExtension,
                                      providerFlags, time, prtime));
 
-  nsresult nrv;
-  if (!gCertVerificationThreadPool) {
-    nrv = NS_ERROR_NOT_INITIALIZED;
-  } else {
-    nrv = gCertVerificationThreadPool->Dispatch(job, NS_DISPATCH_NORMAL);
-  }
+  nsresult nrv = gCertVerificationThreadPool->Dispatch(job, NS_DISPATCH_NORMAL);
   if (NS_FAILED(nrv)) {
     // We can't call SetCertVerificationResult here to change
     // mCertVerificationState because SetCertVerificationResult will call
     // libssl functions that acquire SSL locks that are already being held at
-    // this point. infoObject->mCertVerificationState will be stuck at
-    // waiting_for_cert_verification here, but that is OK because we already
-    // have to be able to handle cases where we encounter non-cert errors while
-    // in that state.
+    // this point. However, we can set an error with PR_SetError and return
+    // SECFailure, and the correct thing will happen (the error will be
+    // propagated and this connection will be terminated).
     PRErrorCode error = nrv == NS_ERROR_OUT_OF_MEMORY
-                      ? SEC_ERROR_NO_MEMORY
+                      ? PR_OUT_OF_MEMORY_ERROR
                       : PR_INVALID_STATE_ERROR;
-    PORT_SetError(error);
+    PR_SetError(error, 0);
     return SECFailure;
   }
 
-  PORT_SetError(PR_WOULD_BLOCK_ERROR);
+  PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
   return SECWouldBlock;
 }
 

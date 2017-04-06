@@ -75,6 +75,7 @@
           src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/preferences/in-content/preferences.js"/>
+  <script src="chrome://browser/content/preferences/in-content/findInPage.js"/>
   <script src="chrome://browser/content/preferences/in-content/subdialogs.js"/>
 
   <stringbundle id="bundleBrand"
@@ -92,6 +93,17 @@
 
     <!-- category list -->
     <richlistbox id="categories">
+      <richlistitem id="category-search-results"
+                    class="category"
+                    value="paneSearchResults"
+                    helpTopic="prefs-main"
+                    tooltiptext="&paneSearchResults.title;"
+                    align="center"
+                    hidden="true">
+        <image class="category-icon"/>
+        <label class="category-name" flex="1">&paneSearchResults.title;</label>
+      </richlistitem>
+
       <richlistitem id="category-general"
                     class="category"
                     value="paneGeneral"
@@ -157,7 +169,11 @@
     </keyset>
 
     <vbox class="main-content" flex="1">
+      <hbox pack="end">
+        <textbox type="search" id="searchInput" placeholder="&searchInput.label;" hidden="true"/>
+      </hbox>
       <prefpane id="mainPrefPane">
+#include searchResults.xul
 #include main.xul
 #include privacy.xul
 #include containers.xul
@@ -166,7 +182,6 @@
 #include sync.xul
       </prefpane>
     </vbox>
-
   </hbox>
 
     <vbox id="dialogOverlay" align="center" pack="center">

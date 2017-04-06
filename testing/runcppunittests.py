@@ -123,7 +123,9 @@ class CPPUnitTests(object):
 
         if mozinfo.info["asan"]:
             # Use llvm-symbolizer for ASan if available/required
-            llvmsym = os.path.join(self.xre_path, "llvm-symbolizer")
+            llvmsym = os.path.join(
+                self.xre_path,
+                "llvm-symbolizer" + mozinfo.info["bin_suffix"].encode('ascii'))
             if os.path.isfile(llvmsym):
                 env["ASAN_SYMBOLIZER_PATH"] = llvmsym
                 self.log.info("ASan using symbolizer at %s" % llvmsym)

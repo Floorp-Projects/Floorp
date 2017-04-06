@@ -1247,15 +1247,21 @@ nsSiteSecurityService::HostHasHSTSEntry(
     bool expired = siteState->IsExpired(nsISiteSecurityService::HEADER_HSTS);
     if (!expired) {
       SSSLOG(("Entry for %s is not expired", aHost.get()));
-      if (aCached) {
-        *aCached = true;
-      }
       if (siteState->mHSTSState == SecurityPropertySet) {
         *aResult = aRequireIncludeSubdomains ? siteState->mHSTSIncludeSubdomains
                                              : true;
+        if (aCached) {
+          // Only set cached if this includes subdomains
+          *aCached = aRequireIncludeSubdomains ? siteState->mHSTSIncludeSubdomains
+                                               : true;
+        }
         return true;
       } else if (siteState->mHSTSState == SecurityPropertyNegative) {
         *aResult = false;
+        if (aCached) {
+          // if it's negative, it is always cached
+          *aCached = true;
+        }
         return true;
       }
     }
@@ -1293,9 +1299,18 @@ nsSiteSecurityService::HostHasHSTSEntry(
       if (dynamicState->mHSTSState == SecurityPropertySet) {
         *aResult = aRequireIncludeSubdomains ? dynamicState->mHSTSIncludeSubdomains
                                              : true;
+        if (aCached) {
+          // Only set cached if this includes subdomains
+          *aCached = aRequireIncludeSubdomains ? dynamicState->mHSTSIncludeSubdomains
+                                               : true;
+        }
         return true;
       } else if (dynamicState->mHSTSState == SecurityPropertyNegative) {
         *aResult = false;
+        if (aCached) {
+          // if it's negative, it is always cached
+          *aCached = true;
+        }
         return true;
       }
     } else {
@@ -1319,7 +1334,9 @@ nsSiteSecurityService::HostHasHSTSEntry(
     *aResult = aRequireIncludeSubdomains ? preload->mIncludeSubdomains
                                          : true;
     if (aCached) {
-      *aCached = true;
+      // Only set cached if this includes subdomains
+      *aCached = aRequireIncludeSubdomains ? siteState->mHSTSIncludeSubdomains
+                                           : true;
     }
     return true;
   }

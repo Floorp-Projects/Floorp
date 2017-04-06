@@ -24,6 +24,16 @@ DEFINES['NSS_ENABLE_ECC'] = 'True'
 for var in ('DLL_PREFIX', 'DLL_SUFFIX'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += [
+        '-Wextra',
+    ]
+
+    # Gecko headers aren't warning-free enough for us to enable these warnings.
+    CXXFLAGS += [
+        '-Wno-unused-parameter',
+    ]
+
 test_ssl_path = '/security/manager/ssl/tests/unit'
 
 headers_arrays_certs = [

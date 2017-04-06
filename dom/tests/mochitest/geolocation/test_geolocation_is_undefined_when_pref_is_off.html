@@ -19,17 +19,18 @@ href="https://bugzilla.mozilla.org/show_bug.cgi?id=884921">Mozilla Bug 884921</a
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-
+// This test loads in an iframe, to ensure that the navigator instance is
+// loaded with the correct value of the preference.
 SimpleTest.waitForExplicitFinish();
 
 SpecialPowers.pushPrefEnv({set: [["geo.enabled", false]]}, function() {
-  is(navigator.geolocation, undefined);
-  is("geolocation" in navigator, false);
-  SimpleTest.finish();
+  let iframe = document.createElement("iframe");
+  iframe.id = "f1";
+  iframe.src = "test_geolocation_is_undefined_when_pref_is_off_iframe.html";
+  document.body.appendChild(iframe);
 });
 
 </script>
 </pre>
 </body>
 </html>
-

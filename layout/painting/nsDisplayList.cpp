@@ -558,7 +558,7 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
   StyleAnimationValue baseStyle =
     aAnimation->GetEffect()->AsKeyframeEffect()->BaseStyle(aProperty.mProperty);
   if (!baseStyle.IsNull()) {
-    // FIXME: Bug 1311257: We need to get the baseValue for
+    // FIXME: Bug 1334036: We need to get the baseValue for
     //        RawServoAnimationValue.
     SetAnimatable(aProperty.mProperty,
                   { baseStyle, nullptr },

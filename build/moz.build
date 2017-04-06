@@ -45,6 +45,9 @@ OBJDIR_FILES += ['!/dist/bin/.gdbinit_python']
 if CONFIG['MOZ_ASAN'] and CONFIG['CLANG_CL']:
     FINAL_TARGET_FILES += ['%' + CONFIG['MOZ_CLANG_RT_ASAN_LIB_PATH']]
 
+if CONFIG['LLVM_SYMBOLIZER']:
+    FINAL_TARGET_FILES += ['/' + CONFIG['LLVM_SYMBOLIZER']]
+
 if CONFIG['MOZ_APP_BASENAME']:
     appini_defines = {
         'TOPOBJDIR': TOPOBJDIR,
