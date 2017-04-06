@@ -7,11 +7,6 @@
 with Files('**'):
     BUG_COMPONENT = ('Core', 'Graphics: Text')
 
-EXPORTS += [
-    'src/woff2_dec.h',
-    'src/woff2_out.h',
-]
-
 UNIFIED_SOURCES += [
     'src/table_tags.cc',
     'src/variable_length.cc',
