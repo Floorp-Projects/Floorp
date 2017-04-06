@@ -861,9 +861,6 @@ skip script test262/built-ins/SharedArrayBuffer/data-allocation-after-object-cre
 skip script test262/intl402/NumberFormat/prototype/format/11.3.2_TRP.js
 skip script test262/intl402/NumberFormat/prototype/format/11.3.2_TRF.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1346079
-skip script test262/intl402/DateTimeFormat/prototype/format/12.3.2_1_a_L15.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1346080
 skip script test262/intl402/PluralRules/prototype/select/tainting.js
 
@@ -878,6 +875,9 @@ skip script test262/language/statements/async-function/early-errors-no-async-gen
 skip script test262/language/statements/async-generator/yield-star-async-next.js
 skip script test262/language/statements/async-generator/yield-star-async-return.js
 skip script test262/language/statements/async-generator/yield-star-async-throw.js
+
+# https://github.com/tc39/test262/pull/947
+skip script test262/intl402/DateTimeFormat/prototype/formatToParts/length.js
 
 # https://github.com/tc39/test262/pull/947
 skip script test262/intl402/PluralRules/this-not-ignored.js
