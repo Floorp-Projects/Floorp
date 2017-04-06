@@ -4,10 +4,6 @@
 
 requestLongerTimeout(2);
 
-registerCleanupFunction(function() {
-  gBrowser.removeCurrentTab();
-});
-
 const permissionError = "error: NotAllowedError: The request is not allowed " +
     "by the user agent or the platform in the current context.";
 
@@ -579,39 +575,6 @@ var gTests = [
 
 ];
 
-function test() {
-  waitForExplicitFinish();
-
-  let tab = gBrowser.addTab();
-  gBrowser.selectedTab = tab;
-  let browser = tab.linkedBrowser;
-
-  browser.messageManager.loadFrameScript(CONTENT_SCRIPT_HELPER, true);
-
-  browser.addEventListener("load", function() {
-    is(PopupNotifications._currentNotifications.length, 0,
-       "should start the test without any prior popup notification");
-    ok(gIdentityHandler._identityPopup.hidden,
-       "should start the test with the control center hidden");
-
-    Task.spawn(function* () {
-      yield SpecialPowers.pushPrefEnv({"set": [[PREF_PERMISSION_FAKE, true]]});
-
-      for (let testCase of gTests) {
-        info(testCase.desc);
-        yield testCase.run();
-
-        // Cleanup before the next test
-        yield expectNoObserverCalled();
-      }
-    }).then(finish, ex => {
-     Cu.reportError(ex);
-     ok(false, "Unexpected Exception: " + ex);
-     finish();
-    });
-  }, {capture: true, once: true});
-  let rootDir = getRootDirectory(gTestPath);
-  rootDir = rootDir.replace("chrome://mochitests/content/",
-                            "https://example.com/");
-  content.location = rootDir + "get_user_media.html";
-}
+add_task(async function test() {
+  await runTests(gTests);
+});
