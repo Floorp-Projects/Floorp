@@ -85,7 +85,7 @@ var NetMonitorController = {
       // Some actors like AddonActor or RootActor for chrome debugging
       // aren't actual tabs.
       this.toolbox = connection.toolbox;
-      this._target = connection.tabConnection.tabTarget;
+      this._target = connection.client.getTabTarget();
       this.tabClient = this._target.isTabActor ? this._target.activeTab : null;
 
       let connectTimeline = () => {
@@ -251,12 +251,12 @@ var NetMonitorController = {
    * @return object
    *         A promise resolved once the task finishes.
    */
-  inspectRequest(requestId) {
+  inspectRequest: function (requestId) {
     // Look for the request in the existing ones or wait for it to appear, if
     // the network monitor is still loading.
     return new Promise((resolve) => {
       let request = null;
-      let inspector = () => {
+      let inspector = function () {
         request = getDisplayedRequestById(window.gStore.getState(), requestId);
         if (!request) {
           // Reset filters so that the request is visible.

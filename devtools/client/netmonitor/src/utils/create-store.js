@@ -8,7 +8,6 @@ const Services = require("Services");
 const { createStore, applyMiddleware } = require("devtools/client/shared/vendor/redux");
 const batching = require("../middleware/batching");
 const prefs = require("../middleware/prefs");
-const thunk = require("../middleware/thunk");
 const rootReducer = require("../reducers/index");
 const { FilterTypes, Filters } = require("../reducers/filters");
 const { Requests } = require("../reducers/requests");
@@ -23,8 +22,7 @@ function configureStore() {
     activeFilters[filter] = true;
   });
 
-  let hiddenColumns = Services.prefs.getCharPref("devtools.netmonitor.hiddenColumns");
-  let inactiveColumns = JSON.parse(hiddenColumns).reduce((acc, col) => {
+  let inactiveColumns = Prefs.hiddenColumns.reduce((acc, col) => {
     acc[col] = false;
     return acc;
   }, {});
@@ -41,7 +39,7 @@ function configureStore() {
     }),
   };
 
-  return createStore(rootReducer, initialState, applyMiddleware(thunk, prefs, batching));
+  return createStore(rootReducer, initialState, applyMiddleware(prefs, batching));
 }
 
 exports.configureStore = configureStore;
