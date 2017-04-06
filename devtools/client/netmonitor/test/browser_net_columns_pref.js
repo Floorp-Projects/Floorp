@@ -14,25 +14,25 @@ add_task(function* () {
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, parent } = monitor.panelWin;
+  let { document, windowRequire, parent } = monitor.panelWin;
 
   ok(!document.querySelector("#requests-list-status-button"),
      "Status column should be hidden");
   ok(!document.querySelector("#requests-list-contentSize-button"),
      "Content size column should be hidden");
 
+  let { Prefs } = windowRequire("devtools/client/netmonitor/src/utils/prefs");
+
   yield showColumn("status");
   yield showColumn("contentSize");
 
-  ok(!Services.prefs.getCharPref("devtools.netmonitor.hiddenColumns").includes("status"),
-    "Pref should be synced for status");
-  ok(!Services.prefs.getCharPref("devtools.netmonitor.hiddenColumns")
-    .includes("contentSize"), "Pref should be synced for contentSize");
+  ok(!Prefs.hiddenColumns.includes("status"), "Pref should be synced for status");
+  ok(!Prefs.hiddenColumns.includes("contentSize"),
+     "Pref should be synced for contentSize");
 
   yield hideColumn("status");
 
-  ok(Services.prefs.getCharPref("devtools.netmonitor.hiddenColumns").includes("status"),
-  "Pref should be synced for status");
+  ok(Prefs.hiddenColumns.includes("status"), "Pref should be synced for status");
 
   yield showColumn("status");
 
