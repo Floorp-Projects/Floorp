@@ -78,10 +78,12 @@ Gamepad::SetConnected(bool aConnected)
 }
 
 void
-Gamepad::SetButton(uint32_t aButton, bool aPressed, double aValue)
+Gamepad::SetButton(uint32_t aButton, bool aPressed,
+                   bool aTouched, double aValue)
 {
   MOZ_ASSERT(aButton < mButtons.Length());
   mButtons[aButton]->SetPressed(aPressed);
+  mButtons[aButton]->SetTouched(aTouched);
   mButtons[aButton]->SetValue(aValue);
   UpdateTimestamp();
 }
@@ -117,6 +119,7 @@ Gamepad::SyncState(Gamepad* aOther)
   mConnected = aOther->mConnected;
   for (uint32_t i = 0; i < mButtons.Length(); ++i) {
     mButtons[i]->SetPressed(aOther->mButtons[i]->Pressed());
+    mButtons[i]->SetTouched(aOther->mButtons[i]->Touched());
     mButtons[i]->SetValue(aOther->mButtons[i]->Value());
   }
 
