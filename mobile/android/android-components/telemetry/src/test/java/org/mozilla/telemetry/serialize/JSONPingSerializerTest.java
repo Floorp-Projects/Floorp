@@ -19,7 +19,9 @@ import org.robolectric.RuntimeEnvironment;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
 public class JSONPingSerializerTest {

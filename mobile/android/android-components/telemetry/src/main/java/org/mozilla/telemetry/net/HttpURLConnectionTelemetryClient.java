@@ -75,8 +75,6 @@ public class HttpURLConnectionTelemetryClient implements TelemetryClient {
     }
 
     @VisibleForTesting HttpURLConnection openConnectionConnection(String endpoint, String path) throws IOException {
-        System.out.println("Connecting to: " + endpoint + path);
-
         final URL url = new URL(endpoint + path);
         return (HttpURLConnection) url.openConnection();
     }

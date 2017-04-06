@@ -34,8 +34,6 @@ public class SessionDurationMeasurement extends TelemetryMeasurement {
 
         sessionStarted = true;
         timeAtSessionStartNano = getSystemTimeNano();
-
-        System.out.println("Session started at: " + timeAtSessionStartNano);
     }
 
     public synchronized void recordSessionEnd() {

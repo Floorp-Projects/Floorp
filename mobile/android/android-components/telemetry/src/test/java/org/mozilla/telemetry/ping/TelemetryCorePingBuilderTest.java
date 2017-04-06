@@ -4,6 +4,7 @@
 
 package org.mozilla.telemetry.ping;
 
+import android.os.Build;
 import android.text.TextUtils;
 
 import org.junit.Test;
@@ -11,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
+import org.robolectric.annotation.Config;
 
 import java.util.Map;
 import java.util.UUID;
