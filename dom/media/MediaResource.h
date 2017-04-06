@@ -316,7 +316,9 @@ public:
    * Create a resource, reading data from the channel. Call on main thread only.
    * The caller must follow up by calling resource->Open().
    */
-  static already_AddRefed<MediaResource> Create(MediaResourceCallback* aCallback, nsIChannel* aChannel);
+  static already_AddRefed<MediaResource>
+  Create(MediaResourceCallback* aCallback,
+         nsIChannel* aChannel, bool aIsPrivateBrowsing);
 
   /**
    * Open the stream. This creates a stream listener and returns it in
@@ -511,7 +513,8 @@ public:
   ChannelMediaResource(MediaResourceCallback* aDecoder,
                        nsIChannel* aChannel,
                        nsIURI* aURI,
-                       const MediaContainerType& aContainerType);
+                       const MediaContainerType& aContainerType,
+                       bool aIsPrivateBrowsing = false);
   ~ChannelMediaResource();
 
   // These are called on the main thread by MediaCache. These must

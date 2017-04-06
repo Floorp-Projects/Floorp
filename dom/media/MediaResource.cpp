@@ -68,12 +68,13 @@ NS_IMPL_QUERY_INTERFACE0(MediaResource)
 ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
                                            nsIChannel* aChannel,
                                            nsIURI* aURI,
-                                           const MediaContainerType& aContainerType)
+                                           const MediaContainerType& aContainerType,
+                                           bool aIsPrivateBrowsing)
   : BaseMediaResource(aCallback, aChannel, aURI, aContainerType),
     mOffset(0),
     mReopenOnError(false),
     mIgnoreClose(false),
-    mCacheStream(this),
+    mCacheStream(this, aIsPrivateBrowsing),
     mLock("ChannelMediaResource.mLock"),
     mIgnoreResume(false),
     mSuspendAgent(mChannel)
@@ -1497,7 +1498,8 @@ int64_t FileMediaResource::Tell()
 }
 
 already_AddRefed<MediaResource>
-MediaResource::Create(MediaResourceCallback* aCallback, nsIChannel* aChannel)
+MediaResource::Create(MediaResourceCallback* aCallback,
+                      nsIChannel* aChannel, bool aIsPrivateBrowsing)
 {
   NS_ASSERTION(NS_IsMainThread(),
                "MediaResource::Open called on non-main thread");
@@ -1521,7 +1523,8 @@ MediaResource::Create(MediaResourceCallback* aCallback, nsIChannel* aChannel)
   if (fc || IsBlobURI(uri)) {
     resource = new FileMediaResource(aCallback, aChannel, uri, *containerType);
   } else {
-    resource = new ChannelMediaResource(aCallback, aChannel, uri, *containerType);
+    resource = new ChannelMediaResource(
+      aCallback, aChannel, uri, *containerType, aIsPrivateBrowsing);
   }
   return resource.forget();
 }
