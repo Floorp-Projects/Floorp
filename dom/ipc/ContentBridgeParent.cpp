@@ -98,6 +98,7 @@ ContentBridgeParent::SendPBlobConstructor(PBlobParent* actor,
 PBrowserParent*
 ContentBridgeParent::SendPBrowserConstructor(PBrowserParent* aActor,
                                              const TabId& aTabId,
+                                             const TabId& aSameTabGroupAs,
                                              const IPCTabContext& aContext,
                                              const uint32_t& aChromeFlags,
                                              const ContentParentId& aCpID,
@@ -105,6 +106,7 @@ ContentBridgeParent::SendPBrowserConstructor(PBrowserParent* aActor,
 {
   return PContentBridgeParent::SendPBrowserConstructor(aActor,
                                                        aTabId,
+                                                       aSameTabGroupAs,
                                                        aContext,
                                                        aChromeFlags,
                                                        aCpID,
@@ -155,12 +157,14 @@ ContentBridgeParent::DeallocPJavaScriptParent(PJavaScriptParent *parent)
 
 PBrowserParent*
 ContentBridgeParent::AllocPBrowserParent(const TabId& aTabId,
+                                         const TabId& aSameTabGroupAs,
                                          const IPCTabContext &aContext,
                                          const uint32_t& aChromeFlags,
                                          const ContentParentId& aCpID,
                                          const bool& aIsForBrowser)
 {
   return nsIContentParent::AllocPBrowserParent(aTabId,
+                                               aSameTabGroupAs,
                                                aContext,
                                                aChromeFlags,
                                                aCpID,
