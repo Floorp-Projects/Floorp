@@ -35,9 +35,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 // Armenian
 // Range: U+0530 to U+058F
 for ( var i = 0x0530; i <= 0x058F; i++ ) {
-  // U+0587 (ARMENIAN SMALL LIGATURE ECH YIWN) has special upper casing.
-  if (i == 0x0587) continue;
-
   var U = new Unicode( i );
 /*
   new TestCase(   SECTION,
