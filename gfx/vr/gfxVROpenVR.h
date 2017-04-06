@@ -14,6 +14,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/EnumeratedArray.h"
 
+#include "openvr/openvr.h"
 #include "gfxVR.h"
 
 // OpenVR Interfaces
@@ -72,7 +73,7 @@ class VRControllerOpenVR : public VRControllerHost
 {
 public:
   explicit VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aNumButtons,
-                              uint32_t aNumAxes);
+                              uint32_t aNumAxes, vr::ETrackedDeviceClass aDeviceType);
   void SetTrackedIndex(uint32_t aTrackedIndex);
   uint32_t GetTrackedIndex();
   void SetTrigger(float aValue);
