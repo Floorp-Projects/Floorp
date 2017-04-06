@@ -33,8 +33,6 @@ public:
   Layer* GetLayer() override { return this; }
   void RenderLayer(wr::DisplayListBuilder& aBuilder) override;
 
-protected:
-  gfx::WebRenderGlyphHelper mGlyphHelper;
 };
 
 } // namespace layers
