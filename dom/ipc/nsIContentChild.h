@@ -70,6 +70,7 @@ public:
   virtual bool
   SendPBrowserConstructor(PBrowserChild* aActor,
                           const TabId& aTabId,
+                          const TabId& aSameTabGroupAs,
                           const IPCTabContext& aContext,
                           const uint32_t& aChromeFlags,
                           const ContentParentId& aCpID,
@@ -86,6 +87,7 @@ protected:
   virtual bool DeallocPJavaScriptChild(jsipc::PJavaScriptChild*);
 
   virtual PBrowserChild* AllocPBrowserChild(const TabId& aTabId,
+                                            const TabId& aSameTabGroupAs,
                                             const IPCTabContext& aContext,
                                             const uint32_t& aChromeFlags,
                                             const ContentParentId& aCpId,
@@ -94,6 +96,7 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvPBrowserConstructor(PBrowserChild* aActor,
                                                           const TabId& aTabId,
+                                                          const TabId& aSameTabGroupAs,
                                                           const IPCTabContext& aContext,
                                                           const uint32_t& aChromeFlags,
                                                           const ContentParentId& aCpID,
