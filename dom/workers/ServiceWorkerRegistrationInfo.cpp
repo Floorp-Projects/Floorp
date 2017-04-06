@@ -85,7 +85,6 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(const nsACString& a
   , mCreationTime(PR_Now())
   , mCreationTimeStamp(TimeStamp::Now())
   , mLastUpdateTime(0)
-  , mLastUpdateCheckTime(0)
   , mLoadFlags(aLoadFlags)
   , mScope(aScope)
   , mPrincipal(aPrincipal)
@@ -315,7 +314,6 @@ void
 ServiceWorkerRegistrationInfo::RefreshLastUpdateCheckTime()
 {
   AssertIsOnMainThread();
-  mLastUpdateCheckTime = PR_IntervalNow() / PR_MSEC_PER_SEC;
 
   mLastUpdateTime =
     mCreationTime + static_cast<PRTime>((TimeStamp::Now() -
@@ -333,10 +331,15 @@ ServiceWorkerRegistrationInfo::IsLastUpdateCheckTimeOverOneDay() const
     return true;
   }
 
-  const uint64_t kSecondsPerDay = 86400;
-  const uint64_t now = PR_IntervalNow() / PR_MSEC_PER_SEC;
+  const int64_t kSecondsPerDay = 86400;
+  const int64_t now =
+    mCreationTime + static_cast<PRTime>((TimeStamp::Now() -
+                                         mCreationTimeStamp).ToMicroseconds());
 
-  if ((now - mLastUpdateCheckTime) > kSecondsPerDay) {
+  // now < mLastUpdateTime if the system time is reset between storing
+  // and loading mLastUpdateTime from ServiceWorkerRegistrar.
+  if (now < mLastUpdateTime ||
+      (now - mLastUpdateTime) / PR_MSEC_PER_SEC > kSecondsPerDay) {
     return true;
   }
   return false;
