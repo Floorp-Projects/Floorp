@@ -371,13 +371,13 @@ str_trimLeft(JSContext* cx, unsigned argc, Value* vp);
 extern bool
 str_trimRight(JSContext* cx, unsigned argc, Value* vp);
 
+#if !EXPOSE_INTL_API
 extern bool
 str_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool
 str_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp);
 
-#if !EXPOSE_INTL_API
 extern bool
 str_localeCompare(JSContext* cx, unsigned argc, Value* vp);
 #else
