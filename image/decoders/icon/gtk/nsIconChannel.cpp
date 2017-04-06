@@ -12,7 +12,9 @@
 #include "mozilla/EndianUtils.h"
 #include <algorithm>
 
+#ifdef MOZ_ENABLE_GIO
 #include <gio/gio.h>
+#endif
 
 #include <gtk/gtk.h>
 
@@ -166,6 +168,7 @@ moz_gtk_icon_size(const char* name)
   return GTK_ICON_SIZE_MENU;
 }
 
+#ifdef MOZ_ENABLE_GIO
 static int32_t
 GetIconSize(nsIMozIconURI* aIconURI)
 {
@@ -298,6 +301,7 @@ nsIconChannel::InitWithGIO(nsIMozIconURI* aIconURI)
   g_object_unref(buf);
   return rv;
 }
+#endif // MOZ_ENABLE_GIO
 
 nsresult
 nsIconChannel::Init(nsIURI* aURI)
@@ -312,7 +316,11 @@ nsIconChannel::Init(nsIURI* aURI)
   nsAutoCString stockIcon;
   iconURI->GetStockIcon(stockIcon);
   if (stockIcon.IsEmpty()) {
+#ifdef MOZ_ENABLE_GIO
     return InitWithGIO(iconURI);
+#else
+    return NS_ERROR_NOT_AVAILABLE;
+#endif
   }
 
   // Search for stockIcon
