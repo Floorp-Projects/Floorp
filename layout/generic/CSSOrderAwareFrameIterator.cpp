@@ -18,6 +18,12 @@ CSSOrderAwareFrameIterator::CSSOrderComparator(nsIFrame* const& a,
 
 template<>
 bool
+CSSOrderAwareFrameIterator::CSSBoxOrdinalGroupComparator(nsIFrame* const& a,
+                                                         nsIFrame* const& b)
+{ return a->StyleXUL()->mBoxOrdinal < b->StyleXUL()->mBoxOrdinal; }
+
+template<>
+bool
 CSSOrderAwareFrameIterator::IsForward() const { return true; }
 
 template<>
@@ -34,6 +40,12 @@ bool
 ReverseCSSOrderAwareFrameIterator::CSSOrderComparator(nsIFrame* const& a,
                                                       nsIFrame* const& b)
 { return a->StylePosition()->mOrder > b->StylePosition()->mOrder; }
+
+template<>
+bool
+ReverseCSSOrderAwareFrameIterator::CSSBoxOrdinalGroupComparator(nsIFrame* const& a,
+                                                                nsIFrame* const& b)
+{ return a->StyleXUL()->mBoxOrdinal > b->StyleXUL()->mBoxOrdinal; }
 
 template<>
 bool
