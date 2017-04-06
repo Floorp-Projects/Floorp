@@ -54,15 +54,9 @@ import org.mozilla.gecko.util.GeckoBundle;
 
 import java.util.List;
 
-import static android.support.customtabs.CustomTabsIntent.EXTRA_TOOLBAR_COLOR;
-
 public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "CustomTabsActivity";
     private static final String SAVED_START_INTENT = "saved_intent_which_started_this_activity";
-    private static final String SAVED_TOOLBAR_COLOR = "SavedToolbarColor";
-
-    @ColorInt
-    private static final int DEFAULT_ACTION_BAR_COLOR = 0xFF363b40; // default color to match design
 
     private final SparseArrayCompat<PendingIntent> menuItemsIntent = new SparseArrayCompat<>();
     private GeckoPopupMenu popupMenu;
@@ -70,9 +64,6 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     private ProgressBar mProgressView;
     // A state to indicate whether this activity is finishing with customize animation
     private boolean usingCustomAnimation = false;
-
-    @ColorInt
-    private int toolbarColor = DEFAULT_ACTION_BAR_COLOR;
 
     // Bug 1351605 - getIntent() not always returns the intent which started this activity.
     // Therefore we make a copy in case of this Activity is re-created.
@@ -84,17 +75,12 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
 
         if (savedInstanceState != null) {
             startIntent = savedInstanceState.getParcelable(SAVED_START_INTENT);
-            toolbarColor = savedInstanceState.getInt(SAVED_TOOLBAR_COLOR, DEFAULT_ACTION_BAR_COLOR);
         } else {
             Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "customtab");
             startIntent = getIntent();
-            toolbarColor = getIntent().getIntExtra(EXTRA_TOOLBAR_COLOR, DEFAULT_ACTION_BAR_COLOR);
             final String host = getReferrerHost();
             recordCustomTabUsage(host);
         }
-
-        // Translucent color does not make sense for toolbar color. Ensure it is 0xFF.
-        toolbarColor = 0xFF000000 | toolbarColor;
 
         setThemeFromToolbarColor();
 
@@ -106,7 +92,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
 
         actionBarPresenter = new ActionBarPresenter(actionBar);
         actionBarPresenter.displayUrlOnly(startIntent.getDataString());
-        actionBarPresenter.setBackgroundColor(toolbarColor, getWindow());
+        actionBarPresenter.setBackgroundColor(IntentUtil.getToolbarColor(startIntent), getWindow());
         actionBarPresenter.setTextLongClickListener(new UrlCopyListener());
         actionBar.setDisplayHomeAsUpEnabled(true);
 
@@ -125,8 +111,8 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     }
 
     private void setThemeFromToolbarColor() {
-        @StyleRes
-        int styleRes = (ColorUtil.getReadableTextColor(toolbarColor) == Color.BLACK)
+        final int color = ColorUtil.getReadableTextColor(IntentUtil.getToolbarColor(startIntent));
+        @StyleRes final int styleRes = (color == Color.BLACK)
                 ? R.style.GeckoCustomTabs_Light
                 : R.style.GeckoCustomTabs;
 
@@ -210,7 +196,6 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelable(SAVED_START_INTENT, startIntent);
-        outState.putInt(SAVED_TOOLBAR_COLOR, toolbarColor);
     }
 
     @Override
