@@ -344,14 +344,15 @@ function handleRequest(req, res) {
 
     push3 = res.push(
         { hostname: 'localhost:' + serverPort, port: serverPort, path : '/pushapi1/3', method : 'GET',
-          headers: {'x-pushed-request': 'true'}});
+          headers: {'x-pushed-request': 'true', 'Accept-Encoding' : 'br'}});
     push3.writeHead(200, {
       'pushed' : 'yes',
-      'content-length' : 1,
+      'content-length' : 6,
       'subresource' : '3',
+      'content-encoding' : 'br',
       'X-Connection-Http2': 'yes'
     });
-    push3.end('3');
+    push3.end(Buffer.from("8B0080330A03", 'hex')); // '3\n'
 
     content = '0';
   }
