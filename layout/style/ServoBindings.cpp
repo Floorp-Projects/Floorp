@@ -513,6 +513,28 @@ Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,
   return collection && !collection->mAnimations.IsEmpty();
 }
 
+double
+Gecko_GetProgressFromComputedTiming(RawGeckoComputedTimingBorrowed aComputedTiming)
+{
+  return aComputedTiming->mProgress.Value();
+}
+
+double
+Gecko_GetPositionInSegment(RawGeckoAnimationPropertySegmentBorrowed aSegment,
+                          double aProgress,
+                          ComputedTimingFunction::BeforeFlag aBeforeFlag)
+{
+  MOZ_ASSERT(aSegment->mFromKey < aSegment->mToKey,
+             "The segment from key should be less than to key");
+
+  double positionInSegment =
+    (aProgress - aSegment->mFromKey) / (aSegment->mToKey - aSegment->mFromKey);
+
+  return ComputedTimingFunction::GetPortion(aSegment->mTimingFunction,
+                                            positionInSegment,
+                                            aBeforeFlag);
+}
+
 void
 Gecko_FillAllBackgroundLists(nsStyleImageLayers* aLayers, uint32_t aMaxLen)
 {
