@@ -17,7 +17,7 @@ function getMarginLeft(cs) {
 
 promise_test(function(t) {
   var div = addDiv(t);
-  var cs = window.getComputedStyle(div);
+  var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
   var animation = div.getAnimations()[0];
   assert_equals(getMarginLeft(cs), 0,
@@ -32,7 +32,7 @@ promise_test(function(t) {
 
 promise_test(function(t) {
   var div = addDiv(t);
-  var cs = window.getComputedStyle(div);
+  var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
   var animation = div.getAnimations()[0];
   assert_equals(getMarginLeft(cs), 0,
@@ -51,7 +51,7 @@ promise_test(function(t) {
 
 promise_test(function(t) {
   var div = addDiv(t);
-  var cs = window.getComputedStyle(div);
+  var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
   var animation = div.getAnimations()[0];
   assert_equals(getMarginLeft(cs), 0,
@@ -82,7 +82,7 @@ promise_test(function(t) {
 
 promise_test(function(t) {
   var div = addDiv(t);
-  var cs = window.getComputedStyle(div);
+  var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s';
   var animation = div.getAnimations()[0];
   assert_equals(getMarginLeft(cs), 0,
@@ -105,7 +105,7 @@ promise_test(function(t) {
 
 promise_test(function(t) {
   var div = addDiv(t);
-  var cs = window.getComputedStyle(div);
+  var cs = getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
   var animation = div.getAnimations()[0];
   assert_equals(getMarginLeft(cs), 0,

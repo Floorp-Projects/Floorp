@@ -33,7 +33,7 @@ promise_test(function(t) {
 
   // Now cancel the animation and flush styles
   div.style.animation = '';
-  window.getComputedStyle(div).animation;
+  getComputedStyle(div).animation;
 
   return retPromise;
 }, 'finished promise is rejected when an animation is cancelled by resetting ' +
@@ -63,7 +63,7 @@ promise_test(function(t) {
 
   // Now update the animation and flush styles
   div.style.animation = 'def 100s';
-  window.getComputedStyle(div).animation;
+  getComputedStyle(div).animation;
 
   return retPromise;
 }, 'finished promise is rejected when an animation is cancelled by changing ' +
