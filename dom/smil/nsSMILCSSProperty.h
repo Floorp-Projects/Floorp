@@ -15,6 +15,8 @@
 #include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
 
+class nsStyleContext;
+
 namespace mozilla {
 namespace dom {
 class Element;
@@ -33,8 +35,14 @@ public:
    * Constructs a new nsSMILCSSProperty.
    * @param  aPropID   The CSS property we're interested in animating.
    * @param  aElement  The element whose CSS property is being animated.
+   * @param  aBaseStyleContext  The style context to use when getting the base
+   *                            value. If this is nullptr and GetBaseValue is
+   *                            called, an empty nsSMILValue initialized with
+   *                            the nsSMILCSSValueType will be returned.
    */
-  nsSMILCSSProperty(nsCSSPropertyID aPropID, mozilla::dom::Element* aElement);
+  nsSMILCSSProperty(nsCSSPropertyID aPropID,
+                    mozilla::dom::Element* aElement,
+                    nsStyleContext* aBaseStyleContext);
 
   // nsISMILAttr methods
   virtual nsresult ValueFromString(const nsAString& aStr,
@@ -62,6 +70,12 @@ protected:
   // as the Compositing step, and DOM elements don't get a chance to die during
   // that time.
   mozilla::dom::Element*   mElement;
+
+  // The style context to use when fetching base styles.
+  // As with mElement, since an nsISMILAttr only lives as long as the
+  // compositing step and since ComposeAttribute holds an owning reference to
+  // the base style context, we can use a non-owning reference here.
+  nsStyleContext* mBaseStyleContext;
 };
 
 #endif // NS_SMILCSSPROPERTY_H_

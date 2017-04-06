@@ -46,8 +46,10 @@ fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-001.xhtml  flexbox-align
 == flexbox-baseline-align-self-baseline-vert-001.html flexbox-baseline-align-self-baseline-vert-001-ref.html
 == flexbox-baseline-empty-001a.html flexbox-baseline-empty-001-ref.html
 == flexbox-baseline-empty-001b.html flexbox-baseline-empty-001-ref.html
-== flexbox-baseline-multi-item-horiz-001.html flexbox-baseline-multi-item-horiz-001-ref.html
-== flexbox-baseline-multi-item-vert-001.html flexbox-baseline-multi-item-vert-001-ref.html
+== flexbox-baseline-multi-item-horiz-001a.html flexbox-baseline-multi-item-horiz-001-ref.html
+== flexbox-baseline-multi-item-horiz-001b.html flexbox-baseline-multi-item-horiz-001-ref.html
+== flexbox-baseline-multi-item-vert-001a.html flexbox-baseline-multi-item-vert-001-ref.html
+== flexbox-baseline-multi-item-vert-001b.html flexbox-baseline-multi-item-vert-001-ref.html
 == flexbox-baseline-multi-line-horiz-001.html flexbox-baseline-multi-line-horiz-001-ref.html
 == flexbox-baseline-multi-line-horiz-002.html flexbox-baseline-multi-line-horiz-002-ref.html
 == flexbox-baseline-multi-line-horiz-003.html flexbox-baseline-multi-line-horiz-003-ref.html

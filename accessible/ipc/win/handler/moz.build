@@ -1,0 +1,60 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SharedLibrary('AccessibleHandler')
+
+EXPORTS.mozilla.a11y += ['AccessibleHandler.h']
+
+LOCAL_INCLUDES += [
+    '/accessible/interfaces/ia2',
+    '/ipc/mscom/oop',
+]
+
+SOURCES += [
+    '!dlldata.c',
+    '!HandlerData_c.c',
+    '!HandlerData_i.c',
+    '!HandlerData_p.c',
+    'AccessibleHandler.cpp',
+    'AccessibleHandlerControl.cpp',
+]
+
+GENERATED_FILES += [
+    'dlldata.c',
+    'HandlerData.h',
+    'HandlerData.tlb',
+    'HandlerData_c.c',
+    'HandlerData_i.c',
+    'HandlerData_p.c',
+]
+
+DEFFILE = SRCDIR + '/AccessibleHandler.def'
+
+USE_LIBS += [
+    'mscom_oop',
+]
+
+OS_LIBS += [
+    'rpcrt4',
+]
+
+RCINCLUDE = 'AccessibleHandler.rc'
+
+# Since we are defining our own COM entry points (DllRegisterServer et al),
+# but we still want to be able to delegate some work to the generated code,
+# we add the prefix "Proxy" to all of the generated counterparts.
+DEFINES['ENTRY_PREFIX'] = 'Proxy'
+DEFINES['REGISTER_PROXY_DLL'] = True
+
+# This DLL may be loaded into other processes, so we need static libs for
+# Windows 7 and Windows 8.
+USE_STATIC_LIBS = True
+
+LIBRARY_DEFINES['UNICODE'] = True
+LIBRARY_DEFINES['_UNICODE'] = True
+LIBRARY_DEFINES['MOZ_NO_MOZALLOC'] = True
+DISABLE_STL_WRAPPING = True
+

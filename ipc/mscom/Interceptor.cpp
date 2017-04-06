@@ -78,7 +78,7 @@ Interceptor::GetClassForHandler(DWORD aDestContext, void* aDestContextPtr,
     return E_INVALIDARG;
   }
   MOZ_ASSERT(mEventSink);
-  return mEventSink->GetHandler(aHandlerClsid);
+  return mEventSink->GetHandler(WrapNotNull(aHandlerClsid));
 }
 
 HRESULT
@@ -101,10 +101,8 @@ Interceptor::GetMarshalSizeMax(REFIID riid, void* pv, DWORD dwDestContext,
     return hr;
   }
 
-  InterceptorTargetPtr<IUnknown> targetParam(mTarget.get());
-
   DWORD payloadSize = 0;
-  hr = mEventSink->GetHandlerPayloadSize(riid, Move(targetParam), &payloadSize);
+  hr = mEventSink->GetHandlerPayloadSize(WrapNotNull(&payloadSize));
   *pSize += payloadSize;
   return hr;
 }
@@ -120,8 +118,7 @@ Interceptor::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
     return hr;
   }
 
-  InterceptorTargetPtr<IUnknown> targetParam(mTarget.get());
-  return mEventSink->WriteHandlerPayload(pStm, riid, Move(targetParam));
+  return mEventSink->WriteHandlerPayload(WrapNotNull(pStm));
 }
 
 HRESULT
@@ -367,7 +364,7 @@ Interceptor::ThreadSafeQueryInterface(REFIID aIid, IUnknown** aOutInterface)
     // support it. We'll check that by looking for a successful call to
     // IInterceptorSink::GetHandler()
     CLSID dummy;
-    if (FAILED(mEventSink->GetHandler(&dummy))) {
+    if (FAILED(mEventSink->GetHandler(WrapNotNull(&dummy)))) {
       return E_NOINTERFACE;
     }
 
@@ -381,7 +378,7 @@ Interceptor::ThreadSafeQueryInterface(REFIID aIid, IUnknown** aOutInterface)
     // support it. We'll check that by looking for a successful call to
     // IInterceptorSink::GetHandler()
     CLSID dummy;
-    if (FAILED(mEventSink->GetHandler(&dummy))) {
+    if (FAILED(mEventSink->GetHandler(WrapNotNull(&dummy)))) {
       return E_NOINTERFACE;
     }
 

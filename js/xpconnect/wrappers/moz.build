@@ -12,6 +12,7 @@ UNIFIED_SOURCES += [
     'AccessCheck.cpp',
     'AddonWrapper.cpp',
     'ChromeObjectWrapper.cpp',
+    'DocGroupValidationWrapper.cpp',
     'FilteringWrapper.cpp',
     'WaiveXrayWrapper.cpp',
     'WrapperFactory.cpp',

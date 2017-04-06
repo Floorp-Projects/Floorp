@@ -22,7 +22,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TypeTraits.h"
 #include "Layers.h" // For Layer
-#include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetStyleContextForElement
+#include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetStyleContext
 #include "nsContentUtils.h"  // nsContentUtils::ReportToConsole
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
@@ -1061,9 +1061,7 @@ KeyframeEffectReadOnly::GetTargetStyleContext()
                     ? nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType)
                     : nullptr;
 
-  return nsComputedDOMStyle::GetStyleContextForElement(mTarget->mElement,
-                                                       pseudo,
-                                                       shell);
+  return nsComputedDOMStyle::GetStyleContext(mTarget->mElement, pseudo, shell);
 }
 
 #ifdef DEBUG

@@ -458,7 +458,7 @@ Element::GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult)
 
   // Get the computed -moz-binding directly from the style context
   RefPtr<nsStyleContext> sc =
-    nsComputedDOMStyle::GetStyleContextForElementNoFlush(this, nullptr, shell);
+    nsComputedDOMStyle::GetStyleContextNoFlush(this, nullptr, shell);
   NS_ENSURE_TRUE(sc, false);
 
   NS_IF_ADDREF(*aResult = sc->StyleDisplay()->mBinding);

@@ -6,6 +6,7 @@
 
 #include "nsSMILCompositor.h"
 
+#include "nsComputedDOMStyle.h"
 #include "nsCSSProps.h"
 #include "nsHashKeys.h"
 #include "nsSMILCSSProperty.h"
@@ -54,9 +55,18 @@ nsSMILCompositor::ComposeAttribute(bool& aMightHavePendingStyleUpdates)
   if (!mKey.mElement)
     return;
 
+  // If we might need to resolve base styles, grab a suitable style context
+  // for initializing our nsISMILAttr with.
+  RefPtr<nsStyleContext> baseStyleContext;
+  if (MightNeedBaseStyle()) {
+    baseStyleContext =
+      nsComputedDOMStyle::GetUnanimatedStyleContextNoFlush(mKey.mElement,
+                                                           nullptr, nullptr);
+  }
+
   // FIRST: Get the nsISMILAttr (to grab base value from, and to eventually
   // give animated value to)
-  UniquePtr<nsISMILAttr> smilAttr = CreateSMILAttr();
+  UniquePtr<nsISMILAttr> smilAttr = CreateSMILAttr(baseStyleContext);
   if (!smilAttr) {
     // Target attribute not found (or, out of memory)
     return;
@@ -115,7 +125,7 @@ nsSMILCompositor::ClearAnimationEffects()
   if (!mKey.mElement || !mKey.mAttributeName)
     return;
 
-  UniquePtr<nsISMILAttr> smilAttr = CreateSMILAttr();
+  UniquePtr<nsISMILAttr> smilAttr = CreateSMILAttr(nullptr);
   if (!smilAttr) {
     // Target attribute not found (or, out of memory)
     return;
@@ -126,12 +136,13 @@ nsSMILCompositor::ClearAnimationEffects()
 // Protected Helper Functions
 // --------------------------
 UniquePtr<nsISMILAttr>
-nsSMILCompositor::CreateSMILAttr()
+nsSMILCompositor::CreateSMILAttr(nsStyleContext* aBaseStyleContext)
 {
   nsCSSPropertyID propID = GetCSSPropertyToAnimate();
 
   if (propID != eCSSProperty_UNKNOWN) {
-    return MakeUnique<nsSMILCSSProperty>(propID, mKey.mElement.get());
+    return MakeUnique<nsSMILCSSProperty>(propID, mKey.mElement.get(),
+                                         aBaseStyleContext);
   }
 
   return mKey.mElement->GetAnimatedAttr(mKey.mAttributeNamespaceID,
@@ -171,6 +182,24 @@ nsSMILCompositor::GetCSSPropertyToAnimate() const
   }
 
   return propID;
+}
+
+bool
+nsSMILCompositor::MightNeedBaseStyle() const
+{
+  if (GetCSSPropertyToAnimate() == eCSSProperty_UNKNOWN) {
+    return false;
+  }
+
+  // We should return true if at least one animation function might build on
+  // the base value.
+  for (const nsSMILAnimationFunction* func : mAnimationFunctions) {
+    if (!func->WillReplace()) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 uint32_t

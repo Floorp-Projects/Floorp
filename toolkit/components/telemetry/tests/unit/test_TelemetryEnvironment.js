@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AttributionCode",
                                   "resource:///modules/AttributionCode.jsm");
 
-// Lazy load |LightweightThemeManager|, we won't be using it on Gonk.
+// Lazy load |LightweightThemeManager|.
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
 
@@ -417,13 +417,8 @@ function checkSettingsSection(data) {
                  f + " must have the correct type.");
   }
 
-  // Check "addonCompatibilityCheckEnabled" separately, as it is not available
-  // on Gonk.
-  if (gIsGonk) {
-    Assert.ok(!("addonCompatibilityCheckEnabled" in data.settings), "Must not be available on Gonk.");
-  } else {
-    Assert.equal(data.settings.addonCompatibilityCheckEnabled, AddonManager.checkCompatibility);
-  }
+  // Check "addonCompatibilityCheckEnabled" separately.
+  Assert.equal(data.settings.addonCompatibilityCheckEnabled, AddonManager.checkCompatibility);
 
   // Check "isDefaultBrowser" separately, as it is not available on Android an can either be
   // null or boolean on other platforms.
@@ -558,8 +553,8 @@ function checkSystemSection(data) {
   Assert.ok(Number.isFinite(cpuData.count), "CPU count must be a number.");
   Assert.ok(Array.isArray(cpuData.extensions), "CPU extensions must be available.");
 
-  // Device data is only available on Android or Gonk.
-  if (gIsAndroid || gIsGonk) {
+  // Device data is only available on Android.
+  if (gIsAndroid) {
     let deviceData = data.system.device;
     Assert.ok(checkNullOrString(deviceData.model));
     Assert.ok(checkNullOrString(deviceData.manufacturer));
@@ -588,7 +583,7 @@ function checkSystemSection(data) {
       Assert.ok((osData["windowsUBR"] === null) || Number.isFinite(osData["windowsUBR"]),
                 "windowsUBR must be null or a number.");
     }
-  } else if (gIsAndroid || gIsGonk) {
+  } else if (gIsAndroid) {
     Assert.ok(checkNullOrString(osData.kernelVersion));
   }
 
@@ -835,11 +830,9 @@ add_task(function* setup() {
   system_addon.lastModifiedTime = SYSTEM_ADDON_INSTALL_DATE;
   loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
 
-  // Spoof the persona ID, but not on Gonk.
-  if (!gIsGonk) {
-    LightweightThemeManager.currentTheme =
-      spoofTheme(PERSONA_ID, PERSONA_NAME, PERSONA_DESCRIPTION);
-  }
+  // Spoof the persona ID.
+  LightweightThemeManager.currentTheme =
+    spoofTheme(PERSONA_ID, PERSONA_NAME, PERSONA_DESCRIPTION);
   // Register a fake plugin host for consistent flash version data.
   registerFakePluginHost();
 
@@ -1199,8 +1192,7 @@ add_task(function* test_addonsAndPlugins() {
   Assert.ok(targetPlugin.mimeTypes.find(m => m == PLUGIN_MIME_TYPE2));
   Assert.ok(!targetPlugin.mimeTypes.find(m => m == "Not There."));
 
-  let personaId = (gIsGonk) ? null : PERSONA_ID;
-  Assert.equal(data.addons.persona, personaId, "The correct Persona Id must be reported.");
+  Assert.equal(data.addons.persona, PERSONA_ID, "The correct Persona Id must be reported.");
 
   // Uninstall the addon.
   yield AddonManagerTesting.uninstallAddonByID(ADDON_ID);

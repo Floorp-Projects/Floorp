@@ -3535,8 +3535,7 @@ IsElementVisible(Element* aElement)
   // lazy frame construction and it hasn't happened yet.  Check which
   // one it is.
   RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement,
-                                                         nullptr, nullptr);
+    nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr, nullptr);
   if (styleContext) {
     return styleContext->StyleDisplay()->mDisplay != StyleDisplay::None;
   }
@@ -3867,9 +3866,9 @@ EditorBase::IsPreformatted(nsIDOMNode* aNode,
     content = content->GetParent();
   }
   if (content && content->IsElement()) {
-    elementStyle = nsComputedDOMStyle::GetStyleContextForElementNoFlush(content->AsElement(),
-                                                                        nullptr,
-                                                                        ps);
+    elementStyle =
+      nsComputedDOMStyle::GetStyleContextNoFlush(content->AsElement(),
+                                                 nullptr, ps);
   }
 
   if (!elementStyle) {

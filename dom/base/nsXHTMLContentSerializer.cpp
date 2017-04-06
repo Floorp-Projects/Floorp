@@ -817,8 +817,8 @@ nsXHTMLContentSerializer::IsElementPreformatted(nsIContent* aNode)
     return false;
   }
   RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContextForElementNoFlush(aNode->AsElement(),
-                                                         nullptr, nullptr);
+    nsComputedDOMStyle::GetStyleContextNoFlush(aNode->AsElement(),
+                                               nullptr, nullptr);
   if (styleContext) {
     const nsStyleText* textStyle = styleContext->StyleText();
     return textStyle->WhiteSpaceOrNewlineIsSignificant();

@@ -44,6 +44,7 @@
 #include "nsEmbedCID.h"
 #include "nsIWebBrowser.h"
 #include "nsIDocShell.h"
+#include "gfxPlatform.h"
 
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
 #include "EventTracer.h"
@@ -523,12 +524,17 @@ nsAppShellService::CreateWindowlessBrowser(bool aIsChrome, nsIWindowlessBrowser 
 
   /* A windowless web browser doesn't have an associated OS level window. To
    * accomplish this, we initialize the window associated with our instance of
-   * nsWebBrowser with an instance of PuppetWidget, which provides a stub
-   * implementation of nsIWidget.
+   * nsWebBrowser with an instance of HeadlessWidget/PuppetWidget, which provide
+   * a stub implementation of nsIWidget.
    */
-  nsCOMPtr<nsIWidget> widget = nsIWidget::CreateHeadlessWidget();
+  nsCOMPtr<nsIWidget> widget;
+  if (gfxPlatform::IsHeadless()) {
+    widget = nsIWidget::CreateHeadlessWidget();
+  } else {
+    widget = nsIWidget::CreatePuppetWidget(nullptr);
+  }
   if (!widget) {
-    NS_ERROR("Couldn't create instance of PuppetWidget");
+    NS_ERROR("Couldn't create instance of stub widget");
     return NS_ERROR_FAILURE;
   }
   nsresult rv =
