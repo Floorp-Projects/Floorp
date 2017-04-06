@@ -14,6 +14,9 @@
 <iframe src="https://example.com/chrome/devtools/shared/webconsole/test/network_requests_iframe.html"></iframe>
 
 <script class="testbody" type="text/javascript">
+Cu.import("resource://testing-common/BrowserTestUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+
 SimpleTest.waitForExplicitFinish();
 
 let gCurrentTestCase = -1;
@@ -61,6 +64,9 @@ const TEST_CASES = [
   }
 ];
 
+const TEST_MODES = [ "public", "private" ];
+let ALL_TESTS = [];
+
 function startTest() {
   // Need to enable this pref or pinning headers are rejected due test
   // certificate.
@@ -77,41 +83,62 @@ function startTest() {
     for (let {url} of TEST_CASES) {
       let uri = gIOService.newURI(url);
       gSSService.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0);
+      gSSService.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
+                             Ci.nsISocketProvider.NO_PERMANENT_STORAGE,
+                             { privateBrowsingId: 1 });
       gSSService.removeState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
+      gSSService.removeState(Ci.nsISiteSecurityService.HEADER_HPKP, uri,
+                             Ci.nsISocketProvider.NO_PERMANENT_STORAGE,
+                             { privateBrowsingId: 1 });
     }
   });
 
   info("Test detection of HTTP Strict Transport Security" +
        " and Public Key Pinning.");
+  for (let mode of TEST_MODES) {
+    for (let testCase of TEST_CASES) {
+      let test = { mode };
+      for (let attr in testCase) {
+        test[attr] = testCase[attr];
+      }
+      ALL_TESTS.push(test);
+    }
+  }
+
   removeEventListener("load", startTest);
   attachConsoleToTab(["NetworkActivity"], onAttach);
 }
 
 function onAttach(state, response) {
-  onNetworkEventUpdate = onNetworkEventUpdate.bind(null, state);
-  state.dbgClient.addListener("networkEventUpdate", onNetworkEventUpdate);
+  let callback = onNetworkEventUpdate.bind(null, state);
+  state.dbgClient.addListener("networkEventUpdate", callback);
 
   runNextCase(state);
 }
 
 function runNextCase(state) {
   gCurrentTestCase++;
-  if (gCurrentTestCase === TEST_CASES.length) {
+  if (gCurrentTestCase === ALL_TESTS.length) {
     info("Tests ran. Cleaning up.");
     closeDebugger(state, SimpleTest.finish);
     return;
   }
 
-  let { desc, url } = TEST_CASES[gCurrentTestCase];
+  let { desc, url, mode } = ALL_TESTS[gCurrentTestCase];
   info("Testing site with " + desc);
 
-  let iframe = document.querySelector("iframe").contentWindow;
-  iframe.wrappedJSObject.makeXhrCallback("GET", url);
+  if (mode == "private") {
+    info("Cleaning up the previous window.");
+    closeDebugger(state, runInPrivateWindow);
+  } else {
+    let iframe = document.querySelector("iframe").contentWindow;
+    iframe.wrappedJSObject.makeXhrCallback("GET", url);
+  }
 }
 
 function onNetworkEventUpdate(state, type, packet) {
   function onSecurityInfo(received) {
-    let data = TEST_CASES[gCurrentTestCase];
+    let data = ALL_TESTS[gCurrentTestCase];
     is(received.securityInfo.hsts, data.usesHSTS,
       "Strict Transport Security detected correctly.");
     is(received.securityInfo.hpkp, data.usesPinning,
@@ -123,6 +150,43 @@ function onNetworkEventUpdate(state, type, packet) {
   if (packet.updateType === "securityInfo") {
     state.client.getSecurityInfo(packet.from, onSecurityInfo);
   }
+}
+
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  SpecialPowers.Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      SpecialPowers.Services.obs.removeObserver(observer, aTopic);
+      SimpleTest.executeSoon(aCallback);
+    }
+  }, "browser-delayed-startup-finished", false);
+}
+
+let mainWindow =
+  window.QueryInterface(Ci.nsIInterfaceRequestor).
+  getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShellTreeItem).
+  rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor).
+  getInterface(Ci.nsIDOMWindow);
+
+function runInPrivateWindow() {
+  let win = mainWindow.OpenBrowserWindow({private: true});
+
+  Task.spawn(function* () {
+    yield new Promise(resolve => whenDelayedStartupFinished(win, resolve));
+    let browser = win.gBrowser.selectedBrowser;
+    let url = ALL_TESTS[gCurrentTestCase].url;
+    win.gBrowser.selectedTab = win.gBrowser.getTabForBrowser(browser);
+
+    yield new Promise(function(resolve) {
+      attachConsoleToTab(["NetworkActivity"], function(state) {
+        let callback = onNetworkEventUpdate.bind(null, state);
+        state.dbgClient.addListener("networkEventUpdate", callback);
+
+        resolve();
+      });
+    });
+
+    yield BrowserTestUtils.loadURI(browser, url);
+  });
 }
 
 addEventListener("load", startTest);
