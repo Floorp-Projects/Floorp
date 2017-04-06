@@ -417,8 +417,6 @@ to mochitest command.
 
 * Content glue not implemented
   * assertion in computed style bug 1337635
-  * assertion for unsupported or non-animatable property bug 1343710
-    * test_animations.html asserts [12]
 
 ## Need Gecko change
 
