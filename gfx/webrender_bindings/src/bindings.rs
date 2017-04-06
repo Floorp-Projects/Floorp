@@ -942,6 +942,13 @@ pub extern "C" fn wr_api_add_raw_font(api: &mut RenderApi,
 }
 
 #[no_mangle]
+pub extern "C" fn wr_api_delete_font(api: &mut RenderApi, key: FontKey)
+{
+    assert!( unsafe { is_in_compositor_thread() });
+    api.delete_font(key);
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn wr_api_get_namespace(api: &mut RenderApi) -> IdNamespace {
     api.id_namespace
 }
