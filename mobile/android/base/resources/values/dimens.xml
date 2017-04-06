@@ -56,7 +56,7 @@
 
     <!-- Dimensions used by Favicons and FaviconView -->
     <dimen name="favicon_bg">32dp</dimen>
-    <dimen name="favicon_corner_radius">4dp</dimen>
+    <dimen name="favicon_corner_radius">2dp</dimen>
     <!-- Set the upper limit on the size of favicon that will be processed. Favicons larger than
          this will be downscaled to this value. If you need to use larger Favicons (Due to a UI
          redesign sometime after this is written) you should increase this value to the largest
@@ -64,6 +64,8 @@
          database. The largest available size is always stored in the database, regardless of this
          value.-->
     <dimen name="favicon_largest_interesting_size">32dp</dimen>
+    <!-- Small favicon used in about:home(TopsitesPanel, BookmarksPanel and CombinedHistoryPanel) -->
+    <dimen name="favicon_small_size">25dp</dimen>
 
     <dimen name="firstrun_content_width">300dp</dimen>
     <dimen name="firstrun_min_height">120dp</dimen>
@@ -92,7 +94,7 @@
     <dimen name="page_row_edge_padding">16dp</dimen>
 
     <!-- Regular page row on about:home -->
-    <dimen name="page_row_height">64dp</dimen>
+    <dimen name="page_row_height">56dp</dimen>
 
     <!-- Group/heading page row on about:home -->
     <dimen name="page_group_height">56dp</dimen>
