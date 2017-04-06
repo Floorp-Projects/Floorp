@@ -636,7 +636,8 @@ var FullScreen = {
       }
     }
 
-    ToolbarIconColor.inferFromText();
+    ToolbarIconColor.inferFromText("fullscreen", aEnterFS);
+
 
     // For Lion fullscreen, all fullscreen controls are hidden, don't
     // bother to touch them. If we don't stop here, the following code
