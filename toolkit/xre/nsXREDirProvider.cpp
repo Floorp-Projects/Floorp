@@ -498,10 +498,6 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
   }
 #if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
   else if (!strcmp(aProperty, NS_APP_CONTENT_PROCESS_TEMP_DIR)) {
-    // If we are in the parent and the sandbox is enabled then mContentTempDir
-    // must have been created and set before anything calls for it.
-    MOZ_ASSERT_IF(XRE_IsParentProcess() && !IsContentSandboxDisabled(),
-                  mContentTempDir);
     if (!mContentTempDir && NS_FAILED((rv = LoadContentProcessTempDir()))) {
       return rv;
     }
@@ -1150,15 +1146,6 @@ nsXREDirProvider::DoStartup()
     static const char16_t kStartup[] = {'s','t','a','r','t','u','p','\0'};
     obsSvc->NotifyObservers(nullptr, "profile-do-change", kStartup);
 
-#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
-    // The parent is responsible for creating the sandbox temp dir. It needs to
-    // be called before it is used, which can happen later in this function.
-    if (XRE_IsParentProcess()) {
-      mContentProcessSandboxTempDir = CreateContentProcessSandboxTempDir();
-      mContentTempDir = mContentProcessSandboxTempDir;
-    }
-#endif
-
     // Init the Extension Manager
     nsCOMPtr<nsIObserver> em = do_GetService("@mozilla.org/addons/integration;1");
     if (em) {
@@ -1213,6 +1200,14 @@ nsXREDirProvider::DoStartup()
     }
 
     obsSvc->NotifyObservers(nullptr, "profile-initial-state", nullptr);
+
+#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
+    // The parent is responsible for creating the sandbox temp dir
+    if (XRE_IsParentProcess()) {
+      mContentProcessSandboxTempDir = CreateContentProcessSandboxTempDir();
+      mContentTempDir = mContentProcessSandboxTempDir;
+    }
+#endif
   }
   return NS_OK;
 }
