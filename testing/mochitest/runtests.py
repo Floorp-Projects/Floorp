@@ -2696,8 +2696,11 @@ toolbar#nav-bar {
             return message
 
         def fix_stack(self, message):
-            if message['action'] == 'log' and self.stackFixerFunction:
-                message['message'] = self.stackFixerFunction(message['message'])
+            if self.stackFixerFunction:
+                if message['action'] == 'log':
+                    message['message'] = self.stackFixerFunction(message['message'])
+                elif message['action'] == 'process_output':
+                    message['data'] = self.stackFixerFunction(message['data'])
             return message
 
         def record_last_test(self, message):
