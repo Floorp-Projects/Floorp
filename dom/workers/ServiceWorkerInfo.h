@@ -39,6 +39,16 @@ private:
   // workers to their corresponding serviceWorkerInfo.
   uint64_t mServiceWorkerID;
 
+  // Timestamp to track SW's state
+  PRTime mCreationTime;
+  TimeStamp mCreationTimeStamp;
+
+  // The time of states are 0, if SW has not reached that state yet. Besides, we
+  // update each of them after UpdateState() is called in SWRegistrationInfo.
+  PRTime mInstalledTime;
+  PRTime mActivatedTime;
+  PRTime mRedundantTime;
+
   // We hold rawptrs since the ServiceWorker constructor and destructor ensure
   // addition and removal.
   // There is a high chance of there being at least one ServiceWorker
@@ -173,6 +183,15 @@ public:
 
   already_AddRefed<ServiceWorker>
   GetOrCreateInstance(nsPIDOMWindowInner* aWindow);
+
+  void
+  UpdateInstalledTime();
+
+  void
+  UpdateActivatedTime();
+
+  void
+  UpdateRedundantTime();
 };
 
 } // namespace workers
