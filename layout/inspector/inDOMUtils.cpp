@@ -1174,7 +1174,7 @@ inDOMUtils::GetCleanStyleContextForElement(dom::Element* aElement,
   presContext->EnsureSafeToHandOutCSSRules();
 
   RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContextForElement(aElement, aPseudo, presShell);
+    nsComputedDOMStyle::GetStyleContext(aElement, aPseudo, presShell);
   return styleContext.forget();
 }
 

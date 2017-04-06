@@ -127,9 +127,8 @@ SVGGeometryElement::GetFillRule()
   FillRule fillRule = FillRule::FILL_WINDING; // Equivalent to StyleFillRule::Nonzero
 
   RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContextForElementNoFlush(this, nullptr,
-                                                         nullptr);
-  
+    nsComputedDOMStyle::GetStyleContextNoFlush(this, nullptr, nullptr);
+
   if (styleContext) {
     MOZ_ASSERT(styleContext->StyleSVG()->mFillRule == StyleFillRule::Nonzero ||
                styleContext->StyleSVG()->mFillRule == StyleFillRule::Evenodd);

@@ -24,7 +24,7 @@ class MainThreadHandoff final : public IInterceptorSink
                               , public ICallFrameWalker
 {
 public:
-  static HRESULT Create(IHandlerPayload* aHandlerPayload,
+  static HRESULT Create(IHandlerProvider* aHandlerProvider,
                         IInterceptorSink** aOutput);
 
   template <typename Interface>
@@ -37,12 +37,12 @@ public:
 
   template <typename Interface>
   static HRESULT WrapInterface(STAUniquePtr<Interface> aTargetInterface,
-                               IHandlerPayload* aHandlerPayload,
+                               IHandlerProvider* aHandlerProvider,
                                Interface** aOutInterface)
   {
     MOZ_ASSERT(!IsProxy(aTargetInterface.get()));
     RefPtr<IInterceptorSink> handoff;
-    HRESULT hr = MainThreadHandoff::Create(aHandlerPayload,
+    HRESULT hr = MainThreadHandoff::Create(aHandlerProvider,
                                            getter_AddRefs(handoff));
     if (FAILED(hr)) {
       return hr;
@@ -60,29 +60,26 @@ public:
 
   // IInterceptorSink
   STDMETHODIMP SetInterceptor(IWeakReference* aInterceptor) override;
-  STDMETHODIMP GetHandler(CLSID* aHandlerClsid) override;
-  STDMETHODIMP GetHandlerPayloadSize(REFIID aIid,
-                                     InterceptorTargetPtr<IUnknown> aTarget,
-                                     DWORD* aOutPayloadSize) override;
-  STDMETHODIMP WriteHandlerPayload(IStream* aStream, REFIID aIid,
-                                   InterceptorTargetPtr<IUnknown> aTarget) override;
-  REFIID MarshalAs(REFIID aIid) override;
+  STDMETHODIMP GetHandler(NotNull<CLSID*> aHandlerClsid) override;
+  STDMETHODIMP GetHandlerPayloadSize(NotNull<DWORD*> aOutPayloadSize) override;
+  STDMETHODIMP WriteHandlerPayload(NotNull<IStream*> aStream) override;
+  STDMETHODIMP_(REFIID) MarshalAs(REFIID aIid) override;
 
   // ICallFrameWalker
   STDMETHODIMP OnWalkInterface(REFIID aIid, PVOID* aInterface, BOOL aIsInParam,
                                BOOL aIsOutParam) override;
 
 private:
-  explicit MainThreadHandoff(IHandlerPayload* aHandlerPayload);
+  explicit MainThreadHandoff(IHandlerProvider* aHandlerProvider);
   ~MainThreadHandoff();
   HRESULT FixArrayElements(ICallFrame* aFrame,
                            const ArrayData& aArrayData);
   HRESULT FixIServiceProvider(ICallFrame* aFrame);
 
 private:
-  ULONG                   mRefCnt;
-  RefPtr<IWeakReference>  mInterceptor;
-  RefPtr<IHandlerPayload> mHandlerPayload;
+  ULONG                     mRefCnt;
+  RefPtr<IWeakReference>    mInterceptor;
+  RefPtr<IHandlerProvider>  mHandlerProvider;
 };
 
 } // namespace mscom

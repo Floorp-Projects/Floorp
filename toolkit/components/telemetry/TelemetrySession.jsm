@@ -1378,7 +1378,7 @@ var Impl = {
 
     let payload;
     try {
-      const isMobile = ["gonk", "android"].includes(AppConstants.platform);
+      const isMobile = (AppConstants.platform == "android");
       const isSubsession = isMobile ? false : !this._isClassicReason(reason);
 
       if (isMobile) {

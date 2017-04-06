@@ -179,8 +179,7 @@ SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
     styleContext = aStyleContext;
   } else {
     styleContext =
-      nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement, nullptr,
-                                                           nullptr);
+      nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr, nullptr);
   }
 
   if (!styleContext) {
@@ -253,8 +252,7 @@ SVGContentUtils::GetStrokeWidth(nsSVGElement* aElement,
     styleContext = aStyleContext;
   } else {
     styleContext =
-      nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement, nullptr,
-                                                           nullptr);
+      nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr, nullptr);
   }
 
   if (!styleContext) {
@@ -276,9 +274,8 @@ SVGContentUtils::GetFontSize(Element *aElement)
   if (!aElement)
     return 1.0f;
 
-  RefPtr<nsStyleContext> styleContext = 
-    nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement,
-                                                         nullptr, nullptr);
+  RefPtr<nsStyleContext> styleContext =
+    nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr, nullptr);
   if (!styleContext) {
     // ReportToConsole
     NS_WARNING("Couldn't get style context for content in GetFontStyle");
@@ -314,9 +311,8 @@ SVGContentUtils::GetFontXHeight(Element *aElement)
   if (!aElement)
     return 1.0f;
 
-  RefPtr<nsStyleContext> styleContext = 
-    nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement,
-                                                         nullptr, nullptr);
+  RefPtr<nsStyleContext> styleContext =
+    nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr, nullptr);
   if (!styleContext) {
     // ReportToConsole
     NS_WARNING("Couldn't get style context for content in GetFontStyle");
@@ -325,7 +321,7 @@ SVGContentUtils::GetFontXHeight(Element *aElement)
 
   return GetFontXHeight(styleContext);
 }
-  
+
 float
 SVGContentUtils::GetFontXHeight(nsIFrame *aFrame)
 {
