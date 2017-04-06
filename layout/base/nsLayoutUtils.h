@@ -1450,14 +1450,13 @@ public:
   /**
    * This function increases an initial intrinsic size, 'aCurrent', according
    * to the given 'aPercent', such that the size-increase makes up exactly
-   * 'aPercent' percent of the returned value.  If 'aPercent' or 'aCurrent' are
-   * less than or equal to zero the original 'aCurrent' value is returned.
-   * If 'aPercent' is greater than or equal to 1.0 the value nscoord_MAX is
-   * returned.
+   * 'aPercent' percent of the returned value.  If 'aPercent' is less than
+   * or equal to zero the original 'aCurrent' value is returned. If 'aPercent'
+   * is greater than or equal to 1.0 the value nscoord_MAX is returned.
    */
   static nscoord AddPercents(nscoord aCurrent, float aPercent)
   {
-    if (aPercent > 0.0f && aCurrent > 0) {
+    if (aPercent > 0.0f) {
       return MOZ_UNLIKELY(aPercent >= 1.0f) ? nscoord_MAX
         : NSToCoordRound(float(aCurrent) / (1.0f - aPercent));
     }
