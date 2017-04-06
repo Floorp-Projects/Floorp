@@ -45,8 +45,10 @@
 == flexbox-baseline-align-self-baseline-vert-001.html flexbox-baseline-align-self-baseline-vert-001.html
 == flexbox-baseline-empty-001a.html flexbox-baseline-empty-001a.html
 == flexbox-baseline-empty-001b.html flexbox-baseline-empty-001b.html
-== flexbox-baseline-multi-item-horiz-001.html flexbox-baseline-multi-item-horiz-001.html
-== flexbox-baseline-multi-item-vert-001.html flexbox-baseline-multi-item-vert-001.html
+== flexbox-baseline-multi-item-horiz-001a.html flexbox-baseline-multi-item-horiz-001a.html
+== flexbox-baseline-multi-item-horiz-001b.html flexbox-baseline-multi-item-horiz-001b.html
+== flexbox-baseline-multi-item-vert-001a.html flexbox-baseline-multi-item-vert-001a.html
+== flexbox-baseline-multi-item-vert-001b.html flexbox-baseline-multi-item-vert-001b.html
 == flexbox-baseline-multi-line-horiz-001.html flexbox-baseline-multi-line-horiz-001.html
 == flexbox-baseline-multi-line-horiz-002.html flexbox-baseline-multi-line-horiz-002.html
 == flexbox-baseline-multi-line-horiz-003.html flexbox-baseline-multi-line-horiz-003.html
