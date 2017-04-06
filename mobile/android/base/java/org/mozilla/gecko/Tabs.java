@@ -75,6 +75,8 @@ public class Tabs implements BundleEventListener {
     private static final long PERSIST_TABS_AFTER_MILLISECONDS = 1000 * 2;
 
     public static final int INVALID_TAB_ID = -1;
+    // Used to indicate a new tab should be appended to the current tabs.
+    public static final int NEW_LAST_INDEX = -1;
 
     private static final AtomicInteger sTabId = new AtomicInteger(0);
     private volatile boolean mInitialTabsAdded;
@@ -250,9 +252,16 @@ public class Tabs implements BundleEventListener {
         return tab;
     }
 
-    // Return the index, among those tabs whose privacy setting matches isPrivate, of the tab at
-    // position index in mOrder.  Returns -1, for "new last tab", when index is -1.
+    /**
+     * Return the index, among those tabs whose privacy setting matches {@code isPrivate}, of the
+     * tab at position {@code index} in {@code mOrder}. Returns {@code NEW_LAST_INDEX} when
+     * {@code index} is {@code NEW_LAST_INDEX} or no matches were found.
+     */
     private int getPrivacySpecificTabIndex(int index, boolean isPrivate) {
+        if (index == NEW_LAST_INDEX) {
+            return NEW_LAST_INDEX;
+        }
+
         int privacySpecificIndex = -1;
         for (int i = 0; i <= index; i++) {
             final Tab tab = mOrder.get(i);
@@ -260,7 +269,7 @@ public class Tabs implements BundleEventListener {
                 privacySpecificIndex++;
             }
         }
-        return privacySpecificIndex;
+        return privacySpecificIndex > -1 ? privacySpecificIndex : NEW_LAST_INDEX;
     }
 
     public synchronized void removeTab(int id) {
@@ -981,7 +990,7 @@ public class Tabs implements BundleEventListener {
             String tabUrl = (url != null && Uri.parse(url).getScheme() != null) ? url : null;
 
             // Add the new tab to the end of the tab order.
-            final int tabIndex = -1;
+            final int tabIndex = NEW_LAST_INDEX;
 
             tabToSelect = addTab(tabId, tabUrl, external, parentId, url, isPrivate, tabIndex);
             tabToSelect.setDesktopMode(desktopMode);

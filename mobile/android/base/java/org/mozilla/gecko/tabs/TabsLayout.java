@@ -99,8 +99,7 @@ public abstract class TabsLayout extends RecyclerView
         switch (msg) {
             case ADDED:
                 int tabIndex = Integer.parseInt(data);
-                // A tabIndex of -1 means "add a new last tab".
-                tabIndex = tabIndex == -1 ? tabsAdapter.getItemCount() : tabIndex;
+                tabIndex = tabIndex == Tabs.NEW_LAST_INDEX ? tabsAdapter.getItemCount() : tabIndex;
                 tabsAdapter.notifyTabInserted(tab, tabIndex);
                 if (addAtIndexRequiresScroll(tabIndex)) {
                     // (The SELECTED tab is updated *after* this call to ADDED, so don't just call
