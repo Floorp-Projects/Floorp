@@ -396,7 +396,7 @@
     </style>
 
     <style name="TextAppearance.Widget.Home.ItemTitle" parent="TextAppearance">
-        <item name="android:textSize">16dp</item>
+        <item name="android:textSize">16sp</item>
     </style>
 
     <style name="TextAppearance.Widget.Home.ItemDescription" parent="TextAppearance.Micro">
