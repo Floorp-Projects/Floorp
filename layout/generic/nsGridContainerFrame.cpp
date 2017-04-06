@@ -386,21 +386,21 @@ MergeSortedFrameListsFor(nsFrameList& aDest, nsFrameList& aSrc,
 }
 
 template<typename Iterator>
-class nsGridContainerFrame::GridItemCSSOrderIteratorT
+class nsGridContainerFrame::CSSOrderAwareFrameIteratorT
 {
 public:
   enum OrderState { eUnknownOrder, eKnownOrdered, eKnownUnordered };
   enum ChildFilter { eSkipPlaceholders, eIncludeAll };
-  GridItemCSSOrderIteratorT(nsIFrame* aGridContainer,
-                            nsIFrame::ChildListID aListID,
-                            ChildFilter aFilter = eSkipPlaceholders,
-                            OrderState aState = eUnknownOrder)
-    : mChildren(aGridContainer->GetChildList(aListID))
+  CSSOrderAwareFrameIteratorT(nsIFrame* aContainer,
+                              nsIFrame::ChildListID aListID,
+                              ChildFilter aFilter = eSkipPlaceholders,
+                              OrderState aState = eUnknownOrder)
+    : mChildren(aContainer->GetChildList(aListID))
     , mArrayIndex(0)
-    , mGridItemIndex(0)
+    , mItemIndex(0)
     , mSkipPlaceholders(aFilter == eSkipPlaceholders)
 #ifdef DEBUG
-    , mGridContainer(aGridContainer)
+    , mContainer(aContainer)
     , mListID(aListID)
 #endif
   {
@@ -435,9 +435,9 @@ public:
       SkipPlaceholders();
     }
   }
-  ~GridItemCSSOrderIteratorT()
+  ~CSSOrderAwareFrameIteratorT()
   {
-    MOZ_ASSERT(IsForward() == mGridItemCount.isNothing());
+    MOZ_ASSERT(IsForward() == mItemCount.isNothing());
   }
 
   bool IsForward() const;
@@ -457,26 +457,26 @@ public:
    * Return the child index of the current item, placeholders not counted.
    * It's forbidden to call this method when the current frame is placeholder.
    */
-  size_t GridItemIndex() const
+  size_t ItemIndex() const
   {
     MOZ_ASSERT(!AtEnd());
     MOZ_ASSERT((**this)->GetType() != nsGkAtoms::placeholderFrame,
                "MUST not call this when at a placeholder");
-    MOZ_ASSERT(IsForward() || mGridItemIndex < *mGridItemCount,
-               "Returning an out-of-range mGridItemIndex...");
-    return mGridItemIndex;
+    MOZ_ASSERT(IsForward() || mItemIndex < *mItemCount,
+               "Returning an out-of-range mItemIndex...");
+    return mItemIndex;
   }
 
-  void SetGridItemCount(size_t aGridItemCount)
+  void SetItemCount(size_t aItemCount)
   {
 #ifndef CLANG_CRASH_BUG
-    MOZ_ASSERT(mIter.isSome() || aGridItemCount <= mArray->Length(),
-               "grid item count mismatch");
+    MOZ_ASSERT(mIter.isSome() || aItemCount <= mArray->Length(),
+               "item count mismatch");
 #endif
-    mGridItemCount.emplace(aGridItemCount);
-    // Note: it's OK if mGridItemIndex underflows -- GridItemIndex()
+    mItemCount.emplace(aItemCount);
+    // Note: it's OK if mItemIndex underflows -- ItemIndex()
     // will not be called unless there is at least one item.
-    mGridItemIndex = IsForward() ? 0 : *mGridItemCount - 1;
+    mItemIndex = IsForward() ? 0 : *mItemCount - 1;
   }
 
   /**
@@ -514,14 +514,14 @@ public:
   {
 #ifdef DEBUG
     MOZ_ASSERT(!AtEnd());
-    nsFrameList list = mGridContainer->GetChildList(mListID);
+    nsFrameList list = mContainer->GetChildList(mListID);
     MOZ_ASSERT(list.FirstChild() == mChildren.FirstChild() &&
                list.LastChild() == mChildren.LastChild(),
                "the list of child frames must not change while iterating!");
 #endif
     if (mSkipPlaceholders ||
         (**this)->GetType() != nsGkAtoms::placeholderFrame) {
-      IsForward() ? ++mGridItemIndex : --mGridItemIndex;
+      IsForward() ? ++mItemIndex : --mItemIndex;
     }
     if (mIter.isSome()) {
       ++*mIter;
@@ -543,7 +543,7 @@ public:
     } else {
       mArrayIndex = 0;
     }
-    mGridItemIndex = IsForward() ? 0 : *mGridItemCount - 1;
+    mItemIndex = IsForward() ? 0 : *mItemCount - 1;
     mSkipPlaceholders = aFilter == eSkipPlaceholders;
     if (mSkipPlaceholders) {
       SkipPlaceholders();
@@ -571,15 +571,15 @@ private:
   // This array is pre-sorted in reverse order for a reverse iterator.
   Maybe<nsTArray<nsIFrame*>> mArray;
   size_t mArrayIndex;
-  // The index of the current grid item (placeholders excluded).
-  size_t mGridItemIndex;
-  // The number of grid items (placeholders excluded).
+  // The index of the current item (placeholders excluded).
+  size_t mItemIndex;
+  // The number of items (placeholders excluded).
   // It's only initialized and used in a reverse iterator.
-  Maybe<size_t> mGridItemCount;
+  Maybe<size_t> mItemCount;
   // Skip placeholder children in the iteration?
   bool mSkipPlaceholders;
 #ifdef DEBUG
-  nsIFrame* mGridContainer;
+  nsIFrame* mContainer;
   nsIFrame::ChildListID mListID;
 #endif
 };
@@ -3356,8 +3356,8 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
                                                         colLineNameMap,
                                                         rowLineNameMap,
                                                         gridStyle)));
-    MOZ_ASSERT(aState.mIter.GridItemIndex() == aState.mGridItems.Length() - 1,
-               "GridItemIndex() is broken");
+    MOZ_ASSERT(aState.mIter.ItemIndex() == aState.mGridItems.Length() - 1,
+               "ItemIndex() is broken");
     GridArea& area = info->mArea;
     if (area.mCols.IsDefinite()) {
       minCol = std::min(minCol, area.mCols.mUntranslatedStart);
@@ -3378,7 +3378,7 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
   mGridRowEnd += offsetToRowZero;
   aState.mIter.Reset();
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
-    GridArea& area = aState.mGridItems[aState.mIter.GridItemIndex()].mArea;
+    GridArea& area = aState.mGridItems[aState.mIter.ItemIndex()].mArea;
     if (area.mCols.IsDefinite()) {
       area.mCols.mStart = area.mCols.mUntranslatedStart + offsetToColZero;
       area.mCols.mEnd = area.mCols.mUntranslatedEnd + offsetToColZero;
@@ -3409,7 +3409,7 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
                                          : &Grid::PlaceAutoRow;
     aState.mIter.Reset();
     for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
-      GridArea& area = aState.mGridItems[aState.mIter.GridItemIndex()].mArea;
+      GridArea& area = aState.mGridItems[aState.mIter.ItemIndex()].mArea;
       LineRange& major = isRowOrder ? area.mRows : area.mCols;
       LineRange& minor = isRowOrder ? area.mCols : area.mRows;
       if (major.IsDefinite() && minor.IsAuto()) {
@@ -3443,8 +3443,8 @@ nsGridContainerFrame::Grid::PlaceGridItems(GridReflowInput& aState,
                                        : &Grid::PlaceAutoCol;
   aState.mIter.Reset();
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
-    GridArea& area = aState.mGridItems[aState.mIter.GridItemIndex()].mArea;
-    MOZ_ASSERT(*aState.mIter == aState.mGridItems[aState.mIter.GridItemIndex()].mFrame,
+    GridArea& area = aState.mGridItems[aState.mIter.ItemIndex()].mArea;
+    MOZ_ASSERT(*aState.mIter == aState.mGridItems[aState.mIter.ItemIndex()].mFrame,
                "iterator out of sync with aState.mGridItems");
     LineRange& major = isRowOrder ? area.mRows : area.mCols;
     LineRange& minor = isRowOrder ? area.mCols : area.mRows;
@@ -4122,7 +4122,7 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
   iter.Reset();
   for (; !iter.AtEnd(); iter.Next()) {
     nsIFrame* child = *iter;
-    GridItemInfo& gridItem = aGridItems[iter.GridItemIndex()];
+    GridItemInfo& gridItem = aGridItems[iter.ItemIndex()];
     uint32_t baselineTrack = kAutoLine;
     auto state = ItemState(0);
     auto childWM = child->GetWritingMode();
@@ -4391,7 +4391,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
     TrackSize::eMaxContentMinSizing;
   iter.Reset();
   for (; !iter.AtEnd(); iter.Next()) {
-    auto& gridItem = aGridItems[iter.GridItemIndex()];
+    auto& gridItem = aGridItems[iter.ItemIndex()];
     const GridArea& area = gridItem.mArea;
     const LineRange& lineRange = area.*aRange;
     uint32_t span = lineRange.Extent();
@@ -4714,7 +4714,7 @@ nsGridContainerFrame::Tracks::FindUsedFlexFraction(
   // ... the result of 'finding the size of an fr' for each item that spans
   // a flex track with its max-content contribution as 'space to fill'
   for (; !iter.AtEnd(); iter.Next()) {
-    const GridItemInfo& item = aGridItems[iter.GridItemIndex()];
+    const GridItemInfo& item = aGridItems[iter.ItemIndex()];
     if (item.mState[mAxis] & ItemState::eIsFlexing) {
       // XXX optimize: bug 1194446
       nscoord spaceToFill = ContentContribution(item, aState, rc, wm, mAxis,
@@ -5351,7 +5351,7 @@ nsGridContainerFrame::ReflowInFragmentainer(GridReflowInput&     aState,
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
     nsIFrame* child = *aState.mIter;
     if (child->GetType() != nsGkAtoms::placeholderFrame) {
-      const GridItemInfo* info = &aState.mGridItems[aState.mIter.GridItemIndex()];
+      const GridItemInfo* info = &aState.mGridItems[aState.mIter.ItemIndex()];
       sortedItems.AppendElement(info);
     } else {
       placeholders.AppendElement(child);
@@ -5868,7 +5868,7 @@ nsGridContainerFrame::ReflowChildren(GridReflowInput&     aState,
       nsIFrame* child = *aState.mIter;
       const GridItemInfo* info = nullptr;
       if (child->GetType() != nsGkAtoms::placeholderFrame) {
-        info = &aState.mGridItems[aState.mIter.GridItemIndex()];
+        info = &aState.mGridItems[aState.mIter.ItemIndex()];
       }
       ReflowInFlowChild(*aState.mIter, info, containerSize, Nothing(), nullptr,
                         aState, aContentArea, aDesiredSize, aStatus);
@@ -6827,7 +6827,7 @@ nsGridContainerFrame::CalculateBaselines(
       Iter::OrderState::eKnownOrdered : Iter::OrderState::eKnownUnordered;
     Iter iter(this, kPrincipalList, Iter::ChildFilter::eSkipPlaceholders,
               orderState);
-    iter.SetGridItemCount(aGridItems->Length());
+    iter.SetItemCount(aGridItems->Length());
     FindItemInGridOrderResult gridOrderLastItem =
       FindLastItemInGridOrder(iter, *aGridItems,
         axis == eLogicalAxisBlock ? &GridArea::mRows : &GridArea::mCols,
@@ -6927,7 +6927,7 @@ nsGridContainerFrame::FindFirstItemInGridOrder(
   uint32_t minMinor = kTranslatedMaxLine + 1;
   aIter.Reset();
   for (; !aIter.AtEnd(); aIter.Next()) {
-    const GridItemInfo& item = aGridItems[aIter.GridItemIndex()];
+    const GridItemInfo& item = aGridItems[aIter.ItemIndex()];
     if ((item.mArea.*aMajor).mEnd <= aFragmentStartTrack) {
       continue; // item doesn't span any track in this fragment
     }
@@ -6958,7 +6958,7 @@ nsGridContainerFrame::FindLastItemInGridOrder(
   aIter.Reset();
   int32_t lastMajorTrack = int32_t(aFirstExcludedTrack) - 1;
   for (; !aIter.AtEnd(); aIter.Next()) {
-    const GridItemInfo& item = aGridItems[aIter.GridItemIndex()];
+    const GridItemInfo& item = aGridItems[aIter.ItemIndex()];
     // Subtract 1 from the end line to get the item's last track index.
     int32_t major = (item.mArea.*aMajor).mEnd - 1;
     // Currently, this method is only called with aFirstExcludedTrack ==
