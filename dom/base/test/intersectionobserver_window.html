@@ -27,6 +27,7 @@
                        records[0].rootBounds.bottom === viewportHeight &&
                        records[0].rootBounds.height === viewportHeight;
           window.opener.postMessage(passed, '*');
+          io.disconnect();
         });
         io.observe(document.getElementById("target"));
 </script>

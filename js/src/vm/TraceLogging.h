@@ -80,12 +80,56 @@ class TraceLoggerThread;
  * this payload, so it cannot get removed.
  */
 class TraceLoggerEvent {
+#ifdef JS_TRACE_LOGGING
   private:
-    TraceLoggerEventPayload* payload_;
+    class EventPayloadOrTextId {
+
+        /**
+         * Payload can be a pointer to a TraceLoggerEventPayload* or a
+         * TraceLoggerTextId. The last bit decides how to read the payload.
+         *
+         * payload_ = [                   | 0 ]
+         *            ------------------------  = TraceLoggerEventPayload* (incl. last bit)
+         * payload_ = [                   | 1 ]
+         *             -------------------      = TraceLoggerTextId (excl. last bit)
+         */
+        uintptr_t payload_;
+
+      public:
+        EventPayloadOrTextId()
+          : payload_(0)
+        { }
+
+        bool isEventPayload() const {
+            return (payload_ & 1) == 0;
+        }
+        TraceLoggerEventPayload* eventPayload() const {
+            MOZ_ASSERT(isEventPayload());
+            return (TraceLoggerEventPayload*) payload_;
+        }
+        void setEventPayload(TraceLoggerEventPayload* payload) {
+            payload_ = (uintptr_t)payload;
+            MOZ_ASSERT((payload_ & 1) == 0);
+        }
+        bool isTextId() const {
+            return (payload_ & 1) == 1;
+        }
+        uint32_t textId() const {
+            MOZ_ASSERT(isTextId());
+            return payload_ >> 1;
+        }
+        void setTextId(TraceLoggerTextId textId) {
+            static_assert(TraceLogger_Last < (UINT32_MAX >> 1), "Too many predefined text ids.");
+            payload_ = (((uint32_t)textId) << 1) | 1;
+        }
+    };
+
+    EventPayloadOrTextId payload_;
 
   public:
-    TraceLoggerEvent() { payload_ = nullptr; };
-#ifdef JS_TRACE_LOGGING
+    TraceLoggerEvent()
+      : payload_()
+    {}
     explicit TraceLoggerEvent(TraceLoggerTextId textId);
     TraceLoggerEvent(TraceLoggerTextId type, JSScript* script);
     TraceLoggerEvent(TraceLoggerTextId type, const char* filename, size_t line, size_t column);
@@ -93,7 +137,22 @@ class TraceLoggerEvent {
     TraceLoggerEvent(const TraceLoggerEvent& event);
     TraceLoggerEvent& operator=(const TraceLoggerEvent& other);
     ~TraceLoggerEvent();
+    uint32_t textId() const;
+    bool hasTextId() const {
+        return hasExtPayload() || payload_.isTextId();
+    }
+
+  private:
+    TraceLoggerEventPayload* extPayload() const {
+        MOZ_ASSERT(hasExtPayload());
+        return payload_.eventPayload();
+    }
+    bool hasExtPayload() const {
+        return payload_.isEventPayload() && !!payload_.eventPayload();
+    }
 #else
+  public:
+    TraceLoggerEvent() {}
     explicit TraceLoggerEvent(TraceLoggerTextId textId) {}
     TraceLoggerEvent(TraceLoggerTextId type, JSScript* script) {}
     TraceLoggerEvent(TraceLoggerTextId type, const char* filename, size_t line, size_t column) {}
@@ -101,15 +160,10 @@ class TraceLoggerEvent {
     TraceLoggerEvent(const TraceLoggerEvent& event) {}
     TraceLoggerEvent& operator=(const TraceLoggerEvent& other) { return *this; };
     ~TraceLoggerEvent() {}
+    uint32_t textId() const { return 0; }
+    bool hasTextId() const { return false; }
 #endif
 
-    TraceLoggerEventPayload* payload() const {
-        MOZ_ASSERT(hasPayload());
-        return payload_;
-    }
-    bool hasPayload() const {
-        return !!payload_;
-    }
 };
 
 #ifdef DEBUG
@@ -378,11 +432,10 @@ class TraceLoggerThreadState
     // This can be used to give start and stop events. Calls to these functions should be
     // limited if possible, because of the overhead.
     // Note: it is not allowed to use them in logTimestamp.
-    TraceLoggerEventPayload* getOrCreateEventPayload(TraceLoggerTextId textId);
     TraceLoggerEventPayload* getOrCreateEventPayload(const char* text);
-    TraceLoggerEventPayload* getOrCreateEventPayload(TraceLoggerTextId type, JSScript* script);
-    TraceLoggerEventPayload* getOrCreateEventPayload(TraceLoggerTextId type, const char* filename,
-                                                     size_t lineno, size_t colno, const void* p);
+    TraceLoggerEventPayload* getOrCreateEventPayload(JSScript* script);
+    TraceLoggerEventPayload* getOrCreateEventPayload(const char* filename, size_t lineno,
+                                                     size_t colno, const void* p);
 #endif
 };
 

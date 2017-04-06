@@ -335,10 +335,10 @@ Parameter.prototype.toJson = function() {
   };
 
   // Values do not need to be serializable, so we don't try. For the client
-  // side (which doesn't do any executing) we don't actually care what the
-  // default value is, just that it exists
+  // side (which doesn't do any executing) we only care whether default value is
+  // undefined, null, or something else.
   if (this.paramSpec.defaultValue !== undefined) {
-    json.defaultValue = {};
+    json.defaultValue = (this.paramSpec.defaultValue === null) ? null : {};
   }
   if (this.paramSpec.description != null) {
     json.description = this.paramSpec.description;

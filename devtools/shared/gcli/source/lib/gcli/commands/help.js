@@ -69,7 +69,7 @@ function getHelpManData(commandData, context) {
       }
       else {
         // We need defaultText to work the text version of defaultValue
-        input = l10n.lookupFormat('helpManOptional');
+        input = l10n.lookup('helpManOptional');
         /*
         var val = param.type.stringify(param.defaultValue);
         input = Promise.resolve(val).then(function(defaultValue) {
