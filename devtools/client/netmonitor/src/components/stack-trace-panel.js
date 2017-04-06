@@ -22,8 +22,8 @@ function StackTracePanel({ request }) {
     div({ className: "panel-container" },
       StackTrace({
         stacktrace,
-        onViewSourceInDebugger: (name, line) => {
-          window.NetMonitorController.viewSourceInDebugger(name, line);
+        onViewSourceInDebugger: (frame) => {
+          window.NetMonitorController.viewSourceInDebugger(frame.url, frame.line);
         },
       }),
     )

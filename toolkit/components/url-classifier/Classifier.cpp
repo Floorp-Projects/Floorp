@@ -148,7 +148,10 @@ Classifier::GetPrivateStoreDirectory(nsIFile* aRootStoreDirectory,
 
 Classifier::Classifier()
   : mIsTableRequestResultOutdated(true)
+  , mUpdateInterrupted(true)
 {
+  NS_NewNamedThread(NS_LITERAL_CSTRING("Classifier Update"),
+                    getter_AddRefs(mUpdateThread));
 }
 
 Classifier::~Classifier()
@@ -273,17 +276,34 @@ Classifier::Close()
 void
 Classifier::Reset()
 {
-  DropStores();
+  MOZ_ASSERT(NS_GetCurrentThread() != mUpdateThread,
+             "Reset() MUST NOT be called on update thread");
 
-  mRootStoreDirectory->Remove(true);
-  mBackupDirectory->Remove(true);
-  mUpdatingDirectory->Remove(true);
-  mToDeleteDirectory->Remove(true);
+  LOG(("Reset() is called so we interrupt the update."));
+  mUpdateInterrupted = true;
 
-  CreateStoreDirectory();
+  auto resetFunc = [=] {
+    DropStores();
 
-  mTableFreshness.Clear();
-  RegenActiveTables();
+    mRootStoreDirectory->Remove(true);
+    mBackupDirectory->Remove(true);
+    mUpdatingDirectory->Remove(true);
+    mToDeleteDirectory->Remove(true);
+
+    CreateStoreDirectory();
+
+    mTableFreshness.Clear();
+    RegenActiveTables();
+  };
+
+  if (!mUpdateThread) {
+    LOG(("Async update has been disabled. Just Reset() on worker thread."));
+    resetFunc();
+    return;
+  }
+
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(resetFunc);
+  SyncRunnable::DispatchToThread(mUpdateThread, r);
 }
 
 void
@@ -611,6 +631,36 @@ Classifier::RemoveUpdateIntermediaries()
   }
 }
 
+void
+Classifier::MergeNewLookupCaches()
+{
+  MOZ_ASSERT(NS_GetCurrentThread() != mUpdateThread,
+             "MergeNewLookupCaches cannot be called on update thread "
+             "since it mutates mLookupCaches which is only safe on "
+             "worker thread.");
+
+  for (auto& newCache: mNewLookupCaches) {
+    // For each element in mNewLookCaches, it will be swapped with
+    //   - An old cache in mLookupCache with the same table name or
+    //   - nullptr (mLookupCache will be expaned) otherwise.
+    size_t swapIndex = 0;
+    for (; swapIndex < mLookupCaches.Length(); swapIndex++) {
+      if (mLookupCaches[swapIndex]->TableName() == newCache->TableName()) {
+        break;
+      }
+    }
+    if (swapIndex == mLookupCaches.Length()) {
+      mLookupCaches.AppendElement(nullptr);
+    }
+
+    Swap(mLookupCaches[swapIndex], newCache);
+    mLookupCaches[swapIndex]->UpdateRootDirHandle(mRootStoreDirectory);
+  }
+
+  // At this point, mNewLookupCaches's length remains the same but
+  // will contain either old cache (override) or nullptr (append).
+}
+
 nsresult
 Classifier::SwapInNewTablesAndCleanup()
 {
@@ -630,11 +680,10 @@ Classifier::SwapInNewTablesAndCleanup()
     return rv;
   }
 
-  // Step 2. Swap in in-memory tables and update root directroy handles.
-  mLookupCaches.SwapElements(mNewLookupCaches);
-  for (auto c: mLookupCaches) {
-    c->UpdateRootDirHandle(mRootStoreDirectory);
-  }
+  // Step 2. Merge mNewLookupCaches into mLookupCaches. The outdated
+  // LookupCaches will be stored in mNewLookupCaches and be cleaned
+  // up later.
+  MergeNewLookupCaches();
 
   // Step 3. Re-generate active tables based on on-disk tables.
   rv = RegenActiveTables();
@@ -653,22 +702,79 @@ Classifier::SwapInNewTablesAndCleanup()
   return rv;
 }
 
-nsresult
-Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
+void Classifier::FlushAndDisableAsyncUpdate()
 {
-  nsCString failedTableName;
+  LOG(("Classifier::FlushAndDisableAsyncUpdate [%p, %p]", this, mUpdateThread.get()));
 
-  nsresult bgRv = ApplyUpdatesBackground(aUpdates, failedTableName);
-  return ApplyUpdatesForeground(bgRv, failedTableName);
+  if (!mUpdateThread) {
+    LOG(("Async update has been disabled."));
+    return;
+  }
+
+  mUpdateThread->Shutdown();
+  mUpdateThread = nullptr;
+}
+
+nsresult
+Classifier::AsyncApplyUpdates(nsTArray<TableUpdate*>* aUpdates,
+                              AsyncUpdateCallback aCallback)
+{
+  LOG(("Classifier::AsyncApplyUpdates"));
+
+  if (!mUpdateThread) {
+    LOG(("Async update has already been disabled."));
+    return NS_ERROR_FAILURE;
+  }
+
+  //         Caller thread      |       Update thread
+  // --------------------------------------------------------
+  //                            |    ApplyUpdatesBackground
+  //    (processing other task) |    (bg-update done. ping back to caller thread)
+  //    (processing other task) |    idle...
+  //    ApplyUpdatesForeground  |
+  //          callback          |
+
+  mUpdateInterrupted = false;
+  nsresult rv = mRootStoreDirectory->Clone(getter_AddRefs(mRootStoreDirectoryForUpdate));
+  if (NS_FAILED(rv)) {
+    LOG(("Failed to clone mRootStoreDirectory for update."));
+    return rv;
+  }
+
+  nsCOMPtr<nsIThread> callerThread = NS_GetCurrentThread();
+  MOZ_ASSERT(callerThread != mUpdateThread);
+
+  nsCOMPtr<nsIRunnable> bgRunnable = NS_NewRunnableFunction([=] {
+    MOZ_ASSERT(NS_GetCurrentThread() == mUpdateThread, "MUST be on update thread");
+
+    LOG(("Step 1. ApplyUpdatesBackground on update thread."));
+    nsCString failedTableName;
+    nsresult bgRv = ApplyUpdatesBackground(aUpdates, failedTableName);
+
+    nsCOMPtr<nsIRunnable> fgRunnable = NS_NewRunnableFunction([=] {
+      MOZ_ASSERT(NS_GetCurrentThread() == callerThread, "MUST be on caller thread");
+
+      LOG(("Step 2. ApplyUpdatesForeground on caller thread"));
+      nsresult rv = ApplyUpdatesForeground(bgRv, failedTableName);;
+
+      LOG(("Step 3. Updates applied! Fire callback."));
+
+      aCallback(rv);
+    });
+    callerThread->Dispatch(fgRunnable, NS_DISPATCH_NORMAL);
+  });
+
+  return mUpdateThread->Dispatch(bgRunnable, NS_DISPATCH_NORMAL);
 }
 
 nsresult
 Classifier::ApplyUpdatesBackground(nsTArray<TableUpdate*>* aUpdates,
                                    nsACString& aFailedTableName)
 {
-  // Will run on the update thread after Bug 1339760.
-  // No lock is required except for CopyInUseDirForUpdate() since
-  // the table lookup may lead to database removal.
+  // |mUpdateInterrupted| is guaranteed to have been unset.
+  // If |mUpdateInterrupted| is set at any point, Reset() must have
+  // been called then we need to interrupt the update process.
+  // We only add checkpoints for non-trivial tasks.
 
   if (!aUpdates || aUpdates->Length() == 0) {
     return NS_OK;
@@ -695,18 +801,15 @@ Classifier::ApplyUpdatesBackground(nsTArray<TableUpdate*>* aUpdates,
     ScopedUpdatesClearer scopedUpdatesClearer(aUpdates);
 
     {
-      // TODO: Bug 1339050. This section should be mutual exclusive to
-      // LookupCache::Open() and HashStore::Open() since those operations
-      // might fail and cause the database to be removed. It'll be fine
-      // until we move "apply update" code off the worker thread.
+      // Check point 1: Copying file takes time so we check here.
+      if (mUpdateInterrupted) {
+        LOG(("Update is interrupted. Don't copy files."));
+        return NS_OK;
+      }
+
       rv = CopyInUseDirForUpdate(); // i.e. mUpdatingDirectory will be setup.
       if (NS_FAILED(rv)) {
         LOG(("Failed to copy in-use directory for update."));
-        return rv;
-      }
-      rv = CopyInUseLookupCacheForUpdate(); // i.e. mNewLookupCaches will be setup.
-      if (NS_FAILED(rv)) {
-        LOG(("Failed to create lookup caches from copied files."));
         return rv;
       }
     }
@@ -719,6 +822,12 @@ Classifier::ApplyUpdatesBackground(nsTArray<TableUpdate*>* aUpdates,
         // Run all updates for one table
         nsCString updateTable(aUpdates->ElementAt(i)->TableName());
 
+        // Check point 2: Processing downloaded data takes time.
+        if (mUpdateInterrupted) {
+          LOG(("Update is interrupted. Stop building new tables."));
+          return NS_OK;
+        }
+
         // Will update the mirrored in-memory and on-disk databases.
         if (TableUpdate::Cast<TableUpdateV2>((*aUpdates)[i])) {
           rv = UpdateHashStore(aUpdates, updateTable);
@@ -728,11 +837,6 @@ Classifier::ApplyUpdatesBackground(nsTArray<TableUpdate*>* aUpdates,
 
         if (NS_FAILED(rv)) {
           aFailedTableName = updateTable;
-          if (rv != NS_ERROR_OUT_OF_MEMORY) {
-#ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
-            DumpFailedUpdate();
-#endif
-          }
           RemoveUpdateIntermediaries();
           return rv;
         }
@@ -754,6 +858,11 @@ nsresult
 Classifier::ApplyUpdatesForeground(nsresult aBackgroundRv,
                                    const nsACString& aFailedTableName)
 {
+  if (mUpdateInterrupted) {
+    LOG(("Update is interrupted! Just remove update intermediaries."));
+    RemoveUpdateIntermediaries();
+    return NS_OK;
+  }
   if (NS_SUCCEEDED(aBackgroundRv)) {
     return SwapInNewTablesAndCleanup();
   }
@@ -918,10 +1027,9 @@ Classifier::GetFailedUpdateDirectroy()
 nsresult
 Classifier::DumpRawTableUpdates(const nsACString& aRawUpdates)
 {
-  // DumpFailedUpdate() MUST be called first to create the
-  // "failed update" directory
-
   LOG(("Dumping raw table updates..."));
+
+  DumpFailedUpdate();
 
   nsCOMPtr<nsIFile> failedUpdatekDirectory = GetFailedUpdateDirectroy();
 
@@ -990,31 +1098,12 @@ Classifier::CopyInUseDirForUpdate()
 
   // Remove the destination directory first (just in case) the do the copy.
   mUpdatingDirectory->Remove(true);
-  rv = mRootStoreDirectory->CopyToNative(nullptr, updatingDirName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // We moved some things to new places, so move the handles around, too.
-  rv = SetupPathNames();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
-Classifier::CopyInUseLookupCacheForUpdate()
-{
-  MOZ_ASSERT(mNewLookupCaches.IsEmpty(), "Update intermediaries is forgotten to "
-                                         "be removed in the previous update.");
-
-  // TODO: Bug 1341183 - Implement deep copy function or copy ctor.
-  // For now we just re-open every table we have opened.
-  // Another option is to NOT pre-open these LookupCaches and
-  // do a "merge" instead of "swap" after update.
-  for (auto c: mLookupCaches) {
-    if (!GetLookupCacheForUpdate(c->TableName())) {
-      return NS_ERROR_FAILURE;
-    }
+  if (!mRootStoreDirectoryForUpdate) {
+    LOG(("mRootStoreDirectoryForUpdate is null."));
+    return NS_ERROR_NULL_POINTER;
   }
+  rv = mRootStoreDirectoryForUpdate->CopyToNative(nullptr, updatingDirName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -1320,6 +1409,11 @@ Classifier::UpdateCache(TableUpdate* aUpdate)
 LookupCache *
 Classifier::GetLookupCache(const nsACString& aTable, bool aForUpdate)
 {
+  if (aForUpdate) {
+    MOZ_ASSERT(NS_GetCurrentThread() == mUpdateThread,
+               "GetLookupCache(aForUpdate==true) can only be called on update thread.");
+  }
+
   nsTArray<LookupCache*>& lookupCaches = aForUpdate ? mNewLookupCaches
                                                     : mLookupCaches;
   auto& rootStoreDirectory = aForUpdate ? mUpdatingDirectory

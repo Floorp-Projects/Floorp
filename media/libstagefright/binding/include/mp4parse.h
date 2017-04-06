@@ -16,28 +16,28 @@ extern "C" {
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-typedef enum mp4parse_error {
-	MP4PARSE_OK = 0,
-	MP4PARSE_ERROR_BADARG = 1,
-	MP4PARSE_ERROR_INVALID = 2,
-	MP4PARSE_ERROR_UNSUPPORTED = 3,
-	MP4PARSE_ERROR_EOF = 4,
-	MP4PARSE_ERROR_IO = 5,
-} mp4parse_error;
+typedef enum mp4parse_status {
+	mp4parse_status_OK = 0,
+	mp4parse_status_BAD_ARG = 1,
+	mp4parse_status_INVALID = 2,
+	mp4parse_status_UNSUPPORTED = 3,
+	mp4parse_status_EOF = 4,
+	mp4parse_status_IO = 5,
+} mp4parse_status;
 
 typedef enum mp4parse_track_type {
-	MP4PARSE_TRACK_TYPE_VIDEO = 0,
-	MP4PARSE_TRACK_TYPE_AUDIO = 1,
+	mp4parse_track_type_VIDEO = 0,
+	mp4parse_track_type_AUDIO = 1,
 } mp4parse_track_type;
 
 typedef enum mp4parse_codec {
-	MP4PARSE_CODEC_UNKNOWN,
-	MP4PARSE_CODEC_AAC,
-	MP4PARSE_CODEC_FLAC,
-	MP4PARSE_CODEC_OPUS,
-	MP4PARSE_CODEC_AVC,
-	MP4PARSE_CODEC_VP9,
-	MP4PARSE_CODEC_MP3,
+	mp4parse_codec_UNKNOWN,
+	mp4parse_codec_AAC,
+	mp4parse_codec_FLAC,
+	mp4parse_codec_OPUS,
+	mp4parse_codec_AVC,
+	mp4parse_codec_VP9,
+	mp4parse_codec_MP3,
 } mp4parse_codec;
 
 typedef struct mp4parse_track_info {
@@ -114,27 +114,27 @@ void mp4parse_free(mp4parse_parser* parser);
 void mp4parse_log(bool enable);
 
 /// Run the `mp4parse_parser*` allocated by `mp4parse_new()` until EOF or error.
-mp4parse_error mp4parse_read(mp4parse_parser* parser);
+mp4parse_status mp4parse_read(mp4parse_parser* parser);
 
 /// Return the number of tracks parsed by previous `mp4parse_read()` call.
-mp4parse_error mp4parse_get_track_count(mp4parse_parser const* parser, uint32_t* count);
+mp4parse_status mp4parse_get_track_count(mp4parse_parser const* parser, uint32_t* count);
 
 /// Fill the supplied `mp4parse_track_info` with metadata for `track`.
-mp4parse_error mp4parse_get_track_info(mp4parse_parser* parser, uint32_t track_index, mp4parse_track_info* info);
+mp4parse_status mp4parse_get_track_info(mp4parse_parser* parser, uint32_t track_index, mp4parse_track_info* info);
 
 /// Fill the supplied `mp4parse_track_audio_info` with metadata for `track`.
-mp4parse_error mp4parse_get_track_audio_info(mp4parse_parser* parser, uint32_t track_index, mp4parse_track_audio_info* info);
+mp4parse_status mp4parse_get_track_audio_info(mp4parse_parser* parser, uint32_t track_index, mp4parse_track_audio_info* info);
 
 /// Fill the supplied `mp4parse_track_video_info` with metadata for `track`.
-mp4parse_error mp4parse_get_track_video_info(mp4parse_parser* parser, uint32_t track_index, mp4parse_track_video_info* info);
+mp4parse_status mp4parse_get_track_video_info(mp4parse_parser* parser, uint32_t track_index, mp4parse_track_video_info* info);
 
-mp4parse_error mp4parse_get_indice_table(mp4parse_parser* parser, uint32_t track_id, mp4parse_byte_data* indices);
+mp4parse_status mp4parse_get_indice_table(mp4parse_parser* parser, uint32_t track_id, mp4parse_byte_data* indices);
 
 /// Fill the supplied `mp4parse_fragment_info` with metadata from fragmented file.
-mp4parse_error mp4parse_get_fragment_info(mp4parse_parser* parser, mp4parse_fragment_info* info);
+mp4parse_status mp4parse_get_fragment_info(mp4parse_parser* parser, mp4parse_fragment_info* info);
 
 /// A fragmented file needs mvex table and contains no data in stts, stsc, and stco boxes.
-mp4parse_error mp4parse_is_fragmented(mp4parse_parser* parser, uint32_t track_id, uint8_t* fragmented);
+mp4parse_status mp4parse_is_fragmented(mp4parse_parser* parser, uint32_t track_id, uint8_t* fragmented);
 
 /// Get 'pssh' system id and 'pssh' box content for eme playback.
 ///
@@ -143,7 +143,7 @@ mp4parse_error mp4parse_is_fragmented(mp4parse_parser* parser, uint32_t track_id
 /// - system id (16 byte uuid)
 /// - pssh box size (32-bit native endian)
 /// - pssh box content (including header)
-mp4parse_error mp4parse_get_pssh_info(mp4parse_parser* parser, mp4parse_pssh_info* info);
+mp4parse_status mp4parse_get_pssh_info(mp4parse_parser* parser, mp4parse_pssh_info* info);
 
 
 

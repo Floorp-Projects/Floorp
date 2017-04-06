@@ -322,7 +322,7 @@ VRServiceTest::AttachVRDisplay(const nsAString& aID, ErrorResult& aRv)
   }
 
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
-  vm->CreateVRServiceTestDisplay(nsCString(ToNewUTF8String(aID)), p);
+  vm->CreateVRServiceTestDisplay(NS_ConvertUTF16toUTF8(aID), p);
 
   return p.forget();
 }
@@ -342,7 +342,7 @@ VRServiceTest::AttachVRController(const nsAString& aID, ErrorResult& aRv)
   }
 
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
-  vm->CreateVRServiceTestController(nsCString(ToNewUTF8String(aID)), p);
+  vm->CreateVRServiceTestController(NS_ConvertUTF16toUTF8(aID), p);
 
   return p.forget();
 }

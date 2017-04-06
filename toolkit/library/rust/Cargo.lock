@@ -304,7 +304,7 @@ name = "gkrust-shared"
 version = "0.1.0"
 dependencies = [
  "geckoservo 0.0.1",
- "mp4parse_capi 0.7.1",
+ "mp4parse_capi 0.8.0",
  "nsstring 0.1.0",
  "rust_url_capi 0.0.1",
  "webrender_bindings 0.1.0",
@@ -412,7 +412,7 @@ dependencies = [
 
 [[package]]
 name = "mp4parse"
-version = "0.7.1"
+version = "0.8.0"
 dependencies = [
  "bitreader 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -421,10 +421,10 @@ dependencies = [
 
 [[package]]
 name = "mp4parse_capi"
-version = "0.7.1"
+version = "0.8.0"
 dependencies = [
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "mp4parse 0.7.1",
+ "mp4parse 0.8.0",
  "num-traits 0.1.37 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

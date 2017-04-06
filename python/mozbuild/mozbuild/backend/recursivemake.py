@@ -1244,11 +1244,6 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write('NO_EXPAND_LIBS := 1\n')
 
     def _process_rust_library(self, libdef, backend_file):
-        lib_var = 'RUST_LIBRARY_FILE'
-        feature_var = 'RUST_LIBRARY_FEATURES'
-        if isinstance(libdef, HostRustLibrary):
-            lib_var = 'HOST_RUST_LIBRARY_FILE'
-            feature_var = 'HOST_RUST_LIBRARY_FEATURES'
         backend_file.write_once('%s := %s\n' % (libdef.LIB_FILE_VAR, libdef.import_name))
         backend_file.write('CARGO_FILE := $(srcdir)/Cargo.toml\n')
         # Need to normalize the path so Cargo sees the same paths from all
