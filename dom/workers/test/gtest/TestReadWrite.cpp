@@ -16,6 +16,8 @@
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 
+#include "prtime.h"
+
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
@@ -157,6 +159,12 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   buffer.Append("cacheName 0\n");
   buffer.AppendInt(nsIRequest::LOAD_NORMAL, 16);
   buffer.Append("\n");
+  buffer.AppendInt(0);
+  buffer.Append("\n");
+  buffer.AppendInt(0);
+  buffer.Append("\n");
+  buffer.AppendInt(0);
+  buffer.Append("\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.Append("\n");
@@ -164,6 +172,13 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   buffer.Append(SERVICEWORKERREGISTRAR_FALSE "\n");
   buffer.Append("cacheName 1\n");
   buffer.AppendInt(nsIRequest::VALIDATE_ALWAYS, 16);
+  buffer.Append("\n");
+  PRTime ts = PR_Now();
+  buffer.AppendInt(ts);
+  buffer.Append("\n");
+  buffer.AppendInt(ts);
+  buffer.Append("\n");
+  buffer.AppendInt(ts);
   buffer.Append("\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
@@ -191,6 +206,9 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   ASSERT_TRUE(data[0].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
   ASSERT_EQ(nsIRequest::LOAD_NORMAL, data[0].loadFlags());
+  ASSERT_EQ((int64_t)0, data[0].currentWorkerInstalledTime());
+  ASSERT_EQ((int64_t)0, data[0].currentWorkerActivatedTime());
+  ASSERT_EQ((int64_t)0, data[0].lastUpdateTime());
 
   const mozilla::ipc::PrincipalInfo& info1 = data[1].principal();
   ASSERT_EQ(info1.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
@@ -206,6 +224,9 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   ASSERT_FALSE(data[1].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
   ASSERT_EQ(nsIRequest::VALIDATE_ALWAYS, data[1].loadFlags());
+  ASSERT_EQ((int64_t)ts, data[1].currentWorkerInstalledTime());
+  ASSERT_EQ((int64_t)ts, data[1].currentWorkerActivatedTime());
+  ASSERT_EQ((int64_t)ts, data[1].lastUpdateTime());
 }
 
 TEST(ServiceWorkerRegistrar, TestDeleteData)
@@ -239,6 +260,10 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
       reg.cacheName() =
         NS_ConvertUTF8toUTF16(nsPrintfCString("cacheName write %d", i));
       reg.loadFlags() = nsIRequest::VALIDATE_ALWAYS;
+
+      reg.currentWorkerInstalledTime() = PR_Now();
+      reg.currentWorkerActivatedTime() = PR_Now();
+      reg.lastUpdateTime() = PR_Now();
 
       nsAutoCString spec;
       spec.AppendPrintf("spec write %d", i);
@@ -292,6 +317,10 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
     ASSERT_STREQ(test.get(), NS_ConvertUTF16toUTF8(data[i].cacheName()).get());
 
     ASSERT_EQ(nsIRequest::VALIDATE_ALWAYS, data[i].loadFlags());
+
+    ASSERT_NE((int64_t)0, data[i].currentWorkerInstalledTime());
+    ASSERT_NE((int64_t)0, data[i].currentWorkerActivatedTime());
+    ASSERT_NE((int64_t)0, data[i].lastUpdateTime());
   }
 }
 
@@ -331,6 +360,9 @@ TEST(ServiceWorkerRegistrar, TestVersion2Migration)
   ASSERT_EQ(true, data[0].currentWorkerHandlesFetch());
   ASSERT_STREQ("activeCache 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
   ASSERT_EQ(nsIRequest::VALIDATE_ALWAYS, data[0].loadFlags());
+  ASSERT_EQ((int64_t)0, data[0].currentWorkerInstalledTime());
+  ASSERT_EQ((int64_t)0, data[0].currentWorkerActivatedTime());
+  ASSERT_EQ((int64_t)0, data[0].lastUpdateTime());
 
   const mozilla::ipc::PrincipalInfo& info1 = data[1].principal();
   ASSERT_EQ(info1.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
@@ -346,6 +378,9 @@ TEST(ServiceWorkerRegistrar, TestVersion2Migration)
   ASSERT_EQ(true, data[1].currentWorkerHandlesFetch());
   ASSERT_STREQ("activeCache 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
   ASSERT_EQ(nsIRequest::VALIDATE_ALWAYS, data[1].loadFlags());
+  ASSERT_EQ((int64_t)0, data[1].currentWorkerInstalledTime());
+  ASSERT_EQ((int64_t)0, data[1].currentWorkerActivatedTime());
+  ASSERT_EQ((int64_t)0, data[1].lastUpdateTime());
 }
 
 TEST(ServiceWorkerRegistrar, TestVersion3Migration)
@@ -384,6 +419,9 @@ TEST(ServiceWorkerRegistrar, TestVersion3Migration)
   ASSERT_EQ(true, data[0].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
   ASSERT_EQ(nsIRequest::VALIDATE_ALWAYS, data[0].loadFlags());
+  ASSERT_EQ((int64_t)0, data[0].currentWorkerInstalledTime());
+  ASSERT_EQ((int64_t)0, data[0].currentWorkerActivatedTime());
+  ASSERT_EQ((int64_t)0, data[0].lastUpdateTime());
 
   const mozilla::ipc::PrincipalInfo& info1 = data[1].principal();
   ASSERT_EQ(info1.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
@@ -399,6 +437,9 @@ TEST(ServiceWorkerRegistrar, TestVersion3Migration)
   ASSERT_EQ(true, data[1].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
   ASSERT_EQ(nsIRequest::VALIDATE_ALWAYS, data[1].loadFlags());
+  ASSERT_EQ((int64_t)0, data[1].currentWorkerInstalledTime());
+  ASSERT_EQ((int64_t)0, data[1].currentWorkerActivatedTime());
+  ASSERT_EQ((int64_t)0, data[1].lastUpdateTime());
 }
 
 TEST(ServiceWorkerRegistrar, TestVersion4Migration)
@@ -438,6 +479,9 @@ TEST(ServiceWorkerRegistrar, TestVersion4Migration)
   ASSERT_EQ(true, data[0].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
   ASSERT_EQ(nsIRequest::VALIDATE_ALWAYS, data[0].loadFlags());
+  ASSERT_EQ((int64_t)0, data[0].currentWorkerInstalledTime());
+  ASSERT_EQ((int64_t)0, data[0].currentWorkerActivatedTime());
+  ASSERT_EQ((int64_t)0, data[0].lastUpdateTime());
 
   const mozilla::ipc::PrincipalInfo& info1 = data[1].principal();
   ASSERT_EQ(info1.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
@@ -454,6 +498,9 @@ TEST(ServiceWorkerRegistrar, TestVersion4Migration)
   ASSERT_EQ(true, data[1].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
   ASSERT_EQ(nsIRequest::VALIDATE_ALWAYS, data[1].loadFlags());
+  ASSERT_EQ((int64_t)0, data[1].currentWorkerInstalledTime());
+  ASSERT_EQ((int64_t)0, data[1].currentWorkerActivatedTime());
+  ASSERT_EQ((int64_t)0, data[1].lastUpdateTime());
 }
 
 TEST(ServiceWorkerRegistrar, TestVersion5Migration)
@@ -496,6 +543,9 @@ TEST(ServiceWorkerRegistrar, TestVersion5Migration)
   ASSERT_TRUE(data[0].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
   ASSERT_EQ(nsIRequest::VALIDATE_ALWAYS, data[0].loadFlags());
+  ASSERT_EQ((int64_t)0, data[0].currentWorkerInstalledTime());
+  ASSERT_EQ((int64_t)0, data[0].currentWorkerActivatedTime());
+  ASSERT_EQ((int64_t)0, data[0].lastUpdateTime());
 
   const mozilla::ipc::PrincipalInfo& info1 = data[1].principal();
   ASSERT_EQ(info1.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
@@ -511,6 +561,76 @@ TEST(ServiceWorkerRegistrar, TestVersion5Migration)
   ASSERT_FALSE(data[1].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
   ASSERT_EQ(nsIRequest::VALIDATE_ALWAYS, data[1].loadFlags());
+  ASSERT_EQ((int64_t)0, data[1].currentWorkerInstalledTime());
+  ASSERT_EQ((int64_t)0, data[1].currentWorkerActivatedTime());
+  ASSERT_EQ((int64_t)0, data[1].lastUpdateTime());
+}
+
+TEST(ServiceWorkerRegistrar, TestVersion6Migration)
+{
+  nsAutoCString buffer("6" "\n");
+
+  buffer.Append("^appId=123&inBrowser=1\n");
+  buffer.Append("scope 0\ncurrentWorkerURL 0\n");
+  buffer.Append(SERVICEWORKERREGISTRAR_TRUE "\n");
+  buffer.Append("cacheName 0\n");
+  buffer.AppendInt(nsIRequest::LOAD_NORMAL, 16);
+  buffer.Append("\n");
+  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+
+  buffer.Append("\n");
+  buffer.Append("scope 1\ncurrentWorkerURL 1\n");
+  buffer.Append(SERVICEWORKERREGISTRAR_FALSE "\n");
+  buffer.Append("cacheName 1\n");
+  buffer.AppendInt(nsIRequest::VALIDATE_ALWAYS, 16);
+  buffer.Append("\n");
+  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+
+  ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
+
+  RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
+
+  nsresult rv = swr->TestReadData();
+  ASSERT_EQ(NS_OK, rv) << "ReadData() should not fail";
+
+  const nsTArray<ServiceWorkerRegistrationData>& data = swr->TestGetData();
+  ASSERT_EQ((uint32_t)2, data.Length()) << "2 entries should be found";
+
+  const mozilla::ipc::PrincipalInfo& info0 = data[0].principal();
+  ASSERT_EQ(info0.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
+  const mozilla::ipc::ContentPrincipalInfo& cInfo0 = data[0].principal();
+
+  nsAutoCString suffix0;
+  cInfo0.attrs().CreateSuffix(suffix0);
+
+  ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
+  ASSERT_STREQ("scope 0", cInfo0.spec().get());
+  ASSERT_STREQ("scope 0", data[0].scope().get());
+  ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
+  ASSERT_TRUE(data[0].currentWorkerHandlesFetch());
+  ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
+  ASSERT_EQ(nsIRequest::LOAD_NORMAL, data[0].loadFlags());
+  ASSERT_EQ((int64_t)0, data[0].currentWorkerInstalledTime());
+  ASSERT_EQ((int64_t)0, data[0].currentWorkerActivatedTime());
+  ASSERT_EQ((int64_t)0, data[0].lastUpdateTime());
+
+  const mozilla::ipc::PrincipalInfo& info1 = data[1].principal();
+  ASSERT_EQ(info1.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
+  const mozilla::ipc::ContentPrincipalInfo& cInfo1 = data[1].principal();
+
+  nsAutoCString suffix1;
+  cInfo1.attrs().CreateSuffix(suffix1);
+
+  ASSERT_STREQ("", suffix1.get());
+  ASSERT_STREQ("scope 1", cInfo1.spec().get());
+  ASSERT_STREQ("scope 1", data[1].scope().get());
+  ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
+  ASSERT_FALSE(data[1].currentWorkerHandlesFetch());
+  ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
+  ASSERT_EQ(nsIRequest::VALIDATE_ALWAYS, data[1].loadFlags());
+  ASSERT_EQ((int64_t)0, data[1].currentWorkerInstalledTime());
+  ASSERT_EQ((int64_t)0, data[1].currentWorkerActivatedTime());
+  ASSERT_EQ((int64_t)0, data[1].lastUpdateTime());
 }
 
 TEST(ServiceWorkerRegistrar, TestDedupeRead)
@@ -563,6 +683,9 @@ TEST(ServiceWorkerRegistrar, TestDedupeRead)
   ASSERT_EQ(true, data[0].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 0", NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
   ASSERT_EQ(nsIRequest::VALIDATE_ALWAYS, data[0].loadFlags());
+  ASSERT_EQ((int64_t)0, data[0].currentWorkerInstalledTime());
+  ASSERT_EQ((int64_t)0, data[0].currentWorkerActivatedTime());
+  ASSERT_EQ((int64_t)0, data[0].lastUpdateTime());
 
   const mozilla::ipc::PrincipalInfo& info1 = data[1].principal();
   ASSERT_EQ(info1.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
@@ -578,6 +701,9 @@ TEST(ServiceWorkerRegistrar, TestDedupeRead)
   ASSERT_EQ(true, data[1].currentWorkerHandlesFetch());
   ASSERT_STREQ("cacheName 1", NS_ConvertUTF16toUTF8(data[1].cacheName()).get());
   ASSERT_EQ(nsIRequest::VALIDATE_ALWAYS, data[1].loadFlags());
+  ASSERT_EQ((int64_t)0, data[1].currentWorkerInstalledTime());
+  ASSERT_EQ((int64_t)0, data[1].currentWorkerActivatedTime());
+  ASSERT_EQ((int64_t)0, data[1].lastUpdateTime());
 }
 
 TEST(ServiceWorkerRegistrar, TestDedupeWrite)
@@ -635,6 +761,9 @@ TEST(ServiceWorkerRegistrar, TestDedupeWrite)
   ASSERT_STREQ("cacheName write 9",
                NS_ConvertUTF16toUTF8(data[0].cacheName()).get());
   ASSERT_EQ(nsIRequest::VALIDATE_ALWAYS, data[0].loadFlags());
+  ASSERT_EQ((int64_t)0, data[0].currentWorkerInstalledTime());
+  ASSERT_EQ((int64_t)0, data[0].currentWorkerActivatedTime());
+  ASSERT_EQ((int64_t)0, data[0].lastUpdateTime());
 }
 
 int main(int argc, char** argv) {
