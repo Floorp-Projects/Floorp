@@ -129,6 +129,9 @@ HTMLEditor::HTMLEditor()
   , mPositionedObjectBorderLeft(0)
   , mPositionedObjectBorderTop(0)
   , mGridSize(0)
+  , mDefaultParagraphSeparator(
+      Preferences::GetBool("editor.use_div_for_default_newlines", true)
+      ? ParagraphSeparator::div : ParagraphSeparator::br)
 {
 }
 
