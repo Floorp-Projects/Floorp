@@ -40,9 +40,6 @@ extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 namespace mozilla {
 namespace safebrowsing {
 
-const int CacheResultV2::VER = CacheResult::V2;
-const int CacheResultV4::VER = CacheResult::V4;
-
 const int LookupCacheV2::VER = 2;
 
 LookupCache::LookupCache(const nsACString& aTableName,
