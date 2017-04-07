@@ -1,5 +1,4 @@
 #include "HashStore.h"
-#include "LookupCacheV4.h"
 #include "nsIFile.h"
 #include "nsTArray.h"
 #include "gtest/gtest.h"
@@ -12,9 +11,6 @@ namespace safebrowsing {
     class Classifier;
 }
 }
-
-typedef nsCString _Fragment;
-typedef nsTArray<nsCString> _PrefixArray;
 
 template<typename Function>
 void RunTestInNewThread(Function&& aFunction);
@@ -43,6 +39,3 @@ nsresult PrefixArrayToAddPrefixArrayV2(const nsTArray<nsCString>& prefixArray,
 
 // Generate a hash prefix from string
 nsCString GeneratePrefix(const nsCString& aFragment, uint8_t aLength);
-
-// Create a LookupCacheV4 object with sepecified prefix array.
-UniquePtr<LookupCacheV4> SetupLookupCacheV4(const _PrefixArray& prefixArray);
