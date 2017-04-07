@@ -154,8 +154,6 @@ var gFxAccounts = {
 
   // Note that updateUI() returns a Promise that's only used by tests.
   updateUI() {
-    let profileInfoEnabled = Services.prefs.getBoolPref("identity.fxaccounts.profile_image.enabled", false);
-
     this.panelUIFooter.hidden = false;
 
     // Make sure the button is disabled in customization mode.
@@ -187,7 +185,6 @@ var gFxAccounts = {
       this.panelUILabel.setAttribute("label", defaultLabel);
       this.panelUIStatus.setAttribute("tooltiptext", defaultTooltiptext);
       this.panelUIFooter.removeAttribute("fxastatus");
-      this.panelUIFooter.removeAttribute("fxaprofileimage");
       this.panelUIAvatar.style.removeProperty("list-style-image");
       let showErrorBadge = false;
       if (userData) {
@@ -209,9 +206,6 @@ var gFxAccounts = {
           this.panelUIFooter.setAttribute("fxastatus", "signedin");
           this.panelUILabel.setAttribute("label", userData.email);
         }
-        if (profileInfoEnabled) {
-          this.panelUIFooter.setAttribute("fxaprofileimage", "enabled");
-        }
       }
       if (showErrorBadge) {
         PanelUI.showBadgeOnlyNotification("fxa-needs-authentication");
@@ -221,26 +215,22 @@ var gFxAccounts = {
     }
 
     let updateWithProfile = (profile) => {
-      if (profileInfoEnabled) {
-        if (profile.displayName) {
-          this.panelUILabel.setAttribute("label", profile.displayName);
-        }
-        if (profile.avatar) {
-          this.panelUIFooter.setAttribute("fxaprofileimage", "set");
-          let bgImage = "url(\"" + profile.avatar + "\")";
-          this.panelUIAvatar.style.listStyleImage = bgImage;
+      if (profile.displayName) {
+        this.panelUILabel.setAttribute("label", profile.displayName);
+      }
+      if (profile.avatar) {
+        let bgImage = "url(\"" + profile.avatar + "\")";
+        this.panelUIAvatar.style.listStyleImage = bgImage;
 
-          let img = new Image();
-          img.onerror = () => {
-            // Clear the image if it has trouble loading. Since this callback is asynchronous
-            // we check to make sure the image is still the same before we clear it.
-            if (this.panelUIAvatar.style.listStyleImage === bgImage) {
-              this.panelUIFooter.removeAttribute("fxaprofileimage");
-              this.panelUIAvatar.style.removeProperty("list-style-image");
-            }
-          };
-          img.src = profile.avatar;
-        }
+        let img = new Image();
+        img.onerror = () => {
+          // Clear the image if it has trouble loading. Since this callback is asynchronous
+          // we check to make sure the image is still the same before we clear it.
+          if (this.panelUIAvatar.style.listStyleImage === bgImage) {
+            this.panelUIAvatar.style.removeProperty("list-style-image");
+          }
+        };
+        img.src = profile.avatar;
       }
     }
 
@@ -249,7 +239,7 @@ var gFxAccounts = {
       updateWithUserData(userData);
       // unverified users cause us to spew log errors fetching an OAuth token
       // to fetch the profile, so don't even try in that case.
-      if (!userData || !userData.verified || !profileInfoEnabled) {
+      if (!userData || !userData.verified) {
         return null; // don't even try to grab the profile.
       }
       if (this._cachedProfile) {
