@@ -2394,10 +2394,6 @@ Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader *reader,
       return *countRead ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
     }
 
-    if (!m0RTTStreams.Contains(stream->StreamID())) {
-      m0RTTStreams.AppendElement(stream->StreamID());
-    }
-
     // Need to adjust this to only take as much as we can fit in with the
     // preamble/settings/priority stuff
     count -= (mOutputQueueUsed - mOutputQueueSent);
@@ -2418,6 +2414,12 @@ Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader *reader,
     // hole of stream->ReadSegments, and we want to make sure we return the
     // proper value to our caller.
     *countRead += earlyDataUsed;
+  }
+
+  if (mAttemptingEarlyData && !m0RTTStreams.Contains(stream->StreamID())) {
+    LOG3(("Http2Session::ReadSegmentsAgain adding stream %d to m0RTTStreams\n",
+          stream->StreamID()));
+    m0RTTStreams.AppendElement(stream->StreamID());
   }
 
   // Not every permutation of stream->ReadSegents produces data (and therefore
