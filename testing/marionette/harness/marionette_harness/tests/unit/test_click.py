@@ -97,8 +97,11 @@ class TestLegacyClick(MarionetteTestCase):
         test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
         self.marionette.find_element(By.LINK_TEXT, "333333").click()
-        Wait(self.marionette, timeout=30, ignored_exceptions=errors.NoSuchElementException).until(
-            lambda m: m.find_element(By.ID, "username"))
+        # Bug 1335778 - Missing implicit wait for page being loaded
+        Wait(self.marionette, timeout=self.marionette.timeout.page_load,
+             ignored_exceptions=errors.NoSuchElementException).until(
+            lambda m: m.find_element(By.ID, "username"),
+            message="Username field hasn't been found")
         self.assertEqual(self.marionette.title, "XHTML Test Page")
 
     def test_clicking_an_element_that_is_not_displayed_raises(self):
@@ -112,7 +115,12 @@ class TestLegacyClick(MarionetteTestCase):
         test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
         self.marionette.find_element(By.ID, "overflowLink").click()
-        self.wait_for_condition(lambda mn: self.marionette.title == "XHTML Test Page")
+        # Bug 1335778 - Missing implicit wait for page being loaded
+        Wait(self.marionette, timeout=self.marionette.timeout.page_load,
+             ignored_exceptions=errors.NoSuchElementException).until(
+            lambda m: m.find_element(By.ID, "username"),
+            message="Username field hasn't been found")
+        self.assertEqual(self.marionette.title, "XHTML Test Page")
 
     def test_scroll_into_view_near_end(self):
         self.marionette.navigate(fixed_overlay)
