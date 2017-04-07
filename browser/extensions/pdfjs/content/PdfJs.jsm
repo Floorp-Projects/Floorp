@@ -346,3 +346,4 @@ var PdfJs = {
     this._registered = false;
   }
 };
+
