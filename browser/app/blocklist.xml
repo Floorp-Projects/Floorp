@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1483646608603" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1483471392954" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i988" id="{b12785f5-d8d0-4530-a3ea-5c4263b85bef}">
       <prefs/>
@@ -886,21 +886,6 @@
       <versionRange minVersion="9.2" maxVersion="9.2.0.1023" severity="1"/>
       <versionRange minVersion="0" maxVersion="9.1.0.1035" severity="1"/>
     </emItem>
-    <emItem blockID="i93" id="{68b8676b-99a5-46d1-b390-22411d8bcd61}">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
-    <emItem blockID="i664" id="123456789@offeringmedia.com">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
-    <emItem blockID="i630" id="webbooster@iminent.com">
-      <prefs>
-        <pref>browser.startup.homepage</pref>
-        <pref>browser.search.defaultenginename</pref>
-      </prefs>
-      <versionRange minVersion="0" maxVersion="*" severity="1"/>
-    </emItem>
     <emItem blockID="i7" id="{2224e955-00e9-4613-a844-ce69fccaae91}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -912,18 +897,6 @@
           <versionRange maxVersion="*" minVersion="39.0a1"/>
         </targetApplication>
       </versionRange>
-    </emItem>
-    <emItem blockID="i842" id="{746505DC-0E21-4667-97F8-72EA6BCF5EEF}">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="1"/>
-    </emItem>
-    <emItem blockID="i868" id="{6e7f6f9f-8ce6-4611-add2-05f0f7049ee6}">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="1"/>
-    </emItem>
-    <emItem blockID="i624" id="/^({b95faac1-a3d7-4d69-8943-ddd5a487d966}|{ecce0073-a837-45a2-95b9-600420505f7e}|{2713b394-286f-4d7c-89ea-4174eeab9f5a}|{da7a20cf-bef4-4342-ad78-0240fdf87055})$/">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
     <emItem blockID="i101" id="{3a12052a-66ef-49db-8c39-e5b0bd5c83fa}">
       <prefs/>
@@ -1384,6 +1357,10 @@
     <emItem blockID="i566" id="{77BEC163-D389-42c1-91A4-C758846296A5}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="c142360c-4f93-467e-9717-b638aa085d95" id="/^(\{11112503-5e91-4299-bf4b-f8c07811aa50\})|(\{501815af-725e-45be-b0f2-8f36f5617afc\})$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="9085fdba-8498-46a9-b9fd-4c7343a15c62" id="/^(test2@test\.com)|(test3@test\.com)|(mozilla_cc2\.2@internetdownloadmanager\.com)$/">
       <prefs/>
@@ -2075,6 +2052,33 @@
       <prefs/>
       <versionRange minVersion="1.3.2" maxVersion="1.3.2" severity="1"/>
     </emItem>
+    <emItem blockID="i93" id="{68b8676b-99a5-46d1-b390-22411d8bcd61}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="i664" id="123456789@offeringmedia.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="i630" id="webbooster@iminent.com">
+      <prefs>
+        <pref>browser.startup.homepage</pref>
+        <pref>browser.search.defaultenginename</pref>
+      </prefs>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="i842" id="{746505DC-0E21-4667-97F8-72EA6BCF5EEF}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="i868" id="{6e7f6f9f-8ce6-4611-add2-05f0f7049ee6}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="i624" id="/^({b95faac1-a3d7-4d69-8943-ddd5a487d966}|{ecce0073-a837-45a2-95b9-600420505f7e}|{2713b394-286f-4d7c-89ea-4174eeab9f5a}|{da7a20cf-bef4-4342-ad78-0240fdf87055})$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
   </emItems>
   <pluginItems>
     <pluginItem blockID="p1074">
@@ -2261,14 +2265,6 @@
       <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="18.0.0.366" minVersion="18.0.0.360" severity="0" vulnerabilitystatus="1"/>
-    </pluginItem>
-    <pluginItem blockID="p298">
-      <match exp="JavaAppletPlugin\.plugin" name="filename"/>
-      <versionRange maxVersion="Java 6 Update 41" minVersion="Java 6 Update 39" severity="0" vulnerabilitystatus="1">
-        <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="17.0"/>
-        </targetApplication>
-      </versionRange>
     </pluginItem>
     <pluginItem blockID="p928">
       <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
@@ -3126,6 +3122,10 @@
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="23.0.0.205" minVersion="23.0.0.185" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
+    <pluginItem blockID="97647cd8-03c5-416c-b9d3-cd5ef87ab39f">
+      <match exp="np32dsw_1227197\.dll" name="filename"/>
+      <versionRange maxVersion="12.2.7.197" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
     <pluginItem blockID="p932" os="Linux">
       <match exp="libflashplayer\.so" name="filename"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
@@ -3156,6 +3156,14 @@
       <match exp="Java\(TM\) Plug-in 1\.6\.0_4[2-5]([^\d\._]|$)" name="name"/>
       <match exp="libnpjp2\.so" name="filename"/>
       <versionRange severity="0" vulnerabilitystatus="1">
+        <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+          <versionRange maxVersion="*" minVersion="17.0"/>
+        </targetApplication>
+      </versionRange>
+    </pluginItem>
+    <pluginItem blockID="p298">
+      <match exp="JavaAppletPlugin\.plugin" name="filename"/>
+      <versionRange maxVersion="Java 6 Update 41" minVersion="Java 6 Update 39" severity="0" vulnerabilitystatus="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
           <versionRange maxVersion="*" minVersion="17.0"/>
         </targetApplication>
