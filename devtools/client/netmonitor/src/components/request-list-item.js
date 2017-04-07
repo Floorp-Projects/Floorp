@@ -68,7 +68,7 @@ const RequestListItem = createClass({
     index: PropTypes.number.isRequired,
     isSelected: PropTypes.bool.isRequired,
     firstRequestStartedMillis: PropTypes.number.isRequired,
-    fromCache: PropTypes.bool,
+    fromCache: PropTypes.bool.isRequired,
     onCauseBadgeClick: PropTypes.func.isRequired,
     onContextMenu: PropTypes.func.isRequired,
     onFocusedNodeChange: PropTypes.func,
