@@ -714,6 +714,7 @@ var Impl = {
   _childrenToHearFrom: null,
   // monotonically-increasing id for USS reports
   _nextTotalMemoryId: 1,
+  _USSFromChildProcesses: null,
   _lastEnvironmentChangeDate: 0,
 
 
@@ -1171,6 +1172,7 @@ var Impl = {
             this._childrenToHearFrom.clear();
           },
           TOTAL_MEMORY_COLLECTOR_TIMEOUT);
+        this._USSFromChildProcesses = [];
         this._childrenToHearFrom = new Set();
         for (let i = 1; i < ppmm.childCount; i++) {
           let child = ppmm.getChildAt(i);
@@ -1195,7 +1197,7 @@ var Impl = {
     histogram.add(new Date() - startTime);
   },
 
-  handleMemoryReport(id, units, amount) {
+  handleMemoryReport(id, units, amount, key) {
     let val;
     if (units == Ci.nsIMemoryReporter.UNITS_BYTES) {
       val = Math.floor(amount / 1024);
@@ -1225,10 +1227,19 @@ var Impl = {
 
     let h = this._histograms[id];
     if (!h) {
-      h = Telemetry.getHistogramById(id);
+      if (key) {
+        h = Telemetry.getKeyedHistogramById(id);
+      } else {
+        h = Telemetry.getHistogramById(id);
+      }
       this._histograms[id] = h;
     }
-    h.add(val);
+
+    if (key) {
+      h.add(key, val);
+    } else {
+      h.add(val);
+    }
   },
 
   getChildPayloads: function getChildPayloads() {
@@ -1557,6 +1568,18 @@ var Impl = {
     return this._delayedInitTask;
   },
 
+  getOpenTabsCount: function getOpenTabsCount() {
+    let tabCount = 0;
+
+    let browserEnum = Services.wm.getEnumerator("navigator:browser");
+    while (browserEnum.hasMoreElements()) {
+      let win = browserEnum.getNext();
+      tabCount += win.gBrowser.tabs.length;
+    }
+
+    return tabCount;
+  },
+
   /**
    * Initializes telemetry for a content process.
    */
@@ -1653,7 +1676,9 @@ var Impl = {
     {
       // In parent process, receive the USS report from the child
       if (this._totalMemoryTimeout && this._childrenToHearFrom.delete(message.data.id)) {
-        this._totalMemory += message.data.bytes;
+        let uss = message.data.bytes;
+        this._totalMemory += uss;
+        this._USSFromChildProcesses.push(uss);
         if (this._childrenToHearFrom.size == 0) {
           clearTimeout(this._totalMemoryTimeout);
           this._totalMemoryTimeout = undefined;
@@ -1661,6 +1686,36 @@ var Impl = {
             "MEMORY_TOTAL",
             Ci.nsIMemoryReporter.UNITS_BYTES,
             this._totalMemory);
+
+          let length = this._USSFromChildProcesses.length;
+          if (length > 1) {
+            // Mean of the USS of all the content processes.
+            let mean = this._USSFromChildProcesses.reduce((a, b) => a + b, 0) / length;
+            // Absolute error of USS for each content process, normalized by the mean (*100 to get it in percentage).
+            // 20% means for a content process that it is using 20% more or 20% less than the mean.
+            let diffs = this._USSFromChildProcesses.map(value => Math.floor(Math.abs(value - mean) * 100 / mean));
+            let tabsCount = this.getOpenTabsCount();
+            let key;
+            if (tabsCount < 11) {
+              key = "0 - 10 tabs";
+            } else if (tabsCount < 501) {
+              key = "11 - 500 tabs";
+            } else {
+              key = "more tabs";
+            }
+
+            diffs.forEach(value => {
+              this.handleMemoryReport(
+              "MEMORY_DISTRIBUTION_AMONG_CONTENT",
+              Ci.nsIMemoryReporter.UNITS_COUNT,
+              value,
+              key);
+            });
+
+            // This notification is for testing only.
+            Services.obs.notifyObservers(null, "gather-memory-telemetry-finished", null);
+          }
+          this._USSFromChildProcesses = undefined;
         }
       } else {
         this._log.trace("Child USS report was missed");
