@@ -4,13 +4,13 @@
 
 "use strict";
 
-const Services = require("Services");
 const {
   ENABLE_REQUEST_FILTER_TYPE_ONLY,
   RESET_COLUMNS,
   TOGGLE_COLUMN,
   TOGGLE_REQUEST_FILTER_TYPE,
 } = require("../constants");
+const { Prefs } = require("../utils/prefs");
 const { getRequestFilterTypes } = require("../selectors/index");
 
 /**
@@ -21,26 +21,22 @@ const { getRequestFilterTypes } = require("../selectors/index");
 function prefsMiddleware(store) {
   return next => action => {
     const res = next(action);
-
     switch (action.type) {
       case ENABLE_REQUEST_FILTER_TYPE_ONLY:
       case TOGGLE_REQUEST_FILTER_TYPE:
-        let filters = getRequestFilterTypes(store.getState())
+        Prefs.filters = getRequestFilterTypes(store.getState())
           .filter(([type, check]) => check)
           .map(([type, check]) => type);
-        Services.prefs.setCharPref(
-          "devtools.netmonitor.filters", JSON.stringify(filters));
         break;
+
       case TOGGLE_COLUMN:
-        let hiddenColumns = [...store.getState().ui.columns]
+        Prefs.hiddenColumns = [...store.getState().ui.columns]
           .filter(([column, shown]) => !shown)
           .map(([column, shown]) => column);
-        Services.prefs.setCharPref(
-          "devtools.netmonitor.hiddenColumns", JSON.stringify(hiddenColumns));
         break;
+
       case RESET_COLUMNS:
-        Services.prefs.setCharPref(
-          "devtools.netmonitor.hiddenColumns", JSON.stringify([]));
+        Prefs.hiddenColumns = [];
         break;
     }
     return res;
