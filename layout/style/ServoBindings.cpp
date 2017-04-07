@@ -1641,8 +1641,7 @@ Gecko_GetFontMetrics(RawGeckoPresContextBorrowed aPresContext,
   aPresContext->SetUsesExChUnits(true);
   GeckoFontMetrics ret;
   // Safe because we are locked, and this function is only
-  // ever called from Servo parallel traversal
-  MOZ_ASSERT(ServoStyleSet::IsInServoTraversal());
+  // ever called from Servo parallel traversal or the main thread
   nsPresContext* presContext = const_cast<nsPresContext*>(aPresContext);
   RefPtr<nsFontMetrics> fm = nsRuleNode::GetMetricsFor(presContext, aIsVertical,
                                                        aFont, aFontSize,
