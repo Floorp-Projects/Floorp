@@ -12,7 +12,6 @@ import android.app.ActivityManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.app.ActionBar;
@@ -30,7 +29,6 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.icons.decoders.FaviconDecoder;
@@ -46,8 +44,6 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.widget.AnchoredPopup;
 
 public class WebAppActivity extends GeckoApp {
-
-    public static final String INTENT_KEY = "IS_A_WEBAPP";
     public static final String MANIFEST_PATH = "MANIFEST_PATH";
 
     private static final String LOGTAG = "WebAppActivity";
