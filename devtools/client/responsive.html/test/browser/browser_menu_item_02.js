@@ -7,8 +7,6 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,";
 
-const { getMostRecentBrowserWindow } = require("sdk/window/utils");
-
 const isMenuCheckedFor = ({document}) => {
   let menu = document.getElementById("menu_responsiveUI");
   return menu.getAttribute("checked") === "true";
@@ -22,7 +20,7 @@ add_task(function* () {
     function* (browser) {
       let tab = gBrowser.getTabForBrowser(browser);
 
-      is(window1, getMostRecentBrowserWindow(),
+      is(window1, Services.wm.getMostRecentWindow("navigator:browser"),
         "The new window is the active one");
 
       ok(!isMenuCheckedFor(window1),
@@ -41,7 +39,7 @@ add_task(function* () {
 
   yield BrowserTestUtils.closeWindow(window1);
 
-  is(window, getMostRecentBrowserWindow(),
+  is(window, Services.wm.getMostRecentWindow("navigator:browser"),
     "The original window is the active one");
 
   ok(!isMenuCheckedFor(window),
