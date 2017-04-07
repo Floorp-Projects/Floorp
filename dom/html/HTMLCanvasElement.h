@@ -178,14 +178,13 @@ public:
 
   void ToDataURL(JSContext* aCx, const nsAString& aType,
                  JS::Handle<JS::Value> aParams,
-                 nsAString& aDataURL, CallerType aCallerType,
+                 nsAString& aDataURL,
                  ErrorResult& aRv);
 
   void ToBlob(JSContext* aCx,
               BlobCallback& aCallback,
               const nsAString& aType,
               JS::Handle<JS::Value> aParams,
-              CallerType aCallerType,
               ErrorResult& aRv);
 
   OffscreenCanvas* TransferControlToOffscreen(ErrorResult& aRv);
