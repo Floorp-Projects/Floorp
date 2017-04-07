@@ -5,7 +5,7 @@
 
 @import url(resource://devtools/client/themes/variables.css);
 @import url(resource://devtools/client/themes/common.css);
-@import url(chrome://devtools/skin/light-theme.css);
+@import url(light-theme.css);
 
 :root {
   font-size: 11px;
