@@ -506,9 +506,9 @@ function handleRequest(req, res) {
       res.writeHead(400);
       res.end("WHAT?");
       return;
-   }
-   // test the alt svc frame for use with altsvc2
-   res.altsvc("foo.example.com", serverPort, "h2", 3600, req.headers['x-redirect-origin']);
+    }
+    // test the alt svc frame for use with altsvc2
+    res.altsvc("foo.example.com", serverPort, "h2", 3600, req.headers['x-redirect-origin']);
   }
 
   else if (u.pathname === "/altsvc2") {
@@ -729,20 +729,20 @@ function handleRequest(req, res) {
 
   // for use with test_immutable.js
   else if (u.pathname === "/immutable-test-without-attribute") {
-     res.setHeader('Cache-Control', 'max-age=100000');
-     res.setHeader('Etag', '1');
-     if (req.headers["if-none-match"]) {
-       res.setHeader("x-conditional", "true");
-     }
+    res.setHeader('Cache-Control', 'max-age=100000');
+    res.setHeader('Etag', '1');
+    if (req.headers["if-none-match"]) {
+      res.setHeader("x-conditional", "true");
+    }
     // default response from here
   }
   else if (u.pathname === "/immutable-test-with-attribute") {
     res.setHeader('Cache-Control', 'max-age=100000, immutable');
     res.setHeader('Etag', '2');
-     if (req.headers["if-none-match"]) {
-       res.setHeader("x-conditional", "true");
-     }
-   // default response from here
+    if (req.headers["if-none-match"]) {
+      res.setHeader("x-conditional", "true");
+    }
+    // default response from here
   }
   else if (u.pathname === "/origin-4") {
    var originList = [ ];
@@ -751,7 +751,7 @@ function handleRequest(req, res) {
   }
   else if (u.pathname === "/origin-6") {
    var originList = [ "https://alt1.example.com:" + serverPort,
-		      "https://alt2.example.com:" + serverPort,
+                      "https://alt2.example.com:" + serverPort,
                       "https://bar.example.com:" + serverPort ];
    req.stream.connection.originFrame(originList);
    res.setHeader("x-client-port", req.remotePort);
@@ -794,7 +794,7 @@ function handleRequest(req, res) {
       'content-length' : 1
       });
     pushe.end('1');
-}
+  }
   else if (u.pathname.substring(0,8) === "/origin-") { // test_origin.js coalescing
     res.setHeader("x-client-port", req.remotePort);
   }
