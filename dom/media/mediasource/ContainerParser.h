@@ -80,6 +80,8 @@ protected:
   RefPtr<MediaByteBuffer> mInitData;
   RefPtr<SourceBufferResource> mResource;
   bool mHasInitData;
+  uint64_t mTotalParsed;
+  uint64_t mGlobalOffset;
   MediaByteRange mCompleteInitSegmentRange;
   MediaByteRange mCompleteMediaHeaderRange;
   MediaByteRange mCompleteMediaSegmentRange;
