@@ -1373,12 +1373,6 @@ AllowCPOWsInAddon(const nsACString& addonIdStr, bool allow)
     return XPCWrappedNativeScope::AllowCPOWsInAddon(jsapi.cx(), addonId, allow);
 }
 
-void
-SetDocGroupValidation(JSObject* global)
-{
-    CompartmentPrivate::Get(global)->scope->SetDocGroupValidation();
-}
-
 } // namespace xpc
 
 namespace mozilla {
