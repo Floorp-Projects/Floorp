@@ -7244,6 +7244,11 @@ Parser<ParseHandler>::nextTokenContinuesLetDeclaration(TokenKind next, YieldHand
     if (next == TOK_YIELD)
         return yieldHandling == YieldIsName;
 
+    // Somewhat similar logic applies for "await", except that it's not tracked
+    // with an AwaitHandling argument.
+    if (next == TOK_AWAIT)
+        return !awaitIsKeyword();
+
     // Otherwise a let declaration must have a name.
     if (TokenKindIsPossibleIdentifier(next)) {
         // A "let" edge case deserves special comment.  Consider this:
