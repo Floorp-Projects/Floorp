@@ -154,17 +154,14 @@ public class Telemetry {
         return this;
     }
 
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public TelemetryClient getClient() {
         return client;
     }
 
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public TelemetryStorage getStorage() {
         return storage;
     }
 
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public TelemetryConfiguration getConfiguration() {
         return configuration;
     }
