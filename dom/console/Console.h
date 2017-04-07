@@ -320,12 +320,10 @@ private:
   // MAX_PAGE_COUNTERS in case of error, otherwise the incremented counter
   // value.
   // * aCx - the JSContext rooting aData.
-  // * aFrame - the first frame of ConsoleCallData.
   // * aData - the arguments received by the console.count() method.
   // * aCountLabel - the label that will be populated by this method.
   uint32_t
-  IncreaseCounter(JSContext* aCx, const ConsoleStackEntry& aFrame,
-                  const Sequence<JS::Value>& aData,
+  IncreaseCounter(JSContext* aCx, const Sequence<JS::Value>& aData,
                   nsAString& aCountLabel);
 
   // This method generates a ConsoleCounter dictionary as JS::Value. If
