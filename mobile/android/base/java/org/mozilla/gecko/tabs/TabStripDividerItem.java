@@ -13,6 +13,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.ViewUtils;
 import android.view.View;
 
 class TabStripDividerItem extends RecyclerView.ItemDecoration {
@@ -38,21 +39,25 @@ class TabStripDividerItem extends RecyclerView.ItemDecoration {
      * {@code view}.
      */
     private static boolean drawLeftDividerForView(View view, RecyclerView parent) {
+        final boolean isLTR = !ViewUtils.isLayoutRtl(parent);
         final int position = parent.getChildAdapterPosition(view);
-        // No left divider if this is tab 0 or this tab is currently pressed.
-        if (position == 0 || view.isPressed()) {
+        // No left divider if this is the leftmost tab or this tab is currently pressed.
+        final boolean isLeftmostTab = isLTR ? position == 0 : position == parent.getAdapter().getItemCount() - 1;
+        if (isLeftmostTab || view.isPressed()) {
             return false;
         }
 
         final int selectedPosition = ((TabStripView) parent).getPositionForSelectedTab();
-        // No left divider if this tab or the previous tab is the current selected tab.
+        // No left divider if this tab or the tab to its left is the current selected tab.
+        final int positionToTheRightOfSelectedTab = isLTR ? selectedPosition + 1 : selectedPosition - 1;
         if (selectedPosition != RecyclerView.NO_POSITION &&
-                (position == selectedPosition || position == selectedPosition + 1)) {
+                (position == selectedPosition || position == positionToTheRightOfSelectedTab)) {
             return false;
         }
 
-        final RecyclerView.ViewHolder holder = parent.findViewHolderForAdapterPosition(position - 1);
-        // No left divider if the previous tab is currently pressed.
+        // No left divider if the tab to the left is currently pressed.
+        final int positionToTheLeft = isLTR ? position - 1 : position + 1;
+        final RecyclerView.ViewHolder holder = parent.findViewHolderForAdapterPosition(positionToTheLeft);
         if (holder != null && holder.itemView.isPressed()) {
             return false;
         }
