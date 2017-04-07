@@ -97,6 +97,34 @@ LookupCache::UpdateRootDirHandle(nsIFile* aNewRootStoreDirectory)
 }
 
 nsresult
+LookupCache::AddCompletionsToCache(AddCompleteArray& aAddCompletes)
+{
+  for (uint32_t i = 0; i < aAddCompletes.Length(); i++) {
+    if (mGetHashCache.BinaryIndexOf(aAddCompletes[i].CompleteHash()) == mGetHashCache.NoIndex) {
+      mGetHashCache.AppendElement(aAddCompletes[i].CompleteHash());
+    }
+  }
+  mGetHashCache.Sort();
+
+  return NS_OK;
+}
+
+#if defined(DEBUG)
+void
+LookupCache::DumpCache()
+{
+  if (!LOG_ENABLED())
+    return;
+
+  for (uint32_t i = 0; i < mGetHashCache.Length(); i++) {
+    nsAutoCString str;
+    mGetHashCache[i].ToHexString(str);
+    LOG(("Caches: %s", str.get()));
+  }
+}
+#endif
+
+nsresult
 LookupCache::WriteFile()
 {
   if (nsUrlClassifierDBService::ShutdownHasStarted()) {
@@ -122,6 +150,12 @@ LookupCache::ClearAll()
   ClearCache();
   ClearPrefixes();
   mPrimed = false;
+}
+
+void
+LookupCache::ClearCache()
+{
+  mGetHashCache.Clear();
 }
 
 /* static */ bool
@@ -367,12 +401,10 @@ LookupCacheV2::ClearAll()
 
 nsresult
 LookupCacheV2::Has(const Completion& aCompletion,
-                   const TableFreshnessMap& aTableFreshness,
-                   uint32_t aFreshnessGuarantee,
                    bool* aHas, uint32_t* aMatchLength,
-                   bool* aConfirmed, bool* aFromCache)
+                   bool* aFromCache)
 {
-  *aHas = *aConfirmed = *aFromCache = false;
+  *aHas = *aFromCache = false;
   *aMatchLength = 0;
 
   uint32_t prefix = aCompletion.ToUint32();
@@ -393,18 +425,29 @@ LookupCacheV2::Has(const Completion& aCompletion,
     LOG(("Complete in %s", mTableName.get()));
     *aFromCache = true;
     *aHas = true;
-
-    int64_t ageSec; // in seconds
-    if (aTableFreshness.Get(mTableName, &ageSec)) {
-      int64_t nowSec = (PR_Now() / PR_USEC_PER_SEC);
-      MOZ_ASSERT(ageSec <= nowSec);
-
-      // Considered completion as unsafe if its table is up-to-date.
-      *aConfirmed = (nowSec - ageSec) < aFreshnessGuarantee;
-    }
+    *aMatchLength = COMPLETE_SIZE;
   }
 
   return NS_OK;
+}
+
+void
+LookupCacheV2::IsHashEntryConfirmed(const Completion& aEntry,
+                                    const TableFreshnessMap& aTableFreshness,
+                                    uint32_t aFreshnessGuarantee,
+                                    bool* aConfirmed)
+{
+  int64_t age; // in seconds
+  bool found = aTableFreshness.Get(mTableName, &age);
+  if (!found) {
+    *aConfirmed = false;
+  } else {
+    int64_t now = (PR_Now() / PR_USEC_PER_SEC);
+    MOZ_ASSERT(age <= now);
+
+    // Considered completion as unsafe if its table is up-to-date.
+    *aConfirmed = (now - age) < aFreshnessGuarantee;
+  }
 }
 
 bool
@@ -452,19 +495,6 @@ LookupCacheV2::GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes)
 }
 
 nsresult
-LookupCacheV2::AddCompletionsToCache(AddCompleteArray& aAddCompletes)
-{
-  for (uint32_t i = 0; i < aAddCompletes.Length(); i++) {
-    if (mGetHashCache.BinaryIndexOf(aAddCompletes[i].CompleteHash()) == mGetHashCache.NoIndex) {
-      mGetHashCache.AppendElement(aAddCompletes[i].CompleteHash());
-    }
-  }
-  mGetHashCache.Sort();
-
-  return NS_OK;
-}
-
-nsresult
 LookupCacheV2::ReadCompletions()
 {
   HashStore store(mTableName, mProvider, mRootStoreDirectory);
@@ -480,12 +510,6 @@ LookupCacheV2::ReadCompletions()
   }
 
   return NS_OK;
-}
-
-void
-LookupCacheV2::ClearCache()
-{
-  mGetHashCache.Clear();
 }
 
 nsresult
@@ -568,21 +592,6 @@ LookupCacheV2::ConstructPrefixSet(AddPrefixArray& aAddPrefixes)
 }
 
 #if defined(DEBUG)
-
-void
-LookupCacheV2::DumpCache()
-{
-  if (!LOG_ENABLED()) {
-    return;
-  }
-
-  for (uint32_t i = 0; i < mGetHashCache.Length(); i++) {
-    nsAutoCString str;
-    mGetHashCache[i].ToHexString(str);
-    LOG(("Caches: %s", str.get()));
-  }
-}
-
 void
 LookupCacheV2::DumpCompletions()
 {

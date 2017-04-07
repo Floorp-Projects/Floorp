@@ -25,16 +25,13 @@ public:
 
   virtual nsresult Init() override;
   virtual nsresult Has(const Completion& aCompletion,
-                       const TableFreshnessMap& aTableFreshness,
-                       uint32_t aFreshnessGuarantee,
                        bool* aHas, uint32_t* aMatchLength,
-                       bool* aConfirmed, bool* aFromCache) override;
+                       bool* aFromCache) override;
 
-  virtual void ClearCache() override;
-
-#if DEBUG
-  virtual void DumpCache() override;
-#endif
+  virtual void IsHashEntryConfirmed(const Completion& aEntry,
+                                    const TableFreshnessMap& aTableFreshness,
+                                    uint32_t aFreshnessGuarantee,
+                                    bool* aConfirmed) override;
 
   virtual bool IsEmpty() override;
 
@@ -48,12 +45,8 @@ public:
                        PrefixStringMap& aInputMap,
                        PrefixStringMap& aOutputMap);
 
-  nsresult AddFullHashResponseToCache(const FullHashResponseMap& aResponseMap);
-
   nsresult WriteMetadata(TableUpdateV4* aTableUpdate);
   nsresult LoadMetadata(nsACString& aState, nsACString& aChecksum);
-
-  void InvalidateExpiredCacheEntry();
 
   static const int VER;
 
@@ -70,8 +63,6 @@ private:
   nsresult VerifyChecksum(const nsACString& aChecksum);
 
   RefPtr<VariableLengthPrefixSet> mVLPrefixSet;
-
-  nsClassHashtable<VLHashPrefixString, CachedFullHashResponse> mCache;
 };
 
 } // namespace safebrowsing
