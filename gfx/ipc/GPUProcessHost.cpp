@@ -152,12 +152,12 @@ GPUProcessHost::Shutdown()
     // unexpected.
     mShutdownRequested = true;
 
+#ifdef NS_FREE_PERMANENT_DATA
     // The channel might already be closed if we got here unexpectedly.
     if (!mChannelClosed) {
       mGPUChild->Close();
     }
-
-#ifndef NS_FREE_PERMANENT_DATA
+#else
     // No need to communicate shutdown, the GPU process doesn't need to
     // communicate anything back.
     KillHard("NormalShutdown");
