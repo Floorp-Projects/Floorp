@@ -148,7 +148,7 @@ Library::Create(JSContext* cx, HandleValue path, const JSCTypesCallbacks* callba
   libSpec.type = PR_LibSpec_Pathname;
 #endif
 
-  PRLibrary* library = PR_LoadLibraryWithFlags(libSpec, 0);
+  PRLibrary* library = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW);
 
 #ifndef XP_WIN
   JS_free(cx, pathBytes);
