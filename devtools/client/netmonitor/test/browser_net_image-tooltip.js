@@ -13,10 +13,8 @@ add_task(function* test() {
   let { tab, monitor } = yield initNetMonitor(IMAGE_TOOLTIP_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, gStore, windowRequire, NetMonitorController } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { NetMonitorController } =
-    windowRequire("devtools/client/netmonitor/src/netmonitor-controller");
   let {
     ACTIVITY_TYPE,
     EVENTS,
