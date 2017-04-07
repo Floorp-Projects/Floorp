@@ -22,14 +22,15 @@
 
   <stringbundle id="bundlePreferences"
                 src="chrome://browser/locale/preferences/preferences.properties"/>
+  <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
 
   <vbox flex="1">
-    <description>&settings.description;</description>
+    <description id="settingsDescription"></description>
     <separator class="thin"/>
 
     <hbox id="searchBoxContainer">
       <textbox id="searchBox" type="search" flex="1"
-        placeholder="&searchPlaceHolder;" accesskey="&searchPlaceHolder.accesskey;"/>
+        placeholder="&searchTextboxPlaceHolder;" accesskey="&searchTextboxPlaceHolder.accesskey;"/>
     </hbox>
     <separator class="thin"/>
 

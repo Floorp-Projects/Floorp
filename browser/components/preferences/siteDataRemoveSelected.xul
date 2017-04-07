@@ -37,7 +37,7 @@
 #endif
         >&removingDialog.title;</label>
         <separator class="thin"/>
-        <description id="removing-description">&removingDialog.description;</description>
+        <description id="removing-description">&removingSelected.description;</description>
       </vbox>
     </hbox>
 
