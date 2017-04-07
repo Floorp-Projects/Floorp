@@ -11,7 +11,6 @@
  */
 const React = require("react");
 const ReactDOM = require("react-dom");
-const { bindActionCreators } = require("redux");
 const { bootstrap, renderRoot } = require("devtools-launchpad");
 const { EventEmitter } = require("devtools-modules");
 const { Services: { appinfo, pref }} = require("devtools-modules");
@@ -39,7 +38,6 @@ pref("devtools.webconsole.persistlog", false);
 
 const App = require("./src/components/app");
 const store = window.gStore = configureStore();
-const actions = bindActionCreators(require("./src/actions"), store.dispatch);
 const { NetMonitorController } = require("./src/netmonitor-controller");
 
 /**
@@ -71,5 +69,5 @@ bootstrap(React, ReactDOM).then(connection => {
     return;
   }
   renderRoot(React, ReactDOM, App, store);
-  NetMonitorController.startupNetMonitor(connection, actions);
+  NetMonitorController.startupNetMonitor(connection);
 });

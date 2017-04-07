@@ -23,11 +23,9 @@
       const EventEmitter = require("devtools/shared/event-emitter");
       const { createFactory } = require("devtools/client/shared/vendor/react");
       const { render, unmountComponentAtNode } = require("devtools/client/shared/vendor/react-dom");
-      const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
       const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
       const { configureStore } = require("./src/utils/create-store");
       const store = window.gStore = configureStore();
-      const actions = bindActionCreators(require("./src/actions/index"), store.dispatch);
       const { NetMonitorController } = require("./src/netmonitor-controller");
 
       // Inject EventEmitter into global window.
@@ -43,7 +41,7 @@
               tabTarget: toolbox.target,
             },
             toolbox,
-          }, actions);
+          });
         },
 
         destroy() {
