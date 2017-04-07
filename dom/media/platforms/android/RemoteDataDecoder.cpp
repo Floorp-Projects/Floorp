@@ -523,6 +523,9 @@ RemoteDataDecoder::Drain()
 {
   RefPtr<RemoteDataDecoder> self = this;
   return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+    if (mShutdown) {
+      return DecodePromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+    }
     RefPtr<DecodePromise> p = mDrainPromise.Ensure(__func__);
     if (mDrainStatus == DrainStatus::DRAINED) {
       // There's no operation to perform other than returning any already
@@ -654,15 +657,9 @@ RemoteDataDecoder::UpdateOutputStatus(MediaData* aSample)
 void
 RemoteDataDecoder::ReturnDecodedData()
 {
-  if (!mTaskQueue->IsCurrentThreadIn()) {
-    mTaskQueue->Dispatch(
-      NewRunnableMethod(this, &RemoteDataDecoder::ReturnDecodedData));
-    return;
-  }
   AssertOnTaskQueue();
-  if (mShutdown) {
-    return;
-  }
+  MOZ_ASSERT(!mShutdown);
+
   // We only want to clear mDecodedData when we have resolved the promises.
   if (!mDecodePromise.IsEmpty()) {
     mDecodePromise.Resolve(mDecodedData, __func__);
