@@ -369,22 +369,18 @@ static inline nscoord ScaleViewportCoordTrunc(const nsCSSValue& aValue,
                                aViewportSize / 100.0f);
 }
 
+/* static */
 already_AddRefed<nsFontMetrics>
-GetMetricsFor(nsPresContext* aPresContext,
-              nsStyleContext* aStyleContext,
-              const nsStyleFont* aStyleFont,
-              nscoord aFontSize, // overrides value from aStyleFont
-              bool aUseUserFontSet)
+nsRuleNode::GetMetricsFor(nsPresContext* aPresContext,
+                          bool aIsVertical,
+                          const nsStyleFont* aStyleFont,
+                          nscoord aFontSize,
+                          bool aUseUserFontSet)
 {
   nsFont font = aStyleFont->mFont;
   font.size = aFontSize;
-  gfxFont::Orientation orientation = gfxFont::eHorizontal;
-  if (aStyleContext) {
-    WritingMode wm(aStyleContext);
-    if (wm.IsVertical() && !wm.IsSideways()) {
-      orientation = gfxFont::eVertical;
-    }
-  }
+  gfxFont::Orientation orientation
+    = aIsVertical ? gfxFont::eVertical : gfxFont::eHorizontal;
   nsFontMetrics::Params params;
   params.language = aStyleFont->mLanguage;
   params.explicitLanguage = aStyleFont->mExplicitLanguage;
@@ -393,6 +389,25 @@ GetMetricsFor(nsPresContext* aPresContext,
     aUseUserFontSet ? aPresContext->GetUserFontSet() : nullptr;
   params.textPerf = aPresContext->GetTextPerfMetrics();
   return aPresContext->DeviceContext()->GetMetricsFor(font, params);
+}
+
+/* static */
+already_AddRefed<nsFontMetrics>
+nsRuleNode::GetMetricsFor(nsPresContext* aPresContext,
+                          nsStyleContext* aStyleContext,
+                          const nsStyleFont* aStyleFont,
+                          nscoord aFontSize, // overrides value from aStyleFont
+                          bool aUseUserFontSet)
+{
+  bool isVertical = false;
+  if (aStyleContext) {
+    WritingMode wm(aStyleContext);
+    if (wm.IsVertical() && !wm.IsSideways()) {
+      isVertical = true;
+    }
+  }
+  return nsRuleNode::GetMetricsFor(aPresContext, isVertical, aStyleFont,
+                                   aFontSize, aUseUserFontSet);
 }
 
 
