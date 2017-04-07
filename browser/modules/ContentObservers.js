@@ -17,6 +17,10 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "ContentWebRTC",
+  "resource:///modules/ContentWebRTC.jsm");
 
 var gEMEUIObserver = function(subject, topic, data) {
   let win = subject.top;
@@ -52,3 +56,29 @@ function getMessageManagerForWindow(aContentWindow) {
 
 Services.obs.addObserver(gEMEUIObserver, "mediakeys-request", false);
 Services.obs.addObserver(gDecoderDoctorObserver, "decoder-doctor-notification", false);
+
+
+// ContentWebRTC observer registration.
+const kWebRTCObserverTopics = ["getUserMedia:request",
+                               "recording-device-stopped",
+                               "PeerConnection:request",
+                               "recording-device-events",
+                               "recording-window-ended"];
+
+function webRTCObserve(aSubject, aTopic, aData) {
+  ContentWebRTC.observe(aSubject, aTopic, aData);
+}
+
+for (let topic of kWebRTCObserverTopics) {
+  Services.obs.addObserver(webRTCObserve, topic, false);
+}
+
+if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT)
+  Services.obs.addObserver(processShutdown, "content-child-shutdown", false);
+
+function processShutdown() {
+  for (let topic of kWebRTCObserverTopics) {
+    Services.obs.removeObserver(webRTCObserve, topic);
+  }
+  Services.obs.removeObserver(processShutdown, "content-child-shutdown");
+}
