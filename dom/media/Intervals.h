@@ -101,12 +101,22 @@ public:
                     mFuzz + aOther.mFuzz);
   }
 
+  SelfType operator+ (const T& aVal) const
+  {
+    return SelfType(mStart + aVal, mEnd + aVal, mFuzz);
+  }
+
   // Basic interval arithmetic operator definition.
   SelfType operator- (const SelfType& aOther) const
   {
     return SelfType(mStart - aOther.mEnd,
                     mEnd - aOther.mStart,
                     mFuzz + aOther.mFuzz);
+  }
+
+  SelfType operator- (const T& aVal) const
+  {
+    return SelfType(mStart - aVal, mEnd - aVal, mFuzz);
   }
 
   bool operator== (const SelfType& aOther) const
