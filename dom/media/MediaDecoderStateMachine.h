@@ -124,6 +124,7 @@ enum class MediaEventType : int8_t
   ExitVideoSuspend,
   StartVideoSuspendTimer,
   CancelVideoSuspendTimer,
+  VideoOnlySeekBegin,
   VideoOnlySeekCompleted,
 };
 
