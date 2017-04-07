@@ -39,6 +39,7 @@ EXPORTS += [
     'gfxMatrix.h',
     'gfxPattern.h',
     'gfxPlatform.h',
+    'gfxPlatformFontList.h',
     'gfxPoint.h',
     'gfxPrefs.h',
     'gfxQuad.h',

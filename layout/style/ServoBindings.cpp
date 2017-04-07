@@ -1638,11 +1638,11 @@ Gecko_GetFontMetrics(RawGeckoPresContextBorrowed aPresContext,
                      bool aUseUserFontSet)
 {
   MutexAutoLock lock(*sServoFontMetricsLock);
-  aPresContext->SetUsesExChUnits(true);
   GeckoFontMetrics ret;
   // Safe because we are locked, and this function is only
   // ever called from Servo parallel traversal or the main thread
   nsPresContext* presContext = const_cast<nsPresContext*>(aPresContext);
+  presContext->SetUsesExChUnits(true);
   RefPtr<nsFontMetrics> fm = nsRuleNode::GetMetricsFor(presContext, aIsVertical,
                                                        aFont, aFontSize,
                                                        aUseUserFontSet);
