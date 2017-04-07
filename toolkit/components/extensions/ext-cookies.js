@@ -7,10 +7,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 
 /* globals DEFAULT_STORE, PRIVATE_STORE */
 
-var {
-  SingletonEventManager,
-} = ExtensionUtils;
-
 function convert({cookie, isPrivate}) {
   let result = {
     name: cookie.name,

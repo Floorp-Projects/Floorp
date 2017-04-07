@@ -14,7 +14,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
 
 var {
   ExtensionError,
-  SingletonEventManager,
   defineLazyGetter,
 } = ExtensionUtils;
 
