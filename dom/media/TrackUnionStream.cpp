@@ -57,13 +57,13 @@ TrackUnionStream::TrackUnionStream(AbstractThread* aMainThread) :
     for (int32_t i = mTrackMap.Length() - 1; i >= 0; --i) {
       if (mTrackMap[i].mInputPort == aPort) {
         STREAM_LOG(LogLevel::Debug, ("TrackUnionStream %p removing trackmap entry %d", this, i));
-        EndTrack(i);
         nsTArray<RefPtr<DirectMediaStreamTrackListener>> listeners(
           mTrackMap[i].mOwnedDirectListeners);
         for (auto listener : listeners) {
           // Remove listeners while the entry still exists.
           RemoveDirectTrackListenerImpl(listener, mTrackMap[i].mOutputTrackID);
         }
+        EndTrack(i);
         mTrackMap.RemoveElementAt(i);
       }
     }
