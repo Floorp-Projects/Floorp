@@ -7,6 +7,10 @@
  */
 
 .boxmodel-container {
+  /* The view will grow bigger as the window gets resized, until 400px */
+  max-width: 400px;
+  margin: 0px auto;
+  padding: 0;
   overflow: auto;
 }
 
@@ -29,11 +33,9 @@
   position: relative;
   color: var(--theme-selection-color);
   /* Make sure there is some space between the window's edges and the regions */
-  margin: 14px auto;
+  margin: 14px 14px 4px 14px;
   width: calc(100% - 2 * 14px);
   min-width: 240px;
-  /* The view will grow bigger as the window gets resized, until 400px */
-  max-width: 400px;
 }
 
 .boxmodel-box {
