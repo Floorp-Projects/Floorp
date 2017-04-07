@@ -23,40 +23,55 @@
     }                                           \
   }
 
-mozilla::detail::MutexImpl::MutexImpl()
-{
-  pthread_mutexattr_t* attrp = nullptr;
-
-  // Linux with glibc and FreeBSD support adaptive mutexes that spin
-  // for a short number of tries before sleeping.  NSPR's locks did
-  // this, too, and it seems like a reasonable thing to do.
+// Linux with glibc and FreeBSD support adaptive mutexes that spin
+// for a short number of tries before sleeping.  NSPR's locks did
+// this, too, and it seems like a reasonable thing to do.
 #if (defined(__linux__) && defined(__GLIBC__)) || defined(__FreeBSD__)
 #define ADAPTIVE_MUTEX_SUPPORTED
 #endif
 
 #if defined(DEBUG)
-#define ATTR_REQUIRED
-#define MUTEX_KIND PTHREAD_MUTEX_ERRORCHECK
+#define ATTR_SETTYPE PTHREAD_MUTEX_ERRORCHECK
 #elif defined(ADAPTIVE_MUTEX_SUPPORTED)
-#define ATTR_REQUIRED
-#define MUTEX_KIND PTHREAD_MUTEX_ADAPTIVE_NP
+#define ATTR_SETTYPE PTHREAD_MUTEX_ADAPTIVE_NP
 #endif
 
-#if defined(ATTR_REQUIRED)
+#if defined(XP_DARWIN)
+// OS X's mutexes are fair by default, which means they can be rather
+// slow in the contended case.  OS X 10.7 and above provides an OS
+// X-only function to set the mutex fairness policy, which makes mutexes
+// non-fair (i.e. like every other platform we support) and increases
+// performance in the contended case by an order of magnitude or so.
+#include <pthread_spis.h>
+#define ATTR_SETPOLICY _PTHREAD_MUTEX_POLICY_FIRSTFIT
+#endif
+
+mozilla::detail::MutexImpl::MutexImpl()
+{
+  pthread_mutexattr_t* attrp = nullptr;
+
+#if defined(ATTR_SETTYPE) || defined(ATTR_SETPOLICY)
   pthread_mutexattr_t attr;
 
   TRY_CALL_PTHREADS(pthread_mutexattr_init(&attr),
                     "mozilla::detail::MutexImpl::MutexImpl: pthread_mutexattr_init failed");
 
-  TRY_CALL_PTHREADS(pthread_mutexattr_settype(&attr, MUTEX_KIND),
+#if defined(ATTR_SETTYPE)
+  TRY_CALL_PTHREADS(pthread_mutexattr_settype(&attr, ATTR_SETTYPE),
                     "mozilla::detail::MutexImpl::MutexImpl: pthread_mutexattr_settype failed");
+#endif
+#if defined(ATTR_SETPOLICY)
+  TRY_CALL_PTHREADS(pthread_mutexattr_setpolicy_np(&attr, ATTR_SETPOLICY),
+                    "mozilla::detail::MutexImpl::MutexImpl: pthread_mutex_setpolicy_np failed");
+#endif
+
   attrp = &attr;
 #endif
 
   TRY_CALL_PTHREADS(pthread_mutex_init(&platformData()->ptMutex, attrp),
                     "mozilla::detail::MutexImpl::MutexImpl: pthread_mutex_init failed");
 
-#if defined(ATTR_REQUIRED)
+#if defined(ATTR_SETTYPE) || defined(ATTR_SETPOLICY)
   TRY_CALL_PTHREADS(pthread_mutexattr_destroy(&attr),
                     "mozilla::detail::MutexImpl::MutexImpl: pthread_mutexattr_destroy failed");
 #endif
