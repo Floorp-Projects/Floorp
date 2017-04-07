@@ -4,8 +4,8 @@
 'use strict';
 
 const { contract } = require('../../util/contract');
-const { isLocalURL } = require('../../url');
-const { isNil, isObject, isString } = require('../../lang/type');
+lazyRequire(this, '../../url', "isLocalURL");
+lazyRequire(this, '../../lang/type', "isNil", "isObject", "isString");
 const { required, either, string, boolean, object, number } = require('../../deprecated/api-utils');
 const { merge } = require('../../util/object');
 const { freeze } = Object;
