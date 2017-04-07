@@ -1182,7 +1182,9 @@ class RunProgram(MachCommandBase):
                 args.append('-profile')
                 args.append(path)
 
-        extra_env = {}
+        extra_env = {
+            'MOZ_DEVELOPER_REPO_DIR': self.topsrcdir,
+        }
 
         if not enable_crash_reporter:
             extra_env['MOZ_CRASHREPORTER_DISABLE'] = '1'
