@@ -16,14 +16,10 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Browser;
-import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.StyleRes;
-import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.Snackbar;
-import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.util.SparseArrayCompat;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -32,8 +28,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
-import android.widget.ImageButton;
 import android.widget.ProgressBar;
 
 import org.mozilla.gecko.EventDispatcher;
@@ -48,9 +42,9 @@ import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.ColorUtil;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
-import org.mozilla.gecko.util.GeckoBundle;
 
 import java.util.List;
 
@@ -218,26 +212,31 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     // CustomTabsActivity only use standard menu in ActionBar, so initialize menu here.
     @Override
     public boolean onCreatePanelMenu(final int id, final Menu menu) {
-        insertActionButton(menu, startIntent, actionBarPresenter.getTextPrimaryColor());
 
+        // if 3rd-party app asks to add an action button
+        if (IntentUtil.hasActionButton(startIntent)) {
+            final Bitmap bitmap = IntentUtil.getActionButtonIcon(startIntent);
+            final Drawable icon = new BitmapDrawable(getResources(), bitmap);
+            final boolean shouldTint = IntentUtil.isActionButtonTinted(startIntent);
+            actionBarPresenter.addActionButton(menu, icon, shouldTint)
+                    .setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onActionButtonClicked();
+                        }
+                    });
+        }
+
+        // insert an action button for menu. click it to show popup menu
         popupMenu = createCustomPopupMenu();
-
-        // Create a ImageButton manually, and use it as an anchor for PopupMenu.
-        final ImageButton btn = new ImageButton(getContext(),
-                null, 0, R.style.Widget_MenuButtonCustomTabs);
-        btn.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View anchor) {
-                popupMenu.setAnchor(anchor);
-                popupMenu.show();
-            }
-        });
-
-        // Insert the anchor-button to Menu
-        final MenuItem item = menu.add(Menu.NONE, R.id.menu, Menu.NONE, "Menu Button");
-        item.setActionView(btn);
-        MenuItemCompat.setShowAsAction(item, MenuItemCompat.SHOW_AS_ACTION_ALWAYS);
+        actionBarPresenter.addActionButton(menu, getDrawable(R.drawable.ab_menu), true)
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View anchor) {
+                        popupMenu.setAnchor(anchor);
+                        popupMenu.show();
+                    }
+                });
 
         updateMenuItemForward();
         return true;
@@ -248,9 +247,6 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         switch (item.getItemId()) {
             case android.R.id.home:
                 finish();
-                return true;
-            case R.id.action_button:
-                onActionButtonClicked();
                 return true;
             case R.id.share:
                 onShareClicked();
@@ -273,37 +269,6 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    /**
-     * To insert a MenuItem (as an ActionButton) into Menu.
-     *
-     * @param menu   The options menu in which to place items.
-     * @param intent which to launch this activity
-     * @param tintColor color to tint action-button
-     * @return the MenuItem which be created and inserted into menu. Otherwise, null.
-     */
-    @VisibleForTesting
-    MenuItem insertActionButton(final Menu menu,
-                                final Intent intent,
-                                @ColorInt final int tintColor) {
-        if (!IntentUtil.hasActionButton(intent)) {
-            return null;
-        }
-
-        MenuItem item = menu.add(Menu.NONE,
-                R.id.action_button,
-                Menu.NONE,
-                IntentUtil.getActionButtonDescription(intent));
-        Bitmap bitmap = IntentUtil.getActionButtonIcon(intent);
-        final Drawable icon = new BitmapDrawable(getResources(), bitmap);
-        if (IntentUtil.isActionButtonTinted(intent)) {
-            DrawableCompat.setTint(icon, tintColor);
-        }
-        item.setIcon(icon);
-        MenuItemCompat.setShowAsAction(item, MenuItemCompat.SHOW_AS_ACTION_ALWAYS);
-
-        return item;
     }
 
     private void bindNavigationCallback(@NonNull final Toolbar toolbar) {
