@@ -4,7 +4,7 @@
 == numbering-3.html numbering-3.html
 == numbering-4.html numbering-4.html
 == ol-reversed-1a.html ol-reversed-1a.html
-fails asserts(1) == ol-reversed-1b.html ol-reversed-1b.html
+asserts-if(stylo,1-2) == ol-reversed-1b.html ol-reversed-1b.html # bug 478135
 == ol-reversed-1c.html ol-reversed-1c.html
 == ol-reversed-2.html ol-reversed-2.html
 == ol-reversed-3.html ol-reversed-3.html
