@@ -188,6 +188,7 @@ VariableLengthPrefixSet::Matches(const nsACString& aFullHash, uint32_t* aLength)
   for (auto iter = mVLPrefixSet.ConstIter(); !iter.Done(); iter.Next()) {
     if (BinarySearch(aFullHash, *iter.Data(), iter.Key())) {
       *aLength = iter.Key();
+      MOZ_ASSERT(*aLength > 4);
       return NS_OK;
     }
   }
