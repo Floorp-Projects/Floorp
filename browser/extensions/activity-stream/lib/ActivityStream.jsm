@@ -6,6 +6,9 @@
 const {utils: Cu} = Components;
 const {Store} = Cu.import("resource://activity-stream/lib/Store.jsm", {});
 
+// Feeds
+const {NewTabInit} = Cu.import("resource://activity-stream/lib/NewTabInit.jsm", {});
+
 this.ActivityStream = class ActivityStream {
 
   /**
@@ -23,7 +26,9 @@ this.ActivityStream = class ActivityStream {
   }
   init() {
     this.initialized = true;
-    this.store.init();
+    this.store.init([
+      new NewTabInit()
+    ]);
   }
   uninit() {
     this.store.uninit();
