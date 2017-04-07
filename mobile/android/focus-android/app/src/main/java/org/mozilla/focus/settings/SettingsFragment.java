@@ -17,6 +17,7 @@ import android.util.Log;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
+import org.mozilla.focus.widget.DefaultBrowserPreference;
 
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
     @Override
@@ -47,6 +48,11 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         super.onResume();
 
         getPreferenceManager().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
+
+        final DefaultBrowserPreference preference = (DefaultBrowserPreference) findPreference(getString(R.string.pref_key_default_browser));
+        if (preference != null) {
+            preference.update();
+        }
     }
 
     @Override
