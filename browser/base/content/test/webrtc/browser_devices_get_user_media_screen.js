@@ -410,7 +410,7 @@ var gTests = [
     yield check({video: true, audio: true});
 
     info("Stop the camera, everything should stop.");
-    yield stopSharing("camera", false, true);
+    yield stopSharing("camera");
 
     info("Now, share only the screen...");
     indicator = promiseIndicatorWindow();
@@ -423,7 +423,7 @@ var gTests = [
     yield check({video: true, audio: true, screen: "Screen"});
 
     info("Stop the camera, this should stop everything.");
-    yield stopSharing("camera", false, true);
+    yield stopSharing("camera");
   }
 },
 
