@@ -98,8 +98,8 @@ dependencies {
 
     compile(name: 'telemetry-a69e1f2', ext: 'aar')
 
-    releaseCompile 'com.adjust.sdk:adjust-android:4.11.1'
-    releaseCompile 'com.google.android.gms:play-services-analytics:10.2.0' // Required by Adjust
+    focusCompile 'com.adjust.sdk:adjust-android:4.11.1'
+    focusCompile 'com.google.android.gms:play-services-analytics:10.2.0' // Required by Adjust
 
     geckoCompile(name: 'geckoview-195049fabb7a', ext: 'aar')
 
