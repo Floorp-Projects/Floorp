@@ -12,7 +12,7 @@
         android:layout_height="81dp"
         android:background="@drawable/animated_background" />
 
-    <android.support.design.widget.CoordinatorLayout
+    <org.mozilla.focus.widget.ResizableKeyboardLayout
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_marginTop="25dp"
         android:id="@+id/main_content"
@@ -68,5 +68,5 @@
             app:layout_behavior="org.mozilla.focus.widget.FloatingActionButtonBehavior"
             android:contentDescription="@string/content_description_erase" />
 
-    </android.support.design.widget.CoordinatorLayout>
+    </org.mozilla.focus.widget.ResizableKeyboardLayout>
 </FrameLayout>
