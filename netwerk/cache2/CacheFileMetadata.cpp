@@ -387,20 +387,29 @@ CacheFileMetadata::GetElement(const char *aKey)
   const char *data = mBuf;
   const char *limit = mBuf + mElementsSize;
 
-  while (data < limit) {
-    // Point to the value part
-    const char *value = data + strlen(data) + 1;
-    MOZ_ASSERT(value < limit, "Metadata elements corrupted");
+  while (data != limit) {
+    size_t maxLen = limit - data;
+    size_t keyLen = strnlen(data, maxLen);
+    MOZ_RELEASE_ASSERT(keyLen != maxLen, "Metadata elements corrupted. Key "
+                       "isn't null terminated!");
+    MOZ_RELEASE_ASSERT(keyLen + 1 != maxLen, "Metadata elements corrupted. "
+                       "There is no value for the key!");
+
+    const char *value = data + keyLen + 1;
+    maxLen = limit - value;
+    size_t valueLen = strnlen(value, maxLen);
+    MOZ_RELEASE_ASSERT(valueLen != maxLen, "Metadata elements corrupted. Value "
+                       "isn't null terminated!");
+
     if (strcmp(data, aKey) == 0) {
       LOG(("CacheFileMetadata::GetElement() - Key found [this=%p, key=%s]",
            this, aKey));
       return value;
     }
 
-    // Skip value part
-    data = value + strlen(value) + 1;
+    // point to next pair
+    data += keyLen + valueLen + 2;
   }
-  MOZ_ASSERT(data == limit, "Metadata elements corrupted");
   LOG(("CacheFileMetadata::GetElement() - Key not found [this=%p, key=%s]",
        this, aKey));
   return nullptr;

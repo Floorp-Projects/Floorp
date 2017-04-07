@@ -29,32 +29,6 @@ using namespace JS;
 
 // static
 void
-XPCStringConvert::FreeZoneCache(JS::Zone* zone)
-{
-    // Put the zone user data into an AutoPtr (which will do the cleanup for us),
-    // and null out the user data (which may already be null).
-    nsAutoPtr<ZoneStringCache> cache(static_cast<ZoneStringCache*>(JS_GetZoneUserData(zone)));
-    JS_SetZoneUserData(zone, nullptr);
-}
-
-// static
-void
-XPCStringConvert::ClearZoneCache(JS::Zone* zone)
-{
-    // Although we clear the cache in FinalizeDOMString if needed, we also clear
-    // the cache here to avoid a dangling JSString* pointer when compacting GC
-    // moves the external string in memory.
-
-    ZoneStringCache* cache = static_cast<ZoneStringCache*>(JS_GetZoneUserData(zone));
-    if (cache) {
-        cache->mBuffer = nullptr;
-        cache->mLength = 0;
-        cache->mString = nullptr;
-    }
-}
-
-// static
-void
 XPCStringConvert::FinalizeLiteral(JS::Zone* zone, const JSStringFinalizer* fin, char16_t* chars)
 {
 }
@@ -67,16 +41,6 @@ void
 XPCStringConvert::FinalizeDOMString(JS::Zone* zone, const JSStringFinalizer* fin, char16_t* chars)
 {
     nsStringBuffer* buf = nsStringBuffer::FromData(chars);
-
-    // Clear the ZoneStringCache if needed, as this can be called outside GC
-    // when flattening an external string.
-    ZoneStringCache* cache = static_cast<ZoneStringCache*>(JS_GetZoneUserData(zone));
-    if (cache && cache->mBuffer == buf) {
-        cache->mBuffer = nullptr;
-        cache->mLength = 0;
-        cache->mString = nullptr;
-    }
-
     buf->Release();
 }
 

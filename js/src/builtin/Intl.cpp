@@ -3593,11 +3593,13 @@ PluralRules(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    // Step 1 (Handled by OrdinaryCreateFromConstructor fallback code).
+    // Step 1.
+    if (!ThrowIfNotConstructing(cx, args, "Intl.PluralRules"))
+        return false;
 
     // Step 2 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
     RootedObject proto(cx);
-    if (args.isConstructing() && !GetPrototypeFromCallableConstructor(cx, args, &proto))
+    if (!GetPrototypeFromCallableConstructor(cx, args, &proto))
         return false;
 
     if (!proto) {

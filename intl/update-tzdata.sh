@@ -14,6 +14,7 @@ export TZ=UTC
 
 # Also ensure SVN-INFO is consistently English.
 export LANG=en_US.UTF-8
+export LANGUAGE=en_US
 export LC_ALL=en_US.UTF-8
 
 # Path to icupkg executable, typically located at $ICU_DIR/bin/icupkg.

@@ -23,8 +23,9 @@ namespace gfx {
 // is a requirement when we consider runtime switchable backends and so on
 ScaledFontFontconfig::ScaledFontFontconfig(cairo_scaled_font_t* aScaledFont,
                                            FcPattern* aPattern,
+                                           const RefPtr<UnscaledFont>& aUnscaledFont,
                                            Float aSize)
-  : ScaledFontBase(aSize),
+  : ScaledFontBase(aUnscaledFont, aSize),
     mPattern(aPattern)
 {
   SetCairoScaledFont(aScaledFont);
@@ -331,7 +332,7 @@ ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
   }
 
   RefPtr<ScaledFontFontconfig> scaledFont =
-    new ScaledFontFontconfig(cairoScaledFont, pattern, aSize);
+    new ScaledFontFontconfig(cairoScaledFont, pattern, nullptr, aSize);
 
   FcPatternDestroy(pattern);
 

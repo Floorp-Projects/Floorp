@@ -739,6 +739,10 @@ nsHttpServer.prototype =
     return this._handler._setObjectState(k, v);
   },
 
+  get wrappedJSObject() {
+    return this;
+  },
+
 
   // NSISUPPORTS
 

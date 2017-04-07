@@ -1315,7 +1315,7 @@ NewStringCopyUTF8Z(JSContext* cx, const JS::ConstUTF8CharsZ utf8)
 
 JSString*
 NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n, const JSStringFinalizer* fin,
-                       bool* isExternal);
+                       bool* allocatedExternal);
 
 JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
 

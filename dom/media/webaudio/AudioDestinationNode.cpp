@@ -167,9 +167,8 @@ public:
 
     aNode->ResolvePromise(renderedBuffer);
 
-    RefPtr<OnCompleteTask> onCompleteTask =
-      new OnCompleteTask(context, renderedBuffer);
-    NS_DispatchToMainThread(onCompleteTask);
+    mAbstractMainThread->Dispatch(do_AddRef(new OnCompleteTask(context,
+                                                               renderedBuffer)));
 
     context->OnStateChanged(nullptr, AudioContextState::Closed);
   }

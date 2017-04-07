@@ -65,12 +65,17 @@ EXPORTS.mozilla.gfx += ['ssse3-scaler.h']
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
     EXPORTS.mozilla.gfx += [
         'MacIOSurface.h',
+        'UnscaledFontMac.h',
     ]
     UNIFIED_SOURCES += [
         'NativeFontResourceMac.cpp',
         'ScaledFontMac.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    EXPORTS.mozilla.gfx += [
+        'UnscaledFontDWrite.h',
+        'UnscaledFontGDI.h',
+    ]
     SOURCES += [
         'DrawTargetD2D1.cpp',
         'ExtendInputEffectD2D1.cpp',
@@ -89,6 +94,11 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'windows':
     SOURCES += [
         'JobScheduler_posix.cpp',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3'):
+    EXPORTS.mozilla.gfx += [
+        'UnscaledFontFreeType.h',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):

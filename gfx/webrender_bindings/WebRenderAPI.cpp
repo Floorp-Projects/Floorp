@@ -445,7 +445,7 @@ WebRenderAPI::AddRawFont(wr::FontKey key, Range<uint8_t> aBytes)
 void
 WebRenderAPI::DeleteFont(wr::FontKey aKey)
 {
-  printf("XXX - WebRender does not seem to implement deleting a font! Leaking it...\n");
+  wr_api_delete_font(mWrApi, aKey);
 }
 
 class EnableProfiler : public RendererEvent
