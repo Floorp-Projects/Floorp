@@ -8,6 +8,7 @@ package org.mozilla.geckoview_example;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -44,7 +45,17 @@ public class GeckoViewActivity extends Activity {
         GeckoThread.initMainProcess(profile, /* args */ null, /* debugging */ false);
         GeckoThread.launch();
 
-        Uri u = getIntent().getData();
+        loadFromIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent externalIntent) {
+        Log.d(LOGTAG, "SNORP: onNewIntent: " + externalIntent.getData().toString());
+        loadFromIntent(externalIntent);
+    }
+
+    private void loadFromIntent(Intent intent) {
+        Uri u = intent.getData();
         if (u != null) {
             mGeckoView.loadUri(u.toString());
         } else {
