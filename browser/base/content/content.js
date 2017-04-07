@@ -12,7 +12,6 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/ContentWebRTC.jsm");
 Cu.import("resource://gre/modules/InlineSpellChecker.jsm");
 Cu.import("resource://gre/modules/InlineSpellCheckerContent.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
@@ -23,6 +22,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ContentLinkHandler",
   "resource:///modules/ContentLinkHandler.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ContentWebRTC",
+  "resource:///modules/ContentWebRTC.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
   "resource://gre/modules/LoginManagerContent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginFormFactory",
@@ -702,7 +703,6 @@ addEventListener("DOMWindowFocus", function(event) {
   sendAsyncMessage("DOMWindowFocus", {});
 }, false);
 
-ContentWebRTC.init();
 addMessageListener("rtcpeer:Allow", ContentWebRTC);
 addMessageListener("rtcpeer:Deny", ContentWebRTC);
 addMessageListener("webrtc:Allow", ContentWebRTC);
