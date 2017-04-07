@@ -159,9 +159,7 @@ public:
 
   bool Empty() const override
   {
-    return mPrefixesMap.IsEmpty() &&
-           mRemovalIndiceArray.IsEmpty() &&
-           mFullHashResponseMap.IsEmpty();
+    return mPrefixesMap.IsEmpty() && mRemovalIndiceArray.IsEmpty();
   }
 
   bool IsFullUpdate() const { return mFullUpdate; }
@@ -169,7 +167,6 @@ public:
   RemovalIndiceArray& RemovalIndices() { return mRemovalIndiceArray; }
   const nsACString& ClientState() const { return mClientState; }
   const nsACString& Checksum() const { return mChecksum; }
-  const FullHashResponseMap& FullHashResponse() const { return mFullHashResponseMap; }
 
   // For downcasting.
   static const int TAG = 4;
@@ -179,8 +176,6 @@ public:
   void NewRemovalIndices(const uint32_t* aIndices, size_t aNumOfIndices);
   void SetNewClientState(const nsACString& aState) { mClientState = aState; }
   void NewChecksum(const std::string& aChecksum);
-  nsresult NewFullHashResponse(const nsACString& aPrefix,
-                               CachedFullHashResponse& aResponse);
 
 private:
   virtual int Tag() const override { return TAG; }
@@ -190,9 +185,6 @@ private:
   RemovalIndiceArray mRemovalIndiceArray;
   nsCString mClientState;
   nsCString mChecksum;
-
-  // This is used to store response from fullHashes.find.
-  FullHashResponseMap mFullHashResponseMap;
 };
 
 // There is one hash store per table.
