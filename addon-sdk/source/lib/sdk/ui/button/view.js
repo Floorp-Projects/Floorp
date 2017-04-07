@@ -11,18 +11,18 @@ module.metadata = {
 };
 
 const { Cu } = require('chrome');
-const { on, off, emit } = require('../../event/core');
+lazyRequire(this, '../../event/core', "on", "off", "emit");
 
-const { data } = require('sdk/self');
+lazyRequire(this, 'sdk/self', "data");
 
-const { isObject, isNil } = require('../../lang/type');
+lazyRequire(this, '../../lang/type', "isObject", "isNil");
 
-const { getMostRecentBrowserWindow } = require('../../window/utils');
-const { ignoreWindow } = require('../../private-browsing/utils');
+lazyRequire(this, '../../window/utils', "getMostRecentBrowserWindow");
+lazyRequire(this, '../../private-browsing/utils', "ignoreWindow");
 const { CustomizableUI } = Cu.import('resource:///modules/CustomizableUI.jsm', {});
 const { AREA_PANEL, AREA_NAVBAR } = CustomizableUI;
 
-const { events: viewEvents } = require('./view/events');
+lazyRequire(this, './view/events', { "events": "viewEvents" });
 
 const XUL_NS = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
 

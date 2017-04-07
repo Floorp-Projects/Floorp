@@ -10,7 +10,6 @@ module.metadata = {
   }
 };
 
-require("./frame/view");
 const { Frame } = require("./frame/model");
 
 exports.Frame = Frame;
