@@ -4944,7 +4944,7 @@ var PDFPageView = function PDFPageViewClosure() {
         if (paintTask === self.paintTask) {
           self.paintTask = null;
         }
-        if (error === 'cancelled') {
+        if (error instanceof pdfjsLib.RenderingCancelledException) {
           self.error = null;
           return Promise.resolve(undefined);
         }
