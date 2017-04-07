@@ -18,7 +18,6 @@ netmonitor.properties:netmonitor.tab.cookies = netmonitor.dtd:netmonitorUI.tab.c
 netmonitor.properties:netmonitor.tab.params = netmonitor.dtd:netmonitorUI.tab.params
 netmonitor.properties:netmonitor.tab.response = netmonitor.dtd:netmonitorUI.tab.response
 netmonitor.properties:netmonitor.tab.timings = netmonitor.dtd:netmonitorUI.tab.timings
-netmonitor.properties:netmonitor.tab.preview = netmonitor.dtd:netmonitorUI.tab.preview
 netmonitor.properties:netmonitor.tab.security = netmonitor.dtd:netmonitorUI.tab.security
 netmonitor.properties:netmonitor.toolbar.filter.all = netmonitor.dtd:netmonitorUI.footer.filterAll
 netmonitor.properties:netmonitor.toolbar.filter.html = netmonitor.dtd:netmonitorUI.footer.filterHTML
