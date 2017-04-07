@@ -15,7 +15,6 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   DefaultWeakMap,
   ExtensionError,
-  SingletonEventManager,
   defineLazyGetter,
 } = ExtensionUtils;
 

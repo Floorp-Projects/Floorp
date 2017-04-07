@@ -44,8 +44,6 @@ const {
   DefaultMap,
   EventEmitter,
   LimitedSet,
-  LocaleData,
-  SingletonEventManager,
   SpreadArgs,
   defineLazyGetter,
   getMessageManager,
@@ -55,7 +53,9 @@ const {
 
 const {
   LocalAPIImplementation,
+  LocaleData,
   SchemaAPIInterface,
+  SingletonEventManager,
 } = ExtensionCommon;
 
 const isContentProcess = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;

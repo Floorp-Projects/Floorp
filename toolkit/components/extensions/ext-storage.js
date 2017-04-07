@@ -9,7 +9,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
 
 var {
   ExtensionError,
-  SingletonEventManager,
 } = ExtensionUtils;
 
 function enforceNoTemporaryAddon(extensionId) {

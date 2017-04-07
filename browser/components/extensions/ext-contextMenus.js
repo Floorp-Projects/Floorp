@@ -12,7 +12,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 var {
   ExtensionError,
   IconDetails,
-  SingletonEventManager,
 } = ExtensionUtils;
 
 const ACTION_MENU_TOP_LEVEL_LIMIT = 6;

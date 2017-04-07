@@ -11,7 +11,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 var {
-  SingletonEventManager,
   promiseObserved,
 } = ExtensionUtils;
 

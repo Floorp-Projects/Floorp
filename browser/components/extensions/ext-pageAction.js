@@ -8,7 +8,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelPopup",
 Cu.import("resource://gre/modules/Task.jsm");
 
 var {
-  SingletonEventManager,
   IconDetails,
 } = ExtensionUtils;
 
