@@ -13,35 +13,32 @@ module.metadata = {
 const { Class } = require('../core/heritage');
 const { merge } = require('../util/object');
 const { Disposable } = require('../core/disposable');
-const { off, emit, setListeners } = require('../event/core');
+lazyRequire(this, '../event/core', "off", "emit", "setListeners");
 const { EventTarget } = require('../event/target');
-const { URL } = require('../url');
-const { add, remove, has, clear, iterator } = require('../lang/weak-set');
-const { id: addonID, data } = require('../self');
-const { WindowTracker } = require('../deprecated/window-utils');
-const { isShowing } = require('./sidebar/utils');
-const { isBrowser, getMostRecentBrowserWindow, windows, isWindowPrivate } = require('../window/utils');
+lazyRequire(this, '../url', "URL");
+lazyRequire(this, '../self', { "id": "addonID" }, "data");
+lazyRequire(this, '../deprecated/window-utils', 'WindowTracker');
+lazyRequire(this, './sidebar/utils', "isShowing");
+lazyRequire(this, '../window/utils', "isBrowser", "getMostRecentBrowserWindow", "windows", "isWindowPrivate");
 const { ns } = require('../core/namespace');
-const { remove: removeFromArray } = require('../util/array');
-const { show, hide, toggle } = require('./sidebar/actions');
-const { Worker } = require('../deprecated/sync-worker');
+lazyRequire(this, '../util/array', { "remove": "removeFromArray" });
+lazyRequire(this, './sidebar/actions', "show", "hide", "toggle");
+lazyRequire(this, '../deprecated/sync-worker', "Worker");
 const { contract: sidebarContract } = require('./sidebar/contract');
-const { create, dispose, updateTitle, updateURL, isSidebarShowing, showSidebar, hideSidebar } = require('./sidebar/view');
-const { defer } = require('../core/promise');
-const { models, views, viewsFor, modelFor } = require('./sidebar/namespace');
-const { isLocalURL } = require('../url');
+lazyRequire(this, './sidebar/view', "create", "dispose", "updateTitle", "updateURL", "isSidebarShowing", "showSidebar", "hideSidebar");
+lazyRequire(this, '../core/promise', "defer");
+lazyRequire(this, './sidebar/namespace', "models", "views", "viewsFor", "modelFor");
+lazyRequire(this, '../url', "isLocalURL");
 const { ensure } = require('../system/unload');
-const { identify } = require('./id');
-const { uuid } = require('../util/uuid');
-const { viewFor } = require('../view/core');
+lazyRequire(this, './id', "identify");
+lazyRequire(this, '../util/uuid', "uuid");
+lazyRequire(this, '../view/core', "viewFor");
 
 const resolveURL = (url) => url ? data.url(url) : url;
 
 const sidebarNS = ns();
 
 const WEB_PANEL_BROWSER_ID = 'web-panels-browser';
-
-var sidebars = {};
 
 const Sidebar = Class({
   implements: [ Disposable ],
@@ -209,8 +206,6 @@ const Sidebar = Class({
     });
 
     views.set(this, bars);
-
-    add(sidebars, this);
   },
   get id() {
     return (modelFor(this) || {}).id;
@@ -258,8 +253,6 @@ const Sidebar = Class({
     const internals = sidebarNS(this);
 
     off(this);
-
-    remove(sidebars, this);
 
     // stop tracking windows
     if (internals.tracker) {
