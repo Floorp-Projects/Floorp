@@ -655,9 +655,6 @@ public:
                                       nsTArray<float>& aFrameIntervals);
 
   void RecordFrame();
-  void PostPresent();
-
-  void BeginTabSwitch();
 
   static bool IsLogEnabled();
   static mozilla::LogModule* GetLog();
@@ -769,8 +766,6 @@ private:
     bool mIsPaused;
   };
   FramesTimingRecording mRecording;
-
-  TimeStamp mTabSwitchStart;
 
 public:
   /*
