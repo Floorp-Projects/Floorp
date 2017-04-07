@@ -37,8 +37,8 @@
           const App = createFactory(require("./src/components/app"));
           render(Provider({ store }, App()), this.mount);
           return NetMonitorController.startupNetMonitor({
-            tabConnection: {
-              tabTarget: toolbox.target,
+            client: {
+              getTabTarget: () => toolbox.target,
             },
             toolbox,
           });
