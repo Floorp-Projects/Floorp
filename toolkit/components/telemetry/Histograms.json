@@ -6516,12 +6516,47 @@
     "keyed": true,
     "description": "a testing histogram; not meant to be touched"
   },
-    "TELEMETRY_TEST_KEYED_BOOLEAN": {
+  "TELEMETRY_TEST_KEYED_BOOLEAN": {
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "keyed": true,
     "bug_numbers": [1299144],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_KEYED_EXPONENTIAL": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 1,
+    "high": 40000,
+    "n_buckets": 10,
+    "keyed": true,
+    "bug_numbers": [1347216],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_KEYED_LINEAR": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 250000,
+    "n_buckets": 10,
+    "keyed": true,
+    "bug_numbers": [1347216],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_KEYED_CATEGORICAL": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "keyed": true,
+    "labels": [
+      "CommonLabel",
+      "Label2",
+      "Label3"
+    ],
+    "bug_numbers": [1347216],
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_RELEASE_OPTOUT": {
