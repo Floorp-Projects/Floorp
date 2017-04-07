@@ -91,7 +91,7 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
         self.assertNotEqual(self.get_selected_tab_index(), self.selected_tab_index)
 
         with self.marionette.using_context("content"):
-            Wait(self.marionette).until(
+            Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
                 lambda _: self.marionette.get_url() == self.empty_page,
                 message="{} has been loaded in the newly opened tab.".format(self.empty_page))
 
