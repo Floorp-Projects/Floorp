@@ -8,6 +8,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "gfxPlatformFontList.h"
+#include "mozilla/gfx/UnscaledFontFreeType.h"
 
 namespace mozilla {
     namespace dom {
@@ -94,6 +95,8 @@ public:
 
     nsCString mFilename;
     uint8_t   mFTFontIndex;
+
+    mozilla::WeakPtr<mozilla::gfx::UnscaledFont> mUnscaledFont;
 };
 
 class FT2FontFamily : public gfxFontFamily

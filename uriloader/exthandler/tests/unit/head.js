@@ -10,9 +10,21 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+Cu.import("resource://testing-common/HandlerServiceTestUtils.jsm", this);
+Cu.import("resource://testing-common/TestUtils.jsm");
+
+HandlerServiceTestUtils.Assert = Assert;
 
 do_get_profile();
+
+let jsonPath = OS.Path.join(OS.Constants.Path.profileDir, "handlers.json");
 
 let rdfFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
 rdfFile.append("mimeTypes.rdf")

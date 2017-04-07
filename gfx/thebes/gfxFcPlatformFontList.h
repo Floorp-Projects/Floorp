@@ -168,6 +168,26 @@ protected:
 
     // data font
     const uint8_t* mFontData;
+
+    class UnscaledFontCache
+    {
+    public:
+        already_AddRefed<mozilla::gfx::UnscaledFontFontconfig>
+        Lookup(const char* aFile, uint32_t aIndex);
+
+        void Add(const RefPtr<mozilla::gfx::UnscaledFontFontconfig>& aUnscaledFont) {
+            mUnscaledFonts[kNumEntries-1] = aUnscaledFont;
+            MoveToFront(kNumEntries-1);
+        }
+
+    private:
+        void MoveToFront(size_t aIndex);
+
+        static const size_t kNumEntries = 3;
+        mozilla::WeakPtr<mozilla::gfx::UnscaledFont> mUnscaledFonts[kNumEntries];
+    };
+
+    UnscaledFontCache mUnscaledFontCache;
 };
 
 class gfxFontconfigFontFamily : public gfxFontFamily {
@@ -205,7 +225,8 @@ protected:
 
 class gfxFontconfigFont : public gfxFontconfigFontBase {
 public:
-    gfxFontconfigFont(cairo_scaled_font_t *aScaledFont,
+    gfxFontconfigFont(const RefPtr<mozilla::gfx::UnscaledFontFontconfig> &aUnscaledFont,
+                      cairo_scaled_font_t *aScaledFont,
                       FcPattern *aPattern,
                       gfxFloat aAdjustedSize,
                       gfxFontEntry *aFontEntry,

@@ -2,7 +2,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="@ANDROID_PACKAGE_NAME@"
-      android:installLocation="auto"
+      android:installLocation="internalOnly"
       android:versionCode="@ANDROID_VERSION_CODE@"
       android:versionName="@MOZ_APP_VERSION@"
 #ifdef MOZ_ANDROID_SHARED_ID

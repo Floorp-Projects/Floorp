@@ -156,11 +156,12 @@ gfxFT2Font::AddRange(const char16_t *aText, uint32_t aOffset,
     }
 }
 
-gfxFT2Font::gfxFT2Font(cairo_scaled_font_t *aCairoFont,
+gfxFT2Font::gfxFT2Font(const RefPtr<mozilla::gfx::UnscaledFontFreeType>& aUnscaledFont,
+                       cairo_scaled_font_t *aCairoFont,
                        FT2FontEntry *aFontEntry,
                        const gfxFontStyle *aFontStyle,
                        bool aNeedsBold)
-    : gfxFT2FontBase(aCairoFont, aFontEntry, aFontStyle)
+    : gfxFT2FontBase(aUnscaledFont, aCairoFont, aFontEntry, aFontStyle)
     , mCharGlyphCache(32)
 {
     NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");

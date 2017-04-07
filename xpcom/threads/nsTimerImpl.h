@@ -50,6 +50,7 @@ public:
   static void Shutdown();
 
   void SetDelayInternal(uint32_t aDelay, TimeStamp aBase = TimeStamp::Now());
+  bool CancelCheckIfFiring();
 
   void Fire(int32_t aGeneration);
 

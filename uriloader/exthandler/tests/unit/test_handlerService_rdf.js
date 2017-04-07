@@ -7,10 +7,6 @@
  * Tests the handlerService interfaces using RDF backend.
  */
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
-
 XPCOMUtils.defineLazyServiceGetter(this, "gHandlerService",
                                    "@mozilla.org/uriloader/handler-service;1",
                                    "nsIHandlerService");
@@ -21,7 +17,9 @@ Services.scriptloader.loadSubScript(NetUtil.newURI(scriptFile).spec);
 var prepareImportDB = Task.async(function* () {
   yield reloadData();
 
-  yield OS.File.copy(do_get_file("mimeTypes.rdf").path, rdfFile.path);
+  let fileName = AppConstants.platform == "android" ? "mimeTypes-android.rdf"
+                                                    : "mimeTypes.rdf";
+  yield OS.File.copy(do_get_file(fileName).path, rdfFile.path);
 });
 
 var removeImportDB = Task.async(function* () {
