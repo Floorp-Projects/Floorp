@@ -338,7 +338,6 @@ to mochitest command.
     * ... `-moz-outline-radius:` [45]
     * test_shorthand_property_getters.html `should condense to shortest possible` [6]
   * transform property servo/servo#15194
-    * test_property_syntax_errors.html `perspective` [6]
     * test_specified_value_serialization.html `bug-721136` [26]
     * test_units_angle.html [3]
   * {background,mask}-position lacks comma for serialization servo/servo#15200
