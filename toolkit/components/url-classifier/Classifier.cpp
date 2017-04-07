@@ -393,21 +393,14 @@ Classifier::TableRequest(nsACString& aResult)
     HashStore store(tables[i], GetProvider(tables[i]), mRootStoreDirectory);
 
     nsresult rv = store.Open();
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv))
       continue;
-    }
-
-    ChunkSet &adds = store.AddChunks();
-    ChunkSet &subs = store.SubChunks();
-
-    // Open HashStore will always succeed even that is not a v2 table.
-    // So skip tables without add and sub chunks.
-    if (adds.Length() == 0 && subs.Length() == 0) {
-      continue;
-    }
 
     aResult.Append(store.TableName());
     aResult.Append(';');
+
+    ChunkSet &adds = store.AddChunks();
+    ChunkSet &subs = store.SubChunks();
 
     if (adds.Length() > 0) {
       aResult.AppendLiteral("a:");
@@ -929,51 +922,42 @@ Classifier::RegenActiveTables()
   mActiveTablesCache.Clear();
 
   nsTArray<nsCString> foundTables;
-  ScanStoreDir(mRootStoreDirectory, foundTables);
+  ScanStoreDir(foundTables);
 
   for (uint32_t i = 0; i < foundTables.Length(); i++) {
     nsCString table(foundTables[i]);
+    HashStore store(table, GetProvider(table), mRootStoreDirectory);
 
-    LookupCache *lookupCache = GetLookupCache(table);
+    nsresult rv = store.Open();
+    if (NS_FAILED(rv))
+      continue;
+
+    LookupCache *lookupCache = GetLookupCache(store.TableName());
     if (!lookupCache) {
       continue;
     }
 
-    if (!lookupCache->IsPrimed()) {
+    if (!lookupCache->IsPrimed())
       continue;
-    }
 
-    if (LookupCache::Cast<LookupCacheV4>(lookupCache)) {
-      LOG(("Active v4 table: %s", table.get()));
-    } else {
-      HashStore store(table, GetProvider(table), mRootStoreDirectory);
+    const ChunkSet &adds = store.AddChunks();
+    const ChunkSet &subs = store.SubChunks();
 
-      nsresult rv = store.Open();
-      if (NS_FAILED(rv)) {
-        continue;
-      }
+    if (adds.Length() == 0 && subs.Length() == 0)
+      continue;
 
-      const ChunkSet &adds = store.AddChunks();
-      const ChunkSet &subs = store.SubChunks();
-
-      if (adds.Length() == 0 && subs.Length() == 0) {
-        continue;
-      }
-
-      LOG(("Active v2 table: %s", store.TableName().get()));
-    }
-
-    mActiveTablesCache.AppendElement(table);
+    LOG(("Active table: %s", store.TableName().get()));
+    mActiveTablesCache.AppendElement(store.TableName());
   }
 
   return NS_OK;
 }
 
 nsresult
-Classifier::ScanStoreDir(nsIFile* aDirectory, nsTArray<nsCString>& aTables)
+Classifier::ScanStoreDir(nsTArray<nsCString>& aTables)
 {
   nsCOMPtr<nsISimpleEnumerator> entries;
-  nsresult rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  nsresult rv = mRootStoreDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasMore;
@@ -984,22 +968,11 @@ Classifier::ScanStoreDir(nsIFile* aDirectory, nsTArray<nsCString>& aTables)
 
     nsCOMPtr<nsIFile> file = do_QueryInterface(supports);
 
-    // If |file| is a directory, recurse to find its entries as well.
-    bool isDirectory;
-    if (NS_FAILED(file->IsDirectory(&isDirectory))) {
-      continue;
-    }
-    if (isDirectory) {
-      ScanStoreDir(file, aTables);
-      continue;
-    }
-
     nsCString leafName;
     rv = file->GetNativeLeafName(leafName);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Both v2 and v4 contain .pset file
-    nsCString suffix(NS_LITERAL_CSTRING(".pset"));
+    nsCString suffix(NS_LITERAL_CSTRING(".sbstore"));
 
     int32_t dot = leafName.RFind(suffix, 0);
     if (dot != -1) {

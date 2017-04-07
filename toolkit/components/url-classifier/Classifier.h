@@ -152,7 +152,7 @@ private:
   nsresult DumpFailedUpdate();
 #endif
 
-  nsresult ScanStoreDir(nsIFile* aDirectory, nsTArray<nsCString>& aTables);
+  nsresult ScanStoreDir(nsTArray<nsCString>& aTables);
 
   nsresult UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
                            const nsACString& aTable);
