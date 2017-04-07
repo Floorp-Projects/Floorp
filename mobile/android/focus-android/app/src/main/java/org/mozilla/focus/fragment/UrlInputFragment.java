@@ -380,7 +380,7 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
 
         openUrl(searchUrl);
 
-        TelemetryWrapper.searchEvent();
+        TelemetryWrapper.searchSelectEvent();
     }
 
     private void openUrl(String url) {

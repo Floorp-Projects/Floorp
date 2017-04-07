@@ -34,7 +34,7 @@ public class SearchEngine {
 
     /* package */ SearchEngine(String identifier) {
         this.identifier = identifier;
-         this.resultsUris = new ArrayList<>();
+        this.resultsUris = new ArrayList<>();
     }
 
     public String getName() {

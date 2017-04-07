@@ -12,12 +12,15 @@ import android.preference.PreferenceManager;
 
 import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.R;
+import org.mozilla.focus.search.SearchEngine;
+import org.mozilla.focus.search.SearchEngineManager;
 import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.telemetry.Telemetry;
 import org.mozilla.telemetry.TelemetryHolder;
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.event.TelemetryEvent;
-import org.mozilla.telemetry.net.DebugLogClient;
+import org.mozilla.telemetry.measurement.DefaultSearchMeasurement;
+import org.mozilla.telemetry.measurement.SearchesMeasurement;
 import org.mozilla.telemetry.net.HttpURLConnectionTelemetryClient;
 import org.mozilla.telemetry.net.TelemetryClient;
 import org.mozilla.telemetry.ping.TelemetryCorePingBuilder;
@@ -44,6 +47,7 @@ public final class TelemetryWrapper {
     private static class Method {
         private static final String TYPE_URL = "type_url";
         private static final String TYPE_QUERY = "type_query";
+        private static final String TYPE_SELECT_QUERY = "select_query";
         private static final String CLICK = "click";
         private static final String CHANGE = "change";
         private static final String FOREGROUND = "foreground";
@@ -96,31 +100,38 @@ public final class TelemetryWrapper {
         final TelemetryClient client = new HttpURLConnectionTelemetryClient();
         final TelemetryScheduler scheduler = new JobSchedulerTelemetryScheduler();
 
-        final Telemetry telemetry = new Telemetry(configuration, storage, client, scheduler)
-                // TODO: Core ping disabled until all fields are added (#18)
-                //.addPingBuilder(new TelemetryCorePingBuilder(configuration))
-                .addPingBuilder(new TelemetryEventPingBuilder(configuration));
-        TelemetryHolder.set(telemetry);
+        TelemetryHolder.set(new Telemetry(configuration, storage, client, scheduler)
+                .addPingBuilder(new TelemetryCorePingBuilder(configuration))
+                .addPingBuilder(new TelemetryEventPingBuilder(configuration))
+                .setDefaultSearchProvider(createDefaultSearchProvider(context)));
+    }
+
+    private static DefaultSearchMeasurement.DefaultSearchEngineProvider createDefaultSearchProvider(final Context context) {
+        return new DefaultSearchMeasurement.DefaultSearchEngineProvider() {
+            @Override
+            public String getDefaultSearchEngineIdentifier() {
+                return SearchEngineManager.getInstance()
+                        .getDefaultSearchEngine(context)
+                        .getIdentifier();
+            }
+        };
     }
 
     public static void startSession() {
-        // TODO: Core ping disabled until all fields are added (#18)
-        // TelemetryHolder.get().recordSessionStart();
+        TelemetryHolder.get().recordSessionStart();
 
         TelemetryEvent.create(Category.ACTION, Method.FOREGROUND, Object.APP).queue();
     }
 
     public static void stopSession() {
-        // TODO: Core ping disabled until all fields are added (#18)
-        // TelemetryHolder.get().recordSessionEnd();
+        TelemetryHolder.get().recordSessionEnd();
 
         TelemetryEvent.create(Category.ACTION, Method.BACKGROUND, Object.APP).queue();
     }
 
     public static void stopMainActivity() {
         TelemetryHolder.get()
-                // TODO: Core ping disabled until all fields are added (#18)
-                //.queuePing(TelemetryCorePingBuilder.TYPE)
+                .queuePing(TelemetryCorePingBuilder.TYPE)
                 .queuePing(TelemetryEventPingBuilder.TYPE)
                 .scheduleUpload();
     }
@@ -129,16 +140,34 @@ public final class TelemetryWrapper {
         if (isUrl) {
             TelemetryWrapper.browseEvent();
         } else {
-            TelemetryWrapper.searchEvent();
+            TelemetryWrapper.searchEnterEvent();
         }
     }
 
-    public static void browseEvent() {
+    private static void browseEvent() {
         TelemetryEvent.create(Category.ACTION, Method.TYPE_URL, Object.SEARCH_BAR).queue();
     }
 
-    public static void searchEvent() {
+    private static void searchEnterEvent() {
+        Telemetry telemetry = TelemetryHolder.get();
+
         TelemetryEvent.create(Category.ACTION, Method.TYPE_QUERY, Object.SEARCH_BAR).queue();
+
+        SearchEngine searchEngine = SearchEngineManager.getInstance().getDefaultSearchEngine(
+            telemetry.getConfiguration().getContext());
+
+        telemetry.recordSearch(SearchesMeasurement.LOCATION_ACTIONBAR, searchEngine.getIdentifier());
+    }
+
+    public static void searchSelectEvent() {
+        Telemetry telemetry = TelemetryHolder.get();
+
+        TelemetryEvent.create(Category.ACTION, Method.TYPE_SELECT_QUERY, Object.SEARCH_BAR).queue();
+
+        SearchEngine searchEngine = SearchEngineManager.getInstance().getDefaultSearchEngine(
+                telemetry.getConfiguration().getContext());
+
+        telemetry.recordSearch(SearchesMeasurement.LOCATION_SUGGESTION, searchEngine.getIdentifier());
     }
 
     public static void eraseEvent() {
