@@ -102,7 +102,9 @@ class TestFileUpload(MarionetteTestCase):
             self.input.send_keys(f.name)
             self.submit.click()
 
-        Wait(self.marionette).until(lambda m: m.get_url() != url)
+        Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+            lambda m: m.get_url() != url,
+            message="URL didn't change after submitting a file upload")
         self.assertIn("multipart/form-data", self.body.text)
 
     def test_change_event(self):
