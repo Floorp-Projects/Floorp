@@ -7,15 +7,6 @@
 with Files('**'):
     BUG_COMPONENT = ('Core', 'General')
 
-EXPORTS += [
-    'dec/bit_reader.h',
-    'dec/decode.h',
-    'dec/huffman.h',
-    'dec/port.h',
-    'dec/state.h',
-    'dec/types.h',
-]
-
 UNIFIED_SOURCES += [
     'dec/bit_reader.c',
     'dec/decode.c',

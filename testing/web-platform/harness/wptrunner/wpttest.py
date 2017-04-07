@@ -173,6 +173,14 @@ class Test(object):
         return False
 
     @property
+    def leaks(self):
+        for meta in self.itermeta(None):
+            leaks = meta.leaks
+            if leaks is not None:
+                return leaks
+        return False
+
+    @property
     def tags(self):
         tags = set()
         for meta in self.itermeta():

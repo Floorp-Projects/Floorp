@@ -101,6 +101,9 @@ body,
   display: inline-flex;
   align-content: stretch;
   margin-inline-end: 10px;
+
+  /* Status bar has just one line so, don't wrap labels */
+  white-space: nowrap;
 }
 
 .status-bar-label::before {
@@ -1094,7 +1097,6 @@ body,
   padding-inline-end: 0;
   cursor: pointer;
   margin-inline-end: 1em;
-  min-width: 0;
 }
 
 .requests-list-network-summary-button > .summary-info-icon {
@@ -1287,12 +1289,6 @@ body,
 
 /* Responsive sidebar */
 @media (max-width: 700px) {
-  #toolbar-spacer,
-  .network-details-panel-toggle,
-  .requests-list-network-summary-button > .summary-info-text {
-    display: none;
-  }
-
   .requests-list-toolbar {
     height: 22px;
   }

@@ -58,3 +58,7 @@ USE_LIBS += [
     'brotli',
     'woff2',
 ]
+
+LOCAL_INCLUDES += [
+    '/modules/woff2/src',
+]

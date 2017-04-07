@@ -1013,7 +1013,7 @@ BaselineScript::toggleTraceLoggerScripts(JSRuntime* runtime, JSScript* script, b
 
     // Patch the logging script textId to be correct.
     // When logging log the specific textId else the global Scripts textId.
-    if (enable && !traceLoggerScriptEvent_.hasPayload())
+    if (enable && !traceLoggerScriptEvent_.hasTextId())
         traceLoggerScriptEvent_ = TraceLoggerEvent(TraceLogger_Scripts, script);
 
     AutoWritableJitCode awjc(method());

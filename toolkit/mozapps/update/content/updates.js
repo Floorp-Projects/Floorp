@@ -1204,6 +1204,8 @@ var gErrorPatchingPage = {
 
   onWizardNext() {
     switch (gUpdates.update.selectedPatch.state) {
+      case STATE_APPLIED:
+      case STATE_APPLIED_SERVICE:
       case STATE_PENDING:
       case STATE_PENDING_SERVICE:
         gUpdates.wiz.goTo("finished");

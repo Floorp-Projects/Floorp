@@ -33,7 +33,6 @@ function restoreClosedTabWithValue(rval) {
 }
 
 function promiseNewLocationAndHistoryEntryReplaced(browser, snippet) {
-  /* eslint-env mozilla/frame-script */
   return ContentTask.spawn(browser, snippet, function* (codeSnippet) {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let shistory = webNavigation.sessionHistory;

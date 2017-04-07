@@ -33,6 +33,7 @@ protected:
   nsresult SetCSSDeclaration(DeclarationBlock* aDecl) final;
   nsIDocument* DocToUpdate() final;
   void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) final;
+  URLExtraData* GetURLData() const final;
 
 private:
   // For accessing the constructor.
@@ -43,6 +44,7 @@ private:
   ~ServoStyleRuleDeclaration();
 
   inline ServoStyleRule* Rule();
+  inline const ServoStyleRule* Rule() const;
 
   RefPtr<ServoDeclarationBlock> mDecls;
 };
@@ -88,8 +90,15 @@ private:
 ServoStyleRule*
 ServoStyleRuleDeclaration::Rule()
 {
-  return reinterpret_cast<ServoStyleRule*>(reinterpret_cast<uint8_t*>(this) -
-                                           offsetof(ServoStyleRule, mDecls));
+  return reinterpret_cast<ServoStyleRule*>(
+    reinterpret_cast<uint8_t*>(this) - offsetof(ServoStyleRule, mDecls));
+}
+
+const ServoStyleRule*
+ServoStyleRuleDeclaration::Rule() const
+{
+  return reinterpret_cast<const ServoStyleRule*>(
+    reinterpret_cast<const uint8_t*>(this) - offsetof(ServoStyleRule, mDecls));
 }
 
 } // namespace mozilla

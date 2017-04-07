@@ -77,7 +77,6 @@ pub struct ComputedValues {
     % endfor
 
     custom_properties: Option<Arc<ComputedValuesMap>>,
-    shareable: bool,
     pub writing_mode: WritingMode,
     pub root_font_size: Au,
     pub font_size_keyword: Option<longhands::font_size::KeywordSize>,
@@ -87,7 +86,6 @@ impl ComputedValues {
     pub fn inherit_from(parent: &Self, default: &Self) -> Arc<Self> {
         Arc::new(ComputedValues {
             custom_properties: parent.custom_properties.clone(),
-            shareable: parent.shareable,
             writing_mode: parent.writing_mode,
             root_font_size: parent.root_font_size,
             font_size_keyword: parent.font_size_keyword,
@@ -102,7 +100,6 @@ impl ComputedValues {
     }
 
     pub fn new(custom_properties: Option<Arc<ComputedValuesMap>>,
-           shareable: bool,
            writing_mode: WritingMode,
            root_font_size: Au,
            font_size_keyword: Option<longhands::font_size::KeywordSize>,
@@ -112,7 +109,6 @@ impl ComputedValues {
     ) -> Self {
         ComputedValues {
             custom_properties: custom_properties,
-            shareable: shareable,
             writing_mode: writing_mode,
             root_font_size: root_font_size,
             font_size_keyword: font_size_keyword,
@@ -125,7 +121,6 @@ impl ComputedValues {
     pub fn default_values(pres_context: RawGeckoPresContextBorrowed) -> Arc<Self> {
         Arc::new(ComputedValues {
             custom_properties: None,
-            shareable: true,
             writing_mode: WritingMode::empty(), // FIXME(bz): This seems dubious
             root_font_size: longhands::font_size::get_initial_value(), // FIXME(bz): Also seems dubious?
             font_size_keyword: Some(Default::default()),
@@ -1074,6 +1069,12 @@ fn static_assert() {
     }
 
     ${impl_simple_copy('align_items', 'mAlignItems')}
+
+    pub fn clone_align_items(&self) -> longhands::align_items::computed_value::T {
+        use values::specified::align::{AlignFlags, AlignItems};
+        AlignItems(AlignFlags::from_bits(self.gecko.mAlignItems)
+                                        .expect("mAlignItems contains valid flags"))
+    }
 
     pub fn set_justify_items(&mut self, v: longhands::justify_items::computed_value::T) {
         self.gecko.mJustifyItems = v.0.bits()
@@ -2884,11 +2885,12 @@ fn static_assert() {
 
     pub fn clone_letter_spacing(&self) -> longhands::letter_spacing::computed_value::T {
         use properties::longhands::letter_spacing::computed_value::T;
-        match self.gecko.mLetterSpacing.as_value() {
-            CoordDataValue::Normal => T(None),
-            CoordDataValue::Coord(coord) => T(Some(Au(coord))),
-            _ => unreachable!("Unexpected computed value for letter-spacing"),
-        }
+        debug_assert!(
+            matches!(self.gecko.mLetterSpacing.as_value(),
+                     CoordDataValue::Normal |
+                     CoordDataValue::Coord(_)),
+            "Unexpected computed value for letter-spacing");
+        T(Au::from_gecko_style_coord(&self.gecko.mLetterSpacing))
     }
 
     <%call expr="impl_coord_copy('letter_spacing', 'mLetterSpacing')"></%call>
@@ -2899,6 +2901,19 @@ fn static_assert() {
             // https://drafts.csswg.org/css-text-3/#valdef-word-spacing-normal
             None => self.gecko.mWordSpacing.set_value(CoordDataValue::Coord(0)),
         }
+    }
+
+    pub fn clone_word_spacing(&self) -> longhands::word_spacing::computed_value::T {
+        use properties::longhands::word_spacing::computed_value::T;
+        use values::computed::LengthOrPercentage;
+        debug_assert!(
+            matches!(self.gecko.mWordSpacing.as_value(),
+                     CoordDataValue::Normal |
+                     CoordDataValue::Coord(_) |
+                     CoordDataValue::Percent(_) |
+                     CoordDataValue::Calc(_)),
+            "Unexpected computed value for word-spacing");
+        T(LengthOrPercentage::from_gecko_style_coord(&self.gecko.mWordSpacing))
     }
 
     <%call expr="impl_coord_copy('word_spacing', 'mWordSpacing')"></%call>

@@ -10,9 +10,9 @@ ${helpers.predefined_type("background-color", "CSSColor",
     "::cssparser::Color::RGBA(::cssparser::RGBA::transparent())",
     initial_specified_value="SpecifiedValue::transparent()",
     spec="https://drafts.csswg.org/css-backgrounds/#background-color",
-    animatable=True, complex_color=True)}
+    animation_type="normal", complex_color=True)}
 
-<%helpers:vector_longhand name="background-image" animatable="False"
+<%helpers:vector_longhand name="background-image" animation_type="none"
                           spec="https://drafts.csswg.org/css-backgrounds/#the-background-image"
                           has_uncacheable_values="${product == 'gecko'}">
     use std::fmt;
@@ -89,7 +89,7 @@ ${helpers.predefined_type("background-color", "CSSColor",
     }
 </%helpers:vector_longhand>
 
-<%helpers:vector_longhand name="background-position-x" animatable="True"
+<%helpers:vector_longhand name="background-position-x" animation_type="normal"
                           spec="https://drafts.csswg.org/css-backgrounds-4/#propdef-background-position-x"
                           delegate_animate="True">
     use std::fmt;
@@ -140,7 +140,7 @@ ${helpers.predefined_type("background-color", "CSSColor",
     }
 </%helpers:vector_longhand>
 
-<%helpers:vector_longhand name="background-position-y" animatable="True"
+<%helpers:vector_longhand name="background-position-y" animation_type="normal"
                           spec="https://drafts.csswg.org/css-backgrounds-4/#propdef-background-position-y"
                           delegate_animate="True">
     use std::fmt;
@@ -192,7 +192,7 @@ ${helpers.predefined_type("background-color", "CSSColor",
     }
 </%helpers:vector_longhand>
 
-<%helpers:vector_longhand name="background-repeat" animatable="False"
+<%helpers:vector_longhand name="background-repeat" animation_type="none"
                           spec="https://drafts.csswg.org/css-backgrounds/#the-background-repeat">
     use std::fmt;
     use style_traits::ToCss;
@@ -308,22 +308,22 @@ ${helpers.single_keyword("background-attachment",
                          "scroll fixed" + (" local" if product == "gecko" else ""),
                          vector=True,
                          spec="https://drafts.csswg.org/css-backgrounds/#the-background-attachment",
-                         animatable=False)}
+                         animation_type="none")}
 
 ${helpers.single_keyword("background-clip",
                          "border-box padding-box content-box",
                          extra_gecko_values="text",
                          vector=True, extra_prefixes="webkit",
                          spec="https://drafts.csswg.org/css-backgrounds/#the-background-clip",
-                         animatable=False)}
+                         animation_type="none")}
 
 ${helpers.single_keyword("background-origin",
                          "padding-box border-box content-box",
                          vector=True, extra_prefixes="webkit",
                          spec="https://drafts.csswg.org/css-backgrounds/#the-background-origin",
-                         animatable=False)}
+                         animation_type="none")}
 
-<%helpers:vector_longhand name="background-size" animatable="True" extra_prefixes="webkit"
+<%helpers:vector_longhand name="background-size" animation_type="normal" extra_prefixes="webkit"
                           spec="https://drafts.csswg.org/css-backgrounds/#the-background-size">
     use cssparser::Token;
     use std::ascii::AsciiExt;
@@ -483,35 +483,22 @@ ${helpers.single_keyword("background-origin",
     }
 
     pub fn parse(_context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue,()> {
-        let width;
-        if let Ok(value) = input.try(|input| {
-            match input.next() {
-                Err(_) => Err(()),
-                Ok(Token::Ident(ref ident)) if ident.eq_ignore_ascii_case("cover") => {
-                    Ok(SpecifiedValue::Cover)
-                }
-                Ok(Token::Ident(ref ident)) if ident.eq_ignore_ascii_case("contain") => {
-                    Ok(SpecifiedValue::Contain)
-                }
-                Ok(_) => Err(()),
-            }
-        }) {
-            return Ok(value)
-        } else {
-            width = try!(specified::LengthOrPercentageOrAuto::parse_non_negative(input))
+        if input.try(|input| input.expect_ident_matching("cover")).is_ok() {
+            return Ok(SpecifiedValue::Cover);
         }
 
-        let height;
-        if let Ok(value) = input.try(|input| {
-            match input.next() {
-                Err(_) => Ok(specified::LengthOrPercentageOrAuto::Auto),
-                Ok(_) => Err(()),
-            }
-        }) {
-            height = value
-        } else {
-            height = try!(specified::LengthOrPercentageOrAuto::parse_non_negative(input));
+        if input.try(|input| input.expect_ident_matching("contain")).is_ok() {
+            return Ok(SpecifiedValue::Contain);
         }
+
+        let width =
+            try!(specified::LengthOrPercentageOrAuto::parse_non_negative(input));
+
+        let height = if input.is_exhausted() {
+            specified::LengthOrPercentageOrAuto::Auto
+        } else {
+            try!(specified::LengthOrPercentageOrAuto::parse_non_negative(input))
+        };
 
         Ok(SpecifiedValue::Explicit(ExplicitSize {
             width: width,
@@ -525,5 +512,5 @@ ${helpers.single_keyword("background-blend-mode",
                          """normal multiply screen overlay darken lighten color-dodge
                             color-burn hard-light soft-light difference exclusion hue
                             saturation color luminosity""",
-                         vector=True, products="gecko", animatable=False,
+                         vector=True, products="gecko", animation_type="none",
                          spec="https://drafts.fxtf.org/compositing/#background-blend-mode")}

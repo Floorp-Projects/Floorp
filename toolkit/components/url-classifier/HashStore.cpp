@@ -101,22 +101,6 @@ extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 #define LOG(args) MOZ_LOG(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug)
 
-// Either the return was successful or we call the Reset function (unless we
-// hit an OOM).  Used while reading in the store.
-#define SUCCESS_OR_RESET(res)                                             \
-  do {                                                                    \
-    nsresult __rv = res; /* Don't evaluate |res| more than once */        \
-    if (__rv == NS_ERROR_OUT_OF_MEMORY) {                                 \
-      NS_WARNING("SafeBrowsing OOM.");                                    \
-      return __rv;                                                        \
-    }                                                                     \
-    if (NS_FAILED(__rv)) {                                                \
-      NS_WARNING("SafeBrowsing store corrupted or out of date.");         \
-      Reset();                                                            \
-      return __rv;                                                        \
-    }                                                                     \
-  } while(0)
-
 namespace mozilla {
 namespace safebrowsing {
 
@@ -306,7 +290,7 @@ HashStore::Open()
     UpdateHeader();
     return NS_OK;
   }
-  SUCCESS_OR_RESET(rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   int64_t fileSize;
   rv = storeFile->GetFileSize(&fileSize);
@@ -320,10 +304,10 @@ HashStore::Open()
   mInputStream = NS_BufferInputStream(origStream, mFileSize);
 
   rv = ReadHeader();
-  SUCCESS_OR_RESET(rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = SanityCheck();
-  SUCCESS_OR_RESET(rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -512,13 +496,13 @@ nsresult
 HashStore::PrepareForUpdate()
 {
   nsresult rv = CheckChecksum(mFileSize);
-  SUCCESS_OR_RESET(rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = ReadChunkNumbers();
-  SUCCESS_OR_RESET(rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = ReadHashes();
-  SUCCESS_OR_RESET(rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

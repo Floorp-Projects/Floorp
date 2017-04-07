@@ -4124,6 +4124,8 @@ this.XPIProvider = {
     addon.visible = true;
     addon.enabled = true;
     addon.active = true;
+    // WebExtension themes are installed as disabled, fix that here.
+    addon.userDisabled = false;
 
     addon = XPIDatabase.addAddonMetadata(addon, file.persistentDescriptor);
 

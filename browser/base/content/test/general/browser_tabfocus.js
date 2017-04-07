@@ -45,8 +45,8 @@ var currentPromiseResolver = null;
 function* getFocusedElementForBrowser(browser, dontCheckExtraFocus = false) {
   if (gMultiProcessBrowser) {
     return new Promise((resolve, reject) => {
-      messageManager.addMessageListener("Browser:GetCurrentFocus", function getCurrentFocus(message) {
-        messageManager.removeMessageListener("Browser:GetCurrentFocus", getCurrentFocus);
+      window.messageManager.addMessageListener("Browser:GetCurrentFocus", function getCurrentFocus(message) {
+        window.messageManager.removeMessageListener("Browser:GetCurrentFocus", getCurrentFocus);
         resolve(message.data.details);
       });
 
@@ -144,7 +144,7 @@ add_task(function*() {
   yield SimpleTest.promiseFocus();
 
   if (gMultiProcessBrowser) {
-    messageManager.addMessageListener("Browser:FocusChanged", message => {
+    window.messageManager.addMessageListener("Browser:FocusChanged", message => {
       actualEvents.push(message.data.details);
       compareFocusResults();
     });

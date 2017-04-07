@@ -1,6 +1,6 @@
 "use strict";
 
-module.exports = { // eslint-disable-line no-undef
+module.exports = {
   "extends": [
     "plugin:mozilla/browser-test",
     "plugin:mozilla/chrome-test",

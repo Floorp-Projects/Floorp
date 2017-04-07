@@ -494,6 +494,7 @@
 <!ENTITY contextmenu_open_private_tab "Open in Private Tab">
 <!ENTITY contextmenu_remove "Remove">
 <!ENTITY contextmenu_add_to_launcher "Add to Home Screen">
+<!ENTITY contextmenu_set_as_homepage "Set as Homepage">
 <!ENTITY contextmenu_share "Share">
 <!ENTITY contextmenu_pasteandgo "Paste &amp; Go">
 <!ENTITY contextmenu_paste "Paste">

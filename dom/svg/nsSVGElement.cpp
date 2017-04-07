@@ -1234,8 +1234,8 @@ MappedAttrParser::ParseMappedAttrValue(nsIAtom* aMappedAttrName,
     } else {
       NS_ConvertUTF16toUTF8 value(aMappedAttrValue);
       // FIXME (bug 1343964): Figure out a better solution for sending the base uri to servo
-      RefPtr<css::URLExtraData> data =
-        new css::URLExtraData(mBaseURI, mDocURI, mElement->NodePrincipal());
+      RefPtr<URLExtraData> data = new URLExtraData(mBaseURI, mDocURI,
+                                                   mElement->NodePrincipal());
       // FIXME (bug 1342559): Set SVG parsing mode for lengths
       changed = Servo_DeclarationBlock_SetPropertyById(mDecl->AsServo()->Raw(), propertyID,
                                                        &value, false, data);

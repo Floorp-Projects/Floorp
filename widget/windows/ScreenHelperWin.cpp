@@ -34,10 +34,7 @@ CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam)
   } else {
     contentsScaleFactor.scale = scale;
   }
-  CSSToLayoutDeviceScale defaultCssScaleFactor(nsIWidget::DefaultScaleOverride());
-  if (defaultCssScaleFactor.scale <= 0.0) {
-    defaultCssScaleFactor.scale = scale;
-  }
+  CSSToLayoutDeviceScale defaultCssScaleFactor(scale);
   LayoutDeviceIntRect rect(info.rcMonitor.left, info.rcMonitor.top,
                            info.rcMonitor.right - info.rcMonitor.left,
                            info.rcMonitor.bottom - info.rcMonitor.top);
