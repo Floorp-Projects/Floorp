@@ -490,3 +490,4 @@ load 1308848-2.html
 load 1338772-1.html
 load 1343937.html
 asserts(0-1) load 1343606.html # bug 1343948
+load 1352380.html
