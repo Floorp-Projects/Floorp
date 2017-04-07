@@ -61,6 +61,9 @@
 // This value is taken from ConsoleAPIStorage.js
 #define STORAGE_MAX_EVENTS 1000
 
+// Default label for console.count.
+#define COUNT_DEFAULT_LABEL "default"
+
 using namespace mozilla::dom::exceptions;
 using namespace mozilla::dom::workers;
 
@@ -1364,12 +1367,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   }
 
   else if (aMethodName == MethodCount) {
-    ConsoleStackEntry frame;
-    if (callData->mTopStackFrame) {
-      frame = *callData->mTopStackFrame;
-    }
-
-    callData->mCountValue = IncreaseCounter(aCx, frame, aData,
+    callData->mCountValue = IncreaseCounter(aCx, aData,
                                             callData->mCountLabel);
   }
 
@@ -2119,42 +2117,40 @@ Console::ArgumentsToValueList(const Sequence<JS::Value>& aData,
 }
 
 uint32_t
-Console::IncreaseCounter(JSContext* aCx, const ConsoleStackEntry& aFrame,
-                         const Sequence<JS::Value>& aArguments,
+Console::IncreaseCounter(JSContext* aCx, const Sequence<JS::Value>& aArguments,
                          nsAString& aCountLabel)
 {
   AssertIsOnOwningThread();
 
   ClearException ce(aCx);
 
-  nsAutoString key;
   nsAutoString label;
 
-  if (!aArguments.IsEmpty()) {
+  if (aArguments.IsEmpty()) {
+    label.AssignLiteral(COUNT_DEFAULT_LABEL);
+  } else {
     JS::Rooted<JS::Value> labelValue(aCx, aArguments[0]);
-    JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, labelValue));
 
-    nsAutoJSString string;
-    if (jsString && string.init(aCx, jsString)) {
-      label = string;
-      key = string;
+    if (labelValue.isUndefined()) {
+      label.AssignLiteral(COUNT_DEFAULT_LABEL);
+    } else {
+      JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, labelValue));
+
+      nsAutoJSString string;
+      if (jsString && string.init(aCx, jsString)) {
+        label = string;
+      }
     }
   }
 
-  if (key.IsEmpty()) {
-    key.Append(aFrame.mFilename);
-    key.Append(':');
-    key.AppendInt(aFrame.mLineNumber);
-  }
-
   uint32_t count = 0;
-  if (!mCounterRegistry.Get(key, &count) &&
+  if (!mCounterRegistry.Get(label, &count) &&
       mCounterRegistry.Count() >= MAX_PAGE_COUNTERS) {
     return MAX_PAGE_COUNTERS;
   }
 
   ++count;
-  mCounterRegistry.Put(key, count);
+  mCounterRegistry.Put(label, count);
 
   aCountLabel = label;
   return count;

@@ -21,7 +21,10 @@ function test() {
     let messages = [];
     [
       "start",
-      "<no label>: 2",
+      "default: 1",
+      "default: 2",
+      "default: 3",
+      "default: 4",
       "console.count() testcounter: 1",
       "console.count() testcounter: 2",
       "console.count() testcounter: 3",
@@ -36,7 +39,7 @@ function test() {
     });
     messages.push({
       name: "Three local counts with no label and count=1",
-      text: "<no label>: 1",
+      text: "default: 1",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
       count: 3
@@ -64,7 +67,7 @@ function test() {
     });
     messages.push({
       name: "Two external counts with no label and count=1",
-      text: "<no label>: 1",
+      text: "default: 1",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
       count: 2
