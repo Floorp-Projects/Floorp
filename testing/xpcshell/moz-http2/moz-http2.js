@@ -799,6 +799,14 @@ function handleRequest(req, res) {
     res.setHeader("x-client-port", req.remotePort);
   }
 
+  else if (u.pathname === "/statusphrase") {
+    // Fortunately, the node-http2 API is dumb enough to allow this right on
+    // through, so we can easily test rejecting this on gecko's end.
+    res.writeHead("200 OK");
+    res.end(content);
+    return;
+  }
+
   res.setHeader('Content-Type', 'text/html');
   if (req.httpVersionMajor != 2) {
     res.setHeader('Connection', 'close');
