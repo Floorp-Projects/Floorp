@@ -296,6 +296,7 @@ bool nsContentUtils::sSendPerformanceTimingNotifications = false;
 bool nsContentUtils::sUseActivityCursor = false;
 bool nsContentUtils::sAnimationsAPICoreEnabled = false;
 bool nsContentUtils::sAnimationsAPIElementAnimateEnabled = false;
+bool nsContentUtils::sGetBoxQuadsEnabled = false;
 
 int32_t nsContentUtils::sPrivacyMaxInnerWidth = 1000;
 int32_t nsContentUtils::sPrivacyMaxInnerHeight = 1000;
@@ -637,6 +638,9 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sAnimationsAPIElementAnimateEnabled,
                                "dom.animations-api.element-animate.enabled", false);
+
+  Preferences::AddBoolVarCache(&sGetBoxQuadsEnabled,
+                               "layout.css.getBoxQuads.enabled", false);
 
   Element::InitCCCallbacks();
 
