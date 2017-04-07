@@ -33,9 +33,11 @@ chrome/en-US/locale/en-US/browser/overrides/global/mozilla.dtd
 chrome/en-US/locale/en-US/browser/overrides/intl.css
 chrome/en-US/locale/en-US/browser/region.properties
 chrome/en-US/locale/en-US/browser/webcompatReporter.properties
+chrome/en-US/locale/en-US/browser/searchplugins/list.json
 chrome/en-US/locale/en-US/browser/searchplugins/amazon-co-uk.xml
 chrome/en-US/locale/en-US/browser/searchplugins/amazon-de.xml
 chrome/en-US/locale/en-US/browser/searchplugins/amazon-en-GB.xml
+chrome/en-US/locale/en-US/browser/searchplugins/amazon-fr.xml
 chrome/en-US/locale/en-US/browser/searchplugins/amazon-in.xml
 chrome/en-US/locale/en-US/browser/searchplugins/amazondotcom.xml
 chrome/en-US/locale/en-US/browser/searchplugins/bolcom-fy-NL.xml
