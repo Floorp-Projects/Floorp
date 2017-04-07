@@ -95,9 +95,9 @@ public:
   public:
     CallbacksSupport(RemoteVideoDecoder* aDecoder) : mDecoder(aDecoder) { }
 
-    void HandleInputExhausted() override
+    void HandleInput(int64_t aTimestamp, bool aProcessed) override
     {
-      mDecoder->ReturnDecodedData();
+      mDecoder->UpdateInputStatus(aTimestamp, aProcessed);
     }
 
     void HandleOutput(Sample::Param aSample) override
@@ -143,8 +143,7 @@ public:
           presentationTimeUs);
 
         v->SetListener(Move(releaseSample));
-
-        mDecoder->Output(v);
+        mDecoder->UpdateOutputStatus(v);
       }
 
       if (isEOS) {
@@ -297,9 +296,9 @@ private:
   public:
     CallbacksSupport(RemoteAudioDecoder* aDecoder) : mDecoder(aDecoder) { }
 
-    void HandleInputExhausted() override
+    void HandleInput(int64_t aTimestamp, bool aProcessed) override
     {
-      mDecoder->ReturnDecodedData();
+      mDecoder->UpdateInputStatus(aTimestamp, aProcessed);
     }
 
     void HandleOutput(Sample::Param aSample) override
@@ -347,7 +346,7 @@ private:
           FramesToUsecs(numFrames, mOutputSampleRate).value(), numFrames,
           Move(audio), mOutputChannels, mOutputSampleRate);
 
-        mDecoder->Output(data);
+        mDecoder->UpdateOutputStatus(data);
       }
 
       if ((flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM) != 0) {
@@ -437,6 +436,7 @@ RemoteDataDecoder::RemoteDataDecoder(MediaData::Type aType,
   , mFormat(aFormat)
   , mDrmStubId(aDrmStubId)
   , mTaskQueue(aTaskQueue)
+  , mNumPendingInputs(0)
 {
 }
 
@@ -446,6 +446,7 @@ RemoteDataDecoder::Flush()
   RefPtr<RemoteDataDecoder> self = this;
   return InvokeAsync(mTaskQueue, __func__, [self, this]() {
     mDecodedData.Clear();
+    mNumPendingInputs = 0;
     mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
     mDrainPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
     mDrainStatus = DrainStatus::DRAINED;
@@ -543,11 +544,41 @@ RemoteDataDecoder::Decode(MediaRawData* aSample)
 }
 
 void
-RemoteDataDecoder::Output(MediaData* aSample)
+RemoteDataDecoder::UpdateInputStatus(int64_t aTimestamp, bool aProcessed)
 {
   if (!mTaskQueue->IsCurrentThreadIn()) {
     mTaskQueue->Dispatch(
-      NewRunnableMethod<MediaData*>(this, &RemoteDataDecoder::Output, aSample));
+      NewRunnableMethod<int64_t, bool>(this,
+                                       &RemoteDataDecoder::UpdateInputStatus,
+                                       aTimestamp,
+                                       aProcessed));
+    return;
+  }
+  AssertOnTaskQueue();
+  if (mShutdown) {
+    return;
+  }
+
+  if (!aProcessed) {
+    mNumPendingInputs++;
+  } else if (mNumPendingInputs > 0) {
+    mNumPendingInputs--;
+  }
+
+  if (mNumPendingInputs == 0 || // Input has been processed, request the next one.
+      !mDecodedData.IsEmpty()) { // Previous output arrived before Decode().
+    ReturnDecodedData();
+  }
+}
+
+void
+RemoteDataDecoder::UpdateOutputStatus(MediaData* aSample)
+{
+  if (!mTaskQueue->IsCurrentThreadIn()) {
+    mTaskQueue->Dispatch(
+      NewRunnableMethod<MediaData*>(this,
+                                    &RemoteDataDecoder::UpdateOutputStatus,
+                                    aSample));
     return;
   }
   AssertOnTaskQueue();
