@@ -8,31 +8,79 @@
 #define mozilla_dom_URLClassifierParent_h
 
 #include "mozilla/dom/PURLClassifierParent.h"
+#include "mozilla/dom/PURLClassifierLocalParent.h"
 #include "nsIURIClassifier.h"
 
 namespace mozilla {
 namespace dom {
 
-class URLClassifierParent : public nsIURIClassifierCallback,
-                            public PURLClassifierParent
+template<typename BaseProtocol>
+class URLClassifierParentBase : public nsIURIClassifierCallback,
+                                public BaseProtocol
 {
- public:
-  URLClassifierParent() = default;
+public:
+  // nsIURIClassifierCallback.
+  NS_IMETHOD OnClassifyComplete(nsresult aErrorCode,
+                                const nsACString& aList,
+                                const nsACString& aProvider,
+                                const nsACString& aPrefix)
+  {
+    if (mIPCOpen) {
+      ClassifierInfo info = ClassifierInfo(nsCString(aList),
+                                           nsCString(aProvider),
+                                           nsCString(aPrefix));
+      Unused << BaseProtocol::Send__delete__(this, info, aErrorCode);
+    }
+    return NS_OK;
+  }
 
+  // Custom.
+  void ClassificationFailed()
+  {
+    if (mIPCOpen) {
+      Unused << BaseProtocol::Send__delete__(this, void_t(), NS_ERROR_FAILURE);
+    }
+  }
+
+protected:
+  ~URLClassifierParentBase() = default;
+  bool mIPCOpen = true;
+};
+
+//////////////////////////////////////////////////////////////
+// URLClassifierParent
+
+class URLClassifierParent : public URLClassifierParentBase<PURLClassifierParent>
+{
+public:
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIURICLASSIFIERCALLBACK
 
   mozilla::ipc::IPCResult StartClassify(nsIPrincipal* aPrincipal,
                                         bool aUseTrackingProtection,
                                         bool* aSuccess);
-  void ActorDestroy(ActorDestroyReason aWhy) override;
-
-  void ClassificationFailed();
-
- private:
+private:
   ~URLClassifierParent() = default;
 
-  bool mIPCOpen = true;
+  // Override PURLClassifierParent::ActorDestroy. We seem to unable to
+  // override from the base template class.
+  void ActorDestroy(ActorDestroyReason aWhy) override;
+};
+
+//////////////////////////////////////////////////////////////
+// URLClassifierLocalParent
+
+class URLClassifierLocalParent : public URLClassifierParentBase<PURLClassifierLocalParent>
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  mozilla::ipc::IPCResult StartClassify(nsIURI* aURI, const nsACString& aTables);
+
+private:
+  ~URLClassifierLocalParent() = default;
+
+  // Override PURLClassifierParent::ActorDestroy.
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
 } // namespace dom

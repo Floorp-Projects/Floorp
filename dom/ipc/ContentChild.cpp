@@ -3143,6 +3143,21 @@ ContentChild::DeallocPURLClassifierChild(PURLClassifierChild* aActor)
   return true;
 }
 
+PURLClassifierLocalChild*
+ContentChild::AllocPURLClassifierLocalChild(const URIParams& aUri,
+                                            const nsCString& aTables)
+{
+  return new URLClassifierLocalChild();
+}
+
+bool
+ContentChild::DeallocPURLClassifierLocalChild(PURLClassifierLocalChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+  delete aActor;
+  return true;
+}
+
 // The IPC code will call this method asking us to assign an event target to new
 // actors created by the ContentParent.
 already_AddRefed<nsIEventTarget>
