@@ -13,7 +13,7 @@ const { Services } = require("resource://gre/modules/Services.jsm");
 const { setTimeout } = require("../timers");
 const { platform } = require("../system");
 const { getMostRecentBrowserWindow, getOwnerBrowserWindow,
-        getScreenPixelsPerCSSPixel } = require("../window/utils");
+        getHiddenWindow, getScreenPixelsPerCSSPixel } = require("../window/utils");
 
 const { create: createFrame, swapFrameLoaders, getDocShell } = require("../frame/utils");
 const { window: addonWindow } = require("../addon/window");
