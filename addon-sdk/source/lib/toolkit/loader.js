@@ -32,7 +32,7 @@ const { addObserver, notifyObservers } = Cc['@mozilla.org/observer-service;1'].
                         getService(Ci.nsIObserverService);
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-const { join: pathJoin, normalize, dirname } = Cu.import("resource://gre/modules/osfile/ospath_unix.jsm");
+const { normalize, dirname } = Cu.import("resource://gre/modules/osfile/ospath_unix.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "resProto",
                                    "@mozilla.org/network/protocol;1?name=resource",
@@ -388,10 +388,10 @@ function join(base, ...paths) {
   // or we wind up stripping too many slashes and producing invalid URLs.
   let match = /^((?:resource|file|chrome)\:\/\/[^\/]*|jar:[^!]+!)(.*)/.exec(base);
   if (match) {
-    return match[1] + normalize(pathJoin(match[2], ...paths));
+    return match[1] + normalize([match[2], ...paths].join("/"));
   }
 
-  return normalize(pathJoin(base, ...paths));
+  return normalize([base, ...paths].join("/"));
 }
 Loader.join = join;
 
@@ -613,7 +613,11 @@ const resolve = iced(function resolve(id, base) {
 
   let baseDir = dirname(base);
 
-  let resolved = join(baseDir, id);
+  let resolved;
+  if (baseDir.includes(":"))
+    resolved = join(baseDir, id);
+  else
+    resolved = normalize(`${baseDir}/${id}`);
 
   // Joining and normalizing removes the './' from relative files.
   // We need to ensure the resolution still has the root
@@ -676,7 +680,7 @@ function* getNodeModulePaths(rootURI, start) {
   let parts = start.split('/');
   while (parts.length) {
     let leaf = parts.pop();
-    let path = join(...parts, leaf, moduleDir);
+    let path = [...parts, leaf, moduleDir].join("/");
     if (leaf !== moduleDir && urlCache.exists(join(rootURI, path))) {
       yield path;
     }
