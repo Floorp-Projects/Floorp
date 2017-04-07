@@ -178,6 +178,13 @@ public:
                  wr::ImageRendering aFilter,
                  wr::ImageKey aImage);
 
+  void PushImage(const WrRect& aBounds,
+                 const WrClipRegion& aClip,
+                 const WrSize& aStretchSize,
+                 const WrSize& aTileSpacing,
+                 wr::ImageRendering aFilter,
+                 wr::ImageKey aImage);
+
   void PushIFrame(const WrRect& aBounds,
                   const WrClipRegion& aClip,
                   wr::PipelineId aPipeline);

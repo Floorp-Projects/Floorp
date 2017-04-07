@@ -660,6 +660,7 @@ WR_FUNC;
 
 WR_INLINE void
 wr_dp_push_image(WrState* wrState, WrRect bounds, WrClipRegion clip,
+                 WrSize stretch_size, WrSize tile_spacing,
                  WrImageRendering filter, WrImageKey key)
 WR_FUNC;
 
