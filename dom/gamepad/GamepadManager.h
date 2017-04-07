@@ -62,7 +62,7 @@ class GamepadManager final : public nsIObserver,
   // a gamepadbutton{up,down} event at them as well.
   // aPressed is used for digital buttons, aValue is for analog buttons.
   void NewButtonEvent(uint32_t aIndex, GamepadServiceType aServiceType, uint32_t aButton,
-                      bool aPressed, double aValue);
+                      bool aPressed, bool aTouched, double aValue);
 
   // Update the state of |aAxis| for the gamepad at |aIndex| for all
   // windows that are listening and visible, and fire a gamepadaxismove
