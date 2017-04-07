@@ -235,11 +235,6 @@ var PerformanceController = {
    * @return Promise:boolean
    */
   canCurrentlyRecord: Task.async(function* () {
-    // If we're testing the legacy front, the performance actor will exist,
-    // with `canCurrentlyRecord` method; this ensures we test the legacy path.
-    if (gFront.LEGACY_FRONT) {
-      return true;
-    }
     let hasActor = yield gTarget.hasActor("performance");
     if (!hasActor) {
       return true;
