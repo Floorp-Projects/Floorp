@@ -52,6 +52,17 @@ private:
   // Prepare the input data to the mVPXImageWrapper for encoding.
   nsresult PrepareRawFrame(VideoChunk &aChunk);
 
+  // Re-configures an existing encoder with a new frame size.
+  nsresult Reconfigure(int32_t aWidth, int32_t aHeight,
+                       int32_t aDisplayWidth, int32_t aDisplayHeight);
+
+  // Destroys the context and image wrapper. Does not de-allocate the structs.
+  void Destroy();
+
+  // Helper method to set the values on a VPX configuration.
+  nsresult SetConfigurationValues(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
+                                  int32_t aDisplayHeight, vpx_codec_enc_cfg_t& config);
+
   // Encoded timestamp.
   StreamTime mEncodedTimestamp;
 
