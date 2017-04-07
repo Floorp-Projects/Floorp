@@ -416,6 +416,9 @@ bool Gecko_MatchStringArgPseudo(RawGeckoElementBorrowed element,
 
 void Gecko_Construct_nsStyleVariables(nsStyleVariables* ptr);
 
+void Gecko_RegisterProfilerThread(const char* name);
+void Gecko_UnregisterProfilerThread();
+
 #define SERVO_BINDING_FUNC(name_, return_, ...) return_ name_(__VA_ARGS__);
 #include "mozilla/ServoBindingList.h"
 #undef SERVO_BINDING_FUNC
