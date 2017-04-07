@@ -1677,7 +1677,7 @@ FunctionConstructor(JSContext* cx, const CallArgs& args, GeneratorKind generator
     }
     if (!sb.append("function"))
          return false;
-    if (isStarGenerator && !isAsync) {
+    if (isStarGenerator) {
         if (!sb.append('*'))
             return false;
     }

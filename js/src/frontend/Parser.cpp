@@ -2500,7 +2500,7 @@ Parser<FullParseHandler>::standaloneFunction(HandleFunction fun,
 
     if (!tokenStream.getToken(&tt))
         return null();
-    if (generatorKind == StarGenerator && asyncKind == SyncFunction) {
+    if (generatorKind == StarGenerator) {
         MOZ_ASSERT(tt == TOK_MUL);
         if (!tokenStream.getToken(&tt))
             return null();
