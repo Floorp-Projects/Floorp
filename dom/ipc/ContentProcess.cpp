@@ -20,8 +20,6 @@
 #include "nsDirectoryServiceDefs.h"
 #endif
 
-#include "mozilla/gfx/gfxVars.h"
-
 using mozilla::ipc::IOThreadChild;
 
 namespace mozilla {
@@ -205,14 +203,8 @@ ContentProcess::Init(int aArgc, char* aArgv[])
       }
       SET_PREF_PHASE(END_INIT_PREFS);
       foundStringPrefs = true;
-    } else if (!strcmp(aArgv[idx], "-gfxVars")) {
-      SET_PREF_PHASE(BEGIN_INIT_PREFS);
-      char* str = aArgv[idx + 1];
-      if (str[0] != '0' || str[1] != '\0') {
-        gfxVars::GotSerializedInitialVarUpdates(aArgv[idx + 1]);
-      }
-      SET_PREF_PHASE(END_INIT_PREFS);
-    } else if (!strcmp(aArgv[idx], "-safeMode")) {
+    }
+    else if (!strcmp(aArgv[idx], "-safeMode")) {
       gSafeMode = true;
     }
 
