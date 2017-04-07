@@ -177,16 +177,6 @@ public class ActionBarPresenter {
         mUrlView.setOnLongClickListener(listener);
     }
 
-    /**
-     * To get primary color of Title of ActionBar
-     *
-     * @return color code of primary color
-     */
-    @ColorInt
-    public int getTextPrimaryColor() {
-        return mTextPrimaryColor;
-    }
-
     private void initIndicator() {
         mActionBar.setDisplayHomeAsUpEnabled(true);
         final Drawable icon = mActionBar.getThemedContext().getDrawable(R.drawable.ic_close_light);
