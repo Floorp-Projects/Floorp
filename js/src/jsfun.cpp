@@ -1762,9 +1762,12 @@ FunctionConstructor(JSContext* cx, const CallArgs& args, GeneratorKind generator
 
     // Step 25-32 (reordered).
     RootedObject globalLexical(cx, &global->lexicalEnvironment());
+    JSFunction::Flags flags = (isStarGenerator || isAsync)
+                              ? JSFunction::INTERPRETED_LAMBDA_GENERATOR_OR_ASYNC
+                              : JSFunction::INTERPRETED_LAMBDA;
     AllocKind allocKind = isAsync ? AllocKind::FUNCTION_EXTENDED : AllocKind::FUNCTION;
     RootedFunction fun(cx, NewFunctionWithProto(cx, nullptr, 0,
-                                                JSFunction::INTERPRETED_LAMBDA, globalLexical,
+                                                flags, globalLexical,
                                                 anonymousAtom, proto,
                                                 allocKind, TenuredObject));
     if (!fun)
