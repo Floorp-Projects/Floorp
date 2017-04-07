@@ -19,6 +19,7 @@ the graph.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
+import re
 
 from slugid import nice as slugid
 from .task import Task
@@ -94,6 +95,17 @@ def derive_misc_task(task, purpose, image, taskgraph, label_to_taskid):
     return task
 
 
+# these regular expressions capture route prefixes for which we have a star
+# scope, allowing them to be summarized.  Each should correspond to a star scope
+# in each Gecko `assume:repo:hg.mozilla.org/...` role.
+SCOPE_SUMMARY_REGEXPS = [
+    re.compile(r'(index:insert-task:buildbot\.branches\.[^.]*\.).*'),
+    re.compile(r'(index:insert-task:buildbot\.revisions\.).*'),
+    re.compile(r'(index:insert-task:docker\.images\.v1\.[^.]*\.).*'),
+    re.compile(r'(index:insert-task:gecko\.v2\.[^.]*\.).*'),
+]
+
+
 def make_index_task(parent_task, taskgraph, label_to_taskid):
     index_paths = [r.split('.', 1)[1] for r in parent_task.task['routes']
                    if r.startswith('index.')]
@@ -102,12 +114,23 @@ def make_index_task(parent_task, taskgraph, label_to_taskid):
 
     task = derive_misc_task(parent_task, 'index-task', 'index-task',
                             taskgraph, label_to_taskid)
-    task.task['scopes'] = [
-        'index:insert-task:{}'.format(path) for path in index_paths]
+
+    # we need to "summarize" the scopes, otherwise a particularly
+    # namespace-heavy index task might have more scopes than can fit in a
+    # temporary credential.
+    scopes = set()
+    for path in index_paths:
+        scope = 'index:insert-task:{}'.format(path)
+        for summ_re in SCOPE_SUMMARY_REGEXPS:
+            match = summ_re.match(scope)
+            if match:
+                scope = match.group(1) + '*'
+                break
+        scopes.add(scope)
+    task.task['scopes'] = sorted(scopes)
+
     task.task['payload']['command'] = ['insert-indexes.js'] + index_paths
-    task.task['payload']['env'] = {
-        "TARGET_TASKID": parent_task.task_id,
-    }
+    task.task['payload']['env'] = {"TARGET_TASKID": parent_task.task_id}
     return task
 
 

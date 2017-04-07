@@ -62,12 +62,12 @@ function autocompleteUnexpectedPopupShowing(event) {
 function* openContextMenu(browser, loginInput) {
   // First synthesize a mousedown. We need this to get the focus event with the "contextmenu" event.
   let eventDetails1 = {type: "mousedown", button: 2};
-  BrowserTestUtils.synthesizeMouseAtCenter(loginInput, eventDetails1, browser);
+  yield BrowserTestUtils.synthesizeMouseAtCenter(loginInput, eventDetails1, browser);
 
   // Then synthesize the contextmenu click over the input element.
   let contextMenuShownPromise = BrowserTestUtils.waitForEvent(window, "popupshown");
   let eventDetails = {type: "contextmenu", button: 2};
-  BrowserTestUtils.synthesizeMouseAtCenter(loginInput, eventDetails, browser);
+  yield BrowserTestUtils.synthesizeMouseAtCenter(loginInput, eventDetails, browser);
   yield contextMenuShownPromise;
 
   // Wait to see which popups are shown.

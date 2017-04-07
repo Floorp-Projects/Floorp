@@ -16,6 +16,7 @@
 #include "mozilla/dom/DOMPoint.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Pose.h"
+#include "mozilla/TimeStamp.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -334,6 +335,9 @@ public:
   int32_t RequestAnimationFrame(mozilla::dom::FrameRequestCallback& aCallback,
                                 mozilla::ErrorResult& aError);
   void CancelAnimationFrame(int32_t aHandle, mozilla::ErrorResult& aError);
+  void StartHandlingVRNavigationEvent();
+  void StopHandlingVRNavigationEvent();
+  bool IsHandlingVRNavigationEvent();
 
 protected:
   VRDisplay(nsPIDOMWindowInner* aWindow, gfx::VRDisplayClient* aClient);
@@ -364,6 +368,10 @@ protected:
   * will use these cached values.
   */
   VRFrameInfo mFrameInfo;
+
+  // Time at which we began expecting VR navigation.
+  TimeStamp mHandlingVRNavigationEventStart;
+  int32_t mVRNavigationEventDepth;
 };
 
 } // namespace dom

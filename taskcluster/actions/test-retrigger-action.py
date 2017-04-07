@@ -58,7 +58,7 @@ logger = logging.getLogger(__name__)
             },
             'environment': {
                 'type': 'object',
-                'default': {'MY_ENV_1': 'myvalue1'},
+                'default': {'MOZ_LOG': ''},
                 'title': 'Extra environment variables',
                 'description': 'Extra environment variables to use for this run'
             },

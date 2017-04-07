@@ -261,4 +261,7 @@ partial interface HTMLInputElement {
 
   [Pref="dom.forms.datetime", Func="IsChromeOrXBL"]
   void closeDateTimePicker();
+
+  [Pref="dom.forms.datetime", Func="IsChromeOrXBL"]
+  void setFocusState(boolean aIsFocused);
 };

@@ -117,12 +117,12 @@ set_config('L10NBASEDIR', l10n_base)
 # `choices` depending on the target, but that doesn't pan out for the same
 # reason.
 option('--enable-default-toolkit', nargs=1,
-       choices=('cairo-windows', 'cairo-gtk3', 'cairo-cocoa', 'cairo-uikit',
-                'cairo-android', 'cairo-gonk'),
+       choices=('cairo-windows', 'cairo-gtk3', 'cairo-gtk3-wayland',
+                'cairo-cocoa', 'cairo-uikit', 'cairo-android', 'cairo-gonk'),
        help='Select default toolkit')
 
-@depends('--enable-default-toolkit', target)
-def toolkit(value, target):
+@depends('--enable-default-toolkit', target, '--help')
+def toolkit(value, target, _):
     # Define possible choices for each platform. The default is the first one
     # listed when there are several.
     os = target.os
@@ -140,7 +140,7 @@ def toolkit(value, target):
         else:
             platform_choices = ('cairo-android',)
     else:
-        platform_choices = ('cairo-gtk3',)
+        platform_choices = ('cairo-gtk3', 'cairo-gtk3-wayland')
 
     if value:
         if value[0] not in platform_choices:
@@ -150,11 +150,16 @@ def toolkit(value, target):
 
     return platform_choices[0]
 
+@depends(toolkit)
+def wayland(toolkit):
+    return toolkit == 'cairo-gtk3-wayland'
 
 @depends(toolkit)
 def toolkit(toolkit):
     if toolkit == 'cairo-gtk2-x11':
         widget_toolkit = 'gtk2'
+    elif toolkit == 'cairo-gtk3-wayland' :
+        widget_toolkit = 'gtk3'
     else:
         widget_toolkit = toolkit.replace('cairo-', '')
     return widget_toolkit
@@ -198,6 +203,14 @@ set_define('MOZ_ENABLE_XREMOTE', x11)
 set_config('MOZ_X11', x11)
 set_define('MOZ_X11', x11)
 add_old_configure_assignment('MOZ_X11', x11)
+
+# Wayland support
+# ==============================================================
+wayland_headers = pkg_check_modules('MOZ_WAYLAND', 'gtk+-wayland-3.0 >= 3.22',
+                                    when=wayland)
+
+set_config('MOZ_WAYLAND', depends_if(wayland_headers)(lambda _: True))
+set_define('MOZ_WAYLAND', depends_if(wayland_headers)(lambda _: True))
 
 # GL Provider
 # ==============================================================
@@ -813,13 +826,14 @@ include('nss.configure')
 
 # Network protocol support
 # ==============================================================
-@depends(check_build_environment, '--help')
+@depends(check_build_environment, toolkit_gtk, '--help')
 @imports('os')
 @imports(_from='__builtin__', _import='sorted')
-def all_necko_protocols(build_env, _):
+def all_necko_protocols(build_env, toolkit_gtk, _):
     basedir = os.path.join(build_env.topsrcdir, 'netwerk', 'protocol')
     return tuple(sorted(p for p in os.listdir(basedir)
-                        if os.path.isdir(os.path.join(basedir, p))))
+                        if (os.path.isdir(os.path.join(basedir, p)) and
+                            (p != 'gio' or toolkit_gtk))))
 
 default_necko_protocols = all_necko_protocols
 

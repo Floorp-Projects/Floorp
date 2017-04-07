@@ -179,7 +179,7 @@ add_task(function* testMatchDataURI() {
             code: "location.href;",
             allFrames: true,
           }),
-          /No window matching/,
+          /Missing host permission/,
           "Should not execute in `data:` frame");
 
         browser.test.sendMessage("done");

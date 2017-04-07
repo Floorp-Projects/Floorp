@@ -191,12 +191,12 @@ var gGestureSupport = {
 
     let isVerticalSwipe = false;
     if (aEvent.direction == aEvent.DIRECTION_UP) {
-      if (gMultiProcessBrowser || content.pageYOffset > 0) {
+      if (gMultiProcessBrowser || window.content.pageYOffset > 0) {
         return false;
       }
       isVerticalSwipe = true;
     } else if (aEvent.direction == aEvent.DIRECTION_DOWN) {
-      if (gMultiProcessBrowser || content.pageYOffset < content.scrollMaxY) {
+      if (gMultiProcessBrowser || window.content.pageYOffset < window.content.scrollMaxY) {
         return false;
       }
       isVerticalSwipe = true;
@@ -442,10 +442,10 @@ var gGestureSupport = {
    *        The MozRotateGestureUpdate event triggering this call
    */
   rotate(aEvent) {
-    if (!(content.document instanceof ImageDocument))
+    if (!(window.content.document instanceof ImageDocument))
       return;
 
-    let contentElement = content.document.body.firstElementChild;
+    let contentElement = window.content.document.body.firstElementChild;
     if (!contentElement)
       return;
     // If we're currently snapping, cancel that snap
@@ -461,10 +461,10 @@ var gGestureSupport = {
    * Perform a rotation end for ImageDocuments
    */
   rotateEnd() {
-    if (!(content.document instanceof ImageDocument))
+    if (!(window.content.document instanceof ImageDocument))
       return;
 
-    let contentElement = content.document.body.firstElementChild;
+    let contentElement = window.content.document.body.firstElementChild;
     if (!contentElement)
       return;
 
@@ -533,12 +533,12 @@ var gGestureSupport = {
     if (gMultiProcessBrowser)
       return;
 
-    if (!(content.document instanceof ImageDocument))
+    if (!(window.content.document instanceof ImageDocument))
       return;
 
-    let contentElement = content.document.body.firstElementChild;
-    let transformValue = content.window.getComputedStyle(contentElement)
-                                       .transform;
+    let contentElement = window.content.document.body.firstElementChild;
+    let transformValue = window.content.window.getComputedStyle(contentElement)
+                                              .transform;
 
     if (transformValue == "none") {
       this.rotation = 0;
@@ -558,10 +558,10 @@ var gGestureSupport = {
    * Removes the transition rule by removing the completeRotation class
    */
   _clearCompleteRotation() {
-    let contentElement = content.document &&
-                         content.document instanceof ImageDocument &&
-                         content.document.body &&
-                         content.document.body.firstElementChild;
+    let contentElement = window.content.document &&
+                         window.content.document instanceof ImageDocument &&
+                         window.content.document.body &&
+                         window.content.document.body.firstElementChild;
     if (!contentElement)
       return;
     contentElement.classList.remove("completeRotation");

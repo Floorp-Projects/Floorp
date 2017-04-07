@@ -653,7 +653,7 @@ function test_localFile() {
 function test_tabClose() {
   return Task.spawn(function* () {
     if (!Preferences.get("xpinstall.customConfirmationUI", false)) {
-      runNextTest();
+      info("Test skipped due to xpinstall.customConfirmationUI being false.");
       return;
     }
 

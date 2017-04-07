@@ -3055,15 +3055,10 @@ ElementRestyler::ComputeStyleChangeFor(nsIFrame*          aFrame,
                                        nsTArray<RefPtr<nsStyleContext>>&
                                          aSwappedStructOwners)
 {
-  nsIContent* content = aFrame->GetContent();
-  std::string elemDesc;
-  if (profiler_is_active() && content) {
-    elemDesc = ToString(*content);
-  }
+  PROFILER_LABEL("ElementRestyler", "ComputeStyleChangeFor",
+                 js::ProfileEntry::Category::CSS);
 
-  PROFILER_LABEL_DYNAMIC("ElementRestyler", "ComputeStyleChangeFor",
-                         js::ProfileEntry::Category::CSS,
-                         content ? elemDesc.c_str() : "<unknown>");
+  nsIContent* content = aFrame->GetContent();
   if (aMinChange) {
     aChangeList->AppendChange(aFrame, content, aMinChange);
   }

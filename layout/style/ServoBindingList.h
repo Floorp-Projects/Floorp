@@ -286,7 +286,8 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoComputedValuesStrong,
                    ServoComputedValuesBorrowedOrNull parent_style)
 
 // Initialize Servo components. Should be called exactly once at startup.
-SERVO_BINDING_FUNC(Servo_Initialize, void)
+SERVO_BINDING_FUNC(Servo_Initialize, void,
+                   RawGeckoURLExtraData* dummy_url_data)
 // Shut down Servo components. Should be called exactly once at shutdown.
 SERVO_BINDING_FUNC(Servo_Shutdown, void)
 

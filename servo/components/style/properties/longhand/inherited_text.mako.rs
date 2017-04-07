@@ -6,7 +6,7 @@
 <% from data import Keyword %>
 <% data.new_style_struct("InheritedText", inherited=True, gecko_name="Text") %>
 
-<%helpers:longhand name="line-height" animatable="True"
+<%helpers:longhand name="line-height" animation_type="normal"
                    spec="https://drafts.csswg.org/css2/visudet.html#propdef-line-height">
     use std::fmt;
     use style_traits::ToCss;
@@ -45,31 +45,33 @@
         }
     }
     /// normal | <number> | <length> | <percentage>
-    pub fn parse(_context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
+    pub fn parse(_: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
         use cssparser::Token;
         use std::ascii::AsciiExt;
-        // We try to parse as a Number first because, for 'line-height', we want "0" to be
-        // parsed as a plain Number rather than a Length (0px); this matches the behaviour
-        // of all major browsers
-        input.try(specified::Number::parse_non_negative)
-            .map(SpecifiedValue::Number)
-            .or_else(|()| {
-                input.try(specified::LengthOrPercentage::parse_non_negative)
-                .map(SpecifiedValue::LengthOrPercentage)
-                .or_else(|()| {
-                    match try!(input.next()) {
-                        Token::Ident(ref value) if value.eq_ignore_ascii_case("normal") => {
-                            Ok(SpecifiedValue::Normal)
-                        }
-                        % if product == "gecko":
-                        Token::Ident(ref value) if value.eq_ignore_ascii_case("-moz-block-height") => {
-                            Ok(SpecifiedValue::MozBlockHeight)
-                        }
-                        % endif
-                        _ => Err(()),
-                    }
-                })
-            })
+
+        // We try to parse as a Number first because, for 'line-height', we want
+        // "0" to be parsed as a plain Number rather than a Length (0px); this
+        // matches the behaviour of all major browsers
+        if let Ok(number) = input.try(specified::Number::parse_non_negative) {
+            return Ok(SpecifiedValue::Number(number))
+        }
+
+        if let Ok(lop) = input.try(specified::LengthOrPercentage::parse_non_negative) {
+            return Ok(SpecifiedValue::LengthOrPercentage(lop))
+        }
+
+
+        match try!(input.next()) {
+            Token::Ident(ref value) if value.eq_ignore_ascii_case("normal") => {
+                Ok(SpecifiedValue::Normal)
+            }
+            % if product == "gecko":
+            Token::Ident(ref value) if value.eq_ignore_ascii_case("-moz-block-height") => {
+                Ok(SpecifiedValue::MozBlockHeight)
+            }
+            % endif
+            _ => Err(()),
+        }
     }
     pub mod computed_value {
         use app_units::Au;
@@ -163,25 +165,25 @@
 ${helpers.single_keyword("text-transform",
                          "none capitalize uppercase lowercase",
                          extra_gecko_values="full-width",
-                         animatable=False,
+                         animation_type="none",
                          spec="https://drafts.csswg.org/css-text/#propdef-text-transform")}
 
 ${helpers.single_keyword("hyphens", "manual none auto",
                          gecko_enum_prefix="StyleHyphens",
-                         products="gecko", animatable=False, extra_prefixes="moz",
+                         products="gecko", animation_type="none", extra_prefixes="moz",
                          spec="https://drafts.csswg.org/css-text/#propdef-hyphens")}
 
 // TODO: Support <percentage>
 ${helpers.single_keyword("-moz-text-size-adjust", "auto none",
                          gecko_constant_prefix="NS_STYLE_TEXT_SIZE_ADJUST",
-                         products="gecko", animatable=False,
+                         products="gecko", animation_type="none",
                          spec="https://drafts.csswg.org/css-size-adjust/#adjustment-control",
                          alias="-webkit-text-size-adjust")}
 
 ${helpers.predefined_type("text-indent",
                           "LengthOrPercentage",
                           "computed::LengthOrPercentage::Length(Au(0))",
-                          animatable=True,
+                          animation_type="normal",
                           spec="https://drafts.csswg.org/css-text/#propdef-text-indent")}
 
 // Also known as "word-wrap" (which is more popular because of IE), but this is the preferred
@@ -189,7 +191,7 @@ ${helpers.predefined_type("text-indent",
 ${helpers.single_keyword("overflow-wrap",
                          "normal break-word",
                          gecko_constant_prefix="NS_STYLE_OVERFLOWWRAP",
-                         animatable=False,
+                         animation_type="none",
                          spec="https://drafts.csswg.org/css-text/#propdef-overflow-wrap",
                          alias="word-wrap")}
 
@@ -197,7 +199,7 @@ ${helpers.single_keyword("overflow-wrap",
 ${helpers.single_keyword("word-break",
                          "normal break-all keep-all",
                          gecko_constant_prefix="NS_STYLE_WORDBREAK",
-                         animatable=False,
+                         animation_type="none",
                          spec="https://drafts.csswg.org/css-text/#propdef-word-break")}
 
 // TODO(pcwalton): Support `text-justify: distribute`.
@@ -206,7 +208,7 @@ ${helpers.single_keyword("word-break",
                                   extra_gecko_values="inter-character"
                                   extra_specified="${'distribute' if product == 'gecko' else ''}"
                                   gecko_enum_prefix="StyleTextJustify"
-                                  animatable="False"
+                                  animation_type="none"
                                   spec="https://drafts.csswg.org/css-text/#propdef-text-justify">
     use values::HasViewportPercentage;
     no_viewport_percentage!(SpecifiedValue);
@@ -246,11 +248,11 @@ ${helpers.single_keyword("text-align-last",
                          "auto start end left right center justify",
                          products="gecko",
                          gecko_constant_prefix="NS_STYLE_TEXT_ALIGN",
-                         animatable=False,
+                         animation_type="none",
                          spec="https://drafts.csswg.org/css-text/#propdef-text-align-last")}
 
 // TODO make this a shorthand and implement text-align-last/text-align-all
-<%helpers:longhand name="text-align" animatable="False" need_clone="True"
+<%helpers:longhand name="text-align" animation_type="none" need_clone="True"
                    spec="https://drafts.csswg.org/css-text/#propdef-text-align">
     use values::computed::ComputedValueAsSpecified;
     use values::HasViewportPercentage;
@@ -404,7 +406,7 @@ ${helpers.single_keyword("text-align-last",
     % endif
 </%helpers:longhand>
 
-<%helpers:longhand name="letter-spacing" boxed="True" animatable="True"
+<%helpers:longhand name="letter-spacing" boxed="True" animation_type="normal"
                    spec="https://drafts.csswg.org/css-text/#propdef-letter-spacing">
     use std::fmt;
     use style_traits::ToCss;
@@ -443,26 +445,7 @@ ${helpers.single_keyword("text-align-last",
         #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
         pub struct T(pub Option<Au>);
 
-        impl Interpolate for T {
-            #[inline]
-            fn interpolate(&self, other: &Self, progress: f64) -> Result<Self, ()> {
-                match (self, other) {
-                    (&T(Some(ref this)), &T(Some(ref other))) => {
-                        Ok(T(this.interpolate(other, progress).ok()))
-                    },
-                    (&T(Some(ref this)), &T(None)) => {
-                        Ok(T(this.interpolate(&Au(0), progress).ok()))
-                    },
-                    (&T(None), &T(Some(ref other))) => {
-                        Ok(T(Au(0).interpolate(other, progress).ok()))
-                    },
-                    (&T(None), &T(None)) => {
-                        Ok(T(None))
-                    },
-                }
-            }
-        }
-
+        ${helpers.impl_interpolate_for_option_tuple('Au(0)')}
     }
 
     impl ToCss for computed_value::T {
@@ -508,7 +491,7 @@ ${helpers.single_keyword("text-align-last",
     }
 </%helpers:longhand>
 
-<%helpers:longhand name="word-spacing" animatable="False"
+<%helpers:longhand name="word-spacing" animation_type="normal"
                    spec="https://drafts.csswg.org/css-text/#propdef-word-spacing">
     use std::fmt;
     use style_traits::ToCss;
@@ -540,10 +523,13 @@ ${helpers.single_keyword("text-align-last",
     }
 
     pub mod computed_value {
+        use properties::animated_properties::Interpolate;
         use values::computed::LengthOrPercentage;
         #[derive(Debug, Clone, PartialEq)]
         #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
         pub struct T(pub Option<LengthOrPercentage>);
+
+        ${helpers.impl_interpolate_for_option_tuple('LengthOrPercentage::zero()')}
     }
 
     impl ToCss for computed_value::T {
@@ -593,7 +579,7 @@ ${helpers.single_keyword("text-align-last",
 <%helpers:longhand name="-servo-text-decorations-in-effect"
                    derived_from="display text-decoration"
                    need_clone="True" products="servo"
-                   animatable="False"
+                   animation_type="none"
                    spec="Nonstandard (Internal property used by Servo)">
     use cssparser::RGBA;
     use std::fmt;
@@ -680,7 +666,7 @@ ${helpers.single_keyword("text-align-last",
                                   values="normal pre nowrap pre-wrap pre-line"
                                   gecko_constant_prefix="NS_STYLE_WHITESPACE"
                                   needs_conversion="True"
-                                  animatable="False"
+                                  animation_type="none"
                                   spec="https://drafts.csswg.org/css-text/#propdef-white-space">
     use values::computed::ComputedValueAsSpecified;
     use values::HasViewportPercentage;
@@ -720,7 +706,7 @@ ${helpers.single_keyword("text-align-last",
     }
 </%helpers:single_keyword_computed>
 
-<%helpers:longhand name="text-shadow" animatable="True"
+<%helpers:longhand name="text-shadow" animation_type="normal"
                    spec="https://drafts.csswg.org/css-text-decor/#propdef-text-shadow">
     use cssparser;
     use std::fmt;
@@ -930,7 +916,7 @@ ${helpers.single_keyword("text-align-last",
     }
 </%helpers:longhand>
 
-<%helpers:longhand name="text-emphasis-style" products="gecko" need_clone="True" boxed="True" animatable="False"
+<%helpers:longhand name="text-emphasis-style" products="gecko" need_clone="True" boxed="True" animation_type="none"
                    spec="https://drafts.csswg.org/css-text-decor/#propdef-text-emphasis-style">
     use computed_values::writing_mode::T as writing_mode;
     use std::fmt;
@@ -1138,7 +1124,7 @@ ${helpers.single_keyword("text-align-last",
     }
 </%helpers:longhand>
 
-<%helpers:longhand name="text-emphasis-position" animatable="False" products="gecko"
+<%helpers:longhand name="text-emphasis-position" animation_type="none" products="gecko"
                    spec="https://drafts.csswg.org/css-text-decor/#propdef-text-emphasis-position">
     use std::fmt;
     use values::computed::ComputedValueAsSpecified;
@@ -1213,7 +1199,7 @@ ${helpers.single_keyword("text-align-last",
 ${helpers.predefined_type("text-emphasis-color", "CSSColor",
                           "::cssparser::Color::CurrentColor",
                           initial_specified_value="specified::CSSColor::currentcolor()",
-                          products="gecko", animatable=True,
+                          products="gecko", animation_type="normal",
                           complex_color=True, need_clone=True,
                           spec="https://drafts.csswg.org/css-text-decor/#propdef-text-emphasis-color")}
 
@@ -1222,7 +1208,7 @@ ${helpers.predefined_type(
     "-moz-tab-size", "LengthOrNumber",
     "::values::Either::Second(8.0)",
     "parse_non_negative",
-    products="gecko", boxed=True, animatable=False,
+    products="gecko", boxed=True, animation_type="none",
     spec="https://drafts.csswg.org/css-text-3/#tab-size-property")}
 
 
@@ -1231,7 +1217,7 @@ ${helpers.predefined_type(
 ${helpers.predefined_type(
     "-webkit-text-fill-color", "CSSColor",
     "CSSParserColor::CurrentColor",
-    products="gecko", animatable=True,
+    products="gecko", animation_type="normal",
     complex_color=True, need_clone=True,
     spec="https://compat.spec.whatwg.org/#the-webkit-text-fill-color")}
 
@@ -1239,11 +1225,11 @@ ${helpers.predefined_type(
     "-webkit-text-stroke-color", "CSSColor",
     "CSSParserColor::CurrentColor",
     initial_specified_value="specified::CSSColor::currentcolor()",
-    products="gecko", animatable=True,
+    products="gecko", animation_type="normal",
     complex_color=True, need_clone=True,
     spec="https://compat.spec.whatwg.org/#the-webkit-text-stroke-color")}
 
-<%helpers:longhand products="gecko" name="-webkit-text-stroke-width" boxed="True" animatable="False"
+<%helpers:longhand products="gecko" name="-webkit-text-stroke-width" boxed="True" animation_type="none"
                    spec="https://compat.spec.whatwg.org/#the-webkit-text-stroke-width">
     use app_units::Au;
     use std::fmt;
@@ -1275,11 +1261,11 @@ ${helpers.predefined_type(
 // CSS Ruby Layout Module Level 1
 // https://drafts.csswg.org/css-ruby/
 ${helpers.single_keyword("ruby-align", "space-around start center space-between",
-                         products="gecko", animatable=False,
+                         products="gecko", animation_type="none",
                          spec="https://drafts.csswg.org/css-ruby/#ruby-align-property")}
 
 ${helpers.single_keyword("ruby-position", "over under",
-                         products="gecko", animatable=False,
+                         products="gecko", animation_type="none",
                          spec="https://drafts.csswg.org/css-ruby/#ruby-position-property")}
 
 // CSS Writing Modes Module Level 3
@@ -1289,11 +1275,11 @@ ${helpers.single_keyword("ruby-position", "over under",
 // at-risk, and Gecko's layout code doesn't support that either. So we
 // can just take the easy way for now.
 ${helpers.single_keyword("text-combine-upright", "none all",
-                         products="gecko", animatable=False,
+                         products="gecko", animation_type="none",
                          spec="https://drafts.csswg.org/css-writing-modes-3/#text-combine-upright")}
 
 // SVG 1.1: Section 11 - Painting: Filling, Stroking and Marker Symbols
 ${helpers.single_keyword("text-rendering",
                          "auto optimizespeed optimizelegibility geometricprecision",
-                         animatable=False,
+                         animation_type="none",
                          spec="https://www.w3.org/TR/SVG11/painting.html#TextRenderingProperty")}

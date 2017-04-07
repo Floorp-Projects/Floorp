@@ -147,11 +147,7 @@ add_task(function* testExecuteScript() {
         }).then(result => {
           browser.test.fail("Expected error when specifying invalid frame ID");
         }, error => {
-          let details = {
-            frame_id: Number.MAX_SAFE_INTEGER,
-            matchesHost: ["http://mochi.test/", "http://example.com/"],
-          };
-          browser.test.assertEq(`No window matching ${JSON.stringify(details)}`,
+          browser.test.assertEq(`Frame not found, or missing host permission`,
                                 error.message, "Got expected error");
         }),
 
@@ -161,10 +157,7 @@ add_task(function* testExecuteScript() {
           }).then(result => {
             browser.test.fail("Expected error when trying to execute on invalid domain");
           }, error => {
-            let details = {
-              matchesHost: ["http://mochi.test/", "http://example.com/"],
-            };
-            browser.test.assertEq(`No window matching ${JSON.stringify(details)}`,
+            browser.test.assertEq("Missing host permission for the tab",
                                   error.message, "Got expected error");
           });
 

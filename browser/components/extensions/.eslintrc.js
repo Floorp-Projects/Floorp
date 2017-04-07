@@ -1,6 +1,6 @@
 "use strict";
 
-module.exports = {  // eslint-disable-line no-undef
+module.exports = {
   "extends": "../../../toolkit/components/extensions/.eslintrc.js",
 
   "globals": {

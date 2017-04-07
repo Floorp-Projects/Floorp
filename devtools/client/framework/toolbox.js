@@ -1803,35 +1803,36 @@ Toolbox.prototype = {
   },
 
   // Returns an instance of the preference actor
-  get _preferenceFront() {
+  get preferenceFront() {
+    if (this._preferenceFront) {
+      return Promise.resolve(this._preferenceFront);
+    }
     return this.isOpen.then(() => {
       return this.target.root.then(rootForm => {
-        return getPreferenceFront(this.target.client, rootForm);
+        let front = getPreferenceFront(this.target.client, rootForm);
+        this._preferenceFront = front;
+        return front;
       });
     });
   },
 
   _toggleNoAutohide: Task.async(function* () {
-    let front = yield this._preferenceFront;
-    let toggledValue = !(yield this._isDisableAutohideEnabled(front));
+    let front = yield this.preferenceFront;
+    let toggledValue = !(yield this._isDisableAutohideEnabled());
 
     front.setBoolPref(DISABLE_AUTOHIDE_PREF, toggledValue);
 
     this.autohideButton.isChecked = toggledValue;
   }),
 
-  _isDisableAutohideEnabled: Task.async(function* (prefFront) {
+  _isDisableAutohideEnabled: Task.async(function* () {
     // Ensure that the tools are open, and the button is visible.
     yield this.isOpen;
     if (!this.autohideButton.isVisible) {
       return false;
     }
 
-    // If no prefFront was provided, then get one.
-    if (!prefFront) {
-      prefFront = yield this._preferenceFront;
-    }
-
+    let prefFront = yield this.preferenceFront;
     return yield prefFront.getBoolPref(DISABLE_AUTOHIDE_PREF);
   }),
 
@@ -2515,8 +2516,11 @@ Toolbox.prototype = {
    * Destroy the preferences actor when the toolbox is unloaded.
    */
   destroyPreference: Task.async(function* () {
-    let front = yield this._preferenceFront;
-    front.destroy();
+    if (!this._preferenceFront) {
+      return;
+    }
+    this._preferenceFront.destroy();
+    this._preferenceFront = null;
   }),
 
   /**
