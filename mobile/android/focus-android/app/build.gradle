@@ -23,13 +23,13 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         beta {
             initWith debug
 
-            minifyEnabled true
+            minifyEnabled false
             applicationIdSuffix ".beta"
         }
         debug {
