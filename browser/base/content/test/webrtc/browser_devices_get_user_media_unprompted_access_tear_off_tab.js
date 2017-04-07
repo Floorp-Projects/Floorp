@@ -41,7 +41,6 @@ var gTests = [
     yield Promise.all(promises);
 
     promises = [promiseObserverCalled("recording-device-events"),
-                promiseObserverCalled("recording-device-events"),
                 promiseObserverCalled("recording-window-ended")];
     yield BrowserTestUtils.closeWindow(win);
     yield Promise.all(promises);
