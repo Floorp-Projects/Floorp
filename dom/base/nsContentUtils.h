@@ -2147,6 +2147,22 @@ public:
   }
 
   /**
+   * Returns true if the DOM Animations API should be enabled.
+   */
+  static bool AnimationsAPICoreEnabled()
+  {
+    return sAnimationsAPICoreEnabled;
+  }
+
+  /*
+   * Returns true if the DOM Animations Element.animate() API should be enabled.
+   */
+  static bool AnimationsAPIElementAnimateEnabled()
+  {
+    return sAnimationsAPIElementAnimateEnabled;
+  }
+
+  /**
    * Return true if this doc is controlled by a ServiceWorker.
    */
   static bool IsControlledByServiceWorker(nsIDocument* aDocument);
@@ -2947,6 +2963,8 @@ private:
   static bool sPrivacyResistFingerprinting;
   static bool sSendPerformanceTimingNotifications;
   static bool sUseActivityCursor;
+  static bool sAnimationsAPICoreEnabled;
+  static bool sAnimationsAPIElementAnimateEnabled;
   static uint32_t sCookiesLifetimePolicy;
   static uint32_t sCookiesBehavior;
 
