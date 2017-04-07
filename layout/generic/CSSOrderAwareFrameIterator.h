@@ -21,6 +21,39 @@
 
 namespace mozilla {
 
+/**
+ * CSSOrderAwareFrameIteratorT is a base class for iterators that traverse
+ * child frame lists in a way that respects their CSS "order" property.
+ *   https://drafts.csswg.org/css-flexbox-1/#order-property
+ * This class isn't meant to be directly used; instead, use its specializations
+ * CSSOrderAwareFrameIterator and ReverseCSSOrderAwareFrameIterator.
+ *
+ * Client code can use a CSSOrderAwareFrameIterator to traverse lower-"order"
+ * frames before higher-"order" ones (as required for correct flex/grid
+ * layout), without modifying the frames' actual ordering within the frame
+ * tree. Any frames with equal "order" values will be traversed consecutively,
+ * in frametree order (which is generally equivalent to DOM order).
+ *
+ * By default, the iterator will skip past placeholder frames during
+ * iteration. You can adjust this behavior via the ChildFilter constructor arg.
+ *
+ * By default, the iterator will use the frames' CSS "order" property to
+ * determine its traversal order. However, it can be customized to instead use
+ * the (prefixed) legacy "box-ordinal-group" CSS property instead, as part of
+ * emulating "display:-webkit-box" containers. This behavior can be customized
+ * using the OrderingProperty constructor arg.
+ *
+ * A few notes on performance:
+ *  - If you're iterating multiple times in a row, it's a good idea to reuse
+ * the same iterator (calling Reset() to start each new iteration), rather than
+ * instantiating a new one each time.
+ *  - If you have foreknowledge of the list's orderedness, you can save some
+ * time by passing eKnownOrdered or eKnownUnordered to the constructor (which
+ * will skip some checks during construction).
+ *
+ * Warning: if the given frame list changes, it makes the iterator invalid and
+ * bad things will happen if it's used further.
+ */
 template<typename Iterator>
 class CSSOrderAwareFrameIteratorT
 {
