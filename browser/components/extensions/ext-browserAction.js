@@ -20,7 +20,6 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 var {
   IconDetails,
-  SingletonEventManager,
 } = ExtensionUtils;
 
 const POPUP_PRELOAD_TIMEOUT_MS = 200;

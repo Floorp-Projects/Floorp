@@ -15,10 +15,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
-var {
-  SingletonEventManager,
-} = ExtensionUtils;
-
 // This function is pretty tightly tied to Extension.jsm.
 // Its job is to fill in the |tab| property of the sender.
 function getSender(extension, target, sender) {

@@ -4,7 +4,6 @@
 
 var {
   promiseObserved,
-  SingletonEventManager,
 } = ExtensionUtils;
 
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",

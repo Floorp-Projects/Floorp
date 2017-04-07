@@ -9,7 +9,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 
 var {
   normalizeTime,
-  SingletonEventManager,
 } = ExtensionUtils;
 
 let nsINavHistoryService = Ci.nsINavHistoryService;
