@@ -202,6 +202,26 @@ ServoCSSRuleList::GetRuleType(uint32_t aIndex) const
   return CastToPtr(rule)->Type();
 }
 
+void
+ServoCSSRuleList::FillStyleRuleHashtable(StyleRuleHashtable& aTable)
+{
+  for (uint32_t i = 0; i < mRules.Length(); i++) {
+    uint16_t type = GetRuleType(i);
+    if (type == nsIDOMCSSRule::STYLE_RULE) {
+      ServoStyleRule* castedRule = static_cast<ServoStyleRule*>(GetRule(i));
+      RawServoStyleRule* rawRule = castedRule->Raw();
+      aTable.Put(rawRule, castedRule);
+    } else if (type == nsIDOMCSSRule::MEDIA_RULE) {
+      ServoMediaRule* castedRule = static_cast<ServoMediaRule*>(GetRule(i));
+
+      // Call this method recursively on the ServoCSSRuleList in the rule.
+      ServoCSSRuleList* castedRuleList = static_cast<ServoCSSRuleList*>(
+        castedRule->CssRules());
+      castedRuleList->FillStyleRuleHashtable(aTable);
+    }
+  }
+}
+
 ServoCSSRuleList::~ServoCSSRuleList()
 {
   DropAllRules();

@@ -11,9 +11,11 @@
 
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/dom/CSSRuleList.h"
+#include "nsDataHashtable.h"
 
 namespace mozilla {
 
+class ServoStyleRule;
 class ServoStyleSheet;
 namespace css {
 class GroupRule;
@@ -43,6 +45,10 @@ public:
   nsresult DeleteRule(uint32_t aIndex);
 
   uint16_t GetRuleType(uint32_t aIndex) const;
+
+  typedef nsDataHashtable<nsPtrHashKey<const RawServoStyleRule>,
+                          ServoStyleRule*> StyleRuleHashtable;
+  void FillStyleRuleHashtable(StyleRuleHashtable& aTable);
 
 private:
   virtual ~ServoCSSRuleList();
