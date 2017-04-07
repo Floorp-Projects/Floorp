@@ -2065,8 +2065,6 @@ CSSParserImpl::ParseVariable(const nsAString& aVariableName,
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
   NS_PRECONDITION(aBaseURI, "need base URI");
   NS_PRECONDITION(aDeclaration, "Need declaration to parse into!");
-  NS_PRECONDITION(nsLayoutUtils::CSSVariablesEnabled(),
-                  "expected Variables to be enabled");
 
   mData.AssertInitialState();
   mTempData.AssertInitialState();
@@ -7233,8 +7231,7 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
   nsString variableValue;
 
   // Check if the property name is a custom property.
-  bool customProperty = nsLayoutUtils::CSSVariablesEnabled() &&
-                        nsCSSProps::IsCustomPropertyName(propertyName) &&
+  bool customProperty = nsCSSProps::IsCustomPropertyName(propertyName) &&
                         aContext == eCSSContext_General;
 
   if (customProperty) {

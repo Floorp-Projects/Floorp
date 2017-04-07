@@ -315,7 +315,6 @@ function test_property(property)
 function runTest() {
   // To avoid triggering the slow script dialog, we have to test one
   // property at a time.
-  ok(SpecialPowers.getBoolPref("layout.css.variables.enabled"), "pref not set #1");
   var props = [];
   for (var prop in gCSSProperties) {
     var info = gCSSProperties[prop];
@@ -344,9 +343,7 @@ function runTest() {
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestLongerTimeout(7);
-
-SpecialPowers.pushPrefEnv({ set: [["layout.css.variables.enabled", true]] },
-                          runTest);
+runTest();
 </script>
 </pre>
 </body>

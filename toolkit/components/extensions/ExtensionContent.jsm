@@ -823,14 +823,12 @@ DocumentManager = {
                         .filter(promise => promise);
 
     if (!promises.length) {
-      let details = {};
-      for (let key of ["all_frames", "frame_id", "match_about_blank", "matchesHost"]) {
-        if (key in options) {
-          details[key] = options[key];
-        }
+      if (options.frame_id) {
+        return Promise.reject({message: `Frame not found, or missing host permission`});
       }
 
-      return Promise.reject({message: `No window matching ${JSON.stringify(details)}`});
+      let frames = options.all_frames ? ", and any iframes" : "";
+      return Promise.reject({message: `Missing host permission for the tab${frames}`});
     }
     if (!options.all_frames && promises.length > 1) {
       return Promise.reject({message: `Internal error: Script matched multiple windows`});

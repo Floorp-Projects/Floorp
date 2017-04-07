@@ -15,6 +15,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsContentUtils.h"
 #include "nsIURI.h"
+#include "mozilla/URLExtraData.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Use)
 
@@ -327,10 +328,13 @@ SVGUseElement::CreateAnonymousContent()
   }
 
   // Store the base URI
-  mContentBaseURI = targetContent->GetBaseURI();
-  if (!mContentBaseURI) {
+  nsCOMPtr<nsIURI> baseURI = targetContent->GetBaseURI();
+  if (!baseURI) {
     return nullptr;
   }
+  mContentURLData = new URLExtraData(baseURI.forget(),
+                                     do_AddRef(OwnerDoc()->GetDocumentURI()),
+                                     do_AddRef(NodePrincipal()));
 
   targetContent->AddMutationObserver(this);
   mClone = newcontent;

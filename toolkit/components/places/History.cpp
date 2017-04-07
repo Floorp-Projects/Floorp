@@ -909,7 +909,8 @@ public:
   static nsresult Start(mozIStorageConnection* aConnection,
                         nsTArray<VisitData>& aPlaces,
                         mozIVisitInfoCallback* aCallback = nullptr,
-                        bool aGroupNotifications = false)
+                        bool aGroupNotifications = false,
+                        uint32_t aInitialUpdatedCount = 0)
   {
     MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
     MOZ_ASSERT(aPlaces.Length() > 0, "Must pass a non-empty array!");
@@ -933,7 +934,7 @@ public:
     }
     RefPtr<InsertVisitedURIs> event =
       new InsertVisitedURIs(aConnection, aPlaces, callback, aGroupNotifications,
-                            ignoreErrors, ignoreResults);
+                            ignoreErrors, ignoreResults, aInitialUpdatedCount);
 
     // Get the target thread, and then start the work!
     nsCOMPtr<nsIEventTarget> target = do_GetInterface(aConnection);
@@ -1066,13 +1067,14 @@ private:
                     const nsMainThreadPtrHandle<mozIVisitInfoCallback>& aCallback,
                     bool aGroupNotifications,
                     bool aIgnoreErrors,
-                    bool aIgnoreResults)
+                    bool aIgnoreResults,
+                    uint32_t aInitialUpdatedCount)
   : mDBConn(aConnection)
   , mCallback(aCallback)
   , mGroupNotifications(aGroupNotifications)
   , mIgnoreErrors(aIgnoreErrors)
   , mIgnoreResults(aIgnoreResults)
-  , mSuccessfulUpdatedCount(0)
+  , mSuccessfulUpdatedCount(aInitialUpdatedCount)
   , mHistory(History::GetService())
   {
     MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
@@ -1948,9 +1950,13 @@ StoreAndNotifyEmbedVisit(VisitData& aPlace,
   if (!!aCallback) {
     nsMainThreadPtrHandle<mozIVisitInfoCallback>
       callback(new nsMainThreadPtrHolder<mozIVisitInfoCallback>(aCallback));
-    nsCOMPtr<nsIRunnable> event =
-      new NotifyPlaceInfoCallback(callback, aPlace, true, NS_OK);
-    (void)NS_DispatchToMainThread(event);
+    bool ignoreResults = false;
+    Unused << aCallback->GetIgnoreResults(&ignoreResults);
+    if (!ignoreResults) {
+      nsCOMPtr<nsIRunnable> event =
+        new NotifyPlaceInfoCallback(callback, aPlace, true, NS_OK);
+      (void)NS_DispatchToMainThread(event);
+    }
   }
 
   nsCOMPtr<nsIRunnable> event = new NotifyVisitObservers(aPlace);
@@ -2896,6 +2902,8 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
   nsresult rv = GetJSArrayFromJSValue(aPlaceInfos, aCtx, &infos, &infosLength);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  uint32_t initialUpdatedCount = 0;
+
   nsTArray<VisitData> visitData;
   for (uint32_t i = 0; i < infosLength; i++) {
     JS::Rooted<JSObject*> info(aCtx);
@@ -2983,6 +2991,7 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
       if (transitionType == nsINavHistoryService::TRANSITION_EMBED) {
         StoreAndNotifyEmbedVisit(data, aCallback);
         visitData.RemoveElementAt(visitData.Length() - 1);
+        initialUpdatedCount++;
         continue;
       }
 
@@ -3006,7 +3015,8 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
   // we should not call InsertVisitedURIs::Start.
   if (visitData.Length()) {
     nsresult rv = InsertVisitedURIs::Start(dbConn, visitData,
-                                           callback, aGroupNotifications);
+                                           callback, aGroupNotifications,
+                                           initialUpdatedCount);
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (aCallback) {
     // Be sure to notify that all of our operations are complete.  This
@@ -3019,7 +3029,8 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
     // know how yet many items we will successfully insert/update.
     nsCOMPtr<nsIEventTarget> backgroundThread = do_GetInterface(dbConn);
     NS_ENSURE_TRUE(backgroundThread, NS_ERROR_UNEXPECTED);
-    nsCOMPtr<nsIRunnable> event = new NotifyCompletion(callback);
+    nsCOMPtr<nsIRunnable> event = new NotifyCompletion(callback,
+                                                       initialUpdatedCount);
     return backgroundThread->Dispatch(event, NS_DISPATCH_NORMAL);
   }
 

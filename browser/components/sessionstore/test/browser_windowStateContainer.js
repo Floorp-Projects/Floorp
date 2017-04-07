@@ -1,6 +1,3 @@
-// This file spawns content tasks.
-/* eslint-env mozilla/frame-script */
-
 "use strict";
 
 requestLongerTimeout(2);

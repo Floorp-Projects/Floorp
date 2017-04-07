@@ -136,7 +136,12 @@ Screen::GetContentsScaleFactor(double *aOutScale)
 NS_IMETHODIMP
 Screen::GetDefaultCSSScaleFactor(double *aOutScale)
 {
-  *aOutScale = mDefaultCssScale.scale;
+  double scale = nsIWidget::DefaultScaleOverride();
+  if (scale > 0.0) {
+    *aOutScale = scale;
+  } else {
+    *aOutScale = mDefaultCssScale.scale;
+  }
   return NS_OK;
 }
 

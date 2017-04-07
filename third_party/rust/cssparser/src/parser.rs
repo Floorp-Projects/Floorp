@@ -22,12 +22,10 @@ pub struct SourcePosition {
 }
 
 
-/// Like std::borrow::Cow, except:
-///
-/// * The Owned variant is boxed
-/// * The Borrowed variant contains a mutable reference.
+/// Like std::borrow::Cow, except the borrowed variant contains a mutable
+/// reference.
 enum MaybeOwned<'a, T: 'a> {
-    Owned(Box<T>),
+    Owned(T),
     Borrowed(&'a mut T),
 }
 
@@ -36,7 +34,7 @@ impl<'a, T> ops::Deref for MaybeOwned<'a, T> {
 
     fn deref<'b>(&'b self) -> &'b T {
         match *self {
-            MaybeOwned::Owned(ref pointer) => &**pointer,
+            MaybeOwned::Owned(ref t) => t,
             MaybeOwned::Borrowed(ref pointer) => &**pointer,
         }
     }
@@ -45,7 +43,7 @@ impl<'a, T> ops::Deref for MaybeOwned<'a, T> {
 impl<'a, T> ops::DerefMut for MaybeOwned<'a, T> {
     fn deref_mut<'b>(&'b mut self) -> &'b mut T {
         match *self {
-            MaybeOwned::Owned(ref mut pointer) => &mut **pointer,
+            MaybeOwned::Owned(ref mut t) => t,
             MaybeOwned::Borrowed(ref mut pointer) => &mut **pointer,
         }
     }
@@ -53,7 +51,7 @@ impl<'a, T> ops::DerefMut for MaybeOwned<'a, T> {
 
 impl<'a, T> Clone for MaybeOwned<'a, T> where T: Clone {
     fn clone(&self) -> MaybeOwned<'a, T> {
-        MaybeOwned::Owned(Box::new((**self).clone()))
+        MaybeOwned::Owned((**self).clone())
     }
 }
 
@@ -171,7 +169,7 @@ impl<'i, 't> Parser<'i, 't> {
     #[inline]
     pub fn new(input: &'i str) -> Parser<'i, 'i> {
         Parser {
-            tokenizer: MaybeOwned::Owned(Box::new(Tokenizer::new(input))),
+            tokenizer: MaybeOwned::Owned(Tokenizer::new(input)),
             at_start_of: None,
             stop_before: Delimiter::None,
         }

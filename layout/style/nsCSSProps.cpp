@@ -521,8 +521,7 @@ nsCSSProps::LookupProperty(const nsACString& aProperty,
 {
   MOZ_ASSERT(gPropertyTable, "no lookup table, needs addref");
 
-  if (nsLayoutUtils::CSSVariablesEnabled() &&
-      IsCustomPropertyName(aProperty)) {
+  if (IsCustomPropertyName(aProperty)) {
     return eCSSPropertyExtra_variable;
   }
 
@@ -552,8 +551,7 @@ nsCSSProps::LookupProperty(const nsACString& aProperty,
 nsCSSPropertyID
 nsCSSProps::LookupProperty(const nsAString& aProperty, EnabledState aEnabled)
 {
-  if (nsLayoutUtils::CSSVariablesEnabled() &&
-      IsCustomPropertyName(aProperty)) {
+  if (IsCustomPropertyName(aProperty)) {
     return eCSSPropertyExtra_variable;
   }
 
