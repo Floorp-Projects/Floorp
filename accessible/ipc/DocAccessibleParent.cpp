@@ -451,6 +451,11 @@ DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
     return IPC_FAIL(this, "binding to proxy that can't be a outerDoc!");
   }
 
+  if (outerDoc->ChildrenCount() == 1) {
+    MOZ_ASSERT(outerDoc->ChildAt(0)->AsDoc());
+    outerDoc->ChildAt(0)->AsDoc()->Unbind();
+  }
+
   aChildDoc->SetParent(outerDoc);
   outerDoc->SetChildDoc(aChildDoc);
   mChildDocs.AppendElement(aChildDoc->mActorID);
