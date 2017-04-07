@@ -44,9 +44,6 @@ add_task(function* setup() {
  */
 add_task(function* test_close_time_anim_probe() {
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
-  yield BrowserTestUtils.waitForEvent(tab, "transitionend", false, (e) => {
-    return e.propertyName == "max-width";
-  });
 
   gAnimHistogram.clear();
   gNoAnimHistogram.clear();
@@ -66,9 +63,6 @@ add_task(function* test_close_time_anim_probe() {
  */
 add_task(function* test_close_time_no_anim_probe() {
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
-  yield BrowserTestUtils.waitForEvent(tab, "transitionend", false, (e) => {
-    return e.propertyName == "max-width";
-  });
 
   gAnimHistogram.clear();
   gNoAnimHistogram.clear();
