@@ -610,7 +610,21 @@ DisplayListBuilder::PushImage(const WrRect& aBounds,
                               wr::ImageRendering aFilter,
                               wr::ImageKey aImage)
 {
-  wr_dp_push_image(mWrState, aBounds, aClip, aFilter, aImage);
+  WrSize size;
+  size.width = aBounds.width;
+  size.height = aBounds.height;
+  PushImage(aBounds, aClip, size, size, aFilter, aImage);
+}
+
+void
+DisplayListBuilder::PushImage(const WrRect& aBounds,
+                              const WrClipRegion& aClip,
+                              const WrSize& aStretchSize,
+                              const WrSize& aTileSpacing,
+                              wr::ImageRendering aFilter,
+                              wr::ImageKey aImage)
+{
+  wr_dp_push_image(mWrState, aBounds, aClip, aStretchSize, aTileSpacing, aFilter, aImage);
 }
 
 void

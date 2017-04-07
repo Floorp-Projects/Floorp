@@ -1152,6 +1152,8 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
 pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                                    bounds: WrRect,
                                    clip: WrClipRegion,
+                                   stretch_size: WrSize,
+                                   tile_spacing: WrSize,
                                    image_rendering: ImageRendering,
                                    key: ImageKey) {
     assert!(unsafe { is_in_main_thread() });
@@ -1160,8 +1162,8 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
 
     state.frame_builder.dl_builder.push_image(bounds,
                                               clip.to_clip_region(),
-                                              bounds.size,
-                                              bounds.size,
+                                              stretch_size.to_size(),
+                                              tile_spacing.to_size(),
                                               image_rendering,
                                               key);
 }
