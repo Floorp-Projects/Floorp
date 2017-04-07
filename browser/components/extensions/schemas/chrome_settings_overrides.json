@@ -12,7 +12,7 @@
             "properties": {
               "homepage": {
                 "type": "string",
-                "format": "relativeUrl",
+                "format": "url",
                 "optional": true,
                 "preprocess": "localize"
               }
