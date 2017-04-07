@@ -94,6 +94,13 @@ MOZ_DEFINE_MALLOC_SIZE_OF(FontCacheMallocSizeOf)
 
 NS_IMPL_ISUPPORTS(gfxFontCache::MemoryReporter, nsIMemoryReporter)
 
+/*virtual*/
+gfxTextRunFactory::~gfxTextRunFactory()
+{
+    // Should not be dropped by stylo
+    MOZ_ASSERT(NS_IsMainThread());
+}
+
 NS_IMETHODIMP
 gfxFontCache::MemoryReporter::CollectReports(
     nsIHandleReportCallback* aHandleReport, nsISupports* aData, bool aAnonymize)

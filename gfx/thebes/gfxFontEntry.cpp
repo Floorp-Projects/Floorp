@@ -141,6 +141,8 @@ gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
 
 gfxFontEntry::~gfxFontEntry()
 {
+    // Should not be dropped by stylo
+    MOZ_ASSERT(NS_IsMainThread());
     if (mCOLR) {
         hb_blob_destroy(mCOLR);
     }
@@ -1534,6 +1536,13 @@ gfxFontFamily::SearchAllFontsForChar(GlobalFontMatch *aMatchData)
             }
         }
     }
+}
+
+/*virtual*/
+gfxFontFamily::~gfxFontFamily()
+{
+    // Should not be dropped by stylo
+    MOZ_ASSERT(NS_IsMainThread());
 }
 
 /*static*/ void
