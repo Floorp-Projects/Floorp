@@ -921,6 +921,7 @@ class XPCShellTests(object):
         # enable non-local connections for the purposes of local testing.
         # Don't override the user's choice here.  See bug 1049688.
         self.env.setdefault('MOZ_DISABLE_NONLOCAL_CONNECTIONS', '1')
+        self.env["MOZ_DEVELOPER_REPO_DIR"] = self.mozInfo["topsrcdir"]
 
     def buildEnvironment(self):
         """
