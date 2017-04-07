@@ -97,10 +97,12 @@ class TestNavigate(BaseNavigationTestCase):
 
     def test_set_location_through_execute_script(self):
         self.marionette.execute_script(
-            "window.location.href = '{}'".format(self.test_page_remote),
-            sandbox=None)
-        Wait(self.marionette).until(
-            lambda mn: self.test_page_remote == mn.get_url())
+            "window.location.href = arguments[0];",
+            script_args=(self.test_page_remote,), sandbox=None)
+
+        Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+            lambda mn: self.test_page_remote == mn.get_url(),
+            message="'{}' hasn't been loaded".format(self.test_page_remote))
         self.assertEqual("Marionette Test", self.marionette.title)
 
     def test_navigate_chrome_unsupported_error(self):
@@ -221,7 +223,7 @@ class TestNavigate(BaseNavigationTestCase):
             urlbar.send_keys(self.mod_key + "x")
             urlbar.send_keys("about:support" + Keys.ENTER)
 
-        Wait(self.marionette).until(
+        Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
             lambda mn: mn.get_url() == "about:support",
             message="'about:support' hasn't been loaded")
         self.assertFalse(self.is_remote_tab)
@@ -237,7 +239,7 @@ class TestNavigate(BaseNavigationTestCase):
             urlbar.send_keys(self.mod_key + "x")
             urlbar.send_keys(self.test_page_remote + Keys.ENTER)
 
-        Wait(self.marionette).until(
+        Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
             lambda mn: mn.get_url() == self.test_page_remote,
             message="'{}' hasn't been loaded".format(self.test_page_remote))
         self.assertTrue(self.is_remote_tab)
@@ -254,8 +256,9 @@ class TestNavigate(BaseNavigationTestCase):
         new_tab = self.open_tab(trigger=open_with_shortcut)
         self.marionette.switch_to_window(new_tab)
 
-        Wait(self.marionette).until(lambda mn: mn.get_url() == "about:addons",
-                                    message="'about:addons' hasn't been loaded")
+        Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+            lambda mn: mn.get_url() == "about:addons",
+            message="'about:addons' hasn't been loaded")
 
 
 class TestBackForwardNavigation(BaseNavigationTestCase):
@@ -446,7 +449,7 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
 
         Wait(self.marionette, self.marionette.timeout.page_load).until(
             lambda mn: urls[0] == mn.get_url(),
-            message="Slow loading page has been successfully loaded after going back")
+            message="'{}' has been successfully loaded after going back".format(urls[0]))
         self.assertEqual(self.marionette.find_element(By.ID, "delay").text, "3")
 
         self.marionette.go_forward()
@@ -460,7 +463,7 @@ class TestBackForwardNavigation(BaseNavigationTestCase):
 
         Wait(self.marionette, self.marionette.timeout.page_load).until(
             lambda mn: urls[2] == mn.get_url(),
-            message="Slow loading page has been successfully loaded after going forward")
+            message="'{}' has been successfully loaded after going back".format(urls[2]))
         self.assertEqual(self.marionette.find_element(By.ID, "delay").text, "4")
 
     def test_certificate_error(self):
