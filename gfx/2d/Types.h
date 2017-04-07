@@ -150,7 +150,8 @@ enum class FontType : int8_t {
   SKIA,
   CAIRO,
   COREGRAPHICS,
-  FONTCONFIG
+  FONTCONFIG,
+  FREETYPE
 };
 
 enum class NativeSurfaceType : int8_t {

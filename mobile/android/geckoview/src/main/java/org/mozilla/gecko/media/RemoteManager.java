@@ -5,7 +5,6 @@
 package org.mozilla.gecko.media;
 
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.Telemetry;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -25,6 +24,7 @@ public final class RemoteManager implements IBinder.DeathRecipient {
     private static final String LOGTAG = "GeckoRemoteManager";
     private static final boolean DEBUG = false;
     private static RemoteManager sRemoteManager = null;
+    private static ICrashReporter setCrashReporter = null;
 
     public synchronized static RemoteManager getInstance() {
         if (sRemoteManager == null) {
@@ -133,9 +133,18 @@ public final class RemoteManager implements IBinder.DeathRecipient {
         }
     }
 
-    private static final String MEDIA_DECODING_PROCESS_CRASH = "MEDIA_DECODING_PROCESS_CRASH";
     private void reportDecodingProcessCrash() {
-        Telemetry.addToHistogram(MEDIA_DECODING_PROCESS_CRASH, 1);
+        if (setCrashReporter != null) {
+            setCrashReporter.reportDecodingProcessCrash();
+        }
+    }
+
+    public static void setCrashReporter(ICrashReporter reporter) {
+        setCrashReporter = reporter;
+    }
+
+    public interface ICrashReporter {
+        void reportDecodingProcessCrash();
     }
 
     public synchronized IMediaDrmBridge createRemoteMediaDrmBridge(String keySystem,

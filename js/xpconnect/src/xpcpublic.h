@@ -221,28 +221,6 @@ xpc_UnmarkSkippableJSHolders();
 // readable string conversions, static methods and members only
 class XPCStringConvert
 {
-    // One-slot cache, because it turns out it's common for web pages to
-    // get the same string a few times in a row.  We get about a 40% cache
-    // hit rate on this cache last it was measured.  We'd get about 70%
-    // hit rate with a hashtable with removal on finalization, but that
-    // would take a lot more machinery.
-    struct ZoneStringCache
-    {
-        // mString owns mBuffer.  mString is a JS thing, so it can only die
-        // during GC, though it can drop its ref to the buffer if it gets
-        // flattened and wasn't null-terminated.  We clear mString and mBuffer
-        // during GC and in our finalizer (to catch the flatterning case).  As
-        // long as the above holds, mBuffer should not be a dangling pointer, so
-        // using this as a cache key should be safe.
-        //
-        // We also need to include the string's length in the cache key, because
-        // now that we allow non-null-terminated buffers we can have two strings
-        // with the same mBuffer but different lengths.
-        void* mBuffer = nullptr;
-        uint32_t mLength = 0;
-        JSString* mString = nullptr;
-    };
-
 public:
 
     // If the string shares the readable's buffer, that buffer will
@@ -257,45 +235,15 @@ public:
     StringBufferToJSVal(JSContext* cx, nsStringBuffer* buf, uint32_t length,
                         JS::MutableHandleValue rval, bool* sharedBuffer)
     {
-        JS::Zone* zone = js::GetContextZone(cx);
-        ZoneStringCache* cache = static_cast<ZoneStringCache*>(JS_GetZoneUserData(zone));
-        if (cache && buf == cache->mBuffer && length == cache->mLength) {
-            MOZ_ASSERT(JS::GetStringZone(cache->mString) == zone);
-            JS::StringReadBarrier(cache->mString);
-            rval.setString(cache->mString);
-            *sharedBuffer = false;
-            return true;
-        }
-
-        bool isExternal;
         JSString* str = JS_NewMaybeExternalString(cx,
                                                   static_cast<char16_t*>(buf->Data()),
-                                                  length, &sDOMStringFinalizer, &isExternal);
+                                                  length, &sDOMStringFinalizer, sharedBuffer);
         if (!str) {
             return false;
         }
         rval.setString(str);
-
-        // If JS_NewMaybeExternalString returns non-external string, finalizer
-        // won't be called.  Do not store it to cache.
-        if (!isExternal) {
-            *sharedBuffer = false;
-            return true;
-        }
-
-        if (!cache) {
-            cache = new ZoneStringCache();
-            JS_SetZoneUserData(zone, cache);
-        }
-        cache->mBuffer = buf;
-        cache->mLength = length;
-        cache->mString = str;
-        *sharedBuffer = true;
         return true;
     }
-
-    static void FreeZoneCache(JS::Zone* zone);
-    static void ClearZoneCache(JS::Zone* zone);
 
     static MOZ_ALWAYS_INLINE bool IsLiteral(JSString* str)
     {

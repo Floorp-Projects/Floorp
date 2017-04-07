@@ -2,7 +2,7 @@
 Histograms
 ==========
 
-If a user has opted into submitting performance data to Mozilla, the Telemetry system will collect various measures of Firefox performance, hardware, usage and customizations and submit it to Mozilla. The Telemetry data collected by a single client can be examined from the integrated ``about:telemetry`` browser page, while the aggregated reports across entire user populations are publicly available at `https://telemetry.mozilla.org <https://telemetry.mozilla.org>`_.
+If a user has opted into submitting performance data to Mozilla, the Telemetry system will collect various measures of Firefox performance, hardware, usage and customizations and submit it to Mozilla. The Telemetry data collected by a single client can be examined from the integrated ``about:telemetry`` browser page, while the aggregated reports across entire user populations are publicly available at `telemetry.mozilla.org <https://telemetry.mozilla.org>`_.
 
 .. important::
 
@@ -193,7 +193,7 @@ Changing histogram declarations after the histogram has been released is tricky.
 Adding a JavaScript Probe
 =========================
 
-A Telemetry probe is the code that measures and stores values in a histogram. Probes in privileged JavaScript code can make use of the `nsITelemetry <https://mxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/nsITelemetry.idl>`_ interface to get references to histogram objects. A new value is recorded in the histogram by calling ``add`` on the histogram object:
+A Telemetry probe is the code that measures and stores values in a histogram. Probes in privileged JavaScript code can make use of the `nsITelemetry <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/nsITelemetry.idl>`_ interface to get references to histogram objects. A new value is recorded in the histogram by calling ``add`` on the histogram object:
 
 .. code-block:: js
 
@@ -205,7 +205,11 @@ A Telemetry probe is the code that measures and stores values in a histogram. Pr
 
 Note that ``nsITelemetry.getHistogramById()`` will throw an ``NS_ERROR_ILLEGAL_VALUE`` JavaScript exception if it is called with an invalid histogram ID. The ``add()`` function will not throw if it fails, instead it prints an error in the browser console.
 
-For histograms measuring time, `TelemetryStopwatch <https://mxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/TelemetryStopwatch.jsm>`_ can be used to avoid working with Dates manually:
+.. warning::
+
+  Adding a new Telemetry probe is not possible with Artifact builds. A full build is needed.
+
+For histograms measuring time, `TelemetryStopwatch <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/TelemetryStopwatch.jsm>`_ can be used to avoid working with Dates manually:
 
 .. code-block:: js
 
@@ -218,7 +222,7 @@ For histograms measuring time, `TelemetryStopwatch <https://mxr.mozilla.org/mozi
 Adding a C++ Probe
 ==================
 
-Probes in native code can also use the `nsITelemetry <https://mxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/nsITelemetry.idl>`_ interface, but the helper functions declared in `Telemetry.h <https://mxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Telemetry.h>`_ are more convenient:
+Probes in native code can also use the `nsITelemetry <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/nsITelemetry.idl>`_ interface, but the helper functions declared in `Telemetry.h <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Telemetry.h>`_ are more convenient:
 
 .. code-block:: cpp
 
