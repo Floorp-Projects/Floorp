@@ -39,6 +39,7 @@
 #endif
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 using namespace mozilla::unicode;
 
 #ifndef FC_POSTSCRIPT_NAME
@@ -796,6 +797,33 @@ PreparePattern(FcPattern* aPattern, bool aIsPrinterFont)
     FcDefaultSubstitute(aPattern);
 }
 
+void
+gfxFontconfigFontEntry::UnscaledFontCache::MoveToFront(size_t aIndex) {
+    if (aIndex > 0) {
+        WeakPtr<UnscaledFont> front =
+            Move(mUnscaledFonts[aIndex]);
+        for (size_t i = aIndex; i > 0; i--) {
+            mUnscaledFonts[i] = Move(mUnscaledFonts[i-1]);
+        }
+        mUnscaledFonts[0] = Move(front);
+    }
+}
+
+already_AddRefed<UnscaledFontFontconfig>
+gfxFontconfigFontEntry::UnscaledFontCache::Lookup(const char* aFile, uint32_t aIndex) {
+    for (size_t i = 0; i < kNumEntries; i++) {
+        UnscaledFontFontconfig* entry =
+            static_cast<UnscaledFontFontconfig*>(mUnscaledFonts[i].get());
+        if (entry &&
+            !strcmp(entry->GetFile(), aFile) &&
+            entry->GetIndex() == aIndex) {
+            MoveToFront(i);
+            return do_AddRef(entry);
+        }
+    }
+    return nullptr;
+}
+
 static inline gfxFloat
 SizeForStyle(gfxFontconfigFontEntry* aEntry, const gfxFontStyle& aStyle)
 {
@@ -848,8 +876,31 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
 
     cairo_scaled_font_t* scaledFont =
         CreateScaledFont(renderPattern, size, aFontStyle, aNeedsBold);
+
+    const FcChar8* file = ToFcChar8Ptr("");
+    int index = 0;
+    if (!mFontData) {
+        if (FcPatternGetString(renderPattern, FC_FILE, 0,
+                               const_cast<FcChar8**>(&file)) != FcResultMatch ||
+            FcPatternGetInteger(renderPattern, FC_INDEX, 0, &index) != FcResultMatch) {
+            NS_WARNING("No file in Fontconfig pattern for font instance");
+            return nullptr;
+        }
+    }
+
+    RefPtr<UnscaledFontFontconfig> unscaledFont =
+        mUnscaledFontCache.Lookup(ToCharPtr(file), index);
+    if (!unscaledFont) {
+        unscaledFont =
+            mFontData ?
+                new UnscaledFontFontconfig(mFTFace) :
+                new UnscaledFontFontconfig(ToCharPtr(file), index);
+        mUnscaledFontCache.Add(unscaledFont);
+    }
+
     gfxFont* newFont =
-        new gfxFontconfigFont(scaledFont, renderPattern, size,
+        new gfxFontconfigFont(unscaledFont, scaledFont,
+                              renderPattern, size,
                               this, aFontStyle, aNeedsBold);
     cairo_scaled_font_destroy(scaledFont);
 
@@ -1067,13 +1118,14 @@ gfxFontconfigFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
     }
 }
 
-gfxFontconfigFont::gfxFontconfigFont(cairo_scaled_font_t *aScaledFont,
+gfxFontconfigFont::gfxFontconfigFont(const RefPtr<UnscaledFontFontconfig>& aUnscaledFont,
+                                     cairo_scaled_font_t *aScaledFont,
                                      FcPattern *aPattern,
                                      gfxFloat aAdjustedSize,
                                      gfxFontEntry *aFontEntry,
                                      const gfxFontStyle *aFontStyle,
                                      bool aNeedsBold) :
-    gfxFontconfigFontBase(aScaledFont, aPattern, aFontEntry, aFontStyle)
+    gfxFontconfigFontBase(aUnscaledFont, aScaledFont, aPattern, aFontEntry, aFontStyle)
 {
     mAdjustedSize = aAdjustedSize;
 }

@@ -3076,23 +3076,31 @@ TabChild::ReinitRendering()
   Unused << cb->SendGetCompositorOptions(mLayersId, &options);
   mCompositorOptions = Some(options);
 
-  bool success;
-  nsTArray<LayersBackend> ignored;
-  PLayerTransactionChild* shadowManager =
-    cb->SendPLayerTransactionConstructor(ignored, LayersId(), &mTextureFactoryIdentifier, &success);
-  if (!success) {
-    NS_WARNING("failed to re-allocate layer transaction");
-    return;
-  }
+  if (gfxVars::UseWebRender()) {
+    RefPtr<LayerManager> lm = mPuppetWidget->RecreateLayerManager(nullptr);
+    MOZ_ASSERT(lm->AsWebRenderLayerManager());
+    lm->AsWebRenderLayerManager()->Initialize(cb,
+                                              wr::AsPipelineId(mLayersId),
+                                              &mTextureFactoryIdentifier);
+  } else {
+    bool success;
+    nsTArray<LayersBackend> ignored;
+    PLayerTransactionChild* shadowManager =
+      cb->SendPLayerTransactionConstructor(ignored, LayersId(), &mTextureFactoryIdentifier, &success);
+    if (!success) {
+      NS_WARNING("failed to re-allocate layer transaction");
+      return;
+    }
 
-  if (!shadowManager) {
-    NS_WARNING("failed to re-construct LayersChild");
-    return;
-  }
+    if (!shadowManager) {
+      NS_WARNING("failed to re-construct LayersChild");
+      return;
+    }
 
-  RefPtr<LayerManager> lm = mPuppetWidget->RecreateLayerManager(shadowManager);
-  ShadowLayerForwarder* lf = lm->AsShadowForwarder();
-  lf->IdentifyTextureHost(mTextureFactoryIdentifier);
+    RefPtr<LayerManager> lm = mPuppetWidget->RecreateLayerManager(shadowManager);
+    ShadowLayerForwarder* lf = lm->AsShadowForwarder();
+    lf->IdentifyTextureHost(mTextureFactoryIdentifier);
+  }
 
   InitAPZState();
 

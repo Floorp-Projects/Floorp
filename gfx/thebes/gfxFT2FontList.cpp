@@ -50,6 +50,7 @@
 #include <sys/stat.h>
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 static LazyLogModule sFontInfoLog("fontInfoLog");
 
@@ -237,7 +238,20 @@ FT2FontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold
     if (!scaledFont) {
         return nullptr;
     }
-    gfxFont *font = new gfxFT2Font(scaledFont, this, aFontStyle, aNeedsBold);
+
+    RefPtr<UnscaledFontFreeType> unscaledFont =
+        static_cast<UnscaledFontFreeType*>(mUnscaledFont.get());
+    if (!unscaledFont) {
+        unscaledFont =
+            mFilename.IsEmpty() ?
+                new UnscaledFontFreeType(mFTFace) :
+                new UnscaledFontFreeType(mFilename.BeginReading(),
+                                         mFTFontIndex);
+        mUnscaledFont = unscaledFont;
+    }
+
+    gfxFont *font = new gfxFT2Font(unscaledFont, scaledFont, this,
+                                   aFontStyle, aNeedsBold);
     cairo_scaled_font_destroy(scaledFont);
     return font;
 }

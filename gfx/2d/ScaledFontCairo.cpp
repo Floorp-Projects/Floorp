@@ -17,9 +17,11 @@ namespace gfx {
 // an SkFontHost implementation that allows Skia to render using this.
 // This is mainly because FT_Face is not good for sharing between libraries, which
 // is a requirement when we consider runtime switchable backends and so on
-ScaledFontCairo::ScaledFontCairo(cairo_scaled_font_t* aScaledFont, Float aSize)
-  : ScaledFontBase(aSize)
-{ 
+ScaledFontCairo::ScaledFontCairo(cairo_scaled_font_t* aScaledFont,
+                                 const RefPtr<UnscaledFont>& aUnscaledFont,
+                                 Float aSize)
+  : ScaledFontBase(aUnscaledFont, aSize)
+{
   SetCairoScaledFont(aScaledFont);
 }
 

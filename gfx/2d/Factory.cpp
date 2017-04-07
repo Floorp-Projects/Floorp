@@ -469,31 +469,33 @@ Factory::GetMaxSurfaceSize(BackendType aType)
 }
 
 already_AddRefed<ScaledFont>
-Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSize)
+Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont,
+                                       const RefPtr<UnscaledFont>& aUnscaledFont,
+                                       Float aSize)
 {
   switch (aNativeFont.mType) {
 #ifdef WIN32
   case NativeFontType::DWRITE_FONT_FACE:
     {
-      return MakeAndAddRef<ScaledFontDWrite>(static_cast<IDWriteFontFace*>(aNativeFont.mFont), aSize);
+      return MakeAndAddRef<ScaledFontDWrite>(static_cast<IDWriteFontFace*>(aNativeFont.mFont), aUnscaledFont, aSize);
     }
 #if defined(USE_CAIRO) || defined(USE_SKIA)
   case NativeFontType::GDI_FONT_FACE:
     {
-      return MakeAndAddRef<ScaledFontWin>(static_cast<LOGFONT*>(aNativeFont.mFont), aSize);
+      return MakeAndAddRef<ScaledFontWin>(static_cast<LOGFONT*>(aNativeFont.mFont), aUnscaledFont, aSize);
     }
 #endif
 #endif
 #ifdef XP_DARWIN
   case NativeFontType::MAC_FONT_FACE:
     {
-      return MakeAndAddRef<ScaledFontMac>(static_cast<CGFontRef>(aNativeFont.mFont), aSize);
+      return MakeAndAddRef<ScaledFontMac>(static_cast<CGFontRef>(aNativeFont.mFont), aUnscaledFont, aSize);
     }
 #endif
 #if defined(USE_CAIRO) || defined(USE_SKIA_FREETYPE)
   case NativeFontType::CAIRO_FONT_FACE:
     {
-      return MakeAndAddRef<ScaledFontCairo>(static_cast<cairo_scaled_font_t*>(aNativeFont.mFont), aSize);
+      return MakeAndAddRef<ScaledFontCairo>(static_cast<cairo_scaled_font_t*>(aNativeFont.mFont), aUnscaledFont, aSize);
     }
 #endif
   default:
@@ -564,14 +566,17 @@ Factory::CreateScaledFontFromFontDescriptor(FontType aType, const uint8_t* aData
 }
 
 already_AddRefed<ScaledFont>
-Factory::CreateScaledFontWithCairo(const NativeFont& aNativeFont, Float aSize, cairo_scaled_font_t* aScaledFont)
+Factory::CreateScaledFontWithCairo(const NativeFont& aNativeFont,
+                                   const RefPtr<UnscaledFont>& aUnscaledFont,
+                                   Float aSize,
+                                   cairo_scaled_font_t* aScaledFont)
 {
 #ifdef USE_CAIRO
   // In theory, we could pull the NativeFont out of the cairo_scaled_font_t*,
   // but that would require a lot of code that would be otherwise repeated in
   // various backends.
   // Therefore, we just reuse CreateScaledFontForNativeFont's implementation.
-  RefPtr<ScaledFont> font = CreateScaledFontForNativeFont(aNativeFont, aSize);
+  RefPtr<ScaledFont> font = CreateScaledFontForNativeFont(aNativeFont, aUnscaledFont, aSize);
   static_cast<ScaledFontBase*>(font.get())->SetCairoScaledFont(aScaledFont);
   return font.forget();
 #else
@@ -581,9 +586,10 @@ Factory::CreateScaledFontWithCairo(const NativeFont& aNativeFont, Float aSize, c
 
 #ifdef MOZ_WIDGET_GTK
 already_AddRefed<ScaledFont>
-Factory::CreateScaledFontForFontconfigFont(cairo_scaled_font_t* aScaledFont, FcPattern* aPattern, Float aSize)
+Factory::CreateScaledFontForFontconfigFont(cairo_scaled_font_t* aScaledFont, FcPattern* aPattern,
+                                           const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize)
 {
-  return MakeAndAddRef<ScaledFontFontconfig>(aScaledFont, aPattern, aSize);
+  return MakeAndAddRef<ScaledFontFontconfig>(aScaledFont, aPattern, aUnscaledFont, aSize);
 }
 #endif
 
@@ -745,11 +751,12 @@ Factory::D2DCleanup()
 already_AddRefed<ScaledFont>
 Factory::CreateScaledFontForDWriteFont(IDWriteFontFace* aFontFace,
                                        const gfxFontStyle* aStyle,
+                                       const RefPtr<UnscaledFont>& aUnscaledFont,
                                        float aSize,
                                        bool aUseEmbeddedBitmap,
                                        bool aForceGDIMode)
 {
-  return MakeAndAddRef<ScaledFontDWrite>(aFontFace, aSize,
+  return MakeAndAddRef<ScaledFontDWrite>(aFontFace, aUnscaledFont, aSize,
                                          aUseEmbeddedBitmap, aForceGDIMode,
                                          aStyle);
 }

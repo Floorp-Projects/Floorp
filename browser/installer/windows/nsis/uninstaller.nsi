@@ -383,6 +383,12 @@ Section "Uninstall"
     ${UnregisterDLL} "$INSTDIR\AccessibleMarshal.dll"
   ${EndIf}
 
+  ; Only unregister the dll if the registration points to this installation
+  ReadRegStr $R1 HKCR "CLSID\${AccessibleHandlerCLSID}\InprocHandler32" ""
+  ${If} "$INSTDIR\AccessibleHandler.dll" == "$R1"
+    ${UnregisterDLL} "$INSTDIR\AccessibleHandler.dll"
+  ${EndIf}
+
   ${un.RemovePrecompleteEntries} "false"
 
   ${If} ${FileExists} "$INSTDIR\defaults\pref\channel-prefs.js"
