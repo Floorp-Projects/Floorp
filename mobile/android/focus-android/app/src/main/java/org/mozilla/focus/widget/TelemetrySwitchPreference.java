@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.SupportUtils;
 
 /**
@@ -28,16 +29,22 @@ import org.mozilla.focus.utils.SupportUtils;
  * switches used in the remaining preferences. There's no AppCompat SwitchPreference to extend,
  * so instead we just build our own preference.
  */
-class LinkedSwitchPreference extends Preference {
-
-    public LinkedSwitchPreference(Context context, AttributeSet attrs) {
+class TelemetrySwitchPreference extends Preference {
+    public TelemetrySwitchPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
-        setWidgetLayoutResource(R.layout.preference_linkedswitch);
+        init();
     }
 
-    public LinkedSwitchPreference(Context context, AttributeSet attrs, int defStyle) {
+    public TelemetrySwitchPreference(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        setWidgetLayoutResource(R.layout.preference_linkedswitch);
+        init();
+    }
+
+    private void init() {
+        setWidgetLayoutResource(R.layout.preference_telemetry);
+
+        // We are keeping track of the preference value ourselves.
+        setPersistent(false);
     }
 
     @Override
@@ -46,12 +53,12 @@ class LinkedSwitchPreference extends Preference {
 
         final Switch switchWidget = (Switch) view.findViewById(R.id.switch_widget);
 
-        switchWidget.setChecked(getPersistedBoolean(false));
+        switchWidget.setChecked(TelemetryWrapper.isTelemetryEnabled(getContext()));
 
         switchWidget.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                persistBoolean(isChecked);
+                TelemetryWrapper.setTelemetryEnabled(getContext(), isChecked);
             }
         });
 

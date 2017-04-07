@@ -69,11 +69,10 @@
             android:key="@string/pref_key_default_browser"
             android:title="@string/preference_default_browser" />
 
-        <org.mozilla.focus.widget.LinkedSwitchPreference
+        <org.mozilla.focus.widget.TelemetrySwitchPreference
             android:layout="@layout/focus_preference"
             android:title="@string/preference_mozilla_telemetry"
-            android:key="@string/pref_key_telemetry"
-            android:defaultValue="true"
+            android:persistent="false"
             android:summary="@string/preference_mozilla_telemetry_summary" />
 
         <!-- AboutPreference performs some string substitutions, so that we can show "About <AppName>".

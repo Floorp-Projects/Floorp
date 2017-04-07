@@ -74,12 +74,36 @@ public final class TelemetryWrapper {
         private static final String TO = "to";
     }
 
-    public static void init(Context context) {
+    public static boolean isTelemetryEnabled(Context context) {
         final Resources resources = context.getResources();
         final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
 
-        final boolean telemetryEnabled = preferences.getBoolean(resources.getString(R.string.pref_key_telemetry), true)
+        return preferences.getBoolean(resources.getString(R.string.pref_key_telemetry), isEnabledByDefault())
                 && !AppConstants.isDevBuild();
+    }
+
+    public static void setTelemetryEnabled(Context context, boolean enabled) {
+        final Resources resources = context.getResources();
+        final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+
+        preferences.edit()
+                .putBoolean(resources.getString(R.string.pref_key_telemetry), enabled)
+                .apply();
+
+        TelemetryHolder.get()
+                .getConfiguration()
+                .setUploadEnabled(enabled)
+                .setCollectionEnabled(enabled);
+    }
+
+    private static boolean isEnabledByDefault() {
+        return !AppConstants.isKlarBuild();
+    }
+
+    public static void init(Context context) {
+        final Resources resources = context.getResources();
+
+        final boolean telemetryEnabled = isTelemetryEnabled(context);
 
         final TelemetryConfiguration configuration = new TelemetryConfiguration(context)
                 .setServerEndpoint("https://incoming.telemetry.mozilla.org")
