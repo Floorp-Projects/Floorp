@@ -78,6 +78,14 @@ public:
     , mListID(aListID)
 #endif
   {
+#ifdef DEBUG
+    {
+      const nsIAtom* type = aContainer->GetType();
+      MOZ_ASSERT(type == nsGkAtoms::flexContainerFrame ||
+                 type == nsGkAtoms::gridContainerFrame,
+                 "Only use this iterator in a container that honors 'order'");
+    }
+#endif
     size_t count = 0;
     bool isOrdered = aState != eKnownUnordered;
     if (aState == eUnknownOrder) {
