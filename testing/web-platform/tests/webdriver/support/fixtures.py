@@ -31,6 +31,7 @@ def _dismiss_user_prompts(session):
 
     session.window_handle = current_window
 
+
 def _restore_windows(session):
     """Closes superfluous windows opened by the test without ending
     the session implicitly by closing the last window.
@@ -44,12 +45,14 @@ def _restore_windows(session):
 
     session.window_handle = current_window
 
+
 def _switch_to_top_level_browsing_context(session):
     """If the current browsing context selected by WebDriver is a
     `<frame>` or an `<iframe>`, switch it back to the top-level
     browsing context.
     """
     session.switch_frame(None)
+
 
 def _windows(session, exclude=None):
     """Set of window handles, filtered by an `exclude` list if
@@ -59,6 +62,7 @@ def _windows(session, exclude=None):
         exclude = []
     wins = [w for w in session.handles if w not in exclude]
     return set(wins)
+
 
 def create_frame(session):
     """Create an `iframe` element in the current browsing context and insert it
@@ -73,6 +77,7 @@ def create_frame(session):
 
     return create_frame
 
+
 def create_window(session):
     """Open new window and return the window handle."""
     def create_window():
@@ -83,54 +88,88 @@ def create_window(session):
         return new_windows.pop()
     return create_window
 
+
 def http(session):
     return HTTPRequest(session.transport.host, session.transport.port)
+
 
 def server_config():
     return json.loads(os.environ.get("WD_SERVER_CONFIG"))
 
-def create_session(request):
-    """Provide a factory function that produces wdclient `Session` instances.
-    If the `WD_CAPABILITIES` environment variable is set, it will be parsed as
-    JSON and the resulting object will be included in the WebDriver "Create
-    Session" command. Additional capabilities may be specified as an optional
-    argument to this function, but the operation will fail if any values
-    conflict with those specified via the environment. If the session is still
-    active at the completion of the test, it will be destroyed
-    automatically."""
 
-    def create_session(test_capabilities=None):
-        host = os.environ.get("WD_HOST", default_host)
-        port = int(os.environ.get("WD_PORT", default_port))
-        if test_capabilities is None:
-            test_capabilities = {}
-        env_capabilities = json.loads(os.environ.get("WD_CAPABILITIES", "{}"))
+def configuration():
+    host = os.environ.get("WD_HOST", default_host)
+    port = int(os.environ.get("WD_PORT", default_port))
+    capabilities = json.loads(os.environ.get("WD_CAPABILITIES", "{}"))
 
-        capabilities = merge_dictionaries(env_capabilities, test_capabilities)
-        session = webdriver.Session(host, port, capabilities=capabilities)
+    return {
+        "host": host,
+        "port": port,
+        "capabilities": capabilities
+    }
 
-        def destroy():
-            if session.session_id is not None:
-                session.end()
 
-        # finalisers are popped off a stack, making their ordering reverse
-        request.addfinalizer(destroy)
-        request.addfinalizer(lambda: _switch_to_top_level_browsing_context(session))
-        request.addfinalizer(lambda: _restore_windows(session))
-        request.addfinalizer(lambda: _dismiss_user_prompts(session))
-        request.addfinalizer(lambda: _ensure_valid_window(session))
+_current_session = None
 
-        return session
+
+def session(configuration, request):
+    """Create and start a session for a test that does not itself test session creation.
+
+    By default the session will stay open after each test, but we always try to start a
+    new one and assume that if that fails there is already a valid session. This makes it
+    possible to recover from some errors that might leave the session in a bad state, but
+    does not demand that we start a new session per test."""
+    global _current_session
+    if _current_session is None:
+        _current_session = webdriver.Session(configuration["host"],
+                                             configuration["port"],
+                                             capabilities=configuration["capabilities"])
+    try:
+        _current_session.start()
+    except webdriver.errors.SessionNotCreatedException:
+        if not _current_session.session_id:
+            raise
+
+    # finalisers are popped off a stack,
+    # making their ordering reverse
+    request.addfinalizer(lambda: _switch_to_top_level_browsing_context(_current_session))
+    request.addfinalizer(lambda: _restore_windows(_current_session))
+    request.addfinalizer(lambda: _dismiss_user_prompts(_current_session))
+    request.addfinalizer(lambda: _ensure_valid_window(_current_session))
+
+    return _current_session
+
+
+def new_session(configuration, request):
+    """Return a factory function that will attempt to start a session with a given body.
+
+    This is intended for tests that are themselves testing new session creation, and the
+    session created is closed at the end of the test."""
+    def end():
+        global _current_session
+        if _current_session is not None and _current_session.session_id:
+            _current_session.end()
+            _current_session = None
+
+    def create_session(body):
+        global _current_session
+        _session = webdriver.Session(configuration["host"],
+                                     configuration["port"],
+                                     capabilities=None)
+        # TODO: merge in some capabilities from the confguration capabilities
+        # since these might be needed to start the browser
+        value = _session.send_command("POST", "session", body=body)
+        # Don't set the global session until we are sure this succeeded
+        _current_session = _session
+        _session.session_id = value["sessionId"]
+
+        return value, _current_session
+
+    end()
+    request.addfinalizer(end)
 
     return create_session
 
-# Create a wdclient `Session` object for each Pytest "session". If the
-# `WD_CAPABILITIES` environment variable is set, it will be parsed as JSON and
-# the resulting object will be included in the WebDriver "Create Session"
-# command. If the session is still active at the completion of the test, it
-# will be destroyed automatically.
-def session(create_session):
-    return create_session()
 
 def url(server_config):
     def inner(path, query="", fragment=""):
