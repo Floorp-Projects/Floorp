@@ -105,7 +105,7 @@ public:
   virtual already_AddRefed<BorderLayer> CreateBorderLayer() override;
   virtual already_AddRefed<DisplayItemLayer> CreateDisplayItemLayer() override;
 
-  virtual bool NeedsWidgetInvalidation() override { return true; }
+  virtual bool NeedsWidgetInvalidation() override { return false; }
 
   virtual void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch) override;
 
