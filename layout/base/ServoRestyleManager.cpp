@@ -525,6 +525,12 @@ ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
   ServoElementSnapshot* snapshot = Servo_Element_GetSnapshot(aElement);
   MOZ_ASSERT_IF(snapshot, snapshot->HasAttrs());
 #endif
+
+  nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
+  if (primaryFrame) {
+    primaryFrame->AttributeChanged(aNameSpaceID, aAttribute, aModType);
+  }
+
   if (aAttribute == nsGkAtoms::style) {
     PostRestyleEvent(aElement, eRestyle_StyleAttribute, nsChangeHint(0));
   }
