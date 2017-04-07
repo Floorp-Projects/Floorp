@@ -21,6 +21,26 @@
 
 using namespace mozilla;
 
+bool
+nsMappedAttributes::sShuttingDown = false;
+nsTArray<void*>*
+nsMappedAttributes::sCachedMappedAttributeAllocations = nullptr;
+
+void
+nsMappedAttributes::Shutdown()
+{
+  sShuttingDown = true;
+  if (sCachedMappedAttributeAllocations) {
+    for (uint32_t i = 0; i < sCachedMappedAttributeAllocations->Length(); ++i) {
+      void* cachedValue = (*sCachedMappedAttributeAllocations)[i];
+      ::operator delete(cachedValue);
+    }
+  }
+
+  delete sCachedMappedAttributeAllocations;
+  sCachedMappedAttributeAllocations = nullptr;
+}
+
 nsMappedAttributes::nsMappedAttributes(nsHTMLStyleSheet* aSheet,
                                        nsMapRuleToAttributesFunc aMapRuleFunc)
   : mAttrCount(0),
@@ -28,6 +48,7 @@ nsMappedAttributes::nsMappedAttributes(nsHTMLStyleSheet* aSheet,
     mRuleMapper(aMapRuleFunc),
     mServoStyle(nullptr)
 {
+  MOZ_ASSERT(mRefCnt == 0); // Ensure caching works as expected.
 }
 
 nsMappedAttributes::nsMappedAttributes(const nsMappedAttributes& aCopy)
@@ -39,6 +60,7 @@ nsMappedAttributes::nsMappedAttributes(const nsMappedAttributes& aCopy)
     mServoStyle(nullptr)
 {
   NS_ASSERTION(mBufferSize >= aCopy.mAttrCount, "can't fit attributes");
+  MOZ_ASSERT(mRefCnt == 0); // Ensure caching works as expected.
 
   uint32_t i;
   for (i = 0; i < mAttrCount; ++i) {
@@ -81,6 +103,15 @@ void* nsMappedAttributes::operator new(size_t aSize, uint32_t aAttrCount) CPP_TH
     size -= sizeof(void*[1]);
   }
 
+  if (sCachedMappedAttributeAllocations) {
+    void* cached =
+      sCachedMappedAttributeAllocations->SafeElementAt(aAttrCount);
+    if (cached) {
+      (*sCachedMappedAttributeAllocations)[aAttrCount] = nullptr;
+      return cached;
+    }
+  }
+
   void* newAttrs = ::operator new(size);
 
 #ifdef DEBUG
@@ -89,8 +120,40 @@ void* nsMappedAttributes::operator new(size_t aSize, uint32_t aAttrCount) CPP_TH
   return newAttrs;
 }
 
-NS_IMPL_ISUPPORTS(nsMappedAttributes,
-                  nsIStyleRule)
+void
+nsMappedAttributes::LastRelease()
+{
+  if (!sShuttingDown) {
+    if (!sCachedMappedAttributeAllocations) {
+      sCachedMappedAttributeAllocations = new nsTArray<void*>();
+    }
+
+    // Ensure the cache array is at least mAttrCount + 1 long and
+    // that each item is either null or pointing to a cached item.
+    // The size of the array is capped because mapped attributes are defined
+    // statically in element implementations.
+    sCachedMappedAttributeAllocations->SetCapacity(mAttrCount + 1);
+    for (uint32_t i = sCachedMappedAttributeAllocations->Length();
+         i < (uint32_t(mAttrCount) + 1); ++i) {
+      sCachedMappedAttributeAllocations->AppendElement(nullptr);
+    }
+
+    if (!(*sCachedMappedAttributeAllocations)[mAttrCount]) {
+      void* memoryToCache = this;
+      this->~nsMappedAttributes();
+      (*sCachedMappedAttributeAllocations)[mAttrCount] = memoryToCache;
+      return;
+    }
+  }
+
+  delete this;
+}
+
+NS_IMPL_ADDREF(nsMappedAttributes)
+NS_IMPL_RELEASE_WITH_DESTROY(nsMappedAttributes, LastRelease())
+
+NS_IMPL_QUERY_INTERFACE(nsMappedAttributes,
+                        nsIStyleRule)
 
 void
 nsMappedAttributes::SetAndTakeAttr(nsIAtom* aAttrName, nsAttrValue& aValue)
