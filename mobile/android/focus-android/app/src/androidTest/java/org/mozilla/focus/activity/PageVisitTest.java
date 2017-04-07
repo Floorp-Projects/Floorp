@@ -69,7 +69,7 @@ public class PageVisitTest {
                 .text("Help"));
         UiObject helpView = TestHelper.mDevice.findObject(new UiSelector()
                 .className("android.webkit.WebView")
-                .description("Mozilla Support - English"));
+                .description("What is Firefox Focus for Android? - Mozilla Support Community"));
 
         /* Wait for app to load, and take the First View screenshot */
         TestHelper.firstViewBtn.waitForExists(waitTime);

@@ -6,7 +6,6 @@
 package org.mozilla.focus.activity;
 
 import android.content.Context;
-import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
@@ -19,13 +18,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static android.view.KeyEvent.KEYCODE_E;
-import static android.view.KeyEvent.KEYCODE_F;
+import static android.view.KeyEvent.KEYCODE_A;
 import static android.view.KeyEvent.KEYCODE_I;
 import static android.view.KeyEvent.KEYCODE_L;
-import static android.view.KeyEvent.KEYCODE_N;
-import static android.view.KeyEvent.KEYCODE_T;
-import static android.view.KeyEvent.KEYCODE_X;
+import static android.view.KeyEvent.KEYCODE_M;
+import static android.view.KeyEvent.KEYCODE_O;
+import static android.view.KeyEvent.KEYCODE_Z;
 import static junit.framework.Assert.assertTrue;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
@@ -55,12 +53,11 @@ public class URLMismatchTest {
     public void MismatchTest() throws InterruptedException, UiObjectNotFoundException {
         final long waitingTime = TestHelper.waitingTime * 3;
 
-        UiObject netflixLogo = TestHelper.mDevice.findObject(new UiSelector()
-                .className("android.view.View")
-                .description("Netflix")
-                .clickable(true));
+        UiObject mozillaLogo = TestHelper.mDevice.findObject(new UiSelector()
+                .className("android.webkit.WebView")
+                .description("Internet for people, not profit — Mozilla"));
 
-        // Search for netflix
+        // Search for mozilla
         TestHelper.firstViewBtn.waitForExists(waitingTime);
         TestHelper.firstViewBtn.click();
         TestHelper.urlBar.waitForExists(waitingTime);
@@ -68,35 +65,31 @@ public class URLMismatchTest {
 
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
-        TestHelper.mDevice.pressKeyCode(KEYCODE_N);
-        TestHelper.mDevice.pressKeyCode(KEYCODE_E);
-        TestHelper.mDevice.pressKeyCode(KEYCODE_T);
-        TestHelper.mDevice.pressKeyCode(KEYCODE_F);
-        TestHelper.mDevice.pressKeyCode(KEYCODE_L);
+        TestHelper.mDevice.pressKeyCode(KEYCODE_M);
+        TestHelper.mDevice.pressKeyCode(KEYCODE_O);
+        TestHelper.mDevice.pressKeyCode(KEYCODE_Z);
         TestHelper.mDevice.pressKeyCode(KEYCODE_I);
-        TestHelper.mDevice.pressKeyCode(KEYCODE_X);
-        assertTrue(TestHelper.hint.getText().equals("Search for netflix"));
+        TestHelper.mDevice.pressKeyCode(KEYCODE_L);
+        TestHelper.mDevice.pressKeyCode(KEYCODE_L);
+        TestHelper.mDevice.pressKeyCode(KEYCODE_A);
+        assertTrue(TestHelper.hint.getText().equals("Search for mozilla"));
         TestHelper.hint.click();
         TestHelper.webView.waitForExists(waitingTime);
-        assertTrue (TestHelper.browserURLbar.getText().contains("netflix"));
+        assertTrue (TestHelper.browserURLbar.getText().contains("mozilla"));
 
-        // Now, go to netflix.com directly
+        // Now, go to mozilla.org directly
         TestHelper.browserURLbar.click();
         TestHelper.inlineAutocompleteEditText.clearTextField();;
-        TestHelper.mDevice.pressKeyCode(KEYCODE_N);
-        TestHelper.mDevice.pressKeyCode(KEYCODE_E);
-        TestHelper.mDevice.pressKeyCode(KEYCODE_T);
+        TestHelper.mDevice.pressKeyCode(KEYCODE_M);
+        TestHelper.mDevice.pressKeyCode(KEYCODE_O);
+        TestHelper.mDevice.pressKeyCode(KEYCODE_Z);
         TestHelper.hint.waitForExists(waitingTime);
-        assertTrue (TestHelper.inlineAutocompleteEditText.getText().equals("netflix.com"));
+        assertTrue (TestHelper.inlineAutocompleteEditText.getText().equals("mozilla.org"));
         TestHelper.pressEnterKey();
 
-        // Verify it's in netflix site and both URL and the displayed site match
-        // For API 25 (N) devices in BB, it does not allow https connection,
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-            TestHelper.webView.waitForExists(waitingTime);
-            netflixLogo.waitForExists(waitingTime);
-            assertTrue(TestHelper.browserURLbar.getText().contains("www.netflix.com"));
-            assertTrue(netflixLogo.exists());
-        }
+        TestHelper.webView.waitForExists(waitingTime);
+        mozillaLogo.waitForExists(waitingTime);
+        assertTrue(TestHelper.browserURLbar.getText().contains("www.mozilla.org"));
+        assertTrue(mozillaLogo.exists());
     }
 }
