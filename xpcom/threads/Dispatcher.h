@@ -77,16 +77,10 @@ public:
     ValidatingDispatcher* mPrevRunningDispatcher;
   };
 
-  // Return true if it's valid to access the TabGroup at this time.
-  bool AccessAllowed() const
-  {
-    return !sRunningDispatcher || mAccessValid;
-  }
-
-  // Like AccessAllowed(), but asserts.
+  // Ensure that it's valid to access the TabGroup at this time.
   void ValidateAccess() const
   {
-    MOZ_ASSERT(AccessAllowed());
+    MOZ_ASSERT(!sRunningDispatcher || mAccessValid);
   }
 
   class Runnable;
