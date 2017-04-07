@@ -2993,7 +2993,10 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     if (i > 0) {
       // Prevent decreasing stop positions by advancing this position
       // to the previous stop position, if necessary
-      position = std::max(position, stops[i - 1].mPosition);
+      double previousPosition = firstUnsetPosition > 0
+        ? stops[firstUnsetPosition - 1].mPosition
+        : stops[i - 1].mPosition;
+      position = std::max(position, previousPosition);
     }
     stops.AppendElement(ColorStop(position, stop.mIsInterpolationHint,
                                   Color::FromABGR(stop.mColor)));
