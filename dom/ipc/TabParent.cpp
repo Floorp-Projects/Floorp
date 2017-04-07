@@ -303,10 +303,6 @@ TabParent::AddWindowListeners()
                                       this, false, false);
       }
     }
-    if (nsIPresShell* shell = mFrameElement->OwnerDoc()->GetShell()) {
-      mPresShellWithRefreshListener = shell;
-      shell->AddPostRefreshObserver(this);
-    }
 
     RefPtr<AudioChannelService> acs = AudioChannelService::GetOrCreate();
     if (acs) {
@@ -326,22 +322,10 @@ TabParent::RemoveWindowListeners()
                                        this, false);
     }
   }
-  if (mPresShellWithRefreshListener) {
-    mPresShellWithRefreshListener->RemovePostRefreshObserver(this);
-    mPresShellWithRefreshListener = nullptr;
-  }
 
   RefPtr<AudioChannelService> acs = AudioChannelService::GetOrCreate();
   if (acs) {
     acs->UnregisterTabParent(this);
-  }
-}
-
-void
-TabParent::DidRefresh()
-{
-  if (mChromeOffset != -GetChildProcessOffset()) {
-    UpdatePosition();
   }
 }
 

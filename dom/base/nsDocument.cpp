@@ -21,6 +21,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Likely.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/URLExtraData.h"
 #include <algorithm>
 
 #include "mozilla/Logging.h"
@@ -3581,6 +3582,27 @@ nsDocument::SetBaseURI(nsIURI* aURI)
     mDocumentBaseURI = nullptr;
   }
   RefreshLinkHrefs();
+}
+
+URLExtraData*
+nsIDocument::DefaultStyleAttrURLData()
+{
+#ifdef MOZ_STYLO
+  MOZ_ASSERT(NS_IsMainThread());
+  nsIURI* baseURI = GetDocBaseURI();
+  nsIURI* docURI = GetDocumentURI();
+  nsIPrincipal* principal = NodePrincipal();
+  if (!mCachedURLData ||
+      mCachedURLData->BaseURI() != baseURI ||
+      mCachedURLData->GetReferrer() != docURI ||
+      mCachedURLData->GetPrincipal() != principal) {
+    mCachedURLData = new URLExtraData(baseURI, docURI, principal);
+  }
+  return mCachedURLData;
+#else
+  MOZ_CRASH("Should not be called for non-stylo build");
+  return nullptr;
+#endif
 }
 
 void

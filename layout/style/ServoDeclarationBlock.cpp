@@ -13,7 +13,7 @@ namespace mozilla {
 
 /* static */ already_AddRefed<ServoDeclarationBlock>
 ServoDeclarationBlock::FromCssText(const nsAString& aCssText,
-                                   css::URLExtraData* aExtraData)
+                                   URLExtraData* aExtraData)
 {
   NS_ConvertUTF16toUTF8 value(aCssText);
   // FIXME (bug 1343964): Figure out a better solution for sending the base uri to servo

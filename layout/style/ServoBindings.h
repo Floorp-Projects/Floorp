@@ -69,8 +69,10 @@ struct nsStyleDisplay;
   void Gecko_##name_##_AddRef(class_* aPtr);    \
   void Gecko_##name_##_Release(class_* aPtr);
 #define NS_IMPL_FFI_REFCOUNTING(class_, name_)                    \
-  void Gecko_##name_##_AddRef(class_* aPtr) { NS_ADDREF(aPtr); }  \
-  void Gecko_##name_##_Release(class_* aPtr) { NS_RELEASE(aPtr); }
+  void Gecko_##name_##_AddRef(class_* aPtr)                       \
+    { MOZ_ASSERT(NS_IsMainThread()); NS_ADDREF(aPtr); }           \
+  void Gecko_##name_##_Release(class_* aPtr)                      \
+    { MOZ_ASSERT(NS_IsMainThread()); NS_RELEASE(aPtr); }
 
 #define DEFINE_ARRAY_TYPE_FOR(type_)                                \
   struct nsTArrayBorrowed_##type_ {                                 \
@@ -89,7 +91,7 @@ public:
   already_AddRefed<mozilla::css::URLValue> IntoCssUrl();
   const uint8_t* mURLString;
   uint32_t mURLStringLength;
-  mozilla::css::URLExtraData* mExtraData;
+  mozilla::URLExtraData* mExtraData;
 };
 
 // DOM Traversal.
@@ -118,10 +120,6 @@ void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
                           uint32_t url_length,
                           const uint8_t* media_bytes,
                           uint32_t media_length);
-
-// URLExtraData
-// Create a new addrefed URLExtraData.
-RawGeckoURLExtraData* Gecko_URLExtraData_CreateDummy();
 
 // By default, Servo walks the DOM by traversing the siblings of the DOM-view
 // first child. This generally works, but misses anonymous children, which we

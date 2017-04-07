@@ -1999,7 +1999,7 @@ nsStyleImageRequest::nsStyleImageRequest(Mode aModeFlags,
 nsStyleImageRequest::nsStyleImageRequest(
     Mode aModeFlags,
     nsStringBuffer* aURLBuffer,
-    already_AddRefed<css::URLExtraData> aExtraData)
+    already_AddRefed<URLExtraData> aExtraData)
   : mImageValue(new css::ImageValue(aURLBuffer, Move(aExtraData)))
   , mModeFlags(aModeFlags)
   , mResolved(false)

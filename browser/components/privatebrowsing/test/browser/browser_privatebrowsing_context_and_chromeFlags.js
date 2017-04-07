@@ -1,7 +1,5 @@
 "use strict";
 
-/* eslint-env mozilla/frame-script */
-
 /**
  * Given some window in the parent process, ensure that
  * the nsIXULWindow has the CHROME_PRIVATE_WINDOW chromeFlag,

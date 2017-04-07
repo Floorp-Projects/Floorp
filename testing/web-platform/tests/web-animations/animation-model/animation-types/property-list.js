@@ -1435,8 +1435,7 @@ var gCSSProperties = {
   },
   'word-spacing': {
     // https://drafts.csswg.org/css-text-3/#propdef-word-spacing
-    types: [
-    ]
+    types: [ 'lengthPercentageOrCalc' ]
   },
   'will-change': {
     // http://dev.w3.org/csswg/css-will-change/#propdef-will-change
