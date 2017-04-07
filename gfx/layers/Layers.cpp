@@ -1489,7 +1489,7 @@ RefLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
  * to get valid results (because the cyclic buffer was overwritten since that call).
  *
  * To determine availability of the data upon StopFrameTimeRecording:
- * - mRecording.mNextIndex increases on each PostPresent, and never resets.
+ * - mRecording.mNextIndex increases on each RecordFrame, and never resets.
  * - Cyclic buffer position is realized as mNextIndex % bufferSize.
  * - StartFrameTimeRecording returns mNextIndex. When StopFrameTimeRecording is called,
  *   the required start index is passed as an arg, and we're able to calculate the required
@@ -1545,16 +1545,6 @@ LayerManager::RecordFrame()
 }
 
 void
-LayerManager::PostPresent()
-{
-  if (!mTabSwitchStart.IsNull()) {
-    Telemetry::Accumulate(Telemetry::FX_TAB_SWITCH_TOTAL_MS,
-                          uint32_t((TimeStamp::Now() - mTabSwitchStart).ToMilliseconds()));
-    mTabSwitchStart = TimeStamp();
-  }
-}
-
-void
 LayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
                                      nsTArray<float>& aFrameIntervals)
 {
@@ -1580,12 +1570,6 @@ LayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
     }
     aFrameIntervals[i] = mRecording.mIntervals[cyclicPos];
   }
-}
-
-void
-LayerManager::BeginTabSwitch()
-{
-  mTabSwitchStart = TimeStamp::Now();
 }
 
 static void PrintInfo(std::stringstream& aStream, HostLayer* aLayerComposite);
