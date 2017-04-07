@@ -407,7 +407,7 @@ private:
     {
       const MediaContainerType mType(aType); // for logging macro.
       mp4_demuxer::ByteReader reader(aData);
-      mp4_demuxer::AtomType initAtom("ftyp");
+      mp4_demuxer::AtomType initAtom("moov");
       mp4_demuxer::AtomType mediaAtom("moof");
 
       // Valid top-level boxes defined in ISO/IEC 14496-12 (Table 1)
