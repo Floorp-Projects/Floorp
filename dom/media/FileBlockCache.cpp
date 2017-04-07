@@ -15,15 +15,16 @@
 
 namespace mozilla {
 
+#undef LOG
 LazyLogModule gFileBlockCacheLog("FileBlockCache");
-#define FBC_LOG(type, msg) MOZ_LOG(gFileBlockCacheLog, type, msg)
+#define LOG(x, ...) MOZ_LOG(gFileBlockCacheLog, LogLevel::Debug, \
+  ("%p " x, this, ##__VA_ARGS__))
 
 void
 FileBlockCache::SetCacheFile(PRFileDesc* aFD)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  FBC_LOG(LogLevel::Debug,
-          ("FileBlockCache::SetFD(aFD=%p) mIsOpen=%d", aFD, mIsOpen));
+  LOG("SetFD(aFD=%p) mIsOpen=%d", aFD, mIsOpen);
 
   if (!aFD) {
     // Failed to get a temporary file. Shutdown.
@@ -53,7 +54,7 @@ FileBlockCache::SetCacheFile(PRFileDesc* aFD)
 nsresult
 FileBlockCache::Init()
 {
-  FBC_LOG(LogLevel::Debug, ("FileBlockCache::Init()"));
+  LOG("Init()");
 
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -116,7 +117,7 @@ FileBlockCache::~FileBlockCache()
 
 void FileBlockCache::Close()
 {
-  FBC_LOG(LogLevel::Debug, ("FileBlockCache::Close"));
+  LOG("Close()");
 
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
@@ -214,10 +215,7 @@ nsresult FileBlockCache::ReadFromFile(int64_t aOffset,
                                       int32_t aBytesToRead,
                                       int32_t& aBytesRead)
 {
-  FBC_LOG(LogLevel::Debug,
-          ("FileBlockCache::ReadFromFile(offset=%" PRIu64 ", len=%u)",
-           aOffset,
-           aBytesToRead));
+  LOG("ReadFromFile(offset=%" PRIu64 ", len=%u)", aOffset, aBytesToRead);
   mFileMonitor.AssertCurrentThreadOwns();
   MOZ_ASSERT(mFD);
 
@@ -235,8 +233,7 @@ nsresult FileBlockCache::ReadFromFile(int64_t aOffset,
 nsresult FileBlockCache::WriteBlockToFile(int32_t aBlockIndex,
                                           const uint8_t* aBlockData)
 {
-  FBC_LOG(LogLevel::Debug,
-          ("FileBlockCache::WriteBlockToFile(index=%u)", aBlockIndex));
+  LOG("WriteBlockToFile(index=%u)", aBlockIndex);
 
   mFileMonitor.AssertCurrentThreadOwns();
   MOZ_ASSERT(mFD);
@@ -257,10 +254,7 @@ nsresult FileBlockCache::WriteBlockToFile(int32_t aBlockIndex,
 nsresult FileBlockCache::MoveBlockInFile(int32_t aSourceBlockIndex,
                                          int32_t aDestBlockIndex)
 {
-  FBC_LOG(LogLevel::Debug,
-          ("FileBlockCache::MoveBlockInFile(src=%u, dest=%u)",
-           aSourceBlockIndex,
-           aDestBlockIndex));
+  LOG("MoveBlockInFile(src=%u, dest=%u)", aSourceBlockIndex, aDestBlockIndex);
 
   mFileMonitor.AssertCurrentThreadOwns();
 
@@ -283,8 +277,7 @@ nsresult FileBlockCache::Run()
   NS_ASSERTION(mIsWriteScheduled, "Should report write running or scheduled.");
   MOZ_ASSERT(mFD);
 
-  FBC_LOG(LogLevel::Debug,
-          ("FileBlockCache::Run mFD=%p mIsOpen=%d", mFD, mIsOpen));
+  LOG("Run() mFD=%p mIsOpen=%d", mFD, mIsOpen);
 
   while (!mChangeIndexList.empty()) {
     if (!mIsOpen) {
@@ -441,3 +434,6 @@ nsresult FileBlockCache::MoveBlock(int32_t aSourceBlockIndex, int32_t aDestBlock
 }
 
 } // End namespace mozilla.
+
+// avoid redefined macro in unified build
+#undef LOG
