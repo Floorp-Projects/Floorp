@@ -103,18 +103,68 @@ public:
 
 typedef nsTArray<LookupResult> LookupResultArray;
 
-struct CacheResult {
-  AddComplete entry;
-  nsCString table;
+class CacheResult {
+public:
+  enum { V2, V4 };
 
-  bool operator==(const CacheResult& aOther) const {
-    if (entry != aOther.entry) {
-      return false;
-    }
-    return table == aOther.table;
+  virtual int Ver() const = 0;
+  virtual bool findCompletion(const Completion& aCompletion) const = 0;
+
+  virtual ~CacheResult() {}
+
+  template<typename T>
+  static T* Cast(CacheResult* aThat) {
+    return ((aThat && T::VER == aThat->Ver()) ?
+      reinterpret_cast<T*>(aThat) : nullptr);
   }
+
+  nsCString table;
 };
-typedef nsTArray<CacheResult> CacheResultArray;
+
+class CacheResultV2 final : public CacheResult
+{
+public:
+  static const int VER;
+
+  Completion completion;
+  uint32_t addChunk;
+
+  bool operator==(const CacheResultV2& aOther) const {
+    return table == aOther.table &&
+           completion == aOther.completion &&
+           addChunk == aOther.addChunk;
+  }
+
+  bool findCompletion(const Completion& aCompletion) const override {
+    return completion == aCompletion;
+  }
+
+  virtual int Ver() const override { return VER; }
+};
+
+class CacheResultV4 final : public CacheResult
+{
+public:
+  static const int VER;
+
+  nsCString prefix;
+  CachedFullHashResponse response;
+
+  bool operator==(const CacheResultV4& aOther) const {
+    return prefix == aOther.prefix &&
+           response == aOther.response;
+  }
+
+  bool findCompletion(const Completion& aCompletion) const override {
+    nsDependentCSubstring completion(
+      reinterpret_cast<const char*>(aCompletion.buf), COMPLETE_SIZE);
+    return response.fullHashes.Contains(completion);
+  }
+
+  virtual int Ver() const override { return VER; }
+};
+
+typedef nsTArray<UniquePtr<CacheResult>> CacheResultArray;
 
 class LookupCache {
 public:

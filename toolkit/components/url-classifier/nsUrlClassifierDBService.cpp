@@ -6,6 +6,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsArrayUtils.h"
 #include "nsCRT.h"
 #include "nsICryptoHash.h"
 #include "nsICryptoHMAC.h"
@@ -121,6 +122,9 @@ LazyLogModule gUrlClassifierDbServiceLog("UrlClassifierDbService");
 
 #define CONFIRM_AGE_PREF        "urlclassifier.max-complete-age"
 #define CONFIRM_AGE_DEFAULT_SEC (45 * 60)
+
+// 30 minutes as the maximum negative cache duration.
+#define MAXIMUM_NEGATIVE_CACHE_DURATION_SEC (30 * 60 * 1000)
 
 // TODO: The following two prefs are to be removed after we
 //       roll out full v4 hash completion. See Bug 1331534.
@@ -838,19 +842,26 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
   }
 
   LOG(("nsUrlClassifierDBServiceWorker::CacheCompletions [%p]", this));
-  if (!mClassifier)
+  if (!mClassifier) {
     return NS_OK;
+  }
 
   // Ownership is transferred in to us
   nsAutoPtr<CacheResultArray> resultsPtr(results);
 
-  if (mLastResults == *resultsPtr) {
+  if (resultsPtr->Length() == 0) {
+    return NS_OK;
+  }
+
+  if (IsSameAsLastResults(*resultsPtr)) {
     LOG(("Skipping completions that have just been cached already."));
     return NS_OK;
   }
 
-  nsAutoPtr<ProtocolParserV2> pParse(new ProtocolParserV2());
-  nsTArray<TableUpdate*> updates;
+  nsAutoPtr<ProtocolParser> pParse;
+  pParse = resultsPtr->ElementAt(0)->Ver() == CacheResult::V2 ?
+             static_cast<ProtocolParser*>(new ProtocolParserV2()) :
+             static_cast<ProtocolParser*>(new ProtocolParserProtobuf());
 
   // Only cache results for tables that we have, don't take
   // in tables we might accidentally have hit during a completion.
@@ -859,37 +870,28 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
   nsresult rv = mClassifier->ActiveTables(tables);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsTArray<TableUpdate*> updates;
+
   for (uint32_t i = 0; i < resultsPtr->Length(); i++) {
     bool activeTable = false;
+    CacheResult* result = resultsPtr->ElementAt(i).get();
+
     for (uint32_t table = 0; table < tables.Length(); table++) {
-      if (tables[table].Equals(resultsPtr->ElementAt(i).table)) {
+      if (tables[table].Equals(result->table)) {
         activeTable = true;
         break;
       }
     }
     if (activeTable) {
-      TableUpdateV2* tuV2 = TableUpdate::Cast<TableUpdateV2>(
-        pParse->GetTableUpdate(resultsPtr->ElementAt(i).table));
+      TableUpdate* tu = pParse->GetTableUpdate(result->table);
 
-      // Ignore V4 for now.
-      if (!tuV2) {
-        continue;
-      }
-
-      LOG(("CacheCompletion Addchunk %d hash %X", resultsPtr->ElementAt(i).entry.addChunk,
-           resultsPtr->ElementAt(i).entry.ToUint32()));
-      rv = tuV2->NewAddComplete(resultsPtr->ElementAt(i).entry.addChunk,
-                                resultsPtr->ElementAt(i).entry.complete);
+      rv = CacheResultToTableUpdate(result, tu);
       if (NS_FAILED(rv)) {
         // We can bail without leaking here because ForgetTableUpdates
         // hasn't been called yet.
         return rv;
       }
-      rv = tuV2->NewAddChunk(resultsPtr->ElementAt(i).entry.addChunk);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      updates.AppendElement(tuV2);
+      updates.AppendElement(tu);
       pParse->ForgetTableUpdates();
     } else {
       LOG(("Completion received, but table is not active, so not caching."));
@@ -897,8 +899,51 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
    }
 
   mClassifier->ApplyFullHashes(&updates);
-  mLastResults = *resultsPtr;
+  mLastResults = Move(resultsPtr);
   return NS_OK;
+}
+
+nsresult
+nsUrlClassifierDBServiceWorker::CacheResultToTableUpdate(CacheResult* aCacheResult,
+                                                         TableUpdate* aUpdate)
+{
+  auto tuV2 = TableUpdate::Cast<TableUpdateV2>(aUpdate);
+  if (tuV2) {
+    auto result = CacheResult::Cast<CacheResultV2>(aCacheResult);
+    MOZ_ASSERT(result);
+
+    LOG(("CacheCompletion hash %X, Addchunk %d", result->completion.ToUint32(),
+         result->addChunk));
+
+    nsresult rv = tuV2->NewAddComplete(result->addChunk, result->completion);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = tuV2->NewAddChunk(result->addChunk);
+    return rv;
+  }
+
+  auto tuV4 = TableUpdate::Cast<TableUpdateV4>(aUpdate);
+  if (tuV4) {
+    auto result = CacheResult::Cast<CacheResultV4>(aCacheResult);
+    MOZ_ASSERT(result);
+
+    if (LOG_ENABLED()) {
+      const FullHashExpiryCache& fullHashes = result->response.fullHashes;
+      for (auto iter = fullHashes.ConstIter(); !iter.Done(); iter.Next()) {
+        Completion completion;
+        completion.Assign(iter.Key());
+        LOG(("CacheCompletion(v4) hash %X, CacheExpireTime %" PRId64, completion.ToUint32(),
+              iter.Data()));
+      }
+    }
+
+    tuV4->NewFullHashResponse(result->prefix, result->response);
+    return NS_OK;
+  }
+
+  // tableUpdate object should be either v2 or v4.
+  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -962,10 +1007,39 @@ NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::ClearLastResults()
 {
   MOZ_ASSERT(!NS_IsMainThread(), "Must be on the background thread");
-  mLastResults.Clear();
+  if (mLastResults) {
+    mLastResults->Clear();
+  }
   return NS_OK;
 }
 
+bool
+nsUrlClassifierDBServiceWorker::IsSameAsLastResults(CacheResultArray& aResult)
+{
+  if (!mLastResults || mLastResults->Length() != aResult.Length()) {
+    return false;
+  }
+
+  bool equal = true;
+  for (uint32_t i = 0; i < mLastResults->Length() && equal; i++) {
+    CacheResult* lhs = mLastResults->ElementAt(i).get();
+    CacheResult* rhs = aResult[i].get();
+
+    if (lhs->Ver() != rhs->Ver()) {
+      return false;
+    }
+
+    if (lhs->Ver() == CacheResult::V2) {
+      equal = *(CacheResult::Cast<CacheResultV2>(lhs)) ==
+              *(CacheResult::Cast<CacheResultV2>(rhs));
+    } else if (lhs->Ver() == CacheResult::V4) {
+      equal = *(CacheResult::Cast<CacheResultV4>(lhs)) ==
+              *(CacheResult::Cast<CacheResultV4>(rhs));
+    }
+  }
+
+  return equal;
+}
 
 // -------------------------------------------------------------------------
 // nsUrlClassifierLookupCallback
@@ -994,6 +1068,7 @@ private:
   ~nsUrlClassifierLookupCallback();
 
   nsresult HandleResults();
+  nsresult ProcessComplete(CacheResult* aCacheResult);
 
   RefPtr<nsUrlClassifierDBService> mDBService;
   nsAutoPtr<LookupResultArray> mResults;
@@ -1109,30 +1184,95 @@ nsUrlClassifierLookupCallback::CompletionFinished(nsresult status)
 }
 
 NS_IMETHODIMP
-nsUrlClassifierLookupCallback::Completion(const nsACString& completeHash,
-                                          const nsACString& tableName,
-                                          uint32_t chunkId)
+nsUrlClassifierLookupCallback::CompletionV2(const nsACString& aCompleteHash,
+                                            const nsACString& aTableName,
+                                            uint32_t aChunkId)
 {
   LOG(("nsUrlClassifierLookupCallback::Completion [%p, %s, %d]",
-       this, PromiseFlatCString(tableName).get(), chunkId));
+       this, PromiseFlatCString(aTableName).get(), aChunkId));
 
-  mozilla::safebrowsing::Completion hash;
-  hash.Assign(completeHash);
+  MOZ_ASSERT(!StringEndsWith(aTableName, NS_LITERAL_CSTRING("-proto")));
 
+  auto result = new CacheResultV2;
+
+  result->table = aTableName;
+  result->completion.Assign(aCompleteHash);
+  result->addChunk = aChunkId;
+
+  return ProcessComplete(result);
+}
+
+NS_IMETHODIMP
+nsUrlClassifierLookupCallback::CompletionV4(const nsACString& aPartialHash,
+                                            const nsACString& aTableName,
+                                            uint32_t aNegativeCacheDuration,
+                                            nsIArray* aFullHashes)
+{
+  LOG(("nsUrlClassifierLookupCallback::CompletionV4 [%p, %s, %d]",
+       this, PromiseFlatCString(aTableName).get(), aNegativeCacheDuration));
+
+  MOZ_ASSERT(StringEndsWith(aTableName, NS_LITERAL_CSTRING("-proto")));
+
+  if(!aFullHashes) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (!Preferences::GetBool(TAKE_V4_COMPLETION_RESULT_PREF,
+                            TAKE_V4_COMPLETION_RESULT_DEFAULT)) {
+    // Bug 1331534 - We temporarily ignore hash completion result
+    // for v4 tables.
+    return NS_OK;
+  }
+
+  if (aNegativeCacheDuration > MAXIMUM_NEGATIVE_CACHE_DURATION_SEC) {
+    LOG(("Negative cache duration too large, clamping it down to"
+         "a reasonable value."));
+    aNegativeCacheDuration = MAXIMUM_NEGATIVE_CACHE_DURATION_SEC;
+  }
+
+  auto result = new CacheResultV4;
+
+  int64_t nowSec = PR_Now() / PR_USEC_PER_SEC;
+
+  result->table = aTableName;
+  result->prefix = aPartialHash;
+  result->response.negativeCacheExpirySec = nowSec + aNegativeCacheDuration;
+
+  // Fill in positive cache entries.
+  uint32_t fullHashCount = 0;
+  nsresult rv = aFullHashes->GetLength(&fullHashCount);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  for (uint32_t i = 0; i < fullHashCount; i++) {
+    nsCOMPtr<nsIFullHashMatch> match = do_QueryElementAt(aFullHashes, i);
+
+    nsCString fullHash;
+    match->GetFullHash(fullHash);
+
+    uint32_t duration;
+    match->GetCacheDuration(&duration);
+
+    result->response.fullHashes.Put(fullHash, nowSec + duration);
+  }
+
+  return ProcessComplete(result);
+}
+
+nsresult
+nsUrlClassifierLookupCallback::ProcessComplete(CacheResult* aCacheResult)
+{
   // Send this completion to the store for caching.
   if (!mCacheResults) {
     mCacheResults = new CacheResultArray();
-    if (!mCacheResults)
+    if (!mCacheResults) {
       return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
-  CacheResult result;
-  result.entry.addChunk = chunkId;
-  result.entry.complete = hash;
-  result.table = tableName;
-
   // OK if this fails, we just won't cache the item.
-  mCacheResults->AppendElement(result);
+  mCacheResults->AppendElement(aCacheResult);
 
   // Check if this matched any of our results.
   for (uint32_t i = 0; i < mResults->Length(); i++) {
@@ -1140,8 +1280,8 @@ nsUrlClassifierLookupCallback::Completion(const nsACString& completeHash,
 
     // Now, see if it verifies a lookup
     if (!result.mNoise
-        && result.CompleteHash() == hash
-        && result.mTableName.Equals(tableName)) {
+        && result.mTableName.Equals(aCacheResult->table)
+        && aCacheResult->findCompletion(result.CompleteHash())) {
       result.mProtocolConfirmed = true;
     }
   }
@@ -1221,14 +1361,6 @@ nsUrlClassifierLookupCallback::HandleResults()
     if (!confirmed) {
       LOG(("Skipping result %s from table %s (not confirmed)",
            result.PartialHashHex().get(), result.mTableName.get()));
-      continue;
-    }
-
-    if (StringEndsWith(result.mTableName, NS_LITERAL_CSTRING("-proto")) &&
-        !Preferences::GetBool(TAKE_V4_COMPLETION_RESULT_PREF,
-                              TAKE_V4_COMPLETION_RESULT_DEFAULT)) {
-      // Bug 1331534 - We temporarily ignore hash completion result
-      // for v4 tables.
       continue;
     }
 

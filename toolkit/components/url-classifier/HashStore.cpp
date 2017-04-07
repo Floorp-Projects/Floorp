@@ -193,6 +193,19 @@ TableUpdateV4::NewChecksum(const std::string& aChecksum)
   mChecksum.Assign(aChecksum.data(), aChecksum.size());
 }
 
+nsresult
+TableUpdateV4::NewFullHashResponse(const nsACString& aPrefix,
+                                   CachedFullHashResponse& aResponse)
+{
+  CachedFullHashResponse* response =
+    mFullHashResponseMap.LookupOrAdd(aPrefix);
+  if (!response) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  *response = aResponse;
+  return NS_OK;
+}
+
 HashStore::HashStore(const nsACString& aTableName,
                      const nsACString& aProvider,
                      nsIFile* aRootStoreDir)
