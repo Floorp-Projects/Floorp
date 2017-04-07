@@ -71,7 +71,6 @@ UNIFIED_SOURCES += [
     'TabMessageUtils.cpp',
     'TabParent.cpp',
     'TelemetryScrollProbe.cpp',
-    'URLClassifierChild.cpp',
     'URLClassifierParent.cpp',
 ]
 
@@ -99,6 +98,7 @@ IPDL_SOURCES += [
     'PTabContext.ipdlh',
     'PURLClassifier.ipdl',
     'PURLClassifierInfo.ipdlh',
+    'PURLClassifierLocal.ipdl',
     'ServiceWorkerConfiguration.ipdlh',
 ]
 
