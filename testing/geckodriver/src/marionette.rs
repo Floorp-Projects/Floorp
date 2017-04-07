@@ -832,17 +832,17 @@ impl MarionetteCommand {
         let (opt_name, opt_parameters) = match msg.command {
             NewSession(_) => {
                 let caps = capabilities.expect("Tried to create new session without processing capabilities");
+
                 let mut data = BTreeMap::new();
-                data.insert("sessionId".to_string(), Json::Null);
-                let mut capabilites = BTreeMap::new();
-                for (key, value) in caps.iter() {
-                    capabilites.insert(key.to_string(), value.to_json());
+                for (k, v) in caps.iter() {
+                    data.insert(k.to_string(), v.to_json());
                 }
-                // Copy into a desiredCapabilities key for legacy compat.
-                capabilites.insert("desiredCapabilities".to_string(),
-                                   caps.to_json());
-                data.insert("capabilities".to_string(),
-                            capabilites.to_json());
+
+                // duplicate in capabilities.desiredCapabilities for legacy compat
+                let mut legacy_caps = BTreeMap::new();
+                legacy_caps.insert("desiredCapabilities".to_string(), caps.to_json());
+                data.insert("capabilities".to_string(), legacy_caps.to_json());
+
                 (Some("newSession"), Some(Ok(data)))
             },
             DeleteSession => {
