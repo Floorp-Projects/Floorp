@@ -367,7 +367,6 @@ task_description_schema = Schema({
         # "Invalid" is a noop for try and other non-supported branches
         Required('google-play-track'): Any('production', 'beta', 'alpha', 'invalid'),
         Required('dry-run', default=True): bool,
-        Optional('rollout-percentage'): int,
     }),
 })
 
@@ -631,9 +630,6 @@ def build_push_apk_payload(config, task, task_def):
         'upstreamArtifacts':  worker['upstream-artifacts'],
         'google_play_track': worker['google-play-track'],
     }
-
-    if worker.get('rollout-percentage', None):
-        task_def['payload']['rollout_percentage'] = worker['rollout-percentage']
 
 
 @payload_builder('push-apk-breakpoint')
