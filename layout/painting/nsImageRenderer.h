@@ -14,6 +14,7 @@ class gfxDrawable;
 namespace mozilla {
 
 namespace layers {
+class WebRenderParentCommand;
 class WebRenderDisplayItemLayer;
 } // namespace layers
 
@@ -207,6 +208,7 @@ public:
    */
   void BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresContext,
                                           mozilla::wr::DisplayListBuilder& aBuilder,
+                                          nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                           mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                           const nsRect&        aDest,
                                           const nsRect&        aFill,
@@ -288,6 +290,7 @@ private:
    */
   void BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
                                   mozilla::wr::DisplayListBuilder& aBuilder,
+                                  nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                   mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                   const nsRect&        aDirtyRect,
                                   const nsRect&        aDest,
