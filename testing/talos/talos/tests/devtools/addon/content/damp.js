@@ -115,9 +115,7 @@ Damp.prototype = {
   },
 
   waitForNetworkRequests: Task.async(function*(label, toolbox) {
-    const { windowRequire } = toolbox.getCurrentPanel().panelWin;
-    const { NetMonitorController} =
-      windowRequire("devtools/client/netmonitor/src/netmonitor-controller");
+    const { NetMonitorController } = toolbox.getCurrentPanel().panelWin;
     const start = performance.now();
     yield NetMonitorController.waitForAllRequestsFinished();
     const end = performance.now();
