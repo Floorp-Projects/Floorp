@@ -18,6 +18,9 @@ for d in $DIRS; do
 	mv ${MY_TEMP_DIR}/brotli/$d $d
 done
 rm -rf ${MY_TEMP_DIR}
+
+patch -p1 < clang-cl-exceptions.patch
+
 hg addremove $DIRS
 
 echo "###"

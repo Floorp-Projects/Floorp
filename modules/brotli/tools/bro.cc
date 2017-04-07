@@ -287,7 +287,10 @@ int main(int argc, char** argv) {
       brotli::BrotliParams params;
       params.lgwin = lgwin;
       params.quality = quality;
+/* clang-cl doesn't like exceptions */
+#if !defined(_MSC_VER) || !defined(__clang__)
       try {
+#endif
         brotli::BrotliFileIn in(fin, 1 << 16);
         brotli::BrotliFileOut out(fout);
         if (!BrotliCompress(params, &in, &out)) {
@@ -295,11 +298,13 @@ int main(int argc, char** argv) {
           unlink(output_path);
           exit(1);
         }
+#if !defined(_MSC_VER) || !defined(__clang__)
       } catch (std::bad_alloc&) {
         fprintf(stderr, "not enough memory\n");
         unlink(output_path);
         exit(1);
       }
+#endif
     }
     if (fclose(fin) != 0) {
       perror("fclose");
