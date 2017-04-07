@@ -3089,3 +3089,16 @@ nsPermissionManager::GetAllKeysForPrincipal(nsIPrincipal* aPrincipal)
              "Every principal should have at least one key.");
   return keys;
 }
+
+NS_IMETHODIMP
+nsPermissionManager::BroadcastPermissionsForPrincipalToAllContentProcesses(nsIPrincipal* aPrincipal)
+{
+  nsTArray<ContentParent*> cps;
+  ContentParent::GetAll(cps);
+  for (ContentParent* cp : cps) {
+    nsresult rv = cp->TransmitPermissionsForPrincipal(aPrincipal);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
