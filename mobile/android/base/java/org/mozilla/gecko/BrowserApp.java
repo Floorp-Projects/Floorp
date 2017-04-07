@@ -112,7 +112,6 @@ import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.gecko.widget.AnchoredPopup;
-
 import org.mozilla.gecko.widget.GeckoActionProvider;
 
 import android.app.Activity;

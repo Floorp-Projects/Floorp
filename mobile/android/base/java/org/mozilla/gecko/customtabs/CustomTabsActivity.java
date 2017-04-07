@@ -52,6 +52,8 @@ import org.mozilla.gecko.widget.GeckoPopupMenu;
 
 import java.util.List;
 
+import static org.mozilla.gecko.Tabs.TabEvents;
+
 public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "CustomTabsActivity";
     private static final String SAVED_START_INTENT = "saved_intent_which_started_this_activity";
@@ -192,25 +194,25 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     }
 
     @Override
-    public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
+    public void onTabChanged(Tab tab, TabEvents msg, String data) {
         if (!Tabs.getInstance().isSelectedTab(tab)) {
             return;
         }
 
-        if (msg == Tabs.TabEvents.START
-                || msg == Tabs.TabEvents.STOP
-                || msg == Tabs.TabEvents.ADDED
-                || msg == Tabs.TabEvents.LOAD_ERROR
-                || msg == Tabs.TabEvents.LOADED
-                || msg == Tabs.TabEvents.LOCATION_CHANGE) {
+        if (msg == TabEvents.START
+                || msg == TabEvents.STOP
+                || msg == TabEvents.ADDED
+                || msg == TabEvents.LOAD_ERROR
+                || msg == TabEvents.LOADED
+                || msg == TabEvents.LOCATION_CHANGE) {
 
             updateProgress((tab.getState() == Tab.STATE_LOADING),
                     tab.getLoadProgress());
         }
 
-        if (msg == Tabs.TabEvents.LOCATION_CHANGE
-                || msg == Tabs.TabEvents.SECURITY_CHANGE
-                || msg == Tabs.TabEvents.TITLE) {
+        if (msg == TabEvents.LOCATION_CHANGE
+                || msg == TabEvents.SECURITY_CHANGE
+                || msg == TabEvents.TITLE) {
             actionBarPresenter.update(tab);
         }
 

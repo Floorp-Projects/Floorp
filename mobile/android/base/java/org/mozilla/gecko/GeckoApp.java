@@ -45,6 +45,9 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.ViewUtil;
+import org.mozilla.gecko.widget.ActionModePresenter;
+import org.mozilla.gecko.widget.AnchoredPopup;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
@@ -108,9 +111,6 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.gecko.util.ViewUtil;
-import org.mozilla.gecko.widget.AnchoredPopup;
-import org.mozilla.gecko.widget.ActionModePresenter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -161,7 +161,7 @@ public abstract class GeckoApp
     public static final String LAST_SELECTED_TAB           = "lastSelectedTab";
 
     public static final String PREFS_ALLOW_STATE_BUNDLE    = "allowStateBundle";
-    public static final String PREFS_FLASH_USAGE = "playFlashCount";
+    public static final String PREFS_FLASH_USAGE           = "playFlashCount";
     public static final String PREFS_VERSION_CODE          = "versionCode";
     public static final String PREFS_WAS_STOPPED           = "wasStopped";
     public static final String PREFS_CRASHED_COUNT         = "crashedCount";
