@@ -17,36 +17,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "MediaManagerService",
 const kBrowserURL = "chrome://browser/content/browser.xul";
 
 this.ContentWebRTC = {
-  _initialized: false,
-
-  init() {
-    if (this._initialized)
-      return;
-
-    this._initialized = true;
-    Services.obs.addObserver(handleGUMRequest, "getUserMedia:request", false);
-    Services.obs.addObserver(handleGUMStop, "recording-device-stopped", false);
-    Services.obs.addObserver(handlePCRequest, "PeerConnection:request", false);
-    Services.obs.addObserver(updateIndicators, "recording-device-events", false);
-    Services.obs.addObserver(removeBrowserSpecificIndicator, "recording-window-ended", false);
-
-    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT)
-      Services.obs.addObserver(processShutdown, "content-child-shutdown", false);
-  },
-
-  uninit() {
-    Services.obs.removeObserver(handleGUMRequest, "getUserMedia:request");
-    Services.obs.removeObserver(handleGUMStop, "recording-device-stopped");
-    Services.obs.removeObserver(handlePCRequest, "PeerConnection:request");
-    Services.obs.removeObserver(updateIndicators, "recording-device-events");
-    Services.obs.removeObserver(removeBrowserSpecificIndicator, "recording-window-ended");
-
-    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT)
-      Services.obs.removeObserver(processShutdown, "content-child-shutdown");
-
-    this._initialized = false;
-  },
-
   // Called only for 'unload' to remove pending gUM prompts in reloaded frames.
   handleEvent(aEvent) {
     let contentWindow = aEvent.target.defaultView;
@@ -56,6 +26,28 @@ this.ContentWebRTC = {
     }
     for (let key of contentWindow.pendingPeerConnectionRequests.keys()) {
       mm.sendAsyncMessage("rtcpeer:CancelRequest", key);
+    }
+  },
+
+  // This observer is registered in ContentObservers.js to avoid
+  // loading this .jsm when WebRTC is not in use.
+  observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "getUserMedia:request":
+	handleGUMRequest(aSubject, aTopic, aData);
+	break;
+      case "recording-device-stopped":
+	handleGUMStop(aSubject, aTopic, aData);
+	break;
+      case "PeerConnection:request":
+	handlePCRequest(aSubject, aTopic, aData);
+	break;
+      case "recording-device-events":
+	updateIndicators(aSubject, aTopic, aData);
+	break;
+      case "recording-window-ended":
+	removeBrowserSpecificIndicator(aSubject, aTopic, aData);
+	break;
     }
   },
 
@@ -409,8 +401,4 @@ function getMessageManagerForWindow(aContentWindow) {
     }
     throw e;
   }
-}
-
-function processShutdown() {
-  ContentWebRTC.uninit();
 }
