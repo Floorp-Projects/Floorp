@@ -77,8 +77,13 @@
     .catch(generateErrorCallback());
   }
 
-  runNetworkTest(() => testScale("VP8").then(() => testScale("H264"))
-                 .then(networkTestFinished));
+  if (!navigator.appVersion.includes("Android")) {
+    runNetworkTest(() => testScale("VP8").then(() => testScale("H264"))
+                   .then(networkTestFinished));
+  } else {
+    // No support for H.264 on Android in automation, see Bug 1355786
+    runNetworkTest(() => testScale("VP8").then(networkTestFinished));
+  }
 </script>
 </pre>
 </body>
