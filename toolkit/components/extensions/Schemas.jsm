@@ -2654,6 +2654,10 @@ this.Schemas = {
    *        True if the context has permission for the given namespace.
    */
   checkPermissions(namespace, wrapperFuncs) {
+    if (!this.initialized) {
+      this.init();
+    }
+
     let ns = this.getNamespace(namespace);
     if (ns && ns.permissions) {
       return ns.permissions.some(perm => wrapperFuncs.hasPermission(perm));
@@ -2672,6 +2676,10 @@ this.Schemas = {
    *     interface, which runs the actual functionality of the generated API.
    */
   inject(dest, wrapperFuncs) {
+    if (!this.initialized) {
+      this.init();
+    }
+
     let context = new InjectionContext(wrapperFuncs);
 
     this.rootNamespace.injectInto(dest, context);
@@ -2687,6 +2695,10 @@ this.Schemas = {
    * @returns {object} The normalized object.
    */
   normalize(obj, typeName, context) {
+    if (!this.initialized) {
+      this.init();
+    }
+
     let [namespaceName, prop] = typeName.split(".");
     let ns = this.getNamespace(namespaceName);
     let type = ns.get(prop);
