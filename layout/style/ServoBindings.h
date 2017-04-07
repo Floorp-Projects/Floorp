@@ -69,8 +69,10 @@ struct nsStyleDisplay;
   void Gecko_##name_##_AddRef(class_* aPtr);    \
   void Gecko_##name_##_Release(class_* aPtr);
 #define NS_IMPL_FFI_REFCOUNTING(class_, name_)                    \
-  void Gecko_##name_##_AddRef(class_* aPtr) { NS_ADDREF(aPtr); }  \
-  void Gecko_##name_##_Release(class_* aPtr) { NS_RELEASE(aPtr); }
+  void Gecko_##name_##_AddRef(class_* aPtr)                       \
+    { MOZ_ASSERT(NS_IsMainThread()); NS_ADDREF(aPtr); }           \
+  void Gecko_##name_##_Release(class_* aPtr)                      \
+    { MOZ_ASSERT(NS_IsMainThread()); NS_RELEASE(aPtr); }
 
 #define DEFINE_ARRAY_TYPE_FOR(type_)                                \
   struct nsTArrayBorrowed_##type_ {                                 \
