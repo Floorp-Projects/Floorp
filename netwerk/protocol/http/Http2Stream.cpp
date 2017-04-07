@@ -1022,6 +1022,19 @@ Http2Stream::ConvertResponseHeaders(Http2Decompressor *decompressor,
 
   nsresult errcode;
   httpResponseCode = statusString.ToInteger(&errcode);
+
+  // Ensure the :status is just an HTTP status code
+  // https://tools.ietf.org/html/rfc7540#section-8.1.2.4
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1352146
+  nsAutoCString parsedStatusString;
+  parsedStatusString.AppendInt(httpResponseCode);
+  if (!parsedStatusString.Equals(statusString)) {
+    LOG3(("Http2Stream::ConvertResposeHeaders %p status %s is not just a code",
+          this, statusString.BeginReading()));
+    // Results in stream reset with PROTOCOL_ERROR
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
   LOG3(("Http2Stream::ConvertResponseHeaders %p response code %d\n", this, httpResponseCode));
   if (mIsTunnel) {
     LOG3(("Http2Stream %p Tunnel Response code %d", this, httpResponseCode));
