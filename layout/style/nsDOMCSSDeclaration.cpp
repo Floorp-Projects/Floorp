@@ -327,10 +327,7 @@ nsDOMCSSDeclaration::ModifyDeclaration(GeckoFunc aGeckoFunc,
   if (decl->IsGecko()) {
     aGeckoFunc(decl->AsGecko(), env, &changed);
   } else {
-    // FIXME (bug 1343964): Figure out a better solution for sending the base uri to servo
-    RefPtr<URLExtraData> data =
-      new URLExtraData(env.mBaseURI, env.mSheetURI, env.mPrincipal);
-    changed = aServoFunc(decl->AsServo(), data);
+    changed = aServoFunc(decl->AsServo(), urlData);
   }
   if (!changed) {
     // Parsing failed -- but we don't throw an exception for that.
