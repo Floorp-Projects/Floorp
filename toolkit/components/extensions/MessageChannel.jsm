@@ -535,6 +535,7 @@ this.MessageChannel = {
     let deferred = PromiseUtils.defer();
     deferred.sender = recipient;
     deferred.messageManager = target;
+    deferred.channelId = channelId;
 
     this._addPendingResponse(deferred);
 
@@ -636,6 +637,7 @@ this.MessageChannel = {
     let deferred = {
       sender: data.sender,
       messageManager: target,
+      channelId: data.channelId,
     };
     deferred.promise = new Promise((resolve, reject) => {
       deferred.reject = reject;
