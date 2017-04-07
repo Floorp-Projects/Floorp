@@ -3417,7 +3417,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
 - (void)restoreBackgroundColor
 {
-  [super setBackgroundColor:mBackgroundColor];
+  [super setBackgroundColor:mColor];
 }
 
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect
