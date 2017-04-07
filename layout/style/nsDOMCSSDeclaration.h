@@ -156,6 +156,13 @@ protected:
   static void GetCSSParsingEnvironmentForRule(mozilla::css::Rule* aRule,
                                               CSSParsingEnvironment& aCSSParseEnv);
 
+  // An implementation for GetURLData for callers wrapping a css::Rule.
+  static mozilla::URLExtraData* GetURLDataForRule(const mozilla::css::Rule* aRule);
+
+  // Returns URL data for parsing url values in CSS.
+  // Returns nullptr on failure.
+  virtual mozilla::URLExtraData* GetURLData() const = 0;
+
   nsresult ParsePropertyValue(const nsCSSPropertyID aPropID,
                               const nsAString& aPropValue,
                               bool aIsImportant);
@@ -169,6 +176,10 @@ protected:
 
 protected:
   virtual ~nsDOMCSSDeclaration();
+
+private:
+  template<typename GeckoFunc, typename ServoFunc>
+  inline nsresult ModifyDeclaration(GeckoFunc aGeckoFunc, ServoFunc aServoFunc);
 };
 
 #endif // nsDOMCSSDeclaration_h___

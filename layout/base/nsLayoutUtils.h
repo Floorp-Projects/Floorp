@@ -2337,14 +2337,6 @@ public:
    */
   static bool IsTextAlignUnsafeValueEnabled();
 
-  /**
-   * Checks if CSS variables are currently enabled.
-   */
-  static bool CSSVariablesEnabled()
-  {
-    return sCSSVariablesEnabled;
-  }
-
   static bool InterruptibleReflowEnabled()
   {
     return sInterruptibleReflowEnabled;
@@ -2944,7 +2936,6 @@ private:
   static uint32_t sZoomMaxPercent;
   static uint32_t sZoomMinPercent;
   static bool sInvalidationDebuggingIsEnabled;
-  static bool sCSSVariablesEnabled;
   static bool sInterruptibleReflowEnabled;
   static bool sSVGTransformBoxEnabled;
   static bool sTextCombineUprightDigitsEnabled;

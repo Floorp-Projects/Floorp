@@ -10,7 +10,9 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 import android.support.customtabs.CustomTabsIntent;
 
 import java.util.ArrayList;
@@ -23,6 +25,10 @@ import java.util.List;
 class IntentUtil {
 
     public static final int NO_ANIMATION_RESOURCE = -1;
+
+    @VisibleForTesting
+    @ColorInt
+    protected static final int DEFAULT_ACTION_BAR_COLOR = 0xFF363b40; // default color to match design
 
     // Hidden constant values from ActivityOptions.java
     private static final String PREFIX = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
@@ -64,6 +70,23 @@ class IntentUtil {
     static Bitmap getActionButtonIcon(@NonNull Intent intent) {
         final Bundle bundle = getActionButtonBundle(intent);
         return (bundle == null) ? null : (Bitmap) bundle.getParcelable(CustomTabsIntent.KEY_ICON);
+    }
+
+    /**
+     * To extract color code from intent for top toolbar.
+     * It also ensure the color is not translucent.
+     *
+     * @param intent which to launch a Custom-Tabs-Activity
+     * @return color code in integer type.
+     */
+    @ColorInt
+    static int getToolbarColor(@NonNull Intent intent) {
+        @ColorInt int toolbarColor = intent.getIntExtra(CustomTabsIntent.EXTRA_TOOLBAR_COLOR,
+                DEFAULT_ACTION_BAR_COLOR);
+
+        // Translucent color does not make sense for toolbar color. Ensure it is 0xFF.
+        toolbarColor = 0xFF000000 | toolbarColor;
+        return toolbarColor;
     }
 
     /**

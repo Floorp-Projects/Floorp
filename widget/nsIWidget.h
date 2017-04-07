@@ -572,6 +572,12 @@ class nsIWidget : public nsISupports
     mozilla::CSSToLayoutDeviceScale GetDefaultScale();
 
     /**
+     * Cache the scale override value. Call whenever the scale override
+     * value is changed.
+     */
+    static void ScaleOverrideChanged();
+
+    /**
      * Return the Gecko override of the system default scale, if any;
      * returns <= 0.0 if the system scale should be used as-is.
      * nsIWidget::GetDefaultScale() [above] takes this into account.

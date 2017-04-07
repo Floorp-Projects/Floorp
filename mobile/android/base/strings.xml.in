@@ -397,6 +397,7 @@
   <string name="contextmenu_open_private_tab">&contextmenu_open_private_tab;</string>
   <string name="contextmenu_remove">&contextmenu_remove;</string>
   <string name="contextmenu_add_to_launcher">&contextmenu_add_to_launcher;</string>
+  <string name="contextmenu_set_as_homepage">&contextmenu_set_as_homepage;</string>
   <string name="contextmenu_share">&contextmenu_share;</string>
   <string name="contextmenu_pasteandgo">&contextmenu_pasteandgo;</string>
   <string name="contextmenu_paste">&contextmenu_paste;</string>
