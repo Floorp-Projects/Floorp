@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Kan ødelegge noen videoer og nettsider</string>
   <string name="preference_category_performance">Ytelse</string>
   <string name="preference_performance_block_webfonts">Blokker nettfonter</string>
+  <string name="preference_performance_block_webfonts_summary">Kan resultere i at ikon eller bilder mangler</string>
   <string name="preference_performance_block_images">Blokker bilder</string>
   <string name="preference_default_browser">Velg som standard nettleser</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">Flere innstillinger</string>
   <string name="content_description_forward">Naviger fremover</string>
   <string name="content_description_reload">Last siden på nytt</string>
+  <string name="content_description_back">Naviger tilbake</string>
+  <string name="content_description_stop">Stopp lasting av nettside</string>
+  <string name="context_menu_paste_go">Lim inn og åpne</string>
   <string name="firstrun_title">Surf uten å føle deg overvåket.</string>
   <string name="firstrun_description">Automatisk blokkering av nettsporere mens du surfer. Deretter trykker du for å slette besøkte sider, søk, informasjonskapsler og passord fra enheten.</string>
   <string name="firstrun_button">OK, jeg skjønner!</string>

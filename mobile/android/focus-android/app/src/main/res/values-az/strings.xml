@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Bəzi video və saytları işlənməz hala gətirə bilər</string>
   <string name="preference_category_performance">Məhsuldarlıq</string>
   <string name="preference_performance_block_webfonts">Web şriftlərini əngəllə</string>
+  <string name="preference_performance_block_webfonts_summary">Əksik icon və şəkillərə səbəb ola bilər</string>
   <string name="preference_performance_block_images">Şəkilləri əngəllə</string>
   <string name="preference_default_browser">Əsas səyyah et</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">Digər seçimlər</string>
   <string name="content_description_forward">İrəli keç</string>
   <string name="content_description_reload">Saytı yenilə</string>
+  <string name="content_description_back">Geri get</string>
+  <string name="content_description_stop">Səhifəni yükləməyi dayandır</string>
+  <string name="context_menu_paste_go">Yapışdır və get</string>
   <string name="firstrun_title">Başqalarınız izləməsindən narahat olmadan internetdə gəzin.</string>
   <string name="firstrun_description">İnternetdə gəzərkən avtomatik olaraq onlayn izləyiciləri əngəlləyin. Sonra ziyarət edilən səhifələri, axtar, çərəz və parolları cihazınızdan pozmaq üçün basın.</string>
   <string name="firstrun_button">Tamam, başa düşdüm!</string>
@@ -56,10 +60,15 @@
   <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Sayt m&#252;v&#601;qq&#601;ti olaraq &#601;l&#231;atmaz v&#601; ya &#231;ox m&#601;&#351;&#287;ul ola bil&#601;r. Biraz sonra t&#601;krar yoxlay&#305;n.</li>"\n        "<li>&#399;g&#601;r he&#231; bir s&#601;hif&#601;ni y&#252;kl&#601;y&#601; bilmirsizs&#601;, mobil cihaz&#305;n&#305;z&#305;n internet datas&#305;n&#305; v&#601; ya Wi-Fi ba&#287;lant&#305;s&#305;n&#305; yoxlay&#305;n.</li>"\n      "</ul>]]></string>
   <string name="error_timeout_title">Qoşulma müddəti bitdi</string>
   <string name="error_hostLookup_title">Server tapılmadı</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"&#220;nvan&#305; "<strong>www</strong>".example.com\n          yerin&#601; "<strong>ww</strong>".example.com kimi\n          yazma x&#601;talar&#305; &#252;&#231;&#252;n t&#601;krar yaxlay&#305;n"</li>"\n        "<li>&#399;g&#601;r he&#231; bir sayt&#305; y&#252;kl&#601;y&#601; bilmirsizs&#601;, cihaz&#305;n&#305;z&#305;n data v&#601; ya Wi-Fi ba&#287;lant&#305;s&#305;n&#305; yoxlay&#305;n.</li>"\n      "</ul>]]></string>
   <string name="error_malformedURI_title">Ünvan səhvdir</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Sayt &#252;nvanlar&#305; &#601;sas&#601;n "<strong>http://www.example.com/</strong>" kimi yaz&#305;l&#305;rlar."</li>"\n  "<li>"&#399;yri k&#601;sm&#601; i&#351;ar&#601;sind&#601;n (yani "<strong>/</strong>) istifad&#601; etdiyinizd&#601;n &#601;min olun.</li>\n</ul>]]></string>
   <string name="error_redirectLoop_title">Səhifə düzgün yönləndirilmir</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Bu problem &#231;ox vaxt &#231;&#601;r&#601;zl&#601;ri qapatmaqdan v&#601; ya q&#601;bul etm&#601;yi l&#601;&#287;v etm&#601;kd&#601;n olur.</li>\n</ul>]]></string>
   <string name="error_unsupportedprotocol_title">Ünvan başa düşülmədi</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Bu &#252;nvan&#305; a&#231;maq &#252;&#231;&#252;n ba&#351;qa bir t&#601;tbiq qurman&#305;za ehtiyyac ola bil&#601;r.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Təhlükəsiz bağlantı qurulmadı</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Bu serverin konfiqurasiyas&#305; il&#601; v&#601; ya biril&#601;rinin server&#601; h&#252;c&#252;m etm&#601;si il&#601; ba&#287;l&#305; ola bil&#601;r.</li>"\n  "<li>&#399;g&#601;r daha sonra bu server&#601; u&#287;urlu ba&#287;lana bilmi&#351;dinizs&#601;, bu x&#601;ta m&#252;v&#601;qq&#601;ti ola bil&#601;r v&#601; daha sonra t&#601;krar yoxlaya bil&#601;rsiz.</li>\n</ul>]]></string>
   <string name="error_generic_title">Uups</string>
   <string name="error_generic_message">Bəzi səbəblərdən bu səhifəni yükləyə bilmirik.</string>
 </resources>
