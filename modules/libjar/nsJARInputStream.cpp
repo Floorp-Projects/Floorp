@@ -195,7 +195,7 @@ MOZ_WIN_MEM_TRY_BEGIN
         return ReadDirectory(aBuffer, aCount, aBytesRead);
 
       case MODE_INFLATE:
-        if (mFd) {
+        if (mZs.total_out < mOutSize) {
           rv = ContinueInflate(aBuffer, aCount, aBytesRead);
         }
         // be aggressive about releasing the file!
