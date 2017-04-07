@@ -50,6 +50,7 @@ module.exports = createClass({
       dom.ul(
         {},
         grids.map(grid => GridItem({
+          key: grid.id,
           getSwatchColorPickerTooltip,
           grid,
           setSelectedNode,
