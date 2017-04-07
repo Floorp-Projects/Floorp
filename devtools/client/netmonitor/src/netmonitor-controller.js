@@ -7,10 +7,7 @@
 const { TimelineFront } = require("devtools/shared/fronts/timeline");
 const { CurlUtils } = require("devtools/client/shared/curl");
 const { ACTIVITY_TYPE, EVENTS } = require("./constants");
-const {
-  getDisplayedRequestById,
-  getRequestById,
-} = require("./selectors/index");
+const Actions = require("./actions/index");
 const {
   fetchHeaders,
   formDataURI,
@@ -21,6 +18,10 @@ const {
   onFirefoxConnect,
   onFirefoxDisconnect,
 } = require("./utils/client");
+const {
+  getRequestById,
+  getDisplayedRequestById,
+} = require("./selectors/index");
 
 /**
  * Object defining the network monitor controller components.
@@ -32,11 +33,10 @@ var NetMonitorController = {
    * @param {Object} connection connection data wrapper
    * @return {Object} A promise that is resolved when the monitor finishes startup.
    */
-  startupNetMonitor(connection, actions) {
+  startupNetMonitor(connection) {
     if (this._startup) {
       return this._startup;
     }
-    this.actions = actions;
     this._startup = new Promise(async (resolve) => {
       await this.connect(connection);
       resolve();
@@ -55,7 +55,7 @@ var NetMonitorController = {
       return this._shutdown;
     }
     this._shutdown = new Promise(async (resolve) => {
-      this.actions.batchReset();
+      window.gStore.dispatch(Actions.batchReset());
       onFirefoxDisconnect(this._target);
       this._target.off("close", this._onTabDetached);
       this.NetworkEventsHandler.disconnect();
@@ -105,7 +105,7 @@ var NetMonitorController = {
 
       this.webConsoleClient = getWebConsoleClient();
       this.NetworkEventsHandler = new NetworkEventsHandler();
-      this.NetworkEventsHandler.connect(this.actions);
+      this.NetworkEventsHandler.connect();
 
       window.emit(EVENTS.CONNECTED);
 
@@ -260,7 +260,7 @@ var NetMonitorController = {
         request = getDisplayedRequestById(window.gStore.getState(), requestId);
         if (!request) {
           // Reset filters so that the request is visible.
-          this.actions.toggleRequestFilterType("all");
+          window.gStore.dispatch(Actions.toggleRequestFilterType("all"));
           request = getDisplayedRequestById(window.gStore.getState(), requestId);
         }
 
@@ -268,7 +268,7 @@ var NetMonitorController = {
         // called again once new requests arrive.
         if (request) {
           window.off(EVENTS.REQUEST_ADDED, inspector);
-          this.actions.selectRequest(request.id);
+          window.gStore.dispatch(Actions.selectRequest(request.id));
           resolve();
         }
       };
@@ -402,8 +402,7 @@ NetworkEventsHandler.prototype = {
   /**
    * Connect to the current target client.
    */
-  connect: function (actions) {
-    this.actions = actions;
+  connect: function () {
     this.webConsoleClient.on("networkEvent", this._onNetworkEvent);
     this.webConsoleClient.on("networkEventUpdate", this._onNetworkEventUpdate);
 
@@ -454,7 +453,7 @@ NetworkEventsHandler.prototype = {
    */
   _onDocLoadingMarker: function (marker) {
     window.emit(EVENTS.TIMELINE_EVENT, marker);
-    this.actions.addTimingMarker(marker);
+    window.gStore.dispatch(Actions.addTimingMarker(marker));
   },
 
   /**
@@ -485,7 +484,7 @@ NetworkEventsHandler.prototype = {
     let { method, url, isXHR, cause, startedDateTime, fromCache,
           fromServiceWorker } = data;
 
-    this.actions.addRequest(
+    window.gStore.dispatch(Actions.addRequest(
       id,
       {
         // Convert the received date/time string to a unix timestamp.
@@ -498,12 +497,13 @@ NetworkEventsHandler.prototype = {
         fromServiceWorker,
       },
       true
-    )
+    ))
     .then(() => window.emit(EVENTS.REQUEST_ADDED, id));
   },
 
   async updateRequest(id, data) {
-    await this.actions.updateRequest(id, data, true);
+    const action = Actions.updateRequest(id, data, true);
+    await window.gStore.dispatch(action);
     let {
       responseContent,
       responseCookies,
@@ -511,28 +511,28 @@ NetworkEventsHandler.prototype = {
       requestCookies,
       requestHeaders,
       requestPostData,
-    } = data;
-    let request = getRequestById(window.gStore.getState(), id);
+    } = action.data;
+    let request = getRequestById(window.gStore.getState(), action.id);
 
     if (requestHeaders && requestHeaders.headers && requestHeaders.headers.length) {
       let headers = await fetchHeaders(requestHeaders, getLongString);
       if (headers) {
-        await this.actions.updateRequest(
-          id,
+        await window.gStore.dispatch(Actions.updateRequest(
+          action.id,
           { requestHeaders: headers },
           true,
-        );
+        ));
       }
     }
 
     if (responseHeaders && responseHeaders.headers && responseHeaders.headers.length) {
       let headers = await fetchHeaders(responseHeaders, getLongString);
       if (headers) {
-        await this.actions.updateRequest(
-          id,
+        await window.gStore.dispatch(Actions.updateRequest(
+          action.id,
           { responseHeaders: headers },
           true,
-        );
+        ));
       }
     }
 
@@ -549,7 +549,7 @@ NetworkEventsHandler.prototype = {
       responseContent.content.text = response;
       payload.responseContent = responseContent;
 
-      await this.actions.updateRequest(id, payload, true);
+      await window.gStore.dispatch(Actions.updateRequest(action.id, payload, true));
 
       if (mimeType.includes("image/")) {
         window.emit(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
@@ -570,7 +570,7 @@ NetworkEventsHandler.prototype = {
       payload.requestPostData = Object.assign({}, requestPostData);
       payload.requestHeadersFromUploadStream = { headers, headersSize };
 
-      await this.actions.updateRequest(id, payload, true);
+      await window.gStore.dispatch(Actions.updateRequest(action.id, payload, true));
     }
 
     // Fetch request and response cookies long value.
@@ -589,10 +589,10 @@ NetworkEventsHandler.prototype = {
           }));
         }
         if (reqCookies.length) {
-          await this.actions.updateRequest(
-            id,
+          await window.gStore.dispatch(Actions.updateRequest(
+            action.id,
             { requestCookies: reqCookies },
-            true);
+            true));
         }
       }
     }
@@ -610,10 +610,10 @@ NetworkEventsHandler.prototype = {
           }));
         }
         if (resCookies.length) {
-          await this.actions.updateRequest(
-            id,
+          await window.gStore.dispatch(Actions.updateRequest(
+            action.id,
             { responseCookies: resCookies },
-            true);
+            true));
         }
       }
     }
