@@ -11,7 +11,7 @@
  */
 const React = require("react");
 const ReactDOM = require("react-dom");
-const { bootstrap, renderRoot } = require("devtools-launchpad");
+const { bootstrap } = require("devtools-launchpad");
 const { EventEmitter } = require("devtools-modules");
 const { Services: { appinfo, pref }} = require("devtools-modules");
 const { configureStore } = require("./src/utils/create-store");
@@ -40,21 +40,7 @@ const App = require("./src/components/app");
 const store = window.gStore = configureStore();
 const { NetMonitorController } = require("./src/netmonitor-controller");
 
-/**
- * Stylesheet links in devtools xhtml files are using chrome or resource URLs.
- * Rewrite the href attribute to remove the protocol. web-server.js contains redirects
- * to map CSS urls to the proper file. Supports urls using:
- *   - devtools/client/
- *   - devtools/content/
- *   - skin/
- * Will also add mandatory classnames and attributes to be compatible with devtools theme
- * stylesheet.
- */
 window.addEventListener("DOMContentLoaded", () => {
-  for (let link of document.head.querySelectorAll("link")) {
-    link.href = link.href.replace(/(resource|chrome)\:\/\//, "/");
-  }
-
   if (appinfo.OS === "Darwin") {
     document.documentElement.setAttribute("platform", "mac");
   } else if (appinfo.OS === "Linux") {
@@ -64,10 +50,9 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-bootstrap(React, ReactDOM).then(connection => {
-  if (!connection) {
+bootstrap(React, ReactDOM, App, null, store).then(connection => {
+  if (!connection || !connection.tab) {
     return;
   }
-  renderRoot(React, ReactDOM, App, store);
   NetMonitorController.startupNetMonitor(connection);
 });
