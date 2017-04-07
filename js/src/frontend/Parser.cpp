@@ -3633,14 +3633,15 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
         return false;
     uint32_t openedPos = 0;
     if (tt != TOK_LC) {
-        if (funbox->isStarGenerator() || kind == Method ||
-            kind == GetterNoExpressionClosure || kind == SetterNoExpressionClosure ||
-            IsConstructorKind(kind)) {
-            error(JSMSG_CURLY_BEFORE_BODY);
-            return false;
-        }
-
         if (kind != Arrow) {
+            if (funbox->isStarGenerator() || funbox->isAsync() || kind == Method ||
+                kind == GetterNoExpressionClosure || kind == SetterNoExpressionClosure ||
+                IsConstructorKind(kind))
+            {
+                error(JSMSG_CURLY_BEFORE_BODY);
+                return false;
+            }
+
 #if JS_HAS_EXPR_CLOSURES
             addTelemetry(JSCompartment::DeprecatedExpressionClosure);
             if (!warnOnceAboutExprClosure())
@@ -7100,8 +7101,7 @@ Parser<ParseHandler>::classDefinition(YieldHandling yieldHandling,
 
         if (propType != PropertyType::Getter && propType != PropertyType::Setter &&
             propType != PropertyType::Method && propType != PropertyType::GeneratorMethod &&
-            propType != PropertyType::AsyncMethod &&
-            propType != PropertyType::Constructor && propType != PropertyType::DerivedConstructor)
+            propType != PropertyType::AsyncMethod)
         {
             errorAt(nameOffset, JSMSG_BAD_METHOD_DEF);
             return null();
