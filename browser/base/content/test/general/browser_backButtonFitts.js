@@ -2,8 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* eslint-env mozilla/frame-script */
-
 add_task(function* () {
   let firstLocation = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, firstLocation);
@@ -28,8 +26,8 @@ add_task(function* () {
   var xPixel = 0; // Use the first pixel of the screen since it is maximized.
 
   let resultLocation = yield new Promise(resolve => {
-    messageManager.addMessageListener("Test:PopStateOccurred", function statePopped(message) {
-      messageManager.removeMessageListener("Test:PopStateOccurred", statePopped);
+    window.messageManager.addMessageListener("Test:PopStateOccurred", function statePopped(message) {
+      window.messageManager.removeMessageListener("Test:PopStateOccurred", statePopped);
       resolve(message.data.location);
     });
 

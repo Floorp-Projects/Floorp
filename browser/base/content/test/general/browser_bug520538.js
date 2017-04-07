@@ -1,10 +1,10 @@
 function test() {
   var tabCount = gBrowser.tabs.length;
   gBrowser.selectedBrowser.focus();
-  browserDOMWindow.openURI(makeURI("about:blank"),
-                           null,
-                           Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
-                           Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+  window.browserDOMWindow.openURI(makeURI("about:blank"),
+                                  null,
+                                  Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
+                                  Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
   is(gBrowser.tabs.length, tabCount + 1,
      "'--new-tab about:blank' opens a new tab");
   is(gBrowser.selectedTab, gBrowser.tabs[tabCount],

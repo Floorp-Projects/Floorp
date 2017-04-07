@@ -24,6 +24,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/ServoRestyleManager.h"
+#include "mozilla/URLExtraData.h"
 #include "mozilla/dom/Attr.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIAtom.h"
@@ -348,7 +349,7 @@ nsIContent::GetBaseURI(bool aTryUseXHRDocBaseURI) const
     MOZ_ASSERT(bindingParent);
     SVGUseElement* useElement = static_cast<SVGUseElement*>(bindingParent);
     // XXX Ignore xml:base as we are removing it.
-    return do_AddRef(useElement->GetContentBaseURI());
+    return do_AddRef(useElement->GetContentURLData()->BaseURI());
   }
 
   nsIDocument* doc = OwnerDoc();
@@ -418,7 +419,7 @@ nsIContent::GetBaseURIWithoutXMLBase() const
     nsIContent* bindingParent = GetBindingParent();
     MOZ_ASSERT(bindingParent);
     SVGUseElement* useElement = static_cast<SVGUseElement*>(bindingParent);
-    return useElement->GetContentBaseURI();
+    return useElement->GetContentURLData()->BaseURI();
   }
   // This also ignores the case that SVG inside XBL binding.
   // But it is probably fine.
@@ -443,6 +444,23 @@ nsIContent::GetBaseURIForStyleAttr() const
   }
   return nsLayoutUtils::StyleAttrWithXMLBaseDisabled()
     ? do_AddRef(baseWithoutXMLBase) : base.forget();
+}
+
+URLExtraData*
+nsIContent::GetURLDataForStyleAttr() const
+{
+  if (IsInAnonymousSubtree() && IsAnonymousContentInSVGUseSubtree()) {
+    nsIContent* bindingParent = GetBindingParent();
+    MOZ_ASSERT(bindingParent);
+    SVGUseElement* useElement = static_cast<SVGUseElement*>(bindingParent);
+    return useElement->GetContentURLData();
+  }
+  // We are not going to support xml:base for stylo, but we want to
+  // ensure we unship that support before we enabling stylo.
+  MOZ_ASSERT(nsLayoutUtils::StyleAttrWithXMLBaseDisabled());
+  // This also ignores the case that SVG inside XBL binding.
+  // But it is probably fine.
+  return OwnerDoc()->DefaultStyleAttrURLData();
 }
 
 //----------------------------------------------------------------------

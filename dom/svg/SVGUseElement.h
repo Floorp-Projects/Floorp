@@ -26,6 +26,8 @@ nsresult NS_NewSVGUseElement(nsIContent **aResult,
                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
+struct URLExtraData;
+
 namespace dom {
 
 typedef SVGGraphicsElement SVGUseElementBase;
@@ -77,7 +79,7 @@ public:
   already_AddRefed<SVGAnimatedLength> Height();
 
   nsIURI* GetSourceDocURI();
-  nsIURI* GetContentBaseURI() const { return mContentBaseURI; }
+  URLExtraData* GetContentURLData() const { return mContentURLData; }
 
 protected:
   class SourceReference : public nsReferencedElement {
@@ -120,7 +122,7 @@ protected:
   nsCOMPtr<nsIContent> mOriginal; // if we've been cloned, our "real" copy
   nsCOMPtr<nsIContent> mClone;    // cloned tree
   SourceReference      mSource;   // observed element
-  nsCOMPtr<nsIURI> mContentBaseURI; // Base URI for its anonymous content
+  RefPtr<URLExtraData> mContentURLData; // URL data for its anonymous content
 };
 
 } // namespace dom

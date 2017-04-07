@@ -12,6 +12,7 @@ import subprocess
 
 # Don't forgot to add new mozboot modules to the bootstrap download
 # list in bin/bootstrap.py!
+from mozboot.base import MODERN_RUST_VERSION
 from mozboot.centosfedora import CentOSFedoraBootstrapper
 from mozboot.debian import DebianBootstrapper
 from mozboot.freebsd import FreeBSDBootstrapper
@@ -283,6 +284,8 @@ class Bootstrapper(object):
             print(SOURCE_ADVERTISE)
 
         print(self.finished % name)
+        if not (self.instance.which('rustc') and self.instance._parse_version('rustc') >= MODERN_RUST_VERSION):
+            print("To build %s, please restart the shell (Start a new terminal window)" % name)
 
         # Like 'suggest_browser_mozconfig' or 'suggest_mobile_android_mozconfig'.
         getattr(self.instance, 'suggest_%s_mozconfig' % application)()

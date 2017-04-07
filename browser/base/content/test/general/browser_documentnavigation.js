@@ -4,8 +4,6 @@
  * non-browser cases.
  */
 
-/* eslint-env mozilla/frame-script */
-
 var testPage1 = "data:text/html,<html id='html1'><body id='body1'><button id='button1'>Tab 1</button></body></html>";
 var testPage2 = "data:text/html,<html id='html2'><body id='body2'><button id='button2'>Tab 2</button></body></html>";
 var testPage3 = "data:text/html,<html id='html3'><body id='body3' contenteditable='true'><button id='button3'>Tab 3</button></body></html>";
@@ -28,7 +26,7 @@ function* expectFocusOnF6(backward, expectedDocument, expectedElement, onContent
   }
 
   if (onContent) {
-    messageManager.addMessageListener("BrowserTest:FocusChanged", focusChangedListener);
+    window.messageManager.addMessageListener("BrowserTest:FocusChanged", focusChangedListener);
 
     yield ContentTask.spawn(gBrowser.selectedBrowser, { expectedElementId: expectedElement }, function* (arg) {
       let contentExpectedElement = content.document.getElementById(arg.expectedElementId);
@@ -79,7 +77,7 @@ function* expectFocusOnF6(backward, expectedDocument, expectedElement, onContent
   is(fm.focusedElement, expectedElement, desc + " element matches");
 
   if (onContent) {
-    messageManager.removeMessageListener("BrowserTest:FocusChanged", focusChangedListener);
+    window.messageManager.removeMessageListener("BrowserTest:FocusChanged", focusChangedListener);
   }
 }
 

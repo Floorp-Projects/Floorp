@@ -1,6 +1,6 @@
 "use strict";
 
-module.exports = { // eslint-disable-line no-undef
+module.exports = {
   "rules": {
     // Warn about cyclomatic complexity in functions.
     // XXX Bug 1326071 - This should be reduced down - probably to 20 or to

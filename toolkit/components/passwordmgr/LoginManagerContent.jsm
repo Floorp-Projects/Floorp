@@ -10,7 +10,7 @@ this.EXPORTED_SYMBOLS = [ "LoginManagerContent",
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
-const AUTOCOMPLETE_AFTER_CONTEXTMENU_THRESHOLD_MS = 400;
+const AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS = 400;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -41,7 +41,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 
 // These mirror signon.* prefs.
 var gEnabled, gAutofillForms, gStoreWhenAutocompleteOff;
-var gLastContextMenuEventTimeStamp = Number.NEGATIVE_INFINITY;
+var gLastRightClickTimeStamp = Number.NEGATIVE_INFINITY;
 
 var observer = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
@@ -129,10 +129,13 @@ var observer = {
         break;
       }
 
-      case "contextmenu": {
-        // Date.now() is used instead of event.timeStamp since
-        // dom.event.highrestimestamp.enabled isn't true on all channels yet.
-        gLastContextMenuEventTimeStamp = Date.now();
+      case "mousedown": {
+        if (aEvent.button == 2) {
+          // Date.now() is used instead of event.timeStamp since
+          // dom.event.highrestimestamp.enabled isn't true on all channels yet.
+          gLastRightClickTimeStamp = Date.now();
+        }
+
         break;
       }
 
@@ -578,33 +581,24 @@ var LoginManagerContent = {
     }
 
     /*
-     * A `focus` event is fired before a `contextmenu` event if a user right-clicks into an
+     * A `mousedown` event is fired before the `focus` event if the user right clicks into an
      * unfocused field. In that case we don't want to show both autocomplete and a context menu
-     * overlapping so we spin the event loop to see if a `contextmenu` event is coming next. If no
-     * `contextmenu` event was seen and the focused field is still focused by the form fill
-     * controller then show the autocomplete popup.
+     * overlapping so we check against the timestamp that was set by the `mousedown` event if the
+     * button code indicated a right click.
+     * We use a timestamp instead of a bool to avoid complexity when dealing with multiple input
+     * forms and the fact that a mousedown into an already focused field does not trigger another focus.
      * Date.now() is used instead of event.timeStamp since dom.event.highrestimestamp.enabled isn't
      * true on all channels yet.
      */
-    let timestamp = Date.now();
-    setTimeout(function maybeOpenAutocompleteAfterFocus() {
-      // Even though the `focus` event happens first in testing, I don't want to
-      // rely on that since it was supposedly in the opposite order before. Use
-      // the absolute value to handle both orders.
-      let timeDiff = Math.abs(gLastContextMenuEventTimeStamp - timestamp);
-      if (timeDiff < AUTOCOMPLETE_AFTER_CONTEXTMENU_THRESHOLD_MS) {
-        log("Not opening autocomplete after focus since a context menu was opened within",
-            timeDiff, "ms");
-        return;
-      }
+    let timeDiff = Date.now() - gLastRightClickTimeStamp;
+    if (timeDiff < AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS) {
+      log("Not opening autocomplete after focus since a context menu was opened within",
+          timeDiff, "ms");
+      return;
+    }
 
-      if (this._formFillService.focusedInput == focusedField) {
-        log("maybeOpenAutocompleteAfterFocus: Opening the autocomplete popup");
-        this._formFillService.showPopup();
-      } else {
-        log("maybeOpenAutocompleteAfterFocus: FormFillController has a different focused input");
-      }
-    }.bind(this), 0);
+    log("maybeOpenAutocompleteAfterFocus: Opening the autocomplete popup");
+    this._formFillService.showPopup();
   },
 
   /**
@@ -1279,7 +1273,7 @@ var LoginManagerContent = {
       if (usernameField) {
         log("_fillForm: Attaching event listeners to usernameField");
         usernameField.addEventListener("focus", observer);
-        usernameField.addEventListener("contextmenu", observer);
+        usernameField.addEventListener("mousedown", observer);
       }
 
       Services.obs.notifyObservers(form.rootElement, "passwordmgr-processed-form", null);

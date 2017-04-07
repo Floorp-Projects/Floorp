@@ -116,6 +116,10 @@ class ExpectedManifest(ManifestItem):
         return bool_prop("restart-after", self)
 
     @property
+    def leaks(self):
+        return bool_prop("leaks", self)
+
+    @property
     def tags(self):
         return tags(self)
 
@@ -132,6 +136,10 @@ class DirectoryManifest(ManifestItem):
     @property
     def restart_after(self):
         return bool_prop("restart-after", self)
+
+    @property
+    def leaks(self):
+        return bool_prop("leaks", self)
 
     @property
     def tags(self):
@@ -177,6 +185,10 @@ class TestNode(ManifestItem):
     @property
     def restart_after(self):
         return bool_prop("restart-after", self)
+
+    @property
+    def leaks(self):
+        return bool_prop("leaks", self)
 
     @property
     def tags(self):

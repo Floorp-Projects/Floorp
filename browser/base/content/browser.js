@@ -4709,10 +4709,10 @@ var XULBrowserWindow = {
         // Don't need to re-enable/disable find commands for same-document location changes
         // (e.g. the replaceStates in about:addons)
         if (!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
-          if (content.document.readyState == "interactive" || content.document.readyState == "complete")
-            disableFindCommands(shouldDisableFind(content.document));
+          if (window.content.document.readyState == "interactive" || window.content.document.readyState == "complete")
+            disableFindCommands(shouldDisableFind(window.content.document));
           else {
-            content.document.addEventListener("readystatechange", onContentRSChange);
+            window.content.document.addEventListener("readystatechange", onContentRSChange);
           }
         }
       } else
@@ -5192,7 +5192,7 @@ nsBrowserAccess.prototype = {
           newWindow = browser.contentWindow;
         break;
       default : // OPEN_CURRENTWINDOW or an illegal value
-        newWindow = content;
+        newWindow = window.content;
         if (aURI) {
           let loadflags = isExternal ?
                             Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :

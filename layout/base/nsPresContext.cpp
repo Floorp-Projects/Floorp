@@ -695,6 +695,12 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
   nsDependentCString prefName(aPrefName);
   if (prefName.EqualsLiteral("layout.css.dpi") ||
       prefName.EqualsLiteral("layout.css.devPixelsPerPx")) {
+
+    // We can't use a separate observer, callback, or var cache
+    // Because they don't guarantee the order of function calls.
+    // We have to update the scale override value first.
+    nsIWidget::ScaleOverrideChanged();
+
     int32_t oldAppUnitsPerDevPixel = AppUnitsPerDevPixel();
     if (mDeviceContext->CheckDPIChange() && mShell) {
       nsCOMPtr<nsIPresShell> shell = mShell;

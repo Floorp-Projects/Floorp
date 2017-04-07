@@ -99,6 +99,7 @@ class L10nBumper(VCSScript):
                         "ssh -oIdentityFile=%s -l %s" % (
                             self.config["ssh_key"], self.config["ssh_user"],
                         ),
+                        "-r", ".",
                         self.config["gecko_push_url"]]
         status = self.run_command(command, cwd=repo_path,
                                   error_list=HgErrorList)
@@ -182,12 +183,12 @@ class L10nBumper(VCSScript):
 
     def build_commit_message(self, name, locale_map):
         comments = ''
-        approval_str = 'a=l10n-bump'
+        approval_str = 'r=release a=l10n-bump'
         for locale, revision in sorted(locale_map.items()):
             comments += "%s -> %s\n" % (locale, revision)
         if self.config['ignore_closed_tree']:
             approval_str += " CLOSED TREE"
-        message = 'Bumping %s %s\n\n' % (name, approval_str)
+        message = 'no bug - Bumping %s %s\n\n' % (name, approval_str)
         message += comments
         message = message.encode("utf-8")
         return message

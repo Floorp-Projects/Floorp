@@ -16,6 +16,7 @@ import android.support.annotation.UiThread;
 
 import android.graphics.Rect;
 
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.adjust.AdjustBrowserAppDelegate;
 import org.mozilla.gecko.annotation.RobocopTarget;
@@ -1428,6 +1429,26 @@ public class BrowserApp extends GeckoApp
                     GeckoAppShell.createShortcut(title, url);
                 }
             });
+
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU,
+                getResources().getResourceEntryName(itemId));
+            return true;
+        }
+
+        if (itemId == R.id.set_as_homepage) {
+            final Tab tab = Tabs.getInstance().getSelectedTab();
+            if (tab == null) {
+                return true;
+            }
+
+            final String url = tab.getURL();
+            if (url == null) {
+                return true;
+            }
+            final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
+            final SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(GeckoPreferences.PREFS_HOMEPAGE, url);
+            editor.apply();
 
             Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU,
                 getResources().getResourceEntryName(itemId));
@@ -3413,6 +3434,7 @@ public class BrowserApp extends GeckoApp
             MenuUtils.safeSetEnabled(aMenu, R.id.subscribe, false);
             MenuUtils.safeSetEnabled(aMenu, R.id.add_search_engine, false);
             MenuUtils.safeSetEnabled(aMenu, R.id.add_to_launcher, false);
+            MenuUtils.safeSetEnabled(aMenu, R.id.set_as_homepage, false);
 
             return true;
         }
@@ -3483,12 +3505,16 @@ public class BrowserApp extends GeckoApp
         share.setEnabled(shareEnabled);
         MenuUtils.safeSetEnabled(aMenu, R.id.downloads, Restrictions.isAllowed(this, Restrictable.DOWNLOAD));
 
+        final boolean distSetAsHomepage = GeckoSharedPrefs.forProfile(this).getBoolean(GeckoPreferences.PREFS_SET_AS_HOMEPAGE, false);
+        MenuUtils.safeSetVisible(aMenu, R.id.set_as_homepage, distSetAsHomepage);
+
         // NOTE: Use MenuUtils.safeSetEnabled because some actions might
         // be on the BrowserToolbar context menu.
         MenuUtils.safeSetEnabled(aMenu, R.id.page, !isAboutHome(tab));
         MenuUtils.safeSetEnabled(aMenu, R.id.subscribe, tab.hasFeeds());
         MenuUtils.safeSetEnabled(aMenu, R.id.add_search_engine, tab.hasOpenSearch());
         MenuUtils.safeSetEnabled(aMenu, R.id.add_to_launcher, !isAboutHome(tab));
+        MenuUtils.safeSetEnabled(aMenu, R.id.set_as_homepage, !isAboutHome(tab));
 
         // This provider also applies to the quick share menu item.
         final GeckoActionProvider provider = ((GeckoMenuItem) share).getGeckoActionProvider();

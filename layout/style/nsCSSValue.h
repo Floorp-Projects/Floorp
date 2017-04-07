@@ -12,11 +12,9 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SheetType.h"
 #include "mozilla/StyleComplexColor.h"
+#include "mozilla/URLExtraData.h"
 #include "mozilla/UniquePtr.h"
 
-#include "nsIPrincipal.h"
-#include "nsIURI.h"
-#include "nsCOMPtr.h"
 #include "nsCSSKeywords.h"
 #include "nsCSSPropertyID.h"
 #include "nsCSSProps.h"
@@ -92,37 +90,6 @@ class CSSStyleSheet;
 
 namespace mozilla {
 namespace css {
-
-struct URLExtraData
-{
-  URLExtraData(already_AddRefed<nsIURI> aBaseURI,
-               already_AddRefed<nsIURI> aReferrer,
-               already_AddRefed<nsIPrincipal> aPrincipal)
-    : mBaseURI(Move(aBaseURI))
-    , mReferrer(Move(aReferrer))
-    , mPrincipal(Move(aPrincipal))
-  {
-    MOZ_ASSERT(mBaseURI);
-  }
-
-  URLExtraData(nsIURI* aBaseURI, nsIURI* aReferrer, nsIPrincipal* aPrincipal)
-    : URLExtraData(do_AddRef(aBaseURI),
-                   do_AddRef(aReferrer),
-                   do_AddRef(aPrincipal)) {}
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(URLExtraData)
-
-  nsIURI* BaseURI() const { return mBaseURI; }
-  nsIURI* GetReferrer() const { return mReferrer; }
-  nsIPrincipal* GetPrincipal() const { return mPrincipal; }
-
-private:
-  ~URLExtraData();
-
-  RefPtr<nsIURI> mBaseURI;
-  RefPtr<nsIURI> mReferrer;
-  RefPtr<nsIPrincipal> mPrincipal;
-};
 
 struct URLValueData
 {

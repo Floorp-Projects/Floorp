@@ -12,14 +12,12 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
 #include "mozilla/css/ImageLoader.h"
 #include "CSSCalc.h"
 #include "gfxFontConstants.h"
 #include "imgIRequest.h"
 #include "imgRequestProxy.h"
 #include "nsIDocument.h"
-#include "nsIPrincipal.h"
 #include "nsCSSProps.h"
 #include "nsNetUtil.h"
 #include "nsPresContext.h"
@@ -2781,15 +2779,6 @@ nsCSSValue::Array::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
     n += mArray[i].SizeOfExcludingThis(aMallocSizeOf);
   }
   return n;
-}
-
-css::URLExtraData::~URLExtraData()
-{
-  if (!NS_IsMainThread()) {
-    NS_ReleaseOnMainThread(mBaseURI.forget());
-    NS_ReleaseOnMainThread(mReferrer.forget());
-    NS_ReleaseOnMainThread(mPrincipal.forget());
-  }
 }
 
 css::URLValueData::URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,

@@ -46,8 +46,7 @@ function testFocusBlur(type) {
   let fm = SpecialPowers.Cc["@mozilla.org/focus-manager;1"]
                         .getService(SpecialPowers.Ci.nsIFocusManager);
   let focusedElement = fm.focusedElement;
-  is(focusedElement.localName, "input", "focusedElement should be an input element");
-  is(focusedElement.type, "text", "focusedElement should be of type text");
+  is(focusedElement.localName, "span", "focusedElement should be an span element");
 
   input.blur();
   isnot(document.activeElement, input, "activeElement should no longer be the datetime input element");

@@ -15,12 +15,11 @@ if CONFIG['MOZ_ENABLE_GCONF']:
         'nsGConfService.cpp',
     ]
 
-if CONFIG['MOZ_ENABLE_GIO']:
-    SOURCES += [
-        'nsGIOService.cpp',
-        'nsGSettingsService.cpp',
-        'nsPackageKitService.cpp'
-    ]
+SOURCES += [
+    'nsGIOService.cpp',
+    'nsGSettingsService.cpp',
+    'nsPackageKitService.cpp'
+]
 
 FINAL_LIBRARY = 'xul'
 
@@ -29,9 +28,6 @@ LOCAL_INCLUDES += [
 ]
 
 CXXFLAGS += CONFIG['MOZ_GCONF_CFLAGS']
-CXXFLAGS += CONFIG['MOZ_GIO_CFLAGS']
 CXXFLAGS += CONFIG['GLIB_CFLAGS']
 CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
-
-if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
-    CXXFLAGS += CONFIG['TK_CFLAGS']
+CXXFLAGS += CONFIG['TK_CFLAGS']

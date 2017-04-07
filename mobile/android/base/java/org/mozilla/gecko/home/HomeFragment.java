@@ -11,6 +11,7 @@ import org.mozilla.gecko.EditBookmarkDialog;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.IntentHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SnackbarBuilder;
@@ -24,6 +25,7 @@ import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenInBackgroundListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.TopSitesGridView.TopSitesGridContextMenuInfo;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.reader.SavedReaderViewHelper;
 import org.mozilla.gecko.reader.ReadingListHelper;
 import org.mozilla.gecko.restrictions.Restrictable;
@@ -37,6 +39,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -195,6 +198,8 @@ public abstract class HomeFragment extends Fragment {
         if (!Restrictions.isAllowed(view.getContext(), Restrictable.PRIVATE_BROWSING)) {
             menu.findItem(R.id.home_open_private_tab).setVisible(false);
         }
+        final boolean distSetAsHomepage = GeckoSharedPrefs.forProfile(view.getContext()).getBoolean(GeckoPreferences.PREFS_SET_AS_HOMEPAGE, false);
+        menu.findItem(R.id.home_set_as_homepage).setVisible(distSetAsHomepage);
     }
 
     @Override
@@ -309,6 +314,15 @@ public abstract class HomeFragment extends Fragment {
             return true;
         }
 
+        if (itemId == R.id.home_set_as_homepage) {
+            final SharedPreferences prefs = GeckoSharedPrefs.forProfile(context);
+            final SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(GeckoPreferences.PREFS_HOMEPAGE, info.url);
+            editor.apply();
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU,
+                getResources().getResourceEntryName(itemId));
+            return true;
+        }
         return false;
     }
 

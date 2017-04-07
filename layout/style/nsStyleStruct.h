@@ -339,7 +339,7 @@ public:
   nsStyleImageRequest(
       Mode aModeFlags,
       nsStringBuffer* aURLBuffer,
-      already_AddRefed<mozilla::css::URLExtraData> aExtraData);
+      already_AddRefed<mozilla::URLExtraData> aExtraData);
 
   bool Resolve(nsPresContext* aPresContext);
   bool IsResolved() const { return mResolved; }

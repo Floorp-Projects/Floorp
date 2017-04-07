@@ -7,7 +7,6 @@ const CONTENT_SEARCH_MSG = "ContentSearch";
 const TEST_CONTENT_SCRIPT_BASENAME = "contentSearch.js";
 
 var gMsgMan;
-/* eslint no-undef:"error" */
 /* import-globals-from ../../../components/search/test/head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/components/search/test/head.js",

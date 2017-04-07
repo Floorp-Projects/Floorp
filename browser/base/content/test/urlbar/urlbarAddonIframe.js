@@ -1,3 +1,6 @@
+// urlbar is injected into the urlbar add-on iframe by Panel.jsm for tests.
+/* global urlbar */
+
 // Listen for messages from the test.
 addEventListener("TestEvent", event => {
   let type = event.detail.type;

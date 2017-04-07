@@ -1602,6 +1602,13 @@ nsCSSKeyframeStyleDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& a
   GetCSSParsingEnvironmentForRule(mRule, aCSSParseEnv);
 }
 
+URLExtraData*
+nsCSSKeyframeStyleDeclaration::GetURLData() const
+{
+  MOZ_ASSERT_UNREACHABLE("GetURLData shouldn't be calling on a Gecko rule");
+  return GetURLDataForRule(mRule);
+}
+
 NS_IMETHODIMP
 nsCSSKeyframeStyleDeclaration::GetParentRule(nsIDOMCSSRule **aParent)
 {
@@ -2110,6 +2117,13 @@ void
 nsCSSPageStyleDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv)
 {
   GetCSSParsingEnvironmentForRule(mRule, aCSSParseEnv);
+}
+
+URLExtraData*
+nsCSSPageStyleDeclaration::GetURLData() const
+{
+  MOZ_ASSERT_UNREACHABLE("GetURLData shouldn't be calling on a Gecko rule");
+  return GetURLDataForRule(mRule);
 }
 
 NS_IMETHODIMP

@@ -41,7 +41,7 @@ function test() {
       return "FAIL.";
     };
   }.toString() + ")();";
-  let mm = getGroupMessageManager("social");
+  let mm = window.getGroupMessageManager("social");
   mm.loadFrameScript(frameScript, true);
 
   // Animation on the panel can cause intermittent failures such as bug 1115131.
@@ -191,7 +191,7 @@ var tests = {
     // ensure correct state
     SocialUI.onCustomizeEnd(window);
 
-    let mm = getGroupMessageManager("social");
+    let mm = window.getGroupMessageManager("social");
     mm.addMessageListener("sharedata", function handler(msg) {
       BrowserTestUtils.removeTab(testTab).then(() => {
         hasoptions(testData.options, JSON.parse(msg.data));
@@ -277,7 +277,7 @@ var tests = {
         }
       });
 
-      let mm = getGroupMessageManager("social");
+      let mm = window.getGroupMessageManager("social");
       mm.addMessageListener("sharedata", function handler(msg) {
         is(msg.data, expecting, "microformats data ok");
         BrowserTestUtils.waitForCondition(() => { return SocialShare.currentShare == null; },
@@ -325,7 +325,7 @@ var tests = {
       ensureFrameLoaded(subframe, activationPage).then(() => {
         is(subframe.contentDocument.location.href, activationPage, "activation page loaded");
         promiseObserverNotified("social:provider-enabled").then(() => {
-          let mm = getGroupMessageManager("social");
+          let mm = window.getGroupMessageManager("social");
           mm.addMessageListener("sharedata", function handler(msg) {
             ok(true, "share completed");
 

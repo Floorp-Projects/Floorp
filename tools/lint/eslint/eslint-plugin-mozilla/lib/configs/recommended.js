@@ -301,6 +301,8 @@ module.exports = {
     "CSSValueList": false,
     "dump": true,
     "ImageDocument": false,
+    // Non-standard, specific to Firefox.
+    "InstallTrigger": false,
     // Specific to Firefox
     // eslint-disable-next-line max-len
     // https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/InternalError

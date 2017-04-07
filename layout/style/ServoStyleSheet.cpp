@@ -87,8 +87,8 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                             nsIPrincipal* aSheetPrincipal,
                             uint32_t aLineNumber)
 {
-  RefPtr<css::URLExtraData> extraData =
-    new css::URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal);
+  RefPtr<URLExtraData> extraData =
+    new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal);
 
   NS_ConvertUTF16toUTF8 input(aInput);
   if (!Inner()->mSheet) {
@@ -100,6 +100,7 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                                     this, &input, extraData);
   }
 
+  Inner()->mURLData = extraData.forget();
   return NS_OK;
 }
 
@@ -107,6 +108,7 @@ void
 ServoStyleSheet::LoadFailed()
 {
   Inner()->mSheet = Servo_StyleSheet_Empty(mParsingMode).Consume();
+  Inner()->mURLData = URLExtraData::Dummy();
 }
 
 // nsICSSLoaderObserver implementation
