@@ -54,6 +54,8 @@ private:
                               const char* aFromRawSegment, uint32_t aToOffset,
                               uint32_t aCount, uint32_t *aWriteCount);
 
+    bool IsIPCSerializable() const;
+
     nsTArray<HeaderEntry> mHeaders;
 
     nsCOMPtr<nsIInputStream> mStream;
@@ -66,11 +68,16 @@ NS_IMPL_RELEASE(nsMIMEInputStream)
 NS_IMPL_CLASSINFO(nsMIMEInputStream, nullptr, nsIClassInfo::THREADSAFE,
                   NS_MIMEINPUTSTREAM_CID)
 
-NS_IMPL_QUERY_INTERFACE_CI(nsMIMEInputStream,
-                           nsIMIMEInputStream,
-                           nsIInputStream,
-                           nsISeekableStream,
-                           nsIIPCSerializableInputStream)
+NS_INTERFACE_MAP_BEGIN(nsMIMEInputStream)
+  NS_INTERFACE_MAP_ENTRY(nsIMIMEInputStream)
+  NS_INTERFACE_MAP_ENTRY(nsIInputStream)
+  NS_INTERFACE_MAP_ENTRY(nsISeekableStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
+                                     IsIPCSerializable())
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMIMEInputStream)
+  NS_IMPL_QUERY_CLASSINFO(nsMIMEInputStream)
+NS_INTERFACE_MAP_END
+
 NS_IMPL_CI_INTERFACE_GETTER(nsMIMEInputStream,
                             nsIMIMEInputStream,
                             nsIInputStream,
@@ -330,3 +337,14 @@ nsMIMEInputStream::ExpectedSerializedLength()
     return serializable ? serializable->ExpectedSerializedLength() : Nothing();
 }
 
+bool
+nsMIMEInputStream::IsIPCSerializable() const
+{
+    // If SetData() or Deserialize() has not be called yet, mStream is null.
+    if (!mStream) {
+      return true;
+    }
+
+    nsCOMPtr<nsIIPCSerializableInputStream> serializable = do_QueryInterface(mStream);
+    return !!serializable;
+}
