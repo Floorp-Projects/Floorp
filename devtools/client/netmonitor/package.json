@@ -10,7 +10,7 @@
     "devtools-launchpad": "^0.0.59",
     "devtools-modules": "^0.0.18",
     "devtools-reps": "^0.4.0",
-    "devtools-splitter": "^0.0.2",
+    "devtools-sham-modules": "^0.0.17",
     "express": "^4.15.2",
     "immutable": "^3.8.1",
     "jszip": "^3.1.3",
