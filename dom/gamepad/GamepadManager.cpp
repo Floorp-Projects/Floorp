@@ -269,7 +269,8 @@ GamepadManager::RemoveGamepad(uint32_t aIndex, GamepadServiceType aServiceType)
 
 void
 GamepadManager::NewButtonEvent(uint32_t aIndex, GamepadServiceType aServiceType,
-                               uint32_t aButton, bool aPressed, double aValue)
+                               uint32_t aButton, bool aPressed, bool aTouched,
+                               double aValue)
 {
   if (mShuttingDown) {
     return;
@@ -282,7 +283,7 @@ GamepadManager::NewButtonEvent(uint32_t aIndex, GamepadServiceType aServiceType,
     return;
   }
 
-  gamepad->SetButton(aButton, aPressed, aValue);
+  gamepad->SetButton(aButton, aPressed, aTouched, aValue);
 
   // Hold on to listeners in a separate array because firing events
   // can mutate the mListeners array.
@@ -303,7 +304,7 @@ GamepadManager::NewButtonEvent(uint32_t aIndex, GamepadServiceType aServiceType,
 
     RefPtr<Gamepad> listenerGamepad = listeners[i]->GetGamepad(newIndex);
     if (listenerGamepad) {
-      listenerGamepad->SetButton(aButton, aPressed, aValue);
+      listenerGamepad->SetButton(aButton, aPressed, aTouched, aValue);
       if (firstTime) {
         FireConnectionEvent(listeners[i], listenerGamepad, true);
       }
@@ -650,7 +651,7 @@ GamepadManager::Update(const GamepadChangeEvent& aEvent)
   if (aEvent.type() == GamepadChangeEvent::TGamepadButtonInformation) {
     const GamepadButtonInformation& a = aEvent.get_GamepadButtonInformation();
     NewButtonEvent(a.index(), a.service_type(), a.button(),
-                   a.pressed(), a.value());
+                   a.pressed(), a.touched(), a.value());
     return;
   }
   if (aEvent.type() == GamepadChangeEvent::TGamepadAxisInformation) {

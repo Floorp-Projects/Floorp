@@ -40,7 +40,8 @@ GamepadTestChannelParent::RecvGamepadTestEvent(const uint32_t& aID,
   }
   if (aEvent.type() == GamepadChangeEvent::TGamepadButtonInformation) {
     const GamepadButtonInformation& a = aEvent.get_GamepadButtonInformation();
-    service->NewButtonEvent(a.index(), a.button(), a.pressed(), a.value());
+    service->NewButtonEvent(a.index(), a.button(), a.pressed(), a.touched(),
+                            a.value());
     return IPC_OK();
   }
   if (aEvent.type() == GamepadChangeEvent::TGamepadAxisInformation) {
