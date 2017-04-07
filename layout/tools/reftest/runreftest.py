@@ -362,6 +362,7 @@ class RefTest(object):
         browserEnv = self.environment(
             xrePath=options.xrePath, debugger=options.debugger)
         browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
+        browserEnv["MOZ_DEVELOPER_REPO_DIR"] = options.topsrcdir
 
         if mozinfo.info["asan"]:
             # Disable leak checking for reftests for now
