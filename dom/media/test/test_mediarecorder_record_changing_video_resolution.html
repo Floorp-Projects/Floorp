@@ -15,53 +15,148 @@ function startTest() {
   var content = document.getElementById("content");
 
   var canvas = document.createElement("canvas");
-  canvas.width = canvas.height = 100;
+  const resolution_change = [
+    {width: 100, height: 100, color: "red"},
+    {width: 150, height: 150, color: "blue"},
+    {width: 100, height: 100, color: "red"},
+  ];
+  canvas.width = resolution_change[0].width;
+  canvas.height = resolution_change[0].height;
 
   var ctx = canvas.getContext("2d");
-  ctx.fillStyle = "red";
+  ctx.fillStyle = resolution_change[0].color;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  var stream = canvas.captureStream(0);
+  // The recorded stream coming from canvas.
+  var stream = canvas.captureStream();
 
-  var numErrorRaised = 0;
+  // Check values for events
   var numDataAvailabledRaised = 0;
+  var numResizeRaised = 0;
+  // Recorded data that will be playback.
+  var blob;
 
-  mediaRecorder = new MediaRecorder(stream);
+  // Media recorder for VP8 and canvas stream.
+  var mediaRecorder = new MediaRecorder(stream);
   is(mediaRecorder.stream, stream,
      "Media recorder stream = canvas stream at the start of recording");
 
-  mediaRecorder.onwarning = () => ok(false, "onwarning unexpectedly fired");
-
+  // Not expected events.
+  mediaRecorder.onwarning = () => ok(false, "MediaRecorder: onwarning unexpectedly fired");
   mediaRecorder.onerror = err => {
-    info("Got 'error' event, " + err.name + " (" + err.message + ")");
-    ++numErrorRaised;
+    ok(false, "MediaRecorder: onerror unexpectedly fired. Code " + err.name);
+    SimpleTest.finish();
   };
 
+  // When recorder is stopped get recorded data.
   mediaRecorder.ondataavailable = ev => {
     info("Got 'dataavailable' event");
     ++numDataAvailabledRaised;
+    is(blob, undefined, "Should only get one dataavailable event");
+    // Save recorded data for playback
+    blob = ev.data;
   };
 
   mediaRecorder.onstart = () => {
-    canvas.width = canvas.height = canvas.width * 1.1;
-    ctx.fillStyle = "blue";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    stream.requestFrame();
+    info('onstart fired successfully');
   };
 
   mediaRecorder.onstop = () => {
     info("Got 'stop' event");
-    is(numErrorRaised, 1, "Should have gotten 1 error event");
     is(numDataAvailabledRaised, 1, "Should have gotten 1 dataavailable event");
-    SimpleTest.finish();
+    // Playback stream and verify resolution changes.
+    ok(blob, "Should have gotten a data blob");
+
+    var video = document.createElement("video");
+    video.id = "recorded-video";
+    video.src = URL.createObjectURL(blob);
+    video.preload = "metadata";
+
+    video.onerror = err => {
+      ok(false, "Should be able to play the recording. Got error. code=" + video.error.code);
+      SimpleTest.finish();
+    };
+
+    video.onloadedmetadata = function(){
+      info("onloadedmetadata");
+      video.seekToNextFrame()
+      .then(()=>video.seekToNextFrame())
+      .catch((reason)=>{
+        info("seekToNextFrame rejected: " + reason)
+        callSeekToNextFrame();
+      });
+    }
+
+    // Check that resize is correct for playback stream.
+    video.onresize = function() {
+      if (numResizeRaised < resolution_change.length) {
+        is(video.videoWidth, resolution_change[numResizeRaised].width,
+          "onresize width should be as expected");
+        is(video.videoHeight, resolution_change[numResizeRaised].height,
+          "onresize height should be as expected");
+        if (numResizeRaised > 0) {
+          callSeekToNextFrame();
+        }
+      } else {
+        ok(false, "Got more resize events than expected");
+      }
+      ++numResizeRaised;
+    };
+
+    video.onended = function() {
+      is(numResizeRaised, resolution_change.length, "Expected number of resize events");
+      SimpleTest.finish();
+    };
+
+    document.getElementById("content").appendChild(video);
+
+    function callSeekToNextFrame() {
+      video.seekToNextFrame()
+      .then()
+      .catch((reason)=>{
+        info("seekToNextFrame rejected: " + reason)
+        callSeekToNextFrame();
+      });
+    };
   };
 
+  // Start here by stream recorder.
   mediaRecorder.start();
   is(mediaRecorder.state, "recording", "Media recorder should be recording");
+  requestAnimationFrame(draw);
+
+  // Change resolution in every frame
+  // Stop recorder on last frame
+  var countFrames=0;
+  var previous_time = performance.now();
+  function draw(timestamp) {
+    if (timestamp - previous_time < 100) {
+      requestAnimationFrame(draw);
+      return;
+    }
+    previous_time = timestamp;
+
+    if (countFrames < resolution_change.length) {
+      canvas.width = resolution_change[countFrames].width;
+      canvas.height = resolution_change[countFrames].height;
+      ctx.fillStyle = resolution_change[countFrames].color;
+      // Resize and draw canvas
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Register draw to be called on next rendering
+      requestAnimationFrame(draw);
+      countFrames++;
+    } else {
+      mediaRecorder.stop();
+    }
+  }
 }
 
 SimpleTest.waitForExplicitFinish();
-startTest();
+SpecialPowers.pushPrefEnv(
+  {
+    "set": [["media.seekToNextFrame.enabled", true ]],
+    "set": [["media.video-queue.send-to-compositor-size", 1]]
+  }, startTest);
 
 </script>
 </pre>

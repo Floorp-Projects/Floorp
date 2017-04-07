@@ -1385,7 +1385,8 @@ protected:
         }
     }
 
-    gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
+    gfxFont(const RefPtr<mozilla::gfx::UnscaledFont>& aUnscaledFont,
+            gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
             AntialiasOption anAAOption = kAntialiasDefault,
             cairo_scaled_font_t *aScaledFont = nullptr);
 
@@ -1801,8 +1802,14 @@ public:
 
     virtual FontType GetType() const = 0;
 
+    const RefPtr<mozilla::gfx::UnscaledFont>& GetUnscaledFont() const {
+        return mUnscaledFont;
+    }
+
     virtual already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(DrawTarget* aTarget)
-    { return gfxPlatform::GetPlatform()->GetScaledFontForFont(aTarget, this); }
+    {
+        return gfxPlatform::GetPlatform()->GetScaledFontForFont(aTarget, this);
+    }
 
     bool KerningDisabled() {
         return mKerningSet && !mKerningEnabled;
@@ -2120,6 +2127,7 @@ protected:
     // ranges supported by font
     RefPtr<gfxCharacterMap> mUnicodeRangeMap;
 
+    RefPtr<mozilla::gfx::UnscaledFont> mUnscaledFont;
     RefPtr<mozilla::gfx::ScaledFont> mAzureScaledFont;
 
     // For vertical metrics, created on demand.

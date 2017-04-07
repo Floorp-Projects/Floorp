@@ -302,6 +302,7 @@ version = "0.1.0"
 dependencies = [
  "geckoservo 0.0.1",
  "mp4parse_capi 0.8.0",
+ "nserror 0.1.0",
  "nsstring 0.1.0",
  "rust_url_capi 0.0.1",
  "webrender_bindings 0.1.0",
@@ -433,6 +434,13 @@ dependencies = [
 name = "nom"
 version = "1.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "nserror"
+version = "0.1.0"
+dependencies = [
+ "nsstring 0.1.0",
+]
 
 [[package]]
 name = "nsstring"

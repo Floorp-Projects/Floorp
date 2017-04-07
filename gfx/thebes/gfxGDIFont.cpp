@@ -44,7 +44,7 @@ gfxGDIFont::gfxGDIFont(GDIFontEntry *aFontEntry,
                        const gfxFontStyle *aFontStyle,
                        bool aNeedsBold,
                        AntialiasOption anAAOption)
-    : gfxFont(aFontEntry, aFontStyle, anAAOption),
+    : gfxFont(nullptr, aFontEntry, aFontStyle, anAAOption),
       mFont(nullptr),
       mFontFace(nullptr),
       mMetrics(nullptr),
@@ -53,6 +53,10 @@ gfxGDIFont::gfxGDIFont(GDIFontEntry *aFontEntry,
       mScriptCache(nullptr)
 {
     Initialize();
+
+    if (mFont) {
+        mUnscaledFont = aFontEntry->LookupUnscaledFont(mFont);
+    }
 }
 
 gfxGDIFont::~gfxGDIFont()
@@ -223,6 +227,12 @@ gfxGDIFont::Initialize()
 
     mMetrics = new gfxFont::Metrics;
     ::memset(mMetrics, 0, sizeof(*mMetrics));
+
+    if (!mFont) {
+        NS_WARNING("Failed creating GDI font");
+        mIsValid = false;
+        return;
+    }
 
     AutoDC dc;
     SetGraphicsMode(dc.GetDC(), GM_ADVANCED);

@@ -68,8 +68,14 @@ function doTest() {
   SimpleTest.finish();
 }
 
+// Before we start, we have to bump Mac to make its 'tab'-key focus behavior
+// predicatble:
+function begin() {
+  SpecialPowers.pushPrefEnv({ set: [[ "accessibility.tabfocus", 7 ]] }, doTest);
+}
+
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(doTest);
+addLoadEvent(begin);
 
 </script>
 </pre>

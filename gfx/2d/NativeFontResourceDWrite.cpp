@@ -275,7 +275,7 @@ NativeFontResourceDWrite::CreateScaledFont(uint32_t aIndex, Float aGlyphSize,
     return nullptr;
   }
 
-  RefPtr<ScaledFontBase> scaledFont = new ScaledFontDWrite(fontFace, aGlyphSize);
+  RefPtr<ScaledFontBase> scaledFont = new ScaledFontDWrite(fontFace, nullptr, aGlyphSize);
   if (mNeedsCairo && !scaledFont->PopulateCairoScaledFont()) {
     gfxWarning() << "Unable to create cairo scaled font DWrite font.";
     return nullptr;
