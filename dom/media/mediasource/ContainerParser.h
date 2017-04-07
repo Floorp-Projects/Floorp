@@ -17,7 +17,8 @@ namespace mozilla {
 class MediaByteBuffer;
 class SourceBufferResource;
 
-class ContainerParser {
+class ContainerParser
+{
 public:
   explicit ContainerParser(const MediaContainerType& aType);
   virtual ~ContainerParser();
