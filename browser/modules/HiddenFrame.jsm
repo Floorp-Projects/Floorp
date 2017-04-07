@@ -14,27 +14,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const XUL_PAGE = "data:application/vnd.mozilla.xul+xml;charset=utf-8,<window%20id='win'/>";
 
-const gAllHiddenFrames = new WeakSet();
-
-let cleanupRegistered = false;
-function ensureCleanupRegistered() {
-  if (!cleanupRegistered) {
-    cleanupRegistered = true;
-    Services.obs.addObserver(function() {
-      for (let hiddenFrame of ChromeUtils.nondeterministicGetWeakSetKeys(gAllHiddenFrames)) {
-        hiddenFrame.destroy();
-      }
-    }, "xpcom-shutdown", false);
-  }
-}
-
-
 /**
  * An hidden frame object. It takes care of creating a windowless browser and
  * passing the window containing a blank XUL <window> back.
  */
-function HiddenFrame() {
-}
+function HiddenFrame() {}
 
 HiddenFrame.prototype = {
   _frame: null,
@@ -57,16 +41,6 @@ HiddenFrame.prototype = {
     return this._deferred.promise;
   },
 
-  /**
-   * Fetch a sync ref to the window inside the frame (needed for the add-on SDK).
-   */
-  getWindow() {
-    this.get();
-    this._browser.QueryInterface(Ci.nsIInterfaceRequestor);
-    return this._browser.getInterface(Ci.nsIDOMWindow);
-  },
-
-
   destroy() {
     if (this._browser) {
       if (this._listener) {
@@ -77,17 +51,14 @@ HiddenFrame.prototype = {
       this._frame = null;
       this._deferred = null;
 
-      gAllHiddenFrames.delete(this);
       this._browser.close();
       this._browser = null;
     }
   },
 
   _create() {
-    ensureCleanupRegistered();
     this._browser = Services.appShell.createWindowlessBrowser(true);
     this._browser.QueryInterface(Ci.nsIInterfaceRequestor);
-    gAllHiddenFrames.add(this);
     this._webProgress = this._browser.getInterface(Ci.nsIWebProgress);
     this._listener = {
       QueryInterface: XPCOMUtils.generateQI([

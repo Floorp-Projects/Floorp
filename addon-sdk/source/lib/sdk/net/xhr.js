@@ -8,9 +8,8 @@ module.metadata = {
 };
 
 const { deprecateFunction } = require("../util/deprecate");
-const { Ci, Cu } = require("chrome");
-
-Cu.importGlobalProperties(["XMLHttpRequest"]);
+const { Cc, Ci } = require("chrome");
+const XMLHttpRequest = require("../addon/window").window.XMLHttpRequest;
 
 Object.defineProperties(XMLHttpRequest.prototype, {
   mozBackgroundRequest: {
