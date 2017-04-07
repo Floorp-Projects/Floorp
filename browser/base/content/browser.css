@@ -1183,7 +1183,7 @@ toolbarpaletteitem[place="palette"][hidden] {
   max-width: 10em;
 }
 
-#main-window[customizing=true] #PanelUI-update-status {
+#main-window[customizing=true] .PanelUI-notification-menu-item {
   display: none;
 }
 
