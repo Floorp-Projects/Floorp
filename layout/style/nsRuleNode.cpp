@@ -614,16 +614,16 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
     case eCSSUnit_XHeight: {
       aPresContext->SetUsesExChUnits(true);
       RefPtr<nsFontMetrics> fm =
-        GetMetricsFor(aPresContext, aStyleContext, styleFont,
-                      aFontSize, aUseUserFontSet);
+        nsRuleNode::GetMetricsFor(aPresContext, aStyleContext, styleFont,
+                                  aFontSize, aUseUserFontSet);
       aConditions.SetUncacheable();
       return ScaleCoordRound(aValue, float(fm->XHeight()));
     }
     case eCSSUnit_Char: {
       aPresContext->SetUsesExChUnits(true);
       RefPtr<nsFontMetrics> fm =
-        GetMetricsFor(aPresContext, aStyleContext, styleFont,
-                      aFontSize, aUseUserFontSet);
+        nsRuleNode::GetMetricsFor(aPresContext, aStyleContext, styleFont,
+                                  aFontSize, aUseUserFontSet);
       gfxFloat zeroWidth =
         fm->GetThebesFontGroup()->GetFirstValidFont()->
           GetMetrics(fm->Orientation()).zeroOrAveCharWidth;

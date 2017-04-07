@@ -27,6 +27,7 @@
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
 #include "nsIPrincipal.h"
+#include "nsFontMetrics.h"
 #include "nsMappedAttributes.h"
 #include "nsMediaFeatures.h"
 #include "nsNameSpaceManager.h"
@@ -41,6 +42,7 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Keyframe.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/StyleAnimationValue.h"
@@ -51,6 +53,7 @@
 #include "mozilla/dom/HTMLTableCellElement.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/URLExtraData.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1607,6 +1610,48 @@ Gecko_GetBaseSize(nsIAtom* aLanguage)
   sizes.CopyFrom(prefs);
 
   return sizes;
+}
+
+static Mutex* sServoFontMetricsLock = nullptr;
+
+void
+InitializeServo()
+{
+  URLExtraData::InitDummy();
+  Servo_Initialize(URLExtraData::Dummy());
+
+  sServoFontMetricsLock = new Mutex("Gecko_GetFontMetrics");
+}
+
+void
+ShutdownServo()
+{
+  delete sServoFontMetricsLock;
+  Servo_Shutdown();
+}
+
+GeckoFontMetrics
+Gecko_GetFontMetrics(RawGeckoPresContextBorrowed aPresContext,
+                     bool aIsVertical,
+                     const nsStyleFont* aFont,
+                     nscoord aFontSize,
+                     bool aUseUserFontSet)
+{
+  MutexAutoLock lock(*sServoFontMetricsLock);
+  aPresContext->SetUsesExChUnits(true);
+  GeckoFontMetrics ret;
+  // Safe because we are locked, and this function is only
+  // ever called from Servo parallel traversal
+  MOZ_ASSERT(ServoStyleSet::IsInServoTraversal());
+  nsPresContext* presContext = const_cast<nsPresContext*>(aPresContext);
+  RefPtr<nsFontMetrics> fm = nsRuleNode::GetMetricsFor(presContext, aIsVertical,
+                                                       aFont, aFontSize,
+                                                       aUseUserFontSet);
+  ret.mXSize = fm->XHeight();
+  gfxFloat zeroWidth = fm->GetThebesFontGroup()->GetFirstValidFont()->
+                           GetMetrics(fm->Orientation()).zeroOrAveCharWidth;
+  ret.mChSize = ceil(aPresContext->AppUnitsPerDevPixel() * zeroWidth);
+  return ret;
 }
 
 void

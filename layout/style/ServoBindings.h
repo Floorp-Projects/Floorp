@@ -399,6 +399,20 @@ void Gecko_nsStyleFont_SetLang(nsStyleFont* font, nsIAtom* atom);
 void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource);
 FontSizePrefs Gecko_GetBaseSize(nsIAtom* lang);
 
+struct GeckoFontMetrics
+{
+  nscoord mChSize;
+  nscoord mXSize;
+};
+
+GeckoFontMetrics Gecko_GetFontMetrics(RawGeckoPresContextBorrowed pres_context,
+                                      bool is_vertical,
+                                      const nsStyleFont* font,
+                                      nscoord font_size,
+                                      bool use_user_font_set);
+void InitializeServo();
+void ShutdownServo();
+
 const nsMediaFeature* Gecko_GetMediaFeatures();
 
 // Font face rule
