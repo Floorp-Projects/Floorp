@@ -8,6 +8,7 @@
 
 #include "ChildIterator.h"
 #include "NullPrincipalURI.h"
+#include "GeckoProfiler.h"
 #include "gfxFontFamilyList.h"
 #include "nsAnimationManager.h"
 #include "nsAttrValueInlines.h"
@@ -1686,6 +1687,19 @@ void
 Gecko_Construct_nsStyleVariables(nsStyleVariables* ptr)
 {
   new (ptr) nsStyleVariables();
+}
+
+void
+Gecko_RegisterProfilerThread(const char* name)
+{
+  char stackTop;
+  profiler_register_thread(name, &stackTop);
+}
+
+void
+Gecko_UnregisterProfilerThread()
+{
+  profiler_unregister_thread();
 }
 
 #include "nsStyleStructList.h"
