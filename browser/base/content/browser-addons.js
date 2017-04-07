@@ -504,9 +504,10 @@ const gExtensionsNotifications = {
     let sideloaded = ExtensionsUI.sideloaded;
     let updates = ExtensionsUI.updates;
     if (sideloaded.size + updates.size == 0) {
-      PanelUI.removeNotification("addon-alert");
+      gMenuButtonBadgeManager.removeBadge(gMenuButtonBadgeManager.BADGEID_ADDONS);
     } else {
-      PanelUI.showBadgeOnlyNotification("addon-alert");
+      gMenuButtonBadgeManager.addBadge(gMenuButtonBadgeManager.BADGEID_ADDONS,
+                                       "addon-alert");
     }
 
     let container = document.getElementById("PanelUI-footer-addons");
