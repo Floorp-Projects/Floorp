@@ -216,7 +216,7 @@ module.exports = createClass({
     width = this.getWidthValue(width);
 
     let contentBox = layout["box-sizing"] == "content-box" ?
-      dom.p(
+      dom.div(
         {
           className: "boxmodel-size",
         },
