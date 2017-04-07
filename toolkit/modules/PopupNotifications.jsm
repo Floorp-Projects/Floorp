@@ -259,6 +259,17 @@ this.PopupNotifications = function PopupNotifications(tabbrowser, panel,
     }
   };
 
+  // There are no anchor icons in DOM fullscreen mode, but we would
+  // still like to show the popup notification. To avoid an infinite
+  // loop of showing and hiding, we have to disable followanchor
+  // (which hides the element without an anchor) in fullscreen.
+  this.window.addEventListener("MozDOMFullscreen:Entered", () => {
+    this.panel.setAttribute("followanchor", "false");
+  }, true);
+  this.window.addEventListener("MozDOMFullscreen:Exited", () => {
+    this.panel.setAttribute("followanchor", "true");
+  }, true);
+
   this.window.addEventListener("activate", this, true);
   if (this.tabbrowser.tabContainer)
     this.tabbrowser.tabContainer.addEventListener("TabSelect", this, true);
