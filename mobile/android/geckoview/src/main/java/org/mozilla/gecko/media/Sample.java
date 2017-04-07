@@ -11,7 +11,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.mozglue.SharedMemBuffer;
 import org.mozilla.gecko.mozglue.SharedMemory;
 
 import java.io.IOException;

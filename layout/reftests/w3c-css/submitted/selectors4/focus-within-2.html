@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="reftest-wait">
   <head>
     <meta charset="utf-8">
     <title>CSS Test: :focus-within selector</title>
@@ -8,7 +8,6 @@
     <link rel="help" href="https://drafts.csswg.org/selectors-4/#focus-within-pseudo">
     <meta name="assert" content="Test checks :focus-within should not apply after element removed.">
     <link rel="match" href="focus-within-2-ref.html">
-    <meta name="flags" content="interact">
     <style type="text/css">
       div {
         border: solid 15px green;
@@ -31,6 +30,7 @@
       var parent = document.getElementById("parent");
       parent.removeChild(child);
       document.body.offsetWidth;
+      document.documentElement.classList.remove('reftest-wait');
     </script>
   </body>
 </html>

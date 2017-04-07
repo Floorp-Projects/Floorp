@@ -8,6 +8,7 @@ package org.mozilla.geckoview_example;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -21,6 +22,7 @@ import static org.mozilla.gecko.GeckoView.setGeckoInterface;
 
 public class GeckoViewActivity extends Activity {
     private static final String LOGTAG = "GeckoViewActivity";
+    private static final String DEFAULT_URL = "https://mozilla.org";
 
     GeckoView mGeckoView;
 
@@ -36,16 +38,18 @@ public class GeckoViewActivity extends Activity {
         mGeckoView.setChromeDelegate(new MyGeckoViewChrome());
         mGeckoView.setContentListener(new MyGeckoViewContent());
         mGeckoView.setProgressListener(new MyGeckoViewProgress());
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
 
         final GeckoProfile profile = GeckoProfile.get(getApplicationContext());
 
         GeckoThread.initMainProcess(profile, /* args */ null, /* debugging */ false);
         GeckoThread.launch();
+
+        Uri u = getIntent().getData();
+        if (u != null) {
+            mGeckoView.loadUri(u.toString());
+        } else {
+            mGeckoView.loadUri(DEFAULT_URL);
+        }
     }
 
     private class MyGeckoViewChrome implements GeckoView.ChromeDelegate {
