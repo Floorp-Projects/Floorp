@@ -111,6 +111,7 @@ function checkIfFinished() {
       (gNumSnapShotChanges[0] >= kNumFrameUpdatesToExpect) &&
       (gNumSnapShotChanges[1] >= kNumFrameUpdatesToExpect)) {
     ok(true, "got expected frame updates");
+    gCountingFrameUpdates = false;
     gFinished = true;
     SimpleTest.finish();
   }
@@ -133,7 +134,7 @@ function addCallbacks(anImage, arrayIndex) {
     }
   };
   observer.frameUpdate = function () {
-    if (!gCountingFrameUpdates) {
+    if (!gCountingFrameUpdates || gFinished) {
       return;
     }
 
