@@ -20,6 +20,7 @@ TEST_FILES = \
   ecma_6/ \
   ecma_7/ \
   ecma_2017/ \
+  ecma_2018/ \
   Intl/ \
   js1_1/ \
   js1_2/ \
