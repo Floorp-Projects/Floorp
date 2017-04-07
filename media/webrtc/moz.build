@@ -54,8 +54,18 @@ webrtc_non_unified_sources = [
 
 GYP_DIRS += ['trunk']
 
+# Set gyp vars that webrtc needs when building under various analysis tools.
+# Primarily this prevents webrtc from setting NVALGRIND and breaking builds.
+gyp_vars_copy = gyp_vars.copy()
+if CONFIG['MOZ_VALGRIND']:
+    gyp_vars_copy.update(build_for_tool="memcheck")
+elif CONFIG['MOZ_ASAN']:
+    gyp_vars_copy.update(build_for_tool="asan")
+elif CONFIG['MOZ_TSAN']:
+    gyp_vars_copy.update(build_for_tool="tsan")
+
 GYP_DIRS['trunk'].input = 'trunk/peerconnection.gyp'
-GYP_DIRS['trunk'].variables = gyp_vars
+GYP_DIRS['trunk'].variables = gyp_vars_copy
 # We allow warnings for third-party code that can be updated from upstream.
 GYP_DIRS['trunk'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
 GYP_DIRS['trunk'].sandbox_vars['FINAL_LIBRARY'] = 'webrtc'
@@ -69,7 +79,7 @@ if CONFIG['ENABLE_TESTS']:
 if CONFIG['MOZ_WEBRTC_SIGNALING']:
     GYP_DIRS += ['signaling']
     GYP_DIRS['signaling'].input = 'signaling/signaling.gyp'
-    GYP_DIRS['signaling'].variables = gyp_vars.copy()
+    GYP_DIRS['signaling'].variables = gyp_vars_copy.copy()
     GYP_DIRS['signaling'].variables.update(
         build_for_test=0,
         build_for_standalone=0
@@ -108,7 +118,7 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
 
     GYP_DIRS += ['trunk/third_party/gflags']
     GYP_DIRS['trunk/third_party/gflags'].input = 'trunk/third_party/gflags/gflags.gyp'
-    GYP_DIRS['trunk/third_party/gflags'].variables = gyp_vars
+    GYP_DIRS['trunk/third_party/gflags'].variables = gyp_vars_copy
     GYP_DIRS['trunk/third_party/gflags'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
 
     if CONFIG['_MSC_VER']:
