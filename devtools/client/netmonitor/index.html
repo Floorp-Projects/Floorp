@@ -31,6 +31,10 @@
       // Inject EventEmitter into global window.
       EventEmitter.decorate(window);
 
+      // Export NetMonitorController to global window
+      // FIXME: Use module export mechanism instead of this tricky global variables
+      window.NetMonitorController = NetMonitorController;
+
       window.Netmonitor = {
         bootstrap({ toolbox }) {
           this.mount = document.querySelector("#mount");

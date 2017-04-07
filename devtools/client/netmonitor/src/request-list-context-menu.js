@@ -11,7 +11,6 @@ const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 const { HarExporter } = require("./har/har-exporter");
-const { NetMonitorController } = require("./netmonitor-controller");
 const { getLongString } = require("./utils/client");
 const { L10N } = require("./utils/l10n");
 const {
@@ -157,7 +156,7 @@ RequestListContextMenu.prototype = {
 
     menu.append(new MenuItem({
       type: "separator",
-      visible: !!(NetMonitorController.supportsCustomRequest &&
+      visible: !!(window.NetMonitorController.supportsCustomRequest &&
                selectedRequest && !selectedRequest.isCustom),
     }));
 
@@ -165,7 +164,7 @@ RequestListContextMenu.prototype = {
       id: "request-list-context-resend",
       label: L10N.getStr("netmonitor.context.editAndResend"),
       accesskey: L10N.getStr("netmonitor.context.editAndResend.accesskey"),
-      visible: !!(NetMonitorController.supportsCustomRequest &&
+      visible: !!(window.NetMonitorController.supportsCustomRequest &&
                selectedRequest && !selectedRequest.isCustom),
       click: this.cloneSelectedRequest,
     }));
@@ -187,7 +186,7 @@ RequestListContextMenu.prototype = {
       id: "request-list-context-perf",
       label: L10N.getStr("netmonitor.context.perfTools"),
       accesskey: L10N.getStr("netmonitor.context.perfTools.accesskey"),
-      visible: !!NetMonitorController.supportsPerfStats,
+      visible: !!window.NetMonitorController.supportsPerfStats,
       click: () => this.openStatistics(true)
     }));
 
@@ -349,7 +348,7 @@ RequestListContextMenu.prototype = {
   },
 
   getDefaultHarOptions() {
-    let form = NetMonitorController._target.form;
+    let form = window.NetMonitorController._target.form;
     let title = form.title || form.url;
 
     return {
