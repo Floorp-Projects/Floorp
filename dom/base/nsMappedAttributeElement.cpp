@@ -15,15 +15,11 @@ nsMappedAttributeElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 bool
-nsMappedAttributeElement::SetMappedAttribute(nsIDocument* aDocument,
-                                             nsIAtom* aName,
+nsMappedAttributeElement::SetMappedAttribute(nsIAtom* aName,
                                              nsAttrValue& aValue,
                                              nsresult* aRetval)
 {
-  NS_PRECONDITION(aDocument == GetComposedDoc(), "Unexpected document");
-  nsHTMLStyleSheet* sheet = aDocument ?
-    aDocument->GetAttributeStyleSheet() : nullptr;
-
+  nsHTMLStyleSheet* sheet = OwnerDoc()->GetAttributeStyleSheet();
   *aRetval = mAttrsAndChildren.SetAndTakeMappedAttr(aName, aValue,
                                                     this, sheet);
   return true;
@@ -39,4 +35,12 @@ void
 nsMappedAttributeElement::MapNoAttributesInto(const nsMappedAttributes* aAttributes,
                                               mozilla::GenericSpecifiedValues* aGenericData)
 {
+}
+
+void
+nsMappedAttributeElement::NodeInfoChanged(nsIDocument* aOldDoc)
+{
+  nsHTMLStyleSheet* sheet = OwnerDoc()->GetAttributeStyleSheet();
+  mAttrsAndChildren.SetMappedAttrStyleSheet(sheet);
+  nsMappedAttributeElementBase::NodeInfoChanged(aOldDoc);
 }
