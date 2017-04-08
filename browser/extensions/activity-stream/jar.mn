@@ -5,4 +5,6 @@
 [features/activity-stream@mozilla.org] chrome.jar:
 % resource activity-stream %content/
   content/lib/ (./lib/*)
+  content/common/ (./common/*)
+  content/vendor/Redux.jsm (./vendor/Redux.jsm)
   content/data/ (./data/*)

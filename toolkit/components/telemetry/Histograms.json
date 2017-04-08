@@ -5152,6 +5152,42 @@
     "releaseChannelCollection": "opt-out",
     "description": "Update: the update wizard page displayed when the UI was closed (mapped in toolkit/mozapps/update/UpdateTelemetry.jsm)"
   },
+  "UPDATE_NOTIFICATION_SHOWN": {
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "bug_numbers": [893505],
+    "releaseChannelCollection": "opt-out",
+    "description": "Update: the application update doorhanger type that was displayed.",
+    "labels": ["restart", "available", "manual"]
+  },
+  "UPDATE_NOTIFICATION_DISMISSED": {
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "bug_numbers": [893505],
+    "releaseChannelCollection": "opt-out",
+    "description": "Update: the dismiss action was executed for this application update doorhanger type.",
+    "labels": ["restart", "available", "manual"]
+  },
+  "UPDATE_NOTIFICATION_MAIN_ACTION_DOORHANGER": {
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "bug_numbers": [893505],
+    "releaseChannelCollection": "opt-out",
+    "description": "Update: the main update action was initiated for this application update doorhanger type.",
+    "labels": ["restart", "available", "manual"]
+  },
+  "UPDATE_NOTIFICATION_MAIN_ACTION_MENU": {
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "bug_numbers": [893505],
+    "releaseChannelCollection": "opt-out",
+    "description": "Update: the update action was initiated from the PanelUI application update menu item.",
+    "labels": ["restart", "available", "manual"]
+  },
   "THUNDERBIRD_GLODA_SIZE_MB": {
     "expires_in_version": "never",
     "kind": "linear",

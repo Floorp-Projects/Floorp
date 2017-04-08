@@ -133,6 +133,7 @@ windows-vm-tests:
     - jsreftest
     - marionette
     - mochitest
+    - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-devtools-chrome
     - mochitest-jetpack
@@ -144,13 +145,13 @@ windows-vm-tests:
 windows-gpu-tests:
     - reftest
     - reftest-no-accel
+    - mochitest-gpu
     - mochitest-webgl
 
 # these tests currently run on hardware, but may migrate above when validated
-#    - mochitest-a11y
+# see https://bugzilla.mozilla.org/show_bug.cgi?id=1280474#c36
 #    - mochitest-chrome
 #    - mochitest-clipboard
-#    - mochitest-gpu
 
 macosx64-tests-debug:
     - cppunit

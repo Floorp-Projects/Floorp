@@ -10,7 +10,6 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const Actions = require("../actions/index");
-const { Filters } = require("../utils/filter-predicates");
 const { L10N } = require("../utils/l10n");
 const { getSelectedRequest } = require("../selectors/index");
 
@@ -20,7 +19,6 @@ const TabPanel = createFactory(require("devtools/client/shared/components/tabs/t
 const CookiesPanel = createFactory(require("./cookies-panel"));
 const HeadersPanel = createFactory(require("./headers-panel"));
 const ParamsPanel = createFactory(require("./params-panel"));
-const PreviewPanel = createFactory(require("./preview-panel"));
 const ResponsePanel = createFactory(require("./response-panel"));
 const SecurityPanel = createFactory(require("./security-panel"));
 const StackTracePanel = createFactory(require("./stack-trace-panel"));
@@ -29,7 +27,6 @@ const TimingsPanel = createFactory(require("./timings-panel"));
 const COOKIES_TITLE = L10N.getStr("netmonitor.tab.cookies");
 const HEADERS_TITLE = L10N.getStr("netmonitor.tab.headers");
 const PARAMS_TITLE = L10N.getStr("netmonitor.tab.params");
-const PREVIEW_TITLE = L10N.getStr("netmonitor.tab.preview");
 const RESPONSE_TITLE = L10N.getStr("netmonitor.tab.response");
 const SECURITY_TITLE = L10N.getStr("netmonitor.tab.security");
 const STACK_TRACE_TITLE = L10N.getStr("netmonitor.tab.stackTrace");
@@ -99,13 +96,6 @@ function TabboxPanel({
         title: SECURITY_TITLE,
       },
         SecurityPanel({ request }),
-      ),
-      Filters.html(request) &&
-      TabPanel({
-        id: "preview",
-        title: PREVIEW_TITLE,
-      },
-        PreviewPanel({ request }),
       ),
     )
   );

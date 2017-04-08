@@ -17,9 +17,17 @@
 
       <footer id="PanelUI-footer">
         <vbox id="PanelUI-footer-addons"></vbox>
-        <toolbarbutton id="PanelUI-update-status"
-                       oncommand="gMenuButtonUpdateBadge.onMenuPanelCommand(event);"
+        <toolbarbutton id="PanelUI-update-available-menu-item"
                        wrap="true"
+                       label="&updateAvailable.panelUI.label;"
+                       hidden="true"/>
+        <toolbarbutton id="PanelUI-update-manual-menu-item"
+                       wrap="true"
+                       label="&updateManual.panelUI.label;"
+                       hidden="true"/>
+        <toolbarbutton id="PanelUI-update-restart-menu-item"
+                       wrap="true"
+                       label="&updateRestart.panelUI.label;"
                        hidden="true"/>
         <hbox id="PanelUI-footer-fxa">
           <hbox id="PanelUI-fxa-status"
@@ -413,4 +421,67 @@
   <button label="&panicButton.thankyou.buttonlabel;"
           id="panic-button-success-closebutton"
           oncommand="PanicButtonNotifier.close()"/>
+</panel>
+
+<panel id="PanelUI-notification-popup"
+       class="popup-notification-panel"
+       type="arrow"
+       position="after_start"
+       hidden="true"
+       orient="vertical"
+       noautofocus="true"
+       noautohide="true"
+       nopreventnavboxhide="true"
+       role="alert">
+  <popupnotification id="PanelUI-update-available-notification"
+                     popupid="update-available"
+                     label="&updateAvailable.header.message;"
+                     buttonlabel="&updateAvailable.acceptButton.label;"
+                     buttonaccesskey="&updateAvailable.acceptButton.accesskey;"
+                     closebuttonhidden="true"
+                     secondarybuttonlabel="&updateAvailable.cancelButton.label;"
+                     secondarybuttonaccesskey="&updateAvailable.cancelButton.accesskey;"
+                     dropmarkerhidden="true"
+                     checkboxhidden="true"
+                     hidden="true">
+    <popupnotificationcontent id="update-available-notification-content" orient="vertical">
+      <description id="update-available-description">&updateAvailable.message;
+        <label id="update-available-whats-new" class="text-link" value="&updateAvailable.whatsnew.label;" />
+      </description>
+    </popupnotificationcontent>
+  </popupnotification>
+
+  <popupnotification id="PanelUI-update-manual-notification"
+                     popupid="update-manual"
+                     label="&updateManual.header.message;"
+                     buttonlabel="&updateManual.acceptButton.label;"
+                     buttonaccesskey="&updateManual.acceptButton.accesskey;"
+                     closebuttonhidden="true"
+                     secondarybuttonlabel="&updateManual.cancelButton.label;"
+                     secondarybuttonaccesskey="&updateManual.cancelButton.accesskey;"
+                     dropmarkerhidden="true"
+                     checkboxhidden="true"
+                     hidden="true">
+    <popupnotificationcontent id="update-manual-notification-content" orient="vertical">
+      <description id="update-manual-description">&updateManual.message;
+        <label id="update-manual-whats-new" class="text-link" value="&updateManual.whatsnew.label;" />
+      </description>
+    </popupnotificationcontent>
+  </popupnotification>
+
+  <popupnotification id="PanelUI-update-restart-notification"
+                     popupid="update-restart"
+                     label="&updateRestart.header.message;"
+                     buttonlabel="&updateRestart.acceptButton.label;"
+                     buttonaccesskey="&updateRestart.acceptButton.accesskey;"
+                     closebuttonhidden="true"
+                     secondarybuttonlabel="&updateRestart.cancelButton.label;"
+                     secondarybuttonaccesskey="&updateRestart.cancelButton.accesskey;"
+                     dropmarkerhidden="true"
+                     checkboxhidden="true"
+                     hidden="true">
+    <popupnotificationcontent id="update-restart-notification-content" orient="vertical">
+      <description id="update-restart-description">&updateRestart.message;</description>
+    </popupnotificationcontent>
+  </popupnotification>
 </panel>

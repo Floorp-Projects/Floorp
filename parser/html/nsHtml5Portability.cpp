@@ -16,37 +16,31 @@ nsHtml5Portability::newLocalNameFromBuffer(char16_t* buf, int32_t offset, int32_
   return interner->GetAtom(nsDependentSubstring(buf, buf + length));
 }
 
-nsString*
-nsHtml5Portability::newStringFromBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5TreeBuilder* treeBuilder)
+nsHtml5String
+nsHtml5Portability::newStringFromBuffer(char16_t* buf,
+                                        int32_t offset,
+                                        int32_t length,
+                                        nsHtml5TreeBuilder* treeBuilder)
 {
-  nsString* str = new nsString();
-  bool succeeded = str->Append(buf + offset, length, mozilla::fallible);
-  if (!succeeded) {
-    str->Assign(char16_t(0xFFFD));
-    treeBuilder->MarkAsBroken(NS_ERROR_OUT_OF_MEMORY);
-  }
-  return str;
+  return nsHtml5String::FromBuffer(buf + offset, length, treeBuilder);
 }
 
-nsString*
+nsHtml5String
 nsHtml5Portability::newEmptyString()
 {
-  return new nsString();
+  return nsHtml5String::EmptyString();
 }
 
-nsString*
+nsHtml5String
 nsHtml5Portability::newStringFromLiteral(const char* literal)
 {
-  nsString* str = new nsString();
-  str->AssignASCII(literal);
-  return str;
+  return nsHtml5String::FromLiteral(literal);
 }
 
-nsString*
-nsHtml5Portability::newStringFromString(nsString* string) {
-  nsString* newStr = new nsString();
-  newStr->Assign(*string);
-  return newStr;
+nsHtml5String
+nsHtml5Portability::newStringFromString(nsHtml5String string)
+{
+  return string.Clone();
 }
 
 jArray<char16_t,int32_t>
@@ -60,12 +54,14 @@ nsHtml5Portability::newCharArrayFromLocal(nsIAtom* local)
   return arr;
 }
 
-jArray<char16_t,int32_t>
-nsHtml5Portability::newCharArrayFromString(nsString* string)
+jArray<char16_t, int32_t>
+nsHtml5Portability::newCharArrayFromString(nsHtml5String string)
 {
-  int32_t len = string->Length();
+  MOZ_RELEASE_ASSERT(string);
+  uint32_t len = string.Length();
+  MOZ_RELEASE_ASSERT(len < INT32_MAX);
   jArray<char16_t,int32_t> arr = jArray<char16_t,int32_t>::newJArray(len);
-  memcpy(arr, string->BeginReading(), len * sizeof(char16_t));
+  string.CopyToBuffer(arr);
   return arr;
 }
 
@@ -82,12 +78,6 @@ nsHtml5Portability::newLocalFromLocal(nsIAtom* local, nsHtml5AtomTable* interner
   return local;
 }
 
-void
-nsHtml5Portability::releaseString(nsString* str)
-{
-  delete str;
-}
-
 bool
 nsHtml5Portability::localEqualsBuffer(nsIAtom* local, char16_t* buf, int32_t offset, int32_t length)
 {
@@ -95,55 +85,32 @@ nsHtml5Portability::localEqualsBuffer(nsIAtom* local, char16_t* buf, int32_t off
 }
 
 bool
-nsHtml5Portability::lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string)
+nsHtml5Portability::lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(
+  const char* lowerCaseLiteral,
+  nsHtml5String string)
 {
-  if (!string) {
-    return false;
-  }
-  const char* litPtr = lowerCaseLiteral;
-  const char16_t* strPtr = string->BeginReading();
-  const char16_t* end = string->EndReading();
-  char16_t litChar;
-  while ((litChar = *litPtr)) {
-    NS_ASSERTION(!(litChar >= 'A' && litChar <= 'Z'), "Literal isn't in lower case.");
-    if (strPtr == end) {
-      return false;
-    }
-    char16_t strChar = *strPtr;
-    if (strChar >= 'A' && strChar <= 'Z') {
-      strChar += 0x20;
-    }
-    if (litChar != strChar) {
-      return false;
-    }
-    ++litPtr;
-    ++strPtr;
-  }
-  return true;
+  return string.LowerCaseStartsWithASCII(lowerCaseLiteral);
 }
 
 bool
-nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string)
+nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(
+  const char* lowerCaseLiteral,
+  nsHtml5String string)
 {
-  if (!string) {
-    return false;
-  }
-  return string->LowerCaseEqualsASCII(lowerCaseLiteral);
+  return string.LowerCaseEqualsASCII(lowerCaseLiteral);
 }
 
 bool
-nsHtml5Portability::literalEqualsString(const char* literal, nsString* string)
+nsHtml5Portability::literalEqualsString(const char* literal,
+                                        nsHtml5String string)
 {
-  if (!string) {
-    return false;
-  }
-  return string->EqualsASCII(literal);
+  return string.EqualsASCII(literal);
 }
 
 bool
-nsHtml5Portability::stringEqualsString(nsString* one, nsString* other)
+nsHtml5Portability::stringEqualsString(nsHtml5String one, nsHtml5String other)
 {
-  return one->Equals(*other);
+  return one.Equals(other);
 }
 
 void

@@ -182,3 +182,20 @@ add_task(function* test_disable() {
   is(Preferences.get("browser.startup.homepage"), defaultHomePage,
      "Home url should be the default");
 });
+
+add_task(function* test_local() {
+  let ext1 = ExtensionTestUtils.loadExtension({
+    manifest: {"chrome_settings_overrides": {"homepage": "home.html"}},
+    useAddonManager: "temporary",
+  });
+
+  let prefPromise = promisePrefChangeObserved("browser.startup.homepage");
+  yield ext1.startup();
+  yield prefPromise;
+
+  let homepage = Preferences.get("browser.startup.homepage");
+  ok((homepage.startsWith("moz-extension") && homepage.endsWith("home.html")),
+     "Home url should be relative to extension.");
+
+  yield ext1.unload();
+});
