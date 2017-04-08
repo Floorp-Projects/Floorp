@@ -27,7 +27,8 @@ const system = require('../system/events');
 const { EventParent } = require('./utils');
 const options = require('@loader/options');
 const loaderModule = require('toolkit/loader');
-const { getTabForBrowser } = require('../tabs/utils');
+
+lazyRequire(this, '../tabs/utils', "getTabForBrowser");
 
 const appInfo = Cc["@mozilla.org/xre/app-info;1"].
                 getService(Ci.nsIXULRuntime);

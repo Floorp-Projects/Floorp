@@ -7,7 +7,7 @@ module.metadata = {
   "stability": "unstable"
 };
 
-const { flatten } = require('./array');
+lazyRequire(this, './array', "flatten");
 
 // Create a shortcut for Array.prototype.slice.call().
 const unbind = Function.call.bind(Function.bind, Function.call);

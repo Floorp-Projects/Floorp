@@ -6,18 +6,20 @@
 const { frames } = require("../remote/child");
 const { Class } = require("../core/heritage");
 const { Disposable } = require('../core/disposable');
-const { data } = require("../self");
-const { once } = require("../dom/events");
-const { getAttachEventType } = require("./utils");
-const { Rules } = require('../util/rules');
-const { uuid } = require('../util/uuid');
-const { WorkerChild } = require("./worker-child");
+lazyRequire(this, "../self", "data");
+lazyRequire(this, "../dom/events", "once");
+lazyRequire(this, "./utils", "getAttachEventType");
+lazyRequire(this, '../util/rules', "Rules");
+lazyRequire(this, '../util/uuid', "uuid");
+lazyRequire(this, "./worker-child", "WorkerChild");
 const { Cc, Ci, Cu } = require("chrome");
 const { on: onSystemEvent } = require("../system/events");
 
-const appShell = Cc["@mozilla.org/appshell/appShellService;1"].getService(Ci.nsIAppShellService);
-
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, 'appShell',
+                                   "@mozilla.org/appshell/appShellService;1",
+                                   "nsIAppShellService");
 
 const pages = new Map();
 

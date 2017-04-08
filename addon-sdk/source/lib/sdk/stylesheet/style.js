@@ -7,14 +7,12 @@ module.metadata = {
   "stability": "experimental"
 };
 
-const { Cc, Ci } = require("chrome");
 const { Class } = require("../core/heritage");
-const { URL, isLocalURL } = require('../url');
-const events = require("../system/events");
-const { loadSheet, removeSheet, isTypeValid } = require("./utils");
-const { isString } = require("../lang/type");
+lazyRequire(this, "../url", "isLocalURL");
+lazyRequire(this, "./utils", "loadSheet", "removeSheet", "isTypeValid");
+lazyRequire(this, "../lang/type", "isString");
 const { attachTo, detachFrom } = require("../content/mod");
-const { data } = require('../self');
+lazyRequire(this, '../self', "data");
 
 const { freeze, create } = Object;
 
