@@ -24,6 +24,27 @@ const IS_CONTENT_PROCESS = (function() {
 })();
 
 this.TelemetryUtils = {
+  Preferences: Object.freeze({
+    // General Preferences
+    ArchiveEnabled: "toolkit.telemetry.archive.enabled",
+    CachedClientId: "toolkit.telemetry.cachedClientID",
+    FirstRun: "toolkit.telemetry.reportingpolicy.firstRun",
+    OverrideOfficialCheck: "toolkit.telemetry.send.overrideOfficialCheck",
+    Server: "toolkit.telemetry.server",
+    ShutdownPingSender: "toolkit.telemetry.shutdownPingSender.enabled",
+    TelemetryEnabled: "toolkit.telemetry.enabled",
+    Unified: "toolkit.telemetry.unified",
+
+    // Data reporting Preferences
+    AcceptedPolicyDate: "datareporting.policy.dataSubmissionPolicyNotifiedTime",
+    AcceptedPolicyVersion: "datareporting.policy.dataSubmissionPolicyAcceptedVersion",
+    BypassNotification: "datareporting.policy.dataSubmissionPolicyBypassNotification",
+    CurrentPolicyVersion: "datareporting.policy.currentPolicyVersion",
+    DataSubmissionEnabled: "datareporting.policy.dataSubmissionEnabled",
+    FhrUploadEnabled: "datareporting.healthreport.uploadEnabled",
+    MinimumPolicyVersion: "datareporting.policy.minimumPolicyVersion",
+  }),
+
   /**
    * True if this is a content process.
    */
