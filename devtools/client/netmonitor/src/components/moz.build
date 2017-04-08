@@ -12,7 +12,6 @@ DevToolsModules(
     'monitor-panel.js',
     'network-details-panel.js',
     'params-panel.js',
-    'preview-panel.js',
     'properties-view.js',
     'request-list-content.js',
     'request-list-empty-notice.js',

@@ -30,7 +30,7 @@
 
 #include "nsIAtom.h"
 #include "nsHtml5AtomTable.h"
-#include "nsString.h"
+#include "nsHtml5String.h"
 #include "nsNameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsTraceRefcnt.h"
@@ -59,19 +59,26 @@ class nsHtml5Portability
 {
   public:
     static nsIAtom* newLocalNameFromBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner);
-    static nsString* newStringFromBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5TreeBuilder* treeBuilder);
-    static nsString* newEmptyString();
-    static nsString* newStringFromLiteral(const char* literal);
-    static nsString* newStringFromString(nsString* string);
+    static nsHtml5String newStringFromBuffer(char16_t* buf,
+                                             int32_t offset,
+                                             int32_t length,
+                                             nsHtml5TreeBuilder* treeBuilder);
+    static nsHtml5String newEmptyString();
+    static nsHtml5String newStringFromLiteral(const char* literal);
+    static nsHtml5String newStringFromString(nsHtml5String string);
     static jArray<char16_t,int32_t> newCharArrayFromLocal(nsIAtom* local);
-    static jArray<char16_t,int32_t> newCharArrayFromString(nsString* string);
+    static jArray<char16_t, int32_t> newCharArrayFromString(
+      nsHtml5String string);
     static nsIAtom* newLocalFromLocal(nsIAtom* local, nsHtml5AtomTable* interner);
-    static void releaseString(nsString* str);
     static bool localEqualsBuffer(nsIAtom* local, char16_t* buf, int32_t offset, int32_t length);
-    static bool lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string);
-    static bool lowerCaseLiteralEqualsIgnoreAsciiCaseString(const char* lowerCaseLiteral, nsString* string);
-    static bool literalEqualsString(const char* literal, nsString* string);
-    static bool stringEqualsString(nsString* one, nsString* other);
+    static bool lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(
+      const char* lowerCaseLiteral,
+      nsHtml5String string);
+    static bool lowerCaseLiteralEqualsIgnoreAsciiCaseString(
+      const char* lowerCaseLiteral,
+      nsHtml5String string);
+    static bool literalEqualsString(const char* literal, nsHtml5String string);
+    static bool stringEqualsString(nsHtml5String one, nsHtml5String other);
     static void initializeStatics();
     static void releaseStatics();
 };

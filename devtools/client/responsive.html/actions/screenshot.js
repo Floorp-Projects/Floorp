@@ -12,7 +12,7 @@ const {
 } = require("./index");
 
 const { getFormatStr } = require("../utils/l10n");
-const { getToplevelWindow } = require("sdk/window/utils");
+const { getToplevelWindow } = require("../utils/window");
 const { Task: { spawn } } = require("devtools/shared/task");
 const e10s = require("../utils/e10s");
 const Services = require("Services");

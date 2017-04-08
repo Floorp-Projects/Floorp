@@ -610,12 +610,20 @@ public:
     return mFontFamilies;
   }
 
+  // PURLClassifierChild
   virtual PURLClassifierChild*
   AllocPURLClassifierChild(const Principal& aPrincipal,
                            const bool& aUseTrackingProtection,
                            bool* aSuccess) override;
   virtual bool
   DeallocPURLClassifierChild(PURLClassifierChild* aActor) override;
+
+  // PURLClassifierLocalChild
+  virtual PURLClassifierLocalChild*
+  AllocPURLClassifierLocalChild(const URIParams& aUri,
+                                const nsCString& aTables) override;
+  virtual bool
+  DeallocPURLClassifierLocalChild(PURLClassifierLocalChild* aActor) override;
 
   nsTArray<LookAndFeelInt>&
   LookAndFeelCache() {

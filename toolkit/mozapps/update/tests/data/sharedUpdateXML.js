@@ -231,8 +231,8 @@ function getLocalPatchString(aType, aURL, aHashFunction, aHashValue, aSize,
  *         If not specified it will default to '20080811053724'.
  * @param  aDetailsURL (optional)
  *         The update's details url.
- *         If not specified it will default to 'http://test_details/' due to due
- *         to bug 470244.
+ *         If not specified it will default to
+ *         URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS" due to bug 470244.
  * @param  aShowPrompt (optional)
  *         Whether to show the prompt for the update when auto update is
  *         enabled.
@@ -273,7 +273,7 @@ function getUpdateString(aType, aName, aDisplayVersion, aAppVersion, aBuildID,
 //   let detailsURL = aDetailsURL ? "detailsURL=\"" + aDetailsURL + "\" " : "";
   let detailsURL = "detailsURL=\"" +
                    (aDetailsURL ? aDetailsURL
-                                : "http://test_details/") + "\" ";
+                                : URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS") + "\" ";
   let showPrompt = aShowPrompt ? "showPrompt=\"" + aShowPrompt + "\" " : "";
   let showNeverForVersion = aShowNeverForVersion ? "showNeverForVersion=\"" +
                                                    aShowNeverForVersion + "\" "
