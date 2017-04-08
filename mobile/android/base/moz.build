@@ -821,6 +821,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'search/SearchEngineManager.java',
     'SessionParser.java',
     'SharedPreferencesHelper.java',
+    'SingleTabActivity.java',
     'SiteIdentity.java',
     'SnackbarBuilder.java',
     'SuggestClient.java',
