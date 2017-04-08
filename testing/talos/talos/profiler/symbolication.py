@@ -261,11 +261,8 @@ class ProfileSymbolicator:
         symbolication_table = self._resolve_symbols(symbols_to_resolve)
         self._substitute_symbols(profile_json, symbolication_table)
 
-        for i, thread in enumerate(profile_json["threads"]):
-            if isinstance(thread, basestring):
-                thread_json = json.loads(thread)
-                self.symbolicate_profile(thread_json)
-                profile_json["threads"][i] = json.dumps(thread_json)
+        for process in profile_json["processes"]:
+            self.symbolicate_profile(process)
 
     def _find_addresses(self, profile_json):
         addresses = set()
