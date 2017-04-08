@@ -434,6 +434,23 @@ public class Tabs implements BundleEventListener {
         return true;
     }
 
+    public synchronized boolean selectLastTab(Tab.TabType targetType) {
+        if (mOrder.isEmpty()) {
+            return false;
+        }
+
+        Tab tabToSelect = mOrder.get(mOrder.size() - 1);
+        if (tabToSelect.getType() != targetType) {
+            tabToSelect = getPreviousTabFrom(tabToSelect, false, targetType);
+            if (tabToSelect == null) {
+                return false;
+            }
+        }
+
+        selectTab(tabToSelect.getId());
+        return true;
+    }
+
     private int getIndexOf(Tab tab) {
         return mOrder.lastIndexOf(tab);
     }
