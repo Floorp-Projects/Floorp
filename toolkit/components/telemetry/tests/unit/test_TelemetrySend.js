@@ -15,8 +15,6 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 
-const PREF_TELEMETRY_SERVER = "toolkit.telemetry.server";
-
 const MS_IN_A_MINUTE = 60 * 1000;
 
 function countPingTypes(pings) {
@@ -79,7 +77,7 @@ add_task(function* test_setup() {
   do_get_profile(true);
   // Make sure we don't generate unexpected pings due to pref changes.
   yield setEmptyPrefWatchlist();
-  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
 });
 
 // Test the ping sending logic.
@@ -137,7 +135,7 @@ add_task(function* test_sendPendingPings() {
   // Now enable sending to the ping server.
   now = fakeNow(futureDate(now, MS_IN_A_MINUTE));
   PingServer.start();
-  Preferences.set(PREF_TELEMETRY_SERVER, "http://localhost:" + PingServer.port);
+  Preferences.set(TelemetryUtils.Preferences.Server, "http://localhost:" + PingServer.port);
 
   let timerPromise = waitForTimer();
   yield TelemetryController.testReset();
@@ -429,7 +427,6 @@ add_task(function* test_persistCurrentPingsOnShutdown() {
 
 add_task(function* test_sendCheckOverride() {
   const TEST_PING_TYPE = "test-sendCheckOverride";
-  const PREF_OVERRIDE_OFFICIAL_CHECK = "toolkit.telemetry.send.overrideOfficialCheck";
 
   // Clear any pending pings.
   yield TelemetryController.testShutdown();
@@ -437,7 +434,7 @@ add_task(function* test_sendCheckOverride() {
 
   // Enable the ping server.
   PingServer.start();
-  Preferences.set(PREF_TELEMETRY_SERVER, "http://localhost:" + PingServer.port);
+  Preferences.set(TelemetryUtils.Preferences.Server, "http://localhost:" + PingServer.port);
 
   // Start Telemetry and disable the test-mode so pings don't get
   // sent unless we enable the override.
@@ -454,7 +451,7 @@ add_task(function* test_sendCheckOverride() {
   }
 
   // Enable the override and try to send again.
-  Preferences.set(PREF_OVERRIDE_OFFICIAL_CHECK, true);
+  Preferences.set(TelemetryUtils.Preferences.OverrideOfficialCheck, true);
   PingServer.resetPingHandler();
   yield TelemetrySend.reset();
   yield TelemetryController.submitExternalPing(TEST_PING_TYPE, { test: "test" });
@@ -465,7 +462,7 @@ add_task(function* test_sendCheckOverride() {
 
   // Restore the test mode and disable the override.
   TelemetrySend.setTestModeEnabled(true);
-  Preferences.reset(PREF_OVERRIDE_OFFICIAL_CHECK);
+  Preferences.reset(TelemetryUtils.Preferences.OverrideOfficialCheck);
 });
 
 add_task(function* cleanup() {
