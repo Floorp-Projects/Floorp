@@ -28,8 +28,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=686905
 /** Test for Bug 686905. **/
 SimpleTest.waitForExplicitFinish();
 
-var gFinished = false;
-
 var gNumDiscards = 0;
 
 window.onload = function() {
@@ -102,17 +100,11 @@ function step4() {
 }
 
 function checkIfFinished() {
-  if (gFinished) {
-    return;
-  }
-
   if ((gNumFrameUpdates[0] >= kNumFrameUpdatesToExpect) &&
       (gNumFrameUpdates[1] >= kNumFrameUpdatesToExpect) &&
       (gNumSnapShotChanges[0] >= kNumFrameUpdatesToExpect) &&
       (gNumSnapShotChanges[1] >= kNumFrameUpdatesToExpect)) {
     ok(true, "got expected frame updates");
-    gCountingFrameUpdates = false;
-    gFinished = true;
     SimpleTest.finish();
   }
 }
@@ -134,7 +126,7 @@ function addCallbacks(anImage, arrayIndex) {
     }
   };
   observer.frameUpdate = function () {
-    if (!gCountingFrameUpdates || gFinished) {
+    if (!gCountingFrameUpdates) {
       return;
     }
 
