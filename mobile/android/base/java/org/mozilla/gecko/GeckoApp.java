@@ -162,6 +162,8 @@ public abstract class GeckoApp
 
     protected static final String LAST_SELECTED_TAB        = "lastSelectedTab";
     protected static final String LAST_SESSION_UUID        = "lastSessionUUID";
+    protected static final String STARTUP_SELECTED_TAB     = "restoredSelectedTab";
+    protected static final String STARTUP_SESSION_UUID     = "restorationSessionUUID";
 
     public static final String PREFS_ALLOW_STATE_BUNDLE    = "allowStateBundle";
     public static final String PREFS_FLASH_USAGE           = "playFlashCount";
@@ -228,6 +230,8 @@ public abstract class GeckoApp
         private JSONObject windowObject;
         private boolean isExternalURL;
 
+        private int selectedTabId = INVALID_TAB_ID;
+
         private boolean selectNextTab;
         private boolean tabsWereSkipped;
         private boolean tabsWereProcessed;
@@ -248,6 +252,15 @@ public abstract class GeckoApp
 
         public int getNewTabId(int oldTabId) {
             return tabIdMap.get(oldTabId, INVALID_TAB_ID);
+        }
+
+        /**
+         * @return The index of the tab that should be selected according to the session store data.
+         *         In conjunction with opening external tabs, this might not be the tab that
+         *         actually gets selected in the end, though.
+         */
+        public int getStoredSelectedTabId() {
+            return selectedTabId;
         }
 
         @Override
@@ -285,6 +298,9 @@ public abstract class GeckoApp
 
             final Tab tab = Tabs.getInstance().loadUrl(sessionTab.getUrl(), flags);
 
+            if (sessionTab.isSelected() || selectNextTab) {
+                selectedTabId = tab.getId();
+            }
             if (selectNextTab) {
                 // We did not restore the selected tab previously. Now let's select this tab.
                 Tabs.getInstance().selectTab(tab.getId());
@@ -1927,9 +1943,27 @@ public abstract class GeckoApp
             throw new SessionRestoreException("No tabs could be read from session file");
         }
 
+        if (saveSelectedStartupTab()) {
+            // This activity is something other than our normal tabbed browsing interface and is
+            // going to overwrite our tab selection. Therefore we should stash it away for later, so
+            // e.g. BrowserApp can display the correct tab if starting up later during this session.
+            SharedPreferences.Editor prefs = getSharedPreferencesForProfile().edit();
+            prefs.putInt(STARTUP_SELECTED_TAB, parser.getStoredSelectedTabId());
+            prefs.putString(STARTUP_SESSION_UUID, GeckoApplication.getSessionUUID());
+            prefs.apply();
+        }
+
         final GeckoBundle restoreData = new GeckoBundle(1);
         restoreData.putString("sessionString", sessionString);
         return restoreData;
+    }
+
+    /**
+     * Activities that don't implement a normal tabbed browsing UI and overwrite the tab selection
+     * made by session restoring should probably override this and return true.
+     */
+    protected boolean saveSelectedStartupTab() {
+        return false;
     }
 
     @RobocopTarget
