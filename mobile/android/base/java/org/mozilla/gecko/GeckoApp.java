@@ -410,6 +410,8 @@ public abstract class GeckoApp
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
         // When a tab is closed, it is always unselected first.
         // When a tab is unselected, another tab is always selected first.
+        // When we're switching activities because of differing tab types,
+        // the first statement is not true.
         switch (msg) {
             case UNSELECTED:
                 break;
@@ -1242,6 +1244,8 @@ public abstract class GeckoApp
         if (sAlreadyLoaded) {
             // This happens when the GeckoApp activity is destroyed by Android
             // without killing the entire application (see Bug 769269).
+            // Now that we've got multiple GeckoApp-based activities, this can
+            // also happen if we're not the first activity to run within a session.
             mIsRestoringActivity = true;
             Telemetry.addToHistogram("FENNEC_RESTORING_ACTIVITY", 1);
 
@@ -1716,9 +1720,12 @@ public abstract class GeckoApp
             }
         }
 
+        if (mIsRestoringActivity && hasGeckoTab(intent)) {
+            Tabs.getInstance().notifyListeners(null, Tabs.TabEvents.RESTORED);
+            handleSelectTabIntent(intent);
         // External URLs should always be loaded regardless of whether Gecko is
         // already running.
-        if (isExternalURL) {
+        } else if (isExternalURL) {
             // Restore tabs before opening an external URL so that the new tab
             // is animated properly.
             Tabs.getInstance().notifyListeners(null, Tabs.TabEvents.RESTORED);
@@ -2204,7 +2211,10 @@ public abstract class GeckoApp
             passedUri = null;
         }
 
-        if (ACTION_LOAD.equals(action)) {
+        if (hasGeckoTab(intent)) {
+            // This also covers ACTION_SWITCH_TAB.
+            handleSelectTabIntent(intent);
+        } else if (ACTION_LOAD.equals(action)) {
             Tabs.getInstance().loadUrl(intent.getDataString());
             lastSelectedTabId = INVALID_TAB_ID;
         } else if (Intent.ACTION_VIEW.equals(action)) {
@@ -2232,13 +2242,20 @@ public abstract class GeckoApp
             // Copy extras.
             settingsIntent.putExtras(intent.getUnsafe());
             startActivity(settingsIntent);
-        } else if (ACTION_SWITCH_TAB.equals(action)) {
-            final int tabId = intent.getIntExtra("TabId", INVALID_TAB_ID);
-            Tabs.getInstance().selectTab(tabId);
-            lastSelectedTabId = INVALID_TAB_ID;
         }
 
         recordStartupActionTelemetry(passedUri, action);
+    }
+
+    protected boolean hasGeckoTab(SafeIntent intent) {
+        final int tabId = intent.getIntExtra(Tabs.INTENT_EXTRA_TAB_ID, INVALID_TAB_ID);
+        return Tabs.getInstance().getTab(tabId) != null;
+    }
+
+    protected void handleSelectTabIntent(SafeIntent intent) {
+        final int tabId = intent.getIntExtra(Tabs.INTENT_EXTRA_TAB_ID, INVALID_TAB_ID);
+        Tabs.getInstance().selectTab(tabId);
+        lastSelectedTabId = INVALID_TAB_ID;
     }
 
     /**
@@ -2726,7 +2743,9 @@ public abstract class GeckoApp
                 if (tab.isExternal()) {
                     onDone();
                     Tab nextSelectedTab = Tabs.getInstance().getNextTab(tab);
-                    if (nextSelectedTab != null) {
+                    // Closing the tab will select the next tab. There's no need to unzombify it
+                    // if we're really exiting - switching activities is a different matter, though.
+                    if (nextSelectedTab != null && nextSelectedTab.getType() == tab.getType()) {
                         final GeckoBundle data = new GeckoBundle(1);
                         data.putInt("nextSelectedTabId", nextSelectedTab.getId());
                         EventDispatcher.getInstance().dispatch("Tab:KeepZombified", data);

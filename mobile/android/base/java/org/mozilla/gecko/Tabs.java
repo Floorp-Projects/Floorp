@@ -12,12 +12,16 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.gecko.customtabs.CustomTabsActivity;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.distribution.PartnerBrowserCustomizationsClient;
 import org.mozilla.gecko.gfx.LayerView;
@@ -52,7 +56,9 @@ import static org.mozilla.gecko.Tab.TabType;
 public class Tabs implements BundleEventListener {
     private static final String LOGTAG = "GeckoTabs";
 
+    public static final String INTENT_EXTRA_TAB_ID = "TabId";
     private static final String PRIVATE_TAB_INTENT_EXTRA = "private_tab";
+
     // mOrder and mTabs are always of the same cardinality, and contain the same values.
     private volatile CopyOnWriteArrayList<Tab> mOrder = new CopyOnWriteArrayList<Tab>();
 
@@ -311,6 +317,14 @@ public class Tabs implements BundleEventListener {
             return tab;
         }
 
+        if (oldTab != null && oldTab.getType() != tab.getType() &&
+                !currentActivityMatchesTab(tab)) {
+            // We're in the wrong activity for this kind of tab, so launch the correct one
+            // and then try again.
+            launchActivityForTab(tab);
+            return tab;
+        }
+
         mSelectedTab = tab;
         notifyListeners(tab, TabEvents.SELECTED);
 
@@ -327,6 +341,56 @@ public class Tabs implements BundleEventListener {
         data.putInt("id", tab.getId());
         EventDispatcher.getInstance().dispatch("Tab:Selected", data);
         return tab;
+    }
+
+    /**
+     * Check whether the currently active activity matches the tab type of the passed tab.
+     */
+    private boolean currentActivityMatchesTab(Tab tab) {
+        final Activity currentActivity = GeckoActivityMonitor.getInstance().getCurrentActivity();
+
+        if (currentActivity == null) {
+            return false;
+        }
+        String currentActivityName = currentActivity.getClass().getName();
+        return currentActivityName.equals(getClassNameForTab(tab));
+    }
+
+    private void launchActivityForTab(Tab tab) {
+        final Intent intent;
+        switch (tab.getType()) {
+            case CUSTOMTAB:
+                if (tab.getCustomTabIntent() != null) {
+                    intent = tab.getCustomTabIntent().getUnsafe();
+                } else {
+                    intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(tab.getURL()));
+                }
+                break;
+            default:
+                intent = new Intent(GeckoApp.ACTION_SWITCH_TAB);
+                break;
+        }
+
+        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, getClassNameForTab(tab));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra(BrowserContract.SKIP_TAB_QUEUE_FLAG, true);
+        intent.putExtra(INTENT_EXTRA_TAB_ID, tab.getId());
+        mAppContext.startActivity(intent);
+    }
+
+    /**
+     * Get the class name of the activity that should be displaying this tab.
+     */
+    private String getClassNameForTab(Tab tab) {
+        TabType type = tab.getType();
+
+        switch (type) {
+            case CUSTOMTAB:
+                return CustomTabsActivity.class.getName();
+            default:
+                return AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS;
+        }
     }
 
     public synchronized boolean selectLastTab() {
@@ -1041,6 +1105,13 @@ public class Tabs implements BundleEventListener {
             tabToSelect = addTab(tabId, tabUrl, external, parentId, url, isPrivate, tabIndex, type);
             tabToSelect.setDesktopMode(desktopMode);
             tabToSelect.setApplicationId(applicationId);
+            if (intent != null) {
+                if (customTab) {
+                    // The intent can contain all sorts of customisations, so we save it in case
+                    // we need to launch a new custom tab activity for this tab.
+                    tabToSelect.setCustomTabIntent(intent);
+                }
+            }
             if (isFirstShownAfterActivityUnhidden) {
                 // We just opened Firefox so we want to show
                 // the toolbar but not animate it to avoid jank.

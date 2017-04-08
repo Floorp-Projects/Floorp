@@ -81,10 +81,13 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             final Intent restoredIntent = savedInstanceState.getParcelable(SAVED_START_INTENT);
             startIntent = new SafeIntent(restoredIntent);
         } else {
-            sendTelemetry();
             startIntent = new SafeIntent(getIntent());
             final String host = getReferrerHost();
             recordCustomTabUsage(host);
+        }
+
+        if (!mIsRestoringActivity || !hasGeckoTab(startIntent)) {
+            sendTelemetry();
         }
 
         setThemeFromToolbarColor();
@@ -197,7 +200,8 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
 
     @Override
     public void onTabChanged(Tab tab, TabEvents msg, String data) {
-        if (!Tabs.getInstance().isSelectedTab(tab)) {
+        if (!Tabs.getInstance().isSelectedTab(tab) ||
+                tab.getType() != Tab.TabType.CUSTOMTAB) {
             return;
         }
 
@@ -206,7 +210,8 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
                 || msg == TabEvents.ADDED
                 || msg == TabEvents.LOAD_ERROR
                 || msg == TabEvents.LOADED
-                || msg == TabEvents.LOCATION_CHANGE) {
+                || msg == TabEvents.LOCATION_CHANGE
+                || msg == TabEvents.SELECTED) {
 
             updateProgress((tab.getState() == Tab.STATE_LOADING),
                     tab.getLoadProgress());
@@ -214,7 +219,8 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
 
         if (msg == TabEvents.LOCATION_CHANGE
                 || msg == TabEvents.SECURITY_CHANGE
-                || msg == TabEvents.TITLE) {
+                || msg == TabEvents.TITLE
+                || msg == TabEvents.SELECTED) {
             actionBarPresenter.update(tab);
         }
 
