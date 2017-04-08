@@ -56,7 +56,6 @@ typedef nsStyleAutoArray<mozilla::StyleAnimation> RawGeckoStyleAnimationList;
 typedef nsTArray<nsFontFaceRuleContainer> RawGeckoFontFaceRuleList;
 typedef mozilla::AnimationPropertySegment RawGeckoAnimationPropertySegment;
 typedef mozilla::ComputedTiming RawGeckoComputedTiming;
-typedef nsTArray<const RawServoStyleRule*> RawGeckoServoStyleRuleList;
 
 // We have these helper types so that we can directly generate
 // things like &T or Borrowed<T> on the Rust side in the function, providing
@@ -136,7 +135,6 @@ DECL_BORROWED_REF_TYPE_FOR(nsTimingFunction)
 DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoFontFaceRuleList)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoAnimationPropertySegment)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoComputedTiming)
-DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoServoStyleRuleList)
 
 #undef DECL_ARC_REF_TYPE_FOR
 #undef DECL_OWNED_REF_TYPE_FOR
