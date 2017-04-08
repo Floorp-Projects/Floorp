@@ -442,7 +442,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     private PendingIntent createContentIntent(int tabId) {
         Intent intent = new Intent(getApplicationContext(), BrowserApp.class);
         intent.setAction(GeckoApp.ACTION_SWITCH_TAB);
-        intent.putExtra("TabId", tabId);
+        intent.putExtra(Tabs.INTENT_EXTRA_TAB_ID, tabId);
         return PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
