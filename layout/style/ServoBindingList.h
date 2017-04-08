@@ -296,12 +296,6 @@ SERVO_BINDING_FUNC(Servo_Shutdown, void)
 SERVO_BINDING_FUNC(Servo_Element_GetSnapshot, ServoElementSnapshot*,
                    RawGeckoElementBorrowed element)
 
-// Gets the source style rules for the element. This returns the result via
-// rules, which would include a list of unowned pointers to RawServoStyleRule.
-SERVO_BINDING_FUNC(Servo_Element_GetStyleRuleList, void,
-                   RawGeckoElementBorrowed element,
-                   RawGeckoServoStyleRuleListBorrowedMut rules)
-
 // Restyle and change hints.
 SERVO_BINDING_FUNC(Servo_NoteExplicitHints, void, RawGeckoElementBorrowed element,
                    nsRestyleHint restyle_hint, nsChangeHint change_hint)

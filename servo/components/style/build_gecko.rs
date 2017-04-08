@@ -610,11 +610,9 @@ mod bindings {
             "RawServoAnimationValue",
             "RawServoAnimationValueMap",
             "RawServoDeclarationBlock",
-            "RawServoStyleRule",
             "RawGeckoPresContext",
             "RawGeckoPresContextOwned",
             "RawGeckoStyleAnimationList",
-            "RawGeckoServoStyleRuleList",
             "RawGeckoURLExtraData",
             "RefPtr",
             "CSSPseudoClassType",
@@ -726,7 +724,6 @@ mod bindings {
             "RawGeckoKeyframeList",
             "RawGeckoComputedKeyframeValuesList",
             "RawGeckoFontFaceRuleList",
-            "RawGeckoServoStyleRuleList",
         ];
         for &ty in structs_types.iter() {
             builder = builder.hide_type(ty)

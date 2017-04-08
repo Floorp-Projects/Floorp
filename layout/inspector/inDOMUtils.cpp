@@ -52,9 +52,6 @@
 #include "mozilla/StyleSetHandleInlines.h"
 #include "nsStyleUtil.h"
 #include "nsQueryObject.h"
-#include "mozilla/ServoBindings.h"
-#include "mozilla/ServoCSSRuleList.h"
-#include "mozilla/ServoStyleRule.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -246,12 +243,7 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
   }
 
   NonOwningStyleContextSource source = styleContext->StyleSource();
-  if (source.IsNull()) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIMutableArray> rules = nsArray::Create();
-  if (source.IsGeckoRuleNodeOrNull()) {
+  if (!source.IsNull() && source.IsGeckoRuleNodeOrNull()) {
     nsRuleNode* ruleNode = source.AsGeckoRuleNode();
 
     AutoTArray<nsRuleNode*, 16> ruleNodes;
@@ -260,6 +252,7 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
       ruleNode = ruleNode->GetParent();
     }
 
+    nsCOMPtr<nsIMutableArray> rules = nsArray::Create();
     for (nsRuleNode* ruleNode : Reversed(ruleNodes)) {
       RefPtr<Declaration> decl = do_QueryObject(ruleNode->GetRule());
       if (decl) {
@@ -269,45 +262,9 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
         }
       }
     }
-  } else {
-    // It's a Servo source, so use some servo methods on the element to get
-    // the rule list.
-    nsTArray<const RawServoStyleRule*> rawRuleList;
-    Servo_Element_GetStyleRuleList(element, &rawRuleList);
-    size_t rawRuleCount = rawRuleList.Length();
 
-    // We have RawServoStyleRules, and now we'll map them to ServoStyleRules
-    // by looking them up in the ServoStyleSheets owned by this document.
-    ServoCSSRuleList::StyleRuleHashtable rawRulesToRules;
-
-    nsIDocument* document = element->GetOwnerDocument();
-    int32_t sheetCount = document->GetNumberOfStyleSheets();
-
-    for (int32_t i = 0; i < sheetCount; i++) {
-      StyleSheet* sheet = document->GetStyleSheetAt(i);
-      MOZ_ASSERT(sheet->IsServo());
-
-      ErrorResult ignored;
-      ServoCSSRuleList* ruleList = static_cast<ServoCSSRuleList*>(
-        sheet->GetCssRules(*nsContentUtils::SubjectPrincipal(), ignored));
-      if (ruleList) {
-        // Generate the map from raw rules to rules.
-        ruleList->FillStyleRuleHashtable(rawRulesToRules);
-      }
-    }
-
-    // Find matching rules in the table.
-    for (size_t j = 0; j < rawRuleCount; j++) {
-      const RawServoStyleRule* rawRule = rawRuleList.ElementAt(j);
-      ServoStyleRule* rule;
-      rawRulesToRules.Get(rawRule, &rule);
-      MOZ_ASSERT(rule, "We should always be able to map a raw rule to a rule.");
-      RefPtr<css::Rule> ruleObj(rule);
-      rules->AppendElement(ruleObj, false);
-    }
+    rules.forget(_retval);
   }
-
-  rules.forget(_retval);
 
   return NS_OK;
 }
