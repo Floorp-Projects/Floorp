@@ -64,9 +64,9 @@ public class TestCustomTabsActivity {
     @Test
     public void testFinishWithoutCustomAnimation() {
         final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-        final SafeIntent i = new SafeIntent(builder.build().intent);
+        final Intent i = builder.build().intent;
 
-        Whitebox.setInternalState(spyActivity, "startIntent", i);
+        doReturn(i).when(spyActivity).getIntent();
 
         spyActivity.finish();
         verify(spyActivity, times(0)).overridePendingTransition(anyInt(), anyInt());
@@ -79,9 +79,9 @@ public class TestCustomTabsActivity {
     public void testFinish() {
         final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
         builder.setExitAnimations(spyContext, enterRes, exitRes);
-        final SafeIntent i = new SafeIntent(builder.build().intent);
+        final Intent i = builder.build().intent;
 
-        Whitebox.setInternalState(spyActivity, "startIntent", i);
+        doReturn(i).when(spyActivity).getIntent();
 
         spyActivity.finish();
         verify(spyActivity, times(1)).overridePendingTransition(eq(enterRes), eq(exitRes));
@@ -94,10 +94,10 @@ public class TestCustomTabsActivity {
     public void testGetPackageName() {
         final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
         builder.setExitAnimations(spyContext, enterRes, exitRes);
-        final SafeIntent i = new SafeIntent(builder.build().intent);
+        final Intent i = builder.build().intent;
 
+        doReturn(i).when(spyActivity).getIntent();
         Whitebox.setInternalState(spyActivity, "usingCustomAnimation", true);
-        Whitebox.setInternalState(spyActivity, "startIntent", i);
 
         Assert.assertEquals(THIRD_PARTY_PACKAGE_NAME, spyActivity.getPackageName());
     }
