@@ -111,6 +111,21 @@ function minProfileReadSandboxLevel(level) {
   }
 }
 
+// Returns the lowest sandbox level where blanket reading of the home
+// directory from the content process should be blocked by the sandbox.
+function minHomeReadSandboxLevel(level) {
+  switch (Services.appinfo.OS) {
+    case "WINNT":
+      return 3;
+    case "Darwin":
+      return 3;
+    case "Linux":
+      return 3;
+    default:
+      Assert.ok(false, "Unknown OS");
+  }
+}
+
 //
 // Checks that sandboxing is enabled and at the appropriate level
 // setting before triggering tests that do the file I/O.
@@ -260,6 +275,24 @@ function* testFileAccess() {
       ok:       true,
       browser:  fileBrowser,
       file:     profileDir,
+      minLevel: 0,
+    });
+  }
+
+  let homeDir = GetHomeDir();
+  tests.push({
+    desc:     "home dir",
+    ok:       false,
+    browser:  webBrowser,
+    file:     homeDir,
+    minLevel: minHomeReadSandboxLevel(),
+  });
+  if (fileContentProcessEnabled) {
+    tests.push({
+      desc:     "home dir",
+      ok:       true,
+      browser:  fileBrowser,
+      file:     homeDir,
       minLevel: 0,
     });
   }
