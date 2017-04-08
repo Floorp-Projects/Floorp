@@ -3660,7 +3660,8 @@ Tab.prototype = {
       desktopMode: this.desktopMode,
       isPrivate: isPrivate,
       tabId: this.id,
-      parentId: this.parentId
+      parentId: this.parentId,
+      type: this.type
     };
 
     if (aParams.delayLoad) {
