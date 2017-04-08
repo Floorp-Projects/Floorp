@@ -1772,7 +1772,7 @@ var touchSyncBookmark = Task.async(function* (db, bookmarkItem) {
 var dedupeSyncBookmark = Task.async(function* (db, localGuid, remoteGuid,
                                                remoteParentGuid) {
   let rows = yield db.executeCached(`
-    SELECT b.id, p.guid AS parentGuid, b.syncStatus
+    SELECT b.id, b.type, p.id AS parentId, p.guid AS parentGuid, b.syncStatus
     FROM moz_bookmarks b
     JOIN moz_bookmarks p ON p.id = b.parent
     WHERE b.guid = :localGuid`,
@@ -1782,6 +1782,8 @@ var dedupeSyncBookmark = Task.async(function* (db, localGuid, remoteGuid,
   }
 
   let localId = rows[0].getResultByName("id");
+  let localParentId = rows[0].getResultByName("parentId");
+  let bookmarkType = rows[0].getResultByName("type");
   if (PlacesUtils.isRootItem(localId)) {
     throw new Error(`Cannot de-dupe local root ${localGuid}`);
   }
@@ -1838,6 +1840,16 @@ var dedupeSyncBookmark = Task.async(function* (db, localGuid, remoteGuid,
         { localGuid, modified });
     }
   });
+
+  let observers = PlacesUtils.bookmarks.getObservers();
+  notify(observers, "onItemChanged", [ localId, "guid", false,
+                                       remoteGuid,
+                                       modified,
+                                       bookmarkType,
+                                       localParentId,
+                                       remoteGuid, remoteParentGuid,
+                                       localGuid, SOURCE_SYNC
+                                     ]);
 
   // TODO (Bug 1313890): Refactor the bookmarks engine to pull change records
   // before uploading, instead of returning records to merge into the engine's
@@ -1978,3 +1990,21 @@ var removeTombstones = Task.async(function* (db, guids) {
     DELETE FROM moz_bookmarks_deleted
     WHERE guid IN (${guids.map(guid => JSON.stringify(guid)).join(",")})`);
 });
+
+/**
+ * Sends a bookmarks notification through the given observers.
+ *
+ * @param observers
+ *        array of nsINavBookmarkObserver objects.
+ * @param notification
+ *        the notification name.
+ * @param args
+ *        array of arguments to pass to the notification.
+ */
+function notify(observers, notification, args = []) {
+  for (let observer of observers) {
+    try {
+      observer[notification](...args);
+    } catch (ex) {}
+  }
+}
