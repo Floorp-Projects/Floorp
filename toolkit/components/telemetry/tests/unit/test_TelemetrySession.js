@@ -60,12 +60,6 @@ var gNumberOfThreadsLaunched = 0;
 const MS_IN_ONE_HOUR  = 60 * 60 * 1000;
 const MS_IN_ONE_DAY   = 24 * MS_IN_ONE_HOUR;
 
-const PREF_BRANCH = "toolkit.telemetry.";
-const PREF_SERVER = PREF_BRANCH + "server";
-const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
-const PREF_BYPASS_NOTIFICATION = "datareporting.policy.dataSubmissionPolicyBypassNotification";
-const PREF_SHUTDOWN_PINGSENDER = "toolkit.telemetry.shutdownPingSender.enabled";
-
 const DATAREPORTING_DIR = "datareporting";
 const ABORTED_PING_FILE_NAME = "aborted-session-ping";
 const ABORTED_SESSION_UPDATE_INTERVAL_MS = 5 * 60 * 1000;
@@ -495,8 +489,8 @@ add_task(function* test_setup() {
   // Make sure we don't generate unexpected pings due to pref changes.
   yield setEmptyPrefWatchlist();
 
-  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
-  Services.prefs.setBoolPref(PREF_FHR_UPLOAD_ENABLED, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
 
   // Make it look like we've previously failed to lock a profile a couple times.
   write_fake_failedprofilelocks_file();
@@ -562,7 +556,7 @@ add_task(function* test_noServerPing() {
 add_task(function* test_simplePing() {
   yield TelemetryStorage.testClearPendingPings();
   PingServer.start();
-  Preferences.set(PREF_SERVER, "http://localhost:" + PingServer.port);
+  Preferences.set(TelemetryUtils.Preferences.Server, "http://localhost:" + PingServer.port);
 
   let now = new Date(2020, 1, 1, 12, 5, 6);
   let expectedDate = new Date(2020, 1, 1, 12, 0, 0);
@@ -1376,7 +1370,7 @@ add_task(function* test_sendShutdownPing() {
     return;
   }
 
-  Preferences.set(PREF_SHUTDOWN_PINGSENDER, true);
+  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, true);
   PingServer.clearRequests();
 
   // Shutdown telemetry and wait for an incoming ping.
@@ -1392,7 +1386,7 @@ add_task(function* test_sendShutdownPing() {
   // Try again, this time disable ping upload. The PingSender
   // should not be sending any ping!
   PingServer.registerPingHandler(() => Assert.ok(false, "Telemetry must not send pings if not allowed to."));
-  Preferences.set(PREF_FHR_UPLOAD_ENABLED, false);
+  Preferences.set(TelemetryUtils.Preferences.FhrUploadEnabled, false);
   yield TelemetryController.testReset();
   yield TelemetryController.testShutdown();
 
@@ -1401,17 +1395,17 @@ add_task(function* test_sendShutdownPing() {
 
   // Enable ping upload and disable the "submission policy".
   // The shutdown ping must not be sent.
-  Preferences.set(PREF_FHR_UPLOAD_ENABLED, true);
-  Preferences.set(PREF_BYPASS_NOTIFICATION, false);
+  Preferences.set(TelemetryUtils.Preferences.FhrUploadEnabled, true);
+  Preferences.set(TelemetryUtils.Preferences.BypassNotification, false);
   yield TelemetryController.testReset();
   yield TelemetryController.testShutdown();
 
 
   // Reset the pref and restart Telemetry.
-  Preferences.reset(PREF_SHUTDOWN_PINGSENDER);
+  Preferences.reset(TelemetryUtils.Preferences.ShutdownPingSender);
   // We cannot reset PREF_BYPASS_NOTIFICATION, as we need it to be
   // |true| in tests.
-  Preferences.set(PREF_BYPASS_NOTIFICATION, true);
+  Preferences.set(TelemetryUtils.Preferences.BypassNotification, true);
   PingServer.resetPingHandler();
   yield TelemetryController.testReset();
 });
