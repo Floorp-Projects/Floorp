@@ -1863,7 +1863,7 @@ pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1
 == 1105137-1.html 1105137-1.html
 == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow.html
 skip-if(stylo) == 1111753-1.html 1111753-1.html # Bug 1302946
-fails == 1114526-1.html 1114526-1.html
+== 1114526-1.html 1114526-1.html
 fuzzy-if(skiaContent,1,800000) == 1119117-1a.html 1119117-1a.html
 fuzzy-if(skiaContent,1,800000) == 1119117-1b.html 1119117-1b.html
 fails == 1120431-1.html 1120431-1.html
