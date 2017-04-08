@@ -353,6 +353,11 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onTabChanged(Tab tab, TabEvents msg, String data) {
+        if (!mInitialized) {
+            super.onTabChanged(tab, msg, data);
+            return;
+        }
+
         if (tab == null) {
             // Only RESTORED is allowed a null tab: it's the only event that
             // isn't tied to a specific tab.
