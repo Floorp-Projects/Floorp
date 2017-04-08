@@ -31,14 +31,12 @@ pub struct PerLevelTraversalData {
 }
 
 bitflags! {
-    /// Flags that control the traversal process.
+    /// Represents that target elements of the traversal.
     pub flags TraversalFlags: u8 {
         /// Traverse only unstyled children.
         const UNSTYLED_CHILDREN_ONLY = 0x01,
-        /// Traverse only elements for animation restyles.
+        /// Traverse only elements for animation restyles
         const ANIMATION_ONLY = 0x02,
-        /// Traverse without generating any change hints.
-        const FOR_RECONSTRUCT = 0x04,
     }
 }
 
@@ -51,11 +49,6 @@ impl TraversalFlags {
     /// Returns true if the traversal is for unstyled children.
     pub fn for_unstyled_children_only(&self) -> bool {
         self.contains(UNSTYLED_CHILDREN_ONLY)
-    }
-
-    /// Returns true if the traversal is for a frame reconstruction.
-    pub fn for_reconstruct(&self) -> bool {
-        self.contains(FOR_RECONSTRUCT)
     }
 }
 
@@ -155,10 +148,6 @@ pub trait DomTraversal<E: TElement> : Sync {
     fn pre_traverse(root: E, stylist: &Stylist, traversal_flags: TraversalFlags)
                     -> PreTraverseToken
     {
-        debug_assert!(!(traversal_flags.for_reconstruct() &&
-                        traversal_flags.for_unstyled_children_only()),
-                      "must not specify FOR_RECONSTRUCT in combination with UNSTYLED_CHILDREN_ONLY");
-
         if traversal_flags.for_unstyled_children_only() {
             if root.borrow_data().map_or(true, |d| d.has_styles() && d.styles().is_display_none()) {
                 return PreTraverseToken {
@@ -176,18 +165,12 @@ pub trait DomTraversal<E: TElement> : Sync {
         // we need a special case for the root.
         //
         // Expanding snapshots here may create a LATER_SIBLINGS restyle hint, which
-        // we propagate to the next sibling element.
+        // we will drop on the floor. To prevent missed restyles, we assert against
+        // restyling a root with later siblings.
         if let Some(mut data) = root.mutate_data() {
             if let Some(r) = data.get_restyle_mut() {
-                let later_siblings = r.compute_final_hint(root, stylist);
-                if later_siblings {
-                    if let Some(next) = root.next_sibling_element() {
-                        if let Some(mut next_data) = next.mutate_data() {
-                            let hint = StoredRestyleHint::subtree_and_later_siblings();
-                            next_data.ensure_restyle().hint.insert(&hint);
-                        }
-                    }
-                }
+                debug_assert!(root.next_sibling_element().is_none());
+                let _later_siblings = r.compute_final_hint(root, stylist);
             }
         }
 
@@ -209,10 +192,6 @@ pub trait DomTraversal<E: TElement> : Sync {
     fn node_needs_traversal(node: E::ConcreteNode, traversal_flags: TraversalFlags) -> bool {
         // Non-incremental layout visits every node.
         if is_servo_nonincremental_layout() {
-            return true;
-        }
-
-        if traversal_flags.for_reconstruct() {
             return true;
         }
 
@@ -285,11 +264,7 @@ pub trait DomTraversal<E: TElement> : Sync {
                 // Servo uses the post-order traversal for flow construction, so
                 // we need to traverse any element with damage so that we can perform
                 // fixup / reconstruction on our way back up the tree.
-                //
-                // We also need to traverse nodes with explicit damage and no other
-                // restyle data, so that this damage can be cleared.
-                if (cfg!(feature = "servo") ||
-                    traversal_flags.for_reconstruct()) &&
+                if cfg!(feature = "servo") &&
                    data.get_restyle().map_or(false, |r| r.damage != RestyleDamage::empty())
                 {
                     return true;
@@ -367,15 +342,11 @@ pub trait DomTraversal<E: TElement> : Sync {
 
         for kid in parent.as_node().children() {
             if Self::node_needs_traversal(kid, self.shared_context().traversal_flags) {
-                // If we are in a restyle for reconstruction, there is no need to
-                // perform a post-traversal, so we don't need to set the dirty
-                // descendants bit on the parent.
-                if !self.shared_context().traversal_flags.for_reconstruct() {
-                    let el = kid.as_element();
-                    if el.as_ref().and_then(|el| el.borrow_data())
-                                  .map_or(false, |d| d.has_styles()) {
-                        unsafe { parent.set_dirty_descendants(); }
-                    }
+                let el = kid.as_element();
+                if el.as_ref().and_then(|el| el.borrow_data())
+                              .map_or(false, |d| d.has_styles())
+                {
+                    unsafe { parent.set_dirty_descendants(); }
                 }
                 f(thread_local, kid);
             }
@@ -586,34 +557,20 @@ pub fn recalc_style_at<E, D>(traversal: &D,
                             inherited_style_changed);
     }
 
-    // If we are in a restyle for reconstruction, drop the existing restyle
-    // data here, since we won't need to perform a post-traversal to pick up
-    // any change hints.
-    if context.shared.traversal_flags.for_reconstruct() {
-        data.clear_restyle();
-    }
-
     if context.shared.traversal_flags.for_animation_only() {
         unsafe { element.unset_animation_only_dirty_descendants(); }
     }
 
-    // There are two cases when we want to clear the dity descendants bit
-    // here after styling this element.
-    //
-    // The first case is when this element is the root of a display:none
-    // subtree, even if the style didn't change (since, if the style did
-    // change, we'd have already cleared it above).
+    // Make sure the dirty descendants bit is not set for the root of a
+    // display:none subtree, even if the style didn't change (since, if
+    // the style did change, we'd have already cleared it above).
     //
     // This keeps the tree in a valid state without requiring the DOM to
     // check display:none on the parent when inserting new children (which
     // can be moderately expensive). Instead, DOM implementations can
     // unconditionally set the dirty descendants bit on any styled parent,
     // and let the traversal sort it out.
-    //
-    // The second case is when we are in a restyle for reconstruction,
-    // where we won't need to perform a post-traversal to pick up any
-    // change hints.
-    if data.styles().is_display_none() || context.shared.traversal_flags.for_reconstruct() {
+    if data.styles().is_display_none() {
         unsafe { element.unset_dirty_descendants(); }
     }
 }
