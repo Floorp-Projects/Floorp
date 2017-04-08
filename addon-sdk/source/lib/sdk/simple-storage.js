@@ -9,12 +9,12 @@ module.metadata = {
 };
 
 const { Cc, Ci } = require("chrome");
-const file = require("./io/file");
-const prefs = require("./preferences/service");
 const jpSelf = require("./self");
-const timer = require("./timers");
+lazyRequireModule(this, "./timers", "timer");
+lazyRequireModule(this, "./io/file", "file");
+lazyRequireModule(this, "./preferences/service", "prefs");
 const unload = require("./system/unload");
-const { emit, on, off } = require("./event/core");
+lazyRequire(this, "./event/core", "emit", "on", "off");
 
 const WRITE_PERIOD_PREF = "extensions.addon-sdk.simple-storage.writePeriod";
 const WRITE_PERIOD_DEFAULT = 300000; // 5 minutes

@@ -3,15 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
-const { merge } = require('../util/object');
+lazyRequire(this, '../util/object', 'merge');
 const { Class } = require('../core/heritage');
-const { emit } = require('../event/core');
+lazyRequire(this, '../event/core', 'emit');
 const { EventTarget } = require('../event/target');
-const { getInnerId, getByInnerId } = require('../window/utils');
-const { instanceOf, isObject } = require('../lang/type');
-const system = require('../system/events');
+lazyRequire(this, '../window/utils', 'getInnerId');
+lazyRequire(this, '../lang/type', 'instanceOf', 'isObject');
+lazyRequireModule(this, '../system/events', 'system');
 const { when } = require('../system/unload');
-const { WorkerSandbox } = require('./sandbox');
+lazyRequire(this, './sandbox', 'WorkerSandbox');
 const { Ci } = require('chrome');
 const { process, frames } = require('../remote/child');
 
