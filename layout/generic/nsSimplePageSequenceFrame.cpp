@@ -629,7 +629,7 @@ nsSimplePageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback, bool* a
 
       mCalledBeginPage = true;
       
-      RefPtr<gfxContext> renderingContext = dc->CreateReferenceRenderingContext();
+      RefPtr<gfxContext> renderingContext = dc->CreateRenderingContext();
       NS_ENSURE_TRUE(renderingContext, NS_ERROR_OUT_OF_MEMORY);
 
       DrawTarget* drawTarget = renderingContext->GetDrawTarget();
