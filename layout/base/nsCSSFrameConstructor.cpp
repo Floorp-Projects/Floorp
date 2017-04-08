@@ -7420,9 +7420,7 @@ nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
     if (child->IsElement() && !child->AsElement()->HasServoData()) {
       Element* parent = child->AsElement()->GetFlattenedTreeParentElement();
       MOZ_ASSERT(parent);
-      if (parent->HasServoData()) {
-        styleSet->StyleNewChildren(parent);
-      }
+      styleSet->StyleNewChildren(parent);
     }
   }
 }
