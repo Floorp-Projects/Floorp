@@ -1710,10 +1710,20 @@ public abstract class GeckoApp
             return;
         }
 
-        Tabs.getInstance().loadUrlWithIntentExtras(url, intent, flags);
+        final Tab newTab = Tabs.getInstance().loadUrlWithIntentExtras(url, intent, flags);
+        if (ThreadUtils.isOnUiThread()) {
+            onTabOpenFromIntent(newTab);
+        } else {
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    onTabOpenFromIntent(newTab);
+                }
+            });
+        }
     }
 
-    private String getIntentURI(SafeIntent intent) {
+    protected String getIntentURI(SafeIntent intent) {
         final String passedUri;
         final String uri = getURIFromIntent(intent);
 
@@ -1852,6 +1862,10 @@ public abstract class GeckoApp
             }
         }
     }
+
+    protected void onTabOpenFromIntent(Tab tab) { }
+
+    protected void onTabSelectFromIntent(Tab tab) { }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     @Override
@@ -2320,14 +2334,32 @@ public abstract class GeckoApp
         recordStartupActionTelemetry(passedUri, action);
     }
 
+    /**
+     * Check whether an intent with tab switch extras refers to a tab that
+     * is actually existing at the moment.
+     *
+     * @param intent The intent to be checked.
+     * @return True if the tab specified in the intent is existing in our Tabs list.
+     */
     protected boolean hasGeckoTab(SafeIntent intent) {
         final int tabId = intent.getIntExtra(Tabs.INTENT_EXTRA_TAB_ID, INVALID_TAB_ID);
-        return Tabs.getInstance().getTab(tabId) != null;
+        final String intentSessionUUID = intent.getStringExtra(Tabs.INTENT_EXTRA_SESSION_UUID);
+        final Tab tabToCheck = Tabs.getInstance().getTab(tabId);
+
+        // We only care about comparing session UUIDs if one was specified in the intent.
+        // Otherwise, we just try matching the tab ID with one of our open tabs.
+        return tabToCheck != null && (!intent.hasExtra(Tabs.INTENT_EXTRA_SESSION_UUID) ||
+                GeckoApplication.getSessionUUID().equals(intentSessionUUID));
     }
 
     protected void handleSelectTabIntent(SafeIntent intent) {
         final int tabId = intent.getIntExtra(Tabs.INTENT_EXTRA_TAB_ID, INVALID_TAB_ID);
-        Tabs.getInstance().selectTab(tabId);
+        final Tab selectedTab = Tabs.getInstance().selectTab(tabId);
+        // If the tab selection has been redirected to a different activity,
+        // the selectedTab within Tabs will not have been updated yet.
+        if (selectedTab == Tabs.getInstance().getSelectedTab()) {
+            onTabSelectFromIntent(selectedTab);
+        }
     }
 
     /**
