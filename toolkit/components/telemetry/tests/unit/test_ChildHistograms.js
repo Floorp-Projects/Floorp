@@ -3,6 +3,7 @@ Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
+Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
 const MESSAGE_TELEMETRY_PAYLOAD = "Telemetry:Payload";
 const MESSAGE_TELEMETRY_GET_CHILD_PAYLOAD = "Telemetry:GetChildPayload";
@@ -77,7 +78,7 @@ add_task(function*() {
   // Setup.
   do_get_profile(true);
   loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
-  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
   yield TelemetryController.testSetup();
   if (runningInParent) {
     // Make sure we don't generate unexpected pings due to pref changes.

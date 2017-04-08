@@ -7,6 +7,7 @@ Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
+Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
 const MESSAGE_CHILD_TEST_DONE = "ChildTest:Done";
 
@@ -140,7 +141,7 @@ add_task(function*() {
   // Setup.
   do_get_profile(true);
   loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
-  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
   yield TelemetryController.testSetup();
   if (runningInParent) {
     setParentScalars();

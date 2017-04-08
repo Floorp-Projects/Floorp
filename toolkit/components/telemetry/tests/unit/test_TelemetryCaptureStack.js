@@ -3,6 +3,7 @@
 
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/AppConstants.jsm", this);
+Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
 // We need both in order to capture stacks.
 const ENABLE_TESTS = AppConstants.MOZ_GECKO_PROFILER;
@@ -183,6 +184,6 @@ add_task({
 
 function run_test() {
   do_get_profile(true);
-  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
   run_next_test();
 }
