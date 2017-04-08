@@ -141,7 +141,7 @@ unsafe fn dummy_url_data() -> &'static RefPtr<URLExtraData> {
 
 fn create_shared_context<'a>(guard: &'a SharedRwLockReadGuard,
                              per_doc_data: &PerDocumentStyleDataImpl,
-                             traversal_flags: TraversalFlags) -> SharedStyleContext<'a> {
+                             animation_only: bool) -> SharedStyleContext<'a> {
     let local_context_data =
         ThreadLocalStyleContextCreationInfo::new(per_doc_data.new_animations_sender.clone());
 
@@ -156,7 +156,7 @@ fn create_shared_context<'a>(guard: &'a SharedRwLockReadGuard,
         timer: Timer::new(),
         // FIXME Find the real QuirksMode information for this document
         quirks_mode: QuirksMode::NoQuirks,
-        traversal_flags: traversal_flags,
+        animation_only_restyle: animation_only,
     }
 }
 
@@ -183,7 +183,8 @@ fn traverse_subtree(element: GeckoElement, raw_data: RawServoStyleSetBorrowed,
 
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
-    let shared_style_context = create_shared_context(&guard, &per_doc_data, traversal_flags);
+    let shared_style_context = create_shared_context(&guard, &per_doc_data,
+                                                     traversal_flags.for_animation_only());
 
     let traversal_driver = if global_style_data.style_thread_pool.is_none() {
         TraversalDriver::Sequential
@@ -397,7 +398,7 @@ pub extern "C" fn Servo_StyleSet_GetBaseComputedValuesForElement(raw_data: RawSe
     let doc_data = PerDocumentStyleData::from_ffi(raw_data).borrow();
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
-    let shared_context = &create_shared_context(&guard, &doc_data, TraversalFlags::empty());
+    let shared_context = &create_shared_context(&guard, &doc_data, false);
 
     let element = GeckoElement(element);
     let element_data = element.borrow_data().unwrap();
@@ -1630,7 +1631,7 @@ pub extern "C" fn Servo_ResolveStyleLazily(element: RawGeckoElementBorrowed,
     }
 
     // We don't have the style ready. Go ahead and compute it as necessary.
-    let shared = create_shared_context(&guard, &mut doc_data.borrow_mut(), TraversalFlags::empty());
+    let shared = create_shared_context(&guard, &mut doc_data.borrow_mut(), false);
     let mut tlc = ThreadLocalStyleContext::new(&shared);
     let mut context = StyleContext {
         shared: &shared,
