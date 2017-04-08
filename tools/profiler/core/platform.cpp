@@ -1222,7 +1222,7 @@ StreamMetaJSCustomObject(PS::LockRef aLock, SpliceableJSONWriter& aWriter)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  aWriter.IntProperty("version", 4);
+  aWriter.IntProperty("version", 5);
   aWriter.DoubleProperty("interval", gPS->Interval(aLock));
   aWriter.IntProperty("stackwalk", gPS->FeatureStackWalk(aLock));
 
@@ -1309,8 +1309,9 @@ SubProcessCallback(const char* aProfile, void* aClosure)
   // Called by the observer to get their profile data included as a sub profile.
   SubprocessClosure* closure = (SubprocessClosure*)aClosure;
 
-  // Add the string profile into the profile.
-  closure->mWriter->StringElement(aProfile);
+  // Add the subprocess profile into the profile, as an element in the
+  // "processes" array.
+  closure->mWriter->Splice(aProfile);
 }
 
 #if defined(PROFILE_JAVA)
@@ -1420,23 +1421,6 @@ StreamJSON(PS::LockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime)
                          aSinceTime);
       }
 
-      // When notifying observers in other places in this file we are careful
-      // to do it when gPSMutex is unlocked, to avoid deadlocks. But that's not
-      // necessary here, because "profiler-subprocess" observers just call back
-      // into SubprocessCallback, which is simple and doesn't lock gPSMutex.
-      if (CanNotifyObservers()) {
-        // Send a event asking any subprocesses (plugins) to
-        // give us their information
-        SubprocessClosure closure(&aWriter);
-        nsCOMPtr<nsIObserverService> os =
-          mozilla::services::GetObserverService();
-        if (os) {
-          RefPtr<ProfileSaveEvent> pse =
-            new ProfileSaveEvent(SubProcessCallback, &closure);
-          os->NotifyObservers(pse, "profiler-subprocess", nullptr);
-        }
-      }
-
 #if defined(PROFILE_JAVA)
       if (gPS->FeatureJava(aLock)) {
         java::GeckoJavaSampler::Pause();
@@ -1452,6 +1436,25 @@ StreamJSON(PS::LockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime)
 #endif
 
       gPS->SetIsPaused(aLock, false);
+    }
+    aWriter.EndArray();
+
+    aWriter.StartArrayProperty("processes");
+    // When notifying observers in other places in this file we are careful
+    // to do it when gPSMutex is unlocked, to avoid deadlocks. But that's not
+    // necessary here, because "profiler-subprocess" observers just call back
+    // into SubprocessCallback, which is simple and doesn't lock gPSMutex.
+    if (CanNotifyObservers()) {
+      // Send a event asking any subprocesses (plugins) to
+      // give us their information
+      SubprocessClosure closure(&aWriter);
+      nsCOMPtr<nsIObserverService> os =
+        mozilla::services::GetObserverService();
+      if (os) {
+        RefPtr<ProfileSaveEvent> pse =
+          new ProfileSaveEvent(SubProcessCallback, &closure);
+        os->NotifyObservers(pse, "profiler-subprocess", nullptr);
+      }
     }
     aWriter.EndArray();
   }
