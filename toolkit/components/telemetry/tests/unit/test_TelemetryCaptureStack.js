@@ -183,6 +183,6 @@ add_task({
 
 function run_test() {
   do_get_profile(true);
-  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
   run_next_test();
 }
