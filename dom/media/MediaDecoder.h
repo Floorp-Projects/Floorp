@@ -570,7 +570,10 @@ protected:
   // This corresponds to the "current position" in HTML5.
   // We allow omx subclasses to substitute an alternative current position for
   // usage with the audio offload player.
-  virtual int64_t CurrentPosition() { return mCurrentPosition; }
+  virtual int64_t CurrentPosition()
+  {
+    return mCurrentPosition.Ref().ToMicroseconds();
+  }
 
   // Official duration of the media resource as observed by script.
   double mDuration;
@@ -762,7 +765,7 @@ protected:
   Mirror<MediaDecoderOwner::NextFrameStatus> mNextFrameStatus;
 
   // NB: Don't use mCurrentPosition directly, but rather CurrentPosition().
-  Mirror<int64_t> mCurrentPosition;
+  Mirror<media::TimeUnit> mCurrentPosition;
 
   // Duration of the media resource according to the state machine.
   Mirror<media::NullableTimeUnit> mStateMachineDuration;

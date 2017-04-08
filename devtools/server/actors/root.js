@@ -244,84 +244,95 @@ RootActor.prototype = {
     this._processActors.clear();
   },
 
+  /**
+   * Gets the "root" form, which lists all the global actors that affect the entire
+   * browser.  This can replace usages of `listTabs` that only wanted the global actors
+   * and didn't actually care about tabs.
+   */
+  onGetRoot: function () {
+    let reply = {
+      from: this.actorID,
+    };
+
+    // Create global actors
+    if (!this._globalActorPool) {
+      this._globalActorPool = new ActorPool(this.conn);
+      this.conn.addActorPool(this._globalActorPool);
+    }
+    this._createExtraActors(this._parameters.globalActorFactories, this._globalActorPool);
+
+    // List the global actors
+    this._appendExtraActors(reply);
+
+    return reply;
+  },
+
   /* The 'listTabs' request and the 'tabListChanged' notification. */
 
   /**
    * Handles the listTabs request. The actors will survive until at least
    * the next listTabs request.
+   *
+   * ⚠ WARNING ⚠ This can be a very expensive operation, especially if there are many
+   * open tabs.  It will cause us to visit every tab, load a frame script, start a
+   * debugger server, and read some data.  With lazy tab support (bug 906076), this
+   * would trigger any lazy tabs to be loaded, greatly increasing resource usage.  Avoid
+   * this method whenever possible.
    */
-  onListTabs: function () {
+  onListTabs: async function () {
     let tabList = this._parameters.tabList;
     if (!tabList) {
       return { from: this.actorID, error: "noTabs",
                message: "This root actor has no browser tabs." };
     }
 
-    /*
-     * Now that a client has requested the list of tabs, we reattach the onListChanged
-     * listener in order to be notified if the list of tabs changes again in the future.
-     */
+    // Now that a client has requested the list of tabs, we reattach the onListChanged
+    // listener in order to be notified if the list of tabs changes again in the future.
     tabList.onListChanged = this._onTabListChanged;
 
-    /*
-     * Walk the tab list, accumulating the array of tab actors for the
-     * reply, and moving all the actors to a new ActorPool. We'll
-     * replace the old tab actor pool with the one we build here, thus
-     * retiring any actors that didn't get listed again, and preparing any
-     * new actors to receive packets.
-     */
+    // Walk the tab list, accumulating the array of tab actors for the reply, and moving
+    // all the actors to a new ActorPool. We'll replace the old tab actor pool with the
+    // one we build here, thus retiring any actors that didn't get listed again, and
+    // preparing any new actors to receive packets.
     let newActorPool = new ActorPool(this.conn);
     let tabActorList = [];
     let selected;
-    return tabList.getList().then((tabActors) => {
-      for (let tabActor of tabActors) {
-        if (tabActor.exited) {
-          // Tab actor may have exited while we were gathering the list.
-          continue;
-        }
-        if (tabActor.selected) {
-          selected = tabActorList.length;
-        }
-        tabActor.parentID = this.actorID;
-        newActorPool.addActor(tabActor);
-        tabActorList.push(tabActor);
-      }
-      /* DebuggerServer.addGlobalActor support: create actors. */
-      if (!this._globalActorPool) {
-        this._globalActorPool = new ActorPool(this.conn);
-        this.conn.addActorPool(this._globalActorPool);
-      }
-      this._createExtraActors(this._parameters.globalActorFactories,
-        this._globalActorPool);
-      /*
-       * Drop the old actorID -> actor map. Actors that still mattered were
-       * added to the new map; others will go away.
-       */
-      if (this._tabActorPool) {
-        this.conn.removeActorPool(this._tabActorPool);
-      }
-      this._tabActorPool = newActorPool;
-      this.conn.addActorPool(this._tabActorPool);
 
-      let reply = {
-        "from": this.actorID,
-        "selected": selected || 0,
-        "tabs": tabActorList.map(actor => actor.form())
-      };
-
-      /* If a root window is accessible, include its URL. */
-      if (this.url) {
-        reply.url = this.url;
+    let tabActors = await tabList.getList();
+    for (let tabActor of tabActors) {
+      if (tabActor.exited) {
+        // Tab actor may have exited while we were gathering the list.
+        continue;
       }
+      if (tabActor.selected) {
+        selected = tabActorList.length;
+      }
+      tabActor.parentID = this.actorID;
+      newActorPool.addActor(tabActor);
+      tabActorList.push(tabActor);
+    }
 
-      /* DebuggerServer.addGlobalActor support: name actors in 'listTabs' reply. */
-      this._appendExtraActors(reply);
+    // Start with the root reply, which includes the global actors for the whole browser.
+    let reply = this.onGetRoot();
 
-      return reply;
+    // Drop the old actorID -> actor map. Actors that still mattered were added to the
+    // new map; others will go away.
+    if (this._tabActorPool) {
+      this.conn.removeActorPool(this._tabActorPool);
+    }
+    this._tabActorPool = newActorPool;
+    this.conn.addActorPool(this._tabActorPool);
+
+    // We'll extend the reply here to also mention all the tabs.
+    Object.assign(reply, {
+      selected: selected || 0,
+      tabs: tabActorList.map(actor => actor.form()),
     });
+
+    return reply;
   },
 
-  onGetTab: function (options) {
+  onGetTab: async function (options) {
     let tabList = this._parameters.tabList;
     if (!tabList) {
       return { error: "noTabs",
@@ -331,22 +342,25 @@ RootActor.prototype = {
       this._tabActorPool = new ActorPool(this.conn);
       this.conn.addActorPool(this._tabActorPool);
     }
-    return tabList.getTab(options)
-                  .then(tabActor => {
-                    tabActor.parentID = this.actorID;
-                    this._tabActorPool.addActor(tabActor);
 
-                    return { tab: tabActor.form() };
-                  }, error => {
-                    if (error.error) {
+    let tabActor;
+    try {
+      tabActor = await tabList.getTab(options);
+    } catch (error) {
+      if (error.error) {
         // Pipe expected errors as-is to the client
-                      return error;
-                    }
-                    return {
-                      error: "noTab",
-                      message: "Unexpected error while calling getTab(): " + error
-                    };
-                  });
+        return error;
+      }
+      return {
+        error: "noTab",
+        message: "Unexpected error while calling getTab(): " + error
+      };
+    }
+
+    tabActor.parentID = this.actorID;
+    this._tabActorPool.addActor(tabActor);
+
+    return { tab: tabActor.form() };
   },
 
   onGetWindow: function ({ outerWindowID }) {
@@ -583,16 +597,17 @@ RootActor.prototype = {
 };
 
 RootActor.prototype.requestTypes = {
-  "listTabs": RootActor.prototype.onListTabs,
-  "getTab": RootActor.prototype.onGetTab,
-  "getWindow": RootActor.prototype.onGetWindow,
-  "listAddons": RootActor.prototype.onListAddons,
-  "listWorkers": RootActor.prototype.onListWorkers,
-  "listServiceWorkerRegistrations": RootActor.prototype.onListServiceWorkerRegistrations,
-  "listProcesses": RootActor.prototype.onListProcesses,
-  "getProcess": RootActor.prototype.onGetProcess,
-  "echo": RootActor.prototype.onEcho,
-  "protocolDescription": RootActor.prototype.onProtocolDescription
+  getRoot: RootActor.prototype.onGetRoot,
+  listTabs: RootActor.prototype.onListTabs,
+  getTab: RootActor.prototype.onGetTab,
+  getWindow: RootActor.prototype.onGetWindow,
+  listAddons: RootActor.prototype.onListAddons,
+  listWorkers: RootActor.prototype.onListWorkers,
+  listServiceWorkerRegistrations: RootActor.prototype.onListServiceWorkerRegistrations,
+  listProcesses: RootActor.prototype.onListProcesses,
+  getProcess: RootActor.prototype.onGetProcess,
+  echo: RootActor.prototype.onEcho,
+  protocolDescription: RootActor.prototype.onProtocolDescription
 };
 
 exports.RootActor = RootActor;

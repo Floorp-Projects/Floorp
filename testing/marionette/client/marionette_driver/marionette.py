@@ -540,7 +540,7 @@ class Alert(object):
     def send_keys(self, *string):
         """Send keys to the currently displayed text input area in an open
         tab modal dialog."""
-        body = {"value": Marionette.convert_keys(*string)}
+        body = {"text": Marionette.convert_keys(*string)}
         self.marionette._send_message("sendKeysToDialog", body)
 
 

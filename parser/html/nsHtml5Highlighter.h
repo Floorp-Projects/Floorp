@@ -78,7 +78,7 @@ class nsHtml5Highlighter
      * @param aValue the value of the attribute
      */
     void MaybeLinkifyAttributeValue(nsHtml5AttributeName* aName,
-                                    nsString* aValue);
+                                    nsHtml5String aValue);
 
     /**
      * Inform the highlighter that the tokenizer successfully completed a
@@ -147,7 +147,7 @@ class nsHtml5Highlighter
      *
      * @param aValue the base URL to add
      */
-    void AddBase(const nsString& aValue);
+    void AddBase(nsHtml5String aValue);
 
   private:
 
@@ -272,8 +272,8 @@ class nsHtml5Highlighter
      *
      * @param aValue the (potentially relative) URL to link to
      */
-    void AddViewSourceHref(const nsString& aValue);
-    
+    void AddViewSourceHref(nsHtml5String aValue);
+
     /**
      * The state we are transitioning away from.
      */

@@ -180,6 +180,31 @@ mm.addMessageListener("ppapipdf.js:printPDF", ({ data }) => {
   });
 });
 
+mm.addMessageListener("ppapipdf.js:openLink", ({data}) => {
+  const PDFIUM_WINDOW_OPEN_DISPOSITION = {
+    CURRENT_TAB: 1,
+    NEW_FOREGROUND_TAB: 3,
+    NEW_BACKGROUND_TAB: 4,
+    NEW_WINDOW: 6,
+  };
+  switch(data.disposition) {
+    case PDFIUM_WINDOW_OPEN_DISPOSITION.CURRENT_TAB:
+      containerWindow.location.href = data.url;
+      break;
+    // We don't support opening in background tab for now. Just open it in
+    // foreground tab.
+    case PDFIUM_WINDOW_OPEN_DISPOSITION.NEW_FOREGROUND_TAB:
+    case PDFIUM_WINDOW_OPEN_DISPOSITION.NEW_BACKGROUND_TAB:
+      containerWindow.open(data.url);
+      break;
+    case PDFIUM_WINDOW_OPEN_DISPOSITION.NEW_WINDOW:
+      containerWindow.open(data.url, "",
+        "noopener=1,menubar=1,toolbar=1," +
+        "location=1,personalbar=1,status=1,resizable");
+      break;
+  }
+});
+
 mm.addMessageListener("ppapipdf.js:save", () => {
   let url = containerWindow.document.location;
   let filename = "document.pdf";

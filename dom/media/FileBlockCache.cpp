@@ -15,19 +15,19 @@
 
 namespace mozilla {
 
+#undef LOG
 LazyLogModule gFileBlockCacheLog("FileBlockCache");
-#define FBC_LOG(type, msg) MOZ_LOG(gFileBlockCacheLog, type, msg)
+#define LOG(x, ...) MOZ_LOG(gFileBlockCacheLog, LogLevel::Debug, \
+  ("%p " x, this, ##__VA_ARGS__))
 
 void
 FileBlockCache::SetCacheFile(PRFileDesc* aFD)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  FBC_LOG(LogLevel::Debug,
-          ("FileBlockCache::SetFD(aFD=%p) mIsOpen=%d", aFD, mIsOpen));
+  LOG("SetFD(aFD=%p) mIsOpen=%d", aFD, mIsOpen);
 
   if (!aFD) {
     // Failed to get a temporary file. Shutdown.
-    mInitPromise->Reject(NS_ERROR_FAILURE, __func__);
     Close();
     return;
   }
@@ -35,13 +35,26 @@ FileBlockCache::SetCacheFile(PRFileDesc* aFD)
     MonitorAutoLock lock(mFileMonitor);
     mFD = aFD;
   }
-  mInitPromise->Resolve(true, __func__);
+  {
+    MonitorAutoLock lock(mDataMonitor);
+    if (!mIsOpen) {
+      // We've been closed while waiting for the file descriptor. Bail out.
+      // Rely on the destructor to close the file descriptor.
+      return;
+    }
+    mInitialized = true;
+    if (mIsWriteScheduled) {
+      // A write was scheduled while waiting for FD. We need to dispatch a
+      // task to service the request.
+      mThread->Dispatch(this, NS_DISPATCH_NORMAL);
+    }
+  }
 }
 
 nsresult
 FileBlockCache::Init()
 {
-  FBC_LOG(LogLevel::Debug, ("FileBlockCache::Init()"));
+  LOG("Init()");
 
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -53,14 +66,12 @@ FileBlockCache::Init()
   if (NS_FAILED(rv)) {
     return rv;
   }
-  mAbstractThread = AbstractThread::CreateXPCOMThreadWrapper(mThread, false);
   mIsOpen = true;
 
-  mInitPromise = new GenericPromise::Private(__func__);
   if (XRE_IsParentProcess()) {
     rv = NS_OpenAnonymousTemporaryFile(&mFD);
     if (NS_SUCCEEDED(rv)) {
-      mInitPromise->Resolve(true, __func__);
+      mInitialized = true;
     }
   } else {
     // We must request a temporary file descriptor from the parent process.
@@ -106,16 +117,18 @@ FileBlockCache::~FileBlockCache()
 
 void FileBlockCache::Close()
 {
-  FBC_LOG(LogLevel::Debug, ("FileBlockCache::Close"));
+  LOG("Close()");
 
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   MonitorAutoLock mon(mDataMonitor);
+  if (!mIsOpen) {
+    return;
+  }
   mIsOpen = false;
   if (!mThread) {
     return;
   }
-  mAbstractThread = nullptr;
   // We must shut down the thread in another runnable. This is called
   // while we're shutting down the media cache, and nsIThread::Shutdown()
   // can cause events to run before it completes, which could end up
@@ -173,14 +186,12 @@ void FileBlockCache::EnsureWriteScheduled()
     return;
   }
   mIsWriteScheduled = true;
-
-  RefPtr<FileBlockCache> self = this;
-  mInitPromise->Then(mAbstractThread,
-                     __func__,
-                     [self](bool aValue) { self->Run(); },
-                     [self](nsresult rv) {}
-                     // Failure handled by EnsureInitialized.
-                     );
+  if (!mInitialized) {
+    // We're still waiting on a file descriptor. When it arrives,
+    // the write will be scheduled.
+    return;
+  }
+  mThread->Dispatch(this, NS_DISPATCH_NORMAL);
 }
 
 nsresult FileBlockCache::Seek(int64_t aOffset)
@@ -204,10 +215,7 @@ nsresult FileBlockCache::ReadFromFile(int64_t aOffset,
                                       int32_t aBytesToRead,
                                       int32_t& aBytesRead)
 {
-  FBC_LOG(LogLevel::Debug,
-          ("FileBlockCache::ReadFromFile(offset=%" PRIu64 ", len=%u)",
-           aOffset,
-           aBytesToRead));
+  LOG("ReadFromFile(offset=%" PRIu64 ", len=%u)", aOffset, aBytesToRead);
   mFileMonitor.AssertCurrentThreadOwns();
   MOZ_ASSERT(mFD);
 
@@ -225,8 +233,7 @@ nsresult FileBlockCache::ReadFromFile(int64_t aOffset,
 nsresult FileBlockCache::WriteBlockToFile(int32_t aBlockIndex,
                                           const uint8_t* aBlockData)
 {
-  FBC_LOG(LogLevel::Debug,
-          ("FileBlockCache::WriteBlockToFile(index=%u)", aBlockIndex));
+  LOG("WriteBlockToFile(index=%u)", aBlockIndex);
 
   mFileMonitor.AssertCurrentThreadOwns();
   MOZ_ASSERT(mFD);
@@ -247,10 +254,7 @@ nsresult FileBlockCache::WriteBlockToFile(int32_t aBlockIndex,
 nsresult FileBlockCache::MoveBlockInFile(int32_t aSourceBlockIndex,
                                          int32_t aDestBlockIndex)
 {
-  FBC_LOG(LogLevel::Debug,
-          ("FileBlockCache::MoveBlockInFile(src=%u, dest=%u)",
-           aSourceBlockIndex,
-           aDestBlockIndex));
+  LOG("MoveBlockInFile(src=%u, dest=%u)", aSourceBlockIndex, aDestBlockIndex);
 
   mFileMonitor.AssertCurrentThreadOwns();
 
@@ -273,8 +277,7 @@ nsresult FileBlockCache::Run()
   NS_ASSERTION(mIsWriteScheduled, "Should report write running or scheduled.");
   MOZ_ASSERT(mFD);
 
-  FBC_LOG(LogLevel::Debug,
-          ("FileBlockCache::Run mFD=%p mIsOpen=%d", mFD, mIsOpen));
+  LOG("Run() mFD=%p mIsOpen=%d", mFD, mIsOpen);
 
   while (!mChangeIndexList.empty()) {
     if (!mIsOpen) {
@@ -431,3 +434,6 @@ nsresult FileBlockCache::MoveBlock(int32_t aSourceBlockIndex, int32_t aDestBlock
 }
 
 } // End namespace mozilla.
+
+// avoid redefined macro in unified build
+#undef LOG

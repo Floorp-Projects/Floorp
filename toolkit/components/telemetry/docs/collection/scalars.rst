@@ -51,6 +51,10 @@ Probes in native code can use the more convenient helper functions declared in `
     void ScalarSet(mozilla::Telemetry::ScalarID aId, const nsAString& aKey, bool aValue);
     void ScalarSetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& aKey, uint32_t aValue);
 
+.. warning::
+
+  Scalar operations are designed to be cheap, not free. If you wish to manipulate Scalars in a performance-sensitive piece of code, store the operations locally and change the Scalar only after the performance-sensitive piece ("hot path") has completed.
+
 The YAML definition file
 ========================
 Scalar probes are required to be registered, both for validation and transparency reasons,
