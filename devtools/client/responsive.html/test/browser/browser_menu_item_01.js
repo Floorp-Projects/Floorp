@@ -7,18 +7,18 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,";
 
-const tabUtils = require("sdk/tabs/utils");
-const { startup } = require("sdk/window/helpers");
+const { startup } = require("devtools/client/responsive.html/utils/window");
 
 const activateTab = (tab) => new Promise(resolve => {
-  let { tabContainer } = tabUtils.getOwnerWindow(tab).gBrowser;
+  let { gBrowser } = tab.ownerGlobal;
+  let { tabContainer } = gBrowser;
 
   tabContainer.addEventListener("TabSelect", function listener({type}) {
     tabContainer.removeEventListener(type, listener);
     resolve();
   });
 
-  tabUtils.activateTab(tab);
+  gBrowser.selectedTab = tab;
 });
 
 const isMenuChecked = () => {

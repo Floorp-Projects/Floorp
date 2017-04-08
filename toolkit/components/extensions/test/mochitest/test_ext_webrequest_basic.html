@@ -322,6 +322,54 @@ add_task(function* test_webRequest_frames() {
 add_task(function* teardown() {
   yield extension.unload();
 });
+
+add_task(async function test_case_preserving() {
+  const manifest = {
+    permissions: [
+      "webRequest",
+      "webRequestBlocking",
+      "http://mochi.test/",
+    ],
+  };
+
+  async function background() {
+    // This is testing if header names preserve case,
+    // so the case-sensitive comparison is on purpose.
+    function ua({url, requestHeaders}) {
+      if (url.endsWith("?blind-add")) {
+        requestHeaders.push({name: "user-agent", value: "Blind/Add"});
+        return {requestHeaders};
+      }
+      for (const header of requestHeaders) {
+        if (header.name === "User-Agent") {
+          header.value = "Case/Sensitive";
+        }
+      }
+      return {requestHeaders};
+    }
+
+    await browser.webRequest.onBeforeSendHeaders.addListener(ua, {urls: ["<all_urls>"]}, ["blocking", "requestHeaders"]);
+    browser.test.sendMessage("ready");
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({manifest, background});
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  const response1 = await fetch(SimpleTest.getTestFileURL("return_headers.sjs"));
+  const headers1 = JSON.parse(await response1.text());
+
+  is(headers1["user-agent"], "Case/Sensitive", "User-Agent header matched and changed.");
+
+  const response2 = await fetch(SimpleTest.getTestFileURL("return_headers.sjs?blind-add"));
+  const headers2 = JSON.parse(await response2.text());
+
+  is(headers2["user-agent"], "Blind/Add", "User-Agent header blindly added.");
+
+  await extension.unload();
+});
+
 </script>
 </head>
 <body>

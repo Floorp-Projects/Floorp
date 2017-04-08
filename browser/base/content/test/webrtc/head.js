@@ -520,3 +520,34 @@ function promiseReloadFrame(aFrameId) {
            .reload();
   });
 }
+
+async function runTests(tests, options = {}) {
+  let leaf = options.relativeURI || "get_user_media.html";
+
+  let rootDir = getRootDirectory(gTestPath);
+  rootDir = rootDir.replace("chrome://mochitests/content/",
+                            "https://example.com/");
+  let absoluteURI = rootDir + leaf;
+  let cleanup = options.cleanup || (() => expectNoObserverCalled());
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, absoluteURI);
+  let browser = tab.linkedBrowser;
+
+  browser.messageManager.loadFrameScript(CONTENT_SCRIPT_HELPER, true);
+
+  is(PopupNotifications._currentNotifications.length, 0,
+     "should start the test without any prior popup notification");
+  ok(gIdentityHandler._identityPopup.hidden,
+     "should start the test with the control center hidden");
+
+  await SpecialPowers.pushPrefEnv({"set": [[PREF_PERMISSION_FAKE, true]]});
+
+  for (let testCase of tests) {
+    info(testCase.desc);
+    await Task.spawn(testCase.run(browser));
+    await cleanup();
+  }
+
+  // Some tests destroy the original tab and leave a new one in its place.
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+}

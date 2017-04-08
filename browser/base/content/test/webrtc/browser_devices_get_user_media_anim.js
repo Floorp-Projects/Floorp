@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-registerCleanupFunction(function() {
-  gBrowser.removeCurrentTab();
-});
-
 var gTests = [
 
 {
@@ -76,34 +72,6 @@ var gTests = [
 
 ];
 
-function test() {
-  waitForExplicitFinish();
-
-  let tab = gBrowser.addTab();
-  gBrowser.selectedTab = tab;
-  let browser = tab.linkedBrowser;
-
-  browser.messageManager.loadFrameScript(CONTENT_SCRIPT_HELPER, true);
-
-  browser.addEventListener("load", function() {
-    is(PopupNotifications._currentNotifications.length, 0,
-       "should start the test without any prior popup notification");
-
-    Task.spawn(function* () {
-      yield SpecialPowers.pushPrefEnv({"set": [[PREF_PERMISSION_FAKE, true]]});
-
-      for (let testCase of gTests) {
-        info(testCase.desc);
-        yield testCase.run();
-      }
-    }).then(finish, ex => {
-     Cu.reportError(ex);
-     ok(false, "Unexpected Exception: " + ex);
-     finish();
-    });
-  }, {capture: true, once: true});
-  let rootDir = getRootDirectory(gTestPath);
-  rootDir = rootDir.replace("chrome://mochitests/content/",
-                            "https://example.com/");
-  content.location = rootDir + "get_user_media.html";
-}
+add_task(async function test() {
+  await runTests(gTests);
+});

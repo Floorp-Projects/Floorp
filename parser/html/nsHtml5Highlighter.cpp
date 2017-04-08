@@ -91,7 +91,7 @@ nsHtml5Highlighter::Start(const nsAutoString& aTitle)
   if (length > INT32_MAX) {
     length = INT32_MAX;
   }
-  AppendCharacters(aTitle.get(), 0, (int32_t)length);
+  AppendCharacters(aTitle.BeginReading(), 0, (int32_t)length);
   Pop(); // title
 
   Push(nsGkAtoms::link, nsHtml5ViewSourceUtils::NewLinkAttributes());
@@ -105,7 +105,7 @@ nsHtml5Highlighter::Start(const nsAutoString& aTitle)
   Push(nsGkAtoms::body, nsHtml5ViewSourceUtils::NewBodyAttributes());
 
   nsHtml5HtmlAttributes* preAttrs = new nsHtml5HtmlAttributes(0);
-  nsString* preId = new nsString(NS_LITERAL_STRING("line1"));
+  nsHtml5String preId = nsHtml5Portability::newStringFromLiteral("line1");
   preAttrs->addAttribute(nsHtml5AttributeName::ATTR_ID, preId, -1);
   Push(nsGkAtoms::pre, preAttrs);
 
@@ -618,7 +618,7 @@ nsHtml5Highlighter::FlushOps()
 
 void
 nsHtml5Highlighter::MaybeLinkifyAttributeValue(nsHtml5AttributeName* aName,
-                                               nsString* aValue)
+                                               nsHtml5String aValue)
 {
   if (!(nsHtml5AttributeName::ATTR_HREF == aName ||
         nsHtml5AttributeName::ATTR_SRC == aName ||
@@ -630,7 +630,7 @@ nsHtml5Highlighter::MaybeLinkifyAttributeValue(nsHtml5AttributeName* aName,
         nsHtml5AttributeName::ATTR_DEFINITIONURL == aName)) {
     return;
   }
-  AddViewSourceHref(*aValue);
+  AddViewSourceHref(aValue);
 }
 
 void
@@ -717,10 +717,10 @@ nsHtml5Highlighter::AddClass(const char16_t* aClass)
 }
 
 void
-nsHtml5Highlighter::AddViewSourceHref(const nsString& aValue)
+nsHtml5Highlighter::AddViewSourceHref(nsHtml5String aValue)
 {
   char16_t* bufferCopy = new char16_t[aValue.Length() + 1];
-  memcpy(bufferCopy, aValue.get(), aValue.Length() * sizeof(char16_t));
+  aValue.CopyToBuffer(bufferCopy);
   bufferCopy[aValue.Length()] = 0;
 
   mOpQueue.AppendElement()->Init(eTreeOpAddViewSourceHref,
@@ -730,14 +730,14 @@ nsHtml5Highlighter::AddViewSourceHref(const nsString& aValue)
 }
 
 void
-nsHtml5Highlighter::AddBase(const nsString& aValue)
+nsHtml5Highlighter::AddBase(nsHtml5String aValue)
 {
   if(mSeenBase) {
     return;
   }
   mSeenBase = true;
   char16_t* bufferCopy = new char16_t[aValue.Length() + 1];
-  memcpy(bufferCopy, aValue.get(), aValue.Length() * sizeof(char16_t));
+  aValue.CopyToBuffer(bufferCopy);
   bufferCopy[aValue.Length()] = 0;
 
   mOpQueue.AppendElement()->Init(eTreeOpAddViewSourceBase,

@@ -19,13 +19,15 @@ nsHtml5MetaScanner::sniff(nsHtml5ByteReadable* bytes, nsACString& charset)
 }
 
 bool
-nsHtml5MetaScanner::tryCharset(nsString* charset)
+nsHtml5MetaScanner::tryCharset(nsHtml5String charset)
 {
   // This code needs to stay in sync with
   // nsHtml5StreamParser::internalEncodingDeclaration. Unfortunately, the
   // trickery with member fields here leads to some copy-paste reuse. :-(
   nsAutoCString label;
-  CopyUTF16toUTF8(*charset, label);
+  nsString charset16; // Not Auto, because using it to hold nsStringBuffer*
+  charset.ToString(charset16);
+  CopyUTF16toUTF8(charset16, label);
   nsAutoCString encoding;
   if (!EncodingUtils::FindEncodingForLabel(label, encoding)) {
     return false;

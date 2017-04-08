@@ -109,13 +109,17 @@ VRDisplayClient::NotifyVsync()
   // Check if we need to trigger onvrdisplayactivate event
   if (!bLastEventWasMounted && mDisplayInfo.mIsMounted) {
     bLastEventWasMounted = true;
-    vm->FireDOMVRDisplayMountedEvent(mDisplayInfo.mDisplayID);
+    if (gfxPrefs::VRAutoActivateEnabled()) {
+      vm->FireDOMVRDisplayMountedEvent(mDisplayInfo.mDisplayID);
+    }
   }
 
   // Check if we need to trigger onvrdisplaydeactivate event
   if (bLastEventWasMounted && !mDisplayInfo.mIsMounted) {
     bLastEventWasMounted = false;
-    vm->FireDOMVRDisplayUnmountedEvent(mDisplayInfo.mDisplayID);
+    if (gfxPrefs::VRAutoActivateEnabled()) {
+      vm->FireDOMVRDisplayUnmountedEvent(mDisplayInfo.mDisplayID);
+    }
   }
 }
 
