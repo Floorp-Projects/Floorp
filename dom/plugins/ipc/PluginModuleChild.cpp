@@ -1197,6 +1197,10 @@ _posturl(NPP aNPP,
     PLUGIN_LOG_DEBUG_FUNCTION;
     ENSURE_PLUGIN_THREAD(NPERR_INVALID_PARAM);
 
+    if (aIsFile) {
+      PLUGIN_LOG_DEBUG(("NPN_PostURL with file=true is no longer supported"));
+      return NPERR_GENERIC_ERROR;
+    }
     NPError err;
     // FIXME what should happen when |aBuffer| is null?
     InstCast(aNPP)->CallNPN_PostURL(NullableString(aRelativeURL),
