@@ -486,6 +486,23 @@ Tester.prototype = {
 
       yield new Promise(resolve => SpecialPowers.flushPrefEnv(resolve));
 
+      if (gConfig.cleanupCrashes) {
+        let gdir = Services.dirsvc.get("UAppData", Ci.nsIFile);
+        gdir.append("Crash Reports");
+        gdir.append("pending");
+        if (gdir.exists()) {
+          let entries = gdir.directoryEntries;
+          while (entries.hasMoreElements()) {
+            let entry = entries.getNext().QueryInterface(Ci.nsIFile);
+            if (entry.isFile()) {
+              entry.remove(false);
+              let msg = "this test left a pending crash report; deleted " + entry.path;
+              this.structuredLogger.info(msg);
+            }
+          }
+        }
+      }
+
       // Notify a long running test problem if it didn't end up in a timeout.
       if (this.currentTest.unexpectedTimeouts && !this.currentTest.timedOut) {
         let msg = "This test exceeded the timeout threshold. It should be " +

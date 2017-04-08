@@ -594,8 +594,15 @@ static void GetKeywordsForProperty(const nsCSSPropertyID aProperty,
   if (keywordTable) {
     for (size_t i = 0; keywordTable[i].mKeyword != eCSSKeyword_UNKNOWN; ++i) {
       nsCSSKeyword word = keywordTable[i].mKeyword;
-      InsertNoDuplicates(aArray,
-                         NS_ConvertASCIItoUTF16(nsCSSKeywords::GetStringValue(word)));
+
+      // These are extra -moz values which are added while rebuilding
+      // the properties db. These values are not relevant and are not
+      // documented on MDN, so filter these out
+      if (word != eCSSKeyword__moz_zoom_in && word != eCSSKeyword__moz_zoom_out &&
+          word != eCSSKeyword__moz_grab && word != eCSSKeyword__moz_grabbing) {
+          InsertNoDuplicates(aArray,
+                  NS_ConvertASCIItoUTF16(nsCSSKeywords::GetStringValue(word)));
+      }
     }
   }
 }
@@ -938,9 +945,7 @@ inDOMUtils::GetCSSValuesForProperty(const nsAString& aProperty,
     uint32_t propertyParserVariant = nsCSSProps::ParserVariant(propertyID);
     // Get colors first.
     GetColorsForProperty(propertyParserVariant, array);
-    if (propertyParserVariant & VARIANT_KEYWORD) {
-      GetKeywordsForProperty(propertyID, array);
-    }
+    GetKeywordsForProperty(propertyID, array);
     GetOtherValuesForProperty(propertyParserVariant, array);
   } else {
     // Property is shorthand.
@@ -956,9 +961,7 @@ inDOMUtils::GetCSSValuesForProperty(const nsAString& aProperty,
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subproperty, propertyID,
                                          CSSEnabledState::eForAllContent) {
       uint32_t propertyParserVariant = nsCSSProps::ParserVariant(*subproperty);
-      if (propertyParserVariant & VARIANT_KEYWORD) {
-        GetKeywordsForProperty(*subproperty, array);
-      }
+      GetKeywordsForProperty(*subproperty, array);
       GetOtherValuesForProperty(propertyParserVariant, array);
     }
   }

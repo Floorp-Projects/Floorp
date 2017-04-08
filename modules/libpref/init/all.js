@@ -4471,7 +4471,7 @@ pref("image.mem.discardable", true);
 
 // Discards inactive image frames of _animated_ images and re-decodes them on
 // demand from compressed data. Has no effect if image.mem.discardable is false.
-pref("image.mem.animated.discardable", false);
+pref("image.mem.animated.discardable", true);
 
 // Decodes images into shared memory to allow direct use in separate
 // rendering processes.
@@ -5666,7 +5666,3 @@ pref("layers.advanced.boxshadow-outer-layers", 2);
 pref("layers.advanced.caret-layers", 2);
 pref("layers.advanced.displaybuttonborder-layers", 2);
 pref("layers.advanced.outline-layers", 2);
-
-// Determines whether we throw an exception when a frame script
-// accesses the wrong DocGroup. The alternative is to crash.
-user_pref("extensions.throw_on_docgroup_mismatch.enabled", true);

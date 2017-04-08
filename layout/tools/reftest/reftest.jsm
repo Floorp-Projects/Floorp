@@ -46,6 +46,7 @@ var gIgnoreWindowSize = false;
 var gShuffle = false;
 var gRepeat = null;
 var gRunUntilFailure = false;
+var gCleanupPendingCrashes = false;
 var gTotalChunks = 0;
 var gThisChunk = 0;
 var gContainingWindow = null;
@@ -117,6 +118,7 @@ var gExpectingProcessCrash = false;
 var gExpectedCrashDumpFiles = [];
 var gUnexpectedCrashDumpFiles = { };
 var gCrashDumpDir;
+var gPendinCrashDumpDir;
 var gFailedNoPaint = false;
 var gFailedOpaqueLayer = false;
 var gFailedOpaqueLayerMessages = [];
@@ -271,6 +273,12 @@ this.OnRefTestLoad = function OnRefTestLoad(win)
                     .getService(CI.nsIProperties)
                     .get("ProfD", CI.nsIFile);
     gCrashDumpDir.append("minidumps");
+
+    gPendingCrashDumpDir = CC[NS_DIRECTORY_SERVICE_CONTRACTID]
+                    .getService(CI.nsIProperties)
+                    .get("UAppData", CI.nsIFile);
+    gPendingCrashDumpDir.append("Crash Reports");
+    gPendingCrashDumpDir.append("pending");
 
     var env = CC["@mozilla.org/process/environment;1"].
               getService(CI.nsIEnvironment);
@@ -458,6 +466,8 @@ function StartTests()
     gShuffle = prefs.getBoolPref("reftest.shuffle", false);
 
     gRunUntilFailure = prefs.getBoolPref("reftest.runUntilFailure", false);
+
+    gCleanupPendingCrashes = prefs.getBoolPref("reftest.cleanupPendingCrashes", false);
 
     // When we repeat this function is called again, so really only want to set
     // gRepeat once.
@@ -1819,10 +1829,29 @@ function FindUnexpectedCrashDumpFiles()
     }
 }
 
+function RemovePendingCrashDumpFiles()
+{
+    if (!gPendingCrashDumpDir.exists()) {
+        return;
+    }
+
+    let entries = gPendingCrashDumpDir.directoryEntries;
+    while (entries.hasMoreElements()) {
+        let file = entries.getNext().QueryInterface(CI.nsIFile);
+        if (file.isFile()) {
+          file.remove(false);
+          logger.info("This test left pending crash dumps; deleted "+file.path);
+        }
+    }
+}
+
 function CleanUpCrashDumpFiles()
 {
     RemoveExpectedCrashDumpFiles();
     FindUnexpectedCrashDumpFiles();
+    if (gCleanupPendingCrashes) {
+      RemovePendingCrashDumpFiles();
+    }
     gExpectingProcessCrash = false;
 }
 

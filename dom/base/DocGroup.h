@@ -93,12 +93,6 @@ public:
     mTabGroup->ValidateAccess();
   }
 
-  // Like ValidateAccess, but it returns a bool rather than asserting.
-  bool AccessAllowed() const
-  {
-    return mTabGroup->AccessAllowed();
-  }
-
   // Return a pointer that can be continually checked to see if access to this
   // DocGroup is valid. This pointer should live at least as long as the
   // DocGroup.

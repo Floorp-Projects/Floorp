@@ -125,8 +125,47 @@ add_task(function* test_tabContextMenu() {
   const click = yield first.awaitMessage("click");
   is(click.info.pageUrl, "http://example.com/", "Click info pageUrl is correct");
   is(click.tab.id, tabId, "Click event tab ID is correct");
+  is(click.info.frameId, undefined, "no frameId on chrome");
 
   yield BrowserTestUtils.removeTab(tab);
   yield first.unload();
   yield second.unload();
+});
+
+add_task(function* test_onclick_frameid() {
+  const manifest = {
+    permissions: ["contextMenus"],
+  };
+
+  function background() {
+    function onclick(info) {
+      browser.test.sendMessage("click", info);
+    }
+    browser.contextMenus.create({contexts: ["frame", "page"], title: "modify", onclick});
+    browser.test.sendMessage("ready");
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({manifest, background});
+  const tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser,
+    "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html");
+
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+
+  function* click(selectorOrId) {
+    const func = (selectorOrId == "body") ? openContextMenu : openContextMenuInFrame;
+    const menu = yield func(selectorOrId);
+    const items = menu.getElementsByAttribute("label", "modify");
+    yield closeExtensionContextMenu(items[0]);
+    return extension.awaitMessage("click");
+  }
+
+  let info = yield click("body");
+  is(info.frameId, 0, "top level click");
+  info = yield click("frame");
+  isnot(info.frameId, undefined, "frame click, frameId is not undefined");
+  isnot(info.frameId, 0, "frame click, frameId probably okay");
+
+  yield BrowserTestUtils.removeTab(tab);
+  yield extension.unload();
 });

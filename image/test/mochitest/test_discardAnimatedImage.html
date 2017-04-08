@@ -28,6 +28,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=686905
 /** Test for Bug 686905. **/
 SimpleTest.waitForExplicitFinish();
 
+var gFinished = false;
+
 var gNumDiscards = 0;
 
 window.onload = function() {
@@ -49,6 +51,8 @@ var gNumFrameUpdates = [0, 0, 0, 0];
 var gLastSnapShot = [null, null, null, null];
 // Number of observed changes in the snapshot.
 var gNumSnapShotChanges = [0, 0, 0, 0];
+// If we've removed the observer.
+var gRemovedObserver = [false, false, false, false];
 
 // 2 would probably be a good enough test, we arbitrarily choose 4.
 var kNumFrameUpdatesToExpect = 4;
@@ -100,11 +104,16 @@ function step4() {
 }
 
 function checkIfFinished() {
+  if (gFinished) {
+    return;
+  }
+
   if ((gNumFrameUpdates[0] >= kNumFrameUpdatesToExpect) &&
       (gNumFrameUpdates[1] >= kNumFrameUpdatesToExpect) &&
       (gNumSnapShotChanges[0] >= kNumFrameUpdatesToExpect) &&
       (gNumSnapShotChanges[1] >= kNumFrameUpdatesToExpect)) {
     ok(true, "got expected frame updates");
+    gFinished = true;
     SimpleTest.finish();
   }
 }
@@ -119,7 +128,10 @@ function addCallbacks(anImage, arrayIndex) {
     if (arrayIndex >= 2) {
       // The last two images are finite, so we don't expect any frame updates,
       // this image is done the test, so remove the observer.
-      imgLoadingContent.removeObserver(scriptedObserver);
+      if (!gRemovedObserver[arrayIndex]) {
+        gRemovedObserver[arrayIndex] = true;
+        imgLoadingContent.removeObserver(scriptedObserver);
+      }
     }
     if (gNumDiscards == gImgs.length) {
       step4();
@@ -148,9 +160,16 @@ function addCallbacks(anImage, arrayIndex) {
 
       if (gNumFrameUpdates[arrayIndex] >= kNumFrameUpdatesToExpect &&
           gNumSnapShotChanges[arrayIndex] >= kNumFrameUpdatesToExpect) {
-        imgLoadingContent.removeObserver(scriptedObserver);
+        if (!gRemovedObserver[arrayIndex]) {
+          gRemovedObserver[arrayIndex] = true;
+          imgLoadingContent.removeObserver(scriptedObserver);
+        }
       }
-      ok(true, "got frame update");
+      if (!gFinished) {
+        // because we do this in a setTimeout we can have several in flight
+        // so don't call ok if we've already finished.
+        ok(true, "got frame update");
+      }
       checkIfFinished();
     }, 0);
   };

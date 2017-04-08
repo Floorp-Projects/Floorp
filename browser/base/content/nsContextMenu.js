@@ -62,6 +62,7 @@ nsContextMenu.prototype = {
         pageUrl: this.browser ? this.browser.currentURI.spec : undefined,
         linkUrl: this.linkURL,
         selectionText: this.isTextSelected ? this.selectionInfo.text : undefined,
+        windowId: this.frameOuterWindowID,
       };
       subject.wrappedJSObject = subject;
       Services.obs.notifyObservers(subject, "on-build-contextmenu", null);
