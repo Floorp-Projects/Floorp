@@ -138,6 +138,10 @@ Record a registered event.
 Throws if the combination of ``category``, ``method`` and ``object`` is unknown.
 Recording an expired event will not throw, but print a warning into the browser console.
 
+.. warning::
+
+  Event Telemetry recording is designed to be cheap, not free. If you wish to record events in a performance-sensitive piece of code, store the events locally and record them only after the performance-sensitive piece ("hot path") has completed.
+
 Example:
 
 .. code-block:: js

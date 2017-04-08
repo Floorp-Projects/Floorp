@@ -5158,6 +5158,9 @@ ContentParent::RecvRecordChildEvents(nsTArray<mozilla::Telemetry::ChildEventData
   return IPC_OK();
 }
 
+//////////////////////////////////////////////////////////////////
+// PURLClassifierParent
+
 PURLClassifierParent*
 ContentParent::AllocPURLClassifierParent(const Principal& aPrincipal,
                                          const bool& aUseTrackingProtection,
@@ -5197,6 +5200,48 @@ ContentParent::DeallocPURLClassifierParent(PURLClassifierParent* aActor)
 
   RefPtr<URLClassifierParent> actor =
     dont_AddRef(static_cast<URLClassifierParent*>(aActor));
+  return true;
+}
+
+//////////////////////////////////////////////////////////////////
+// PURLClassifierLocalParent
+
+PURLClassifierLocalParent*
+ContentParent::AllocPURLClassifierLocalParent(const URIParams& aURI,
+                                              const nsCString& aTables)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<URLClassifierLocalParent> actor = new URLClassifierLocalParent();
+  return actor.forget().take();
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvPURLClassifierLocalConstructor(PURLClassifierLocalParent* aActor,
+                                                  const URIParams& aURI,
+                                                  const nsCString& aTables)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aActor);
+
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
+  if (!uri) {
+    NS_WARNING("Failed to DeserializeURI");
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  auto* actor = static_cast<URLClassifierLocalParent*>(aActor);
+  return actor->StartClassify(uri, aTables);
+}
+
+bool
+ContentParent::DeallocPURLClassifierLocalParent(PURLClassifierLocalParent* aActor)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aActor);
+
+  RefPtr<URLClassifierLocalParent> actor =
+    dont_AddRef(static_cast<URLClassifierLocalParent*>(aActor));
   return true;
 }
 

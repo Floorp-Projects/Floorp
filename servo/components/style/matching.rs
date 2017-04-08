@@ -23,7 +23,7 @@ use selector_parser::{PseudoElement, RestyleDamage, SelectorImpl};
 use selectors::bloom::BloomFilter;
 use selectors::matching::{ElementSelectorFlags, StyleRelations};
 use selectors::matching::AFFECTED_BY_PSEUDO_ELEMENTS;
-use servo_config::opts;
+#[cfg(feature = "servo")] use servo_config::opts;
 use sink::ForgetfulSink;
 use std::sync::Arc;
 use stylist::ApplicableDeclarationBlock;
@@ -783,6 +783,16 @@ pub enum StyleSharingBehavior {
     Disallow,
 }
 
+#[cfg(feature = "servo")]
+fn is_share_style_cache_disabled() -> bool {
+    opts::get().disable_share_style_cache
+}
+
+#[cfg(not(feature = "servo"))]
+fn is_share_style_cache_disabled() -> bool {
+    false
+}
+
 /// The public API that elements expose for selector matching.
 pub trait MatchMethods : TElement {
     /// Performs selector matching and property cascading on an element and its eager pseudos.
@@ -1069,7 +1079,7 @@ pub trait MatchMethods : TElement {
                                       shared_context: &SharedStyleContext,
                                       data: &mut AtomicRefMut<ElementData>)
                                       -> StyleSharingResult {
-        if opts::get().disable_share_style_cache {
+        if is_share_style_cache_disabled() {
             return StyleSharingResult::CannotShare
         }
 
@@ -1165,23 +1175,30 @@ pub trait MatchMethods : TElement {
     /// Therefore, each node must have its matching selectors inserted _after_
     /// its own selector matching and _before_ its children start.
     fn insert_into_bloom_filter(&self, bf: &mut BloomFilter) {
-        bf.insert(&*self.get_local_name());
-        bf.insert(&*self.get_namespace());
-        self.get_id().map(|id| bf.insert(&id));
-
+        bf.insert_hash(self.get_local_name().get_hash());
+        bf.insert_hash(self.get_namespace().get_hash());
+        if let Some(id) = self.get_id() {
+            bf.insert_hash(id.get_hash());
+        }
         // TODO: case-sensitivity depends on the document type and quirks mode
-        self.each_class(|class| bf.insert(class));
+        self.each_class(|class| {
+            bf.insert_hash(class.get_hash())
+        });
     }
 
     /// After all the children are done css selector matching, this must be
     /// called to reset the bloom filter after an `insert`.
     fn remove_from_bloom_filter(&self, bf: &mut BloomFilter) {
-        bf.remove(&*self.get_local_name());
-        bf.remove(&*self.get_namespace());
-        self.get_id().map(|id| bf.remove(&id));
+        bf.remove_hash(self.get_local_name().get_hash());
+        bf.remove_hash(self.get_namespace().get_hash());
+        if let Some(id) = self.get_id() {
+            bf.remove_hash(id.get_hash());
+        }
 
         // TODO: case-sensitivity depends on the document type and quirks mode
-        self.each_class(|class| bf.remove(class));
+        self.each_class(|class| {
+            bf.remove_hash(class.get_hash())
+        });
     }
 
     /// Given the old and new style of this element, and whether it's a
