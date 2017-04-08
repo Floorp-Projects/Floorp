@@ -214,17 +214,13 @@ ServoStyleSet::PreTraverseSync()
 }
 
 void
-ServoStyleSet::PreTraverse(Element* aRoot)
+ServoStyleSet::PreTraverse()
 {
   PreTraverseSync();
 
   // Process animation stuff that we should avoid doing during the parallel
   // traversal.
-  if (aRoot) {
-    mPresContext->EffectCompositor()->PreTraverseInSubtree(aRoot);
-  } else {
-    mPresContext->EffectCompositor()->PreTraverse();
-  }
+  mPresContext->EffectCompositor()->PreTraverse();
 }
 
 bool
@@ -242,22 +238,15 @@ ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
   sInServoTraversal = true;
 
   bool isInitial = !aRoot->HasServoData();
-  bool forReconstruct =
-    aRestyleBehavior == TraversalRestyleBehavior::ForReconstruct;
   bool postTraversalRequired =
     Servo_TraverseSubtree(aRoot, mRawSet.get(), aRootBehavior, aRestyleBehavior);
-  MOZ_ASSERT_IF(isInitial || forReconstruct, !postTraversalRequired);
-
-  auto root = const_cast<Element*>(aRoot);
+  MOZ_ASSERT_IF(isInitial, !postTraversalRequired);
 
   // If there are still animation restyles needed, trigger a second traversal to
   // update CSS animations' styles.
-  EffectCompositor* compositor = mPresContext->EffectCompositor();
-  if (forReconstruct ? compositor->PreTraverseInSubtree(root)
-                     : compositor->PreTraverse()) {
+  if (mPresContext->EffectCompositor()->PreTraverse()) {
     if (Servo_TraverseSubtree(aRoot, mRawSet.get(),
                               aRootBehavior, aRestyleBehavior)) {
-      MOZ_ASSERT(!forReconstruct);
       if (isInitial) {
         // We're doing initial styling, and the additional animation
         // traversal changed the styles that were set by the first traversal.
@@ -269,7 +258,7 @@ ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
         // post-traversal. Instead, just drop this state and tell the caller
         // that no post-traversal is required.
         MOZ_ASSERT(!postTraversalRequired);
-        ServoRestyleManager::ClearRestyleStateFromSubtree(root);
+        ServoRestyleManager::ClearRestyleStateFromSubtree(const_cast<Element*>(aRoot));
       } else {
         postTraversalRequired = true;
       }
@@ -755,18 +744,6 @@ ServoStyleSet::StyleNewChildren(Element* aParent)
                             TraversalRestyleBehavior::Normal);
   // We can't assert that Servo_TraverseSubtree returns false, since aParent
   // or some of its other children might have pending restyles.
-}
-
-void
-ServoStyleSet::StyleSubtreeForReconstruct(Element* aRoot)
-{
-  PreTraverse(aRoot);
-
-  DebugOnly<bool> postTraversalRequired =
-    PrepareAndTraverseSubtree(aRoot,
-                              TraversalRootBehavior::Normal,
-                              TraversalRestyleBehavior::ForReconstruct);
-  MOZ_ASSERT(!postTraversalRequired);
 }
 
 void
