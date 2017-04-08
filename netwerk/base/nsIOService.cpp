@@ -791,9 +791,12 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
     }
     else {
         rv = handler->NewChannel2(aURI, aLoadInfo, getter_AddRefs(channel));
-        // if calling newChannel2() fails we try to fall back to
+        // if an implementation of NewChannel2() is missing we try to fall back to
         // creating a new channel by calling NewChannel().
-        if (NS_FAILED(rv)) {
+        if (rv == NS_ERROR_NOT_IMPLEMENTED ||
+            rv == NS_ERROR_XPC_JSOBJECT_HAS_NO_FUNCTION_NAMED) {
+            LOG(("NewChannel2 not implemented rv=%" PRIx32
+                 ". Falling back to NewChannel\n", static_cast<uint32_t>(rv)));
             rv = handler->NewChannel(aURI, getter_AddRefs(channel));
             if (NS_FAILED(rv)) {
                 return rv;
@@ -802,6 +805,8 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
             // maybe we need to wrap the channel (see comment in MaybeWrap
             // function).
             channel = nsSecCheckWrapChannel::MaybeWrap(channel, aLoadInfo);
+        } else if (NS_FAILED(rv)) {
+            return rv;
         }
     }
 

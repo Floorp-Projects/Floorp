@@ -76,6 +76,9 @@ const { classes: Cc, interfaces: Ci, manager: Cm, results: Cr,
 
 Cu.import("resource://gre/modules/Services.jsm", this);
 
+/* import-globals-from testConstants.js */
+Services.scriptloader.loadSubScript("chrome://mochitests/content/chrome/toolkit/mozapps/update/tests/chrome/testConstants.js", this);
+
 const IS_MACOSX = ("nsILocalFileMac" in Ci);
 const IS_WIN = ("@mozilla.org/windows-registry-key;1" in Cc);
 
@@ -96,13 +99,9 @@ const PAGEID_FINISHED_BKGRD   = "finishedBackground";    // Done
 
 const UPDATE_WINDOW_NAME = "Update:Wizard";
 
-const URL_HOST = "http://example.com";
-const URL_PATH_UPDATE_XML = "/chrome/toolkit/mozapps/update/tests/chrome/update.sjs";
-const REL_PATH_DATA = "chrome/toolkit/mozapps/update/tests/data";
-
 // These two URLs must not contain parameters since tests add their own
 // test specific parameters.
-const URL_HTTP_UPDATE_XML = URL_HOST + URL_PATH_UPDATE_XML;
+const URL_HTTP_UPDATE_XML = URL_HTTP_UPDATE_SJS;
 const URL_HTTPS_UPDATE_XML = "https://example.com" + URL_PATH_UPDATE_XML;
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
@@ -489,7 +488,7 @@ function getContinueFile() {
   let continueFile = Cc["@mozilla.org/file/directory_service;1"].
                      getService(Ci.nsIProperties).
                      get("CurWorkD", Ci.nsILocalFile);
-  let continuePath = REL_PATH_DATA + "/continue";
+  let continuePath = REL_PATH_DATA + "continue";
   let continuePathParts = continuePath.split("/");
   for (let i = 0; i < continuePathParts.length; ++i) {
     continueFile.append(continuePathParts[i]);
@@ -813,6 +812,7 @@ function setupPrefs() {
   Services.prefs.setIntPref(PREF_APP_UPDATE_IDLETIME, 0);
   Services.prefs.setIntPref(PREF_APP_UPDATE_PROMPTWAITTIME, 0);
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, false);
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_DOORHANGER, false);
 }
 
 /**
@@ -904,6 +904,10 @@ function resetPrefs() {
 
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDMAXERRORS)) {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDMAXERRORS);
+  }
+
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_DOORHANGER)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_DOORHANGER);
   }
 
   try {
