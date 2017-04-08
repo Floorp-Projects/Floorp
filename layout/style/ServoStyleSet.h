@@ -302,8 +302,7 @@ private:
    * a subtree.  Returns whether a post-traversal is required.
    */
   bool PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
-                                 TraversalRootBehavior aRootBehavior,
-                                 TraversalRestyleBehavior aRestyleBehavior);
+                                 mozilla::TraversalRootBehavior aRootBehavior);
 
   /**
    * Clear our cached mNonInheritingStyleContexts.  We do this when we want to
