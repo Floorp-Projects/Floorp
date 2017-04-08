@@ -235,18 +235,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
 
     @Override
     public void onResume() {
-        if (lastSelectedTabId >= 0) {
-            final Tabs tabs = Tabs.getInstance();
-            final Tab tab = tabs.getTab(lastSelectedTabId);
-            if (tab == null) {
-                finish();
-            } else {
-                // we are restoring
-                actionBarPresenter.update(tab);
-            }
-        }
         super.onResume();
-
         mLayerView.getDynamicToolbarAnimator().setPinned(true, PinReason.CUSTOM_TAB);
     }
 

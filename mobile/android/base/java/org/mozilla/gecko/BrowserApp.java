@@ -184,6 +184,8 @@ import java.util.Locale;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
+import static org.mozilla.gecko.Tab.TabType;
+
 public class BrowserApp extends GeckoApp
                         implements TabsPanel.TabsLayoutChangeListener,
                                    PropertyAnimator.PropertyAnimationListener,
@@ -436,6 +438,11 @@ public class BrowserApp extends GeckoApp
         }
 
         super.onTabChanged(tab, msg, data);
+    }
+
+    @Override
+    protected boolean saveAsLastSelectedTab(Tab tab) {
+        return tab.getType() == TabType.BROWSING;
     }
 
     private void updateEditingModeForTab(final Tab selectedTab) {
@@ -1150,6 +1157,26 @@ public class BrowserApp extends GeckoApp
 
         for (BrowserAppDelegate delegate : delegates) {
             delegate.onResume(this);
+        }
+    }
+
+    @Override
+    protected void restoreLastSelectedTab() {
+        if (mResumingAfterOnCreate && !mIsRestoringActivity) {
+            // We're the first activity to run, so our startup code will (have) handle(d) tab selection.
+            return;
+        }
+
+        final Tabs tabs = Tabs.getInstance();
+        final Tab tabToSelect = tabs.getTab(mLastSelectedTabId);
+
+        if (tabToSelect != null && GeckoApplication.getSessionUUID().equals(mLastSessionUUID) &&
+                tabToSelect.getType() == TabType.BROWSING) {
+            tabs.selectTab(mLastSelectedTabId);
+        } else {
+            if (!tabs.selectLastTab(TabType.BROWSING)) {
+                tabs.loadUrl(Tabs.getHomepageForStartupTab(this), Tabs.LOADURL_NEW_TAB);
+            }
         }
     }
 
