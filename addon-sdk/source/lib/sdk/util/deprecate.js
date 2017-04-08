@@ -8,8 +8,8 @@ module.metadata = {
   "stability": "experimental"
 };
 
-const { get, format } = require("../console/traceback");
-const { get: getPref } = require("../preferences/service");
+lazyRequire(this, "../console/traceback", "get", "format");
+lazyRequire(this, "../preferences/service", {"get": "getPref"});
 const PREFERENCE = "devtools.errorconsole.deprecation_warnings";
 
 function deprecateUsage(msg) {

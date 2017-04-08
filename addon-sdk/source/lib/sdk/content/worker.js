@@ -7,19 +7,19 @@ module.metadata = {
   "stability": "unstable"
 };
 
-const { emit } = require('../event/core');
+lazyRequire(this, '../event/core', "emit");
 const { omit, merge } = require('../util/object');
 const { Class } = require('../core/heritage');
 const { method } = require('../lang/functional');
-const { getInnerId } = require('../window/utils');
+lazyRequire(this, '../window/utils', "getInnerId");
 const { EventTarget } = require('../event/target');
-const { isPrivate } = require('../private-browsing/utils');
-const { getTabForBrowser, getTabForContentWindowNoShim, getBrowserForTab } = require('../tabs/utils');
-const { attach, connect, detach, destroy, makeChildOptions } = require('./utils');
+lazyRequire(this, '../private-browsing/utils', "isPrivate");
+lazyRequire(this, '../tabs/utils', "getTabForBrowser", "getTabForContentWindowNoShim", "getBrowserForTab");
+lazyRequire(this, './utils', "attach", "connect", "detach", "destroy", "makeChildOptions");
 const { ensure } = require('../system/unload');
-const { on: observe } = require('../system/events');
+lazyRequire(this, '../system/events', {"on": "observe"});
 const { Ci, Cu } = require('chrome');
-const { modelFor: tabFor } = require('sdk/model/core');
+lazyRequire(this, 'sdk/model/core', {"modelFor": "tabFor"});
 const { remoteRequire, processes, frames } = require('../remote/parent');
 remoteRequire('sdk/content/worker-child');
 

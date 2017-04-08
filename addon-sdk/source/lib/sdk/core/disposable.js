@@ -10,8 +10,9 @@ module.metadata = {
 
 const { Class } = require("./heritage");
 const { Observer, subscribe, unsubscribe, observe } = require("./observer");
-const { isWeak } = require("./reference");
-const SDKWeakSet = require("../lang/weak-set");
+
+lazyRequire(this, "./reference", "isWeak");
+lazyRequireModule(this, "../lang/weak-set", "SDKWeakSet");
 
 const method = require("../../method/core");
 

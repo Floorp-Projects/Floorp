@@ -18,8 +18,8 @@ module.metadata = {
  */
 
 const { Cu } = require('chrome');
-const { isNumber } = require('sdk/lang/type');
-const { TextEncoder, TextDecoder } = Cu.import('resource://gre/modules/commonjs/toolkit/loader.js', {});
+lazyRequire(this, 'sdk/lang/type', "isNumber");
+Cu.importGlobalProperties(["TextEncoder", "TextDecoder"]);
 
 exports.TextEncoder = TextEncoder;
 exports.TextDecoder = TextDecoder;

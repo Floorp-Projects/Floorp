@@ -40,7 +40,8 @@ exports.asyncWindowLeakTest = function*(assert, asyncTestFunc) {
 
   // SelfSupportBackend periodically tries to open windows.  This can
   // mess up our window leak detection below, so turn it off.
-  SelfSupportBackend.uninit();
+  if (SelfSupportBackend._log)
+    SelfSupportBackend.uninit();
 
   // Wait for the browser to finish loading.
   yield Startup.onceInitialized;

@@ -14,28 +14,27 @@ module.metadata = {
 };
 
 const { Cu, Ci } = require("chrome");
-const { setTimeout } = require('./timers');
+lazyRequire(this, './timers', "setTimeout");
 const { Class } = require("./core/heritage");
 const { DefaultWeakMap, merge } = require("./util/object");
 const { WorkerHost } = require("./content/utils");
-const { Worker } = require("./deprecated/sync-worker");
+lazyRequire(this, "./deprecated/sync-worker", "Worker");
 const { Disposable } = require("./core/disposable");
 const { WeakReference } = require('./core/reference');
 const { contract: loaderContract } = require("./content/loader");
 const { contract } = require("./util/contract");
-const { on, off, emit, setListeners } = require("./event/core");
+lazyRequire(this, "./event/core", "on", "off", "emit", "setListeners");
 const { EventTarget } = require("./event/target");
-const domPanel = require("./panel/utils");
-const { getDocShell } = require('./frame/utils');
+lazyRequireModule(this, "./panel/utils", "domPanel");
+lazyRequire(this, './frame/utils', "getDocShell");
 const { events } = require("./panel/events");
-const systemEvents = require("./system/events");
 const { filter, pipe, stripListeners } = require("./event/utils");
-const { getNodeView, getActiveView } = require("./view/core");
-const { isNil, isObject, isNumber } = require("./lang/type");
-const { getAttachEventType } = require("./content/utils");
+lazyRequire(this, "./view/core", "getNodeView", "getActiveView");
+lazyRequire(this, "./lang/type", "isNil", "isObject", "isNumber");
+lazyRequire(this, "./content/utils", "getAttachEventType");
 const { number, boolean, object } = require('./deprecated/api-utils');
-const { Style } = require("./stylesheet/style");
-const { attach, detach } = require("./content/mod");
+lazyRequire(this, "./stylesheet/style", "Style");
+lazyRequire(this, "./content/mod", "attach", "detach");
 
 var isRect = ({top, right, bottom, left}) => [top, right, bottom, left].
   some(value => isNumber(value) && !isNaN(value));

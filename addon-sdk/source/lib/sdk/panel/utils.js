@@ -10,17 +10,17 @@ module.metadata = {
 
 const { Cc, Ci } = require("chrome");
 const { Services } = require("resource://gre/modules/Services.jsm");
-const { setTimeout } = require("../timers");
-const { platform } = require("../system");
-const { getMostRecentBrowserWindow, getOwnerBrowserWindow,
-        getScreenPixelsPerCSSPixel } = require("../window/utils");
+lazyRequire(this, "../timers", "setTimeout");
+lazyRequire(this, "../system", "platform");
+lazyRequire(this, "../window/utils", "getMostRecentBrowserWindow", "getOwnerBrowserWindow",
+            "getScreenPixelsPerCSSPixel");
 
-const { create: createFrame, swapFrameLoaders, getDocShell } = require("../frame/utils");
-const { window: addonWindow } = require("../addon/window");
-const { isNil } = require("../lang/type");
-const { data } = require('../self');
+lazyRequire(this, "../frame/utils", { "create": "createFrame" }, "swapFrameLoaders", "getDocShell");
+lazyRequire(this, "../addon/window", { "window": "addonWindow" });
+lazyRequire(this, "../lang/type", "isNil");
+lazyRequire(this, '../self', "data");
 
-const events = require("../system/events");
+lazyRequireModule(this, "../system/events", "events");
 
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
