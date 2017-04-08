@@ -284,6 +284,13 @@ const urlCache = {
     }
   }),
 
+  resolutionCache: new DefaultMap(fullId => {
+    return (resolveAsFile(fullId) ||
+            resolveAsDirectory(fullId));
+  }),
+
+  nodeModulesCache: new Map(),
+
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference]),
 
   observe() {
@@ -291,6 +298,19 @@ const urlCache = {
     // since it probably means we're loading new copies of extensions.
     this.zipContentsCache.clear();
     this.filesCache.clear();
+    this.resolutionCache.clear();
+    this.nodeModulesCache.clear();
+  },
+
+  getNodeModulePaths(rootURI, start) {
+    let url = join(rootURI, start);
+
+    if (this.nodeModulesCache.has(url))
+      return this.nodeModulesCache.get(url);
+
+    let result = Array.from(getNodeModulePaths(rootURI, start));
+    this.nodeModulesCache.set(url, result);
+    return result;
   },
 
   /**
@@ -640,8 +660,7 @@ function resolveAsDirectory(path) {
 function resolveRelative(rootURI, modulesDir, id) {
   let fullId = join(rootURI, modulesDir, id);
 
-  let resolvedPath = (resolveAsFile(fullId) ||
-                      resolveAsDirectory(fullId));
+  let resolvedPath = urlCache.resolutionCache.get(fullId);
   if (resolvedPath) {
     return './' + resolvedPath.slice(rootURI.length);
   }
@@ -698,7 +717,7 @@ const nodeResolve = iced(function nodeResolve(id, requirer, { rootURI }) {
 
   // If manifest has dependencies, attempt to look up node modules
   // in the `dependencies` list
-  for (let modulesDir of getNodeModulePaths(rootURI, dirname(requirer))) {
+  for (let modulesDir of urlCache.getNodeModulePaths(rootURI, dirname(requirer))) {
     if ((resolvedPath = resolveRelative(rootURI, modulesDir, id))) {
       return resolvedPath;
     }
@@ -826,9 +845,8 @@ function lazyRequireModule(obj, moduleId, prop = moduleId) {
 // with it during link time.
 const Require = iced(function Require(loader, requirer) {
   let {
-    modules, mapping, resolve: loaderResolve, load,
-    manifest, rootURI, isNative, requireMap,
-    requireHook
+    modules, mapping, mappingCache, resolve: loaderResolve, load,
+    manifest, rootURI, isNative, requireHook
   } = loader;
 
   if (isSystemURI(requirer.uri)) {
@@ -853,6 +871,7 @@ const Require = iced(function Require(loader, requirer) {
 
   function _require(id) {
     let { uri, requirement } = getRequirements(id);
+
     let module = null;
     // If module is already cached by loader then just use it.
     if (uri in modules) {
@@ -974,7 +993,14 @@ const Require = iced(function Require(loader, requirer) {
     }
 
     // Resolves `uri` of module using loaders resolve function.
-    uri = uri || resolveURI(requirement, mapping);
+    if (!uri) {
+      if (mappingCache.has(requirement)) {
+        uri = mappingCache.get(requirement);
+      } else {
+        uri = resolveURI(requirement, mapping);
+        mappingCache.set(requirement, uri);
+      }
+    }
 
     // Throw if `uri` can not be resolved.
     if (!uri) {
@@ -1057,11 +1083,15 @@ Loader.unload = unload;
 //   If `resolve` does not returns `uri` string exception will be thrown by
 //   an associated `require` call.
 function Loader(options) {
+  function normalizeRootURI(uri) {
+    return addTrailingSlash(join(uri));
+  }
+
   if (options.sharedGlobalBlacklist && !options.sharedGlobalBlocklist) {
     options.sharedGlobalBlocklist = options.sharedGlobalBlacklist;
   }
   let {
-    modules, globals, resolve, paths, rootURI, manifest, requireMap, isNative,
+    modules, globals, resolve, paths, rootURI, manifest, isNative,
     metadata, sharedGlobal, sharedGlobalBlocklist, checkCompatibility, waiveIntereposition
   } = override({
     paths: {},
@@ -1080,7 +1110,7 @@ function Loader(options) {
     checkCompatibility: false,
     resolve: options.isNative ?
       // Make the returned resolve function have the same signature
-      (id, requirer) => Loader.nodeResolve(id, requirer, { rootURI: rootURI }) :
+      (id, requirer) => Loader.nodeResolve(id, requirer, { rootURI: normalizeRootURI(rootURI) }) :
       Loader.resolve,
     sharedGlobalBlocklist: ["sdk/indexed-db"],
     waiveIntereposition: false
@@ -1175,6 +1205,7 @@ function Loader(options) {
     destructor: { enumerable: false, value: destructor },
     globals: { enumerable: false, value: globals },
     mapping: { enumerable: false, value: mapping },
+    mappingCache: { enumerable: false, value: new Map() },
     // Map of module objects indexed by module URIs.
     modules: { enumerable: false, value: modules },
     metadata: { enumerable: false, value: metadata },
@@ -1210,7 +1241,7 @@ function Loader(options) {
   if (isNative) {
     returnObj.isNative = { enumerable: false, value: true };
     returnObj.manifest = { enumerable: false, value: manifest };
-    returnObj.rootURI = { enumerable: false, value: addTrailingSlash(rootURI) };
+    returnObj.rootURI = { enumerable: false, value: normalizeRootURI(rootURI) };
   }
 
   return freeze(Object.create(null, returnObj));
