@@ -160,7 +160,8 @@ public abstract class GeckoApp
 
     public static final String EXTRA_STATE_BUNDLE          = "stateBundle";
 
-    public static final String LAST_SELECTED_TAB           = "lastSelectedTab";
+    protected static final String LAST_SELECTED_TAB        = "lastSelectedTab";
+    protected static final String LAST_SESSION_UUID        = "lastSessionUUID";
 
     public static final String PREFS_ALLOW_STATE_BUNDLE    = "allowStateBundle";
     public static final String PREFS_FLASH_USAGE           = "playFlashCount";
@@ -182,7 +183,8 @@ public abstract class GeckoApp
 
     private static boolean sAlreadyLoaded;
 
-    private static WeakReference<GeckoApp> lastActiveGeckoApp;
+    protected boolean mResumingAfterOnCreate;
+    protected static WeakReference<GeckoApp> mLastActiveGeckoApp;
 
     protected RelativeLayout mRootLayout;
     protected RelativeLayout mMainLayout;
@@ -216,7 +218,8 @@ public abstract class GeckoApp
     protected boolean mShouldRestore;
     private boolean mSessionRestoreParsingFinished = false;
 
-    protected int lastSelectedTabId = INVALID_TAB_ID;
+    protected int mLastSelectedTabId = INVALID_TAB_ID;
+    protected String mLastSessionUUID = null;
 
     private boolean foregrounded = false;
 
@@ -427,6 +430,21 @@ public abstract class GeckoApp
             case SELECTED:
                 resetOptionsMenu();
                 resetFormAssistPopup();
+
+                if (saveAsLastSelectedTab(tab)) {
+                    mLastSelectedTabId = tab.getId();
+                    mLastSessionUUID = GeckoApplication.getSessionUUID();
+                }
+                break;
+
+            case CLOSED:
+                if (saveAsLastSelectedTab(tab)) {
+                    if (mLastSelectedTabId == tab.getId() &&
+                            GeckoApplication.getSessionUUID().equals(mLastSessionUUID)) {
+                        mLastSelectedTabId = Tabs.INVALID_TAB_ID;
+                        mLastSessionUUID = null;
+                    }
+                }
                 break;
 
             case DESKTOP_MODE_CHANGE:
@@ -446,6 +464,14 @@ public abstract class GeckoApp
         if (mInitialized && mFormAssistPopup != null) {
             mFormAssistPopup.hide();
         }
+    }
+
+    /**
+     * Called on tab selection and tab close - return true to allow updating of this activity's
+     * last selected tab.
+     */
+    protected boolean saveAsLastSelectedTab(Tab tab) {
+        return false;
     }
 
     public void refreshChrome() { }
@@ -653,12 +679,8 @@ public abstract class GeckoApp
 
         outState.putBoolean(SAVED_STATE_IN_BACKGROUND, isApplicationInBackground());
         outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
-        outState.putInt(LAST_SELECTED_TAB, lastSelectedTabId);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(final Bundle inState) {
-        lastSelectedTabId = inState.getInt(LAST_SELECTED_TAB);
+        outState.putInt(LAST_SELECTED_TAB, mLastSelectedTabId);
+        outState.putString(LAST_SESSION_UUID, mLastSessionUUID);
     }
 
     public void addTab() { }
@@ -1208,6 +1230,11 @@ public abstract class GeckoApp
         mJavaUiStartupTimer = new Telemetry.UptimeTimer("FENNEC_STARTUP_TIME_JAVAUI");
         mGeckoReadyStartupTimer = new Telemetry.UptimeTimer("FENNEC_STARTUP_TIME_GECKOREADY");
 
+        if (savedInstanceState != null) {
+            mLastSelectedTabId = savedInstanceState.getInt(LAST_SELECTED_TAB);
+            mLastSessionUUID = savedInstanceState.getString(LAST_SESSION_UUID);
+        }
+
         final SafeIntent intent = new SafeIntent(getIntent());
 
         earlyStartJavaSampler(intent);
@@ -1254,6 +1281,8 @@ public abstract class GeckoApp
             doRestart();
             return;
         }
+
+        mResumingAfterOnCreate = true;
 
         if (sAlreadyLoaded) {
             // This happens when the GeckoApp activity is destroyed by Android
@@ -2228,7 +2257,6 @@ public abstract class GeckoApp
             handleSelectTabIntent(intent);
         } else if (ACTION_LOAD.equals(action)) {
             Tabs.getInstance().loadUrl(intent.getDataString());
-            lastSelectedTabId = INVALID_TAB_ID;
         } else if (Intent.ACTION_VIEW.equals(action)) {
             processActionViewIntent(new Runnable() {
                 @Override
@@ -2241,7 +2269,6 @@ public abstract class GeckoApp
                     Tabs.getInstance().loadUrlWithIntentExtras(url, intent, flags);
                 }
             });
-            lastSelectedTabId = INVALID_TAB_ID;
         } else if (ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
             mLayerView.loadUri(uri, GeckoView.LOAD_SWITCH_TAB);
         } else if (Intent.ACTION_SEARCH.equals(action)) {
@@ -2267,7 +2294,6 @@ public abstract class GeckoApp
     protected void handleSelectTabIntent(SafeIntent intent) {
         final int tabId = intent.getIntExtra(Tabs.INTENT_EXTRA_TAB_ID, INVALID_TAB_ID);
         Tabs.getInstance().selectTab(tabId);
-        lastSelectedTabId = INVALID_TAB_ID;
     }
 
     /**
@@ -2311,7 +2337,9 @@ public abstract class GeckoApp
         GeckoAppShell.setGeckoInterface(this);
         GeckoAppShell.setScreenOrientationDelegate(this);
 
-        restoreLastSelectedTab();
+        if (mLastActiveGeckoApp == null || mLastActiveGeckoApp.get() != this) {
+            restoreLastSelectedTab();
+        }
 
         int newOrientation = getResources().getConfiguration().orientation;
         if (GeckoScreenOrientation.getInstance().update(newOrientation)) {
@@ -2361,13 +2389,15 @@ public abstract class GeckoApp
         });
 
         Restrictions.update(this);
+
+        mResumingAfterOnCreate = false;
     }
 
-    protected void restoreLastSelectedTab() {
-        if (lastSelectedTabId >= 0 && (lastActiveGeckoApp == null || lastActiveGeckoApp.get() != this)) {
-            Tabs.getInstance().selectTab(lastSelectedTabId);
-        }
-    }
+    /**
+     * Called on activity resume if a different (or no) GeckoApp-based activity was previously
+     * active within our application.
+     */
+    protected void restoreLastSelectedTab() { }
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
@@ -2397,11 +2427,7 @@ public abstract class GeckoApp
 
         foregrounded = false;
 
-        final Tab selectedTab = Tabs.getInstance().getSelectedTab();
-        if (selectedTab != null) {
-            lastSelectedTabId = selectedTab.getId();
-        }
-        lastActiveGeckoApp = new WeakReference<GeckoApp>(this);
+        mLastActiveGeckoApp = new WeakReference<GeckoApp>(this);
 
         final HealthRecorder rec = mHealthRecorder;
         final Context context = this;
