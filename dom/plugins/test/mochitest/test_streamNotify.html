@@ -83,6 +83,8 @@
                      function(r, t) {
                        todo(false, "Shouldn't get callback for invalid data: URI");
                      }, null, true), "streamTest GET bad data: URI");
+
+    ok(!p.postFileToURLTest("post.sjs"), "postFileToURLTest POST a file");
   }
   </script>
 
