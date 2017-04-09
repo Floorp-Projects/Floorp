@@ -26,7 +26,6 @@
 #include "mozilla/ArenaAllocatorExtensions.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/ServoStyleSet.h"
 #include "mozilla/dom/PContent.h"
 #include "mozilla/dom/ContentPrefs.h"
 #include "nsQuickSort.h"
@@ -763,7 +762,7 @@ inInitArray(const char* key)
 PrefHashEntry* pref_HashTableLookup(const char *key)
 {
 #ifndef MOZ_B2G
-    MOZ_ASSERT(NS_IsMainThread() || mozilla::ServoStyleSet::IsInServoTraversal());
+    MOZ_ASSERT(NS_IsMainThread());
 #endif
     MOZ_ASSERT((!XRE_IsContentProcess() || gPhase != START),
                "pref access before commandline prefs set");
