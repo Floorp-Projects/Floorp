@@ -988,6 +988,12 @@ Gecko_SetUrlImageValue(nsStyleImage* aImage, ServoBundledURI aURI)
 }
 
 void
+Gecko_SetImageElement(nsStyleImage* aImage, nsIAtom* aAtom) {
+  MOZ_ASSERT(aImage);
+  aImage->SetElementId(do_AddRef(aAtom));
+}
+
+void
 Gecko_CopyImageValueFrom(nsStyleImage* aImage, const nsStyleImage* aOther)
 {
   MOZ_ASSERT(aImage);
