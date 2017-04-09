@@ -112,25 +112,6 @@ CrossProcessCompositorBridgeParent::DeallocPLayerTransactionParent(PLayerTransac
   return true;
 }
 
-mozilla::ipc::IPCResult
-CrossProcessCompositorBridgeParent::RecvGetCompositorOptions(const uint64_t& aLayersId,
-                                                             CompositorOptions* aOptions)
-{
-  // Check to see if this child process has access to this layer tree.
-  if (!LayerTreeOwnerTracker::Get()->IsMapped(aLayersId, OtherPid())) {
-    NS_ERROR("Unexpected layers id in RecvGetCompositorOptions; dropping message...");
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  CompositorBridgeParent::LayerTreeState& state = sIndirectLayerTrees[aLayersId];
-
-  if (state.mParent) {
-    *aOptions = state.mParent->GetOptions();
-  }
-  return IPC_OK();
-}
-
 PAPZCTreeManagerParent*
 CrossProcessCompositorBridgeParent::AllocPAPZCTreeManagerParent(const uint64_t& aLayersId)
 {

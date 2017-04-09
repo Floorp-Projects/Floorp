@@ -144,9 +144,6 @@ parent:
   sync Reset(LayersBackend[] aBackendHints, uint64_t aSeqNo)
     returns (bool aResult, TextureFactoryIdentifier aOutIdentifier);
 
-  // Returns the CompositorOptions for this compositor.
-  sync GetCompositorOptions(uint64_t layersId) returns (CompositorOptions aOptions);
-
   // Must be called after Initialize(), and only succeeds if AsyncPanZoomEnabled() is true.
   async PAPZ(uint64_t layersId);
   async PAPZCTreeManager(uint64_t layersId);
