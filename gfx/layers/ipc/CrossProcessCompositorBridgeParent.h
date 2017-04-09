@@ -145,8 +145,6 @@ public:
     return false;
   }
 
-  virtual mozilla::ipc::IPCResult RecvGetCompositorOptions(const uint64_t& aLayersId, CompositorOptions* aOptions) override;
-
   virtual PAPZCTreeManagerParent* AllocPAPZCTreeManagerParent(const uint64_t& aLayersId) override;
   virtual bool DeallocPAPZCTreeManagerParent(PAPZCTreeManagerParent* aActor) override;
 

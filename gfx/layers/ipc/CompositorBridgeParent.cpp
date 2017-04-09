@@ -1140,22 +1140,6 @@ CompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor)
   return true;
 }
 
-mozilla::ipc::IPCResult
-CompositorBridgeParent::RecvGetCompositorOptions(const uint64_t& aLayersId,
-                                                 CompositorOptions* aOptions)
-{
-  // The CompositorBridgeParent associated with the layers id should be this
-  // one.
-  if (aLayersId != 0) {
-#ifdef DEBUG
-    MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    MOZ_ASSERT(sIndirectLayerTrees[aLayersId].mParent == this);
-#endif
-  }
-  *aOptions = mOptions;
-  return IPC_OK();
-}
-
 RefPtr<APZCTreeManager>
 CompositorBridgeParent::GetAPZCTreeManager()
 {
