@@ -864,7 +864,8 @@ GPUProcessManager::AllocateLayerTreeId()
 bool
 GPUProcessManager::AllocateAndConnectLayerTreeId(PCompositorBridgeChild* aCompositorBridge,
                                                  base::ProcessId aOtherPid,
-                                                 uint64_t* aOutLayersId)
+                                                 uint64_t* aOutLayersId,
+                                                 CompositorOptions* aOutCompositorOptions)
 {
   uint64_t layersId = AllocateLayerTreeId();
   *aOutLayersId = layersId;
@@ -878,12 +879,12 @@ GPUProcessManager::AllocateAndConnectLayerTreeId(PCompositorBridgeChild* aCompos
     if (!aCompositorBridge) {
       return false;
     }
-    return aCompositorBridge->SendNotifyChildCreated(layersId);
+    return aCompositorBridge->SendNotifyChildCreated(layersId, aOutCompositorOptions);
   }
 
   // Use the combined message path.
   LayerTreeOwnerTracker::Get()->Map(layersId, aOtherPid);
-  return aCompositorBridge->SendMapAndNotifyChildCreated(layersId, aOtherPid);
+  return aCompositorBridge->SendMapAndNotifyChildCreated(layersId, aOtherPid, aOutCompositorOptions);
 }
 
 void
