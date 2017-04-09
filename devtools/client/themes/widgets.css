@@ -164,15 +164,19 @@
 }
 
 /* Draw shadows to indicate there is more content 'behind' scrollbuttons. */
-.scrollbutton-up:-moz-locale-dir(ltr),
-.scrollbutton-down:-moz-locale-dir(rtl) {
+.scrollbutton-up:-moz-locale-dir(ltr):not(:dir(rtl)),
+.scrollbutton-up:dir(ltr),
+.scrollbutton-down:-moz-locale-dir(rtl),
+.scrollbutton-down:dir(rtl) {
   border-right: solid 1px rgba(255, 255, 255, .1);
   border-left: solid 1px transparent;
   box-shadow: 3px 0px 3px -3px var(--theme-sidebar-background);
 }
 
-.scrollbutton-down:-moz-locale-dir(ltr),
-.scrollbutton-up:-moz-locale-dir(rtl) {
+.scrollbutton-down:-moz-locale-dir(ltr):not(:dir(rtl)),
+.scrollbutton-down:dir(ltr),
+.scrollbutton-up:-moz-locale-dir(rtl),
+.scrollbutton-up:dir(rtl) {
   border-right: solid 1px transparent;
   border-left: solid 1px rgba(255, 255, 255, .1);
   box-shadow: -3px 0px 3px -3px var(--theme-sidebar-background);
@@ -185,7 +189,9 @@
 }
 
 .scrollbutton-up > .toolbarbutton-icon:-moz-locale-dir(rtl),
-.scrollbutton-down > .toolbarbutton-icon:-moz-locale-dir(ltr) {
+.scrollbutton-up > .toolbarbutton-icon:dir(rtl),
+.scrollbutton-down > .toolbarbutton-icon:-moz-locale-dir(ltr):not(:dir(rtl)),
+.scrollbutton-down > .toolbarbutton-icon:dir(ltr) {
   transform: scaleX(-1);
 }
 
