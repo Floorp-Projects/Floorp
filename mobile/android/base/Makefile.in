@@ -581,7 +581,7 @@ GECKOVIEW_AIDLS = \
 
 geckoview_aidl_src_path := $(topsrcdir)/mobile/android/geckoview/src/main/aidl
 geckoview_aidl_target_path := generated
-geckoview_aidl_targets := $(addprefix $(geckoview_aidl_target_path)/,$($(GECKOVIEW_AIDLS:.java=):.aidl=.java))
+geckoview_aidl_targets := $(addprefix $(geckoview_aidl_target_path)/,$(patsubst %.aidl,%.java,$(GECKOVIEW_AIDLS:.java=)))
 
 $(geckoview_aidl_targets): $(geckoview_aidl_target_path)/%.java: $(geckoview_aidl_src_path)/%.aidl
 	@echo "Processing AIDL: $< => $@"
@@ -592,7 +592,7 @@ FENNEC_AIDLS = \
 
 fennec_aidl_src_path := $(srcdir)/aidl
 fennec_aidl_target_path := generated
-fennec_aidl_targets := $(addprefix $(fennec_aidl_target_path)/,$($(FENNEC_AIDLS:.java=):.aidl=.java))
+fennec_aidl_targets := $(addprefix $(fennec_aidl_target_path)/,$(patsubst %.aidl,%.java,$(FENNEC_AIDLS:.java=)))
 
 $(fennec_aidl_targets): $(fennec_aidl_target_path)/%.java: $(fennec_aidl_src_path)/%.aidl
 	@echo "Processing AIDL: $< => $@"
