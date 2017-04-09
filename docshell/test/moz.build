@@ -1,0 +1,146 @@
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Document Navigation')
+
+with Files('browser/*_bug234628*'):
+    BUG_COMPONENT = ('Core', 'Internationalization')
+
+with Files('browser/*_bug349769*'):
+    BUG_COMPONENT = ('Core', 'DOM')
+
+with Files('browser/*_bug388121*'):
+    BUG_COMPONENT = ('Core', 'DOM')
+
+with Files('browser/*_bug655270*'):
+    BUG_COMPONENT = ('Toolkit', 'Places')
+
+with Files('browser/*_bug655273*'):
+    BUG_COMPONENT = ('Firefox', 'Menus')
+
+with Files('browser/*_bug852909*'):
+    BUG_COMPONENT = ('Firefox', 'Menus')
+
+with Files('browser/*bug92473*'):
+    BUG_COMPONENT = ('Core', 'Internationalization')
+
+with Files('browser/*loadDisallowInherit*'):
+    BUG_COMPONENT = ('Firefox', 'Location Bar')
+
+with Files('browser/*tab_touch_events*'):
+    BUG_COMPONENT = ('Core', 'DOM: Events')
+
+with Files('browser/*timelineMarkers*'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Performance Tools (Profiler/Timeline)')
+
+with Files('browser/*ua_emulation*'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools')
+
+with Files('chrome/*112564*'):
+    BUG_COMPONENT = ('Core', 'Networking: HTTP')
+
+with Files('chrome/*303267*'):
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
+
+with Files('chrome/*453650*'):
+    BUG_COMPONENT = ('Core', 'Layout')
+
+with Files('chrome/*565388*'):
+    BUG_COMPONENT = ('Core', 'Widget')
+
+with Files('chrome/*582176*'):
+    BUG_COMPONENT = ('Core', 'DOM')
+
+with Files('chrome/*608669*'):
+    BUG_COMPONENT = ('Core', 'DOM')
+
+with Files('chrome/*690056*'):
+    BUG_COMPONENT = ('Core', 'DOM')
+
+with Files('chrome/*92598*'):
+    BUG_COMPONENT = ('Core', 'Networking: HTTP')
+
+with Files('chrome/*private_hidden_window*'):
+    BUG_COMPONENT = ('Firefox', 'Private Browsing')
+
+
+with Files('iframesandbox/**'):
+    BUG_COMPONENT = ('Core', 'Security')
+
+with Files('iframesandbox/*marquee_event_handlers*'):
+    BUG_COMPONENT = ('Core', 'DOM: Security')
+
+
+with Files('navigation/*13871.html'):
+    BUG_COMPONENT = ('Core', 'Security')
+
+with Files('navigation/*386782*'):
+    BUG_COMPONENT = ('Core', 'Editor')
+
+with Files('navigation/*430624*'):
+    BUG_COMPONENT = ('Core', 'Editor')
+
+with Files('navigation/*430723*'):
+    BUG_COMPONENT = ('Core', 'Keyboard: Navigation')
+
+with Files('navigation/*child*'):
+    BUG_COMPONENT = ('Core', 'Security')
+
+with Files('navigation/*opener*'):
+    BUG_COMPONENT = ('Core', 'Security')
+
+with Files('navigation/*reserved*'):
+    BUG_COMPONENT = ('Core', 'Security')
+
+with Files('navigation/*triggering*'):
+    BUG_COMPONENT = ('Core', 'DOM: Security')
+
+
+with Files('unit/*442584*'):
+    BUG_COMPONENT = ('Core', 'Networking: Cache')
+
+with Files('unit/*setUsePrivateBrowsing*'):
+    BUG_COMPONENT = ('Firefox', 'Extension Compatibility')
+
+with Files('*1045096*'):
+    BUG_COMPONENT = ('Core', 'DOM')
+
+with Files('*1151421*'):
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
+
+with Files('*369814*'):
+    BUG_COMPONENT = ('Core', 'Networking: JAR')
+
+with Files('*402210*'):
+    BUG_COMPONENT = ('Core', 'DOM: Security')
+
+with Files('*509055*'):
+    BUG_COMPONENT = ('Core', 'History: Global')
+
+with Files('*511449*'):
+    BUG_COMPONENT = ('Core', 'Widget: Cocoa')
+
+with Files('*551225*'):
+    BUG_COMPONENT = ('Core', 'DOM')
+
+with Files('*570341*'):
+    BUG_COMPONENT = ('Core', 'DOM')
+
+with Files('*580069*'):
+    BUG_COMPONENT = ('Core', 'DOM')
+
+with Files('*637644*'):
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
+
+with Files('*640387*'):
+    BUG_COMPONENT = ('Core', 'DOM: Events')
+
+with Files('*668513*'):
+    BUG_COMPONENT = ('Core', 'DOM')
+
+with Files('*713825*'):
+    BUG_COMPONENT = ('Core', 'Internationalization')
+
+with Files('*797909*'):
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
+
+with Files('*forceinheritprincipal*'):
+    BUG_COMPONENT = ('Core', 'DOM: Security')
