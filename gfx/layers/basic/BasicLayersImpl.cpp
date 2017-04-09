@@ -12,8 +12,6 @@
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "AutoMaskData.h"
-#include "mozilla/gfx/InlineTranslator.h"
-#include "mozilla/gfx/DrawTargetRecording.h"
 
 namespace mozilla {
 namespace layers {
@@ -124,9 +122,6 @@ FillRectWithMask(DrawTarget* aDT,
                  const Matrix* aMaskTransform,
                  const Matrix* aSurfaceTransform)
 {
-  MOZ_ASSERT(!aMaskSource || (aMaskSource && aMaskTransform),
-             "aMaskSource must not be passed without a transform");
-
   if (aMaskSource && aMaskTransform) {
     aDT->PushClipRect(aRect);
     Matrix oldTransform = aDT->GetTransform();
@@ -143,29 +138,6 @@ FillRectWithMask(DrawTarget* aDT,
 
     aDT->SetTransform(*aMaskTransform);
     aDT->MaskSurface(source, aMaskSource, Point(0, 0), aOptions);
-
-    aDT->SetTransform(oldTransform);
-    aDT->PopClip();
-    return;
-  }
-
-  if (aSurface->GetType() == SurfaceType::RECORDING) {
-    MOZ_ASSERT(aOptions.mAlpha == 1.0 &&
-               aOptions.mCompositionOp == CompositionOp::OP_OVER);
-
-    aDT->PushClipRect(aRect);
-    Matrix oldTransform = aDT->GetTransform();
-
-    Matrix transform = oldTransform;
-    if (aSurfaceTransform) {
-      transform = (*aSurfaceTransform) * transform;
-    }
-
-    InlineTranslator* translator = new InlineTranslator(aDT, transform);
-    SourceSurfaceRecording* ss = static_cast<SourceSurfaceRecording*>(aSurface);
-    DrawEventRecorderMemory* mr = static_cast<DrawEventRecorderMemory*>(ss->mRecorder.get());
-
-    translator->TranslateRecording(mr->GetInputStream());
 
     aDT->SetTransform(oldTransform);
     aDT->PopClip();
