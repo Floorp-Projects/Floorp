@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 const PTV_interfaces = [Ci.nsITreeView,
                         Ci.nsINavHistoryResultObserver,
@@ -499,8 +500,8 @@ PlacesTreeView.prototype = {
   __todayFormatter: null,
   get _todayFormatter() {
     if (!this.__todayFormatter) {
-      const dtOptions = { hour: "numeric", minute: "numeric" };
-      this.__todayFormatter = new Intl.DateTimeFormat(undefined, dtOptions);
+      const dtOptions = { timeStyle: "short" };
+      this.__todayFormatter = Services.intl.createDateTimeFormat(undefined, dtOptions);
     }
     return this.__todayFormatter;
   },
@@ -508,9 +509,11 @@ PlacesTreeView.prototype = {
   __dateFormatter: null,
   get _dateFormatter() {
     if (!this.__dateFormatter) {
-      const dtOptions = { year: "numeric", month: "numeric", day: "numeric",
-                          hour: "numeric", minute: "numeric" };
-      this.__dateFormatter = new Intl.DateTimeFormat(undefined, dtOptions);
+      const dtOptions = {
+        dateStyle: "short",
+        timeStyle: "short"
+      };
+      this.__dateFormatter = Services.intl.createDateTimeFormat(undefined, dtOptions);
     }
     return this.__dateFormatter;
   },
