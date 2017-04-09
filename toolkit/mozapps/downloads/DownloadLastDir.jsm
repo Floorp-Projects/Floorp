@@ -34,6 +34,11 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
+let nonPrivateLoadContext = Components.classes["@mozilla.org/loadcontext;1"].
+                              createInstance(Components.interfaces.nsILoadContext);
+let privateLoadContext = Components.classes["@mozilla.org/privateloadcontext;1"].
+                              createInstance(Components.interfaces.nsILoadContext);
+
 var observer = {
   QueryInterface(aIID) {
     if (aIID.equals(Components.interfaces.nsIObserver) ||
@@ -56,8 +61,8 @@ var observer = {
         let cps2 = Components.classes["@mozilla.org/content-pref/service;1"].
                      getService(Components.interfaces.nsIContentPrefService2);
 
-        cps2.removeByName(LAST_DIR_PREF, {usePrivateBrowsing: false});
-        cps2.removeByName(LAST_DIR_PREF, {usePrivateBrowsing: true});
+        cps2.removeByName(LAST_DIR_PREF, nonPrivateLoadContext);
+        cps2.removeByName(LAST_DIR_PREF, privateLoadContext);
         break;
     }
   }
@@ -93,11 +98,9 @@ this.DownloadLastDir = function DownloadLastDir(aWindow) {
   // Need this in case the real thing has gone away by the time we need it.
   // We only care about the private browsing state. All the rest of the
   // load context isn't of interest to the content pref service.
-  this.fakeContext = {
-    QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsILoadContext]),
-    usePrivateBrowsing: loadContext.usePrivateBrowsing,
-    originAttributes: {},
-  };
+  this.fakeContext = loadContext.usePrivateBrowsing ?
+                       privateLoadContext :
+                       nonPrivateLoadContext;
 }
 
 DownloadLastDir.prototype = {
