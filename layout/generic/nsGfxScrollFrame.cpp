@@ -1980,9 +1980,10 @@ public:
   // Wait for 3-4s between scrolls before we remove our layers.
   // That's 4 generations of 1s each.
   enum { TIMEOUT_MS = 1000 };
-  ScrollFrameActivityTracker()
+  explicit ScrollFrameActivityTracker(nsIEventTarget* aEventTarget)
     : nsExpirationTracker<ScrollFrameHelper,4>(TIMEOUT_MS,
-                                               "ScrollFrameActivityTracker")
+                                               "ScrollFrameActivityTracker",
+                                               aEventTarget)
   {}
   ~ScrollFrameActivityTracker() {
     AgeAllGenerations();
@@ -2539,7 +2540,8 @@ void ScrollFrameHelper::MarkRecentlyScrolled()
     gScrollFrameActivityTracker->MarkUsed(this);
   } else {
     if (!gScrollFrameActivityTracker) {
-      gScrollFrameActivityTracker = new ScrollFrameActivityTracker();
+      gScrollFrameActivityTracker = new ScrollFrameActivityTracker(
+        SystemGroup::EventTargetFor(TaskCategory::Other));
     }
     gScrollFrameActivityTracker->AddObject(this);
   }
