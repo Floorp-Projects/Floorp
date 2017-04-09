@@ -16,10 +16,10 @@ random-if(cocoaWidget) fails-if(!haveTestPlugin&&!Android) skip-if(stylo) == plu
 fails == plugin-transform-alpha-zindex.html plugin-transform-alpha-zindex.html
 == plugin-busy-alpha-zindex.html plugin-busy-alpha-zindex.html
 == plugin-background.html plugin-background.html
-== plugin-background-1-step.html plugin-background-1-step.html # bug 1348723
-== plugin-background-2-step.html plugin-background-2-step.html # bug 1348723
-== plugin-background-5-step.html plugin-background-5-step.html # bug 1348723
-== plugin-background-10-step.html plugin-background-10-step.html # bug 1348723
+== plugin-background-1-step.html plugin-background-1-step.html
+== plugin-background-2-step.html plugin-background-2-step.html
+== plugin-background-5-step.html plugin-background-5-step.html
+== plugin-background-10-step.html plugin-background-10-step.html
 == plugin-transform-1.html plugin-transform-1.html
 fails == plugin-transform-2.html plugin-transform-2.html
 == shrink-1.html shrink-1.html

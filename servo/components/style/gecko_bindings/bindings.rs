@@ -22,6 +22,7 @@ use gecko_bindings::structs::RawGeckoStyleAnimationList;
 use gecko_bindings::structs::RawGeckoURLExtraData;
 use gecko_bindings::structs::RefPtr;
 use gecko_bindings::structs::CSSPseudoClassType;
+use gecko_bindings::structs::TraversalRestyleBehavior;
 use gecko_bindings::structs::TraversalRootBehavior;
 use gecko_bindings::structs::ComputedTimingFunction_BeforeFlag;
 use gecko_bindings::structs::FontFamilyList;
@@ -97,6 +98,9 @@ unsafe impl Sync for nsStyleGradient {}
 use gecko_bindings::structs::nsStyleGradientStop;
 unsafe impl Send for nsStyleGradientStop {}
 unsafe impl Sync for nsStyleGradientStop {}
+use gecko_bindings::structs::nsStyleGridTemplate;
+unsafe impl Send for nsStyleGridTemplate {}
+unsafe impl Sync for nsStyleGridTemplate {}
 use gecko_bindings::structs::nsStyleImage;
 unsafe impl Send for nsStyleImage {}
 unsafe impl Sync for nsStyleImage {}
@@ -779,6 +783,12 @@ extern "C" {
     pub fn Gecko_DropElementSnapshot(snapshot: ServoElementSnapshotOwned);
 }
 extern "C" {
+    pub fn Gecko_CopyStyleGridTemplateValues(grid_template:
+                                                 *mut nsStyleGridTemplate,
+                                             other:
+                                                 *const nsStyleGridTemplate);
+}
+extern "C" {
     pub fn Gecko_ClearAndResizeStyleContents(content: *mut nsStyleContent,
                                              how_many: u32);
 }
@@ -1395,6 +1405,12 @@ extern "C" {
     pub fn Gecko_Construct_nsStyleVariables(ptr: *mut nsStyleVariables);
 }
 extern "C" {
+    pub fn Gecko_RegisterProfilerThread(name: *const ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Gecko_UnregisterProfilerThread();
+}
+extern "C" {
     pub fn Servo_Element_ClearData(node: RawGeckoElementBorrowed);
 }
 extern "C" {
@@ -1894,7 +1910,8 @@ extern "C" {
 extern "C" {
     pub fn Servo_TraverseSubtree(root: RawGeckoElementBorrowed,
                                  set: RawServoStyleSetBorrowed,
-                                 root_behavior: TraversalRootBehavior)
+                                 root_behavior: TraversalRootBehavior,
+                                 restyle_behavior: TraversalRestyleBehavior)
      -> bool;
 }
 extern "C" {

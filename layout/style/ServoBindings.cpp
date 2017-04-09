@@ -1110,6 +1110,13 @@ Gecko_ClearPODTArray(void* aArray, size_t aElementSize, size_t aElementAlign)
 }
 
 void
+Gecko_CopyStyleGridTemplateValues(nsStyleGridTemplate* aGridTemplate,
+                                  const nsStyleGridTemplate* aOther)
+{
+  *aGridTemplate = *aOther;
+}
+
+void
 Gecko_ClearAndResizeStyleContents(nsStyleContent* aContent, uint32_t aHowMany)
 {
   aContent->AllocateContents(aHowMany);
