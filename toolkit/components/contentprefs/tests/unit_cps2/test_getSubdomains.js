@@ -45,7 +45,7 @@ var tests = [
     yield setGlobal("bar", 4);
     yield set("b.com", "foo", 5);
 
-    let context = { usePrivateBrowsing: true };
+    let context = privateLoadContext;
     yield set("a.com", "foo", 6, context);
     yield setGlobal("foo", 7, context);
     yield getSubdomainsOK(["a.com", "foo", context], [["a.com", 6]]);

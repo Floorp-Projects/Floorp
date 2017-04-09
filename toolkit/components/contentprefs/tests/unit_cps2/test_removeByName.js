@@ -51,7 +51,7 @@ var tests = [
     yield set("b.com", "foo", 5);
     yield set("b.com", "bar", 6);
 
-    let context = { usePrivateBrowsing: true };
+    let context = privateLoadContext;
     yield set("a.com", "foo", 7, context);
     yield setGlobal("foo", 8, context);
     yield set("b.com", "bar", 9, context);
