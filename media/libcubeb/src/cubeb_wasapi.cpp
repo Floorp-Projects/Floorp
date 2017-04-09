@@ -1540,6 +1540,7 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
       if (devid && hr == AUDCLNT_E_DEVICE_INVALIDATED) {
         LOG("Trying again with the default %s audio device.", DIRECTION_NAME);
         devid = nullptr;
+        device = nullptr;
         try_again = true;
       } else {
         return CUBEB_ERROR;
