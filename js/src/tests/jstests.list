@@ -24,6 +24,7 @@ skip script test262/built-ins/ThrowTypeError/unique-per-realm-function-proto.js
 
 skip-if(!Array.prototype.values) script test262/built-ins/Array/prototype/Symbol.iterator.js
 skip-if(!Array.prototype.values) include test262/built-ins/Array/prototype/values/jstests.list
+skip-if(!String.prototype.normalize) include test262/built-ins/String/prototype/normalize/jstests.list
 
 
 #####################################
