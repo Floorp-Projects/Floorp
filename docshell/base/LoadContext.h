@@ -122,6 +122,9 @@ private:
 #endif
 };
 
+nsresult CreateTestLoadContext(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+nsresult CreatePrivateTestLoadContext(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
 } // namespace mozilla
 
 #endif // LoadContext_h

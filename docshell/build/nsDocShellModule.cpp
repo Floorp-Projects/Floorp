@@ -39,6 +39,10 @@
 // download history
 #include "nsDownloadHistory.h"
 
+
+// LoadContexts (used for testing)
+#include "LoadContext.h"
+
 using mozilla::dom::ContentHandlerService;
 
 static bool gInitialized = false;
@@ -124,6 +128,8 @@ NS_DEFINE_NAMED_CID(NS_SHISTORY_CID);
 NS_DEFINE_NAMED_CID(NS_SHISTORY_INTERNAL_CID);
 NS_DEFINE_NAMED_CID(NS_DOWNLOADHISTORY_CID);
 NS_DEFINE_NAMED_CID(NS_CONTENTHANDLERSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_LOADCONTEXT_CID);
+NS_DEFINE_NAMED_CID(NS_PRIVATELOADCONTEXT_CID);
 
 const mozilla::Module::CIDEntry kDocShellCIDs[] = {
   { &kNS_DOCSHELL_CID, false, nullptr, nsDocShellConstructor },
@@ -152,6 +158,8 @@ const mozilla::Module::CIDEntry kDocShellCIDs[] = {
   { &kNS_SHISTORY_CID, false, nullptr, nsSHistoryConstructor },
   { &kNS_SHISTORY_INTERNAL_CID, false, nullptr, nsSHistoryConstructor },
   { &kNS_DOWNLOADHISTORY_CID, false, nullptr, nsDownloadHistoryConstructor },
+  { &kNS_LOADCONTEXT_CID, false, nullptr, mozilla::CreateTestLoadContext },
+  { &kNS_PRIVATELOADCONTEXT_CID, false, nullptr, mozilla::CreatePrivateTestLoadContext },
   { nullptr }
 };
 
@@ -213,6 +221,8 @@ const mozilla::Module::ContractIDEntry kDocShellContracts[] = {
   { NS_SHISTORY_CONTRACTID, &kNS_SHISTORY_CID },
   { NS_SHISTORY_INTERNAL_CONTRACTID, &kNS_SHISTORY_INTERNAL_CID },
   { NS_DOWNLOADHISTORY_CONTRACTID, &kNS_DOWNLOADHISTORY_CID },
+  { NS_LOADCONTEXT_CONTRACTID, &kNS_LOADCONTEXT_CID },
+  { NS_PRIVATELOADCONTEXT_CONTRACTID, &kNS_PRIVATELOADCONTEXT_CID },
   { nullptr }
 };
 
