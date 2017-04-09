@@ -97,6 +97,7 @@ TestRunner.dumpDMDAfterTest = false;
 TestRunner.slowestTestTime = 0;
 TestRunner.slowestTestURL = "";
 TestRunner.interactiveDebugger = false;
+TestRunner.cleanupCrashes = false;
 
 TestRunner._expectingProcessCrash = false;
 TestRunner._structuredFormatter = new StructuredFormatter();
@@ -560,6 +561,12 @@ TestRunner.testFinished = function(tests) {
                 TestRunner.structuredLogger.info("Found unexpected crash dump file " +
                                                  aFilename + ".");
             });
+        }
+
+        if (TestRunner.cleanupCrashes) {
+            if (SpecialPowers.removePendingCrashDumpFiles()) {
+                TestRunner.structuredLogger.info("This test left pending crash dumps");
+            }
         }
     }
 
