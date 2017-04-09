@@ -182,7 +182,8 @@ public:
                                                              const nsString& aFeatures,
                                                              bool* aOutWindowOpened,
                                                              TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                                             uint64_t* aLayersId) override;
+                                                             uint64_t* aLayersId,
+                                                             CompositorOptions* aCompositorOptions) override;
 
   virtual mozilla::ipc::IPCResult
   RecvSyncMessage(const nsString& aMessage,

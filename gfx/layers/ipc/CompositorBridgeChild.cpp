@@ -773,12 +773,13 @@ CompositorBridgeChild::SendResume()
 }
 
 bool
-CompositorBridgeChild::SendNotifyChildCreated(const uint64_t& id)
+CompositorBridgeChild::SendNotifyChildCreated(const uint64_t& id,
+                                              CompositorOptions* aOptions)
 {
   if (!mCanSend) {
     return false;
   }
-  return PCompositorBridgeChild::SendNotifyChildCreated(id);
+  return PCompositorBridgeChild::SendNotifyChildCreated(id, aOptions);
 }
 
 bool

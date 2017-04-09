@@ -250,7 +250,8 @@ CrossProcessCompositorBridgeParent::DeallocPWebRenderBridgeParent(PWebRenderBrid
 }
 
 mozilla::ipc::IPCResult
-CrossProcessCompositorBridgeParent::RecvNotifyChildCreated(const uint64_t& child)
+CrossProcessCompositorBridgeParent::RecvNotifyChildCreated(const uint64_t& child,
+                                                           CompositorOptions* aOptions)
 {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   for (LayerTreeMap::iterator it = sIndirectLayerTrees.begin();
@@ -258,6 +259,7 @@ CrossProcessCompositorBridgeParent::RecvNotifyChildCreated(const uint64_t& child
     CompositorBridgeParent::LayerTreeState* lts = &it->second;
     if (lts->mParent && lts->mCrossProcessParent == this) {
       lts->mParent->NotifyChildCreated(child);
+      *aOptions = lts->mParent->GetOptions();
       return IPC_OK();
     }
   }
@@ -265,7 +267,9 @@ CrossProcessCompositorBridgeParent::RecvNotifyChildCreated(const uint64_t& child
 }
 
 mozilla::ipc::IPCResult
-CrossProcessCompositorBridgeParent::RecvMapAndNotifyChildCreated(const uint64_t& child, const base::ProcessId& pid)
+CrossProcessCompositorBridgeParent::RecvMapAndNotifyChildCreated(const uint64_t& child,
+                                                                 const base::ProcessId& pid,
+                                                                 CompositorOptions* aOptions)
 {
   // This can only be called from the browser process, as the mapping
   // ensures proper window ownership of layer trees.

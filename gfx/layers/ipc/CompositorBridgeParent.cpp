@@ -1144,8 +1144,14 @@ mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvGetCompositorOptions(const uint64_t& aLayersId,
                                                  CompositorOptions* aOptions)
 {
-  // The main process should pass in 0 because we assume mRootLayerTreeID
-  MOZ_ASSERT(aLayersId == 0);
+  // The CompositorBridgeParent associated with the layers id should be this
+  // one.
+  if (aLayersId != 0) {
+#ifdef DEBUG
+    MonitorAutoLock lock(*sIndirectLayerTreesLock);
+    MOZ_ASSERT(sIndirectLayerTrees[aLayersId].mParent == this);
+#endif
+  }
   *aOptions = mOptions;
   return IPC_OK();
 }
@@ -1529,15 +1535,18 @@ CompositorBridgeParent::NotifyVsync(const TimeStamp& aTimeStamp, const uint64_t&
 }
 
 mozilla::ipc::IPCResult
-CompositorBridgeParent::RecvNotifyChildCreated(const uint64_t& child)
+CompositorBridgeParent::RecvNotifyChildCreated(const uint64_t& child,
+                                               CompositorOptions* aOptions)
 {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   NotifyChildCreated(child);
+  *aOptions = mOptions;
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-CompositorBridgeParent::RecvNotifyChildRecreated(const uint64_t& aChild)
+CompositorBridgeParent::RecvNotifyChildRecreated(const uint64_t& aChild,
+                                                 CompositorOptions* aOptions)
 {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
 
@@ -1547,6 +1556,7 @@ CompositorBridgeParent::RecvNotifyChildRecreated(const uint64_t& aChild)
   }
 
   NotifyChildCreated(aChild);
+  *aOptions = mOptions;
   return IPC_OK();
 }
 
@@ -1559,7 +1569,9 @@ CompositorBridgeParent::NotifyChildCreated(uint64_t aChild)
 }
 
 mozilla::ipc::IPCResult
-CompositorBridgeParent::RecvMapAndNotifyChildCreated(const uint64_t& aChild, const base::ProcessId& aOwnerPid)
+CompositorBridgeParent::RecvMapAndNotifyChildCreated(const uint64_t& aChild,
+                                                     const base::ProcessId& aOwnerPid,
+                                                     CompositorOptions* aOptions)
 {
   // We only use this message when the remote compositor is in the GPU process.
   // It is harmless to call it, though.
@@ -1569,6 +1581,7 @@ CompositorBridgeParent::RecvMapAndNotifyChildCreated(const uint64_t& aChild, con
 
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   NotifyChildCreated(aChild);
+  *aOptions = mOptions;
   return IPC_OK();
 }
 

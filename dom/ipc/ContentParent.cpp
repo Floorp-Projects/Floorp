@@ -4594,7 +4594,8 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                                 InfallibleTArray<FrameScriptInfo>* aFrameScripts,
                                 nsCString* aURLToLoad,
                                 TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                uint64_t* aLayersId)
+                                uint64_t* aLayersId,
+                                CompositorOptions* aCompositorOptions)
 {
   // We always expect to open a new window here. If we don't, it's an error.
   *aWindowIsNew = true;
@@ -4640,6 +4641,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
       !newTab->GetRenderFrameInfo(aTextureFactoryIdentifier, aLayersId)) {
     *aResult = NS_ERROR_FAILURE;
   }
+  *aCompositorOptions = rfp->GetCompositorOptions();
 
   return IPC_OK();
 }
