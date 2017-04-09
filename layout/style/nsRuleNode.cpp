@@ -1389,8 +1389,11 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
       break;
     }
     case eCSSUnit_Element:
-      aResult.SetElementId(aValue.GetStringBufferValue());
+    {
+      nsCOMPtr<nsIAtom> atom = NS_Atomize(aValue.GetStringBufferValue());
+      aResult.SetElementId(atom.forget());
       break;
+    }
     case eCSSUnit_Initial:
     case eCSSUnit_Unset:
     case eCSSUnit_None:
