@@ -594,7 +594,7 @@ parent:
     // this is sync so we can ensure that messages to the window compositor
     // arrive before the TabChild attempts to use its cross-process compositor
     // bridge.
-    sync EnsureLayersConnected();
+    sync EnsureLayersConnected() returns (CompositorOptions compositorOptions);
 
     /**
      * Notify the parent that the session history state has been updated.
