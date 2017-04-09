@@ -7,7 +7,6 @@
 #include "mozilla/Move.h"
 #include "mozilla/ProfilerTypes.h"
 #include "nsIProfiler.h"
-#include "nsIProfileSaveEvent.h"
 #include "nsISupports.h"
 #include "nsIObserver.h"
 #include "nsProfiler.h"
@@ -21,7 +20,6 @@ static const char* sObserverTopics[] = {
   "profiler-paused",
   "profiler-resumed",
   "profiler-subprocess-gather",
-  "profiler-subprocess",
 };
 
 // ProfilerObserver is a refcounted class that gets registered with the
@@ -85,10 +83,6 @@ CrossProcessProfilerController::CrossProcessProfilerController(
 
 CrossProcessProfilerController::~CrossProcessProfilerController()
 {
-  if (!mProfile.IsEmpty()) {
-    nsProfiler::GetOrCreate()->OOPExitProfile(mProfile);
-  }
-
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     size_t length = ArrayLength(sObserverTopics);
@@ -128,19 +122,6 @@ CrossProcessProfilerController::Observe(nsISupports* aSubject,
     nsProfiler::GetOrCreate()->WillGatherOOPProfile();
     mProcess->SendGatherProfile();
   }
-  else if (!strcmp(aTopic, "profiler-subprocess")) {
-    // profiler-subprocess is sent once the gatherer knows that all other
-    // processes have replied with their profiles. It's sent during the final
-    // assembly of the parent process profile, and this is where we pass the
-    // subprocess profile along.
-    nsCOMPtr<nsIProfileSaveEvent> pse = do_QueryInterface(aSubject);
-    if (pse) {
-      if (!mProfile.IsEmpty()) {
-        pse->AddSubProfile(mProfile.get());
-        mProfile.Truncate();
-      }
-    }
-  }
   // These four notifications are sent by the profiler when its corresponding
   // methods are called inside this process. These state changes just need to
   // be forwarded to the other process.
@@ -165,13 +146,12 @@ void
 CrossProcessProfilerController::RecvProfile(const nsCString& aProfile,
                                             bool aIsExitProfile)
 {
-  // Store the profile on this object.
-  mProfile = aProfile;
-  // Tell the gatherer that we've received the profile from this process, but
-  // don't actually give it the profile. It will request the profile once all
-  // processes have replied, through the "profiler-subprocess" observer
-  // notification.
-  nsProfiler::GetOrCreate()->GatheredOOPProfile();
+  // Pass our process's profile along to nsProfiler.
+  if (aIsExitProfile) {
+    nsProfiler::GetOrCreate()->OOPExitProfile(aProfile);
+  } else {
+    nsProfiler::GetOrCreate()->GatheredOOPProfile(aProfile);
+  }
 }
 
 } // namespace mozilla
