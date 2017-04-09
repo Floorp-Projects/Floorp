@@ -125,10 +125,11 @@ RenderFrameParent::Init(nsFrameLoader* aFrameLoader)
     mLayersConnected = gpm->AllocateAndConnectLayerTreeId(
       compositor,
       browser->Manager()->AsContentParent()->OtherPid(),
-      &mLayersId);
+      &mLayersId,
+      &mCompositorOptions);
   } else if (XRE_IsContentProcess()) {
     ContentChild::GetSingleton()->SendAllocateLayerTreeId(browser->Manager()->ChildID(), browser->GetTabId(), &mLayersId);
-    mLayersConnected = CompositorBridgeChild::Get()->SendNotifyChildCreated(mLayersId);
+    mLayersConnected = CompositorBridgeChild::Get()->SendNotifyChildCreated(mLayersId, &mCompositorOptions);
   }
 
   mInitted = true;
@@ -215,6 +216,7 @@ RenderFrameParent::OwnerContentChanged(nsIContent* aContent)
   // Perhaps the document containing this frame currently has no presentation?
   if (lm && lm->GetCompositorBridgeChild()) {
     mLayersConnected = lm->GetCompositorBridgeChild()->SendAdoptChild(mLayersId);
+    lm->GetCompositorBridgeChild()->SendGetCompositorOptions(mLayersId, &mCompositorOptions);
     FrameLayerBuilder::InvalidateAllLayers(lm);
   }
 }
@@ -318,7 +320,7 @@ RenderFrameParent::EnsureLayersConnected()
     return;
   }
 
-  mLayersConnected = lm->GetCompositorBridgeChild()->SendNotifyChildRecreated(mLayersId);
+  mLayersConnected = lm->GetCompositorBridgeChild()->SendNotifyChildRecreated(mLayersId, &mCompositorOptions);
 }
 
 } // namespace layout
