@@ -1,0 +1,21 @@
+diff --git a/media/libcubeb/src/cubeb_wasapi.cpp b/media/libcubeb/src/cubeb_wasapi.cpp
+--- a/media/libcubeb/src/cubeb_wasapi.cpp
++++ b/media/libcubeb/src/cubeb_wasapi.cpp
+@@ -1535,16 +1535,17 @@ int setup_wasapi_stream_one_side(cubeb_s
+     if (FAILED(hr)) {
+       LOG("Could not activate the device to get an audio"
+           " client for %s: error: %lx\n", DIRECTION_NAME, hr);
+       // A particular device can't be activated because it has been
+       // unplugged, try fall back to the default audio device.
+       if (devid && hr == AUDCLNT_E_DEVICE_INVALIDATED) {
+         LOG("Trying again with the default %s audio device.", DIRECTION_NAME);
+         devid = nullptr;
++        device = nullptr;
+         try_again = true;
+       } else {
+         return CUBEB_ERROR;
+       }
+     } else {
+       try_again = false;
+     }
+   } while (try_again);
