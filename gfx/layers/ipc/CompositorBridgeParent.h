@@ -446,9 +446,6 @@ public:
   PAPZParent* AllocPAPZParent(const uint64_t& aLayersId) override;
   bool DeallocPAPZParent(PAPZParent* aActor) override;
 
-  mozilla::ipc::IPCResult RecvGetCompositorOptions(const uint64_t& aLayersId,
-                                                   CompositorOptions* aOptions) override;
-
   RefPtr<APZCTreeManager> GetAPZCTreeManager();
 
   CompositorOptions GetOptions() const {
