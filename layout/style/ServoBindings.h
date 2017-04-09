@@ -40,7 +40,6 @@ namespace mozilla {
     struct URLValue;
   };
   enum class UpdateAnimationsTasks : uint8_t;
-  struct LangGroupFontPrefs;
 }
 using mozilla::FontFamilyList;
 using mozilla::FontFamilyType;
@@ -93,18 +92,6 @@ public:
   const uint8_t* mURLString;
   uint32_t mURLStringLength;
   mozilla::URLExtraData* mExtraData;
-};
-
-struct FontSizePrefs
-{
-  FontSizePrefs(const mozilla::LangGroupFontPrefs&);
-  nscoord mDefaultVariableSize;
-  nscoord mDefaultFixedSize;
-  nscoord mDefaultSerifSize;
-  nscoord mDefaultSansSerifSize;
-  nscoord mDefaultMonospaceSize;
-  nscoord mDefaultCursiveSize;
-  nscoord mDefaultFantasySize;
 };
 
 // DOM Traversal.
@@ -397,7 +384,7 @@ bool Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id);
 
 void Gecko_nsStyleFont_SetLang(nsStyleFont* font, nsIAtom* atom);
 void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource);
-FontSizePrefs Gecko_GetBaseSize(nsIAtom* lang);
+nscoord Gecko_nsStyleFont_GetBaseSize(const nsStyleFont* font, RawGeckoPresContextBorrowed pres_context);
 
 const nsMediaFeature* Gecko_GetMediaFeatures();
 
