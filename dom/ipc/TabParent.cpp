@@ -413,10 +413,10 @@ TabParent::Destroy()
 }
 
 mozilla::ipc::IPCResult
-TabParent::RecvEnsureLayersConnected()
+TabParent::RecvEnsureLayersConnected(CompositorOptions* aCompositorOptions)
 {
   if (RenderFrameParent* frame = GetRenderFrame()) {
-    frame->EnsureLayersConnected();
+    frame->EnsureLayersConnected(aCompositorOptions);
   }
   return IPC_OK();
 }

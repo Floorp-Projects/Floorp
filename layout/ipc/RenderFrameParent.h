@@ -88,7 +88,7 @@ public:
 
   void TakeFocusForClickFromTap();
 
-  void EnsureLayersConnected();
+  void EnsureLayersConnected(CompositorOptions* aCompositorOptions);
 
 protected:
   void ActorDestroy(ActorDestroyReason why) override;

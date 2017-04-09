@@ -587,7 +587,7 @@ public:
   bool GetRenderFrameInfo(TextureFactoryIdentifier* aTextureFactoryIdentifier,
                           uint64_t* aLayersId);
 
-  mozilla::ipc::IPCResult RecvEnsureLayersConnected() override;
+  mozilla::ipc::IPCResult RecvEnsureLayersConnected(CompositorOptions* aCompositorOptions) override;
 
   // LiveResizeListener implementation
   void LiveResizeStarted() override;
