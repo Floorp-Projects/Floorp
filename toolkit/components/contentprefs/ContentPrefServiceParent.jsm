@@ -13,6 +13,17 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/ContentPrefUtils.jsm");
 
+let loadContext = Cc["@mozilla.org/loadcontext;1"].
+                    createInstance(Ci.nsILoadContext);
+let privateLoadContext = Cc["@mozilla.org/privateloadcontext;1"].
+                           createInstance(Ci.nsILoadContext);
+
+function contextArg(context) {
+  return (context && context.usePrivateBrowsing) ?
+           privateLoadContext :
+           loadContext;
+}
+
 var ContentPrefServiceParent = {
   _cps2: null,
 
@@ -96,8 +107,15 @@ var ContentPrefServiceParent = {
 
   receiveMessage(msg) {
     let data = msg.data;
+    let signature;
 
-    if (!_methodsCallableFromChild.some(([method, args]) => method == data.call)) {
+    if (!_methodsCallableFromChild.some(([method, args]) => {
+       if (method == data.call) {
+         signature = args;
+         return true;
+       }
+       return false;
+     })) {
       throw new Error(`Can't call ${data.call} from child!`);
     }
 
@@ -130,6 +148,12 @@ var ContentPrefServiceParent = {
 
     // Push our special listener.
     args.push(listener);
+
+    // Process context argument for forwarding
+    let contextIndex = signature.indexOf("context");
+    if (contextIndex > -1) {
+      args[contextIndex] = contextArg(args[contextIndex]);
+    }
 
     // And call the function.
     this._cps2[data.call](...args);
