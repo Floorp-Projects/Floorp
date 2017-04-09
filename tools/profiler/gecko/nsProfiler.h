@@ -33,7 +33,7 @@ public:
     }
 
     void WillGatherOOPProfile();
-    void GatheredOOPProfile();
+    void GatheredOOPProfile(const nsACString& aProfile);
     void OOPExitProfile(const nsACString& aProfile);
 
 private:
