@@ -35,13 +35,8 @@ class nsILanguageAtomService : public nsISupports
 
   virtual nsIAtom* GetLocaleLanguage() = 0;
 
-  virtual nsIAtom* GetLanguageGroup(nsIAtom* aLanguage,
-                                    nsresult* aError = nullptr) = 0;
-
-  // Same as GetLanguageGroup, but will not cache anything
-  // and can be used from a different thread
-  virtual already_AddRefed<nsIAtom> GetUncachedLanguageGroup(nsIAtom* aLanguage,
-                                                             nsresult* aError = nullptr) const = 0;
+  virtual nsIAtom* GetLanguageGroup(nsIAtom *aLanguage,
+                                    nsresult *aError = nullptr) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsILanguageAtomService,
