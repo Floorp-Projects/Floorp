@@ -1,0 +1,264 @@
+# This file contains an extensive compile-time blacklist for silencing highly
+# frequent signed and unsigned integer overflows in our codebase, found by the
+# use of -fsanitize=integer. All of the overflows that caused an entry in this
+# list are highly frequent in our test suites (> 500 times per run) and therefore
+# unlikely to be bugs. Nevertheless, the slow down this test mode significantly
+# if left active. Without this list, the -fsanitize=integer test mode is unusable
+# both because of performance and the large number of results to check.
+#
+# Some of the entries on this list are more aggressive to get the build into a
+# state that allows any testing to happen at all. This is not an optimal solution
+# and it would be good if we could refine the tool and shorten this list over
+# the time. Source code annotations can also help with this.
+#
+# The rules in this file are only applied at compile time. If you can modify the
+# source in question, consider function attributes to disable instrumentation.
+
+# Ignore common overflows in the C++ std headers
+src:*bits/basic_string.h
+
+# Assume everything running through CheckedInt.h is ok. The CheckedInt class
+# casts signed integers to unsigned first and then does a post-overflow
+# check causing lots of unsigned integer overflow messages.
+src:*/CheckedInt.h
+
+# Exclude bignum
+src:*/mfbt/double-conversion/source/bignum.cc
+
+# Exclude anything within gtests
+src:*/gtest/*
+
+# The JS engine has a lot of code doing all sorts of overflows. This code
+# is pretty well tested though and excluding it here will allow us to go
+# for other, less tested code. Ideally, we would include the JS engine here
+# at some point.
+src:*/js/src/*
+src:*/js/public/*
+src:*/js/*.h
+src:*/jsfriendapi.h
+
+# Atomics can overflow, but without a full stack we can't trace these back
+# to what is actually causing the overflow. Ignoring these for now, as it will
+# be too much effort to determine every single source here.
+src:*/mfbt/Atomics.h
+
+# No reason to instrument certain parts of NSS that explicitely deal with
+# arithmetics and crypto.
+src:*/security/nss/lib/freebl/mpi/*
+src:*/security/nss/lib/freebl/ecl/*
+
+# nsTArray_base<Alloc, Copy>::ShiftData performs overflows
+fun:*nsTArray_base*ShiftData*
+
+### Frequent 0 - 1 overflows
+#
+# We have several code patterns in our codebase that cause these overflows,
+# but they are typically all harmless and could be filtered easily at runtime.
+# However, some of them are so frequent that suppressing them at compile-time
+# makes sense to increase runtime performance.
+#
+src:*/media/libstagefright/system/core/include/utils/TypeHelpers.h
+src:*/netwerk/base/nsSocketTransportService2.cpp
+src:*/dom/xul/XULDocument.cpp
+src:*/nsCharTraits.h
+# Code in xpcom/base/CycleCollectedJSContext.cpp
+fun:*CycleCollectedJSContext*ProcessMetastableStateQueue*
+# Code in layout/painting/nsDisplayList.cpp
+fun:*nsDisplayOpacity*ShouldFlattenAway*
+# Code in modules/libpref/Preferences.cpp
+fun:*pref_InitInitialObjects*
+# Code in netwerk/base/nsIOService.cpp
+fun:*nsIOService*GetCachedProtocolHandler*
+# Code in layout/style/nsCSSRuleProcessor.cpp
+fun:*0nsCSSRuleProcessor@@*
+fun:*nsCSSRuleProcessor*ClearSheets*
+fun:*TreeMatchContext*InitAncestors*
+fun:*TreeMatchContext*InitStyleScopes*
+# Code in layout/xul/nsXULPopupManager.cpp
+fun:*nsXULPopupManager*AdjustPopupsOnWindowChange*
+# Code in dom/base/nsDocument.cpp
+fun:*1nsDocument@@*
+# Code in gfx/layers/ipc/CompositorBridgeChild.cpp
+fun:*CompositorBridgeChild*Destroy*
+# Code in gfx/layers/ipc/ImageBridgeChild.cpp
+fun:*ImageBridgeChild*ShutdownStep1*
+# Code in dom/base/nsGlobalWindow.cpp
+fun:*nsGlobalWindow*ClearControllers*
+# Code in layout/style/AnimationCollection.cpp
+fun:*AnimationCollection*PropertyDtor*
+# Code in layout/style/nsStyleSet.cpp
+fun:*nsStyleSet*AddImportantRules*
+fun:*nsStyleSet*CounterStyleRuleForName*
+
+
+### Misc overflows
+
+# Hot function in protobuf producing overflows
+fun:*CodedInputStream*ReadTagWithCutoff*
+
+
+# SQLite3 is full of overflows :/
+src:*/db/sqlite3/src/sqlite3.c
+
+# zlib has some overflows, we can't deal with them right now
+src:*/modules/zlib/src/*
+
+# Our LZ4 implementation uses overflows. By listing it here we might
+# miss some unintended overflows in that implementation, but we can't
+# check for it right now.
+src:*/mfbt/lz4.c
+
+# Apparently this overflows a lot, because it contains some allocators
+# that keep overflowing, not sure why. Disabling by function didn't seem
+# to work here for operator new.
+src:*/xpcom/ds/nsArrayEnumerator.cpp
+
+# Memory usage reporting code in gfx/thebes/gfxASurface.cpp
+# We probably don't care about the frequent overflows there.
+fun:*SurfaceMemoryReporter*AdjustUsedMemory*
+
+# Frequent overflower in gfx/thebes/gfxFontEntry.cpp
+fun:*WeightDistance*
+
+# Another frequent overflower
+fun:*nsTObserverArray_base*AdjustIterators*
+
+# Overflows in Skia
+fun:*SkPathRef*makeSpace*
+fun:*SkPathRef*resetToSize*
+
+# Expat Parser has some overflows
+fun:*nsExpatDriver*ConsumeToken*
+
+# Frequent overflowers in harfbuzz
+fun:*hb_in_range*
+fun:*OT*collect_glyphs*
+
+# These look like harmless layouting-related overflows
+src:*/gfx/cairo/libpixman/src/pixman-region.c
+
+# Sorting code in layout/style/nsCSSProps.cpp that probably doesn't
+# care about overflows.
+fun:*SortPropertyAndCount*
+
+# Code in ipc/chromium/src/base/file_path.cc where a function returns -1
+# being cast to unsigned and then overflowed.
+fun:*FilePath*Append*
+fun:*FilePath*StripTrailingSeparatorsInternal*
+
+# Code in dom/base/nsJSEnvironment.cpp
+fun:*FireForgetSkippable*
+
+# Code in gfx/thebes/gfxSkipChars.h
+fun:*gfxSkipCharsIterator*AdvanceSkipped*
+
+# Code in gfx/thebes/gfxScriptItemizer.cpp
+fun:*gfxScriptItemizer*fixup*
+fun:*gfxScriptItemizer*push*
+
+# Code in dom/base/nsDocument.cpp
+fun:*nsDocument*BlockOnload*
+
+# Code in layout/base/nsCSSFrameConstructor.cpp
+fun:*nsCSSFrameConstructor*FrameConstructionItemList*AdjustCountsForItem*
+
+# Code in nsprpub/lib/ds/plarena.c doing ptrdiffs
+fun:*PL_ArenaRelease*
+
+# This file contains a bunch of arithmetic operations on timestamps that
+# apparently are allowed to overflow.
+src:*/src/widget/SystemTimeConverter.h
+
+# Code in dom/media/flac/FlacDemuxer.cpp purposely uses overflowing arithmetics
+fun:*Frame*FindNext*
+
+# Code in netwerk/base/nsStandardURL.cpp,
+# these methods return signed but the subtraction is first performed unsigned
+fun:*nsStandardURL*ReplaceSegment*
+
+# Code in netwerk/protocol/http/nsHttpChannel.cpp
+# same as previous with the previous entry.
+fun:*nsHttpChannel*ReportNetVSCacheTelemetry*
+
+# Code in layout/tables/nsCellMap.cpp
+# again subtraction then cast to signed.
+fun:*nsTableCellMap*GetColInfoAt*
+
+# Code in layout/generic/nsTextFrame.cpp
+# again subtraction then cast to signed.
+fun:*nsTextFrame*CharacterDataChanged*
+
+# Not sure what is going on in this file, but it doesn't look
+# related to what we are looking for.
+src:*/xpcom/base/CountingAllocatorBase.h
+
+# Code in dom/base/nsDOMNavigationTiming.cpp
+# Timestamp related, probably expecting the overflow
+fun:*nsDOMNavigationTiming*TimeStampToDOM*
+
+# Several unsigned arithmetic operations with -1
+src:*/hal/HalWakeLock.cpp
+
+# Code in layout/generic/nsGfxScrollFrame.cpp that produces
+# somewhat frequent signed integer overflows. Probably harmless
+# because it's layout code.
+fun:*ClampAndAlignWithPixels*
+
+# Likely benign overflow in mozglue/misc/TimeStamp_posix.cpp
+fun:*ClockResolutionNs*
+
+# This header has all sorts of operators that do post-operation
+# overflow and underflow checking, triggering frequent reports
+src:*/mozglue/misc/TimeStamp.h
+
+#
+# Various hashing functions, both regular and cryptographic ones
+#
+src:*/dom/canvas/MurmurHash3.cpp
+src:*/gfx/skia/skia/include/private/SkChecksum.h
+src:*/HashFunctions.h
+src:*/intl/icu/source/common/unifiedcache.h
+src:*/mfbt/SHA1.cpp
+src:*/modules/zlib/src/adler32.c
+src:*/netwerk/cache/nsDiskCacheDevice.cpp
+src:*/netwerk/cache2/CacheHashUtils.cpp
+src:*/netwerk/sctp/src/netinet/sctp_sha1.c
+src:*/netwerk/srtp/src/crypto/hash/sha1.c
+src:*/netwerk/sctp/src/netinet/sctp_sha1.c
+src:*/nsprpub/lib/ds/plhash.c
+src:*/security/manager/ssl/md4.c
+src:*/security/nss/lib/dbm/src/h_func.c
+src:*/security/nss/lib/freebl/sha512.c
+src:*/security/nss/lib/freebl/md5.c
+src:*/XorShift128PlusRNG.h
+src:*/xpcom/ds/PLDHashTable.cpp
+
+# Hash/Cache function in Skia
+fun:*GradientShaderCache*Build32bitCache*
+
+# Hash function in js/public/Utility.h
+fun:ScrambleHashCode*
+
+# Hashing functions in Cairo
+fun:*_hash_matrix_fnv*
+fun:*_hash_mix_bits*
+fun:*_cairo_hash_string*
+fun:*_cairo_hash_bytes*
+
+# Hash function in modules/libjar/nsZipArchive.cpp
+fun:*HashName*
+
+# intl code hashing functions
+fun:*ustr_hash*CharsN*
+fun:*hashEntry*
+
+# harfbuzz hash/digest functions
+fun:*hb_set_digest_lowest_bits_t*
+
+# Hash function in gfx
+fun:*gfxFontStyle*Hash*
+
+# expat uses a CHAR_HASH macro in several places that causes
+# a high amount of overflows. We should try finding a better
+# way to disable this rather than blacklisting the whole thing.
+src:*/parser/expat/*
