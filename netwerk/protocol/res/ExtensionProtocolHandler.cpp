@@ -11,14 +11,12 @@
 #include "nsIURL.h"
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"
-#include "nsIRequestObserver.h"
-#include "nsIInputStreamChannel.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIStreamConverterService.h"
-#include "nsIPipe.h"
 #include "nsNetUtil.h"
 #include "LoadInfo.h"
+#include "SimpleChannel.h"
 
 namespace mozilla {
 namespace net {
@@ -44,39 +42,6 @@ ExtensionProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aFlags)
   *aFlags = URI_STD | URI_IS_LOCAL_RESOURCE | (loadableByAnyone ? (URI_LOADABLE_BY_ANYONE | URI_FETCHABLE_BY_ANYONE) : URI_DANGEROUS_TO_LOAD);
   return NS_OK;
 }
-
-class PipeCloser : public nsIRequestObserver
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  explicit PipeCloser(nsIOutputStream* aOutputStream) :
-    mOutputStream(aOutputStream)
-  {
-  }
-
-  NS_IMETHOD OnStartRequest(nsIRequest*, nsISupports*) override
-  {
-    return NS_OK;
-  }
-
-  NS_IMETHOD OnStopRequest(nsIRequest*, nsISupports*, nsresult aStatusCode) override
-  {
-    NS_ENSURE_TRUE(mOutputStream, NS_ERROR_UNEXPECTED);
-
-    nsresult rv = mOutputStream->Close();
-    mOutputStream = nullptr;
-    return rv;
-  }
-
-protected:
-  virtual ~PipeCloser() {}
-
-private:
-  nsCOMPtr<nsIOutputStream> mOutputStream;
-};
-
-NS_IMPL_ISUPPORTS(PipeCloser, nsIRequestObserver)
 
 bool
 ExtensionProtocolHandler::ResolveSpecialCases(const nsACString& aHost,
@@ -111,6 +76,17 @@ ExtensionProtocolHandler::ResolveSpecialCases(const nsACString& aHost,
   return false;
 }
 
+static inline Result<Ok, nsresult>
+WrapNSResult(nsresult aRv)
+{
+  if (NS_FAILED(aRv)) {
+    return Err(aRv);
+  }
+  return Ok();
+}
+
+#define NS_TRY(expr) MOZ_TRY(WrapNSResult(expr))
+
 nsresult
 ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
                                             nsILoadInfo* aLoadInfo,
@@ -130,50 +106,46 @@ ExtensionProtocolHandler::SubstituteChannel(nsIURI* aURI,
 
   // Filter CSS files to replace locale message tokens with localized strings.
 
-  nsCOMPtr<nsIStreamConverterService> convService =
-    do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  bool haveLoadInfo = aLoadInfo;
+  nsCOMPtr<nsIChannel> channel = NS_NewSimpleChannel(
+    aURI, aLoadInfo, *result,
+    [haveLoadInfo] (nsIStreamListener* listener, nsIChannel* channel, nsIChannel* origChannel) -> RequestOrReason {
+      nsresult rv;
+      nsCOMPtr<nsIStreamConverterService> convService =
+        do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
+      NS_TRY(rv);
 
-  const char* kFromType = "application/vnd.mozilla.webext.unlocalized";
-  const char* kToType = "text/css";
+      nsCOMPtr<nsIURI> uri;
+      NS_TRY(channel->GetURI(getter_AddRefs(uri)));
 
-  nsCOMPtr<nsIInputStream> inputStream;
-  nsCOMPtr<nsIOutputStream> outputStream;
-  rv = NS_NewPipe(getter_AddRefs(inputStream), getter_AddRefs(outputStream),
-                  0, UINT32_MAX, true, false);
-  NS_ENSURE_SUCCESS(rv, rv);
+      const char* kFromType = "application/vnd.mozilla.webext.unlocalized";
+      const char* kToType = "text/css";
 
-  nsCOMPtr<nsIStreamListener> listener;
-  nsCOMPtr<nsIRequestObserver> observer = new PipeCloser(outputStream);
-  rv = NS_NewSimpleStreamListener(getter_AddRefs(listener), outputStream, observer);
-  NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIStreamListener> converter;
+      NS_TRY(convService->AsyncConvertData(kFromType, kToType, listener,
+                                        uri, getter_AddRefs(converter)));
+      if (haveLoadInfo) {
+        NS_TRY(origChannel->AsyncOpen2(converter));
+      } else {
+        NS_TRY(origChannel->AsyncOpen(converter, nullptr));
+      }
 
-  nsCOMPtr<nsIStreamListener> converter;
-  rv = convService->AsyncConvertData(kFromType, kToType, listener,
-                                     aURI, getter_AddRefs(converter));
-  NS_ENSURE_SUCCESS(rv, rv);
+      return RequestOrReason(origChannel);
+    });
+  NS_ENSURE_TRUE(channel, NS_ERROR_OUT_OF_MEMORY);
 
   if (aLoadInfo) {
     nsCOMPtr<nsILoadInfo> loadInfo =
         static_cast<LoadInfo*>(aLoadInfo)->CloneForNewRequest();
-      (*result)->SetLoadInfo(loadInfo);
-
-    rv = (*result)->AsyncOpen2(converter);
-  } else {
-    rv = (*result)->AsyncOpen(converter, nullptr);
+    (*result)->SetLoadInfo(loadInfo);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel), aURI, inputStream,
-                                        NS_LITERAL_CSTRING("text/css"),
-                                        NS_LITERAL_CSTRING("utf-8"),
-                                        aLoadInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   channel.swap(*result);
+
   return NS_OK;
 }
+
+#undef NS_TRY
 
 } // namespace net
 } // namespace mozilla
