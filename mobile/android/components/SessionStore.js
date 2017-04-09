@@ -230,6 +230,8 @@ SessionStore.prototype = {
     }
   },
 
+  // Removal of line below tracked by bug 1360287
+  // eslint-disable-next-line complexity
   observe: function ss_observe(aSubject, aTopic, aData) {
     let observerService = Services.obs;
     switch (aTopic) {
@@ -404,9 +406,11 @@ SessionStore.prototype = {
         // If we skipped restoring a zombified tab before backgrounding,
         // we might have to do it now instead.
         let window = Services.wm.getMostRecentWindow("navigator:browser");
-        if (window) { // Might not yet be ready during a cold startup.
+        if (window && window.BrowserApp) { // Might not yet be ready during a cold startup.
           let tab = window.BrowserApp.selectedTab;
-          this.restoreZombieTab(tab);
+          if (tab) { // Can be null if closing a tab triggered an activity switch.
+            this.restoreZombieTab(tab);
+          }
         }
         break;
       case "last-pb-context-exited":
