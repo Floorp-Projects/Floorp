@@ -7,6 +7,7 @@
 
 #include "mozilla/dom/Promise.h"
 #include "nsIFile.h"
+#include "ProfileJSONWriter.h"
 
 namespace mozilla {
 
@@ -30,11 +31,10 @@ private:
   void Reset();
   void Start2(double aSinceTime);
 
-  nsTArray<nsCString> mResponseProfiles;
   nsTArray<nsCString> mExitProfiles;
   RefPtr<mozilla::dom::Promise> mPromise;
   nsCOMPtr<nsIFile> mFile;
-  double mSinceTime;
+  Maybe<SpliceableChunkedJSONWriter> mWriter;
   uint32_t mPendingProfiles;
   bool mGathering;
 };

@@ -10,7 +10,6 @@
 #include "nsIObserverService.h"
 #include "nsLocalFile.h"
 #include "nsIFileStreams.h"
-#include "ProfileJSONWriter.h"
 
 using mozilla::dom::AutoJSAPI;
 using mozilla::dom::Promise;
@@ -29,8 +28,7 @@ static const uint32_t MAX_SUBPROCESS_EXIT_PROFILES = 5;
 NS_IMPL_ISUPPORTS0(ProfileGatherer)
 
 ProfileGatherer::ProfileGatherer()
-  : mSinceTime(0)
-  , mPendingProfiles(0)
+  : mPendingProfiles(0)
   , mGathering(false)
 {
 }
@@ -58,7 +56,9 @@ ProfileGatherer::GatheredOOPProfile(const nsACString& aProfile)
     return;
   }
 
-  mResponseProfiles.AppendElement(aProfile);
+  MOZ_RELEASE_ASSERT(mWriter.isSome(), "Should always have a writer if mGathering is true");
+
+  mWriter->Splice(PromiseFlatCString(aProfile).get());
 
   mPendingProfiles--;
 
@@ -120,16 +120,49 @@ ProfileGatherer::Start2(double aSinceTime)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  mSinceTime = aSinceTime;
   mGathering = true;
   mPendingProfiles = 0;
+  mWriter.emplace();
 
+  // Send a notification to request profiles from other processes. The
+  // observers of this notification will call WillGatherOOPProfile() which
+  // increments mPendingProfiles.
+  // Do this before the call to profiler_stream_json_for_this_process because
+  // that call is slow and we want to let the other processes grab their
+  // profiles as soon as possible.
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
     DebugOnly<nsresult> rv =
       os->NotifyObservers(this, "profiler-subprocess-gather", nullptr);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NotifyObservers failed");
   }
+
+  // Start building up the JSON result and grab the profile from this process.
+  mWriter->Start(SpliceableJSONWriter::SingleLineStyle);
+  if (!profiler_stream_json_for_this_process(*mWriter, aSinceTime)) {
+    // The profiler is inactive. This either means that it was inactive even
+    // at the time that ProfileGatherer::Start() was called, or that it was
+    // stopped on a different thread since that call. Either way, we need to
+    // reject the promise and stop gathering.
+    Cancel();
+    return;
+  }
+
+  mWriter->StartArrayProperty("processes");
+
+  // If we have any process exit profiles, add them immediately, and clear
+  // mExitProfiles.
+  for (size_t i = 0; i < mExitProfiles.Length(); ++i) {
+    if (!mExitProfiles[i].IsEmpty()) {
+      mWriter->Splice(mExitProfiles[i].get());
+    }
+  }
+  mExitProfiles.Clear();
+
+  // Keep the array property "processes" and the root object in mWriter open
+  // until Finish() is called. As profiles from the other processes come in,
+  // they will be inserted and end up in the right spot. Finish() will close
+  // the array and the root object.
 
   if (!mPendingProfiles) {
     Finish();
@@ -140,45 +173,15 @@ void
 ProfileGatherer::Finish()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(mWriter.isSome());
 
-  SpliceableChunkedJSONWriter b;
-  b.Start(SpliceableJSONWriter::SingleLineStyle);
-  {
-    if (!profiler_stream_json_for_this_process(b, mSinceTime)) {
-      // It's unlikely but possible that profiler_stop() could be called while the
-      // profile gathering is in flight, but not via nsProfiler::StopProfiler().
-      // This check will detect that case.
-      //
-      // XXX: However, it won't detect the case where profiler_stop() *and*
-      // profiler_start() have both been called. (If that does happen, we'll end up
-      // with a franken-profile that includes a mix of data from the old and new
-      // profile activations.) We could include the activity generation to detect
-      // that, but it's not worth it for what should be an extremely unlikely case.
-      // It would be better if this class was rearranged so that
-      // profiler_get_profile() was called for the parent process in Start2()
-      // instead of in Finish(). Then we wouldn't have to worry about cancelling.
-      Cancel();
-      return;
-    }
+  // Close the "processes" array property.
+  mWriter->EndArray();
 
-    b.StartArrayProperty("processes");
-    for (size_t i = 0; i < mExitProfiles.Length(); ++i) {
-      if (!mExitProfiles[i].IsEmpty()) {
-        b.Splice(mExitProfiles[i].get());
-      }
-    }
-    mExitProfiles.Clear();
-    for (size_t i = 0; i < mResponseProfiles.Length(); ++i) {
-      if (!mResponseProfiles[i].IsEmpty()) {
-        b.Splice(mResponseProfiles[i].get());
-      }
-    }
-    mResponseProfiles.Clear();
-    b.EndArray();
-  }
-  b.End();
+  // Close the root object of the generated JSON.
+  mWriter->End();
 
-  UniquePtr<char[]> buf = b.WriteFunc()->CopyData();
+  UniquePtr<char[]> buf = mWriter->WriteFunc()->CopyData();
 
   if (mFile) {
     nsCOMPtr<nsIFileOutputStream> of =
@@ -227,28 +230,31 @@ ProfileGatherer::Finish()
 void
 ProfileGatherer::Reset()
 {
-  mSinceTime = 0;
   mPromise = nullptr;
   mFile = nullptr;
   mPendingProfiles = 0;
   mGathering = false;
+  mWriter.reset();
 }
 
 void
 ProfileGatherer::Cancel()
 {
-  // We're about to stop profiling. If we have a Promise in flight, we should
-  // reject it.
+  // If we have a Promise in flight, we should reject it.
   if (mPromise) {
     mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
   }
-  mPromise = nullptr;
-  mFile = nullptr;
+  Reset();
 }
 
 void
 ProfileGatherer::OOPExitProfile(const nsACString& aProfile)
 {
+  // Append the exit profile to mExitProfiles so that it can be picked up the
+  // next time a profile is requested. If we're currently gathering a profile,
+  // do not add this exit profile to it; chances are that we already have a
+  // profile from the exiting process and we don't want another one.
+  // We only keep around at most MAX_SUBPROCESS_EXIT_PROFILES exit profiles.
   if (mExitProfiles.Length() >= MAX_SUBPROCESS_EXIT_PROFILES) {
     mExitProfiles.RemoveElementAt(0);
   }
