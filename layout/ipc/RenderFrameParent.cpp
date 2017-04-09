@@ -216,7 +216,6 @@ RenderFrameParent::OwnerContentChanged(nsIContent* aContent)
   // Perhaps the document containing this frame currently has no presentation?
   if (lm && lm->GetCompositorBridgeChild()) {
     mLayersConnected = lm->GetCompositorBridgeChild()->SendAdoptChild(mLayersId);
-    lm->GetCompositorBridgeChild()->SendGetCompositorOptions(mLayersId, &mCompositorOptions);
     FrameLayerBuilder::InvalidateAllLayers(lm);
   }
 }

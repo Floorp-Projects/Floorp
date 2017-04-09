@@ -1591,6 +1591,9 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
   APZCTreeManagerParent* parent;
   {
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
+    // We currently don't support adopting children from one compositor to
+    // another if the two compositors don't have the same options.
+    MOZ_ASSERT(sIndirectLayerTrees[child].mParent->mOptions == mOptions);
     NotifyChildCreated(child);
     if (sIndirectLayerTrees[child].mLayerTree) {
       sIndirectLayerTrees[child].mLayerTree->SetLayerManager(mLayerManager);
