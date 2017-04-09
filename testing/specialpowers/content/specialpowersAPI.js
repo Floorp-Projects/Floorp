@@ -694,6 +694,14 @@ SpecialPowersAPI.prototype = {
     return crashDumpFiles;
   },
 
+  removePendingCrashDumpFiles: function() {
+    var message = {
+      op: "delete-pending-crash-dump-files"
+    };
+    var removed = this._sendSyncMessage("SPProcessCrashService", message)[0];
+    return removed;
+  },
+
   _setTimeout: function(callback) {
     // for mochitest-browser
     if (typeof window != 'undefined')
