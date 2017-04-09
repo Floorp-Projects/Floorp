@@ -258,11 +258,17 @@ IonBuilder::getSingleCallTarget(TemporaryTypeSet* calleeTypes)
     if (!calleeTypes)
         return nullptr;
 
-    JSObject* obj = calleeTypes->maybeSingleton();
-    if (!obj || !obj->is<JSFunction>())
+    TemporaryTypeSet::ObjectKey* key = calleeTypes->maybeSingleObject();
+    if (!key || key->clasp() != &JSFunction::class_)
         return nullptr;
 
-    return &obj->as<JSFunction>();
+    if (key->isSingleton())
+        return &key->singleton()->as<JSFunction>();
+
+    if (JSFunction* fun = key->group()->maybeInterpretedFunction())
+        return fun;
+
+    return nullptr;
 }
 
 AbortReasonOr<Ok>
@@ -5493,11 +5499,11 @@ IonBuilder::jsop_eval(uint32_t argc)
     if (calleeTypes && calleeTypes->empty())
         return jsop_call(argc, /* constructing = */ false, false);
 
-    JSFunction* singleton = getSingleCallTarget(calleeTypes);
-    if (!singleton)
-        return abort(AbortReason::Disable, "No singleton callee for eval()");
+    JSFunction* target = getSingleCallTarget(calleeTypes);
+    if (!target)
+        return abort(AbortReason::Disable, "No single callee for eval()");
 
-    if (script()->global().valueIsEval(ObjectValue(*singleton))) {
+    if (script()->global().valueIsEval(ObjectValue(*target))) {
         if (argc != 1)
             return abort(AbortReason::Disable, "Direct eval with more than one argument");
 

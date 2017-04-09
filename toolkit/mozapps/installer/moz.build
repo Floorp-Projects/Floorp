@@ -5,22 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'General')
+    BUG_COMPONENT = ('Firefox', 'Installer')
 
-XPIDL_SOURCES += [
-    'nsIDiskSpaceWatcher.idl',
-]
-
-EXPORTS += [
-    'DiskSpaceWatcher.h'
-]
-
-XPIDL_MODULE = 'diskspacewatcher'
-
-SOURCES = [
-    'DiskSpaceWatcher.cpp',
-]
-
-include('/ipc/chromium/chromium-config.mozbuild')
-
-FINAL_LIBRARY = 'xul'
+with Files('windows/**'):
+    BUG_COMPONENT = ('Toolkit', 'NSIS Installer')

@@ -22,7 +22,6 @@
 #include "nsDisplayList.h"
 #include "nsHTMLCanvasFrame.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "mozilla/gfx/DrawEventRecorder.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsServiceManagerUtils.h"
 #include <algorithm>
@@ -630,7 +629,7 @@ nsSimplePageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback, bool* a
 
       mCalledBeginPage = true;
       
-      RefPtr<gfxContext> renderingContext = dc->CreateReferenceRenderingContext();
+      RefPtr<gfxContext> renderingContext = dc->CreateRenderingContext();
       NS_ENSURE_TRUE(renderingContext, NS_ERROR_OUT_OF_MEMORY);
 
       DrawTarget* drawTarget = renderingContext->GetDrawTarget();
@@ -642,12 +641,8 @@ nsSimplePageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback, bool* a
         HTMLCanvasElement* canvas = mCurrentCanvasList[i];
         nsIntSize size = canvas->GetSize();
 
-        RefPtr<mozilla::gfx::DrawEventRecorder> recorder =
-          new mozilla::gfx::DrawEventRecorderMemory();
         RefPtr<DrawTarget> canvasTarget =
           drawTarget->CreateSimilarDrawTarget(size, drawTarget->GetFormat());
-        canvasTarget =
-          mozilla::gfx::Factory::CreateRecordingDrawTarget(recorder, canvasTarget);
         if (!canvasTarget) {
           continue;
         }
