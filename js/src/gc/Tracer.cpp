@@ -289,6 +289,37 @@ CountDecimalDigits(size_t num)
     return numDigits;
 }
 
+static const char*
+StringKindHeader(JSString* str)
+{
+    MOZ_ASSERT(str->isLinear());
+
+    if (str->isAtom()) {
+        if (str->isPermanentAtom())
+            return "permanent atom: ";
+        return "atom: ";
+    }
+
+    if (str->isFlat()) {
+        if (str->isExtensible())
+            return "extensible: ";
+        if (str->isUndepended())
+            return "undepended: ";
+        if (str->isInline()) {
+            if (str->isFatInline())
+                return "fat inline: ";
+            return "inline: ";
+        }
+        return "flat: ";
+    }
+
+    if (str->isDependent())
+        return "dependent: ";
+    if (str->isExternal())
+        return "external: ";
+    return "linear: ";
+}
+
 JS_PUBLIC_API(void)
 JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
                      JS::TraceKind kind, bool details)
@@ -387,12 +418,13 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
             JSString* str = (JSString*)thing;
 
             if (str->isLinear()) {
-                bool willFit = str->length() + strlen("<length > ") +
+                const char* header = StringKindHeader(str);
+                bool willFit = str->length() + strlen("<length > ") + strlen(header) +
                                CountDecimalDigits(str->length()) < bufsize;
 
-                n = snprintf(buf, bufsize, "<length %" PRIuSIZE "%s> ",
-                                str->length(),
-                                willFit ? "" : " (truncated)");
+                n = snprintf(buf, bufsize, "<%slength %" PRIuSIZE "%s> ",
+                             header, str->length(),
+                             willFit ? "" : " (truncated)");
                 buf += n;
                 bufsize -= n;
 
