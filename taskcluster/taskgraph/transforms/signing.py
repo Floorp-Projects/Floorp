@@ -124,7 +124,7 @@ def make_task_description(config, jobs):
         }
 
         if job.get('use-funsize-route', False):
-            task['routes'].append("project.releng.funsize.level-{level}.{project}".format(
+            task['routes'].append("index.project.releng.funsize.level-{level}.{project}".format(
                 project=config.params['project'], level=config.params['level']))
 
         yield task

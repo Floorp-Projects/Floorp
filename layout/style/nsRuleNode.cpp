@@ -8321,14 +8321,7 @@ SetGridTrackList(const nsCSSValue& aValue,
 
   case eCSSUnit_Inherit:
     aConditions.SetUncacheable();
-    aResult.mIsSubgrid = aParentValue.mIsSubgrid;
-    aResult.mLineNameLists = aParentValue.mLineNameLists;
-    aResult.mMinTrackSizingFunctions = aParentValue.mMinTrackSizingFunctions;
-    aResult.mMaxTrackSizingFunctions = aParentValue.mMaxTrackSizingFunctions;
-    aResult.mRepeatAutoLineNameListBefore = aParentValue.mRepeatAutoLineNameListBefore;
-    aResult.mRepeatAutoLineNameListAfter = aParentValue.mRepeatAutoLineNameListAfter;
-    aResult.mRepeatAutoIndex = aParentValue.mRepeatAutoIndex;
-    aResult.mIsAutoFill = aParentValue.mIsAutoFill;
+    aResult = aParentValue;
     break;
 
   case eCSSUnit_Initial:

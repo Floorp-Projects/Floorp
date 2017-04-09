@@ -237,6 +237,16 @@ public:
   void StyleNewChildren(dom::Element* aParent);
 
   /**
+   * Like StyleNewSubtree, but in response to a request to reconstruct frames
+   * for the given subtree, and so works on elements that already have
+   * styles.  This will leave the subtree in a state just like after an initial
+   * styling, i.e. with new styles, no change hints, and with the dirty
+   * descendants bits cleared.  No comparison of old and new styles is done,
+   * so no change hints will be processed.
+   */
+  void StyleSubtreeForReconstruct(dom::Element* aRoot);
+
+  /**
    * Records that the contents of style sheets have changed since the last
    * restyle.  Calling this will ensure that the Stylist rebuilds its
    * selector maps.
@@ -302,7 +312,8 @@ private:
    * a subtree.  Returns whether a post-traversal is required.
    */
   bool PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
-                                 mozilla::TraversalRootBehavior aRootBehavior);
+                                 TraversalRootBehavior aRootBehavior,
+                                 TraversalRestyleBehavior aRestyleBehavior);
 
   /**
    * Clear our cached mNonInheritingStyleContexts.  We do this when we want to
@@ -313,8 +324,11 @@ private:
 
   /**
    * Perform processes that we should do before traversing.
+   *
+   * When aRoot is null, the entire document is pre-traversed.  Otherwise,
+   * only the subtree rooted at aRoot is pre-traversed.
    */
-  void PreTraverse();
+  void PreTraverse(dom::Element* aRoot = nullptr);
   // Subset of the pre-traverse steps that involve syncing up data
   void PreTraverseSync();
 
