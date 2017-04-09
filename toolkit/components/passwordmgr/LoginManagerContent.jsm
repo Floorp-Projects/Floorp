@@ -1442,8 +1442,7 @@ function UserAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messag
   this.matchCount = matchingLogins.length + this._showInsecureFieldWarning;
   this._messageManager = messageManager;
   this._stringBundle = Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties");
-  this._dateAndTimeFormatter = new Intl.DateTimeFormat(undefined,
-                              { day: "numeric", month: "short", year: "numeric" });
+  this._dateAndTimeFormatter = Services.intl.createDateTimeFormat(undefined, { dateStyle: "medium" });
 
   this._isPasswordField = isPasswordField;
 

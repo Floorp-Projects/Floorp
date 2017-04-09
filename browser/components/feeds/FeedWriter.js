@@ -189,9 +189,11 @@ FeedWriter.prototype = {
   __dateFormatter: null,
   get _dateFormatter() {
     if (!this.__dateFormatter) {
-      const dtOptions = { year: "numeric", month: "long", day: "numeric",
-                          hour: "numeric", minute: "numeric" };
-      this.__dateFormatter = new Intl.DateTimeFormat(undefined, dtOptions);
+      const dtOptions = {
+        timeStyle: "short",
+        dateStyle: "long"
+      };
+      this.__dateFormatter = Services.intl.createDateTimeFormat(undefined, dtOptions);
     }
     return this.__dateFormatter;
   },
