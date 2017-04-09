@@ -1645,8 +1645,7 @@ public abstract class GeckoApp
                 // to the Recent Tabs folder of the Combined History panel.
                 Tabs.getInstance().loadUrl(AboutPages.getURLForBuiltinPanelType(PanelType.DEPRECATED_RECENT_TABS), flags);
             } else {
-                final String homepage = Tabs.getHomepage(this);
-                Tabs.getInstance().loadUrl(!TextUtils.isEmpty(homepage) ? homepage : AboutPages.HOME, flags);
+                Tabs.getInstance().loadUrl(Tabs.getHomepageForStartupTab(this), flags);
             }
         }
     }
