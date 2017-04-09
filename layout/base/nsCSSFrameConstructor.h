@@ -106,7 +106,8 @@ private:
   void IssueSingleInsertNofications(nsIContent* aContainer,
                                     nsIContent* aStartChild,
                                     nsIContent* aEndChild,
-                                    bool aAllowLazyConstruction);
+                                    bool aAllowLazyConstruction,
+                                    bool aForReconstruction);
 
   /**
    * Data that represents an insertion point for some child content.
@@ -149,7 +150,8 @@ private:
   InsertionPoint GetRangeInsertionPoint(nsIContent* aContainer,
                                         nsIContent* aStartChild,
                                         nsIContent* aEndChild,
-                                        bool aAllowLazyConstruction);
+                                        bool aAllowLazyConstruction,
+                                        bool aForReconstruction);
 
   // Returns true if parent was recreated due to frameset child, false otherwise.
   bool MaybeRecreateForFrameset(nsIFrame* aParentFrame,
@@ -164,6 +166,13 @@ private:
    * tree parent.  Only used when we are styled by Servo.
    */
   void StyleNewChildRange(nsIContent* aStartChild, nsIContent* aEndChild);
+
+  /**
+   * Calls StyleSubtreeForReconstruct on each child in the aStartChild/aEndChild
+   * range. Only used when we are styled by Servo.
+   */
+  void StyleChildRangeForReconstruct(nsIContent* aStartChild,
+                                     nsIContent* aEndChild);
 
 public:
   /**
@@ -220,7 +229,11 @@ public:
   void ContentAppended(nsIContent* aContainer,
                        nsIContent* aFirstNewContent,
                        bool aAllowLazyConstruction,
-                       TreeMatchContext* aProvidedTreeMatchContext = nullptr);
+                       TreeMatchContext* aProvidedTreeMatchContext = nullptr)
+  {
+    ContentAppended(aContainer, aFirstNewContent, aAllowLazyConstruction, false,
+                    aProvidedTreeMatchContext);
+  }
 
   // If aAllowLazyConstruction is true then frame construction of the new child
   // can be done lazily.
@@ -245,8 +258,36 @@ public:
                             nsIContent* aEndChild,
                             nsILayoutHistoryState* aFrameState,
                             bool aAllowLazyConstruction,
-                            TreeMatchContext* aProvidedTreeMatchContext = nullptr);
+                            TreeMatchContext* aProvidedTreeMatchContext = nullptr)
+  {
+    ContentRangeInserted(aContainer, aStartChild, aEndChild, aFrameState,
+                         aAllowLazyConstruction, false,
+                         aProvidedTreeMatchContext);
+  }
 
+private:
+  // Helpers for the public ContentAppended, ContentInserted and
+  // ContentRangeInserted functions above.
+  //
+  // aForReconstruction indicates whether this call is for frame reconstruction
+  // via RecreateFramesFor or lazy frame construction via CreateNeededFrames.
+  // (This latter case admittedly isn't always for "reconstruction" per se, but
+  // the important thing is that aForReconstruction is false for real content
+  // insertions, and true for other cases.)
+  void ContentAppended(nsIContent* aContainer,
+                       nsIContent* aFirstNewContent,
+                       bool aAllowLazyConstruction,
+                       bool aForReconstruction,
+                       TreeMatchContext* aProvidedTreeMatchContext);
+  void ContentRangeInserted(nsIContent* aContainer,
+                            nsIContent* aStartChild,
+                            nsIContent* aEndChild,
+                            nsILayoutHistoryState* aFrameState,
+                            bool aAllowLazyConstruction,
+                            bool aForReconstruction,
+                            TreeMatchContext* aProvidedTreeMatchContext);
+
+public:
   enum RemoveFlags {
     REMOVE_CONTENT, REMOVE_FOR_RECONSTRUCTION, REMOVE_DESTROY_FRAMES };
   /**
