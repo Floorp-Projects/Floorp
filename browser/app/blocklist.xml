@@ -2266,14 +2266,6 @@
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="18.0.0.366" minVersion="18.0.0.360" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
-    <pluginItem blockID="p298">
-      <match exp="JavaAppletPlugin\.plugin" name="filename"/>
-      <versionRange maxVersion="Java 6 Update 41" minVersion="Java 6 Update 39" severity="0" vulnerabilitystatus="1">
-        <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="17.0"/>
-        </targetApplication>
-      </versionRange>
-    </pluginItem>
     <pluginItem blockID="p928">
       <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
@@ -3130,6 +3122,10 @@
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="23.0.0.205" minVersion="23.0.0.185" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
+    <pluginItem blockID="97647cd8-03c5-416c-b9d3-cd5ef87ab39f">
+      <match exp="np32dsw_1227197\.dll" name="filename"/>
+      <versionRange maxVersion="12.2.7.197" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
     <pluginItem blockID="p932" os="Linux">
       <match exp="libflashplayer\.so" name="filename"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
@@ -3160,6 +3156,14 @@
       <match exp="Java\(TM\) Plug-in 1\.6\.0_4[2-5]([^\d\._]|$)" name="name"/>
       <match exp="libnpjp2\.so" name="filename"/>
       <versionRange severity="0" vulnerabilitystatus="1">
+        <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+          <versionRange maxVersion="*" minVersion="17.0"/>
+        </targetApplication>
+      </versionRange>
+    </pluginItem>
+    <pluginItem blockID="p298">
+      <match exp="JavaAppletPlugin\.plugin" name="filename"/>
+      <versionRange maxVersion="Java 6 Update 41" minVersion="Java 6 Update 39" severity="0" vulnerabilitystatus="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
           <versionRange maxVersion="*" minVersion="17.0"/>
         </targetApplication>
