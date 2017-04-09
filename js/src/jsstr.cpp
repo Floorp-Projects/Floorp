@@ -639,6 +639,10 @@ Final_Sigma(const char16_t* chars, size_t length, size_t index)
                unicode::GREEK_SMALL_LETTER_SIGMA);
 
 #if ENABLE_INTL_API
+    // Tell the analysis the BinaryProperty.contains function pointer called by
+    // u_hasBinaryProperty cannot GC.
+    JS::AutoSuppressGCAnalysis nogc;
+
     bool precededByCased = false;
     for (size_t i = index; i > 0; ) {
         char16_t c = chars[--i];
