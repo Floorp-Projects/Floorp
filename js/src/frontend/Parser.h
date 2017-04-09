@@ -578,6 +578,7 @@ enum class PropertyType {
     Method,
     GeneratorMethod,
     AsyncMethod,
+    AsyncGeneratorMethod,
     Constructor,
     DerivedConstructor
 };
