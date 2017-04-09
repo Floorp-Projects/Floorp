@@ -19,7 +19,7 @@ public:
 
   explicit ProfileGatherer();
   void WillGatherOOPProfile();
-  void GatheredOOPProfile();
+  void GatheredOOPProfile(const nsACString& aProfile);
   void Start(double aSinceTime, mozilla::dom::Promise* aPromise);
   void Start(double aSinceTime, const nsACString& aFileName);
   void Cancel();
@@ -31,6 +31,7 @@ private:
   void Reset();
   void Start2(double aSinceTime);
 
+  nsTArray<nsCString> mResponseProfiles;
   nsTArray<nsCString> mExitProfiles;
   RefPtr<mozilla::dom::Promise> mPromise;
   nsCOMPtr<nsIFile> mFile;

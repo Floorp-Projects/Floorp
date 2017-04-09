@@ -41,7 +41,7 @@ ProfileGatherer::~ProfileGatherer()
 }
 
 void
-ProfileGatherer::GatheredOOPProfile()
+ProfileGatherer::GatheredOOPProfile(const nsACString& aProfile)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -57,6 +57,8 @@ ProfileGatherer::GatheredOOPProfile()
     // calling us erroneously.
     return;
   }
+
+  mResponseProfiles.AppendElement(aProfile);
 
   mPendingProfiles--;
 
@@ -256,6 +258,12 @@ ProfileGatherer::Observe(nsISupports* aSubject,
         }
       }
       mExitProfiles.Clear();
+      for (size_t i = 0; i < mResponseProfiles.Length(); ++i) {
+        if (!mResponseProfiles[i].IsEmpty()) {
+          pse->AddSubProfile(mResponseProfiles[i].get());
+        }
+      }
+      mResponseProfiles.Clear();
     }
   }
   return NS_OK;
