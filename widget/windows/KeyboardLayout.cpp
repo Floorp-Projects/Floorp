@@ -2419,8 +2419,10 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
 
   MOZ_ASSERT(!mWidget->Destroyed());
 
-  // If the key was processed by IME, we shouldn't dispatch keypress event.
-  if (mOriginalVirtualKeyCode == VK_PROCESSKEY) {
+  // If the key was processed by IME and didn't cause WM_(SYS)CHAR messages, we
+  // shouldn't dispatch keypress event.
+  if (mOriginalVirtualKeyCode == VK_PROCESSKEY &&
+      !IsFollowedByPrintableCharOrSysCharMessage()) {
     MOZ_LOG(sNativeKeyLogger, LogLevel::Info,
       ("%p   NativeKey::HandleKeyDownMessage(), not dispatching keypress "
        "event because the key was already handled by IME, defaultPrevented=%s",
