@@ -44,7 +44,7 @@ toolbar[brighttext] #downloads-indicator-progress-icon {
   }
 }
 
-#downloads-button[notification="start"] > #downloads-indicator-anchor {
+#downloads-button[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-icon {
   animation-name: downloadsIndicatorStartJump;
   /* Upon changing the overall duration below, please keep the delay time of
      setTimeout() identical in indicator.js for this animation. */
