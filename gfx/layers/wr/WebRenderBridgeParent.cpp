@@ -562,6 +562,16 @@ WebRenderBridgeParent::RecvClearCachedResources()
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvForceComposite()
+{
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+  ScheduleComposition();
+  return IPC_OK();
+}
+
 void
 WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 {
