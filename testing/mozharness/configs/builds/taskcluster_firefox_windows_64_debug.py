@@ -70,7 +70,7 @@ config = {
         'MOZ_AUTOMATION': '1',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
         'MOZ_OBJDIR': 'obj-firefox',
-        'PDBSTR_PATH': '/c/Program Files (x86)/Windows Kits/10/Debuggers/x64/srcsrv/pdbstr.exe',
+        'PDBSTR_PATH': 'C:/Program Files (x86)/Windows Kits/10/Debuggers/x64/srcsrv/pdbstr.exe',
         'TINDERBOX_OUTPUT': '1',
         'TOOLTOOL_CACHE': 'c:/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/c/builds',
