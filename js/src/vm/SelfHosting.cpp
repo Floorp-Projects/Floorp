@@ -2351,15 +2351,15 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_String_trim",                     str_trim,                     0,0),
     JS_FN("std_String_trimLeft",                 str_trimLeft,                 0,0),
     JS_FN("std_String_trimRight",                str_trimRight,                0,0),
+#if !EXPOSE_INTL_API
     JS_FN("std_String_toLocaleLowerCase",        str_toLocaleLowerCase,        0,0),
     JS_FN("std_String_toLocaleUpperCase",        str_toLocaleUpperCase,        0,0),
-#if !EXPOSE_INTL_API
     JS_FN("std_String_localeCompare",            str_localeCompare,            1,0),
 #else
     JS_FN("std_String_normalize",                str_normalize,                0,0),
 #endif
     JS_FN("std_String_concat",                   str_concat,                   1,0),
-    
+
     JS_FN("std_TypedArray_buffer",               js::TypedArray_bufferGetter,  1,0),
 
     JS_FN("std_WeakMap_has",                     WeakMap_has,                  1,0),
@@ -2633,6 +2633,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_PluralRules_availableLocales", intl_PluralRules_availableLocales, 0,0),
     JS_FN("intl_GetPluralCategories", intl_GetPluralCategories, 2, 0),
     JS_FN("intl_SelectPluralRule", intl_SelectPluralRule, 2,0),
+    JS_FN("intl_toLocaleLowerCase", intl_toLocaleLowerCase, 2,0),
+    JS_FN("intl_toLocaleUpperCase", intl_toLocaleUpperCase, 2,0),
 
     JS_INLINABLE_FN("IsCollator",
                     intrinsic_IsInstanceOfBuiltin<CollatorObject>, 1,0,

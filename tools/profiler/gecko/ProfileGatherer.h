@@ -7,10 +7,10 @@
 
 #include "mozilla/dom/Promise.h"
 #include "nsIFile.h"
-#include "platform.h"
 
 namespace mozilla {
 
+// This class holds the state for an async profile-gathering request.
 class ProfileGatherer final : public nsIObserver
 {
 public:
@@ -19,23 +19,21 @@ public:
 
   explicit ProfileGatherer();
   void WillGatherOOPProfile();
-  void GatheredOOPProfile(PSLockRef aLock);
-  void Start(PSLockRef aLock, double aSinceTime,
-             mozilla::dom::Promise* aPromise);
-  void Start(PSLockRef aLock, double aSinceTime, const nsACString& aFileName);
+  void GatheredOOPProfile();
+  void Start(double aSinceTime, mozilla::dom::Promise* aPromise);
+  void Start(double aSinceTime, const nsACString& aFileName);
   void Cancel();
-  void OOPExitProfile(const nsCString& aProfile);
+  void OOPExitProfile(const nsACString& aProfile);
 
 private:
-  ~ProfileGatherer() {};
-  void Finish(PSLockRef aLock);
+  ~ProfileGatherer();
+  void Finish();
   void Reset();
-  void Start2(PSLockRef aLock, double aSinceTime);
+  void Start2(double aSinceTime);
 
   nsTArray<nsCString> mExitProfiles;
   RefPtr<mozilla::dom::Promise> mPromise;
   nsCOMPtr<nsIFile> mFile;
-  bool mIsCancelled;
   double mSinceTime;
   uint32_t mPendingProfiles;
   bool mGathering;

@@ -371,13 +371,13 @@ str_trimLeft(JSContext* cx, unsigned argc, Value* vp);
 extern bool
 str_trimRight(JSContext* cx, unsigned argc, Value* vp);
 
+#if !EXPOSE_INTL_API
 extern bool
 str_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool
 str_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp);
 
-#if !EXPOSE_INTL_API
 extern bool
 str_localeCompare(JSContext* cx, unsigned argc, Value* vp);
 #else
@@ -480,6 +480,12 @@ str_flat_replace_string(JSContext *cx, HandleString string, HandleString pattern
 JSString*
 str_replace_string_raw(JSContext* cx, HandleString string, HandleString pattern,
                        HandleString replacement);
+
+extern JSString*
+StringToLowerCase(JSContext* cx, HandleLinearString string);
+
+extern JSString*
+StringToUpperCase(JSContext* cx, HandleLinearString string);
 
 extern bool
 StringConstructor(JSContext* cx, unsigned argc, Value* vp);
