@@ -30,8 +30,8 @@ fails == columnrule-complex.html columnrule-complex.html
 fails == columnfill-overflow.html columnfill-overflow.html
 == margin-collapsing-bug616722-1.html margin-collapsing-bug616722-1.html
 == margin-collapsing-bug616722-2.html margin-collapsing-bug616722-2.html
-fails == column-balancing-nested-000.html column-balancing-nested-000.html
-fails == column-balancing-nested-001.html column-balancing-nested-001.html
+== column-balancing-nested-000.html column-balancing-nested-000.html
+== column-balancing-nested-001.html column-balancing-nested-001.html
 == columnrule-overflow.html columnrule-overflow.html
 == columns-table-caption-000.html columns-table-caption-000.html
 == positioning-transforms-bug1112501.html positioning-transforms-bug1112501.html

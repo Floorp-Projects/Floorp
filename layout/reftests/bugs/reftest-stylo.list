@@ -449,9 +449,9 @@ fails == 335628-1.html 335628-1.html
 fails == 336147-1.html 336147-1.html
 fails == 336153-1.html 336153-1.html
 fails == 338251-p.html 338251-p.html
-fails == 338251-p-oh.html 338251-p-oh.html
+== 338251-p-oh.html 338251-p-oh.html
 fails == 338251-pre.html 338251-pre.html
-fails == 338251-pre-oh.html 338251-pre-oh.html
+== 338251-pre-oh.html 338251-pre-oh.html
 == 339289-1.html 339289-1.html
 == 341043-1a.html 341043-1a.html
 == 341043-1b.html 341043-1b.html
@@ -467,7 +467,7 @@ fails == 346774-1a.html 346774-1a.html
 fails == 346774-1b.html 346774-1b.html
 fails == 346774-1c.html 346774-1c.html
 == 347348-1.xhtml 347348-1.xhtml
-fails == 347496-1.xhtml 347496-1.xhtml
+== 347496-1.xhtml 347496-1.xhtml
 == 347912-1.html 347912-1.html
 fails == 348049-1.xhtml 348049-1.xhtml
 fails == 348516-1.html 348516-1.html
@@ -551,8 +551,8 @@ asserts-if(stylo,1) == 360746-1.html 360746-1.html # Bug 1341721
 == 363370-1.html 363370-1.html
 == 363402-1.html 363402-1.html
 == 363637-1.html 363637-1.html
-fails == 363706-1.html 363706-1.html # Bug 1324348
-fails == 363706-1.html 363706-1.html # Bug 1324348
+== 363706-1.html 363706-1.html # Bug 1324348
+== 363706-1.html 363706-1.html # Bug 1324348
 fails == 363728-1.html 363728-1.html
 == 363728-2.html 363728-2.html
 fails == 363858-1.html 363858-1.html
@@ -643,7 +643,7 @@ fails == 370422-1.html 370422-1.html
 fails == 370629-2.html 370629-2.html
 == 370692-1.xhtml 370692-1.xhtml
 == 371041-1.html 371041-1.html
-fails == 371043-1.html 371043-1.html
+== 371043-1.html 371043-1.html
 == 371354-1.html 371354-1.html
 == 371483-1.html 371483-1.html
 == 371561-1.html 371561-1.html
@@ -788,8 +788,8 @@ skip-if(!winWidget) == 391045.html 391045.html
 == 391140-1.html 391140-1.html
 == 391412-1a.html 391412-1a.html
 == 391412-1b.html 391412-1b.html
-fails == 391909-1.html 391909-1.html
-fails == 391979.html 391979.html
+== 391909-1.html 391909-1.html
+== 391979.html 391979.html
 fails == 391994-1.html 391994-1.html
 == 392047.html 392047.html
 fails == 392435-1.html 392435-1.html
@@ -823,7 +823,7 @@ fails == 395130-2.html 395130-2.html
 == 397428-1.html 397428-1.html
 == 397844-1.xhtml 397844-1.xhtml
 == 398092-1.html 398092-1.html
-fails == 398101-1.html 398101-1.html
+== 398101-1.html 398101-1.html
 == 398144-1.html 398144-1.html
 == 398682-1.html 398682-1.html
 == 398797-1a.html 398797-1a.html
@@ -1197,7 +1197,7 @@ fails pref(dom.use_xbl_scopes_for_remote_xul,true) == 449149-1b.html 449149-1b.h
 == 455105-2.html 455105-2.html
 fails == 455171-5.html 455171-5.html
 fails == 455280-1.xhtml 455280-1.xhtml
-fails == 455826-1.html 455826-1.html
+== 455826-1.html 455826-1.html
 fails-if(cocoaWidget) fails-if(Android) == 456147.xul 456147.xul
 == 456219-1a.html 456219-1a.html
 == 456219-1b.html 456219-1b.html
