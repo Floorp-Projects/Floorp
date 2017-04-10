@@ -312,12 +312,10 @@
 
         </activity>
 
-#ifdef MOZ_ANDROID_CUSTOM_TABS
         <activity android:name="org.mozilla.gecko.customtabs.CustomTabsActivity"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
                   android:theme="@style/GeckoCustomTabs" />
-#endif
 
         <activity android:name="org.mozilla.gecko.webapps.WebAppActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
@@ -421,7 +419,6 @@
           android:name="org.mozilla.gecko.telemetry.TelemetryUploadService"
           android:exported="false"/>
 
-#ifdef MOZ_ANDROID_CUSTOM_TABS
         <service
             android:name="org.mozilla.gecko.customtabs.GeckoCustomTabsService"
             android:exported="true">
@@ -429,7 +426,6 @@
                 <action android:name="android.support.customtabs.action.CustomTabsService" />
             </intent-filter>
         </service>
-#endif
 
 #include ../services/manifests/FxAccountAndroidManifest_services.xml.in
 
