@@ -25,6 +25,7 @@
 #include "nsIObserver.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Attributes.h"
+#include "MainThreadUtils.h"
 #include <algorithm>
 #include "DrawMode.h"
 #include "nsDataHashtable.h"
@@ -453,7 +454,8 @@ public:
 };
 
 class gfxTextRunFactory {
-    NS_INLINE_DECL_REFCOUNTING(gfxTextRunFactory)
+    // Used by stylo
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxTextRunFactory)
 
 public:
     typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -592,7 +594,7 @@ public:
 
 protected:
     // Protected destructor, to discourage deletion outside of Release():
-    virtual ~gfxTextRunFactory() {}
+    virtual ~gfxTextRunFactory();
 };
 
 /**
