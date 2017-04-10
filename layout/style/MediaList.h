@@ -15,6 +15,8 @@
 #include "nsIDOMMediaList.h"
 #include "nsWrapperCache.h"
 
+class nsIDocument;
+
 namespace mozilla {
 class StyleSheet;
 
@@ -34,6 +36,12 @@ class MediaList : public nsIDOMMediaList
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaList)
+
+  /**
+   * Creates a MediaList backed by the StyleBackendType of the document.
+   */
+  static already_AddRefed<MediaList> Create(nsIDocument* aDocument,
+                                            const nsAString& aMedia);
 
   virtual already_AddRefed<MediaList> Clone() = 0;
 
