@@ -6,16 +6,20 @@
 package org.mozilla.focus;
 
 import android.app.Application;
+import android.os.StrictMode;
 import android.preference.PreferenceManager;
 
 import org.mozilla.focus.search.SearchEngineManager;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.AdjustHelper;
+import org.mozilla.focus.utils.AppConstants;
 
 public class FocusApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        enableStrictMode();
 
         PreferenceManager.setDefaultValues(this, R.xml.settings, false);
 
@@ -23,5 +27,21 @@ public class FocusApplication extends Application {
 
         TelemetryWrapper.init(this);
         AdjustHelper.setupAdjustIfNeeded(this);
+    }
+
+    private void enableStrictMode() {
+        if (AppConstants.isReleaseBuild()) {
+            return;
+        }
+
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                .detectAll()
+                .penaltyLog()
+                .build());
+
+        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                .detectAll()
+                .penaltyLog()
+                .build());
     }
 }
