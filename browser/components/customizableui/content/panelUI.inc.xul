@@ -485,3 +485,13 @@
     </popupnotificationcontent>
   </popupnotification>
 </panel>
+
+<panel id="PanelUI-photon-popup"
+       role="group"
+       type="arrow"
+       hidden="true"
+       flip="slide"
+       position="bottomcenter topright"
+       noautofocus="true">
+  This space intentionally left blank.
+</panel>
