@@ -423,20 +423,22 @@ public:
   void InitMemoryReporter() { RegisterWeakMemoryReporter(this); }
 
   InsertOutcome Insert(NotNull<ISurfaceProvider*> aProvider,
-                       bool                       aSetAvailable)
+                       bool                       aSetAvailable,
+                       const StaticMutexAutoLock& aAutoLock)
   {
     // If this is a duplicate surface, refuse to replace the original.
     // XXX(seth): Calling Lookup() and then RemoveEntry() does the lookup
     // twice. We'll make this more efficient in bug 1185137.
     LookupResult result = Lookup(aProvider->GetImageKey(),
                                  aProvider->GetSurfaceKey(),
+                                 aAutoLock,
                                  /* aMarkUsed = */ false);
     if (MOZ_UNLIKELY(result)) {
       return InsertOutcome::FAILURE_ALREADY_PRESENT;
     }
 
     if (result.Type() == MatchType::PENDING) {
-      RemoveEntry(aProvider->GetImageKey(), aProvider->GetSurfaceKey());
+      RemoveEntry(aProvider->GetImageKey(), aProvider->GetSurfaceKey(), aAutoLock);
     }
 
     MOZ_ASSERT(result.Type() == MatchType::NOT_FOUND ||
@@ -456,7 +458,7 @@ public:
     while (cost > mAvailableCost) {
       MOZ_ASSERT(!mCosts.IsEmpty(),
                  "Removed everything and it still won't fit");
-      Remove(mCosts.LastElement().Surface());
+      Remove(mCosts.LastElement().Surface(), aAutoLock);
     }
 
     // Locate the appropriate per-image cache. If there's not an existing cache
@@ -488,12 +490,13 @@ public:
     // Insert.
     MOZ_ASSERT(cost <= mAvailableCost, "Inserting despite too large a cost");
     cache->Insert(surface);
-    StartTracking(surface);
+    StartTracking(surface, aAutoLock);
 
     return InsertOutcome::SUCCESS;
   }
 
-  void Remove(NotNull<CachedSurface*> aSurface)
+  void Remove(NotNull<CachedSurface*> aSurface,
+              const StaticMutexAutoLock& aAutoLock)
   {
     ImageKey imageKey = aSurface->GetImageKey();
 
@@ -505,7 +508,7 @@ public:
       static_cast<Image*>(imageKey)->OnSurfaceDiscarded();
     }
 
-    StopTracking(aSurface);
+    StopTracking(aSurface, aAutoLock);
     cache->Remove(aSurface);
 
     // Remove the per-image cache if it's unneeded now. (Keep it if the image is
@@ -515,7 +518,8 @@ public:
     }
   }
 
-  void StartTracking(NotNull<CachedSurface*> aSurface)
+  void StartTracking(NotNull<CachedSurface*> aSurface,
+                     const StaticMutexAutoLock& aAutoLock)
   {
     CostEntry costEntry = aSurface->GetCostEntry();
     MOZ_ASSERT(costEntry.GetCost() <= mAvailableCost,
@@ -530,11 +534,12 @@ public:
       mCosts.InsertElementSorted(costEntry);
       // This may fail during XPCOM shutdown, so we need to ensure the object is
       // tracked before calling RemoveObject in StopTracking.
-      mExpirationTracker.AddObject(aSurface);
+      mExpirationTracker.AddObjectLocked(aSurface, aAutoLock);
     }
   }
 
-  void StopTracking(NotNull<CachedSurface*> aSurface)
+  void StopTracking(NotNull<CachedSurface*> aSurface,
+                    const StaticMutexAutoLock& aAutoLock)
   {
     CostEntry costEntry = aSurface->GetCostEntry();
 
@@ -546,7 +551,7 @@ public:
                  "Shouldn't have a cost entry for a locked surface");
     } else {
       if (MOZ_LIKELY(aSurface->GetExpirationState()->IsTracked())) {
-        mExpirationTracker.RemoveObject(aSurface);
+        mExpirationTracker.RemoveObjectLocked(aSurface, aAutoLock);
       } else {
         // Our call to AddObject must have failed in StartTracking; most likely
         // we're in XPCOM shutdown right now.
@@ -565,6 +570,7 @@ public:
 
   LookupResult Lookup(const ImageKey    aImageKey,
                       const SurfaceKey& aSurfaceKey,
+                      const StaticMutexAutoLock& aAutoLock,
                       bool aMarkUsed = true)
   {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
@@ -587,12 +593,12 @@ public:
     if (!drawableSurface) {
       // The surface was released by the operating system. Remove the cache
       // entry as well.
-      Remove(WrapNotNull(surface));
+      Remove(WrapNotNull(surface), aAutoLock);
       return LookupResult(MatchType::NOT_FOUND);
     }
 
     if (aMarkUsed) {
-      MarkUsed(WrapNotNull(surface), WrapNotNull(cache));
+      MarkUsed(WrapNotNull(surface), WrapNotNull(cache), aAutoLock);
     }
 
     MOZ_ASSERT(surface->GetSurfaceKey() == aSurfaceKey,
@@ -601,7 +607,8 @@ public:
   }
 
   LookupResult LookupBestMatch(const ImageKey         aImageKey,
-                               const SurfaceKey&      aSurfaceKey)
+                               const SurfaceKey&      aSurfaceKey,
+                               const StaticMutexAutoLock& aAutoLock)
   {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache) {
@@ -632,7 +639,7 @@ public:
 
       // The surface was released by the operating system. Remove the cache
       // entry as well.
-      Remove(WrapNotNull(surface));
+      Remove(WrapNotNull(surface), aAutoLock);
     }
 
     MOZ_ASSERT_IF(matchType == MatchType::EXACT,
@@ -644,7 +651,7 @@ public:
       surface->GetSurfaceKey().Flags() == aSurfaceKey.Flags());
 
     if (matchType == MatchType::EXACT) {
-      MarkUsed(WrapNotNull(surface), WrapNotNull(cache));
+      MarkUsed(WrapNotNull(surface), WrapNotNull(cache), aAutoLock);
     }
 
     return LookupResult(Move(drawableSurface), matchType);
@@ -660,7 +667,8 @@ public:
     return size_t(mMaxCost);
   }
 
-  void SurfaceAvailable(NotNull<ISurfaceProvider*> aProvider)
+  void SurfaceAvailable(NotNull<ISurfaceProvider*> aProvider,
+                        const StaticMutexAutoLock& aAutoLock)
   {
     if (!aProvider->Availability().IsPlaceholder()) {
       MOZ_ASSERT_UNREACHABLE("Calling SurfaceAvailable on non-placeholder");
@@ -673,7 +681,7 @@ public:
     // surface first, but it's fine either way.
     // XXX(seth): This could be implemented more efficiently; we should be able
     // to just update our data structures without reinserting.
-    Insert(aProvider, /* aSetAvailable = */ true);
+    Insert(aProvider, /* aSetAvailable = */ true, aAutoLock);
   }
 
   void LockImage(const ImageKey aImageKey)
@@ -690,7 +698,7 @@ public:
     // image should arrange for Lookup() to touch them if they are still useful.
   }
 
-  void UnlockImage(const ImageKey aImageKey)
+  void UnlockImage(const ImageKey aImageKey, const StaticMutexAutoLock& aAutoLock)
   {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache || !cache->IsLocked()) {
@@ -698,10 +706,10 @@ public:
     }
 
     cache->SetLocked(false);
-    DoUnlockSurfaces(WrapNotNull(cache));
+    DoUnlockSurfaces(WrapNotNull(cache), aAutoLock);
   }
 
-  void UnlockEntries(const ImageKey aImageKey)
+  void UnlockEntries(const ImageKey aImageKey, const StaticMutexAutoLock& aAutoLock)
   {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache || !cache->IsLocked()) {
@@ -710,10 +718,10 @@ public:
 
     // (Note that we *don't* unlock the per-image cache here; that's the
     // difference between this and UnlockImage.)
-    DoUnlockSurfaces(WrapNotNull(cache));
+    DoUnlockSurfaces(WrapNotNull(cache), aAutoLock);
   }
 
-  void RemoveImage(const ImageKey aImageKey)
+  void RemoveImage(const ImageKey aImageKey, const StaticMutexAutoLock& aAutoLock)
   {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache) {
@@ -726,7 +734,7 @@ public:
     // small, performance should be good, but if usage patterns change we should
     // change the data structure used for mCosts.
     for (auto iter = cache->ConstIter(); !iter.Done(); iter.Next()) {
-      StopTracking(WrapNotNull(iter.UserData()));
+      StopTracking(WrapNotNull(iter.UserData()), aAutoLock);
     }
 
     // The per-image cache isn't needed anymore, so remove it as well.
@@ -734,17 +742,17 @@ public:
     mImageCaches.Remove(aImageKey);
   }
 
-  void DiscardAll()
+  void DiscardAll(const StaticMutexAutoLock& aAutoLock)
   {
     // Remove in order of cost because mCosts is an array and the other data
     // structures are all hash tables. Note that locked surfaces are not
     // removed, since they aren't present in mCosts.
     while (!mCosts.IsEmpty()) {
-      Remove(mCosts.LastElement().Surface());
+      Remove(mCosts.LastElement().Surface(), aAutoLock);
     }
   }
 
-  void DiscardForMemoryPressure()
+  void DiscardForMemoryPressure(const StaticMutexAutoLock& aAutoLock)
   {
     // Compute our discardable cost. Since locked surfaces aren't discardable,
     // we exclude them.
@@ -759,28 +767,29 @@ public:
 
     if (targetCost > mMaxCost - mLockedCost) {
       MOZ_ASSERT_UNREACHABLE("Target cost is more than we can discard");
-      DiscardAll();
+      DiscardAll(aAutoLock);
       return;
     }
 
     // Discard surfaces until we've reduced our cost to our target cost.
     while (mAvailableCost < targetCost) {
       MOZ_ASSERT(!mCosts.IsEmpty(), "Removed everything and still not done");
-      Remove(mCosts.LastElement().Surface());
+      Remove(mCosts.LastElement().Surface(), aAutoLock);
     }
   }
 
-  void LockSurface(NotNull<CachedSurface*> aSurface)
+  void LockSurface(NotNull<CachedSurface*> aSurface,
+                   const StaticMutexAutoLock& aAutoLock)
   {
     if (aSurface->IsPlaceholder() || aSurface->IsLocked()) {
       return;
     }
 
-    StopTracking(aSurface);
+    StopTracking(aSurface, aAutoLock);
 
     // Lock the surface. This can fail.
     aSurface->SetLocked(true);
-    StartTracking(aSurface);
+    StartTracking(aSurface, aAutoLock);
   }
 
   NS_IMETHOD
@@ -847,16 +856,18 @@ private:
   }
 
   void MarkUsed(NotNull<CachedSurface*> aSurface,
-                NotNull<ImageSurfaceCache*> aCache)
+                NotNull<ImageSurfaceCache*> aCache,
+                const StaticMutexAutoLock& aAutoLock)
   {
     if (aCache->IsLocked()) {
-      LockSurface(aSurface);
+      LockSurface(aSurface, aAutoLock);
     } else {
-      mExpirationTracker.MarkUsed(aSurface);
+      mExpirationTracker.MarkUsedLocked(aSurface, aAutoLock);
     }
   }
 
-  void DoUnlockSurfaces(NotNull<ImageSurfaceCache*> aCache)
+  void DoUnlockSurfaces(NotNull<ImageSurfaceCache*> aCache,
+                        const StaticMutexAutoLock& aAutoLock)
   {
     // Unlock all the surfaces the per-image cache is holding.
     for (auto iter = aCache->ConstIter(); !iter.Done(); iter.Next()) {
@@ -864,14 +875,15 @@ private:
       if (surface->IsPlaceholder() || !surface->IsLocked()) {
         continue;
       }
-      StopTracking(surface);
+      StopTracking(surface, aAutoLock);
       surface->SetLocked(false);
-      StartTracking(surface);
+      StartTracking(surface, aAutoLock);
     }
   }
 
   void RemoveEntry(const ImageKey    aImageKey,
-                   const SurfaceKey& aSurfaceKey)
+                   const SurfaceKey& aSurfaceKey,
+                   const StaticMutexAutoLock& aAutoLock)
   {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache) {
@@ -883,23 +895,29 @@ private:
       return;  // Lookup in the per-image cache missed.
     }
 
-    Remove(WrapNotNull(surface));
+    Remove(WrapNotNull(surface), aAutoLock);
   }
 
-  struct SurfaceTracker : public nsExpirationTracker<CachedSurface, 2>
+  struct SurfaceTracker : public ExpirationTrackerImpl<CachedSurface, 2,
+                                                       StaticMutex,
+                                                       StaticMutexAutoLock>
   {
     explicit SurfaceTracker(uint32_t aSurfaceCacheExpirationTimeMS)
-      : nsExpirationTracker<CachedSurface, 2>(aSurfaceCacheExpirationTimeMS,
-                                              "SurfaceTracker")
+      : ExpirationTrackerImpl<CachedSurface, 2,
+                              StaticMutex, StaticMutexAutoLock>(
+          aSurfaceCacheExpirationTimeMS, "SurfaceTracker")
     { }
 
   protected:
-    virtual void NotifyExpired(CachedSurface* aSurface) override
+    void NotifyExpiredLocked(CachedSurface* aSurface,
+                             const StaticMutexAutoLock& aAutoLock) override
     {
-      StaticMutexAutoLock lock(sInstanceMutex);
-      if (sInstance) {
-        sInstance->Remove(WrapNotNull(aSurface));
-      }
+      sInstance->Remove(WrapNotNull(aSurface), aAutoLock);
+    }
+
+    StaticMutex& GetMutex() override
+    {
+      return sInstanceMutex;
     }
   };
 
@@ -913,7 +931,7 @@ private:
     {
       StaticMutexAutoLock lock(sInstanceMutex);
       if (sInstance && strcmp(aTopic, "memory-pressure") == 0) {
-        sInstance->DiscardForMemoryPressure();
+        sInstance->DiscardForMemoryPressure(lock);
       }
       return NS_OK;
     }
@@ -1015,7 +1033,7 @@ SurfaceCache::Lookup(const ImageKey         aImageKey,
     return LookupResult(MatchType::NOT_FOUND);
   }
 
-  return sInstance->Lookup(aImageKey, aSurfaceKey);
+  return sInstance->Lookup(aImageKey, aSurfaceKey, lock);
 }
 
 /* static */ LookupResult
@@ -1027,7 +1045,7 @@ SurfaceCache::LookupBestMatch(const ImageKey         aImageKey,
     return LookupResult(MatchType::NOT_FOUND);
   }
 
-  return sInstance->LookupBestMatch(aImageKey, aSurfaceKey);
+  return sInstance->LookupBestMatch(aImageKey, aSurfaceKey, lock);
 }
 
 /* static */ InsertOutcome
@@ -1038,7 +1056,7 @@ SurfaceCache::Insert(NotNull<ISurfaceProvider*> aProvider)
     return InsertOutcome::FAILURE;
   }
 
-  return sInstance->Insert(aProvider, /* aSetAvailable = */ false);
+  return sInstance->Insert(aProvider, /* aSetAvailable = */ false, lock);
 }
 
 /* static */ bool
@@ -1072,7 +1090,7 @@ SurfaceCache::SurfaceAvailable(NotNull<ISurfaceProvider*> aProvider)
     return;
   }
 
-  sInstance->SurfaceAvailable(aProvider);
+  sInstance->SurfaceAvailable(aProvider, lock);
 }
 
 /* static */ void
@@ -1089,7 +1107,7 @@ SurfaceCache::UnlockImage(const ImageKey aImageKey)
 {
   StaticMutexAutoLock lock(sInstanceMutex);
   if (sInstance) {
-    return sInstance->UnlockImage(aImageKey);
+    return sInstance->UnlockImage(aImageKey, lock);
   }
 }
 
@@ -1098,7 +1116,7 @@ SurfaceCache::UnlockEntries(const ImageKey aImageKey)
 {
   StaticMutexAutoLock lock(sInstanceMutex);
   if (sInstance) {
-    return sInstance->UnlockEntries(aImageKey);
+    return sInstance->UnlockEntries(aImageKey, lock);
   }
 }
 
@@ -1107,7 +1125,7 @@ SurfaceCache::RemoveImage(const ImageKey aImageKey)
 {
   StaticMutexAutoLock lock(sInstanceMutex);
   if (sInstance) {
-    sInstance->RemoveImage(aImageKey);
+    sInstance->RemoveImage(aImageKey, lock);
   }
 }
 
@@ -1116,7 +1134,7 @@ SurfaceCache::DiscardAll()
 {
   StaticMutexAutoLock lock(sInstanceMutex);
   if (sInstance) {
-    sInstance->DiscardAll();
+    sInstance->DiscardAll(lock);
   }
 }
 
