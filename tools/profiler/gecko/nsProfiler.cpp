@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -20,6 +21,7 @@
 #include "js/Value.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"
+#include "ProfileGatherer.h"
 
 using mozilla::ErrorResult;
 using mozilla::dom::Promise;
@@ -92,13 +94,21 @@ nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
   profiler_start(aEntries, aInterval,
                  aFeatures, aFeatureCount,
                  aThreadNameFilters, aFilterCount);
+
+  // Do this after profiler_start().
+  mGatherer = new ProfileGatherer();
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsProfiler::StopProfiler()
 {
+  // Do this before profiler_stop().
+  mGatherer = nullptr;
+
   profiler_stop();
+
   return NS_OK;
 }
 
@@ -190,11 +200,18 @@ NS_IMETHODIMP
 nsProfiler::GetProfileData(double aSinceTime, JSContext* aCx,
                            JS::MutableHandle<JS::Value> aResult)
 {
-  JS::RootedObject obj(aCx, profiler_get_profile_jsobject(aCx, aSinceTime));
-  if (!obj) {
+  mozilla::UniquePtr<char[]> profile = profiler_get_profile(aSinceTime);
+  if (!profile) {
     return NS_ERROR_FAILURE;
   }
-  aResult.setObject(*obj);
+
+  NS_ConvertUTF8toUTF16 js_string(nsDependentCString(profile.get()));
+  auto profile16 = static_cast<const char16_t*>(js_string.get());
+
+  JS::RootedValue val(aCx);
+  MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, profile16, js_string.Length(), &val));
+
+  aResult.set(val);
   return NS_OK;
 }
 
@@ -203,6 +220,10 @@ nsProfiler::GetProfileDataAsync(double aSinceTime, JSContext* aCx,
                                 nsISupports** aPromise)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mGatherer) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (NS_WARN_IF(!aCx)) {
     return NS_ERROR_FAILURE;
@@ -220,11 +241,27 @@ nsProfiler::GetProfileDataAsync(double aSinceTime, JSContext* aCx,
     return result.StealNSResult();
   }
 
-  profiler_get_profile_jsobject_async(aSinceTime, promise);
+  mGatherer->Start(aSinceTime, promise);
 
   promise.forget(aPromise);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsProfiler::DumpProfileToFileAsync(const nsACString& aFilename,
+                                   double aSinceTime)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mGatherer) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mGatherer->Start(aSinceTime, aFilename);
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsProfiler::GetElapsedTime(double* aElapsedTime)
@@ -309,5 +346,41 @@ nsProfiler::GetBufferInfo(uint32_t* aCurrentPosition, uint32_t* aTotalSize,
   MOZ_ASSERT(aGeneration);
   profiler_get_buffer_info(aCurrentPosition, aTotalSize, aGeneration);
   return NS_OK;
+}
+
+void
+nsProfiler::WillGatherOOPProfile()
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!mGatherer) {
+    return;
+  }
+
+  mGatherer->WillGatherOOPProfile();
+}
+
+void
+nsProfiler::GatheredOOPProfile()
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!mGatherer) {
+    return;
+  }
+
+  mGatherer->GatheredOOPProfile();
+}
+
+void
+nsProfiler::OOPExitProfile(const nsACString& aProfile)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!mGatherer) {
+    return;
+  }
+
+  mGatherer->OOPExitProfile(aProfile);
 }
 
