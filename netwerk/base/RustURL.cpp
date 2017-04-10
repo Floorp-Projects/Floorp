@@ -50,7 +50,7 @@ RustURL::~RustURL()
 NS_IMETHODIMP
 RustURL::GetSpec(nsACString & aSpec)
 {
-  return static_cast<nsresult>(rusturl_get_spec(mURL.get(), &aSpec));
+  return rusturl_get_spec(mURL.get(), &aSpec);
 }
 
 NS_IMETHODIMP
@@ -103,7 +103,7 @@ RustURL::GetPrePath(nsACString & aPrePath)
 NS_IMETHODIMP
 RustURL::GetScheme(nsACString & aScheme)
 {
-  return static_cast<nsresult>(rusturl_get_scheme(mURL.get(), &aScheme));
+  return rusturl_get_scheme(mURL.get(), &aScheme);
 }
 
 NS_IMETHODIMP
@@ -111,7 +111,7 @@ RustURL::SetScheme(const nsACString & aScheme)
 {
   ENSURE_MUTABLE();
 
-  return static_cast<nsresult>(rusturl_set_scheme(mURL.get(), &aScheme));
+  return rusturl_set_scheme(mURL.get(), &aScheme);
 }
 
 NS_IMETHODIMP
@@ -152,42 +152,44 @@ RustURL::SetUserPass(const nsACString & aUserPass)
     pass = Substring(aUserPass, colonPos + 1, aUserPass.Length());
   }
 
-  if (rusturl_set_username(mURL.get(), &user) != 0) {
-    return NS_ERROR_FAILURE;
+  nsresult rv = rusturl_set_username(mURL.get(), &user);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
-  return static_cast<nsresult>(rusturl_set_password(mURL.get(), &pass));
+
+  return rusturl_set_password(mURL.get(), &pass);
 }
 
 NS_IMETHODIMP
 RustURL::GetUsername(nsACString & aUsername)
 {
-  return static_cast<nsresult>(rusturl_get_username(mURL.get(), &aUsername));
+  return rusturl_get_username(mURL.get(), &aUsername);
 }
 
 NS_IMETHODIMP
 RustURL::SetUsername(const nsACString & aUsername)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_username(mURL.get(), &aUsername));
+  return rusturl_set_username(mURL.get(), &aUsername);
 }
 
 NS_IMETHODIMP
 RustURL::GetPassword(nsACString & aPassword)
 {
-  return static_cast<nsresult>(rusturl_get_password(mURL.get(), &aPassword));
+  return rusturl_get_password(mURL.get(), &aPassword);
 }
 
 NS_IMETHODIMP
 RustURL::SetPassword(const nsACString & aPassword)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_password(mURL.get(), &aPassword));
+  return rusturl_set_password(mURL.get(), &aPassword);
 }
 
 NS_IMETHODIMP
 RustURL::GetHostPort(nsACString & aHostPort)
 {
-  nsresult rv = (nsresult) rusturl_get_host(mURL.get(), &aHostPort);
+  nsresult rv = rusturl_get_host(mURL.get(), &aHostPort);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -209,21 +211,21 @@ NS_IMETHODIMP
 RustURL::SetHostPort(const nsACString & aHostPort)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_host_port(mURL.get(), &aHostPort));
+  return rusturl_set_host_port(mURL.get(), &aHostPort);
 }
 
 NS_IMETHODIMP
 RustURL::SetHostAndPort(const nsACString & hostport)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_host_and_port(mURL.get(), &hostport));
+  return rusturl_set_host_and_port(mURL.get(), &hostport);
 }
 
 NS_IMETHODIMP
 RustURL::GetHost(nsACString & aHost)
 {
   nsAutoCString host;
-  nsresult rv = (nsresult) rusturl_get_host(mURL.get(), &host);
+  nsresult rv = rusturl_get_host(mURL.get(), &host);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -241,7 +243,7 @@ NS_IMETHODIMP
 RustURL::SetHost(const nsACString & aHost)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_host(mURL.get(), &aHost));
+  return rusturl_set_host(mURL.get(), &aHost);
 }
 
 NS_IMETHODIMP
@@ -250,21 +252,21 @@ RustURL::GetPort(int32_t *aPort)
   if (!mURL) {
     return NS_ERROR_FAILURE;
   }
-  *aPort = rusturl_get_port(mURL.get());
-  return NS_OK;
+  *aPort = 0;
+  return rusturl_get_port(mURL.get(), aPort);
 }
 
 NS_IMETHODIMP
 RustURL::SetPort(int32_t aPort)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_port_no(mURL.get(), aPort));
+  return rusturl_set_port_no(mURL.get(), aPort);
 }
 
 NS_IMETHODIMP
 RustURL::GetPath(nsACString & aPath)
 {
-  return static_cast<nsresult>(rusturl_get_path(mURL.get(), &aPath));
+  return rusturl_get_path(mURL.get(), &aPath);
 }
 
 NS_IMETHODIMP
@@ -341,7 +343,7 @@ RustURL::Clone(nsIURI * *aRetVal)
 NS_IMETHODIMP
 RustURL::Resolve(const nsACString & relativePath, nsACString & aRetVal)
 {
-  return static_cast<nsresult>(rusturl_resolve(mURL.get(), &relativePath, &aRetVal));
+  return rusturl_resolve(mURL.get(), &relativePath, &aRetVal);
 }
 
 NS_IMETHODIMP
@@ -372,14 +374,14 @@ RustURL::GetOriginCharset(nsACString & aOriginCharset)
 NS_IMETHODIMP
 RustURL::GetRef(nsACString & aRef)
 {
-  return static_cast<nsresult>(rusturl_get_fragment(mURL.get(), &aRef));
+  return rusturl_get_fragment(mURL.get(), &aRef);
 }
 
 NS_IMETHODIMP
 RustURL::SetRef(const nsACString & aRef)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_fragment(mURL.get(), &aRef));
+  return rusturl_set_fragment(mURL.get(), &aRef);
 }
 
 NS_IMETHODIMP
@@ -444,13 +446,7 @@ NS_IMETHODIMP
 RustURL::GetHasRef(bool *aHasRef)
 {
   *aHasRef = false;
-  int32_t rv = rusturl_has_fragment(mURL.get());
-  if (rv == 1) {
-    *aHasRef = true;
-  } else if (rv < 0) {
-    return static_cast<nsresult>(rv);
-  }
-  return NS_OK;
+  return rusturl_has_fragment(mURL.get(), aHasRef);
 }
 
 /// nsIURL
@@ -458,27 +454,27 @@ RustURL::GetHasRef(bool *aHasRef)
 NS_IMETHODIMP
 RustURL::GetFilePath(nsACString & aFilePath)
 {
-  return static_cast<nsresult>(rusturl_get_path(mURL.get(), &aFilePath));
+  return rusturl_get_path(mURL.get(), &aFilePath);
 }
 
 NS_IMETHODIMP
 RustURL::SetFilePath(const nsACString & aFilePath)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_path(mURL.get(), &aFilePath));
+  return rusturl_set_path(mURL.get(), &aFilePath);
 }
 
 NS_IMETHODIMP
 RustURL::GetQuery(nsACString & aQuery)
 {
-  return static_cast<nsresult>(rusturl_get_query(mURL.get(), &aQuery));
+  return rusturl_get_query(mURL.get(), &aQuery);
 }
 
 NS_IMETHODIMP
 RustURL::SetQuery(const nsACString & aQuery)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_query(mURL.get(), &aQuery));
+  return rusturl_set_query(mURL.get(), &aQuery);
 }
 
 NS_IMETHODIMP
@@ -546,7 +542,7 @@ RustURL::GetCommonBaseSpec(nsIURI *aURIToCompare, nsACString & _retval)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  return static_cast<nsresult>(rusturl_common_base_spec(mURL.get(), url->mURL.get(), &_retval));
+  return rusturl_common_base_spec(mURL.get(), url->mURL.get(), &_retval);
 }
 
 NS_IMETHODIMP
@@ -563,7 +559,7 @@ RustURL::GetRelativeSpec(nsIURI *aURIToCompare, nsACString & _retval)
     return rv;
   }
 
-  return static_cast<nsresult>(rusturl_relative_spec(mURL.get(), url->mURL.get(), &_retval));
+  return rusturl_relative_spec(mURL.get(), url->mURL.get(), &_retval);
 }
 
 // nsIFileURL
