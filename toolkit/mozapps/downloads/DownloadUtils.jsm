@@ -42,9 +42,12 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 this.__defineGetter__("gDecimalSymbol", function() {
     delete this.gDecimalSymbol;
@@ -342,47 +345,59 @@ this.DownloadUtils = {
       aNow = new Date();
     }
 
-    let dts = Cc["@mozilla.org/intl/scriptabledateformat;1"]
-              .getService(Ci.nsIScriptableDateFormat);
-
     // Figure out when today begins
     let today = new Date(aNow.getFullYear(), aNow.getMonth(), aNow.getDate());
 
-    // Figure out if the time is from today, yesterday, this week, etc.
     let dateTimeCompact;
-    if (aDate >= today) {
-      // After today started, show the time
-      dateTimeCompact = dts.FormatTime("",
-                                       dts.timeFormatNoSeconds,
-                                       aDate.getHours(),
-                                       aDate.getMinutes(),
-                                       0);
-    } else if (today - aDate < (24 * 60 * 60 * 1000)) {
-      // After yesterday started, show yesterday
-      dateTimeCompact = gBundle.GetStringFromName(gStr.yesterday);
-    } else if (today - aDate < (6 * 24 * 60 * 60 * 1000)) {
-      // After last week started, show day of week
-      dateTimeCompact = typeof Intl === "undefined"
-                        ? aDate.toLocaleFormat("%A")
-                        : aDate.toLocaleDateString(undefined, { weekday: "long" });
-    } else {
-      // Show month/day
-      let month = typeof Intl === "undefined"
-                  ? aDate.toLocaleFormat("%B")
-                  : aDate.toLocaleDateString(undefined, { month: "long" });
-      let date = aDate.getDate();
-      dateTimeCompact = gBundle.formatStringFromName(gStr.monthDate, [month, date], 2);
-    }
+    let dateTimeFull;
 
-    let dateTimeFull = dts.FormatDateTime("",
-                                          dts.dateFormatLong,
-                                          dts.timeFormatNoSeconds,
-                                          aDate.getFullYear(),
-                                          aDate.getMonth() + 1,
-                                          aDate.getDate(),
-                                          aDate.getHours(),
-                                          aDate.getMinutes(),
-                                          0);
+    // For Android, we have to keep the non Intl API version which uses
+    // deprecated toLocaleFormat until we get Intl API.
+    //
+    // For the rest of the platform, we'll use a combination of mozIntl,
+    // Intl API and localization.
+    if (typeof Intl === "undefined") {
+      // Figure out if the time is from today, yesterday, this week, etc.
+      if (aDate >= today) {
+        dateTimeCompact = aDate.toLocaleFormat("%X");
+      } else if (today - aDate < (MS_PER_DAY)) {
+        // After yesterday started, show yesterday
+        dateTimeCompact = gBundle.GetStringFromName(gStr.yesterday);
+      } else if (today - aDate < (6 * MS_PER_DAY)) {
+        // After last week started, show day of week
+        dateTimeCompact = aDate.toLocaleFormat("%A");
+      } else {
+        // Show month/day
+        let month = aDate.toLocaleFormat("%B");
+        let date = aDate.getDate();
+        dateTimeCompact = gBundle.formatStringFromName(gStr.monthDate, [month, date], 2);
+      }
+
+      dateTimeFull = aDate.toLocaleFormat("%x %X");
+    } else {
+      // Figure out if the time is from today, yesterday, this week, etc.
+      if (aDate >= today) {
+        let dts = Services.intl.createDateTimeFormat(undefined, {
+          timeStyle: "short"
+        });
+        dateTimeCompact = dts.format(aDate);
+      } else if (today - aDate < (MS_PER_DAY)) {
+        // After yesterday started, show yesterday
+        dateTimeCompact = gBundle.GetStringFromName(gStr.yesterday);
+      } else if (today - aDate < (6 * MS_PER_DAY)) {
+        // After last week started, show day of week
+        dateTimeCompact = aDate.toLocaleDateString(undefined, { weekday: "long" });
+      } else {
+        // Show month/day
+        let month = aDate.toLocaleDateString(undefined, { month: "long" });
+        let date = aDate.getDate();
+        dateTimeCompact = gBundle.formatStringFromName(gStr.monthDate, [month, date], 2);
+      }
+
+      const dtOptions = { dateStyle: "long", timeStyle: "short" };
+      dateTimeFull =
+        Services.intl.createDateTimeFormat(undefined, dtOptions).format(aDate); 
+    }
 
     return [dateTimeCompact, dateTimeFull];
   },
