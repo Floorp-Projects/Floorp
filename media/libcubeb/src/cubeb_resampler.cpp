@@ -55,8 +55,7 @@ long passthrough_resampler<T>::fill(void * input_buffer, long * input_frames_cou
   if (input_buffer) {
     assert(input_frames_count);
   }
-  assert((input_buffer && output_buffer &&
-         *input_frames_count + static_cast<int>(samples_to_frames(internal_input_buffer.length())) >= output_frames) ||
+  assert((input_buffer && output_buffer) ||
          (output_buffer && !input_buffer && (!input_frames_count || *input_frames_count == 0)) ||
          (input_buffer && !output_buffer && output_frames == 0));
 
