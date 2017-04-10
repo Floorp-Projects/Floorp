@@ -480,7 +480,7 @@ inline WrByteSlice RangeToByteSlice(mozilla::Range<uint8_t> aRange) {
 }
 
 inline mozilla::Range<uint8_t> ByteSliceToRange(WrByteSlice aWrSlice) {
-  return mozilla::Range<uint8_t>(aWrSlice.mBuffer, aWrSlice.mLength);
+  return mozilla::Range<uint8_t>(aWrSlice.buffer, aWrSlice.len);
 }
 
 struct BuiltDisplayList {
