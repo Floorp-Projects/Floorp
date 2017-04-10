@@ -33,6 +33,7 @@ public class TelemetryConfiguration {
     private static final int DEFAULT_MINIMUM_EVENTS_FOR_UPLOAD = 3;
     private static final String DEFAULT_UPDATE_CHANNEL = "unknown";
     private static final int DEFAULT_MAXIMUM_NUMBER_OF_PINGS_PER_EVENT = 500;
+    private static final int DEFAULT_MAXIMUM_PINGS_PER_TYPE = 40;
 
     private final Context context;
 
@@ -51,6 +52,7 @@ public class TelemetryConfiguration {
     private String userAgent;
     private int minimumEventsForUpload;
     private int maximumNumberOfEventsPerPing;
+    private int maximumNumberOfPingsPerType;
 
     public TelemetryConfiguration(Context context) {
         this.context = context.getApplicationContext();
@@ -70,6 +72,7 @@ public class TelemetryConfiguration {
         setCollectionEnabled(true);
         setUploadEnabled(true);
         setMaximumNumberOfEventsPerPing(DEFAULT_MAXIMUM_NUMBER_OF_PINGS_PER_EVENT);
+        setMaximumNumberOfPingsPerType(DEFAULT_MAXIMUM_PINGS_PER_TYPE);
     }
 
     /**
@@ -352,5 +355,22 @@ public class TelemetryConfiguration {
      */
     public int getMaximumNumberOfEventsPerPing() {
         return maximumNumberOfEventsPerPing;
+    }
+
+    /**
+     * Set the maximum number of pings that will be stored for a given ping type. If more types
+     * are in the local store then pings will be removed (oldest first). For this to happen the
+     * maximum needs to be reached without any successful upload.
+     */
+    public TelemetryConfiguration setMaximumNumberOfPingsPerType(int maximumNumberOfPingsPerType) {
+        this.maximumNumberOfPingsPerType = maximumNumberOfPingsPerType;
+        return this;
+    }
+
+    /**
+     * Get the maximum number of pings that will be stored (for upload).
+     */
+    public int getMaximumNumberOfPingsPerType() {
+        return maximumNumberOfPingsPerType;
     }
 }

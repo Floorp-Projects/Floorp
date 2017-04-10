@@ -5,6 +5,7 @@
 package org.mozilla.telemetry.storage;
 
 import android.support.annotation.RestrictTo;
+import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
 import org.mozilla.telemetry.config.TelemetryConfiguration;
@@ -22,6 +23,10 @@ import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -48,46 +53,14 @@ public class FileTelemetryStorage implements TelemetryStorage {
     }
 
     @Override
-    public void store(TelemetryPing ping) {
-        final File pingStorageDirectory = new File(storageDirectory, ping.getType());
-        FileUtils.assertDirectory(pingStorageDirectory);
-
-        final String serializedPing = serializer.serialize(ping);
-
-        final File pingFile = new File(pingStorageDirectory, ping.getDocumentId());
-
-        FileOutputStream stream = null;
-
-        try {
-            stream = new FileOutputStream(pingFile, true);
-
-            final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(stream));
-            writer.write(ping.getUploadPath());
-            writer.newLine();
-            writer.write(serializedPing);
-            writer.newLine();
-            writer.flush();
-            writer.close();
-        } catch (IOException e) {
-            Log.w(LOG_TAG, "IOException while writing event to disk", e);
-        } finally {
-            IOUtils.safeClose(stream);
-        }
+    public synchronized void store(TelemetryPing ping) {
+        storePing(ping);
+        maybePrunePings(ping.getType());
     }
 
     @Override
     public boolean process(String pingType, TelemetryStorageCallback callback) {
-        final File pingStorageDirectory = new File(storageDirectory, pingType);
-
-        Pattern uuidPattern = Pattern.compile(FILE_PATTERN);
-
-        final FilenameFilter uuidFilenameFilter = new FileUtils.FilenameRegexFilter(uuidPattern);
-        final File[] files = pingStorageDirectory.listFiles(uuidFilenameFilter);
-        if (files == null) {
-            return true;
-        }
-
-        for (File file : files) {
+        for (File file : listPingFiles(pingType)) {
             FileReader reader = null;
 
             try {
@@ -118,12 +91,77 @@ public class FileTelemetryStorage implements TelemetryStorage {
         return true;
     }
 
+    private void storePing(TelemetryPing ping) {
+        final File pingStorageDirectory = new File(storageDirectory, ping.getType());
+        FileUtils.assertDirectory(pingStorageDirectory);
+
+        final String serializedPing = serializer.serialize(ping);
+
+        final File pingFile = new File(pingStorageDirectory, ping.getDocumentId());
+
+        FileOutputStream stream = null;
+
+        try {
+            stream = new FileOutputStream(pingFile, true);
+
+            final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(stream));
+            writer.write(ping.getUploadPath());
+            writer.newLine();
+            writer.write(serializedPing);
+            writer.newLine();
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            Log.w(LOG_TAG, "IOException while writing event to disk", e);
+        } finally {
+            IOUtils.safeClose(stream);
+        }
+    }
+
+    private void maybePrunePings(final String pingType) {
+        final File[] files = listPingFiles(pingType);
+
+        final int pingsToRemove = files.length - configuration.getMaximumNumberOfPingsPerType();
+
+        if (pingsToRemove <= 0) {
+            return;
+        }
+
+        final List<File> sortedFiles = new ArrayList<>(Arrays.asList(files));
+        Collections.sort(sortedFiles, new FileUtils.FileLastModifiedComparator());
+
+        for (File file : sortedFiles) {
+            System.out.println(file.lastModified() + " " + file.getAbsolutePath());
+        }
+
+        for (int i = 0; i < pingsToRemove; i++) {
+            final File file = sortedFiles.get(i);
+
+            if (!file.delete()) {
+                Log.w(LOG_TAG, "Can't prune ping file: " + file.getAbsolutePath());
+            }
+        }
+    }
+
+    @VisibleForTesting File[] listPingFiles(String pingType) {
+        final File pingStorageDirectory = new File(storageDirectory, pingType);
+
+        final Pattern uuidPattern = Pattern.compile(FILE_PATTERN);
+
+        final FilenameFilter uuidFilenameFilter = new FileUtils.FilenameRegexFilter(uuidPattern);
+        final File[] files = pingStorageDirectory.listFiles(uuidFilenameFilter);
+        if (files == null) {
+            return new File[0];
+        }
+        return files;
+    }
+
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     public int countStoredPings(String pingType) {
         final File pingStorageDirectory = new File(storageDirectory, pingType);
 
-        Pattern uuidPattern = Pattern.compile(FILE_PATTERN);
+        final Pattern uuidPattern = Pattern.compile(FILE_PATTERN);
 
         final FilenameFilter uuidFilenameFilter = new FileUtils.FilenameRegexFilter(uuidPattern);
         final File[] files = pingStorageDirectory.listFiles(uuidFilenameFilter);

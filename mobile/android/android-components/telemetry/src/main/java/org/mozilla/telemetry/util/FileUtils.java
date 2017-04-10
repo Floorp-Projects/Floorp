@@ -8,6 +8,7 @@ import android.support.annotation.RestrictTo;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.Comparator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,6 +46,22 @@ public class FileUtils {
                 mCachedMatcher.reset(filename);
             }
             return mCachedMatcher.matches();
+        }
+    }
+
+    public static class FileLastModifiedComparator implements Comparator<File> {
+        @Override
+        public int compare(final File lhs, final File rhs) {
+            // Long.compare is API 19+.
+            final long lhsModified = lhs.lastModified();
+            final long rhsModified = rhs.lastModified();
+            if (lhsModified < rhsModified) {
+                return -1;
+            } else if (lhsModified == rhsModified) {
+                return 0;
+            } else {
+                return 1;
+            }
         }
     }
 }

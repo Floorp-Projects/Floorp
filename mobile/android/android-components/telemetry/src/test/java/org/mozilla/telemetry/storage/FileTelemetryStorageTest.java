@@ -7,20 +7,24 @@ package org.mozilla.telemetry.storage;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.telemetry.config.TelemetryConfiguration;
+import org.mozilla.telemetry.ping.TelemetryCorePingBuilder;
 import org.mozilla.telemetry.ping.TelemetryPing;
+import org.mozilla.telemetry.serialize.JSONPingSerializer;
 import org.mozilla.telemetry.serialize.TelemetryPingSerializer;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
+import java.io.File;
 import java.util.UUID;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
-
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.verify;
 
 @RunWith(RobolectricTestRunner.class)
@@ -185,5 +189,53 @@ public class FileTelemetryStorageTest {
         assertTrue(processed2);
 
         verify(callback2).onTelemetryPingLoaded(TEST_UPLOAD_PATH, TEST_SERIALIZED_PING);
+    }
+
+    @Test
+    public void testPingsAreRemovedIfLimitsIsReached() {
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application)
+                .setMaximumNumberOfPingsPerType(2);
+
+        final TelemetryPingSerializer serializer = new JSONPingSerializer();
+
+        final FileTelemetryStorage storage = new FileTelemetryStorage(configuration, serializer);
+
+        final TelemetryCorePingBuilder builder = new TelemetryCorePingBuilder(configuration);
+
+        storage.store(builder.build());
+        storage.store(builder.build());
+        storage.store(builder.build());
+        storage.store(builder.build());
+
+        // Only two should actually be stored.
+        assertEquals(2, storage.countStoredPings(TelemetryCorePingBuilder.TYPE));
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
+    public void testOldestFilesAreRemovedFirst() {
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application)
+                .setMaximumNumberOfPingsPerType(2);
+
+        final TelemetryPingSerializer serializer = new JSONPingSerializer();
+
+        final File file1 = mock(File.class);
+        doReturn(10L).when(file1).lastModified();
+
+        final File file2 = mock(File.class);
+        doReturn(5L).when(file2).lastModified();
+
+        final File file3 = mock(File.class);
+        doReturn(20L).when(file3).lastModified();
+
+        final FileTelemetryStorage storage = spy(new FileTelemetryStorage(configuration, serializer));
+        doReturn(new File[] { file1, file2, file3 } ).when(storage).listPingFiles(anyString());
+
+        final TelemetryCorePingBuilder builder = new TelemetryCorePingBuilder(configuration);
+        storage.store(builder.build());
+
+        verify(file1, never()).delete();
+        verify(file2).delete();
+        verify(file3, never()).delete();
     }
 }
