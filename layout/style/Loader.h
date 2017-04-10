@@ -31,7 +31,6 @@ class nsICSSLoaderObserver;
 class nsIConsoleReportCollector;
 class nsIContent;
 class nsIDocument;
-class nsMediaList;
 class nsIStyleSheetLinkingElement;
 
 namespace mozilla {
@@ -300,7 +299,7 @@ public:
    */
   nsresult LoadChildSheet(StyleSheet* aParentSheet,
                           nsIURI* aURL,
-                          nsMediaList* aMedia,
+                          dom::MediaList* aMedia,
                           ImportRule* aGeckoParentRule,
                           const RawServoStyleSheet* aServoChildSheet,
                           LoaderReusableStyleSheets* aSavedSheets);
@@ -503,13 +502,14 @@ private:
                        bool *aIsAlternate,
                        RefPtr<StyleSheet>* aSheet);
 
-  // Pass in either a media string or the nsMediaList from the
-  // CSSParser.  Don't pass both.
+  // Pass in either a media string or the MediaList from the CSSParser.  Don't
+  // pass both.
+  //
   // This method will set the sheet's enabled state based on aIsAlternate
   void PrepareSheet(StyleSheet* aSheet,
                     const nsAString& aTitle,
                     const nsAString& aMediaString,
-                    nsMediaList* aMediaList,
+                    dom::MediaList* aMediaList,
                     dom::Element* aScopeElement,
                     bool aIsAlternate);
 

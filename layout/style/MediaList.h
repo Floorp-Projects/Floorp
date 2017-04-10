@@ -11,6 +11,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/ServoUtils.h"
+#include "mozilla/StyleBackendType.h"
 
 #include "nsIDOMMediaList.h"
 #include "nsWrapperCache.h"
@@ -38,6 +39,12 @@ class MediaList : public nsIDOMMediaList
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaList)
+
+  /**
+   * Creates a MediaList backed by the StyleBackendType of the document.
+   */
+  static already_AddRefed<MediaList> Create(StyleBackendType,
+                                            const nsAString& aMedia);
 
   /**
    * Creates a MediaList backed by the StyleBackendType of the document.
