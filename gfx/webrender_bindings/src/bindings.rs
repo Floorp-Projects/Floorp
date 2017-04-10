@@ -32,6 +32,8 @@ type WrMixBlendMode = MixBlendMode;
 type WrPipelineId = PipelineId;
 type WrRenderedEpochs = Vec<(WrPipelineId, WrEpoch)>;
 type WrRenderer = Renderer;
+type WrSideOffsets2Du32 = WrSideOffsets2D<u32>;
+type WrSideOffsets2Df32 = WrSideOffsets2D<f32>;
 
 static ENABLE_RECORDING: bool = false;
 
@@ -294,7 +296,7 @@ pub struct WrNinePatchDescriptor
 {
     width: u32,
     height: u32,
-    slice: WrSideOffsets2D<u32>,
+    slice: WrSideOffsets2Du32,
 }
 
 impl WrNinePatchDescriptor
@@ -1254,7 +1256,7 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
                                           widths: WrBorderWidths,
                                           image: WrImageKey,
                                           patch: WrNinePatchDescriptor,
-                                          outset: WrSideOffsets2D<f32>,
+                                          outset: WrSideOffsets2Df32,
                                           repeat_horizontal: WrRepeatMode,
                                           repeat_vertical: WrRepeatMode) {
     assert!( unsafe { is_in_main_thread() });
@@ -1278,7 +1280,7 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState, rect: WrRect, 
                                              start_point: WrPoint, end_point: WrPoint,
                                              stops: *const WrGradientStop, stops_count: usize,
                                              extend_mode: WrGradientExtendMode,
-                                             outset: WrSideOffsets2D<f32>) {
+                                             outset: WrSideOffsets2Df32) {
     assert!( unsafe { is_in_main_thread() });
     let stops = WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
@@ -1302,7 +1304,7 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState, rect: W
                                                     radius: WrSize,
                                                     stops: *const WrGradientStop, stops_count: usize,
                                                     extend_mode: WrGradientExtendMode,
-                                                    outset: WrSideOffsets2D<f32>) {
+                                                    outset: WrSideOffsets2Df32) {
     assert!( unsafe { is_in_main_thread() });
     let stops = WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
