@@ -666,7 +666,9 @@ VRSystemManagerOpenVR::HandleInput()
     const uint32_t trackedIndex = controller->GetTrackedIndex();
 
     MOZ_ASSERT(mVRSystem->GetTrackedDeviceClass(trackedIndex)
-               == vr::TrackedDeviceClass_Controller);
+               == vr::TrackedDeviceClass_Controller ||
+               mVRSystem->GetTrackedDeviceClass(trackedIndex)
+               == vr::TrackedDeviceClass_GenericTracker);
 
     if (mVRSystem->GetControllerState(trackedIndex, &state)) {
       for (uint32_t j = 0; j < vr::k_unControllerStateAxisCount; ++j) {
