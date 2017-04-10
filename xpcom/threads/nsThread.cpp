@@ -461,7 +461,7 @@ nsThread::ThreadFunc(void* aArg)
   SetupCurrentThreadForChaosMode();
 
   if (!initData->name.IsEmpty()) {
-    NS_SetCurrentThreadName(initData->name.BeginReading());
+    PR_SetCurrentThreadName(initData->name.BeginReading());
   }
 
   // Inform the ThreadManager

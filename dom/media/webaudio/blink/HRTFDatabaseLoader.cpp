@@ -29,7 +29,6 @@
 #include "HRTFDatabaseLoader.h"
 #include "HRTFDatabase.h"
 #include "GeckoProfiler.h"
-#include "nsThreadUtils.h"
 
 using namespace mozilla;
 
@@ -154,7 +153,7 @@ void HRTFDatabaseLoader::MainThreadRelease()
 static void databaseLoaderEntry(void* threadData)
 {
     AutoProfilerRegister registerThread("HRTFDatabaseLdr");
-    NS_SetCurrentThreadName("HRTFDatabaseLdr");
+    PR_SetCurrentThreadName("HRTFDatabaseLdr");
 
     HRTFDatabaseLoader* loader = reinterpret_cast<HRTFDatabaseLoader*>(threadData);
     MOZ_ASSERT(loader);
