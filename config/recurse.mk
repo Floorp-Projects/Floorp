@@ -68,9 +68,23 @@ CURRENT_DIRS := $($(CURRENT_TIER)_dirs)
 # Need a list of compile targets because we can't use pattern rules:
 # https://savannah.gnu.org/bugs/index.php?42833
 # Only recurse the paths starting with RECURSE_BASE_DIR when provided.
-.PHONY: $(compile_targets)
-$(compile_targets):
+.PHONY: $(compile_targets) $(syms_targets)
+$(compile_targets) $(syms_targets):
 	$(if $(filter $(RECURSE_BASE_DIR)%,$@),$(call RECURSE,$(@F),$(@D)))
+
+$(syms_targets): %/syms: %/target
+
+# Only hook symbols targets into the main compile graph in automation.
+ifdef MOZ_AUTOMATION
+ifdef MOZ_CRASHREPORTER
+recurse_compile: $(syms_targets)
+endif
+endif
+
+# Create a separate rule that depends on every 'syms' target so that
+# symbols can be dumped on demand locally.
+.PHONY: recurse_syms
+recurse_syms: $(syms_targets)
 
 # The compile tier has different rules from other tiers.
 ifneq ($(CURRENT_TIER),compile)
