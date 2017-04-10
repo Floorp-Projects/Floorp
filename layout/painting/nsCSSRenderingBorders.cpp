@@ -3333,8 +3333,8 @@ nsCSSBorderRenderer::DrawBorders()
   if (allBordersSame && mCompositeColors[0] != nullptr && !mNoBorderRadius)
     forceSeparateCorners = true;
 
-  PrintAsString(" mOuterRect: "), PrintAsString(mOuterRect), PrintAsStringNewline();
-  PrintAsString(" mInnerRect: "), PrintAsString(mInnerRect), PrintAsStringNewline();
+  PrintAsString(" mOuterRect: "); PrintAsString(mOuterRect); PrintAsStringNewline();
+  PrintAsString(" mInnerRect: "); PrintAsString(mInnerRect); PrintAsStringNewline();
   PrintAsFormatString(" mBorderColors: 0x%08x 0x%08x 0x%08x 0x%08x\n", mBorderColors[0], mBorderColors[1], mBorderColors[2], mBorderColors[3]);
 
   // if conditioning the outside rect failed, then bail -- the outside
