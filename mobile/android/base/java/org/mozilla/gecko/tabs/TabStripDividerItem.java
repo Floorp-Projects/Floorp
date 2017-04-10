@@ -68,8 +68,16 @@ class TabStripDividerItem extends RecyclerView.ItemDecoration {
     @Override
     public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
         final int position = parent.getChildAdapterPosition(view);
-        final int leftOffset = position == 0 ? 0 : margin;
-        final int rightOffset = position == parent.getAdapter().getItemCount() - 1 ? 0 : margin;
+
+        // RTL positions start from the right, but offsets are still LTR since view is LTR.
+        final int leftOffset, rightOffset;
+        if (ViewUtils.isLayoutRtl(parent)) {
+            leftOffset = position == parent.getAdapter().getItemCount() - 1 ? 0 : margin;
+            rightOffset = position == 0 ? 0 : margin;
+        } else {
+            leftOffset = position == 0 ? 0 : margin;
+            rightOffset = position == parent.getAdapter().getItemCount() - 1 ? 0 : margin;
+        }
 
         outRect.set(leftOffset, 0, rightOffset, 0);
     }
