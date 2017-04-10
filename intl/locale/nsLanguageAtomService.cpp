@@ -62,44 +62,54 @@ nsLanguageAtomService::GetLocaleLanguage()
 }
 
 nsIAtom*
-nsLanguageAtomService::GetLanguageGroup(nsIAtom *aLanguage,
-                                        nsresult *aError)
+nsLanguageAtomService::GetLanguageGroup(nsIAtom* aLanguage,
+                                        nsresult* aError)
 {
-  nsIAtom *retVal;
-  nsresult res = NS_OK;
+  nsIAtom* retVal;
 
   retVal = mLangToGroup.GetWeak(aLanguage);
 
   if (!retVal) {
-    nsAutoCString langStr;
-    aLanguage->ToUTF8String(langStr);
+    nsCOMPtr<nsIAtom> uncached = GetUncachedLanguageGroup(aLanguage, aError);
+    retVal = uncached.get();
 
-    nsAutoCString langGroupStr;
+    // The hashtable will keep an owning reference to the atom
+    mLangToGroup.Put(aLanguage, uncached);
+  }
+
+  return retVal;
+}
+
+already_AddRefed<nsIAtom>
+nsLanguageAtomService::GetUncachedLanguageGroup(nsIAtom* aLanguage,
+                                                nsresult* aError) const
+{
+  nsresult res = NS_OK;
+
+  nsAutoCString langStr;
+  aLanguage->ToUTF8String(langStr);
+
+  nsAutoCString langGroupStr;
+  res = nsUConvPropertySearch::SearchPropertyValue(kLangGroups,
+                                                   ArrayLength(kLangGroups),
+                                                   langStr, langGroupStr);
+  while (NS_FAILED(res)) {
+    int32_t hyphen = langStr.RFindChar('-');
+    if (hyphen <= 0) {
+      langGroupStr.AssignLiteral("x-unicode");
+      break;
+    }
+    langStr.Truncate(hyphen);
     res = nsUConvPropertySearch::SearchPropertyValue(kLangGroups,
                                                      ArrayLength(kLangGroups),
                                                      langStr, langGroupStr);
-    while (NS_FAILED(res)) {
-      int32_t hyphen = langStr.RFindChar('-');
-      if (hyphen <= 0) {
-        langGroupStr.AssignLiteral("x-unicode");
-        break;
-      }
-      langStr.Truncate(hyphen);
-      res = nsUConvPropertySearch::SearchPropertyValue(kLangGroups,
-                                                       ArrayLength(kLangGroups),
-                                                       langStr, langGroupStr);
-    }
-
-    nsCOMPtr<nsIAtom> langGroup = NS_Atomize(langGroupStr);
-
-    // The hashtable will keep an owning reference to the atom
-    mLangToGroup.Put(aLanguage, langGroup);
-    retVal = langGroup.get();
   }
+
+  nsCOMPtr<nsIAtom> langGroup = NS_Atomize(langGroupStr);
 
   if (aError) {
     *aError = res;
   }
 
-  return retVal;
+  return langGroup.forget();
 }

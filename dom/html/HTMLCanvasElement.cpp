@@ -644,11 +644,11 @@ void
 HTMLCanvasElement::ToDataURL(JSContext* aCx, const nsAString& aType,
                              JS::Handle<JS::Value> aParams,
                              nsAString& aDataURL,
-                             CallerType aCallerType,
                              ErrorResult& aRv)
 {
   // do a trust check if this is a write-only canvas
-  if (mWriteOnly && aCallerType != CallerType::System) {
+  if (mWriteOnly &&
+      !nsContentUtils::CallerHasPermission(aCx, NS_LITERAL_STRING("<all_urls>"))) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -827,11 +827,11 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
                           BlobCallback& aCallback,
                           const nsAString& aType,
                           JS::Handle<JS::Value> aParams,
-                          CallerType aCallerType,
                           ErrorResult& aRv)
 {
   // do a trust check if this is a write-only canvas
-  if (mWriteOnly && aCallerType != CallerType::System) {
+  if (mWriteOnly &&
+      !nsContentUtils::CallerHasPermission(aCx, NS_LITERAL_STRING("<all_urls>"))) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }

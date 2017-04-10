@@ -554,7 +554,8 @@ public:
                    InfallibleTArray<FrameScriptInfo>* aFrameScripts,
                    nsCString* aURLToLoad,
                    layers::TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                   uint64_t* aLayersId) override;
+                   uint64_t* aLayersId,
+                   mozilla::layers::CompositorOptions* aCompositorOptions) override;
 
   virtual mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
     PBrowserParent* aThisTab,

@@ -1560,7 +1560,7 @@ fails needs-focus == 568441.html 568441.html
 == 571347-2b.html 571347-2b.html
 fails == 571347-2c.html 571347-2c.html
 == 571347-2d.html 571347-2d.html
-fails == 571347-3.html 571347-3.html
+== 571347-3.html 571347-3.html
 fails == 572598-1.html 572598-1.html
 fails == 574898-1.html 574898-1.html
 # 574907 is a windows-only issue, result on other platforms depends on details of font support

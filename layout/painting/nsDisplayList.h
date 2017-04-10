@@ -2711,43 +2711,6 @@ protected:
   Type mType;
 };
 
-/**
- * Generic display item that can contain overflow. Use this in lieu of
- * nsDisplayGeneric if you have a frame that should use the visual overflow
- * rect of its frame when drawing items, instead of the frame's bounds.
- */
-class nsDisplayGenericOverflow : public nsDisplayGeneric {
-  public:
-    nsDisplayGenericOverflow(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                             PaintCallback aPaint, const char* aName, Type aType)
-      : nsDisplayGeneric(aBuilder, aFrame, aPaint, aName, aType)
-    {
-      MOZ_COUNT_CTOR(nsDisplayGenericOverflow);
-    }
-    // XXX: should be removed eventually
-    nsDisplayGenericOverflow(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                             OldPaintCallback aOldPaint, const char* aName, Type aType)
-      : nsDisplayGeneric(aBuilder, aFrame, aOldPaint, aName, aType)
-    {
-      MOZ_COUNT_CTOR(nsDisplayGenericOverflow);
-    }
-  #ifdef NS_BUILD_REFCNT_LOGGING
-    virtual ~nsDisplayGenericOverflow() {
-      MOZ_COUNT_DTOR(nsDisplayGenericOverflow);
-    }
-  #endif
-
-    /**
-     * Returns the frame's visual overflow rect instead of the frame's bounds.
-     */
-    virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                             bool* aSnap) override
-    {
-      *aSnap = false;
-      return Frame()->GetVisualOverflowRect() + ToReferenceFrame();
-    }
-};
-
 #if defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF)
 /**
  * This class implements painting of reflow counts.  Ideally, we would simply

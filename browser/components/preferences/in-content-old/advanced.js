@@ -55,9 +55,11 @@ var gAdvancedPane = {
 
     if (Services.prefs.getBoolPref("browser.storageManager.enabled")) {
       Services.obs.addObserver(this, "sitedatamanager:sites-updated", false);
+      Services.obs.addObserver(this, "sitedatamanager:updating-sites", false);
       let unload = () => {
         window.removeEventListener("unload", unload);
         Services.obs.removeObserver(this, "sitedatamanager:sites-updated");
+        Services.obs.removeObserver(this, "sitedatamanager:updating-sites");
       };
       window.addEventListener("unload", unload);
       SiteDataManager.updateSites();
@@ -68,6 +70,8 @@ var gAdvancedPane = {
 
       let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "storage-permissions";
       document.getElementById("siteDataLearnMoreLink").setAttribute("href", url);
+      let siteDataGroup = document.getElementById("siteDataGroup");
+      siteDataGroup.hidden = false;
     }
 
     setEventListener("layers.acceleration.disabled", "change",
@@ -358,16 +362,22 @@ var gAdvancedPane = {
     gSubDialog.open("chrome://browser/content/preferences/siteDataSettings.xul");
   },
 
-  updateTotalSiteDataSize() {
-    SiteDataManager.getTotalUsage()
-      .then(usage => {
-        let size = DownloadUtils.convertByteUnits(usage);
-        let prefStrBundle = document.getElementById("bundlePreferences");
-        let totalSiteDataSizeLabel = document.getElementById("totalSiteDataSize");
-        totalSiteDataSizeLabel.textContent = prefStrBundle.getFormattedString("totalSiteDataSize", size);
-        let siteDataGroup = document.getElementById("siteDataGroup");
-        siteDataGroup.hidden = false;
-      });
+  toggleSiteData(shouldShow) {
+    let clearButton = document.getElementById("clearSiteDataButton");
+    let settingsButton = document.getElementById("siteDataSettings");
+    clearButton.disabled = !shouldShow;
+    settingsButton.disabled = !shouldShow;
+  },
+
+  updateTotalDataSizeLabel(usage) {
+    let prefStrBundle = document.getElementById("bundlePreferences");
+    let totalSiteDataSizeLabel = document.getElementById("totalSiteDataSize");
+    if (usage < 0) {
+      totalSiteDataSizeLabel.textContent = prefStrBundle.getString("loadingSiteDataSize");
+    } else {
+      let size = DownloadUtils.convertByteUnits(usage);
+      totalSiteDataSizeLabel.textContent = prefStrBundle.getFormattedString("totalSiteDataSize", size);
+    }
   },
 
   // Retrieves the amount of space currently used by disk cache
@@ -791,16 +801,22 @@ var gAdvancedPane = {
   },
 
   observe(aSubject, aTopic, aData) {
-    if (AppConstants.MOZ_UPDATER) {
-      switch (aTopic) {
-        case "nsPref:changed":
-          this.updateReadPrefs();
-          break;
+    switch (aTopic) {
+      case "nsPref:changed":
+        this.updateReadPrefs();
+        break;
 
-        case "sitedatamanager:sites-updated":
-          this.updateTotalSiteDataSize();
-          break;
-      }
+      case "sitedatamanager:updating-sites":
+        // While updating, we want to disable this section and display loading message until updated
+        this.toggleSiteData(false);
+        this.updateTotalDataSizeLabel(-1);
+        break;
+
+      case "sitedatamanager:sites-updated":
+        this.toggleSiteData(true);
+        SiteDataManager.getTotalUsage()
+          .then(this.updateTotalDataSizeLabel.bind(this));
+        break;
     }
   },
 };

@@ -112,25 +112,6 @@ CrossProcessCompositorBridgeParent::DeallocPLayerTransactionParent(PLayerTransac
   return true;
 }
 
-mozilla::ipc::IPCResult
-CrossProcessCompositorBridgeParent::RecvGetCompositorOptions(const uint64_t& aLayersId,
-                                                             CompositorOptions* aOptions)
-{
-  // Check to see if this child process has access to this layer tree.
-  if (!LayerTreeOwnerTracker::Get()->IsMapped(aLayersId, OtherPid())) {
-    NS_ERROR("Unexpected layers id in RecvGetCompositorOptions; dropping message...");
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  CompositorBridgeParent::LayerTreeState& state = sIndirectLayerTrees[aLayersId];
-
-  if (state.mParent) {
-    *aOptions = state.mParent->GetOptions();
-  }
-  return IPC_OK();
-}
-
 PAPZCTreeManagerParent*
 CrossProcessCompositorBridgeParent::AllocPAPZCTreeManagerParent(const uint64_t& aLayersId)
 {
@@ -250,7 +231,8 @@ CrossProcessCompositorBridgeParent::DeallocPWebRenderBridgeParent(PWebRenderBrid
 }
 
 mozilla::ipc::IPCResult
-CrossProcessCompositorBridgeParent::RecvNotifyChildCreated(const uint64_t& child)
+CrossProcessCompositorBridgeParent::RecvNotifyChildCreated(const uint64_t& child,
+                                                           CompositorOptions* aOptions)
 {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   for (LayerTreeMap::iterator it = sIndirectLayerTrees.begin();
@@ -258,6 +240,7 @@ CrossProcessCompositorBridgeParent::RecvNotifyChildCreated(const uint64_t& child
     CompositorBridgeParent::LayerTreeState* lts = &it->second;
     if (lts->mParent && lts->mCrossProcessParent == this) {
       lts->mParent->NotifyChildCreated(child);
+      *aOptions = lts->mParent->GetOptions();
       return IPC_OK();
     }
   }
@@ -265,7 +248,9 @@ CrossProcessCompositorBridgeParent::RecvNotifyChildCreated(const uint64_t& child
 }
 
 mozilla::ipc::IPCResult
-CrossProcessCompositorBridgeParent::RecvMapAndNotifyChildCreated(const uint64_t& child, const base::ProcessId& pid)
+CrossProcessCompositorBridgeParent::RecvMapAndNotifyChildCreated(const uint64_t& child,
+                                                                 const base::ProcessId& pid,
+                                                                 CompositorOptions* aOptions)
 {
   // This can only be called from the browser process, as the mapping
   // ensures proper window ownership of layer trees.
