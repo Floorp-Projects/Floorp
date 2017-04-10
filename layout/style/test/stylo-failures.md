@@ -149,11 +149,8 @@ to mochitest command.
 * test_hover_quirk.html: hover quirks [6]
 * url value from decl setter bug 1330503
   * test_compute_data_with_start_struct.html `border-image-source` [2]
-  * ... `mask-image` [2]
   * test_inherit_computation.html `border-image` [2]
-  * ... `mask-image` [4]
   * test_initial_computation.html `border-image` [4]
-  * ... `mask-image` [8]
 * Unimplemented prefixed properties:
   * -moz-border-*-colors bug 1348173
     * test_compute_data_with_start_struct.html `-colors` [8]
