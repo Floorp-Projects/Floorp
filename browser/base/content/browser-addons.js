@@ -642,34 +642,25 @@ var LightWeightThemeWebInstaller = {
       return;
     }
 
-    let allowButtonText =
-      gNavigatorBundle.getString("lwthemeInstallRequest.allowButton");
-    let allowButtonAccesskey =
-      gNavigatorBundle.getString("lwthemeInstallRequest.allowButton.accesskey");
-    let message =
-      gNavigatorBundle.getFormattedString("lwthemeInstallRequest.message",
-                                          [uri.host]);
-    let buttons = [{
-      label: allowButtonText,
-      accessKey: allowButtonAccesskey,
-      callback() {
+    let strings = {
+      header: gNavigatorBundle.getFormattedString("webextPerms.header", [data.name]),
+      text: gNavigatorBundle.getFormattedString("lwthemeInstallRequest.message2",
+                                                [uri.host]),
+      acceptText: gNavigatorBundle.getString("lwthemeInstallRequest.allowButton2"),
+      acceptKey: gNavigatorBundle.getString("lwthemeInstallRequest.allowButton.accesskey2"),
+      cancelText: gNavigatorBundle.getString("webextPerms.cancel.label"),
+      cancelKey: gNavigatorBundle.getString("webextPerms.cancel.accessKey"),
+      msgs: []
+    };
+    ExtensionsUI.showPermissionsPrompt(gBrowser.selectedBrowser, strings, null,
+      "installWeb").then(answer => {
+      if (answer) {
         LightWeightThemeWebInstaller._install(data, notify);
       }
-    }];
-
-    this._removePreviousNotifications();
-
-    let notificationBox = gBrowser.getNotificationBox();
-    let notificationBar =
-      notificationBox.appendNotification(message, "lwtheme-install-request", "",
-                                         notificationBox.PRIORITY_INFO_MEDIUM,
-                                         buttons);
-    notificationBar.persistence = 1;
+    });
   },
 
   _install(newLWTheme, notify) {
-    let previousLWTheme = this._manager.currentTheme;
-
     let listener = {
       onEnabling(aAddon, aRequiresRestart) {
         if (!aRequiresRestart) {
@@ -698,7 +689,7 @@ var LightWeightThemeWebInstaller = {
 
       onEnabled(aAddon) {
         if (notify) {
-          LightWeightThemeWebInstaller._postInstallNotification(newLWTheme, previousLWTheme);
+          ExtensionsUI.showInstallNotification(gBrowser.selectedBrowser, newLWTheme);
         }
       }
     };
@@ -706,49 +697,6 @@ var LightWeightThemeWebInstaller = {
     AddonManager.addAddonListener(listener);
     this._manager.currentTheme = newLWTheme;
     AddonManager.removeAddonListener(listener);
-  },
-
-  _postInstallNotification(newTheme, previousTheme) {
-    function text(id) {
-      return gNavigatorBundle.getString("lwthemePostInstallNotification." + id);
-    }
-
-    let buttons = [{
-      label: text("undoButton"),
-      accessKey: text("undoButton.accesskey"),
-      callback() {
-        LightWeightThemeWebInstaller._manager.forgetUsedTheme(newTheme.id);
-        LightWeightThemeWebInstaller._manager.currentTheme = previousTheme;
-      }
-    }, {
-      label: text("manageButton"),
-      accessKey: text("manageButton.accesskey"),
-      callback() {
-        BrowserOpenAddonsMgr("addons://list/theme");
-      }
-    }];
-
-    this._removePreviousNotifications();
-
-    let notificationBox = gBrowser.getNotificationBox();
-    let notificationBar =
-      notificationBox.appendNotification(text("message"),
-                                         "lwtheme-install-notification", "",
-                                         notificationBox.PRIORITY_INFO_MEDIUM,
-                                         buttons);
-    notificationBar.persistence = 1;
-    notificationBar.timeout = Date.now() + 20000; // 20 seconds
-  },
-
-  _removePreviousNotifications() {
-    let box = gBrowser.getNotificationBox();
-
-    ["lwtheme-install-request",
-     "lwtheme-install-notification"].forEach(function(value) {
-        let notification = box.getNotificationWithValue(value);
-        if (notification)
-          box.removeNotification(notification);
-      });
   },
 
   _preview(dataString, baseURI) {
