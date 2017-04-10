@@ -6,6 +6,7 @@ package org.mozilla.telemetry.schedule.jobscheduler;
 
 import android.app.job.JobParameters;
 import android.app.job.JobService;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
@@ -17,8 +18,13 @@ import org.mozilla.telemetry.net.TelemetryClient;
 import org.mozilla.telemetry.ping.TelemetryPingBuilder;
 import org.mozilla.telemetry.storage.TelemetryStorage;
 
+import java.util.Calendar;
+
 public class TelemetryJobService extends JobService {
     private static final String LOG_TAG = "TelemetryJobService";
+
+    private static final String PREFERENCE_UPLOAD_COUNT_PREFIX = "upload_count_";
+    private static final String PREFERENCE_LAST_UPLOAD_PREFIX = "last_uploade_";
 
     private UploadPingsTask uploadTask;
 
@@ -48,6 +54,7 @@ public class TelemetryJobService extends JobService {
 
     @VisibleForTesting public void uploadPingsInBackground(AsyncTask task, JobParameters parameters) {
         final Telemetry telemetry = TelemetryHolder.get();
+        final TelemetryConfiguration configuration = telemetry.getConfiguration();
         final TelemetryStorage storage = telemetry.getStorage();
 
         for (TelemetryPingBuilder builder : telemetry.getBuilders()) {
@@ -64,9 +71,14 @@ public class TelemetryJobService extends JobService {
                 continue;
             }
 
+            if (hasReachedUploadLimit(configuration, pingType)) {
+                Log.d(LOG_TAG, "Daily upload limit for type " + pingType + " reached");
+                continue;
+            }
+
             if (!performPingUpload(telemetry, pingType)) {
-                Log.i(LOG_TAG, "Upload failed. Rescheduling job.");
-                jobFinished(parameters, true);
+                Log.i(LOG_TAG, "Upload aborted. Rescheduling job if limit not reached.");
+                jobFinished(parameters, !hasReachedUploadLimit(configuration, pingType));
                 return;
             }
         }
@@ -75,7 +87,57 @@ public class TelemetryJobService extends JobService {
         jobFinished(parameters, false);
     }
 
-    private boolean performPingUpload(Telemetry telemetry, String pingType) {
+    /**
+     * Increment the upload counter for this ping type.
+     */
+    private boolean incrementUploadCount(TelemetryConfiguration configuration, String pingType) {
+        final SharedPreferences preferences = configuration.getSharedPreferences();
+
+        final long lastUpload = preferences.getLong(PREFERENCE_LAST_UPLOAD_PREFIX + pingType, 0);
+        final long now = now();
+
+        final long count = isSameDay(lastUpload, now)
+                ? preferences.getLong(PREFERENCE_UPLOAD_COUNT_PREFIX + pingType, 0) + 1
+                : 1;
+
+        preferences.edit()
+                .putLong(PREFERENCE_LAST_UPLOAD_PREFIX + pingType, now)
+                .putLong(PREFERENCE_UPLOAD_COUNT_PREFIX + pingType, count)
+                .apply();
+
+        return true;
+    }
+
+    /**
+     * Return true if the upload limit for this ping type has been reached.
+     */
+    private boolean hasReachedUploadLimit(TelemetryConfiguration configuration, String pingType) {
+        final SharedPreferences preferences = configuration.getSharedPreferences();
+
+        final long lastUpload = preferences.getLong(PREFERENCE_LAST_UPLOAD_PREFIX + pingType, 0);
+        final long count = preferences.getLong(PREFERENCE_UPLOAD_COUNT_PREFIX + pingType, 0);
+
+        return isSameDay(lastUpload, now())
+                && count >= configuration.getMaximumNumberOfPingUploadsPerDay();
+    }
+
+    @VisibleForTesting boolean isSameDay(long timestamp1, long timestamp2) {
+        final Calendar calendar1 = Calendar.getInstance();
+        calendar1.setTimeInMillis(timestamp1);
+
+        final Calendar calendar2 = Calendar.getInstance();
+        calendar2.setTimeInMillis(timestamp2);
+
+        return (calendar1.get(Calendar.ERA) == calendar2.get(Calendar.ERA) &&
+                calendar1.get(Calendar.YEAR) == calendar2.get(Calendar.YEAR) &&
+                calendar1.get(Calendar.DAY_OF_YEAR) == calendar2.get(Calendar.DAY_OF_YEAR));
+    }
+
+    @VisibleForTesting long now() {
+        return System.currentTimeMillis();
+    }
+
+    private boolean performPingUpload(Telemetry telemetry, final String pingType) {
         final TelemetryConfiguration configuration = telemetry.getConfiguration();
         final TelemetryStorage storage = telemetry.getStorage();
         final TelemetryClient client = telemetry.getClient();
@@ -83,9 +145,10 @@ public class TelemetryJobService extends JobService {
         return storage.process(pingType, new TelemetryStorage.TelemetryStorageCallback() {
             @Override
             public boolean onTelemetryPingLoaded(String path, String serializedPing) {
-                return client.uploadPing(configuration, path, serializedPing);
+                return !hasReachedUploadLimit(configuration, pingType)
+                        && client.uploadPing(configuration, path, serializedPing)
+                        && incrementUploadCount(configuration, pingType);
             }
         });
-
     }
 }

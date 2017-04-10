@@ -159,13 +159,6 @@ public class FileTelemetryStorage implements TelemetryStorage {
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     public int countStoredPings(String pingType) {
-        final File pingStorageDirectory = new File(storageDirectory, pingType);
-
-        final Pattern uuidPattern = Pattern.compile(FILE_PATTERN);
-
-        final FilenameFilter uuidFilenameFilter = new FileUtils.FilenameRegexFilter(uuidPattern);
-        final File[] files = pingStorageDirectory.listFiles(uuidFilenameFilter);
-
-        return files != null ? files.length : 0;
+        return listPingFiles(pingType).length;
     }
 }

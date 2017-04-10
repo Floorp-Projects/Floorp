@@ -34,6 +34,7 @@ public class TelemetryConfiguration {
     private static final String DEFAULT_UPDATE_CHANNEL = "unknown";
     private static final int DEFAULT_MAXIMUM_NUMBER_OF_PINGS_PER_EVENT = 500;
     private static final int DEFAULT_MAXIMUM_PINGS_PER_TYPE = 40;
+    private static final int DEFAULT_MAXIMUM_PING_UPLOADS_PER_DAY = 100;
 
     private final Context context;
 
@@ -53,6 +54,7 @@ public class TelemetryConfiguration {
     private int minimumEventsForUpload;
     private int maximumNumberOfEventsPerPing;
     private int maximumNumberOfPingsPerType;
+    private int maximumNumberOfPingUploadsPerDay;
 
     public TelemetryConfiguration(Context context) {
         this.context = context.getApplicationContext();
@@ -73,6 +75,7 @@ public class TelemetryConfiguration {
         setUploadEnabled(true);
         setMaximumNumberOfEventsPerPing(DEFAULT_MAXIMUM_NUMBER_OF_PINGS_PER_EVENT);
         setMaximumNumberOfPingsPerType(DEFAULT_MAXIMUM_PINGS_PER_TYPE);
+        setMaximumNumberOfPingUploadsPerDay(DEFAULT_MAXIMUM_PING_UPLOADS_PER_DAY);
     }
 
     /**
@@ -372,5 +375,22 @@ public class TelemetryConfiguration {
      */
     public int getMaximumNumberOfPingsPerType() {
         return maximumNumberOfPingsPerType;
+    }
+
+    /**
+     * Get the maximum number of pings that should be uploaded per day.
+     */
+    public int getMaximumNumberOfPingUploadsPerDay() {
+        return maximumNumberOfPingUploadsPerDay;
+    }
+
+    /**
+     * Set the maximum number of pings uploaded per day. This limit is enforced for every type. If
+     * you have 2 ping types and set a limit of 100 pings per day then in total 200 pings per day
+     * could be uploaded.
+     */
+    public TelemetryConfiguration setMaximumNumberOfPingUploadsPerDay(int maximumNumberOfPingUploadsPerDay) {
+        this.maximumNumberOfPingUploadsPerDay = maximumNumberOfPingUploadsPerDay;
+        return this;
     }
 }
