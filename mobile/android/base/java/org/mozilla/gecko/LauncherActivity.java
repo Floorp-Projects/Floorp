@@ -65,9 +65,7 @@ public class LauncherActivity extends Activity {
         } else if (!isViewIntentWithURL(safeIntent)) {
             dispatchNormalIntent();
 
-        // Is this a custom tabs intent, and are custom tabs enabled?
-        } else if (AppConstants.MOZ_ANDROID_CUSTOM_TABS && isCustomTabsIntent(safeIntent)
-                && isCustomTabsEnabled()) {
+        } else if (isCustomTabsIntent(safeIntent)) {
             dispatchCustomTabsIntent();
 
         // Can we dispatch this VIEW action intent to the tab queue service?
@@ -156,10 +154,6 @@ public class LauncherActivity extends Activity {
 
     private static boolean isWebAppIntent(@NonNull final SafeIntent safeIntent) {
         return GeckoApp.ACTION_WEBAPP.equals(safeIntent.getAction());
-    }
-
-    private boolean isCustomTabsEnabled() {
-        return GeckoSharedPrefs.forApp(this).getBoolean(GeckoPreferences.PREFS_CUSTOM_TABS, false);
     }
 
     private boolean isDeepLink(SafeIntent intent) {
