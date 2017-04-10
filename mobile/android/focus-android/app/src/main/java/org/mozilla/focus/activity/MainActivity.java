@@ -143,6 +143,8 @@ public class MainActivity extends AppCompatActivity {
                 .replace(R.id.container,
                         BrowserFragment.create(url), BrowserFragment.FRAGMENT_TAG)
                 .commit();
+
+        TelemetryWrapper.browseIntentEvent();
     }
 
     @Override

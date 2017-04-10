@@ -213,6 +213,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             goBack();
         } else {
             eraseAndShowHomeScreen();
+
+            TelemetryWrapper.eraseBackEvent();
         }
 
         return true;

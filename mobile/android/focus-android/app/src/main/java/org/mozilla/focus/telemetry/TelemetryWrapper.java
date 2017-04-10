@@ -54,6 +54,7 @@ public final class TelemetryWrapper {
         private static final String BACKGROUND = "background";
         private static final String SHARE = "share";
         private static final String OPEN = "open";
+        private static final String INTENT_URL = "intent_url";
     }
 
     private static class Object {
@@ -62,12 +63,14 @@ public final class TelemetryWrapper {
         private static final String SETTING = "setting";
         private static final String APP = "app";
         private static final String MENU = "menu";
+        private static final String BACK_BUTTON = "back_button";
     }
 
     private static class Value {
         private static final String DEFAULT = "default";
         private static final String FIREFOX = "firefox";
         private static final String SELECTION = "selection";
+        private static final String ERASE = "erase";
     }
 
     private static class Extra {
@@ -172,6 +175,10 @@ public final class TelemetryWrapper {
         TelemetryEvent.create(Category.ACTION, Method.TYPE_URL, Object.SEARCH_BAR).queue();
     }
 
+    public static void browseIntentEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.INTENT_URL, Object.APP).queue();
+    }
+
     private static void searchEnterEvent() {
         Telemetry telemetry = TelemetryHolder.get();
 
@@ -196,6 +203,10 @@ public final class TelemetryWrapper {
 
     public static void eraseEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.ERASE_BUTTON).queue();
+    }
+
+    public static void eraseBackEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.BACK_BUTTON, Value.ERASE).queue();
     }
 
     public static void settingsEvent(String key, String value) {
