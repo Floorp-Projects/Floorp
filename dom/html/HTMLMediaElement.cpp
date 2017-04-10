@@ -7366,14 +7366,12 @@ HTMLMediaElement::ConstructMediaTracks(const MediaInfo* aInfo)
 void
 HTMLMediaElement::RemoveMediaTracks()
 {
-  AudioTrackList* audioList = AudioTracks();
-  if (audioList) {
-    audioList->RemoveTracks();
+  if (mAudioTrackList) {
+    mAudioTrackList->RemoveTracks();
   }
 
-  VideoTrackList* videoList = VideoTracks();
-  if (videoList) {
-    videoList->RemoveTracks();
+  if (mVideoTrackList) {
+    mVideoTrackList->RemoveTracks();
   }
 }
 
