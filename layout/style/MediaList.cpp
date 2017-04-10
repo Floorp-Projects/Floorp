@@ -72,10 +72,10 @@ MediaList::DoMediaChange(Func aCallback)
 }
 
 /* static */ already_AddRefed<MediaList>
-MediaList::Create(nsIDocument* aDocument, const nsAString& aMedia)
+MediaList::Create(const nsIDocument& aDocument,
+                  const nsAString& aMedia)
 {
-  MOZ_ASSERT(aDocument);
-  if (aDocument->IsStyledByServo()) {
+  if (aDocument.IsStyledByServo()) {
     RefPtr<ServoMediaList> mediaList = new ServoMediaList(aMedia);
     return mediaList.forget();
   }
