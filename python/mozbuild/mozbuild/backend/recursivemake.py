@@ -418,6 +418,7 @@ class RecursiveMakeBackend(CommonBackend):
             'misc': set(),
             'tools': set(),
             'check': set(),
+            'syms': set(),
         }
 
     def summary(self):
@@ -568,6 +569,7 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, Program):
             self._process_program(obj.program, backend_file)
             self._process_linked_libraries(obj, backend_file)
+            self._no_skip['syms'].add(backend_file.relobjdir)
 
         elif isinstance(obj, HostProgram):
             self._process_host_program(obj.program, backend_file)
@@ -576,6 +578,7 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, SimpleProgram):
             self._process_simple_program(obj, backend_file)
             self._process_linked_libraries(obj, backend_file)
+            self._no_skip['syms'].add(backend_file.relobjdir)
 
         elif isinstance(obj, HostSimpleProgram):
             self._process_host_simple_program(obj.program, backend_file)
@@ -612,6 +615,7 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, SharedLibrary):
             self._process_shared_library(obj, backend_file)
             self._process_linked_libraries(obj, backend_file)
+            self._no_skip['syms'].add(backend_file.relobjdir)
 
         elif isinstance(obj, StaticLibrary):
             self._process_static_library(obj, backend_file)
@@ -751,6 +755,8 @@ class RecursiveMakeBackend(CommonBackend):
         # https://savannah.gnu.org/bugs/index.php?42833
         root_mk.add_statement('compile_targets := %s' % ' '.join(sorted(
             set(self._compile_graph.keys()) | all_compile_deps)))
+        root_mk.add_statement('syms_targets := %s' % ' '.join(sorted(
+            set('%s/syms' % d for d in self._no_skip['syms']))))
 
         root_mk.add_statement('include root-deps.mk')
 

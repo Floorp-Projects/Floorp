@@ -547,6 +547,8 @@ host:: $(HOST_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(HOST_RUST_PROGR
 
 target:: $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(RUST_LIBRARY_FILE) $(RUST_PROGRAMS)
 
+syms::
+
 include $(MOZILLA_DIR)/config/makefiles/target_binaries.mk
 endif
 
