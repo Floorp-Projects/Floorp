@@ -31,19 +31,19 @@ def write_elf(filename):
 def write_macho(filename):
     open(filename, "wb").write(struct.pack("<I28x", 0xfeedface))
 
-def write_pdb(filename):
+def write_dll(filename):
     open(filename, "w").write("aaa")
-    # write out a fake DLL too
-    open(os.path.splitext(filename)[0] + ".dll", "w").write("aaa")
+    # write out a fake PDB too
+    open(os.path.splitext(filename)[0] + ".pdb", "w").write("aaa")
 
 def target_platform():
     return buildconfig.substs['OS_TARGET']
 
-writer = {'WINNT': write_pdb,
+writer = {'WINNT': write_dll,
           'Linux': write_elf,
           'Sunos5': write_elf,
           'Darwin': write_macho}[target_platform()]
-extension = {'WINNT': ".pdb",
+extension = {'WINNT': ".dll",
              'Linux': ".so",
              'Sunos5': ".so",
              'Darwin': ".dylib"}[target_platform()]
@@ -219,8 +219,8 @@ class TestCopyDebug(HelperMixin, unittest.TestCase):
         """
         Test that CopyDebug copies binaries as well on Windows.
         """
-        test_file = os.path.join(self.test_dir, 'foo.pdb')
-        write_pdb(test_file)
+        test_file = os.path.join(self.test_dir, 'foo.dll')
+        write_dll(test_file)
         code_file = 'foo.dll'
         code_id = 'abc123'
         self.stdouts.append(mock_dump_syms('X' * 33, 'foo.pdb',
@@ -541,7 +541,7 @@ class TestFunctional(HelperMixin, unittest.TestCase):
             self.target_bin = os.path.join(buildconfig.topobjdir,
                                            'browser',
                                            'app',
-                                           'firefox.pdb')
+                                           'firefox.exe')
         else:
             self.dump_syms = os.path.join(buildconfig.topobjdir,
                                           'dist', 'host', 'bin',
