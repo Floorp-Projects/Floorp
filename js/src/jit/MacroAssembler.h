@@ -2291,6 +2291,19 @@ ToMIRType(MIRType t)
     return t;
 }
 
+static inline MIRType
+ToMIRType(ABIArgType argType)
+{
+    switch (argType & ArgType_Mask) {
+      case ArgType_General: return MIRType::Int32;
+      case ArgType_Double:  return MIRType::Double;
+      case ArgType_Float32: return MIRType::Float32;
+      case ArgType_Int64:   return MIRType::Int64;
+      default: break;
+    }
+    MOZ_CRASH("unexpected argType");
+}
+
 template <class VecT>
 class ABIArgIter
 {

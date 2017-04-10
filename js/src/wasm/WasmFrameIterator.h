@@ -89,6 +89,7 @@ enum class ExitReason : uint32_t
     None,          // default state, the pc is in wasm code
     ImportJit,     // fast-path call directly into JIT code
     ImportInterp,  // slow-path call into C++ Invoke()
+    ImportNative,  // fast-path call directly into native C++ code
     Trap,          // call to trap handler for the trap in WasmActivation::trap
     DebugTrap      // call to debug trap handler
 };
