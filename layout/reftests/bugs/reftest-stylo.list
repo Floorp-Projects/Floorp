@@ -656,7 +656,7 @@ fails == 372037-1.html 372037-1.html
 == 372323-1.xhtml 372323-1.xhtml
 == 372553-1.html 372553-1.html
 == 372632-1.html 372632-1.html
-fails == 372768-1.html 372768-1.html
+== 372768-1.html 372768-1.html
 == 373295-1.html 373295-1.html
 == 373298-1.html 373298-1.html
 == 373381-1.html 373381-1.html
@@ -989,8 +989,8 @@ fails == 416106-1.xhtml 416106-1.xhtml
 == 417178-1.html 417178-1.html
 == 417246-1.html 417246-1.html
 == 417676.html 417676.html
-fails asserts(1) == 418574-1.html 418574-1.html
-fails asserts(1) == 418574-2.html 418574-2.html
+asserts-if(stylo,1-2) == 418574-1.html 418574-1.html # bug 478135
+asserts-if(stylo,1-2) == 418574-2.html 418574-2.html # bug 478135
 == 418766-1a.html 418766-1a.html
 == 418766-1b.html 418766-1b.html
 == 419060.html 419060.html
@@ -1678,7 +1678,7 @@ fails == 645647-1.html 645647-1.html
 needs-focus == 652301-1a.html 652301-1a.html
 needs-focus == 652301-1b.html 652301-1b.html
 fails == 652775-1.html 652775-1.html
-fails == 653930-1.html 653930-1.html
+== 653930-1.html 653930-1.html
 HTTP(..) == 654057-1.html 654057-1.html
 fails == 654950-1.html 654950-1.html
 == 655549-1.html 655549-1.html

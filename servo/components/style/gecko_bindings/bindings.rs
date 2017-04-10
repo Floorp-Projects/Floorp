@@ -16,9 +16,11 @@ use gecko_bindings::structs::RawGeckoAnimationValueList;
 use gecko_bindings::structs::RawServoAnimationValue;
 use gecko_bindings::structs::RawServoAnimationValueMap;
 use gecko_bindings::structs::RawServoDeclarationBlock;
+use gecko_bindings::structs::RawServoStyleRule;
 use gecko_bindings::structs::RawGeckoPresContext;
 use gecko_bindings::structs::RawGeckoPresContextOwned;
 use gecko_bindings::structs::RawGeckoStyleAnimationList;
+use gecko_bindings::structs::RawGeckoServoStyleRuleList;
 use gecko_bindings::structs::RawGeckoURLExtraData;
 use gecko_bindings::structs::RefPtr;
 use gecko_bindings::structs::CSSPseudoClassType;
@@ -28,6 +30,7 @@ use gecko_bindings::structs::ComputedTimingFunction_BeforeFlag;
 use gecko_bindings::structs::FontFamilyList;
 use gecko_bindings::structs::FontFamilyType;
 use gecko_bindings::structs::FontSizePrefs;
+use gecko_bindings::structs::GeckoFontMetrics;
 use gecko_bindings::structs::Keyframe;
 use gecko_bindings::structs::ServoBundledURI;
 use gecko_bindings::structs::ServoElementSnapshot;
@@ -207,8 +210,6 @@ pub type RawServoDeclarationBlockBorrowedOrNull<'a> = Option<&'a RawServoDeclara
 pub type RawServoStyleRuleStrong = ::gecko_bindings::sugar::ownership::Strong<RawServoStyleRule>;
 pub type RawServoStyleRuleBorrowed<'a> = &'a RawServoStyleRule;
 pub type RawServoStyleRuleBorrowedOrNull<'a> = Option<&'a RawServoStyleRule>;
-enum RawServoStyleRuleVoid { }
-pub struct RawServoStyleRule(RawServoStyleRuleVoid);
 pub type RawServoImportRuleStrong = ::gecko_bindings::sugar::ownership::Strong<RawServoImportRule>;
 pub type RawServoImportRuleBorrowed<'a> = &'a RawServoImportRule;
 pub type RawServoImportRuleBorrowedOrNull<'a> = Option<&'a RawServoImportRule>;
@@ -306,6 +307,10 @@ pub type RawGeckoFontFaceRuleListBorrowed<'a> = &'a RawGeckoFontFaceRuleList;
 pub type RawGeckoFontFaceRuleListBorrowedOrNull<'a> = Option<&'a RawGeckoFontFaceRuleList>;
 pub type RawGeckoFontFaceRuleListBorrowedMut<'a> = &'a mut RawGeckoFontFaceRuleList;
 pub type RawGeckoFontFaceRuleListBorrowedMutOrNull<'a> = Option<&'a mut RawGeckoFontFaceRuleList>;
+pub type RawGeckoServoStyleRuleListBorrowed<'a> = &'a RawGeckoServoStyleRuleList;
+pub type RawGeckoServoStyleRuleListBorrowedOrNull<'a> = Option<&'a RawGeckoServoStyleRuleList>;
+pub type RawGeckoServoStyleRuleListBorrowedMut<'a> = &'a mut RawGeckoServoStyleRuleList;
+pub type RawGeckoServoStyleRuleListBorrowedMutOrNull<'a> = Option<&'a mut RawGeckoServoStyleRuleList>;
 
 extern "C" {
     pub fn Gecko_EnsureTArrayCapacity(aArray: *mut ::std::os::raw::c_void,
@@ -1075,6 +1080,12 @@ extern "C" {
 }
 extern "C" {
     pub fn Gecko_GetBaseSize(lang: *mut nsIAtom) -> FontSizePrefs;
+}
+extern "C" {
+    pub fn Gecko_GetFontMetrics(pres_context: RawGeckoPresContextBorrowed,
+                                is_vertical: bool, font: *const nsStyleFont,
+                                font_size: nscoord, use_user_font_set: bool)
+     -> GeckoFontMetrics;
 }
 extern "C" {
     pub fn Gecko_GetMediaFeatures() -> *const nsMediaFeature;
@@ -1910,6 +1921,11 @@ extern "C" {
 extern "C" {
     pub fn Servo_Element_GetSnapshot(element: RawGeckoElementBorrowed)
      -> *mut ServoElementSnapshot;
+}
+extern "C" {
+    pub fn Servo_Element_GetStyleRuleList(element: RawGeckoElementBorrowed,
+                                          rules:
+                                              RawGeckoServoStyleRuleListBorrowedMut);
 }
 extern "C" {
     pub fn Servo_NoteExplicitHints(element: RawGeckoElementBorrowed,
