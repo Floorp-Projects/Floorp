@@ -262,6 +262,8 @@ public:
   void SetMaskOp(uint8_t aMaskOp) { mMaskOp = aMaskOp; }
   void PurgeCacheForViewportChange(const mozilla::Maybe<nsSize>& aSVGViewportSize,
                                    const bool aHasRatio);
+  nsStyleImageType GetType() const { return mType; }
+  already_AddRefed<nsStyleGradient> GetGradientData();
 
 private:
   /**
