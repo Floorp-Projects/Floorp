@@ -278,8 +278,6 @@ to mochitest command.
     * test_value_storage.html `-moz-middle-with-baseline` [1]
   * -moz-pre-space on white-space
     * test_value_storage.html `-moz-pre-space` [1]
-  * -moz-crisp-edges on image-rendering
-    * test_value_storage.html `-moz-crisp-edges` [1]
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
   * test_pixel_lengths.html `mozmm`: mozmm unit [3]
