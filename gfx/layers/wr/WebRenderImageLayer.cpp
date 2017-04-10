@@ -172,7 +172,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 }
 
 Maybe<WrImageMask>
-WebRenderImageLayer::RenderMaskLayer()
+WebRenderImageLayer::RenderMaskLayer(const gfx::Matrix4x4& aTransform)
 {
   if (!mContainer) {
      return Nothing();
@@ -225,7 +225,8 @@ WebRenderImageLayer::RenderMaskLayer()
   gfx::IntSize size = image->GetSize();
   WrImageMask imageMask;
   imageMask.image = key;
-  imageMask.rect = wr::ToWrRect(Rect(0, 0, size.width, size.height));
+  Rect maskRect = aTransform.TransformBounds(Rect(0, 0, size.width, size.height));
+  imageMask.rect = wr::ToWrRect(maskRect);
   imageMask.repeat = false;
   return Some(imageMask);
 }

@@ -112,7 +112,10 @@ WebRenderLayer::BuildWrMaskLayer()
 {
   if (GetLayer()->GetMaskLayer()) {
     WebRenderLayer* maskLayer = ToWebRenderLayer(GetLayer()->GetMaskLayer());
-    return maskLayer->RenderMaskLayer();
+    // The size of mask layer is transformed, and we also push the layer transform to wr stacking context.
+    // So we should apply inverse transform for mask layer.
+    gfx::Matrix4x4 transform = GetWrBoundTransform();
+    return maskLayer->RenderMaskLayer(transform.Inverse());
   }
 
   return Nothing();
@@ -142,18 +145,24 @@ WebRenderLayer::GetWrClipRect(gfx::Rect& aRect)
   return clip;
 }
 
+gfx::Matrix4x4
+WebRenderLayer::GetWrBoundTransform()
+{
+  gfx::Matrix4x4 transform = GetLayer()->GetTransform();
+  transform._41 = 0.0f;
+  transform._42 = 0.0f;
+  transform._43 = 0.0f;
+  return transform;
+}
+
 gfx::Rect
 WebRenderLayer::GetWrRelBounds()
 {
   gfx::Rect relBounds = VisibleBoundsRelativeToParent();
-  gfx::Matrix4x4 transform = GetLayer()->GetTransform();
+  gfx::Matrix4x4 transform = GetWrBoundTransform();
   if (!transform.IsIdentity()) {
     // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
-    gfx::Matrix4x4 boundTransform = transform;
-    boundTransform._41 = 0.0f;
-    boundTransform._42 = 0.0f;
-    boundTransform._43 = 0.0f;
-    relBounds.MoveTo(boundTransform.TransformPoint(relBounds.TopLeft()));
+    relBounds.MoveTo(transform.TransformPoint(relBounds.TopLeft()));
   }
 
   return relBounds;
