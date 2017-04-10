@@ -54,9 +54,6 @@ if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
         'LoadLibraryRemote.cpp',
     ]
 
-if CONFIG['ENABLE_TESTS']:
-    DIRS += ['test/gtest']
-
 TEST_DIRS += ['test']
 
 EXPORTS += [
