@@ -135,10 +135,13 @@ pub extern "C" fn rusturl_get_port(urlptr: Option<&Url>, port: &mut i32) -> nsre
   match url.port() {
     Some(p) => {
       *port = p as i32;
-      NS_OK
     }
-    None => NS_ERROR_FAILURE
+    None => {
+      // NOTE: Gecko uses -1 to represent the default port
+      *port = -1;
+    }
   }
+  NS_OK
 }
 
 #[no_mangle]
