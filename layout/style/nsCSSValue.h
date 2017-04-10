@@ -135,6 +135,14 @@ public:
 
   bool HasRef() const;
 
+  // This function takes a guess whether the URL has a fragment, by searching
+  // for a hash character. It definitely returns false if we know it can't
+  // have a fragment because it has no hash character.
+  //
+  // MightHaveRef can be used in any thread, whereas HasRef can only be used
+  // in the main thread.
+  bool MightHaveRef() const;
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(URLValueData)
 
   // When matching a url with mIsLocalRef set, resolve it against aURI;
@@ -159,6 +167,7 @@ private:
   mutable bool mURIResolved;
   // mIsLocalRef is set when url starts with a U+0023 number sign(#) character.
   mutable Maybe<bool> mIsLocalRef;
+  mutable Maybe<bool> mMightHaveRef;
 
 protected:
   virtual ~URLValueData() = default;
