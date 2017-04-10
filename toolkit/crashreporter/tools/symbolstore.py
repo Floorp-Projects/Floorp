@@ -705,7 +705,7 @@ class Dumper:
                     self.output(sys.stdout, rel_path)
                     if self.srcsrv and vcs_root:
                         # add source server indexing to the pdb file
-                        self.SourceServerIndexing(file, guid, sourceFileStream, vcs_root)
+                        self.SourceServerIndexing(debug_file, guid, sourceFileStream, vcs_root)
                     # only copy debug the first time if we have multiple architectures
                     if self.copy_debug and arch_num == 0:
                         self.CopyDebug(file, debug_file, guid,
@@ -731,13 +731,13 @@ class Dumper_Win32(Dumper):
     fixedFilenameCaseCache = {}
 
     def ShouldProcess(self, file):
-        """This function will allow processing of pdb files that have dll
-        or exe files with the same base name next to them."""
+        """This function will allow processing of exe or dll files that have pdb
+        files with the same base name next to them."""
         if not Dumper.ShouldProcess(self, file):
             return False
-        if file.endswith(".pdb"):
-            (path,ext) = os.path.splitext(file)
-            if os.path.isfile(path + ".exe") or os.path.isfile(path + ".dll"):
+        if file.endswith(".exe") or file.endswith(".dll"):
+            path, ext = os.path.splitext(file)
+            if os.path.isfile(path + ".pdb"):
                 return True
         return False
 
@@ -788,6 +788,7 @@ class Dumper_Win32(Dumper):
         return result
 
     def CopyDebug(self, file, debug_file, guid, code_file, code_id):
+        file = "%s.pdb" % os.path.splitext(file)[0]
         def compress(path):
             compressed_file = path[:-1] + '_'
             # ignore makecab's output
@@ -836,7 +837,6 @@ class Dumper_Win32(Dumper):
 
     def SourceServerIndexing(self, debug_file, guid, sourceFileStream, vcs_root):
         # Creates a .pdb.stream file in the mozilla\objdir to be used for source indexing
-        debug_file = os.path.abspath(debug_file)
         streamFilename = debug_file + ".stream"
         stream_output_path = os.path.abspath(streamFilename)
         # Call SourceIndex to create the .stream file
