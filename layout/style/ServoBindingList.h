@@ -285,6 +285,8 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetBackgroundImage, void,
 
 // MediaList
 SERVO_BINDING_FUNC(Servo_MediaList_Create, RawServoMediaListStrong)
+SERVO_BINDING_FUNC(Servo_MediaList_DeepClone, RawServoMediaListStrong,
+                   RawServoMediaListBorrowed list)
 SERVO_BINDING_FUNC(Servo_MediaList_Matches, bool,
                    RawServoMediaListBorrowed list,
                    RawServoStyleSetBorrowed set)
