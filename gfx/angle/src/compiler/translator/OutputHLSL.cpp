@@ -31,16 +31,28 @@
 namespace sh
 {
 
-namespace
+void OutputHLSL::writeFloat(TInfoSinkBase &out, float f)
 {
+    // This is known not to work for NaN on all drivers but make the best effort to output NaNs
+    // regardless.
+    if ((gl::isInf(f) || gl::isNaN(f)) && mShaderVersion >= 300 &&
+        mOutputType == SH_HLSL_4_1_OUTPUT)
+    {
+        out << "asfloat(" << gl::bitCast<uint32_t>(f) << "u)";
+    }
+    else
+    {
+        out << std::min(FLT_MAX, std::max(-FLT_MAX, f));
+    }
+}
 
-void WriteSingleConstant(TInfoSinkBase &out, const TConstantUnion *const constUnion)
+void OutputHLSL::writeSingleConstant(TInfoSinkBase &out, const TConstantUnion *const constUnion)
 {
     ASSERT(constUnion != nullptr);
     switch (constUnion->getType())
     {
         case EbtFloat:
-            out << std::min(FLT_MAX, std::max(-FLT_MAX, constUnion->getFConst()));
+            writeFloat(out, constUnion->getFConst());
             break;
         case EbtInt:
             out << constUnion->getIConst();
@@ -56,14 +68,14 @@ void WriteSingleConstant(TInfoSinkBase &out, const TConstantUnion *const constUn
     }
 }
 
-const TConstantUnion *WriteConstantUnionArray(TInfoSinkBase &out,
-                                              const TConstantUnion *const constUnion,
-                                              const size_t size)
+const TConstantUnion *OutputHLSL::writeConstantUnionArray(TInfoSinkBase &out,
+                                                          const TConstantUnion *const constUnion,
+                                                          const size_t size)
 {
     const TConstantUnion *constUnionIterated = constUnion;
     for (size_t i = 0; i < size; i++, constUnionIterated++)
     {
-        WriteSingleConstant(out, constUnionIterated);
+        writeSingleConstant(out, constUnionIterated);
 
         if (i != size - 1)
         {
@@ -72,8 +84,6 @@ const TConstantUnion *WriteConstantUnionArray(TInfoSinkBase &out,
     }
     return constUnionIterated;
 }
-
-} // namespace
 
 OutputHLSL::OutputHLSL(sh::GLenum shaderType,
                        int shaderVersion,
@@ -2571,7 +2581,7 @@ const TConstantUnion *OutputHLSL::writeConstantUnion(TInfoSinkBase &out,
         {
             out << TypeString(type) << "(";
         }
-        constUnionIterated = WriteConstantUnionArray(out, constUnionIterated, size);
+        constUnionIterated = writeConstantUnionArray(out, constUnionIterated, size);
         if (writeType)
         {
             out << ")";
@@ -2632,7 +2642,7 @@ bool OutputHLSL::writeConstantInitialization(TInfoSinkBase &out,
         {
             TIntermConstantUnion *nodeConst  = expression->getAsConstantUnion();
             const TConstantUnion *constUnion = nodeConst->getUnionArrayPointer();
-            WriteConstantUnionArray(out, constUnion, nodeConst->getType().getObjectSize());
+            writeConstantUnionArray(out, constUnion, nodeConst->getType().getObjectSize());
         }
         else
         {
@@ -2643,7 +2653,7 @@ bool OutputHLSL::writeConstantInitialization(TInfoSinkBase &out,
                 TIntermConstantUnion *nodeConst = node->getAsConstantUnion();
                 ASSERT(nodeConst);
                 const TConstantUnion *constUnion = nodeConst->getUnionArrayPointer();
-                WriteConstantUnionArray(out, constUnion, nodeConst->getType().getObjectSize());
+                writeConstantUnionArray(out, constUnion, nodeConst->getType().getObjectSize());
                 if (node != constructor->getSequence()->back())
                 {
                     out << ", ";

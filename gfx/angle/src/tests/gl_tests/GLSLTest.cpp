@@ -1246,30 +1246,6 @@ TEST_P(GLSLTest, MaxMinusTwoVaryingVec4PlusThreeSpecialVariables)
     VaryingTestBase(0, 0, 0, 0, 0, 0, maxVaryings - 2, 0, true, true, true, true);
 }
 
-// Disabled because drivers are allowed to successfully compile shaders that have more than the
-// maximum number of varyings. (http://anglebug.com/1296)
-TEST_P(GLSLTest, DISABLED_MaxVaryingVec4PlusFragCoord)
-{
-    GLint maxVaryings = 0;
-    glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
-
-    // Generate shader code that uses gl_FragCoord, a special fragment shader variables.
-    // This test should fail, since we are really using (maxVaryings + 1) varyings.
-    VaryingTestBase(0, 0, 0, 0, 0, 0, maxVaryings, 0, true, false, false, false);
-}
-
-// Disabled because drivers are allowed to successfully compile shaders that have more than the
-// maximum number of varyings. (http://anglebug.com/1296)
-TEST_P(GLSLTest, DISABLED_MaxVaryingVec4PlusPointCoord)
-{
-    GLint maxVaryings = 0;
-    glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
-
-    // Generate shader code that uses gl_FragCoord, a special fragment shader variables.
-    // This test should fail, since we are really using (maxVaryings + 1) varyings.
-    VaryingTestBase(0, 0, 0, 0, 0, 0, maxVaryings, 0, false, true, false, false);
-}
-
 TEST_P(GLSLTest, MaxVaryingVec3)
 {
     GLint maxVaryings = 0;
@@ -1378,56 +1354,6 @@ TEST_P(GLSLTest, MaxVaryingVec2Arrays)
     glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
 
     VaryingTestBase(0, 0, 0, maxVaryings, 0, 0, 0, 0, false, false, false, true);
-}
-
-// Disabled because drivers are allowed to successfully compile shaders that have more than the
-// maximum number of varyings. (http://anglebug.com/1296)
-TEST_P(GLSLTest, DISABLED_MaxPlusOneVaryingVec3)
-{
-    GLint maxVaryings = 0;
-    glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
-
-    VaryingTestBase(0, 0, 0, 0, maxVaryings + 1, 0, 0, 0, false, false, false, false);
-}
-
-// Disabled because drivers are allowed to successfully compile shaders that have more than the
-// maximum number of varyings. (http://anglebug.com/1296)
-TEST_P(GLSLTest, DISABLED_MaxPlusOneVaryingVec3Array)
-{
-    GLint maxVaryings = 0;
-    glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
-
-    VaryingTestBase(0, 0, 0, 0, 0, maxVaryings / 2 + 1, 0, 0, false, false, false, false);
-}
-
-// Disabled because drivers are allowed to successfully compile shaders that have more than the
-// maximum number of varyings. (http://anglebug.com/1296)
-TEST_P(GLSLTest, DISABLED_MaxVaryingVec3AndOneVec2)
-{
-    GLint maxVaryings = 0;
-    glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
-
-    VaryingTestBase(0, 0, 1, 0, maxVaryings, 0, 0, 0, false, false, false, false);
-}
-
-// Disabled because drivers are allowed to successfully compile shaders that have more than the
-// maximum number of varyings. (http://anglebug.com/1296)
-TEST_P(GLSLTest, DISABLED_MaxPlusOneVaryingVec2)
-{
-    GLint maxVaryings = 0;
-    glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
-
-    VaryingTestBase(0, 0, 2 * maxVaryings + 1, 0, 0, 0, 0, 0, false, false, false, false);
-}
-
-// Disabled because drivers are allowed to successfully compile shaders that have more than the
-// maximum number of varyings. (http://anglebug.com/1296)
-TEST_P(GLSLTest, DISABLED_MaxVaryingVec3ArrayAndMaxPlusOneFloatArray)
-{
-    GLint maxVaryings = 0;
-    glGetIntegerv(GL_MAX_VARYING_VECTORS, &maxVaryings);
-
-    VaryingTestBase(0, maxVaryings / 2 + 1, 0, 0, 0, 0, 0, maxVaryings / 2, false, false, false, false);
 }
 
 // Verify shader source with a fixed length that is less than the null-terminated length will compile.
@@ -2425,6 +2351,48 @@ TEST_P(GLSLTest_ES3, FoldedInvalidLeftShift)
     GLuint program = CompileProgram(mSimpleVSSource, fragmentShader);
     EXPECT_EQ(0u, program);
     glDeleteProgram(program);
+}
+
+// Test that literal infinity can be written out from the shader translator.
+// A similar test can't be made for NaNs, since ESSL 3.00.6 requirements for NaNs are very loose.
+TEST_P(GLSLTest_ES3, LiteralInfinityOutput)
+{
+    const std::string &fragmentShader =
+        "#version 300 es\n"
+        "precision highp float;\n"
+        "out vec4 out_color;\n"
+        "uniform float u;\n"
+        "void main()\n"
+        "{\n"
+        "   float infVar = 1.0e40 - u;\n"
+        "   bool correct = isinf(infVar) && infVar > 0.0;\n"
+        "   out_color = correct ? vec4(0.0, 1.0, 0.0, 1.0) : vec4(1.0, 0.0, 0.0, 1.0);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that literal negative infinity can be written out from the shader translator.
+// A similar test can't be made for NaNs, since ESSL 3.00.6 requirements for NaNs are very loose.
+TEST_P(GLSLTest_ES3, LiteralNegativeInfinityOutput)
+{
+    const std::string &fragmentShader =
+        "#version 300 es\n"
+        "precision highp float;\n"
+        "out vec4 out_color;\n"
+        "uniform float u;\n"
+        "void main()\n"
+        "{\n"
+        "   float infVar = -1.0e40 + u;\n"
+        "   bool correct = isinf(infVar) && infVar < 0.0;\n"
+        "   out_color = correct ? vec4(0.0, 1.0, 0.0, 1.0) : vec4(1.0, 0.0, 0.0, 1.0);\n"
+        "}\n";
+
+    ANGLE_GL_PROGRAM(program, mSimpleVSSource, fragmentShader);
+    drawQuad(program.get(), "inputAttribute", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
 }
 
 }  // anonymous namespace

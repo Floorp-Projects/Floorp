@@ -7,6 +7,7 @@
 #include "compiler/translator/OutputGLSLBase.h"
 
 #include "common/debug.h"
+#include "common/mathutil.h"
 
 #include <cfloat>
 
@@ -109,6 +110,18 @@ void TOutputGLSLBase::writeInvariantQualifier(const TType &type)
     {
         TInfoSinkBase &out = objSink();
         out << "invariant ";
+    }
+}
+
+void TOutputGLSLBase::writeFloat(TInfoSinkBase &out, float f)
+{
+    if ((gl::isInf(f) || gl::isNaN(f)) && mShaderVersion >= 300)
+    {
+        out << "uintBitsToFloat(" << gl::bitCast<uint32_t>(f) << "u)";
+    }
+    else
+    {
+        out << std::min(FLT_MAX, std::max(-FLT_MAX, f));
     }
 }
 
@@ -329,8 +342,8 @@ const TConstantUnion *TOutputGLSLBase::writeConstantUnion(
             switch (pConstUnion->getType())
             {
               case EbtFloat:
-                out << std::min(FLT_MAX, std::max(-FLT_MAX, pConstUnion->getFConst()));
-                break;
+                  writeFloat(out, pConstUnion->getFConst());
+                  break;
               case EbtInt:
                 out << pConstUnion->getIConst();
                 break;
@@ -376,10 +389,7 @@ void TOutputGLSLBase::writeConstructorTriplet(Visit visit, const TType &type)
 void TOutputGLSLBase::visitSymbol(TIntermSymbol *node)
 {
     TInfoSinkBase &out = objSink();
-    if (mLoopUnrollStack.needsToReplaceSymbolWithValue(node))
-        out << mLoopUnrollStack.getLoopIndexValue(node);
-    else
-        out << hashVariableName(node->getName());
+    out << hashVariableName(node->getName());
 
     if (mDeclaringVariables && node->getType().isArray())
         out << arrayBrackets(node->getType());
@@ -1124,49 +1134,22 @@ bool TOutputGLSLBase::visitLoop(Visit visit, TIntermLoop *node)
 
     TLoopType loopType = node->getType();
 
-    // Only for loops can be unrolled
-    ASSERT(!node->getUnrollFlag() || loopType == ELoopFor);
-
     if (loopType == ELoopFor)  // for loop
     {
-        if (!node->getUnrollFlag())
-        {
-            out << "for (";
-            if (node->getInit())
-                node->getInit()->traverse(this);
-            out << "; ";
+        out << "for (";
+        if (node->getInit())
+            node->getInit()->traverse(this);
+        out << "; ";
 
-            if (node->getCondition())
-                node->getCondition()->traverse(this);
-            out << "; ";
+        if (node->getCondition())
+            node->getCondition()->traverse(this);
+        out << "; ";
 
-            if (node->getExpression())
-                node->getExpression()->traverse(this);
-            out << ")\n";
+        if (node->getExpression())
+            node->getExpression()->traverse(this);
+        out << ")\n";
 
-            visitCodeBlock(node->getBody());
-        }
-        else
-        {
-            // Need to put a one-iteration loop here to handle break.
-            TIntermSequence *declSeq = node->getInit()->getAsDeclarationNode()->getSequence();
-            TIntermSymbol *indexSymbol =
-                (*declSeq)[0]->getAsBinaryNode()->getLeft()->getAsSymbolNode();
-            TString name = hashVariableName(indexSymbol->getName());
-            out << "for (int " << name << " = 0; "
-                << name << " < 1; "
-                << "++" << name << ")\n";
-
-            out << "{\n";
-            mLoopUnrollStack.push(node);
-            while (mLoopUnrollStack.satisfiesLoopCondition())
-            {
-                visitCodeBlock(node->getBody());
-                mLoopUnrollStack.step();
-            }
-            mLoopUnrollStack.pop();
-            out << "}\n";
-        }
+        visitCodeBlock(node->getBody());
     }
     else if (loopType == ELoopWhile)  // while loop
     {

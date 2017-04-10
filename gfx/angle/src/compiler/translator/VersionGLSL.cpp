@@ -6,6 +6,8 @@
 
 #include "compiler/translator/VersionGLSL.h"
 
+#include "angle_gl.h"
+
 namespace sh
 {
 
@@ -54,6 +56,10 @@ TVersionGLSL::TVersionGLSL(sh::GLenum type,
     if (pragma.stdgl.invariantAll)
     {
         ensureVersionIsAtLeast(GLSL_VERSION_120);
+    }
+    if (type == GL_COMPUTE_SHADER)
+    {
+        ensureVersionIsAtLeast(GLSL_VERSION_430);
     }
 }
 

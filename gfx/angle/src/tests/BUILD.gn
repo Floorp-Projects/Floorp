@@ -169,6 +169,9 @@ if (build_angle_deqp_tests) {
       include_dirs += [ "../deqp/src/framework/platform/win32" ]
       cflags = deqp_gypi.deqp_win_cflags
     }
+    if (is_android) {
+      include_dirs += [ "../../../deqp/src/framework/platform/android" ]
+    }
     defines = deqp_gypi.deqp_defines
     defines += [ "_MBCS" ]
 
@@ -239,6 +242,8 @@ if (build_angle_deqp_tests) {
           rebase_path(deqp_gypi.deqp_libtester_sources_unix, ".", "../..")
     }
     if (is_android) {
+      sources +=
+          rebase_path(deqp_gypi.deqp_libtester_sources_android, ".", "../..")
       libs = [ "log" ]
     }
   }

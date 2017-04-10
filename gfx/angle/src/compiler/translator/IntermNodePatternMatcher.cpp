@@ -106,4 +106,13 @@ bool IntermNodePatternMatcher::match(TIntermTernary *node)
     return false;
 }
 
+bool IntermNodePatternMatcher::match(TIntermDeclaration *node)
+{
+    if ((mMask & kMultiDeclaration) != 0)
+    {
+        return node->getSequence()->size() > 1;
+    }
+    return false;
+}
+
 }  // namespace sh

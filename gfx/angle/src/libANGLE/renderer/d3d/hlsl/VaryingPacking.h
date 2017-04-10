@@ -8,15 +8,22 @@
 //   for linking between shader stages.
 //
 
-#ifndef LIBANGLE_RENDERER_D3D_VARYINGPACKING_H_
-#define LIBANGLE_RENDERER_D3D_VARYINGPACKING_H_
+#ifndef LIBANGLE_RENDERER_D3D_HLSL_VARYINGPACKING_H_
+#define LIBANGLE_RENDERER_D3D_HLSL_VARYINGPACKING_H_
 
-#include "libANGLE/renderer/d3d/RendererD3D.h"
+#include <GLSLANG/ShaderVars.h>
+
+#include "angle_gl.h"
+#include "common/angleutils.h"
+#include "libANGLE/renderer/d3d/hlsl/hlsl_utils.h"
+
+namespace gl
+{
+class InfoLog;
+}
 
 namespace rx
 {
-class ProgramD3DMetadata;
-
 struct PackedVarying
 {
     PackedVarying(const sh::ShaderVariable &varyingIn, sh::InterpolationType interpolationIn)
@@ -101,9 +108,13 @@ class VaryingPacking final : angle::NonCopyable
   public:
     VaryingPacking(GLuint maxVaryingVectors);
 
-    bool packVaryings(gl::InfoLog &infoLog,
-                      const std::vector<PackedVarying> &packedVaryings,
-                      const std::vector<std::string> &transformFeedbackVaryings);
+    bool packUserVaryings(gl::InfoLog &infoLog,
+                          const std::vector<PackedVarying> &packedVaryings,
+                          const std::vector<std::string> &transformFeedbackVaryings);
+
+    // Some built-in varyings require emulation that eats up available registers. This method
+    // checks that we're within the register limits of the implementation.
+    bool validateBuiltins() const;
 
     struct Register
     {
@@ -124,8 +135,6 @@ class VaryingPacking final : angle::NonCopyable
         return static_cast<unsigned int>(mRegisterList.size());
     }
     unsigned int getRegisterCount() const;
-
-    void enableBuiltins(ShaderType shaderType, const ProgramD3DMetadata &programMetadata);
 
     struct BuiltinVarying final : angle::NonCopyable
     {
@@ -151,6 +160,7 @@ class VaryingPacking final : angle::NonCopyable
     };
 
     const BuiltinInfo &builtins(ShaderType shaderType) const { return mBuiltinInfo[shaderType]; }
+    BuiltinInfo &builtins(ShaderType shaderType) { return mBuiltinInfo[shaderType]; }
 
     bool usesPointSize() const { return mBuiltinInfo[SHADER_VERTEX].glPointSize.enabled; }
 
@@ -172,4 +182,4 @@ class VaryingPacking final : angle::NonCopyable
 
 }  // namespace rx
 
-#endif  // LIBANGLE_RENDERER_D3D_VARYINGPACKING_H_
+#endif  // LIBANGLE_RENDERER_D3D_HLSL_VARYINGPACKING_H_

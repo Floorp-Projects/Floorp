@@ -17,9 +17,9 @@
 #include "angle_gl.h"
 #include "angle_test_configs.h"
 #include "common/angleutils.h"
+#include "common/vector_utils.h"
 #include "shader_utils.h"
 #include "system_utils.h"
-#include "Vector.h"
 
 #define EXPECT_GL_ERROR(err) EXPECT_EQ(static_cast<GLenum>(err), glGetError())
 #define EXPECT_GL_NO_ERROR() EXPECT_EQ(static_cast<GLenum>(GL_NO_ERROR), glGetError())
@@ -48,7 +48,7 @@ struct GLColorRGB
 {
     GLColorRGB();
     GLColorRGB(GLubyte r, GLubyte g, GLubyte b);
-    GLColorRGB(const Vector3 &floatColor);
+    GLColorRGB(const angle::Vector3 &floatColor);
 
     GLubyte R, G, B;
 
@@ -63,10 +63,10 @@ struct GLColor
 {
     GLColor();
     GLColor(GLubyte r, GLubyte g, GLubyte b, GLubyte a);
-    GLColor(const Vector4 &floatColor);
+    GLColor(const angle::Vector4 &floatColor);
     GLColor(GLuint colorValue);
 
-    Vector4 toNormalizedVector() const;
+    angle::Vector4 toNormalizedVector() const;
 
     GLubyte R, G, B, A;
 
@@ -160,7 +160,7 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
                   GLfloat positionAttribZ,
                   GLfloat positionAttribXYScale,
                   bool useVertexBuffer);
-    static std::array<Vector3, 6> GetQuadVertices();
+    static std::array<angle::Vector3, 6> GetQuadVertices();
     void drawIndexedQuad(GLuint program,
                          const std::string &positionAttribName,
                          GLfloat positionAttribZ);
@@ -171,6 +171,7 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
 
     static GLuint compileShader(GLenum type, const std::string &source);
     static bool extensionEnabled(const std::string &extName);
+    static bool extensionRequestable(const std::string &extName);
     static bool eglClientExtensionEnabled(const std::string &extName);
     static bool eglDeviceExtensionEnabled(EGLDeviceEXT device, const std::string &extName);
 
@@ -246,6 +247,7 @@ bool IsD3DSM3();
 bool IsDesktopOpenGL();
 bool IsOpenGLES();
 bool IsOpenGL();
+bool IsNULL();
 
 // Operating systems
 bool IsAndroid();

@@ -73,6 +73,8 @@ void InitBuiltInIsnanFunctionEmulatorForGLSLWorkarounds(BuiltInFunctionEmulator 
         "    }\n"
         "    return isnan;\n"
         "}\n");
+    emu->addEmulatedFunction(EOpFaceForward, float1, float1, float1, "#define webgl_faceforward_emu(N, I, Nref) (((Nref) * (I) < 0.0) ? (N) : -(N))");
+
 }
 
 // Emulate built-in functions missing from GLSL 1.30 and higher

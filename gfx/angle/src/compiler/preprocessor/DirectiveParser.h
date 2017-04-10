@@ -24,7 +24,8 @@ class DirectiveParser : public Lexer
     DirectiveParser(Tokenizer *tokenizer,
                     MacroSet *macroSet,
                     Diagnostics *diagnostics,
-                    DirectiveHandler *directiveHandler);
+                    DirectiveHandler *directiveHandler,
+                    int maxMacroExpansionDepth);
 
     void lex(Token *token) override;
 
@@ -76,6 +77,7 @@ class DirectiveParser : public Lexer
     Diagnostics *mDiagnostics;
     DirectiveHandler *mDirectiveHandler;
     int mShaderVersion;
+    int mMaxMacroExpansionDepth;
 };
 
 }  // namespace pp

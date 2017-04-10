@@ -336,6 +336,11 @@ inline GLenum FramebufferBindingToEnum(FramebufferBinding binding)
             return GL_NONE;
     }
 }
-}
+}  // namespace angle
+
+namespace gl
+{
+class ContextState;
+}  // namespace gl
 
 #endif // LIBANGLE_ANGLETYPES_H_

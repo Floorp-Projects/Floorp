@@ -319,6 +319,10 @@ static_library("libANGLE") {
     defines += [ "ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES={ " + "\"d3dcompiler_47.dll\", \"d3dcompiler_46.dll\", \"d3dcompiler_43.dll\" }" ]
   }
 
+  if (angle_enable_hlsl) {
+    sources += rebase_path(gles_gypi.libangle_d3d_hlsl_sources, ".", "src")
+  }
+
   if (angle_enable_d3d9) {
     sources += rebase_path(gles_gypi.libangle_d3d9_sources, ".", "src")
     libs += [ "d3d9.lib" ]

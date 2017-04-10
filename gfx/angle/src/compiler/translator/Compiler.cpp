@@ -16,7 +16,6 @@
 #include "compiler/translator/DeferGlobalInitializers.h"
 #include "compiler/translator/EmulateGLFragColorBroadcast.h"
 #include "compiler/translator/EmulatePrecision.h"
-#include "compiler/translator/ForLoopUnroll.h"
 #include "compiler/translator/Initialize.h"
 #include "compiler/translator/InitializeParseContext.h"
 #include "compiler/translator/InitializeVariables.h"
@@ -113,7 +112,7 @@ bool RemoveInvariant(sh::GLenum shaderType,
         return true;
 
     if ((compileOptions & SH_REMOVE_INVARIANT_AND_CENTROID_FOR_ESSL3) != 0 &&
-        shaderVersion >= 300 && shaderType == GL_VERTEX_SHADER && IsGLSL410OrOlder(outputType))
+        shaderVersion >= 300 && shaderType == GL_VERTEX_SHADER)
         return true;
 
     return false;
@@ -121,7 +120,7 @@ bool RemoveInvariant(sh::GLenum shaderType,
 
 size_t GetGlobalMaxTokenSize(ShShaderSpec spec)
 {
-    // WebGL defines a max token legnth of 256, while ES2 leaves max token
+    // WebGL defines a max token length of 256, while ES2 leaves max token
     // size undefined. ES3 defines a max size of 1024 characters.
     switch (spec)
     {
@@ -370,26 +369,6 @@ TIntermBlock *TCompiler::compileTreeImpl(const char *const shaderStrings[],
             }
         }
 
-        // Unroll for-loop markup needs to happen after validateLimitations pass.
-        if (success && (compileOptions & SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX))
-        {
-            ForLoopUnrollMarker marker(ForLoopUnrollMarker::kIntegerIndex,
-                                       shouldRunLoopAndIndexingValidation(compileOptions));
-            root->traverse(&marker);
-        }
-        if (success && (compileOptions & SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX))
-        {
-            ForLoopUnrollMarker marker(ForLoopUnrollMarker::kSamplerArrayIndex,
-                                       shouldRunLoopAndIndexingValidation(compileOptions));
-            root->traverse(&marker);
-            if (marker.samplerArrayIndexIsFloatLoopIndex())
-            {
-                infoSink.info.prefix(EPrefixError);
-                infoSink.info << "sampler array index is float loop index";
-                success = false;
-            }
-        }
-
         // Built-in function emulation needs to happen after validateLimitations pass.
         if (success)
         {
@@ -506,17 +485,6 @@ bool TCompiler::compile(const char *const shaderStrings[],
         compileOptions |= SH_FLATTEN_PRAGMA_STDGL_INVARIANT_ALL;
     }
 
-    ShCompileOptions unrollFlags =
-        SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX | SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX;
-    if ((compileOptions & SH_ADD_AND_TRUE_TO_LOOP_CONDITION) != 0 &&
-        (compileOptions & unrollFlags) != 0)
-    {
-        infoSink.info.prefix(EPrefixError);
-        infoSink.info
-            << "Unsupported compile flag combination: unroll & ADD_TRUE_TO_LOOP_CONDITION";
-        return false;
-    }
-
     TScopedPoolAllocator scopedAlloc(&allocator);
     TIntermBlock *root = compileTreeImpl(shaderStrings, numStrings, compileOptions);
 
@@ -537,6 +505,15 @@ bool TCompiler::compile(const char *const shaderStrings[],
 
 bool TCompiler::InitBuiltInSymbolTable(const ShBuiltInResources &resources)
 {
+    if (resources.MaxDrawBuffers < 1)
+    {
+        return false;
+    }
+    if (resources.EXT_blend_func_extended && resources.MaxDualSourceDrawBuffers < 1)
+    {
+        return false;
+    }
+
     compileResources = resources;
     setResourceString();
 

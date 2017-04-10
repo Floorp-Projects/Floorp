@@ -149,12 +149,6 @@ class MalformedComputeShaderTest : public MalformedShaderTest
     }
 };
 
-class UnrollForLoopsTest : public MalformedShaderTest
-{
-  public:
-    UnrollForLoopsTest() { mExtraCompileOptions = SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX; }
-};
-
 // This is a test for a bug that used to exist in ANGLE:
 // Calling a function with all parameters missing should not succeed.
 TEST_F(MalformedShaderTest, FunctionParameterMismatch)
@@ -1442,45 +1436,6 @@ TEST_F(MalformedWebGL1ShaderTest, NonConstantLoopIndex)
     if (compile(shaderString))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
-    }
-}
-
-// Regression test for an old crash bug in ANGLE.
-// ForLoopUnroll used to crash when it encountered a while loop.
-TEST_F(UnrollForLoopsTest, WhileLoop)
-{
-    const std::string &shaderString =
-        "precision mediump float;\n"
-        "void main()\n"
-        "{\n"
-        "    while (true) {\n"
-        "        gl_FragColor = vec4(0.0);\n"
-        "        break;\n"
-        "    }\n"
-        "}\n";
-    if (!compile(shaderString))
-    {
-        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
-    }
-}
-
-// Regression test for an old crash bug in ANGLE.
-// ForLoopUnroll used to crash when it encountered a loop that didn't fit the ESSL 1.00
-// Appendix A limitations.
-TEST_F(UnrollForLoopsTest, UnlimitedForLoop)
-{
-    const std::string &shaderString =
-        "precision mediump float;\n"
-        "void main()\n"
-        "{\n"
-        "    for (;true;) {\n"
-        "        gl_FragColor = vec4(0.0);\n"
-        "        break;\n"
-        "    }\n"
-        "}\n";
-    if (!compile(shaderString))
-    {
-        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
     }
 }
 
@@ -3151,6 +3106,25 @@ TEST_F(MalformedFragmentShaderGLES31Test, OverqualifyingImageParameter)
         "   myFunc(myImage);\n"
         "}\n";
 
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Test that work group size can be used to size arrays.
+// GLSL ES 3.10.4 section 7.1.3 Compute Shader Special Variables
+TEST_F(MalformedComputeShaderTest, WorkGroupSizeAsArraySize)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 5, local_size_y = 3, local_size_z = 1) in;\n"
+        "void main()\n"
+        "{\n"
+        "    int[gl_WorkGroupSize.x] a = int[5](0, 0, 0, 0, 0);\n"
+        "    int[gl_WorkGroupSize.y] b = int[3](0, 0, 0);\n"
+        "    int[gl_WorkGroupSize.z] c = int[1](0);\n"
+        "}\n";
     if (!compile(shaderString))
     {
         FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
