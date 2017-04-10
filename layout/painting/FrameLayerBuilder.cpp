@@ -3785,25 +3785,24 @@ ContainerState::GetDisplayPortForAnimatedGeometryRoot(AnimatedGeometryRoot* aAni
     return mLastDisplayPortRect;
   }
 
-  mLastDisplayPortAGR = aAnimatedGeometryRoot;
-
   nsIScrollableFrame* sf = nsLayoutUtils::GetScrollableFrameFor(*aAnimatedGeometryRoot);
   if (sf == nullptr || nsLayoutUtils::UsesAsyncScrolling(*aAnimatedGeometryRoot)) {
-    mLastDisplayPortRect = nsRect();
-    return mLastDisplayPortRect;
+    return nsRect();
   }
 
+  mLastDisplayPortAGR = aAnimatedGeometryRoot;
+  nsRect& displayport = mLastDisplayPortRect;;
   bool usingDisplayport =
-    nsLayoutUtils::GetDisplayPort((*aAnimatedGeometryRoot)->GetContent(), &mLastDisplayPortRect,
+    nsLayoutUtils::GetDisplayPort((*aAnimatedGeometryRoot)->GetContent(), &displayport,
                                   RelativeTo::ScrollFrame);
   if (!usingDisplayport) {
     // No async scrolling, so all that matters is that the layer contents
     // cover the scrollport.
-    mLastDisplayPortRect = sf->GetScrollPortRect();
+    displayport = sf->GetScrollPortRect();
   }
   nsIFrame* scrollFrame = do_QueryFrame(sf);
-  mLastDisplayPortRect += scrollFrame->GetOffsetToCrossDoc(mContainerReferenceFrame);
-  return mLastDisplayPortRect;
+  displayport += scrollFrame->GetOffsetToCrossDoc(mContainerReferenceFrame);
+  return displayport;
 }
 
 nsIntRegion
