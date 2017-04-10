@@ -73,6 +73,9 @@ public:
   bool LookupAppCache() const { return mLookupAppCache; }
   bool SkipSizeCheck() const { return mSkipSizeCheck; }
   bool Pinning() const { return mPinning; }
+  virtual nsresult GetCacheIndexEntryAttrs(
+          nsIURI *aURI, const nsACString &aIdExtension,
+          bool *aHasAltData, uint32_t *aSizeInKB) override;
 };
 
 } // namespace net
