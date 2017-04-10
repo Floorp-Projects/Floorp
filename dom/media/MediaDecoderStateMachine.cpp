@@ -1032,6 +1032,15 @@ public:
 
   void Exit() override
   {
+    if (mSeekJob.Exists() &&
+        mSeekJob.mTarget.isSome() &&
+        mSeekJob.mTarget->IsVideoOnly()) {
+      // We are discarding this video-only seek operation now, and we still need
+      // to dispatch an event so that the UI can change in response to the end
+      // of video-only seek.
+      mMaster->mOnPlaybackEvent.Notify(MediaEventType::VideoOnlySeekCompleted);
+    }
+
     // Disconnect MediaDecoder.
     mSeekJob.RejectIfExists(__func__);
 
