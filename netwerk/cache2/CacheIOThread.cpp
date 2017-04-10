@@ -442,8 +442,7 @@ void CacheIOThread::ThreadFunc(void* aClosure)
 {
   // XXXmstange We'd like to register this thread with the profiler, but doing
   // so causes leaks, see bug 1323100.
-  NS_SetCurrentThreadName("Cache2 I/O");
-
+  PR_SetCurrentThreadName("Cache2 I/O");
   mozilla::IOInterposer::RegisterCurrentThread();
   CacheIOThread* thread = static_cast<CacheIOThread*>(aClosure);
   thread->ThreadFunc();

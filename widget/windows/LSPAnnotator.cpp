@@ -51,7 +51,7 @@ LSPAnnotationGatherer::Annotate()
 NS_IMETHODIMP
 LSPAnnotationGatherer::Run()
 {
-  NS_SetCurrentThreadName("LSP Annotator");
+  PR_SetCurrentThreadName("LSP Annotator");
 
   mThread = NS_GetCurrentThread();
 
