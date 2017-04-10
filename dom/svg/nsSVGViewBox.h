@@ -38,6 +38,8 @@ struct nsSVGViewBoxRect
   nsSVGViewBoxRect(const nsSVGViewBoxRect& rhs) :
     x(rhs.x), y(rhs.y), width(rhs.width), height(rhs.height), none(rhs.none) {}
   bool operator==(const nsSVGViewBoxRect& aOther) const;
+
+  static nsresult FromString(const nsAString& aStr, nsSVGViewBoxRect *aViewBox);
 };
 
 class nsSVGViewBox
