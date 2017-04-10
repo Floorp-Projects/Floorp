@@ -51,6 +51,11 @@ function file(first, second) {
   return result || waterfall(first, second);
 }
 
+function protocol(first, second) {
+  const result = compareValues(first.httpVersion, second.httpVersion);
+  return result || waterfall(first, second);
+}
+
 function domain(first, second) {
   const firstDomain = first.urlDetails.host.toLowerCase();
   const secondDomain = second.urlDetails.host.toLowerCase();
@@ -93,6 +98,7 @@ exports.Sorters = {
   status,
   method,
   file,
+  protocol,
   domain,
   remoteip,
   cause,

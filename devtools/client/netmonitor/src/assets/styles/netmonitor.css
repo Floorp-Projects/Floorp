@@ -364,6 +364,10 @@ body,
   width: 8vw;
 }
 
+.requests-list-protocol {
+  width: 7vw;
+}
+
 .requests-security-state-icon {
   flex: none;
   width: 16px;
