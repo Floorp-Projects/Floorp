@@ -13,7 +13,6 @@
 #include "mozilla/TimeStamp.h"
 #include "nsAutoPtr.h"
 #include "nsNativeCharsetUtils.h"
-#include "nsThreadUtils.h"
 
 /**
  * This code uses NSPR stuff and STL containers because it must be detached
@@ -116,7 +115,7 @@ MainThreadIOLoggerImpl::Init()
 MainThreadIOLoggerImpl::sIOThreadFunc(void* aArg)
 {
   AutoProfilerRegister registerThread("MainThreadIOLogger");
-  NS_SetCurrentThreadName("MainThreadIOLogger");
+  PR_SetCurrentThreadName("MainThreadIOLogger");
   MainThreadIOLoggerImpl* obj = static_cast<MainThreadIOLoggerImpl*>(aArg);
   obj->IOThreadFunc();
 }

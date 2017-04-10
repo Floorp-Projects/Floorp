@@ -290,16 +290,6 @@ XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
 #  error "OOP crash reporter unsupported on this platform"
 #endif
 }
-
-bool
-XRE_UnsetRemoteExceptionHandler()
-{
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(OS_LINUX)
-  return CrashReporter::UnsetRemoteExceptionHandler();
-#else
-#  error "OOP crash reporter unsupported on this platform"
-#endif
-}
 #endif // if defined(MOZ_CRASHREPORTER)
 
 #if defined(XP_WIN)
@@ -729,9 +719,6 @@ XRE_InitChildProcess(int aArgc,
 #endif
 
   Telemetry::DestroyStatisticsRecorder();
-#ifdef MOZ_CRASHREPORTER
-  (void) XRE_UnsetRemoteExceptionHandler();
-#endif
   return XRE_DeinitCommandLine();
 }
 

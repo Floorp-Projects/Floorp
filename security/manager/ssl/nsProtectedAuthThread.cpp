@@ -12,7 +12,6 @@
 #include "nsProtectedAuthThread.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
-#include "nsThreadUtils.h"
 #include "pk11func.h"
 
 using namespace mozilla;
@@ -23,7 +22,7 @@ NS_IMPL_ISUPPORTS(nsProtectedAuthThread, nsIProtectedAuthThread)
 static void nsProtectedAuthThreadRunner(void *arg)
 {
     AutoProfilerRegister registerThread("Protected Auth");
-    NS_SetCurrentThreadName("Protected Auth");
+    PR_SetCurrentThreadName("Protected Auth");
 
     nsProtectedAuthThread *self = static_cast<nsProtectedAuthThread *>(arg);
     self->Run();
