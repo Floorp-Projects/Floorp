@@ -2901,7 +2901,7 @@ struct DisassembleOptionParser {
                 sourceNotes = false;
             else
                 break;
-            argv++, argc--;
+            argv++; argc--;
         }
         return true;
     }
