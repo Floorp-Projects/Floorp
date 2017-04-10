@@ -513,8 +513,9 @@ CSSStyleSheet::UseForPresentation(nsPresContext* aPresContext,
                                   nsMediaQueryResultCacheKey& aKey) const
 {
   if (mMedia) {
+    MOZ_ASSERT(aPresContext);
     auto media = static_cast<nsMediaList*>(mMedia.get());
-    return media->Matches(aPresContext, &aKey);
+    return media->Matches(*aPresContext, &aKey);
   }
   return true;
 }
