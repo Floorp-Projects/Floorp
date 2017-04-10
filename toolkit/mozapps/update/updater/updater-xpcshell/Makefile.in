@@ -7,7 +7,10 @@
 
 XPCSHELLTESTDIR = $(topobjdir)/_tests/xpcshell/toolkit/mozapps/update/tests
 MOCHITESTCHROMEDIR = $(topobjdir)/_tests/testing/mochitest/chrome/toolkit/mozapps/update/tests
+
+ifeq (,$(MOZ_SUITE)$(MOZ_THUNDERBIRD))
 MOCHITESTBROWSERDIR = $(topobjdir)/_tests/testing/mochitest/browser/browser/base/content/test/appUpdate
+endif
 
 include $(topsrcdir)/config/rules.mk
 
@@ -34,9 +37,13 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 
 	# Copy for mochitest chrome tests
 	rsync -a -C $(XPCSHELLTESTDIR)/data/updater.app $(MOCHITESTCHROMEDIR)/data/
+ifdef MOCHITESTBROWSERDIR
 	rsync -a -C $(XPCSHELLTESTDIR)/data/updater.app $(MOCHITESTBROWSERDIR)/
+endif
 else
 	cp $(FINAL_TARGET)/updater-xpcshell$(BIN_SUFFIX) $(XPCSHELLTESTDIR)/data/updater$(BIN_SUFFIX)
 	cp $(FINAL_TARGET)/updater-xpcshell$(BIN_SUFFIX) $(MOCHITESTCHROMEDIR)/data/updater$(BIN_SUFFIX)
+ifdef MOCHITESTBROWSERDIR
 	cp $(FINAL_TARGET)/updater-xpcshell$(BIN_SUFFIX) $(MOCHITESTBROWSERDIR)/updater$(BIN_SUFFIX)
+endif
 endif
