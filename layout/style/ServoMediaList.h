@@ -19,6 +19,8 @@ class ServoMediaList final : public dom::MediaList
 public:
   explicit ServoMediaList(already_AddRefed<RawServoMediaList> aRawList)
     : mRawList(aRawList) {}
+  explicit ServoMediaList(const nsAString& aMedia);
+  ServoMediaList();
 
   already_AddRefed<dom::MediaList> Clone() final;
 

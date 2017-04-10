@@ -21,6 +21,17 @@ ServoMediaList::Clone()
   return nullptr;
 }
 
+ServoMediaList::ServoMediaList()
+  : mRawList(Servo_MediaList_Create().Consume())
+{
+}
+
+ServoMediaList::ServoMediaList(const nsAString& aMedia)
+  : ServoMediaList()
+{
+  SetText(aMedia);
+}
+
 void
 ServoMediaList::GetText(nsAString& aMediaText)
 {

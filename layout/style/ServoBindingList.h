@@ -284,6 +284,7 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetBackgroundImage, void,
                    RawGeckoURLExtraData* extra_data)
 
 // MediaList
+SERVO_BINDING_FUNC(Servo_MediaList_Create, RawServoMediaListStrong)
 SERVO_BINDING_FUNC(Servo_MediaList_GetText, void,
                    RawServoMediaListBorrowed list, nsAString* result)
 SERVO_BINDING_FUNC(Servo_MediaList_SetText, void,
