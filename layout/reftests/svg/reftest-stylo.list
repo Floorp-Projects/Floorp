@@ -60,7 +60,7 @@ skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-soft-ligh
 
 == clipPath-advanced-01.svg clipPath-advanced-01.svg
 == clipPath-and-mask-on-outflowElement-01a.html clipPath-and-mask-on-outflowElement-01a.html
-fails == clipPath-and-mask-on-outflowElement-01b.html clipPath-and-mask-on-outflowElement-01b.html
+== clipPath-and-mask-on-outflowElement-01b.html clipPath-and-mask-on-outflowElement-01b.html
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(OSX,1,6) fuzzy-if(skiaContent,1,630) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01.svg
 == clipPath-and-transform-01.svg clipPath-and-transform-01.svg
 == clipPath-basic-01.svg clipPath-basic-01.svg
@@ -133,7 +133,7 @@ fuzzy-if(d2d||skiaContent,1,10000) == dynamic-filter-contents-01b.svg dynamic-fi
 == dynamic-marker-03.svg dynamic-marker-03.svg
 == dynamic-mask-01.svg dynamic-mask-01.svg
 == dynamic-mask-contents-01.svg dynamic-mask-contents-01.svg
-fails == dynamic-mask-pre-effects-bbox.html dynamic-mask-pre-effects-bbox.html
+== dynamic-mask-pre-effects-bbox.html dynamic-mask-pre-effects-bbox.html
 == dynamic-opacity-property-01.svg dynamic-opacity-property-01.svg
 == dynamic-pattern-01.svg dynamic-pattern-01.svg
 == dynamic-pattern-02.svg dynamic-pattern-02.svg
@@ -253,7 +253,7 @@ fuzzy-if(skiaContent,1,5) pref(svg.marker-improvements.enabled,true) == marker-o
 == marker-orientation-04.svg marker-orientation-04.svg
 
 # fuzzy because of the differences between clipPath and mask clipping
-fails == mask-and-clipPath.html mask-and-clipPath.html
+== mask-and-clipPath.html mask-and-clipPath.html
 == mask-and-clipPath-2.svg mask-and-clipPath-2.svg
 == mask-basic-01.svg mask-basic-01.svg
 fuzzy-if(skiaContent,1,10000) == mask-basic-02.svg mask-basic-02.svg
@@ -264,8 +264,8 @@ fuzzy-if(skiaContent,1,10000) == mask-basic-02.svg mask-basic-02.svg
 
 == mask-extref-dataURI-01.svg mask-extref-dataURI-01.svg
 == mask-img.html mask-img.html
-fails == mask-on-outflowElement-01a.html mask-on-outflowElement-01a.html
-fails == mask-on-outflowElement-01b.html mask-on-outflowElement-01b.html
+== mask-on-outflowElement-01a.html mask-on-outflowElement-01a.html
+== mask-on-outflowElement-01b.html mask-on-outflowElement-01b.html
 fuzzy(1,5000) == mask-opacity-01.svg mask-opacity-01.svg
 == mask-transformed-01.svg mask-transformed-01.svg
 == mask-transformed-02.svg mask-transformed-02.svg

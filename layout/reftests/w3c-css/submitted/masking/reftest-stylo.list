@@ -2,85 +2,85 @@
 # For those test items with failure type fuzzy-if added, please refer to bug 1231643#c10.
 
 # mask-composite test cases
-fails == mask-composite-1a.html mask-composite-1a.html
-fails == mask-composite-1b.html mask-composite-1b.html
-fails == mask-composite-1c.html mask-composite-1c.html
-fails == mask-composite-2a.html mask-composite-2a.html
-fails == mask-composite-2b.html mask-composite-2b.html
-fails == mask-composite-2c.html mask-composite-2c.html
+== mask-composite-1a.html mask-composite-1a.html
+== mask-composite-1b.html mask-composite-1b.html
+== mask-composite-1c.html mask-composite-1c.html
+== mask-composite-2a.html mask-composite-2a.html
+== mask-composite-2b.html mask-composite-2b.html
+== mask-composite-2c.html mask-composite-2c.html
 
 # mask-mode test cases
-fails == mask-mode-a.html mask-mode-a.html
-fails == mask-mode-b.html mask-mode-b.html
-fails == mask-mode-to-mask-type.html mask-mode-to-mask-type.html
+== mask-mode-a.html mask-mode-a.html
+== mask-mode-b.html mask-mode-b.html
+== mask-mode-to-mask-type.html mask-mode-to-mask-type.html
 
 # mask-image test cases
-fails == mask-image-1a.html mask-image-1a.html
-fails == mask-image-1b.html mask-image-1b.html
-fails == mask-image-1c.html mask-image-1c.html
+== mask-image-1a.html mask-image-1a.html
+== mask-image-1b.html mask-image-1b.html
+== mask-image-1c.html mask-image-1c.html
 == mask-image-1d.html mask-image-1d.html
 == mask-image-2.html mask-image-2.html
-fails == mask-image-3a.html mask-image-3a.html
-fails == mask-image-3b.html mask-image-3b.html
-fails == mask-image-3c.html mask-image-3c.html
-fails == mask-image-3d.html mask-image-3d.html
-fails == mask-image-3e.html mask-image-3e.html
-fails == mask-image-3f.html mask-image-3f.html
-fails == mask-image-3g.html mask-image-3g.html
-fails pref(layout.css.clip-path-shapes.enabled,true) == mask-image-3h.html mask-image-3h.html
-fails == mask-image-3i.html mask-image-3i.html
-fails == mask-image-4a.html mask-image-4a.html
-fails == mask-image-4b.html mask-image-4b.html
+== mask-image-3a.html mask-image-3a.html
+== mask-image-3b.html mask-image-3b.html
+== mask-image-3c.html mask-image-3c.html
+== mask-image-3d.html mask-image-3d.html
+== mask-image-3e.html mask-image-3e.html
+== mask-image-3f.html mask-image-3f.html
+== mask-image-3g.html mask-image-3g.html
+pref(layout.css.clip-path-shapes.enabled,true) == mask-image-3h.html mask-image-3h.html
+== mask-image-3i.html mask-image-3i.html
+== mask-image-4a.html mask-image-4a.html
+== mask-image-4b.html mask-image-4b.html
 == mask-image-5.html mask-image-5.html
-fails == mask-image-6.html mask-image-6.html
+== mask-image-6.html mask-image-6.html
 
 # mask-clip test cases
-fails == mask-clip-1.html mask-clip-1.html
+== mask-clip-1.html mask-clip-1.html
 
 # mask-position test cases
-fails == mask-position-1a.html mask-position-1a.html
-fails == mask-position-1b.html mask-position-1b.html
-fails == mask-position-1c.html mask-position-1c.html
-fails == mask-position-2a.html mask-position-2a.html
-fails == mask-position-2b.html mask-position-2b.html
-fails == mask-position-3a.html mask-position-3a.html
-fails == mask-position-3b.html mask-position-3b.html
-fails == mask-position-4a.html mask-position-4a.html
-fails == mask-position-4b.html mask-position-4b.html
-fails == mask-position-4c.html mask-position-4c.html
-fails == mask-position-4d.html mask-position-4d.html
-fails == mask-position-5.html mask-position-5.html
-fails == mask-position-6.html mask-position-6.html
-fails == mask-position-7.html mask-position-7.html
+== mask-position-1a.html mask-position-1a.html
+== mask-position-1b.html mask-position-1b.html
+== mask-position-1c.html mask-position-1c.html
+== mask-position-2a.html mask-position-2a.html
+== mask-position-2b.html mask-position-2b.html
+== mask-position-3a.html mask-position-3a.html
+== mask-position-3b.html mask-position-3b.html
+== mask-position-4a.html mask-position-4a.html
+== mask-position-4b.html mask-position-4b.html
+== mask-position-4c.html mask-position-4c.html
+== mask-position-4d.html mask-position-4d.html
+== mask-position-5.html mask-position-5.html
+== mask-position-6.html mask-position-6.html
+== mask-position-7.html mask-position-7.html
 
 # mask-repeat test cases
-fails == mask-repeat-1.html mask-repeat-1.html
-fails == mask-repeat-2.html mask-repeat-2.html
-fails == mask-repeat-3.html mask-repeat-3.html
+== mask-repeat-1.html mask-repeat-1.html
+== mask-repeat-2.html mask-repeat-2.html
+== mask-repeat-3.html mask-repeat-3.html
 
 # mask-origin test cases
-fails == mask-origin-1.html mask-origin-1.html
-fails == mask-origin-2.html mask-origin-2.html
+== mask-origin-1.html mask-origin-1.html
+== mask-origin-2.html mask-origin-2.html
 
 # mask-size test cases
-fails == mask-size-auto.html mask-size-auto.html
-fails == mask-size-auto-auto.html mask-size-auto-auto.html
-fails == mask-size-auto-length.html mask-size-auto-length.html
-fails == mask-size-auto-percent.html mask-size-auto-percent.html
-fails == mask-size-contain-clip-border.html mask-size-contain-clip-border.html
-fails == mask-size-contain-clip-padding.html mask-size-contain-clip-padding.html
-fails == mask-size-contain-position-fifty-fifty.html mask-size-contain-position-fifty-fifty.html
-fails == mask-size-contain.html mask-size-contain.html
-fails == mask-size-cover.html mask-size-cover.html
-fails == mask-size-length.html mask-size-length.html
-fails == mask-size-length-auto.html mask-size-length-auto.html
-fails == mask-size-length-length.html mask-size-length-length.html
-fails == mask-size-length-percent.html mask-size-length-percent.html
-fails == mask-size-percent.html mask-size-percent.html
-fails == mask-size-percent-auto.html mask-size-percent-auto.html
-fails == mask-size-percent-length.html mask-size-percent-length.html
-fails == mask-size-percent-percent.html mask-size-percent-percent.html
-fails == mask-size-percent-percent-stretch.html mask-size-percent-percent-stretch.html
+== mask-size-auto.html mask-size-auto.html
+== mask-size-auto-auto.html mask-size-auto-auto.html
+== mask-size-auto-length.html mask-size-auto-length.html
+== mask-size-auto-percent.html mask-size-auto-percent.html
+== mask-size-contain-clip-border.html mask-size-contain-clip-border.html
+== mask-size-contain-clip-padding.html mask-size-contain-clip-padding.html
+== mask-size-contain-position-fifty-fifty.html mask-size-contain-position-fifty-fifty.html
+== mask-size-contain.html mask-size-contain.html
+== mask-size-cover.html mask-size-cover.html
+== mask-size-length.html mask-size-length.html
+== mask-size-length-auto.html mask-size-length-auto.html
+== mask-size-length-length.html mask-size-length-length.html
+== mask-size-length-percent.html mask-size-length-percent.html
+== mask-size-percent.html mask-size-percent.html
+== mask-size-percent-auto.html mask-size-percent-auto.html
+== mask-size-percent-length.html mask-size-percent-length.html
+== mask-size-percent-percent.html mask-size-percent-percent.html
+== mask-size-percent-percent-stretch.html mask-size-percent-percent-stretch.html
 
 default-preferences pref(layout.css.clip-path-shapes.enabled,true)
 
@@ -107,8 +107,8 @@ fuzzy(64,370) == clip-path-borderBox-1a.html clip-path-borderBox-1a.html
 default-preferences
 
 # mask with opacity test cases
-fails == mask-opacity-1a.html mask-opacity-1a.html
-fails == mask-opacity-1b.html mask-opacity-1b.html
+== mask-opacity-1a.html mask-opacity-1a.html
+== mask-opacity-1b.html mask-opacity-1b.html
 fuzzy(1,5000) == mask-opacity-1c.html mask-opacity-1c.html
 
 == clip-path-mix-blend-mode-1.html clip-path-mix-blend-mode-1.html
