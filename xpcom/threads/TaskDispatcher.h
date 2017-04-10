@@ -117,15 +117,19 @@ public:
   void AddStateChangeTask(AbstractThread* aThread,
                           already_AddRefed<nsIRunnable> aRunnable) override
   {
-    EnsureTaskGroup(aThread).mStateChangeTasks.AppendElement(aRunnable);
+    nsCOMPtr<nsIRunnable> r = aRunnable;
+    MOZ_RELEASE_ASSERT(r);
+    EnsureTaskGroup(aThread).mStateChangeTasks.AppendElement(r.forget());
   }
 
   void AddTask(AbstractThread* aThread,
                already_AddRefed<nsIRunnable> aRunnable,
                AbstractThread::DispatchFailureHandling aFailureHandling) override
   {
+    nsCOMPtr<nsIRunnable> r = aRunnable;
+    MOZ_RELEASE_ASSERT(r);
     PerThreadTaskGroup& group = EnsureTaskGroup(aThread);
-    group.mRegularTasks.AppendElement(aRunnable);
+    group.mRegularTasks.AppendElement(r.forget());
 
     // The task group needs to assert dispatch success if any of the runnables
     // it's dispatching want to assert it.
