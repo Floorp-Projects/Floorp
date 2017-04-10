@@ -35,6 +35,8 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -89,6 +91,8 @@ public class TelemetryTest {
 
         telemetry.queuePing(TelemetryCorePingBuilder.TYPE);
         telemetry.scheduleUpload();
+
+        waitForExecutor(telemetry);
 
         assertEquals(1, storage.countStoredPings(TelemetryCorePingBuilder.TYPE));
 
@@ -161,9 +165,13 @@ public class TelemetryTest {
         TelemetryEvent.create("action", "click", "erase_button").queue().join();
         telemetry.queuePing(TelemetryEventPingBuilder.TYPE);
 
+        waitForExecutor(telemetry);
+
         assertEquals(1, storage.countStoredPings(TelemetryEventPingBuilder.TYPE));
 
         telemetry.scheduleUpload();
+
+        waitForExecutor(telemetry);
 
         assertJobIsScheduled(TelemetryEventPingBuilder.TYPE);
         executePendingJob(TelemetryEventPingBuilder.TYPE);
@@ -243,5 +251,14 @@ public class TelemetryTest {
     @After
     public void tearDown() {
         TelemetryHolder.set(null);
+    }
+
+    private void waitForExecutor(Telemetry telemetry) throws ExecutionException, InterruptedException {
+        telemetry.getExecutor().submit(new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        }).get();
     }
 }

@@ -6,10 +6,10 @@ package org.mozilla.telemetry;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.RestrictTo;
+import android.support.annotation.VisibleForTesting;
 
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.measurement.DefaultSearchMeasurement;
-import org.mozilla.telemetry.measurement.SearchesMeasurement;
 import org.mozilla.telemetry.net.TelemetryClient;
 import org.mozilla.telemetry.ping.TelemetryCorePingBuilder;
 import org.mozilla.telemetry.ping.TelemetryPing;
@@ -20,6 +20,8 @@ import org.mozilla.telemetry.storage.TelemetryStorage;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Telemetry {
     private final TelemetryConfiguration configuration;
@@ -28,6 +30,7 @@ public class Telemetry {
     private final TelemetryScheduler scheduler;
 
     private final Map<String, TelemetryPingBuilder> pingBuilders;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public Telemetry(TelemetryConfiguration configuration, TelemetryStorage storage,
                      TelemetryClient client, TelemetryScheduler scheduler) {
@@ -44,23 +47,27 @@ public class Telemetry {
         return this;
     }
 
-    // TODO: Do queuing asynchronously? (Issue #16)
-    public Telemetry queuePing(String pingType) {
-        if (!configuration.isCollectionEnabled()) {
-            return this;
-        }
+    public Telemetry queuePing(final String pingType) {
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                if (!configuration.isCollectionEnabled()) {
+                    return;
+                }
 
-        final TelemetryPingBuilder pingBuilder = pingBuilders.get(pingType);
+                final TelemetryPingBuilder pingBuilder = pingBuilders.get(pingType);
 
-        if (!pingBuilder.canBuild()) {
-            // We do not always want to build a ping. Sometimes we want to collect enough data so that
-            // it is worth sending a ping. Here we exit early if the ping builder implementation
-            // signals that it's not time to build a ping yet.
-            return this;
-        }
+                if (!pingBuilder.canBuild()) {
+                    // We do not always want to build a ping. Sometimes we want to collect enough data so that
+                    // it is worth sending a ping. Here we exit early if the ping builder implementation
+                    // signals that it's not time to build a ping yet.
+                    return;
+                }
 
-        final TelemetryPing ping = pingBuilder.build();
-        storage.store(ping);
+                final TelemetryPing ping = pingBuilder.build();
+                storage.store(ping);
+            }
+        });
 
         return this;
     }
@@ -74,11 +81,16 @@ public class Telemetry {
     }
 
     public Telemetry scheduleUpload() {
-        if (!configuration.isUploadEnabled()) {
-            return this;
-        }
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                if (!configuration.isUploadEnabled()) {
+                    return;
+                }
 
-        scheduler.scheduleUpload(configuration);
+                scheduler.scheduleUpload(configuration);
+            }
+        });
         return this;
     }
 
@@ -164,5 +176,13 @@ public class Telemetry {
 
     public TelemetryConfiguration getConfiguration() {
         return configuration;
+    }
+
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    @VisibleForTesting ExecutorService getExecutor() {
+        return executor;
     }
 }
