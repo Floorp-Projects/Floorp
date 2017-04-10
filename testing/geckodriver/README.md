@@ -242,6 +242,9 @@ and may contain any of the following fields:
    to use as the profile for the Firefox instance.
    This may be used to e.g. install extensions
    or custom certificates.
+   By default, a new profile will be created in the system’s temporary folder.
+   The effective profile in use by the WebDriver session
+   is returned to the user in the `moz:profile` capability.
  </tr>
 
  <tr>
