@@ -103,6 +103,7 @@ public:
     inline void SetFontFamily(const nsString& aValue);
     // Add a quirks-mode override to the decoration color of elements nested in <a>
     inline void SetTextDecorationColorOverride();
+    inline void SetBackgroundImage(nsAttrValue& value);
 
     const mozilla::StyleBackendType mType;
     nsPresContext* const mPresContext;
