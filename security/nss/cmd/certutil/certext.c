@@ -980,8 +980,6 @@ AddNameConstraints(void *extHandle)
             GEN_BREAK(SECFailure);
         }
 
-        (void)SEC_ASN1EncodeInteger(arena, &current->min, 0);
-
         if (!GetGeneralName(arena, &current->name, PR_TRUE)) {
             GEN_BREAK(SECFailure);
         }
