@@ -30,6 +30,11 @@ android {
             }
         }
     }
+    lintOptions {
+        ignoreWarnings false
+        abortOnError true
+        warningsAsErrors true
+    }
 }
 
 jacocoAndroidUnitTestReport {
