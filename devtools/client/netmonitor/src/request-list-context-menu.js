@@ -7,8 +7,7 @@
 const Services = require("Services");
 const { Curl } = require("devtools/client/shared/curl");
 const { gDevTools } = require("devtools/client/framework/devtools");
-const Menu = require("devtools/client/framework/menu");
-const MenuItem = require("devtools/client/framework/menu-item");
+const { showMenu } = require("devtools/client/netmonitor/src/utils/menu");
 const FileSaver = require("devtools/client/shared/file-saver");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 const { HarExporter } = require("./har/har-exporter");
@@ -48,66 +47,65 @@ RequestListContextMenu.prototype = {
    * Since visible attribute only accept boolean value but the method call may
    * return undefined, we use !! to force convert any object to boolean
    */
-  open({ screenX = 0, screenY = 0 } = {}) {
+  open(event = {}) {
     let selectedRequest = this.selectedRequest;
+    let menu = [];
+    let copySubmenu = [];
 
-    let menu = new Menu();
-    let copySubmenu = new Menu();
-
-    copySubmenu.append(new MenuItem({
+    copySubmenu.push({
       id: "request-list-context-copy-url",
       label: L10N.getStr("netmonitor.context.copyUrl"),
       accesskey: L10N.getStr("netmonitor.context.copyUrl.accesskey"),
       visible: !!selectedRequest,
       click: () => this.copyUrl(),
-    }));
+    });
 
-    copySubmenu.append(new MenuItem({
+    copySubmenu.push({
       id: "request-list-context-copy-url-params",
       label: L10N.getStr("netmonitor.context.copyUrlParams"),
       accesskey: L10N.getStr("netmonitor.context.copyUrlParams.accesskey"),
       visible: !!(selectedRequest && getUrlQuery(selectedRequest.url)),
       click: () => this.copyUrlParams(),
-    }));
+    });
 
-    copySubmenu.append(new MenuItem({
+    copySubmenu.push({
       id: "request-list-context-copy-post-data",
       label: L10N.getStr("netmonitor.context.copyPostData"),
       accesskey: L10N.getStr("netmonitor.context.copyPostData.accesskey"),
       visible: !!(selectedRequest && selectedRequest.requestPostData),
       click: () => this.copyPostData(),
-    }));
+    });
 
-    copySubmenu.append(new MenuItem({
+    copySubmenu.push({
       id: "request-list-context-copy-as-curl",
       label: L10N.getStr("netmonitor.context.copyAsCurl"),
       accesskey: L10N.getStr("netmonitor.context.copyAsCurl.accesskey"),
       visible: !!selectedRequest,
       click: () => this.copyAsCurl(),
-    }));
+    });
 
-    copySubmenu.append(new MenuItem({
+    copySubmenu.push({
       type: "separator",
       visible: !!selectedRequest,
-    }));
+    });
 
-    copySubmenu.append(new MenuItem({
+    copySubmenu.push({
       id: "request-list-context-copy-request-headers",
       label: L10N.getStr("netmonitor.context.copyRequestHeaders"),
       accesskey: L10N.getStr("netmonitor.context.copyRequestHeaders.accesskey"),
       visible: !!(selectedRequest && selectedRequest.requestHeaders),
       click: () => this.copyRequestHeaders(),
-    }));
+    });
 
-    copySubmenu.append(new MenuItem({
+    copySubmenu.push({
       id: "response-list-context-copy-response-headers",
       label: L10N.getStr("netmonitor.context.copyResponseHeaders"),
       accesskey: L10N.getStr("netmonitor.context.copyResponseHeaders.accesskey"),
       visible: !!(selectedRequest && selectedRequest.responseHeaders),
       click: () => this.copyResponseHeaders(),
-    }));
+    });
 
-    copySubmenu.append(new MenuItem({
+    copySubmenu.push({
       id: "request-list-context-copy-response",
       label: L10N.getStr("netmonitor.context.copyResponse"),
       accesskey: L10N.getStr("netmonitor.context.copyResponse.accesskey"),
@@ -116,9 +114,9 @@ RequestListContextMenu.prototype = {
                selectedRequest.responseContent.content.text &&
                selectedRequest.responseContent.content.text.length !== 0),
       click: () => this.copyResponse(),
-    }));
+    });
 
-    copySubmenu.append(new MenuItem({
+    copySubmenu.push({
       id: "request-list-context-copy-image-as-data-uri",
       label: L10N.getStr("netmonitor.context.copyImageAsDataUri"),
       accesskey: L10N.getStr("netmonitor.context.copyImageAsDataUri.accesskey"),
@@ -126,37 +124,37 @@ RequestListContextMenu.prototype = {
                selectedRequest.responseContent &&
                selectedRequest.responseContent.content.mimeType.includes("image/")),
       click: () => this.copyImageAsDataUri(),
-    }));
+    });
 
-    copySubmenu.append(new MenuItem({
+    copySubmenu.push({
       type: "separator",
       visible: !!selectedRequest,
-    }));
+    });
 
-    copySubmenu.append(new MenuItem({
+    copySubmenu.push({
       id: "request-list-context-copy-all-as-har",
       label: L10N.getStr("netmonitor.context.copyAllAsHar"),
       accesskey: L10N.getStr("netmonitor.context.copyAllAsHar.accesskey"),
       visible: this.sortedRequests.size > 0,
       click: () => this.copyAllAsHar(),
-    }));
+    });
 
-    menu.append(new MenuItem({
+    menu.push({
       label: L10N.getStr("netmonitor.context.copy"),
       accesskey: L10N.getStr("netmonitor.context.copy.accesskey"),
       visible: !!selectedRequest,
       submenu: copySubmenu,
-    }));
+    });
 
-    menu.append(new MenuItem({
+    menu.push({
       id: "request-list-context-save-all-as-har",
       label: L10N.getStr("netmonitor.context.saveAllAsHar"),
       accesskey: L10N.getStr("netmonitor.context.saveAllAsHar.accesskey"),
       visible: this.sortedRequests.size > 0,
       click: () => this.saveAllAsHar(),
-    }));
+    });
 
-    menu.append(new MenuItem({
+    menu.push({
       id: "request-list-context-save-image-as",
       label: L10N.getStr("netmonitor.context.saveImageAs"),
       accesskey: L10N.getStr("netmonitor.context.saveImageAs.accesskey"),
@@ -164,46 +162,44 @@ RequestListContextMenu.prototype = {
                selectedRequest.responseContent &&
                selectedRequest.responseContent.content.mimeType.includes("image/")),
       click: () => this.saveImageAs(),
-    }));
+    });
 
-    menu.append(new MenuItem({
+    menu.push({
       type: "separator",
       visible: !!(NetMonitorController.supportsCustomRequest &&
                selectedRequest && !selectedRequest.isCustom),
-    }));
+    });
 
-    menu.append(new MenuItem({
+    menu.push({
       id: "request-list-context-resend",
       label: L10N.getStr("netmonitor.context.editAndResend"),
       accesskey: L10N.getStr("netmonitor.context.editAndResend.accesskey"),
       visible: !!(NetMonitorController.supportsCustomRequest &&
                selectedRequest && !selectedRequest.isCustom),
       click: this.cloneSelectedRequest,
-    }));
+    });
 
-    menu.append(new MenuItem({
+    menu.push({
       type: "separator",
       visible: !!selectedRequest,
-    }));
+    });
 
-    menu.append(new MenuItem({
+    menu.push({
       id: "request-list-context-newtab",
       label: L10N.getStr("netmonitor.context.newTab"),
       accesskey: L10N.getStr("netmonitor.context.newTab.accesskey"),
       visible: !!selectedRequest,
       click: () => this.openRequestInTab()
-    }));
+    });
 
-    menu.append(new MenuItem({
+    menu.push({
       id: "request-list-context-perf",
       label: L10N.getStr("netmonitor.context.perfTools"),
       accesskey: L10N.getStr("netmonitor.context.perfTools.accesskey"),
-      visible: !!NetMonitorController.supportsPerfStats,
       click: () => this.openStatistics(true)
-    }));
+    });
 
-    menu.popup(screenX, screenY, { doc: window.parent.document });
-    return menu;
+    return showMenu(event, menu);
   },
 
   /**
