@@ -8186,6 +8186,30 @@
     "description": "Number of times the DevTools Eyedropper has been opened via the color picker.",
     "releaseChannelCollection": "opt-out"
   },
+  "DEVTOOLS_TOOLBAR_EYEDROPPER_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1247985, 1352115],
+    "description": "Number of times the DevTools Eyedropper has been opened via the inspector toolbar.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_COPY_UNIQUE_CSS_SELECTOR_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "57",
+    "kind": "count",
+    "bug_numbers": [1323700, 1352115],
+    "description": "Number of times the DevTools copy unique css selector has been used.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "DEVTOOLS_COPY_FULL_CSS_SELECTOR_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "57",
+    "kind": "count",
+    "bug_numbers": [1323700, 1352115],
+    "description": "Number of times the DevTools copy full css selector has been used.",
+    "releaseChannelCollection": "opt-out"
+  },
   "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_COUNT": {
     "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "never",
