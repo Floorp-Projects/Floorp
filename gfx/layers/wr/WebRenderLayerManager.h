@@ -48,7 +48,7 @@ public:
 
   gfx::Rect RelativeToVisible(gfx::Rect aRect);
   gfx::Rect RelativeToTransformedVisible(gfx::Rect aRect);
-  gfx::Rect ParentStackingContextBounds(size_t aScrollMetadataIndex);
+  gfx::Rect ParentStackingContextBounds();
   gfx::Rect RelativeToParent(gfx::Rect aRect);
   gfx::Rect VisibleBoundsRelativeToParent();
   gfx::Point GetOffsetToParent();
