@@ -62,6 +62,7 @@ using class mozilla::WidgetPluginEvent from "ipc/nsGUIEventIPC.h";
 using struct mozilla::dom::RemoteDOMEvent from "mozilla/dom/TabMessageUtils.h";
 using mozilla::dom::ScreenOrientationInternal from "mozilla/dom/ScreenOrientation.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
+using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 using mozilla::CSSToScreenScale from "Units.h";
 using mozilla::CommandInt from "mozilla/EventForwards.h";
 using mozilla::WritingMode from "mozilla/WritingModes.h";
@@ -473,7 +474,8 @@ parent:
                                 nsString aURL, nsString aName, nsString aFeatures)
       returns (bool windowOpened,
                TextureFactoryIdentifier textureFactoryIdentifier,
-               uint64_t layersId);
+               uint64_t layersId,
+               CompositorOptions compositorOptions);
 
     /**
      * Tells the containing widget whether the given input block results in a
@@ -592,7 +594,7 @@ parent:
     // this is sync so we can ensure that messages to the window compositor
     // arrive before the TabChild attempts to use its cross-process compositor
     // bridge.
-    sync EnsureLayersConnected();
+    sync EnsureLayersConnected() returns (CompositorOptions compositorOptions);
 
     /**
      * Notify the parent that the session history state has been updated.
@@ -630,6 +632,7 @@ child:
 
     async InitRendering(TextureFactoryIdentifier textureFactoryIdentifier,
                         uint64_t layersId,
+                        CompositorOptions compositorOptions,
                         bool layersConnected,
                         nullable PRenderFrame renderFrame);
 

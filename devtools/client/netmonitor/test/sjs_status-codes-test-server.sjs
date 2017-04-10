@@ -24,6 +24,9 @@ function handleRequest(request, response) {
       case "300":
         response.setStatusLine(request.httpVersion, 303, "See Other");
         break;
+      case "304":
+        response.setStatusLine(request.httpVersion, 304, "Not Modified");
+        break;
       case "400":
         response.setStatusLine(request.httpVersion, 404, "Not Found");
         break;

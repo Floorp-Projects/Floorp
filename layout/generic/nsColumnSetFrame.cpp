@@ -8,10 +8,107 @@
 #include "mozilla/Unused.h"
 #include "nsColumnSetFrame.h"
 #include "nsCSSRendering.h"
-#include "nsDisplayList.h"
 
 using namespace mozilla;
 using namespace mozilla::layout;
+
+
+class nsDisplayColumnRule : public nsDisplayItem {
+public:
+  nsDisplayColumnRule(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame)
+  {
+    MOZ_COUNT_CTOR(nsDisplayColumnRule);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayColumnRule() {
+    MOZ_COUNT_DTOR(nsDisplayColumnRule);
+    mBorderRenderers.Clear();
+  }
+#endif
+
+  /**
+   * Returns the frame's visual overflow rect instead of the frame's bounds.
+   */
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
+                           bool* aSnap) override
+  {
+    *aSnap = false;
+    return Frame()->GetVisualOverflowRect() + ToReferenceFrame();
+  }
+
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters) override;
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerLayerParameters& aContainerParameters) override;
+  virtual void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       nsTArray<WebRenderParentCommand>& aParentCommands,
+                                       mozilla::layers::WebRenderDisplayItemLayer* aLayer) override;
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsRenderingContext* aCtx) override;
+
+  NS_DISPLAY_DECL_NAME("ColumnRule", nsDisplayItem::TYPE_COLUMN_RULE);
+
+private:
+  nsTArray<nsCSSBorderRenderer> mBorderRenderers;
+};
+
+void
+nsDisplayColumnRule::Paint(nsDisplayListBuilder* aBuilder,
+                           nsRenderingContext* aCtx)
+{
+  static_cast<nsColumnSetFrame*>(mFrame)->
+    CreateBorderRenderers(mBorderRenderers, aCtx, mVisibleRect, ToReferenceFrame());
+
+  for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end(); iter++) {
+    iter->DrawBorders();
+  }
+
+
+}
+LayerState
+nsDisplayColumnRule::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters)
+{
+  if (!gfxPrefs::LayersAllowColumnRuleLayers()) {
+    return LAYER_NONE;
+  }
+
+  RefPtr<gfxContext> screenRefCtx =
+    gfxContext::CreateOrNull(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
+  nsRenderingContext ctx(screenRefCtx);
+
+  static_cast<nsColumnSetFrame*>(mFrame)->
+    CreateBorderRenderers(mBorderRenderers, &ctx, mVisibleRect, ToReferenceFrame());
+
+  if (mBorderRenderers.IsEmpty()) {
+    return LAYER_NONE;
+  }
+
+  return LAYER_ACTIVE;
+}
+
+already_AddRefed<Layer>
+nsDisplayColumnRule::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                LayerManager* aManager,
+                                const ContainerLayerParameters& aContainerParameters)
+{
+  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
+}
+
+void
+nsDisplayColumnRule::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                             nsTArray<WebRenderParentCommand>& aParentCommands,
+                                             WebRenderDisplayItemLayer* aLayer)
+{
+  MOZ_ASSERT(!mBorderRenderers.IsEmpty());
+  for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end(); iter++) {
+      iter->CreateWebRenderCommands(aBuilder, aLayer);
+  }
+}
 
 /**
  * Tracking issues:
@@ -43,17 +140,11 @@ nsColumnSetFrame::GetType() const
   return nsGkAtoms::columnSetFrame;
 }
 
-static void
-PaintColumnRule(nsIFrame* aFrame, nsRenderingContext* aCtx,
-                const nsRect& aDirtyRect, nsPoint aPt)
-{
-  static_cast<nsColumnSetFrame*>(aFrame)->PaintColumnRule(aCtx, aDirtyRect, aPt);
-}
-
 void
-nsColumnSetFrame::PaintColumnRule(nsRenderingContext* aCtx,
-                                  const nsRect& aDirtyRect,
-                                  const nsPoint& aPt)
+nsColumnSetFrame::CreateBorderRenderers(nsTArray<nsCSSBorderRenderer>& aBorderRenderers,
+                                        nsRenderingContext* aCtx,
+                                        const nsRect& aDirtyRect,
+                                        const nsPoint& aPt)
 {
   nsIFrame* child = mFrames.FirstChild();
   if (!child)
@@ -82,6 +173,7 @@ nsColumnSetFrame::PaintColumnRule(nsRenderingContext* aCtx,
   if (!ruleWidth)
     return;
 
+  aBorderRenderers.Clear();
   nscolor ruleColor =
     GetVisitedDependentColor(&nsStyleColumn::mColumnRuleColor);
 
@@ -142,13 +234,15 @@ nsColumnSetFrame::PaintColumnRule(nsRenderingContext* aCtx,
     // couldn't ignore the DrawResult that PaintBorderWithStyleBorder returns.
     MOZ_ASSERT(border.mBorderImageSource.GetType() == eStyleImageType_Null);
 
-    Unused <<
-      nsCSSRendering::PaintBorderWithStyleBorder(presContext, *aCtx, this,
-                                                 aDirtyRect, lineRect, border,
-                                                 StyleContext(),
-                                                 PaintBorderFlags::SYNC_DECODE_IMAGES,
-                                                 skipSides);
-
+    gfx::DrawTarget* dt = aCtx ? aCtx->GetDrawTarget() : nullptr;
+    Maybe<nsCSSBorderRenderer> br =
+      nsCSSRendering::CreateBorderRendererWithStyleBorder(presContext, dt,
+                                                          this, aDirtyRect,
+                                                          lineRect, border,
+                                                          StyleContext(), skipSides);
+    if (br.isSome()) {
+      aBorderRenderers.AppendElement(br.value());
+    }
     child = nextSibling;
     nextSibling = nextSibling->GetNextSibling();
   }
@@ -1128,9 +1222,8 @@ nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   if (IsVisibleForPainting(aBuilder)) {
-    aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-      nsDisplayGenericOverflow(aBuilder, this, ::PaintColumnRule, "ColumnRule",
-                               nsDisplayItem::TYPE_COLUMN_RULE));
+    aLists.BorderBackground()->
+      AppendNewToTop(new (aBuilder)nsDisplayColumnRule(aBuilder, this));
   }
 
   // Our children won't have backgrounds so it doesn't matter where we put them.

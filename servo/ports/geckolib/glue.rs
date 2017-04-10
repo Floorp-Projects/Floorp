@@ -20,6 +20,7 @@ use style::data::{ElementData, ElementStyles, RestyleData};
 use style::dom::{AnimationOnlyDirtyDescendants, DirtyDescendants};
 use style::dom::{ShowSubtreeData, TElement, TNode};
 use style::error_reporting::StdoutErrorReporter;
+use style::font_metrics::get_metrics_provider_for_product;
 use style::gecko::data::{PerDocumentStyleData, PerDocumentStyleDataImpl};
 use style::gecko::global_style_data::GLOBAL_STYLE_DATA;
 use style::gecko::restyle_damage::GeckoRestyleDamage;
@@ -32,6 +33,7 @@ use style::gecko_bindings::bindings::{RawServoDeclarationBlockBorrowed, RawServo
 use style::gecko_bindings::bindings::{RawServoMediaListBorrowed, RawServoMediaListStrong};
 use style::gecko_bindings::bindings::{RawServoMediaRule, RawServoMediaRuleBorrowed};
 use style::gecko_bindings::bindings::{RawServoNamespaceRule, RawServoNamespaceRuleBorrowed};
+use style::gecko_bindings::bindings::{RawServoPageRule, RawServoPageRuleBorrowed};
 use style::gecko_bindings::bindings::{RawServoStyleRule, RawServoStyleRuleBorrowed};
 use style::gecko_bindings::bindings::{RawServoStyleSetBorrowed, RawServoStyleSetOwned};
 use style::gecko_bindings::bindings::{RawServoStyleSheetBorrowed, ServoComputedValuesBorrowed};
@@ -79,7 +81,7 @@ use style::selector_parser::PseudoElementCascadeType;
 use style::sequential;
 use style::shared_lock::{SharedRwLock, SharedRwLockReadGuard, StylesheetGuards, ToCssWithGuard, Locked};
 use style::string_cache::Atom;
-use style::stylesheets::{CssRule, CssRules, ImportRule, MediaRule, NamespaceRule};
+use style::stylesheets::{CssRule, CssRules, CssRuleType, ImportRule, MediaRule, NamespaceRule, PageRule};
 use style::stylesheets::{Origin, Stylesheet, StyleRule};
 use style::stylesheets::StylesheetLoader as StyleStylesheetLoader;
 use style::supports::parse_condition_or_declaration;
@@ -418,7 +420,8 @@ pub extern "C" fn Servo_StyleSet_GetBaseComputedValuesForElement(raw_data: RawSe
     let pseudos = &styles.pseudos;
     let pseudo_style = pseudo.as_ref().map(|p| (p, pseudos.get(p).unwrap()));
 
-    element.get_base_style(shared_context, &styles.primary, &pseudo_style)
+    let provider = get_metrics_provider_for_product();
+    element.get_base_style(shared_context, &provider, &styles.primary, &pseudo_style)
            .into_strong()
 }
 
@@ -731,6 +734,12 @@ impl_basic_rule_funcs! { (Namespace, NamespaceRule, RawServoNamespaceRule),
     to_css: Servo_NamespaceRule_GetCssText,
 }
 
+impl_basic_rule_funcs! { (Page, PageRule, RawServoPageRule),
+    getter: Servo_CssRules_GetPageRuleAt,
+    debug: Servo_PageRule_Debug,
+    to_css: Servo_PageRule_GetCssText,
+}
+
 #[no_mangle]
 pub extern "C" fn Servo_CssRules_GetFontFaceRuleAt(rules: ServoCssRulesBorrowed, index: u32)
                                                    -> *mut nsCSSFontFaceRule
@@ -794,6 +803,22 @@ pub extern "C" fn Servo_NamespaceRule_GetURI(rule: RawServoNamespaceRuleBorrowed
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_PageRule_GetStyle(rule: RawServoPageRuleBorrowed) -> RawServoDeclarationBlockStrong {
+    read_locked_arc(rule, |rule: &PageRule| {
+        rule.0.clone().into_strong()
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_PageRule_SetStyle(rule: RawServoPageRuleBorrowed,
+                                           declarations: RawServoDeclarationBlockBorrowed) {
+    let declarations = Locked::<PropertyDeclarationBlock>::as_arc(&declarations);
+    write_locked_arc(rule, |rule: &mut PageRule| {
+        rule.0 = declarations.clone();
+    })
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_ComputedValues_GetForAnonymousBox(parent_style_or_null: ServoComputedValuesBorrowedOrNull,
                                                           pseudo_tag: *mut nsIAtom,
                                                           skip_display_fixup: bool,
@@ -812,8 +837,9 @@ pub extern "C" fn Servo_ComputedValues_GetForAnonymousBox(parent_style_or_null: 
     if skip_display_fixup {
         cascade_flags.insert(SKIP_ROOT_AND_ITEM_BASED_DISPLAY_FIXUP);
     }
+    let metrics = get_metrics_provider_for_product();
     data.stylist.precomputed_values_for_pseudo(&guards, &pseudo, maybe_parent,
-                                               cascade_flags)
+                                               cascade_flags, &metrics)
         .values.unwrap()
         .into_strong()
 }
@@ -859,10 +885,12 @@ fn get_pseudo_style(guard: &SharedRwLockReadGuard, element: GeckoElement, pseudo
             let d = doc_data.borrow_mut();
             let base = styles.primary.values();
             let guards = StylesheetGuards::same(guard);
+            let metrics = get_metrics_provider_for_product();
             d.stylist.lazily_compute_pseudo_element_style(&guards,
                                                           &element,
                                                           &pseudo,
-                                                          base)
+                                                          base,
+                                                          &metrics)
                      .map(|s| s.values().clone())
         },
     }
@@ -922,7 +950,7 @@ pub extern "C" fn Servo_ParseProperty(property: *const nsACString, value: *const
     let reporter = StdoutErrorReporter;
     let context = ParserContext::new(Origin::Author, url_data, &reporter);
 
-    match ParsedDeclaration::parse(id, &context, &mut Parser::new(value), false) {
+    match ParsedDeclaration::parse(id, &context, &mut Parser::new(value), false, CssRuleType::Style) {
         Ok(parsed) => {
             let global_style_data = &*GLOBAL_STYLE_DATA;
             let mut block = PropertyDeclarationBlock::new();
@@ -1672,6 +1700,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(keyframes: RawGeckoKeyframeLis
     let parent_style = parent_style.as_ref().map(|r| &**ComputedValues::as_arc(&r));
 
     let default_values = data.default_computed_values();
+    let metrics = get_metrics_provider_for_product();
 
     let context = Context {
         is_root_element: false,
@@ -1679,7 +1708,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(keyframes: RawGeckoKeyframeLis
         inherited_style: parent_style.unwrap_or(default_values),
         layout_parent_style: parent_style.unwrap_or(default_values),
         style: (**style).clone(),
-        font_metrics_provider: None,
+        font_metrics_provider: &metrics,
     };
 
     for (index, keyframe) in keyframes.iter().enumerate() {

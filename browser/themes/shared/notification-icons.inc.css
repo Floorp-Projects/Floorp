@@ -33,6 +33,10 @@
 
 /* INDIVIDUAL NOTIFICATIONS */
 
+.focus-tab-by-prompt-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons.svg#focus-tab-by-prompt);
+}
+
 .popup-notification-icon[popupid="web-notifications"],
 .desktop-notification-icon {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#desktop-notification);

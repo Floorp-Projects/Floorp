@@ -12,6 +12,7 @@
 #include "mozilla/ServoStyleRule.h"
 #include "mozilla/ServoMediaRule.h"
 #include "mozilla/ServoNamespaceRule.h"
+#include "mozilla/ServoPageRule.h"
 
 namespace mozilla {
 
@@ -87,6 +88,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
       CASE_RULE(STYLE, Style)
       CASE_RULE(MEDIA, Media)
       CASE_RULE(NAMESPACE, Namespace)
+      CASE_RULE(PAGE, Page)
 #undef CASE_RULE
       case nsIDOMCSSRule::FONT_FACE_RULE: {
         // Returns a borrowed nsCSSFontFaceRule object directly, so we
