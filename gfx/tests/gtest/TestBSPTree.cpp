@@ -21,7 +21,7 @@ namespace {
 static void RunTest(std::deque<MozPolygon> aPolygons,
                     std::deque<MozPolygon> aExpected)
 {
-  std::list<LayerPolygon> layers;
+  std::deque<LayerPolygon> layers;
   for (MozPolygon& polygon : aPolygons) {
     layers.push_back(LayerPolygon(nullptr, Move(polygon)));
   }

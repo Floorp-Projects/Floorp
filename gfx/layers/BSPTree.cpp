@@ -9,14 +9,21 @@
 namespace mozilla {
 namespace layers {
 
+LayerPolygon PopFront(std::deque<LayerPolygon>& aLayers)
+{
+  LayerPolygon layer = Move(aLayers.front());
+  aLayers.pop_front();
+  return layer;
+}
+
 void
-BSPTree::BuildDrawOrder(BSPTreeNode* aNode,
+BSPTree::BuildDrawOrder(const UniquePtr<BSPTreeNode>& aNode,
                         nsTArray<LayerPolygon>& aLayers) const
 {
   const gfx::Point4D& normal = aNode->First().GetNormal();
 
-  BSPTreeNode* front = aNode->front;
-  BSPTreeNode* back = aNode->back;
+  UniquePtr<BSPTreeNode> *front = &aNode->front;
+  UniquePtr<BSPTreeNode> *back = &aNode->back;
 
   // Since the goal is to return the draw order from back to front, we reverse
   // the traversal order if the current polygon is facing towards the camera.
@@ -26,8 +33,8 @@ BSPTree::BuildDrawOrder(BSPTreeNode* aNode,
     std::swap(front, back);
   }
 
-  if (front) {
-    BuildDrawOrder(front, aLayers);
+  if (*front) {
+    BuildDrawOrder(*front, aLayers);
   }
 
   for (LayerPolygon& layer : aNode->layers) {
@@ -38,27 +45,22 @@ BSPTree::BuildDrawOrder(BSPTreeNode* aNode,
     }
   }
 
-  if (back) {
-    BuildDrawOrder(back, aLayers);
+  if (*back) {
+    BuildDrawOrder(*back, aLayers);
   }
 }
 
 void
-BSPTree::BuildTree(BSPTreeNode* aRoot,
-                   std::list<LayerPolygon>& aLayers)
+BSPTree::BuildTree(UniquePtr<BSPTreeNode>& aRoot,
+                   std::deque<LayerPolygon>& aLayers)
 {
-  MOZ_ASSERT(!aLayers.empty());
-
-  aRoot->layers.push_back(Move(aLayers.front()));
-  aLayers.pop_front();
-
   if (aLayers.empty()) {
     return;
   }
 
   const gfx::Polygon& plane = aRoot->First();
+  std::deque<LayerPolygon> backLayers, frontLayers;
 
-  std::list<LayerPolygon> backLayers, frontLayers;
   for (LayerPolygon& layerPolygon : aLayers) {
     const Maybe<gfx::Polygon>& geometry = layerPolygon.geometry;
 
@@ -86,22 +88,22 @@ BSPTree::BuildTree(BSPTreeNode* aRoot,
       Layer *layer = layerPolygon.layer;
 
       if (backPoints.Length() >= 3) {
-        backLayers.emplace_back(layer, Move(backPoints), normal);
+        backLayers.push_back(LayerPolygon(layer, Move(backPoints), normal));
       }
 
       if (frontPoints.Length() >= 3) {
-        frontLayers.emplace_back(layer, Move(frontPoints), normal);
+        frontLayers.push_back(LayerPolygon(layer, Move(frontPoints), normal));
       }
     }
   }
 
   if (!backLayers.empty()) {
-    aRoot->back = new (mPool) BSPTreeNode();
+    aRoot->back.reset(new BSPTreeNode(PopFront(backLayers)));
     BuildTree(aRoot->back, backLayers);
   }
 
   if (!frontLayers.empty()) {
-    aRoot->front = new (mPool) BSPTreeNode();
+    aRoot->front.reset(new BSPTreeNode(PopFront(frontLayers)));
     BuildTree(aRoot->front, frontLayers);
   }
 }
