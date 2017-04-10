@@ -9,6 +9,7 @@
 #include "mozilla/ServoMediaList.h"
 
 #include "mozilla/ServoBindings.h"
+#include "mozilla/ServoStyleSet.h"
 
 namespace mozilla {
 
@@ -77,6 +78,14 @@ ServoMediaList::Delete(const nsAString& aOldMedium)
     return NS_OK;
   }
   return NS_ERROR_DOM_NOT_FOUND_ERR;
+}
+
+bool
+ServoMediaList::Matches(nsPresContext& aPresContext,
+                        nsMediaQueryResultCacheKey*) const
+{
+  const RawServoStyleSet& rawSet = aPresContext.StyleSet()->AsServo()->RawSet();
+  return Servo_MediaList_Matches(mRawList, &rawSet);
 }
 
 } // namespace mozilla

@@ -16,6 +16,8 @@
 #include "nsWrapperCache.h"
 
 class nsIDocument;
+class nsPresContext;
+class nsMediaQueryResultCacheKey;
 
 namespace mozilla {
 class StyleSheet;
@@ -40,7 +42,7 @@ public:
   /**
    * Creates a MediaList backed by the StyleBackendType of the document.
    */
-  static already_AddRefed<MediaList> Create(nsIDocument* aDocument,
+  static already_AddRefed<MediaList> Create(const nsIDocument& aDocument,
                                             const nsAString& aMedia);
 
   virtual already_AddRefed<MediaList> Clone() = 0;
@@ -50,6 +52,8 @@ public:
 
   virtual void GetText(nsAString& aMediaText) = 0;
   virtual void SetText(const nsAString& aMediaText) = 0;
+  virtual bool Matches(nsPresContext& aPresContext,
+                       nsMediaQueryResultCacheKey* = nullptr) const = 0;
 
   void SetStyleSheet(StyleSheet* aSheet);
 

@@ -31,6 +31,8 @@ public:
   void IndexedGetter(uint32_t aIndex, bool& aFound,
                      nsAString& aReturn) final;
 
+  bool Matches(nsPresContext&, nsMediaQueryResultCacheKey*) const final;
+
 protected:
   nsresult Delete(const nsAString& aOldMedium) final;
   nsresult Append(const nsAString& aNewMedium) final;
