@@ -92,6 +92,19 @@ private:
   virtual nsresult OpenContentStream(bool async, nsIInputStream **stream,
                                      nsIChannel** channel) = 0;
 
+  // Implemented by subclass to begin pumping data for an async channel, in
+  // lieu of returning a stream. If implemented, OpenContentStream will never
+  // be called for async channels. If not implemented, AsyncOpen2 will fall
+  // back to OpenContentStream.
+  //
+  // On success, the callee must begin pumping data to the stream listener,
+  // and at some point call OnStartRequest followed by OnStopRequest.
+  // Additionally, it may provide a request object which may be used to
+  // suspend, resume, and cancel the underlying request.
+  virtual nsresult BeginAsyncRead(nsIStreamListener* listener, nsIRequest** request) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   // The basechannel calls this method from its OnTransportStatus method to
   // determine whether to call nsIProgressEventSink::OnStatus in addition to
   // nsIProgressEventSink::OnProgress.  This method may be overriden by the
@@ -164,7 +177,7 @@ public:
 
   // This is a short-cut to calling nsIRequest::IsPending()
   virtual bool Pending() const {
-    return mPump || mWaitingOnAsyncRedirect;
+    return mPumpingData || mWaitingOnAsyncRedirect;
  }
 
   // Helper function for querying the channel's notification callbacks.
@@ -266,6 +279,8 @@ private:
   friend class RedirectRunnable;
 
   RefPtr<nsInputStreamPump>         mPump;
+  RefPtr<nsIRequest>                  mRequest;
+  bool                                mPumpingData;
   nsCOMPtr<nsIProgressEventSink>      mProgressSink;
   nsCOMPtr<nsIURI>                    mOriginalURI;
   nsCOMPtr<nsISupports>               mOwner;

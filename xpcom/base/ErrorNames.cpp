@@ -9,35 +9,17 @@
 #include "nsString.h"
 #include "prerror.h"
 
-namespace {
-
-struct ErrorEntry
-{
-  nsresult value;
-  const char * name;
-};
-
-#undef ERROR
-#define ERROR(key, val) {key, #key}
-
-const ErrorEntry errors[] = {
-  #include "ErrorList.h"
-};
-
-#undef ERROR
-
-} // unnamed namespace
+// Get the GetErrorNameInternal method
+#include "ErrorNamesInternal.h"
 
 namespace mozilla {
 
 void
 GetErrorName(nsresult rv, nsACString& name)
 {
-  for (size_t i = 0; i < ArrayLength(errors); ++i) {
-    if (errors[i].value == rv) {
-      name.AssignASCII(errors[i].name);
-      return;
-    }
+  if (const char* errorName = GetErrorNameInternal(rv)) {
+    name.AssignASCII(errorName);
+    return;
   }
 
   bool isSecurityError = NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_SECURITY;
@@ -82,3 +64,15 @@ GetErrorName(nsresult rv, nsACString& name)
 }
 
 } // namespace mozilla
+
+extern "C" {
+
+// This is an extern "C" binding for the GetErrorName method which is used by
+// the nsresult rust bindings in xpcom/rust/nserror.
+void
+Gecko_GetErrorName(nsresult aRv, nsACString& aName)
+{
+  GetErrorName(aRv, aName);
+}
+
+}

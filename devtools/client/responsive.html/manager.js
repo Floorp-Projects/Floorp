@@ -8,8 +8,7 @@ const { Ci } = require("chrome");
 const promise = require("promise");
 const { Task } = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
-const { getOwnerWindow } = require("sdk/tabs/utils");
-const { startup } = require("sdk/window/helpers");
+const { startup } = require("./utils/window");
 const message = require("./utils/message");
 const { swapToInnerBrowser } = require("./browser/swap");
 const { EmulationFront } = require("devtools/shared/fronts/emulation");
@@ -145,7 +144,7 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
    * @return boolean
    */
   isActiveForWindow(window) {
-    return [...this.activeTabs.keys()].some(t => getOwnerWindow(t) === window);
+    return [...this.activeTabs.keys()].some(t => t.ownerGlobal === window);
   },
 
   /**
@@ -209,7 +208,7 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
     }
   },
 
-  setMenuCheckFor: Task.async(function* (tab, window = getOwnerWindow(tab)) {
+  setMenuCheckFor: Task.async(function* (tab, window = tab.ownerGlobal) {
     yield startup(window);
 
     let menu = window.document.getElementById("menu_responsiveUI");

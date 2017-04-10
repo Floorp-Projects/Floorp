@@ -1652,6 +1652,13 @@ RootClient.prototype = {
   constructor: RootClient,
 
   /**
+   * Gets the "root" form, which lists all the global actors that affect the entire
+   * browser.  This can replace usages of `listTabs` that only wanted the global actors
+   * and didn't actually care about tabs.
+   */
+  getRoot: DebuggerClient.requester({ type: "getRoot" }),
+
+   /**
    * List the open tabs.
    *
    * @param function onResponse

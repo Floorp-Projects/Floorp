@@ -181,6 +181,11 @@ function setRadioState(aPartId, aValue) {
 }
 
 function initIndexedDBRow() {
+  // IndexedDB information is not shown for pages with a null principal
+  // such as sandboxed pages because these pages do not have access to indexedDB.
+  if (gPermPrincipal.isNullPrincipal)
+    return;
+
   let row = document.getElementById("perm-indexedDB-row");
   let extras = document.getElementById("perm-indexedDB-extras");
 

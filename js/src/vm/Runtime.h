@@ -497,12 +497,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     /* Compartment memory reporting callback. */
     js::ActiveThreadData<JSSizeOfIncludingThisCompartmentCallback> sizeOfIncludingThisCompartmentCallback;
 
-    /* Zone destroy callback. */
-    js::ActiveThreadData<JSZoneCallback> destroyZoneCallback;
-
-    /* Zone sweep callback. */
-    js::ActiveThreadData<JSZoneCallback> sweepZoneCallback;
-
     /* Call this to get the name of a compartment. */
     js::ActiveThreadData<JSCompartmentNameCallback> compartmentNameCallback;
 

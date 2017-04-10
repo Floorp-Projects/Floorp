@@ -40,10 +40,11 @@ public:
                                   mozilla::GenericSpecifiedValues* aGenericData);
 
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) override;
-  virtual bool SetMappedAttribute(nsIDocument* aDocument,
-                                    nsIAtom* aName,
-                                    nsAttrValue& aValue,
-                                    nsresult* aRetval) override;
+  virtual bool SetMappedAttribute(nsIAtom* aName,
+                                  nsAttrValue& aValue,
+                                  nsresult* aRetval) override;
+
+  virtual void NodeInfoChanged(nsIDocument* aOldDoc) override;
 };
 
 #endif // NS_MAPPEDATTRIBUTEELEMENT_H_

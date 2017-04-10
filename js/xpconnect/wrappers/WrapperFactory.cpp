@@ -7,7 +7,6 @@
 #include "WaiveXrayWrapper.h"
 #include "FilteringWrapper.h"
 #include "AddonWrapper.h"
-#include "DocGroupValidationWrapper.h"
 #include "XrayWrapper.h"
 #include "AccessCheck.h"
 #include "XPCWrapper.h"
@@ -448,66 +447,6 @@ SelectAddonWrapper(JSContext* cx, HandleObject obj, const Wrapper* wrapper)
     return wrapper;
 }
 
-static bool
-NeedsDocGroupValidationWrapper(JSContext* cx, HandleObject obj,
-                               JSCompartment* origin, JSCompartment* target,
-                               CompartmentPrivate* targetCompartmentPrivate)
-{
-    // We do DocGroup validation in the following circumstances:
-    //   - Only if the target compartment has the DocGroupValidation()
-    //     flag set (which includes any add-on compartments).
-    //   - Only if we're in the content process.
-    //   - Only if the origin compartment is not system principled and is not a sandbox.
-    //   - Only if the target compartment is system principled.
-
-    if (!targetCompartmentPrivate->scope->HasDocGroupValidation())
-        return false;
-
-    if (!XRE_IsContentProcess())
-        return false;
-
-    if (!AccessCheck::isChrome(target))
-        return false;
-
-    if (AccessCheck::isChrome(origin) ||
-        IsSandbox(js::GetGlobalForObjectCrossCompartment(obj)))
-    {
-        return false;
-    }
-
-    return true;
-}
-
-static const Wrapper*
-SelectDocGroupValidationWrapper(JSContext* cx, HandleObject obj, const Wrapper* wrapper)
-{
-    // Validation wrappers only supports certain wrapper types, so we check if
-    // we would have used one of the supported ones.
-    if (wrapper == &CrossCompartmentWrapper::singleton)
-        return &DocGroupValidationWrapper<CrossCompartmentWrapper>::singleton;
-    else if (wrapper == &PermissiveXrayXPCWN::singleton)
-        return &DocGroupValidationWrapper<PermissiveXrayXPCWN>::singleton;
-    else if (wrapper == &PermissiveXrayDOM::singleton)
-        return &DocGroupValidationWrapper<PermissiveXrayDOM>::singleton;
-    else if (wrapper == &PermissiveXrayJS::singleton)
-        return &DocGroupValidationWrapper<PermissiveXrayJS>::singleton;
-    else if (wrapper == &AddonWrapper<CrossCompartmentWrapper>::singleton)
-        return &DocGroupValidationWrapper<AddonWrapper<CrossCompartmentWrapper>>::singleton;
-    else if (wrapper == &AddonWrapper<PermissiveXrayXPCWN>::singleton)
-        return &DocGroupValidationWrapper<AddonWrapper<PermissiveXrayXPCWN>>::singleton;
-    else if (wrapper == &AddonWrapper<PermissiveXrayDOM>::singleton)
-        return &DocGroupValidationWrapper<AddonWrapper<PermissiveXrayDOM>>::singleton;
-    else if (wrapper == &WaiveXrayWrapper::singleton)
-        return &DocGroupValidationWrapper<WaiveXrayWrapper>::singleton;
-
-    // If NeedsDocGroupValidationWrapper is true, then securityWrapper should be false
-    // and xrayType should never be NotXray (since the target always subsumes the origin
-    // and the origin never subsumes the target).
-    MOZ_ASSERT(wrapper == &WaiveXrayWrapper::singleton ||
-               wrapper == &(PermissiveXrayOpaque::singleton));
-    return wrapper;
-}
-
 JSObject*
 WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
 {
@@ -617,13 +556,6 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
         // then we try to "upgrade" the wrapper to an interposing one.
         if (targetCompartmentPrivate->scope->HasInterposition())
             wrapper = SelectAddonWrapper(cx, obj, wrapper);
-
-        // Now try another "upgrade" to a DocGroupValidationWrapper.
-        if (NeedsDocGroupValidationWrapper(cx, obj, origin, target,
-                                           targetCompartmentPrivate))
-        {
-            wrapper = SelectDocGroupValidationWrapper(cx, obj, wrapper);
-        }
     }
 
     if (!targetSubsumesOrigin) {

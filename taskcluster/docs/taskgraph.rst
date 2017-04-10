@@ -180,6 +180,15 @@ parameter file.  The parameter keys and values are described in
 :doc:`parameters`; using that information, you may modify an existing
 ``parameters.yml`` or create your own.
 
+By default, the above commands will only output a list of tasks. Use `-J` flag
+to output full task definitions. For example:
+
+.. code-block:: shell
+
+    $ ./mach taskgraph optimized -J -p ~/Downloads/parameters.yml
+
+See :doc:`how-tos` for further practical tips.
+
 Task Parameterization
 ---------------------
 

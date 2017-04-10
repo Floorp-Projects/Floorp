@@ -85,7 +85,7 @@ public:
 
     RefPtr<TransferBuffer> transfer =
       new TransferBuffer(aStream, aInput.AsAudioChunk());
-    NS_DispatchToMainThread(transfer);
+    mAbstractMainThread->Dispatch(transfer.forget());
   }
 
   virtual bool IsActive() const override

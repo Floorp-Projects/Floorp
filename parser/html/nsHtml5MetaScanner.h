@@ -31,7 +31,7 @@
 
 #include "nsIAtom.h"
 #include "nsHtml5AtomTable.h"
-#include "nsString.h"
+#include "nsHtml5String.h"
 #include "nsNameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsTraceRefcnt.h"
@@ -76,8 +76,8 @@ class nsHtml5MetaScanner
   private:
     int32_t strBufLen;
     autoJArray<char16_t,int32_t> strBuf;
-    nsString* content;
-    nsString* charset;
+    nsHtml5String content;
+    nsHtml5String charset;
     int32_t httpEquivState;
     nsHtml5TreeBuilder* treeBuilder;
   public:
@@ -100,7 +100,8 @@ class nsHtml5MetaScanner
     bool handleTag();
     bool handleTagInner();
   protected:
-    bool tryCharset(nsString* encoding);
+    bool tryCharset(nsHtml5String encoding);
+
   public:
     static void initializeStatics();
     static void releaseStatics();

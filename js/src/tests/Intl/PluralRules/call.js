@@ -11,10 +11,6 @@ function IsConstructor(o) {
   }
 }
 
-function IsObject(o) {
-    return Object(o) === o;
-}
-
 function thisValues() {
     const intlConstructors = Object.getOwnPropertyNames(Intl).map(name => Intl[name]).filter(IsConstructor);
 
@@ -42,29 +38,12 @@ function thisValues() {
     ];
 }
 
-// Invoking [[Call]] for Intl.PluralRules always returns a new PluralRules instance.
-for (let thisValue of thisValues()) {
-    let obj = Intl.PluralRules.call(thisValue);
-    assertEq(Object.is(obj, thisValue), false);
-    assertEq(obj instanceof Intl.PluralRules, true);
+// Intl.PluralRules cannot be invoked as a function.
+assertThrowsInstanceOf(() => Intl.PluralRules(), TypeError);
 
-    // Ensure Intl.[[FallbackSymbol]] wasn't installed on |thisValue|.
-    if (IsObject(thisValue))
-        assertEqArray(Object.getOwnPropertySymbols(thisValue), []);
-}
-
-// Intl.PluralRules doesn't use the legacy Intl constructor compromise semantics.
+// Also test with explicit this-value.
 for (let thisValue of thisValues()) {
-    // Ensure instanceof operator isn't invoked for Intl.PluralRules.
-    Object.defineProperty(Intl.PluralRules, Symbol.hasInstance, {
-        get() {
-            assertEq(false, true, "@@hasInstance operator called");
-        }, configurable: true
-    });
-    let obj = Intl.PluralRules.call(thisValue);
-    delete Intl.PluralRules[Symbol.hasInstance];
-    assertEq(Object.is(obj, thisValue), false);
-    assertEq(obj instanceof Intl.PluralRules, true);
+    assertThrowsInstanceOf(() => Intl.PluralRules.call(thisValue), TypeError);
 }
 
 if (typeof reportCompare === "function")

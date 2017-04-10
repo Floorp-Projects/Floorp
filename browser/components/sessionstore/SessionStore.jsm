@@ -634,10 +634,15 @@ var SessionStoreInternal = {
           let [iniState, remainingState] = this._prepDataForDeferredRestore(state);
           // If we have a iniState with windows, that means that we have windows
           // with app tabs to restore.
-          if (iniState.windows.length)
+          if (iniState.windows.length) {
+            // Move cookies over from the remaining state so that they're
+            // restored right away, and pinned tabs will load correctly.
+            iniState.cookies = remainingState.cookies;
+            delete remainingState.cookies;
             state = iniState;
-          else
+          } else {
             state = null;
+          }
 
           if (remainingState.windows.length) {
             LastSession.setState(remainingState);
@@ -1153,6 +1158,9 @@ var SessionStoreInternal = {
           // it happens before observers are notified
           this._globalState.setFromState(aInitialState);
 
+          // Restore session cookies before loading any tabs.
+          SessionCookies.restore(aInitialState.cookies || []);
+
           let overwrite = this._isCmdLineEmpty(aWindow, aInitialState);
           let options = {firstWindow: true, overwriteTabs: overwrite};
           this.restoreWindows(aWindow, aInitialState, options);
@@ -1381,7 +1389,6 @@ var SessionStoreInternal = {
         winData.title = tabbrowser.selectedBrowser.contentTitle || tabbrowser.selectedTab.label;
         winData.title = this._replaceLoadingTitle(winData.title, tabbrowser,
                                                   tabbrowser.selectedTab);
-        SessionCookies.update([winData]);
       }
 
       if (AppConstants.platform != "macosx") {
@@ -2221,6 +2228,9 @@ var SessionStoreInternal = {
     // it happens before observers are notified
     this._globalState.setFromState(state);
 
+    // Restore session cookies.
+    SessionCookies.restore(state.cookies || []);
+
     // restore to the given state
     this.restoreWindows(window, state, {overwriteTabs: true});
 
@@ -2686,6 +2696,9 @@ var SessionStoreInternal = {
     // it happens before observers are notified
     this._globalState.setFromState(lastSessionState);
 
+    // Restore session cookies.
+    SessionCookies.restore(lastSessionState.cookies || []);
+
     // Restore into windows or open new ones as needed.
     for (let i = 0; i < lastSessionState.windows.length; i++) {
       let winState = lastSessionState.windows[i];
@@ -3046,10 +3059,6 @@ var SessionStoreInternal = {
         nonPopupCount++;
     }
 
-    TelemetryStopwatch.start("FX_SESSION_RESTORE_COLLECT_COOKIES_MS");
-    SessionCookies.update(total);
-    TelemetryStopwatch.finish("FX_SESSION_RESTORE_COLLECT_COOKIES_MS");
-
     // collect the data for all windows yet to be restored
     for (ix in this._statesToRestore) {
       for (let winData of this._statesToRestore[ix].windows) {
@@ -3102,6 +3111,11 @@ var SessionStoreInternal = {
       global: this._globalState.getState()
     };
 
+    // Collect and store session cookies.
+    TelemetryStopwatch.start("FX_SESSION_RESTORE_COLLECT_COOKIES_MS");
+    state.cookies = SessionCookies.collect();
+    TelemetryStopwatch.finish("FX_SESSION_RESTORE_COLLECT_COOKIES_MS");
+
     if (Cu.isModuleLoaded("resource://devtools/client/scratchpad/scratchpad-manager.jsm")) {
       // get open Scratchpad window states too
       let scratchpads = ScratchpadManager.getSessionState();
@@ -3139,10 +3153,7 @@ var SessionStoreInternal = {
       this._collectWindowData(aWindow);
     }
 
-    let windows = [this._windows[aWindow.__SSi]];
-    SessionCookies.update(windows);
-
-    return { windows };
+    return { windows: [this._windows[aWindow.__SSi]] };
   },
 
   /**
@@ -3386,9 +3397,10 @@ var SessionStoreInternal = {
       this.restoreWindowFeatures(aWindow, winData);
       delete this._windows[aWindow.__SSi].extData;
     }
-    if (winData.cookies) {
-      SessionCookies.restore(winData.cookies);
-    }
+
+    // Restore cookies from legacy sessions, i.e. before bug 912717.
+    SessionCookies.restore(winData.cookies || []);
+
     if (winData.extData) {
       if (!this._windows[aWindow.__SSi].extData) {
         this._windows[aWindow.__SSi].extData = {};
@@ -4312,8 +4324,7 @@ var SessionStoreInternal = {
    * (defaultState) will be a state that should still be restored at startup,
    * while the second part (state) is a state that should be saved for later.
    * defaultState will be comprised of windows with only pinned tabs, extracted
-   * from state. It will contain the cookies that go along with the history
-   * entries in those tabs. It will also contain window position information.
+   * from state. It will also contain window position information.
    *
    * defaultState will be restored at startup. state will be passed into
    * LastSession and will be kept in case the user explicitly wants
@@ -4338,7 +4349,7 @@ var SessionStoreInternal = {
       let window = state.windows[wIndex];
       window.selected = window.selected || 1;
       // We're going to put the state of the window into this object
-      let pinnedWindowState = { tabs: [], cookies: []};
+      let pinnedWindowState = { tabs: [] };
       for (let tIndex = 0; tIndex < window.tabs.length;) {
         if (window.tabs[tIndex].pinned) {
           // Adjust window.selected
@@ -4379,9 +4390,6 @@ var SessionStoreInternal = {
         window.__lastSessionWindowID = pinnedWindowState.__lastSessionWindowID
                                      = "" + Date.now() + Math.random();
 
-        // Extract the cookies that belong with each pinned tab
-        this._splitCookiesFromWindow(window, pinnedWindowState);
-
         // Actually add this window to our defaultState
         defaultState.windows.push(pinnedWindowState);
         // Remove the window from the state if it doesn't have any tabs
@@ -4402,36 +4410,6 @@ var SessionStoreInternal = {
     }
 
     return [defaultState, state];
-  },
-
-  /**
-   * Splits out the cookies from aWinState into aTargetWinState based on the
-   * tabs that are in aTargetWinState.
-   * This alters the state of aWinState and aTargetWinState.
-   */
-  _splitCookiesFromWindow:
-    function ssi_splitCookiesFromWindow(aWinState, aTargetWinState) {
-    if (!aWinState.cookies || !aWinState.cookies.length)
-      return;
-
-    // Get the hosts for history entries in aTargetWinState
-    let cookieHosts = SessionCookies.getHostsForWindow(aTargetWinState);
-
-    // By creating a regex we reduce overhead and there is only one loop pass
-    // through either array (cookieHosts and aWinState.cookies).
-    let hosts = [...cookieHosts].join("|").replace(/\./g, "\\.");
-    // If we don't actually have any hosts, then we don't want to do anything.
-    if (!hosts.length)
-      return;
-    let cookieRegex = new RegExp(".*(" + hosts + ")");
-    for (let cIndex = 0; cIndex < aWinState.cookies.length;) {
-      if (cookieRegex.test(aWinState.cookies[cIndex].host)) {
-        aTargetWinState.cookies =
-          aTargetWinState.cookies.concat(aWinState.cookies.splice(cIndex, 1));
-        continue;
-      }
-      cIndex++;
-    }
   },
 
   _sendRestoreCompletedNotifications: function ssi_sendRestoreCompletedNotifications() {

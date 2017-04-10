@@ -28,7 +28,7 @@ class ScaledFontBase : public ScaledFont
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontBase)
-  explicit ScaledFontBase(Float aSize);
+  ScaledFontBase(const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize);
   virtual ~ScaledFontBase();
 
   virtual already_AddRefed<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget);
@@ -37,7 +37,7 @@ public:
 
   virtual void GetGlyphDesignMetrics(const uint16_t* aGlyphIndices, uint32_t aNumGlyphs, GlyphMetrics* aGlyphMetrics);
 
-  float GetSize() { return mSize; }
+  virtual Float GetSize() const { return mSize; }
 
 #ifdef USE_SKIA
   virtual SkTypeface* GetSkTypeface() { return mTypeface; }

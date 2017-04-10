@@ -1236,14 +1236,7 @@ bool
 nsStyleSVGReset::HasMask() const
 {
   for (uint32_t i = 0; i < mMask.mImageCount; i++) {
-    // mMask.mLayers[i].mSourceURI can be nullptr if mask-image prop value is
-    // <element-reference> or <gradient>.
-    // mMask.mLayers[i].mImage can be empty if mask-image prop value is a
-    // reference to SVG mask element.
-    //
-    // So we need to test both mSourceURI and mImage.
-    if ((mMask.mLayers[i].mSourceURI && mMask.mLayers[i].mSourceURI->GetURI()) ||
-        !mMask.mLayers[i].mImage.IsEmpty()) {
+    if (!mMask.mLayers[i].mImage.IsEmpty()) {
       return true;
     }
   }
@@ -2194,6 +2187,8 @@ nsStyleImage::DoCopy(const nsStyleImage& aOther)
     SetGradientData(aOther.mGradient);
   } else if (aOther.mType == eStyleImageType_Element) {
     SetElementId(aOther.mElementId);
+  } else if (aOther.mType == eStyleImageType_URL) {
+    SetURLValue(do_AddRef(aOther.mURLValue));
   }
 
   UniquePtr<nsStyleSides> cropRectCopy;
@@ -2212,6 +2207,8 @@ nsStyleImage::SetNull()
     NS_RELEASE(mImage);
   } else if (mType == eStyleImageType_Element) {
     free(mElementId);
+  } else if (mType == eStyleImageType_URL) {
+    NS_RELEASE(mURLValue);
   }
 
   mType = eStyleImageType_Null;
@@ -2270,6 +2267,21 @@ void
 nsStyleImage::SetCropRect(UniquePtr<nsStyleSides> aCropRect)
 {
     mCropRect = Move(aCropRect);
+}
+
+void
+nsStyleImage::SetURLValue(already_AddRefed<URLValue> aValue)
+{
+  RefPtr<URLValue> value = aValue;
+
+  if (mType != eStyleImageType_Null) {
+    SetNull();
+  }
+
+  if (value) {
+    mURLValue = value.forget().take();
+    mType = eStyleImageType_URL;
+  }
 }
 
 static int32_t
@@ -2417,6 +2429,7 @@ nsStyleImage::IsComplete() const
       return false;
     case eStyleImageType_Gradient:
     case eStyleImageType_Element:
+    case eStyleImageType_URL:
       return true;
     case eStyleImageType_Image: {
       imgRequestProxy* req = GetImageData();
@@ -2442,6 +2455,7 @@ nsStyleImage::IsLoaded() const
       return false;
     case eStyleImageType_Gradient:
     case eStyleImageType_Element:
+    case eStyleImageType_URL:
       return true;
     case eStyleImageType_Image: {
       imgRequestProxy* req = GetImageData();
@@ -2489,6 +2503,10 @@ nsStyleImage::operator==(const nsStyleImage& aOther) const
     return NS_strcmp(mElementId, aOther.mElementId) == 0;
   }
 
+  if (mType == eStyleImageType_URL) {
+    return DefinitelyEqualURIs(mURLValue, aOther.mURLValue);
+  }
+
   return true;
 }
 
@@ -2521,6 +2539,18 @@ nsStyleImage::GetImageURI() const
 
   nsCOMPtr<nsIURI> uri = mImage->GetImageURI();
   return uri.forget();
+}
+
+css::URLValueData*
+nsStyleImage::GetURLValue() const
+{
+  if (mType == eStyleImageType_Image) {
+    return mImage->GetImageValue();
+  } else if (mType == eStyleImageType_URL) {
+    return mURLValue;
+  }
+
+  return nullptr;
 }
 
 // --------------------
@@ -2759,7 +2789,8 @@ bool nsStyleImageLayers::operator==(const nsStyleImageLayers& aOther) const
 
   for (uint32_t i = 0; i < mLayers.Length(); i++) {
     if (mLayers[i].mPosition != aOther.mLayers[i].mPosition ||
-        !DefinitelyEqualURIs(mLayers[i].mSourceURI, aOther.mLayers[i].mSourceURI) ||
+        !DefinitelyEqualURIs(mLayers[i].mImage.GetURLValue(),
+                             aOther.mLayers[i].mImage.GetURLValue()) ||
         mLayers[i].mImage != aOther.mLayers[i].mImage ||
         mLayers[i].mSize != aOther.mLayers[i].mSize ||
         mLayers[i].mClip != aOther.mLayers[i].mClip ||
@@ -2973,15 +3004,15 @@ nsStyleImageLayers::Layer::operator==(const Layer& aOther) const
          mSize == aOther.mSize &&
          mImage == aOther.mImage &&
          mMaskMode == aOther.mMaskMode &&
-         mComposite == aOther.mComposite &&
-         DefinitelyEqualURIs(mSourceURI, aOther.mSourceURI);
+         mComposite == aOther.mComposite;
 }
 
 nsChangeHint
 nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewLayer) const
 {
   nsChangeHint hint = nsChangeHint(0);
-  if (!DefinitelyEqualURIs(mSourceURI, aNewLayer.mSourceURI)) {
+  if (!DefinitelyEqualURIs(mImage.GetURLValue(),
+                           aNewLayer.mImage.GetURLValue())) {
     hint |= nsChangeHint_RepaintFrame | nsChangeHint_UpdateEffects;
 
     // If Layer::mSourceURI links to a SVG mask, it has a fragment. Not vice
@@ -2996,12 +3027,12 @@ nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewL
     // That is, if mSourceURI has a fragment, it may link to a SVG mask; If
     // not, it "must" not link to a SVG mask.
     bool maybeSVGMask = false;
-    if (mSourceURI) {
-      maybeSVGMask = mSourceURI->HasRef();
+    if (mImage.GetURLValue()) {
+      maybeSVGMask = mImage.GetURLValue()->HasRef();
     }
 
-    if (!maybeSVGMask && aNewLayer.mSourceURI) {
-      maybeSVGMask = aNewLayer.mSourceURI->HasRef();
+    if (!maybeSVGMask && aNewLayer.mImage.GetURLValue()) {
+      maybeSVGMask = aNewLayer.mImage.GetURLValue()->HasRef();
     }
 
     // Return nsChangeHint_UpdateOverflow if either URI might link to an SVG

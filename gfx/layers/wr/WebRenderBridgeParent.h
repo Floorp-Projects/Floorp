@@ -73,14 +73,15 @@ public:
                                            const uint32_t& aStride,
                                            const gfx::SurfaceFormat& aFormat,
                                            const ByteBuffer& aBuffer) override;
-  mozilla::ipc::IPCResult RecvAddRawFont(const wr::FontKey& aFontKey,
-                                         const ByteBuffer& aBuffer,
-                                         const uint32_t& aFontIndex) override;
   mozilla::ipc::IPCResult RecvUpdateImage(const wr::ImageKey& aImageKey,
                                           const gfx::IntSize& aSize,
                                           const gfx::SurfaceFormat& aFormat,
                                           const ByteBuffer& aBuffer) override;
   mozilla::ipc::IPCResult RecvDeleteImage(const wr::ImageKey& a1) override;
+  mozilla::ipc::IPCResult RecvAddRawFont(const wr::FontKey& aFontKey,
+                                         const ByteBuffer& aBuffer,
+                                         const uint32_t& aFontIndex) override;
+  mozilla::ipc::IPCResult RecvDeleteFont(const wr::FontKey& aFontKey) override;
   mozilla::ipc::IPCResult RecvDPBegin(const gfx::IntSize& aSize) override;
   mozilla::ipc::IPCResult RecvDPEnd(const gfx::IntSize& aSize,
                                     InfallibleTArray<WebRenderParentCommand>&& aCommands,

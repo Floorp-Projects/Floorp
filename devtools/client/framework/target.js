@@ -277,7 +277,7 @@ TabTarget.prototype = {
     return this._form;
   },
 
-  // Get a promise of the root form returned by a listTabs request. This promise
+  // Get a promise of the root form returned by a getRoot request. This promise
   // is cached.
   get root() {
     if (!this._root) {
@@ -288,7 +288,7 @@ TabTarget.prototype = {
 
   _getRoot: function () {
     return new Promise((resolve, reject) => {
-      this.client.listTabs(response => {
+      this.client.mainRoot.getRoot(response => {
         if (response.error) {
           reject(new Error(response.error + ": " + response.message));
           return;

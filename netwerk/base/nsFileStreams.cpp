@@ -26,8 +26,6 @@
 #include "nsNetCID.h"
 #include "nsXULAppAPI.h"
 
-#define NS_NO_INPUT_BUFFERING 1 // see http://bugzilla.mozilla.org/show_bug.cgi?id=41067
-
 typedef mozilla::ipc::FileDescriptor::PlatformHandleType FileHandleType;
 
 using namespace mozilla::ipc;

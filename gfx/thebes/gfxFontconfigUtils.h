@@ -38,11 +38,12 @@ public:
 
 class gfxFontconfigFontBase : public gfxFT2FontBase {
 public:
-    gfxFontconfigFontBase(cairo_scaled_font_t *aScaledFont,
+    gfxFontconfigFontBase(const RefPtr<mozilla::gfx::UnscaledFontFontconfig>& aUnscaledFont,
+                          cairo_scaled_font_t *aScaledFont,
                           FcPattern *aPattern,
                           gfxFontEntry *aFontEntry,
                           const gfxFontStyle *aFontStyle)
-      : gfxFT2FontBase(aScaledFont, aFontEntry, aFontStyle)
+      : gfxFT2FontBase(aUnscaledFont, aScaledFont, aFontEntry, aFontStyle)
       , mPattern(aPattern) { }
 
     virtual FontType GetType() const override { return FONT_TYPE_FONTCONFIG; }

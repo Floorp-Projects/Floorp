@@ -29,7 +29,7 @@
 "PKCS #12 V2 PBE With SHA-1 and 40 Bit RC4"
 
   export pkcs12v2pbeWithSha1AndTripleDESCBC=\
-"PKCS #12 V2 PBE With SHA-1 and Triple DES-CBC"
+"PKCS #12 V2 PBE With SHA-1 and 3KEY Triple DES-CBC"
 
   export pkcs12v2pbeWithSha1And128BitRc2Cbc=\
 "PKCS #12 V2 PBE With SHA-1 and 128 Bit RC2 CBC"
@@ -249,7 +249,7 @@ tools_p12_export_list_import_all_pkcs5pbe_ciphers()
                          "${pkcs5pbeWithMD5AndDEScbc}" \
                          "${pkcs5pbeWithSha1AndDEScbc}" \
                          "DEFAULT"\
-                         "null"; do
+                         "none"; do
             export_list_import "${key_cipher}" "${cert_cipher}"
       done       
   done
@@ -287,7 +287,7 @@ tools_p12_export_list_import_all_pkcs5v2_ciphers()
       AES-128-CBC \
       AES-192-CBC \
       AES-256-CBC \
-      null; do
+      none; do
 	  export_list_import ${key_cipher} ${cert_cipher}
 	done
   done
@@ -324,8 +324,8 @@ tools_p12_export_list_import_all_pkcs12v2pbe_ciphers()
                   "${pkcs12v2pbeWithMd5AndDESCBC}" \
                   "${pkcs12v2pbeWithSha1AndDESCBC}" \
                   "DEFAULT"\
-                  "null"; do        
-	  export_list_import "${key_cipher}" "${key_cipher}" 
+                  "none"; do        
+	  export_list_import "${key_cipher}" "${cert_cipher}" 
 	done
   #done
 }
@@ -333,32 +333,57 @@ tools_p12_export_list_import_all_pkcs12v2pbe_ciphers()
 #########################################################################
 # Export with no encryption on key should fail but on cert should pass
 #########################################################################
-tools_p12_export_with_null_ciphers()
+tools_p12_export_with_none_ciphers()
 {
-  # use null as the key encryption algorithm default for the cert one
+  # use none as the key encryption algorithm default for the cert one
   # should fail
   
   echo "pk12util -o Alice.p12 -n \"Alice\" -d ${P_R_ALICEDIR} \\"
-  echo "         -k ${R_PWFILE} -w ${R_PWFILE} -c null"     
+  echo "         -k ${R_PWFILE} -w ${R_PWFILE} -c none"     
   ${BINDIR}/pk12util -o Alice.p12 -n Alice -d ${P_R_ALICEDIR} \
                        -k ${R_PWFILE} -w ${R_PWFILE} \
-                       -c null 2>&1  
+                       -c none 2>&1  
   ret=$?
-  html_msg $ret 30 "Exporting with [null:default] (pk12util -o)"
+  html_msg $ret 30 "Exporting with [none:default] (pk12util -o)"
   check_tmpfile
 
-  # use default as the key encryption algorithm null for the cert one
+  # use default as the key encryption algorithm none for the cert one
   # should pass
   
   echo "pk12util -o Alice.p12 -n \"Alice\" -d ${P_R_ALICEDIR} \\"
-  echo "         -k ${R_PWFILE} -w ${R_PWFILE} -C null"     
+  echo "         -k ${R_PWFILE} -w ${R_PWFILE} -C none"     
   ${BINDIR}/pk12util -o Alice.p12 -n Alice -d ${P_R_ALICEDIR} \
                        -k ${R_PWFILE} -w ${R_PWFILE} \
-                       -C null 2>&1  
+                       -C none 2>&1  
   ret=$?
-  html_msg $ret 0 "Exporting with [default:null] (pk12util -o)"
+  html_msg $ret 0 "Exporting with [default:none] (pk12util -o)"
   check_tmpfile
  
+}
+
+#########################################################################
+# Export with invalid cipher should fail
+#########################################################################
+tools_p12_export_with_invalid_ciphers()
+{
+  echo "pk12util -o Alice.p12 -n \"Alice\" -d ${P_R_ALICEDIR} \\"
+  echo "         -k ${R_PWFILE} -w ${R_PWFILE} -c INVALID_CIPHER"
+  ${BINDIR}/pk12util -o Alice.p12 -n Alice -d ${P_R_ALICEDIR} \
+                       -k ${R_PWFILE} -w ${R_PWFILE} \
+                       -c INVALID_CIPHER 2>&1
+  ret=$?
+  html_msg $ret 30 "Exporting with [INVALID_CIPHER:default] (pk12util -o)"
+  check_tmpfile
+
+  echo "pk12util -o Alice.p12 -n \"Alice\" -d ${P_R_ALICEDIR} \\"
+  echo "         -k ${R_PWFILE} -w ${R_PWFILE} -C INVALID_CIPHER"
+  ${BINDIR}/pk12util -o Alice.p12 -n Alice -d ${P_R_ALICEDIR} \
+                       -k ${R_PWFILE} -w ${R_PWFILE} \
+                       -C INVALID_CIPHER 2>&1
+  ret=$?
+  html_msg $ret 30 "Exporting with [default:INVALID_CIPHER] (pk12util -o)"
+  check_tmpfile
+
 }
 
 #########################################################################
@@ -407,7 +432,8 @@ tools_p12()
   tools_p12_export_list_import_all_pkcs5v2_ciphers
   tools_p12_export_list_import_all_pkcs5pbe_ciphers
   tools_p12_export_list_import_all_pkcs12v2pbe_ciphers
-  tools_p12_export_with_null_ciphers
+  tools_p12_export_with_none_ciphers
+  tools_p12_export_with_invalid_ciphers
 }
 
 ############################## tools_sign ##############################

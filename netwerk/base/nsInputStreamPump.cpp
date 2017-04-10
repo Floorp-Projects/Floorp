@@ -240,7 +240,10 @@ nsInputStreamPump::Resume()
     NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
     NS_ENSURE_TRUE(mState != STATE_IDLE, NS_ERROR_UNEXPECTED);
 
-    if (--mSuspendCount == 0)
+    // There is a brief in-between state when we null out mAsyncStream in
+    // OnStateStop() before calling OnStopRequest, and only afterwards set
+    // STATE_IDLE, which we need to handle gracefully.
+    if (--mSuspendCount == 0 && mAsyncStream)
         EnsureWaiting();
     return NS_OK;
 }

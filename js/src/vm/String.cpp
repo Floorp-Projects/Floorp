@@ -26,6 +26,7 @@ using namespace js;
 
 using mozilla::IsSame;
 using mozilla::PodCopy;
+using mozilla::PodEqual;
 using mozilla::RangedPtr;
 using mozilla::RoundUpPow2;
 
@@ -1413,17 +1414,67 @@ NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8)
 template JSFlatString*
 NewStringCopyUTF8N<CanGC>(JSContext* cx, const JS::UTF8Chars utf8);
 
+MOZ_ALWAYS_INLINE JSString*
+ExternalStringCache::lookup(const char16_t* chars, size_t len) const
+{
+    AutoCheckCannotGC nogc;
+
+    for (size_t i = 0; i < NumEntries; i++) {
+        JSString* str = entries_[i];
+        if (!str || str->length() != len)
+            continue;
+
+        const char16_t* strChars = str->asLinear().nonInlineTwoByteChars(nogc);
+        if (chars == strChars) {
+            // Note that we don't need an incremental barrier here or below.
+            // The cache is purged on GC so any string we get from the cache
+            // must have been allocated after the GC started.
+            return str;
+        }
+
+        // Compare the chars. Don't do this for long strings as it will be
+        // faster to allocate a new external string.
+        static const size_t MaxLengthForCharComparison = 100;
+        if (len <= MaxLengthForCharComparison && PodEqual(chars, strChars, len))
+            return str;
+    }
+
+    return nullptr;
+}
+
+MOZ_ALWAYS_INLINE void
+ExternalStringCache::put(JSString* str)
+{
+    MOZ_ASSERT(str->isExternal());
+
+    for (size_t i = NumEntries - 1; i > 0; i--)
+        entries_[i] = entries_[i - 1];
+
+    entries_[0] = str;
+}
+
 JSString*
 NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n, const JSStringFinalizer* fin,
-                       bool* isExternal)
+                       bool* allocatedExternal)
 {
     if (JSString* str = TryEmptyOrStaticString(cx, s, n)) {
-        *isExternal = false;
+        *allocatedExternal = false;
         return str;
     }
 
-    *isExternal = true;
-    return JSExternalString::new_(cx, s, n, fin);
+    ExternalStringCache& cache = cx->zone()->externalStringCache();
+    if (JSString* str = cache.lookup(s, n)) {
+        *allocatedExternal = false;
+        return str;
+    }
+
+    JSString* str = JSExternalString::new_(cx, s, n, fin);
+    if (!str)
+        return nullptr;
+
+    *allocatedExternal = true;
+    cache.put(str);
+    return str;
 }
 
 } /* namespace js */

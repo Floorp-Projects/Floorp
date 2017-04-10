@@ -614,6 +614,7 @@ PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
       // can do drawing in this process.
       mLayerManager = new BasicLayerManager(this);
     } else if (gfxVars::UseWebRender()) {
+      MOZ_ASSERT(!aShadowManager);
       mLayerManager = new WebRenderLayerManager(this);
     } else {
       mLayerManager = new ClientLayerManager(this);
@@ -638,6 +639,7 @@ PuppetWidget::RecreateLayerManager(PLayerTransactionChild* aShadowManager)
 
   MOZ_ASSERT(mTabChild);
   if (gfxVars::UseWebRender()) {
+    MOZ_ASSERT(!aShadowManager);
     mLayerManager = new WebRenderLayerManager(this);
   } else {
     mLayerManager = new ClientLayerManager(this);

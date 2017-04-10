@@ -15,7 +15,7 @@ const { require } = BrowserLoader({
 });
 const { Task } = require("devtools/shared/task");
 const Telemetry = require("devtools/client/shared/telemetry");
-const { loadSheet } = require("sdk/stylesheet/utils");
+const { loadAgentSheet } = require("./utils/css");
 
 const { createFactory, createElement } =
   require("devtools/client/shared/vendor/react");
@@ -42,9 +42,10 @@ let bootstrap = {
   init: Task.async(function* () {
     // Load a special UA stylesheet to reset certain styles such as dropdown
     // lists.
-    loadSheet(window,
-              "resource://devtools/client/responsive.html/responsive-ua.css",
-              "agent");
+    loadAgentSheet(
+      window,
+      "resource://devtools/client/responsive.html/responsive-ua.css"
+    );
     this.telemetry.toolOpened("responsive");
     let store = this.store = Store();
     let provider = createElement(Provider, { store }, App());

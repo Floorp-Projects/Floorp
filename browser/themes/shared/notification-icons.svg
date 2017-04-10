@@ -44,11 +44,18 @@
       fill: white;
       fill-opacity: 1;
     }
+
+    #update-icon {
+      stroke: #fff;
+      stroke-width: 3px;
+      stroke-linecap: round;
+    }
   </style>
 
   <defs>
     <path id="camera-icon" d="m 2,23 a 3,3 0 0 0 3,3 l 14,0 a 3,3 0 0 0 3,-3 l 0,-4 6,5.5 c 0.5,0.5 1,0.7 2,0.5 l 0,-18 c -1,-0.2 -1.5,0 -2,0.5 l -6,5.5 0,-4 a 3,3 0 0 0 -3,-3 l -14,0 a 3,3 0 0 0 -3,3 z" />
     <path id="desktop-notification-icon" d="m 2,20 a 4,4 0 0 0 4,4 l 13,0 7,7 0,-7 a 4,4 0 0 0 4,-4 l 0,-12 a 4,4 0 0 0 -4,-4 l -20,0 a 4,4 0 0 0 -4,4 z m 5,-2 a 1,1 0 1 1 0,-2 l 10,0 a 1,1 0 1 1 0,2 z m 0,-4 a 1,1 0 1 1 0,-2 l 14,0 a 1,1 0 1 1 0,2 z m 0,-4 a 1,1 0 1 1 0,-2 l 18,0 a 1,1 0 1 1 0,2 z" />
+    <path id="focus-tab-by-prompt-icon" d="M29.43,25,18.57,3.8A2.92,2.92,0,0,0,16,2a2.92,2.92,0,0,0-2.57,1.8L2.57,25a3.47,3.47,0,0,0,0,3.4A3.15,3.15,0,0,0,5.33,30H26.66a3.15,3.15,0,0,0,2.77-1.6A3.47,3.47,0,0,0,29.43,25ZM16,7.2a2.3,2.3,0,0,1,2.37,2.4L18,18a1.88,1.88,0,0,1-2,2,1.88,1.88,0,0,1-2-2l-.4-8.4A2.3,2.3,0,0,1,16,7.2ZM16,28a3,3,0,0,1,0-6,3,3,0,0,1,0,6Z"/>
     <path id="geo-linux-icon" d="m 2,15.9 a 14,14 0 1 1 0,0.2 z m 4,2.1 a 10,10 0 0 0 8,8 l 0,-4 4,0 0,4 a 10,10 0 0 0 8,-8 l -4,0 0,-4 4,0 a 10,10 0 0 0 -8,-8 l 0,4 -4,0 0,-4 a 10,10 0 0 0 -8,8 l 4,0 0,4 z" />
     <path id="geo-linux-detailed-icon" d="m 2,15.9 a 14,14 0 1 1 0,0.2 z m 3,2.1 a 11,11 0 0 0 9,9 l 1,-5 2,0 1,5 a 11,11 0 0 0 9,-9 l -5,-1 0,-2 5,-1 a 11,11 0 0 0 -9,-9 l -1,5 -2,0 -1,-5 a 11,11 0 0 0 -9,9 l 5,1 0,2 z" />
     <path id="geo-osx-icon" d="m 0,16 16,0 0,16 12,-28 z" />
@@ -62,6 +69,7 @@
     <path id="plugin-icon" d="m 2,26 a 2,2 0 0 0 2,2 l 24,0 a 2,2 0 0 0 2,-2 l 0,-16 a 2,2 0 0 0 -2,-2 l -24,0 a 2,2 0 0 0 -2,2 z m 2,-20 10,0 0,-2 a 2,2 0 0 0 -2,-2 l -6,0 a 2,2 0 0 0 -2,2 z m 14,0 10,0 0,-2 a 2,2 0 0 0 -2,-2 l -6,0 a 2,2 0 0 0 -2,2 z" />
     <path id="popup-icon" d="m 2,24 a 4,4 0 0 0 4,4 l 8,0 a 10,10 0 0 1 -2,-4 l -4,0 a 2,2 0 0 1 -2,-2 l 0,-12 18,0 0,2 a 10,10 0 0 1 4,2 l 0,-8 a 4,4 0 0 0 -4,-4 l -18,0 a 4,4 0 0 0 -4,4 z m 12,-2.1 a 8,8 0 1 1 0,0.2 m 10.7,-4.3 a 5,5 0 0 0 -6.9,6.9 z m -5.4,8.4 a 5,5 0 0 0 6.9,-6.9 z" />
     <path id="screen-icon" d="m 2,18 a 2,2 0 0 0 2,2 l 2,0 0,-6 a 4,4 0 0 1 4,-4 l 14,0 0,-6 a 2,2 0 0 0 -2,-2 l -18,0 a 2,2 0 0 0 -2,2 z m 6,10 a 2,2 0 0 0 2,2 l 18,0 a 2,2 0 0 0 2,-2 l 0,-14 a 2,2 0 0 0 -2,-2 l -18,0 a 2,2 0 0 0 -2,2 z" />
+    <path id="update-icon" d="M 16,9 L 16,24 M 16,9 L 11,14 M 16,9 L 21,14" />
 
     <clipPath id="blocked-clipPath">
       <path d="m 0,0 0,31 31,-31 z m 6,32 26,0 0,-26 z"/>
@@ -84,6 +92,7 @@
   <use id="camera-blocked" class="blocked" xlink:href="#camera-icon" />
   <use id="desktop-notification" xlink:href="#desktop-notification-icon" />
   <use id="desktop-notification-blocked" class="blocked" xlink:href="#desktop-notification-icon" />
+  <use id="focus-tab-by-prompt" xlink:href="#focus-tab-by-prompt-icon" />
   <use id="geo-osx" xlink:href="#geo-osx-icon" />
   <use id="geo-osx-blocked" class="blocked" xlink:href="#geo-osx-icon" />
   <use id="geo-linux" xlink:href="#geo-linux-icon" />
@@ -109,6 +118,7 @@
   <use id="screen-sharing" xlink:href="#screen-icon"/>
   <use id="screen-indicator" xlink:href="#screen-icon"/>
   <use id="screen-blocked" class="blocked" xlink:href="#screen-icon" />
+  <use id="update" xlink:href="#update-icon" />
 
   <path id="strikeout" d="m 2,28 2,2 26,-26 -2,-2 z"/>
 </svg>

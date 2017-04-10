@@ -554,7 +554,8 @@ public:
                    InfallibleTArray<FrameScriptInfo>* aFrameScripts,
                    nsCString* aURLToLoad,
                    layers::TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                   uint64_t* aLayersId) override;
+                   uint64_t* aLayersId,
+                   mozilla::layers::CompositorOptions* aCompositorOptions) override;
 
   virtual mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
     PBrowserParent* aThisTab,
@@ -605,6 +606,7 @@ public:
 
   virtual int32_t Pid() const override;
 
+  // PURLClassifierParent.
   virtual PURLClassifierParent*
   AllocPURLClassifierParent(const Principal& aPrincipal,
                             const bool& aUseTrackingProtection,
@@ -614,6 +616,15 @@ public:
                                 const Principal& aPrincipal,
                                 const bool& aUseTrackingProtection,
                                 bool* aSuccess) override;
+
+  // PURLClassifierLocalParent.
+  virtual PURLClassifierLocalParent*
+  AllocPURLClassifierLocalParent(const URIParams& aURI,
+                                 const nsCString& aTables) override;
+  virtual mozilla::ipc::IPCResult
+  RecvPURLClassifierLocalConstructor(PURLClassifierLocalParent* aActor,
+                                     const URIParams& aURI,
+                                     const nsCString& aTables) override;
 
   virtual bool SendActivate(PBrowserParent* aTab) override
   {
@@ -630,6 +641,9 @@ public:
   {
     return PContentParent::SendParentActivated(aTab, aActivated);
   }
+
+  virtual bool
+  DeallocPURLClassifierLocalParent(PURLClassifierLocalParent* aActor) override;
 
   virtual bool
   DeallocPURLClassifierParent(PURLClassifierParent* aActor) override;

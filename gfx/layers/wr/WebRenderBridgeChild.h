@@ -26,6 +26,28 @@ class CompositableClient;
 class CompositorBridgeChild;
 class TextureForwarder;
 
+class UnscaledFontHashKey : public PLDHashEntryHdr
+{
+public:
+  typedef gfx::UnscaledFont* KeyType;
+  typedef const gfx::UnscaledFont* KeyTypePointer;
+
+  explicit UnscaledFontHashKey(KeyTypePointer aKey) : mKey(const_cast<KeyType>(aKey)) {}
+
+  KeyType GetKey() const { return mKey; }
+  bool KeyEquals(KeyTypePointer aKey) const { return aKey == mKey; }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey)
+  {
+    return NS_PTR_TO_UINT32(aKey) >> 2;
+  }
+  enum { ALLOW_MEMMOVE = true };
+
+private:
+  WeakPtr<gfx::UnscaledFont> mKey;
+};
+
 class WebRenderBridgeChild final : public PWebRenderBridgeChild
                                  , public CompositableForwarder
 {
@@ -66,6 +88,14 @@ public:
   {
     mIdNamespace = aIdNamespace;
   }
+
+  void PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<GlyphArray>& aGlyphs,
+                  gfx::ScaledFont* aFont, const gfx::Point& aOffset, const gfx::Rect& aBounds,
+                  const gfx::Rect& aClip);
+
+  wr::FontKey GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont);
+
+  void RemoveExpiredFontKeys();
 
 private:
   friend class CompositorBridgeChild;
@@ -123,6 +153,9 @@ private:
 
   bool mIPCOpen;
   bool mDestroyed;
+
+  uint32_t mFontKeysDeleted;
+  nsDataHashtable<UnscaledFontHashKey, wr::FontKey> mFontKeys;
 };
 
 } // namespace layers

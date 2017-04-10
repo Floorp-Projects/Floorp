@@ -3162,8 +3162,8 @@ nsDocument::IsElementAnimateEnabled(JSContext* aCx, JSObject* /*unused*/)
   MOZ_ASSERT(NS_IsMainThread());
 
   return nsContentUtils::IsSystemCaller(aCx) ||
-         Preferences::GetBool("dom.animations-api.core.enabled") ||
-         Preferences::GetBool("dom.animations-api.element-animate.enabled");
+         nsContentUtils::AnimationsAPICoreEnabled() ||
+         nsContentUtils::AnimationsAPIElementAnimateEnabled();
 }
 
 bool
@@ -3172,7 +3172,7 @@ nsDocument::IsWebAnimationsEnabled(JSContext* aCx, JSObject* /*unused*/)
   MOZ_ASSERT(NS_IsMainThread());
 
   return nsContentUtils::IsSystemCaller(aCx) ||
-         Preferences::GetBool("dom.animations-api.core.enabled");
+         nsContentUtils::AnimationsAPICoreEnabled();
 }
 
 DocumentTimeline*

@@ -12,14 +12,18 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import android.content.SharedPreferences;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.distribution.PartnerBrowserCustomizationsClient;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.notifications.WhatsNewReceiver;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -40,6 +44,7 @@ import android.os.Handler;
 import android.provider.Browser;
 import android.support.annotation.UiThread;
 import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
 import android.util.Log;
 
 import static org.mozilla.gecko.Tab.TabType;
@@ -432,7 +437,7 @@ public class Tabs implements BundleEventListener {
         removeTab(tabId);
 
         if (nextTab == null) {
-            nextTab = loadUrl(AboutPages.HOME, LOADURL_NEW_TAB);
+            nextTab = loadUrl(getHomepageForNewTab(mAppContext), LOADURL_NEW_TAB);
         }
 
         selectTab(nextTab.getId());
@@ -1062,7 +1067,7 @@ public class Tabs implements BundleEventListener {
     }
 
     public Tab addTab() {
-        return loadUrl(AboutPages.HOME, Tabs.LOADURL_NEW_TAB);
+        return loadUrl(getHomepageForNewTab(mAppContext), Tabs.LOADURL_NEW_TAB);
     }
 
     public Tab addPrivateTab() {
@@ -1225,5 +1230,61 @@ public class Tabs implements BundleEventListener {
         data.putInt("toTabId", toTabId);
         data.putInt("toPosition", toPosition);
         EventDispatcher.getInstance().dispatch("Tab:Move", data);
+    }
+
+    @NonNull
+    public static String getHomepageForNewTab(Context context) {
+        final SharedPreferences preferences = GeckoSharedPrefs.forApp(context);
+        final boolean forEveryNewTab = preferences.getBoolean(GeckoPreferences.PREFS_HOMEPAGE_FOR_EVERY_NEW_TAB, false);
+
+        if (forEveryNewTab) {
+            final String homePage = getHomepage(context);
+            if (TextUtils.isEmpty(homePage)) {
+                return AboutPages.HOME;
+            } else {
+                return homePage;
+            }
+        }
+        return AboutPages.HOME;
+    }
+
+    @Nullable
+    public static String getHomepage(Context context) {
+        final SharedPreferences preferences = GeckoSharedPrefs.forProfile(context);
+        final String homepagePreference = preferences.getString(GeckoPreferences.PREFS_HOMEPAGE, AboutPages.HOME);
+
+        final boolean readFromPartnerProvider = preferences.getBoolean(
+                GeckoPreferences.PREFS_READ_PARTNER_CUSTOMIZATIONS_PROVIDER, false);
+
+        if (!readFromPartnerProvider) {
+            // Just return homepage as set by the user (or null).
+            return homepagePreference;
+        }
+
+
+        final String homepagePrevious = preferences.getString(GeckoPreferences.PREFS_HOMEPAGE_PARTNER_COPY, null);
+        if (homepagePrevious != null && !homepagePrevious.equals(homepagePreference)) {
+            // We have read the homepage once and the user has changed it since then. Just use the
+            // value the user has set.
+            return homepagePreference;
+        }
+
+        // This is the first time we read the partner provider or the value has not been altered by the user
+        final String homepagePartner = PartnerBrowserCustomizationsClient.getHomepage(context);
+
+        if (homepagePartner == null) {
+            // We didn't get anything from the provider. Let's just use what we have locally.
+            return homepagePreference;
+        }
+
+        if (!homepagePartner.equals(homepagePrevious)) {
+            // We have a new value. Update the preferences.
+            preferences.edit()
+                    .putString(GeckoPreferences.PREFS_HOMEPAGE, homepagePartner)
+                    .putString(GeckoPreferences.PREFS_HOMEPAGE_PARTNER_COPY, homepagePartner)
+                    .apply();
+        }
+
+        return homepagePartner;
     }
 }

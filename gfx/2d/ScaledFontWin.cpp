@@ -22,8 +22,10 @@
 namespace mozilla {
 namespace gfx {
 
-ScaledFontWin::ScaledFontWin(const LOGFONT* aFont, Float aSize)
-  : ScaledFontBase(aSize)
+ScaledFontWin::ScaledFontWin(const LOGFONT* aFont,
+                             const RefPtr<UnscaledFont>& aUnscaledFont,
+                             Float aSize)
+  : ScaledFontBase(aUnscaledFont, aSize)
   , mLogFont(*aFont)
 {
 }
@@ -80,7 +82,7 @@ ScaledFontWin::CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLeng
   nativeFont.mFont = (void*)aData;
 
   RefPtr<ScaledFont> font =
-    Factory::CreateScaledFontForNativeFont(nativeFont, aSize);
+    Factory::CreateScaledFontForNativeFont(nativeFont, nullptr, aSize);
 
 #ifdef USE_CAIRO_SCALED_FONT
   static_cast<ScaledFontBase*>(font.get())->PopulateCairoScaledFont();

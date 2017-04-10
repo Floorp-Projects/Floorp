@@ -52,7 +52,7 @@ export LIBRARY_PATH=$LIBRARY_PATH:$WORKSPACE/src/obj-firefox:$WORKSPACE/src/gcc/
 
 if [[ -n ${USE_SCCACHE} ]]; then
     # Point sccache at the Taskcluster proxy for AWS credentials.
-    export AWS_IAM_CREDENTIALS_URL="http://taskcluster/auth/v1/aws/s3/read-write/taskcluster-level-${MOZ_SCM_LEVEL}-sccache-${TASKCLUSTER_WORKER_GROUP%?}/?format=iam-role-compat"
+    export AWS_IAM_CREDENTIALS_URL="http://taskcluster/auth/v1/aws/s3/read-write/taskcluster-level-${MOZ_SCM_LEVEL}-sccache-${TASKCLUSTER_WORKER_GROUP}/?format=iam-role-compat"
 fi
 
 # test required parameters are supplied

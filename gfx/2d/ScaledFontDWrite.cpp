@@ -102,10 +102,13 @@ DWriteFontStretchFromStretch(int16_t aStretch)
     }
 }
 
-ScaledFontDWrite::ScaledFontDWrite(IDWriteFontFace *aFontFace, Float aSize,
-                                   bool aUseEmbeddedBitmap, bool aForceGDIMode,
+ScaledFontDWrite::ScaledFontDWrite(IDWriteFontFace *aFontFace,
+                                   const RefPtr<UnscaledFont>& aUnscaledFont,
+                                   Float aSize,
+                                   bool aUseEmbeddedBitmap,
+                                   bool aForceGDIMode,
                                    const gfxFontStyle* aStyle)
-    : ScaledFontBase(aSize)
+    : ScaledFontBase(aUnscaledFont, aSize)
     , mFontFace(aFontFace)
     , mUseEmbeddedBitmap(aUseEmbeddedBitmap)
     , mForceGDIMode(aForceGDIMode)

@@ -1212,6 +1212,16 @@
     "n_buckets": 100,
     "description": "Total Memory Across All Processes (KB)"
   },
+  "MEMORY_DISTRIBUTION_AMONG_CONTENT": {
+    "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1344174],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": true,
+    "high": 200,
+    "n_buckets": 100,
+    "description": "Absolute difference of each content process' USS and the mean of USS's, normalized by the mean, in percentage. 100 means that the content process uses twice as much memory as the mean of the rest (or theoretically it could also mean that it uses 0 while the mean of the others are non 0.)"
+  },
   "MEMORY_UNIQUE": {
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1198209],
@@ -5142,6 +5152,42 @@
     "releaseChannelCollection": "opt-out",
     "description": "Update: the update wizard page displayed when the UI was closed (mapped in toolkit/mozapps/update/UpdateTelemetry.jsm)"
   },
+  "UPDATE_NOTIFICATION_SHOWN": {
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "bug_numbers": [893505],
+    "releaseChannelCollection": "opt-out",
+    "description": "Update: the application update doorhanger type that was displayed.",
+    "labels": ["restart", "available", "manual"]
+  },
+  "UPDATE_NOTIFICATION_DISMISSED": {
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "bug_numbers": [893505],
+    "releaseChannelCollection": "opt-out",
+    "description": "Update: the dismiss action was executed for this application update doorhanger type.",
+    "labels": ["restart", "available", "manual"]
+  },
+  "UPDATE_NOTIFICATION_MAIN_ACTION_DOORHANGER": {
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "bug_numbers": [893505],
+    "releaseChannelCollection": "opt-out",
+    "description": "Update: the main update action was initiated for this application update doorhanger type.",
+    "labels": ["restart", "available", "manual"]
+  },
+  "UPDATE_NOTIFICATION_MAIN_ACTION_MENU": {
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "bug_numbers": [893505],
+    "releaseChannelCollection": "opt-out",
+    "description": "Update: the update action was initiated from the PanelUI application update menu item.",
+    "labels": ["restart", "available", "manual"]
+  },
   "THUNDERBIRD_GLODA_SIZE_MB": {
     "expires_in_version": "never",
     "kind": "linear",
@@ -6506,12 +6552,47 @@
     "keyed": true,
     "description": "a testing histogram; not meant to be touched"
   },
-    "TELEMETRY_TEST_KEYED_BOOLEAN": {
+  "TELEMETRY_TEST_KEYED_BOOLEAN": {
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "keyed": true,
     "bug_numbers": [1299144],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_KEYED_EXPONENTIAL": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 1,
+    "high": 40000,
+    "n_buckets": 10,
+    "keyed": true,
+    "bug_numbers": [1347216],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_KEYED_LINEAR": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 250000,
+    "n_buckets": 10,
+    "keyed": true,
+    "bug_numbers": [1347216],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_KEYED_CATEGORICAL": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "keyed": true,
+    "labels": [
+      "CommonLabel",
+      "Label2",
+      "Label3"
+    ],
+    "bug_numbers": [1347216],
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_RELEASE_OPTOUT": {

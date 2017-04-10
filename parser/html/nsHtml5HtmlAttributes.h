@@ -31,7 +31,7 @@
 
 #include "nsIAtom.h"
 #include "nsHtml5AtomTable.h"
-#include "nsString.h"
+#include "nsHtml5String.h"
 #include "nsNameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsTraceRefcnt.h"
@@ -64,21 +64,23 @@ class nsHtml5HtmlAttributes
     int32_t mode;
     int32_t length;
     autoJArray<nsHtml5AttributeName*,int32_t> names;
-    autoJArray<nsString*,int32_t> values;
+    autoJArray<nsHtml5String, int32_t> values;
     autoJArray<int32_t,int32_t> lines;
   public:
     explicit nsHtml5HtmlAttributes(int32_t mode);
     ~nsHtml5HtmlAttributes();
     int32_t getIndex(nsHtml5AttributeName* name);
-    nsString* getValue(nsHtml5AttributeName* name);
+    nsHtml5String getValue(nsHtml5AttributeName* name);
     int32_t getLength();
     nsIAtom* getLocalNameNoBoundsCheck(int32_t index);
     int32_t getURINoBoundsCheck(int32_t index);
     nsIAtom* getPrefixNoBoundsCheck(int32_t index);
-    nsString* getValueNoBoundsCheck(int32_t index);
+    nsHtml5String getValueNoBoundsCheck(int32_t index);
     nsHtml5AttributeName* getAttributeNameNoBoundsCheck(int32_t index);
     int32_t getLineNoBoundsCheck(int32_t index);
-    void addAttribute(nsHtml5AttributeName* name, nsString* value, int32_t line);
+    void addAttribute(nsHtml5AttributeName* name,
+                      nsHtml5String value,
+                      int32_t line);
     void clear(int32_t m);
     void releaseValue(int32_t i);
     void clearWithoutReleasingContents();

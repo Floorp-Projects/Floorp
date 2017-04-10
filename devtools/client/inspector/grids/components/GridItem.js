@@ -117,7 +117,6 @@ module.exports = createClass({
 
     return dom.li(
       {
-        key: grid.id,
         className: "grid-item",
       },
       dom.label(

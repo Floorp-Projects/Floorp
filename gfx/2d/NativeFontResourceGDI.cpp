@@ -50,7 +50,7 @@ NativeFontResourceGDI::CreateScaledFont(uint32_t aIndex, Float aGlyphSize,
 
   // Constructor for ScaledFontWin dereferences and copies the LOGFONT, so we
   // are safe to pass this reference.
-  RefPtr<ScaledFontBase> scaledFont = new ScaledFontWin(logFont, aGlyphSize);
+  RefPtr<ScaledFontBase> scaledFont = new ScaledFontWin(logFont, nullptr, aGlyphSize);
   if (mNeedsCairo && !scaledFont->PopulateCairoScaledFont()) {
     gfxWarning() << "Unable to create cairo scaled font GDI font.";
     return nullptr;

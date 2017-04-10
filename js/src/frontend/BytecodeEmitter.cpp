@@ -357,7 +357,8 @@ class BytecodeEmitter::EmitterScope : public Nestable<BytecodeEmitter::EmitterSc
         if (bi.nextFrameSlot() >= LOCALNO_LIMIT ||
             bi.nextEnvironmentSlot() >= ENVCOORD_SLOT_LIMIT)
         {
-            return bce->reportError(nullptr, JSMSG_TOO_MANY_LOCALS);
+            bce->reportError(nullptr, JSMSG_TOO_MANY_LOCALS);
+            return false;
         }
         return true;
     }
@@ -368,8 +369,12 @@ class BytecodeEmitter::EmitterScope : public Nestable<BytecodeEmitter::EmitterSc
             hops = emitterScope->environmentChainLength_;
         else
             hops = bce->sc->compilationEnclosingScope()->environmentChainLength();
-        if (hops >= ENVCOORD_HOPS_LIMIT - 1)
-            return bce->reportError(nullptr, JSMSG_TOO_DEEP, js_function_str);
+
+        if (hops >= ENVCOORD_HOPS_LIMIT - 1) {
+            bce->reportError(nullptr, JSMSG_TOO_DEEP, js_function_str);
+            return false;
+        }
+
         environmentChainLength_ = mozilla::AssertedCast<uint8_t>(hops + 1);
         return true;
     }
@@ -2500,8 +2505,11 @@ BytecodeEmitter::updateLineNumberNotes(uint32_t offset)
 {
     TokenStream* ts = &parser->tokenStream;
     bool onThisLine;
-    if (!ts->srcCoords.isOnThisLine(offset, currentLine(), &onThisLine))
-        return ts->reportError(JSMSG_OUT_OF_MEMORY);
+    if (!ts->srcCoords.isOnThisLine(offset, currentLine(), &onThisLine)) {
+        ts->reportError(JSMSG_OUT_OF_MEMORY);
+        return false;
+    }
+
     if (!onThisLine) {
         unsigned line = ts->srcCoords.lineNum(offset);
         unsigned delta = line - currentLine();
@@ -3562,17 +3570,20 @@ BytecodeEmitter::tokenStream()
     return parser->tokenStream;
 }
 
-bool
+void
 BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...)
 {
     TokenPos pos = pn ? pn->pn_pos : tokenStream().currentToken().pos;
 
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream().reportCompileErrorNumberVA(nullptr, pos.begin, JSREPORT_ERROR,
-                                                           errorNumber, args);
+
+    TokenStream& ts = tokenStream();
+    ErrorMetadata metadata;
+    if (ts.computeErrorMetadata(&metadata, pos.begin))
+        ts.compileError(Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
+
     va_end(args);
-    return result;
 }
 
 bool

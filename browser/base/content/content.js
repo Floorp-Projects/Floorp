@@ -12,9 +12,6 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/ContentWebRTC.jsm");
-Cu.import("resource://gre/modules/InlineSpellChecker.jsm");
-Cu.import("resource://gre/modules/InlineSpellCheckerContent.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
@@ -23,6 +20,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ContentLinkHandler",
   "resource:///modules/ContentLinkHandler.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ContentWebRTC",
+  "resource:///modules/ContentWebRTC.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SpellCheckHelper",
+  "resource://gre/modules/InlineSpellChecker.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "InlineSpellCheckerContent",
+  "resource://gre/modules/InlineSpellCheckerContent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
   "resource://gre/modules/LoginManagerContent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginFormFactory",
@@ -702,19 +705,15 @@ addEventListener("DOMWindowFocus", function(event) {
   sendAsyncMessage("DOMWindowFocus", {});
 }, false);
 
-ContentWebRTC.init();
-addMessageListener("rtcpeer:Allow", ContentWebRTC);
-addMessageListener("rtcpeer:Deny", ContentWebRTC);
-addMessageListener("webrtc:Allow", ContentWebRTC);
-addMessageListener("webrtc:Deny", ContentWebRTC);
-addMessageListener("webrtc:StopSharing", ContentWebRTC);
-addMessageListener("webrtc:StartBrowserSharing", () => {
-  let windowID = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
-  sendAsyncMessage("webrtc:response:StartBrowserSharing", {
-    windowID
-  });
-});
+// We use this shim so that ContentWebRTC.jsm will not be loaded until
+// it is actually needed.
+var ContentWebRTCShim = message => ContentWebRTC.receiveMessage(message);
+
+addMessageListener("rtcpeer:Allow", ContentWebRTCShim);
+addMessageListener("rtcpeer:Deny", ContentWebRTCShim);
+addMessageListener("webrtc:Allow", ContentWebRTCShim);
+addMessageListener("webrtc:Deny", ContentWebRTCShim);
+addMessageListener("webrtc:StopSharing", ContentWebRTCShim);
 
 addEventListener("pageshow", function(event) {
   if (event.target == content.document) {

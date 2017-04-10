@@ -19,7 +19,8 @@ class FT2FontEntry;
 
 class gfxFT2Font : public gfxFT2FontBase {
 public: // new functions
-    gfxFT2Font(cairo_scaled_font_t *aCairoFont,
+    gfxFT2Font(const RefPtr<mozilla::gfx::UnscaledFontFreeType>& aUnscaledFont,
+               cairo_scaled_font_t *aCairoFont,
                FT2FontEntry *aFontEntry,
                const gfxFontStyle *aFontStyle,
                bool aNeedsBold);

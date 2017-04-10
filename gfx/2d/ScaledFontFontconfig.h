@@ -19,7 +19,8 @@ class ScaledFontFontconfig : public ScaledFontBase
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontFontconfig, override)
-  ScaledFontFontconfig(cairo_scaled_font_t* aScaledFont, FcPattern* aPattern, Float aSize);
+  ScaledFontFontconfig(cairo_scaled_font_t* aScaledFont, FcPattern* aPattern,
+                       const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize);
   ~ScaledFontFontconfig();
 
   FontType GetType() const override { return FontType::FONTCONFIG; }
@@ -27,6 +28,8 @@ public:
 #ifdef USE_SKIA
   SkTypeface* GetSkTypeface() override;
 #endif
+
+  bool CanSerialize() override { return true; }
 
   bool GetFontFileData(FontFileDataOutput aDataCallback, void* aBaton) override;
 

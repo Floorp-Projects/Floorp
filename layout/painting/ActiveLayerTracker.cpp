@@ -119,9 +119,10 @@ class LayerActivityTracker final : public nsExpirationTracker<LayerActivity,4> {
 public:
   // 75-100ms is a good timeout period. We use 4 generations of 25ms each.
   enum { GENERATION_MS = 100 };
-  LayerActivityTracker()
+  explicit LayerActivityTracker(nsIEventTarget* aEventTarget)
     : nsExpirationTracker<LayerActivity,4>(GENERATION_MS,
-                                           "LayerActivityTracker")
+                                           "LayerActivityTracker",
+                                           aEventTarget)
     , mDestroying(false)
   {}
   ~LayerActivityTracker() {
@@ -203,7 +204,8 @@ GetLayerActivityForUpdate(nsIFrame* aFrame)
     gLayerActivityTracker->MarkUsed(layerActivity);
   } else {
     if (!gLayerActivityTracker) {
-      gLayerActivityTracker = new LayerActivityTracker();
+      gLayerActivityTracker = new LayerActivityTracker(
+        SystemGroup::EventTargetFor(TaskCategory::Other));
     }
     layerActivity = new LayerActivity(aFrame);
     gLayerActivityTracker->AddObject(layerActivity);
@@ -511,7 +513,8 @@ ActiveLayerTracker::IsContentActive(nsIFrame* aFrame)
 ActiveLayerTracker::SetCurrentScrollHandlerFrame(nsIFrame* aFrame)
 {
   if (!gLayerActivityTracker) {
-    gLayerActivityTracker = new LayerActivityTracker();
+    gLayerActivityTracker = new LayerActivityTracker(
+      SystemGroup::EventTargetFor(TaskCategory::Other));
   }
   gLayerActivityTracker->mCurrentScrollHandlerFrame = aFrame;
 }

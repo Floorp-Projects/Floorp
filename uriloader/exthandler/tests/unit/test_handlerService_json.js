@@ -7,10 +7,6 @@
  * Tests the handlerService interfaces using JSON backend.
  */
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
-
 XPCOMUtils.defineLazyServiceGetter(this, "gHandlerService",
                                    "@mozilla.org/uriloader/handler-service-json;1",
                                    "nsIHandlerService");
@@ -21,17 +17,13 @@ Services.scriptloader.loadSubScript(NetUtil.newURI(scriptFile).spec);
 var prepareImportDB = Task.async(function* () {
   yield reloadData();
 
-  let dst = OS.Path.join(OS.Constants.Path.profileDir, "handlers.json");
-  yield OS.File.copy(do_get_file("handlers.json").path, dst);
-  Assert.ok((yield OS.File.exists(dst)), "should have a DB now");
+  yield OS.File.copy(do_get_file("handlers.json").path, jsonPath);
 });
 
 var removeImportDB = Task.async(function* () {
   yield reloadData();
 
-  let dst = OS.Path.join(OS.Constants.Path.profileDir, "handlers.json");
-  yield OS.File.remove(dst);
-  Assert.ok(!(yield OS.File.exists(dst)), "should not have a DB now");
+  yield OS.File.remove(jsonPath, { ignoreAbsent: true });
 });
 
 var reloadData = Task.async(function* () {

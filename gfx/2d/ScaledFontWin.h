@@ -16,7 +16,9 @@ class ScaledFontWin : public ScaledFontBase
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontWin)
-  ScaledFontWin(const LOGFONT* aFont, Float aSize);
+  ScaledFontWin(const LOGFONT* aFont,
+                const RefPtr<UnscaledFont>& aUnscaledFont,
+                Float aSize);
 
   virtual FontType GetType() const { return FontType::GDI; }
 

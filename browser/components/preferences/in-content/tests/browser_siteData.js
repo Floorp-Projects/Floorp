@@ -15,6 +15,7 @@ const TEST_BASE_URL = TEST_ORIGIN + "/browser/browser/components/preferences/in-
 const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
 
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+const { DownloadUtils } = Cu.import("resource://gre/modules/DownloadUtils.jsm", {});
 const { SiteDataManager } = Cu.import("resource:///modules/SiteDataManager.jsm", {});
 const { OfflineAppCacheHelper } = Cu.import("resource:///modules/offlineAppCache.jsm", {});
 
@@ -164,6 +165,51 @@ registerCleanupFunction(function() {
   delete window.setImmediate;
   delete window.clearImmediate;
   mockOfflineAppCacheHelper.unregister();
+});
+
+// Test buttons are disabled and loading message shown while updating sites
+add_task(function *() {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+  let updatedPromise = promiseSiteDataManagerSitesUpdated();
+  yield openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  yield updatedPromise;
+
+  let actual = null;
+  let expected = null;
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  let clearBtn = doc.getElementById("clearSiteDataButton");
+  let settingsButton = doc.getElementById("siteDataSettings");
+  let prefStrBundle = doc.getElementById("bundlePreferences");
+  let totalSiteDataSizeLabel = doc.getElementById("totalSiteDataSize");
+  is(clearBtn.disabled, false, "Should enable clear button after sites updated");
+  is(settingsButton.disabled, false, "Should enable settings button after sites updated");
+  yield SiteDataManager.getTotalUsage()
+                       .then(usage => {
+                         actual = totalSiteDataSizeLabel.textContent;
+                         expected = prefStrBundle.getFormattedString(
+                           "totalSiteDataSize", DownloadUtils.convertByteUnits(usage));
+                          is(actual, expected, "Should show the right total site data size");
+                       });
+
+  Services.obs.notifyObservers(null, "sitedatamanager:updating-sites", null);
+  is(clearBtn.disabled, true, "Should disable clear button while updating sites");
+  is(settingsButton.disabled, true, "Should disable settings button while updating sites");
+  actual = totalSiteDataSizeLabel.textContent;
+  expected = prefStrBundle.getString("loadingSiteDataSize");
+  is(actual, expected, "Should show the loading message while updating");
+
+  Services.obs.notifyObservers(null, "sitedatamanager:sites-updated", null);
+  is(clearBtn.disabled, false, "Should enable clear button after sites updated");
+  is(settingsButton.disabled, false, "Should enable settings button after sites updated");
+  yield SiteDataManager.getTotalUsage()
+                       .then(usage => {
+                         actual = totalSiteDataSizeLabel.textContent;
+                         expected = prefStrBundle.getFormattedString(
+                           "totalSiteDataSize", DownloadUtils.convertByteUnits(usage));
+                          is(actual, expected, "Should show the right total site data size");
+                       });
+
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(function* () {

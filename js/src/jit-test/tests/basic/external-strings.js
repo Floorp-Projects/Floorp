@@ -34,3 +34,15 @@ function testQuote() {
     }
 }
 testQuote();
+
+function testMaybeExternal() {
+    for (var i=0; i<10; i++) {
+        var s = "abcdef4321" + i;
+        assertEq(newMaybeExternalString(s), s);
+        if ((i % 2) === 0)
+            assertEq(ensureFlatString(newMaybeExternalString(s)), s);
+    }
+}
+testMaybeExternal();
+gc();
+testMaybeExternal();
