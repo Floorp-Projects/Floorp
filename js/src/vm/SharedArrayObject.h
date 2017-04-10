@@ -94,6 +94,8 @@ class SharedArrayRawBuffer
 
     MOZ_MUST_USE bool addReference();
     void dropReference();
+
+    static int32_t liveBuffers();
 };
 
 /*

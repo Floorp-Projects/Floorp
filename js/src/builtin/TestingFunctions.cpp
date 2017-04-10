@@ -2675,6 +2675,31 @@ SharedMemoryEnabled(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+SharedArrayRawBufferCount(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setInt32(SharedArrayRawBuffer::liveBuffers());
+    return true;
+}
+
+static bool
+SharedArrayRawBufferRefcount(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 1 || !args[0].isObject()) {
+        JS_ReportErrorASCII(cx, "Expected SharedArrayBuffer object");
+        return false;
+    }
+    RootedObject obj(cx, &args[0].toObject());
+    if (!obj->is<SharedArrayBufferObject>()) {
+        JS_ReportErrorASCII(cx, "Expected SharedArrayBuffer object");
+        return false;
+    }
+    args.rval().setInt32(obj->as<SharedArrayBufferObject>().rawBufferObject()->refcount());
+    return true;
+}
+
 #ifdef NIGHTLY_BUILD
 static bool
 ObjectAddress(JSContext* cx, unsigned argc, Value* vp)
@@ -4753,6 +4778,14 @@ gc::ZealModeHelpText),
     JS_FN_HELP("sharedMemoryEnabled", SharedMemoryEnabled, 0, 0,
 "sharedMemoryEnabled()",
 "  Return true if SharedArrayBuffer and Atomics are enabled"),
+
+    JS_FN_HELP("sharedArrayRawBufferCount", SharedArrayRawBufferCount, 0, 0,
+"sharedArrayRawBufferCount()",
+"  Return the number of live SharedArrayRawBuffer objects"),
+
+    JS_FN_HELP("sharedArrayRawBufferRefcount", SharedArrayRawBufferRefcount, 0, 0,
+"sharedArrayRawBufferRefcount(sab)",
+"  Return the reference count of the SharedArrayRawBuffer object held by sab"),
 
 #ifdef NIGHTLY_BUILD
     JS_FN_HELP("objectAddress", ObjectAddress, 1, 0,
