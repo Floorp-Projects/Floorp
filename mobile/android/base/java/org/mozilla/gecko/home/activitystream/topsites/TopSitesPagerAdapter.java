@@ -10,6 +10,7 @@ import android.support.v4.view.PagerAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.home.HomePager;
@@ -67,6 +68,12 @@ public class TopSitesPagerAdapter extends PagerAdapter {
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
         TopSitesPage page = pages.get(position);
+
+        final ViewParent viewParent = page.getParent();
+        if (viewParent != null && viewParent instanceof ViewGroup) {
+            ViewGroup viewGroup = (ViewGroup) viewParent;
+            viewGroup.removeView(page);
+        }
 
         container.addView(page);
 
