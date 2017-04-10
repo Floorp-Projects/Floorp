@@ -6063,9 +6063,21 @@
         ]]></body>
       </method>
 
-      <field name="_lastNumPinned">0</field>
-      <method name="_positionPinnedTabs">
+      <method name="themeLayoutChanged">
         <body><![CDATA[
+          this._positionPinnedTabs(true);
+        ]]></body>
+      </method>
+
+      <field name="_lastNumPinned">0</field>
+      <field name="_pinnedTabsLayoutCache">null</field>
+      <method name="_positionPinnedTabs">
+        <parameter name="aThemeLayoutChanged"/>
+        <body><![CDATA[
+          if (aThemeLayoutChanged) {
+            this._pinnedTabsLayoutCache = null;
+          }
+
           var numPinned = this.tabbrowser._numPinnedTabs;
           var doPosition = this.getAttribute("overflow") == "true" &&
                            numPinned > 0;
@@ -6073,21 +6085,24 @@
           if (doPosition) {
             this.setAttribute("positionpinnedtabs", "true");
 
-            let scrollButtonWidth = this.mTabstrip._scrollButtonDown.getBoundingClientRect().width;
-            let paddingStart = this.mTabstrip.scrollboxPaddingStart;
-            let pinnedTabWidth;
-            let width = 0;
-
-            for (let i = numPinned - 1; i >= 0; i--) {
-              let tab = this.childNodes[i];
-              if (!pinnedTabWidth) {
-                pinnedTabWidth = tab.getBoundingClientRect().width;
-              }
-              width += pinnedTabWidth;
-              tab.style.marginInlineStart = -(width + scrollButtonWidth + paddingStart) + "px";
+            let layoutData = this._pinnedTabsLayoutCache;
+            if (!layoutData) {
+              let tabstrip = this.mTabstrip;
+              layoutData = this._pinnedTabsLayoutCache = {
+                pinnedTabWidth: this.childNodes[0].getBoundingClientRect().width,
+                paddingStart: tabstrip.scrollboxPaddingStart,
+                scrollButtonWidth: tabstrip._scrollButtonDown.getBoundingClientRect().width
+              };
             }
 
-            this.style.paddingInlineStart = width + paddingStart + "px";
+            let width = 0;
+            for (let i = numPinned - 1; i >= 0; i--) {
+              let tab = this.childNodes[i];
+              width += layoutData.pinnedTabWidth;
+              tab.style.marginInlineStart =
+                -(width + layoutData.scrollButtonWidth + layoutData.paddingStart) + "px";
+            }
+            this.style.paddingInlineStart = width + layoutData.paddingStart + "px";
           } else {
             this.removeAttribute("positionpinnedtabs");
 
