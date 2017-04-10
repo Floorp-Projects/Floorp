@@ -1,9 +1,8 @@
 "use strict";
 
-/* exported isPageActionShown clickPageAction, AppConstants */
+/* exported AppConstants */
 
 var {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
-var {PageActions} = SpecialPowers.Cu.import("resource://gre/modules/PageActions.jsm", {});
 
 {
   let chromeScript = SpecialPowers.loadChromeScript(
@@ -21,12 +20,4 @@ var {PageActions} = SpecialPowers.Cu.import("resource://gre/modules/PageActions.
       ok(false, `Test left extra windows or tabs: ${JSON.stringify(results)}\n`);
     }
   });
-}
-
-function isPageActionShown(uuid) {
-  return PageActions.isShown(uuid);
-}
-
-function clickPageAction(uuid) {
-  PageActions.synthesizeClick(uuid);
 }
