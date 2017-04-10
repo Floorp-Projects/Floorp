@@ -32,7 +32,7 @@ use properties::animated_properties::TransitionProperty;
 #[cfg(feature = "servo")] use servo_config::prefs::PREFS;
 use shared_lock::StylesheetGuards;
 use style_traits::ToCss;
-use stylesheets::{Origin, UrlExtraData};
+use stylesheets::{CssRuleType, Origin, UrlExtraData};
 #[cfg(feature = "servo")] use values::Either;
 use values::{HasViewportPercentage, computed};
 use cascade_info::CascadeInfo;
@@ -977,8 +977,12 @@ impl ParsedDeclaration {
     /// to Importance::Normal. Parsing Importance values is the job of PropertyDeclarationParser,
     /// we only set them here so that we don't have to reallocate
     pub fn parse(id: PropertyId, context: &ParserContext, input: &mut Parser,
-                 in_keyframe_block: bool)
+                 in_keyframe_block: bool, rule_type: CssRuleType)
                  -> Result<ParsedDeclaration, PropertyDeclarationParseError> {
+        debug_assert!(rule_type == CssRuleType::Keyframe ||
+                      rule_type == CssRuleType::Page ||
+                      rule_type == CssRuleType::Style,
+                      "Declarations are only expected inside a keyframe, page, or style rule.");
         match id {
             PropertyId::Custom(name) => {
                 let value = match input.try(|i| CSSWideKeyword::parse(context, i)) {
@@ -1002,6 +1006,11 @@ impl ParsedDeclaration {
                         % if property.internal:
                             if context.stylesheet_origin != Origin::UserAgent {
                                 return Err(PropertyDeclarationParseError::UnknownProperty)
+                            }
+                        % endif
+                        % if not property.allowed_in_page_rule:
+                            if rule_type == CssRuleType::Page {
+                                return Err(PropertyDeclarationParseError::NotAllowedInPageRule)
                             }
                         % endif
 
@@ -1030,6 +1039,11 @@ impl ParsedDeclaration {
                     % if shorthand.internal:
                         if context.stylesheet_origin != Origin::UserAgent {
                             return Err(PropertyDeclarationParseError::UnknownProperty)
+                        }
+                    % endif
+                    % if not shorthand.allowed_in_page_rule:
+                        if rule_type == CssRuleType::Page {
+                            return Err(PropertyDeclarationParseError::NotAllowedInPageRule)
                         }
                     % endif
 
@@ -1105,6 +1119,8 @@ pub enum PropertyDeclarationParseError {
     ///
     /// See: https://drafts.csswg.org/css-animations/#keyframes
     AnimationPropertyInKeyframeBlock,
+    /// The property is not allowed within a page rule.
+    NotAllowedInPageRule,
 }
 
 impl fmt::Debug for PropertyDeclaration {
@@ -1944,6 +1960,7 @@ pub fn cascade(device: &Device,
                layout_parent_style: Option<<&ComputedValues>,
                cascade_info: Option<<&mut CascadeInfo>,
                error_reporter: &ParseErrorReporter,
+               font_metrics_provider: &FontMetricsProvider,
                flags: CascadeFlags)
                -> ComputedValues {
     debug_assert_eq!(parent_style.is_some(), layout_parent_style.is_some());
@@ -1988,7 +2005,7 @@ pub fn cascade(device: &Device,
                        layout_parent_style,
                        cascade_info,
                        error_reporter,
-                       None,
+                       font_metrics_provider,
                        flags)
 }
 
@@ -2002,7 +2019,7 @@ pub fn apply_declarations<'a, F, I>(device: &Device,
                                     layout_parent_style: &ComputedValues,
                                     mut cascade_info: Option<<&mut CascadeInfo>,
                                     error_reporter: &ParseErrorReporter,
-                                    font_metrics_provider: Option<<&FontMetricsProvider>,
+                                    font_metrics_provider: &FontMetricsProvider,
                                     flags: CascadeFlags)
                                     -> ComputedValues
     where F: Fn() -> I,
@@ -2109,6 +2126,7 @@ pub fn apply_declarations<'a, F, I>(device: &Device,
                     | LonghandId::TextOrientation
                     | LonghandId::AnimationName
                     | LonghandId::TransitionProperty
+                    | LonghandId::XLang
                 % endif
             );
             if

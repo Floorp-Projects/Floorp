@@ -38,7 +38,6 @@
 #include "mozilla/dom/CSSImportRuleBinding.h"
 #include "mozilla/dom/CSSSupportsRuleBinding.h"
 #include "mozilla/dom/CSSMozDocumentRuleBinding.h"
-#include "mozilla/dom/CSSPageRuleBinding.h"
 #include "mozilla/dom/CSSFontFaceRuleBinding.h"
 #include "mozilla/dom/CSSFontFeatureValuesRuleBinding.h"
 #include "mozilla/dom/CSSKeyframeRuleBinding.h"
@@ -2161,7 +2160,7 @@ nsCSSPageStyleDeclaration::GetParentObject()
 
 nsCSSPageRule::nsCSSPageRule(const nsCSSPageRule& aCopy)
   // copy everything except our reference count and mDOMDeclaration
-  : Rule(aCopy)
+  : dom::CSSPageRule(aCopy)
   , mDeclaration(new css::Declaration(*aCopy.mDeclaration))
 {
   mDeclaration->SetOwningRule(this);
@@ -2182,20 +2181,20 @@ nsCSSPageRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSPageRule, mozilla::css::Rule)
-NS_IMPL_RELEASE_INHERITED(nsCSSPageRule, mozilla::css::Rule)
+NS_IMPL_ADDREF_INHERITED(nsCSSPageRule, dom::CSSPageRule)
+NS_IMPL_RELEASE_INHERITED(nsCSSPageRule, dom::CSSPageRule)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSPageRule)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsCSSPageRule,
-                                                mozilla::css::Rule)
+                                                dom::CSSPageRule)
   if (tmp->mDOMDeclaration) {
     tmp->mDOMDeclaration->DropReference();
     tmp->mDOMDeclaration = nullptr;
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsCSSPageRule,
-                                                  mozilla::css::Rule)
+                                                  dom::CSSPageRule)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMDeclaration)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -2208,8 +2207,7 @@ nsCSSPageRule::IsCCLeaf() const
 
 // QueryInterface implementation for nsCSSPageRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsCSSPageRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSPageRule)
-NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
+NS_INTERFACE_MAP_END_INHERITING(dom::CSSPageRule)
 
 #ifdef DEBUG
 void
@@ -2229,18 +2227,6 @@ nsCSSPageRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-/* virtual */ int32_t
-nsCSSPageRule::GetType() const
-{
-  return Rule::PAGE_RULE;
-}
-
-uint16_t
-nsCSSPageRule::Type() const
-{
-  return nsIDOMCSSRule::PAGE_RULE;
-}
-
 void
 nsCSSPageRule::GetCssTextImpl(nsAString& aCssText) const
 {
@@ -2249,13 +2235,6 @@ nsCSSPageRule::GetCssTextImpl(nsAString& aCssText) const
   mDeclaration->ToString(tmp);
   aCssText.Append(tmp);
   aCssText.AppendLiteral(" }");
-}
-
-NS_IMETHODIMP
-nsCSSPageRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
-{
-  NS_ADDREF(*aStyle = Style());
-  return NS_OK;
 }
 
 nsICSSDeclaration*
@@ -2285,13 +2264,6 @@ nsCSSPageRule::ChangeDeclaration(css::Declaration* aDeclaration)
 nsCSSPageRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this);
-}
-
-/* virtual */ JSObject*
-nsCSSPageRule::WrapObject(JSContext* aCx,
-                          JS::Handle<JSObject*> aGivenProto)
-{
-  return CSSPageRuleBinding::Wrap(aCx, this, aGivenProto);
 }
 
 namespace mozilla {

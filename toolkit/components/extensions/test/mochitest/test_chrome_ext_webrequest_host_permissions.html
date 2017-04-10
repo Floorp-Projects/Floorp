@@ -56,6 +56,31 @@ add_task(function* test_webRequest_host_permissions() {
   yield mochi_test.unload();
 });
 
+add_task(async function test_webRequest_filter_permissions_warning() {
+  const manifest = {
+    permissions: ["webRequest", "http://example.com/"],
+  };
+
+  async function background() {
+    await browser.webRequest.onBeforeRequest.addListener(() => {}, {urls: ["http://example.org/"]});
+    browser.test.notifyPass();
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({manifest, background});
+
+  const warning = new Promise(resolve => {
+    SimpleTest.monitorConsole(resolve, [{message: /filter doesn't overlap with host permissions/}]);
+  });
+
+  await extension.startup();
+  await extension.awaitFinish();
+
+  SimpleTest.endMonitorConsole();
+  await warning;
+
+  await extension.unload();
+});
+
 </script>
 </body>
 </html>

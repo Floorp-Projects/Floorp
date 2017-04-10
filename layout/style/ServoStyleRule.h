@@ -58,13 +58,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ServoStyleRule,
                                                          css::Rule)
-  virtual bool IsCCLeaf() const override MOZ_MUST_OVERRIDE;
+  virtual bool IsCCLeaf() const final MOZ_MUST_OVERRIDE;
   NS_DECL_NSIDOMCSSSTYLERULE
 
   // WebIDL interface
-  uint16_t Type() const override;
-  void GetCssTextImpl(nsAString& aCssText) const override;
-  virtual nsICSSDeclaration* Style() override;
+  uint16_t Type() const final;
+  void GetCssTextImpl(nsAString& aCssText) const final;
+  virtual nsICSSDeclaration* Style() final;
 
   RawServoStyleRule* Raw() const { return mRawRule; }
 

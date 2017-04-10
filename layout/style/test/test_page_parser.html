@@ -21,7 +21,7 @@
     // CSS 2.1 only allows margin properties in the page rule.
 
     // Check a bad property.
-    { rule: "position: absolute;" },
+    { rule: _("position: absolute;") },
 
     // Check good properties with invalid units.
     { rule: _("margin: 2in; margin: 2vw;"), expected: {
@@ -52,25 +52,18 @@
   var sheet = document.styleSheets[1];
 
   for (var curTest = 0; curTest < testset.length; curTest++) {
-    try {
-      while(sheet.cssRules.length > 0)
-        sheet.deleteRule(0);
-      sheet.insertRule(testset[curTest].rule, 0);
-    } catch (e) {
-      ok(e.name == "SyntaxError"
-         && e instanceof DOMException
-         && e.code == DOMException.SYNTAX_ERR
-         && !('expected' in testset[curTest]),
-         testset[curTest].rule + " syntax error thrown", e);
+    while(sheet.cssRules.length > 0) {
+      sheet.deleteRule(0);
     }
+    sheet.insertRule(testset[curTest].rule, 0);
 
     try {
-      if (testset[curTest].expected) {
-        is(sheet.cssRules.length, 1,
-           testset[curTest].rule + " rule count");
-           is(sheet.cssRules[0].type, CSSRule.PAGE_RULE,
-           testset[curTest].rule + " rule type");
+      is(sheet.cssRules.length, 1,
+          testset[curTest].rule + " rule count");
+      is(sheet.cssRules[0].type, CSSRule.PAGE_RULE,
+          testset[curTest].rule + " rule type");
 
+      if (testset[curTest].expected) {
         var expected = testset[curTest].expected;
         var s = sheet.cssRules[0].style;
         var n = 0;
@@ -82,21 +75,14 @@
           n++;
         }
         // nothing else is set
-        is(s.length, n, testset[curTest].rule + "prop count");
+        is(s.length, n, testset[curTest].rule + " prop count");
         for (var i = 0; i < s.length; i++) {
           ok(s[i] in expected, testset[curTest].rule,
              "Unexpected item #" + i + ": " + s[i]);
         }
       } else {
-        if (sheet.cssRules.length == 0) {
-          is(sheet.cssRules.length, 0,
-             testset[curTest].rule + " rule count (0)");
-        } else {
-          is(sheet.cssRules.length, 1,
-             testset[curTest].rule + " rule count (1 non-page)");
-          isnot(sheet.cssRules[0].type, CSSRule.PAGE_RULE,
-                testset[curTest].rule + " rule type (1 non-page)");
-        }
+        is(Object.keys(sheet.cssRules[0].style).length, 0,
+            testset[curTest].rule + " rule has no properties");
       }
     } catch (e) {
       ok(false, testset[curTest].rule, "During test: " + e);

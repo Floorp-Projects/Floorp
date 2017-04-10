@@ -72,7 +72,8 @@ private:
   public:
     explicit ExpirationTracker(RuleProcessorCache* aCache)
       : nsExpirationTracker<nsCSSRuleProcessor,3>(
-          10000, "RuleProcessorCache::ExpirationTracker")
+          10000, "RuleProcessorCache::ExpirationTracker",
+          SystemGroup::EventTargetFor(TaskCategory::Other))
       , mCache(aCache) {}
 
     void RemoveObjectIfTracked(nsCSSRuleProcessor* aRuleProcessor);

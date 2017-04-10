@@ -413,10 +413,10 @@ TabParent::Destroy()
 }
 
 mozilla::ipc::IPCResult
-TabParent::RecvEnsureLayersConnected()
+TabParent::RecvEnsureLayersConnected(CompositorOptions* aCompositorOptions)
 {
   if (RenderFrameParent* frame = GetRenderFrame()) {
-    frame->EnsureLayersConnected();
+    frame->EnsureLayersConnected(aCompositorOptions);
   }
   return IPC_OK();
 }
@@ -644,6 +644,7 @@ TabParent::InitRenderFrame()
       TextureFactoryIdentifier textureFactoryIdentifier;
       renderFrame->GetTextureFactoryIdentifier(&textureFactoryIdentifier);
       Unused << SendInitRendering(textureFactoryIdentifier, layersId,
+        renderFrame->GetCompositorOptions(),
         renderFrame->IsLayersConnected(), renderFrame);
     }
   } else {
@@ -2643,12 +2644,14 @@ TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
                                       const nsString& aFeatures,
                                       bool* aOutWindowOpened,
                                       TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                      uint64_t* aLayersId)
+                                      uint64_t* aLayersId,
+                                      CompositorOptions* aCompositorOptions)
 {
   BrowserElementParent::OpenWindowResult opened =
     BrowserElementParent::OpenWindowOOP(TabParent::GetFrom(aOpener),
                                         this, aRenderFrame, aURL, aName, aFeatures,
                                         aTextureFactoryIdentifier, aLayersId);
+  *aCompositorOptions = static_cast<RenderFrameParent*>(aRenderFrame)->GetCompositorOptions();
   *aOutWindowOpened = (opened == BrowserElementParent::OPEN_WINDOW_ADDED);
   if (!*aOutWindowOpened) {
     Destroy();
