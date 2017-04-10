@@ -148,6 +148,8 @@ public:
   // Cache-file access methods. These are the lowest-level cache methods.
   // mReentrantMonitor must be held; these can be called on any thread.
   // This can return partial reads.
+  // Note mReentrantMonitor will be dropped while doing IO. The caller need
+  // to handle changes happening when the monitor is not held.
   nsresult ReadCacheFile(int64_t aOffset, void* aData, int32_t aLength,
                          int32_t* aBytes);
   // This will fail if all aLength bytes are not read
@@ -668,15 +670,23 @@ InitMediaCache()
 }
 
 nsresult
-MediaCache::ReadCacheFile(int64_t aOffset, void* aData, int32_t aLength,
-                            int32_t* aBytes)
+MediaCache::ReadCacheFile(
+  int64_t aOffset, void* aData, int32_t aLength, int32_t* aBytes)
 {
   mReentrantMonitor.AssertCurrentThreadIn();
-
-  if (!mFileCache)
+  RefPtr<FileBlockCache> fileCache = mFileCache;
+  if (!fileCache) {
     return NS_ERROR_FAILURE;
-
-  return mFileCache->Read(aOffset, reinterpret_cast<uint8_t*>(aData), aLength, aBytes);
+  }
+  {
+    // Since the monitor might be acquired on the main thread, we need to drop
+    // the monitor while doing IO in order not to block the main thread.
+    // TODO: fix calls of ReadCacheFile() to handle state changes happening when
+    // the monitor is not held.
+    ReentrantMonitorAutoExit unlock(mReentrantMonitor);
+    return fileCache->Read(aOffset,
+      reinterpret_cast<uint8_t*>(aData), aLength, aBytes);
+  }
 }
 
 nsresult
