@@ -404,7 +404,7 @@ struct IntervalComparator
 NS_IMETHODIMP
 TimerThread::Run()
 {
-  NS_SetCurrentThreadName("Timer");
+  PR_SetCurrentThreadName("Timer");
 
   MonitorAutoLock lock(mMonitor);
 
