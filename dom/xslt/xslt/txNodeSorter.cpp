@@ -13,6 +13,10 @@
 #include "prmem.h"
 #include "nsQuickSort.h"
 
+#include "mozilla/CheckedInt.h"
+
+using mozilla::CheckedUint32;
+
 /*
  * Sorts Nodes as specified by the W3C XSLT 1.0 Recommendation
  */
@@ -143,13 +147,14 @@ txNodeSorter::sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
     uint32_t len = static_cast<uint32_t>(aNodes->size());
 
     // Limit resource use to something sane.
-    uint32_t itemSize = sizeof(uint32_t) + mNKeys * sizeof(txObject*);
-    if (mNKeys > (UINT32_MAX - sizeof(uint32_t)) / sizeof(txObject*) ||
-        len >= UINT32_MAX / itemSize) {
+    CheckedUint32 indexSize = CheckedUint32(len) * sizeof(uint32_t);
+    CheckedUint32 sortValuesSize = CheckedUint32(len) * sizeof(txObject*) * mNKeys;
+    CheckedUint32 arraySize = indexSize + sortValuesSize;
+    if (!arraySize.isValid()) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    void* mem = PR_Malloc(len * itemSize);
+    void* mem = PR_Malloc(arraySize.value());
     NS_ENSURE_TRUE(mem, NS_ERROR_OUT_OF_MEMORY);
 
     uint32_t* indexes = static_cast<uint32_t*>(mem);
@@ -159,7 +164,7 @@ txNodeSorter::sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
     for (i = 0; i < len; ++i) {
         indexes[i] = i;
     }
-    memset(sortValues, 0, len * mNKeys * sizeof(txObject*));
+    memset(sortValues, 0, sortValuesSize.value());
 
     // Sort the indexarray
     SortData sortData;
