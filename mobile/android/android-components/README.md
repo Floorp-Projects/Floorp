@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/mozilla-mobile/telemetry-android.svg?branch=master)](https://travis-ci.org/mozilla-mobile/telemetry-android) 
-[![Coverage Status](https://coveralls.io/repos/github/mozilla-mobile/telemetry-android/badge.svg?branch=sebastian%2Fdevelopment)](https://coveralls.io/github/mozilla-mobile/telemetry-android?branch=sebastian%2Fdevelopment)
+[![Coverage Status](https://coveralls.io/repos/github/mozilla-mobile/telemetry-android/badge.svg?branch=master)](https://coveralls.io/github/mozilla-mobile/telemetry-android?branch=master)
 
 telemetry-android
 =================
