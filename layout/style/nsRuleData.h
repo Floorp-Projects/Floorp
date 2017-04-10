@@ -166,6 +166,11 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
     }
   }
 
+  void SetNumberValue(nsCSSPropertyID aId,
+                     float aValue) {
+    ValueFor(aId)->SetFloatValue(aValue, eCSSUnit_Number);
+  }
+
   void SetPercentValue(nsCSSPropertyID aId,
                        float aValue) {
     ValueFor(aId)->SetPercentValue(aValue);

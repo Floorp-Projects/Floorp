@@ -508,10 +508,8 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     //
     const nsAttrValue* value =
       aAttributes->GetAttr(nsGkAtoms::scriptsizemultiplier_);
-    nsCSSValue* scriptSizeMultiplier =
-      aData->ValueForScriptSizeMultiplier();
     if (value && value->Type() == nsAttrValue::eString &&
-        scriptSizeMultiplier->GetUnit() == eCSSUnit_Null) {
+        !aData->PropertyIsSet(eCSSProperty__moz_script_size_multiplier)) {
       nsAutoString str(value->GetStringValue());
       str.CompressWhitespace();
       // MathML numbers can't have leading '+'
@@ -520,7 +518,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
         float floatValue = str.ToFloat(&errorCode);
         // Negative scriptsizemultipliers are not parsed
         if (NS_SUCCEEDED(errorCode) && floatValue >= 0.0f) {
-          scriptSizeMultiplier->SetFloatValue(floatValue, eCSSUnit_Number);
+          aData->SetNumberValue(eCSSProperty__moz_script_size_multiplier, floatValue);
         } else {
           ReportParseErrorNoTag(str,
                                 nsGkAtoms::scriptsizemultiplier_,
@@ -566,9 +564,8 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     // default: inherited
     //
     value = aAttributes->GetAttr(nsGkAtoms::scriptlevel_);
-    nsCSSValue* scriptLevel = aData->ValueForScriptLevel();
     if (value && value->Type() == nsAttrValue::eString &&
-        scriptLevel->GetUnit() == eCSSUnit_Null) {
+        !aData->PropertyIsSet(eCSSProperty__moz_script_level)) {
       nsAutoString str(value->GetStringValue());
       str.CompressWhitespace();
       if (str.Length() > 0) {
@@ -581,9 +578,9 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
           // to indicate that the scriptlevel is absolute.
           char16_t ch = str.CharAt(0);
           if (ch == '+' || ch == '-') {
-            scriptLevel->SetIntValue(intValue, eCSSUnit_Integer);
+            aData->SetIntValue(eCSSProperty__moz_script_level, intValue);
           } else {
-            scriptLevel->SetFloatValue(intValue, eCSSUnit_Number);
+            aData->SetNumberValue(eCSSProperty__moz_script_level, intValue);
           }
         } else {
           ReportParseErrorNoTag(str,
@@ -741,10 +738,9 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     // "monospace" | "initial" | "tailed" | "looped" | "stretched"
     // default: normal (except on <mi>)
     //
-    nsCSSValue* mathVariant = aData->ValueForMathVariant();
     value = aAttributes->GetAttr(nsGkAtoms::mathvariant_);
     if (value && value->Type() == nsAttrValue::eString &&
-        mathVariant->GetUnit() == eCSSUnit_Null) {
+        !aData->PropertyIsSet(eCSSProperty__moz_math_variant)) {
       nsAutoString str(value->GetStringValue());
       str.CompressWhitespace();
       static const char sizes[19][23] = {
@@ -768,7 +764,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       };
       for (uint32_t i = 0; i < ArrayLength(sizes); ++i) {
         if (str.EqualsASCII(sizes[i])) {
-          mathVariant->SetIntValue(values[i], eCSSUnit_Enumerated);
+          aData->SetKeywordValue(eCSSProperty__moz_math_variant, values[i]);
           break;
         }
       }

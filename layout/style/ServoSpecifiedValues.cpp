@@ -69,6 +69,12 @@ ServoSpecifiedValues::SetPixelValue(nsCSSPropertyID aId, float aValue)
 }
 
 void
+ServoSpecifiedValues::SetNumberValue(nsCSSPropertyID aId, float aValue)
+{
+  Servo_DeclarationBlock_SetNumberValue(mDecl, aId, aValue);
+}
+
+void
 ServoSpecifiedValues::SetPercentValue(nsCSSPropertyID aId, float aValue)
 {
   Servo_DeclarationBlock_SetPercentValue(mDecl, aId, aValue);
