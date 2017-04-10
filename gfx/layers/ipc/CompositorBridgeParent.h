@@ -188,9 +188,9 @@ public:
   virtual mozilla::ipc::IPCResult RecvWillClose() override;
   virtual mozilla::ipc::IPCResult RecvPause() override;
   virtual mozilla::ipc::IPCResult RecvResume() override;
-  virtual mozilla::ipc::IPCResult RecvNotifyChildCreated(const uint64_t& child) override;
-  virtual mozilla::ipc::IPCResult RecvMapAndNotifyChildCreated(const uint64_t& child, const base::ProcessId& pid) override;
-  virtual mozilla::ipc::IPCResult RecvNotifyChildRecreated(const uint64_t& child) override;
+  virtual mozilla::ipc::IPCResult RecvNotifyChildCreated(const uint64_t& child, CompositorOptions* aOptions) override;
+  virtual mozilla::ipc::IPCResult RecvMapAndNotifyChildCreated(const uint64_t& child, const base::ProcessId& pid, CompositorOptions* aOptions) override;
+  virtual mozilla::ipc::IPCResult RecvNotifyChildRecreated(const uint64_t& child, CompositorOptions* aOptions) override;
   virtual mozilla::ipc::IPCResult RecvAdoptChild(const uint64_t& child) override;
   virtual mozilla::ipc::IPCResult RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
                                 const gfx::IntRect& aRect) override;
@@ -445,9 +445,6 @@ public:
 
   PAPZParent* AllocPAPZParent(const uint64_t& aLayersId) override;
   bool DeallocPAPZParent(PAPZParent* aActor) override;
-
-  mozilla::ipc::IPCResult RecvGetCompositorOptions(const uint64_t& aLayersId,
-                                                   CompositorOptions* aOptions) override;
 
   RefPtr<APZCTreeManager> GetAPZCTreeManager();
 

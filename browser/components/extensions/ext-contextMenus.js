@@ -2,6 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+Cu.import("resource://gre/modules/ExtensionManagement.jsm");
 Cu.import("resource://gre/modules/MatchPattern.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -495,6 +496,11 @@ MenuItem.prototype = {
       mediaType = "image";
     }
 
+    let frameId;
+    if (contextData.windowId) {
+      frameId = ExtensionManagement.getFrameId(contextData.windowId);
+    }
+
     let info = {
       menuItemId: this.id,
       editable: contextData.onEditableArea || contextData.onPassword,
@@ -512,6 +518,7 @@ MenuItem.prototype = {
     setIfDefined("srcUrl", contextData.srcUrl);
     setIfDefined("pageUrl", contextData.pageUrl);
     setIfDefined("frameUrl", contextData.frameUrl);
+    setIfDefined("frameId", frameId);
     setIfDefined("selectionText", contextData.selectionText);
 
     if ((this.type === "checkbox") || (this.type === "radio")) {

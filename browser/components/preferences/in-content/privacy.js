@@ -267,9 +267,11 @@ var gPrivacyPane = {
 
     if (Services.prefs.getBoolPref("browser.storageManager.enabled")) {
       Services.obs.addObserver(this, "sitedatamanager:sites-updated", false);
+      Services.obs.addObserver(this, "sitedatamanager:updating-sites", false);
       let unload = () => {
         window.removeEventListener("unload", unload);
         Services.obs.removeObserver(this, "sitedatamanager:sites-updated");
+        Services.obs.removeObserver(this, "sitedatamanager:updating-sites");
       };
       window.addEventListener("unload", unload);
       SiteDataManager.updateSites();
@@ -1180,14 +1182,22 @@ var gPrivacyPane = {
     gSubDialog.open("chrome://browser/content/preferences/siteDataSettings.xul");
   },
 
-  updateTotalSiteDataSize() {
-    SiteDataManager.getTotalUsage()
-      .then(usage => {
-        let size = DownloadUtils.convertByteUnits(usage);
-        let prefStrBundle = document.getElementById("bundlePreferences");
-        let totalSiteDataSizeLabel = document.getElementById("totalSiteDataSize");
-        totalSiteDataSizeLabel.textContent = prefStrBundle.getFormattedString("totalSiteDataSize", size);
-      });
+  toggleSiteData(shouldShow) {
+    let clearButton = document.getElementById("clearSiteDataButton");
+    let settingsButton = document.getElementById("siteDataSettings");
+    clearButton.disabled = !shouldShow;
+    settingsButton.disabled = !shouldShow;
+  },
+
+  updateTotalDataSizeLabel(usage) {
+    let prefStrBundle = document.getElementById("bundlePreferences");
+    let totalSiteDataSizeLabel = document.getElementById("totalSiteDataSize");
+    if (usage < 0) {
+      totalSiteDataSizeLabel.textContent = prefStrBundle.getString("loadingSiteDataSize");
+    } else {
+      let size = DownloadUtils.convertByteUnits(usage);
+      totalSiteDataSizeLabel.textContent = prefStrBundle.getFormattedString("totalSiteDataSize", size);
+    }
   },
 
   // Retrieves the amount of space currently used by disk cache
@@ -1447,8 +1457,16 @@ var gPrivacyPane = {
 
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case "sitedatamanager:updating-sites":
+        // While updating, we want to disable this section and display loading message until updated
+        this.toggleSiteData(false);
+        this.updateTotalDataSizeLabel(-1);
+        break;
+
       case "sitedatamanager:sites-updated":
-        this.updateTotalSiteDataSize();
+        this.toggleSiteData(true);
+        SiteDataManager.getTotalUsage()
+          .then(this.updateTotalDataSizeLabel.bind(this));
         break;
     }
   },

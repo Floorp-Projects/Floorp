@@ -4,6 +4,33 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Document Navigation')
+
+with Files('crashtests/430628*'):
+    BUG_COMPONENT = ('Core', 'Editor')
+
+with Files('crashtests/432114*'):
+    BUG_COMPONENT = ('Core', 'Editor')
+
+with Files('crashtests/500328*'):
+    BUG_COMPONENT = ('Firefox', 'Bookmarks & History')
+
+with Files('IHistory.h'):
+    BUG_COMPONENT = ('Toolkit', 'Places')
+
+with Files('*LoadContext.*'):
+    BUG_COMPONENT = ('Core', 'Networking')
+
+with Files('nsAboutRedirector.*'):
+    BUG_COMPONENT = ('Core', 'General')
+
+with Files('nsILinkHandler.*'):
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
+
+with Files('nsIScrollObserver.*'):
+    BUG_COMPONENT = ('Core', 'Panning and Zooming')
+
 DIRS += [
     'timeline',
 ]

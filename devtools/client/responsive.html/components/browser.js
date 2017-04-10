@@ -8,7 +8,7 @@
 
 const { Task } = require("devtools/shared/task");
 const flags = require("devtools/shared/flags");
-const { getToplevelWindow } = require("sdk/window/utils");
+const { getToplevelWindow } = require("../utils/window");
 const { DOM: dom, createClass, addons, PropTypes } =
   require("devtools/client/shared/vendor/react");
 

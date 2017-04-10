@@ -144,9 +144,6 @@ parent:
   sync Reset(LayersBackend[] aBackendHints, uint64_t aSeqNo)
     returns (bool aResult, TextureFactoryIdentifier aOutIdentifier);
 
-  // Returns the CompositorOptions for this compositor.
-  sync GetCompositorOptions(uint64_t layersId) returns (CompositorOptions aOptions);
-
   // Must be called after Initialize(), and only succeeds if AsyncPanZoomEnabled() is true.
   async PAPZ(uint64_t layersId);
   async PAPZCTreeManager(uint64_t layersId);
@@ -174,13 +171,15 @@ parent:
 
   // See bug 1316632 comment #33 for why this has to be sync. Otherwise,
   // there are ordering issues with SendPLayerTransactionConstructor.
-  sync NotifyChildCreated(uint64_t id);
+  sync NotifyChildCreated(uint64_t id)
+    returns (CompositorOptions compositorOptions);
 
   // This version of NotifyChildCreated also performs a layer tree mapping.
   //
   // See bug 1316632 comment #33 for why this has to be sync. Otherwise,
   // there are ordering issues with SendPLayerTransactionConstructor.
-  sync MapAndNotifyChildCreated(uint64_t id, ProcessId owner);
+  sync MapAndNotifyChildCreated(uint64_t id, ProcessId owner)
+    returns (CompositorOptions compositorOptions);
 
   async AdoptChild(uint64_t id);
 
@@ -188,7 +187,8 @@ parent:
   // reassociate layers. This must be synchronous to ensure that the
   // association happens before PLayerTransactions are sent over the
   // cross-process bridge.
-  sync NotifyChildRecreated(uint64_t id);
+  sync NotifyChildRecreated(uint64_t id)
+    returns (CompositorOptions compositorOptions);
 
   // Make a snapshot of the content that would have been drawn to our
   // render target at the time this message is received.  If the size

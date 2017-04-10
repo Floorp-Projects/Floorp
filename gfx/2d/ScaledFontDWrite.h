@@ -19,15 +19,21 @@ class ScaledFontDWrite final : public ScaledFontBase
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontDwrite)
-  ScaledFontDWrite(IDWriteFontFace *aFont, Float aSize)
-    : ScaledFontBase(aSize)
+  ScaledFontDWrite(IDWriteFontFace *aFont,
+                   const RefPtr<UnscaledFont>& aUnscaledFont,
+                   Float aSize)
+    : ScaledFontBase(aUnscaledFont, aSize)
     , mFontFace(aFont)
     , mUseEmbeddedBitmap(false)
     , mForceGDIMode(false)
   {}
 
-  ScaledFontDWrite(IDWriteFontFace *aFontFace, Float aSize, bool aUseEmbeddedBitmap,
-                   bool aForceGDIMode, const gfxFontStyle* aStyle);
+  ScaledFontDWrite(IDWriteFontFace *aFontFace,
+                   const RefPtr<UnscaledFont>& aUnscaledFont,
+                   Float aSize,
+                   bool aUseEmbeddedBitmap,
+                   bool aForceGDIMode,
+                   const gfxFontStyle* aStyle);
 
   virtual FontType GetType() const { return FontType::DWRITE; }
 

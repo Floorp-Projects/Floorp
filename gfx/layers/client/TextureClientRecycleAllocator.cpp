@@ -180,8 +180,10 @@ TextureClientRecycleAllocator::CreateOrRecycle(ITextureClientAllocationHelper& a
     if (!mPooledClients.empty()) {
       textureHolder = mPooledClients.top();
       mPooledClients.pop();
-      // If a pooled TextureClient is not compatible, release it.
-      if (!aHelper.IsCompatible(textureHolder->GetTextureClient())) {
+      // If the texture's allocator is not open or a pooled TextureClient is
+      // not compatible, release it.
+      if (!textureHolder->GetTextureClient()->GetAllocator()->IPCOpen() ||
+          !aHelper.IsCompatible(textureHolder->GetTextureClient())) {
         // Release TextureClient.
         RefPtr<Runnable> task = new TextureClientReleaseTask(textureHolder->GetTextureClient());
         textureHolder->ClearTextureClient();

@@ -22,10 +22,12 @@ use gecko_bindings::structs::RawGeckoStyleAnimationList;
 use gecko_bindings::structs::RawGeckoURLExtraData;
 use gecko_bindings::structs::RefPtr;
 use gecko_bindings::structs::CSSPseudoClassType;
+use gecko_bindings::structs::TraversalRestyleBehavior;
 use gecko_bindings::structs::TraversalRootBehavior;
 use gecko_bindings::structs::ComputedTimingFunction_BeforeFlag;
 use gecko_bindings::structs::FontFamilyList;
 use gecko_bindings::structs::FontFamilyType;
+use gecko_bindings::structs::FontSizePrefs;
 use gecko_bindings::structs::Keyframe;
 use gecko_bindings::structs::ServoBundledURI;
 use gecko_bindings::structs::ServoElementSnapshot;
@@ -97,6 +99,9 @@ unsafe impl Sync for nsStyleGradient {}
 use gecko_bindings::structs::nsStyleGradientStop;
 unsafe impl Send for nsStyleGradientStop {}
 unsafe impl Sync for nsStyleGradientStop {}
+use gecko_bindings::structs::nsStyleGridTemplate;
+unsafe impl Send for nsStyleGridTemplate {}
+unsafe impl Sync for nsStyleGridTemplate {}
 use gecko_bindings::structs::nsStyleImage;
 unsafe impl Send for nsStyleImage {}
 unsafe impl Sync for nsStyleImage {}
@@ -230,6 +235,11 @@ pub type RawServoNamespaceRuleBorrowed<'a> = &'a RawServoNamespaceRule;
 pub type RawServoNamespaceRuleBorrowedOrNull<'a> = Option<&'a RawServoNamespaceRule>;
 enum RawServoNamespaceRuleVoid { }
 pub struct RawServoNamespaceRule(RawServoNamespaceRuleVoid);
+pub type RawServoPageRuleStrong = ::gecko_bindings::sugar::ownership::Strong<RawServoPageRule>;
+pub type RawServoPageRuleBorrowed<'a> = &'a RawServoPageRule;
+pub type RawServoPageRuleBorrowedOrNull<'a> = Option<&'a RawServoPageRule>;
+enum RawServoPageRuleVoid { }
+pub struct RawServoPageRule(RawServoPageRuleVoid);
 pub type RawServoStyleSetOwned = ::gecko_bindings::sugar::ownership::Owned<RawServoStyleSet>;
 pub type RawServoStyleSetOwnedOrNull = ::gecko_bindings::sugar::ownership::OwnedOrNull<RawServoStyleSet>;
 pub type RawServoStyleSetBorrowed<'a> = &'a RawServoStyleSet;
@@ -374,6 +384,12 @@ extern "C" {
 }
 extern "C" {
     pub fn Servo_NamespaceRule_Release(ptr: RawServoNamespaceRuleBorrowed);
+}
+extern "C" {
+    pub fn Servo_PageRule_AddRef(ptr: RawServoPageRuleBorrowed);
+}
+extern "C" {
+    pub fn Servo_PageRule_Release(ptr: RawServoPageRuleBorrowed);
 }
 extern "C" {
     pub fn Servo_StyleSet_Drop(ptr: RawServoStyleSetOwned);
@@ -779,6 +795,12 @@ extern "C" {
     pub fn Gecko_DropElementSnapshot(snapshot: ServoElementSnapshotOwned);
 }
 extern "C" {
+    pub fn Gecko_CopyStyleGridTemplateValues(grid_template:
+                                                 *mut nsStyleGridTemplate,
+                                             other:
+                                                 *const nsStyleGridTemplate);
+}
+extern "C" {
     pub fn Gecko_ClearAndResizeStyleContents(content: *mut nsStyleContent,
                                              how_many: u32);
 }
@@ -1052,10 +1074,7 @@ extern "C" {
                                           aSource: *const nsStyleFont);
 }
 extern "C" {
-    pub fn Gecko_nsStyleFont_GetBaseSize(font: *const nsStyleFont,
-                                         pres_context:
-                                             RawGeckoPresContextBorrowed)
-     -> nscoord;
+    pub fn Gecko_GetBaseSize(lang: *mut nsIAtom) -> FontSizePrefs;
 }
 extern "C" {
     pub fn Gecko_GetMediaFeatures() -> *const nsMediaFeature;
@@ -1395,6 +1414,12 @@ extern "C" {
     pub fn Gecko_Construct_nsStyleVariables(ptr: *mut nsStyleVariables);
 }
 extern "C" {
+    pub fn Gecko_RegisterProfilerThread(name: *const ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Gecko_UnregisterProfilerThread();
+}
+extern "C" {
     pub fn Servo_Element_ClearData(node: RawGeckoElementBorrowed);
 }
 extern "C" {
@@ -1543,6 +1568,18 @@ extern "C" {
                                           result: *mut nsAString);
 }
 extern "C" {
+    pub fn Servo_CssRules_GetPageRuleAt(rules: ServoCssRulesBorrowed,
+                                        index: u32) -> RawServoPageRuleStrong;
+}
+extern "C" {
+    pub fn Servo_PageRule_Debug(rule: RawServoPageRuleBorrowed,
+                                result: *mut nsACString);
+}
+extern "C" {
+    pub fn Servo_PageRule_GetCssText(rule: RawServoPageRuleBorrowed,
+                                     result: *mut nsAString);
+}
+extern "C" {
     pub fn Servo_CssRules_GetFontFaceRuleAt(rules: ServoCssRulesBorrowed,
                                             index: u32)
      -> *mut nsCSSFontFaceRule;
@@ -1575,6 +1612,15 @@ extern "C" {
 extern "C" {
     pub fn Servo_NamespaceRule_GetURI(rule: RawServoNamespaceRuleBorrowed)
      -> *mut nsIAtom;
+}
+extern "C" {
+    pub fn Servo_PageRule_GetStyle(rule: RawServoPageRuleBorrowed)
+     -> RawServoDeclarationBlockStrong;
+}
+extern "C" {
+    pub fn Servo_PageRule_SetStyle(rule: RawServoPageRuleBorrowed,
+                                   declarations:
+                                       RawServoDeclarationBlockBorrowed);
 }
 extern "C" {
     pub fn Servo_ParseProperty(property: *const nsACString,
@@ -1894,7 +1940,8 @@ extern "C" {
 extern "C" {
     pub fn Servo_TraverseSubtree(root: RawGeckoElementBorrowed,
                                  set: RawServoStyleSetBorrowed,
-                                 root_behavior: TraversalRootBehavior)
+                                 root_behavior: TraversalRootBehavior,
+                                 restyle_behavior: TraversalRestyleBehavior)
      -> bool;
 }
 extern "C" {

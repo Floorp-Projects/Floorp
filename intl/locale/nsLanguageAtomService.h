@@ -28,8 +28,10 @@ public:
 
   virtual nsIAtom* GetLocaleLanguage() override;
 
-  virtual nsIAtom* GetLanguageGroup(nsIAtom *aLanguage,
-                                                nsresult *aError) override;
+  virtual nsIAtom* GetLanguageGroup(nsIAtom* aLanguage,
+                                    nsresult* aError) override;
+  virtual already_AddRefed<nsIAtom> GetUncachedLanguageGroup(nsIAtom* aLanguage,
+                                                             nsresult* aError) const final;
 
   nsLanguageAtomService();
 

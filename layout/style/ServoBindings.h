@@ -40,6 +40,7 @@ namespace mozilla {
     struct URLValue;
   };
   enum class UpdateAnimationsTasks : uint8_t;
+  struct LangGroupFontPrefs;
 }
 using mozilla::FontFamilyList;
 using mozilla::FontFamilyType;
@@ -92,6 +93,18 @@ public:
   const uint8_t* mURLString;
   uint32_t mURLStringLength;
   mozilla::URLExtraData* mExtraData;
+};
+
+struct FontSizePrefs
+{
+  void CopyFrom(const mozilla::LangGroupFontPrefs&);
+  nscoord mDefaultVariableSize;
+  nscoord mDefaultFixedSize;
+  nscoord mDefaultSerifSize;
+  nscoord mDefaultSansSerifSize;
+  nscoord mDefaultMonospaceSize;
+  nscoord mDefaultCursiveSize;
+  nscoord mDefaultFantasySize;
 };
 
 // DOM Traversal.
@@ -284,6 +297,9 @@ void Gecko_EnsureTArrayCapacity(void* array, size_t capacity, size_t elem_size);
 // otherwise. This is ensured with rust traits for the relevant structs.
 void Gecko_ClearPODTArray(void* array, size_t elem_size, size_t elem_align);
 
+void Gecko_CopyStyleGridTemplateValues(nsStyleGridTemplate* grid_template,
+                                       const nsStyleGridTemplate* other);
+
 // Clear the mContents, mCounterIncrements, or mCounterResets field in nsStyleContent. This is
 // needed to run the destructors, otherwise we'd leak the images, strings, and whatnot.
 void Gecko_ClearAndResizeStyleContents(nsStyleContent* content,
@@ -381,7 +397,7 @@ bool Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id);
 
 void Gecko_nsStyleFont_SetLang(nsStyleFont* font, nsIAtom* atom);
 void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource);
-nscoord Gecko_nsStyleFont_GetBaseSize(const nsStyleFont* font, RawGeckoPresContextBorrowed pres_context);
+FontSizePrefs Gecko_GetBaseSize(nsIAtom* lang);
 
 const nsMediaFeature* Gecko_GetMediaFeatures();
 
@@ -415,6 +431,9 @@ bool Gecko_MatchStringArgPseudo(RawGeckoElementBorrowed element,
 #undef STYLE_STRUCT
 
 void Gecko_Construct_nsStyleVariables(nsStyleVariables* ptr);
+
+void Gecko_RegisterProfilerThread(const char* name);
+void Gecko_UnregisterProfilerThread();
 
 #define SERVO_BINDING_FUNC(name_, return_, ...) return_ name_(__VA_ARGS__);
 #include "mozilla/ServoBindingList.h"

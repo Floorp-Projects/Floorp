@@ -112,23 +112,6 @@ public:
 };
 
 // ----------------------------------------------------------------------------
-// ProfilerState auxiliaries
-
-// There is a single instance of ProfilerState that holds the profiler's global
-// state. Both the class and the instance are defined in platform.cpp.
-// ProfilerStateMutex is the type of the mutex that guards all accesses to
-// ProfilerState. We use a distinct type for it to make it hard to mix up with
-// any other StaticMutex.
-class ProfilerStateMutex : public mozilla::StaticMutex {};
-
-// Values of this type are passed around as a kind of token indicating which
-// functions are called while the global ProfilerStateMutex is held, i.e. while
-// the ProfilerState can be modified. (All of ProfilerState's getters and
-// setters require this token.) Some such functions are outside platform.cpp,
-// so this type must be declared here.
-typedef const mozilla::BaseAutoLock<ProfilerStateMutex>& PSLockRef;
-
-// ----------------------------------------------------------------------------
 // Miscellaneous
 
 class PlatformData;
@@ -142,9 +125,6 @@ struct PlatformDataDestructor {
 typedef mozilla::UniquePtr<PlatformData, PlatformDataDestructor>
   UniquePlatformData;
 UniquePlatformData AllocPlatformData(int aThreadId);
-
-mozilla::UniquePtr<char[]>
-ToJSON(PSLockRef aLock, double aSinceTime);
 
 namespace mozilla {
 class JSONWriter;

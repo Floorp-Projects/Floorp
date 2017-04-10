@@ -53,10 +53,11 @@ impl<'a> RecalcStyleAndConstructFlows<'a> {
 impl<'a, E> DomTraversal<E> for RecalcStyleAndConstructFlows<'a>
     where E: TElement,
           E::ConcreteNode: LayoutNode,
+          E::FontMetricsProvider: Send,
 {
     type ThreadLocalContext = ScopedThreadLocalLayoutContext<E>;
 
-    fn process_preorder(&self, traversal_data: &mut PerLevelTraversalData,
+    fn process_preorder(&self, traversal_data: &PerLevelTraversalData,
                         thread_local: &mut Self::ThreadLocalContext, node: E::ConcreteNode) {
         // FIXME(pcwalton): Stop allocating here. Ideally this should just be
         // done by the HTML parser.

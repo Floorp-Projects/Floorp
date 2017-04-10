@@ -1390,16 +1390,14 @@ protected:
    * caller will not try to set the attr in any other way if this method
    * returns true (the value of aRetval does not matter for that purpose).
    *
-   * @param aDocument the current document of this node (an optimization)
    * @param aName the name of the attribute
    * @param aValue the nsAttrValue to set
    * @param [out] aRetval the nsresult status of the operation, if any.
    * @return true if the setting was attempted, false otherwise.
    */
-  virtual bool SetMappedAttribute(nsIDocument* aDocument,
-                                    nsIAtom* aName,
-                                    nsAttrValue& aValue,
-                                    nsresult* aRetval);
+  virtual bool SetMappedAttribute(nsIAtom* aName,
+                                  nsAttrValue& aValue,
+                                  nsresult* aRetval);
 
   /**
    * Hook that is called by Element::SetAttr to allow subclasses to

@@ -58,8 +58,8 @@ class BackgroundPage extends HiddenExtensionPage {
       // Wait until all event listeners registered by the script so far
       // to be handled.
       await Promise.all(context.listenerPromises);
+      context.listenerPromises = null;
     }
-    context.listenerPromises = null;
 
     this.extension.emit("startup");
   }

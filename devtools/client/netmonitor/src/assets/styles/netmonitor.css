@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import "chrome://devtools/skin/widgets.css";
 @import "resource://devtools/client/shared/components/splitter/split-box.css";
 @import "resource://devtools/client/shared/components/tree/tree-view.css";
 @import "resource://devtools/client/shared/components/tabs/tabs.css";
@@ -510,11 +511,11 @@ body,
   border-inline-start: 1px dashed;
 }
 
-.requests-list-timings-division:-moz-locale-dir(ltr) {
+.requests-list-timings-division:dir(ltr) {
   transform-origin: left center;
 }
 
-.requests-list-timings-division:-moz-locale-dir(rtl) {
+.requests-list-timings-division:dir(rtl) {
   transform-origin: right center;
 }
 
@@ -543,7 +544,7 @@ body,
   background-position: left center;
 }
 
-.requests-list-subitem.requests-list-waterfall:-moz-locale-dir(rtl) {
+.requests-list-subitem.requests-list-waterfall:dir(rtl) {
   background-position: right center;
 }
 
@@ -554,19 +555,19 @@ body,
   transform: scaleX(var(--timings-scale));
 }
 
-.requests-list-timings:-moz-locale-dir(ltr) {
+.requests-list-timings:dir(ltr) {
   transform-origin: left center;
 }
 
-.requests-list-timings:-moz-locale-dir(rtl) {
+.requests-list-timings:dir(rtl) {
   transform-origin: right center;
 }
 
-.requests-list-timings-total:-moz-locale-dir(ltr) {
+.requests-list-timings-total:dir(ltr) {
   transform-origin: left center;
 }
 
-.requests-list-timings-total:-moz-locale-dir(rtl) {
+.requests-list-timings-total:dir(rtl) {
   transform-origin: right center;
 }
 
@@ -679,13 +680,13 @@ body,
   display: none;
 }
 
-.network-details-panel-toggle:-moz-locale-dir(ltr)::before,
-.network-details-panel-toggle.pane-collapsed:-moz-locale-dir(rtl)::before {
+.network-details-panel-toggle:dir(ltr)::before,
+.network-details-panel-toggle.pane-collapsed:dir(rtl)::before {
   background-image: var(--theme-pane-collapse-image);
 }
 
-.network-details-panel-toggle.pane-collapsed:-moz-locale-dir(ltr)::before,
-.network-details-panel-toggle:-moz-locale-dir(rtl)::before {
+.network-details-panel-toggle.pane-collapsed:dir(ltr)::before,
+.network-details-panel-toggle:dir(rtl)::before {
   background-image: var(--theme-pane-expand-image);
 }
 

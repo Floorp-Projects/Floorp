@@ -226,7 +226,16 @@ WebRenderBridgeParent::RecvAddRawFont(const wr::FontKey& aFontKey,
   return IPC_OK();
 }
 
-
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvDeleteFont(const wr::FontKey& aFontKey)
+{
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+  MOZ_ASSERT(mApi);
+  mApi->DeleteFont(aFontKey);
+  return IPC_OK();
+}
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvUpdateImage(const wr::ImageKey& aImageKey,

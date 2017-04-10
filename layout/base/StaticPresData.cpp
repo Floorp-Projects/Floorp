@@ -70,41 +70,10 @@ enum {
   eDefaultFont_COUNT
 };
 
-const LangGroupFontPrefs*
-StaticPresData::GetFontPrefsForLangHelper(nsIAtom *aLanguage,
-                                          const LangGroupFontPrefs* aPrefs) const
+void
+LangGroupFontPrefs::Initialize(nsIAtom* aLangGroupAtom)
 {
-  // Get language group for aLanguage:
-  MOZ_ASSERT(aLanguage);
-  MOZ_ASSERT(mLangService);
-  MOZ_ASSERT(aPrefs);
-
-  nsresult rv = NS_OK;
-  nsIAtom *langGroupAtom = nullptr;
-  langGroupAtom = mLangService->GetLanguageGroup(aLanguage, &rv);
-  if (NS_FAILED(rv) || !langGroupAtom) {
-    langGroupAtom = nsGkAtoms::x_western; // Assume x-western is safe...
-  }
-
-  LangGroupFontPrefs *prefs = const_cast<LangGroupFontPrefs*>(aPrefs);
-  if (prefs->mLangGroup) { // if initialized
-    DebugOnly<uint32_t> count = 0;
-    for (;;) {
-      NS_ASSERTION(++count < 35, "Lang group count exceeded!!!");
-      if (prefs->mLangGroup == langGroupAtom) {
-        return prefs;
-      }
-      if (!prefs->mNext) {
-        break;
-      }
-      prefs = prefs->mNext;
-    }
-
-    // nothing cached, so go on and fetch the prefs for this lang group:
-    prefs = prefs->mNext = new LangGroupFontPrefs;
-  }
-
-  prefs->mLangGroup = langGroupAtom;
+  mLangGroup = aLangGroupAtom;
 
   /* Fetch the font prefs to be used -- see bug 61883 for details.
      Not all prefs are needed upfront. Some are fallback prefs intended
@@ -123,10 +92,10 @@ StaticPresData::GetFontPrefsForLangHelper(nsIAtom *aLanguage,
   */
 
   nsAutoCString langGroup;
-  langGroupAtom->ToUTF8String(langGroup);
+  aLangGroupAtom->ToUTF8String(langGroup);
 
-  prefs->mDefaultVariableFont.size = nsPresContext::CSSPixelsToAppUnits(16);
-  prefs->mDefaultFixedFont.size = nsPresContext::CSSPixelsToAppUnits(13);
+  mDefaultVariableFont.size = nsPresContext::CSSPixelsToAppUnits(16);
+  mDefaultFixedFont.size = nsPresContext::CSSPixelsToAppUnits(13);
 
   nsAutoCString pref;
 
@@ -158,20 +127,20 @@ StaticPresData::GetFontPrefsForLangHelper(nsIAtom *aLanguage,
 
   int32_t size = Preferences::GetInt(pref.get());
   if (unit == eUnit_px) {
-    prefs->mMinimumFontSize = nsPresContext::CSSPixelsToAppUnits(size);
+    mMinimumFontSize = nsPresContext::CSSPixelsToAppUnits(size);
   }
   else if (unit == eUnit_pt) {
-    prefs->mMinimumFontSize = nsPresContext::CSSPointsToAppUnits(size);
+    mMinimumFontSize = nsPresContext::CSSPointsToAppUnits(size);
   }
 
   nsFont* fontTypes[] = {
-    &prefs->mDefaultVariableFont,
-    &prefs->mDefaultFixedFont,
-    &prefs->mDefaultSerifFont,
-    &prefs->mDefaultSansSerifFont,
-    &prefs->mDefaultMonospaceFont,
-    &prefs->mDefaultCursiveFont,
-    &prefs->mDefaultFantasyFont
+    &mDefaultVariableFont,
+    &mDefaultFixedFont,
+    &mDefaultSerifFont,
+    &mDefaultSansSerifFont,
+    &mDefaultMonospaceFont,
+    &mDefaultCursiveFont,
+    &mDefaultFantasyFont
   };
   static_assert(MOZ_ARRAY_LENGTH(fontTypes) == eDefaultFont_COUNT,
                 "FontTypes array count is not correct");
@@ -201,7 +170,7 @@ StaticPresData::GetFontPrefsForLangHelper(nsIAtom *aLanguage,
         NS_ASSERTION(defaultType == eFamily_serif ||
                      defaultType == eFamily_sans_serif,
                      "default type must be serif or sans-serif");
-        prefs->mDefaultVariableFont.fontlist = FontFamilyList(defaultType);
+        mDefaultVariableFont.fontlist = FontFamilyList(defaultType);
       }
       else {
         MAKE_FONT_PREF_KEY(pref, "font.default.", langGroup);
@@ -212,7 +181,7 @@ StaticPresData::GetFontPrefsForLangHelper(nsIAtom *aLanguage,
           NS_ASSERTION(defaultType == eFamily_serif ||
                        defaultType == eFamily_sans_serif,
                        "default type must be serif or sans-serif");
-          prefs->mDefaultVariableFont.fontlist = FontFamilyList(defaultType);
+          mDefaultVariableFont.fontlist = FontFamilyList(defaultType);
         }
       }
     }
@@ -222,12 +191,12 @@ StaticPresData::GetFontPrefsForLangHelper(nsIAtom *aLanguage,
         // to have the same default font-size as "-moz-fixed" (this tentative
         // size may be overwritten with the specific value for "monospace" when
         // "font.size.monospace.[langGroup]" is read -- see below)
-        prefs->mDefaultMonospaceFont.size = prefs->mDefaultFixedFont.size;
+        mDefaultMonospaceFont.size = mDefaultFixedFont.size;
       }
       else if (eType != eDefaultFont_Fixed) {
         // all the other generic fonts are initialized with the size of the
         // variable font, but their specific size can supersede later -- see below
-        font->size = prefs->mDefaultVariableFont.size;
+        font->size = mDefaultVariableFont.size;
       }
     }
 
@@ -264,6 +233,61 @@ StaticPresData::GetFontPrefsForLangHelper(nsIAtom *aLanguage,
            font->sizeAdjust);
 #endif
   }
+}
+
+nsIAtom*
+StaticPresData::GetLangGroup(nsIAtom* aLanguage) const
+{
+  nsresult rv = NS_OK;
+  nsIAtom* langGroupAtom = nullptr;
+  langGroupAtom = mLangService->GetLanguageGroup(aLanguage, &rv);
+  if (NS_FAILED(rv) || !langGroupAtom) {
+    langGroupAtom = nsGkAtoms::x_western; // Assume x-western is safe...
+  }
+  return langGroupAtom;
+}
+
+already_AddRefed<nsIAtom>
+StaticPresData::GetUncachedLangGroup(nsIAtom* aLanguage) const
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIAtom> langGroupAtom = mLangService->GetUncachedLanguageGroup(aLanguage, &rv);
+  if (NS_FAILED(rv) || !langGroupAtom) {
+    langGroupAtom = nsGkAtoms::x_western; // Assume x-western is safe...
+  }
+  return langGroupAtom.forget();
+}
+
+const LangGroupFontPrefs*
+StaticPresData::GetFontPrefsForLangHelper(nsIAtom* aLanguage,
+                                          const LangGroupFontPrefs* aPrefs) const
+{
+  // Get language group for aLanguage:
+  MOZ_ASSERT(aLanguage);
+  MOZ_ASSERT(mLangService);
+  MOZ_ASSERT(aPrefs);
+
+  nsIAtom* langGroupAtom = GetLangGroup(aLanguage);
+
+  LangGroupFontPrefs* prefs = const_cast<LangGroupFontPrefs*>(aPrefs);
+  if (prefs->mLangGroup) { // if initialized
+    DebugOnly<uint32_t> count = 0;
+    for (;;) {
+      NS_ASSERTION(++count < 35, "Lang group count exceeded!!!");
+      if (prefs->mLangGroup == langGroupAtom) {
+        return prefs;
+      }
+      if (!prefs->mNext) {
+        break;
+      }
+      prefs = prefs->mNext;
+    }
+
+    // nothing cached, so go on and fetch the prefs for this lang group:
+    prefs = prefs->mNext = new LangGroupFontPrefs;
+  }
+
+  prefs->Initialize(langGroupAtom);
 
   return prefs;
 }

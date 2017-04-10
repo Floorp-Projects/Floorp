@@ -40,6 +40,7 @@ include protocol PWebBrowserPersistDocument;
 include protocol PWebrtcGlobal;
 include protocol PPresentation;
 include protocol PURLClassifier;
+include protocol PURLClassifierLocal;
 include protocol PVRManager;
 include protocol PVideoDecoderManager;
 include protocol PFlyWebPublishedServer;
@@ -86,6 +87,7 @@ using class mozilla::dom::ipc::StructuredCloneData from "mozilla/dom/ipc/Structu
 using mozilla::DataStorageType from "ipc/DataStorageIPCUtils.h";
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
+using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 using struct mozilla::dom::FlyWebPublishOptions from "mozilla/dom/FlyWebPublishOptionsIPCSerializer.h";
 using mozilla::Telemetry::Accumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedAccumulation from "mozilla/TelemetryComms.h";
@@ -301,6 +303,7 @@ nested(upto inside_cpow) sync protocol PContent
     manages PPresentation;
     manages PFlyWebPublishedServer;
     manages PURLClassifier;
+    manages PURLClassifierLocal;
 
 both:
     // Depending on exactly how the new browser is being created, it might be
@@ -732,6 +735,8 @@ parent:
         returns (bool success);
     sync ClassifyLocal(URIParams uri, nsCString tables)
         returns (nsresult rv, nsCString[] results);
+    // The async version of ClassifyLocal.
+    async PURLClassifierLocal(URIParams uri, nsCString tables);
 
     // Services remoting
 
@@ -996,7 +1001,8 @@ parent:
                FrameScriptInfo[] frameScripts,
                nsCString urlToLoad,
                TextureFactoryIdentifier textureFactoryIdentifier,
-               uint64_t layersId);
+               uint64_t layersId,
+               CompositorOptions compositorOptions);
 
     async CreateWindowInDifferentProcess(
       PBrowser aThisTab,

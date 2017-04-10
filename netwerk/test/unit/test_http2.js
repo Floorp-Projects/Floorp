@@ -728,6 +728,8 @@ Http2PushApiListener.prototype = {
     pushChannel.asyncOpen2(this);
     if (pushChannel.originalURI.spec == "https://localhost:" + serverPort + "/pushapi1/2") {
       pushChannel.cancel(Components.results.NS_ERROR_ABORT);
+    } else if (pushChannel.originalURI.spec == "https://localhost:" + serverPort + "/pushapi1/3") {
+      do_check_true(pushChannel.getRequestHeader("Accept-Encoding").includes("br"));
     }
   },
 
@@ -774,7 +776,7 @@ Http2PushApiListener.prototype = {
 // 2 to see /pushapi1/1 with 1
 // 3 to see /pushapi1/1 with 1 (again)
 // 4 to see /pushapi1/2 that it will cancel
-// 5 to see /pushapi1/3 with 3
+// 5 to see /pushapi1/3 with 3 with brotli
 
 function test_http2_pushapi_1() {
   var chan = makeChan("https://localhost:" + serverPort + "/pushapi1");

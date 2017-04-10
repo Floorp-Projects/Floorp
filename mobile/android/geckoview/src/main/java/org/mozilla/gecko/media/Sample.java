@@ -1,0 +1,263 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.gecko.media;
+
+import android.media.MediaCodec;
+import android.media.MediaCodec.BufferInfo;
+import android.media.MediaCodec.CryptoInfo;
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.mozglue.SharedMemory;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
+// Parcelable carrying input/output sample data and info cross process.
+public final class Sample implements Parcelable {
+    public static final Sample EOS;
+    static {
+        BufferInfo eosInfo = new BufferInfo();
+        eosInfo.set(0, 0, Long.MIN_VALUE, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+        EOS = new Sample(null, eosInfo, null);
+    }
+
+    public interface Buffer extends Parcelable {
+        int capacity();
+        void readFromByteBuffer(ByteBuffer src, int offset, int size) throws IOException;
+        void writeToByteBuffer(ByteBuffer dest, int offset, int size) throws IOException;
+        void dispose();
+    }
+
+    private static final class ArrayBuffer implements Buffer {
+        private byte[] mArray;
+
+        public static final Creator<ArrayBuffer> CREATOR = new Creator<ArrayBuffer>() {
+            @Override
+            public ArrayBuffer createFromParcel(Parcel in) {
+                return new ArrayBuffer(in);
+            }
+
+            @Override
+            public ArrayBuffer[] newArray(int size) {
+                return new ArrayBuffer[size];
+            }
+        };
+
+        private ArrayBuffer(Parcel in) {
+            mArray = in.createByteArray();
+        }
+
+        private ArrayBuffer(byte[] bytes) { mArray = bytes; }
+
+        @Override
+        public int describeContents() { return 0; }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeByteArray(mArray);
+        }
+
+        @Override
+        public int capacity() {
+            return mArray != null ? mArray.length : 0;
+        }
+
+        @Override
+        public void readFromByteBuffer(ByteBuffer src, int offset, int size) throws IOException {
+            src.position(offset);
+            if (mArray == null || mArray.length != size) {
+                mArray = new byte[size];
+            }
+            src.get(mArray, 0, size);
+        }
+
+        @Override
+        public void writeToByteBuffer(ByteBuffer dest, int offset, int size) throws IOException {
+            dest.put(mArray, offset, size);
+        }
+
+        @Override
+        public void dispose() {
+            mArray = null;
+        }
+    }
+
+    public Buffer buffer;
+    @WrapForJNI
+    public BufferInfo info;
+    public CryptoInfo cryptoInfo;
+
+    public static Sample create() { return create(null, new BufferInfo(), null); }
+
+    public static Sample create(ByteBuffer src, BufferInfo info, CryptoInfo cryptoInfo) {
+        ArrayBuffer buffer = new ArrayBuffer(byteArrayFromBuffer(src, info.offset, info.size));
+
+        BufferInfo bufferInfo = new BufferInfo();
+        bufferInfo.set(0, info.size, info.presentationTimeUs, info.flags);
+
+        return new Sample(buffer, bufferInfo, cryptoInfo);
+    }
+
+    public static Sample create(SharedMemory sharedMem) {
+        return new Sample(new SharedMemBuffer(sharedMem), new BufferInfo(), null);
+    }
+
+    private Sample(Buffer bytes, BufferInfo info, CryptoInfo cryptoInfo) {
+        buffer = bytes;
+        this.info = info;
+        this.cryptoInfo = cryptoInfo;
+    }
+
+    private Sample(Parcel in) {
+        readInfo(in);
+        readCrypto(in);
+        buffer = in.readParcelable(Sample.class.getClassLoader());
+    }
+
+    private void readInfo(Parcel in) {
+        int offset = in.readInt();
+        int size = in.readInt();
+        long pts = in.readLong();
+        int flags = in.readInt();
+
+        info = new BufferInfo();
+        info.set(offset, size, pts, flags);
+    }
+
+    private void readCrypto(Parcel in) {
+        int hasCryptoInfo = in.readInt();
+        if (hasCryptoInfo == 0) {
+            return;
+        }
+
+        byte[] iv = in.createByteArray();
+        byte[] key = in.createByteArray();
+        int mode = in.readInt();
+        int[] numBytesOfClearData = in.createIntArray();
+        int[] numBytesOfEncryptedData = in.createIntArray();
+        int numSubSamples = in.readInt();
+
+        cryptoInfo = new CryptoInfo();
+        cryptoInfo.set(numSubSamples,
+                      numBytesOfClearData,
+                      numBytesOfEncryptedData,
+                      key,
+                      iv,
+                      mode);
+    }
+
+    public Sample set(ByteBuffer bytes, BufferInfo info, CryptoInfo cryptoInfo) throws IOException {
+        if (bytes != null && info.size > 0) {
+            buffer.readFromByteBuffer(bytes, info.offset, info.size);
+        }
+        this.info.set(0, info.size, info.presentationTimeUs, info.flags);
+        this.cryptoInfo = cryptoInfo;
+
+        return this;
+    }
+
+    public void dispose() {
+        if (isEOS()) {
+            return;
+        }
+
+        if (buffer != null) {
+            buffer.dispose();
+            buffer = null;
+        }
+        info = null;
+        cryptoInfo = null;
+    }
+
+    public boolean isEOS() {
+        return (this == EOS) ||
+                ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0);
+    }
+
+    public static final Creator<Sample> CREATOR = new Creator<Sample>() {
+        @Override
+        public Sample createFromParcel(Parcel in) {
+            return new Sample(in);
+        }
+
+        @Override
+        public Sample[] newArray(int size) {
+            return new Sample[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int parcelableFlags) {
+        writeInfo(dest);
+        writeCrypto(dest);
+        dest.writeParcelable(buffer, parcelableFlags);
+    }
+
+    private void writeInfo(Parcel dest) {
+        dest.writeInt(info.offset);
+        dest.writeInt(info.size);
+        dest.writeLong(info.presentationTimeUs);
+        dest.writeInt(info.flags);
+    }
+
+    private void writeCrypto(Parcel dest) {
+        if (cryptoInfo != null) {
+            dest.writeInt(1);
+            dest.writeByteArray(cryptoInfo.iv);
+            dest.writeByteArray(cryptoInfo.key);
+            dest.writeInt(cryptoInfo.mode);
+            dest.writeIntArray(cryptoInfo.numBytesOfClearData);
+            dest.writeIntArray(cryptoInfo.numBytesOfEncryptedData);
+            dest.writeInt(cryptoInfo.numSubSamples);
+        } else {
+            dest.writeInt(0);
+        }
+    }
+
+    public static byte[] byteArrayFromBuffer(ByteBuffer buffer, int offset, int size) {
+        if (buffer == null || buffer.capacity() == 0 || size == 0) {
+            return null;
+        }
+        if (buffer.hasArray() && offset == 0 && buffer.array().length == size) {
+            return buffer.array();
+        }
+        int length = Math.min(offset + size, buffer.capacity()) - offset;
+        byte[] bytes = new byte[length];
+        buffer.position(offset);
+        buffer.get(bytes);
+        return bytes;
+    }
+
+    @WrapForJNI
+    public void writeToByteBuffer(ByteBuffer dest) throws IOException {
+        if (buffer != null && dest != null && info.size > 0) {
+            buffer.writeToByteBuffer(dest, info.offset, info.size);
+        }
+    }
+
+    @Override
+    public String toString() {
+        if (isEOS()) {
+            return "EOS sample";
+        }
+
+        StringBuilder str = new StringBuilder();
+        str.append("{ buffer=").append(buffer).
+                append(", info=").
+                append("{ offset=").append(info.offset).
+                append(", size=").append(info.size).
+                append(", pts=").append(info.presentationTimeUs).
+                append(", flags=").append(Integer.toHexString(info.flags)).append(" }").
+                append(" }");
+            return str.toString();
+    }
+}

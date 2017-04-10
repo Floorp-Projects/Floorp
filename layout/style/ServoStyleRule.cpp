@@ -73,9 +73,11 @@ ServoStyleRuleDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl)
     nsCOMPtr<nsIDocument> doc = sheet->GetAssociatedDocument();
     mozAutoDocUpdate updateBatch(doc, UPDATE_STYLE, true);
     if (aDecl != mDecls) {
+      mDecls->SetOwningRule(nullptr);
       RefPtr<ServoDeclarationBlock> decls = aDecl->AsServo();
       Servo_StyleRule_SetStyle(rule->Raw(), decls->Raw());
       mDecls = decls.forget();
+      mDecls->SetOwningRule(rule);
     }
     if (doc) {
       doc->StyleRuleChanged(sheet, rule);

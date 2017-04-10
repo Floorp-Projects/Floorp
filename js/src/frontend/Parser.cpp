@@ -593,12 +593,11 @@ ParserBase::error(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-#ifdef DEBUG
-    bool result =
-#endif
-        tokenStream.reportCompileErrorNumberVA(nullptr, pos().begin, JSREPORT_ERROR,
-                                               errorNumber, args);
-    MOZ_ASSERT(!result, "reporting an error returned true?");
+
+    ErrorMetadata metadata;
+    if (tokenStream.computeErrorMetadata(&metadata, pos().begin))
+        tokenStream.compileError(Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
+
     va_end(args);
 }
 
@@ -607,12 +606,11 @@ ParserBase::errorWithNotes(UniquePtr<JSErrorNotes> notes, unsigned errorNumber, 
 {
     va_list args;
     va_start(args, errorNumber);
-#ifdef DEBUG
-    bool result =
-#endif
-        tokenStream.reportCompileErrorNumberVA(Move(notes), pos().begin, JSREPORT_ERROR,
-                                               errorNumber, args);
-    MOZ_ASSERT(!result, "reporting an error returned true?");
+
+    ErrorMetadata metadata;
+    if (tokenStream.computeErrorMetadata(&metadata, pos().begin))
+        tokenStream.compileError(Move(metadata), Move(notes), JSREPORT_ERROR, errorNumber, args);
+
     va_end(args);
 }
 
@@ -621,11 +619,11 @@ ParserBase::errorAt(uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-#ifdef DEBUG
-    bool result =
-#endif
-        tokenStream.reportCompileErrorNumberVA(nullptr, offset, JSREPORT_ERROR, errorNumber, args);
-    MOZ_ASSERT(!result, "reporting an error returned true?");
+
+    ErrorMetadata metadata;
+    if (tokenStream.computeErrorMetadata(&metadata, offset))
+        tokenStream.compileError(Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
+
     va_end(args);
 }
 
@@ -635,12 +633,11 @@ ParserBase::errorWithNotesAt(UniquePtr<JSErrorNotes> notes, uint32_t offset,
 {
     va_list args;
     va_start(args, errorNumber);
-#ifdef DEBUG
-    bool result =
-#endif
-        tokenStream.reportCompileErrorNumberVA(Move(notes), offset, JSREPORT_ERROR,
-                                               errorNumber, args);
-    MOZ_ASSERT(!result, "reporting an error returned true?");
+
+    ErrorMetadata metadata;
+    if (tokenStream.computeErrorMetadata(&metadata, offset))
+        tokenStream.compileError(Move(metadata), Move(notes), JSREPORT_ERROR, errorNumber, args);
+
     va_end(args);
 }
 
@@ -649,9 +646,12 @@ ParserBase::warning(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
+
+    ErrorMetadata metadata;
     bool result =
-        tokenStream.reportCompileErrorNumberVA(nullptr, pos().begin, JSREPORT_WARNING,
-                                               errorNumber, args);
+        tokenStream.computeErrorMetadata(&metadata, pos().begin) &&
+        tokenStream.compileWarning(Move(metadata), nullptr, JSREPORT_WARNING, errorNumber, args);
+
     va_end(args);
     return result;
 }
@@ -661,9 +661,15 @@ ParserBase::warningAt(uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result =
-        tokenStream.reportCompileErrorNumberVA(nullptr, offset, JSREPORT_WARNING,
-                                               errorNumber, args);
+
+    ErrorMetadata metadata;
+    bool result = tokenStream.computeErrorMetadata(&metadata, offset);
+    if (result) {
+        result =
+            tokenStream.compileWarning(Move(metadata), nullptr, JSREPORT_WARNING, errorNumber,
+                                      args);
+    }
+
     va_end(args);
     return result;
 }
@@ -673,8 +679,10 @@ ParserBase::extraWarning(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream.reportExtraWarningErrorNumberVA(nullptr, pos().begin,
-                                                              errorNumber, args);
+
+    bool result =
+        tokenStream.reportExtraWarningErrorNumberVA(nullptr, pos().begin, errorNumber, args);
+
     va_end(args);
     return result;
 }
@@ -684,9 +692,11 @@ ParserBase::strictModeError(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
+
     bool res =
         tokenStream.reportStrictModeErrorNumberVA(nullptr, pos().begin, pc->sc()->strict(),
                                                   errorNumber, args);
+
     va_end(args);
     return res;
 }
@@ -696,9 +706,11 @@ ParserBase::strictModeErrorAt(uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
+
     bool res =
         tokenStream.reportStrictModeErrorNumberVA(nullptr, offset, pc->sc()->strict(),
                                                   errorNumber, args);
+
     va_end(args);
     return res;
 }
@@ -708,27 +720,35 @@ ParserBase::reportNoOffset(ParseReportKind kind, bool strict, unsigned errorNumb
 {
     va_list args;
     va_start(args, errorNumber);
+
     bool result = false;
-    uint32_t offset = TokenStream::NoOffset;
     switch (kind) {
       case ParseError:
-        result = tokenStream.reportCompileErrorNumberVA(nullptr, offset, JSREPORT_ERROR,
-                                                        errorNumber, args);
+      case ParseWarning: {
+        ErrorMetadata metadata;
+        tokenStream.computeErrorMetadataNoOffset(&metadata);
+
+        if (kind == ParseError) {
+            tokenStream.compileError(Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
+            MOZ_ASSERT(!result);
+        } else {
+            result =
+                tokenStream.compileWarning(Move(metadata), nullptr, JSREPORT_WARNING, errorNumber,
+                                           args);
+        }
+
         break;
-      case ParseWarning:
-        result =
-            tokenStream.reportCompileErrorNumberVA(nullptr, offset, JSREPORT_WARNING,
-                                                   errorNumber, args);
-        break;
+      }
       case ParseExtraWarning:
-        result = tokenStream.reportExtraWarningErrorNumberVA(nullptr, offset,
+        result = tokenStream.reportExtraWarningErrorNumberVA(nullptr, TokenStream::NoOffset,
                                                              errorNumber, args);
         break;
       case ParseStrictError:
-        result = tokenStream.reportStrictModeErrorNumberVA(nullptr, offset, strict,
+        result = tokenStream.reportStrictModeErrorNumberVA(nullptr, TokenStream::NoOffset, strict,
                                                            errorNumber, args);
         break;
     }
+
     va_end(args);
     return result;
 }
@@ -2480,7 +2500,7 @@ Parser<FullParseHandler>::standaloneFunction(HandleFunction fun,
 
     if (!tokenStream.getToken(&tt))
         return null();
-    if (generatorKind == StarGenerator && asyncKind == SyncFunction) {
+    if (generatorKind == StarGenerator) {
         MOZ_ASSERT(tt == TOK_MUL);
         if (!tokenStream.getToken(&tt))
             return null();
@@ -3633,14 +3653,15 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
         return false;
     uint32_t openedPos = 0;
     if (tt != TOK_LC) {
-        if (funbox->isStarGenerator() || kind == Method ||
-            kind == GetterNoExpressionClosure || kind == SetterNoExpressionClosure ||
-            IsConstructorKind(kind)) {
-            error(JSMSG_CURLY_BEFORE_BODY);
-            return false;
-        }
-
         if (kind != Arrow) {
+            if (funbox->isStarGenerator() || funbox->isAsync() || kind == Method ||
+                kind == GetterNoExpressionClosure || kind == SetterNoExpressionClosure ||
+                IsConstructorKind(kind))
+            {
+                error(JSMSG_CURLY_BEFORE_BODY);
+                return false;
+            }
+
 #if JS_HAS_EXPR_CLOSURES
             addTelemetry(JSCompartment::DeprecatedExpressionClosure);
             if (!warnOnceAboutExprClosure())
@@ -6983,6 +7004,7 @@ JSOpFromPropertyType(PropertyType propType)
       case PropertyType::Method:
       case PropertyType::GeneratorMethod:
       case PropertyType::AsyncMethod:
+      case PropertyType::AsyncGeneratorMethod:
       case PropertyType::Constructor:
       case PropertyType::DerivedConstructor:
         return JSOP_INITPROP;
@@ -7101,7 +7123,7 @@ Parser<ParseHandler>::classDefinition(YieldHandling yieldHandling,
         if (propType != PropertyType::Getter && propType != PropertyType::Setter &&
             propType != PropertyType::Method && propType != PropertyType::GeneratorMethod &&
             propType != PropertyType::AsyncMethod &&
-            propType != PropertyType::Constructor && propType != PropertyType::DerivedConstructor)
+            propType != PropertyType::AsyncGeneratorMethod)
         {
             errorAt(nameOffset, JSMSG_BAD_METHOD_DEF);
             return null();
@@ -7223,6 +7245,11 @@ Parser<ParseHandler>::nextTokenContinuesLetDeclaration(TokenKind next, YieldHand
     // "yield" valid.
     if (next == TOK_YIELD)
         return yieldHandling == YieldIsName;
+
+    // Somewhat similar logic applies for "await", except that it's not tracked
+    // with an AwaitHandling argument.
+    if (next == TOK_AWAIT)
+        return !awaitIsKeyword();
 
     // Otherwise a let declaration must have a name.
     if (TokenKindIsPossibleIdentifier(next)) {
@@ -9317,6 +9344,9 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
         // AsyncMethod[Yield, Await]:
         //   async [no LineTerminator here] PropertyName[?Yield, ?Await] ...
         //
+        //  AsyncGeneratorMethod[Yield, Await]:
+        //    async [no LineTerminator here] * PropertyName[?Yield, ?Await] ...
+        //
         // PropertyName:
         //   LiteralPropertyName
         //   ComputedPropertyName[?Yield, ?Await]
@@ -9332,7 +9362,7 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
         if (!tokenStream.peekTokenSameLine(&tt))
             return null();
         if (tt == TOK_STRING || tt == TOK_NUMBER || tt == TOK_LB ||
-            TokenKindIsPossibleIdentifierName(tt))
+            TokenKindIsPossibleIdentifierName(tt) || tt == TOK_MUL)
         {
             isAsync = true;
             tokenStream.consumeKnownToken(tt);
@@ -9478,7 +9508,9 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
 
     if (tt == TOK_LP) {
         tokenStream.ungetToken();
-        if (isGenerator)
+        if (isGenerator && isAsync)
+            *propType = PropertyType::AsyncGeneratorMethod;
+        else if (isGenerator)
             *propType = PropertyType::GeneratorMethod;
         else if (isAsync)
             *propType = PropertyType::AsyncMethod;
@@ -9722,6 +9754,7 @@ Parser<ParseHandler>::methodDefinition(uint32_t preludeStart, PropertyType propT
       case PropertyType::Method:
       case PropertyType::GeneratorMethod:
       case PropertyType::AsyncMethod:
+      case PropertyType::AsyncGeneratorMethod:
         kind = Method;
         break;
 
@@ -9737,11 +9770,13 @@ Parser<ParseHandler>::methodDefinition(uint32_t preludeStart, PropertyType propT
         MOZ_CRASH("unexpected property type");
     }
 
-    GeneratorKind generatorKind = propType == PropertyType::GeneratorMethod
+    GeneratorKind generatorKind = (propType == PropertyType::GeneratorMethod ||
+                                   propType == PropertyType::AsyncGeneratorMethod)
                                   ? StarGenerator
                                   : NotGenerator;
 
-    FunctionAsyncKind asyncKind = (propType == PropertyType::AsyncMethod)
+    FunctionAsyncKind asyncKind = (propType == PropertyType::AsyncMethod ||
+                                   propType == PropertyType::AsyncGeneratorMethod)
                                   ? AsyncFunction
                                   : SyncFunction;
 

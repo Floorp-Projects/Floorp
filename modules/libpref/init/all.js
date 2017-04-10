@@ -1,3 +1,4 @@
+
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1236,6 +1237,13 @@ pref("dom.sysmsg.enabled", false);
 pref("dom.webapps.useCurrentProfile", false);
 
 pref("dom.cycle_collector.incremental", true);
+
+// Whether Xrays expose properties from the named properties object (aka global
+// scope polluter).  Values are:
+//   0 = properties exposed on Xrays
+//   1 = properties exposed on Xrays, except in web extension content scripts.
+//   2 = properties not exposed on xrays
+pref("dom.allow_named_properties_object_for_xrays", 1);
 
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN
@@ -4471,7 +4479,7 @@ pref("image.mem.discardable", true);
 
 // Discards inactive image frames of _animated_ images and re-decodes them on
 // demand from compressed data. Has no effect if image.mem.discardable is false.
-pref("image.mem.animated.discardable", false);
+pref("image.mem.animated.discardable", true);
 
 // Decodes images into shared memory to allow direct use in separate
 // rendering processes.
@@ -5028,6 +5036,14 @@ pref("dom.vr.enabled", false);
 #else
 pref("dom.vr.enabled", true);
 #endif
+// It is often desirable to automatically start vr presentation when
+// a user puts on the VR headset.  This is done by emitting the
+// Window.vrdisplayactivate event when the headset's sensors detect it
+// being worn.  This can result in WebVR content taking over the headset
+// when the user is using it outside the browser or inadvertent start of
+// presentation due to the high sensitivity of the proximity sensor in some
+// headsets, so it is off by default.
+pref("dom.vr.autoactivate.enabled", false);
 // Maximum number of milliseconds the browser will wait for content to call
 // VRDisplay.requestPresent after emitting vrdisplayactivate during VR
 // link traversal.  This prevents a long running event handler for
@@ -5633,7 +5649,7 @@ pref("prompts.authentication_dialog_abuse_limit", 3);
 pref("browser.storageManager.enabled", false);
 pref("browser.storageManager.pressureNotification.minIntervalMS", 1200000);
 pref("browser.storageManager.pressureNotification.usageThresholdGB", 5);
-pref("dom.IntersectionObserver.enabled", true);
+pref("dom.IntersectionObserver.enabled", false);
 
 // Whether module scripts (<script type="module">) are enabled for content.
 pref("dom.moduleScripts.enabled", false);
@@ -5658,7 +5674,3 @@ pref("layers.advanced.boxshadow-outer-layers", 2);
 pref("layers.advanced.caret-layers", 2);
 pref("layers.advanced.displaybuttonborder-layers", 2);
 pref("layers.advanced.outline-layers", 2);
-
-// Determines whether we throw an exception when a frame script
-// accesses the wrong DocGroup. The alternative is to crash.
-user_pref("extensions.throw_on_docgroup_mismatch.enabled", true);

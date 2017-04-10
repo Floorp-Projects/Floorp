@@ -20,26 +20,27 @@
 #endif
 
 ThreadInfo::ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
-                       mozilla::NotNull<PseudoStack*> aPseudoStack,
                        void* aStackTop)
   : mName(strdup(aName))
   , mThreadId(aThreadId)
   , mIsMainThread(aIsMainThread)
-  , mPseudoStack(aPseudoStack)
+  , mPseudoStack(mozilla::WrapNotNull(new PseudoStack()))
   , mPlatformData(AllocPlatformData(aThreadId))
   , mStackTop(aStackTop)
-  , mPendingDelete(false)
   , mHasProfile(false)
   , mLastSample()
 {
   MOZ_COUNT_CTOR(ThreadInfo);
-  mThread = NS_GetCurrentThread();
 
   // We don't have to guess on mac
 #if defined(GP_OS_darwin)
   pthread_t self = pthread_self();
   mStackTop = pthread_get_stackaddr_np(self);
 #endif
+
+  if (aIsMainThread) {
+    mResponsiveness.emplace();
+  }
 
   // I don't know if we can assert this. But we should warn.
   MOZ_ASSERT(aThreadId >= 0, "native thread ID is < 0");
@@ -51,12 +52,6 @@ ThreadInfo::~ThreadInfo()
   MOZ_COUNT_DTOR(ThreadInfo);
 
   delete mPseudoStack;
-}
-
-void
-ThreadInfo::SetPendingDelete()
-{
-  mPendingDelete = true;
 }
 
 void

@@ -18,6 +18,7 @@
 #include "mozilla/SheetType.h"
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/dom/CSSMediaRule.h"
+#include "mozilla/dom/CSSPageRule.h"
 #include "nsAutoPtr.h"
 #include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
@@ -27,7 +28,6 @@
 #include "nsIDOMCSSFontFeatureValuesRule.h"
 #include "nsIDOMCSSGroupingRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
-#include "nsIDOMCSSPageRule.h"
 #include "nsIDOMCSSSupportsRule.h"
 #include "nsIDOMCSSKeyframeRule.h"
 #include "nsIDOMCSSKeyframesRule.h"
@@ -405,13 +405,12 @@ protected:
   nsCSSPageRule* MOZ_NON_OWNING_REF mRule;
 };
 
-class nsCSSPageRule final : public mozilla::css::Rule,
-                            public nsIDOMCSSPageRule
+class nsCSSPageRule final : public mozilla::dom::CSSPageRule
 {
 public:
   nsCSSPageRule(mozilla::css::Declaration* aDeclaration,
                 uint32_t aLineNumber, uint32_t aColumnNumber)
-    : mozilla::css::Rule(aLineNumber, aColumnNumber)
+    : mozilla::dom::CSSPageRule(aLineNumber, aColumnNumber)
     , mDeclaration(aDeclaration)
   {
     mDeclaration->SetOwningRule(this);
@@ -421,32 +420,23 @@ private:
   ~nsCSSPageRule();
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsCSSPageRule, mozilla::css::Rule)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsCSSPageRule, mozilla::dom::CSSPageRule)
   virtual bool IsCCLeaf() const override;
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
-  virtual int32_t GetType() const override;
-  using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
 
-  // nsIDOMCSSPageRule interface
-  NS_DECL_NSIDOMCSSPAGERULE
-
-  // WebIDL interface
-  uint16_t Type() const override;
-  void GetCssTextImpl(nsAString& aCssText) const override;
-  nsICSSDeclaration* Style();
+  // WebIDL interfaces
+  virtual void GetCssTextImpl(nsAString& aCssText) const override;
+  virtual nsICSSDeclaration* Style() override;
 
   mozilla::css::Declaration* Declaration()   { return mDeclaration; }
 
   void ChangeDeclaration(mozilla::css::Declaration* aDeclaration);
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
-
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
 
 private:
   RefPtr<mozilla::css::Declaration>     mDeclaration;

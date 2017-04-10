@@ -22,6 +22,7 @@
 #include "mozilla/Compression.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Unused.h"
 
 #include "jsmath.h"
 #include "jsprf.h"
@@ -69,6 +70,7 @@ using mozilla::PodCopy;
 using mozilla::PodEqual;
 using mozilla::PodZero;
 using mozilla::PositiveInfinity;
+using mozilla::Unused;
 using JS::AsmJSOption;
 using JS::GenericNaN;
 
@@ -1736,14 +1738,41 @@ class MOZ_STACK_CLASS ModuleValidator
     ~ModuleValidator() {
         if (errorString_) {
             MOZ_ASSERT(errorOffset_ != UINT32_MAX);
-            tokenStream().reportAsmJSError(errorOffset_,
-                                           JSMSG_USE_ASM_TYPE_FAIL,
-                                           errorString_.get());
+            typeFailure(errorOffset_, errorString_.get());
         }
         if (errorOverRecursed_)
             ReportOverRecursed(cx_);
     }
 
+  private:
+    void typeFailure(uint32_t offset, ...) {
+        va_list args;
+        va_start(args, offset);
+
+        TokenStream& ts = tokenStream();
+        ErrorMetadata metadata;
+        if (ts.computeErrorMetadata(&metadata, offset)) {
+            if (ts.options().throwOnAsmJSValidationFailureOption) {
+                ts.compileError(Move(metadata), nullptr, JSREPORT_ERROR, JSMSG_USE_ASM_TYPE_FAIL,
+                                args);
+            } else {
+                // asm.js type failure is indicated by calling one of the fail*
+                // functions below.  These functions always return false to
+                // halt asm.js parsing.  Whether normal parsing is attempted as
+                // fallback, depends whether an exception is also set.
+                //
+                // If warning succeeds, no exception is set.  If warning fails,
+                // an exception is set and execution will halt.  Thus it's safe
+                // and correct to ignore the return value here.
+                Unused << ts.compileWarning(Move(metadata), nullptr, JSREPORT_WARNING,
+                                            JSMSG_USE_ASM_TYPE_FAIL, args);
+            }
+        }
+
+        va_end(args);
+    }
+
+  public:
     bool init() {
         asmJSMetadata_ = cx_->new_<AsmJSMetadata>();
         if (!asmJSMetadata_)

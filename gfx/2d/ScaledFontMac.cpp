@@ -67,8 +67,10 @@ CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont, CGFloat aSize)
     return ctFont;
 }
 
-ScaledFontMac::ScaledFontMac(CGFontRef aFont, Float aSize)
-  : ScaledFontBase(aSize)
+ScaledFontMac::ScaledFontMac(CGFontRef aFont,
+                             const RefPtr<UnscaledFont>& aUnscaledFont,
+                             Float aSize)
+  : ScaledFontBase(aUnscaledFont, aSize)
 {
   if (!sSymbolLookupDone) {
     CTFontDrawGlyphsPtr =

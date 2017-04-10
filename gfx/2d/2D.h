@@ -25,6 +25,7 @@
 // outparams using the &-operator. But it will have to do as there's no easy
 // solution.
 #include "mozilla/RefPtr.h"
+#include "mozilla/WeakPtr.h"
 
 #include "mozilla/DebugOnly.h"
 
@@ -696,6 +697,27 @@ struct GlyphMetrics
   Float mHeight;
 };
 
+class UnscaledFont
+  : public external::AtomicRefCounted<UnscaledFont>
+  , public SupportsWeakPtr<UnscaledFont>
+{
+public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(UnscaledFont)
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(UnscaledFont)
+
+  virtual ~UnscaledFont();
+
+  virtual FontType GetType() const = 0;
+
+  static uint32_t DeletionCounter() { return sDeletionCounter; }
+
+protected:
+  UnscaledFont() {}
+
+private:
+  static uint32_t sDeletionCounter;
+};
+
 /** This class is an abstraction of a backend/platform specific font object
  * at a particular size. It is passed into text drawing calls to describe
  * the font used for the drawing call.
@@ -718,6 +740,7 @@ public:
   typedef void (*FontDescriptorOutput)(const uint8_t* aData, uint32_t aLength, Float aFontSize, void* aBaton);
 
   virtual FontType GetType() const = 0;
+  virtual Float GetSize() const = 0;
   virtual AntialiasMode GetDefaultAAMode();
 
   /** This allows getting a path that describes the outline of a set of glyphs.
@@ -753,10 +776,15 @@ public:
     return mUserData.Get(key);
   }
 
+  const RefPtr<UnscaledFont>& GetUnscaledFont() const { return mUnscaledFont; }
+
 protected:
-  ScaledFont() {}
+  explicit ScaledFont(const RefPtr<UnscaledFont>& aUnscaledFont)
+    : mUnscaledFont(aUnscaledFont)
+  {}
 
   UserData mUserData;
+  RefPtr<UnscaledFont> mUnscaledFont;
 };
 
 /**
@@ -1426,11 +1454,14 @@ public:
     CreateDrawTargetForData(BackendType aBackend, unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat, bool aUninitialized = false);
 
   static already_AddRefed<ScaledFont>
-    CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSize);
+    CreateScaledFontForNativeFont(const NativeFont &aNativeFont,
+                                  const RefPtr<UnscaledFont>& aUnscaledFont,
+                                  Float aSize);
 
 #ifdef MOZ_WIDGET_GTK
   static already_AddRefed<ScaledFont>
-    CreateScaledFontForFontconfigFont(cairo_scaled_font_t* aScaledFont, FcPattern* aPattern, Float aSize);
+    CreateScaledFontForFontconfigFont(cairo_scaled_font_t* aScaledFont, FcPattern* aPattern,
+                                      const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize);
 #endif
 
   /**
@@ -1462,7 +1493,10 @@ public:
    * cairo_scaled_font_t* parameters must correspond to the same font.
    */
   static already_AddRefed<ScaledFont>
-    CreateScaledFontWithCairo(const NativeFont &aNativeFont, Float aSize, cairo_scaled_font_t* aScaledFont);
+    CreateScaledFontWithCairo(const NativeFont &aNativeFont,
+                              const RefPtr<UnscaledFont>& aUnscaledFont,
+                              Float aSize,
+                              cairo_scaled_font_t* aScaledFont);
 
   /**
    * This creates a simple data source surface for a certain size. It allocates
@@ -1588,6 +1622,7 @@ public:
   static already_AddRefed<ScaledFont>
     CreateScaledFontForDWriteFont(IDWriteFontFace* aFontFace,
                                   const gfxFontStyle* aStyle,
+                                  const RefPtr<UnscaledFont>& aUnscaledFont,
                                   Float aSize,
                                   bool aUseEmbeddedBitmap,
                                   bool aForceGDIMode);

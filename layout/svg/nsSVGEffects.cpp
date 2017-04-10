@@ -1018,6 +1018,7 @@ nsSVGEffects::GetMaskURI(nsIFrame* aFrame, uint32_t aIndex)
   const nsStyleSVGReset* svgReset = aFrame->StyleSVGReset();
   MOZ_ASSERT(svgReset->mMask.mLayers.Length() > aIndex);
 
-  return ResolveURLUsingLocalRef(aFrame,
-                                 svgReset->mMask.mLayers[aIndex].mSourceURI);
+  mozilla::css::URLValueData* data =
+    svgReset->mMask.mLayers[aIndex].mImage.GetURLValue();
+  return ResolveURLUsingLocalRef(aFrame, data);
 }

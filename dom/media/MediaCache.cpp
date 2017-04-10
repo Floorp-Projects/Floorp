@@ -140,6 +140,11 @@ public:
   static void Flush();
   void FlushInternal();
 
+  // Close all streams associated with private browsing windows. This will
+  // also remove the blocks from the cache since we don't want to leave any
+  // traces when PB is done.
+  static void CloseStreamsForPrivateBrowsing();
+
   // Cache-file access methods. These are the lowest-level cache methods.
   // mReentrantMonitor must be held; these can be called on any thread.
   // This can return partial reads.
@@ -355,15 +360,18 @@ NS_IMETHODIMP
 MediaCacheFlusher::Observe(nsISupports *aSubject, char const *aTopic, char16_t const *aData)
 {
   if (strcmp(aTopic, "last-pb-context-exited") == 0) {
-    MediaCache::Flush();
+    MediaCache::CloseStreamsForPrivateBrowsing();
+    return NS_OK;
   }
   if (strcmp(aTopic, "cacheservice:empty-cache") == 0) {
     MediaCache::Flush();
+    return NS_OK;
   }
   return NS_OK;
 }
 
-MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient)
+MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient,
+                                   bool aIsPrivateBrowsing)
   : mClient(aClient),
     mInitialized(false),
     mHasHadUpdate(false),
@@ -380,7 +388,8 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient)
     mPinCount(0),
     mCurrentMode(MODE_PLAYBACK),
     mMetadataInPartialBlockBuffer(false),
-    mPartialBlockBuffer(MakeUnique<int64_t[]>(BLOCK_SIZE/sizeof(int64_t)))
+    mPartialBlockBuffer(MakeUnique<int64_t[]>(BLOCK_SIZE/sizeof(int64_t))),
+    mIsPrivateBrowsing(aIsPrivateBrowsing)
 {
 }
 
@@ -610,6 +619,20 @@ MediaCache::FlushInternal()
     mFileCache = nullptr;
   }
   Init();
+}
+
+void
+MediaCache::CloseStreamsForPrivateBrowsing()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!gMediaCache) {
+    return;
+  }
+  for (auto& s : gMediaCache->mStreams) {
+    if (s->mIsPrivateBrowsing) {
+      s->Close();
+    }
+  }
 }
 
 void
@@ -1746,6 +1769,10 @@ MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData,
     nsIPrincipal* aPrincipal)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+
+  if (mClosed) {
+    return;
+  }
 
   // Update principals before putting the data in the cache. This is important,
   // we want to make sure all principals are updated before any consumer

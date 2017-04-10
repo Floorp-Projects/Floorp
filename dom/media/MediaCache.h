@@ -195,7 +195,7 @@ public:
 
   // aClient provides the underlying transport that cache will use to read
   // data for this stream.
-  explicit MediaCacheStream(ChannelMediaResource* aClient);
+  MediaCacheStream(ChannelMediaResource* aClient, bool aIsPrivateBrowsing);
   ~MediaCacheStream();
 
   // Set up this stream with the cache. Can fail on OOM. One
@@ -225,7 +225,7 @@ public:
   // Returns true when this stream is can be shared by a new resource load
   bool IsAvailableForSharing() const
   {
-    return !mClosed &&
+    return !mClosed && !mIsPrivateBrowsing &&
       (!mDidNotifyDataEnded || NS_SUCCEEDED(mNotifyDataEndedStatus));
   }
   // Get the principal for this stream. Anything accessing the contents of
@@ -512,6 +512,9 @@ private:
   // Heap allocate this buffer since the exact power-of-2 will cause allocation
   // slop when combined with the rest of the object members.
   UniquePtr<int64_t[]> mPartialBlockBuffer;
+
+  // True if associated with a private browsing window.
+  const bool mIsPrivateBrowsing;
 };
 
 } // namespace mozilla

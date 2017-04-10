@@ -165,16 +165,30 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
     return rawbuf;
 }
 
-void
+bool
 SharedArrayRawBuffer::addReference()
 {
-    MOZ_ASSERT(this->refcount_ > 0);
-    ++this->refcount_; // Atomic.
+    MOZ_RELEASE_ASSERT(this->refcount_ > 0);
+
+    // Be careful never to overflow the refcount field.
+    for (;;) {
+        uint32_t old_refcount = this->refcount_;
+        uint32_t new_refcount = old_refcount+1;
+        if (new_refcount == 0)
+            return false;
+        if (this->refcount_.compareExchange(old_refcount, new_refcount))
+            return true;
+    }
 }
 
 void
 SharedArrayRawBuffer::dropReference()
 {
+    // Normally if the refcount is zero then the memory will have been unmapped
+    // and this test may just crash, but if the memory has been retained for any
+    // reason we will catch the underflow here.
+    MOZ_RELEASE_ASSERT(this->refcount_ > 0);
+
     // Drop the reference to the buffer.
     uint32_t refcount = --this->refcount_; // Atomic.
     if (refcount)

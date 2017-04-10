@@ -567,25 +567,33 @@ libs:: classes.dex
 	$(INSTALL) classes.dex $(FINAL_TARGET)
 
 # Generate Java binder interfaces from AIDL files.
-aidl_src_path := $(srcdir)/aidl
-aidl_target_path := generated
-media_pkg := org/mozilla/gecko/media
-
-$(aidl_target_path)/$(media_pkg)/%.java:$(aidl_src_path)/$(media_pkg)/%.aidl
-	@echo "Processing AIDL: $< => $@"
-	$(AIDL) -p$(ANDROID_SDK)/framework.aidl -I$(aidl_src_path) -o$(aidl_target_path) $<
-
 GECKOVIEW_AIDLS = \
   org/mozilla/gecko/IGeckoEditableChild.aidl \
   org/mozilla/gecko/IGeckoEditableParent.aidl \
+  org/mozilla/gecko/media/ICodec.aidl \
+  org/mozilla/gecko/media/ICodecCallbacks.aidl \
+  org/mozilla/gecko/media/IMediaDrmBridge.aidl \
+  org/mozilla/gecko/media/IMediaDrmBridgeCallbacks.aidl \
+  org/mozilla/gecko/media/IMediaManager.aidl \
   org/mozilla/gecko/process/IChildProcess.aidl \
   org/mozilla/gecko/process/IProcessManager.aidl \
   $(NULL)
 
 geckoview_aidl_src_path := $(topsrcdir)/mobile/android/geckoview/src/main/aidl
 geckoview_aidl_target_path := generated
-geckoview_aidl_targets := $(addprefix $(geckoview_aidl_target_path)/,$(GECKOVIEW_AIDLS:.aidl=.java))
+geckoview_aidl_targets := $(addprefix $(geckoview_aidl_target_path)/,$(patsubst %.aidl,%.java,$(GECKOVIEW_AIDLS:.java=)))
 
 $(geckoview_aidl_targets): $(geckoview_aidl_target_path)/%.java: $(geckoview_aidl_src_path)/%.aidl
 	@echo "Processing AIDL: $< => $@"
 	$(AIDL) -p$(ANDROID_SDK)/framework.aidl -I$(geckoview_aidl_src_path) -o$(geckoview_aidl_target_path) $<
+
+FENNEC_AIDLS = \
+  $(NULL)
+
+fennec_aidl_src_path := $(srcdir)/aidl
+fennec_aidl_target_path := generated
+fennec_aidl_targets := $(addprefix $(fennec_aidl_target_path)/,$(patsubst %.aidl,%.java,$(FENNEC_AIDLS:.java=)))
+
+$(fennec_aidl_targets): $(fennec_aidl_target_path)/%.java: $(fennec_aidl_src_path)/%.aidl
+	@echo "Processing AIDL: $< => $@"
+	$(AIDL) -p$(ANDROID_SDK)/framework.aidl -I$(fennec_aidl_src_path) -I$(geckoview_aidl_src_path) -o$(fennec_aidl_target_path) $<

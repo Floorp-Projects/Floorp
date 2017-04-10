@@ -1174,9 +1174,10 @@ TabChild::RecvLoadURL(const nsCString& aURI,
 void
 TabChild::DoFakeShow(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                      const uint64_t& aLayersId,
+                     const CompositorOptions& aCompositorOptions,
                      PRenderFrameChild* aRenderFrame, const ShowInfo& aShowInfo)
 {
-  InitRenderingState(aTextureFactoryIdentifier, aLayersId, aRenderFrame);
+  InitRenderingState(aTextureFactoryIdentifier, aLayersId, aCompositorOptions, aRenderFrame);
   RecvShow(ScreenIntSize(0, 0), aShowInfo, mParentIsActive, nsSizeMode_Normal);
   mDidFakeShow = true;
 }
@@ -1262,13 +1263,14 @@ TabChild::RecvShow(const ScreenIntSize& aSize,
 mozilla::ipc::IPCResult
 TabChild::RecvInitRendering(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                             const uint64_t& aLayersId,
+                            const CompositorOptions& aCompositorOptions,
                             const bool& aLayersConnected,
                             PRenderFrameChild* aRenderFrame)
 {
   MOZ_ASSERT((!mDidFakeShow && aRenderFrame) || (mDidFakeShow && !aRenderFrame));
 
   mLayersConnected = aLayersConnected;
-  InitRenderingState(aTextureFactoryIdentifier, aLayersId, aRenderFrame);
+  InitRenderingState(aTextureFactoryIdentifier, aLayersId, aCompositorOptions, aRenderFrame);
   return IPC_OK();
 }
 
@@ -2642,6 +2644,7 @@ TabChild::InitTabChildGlobal()
 void
 TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                              const uint64_t& aLayersId,
+                             const CompositorOptions& aCompositorOptions,
                              PRenderFrameChild* aRenderFrame)
 {
     mPuppetWidget->InitIMEState();
@@ -2662,9 +2665,7 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
       return;
     }
 
-    CompositorOptions options;
-    Unused << compositorChild->SendGetCompositorOptions(aLayersId, &options);
-    mCompositorOptions = Some(options);
+    mCompositorOptions = Some(aCompositorOptions);
 
     mRemoteFrame = static_cast<RenderFrameChild*>(aRenderFrame);
     if (aLayersId != 0) {
@@ -3066,33 +3067,36 @@ TabChild::ReinitRendering()
   // This guarantees the correct association is in place before our
   // PLayerTransaction constructor message arrives on the cross-process
   // compositor bridge.
-  SendEnsureLayersConnected();
-
-  RefPtr<CompositorBridgeChild> cb = CompositorBridgeChild::Get();
-
-  // Refresh the compositor options since we may now be attached to a different
-  // compositor than we were previously.
   CompositorOptions options;
-  Unused << cb->SendGetCompositorOptions(mLayersId, &options);
+  SendEnsureLayersConnected(&options);
   mCompositorOptions = Some(options);
 
-  bool success;
-  nsTArray<LayersBackend> ignored;
-  PLayerTransactionChild* shadowManager =
-    cb->SendPLayerTransactionConstructor(ignored, LayersId(), &mTextureFactoryIdentifier, &success);
-  if (!success) {
-    NS_WARNING("failed to re-allocate layer transaction");
-    return;
-  }
+  RefPtr<CompositorBridgeChild> cb = CompositorBridgeChild::Get();
+  if (gfxVars::UseWebRender()) {
+    RefPtr<LayerManager> lm = mPuppetWidget->RecreateLayerManager(nullptr);
+    MOZ_ASSERT(lm->AsWebRenderLayerManager());
+    lm->AsWebRenderLayerManager()->Initialize(cb,
+                                              wr::AsPipelineId(mLayersId),
+                                              &mTextureFactoryIdentifier);
+  } else {
+    bool success;
+    nsTArray<LayersBackend> ignored;
+    PLayerTransactionChild* shadowManager =
+      cb->SendPLayerTransactionConstructor(ignored, LayersId(), &mTextureFactoryIdentifier, &success);
+    if (!success) {
+      NS_WARNING("failed to re-allocate layer transaction");
+      return;
+    }
 
-  if (!shadowManager) {
-    NS_WARNING("failed to re-construct LayersChild");
-    return;
-  }
+    if (!shadowManager) {
+      NS_WARNING("failed to re-construct LayersChild");
+      return;
+    }
 
-  RefPtr<LayerManager> lm = mPuppetWidget->RecreateLayerManager(shadowManager);
-  ShadowLayerForwarder* lf = lm->AsShadowForwarder();
-  lf->IdentifyTextureHost(mTextureFactoryIdentifier);
+    RefPtr<LayerManager> lm = mPuppetWidget->RecreateLayerManager(shadowManager);
+    ShadowLayerForwarder* lf = lm->AsShadowForwarder();
+    lf->IdentifyTextureHost(mTextureFactoryIdentifier);
+  }
 
   InitAPZState();
 

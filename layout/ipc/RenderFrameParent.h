@@ -12,6 +12,7 @@
 #include <map>
 
 #include "mozilla/layers/APZUtils.h"
+#include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layout/PRenderFrameParent.h"
 #include "nsDisplayList.h"
@@ -36,6 +37,7 @@ class RenderFrameParent : public PRenderFrameParent
 {
   typedef mozilla::layers::AsyncDragMetrics AsyncDragMetrics;
   typedef mozilla::layers::FrameMetrics FrameMetrics;
+  typedef mozilla::layers::CompositorOptions CompositorOptions;
   typedef mozilla::layers::ContainerLayer ContainerLayer;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
@@ -82,10 +84,11 @@ public:
 
   inline uint64_t GetLayersId() const { return mLayersId; }
   inline bool IsLayersConnected() const { return mLayersConnected; }
+  inline CompositorOptions GetCompositorOptions() const { return mCompositorOptions; }
 
   void TakeFocusForClickFromTap();
 
-  void EnsureLayersConnected();
+  void EnsureLayersConnected(CompositorOptions* aCompositorOptions);
 
 protected:
   void ActorDestroy(ActorDestroyReason why) override;
@@ -104,6 +107,10 @@ private:
   // layers id. In some cases this RenderFrameParent is not connected to the
   // compositor and so this flag is false.
   bool mLayersConnected;
+  // The compositor options for this layers id. This is only meaningful if
+  // the compositor actually knows about this layers id (i.e. when mLayersConnected
+  // is true).
+  CompositorOptions mCompositorOptions;
 
   RefPtr<nsFrameLoader> mFrameLoader;
   RefPtr<ContainerLayer> mContainer;

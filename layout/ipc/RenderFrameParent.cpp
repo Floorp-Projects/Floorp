@@ -125,10 +125,11 @@ RenderFrameParent::Init(nsFrameLoader* aFrameLoader)
     mLayersConnected = gpm->AllocateAndConnectLayerTreeId(
       compositor,
       browser->Manager()->AsContentParent()->OtherPid(),
-      &mLayersId);
+      &mLayersId,
+      &mCompositorOptions);
   } else if (XRE_IsContentProcess()) {
     ContentChild::GetSingleton()->SendAllocateLayerTreeId(browser->Manager()->ChildID(), browser->GetTabId(), &mLayersId);
-    mLayersConnected = CompositorBridgeChild::Get()->SendNotifyChildCreated(mLayersId);
+    mLayersConnected = CompositorBridgeChild::Get()->SendNotifyChildCreated(mLayersId, &mCompositorOptions);
   }
 
   mInitted = true;
@@ -307,7 +308,7 @@ RenderFrameParent::TakeFocusForClickFromTap()
 }
 
 void
-RenderFrameParent::EnsureLayersConnected()
+RenderFrameParent::EnsureLayersConnected(CompositorOptions* aCompositorOptions)
 {
   RefPtr<LayerManager> lm = GetFrom(mFrameLoader);
   if (!lm) {
@@ -318,7 +319,8 @@ RenderFrameParent::EnsureLayersConnected()
     return;
   }
 
-  mLayersConnected = lm->GetCompositorBridgeChild()->SendNotifyChildRecreated(mLayersId);
+  mLayersConnected = lm->GetCompositorBridgeChild()->SendNotifyChildRecreated(mLayersId, &mCompositorOptions);
+  *aCompositorOptions = mCompositorOptions;
 }
 
 } // namespace layout
