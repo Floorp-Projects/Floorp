@@ -285,9 +285,6 @@ const ignorableWhitelist = new Set([
   // dom/media/gmp/GMPParent.cpp
   "resource://gre/gmp-clearkey/0.1/manifest.json",
 
-  // Bug 1351675 - should this file be packaged?
-  "resource://app/defaults/pinning/pins.json",
-
   // Bug 1351682 - should be removed?
   "resource://app/defaults/profile/prefs.js",
 
