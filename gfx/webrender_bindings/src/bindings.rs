@@ -1248,6 +1248,54 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
 }
 
 #[no_mangle]
+pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState, rect: WrRect, clip: WrRect,
+                                             widths: WrBorderWidths,
+                                             start_point: WrPoint, end_point: WrPoint,
+                                             stops: *const WrGradientStop, stops_count: usize,
+                                             extend_mode: WrGradientExtendMode,
+                                             outset: WrSideOffsets2D<f32>) {
+    assert!( unsafe { is_in_main_thread() });
+    let stops = WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
+    let border_details = BorderDetails::Gradient(GradientBorder {
+        gradient: state.frame_builder.dl_builder.create_gradient(
+                      start_point.to_point(), end_point.to_point(),
+                      stops, extend_mode.to_gradient_extend_mode()),
+        outset: outset.to_side_offsets_2d(),
+    });
+    state.frame_builder.dl_builder.push_border(
+                                    rect.to_rect(),
+                                    clip_region,
+                                    widths.to_border_widths(),
+                                    border_details);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState, rect: WrRect, clip: WrRect,
+                                                    widths: WrBorderWidths,
+                                                    center: WrPoint,
+                                                    radius: WrSize,
+                                                    stops: *const WrGradientStop, stops_count: usize,
+                                                    extend_mode: WrGradientExtendMode,
+                                                    outset: WrSideOffsets2D<f32>) {
+    assert!( unsafe { is_in_main_thread() });
+    let stops = WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
+    let border_details = BorderDetails::RadialGradient(RadialGradientBorder {
+        gradient: state.frame_builder.dl_builder.create_radial_gradient(center.to_point(),
+                                                                        radius.to_size(),
+                                                                        stops,
+                                                                        extend_mode.to_gradient_extend_mode()),
+        outset: outset.to_side_offsets_2d(),
+    });
+    state.frame_builder.dl_builder.push_border(
+                                    rect.to_rect(),
+                                    clip_region,
+                                    widths.to_border_widths(),
+                                    border_details);
+}
+
+#[no_mangle]
 pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                              rect: WrRect,
                                              clip: WrClipRegion,
