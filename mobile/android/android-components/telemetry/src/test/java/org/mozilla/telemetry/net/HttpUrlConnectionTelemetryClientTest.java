@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 
 import okhttp3.internal.http.HttpMethod;
 import okhttp3.mockwebserver.MockResponse;
@@ -25,9 +26,11 @@ import okhttp3.mockwebserver.RecordedRequest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -121,5 +124,35 @@ public class HttpUrlConnectionTelemetryClientTest {
         assertEquals("application/json; charset=utf-8", request.getHeader("Content-Type"));
 
         server.shutdown();
+    }
+
+    @Test
+    public void testMalformedUrl() throws Exception {
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
+
+        final HttpURLConnectionTelemetryClient client = spy(new HttpURLConnectionTelemetryClient());
+        doThrow(new MalformedURLException()).when(client).openConnectionConnection(anyString(), anyString());
+
+        // If the URL is malformed then there's nothing we can do to recover. Therefore this is treated
+        // like a successful upload.
+        assertTrue(client.uploadPing(configuration, "path", "ping"));
+    }
+
+    @Test
+    public void testIOExceptionWhileUpload() throws Exception {
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
+
+        final OutputStream stream = mock(OutputStream.class);
+        doThrow(new IOException()).when(stream).write(any(byte[].class));
+
+        final HttpURLConnection connection = mock(HttpURLConnection.class);
+        doReturn(stream).when(connection).getOutputStream();
+
+        final HttpURLConnectionTelemetryClient client = spy(new HttpURLConnectionTelemetryClient());
+        doReturn(connection).when(client).openConnectionConnection(anyString(), anyString());
+
+        // And IOException during upload is a failed upload that we should retry. The client should
+        // return false in this case.
+        assertFalse(client.uploadPing(configuration, "path", "ping"));
     }
 }

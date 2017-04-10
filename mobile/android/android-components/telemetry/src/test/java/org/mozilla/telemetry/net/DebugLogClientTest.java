@@ -38,4 +38,22 @@ public class DebugLogClientTest {
         // Our client has logged two lines, a separator and the JSON for the ping
         verify(stream, times(2)).println(anyString());
     }
+
+    @Test
+    public void testCorruptJSONJustTriggersLogWrite() {
+        final PrintStream stream = mock(PrintStream.class);
+        ShadowLog.stream = stream;
+
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
+
+        final DebugLogClient client = new DebugLogClient("TEST");
+
+        // Nothing has written to the log so far
+        verify(stream, never()).println(anyString());
+
+        client.uploadPing(configuration, "path", "{]]]{{");
+
+        // Our client has logged two lines, a separator and the JSON for the ping
+        verify(stream, times(2)).println(anyString());
+    }
 }
