@@ -52,4 +52,28 @@ public class LocaleMeasurementTest {
             Locale.setDefault(defaultLocale);
         }
     }
+
+    /**
+     * iw_IL -> he-IL
+     */
+    @Test
+    public void testReturnsFixedLanguageTag() {
+        final Locale defaultLocale = Locale.getDefault();
+
+        try {
+            Locale.setDefault(new Locale("iw", "IL"));
+
+            final LocaleMeasurement measurement = new LocaleMeasurement();
+
+            final Object value = measurement.flush();
+            assertNotNull(value);
+            assertTrue(value instanceof String);
+
+            final String locale = (String) value;
+            assertFalse(TextUtils.isEmpty(locale));
+            assertEquals("he-IL", locale);
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
+    }
 }

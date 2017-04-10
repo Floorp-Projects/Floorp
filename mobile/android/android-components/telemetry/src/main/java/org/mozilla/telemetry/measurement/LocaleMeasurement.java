@@ -15,15 +15,53 @@ public class LocaleMeasurement extends TelemetryMeasurement {
 
     @Override
     public Object flush() {
-        Locale locale = Locale.getDefault();
+        return getLanguageTag(Locale.getDefault());
+    }
 
-        // TODO: There are multiple problems with this (Issue #18):
-        // (1) It might not work with apps where we ship our own locale switcher. We might want
-        //     to get the current locale from somewhere else (or provide a way to override what
-        //     this measurement returns).
-        // (2) getLanguage() returns an ISO 639 language code. ISO 639 is a moving target and we
-        //     may return different codes for the same language. We probably want to fix this here
-        //     or at least make this known to the server side processing those pings.
-        return locale.getLanguage() + "-" + locale.getCountry();
+    /**
+     * Gecko uses locale codes like "es-ES", whereas a Java {@link Locale}
+     * stringifies as "es_ES".
+     *
+     * This method approximates the Java 7 method
+     * <code>Locale#toLanguageTag()</code>.
+     *
+     * @return a locale string suitable for passing to Gecko.
+     */
+    public String getLanguageTag(final Locale locale) {
+        // If this were Java 7:
+        // return locale.toLanguageTag();
+
+        final String language = getLanguage(locale);
+        final String country = locale.getCountry(); // Can be an empty string.
+        if (country.equals("")) {
+            return language;
+        }
+        return language + "-" + country;
+    }
+
+    /**
+     * Sometimes we want just the language for a locale, not the entire language
+     * tag. But Java's .getLanguage method is wrong.
+     *
+     * @return a language string, such as "he" for the Hebrew locales.
+     */
+    private String getLanguage(final Locale locale) {
+        // Can, but should never be, an empty string.
+        final String language = locale.getLanguage();
+
+        // Modernize certain language codes.
+        if (language.equals("iw")) {
+            return "he";
+        }
+
+        if (language.equals("in")) {
+            return "id";
+        }
+
+        if (language.equals("ji")) {
+            return "yi";
+        }
+
+        return language;
     }
 }
