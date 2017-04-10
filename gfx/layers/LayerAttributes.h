@@ -44,6 +44,13 @@ public:
   // All set methods return true if values changed, false otherwise.
   //
 
+  bool SetLayerBounds(const gfx::IntRect& aLayerBounds) {
+    if (mLayerBounds.IsEqualEdges(aLayerBounds)) {
+      return false;
+    }
+    mLayerBounds = aLayerBounds;
+    return true;
+  }
   bool SetPostScale(float aXScale, float aYScale) {
     if (mPostXScale == aXScale && mPostYScale == aYScale) {
       return false;
@@ -167,6 +174,9 @@ public:
   // Getters.
   //
 
+  const gfx::IntRect& LayerBounds() const {
+    return mLayerBounds;
+  }
   float PostXScale() const {
     return mPostXScale;
   }
@@ -234,7 +244,8 @@ public:
   }
 
   bool operator ==(const SimpleLayerAttributes& aOther) const {
-    return mTransform == aOther.mTransform &&
+    return mLayerBounds == aOther.mLayerBounds &&
+           mTransform == aOther.mTransform &&
            mTransformIsPerspective == aOther.mTransformIsPerspective &&
            mScrolledClip == aOther.mScrolledClip &&
            mPostXScale == aOther.mPostXScale &&
@@ -251,6 +262,7 @@ public:
   }
 
 private:
+  gfx::IntRect mLayerBounds;
   gfx::Matrix4x4 mTransform;
   bool mTransformIsPerspective;
   Maybe<LayerClip> mScrolledClip;

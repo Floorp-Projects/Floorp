@@ -169,7 +169,7 @@ ClientTiledPaintedLayer::BeginPaint()
   ParentLayerToLayerMatrix4x4 transformDisplayPortToLayer =
     GetTransformToAncestorsParentLayer(this, displayPortAncestor).Inverse();
 
-  LayerRect layerBounds(GetVisibleRegion().GetBounds());
+  LayerRect layerBounds = ViewAs<LayerPixel>(Rect(GetLayerBounds()));
 
   // Compute the critical display port that applies to this layer in the
   // LayoutDevice space of this layer, but only if there is no OMT animation
