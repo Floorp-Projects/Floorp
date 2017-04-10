@@ -2984,7 +2984,7 @@ bool
 nsINode::HasBoxQuadsSupport(JSContext* aCx, JSObject* /* unused */)
 {
   return xpc::AccessCheck::isChrome(js::GetContextCompartment(aCx)) ||
-         Preferences::GetBool("layout.css.getBoxQuads.enabled");
+         nsContentUtils::GetBoxQuadsEnabled();
 }
 
 nsINode*

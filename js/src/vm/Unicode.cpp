@@ -55,174 +55,174 @@ using namespace js::unicode;
  *  stop if you found the best shift
  */
 const CharacterInfo unicode::js_charinfo[] = {
-    {0, 0, 0},
-    {0, 0, 1},
-    {0, 0, 4},
-    {0, 32, 2},
-    {65504, 0, 2},
-    {0, 0, 2},
-    {743, 0, 2},
-    {121, 0, 2},
-    {0, 1, 2},
-    {65535, 0, 2},
-    {0, 65337, 2},
-    {65304, 0, 2},
-    {0, 65415, 2},
-    {65236, 0, 2},
-    {195, 0, 2},
-    {0, 210, 2},
-    {0, 206, 2},
-    {0, 205, 2},
-    {0, 79, 2},
-    {0, 202, 2},
-    {0, 203, 2},
-    {0, 207, 2},
-    {97, 0, 2},
-    {0, 211, 2},
-    {0, 209, 2},
-    {163, 0, 2},
-    {0, 213, 2},
-    {130, 0, 2},
-    {0, 214, 2},
-    {0, 218, 2},
-    {0, 217, 2},
-    {0, 219, 2},
-    {56, 0, 2},
-    {0, 2, 2},
-    {65535, 1, 2},
-    {65534, 0, 2},
-    {65457, 0, 2},
-    {0, 65439, 2},
-    {0, 65480, 2},
-    {0, 65406, 2},
-    {0, 10795, 2},
-    {0, 65373, 2},
-    {0, 10792, 2},
-    {10815, 0, 2},
-    {0, 65341, 2},
-    {0, 69, 2},
-    {0, 71, 2},
-    {10783, 0, 2},
-    {10780, 0, 2},
-    {10782, 0, 2},
-    {65326, 0, 2},
-    {65330, 0, 2},
-    {65331, 0, 2},
-    {65334, 0, 2},
-    {65333, 0, 2},
-    {42319, 0, 2},
-    {42315, 0, 2},
-    {65329, 0, 2},
-    {42280, 0, 2},
-    {42308, 0, 2},
-    {65327, 0, 2},
-    {65325, 0, 2},
-    {10743, 0, 2},
-    {42305, 0, 2},
-    {10749, 0, 2},
-    {65323, 0, 2},
-    {65322, 0, 2},
-    {10727, 0, 2},
-    {65318, 0, 2},
-    {42282, 0, 2},
-    {65467, 0, 2},
-    {65319, 0, 2},
-    {65465, 0, 2},
-    {65317, 0, 2},
-    {42261, 0, 2},
-    {42258, 0, 2},
-    {84, 0, 4},
-    {0, 116, 2},
-    {0, 38, 2},
-    {0, 37, 2},
-    {0, 64, 2},
-    {0, 63, 2},
-    {65498, 0, 2},
-    {65499, 0, 2},
-    {65505, 0, 2},
-    {65472, 0, 2},
-    {65473, 0, 2},
-    {0, 8, 2},
-    {65474, 0, 2},
-    {65479, 0, 2},
-    {65489, 0, 2},
-    {65482, 0, 2},
-    {65528, 0, 2},
-    {65450, 0, 2},
-    {65456, 0, 2},
-    {7, 0, 2},
-    {65420, 0, 2},
-    {0, 65476, 2},
-    {65440, 0, 2},
-    {0, 65529, 2},
-    {0, 80, 2},
-    {0, 15, 2},
-    {65521, 0, 2},
-    {0, 48, 2},
-    {65488, 0, 2},
-    {0, 7264, 2},
-    {0, 38864, 2},
-    {59282, 0, 2},
-    {59283, 0, 2},
-    {59292, 0, 2},
-    {59294, 0, 2},
-    {59293, 0, 2},
-    {59300, 0, 2},
-    {59355, 0, 2},
-    {35266, 0, 2},
-    {35332, 0, 2},
-    {3814, 0, 2},
-    {65477, 0, 2},
-    {0, 57921, 2},
-    {8, 0, 2},
-    {0, 65528, 2},
-    {74, 0, 2},
-    {86, 0, 2},
-    {100, 0, 2},
-    {128, 0, 2},
-    {112, 0, 2},
-    {126, 0, 2},
-    {9, 0, 2},
-    {0, 65462, 2},
-    {0, 65527, 2},
-    {58331, 0, 2},
-    {0, 65450, 2},
-    {0, 65436, 2},
-    {0, 65424, 2},
-    {0, 65408, 2},
-    {0, 65410, 2},
-    {0, 58019, 2},
-    {0, 57153, 2},
-    {0, 57274, 2},
-    {0, 28, 2},
-    {65508, 0, 2},
-    {0, 16, 2},
-    {65520, 0, 2},
-    {0, 26, 0},
-    {65510, 0, 0},
-    {0, 54793, 2},
-    {0, 61722, 2},
-    {0, 54809, 2},
-    {54741, 0, 2},
-    {54744, 0, 2},
-    {0, 54756, 2},
-    {0, 54787, 2},
-    {0, 54753, 2},
-    {0, 54754, 2},
-    {0, 54721, 2},
-    {58272, 0, 2},
-    {0, 30204, 2},
-    {0, 23256, 2},
-    {0, 23228, 2},
-    {0, 23217, 2},
-    {0, 23221, 2},
-    {0, 23231, 2},
-    {0, 23278, 2},
-    {0, 23254, 2},
-    {0, 23275, 2},
-    {0, 928, 2},
-    {64608, 0, 2},
-    {26672, 0, 2},
+    { 0, 0, 0 },
+    { 0, 0, 1 },
+    { 0, 0, 4 },
+    { 0, 32, 2 },
+    { 65504, 0, 2 },
+    { 0, 0, 2 },
+    { 743, 0, 2 },
+    { 121, 0, 2 },
+    { 0, 1, 2 },
+    { 65535, 0, 2 },
+    { 0, 65337, 2 },
+    { 65304, 0, 2 },
+    { 0, 65415, 2 },
+    { 65236, 0, 2 },
+    { 195, 0, 2 },
+    { 0, 210, 2 },
+    { 0, 206, 2 },
+    { 0, 205, 2 },
+    { 0, 79, 2 },
+    { 0, 202, 2 },
+    { 0, 203, 2 },
+    { 0, 207, 2 },
+    { 97, 0, 2 },
+    { 0, 211, 2 },
+    { 0, 209, 2 },
+    { 163, 0, 2 },
+    { 0, 213, 2 },
+    { 130, 0, 2 },
+    { 0, 214, 2 },
+    { 0, 218, 2 },
+    { 0, 217, 2 },
+    { 0, 219, 2 },
+    { 56, 0, 2 },
+    { 0, 2, 2 },
+    { 65535, 1, 2 },
+    { 65534, 0, 2 },
+    { 65457, 0, 2 },
+    { 0, 65439, 2 },
+    { 0, 65480, 2 },
+    { 0, 65406, 2 },
+    { 0, 10795, 2 },
+    { 0, 65373, 2 },
+    { 0, 10792, 2 },
+    { 10815, 0, 2 },
+    { 0, 65341, 2 },
+    { 0, 69, 2 },
+    { 0, 71, 2 },
+    { 10783, 0, 2 },
+    { 10780, 0, 2 },
+    { 10782, 0, 2 },
+    { 65326, 0, 2 },
+    { 65330, 0, 2 },
+    { 65331, 0, 2 },
+    { 65334, 0, 2 },
+    { 65333, 0, 2 },
+    { 42319, 0, 2 },
+    { 42315, 0, 2 },
+    { 65329, 0, 2 },
+    { 42280, 0, 2 },
+    { 42308, 0, 2 },
+    { 65327, 0, 2 },
+    { 65325, 0, 2 },
+    { 10743, 0, 2 },
+    { 42305, 0, 2 },
+    { 10749, 0, 2 },
+    { 65323, 0, 2 },
+    { 65322, 0, 2 },
+    { 10727, 0, 2 },
+    { 65318, 0, 2 },
+    { 42282, 0, 2 },
+    { 65467, 0, 2 },
+    { 65319, 0, 2 },
+    { 65465, 0, 2 },
+    { 65317, 0, 2 },
+    { 42261, 0, 2 },
+    { 42258, 0, 2 },
+    { 84, 0, 4 },
+    { 0, 116, 2 },
+    { 0, 38, 2 },
+    { 0, 37, 2 },
+    { 0, 64, 2 },
+    { 0, 63, 2 },
+    { 65498, 0, 2 },
+    { 65499, 0, 2 },
+    { 65505, 0, 2 },
+    { 65472, 0, 2 },
+    { 65473, 0, 2 },
+    { 0, 8, 2 },
+    { 65474, 0, 2 },
+    { 65479, 0, 2 },
+    { 65489, 0, 2 },
+    { 65482, 0, 2 },
+    { 65528, 0, 2 },
+    { 65450, 0, 2 },
+    { 65456, 0, 2 },
+    { 7, 0, 2 },
+    { 65420, 0, 2 },
+    { 0, 65476, 2 },
+    { 65440, 0, 2 },
+    { 0, 65529, 2 },
+    { 0, 80, 2 },
+    { 0, 15, 2 },
+    { 65521, 0, 2 },
+    { 0, 48, 2 },
+    { 65488, 0, 2 },
+    { 0, 7264, 2 },
+    { 0, 38864, 2 },
+    { 59282, 0, 2 },
+    { 59283, 0, 2 },
+    { 59292, 0, 2 },
+    { 59294, 0, 2 },
+    { 59293, 0, 2 },
+    { 59300, 0, 2 },
+    { 59355, 0, 2 },
+    { 35266, 0, 2 },
+    { 35332, 0, 2 },
+    { 3814, 0, 2 },
+    { 65477, 0, 2 },
+    { 0, 57921, 2 },
+    { 8, 0, 2 },
+    { 0, 65528, 2 },
+    { 74, 0, 2 },
+    { 86, 0, 2 },
+    { 100, 0, 2 },
+    { 128, 0, 2 },
+    { 112, 0, 2 },
+    { 126, 0, 2 },
+    { 9, 0, 2 },
+    { 0, 65462, 2 },
+    { 0, 65527, 2 },
+    { 58331, 0, 2 },
+    { 0, 65450, 2 },
+    { 0, 65436, 2 },
+    { 0, 65424, 2 },
+    { 0, 65408, 2 },
+    { 0, 65410, 2 },
+    { 0, 58019, 2 },
+    { 0, 57153, 2 },
+    { 0, 57274, 2 },
+    { 0, 28, 2 },
+    { 65508, 0, 2 },
+    { 0, 16, 2 },
+    { 65520, 0, 2 },
+    { 0, 26, 0 },
+    { 65510, 0, 0 },
+    { 0, 54793, 2 },
+    { 0, 61722, 2 },
+    { 0, 54809, 2 },
+    { 54741, 0, 2 },
+    { 54744, 0, 2 },
+    { 0, 54756, 2 },
+    { 0, 54787, 2 },
+    { 0, 54753, 2 },
+    { 0, 54754, 2 },
+    { 0, 54721, 2 },
+    { 58272, 0, 2 },
+    { 0, 30204, 2 },
+    { 0, 23256, 2 },
+    { 0, 23228, 2 },
+    { 0, 23217, 2 },
+    { 0, 23221, 2 },
+    { 0, 23231, 2 },
+    { 0, 23278, 2 },
+    { 0, 23254, 2 },
+    { 0, 23275, 2 },
+    { 0, 928, 2 },
+    { 64608, 0, 2 },
+    { 26672, 0, 2 },
 };
 
 const uint8_t unicode::index1[] = {
@@ -926,140 +926,140 @@ const uint8_t unicode::index2[] = {
 };
 
 const CodepointsWithSameUpperCaseInfo unicode::js_codepoints_with_same_upper_info[] = {
-    {0, 0, 0},
-    {32, 0, 0},
-    {32, 232, 0},
-    {32, 300, 0},
-    {0, 200, 0},
-    {0, 268, 0},
-    {0, 775, 0},
-    {1, 0, 0},
-    {65336, 0, 0},
-    {65415, 0, 0},
-    {65268, 0, 0},
-    {210, 0, 0},
-    {206, 0, 0},
-    {205, 0, 0},
-    {79, 0, 0},
-    {202, 0, 0},
-    {203, 0, 0},
-    {207, 0, 0},
-    {211, 0, 0},
-    {209, 0, 0},
-    {213, 0, 0},
-    {214, 0, 0},
-    {218, 0, 0},
-    {217, 0, 0},
-    {219, 0, 0},
-    {1, 2, 0},
-    {0, 1, 0},
-    {65535, 0, 0},
-    {65439, 0, 0},
-    {65480, 0, 0},
-    {65406, 0, 0},
-    {10795, 0, 0},
-    {65373, 0, 0},
-    {10792, 0, 0},
-    {65341, 0, 0},
-    {69, 0, 0},
-    {71, 0, 0},
-    {0, 116, 7289},
-    {116, 0, 0},
-    {38, 0, 0},
-    {37, 0, 0},
-    {64, 0, 0},
-    {63, 0, 0},
-    {32, 62, 0},
-    {32, 96, 0},
-    {32, 57, 0},
-    {65452, 32, 7205},
-    {32, 86, 0},
-    {64793, 32, 0},
-    {32, 54, 0},
-    {32, 80, 0},
-    {31, 32, 0},
-    {32, 47, 0},
-    {0, 30, 0},
-    {0, 64, 0},
-    {0, 25, 0},
-    {65420, 0, 7173},
-    {0, 54, 0},
-    {64761, 0, 0},
-    {0, 22, 0},
-    {0, 48, 0},
-    {0, 15, 0},
-    {8, 0, 0},
-    {65506, 0, 0},
-    {65511, 0, 0},
-    {65521, 0, 0},
-    {65514, 0, 0},
-    {65482, 0, 0},
-    {65488, 0, 0},
-    {65472, 0, 0},
-    {65529, 0, 0},
-    {80, 0, 0},
-    {32, 6254, 0},
-    {32, 6253, 0},
-    {32, 6244, 0},
-    {32, 6242, 0},
-    {32, 6242, 6243},
-    {32, 6236, 0},
-    {0, 6222, 0},
-    {0, 6221, 0},
-    {0, 6212, 0},
-    {0, 6210, 0},
-    {0, 6210, 6211},
-    {0, 6204, 0},
-    {1, 6181, 0},
-    {0, 6180, 0},
-    {15, 0, 0},
-    {48, 0, 0},
-    {7264, 0, 0},
-    {38864, 0, 0},
-    {59314, 0, 0},
-    {59315, 0, 0},
-    {59324, 0, 0},
-    {59326, 0, 0},
-    {59326, 0, 1},
-    {59325, 65535, 0},
-    {59332, 0, 0},
-    {59356, 0, 0},
-    {0, 35267, 0},
-    {1, 59, 0},
-    {0, 58, 0},
-    {65478, 0, 0},
-    {65528, 0, 0},
-    {65462, 0, 0},
-    {65527, 0, 0},
-    {58247, 58363, 0},
-    {65450, 0, 0},
-    {65436, 0, 0},
-    {65424, 0, 0},
-    {65408, 0, 0},
-    {65410, 0, 0},
-    {28, 0, 0},
-    {16, 0, 0},
-    {26, 0, 0},
-    {54793, 0, 0},
-    {61722, 0, 0},
-    {54809, 0, 0},
-    {54756, 0, 0},
-    {54787, 0, 0},
-    {54753, 0, 0},
-    {54754, 0, 0},
-    {54721, 0, 0},
-    {30270, 1, 0},
-    {30269, 0, 0},
-    {30204, 0, 0},
-    {23256, 0, 0},
-    {23228, 0, 0},
-    {23217, 0, 0},
-    {23221, 0, 0},
-    {23231, 0, 0},
-    {23278, 0, 0},
-    {23254, 0, 0},
-    {23275, 0, 0},
-    {928, 0, 0},
+    { 0, 0, 0 },
+    { 32, 0, 0 },
+    { 32, 232, 0 },
+    { 32, 300, 0 },
+    { 0, 200, 0 },
+    { 0, 268, 0 },
+    { 0, 775, 0 },
+    { 1, 0, 0 },
+    { 65336, 0, 0 },
+    { 65415, 0, 0 },
+    { 65268, 0, 0 },
+    { 210, 0, 0 },
+    { 206, 0, 0 },
+    { 205, 0, 0 },
+    { 79, 0, 0 },
+    { 202, 0, 0 },
+    { 203, 0, 0 },
+    { 207, 0, 0 },
+    { 211, 0, 0 },
+    { 209, 0, 0 },
+    { 213, 0, 0 },
+    { 214, 0, 0 },
+    { 218, 0, 0 },
+    { 217, 0, 0 },
+    { 219, 0, 0 },
+    { 1, 2, 0 },
+    { 0, 1, 0 },
+    { 65535, 0, 0 },
+    { 65439, 0, 0 },
+    { 65480, 0, 0 },
+    { 65406, 0, 0 },
+    { 10795, 0, 0 },
+    { 65373, 0, 0 },
+    { 10792, 0, 0 },
+    { 65341, 0, 0 },
+    { 69, 0, 0 },
+    { 71, 0, 0 },
+    { 0, 116, 7289 },
+    { 116, 0, 0 },
+    { 38, 0, 0 },
+    { 37, 0, 0 },
+    { 64, 0, 0 },
+    { 63, 0, 0 },
+    { 32, 62, 0 },
+    { 32, 96, 0 },
+    { 32, 57, 0 },
+    { 65452, 32, 7205 },
+    { 32, 86, 0 },
+    { 64793, 32, 0 },
+    { 32, 54, 0 },
+    { 32, 80, 0 },
+    { 31, 32, 0 },
+    { 32, 47, 0 },
+    { 0, 30, 0 },
+    { 0, 64, 0 },
+    { 0, 25, 0 },
+    { 65420, 0, 7173 },
+    { 0, 54, 0 },
+    { 64761, 0, 0 },
+    { 0, 22, 0 },
+    { 0, 48, 0 },
+    { 0, 15, 0 },
+    { 8, 0, 0 },
+    { 65506, 0, 0 },
+    { 65511, 0, 0 },
+    { 65521, 0, 0 },
+    { 65514, 0, 0 },
+    { 65482, 0, 0 },
+    { 65488, 0, 0 },
+    { 65472, 0, 0 },
+    { 65529, 0, 0 },
+    { 80, 0, 0 },
+    { 32, 6254, 0 },
+    { 32, 6253, 0 },
+    { 32, 6244, 0 },
+    { 32, 6242, 0 },
+    { 32, 6242, 6243 },
+    { 32, 6236, 0 },
+    { 0, 6222, 0 },
+    { 0, 6221, 0 },
+    { 0, 6212, 0 },
+    { 0, 6210, 0 },
+    { 0, 6210, 6211 },
+    { 0, 6204, 0 },
+    { 1, 6181, 0 },
+    { 0, 6180, 0 },
+    { 15, 0, 0 },
+    { 48, 0, 0 },
+    { 7264, 0, 0 },
+    { 38864, 0, 0 },
+    { 59314, 0, 0 },
+    { 59315, 0, 0 },
+    { 59324, 0, 0 },
+    { 59326, 0, 0 },
+    { 59326, 0, 1 },
+    { 59325, 65535, 0 },
+    { 59332, 0, 0 },
+    { 59356, 0, 0 },
+    { 0, 35267, 0 },
+    { 1, 59, 0 },
+    { 0, 58, 0 },
+    { 65478, 0, 0 },
+    { 65528, 0, 0 },
+    { 65462, 0, 0 },
+    { 65527, 0, 0 },
+    { 58247, 58363, 0 },
+    { 65450, 0, 0 },
+    { 65436, 0, 0 },
+    { 65424, 0, 0 },
+    { 65408, 0, 0 },
+    { 65410, 0, 0 },
+    { 28, 0, 0 },
+    { 16, 0, 0 },
+    { 26, 0, 0 },
+    { 54793, 0, 0 },
+    { 61722, 0, 0 },
+    { 54809, 0, 0 },
+    { 54756, 0, 0 },
+    { 54787, 0, 0 },
+    { 54753, 0, 0 },
+    { 54754, 0, 0 },
+    { 54721, 0, 0 },
+    { 30270, 1, 0 },
+    { 30269, 0, 0 },
+    { 30204, 0, 0 },
+    { 23256, 0, 0 },
+    { 23228, 0, 0 },
+    { 23217, 0, 0 },
+    { 23221, 0, 0 },
+    { 23231, 0, 0 },
+    { 23278, 0, 0 },
+    { 23254, 0, 0 },
+    { 23275, 0, 0 },
+    { 928, 0, 0 },
 };
 
 const uint8_t unicode::codepoints_with_same_upper_index1[] = {
@@ -1286,218 +1286,218 @@ const uint8_t unicode::codepoints_with_same_upper_index2[] = {
 };
 
 const FoldingInfo unicode::js_foldinfo[] = {
-    {0, 0, 0, 0},
-    {32, 0, 0, 0},
-    {32, 8415, 0, 0},
-    {32, 300, 0, 0},
-    {0, 65504, 0, 0},
-    {0, 65504, 8383, 0},
-    {0, 65504, 268, 0},
-    {775, 743, 0, 0},
-    {32, 8294, 0, 0},
-    {0, 7615, 0, 0},
-    {0, 65504, 8262, 0},
-    {0, 121, 0, 0},
-    {1, 0, 0, 0},
-    {0, 65535, 0, 0},
-    {65415, 0, 0, 0},
-    {65268, 65236, 0, 0},
-    {0, 195, 0, 0},
-    {210, 0, 0, 0},
-    {206, 0, 0, 0},
-    {205, 0, 0, 0},
-    {79, 0, 0, 0},
-    {202, 0, 0, 0},
-    {203, 0, 0, 0},
-    {207, 0, 0, 0},
-    {0, 97, 0, 0},
-    {211, 0, 0, 0},
-    {209, 0, 0, 0},
-    {0, 163, 0, 0},
-    {213, 0, 0, 0},
-    {0, 130, 0, 0},
-    {214, 0, 0, 0},
-    {218, 0, 0, 0},
-    {217, 0, 0, 0},
-    {219, 0, 0, 0},
-    {0, 56, 0, 0},
-    {2, 1, 0, 0},
-    {1, 65535, 0, 0},
-    {0, 65534, 65535, 0},
-    {0, 65457, 0, 0},
-    {65439, 0, 0, 0},
-    {65480, 0, 0, 0},
-    {65406, 0, 0, 0},
-    {10795, 0, 0, 0},
-    {65373, 0, 0, 0},
-    {10792, 0, 0, 0},
-    {0, 10815, 0, 0},
-    {65341, 0, 0, 0},
-    {69, 0, 0, 0},
-    {71, 0, 0, 0},
-    {0, 10783, 0, 0},
-    {0, 10780, 0, 0},
-    {0, 10782, 0, 0},
-    {0, 65326, 0, 0},
-    {0, 65330, 0, 0},
-    {0, 65331, 0, 0},
-    {0, 65334, 0, 0},
-    {0, 65333, 0, 0},
-    {0, 42319, 0, 0},
-    {0, 42315, 0, 0},
-    {0, 65329, 0, 0},
-    {0, 42280, 0, 0},
-    {0, 42308, 0, 0},
-    {0, 65327, 0, 0},
-    {0, 65325, 0, 0},
-    {0, 10743, 0, 0},
-    {0, 42305, 0, 0},
-    {0, 10749, 0, 0},
-    {0, 65323, 0, 0},
-    {0, 65322, 0, 0},
-    {0, 10727, 0, 0},
-    {0, 65318, 0, 0},
-    {0, 42282, 0, 0},
-    {0, 65467, 0, 0},
-    {0, 65319, 0, 0},
-    {0, 65465, 0, 0},
-    {0, 65317, 0, 0},
-    {0, 42261, 0, 0},
-    {0, 42258, 0, 0},
-    {116, 84, 7289, 0},
-    {116, 0, 0, 0},
-    {38, 0, 0, 0},
-    {37, 0, 0, 0},
-    {64, 0, 0, 0},
-    {63, 0, 0, 0},
-    {32, 62, 0, 0},
-    {32, 96, 0, 0},
-    {32, 57, 92, 0},
-    {32, 65452, 7205, 0},
-    {32, 86, 0, 0},
-    {32, 64793, 0, 0},
-    {32, 54, 0, 0},
-    {32, 80, 0, 0},
-    {32, 31, 0, 0},
-    {32, 47, 0, 0},
-    {32, 7549, 0, 0},
-    {0, 65498, 0, 0},
-    {0, 65499, 0, 0},
-    {0, 65504, 30, 0},
-    {0, 65504, 64, 0},
-    {0, 65504, 25, 60},
-    {0, 65420, 65504, 7173},
-    {0, 65504, 54, 0},
-    {0, 64761, 65504, 0},
-    {0, 65504, 22, 0},
-    {0, 65504, 48, 0},
-    {1, 65505, 0, 0},
-    {0, 65504, 65535, 0},
-    {0, 65504, 15, 0},
-    {0, 65504, 7517, 0},
-    {0, 65472, 0, 0},
-    {0, 65473, 0, 0},
-    {8, 0, 0, 0},
-    {65506, 65474, 0, 0},
-    {65511, 65479, 35, 0},
-    {65521, 65489, 0, 0},
-    {65514, 65482, 0, 0},
-    {0, 65528, 0, 0},
-    {65482, 65450, 0, 0},
-    {65488, 65456, 0, 0},
-    {0, 7, 0, 0},
-    {0, 65420, 0, 0},
-    {65476, 65444, 65501, 0},
-    {65472, 65440, 0, 0},
-    {65529, 0, 0, 0},
-    {80, 0, 0, 0},
-    {32, 6254, 0, 0},
-    {32, 6253, 0, 0},
-    {32, 6244, 0, 0},
-    {32, 6242, 0, 0},
-    {32, 6242, 6243, 0},
-    {32, 6236, 0, 0},
-    {0, 65504, 6222, 0},
-    {0, 65504, 6221, 0},
-    {0, 65504, 6212, 0},
-    {0, 65504, 6210, 0},
-    {0, 65504, 6210, 6211},
-    {0, 65504, 6204, 0},
-    {0, 65456, 0, 0},
-    {1, 6181, 0, 0},
-    {0, 65535, 6180, 0},
-    {15, 0, 0, 0},
-    {0, 65521, 0, 0},
-    {48, 0, 0, 0},
-    {0, 65488, 0, 0},
-    {7264, 0, 0, 0},
-    {0, 38864, 0, 0},
-    {0, 8, 0, 0},
-    {65528, 0, 0, 0},
-    {59314, 59282, 0, 0},
-    {59315, 59283, 0, 0},
-    {59324, 59292, 0, 0},
-    {59326, 59294, 0, 0},
-    {59326, 59294, 1, 0},
-    {59325, 59293, 65535, 0},
-    {59332, 59300, 0, 0},
-    {59356, 59355, 0, 0},
-    {35267, 35266, 0, 0},
-    {0, 35332, 0, 0},
-    {0, 3814, 0, 0},
-    {1, 59, 0, 0},
-    {0, 65535, 58, 0},
-    {65478, 65477, 0, 0},
-    {57921, 0, 0, 0},
-    {0, 74, 0, 0},
-    {0, 86, 0, 0},
-    {0, 100, 0, 0},
-    {0, 128, 0, 0},
-    {0, 112, 0, 0},
-    {0, 126, 0, 0},
-    {0, 9, 0, 0},
-    {65462, 0, 0, 0},
-    {65527, 0, 0, 0},
-    {58363, 58247, 58331, 0},
-    {65450, 0, 0, 0},
-    {65436, 0, 0, 0},
-    {65424, 0, 0, 0},
-    {65408, 0, 0, 0},
-    {65410, 0, 0, 0},
-    {58019, 57987, 0, 0},
-    {57153, 57121, 0, 0},
-    {57274, 57242, 0, 0},
-    {28, 0, 0, 0},
-    {0, 65508, 0, 0},
-    {16, 0, 0, 0},
-    {0, 65520, 0, 0},
-    {26, 0, 0, 0},
-    {0, 65510, 0, 0},
-    {54793, 0, 0, 0},
-    {61722, 0, 0, 0},
-    {54809, 0, 0, 0},
-    {0, 54741, 0, 0},
-    {0, 54744, 0, 0},
-    {54756, 0, 0, 0},
-    {54787, 0, 0, 0},
-    {54753, 0, 0, 0},
-    {54754, 0, 0, 0},
-    {54721, 0, 0, 0},
-    {0, 58272, 0, 0},
-    {1, 30270, 0, 0},
-    {0, 30269, 65535, 0},
-    {30204, 0, 0, 0},
-    {23256, 0, 0, 0},
-    {23228, 0, 0, 0},
-    {23217, 0, 0, 0},
-    {23221, 0, 0, 0},
-    {23231, 0, 0, 0},
-    {23278, 0, 0, 0},
-    {23254, 0, 0, 0},
-    {23275, 0, 0, 0},
-    {928, 0, 0, 0},
-    {0, 64608, 0, 0},
-    {26672, 0, 0, 0},
+    { 0, 0, 0, 0 },
+    { 32, 0, 0, 0 },
+    { 32, 8415, 0, 0 },
+    { 32, 300, 0, 0 },
+    { 0, 65504, 0, 0 },
+    { 0, 65504, 8383, 0 },
+    { 0, 65504, 268, 0 },
+    { 775, 743, 0, 0 },
+    { 32, 8294, 0, 0 },
+    { 0, 7615, 0, 0 },
+    { 0, 65504, 8262, 0 },
+    { 0, 121, 0, 0 },
+    { 1, 0, 0, 0 },
+    { 0, 65535, 0, 0 },
+    { 65415, 0, 0, 0 },
+    { 65268, 65236, 0, 0 },
+    { 0, 195, 0, 0 },
+    { 210, 0, 0, 0 },
+    { 206, 0, 0, 0 },
+    { 205, 0, 0, 0 },
+    { 79, 0, 0, 0 },
+    { 202, 0, 0, 0 },
+    { 203, 0, 0, 0 },
+    { 207, 0, 0, 0 },
+    { 0, 97, 0, 0 },
+    { 211, 0, 0, 0 },
+    { 209, 0, 0, 0 },
+    { 0, 163, 0, 0 },
+    { 213, 0, 0, 0 },
+    { 0, 130, 0, 0 },
+    { 214, 0, 0, 0 },
+    { 218, 0, 0, 0 },
+    { 217, 0, 0, 0 },
+    { 219, 0, 0, 0 },
+    { 0, 56, 0, 0 },
+    { 2, 1, 0, 0 },
+    { 1, 65535, 0, 0 },
+    { 0, 65534, 65535, 0 },
+    { 0, 65457, 0, 0 },
+    { 65439, 0, 0, 0 },
+    { 65480, 0, 0, 0 },
+    { 65406, 0, 0, 0 },
+    { 10795, 0, 0, 0 },
+    { 65373, 0, 0, 0 },
+    { 10792, 0, 0, 0 },
+    { 0, 10815, 0, 0 },
+    { 65341, 0, 0, 0 },
+    { 69, 0, 0, 0 },
+    { 71, 0, 0, 0 },
+    { 0, 10783, 0, 0 },
+    { 0, 10780, 0, 0 },
+    { 0, 10782, 0, 0 },
+    { 0, 65326, 0, 0 },
+    { 0, 65330, 0, 0 },
+    { 0, 65331, 0, 0 },
+    { 0, 65334, 0, 0 },
+    { 0, 65333, 0, 0 },
+    { 0, 42319, 0, 0 },
+    { 0, 42315, 0, 0 },
+    { 0, 65329, 0, 0 },
+    { 0, 42280, 0, 0 },
+    { 0, 42308, 0, 0 },
+    { 0, 65327, 0, 0 },
+    { 0, 65325, 0, 0 },
+    { 0, 10743, 0, 0 },
+    { 0, 42305, 0, 0 },
+    { 0, 10749, 0, 0 },
+    { 0, 65323, 0, 0 },
+    { 0, 65322, 0, 0 },
+    { 0, 10727, 0, 0 },
+    { 0, 65318, 0, 0 },
+    { 0, 42282, 0, 0 },
+    { 0, 65467, 0, 0 },
+    { 0, 65319, 0, 0 },
+    { 0, 65465, 0, 0 },
+    { 0, 65317, 0, 0 },
+    { 0, 42261, 0, 0 },
+    { 0, 42258, 0, 0 },
+    { 116, 84, 7289, 0 },
+    { 116, 0, 0, 0 },
+    { 38, 0, 0, 0 },
+    { 37, 0, 0, 0 },
+    { 64, 0, 0, 0 },
+    { 63, 0, 0, 0 },
+    { 32, 62, 0, 0 },
+    { 32, 96, 0, 0 },
+    { 32, 57, 92, 0 },
+    { 32, 65452, 7205, 0 },
+    { 32, 86, 0, 0 },
+    { 32, 64793, 0, 0 },
+    { 32, 54, 0, 0 },
+    { 32, 80, 0, 0 },
+    { 32, 31, 0, 0 },
+    { 32, 47, 0, 0 },
+    { 32, 7549, 0, 0 },
+    { 0, 65498, 0, 0 },
+    { 0, 65499, 0, 0 },
+    { 0, 65504, 30, 0 },
+    { 0, 65504, 64, 0 },
+    { 0, 65504, 25, 60 },
+    { 0, 65420, 65504, 7173 },
+    { 0, 65504, 54, 0 },
+    { 0, 64761, 65504, 0 },
+    { 0, 65504, 22, 0 },
+    { 0, 65504, 48, 0 },
+    { 1, 65505, 0, 0 },
+    { 0, 65504, 65535, 0 },
+    { 0, 65504, 15, 0 },
+    { 0, 65504, 7517, 0 },
+    { 0, 65472, 0, 0 },
+    { 0, 65473, 0, 0 },
+    { 8, 0, 0, 0 },
+    { 65506, 65474, 0, 0 },
+    { 65511, 65479, 35, 0 },
+    { 65521, 65489, 0, 0 },
+    { 65514, 65482, 0, 0 },
+    { 0, 65528, 0, 0 },
+    { 65482, 65450, 0, 0 },
+    { 65488, 65456, 0, 0 },
+    { 0, 7, 0, 0 },
+    { 0, 65420, 0, 0 },
+    { 65476, 65444, 65501, 0 },
+    { 65472, 65440, 0, 0 },
+    { 65529, 0, 0, 0 },
+    { 80, 0, 0, 0 },
+    { 32, 6254, 0, 0 },
+    { 32, 6253, 0, 0 },
+    { 32, 6244, 0, 0 },
+    { 32, 6242, 0, 0 },
+    { 32, 6242, 6243, 0 },
+    { 32, 6236, 0, 0 },
+    { 0, 65504, 6222, 0 },
+    { 0, 65504, 6221, 0 },
+    { 0, 65504, 6212, 0 },
+    { 0, 65504, 6210, 0 },
+    { 0, 65504, 6210, 6211 },
+    { 0, 65504, 6204, 0 },
+    { 0, 65456, 0, 0 },
+    { 1, 6181, 0, 0 },
+    { 0, 65535, 6180, 0 },
+    { 15, 0, 0, 0 },
+    { 0, 65521, 0, 0 },
+    { 48, 0, 0, 0 },
+    { 0, 65488, 0, 0 },
+    { 7264, 0, 0, 0 },
+    { 0, 38864, 0, 0 },
+    { 0, 8, 0, 0 },
+    { 65528, 0, 0, 0 },
+    { 59314, 59282, 0, 0 },
+    { 59315, 59283, 0, 0 },
+    { 59324, 59292, 0, 0 },
+    { 59326, 59294, 0, 0 },
+    { 59326, 59294, 1, 0 },
+    { 59325, 59293, 65535, 0 },
+    { 59332, 59300, 0, 0 },
+    { 59356, 59355, 0, 0 },
+    { 35267, 35266, 0, 0 },
+    { 0, 35332, 0, 0 },
+    { 0, 3814, 0, 0 },
+    { 1, 59, 0, 0 },
+    { 0, 65535, 58, 0 },
+    { 65478, 65477, 0, 0 },
+    { 57921, 0, 0, 0 },
+    { 0, 74, 0, 0 },
+    { 0, 86, 0, 0 },
+    { 0, 100, 0, 0 },
+    { 0, 128, 0, 0 },
+    { 0, 112, 0, 0 },
+    { 0, 126, 0, 0 },
+    { 0, 9, 0, 0 },
+    { 65462, 0, 0, 0 },
+    { 65527, 0, 0, 0 },
+    { 58363, 58247, 58331, 0 },
+    { 65450, 0, 0, 0 },
+    { 65436, 0, 0, 0 },
+    { 65424, 0, 0, 0 },
+    { 65408, 0, 0, 0 },
+    { 65410, 0, 0, 0 },
+    { 58019, 57987, 0, 0 },
+    { 57153, 57121, 0, 0 },
+    { 57274, 57242, 0, 0 },
+    { 28, 0, 0, 0 },
+    { 0, 65508, 0, 0 },
+    { 16, 0, 0, 0 },
+    { 0, 65520, 0, 0 },
+    { 26, 0, 0, 0 },
+    { 0, 65510, 0, 0 },
+    { 54793, 0, 0, 0 },
+    { 61722, 0, 0, 0 },
+    { 54809, 0, 0, 0 },
+    { 0, 54741, 0, 0 },
+    { 0, 54744, 0, 0 },
+    { 54756, 0, 0, 0 },
+    { 54787, 0, 0, 0 },
+    { 54753, 0, 0, 0 },
+    { 54754, 0, 0, 0 },
+    { 54721, 0, 0, 0 },
+    { 0, 58272, 0, 0 },
+    { 1, 30270, 0, 0 },
+    { 0, 30269, 65535, 0 },
+    { 30204, 0, 0, 0 },
+    { 23256, 0, 0, 0 },
+    { 23228, 0, 0, 0 },
+    { 23217, 0, 0, 0 },
+    { 23221, 0, 0, 0 },
+    { 23231, 0, 0, 0 },
+    { 23278, 0, 0, 0 },
+    { 23254, 0, 0, 0 },
+    { 23275, 0, 0, 0 },
+    { 928, 0, 0, 0 },
+    { 0, 64608, 0, 0 },
+    { 26672, 0, 0, 0 },
 };
 
 const uint8_t unicode::folding_index1[] = {
@@ -1751,389 +1751,389 @@ const uint8_t unicode::folding_index2[] = {
 bool
 js::unicode::IsIdentifierStartNonBMP(uint32_t codePoint)
 {
-    if (codePoint >= 0x10000 && codePoint <= 0x1000b)
+    if (codePoint >= 0x10000 && codePoint <= 0x1000B) // LINEAR B SYLLABLE B008 A .. LINEAR B SYLLABLE B046 JE
         return true;
-    if (codePoint >= 0x1000d && codePoint <= 0x10026)
+    if (codePoint >= 0x1000D && codePoint <= 0x10026) // LINEAR B SYLLABLE B036 JO .. LINEAR B SYLLABLE B032 QO
         return true;
-    if (codePoint >= 0x10028 && codePoint <= 0x1003a)
+    if (codePoint >= 0x10028 && codePoint <= 0x1003A) // LINEAR B SYLLABLE B060 RA .. LINEAR B SYLLABLE B042 WO
         return true;
-    if (codePoint >= 0x1003c && codePoint <= 0x1003d)
+    if (codePoint >= 0x1003C && codePoint <= 0x1003D) // LINEAR B SYLLABLE B017 ZA .. LINEAR B SYLLABLE B074 ZE
         return true;
-    if (codePoint >= 0x1003f && codePoint <= 0x1004d)
+    if (codePoint >= 0x1003F && codePoint <= 0x1004D) // LINEAR B SYLLABLE B020 ZO .. LINEAR B SYLLABLE B091 TWO
         return true;
-    if (codePoint >= 0x10050 && codePoint <= 0x1005d)
+    if (codePoint >= 0x10050 && codePoint <= 0x1005D) // LINEAR B SYMBOL B018 .. LINEAR B SYMBOL B089
         return true;
-    if (codePoint >= 0x10080 && codePoint <= 0x100fa)
+    if (codePoint >= 0x10080 && codePoint <= 0x100FA) // LINEAR B IDEOGRAM B100 MAN .. LINEAR B IDEOGRAM VESSEL B305
         return true;
-    if (codePoint >= 0x10140 && codePoint <= 0x10174)
+    if (codePoint >= 0x10140 && codePoint <= 0x10174) // GREEK ACROPHONIC ATTIC ONE QUARTER .. GREEK ACROPHONIC STRATIAN FIFTY MNAS
         return true;
-    if (codePoint >= 0x10280 && codePoint <= 0x1029c)
+    if (codePoint >= 0x10280 && codePoint <= 0x1029C) // LYCIAN LETTER A .. LYCIAN LETTER X
         return true;
-    if (codePoint >= 0x102a0 && codePoint <= 0x102d0)
+    if (codePoint >= 0x102A0 && codePoint <= 0x102D0) // CARIAN LETTER A .. CARIAN LETTER UUU3
         return true;
-    if (codePoint >= 0x10300 && codePoint <= 0x1031f)
+    if (codePoint >= 0x10300 && codePoint <= 0x1031F) // OLD ITALIC LETTER A .. OLD ITALIC LETTER ESS
         return true;
-    if (codePoint >= 0x10330 && codePoint <= 0x1034a)
+    if (codePoint >= 0x10330 && codePoint <= 0x1034A) // GOTHIC LETTER AHSA .. GOTHIC LETTER NINE HUNDRED
         return true;
-    if (codePoint >= 0x10350 && codePoint <= 0x10375)
+    if (codePoint >= 0x10350 && codePoint <= 0x10375) // OLD PERMIC LETTER AN .. OLD PERMIC LETTER IA
         return true;
-    if (codePoint >= 0x10380 && codePoint <= 0x1039d)
+    if (codePoint >= 0x10380 && codePoint <= 0x1039D) // UGARITIC LETTER ALPA .. UGARITIC LETTER SSU
         return true;
-    if (codePoint >= 0x103a0 && codePoint <= 0x103c3)
+    if (codePoint >= 0x103A0 && codePoint <= 0x103C3) // OLD PERSIAN SIGN A .. OLD PERSIAN SIGN HA
         return true;
-    if (codePoint >= 0x103c8 && codePoint <= 0x103cf)
+    if (codePoint >= 0x103C8 && codePoint <= 0x103CF) // OLD PERSIAN SIGN AURAMAZDAA .. OLD PERSIAN SIGN BUUMISH
         return true;
-    if (codePoint >= 0x103d1 && codePoint <= 0x103d5)
+    if (codePoint >= 0x103D1 && codePoint <= 0x103D5) // OLD PERSIAN NUMBER ONE .. OLD PERSIAN NUMBER HUNDRED
         return true;
-    if (codePoint >= 0x10400 && codePoint <= 0x1049d)
+    if (codePoint >= 0x10400 && codePoint <= 0x1049D) // DESERET CAPITAL LETTER LONG I .. OSMANYA LETTER OO
         return true;
-    if (codePoint >= 0x104b0 && codePoint <= 0x104d3)
+    if (codePoint >= 0x104B0 && codePoint <= 0x104D3) // OSAGE CAPITAL LETTER A .. OSAGE CAPITAL LETTER ZHA
         return true;
-    if (codePoint >= 0x104d8 && codePoint <= 0x104fb)
+    if (codePoint >= 0x104D8 && codePoint <= 0x104FB) // OSAGE SMALL LETTER A .. OSAGE SMALL LETTER ZHA
         return true;
-    if (codePoint >= 0x10500 && codePoint <= 0x10527)
+    if (codePoint >= 0x10500 && codePoint <= 0x10527) // ELBASAN LETTER A .. ELBASAN LETTER KHE
         return true;
-    if (codePoint >= 0x10530 && codePoint <= 0x10563)
+    if (codePoint >= 0x10530 && codePoint <= 0x10563) // CAUCASIAN ALBANIAN LETTER ALT .. CAUCASIAN ALBANIAN LETTER KIW
         return true;
-    if (codePoint >= 0x10600 && codePoint <= 0x10736)
+    if (codePoint >= 0x10600 && codePoint <= 0x10736) // LINEAR A SIGN AB001 .. LINEAR A SIGN A664
         return true;
-    if (codePoint >= 0x10740 && codePoint <= 0x10755)
+    if (codePoint >= 0x10740 && codePoint <= 0x10755) // LINEAR A SIGN A701 A .. LINEAR A SIGN A732 JE
         return true;
-    if (codePoint >= 0x10760 && codePoint <= 0x10767)
+    if (codePoint >= 0x10760 && codePoint <= 0x10767) // LINEAR A SIGN A800 .. LINEAR A SIGN A807
         return true;
-    if (codePoint >= 0x10800 && codePoint <= 0x10805)
+    if (codePoint >= 0x10800 && codePoint <= 0x10805) // CYPRIOT SYLLABLE A .. CYPRIOT SYLLABLE JA
         return true;
-    if (codePoint >= 0x10808 && codePoint <= 0x10808)
+    if (codePoint >= 0x10808 && codePoint <= 0x10808) // CYPRIOT SYLLABLE JO .. CYPRIOT SYLLABLE JO
         return true;
-    if (codePoint >= 0x1080a && codePoint <= 0x10835)
+    if (codePoint >= 0x1080A && codePoint <= 0x10835) // CYPRIOT SYLLABLE KA .. CYPRIOT SYLLABLE WO
         return true;
-    if (codePoint >= 0x10837 && codePoint <= 0x10838)
+    if (codePoint >= 0x10837 && codePoint <= 0x10838) // CYPRIOT SYLLABLE XA .. CYPRIOT SYLLABLE XE
         return true;
-    if (codePoint >= 0x1083c && codePoint <= 0x1083c)
+    if (codePoint >= 0x1083C && codePoint <= 0x1083C) // CYPRIOT SYLLABLE ZA .. CYPRIOT SYLLABLE ZA
         return true;
-    if (codePoint >= 0x1083f && codePoint <= 0x10855)
+    if (codePoint >= 0x1083F && codePoint <= 0x10855) // CYPRIOT SYLLABLE ZO .. IMPERIAL ARAMAIC LETTER TAW
         return true;
-    if (codePoint >= 0x10860 && codePoint <= 0x10876)
+    if (codePoint >= 0x10860 && codePoint <= 0x10876) // PALMYRENE LETTER ALEPH .. PALMYRENE LETTER TAW
         return true;
-    if (codePoint >= 0x10880 && codePoint <= 0x1089e)
+    if (codePoint >= 0x10880 && codePoint <= 0x1089E) // NABATAEAN LETTER FINAL ALEPH .. NABATAEAN LETTER TAW
         return true;
-    if (codePoint >= 0x108e0 && codePoint <= 0x108f2)
+    if (codePoint >= 0x108E0 && codePoint <= 0x108F2) // HATRAN LETTER ALEPH .. HATRAN LETTER QOPH
         return true;
-    if (codePoint >= 0x108f4 && codePoint <= 0x108f5)
+    if (codePoint >= 0x108F4 && codePoint <= 0x108F5) // HATRAN LETTER SHIN .. HATRAN LETTER TAW
         return true;
-    if (codePoint >= 0x10900 && codePoint <= 0x10915)
+    if (codePoint >= 0x10900 && codePoint <= 0x10915) // PHOENICIAN LETTER ALF .. PHOENICIAN LETTER TAU
         return true;
-    if (codePoint >= 0x10920 && codePoint <= 0x10939)
+    if (codePoint >= 0x10920 && codePoint <= 0x10939) // LYDIAN LETTER A .. LYDIAN LETTER C
         return true;
-    if (codePoint >= 0x10980 && codePoint <= 0x109b7)
+    if (codePoint >= 0x10980 && codePoint <= 0x109B7) // MEROITIC HIEROGLYPHIC LETTER A .. MEROITIC CURSIVE LETTER DA
         return true;
-    if (codePoint >= 0x109be && codePoint <= 0x109bf)
+    if (codePoint >= 0x109BE && codePoint <= 0x109BF) // MEROITIC CURSIVE LOGOGRAM RMT .. MEROITIC CURSIVE LOGOGRAM IMN
         return true;
-    if (codePoint >= 0x10a00 && codePoint <= 0x10a00)
+    if (codePoint >= 0x10A00 && codePoint <= 0x10A00) // KHAROSHTHI LETTER A .. KHAROSHTHI LETTER A
         return true;
-    if (codePoint >= 0x10a10 && codePoint <= 0x10a13)
+    if (codePoint >= 0x10A10 && codePoint <= 0x10A13) // KHAROSHTHI LETTER KA .. KHAROSHTHI LETTER GHA
         return true;
-    if (codePoint >= 0x10a15 && codePoint <= 0x10a17)
+    if (codePoint >= 0x10A15 && codePoint <= 0x10A17) // KHAROSHTHI LETTER CA .. KHAROSHTHI LETTER JA
         return true;
-    if (codePoint >= 0x10a19 && codePoint <= 0x10a33)
+    if (codePoint >= 0x10A19 && codePoint <= 0x10A33) // KHAROSHTHI LETTER NYA .. KHAROSHTHI LETTER TTTHA
         return true;
-    if (codePoint >= 0x10a60 && codePoint <= 0x10a7c)
+    if (codePoint >= 0x10A60 && codePoint <= 0x10A7C) // OLD SOUTH ARABIAN LETTER HE .. OLD SOUTH ARABIAN LETTER THETH
         return true;
-    if (codePoint >= 0x10a80 && codePoint <= 0x10a9c)
+    if (codePoint >= 0x10A80 && codePoint <= 0x10A9C) // OLD NORTH ARABIAN LETTER HEH .. OLD NORTH ARABIAN LETTER ZAH
         return true;
-    if (codePoint >= 0x10ac0 && codePoint <= 0x10ac7)
+    if (codePoint >= 0x10AC0 && codePoint <= 0x10AC7) // MANICHAEAN LETTER ALEPH .. MANICHAEAN LETTER WAW
         return true;
-    if (codePoint >= 0x10ac9 && codePoint <= 0x10ae4)
+    if (codePoint >= 0x10AC9 && codePoint <= 0x10AE4) // MANICHAEAN LETTER ZAYIN .. MANICHAEAN LETTER TAW
         return true;
-    if (codePoint >= 0x10b00 && codePoint <= 0x10b35)
+    if (codePoint >= 0x10B00 && codePoint <= 0x10B35) // AVESTAN LETTER A .. AVESTAN LETTER HE
         return true;
-    if (codePoint >= 0x10b40 && codePoint <= 0x10b55)
+    if (codePoint >= 0x10B40 && codePoint <= 0x10B55) // INSCRIPTIONAL PARTHIAN LETTER ALEPH .. INSCRIPTIONAL PARTHIAN LETTER TAW
         return true;
-    if (codePoint >= 0x10b60 && codePoint <= 0x10b72)
+    if (codePoint >= 0x10B60 && codePoint <= 0x10B72) // INSCRIPTIONAL PAHLAVI LETTER ALEPH .. INSCRIPTIONAL PAHLAVI LETTER TAW
         return true;
-    if (codePoint >= 0x10b80 && codePoint <= 0x10b91)
+    if (codePoint >= 0x10B80 && codePoint <= 0x10B91) // PSALTER PAHLAVI LETTER ALEPH .. PSALTER PAHLAVI LETTER TAW
         return true;
-    if (codePoint >= 0x10c00 && codePoint <= 0x10c48)
+    if (codePoint >= 0x10C00 && codePoint <= 0x10C48) // OLD TURKIC LETTER ORKHON A .. OLD TURKIC LETTER ORKHON BASH
         return true;
-    if (codePoint >= 0x10c80 && codePoint <= 0x10cb2)
+    if (codePoint >= 0x10C80 && codePoint <= 0x10CB2) // OLD HUNGARIAN CAPITAL LETTER A .. OLD HUNGARIAN CAPITAL LETTER US
         return true;
-    if (codePoint >= 0x10cc0 && codePoint <= 0x10cf2)
+    if (codePoint >= 0x10CC0 && codePoint <= 0x10CF2) // OLD HUNGARIAN SMALL LETTER A .. OLD HUNGARIAN SMALL LETTER US
         return true;
-    if (codePoint >= 0x11003 && codePoint <= 0x11037)
+    if (codePoint >= 0x11003 && codePoint <= 0x11037) // BRAHMI SIGN JIHVAMULIYA .. BRAHMI LETTER OLD TAMIL NNNA
         return true;
-    if (codePoint >= 0x11083 && codePoint <= 0x110af)
+    if (codePoint >= 0x11083 && codePoint <= 0x110AF) // KAITHI LETTER A .. KAITHI LETTER HA
         return true;
-    if (codePoint >= 0x110d0 && codePoint <= 0x110e8)
+    if (codePoint >= 0x110D0 && codePoint <= 0x110E8) // SORA SOMPENG LETTER SAH .. SORA SOMPENG LETTER MAE
         return true;
-    if (codePoint >= 0x11103 && codePoint <= 0x11126)
+    if (codePoint >= 0x11103 && codePoint <= 0x11126) // CHAKMA LETTER AA .. CHAKMA LETTER HAA
         return true;
-    if (codePoint >= 0x11150 && codePoint <= 0x11172)
+    if (codePoint >= 0x11150 && codePoint <= 0x11172) // MAHAJANI LETTER A .. MAHAJANI LETTER RRA
         return true;
-    if (codePoint >= 0x11176 && codePoint <= 0x11176)
+    if (codePoint >= 0x11176 && codePoint <= 0x11176) // MAHAJANI LIGATURE SHRI .. MAHAJANI LIGATURE SHRI
         return true;
-    if (codePoint >= 0x11183 && codePoint <= 0x111b2)
+    if (codePoint >= 0x11183 && codePoint <= 0x111B2) // SHARADA LETTER A .. SHARADA LETTER HA
         return true;
-    if (codePoint >= 0x111c1 && codePoint <= 0x111c4)
+    if (codePoint >= 0x111C1 && codePoint <= 0x111C4) // SHARADA SIGN AVAGRAHA .. SHARADA OM
         return true;
-    if (codePoint >= 0x111da && codePoint <= 0x111da)
+    if (codePoint >= 0x111DA && codePoint <= 0x111DA) // SHARADA EKAM .. SHARADA EKAM
         return true;
-    if (codePoint >= 0x111dc && codePoint <= 0x111dc)
+    if (codePoint >= 0x111DC && codePoint <= 0x111DC) // SHARADA HEADSTROKE .. SHARADA HEADSTROKE
         return true;
-    if (codePoint >= 0x11200 && codePoint <= 0x11211)
+    if (codePoint >= 0x11200 && codePoint <= 0x11211) // KHOJKI LETTER A .. KHOJKI LETTER JJA
         return true;
-    if (codePoint >= 0x11213 && codePoint <= 0x1122b)
+    if (codePoint >= 0x11213 && codePoint <= 0x1122B) // KHOJKI LETTER NYA .. KHOJKI LETTER LLA
         return true;
-    if (codePoint >= 0x11280 && codePoint <= 0x11286)
+    if (codePoint >= 0x11280 && codePoint <= 0x11286) // MULTANI LETTER A .. MULTANI LETTER GA
         return true;
-    if (codePoint >= 0x11288 && codePoint <= 0x11288)
+    if (codePoint >= 0x11288 && codePoint <= 0x11288) // MULTANI LETTER GHA .. MULTANI LETTER GHA
         return true;
-    if (codePoint >= 0x1128a && codePoint <= 0x1128d)
+    if (codePoint >= 0x1128A && codePoint <= 0x1128D) // MULTANI LETTER CA .. MULTANI LETTER JJA
         return true;
-    if (codePoint >= 0x1128f && codePoint <= 0x1129d)
+    if (codePoint >= 0x1128F && codePoint <= 0x1129D) // MULTANI LETTER NYA .. MULTANI LETTER BA
         return true;
-    if (codePoint >= 0x1129f && codePoint <= 0x112a8)
+    if (codePoint >= 0x1129F && codePoint <= 0x112A8) // MULTANI LETTER BHA .. MULTANI LETTER RHA
         return true;
-    if (codePoint >= 0x112b0 && codePoint <= 0x112de)
+    if (codePoint >= 0x112B0 && codePoint <= 0x112DE) // KHUDAWADI LETTER A .. KHUDAWADI LETTER HA
         return true;
-    if (codePoint >= 0x11305 && codePoint <= 0x1130c)
+    if (codePoint >= 0x11305 && codePoint <= 0x1130C) // GRANTHA LETTER A .. GRANTHA LETTER VOCALIC L
         return true;
-    if (codePoint >= 0x1130f && codePoint <= 0x11310)
+    if (codePoint >= 0x1130F && codePoint <= 0x11310) // GRANTHA LETTER EE .. GRANTHA LETTER AI
         return true;
-    if (codePoint >= 0x11313 && codePoint <= 0x11328)
+    if (codePoint >= 0x11313 && codePoint <= 0x11328) // GRANTHA LETTER OO .. GRANTHA LETTER NA
         return true;
-    if (codePoint >= 0x1132a && codePoint <= 0x11330)
+    if (codePoint >= 0x1132A && codePoint <= 0x11330) // GRANTHA LETTER PA .. GRANTHA LETTER RA
         return true;
-    if (codePoint >= 0x11332 && codePoint <= 0x11333)
+    if (codePoint >= 0x11332 && codePoint <= 0x11333) // GRANTHA LETTER LA .. GRANTHA LETTER LLA
         return true;
-    if (codePoint >= 0x11335 && codePoint <= 0x11339)
+    if (codePoint >= 0x11335 && codePoint <= 0x11339) // GRANTHA LETTER VA .. GRANTHA LETTER HA
         return true;
-    if (codePoint >= 0x1133d && codePoint <= 0x1133d)
+    if (codePoint >= 0x1133D && codePoint <= 0x1133D) // GRANTHA SIGN AVAGRAHA .. GRANTHA SIGN AVAGRAHA
         return true;
-    if (codePoint >= 0x11350 && codePoint <= 0x11350)
+    if (codePoint >= 0x11350 && codePoint <= 0x11350) // GRANTHA OM .. GRANTHA OM
         return true;
-    if (codePoint >= 0x1135d && codePoint <= 0x11361)
+    if (codePoint >= 0x1135D && codePoint <= 0x11361) // GRANTHA SIGN PLUTA .. GRANTHA LETTER VOCALIC LL
         return true;
-    if (codePoint >= 0x11400 && codePoint <= 0x11434)
+    if (codePoint >= 0x11400 && codePoint <= 0x11434) // NEWA LETTER A .. NEWA LETTER HA
         return true;
-    if (codePoint >= 0x11447 && codePoint <= 0x1144a)
+    if (codePoint >= 0x11447 && codePoint <= 0x1144A) // NEWA SIGN AVAGRAHA .. NEWA SIDDHI
         return true;
-    if (codePoint >= 0x11480 && codePoint <= 0x114af)
+    if (codePoint >= 0x11480 && codePoint <= 0x114AF) // TIRHUTA ANJI .. TIRHUTA LETTER HA
         return true;
-    if (codePoint >= 0x114c4 && codePoint <= 0x114c5)
+    if (codePoint >= 0x114C4 && codePoint <= 0x114C5) // TIRHUTA SIGN AVAGRAHA .. TIRHUTA GVANG
         return true;
-    if (codePoint >= 0x114c7 && codePoint <= 0x114c7)
+    if (codePoint >= 0x114C7 && codePoint <= 0x114C7) // TIRHUTA OM .. TIRHUTA OM
         return true;
-    if (codePoint >= 0x11580 && codePoint <= 0x115ae)
+    if (codePoint >= 0x11580 && codePoint <= 0x115AE) // SIDDHAM LETTER A .. SIDDHAM LETTER HA
         return true;
-    if (codePoint >= 0x115d8 && codePoint <= 0x115db)
+    if (codePoint >= 0x115D8 && codePoint <= 0x115DB) // SIDDHAM LETTER THREE-CIRCLE ALTERNATE I .. SIDDHAM LETTER ALTERNATE U
         return true;
-    if (codePoint >= 0x11600 && codePoint <= 0x1162f)
+    if (codePoint >= 0x11600 && codePoint <= 0x1162F) // MODI LETTER A .. MODI LETTER LLA
         return true;
-    if (codePoint >= 0x11644 && codePoint <= 0x11644)
+    if (codePoint >= 0x11644 && codePoint <= 0x11644) // MODI SIGN HUVA .. MODI SIGN HUVA
         return true;
-    if (codePoint >= 0x11680 && codePoint <= 0x116aa)
+    if (codePoint >= 0x11680 && codePoint <= 0x116AA) // TAKRI LETTER A .. TAKRI LETTER RRA
         return true;
-    if (codePoint >= 0x11700 && codePoint <= 0x11719)
+    if (codePoint >= 0x11700 && codePoint <= 0x11719) // AHOM LETTER KA .. AHOM LETTER JHA
         return true;
-    if (codePoint >= 0x118a0 && codePoint <= 0x118df)
+    if (codePoint >= 0x118A0 && codePoint <= 0x118DF) // WARANG CITI CAPITAL LETTER NGAA .. WARANG CITI SMALL LETTER VIYO
         return true;
-    if (codePoint >= 0x118ff && codePoint <= 0x118ff)
+    if (codePoint >= 0x118FF && codePoint <= 0x118FF) // WARANG CITI OM .. WARANG CITI OM
         return true;
-    if (codePoint >= 0x11ac0 && codePoint <= 0x11af8)
+    if (codePoint >= 0x11AC0 && codePoint <= 0x11AF8) // PAU CIN HAU LETTER PA .. PAU CIN HAU GLOTTAL STOP FINAL
         return true;
-    if (codePoint >= 0x11c00 && codePoint <= 0x11c08)
+    if (codePoint >= 0x11C00 && codePoint <= 0x11C08) // BHAIKSUKI LETTER A .. BHAIKSUKI LETTER VOCALIC L
         return true;
-    if (codePoint >= 0x11c0a && codePoint <= 0x11c2e)
+    if (codePoint >= 0x11C0A && codePoint <= 0x11C2E) // BHAIKSUKI LETTER E .. BHAIKSUKI LETTER HA
         return true;
-    if (codePoint >= 0x11c40 && codePoint <= 0x11c40)
+    if (codePoint >= 0x11C40 && codePoint <= 0x11C40) // BHAIKSUKI SIGN AVAGRAHA .. BHAIKSUKI SIGN AVAGRAHA
         return true;
-    if (codePoint >= 0x11c72 && codePoint <= 0x11c8f)
+    if (codePoint >= 0x11C72 && codePoint <= 0x11C8F) // MARCHEN LETTER KA .. MARCHEN LETTER A
         return true;
-    if (codePoint >= 0x12000 && codePoint <= 0x12399)
+    if (codePoint >= 0x12000 && codePoint <= 0x12399) // CUNEIFORM SIGN A .. CUNEIFORM SIGN U U
         return true;
-    if (codePoint >= 0x12400 && codePoint <= 0x1246e)
+    if (codePoint >= 0x12400 && codePoint <= 0x1246E) // CUNEIFORM NUMERIC SIGN TWO ASH .. CUNEIFORM NUMERIC SIGN NINE U VARIANT FORM
         return true;
-    if (codePoint >= 0x12480 && codePoint <= 0x12543)
+    if (codePoint >= 0x12480 && codePoint <= 0x12543) // CUNEIFORM SIGN AB TIMES NUN TENU .. CUNEIFORM SIGN ZU5 TIMES THREE DISH TENU
         return true;
-    if (codePoint >= 0x13000 && codePoint <= 0x1342e)
+    if (codePoint >= 0x13000 && codePoint <= 0x1342E) // EGYPTIAN HIEROGLYPH A001 .. EGYPTIAN HIEROGLYPH AA032
         return true;
-    if (codePoint >= 0x14400 && codePoint <= 0x14646)
+    if (codePoint >= 0x14400 && codePoint <= 0x14646) // ANATOLIAN HIEROGLYPH A001 .. ANATOLIAN HIEROGLYPH A530
         return true;
-    if (codePoint >= 0x16800 && codePoint <= 0x16a38)
+    if (codePoint >= 0x16800 && codePoint <= 0x16A38) // BAMUM LETTER PHASE-A NGKUE MFON .. BAMUM LETTER PHASE-F VUEQ
         return true;
-    if (codePoint >= 0x16a40 && codePoint <= 0x16a5e)
+    if (codePoint >= 0x16A40 && codePoint <= 0x16A5E) // MRO LETTER TA .. MRO LETTER TEK
         return true;
-    if (codePoint >= 0x16ad0 && codePoint <= 0x16aed)
+    if (codePoint >= 0x16AD0 && codePoint <= 0x16AED) // BASSA VAH LETTER ENNI .. BASSA VAH LETTER I
         return true;
-    if (codePoint >= 0x16b00 && codePoint <= 0x16b2f)
+    if (codePoint >= 0x16B00 && codePoint <= 0x16B2F) // PAHAWH HMONG VOWEL KEEB .. PAHAWH HMONG CONSONANT CAU
         return true;
-    if (codePoint >= 0x16b40 && codePoint <= 0x16b43)
+    if (codePoint >= 0x16B40 && codePoint <= 0x16B43) // PAHAWH HMONG SIGN VOS SEEV .. PAHAWH HMONG SIGN IB YAM
         return true;
-    if (codePoint >= 0x16b63 && codePoint <= 0x16b77)
+    if (codePoint >= 0x16B63 && codePoint <= 0x16B77) // PAHAWH HMONG SIGN VOS LUB .. PAHAWH HMONG SIGN CIM NRES TOS
         return true;
-    if (codePoint >= 0x16b7d && codePoint <= 0x16b8f)
+    if (codePoint >= 0x16B7D && codePoint <= 0x16B8F) // PAHAWH HMONG CLAN SIGN TSHEEJ .. PAHAWH HMONG CLAN SIGN VWJ
         return true;
-    if (codePoint >= 0x16f00 && codePoint <= 0x16f44)
+    if (codePoint >= 0x16F00 && codePoint <= 0x16F44) // MIAO LETTER PA .. MIAO LETTER HHA
         return true;
-    if (codePoint >= 0x16f50 && codePoint <= 0x16f50)
+    if (codePoint >= 0x16F50 && codePoint <= 0x16F50) // MIAO LETTER NASALIZATION .. MIAO LETTER NASALIZATION
         return true;
-    if (codePoint >= 0x16f93 && codePoint <= 0x16f9f)
+    if (codePoint >= 0x16F93 && codePoint <= 0x16F9F) // MIAO LETTER TONE-2 .. MIAO LETTER REFORMED TONE-8
         return true;
-    if (codePoint >= 0x16fe0 && codePoint <= 0x16fe0)
+    if (codePoint >= 0x16FE0 && codePoint <= 0x16FE0) // TANGUT ITERATION MARK .. TANGUT ITERATION MARK
         return true;
-    if (codePoint >= 0x17000 && codePoint <= 0x187ec)
+    if (codePoint >= 0x17000 && codePoint <= 0x187EC) // Tangut Ideograph .. Tangut Ideograph
         return true;
-    if (codePoint >= 0x18800 && codePoint <= 0x18af2)
+    if (codePoint >= 0x18800 && codePoint <= 0x18AF2) // TANGUT COMPONENT-001 .. TANGUT COMPONENT-755
         return true;
-    if (codePoint >= 0x1b000 && codePoint <= 0x1b001)
+    if (codePoint >= 0x1B000 && codePoint <= 0x1B001) // KATAKANA LETTER ARCHAIC E .. HIRAGANA LETTER ARCHAIC YE
         return true;
-    if (codePoint >= 0x1bc00 && codePoint <= 0x1bc6a)
+    if (codePoint >= 0x1BC00 && codePoint <= 0x1BC6A) // DUPLOYAN LETTER H .. DUPLOYAN LETTER VOCALIC M
         return true;
-    if (codePoint >= 0x1bc70 && codePoint <= 0x1bc7c)
+    if (codePoint >= 0x1BC70 && codePoint <= 0x1BC7C) // DUPLOYAN AFFIX LEFT HORIZONTAL SECANT .. DUPLOYAN AFFIX ATTACHED TANGENT HOOK
         return true;
-    if (codePoint >= 0x1bc80 && codePoint <= 0x1bc88)
+    if (codePoint >= 0x1BC80 && codePoint <= 0x1BC88) // DUPLOYAN AFFIX HIGH ACUTE .. DUPLOYAN AFFIX HIGH VERTICAL
         return true;
-    if (codePoint >= 0x1bc90 && codePoint <= 0x1bc99)
+    if (codePoint >= 0x1BC90 && codePoint <= 0x1BC99) // DUPLOYAN AFFIX LOW ACUTE .. DUPLOYAN AFFIX LOW ARROW
         return true;
-    if (codePoint >= 0x1d400 && codePoint <= 0x1d454)
+    if (codePoint >= 0x1D400 && codePoint <= 0x1D454) // MATHEMATICAL BOLD CAPITAL A .. MATHEMATICAL ITALIC SMALL G
         return true;
-    if (codePoint >= 0x1d456 && codePoint <= 0x1d49c)
+    if (codePoint >= 0x1D456 && codePoint <= 0x1D49C) // MATHEMATICAL ITALIC SMALL I .. MATHEMATICAL SCRIPT CAPITAL A
         return true;
-    if (codePoint >= 0x1d49e && codePoint <= 0x1d49f)
+    if (codePoint >= 0x1D49E && codePoint <= 0x1D49F) // MATHEMATICAL SCRIPT CAPITAL C .. MATHEMATICAL SCRIPT CAPITAL D
         return true;
-    if (codePoint >= 0x1d4a2 && codePoint <= 0x1d4a2)
+    if (codePoint >= 0x1D4A2 && codePoint <= 0x1D4A2) // MATHEMATICAL SCRIPT CAPITAL G .. MATHEMATICAL SCRIPT CAPITAL G
         return true;
-    if (codePoint >= 0x1d4a5 && codePoint <= 0x1d4a6)
+    if (codePoint >= 0x1D4A5 && codePoint <= 0x1D4A6) // MATHEMATICAL SCRIPT CAPITAL J .. MATHEMATICAL SCRIPT CAPITAL K
         return true;
-    if (codePoint >= 0x1d4a9 && codePoint <= 0x1d4ac)
+    if (codePoint >= 0x1D4A9 && codePoint <= 0x1D4AC) // MATHEMATICAL SCRIPT CAPITAL N .. MATHEMATICAL SCRIPT CAPITAL Q
         return true;
-    if (codePoint >= 0x1d4ae && codePoint <= 0x1d4b9)
+    if (codePoint >= 0x1D4AE && codePoint <= 0x1D4B9) // MATHEMATICAL SCRIPT CAPITAL S .. MATHEMATICAL SCRIPT SMALL D
         return true;
-    if (codePoint >= 0x1d4bb && codePoint <= 0x1d4bb)
+    if (codePoint >= 0x1D4BB && codePoint <= 0x1D4BB) // MATHEMATICAL SCRIPT SMALL F .. MATHEMATICAL SCRIPT SMALL F
         return true;
-    if (codePoint >= 0x1d4bd && codePoint <= 0x1d4c3)
+    if (codePoint >= 0x1D4BD && codePoint <= 0x1D4C3) // MATHEMATICAL SCRIPT SMALL H .. MATHEMATICAL SCRIPT SMALL N
         return true;
-    if (codePoint >= 0x1d4c5 && codePoint <= 0x1d505)
+    if (codePoint >= 0x1D4C5 && codePoint <= 0x1D505) // MATHEMATICAL SCRIPT SMALL P .. MATHEMATICAL FRAKTUR CAPITAL B
         return true;
-    if (codePoint >= 0x1d507 && codePoint <= 0x1d50a)
+    if (codePoint >= 0x1D507 && codePoint <= 0x1D50A) // MATHEMATICAL FRAKTUR CAPITAL D .. MATHEMATICAL FRAKTUR CAPITAL G
         return true;
-    if (codePoint >= 0x1d50d && codePoint <= 0x1d514)
+    if (codePoint >= 0x1D50D && codePoint <= 0x1D514) // MATHEMATICAL FRAKTUR CAPITAL J .. MATHEMATICAL FRAKTUR CAPITAL Q
         return true;
-    if (codePoint >= 0x1d516 && codePoint <= 0x1d51c)
+    if (codePoint >= 0x1D516 && codePoint <= 0x1D51C) // MATHEMATICAL FRAKTUR CAPITAL S .. MATHEMATICAL FRAKTUR CAPITAL Y
         return true;
-    if (codePoint >= 0x1d51e && codePoint <= 0x1d539)
+    if (codePoint >= 0x1D51E && codePoint <= 0x1D539) // MATHEMATICAL FRAKTUR SMALL A .. MATHEMATICAL DOUBLE-STRUCK CAPITAL B
         return true;
-    if (codePoint >= 0x1d53b && codePoint <= 0x1d53e)
+    if (codePoint >= 0x1D53B && codePoint <= 0x1D53E) // MATHEMATICAL DOUBLE-STRUCK CAPITAL D .. MATHEMATICAL DOUBLE-STRUCK CAPITAL G
         return true;
-    if (codePoint >= 0x1d540 && codePoint <= 0x1d544)
+    if (codePoint >= 0x1D540 && codePoint <= 0x1D544) // MATHEMATICAL DOUBLE-STRUCK CAPITAL I .. MATHEMATICAL DOUBLE-STRUCK CAPITAL M
         return true;
-    if (codePoint >= 0x1d546 && codePoint <= 0x1d546)
+    if (codePoint >= 0x1D546 && codePoint <= 0x1D546) // MATHEMATICAL DOUBLE-STRUCK CAPITAL O .. MATHEMATICAL DOUBLE-STRUCK CAPITAL O
         return true;
-    if (codePoint >= 0x1d54a && codePoint <= 0x1d550)
+    if (codePoint >= 0x1D54A && codePoint <= 0x1D550) // MATHEMATICAL DOUBLE-STRUCK CAPITAL S .. MATHEMATICAL DOUBLE-STRUCK CAPITAL Y
         return true;
-    if (codePoint >= 0x1d552 && codePoint <= 0x1d6a5)
+    if (codePoint >= 0x1D552 && codePoint <= 0x1D6A5) // MATHEMATICAL DOUBLE-STRUCK SMALL A .. MATHEMATICAL ITALIC SMALL DOTLESS J
         return true;
-    if (codePoint >= 0x1d6a8 && codePoint <= 0x1d6c0)
+    if (codePoint >= 0x1D6A8 && codePoint <= 0x1D6C0) // MATHEMATICAL BOLD CAPITAL ALPHA .. MATHEMATICAL BOLD CAPITAL OMEGA
         return true;
-    if (codePoint >= 0x1d6c2 && codePoint <= 0x1d6da)
+    if (codePoint >= 0x1D6C2 && codePoint <= 0x1D6DA) // MATHEMATICAL BOLD SMALL ALPHA .. MATHEMATICAL BOLD SMALL OMEGA
         return true;
-    if (codePoint >= 0x1d6dc && codePoint <= 0x1d6fa)
+    if (codePoint >= 0x1D6DC && codePoint <= 0x1D6FA) // MATHEMATICAL BOLD EPSILON SYMBOL .. MATHEMATICAL ITALIC CAPITAL OMEGA
         return true;
-    if (codePoint >= 0x1d6fc && codePoint <= 0x1d714)
+    if (codePoint >= 0x1D6FC && codePoint <= 0x1D714) // MATHEMATICAL ITALIC SMALL ALPHA .. MATHEMATICAL ITALIC SMALL OMEGA
         return true;
-    if (codePoint >= 0x1d716 && codePoint <= 0x1d734)
+    if (codePoint >= 0x1D716 && codePoint <= 0x1D734) // MATHEMATICAL ITALIC EPSILON SYMBOL .. MATHEMATICAL BOLD ITALIC CAPITAL OMEGA
         return true;
-    if (codePoint >= 0x1d736 && codePoint <= 0x1d74e)
+    if (codePoint >= 0x1D736 && codePoint <= 0x1D74E) // MATHEMATICAL BOLD ITALIC SMALL ALPHA .. MATHEMATICAL BOLD ITALIC SMALL OMEGA
         return true;
-    if (codePoint >= 0x1d750 && codePoint <= 0x1d76e)
+    if (codePoint >= 0x1D750 && codePoint <= 0x1D76E) // MATHEMATICAL BOLD ITALIC EPSILON SYMBOL .. MATHEMATICAL SANS-SERIF BOLD CAPITAL OMEGA
         return true;
-    if (codePoint >= 0x1d770 && codePoint <= 0x1d788)
+    if (codePoint >= 0x1D770 && codePoint <= 0x1D788) // MATHEMATICAL SANS-SERIF BOLD SMALL ALPHA .. MATHEMATICAL SANS-SERIF BOLD SMALL OMEGA
         return true;
-    if (codePoint >= 0x1d78a && codePoint <= 0x1d7a8)
+    if (codePoint >= 0x1D78A && codePoint <= 0x1D7A8) // MATHEMATICAL SANS-SERIF BOLD EPSILON SYMBOL .. MATHEMATICAL SANS-SERIF BOLD ITALIC CAPITAL OMEGA
         return true;
-    if (codePoint >= 0x1d7aa && codePoint <= 0x1d7c2)
+    if (codePoint >= 0x1D7AA && codePoint <= 0x1D7C2) // MATHEMATICAL SANS-SERIF BOLD ITALIC SMALL ALPHA .. MATHEMATICAL SANS-SERIF BOLD ITALIC SMALL OMEGA
         return true;
-    if (codePoint >= 0x1d7c4 && codePoint <= 0x1d7cb)
+    if (codePoint >= 0x1D7C4 && codePoint <= 0x1D7CB) // MATHEMATICAL SANS-SERIF BOLD ITALIC EPSILON SYMBOL .. MATHEMATICAL BOLD SMALL DIGAMMA
         return true;
-    if (codePoint >= 0x1e800 && codePoint <= 0x1e8c4)
+    if (codePoint >= 0x1E800 && codePoint <= 0x1E8C4) // MENDE KIKAKUI SYLLABLE M001 KI .. MENDE KIKAKUI SYLLABLE M060 NYON
         return true;
-    if (codePoint >= 0x1e900 && codePoint <= 0x1e943)
+    if (codePoint >= 0x1E900 && codePoint <= 0x1E943) // ADLAM CAPITAL LETTER ALIF .. ADLAM SMALL LETTER SHA
         return true;
-    if (codePoint >= 0x1ee00 && codePoint <= 0x1ee03)
+    if (codePoint >= 0x1EE00 && codePoint <= 0x1EE03) // ARABIC MATHEMATICAL ALEF .. ARABIC MATHEMATICAL DAL
         return true;
-    if (codePoint >= 0x1ee05 && codePoint <= 0x1ee1f)
+    if (codePoint >= 0x1EE05 && codePoint <= 0x1EE1F) // ARABIC MATHEMATICAL WAW .. ARABIC MATHEMATICAL DOTLESS QAF
         return true;
-    if (codePoint >= 0x1ee21 && codePoint <= 0x1ee22)
+    if (codePoint >= 0x1EE21 && codePoint <= 0x1EE22) // ARABIC MATHEMATICAL INITIAL BEH .. ARABIC MATHEMATICAL INITIAL JEEM
         return true;
-    if (codePoint >= 0x1ee24 && codePoint <= 0x1ee24)
+    if (codePoint >= 0x1EE24 && codePoint <= 0x1EE24) // ARABIC MATHEMATICAL INITIAL HEH .. ARABIC MATHEMATICAL INITIAL HEH
         return true;
-    if (codePoint >= 0x1ee27 && codePoint <= 0x1ee27)
+    if (codePoint >= 0x1EE27 && codePoint <= 0x1EE27) // ARABIC MATHEMATICAL INITIAL HAH .. ARABIC MATHEMATICAL INITIAL HAH
         return true;
-    if (codePoint >= 0x1ee29 && codePoint <= 0x1ee32)
+    if (codePoint >= 0x1EE29 && codePoint <= 0x1EE32) // ARABIC MATHEMATICAL INITIAL YEH .. ARABIC MATHEMATICAL INITIAL QAF
         return true;
-    if (codePoint >= 0x1ee34 && codePoint <= 0x1ee37)
+    if (codePoint >= 0x1EE34 && codePoint <= 0x1EE37) // ARABIC MATHEMATICAL INITIAL SHEEN .. ARABIC MATHEMATICAL INITIAL KHAH
         return true;
-    if (codePoint >= 0x1ee39 && codePoint <= 0x1ee39)
+    if (codePoint >= 0x1EE39 && codePoint <= 0x1EE39) // ARABIC MATHEMATICAL INITIAL DAD .. ARABIC MATHEMATICAL INITIAL DAD
         return true;
-    if (codePoint >= 0x1ee3b && codePoint <= 0x1ee3b)
+    if (codePoint >= 0x1EE3B && codePoint <= 0x1EE3B) // ARABIC MATHEMATICAL INITIAL GHAIN .. ARABIC MATHEMATICAL INITIAL GHAIN
         return true;
-    if (codePoint >= 0x1ee42 && codePoint <= 0x1ee42)
+    if (codePoint >= 0x1EE42 && codePoint <= 0x1EE42) // ARABIC MATHEMATICAL TAILED JEEM .. ARABIC MATHEMATICAL TAILED JEEM
         return true;
-    if (codePoint >= 0x1ee47 && codePoint <= 0x1ee47)
+    if (codePoint >= 0x1EE47 && codePoint <= 0x1EE47) // ARABIC MATHEMATICAL TAILED HAH .. ARABIC MATHEMATICAL TAILED HAH
         return true;
-    if (codePoint >= 0x1ee49 && codePoint <= 0x1ee49)
+    if (codePoint >= 0x1EE49 && codePoint <= 0x1EE49) // ARABIC MATHEMATICAL TAILED YEH .. ARABIC MATHEMATICAL TAILED YEH
         return true;
-    if (codePoint >= 0x1ee4b && codePoint <= 0x1ee4b)
+    if (codePoint >= 0x1EE4B && codePoint <= 0x1EE4B) // ARABIC MATHEMATICAL TAILED LAM .. ARABIC MATHEMATICAL TAILED LAM
         return true;
-    if (codePoint >= 0x1ee4d && codePoint <= 0x1ee4f)
+    if (codePoint >= 0x1EE4D && codePoint <= 0x1EE4F) // ARABIC MATHEMATICAL TAILED NOON .. ARABIC MATHEMATICAL TAILED AIN
         return true;
-    if (codePoint >= 0x1ee51 && codePoint <= 0x1ee52)
+    if (codePoint >= 0x1EE51 && codePoint <= 0x1EE52) // ARABIC MATHEMATICAL TAILED SAD .. ARABIC MATHEMATICAL TAILED QAF
         return true;
-    if (codePoint >= 0x1ee54 && codePoint <= 0x1ee54)
+    if (codePoint >= 0x1EE54 && codePoint <= 0x1EE54) // ARABIC MATHEMATICAL TAILED SHEEN .. ARABIC MATHEMATICAL TAILED SHEEN
         return true;
-    if (codePoint >= 0x1ee57 && codePoint <= 0x1ee57)
+    if (codePoint >= 0x1EE57 && codePoint <= 0x1EE57) // ARABIC MATHEMATICAL TAILED KHAH .. ARABIC MATHEMATICAL TAILED KHAH
         return true;
-    if (codePoint >= 0x1ee59 && codePoint <= 0x1ee59)
+    if (codePoint >= 0x1EE59 && codePoint <= 0x1EE59) // ARABIC MATHEMATICAL TAILED DAD .. ARABIC MATHEMATICAL TAILED DAD
         return true;
-    if (codePoint >= 0x1ee5b && codePoint <= 0x1ee5b)
+    if (codePoint >= 0x1EE5B && codePoint <= 0x1EE5B) // ARABIC MATHEMATICAL TAILED GHAIN .. ARABIC MATHEMATICAL TAILED GHAIN
         return true;
-    if (codePoint >= 0x1ee5d && codePoint <= 0x1ee5d)
+    if (codePoint >= 0x1EE5D && codePoint <= 0x1EE5D) // ARABIC MATHEMATICAL TAILED DOTLESS NOON .. ARABIC MATHEMATICAL TAILED DOTLESS NOON
         return true;
-    if (codePoint >= 0x1ee5f && codePoint <= 0x1ee5f)
+    if (codePoint >= 0x1EE5F && codePoint <= 0x1EE5F) // ARABIC MATHEMATICAL TAILED DOTLESS QAF .. ARABIC MATHEMATICAL TAILED DOTLESS QAF
         return true;
-    if (codePoint >= 0x1ee61 && codePoint <= 0x1ee62)
+    if (codePoint >= 0x1EE61 && codePoint <= 0x1EE62) // ARABIC MATHEMATICAL STRETCHED BEH .. ARABIC MATHEMATICAL STRETCHED JEEM
         return true;
-    if (codePoint >= 0x1ee64 && codePoint <= 0x1ee64)
+    if (codePoint >= 0x1EE64 && codePoint <= 0x1EE64) // ARABIC MATHEMATICAL STRETCHED HEH .. ARABIC MATHEMATICAL STRETCHED HEH
         return true;
-    if (codePoint >= 0x1ee67 && codePoint <= 0x1ee6a)
+    if (codePoint >= 0x1EE67 && codePoint <= 0x1EE6A) // ARABIC MATHEMATICAL STRETCHED HAH .. ARABIC MATHEMATICAL STRETCHED KAF
         return true;
-    if (codePoint >= 0x1ee6c && codePoint <= 0x1ee72)
+    if (codePoint >= 0x1EE6C && codePoint <= 0x1EE72) // ARABIC MATHEMATICAL STRETCHED MEEM .. ARABIC MATHEMATICAL STRETCHED QAF
         return true;
-    if (codePoint >= 0x1ee74 && codePoint <= 0x1ee77)
+    if (codePoint >= 0x1EE74 && codePoint <= 0x1EE77) // ARABIC MATHEMATICAL STRETCHED SHEEN .. ARABIC MATHEMATICAL STRETCHED KHAH
         return true;
-    if (codePoint >= 0x1ee79 && codePoint <= 0x1ee7c)
+    if (codePoint >= 0x1EE79 && codePoint <= 0x1EE7C) // ARABIC MATHEMATICAL STRETCHED DAD .. ARABIC MATHEMATICAL STRETCHED DOTLESS BEH
         return true;
-    if (codePoint >= 0x1ee7e && codePoint <= 0x1ee7e)
+    if (codePoint >= 0x1EE7E && codePoint <= 0x1EE7E) // ARABIC MATHEMATICAL STRETCHED DOTLESS FEH .. ARABIC MATHEMATICAL STRETCHED DOTLESS FEH
         return true;
-    if (codePoint >= 0x1ee80 && codePoint <= 0x1ee89)
+    if (codePoint >= 0x1EE80 && codePoint <= 0x1EE89) // ARABIC MATHEMATICAL LOOPED ALEF .. ARABIC MATHEMATICAL LOOPED YEH
         return true;
-    if (codePoint >= 0x1ee8b && codePoint <= 0x1ee9b)
+    if (codePoint >= 0x1EE8B && codePoint <= 0x1EE9B) // ARABIC MATHEMATICAL LOOPED LAM .. ARABIC MATHEMATICAL LOOPED GHAIN
         return true;
-    if (codePoint >= 0x1eea1 && codePoint <= 0x1eea3)
+    if (codePoint >= 0x1EEA1 && codePoint <= 0x1EEA3) // ARABIC MATHEMATICAL DOUBLE-STRUCK BEH .. ARABIC MATHEMATICAL DOUBLE-STRUCK DAL
         return true;
-    if (codePoint >= 0x1eea5 && codePoint <= 0x1eea9)
+    if (codePoint >= 0x1EEA5 && codePoint <= 0x1EEA9) // ARABIC MATHEMATICAL DOUBLE-STRUCK WAW .. ARABIC MATHEMATICAL DOUBLE-STRUCK YEH
         return true;
-    if (codePoint >= 0x1eeab && codePoint <= 0x1eebb)
+    if (codePoint >= 0x1EEAB && codePoint <= 0x1EEBB) // ARABIC MATHEMATICAL DOUBLE-STRUCK LAM .. ARABIC MATHEMATICAL DOUBLE-STRUCK GHAIN
         return true;
-    if (codePoint >= 0x20000 && codePoint <= 0x2a6d6)
+    if (codePoint >= 0x20000 && codePoint <= 0x2A6D6) // CJK Ideograph Extension B .. CJK Ideograph Extension B
         return true;
-    if (codePoint >= 0x2a700 && codePoint <= 0x2b734)
+    if (codePoint >= 0x2A700 && codePoint <= 0x2B734) // CJK Ideograph Extension C .. CJK Ideograph Extension C
         return true;
-    if (codePoint >= 0x2b740 && codePoint <= 0x2b81d)
+    if (codePoint >= 0x2B740 && codePoint <= 0x2B81D) // CJK Ideograph Extension D .. CJK Ideograph Extension D
         return true;
-    if (codePoint >= 0x2b820 && codePoint <= 0x2cea1)
+    if (codePoint >= 0x2B820 && codePoint <= 0x2CEA1) // CJK Ideograph Extension E .. CJK Ideograph Extension E
         return true;
-    if (codePoint >= 0x2f800 && codePoint <= 0x2fa1d)
+    if (codePoint >= 0x2F800 && codePoint <= 0x2FA1D) // CJK COMPATIBILITY IDEOGRAPH-2F800 .. CJK COMPATIBILITY IDEOGRAPH-2FA1D
         return true;
     return false;
 }
@@ -2141,489 +2141,1089 @@ js::unicode::IsIdentifierStartNonBMP(uint32_t codePoint)
 bool
 js::unicode::IsIdentifierPartNonBMP(uint32_t codePoint)
 {
-    if (codePoint >= 0x10000 && codePoint <= 0x1000b)
+    if (codePoint >= 0x10000 && codePoint <= 0x1000B) // LINEAR B SYLLABLE B008 A .. LINEAR B SYLLABLE B046 JE
         return true;
-    if (codePoint >= 0x1000d && codePoint <= 0x10026)
+    if (codePoint >= 0x1000D && codePoint <= 0x10026) // LINEAR B SYLLABLE B036 JO .. LINEAR B SYLLABLE B032 QO
         return true;
-    if (codePoint >= 0x10028 && codePoint <= 0x1003a)
+    if (codePoint >= 0x10028 && codePoint <= 0x1003A) // LINEAR B SYLLABLE B060 RA .. LINEAR B SYLLABLE B042 WO
         return true;
-    if (codePoint >= 0x1003c && codePoint <= 0x1003d)
+    if (codePoint >= 0x1003C && codePoint <= 0x1003D) // LINEAR B SYLLABLE B017 ZA .. LINEAR B SYLLABLE B074 ZE
         return true;
-    if (codePoint >= 0x1003f && codePoint <= 0x1004d)
+    if (codePoint >= 0x1003F && codePoint <= 0x1004D) // LINEAR B SYLLABLE B020 ZO .. LINEAR B SYLLABLE B091 TWO
         return true;
-    if (codePoint >= 0x10050 && codePoint <= 0x1005d)
+    if (codePoint >= 0x10050 && codePoint <= 0x1005D) // LINEAR B SYMBOL B018 .. LINEAR B SYMBOL B089
         return true;
-    if (codePoint >= 0x10080 && codePoint <= 0x100fa)
+    if (codePoint >= 0x10080 && codePoint <= 0x100FA) // LINEAR B IDEOGRAM B100 MAN .. LINEAR B IDEOGRAM VESSEL B305
         return true;
-    if (codePoint >= 0x10140 && codePoint <= 0x10174)
+    if (codePoint >= 0x10140 && codePoint <= 0x10174) // GREEK ACROPHONIC ATTIC ONE QUARTER .. GREEK ACROPHONIC STRATIAN FIFTY MNAS
         return true;
-    if (codePoint >= 0x101fd && codePoint <= 0x101fd)
+    if (codePoint >= 0x101FD && codePoint <= 0x101FD) // PHAISTOS DISC SIGN COMBINING OBLIQUE STROKE .. PHAISTOS DISC SIGN COMBINING OBLIQUE STROKE
         return true;
-    if (codePoint >= 0x10280 && codePoint <= 0x1029c)
+    if (codePoint >= 0x10280 && codePoint <= 0x1029C) // LYCIAN LETTER A .. LYCIAN LETTER X
         return true;
-    if (codePoint >= 0x102a0 && codePoint <= 0x102d0)
+    if (codePoint >= 0x102A0 && codePoint <= 0x102D0) // CARIAN LETTER A .. CARIAN LETTER UUU3
         return true;
-    if (codePoint >= 0x102e0 && codePoint <= 0x102e0)
+    if (codePoint >= 0x102E0 && codePoint <= 0x102E0) // COPTIC EPACT THOUSANDS MARK .. COPTIC EPACT THOUSANDS MARK
         return true;
-    if (codePoint >= 0x10300 && codePoint <= 0x1031f)
+    if (codePoint >= 0x10300 && codePoint <= 0x1031F) // OLD ITALIC LETTER A .. OLD ITALIC LETTER ESS
         return true;
-    if (codePoint >= 0x10330 && codePoint <= 0x1034a)
+    if (codePoint >= 0x10330 && codePoint <= 0x1034A) // GOTHIC LETTER AHSA .. GOTHIC LETTER NINE HUNDRED
         return true;
-    if (codePoint >= 0x10350 && codePoint <= 0x1037a)
+    if (codePoint >= 0x10350 && codePoint <= 0x1037A) // OLD PERMIC LETTER AN .. COMBINING OLD PERMIC LETTER SII
         return true;
-    if (codePoint >= 0x10380 && codePoint <= 0x1039d)
+    if (codePoint >= 0x10380 && codePoint <= 0x1039D) // UGARITIC LETTER ALPA .. UGARITIC LETTER SSU
         return true;
-    if (codePoint >= 0x103a0 && codePoint <= 0x103c3)
+    if (codePoint >= 0x103A0 && codePoint <= 0x103C3) // OLD PERSIAN SIGN A .. OLD PERSIAN SIGN HA
         return true;
-    if (codePoint >= 0x103c8 && codePoint <= 0x103cf)
+    if (codePoint >= 0x103C8 && codePoint <= 0x103CF) // OLD PERSIAN SIGN AURAMAZDAA .. OLD PERSIAN SIGN BUUMISH
         return true;
-    if (codePoint >= 0x103d1 && codePoint <= 0x103d5)
+    if (codePoint >= 0x103D1 && codePoint <= 0x103D5) // OLD PERSIAN NUMBER ONE .. OLD PERSIAN NUMBER HUNDRED
         return true;
-    if (codePoint >= 0x10400 && codePoint <= 0x1049d)
+    if (codePoint >= 0x10400 && codePoint <= 0x1049D) // DESERET CAPITAL LETTER LONG I .. OSMANYA LETTER OO
         return true;
-    if (codePoint >= 0x104a0 && codePoint <= 0x104a9)
+    if (codePoint >= 0x104A0 && codePoint <= 0x104A9) // OSMANYA DIGIT ZERO .. OSMANYA DIGIT NINE
         return true;
-    if (codePoint >= 0x104b0 && codePoint <= 0x104d3)
+    if (codePoint >= 0x104B0 && codePoint <= 0x104D3) // OSAGE CAPITAL LETTER A .. OSAGE CAPITAL LETTER ZHA
         return true;
-    if (codePoint >= 0x104d8 && codePoint <= 0x104fb)
+    if (codePoint >= 0x104D8 && codePoint <= 0x104FB) // OSAGE SMALL LETTER A .. OSAGE SMALL LETTER ZHA
         return true;
-    if (codePoint >= 0x10500 && codePoint <= 0x10527)
+    if (codePoint >= 0x10500 && codePoint <= 0x10527) // ELBASAN LETTER A .. ELBASAN LETTER KHE
         return true;
-    if (codePoint >= 0x10530 && codePoint <= 0x10563)
+    if (codePoint >= 0x10530 && codePoint <= 0x10563) // CAUCASIAN ALBANIAN LETTER ALT .. CAUCASIAN ALBANIAN LETTER KIW
         return true;
-    if (codePoint >= 0x10600 && codePoint <= 0x10736)
+    if (codePoint >= 0x10600 && codePoint <= 0x10736) // LINEAR A SIGN AB001 .. LINEAR A SIGN A664
         return true;
-    if (codePoint >= 0x10740 && codePoint <= 0x10755)
+    if (codePoint >= 0x10740 && codePoint <= 0x10755) // LINEAR A SIGN A701 A .. LINEAR A SIGN A732 JE
         return true;
-    if (codePoint >= 0x10760 && codePoint <= 0x10767)
+    if (codePoint >= 0x10760 && codePoint <= 0x10767) // LINEAR A SIGN A800 .. LINEAR A SIGN A807
         return true;
-    if (codePoint >= 0x10800 && codePoint <= 0x10805)
+    if (codePoint >= 0x10800 && codePoint <= 0x10805) // CYPRIOT SYLLABLE A .. CYPRIOT SYLLABLE JA
         return true;
-    if (codePoint >= 0x10808 && codePoint <= 0x10808)
+    if (codePoint >= 0x10808 && codePoint <= 0x10808) // CYPRIOT SYLLABLE JO .. CYPRIOT SYLLABLE JO
         return true;
-    if (codePoint >= 0x1080a && codePoint <= 0x10835)
+    if (codePoint >= 0x1080A && codePoint <= 0x10835) // CYPRIOT SYLLABLE KA .. CYPRIOT SYLLABLE WO
         return true;
-    if (codePoint >= 0x10837 && codePoint <= 0x10838)
+    if (codePoint >= 0x10837 && codePoint <= 0x10838) // CYPRIOT SYLLABLE XA .. CYPRIOT SYLLABLE XE
         return true;
-    if (codePoint >= 0x1083c && codePoint <= 0x1083c)
+    if (codePoint >= 0x1083C && codePoint <= 0x1083C) // CYPRIOT SYLLABLE ZA .. CYPRIOT SYLLABLE ZA
         return true;
-    if (codePoint >= 0x1083f && codePoint <= 0x10855)
+    if (codePoint >= 0x1083F && codePoint <= 0x10855) // CYPRIOT SYLLABLE ZO .. IMPERIAL ARAMAIC LETTER TAW
         return true;
-    if (codePoint >= 0x10860 && codePoint <= 0x10876)
+    if (codePoint >= 0x10860 && codePoint <= 0x10876) // PALMYRENE LETTER ALEPH .. PALMYRENE LETTER TAW
         return true;
-    if (codePoint >= 0x10880 && codePoint <= 0x1089e)
+    if (codePoint >= 0x10880 && codePoint <= 0x1089E) // NABATAEAN LETTER FINAL ALEPH .. NABATAEAN LETTER TAW
         return true;
-    if (codePoint >= 0x108e0 && codePoint <= 0x108f2)
+    if (codePoint >= 0x108E0 && codePoint <= 0x108F2) // HATRAN LETTER ALEPH .. HATRAN LETTER QOPH
         return true;
-    if (codePoint >= 0x108f4 && codePoint <= 0x108f5)
+    if (codePoint >= 0x108F4 && codePoint <= 0x108F5) // HATRAN LETTER SHIN .. HATRAN LETTER TAW
         return true;
-    if (codePoint >= 0x10900 && codePoint <= 0x10915)
+    if (codePoint >= 0x10900 && codePoint <= 0x10915) // PHOENICIAN LETTER ALF .. PHOENICIAN LETTER TAU
         return true;
-    if (codePoint >= 0x10920 && codePoint <= 0x10939)
+    if (codePoint >= 0x10920 && codePoint <= 0x10939) // LYDIAN LETTER A .. LYDIAN LETTER C
         return true;
-    if (codePoint >= 0x10980 && codePoint <= 0x109b7)
+    if (codePoint >= 0x10980 && codePoint <= 0x109B7) // MEROITIC HIEROGLYPHIC LETTER A .. MEROITIC CURSIVE LETTER DA
         return true;
-    if (codePoint >= 0x109be && codePoint <= 0x109bf)
+    if (codePoint >= 0x109BE && codePoint <= 0x109BF) // MEROITIC CURSIVE LOGOGRAM RMT .. MEROITIC CURSIVE LOGOGRAM IMN
         return true;
-    if (codePoint >= 0x10a00 && codePoint <= 0x10a03)
+    if (codePoint >= 0x10A00 && codePoint <= 0x10A03) // KHAROSHTHI LETTER A .. KHAROSHTHI VOWEL SIGN VOCALIC R
         return true;
-    if (codePoint >= 0x10a05 && codePoint <= 0x10a06)
+    if (codePoint >= 0x10A05 && codePoint <= 0x10A06) // KHAROSHTHI VOWEL SIGN E .. KHAROSHTHI VOWEL SIGN O
         return true;
-    if (codePoint >= 0x10a0c && codePoint <= 0x10a13)
+    if (codePoint >= 0x10A0C && codePoint <= 0x10A13) // KHAROSHTHI VOWEL LENGTH MARK .. KHAROSHTHI LETTER GHA
         return true;
-    if (codePoint >= 0x10a15 && codePoint <= 0x10a17)
+    if (codePoint >= 0x10A15 && codePoint <= 0x10A17) // KHAROSHTHI LETTER CA .. KHAROSHTHI LETTER JA
         return true;
-    if (codePoint >= 0x10a19 && codePoint <= 0x10a33)
+    if (codePoint >= 0x10A19 && codePoint <= 0x10A33) // KHAROSHTHI LETTER NYA .. KHAROSHTHI LETTER TTTHA
         return true;
-    if (codePoint >= 0x10a38 && codePoint <= 0x10a3a)
+    if (codePoint >= 0x10A38 && codePoint <= 0x10A3A) // KHAROSHTHI SIGN BAR ABOVE .. KHAROSHTHI SIGN DOT BELOW
         return true;
-    if (codePoint >= 0x10a3f && codePoint <= 0x10a3f)
+    if (codePoint >= 0x10A3F && codePoint <= 0x10A3F) // KHAROSHTHI VIRAMA .. KHAROSHTHI VIRAMA
         return true;
-    if (codePoint >= 0x10a60 && codePoint <= 0x10a7c)
+    if (codePoint >= 0x10A60 && codePoint <= 0x10A7C) // OLD SOUTH ARABIAN LETTER HE .. OLD SOUTH ARABIAN LETTER THETH
         return true;
-    if (codePoint >= 0x10a80 && codePoint <= 0x10a9c)
+    if (codePoint >= 0x10A80 && codePoint <= 0x10A9C) // OLD NORTH ARABIAN LETTER HEH .. OLD NORTH ARABIAN LETTER ZAH
         return true;
-    if (codePoint >= 0x10ac0 && codePoint <= 0x10ac7)
+    if (codePoint >= 0x10AC0 && codePoint <= 0x10AC7) // MANICHAEAN LETTER ALEPH .. MANICHAEAN LETTER WAW
         return true;
-    if (codePoint >= 0x10ac9 && codePoint <= 0x10ae6)
+    if (codePoint >= 0x10AC9 && codePoint <= 0x10AE6) // MANICHAEAN LETTER ZAYIN .. MANICHAEAN ABBREVIATION MARK BELOW
         return true;
-    if (codePoint >= 0x10b00 && codePoint <= 0x10b35)
+    if (codePoint >= 0x10B00 && codePoint <= 0x10B35) // AVESTAN LETTER A .. AVESTAN LETTER HE
         return true;
-    if (codePoint >= 0x10b40 && codePoint <= 0x10b55)
+    if (codePoint >= 0x10B40 && codePoint <= 0x10B55) // INSCRIPTIONAL PARTHIAN LETTER ALEPH .. INSCRIPTIONAL PARTHIAN LETTER TAW
         return true;
-    if (codePoint >= 0x10b60 && codePoint <= 0x10b72)
+    if (codePoint >= 0x10B60 && codePoint <= 0x10B72) // INSCRIPTIONAL PAHLAVI LETTER ALEPH .. INSCRIPTIONAL PAHLAVI LETTER TAW
         return true;
-    if (codePoint >= 0x10b80 && codePoint <= 0x10b91)
+    if (codePoint >= 0x10B80 && codePoint <= 0x10B91) // PSALTER PAHLAVI LETTER ALEPH .. PSALTER PAHLAVI LETTER TAW
         return true;
-    if (codePoint >= 0x10c00 && codePoint <= 0x10c48)
+    if (codePoint >= 0x10C00 && codePoint <= 0x10C48) // OLD TURKIC LETTER ORKHON A .. OLD TURKIC LETTER ORKHON BASH
         return true;
-    if (codePoint >= 0x10c80 && codePoint <= 0x10cb2)
+    if (codePoint >= 0x10C80 && codePoint <= 0x10CB2) // OLD HUNGARIAN CAPITAL LETTER A .. OLD HUNGARIAN CAPITAL LETTER US
         return true;
-    if (codePoint >= 0x10cc0 && codePoint <= 0x10cf2)
+    if (codePoint >= 0x10CC0 && codePoint <= 0x10CF2) // OLD HUNGARIAN SMALL LETTER A .. OLD HUNGARIAN SMALL LETTER US
         return true;
-    if (codePoint >= 0x11000 && codePoint <= 0x11046)
+    if (codePoint >= 0x11000 && codePoint <= 0x11046) // BRAHMI SIGN CANDRABINDU .. BRAHMI VIRAMA
         return true;
-    if (codePoint >= 0x11066 && codePoint <= 0x1106f)
+    if (codePoint >= 0x11066 && codePoint <= 0x1106F) // BRAHMI DIGIT ZERO .. BRAHMI DIGIT NINE
         return true;
-    if (codePoint >= 0x1107f && codePoint <= 0x110ba)
+    if (codePoint >= 0x1107F && codePoint <= 0x110BA) // BRAHMI NUMBER JOINER .. KAITHI SIGN NUKTA
         return true;
-    if (codePoint >= 0x110d0 && codePoint <= 0x110e8)
+    if (codePoint >= 0x110D0 && codePoint <= 0x110E8) // SORA SOMPENG LETTER SAH .. SORA SOMPENG LETTER MAE
         return true;
-    if (codePoint >= 0x110f0 && codePoint <= 0x110f9)
+    if (codePoint >= 0x110F0 && codePoint <= 0x110F9) // SORA SOMPENG DIGIT ZERO .. SORA SOMPENG DIGIT NINE
         return true;
-    if (codePoint >= 0x11100 && codePoint <= 0x11134)
+    if (codePoint >= 0x11100 && codePoint <= 0x11134) // CHAKMA SIGN CANDRABINDU .. CHAKMA MAAYYAA
         return true;
-    if (codePoint >= 0x11136 && codePoint <= 0x1113f)
+    if (codePoint >= 0x11136 && codePoint <= 0x1113F) // CHAKMA DIGIT ZERO .. CHAKMA DIGIT NINE
         return true;
-    if (codePoint >= 0x11150 && codePoint <= 0x11173)
+    if (codePoint >= 0x11150 && codePoint <= 0x11173) // MAHAJANI LETTER A .. MAHAJANI SIGN NUKTA
         return true;
-    if (codePoint >= 0x11176 && codePoint <= 0x11176)
+    if (codePoint >= 0x11176 && codePoint <= 0x11176) // MAHAJANI LIGATURE SHRI .. MAHAJANI LIGATURE SHRI
         return true;
-    if (codePoint >= 0x11180 && codePoint <= 0x111c4)
+    if (codePoint >= 0x11180 && codePoint <= 0x111C4) // SHARADA SIGN CANDRABINDU .. SHARADA OM
         return true;
-    if (codePoint >= 0x111ca && codePoint <= 0x111cc)
+    if (codePoint >= 0x111CA && codePoint <= 0x111CC) // SHARADA SIGN NUKTA .. SHARADA EXTRA SHORT VOWEL MARK
         return true;
-    if (codePoint >= 0x111d0 && codePoint <= 0x111da)
+    if (codePoint >= 0x111D0 && codePoint <= 0x111DA) // SHARADA DIGIT ZERO .. SHARADA EKAM
         return true;
-    if (codePoint >= 0x111dc && codePoint <= 0x111dc)
+    if (codePoint >= 0x111DC && codePoint <= 0x111DC) // SHARADA HEADSTROKE .. SHARADA HEADSTROKE
         return true;
-    if (codePoint >= 0x11200 && codePoint <= 0x11211)
+    if (codePoint >= 0x11200 && codePoint <= 0x11211) // KHOJKI LETTER A .. KHOJKI LETTER JJA
         return true;
-    if (codePoint >= 0x11213 && codePoint <= 0x11237)
+    if (codePoint >= 0x11213 && codePoint <= 0x11237) // KHOJKI LETTER NYA .. KHOJKI SIGN SHADDA
         return true;
-    if (codePoint >= 0x1123e && codePoint <= 0x1123e)
+    if (codePoint >= 0x1123E && codePoint <= 0x1123E) // KHOJKI SIGN SUKUN .. KHOJKI SIGN SUKUN
         return true;
-    if (codePoint >= 0x11280 && codePoint <= 0x11286)
+    if (codePoint >= 0x11280 && codePoint <= 0x11286) // MULTANI LETTER A .. MULTANI LETTER GA
         return true;
-    if (codePoint >= 0x11288 && codePoint <= 0x11288)
+    if (codePoint >= 0x11288 && codePoint <= 0x11288) // MULTANI LETTER GHA .. MULTANI LETTER GHA
         return true;
-    if (codePoint >= 0x1128a && codePoint <= 0x1128d)
+    if (codePoint >= 0x1128A && codePoint <= 0x1128D) // MULTANI LETTER CA .. MULTANI LETTER JJA
         return true;
-    if (codePoint >= 0x1128f && codePoint <= 0x1129d)
+    if (codePoint >= 0x1128F && codePoint <= 0x1129D) // MULTANI LETTER NYA .. MULTANI LETTER BA
         return true;
-    if (codePoint >= 0x1129f && codePoint <= 0x112a8)
+    if (codePoint >= 0x1129F && codePoint <= 0x112A8) // MULTANI LETTER BHA .. MULTANI LETTER RHA
         return true;
-    if (codePoint >= 0x112b0 && codePoint <= 0x112ea)
+    if (codePoint >= 0x112B0 && codePoint <= 0x112EA) // KHUDAWADI LETTER A .. KHUDAWADI SIGN VIRAMA
         return true;
-    if (codePoint >= 0x112f0 && codePoint <= 0x112f9)
+    if (codePoint >= 0x112F0 && codePoint <= 0x112F9) // KHUDAWADI DIGIT ZERO .. KHUDAWADI DIGIT NINE
         return true;
-    if (codePoint >= 0x11300 && codePoint <= 0x11303)
+    if (codePoint >= 0x11300 && codePoint <= 0x11303) // GRANTHA SIGN COMBINING ANUSVARA ABOVE .. GRANTHA SIGN VISARGA
         return true;
-    if (codePoint >= 0x11305 && codePoint <= 0x1130c)
+    if (codePoint >= 0x11305 && codePoint <= 0x1130C) // GRANTHA LETTER A .. GRANTHA LETTER VOCALIC L
         return true;
-    if (codePoint >= 0x1130f && codePoint <= 0x11310)
+    if (codePoint >= 0x1130F && codePoint <= 0x11310) // GRANTHA LETTER EE .. GRANTHA LETTER AI
         return true;
-    if (codePoint >= 0x11313 && codePoint <= 0x11328)
+    if (codePoint >= 0x11313 && codePoint <= 0x11328) // GRANTHA LETTER OO .. GRANTHA LETTER NA
         return true;
-    if (codePoint >= 0x1132a && codePoint <= 0x11330)
+    if (codePoint >= 0x1132A && codePoint <= 0x11330) // GRANTHA LETTER PA .. GRANTHA LETTER RA
         return true;
-    if (codePoint >= 0x11332 && codePoint <= 0x11333)
+    if (codePoint >= 0x11332 && codePoint <= 0x11333) // GRANTHA LETTER LA .. GRANTHA LETTER LLA
         return true;
-    if (codePoint >= 0x11335 && codePoint <= 0x11339)
+    if (codePoint >= 0x11335 && codePoint <= 0x11339) // GRANTHA LETTER VA .. GRANTHA LETTER HA
         return true;
-    if (codePoint >= 0x1133c && codePoint <= 0x11344)
+    if (codePoint >= 0x1133C && codePoint <= 0x11344) // GRANTHA SIGN NUKTA .. GRANTHA VOWEL SIGN VOCALIC RR
         return true;
-    if (codePoint >= 0x11347 && codePoint <= 0x11348)
+    if (codePoint >= 0x11347 && codePoint <= 0x11348) // GRANTHA VOWEL SIGN EE .. GRANTHA VOWEL SIGN AI
         return true;
-    if (codePoint >= 0x1134b && codePoint <= 0x1134d)
+    if (codePoint >= 0x1134B && codePoint <= 0x1134D) // GRANTHA VOWEL SIGN OO .. GRANTHA SIGN VIRAMA
         return true;
-    if (codePoint >= 0x11350 && codePoint <= 0x11350)
+    if (codePoint >= 0x11350 && codePoint <= 0x11350) // GRANTHA OM .. GRANTHA OM
         return true;
-    if (codePoint >= 0x11357 && codePoint <= 0x11357)
+    if (codePoint >= 0x11357 && codePoint <= 0x11357) // GRANTHA AU LENGTH MARK .. GRANTHA AU LENGTH MARK
         return true;
-    if (codePoint >= 0x1135d && codePoint <= 0x11363)
+    if (codePoint >= 0x1135D && codePoint <= 0x11363) // GRANTHA SIGN PLUTA .. GRANTHA VOWEL SIGN VOCALIC LL
         return true;
-    if (codePoint >= 0x11366 && codePoint <= 0x1136c)
+    if (codePoint >= 0x11366 && codePoint <= 0x1136C) // COMBINING GRANTHA DIGIT ZERO .. COMBINING GRANTHA DIGIT SIX
         return true;
-    if (codePoint >= 0x11370 && codePoint <= 0x11374)
+    if (codePoint >= 0x11370 && codePoint <= 0x11374) // COMBINING GRANTHA LETTER A .. COMBINING GRANTHA LETTER PA
         return true;
-    if (codePoint >= 0x11400 && codePoint <= 0x1144a)
+    if (codePoint >= 0x11400 && codePoint <= 0x1144A) // NEWA LETTER A .. NEWA SIDDHI
         return true;
-    if (codePoint >= 0x11450 && codePoint <= 0x11459)
+    if (codePoint >= 0x11450 && codePoint <= 0x11459) // NEWA DIGIT ZERO .. NEWA DIGIT NINE
         return true;
-    if (codePoint >= 0x11480 && codePoint <= 0x114c5)
+    if (codePoint >= 0x11480 && codePoint <= 0x114C5) // TIRHUTA ANJI .. TIRHUTA GVANG
         return true;
-    if (codePoint >= 0x114c7 && codePoint <= 0x114c7)
+    if (codePoint >= 0x114C7 && codePoint <= 0x114C7) // TIRHUTA OM .. TIRHUTA OM
         return true;
-    if (codePoint >= 0x114d0 && codePoint <= 0x114d9)
+    if (codePoint >= 0x114D0 && codePoint <= 0x114D9) // TIRHUTA DIGIT ZERO .. TIRHUTA DIGIT NINE
         return true;
-    if (codePoint >= 0x11580 && codePoint <= 0x115b5)
+    if (codePoint >= 0x11580 && codePoint <= 0x115B5) // SIDDHAM LETTER A .. SIDDHAM VOWEL SIGN VOCALIC RR
         return true;
-    if (codePoint >= 0x115b8 && codePoint <= 0x115c0)
+    if (codePoint >= 0x115B8 && codePoint <= 0x115C0) // SIDDHAM VOWEL SIGN E .. SIDDHAM SIGN NUKTA
         return true;
-    if (codePoint >= 0x115d8 && codePoint <= 0x115dd)
+    if (codePoint >= 0x115D8 && codePoint <= 0x115DD) // SIDDHAM LETTER THREE-CIRCLE ALTERNATE I .. SIDDHAM VOWEL SIGN ALTERNATE UU
         return true;
-    if (codePoint >= 0x11600 && codePoint <= 0x11640)
+    if (codePoint >= 0x11600 && codePoint <= 0x11640) // MODI LETTER A .. MODI SIGN ARDHACANDRA
         return true;
-    if (codePoint >= 0x11644 && codePoint <= 0x11644)
+    if (codePoint >= 0x11644 && codePoint <= 0x11644) // MODI SIGN HUVA .. MODI SIGN HUVA
         return true;
-    if (codePoint >= 0x11650 && codePoint <= 0x11659)
+    if (codePoint >= 0x11650 && codePoint <= 0x11659) // MODI DIGIT ZERO .. MODI DIGIT NINE
         return true;
-    if (codePoint >= 0x11680 && codePoint <= 0x116b7)
+    if (codePoint >= 0x11680 && codePoint <= 0x116B7) // TAKRI LETTER A .. TAKRI SIGN NUKTA
         return true;
-    if (codePoint >= 0x116c0 && codePoint <= 0x116c9)
+    if (codePoint >= 0x116C0 && codePoint <= 0x116C9) // TAKRI DIGIT ZERO .. TAKRI DIGIT NINE
         return true;
-    if (codePoint >= 0x11700 && codePoint <= 0x11719)
+    if (codePoint >= 0x11700 && codePoint <= 0x11719) // AHOM LETTER KA .. AHOM LETTER JHA
         return true;
-    if (codePoint >= 0x1171d && codePoint <= 0x1172b)
+    if (codePoint >= 0x1171D && codePoint <= 0x1172B) // AHOM CONSONANT SIGN MEDIAL LA .. AHOM SIGN KILLER
         return true;
-    if (codePoint >= 0x11730 && codePoint <= 0x11739)
+    if (codePoint >= 0x11730 && codePoint <= 0x11739) // AHOM DIGIT ZERO .. AHOM DIGIT NINE
         return true;
-    if (codePoint >= 0x118a0 && codePoint <= 0x118e9)
+    if (codePoint >= 0x118A0 && codePoint <= 0x118E9) // WARANG CITI CAPITAL LETTER NGAA .. WARANG CITI DIGIT NINE
         return true;
-    if (codePoint >= 0x118ff && codePoint <= 0x118ff)
+    if (codePoint >= 0x118FF && codePoint <= 0x118FF) // WARANG CITI OM .. WARANG CITI OM
         return true;
-    if (codePoint >= 0x11ac0 && codePoint <= 0x11af8)
+    if (codePoint >= 0x11AC0 && codePoint <= 0x11AF8) // PAU CIN HAU LETTER PA .. PAU CIN HAU GLOTTAL STOP FINAL
         return true;
-    if (codePoint >= 0x11c00 && codePoint <= 0x11c08)
+    if (codePoint >= 0x11C00 && codePoint <= 0x11C08) // BHAIKSUKI LETTER A .. BHAIKSUKI LETTER VOCALIC L
         return true;
-    if (codePoint >= 0x11c0a && codePoint <= 0x11c36)
+    if (codePoint >= 0x11C0A && codePoint <= 0x11C36) // BHAIKSUKI LETTER E .. BHAIKSUKI VOWEL SIGN VOCALIC L
         return true;
-    if (codePoint >= 0x11c38 && codePoint <= 0x11c40)
+    if (codePoint >= 0x11C38 && codePoint <= 0x11C40) // BHAIKSUKI VOWEL SIGN E .. BHAIKSUKI SIGN AVAGRAHA
         return true;
-    if (codePoint >= 0x11c50 && codePoint <= 0x11c59)
+    if (codePoint >= 0x11C50 && codePoint <= 0x11C59) // BHAIKSUKI DIGIT ZERO .. BHAIKSUKI DIGIT NINE
         return true;
-    if (codePoint >= 0x11c72 && codePoint <= 0x11c8f)
+    if (codePoint >= 0x11C72 && codePoint <= 0x11C8F) // MARCHEN LETTER KA .. MARCHEN LETTER A
         return true;
-    if (codePoint >= 0x11c92 && codePoint <= 0x11ca7)
+    if (codePoint >= 0x11C92 && codePoint <= 0x11CA7) // MARCHEN SUBJOINED LETTER KA .. MARCHEN SUBJOINED LETTER ZA
         return true;
-    if (codePoint >= 0x11ca9 && codePoint <= 0x11cb6)
+    if (codePoint >= 0x11CA9 && codePoint <= 0x11CB6) // MARCHEN SUBJOINED LETTER YA .. MARCHEN SIGN CANDRABINDU
         return true;
-    if (codePoint >= 0x12000 && codePoint <= 0x12399)
+    if (codePoint >= 0x12000 && codePoint <= 0x12399) // CUNEIFORM SIGN A .. CUNEIFORM SIGN U U
         return true;
-    if (codePoint >= 0x12400 && codePoint <= 0x1246e)
+    if (codePoint >= 0x12400 && codePoint <= 0x1246E) // CUNEIFORM NUMERIC SIGN TWO ASH .. CUNEIFORM NUMERIC SIGN NINE U VARIANT FORM
         return true;
-    if (codePoint >= 0x12480 && codePoint <= 0x12543)
+    if (codePoint >= 0x12480 && codePoint <= 0x12543) // CUNEIFORM SIGN AB TIMES NUN TENU .. CUNEIFORM SIGN ZU5 TIMES THREE DISH TENU
         return true;
-    if (codePoint >= 0x13000 && codePoint <= 0x1342e)
+    if (codePoint >= 0x13000 && codePoint <= 0x1342E) // EGYPTIAN HIEROGLYPH A001 .. EGYPTIAN HIEROGLYPH AA032
         return true;
-    if (codePoint >= 0x14400 && codePoint <= 0x14646)
+    if (codePoint >= 0x14400 && codePoint <= 0x14646) // ANATOLIAN HIEROGLYPH A001 .. ANATOLIAN HIEROGLYPH A530
         return true;
-    if (codePoint >= 0x16800 && codePoint <= 0x16a38)
+    if (codePoint >= 0x16800 && codePoint <= 0x16A38) // BAMUM LETTER PHASE-A NGKUE MFON .. BAMUM LETTER PHASE-F VUEQ
         return true;
-    if (codePoint >= 0x16a40 && codePoint <= 0x16a5e)
+    if (codePoint >= 0x16A40 && codePoint <= 0x16A5E) // MRO LETTER TA .. MRO LETTER TEK
         return true;
-    if (codePoint >= 0x16a60 && codePoint <= 0x16a69)
+    if (codePoint >= 0x16A60 && codePoint <= 0x16A69) // MRO DIGIT ZERO .. MRO DIGIT NINE
         return true;
-    if (codePoint >= 0x16ad0 && codePoint <= 0x16aed)
+    if (codePoint >= 0x16AD0 && codePoint <= 0x16AED) // BASSA VAH LETTER ENNI .. BASSA VAH LETTER I
         return true;
-    if (codePoint >= 0x16af0 && codePoint <= 0x16af4)
+    if (codePoint >= 0x16AF0 && codePoint <= 0x16AF4) // BASSA VAH COMBINING HIGH TONE .. BASSA VAH COMBINING HIGH-LOW TONE
         return true;
-    if (codePoint >= 0x16b00 && codePoint <= 0x16b36)
+    if (codePoint >= 0x16B00 && codePoint <= 0x16B36) // PAHAWH HMONG VOWEL KEEB .. PAHAWH HMONG MARK CIM TAUM
         return true;
-    if (codePoint >= 0x16b40 && codePoint <= 0x16b43)
+    if (codePoint >= 0x16B40 && codePoint <= 0x16B43) // PAHAWH HMONG SIGN VOS SEEV .. PAHAWH HMONG SIGN IB YAM
         return true;
-    if (codePoint >= 0x16b50 && codePoint <= 0x16b59)
+    if (codePoint >= 0x16B50 && codePoint <= 0x16B59) // PAHAWH HMONG DIGIT ZERO .. PAHAWH HMONG DIGIT NINE
         return true;
-    if (codePoint >= 0x16b63 && codePoint <= 0x16b77)
+    if (codePoint >= 0x16B63 && codePoint <= 0x16B77) // PAHAWH HMONG SIGN VOS LUB .. PAHAWH HMONG SIGN CIM NRES TOS
         return true;
-    if (codePoint >= 0x16b7d && codePoint <= 0x16b8f)
+    if (codePoint >= 0x16B7D && codePoint <= 0x16B8F) // PAHAWH HMONG CLAN SIGN TSHEEJ .. PAHAWH HMONG CLAN SIGN VWJ
         return true;
-    if (codePoint >= 0x16f00 && codePoint <= 0x16f44)
+    if (codePoint >= 0x16F00 && codePoint <= 0x16F44) // MIAO LETTER PA .. MIAO LETTER HHA
         return true;
-    if (codePoint >= 0x16f50 && codePoint <= 0x16f7e)
+    if (codePoint >= 0x16F50 && codePoint <= 0x16F7E) // MIAO LETTER NASALIZATION .. MIAO VOWEL SIGN NG
         return true;
-    if (codePoint >= 0x16f8f && codePoint <= 0x16f9f)
+    if (codePoint >= 0x16F8F && codePoint <= 0x16F9F) // MIAO TONE RIGHT .. MIAO LETTER REFORMED TONE-8
         return true;
-    if (codePoint >= 0x16fe0 && codePoint <= 0x16fe0)
+    if (codePoint >= 0x16FE0 && codePoint <= 0x16FE0) // TANGUT ITERATION MARK .. TANGUT ITERATION MARK
         return true;
-    if (codePoint >= 0x17000 && codePoint <= 0x187ec)
+    if (codePoint >= 0x17000 && codePoint <= 0x187EC) // Tangut Ideograph .. Tangut Ideograph
         return true;
-    if (codePoint >= 0x18800 && codePoint <= 0x18af2)
+    if (codePoint >= 0x18800 && codePoint <= 0x18AF2) // TANGUT COMPONENT-001 .. TANGUT COMPONENT-755
         return true;
-    if (codePoint >= 0x1b000 && codePoint <= 0x1b001)
+    if (codePoint >= 0x1B000 && codePoint <= 0x1B001) // KATAKANA LETTER ARCHAIC E .. HIRAGANA LETTER ARCHAIC YE
         return true;
-    if (codePoint >= 0x1bc00 && codePoint <= 0x1bc6a)
+    if (codePoint >= 0x1BC00 && codePoint <= 0x1BC6A) // DUPLOYAN LETTER H .. DUPLOYAN LETTER VOCALIC M
         return true;
-    if (codePoint >= 0x1bc70 && codePoint <= 0x1bc7c)
+    if (codePoint >= 0x1BC70 && codePoint <= 0x1BC7C) // DUPLOYAN AFFIX LEFT HORIZONTAL SECANT .. DUPLOYAN AFFIX ATTACHED TANGENT HOOK
         return true;
-    if (codePoint >= 0x1bc80 && codePoint <= 0x1bc88)
+    if (codePoint >= 0x1BC80 && codePoint <= 0x1BC88) // DUPLOYAN AFFIX HIGH ACUTE .. DUPLOYAN AFFIX HIGH VERTICAL
         return true;
-    if (codePoint >= 0x1bc90 && codePoint <= 0x1bc99)
+    if (codePoint >= 0x1BC90 && codePoint <= 0x1BC99) // DUPLOYAN AFFIX LOW ACUTE .. DUPLOYAN AFFIX LOW ARROW
         return true;
-    if (codePoint >= 0x1bc9d && codePoint <= 0x1bc9e)
+    if (codePoint >= 0x1BC9D && codePoint <= 0x1BC9E) // DUPLOYAN THICK LETTER SELECTOR .. DUPLOYAN DOUBLE MARK
         return true;
-    if (codePoint >= 0x1d165 && codePoint <= 0x1d169)
+    if (codePoint >= 0x1D165 && codePoint <= 0x1D169) // MUSICAL SYMBOL COMBINING STEM .. MUSICAL SYMBOL COMBINING TREMOLO-3
         return true;
-    if (codePoint >= 0x1d16d && codePoint <= 0x1d172)
+    if (codePoint >= 0x1D16D && codePoint <= 0x1D172) // MUSICAL SYMBOL COMBINING AUGMENTATION DOT .. MUSICAL SYMBOL COMBINING FLAG-5
         return true;
-    if (codePoint >= 0x1d17b && codePoint <= 0x1d182)
+    if (codePoint >= 0x1D17B && codePoint <= 0x1D182) // MUSICAL SYMBOL COMBINING ACCENT .. MUSICAL SYMBOL COMBINING LOURE
         return true;
-    if (codePoint >= 0x1d185 && codePoint <= 0x1d18b)
+    if (codePoint >= 0x1D185 && codePoint <= 0x1D18B) // MUSICAL SYMBOL COMBINING DOIT .. MUSICAL SYMBOL COMBINING TRIPLE TONGUE
         return true;
-    if (codePoint >= 0x1d1aa && codePoint <= 0x1d1ad)
+    if (codePoint >= 0x1D1AA && codePoint <= 0x1D1AD) // MUSICAL SYMBOL COMBINING DOWN BOW .. MUSICAL SYMBOL COMBINING SNAP PIZZICATO
         return true;
-    if (codePoint >= 0x1d242 && codePoint <= 0x1d244)
+    if (codePoint >= 0x1D242 && codePoint <= 0x1D244) // COMBINING GREEK MUSICAL TRISEME .. COMBINING GREEK MUSICAL PENTASEME
         return true;
-    if (codePoint >= 0x1d400 && codePoint <= 0x1d454)
+    if (codePoint >= 0x1D400 && codePoint <= 0x1D454) // MATHEMATICAL BOLD CAPITAL A .. MATHEMATICAL ITALIC SMALL G
         return true;
-    if (codePoint >= 0x1d456 && codePoint <= 0x1d49c)
+    if (codePoint >= 0x1D456 && codePoint <= 0x1D49C) // MATHEMATICAL ITALIC SMALL I .. MATHEMATICAL SCRIPT CAPITAL A
         return true;
-    if (codePoint >= 0x1d49e && codePoint <= 0x1d49f)
+    if (codePoint >= 0x1D49E && codePoint <= 0x1D49F) // MATHEMATICAL SCRIPT CAPITAL C .. MATHEMATICAL SCRIPT CAPITAL D
         return true;
-    if (codePoint >= 0x1d4a2 && codePoint <= 0x1d4a2)
+    if (codePoint >= 0x1D4A2 && codePoint <= 0x1D4A2) // MATHEMATICAL SCRIPT CAPITAL G .. MATHEMATICAL SCRIPT CAPITAL G
         return true;
-    if (codePoint >= 0x1d4a5 && codePoint <= 0x1d4a6)
+    if (codePoint >= 0x1D4A5 && codePoint <= 0x1D4A6) // MATHEMATICAL SCRIPT CAPITAL J .. MATHEMATICAL SCRIPT CAPITAL K
         return true;
-    if (codePoint >= 0x1d4a9 && codePoint <= 0x1d4ac)
+    if (codePoint >= 0x1D4A9 && codePoint <= 0x1D4AC) // MATHEMATICAL SCRIPT CAPITAL N .. MATHEMATICAL SCRIPT CAPITAL Q
         return true;
-    if (codePoint >= 0x1d4ae && codePoint <= 0x1d4b9)
+    if (codePoint >= 0x1D4AE && codePoint <= 0x1D4B9) // MATHEMATICAL SCRIPT CAPITAL S .. MATHEMATICAL SCRIPT SMALL D
         return true;
-    if (codePoint >= 0x1d4bb && codePoint <= 0x1d4bb)
+    if (codePoint >= 0x1D4BB && codePoint <= 0x1D4BB) // MATHEMATICAL SCRIPT SMALL F .. MATHEMATICAL SCRIPT SMALL F
         return true;
-    if (codePoint >= 0x1d4bd && codePoint <= 0x1d4c3)
+    if (codePoint >= 0x1D4BD && codePoint <= 0x1D4C3) // MATHEMATICAL SCRIPT SMALL H .. MATHEMATICAL SCRIPT SMALL N
         return true;
-    if (codePoint >= 0x1d4c5 && codePoint <= 0x1d505)
+    if (codePoint >= 0x1D4C5 && codePoint <= 0x1D505) // MATHEMATICAL SCRIPT SMALL P .. MATHEMATICAL FRAKTUR CAPITAL B
         return true;
-    if (codePoint >= 0x1d507 && codePoint <= 0x1d50a)
+    if (codePoint >= 0x1D507 && codePoint <= 0x1D50A) // MATHEMATICAL FRAKTUR CAPITAL D .. MATHEMATICAL FRAKTUR CAPITAL G
         return true;
-    if (codePoint >= 0x1d50d && codePoint <= 0x1d514)
+    if (codePoint >= 0x1D50D && codePoint <= 0x1D514) // MATHEMATICAL FRAKTUR CAPITAL J .. MATHEMATICAL FRAKTUR CAPITAL Q
         return true;
-    if (codePoint >= 0x1d516 && codePoint <= 0x1d51c)
+    if (codePoint >= 0x1D516 && codePoint <= 0x1D51C) // MATHEMATICAL FRAKTUR CAPITAL S .. MATHEMATICAL FRAKTUR CAPITAL Y
         return true;
-    if (codePoint >= 0x1d51e && codePoint <= 0x1d539)
+    if (codePoint >= 0x1D51E && codePoint <= 0x1D539) // MATHEMATICAL FRAKTUR SMALL A .. MATHEMATICAL DOUBLE-STRUCK CAPITAL B
         return true;
-    if (codePoint >= 0x1d53b && codePoint <= 0x1d53e)
+    if (codePoint >= 0x1D53B && codePoint <= 0x1D53E) // MATHEMATICAL DOUBLE-STRUCK CAPITAL D .. MATHEMATICAL DOUBLE-STRUCK CAPITAL G
         return true;
-    if (codePoint >= 0x1d540 && codePoint <= 0x1d544)
+    if (codePoint >= 0x1D540 && codePoint <= 0x1D544) // MATHEMATICAL DOUBLE-STRUCK CAPITAL I .. MATHEMATICAL DOUBLE-STRUCK CAPITAL M
         return true;
-    if (codePoint >= 0x1d546 && codePoint <= 0x1d546)
+    if (codePoint >= 0x1D546 && codePoint <= 0x1D546) // MATHEMATICAL DOUBLE-STRUCK CAPITAL O .. MATHEMATICAL DOUBLE-STRUCK CAPITAL O
         return true;
-    if (codePoint >= 0x1d54a && codePoint <= 0x1d550)
+    if (codePoint >= 0x1D54A && codePoint <= 0x1D550) // MATHEMATICAL DOUBLE-STRUCK CAPITAL S .. MATHEMATICAL DOUBLE-STRUCK CAPITAL Y
         return true;
-    if (codePoint >= 0x1d552 && codePoint <= 0x1d6a5)
+    if (codePoint >= 0x1D552 && codePoint <= 0x1D6A5) // MATHEMATICAL DOUBLE-STRUCK SMALL A .. MATHEMATICAL ITALIC SMALL DOTLESS J
         return true;
-    if (codePoint >= 0x1d6a8 && codePoint <= 0x1d6c0)
+    if (codePoint >= 0x1D6A8 && codePoint <= 0x1D6C0) // MATHEMATICAL BOLD CAPITAL ALPHA .. MATHEMATICAL BOLD CAPITAL OMEGA
         return true;
-    if (codePoint >= 0x1d6c2 && codePoint <= 0x1d6da)
+    if (codePoint >= 0x1D6C2 && codePoint <= 0x1D6DA) // MATHEMATICAL BOLD SMALL ALPHA .. MATHEMATICAL BOLD SMALL OMEGA
         return true;
-    if (codePoint >= 0x1d6dc && codePoint <= 0x1d6fa)
+    if (codePoint >= 0x1D6DC && codePoint <= 0x1D6FA) // MATHEMATICAL BOLD EPSILON SYMBOL .. MATHEMATICAL ITALIC CAPITAL OMEGA
         return true;
-    if (codePoint >= 0x1d6fc && codePoint <= 0x1d714)
+    if (codePoint >= 0x1D6FC && codePoint <= 0x1D714) // MATHEMATICAL ITALIC SMALL ALPHA .. MATHEMATICAL ITALIC SMALL OMEGA
         return true;
-    if (codePoint >= 0x1d716 && codePoint <= 0x1d734)
+    if (codePoint >= 0x1D716 && codePoint <= 0x1D734) // MATHEMATICAL ITALIC EPSILON SYMBOL .. MATHEMATICAL BOLD ITALIC CAPITAL OMEGA
         return true;
-    if (codePoint >= 0x1d736 && codePoint <= 0x1d74e)
+    if (codePoint >= 0x1D736 && codePoint <= 0x1D74E) // MATHEMATICAL BOLD ITALIC SMALL ALPHA .. MATHEMATICAL BOLD ITALIC SMALL OMEGA
         return true;
-    if (codePoint >= 0x1d750 && codePoint <= 0x1d76e)
+    if (codePoint >= 0x1D750 && codePoint <= 0x1D76E) // MATHEMATICAL BOLD ITALIC EPSILON SYMBOL .. MATHEMATICAL SANS-SERIF BOLD CAPITAL OMEGA
         return true;
-    if (codePoint >= 0x1d770 && codePoint <= 0x1d788)
+    if (codePoint >= 0x1D770 && codePoint <= 0x1D788) // MATHEMATICAL SANS-SERIF BOLD SMALL ALPHA .. MATHEMATICAL SANS-SERIF BOLD SMALL OMEGA
         return true;
-    if (codePoint >= 0x1d78a && codePoint <= 0x1d7a8)
+    if (codePoint >= 0x1D78A && codePoint <= 0x1D7A8) // MATHEMATICAL SANS-SERIF BOLD EPSILON SYMBOL .. MATHEMATICAL SANS-SERIF BOLD ITALIC CAPITAL OMEGA
         return true;
-    if (codePoint >= 0x1d7aa && codePoint <= 0x1d7c2)
+    if (codePoint >= 0x1D7AA && codePoint <= 0x1D7C2) // MATHEMATICAL SANS-SERIF BOLD ITALIC SMALL ALPHA .. MATHEMATICAL SANS-SERIF BOLD ITALIC SMALL OMEGA
         return true;
-    if (codePoint >= 0x1d7c4 && codePoint <= 0x1d7cb)
+    if (codePoint >= 0x1D7C4 && codePoint <= 0x1D7CB) // MATHEMATICAL SANS-SERIF BOLD ITALIC EPSILON SYMBOL .. MATHEMATICAL BOLD SMALL DIGAMMA
         return true;
-    if (codePoint >= 0x1d7ce && codePoint <= 0x1d7ff)
+    if (codePoint >= 0x1D7CE && codePoint <= 0x1D7FF) // MATHEMATICAL BOLD DIGIT ZERO .. MATHEMATICAL MONOSPACE DIGIT NINE
         return true;
-    if (codePoint >= 0x1da00 && codePoint <= 0x1da36)
+    if (codePoint >= 0x1DA00 && codePoint <= 0x1DA36) // SIGNWRITING HEAD RIM .. SIGNWRITING AIR SUCKING IN
         return true;
-    if (codePoint >= 0x1da3b && codePoint <= 0x1da6c)
+    if (codePoint >= 0x1DA3B && codePoint <= 0x1DA6C) // SIGNWRITING MOUTH CLOSED NEUTRAL .. SIGNWRITING EXCITEMENT
         return true;
-    if (codePoint >= 0x1da75 && codePoint <= 0x1da75)
+    if (codePoint >= 0x1DA75 && codePoint <= 0x1DA75) // SIGNWRITING UPPER BODY TILTING FROM HIP JOINTS .. SIGNWRITING UPPER BODY TILTING FROM HIP JOINTS
         return true;
-    if (codePoint >= 0x1da84 && codePoint <= 0x1da84)
+    if (codePoint >= 0x1DA84 && codePoint <= 0x1DA84) // SIGNWRITING LOCATION HEAD NECK .. SIGNWRITING LOCATION HEAD NECK
         return true;
-    if (codePoint >= 0x1da9b && codePoint <= 0x1da9f)
+    if (codePoint >= 0x1DA9B && codePoint <= 0x1DA9F) // SIGNWRITING FILL MODIFIER-2 .. SIGNWRITING FILL MODIFIER-6
         return true;
-    if (codePoint >= 0x1daa1 && codePoint <= 0x1daaf)
+    if (codePoint >= 0x1DAA1 && codePoint <= 0x1DAAF) // SIGNWRITING ROTATION MODIFIER-2 .. SIGNWRITING ROTATION MODIFIER-16
         return true;
-    if (codePoint >= 0x1e000 && codePoint <= 0x1e006)
+    if (codePoint >= 0x1E000 && codePoint <= 0x1E006) // COMBINING GLAGOLITIC LETTER AZU .. COMBINING GLAGOLITIC LETTER ZHIVETE
         return true;
-    if (codePoint >= 0x1e008 && codePoint <= 0x1e018)
+    if (codePoint >= 0x1E008 && codePoint <= 0x1E018) // COMBINING GLAGOLITIC LETTER ZEMLJA .. COMBINING GLAGOLITIC LETTER HERU
         return true;
-    if (codePoint >= 0x1e01b && codePoint <= 0x1e021)
+    if (codePoint >= 0x1E01B && codePoint <= 0x1E021) // COMBINING GLAGOLITIC LETTER SHTA .. COMBINING GLAGOLITIC LETTER YATI
         return true;
-    if (codePoint >= 0x1e023 && codePoint <= 0x1e024)
+    if (codePoint >= 0x1E023 && codePoint <= 0x1E024) // COMBINING GLAGOLITIC LETTER YU .. COMBINING GLAGOLITIC LETTER SMALL YUS
         return true;
-    if (codePoint >= 0x1e026 && codePoint <= 0x1e02a)
+    if (codePoint >= 0x1E026 && codePoint <= 0x1E02A) // COMBINING GLAGOLITIC LETTER YO .. COMBINING GLAGOLITIC LETTER FITA
         return true;
-    if (codePoint >= 0x1e800 && codePoint <= 0x1e8c4)
+    if (codePoint >= 0x1E800 && codePoint <= 0x1E8C4) // MENDE KIKAKUI SYLLABLE M001 KI .. MENDE KIKAKUI SYLLABLE M060 NYON
         return true;
-    if (codePoint >= 0x1e8d0 && codePoint <= 0x1e8d6)
+    if (codePoint >= 0x1E8D0 && codePoint <= 0x1E8D6) // MENDE KIKAKUI COMBINING NUMBER TEENS .. MENDE KIKAKUI COMBINING NUMBER MILLIONS
         return true;
-    if (codePoint >= 0x1e900 && codePoint <= 0x1e94a)
+    if (codePoint >= 0x1E900 && codePoint <= 0x1E94A) // ADLAM CAPITAL LETTER ALIF .. ADLAM NUKTA
         return true;
-    if (codePoint >= 0x1e950 && codePoint <= 0x1e959)
+    if (codePoint >= 0x1E950 && codePoint <= 0x1E959) // ADLAM DIGIT ZERO .. ADLAM DIGIT NINE
         return true;
-    if (codePoint >= 0x1ee00 && codePoint <= 0x1ee03)
+    if (codePoint >= 0x1EE00 && codePoint <= 0x1EE03) // ARABIC MATHEMATICAL ALEF .. ARABIC MATHEMATICAL DAL
         return true;
-    if (codePoint >= 0x1ee05 && codePoint <= 0x1ee1f)
+    if (codePoint >= 0x1EE05 && codePoint <= 0x1EE1F) // ARABIC MATHEMATICAL WAW .. ARABIC MATHEMATICAL DOTLESS QAF
         return true;
-    if (codePoint >= 0x1ee21 && codePoint <= 0x1ee22)
+    if (codePoint >= 0x1EE21 && codePoint <= 0x1EE22) // ARABIC MATHEMATICAL INITIAL BEH .. ARABIC MATHEMATICAL INITIAL JEEM
         return true;
-    if (codePoint >= 0x1ee24 && codePoint <= 0x1ee24)
+    if (codePoint >= 0x1EE24 && codePoint <= 0x1EE24) // ARABIC MATHEMATICAL INITIAL HEH .. ARABIC MATHEMATICAL INITIAL HEH
         return true;
-    if (codePoint >= 0x1ee27 && codePoint <= 0x1ee27)
+    if (codePoint >= 0x1EE27 && codePoint <= 0x1EE27) // ARABIC MATHEMATICAL INITIAL HAH .. ARABIC MATHEMATICAL INITIAL HAH
         return true;
-    if (codePoint >= 0x1ee29 && codePoint <= 0x1ee32)
+    if (codePoint >= 0x1EE29 && codePoint <= 0x1EE32) // ARABIC MATHEMATICAL INITIAL YEH .. ARABIC MATHEMATICAL INITIAL QAF
         return true;
-    if (codePoint >= 0x1ee34 && codePoint <= 0x1ee37)
+    if (codePoint >= 0x1EE34 && codePoint <= 0x1EE37) // ARABIC MATHEMATICAL INITIAL SHEEN .. ARABIC MATHEMATICAL INITIAL KHAH
         return true;
-    if (codePoint >= 0x1ee39 && codePoint <= 0x1ee39)
+    if (codePoint >= 0x1EE39 && codePoint <= 0x1EE39) // ARABIC MATHEMATICAL INITIAL DAD .. ARABIC MATHEMATICAL INITIAL DAD
         return true;
-    if (codePoint >= 0x1ee3b && codePoint <= 0x1ee3b)
+    if (codePoint >= 0x1EE3B && codePoint <= 0x1EE3B) // ARABIC MATHEMATICAL INITIAL GHAIN .. ARABIC MATHEMATICAL INITIAL GHAIN
         return true;
-    if (codePoint >= 0x1ee42 && codePoint <= 0x1ee42)
+    if (codePoint >= 0x1EE42 && codePoint <= 0x1EE42) // ARABIC MATHEMATICAL TAILED JEEM .. ARABIC MATHEMATICAL TAILED JEEM
         return true;
-    if (codePoint >= 0x1ee47 && codePoint <= 0x1ee47)
+    if (codePoint >= 0x1EE47 && codePoint <= 0x1EE47) // ARABIC MATHEMATICAL TAILED HAH .. ARABIC MATHEMATICAL TAILED HAH
         return true;
-    if (codePoint >= 0x1ee49 && codePoint <= 0x1ee49)
+    if (codePoint >= 0x1EE49 && codePoint <= 0x1EE49) // ARABIC MATHEMATICAL TAILED YEH .. ARABIC MATHEMATICAL TAILED YEH
         return true;
-    if (codePoint >= 0x1ee4b && codePoint <= 0x1ee4b)
+    if (codePoint >= 0x1EE4B && codePoint <= 0x1EE4B) // ARABIC MATHEMATICAL TAILED LAM .. ARABIC MATHEMATICAL TAILED LAM
         return true;
-    if (codePoint >= 0x1ee4d && codePoint <= 0x1ee4f)
+    if (codePoint >= 0x1EE4D && codePoint <= 0x1EE4F) // ARABIC MATHEMATICAL TAILED NOON .. ARABIC MATHEMATICAL TAILED AIN
         return true;
-    if (codePoint >= 0x1ee51 && codePoint <= 0x1ee52)
+    if (codePoint >= 0x1EE51 && codePoint <= 0x1EE52) // ARABIC MATHEMATICAL TAILED SAD .. ARABIC MATHEMATICAL TAILED QAF
         return true;
-    if (codePoint >= 0x1ee54 && codePoint <= 0x1ee54)
+    if (codePoint >= 0x1EE54 && codePoint <= 0x1EE54) // ARABIC MATHEMATICAL TAILED SHEEN .. ARABIC MATHEMATICAL TAILED SHEEN
         return true;
-    if (codePoint >= 0x1ee57 && codePoint <= 0x1ee57)
+    if (codePoint >= 0x1EE57 && codePoint <= 0x1EE57) // ARABIC MATHEMATICAL TAILED KHAH .. ARABIC MATHEMATICAL TAILED KHAH
         return true;
-    if (codePoint >= 0x1ee59 && codePoint <= 0x1ee59)
+    if (codePoint >= 0x1EE59 && codePoint <= 0x1EE59) // ARABIC MATHEMATICAL TAILED DAD .. ARABIC MATHEMATICAL TAILED DAD
         return true;
-    if (codePoint >= 0x1ee5b && codePoint <= 0x1ee5b)
+    if (codePoint >= 0x1EE5B && codePoint <= 0x1EE5B) // ARABIC MATHEMATICAL TAILED GHAIN .. ARABIC MATHEMATICAL TAILED GHAIN
         return true;
-    if (codePoint >= 0x1ee5d && codePoint <= 0x1ee5d)
+    if (codePoint >= 0x1EE5D && codePoint <= 0x1EE5D) // ARABIC MATHEMATICAL TAILED DOTLESS NOON .. ARABIC MATHEMATICAL TAILED DOTLESS NOON
         return true;
-    if (codePoint >= 0x1ee5f && codePoint <= 0x1ee5f)
+    if (codePoint >= 0x1EE5F && codePoint <= 0x1EE5F) // ARABIC MATHEMATICAL TAILED DOTLESS QAF .. ARABIC MATHEMATICAL TAILED DOTLESS QAF
         return true;
-    if (codePoint >= 0x1ee61 && codePoint <= 0x1ee62)
+    if (codePoint >= 0x1EE61 && codePoint <= 0x1EE62) // ARABIC MATHEMATICAL STRETCHED BEH .. ARABIC MATHEMATICAL STRETCHED JEEM
         return true;
-    if (codePoint >= 0x1ee64 && codePoint <= 0x1ee64)
+    if (codePoint >= 0x1EE64 && codePoint <= 0x1EE64) // ARABIC MATHEMATICAL STRETCHED HEH .. ARABIC MATHEMATICAL STRETCHED HEH
         return true;
-    if (codePoint >= 0x1ee67 && codePoint <= 0x1ee6a)
+    if (codePoint >= 0x1EE67 && codePoint <= 0x1EE6A) // ARABIC MATHEMATICAL STRETCHED HAH .. ARABIC MATHEMATICAL STRETCHED KAF
         return true;
-    if (codePoint >= 0x1ee6c && codePoint <= 0x1ee72)
+    if (codePoint >= 0x1EE6C && codePoint <= 0x1EE72) // ARABIC MATHEMATICAL STRETCHED MEEM .. ARABIC MATHEMATICAL STRETCHED QAF
         return true;
-    if (codePoint >= 0x1ee74 && codePoint <= 0x1ee77)
+    if (codePoint >= 0x1EE74 && codePoint <= 0x1EE77) // ARABIC MATHEMATICAL STRETCHED SHEEN .. ARABIC MATHEMATICAL STRETCHED KHAH
         return true;
-    if (codePoint >= 0x1ee79 && codePoint <= 0x1ee7c)
+    if (codePoint >= 0x1EE79 && codePoint <= 0x1EE7C) // ARABIC MATHEMATICAL STRETCHED DAD .. ARABIC MATHEMATICAL STRETCHED DOTLESS BEH
         return true;
-    if (codePoint >= 0x1ee7e && codePoint <= 0x1ee7e)
+    if (codePoint >= 0x1EE7E && codePoint <= 0x1EE7E) // ARABIC MATHEMATICAL STRETCHED DOTLESS FEH .. ARABIC MATHEMATICAL STRETCHED DOTLESS FEH
         return true;
-    if (codePoint >= 0x1ee80 && codePoint <= 0x1ee89)
+    if (codePoint >= 0x1EE80 && codePoint <= 0x1EE89) // ARABIC MATHEMATICAL LOOPED ALEF .. ARABIC MATHEMATICAL LOOPED YEH
         return true;
-    if (codePoint >= 0x1ee8b && codePoint <= 0x1ee9b)
+    if (codePoint >= 0x1EE8B && codePoint <= 0x1EE9B) // ARABIC MATHEMATICAL LOOPED LAM .. ARABIC MATHEMATICAL LOOPED GHAIN
         return true;
-    if (codePoint >= 0x1eea1 && codePoint <= 0x1eea3)
+    if (codePoint >= 0x1EEA1 && codePoint <= 0x1EEA3) // ARABIC MATHEMATICAL DOUBLE-STRUCK BEH .. ARABIC MATHEMATICAL DOUBLE-STRUCK DAL
         return true;
-    if (codePoint >= 0x1eea5 && codePoint <= 0x1eea9)
+    if (codePoint >= 0x1EEA5 && codePoint <= 0x1EEA9) // ARABIC MATHEMATICAL DOUBLE-STRUCK WAW .. ARABIC MATHEMATICAL DOUBLE-STRUCK YEH
         return true;
-    if (codePoint >= 0x1eeab && codePoint <= 0x1eebb)
+    if (codePoint >= 0x1EEAB && codePoint <= 0x1EEBB) // ARABIC MATHEMATICAL DOUBLE-STRUCK LAM .. ARABIC MATHEMATICAL DOUBLE-STRUCK GHAIN
         return true;
-    if (codePoint >= 0x20000 && codePoint <= 0x2a6d6)
+    if (codePoint >= 0x20000 && codePoint <= 0x2A6D6) // CJK Ideograph Extension B .. CJK Ideograph Extension B
         return true;
-    if (codePoint >= 0x2a700 && codePoint <= 0x2b734)
+    if (codePoint >= 0x2A700 && codePoint <= 0x2B734) // CJK Ideograph Extension C .. CJK Ideograph Extension C
         return true;
-    if (codePoint >= 0x2b740 && codePoint <= 0x2b81d)
+    if (codePoint >= 0x2B740 && codePoint <= 0x2B81D) // CJK Ideograph Extension D .. CJK Ideograph Extension D
         return true;
-    if (codePoint >= 0x2b820 && codePoint <= 0x2cea1)
+    if (codePoint >= 0x2B820 && codePoint <= 0x2CEA1) // CJK Ideograph Extension E .. CJK Ideograph Extension E
         return true;
-    if (codePoint >= 0x2f800 && codePoint <= 0x2fa1d)
+    if (codePoint >= 0x2F800 && codePoint <= 0x2FA1D) // CJK COMPATIBILITY IDEOGRAPH-2F800 .. CJK COMPATIBILITY IDEOGRAPH-2FA1D
         return true;
-    if (codePoint >= 0xe0100 && codePoint <= 0xe01ef)
+    if (codePoint >= 0xE0100 && codePoint <= 0xE01EF) // VARIATION SELECTOR-17 .. VARIATION SELECTOR-256
         return true;
     return false;
+}
+
+bool
+js::unicode::CanUpperCaseSpecialCasing(char16_t ch)
+{
+    if (ch < 0x00DF || ch > 0xFB17)
+        return false;
+    if (ch <= 0x0587) {
+        // U+00DF LATIN SMALL LETTER SHARP S
+        // U+0149 LATIN SMALL LETTER N PRECEDED BY APOSTROPHE (LATIN SMALL LETTER APOSTROPHE N)
+        // U+01F0 LATIN SMALL LETTER J WITH CARON (LATIN SMALL LETTER J HACEK)
+        // U+0390 GREEK SMALL LETTER IOTA WITH DIALYTIKA AND TONOS (GREEK SMALL LETTER IOTA DIAERESIS TONOS)
+        // U+03B0 GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND TONOS (GREEK SMALL LETTER UPSILON DIAERESIS TONOS)
+        // U+0587 ARMENIAN SMALL LIGATURE ECH YIWN
+        return ch == 0x00DF || ch == 0x0149 || ch == 0x01F0 || ch == 0x0390 || ch == 0x03B0 ||
+               ch == 0x0587;
+    }
+    if (ch <= 0x1FFC) {
+        // U+1E96 LATIN SMALL LETTER H WITH LINE BELOW .. U+1E9A LATIN SMALL LETTER A WITH RIGHT HALF RING
+        if (ch <= 0x1E9A)
+            return ch >= 0x1E96;
+        if (ch < 0x1F50)
+            return false;
+        // U+1F50 GREEK SMALL LETTER UPSILON WITH PSILI
+        // U+1F52 GREEK SMALL LETTER UPSILON WITH PSILI AND VARIA
+        // U+1F54 GREEK SMALL LETTER UPSILON WITH PSILI AND OXIA
+        // U+1F56 GREEK SMALL LETTER UPSILON WITH PSILI AND PERISPOMENI
+        // U+1F80 GREEK SMALL LETTER ALPHA WITH PSILI AND YPOGEGRAMMENI .. U+1FAF GREEK CAPITAL LETTER OMEGA WITH DASIA AND PERISPOMENI AND PROSGEGRAMMENI
+        // U+1FB2 GREEK SMALL LETTER ALPHA WITH VARIA AND YPOGEGRAMMENI .. U+1FB4 GREEK SMALL LETTER ALPHA WITH OXIA AND YPOGEGRAMMENI
+        // U+1FB6 GREEK SMALL LETTER ALPHA WITH PERISPOMENI .. U+1FB7 GREEK SMALL LETTER ALPHA WITH PERISPOMENI AND YPOGEGRAMMENI
+        // U+1FBC GREEK CAPITAL LETTER ALPHA WITH PROSGEGRAMMENI
+        // U+1FC2 GREEK SMALL LETTER ETA WITH VARIA AND YPOGEGRAMMENI .. U+1FC4 GREEK SMALL LETTER ETA WITH OXIA AND YPOGEGRAMMENI
+        // U+1FC6 GREEK SMALL LETTER ETA WITH PERISPOMENI .. U+1FC7 GREEK SMALL LETTER ETA WITH PERISPOMENI AND YPOGEGRAMMENI
+        // U+1FCC GREEK CAPITAL LETTER ETA WITH PROSGEGRAMMENI
+        // U+1FD2 GREEK SMALL LETTER IOTA WITH DIALYTIKA AND VARIA .. U+1FD3 GREEK SMALL LETTER IOTA WITH DIALYTIKA AND OXIA
+        // U+1FD6 GREEK SMALL LETTER IOTA WITH PERISPOMENI .. U+1FD7 GREEK SMALL LETTER IOTA WITH DIALYTIKA AND PERISPOMENI
+        // U+1FE2 GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND VARIA .. U+1FE4 GREEK SMALL LETTER RHO WITH PSILI
+        // U+1FE6 GREEK SMALL LETTER UPSILON WITH PERISPOMENI .. U+1FE7 GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND PERISPOMENI
+        // U+1FF2 GREEK SMALL LETTER OMEGA WITH VARIA AND YPOGEGRAMMENI .. U+1FF4 GREEK SMALL LETTER OMEGA WITH OXIA AND YPOGEGRAMMENI
+        // U+1FF6 GREEK SMALL LETTER OMEGA WITH PERISPOMENI .. U+1FF7 GREEK SMALL LETTER OMEGA WITH PERISPOMENI AND YPOGEGRAMMENI
+        // U+1FFC GREEK CAPITAL LETTER OMEGA WITH PROSGEGRAMMENI
+        return ch == 0x1F50 || ch == 0x1F52 || ch == 0x1F54 || ch == 0x1F56 ||
+               (ch >= 0x1F80 && ch <= 0x1FAF) || (ch >= 0x1FB2 && ch <= 0x1FB4) ||
+               (ch >= 0x1FB6 && ch <= 0x1FB7) || ch == 0x1FBC || (ch >= 0x1FC2 && ch <= 0x1FC4) ||
+               (ch >= 0x1FC6 && ch <= 0x1FC7) || ch == 0x1FCC || (ch >= 0x1FD2 && ch <= 0x1FD3) ||
+               (ch >= 0x1FD6 && ch <= 0x1FD7) || (ch >= 0x1FE2 && ch <= 0x1FE4) ||
+               (ch >= 0x1FE6 && ch <= 0x1FE7) || (ch >= 0x1FF2 && ch <= 0x1FF4) ||
+               (ch >= 0x1FF6 && ch <= 0x1FF7) || ch == 0x1FFC;
+    }
+    if (ch < 0xFB00)
+        return false;
+    // U+FB00 LATIN SMALL LIGATURE FF .. U+FB06 LATIN SMALL LIGATURE ST
+    // U+FB13 ARMENIAN SMALL LIGATURE MEN NOW .. U+FB17 ARMENIAN SMALL LIGATURE MEN XEH
+    return (ch >= 0xFB00 && ch <= 0xFB06) || (ch >= 0xFB13 && ch <= 0xFB17);
+}
+
+size_t
+js::unicode::LengthUpperCaseSpecialCasing(char16_t ch)
+{
+    switch(ch) {
+      case 0x00DF: return 2; // LATIN SMALL LETTER SHARP S
+      case 0x0149: return 2; // LATIN SMALL LETTER N PRECEDED BY APOSTROPHE (LATIN SMALL LETTER APOSTROPHE N)
+      case 0x01F0: return 2; // LATIN SMALL LETTER J WITH CARON (LATIN SMALL LETTER J HACEK)
+      case 0x0390: return 3; // GREEK SMALL LETTER IOTA WITH DIALYTIKA AND TONOS (GREEK SMALL LETTER IOTA DIAERESIS TONOS)
+      case 0x03B0: return 3; // GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND TONOS (GREEK SMALL LETTER UPSILON DIAERESIS TONOS)
+      case 0x0587: return 2; // ARMENIAN SMALL LIGATURE ECH YIWN
+      case 0x1E96: return 2; // LATIN SMALL LETTER H WITH LINE BELOW
+      case 0x1E97: return 2; // LATIN SMALL LETTER T WITH DIAERESIS
+      case 0x1E98: return 2; // LATIN SMALL LETTER W WITH RING ABOVE
+      case 0x1E99: return 2; // LATIN SMALL LETTER Y WITH RING ABOVE
+      case 0x1E9A: return 2; // LATIN SMALL LETTER A WITH RIGHT HALF RING
+      case 0x1F50: return 2; // GREEK SMALL LETTER UPSILON WITH PSILI
+      case 0x1F52: return 3; // GREEK SMALL LETTER UPSILON WITH PSILI AND VARIA
+      case 0x1F54: return 3; // GREEK SMALL LETTER UPSILON WITH PSILI AND OXIA
+      case 0x1F56: return 3; // GREEK SMALL LETTER UPSILON WITH PSILI AND PERISPOMENI
+      case 0x1F80: return 2; // GREEK SMALL LETTER ALPHA WITH PSILI AND YPOGEGRAMMENI
+      case 0x1F81: return 2; // GREEK SMALL LETTER ALPHA WITH DASIA AND YPOGEGRAMMENI
+      case 0x1F82: return 2; // GREEK SMALL LETTER ALPHA WITH PSILI AND VARIA AND YPOGEGRAMMENI
+      case 0x1F83: return 2; // GREEK SMALL LETTER ALPHA WITH DASIA AND VARIA AND YPOGEGRAMMENI
+      case 0x1F84: return 2; // GREEK SMALL LETTER ALPHA WITH PSILI AND OXIA AND YPOGEGRAMMENI
+      case 0x1F85: return 2; // GREEK SMALL LETTER ALPHA WITH DASIA AND OXIA AND YPOGEGRAMMENI
+      case 0x1F86: return 2; // GREEK SMALL LETTER ALPHA WITH PSILI AND PERISPOMENI AND YPOGEGRAMMENI
+      case 0x1F87: return 2; // GREEK SMALL LETTER ALPHA WITH DASIA AND PERISPOMENI AND YPOGEGRAMMENI
+      case 0x1F88: return 2; // GREEK CAPITAL LETTER ALPHA WITH PSILI AND PROSGEGRAMMENI
+      case 0x1F89: return 2; // GREEK CAPITAL LETTER ALPHA WITH DASIA AND PROSGEGRAMMENI
+      case 0x1F8A: return 2; // GREEK CAPITAL LETTER ALPHA WITH PSILI AND VARIA AND PROSGEGRAMMENI
+      case 0x1F8B: return 2; // GREEK CAPITAL LETTER ALPHA WITH DASIA AND VARIA AND PROSGEGRAMMENI
+      case 0x1F8C: return 2; // GREEK CAPITAL LETTER ALPHA WITH PSILI AND OXIA AND PROSGEGRAMMENI
+      case 0x1F8D: return 2; // GREEK CAPITAL LETTER ALPHA WITH DASIA AND OXIA AND PROSGEGRAMMENI
+      case 0x1F8E: return 2; // GREEK CAPITAL LETTER ALPHA WITH PSILI AND PERISPOMENI AND PROSGEGRAMMENI
+      case 0x1F8F: return 2; // GREEK CAPITAL LETTER ALPHA WITH DASIA AND PERISPOMENI AND PROSGEGRAMMENI
+      case 0x1F90: return 2; // GREEK SMALL LETTER ETA WITH PSILI AND YPOGEGRAMMENI
+      case 0x1F91: return 2; // GREEK SMALL LETTER ETA WITH DASIA AND YPOGEGRAMMENI
+      case 0x1F92: return 2; // GREEK SMALL LETTER ETA WITH PSILI AND VARIA AND YPOGEGRAMMENI
+      case 0x1F93: return 2; // GREEK SMALL LETTER ETA WITH DASIA AND VARIA AND YPOGEGRAMMENI
+      case 0x1F94: return 2; // GREEK SMALL LETTER ETA WITH PSILI AND OXIA AND YPOGEGRAMMENI
+      case 0x1F95: return 2; // GREEK SMALL LETTER ETA WITH DASIA AND OXIA AND YPOGEGRAMMENI
+      case 0x1F96: return 2; // GREEK SMALL LETTER ETA WITH PSILI AND PERISPOMENI AND YPOGEGRAMMENI
+      case 0x1F97: return 2; // GREEK SMALL LETTER ETA WITH DASIA AND PERISPOMENI AND YPOGEGRAMMENI
+      case 0x1F98: return 2; // GREEK CAPITAL LETTER ETA WITH PSILI AND PROSGEGRAMMENI
+      case 0x1F99: return 2; // GREEK CAPITAL LETTER ETA WITH DASIA AND PROSGEGRAMMENI
+      case 0x1F9A: return 2; // GREEK CAPITAL LETTER ETA WITH PSILI AND VARIA AND PROSGEGRAMMENI
+      case 0x1F9B: return 2; // GREEK CAPITAL LETTER ETA WITH DASIA AND VARIA AND PROSGEGRAMMENI
+      case 0x1F9C: return 2; // GREEK CAPITAL LETTER ETA WITH PSILI AND OXIA AND PROSGEGRAMMENI
+      case 0x1F9D: return 2; // GREEK CAPITAL LETTER ETA WITH DASIA AND OXIA AND PROSGEGRAMMENI
+      case 0x1F9E: return 2; // GREEK CAPITAL LETTER ETA WITH PSILI AND PERISPOMENI AND PROSGEGRAMMENI
+      case 0x1F9F: return 2; // GREEK CAPITAL LETTER ETA WITH DASIA AND PERISPOMENI AND PROSGEGRAMMENI
+      case 0x1FA0: return 2; // GREEK SMALL LETTER OMEGA WITH PSILI AND YPOGEGRAMMENI
+      case 0x1FA1: return 2; // GREEK SMALL LETTER OMEGA WITH DASIA AND YPOGEGRAMMENI
+      case 0x1FA2: return 2; // GREEK SMALL LETTER OMEGA WITH PSILI AND VARIA AND YPOGEGRAMMENI
+      case 0x1FA3: return 2; // GREEK SMALL LETTER OMEGA WITH DASIA AND VARIA AND YPOGEGRAMMENI
+      case 0x1FA4: return 2; // GREEK SMALL LETTER OMEGA WITH PSILI AND OXIA AND YPOGEGRAMMENI
+      case 0x1FA5: return 2; // GREEK SMALL LETTER OMEGA WITH DASIA AND OXIA AND YPOGEGRAMMENI
+      case 0x1FA6: return 2; // GREEK SMALL LETTER OMEGA WITH PSILI AND PERISPOMENI AND YPOGEGRAMMENI
+      case 0x1FA7: return 2; // GREEK SMALL LETTER OMEGA WITH DASIA AND PERISPOMENI AND YPOGEGRAMMENI
+      case 0x1FA8: return 2; // GREEK CAPITAL LETTER OMEGA WITH PSILI AND PROSGEGRAMMENI
+      case 0x1FA9: return 2; // GREEK CAPITAL LETTER OMEGA WITH DASIA AND PROSGEGRAMMENI
+      case 0x1FAA: return 2; // GREEK CAPITAL LETTER OMEGA WITH PSILI AND VARIA AND PROSGEGRAMMENI
+      case 0x1FAB: return 2; // GREEK CAPITAL LETTER OMEGA WITH DASIA AND VARIA AND PROSGEGRAMMENI
+      case 0x1FAC: return 2; // GREEK CAPITAL LETTER OMEGA WITH PSILI AND OXIA AND PROSGEGRAMMENI
+      case 0x1FAD: return 2; // GREEK CAPITAL LETTER OMEGA WITH DASIA AND OXIA AND PROSGEGRAMMENI
+      case 0x1FAE: return 2; // GREEK CAPITAL LETTER OMEGA WITH PSILI AND PERISPOMENI AND PROSGEGRAMMENI
+      case 0x1FAF: return 2; // GREEK CAPITAL LETTER OMEGA WITH DASIA AND PERISPOMENI AND PROSGEGRAMMENI
+      case 0x1FB2: return 2; // GREEK SMALL LETTER ALPHA WITH VARIA AND YPOGEGRAMMENI
+      case 0x1FB3: return 2; // GREEK SMALL LETTER ALPHA WITH YPOGEGRAMMENI
+      case 0x1FB4: return 2; // GREEK SMALL LETTER ALPHA WITH OXIA AND YPOGEGRAMMENI
+      case 0x1FB6: return 2; // GREEK SMALL LETTER ALPHA WITH PERISPOMENI
+      case 0x1FB7: return 3; // GREEK SMALL LETTER ALPHA WITH PERISPOMENI AND YPOGEGRAMMENI
+      case 0x1FBC: return 2; // GREEK CAPITAL LETTER ALPHA WITH PROSGEGRAMMENI
+      case 0x1FC2: return 2; // GREEK SMALL LETTER ETA WITH VARIA AND YPOGEGRAMMENI
+      case 0x1FC3: return 2; // GREEK SMALL LETTER ETA WITH YPOGEGRAMMENI
+      case 0x1FC4: return 2; // GREEK SMALL LETTER ETA WITH OXIA AND YPOGEGRAMMENI
+      case 0x1FC6: return 2; // GREEK SMALL LETTER ETA WITH PERISPOMENI
+      case 0x1FC7: return 3; // GREEK SMALL LETTER ETA WITH PERISPOMENI AND YPOGEGRAMMENI
+      case 0x1FCC: return 2; // GREEK CAPITAL LETTER ETA WITH PROSGEGRAMMENI
+      case 0x1FD2: return 3; // GREEK SMALL LETTER IOTA WITH DIALYTIKA AND VARIA
+      case 0x1FD3: return 3; // GREEK SMALL LETTER IOTA WITH DIALYTIKA AND OXIA
+      case 0x1FD6: return 2; // GREEK SMALL LETTER IOTA WITH PERISPOMENI
+      case 0x1FD7: return 3; // GREEK SMALL LETTER IOTA WITH DIALYTIKA AND PERISPOMENI
+      case 0x1FE2: return 3; // GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND VARIA
+      case 0x1FE3: return 3; // GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND OXIA
+      case 0x1FE4: return 2; // GREEK SMALL LETTER RHO WITH PSILI
+      case 0x1FE6: return 2; // GREEK SMALL LETTER UPSILON WITH PERISPOMENI
+      case 0x1FE7: return 3; // GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND PERISPOMENI
+      case 0x1FF2: return 2; // GREEK SMALL LETTER OMEGA WITH VARIA AND YPOGEGRAMMENI
+      case 0x1FF3: return 2; // GREEK SMALL LETTER OMEGA WITH YPOGEGRAMMENI
+      case 0x1FF4: return 2; // GREEK SMALL LETTER OMEGA WITH OXIA AND YPOGEGRAMMENI
+      case 0x1FF6: return 2; // GREEK SMALL LETTER OMEGA WITH PERISPOMENI
+      case 0x1FF7: return 3; // GREEK SMALL LETTER OMEGA WITH PERISPOMENI AND YPOGEGRAMMENI
+      case 0x1FFC: return 2; // GREEK CAPITAL LETTER OMEGA WITH PROSGEGRAMMENI
+      case 0xFB00: return 2; // LATIN SMALL LIGATURE FF
+      case 0xFB01: return 2; // LATIN SMALL LIGATURE FI
+      case 0xFB02: return 2; // LATIN SMALL LIGATURE FL
+      case 0xFB03: return 3; // LATIN SMALL LIGATURE FFI
+      case 0xFB04: return 3; // LATIN SMALL LIGATURE FFL
+      case 0xFB05: return 2; // LATIN SMALL LIGATURE LONG S T
+      case 0xFB06: return 2; // LATIN SMALL LIGATURE ST
+      case 0xFB13: return 2; // ARMENIAN SMALL LIGATURE MEN NOW
+      case 0xFB14: return 2; // ARMENIAN SMALL LIGATURE MEN ECH
+      case 0xFB15: return 2; // ARMENIAN SMALL LIGATURE MEN INI
+      case 0xFB16: return 2; // ARMENIAN SMALL LIGATURE VEW NOW
+      case 0xFB17: return 2; // ARMENIAN SMALL LIGATURE MEN XEH
+    }
+
+    MOZ_ASSERT_UNREACHABLE("Bad character input.");
+    return 0;
+}
+
+void
+js::unicode::AppendUpperCaseSpecialCasing(char16_t ch, char16_t* elements, size_t* index)
+{
+    switch(ch) {
+      case 0x00DF: // LATIN SMALL LETTER SHARP S
+        elements[(*index)++] = 0x0053; // LATIN CAPITAL LETTER S
+        elements[(*index)++] = 0x0053; // LATIN CAPITAL LETTER S
+        return;
+      case 0x0149: // LATIN SMALL LETTER N PRECEDED BY APOSTROPHE (LATIN SMALL LETTER APOSTROPHE N)
+        elements[(*index)++] = 0x02BC; // MODIFIER LETTER APOSTROPHE
+        elements[(*index)++] = 0x004E; // LATIN CAPITAL LETTER N
+        return;
+      case 0x01F0: // LATIN SMALL LETTER J WITH CARON (LATIN SMALL LETTER J HACEK)
+        elements[(*index)++] = 0x004A; // LATIN CAPITAL LETTER J
+        elements[(*index)++] = 0x030C; // COMBINING CARON (NON-SPACING HACEK)
+        return;
+      case 0x0390: // GREEK SMALL LETTER IOTA WITH DIALYTIKA AND TONOS (GREEK SMALL LETTER IOTA DIAERESIS TONOS)
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        elements[(*index)++] = 0x0308; // COMBINING DIAERESIS (NON-SPACING DIAERESIS)
+        elements[(*index)++] = 0x0301; // COMBINING ACUTE ACCENT (NON-SPACING ACUTE)
+        return;
+      case 0x03B0: // GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND TONOS (GREEK SMALL LETTER UPSILON DIAERESIS TONOS)
+        elements[(*index)++] = 0x03A5; // GREEK CAPITAL LETTER UPSILON
+        elements[(*index)++] = 0x0308; // COMBINING DIAERESIS (NON-SPACING DIAERESIS)
+        elements[(*index)++] = 0x0301; // COMBINING ACUTE ACCENT (NON-SPACING ACUTE)
+        return;
+      case 0x0587: // ARMENIAN SMALL LIGATURE ECH YIWN
+        elements[(*index)++] = 0x0535; // ARMENIAN CAPITAL LETTER ECH
+        elements[(*index)++] = 0x0552; // ARMENIAN CAPITAL LETTER YIWN
+        return;
+      case 0x1E96: // LATIN SMALL LETTER H WITH LINE BELOW
+        elements[(*index)++] = 0x0048; // LATIN CAPITAL LETTER H
+        elements[(*index)++] = 0x0331; // COMBINING MACRON BELOW (NON-SPACING MACRON BELOW)
+        return;
+      case 0x1E97: // LATIN SMALL LETTER T WITH DIAERESIS
+        elements[(*index)++] = 0x0054; // LATIN CAPITAL LETTER T
+        elements[(*index)++] = 0x0308; // COMBINING DIAERESIS (NON-SPACING DIAERESIS)
+        return;
+      case 0x1E98: // LATIN SMALL LETTER W WITH RING ABOVE
+        elements[(*index)++] = 0x0057; // LATIN CAPITAL LETTER W
+        elements[(*index)++] = 0x030A; // COMBINING RING ABOVE (NON-SPACING RING ABOVE)
+        return;
+      case 0x1E99: // LATIN SMALL LETTER Y WITH RING ABOVE
+        elements[(*index)++] = 0x0059; // LATIN CAPITAL LETTER Y
+        elements[(*index)++] = 0x030A; // COMBINING RING ABOVE (NON-SPACING RING ABOVE)
+        return;
+      case 0x1E9A: // LATIN SMALL LETTER A WITH RIGHT HALF RING
+        elements[(*index)++] = 0x0041; // LATIN CAPITAL LETTER A
+        elements[(*index)++] = 0x02BE; // MODIFIER LETTER RIGHT HALF RING
+        return;
+      case 0x1F50: // GREEK SMALL LETTER UPSILON WITH PSILI
+        elements[(*index)++] = 0x03A5; // GREEK CAPITAL LETTER UPSILON
+        elements[(*index)++] = 0x0313; // COMBINING COMMA ABOVE (NON-SPACING COMMA ABOVE)
+        return;
+      case 0x1F52: // GREEK SMALL LETTER UPSILON WITH PSILI AND VARIA
+        elements[(*index)++] = 0x03A5; // GREEK CAPITAL LETTER UPSILON
+        elements[(*index)++] = 0x0313; // COMBINING COMMA ABOVE (NON-SPACING COMMA ABOVE)
+        elements[(*index)++] = 0x0300; // COMBINING GRAVE ACCENT (NON-SPACING GRAVE)
+        return;
+      case 0x1F54: // GREEK SMALL LETTER UPSILON WITH PSILI AND OXIA
+        elements[(*index)++] = 0x03A5; // GREEK CAPITAL LETTER UPSILON
+        elements[(*index)++] = 0x0313; // COMBINING COMMA ABOVE (NON-SPACING COMMA ABOVE)
+        elements[(*index)++] = 0x0301; // COMBINING ACUTE ACCENT (NON-SPACING ACUTE)
+        return;
+      case 0x1F56: // GREEK SMALL LETTER UPSILON WITH PSILI AND PERISPOMENI
+        elements[(*index)++] = 0x03A5; // GREEK CAPITAL LETTER UPSILON
+        elements[(*index)++] = 0x0313; // COMBINING COMMA ABOVE (NON-SPACING COMMA ABOVE)
+        elements[(*index)++] = 0x0342; // COMBINING GREEK PERISPOMENI
+        return;
+      case 0x1F80: // GREEK SMALL LETTER ALPHA WITH PSILI AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F08; // GREEK CAPITAL LETTER ALPHA WITH PSILI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F81: // GREEK SMALL LETTER ALPHA WITH DASIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F09; // GREEK CAPITAL LETTER ALPHA WITH DASIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F82: // GREEK SMALL LETTER ALPHA WITH PSILI AND VARIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F0A; // GREEK CAPITAL LETTER ALPHA WITH PSILI AND VARIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F83: // GREEK SMALL LETTER ALPHA WITH DASIA AND VARIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F0B; // GREEK CAPITAL LETTER ALPHA WITH DASIA AND VARIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F84: // GREEK SMALL LETTER ALPHA WITH PSILI AND OXIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F0C; // GREEK CAPITAL LETTER ALPHA WITH PSILI AND OXIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F85: // GREEK SMALL LETTER ALPHA WITH DASIA AND OXIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F0D; // GREEK CAPITAL LETTER ALPHA WITH DASIA AND OXIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F86: // GREEK SMALL LETTER ALPHA WITH PSILI AND PERISPOMENI AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F0E; // GREEK CAPITAL LETTER ALPHA WITH PSILI AND PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F87: // GREEK SMALL LETTER ALPHA WITH DASIA AND PERISPOMENI AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F0F; // GREEK CAPITAL LETTER ALPHA WITH DASIA AND PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F88: // GREEK CAPITAL LETTER ALPHA WITH PSILI AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F08; // GREEK CAPITAL LETTER ALPHA WITH PSILI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F89: // GREEK CAPITAL LETTER ALPHA WITH DASIA AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F09; // GREEK CAPITAL LETTER ALPHA WITH DASIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F8A: // GREEK CAPITAL LETTER ALPHA WITH PSILI AND VARIA AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F0A; // GREEK CAPITAL LETTER ALPHA WITH PSILI AND VARIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F8B: // GREEK CAPITAL LETTER ALPHA WITH DASIA AND VARIA AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F0B; // GREEK CAPITAL LETTER ALPHA WITH DASIA AND VARIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F8C: // GREEK CAPITAL LETTER ALPHA WITH PSILI AND OXIA AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F0C; // GREEK CAPITAL LETTER ALPHA WITH PSILI AND OXIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F8D: // GREEK CAPITAL LETTER ALPHA WITH DASIA AND OXIA AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F0D; // GREEK CAPITAL LETTER ALPHA WITH DASIA AND OXIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F8E: // GREEK CAPITAL LETTER ALPHA WITH PSILI AND PERISPOMENI AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F0E; // GREEK CAPITAL LETTER ALPHA WITH PSILI AND PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F8F: // GREEK CAPITAL LETTER ALPHA WITH DASIA AND PERISPOMENI AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F0F; // GREEK CAPITAL LETTER ALPHA WITH DASIA AND PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F90: // GREEK SMALL LETTER ETA WITH PSILI AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F28; // GREEK CAPITAL LETTER ETA WITH PSILI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F91: // GREEK SMALL LETTER ETA WITH DASIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F29; // GREEK CAPITAL LETTER ETA WITH DASIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F92: // GREEK SMALL LETTER ETA WITH PSILI AND VARIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F2A; // GREEK CAPITAL LETTER ETA WITH PSILI AND VARIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F93: // GREEK SMALL LETTER ETA WITH DASIA AND VARIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F2B; // GREEK CAPITAL LETTER ETA WITH DASIA AND VARIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F94: // GREEK SMALL LETTER ETA WITH PSILI AND OXIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F2C; // GREEK CAPITAL LETTER ETA WITH PSILI AND OXIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F95: // GREEK SMALL LETTER ETA WITH DASIA AND OXIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F2D; // GREEK CAPITAL LETTER ETA WITH DASIA AND OXIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F96: // GREEK SMALL LETTER ETA WITH PSILI AND PERISPOMENI AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F2E; // GREEK CAPITAL LETTER ETA WITH PSILI AND PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F97: // GREEK SMALL LETTER ETA WITH DASIA AND PERISPOMENI AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F2F; // GREEK CAPITAL LETTER ETA WITH DASIA AND PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F98: // GREEK CAPITAL LETTER ETA WITH PSILI AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F28; // GREEK CAPITAL LETTER ETA WITH PSILI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F99: // GREEK CAPITAL LETTER ETA WITH DASIA AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F29; // GREEK CAPITAL LETTER ETA WITH DASIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F9A: // GREEK CAPITAL LETTER ETA WITH PSILI AND VARIA AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F2A; // GREEK CAPITAL LETTER ETA WITH PSILI AND VARIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F9B: // GREEK CAPITAL LETTER ETA WITH DASIA AND VARIA AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F2B; // GREEK CAPITAL LETTER ETA WITH DASIA AND VARIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F9C: // GREEK CAPITAL LETTER ETA WITH PSILI AND OXIA AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F2C; // GREEK CAPITAL LETTER ETA WITH PSILI AND OXIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F9D: // GREEK CAPITAL LETTER ETA WITH DASIA AND OXIA AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F2D; // GREEK CAPITAL LETTER ETA WITH DASIA AND OXIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F9E: // GREEK CAPITAL LETTER ETA WITH PSILI AND PERISPOMENI AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F2E; // GREEK CAPITAL LETTER ETA WITH PSILI AND PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1F9F: // GREEK CAPITAL LETTER ETA WITH DASIA AND PERISPOMENI AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F2F; // GREEK CAPITAL LETTER ETA WITH DASIA AND PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FA0: // GREEK SMALL LETTER OMEGA WITH PSILI AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F68; // GREEK CAPITAL LETTER OMEGA WITH PSILI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FA1: // GREEK SMALL LETTER OMEGA WITH DASIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F69; // GREEK CAPITAL LETTER OMEGA WITH DASIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FA2: // GREEK SMALL LETTER OMEGA WITH PSILI AND VARIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F6A; // GREEK CAPITAL LETTER OMEGA WITH PSILI AND VARIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FA3: // GREEK SMALL LETTER OMEGA WITH DASIA AND VARIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F6B; // GREEK CAPITAL LETTER OMEGA WITH DASIA AND VARIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FA4: // GREEK SMALL LETTER OMEGA WITH PSILI AND OXIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F6C; // GREEK CAPITAL LETTER OMEGA WITH PSILI AND OXIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FA5: // GREEK SMALL LETTER OMEGA WITH DASIA AND OXIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F6D; // GREEK CAPITAL LETTER OMEGA WITH DASIA AND OXIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FA6: // GREEK SMALL LETTER OMEGA WITH PSILI AND PERISPOMENI AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F6E; // GREEK CAPITAL LETTER OMEGA WITH PSILI AND PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FA7: // GREEK SMALL LETTER OMEGA WITH DASIA AND PERISPOMENI AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1F6F; // GREEK CAPITAL LETTER OMEGA WITH DASIA AND PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FA8: // GREEK CAPITAL LETTER OMEGA WITH PSILI AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F68; // GREEK CAPITAL LETTER OMEGA WITH PSILI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FA9: // GREEK CAPITAL LETTER OMEGA WITH DASIA AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F69; // GREEK CAPITAL LETTER OMEGA WITH DASIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FAA: // GREEK CAPITAL LETTER OMEGA WITH PSILI AND VARIA AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F6A; // GREEK CAPITAL LETTER OMEGA WITH PSILI AND VARIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FAB: // GREEK CAPITAL LETTER OMEGA WITH DASIA AND VARIA AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F6B; // GREEK CAPITAL LETTER OMEGA WITH DASIA AND VARIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FAC: // GREEK CAPITAL LETTER OMEGA WITH PSILI AND OXIA AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F6C; // GREEK CAPITAL LETTER OMEGA WITH PSILI AND OXIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FAD: // GREEK CAPITAL LETTER OMEGA WITH DASIA AND OXIA AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F6D; // GREEK CAPITAL LETTER OMEGA WITH DASIA AND OXIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FAE: // GREEK CAPITAL LETTER OMEGA WITH PSILI AND PERISPOMENI AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F6E; // GREEK CAPITAL LETTER OMEGA WITH PSILI AND PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FAF: // GREEK CAPITAL LETTER OMEGA WITH DASIA AND PERISPOMENI AND PROSGEGRAMMENI
+        elements[(*index)++] = 0x1F6F; // GREEK CAPITAL LETTER OMEGA WITH DASIA AND PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FB2: // GREEK SMALL LETTER ALPHA WITH VARIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1FBA; // GREEK CAPITAL LETTER ALPHA WITH VARIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FB3: // GREEK SMALL LETTER ALPHA WITH YPOGEGRAMMENI
+        elements[(*index)++] = 0x0391; // GREEK CAPITAL LETTER ALPHA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FB4: // GREEK SMALL LETTER ALPHA WITH OXIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x0386; // GREEK CAPITAL LETTER ALPHA WITH TONOS (GREEK CAPITAL LETTER ALPHA TONOS)
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FB6: // GREEK SMALL LETTER ALPHA WITH PERISPOMENI
+        elements[(*index)++] = 0x0391; // GREEK CAPITAL LETTER ALPHA
+        elements[(*index)++] = 0x0342; // COMBINING GREEK PERISPOMENI
+        return;
+      case 0x1FB7: // GREEK SMALL LETTER ALPHA WITH PERISPOMENI AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x0391; // GREEK CAPITAL LETTER ALPHA
+        elements[(*index)++] = 0x0342; // COMBINING GREEK PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FBC: // GREEK CAPITAL LETTER ALPHA WITH PROSGEGRAMMENI
+        elements[(*index)++] = 0x0391; // GREEK CAPITAL LETTER ALPHA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FC2: // GREEK SMALL LETTER ETA WITH VARIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1FCA; // GREEK CAPITAL LETTER ETA WITH VARIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FC3: // GREEK SMALL LETTER ETA WITH YPOGEGRAMMENI
+        elements[(*index)++] = 0x0397; // GREEK CAPITAL LETTER ETA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FC4: // GREEK SMALL LETTER ETA WITH OXIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x0389; // GREEK CAPITAL LETTER ETA WITH TONOS (GREEK CAPITAL LETTER ETA TONOS)
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FC6: // GREEK SMALL LETTER ETA WITH PERISPOMENI
+        elements[(*index)++] = 0x0397; // GREEK CAPITAL LETTER ETA
+        elements[(*index)++] = 0x0342; // COMBINING GREEK PERISPOMENI
+        return;
+      case 0x1FC7: // GREEK SMALL LETTER ETA WITH PERISPOMENI AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x0397; // GREEK CAPITAL LETTER ETA
+        elements[(*index)++] = 0x0342; // COMBINING GREEK PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FCC: // GREEK CAPITAL LETTER ETA WITH PROSGEGRAMMENI
+        elements[(*index)++] = 0x0397; // GREEK CAPITAL LETTER ETA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FD2: // GREEK SMALL LETTER IOTA WITH DIALYTIKA AND VARIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        elements[(*index)++] = 0x0308; // COMBINING DIAERESIS (NON-SPACING DIAERESIS)
+        elements[(*index)++] = 0x0300; // COMBINING GRAVE ACCENT (NON-SPACING GRAVE)
+        return;
+      case 0x1FD3: // GREEK SMALL LETTER IOTA WITH DIALYTIKA AND OXIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        elements[(*index)++] = 0x0308; // COMBINING DIAERESIS (NON-SPACING DIAERESIS)
+        elements[(*index)++] = 0x0301; // COMBINING ACUTE ACCENT (NON-SPACING ACUTE)
+        return;
+      case 0x1FD6: // GREEK SMALL LETTER IOTA WITH PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        elements[(*index)++] = 0x0342; // COMBINING GREEK PERISPOMENI
+        return;
+      case 0x1FD7: // GREEK SMALL LETTER IOTA WITH DIALYTIKA AND PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        elements[(*index)++] = 0x0308; // COMBINING DIAERESIS (NON-SPACING DIAERESIS)
+        elements[(*index)++] = 0x0342; // COMBINING GREEK PERISPOMENI
+        return;
+      case 0x1FE2: // GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND VARIA
+        elements[(*index)++] = 0x03A5; // GREEK CAPITAL LETTER UPSILON
+        elements[(*index)++] = 0x0308; // COMBINING DIAERESIS (NON-SPACING DIAERESIS)
+        elements[(*index)++] = 0x0300; // COMBINING GRAVE ACCENT (NON-SPACING GRAVE)
+        return;
+      case 0x1FE3: // GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND OXIA
+        elements[(*index)++] = 0x03A5; // GREEK CAPITAL LETTER UPSILON
+        elements[(*index)++] = 0x0308; // COMBINING DIAERESIS (NON-SPACING DIAERESIS)
+        elements[(*index)++] = 0x0301; // COMBINING ACUTE ACCENT (NON-SPACING ACUTE)
+        return;
+      case 0x1FE4: // GREEK SMALL LETTER RHO WITH PSILI
+        elements[(*index)++] = 0x03A1; // GREEK CAPITAL LETTER RHO
+        elements[(*index)++] = 0x0313; // COMBINING COMMA ABOVE (NON-SPACING COMMA ABOVE)
+        return;
+      case 0x1FE6: // GREEK SMALL LETTER UPSILON WITH PERISPOMENI
+        elements[(*index)++] = 0x03A5; // GREEK CAPITAL LETTER UPSILON
+        elements[(*index)++] = 0x0342; // COMBINING GREEK PERISPOMENI
+        return;
+      case 0x1FE7: // GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND PERISPOMENI
+        elements[(*index)++] = 0x03A5; // GREEK CAPITAL LETTER UPSILON
+        elements[(*index)++] = 0x0308; // COMBINING DIAERESIS (NON-SPACING DIAERESIS)
+        elements[(*index)++] = 0x0342; // COMBINING GREEK PERISPOMENI
+        return;
+      case 0x1FF2: // GREEK SMALL LETTER OMEGA WITH VARIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x1FFA; // GREEK CAPITAL LETTER OMEGA WITH VARIA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FF3: // GREEK SMALL LETTER OMEGA WITH YPOGEGRAMMENI
+        elements[(*index)++] = 0x03A9; // GREEK CAPITAL LETTER OMEGA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FF4: // GREEK SMALL LETTER OMEGA WITH OXIA AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x038F; // GREEK CAPITAL LETTER OMEGA WITH TONOS (GREEK CAPITAL LETTER OMEGA TONOS)
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FF6: // GREEK SMALL LETTER OMEGA WITH PERISPOMENI
+        elements[(*index)++] = 0x03A9; // GREEK CAPITAL LETTER OMEGA
+        elements[(*index)++] = 0x0342; // COMBINING GREEK PERISPOMENI
+        return;
+      case 0x1FF7: // GREEK SMALL LETTER OMEGA WITH PERISPOMENI AND YPOGEGRAMMENI
+        elements[(*index)++] = 0x03A9; // GREEK CAPITAL LETTER OMEGA
+        elements[(*index)++] = 0x0342; // COMBINING GREEK PERISPOMENI
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0x1FFC: // GREEK CAPITAL LETTER OMEGA WITH PROSGEGRAMMENI
+        elements[(*index)++] = 0x03A9; // GREEK CAPITAL LETTER OMEGA
+        elements[(*index)++] = 0x0399; // GREEK CAPITAL LETTER IOTA
+        return;
+      case 0xFB00: // LATIN SMALL LIGATURE FF
+        elements[(*index)++] = 0x0046; // LATIN CAPITAL LETTER F
+        elements[(*index)++] = 0x0046; // LATIN CAPITAL LETTER F
+        return;
+      case 0xFB01: // LATIN SMALL LIGATURE FI
+        elements[(*index)++] = 0x0046; // LATIN CAPITAL LETTER F
+        elements[(*index)++] = 0x0049; // LATIN CAPITAL LETTER I
+        return;
+      case 0xFB02: // LATIN SMALL LIGATURE FL
+        elements[(*index)++] = 0x0046; // LATIN CAPITAL LETTER F
+        elements[(*index)++] = 0x004C; // LATIN CAPITAL LETTER L
+        return;
+      case 0xFB03: // LATIN SMALL LIGATURE FFI
+        elements[(*index)++] = 0x0046; // LATIN CAPITAL LETTER F
+        elements[(*index)++] = 0x0046; // LATIN CAPITAL LETTER F
+        elements[(*index)++] = 0x0049; // LATIN CAPITAL LETTER I
+        return;
+      case 0xFB04: // LATIN SMALL LIGATURE FFL
+        elements[(*index)++] = 0x0046; // LATIN CAPITAL LETTER F
+        elements[(*index)++] = 0x0046; // LATIN CAPITAL LETTER F
+        elements[(*index)++] = 0x004C; // LATIN CAPITAL LETTER L
+        return;
+      case 0xFB05: // LATIN SMALL LIGATURE LONG S T
+        elements[(*index)++] = 0x0053; // LATIN CAPITAL LETTER S
+        elements[(*index)++] = 0x0054; // LATIN CAPITAL LETTER T
+        return;
+      case 0xFB06: // LATIN SMALL LIGATURE ST
+        elements[(*index)++] = 0x0053; // LATIN CAPITAL LETTER S
+        elements[(*index)++] = 0x0054; // LATIN CAPITAL LETTER T
+        return;
+      case 0xFB13: // ARMENIAN SMALL LIGATURE MEN NOW
+        elements[(*index)++] = 0x0544; // ARMENIAN CAPITAL LETTER MEN
+        elements[(*index)++] = 0x0546; // ARMENIAN CAPITAL LETTER NOW
+        return;
+      case 0xFB14: // ARMENIAN SMALL LIGATURE MEN ECH
+        elements[(*index)++] = 0x0544; // ARMENIAN CAPITAL LETTER MEN
+        elements[(*index)++] = 0x0535; // ARMENIAN CAPITAL LETTER ECH
+        return;
+      case 0xFB15: // ARMENIAN SMALL LIGATURE MEN INI
+        elements[(*index)++] = 0x0544; // ARMENIAN CAPITAL LETTER MEN
+        elements[(*index)++] = 0x053B; // ARMENIAN CAPITAL LETTER INI
+        return;
+      case 0xFB16: // ARMENIAN SMALL LIGATURE VEW NOW
+        elements[(*index)++] = 0x054E; // ARMENIAN CAPITAL LETTER VEW
+        elements[(*index)++] = 0x0546; // ARMENIAN CAPITAL LETTER NOW
+        return;
+      case 0xFB17: // ARMENIAN SMALL LIGATURE MEN XEH
+        elements[(*index)++] = 0x0544; // ARMENIAN CAPITAL LETTER MEN
+        elements[(*index)++] = 0x053D; // ARMENIAN CAPITAL LETTER XEH
+        return;
+    }
+
+    MOZ_ASSERT_UNREACHABLE("Bad character input.");
+    return;
 }

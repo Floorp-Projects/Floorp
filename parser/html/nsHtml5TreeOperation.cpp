@@ -319,11 +319,10 @@ nsHtml5TreeOperation::AddAttributes(nsIContent* aNode,
     if (!node->HasAttr(nsuri, localName)) {
       // prefix doesn't need regetting. it is always null or a static atom
       // local name is never null
-      node->SetAttr(nsuri,
-                    localName,
-                    aAttributes->getPrefixNoBoundsCheck(i),
-                    *(aAttributes->getValueNoBoundsCheck(i)),
-                    true);
+      nsString value; // Not Auto, because using it to hold nsStringBuffer*
+      aAttributes->getValueNoBoundsCheck(i).ToString(value);
+      node->SetAttr(
+        nsuri, localName, aAttributes->getPrefixNoBoundsCheck(i), value, true);
       // XXX what to do with nsresult?
     }
   }
@@ -418,12 +417,14 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
     nsCOMPtr<nsIAtom> prefix = aAttributes->getPrefixNoBoundsCheck(i);
     int32_t nsuri = aAttributes->getURINoBoundsCheck(i);
 
+    nsString value; // Not Auto, because using it to hold nsStringBuffer*
+    aAttributes->getValueNoBoundsCheck(i).ToString(value);
     if (aNs == kNameSpaceID_XHTML &&
         nsHtml5Atoms::a == aName &&
         nsHtml5Atoms::name == localName) {
       // This is an HTML5-incompliant Geckoism.
       // Remove when fixing bug 582361
-      NS_ConvertUTF16toUTF8 cname(*(aAttributes->getValueNoBoundsCheck(i)));
+      NS_ConvertUTF16toUTF8 cname(value);
       NS_ConvertUTF8toUTF16 uv(nsUnescape(cname.BeginWriting()));
       newContent->SetAttr(nsuri,
                           localName,
@@ -431,7 +432,6 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
                           uv,
                           false);
     } else {
-      nsString& value = *(aAttributes->getValueNoBoundsCheck(i));
       newContent->SetAttr(nsuri,
                           localName,
                           prefix,

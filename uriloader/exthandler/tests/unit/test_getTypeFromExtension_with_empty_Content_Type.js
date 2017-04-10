@@ -18,8 +18,6 @@ function run_test() {
 
   // --- Modified nsIWindowsRegKey implementation ---
 
-  Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
   /**
    * Constructs a new mock registry key by wrapping the provided object.
    *

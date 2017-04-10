@@ -165,6 +165,10 @@ public class WebAppActivity extends GeckoApp {
             Log.e(LOGTAG, "Missing manifest");
             return;
         }
+        // The customisations defined in the manifest only work on Android API 21+
+        if (AppConstants.Versions.preLollipop) {
+            return;
+        }
 
         try {
             final File manifestFile = new File(manifestPath);
@@ -186,7 +190,7 @@ public class WebAppActivity extends GeckoApp {
     }
 
     private void updateStatusBarColor(final Integer themeColor) {
-        if (themeColor != null && !AppConstants.Versions.preLollipop) {
+        if (themeColor != null) {
             final Window window = getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(ColorUtil.darken(themeColor, 0.25));

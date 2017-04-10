@@ -132,6 +132,41 @@ add_task(function* test_parameterChecks() {
   }
 });
 
+add_task(function* test_parameterCounts() {
+  let histogramIds = [
+    "TELEMETRY_TEST_EXPONENTIAL",
+    "TELEMETRY_TEST_LINEAR",
+    "TELEMETRY_TEST_FLAG",
+    "TELEMETRY_TEST_CATEGORICAL",
+    "TELEMETRY_TEST_BOOLEAN",
+  ];
+
+  for (let id of histogramIds) {
+    let h = Telemetry.getHistogramById(id);
+    h.clear();
+    h.add();
+    Assert.equal(h.snapshot().sum, 0, "Calling add() without a value should only log an error.");
+    h.clear();
+  }
+});
+
+add_task(function* test_parameterCountsKeyed() {
+  let histogramIds = [
+    "TELEMETRY_TEST_KEYED_FLAG",
+    "TELEMETRY_TEST_KEYED_BOOLEAN",
+    "TELEMETRY_TEST_KEYED_EXPONENTIAL",
+    "TELEMETRY_TEST_KEYED_LINEAR",
+  ];
+
+  for (let id of histogramIds) {
+    let h = Telemetry.getKeyedHistogramById(id);
+    h.clear();
+    h.add("key");
+    Assert.equal(h.snapshot("key").sum, 0, "Calling add('key') without a value should only log an error.");
+    h.clear();
+  }
+});
+
 add_task(function* test_noSerialization() {
   // Instantiate the storage for this histogram and make sure it doesn't
   // get reflected into JS, as it has no interesting data in it.
@@ -608,9 +643,54 @@ add_task(function* test_keyed_count_histogram() {
   let allSnapshots = Telemetry.keyedHistogramSnapshots;
   Assert.deepEqual(allSnapshots[KEYED_ID], testSnapShot);
 
+  // Test clearing categorical histogram.
   h.clear();
   Assert.deepEqual(h.keys(), []);
   Assert.deepEqual(h.snapshot(), {});
+
+  // Test leaving out the value argument. That should increment by 1.
+  h.add("key");
+  Assert.equal(h.snapshot("key").sum, 1);
+});
+
+add_task(function* test_keyed_categorical_histogram() {
+  const KEYED_ID = "TELEMETRY_TEST_KEYED_CATEGORICAL";
+  const KEYS = numberRange(0, 5).map(i => "key" + (i + 1));
+
+  let h = Telemetry.getKeyedHistogramById(KEYED_ID);
+
+  for (let k of KEYS) {
+    // Test adding both per label and index.
+    for (let v of ["CommonLabel", "Label2", "Label3", "Label3", 0, 0, 1]) {
+      h.add(k, v);
+    }
+
+    // The |add| method should not throw for unexpected values, but rather
+    // print an error message in the console.
+    for (let s of ["", "Label4", "1234"]) {
+      h.add(k, s);
+    }
+  }
+
+  // Categorical histograms default to 50 linear buckets.
+  let expectedRanges = [];
+  for (let i = 0; i < 51; ++i) {
+    expectedRanges.push(i);
+  }
+
+  // Check that the set of keys in the snapshot is what we expect.
+  let snapshot = h.snapshot();
+  let snapshotKeys = Object.keys(snapshot);
+  Assert.equal(KEYS.length, snapshotKeys.length);
+  Assert.ok(KEYS.every(k => snapshotKeys.includes(k)));
+
+  // Check the snapshot values.
+  for (let k of KEYS) {
+    Assert.ok(k in snapshot);
+    Assert.equal(snapshot[k].sum, 6);
+    Assert.deepEqual(snapshot[k].ranges, expectedRanges);
+    Assert.deepEqual(snapshot[k].counts.slice(0, 4), [3, 2, 2, 0]);
+  }
 });
 
 add_task(function* test_keyed_flag_histogram() {

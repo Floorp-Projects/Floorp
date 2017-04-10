@@ -156,6 +156,10 @@ def readRegistry(registry):
     # Special case for heploc.
     langTagMappings["ja-latn-hepburn-heploc"] = "ja-Latn-alalc97"
 
+    # ValidateAndCanonicalizeLanguageTag in Intl.js expects langTagMappings
+    # contains no 2*3ALPHA.
+    assert all(len(lang) > 3 for lang in langTagMappings.iterkeys())
+
     return {"fileDate": fileDate,
             "langTagMappings": langTagMappings,
             "langSubtagMappings": langSubtagMappings,

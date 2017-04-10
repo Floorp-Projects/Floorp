@@ -249,6 +249,10 @@ public:
   // Similar to the above but only for the (pseudo-)element.
   bool PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull);
 
+  // Similar to the above but for all elements in the subtree rooted
+  // at aElement.
+  bool PreTraverseInSubtree(dom::Element* aElement);
+
 private:
   ~EffectCompositor() = default;
 

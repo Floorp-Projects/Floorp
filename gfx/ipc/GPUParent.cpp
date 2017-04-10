@@ -141,7 +141,9 @@ GPUParent::NotifyDeviceReset()
 
   // Notify the main process that there's been a device reset
   // and that they should reset their compositors and repaint
-  Unused << SendNotifyDeviceReset();
+  GPUDeviceData data;
+  RecvGetDeviceStatus(&data);
+  Unused << SendNotifyDeviceReset(data);
 }
 
 mozilla::ipc::IPCResult

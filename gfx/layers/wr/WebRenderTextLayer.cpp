@@ -39,8 +39,7 @@ WebRenderTextLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                       Stringify(clip).c_str());
     }
 
-    mGlyphHelper.BuildWebRenderCommands(WrBridge(), aBuilder, mGlyphs, mFont,
-                                        GetOffsetToParent(), rect, clip);
+    WrBridge()->PushGlyphs(aBuilder, mGlyphs, mFont, GetOffsetToParent(), rect, clip);
 }
 
 } // namespace layers

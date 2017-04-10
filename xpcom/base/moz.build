@@ -43,8 +43,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 XPIDL_MODULE = 'xpcom_base'
 
 EXPORTS += [
+    '!ErrorList.h',
+    '!ErrorNamesInternal.h',
     'CodeAddressService.h',
-    'ErrorList.h',
     'nsAgg.h',
     'nsAlgorithm.h',
     'nsAutoPtr.h',
@@ -164,6 +165,16 @@ UNIFIED_SOURCES += [
     'nsVersionComparatorImpl.cpp',
     'nsWeakReference.cpp',
 ]
+
+GENERATED_FILES += [
+    "error_list.rs",
+    "ErrorList.h",
+    "ErrorNamesInternal.h",
+]
+
+GENERATED_FILES["ErrorList.h"].script = "ErrorList.py:error_list_h"
+GENERATED_FILES["ErrorNamesInternal.h"].script = "ErrorList.py:error_names_internal_h"
+GENERATED_FILES["error_list.rs"].script = "ErrorList.py:error_list_rs"
 
 if CONFIG['OS_ARCH'] == 'Linux':
     SOURCES += [

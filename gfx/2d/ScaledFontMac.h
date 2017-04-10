@@ -41,7 +41,7 @@ class ScaledFontMac : public ScaledFontBase
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontMac)
-  ScaledFontMac(CGFontRef aFont, Float aSize);
+  ScaledFontMac(CGFontRef aFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize);
   virtual ~ScaledFontMac();
 
   virtual FontType GetType() const { return FontType::MAC; }

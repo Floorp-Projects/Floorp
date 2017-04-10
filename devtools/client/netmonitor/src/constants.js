@@ -110,10 +110,56 @@ const EVENTS = {
   CONNECTED: "connected",
 };
 
+const HEADERS = [
+  {
+    name: "status",
+    label: "status3",
+    canFilter: true,
+    filterKey: "status-code"
+  },
+  {
+    name: "method",
+    canFilter: true,
+  },
+  {
+    name: "file",
+    boxName: "icon-and-file",
+    canFilter: false,
+  },
+  {
+    name: "domain",
+    boxName: "security-and-domain",
+    canFilter: true,
+  },
+  {
+    name: "cause",
+    canFilter: true,
+  },
+  {
+    name: "type",
+    canFilter: false,
+  },
+  {
+    name: "transferred",
+    canFilter: true,
+  },
+  {
+    name: "contentSize",
+    boxName: "size",
+    filterKey: "size",
+    canFilter: true,
+  },
+  {
+    name: "waterfall",
+    canFilter: false,
+  }
+];
+
 const general = {
   ACTIVITY_TYPE,
   EVENTS,
   FILTER_SEARCH_DELAY: 200,
+  HEADERS,
   // 100 KB in bytes
   SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE: 102400,
 };

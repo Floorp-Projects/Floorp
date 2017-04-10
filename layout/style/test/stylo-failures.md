@@ -61,8 +61,6 @@ to mochitest command.
   * Property parsing and computation:
     * test_property_syntax_errors.html `animation` [404]
     * test_value_storage.html `animation` [91]
-* test_any_dynamic.html: slow selector handling [3]
-* test_bug635286.html: :-moz-any pseudo-class bugs [3]
 * CSSOM support:
   * @import
     * test_bug221428.html [1]
@@ -70,6 +68,7 @@ to mochitest command.
   * @keyframes
     * test_keyframes_rules.html [1]
     * test_rules_out_of_sheets.html [1]
+    * test_bug887741_at-rules_in_declaration_lists.html `rules[2]` [1]
   * @support
     * test_supports_rules.html [1]
 * test_box_size_keywords.html: moz-prefixed intrinsic size keyword value [64]
@@ -245,10 +244,8 @@ to mochitest command.
     * ... `justify-` [6]
     * test_value_storage.html `align-` [9]
     * ... `justify-` [14]
-* @page support
-  * test_bug887741_at-rules_in_declaration_lists.html [1]
-  * test_page_parser.html [30]
-  * test_rule_insertion.html `@page` [4]
+* @page should ignore properties with viewport units bug 1353191
+  * test_page_parser.html `2v` [8]
 * Stylesheet cloning is somehow busted bug 1348481
   * test_selectors.html `cloned correctly` [157]
   * ... `matched clone` [204]
@@ -338,7 +335,6 @@ to mochitest command.
     * ... `-moz-outline-radius:` [45]
     * test_shorthand_property_getters.html `should condense to shortest possible` [6]
   * transform property servo/servo#15194
-    * test_property_syntax_errors.html `perspective` [6]
     * test_specified_value_serialization.html `bug-721136` [26]
     * test_units_angle.html [3]
   * {background,mask}-position lacks comma for serialization servo/servo#15200
@@ -399,6 +395,8 @@ to mochitest command.
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_length.html [5]
   * test_units_time.html [1]
+  * test_page_parser.html `192px` [8]
+  * test_bug887741_at-rules_in_declaration_lists.html `188.96666px` [1]
 * insertRule / deleteRule don't work bug 1336863
   * test_rule_insertion.html [5]
 * @-moz-document support

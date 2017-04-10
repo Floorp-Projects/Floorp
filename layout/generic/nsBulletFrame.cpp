@@ -309,7 +309,6 @@ private:
   nsPoint mPoint;
   RefPtr<ScaledFont> mFont;
   nsTArray<layers::GlyphArray> mGlyphs;
-  WebRenderGlyphHelper mGlyphHelper;
 
   // Store the type of list-style-type.
   int32_t mListStyleType;
@@ -506,8 +505,8 @@ BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
     NSRectToRect(aItem->GetBounds(builder, &dummy), appUnitsPerDevPixel);
   Rect destRectTransformed = aLayer->RelativeToParent(destRect);
 
-  mGlyphHelper.BuildWebRenderCommands(layer->WrBridge(), aBuilder, mGlyphs, mFont, aLayer->GetOffsetToParent(),
-                                      destRectTransformed, destRectTransformed);
+  layer->WrBridge()->PushGlyphs(aBuilder, mGlyphs, mFont, aLayer->GetOffsetToParent(),
+                                destRectTransformed, destRectTransformed);
 }
 
 class nsDisplayBullet final : public nsDisplayItem {

@@ -36,7 +36,6 @@ const TEST_URI_ROOT = "http://example.com/browser/devtools/client/responsive.htm
 const OPEN_DEVICE_MODAL_VALUE = "OPEN_DEVICE_MODAL";
 
 const { _loadPreferredDevices } = require("devtools/client/responsive.html/actions/devices");
-const { getOwnerWindow } = require("sdk/tabs/utils");
 const asyncStorage = require("devtools/shared/async-storage");
 const { addDevice, removeDevice } = require("devtools/client/shared/devices");
 
@@ -72,7 +71,7 @@ const { ResponsiveUIManager } = require("resource://devtools/client/responsivede
 var openRDM = Task.async(function* (tab) {
   info("Opening responsive design mode");
   let manager = ResponsiveUIManager;
-  let ui = yield manager.openIfNeeded(getOwnerWindow(tab), tab);
+  let ui = yield manager.openIfNeeded(tab.ownerGlobal, tab);
   info("Responsive design mode opened");
   return { ui, manager };
 });
@@ -83,7 +82,7 @@ var openRDM = Task.async(function* (tab) {
 var closeRDM = Task.async(function* (tab, options) {
   info("Closing responsive design mode");
   let manager = ResponsiveUIManager;
-  yield manager.closeIfNeeded(getOwnerWindow(tab), tab, options);
+  yield manager.closeIfNeeded(tab.ownerGlobal, tab, options);
   info("Responsive design mode closed");
 });
 

@@ -1754,6 +1754,15 @@ TemporaryTypeSet::maybeSingleton()
     return getSingleton(0);
 }
 
+TemporaryTypeSet::ObjectKey*
+TemporaryTypeSet::maybeSingleObject()
+{
+    if (baseFlags() != 0 || baseObjectCount() != 1)
+        return nullptr;
+
+    return getObject(0);
+}
+
 JSObject*
 HeapTypeSetKey::singleton(CompilerConstraintList* constraints)
 {

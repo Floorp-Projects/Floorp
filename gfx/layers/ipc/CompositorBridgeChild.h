@@ -153,7 +153,7 @@ public:
   bool SendWillClose();
   bool SendPause();
   bool SendResume();
-  bool SendNotifyChildCreated(const uint64_t& id);
+  bool SendNotifyChildCreated(const uint64_t& id, CompositorOptions* aOptions);
   bool SendAdoptChild(const uint64_t& id);
   bool SendMakeSnapshot(const SurfaceDescriptor& inSnapshot, const gfx::IntRect& dirtyRect);
   bool SendFlushRendering();

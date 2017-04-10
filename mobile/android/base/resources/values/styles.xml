@@ -119,10 +119,6 @@
         <item name="android:textSize">@dimen/menu_item_textsize</item>
     </style>
 
-    <style name="Widget.MenuButtonCustomTabs" parent="GeckoActionBar.Button.MenuButton">
-        <item name="android:tint">?android:textColorPrimary</item>
-    </style>
-
     <style name="Widget.MenuItemCustomTabs" parent="Widget.MenuItemDefault">
         <!-- In current design, there is only one style for Popup-menu, regardless of Dark/Light theme -->
         <item name="android:textColor">@android:color/black</item>

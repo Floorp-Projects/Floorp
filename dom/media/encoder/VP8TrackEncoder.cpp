@@ -64,6 +64,14 @@ VP8TrackEncoder::VP8TrackEncoder(TrackRate aTrackRate)
 
 VP8TrackEncoder::~VP8TrackEncoder()
 {
+  Destroy();
+  MOZ_COUNT_DTOR(VP8TrackEncoder);
+}
+
+void
+VP8TrackEncoder::Destroy()
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   if (mInitialized) {
     vpx_codec_destroy(mVPXContext);
   }
@@ -71,7 +79,7 @@ VP8TrackEncoder::~VP8TrackEncoder()
   if (mVPXImageWrapper) {
     vpx_img_free(mVPXImageWrapper);
   }
-  MOZ_COUNT_DTOR(VP8TrackEncoder);
+  mInitialized = false;
 }
 
 nsresult
@@ -83,24 +91,86 @@ VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
   }
 
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-  mFrameWidth = aWidth;
-  mFrameHeight = aHeight;
-  mDisplayWidth = aDisplayWidth;
-  mDisplayHeight = aDisplayHeight;
+  if (mInitialized) {
+    MOZ_ASSERT(false);
+    return NS_ERROR_FAILURE;
+  }
 
   // Encoder configuration structure.
   vpx_codec_enc_cfg_t config;
-  memset(&config, 0, sizeof(vpx_codec_enc_cfg_t));
-  if (vpx_codec_enc_config_default(vpx_codec_vp8_cx(), &config, 0)) {
-    return NS_ERROR_FAILURE;
-  }
+  nsresult rv = SetConfigurationValues(aWidth, aHeight, aDisplayWidth, aDisplayHeight, config);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   // Creating a wrapper to the image - setting image data to NULL. Actual
   // pointer will be set in encode. Setting align to 1, as it is meaningless
   // (actual memory is not allocated).
   vpx_img_wrap(mVPXImageWrapper, VPX_IMG_FMT_I420,
                mFrameWidth, mFrameHeight, 1, nullptr);
+
+  vpx_codec_flags_t flags = 0;
+  flags |= VPX_CODEC_USE_OUTPUT_PARTITION;
+  if (vpx_codec_enc_init(mVPXContext, vpx_codec_vp8_cx(), &config, flags)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  vpx_codec_control(mVPXContext, VP8E_SET_STATIC_THRESHOLD, 1);
+  vpx_codec_control(mVPXContext, VP8E_SET_CPUUSED, -6);
+  vpx_codec_control(mVPXContext, VP8E_SET_TOKEN_PARTITIONS,
+                    VP8_ONE_TOKENPARTITION);
+
+  mInitialized = true;
+  mon.NotifyAll();
+
+  return NS_OK;
+}
+
+nsresult
+VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight,
+                             int32_t aDisplayWidth, int32_t aDisplayHeight)
+{
+  if(aWidth <= 0 || aHeight <= 0 || aDisplayWidth <= 0 || aDisplayHeight <= 0) {
+    MOZ_ASSERT(false);
+    return NS_ERROR_FAILURE;
+  }
+
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  if (!mInitialized) {
+    MOZ_ASSERT(false);
+    return NS_ERROR_FAILURE;
+  }
+
+  mInitialized = false;
+  // Recreate image wrapper
+  vpx_img_free(mVPXImageWrapper);
+  vpx_img_wrap(mVPXImageWrapper, VPX_IMG_FMT_I420, aWidth, aHeight, 1, nullptr);
+  // Encoder configuration structure.
+  vpx_codec_enc_cfg_t config;
+  nsresult rv = SetConfigurationValues(aWidth, aHeight, aDisplayWidth, aDisplayHeight, config);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+  // Set new configuration
+  if (vpx_codec_enc_config_set(mVPXContext.get(), &config) != VPX_CODEC_OK) {
+    VP8LOG(LogLevel::Error, "Failed to set new configuration");
+    return NS_ERROR_FAILURE;
+  }
+  mInitialized = true;
+  return NS_OK;
+}
+
+nsresult
+VP8TrackEncoder::SetConfigurationValues(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
+                                        int32_t aDisplayHeight, vpx_codec_enc_cfg_t& config)
+{
+  mFrameWidth = aWidth;
+  mFrameHeight = aHeight;
+  mDisplayWidth = aDisplayWidth;
+  mDisplayHeight = aDisplayHeight;
+
+  // Encoder configuration structure.
+  memset(&config, 0, sizeof(vpx_codec_enc_cfg_t));
+  if (vpx_codec_enc_config_default(vpx_codec_vp8_cx(), &config, 0)) {
+    VP8LOG(LogLevel::Error, "Failed to get default configuration");
+    return NS_ERROR_FAILURE;
+  }
 
   config.g_w = mFrameWidth;
   config.g_h = mFrameHeight;
@@ -143,20 +213,6 @@ VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
   config.kf_mode = VPX_KF_AUTO;
   // Ensure that we can output one I-frame per second.
   config.kf_max_dist = 60;
-
-  vpx_codec_flags_t flags = 0;
-  flags |= VPX_CODEC_USE_OUTPUT_PARTITION;
-  if (vpx_codec_enc_init(mVPXContext, vpx_codec_vp8_cx(), &config, flags)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  vpx_codec_control(mVPXContext, VP8E_SET_STATIC_THRESHOLD, 1);
-  vpx_codec_control(mVPXContext, VP8E_SET_CPUUSED, -6);
-  vpx_codec_control(mVPXContext, VP8E_SET_TOKEN_PARTITIONS,
-                    VP8_ONE_TOKENPARTITION);
-
-  mInitialized = true;
-  mon.NotifyAll();
 
   return NS_OK;
 }
@@ -299,10 +355,31 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
   }
 
   if (img->GetSize() != IntSize(mFrameWidth, mFrameHeight)) {
-    VP8LOG(LogLevel::Error,
-           "Dynamic resolution changes (was %dx%d, now %dx%d) are unsupported",
+    VP8LOG(LogLevel::Info,
+           "Dynamic resolution change (was %dx%d, now %dx%d).",
            mFrameWidth, mFrameHeight, img->GetSize().width, img->GetSize().height);
-    return NS_ERROR_FAILURE;
+
+
+    gfx::IntSize intrinsicSize = aChunk.mFrame.GetIntrinsicSize();
+    gfx::IntSize imgSize = aChunk.mFrame.GetImage()->GetSize();
+    if (imgSize <= IntSize(mFrameWidth, mFrameHeight) && // check buffer size instead
+        // If the new size is less than or equal to old,
+        // the existing encoder instance can continue.
+        NS_SUCCEEDED(Reconfigure(imgSize.width,
+                                 imgSize.height,
+                                 intrinsicSize.width,
+                                 intrinsicSize.height))) {
+      VP8LOG(LogLevel::Info, "Reconfigured VP8 encoder.");
+    } else {
+      // New frame size is larger; re-create the encoder.
+      Destroy();
+      nsresult rv = Init(imgSize.width,
+                         imgSize.height,
+                         intrinsicSize.width,
+                         intrinsicSize.height);
+      VP8LOG(LogLevel::Info, "Recreated VP8 encoder.");
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   ImageFormat format = img->GetFormat();
@@ -335,7 +412,7 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
   uint32_t halfHeight = (mFrameHeight + 1) / 2;
   uint32_t uvPlaneSize = halfWidth * halfHeight;
 
-  if (mI420Frame.IsEmpty()) {
+  if (mI420Frame.Length() != yPlaneSize + uvPlaneSize * 2) {
     mI420Frame.SetLength(yPlaneSize + uvPlaneSize * 2);
   }
 
@@ -567,6 +644,7 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
       if (vpx_codec_encode(mVPXContext, mVPXImageWrapper, mEncodedTimestamp,
                            (unsigned long)chunk.GetDuration(), flags,
                            VPX_DL_REALTIME)) {
+        VP8LOG(LogLevel::Error, "vpx_codec_encode failed to encode the frame.");
         return NS_ERROR_FAILURE;
       }
       // Get the encoded data from VP8 encoder.

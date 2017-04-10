@@ -1,0 +1,9 @@
+[package]
+name = "nserror"
+version = "0.1.0"
+authors = ["Michael Layzell <michael@thelayzells.com>"]
+license = "MPL-2.0"
+description = "Rust bindings to xpcom nsresult and NS_ERROR_ values"
+
+[dependencies]
+nsstring = { path = "../nsstring" }

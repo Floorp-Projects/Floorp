@@ -5,10 +5,9 @@
 
 /* global XPCNativeWrapper */
 
-const { Cu } = require("chrome");
+const { Cu, Cc, Ci } = require("chrome");
 
 const events = require("sdk/event/core");
-const { on: systemOn, off: systemOff } = require("sdk/system/events");
 const protocol = require("devtools/shared/protocol");
 const { CallWatcherActor } = require("devtools/server/actors/call-watcher");
 const { createValueGrip } = require("devtools/server/actors/object");
@@ -19,6 +18,10 @@ const {
   webAudioSpec
 } = require("devtools/shared/specs/webaudio");
 const { WebAudioFront } = require("devtools/shared/fronts/webaudio");
+
+const observerService = Cc["@mozilla.org/observer-service;1"]
+                       .getService(Ci.nsIObserverService);
+
 const AUDIO_NODE_DEFINITION = require("devtools/server/actors/utils/audionodes.json");
 const ENABLE_AUTOMATION = false;
 const AUTOMATION_GRANULARITY = 2000;
@@ -413,7 +416,6 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
     // to the client in any way.
     this._nativeToActorID = new Map();
 
-    this._onDestroyNode = this._onDestroyNode.bind(this);
     this._onGlobalDestroyed = this._onGlobalDestroyed.bind(this);
     this._onGlobalCreated = this._onGlobalCreated.bind(this);
   },
@@ -555,7 +557,13 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
       return;
     }
     this._initialized = false;
-    systemOff("webaudio-node-demise", this._onDestroyNode);
+
+    try {
+      observerService.removeObserver(this, "webaudio-node-demise");
+    } catch (e) {
+      // Maybe we've shutdown already and it's too late to remove the observer. So avoid
+      // NS_ERROR_FAILURE errors with this silent try/catch.
+    }
 
     off(this.tabActor, "window-destroyed", this._onGlobalDestroyed);
     off(this.tabActor, "window-ready", this._onGlobalCreated);
@@ -619,7 +627,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
    * Called on first audio node creation, signifying audio context usage
    */
   _onStartContext: function () {
-    systemOn("webaudio-node-demise", this._onDestroyNode);
+    observerService.addObserver(this, "webaudio-node-demise", false);
     emit(this, "start-context");
   },
 
@@ -677,20 +685,31 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
     emit(this, "create-node", actor);
   },
 
-  /** Called when `webaudio-node-demise` is triggered,
-   * and emits the associated actor to the front if found.
+  /**
+   * Called by the ObserverService when webaudio-node-demise events are emitted.
    */
-  _onDestroyNode: function ({data}) {
-    // Cast to integer.
-    let nativeID = ~~data;
+  observe: function (subject, topic, data) {
+    switch (topic) {
+      case "webaudio-node-demise":
+        // Cast the data to an integer.
+        this._handleNodeDestroyed(~~data);
+        break;
+    }
+  },
 
-    let actor = this._getActorByNativeID(nativeID);
+  /**
+   * Handles `webaudio-node-demise` events. Emits the associated actor to the front if
+   * found.
+   * @param {Number} nodeNativeID The ID for the audio node.
+   */
+  _handleNodeDestroyed: function (nodeNativeID) {
+    let actor = this._getActorByNativeID(nodeNativeID);
 
     // If actorID exists, emit; in the case where we get demise
     // notifications for a document that no longer exists,
     // the mapping should not be found, so we do not emit an event.
     if (actor) {
-      this._nativeToActorID.delete(nativeID);
+      this._nativeToActorID.delete(nodeNativeID);
       emit(this, "destroy-node", actor);
     }
   },
@@ -736,7 +755,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
     if (this._nativeToActorID) {
       this._nativeToActorID.clear();
     }
-    systemOff("webaudio-node-demise", this._onDestroyNode);
+    observerService.removeObserver(this, "webaudio-node-demise");
   }
 });
 

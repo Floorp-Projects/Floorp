@@ -33,7 +33,7 @@
 
 #include "nsIAtom.h"
 #include "nsHtml5AtomTable.h"
-#include "nsString.h"
+#include "nsHtml5String.h"
 #include "nsIContent.h"
 #include "nsTraceRefcnt.h"
 #include "jArray.h"
@@ -106,8 +106,8 @@ class nsHtml5Tokenizer
   protected:
     int32_t cstart;
   private:
-    nsString* publicId;
-    nsString* systemId;
+    nsHtml5String publicId;
+    nsHtml5String systemId;
     autoJArray<char16_t,int32_t> strBuf;
     int32_t strBufLen;
     autoJArray<char16_t,int32_t> charRefBuf;
@@ -126,8 +126,8 @@ class nsHtml5Tokenizer
     nsHtml5AttributeName* attributeName;
   private:
     nsIAtom* doctypeName;
-    nsString* publicIdentifier;
-    nsString* systemIdentifier;
+    nsHtml5String publicIdentifier;
+    nsHtml5String systemIdentifier;
     nsHtml5HtmlAttributes* attributes;
     bool newAttributesEachTime;
     bool shouldSuspend;
@@ -141,7 +141,7 @@ class nsHtml5Tokenizer
   public:
     nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler, bool viewingXmlSource);
     void setInterner(nsHtml5AtomTable* interner);
-    void initLocation(nsString* newPublicId, nsString* newSystemId);
+    void initLocation(nsHtml5String newPublicId, nsHtml5String newSystemId);
     bool isViewingXmlSource();
     void setStateAndEndTagExpectation(int32_t specialTokenizerState, nsIAtom* endTagExpectation);
     void setStateAndEndTagExpectation(int32_t specialTokenizerState, nsHtml5ElementName* endTagExpectation);
@@ -193,7 +193,8 @@ class nsHtml5Tokenizer
     }
 
   protected:
-    nsString* strBufToString();
+    nsHtml5String strBufToString();
+
   private:
     void strBufToDoctypeName();
     void emitStrBuf();
@@ -285,7 +286,8 @@ class nsHtml5Tokenizer
     }
 
   public:
-    bool internalEncodingDeclaration(nsString* internalCharset);
+    bool internalEncodingDeclaration(nsHtml5String internalCharset);
+
   private:
     void emitOrAppendTwo(const char16_t* val, int32_t returnState);
     void emitOrAppendOne(const char16_t* val, int32_t returnState);

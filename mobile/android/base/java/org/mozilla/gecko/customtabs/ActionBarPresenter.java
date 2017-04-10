@@ -8,6 +8,7 @@ package org.mozilla.gecko.customtabs;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.ColorInt;
@@ -15,12 +16,17 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.support.v4.graphics.drawable.DrawableCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.mozilla.gecko.R;
@@ -73,6 +79,8 @@ public class ActionBarPresenter {
                 mIdentityPopup.show();
             }
         });
+
+        initIndicator();
     }
 
     /**
@@ -106,6 +114,41 @@ public class ActionBarPresenter {
     }
 
     /**
+     * To add a always-show-as-action button to menu, and manually create a view to insert.
+     *
+     * @param menu the menu to insert new action-button.
+     * @param icon the image to be used for action-button.
+     * @param tint true if the icon should be tint by primary text color
+     * @return the view which be inserted to menu
+     */
+    public View addActionButton(@NonNull final Menu menu,
+                                @NonNull final Drawable icon,
+                                final boolean tint) {
+        final Resources res = mActionBar.getThemedContext().getResources();
+
+        // if we specify layout_width, layout_height in xml to build View, then add to ActionBar
+        // system might overwrite the value to WRAP_CONTENT.
+        // Therefore we create view manually to match design spec
+        final ImageButton btn = new ImageButton(mActionBar.getThemedContext(), null, 0);
+        final int size = res.getDimensionPixelSize(R.dimen.custom_tab_action_button_size);
+        final int padding = res.getDimensionPixelSize(R.dimen.custom_tab_action_button_padding);
+        btn.setPadding(padding, padding, padding, padding);
+        btn.setLayoutParams(new ViewGroup.LayoutParams(size, size));
+        btn.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+        if (tint) {
+            DrawableCompat.setTint(icon, mTextPrimaryColor);
+        }
+        btn.setImageDrawable(icon);
+
+        // menu id does not matter here. We can directly bind callback to the returned-view.
+        final MenuItem item = menu.add(Menu.NONE, -1, Menu.NONE, "");
+        item.setActionView(btn);
+        MenuItemCompat.setShowAsAction(item, MenuItemCompat.SHOW_AS_ACTION_ALWAYS);
+        return btn;
+    }
+
+    /**
      * Set background color to ActionBar, as well as Status bar.
      *
      * @param color  the color to apply to ActionBar
@@ -126,6 +169,7 @@ public class ActionBarPresenter {
 
     /**
      * To assign a long-click-listener to text area of ActionBar
+     *
      * @param listener then callback to trigger
      */
     public void setTextLongClickListener(View.OnLongClickListener listener) {
@@ -133,14 +177,11 @@ public class ActionBarPresenter {
         mUrlView.setOnLongClickListener(listener);
     }
 
-    /**
-     * To get primary color of Title of ActionBar
-     *
-     * @return color code of primary color
-     */
-    @ColorInt
-    public int getTextPrimaryColor() {
-        return mTextPrimaryColor;
+    private void initIndicator() {
+        mActionBar.setDisplayHomeAsUpEnabled(true);
+        final Drawable icon = mActionBar.getThemedContext().getDrawable(R.drawable.ic_close_light);
+        DrawableCompat.setTint(icon, mTextPrimaryColor);
+        mActionBar.setHomeAsUpIndicator(icon);
     }
 
     /**

@@ -17,6 +17,8 @@
 #include "gfxPlatform.h"
 #include <algorithm>
 
+#include "mozilla/gfx/UnscaledFontDWrite.h"
+
 
 /**
  * gfxDWriteFontFamily is a class that describes one of the fonts on the
@@ -201,6 +203,9 @@ protected:
 
     int8_t mIsCJK;
     bool mForceGDIClassic;
+
+    mozilla::WeakPtr<mozilla::gfx::UnscaledFont> mUnscaledFont;
+    mozilla::WeakPtr<mozilla::gfx::UnscaledFont> mUnscaledFontBold;
 };
 
 // custom text renderer used to determine the fallback font for a given char

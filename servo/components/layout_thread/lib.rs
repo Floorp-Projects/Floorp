@@ -523,7 +523,7 @@ impl LayoutThread {
                 local_context_creation_data: Mutex::new(thread_local_style_context_creation_data),
                 timer: self.timer.clone(),
                 quirks_mode: self.quirks_mode.unwrap(),
-                animation_only_restyle: false,
+                traversal_flags: TraversalFlags::empty(),
             },
             image_cache: self.image_cache.clone(),
             font_cache_thread: Mutex::new(self.font_cache_thread.clone()),
@@ -1146,7 +1146,6 @@ impl LayoutThread {
         };
 
         let traversal = RecalcStyleAndConstructFlows::new(layout_context, traversal_driver);
-        let dom_depth = Some(0); // This is always the root node.
         let token = {
             let stylist = &<RecalcStyleAndConstructFlows as
                             DomTraversal<ServoLayoutElement>>::shared_context(&traversal).stylist;
@@ -1165,7 +1164,7 @@ impl LayoutThread {
                     let pool = self.parallel_traversal.as_mut().unwrap();
                     // Parallel mode
                     parallel::traverse_dom::<ServoLayoutElement, RecalcStyleAndConstructFlows>(
-                        &traversal, element, dom_depth, token, pool);
+                        &traversal, element, token, pool);
                 } else {
                     // Sequential mode
                     sequential::traverse_dom::<ServoLayoutElement, RecalcStyleAndConstructFlows>(

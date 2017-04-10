@@ -17,7 +17,7 @@ class ThreadInfo final
 {
 public:
   ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
-             mozilla::NotNull<PseudoStack*> aPseudoStack, void* aStackTop);
+             void* aStackTop);
 
   ~ThreadInfo();
 
@@ -25,15 +25,13 @@ public:
   int ThreadId() const { return mThreadId; }
 
   bool IsMainThread() const { return mIsMainThread; }
+
   mozilla::NotNull<PseudoStack*> Stack() const { return mPseudoStack; }
 
   void SetHasProfile() { mHasProfile = true; }
 
   PlatformData* GetPlatformData() const { return mPlatformData.get(); }
   void* StackTop() const { return mStackTop; }
-
-  void SetPendingDelete();
-  bool IsPendingDelete() const { return mPendingDelete; }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -44,19 +42,14 @@ private:
   int mThreadId;
   const bool mIsMainThread;
 
-  // The thread's PseudoStack. This is an owning pointer.
+  // The thread's PseudoStack. This is an owning pointer. It could be an inline
+  // member, but we don't do that because PseudoStack is quite large, and we
+  // have ThreadInfo vectors and so we'd end up wasting a lot of space in those
+  // vectors for excess elements.
   mozilla::NotNull<PseudoStack*> mPseudoStack;
 
   UniquePlatformData mPlatformData;
   void* mStackTop;
-
-  // May be null for the main thread if the profiler was started during startup.
-  nsCOMPtr<nsIThread> mThread;
-
-  // When a thread dies while the profiler is active we keep its ThreadInfo
-  // (and its PseudoStack) around for a while, and put it in a "pending delete"
-  // state.
-  bool mPendingDelete;
 
   //
   // The following code is only used for threads that are being profiled, i.e.
@@ -74,10 +67,12 @@ public:
   void FlushSamplesAndMarkers(ProfileBuffer* aBuffer,
                               const mozilla::TimeStamp& aStartTime);
 
-  ThreadResponsiveness* GetThreadResponsiveness() { return &mRespInfo; }
-
-  void UpdateThreadResponsiveness() {
-    mRespInfo.Update(mIsMainThread, mThread);
+  // Returns nullptr if this is not the main thread.
+  ThreadResponsiveness* GetThreadResponsiveness()
+  {
+    ThreadResponsiveness* responsiveness = mResponsiveness.ptrOr(nullptr);
+    MOZ_ASSERT(!!responsiveness == mIsMainThread);
+    return responsiveness;
   }
 
 private:
@@ -91,7 +86,8 @@ private:
   mozilla::UniquePtr<char[]> mSavedStreamedMarkers;
   mozilla::Maybe<UniqueStacks> mUniqueStacks;
 
-  ThreadResponsiveness mRespInfo;
+  // This is only used for the main thread.
+  mozilla::Maybe<ThreadResponsiveness> mResponsiveness;
 
   // When sampling, this holds the generation number and offset in
   // ProfilerState::mBuffer of the most recent sample for this thread.

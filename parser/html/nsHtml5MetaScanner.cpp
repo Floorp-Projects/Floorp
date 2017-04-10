@@ -30,7 +30,7 @@
 
 #include "nsIAtom.h"
 #include "nsHtml5AtomTable.h"
-#include "nsString.h"
+#include "nsHtml5String.h"
 #include "nsNameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsTraceRefcnt.h"
@@ -86,8 +86,8 @@ nsHtml5MetaScanner::nsHtml5MetaScanner(nsHtml5TreeBuilder* tb)
 nsHtml5MetaScanner::~nsHtml5MetaScanner()
 {
   MOZ_COUNT_DTOR(nsHtml5MetaScanner);
-  nsHtml5Portability::releaseString(content);
-  nsHtml5Portability::releaseString(charset);
+  content.Release();
+  charset.Release();
 }
 
 void 
@@ -771,9 +771,9 @@ bool
 nsHtml5MetaScanner::handleTag()
 {
   bool stop = handleTagInner();
-  nsHtml5Portability::releaseString(content);
+  content.Release();
   content = nullptr;
-  nsHtml5Portability::releaseString(charset);
+  charset.Release();
   charset = nullptr;
   httpEquivState = NS_HTML5META_SCANNER_HTTP_EQUIV_NOT_SEEN;
   return stop;
@@ -786,12 +786,13 @@ nsHtml5MetaScanner::handleTagInner()
     return true;
   }
   if (!!content && httpEquivState == NS_HTML5META_SCANNER_HTTP_EQUIV_CONTENT_TYPE) {
-    nsString* extract = nsHtml5TreeBuilder::extractCharsetFromContent(content, treeBuilder);
+    nsHtml5String extract =
+      nsHtml5TreeBuilder::extractCharsetFromContent(content, treeBuilder);
     if (!extract) {
       return false;
     }
     bool success = tryCharset(extract);
-    nsHtml5Portability::releaseString(extract);
+    extract.Release();
     return success;
   }
   return false;

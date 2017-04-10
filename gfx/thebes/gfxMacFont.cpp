@@ -159,9 +159,11 @@ CreateVariationDictionaryOrNull(CGFontRef aCGFont,
     return dict.forget();
 }
 
-gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
+gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
+                       MacOSFontEntry *aFontEntry,
+                       const gfxFontStyle *aFontStyle,
                        bool aNeedsBold)
-    : gfxFont(aFontEntry, aFontStyle),
+    : gfxFont(aUnscaledFont, aFontEntry, aFontStyle),
       mCGFont(nullptr),
       mCTFont(nullptr),
       mFontFace(nullptr),
@@ -170,7 +172,7 @@ gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyl
     mApplySyntheticBold = aNeedsBold;
 
     if (mVariationFont && aFontStyle->variationSettings.Length() > 0) {
-        CGFontRef baseFont = aFontEntry->GetFontRef();
+        CGFontRef baseFont = aUnscaledFont->GetFont();
         if (!baseFont) {
             mIsValid = false;
             return;
@@ -185,7 +187,7 @@ gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyl
             mCGFont = baseFont;
         }
     } else {
-        mCGFont = aFontEntry->GetFontRef();
+        mCGFont = aUnscaledFont->GetFont();
         if (!mCGFont) {
             mIsValid = false;
             return;
@@ -636,18 +638,22 @@ gfxMacFont::GetScaledFont(DrawTarget *aTarget)
     NativeFont nativeFont;
     nativeFont.mType = NativeFontType::MAC_FONT_FACE;
     nativeFont.mFont = GetCGFontRef();
-    mAzureScaledFont = mozilla::gfx::Factory::CreateScaledFontWithCairo(nativeFont, GetAdjustedSize(), mScaledFont);
+    mAzureScaledFont =
+      Factory::CreateScaledFontWithCairo(nativeFont,
+                                         GetUnscaledFont(),
+                                         GetAdjustedSize(),
+                                         mScaledFont);
   }
 
   RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
   return scaledFont.forget();
 }
 
-already_AddRefed<mozilla::gfx::GlyphRenderingOptions>
+already_AddRefed<GlyphRenderingOptions>
 gfxMacFont::GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams)
 {
     if (aRunParams) {
-        return mozilla::gfx::Factory::CreateCGGlyphRenderingOptions(aRunParams->fontSmoothingBGColor);
+        return Factory::CreateCGGlyphRenderingOptions(aRunParams->fontSmoothingBGColor);
     }
     return nullptr;
 }

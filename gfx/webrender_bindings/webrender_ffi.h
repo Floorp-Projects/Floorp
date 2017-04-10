@@ -601,6 +601,10 @@ WR_INLINE void
 wr_api_add_raw_font(WrAPI* api, WrFontKey key, uint8_t* font_buffer, size_t buffer_size)
 WR_FUNC;
 
+WR_INLINE void
+wr_api_delete_font(WrAPI* api, WrFontKey key)
+WR_FUNC;
+
 WR_INLINE WrIdNamespace
 wr_api_get_namespace(WrAPI* api)
 WR_FUNC;

@@ -12,6 +12,7 @@ use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
 #[cfg(feature = "gecko")] use context::UpdateAnimationsTasks;
 use data::ElementData;
 use element_state::ElementState;
+use font_metrics::FontMetricsProvider;
 use properties::{ComputedValues, PropertyDeclarationBlock};
 use selector_parser::{ElementExt, PreExistingComputedValues, PseudoElement};
 use selectors::matching::ElementSelectorFlags;
@@ -278,8 +279,26 @@ pub trait TElement : PartialEq + Debug + Sized + Copy + Clone + ElementExt + Pre
     /// The concrete node type.
     type ConcreteNode: TNode<ConcreteElement = Self>;
 
+    /// Type of the font metrics provider
+    ///
+    /// XXXManishearth It would be better to make this a type parameter on
+    /// ThreadLocalStyleContext and StyleContext
+    type FontMetricsProvider: FontMetricsProvider;
+
     /// Get this element as a node.
     fn as_node(&self) -> Self::ConcreteNode;
+
+    /// Returns the depth of this element in the DOM.
+    fn depth(&self) -> usize {
+        let mut depth = 0;
+        let mut curr = *self;
+        while let Some(parent) = curr.parent_element() {
+            depth += 1;
+            curr = parent;
+        }
+
+        depth
+    }
 
     /// While doing a reflow, the element at the root has no parent, as far as we're
     /// concerned. This method returns `None` at the reflow root.

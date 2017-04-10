@@ -42,6 +42,7 @@ JS::Zone::Zone(JSRuntime* rt, ZoneGroup* group)
     typeDescrObjects_(group, this, SystemAllocPolicy()),
     markedAtoms_(group),
     atomCache_(group),
+    externalStringCache_(group),
     usage(&rt->gc.usage),
     threshold(),
     gcDelayBytes(0),

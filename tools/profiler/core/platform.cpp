@@ -38,9 +38,9 @@
 #include "nsProfilerStartParams.h"
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
-#include "ProfileGatherer.h"
 #include "ProfilerMarkers.h"
 #include "shared-libraries.h"
+#include "prtime.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -129,7 +129,8 @@ class ProfilerState
 {
 public:
   // Shorter names for local use.
-  typedef ProfilerStateMutex Mutex;
+  class Mutex : public mozilla::StaticMutex {};
+
   typedef mozilla::BaseAutoLock<Mutex> AutoLock;
 
   // Only functions that take a LockRef arg can modify this class's fields.
@@ -153,7 +154,6 @@ public:
     , mFeatureTaskTracer(false)
     , mFeatureThreads(false)
     , mBuffer(nullptr)
-    , mGatherer(nullptr)
     , mIsPaused(false)
 #if defined(GP_OS_linux) || defined(GP_OS_android)
     , mWasPaused(false)
@@ -196,9 +196,8 @@ public:
 
   GET_AND_SET(ProfileBuffer*, Buffer)
 
-  GET_AND_SET(ProfileGatherer*, Gatherer)
-
-  ThreadVector& Threads(LockRef) { return mThreads; }
+  ThreadVector& LiveThreads(LockRef) { return mLiveThreads; }
+  ThreadVector& DeadThreads(LockRef) { return mDeadThreads; }
 
   static bool IsActive(LockRef) { return sActivityGeneration > 0; }
   static uint32_t ActivityGeneration(LockRef) { return sActivityGeneration; }
@@ -266,15 +265,16 @@ private:
   bool mFeatureThreads;
 
   // The buffer into which all samples are recorded. Always used in conjunction
-  // with mThreads. Null when the profiler is inactive.
+  // with mLiveThreads and mDeadThreads. Null when the profiler is inactive.
   ProfileBuffer* mBuffer;
 
-  // A helper class that is used when saving profiles. Null when the profiler
-  // is inactive.
-  RefPtr<mozilla::ProfileGatherer> mGatherer;
-
-  // All the registered threads.
-  ThreadVector mThreads;
+  // Info on all the registered threads, both live and dead. ThreadIds in
+  // mLiveThreads are unique. ThreadIds in mDeadThreads may not be, because
+  // ThreadIds can be reused. HasProfile() is true for all ThreadInfos in
+  // mDeadThreads because we don't hold onto ThreadInfos for non-profiled dead
+  // threads.
+  ThreadVector mLiveThreads;
+  ThreadVector mDeadThreads;
 
   // Is the profiler active? The obvious way to track this is with a bool,
   // sIsActive, but then we could have the following scenario.
@@ -375,7 +375,7 @@ public:
     , mStackTop(aThreadInfo->StackTop())
     , mLastSample(&aThreadInfo->LastSample())
     , mPlatformData(aThreadInfo->GetPlatformData())
-    , mRespInfo(aThreadInfo->GetThreadResponsiveness())
+    , mResponsiveness(aThreadInfo->GetThreadResponsiveness())
     , mRSSMemory(aRSSMemory)    // may be zero
     , mUSSMemory(aUSSMemory)    // may be zero
 #if !defined(GP_OS_darwin)
@@ -398,7 +398,7 @@ public:
     , mStackTop(nullptr)
     , mLastSample(nullptr)
     , mPlatformData(aPlatformData)
-    , mRespInfo(nullptr)
+    , mResponsiveness(nullptr)
     , mRSSMemory(0)
     , mUSSMemory(0)
 #if !defined(GP_OS_darwin)
@@ -428,7 +428,7 @@ public:
 
   PlatformData* const mPlatformData;
 
-  ThreadResponsiveness* const mRespInfo;          // may be null
+  ThreadResponsiveness* const mResponsiveness;    // may be null
 
   const int64_t mRSSMemory;                       // may be zero
   const int64_t mUSSMemory;                       // may be zero
@@ -1077,9 +1077,9 @@ Tick(PS::LockRef aLock, ProfileBuffer* aBuffer, TickSample* aSample)
     }
   }
 
-  if (aSample->mRespInfo && aSample->mRespInfo->HasData()) {
+  if (aSample->mResponsiveness && aSample->mResponsiveness->HasData()) {
     mozilla::TimeDuration delta =
-      aSample->mRespInfo->GetUnresponsiveDuration(aSample->mTimeStamp);
+      aSample->mResponsiveness->GetUnresponsiveDuration(aSample->mTimeStamp);
     aBuffer->addTag(ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
   }
 
@@ -1166,6 +1166,24 @@ AppendSharedLibraries(JSONWriter& aWriter)
   }
 }
 
+#ifdef MOZ_TASK_TRACER
+static void
+StreamNameAndThreadId(const char* aName, int aThreadId)
+{
+  aWriter.StartObjectElement();
+  {
+    if (XRE_GetProcessType() == GeckoProcessType_Plugin) {
+      // TODO Add the proper plugin name
+      aWriter.StringProperty("name", "Plugin");
+    } else {
+      aWriter.StringProperty("name", aName);
+    }
+    aWriter.IntProperty("tid", aThreadId);
+  }
+  aWriter.EndObject();
+}
+#endif
+
 static void
 StreamTaskTracer(PS::LockRef aLock, SpliceableJSONWriter& aWriter)
 {
@@ -1182,21 +1200,16 @@ StreamTaskTracer(PS::LockRef aLock, SpliceableJSONWriter& aWriter)
 
   aWriter.StartArrayProperty("threads");
   {
-    const PS::ThreadVector& threads = gPS->Threads(aLock);
-    for (size_t i = 0; i < threads.size(); i++) {
-      // Thread meta data
-      ThreadInfo* info = threads.at(i);
-      aWriter.StartObjectElement();
-      {
-        if (XRE_GetProcessType() == GeckoProcessType_Plugin) {
-          // TODO Add the proper plugin name
-          aWriter.StringProperty("name", "Plugin");
-        } else {
-          aWriter.StringProperty("name", info->Name());
-        }
-        aWriter.IntProperty("tid", static_cast<int>(info->ThreadId()));
-      }
-      aWriter.EndObject();
+    const PS::ThreadVector& liveThreads = gPS->LiveThreads(aLock);
+    for (size_t i = 0; i < liveThreads.size(); i++) {
+      ThreadInfo* info = liveThreads.at(i);
+      StreamNameAndThreadId(info->Name(), info->ThreadId());
+    }
+
+    const PS::ThreadVector& deadThreads = gPS->DeadThreads(aLock);
+    for (size_t i = 0; i < deadThreads.size(); i++) {
+      ThreadInfo* info = deadThreads.at(i);
+      StreamNameAndThreadId(info->Name(), info->ThreadId());
     }
   }
   aWriter.EndArray();
@@ -1391,21 +1404,22 @@ StreamJSON(PS::LockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime)
     {
       gPS->SetIsPaused(aLock, true);
 
-      {
-        const PS::ThreadVector& threads = gPS->Threads(aLock);
-        for (size_t i = 0; i < threads.size(); i++) {
-          // Thread not being profiled, skip it
-          ThreadInfo* info = threads.at(i);
-          if (!info->HasProfile()) {
-            continue;
-          }
-
-          // Note that we intentionally include thread profiles which
-          // have been marked for pending delete.
-
-          info->StreamJSON(gPS->Buffer(aLock), aWriter, gPS->StartTime(aLock),
-                           aSinceTime);
+      const PS::ThreadVector& liveThreads = gPS->LiveThreads(aLock);
+      for (size_t i = 0; i < liveThreads.size(); i++) {
+        ThreadInfo* info = liveThreads.at(i);
+        if (!info->HasProfile()) {
+          continue;
         }
+        info->StreamJSON(gPS->Buffer(aLock), aWriter, gPS->StartTime(aLock),
+                         aSinceTime);
+      }
+
+      const PS::ThreadVector& deadThreads = gPS->DeadThreads(aLock);
+      for (size_t i = 0; i < deadThreads.size(); i++) {
+        ThreadInfo* info = deadThreads.at(i);
+        MOZ_ASSERT(info->HasProfile());
+        info->StreamJSON(gPS->Buffer(aLock), aWriter, gPS->StartTime(aLock),
+                         aSinceTime);
       }
 
       // When notifying observers in other places in this file we are careful
@@ -1444,19 +1458,6 @@ StreamJSON(PS::LockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime)
     aWriter.EndArray();
   }
   aWriter.End();
-}
-
-UniquePtr<char[]>
-ToJSON(PS::LockRef aLock, double aSinceTime)
-{
-  LOG("ToJSON");
-
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(gPS && gPS->IsActive(aLock));
-
-  SpliceableChunkedJSONWriter b;
-  StreamJSON(aLock, b, aSinceTime);
-  return b.WriteFunc()->CopyData();
 }
 
 // END saving/streaming code
@@ -1661,11 +1662,11 @@ SamplerThread::Run()
       gPS->Buffer(lock)->deleteExpiredStoredMarkers();
 
       if (!gPS->IsPaused(lock)) {
-        const PS::ThreadVector& threads = gPS->Threads(lock);
-        for (uint32_t i = 0; i < threads.size(); i++) {
-          ThreadInfo* info = threads[i];
+        const PS::ThreadVector& liveThreads = gPS->LiveThreads(lock);
+        for (uint32_t i = 0; i < liveThreads.size(); i++) {
+          ThreadInfo* info = liveThreads[i];
 
-          if (!info->HasProfile() || info->IsPendingDelete()) {
+          if (!info->HasProfile()) {
             // We are not interested in profiling this thread.
             continue;
           }
@@ -1683,9 +1684,12 @@ SamplerThread::Run()
             }
           }
 
-          info->UpdateThreadResponsiveness();
+          // We only track responsiveness for the main thread.
+          if (info->IsMainThread()) {
+            info->GetThreadResponsiveness()->Update();
+          }
 
-          // We only get the memory measurements once for all threads.
+          // We only get the memory measurements once for all live threads.
           int64_t rssMemory = 0;
           int64_t ussMemory = 0;
           if (i == 0 && gPS->FeatureMemory(lock)) {
@@ -1780,9 +1784,15 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
     if (gPS) {
       profSize = GeckoProfilerMallocSizeOf(gPS);
 
-      const PS::ThreadVector& threads = gPS->Threads(lock);
-      for (uint32_t i = 0; i < threads.size(); i++) {
-        ThreadInfo* info = threads.at(i);
+      const PS::ThreadVector& liveThreads = gPS->LiveThreads(lock);
+      for (uint32_t i = 0; i < liveThreads.size(); i++) {
+        ThreadInfo* info = liveThreads.at(i);
+        profSize += info->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
+      }
+
+      const PS::ThreadVector& deadThreads = gPS->DeadThreads(lock);
+      for (uint32_t i = 0; i < deadThreads.size(); i++) {
+        ThreadInfo* info = deadThreads.at(i);
         profSize += info->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
       }
 
@@ -1795,8 +1805,8 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
       // is worthwhile:
       // - gPS->mFeatures
       // - gPS->mThreadNameFilters
-      // - gPS->mThreads itself (its elements' children are measured above)
-      // - gPS->mGatherer
+      // - gPS->mLiveThreads itself (its elements' children are measured above)
+      // - gPS->mDeadThreads itself (ditto)
       // - gPS->mInterposeObserver
 
 #if defined(USE_LUL_STACKWALK)
@@ -1851,31 +1861,29 @@ ThreadSelected(PS::LockRef aLock, const char* aThreadName)
   return false;
 }
 
-static void
-MaybeSetProfile(PS::LockRef aLock, ThreadInfo* aInfo)
+static bool
+ShouldProfileThread(PS::LockRef aLock, ThreadInfo* aInfo)
 {
   // This function runs both on and off the main thread.
 
   MOZ_RELEASE_ASSERT(gPS);
 
-  if ((aInfo->IsMainThread() || gPS->FeatureThreads(aLock)) &&
-      ThreadSelected(aLock, aInfo->Name())) {
-    aInfo->SetHasProfile();
-  }
+  return ((aInfo->IsMainThread() || gPS->FeatureThreads(aLock)) &&
+          ThreadSelected(aLock, aInfo->Name()));
 }
 
 // Find the ThreadInfo for the current thread. On success, *aIndexOut is set to
 // the index if it is non-null.
 static ThreadInfo*
-FindThreadInfo(PS::LockRef aLock, int* aIndexOut = nullptr)
+FindLiveThreadInfo(PS::LockRef aLock, int* aIndexOut = nullptr)
 {
   // This function runs both on and off the main thread.
 
   Thread::tid_t id = Thread::GetCurrentId();
-  const PS::ThreadVector& threads = gPS->Threads(aLock);
-  for (uint32_t i = 0; i < threads.size(); i++) {
-    ThreadInfo* info = threads.at(i);
-    if (info->ThreadId() == id && !info->IsPendingDelete()) {
+  const PS::ThreadVector& liveThreads = gPS->LiveThreads(aLock);
+  for (uint32_t i = 0; i < liveThreads.size(); i++) {
+    ThreadInfo* info = liveThreads.at(i);
+    if (info->ThreadId() == id) {
       if (aIndexOut) {
         *aIndexOut = i;
       }
@@ -1892,28 +1900,30 @@ locked_register_thread(PS::LockRef aLock, const char* aName, void* stackTop)
 
   MOZ_RELEASE_ASSERT(gPS);
 
-  MOZ_RELEASE_ASSERT(!FindThreadInfo(aLock));
+  MOZ_RELEASE_ASSERT(!FindLiveThreadInfo(aLock));
 
   if (!tlsPseudoStack.init()) {
     return;
   }
-  NotNull<PseudoStack*> stack = WrapNotNull(new PseudoStack());
-  tlsPseudoStack.set(stack);
 
   ThreadInfo* info = new ThreadInfo(aName, Thread::GetCurrentId(),
-                                    NS_IsMainThread(), stack, stackTop);
+                                    NS_IsMainThread(), stackTop);
+  NotNull<PseudoStack*> pseudoStack = info->Stack();
 
-  MaybeSetProfile(aLock, info);
+  tlsPseudoStack.set(pseudoStack.get());
 
-  // This must come after the MaybeSetProfile() call.
-  if (gPS->IsActive(aLock) && info->HasProfile() && gPS->FeatureJS(aLock)) {
-    // This startJSSampling() call is on-thread, so we can poll manually to
-    // start JS sampling immediately.
-    stack->startJSSampling();
-    stack->pollJSSampling();
+  if (ShouldProfileThread(aLock, info)) {
+    info->SetHasProfile();
+
+    if (gPS->IsActive(aLock) && gPS->FeatureJS(aLock)) {
+      // This startJSSampling() call is on-thread, so we can poll manually to
+      // start JS sampling immediately.
+      pseudoStack->startJSSampling();
+      pseudoStack->pollJSSampling();
+    }
   }
 
-  gPS->Threads(aLock).push_back(info);
+  gPS->LiveThreads(aLock).push_back(info);
 }
 
 static void
@@ -2095,10 +2105,16 @@ profiler_shutdown()
       samplerThread = locked_profiler_stop(lock);
     }
 
-    PS::ThreadVector& threads = gPS->Threads(lock);
-    while (threads.size() > 0) {
-      delete threads.back();
-      threads.pop_back();
+    PS::ThreadVector& liveThreads = gPS->LiveThreads(lock);
+    while (liveThreads.size() > 0) {
+      delete liveThreads.back();
+      liveThreads.pop_back();
+    }
+
+    PS::ThreadVector& deadThreads = gPS->DeadThreads(lock);
+    while (deadThreads.size() > 0) {
+      delete deadThreads.back();
+      deadThreads.pop_back();
     }
 
 #if defined(USE_LUL_STACKWALK)
@@ -2144,81 +2160,9 @@ profiler_get_profile(double aSinceTime)
     return nullptr;
   }
 
-  return ToJSON(lock, aSinceTime);
-}
-
-JSObject*
-profiler_get_profile_jsobject(JSContext *aCx, double aSinceTime)
-{
-  LOG("profiler_get_profile_jsobject");
-
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(gPS);
-
-  // |val| must outlive |lock| to avoid a GC hazard.
-  JS::RootedValue val(aCx);
-  UniquePtr<char[]> buf = nullptr;
-
-  {
-    PS::AutoLock lock(gPSMutex);
-
-    if (!gPS->IsActive(lock)) {
-      return nullptr;
-    }
-
-    buf = ToJSON(lock, aSinceTime);
-  }
-
-  NS_ConvertUTF8toUTF16 js_string(nsDependentCString(buf.get()));
-  auto buf16 = static_cast<const char16_t*>(js_string.get());
-  MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, buf16, js_string.Length(), &val));
-
-  return &val.toObject();
-}
-
-void
-profiler_get_profile_jsobject_async(double aSinceTime,
-                                    mozilla::dom::Promise* aPromise)
-{
-  LOG("profiler_get_profile_jsobject_async");
-
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(gPS);
-
-  PS::AutoLock lock(gPSMutex);
-
-  if (!gPS->IsActive(lock)) {
-    LOG("END   profiler_get_profile_jsobject_async: inactive");
-    return;
-  }
-
-  gPS->Gatherer(lock)->Start(lock, aSinceTime, aPromise);
-}
-
-void
-profiler_save_profile_to_file_async(double aSinceTime, const char* aFileName)
-{
-  LOG("BEGIN profiler_save_profile_to_file_async");
-
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(gPS);
-
-  nsCString filename(aFileName);
-  NS_DispatchToMainThread(NS_NewRunnableFunction([=] () {
-
-    LOG("profiler_save_profile_to_file_async callback");
-
-    PS::AutoLock lock(gPSMutex);
-
-    // It's conceivable that profiler_stop() or profiler_shutdown() was called
-    // between the dispatch and running of this runnable, so check for those.
-    if (!gPS || !gPS->IsActive(lock)) {
-      LOG("END   profiler_save_profile_to_file_async callback: inactive");
-      return;
-    }
-
-    gPS->Gatherer(lock)->Start(lock, aSinceTime, filename);
-  }));
+  SpliceableChunkedJSONWriter b;
+  StreamJSON(lock, b, aSinceTime);
+  return b.WriteFunc()->CopyData();
 }
 
 void
@@ -2250,61 +2194,6 @@ profiler_get_start_params(int* aEntries, double* aInterval,
   for (uint32_t i = 0; i < threadNameFilters.length(); ++i) {
     (*aFilters)[i] = threadNameFilters[i].c_str();
   }
-}
-
-void
-profiler_will_gather_OOP_profile()
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(gPS);
-
-  // This function is called once per subprocess in response to the observation
-  // of a "profile-subprocess-gather" notification. That notification
-  // originates from ProfileGatherer::Start2(). The observers receive it and
-  // immediately call this function, all while Start2() holds gPSMutex locked.
-  // This is non-trivial, so we assert that gPSMutex is locked as expected...
-  gPSMutex.AssertCurrentThreadOwns();
-
-  // ...therefore we don't need to lock gPSMutex. But we need a PS::AutoLock to
-  // access gPS, so we make a fake one. This is gross but it's hard to get the
-  // "profile-subprocess-gather" observers to call back here any other way
-  // without exposing ProfileGatherer, which causes other difficulties.
-  static PS::Mutex sFakeMutex;
-  PS::AutoLock fakeLock(sFakeMutex);
-
-  MOZ_RELEASE_ASSERT(gPS->IsActive(fakeLock));
-
-  gPS->Gatherer(fakeLock)->WillGatherOOPProfile();
-}
-
-void
-profiler_gathered_OOP_profile()
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(gPS);
-
-  PS::AutoLock lock(gPSMutex);
-
-  if (!gPS->IsActive(lock)) {
-    return;
-  }
-
-  gPS->Gatherer(lock)->GatheredOOPProfile(lock);
-}
-
-void
-profiler_OOP_exit_profile(const nsCString& aProfile)
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(gPS);
-
-  PS::AutoLock lock(gPSMutex);
-
-  if (!gPS->IsActive(lock)) {
-    return;
-  }
-
-  gPS->Gatherer(lock)->OOPExitProfile(aProfile);
 }
 
 static void
@@ -2449,14 +2338,14 @@ locked_profiler_start(PS::LockRef aLock, int aEntries, double aInterval,
   double interval = aInterval > 0 ? aInterval : PROFILE_DEFAULT_INTERVAL;
   gPS->SetInterval(aLock, interval);
 
-  // Deep copy aFeatures. Must precede the MaybeSetProfile() call below.
+  // Deep copy aFeatures. Must precede the ShouldProfileThread() call below.
   Vector<std::string>& features = gPS->Features(aLock);
   MOZ_ALWAYS_TRUE(features.resize(aFeatureCount));
   for (uint32_t i = 0; i < aFeatureCount; ++i) {
     features[i] = aFeatures[i];
   }
 
-  // Deep copy aThreadNameFilters. Must precede the MaybeSetProfile() call
+  // Deep copy aThreadNameFilters. Must precede the ShouldProfileThread() call
   // below.
   Vector<std::string>& threadNameFilters = gPS->ThreadNameFilters(aLock);
   MOZ_ALWAYS_TRUE(threadNameFilters.resize(aFilterCount));
@@ -2486,36 +2375,37 @@ locked_profiler_start(PS::LockRef aLock, int aEntries, double aInterval,
 #endif
   // Profile non-main threads if we have a filter, because users sometimes ask
   // to filter by a list of threads but forget to explicitly request.
-  // Must precede the MaybeSetProfile() call below.
+  // Must precede the ShouldProfileThread() call below.
   gPS->SetFeatureThreads(aLock, HAS_FEATURE("threads") || aFilterCount > 0);
 
 #undef HAS_FEATURE
 
   gPS->SetBuffer(aLock, new ProfileBuffer(entries));
 
-  gPS->SetGatherer(aLock, new mozilla::ProfileGatherer());
-
   // Set up profiling for each registered thread, if appropriate.
-  const PS::ThreadVector& threads = gPS->Threads(aLock);
-  for (uint32_t i = 0; i < threads.size(); i++) {
-    ThreadInfo* info = threads.at(i);
+  const PS::ThreadVector& liveThreads = gPS->LiveThreads(aLock);
+  for (uint32_t i = 0; i < liveThreads.size(); i++) {
+    ThreadInfo* info = liveThreads.at(i);
 
-    MaybeSetProfile(aLock, info);
-
-    if (info->HasProfile() && !info->IsPendingDelete()) {
+    if (ShouldProfileThread(aLock, info)) {
+      info->SetHasProfile();
       info->Stack()->reinitializeOnResume();
-
       if (featureJS) {
         info->Stack()->startJSSampling();
       }
     }
   }
 
+  // Dead ThreadInfos are deleted in profiler_stop(), and dead ThreadInfos
+  // aren't saved when the profiler is inactive. Therefore mDeadThreads should
+  // be empty here.
+  MOZ_RELEASE_ASSERT(gPS->DeadThreads(aLock).empty());
+
   if (featureJS) {
     // We just called startJSSampling() on all relevant threads. We can also
     // manually poll the current thread so it starts sampling immediately.
-    if (PseudoStack* stack = tlsPseudoStack.get()) {
-      stack->pollJSSampling();
+    if (PseudoStack* pseudoStack = tlsPseudoStack.get()) {
+      pseudoStack->pollJSSampling();
     }
   }
 
@@ -2625,18 +2515,22 @@ locked_profiler_stop(PS::LockRef aLock)
   }
 #endif
 
-  PS::ThreadVector& threads = gPS->Threads(aLock);
-  for (uint32_t i = 0; i < threads.size(); i++) {
-    ThreadInfo* info = threads.at(i);
-    if (info->IsPendingDelete()) {
-      // We've stopped profiling. Destroy ThreadInfo for dead threads.
-      delete info;
-      threads.erase(threads.begin() + i);
-      i--;
-    } else if (info->HasProfile() && gPS->FeatureJS(aLock)) {
-      // Stop JS sampling live threads.
-      info->Stack()->stopJSSampling();
+  // Stop JS sampling live threads.
+  if (gPS->FeatureJS(aLock)) {
+    PS::ThreadVector& liveThreads = gPS->LiveThreads(aLock);
+    for (uint32_t i = 0; i < liveThreads.size(); i++) {
+      ThreadInfo* info = liveThreads.at(i);
+      if (info->HasProfile()) {
+        info->Stack()->stopJSSampling();
+      }
     }
+  }
+
+  // This is where we destroy the ThreadInfos for all dead threads.
+  PS::ThreadVector& deadThreads = gPS->DeadThreads(aLock);
+  while (deadThreads.size() > 0) {
+    delete deadThreads.back();
+    deadThreads.pop_back();
   }
 
   if (gPS->FeatureJS(aLock)) {
@@ -2646,10 +2540,6 @@ locked_profiler_stop(PS::LockRef aLock)
       stack->pollJSSampling();
     }
   }
-
-  // Cancel any in-flight async profile gathering requests.
-  gPS->Gatherer(aLock)->Cancel();
-  gPS->SetGatherer(aLock, nullptr);
 
   delete gPS->Buffer(aLock);
   gPS->SetBuffer(aLock, nullptr);
@@ -2854,26 +2744,23 @@ profiler_unregister_thread()
   // that for a JS thread that is in the process of disappearing.
 
   int i;
-  ThreadInfo* info = FindThreadInfo(lock, &i);
+  ThreadInfo* info = FindLiveThreadInfo(lock, &i);
   if (info) {
     DEBUG_LOG("profiler_unregister_thread: %s", info->Name());
-    if (gPS->IsActive(lock)) {
-      // We still want to show the results of this thread if you save the
-      // profile shortly after a thread is terminated. We defer the delete to
-      // profile stop.
-      info->SetPendingDelete();
+    if (gPS->IsActive(lock) && info->HasProfile()) {
+      gPS->DeadThreads(lock).push_back(info);
     } else {
       delete info;
-      PS::ThreadVector& threads = gPS->Threads(lock);
-      threads.erase(threads.begin() + i);
     }
+    PS::ThreadVector& liveThreads = gPS->LiveThreads(lock);
+    liveThreads.erase(liveThreads.begin() + i);
 
     // Whether or not we just destroyed the PseudoStack (via its owning
     // ThreadInfo), we no longer need to access it via TLS.
     tlsPseudoStack.set(nullptr);
 
   } else {
-    // There are two ways FindThreadInfo() can fail.
+    // There are two ways FindLiveThreadInfo() can fail.
     //
     // - tlsPseudoStack.init() failed in locked_register_thread().
     //
@@ -3189,7 +3076,7 @@ profiler_clear_js_context()
     gPS->SetIsPaused(lock, true);
 
     // Flush this thread's ThreadInfo, if it is being profiled.
-    ThreadInfo* info = FindThreadInfo(lock);
+    ThreadInfo* info = FindLiveThreadInfo(lock);
     MOZ_RELEASE_ASSERT(info);
     if (info->HasProfile()) {
       info->FlushSamplesAndMarkers(gPS->Buffer(lock), gPS->StartTime(lock));

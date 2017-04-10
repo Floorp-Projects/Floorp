@@ -866,9 +866,6 @@ public:
 
     bool AttachComponentsObject(JSContext* aCx);
 
-    void SetDocGroupValidation() { mDocGroupValidation = true; }
-    bool HasDocGroupValidation() const { return mDocGroupValidation; }
-
     // Returns the JS object reflection of the Components object.
     bool
     GetComponentsJSObject(JS::MutableHandleObject obj);
@@ -1069,12 +1066,6 @@ private:
     // If this flag is set, we intercept function calls on vanilla JS function objects
     // from this scope if the caller scope has mInterposition set.
     bool mHasCallInterpositions;
-
-    // If this flag is set, Xray wrappers from this compartment to content
-    // compartments will be DocGroupValidationWrappers of some
-    // sort. Consequently, this compartment will throw instead of asserting for
-    // DocGroup mismatches.
-    bool mDocGroupValidation;
 
     nsAutoPtr<DOMExpandoSet> mDOMExpandoSet;
 

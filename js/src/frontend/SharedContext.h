@@ -454,7 +454,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     uint16_t        length;
 
     uint8_t         generatorKindBits_;     /* The GeneratorKind of this function. */
-    uint8_t         asyncKindBits_;         /* The FunctionAsyncKing of this function. */
+    uint8_t         asyncKindBits_;         /* The FunctionAsyncKind of this function. */
 
     bool            isGenexpLambda:1;       /* lambda from generator expression */
     bool            hasDestructuringArgs:1; /* parameter list contains destructuring expression */

@@ -83,6 +83,7 @@ included_inclnames_to_ignore = set([
     'unicode/timezone.h',       # ICU
     'unicode/plurrule.h',       # ICU
     'unicode/ucal.h',           # ICU
+    'unicode/uchar.h',          # ICU
     'unicode/uclean.h',         # ICU
     'unicode/ucol.h',           # ICU
     'unicode/udat.h',           # ICU

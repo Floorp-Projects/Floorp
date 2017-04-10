@@ -2147,6 +2147,30 @@ public:
   }
 
   /**
+   * Returns true if the DOM Animations API should be enabled.
+   */
+  static bool AnimationsAPICoreEnabled()
+  {
+    return sAnimationsAPICoreEnabled;
+  }
+
+  /*
+   * Returns true if the DOM Animations Element.animate() API should be enabled.
+   */
+  static bool AnimationsAPIElementAnimateEnabled()
+  {
+    return sAnimationsAPIElementAnimateEnabled;
+  }
+
+  /**
+   * Returns true if the getBoxQuads API should be enabled.
+   */
+  static bool GetBoxQuadsEnabled()
+  {
+    return sGetBoxQuadsEnabled;
+  }
+
+  /**
    * Return true if this doc is controlled by a ServiceWorker.
    */
   static bool IsControlledByServiceWorker(nsIDocument* aDocument);
@@ -2947,6 +2971,9 @@ private:
   static bool sPrivacyResistFingerprinting;
   static bool sSendPerformanceTimingNotifications;
   static bool sUseActivityCursor;
+  static bool sAnimationsAPICoreEnabled;
+  static bool sAnimationsAPIElementAnimateEnabled;
+  static bool sGetBoxQuadsEnabled;
   static uint32_t sCookiesLifetimePolicy;
   static uint32_t sCookiesBehavior;
 

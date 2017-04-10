@@ -347,6 +347,7 @@ private:
   DECL_GFX_PREF(Live, "dom.ipc.plugins.asyncdrawing.enabled",  PluginAsyncDrawingEnabled, bool, false);
   DECL_GFX_PREF(Live, "dom.meta-viewport.enabled",             MetaViewportEnabled, bool, false);
   DECL_GFX_PREF(Once, "dom.vr.enabled",                        VREnabled, bool, false);
+  DECL_GFX_PREF(Live, "dom.vr.autoactivate.enabled",           VRAutoActivateEnabled, bool, false);
   DECL_GFX_PREF(Live, "dom.vr.navigation.timeout",             VRNavigationTimeout, int32_t, 1000);
   DECL_GFX_PREF(Once, "dom.vr.oculus.enabled",                 VROculusEnabled, bool, true);
   DECL_GFX_PREF(Once, "dom.vr.openvr.enabled",                 VROpenVREnabled, bool, false);
@@ -496,6 +497,7 @@ private:
   DECL_GFX_PREF(Live, "layers.advanced.button-foreground-layers", LayersAllowButtonForegroundLayers, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.canvas-background-color", LayersAllowCanvasBackgroundColorLayers, bool, false);
   DECL_OVERRIDE_PREF(Live, "layers.advanced.caret-layers",     LayersAllowCaretLayers, gfxPrefs::OverrideBase_WebRender());
+  DECL_GFX_PREF(Live, "layers.advanced.columnRule-layers",     LayersAllowColumnRuleLayers, bool, false);
   DECL_OVERRIDE_PREF(Live, "layers.advanced.displaybuttonborder-layers", LayersAllowDisplayButtonBorder, gfxPrefs::OverrideBase_WebRender());
   DECL_GFX_PREF(Live, "layers.advanced.image-layers",          LayersAllowImageLayers, bool, false);
   DECL_OVERRIDE_PREF(Live, "layers.advanced.outline-layers",   LayersAllowOutlineLayers, gfxPrefs::OverrideBase_WebRender());

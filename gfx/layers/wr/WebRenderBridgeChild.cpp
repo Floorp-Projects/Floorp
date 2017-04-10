@@ -24,6 +24,7 @@ WebRenderBridgeChild::WebRenderBridgeChild(const wr::PipelineId& aPipelineId)
   , mPipelineId(aPipelineId)
   , mIPCOpen(false)
   , mDestroyed(false)
+  , mFontKeysDeleted(0)
 {
 }
 
@@ -149,6 +150,112 @@ WebRenderBridgeChild::DeallocExternalImageId(uint64_t aImageId)
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(aImageId);
   SendRemoveExternalImageId(aImageId);
+}
+
+struct FontFileData
+{
+  wr::ByteBuffer mFontBuffer;
+  uint32_t mFontIndex;
+  float mGlyphSize;
+};
+
+static void
+WriteFontFileData(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
+                  float aGlyphSize, uint32_t aVariationCount,
+                  const ScaledFont::VariationSetting* aVariations, void* aBaton)
+{
+  FontFileData* data = static_cast<FontFileData*>(aBaton);
+
+  if (!data->mFontBuffer.Allocate(aLength)) {
+    return;
+  }
+  memcpy(data->mFontBuffer.mData, aData, aLength);
+
+  data->mFontIndex = aIndex;
+  data->mGlyphSize = aGlyphSize;
+}
+
+void
+WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<GlyphArray>& aGlyphs,
+                                 gfx::ScaledFont* aFont, const gfx::Point& aOffset, const gfx::Rect& aBounds,
+                                 const gfx::Rect& aClip)
+{
+  MOZ_ASSERT(aFont);
+  MOZ_ASSERT(!aGlyphs.IsEmpty());
+
+  WrFontKey key = GetFontKeyForScaledFont(aFont);
+  MOZ_ASSERT(key.mNamespace && key.mHandle);
+
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(aClip));
+
+  for (size_t i = 0; i < aGlyphs.Length(); i++) {
+    GlyphArray glyph_array = aGlyphs[i];
+    nsTArray<gfx::Glyph>& glyphs = glyph_array.glyphs();
+
+    nsTArray<WrGlyphInstance> wr_glyph_instances;
+    wr_glyph_instances.SetLength(glyphs.Length());
+
+    for (size_t j = 0; j < glyphs.Length(); j++) {
+      wr_glyph_instances[j].index = glyphs[j].mIndex;
+      wr_glyph_instances[j].x = glyphs[j].mPosition.x - aOffset.x;
+      wr_glyph_instances[j].y = glyphs[j].mPosition.y - aOffset.y;
+    }
+    aBuilder.PushText(wr::ToWrRect(aBounds),
+                      clipRegion,
+                      glyph_array.color().value(),
+                      key,
+                      Range<const WrGlyphInstance>(wr_glyph_instances.Elements(), wr_glyph_instances.Length()),
+                      aFont->GetSize());
+
+  }
+}
+
+wr::FontKey
+WebRenderBridgeChild::GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont)
+{
+  MOZ_ASSERT(!mDestroyed);
+  MOZ_ASSERT(aScaledFont);
+  MOZ_ASSERT((aScaledFont->GetType() == gfx::FontType::DWRITE) ||
+             (aScaledFont->GetType() == gfx::FontType::MAC) ||
+             (aScaledFont->GetType() == gfx::FontType::FONTCONFIG));
+
+  RefPtr<UnscaledFont> unscaled = aScaledFont->GetUnscaledFont();
+  MOZ_ASSERT(unscaled);
+
+  wr::FontKey key = {0, 0};
+  if (mFontKeys.Get(unscaled, &key)) {
+    return key;
+  }
+
+  FontFileData data;
+  if (!aScaledFont->GetFontFileData(WriteFontFileData, &data) ||
+      !data.mFontBuffer.mData) {
+    return key;
+  }
+
+  key.mNamespace = GetNamespace();
+  key.mHandle = GetNextResourceId();
+
+  SendAddRawFont(key, data.mFontBuffer, data.mFontIndex);
+
+  mFontKeys.Put(unscaled, key);
+
+  return key;
+}
+
+void
+WebRenderBridgeChild::RemoveExpiredFontKeys()
+{
+  uint32_t counter = UnscaledFont::DeletionCounter();
+  if (mFontKeysDeleted != counter) {
+    mFontKeysDeleted = counter;
+    for (auto iter = mFontKeys.Iter(); !iter.Done(); iter.Next()) {
+      if (!iter.Key()) {
+        SendDeleteFont(iter.Data());
+        iter.Remove();
+      }
+    }
+  }
 }
 
 CompositorBridgeChild*

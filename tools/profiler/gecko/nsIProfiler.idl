@@ -57,6 +57,9 @@ interface nsIProfiler : nsISupports
   [implicit_jscontext]
   nsISupports getProfileDataAsync([optional] in double aSinceTime);
 
+  void dumpProfileToFileAsync(in ACString aFilename,
+                              [optional] in double aSinceTime);
+
   boolean IsActive();
   void GetFeatures(out uint32_t aCount, [retval, array, size_is(aCount)] out string aFeatures);
 

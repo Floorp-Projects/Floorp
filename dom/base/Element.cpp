@@ -1676,17 +1676,6 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     static_cast<nsStyledElement*>(this)->ReparseStyleAttribute(false, false);
   }
 
-  if (aDocument) {
-    // If we're in a document now, let our mapped attrs know what their new
-    // sheet is.  This is safe to run for non-mapped-attribute elements too;
-    // it'll just do a small bit of unnecessary work.  But most elements in
-    // practice are mapped-attribute elements.
-    nsHTMLStyleSheet* sheet = aDocument->GetAttributeStyleSheet();
-    if (sheet) {
-      mAttrsAndChildren.SetMappedAttrStyleSheet(sheet);
-    }
-  }
-
   // Call BindToTree on shadow root children.
   ShadowRoot* shadowRoot = GetShadowRoot();
   if (shadowRoot) {
@@ -2464,7 +2453,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
     // XXXbz Perhaps we should push up the attribute mapping function
     // stuff to Element?
     if (!IsAttributeMapped(aName) ||
-        !SetMappedAttribute(aComposedDocument, aName, aParsedValue, &rv)) {
+        !SetMappedAttribute(aName, aParsedValue, &rv)) {
       rv = mAttrsAndChildren.SetAndSwapAttr(aName, aParsedValue);
     }
   }
@@ -2583,8 +2572,7 @@ Element::ParseAttribute(int32_t aNamespaceID,
 }
 
 bool
-Element::SetMappedAttribute(nsIDocument* aDocument,
-                            nsIAtom* aName,
+Element::SetMappedAttribute(nsIAtom* aName,
                             nsAttrValue& aValue,
                             nsresult* aRetval)
 {

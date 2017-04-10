@@ -1757,8 +1757,28 @@ nsUrlClassifierDBService::AsyncClassifyLocalWithTables(nsIURI *aURI,
                                 "on main thread");
 
   if (XRE_IsContentProcess()) {
-    // TODO: e10s support. Bug 1343425.
-    return NS_ERROR_NOT_IMPLEMENTED;
+    using namespace mozilla::dom;
+    using namespace mozilla::ipc;
+
+    ContentChild* content = ContentChild::GetSingleton();
+    MOZ_ASSERT(content);
+
+    auto actor = new URLClassifierLocalChild();
+
+    // TODO: Bug 1353701 - Supports custom event target for labelling.
+    nsCOMPtr<nsIEventTarget> systemGroupEventTarget
+      = mozilla::SystemGroup::EventTargetFor(mozilla::TaskCategory::Other);
+    content->SetEventTargetForActor(actor, systemGroupEventTarget);
+
+    URIParams uri;
+    SerializeURI(aURI, uri);
+    nsAutoCString tables(aTables);
+    if (!content->SendPURLClassifierLocalConstructor(actor, uri, tables)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    actor->SetCallback(aCallback);
+    return NS_OK;
   }
 
   if (gShuttingDownThread) {

@@ -1720,6 +1720,7 @@ class PPAPIInstance {
       let mouseEventInit = {
         altkey: event.altkey,
         button: event.button,
+        buttons: event.buttons,
         clientX: event.clientX - rect.left,
         clientY: event.clientY - rect.top,
         ctrlKey: event.ctrlKey,
@@ -1819,6 +1820,12 @@ class PPAPIInstance {
       case 'startPrint':
         // We need permission for showing print dialog to get print settings
         this.mm.sendAsyncMessage("ppapipdf.js:getPrintSettings");
+        break;
+      case 'openLink':
+        this.mm.sendAsyncMessage("ppapipdf.js:openLink", {
+          url: message.url,
+          disposition: message.disposition
+        });
         break;
       case 'viewport':
       case 'rotateClockwise':
@@ -3126,25 +3133,37 @@ dump(`callFromJSON: < ${JSON.stringify(call)}\n`);
 
       if (event instanceof KeyboardInputEvent) {
         if (event.domEvent.location == event.domEvent.DOM_KEY_LOCATION_NUMPAD) {
-          modifiers &= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_ISKEYPAD;
+          modifiers |= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_ISKEYPAD;
         } else if (event.domEvent.location & event.domEvent.DOM_KEY_LOCATION_LEFT) {
-          modifiers &= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_ISLEFT;
+          modifiers |= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_ISLEFT;
         } else if (event.domEvent.location & event.domEvent.DOM_KEY_LOCATION_RIGHT) {
-          modifiers &= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_ISRIGHT;
+          modifiers |= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_ISRIGHT;
         }
 
         if (event.domEvent.repeat) {
-          modifiers &= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_ISAUTOREPEAT;
+          modifiers |= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_ISAUTOREPEAT;
         }
       } else if (event instanceof MouseInputEvent) {
-        if (event.domEvent.buttons && 0x01) {
-          modifiers &= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_LEFTBUTTONDOWN;
+        if (event.domEvent.buttons & 0x01) {
+          modifiers |= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_LEFTBUTTONDOWN;
         }
-        if (event.domEvent.buttons && 0x04) {
-          modifiers &= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_MIDDLEBUTTONDOWN;
+        if (event.domEvent.buttons & 0x04) {
+          modifiers |= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_MIDDLEBUTTONDOWN;
         }
-        if (event.domEvent.buttons && 0x02) {
-          modifiers &= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_RIGHTBUTTONDOWN;
+        if (event.domEvent.buttons & 0x02) {
+          modifiers |= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_RIGHTBUTTONDOWN;
+        }
+        if (event.domEvent.type == 'mouseup') {
+          // mouseup event indicates the key released only in domEvent.button
+          // rather than domEvent.buttons, but PDFium do use modifiers to
+          // determine which button is released. So we make it up here.
+          if (event.domEvent.button == 0) {
+            modifiers |= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_LEFTBUTTONDOWN;
+          } else if (event.domEvent.button == 1) {
+            modifiers |= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_MIDDLEBUTTONDOWN;
+          } else if (event.domEvent.button == 2) {
+            modifiers |= PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_RIGHTBUTTONDOWN;
+          }
         }
       }
 

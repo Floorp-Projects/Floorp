@@ -209,7 +209,7 @@ already_AddRefed<ScaledFont>
 NativeFontResourceMac::CreateScaledFont(uint32_t aIndex, Float aGlyphSize,
                                         const uint8_t* aInstanceData, uint32_t aInstanceDataLength)
 {
-  RefPtr<ScaledFontBase> scaledFont = new ScaledFontMac(mFontRef, aGlyphSize);
+  RefPtr<ScaledFontBase> scaledFont = new ScaledFontMac(mFontRef, nullptr, aGlyphSize);
 
   if (!scaledFont->PopulateCairoScaledFont()) {
     gfxWarning() << "Unable to create cairo scaled Mac font.";

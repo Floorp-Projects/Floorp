@@ -963,6 +963,26 @@ EffectCompositor::SetPerformanceWarning(
 bool
 EffectCompositor::PreTraverse()
 {
+  return PreTraverseInSubtree(nullptr);
+}
+
+static bool
+IsFlattenedTreeDescendantOf(nsINode* aPossibleDescendant,
+                            nsINode* aPossibleAncestor)
+{
+  do {
+    if (aPossibleDescendant == aPossibleAncestor) {
+      return true;
+    }
+    aPossibleDescendant = aPossibleDescendant->GetFlattenedTreeParentNode();
+  } while (aPossibleDescendant);
+
+  return false;
+}
+
+bool
+EffectCompositor::PreTraverseInSubtree(Element* aRoot)
+{
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
 
@@ -976,6 +996,12 @@ EffectCompositor::PreTraverse()
       }
 
       NonOwningAnimationTarget target = iter.Key();
+
+      // Ignore restyles that aren't in the flattened tree subtree rooted at
+      // aRoot.
+      if (aRoot && !IsFlattenedTreeDescendantOf(target.mElement, aRoot)) {
+        continue;
+      }
 
       // We need to post restyle hints even if the target is not in EffectSet to
       // ensure the final restyling for removed animations.

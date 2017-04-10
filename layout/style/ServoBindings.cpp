@@ -7,6 +7,7 @@
 #include "mozilla/ServoBindings.h"
 
 #include "ChildIterator.h"
+#include "GeckoProfiler.h"
 #include "gfxFontFamilyList.h"
 #include "nsAnimationManager.h"
 #include "nsAttrValueInlines.h"
@@ -1109,6 +1110,13 @@ Gecko_ClearPODTArray(void* aArray, size_t aElementSize, size_t aElementAlign)
 }
 
 void
+Gecko_CopyStyleGridTemplateValues(nsStyleGridTemplate* aGridTemplate,
+                                  const nsStyleGridTemplate* aOther)
+{
+  *aGridTemplate = *aOther;
+}
+
+void
 Gecko_ClearAndResizeStyleContents(nsStyleContent* aContent, uint32_t aHowMany)
 {
   aContent->AllocateContents(aHowMany);
@@ -1576,10 +1584,29 @@ Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource)
   aFont->mLanguage = aSource->mLanguage;
 }
 
-nscoord
-Gecko_nsStyleFont_GetBaseSize(const nsStyleFont* aFont, RawGeckoPresContextBorrowed aPresContext)
+void
+FontSizePrefs::CopyFrom(const LangGroupFontPrefs& prefs)
 {
-  return aPresContext->GetDefaultFont(aFont->mGenericID, aFont->mLanguage)->size;
+  mDefaultVariableSize = prefs.mDefaultVariableFont.size;
+  mDefaultFixedSize = prefs.mDefaultFixedFont.size;
+  mDefaultSerifSize = prefs.mDefaultSerifFont.size;
+  mDefaultSansSerifSize = prefs.mDefaultSansSerifFont.size;
+  mDefaultMonospaceSize = prefs.mDefaultMonospaceFont.size;
+  mDefaultCursiveSize = prefs.mDefaultCursiveFont.size;
+  mDefaultFantasySize = prefs.mDefaultFantasyFont.size;
+}
+
+FontSizePrefs
+Gecko_GetBaseSize(nsIAtom* aLanguage)
+{
+  LangGroupFontPrefs prefs;
+  nsCOMPtr<nsIAtom> langGroupAtom = StaticPresData::Get()->GetUncachedLangGroup(aLanguage);
+
+  prefs.Initialize(langGroupAtom);
+  FontSizePrefs sizes;
+  sizes.CopyFrom(prefs);
+
+  return sizes;
 }
 
 void
@@ -1676,6 +1703,19 @@ void
 Gecko_Construct_nsStyleVariables(nsStyleVariables* ptr)
 {
   new (ptr) nsStyleVariables();
+}
+
+void
+Gecko_RegisterProfilerThread(const char* name)
+{
+  char stackTop;
+  profiler_register_thread(name, &stackTop);
+}
+
+void
+Gecko_UnregisterProfilerThread()
+{
+  profiler_unregister_thread();
 }
 
 #include "nsStyleStructList.h"

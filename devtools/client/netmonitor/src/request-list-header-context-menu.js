@@ -6,11 +6,12 @@
 
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
+const { HEADERS } = require("./constants");
 const { L10N } = require("./utils/l10n");
 
-const stringMap = {
-  status: "status3"
-};
+const stringMap = HEADERS
+  .filter((header) => header.hasOwnProperty("label"))
+  .reduce((acc, { name, label }) => Object.assign(acc, { [name]: label }), {});
 
 class RequestListHeaderContextMenu {
   constructor({ toggleColumn, resetColumns }) {

@@ -8,6 +8,8 @@
 #include "nsThreadUtils.h"
 #include <algorithm>
 
+using namespace mozilla::net;
+
 nsresult
 nsSyncStreamListener::Init()
 {

@@ -23,6 +23,7 @@ import org.mozilla.gecko.home.HomePanelsManager;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.mdns.MulticastDNSManager;
 import org.mozilla.gecko.media.AudioFocusAgent;
+import org.mozilla.gecko.media.RemoteManager;
 import org.mozilla.gecko.notifications.NotificationClient;
 import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
@@ -39,6 +40,7 @@ import java.lang.reflect.Method;
 public class GeckoApplication extends Application
     implements ContextGetter {
     private static final String LOG_TAG = "GeckoApplication";
+    private static final String MEDIA_DECODING_PROCESS_CRASH = "MEDIA_DECODING_PROCESS_CRASH";
 
     private boolean mInBackground;
     private boolean mPausedGecko;
@@ -212,6 +214,12 @@ public class GeckoApplication extends Application
         GeckoAccessibility.setAccessibilityManagerListeners(this);
 
         AudioFocusAgent.getInstance().attachToContext(this);
+
+        RemoteManager.setCrashReporter(new RemoteManager.ICrashReporter() {
+            public void reportDecodingProcessCrash() {
+                Telemetry.addToHistogram(MEDIA_DECODING_PROCESS_CRASH, 1);
+            }
+        });
     }
 
     private class EventListener implements BundleEventListener

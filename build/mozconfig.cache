@@ -49,7 +49,10 @@ if test -z "$bucket" -a -z "$SCCACHE_DISABLE" -a -z "$no_sccache" -a -z "$MOZ_PG
     # prevent rerun if az is set, or wget is not available
     if test -z "$availability_zone" -a -x "$(command -v wget)"; then
         if test -n "${TASKCLUSTER_WORKER_GROUP}"; then
-            availability_zone="${TASKCLUSTER_WORKER_GROUP}"
+            # TASKCLUSTER_WORKER_GROUP is just the region now, so
+            # stick an extra character on to make the already-convoluted logic
+            # here simpler.
+            availability_zone="${TASKCLUSTER_WORKER_GROUP}x"
         else
             # timeout after 1 second, and don't retry (failure indicates instance is not in ec2 or network issue)
             # availability_zone is of the form <region><letter> where region is e.g. us-west-2, and az is us-west-2a

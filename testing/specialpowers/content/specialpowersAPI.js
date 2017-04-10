@@ -694,6 +694,14 @@ SpecialPowersAPI.prototype = {
     return crashDumpFiles;
   },
 
+  removePendingCrashDumpFiles: function() {
+    var message = {
+      op: "delete-pending-crash-dump-files"
+    };
+    var removed = this._sendSyncMessage("SPProcessCrashService", message)[0];
+    return removed;
+  },
+
   _setTimeout: function(callback) {
     // for mochitest-browser
     if (typeof window != 'undefined')
@@ -725,7 +733,7 @@ SpecialPowersAPI.prototype = {
      we will revert the permission back to the original.
 
      inPermissions is an array of objects where each object has a type, action, context, ex:
-     [{'type': 'SystemXHR', 'allow': 1, 'context': document}, 
+     [{'type': 'SystemXHR', 'allow': 1, 'context': document},
       {'type': 'SystemXHR', 'allow': Ci.nsIPermissionManager.PROMPT_ACTION, 'context': document}]
 
      Allow can be a boolean value of true/false or ALLOW_ACTION/DENY_ACTION/PROMPT_ACTION/UNKNOWN_ACTION
@@ -2142,6 +2150,26 @@ SpecialPowersAPI.prototype = {
 
     return classifierService.classify(unwrapIfWrapped(principal), eventTarget,
                                       tpEnabled, wrapCallback);
+  },
+
+  // TODO: Bug 1353701 - Supports custom event target for labelling.
+  doUrlClassifyLocal(uri, tables, callback) {
+    let classifierService =
+      Cc["@mozilla.org/url-classifier/dbservice;1"].getService(Ci.nsIURIClassifier);
+
+    let wrapCallback = (...args) => {
+      Services.tm.mainThread.dispatch(() => {
+        if (typeof callback == 'function') {
+          callback.call(undefined, ...args);
+        } else {
+          callback.onClassifyComplete.call(undefined, ...args);
+        }
+      }, Ci.nsIThread.DISPATCH_NORMAL);
+    };
+
+    return classifierService.asyncClassifyLocalWithTables(unwrapIfWrapped(uri),
+                                                          tables,
+                                                          wrapCallback);
   },
 
 };

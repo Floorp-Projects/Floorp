@@ -110,14 +110,31 @@
   display: none;
 }
 
-#PanelUI-menu-button[badge-status="update-succeeded"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+#PanelUI-menu-button[badge-status="update-available"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
+#PanelUI-menu-button[badge-status="update-manual"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
+#PanelUI-menu-button[badge-status="update-restart"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   background: #74BF43 url(chrome://browser/skin/update-badge.svg) no-repeat center;
-  height: 13px;
+  border-radius: 50%;
+  box-shadow: none;
+  border: 1px solid -moz-dialog;
+  /* "!important" is necessary to override the rule in toolbarbutton.css */
+  margin: -9px 0 0 !important;
+  margin-inline-end: -6px !important;
+  min-width: 16px;
+  min-height: 16px;
 }
 
-#PanelUI-menu-button[badge-status="update-failed"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  background: #D90000 url(chrome://browser/skin/update-badge-failed.svg) no-repeat center;
-  height: 13px;
+#PanelUI-update-restart-menu-item::after,
+#PanelUI-update-available-menu-item::after,
+#PanelUI-update-manual-menu-item::after {
+  background: #74BF43 url(chrome://browser/skin/update-badge.svg) no-repeat center;
+  border-radius: 50%;
+}
+
+#PanelUI-update-restart-menu-item,
+#PanelUI-update-available-menu-item,
+#PanelUI-update-manual-menu-item {
+  list-style-image: url(chrome://branding/content/icon16.png);
 }
 
 #PanelUI-menu-button[badge-status="download-warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
@@ -444,11 +461,11 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"] > iframe {
 
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-contents-scroller > #PanelUI-contents > .panel-wide-item,
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-contents-scroller > #PanelUI-contents > .toolbarbutton-1:not([panel-multiview-anchor="true"]),
-#PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-update-status,
+#PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > .PanelUI-notification-menu-item,
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-footer-fxa > #PanelUI-fxa-status > #PanelUI-fxa-avatar,
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-footer-fxa > #PanelUI-fxa-status > #PanelUI-fxa-label,
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-footer-fxa > #PanelUI-fxa-icon,
-#PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-footer-inner > toolbarseparator,
+#PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-footer-inner > #PanelUI-footer-inner > toolbarseparator,
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-footer-inner > #PanelUI-customize,
 #PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer > #PanelUI-footer-inner > #PanelUI-help:not([panel-multiview-anchor="true"]) {
   opacity: .5;
@@ -566,26 +583,13 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   top: 25%;
 }
 
-#PanelUI-update-status[update-status]::after,
-#PanelUI-footer-addons > toolbarbutton::after {
+#PanelUI-footer-addons > toolbarbutton::after,
+.PanelUI-notification-menu-item::after {
   content: "";
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   margin-inline-end: 16.5px;
-  box-shadow: 0px 1px 0px rgba(255,255,255,.2) inset, 0px -1px 0px rgba(0,0,0,.1) inset, 0px 1px 0px rgba(12,27,38,.2);
-  border-radius: 2px;
-  background-size: contain;
   display: -moz-box;
-}
-
-#PanelUI-update-status[update-status="succeeded"]::after {
-  background-image: url(chrome://browser/skin/update-badge.svg);
-  background-color: #74BF43;
-}
-
-#PanelUI-update-status[update-status="failed"]::after {
-  background-image: url(chrome://browser/skin/update-badge-failed.svg);
-  background-color: #D90000;
 }
 
 #PanelUI-footer-addons > toolbarbutton {
@@ -646,7 +650,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   margin: 0;
 }
 
-#PanelUI-update-status,
+.PanelUI-notification-menu-item,
 #PanelUI-help,
 #PanelUI-fxa-label,
 #PanelUI-fxa-icon,
@@ -665,16 +669,13 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   -moz-box-orient: horizontal;
 }
 
-#PanelUI-update-status {
+.PanelUI-notification-menu-item {
   border-top: 1px solid var(--panel-separator-color);
-}
-
-#PanelUI-update-status {
   border-bottom: 1px solid transparent;
   margin-bottom: -1px;
 }
 
-#PanelUI-update-status > .toolbarbutton-text {
+.PanelUI-notification-menu-item > .toolbarbutton-text {
   width: 0; /* Fancy cropping solution for flexbox. */
 }
 
@@ -683,7 +684,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   min-width: 46px;
 }
 
-#PanelUI-update-status > .toolbarbutton-text,
+.PanelUI-notification-menu-item > .toolbarbutton-text,
 #PanelUI-fxa-label > .toolbarbutton-text,
 #PanelUI-footer-addons > toolbarbutton > .toolbarbutton-text,
 #PanelUI-customize > .toolbarbutton-text {
@@ -698,7 +699,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   display: none;
 }
 
-#PanelUI-update-status > .toolbarbutton-icon,
+.PanelUI-notification-menu-item > .toolbarbutton-icon,
 #PanelUI-fxa-label > .toolbarbutton-icon,
 #PanelUI-fxa-icon > .toolbarbutton-icon,
 #PanelUI-customize > .toolbarbutton-icon,
@@ -725,14 +726,12 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   padding-inline-start: 0px;
 }
 
-#PanelUI-update-status {
+/* descend from #PanelUI-footer to add specificity, or else the
+   padding-inline-start will be overridden */
+#PanelUI-footer > .PanelUI-notification-menu-item {
   width: calc(@menuPanelWidth@ + 30px);
   padding-inline-start: 15px;
   border-inline-start-style: none;
-}
-
-#PanelUI-update-status {
-  list-style-image: url(chrome://branding/content/icon16.png);
 }
 
 #PanelUI-fxa-label,
@@ -980,32 +979,17 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
-#PanelUI-update-status {
+.PanelUI-notification-menu-item {
   color: black;
-}
-
-#PanelUI-update-status[update-status="succeeded"] {
   background-color: hsla(96,65%,75%,.5);
 }
 
-#PanelUI-update-status[update-status="succeeded"]:not([disabled]):hover {
+.PanelUI-notification-menu-item:not([disabled]):hover {
   background-color: hsla(96,65%,75%,.8);
 }
 
-#PanelUI-update-status[update-status="succeeded"]:not([disabled]):hover:active {
+.PanelUI-notification-menu-item:not([disabled]):hover:active {
   background-color: hsl(96,65%,75%);
-}
-
-#PanelUI-update-status[update-status="failed"] {
-  background-color: hsla(359,69%,84%,.5);
-}
-
-#PanelUI-update-status[update-status="failed"]:not([disabled]):hover {
-  background-color: hsla(359,69%,84%,.8);
-}
-
-#PanelUI-update-status[update-status="failed"]:not([disabled]):hover:active {
-  background-color: hsl(359,69%,84%);
 }
 
 #PanelUI-quit:not([disabled]):hover {
@@ -1712,7 +1696,9 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
                       linear-gradient(rgba(255,255,255,0.3), transparent);
   }
 
-  #PanelUI-update-status {
+  #PanelUI-update-restart-menu-item,
+  #PanelUI-update-available-menu-item,
+  #PanelUI-update-manual-menu-item {
     list-style-image: url(chrome://branding/content/icon32.png);
   }
 
@@ -1749,7 +1735,7 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
     -moz-image-region: rect(0, 32px, 32px, 0);
   }
 
-  #PanelUI-update-status > .toolbarbutton-icon,
+  .PanelUI-notification-menu-item > .toolbarbutton-icon,
   #PanelUI-fxa-label > .toolbarbutton-icon,
   #PanelUI-fxa-icon > .toolbarbutton-icon,
   #PanelUI-customize > .toolbarbutton-icon,

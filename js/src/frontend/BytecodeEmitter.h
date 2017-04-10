@@ -391,7 +391,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
         functionBodyEndPosSet = true;
     }
 
-    bool reportError(ParseNode* pn, unsigned errorNumber, ...);
+    void reportError(ParseNode* pn, unsigned errorNumber, ...);
     bool reportExtraWarning(ParseNode* pn, unsigned errorNumber, ...);
     bool reportStrictModeError(ParseNode* pn, unsigned errorNumber, ...);
 

@@ -7235,13 +7235,18 @@ nsCSSFrameConstructor::CreateNeededFrames(
         inRun = false;
         // generate a ContentRangeInserted for [startOfRun,i)
         ContentRangeInserted(aContent, firstChildInRun, child, nullptr,
-                             false, &aTreeMatchContext);
+                             false, // aAllowLazyConstruction
+                             true,  // aForReconstruction
+                             &aTreeMatchContext);
       }
     }
   }
 
   if (inRun) {
-    ContentAppended(aContent, firstChildInRun, false, &aTreeMatchContext);
+    ContentAppended(aContent, firstChildInRun,
+                    false, // aAllowLazyConstruction
+                    true,  // aForReconstruction
+                    &aTreeMatchContext);
   }
 
   // Now descend.
@@ -7286,7 +7291,8 @@ void
 nsCSSFrameConstructor::IssueSingleInsertNofications(nsIContent* aContainer,
                                                     nsIContent* aStartChild,
                                                     nsIContent* aEndChild,
-                                                    bool aAllowLazyConstruction)
+                                                    bool aAllowLazyConstruction,
+                                                    bool aForReconstruction)
 {
   for (nsIContent* child = aStartChild;
        child != aEndChild;
@@ -7300,13 +7306,14 @@ nsCSSFrameConstructor::IssueSingleInsertNofications(nsIContent* aContainer,
 #endif
         ) {
       // Already have a frame or undisplayed entry for this content; a
-      // previous ContentInserted in this loop must have reconstructed
+      // previous ContentRangeInserted in this loop must have reconstructed
       // its insertion parent.  Skip it.
       continue;
     }
-    // Call ContentInserted with this node.
-    ContentInserted(aContainer, child, mTempFrameTreeState,
-                    aAllowLazyConstruction);
+    // Call ContentRangeInserted with this node.
+    ContentRangeInserted(aContainer, child, child->GetNextSibling(),
+                         mTempFrameTreeState, aAllowLazyConstruction,
+                         aForReconstruction, nullptr);
   }
 }
 
@@ -7314,7 +7321,8 @@ nsCSSFrameConstructor::InsertionPoint
 nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aContainer,
                                               nsIContent* aStartChild,
                                               nsIContent* aEndChild,
-                                              bool aAllowLazyConstruction)
+                                              bool aAllowLazyConstruction,
+                                              bool aForReconstruction)
 {
   // See if we have an XBL insertion point. If so, then that's our
   // real parent frame; if not, then the frame hasn't been built yet
@@ -7363,7 +7371,7 @@ nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aContainer,
       // ContentInserted call as if it had just gotten inserted and
       // let ContentInserted handle the mess.
       IssueSingleInsertNofications(aContainer, aStartChild, aEndChild,
-                                   aAllowLazyConstruction);
+                                   aAllowLazyConstruction, aForReconstruction);
       insertionPoint.mParentFrame = nullptr;
     }
   }
@@ -7412,7 +7420,25 @@ nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
     if (child->IsElement() && !child->AsElement()->HasServoData()) {
       Element* parent = child->AsElement()->GetFlattenedTreeParentElement();
       MOZ_ASSERT(parent);
-      styleSet->StyleNewChildren(parent);
+      if (parent->HasServoData()) {
+        styleSet->StyleNewChildren(parent);
+      }
+    }
+  }
+}
+
+void
+nsCSSFrameConstructor::StyleChildRangeForReconstruct(nsIContent* aStartChild,
+                                                     nsIContent* aEndChild)
+{
+  ServoStyleSet* styleSet = mPresShell->StyleSet()->AsServo();
+
+  // We take a parallelism hit here, since we don't have a great API to pass
+  // a range of elements to style to Servo.
+  for (nsIContent* child = aStartChild; child != aEndChild;
+       child = child->GetNextSibling()) {
+    if (child->IsElement()) {
+      styleSet->StyleSubtreeForReconstruct(child->AsElement());
     }
   }
 }
@@ -7421,6 +7447,7 @@ void
 nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
                                        nsIContent* aFirstNewContent,
                                        bool aAllowLazyConstruction,
+                                       bool aForReconstruction,
                                        TreeMatchContext* aProvidedTreeMatchContext)
 {
   MOZ_ASSERT_IF(aProvidedTreeMatchContext, !aAllowLazyConstruction);
@@ -7474,7 +7501,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
   // want to ensure that styles get resolved in the first case, whereas for the
   // second case they should have already been resolved if needed.
   bool isNewlyAddedContentForServo = aContainer->IsStyledByServo() &&
-                                     !RestyleManager()->IsInStyleRefresh();
+                                     !aForReconstruction;
 
   bool isNewShadowTreeContent =
     aContainer && aContainer->HasFlag(NODE_IS_IN_SHADOW_TREE) &&
@@ -7504,8 +7531,12 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
   }
 
   // We couldn't construct lazily. Make Servo eagerly traverse the new content.
-  if (isNewlyAddedContentForServo) {
-    StyleNewChildRange(aFirstNewContent, nullptr);
+  if (aContainer->IsStyledByServo()) {
+    if (aForReconstruction) {
+      StyleChildRangeForReconstruct(aFirstNewContent, nullptr);
+    } else {
+      StyleNewChildRange(aFirstNewContent, nullptr);
+    }
   }
 
   if (isNewShadowTreeContent) {
@@ -7524,7 +7555,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
   LAYOUT_PHASE_TEMP_EXIT();
   InsertionPoint insertion =
     GetRangeInsertionPoint(aContainer, aFirstNewContent, nullptr,
-                           aAllowLazyConstruction);
+                           aAllowLazyConstruction, aForReconstruction);
   nsContainerFrame*& parentFrame = insertion.mParentFrame;
   LAYOUT_PHASE_TEMP_REENTER();
   if (!parentFrame) {
@@ -7822,6 +7853,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
                                             nsIContent* aEndChild,
                                             nsILayoutHistoryState* aFrameState,
                                             bool aAllowLazyConstruction,
+                                            bool aForReconstruction,
                                             TreeMatchContext* aProvidedTreeMatchContext)
 {
   MOZ_ASSERT_IF(aProvidedTreeMatchContext, !aAllowLazyConstruction);
@@ -7884,7 +7916,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
       // ContertInserted calls for each node inserted.
       LAYOUT_PHASE_TEMP_EXIT();
       IssueSingleInsertNofications(aContainer, aStartChild, aEndChild,
-                                   aAllowLazyConstruction);
+                                   aAllowLazyConstruction, aForReconstruction);
       LAYOUT_PHASE_TEMP_REENTER();
       return;
     }
@@ -7947,7 +7979,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
   // want to ensure that styles get resolved in the first case, whereas for the
   // second case they should have already been resolved if needed.
   bool isNewlyAddedContentForServo = aContainer->IsStyledByServo() &&
-                                     !RestyleManager()->IsInStyleRefresh();
+                                     !aForReconstruction;
 
   bool isNewShadowTreeContent =
     aContainer->HasFlag(NODE_IS_IN_SHADOW_TREE) &&
@@ -7984,8 +8016,12 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
   }
 
   // We couldn't construct lazily. Make Servo eagerly traverse the new content.
-  if (isNewlyAddedContentForServo) {
-    StyleNewChildRange(aStartChild, aEndChild);
+  if (aContainer->IsStyledByServo()) {
+    if (aForReconstruction) {
+      StyleChildRangeForReconstruct(aStartChild, aEndChild);
+    } else {
+      StyleNewChildRange(aStartChild, aEndChild);
+    }
   }
 
   if (isNewShadowTreeContent) {
@@ -8012,7 +8048,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     // GetRangeInsertionPoint will take care of that for us.
     LAYOUT_PHASE_TEMP_EXIT();
     insertion = GetRangeInsertionPoint(aContainer, aStartChild, aEndChild,
-                                       aAllowLazyConstruction);
+                                       aAllowLazyConstruction,
+                                       aForReconstruction);
     LAYOUT_PHASE_TEMP_REENTER();
   }
 
@@ -8029,7 +8066,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     // must fall back to a single ContertInserted for each child in the range
     LAYOUT_PHASE_TEMP_EXIT();
     IssueSingleInsertNofications(aContainer, aStartChild, aEndChild,
-                                 aAllowLazyConstruction);
+                                 aAllowLazyConstruction, aForReconstruction);
     LAYOUT_PHASE_TEMP_REENTER();
     return;
   }
@@ -8169,7 +8206,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
         // must fall back to a single ContertInserted for each child in the range
         LAYOUT_PHASE_TEMP_EXIT();
         IssueSingleInsertNofications(aContainer, aStartChild, aEndChild,
-                                     aAllowLazyConstruction);
+                                     aAllowLazyConstruction, aForReconstruction);
         LAYOUT_PHASE_TEMP_REENTER();
         return;
       }
@@ -9907,7 +9944,11 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent*  aContent,
         RestyleManager()->PostRestyleEvent(
           aContent->AsElement(), nsRestyleHint(0), nsChangeHint_ReconstructFrame);
       } else {
-        ContentInserted(container, aContent, mTempFrameTreeState, false);
+        ContentRangeInserted(container, aContent, aContent->GetNextSibling(),
+                             mTempFrameTreeState,
+                             false, // aAllowLazyConstruction
+                             true,  // aForReconstruction
+                             nullptr);
       }
     }
   }

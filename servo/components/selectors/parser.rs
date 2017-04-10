@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use cssparser::{Token, Parser as CssParser, parse_nth, ToCss, serialize_identifier, CssStringWriter};
+use precomputed_hash::PrecomputedHash;
 use std::ascii::AsciiExt;
 use std::borrow::{Borrow, Cow};
 use std::cmp;
@@ -11,6 +12,7 @@ use std::hash::Hash;
 use std::ops::Add;
 use std::sync::Arc;
 use tree::SELECTOR_WHITESPACE;
+use visitor::SelectorVisitor;
 
 macro_rules! with_all_bounds {
     (
@@ -39,36 +41,20 @@ macro_rules! with_all_bounds {
         /// of pseudo-classes/elements
         pub trait SelectorImpl: Sized {
             type AttrValue: $($InSelector)*;
-            type Identifier: $($InSelector)*;
-            type ClassName: $($InSelector)*;
-            type LocalName: $($InSelector)* + Borrow<Self::BorrowedLocalName>;
-            type NamespaceUrl: $($CommonBounds)* + Default + Borrow<Self::BorrowedNamespaceUrl>;
+            type Identifier: $($InSelector)* + PrecomputedHash;
+            type ClassName: $($InSelector)* + PrecomputedHash;
+            type LocalName: $($InSelector)* + Borrow<Self::BorrowedLocalName> + PrecomputedHash;
+            type NamespaceUrl: $($CommonBounds)* + Default + Borrow<Self::BorrowedNamespaceUrl> + PrecomputedHash;
             type NamespacePrefix: $($InSelector)* + Default;
             type BorrowedNamespaceUrl: ?Sized + Eq;
             type BorrowedLocalName: ?Sized + Eq + Hash;
 
             /// non tree-structural pseudo-classes
             /// (see: https://drafts.csswg.org/selectors/#structural-pseudos)
-            type NonTSPseudoClass: $($CommonBounds)* + Sized + ToCss + SelectorMethods;
+            type NonTSPseudoClass: $($CommonBounds)* + Sized + ToCss + SelectorMethods<Impl = Self>;
 
             /// pseudo-elements
             type PseudoElement: $($CommonBounds)* + Sized + ToCss;
-
-            /// Declares if the following "attribute exists" selector is considered
-            /// "common" enough to be shareable. If that's not the case, when matching
-            /// over an element, the relation
-            /// AFFECTED_BY_NON_COMMON_STYLE_AFFECTING_ATTRIBUTE would be set.
-            fn attr_exists_selector_is_shareable(_attr_selector: &AttrSelector<Self>) -> bool {
-                false
-            }
-
-            /// Declares if the following "equals" attribute selector is considered
-            /// "common" enough to be shareable.
-            fn attr_equals_selector_is_shareable(_attr_selector: &AttrSelector<Self>,
-                                                 _value: &Self::AttrValue)
-                                                 -> bool {
-                false
-            }
         }
     }
 }
@@ -142,93 +128,91 @@ pub struct Selector<Impl: SelectorImpl> {
     pub specificity: u32,
 }
 
-fn affects_sibling<Impl: SelectorImpl>(simple_selector: &SimpleSelector<Impl>) -> bool {
-    match *simple_selector {
-        SimpleSelector::Negation(ref negated) => {
-            negated.iter().any(|ref selector| selector.affects_siblings())
-        }
-
-        SimpleSelector::FirstChild |
-        SimpleSelector::LastChild |
-        SimpleSelector::OnlyChild |
-        SimpleSelector::NthChild(..) |
-        SimpleSelector::NthLastChild(..) |
-        SimpleSelector::NthOfType(..) |
-        SimpleSelector::NthLastOfType(..) |
-        SimpleSelector::FirstOfType |
-        SimpleSelector::LastOfType |
-        SimpleSelector::OnlyOfType => true,
-
-        SimpleSelector::NonTSPseudoClass(ref pseudo_class) => pseudo_class.affects_siblings(),
-
-        _ => false,
-    }
-}
-
-fn matches_non_common_style_affecting_attribute<Impl: SelectorImpl>(simple_selector: &SimpleSelector<Impl>) -> bool {
-    match *simple_selector {
-        SimpleSelector::Negation(ref negated) => {
-            negated.iter().any(|ref selector| selector.matches_non_common_style_affecting_attribute())
-        }
-        SimpleSelector::AttrEqual(ref attr, ref val, _) => {
-            !Impl::attr_equals_selector_is_shareable(attr, val)
-        }
-        SimpleSelector::AttrExists(ref attr) => {
-            !Impl::attr_exists_selector_is_shareable(attr)
-        }
-        SimpleSelector::AttrIncludes(..) |
-        SimpleSelector::AttrDashMatch(..) |
-        SimpleSelector::AttrPrefixMatch(..) |
-        SimpleSelector::AttrSuffixMatch(..) |
-        SimpleSelector::AttrSubstringMatch(..) => true,
-
-        SimpleSelector::NonTSPseudoClass(ref pseudo_class) =>
-            pseudo_class.matches_non_common_style_affecting_attribute(),
-
-        // This deliberately includes Attr*NeverMatch
-        // which never match regardless of element attributes.
-        _ => false,
-    }
-}
-
 pub trait SelectorMethods {
-    fn affects_siblings(&self) -> bool;
-    fn matches_non_common_style_affecting_attribute(&self) -> bool;
+    type Impl: SelectorImpl;
+
+    fn visit<V>(&self, visitor: &mut V) -> bool
+        where V: SelectorVisitor<Impl = Self::Impl>;
 }
 
 impl<Impl: SelectorImpl> SelectorMethods for Selector<Impl> {
-    /// Whether this selector, if matching on a set of siblings, could affect
-    /// other sibling's style.
-    fn affects_siblings(&self) -> bool {
-        self.complex_selector.affects_siblings()
-    }
+    type Impl = Impl;
 
-    fn matches_non_common_style_affecting_attribute(&self) -> bool {
-        self.complex_selector.matches_non_common_style_affecting_attribute()
+    fn visit<V>(&self, visitor: &mut V) -> bool
+        where V: SelectorVisitor<Impl = Impl>,
+    {
+        self.complex_selector.visit(visitor)
     }
 }
 
-impl<Impl: SelectorImpl> SelectorMethods for ComplexSelector<Impl> {
-    /// Whether this complex selector, if matching on a set of siblings,
-    /// could affect other sibling's style.
-    fn affects_siblings(&self) -> bool {
-        match self.next {
-            Some((_, Combinator::NextSibling)) |
-            Some((_, Combinator::LaterSibling)) => return true,
-            _ => {},
+impl<Impl: SelectorImpl> SelectorMethods for Arc<ComplexSelector<Impl>> {
+    type Impl = Impl;
+
+    fn visit<V>(&self, visitor: &mut V) -> bool
+        where V: SelectorVisitor<Impl = Impl>,
+    {
+        let mut current = self;
+        let mut combinator = None;
+        loop {
+            if !visitor.visit_complex_selector(current, combinator) {
+                return false;
+            }
+
+            for selector in &current.compound_selector {
+                if !selector.visit(visitor) {
+                    return false;
+                }
+            }
+
+            match current.next {
+                Some((ref next, next_combinator)) => {
+                    current = next;
+                    combinator = Some(next_combinator);
+                }
+                None => break,
+            }
         }
 
-        match self.compound_selector.last() {
-            Some(ref selector) => affects_sibling(selector),
-            None => false,
-        }
+        true
     }
+}
 
-    fn matches_non_common_style_affecting_attribute(&self) -> bool {
-        match self.compound_selector.last() {
-            Some(ref selector) => matches_non_common_style_affecting_attribute(selector),
-            None => false,
+impl<Impl: SelectorImpl> SelectorMethods for SimpleSelector<Impl> {
+    type Impl = Impl;
+
+    fn visit<V>(&self, visitor: &mut V) -> bool
+        where V: SelectorVisitor<Impl = Impl>,
+    {
+        use self::SimpleSelector::*;
+
+        match *self {
+            Negation(ref negated) => {
+                for selector in negated {
+                    if !selector.visit(visitor) {
+                        return false;
+                    }
+                }
+            }
+            AttrExists(ref selector) |
+            AttrEqual(ref selector, _, _) |
+            AttrIncludes(ref selector, _) |
+            AttrDashMatch(ref selector, _) |
+            AttrPrefixMatch(ref selector, _) |
+            AttrSubstringMatch(ref selector, _) |
+            AttrSuffixMatch(ref selector, _) => {
+                if !visitor.visit_attribute_selector(selector) {
+                    return false;
+                }
+            }
+            NonTSPseudoClass(ref pseudo_class) => {
+                if !pseudo_class.visit(visitor) {
+                    return false;
+                }
+            },
+            _ => {}
         }
+
+        true
     }
 }
 
@@ -1022,9 +1006,8 @@ fn parse_functional_pseudo_class<P, Impl>(parser: &P,
         "not" => {
             if inside_negation {
                 return Err(())
-            } else {
-                return parse_negation(parser, input)
             }
+            return parse_negation(parser, input)
         },
         _ => {}
     }
@@ -1126,7 +1109,8 @@ fn parse_simple_pseudo_class<P, Impl>(parser: &P, name: Cow<str>) -> Result<Simp
         "only-of-type"  => Ok(SimpleSelector::OnlyOfType),
         _ => Err(())
     }).or_else(|()| {
-        P::parse_non_ts_pseudo_class(parser, name).map(|pc| SimpleSelector::NonTSPseudoClass(pc))
+        P::parse_non_ts_pseudo_class(parser, name)
+            .map(SimpleSelector::NonTSPseudoClass)
     })
 }
 
@@ -1175,8 +1159,10 @@ pub mod tests {
     }
 
     impl SelectorMethods for PseudoClass {
-        fn affects_siblings(&self) -> bool { false }
-        fn matches_non_common_style_affecting_attribute(&self) -> bool { false }
+        type Impl = DummySelectorImpl;
+
+        fn visit<V>(&self, visitor: &mut V) -> bool
+            where V: SelectorVisitor<Impl = Self::Impl> { true }
     }
 
     #[derive(PartialEq, Debug)]
@@ -1184,21 +1170,48 @@ pub mod tests {
 
     #[derive(Default)]
     pub struct DummyParser {
-        default_ns: Option<String>,
-        ns_prefixes: HashMap<String, String>,
+        default_ns: Option<DummyAtom>,
+        ns_prefixes: HashMap<DummyAtom, DummyAtom>,
     }
 
     impl SelectorImpl for DummySelectorImpl {
-        type AttrValue = String;
-        type Identifier = String;
-        type ClassName = String;
-        type LocalName = String;
-        type NamespaceUrl = String;
-        type NamespacePrefix = String;
-        type BorrowedLocalName = str;
-        type BorrowedNamespaceUrl = str;
+        type AttrValue = DummyAtom;
+        type Identifier = DummyAtom;
+        type ClassName = DummyAtom;
+        type LocalName = DummyAtom;
+        type NamespaceUrl = DummyAtom;
+        type NamespacePrefix = DummyAtom;
+        type BorrowedLocalName = DummyAtom;
+        type BorrowedNamespaceUrl = DummyAtom;
         type NonTSPseudoClass = PseudoClass;
         type PseudoElement = PseudoElement;
+    }
+
+    #[derive(Default, Debug, Hash, Clone, PartialEq, Eq)]
+    pub struct DummyAtom(String);
+
+    impl fmt::Display for DummyAtom {
+        fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+            <String as fmt::Display>::fmt(&self.0, fmt)
+        }
+    }
+
+    impl From<String> for DummyAtom {
+        fn from(string: String) -> Self {
+            DummyAtom(string)
+        }
+    }
+
+    impl<'a> From<&'a str> for DummyAtom {
+        fn from(string: &'a str) -> Self {
+            DummyAtom(string.into())
+        }
+    }
+
+    impl PrecomputedHash for DummyAtom {
+        fn precomputed_hash(&self) -> u32 {
+            return 0
+        }
     }
 
     impl Parser for DummyParser {
@@ -1230,11 +1243,11 @@ pub mod tests {
             }
         }
 
-        fn default_namespace(&self) -> Option<String> {
+        fn default_namespace(&self) -> Option<DummyAtom> {
             self.default_ns.clone()
         }
 
-        fn namespace_for_prefix(&self, prefix: &str) -> Option<String> {
+        fn namespace_for_prefix(&self, prefix: &DummyAtom) -> Option<DummyAtom> {
             self.ns_prefixes.get(prefix).cloned()
         }
     }
@@ -1274,8 +1287,8 @@ pub mod tests {
         assert_eq!(parse("EeÉ"), Ok(SelectorList(vec!(Selector {
             complex_selector: Arc::new(ComplexSelector {
                 compound_selector: vec!(SimpleSelector::LocalName(LocalName {
-                    name: String::from("EeÉ"),
-                    lower_name: String::from("eeÉ") })),
+                    name: DummyAtom::from("EeÉ"),
+                    lower_name: DummyAtom::from("eeÉ") })),
                 next: None,
             }),
             pseudo_element: None,
@@ -1284,7 +1297,7 @@ pub mod tests {
         assert_eq!(parse(".foo:lang(en-US)"), Ok(SelectorList(vec!(Selector {
             complex_selector: Arc::new(ComplexSelector {
                 compound_selector: vec![
-                    SimpleSelector::Class(String::from("foo")),
+                    SimpleSelector::Class(DummyAtom::from("foo")),
                     SimpleSelector::NonTSPseudoClass(PseudoClass::Lang("en-US".to_owned()))
                 ],
                 next: None,
@@ -1294,7 +1307,7 @@ pub mod tests {
         }))));
         assert_eq!(parse("#bar"), Ok(SelectorList(vec!(Selector {
             complex_selector: Arc::new(ComplexSelector {
-                compound_selector: vec!(SimpleSelector::ID(String::from("bar"))),
+                compound_selector: vec!(SimpleSelector::ID(DummyAtom::from("bar"))),
                 next: None,
             }),
             pseudo_element: None,
@@ -1303,10 +1316,10 @@ pub mod tests {
         assert_eq!(parse("e.foo#bar"), Ok(SelectorList(vec!(Selector {
             complex_selector: Arc::new(ComplexSelector {
                 compound_selector: vec!(SimpleSelector::LocalName(LocalName {
-                                            name: String::from("e"),
-                                            lower_name: String::from("e") }),
-                                       SimpleSelector::Class(String::from("foo")),
-                                       SimpleSelector::ID(String::from("bar"))),
+                                            name: DummyAtom::from("e"),
+                                            lower_name: DummyAtom::from("e") }),
+                                       SimpleSelector::Class(DummyAtom::from("foo")),
+                                       SimpleSelector::ID(DummyAtom::from("bar"))),
                 next: None,
             }),
             pseudo_element: None,
@@ -1314,12 +1327,12 @@ pub mod tests {
         }))));
         assert_eq!(parse("e.foo #bar"), Ok(SelectorList(vec!(Selector {
             complex_selector: Arc::new(ComplexSelector {
-                compound_selector: vec!(SimpleSelector::ID(String::from("bar"))),
+                compound_selector: vec!(SimpleSelector::ID(DummyAtom::from("bar"))),
                 next: Some((Arc::new(ComplexSelector {
                     compound_selector: vec!(SimpleSelector::LocalName(LocalName {
-                                                name: String::from("e"),
-                                                lower_name: String::from("e") }),
-                                           SimpleSelector::Class(String::from("foo"))),
+                                                name: DummyAtom::from("e"),
+                                                lower_name: DummyAtom::from("e") }),
+                                           SimpleSelector::Class(DummyAtom::from("foo"))),
                     next: None,
                 }), Combinator::Descendant)),
             }),
@@ -1332,8 +1345,8 @@ pub mod tests {
         assert_eq!(parse_ns("[Foo]", &parser), Ok(SelectorList(vec!(Selector {
             complex_selector: Arc::new(ComplexSelector {
                 compound_selector: vec!(SimpleSelector::AttrExists(AttrSelector {
-                    name: String::from("Foo"),
-                    lower_name: String::from("foo"),
+                    name: DummyAtom::from("Foo"),
+                    lower_name: DummyAtom::from("foo"),
                     namespace: NamespaceConstraint::Specific(Namespace {
                         prefix: None,
                         url: "".into(),
@@ -1345,17 +1358,17 @@ pub mod tests {
             specificity: specificity(0, 1, 0),
         }))));
         assert_eq!(parse_ns("svg|circle", &parser), Err(()));
-        parser.ns_prefixes.insert("svg".into(), SVG.into());
+        parser.ns_prefixes.insert(DummyAtom("svg".into()), DummyAtom(SVG.into()));
         assert_eq!(parse_ns("svg|circle", &parser), Ok(SelectorList(vec![Selector {
             complex_selector: Arc::new(ComplexSelector {
                 compound_selector: vec![
                     SimpleSelector::Namespace(Namespace {
-                        prefix: Some("svg".into()),
+                        prefix: Some(DummyAtom("svg".into())),
                         url: SVG.into(),
                     }),
                     SimpleSelector::LocalName(LocalName {
-                        name: String::from("circle"),
-                        lower_name: String::from("circle")
+                        name: DummyAtom::from("circle"),
+                        lower_name: DummyAtom::from("circle"),
                     })
                 ],
                 next: None,
@@ -1376,8 +1389,8 @@ pub mod tests {
                         url: MATHML.into(),
                     }),
                     SimpleSelector::AttrExists(AttrSelector {
-                        name: String::from("Foo"),
-                        lower_name: String::from("foo"),
+                        name: DummyAtom::from("Foo"),
+                        lower_name: DummyAtom::from("foo"),
                         namespace: NamespaceConstraint::Specific(Namespace {
                             prefix: None,
                             url: "".into(),
@@ -1398,8 +1411,8 @@ pub mod tests {
                         url: MATHML.into(),
                     }),
                     SimpleSelector::LocalName(LocalName {
-                        name: String::from("e"),
-                        lower_name: String::from("e") }),
+                        name: DummyAtom::from("e"),
+                        lower_name: DummyAtom::from("e") }),
                 ),
                 next: None,
             }),
@@ -1410,13 +1423,13 @@ pub mod tests {
             complex_selector: Arc::new(ComplexSelector {
                 compound_selector: vec![
                     SimpleSelector::AttrDashMatch(AttrSelector {
-                        name: String::from("attr"),
-                        lower_name: String::from("attr"),
+                        name: DummyAtom::from("attr"),
+                        lower_name: DummyAtom::from("attr"),
                         namespace: NamespaceConstraint::Specific(Namespace {
                             prefix: None,
                             url: "".into(),
                         }),
-                    }, "foo".to_owned())
+                    }, DummyAtom::from("foo"))
                 ],
                 next: None,
             }),
@@ -1439,8 +1452,8 @@ pub mod tests {
                 compound_selector: vec!(),
                 next: Some((Arc::new(ComplexSelector {
                     compound_selector: vec!(SimpleSelector::LocalName(LocalName {
-                        name: String::from("div"),
-                        lower_name: String::from("div") })),
+                        name: DummyAtom::from("div"),
+                        lower_name: DummyAtom::from("div") })),
                     next: None,
                 }), Combinator::Descendant)),
             }),
@@ -1450,11 +1463,11 @@ pub mod tests {
         assert_eq!(parse("#d1 > .ok"), Ok(SelectorList(vec![Selector {
             complex_selector: Arc::new(ComplexSelector {
                 compound_selector: vec![
-                    SimpleSelector::Class(String::from("ok")),
+                    SimpleSelector::Class(DummyAtom::from("ok")),
                 ],
                 next: Some((Arc::new(ComplexSelector {
                     compound_selector: vec![
-                        SimpleSelector::ID(String::from("d1")),
+                        SimpleSelector::ID(DummyAtom::from("d1")),
                     ],
                     next: None,
                 }), Combinator::Child)),
@@ -1467,13 +1480,13 @@ pub mod tests {
                 compound_selector: vec!(SimpleSelector::Negation(
                     vec!(
                         Arc::new(ComplexSelector {
-                            compound_selector: vec!(SimpleSelector::Class(String::from("babybel"))),
+                            compound_selector: vec!(SimpleSelector::Class(DummyAtom::from("babybel"))),
                             next: None
                         }),
                         Arc::new(ComplexSelector {
                             compound_selector: vec!(
-                                SimpleSelector::ID(String::from("provel")),
-                                SimpleSelector::Class(String::from("old")),
+                                SimpleSelector::ID(DummyAtom::from("provel")),
+                                SimpleSelector::Class(DummyAtom::from("old")),
                             ),
                             next: None
                         }),

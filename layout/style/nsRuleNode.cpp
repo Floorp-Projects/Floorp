@@ -1411,7 +1411,7 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
                  isLocalRef,
                  "unexpected unit; maybe nsCSSValue::Image::Image() failed?");
 #endif
-
+      aResult.SetURLValue(do_AddRef(aValue.GetURLStructValue()));
       break;
     }
     default:
@@ -6900,30 +6900,6 @@ struct BackgroundItemComputer<nsCSSValueList, nsStyleImage>
   }
 };
 
-template <>
-struct BackgroundItemComputer<nsCSSValueList, RefPtr<css::URLValueData>>
-{
-  static void ComputeValue(nsStyleContext* aStyleContext,
-                           const nsCSSValueList* aSpecifiedValue,
-                           RefPtr<css::URLValueData>& aComputedValue,
-                           RuleNodeCacheConditions& aConditions)
-  {
-    switch (aSpecifiedValue->mValue.GetUnit()) {
-      case eCSSUnit_Null:
-        break;
-      case eCSSUnit_URL:
-        aComputedValue = aSpecifiedValue->mValue.GetURLStructValue();
-        break;
-      case eCSSUnit_Image:
-        aComputedValue = aSpecifiedValue->mValue.GetImageStructValue();
-        break;
-      default:
-        aComputedValue = nullptr;
-        break;
-    }
-  }
-};
-
 template <typename T>
 struct BackgroundItemComputer<nsCSSValueList, T>
 {
@@ -8345,14 +8321,7 @@ SetGridTrackList(const nsCSSValue& aValue,
 
   case eCSSUnit_Inherit:
     aConditions.SetUncacheable();
-    aResult.mIsSubgrid = aParentValue.mIsSubgrid;
-    aResult.mLineNameLists = aParentValue.mLineNameLists;
-    aResult.mMinTrackSizingFunctions = aParentValue.mMinTrackSizingFunctions;
-    aResult.mMaxTrackSizingFunctions = aParentValue.mMaxTrackSizingFunctions;
-    aResult.mRepeatAutoLineNameListBefore = aParentValue.mRepeatAutoLineNameListBefore;
-    aResult.mRepeatAutoLineNameListAfter = aParentValue.mRepeatAutoLineNameListAfter;
-    aResult.mRepeatAutoIndex = aParentValue.mRepeatAutoIndex;
-    aResult.mIsAutoFill = aParentValue.mIsAutoFill;
+    aResult = aParentValue;
     break;
 
   case eCSSUnit_Initial:
@@ -9446,9 +9415,6 @@ nsRuleNode::FillAllMaskLists(nsStyleImageLayers& aMask,
                      &nsStyleImageLayers::Layer::mImage,
                      aMask.mImageCount, fillCount);
   FillImageLayerList(aMask.mLayers,
-                     &nsStyleImageLayers::Layer::mSourceURI,
-                     aMask.mImageCount, fillCount);
-  FillImageLayerList(aMask.mLayers,
                      &nsStyleImageLayers::Layer::mRepeat,
                      aMask.mRepeatCount, fillCount);
   FillImageLayerList(aMask.mLayers,
@@ -10101,14 +10067,6 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
                     parentSVGReset->mMask.mLayers,
                     &nsStyleImageLayers::Layer::mImage,
                     initialImage, parentSVGReset->mMask.mImageCount,
-                    svgReset->mMask.mImageCount,
-                    maxItemCount, rebuild, conditions);
-  SetImageLayerList(aContext, *aRuleData->ValueForMaskImage(),
-                    svgReset->mMask.mLayers,
-                    parentSVGReset->mMask.mLayers,
-                    &nsStyleImageLayers::Layer::mSourceURI,
-                    RefPtr<css::URLValueData>(),
-                    parentSVGReset->mMask.mImageCount,
                     svgReset->mMask.mImageCount,
                     maxItemCount, rebuild, conditions);
 
