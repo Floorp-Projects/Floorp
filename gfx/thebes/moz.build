@@ -134,7 +134,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'gfxDWriteFonts.h',
         'gfxGDIFont.h',
         'gfxGDIFontList.h',
-        'gfxPlatformFontList.h',
         'gfxWindowsNativeDrawing.h',
         'gfxWindowsPlatform.h',
         'gfxWindowsSurface.h',
