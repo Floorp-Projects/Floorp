@@ -37,7 +37,6 @@ function* testProxyScript(script, expected) {
   let win = window.open("http://example.com/");
   let error = yield extension.awaitMessage("proxy-error-received");
   is(error.message, expected.message, "Correct error message received");
-  win.close();
 
   if (expected.errorInfo) {
     ok(error.fileName.includes("proxy_script.js"), "Error should include file name");
@@ -46,6 +45,8 @@ function* testProxyScript(script, expected) {
   }
 
   yield extension.unload();
+
+  win.close();
 }
 
 add_task(function* test_invalid_FindProxyForURL_type() {
