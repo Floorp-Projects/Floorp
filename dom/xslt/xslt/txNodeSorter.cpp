@@ -127,7 +127,8 @@ txNodeSorter::sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
                           txNodeSet** aResult)
 {
     if (mNKeys == 0 || aNodes->isEmpty()) {
-        NS_ADDREF(*aResult = aNodes);
+        RefPtr<txNodeSet> ref(aNodes);
+        ref.forget(aResult);
 
         return NS_OK;
     }
@@ -194,7 +195,7 @@ txNodeSorter::sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
 
     delete aEs->popEvalContext();
 
-    NS_ADDREF(*aResult = sortedNodes);
+    sortedNodes.forget(aResult);
 
     return NS_OK;
 }
