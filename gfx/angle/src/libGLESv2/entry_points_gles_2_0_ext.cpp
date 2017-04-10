@@ -1952,22 +1952,20 @@ ANGLE_EXPORT void GL_APIENTRY CompressedCopyTextureCHROMIUM(GLuint sourceId, GLu
     }
 }
 
-GL_APICALL GLboolean GL_APIENTRY EnableExtensionANGLE(const GLchar *name)
+GL_APICALL void GL_APIENTRY RequestExtensionANGLE(const GLchar *name)
 {
     EVENT("(const GLchar *name = %p)", name);
 
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        if (!context->skipValidation() && !ValidateEnableExtensionANGLE(context, name))
+        if (!context->skipValidation() && !ValidateRequestExtensionANGLE(context, name))
         {
-            return GL_FALSE;
+            return;
         }
 
-        return context->enableExtension(name) ? GL_TRUE : GL_FALSE;
+        context->requestExtension(name);
     }
-
-    return GL_FALSE;
 }
 
 ANGLE_EXPORT void GL_APIENTRY GetBooleanvRobustANGLE(GLenum pname,

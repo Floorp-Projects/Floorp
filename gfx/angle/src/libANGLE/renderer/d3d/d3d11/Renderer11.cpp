@@ -3209,6 +3209,15 @@ gl::Error Renderer11::copyTexture(const gl::Texture *source,
     return gl::NoError();
 }
 
+UINT64 EstimateSize(D3D11_TEXTURE2D_DESC &desc)
+{
+    //XXX: handle overflow (64 bits should be enough for anyone...)
+    const d3d11::DXGIFormatSize &dxgiFormatInfo = d3d11::GetDXGIFormatSizeInfo(desc.Format);
+    // NVIDIA seems to align the width of buffers by 8 and the height by 64, so we do the same.
+    UINT64 total = UINT64(rx::roundUp(desc.Width, UINT(8))) * rx::roundUp(desc.Height, UINT(64)) * desc.SampleDesc.Count * dxgiFormatInfo.pixelBytes;
+    return total;
+}
+
 gl::Error Renderer11::copyCompressedTexture(const gl::Texture *source,
                                             GLint sourceLevel,
                                             TextureStorage *storage,
@@ -3242,15 +3251,6 @@ gl::Error Renderer11::copyCompressedTexture(const gl::Texture *source,
                                           sourceSubresource, nullptr);
 
     return gl::NoError();
-}
-
-UINT64 EstimateSize(D3D11_TEXTURE2D_DESC &desc)
-{
-    //XXX: handle overflow (64 bits should be enough for anyone...)
-    const d3d11::DXGIFormatSize &dxgiFormatInfo = d3d11::GetDXGIFormatSizeInfo(desc.Format);
-    // NVIDIA seems to align the width of buffers by 8 and the height by 64, so we do the same.
-    UINT64 total = UINT64(rx::roundUp(desc.Width, UINT(8))) * rx::roundUp(desc.Height, UINT(64)) * desc.SampleDesc.Count * dxgiFormatInfo.pixelBytes;
-    return total;
 }
 
 gl::Error Renderer11::createRenderTarget(int width,
@@ -3305,6 +3305,7 @@ gl::Error Renderer11::createRenderTarget(int width,
         ASSERT(bindRTV != bindDSV);
 
         ID3D11Texture2D *texture = NULL;
+
         HRESULT result;
 
         // Some Nvidia drivers (GeForce GT 610 w/ 9.18.13.3523) crash with very large render targets
@@ -3572,25 +3573,27 @@ gl::Error Renderer11::compileToExecutable(gl::InfoLog &infoLog,
                                           const D3DCompilerWorkarounds &workarounds,
                                           ShaderExecutableD3D **outExectuable)
 {
-    const char *profileType = NULL;
+    std::stringstream profileStream;
+
     switch (type)
     {
         case SHADER_VERTEX:
-            profileType = "vs";
+            profileStream << "vs";
             break;
         case SHADER_PIXEL:
-            profileType = "ps";
+            profileStream << "ps";
             break;
         case SHADER_GEOMETRY:
-            profileType = "gs";
+            profileStream << "gs";
             break;
         default:
             UNREACHABLE();
             return gl::Error(GL_INVALID_OPERATION);
     }
 
-    std::string profile = FormatString("%s_%d_%d%s", profileType, getMajorShaderModel(),
-                                       getMinorShaderModel(), getShaderModelSuffix().c_str());
+    profileStream << "_" << getMajorShaderModel() << "_" << getMinorShaderModel()
+                  << getShaderModelSuffix();
+    std::string profile = profileStream.str();
 
     UINT flags = D3DCOMPILE_OPTIMIZATION_LEVEL2;
 
@@ -3654,6 +3657,11 @@ gl::Error Renderer11::compileToExecutable(gl::InfoLog &infoLog,
     }
 
     return gl::NoError();
+}
+
+gl::Error Renderer11::ensureHLSLCompilerInitialized()
+{
+    return mCompiler.ensureInitialized();
 }
 
 UniformStorageD3D *Renderer11::createUniformStorage(size_t storageSize)
@@ -4274,7 +4282,7 @@ gl::Error Renderer11::blitRenderbufferRect(const gl::Rectangle &readRectIn,
 
 bool Renderer11::isES3Capable() const
 {
-    return (d3d11_gl::GetMaximumClientVersion(mRenderer11DeviceCaps.featureLevel) > 2);
+    return (d3d11_gl::GetMaximumClientVersion(mRenderer11DeviceCaps.featureLevel).major > 2);
 };
 
 void Renderer11::onSwap()
@@ -4603,7 +4611,7 @@ gl::Error Renderer11::getScratchMemoryBuffer(size_t requestedSize, MemoryBuffer 
 
 gl::Version Renderer11::getMaxSupportedESVersion() const
 {
-    return gl::Version(d3d11_gl::GetMaximumClientVersion(mRenderer11DeviceCaps.featureLevel), 0);
+    return d3d11_gl::GetMaximumClientVersion(mRenderer11DeviceCaps.featureLevel);
 }
 
 gl::DebugAnnotator *Renderer11::getAnnotator()

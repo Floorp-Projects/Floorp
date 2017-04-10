@@ -4,12 +4,14 @@
 // found in the LICENSE file.
 //
 
+#include <sstream>
+
 #include "PreprocessorTest.h"
 #include "compiler/preprocessor/Token.h"
 
 using testing::_;
 
-class DefineTest : public PreprocessorTest
+class DefineTest : public SimplePreprocessorTest
 {
 };
 
@@ -849,10 +851,9 @@ TEST_F(DefineTest, Predefined_VERSION)
 TEST_F(DefineTest, Predefined_LINE1)
 {
     const char* str = "\n\n__LINE__";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, NULL));
 
     pp::Token token;
-    mPreprocessor.lex(&token);
+    lexSingleToken(str, &token);
     EXPECT_EQ(pp::Token::CONST_INT, token.type);
     EXPECT_EQ("3", token.text);
 }
@@ -861,10 +862,9 @@ TEST_F(DefineTest, Predefined_LINE2)
 {
     const char* str = "#line 10\n"
                       "__LINE__\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, NULL));
 
     pp::Token token;
-    mPreprocessor.lex(&token);
+    lexSingleToken(str, &token);
     EXPECT_EQ(pp::Token::CONST_INT, token.type);
     EXPECT_EQ("10", token.text);
 }
@@ -872,10 +872,9 @@ TEST_F(DefineTest, Predefined_LINE2)
 TEST_F(DefineTest, Predefined_FILE1)
 {
     const char* const str[] = {"", "", "__FILE__"};
-    ASSERT_TRUE(mPreprocessor.init(3, str, NULL));
 
     pp::Token token;
-    mPreprocessor.lex(&token);
+    lexSingleToken(3, str, &token);
     EXPECT_EQ(pp::Token::CONST_INT, token.type);
     EXPECT_EQ("2", token.text);
 }
@@ -883,10 +882,9 @@ TEST_F(DefineTest, Predefined_FILE1)
 TEST_F(DefineTest, Predefined_FILE2)
 {
     const char* const str[] = {"#line 10 20\n", "__FILE__"};
-    ASSERT_TRUE(mPreprocessor.init(2, str, NULL));
 
     pp::Token token;
-    mPreprocessor.lex(&token);
+    lexSingleToken(2, str, &token);
     EXPECT_EQ(pp::Token::CONST_INT, token.type);
     EXPECT_EQ("21", token.text);
 }
@@ -985,4 +983,28 @@ TEST_F(DefineTest, RecursiveMacroNameInsideIncompleteMacroInvocationInMacroExpan
         "\n"
         "\n";
     preprocess(input, expected);
+}
+
+// The macro invocations form a long chain. The macro expander should protect against stack overflow
+// and generate an error in this case.
+TEST_F(DefineTest, LongMacroInvocationChain)
+{
+    std::stringstream inputStream;
+    std::stringstream expectedStream;
+
+    inputStream << "#define b(x) x\n";
+    inputStream << "#define a0(x) foo x\n";
+    for (int i = 1; i < 20; ++i)
+    {
+        inputStream << "#define a" << i << "(x) b(a" << (i - 1) << "(x))\n";
+    }
+    inputStream << "a19(y)\n";
+
+    EXPECT_CALL(mDiagnostics, print(pp::Diagnostics::PP_MACRO_INVOCATION_CHAIN_TOO_DEEP,
+                                    pp::SourceLocation(0, 22), _));
+
+    pp::PreprocessorSettings settings;
+    settings.maxMacroExpansionDepth = 19;
+
+    preprocess(inputStream.str().c_str(), settings);
 }

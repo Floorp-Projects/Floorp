@@ -8,12 +8,11 @@
 //   for linking between shader stages.
 //
 
-#include "libANGLE/renderer/d3d/VaryingPacking.h"
+#include "libANGLE/renderer/d3d/hlsl/VaryingPacking.h"
 
 #include "common/utilities.h"
 #include "compiler/translator/blocklayoutHLSL.h"
-#include "libANGLE/renderer/d3d/DynamicHLSL.h"
-#include "libANGLE/renderer/d3d/ProgramD3D.h"
+#include "libANGLE/Program.h"
 
 namespace rx
 {
@@ -54,9 +53,6 @@ VaryingPacking::VaryingPacking(GLuint maxVaryingVectors)
 // Returns false if unsuccessful.
 bool VaryingPacking::packVarying(const PackedVarying &packedVarying)
 {
-    unsigned int varyingRows    = 0;
-    unsigned int varyingColumns = 0;
-
     const auto &varying = *packedVarying.varying;
 
     // "Non - square matrices of type matCxR consume the same space as a square matrix of type matN
@@ -64,16 +60,18 @@ bool VaryingPacking::packVarying(const PackedVarying &packedVarying)
     // Here we are a bit more conservative and allow packing non-square matrices more tightly.
     // Make sure we use transposed matrix types to count registers correctly.
     ASSERT(!varying.isStruct());
-    GLenum transposedType = gl::TransposeMatrixType(varying.type);
-    varyingRows           = gl::VariableRowCount(transposedType);
-    varyingColumns        = gl::VariableColumnCount(transposedType);
+    GLenum transposedType       = gl::TransposeMatrixType(varying.type);
+    unsigned int varyingRows    = gl::VariableRowCount(transposedType);
+    unsigned int varyingColumns = gl::VariableColumnCount(transposedType);
 
     // "Arrays of size N are assumed to take N times the size of the base type"
     varyingRows *= varying.elementCount();
 
     unsigned int maxVaryingVectors = static_cast<unsigned int>(mRegisterMap.size());
 
-    if (varyingRows > maxVaryingVectors) {
+    // Fail if we are packing a single over-large varying.
+    if (varyingRows > maxVaryingVectors)
+    {
         return false;
     }
 
@@ -162,7 +160,7 @@ bool VaryingPacking::packVarying(const PackedVarying &packedVarying)
                     registerInfo.registerRow       = row + arrayIndex;
                     registerInfo.registerColumn    = bestColumn;
                     registerInfo.varyingArrayIndex = arrayIndex;
-                    registerInfo.varyingRowIndex = 0;
+                    registerInfo.varyingRowIndex   = 0;
                     mRegisterList.push_back(registerInfo);
                     mRegisterMap[row + arrayIndex][bestColumn] = true;
                 }
@@ -217,8 +215,8 @@ void VaryingPacking::insert(unsigned int registerRow,
     {
         for (unsigned int varyingRow = 0; varyingRow < varyingRows; ++varyingRow)
         {
-            registerInfo.registerRow       = registerRow + (arrayElement * varyingRows) + varyingRow;
-            registerInfo.varyingRowIndex   = varyingRow;
+            registerInfo.registerRow     = registerRow + (arrayElement * varyingRows) + varyingRow;
+            registerInfo.varyingRowIndex = varyingRow;
             registerInfo.varyingArrayIndex = arrayElement;
             mRegisterList.push_back(registerInfo);
 
@@ -231,9 +229,9 @@ void VaryingPacking::insert(unsigned int registerRow,
 }
 
 // See comment on packVarying.
-bool VaryingPacking::packVaryings(gl::InfoLog &infoLog,
-                                  const std::vector<PackedVarying> &packedVaryings,
-                                  const std::vector<std::string> &transformFeedbackVaryings)
+bool VaryingPacking::packUserVaryings(gl::InfoLog &infoLog,
+                                      const std::vector<PackedVarying> &packedVaryings,
+                                      const std::vector<std::string> &transformFeedbackVaryings)
 {
     std::set<std::string> uniqueVaryingNames;
 
@@ -317,6 +315,11 @@ bool VaryingPacking::packVaryings(gl::InfoLog &infoLog,
     return true;
 }
 
+bool VaryingPacking::validateBuiltins() const
+{
+    return (static_cast<size_t>(getRegisterCount()) <= mRegisterMap.size());
+}
+
 unsigned int VaryingPacking::getRegisterCount() const
 {
     unsigned int count = 0;
@@ -340,66 +343,6 @@ unsigned int VaryingPacking::getRegisterCount() const
     }
 
     return count;
-}
-
-void VaryingPacking::enableBuiltins(ShaderType shaderType,
-                                    const ProgramD3DMetadata &programMetadata)
-{
-    int majorShaderModel = programMetadata.getRendererMajorShaderModel();
-    bool position        = programMetadata.usesTransformFeedbackGLPosition();
-    bool fragCoord       = programMetadata.usesFragCoord();
-    bool pointCoord = shaderType == SHADER_VERTEX ? programMetadata.addsPointCoordToVertexShader()
-                                                  : programMetadata.usesPointCoord();
-    bool pointSize                  = programMetadata.usesSystemValuePointSize();
-    bool hlsl4                      = (majorShaderModel >= 4);
-    const std::string &userSemantic = GetVaryingSemantic(majorShaderModel, pointSize);
-
-    unsigned int reservedSemanticIndex = getMaxSemanticIndex();
-
-    BuiltinInfo *builtins = &mBuiltinInfo[shaderType];
-
-    if (hlsl4)
-    {
-        builtins->dxPosition.enableSystem("SV_Position");
-    }
-    else if (shaderType == SHADER_PIXEL)
-    {
-        builtins->dxPosition.enableSystem("VPOS");
-    }
-    else
-    {
-        builtins->dxPosition.enableSystem("POSITION");
-    }
-
-    if (position)
-    {
-        builtins->glPosition.enable(userSemantic, reservedSemanticIndex++);
-    }
-
-    if (fragCoord)
-    {
-        builtins->glFragCoord.enable(userSemantic, reservedSemanticIndex++);
-    }
-
-    if (pointCoord)
-    {
-        // SM3 reserves the TEXCOORD semantic for point sprite texcoords (gl_PointCoord)
-        // In D3D11 we manually compute gl_PointCoord in the GS.
-        if (hlsl4)
-        {
-            builtins->glPointCoord.enable(userSemantic, reservedSemanticIndex++);
-        }
-        else
-        {
-            builtins->glPointCoord.enable("TEXCOORD", 0);
-        }
-    }
-
-    // Special case: do not include PSIZE semantic in HLSL 3 pixel shaders
-    if (pointSize && (shaderType != SHADER_PIXEL || hlsl4))
-    {
-        builtins->glPointSize.enableSystem("PSIZE");
-    }
 }
 
 }  // namespace rx

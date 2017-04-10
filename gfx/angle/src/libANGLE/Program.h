@@ -11,8 +11,9 @@
 #define LIBANGLE_PROGRAM_H_
 
 #include <GLES2/gl2.h>
-#include <GLSLANG/ShaderLang.h>
+#include <GLSLANG/ShaderVars.h>
 
+#include <map>
 #include <set>
 #include <sstream>
 #include <string>
@@ -379,10 +380,7 @@ class Program final : angle::NonCopyable, public LabeledObject
     void unlink(bool destroy = false);
     void resetUniformBlockBindings();
 
-    bool linkAttributes(const ContextState &data,
-                        InfoLog &infoLog,
-                        const Bindings &attributeBindings,
-                        const Shader *vertexShader);
+    bool linkAttributes(const ContextState &data, InfoLog &infoLog);
     bool validateUniformBlocksCount(GLuint maxUniformBlocks,
                                     const std::vector<sh::InterfaceBlock> &block,
                                     const std::string &errorMessage,

@@ -97,7 +97,6 @@ class DynamicHLSL : angle::NonCopyable
                                                 const sh::ShaderVariable &shaderAttrib) const;
 };
 
-std::string GetVaryingSemantic(int majorShaderModel, bool programUsesPointSize);
 }
 
 #endif  // LIBANGLE_RENDERER_D3D_DYNAMICHLSL_H_

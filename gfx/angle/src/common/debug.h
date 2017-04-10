@@ -143,9 +143,9 @@ std::ostream &DummyStream();
 
 // A macro asserting a condition and outputting failures to the debug log
 #if ANGLE_ASSERTS_ON
-#define ASSERT(expression)                                                                        \
-    (expression ? static_cast<void>(0)                                                            \
-                : (ERR("\t! Assert failed in %s(%d): %s\n", __FUNCTION__, __LINE__, #expression), \
+#define ASSERT(expression)                                                                      \
+    (expression ? static_cast<void>(0)                                                          \
+                : (ERR("\t! Assert failed in %s(%d): %s", __FUNCTION__, __LINE__, #expression), \
                    ANGLE_ASSERT_IMPL(expression)))
 #else
 #define ASSERT(condition)                                                           \
@@ -160,15 +160,15 @@ std::ostream &DummyStream();
 #define NOASSERT_UNIMPLEMENTED 1
 #endif
 
-#define UNIMPLEMENTED()                                             \
-    {                                                               \
-        ERR("\t! Unimplemented: %s(%d)\n", __FUNCTION__, __LINE__); \
-        ASSERT(NOASSERT_UNIMPLEMENTED);                             \
-    }                                                               \
+#define UNIMPLEMENTED()                                           \
+    {                                                             \
+        ERR("\t! Unimplemented: %s(%d)", __FUNCTION__, __LINE__); \
+        ASSERT(NOASSERT_UNIMPLEMENTED);                           \
+    }                                                             \
     ANGLE_EMPTY_STATEMENT
 
 // A macro for code which is not expected to be reached under valid assumptions
 #define UNREACHABLE() \
-    (ERR("\t! Unreachable reached: %s(%d)\n", __FUNCTION__, __LINE__), ASSERT(false))
+    (ERR("\t! Unreachable reached: %s(%d)", __FUNCTION__, __LINE__), ASSERT(false))
 
 #endif   // COMMON_DEBUG_H_
