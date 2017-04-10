@@ -17,8 +17,10 @@ UPLOAD_DIR=$WORKSPACE/artifacts
 mkdir -p $UPLOAD_DIR $STAGE
 
 cd $WORKSPACE
-tc-vcs checkout --force-clone libdmg-hfsplus $LIBDMG_REPOSITORY $LIBDMG_REPOSITORY $LIBDMG_REV
+git clone --no-checkout $LIBDMG_REPOSITORY libdmg-hfsplus
 cd libdmg-hfsplus
+git checkout $LIBDMG_REV
+
 # Make a source archive
 git archive ${LIBDMG_REV} | xz > $UPLOAD_DIR/libdmg-hfsplus.tar.xz
 cmake .
