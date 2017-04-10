@@ -67,7 +67,7 @@ var CompactTheme = {
     // Don't touch things on the browser if gBrowserInit.onLoad hasn't
     // yet fired.
     if (this.initialized) {
-      gBrowser.tabContainer._positionPinnedTabs();
+      gBrowser.tabContainer.themeLayoutChanged();
     }
   },
 
