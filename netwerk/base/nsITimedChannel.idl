@@ -26,6 +26,15 @@ interface nsITimedChannel : nsISupports {
   [noscript] readonly attribute TimeStamp channelCreation;
   [noscript] readonly attribute TimeStamp asyncOpen;
 
+  // The following are only set when the request is intercepted by a service
+  // worker no matter the response is synthesized.
+  [noscript] attribute TimeStamp launchServiceWorkerStart;
+  [noscript] attribute TimeStamp launchServiceWorkerEnd;
+  [noscript] attribute TimeStamp dispatchFetchEventStart;
+  [noscript] attribute TimeStamp dispatchFetchEventEnd;
+  [noscript] attribute TimeStamp handleFetchEventStart;
+  [noscript] attribute TimeStamp handleFetchEventEnd;
+
   // The following are only set when the document is not (only) read from the
   // cache
   [noscript] readonly attribute TimeStamp domainLookupStart;
@@ -66,6 +75,12 @@ interface nsITimedChannel : nsISupports {
   // All following are PRTime versions of the above.
   readonly attribute PRTime channelCreationTime;
   readonly attribute PRTime asyncOpenTime;
+  readonly attribute PRTime launchServiceWorkerStartTime;
+  readonly attribute PRTime launchServiceWorkerEndTime;
+  readonly attribute PRTime dispatchFetchEventStartTime;
+  readonly attribute PRTime dispatchFetchEventEndTime;
+  readonly attribute PRTime handleFetchEventStartTime;
+  readonly attribute PRTime handleFetchEventEndTime;
   readonly attribute PRTime domainLookupStartTime;
   readonly attribute PRTime domainLookupEndTime;
   readonly attribute PRTime connectStartTime;
