@@ -47,13 +47,18 @@ TestHasPrefix(const _Fragment& aFragment, bool aExpectedHas, bool aExpectedCompl
     nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
     lookupHash.FromPlaintext(aFragment, cryptoHash);
 
-    bool has, fromCache;
+    bool has, confirmed, fromCache;
     uint32_t matchLength;
-    nsresult rv = cache->Has(lookupHash, &has, &matchLength, &fromCache);
+    // Freshness is not used in V4 so we just put dummy values here.
+    TableFreshnessMap dummy;
+    nsresult rv = cache->Has(lookupHash, dummy, 0,
+                             &has, &matchLength, &confirmed, &fromCache);
 
     EXPECT_EQ(rv, NS_OK);
     EXPECT_EQ(has, aExpectedHas);
     EXPECT_EQ(matchLength == COMPLETE_SIZE, aExpectedComplete);
+    EXPECT_EQ(confirmed, false);
+    EXPECT_EQ(fromCache, false);
 
     cache->ClearAll();
   });

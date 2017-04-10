@@ -80,10 +80,12 @@ LookupCacheV4::Init()
 
 nsresult
 LookupCacheV4::Has(const Completion& aCompletion,
+                   const TableFreshnessMap& aTableFreshness,
+                   uint32_t aFreshnessGuarantee,
                    bool* aHas, uint32_t* aMatchLength,
-                   bool* aFromCache)
+                   bool* aConfirmed, bool* aFromCache)
 {
-  *aHas = *aFromCache = false;
+  *aHas = *aConfirmed = *aFromCache = false;
   *aMatchLength = 0;
 
   uint32_t length = 0;
@@ -92,6 +94,8 @@ LookupCacheV4::Has(const Completion& aCompletion,
 
   nsresult rv = mVLPrefixSet->Matches(fullhash, &length);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  MOZ_ASSERT(length == 0 || (length >= PREFIX_SIZE && length <= COMPLETE_SIZE));
 
   *aHas = length >= PREFIX_SIZE;
   *aMatchLength = length;
@@ -102,19 +106,69 @@ LookupCacheV4::Has(const Completion& aCompletion,
           prefix, *aHas, length == COMPLETE_SIZE));
   }
 
-  // TODO : Bug 1311935 - Implement v4 caching
+  // Check if fullhash match any prefix in the local database
+  if (!(*aHas)) {
+    return NS_OK;
+  }
+
+  // We always send 4-bytes for completion(Bug 1323953) so the prefix used to
+  // lookup for cache should be 4-bytes too.
+  nsDependentCSubstring prefix(reinterpret_cast<const char*>(aCompletion.buf),
+                               PREFIX_SIZE);
+
+  // Check if prefix can be found in cache.
+  CachedFullHashResponse* fullHashResponse = mCache.Get(prefix);
+  if (!fullHashResponse) {
+    return NS_OK;
+  }
+
+  *aFromCache = true;
+
+  int64_t nowSec = PR_Now() / PR_USEC_PER_SEC;
+  int64_t expiryTime;
+
+  FullHashExpiryCache& fullHashes = fullHashResponse->fullHashes;
+  nsDependentCSubstring completion(
+    reinterpret_cast<const char*>(aCompletion.buf), COMPLETE_SIZE);
+
+  // Check if we can find the fullhash in positive cache
+  if (fullHashes.Get(completion, &expiryTime)) {
+    if (nowSec <= expiryTime) {
+      // Url is NOT safe.
+      *aConfirmed = true;
+      LOG(("Found a valid fullhash in the positive cache"));
+    } else {
+      // Trigger a gethash request in this case(aConfirmed is false).
+      LOG(("Found an expired fullhash in the positive cache"));
+
+      // Remove fullhash entry from the cache when the negative cache
+      // is also expired because whether or not the fullhash is cached
+      // locally, we will need to consult the server next time we
+      // lookup this hash. We may as well remove it from our cache.
+      if (fullHashResponse->negativeCacheExpirySec < expiryTime) {
+        fullHashes.Remove(completion);
+        if (fullHashes.Count() == 0 &&
+            fullHashResponse->negativeCacheExpirySec < nowSec) {
+          mCache.Remove(prefix);
+        }
+      }
+    }
+    return NS_OK;
+  }
+
+  // Check negative cache.
+  if (fullHashResponse->negativeCacheExpirySec >= nowSec) {
+    // Url is safe.
+    LOG(("Found a valid prefix in the negative cache"));
+    *aHas = false;
+  } else {
+    LOG(("Found an expired prefix in the negative cache"));
+    if (fullHashes.Count() == 0) {
+      mCache.Remove(prefix);
+    }
+  }
 
   return NS_OK;
-}
-
-void
-LookupCacheV4::IsHashEntryConfirmed(const Completion& aEntry,
-                                    const TableFreshnessMap& aTableFreshness,
-                                    uint32_t aFreshnessGuarantee,
-                                    bool* aConfirmed)
-{
-  // TODO : Bug 1311935 - Implement v4 caching
-  *aConfirmed = true;
 }
 
 bool
@@ -330,6 +384,17 @@ LookupCacheV4::ApplyUpdate(TableUpdateV4* aTableUpdate,
 }
 
 nsresult
+LookupCacheV4::AddFullHashResponseToCache(const FullHashResponseMap& aResponseMap)
+{
+  for (auto iter = aResponseMap.ConstIter(); !iter.Done(); iter.Next()) {
+    CachedFullHashResponse* response = mCache.LookupOrAdd(iter.Key());
+    *response = *(iter.Data());
+  }
+
+  return NS_OK;
+}
+
+nsresult
 LookupCacheV4::InitCrypto(nsCOMPtr<nsICryptoHash>& aCrypto)
 {
   nsresult rv;
@@ -538,6 +603,84 @@ LookupCacheV4::LoadMetadata(nsACString& aState, nsACString& aChecksum)
 
   return rv;
 }
+
+void
+LookupCacheV4::ClearCache()
+{
+  mCache.Clear();
+}
+
+// This function remove cache entries whose negative cache time is expired.
+// It is possible that a cache entry whose positive cache time is not yet
+// expired but still being removed after calling this API. Right now we call
+// this on every update.
+void
+LookupCacheV4::InvalidateExpiredCacheEntry()
+{
+  int64_t nowSec = PR_Now() / PR_USEC_PER_SEC;
+
+  for (auto iter = mCache.Iter(); !iter.Done(); iter.Next()) {
+    CachedFullHashResponse* response = iter.Data();
+    if (response->negativeCacheExpirySec < nowSec) {
+      iter.Remove();
+    }
+  }
+}
+
+#if defined(DEBUG)
+static
+void CStringToHexString(const nsACString& aIn, nsACString& aOut)
+{
+  static const char* const lut = "0123456789ABCDEF";
+  // 32 bytes is the longest hash
+  size_t len = COMPLETE_SIZE;
+
+  aOut.SetCapacity(2 * len);
+  for (size_t i = 0; i < aIn.Length(); ++i) {
+    const char c = static_cast<const char>(aIn[i]);
+    aOut.Append(lut[(c >> 4) & 0x0F]);
+    aOut.Append(lut[c & 15]);
+  }
+}
+
+static
+nsCString GetFormattedTimeString(int64_t aCurTimeSec)
+{
+  PRExplodedTime pret;
+  PR_ExplodeTime(aCurTimeSec * PR_USEC_PER_SEC, PR_GMTParameters, &pret);
+
+  return nsPrintfCString(
+         "%04d-%02d-%02d %02d:%02d:%02d UTC",
+         pret.tm_year, pret.tm_month + 1, pret.tm_mday,
+         pret.tm_hour, pret.tm_min, pret.tm_sec);
+}
+
+void
+LookupCacheV4::DumpCache()
+{
+  if (!LOG_ENABLED()) {
+    return;
+  }
+
+  for (auto iter = mCache.ConstIter(); !iter.Done(); iter.Next()) {
+    nsAutoCString strPrefix;
+    CStringToHexString(iter.Key(), strPrefix);
+
+    CachedFullHashResponse* response = iter.Data();
+    LOG(("Caches prefix: %s, Expire time: %s",
+         strPrefix.get(),
+         GetFormattedTimeString(response->negativeCacheExpirySec).get()));
+
+    FullHashExpiryCache& fullHashes = response->fullHashes;
+    for (auto iter2 = fullHashes.ConstIter(); !iter2.Done(); iter2.Next()) {
+      nsAutoCString strFullhash;
+      CStringToHexString(iter2.Key(), strFullhash);
+      LOG(("  - %s, Expire time: %s", strFullhash.get(),
+           GetFormattedTimeString(iter2.Data()).get()));
+    }
+  }
+}
+#endif
 
 VLPrefixSet::VLPrefixSet(const PrefixStringMap& aMap)
   : mCount(0)
