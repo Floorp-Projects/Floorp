@@ -57,6 +57,13 @@ public:
              const nsRect& aDirtyRect,
              float aOpacity = 1.0);
 
+  void BuildWebRenderParameters(float aOpacity,
+                                WrGradientExtendMode& aMode,
+                                nsTArray<WrGradientStop>& aStops,
+                                LayoutDevicePoint& aLineStart,
+                                LayoutDevicePoint& aLineEnd,
+                                LayoutDeviceSize& aGradientRadius);
+
   void BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuilder,
                                   layers::WebRenderDisplayItemLayer* aLayer,
                                   float aOpacity = 1.0);

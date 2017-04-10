@@ -1012,26 +1012,41 @@ nsCSSGradientRenderer::Paint(gfxContext& aContext,
 }
 
 void
+nsCSSGradientRenderer::BuildWebRenderParameters(float aOpacity,
+                                                WrGradientExtendMode& aMode,
+                                                nsTArray<WrGradientStop>& aStops,
+                                                LayoutDevicePoint& aLineStart,
+                                                LayoutDevicePoint& aLineEnd,
+                                                LayoutDeviceSize& aGradientRadius)
+{
+  bool isRepeat = mGradient->mRepeating || mForceRepeatToCoverTiles;
+  aMode = isRepeat ? WrGradientExtendMode::Repeat : WrGradientExtendMode::Clamp;
+
+  aStops.SetLength(mStops.Length());
+  for(uint32_t i = 0; i < mStops.Length(); i++) {
+    aStops[i].color.r = mStops[i].mColor.r;
+    aStops[i].color.g = mStops[i].mColor.g;
+    aStops[i].color.b = mStops[i].mColor.b;
+    aStops[i].color.a = mStops[i].mColor.a * aOpacity;
+    aStops[i].offset = mStops[i].mPosition;
+  }
+
+  aLineStart = LayoutDevicePoint(mLineStart.x, mLineStart.y);
+  aLineEnd = LayoutDevicePoint(mLineEnd.x, mLineEnd.y);
+  aGradientRadius = LayoutDeviceSize(mRadiusX, mRadiusY);
+}
+
+void
 nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuilder,
                                                   layers::WebRenderDisplayItemLayer* aLayer,
                                                   float aOpacity)
 {
-  bool isRepeat = mGradient->mRepeating || mForceRepeatToCoverTiles;
-  WrGradientExtendMode extendMode = isRepeat ? WrGradientExtendMode::Repeat : WrGradientExtendMode::Clamp;
-
-  nsTArray<WrGradientStop> stops(mStops.Length());
-  stops.SetLength(mStops.Length());
-  for(uint32_t i = 0; i < mStops.Length(); i++) {
-    stops[i].color.r = mStops[i].mColor.r;
-    stops[i].color.g = mStops[i].mColor.g;
-    stops[i].color.b = mStops[i].mColor.b;
-    stops[i].color.a = mStops[i].mColor.a * aOpacity;
-    stops[i].offset = mStops[i].mPosition;
-  }
-
-  LayoutDevicePoint lineStart = LayoutDevicePoint(mLineStart.x, mLineStart.y);
-  LayoutDevicePoint lineEnd = LayoutDevicePoint(mLineEnd.x, mLineEnd.y);
-  LayoutDeviceSize gradientRadius = LayoutDeviceSize(mRadiusX, mRadiusY);
+  WrGradientExtendMode extendMode;
+  nsTArray<WrGradientStop> stops;
+  LayoutDevicePoint lineStart;
+  LayoutDevicePoint lineEnd;
+  LayoutDeviceSize gradientRadius;
+  BuildWebRenderParameters(aOpacity, extendMode, stops, lineStart, lineEnd, gradientRadius);
 
   // Do a naive tiling of the gradient by making multiple display items
   // TODO: this should be done on the WebRender side eventually

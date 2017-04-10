@@ -999,3 +999,10 @@ nsImageRenderer::PurgeCacheForViewportChange(
   }
 }
 
+already_AddRefed<nsStyleGradient>
+nsImageRenderer::GetGradientData()
+{
+  RefPtr<nsStyleGradient> res = mGradientData;
+  return res.forget();
+}
+
