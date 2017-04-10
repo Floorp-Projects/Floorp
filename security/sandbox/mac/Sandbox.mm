@@ -176,6 +176,7 @@ static const char contentSandboxRules[] =
   "(define profileDir (param \"PROFILE_DIR\"))\n"
   "(define home-path (param \"HOME_PATH\"))\n"
   "(define hasFilePrivileges (param \"HAS_FILE_PRIVILEGES\"))\n"
+  "(define isDebugBuild (param \"DEBUG_BUILD\"))\n"
   "\n"
   "; Allow read access to standard system paths.\n"
   "(allow file-read*\n"
@@ -442,11 +443,10 @@ static const char contentSandboxRules[] =
   "\n"
   "; bug 1324610\n"
   "  (allow network-outbound (literal \"/private/var/run/cupsd\"))\n"
-#ifdef DEBUG
   "\n"
   "; bug 1303987\n"
-  "  (allow file-write* (var-folders-regex \"/\"))\n"
-#endif
+  "  (if (string=? isDebugBuild \"TRUE\")\n"
+  "      (allow file-write* (var-folders-regex \"/\")))\n"
   ")\n";
 
 bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
@@ -503,6 +503,12 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
       params.push_back(aInfo.hasSandboxedProfile ? "TRUE" : "FALSE");
       params.push_back("HAS_FILE_PRIVILEGES");
       params.push_back(aInfo.hasFilePrivileges ? "TRUE" : "FALSE");
+      params.push_back("DEBUG_BUILD");
+#ifdef DEBUG
+      params.push_back("TRUE");
+#else
+      params.push_back("FALSE");
+#endif
     } else {
       fprintf(stderr,
         "Content sandbox disabled due to sandbox level setting\n");
