@@ -16,6 +16,7 @@ function normalize(stack)
         {re:/^entry trampoline \(in wasm\)$/,                        sub:">"},
         {re:/^wasm-function\[(\d+)\] \(.*\)$/,                       sub:"$1"},
         {re:/^(fast|slow) FFI trampoline (to native )?\(in wasm\)$/, sub:"<"},
+        {re:/^call to[ asm.js]? native (.*) \(in wasm\)$/,           sub:"$1"},
         {re:/ \(in wasm\)$/,                                         sub:""}
     ];
 
@@ -136,7 +137,7 @@ if (getBuildConfiguration()["arm-simulator"]) {
             )
         )`,
         this,
-        ["", ">", "0,>", "<,0,>", "0,>", ">", ""]);
+        ["", ">", "0,>", "<,0,>", `i64.${op},0,>`, "<,0,>", "0,>", ">", ""]);
     }
 }
 
@@ -148,7 +149,7 @@ test(`(module
     )
 )`,
 this,
-["", ">", "0,>", "<,0,>", "0,>", ">", ""]);
+["", ">", "0,>", "<,0,>", "current_memory,0,>", "<,0,>", "0,>", ">", ""]);
 
 // grow_memory is a callout.
 test(`(module
@@ -159,7 +160,7 @@ test(`(module
     )
 )`,
 this,
-["", ">", "0,>", "<,0,>", "0,>", ">", ""]);
+["", ">", "0,>", "<,0,>", "grow_memory,0,>", "<,0,>", "0,>", ">", ""]);
 
 // A few math builtins.
 for (let type of ['f32', 'f64']) {
@@ -171,7 +172,7 @@ for (let type of ['f32', 'f64']) {
             )
         )`,
         this,
-        ["", ">", "0,>", "<,0,>", "0,>", ">", ""]);
+        ["", ">", "0,>", "<,0,>", `${type}.${func},0,>`, "<,0,>", "0,>", ">", ""]);
     }
 }
 
