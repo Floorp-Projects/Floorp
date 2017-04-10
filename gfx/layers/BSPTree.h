@@ -6,13 +6,12 @@
 #ifndef MOZILLA_LAYERS_BSPTREE_H
 #define MOZILLA_LAYERS_BSPTREE_H
 
-#include "mozilla/ArenaAllocator.h"
 #include "mozilla/gfx/Polygon.h"
 #include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 
-#include <list>
+#include <deque>
 
 namespace mozilla {
 namespace layers {
@@ -26,50 +25,37 @@ struct LayerPolygon {
 
   LayerPolygon(Layer *aLayer,
                gfx::Polygon&& aGeometry)
-    : layer(aLayer), geometry(Some(Move(aGeometry))) {}
+    : layer(aLayer), geometry(Some(aGeometry)) {}
 
   LayerPolygon(Layer *aLayer,
                nsTArray<gfx::Point4D>&& aPoints,
                const gfx::Point4D& aNormal)
-    : layer(aLayer)
-  {
-    geometry.emplace(Move(aPoints), aNormal);
-  }
+    : layer(aLayer), geometry(Some(gfx::Polygon(Move(aPoints), aNormal))) {}
 
   Layer *layer;
   Maybe<gfx::Polygon> geometry;
 };
 
-/**
- * Allocate BSPTreeNodes from a memory arena to improve performance with
- * complex scenes.
- * The arena size of 4096 bytes was selected as an arbitrary power of two.
- * Depending on the platform, this size accommodates roughly 100 BSPTreeNodes.
- */
-typedef mozilla::ArenaAllocator<4096, 8> BSPTreeArena;
+LayerPolygon PopFront(std::deque<LayerPolygon>& aLayers);
 
 // Represents a node in a BSP tree. The node contains at least one layer with
 // associated geometry that is used as a splitting plane, and at most two child
 // nodes that represent the splitting planes that further subdivide the space.
 struct BSPTreeNode {
-  BSPTreeNode()
-    : front(nullptr), back(nullptr) {}
+  explicit BSPTreeNode(LayerPolygon&& layer)
+  {
+    layers.push_back(Move(layer));
+  }
 
   const gfx::Polygon& First() const
   {
-    MOZ_ASSERT(!layers.empty());
-    MOZ_ASSERT(layers.front().geometry);
-    return *layers.front().geometry;
+    MOZ_ASSERT(layers[0].geometry);
+    return *layers[0].geometry;
   }
 
-  static void* operator new(size_t aSize, BSPTreeArena& mPool)
-  {
-    return mPool.Allocate(aSize);
-  }
-
-  BSPTreeNode* front;
-  BSPTreeNode* back;
-  std::list<LayerPolygon> layers;
+  UniquePtr<BSPTreeNode> front;
+  UniquePtr<BSPTreeNode> back;
+  std::deque<LayerPolygon> layers;
 };
 
 // BSPTree class takes a list of layers as an input and uses binary space
@@ -81,15 +67,19 @@ struct BSPTreeNode {
 // ftp://ftp.sgi.com/other/bspfaq/faq/bspfaq.html
 class BSPTree {
 public:
-  /**
-   * The constructor modifies layers in the given list.
-   */
-  explicit BSPTree(std::list<LayerPolygon>& aLayers)
+  // This constructor takes the ownership of layers in the given list.
+  explicit BSPTree(std::deque<LayerPolygon>& aLayers)
   {
     MOZ_ASSERT(!aLayers.empty());
+    mRoot.reset(new BSPTreeNode(PopFront(aLayers)));
 
-    mRoot = new (mPool) BSPTreeNode();
     BuildTree(mRoot, aLayers);
+  }
+
+  // Returns the root node of the BSP tree.
+  const UniquePtr<BSPTreeNode>& GetRoot() const
+  {
+    return mRoot;
   }
 
   // Builds and returns the back-to-front draw order for the created BSP tree.
@@ -101,16 +91,14 @@ public:
   }
 
 private:
-  BSPTreeArena mPool;
-  BSPTreeNode* mRoot;
+  UniquePtr<BSPTreeNode> mRoot;
 
   // BuildDrawOrder and BuildTree are called recursively. The depth of the
   // recursion depends on the amount of polygons and their intersections.
-  void BuildDrawOrder(BSPTreeNode* aNode,
+  void BuildDrawOrder(const UniquePtr<BSPTreeNode>& aNode,
                       nsTArray<LayerPolygon>& aLayers) const;
-
-  void BuildTree(BSPTreeNode* aRoot,
-                 std::list<LayerPolygon>& aLayers);
+  void BuildTree(UniquePtr<BSPTreeNode>& aRoot,
+                 std::deque<LayerPolygon>& aLayers);
 };
 
 } // namespace layers
