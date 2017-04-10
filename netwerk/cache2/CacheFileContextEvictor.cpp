@@ -613,8 +613,11 @@ CacheFileContextEvictor::EvictEntries()
     }
 
     CacheIndex::EntryStatus status;
-    bool pinned;
-    rv = CacheIndex::HasEntry(hash, &status, &pinned);
+    bool pinned = false;
+    auto callback = [&pinned](const CacheIndexEntry * aEntry) {
+      pinned = aEntry->IsPinned();
+    };
+    rv = CacheIndex::HasEntry(hash, &status, callback);
     // This must never fail, since eviction (this code) happens only when the index
     // is up-to-date and thus the informatin is known.
     MOZ_ASSERT(NS_SUCCEEDED(rv));

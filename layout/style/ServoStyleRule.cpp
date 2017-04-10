@@ -171,8 +171,14 @@ ServoStyleRule::Clone() const
 size_t
 ServoStyleRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
-  // TODO Implement this!
-  return aMallocSizeOf(this);
+  size_t n = aMallocSizeOf(this);
+
+  // Measurement of the following members may be added later if DMD finds it is
+  // worthwhile:
+  // - mRawRule
+  // - mDecls
+
+  return n;
 }
 
 #ifdef DEBUG

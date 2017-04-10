@@ -3092,8 +3092,26 @@ SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape
     }
 
     // Watch out for resolve hooks.
-    if (ClassMayResolveId(cx_->names(), obj->getClass(), id, obj))
-        return false;
+    if (ClassMayResolveId(cx_->names(), obj->getClass(), id, obj)) {
+        // The JSFunction resolve hook defines a (non-configurable and
+        // non-enumerable) |prototype| property on certain functions. Scripts
+        // often assign a custom |prototype| object and we want to optimize
+        // this |prototype| set and eliminate the default object allocation.
+        //
+        // We check group->maybeInterpretedFunction() here and guard on the
+        // group. The group is unique for a particular function so this ensures
+        // we don't add the default prototype property to functions that don't
+        // have it.
+        if (!obj->is<JSFunction>() ||
+            !JSID_IS_ATOM(id, cx_->names().prototype) ||
+            !oldGroup->maybeInterpretedFunction() ||
+            !obj->as<JSFunction>().needsPrototypeProperty())
+        {
+            return false;
+        }
+        MOZ_ASSERT(!propShape->configurable());
+        MOZ_ASSERT(!propShape->enumerable());
+    }
 
     // Also watch out for addProperty hooks. Ignore the Array addProperty hook,
     // because it doesn't do anything for non-index properties.
@@ -3115,9 +3133,14 @@ SetPropIRGenerator::tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape
 
         // Otherwise, if there's no such property, watch out for a resolve hook
         // that would need to be invoked and thus prevent inlining of property
-        // addition.
-        if (ClassMayResolveId(cx_->names(), proto->getClass(), id, proto))
+        // addition. Allow the JSFunction resolve hook as it only defines plain
+        // data properties and we don't need to invoke it for objects on the
+        // proto chain.
+        if (ClassMayResolveId(cx_->names(), proto->getClass(), id, proto) &&
+            !proto->is<JSFunction>())
+        {
             return false;
+        }
     }
 
     // Don't attach if we are adding a property to an object which the new
