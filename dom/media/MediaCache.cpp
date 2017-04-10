@@ -679,8 +679,6 @@ MediaCache::ReadCacheFile(
   {
     // Since the monitor might be acquired on the main thread, we need to drop
     // the monitor while doing IO in order not to block the main thread.
-    // TODO: fix calls of ReadCacheFile() to handle state changes happening when
-    // the monitor is not held.
     ReentrantMonitorAutoExit unlock(mReentrantMonitor);
     return fileCache->Read(aOffset,
       reinterpret_cast<uint8_t*>(aData), aLength, aBytes);
@@ -2336,13 +2334,16 @@ nsresult
 MediaCacheStream::ReadFromCache(char* aBuffer, int64_t aOffset, int64_t aCount)
 {
   ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
-  if (mClosed)
-    return NS_ERROR_FAILURE;
 
   // Read one block (or part of a block) at a time
   uint32_t count = 0;
   int64_t streamOffset = aOffset;
   while (count < aCount) {
+    if (mClosed) {
+      // We need to check |mClosed| in each iteration which might be changed
+      // after calling |gMediaCache->ReadCacheFile|.
+      return NS_ERROR_FAILURE;
+    }
     uint32_t streamBlock = uint32_t(streamOffset/BLOCK_SIZE);
     uint32_t offsetInStreamBlock =
       uint32_t(streamOffset - streamBlock*BLOCK_SIZE);
