@@ -719,15 +719,15 @@
       </handler>
       <handler event="MozMousePixelScroll">
         <![CDATA[
-          if (this.getAttribute("allowunderflowscroll") != "true" &&
-              this.getAttribute("hidevscroll") != "true")
+          if (!(this.getAttribute("allowunderflowscroll") == "true" &&
+                this.getAttribute("hidevscroll") == "true"))
             event.preventDefault();
         ]]>
       </handler>
       <handler event="DOMMouseScroll">
         <![CDATA[
-          if (this.getAttribute("allowunderflowscroll") != "true" &&
-              this.getAttribute("hidevscroll") != "true")
+          if (!(this.getAttribute("allowunderflowscroll") == "true" &&
+                this.getAttribute("hidevscroll") == "true"))
             event.preventDefault();
 
           if (this._editingColumn)
