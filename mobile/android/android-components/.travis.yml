@@ -19,7 +19,7 @@ before_install:
   - touch local.properties
 
 script:
-- ./gradlew clean assembleDebug lint test
+- ./gradlew --info clean assembleDebug lint test
 
 after_failure:
 - "cat $TRAVIS_BUILD_DIR/app/build/outputs/lint-results-debug.xml"
