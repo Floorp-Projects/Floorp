@@ -3,7 +3,6 @@
 
 Cu.import("resource://gre/modules/TelemetryLog.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
-Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
 const TEST_PREFIX = "TEST-";
 const TEST_REGEX = new RegExp("^" + TEST_PREFIX);
@@ -27,7 +26,7 @@ function check_event(event, id, data) {
 add_task(function* () {
   do_get_profile();
   // TODO: After Bug 1254550 lands we should not need to set the pref here.
-  Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
+  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
   yield TelemetryController.testSetup();
 
   TelemetryLog.log(TEST_PREFIX + "1", ["val", 123, undefined]);
