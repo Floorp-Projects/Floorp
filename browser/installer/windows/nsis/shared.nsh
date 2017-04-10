@@ -80,6 +80,8 @@
   ; Adds a pinned Task Bar shortcut (see MigrateTaskBarShortcut for details).
   ${MigrateTaskBarShortcut}
 
+  ${UpdateShortcutNames}
+
   ${RemoveDeprecatedKeys}
 
   ${SetAppKeys}
@@ -300,6 +302,65 @@
   ${EndUnless}
 !macroend
 !define ShowShortcuts "!insertmacro ShowShortcuts"
+
+; Update the branding information on all shortcuts our installer created,
+; in case the branding has changed between updates.
+; This should only be called sometime after both MigrateStartMenuShortcut
+; and MigrateTaskBarShurtcut
+!macro UpdateShortcutNames
+  ${GetLongPath} "$INSTDIR\uninstall\${SHORTCUTS_LOG}" $R9
+  ${If} ${FileExists} "$R9"
+    ClearErrors
+    ; The entries in the shortcut log are numbered, but we never actually
+    ; create more than one shortcut (or log entry) in each location.
+    ReadINIStr $R8 "$R9" "STARTMENU" "Shortcut0"
+    ${IfNot} ${Errors}
+      ${If} ${FileExists} "$SMPROGRAMS\$R8"
+      ${AndIf} $R8 != "${BrandFullName}.lnk"
+        ShellLink::GetShortCutTarget "$SMPROGRAMS\$R8"
+        Pop $R7
+        ${GetLongPath} "$R7" $R7
+        ${If} "$INSTDIR\${FileMainEXE}" == "$R7"
+          Rename "$SMPROGRAMS\$R8" "$SMPROGRAMS\${BrandFullName}.lnk"
+          WriteINIStr "$R9" "STARTMENU" "Shortcut0" "${BrandFullName}.lnk"
+        ${EndIf}
+      ${EndIf}
+    ${EndIf}
+
+    ClearErrors
+    ReadINIStr $R8 "$R9" "DESKTOP" "Shortcut0"
+    ${IfNot} ${Errors}
+      ${If} ${FileExists} "$DESKTOP\$R8"
+      ${AndIf} $R8 != "${BrandFullName}.lnk"
+        ShellLink::GetShortCutTarget "$DESKTOP\$R8"
+        Pop $R7
+        ${GetLongPath} "$R7" $R7
+        ${If} "$INSTDIR\${FileMainEXE}" == "$R7"
+          Rename "$DESKTOP\$R8" "$DESKTOP\${BrandFullName}.lnk"
+          WriteINIStr "$R9" "DESKTOP" "Shortcut0" "${BrandFullName}.lnk"
+        ${EndIf}
+      ${EndIf}
+    ${EndIf}
+
+    ClearErrors
+    ReadINIStr $R8 "$R9" "QUICKLAUNCH" "Shortcut0"
+    ${IfNot} ${Errors}
+      ; "QUICKLAUNCH" actually means a taskbar pin.
+      ${If} ${FileExists} "$QUICKLAUNCH\User Pinned\TaskBar\$R8"
+      ${AndIf} $R8 != "${BrandFullName}.lnk"
+        ShellLink::GetShortCutTarget "$QUICKLAUNCH\User Pinned\TaskBar\$R8"
+        Pop $R7
+        ${GetLongPath} "$R7" $R7
+        ${If} "$INSTDIR\${FileMainEXE}" == "$R7"
+          Rename "$QUICKLAUNCH\User Pinned\TaskBar\$R8" \
+                 "$QUICKLAUNCH\User Pinned\TaskBar\${BrandFullName}.lnk"
+          WriteINIStr "$R9" "QUICKLAUNCH" "Shortcut0" "${BrandFullName}.lnk"
+        ${EndIf}
+      ${EndIf}
+    ${EndIf}
+  ${EndIf}
+!macroend
+!define UpdateShortcutNames "!insertmacro UpdateShortcutNames"
 
 !macro AddAssociationIfNoneExist FILE_TYPE KEY
   ClearErrors
