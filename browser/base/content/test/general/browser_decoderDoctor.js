@@ -84,6 +84,24 @@ function tab_checker_for_sumo(expectedPath) {
   };
 }
 
+function tab_checker_for_webcompat(expectedParams) {
+  return function(openedTab) {
+    let urlString = openedTab.linkedBrowser.currentURI.spec;
+    let endpoint = Services.prefs.getStringPref("media.decoder-doctor.new-issue-endpoint", "");
+    ok(urlString.startsWith(endpoint),
+       `Expected URL starting with '${endpoint}', got '${urlString}'`)
+    let params = new URL(urlString).searchParams;
+    for (let k in expectedParams) {
+      if (!params.has(k)) {
+        ok(false, `Expected ${k} in webcompat URL`);
+      } else {
+        is(params.get(k), expectedParams[k],
+           `Expected ${k}='${expectedParams[k]}' in webcompat URL`);
+      }
+    }
+  };
+}
+
 add_task(function* test_platform_decoder_not_found() {
   let message = "";
   let isLinux = AppConstants.platform == "linux";
@@ -126,4 +144,36 @@ add_task(function* test_unsupported_libavcodec() {
 
   yield test_decoder_doctor_notification(
     {type: "unsupported-libavcodec", formats: "testFormat"}, message);
+});
+
+add_task(function* test_decode_error() {
+  yield SpecialPowers.pushPrefEnv(
+    { set: [["media.decoder-doctor.new-issue-endpoint",
+             "http://127.0.0.1/webcompat"]] });
+  let message = gNavigatorBundle.getString("decoder.decodeError.message");
+  yield test_decoder_doctor_notification(
+    {type: "decode-error", decodeIssue: "DecodeIssue",
+     docURL: "DocURL", resourceURL: "ResURL"},
+    message,
+    gNavigatorBundle.getString("decoder.decodeError.button"),
+    gNavigatorBundle.getString("decoder.decodeError.accesskey"),
+    tab_checker_for_webcompat(
+      {url: "DocURL", problem_type: "video_bug",
+       details: "Technical Information:\nDecodeIssue\nResource: ResURL"}));
+});
+
+add_task(function* test_decode_warning() {
+  yield SpecialPowers.pushPrefEnv(
+    { set: [["media.decoder-doctor.new-issue-endpoint",
+             "http://127.0.0.1/webcompat"]] });
+  let message = gNavigatorBundle.getString("decoder.decodeWarning.message");
+  yield test_decoder_doctor_notification(
+    {type: "decode-warning", decodeIssue: "DecodeIssue",
+     docURL: "DocURL", resourceURL: "ResURL"},
+    message,
+    gNavigatorBundle.getString("decoder.decodeError.button"),
+    gNavigatorBundle.getString("decoder.decodeError.accesskey"),
+    tab_checker_for_webcompat(
+      {url: "DocURL", problem_type: "video_bug",
+       details: "Technical Information:\nDecodeIssue\nResource: ResURL"}));
 });
