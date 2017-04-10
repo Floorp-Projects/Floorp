@@ -665,6 +665,38 @@ DisplayListBuilder::PushBorderImage(const WrRect& aBounds,
 }
 
 void
+DisplayListBuilder::PushBorderGradient(const WrRect& aBounds,
+                                       const WrClipRegion& aClip,
+                                       const WrBorderWidths& aWidths,
+                                       const WrPoint& aStartPoint,
+                                       const WrPoint& aEndPoint,
+                                       const nsTArray<WrGradientStop>& aStops,
+                                       wr::GradientExtendMode aExtendMode,
+                                       const WrSideOffsets2Df32& aOutset)
+{
+  wr_dp_push_border_gradient(mWrState, aBounds, aClip,
+                             aWidths, aStartPoint, aEndPoint,
+                             aStops.Elements(), aStops.Length(),
+                             aExtendMode, aOutset);
+}
+
+void
+DisplayListBuilder::PushBorderRadialGradient(const WrRect& aBounds,
+                                             const WrClipRegion& aClip,
+                                             const WrBorderWidths& aWidths,
+                                             const WrPoint& aCenter,
+                                             const WrSize& aRadius,
+                                             const nsTArray<WrGradientStop>& aStops,
+                                             wr::GradientExtendMode aExtendMode,
+                                             const WrSideOffsets2Df32& aOutset)
+{
+  wr_dp_push_border_radial_gradient(
+    mWrState, aBounds, aClip, aWidths, aCenter,
+    aRadius, aStops.Elements(), aStops.Length(),
+    aExtendMode, aOutset);
+}
+
+void
 DisplayListBuilder::PushText(const WrRect& aBounds,
                              const WrClipRegion& aClip,
                              const gfx::Color& aColor,
