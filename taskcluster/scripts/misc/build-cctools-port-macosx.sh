@@ -9,7 +9,7 @@ UPLOAD_DIR=$WORKSPACE/artifacts
 
 # Repository info
 : CROSSTOOL_PORT_REPOSITORY    ${CROSSTOOL_PORT_REPOSITORY:=https://github.com/tpoechtrager/cctools-port}
-: CROSSTOOL_PORT_REV           ${CROSSTOOL_PORT_REV:=master}
+: CROSSTOOL_PORT_REV           ${CROSSTOOL_PORT_REV:=8e9c3f2506b51cf56725eaa60b6e90e240e249ca}
 
 # Set some crosstools-port directories
 CROSSTOOLS_SOURCE_DIR=$WORKSPACE/crosstools-port
@@ -24,8 +24,9 @@ TARGET_TRIPLE=x86_64-apple-darwin11
 # Create our directories
 mkdir -p $CROSSTOOLS_BUILD_DIR
 
-tc-vcs checkout --force-clone $CROSSTOOLS_SOURCE_DIR $CROSSTOOL_PORT_REPOSITORY $CROSSTOOL_PORT_REPOSITORY $CROSSTOOL_PORT_REV
+git clone --no-checkout $CROSSTOOL_PORT_REPOSITORY $CROSSTOOLS_SOURCE_DIR
 cd $CROSSTOOLS_SOURCE_DIR
+git checkout $CROSSTOOL_PORT_REV
 echo "Building from commit hash `git rev-parse $CROSSTOOL_PORT_REV`..."
 
 # Fetch clang from tooltool
