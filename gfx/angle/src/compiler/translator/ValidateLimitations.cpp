@@ -16,17 +16,6 @@ namespace sh
 namespace
 {
 
-int GetLoopSymbolId(TIntermLoop *loop)
-{
-    // Here we assume all the operations are valid, because the loop node is
-    // already validated before this call.
-    TIntermSequence *declSeq = loop->getInit()->getAsDeclarationNode()->getSequence();
-    TIntermBinary *declInit  = (*declSeq)[0]->getAsBinaryNode();
-    TIntermSymbol *symbol    = declInit->getLeft()->getAsSymbolNode();
-
-    return symbol->getId();
-}
-
 // Traverses a node to check if it represents a constant index expression.
 // Definition:
 // constant-index-expressions are a superset of constant-expressions.
@@ -39,8 +28,10 @@ int GetLoopSymbolId(TIntermLoop *loop)
 class ValidateConstIndexExpr : public TIntermTraverser
 {
   public:
-    ValidateConstIndexExpr(const std::vector<int> &loopSymbols)
-        : TIntermTraverser(true, false, false), mValid(true), mLoopSymbolIds(loopSymbols)
+    ValidateConstIndexExpr(TLoopStack& stack)
+        : TIntermTraverser(true, false, false),
+          mValid(true),
+          mLoopStack(stack)
     {
     }
 
@@ -53,15 +44,14 @@ class ValidateConstIndexExpr : public TIntermTraverser
         // constant index expression.
         if (mValid)
         {
-            bool isLoopSymbol = std::find(mLoopSymbolIds.begin(), mLoopSymbolIds.end(),
-                                          symbol->getId()) != mLoopSymbolIds.end();
-            mValid = (symbol->getQualifier() == EvqConst) || isLoopSymbol;
+            mValid = (symbol->getQualifier() == EvqConst) ||
+                     (mLoopStack.findLoop(symbol));
         }
     }
 
   private:
     bool mValid;
-    const std::vector<int> mLoopSymbolIds;
+    TLoopStack& mLoopStack;
 };
 
 }  // namespace anonymous
@@ -90,9 +80,9 @@ bool ValidateLimitations::IsLimitedForLoop(TIntermLoop *loop)
     TIntermNode *body = loop->getBody();
     if (body != nullptr)
     {
-        validate.mLoopSymbolIds.push_back(GetLoopSymbolId(loop));
+        validate.mLoopStack.push(loop);
         body->traverse(&validate);
-        validate.mLoopSymbolIds.pop_back();
+        validate.mLoopStack.pop();
     }
     return (validate.mNumErrors == 0);
 }
@@ -150,9 +140,9 @@ bool ValidateLimitations::visitLoop(Visit, TIntermLoop *node)
     TIntermNode *body = node->getBody();
     if (body != NULL)
     {
-        mLoopSymbolIds.push_back(GetLoopSymbolId(node));
+        mLoopStack.push(node);
         body->traverse(this);
-        mLoopSymbolIds.pop_back();
+        mLoopStack.pop();
     }
 
     // The loop is fully processed - no need to visit children.
@@ -173,13 +163,12 @@ void ValidateLimitations::error(TSourceLoc loc,
 
 bool ValidateLimitations::withinLoopBody() const
 {
-    return !mLoopSymbolIds.empty();
+    return !mLoopStack.empty();
 }
 
 bool ValidateLimitations::isLoopIndex(TIntermSymbol *symbol)
 {
-    return std::find(mLoopSymbolIds.begin(), mLoopSymbolIds.end(), symbol->getId()) !=
-           mLoopSymbolIds.end();
+    return mLoopStack.findLoop(symbol) != NULL;
 }
 
 bool ValidateLimitations::validateLoopType(TIntermLoop *node)
@@ -485,7 +474,7 @@ bool ValidateLimitations::isConstIndexExpr(TIntermNode *node)
 {
     ASSERT(node != NULL);
 
-    ValidateConstIndexExpr validate(mLoopSymbolIds);
+    ValidateConstIndexExpr validate(mLoopStack);
     node->traverse(&validate);
     return validate.isValid();
 }
