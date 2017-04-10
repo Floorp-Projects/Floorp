@@ -86,6 +86,11 @@ endif
 .PHONY: recurse_syms
 recurse_syms: $(syms_targets)
 
+# Ensure dump_syms gets built before any syms targets, all of which depend on it.
+ifneq (,$(filter toolkit/crashreporter/google-breakpad/src/tools/%/dump_syms/host,$(compile_targets)))
+$(syms_targets): $(filter toolkit/crashreporter/google-breakpad/src/tools/%/dump_syms/host,$(compile_targets))
+endif
+
 # The compile tier has different rules from other tiers.
 ifneq ($(CURRENT_TIER),compile)
 
