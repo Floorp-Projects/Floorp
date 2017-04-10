@@ -207,6 +207,24 @@ public:
                        const WrRepeatMode& aRepeatHorizontal,
                        const WrRepeatMode& aRepeatVertical);
 
+  void PushBorderGradient(const WrRect& aBounds,
+                          const WrClipRegion& aClip,
+                          const WrBorderWidths& aWidths,
+                          const WrPoint& aStartPoint,
+                          const WrPoint& aEndPoint,
+                          const nsTArray<WrGradientStop>& aStops,
+                          wr::GradientExtendMode aExtendMode,
+                          const WrSideOffsets2Df32& aOutset);
+
+  void PushBorderRadialGradient(const WrRect& aBounds,
+                                const WrClipRegion& aClip,
+                                const WrBorderWidths& aWidths,
+                                const WrPoint& aCenter,
+                                const WrSize& aRadius,
+                                const nsTArray<WrGradientStop>& aStops,
+                                wr::GradientExtendMode aExtendMode,
+                                const WrSideOffsets2Df32& aOutset);
+
   void PushText(const WrRect& aBounds,
                 const WrClipRegion& aClip,
                 const gfx::Color& aColor,

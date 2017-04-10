@@ -686,6 +686,24 @@ wr_dp_push_border_image(WrState* wrState, WrRect bounds, WrClipRegion clip,
 WR_FUNC;
 
 WR_INLINE void
+wr_dp_push_border_gradient(WrState* wrState, WrRect bounds, WrClipRegion clip,
+                           WrBorderWidths widths,
+                           WrPoint startPoint, WrPoint endPoint,
+                           const WrGradientStop* stops, size_t stopsCount,
+                           WrGradientExtendMode extendMode,
+                           WrSideOffsets2Df32 outset)
+WR_FUNC;
+
+WR_INLINE void
+wr_dp_push_border_radial_gradient(WrState* wrState, WrRect bounds, WrClipRegion clip,
+                                  WrBorderWidths widths,
+                                  WrPoint center, WrSize radius,
+                                  const WrGradientStop* stops, size_t stopsCount,
+                                  WrGradientExtendMode extendMode,
+                                  WrSideOffsets2Df32 outset)
+WR_FUNC;
+
+WR_INLINE void
 wr_dp_push_linear_gradient(WrState* wrState, WrRect bounds, WrClipRegion clip,
                            WrPoint startPoint, WrPoint endPoint,
                            const WrGradientStop* stops, size_t stopsCount,
