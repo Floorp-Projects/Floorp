@@ -74,6 +74,7 @@
         './src/sdp/sipcc',
         '../../../dom/base',
         '../../../dom/media',
+        '../../../dom/media/platforms',
         '../../../media/mtransport',
         '../trunk',
         '../../libyuv/libyuv/include',
@@ -279,7 +280,9 @@
         ['build_for_standalone==0', {
           'sources': [
             './src/media-conduit/GmpVideoCodec.cpp',
+            './src/media-conduit/MediaDataDecoderCodec.cpp',
             './src/media-conduit/WebrtcGmpVideoCodec.cpp',
+            './src/media-conduit/WebrtcMediaDataDecoderCodec.cpp',
           ],
         }],
         ['build_for_standalone!=0', {
