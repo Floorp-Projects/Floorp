@@ -927,6 +927,27 @@ CompositorBridgeChild::RecvObserveLayerUpdate(const uint64_t& aLayersId,
   return IPC_OK();
 }
 
+already_AddRefed<nsIEventTarget>
+CompositorBridgeChild::GetSpecificMessageEventTarget(const Message& aMsg)
+{
+  if (aMsg.type() != PCompositorBridge::Msg_DidComposite__ID) {
+    return nullptr;
+  }
+
+  uint64_t layersId;
+  PickleIterator iter(aMsg);
+  if (!IPC::ReadParam(&aMsg, &iter, &layersId)) {
+    return nullptr;
+  }
+
+  TabChild* tabChild = TabChild::GetFrom(layersId);
+  if (!tabChild) {
+    return nullptr;
+  }
+
+  return do_AddRef(tabChild->TabGroup()->EventTargetFor(TaskCategory::Other));
+}
+
 void
 CompositorBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(TextureClient* aClient)
 {
