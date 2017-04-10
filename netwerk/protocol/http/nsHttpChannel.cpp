@@ -122,6 +122,7 @@ static uint64_t gNumIntercepted = 0;
 static bool sRCWNEnabled = false;
 static uint32_t sRCWNQueueSizeNormal = 50;
 static uint32_t sRCWNQueueSizePriority = 10;
+static uint32_t sRCWNSmallResourceSizeKB = 256;
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags) \
@@ -3612,7 +3613,16 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
         mCacheOpenWithPriority = cacheEntryOpenFlags & nsICacheStorage::OPEN_PRIORITY;
         mCacheQueueSizeWhenOpen = CacheStorageService::CacheQueueSize(mCacheOpenWithPriority);
 
-        if (sRCWNEnabled && mInterceptCache != INTERCEPTED) {
+        bool hasAltData = false;
+        uint32_t sizeInKb = 0;
+        rv = cacheStorage->GetCacheIndexEntryAttrs(openURI, extension,
+                                                   &hasAltData, &sizeInKb);
+
+        // We will attempt to race the network vs the cache if we've found this
+        // entry in the cache index, and it has appropriate
+        // attributes (doesn't have alt-data, and has a small size)
+        if (sRCWNEnabled && mInterceptCache != INTERCEPTED &&
+            NS_SUCCEEDED(rv) && !hasAltData && sizeInKb < sRCWNSmallResourceSizeKB) {
             MaybeRaceNetworkWithCache();
         }
 
@@ -5822,6 +5832,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         Preferences::AddBoolVarCache(&sRCWNEnabled, "network.http.rcwn.enabled");
         Preferences::AddUintVarCache(&sRCWNQueueSizeNormal, "network.http.rcwn.cache_queue_normal_threshold");
         Preferences::AddUintVarCache(&sRCWNQueueSizePriority, "network.http.rcwn.cache_queue_priority_threshold");
+        Preferences::AddUintVarCache(&sRCWNSmallResourceSizeKB, "network.http.rcwn.small_resource_size_kb");
     }
 
     rv = NS_CheckPortSafety(mURI);

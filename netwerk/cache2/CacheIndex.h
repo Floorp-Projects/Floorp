@@ -727,11 +727,12 @@ public:
 
   // Returns status of the entry in index for the given key. It can be called
   // on any thread.
-  // If _pinned is non-null, it's filled with pinning status of the entry.
+  // If the optional aCB callback is given, the it will be called with a
+  // CacheIndexEntry only if _retval is EXISTS when the method returns.
   static nsresult HasEntry(const nsACString &aKey, EntryStatus *_retval,
-                           bool *_pinned = nullptr);
+                           const std::function<void(const CacheIndexEntry*)> &aCB = nullptr);
   static nsresult HasEntry(const SHA1Sum::Hash &hash, EntryStatus *_retval,
-                           bool *_pinned = nullptr);
+                           const std::function<void(const CacheIndexEntry*)> &aCB = nullptr);
 
   // Returns a hash of the least important entry that should be evicted if the
   // cache size is over limit and also returns a total number of all entries in
