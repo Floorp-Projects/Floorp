@@ -6802,7 +6802,8 @@ nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
   PROFILER_LABEL("layout", "nsLayoutUtils::DrawBackgroundImage",
                  js::ProfileEntry::Category::GRAPHICS);
 
-  const Maybe<SVGImageContext> svgContext(Some(SVGImageContext(Some(aImageSize))));
+  const Maybe<SVGImageContext>
+    svgContext(Some(SVGImageContext(Some(aImageSize))));
 
   /* Fast path when there is no need for image spacing */
   if (aRepeatSize.width == aDest.width && aRepeatSize.height == aDest.height) {
