@@ -1,0 +1,2942 @@
+/* Copied from devtools/client/debugger/new/debugger.css on 2017-04-03 */
+
+.landing-page {
+  flex: 1;
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  flex-direction: row;
+  align-items: stretch;
+  /* Customs properties */
+  --title-font-size: 24px;
+  --ui-element-font-size: 16px;
+  --primary-line-height: 30px;
+  --secondary-line-height: 25px;
+  --base-spacing: 20px;
+  --base-transition: all 0.25s ease;
+}
+
+.landing-popup {
+  min-width: 0;
+}
+
+.landing-page .panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.landing-page .panel header {
+  display: flex;
+  align-items: baseline;
+  margin: calc(2 * var(--base-spacing)) 0 0;
+  padding-bottom: var(--base-spacing);
+}
+
+.landing-page .panel header input[type=search] {
+  flex: 1;
+  background-color: var(--theme-tab-toolbar-background);
+  color: var(--theme-comment);
+  font-size: var(--ui-element-font-size);
+  border: 1px solid var(--theme-splitter-color);
+  padding: calc(var(--base-spacing) / 2);
+  margin: 0 var(--base-spacing);
+  transition: var(--base-transition);
+}
+
+.landing-page .panel header input[type=button] {
+  background-color: var(--theme-tab-toolbar-background);
+  color: var(--theme-comment);
+  font-size: var(--ui-element-font-size);
+  border: 1px solid var(--theme-splitter-color);
+  padding: calc(var(--base-spacing) / 2);
+  margin: 0 var(--base-spacing);
+  transition: var(--base-transition);
+}
+
+.landing-page .panel header h1 {
+  color: var(--theme-body-color);
+  font-size: var(--title-font-size);
+  margin: 0;
+  line-height: var(--primary-line-height);
+  font-weight: normal;
+  padding-left: calc(2 * var(--base-spacing));
+}
+
+.landing-page .panel h3 {
+  padding-left: calc(2 * var(--base-spacing));
+}
+
+.landing-page .panel header input::placeholder {
+  color: var(--theme-body-color-inactive);
+}
+
+.landing-page .panel header input:focus {
+  border: 1px solid var(--theme-selection-background);
+}
+
+.landing-page .panel .center-message {
+  font-size: var(--ui-element-font-size);
+  line-height: var(--secondary-line-height);
+  padding: calc(var(--base-spacing) / 2);
+}
+
+.landing-page .center a {
+  color: var(--theme-highlight-bluegrey);
+  text-decoration: none;
+}
+
+.landing-page .panel .footer-note {
+  padding: var(--base-spacing) 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--theme-comment);
+}
+.landing-page .tab-group {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.landing-page .tab-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.landing-page .tab {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: calc(var(--base-spacing) / 2) var(--base-spacing);
+  font-family: sans-serif;
+}
+
+.landing-page .tab-sides {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 calc(var(--base-spacing) * 2);
+}
+
+.landing-page .tab-title {
+  line-height: var(--secondary-line-height);
+  font-size: var(--ui-element-font-size);
+  color: var(--theme-highlight-bluegrey);
+  word-break: break-all;
+}
+
+.landing-page .tab-url {
+  color: var(--theme-comment);
+  word-break: break-all;
+}
+
+.landing-page .tab-value {
+  color: var(--theme-comment);
+  line-height: var(--secondary-line-height);
+  font-size: var(--ui-element-font-size);
+}
+
+.landing-page .tab:focus,
+.landing-page .tab.active {
+  background: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+  cursor: pointer;
+  transition: var(--base-transition);
+}
+
+.landing-page .tab:focus .tab-title,
+.landing-page .tab.active .tab-title {
+  color: inherit;
+}
+
+.landing-page .tab:focus .tab-url,
+.landing-page .tab.active .tab-url {
+  color: var(--theme-highlight-gray);
+}
+.landing-page .sidebar {
+  display: flex;
+  background-color: var(--theme-tab-toolbar-background);
+  width: 200px;
+  flex-direction: column;
+  border-right: 1px solid var(--theme-splitter-color);
+}
+
+.landing-page .sidebar h1 {
+  color: var(--theme-body-color);
+  font-size: var(--title-font-size);
+  margin: 0;
+  line-height: var(--primary-line-height);
+  font-weight: normal;
+  padding: calc(2 * var(--base-spacing)) var(--base-spacing);
+}
+
+.landing-page .sidebar ul {
+  list-style: none;
+  padding: 0;
+  line-height: var(--primary-line-height);
+  font-size: var(--ui-element-font-size);
+}
+
+.landing-page .sidebar li {
+  padding: calc(var(--base-spacing) / 4) var(--base-spacing);
+}
+
+.landing-page .sidebar li a {
+  color: var(--theme-body-color);
+}
+
+.landing-page .sidebar li.selected {
+  background: var(--theme-highlight-bluegrey);
+  color: var(--theme-selection-color);
+  transition: var(--base-transition);
+}
+
+.landing-page .sidebar li.selected a {
+  color: inherit;
+}
+
+.landing-page .sidebar li:hover,
+.landing-page .sidebar li:focus {
+  background: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+  cursor: pointer;
+}
+
+.landing-page .sidebar li:hover a,
+.landing-page .sidebar li:focus a {
+  color: inherit;
+}
+:root.theme-light,
+:root .theme-light {
+  --theme-search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+#mount {
+  display: flex;
+  height: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 8px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: rgba(113, 113, 113, 0.5);
+}
+
+:root.theme-dark .CodeMirror-scrollbar-filler {
+  background: transparent;
+}
+/* BASICS */
+
+.CodeMirror {
+  /* Set height, width, borders, and global font properties here */
+  font-family: monospace;
+  height: 300px;
+  color: black;
+}
+
+/* PADDING */
+
+.CodeMirror-lines {
+  padding: 4px 0; /* Vertical padding around content */
+}
+.CodeMirror pre {
+  padding: 0 4px; /* Horizontal padding of content */
+}
+
+.CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {
+  background-color: white; /* The little square between H and V scrollbars */
+}
+
+/* GUTTER */
+
+.CodeMirror-gutters {
+  border-right: 1px solid #ddd;
+  background-color: #f7f7f7;
+  white-space: nowrap;
+}
+.CodeMirror-linenumbers {}
+.CodeMirror-linenumber {
+  padding: 0 3px 0 5px;
+  min-width: 20px;
+  text-align: right;
+  color: #999;
+  white-space: nowrap;
+}
+
+.CodeMirror-guttermarker { color: black; }
+.CodeMirror-guttermarker-subtle { color: #999; }
+
+/* CURSOR */
+
+.CodeMirror-cursor {
+  border-left: 1px solid black;
+  border-right: none;
+  width: 0;
+}
+/* Shown when moving in bi-directional text */
+.CodeMirror div.CodeMirror-secondarycursor {
+  border-left: 1px solid silver;
+}
+.cm-fat-cursor .CodeMirror-cursor {
+  width: auto;
+  border: 0 !important;
+  background: #7e7;
+}
+.cm-fat-cursor div.CodeMirror-cursors {
+  z-index: 1;
+}
+
+.cm-animate-fat-cursor {
+  width: auto;
+  border: 0;
+  -webkit-animation: blink 1.06s steps(1) infinite;
+  -moz-animation: blink 1.06s steps(1) infinite;
+  animation: blink 1.06s steps(1) infinite;
+  background-color: #7e7;
+}
+@-moz-keyframes blink {
+  0% {}
+  50% { background-color: transparent; }
+  100% {}
+}
+@-webkit-keyframes blink {
+  0% {}
+  50% { background-color: transparent; }
+  100% {}
+}
+@keyframes blink {
+  0% {}
+  50% { background-color: transparent; }
+  100% {}
+}
+
+/* Can style cursor different in overwrite (non-insert) mode */
+.CodeMirror-overwrite .CodeMirror-cursor {}
+
+.cm-tab { display: inline-block; text-decoration: inherit; }
+
+.CodeMirror-rulers {
+  position: absolute;
+  left: 0; right: 0; top: -50px; bottom: -20px;
+  overflow: hidden;
+}
+.CodeMirror-ruler {
+  border-left: 1px solid #ccc;
+  top: 0; bottom: 0;
+  position: absolute;
+}
+
+/* DEFAULT THEME */
+
+.cm-s-default .cm-header {color: blue;}
+.cm-s-default .cm-quote {color: #090;}
+.cm-negative {color: #d44;}
+.cm-positive {color: #292;}
+.cm-header, .cm-strong {font-weight: bold;}
+.cm-em {font-style: italic;}
+.cm-link {text-decoration: underline;}
+.cm-strikethrough {text-decoration: line-through;}
+
+.cm-s-default .cm-keyword {color: #708;}
+.cm-s-default .cm-atom {color: #219;}
+.cm-s-default .cm-number {color: #164;}
+.cm-s-default .cm-def {color: #00f;}
+.cm-s-default .cm-variable,
+.cm-s-default .cm-punctuation,
+.cm-s-default .cm-property,
+.cm-s-default .cm-operator {}
+.cm-s-default .cm-variable-2 {color: #05a;}
+.cm-s-default .cm-variable-3 {color: #085;}
+.cm-s-default .cm-comment {color: #a50;}
+.cm-s-default .cm-string {color: #a11;}
+.cm-s-default .cm-string-2 {color: #f50;}
+.cm-s-default .cm-meta {color: #555;}
+.cm-s-default .cm-qualifier {color: #555;}
+.cm-s-default .cm-builtin {color: #30a;}
+.cm-s-default .cm-bracket {color: #997;}
+.cm-s-default .cm-tag {color: #170;}
+.cm-s-default .cm-attribute {color: #00c;}
+.cm-s-default .cm-hr {color: #999;}
+.cm-s-default .cm-link {color: #00c;}
+
+.cm-s-default .cm-error {color: #f00;}
+.cm-invalidchar {color: #f00;}
+
+.CodeMirror-composing { border-bottom: 2px solid; }
+
+/* Default styles for common addons */
+
+div.CodeMirror span.CodeMirror-matchingbracket {color: #0f0;}
+div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
+.CodeMirror-matchingtag { background: rgba(255, 150, 0, .3); }
+.CodeMirror-activeline-background {background: #e8f2ff;}
+
+/* STOP */
+
+/* The rest of this file contains styles related to the mechanics of
+   the editor. You probably shouldn't touch them. */
+
+.CodeMirror {
+  position: relative;
+  overflow: hidden;
+  background: white;
+}
+
+.CodeMirror-scroll {
+  overflow: scroll !important; /* Things will break if this is overridden */
+  /* 30px is the magic margin used to hide the element's real scrollbars */
+  /* See overflow: hidden in .CodeMirror */
+  margin-bottom: -30px; margin-right: -30px;
+  padding-bottom: 30px;
+  height: 100%;
+  outline: none; /* Prevent dragging from highlighting the element */
+  position: relative;
+}
+.CodeMirror-sizer {
+  position: relative;
+  border-right: 30px solid transparent;
+}
+
+/* The fake, visible scrollbars. Used to force redraw during scrolling
+   before actual scrolling happens, thus preventing shaking and
+   flickering artifacts. */
+.CodeMirror-vscrollbar, .CodeMirror-hscrollbar, .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {
+  position: absolute;
+  z-index: 6;
+  display: none;
+}
+.CodeMirror-vscrollbar {
+  right: 0; top: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+.CodeMirror-hscrollbar {
+  bottom: 0; left: 0;
+  overflow-y: hidden;
+  overflow-x: scroll;
+}
+.CodeMirror-scrollbar-filler {
+  right: 0; bottom: 0;
+}
+.CodeMirror-gutter-filler {
+  left: 0; bottom: 0;
+}
+
+.CodeMirror-gutters {
+  position: absolute; left: 0; top: 0;
+  min-height: 100%;
+  z-index: 3;
+}
+.CodeMirror-gutter {
+  white-space: normal;
+  height: 100%;
+  display: inline-block;
+  vertical-align: top;
+  margin-bottom: -30px;
+}
+.CodeMirror-gutter-wrapper {
+  position: absolute;
+  z-index: 4;
+  background: none !important;
+  border: none !important;
+}
+.CodeMirror-gutter-background {
+  position: absolute;
+  top: 0; bottom: 0;
+  z-index: 4;
+}
+.CodeMirror-gutter-elt {
+  position: absolute;
+  cursor: default;
+  z-index: 4;
+}
+.CodeMirror-gutter-wrapper {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.CodeMirror-lines {
+  cursor: text;
+  min-height: 1px; /* prevents collapsing before first draw */
+}
+.CodeMirror pre {
+  /* Reset some styles that the rest of the page might have set */
+  -moz-border-radius: 0; -webkit-border-radius: 0; border-radius: 0;
+  border-width: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  margin: 0;
+  white-space: pre;
+  word-wrap: normal;
+  line-height: inherit;
+  color: inherit;
+  z-index: 2;
+  position: relative;
+  overflow: visible;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-variant-ligatures: contextual;
+  font-variant-ligatures: contextual;
+}
+.CodeMirror-wrap pre {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  word-break: normal;
+}
+
+.CodeMirror-linebackground {
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  z-index: 0;
+}
+
+.CodeMirror-linewidget {
+  position: relative;
+  z-index: 2;
+  overflow: auto;
+}
+
+.CodeMirror-widget {}
+
+.CodeMirror-code {
+  outline: none;
+}
+
+/* Force content-box sizing for the elements where we expect it */
+.CodeMirror-scroll,
+.CodeMirror-sizer,
+.CodeMirror-gutter,
+.CodeMirror-gutters,
+.CodeMirror-linenumber {
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+}
+
+.CodeMirror-measure {
+  position: absolute;
+  width: 100%;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+
+.CodeMirror-cursor {
+  position: absolute;
+  pointer-events: none;
+}
+.CodeMirror-measure pre { position: static; }
+
+div.CodeMirror-cursors {
+  visibility: hidden;
+  position: relative;
+  z-index: 3;
+}
+div.CodeMirror-dragcursors {
+  visibility: visible;
+}
+
+.CodeMirror-focused div.CodeMirror-cursors {
+  visibility: visible;
+}
+
+.CodeMirror-selected { background: #d9d9d9; }
+.CodeMirror-focused .CodeMirror-selected { background: #d7d4f0; }
+.CodeMirror-crosshair { cursor: crosshair; }
+.CodeMirror-line::selection, .CodeMirror-line > span::selection, .CodeMirror-line > span > span::selection { background: #d7d4f0; }
+.CodeMirror-line::-moz-selection, .CodeMirror-line > span::-moz-selection, .CodeMirror-line > span > span::-moz-selection { background: #d7d4f0; }
+
+.cm-searching {
+  background: #ffa;
+  background: rgba(255, 255, 0, .4);
+}
+
+/* Used to force a border model for a node */
+.cm-force-border { padding-right: .1px; }
+
+@media print {
+  /* Hide the cursor when printing */
+  .CodeMirror div.CodeMirror-cursors {
+    visibility: hidden;
+  }
+}
+
+/* See issue #2901 */
+.cm-tab-wrap-hack:after { content: ''; }
+
+/* Help users use markselection to safely style text background */
+span.CodeMirror-selectedtext { background: none; }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  /* --breakpoint-background: url("chrome://devtools/skin/images/breakpoint.svg#light"); */
+  /* --breakpoint-hover-background: url("chrome://devtools/skin/images/breakpoint.svg#light-hover"); */
+  --breakpoint-active-color: rgba(44,187,15,.2);
+  --breakpoint-active-color-hover: rgba(44,187,15,.5);
+  /* --breakpoint-conditional-background: url("chrome://devtools/skin/images/breakpoint.svg#light-conditional"); */
+}
+
+.theme-dark:root {
+  /* --breakpoint-background: url("chrome://devtools/skin/images/breakpoint.svg#dark"); */
+  /* --breakpoint-hover-background: url("chrome://devtools/skin/images/breakpoint.svg#dark-hover"); */
+  --breakpoint-active-color: rgba(0,255,175,.4);
+  --breakpoint-active-color-hover: rgba(0,255,175,.7);
+  /* --breakpoint-conditional-background: url("chrome://devtools/skin/images/breakpoint.svg#dark-conditional"); */
+}
+
+.CodeMirror .errors {
+  width: 16px;
+}
+
+.CodeMirror .error {
+  display: inline-block;
+  margin-left: 5px;
+  width: 12px;
+  height: 12px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  /* background-image: url("chrome://devtools/skin/images/editor-error.png"); */
+  opacity: 0.75;
+}
+
+.CodeMirror .hit-counts {
+  width: 6px;
+}
+
+.CodeMirror .hit-count {
+  display: inline-block;
+  height: 12px;
+  border: solid rgba(0,0,0,0.2);
+  border-width: 1px 1px 1px 0;
+  border-radius: 0 3px 3px 0;
+  padding: 0 3px;
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.CodeMirror-linenumber:before {
+  content: " ";
+  display: block;
+  width: calc(100% - 3px);
+  position: absolute;
+  top: 1px;
+  left: 0;
+  height: 12px;
+  z-index: -1;
+  background-size: calc(100% - 2px) 12px;
+  background-repeat: no-repeat;
+  background-position: right center;
+  padding-inline-end: 9px;
+}
+
+.breakpoint .CodeMirror-linenumber {
+  color: var(--theme-body-background);
+}
+
+.breakpoint .CodeMirror-linenumber:before {
+  background-image: var(--breakpoint-background) !important;
+}
+
+.conditional .CodeMirror-linenumber:before {
+  background-image: var(--breakpoint-conditional-background) !important;
+}
+
+.debug-line .CodeMirror-linenumber {
+  background-color: var(--breakpoint-active-color);
+}
+
+.theme-dark .debug-line .CodeMirror-linenumber {
+  color: #c0c0c0;
+}
+
+.debug-line .CodeMirror-line {
+  background-color: var(--breakpoint-active-color) !important;
+}
+
+/* Don't display the highlight color since the debug line
+   is already highlighted */
+.debug-line .CodeMirror-activeline-background {
+  display: none;
+}
+
+.CodeMirror {
+  cursor: text;
+  height: 100%;
+}
+
+.CodeMirror-gutters {
+  cursor: default;
+}
+
+/* This is to avoid the fake horizontal scrollbar div of codemirror to go 0
+height when floating scrollbars are active. Make sure that this value is equal
+to the maximum of `min-height` specific to the `scrollbar[orient="horizontal"]`
+selector in floating-scrollbar-light.css across all platforms. */
+.CodeMirror-hscrollbar {
+  min-height: 10px;
+}
+
+/* This is to avoid the fake vertical scrollbar div of codemirror to go 0
+width when floating scrollbars are active. Make sure that this value is equal
+to the maximum of `min-width` specific to the `scrollbar[orient="vertical"]`
+selector in floating-scrollbar-light.css across all platforms. */
+.CodeMirror-vscrollbar {
+  min-width: 10px;
+}
+
+.cm-trailingspace {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAYAAAB/qH1jAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3QUXCToH00Y1UgAAACFJREFUCNdjPMDBUc/AwNDAAAFMTAwMDA0OP34wQgX/AQBYgwYEx4f9lQAAAABJRU5ErkJggg==");
+  opacity: 0.75;
+  background-position: left bottom;
+  background-repeat: repeat-x;
+}
+
+.cm-highlight {
+  position: relative;
+}
+
+.cm-highlight:before {
+  position: absolute;
+  border-top-style: solid;
+  border-bottom-style: solid;
+  border-top-color: var(--theme-comment-alt);
+  border-bottom-color: var(--theme-comment-alt);
+  border-top-width: 1px;
+  border-bottom-width: 1px;
+  top: -1px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  content: "";
+  margin-bottom: -1px;
+}
+
+.cm-highlight-full:before {
+  border: 1px solid var(--theme-comment-alt);
+}
+
+.cm-highlight-start:before {
+  border-left-width: 1px;
+  border-left-style: solid;
+  border-left-color: var(--theme-comment-alt);
+  margin: 0 0 -1px -1px;
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+.cm-highlight-end:before {
+  border-right-width: 1px;
+  border-right-style: solid;
+  border-right-color: var(--theme-comment-alt);
+  margin: 0 -1px -1px 0;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+
+/* CodeMirror dialogs styling */
+
+.CodeMirror-dialog {
+  padding: 4px 3px;
+}
+
+.CodeMirror-dialog,
+.CodeMirror-dialog input {
+  font: message-box;
+}
+
+/* Fold addon */
+
+.CodeMirror-foldmarker {
+  color: blue;
+  text-shadow: #b9f 1px 1px 2px, #b9f -1px -1px 2px, #b9f 1px -1px 2px, #b9f -1px 1px 2px;
+  font-family: sans-serif;
+  line-height: .3;
+  cursor: pointer;
+}
+
+.CodeMirror-foldgutter {
+  width: 16px; /* Same as breakpoints gutter above */
+}
+
+.CodeMirror-foldgutter-open,
+.CodeMirror-foldgutter-folded {
+  color: #555;
+  cursor: pointer;
+}
+
+.CodeMirror-foldgutter-open:after {
+  font-size: 120%;
+  content: "\25BE";
+}
+
+.CodeMirror-foldgutter-folded:after {
+  font-size: 120%;
+  content: "\25B8";
+}
+
+.CodeMirror-hints {
+  position: absolute;
+  z-index: 10;
+  overflow: hidden;
+  list-style: none;
+  margin: 0;
+  padding: 2px;
+  border-radius: 3px;
+  font-size: 90%;
+  max-height: 20em;
+  overflow-y: auto;
+}
+
+.CodeMirror-hint {
+  margin: 0;
+  padding: 0 4px;
+  border-radius: 2px;
+  max-width: 19em;
+  overflow: hidden;
+  white-space: pre;
+  cursor: pointer;
+}
+
+.CodeMirror-Tern-completion {
+  padding-inline-start: 22px;
+  position: relative;
+  line-height: 18px;
+}
+
+.CodeMirror-Tern-completion:before {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  height: 15px;
+  width: 15px;
+  line-height: 16px;
+  text-align: center;
+  color: #ffffff;
+  box-sizing: border-box;
+}
+
+.CodeMirror-Tern-completion-unknown:before {
+  content: "?";
+}
+
+.CodeMirror-Tern-completion-object:before {
+  content: "O";
+}
+
+.CodeMirror-Tern-completion-fn:before {
+  content: "F";
+}
+
+.CodeMirror-Tern-completion-array:before {
+  content: "A";
+}
+
+.CodeMirror-Tern-completion-number:before {
+  content: "N";
+}
+
+.CodeMirror-Tern-completion-string:before {
+  content: "S";
+}
+
+.CodeMirror-Tern-completion-bool:before {
+  content: "B";
+}
+
+.CodeMirror-Tern-completion-guess {
+  color: #999;
+}
+
+.CodeMirror-Tern-tooltip {
+  border-radius: 3px;
+  padding: 2px 5px;
+  white-space: pre-wrap;
+  max-width: 40em;
+  position: absolute;
+  z-index: 10;
+}
+
+.CodeMirror-Tern-hint-doc {
+  max-width: 25em;
+}
+
+.CodeMirror-Tern-farg-current {
+  text-decoration: underline;
+}
+
+.CodeMirror-Tern-fhint-guess {
+  opacity: .7;
+}
+:root.theme-light,
+:root .theme-light {
+  --search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
+}
+
+:root.theme-dark,
+:root .theme-dark {
+  --search-overlays-semitransparent: rgba(42, 46, 56, 0.66);
+}
+.debugger {
+  display: flex;
+  flex: 1;
+  height: 100%;
+}
+
+.editor-pane {
+  display: flex;
+  position: relative;
+  flex: 1;
+  background-color: var(--theme-tab-toolbar-background);
+  height: calc(100% - 1px);
+  overflow: hidden;
+}
+
+.editor-container {
+  width: 100%;
+}
+
+.subsettings:hover {
+  cursor: pointer;
+}
+
+.search-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  z-index: 200;
+  background-color: var(--search-overlays-semitransparent);
+}
+
+.search-container .close-button {
+  width: 16px;
+  margin-top: 25px;
+  margin-right: 20px;
+}
+menupopup {
+  position: fixed;
+  z-index: 10000;
+  background: white;
+  border: 1px solid #cccccc;
+  padding: 5px 0;
+  background: #f2f2f2;
+  border-radius: 5px;
+  color: #585858;
+  box-shadow: 0 0 4px 0 rgba(190, 190, 190, 0.8);
+  min-width: 130px;
+}
+
+menuitem {
+  display: block;
+  padding: 0 20px;
+  line-height: 20px;
+  font-weight: 500;
+  font-size: 13px;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+menuitem:hover {
+  background: #3780fb;
+  color: white;
+  cursor: pointer;
+}
+
+menuitem[disabled=true] {
+  color: #cccccc;
+}
+
+menuitem[disabled=true]:hover {
+  background-color: transparent;
+  cursor: default;
+}
+
+menuseparator {
+  border-bottom: 1px solid #cacdd3;
+  width: 100%;
+  height: 5px;
+  display: block;
+  margin-bottom: 5px;
+}
+
+#contextmenu-mask.show {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+}
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.split-box {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.split-box.vert {
+  flex-direction: row;
+}
+
+.split-box.horz {
+  flex-direction: column;
+}
+
+.split-box > .uncontrolled {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.split-box > .controlled {
+  display: flex;
+  overflow: auto;
+}
+
+.split-box > .splitter {
+  background-image: none;
+  border: 0;
+  border-style: solid;
+  border-color: transparent;
+  background-color: var(--theme-splitter-color);
+  background-clip: content-box;
+  position: relative;
+
+  box-sizing: border-box;
+
+  /* Positive z-index positions the splitter on top of its siblings and makes
+     it clickable on both sides. */
+  z-index: 1;
+}
+
+.split-box.vert > .splitter {
+  min-width: calc(var(--devtools-splitter-inline-start-width) +
+    var(--devtools-splitter-inline-end-width) + 1px);
+
+  border-left-width: var(--devtools-splitter-inline-start-width);
+  border-right-width: var(--devtools-splitter-inline-end-width);
+
+  margin-left: calc(-1 * var(--devtools-splitter-inline-start-width) - 1px);
+  margin-right: calc(-1 * var(--devtools-splitter-inline-end-width));
+
+  cursor: ew-resize;
+}
+
+.split-box.horz > .splitter {
+  min-height: calc(var(--devtools-splitter-top-width) +
+    var(--devtools-splitter-bottom-width) + 1px);
+
+  border-top-width: var(--devtools-splitter-top-width);
+  border-bottom-width: var(--devtools-splitter-bottom-width);
+
+  margin-top: calc(-1 * var(--devtools-splitter-top-width) - 1px);
+  margin-bottom: calc(-1 * var(--devtools-splitter-bottom-width));
+
+  cursor: ns-resize;
+}
+
+.split-box.disabled {
+  pointer-events: none;
+}
+
+/**
+ * Make sure splitter panels are not processing any mouse
+ * events. This is good for performance during splitter
+ * bar dragging.
+ */
+.split-box.dragging > .controlled,
+.split-box.dragging > .uncontrolled {
+  pointer-events: none;
+}
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.theme-dark,
+.theme-light {
+  --number-color: var(--theme-highlight-green);
+  --string-color: var(--theme-highlight-orange);
+  --null-color: var(--theme-comment);
+  --object-color: var(--theme-body-color);
+  --caption-color: var(--theme-highlight-blue);
+  --location-color: var(--theme-content-color1);
+  --source-link-color: var(--theme-highlight-blue);
+  --node-color: var(--theme-highlight-bluegrey);
+  --reference-color: var(--theme-highlight-purple);
+}
+
+.theme-firebug {
+  --number-color: #000088;
+  --string-color: #FF0000;
+  --null-color: #787878;
+  --object-color: DarkGreen;
+  --caption-color: #444444;
+  --location-color: #555555;
+  --source-link-color: blue;
+  --node-color: rgb(0, 0, 136);
+  --reference-color: rgb(102, 102, 255);
+}
+
+/******************************************************************************/
+
+.objectLink:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.inline {
+  display: inline;
+  white-space: normal;
+}
+
+.objectBox-object {
+  font-weight: bold;
+  color: var(--object-color);
+  white-space: pre-wrap;
+}
+
+.objectBox-string,
+.objectBox-text,
+.objectLink-textNode,
+.objectBox-table {
+  white-space: pre-wrap;
+}
+
+.objectBox-number,
+.objectLink-styleRule,
+.objectLink-element,
+.objectLink-textNode,
+.objectBox-array > .length {
+  color: var(--number-color);
+}
+
+.objectBox-string {
+  color: var(--string-color);
+}
+
+.objectLink-function,
+.objectBox-stackTrace,
+.objectLink-profile {
+  color: var(--object-color);
+}
+
+.objectLink-Location {
+  font-style: italic;
+  color: var(--location-color);
+}
+
+.objectBox-null,
+.objectBox-undefined,
+.objectBox-hint,
+.logRowHint {
+  font-style: italic;
+  color: var(--null-color);
+}
+
+.objectLink-sourceLink {
+  position: absolute;
+  right: 4px;
+  top: 2px;
+  padding-left: 8px;
+  font-weight: bold;
+  color: var(--source-link-color);
+}
+
+/******************************************************************************/
+
+.objectLink-event,
+.objectLink-eventLog,
+.objectLink-regexp,
+.objectLink-object,
+.objectLink-Date {
+  font-weight: bold;
+  color: var(--object-color);
+  white-space: pre-wrap;
+}
+
+/******************************************************************************/
+
+.objectLink-object .nodeName,
+.objectLink-NamedNodeMap .nodeName,
+.objectLink-NamedNodeMap .objectEqual,
+.objectLink-NamedNodeMap .arrayLeftBracket,
+.objectLink-NamedNodeMap .arrayRightBracket,
+.objectLink-Attr .attrEqual,
+.objectLink-Attr .attrTitle {
+  color: var(--node-color);
+}
+
+.objectLink-object .nodeName {
+  font-weight: normal;
+}
+
+/******************************************************************************/
+
+.objectLeftBrace,
+.objectRightBrace,
+.arrayLeftBracket,
+.arrayRightBracket {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.objectLeftBrace,
+.arrayLeftBracket {
+  margin-right: 4px;
+}
+
+.objectRightBrace,
+.arrayRightBracket {
+  margin-left: 4px;
+}
+
+/******************************************************************************/
+/* Cycle reference*/
+
+.objectLink-Reference {
+  font-weight: bold;
+  color: var(--reference-color);
+}
+
+.objectBox-array > .objectTitle {
+  font-weight: bold;
+  color: var(--object-color);
+}
+
+.caption {
+  font-weight: bold;
+  color:  var(--caption-color);
+}
+
+/******************************************************************************/
+/* Themes */
+
+.theme-dark .objectBox-null,
+.theme-dark .objectBox-undefined,
+.theme-light .objectBox-null,
+.theme-light .objectBox-undefined {
+  font-style: normal;
+}
+
+.theme-dark .objectBox-object,
+.theme-light .objectBox-object {
+  font-weight: normal;
+  white-space: pre-wrap;
+}
+
+.theme-dark .caption,
+.theme-light .caption {
+  font-weight: normal;
+}
+
+.search-container {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  width: calc(100% - 1px);
+  height: calc(100% - 31px);
+  display: flex;
+  z-index: 200;
+  background-color: var(--theme-body-background);
+}
+
+.searchinput-container {
+  display: flex;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.theme-dark .result-list li .subtitle {
+  color: var(--theme-comment-alt);
+}
+
+.arrow,
+.folder,
+.domain,
+.file,
+.worker,
+.refresh,
+.add-button {
+  fill: var(--theme-splitter-color);
+}
+
+.worker,
+.folder {
+  position: relative;
+  top: 2px;
+}
+
+.domain,
+.file,
+.worker,
+.refresh,
+.add-button {
+  position: relative;
+  top: 1px;
+}
+
+.domain svg,
+.folder svg,
+.worker svg,
+.refresh svg,
+.add-button svg {
+  width: 15px;
+}
+
+.file svg {
+  width: 13px;
+}
+
+.file svg,
+.domain svg,
+.folder svg,
+.refresh svg,
+.worker svg {
+  margin-inline-end: 5px;
+}
+
+.arrow svg {
+  fill: var(--theme-splitter-color);
+  margin-top: 3px;
+  transition: transform 0.25s ease;
+  width: 10px;
+}
+
+html:not([dir="rtl"]) .arrow svg {
+  margin-right: 5px;
+  transform: rotate(-90deg);
+}
+
+html[dir="rtl"] .arrow svg {
+  margin-left: 5px;
+  transform: rotate(90deg);
+}
+
+/* TODO (Amit): html is just for specificity. keep it like this? */
+html .arrow.expanded svg {
+  transform: rotate(0deg);
+}
+
+.arrow.hidden {
+  visibility: hidden;
+}
+.close-btn path {
+  fill: var(--theme-comment-alt);
+}
+
+.close-btn .close {
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  padding: 2px;
+  text-align: center;
+  margin-top: 2px;
+  line-height: 7px;
+  transition: all 0.25s easeinout;
+}
+
+.close-btn .close svg {
+  width: 8px;
+}
+
+.close-btn:hover {
+  display: block;
+}
+
+.close-btn:hover .close {
+  background: var(--theme-selection-background);
+  border-radius: 2px;
+}
+
+.close-btn:hover .close path {
+  fill: white;
+}
+
+.close-btn-big {
+  padding: 11px;
+  margin-right: 7px;
+  width: 27px;
+  height: 40px;
+}
+
+.close-btn-big .close {
+  cursor: pointer;
+  display: inline-block;
+  padding: 2px;
+  text-align: center;
+  transition: all 0.25s easeinout;
+  line-height: 100%;
+  width: 16px;
+  height: 16px;
+}
+
+.close-btn-big .close svg {
+  width: 9px;
+  height: 9px;
+}
+
+.close-btn-big .close:hover {
+  border-radius: 2px;
+}
+
+.search-field {
+  width: calc(100% - 1px);
+  height: 27px;
+  background-color: var(--theme-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding-right: 10px;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.search-field.big {
+  height: 40px;
+  font-size: 14px;
+}
+
+.search-field.big input {
+  font-size: 14px;
+}
+
+.search-field i {
+  display: block;
+  padding: 0;
+  width: 16px;
+}
+
+.search-field i svg {
+  width: 16px;
+}
+
+.search-field.big input {
+  line-height: 40px;
+}
+
+.search-field input {
+  border: none;
+  line-height: 30px;
+  background-color: var(--theme-toolbar-background);
+  color: var(--theme-body-color-inactive);
+  width: calc(100% - 38px);
+  flex: 1;
+}
+
+.theme-dark .search-field input {
+  color: var(--theme-body-color-inactive);
+}
+
+.search-field i.magnifying-glass,
+.search-field i.sad-face {
+  padding: 6px;
+  width: 24px;
+}
+
+.search-field.big i.magnifying-glass,
+.search-field.big i.sad-face {
+  padding: 14px;
+  width: 40px;
+}
+
+.search-field .magnifying-glass path,
+.search-field .magnifying-glass ellipse {
+  stroke: var(--theme-splitter-color);
+}
+
+.search-field ::-webkit-input-placeholder {
+  color: var(--theme-body-color-inactive);
+}
+
+.search-field input::placeholder {
+  color: var(--theme-body-color-inactive);
+}
+
+.search-field input:focus {
+  outline-width: 0;
+}
+
+.search-field input.empty {
+  color: var(--theme-highlight-orange);
+}
+
+.search-field.big .summary {
+  line-height: 40px;
+}
+
+.search-field .summary {
+  line-height: 27px;
+  padding-right: 10px;
+  color: var(--theme-body-color-inactive);
+}
+
+.result-list {
+  list-style: none;
+  width: 100%;
+  background-color: var(--theme-toolbar-background);
+  margin: 0px;
+  padding: 0px;
+  overflow: auto;
+}
+
+.result-list.big {
+  max-height: calc(100% - 32px);
+}
+
+.result-list * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.result-list li {
+  color: var(--theme-body-color);
+  background-color: var(--theme-tab-toolbar-background);
+  padding: 4px 13px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.result-list li:first-child {
+  border-top: none;
+}
+
+.result-list.big li {
+  padding: 10px;
+  flex-direction: column;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.result-list li:hover {
+  background: var(--theme-tab-toolbar-background);
+  cursor: pointer;
+}
+
+.result-list li.selected {
+  border: 1px solid var(--theme-selection-background);
+}
+
+.result-list.big li.selected {
+  padding-left: 9px;
+  padding-top: 9px;
+}
+
+.search-bar .result-list li.selected {
+  background-color: var(--theme-selection-background);
+  color: white;
+}
+
+.result-list li .title {
+  line-height: 1.5em;
+  word-break: break-all;
+}
+
+.result-list li.selected .title {
+  color: white;
+}
+
+.result-list.big li.selected .title {
+  color: var(--theme-body-color);
+}
+
+.result-list.big li .subtitle {
+  word-break: break-all;
+  color: var(--theme-body-color-inactive);
+}
+
+.result-list.big li .subtitle {
+  line-height: 1.5em;
+}
+
+.search-bar .result-list li.selected .subtitle {
+  color: white;
+}
+
+.search-bar .result-list {
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.theme-dark .result-list {
+  background-color: var(--theme-body-background);
+}
+
+.autocomplete {
+  flex: 1;
+  width: 100%;
+}
+
+.autocomplete .no-result-msg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--theme-graphs-full-red);
+  font-size: 24px;
+  padding: 4px;
+  word-break: break-all;
+}
+
+.autocomplete .no-result-msg .sad-face {
+  width: 24px;
+  margin: 0 4px;
+  line-height: 0;
+  flex-shrink: 0;
+}
+
+.autocomplete .no-result-msg .sad-face svg {
+  fill: var(--theme-graphs-full-red);
+}
+.tree {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+
+  white-space: nowrap;
+  overflow: auto;
+  min-width: 100%;
+}
+
+.tree button {
+  display: block;
+}
+
+.tree .node {
+  padding: 2px 5px;
+  position: relative;
+  cursor: pointer;
+}
+
+.tree .node.focused {
+  color: white;
+  background-color: var(--theme-selection-background);
+}
+
+html:not([dir="rtl"]) .tree .node > div {
+  margin-left: 10px;
+}
+
+html[dir="rtl"] .tree .node > div {
+  margin-right: 10px;
+}
+
+.tree .node.focused svg {
+  fill: white;
+}
+
+.tree-node button {
+  position: fixed;
+}
+.sources-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sources-panel * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.sources-header {
+  height: 30px;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding-top: 0px;
+  padding-bottom: 0px;
+  line-height: 30px;
+  font-size: 1.2em;
+  display: flex;
+  align-items: baseline;
+  -moz-user-select: none;
+  user-select: none;
+  justify-content: flex-end;
+}
+
+.theme-dark .sources-header {
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+.sources-header {
+  padding-inline-start: 10px;
+}
+
+.sources-header-info {
+  font-size: 12px;
+  color: var(--theme-comment-alt);
+  font-weight: lighter;
+  white-space: nowrap;
+  padding-inline-end: 10px;
+  cursor: pointer;
+}
+
+.sources-list {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.theme-dark .sources-list .tree .node:not(.focused) svg {
+  fill: var(--theme-comment);
+}
+
+.theme-dark .source-list .tree .node.focused {
+  background-color: var(--theme-tab-toolbar-background);
+}
+.toggle-button-start,
+.toggle-button-end {
+  transform: translate(0, 2px);
+  transition: transform 0.25s ease-in-out;
+  cursor: pointer;
+  padding: 4px 2px;
+}
+
+.toggle-button-start svg,
+.toggle-button-end svg {
+  width: 16px;
+  fill: var(--theme-comment);
+}
+
+.theme-dark .toggle-button-start svg,
+.theme-dark .toggle-button-end svg {
+  fill: var(--theme-comment-alt);
+}
+
+.toggle-button-end {
+  margin-left: auto;
+  margin-right: 5px;
+}
+
+.toggle-button-start {
+  margin-left: 5px;
+}
+
+html:not([dir="rtl"]) .toggle-button-end svg,
+html[dir="rtl"] .toggle-button-start svg {
+  transform: rotate(180deg);
+}
+
+html .toggle-button-end.vertical svg {
+  transform: rotate(-90deg);
+}
+
+.toggle-button-end.vertical {
+  margin-bottom: 2px;
+}
+
+.toggle-button-start.collapsed,
+.toggle-button-end.collapsed {
+  transform: rotate(180deg);
+}
+
+.source-footer {
+  background: var(--theme-toolbar-background);
+  border-top: 1px solid var(--theme-splitter-color);
+  position: absolute;
+  display: flex;
+  bottom: 0;
+  left: 0;
+  right: 1px;
+  opacity: 1;
+  z-index: 100;
+  -moz-user-select: none;
+  user-select: none;
+  height: 27px;
+  box-sizing: border-box;
+}
+
+.source-footer .commands {
+  display: flex;
+}
+
+.source-footer .commands * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.source-footer > .commands > .action {
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 200ms;
+  border: none;
+  background: transparent;
+  padding: 8px 0.7em;
+}
+
+.source-footer > .commands > .action i {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+:root.theme-dark .source-footer > .commands > .action {
+  fill: var(--theme-body-color);
+}
+
+:root.theme-dark .source-footer > .commands > .action:hover {
+  fill: var(--theme-selection-color);
+}
+
+.source-footer > .commands > .action svg {
+  height: 16px;
+  width: 16px;
+}
+
+.source-footer .commands .coverage {
+  color: var(--theme-body-color);
+}
+
+.coverage-on .source-footer .commands .coverage {
+  color: var(--theme-highlight-blue);
+  border: 1px solid var(--theme-body-color-inactive);
+  border-radius: 2px;
+}
+
+.search-bar {
+  display: flex;
+  flex-direction: column;
+  max-height: 50%;
+}
+
+.search-bar .search-field {
+  padding-left: 7px;
+}
+
+.search-bar .close-btn {
+  padding: 6px;
+}
+
+.search-bottom-bar * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.search-bottom-bar {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: space-between;
+  width: calc(100% - 1px);
+  height: 27px;
+  background-color: var(--theme-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 0 13px;
+}
+
+.search-bottom-bar button:focus {
+  outline: none;
+}
+
+.search-bottom-bar .search-modifiers {
+  display: flex;
+  align-items: center;
+}
+
+.search-bottom-bar .search-modifiers button {
+  padding: 0 3px;
+  margin: 0 3px;
+  border: none;
+  background: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+}
+
+.search-bottom-bar .search-modifiers button i {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  width: 16px;
+}
+
+.search-bottom-bar .search-modifiers button svg {
+  fill: var(--theme-comment-alt);
+  height: 16px;
+  width: 16px;
+}
+
+.search-bottom-bar .search-modifiers button svg:hover {
+  cursor: pointer;
+}
+
+.search-bottom-bar .search-modifiers button:active {
+  outline: none;
+}
+
+.search-bottom-bar .search-modifiers button.active svg {
+  fill: var(--theme-selection-background);
+}
+
+.theme-dark .search-bottom-bar .search-modifiers button.active svg {
+  fill: white;
+}
+
+.search-bottom-bar .search-modifiers button.disabled svg {
+  fill: var(--theme-comment-alt);
+}
+
+.search-bottom-bar .search-type-toggles {
+  display: flex;
+  align-items: center;
+}
+
+.search-bottom-bar .search-type-toggles .search-toggle-title {
+  color: var(--theme-body-color-inactive);
+  font-size: 11px;
+  font-weight: normal;
+  margin: 0;
+}
+
+.search-bottom-bar .search-type-toggles .search-type-btn {
+  margin: 0 6px;
+  border: none;
+  background: transparent;
+  color: var(--theme-comment-alt);
+}
+
+.search-bottom-bar .search-type-toggles .search-type-btn:hover {
+  cursor: pointer;
+}
+
+.search-bottom-bar .search-type-toggles .search-type-btn:active {
+  outline: none;
+}
+
+.search-bottom-bar .search-type-toggles .search-type-btn.active {
+  color: var(--theme-selection-background);
+}
+
+.theme-dark .search-bottom-bar .search-type-toggles .search-type-btn.active {
+  color: white;
+}
+
+.search-bar .result-list {
+  max-height: 230px;
+}
+.popover {
+  position: fixed;
+  z-index: 4;
+}
+
+.popover-gap {
+  height: 10px;
+  padding-top: 10px;
+}
+
+.popover::before,
+.popover::after {
+  content: '';
+  height: 0;
+  width: 0;
+  position: absolute;
+  border: 10px solid transparent;
+  left: calc(20% - 10px); /* corresponds to calculation in Popover.js */
+}
+
+.popover::before {
+  border-bottom-color: var(--theme-comment);
+  top: -10px;
+}
+
+.popover::after {
+  border-bottom-color: var(--theme-body-background);
+  top: -8px;
+}
+.preview {
+  background: var(--theme-body-background);
+  min-width: 200px;
+  min-height: 80px;
+  border: 1px solid var(--theme-comment);
+  padding: 10px;
+  height: auto;
+  min-height: inherit;
+  max-height: 130px;
+  overflow: auto;
+  max-width: 400px;
+}
+
+.preview .header {
+  width: 100%;
+  line-height: 20px;
+  border-bottom: 1px solid #cccccc;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview .header .link {
+  align-self: flex-end;
+  color: var(--theme-highlight-blue);
+  text-decoration: underline;
+}
+.preview .header .link:hover {
+  cursor: pointer;
+}
+
+.selected-token {
+  background-color: var(--theme-search-overlays-semitransparent);
+  color: var(--theme-selection-color);
+}
+
+.selected-token:hover {
+  cursor: pointer;
+}
+
+.preview .function-signature {
+  padding-top: 10px;
+}
+
+.function-signature {
+  line-height: 20px;
+  align-self: center;
+}
+
+.function-signature .function-name {
+  color: var(--theme-highlight-blue);
+}
+
+.function-signature .param {
+  color: var(--string-color);
+}
+
+.function-signature .paren {
+  color: var(--object-color);
+}
+
+.function-signature .comma {
+  color: var(--object-color);
+}
+
+.theme-dark .preview {
+  border-color: var(--theme-body-color);
+}
+
+.theme-dark .preview .arrow svg {
+  fill: var(--theme-comment);
+}
+.conditional-breakpoint-panel {
+  cursor: initial;
+  margin: 1em 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--theme-toolbar-background);
+  border-top: 1px solid var(--theme-splitter-color);
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.conditional-breakpoint-panel .prompt {
+  font-size: 1.8em;
+  color: var(--theme-comment-alt);
+  padding-left: 3px;
+}
+
+.conditional-breakpoint-panel input {
+  margin: 5px 10px;
+  width: calc(100% - 4em);
+  border: none;
+  background: var(--theme-toolbar-background);
+  font-size: 14px;
+  color: var(--theme-comment);
+  line-height: 30px;
+}
+
+.conditional-breakpoint-panel input:focus {
+  outline-width: 0;
+}
+/* vim:set ts=2 sw=2 sts=2 et: */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * There's a known codemirror flex issue with chrome that this addresses.
+ * BUG https://github.com/devtools-html/debugger.html/issues/63
+ */
+.editor-wrapper {
+  position: absolute;
+  height: calc(100% - 31px);
+  width: 100%;
+  top: 30px;
+  left: 0px;
+}
+
+html[dir="rtl"] .editor-mount {
+  direction: ltr;
+}
+
+.editor-wrapper .breakpoints {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.function-search {
+  max-height: 300px;
+  overflow: hidden;
+}
+
+.function-search .results {
+  height: auto;
+}
+
+.editor.hit-marker {
+  height: 14px;
+}
+
+.coverage-on .CodeMirror-code :not(.hit-marker) .CodeMirror-line,
+.coverage-on .CodeMirror-code :not(.hit-marker) .CodeMirror-gutter-wrapper {
+  opacity: 0.5;
+}
+
+.editor.new-breakpoint svg {
+  fill: var(--theme-selection-background);
+  width: 60px;
+  height: 14px;
+  position: absolute;
+  top: 0px;
+  right: -4px;
+}
+
+.new-breakpoint.has-condition svg {
+  fill: var(--theme-graphs-yellow);
+}
+
+.editor.new-breakpoint.breakpoint-disabled svg {
+  opacity: 0.3;
+}
+
+.CodeMirror {
+  width: 100%;
+  height: 100%;
+}
+
+.editor-wrapper .editor-mount {
+  width: 100%;
+  height: calc(100% - 32px);
+  background-color: var(--theme-body-background);
+}
+
+.search-bar ~ .editor-mount {
+  height: calc(100% - 72px);
+}
+
+.CodeMirror-linenumber {
+  font-size: 11px;
+  line-height: 14px;
+}
+
+/* set the linenumber white when there is a breakpoint */
+.new-breakpoint .CodeMirror-gutter-wrapper .CodeMirror-linenumber {
+  color: white;
+}
+
+/* move the breakpoint below the linenumber */
+.new-breakpoint .CodeMirror-gutter-elt:last-child {
+  z-index: 0;
+}
+
+.editor-wrapper .CodeMirror-line {
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.theme-dark .editor-wrapper .CodeMirror-line .cm-comment {
+  color: var(--theme-content-color3);
+}
+
+.debug-line .CodeMirror-line {
+  background-color: var(--breakpoint-active-color) !important;
+}
+
+/* Don't display the highlight color since the debug line
+   is already highlighted */
+.debug-line .CodeMirror-activeline-background {
+  display: none;
+}
+
+.highlight-line .CodeMirror-line {
+  animation: fade-highlight-out 1.5s normal forwards;
+}
+
+@keyframes fade-highlight-out {
+  0% { background-color: var(--theme-highlight-gray); }
+  100% { background-color: transparent; }
+}
+
+.welcomebox {
+  width: calc(100% - 1px);
+
+  /* Offsetting it by 30px for the sources-header area */
+  height: calc(100% - 30px);
+  position: absolute;
+  top: 30px;
+  left: 0;
+  padding: 50px 0;
+  text-align: center;
+  font-size: 1.25em;
+  color: var(--theme-comment-alt);
+  background-color: var(--theme-tab-toolbar-background);
+  font-weight: lighter;
+  z-index: 100;
+  -moz-user-select: none;
+  user-select: none;
+}
+.input-expression {
+  width: 100%;
+  margin: 0px;
+  border: 1px;
+  cursor: pointer;
+  background-color: var(--theme-body-background);
+  font-size: 12px;
+  padding: 0px 20px;
+  color: var(--theme-highlight-blue);
+}
+
+.input-expression::-webkit-input-placeholder {
+  text-align: center;
+  font-style: italic;
+  color: var(--theme-comment-alt);
+}
+
+.input-expression::placeholder {
+  text-align: center;
+  font-style: italic;
+  color: var(--theme-comment-alt);
+  opacity: 1;
+}
+
+.input-expression:focus {
+  outline: none;
+  cursor: text;
+}
+
+.expression-input-container {
+  padding: 0.5em;
+  display: flex;
+}
+
+.expression-container {
+  border: 1px;
+  padding: 8px 5px 0px 0px;
+  width: 100%;
+  color: var(--theme-body-color);
+  background-color: var(--theme-body-background);
+  display: flex;
+  position: relative;
+}
+
+.expression-container > .tree {
+  width: 100%;
+  overflow: hidden;
+}
+
+:root.theme-light .expression-container:hover {
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+:root.theme-dark .expression-container:hover {
+  background-color: var(--search-overlays-semitransparent);
+}
+
+.expression-container .close-btn {
+  position: absolute;
+  offset-inline-end: 6px;
+  top: 6px;
+}
+
+.expression-container .close {
+  display: none;
+}
+
+.expression-container:hover .close {
+  display: block;
+}
+
+.expression-input {
+  cursor: pointer;
+  max-width: 50%;
+}
+
+.expression-separator {
+  padding: 0px 5px;
+}
+
+.expression-value {
+  overflow-x: scroll;
+  color: var(--theme-content-color2);
+  max-width: 50% !important;
+}
+
+.expression-error {
+  color: var(--theme-highlight-red);
+}
+
+.why-paused {
+  background-color: var(--breakpoint-active-color);
+  border: 1.7px solid var(--breakpoint-active-color);
+  color: var(--theme-highlight-blue);
+  padding: 10px 10px 10px 20px;
+  white-space: normal;
+  opacity: 0.9;
+  font-size: 12px;
+  font-weight: bold;
+  flex: 0 1 auto;
+}
+
+.theme-dark .secondary-panes .why-paused {
+  color: white;
+}
+.breakpoints-list * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.breakpoints-list .breakpoint {
+  font-size: 12px;
+  color: var(--theme-content-color1);
+  padding: 0.5em 1px;
+  line-height: 1em;
+  position: relative;
+  transition: all 0.25s ease;
+}
+
+html[dir="rtl"] .breakpoints-list .breakpoint {
+  border-right: 4px solid transparent;
+}
+
+html:not([dir="rtl"]) .breakpoints-list .breakpoint {
+  border-left: 4px solid transparent;
+}
+
+.breakpoints-list .breakpoint:last-of-type {
+  padding-bottom: 0.45em;
+}
+
+html:not([dir="rtl"]) .breakpoints-list .breakpoint.is-conditional {
+  border-left-color: var(--theme-graphs-yellow);
+}
+
+html[dir="rtl"] .breakpoints-list .breakpoint.is-conditional {
+  border-right-color: var(--theme-graphs-yellow);
+}
+
+html .breakpoints-list .breakpoint.paused {
+  background-color: var(--theme-toolbar-background-alt);
+  border-color: var(--breakpoint-active-color);
+}
+
+.breakpoints-list .breakpoint.disabled .breakpoint-label {
+  color: var(--theme-content-color3);
+  transition: color 0.5s linear;
+}
+
+.breakpoints-list .breakpoint:hover {
+  cursor: pointer;
+  background-color: var(--search-overlays-semitransparent);
+}
+
+.breakpoints-list .breakpoint.paused:hover {
+  border-color: var(--breakpoint-active-color-hover);
+}
+
+.breakpoints-list .breakpoint-checkbox {
+  margin-inline-start: 0;
+}
+
+.breakpoints-list .breakpoint-label {
+  display: inline-block;
+  padding-inline-start: 2px;
+  padding-bottom: 4px;
+}
+
+.breakpoints-list .pause-indicator {
+  flex: 0 1 content;
+  order: 3;
+}
+
+:root.theme-light .breakpoint-snippet,
+:root.theme-firebug .breakpoint-snippet {
+  color: var(--theme-comment);
+}
+
+:root.theme-dark .breakpoint-snippet {
+  color: var(--theme-body-color);
+  opacity: 0.6;
+}
+
+.breakpoint-snippet {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-inline-start: 18px;
+  padding-inline-end: 18px;
+}
+
+.breakpoint .close-btn {
+  position: absolute;
+  offset-inline-end: 6px;
+  top: 12px;
+}
+
+.breakpoint .close {
+  display: none;
+}
+
+.breakpoint:hover .close {
+  display: block;
+}
+
+.object-node.default-property {
+  opacity: 0.6;
+}
+
+.object-label {
+  color: var(--theme-highlight-blue);
+}
+
+.objectBox-object,
+.objectBox-string,
+.objectBox-text,
+.objectBox-table,
+.objectLink-textNode,
+.objectLink-event,
+.objectLink-eventLog,
+.objectLink-regexp,
+.objectLink-object,
+.objectLink-Date,
+.theme-dark .objectBox-object,
+.theme-light .objectBox-object {
+  white-space: nowrap;
+}
+
+.scopes-list .tree-node {
+  overflow: hidden;
+}
+.frames ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.frames ul li {
+  cursor: pointer;
+  padding: 7px 10px 7px 21px;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Style the focused call frame like so:
+.frames ul li:focus {
+  border: 3px solid red;
+}
+*/
+
+.frames ul li * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.frames ul li:nth-of-type(2n) {
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+.frames .location {
+  font-weight: lighter;
+}
+
+:root.theme-light .frames .location,
+:root.theme-firebug .frames .location {
+  color: var(--theme-comment);
+}
+
+:root.theme-dark .frames .location {
+  color: var(--theme-body-color);
+  opacity: 0.6;
+}
+
+.frames .title {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  margin-right: 1em;
+}
+
+.frames ul li:hover,
+.frames ul li:focus {
+  background-color: var(--theme-toolbar-background-alt);
+  outline: none;
+}
+
+.frames ul li.selected {
+  background-color: var(--theme-selection-background);
+  color: white;
+}
+
+:root.theme-light .frames ul li.selected .location,
+:root.theme-firebug .frames ul li.selected .location,
+:root.theme-dark .frames ul li.selected .location {
+  color: white;
+}
+
+:root.theme-dark .frames ul li:hover .location,
+:root.theme-dark .frames ul li.selected .location {
+  opacity: 1;
+}
+
+.show-more {
+  cursor: pointer;
+  text-align: center;
+  padding: 8px 0px;
+  border-top: 1px solid var(--theme-splitter-color);
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+.show-more:hover {
+  background-color: var(--search-overlays-semitransparent);
+}
+.event-listeners {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.event-listeners .listener {
+  cursor: pointer;
+  padding: 7px 10px 7px 21px;
+  clear: both;
+  overflow: hidden;
+}
+
+.event-listeners .listener * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.event-listeners .listener:nth-of-type(2n) {
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+.event-listeners .listener .type {
+  color: var(--theme-highlight-bluegrey);
+  padding-right: 5px;
+}
+
+.event-listeners .listener .selector {
+  color: var(--theme-content-color2);
+}
+
+.event-listeners .listener-checkbox {
+  margin-left: 0;
+}
+
+.event-listeners .listener .close-btn {
+  float: right;
+}
+
+.event-listeners .listener .close {
+  display: none;
+}
+
+.event-listeners .listener:hover .close {
+  display: block;
+}
+.accordion {
+  background-color: var(--theme-body-background);
+  width: 100%;
+}
+
+.accordion ._header {
+  background-color: var(--theme-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 5px;
+  transition: all 0.25s ease;
+  width: 100%;
+
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.accordion ._header {
+  display: flex;
+}
+
+.accordion ._header:hover {
+  background-color: var(--search-overlays-semitransparent);
+}
+
+.accordion ._header button svg,
+.accordion ._header:hover button svg {
+  fill: currentColor;
+  height: 16px;
+}
+
+.accordion ._content {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  font-size: 12px;
+}
+
+.accordion ._header .header-buttons {
+  display: flex;
+  margin-left: auto;
+  padding-right: 5px;
+}
+
+.accordion .header-buttons .add-button {
+  font-size: 180%;
+  text-align: center;
+  line-height: 16px;
+}
+
+.accordion .header-buttons button {
+  color: var(--theme-body-color);
+  border: none;
+  background: none;
+  outline: 0;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.accordion .header-buttons button::-moz-focus-inner {
+  border: none;
+}
+.command-bar {
+  flex: 0 0 30px;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  display: flex;
+  height: 30px;
+  overflow: hidden;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--theme-body-background);
+}
+
+.theme-dark .command-bar {
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+.command-bar > button {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+  text-align: center;
+  transition: all 0.25s ease;
+  padding: 8px 5px;
+  position: relative;
+  fill: currentColor;
+}
+
+:root.theme-dark .command-bar > button {
+  color: var(--theme-body-color);
+}
+
+.command-bar > button {
+  margin-inline-end: 0.7em;
+}
+
+html .command-bar > button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.command-bar > button > i {
+  height: 100%;
+  width: 100%;
+  display: block;
+}
+
+.command-bar > button > i > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.command-bar button.pause-exceptions {
+  margin-inline-start: 0.5em;
+}
+
+.command-bar .subSettings {
+  float: right;
+}
+
+.command-bar button.pause-exceptions.uncaught {
+  color: var(--theme-highlight-purple);
+}
+
+.command-bar button.pause-exceptions.all {
+  color: var(--theme-highlight-blue);
+}
+.secondary-panes {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  white-space: nowrap;
+}
+
+.secondary-panes * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.secondary-panes .accordion {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1 0 auto;
+}
+
+.pane {
+  color: var(--theme-body-color);
+}
+
+.pane .pane-info {
+  font-style: italic;
+  text-align: center;
+  padding: 0.5em;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.theme-dark .secondary-panes .accordion .arrow svg {
+  fill: var(--theme-comment);
+}
+.welcomebox {
+  width: calc(100% - 1px);
+
+  /* Offsetting it by 30px for the sources-header area */
+  height: calc(100% - 30px);
+  position: absolute;
+  top: 30px;
+  left: 0;
+  padding: 50px 0 0 0;
+  text-align: center;
+  font-size: 1.25em;
+  color: var(--theme-comment-alt);
+  background-color: var(--theme-tab-toolbar-background);
+  font-weight: lighter;
+  z-index: 100;
+}
+
+html .welcomebox .toggle-button-end {
+  bottom: 11px;
+  position: absolute;
+  top: auto;
+}
+.dropdown {
+  --width: 150px;
+  background: var(--theme-body-background);
+  border: 1px solid var(--theme-splitter-color);
+  box-shadow: 0 4px 4px 0 var(--search-overlays-semitransparent);
+  max-height: 300px;
+  position: absolute;
+  right: 8px;
+  top: 35px;
+  width: var(--width);
+  z-index: 1000;
+}
+
+html[dir="rtl"] .dropdown {
+  right: calc((var(--width) - 11px) * (-1));
+}
+
+.dropdown-block {
+  padding: 0px 2px;
+  position: relative;
+  align-self: center;
+}
+
+.dropdown-button {
+  cursor: pointer;
+  color: var(--theme-comment);
+  background: none;
+  border: none;
+  padding: 0;
+  font-weight: 100;
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+.dropdown li {
+  transition: all 0.25s ease;
+  padding: 2px 10px 10px 5px;
+  overflow: hidden;
+  height: 30px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown li:hover {
+  background-color: var(--search-overlays-semitransparent);
+  cursor: pointer;
+}
+
+.dropdown ul {
+  list-style: none;
+  line-height: 2em;
+  font-size: 1em;
+  margin: 0;
+  padding: 0;
+}
+
+.dropdown-mask {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  z-index: 999;
+  left: 0;
+  top: 0;
+}
+.source-header {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  width: 100%;
+  height: 30px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.source-header * {
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.source-header .new-tab-btn {
+  padding: 0px 4px;
+  margin-top: 8px;
+  cursor: pointer;
+  fill: var(--theme-comment);
+  transition: 0.1s ease;
+  align-self: center;
+}
+
+.source-header .new-tab-btn svg {
+  width: 12px;
+}
+
+.source-tabs {
+  max-width: calc(100% - 80px);
+  align-self: flex-start;
+}
+
+.source-tab {
+  border: 1px solid transparent;
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  transition: all 0.25s ease;
+  min-width: 40px;
+  overflow: hidden;
+  padding: 6px;
+  margin-inline-start: 3px;
+  margin-top: 2px;
+}
+
+.source-tab:hover {
+  background-color: var(--theme-toolbar-background-alt);
+  border-color: var(--theme-splitter-color);
+  cursor: pointer;
+}
+
+.source-tab.active {
+  color: var(--theme-body-color);
+  background-color: var(--theme-body-background);
+  border-color: var(--theme-splitter-color);
+  border-bottom-color: transparent;
+}
+
+.source-tab.active path,
+.source-tab:hover path {
+  fill: var(--theme-body-color);
+}
+
+.source-tab .prettyPrint {
+  line-height: 0;
+}
+
+.source-tab .prettyPrint svg {
+  height: 12px;
+  width: 12px;
+}
+
+.source-tab .prettyPrint path {
+  fill: var(--theme-textbox-box-shadow);
+}
+
+.source-tab .filename {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.source-tab.pretty .filename {
+  padding-inline-start: 8px;
+}
+
+.source-tab .close-btn {
+  visibility: hidden;
+  line-height: 0;
+  margin-inline-start: 6px;
+}
+
+.source-tab.active .close-btn {
+  visibility: visible;
+}
+
+.source-tab:hover .close-btn {
+  visibility: visible;
+}
+
+.source-tab .close-btn .close {
+  padding: 0;
+  margin-top: 0;
+  display: inline-flex;
+  justify-content: center;
+}
