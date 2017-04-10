@@ -1250,12 +1250,18 @@ gfxPlatformFontList::GetFontFamilyNames(nsTArray<nsString>& aFontFamilyNames)
     }
 }
 
-nsILanguageAtomService*
-gfxPlatformFontList::GetLangService()
+void
+gfxPlatformFontList::InitLangService()
 {
     if (!mLangService) {
         mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
     }
+}
+
+nsILanguageAtomService*
+gfxPlatformFontList::GetLangService()
+{
+    InitLangService();
     NS_ASSERTION(mLangService, "no language service!");
     return mLangService;
 }
