@@ -21,6 +21,7 @@ type WrBorderStyle = BorderStyle;
 type WrBoxShadowClipMode = BoxShadowClipMode;
 type WrBuiltDisplayListDescriptor = BuiltDisplayListDescriptor;
 type WrEpoch = Epoch;
+type WrExternalImageId = ExternalImageId;
 type WrFontKey = FontKey;
 type WrGlyphInstance = GlyphInstance;
 type WrIdNamespace = IdNamespace;
@@ -448,7 +449,7 @@ enum WrExternalImageType {
 }
 
 #[repr(C)]
-struct WrExternalImageStruct {
+struct WrExternalImage {
     image_type: WrExternalImageType,
 
     // external texture handle
@@ -464,9 +465,9 @@ struct WrExternalImageStruct {
     size: usize,
 }
 
-type LockExternalImageCallback = fn(*mut c_void, ExternalImageId) -> WrExternalImageStruct;
-type UnlockExternalImageCallback = fn(*mut c_void, ExternalImageId);
-type ReleaseExternalImageCallback = fn(*mut c_void, ExternalImageId);
+type LockExternalImageCallback = fn(*mut c_void, WrExternalImageId) -> WrExternalImage;
+type UnlockExternalImageCallback = fn(*mut c_void, WrExternalImageId);
+type ReleaseExternalImageCallback = fn(*mut c_void, WrExternalImageId);
 
 #[repr(C)]
 pub struct WrExternalImageHandler {
@@ -477,7 +478,7 @@ pub struct WrExternalImageHandler {
 }
 
 impl ExternalImageHandler for WrExternalImageHandler {
-    fn lock(&mut self, id: ExternalImageId) -> ExternalImage {
+    fn lock(&mut self, id: WrExternalImageId) -> ExternalImage {
         let image = (self.lock_func)(self.external_image_obj, id);
 
         match image.image_type {
@@ -505,11 +506,11 @@ impl ExternalImageHandler for WrExternalImageHandler {
         }
     }
 
-    fn unlock(&mut self, id: ExternalImageId) {
+    fn unlock(&mut self, id: WrExternalImageId) {
         (self.unlock_func)(self.external_image_obj, id);
     }
 
-    fn release(&mut self, id: ExternalImageId) {
+    fn release(&mut self, id: WrExternalImageId) {
         (self.release_func)(self.external_image_obj, id);
     }
 }
@@ -959,7 +960,7 @@ pub extern "C" fn wr_api_add_raw_font(api: &mut WrAPI,
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_delete_font(api: &mut RenderApi, key: FontKey)
+pub extern "C" fn wr_api_delete_font(api: &mut WrAPI, key: WrFontKey)
 {
     assert!( unsafe { is_in_compositor_thread() });
     api.delete_font(key);
