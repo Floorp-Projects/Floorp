@@ -376,6 +376,7 @@ UNIFIED_SOURCES += [
     'wasm/WasmIonCompile.cpp',
     'wasm/WasmJS.cpp',
     'wasm/WasmModule.cpp',
+    'wasm/WasmRuntime.cpp',
     'wasm/WasmSignalHandlers.cpp',
     'wasm/WasmStubs.cpp',
     'wasm/WasmTable.cpp',
