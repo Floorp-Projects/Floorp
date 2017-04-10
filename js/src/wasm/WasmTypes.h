@@ -831,7 +831,7 @@ class CodeRange
         Entry,             // calls into wasm from C++
         ImportJitExit,     // fast-path calling from wasm into JIT code
         ImportInterpExit,  // slow-path calling from wasm into C++ interp
-        ImportNativeExit,  // fast-path calling from wasm into a C++ native
+        BuiltinNativeExit, // fast-path calling from wasm into a C++ native
         TrapExit,          // calls C++ to report and jumps to throw stub
         DebugTrap,         // calls C++ to handle debug event
         FarJumpIsland,     // inserted to connect otherwise out-of-range insns
@@ -875,7 +875,7 @@ class CodeRange
         return kind() == Function;
     }
     bool isImportExit() const {
-        return kind() == ImportJitExit || kind() == ImportInterpExit || kind() == ImportNativeExit;
+        return kind() == ImportJitExit || kind() == ImportInterpExit || kind() == BuiltinNativeExit;
     }
     bool isTrapExit() const {
         return kind() == TrapExit;

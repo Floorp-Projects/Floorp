@@ -34,6 +34,8 @@ namespace jit {
 
 namespace wasm {
 
+class ExitReason;
+
 bool
 NeedsBuiltinThunk(SymbolicAddress imm);
 
@@ -68,7 +70,7 @@ struct BuiltinThunk
     BuiltinThunk(uint8_t* base, size_t size, jit::ExecutablePool* executablePool,
                  CallableOffsets offsets)
       : executablePool(executablePool),
-        codeRange(CodeRange(CodeRange::ImportNativeExit, offsets)),
+        codeRange(CodeRange(CodeRange::BuiltinNativeExit, offsets)),
         size(size),
         base(base)
     {}
@@ -86,7 +88,8 @@ class Runtime
     BuiltinThunkMap builtinThunkMap_;
     BuiltinThunkVector builtinThunkVector_;
 
-    bool getBuiltinThunk(JSContext* cx, void* funcPtr, jit::ABIFunctionType type, void** thunkPtr);
+    bool getBuiltinThunk(JSContext* cx, void* funcPtr, jit::ABIFunctionType type,
+                         ExitReason exitReason, void** thunkPtr);
 
   public:
     bool init() { return builtinThunkMap_.init(); }

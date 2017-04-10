@@ -690,7 +690,7 @@ CodeRange::CodeRange(Kind kind, Offsets offsets)
       case Function:
       case TrapExit:
       case ImportJitExit:
-      case ImportNativeExit:
+      case BuiltinNativeExit:
       case ImportInterpExit:
         MOZ_CRASH("should use more specific constructor");
     }
@@ -712,7 +712,7 @@ CodeRange::CodeRange(Kind kind, CallableOffsets offsets)
     switch (kind_) {
       case TrapExit:
       case ImportJitExit:
-      case ImportNativeExit:
+      case BuiltinNativeExit:
       case ImportInterpExit:
         break;
       case Entry:
