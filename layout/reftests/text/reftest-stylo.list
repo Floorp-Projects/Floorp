@@ -12,7 +12,7 @@ HTTP(..) == font-selection-generic-1.html font-selection-generic-1.html
 # in the "obvious" way, but it is unclear what the behavior should really be;
 # see bug
 == font-size-adjust-03.html font-size-adjust-03.html
-fails == justification-1.html justification-1.html
+== justification-1.html justification-1.html
 == justification-2a.html justification-2a.html
 == justification-2b.html justification-2b.html
 == justification-2c.html justification-2c.html
@@ -35,7 +35,7 @@ fails == long-1.html long-1.html
 == pre-line-3.html pre-line-3.html
 == pre-line-4.html pre-line-4.html
 fails == pre-space-1.html pre-space-1.html
-fails == pre-wrap-1.html pre-wrap-1.html
+== pre-wrap-1.html pre-wrap-1.html
 == soft-hyphens-1a.html soft-hyphens-1a.html
 == soft-hyphens-1b.html soft-hyphens-1b.html
 == soft-hyphens-1c.html soft-hyphens-1c.html
@@ -123,7 +123,7 @@ HTTP(..) == wordbreak-7a.html wordbreak-7a.html
 HTTP(..) == wordbreak-7b.html wordbreak-7b.html
 == wordbreak-8.html wordbreak-8.html
 pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == wordbreak-9.html wordbreak-9.html
-fails == wordbreak-dynamic-1.html wordbreak-dynamic-1.html
+== wordbreak-dynamic-1.html wordbreak-dynamic-1.html
 fails == wordwrap-01.html wordwrap-01.html
 fails HTTP(..) == wordwrap-02.html wordwrap-02.html
 fails == wordwrap-03.html wordwrap-03.html
