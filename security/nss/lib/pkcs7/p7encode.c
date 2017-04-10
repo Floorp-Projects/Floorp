@@ -510,7 +510,7 @@ sec_pkcs7_encoder_work_data(SEC_PKCS7EncoderContext *p7ecx, SECItem *dest,
              * No output is expected, but the input data may be buffered
              * so we still have to call Encrypt.
              */
-            rv = sec_PKCS7Encrypt(p7ecx->encryptobj, NULL, NULL, 0,
+            rv = sec_PKCS7Encrypt(p7ecx->encryptobj, NULL, &outlen, 0,
                                   data, inlen, final);
             if (final) {
                 len = 0;

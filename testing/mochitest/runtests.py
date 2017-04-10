@@ -986,6 +986,8 @@ class MochitestDesktop(object):
                 self.urlOpts.append("interactiveDebugger=true")
             if options.jscov_dir_prefix:
                 self.urlOpts.append("jscovDirPrefix=%s" % options.jscov_dir_prefix)
+            if options.cleanupCrashes:
+                self.urlOpts.append("cleanupCrashes=true")
 
     def normflavor(self, flavor):
         """
