@@ -131,7 +131,7 @@ public:
 
   nsIURI* GetURI() const;
 
-  bool IsLocalRef() const { return mIsLocalRef; }
+  bool IsLocalRef() const;
 
   bool HasRef() const;
 
@@ -158,7 +158,7 @@ public:
 private:
   mutable bool mURIResolved;
   // mIsLocalRef is set when url starts with a U+0023 number sign(#) character.
-  bool mIsLocalRef;
+  mutable Maybe<bool> mIsLocalRef;
 
 protected:
   virtual ~URLValueData() = default;

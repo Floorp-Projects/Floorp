@@ -2788,7 +2788,6 @@ css::URLValueData::URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
   , mString(aString)
   , mExtraData(Move(aExtraData))
   , mURIResolved(true)
-  , mIsLocalRef(IsLocalRefURL(aString))
 {
   MOZ_ASSERT(mString);
   MOZ_ASSERT(mExtraData);
@@ -2800,7 +2799,6 @@ css::URLValueData::URLValueData(nsStringBuffer* aString,
   : mString(aString)
   , mExtraData(Move(aExtraData))
   , mURIResolved(false)
-  , mIsLocalRef(IsLocalRefURL(aString))
 {
   MOZ_ASSERT(aString);
   MOZ_ASSERT(mExtraData);
@@ -2827,7 +2825,7 @@ css::URLValueData::Equals(const URLValueData& aOther) const
             eq)) &&
           (self->GetPrincipal() == other->GetPrincipal() ||
            self->GetPrincipal()->Equals(other->GetPrincipal())) &&
-          mIsLocalRef == aOther.mIsLocalRef;
+          IsLocalRef() == aOther.IsLocalRef();
 }
 
 bool
@@ -2866,6 +2864,17 @@ css::URLValueData::GetURI() const
 }
 
 bool
+css::URLValueData::IsLocalRef() const
+{
+  if (mIsLocalRef.isNothing()) {
+    // IsLocalRefURL is O(N), use it only when IsLocalRef is called.
+    mIsLocalRef.emplace(IsLocalRefURL(mString));
+  }
+
+  return mIsLocalRef.value();
+}
+
+bool
 css::URLValueData::HasRef() const
 {
   if (IsLocalRef()) {
@@ -2891,7 +2900,7 @@ css::URLValueData::ResolveLocalRef(nsIURI* aURI) const
 {
   nsCOMPtr<nsIURI> result = GetURI();
 
-  if (result && mIsLocalRef) {
+  if (result && IsLocalRef()) {
     nsCString ref;
     mURI->GetRef(ref);
 
@@ -2919,7 +2928,7 @@ css::URLValueData::GetSourceString(nsString& aRef) const
   }
 
   nsCString cref;
-  if (mIsLocalRef) {
+  if (IsLocalRef()) {
     // XXXheycam It's possible we can just return mString in this case, since
     // it should be the "#fragment" string the URLValueData was created with.
     uri->GetRef(cref);
