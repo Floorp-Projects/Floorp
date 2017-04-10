@@ -79,6 +79,9 @@ HiddenFrame.prototype = {
       }
     };
     this._webProgress.addProgressListener(this._listener, Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
-    this._browser.document.location = XUL_PAGE;
+    let docShell = this._browser.getInterface(Ci.nsIDocShell);
+    docShell.createAboutBlankContentViewer(Services.scriptSecurityManager.getSystemPrincipal());
+    docShell.useGlobalHistory = false;
+    this._browser.loadURI(XUL_PAGE, 0, null, null, null);
   }
 };
