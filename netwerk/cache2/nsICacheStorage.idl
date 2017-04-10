@@ -131,4 +131,12 @@ interface nsICacheStorage : nsISupports
    */
   void asyncVisitStorage(in nsICacheStorageVisitor aVisitor,
                          in boolean aVisitEntries);
+
+  %{C++
+    virtual nsresult GetCacheIndexEntryAttrs(
+          nsIURI *aURI, const nsACString &aIdExtension,
+          bool *aHasAltData, uint32_t *aSizeInKB) {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+  %}
 };

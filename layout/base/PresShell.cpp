@@ -10993,8 +10993,10 @@ PresShell::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 
   if (nsStyleSet* styleSet = StyleSet()->GetAsGecko()) {
     *aStyleSetsSize += styleSet->SizeOfIncludingThis(aMallocSizeOf);
+  } else if (ServoStyleSet* styleSet = StyleSet()->GetAsServo()) {
+    *aStyleSetsSize += styleSet->SizeOfIncludingThis(aMallocSizeOf);
   } else {
-    NS_WARNING("ServoStyleSets do not support memory measurements yet");
+    MOZ_CRASH();
   }
 
   *aTextRunsSize += SizeOfTextRuns(aMallocSizeOf);

@@ -9976,15 +9976,11 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
       parentSize.width += margin.LeftRight();
 
     nsIFrame *parentFrame = GetParent();
-    nsFrameState savedState = parentFrame->GetStateBits();
     WritingMode parentWM = parentFrame->GetWritingMode();
     ReflowInput
       parentReflowInput(aPresContext, parentFrame, aRenderingContext,
                         LogicalSize(parentWM, parentSize),
                         ReflowInput::DUMMY_PARENT_REFLOW_STATE);
-    const nsFrameState bitsToLeaveUntouched = NS_FRAME_HAS_PROPERTIES;
-    parentFrame->RemoveStateBits(~bitsToLeaveUntouched);
-    parentFrame->AddStateBits(savedState & ~bitsToLeaveUntouched);
 
     // This may not do very much useful, but it's probably worth trying.
     if (parentSize.width != NS_INTRINSICSIZE)
