@@ -782,11 +782,13 @@ impl MarionetteSession {
 
     pub fn error_from_string(&self, error_code: &str) -> ErrorStatus {
         match error_code {
+            "element click intercepted" => ErrorStatus::ElementClickIntercepted,
+            "element not interactable" | "element not visible" => ErrorStatus::ElementNotInteractable,
             "element not selectable" => ErrorStatus::ElementNotSelectable,
-            "element not visible" => ErrorStatus::ElementNotVisible,
+            "insecure certificate" => ErrorStatus::InsecureCertificate,
             "invalid argument" => ErrorStatus::InvalidArgument,
             "invalid cookie domain" => ErrorStatus::InvalidCookieDomain,
-            "invalid element coordinates" => ErrorStatus::InvalidElementCoordinates,
+            "invalid coordinates" | "invalid element coordinates" => ErrorStatus::InvalidCoordinates,
             "invalid element state" => ErrorStatus::InvalidElementState,
             "invalid selector" => ErrorStatus::InvalidSelector,
             "invalid session id" => ErrorStatus::InvalidSessionId,
@@ -800,12 +802,13 @@ impl MarionetteSession {
             "session not created" => ErrorStatus::SessionNotCreated,
             "stale element reference" => ErrorStatus::StaleElementReference,
             "timeout" => ErrorStatus::Timeout,
+            "unable to capture screen" => ErrorStatus::UnableToCaptureScreen,
             "unable to set cookie" => ErrorStatus::UnableToSetCookie,
             "unexpected alert open" => ErrorStatus::UnexpectedAlertOpen,
+            "unknown command" => ErrorStatus::UnknownCommand,
             "unknown error" => ErrorStatus::UnknownError,
-            "unknown command" => ErrorStatus::UnknownPath,
             "unsupported operation" => ErrorStatus::UnsupportedOperation,
-            _ => ErrorStatus::UnknownError
+            _ => ErrorStatus::UnknownError,
         }
     }
 }
