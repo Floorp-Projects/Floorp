@@ -2,6 +2,41 @@
 
 All notable changes to this program is documented in this file.
 
+## 0.16.0 (2017-04-10)
+
+### Added
+- Support for WebDriver-conforming [New Session](https://w3c.github.io/webdriver/webdriver-spec.html#dfn-new-session) negotiation, with `desiredCapabilities`/`requiredCapabilities` negotiation as fallback
+- Added two new endpoints:
+  - GET `/session/{session id}/window/rect` for [Get Window Rect](https://w3c.github.io/webdriver/webdriver-spec.html#get-window-rect)
+  - POST `/session/{session id}/window/rect` for [Set Window Rect](https://w3c.github.io/webdriver/webdriver-spec.html#set-window-rect)
+- Align errors with the [WebDriver errors](https://w3c.github.io/webdriver/webdriver-spec.html#handling-errors):
+  - Introduces new errors [`ElementClickIntercepted`](https://docs.rs/webdriver/0.25.0/webdriver/error/enum.ErrorStatus.html#variant.ElementClickIntercepted), [`ElementNotInteractable`](https://docs.rs/webdriver/0.25.0/webdriver/error/enum.ErrorStatus.html#variant.ElementNotInteractable), [`InvalidCoordinates`](https://docs.rs/webdriver/0.25.0/webdriver/error/enum.ErrorStatus.html#variant.InvalidCoordinates), [`NoSuchCookie`](https://docs.rs/webdriver/0.25.0/webdriver/error/enum.ErrorStatus.html#variant.NoSuchCookie), [`UnableToCaptureScreen`](https://docs.rs/webdriver/0.25.0/webdriver/error/enum.ErrorStatus.html#variant.UnableToCaptureScreen), and [`UnknownCommand`](https://docs.rs/webdriver/0.25.0/webdriver/error/enum.ErrorStatus.html#variant.UnknownCommand)
+  - Removes `ElementNotVisible` and `InvalidElementCoordinates` errors
+
+### Removed
+- Removed following list of unused endpoints:
+  - GET `/session/{session id}/alert_text`
+  - POST `/session/{session id}/alert_text`
+  - POST `/session/{session id}/accept_alert`
+  - POST `/session/{session id}/dismiss_alert`
+  - GET `/session/{session id}/window_handle` 
+  - DELETE `/session/{session id}/window_handle`
+  - POST `/session/{session id}/execute_async`
+  - POST `/session/{session id}/execute`
+
+### Changed
+- [`SendKeysParameters`](https://docs.rs/webdriver/0.25.0/webdriver/command/struct.SendKeysParameters.html), which is used for the [Element Send Keys](https://w3c.github.io/webdriver/webdriver-spec.html#element-send-keys) and [Send Alert Text](https://w3c.github.io/webdriver/webdriver-spec.html#send-alert-text) commands, has been updated to take a string `text` field
+- [`CookieResponse`](https://docs.rs/webdriver/0.25.0/webdriver/response/struct.CookieResponse.html) and [`CloseWindowResponse`](https://docs.rs/webdriver/0.25.0/webdriver/response/struct.CloseWindowResponse.html) fixed to be properly wrapped in a `value` field, like other responses
+- Allow negative numbers for `x` and `y` fields in `pointerMove` action
+- Disable Flash and the plugin container in Firefox by default, which should help mitigate the “Plugin Container for Firefox has stopped wroking” problems [many users were reporting](https://github.com/mozilla/geckodriver/issues/225) when deleting a session
+- Preferences passed in a profile now take precedence over set of default preferences defined by geckodriver (fixed by [@DrMarcII](https://github.com/DrMarcII))
+  - The exceptions are the `marionette.port` and `marionette.log.level` preferences and their fallbacks, which are set unconditionally and cannot be overriden
+- Remove default preference that disables unsafe CPOW checks
+- WebDriver library updated to 0.25.0
+
+### Fixed
+- Fix for the “corrupt deflate stream” exception that sometimes occured when trying to write an empty profile by [@kirhgoph](https://github.com/kirhgoph)
+
 ## 0.15.0 (2017-03-08)
 
 ### Added
