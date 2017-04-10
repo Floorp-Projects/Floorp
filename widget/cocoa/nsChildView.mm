@@ -21,7 +21,6 @@
 #include "nsArrayUtils.h"
 #include "nsObjCExceptions.h"
 #include "nsCOMPtr.h"
-#include "nsThreadUtils.h"
 #include "nsToolkit.h"
 #include "nsCRT.h"
 
@@ -6607,7 +6606,7 @@ HandleEvent(CGEventTapProxy aProxy, CGEventType aType,
 {
   char aLocal;
   profiler_register_thread("APZC Event Thread", &aLocal);
-  NS_SetCurrentThreadName("APZC Event Thread");
+  PR_SetCurrentThreadName("APZC Event Thread");
 
   mThread = [NSThread currentThread];
   ProcessSerialNumber currentProcess;
