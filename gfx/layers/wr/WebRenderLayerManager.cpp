@@ -61,17 +61,12 @@ WebRenderLayer::RelativeToTransformedVisible(Rect aRect)
 }
 
 Rect
-WebRenderLayer::ParentStackingContextBounds(size_t aScrollMetadataIndex)
+WebRenderLayer::ParentStackingContextBounds()
 {
   // Walk up to find the parent stacking context. This will be created either
   // by the nearest scrollable metrics, or by the parent layer which must be a
   // ContainerLayer.
   Layer* layer = GetLayer();
-  for (size_t i = aScrollMetadataIndex + 1; i < layer->GetScrollMetadataCount(); i++) {
-    if (layer->GetFrameMetrics(i).IsScrollable()) {
-      return layer->GetFrameMetrics(i).GetCompositionBounds().ToUnknownRect();
-    }
-  }
   if (layer->GetParent()) {
     return IntRectToRect(layer->GetParent()->GetVisibleRegion().GetBounds().ToUnknownRect());
   }
@@ -81,7 +76,7 @@ WebRenderLayer::ParentStackingContextBounds(size_t aScrollMetadataIndex)
 Rect
 WebRenderLayer::RelativeToParent(Rect aRect)
 {
-  Rect parentBounds = ParentStackingContextBounds(-1);
+  Rect parentBounds = ParentStackingContextBounds();
   aRect.MoveBy(-parentBounds.x, -parentBounds.y);
   return aRect;
 }
@@ -89,7 +84,7 @@ WebRenderLayer::RelativeToParent(Rect aRect)
 Point
 WebRenderLayer::GetOffsetToParent()
 {
-  Rect parentBounds = ParentStackingContextBounds(-1);
+  Rect parentBounds = ParentStackingContextBounds();
   return parentBounds.TopLeft();
 }
 
