@@ -494,7 +494,7 @@ class ProtectedReallocPolicy
         return newAddr;
     }
 
-    void crashWithInfo(const uint8_t* buffer, size_t bytes, bool afterRealloc) {
+    void crashWithInfo(const uint8_t* buffer, size_t bytes, const char* type) {
         size_t start = 0;
         while (start < bytes) {
             if (MOZ_LIKELY(buffer[start] != PoisonPattern)) {
@@ -507,8 +507,8 @@ class ProtectedReallocPolicy
             if (size >= 16) {
                 MOZ_CRASH_UNSAFE_PRINTF("maybe_pod_realloc: %s buffer (old size = %" PRIu64
                                         ") contains %" PRIu64 " bytes of poison starting from"
-                                        " offset %" PRIu64 "!", afterRealloc ? "new" : "old",
-                                        uint64_t(bytes), uint64_t(size), uint64_t(start));
+                                        " offset %" PRIu64 "!", type, uint64_t(bytes),
+                                        uint64_t(size), uint64_t(start));
             }
             start = limit;
         }
@@ -572,7 +572,7 @@ class ProtectedReallocPolicy
         for (size_t j, i = 0; i + 16 <= bytes; i += 1024) {
             for (j = 0; j < 16 && oldAddrBytes[i + j] == PoisonPattern; ++j);
             if (MOZ_UNLIKELY(j == 16))
-                crashWithInfo(oldAddrBytes, bytes, false);
+                crashWithInfo(oldAddrBytes, bytes, "old");
         }
 
         T* tmpAddr = js_pod_malloc<T>(newSize);
@@ -580,6 +580,16 @@ class ProtectedReallocPolicy
             return reallocUpdate<T>(oldAddr, oldSize, newSize);
 
         memcpy(tmpAddr, oldAddr, bytes);
+
+        const uint8_t* tmpAddrBytes = reinterpret_cast<const uint8_t*>(tmpAddr);
+        for (size_t j, i = 0; i + 16 <= bytes; i += 1024) {
+            for (j = 0; j < 16 && tmpAddrBytes[i + j] == PoisonPattern; ++j);
+            if (MOZ_UNLIKELY(j == 16))
+                crashWithInfo(tmpAddrBytes, bytes, "tmp");
+        }
+
+        if (!mozilla::PodEqual(oldAddrBytes, tmpAddrBytes, bytes))
+            MOZ_CRASH("maybe_pod_realloc: tmp buffer doesn't match old buffer!");
 
         T* newAddr = js_pod_realloc<T>(oldAddr, oldSize, newSize);
         if (MOZ_UNLIKELY(!newAddr)) {
@@ -591,10 +601,9 @@ class ProtectedReallocPolicy
         for (size_t j, i = 0; i + 16 <= bytes; i += 1024) {
             for (j = 0; j < 16 && newAddrBytes[i + j] == PoisonPattern; ++j);
             if (MOZ_UNLIKELY(j == 16))
-                crashWithInfo(newAddrBytes, bytes, true);
+                crashWithInfo(newAddrBytes, bytes, "new");
         }
 
-        const uint8_t* tmpAddrBytes = reinterpret_cast<const uint8_t*>(tmpAddr);
         if (!mozilla::PodEqual(tmpAddrBytes, newAddrBytes, bytes)) {
 #ifdef MOZ_MEMORY
             MOZ_CRASH_UNSAFE_PRINTF("maybe_pod_realloc: buffers don't match "
