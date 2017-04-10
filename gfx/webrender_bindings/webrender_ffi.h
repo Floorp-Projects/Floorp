@@ -128,7 +128,7 @@ enum class WrImageRendering: uint32_t
   Sentinel /* this must be last, for IPC serialization purposes */
 };
 
-enum class WrExternalImageIdType: uint32_t
+enum class WrExternalImageType: uint32_t
 {
   NativeTexture, // Currently, we only support gl texture handle.
   RawData,
@@ -180,7 +180,7 @@ enum class WrRepeatMode : uint32_t
 // Typedefs for struct fields and function signatures below.
 // -----
 
-typedef uint64_t WrImageIdType;
+typedef uint64_t WrExternalImageId;
 
 // -----
 // Structs used in C++ code with corresponding types in Rust code
@@ -404,14 +404,9 @@ struct WrClipRegion
   bool has_image_mask;
 };
 
-struct WrExternalImageId
-{
-  WrImageIdType id;
-};
-
 struct WrExternalImage
 {
-  WrExternalImageIdType type;
+  WrExternalImageType type;
 
   // external texture handle
   uint32_t handle;

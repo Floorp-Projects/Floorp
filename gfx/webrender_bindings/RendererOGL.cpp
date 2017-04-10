@@ -19,7 +19,7 @@ namespace wr {
 WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId)
 {
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
-  RenderTextureHost* texture = renderer->GetRenderTexture(aId.id);
+  RenderTextureHost* texture = renderer->GetRenderTexture(aId);
 
   if (texture->AsBufferTextureHost()) {
     RenderBufferTextureHost* bufferTexture = texture->AsBufferTextureHost();
@@ -45,7 +45,7 @@ WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId)
 void UnlockExternalImage(void* aObj, WrExternalImageId aId)
 {
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
-  RenderTextureHost* texture = renderer->GetRenderTexture(aId.id);
+  RenderTextureHost* texture = renderer->GetRenderTexture(aId);
   MOZ_ASSERT(texture);
   texture->Unlock();
 }
