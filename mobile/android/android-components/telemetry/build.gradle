@@ -1,5 +1,8 @@
 apply plugin: 'com.android.library'
 
+apply plugin: 'jacoco'
+apply plugin: 'jacoco-android'
+
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
@@ -14,9 +17,24 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            testCoverageEnabled true
         }
     }
+    testOptions {
+        unitTests.all {
+            jacoco {
+                includeNoLocationClasses = true
+            }
+        }
+    }
+}
+
+jacocoAndroidUnitTestReport {
+    csv.enabled false
+    html.enabled true
+    xml.enabled true
 }
 
 dependencies {
