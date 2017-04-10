@@ -69,6 +69,13 @@ ServoSpecifiedValues::SetPixelValue(nsCSSPropertyID aId, float aValue)
 }
 
 void
+ServoSpecifiedValues::SetLengthValue(nsCSSPropertyID aId, nsCSSValue aValue)
+{
+  MOZ_ASSERT(aValue.IsLengthUnit());
+  Servo_DeclarationBlock_SetLengthValue(mDecl, aId, aValue.GetFloatValue(), aValue.GetUnit());
+}
+
+void
 ServoSpecifiedValues::SetNumberValue(nsCSSPropertyID aId, float aValue)
 {
   Servo_DeclarationBlock_SetNumberValue(mDecl, aId, aValue);

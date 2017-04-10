@@ -488,15 +488,8 @@ nsMathMLElement::ParseNumericValue(const nsString& aString,
 
 void
 nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
-                                         GenericSpecifiedValues* aGenericData)
+                                         GenericSpecifiedValues* aData)
 {
-  if (aGenericData->IsServo()) {
-    // FIXME (bug 1339711) handle MathML properties in Stylo
-    NS_WARNING("stylo: cannot handle MathML presentation attributes");
-    return;
-  }
-
-  nsRuleData* aData = aGenericData->AsGecko();
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Font)) {
     // scriptsizemultiplier
     //
@@ -539,16 +532,19 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     // Unitless and percent values give a multiple of the default value.
     //
     value = aAttributes->GetAttr(nsGkAtoms::scriptminsize_);
-    nsCSSValue* scriptMinSize = aData->ValueForScriptMinSize();
     if (value && value->Type() == nsAttrValue::eString &&
-        scriptMinSize->GetUnit() == eCSSUnit_Null) {
-      ParseNumericValue(value->GetStringValue(), *scriptMinSize,
+        !aData->PropertyIsSet(eCSSProperty__moz_script_min_size)) {
+      nsCSSValue scriptMinSize;
+      ParseNumericValue(value->GetStringValue(), scriptMinSize,
                         PARSE_ALLOW_UNITLESS | CONVERT_UNITLESS_TO_PERCENT,
                         aData->mPresContext->Document());
 
-      if (scriptMinSize->GetUnit() == eCSSUnit_Percent) {
-        scriptMinSize->SetFloatValue(8.0 * scriptMinSize->GetPercentValue(),
+      if (scriptMinSize.GetUnit() == eCSSUnit_Percent) {
+        scriptMinSize.SetFloatValue(8.0 * scriptMinSize.GetPercentValue(),
                                      eCSSUnit_Point);
+      }
+      if (scriptMinSize.GetUnit() != eCSSUnit_Null) {
+        aData->SetLengthValue(eCSSProperty__moz_script_min_size, scriptMinSize);
       }
     }
 
@@ -622,11 +618,11 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
                        aData->mPresContext->Document());
       }
     }
-    nsCSSValue* fontSize = aData->ValueForFontSize();
     if (value && value->Type() == nsAttrValue::eString &&
-        fontSize->GetUnit() == eCSSUnit_Null) {
+        !aData->PropertyIsSet(eCSSProperty_font_size)) {
       nsAutoString str(value->GetStringValue());
-      if (!ParseNumericValue(str, *fontSize, PARSE_SUPPRESS_WARNINGS |
+      nsCSSValue fontSize;
+      if (!ParseNumericValue(str, fontSize, PARSE_SUPPRESS_WARNINGS |
                              PARSE_ALLOW_UNITLESS | CONVERT_UNITLESS_TO_PERCENT,
                              nullptr)
           && parseSizeKeywords) {
@@ -638,10 +634,15 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
         str.CompressWhitespace();
         for (uint32_t i = 0; i < ArrayLength(sizes); ++i) {
           if (str.EqualsASCII(sizes[i])) {
-            fontSize->SetIntValue(values[i], eCSSUnit_Enumerated);
+            aData->SetKeywordValue(eCSSProperty_font_size, values[i]);
             break;
           }
         }
+      } else if (fontSize.GetUnit() == eCSSUnit_Percent) {
+        aData->SetPercentValue(eCSSProperty_font_size,
+                               fontSize.GetPercentValue());
+      } else if (fontSize.GetUnit() != eCSSUnit_Null) {
+        aData->SetLengthValue(eCSSProperty_font_size, fontSize);
       }
     }
 
@@ -849,13 +850,19 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     // values: "auto" | length
     // default: auto
     //
-    nsCSSValue* width = aData->ValueForWidth();
-    if (width->GetUnit() == eCSSUnit_Null) {
+    if (!aData->PropertyIsSet(eCSSProperty_width)) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
+      nsCSSValue width;
       // This does not handle auto and unitless values
       if (value && value->Type() == nsAttrValue::eString) {
-        ParseNumericValue(value->GetStringValue(), *width, 0,
+        ParseNumericValue(value->GetStringValue(), width, 0,
                           aData->mPresContext->Document());
+        if (width.GetUnit() == eCSSUnit_Percent) {
+          aData->SetPercentValue(eCSSProperty_width,
+                                 width.GetPercentValue());
+        } else if (width.GetUnit() != eCSSUnit_Null) {
+          aData->SetLengthValue(eCSSProperty_width, width);
+        }
       }
     }
   }
