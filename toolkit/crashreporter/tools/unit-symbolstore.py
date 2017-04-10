@@ -106,7 +106,6 @@ class TestSizeOrder(HelperMixin, unittest.TestCase):
         d.ShouldProcess = lambda f: True
         d.ProcessFiles = mock_process_file
         d.Process(self.test_dir)
-        d.Finish(stop_pool=False)
         self.assertEqual(processed, ['b/c/two', 'c/three', 'a/one'])
 
 
@@ -126,7 +125,6 @@ class TestExclude(HelperMixin, unittest.TestCase):
                                                   exclude=["*foo*"])
         d.ProcessFiles = mock_process_file
         d.Process(self.test_dir)
-        d.Finish(stop_pool=False)
         processed.sort()
         expected = add_extension(["bar", "abc/xyz", "def/asdf"])
         expected.sort()
@@ -148,7 +146,6 @@ class TestExclude(HelperMixin, unittest.TestCase):
                                                   exclude=add_extension(["foo"]))
         d.ProcessFiles = mock_process_file
         d.Process(self.test_dir)
-        d.Finish(stop_pool=False)
         processed.sort()
         expected = add_extension(["bar", "abc/bar", "def/bar"])
         expected.sort()
@@ -211,7 +208,6 @@ class TestCopyDebug(HelperMixin, unittest.TestCase):
                                                   archs="abc xyz")
         d.CopyDebug = mock_copy_debug
         d.Process(self.test_dir)
-        d.Finish(stop_pool=False)
         self.assertEqual(1, len(copied))
 
     @patch.dict('buildconfig.substs', {'MAKECAB': 'makecab'})
@@ -235,7 +231,6 @@ class TestCopyDebug(HelperMixin, unittest.TestCase):
                                      copy_debug=True)
         d.FixFilenameCase = lambda f: f
         d.Process(self.test_dir)
-        d.Finish(stop_pool=False)
         self.assertTrue(os.path.isfile(os.path.join(self.symbol_dir, code_file, code_id, code_file[:-1] + '_')))
 
 class TestGetVCSFilename(HelperMixin, unittest.TestCase):
@@ -383,7 +378,6 @@ if target_platform() == 'WINNT':
             # stub out CopyDebug
             d.CopyDebug = lambda *args: True
             d.Process(self.test_dir)
-            d.Finish(stop_pool=False)
             self.assertNotEqual(srcsrv_stream, None)
             hgserver = [x.rstrip() for x in srcsrv_stream.splitlines() if x.startswith("HGSERVER=")]
             self.assertEqual(len(hgserver), 1)
@@ -503,7 +497,6 @@ class TestFileMapping(HelperMixin, unittest.TestCase):
         f = os.path.join(self.objdir, 'somefile')
         open(f, 'wb').write('blah')
         d.Process(f)
-        d.Finish(stop_pool=False)
         expected_output = ''.join(mk_output(expected_files))
         symbol_file = os.path.join(self.symboldir,
                                    file_id[1], file_id[0], file_id[1] + '.sym')
@@ -581,9 +574,4 @@ class TestFunctional(HelperMixin, unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # use ThreadPoolExecutor to use threading instead of processes so
-    # that our mocking/module-patching works.
-    symbolstore.Dumper.GlobalInit(concurrent.futures.ThreadPoolExecutor)
-
     mozunit.main()
-
