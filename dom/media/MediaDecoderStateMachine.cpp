@@ -944,12 +944,6 @@ public:
   {
     mSeekJob = Move(aSeekJob);
 
-    // Dispatch a mozvideoonlyseekbegin event to indicate UI for corresponding
-    // changes.
-    if (mSeekJob.mTarget->IsVideoOnly()) {
-      mMaster->mOnPlaybackEvent.Notify(MediaEventType::VideoOnlySeekBegin);
-    }
-
     // Always switch off the blank decoder otherwise we might become visible
     // in the middle of seeking and won't have a valid video frame to show
     // when seek is done.
@@ -957,6 +951,12 @@ public:
       mMaster->mVideoDecodeSuspended = false;
       mMaster->mOnPlaybackEvent.Notify(MediaEventType::ExitVideoSuspend);
       Reader()->SetVideoBlankDecode(false);
+    }
+
+    // Dispatch a mozvideoonlyseekbegin event to indicate UI for corresponding
+    // changes.
+    if (mSeekJob.mTarget->IsVideoOnly()) {
+      mMaster->mOnPlaybackEvent.Notify(MediaEventType::VideoOnlySeekBegin);
     }
 
     // Don't stop playback for a video-only seek since audio is playing.
