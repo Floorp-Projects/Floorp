@@ -61,8 +61,6 @@ to mochitest command.
   * Property parsing and computation:
     * test_property_syntax_errors.html `animation` [404]
     * test_value_storage.html `animation` [91]
-* test_any_dynamic.html: slow selector handling [3]
-* test_bug635286.html: :-moz-any pseudo-class bugs [3]
 * CSSOM support:
   * @import
     * test_bug221428.html [1]
