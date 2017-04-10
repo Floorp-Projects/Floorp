@@ -17,10 +17,6 @@
 namespace mozilla {
 namespace gfx {
 
-/**
- * Calculates the w = 0 intersection point for the edge defined by
- * |aFirst| and |aSecond|.
- */
 template<class Units>
 Point4DTyped<Units>
 CalculateEdgeIntersect(const Point4DTyped<Units>& aFirst,
@@ -63,10 +59,6 @@ ClipPointsAtInfinity(const nsTArray<Point4DTyped<Units>>& aPoints)
   return outPoints;
 }
 
-/**
- * Calculates the distances between the points in |aPoints| and the plane
- * defined by |aPlaneNormal| and |aPlanePoint|.
- */
 template<class Units>
 nsTArray<float>
 CalculatePointPlaneDistances(const nsTArray<Point4DTyped<Units>>& aPoints,
@@ -154,9 +146,7 @@ ClipPointsWithPlane(const nsTArray<Point4DTyped<Units>>& aPoints,
   }
 }
 
-/**
- * PolygonTyped stores the points of a convex planar polygon.
- */
+// PolygonTyped stores the points of a convex planar polygon.
 template<class Units>
 class PolygonTyped {
   typedef Point3DTyped<Units> Point3DType;
@@ -182,9 +172,6 @@ public:
 #endif
   }
 
-  /**
-   * Returns the smallest 2D rectangle that can fully cover the polygon.
-   */
   RectTyped<Units> BoundingBox() const
   {
     if (mPoints.IsEmpty()) {
@@ -206,9 +193,7 @@ public:
     return RectTyped<Units>(minX, minY, maxX - minX, maxY - minY);
   }
 
-  /**
-   * Clips the polygon against the given 2D rectangle.
-   */
+  // Clips the polygon against the given 2D rectangle.
   PolygonTyped<Units> ClipPolygon(const RectTyped<Units>& aRect) const
   {
     if (aRect.IsEmpty()) {
@@ -218,9 +203,7 @@ public:
     return ClipPolygon(FromRect(aRect));
   }
 
-  /**
-   * Clips this polygon against |aPolygon| in 2D and returns a new polygon.
-   */
+  // Clips this polygon against the given polygon in 2D.
   PolygonTyped<Units> ClipPolygon(const PolygonTyped<Units>& aPolygon) const
   {
     const nsTArray<Point4DType>& points = aPolygon.GetPoints();
@@ -268,9 +251,6 @@ public:
     return PolygonTyped<Units>(Move(clippedPoints), mNormal);
   }
 
-  /**
-   * Returns a new polygon containing the bounds of the given 2D rectangle.
-   */
   static PolygonTyped<Units> FromRect(const RectTyped<Units>& aRect)
   {
     nsTArray<Point4DType> points {
@@ -299,9 +279,6 @@ public:
     return mPoints.Length() < 3;
   }
 
-  /**
-   * Returns a list of triangles covering the polygon.
-   */
   nsTArray<TriangleTyped<Units>> ToTriangles() const
   {
     nsTArray<TriangleTyped<Units>> triangles;
@@ -310,11 +287,10 @@ public:
       return triangles;
     }
 
-    // This fan triangulation method only works for convex polygons.
     for (size_t i = 1; i < mPoints.Length() - 1; ++i) {
       TriangleTyped<Units> triangle(Point(mPoints[0].x, mPoints[0].y),
                                     Point(mPoints[i].x, mPoints[i].y),
-                                    Point(mPoints[i + 1].x, mPoints[i + 1].y));
+                                    Point(mPoints[i+1].x, mPoints[i+1].y));
       triangles.AppendElement(Move(triangle));
     }
 
