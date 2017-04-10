@@ -49,10 +49,9 @@ NullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom)
 NullPrincipal::CreateWithInheritedAttributes(nsIDocShell* aDocShell, bool aIsFirstParty)
 {
   OriginAttributes attrs = nsDocShell::Cast(aDocShell)->GetOriginAttributes();
-  attrs.SetFirstPartyDomain(aIsFirstParty, NS_LITERAL_CSTRING(NULL_PRINCIPAL_FIRST_PARTY_DOMAIN));
 
   RefPtr<NullPrincipal> nullPrin = new NullPrincipal();
-  nsresult rv = nullPrin->Init(attrs);
+  nsresult rv = nullPrin->Init(attrs, aIsFirstParty);
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   return nullPrin.forget();
 }
@@ -89,6 +88,33 @@ NullPrincipal::Init(const OriginAttributes& aOriginAttributes, nsIURI* aURI)
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   FinishInit(originNoSuffix, aOriginAttributes);
+
+  return NS_OK;
+}
+
+nsresult
+NullPrincipal::Init(const OriginAttributes& aOriginAttributes, bool aIsFirstParty)
+{
+  mURI = NullPrincipalURI::Create();
+  NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_AVAILABLE);
+
+  nsAutoCString originNoSuffix;
+  DebugOnly<nsresult> rv = mURI->GetSpec(originNoSuffix);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  nsAutoCString path;
+  rv = mURI->GetPath(path);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  OriginAttributes attrs(aOriginAttributes);
+  if (aIsFirstParty) {
+    // remove the '{}' characters from both ends.
+    path.Mid(path, 1, path.Length() - 2);
+    path.AppendLiteral(".mozilla");
+    attrs.SetFirstPartyDomain(true, path);
+  }
+
+  FinishInit(originNoSuffix, attrs);
 
   return NS_OK;
 }
