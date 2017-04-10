@@ -19,6 +19,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.event.TelemetryEvent;
+import org.mozilla.telemetry.measurement.DefaultSearchMeasurement;
+import org.mozilla.telemetry.measurement.SearchesMeasurement;
 import org.mozilla.telemetry.net.HttpURLConnectionTelemetryClient;
 import org.mozilla.telemetry.net.TelemetryClient;
 import org.mozilla.telemetry.ping.TelemetryCorePingBuilder;
@@ -96,7 +98,7 @@ public class TelemetryTest {
 
         assertEquals(1, storage.countStoredPings(TelemetryCorePingBuilder.TYPE));
 
-        assertJobIsScheduled(TelemetryCorePingBuilder.TYPE);
+        assertJobIsScheduled();
         executePendingJob(TelemetryCorePingBuilder.TYPE);
 
         verify(client).uploadPing(eq(configuration), anyString(), anyString());
@@ -173,7 +175,7 @@ public class TelemetryTest {
 
         waitForExecutor(telemetry);
 
-        assertJobIsScheduled(TelemetryEventPingBuilder.TYPE);
+        assertJobIsScheduled();
         executePendingJob(TelemetryEventPingBuilder.TYPE);
 
         verify(client).uploadPing(eq(configuration), anyString(), anyString());
@@ -219,7 +221,70 @@ public class TelemetryTest {
         server.shutdown();
     }
 
-    private void assertJobIsScheduled(String expectedPingType) {
+    @Test
+    public void testCorePingWithSearches() throws Exception {
+        final MockWebServer server = new MockWebServer();
+        server.enqueue(new MockResponse().setBody("OK"));
+
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application)
+                .setServerEndpoint("http://" + server.getHostName() + ":" + server.getPort());
+
+        final TelemetryPingSerializer serializer = new JSONPingSerializer();
+        final FileTelemetryStorage storage = new FileTelemetryStorage(configuration, serializer);
+
+        final TelemetryClient client = spy(new HttpURLConnectionTelemetryClient());
+        final TelemetryScheduler scheduler = new JobSchedulerTelemetryScheduler();
+
+        final Telemetry telemetry = new Telemetry(configuration, storage, client, scheduler)
+                .addPingBuilder(new TelemetryCorePingBuilder(configuration));
+        TelemetryHolder.set(telemetry);
+
+        telemetry.setDefaultSearchProvider(new DefaultSearchMeasurement.DefaultSearchEngineProvider() {
+            @Override
+            public String getDefaultSearchEngineIdentifier() {
+                return "test-default-search";
+            }
+        });
+
+        telemetry.recordSearch(SearchesMeasurement.LOCATION_ACTIONBAR, "google");
+        telemetry.recordSearch(SearchesMeasurement.LOCATION_ACTIONBAR, "yahoo");
+        telemetry.recordSearch(SearchesMeasurement.LOCATION_ACTIONBAR, "yahoo");
+        telemetry.recordSearch(SearchesMeasurement.LOCATION_SUGGESTION, "duckduckgo");
+        telemetry.recordSearch(SearchesMeasurement.LOCATION_ACTIONBAR, "duckduckgo");
+
+        telemetry.queuePing(TelemetryCorePingBuilder.TYPE);
+        waitForExecutor(telemetry);
+
+        telemetry.scheduleUpload();
+        waitForExecutor(telemetry);
+
+        executePendingJob(TelemetryCorePingBuilder.TYPE);
+
+        final RecordedRequest request = server.takeRequest();
+
+        final JSONObject object = new JSONObject(request.getBody().readUtf8());
+
+        assertTrue(object.has("searches"));
+        assertTrue(object.has("defaultSearch"));
+
+        assertEquals("test-default-search", object.getString("defaultSearch"));
+
+        final JSONObject searches = object.getJSONObject("searches");
+
+        assertTrue(searches.has("actionbar.google"));
+        assertTrue(searches.has("actionbar.yahoo"));
+        assertTrue(searches.has("actionbar.duckduckgo"));
+        assertTrue(searches.has("suggestion.duckduckgo"));
+
+        assertEquals(1, searches.getInt("actionbar.google"));
+        assertEquals(2, searches.getInt("actionbar.yahoo"));
+        assertEquals(1, searches.getInt("actionbar.duckduckgo"));
+        assertEquals(1, searches.getInt("actionbar.duckduckgo"));
+
+        server.shutdown();
+    }
+
+    private void assertJobIsScheduled() {
         final Context context = RuntimeEnvironment.application;
         final JobScheduler scheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
 
