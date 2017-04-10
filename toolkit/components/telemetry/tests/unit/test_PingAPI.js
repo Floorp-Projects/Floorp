@@ -12,7 +12,6 @@ Cu.import("resource://gre/modules/TelemetryArchive.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
 XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, "datareporting", "archived");
@@ -69,7 +68,7 @@ add_task(function* test_setup() {
   do_get_profile(true);
   // Make sure we don't generate unexpected pings due to pref changes.
   yield setEmptyPrefWatchlist();
-  Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
+  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
 });
 
 add_task(function* test_archivedPings() {
