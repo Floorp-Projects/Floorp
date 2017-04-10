@@ -30,7 +30,7 @@ class WebRenderLayer
 public:
   virtual Layer* GetLayer() = 0;
   virtual void RenderLayer(wr::DisplayListBuilder& aBuilder) = 0;
-  virtual Maybe<WrImageMask> RenderMaskLayer()
+  virtual Maybe<WrImageMask> RenderMaskLayer(const gfx::Matrix4x4& aTransform)
   {
     MOZ_ASSERT(false);
     return Nothing();
@@ -57,6 +57,7 @@ protected:
   gfx::Rect GetWrBoundsRect();
   gfx::Rect GetWrRelBounds();
   gfx::Rect GetWrClipRect(gfx::Rect& aRect);
+  gfx::Matrix4x4 GetWrBoundTransform();
   void DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect);
   Maybe<WrImageMask> BuildWrMaskLayer();
 };
