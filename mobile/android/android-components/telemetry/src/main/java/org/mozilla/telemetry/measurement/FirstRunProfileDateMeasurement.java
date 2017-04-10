@@ -30,7 +30,7 @@ public class FirstRunProfileDateMeasurement extends TelemetryMeasurement {
         ensureValueExists();
     }
 
-    private void ensureValueExists() {
+    @VisibleForTesting void ensureValueExists() {
         final SharedPreferences preferences = configuration.getSharedPreferences();
 
         if (preferences.contains(PREFERENCE_KEY)) {
