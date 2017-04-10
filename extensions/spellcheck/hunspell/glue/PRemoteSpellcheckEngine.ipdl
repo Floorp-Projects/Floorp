@@ -17,6 +17,11 @@ parent:
   sync CheckAndSuggest(nsString aWord) returns (bool aIsMisspelled, nsString[] aSuggestions);
 
   sync SetDictionary(nsString aDictionary) returns (bool success);
+
+  async SetDictionaryFromList(nsString[] aList, intptr_t aPromiseId);
+
+child:
+  async NotifyOfCurrentDictionary(nsString aDictionary, intptr_t aPromiseId);
 };
 
 } // namespace mozilla
