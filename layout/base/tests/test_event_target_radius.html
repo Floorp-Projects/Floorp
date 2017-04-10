@@ -17,6 +17,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
 <div id="content">
   <div id="ruler" style="position:absolute; left:0; top:0; width:1mozmm; height:0;"></div>
 
+  <!-- XXX Though B2G isn't supported anymore, we probably want to keep this
+       test's B2G special-cases around, and just make them apply to Android.
+       (We may need to do so, for this test to be runnable on Android...?)
+       See bug 1355206 for more.
+  -->
   <!-- the iframe holding this test is only 300px tall on B2G, so we need to
        make the t target shorter than normal to test the bottom edge fluffing
   -->
