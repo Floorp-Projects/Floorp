@@ -25,7 +25,7 @@ function run_test() {
  * Called after the call to setupUpdaterTest finishes.
  */
 function setupUpdaterTestFinished() {
-  stageUpdate();
+  stageUpdate(false);
 }
 
 /**
