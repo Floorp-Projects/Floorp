@@ -31,9 +31,9 @@ var gSubDialog = {
   },
 
   updateTitle(aEvent) {
-    if (aEvent.target != gSubDialog._frame.contentDocument)
+    if (aEvent.target != this._frame.contentDocument)
       return;
-    document.getElementById("dialogTitle").textContent = gSubDialog._frame.contentDocument.title;
+    document.getElementById("dialogTitle").textContent = this._frame.contentDocument.title;
   },
 
   injectXMLStylesheet(aStylesheetURL) {
@@ -185,32 +185,32 @@ var gSubDialog = {
     this._frame.contentWindow.addEventListener("dialogclosing", this);
 
     let oldResizeBy = this._frame.contentWindow.resizeBy;
-    this._frame.contentWindow.resizeBy = function(resizeByWidth, resizeByHeight) {
+    this._frame.contentWindow.resizeBy = (resizeByWidth, resizeByHeight) => {
       // Only handle resizeByHeight currently.
-      let frameHeight = gSubDialog._frame.clientHeight;
-      let boxMinHeight = parseFloat(getComputedStyle(gSubDialog._box).minHeight, 10);
+      let frameHeight = this._frame.clientHeight;
+      let boxMinHeight = parseFloat(getComputedStyle(this._box).minHeight, 10);
 
-      gSubDialog._frame.style.height = (frameHeight + resizeByHeight) + "px";
-      gSubDialog._box.style.minHeight = (boxMinHeight + resizeByHeight) + "px";
+      this._frame.style.height = (frameHeight + resizeByHeight) + "px";
+      this._box.style.minHeight = (boxMinHeight + resizeByHeight) + "px";
 
-      oldResizeBy.call(gSubDialog._frame.contentWindow, resizeByWidth, resizeByHeight);
+      oldResizeBy.call(this._frame.contentWindow, resizeByWidth, resizeByHeight);
     };
 
     // Make window.close calls work like dialog closing.
     let oldClose = this._frame.contentWindow.close;
-    this._frame.contentWindow.close = function() {
-      var closingEvent = gSubDialog._closingEvent;
+    this._frame.contentWindow.close = () => {
+      var closingEvent = this._closingEvent;
       if (!closingEvent) {
         closingEvent = new CustomEvent("dialogclosing", {
           bubbles: true,
           detail: { button: null },
         });
 
-        gSubDialog._frame.contentWindow.dispatchEvent(closingEvent);
+        this._frame.contentWindow.dispatchEvent(closingEvent);
       }
 
-      gSubDialog.close(closingEvent);
-      oldClose.call(gSubDialog._frame.contentWindow);
+      this.close(closingEvent);
+      oldClose.call(this._frame.contentWindow);
     };
 
     // XXX: Hack to make focus during the dialog's load functions work. Make the element visible
@@ -305,7 +305,7 @@ var gSubDialog = {
   },
 
   _onResize(mutations) {
-    let frame = gSubDialog._frame;
+    let frame = this._frame;
     // The width and height styles are needed for the initial
     // layout of the frame, but afterward they need to be removed
     // or their presence will restrict the contents of the <browser>
@@ -348,13 +348,13 @@ var gSubDialog = {
 
     let fm = Services.focus;
 
-    function isLastFocusableElement(el) {
+    let isLastFocusableElement = el => {
       // XXXgijs unfortunately there is no way to get the last focusable element without asking
       // the focus manager to move focus to it.
-      let rv = el == fm.moveFocus(gSubDialog._frame.contentWindow, null, fm.MOVEFOCUS_LAST, 0);
+      let rv = el == fm.moveFocus(this._frame.contentWindow, null, fm.MOVEFOCUS_LAST, 0);
       fm.setFocus(el, 0);
       return rv;
-    }
+    };
 
     let forward = !aEvent.shiftKey;
     // check if focus is leaving the frame (incl. the close button):
