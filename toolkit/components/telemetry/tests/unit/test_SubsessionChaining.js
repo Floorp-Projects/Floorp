@@ -9,12 +9,12 @@ Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
 const MS_IN_ONE_HOUR  = 60 * 60 * 1000;
 const MS_IN_ONE_DAY   = 24 * MS_IN_ONE_HOUR;
 
 const PREF_BRANCH = "toolkit.telemetry.";
+const PREF_ARCHIVE_ENABLED = PREF_BRANCH + "archive.enabled";
 
 const REASON_ABORTED_SESSION = "aborted-session";
 const REASON_DAILY = "daily";
@@ -92,7 +92,7 @@ add_task(function* test_setup() {
   // Make sure we don't generate unexpected pings due to pref changes.
   yield setEmptyPrefWatchlist();
 
-  Preferences.set(TelemetryUtils.Preferences.TelemetryEnabled, true);
+  Preferences.set(PREF_TELEMETRY_ENABLED, true);
 });
 
 add_task(function* test_subsessionsChaining() {
