@@ -116,3 +116,14 @@ ServoSpecifiedValues::SetTextDecorationColorOverride()
 {
   Servo_DeclarationBlock_SetTextDecorationColorOverride(mDecl);
 }
+
+void
+ServoSpecifiedValues::SetBackgroundImage(nsAttrValue& aValue)
+{
+  // FIXME (bug 1310885) this should store resolved images directly on the servo
+  // side.
+  nsAutoString str;
+  aValue.ToString(str);
+  Servo_DeclarationBlock_SetBackgroundImage(mDecl, str,
+        mPresContext->Document()->DefaultStyleAttrURLData());
+}

@@ -104,6 +104,7 @@ public:
 
   void SetFontFamily(const nsString& aValue);
   void SetTextDecorationColorOverride();
+  void SetBackgroundImage(nsAttrValue& aValue);
 
 private:
   RefPtr<RawServoDeclarationBlock> mDecl;

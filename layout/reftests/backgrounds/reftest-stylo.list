@@ -139,16 +139,16 @@ HTTP == root-background-1.html root-background-1.html
 HTTP == root-background-1.html root-background-1.html
 
 fails == really-big-background.html really-big-background.html # Bug 1341690
-fails == body-background.html body-background.html # Bug 1339711
-fails == table-background.html table-background.html # Bug 1339711
-fails == table-background-print.html table-background-print.html
+== body-background.html body-background.html # Bug 1339711
+== table-background.html table-background.html # Bug 1339711
+== table-background-print.html table-background-print.html
 == div-background.html div-background.html
 
 == background-repeat-1-ref.html background-repeat-1-ref.html
 
 == multi-background-clip-content-border.html multi-background-clip-content-border.html
 
-fails HTTP == background-referrer.html background-referrer.html
+HTTP == background-referrer.html background-referrer.html
 
 == attachment-scroll-positioning-1.html attachment-scroll-positioning-1.html
 == attachment-local-positioning-1.html attachment-local-positioning-1.html

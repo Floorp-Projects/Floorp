@@ -170,6 +170,12 @@ GenericSpecifiedValues::SetTextDecorationColorOverride()
   MOZ_STYLO_FORWARD(SetTextDecorationColorOverride, ())
 }
 
+void
+GenericSpecifiedValues::SetBackgroundImage(nsAttrValue& aValue)
+{
+  MOZ_STYLO_FORWARD(SetBackgroundImage, (aValue))
+}
+
 } // namespace mozilla
 
 #endif // mozilla_GenericSpecifiedValuesInlines_h
