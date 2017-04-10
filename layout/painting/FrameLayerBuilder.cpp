@@ -3660,7 +3660,7 @@ ContainerState::NewPaintedLayerData(nsDisplayItem* aItem,
   PaintedLayerData data;
   data.mAnimatedGeometryRoot = aAnimatedGeometryRoot;
   data.mASR = aASR;
-  data.mClipChain = aClipChain,
+  data.mClipChain = aClipChain;
   data.mAnimatedGeometryRootOffset = aTopLeft;
   data.mReferenceFrame = aItem->ReferenceFrame();
   data.mBackfaceHidden = aItem->Frame()->In3DContextAndBackfaceIsHidden();
@@ -3670,7 +3670,7 @@ ContainerState::NewPaintedLayerData(nsDisplayItem* aItem,
   newLayerEntry->mAnimatedGeometryRoot = aAnimatedGeometryRoot;
   newLayerEntry->mASR = aASR;
   newLayerEntry->mScrollMetadataASR = aScrollMetadataASR;
-  newLayerEntry->mClipChain = aClipChain,
+  newLayerEntry->mClipChain = aClipChain;
   // newLayerEntry->mOpaqueRegion is filled in later from
   // paintedLayerData->mOpaqueRegion, if necessary.
 
