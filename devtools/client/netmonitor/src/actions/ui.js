@@ -13,6 +13,7 @@ const {
   TOGGLE_COLUMN,
   WATERFALL_RESIZE,
 } = require("../constants");
+const { NetMonitorController } = require("../netmonitor-controller");
 
 /**
  * Change network details panel.
@@ -33,7 +34,7 @@ function openNetworkDetails(open) {
  */
 function openStatistics(open) {
   if (open) {
-    window.NetMonitorController.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
+    NetMonitorController.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
   }
   return {
     type: OPEN_STATISTICS,

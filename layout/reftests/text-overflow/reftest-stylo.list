@@ -2,7 +2,7 @@
 == ellipsis-font-fallback.html ellipsis-font-fallback.html
 == line-clipping.html line-clipping.html
 == marker-basic.html marker-basic.html
-fails HTTP(..) == marker-string.html marker-string.html
+HTTP(..) == marker-string.html marker-string.html
 fails == bidi-simple.html bidi-simple.html # Bug 1321769?
 fails == bidi-simple-scrolled.html bidi-simple-scrolled.html
 == scroll-rounding.html scroll-rounding.html
@@ -28,10 +28,10 @@ fails HTTP(..) == combobox-zoom.html combobox-zoom.html
 == dynamic-change-1.html dynamic-change-1.html
 
 # The vertical-text pref setting can be removed after bug 1138384 lands
-fails == vertical-decorations-1.html vertical-decorations-1.html # Bug 1341724
-fails == vertical-decorations-2.html vertical-decorations-2.html # Bug 1341724
-fails == vertical-decorations-1.html vertical-decorations-1.html # Bug 1341724
-fails == vertical-decorations-2.html vertical-decorations-2.html # Bug 1341724
+== vertical-decorations-1.html vertical-decorations-1.html
+== vertical-decorations-2.html vertical-decorations-2.html
+== vertical-decorations-1.html vertical-decorations-1.html
+== vertical-decorations-2.html vertical-decorations-2.html
 == vertical-decorations-3.html vertical-decorations-3.html
 == vertical-decorations-4.html vertical-decorations-4.html
 == vertical-decorations-3.html vertical-decorations-3.html
