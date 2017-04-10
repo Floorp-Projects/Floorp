@@ -440,7 +440,7 @@ impl From<ClipRegion> for WrClipRegion {
     }
 }
 
-#[repr(C)]
+#[repr(u32)]
 #[allow(dead_code)]
 enum WrExternalImageType {
     NativeTexture,
