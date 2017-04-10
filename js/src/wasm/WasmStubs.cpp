@@ -871,6 +871,94 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
     return offsets;
 }
 
+struct ABIFunctionArgs
+{
+    ABIFunctionType abiType;
+    size_t len;
+
+    explicit ABIFunctionArgs(ABIFunctionType sig)
+      : abiType(ABIFunctionType(sig >> ArgType_Shift))
+    {
+        len = 0;
+        uint32_t i = uint32_t(abiType);
+        while (i) {
+            i = i >> ArgType_Shift;
+            len++;
+        }
+    }
+
+    size_t length() const { return len; }
+
+    MIRType operator[](size_t i) const {
+        MOZ_ASSERT(i < len);
+        uint32_t abi = uint32_t(abiType);
+        while (i--)
+            abi = abi >> ArgType_Shift;
+        return ToMIRType(ABIArgType(abi));
+    }
+};
+
+CallableOffsets
+wasm::GenerateBuiltinImportExit(MacroAssembler& masm, ABIFunctionType abiType, void* func)
+{
+    masm.setFramePushed(0);
+
+    ABIFunctionArgs args(abiType);
+    uint32_t framePushed = StackDecrementForCall(masm, ABIStackAlignment, args);
+
+    CallableOffsets offsets;
+    GenerateExitPrologue(masm, framePushed, ExitReason::ImportNative, &offsets);
+
+    // Copy out and convert caller arguments, if needed.
+    unsigned offsetToCallerStackArgs = sizeof(Frame) + masm.framePushed();
+    Register scratch = ABINonArgReturnReg0;
+    for (ABIArgIter<ABIFunctionArgs> i(args); !i.done(); i++) {
+        if (i->argInRegister()) {
+#ifdef JS_CODEGEN_ARM
+            // Non hard-fp passes the args values in GPRs.
+            if (!UseHardFpABI() && IsFloatingPointType(i.mirType())) {
+                FloatRegister input = i->fpu();
+                if (i.mirType() == MIRType::Float32) {
+                    masm.ma_vxfer(input, Register::FromCode(input.id()));
+                } else if (i.mirType() == MIRType::Double) {
+                    uint32_t regId = input.singleOverlay().id();
+                    masm.ma_vxfer(input, Register::FromCode(regId), Register::FromCode(regId + 1));
+                }
+            }
+#endif
+            continue;
+        }
+
+        Address src(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
+        Address dst(masm.getStackPointer(), i->offsetFromArgBase());
+        StackCopy(masm, i.mirType(), scratch, src, dst);
+    }
+
+    masm.call(ImmPtr(func, ImmPtr::NoCheckToken()));
+
+#if defined(JS_CODEGEN_X86)
+    // x86 passes the return value on the x87 FP stack.
+    Operand op(esp, 0);
+    MIRType retType = ToMIRType(ABIArgType(abiType & ArgType_Mask));
+    if (retType == MIRType::Float32) {
+        masm.fstp32(op);
+        masm.loadFloat32(op, ReturnFloat32Reg);
+    } else if (retType == MIRType::Double) {
+        masm.fstp(op);
+        masm.loadDouble(op, ReturnDoubleReg);
+    }
+#elif defined(JS_CODEGEN_ARM)
+    // Non hard-fp passes the return values in GPRs.
+    MIRType retType = ToMIRType(ABIArgType(abiType & ArgType_Mask));
+    if (!UseHardFpABI() && IsFloatingPointType(retType))
+        masm.ma_vxfer(r0, r1, d0);
+#endif
+
+    GenerateExitEpilogue(masm, framePushed, ExitReason::ImportNative, &offsets);
+    offsets.end = masm.currentOffset();
+    return offsets;
+}
+
 // Generate a stub that calls into ReportTrap with the right trap reason.
 // This stub is called with ABIStackAlignment by a trap out-of-line path. An
 // exit prologue/epilogue is used so that stack unwinding picks up the

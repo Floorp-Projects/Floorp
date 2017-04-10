@@ -1139,3 +1139,76 @@ DebugFrame::leave(JSContext* cx)
        observing_ = false;
     }
 }
+
+CodeRange::CodeRange(Kind kind, Offsets offsets)
+  : begin_(offsets.begin),
+    ret_(0),
+    end_(offsets.end),
+    funcIndex_(0),
+    funcLineOrBytecode_(0),
+    funcBeginToNormalEntry_(0),
+    kind_(kind)
+{
+    MOZ_ASSERT(begin_ <= end_);
+#ifdef DEBUG
+    switch (kind_) {
+      case Entry:
+      case DebugTrap:
+      case FarJumpIsland:
+      case Inline:
+      case Throw:
+      case Interrupt:
+        break;
+      case Function:
+      case TrapExit:
+      case ImportJitExit:
+      case ImportNativeExit:
+      case ImportInterpExit:
+        MOZ_CRASH("should use more specific constructor");
+    }
+#endif
+}
+
+CodeRange::CodeRange(Kind kind, CallableOffsets offsets)
+  : begin_(offsets.begin),
+    ret_(offsets.ret),
+    end_(offsets.end),
+    funcIndex_(0),
+    funcLineOrBytecode_(0),
+    funcBeginToNormalEntry_(0),
+    kind_(kind)
+{
+    MOZ_ASSERT(begin_ < ret_);
+    MOZ_ASSERT(ret_ < end_);
+#ifdef DEBUG
+    switch (kind_) {
+      case TrapExit:
+      case ImportJitExit:
+      case ImportNativeExit:
+      case ImportInterpExit:
+        break;
+      case Entry:
+      case DebugTrap:
+      case FarJumpIsland:
+      case Inline:
+      case Throw:
+      case Interrupt:
+      case Function:
+        MOZ_CRASH("should use more specific constructor");
+    }
+#endif
+}
+
+CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffsets offsets)
+  : begin_(offsets.begin),
+    ret_(offsets.ret),
+    end_(offsets.end),
+    funcIndex_(funcIndex),
+    funcLineOrBytecode_(funcLineOrBytecode),
+    funcBeginToNormalEntry_(offsets.normalEntry - begin_),
+    kind_(Function)
+{
+    MOZ_ASSERT(begin_ < ret_);
+    MOZ_ASSERT(ret_ < end_);
+    MOZ_ASSERT(offsets.normalEntry - begin_ <= UINT8_MAX);
+}
