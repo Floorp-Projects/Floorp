@@ -186,6 +186,7 @@ WebRenderLayer::DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect)
 WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   : mWidget(aWidget)
   , mLatestTransactionId(0)
+  , mNeedsComposite(false)
   , mTarget(nullptr)
 {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
@@ -313,6 +314,7 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
   WrBridge()->DPEnd(builder, size.ToUnknownSize(), sync, mLatestTransactionId);
 
   MakeSnapshotIfRequired(size);
+  mNeedsComposite = false;
 
   ClearDisplayItemLayers();
 
@@ -483,6 +485,27 @@ void
 WebRenderLayerManager::RemoveDidCompositeObserver(DidCompositeObserver* aObserver)
 {
   mDidCompositeObservers.RemoveElement(aObserver);
+}
+
+void
+WebRenderLayerManager::FlushRendering()
+{
+  CompositorBridgeChild* bridge = GetCompositorBridgeChild();
+  if (bridge) {
+    bridge->SendFlushRendering();
+  }
+}
+
+void
+WebRenderLayerManager::SendInvalidRegion(const nsIntRegion& aRegion)
+{
+  // XXX Webrender does not support invalid region yet.
+}
+
+void
+WebRenderLayerManager::Composite()
+{
+  WrBridge()->SendForceComposite();
 }
 
 void

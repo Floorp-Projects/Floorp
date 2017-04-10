@@ -124,6 +124,18 @@ public:
   virtual void AddDidCompositeObserver(DidCompositeObserver* aObserver) override;
   virtual void RemoveDidCompositeObserver(DidCompositeObserver* aObserver) override;
 
+  virtual void FlushRendering() override;
+
+  virtual void SendInvalidRegion(const nsIntRegion& aRegion) override;
+
+  virtual void Composite() override;
+
+  virtual void SetNeedsComposite(bool aNeedsComposite) override
+  {
+    mNeedsComposite = aNeedsComposite;
+  }
+  virtual bool NeedsComposite() const override { return mNeedsComposite; }
+
   DrawPaintedLayerCallback GetPaintedLayerCallback() const
   { return mPaintedLayerCallback; }
 
@@ -165,6 +177,8 @@ private:
   nsTArray<DidCompositeObserver*> mDidCompositeObservers;
 
   LayerRefArray mKeepAlive;
+
+  bool mNeedsComposite;
 
  // When we're doing a transaction in order to draw to a non-default
  // target, the layers transaction is only performed in order to send
