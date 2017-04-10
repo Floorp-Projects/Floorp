@@ -473,7 +473,8 @@ PeerConnectionMedia::ActivateOrRemoveTransports(const JsepSession& aSession,
       candidates.erase(std::remove_if(candidates.begin(),
                                       candidates.end(),
                                       [](const std::string & s) {
-                                        return s.find(" UDP "); }),
+                                        return s.find(" UDP ") != std::string::npos ||
+                                               s.find(" udp ") != std::string::npos; }),
                        candidates.end());
     }
 
