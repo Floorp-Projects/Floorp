@@ -15,7 +15,7 @@
 == outline-square.html outline-square.html
 == outline-circle.html outline-circle.html
 == border-value-interpret.html border-value-interpret.html
-fails == curved-borders-all-styles.html curved-borders-all-styles.html
+== curved-borders-all-styles.html curved-borders-all-styles.html
 # ridge/groove borders
 
 # percent units
