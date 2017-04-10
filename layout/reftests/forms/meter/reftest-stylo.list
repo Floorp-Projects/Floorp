@@ -23,7 +23,7 @@ fails == transformations.html transformations.html # Bug 1341785
 include default-style/reftest-stylo.list
 
 # Tests for bugs:
-fails == block-invalidate.html block-invalidate.html
+== block-invalidate.html block-invalidate.html
 == in-cells.html in-cells.html
 fails == max-height.html max-height.html
 

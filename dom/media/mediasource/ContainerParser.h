@@ -17,7 +17,8 @@ namespace mozilla {
 class MediaByteBuffer;
 class SourceBufferResource;
 
-class ContainerParser {
+class ContainerParser
+{
 public:
   explicit ContainerParser(const MediaContainerType& aType);
   virtual ~ContainerParser();
@@ -79,6 +80,8 @@ protected:
   RefPtr<MediaByteBuffer> mInitData;
   RefPtr<SourceBufferResource> mResource;
   bool mHasInitData;
+  uint64_t mTotalParsed;
+  uint64_t mGlobalOffset;
   MediaByteRange mCompleteInitSegmentRange;
   MediaByteRange mCompleteMediaHeaderRange;
   MediaByteRange mCompleteMediaSegmentRange;
