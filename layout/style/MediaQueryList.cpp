@@ -7,19 +7,25 @@
 /* implements DOM interface for querying and observing media queries */
 
 #include "mozilla/dom/MediaQueryList.h"
+#include "mozilla/dom/MediaQueryListEvent.h"
+#include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/EventTargetBinding.h"
 #include "nsPresContext.h"
 #include "nsMediaList.h"
 #include "nsCSSParser.h"
 #include "nsIDocument.h"
+
+#define ONCHANGE_STRING NS_LITERAL_STRING("change")
 
 namespace mozilla {
 namespace dom {
 
 MediaQueryList::MediaQueryList(nsIDocument *aDocument,
                                const nsAString &aMediaQueryList)
-  : mDocument(aDocument),
-    mMediaList(new nsMediaList),
-    mMatchesValid(false)
+  : mDocument(aDocument)
+  , mMediaList(new nsMediaList)
+  , mMatchesValid(false)
+  , mIsKeptAlive(false)
 {
   PR_INIT_CLIST(this);
 
@@ -36,30 +42,26 @@ MediaQueryList::~MediaQueryList()
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MediaQueryList)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MediaQueryList)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MediaQueryList,
+                                                  DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallbacks)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MediaQueryList)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MediaQueryList,
+                                                DOMEventTargetHelper)
   if (tmp->mDocument) {
     PR_REMOVE_LINK(tmp);
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
   }
-  tmp->RemoveAllListeners();
+  tmp->Disconnect();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(MediaQueryList)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MediaQueryList)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_INTERFACE_MAP_BEGIN(MediaQueryList)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(MediaQueryList)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaQueryList)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(MediaQueryList)
+NS_IMPL_ADDREF_INHERITED(MediaQueryList, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(MediaQueryList, DOMEventTargetHelper)
 
 void
 MediaQueryList::GetMedia(nsAString &aMedia)
@@ -80,57 +82,124 @@ MediaQueryList::Matches()
 }
 
 void
-MediaQueryList::AddListener(MediaQueryListListener& aListener)
+MediaQueryList::AddListener(EventListener* aListener, ErrorResult& aRv)
 {
-  if (!HasListeners()) {
-    // When we have listeners, the pres context owns a reference to
-    // this.  This is a cyclic reference that can only be broken by
-    // cycle collection.
-    NS_ADDREF_THIS();
+  if (!aListener) {
+    return;
   }
 
+  AddEventListenerOptionsOrBoolean options;
+  options.SetAsBoolean() = false;
+
+  AddEventListener(ONCHANGE_STRING, aListener, options, false, aRv);
+}
+
+void
+MediaQueryList::AddEventListener(const nsAString& aType,
+                                 EventListener* aCallback,
+                                 const AddEventListenerOptionsOrBoolean& aOptions,
+                                 const dom::Nullable<bool>& aWantsUntrusted,
+                                 ErrorResult& aRv)
+{
   if (!mMatchesValid) {
     MOZ_ASSERT(!HasListeners(),
                "when listeners present, must keep mMatches current");
     RecomputeMatches();
   }
 
-  for (uint32_t i = 0; i < mCallbacks.Length(); ++i) {
-    if (aListener == *mCallbacks[i]) {
-      // Already registered
-      return;
-    }
+  DOMEventTargetHelper::AddEventListener(aType, aCallback, aOptions,
+                                         aWantsUntrusted, aRv);
+
+  if (aRv.Failed()) {
+    return;
   }
 
-  if (!mCallbacks.AppendElement(&aListener, fallible)) {
-    if (!HasListeners()) {
-      // Append failed; undo the AddRef above.
-      NS_RELEASE_THIS();
-    }
-  }
+  UpdateMustKeepAlive();
 }
 
 void
-MediaQueryList::RemoveListener(MediaQueryListListener& aListener)
+MediaQueryList::RemoveListener(EventListener* aListener, ErrorResult& aRv)
 {
-  for (uint32_t i = 0; i < mCallbacks.Length(); ++i) {
-    if (aListener == *mCallbacks[i]) {
-      mCallbacks.RemoveElementAt(i);
-      if (!HasListeners()) {
-        // See NS_ADDREF_THIS() in AddListener.
-        NS_RELEASE_THIS();
-      }
-      break;
-    }
+  if (!aListener) {
+    return;
   }
+
+  EventListenerOptionsOrBoolean options;
+  options.SetAsBoolean() = false;
+
+  RemoveEventListener(ONCHANGE_STRING, aListener, options, aRv);
 }
 
 void
-MediaQueryList::RemoveAllListeners()
+MediaQueryList::RemoveEventListener(const nsAString& aType,
+                                    EventListener* aCallback,
+                                    const EventListenerOptionsOrBoolean& aOptions,
+                                    ErrorResult& aRv)
 {
-  bool hadListeners = HasListeners();
-  mCallbacks.Clear();
-  if (hadListeners) {
+  DOMEventTargetHelper::RemoveEventListener(aType, aCallback, aOptions, aRv);
+
+  if (aRv.Failed()) {
+    return;
+  }
+
+  UpdateMustKeepAlive();
+}
+
+EventHandlerNonNull*
+MediaQueryList::GetOnchange()
+{
+  if (NS_IsMainThread()) {
+    return GetEventHandler(nsGkAtoms::onchange, EmptyString());
+  }
+  return GetEventHandler(nullptr, ONCHANGE_STRING);
+}
+
+void
+MediaQueryList::SetOnchange(EventHandlerNonNull* aCallback)
+{
+  if (NS_IsMainThread()) {
+    SetEventHandler(nsGkAtoms::onchange, EmptyString(), aCallback);
+  } else {
+    SetEventHandler(nullptr, ONCHANGE_STRING, aCallback);
+  }
+
+  UpdateMustKeepAlive();
+}
+
+void
+MediaQueryList::UpdateMustKeepAlive()
+{
+  bool toKeepAlive = HasListeners();
+  if (toKeepAlive == mIsKeptAlive) {
+    return;
+  }
+
+  // When we have listeners, the pres context owns a reference to
+  // this.  This is a cyclic reference that can only be broken by
+  // cycle collection.
+
+  mIsKeptAlive = toKeepAlive;
+
+  if (toKeepAlive) {
+    NS_ADDREF_THIS();
+  } else {
+    NS_RELEASE_THIS();
+  }
+}
+
+bool
+MediaQueryList::HasListeners()
+{
+  return HasListenersFor(ONCHANGE_STRING);
+}
+
+void
+MediaQueryList::Disconnect()
+{
+  DisconnectFromOwner();
+
+  if (mIsKeptAlive) {
+    mIsKeptAlive = false;
     // See NS_ADDREF_THIS() in AddListener.
     NS_RELEASE_THIS();
   }
@@ -169,27 +238,6 @@ MediaQueryList::RecomputeMatches()
   mMatchesValid = true;
 }
 
-void
-MediaQueryList::MediumFeaturesChanged(
-    nsTArray<HandleChangeData>& aListenersToNotify)
-{
-  mMatchesValid = false;
-
-  if (HasListeners()) {
-    bool oldMatches = mMatches;
-    RecomputeMatches();
-    if (mMatches != oldMatches) {
-      for (uint32_t i = 0, i_end = mCallbacks.Length(); i != i_end; ++i) {
-        HandleChangeData *d = aListenersToNotify.AppendElement(fallible);
-        if (d) {
-          d->mql = this;
-          d->callback = mCallbacks[i];
-        }
-      }
-    }
-  }
-}
-
 nsISupports*
 MediaQueryList::GetParentObject() const
 {
@@ -200,6 +248,37 @@ JSObject*
 MediaQueryList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return MediaQueryListBinding::Wrap(aCx, this, aGivenProto);
+}
+
+void
+MediaQueryList::MaybeNotify()
+{
+  mMatchesValid = false;
+
+  if (!HasListeners()) {
+    return;
+  }
+
+  bool oldMatches = mMatches;
+  RecomputeMatches();
+
+  // No need to notify the change.
+  if (mMatches == oldMatches) {
+    return;
+  }
+
+  MediaQueryListEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mMatches = mMatches;
+  mMediaList->GetText(init.mMedia);
+
+  RefPtr<MediaQueryListEvent> event =
+    MediaQueryListEvent::Constructor(this, ONCHANGE_STRING, init);
+  event->SetTrusted(true);
+
+  bool dummy;
+  DispatchEvent(event, &dummy);
 }
 
 } // namespace dom
