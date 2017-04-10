@@ -68,7 +68,4 @@ else
 fi
 
 echo "Applying a patch on top of $rev"
-patch -p3 < temp-patch-debug-drift.patch
-
-echo "Applying a patch on top of $rev"
 patch -p3 < disable-assert.patch
