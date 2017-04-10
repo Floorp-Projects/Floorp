@@ -550,18 +550,18 @@ impl WrImageDescriptor {
 
 #[repr(C)]
 pub struct WrVecU8 {
-    ptr: *mut u8,
+    data: *mut u8,
     length: usize,
     capacity: usize,
 }
 
 impl WrVecU8 {
     fn to_vec(self) -> Vec<u8> {
-        unsafe { Vec::from_raw_parts(self.ptr, self.length, self.capacity) }
+        unsafe { Vec::from_raw_parts(self.data, self.length, self.capacity) }
     }
     fn from_vec(mut v: Vec<u8>) -> WrVecU8 {
         let w = WrVecU8 {
-            ptr: v.as_mut_ptr(),
+            data: v.as_mut_ptr(),
             length: v.len(),
             capacity: v.capacity(),
         };
