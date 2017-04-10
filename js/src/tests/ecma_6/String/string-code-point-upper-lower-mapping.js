@@ -5,392 +5,392 @@
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/
  */
-assertEq(String.fromCodePoint(0x10428).toUpperCase().codePointAt(0), 0x10400);
-assertEq(String.fromCodePoint(0x10429).toUpperCase().codePointAt(0), 0x10401);
-assertEq(String.fromCodePoint(0x1042a).toUpperCase().codePointAt(0), 0x10402);
-assertEq(String.fromCodePoint(0x1042b).toUpperCase().codePointAt(0), 0x10403);
-assertEq(String.fromCodePoint(0x1042c).toUpperCase().codePointAt(0), 0x10404);
-assertEq(String.fromCodePoint(0x1042d).toUpperCase().codePointAt(0), 0x10405);
-assertEq(String.fromCodePoint(0x1042e).toUpperCase().codePointAt(0), 0x10406);
-assertEq(String.fromCodePoint(0x1042f).toUpperCase().codePointAt(0), 0x10407);
-assertEq(String.fromCodePoint(0x10430).toUpperCase().codePointAt(0), 0x10408);
-assertEq(String.fromCodePoint(0x10431).toUpperCase().codePointAt(0), 0x10409);
-assertEq(String.fromCodePoint(0x10432).toUpperCase().codePointAt(0), 0x1040a);
-assertEq(String.fromCodePoint(0x10433).toUpperCase().codePointAt(0), 0x1040b);
-assertEq(String.fromCodePoint(0x10434).toUpperCase().codePointAt(0), 0x1040c);
-assertEq(String.fromCodePoint(0x10435).toUpperCase().codePointAt(0), 0x1040d);
-assertEq(String.fromCodePoint(0x10436).toUpperCase().codePointAt(0), 0x1040e);
-assertEq(String.fromCodePoint(0x10437).toUpperCase().codePointAt(0), 0x1040f);
-assertEq(String.fromCodePoint(0x10438).toUpperCase().codePointAt(0), 0x10410);
-assertEq(String.fromCodePoint(0x10439).toUpperCase().codePointAt(0), 0x10411);
-assertEq(String.fromCodePoint(0x1043a).toUpperCase().codePointAt(0), 0x10412);
-assertEq(String.fromCodePoint(0x1043b).toUpperCase().codePointAt(0), 0x10413);
-assertEq(String.fromCodePoint(0x1043c).toUpperCase().codePointAt(0), 0x10414);
-assertEq(String.fromCodePoint(0x1043d).toUpperCase().codePointAt(0), 0x10415);
-assertEq(String.fromCodePoint(0x1043e).toUpperCase().codePointAt(0), 0x10416);
-assertEq(String.fromCodePoint(0x1043f).toUpperCase().codePointAt(0), 0x10417);
-assertEq(String.fromCodePoint(0x10440).toUpperCase().codePointAt(0), 0x10418);
-assertEq(String.fromCodePoint(0x10441).toUpperCase().codePointAt(0), 0x10419);
-assertEq(String.fromCodePoint(0x10442).toUpperCase().codePointAt(0), 0x1041a);
-assertEq(String.fromCodePoint(0x10443).toUpperCase().codePointAt(0), 0x1041b);
-assertEq(String.fromCodePoint(0x10444).toUpperCase().codePointAt(0), 0x1041c);
-assertEq(String.fromCodePoint(0x10445).toUpperCase().codePointAt(0), 0x1041d);
-assertEq(String.fromCodePoint(0x10446).toUpperCase().codePointAt(0), 0x1041e);
-assertEq(String.fromCodePoint(0x10447).toUpperCase().codePointAt(0), 0x1041f);
-assertEq(String.fromCodePoint(0x10448).toUpperCase().codePointAt(0), 0x10420);
-assertEq(String.fromCodePoint(0x10449).toUpperCase().codePointAt(0), 0x10421);
-assertEq(String.fromCodePoint(0x1044a).toUpperCase().codePointAt(0), 0x10422);
-assertEq(String.fromCodePoint(0x1044b).toUpperCase().codePointAt(0), 0x10423);
-assertEq(String.fromCodePoint(0x1044c).toUpperCase().codePointAt(0), 0x10424);
-assertEq(String.fromCodePoint(0x1044d).toUpperCase().codePointAt(0), 0x10425);
-assertEq(String.fromCodePoint(0x1044e).toUpperCase().codePointAt(0), 0x10426);
-assertEq(String.fromCodePoint(0x1044f).toUpperCase().codePointAt(0), 0x10427);
-assertEq(String.fromCodePoint(0x104d8).toUpperCase().codePointAt(0), 0x104b0);
-assertEq(String.fromCodePoint(0x104d9).toUpperCase().codePointAt(0), 0x104b1);
-assertEq(String.fromCodePoint(0x104da).toUpperCase().codePointAt(0), 0x104b2);
-assertEq(String.fromCodePoint(0x104db).toUpperCase().codePointAt(0), 0x104b3);
-assertEq(String.fromCodePoint(0x104dc).toUpperCase().codePointAt(0), 0x104b4);
-assertEq(String.fromCodePoint(0x104dd).toUpperCase().codePointAt(0), 0x104b5);
-assertEq(String.fromCodePoint(0x104de).toUpperCase().codePointAt(0), 0x104b6);
-assertEq(String.fromCodePoint(0x104df).toUpperCase().codePointAt(0), 0x104b7);
-assertEq(String.fromCodePoint(0x104e0).toUpperCase().codePointAt(0), 0x104b8);
-assertEq(String.fromCodePoint(0x104e1).toUpperCase().codePointAt(0), 0x104b9);
-assertEq(String.fromCodePoint(0x104e2).toUpperCase().codePointAt(0), 0x104ba);
-assertEq(String.fromCodePoint(0x104e3).toUpperCase().codePointAt(0), 0x104bb);
-assertEq(String.fromCodePoint(0x104e4).toUpperCase().codePointAt(0), 0x104bc);
-assertEq(String.fromCodePoint(0x104e5).toUpperCase().codePointAt(0), 0x104bd);
-assertEq(String.fromCodePoint(0x104e6).toUpperCase().codePointAt(0), 0x104be);
-assertEq(String.fromCodePoint(0x104e7).toUpperCase().codePointAt(0), 0x104bf);
-assertEq(String.fromCodePoint(0x104e8).toUpperCase().codePointAt(0), 0x104c0);
-assertEq(String.fromCodePoint(0x104e9).toUpperCase().codePointAt(0), 0x104c1);
-assertEq(String.fromCodePoint(0x104ea).toUpperCase().codePointAt(0), 0x104c2);
-assertEq(String.fromCodePoint(0x104eb).toUpperCase().codePointAt(0), 0x104c3);
-assertEq(String.fromCodePoint(0x104ec).toUpperCase().codePointAt(0), 0x104c4);
-assertEq(String.fromCodePoint(0x104ed).toUpperCase().codePointAt(0), 0x104c5);
-assertEq(String.fromCodePoint(0x104ee).toUpperCase().codePointAt(0), 0x104c6);
-assertEq(String.fromCodePoint(0x104ef).toUpperCase().codePointAt(0), 0x104c7);
-assertEq(String.fromCodePoint(0x104f0).toUpperCase().codePointAt(0), 0x104c8);
-assertEq(String.fromCodePoint(0x104f1).toUpperCase().codePointAt(0), 0x104c9);
-assertEq(String.fromCodePoint(0x104f2).toUpperCase().codePointAt(0), 0x104ca);
-assertEq(String.fromCodePoint(0x104f3).toUpperCase().codePointAt(0), 0x104cb);
-assertEq(String.fromCodePoint(0x104f4).toUpperCase().codePointAt(0), 0x104cc);
-assertEq(String.fromCodePoint(0x104f5).toUpperCase().codePointAt(0), 0x104cd);
-assertEq(String.fromCodePoint(0x104f6).toUpperCase().codePointAt(0), 0x104ce);
-assertEq(String.fromCodePoint(0x104f7).toUpperCase().codePointAt(0), 0x104cf);
-assertEq(String.fromCodePoint(0x104f8).toUpperCase().codePointAt(0), 0x104d0);
-assertEq(String.fromCodePoint(0x104f9).toUpperCase().codePointAt(0), 0x104d1);
-assertEq(String.fromCodePoint(0x104fa).toUpperCase().codePointAt(0), 0x104d2);
-assertEq(String.fromCodePoint(0x104fb).toUpperCase().codePointAt(0), 0x104d3);
-assertEq(String.fromCodePoint(0x10cc0).toUpperCase().codePointAt(0), 0x10c80);
-assertEq(String.fromCodePoint(0x10cc1).toUpperCase().codePointAt(0), 0x10c81);
-assertEq(String.fromCodePoint(0x10cc2).toUpperCase().codePointAt(0), 0x10c82);
-assertEq(String.fromCodePoint(0x10cc3).toUpperCase().codePointAt(0), 0x10c83);
-assertEq(String.fromCodePoint(0x10cc4).toUpperCase().codePointAt(0), 0x10c84);
-assertEq(String.fromCodePoint(0x10cc5).toUpperCase().codePointAt(0), 0x10c85);
-assertEq(String.fromCodePoint(0x10cc6).toUpperCase().codePointAt(0), 0x10c86);
-assertEq(String.fromCodePoint(0x10cc7).toUpperCase().codePointAt(0), 0x10c87);
-assertEq(String.fromCodePoint(0x10cc8).toUpperCase().codePointAt(0), 0x10c88);
-assertEq(String.fromCodePoint(0x10cc9).toUpperCase().codePointAt(0), 0x10c89);
-assertEq(String.fromCodePoint(0x10cca).toUpperCase().codePointAt(0), 0x10c8a);
-assertEq(String.fromCodePoint(0x10ccb).toUpperCase().codePointAt(0), 0x10c8b);
-assertEq(String.fromCodePoint(0x10ccc).toUpperCase().codePointAt(0), 0x10c8c);
-assertEq(String.fromCodePoint(0x10ccd).toUpperCase().codePointAt(0), 0x10c8d);
-assertEq(String.fromCodePoint(0x10cce).toUpperCase().codePointAt(0), 0x10c8e);
-assertEq(String.fromCodePoint(0x10ccf).toUpperCase().codePointAt(0), 0x10c8f);
-assertEq(String.fromCodePoint(0x10cd0).toUpperCase().codePointAt(0), 0x10c90);
-assertEq(String.fromCodePoint(0x10cd1).toUpperCase().codePointAt(0), 0x10c91);
-assertEq(String.fromCodePoint(0x10cd2).toUpperCase().codePointAt(0), 0x10c92);
-assertEq(String.fromCodePoint(0x10cd3).toUpperCase().codePointAt(0), 0x10c93);
-assertEq(String.fromCodePoint(0x10cd4).toUpperCase().codePointAt(0), 0x10c94);
-assertEq(String.fromCodePoint(0x10cd5).toUpperCase().codePointAt(0), 0x10c95);
-assertEq(String.fromCodePoint(0x10cd6).toUpperCase().codePointAt(0), 0x10c96);
-assertEq(String.fromCodePoint(0x10cd7).toUpperCase().codePointAt(0), 0x10c97);
-assertEq(String.fromCodePoint(0x10cd8).toUpperCase().codePointAt(0), 0x10c98);
-assertEq(String.fromCodePoint(0x10cd9).toUpperCase().codePointAt(0), 0x10c99);
-assertEq(String.fromCodePoint(0x10cda).toUpperCase().codePointAt(0), 0x10c9a);
-assertEq(String.fromCodePoint(0x10cdb).toUpperCase().codePointAt(0), 0x10c9b);
-assertEq(String.fromCodePoint(0x10cdc).toUpperCase().codePointAt(0), 0x10c9c);
-assertEq(String.fromCodePoint(0x10cdd).toUpperCase().codePointAt(0), 0x10c9d);
-assertEq(String.fromCodePoint(0x10cde).toUpperCase().codePointAt(0), 0x10c9e);
-assertEq(String.fromCodePoint(0x10cdf).toUpperCase().codePointAt(0), 0x10c9f);
-assertEq(String.fromCodePoint(0x10ce0).toUpperCase().codePointAt(0), 0x10ca0);
-assertEq(String.fromCodePoint(0x10ce1).toUpperCase().codePointAt(0), 0x10ca1);
-assertEq(String.fromCodePoint(0x10ce2).toUpperCase().codePointAt(0), 0x10ca2);
-assertEq(String.fromCodePoint(0x10ce3).toUpperCase().codePointAt(0), 0x10ca3);
-assertEq(String.fromCodePoint(0x10ce4).toUpperCase().codePointAt(0), 0x10ca4);
-assertEq(String.fromCodePoint(0x10ce5).toUpperCase().codePointAt(0), 0x10ca5);
-assertEq(String.fromCodePoint(0x10ce6).toUpperCase().codePointAt(0), 0x10ca6);
-assertEq(String.fromCodePoint(0x10ce7).toUpperCase().codePointAt(0), 0x10ca7);
-assertEq(String.fromCodePoint(0x10ce8).toUpperCase().codePointAt(0), 0x10ca8);
-assertEq(String.fromCodePoint(0x10ce9).toUpperCase().codePointAt(0), 0x10ca9);
-assertEq(String.fromCodePoint(0x10cea).toUpperCase().codePointAt(0), 0x10caa);
-assertEq(String.fromCodePoint(0x10ceb).toUpperCase().codePointAt(0), 0x10cab);
-assertEq(String.fromCodePoint(0x10cec).toUpperCase().codePointAt(0), 0x10cac);
-assertEq(String.fromCodePoint(0x10ced).toUpperCase().codePointAt(0), 0x10cad);
-assertEq(String.fromCodePoint(0x10cee).toUpperCase().codePointAt(0), 0x10cae);
-assertEq(String.fromCodePoint(0x10cef).toUpperCase().codePointAt(0), 0x10caf);
-assertEq(String.fromCodePoint(0x10cf0).toUpperCase().codePointAt(0), 0x10cb0);
-assertEq(String.fromCodePoint(0x10cf1).toUpperCase().codePointAt(0), 0x10cb1);
-assertEq(String.fromCodePoint(0x10cf2).toUpperCase().codePointAt(0), 0x10cb2);
-assertEq(String.fromCodePoint(0x118c0).toUpperCase().codePointAt(0), 0x118a0);
-assertEq(String.fromCodePoint(0x118c1).toUpperCase().codePointAt(0), 0x118a1);
-assertEq(String.fromCodePoint(0x118c2).toUpperCase().codePointAt(0), 0x118a2);
-assertEq(String.fromCodePoint(0x118c3).toUpperCase().codePointAt(0), 0x118a3);
-assertEq(String.fromCodePoint(0x118c4).toUpperCase().codePointAt(0), 0x118a4);
-assertEq(String.fromCodePoint(0x118c5).toUpperCase().codePointAt(0), 0x118a5);
-assertEq(String.fromCodePoint(0x118c6).toUpperCase().codePointAt(0), 0x118a6);
-assertEq(String.fromCodePoint(0x118c7).toUpperCase().codePointAt(0), 0x118a7);
-assertEq(String.fromCodePoint(0x118c8).toUpperCase().codePointAt(0), 0x118a8);
-assertEq(String.fromCodePoint(0x118c9).toUpperCase().codePointAt(0), 0x118a9);
-assertEq(String.fromCodePoint(0x118ca).toUpperCase().codePointAt(0), 0x118aa);
-assertEq(String.fromCodePoint(0x118cb).toUpperCase().codePointAt(0), 0x118ab);
-assertEq(String.fromCodePoint(0x118cc).toUpperCase().codePointAt(0), 0x118ac);
-assertEq(String.fromCodePoint(0x118cd).toUpperCase().codePointAt(0), 0x118ad);
-assertEq(String.fromCodePoint(0x118ce).toUpperCase().codePointAt(0), 0x118ae);
-assertEq(String.fromCodePoint(0x118cf).toUpperCase().codePointAt(0), 0x118af);
-assertEq(String.fromCodePoint(0x118d0).toUpperCase().codePointAt(0), 0x118b0);
-assertEq(String.fromCodePoint(0x118d1).toUpperCase().codePointAt(0), 0x118b1);
-assertEq(String.fromCodePoint(0x118d2).toUpperCase().codePointAt(0), 0x118b2);
-assertEq(String.fromCodePoint(0x118d3).toUpperCase().codePointAt(0), 0x118b3);
-assertEq(String.fromCodePoint(0x118d4).toUpperCase().codePointAt(0), 0x118b4);
-assertEq(String.fromCodePoint(0x118d5).toUpperCase().codePointAt(0), 0x118b5);
-assertEq(String.fromCodePoint(0x118d6).toUpperCase().codePointAt(0), 0x118b6);
-assertEq(String.fromCodePoint(0x118d7).toUpperCase().codePointAt(0), 0x118b7);
-assertEq(String.fromCodePoint(0x118d8).toUpperCase().codePointAt(0), 0x118b8);
-assertEq(String.fromCodePoint(0x118d9).toUpperCase().codePointAt(0), 0x118b9);
-assertEq(String.fromCodePoint(0x118da).toUpperCase().codePointAt(0), 0x118ba);
-assertEq(String.fromCodePoint(0x118db).toUpperCase().codePointAt(0), 0x118bb);
-assertEq(String.fromCodePoint(0x118dc).toUpperCase().codePointAt(0), 0x118bc);
-assertEq(String.fromCodePoint(0x118dd).toUpperCase().codePointAt(0), 0x118bd);
-assertEq(String.fromCodePoint(0x118de).toUpperCase().codePointAt(0), 0x118be);
-assertEq(String.fromCodePoint(0x118df).toUpperCase().codePointAt(0), 0x118bf);
-assertEq(String.fromCodePoint(0x1e922).toUpperCase().codePointAt(0), 0x1e900);
-assertEq(String.fromCodePoint(0x1e923).toUpperCase().codePointAt(0), 0x1e901);
-assertEq(String.fromCodePoint(0x1e924).toUpperCase().codePointAt(0), 0x1e902);
-assertEq(String.fromCodePoint(0x1e925).toUpperCase().codePointAt(0), 0x1e903);
-assertEq(String.fromCodePoint(0x1e926).toUpperCase().codePointAt(0), 0x1e904);
-assertEq(String.fromCodePoint(0x1e927).toUpperCase().codePointAt(0), 0x1e905);
-assertEq(String.fromCodePoint(0x1e928).toUpperCase().codePointAt(0), 0x1e906);
-assertEq(String.fromCodePoint(0x1e929).toUpperCase().codePointAt(0), 0x1e907);
-assertEq(String.fromCodePoint(0x1e92a).toUpperCase().codePointAt(0), 0x1e908);
-assertEq(String.fromCodePoint(0x1e92b).toUpperCase().codePointAt(0), 0x1e909);
-assertEq(String.fromCodePoint(0x1e92c).toUpperCase().codePointAt(0), 0x1e90a);
-assertEq(String.fromCodePoint(0x1e92d).toUpperCase().codePointAt(0), 0x1e90b);
-assertEq(String.fromCodePoint(0x1e92e).toUpperCase().codePointAt(0), 0x1e90c);
-assertEq(String.fromCodePoint(0x1e92f).toUpperCase().codePointAt(0), 0x1e90d);
-assertEq(String.fromCodePoint(0x1e930).toUpperCase().codePointAt(0), 0x1e90e);
-assertEq(String.fromCodePoint(0x1e931).toUpperCase().codePointAt(0), 0x1e90f);
-assertEq(String.fromCodePoint(0x1e932).toUpperCase().codePointAt(0), 0x1e910);
-assertEq(String.fromCodePoint(0x1e933).toUpperCase().codePointAt(0), 0x1e911);
-assertEq(String.fromCodePoint(0x1e934).toUpperCase().codePointAt(0), 0x1e912);
-assertEq(String.fromCodePoint(0x1e935).toUpperCase().codePointAt(0), 0x1e913);
-assertEq(String.fromCodePoint(0x1e936).toUpperCase().codePointAt(0), 0x1e914);
-assertEq(String.fromCodePoint(0x1e937).toUpperCase().codePointAt(0), 0x1e915);
-assertEq(String.fromCodePoint(0x1e938).toUpperCase().codePointAt(0), 0x1e916);
-assertEq(String.fromCodePoint(0x1e939).toUpperCase().codePointAt(0), 0x1e917);
-assertEq(String.fromCodePoint(0x1e93a).toUpperCase().codePointAt(0), 0x1e918);
-assertEq(String.fromCodePoint(0x1e93b).toUpperCase().codePointAt(0), 0x1e919);
-assertEq(String.fromCodePoint(0x1e93c).toUpperCase().codePointAt(0), 0x1e91a);
-assertEq(String.fromCodePoint(0x1e93d).toUpperCase().codePointAt(0), 0x1e91b);
-assertEq(String.fromCodePoint(0x1e93e).toUpperCase().codePointAt(0), 0x1e91c);
-assertEq(String.fromCodePoint(0x1e93f).toUpperCase().codePointAt(0), 0x1e91d);
-assertEq(String.fromCodePoint(0x1e940).toUpperCase().codePointAt(0), 0x1e91e);
-assertEq(String.fromCodePoint(0x1e941).toUpperCase().codePointAt(0), 0x1e91f);
-assertEq(String.fromCodePoint(0x1e942).toUpperCase().codePointAt(0), 0x1e920);
-assertEq(String.fromCodePoint(0x1e943).toUpperCase().codePointAt(0), 0x1e921);
-assertEq(String.fromCodePoint(0x10400).toLowerCase().codePointAt(0), 0x10428);
-assertEq(String.fromCodePoint(0x10401).toLowerCase().codePointAt(0), 0x10429);
-assertEq(String.fromCodePoint(0x10402).toLowerCase().codePointAt(0), 0x1042a);
-assertEq(String.fromCodePoint(0x10403).toLowerCase().codePointAt(0), 0x1042b);
-assertEq(String.fromCodePoint(0x10404).toLowerCase().codePointAt(0), 0x1042c);
-assertEq(String.fromCodePoint(0x10405).toLowerCase().codePointAt(0), 0x1042d);
-assertEq(String.fromCodePoint(0x10406).toLowerCase().codePointAt(0), 0x1042e);
-assertEq(String.fromCodePoint(0x10407).toLowerCase().codePointAt(0), 0x1042f);
-assertEq(String.fromCodePoint(0x10408).toLowerCase().codePointAt(0), 0x10430);
-assertEq(String.fromCodePoint(0x10409).toLowerCase().codePointAt(0), 0x10431);
-assertEq(String.fromCodePoint(0x1040a).toLowerCase().codePointAt(0), 0x10432);
-assertEq(String.fromCodePoint(0x1040b).toLowerCase().codePointAt(0), 0x10433);
-assertEq(String.fromCodePoint(0x1040c).toLowerCase().codePointAt(0), 0x10434);
-assertEq(String.fromCodePoint(0x1040d).toLowerCase().codePointAt(0), 0x10435);
-assertEq(String.fromCodePoint(0x1040e).toLowerCase().codePointAt(0), 0x10436);
-assertEq(String.fromCodePoint(0x1040f).toLowerCase().codePointAt(0), 0x10437);
-assertEq(String.fromCodePoint(0x10410).toLowerCase().codePointAt(0), 0x10438);
-assertEq(String.fromCodePoint(0x10411).toLowerCase().codePointAt(0), 0x10439);
-assertEq(String.fromCodePoint(0x10412).toLowerCase().codePointAt(0), 0x1043a);
-assertEq(String.fromCodePoint(0x10413).toLowerCase().codePointAt(0), 0x1043b);
-assertEq(String.fromCodePoint(0x10414).toLowerCase().codePointAt(0), 0x1043c);
-assertEq(String.fromCodePoint(0x10415).toLowerCase().codePointAt(0), 0x1043d);
-assertEq(String.fromCodePoint(0x10416).toLowerCase().codePointAt(0), 0x1043e);
-assertEq(String.fromCodePoint(0x10417).toLowerCase().codePointAt(0), 0x1043f);
-assertEq(String.fromCodePoint(0x10418).toLowerCase().codePointAt(0), 0x10440);
-assertEq(String.fromCodePoint(0x10419).toLowerCase().codePointAt(0), 0x10441);
-assertEq(String.fromCodePoint(0x1041a).toLowerCase().codePointAt(0), 0x10442);
-assertEq(String.fromCodePoint(0x1041b).toLowerCase().codePointAt(0), 0x10443);
-assertEq(String.fromCodePoint(0x1041c).toLowerCase().codePointAt(0), 0x10444);
-assertEq(String.fromCodePoint(0x1041d).toLowerCase().codePointAt(0), 0x10445);
-assertEq(String.fromCodePoint(0x1041e).toLowerCase().codePointAt(0), 0x10446);
-assertEq(String.fromCodePoint(0x1041f).toLowerCase().codePointAt(0), 0x10447);
-assertEq(String.fromCodePoint(0x10420).toLowerCase().codePointAt(0), 0x10448);
-assertEq(String.fromCodePoint(0x10421).toLowerCase().codePointAt(0), 0x10449);
-assertEq(String.fromCodePoint(0x10422).toLowerCase().codePointAt(0), 0x1044a);
-assertEq(String.fromCodePoint(0x10423).toLowerCase().codePointAt(0), 0x1044b);
-assertEq(String.fromCodePoint(0x10424).toLowerCase().codePointAt(0), 0x1044c);
-assertEq(String.fromCodePoint(0x10425).toLowerCase().codePointAt(0), 0x1044d);
-assertEq(String.fromCodePoint(0x10426).toLowerCase().codePointAt(0), 0x1044e);
-assertEq(String.fromCodePoint(0x10427).toLowerCase().codePointAt(0), 0x1044f);
-assertEq(String.fromCodePoint(0x104b0).toLowerCase().codePointAt(0), 0x104d8);
-assertEq(String.fromCodePoint(0x104b1).toLowerCase().codePointAt(0), 0x104d9);
-assertEq(String.fromCodePoint(0x104b2).toLowerCase().codePointAt(0), 0x104da);
-assertEq(String.fromCodePoint(0x104b3).toLowerCase().codePointAt(0), 0x104db);
-assertEq(String.fromCodePoint(0x104b4).toLowerCase().codePointAt(0), 0x104dc);
-assertEq(String.fromCodePoint(0x104b5).toLowerCase().codePointAt(0), 0x104dd);
-assertEq(String.fromCodePoint(0x104b6).toLowerCase().codePointAt(0), 0x104de);
-assertEq(String.fromCodePoint(0x104b7).toLowerCase().codePointAt(0), 0x104df);
-assertEq(String.fromCodePoint(0x104b8).toLowerCase().codePointAt(0), 0x104e0);
-assertEq(String.fromCodePoint(0x104b9).toLowerCase().codePointAt(0), 0x104e1);
-assertEq(String.fromCodePoint(0x104ba).toLowerCase().codePointAt(0), 0x104e2);
-assertEq(String.fromCodePoint(0x104bb).toLowerCase().codePointAt(0), 0x104e3);
-assertEq(String.fromCodePoint(0x104bc).toLowerCase().codePointAt(0), 0x104e4);
-assertEq(String.fromCodePoint(0x104bd).toLowerCase().codePointAt(0), 0x104e5);
-assertEq(String.fromCodePoint(0x104be).toLowerCase().codePointAt(0), 0x104e6);
-assertEq(String.fromCodePoint(0x104bf).toLowerCase().codePointAt(0), 0x104e7);
-assertEq(String.fromCodePoint(0x104c0).toLowerCase().codePointAt(0), 0x104e8);
-assertEq(String.fromCodePoint(0x104c1).toLowerCase().codePointAt(0), 0x104e9);
-assertEq(String.fromCodePoint(0x104c2).toLowerCase().codePointAt(0), 0x104ea);
-assertEq(String.fromCodePoint(0x104c3).toLowerCase().codePointAt(0), 0x104eb);
-assertEq(String.fromCodePoint(0x104c4).toLowerCase().codePointAt(0), 0x104ec);
-assertEq(String.fromCodePoint(0x104c5).toLowerCase().codePointAt(0), 0x104ed);
-assertEq(String.fromCodePoint(0x104c6).toLowerCase().codePointAt(0), 0x104ee);
-assertEq(String.fromCodePoint(0x104c7).toLowerCase().codePointAt(0), 0x104ef);
-assertEq(String.fromCodePoint(0x104c8).toLowerCase().codePointAt(0), 0x104f0);
-assertEq(String.fromCodePoint(0x104c9).toLowerCase().codePointAt(0), 0x104f1);
-assertEq(String.fromCodePoint(0x104ca).toLowerCase().codePointAt(0), 0x104f2);
-assertEq(String.fromCodePoint(0x104cb).toLowerCase().codePointAt(0), 0x104f3);
-assertEq(String.fromCodePoint(0x104cc).toLowerCase().codePointAt(0), 0x104f4);
-assertEq(String.fromCodePoint(0x104cd).toLowerCase().codePointAt(0), 0x104f5);
-assertEq(String.fromCodePoint(0x104ce).toLowerCase().codePointAt(0), 0x104f6);
-assertEq(String.fromCodePoint(0x104cf).toLowerCase().codePointAt(0), 0x104f7);
-assertEq(String.fromCodePoint(0x104d0).toLowerCase().codePointAt(0), 0x104f8);
-assertEq(String.fromCodePoint(0x104d1).toLowerCase().codePointAt(0), 0x104f9);
-assertEq(String.fromCodePoint(0x104d2).toLowerCase().codePointAt(0), 0x104fa);
-assertEq(String.fromCodePoint(0x104d3).toLowerCase().codePointAt(0), 0x104fb);
-assertEq(String.fromCodePoint(0x10c80).toLowerCase().codePointAt(0), 0x10cc0);
-assertEq(String.fromCodePoint(0x10c81).toLowerCase().codePointAt(0), 0x10cc1);
-assertEq(String.fromCodePoint(0x10c82).toLowerCase().codePointAt(0), 0x10cc2);
-assertEq(String.fromCodePoint(0x10c83).toLowerCase().codePointAt(0), 0x10cc3);
-assertEq(String.fromCodePoint(0x10c84).toLowerCase().codePointAt(0), 0x10cc4);
-assertEq(String.fromCodePoint(0x10c85).toLowerCase().codePointAt(0), 0x10cc5);
-assertEq(String.fromCodePoint(0x10c86).toLowerCase().codePointAt(0), 0x10cc6);
-assertEq(String.fromCodePoint(0x10c87).toLowerCase().codePointAt(0), 0x10cc7);
-assertEq(String.fromCodePoint(0x10c88).toLowerCase().codePointAt(0), 0x10cc8);
-assertEq(String.fromCodePoint(0x10c89).toLowerCase().codePointAt(0), 0x10cc9);
-assertEq(String.fromCodePoint(0x10c8a).toLowerCase().codePointAt(0), 0x10cca);
-assertEq(String.fromCodePoint(0x10c8b).toLowerCase().codePointAt(0), 0x10ccb);
-assertEq(String.fromCodePoint(0x10c8c).toLowerCase().codePointAt(0), 0x10ccc);
-assertEq(String.fromCodePoint(0x10c8d).toLowerCase().codePointAt(0), 0x10ccd);
-assertEq(String.fromCodePoint(0x10c8e).toLowerCase().codePointAt(0), 0x10cce);
-assertEq(String.fromCodePoint(0x10c8f).toLowerCase().codePointAt(0), 0x10ccf);
-assertEq(String.fromCodePoint(0x10c90).toLowerCase().codePointAt(0), 0x10cd0);
-assertEq(String.fromCodePoint(0x10c91).toLowerCase().codePointAt(0), 0x10cd1);
-assertEq(String.fromCodePoint(0x10c92).toLowerCase().codePointAt(0), 0x10cd2);
-assertEq(String.fromCodePoint(0x10c93).toLowerCase().codePointAt(0), 0x10cd3);
-assertEq(String.fromCodePoint(0x10c94).toLowerCase().codePointAt(0), 0x10cd4);
-assertEq(String.fromCodePoint(0x10c95).toLowerCase().codePointAt(0), 0x10cd5);
-assertEq(String.fromCodePoint(0x10c96).toLowerCase().codePointAt(0), 0x10cd6);
-assertEq(String.fromCodePoint(0x10c97).toLowerCase().codePointAt(0), 0x10cd7);
-assertEq(String.fromCodePoint(0x10c98).toLowerCase().codePointAt(0), 0x10cd8);
-assertEq(String.fromCodePoint(0x10c99).toLowerCase().codePointAt(0), 0x10cd9);
-assertEq(String.fromCodePoint(0x10c9a).toLowerCase().codePointAt(0), 0x10cda);
-assertEq(String.fromCodePoint(0x10c9b).toLowerCase().codePointAt(0), 0x10cdb);
-assertEq(String.fromCodePoint(0x10c9c).toLowerCase().codePointAt(0), 0x10cdc);
-assertEq(String.fromCodePoint(0x10c9d).toLowerCase().codePointAt(0), 0x10cdd);
-assertEq(String.fromCodePoint(0x10c9e).toLowerCase().codePointAt(0), 0x10cde);
-assertEq(String.fromCodePoint(0x10c9f).toLowerCase().codePointAt(0), 0x10cdf);
-assertEq(String.fromCodePoint(0x10ca0).toLowerCase().codePointAt(0), 0x10ce0);
-assertEq(String.fromCodePoint(0x10ca1).toLowerCase().codePointAt(0), 0x10ce1);
-assertEq(String.fromCodePoint(0x10ca2).toLowerCase().codePointAt(0), 0x10ce2);
-assertEq(String.fromCodePoint(0x10ca3).toLowerCase().codePointAt(0), 0x10ce3);
-assertEq(String.fromCodePoint(0x10ca4).toLowerCase().codePointAt(0), 0x10ce4);
-assertEq(String.fromCodePoint(0x10ca5).toLowerCase().codePointAt(0), 0x10ce5);
-assertEq(String.fromCodePoint(0x10ca6).toLowerCase().codePointAt(0), 0x10ce6);
-assertEq(String.fromCodePoint(0x10ca7).toLowerCase().codePointAt(0), 0x10ce7);
-assertEq(String.fromCodePoint(0x10ca8).toLowerCase().codePointAt(0), 0x10ce8);
-assertEq(String.fromCodePoint(0x10ca9).toLowerCase().codePointAt(0), 0x10ce9);
-assertEq(String.fromCodePoint(0x10caa).toLowerCase().codePointAt(0), 0x10cea);
-assertEq(String.fromCodePoint(0x10cab).toLowerCase().codePointAt(0), 0x10ceb);
-assertEq(String.fromCodePoint(0x10cac).toLowerCase().codePointAt(0), 0x10cec);
-assertEq(String.fromCodePoint(0x10cad).toLowerCase().codePointAt(0), 0x10ced);
-assertEq(String.fromCodePoint(0x10cae).toLowerCase().codePointAt(0), 0x10cee);
-assertEq(String.fromCodePoint(0x10caf).toLowerCase().codePointAt(0), 0x10cef);
-assertEq(String.fromCodePoint(0x10cb0).toLowerCase().codePointAt(0), 0x10cf0);
-assertEq(String.fromCodePoint(0x10cb1).toLowerCase().codePointAt(0), 0x10cf1);
-assertEq(String.fromCodePoint(0x10cb2).toLowerCase().codePointAt(0), 0x10cf2);
-assertEq(String.fromCodePoint(0x118a0).toLowerCase().codePointAt(0), 0x118c0);
-assertEq(String.fromCodePoint(0x118a1).toLowerCase().codePointAt(0), 0x118c1);
-assertEq(String.fromCodePoint(0x118a2).toLowerCase().codePointAt(0), 0x118c2);
-assertEq(String.fromCodePoint(0x118a3).toLowerCase().codePointAt(0), 0x118c3);
-assertEq(String.fromCodePoint(0x118a4).toLowerCase().codePointAt(0), 0x118c4);
-assertEq(String.fromCodePoint(0x118a5).toLowerCase().codePointAt(0), 0x118c5);
-assertEq(String.fromCodePoint(0x118a6).toLowerCase().codePointAt(0), 0x118c6);
-assertEq(String.fromCodePoint(0x118a7).toLowerCase().codePointAt(0), 0x118c7);
-assertEq(String.fromCodePoint(0x118a8).toLowerCase().codePointAt(0), 0x118c8);
-assertEq(String.fromCodePoint(0x118a9).toLowerCase().codePointAt(0), 0x118c9);
-assertEq(String.fromCodePoint(0x118aa).toLowerCase().codePointAt(0), 0x118ca);
-assertEq(String.fromCodePoint(0x118ab).toLowerCase().codePointAt(0), 0x118cb);
-assertEq(String.fromCodePoint(0x118ac).toLowerCase().codePointAt(0), 0x118cc);
-assertEq(String.fromCodePoint(0x118ad).toLowerCase().codePointAt(0), 0x118cd);
-assertEq(String.fromCodePoint(0x118ae).toLowerCase().codePointAt(0), 0x118ce);
-assertEq(String.fromCodePoint(0x118af).toLowerCase().codePointAt(0), 0x118cf);
-assertEq(String.fromCodePoint(0x118b0).toLowerCase().codePointAt(0), 0x118d0);
-assertEq(String.fromCodePoint(0x118b1).toLowerCase().codePointAt(0), 0x118d1);
-assertEq(String.fromCodePoint(0x118b2).toLowerCase().codePointAt(0), 0x118d2);
-assertEq(String.fromCodePoint(0x118b3).toLowerCase().codePointAt(0), 0x118d3);
-assertEq(String.fromCodePoint(0x118b4).toLowerCase().codePointAt(0), 0x118d4);
-assertEq(String.fromCodePoint(0x118b5).toLowerCase().codePointAt(0), 0x118d5);
-assertEq(String.fromCodePoint(0x118b6).toLowerCase().codePointAt(0), 0x118d6);
-assertEq(String.fromCodePoint(0x118b7).toLowerCase().codePointAt(0), 0x118d7);
-assertEq(String.fromCodePoint(0x118b8).toLowerCase().codePointAt(0), 0x118d8);
-assertEq(String.fromCodePoint(0x118b9).toLowerCase().codePointAt(0), 0x118d9);
-assertEq(String.fromCodePoint(0x118ba).toLowerCase().codePointAt(0), 0x118da);
-assertEq(String.fromCodePoint(0x118bb).toLowerCase().codePointAt(0), 0x118db);
-assertEq(String.fromCodePoint(0x118bc).toLowerCase().codePointAt(0), 0x118dc);
-assertEq(String.fromCodePoint(0x118bd).toLowerCase().codePointAt(0), 0x118dd);
-assertEq(String.fromCodePoint(0x118be).toLowerCase().codePointAt(0), 0x118de);
-assertEq(String.fromCodePoint(0x118bf).toLowerCase().codePointAt(0), 0x118df);
-assertEq(String.fromCodePoint(0x1e900).toLowerCase().codePointAt(0), 0x1e922);
-assertEq(String.fromCodePoint(0x1e901).toLowerCase().codePointAt(0), 0x1e923);
-assertEq(String.fromCodePoint(0x1e902).toLowerCase().codePointAt(0), 0x1e924);
-assertEq(String.fromCodePoint(0x1e903).toLowerCase().codePointAt(0), 0x1e925);
-assertEq(String.fromCodePoint(0x1e904).toLowerCase().codePointAt(0), 0x1e926);
-assertEq(String.fromCodePoint(0x1e905).toLowerCase().codePointAt(0), 0x1e927);
-assertEq(String.fromCodePoint(0x1e906).toLowerCase().codePointAt(0), 0x1e928);
-assertEq(String.fromCodePoint(0x1e907).toLowerCase().codePointAt(0), 0x1e929);
-assertEq(String.fromCodePoint(0x1e908).toLowerCase().codePointAt(0), 0x1e92a);
-assertEq(String.fromCodePoint(0x1e909).toLowerCase().codePointAt(0), 0x1e92b);
-assertEq(String.fromCodePoint(0x1e90a).toLowerCase().codePointAt(0), 0x1e92c);
-assertEq(String.fromCodePoint(0x1e90b).toLowerCase().codePointAt(0), 0x1e92d);
-assertEq(String.fromCodePoint(0x1e90c).toLowerCase().codePointAt(0), 0x1e92e);
-assertEq(String.fromCodePoint(0x1e90d).toLowerCase().codePointAt(0), 0x1e92f);
-assertEq(String.fromCodePoint(0x1e90e).toLowerCase().codePointAt(0), 0x1e930);
-assertEq(String.fromCodePoint(0x1e90f).toLowerCase().codePointAt(0), 0x1e931);
-assertEq(String.fromCodePoint(0x1e910).toLowerCase().codePointAt(0), 0x1e932);
-assertEq(String.fromCodePoint(0x1e911).toLowerCase().codePointAt(0), 0x1e933);
-assertEq(String.fromCodePoint(0x1e912).toLowerCase().codePointAt(0), 0x1e934);
-assertEq(String.fromCodePoint(0x1e913).toLowerCase().codePointAt(0), 0x1e935);
-assertEq(String.fromCodePoint(0x1e914).toLowerCase().codePointAt(0), 0x1e936);
-assertEq(String.fromCodePoint(0x1e915).toLowerCase().codePointAt(0), 0x1e937);
-assertEq(String.fromCodePoint(0x1e916).toLowerCase().codePointAt(0), 0x1e938);
-assertEq(String.fromCodePoint(0x1e917).toLowerCase().codePointAt(0), 0x1e939);
-assertEq(String.fromCodePoint(0x1e918).toLowerCase().codePointAt(0), 0x1e93a);
-assertEq(String.fromCodePoint(0x1e919).toLowerCase().codePointAt(0), 0x1e93b);
-assertEq(String.fromCodePoint(0x1e91a).toLowerCase().codePointAt(0), 0x1e93c);
-assertEq(String.fromCodePoint(0x1e91b).toLowerCase().codePointAt(0), 0x1e93d);
-assertEq(String.fromCodePoint(0x1e91c).toLowerCase().codePointAt(0), 0x1e93e);
-assertEq(String.fromCodePoint(0x1e91d).toLowerCase().codePointAt(0), 0x1e93f);
-assertEq(String.fromCodePoint(0x1e91e).toLowerCase().codePointAt(0), 0x1e940);
-assertEq(String.fromCodePoint(0x1e91f).toLowerCase().codePointAt(0), 0x1e941);
-assertEq(String.fromCodePoint(0x1e920).toLowerCase().codePointAt(0), 0x1e942);
-assertEq(String.fromCodePoint(0x1e921).toLowerCase().codePointAt(0), 0x1e943);
+assertEq(String.fromCodePoint(0x10428).toUpperCase().codePointAt(0), 0x10400); // DESERET SMALL LETTER LONG I, DESERET CAPITAL LETTER LONG I
+assertEq(String.fromCodePoint(0x10429).toUpperCase().codePointAt(0), 0x10401); // DESERET SMALL LETTER LONG E, DESERET CAPITAL LETTER LONG E
+assertEq(String.fromCodePoint(0x1042A).toUpperCase().codePointAt(0), 0x10402); // DESERET SMALL LETTER LONG A, DESERET CAPITAL LETTER LONG A
+assertEq(String.fromCodePoint(0x1042B).toUpperCase().codePointAt(0), 0x10403); // DESERET SMALL LETTER LONG AH, DESERET CAPITAL LETTER LONG AH
+assertEq(String.fromCodePoint(0x1042C).toUpperCase().codePointAt(0), 0x10404); // DESERET SMALL LETTER LONG O, DESERET CAPITAL LETTER LONG O
+assertEq(String.fromCodePoint(0x1042D).toUpperCase().codePointAt(0), 0x10405); // DESERET SMALL LETTER LONG OO, DESERET CAPITAL LETTER LONG OO
+assertEq(String.fromCodePoint(0x1042E).toUpperCase().codePointAt(0), 0x10406); // DESERET SMALL LETTER SHORT I, DESERET CAPITAL LETTER SHORT I
+assertEq(String.fromCodePoint(0x1042F).toUpperCase().codePointAt(0), 0x10407); // DESERET SMALL LETTER SHORT E, DESERET CAPITAL LETTER SHORT E
+assertEq(String.fromCodePoint(0x10430).toUpperCase().codePointAt(0), 0x10408); // DESERET SMALL LETTER SHORT A, DESERET CAPITAL LETTER SHORT A
+assertEq(String.fromCodePoint(0x10431).toUpperCase().codePointAt(0), 0x10409); // DESERET SMALL LETTER SHORT AH, DESERET CAPITAL LETTER SHORT AH
+assertEq(String.fromCodePoint(0x10432).toUpperCase().codePointAt(0), 0x1040A); // DESERET SMALL LETTER SHORT O, DESERET CAPITAL LETTER SHORT O
+assertEq(String.fromCodePoint(0x10433).toUpperCase().codePointAt(0), 0x1040B); // DESERET SMALL LETTER SHORT OO, DESERET CAPITAL LETTER SHORT OO
+assertEq(String.fromCodePoint(0x10434).toUpperCase().codePointAt(0), 0x1040C); // DESERET SMALL LETTER AY, DESERET CAPITAL LETTER AY
+assertEq(String.fromCodePoint(0x10435).toUpperCase().codePointAt(0), 0x1040D); // DESERET SMALL LETTER OW, DESERET CAPITAL LETTER OW
+assertEq(String.fromCodePoint(0x10436).toUpperCase().codePointAt(0), 0x1040E); // DESERET SMALL LETTER WU, DESERET CAPITAL LETTER WU
+assertEq(String.fromCodePoint(0x10437).toUpperCase().codePointAt(0), 0x1040F); // DESERET SMALL LETTER YEE, DESERET CAPITAL LETTER YEE
+assertEq(String.fromCodePoint(0x10438).toUpperCase().codePointAt(0), 0x10410); // DESERET SMALL LETTER H, DESERET CAPITAL LETTER H
+assertEq(String.fromCodePoint(0x10439).toUpperCase().codePointAt(0), 0x10411); // DESERET SMALL LETTER PEE, DESERET CAPITAL LETTER PEE
+assertEq(String.fromCodePoint(0x1043A).toUpperCase().codePointAt(0), 0x10412); // DESERET SMALL LETTER BEE, DESERET CAPITAL LETTER BEE
+assertEq(String.fromCodePoint(0x1043B).toUpperCase().codePointAt(0), 0x10413); // DESERET SMALL LETTER TEE, DESERET CAPITAL LETTER TEE
+assertEq(String.fromCodePoint(0x1043C).toUpperCase().codePointAt(0), 0x10414); // DESERET SMALL LETTER DEE, DESERET CAPITAL LETTER DEE
+assertEq(String.fromCodePoint(0x1043D).toUpperCase().codePointAt(0), 0x10415); // DESERET SMALL LETTER CHEE, DESERET CAPITAL LETTER CHEE
+assertEq(String.fromCodePoint(0x1043E).toUpperCase().codePointAt(0), 0x10416); // DESERET SMALL LETTER JEE, DESERET CAPITAL LETTER JEE
+assertEq(String.fromCodePoint(0x1043F).toUpperCase().codePointAt(0), 0x10417); // DESERET SMALL LETTER KAY, DESERET CAPITAL LETTER KAY
+assertEq(String.fromCodePoint(0x10440).toUpperCase().codePointAt(0), 0x10418); // DESERET SMALL LETTER GAY, DESERET CAPITAL LETTER GAY
+assertEq(String.fromCodePoint(0x10441).toUpperCase().codePointAt(0), 0x10419); // DESERET SMALL LETTER EF, DESERET CAPITAL LETTER EF
+assertEq(String.fromCodePoint(0x10442).toUpperCase().codePointAt(0), 0x1041A); // DESERET SMALL LETTER VEE, DESERET CAPITAL LETTER VEE
+assertEq(String.fromCodePoint(0x10443).toUpperCase().codePointAt(0), 0x1041B); // DESERET SMALL LETTER ETH, DESERET CAPITAL LETTER ETH
+assertEq(String.fromCodePoint(0x10444).toUpperCase().codePointAt(0), 0x1041C); // DESERET SMALL LETTER THEE, DESERET CAPITAL LETTER THEE
+assertEq(String.fromCodePoint(0x10445).toUpperCase().codePointAt(0), 0x1041D); // DESERET SMALL LETTER ES, DESERET CAPITAL LETTER ES
+assertEq(String.fromCodePoint(0x10446).toUpperCase().codePointAt(0), 0x1041E); // DESERET SMALL LETTER ZEE, DESERET CAPITAL LETTER ZEE
+assertEq(String.fromCodePoint(0x10447).toUpperCase().codePointAt(0), 0x1041F); // DESERET SMALL LETTER ESH, DESERET CAPITAL LETTER ESH
+assertEq(String.fromCodePoint(0x10448).toUpperCase().codePointAt(0), 0x10420); // DESERET SMALL LETTER ZHEE, DESERET CAPITAL LETTER ZHEE
+assertEq(String.fromCodePoint(0x10449).toUpperCase().codePointAt(0), 0x10421); // DESERET SMALL LETTER ER, DESERET CAPITAL LETTER ER
+assertEq(String.fromCodePoint(0x1044A).toUpperCase().codePointAt(0), 0x10422); // DESERET SMALL LETTER EL, DESERET CAPITAL LETTER EL
+assertEq(String.fromCodePoint(0x1044B).toUpperCase().codePointAt(0), 0x10423); // DESERET SMALL LETTER EM, DESERET CAPITAL LETTER EM
+assertEq(String.fromCodePoint(0x1044C).toUpperCase().codePointAt(0), 0x10424); // DESERET SMALL LETTER EN, DESERET CAPITAL LETTER EN
+assertEq(String.fromCodePoint(0x1044D).toUpperCase().codePointAt(0), 0x10425); // DESERET SMALL LETTER ENG, DESERET CAPITAL LETTER ENG
+assertEq(String.fromCodePoint(0x1044E).toUpperCase().codePointAt(0), 0x10426); // DESERET SMALL LETTER OI, DESERET CAPITAL LETTER OI
+assertEq(String.fromCodePoint(0x1044F).toUpperCase().codePointAt(0), 0x10427); // DESERET SMALL LETTER EW, DESERET CAPITAL LETTER EW
+assertEq(String.fromCodePoint(0x104D8).toUpperCase().codePointAt(0), 0x104B0); // OSAGE SMALL LETTER A, OSAGE CAPITAL LETTER A
+assertEq(String.fromCodePoint(0x104D9).toUpperCase().codePointAt(0), 0x104B1); // OSAGE SMALL LETTER AI, OSAGE CAPITAL LETTER AI
+assertEq(String.fromCodePoint(0x104DA).toUpperCase().codePointAt(0), 0x104B2); // OSAGE SMALL LETTER AIN, OSAGE CAPITAL LETTER AIN
+assertEq(String.fromCodePoint(0x104DB).toUpperCase().codePointAt(0), 0x104B3); // OSAGE SMALL LETTER AH, OSAGE CAPITAL LETTER AH
+assertEq(String.fromCodePoint(0x104DC).toUpperCase().codePointAt(0), 0x104B4); // OSAGE SMALL LETTER BRA, OSAGE CAPITAL LETTER BRA
+assertEq(String.fromCodePoint(0x104DD).toUpperCase().codePointAt(0), 0x104B5); // OSAGE SMALL LETTER CHA, OSAGE CAPITAL LETTER CHA
+assertEq(String.fromCodePoint(0x104DE).toUpperCase().codePointAt(0), 0x104B6); // OSAGE SMALL LETTER EHCHA, OSAGE CAPITAL LETTER EHCHA
+assertEq(String.fromCodePoint(0x104DF).toUpperCase().codePointAt(0), 0x104B7); // OSAGE SMALL LETTER E, OSAGE CAPITAL LETTER E
+assertEq(String.fromCodePoint(0x104E0).toUpperCase().codePointAt(0), 0x104B8); // OSAGE SMALL LETTER EIN, OSAGE CAPITAL LETTER EIN
+assertEq(String.fromCodePoint(0x104E1).toUpperCase().codePointAt(0), 0x104B9); // OSAGE SMALL LETTER HA, OSAGE CAPITAL LETTER HA
+assertEq(String.fromCodePoint(0x104E2).toUpperCase().codePointAt(0), 0x104BA); // OSAGE SMALL LETTER HYA, OSAGE CAPITAL LETTER HYA
+assertEq(String.fromCodePoint(0x104E3).toUpperCase().codePointAt(0), 0x104BB); // OSAGE SMALL LETTER I, OSAGE CAPITAL LETTER I
+assertEq(String.fromCodePoint(0x104E4).toUpperCase().codePointAt(0), 0x104BC); // OSAGE SMALL LETTER KA, OSAGE CAPITAL LETTER KA
+assertEq(String.fromCodePoint(0x104E5).toUpperCase().codePointAt(0), 0x104BD); // OSAGE SMALL LETTER EHKA, OSAGE CAPITAL LETTER EHKA
+assertEq(String.fromCodePoint(0x104E6).toUpperCase().codePointAt(0), 0x104BE); // OSAGE SMALL LETTER KYA, OSAGE CAPITAL LETTER KYA
+assertEq(String.fromCodePoint(0x104E7).toUpperCase().codePointAt(0), 0x104BF); // OSAGE SMALL LETTER LA, OSAGE CAPITAL LETTER LA
+assertEq(String.fromCodePoint(0x104E8).toUpperCase().codePointAt(0), 0x104C0); // OSAGE SMALL LETTER MA, OSAGE CAPITAL LETTER MA
+assertEq(String.fromCodePoint(0x104E9).toUpperCase().codePointAt(0), 0x104C1); // OSAGE SMALL LETTER NA, OSAGE CAPITAL LETTER NA
+assertEq(String.fromCodePoint(0x104EA).toUpperCase().codePointAt(0), 0x104C2); // OSAGE SMALL LETTER O, OSAGE CAPITAL LETTER O
+assertEq(String.fromCodePoint(0x104EB).toUpperCase().codePointAt(0), 0x104C3); // OSAGE SMALL LETTER OIN, OSAGE CAPITAL LETTER OIN
+assertEq(String.fromCodePoint(0x104EC).toUpperCase().codePointAt(0), 0x104C4); // OSAGE SMALL LETTER PA, OSAGE CAPITAL LETTER PA
+assertEq(String.fromCodePoint(0x104ED).toUpperCase().codePointAt(0), 0x104C5); // OSAGE SMALL LETTER EHPA, OSAGE CAPITAL LETTER EHPA
+assertEq(String.fromCodePoint(0x104EE).toUpperCase().codePointAt(0), 0x104C6); // OSAGE SMALL LETTER SA, OSAGE CAPITAL LETTER SA
+assertEq(String.fromCodePoint(0x104EF).toUpperCase().codePointAt(0), 0x104C7); // OSAGE SMALL LETTER SHA, OSAGE CAPITAL LETTER SHA
+assertEq(String.fromCodePoint(0x104F0).toUpperCase().codePointAt(0), 0x104C8); // OSAGE SMALL LETTER TA, OSAGE CAPITAL LETTER TA
+assertEq(String.fromCodePoint(0x104F1).toUpperCase().codePointAt(0), 0x104C9); // OSAGE SMALL LETTER EHTA, OSAGE CAPITAL LETTER EHTA
+assertEq(String.fromCodePoint(0x104F2).toUpperCase().codePointAt(0), 0x104CA); // OSAGE SMALL LETTER TSA, OSAGE CAPITAL LETTER TSA
+assertEq(String.fromCodePoint(0x104F3).toUpperCase().codePointAt(0), 0x104CB); // OSAGE SMALL LETTER EHTSA, OSAGE CAPITAL LETTER EHTSA
+assertEq(String.fromCodePoint(0x104F4).toUpperCase().codePointAt(0), 0x104CC); // OSAGE SMALL LETTER TSHA, OSAGE CAPITAL LETTER TSHA
+assertEq(String.fromCodePoint(0x104F5).toUpperCase().codePointAt(0), 0x104CD); // OSAGE SMALL LETTER DHA, OSAGE CAPITAL LETTER DHA
+assertEq(String.fromCodePoint(0x104F6).toUpperCase().codePointAt(0), 0x104CE); // OSAGE SMALL LETTER U, OSAGE CAPITAL LETTER U
+assertEq(String.fromCodePoint(0x104F7).toUpperCase().codePointAt(0), 0x104CF); // OSAGE SMALL LETTER WA, OSAGE CAPITAL LETTER WA
+assertEq(String.fromCodePoint(0x104F8).toUpperCase().codePointAt(0), 0x104D0); // OSAGE SMALL LETTER KHA, OSAGE CAPITAL LETTER KHA
+assertEq(String.fromCodePoint(0x104F9).toUpperCase().codePointAt(0), 0x104D1); // OSAGE SMALL LETTER GHA, OSAGE CAPITAL LETTER GHA
+assertEq(String.fromCodePoint(0x104FA).toUpperCase().codePointAt(0), 0x104D2); // OSAGE SMALL LETTER ZA, OSAGE CAPITAL LETTER ZA
+assertEq(String.fromCodePoint(0x104FB).toUpperCase().codePointAt(0), 0x104D3); // OSAGE SMALL LETTER ZHA, OSAGE CAPITAL LETTER ZHA
+assertEq(String.fromCodePoint(0x10CC0).toUpperCase().codePointAt(0), 0x10C80); // OLD HUNGARIAN SMALL LETTER A, OLD HUNGARIAN CAPITAL LETTER A
+assertEq(String.fromCodePoint(0x10CC1).toUpperCase().codePointAt(0), 0x10C81); // OLD HUNGARIAN SMALL LETTER AA, OLD HUNGARIAN CAPITAL LETTER AA
+assertEq(String.fromCodePoint(0x10CC2).toUpperCase().codePointAt(0), 0x10C82); // OLD HUNGARIAN SMALL LETTER EB, OLD HUNGARIAN CAPITAL LETTER EB
+assertEq(String.fromCodePoint(0x10CC3).toUpperCase().codePointAt(0), 0x10C83); // OLD HUNGARIAN SMALL LETTER AMB, OLD HUNGARIAN CAPITAL LETTER AMB
+assertEq(String.fromCodePoint(0x10CC4).toUpperCase().codePointAt(0), 0x10C84); // OLD HUNGARIAN SMALL LETTER EC, OLD HUNGARIAN CAPITAL LETTER EC
+assertEq(String.fromCodePoint(0x10CC5).toUpperCase().codePointAt(0), 0x10C85); // OLD HUNGARIAN SMALL LETTER ENC, OLD HUNGARIAN CAPITAL LETTER ENC
+assertEq(String.fromCodePoint(0x10CC6).toUpperCase().codePointAt(0), 0x10C86); // OLD HUNGARIAN SMALL LETTER ECS, OLD HUNGARIAN CAPITAL LETTER ECS
+assertEq(String.fromCodePoint(0x10CC7).toUpperCase().codePointAt(0), 0x10C87); // OLD HUNGARIAN SMALL LETTER ED, OLD HUNGARIAN CAPITAL LETTER ED
+assertEq(String.fromCodePoint(0x10CC8).toUpperCase().codePointAt(0), 0x10C88); // OLD HUNGARIAN SMALL LETTER AND, OLD HUNGARIAN CAPITAL LETTER AND
+assertEq(String.fromCodePoint(0x10CC9).toUpperCase().codePointAt(0), 0x10C89); // OLD HUNGARIAN SMALL LETTER E, OLD HUNGARIAN CAPITAL LETTER E
+assertEq(String.fromCodePoint(0x10CCA).toUpperCase().codePointAt(0), 0x10C8A); // OLD HUNGARIAN SMALL LETTER CLOSE E, OLD HUNGARIAN CAPITAL LETTER CLOSE E
+assertEq(String.fromCodePoint(0x10CCB).toUpperCase().codePointAt(0), 0x10C8B); // OLD HUNGARIAN SMALL LETTER EE, OLD HUNGARIAN CAPITAL LETTER EE
+assertEq(String.fromCodePoint(0x10CCC).toUpperCase().codePointAt(0), 0x10C8C); // OLD HUNGARIAN SMALL LETTER EF, OLD HUNGARIAN CAPITAL LETTER EF
+assertEq(String.fromCodePoint(0x10CCD).toUpperCase().codePointAt(0), 0x10C8D); // OLD HUNGARIAN SMALL LETTER EG, OLD HUNGARIAN CAPITAL LETTER EG
+assertEq(String.fromCodePoint(0x10CCE).toUpperCase().codePointAt(0), 0x10C8E); // OLD HUNGARIAN SMALL LETTER EGY, OLD HUNGARIAN CAPITAL LETTER EGY
+assertEq(String.fromCodePoint(0x10CCF).toUpperCase().codePointAt(0), 0x10C8F); // OLD HUNGARIAN SMALL LETTER EH, OLD HUNGARIAN CAPITAL LETTER EH
+assertEq(String.fromCodePoint(0x10CD0).toUpperCase().codePointAt(0), 0x10C90); // OLD HUNGARIAN SMALL LETTER I, OLD HUNGARIAN CAPITAL LETTER I
+assertEq(String.fromCodePoint(0x10CD1).toUpperCase().codePointAt(0), 0x10C91); // OLD HUNGARIAN SMALL LETTER II, OLD HUNGARIAN CAPITAL LETTER II
+assertEq(String.fromCodePoint(0x10CD2).toUpperCase().codePointAt(0), 0x10C92); // OLD HUNGARIAN SMALL LETTER EJ, OLD HUNGARIAN CAPITAL LETTER EJ
+assertEq(String.fromCodePoint(0x10CD3).toUpperCase().codePointAt(0), 0x10C93); // OLD HUNGARIAN SMALL LETTER EK, OLD HUNGARIAN CAPITAL LETTER EK
+assertEq(String.fromCodePoint(0x10CD4).toUpperCase().codePointAt(0), 0x10C94); // OLD HUNGARIAN SMALL LETTER AK, OLD HUNGARIAN CAPITAL LETTER AK
+assertEq(String.fromCodePoint(0x10CD5).toUpperCase().codePointAt(0), 0x10C95); // OLD HUNGARIAN SMALL LETTER UNK, OLD HUNGARIAN CAPITAL LETTER UNK
+assertEq(String.fromCodePoint(0x10CD6).toUpperCase().codePointAt(0), 0x10C96); // OLD HUNGARIAN SMALL LETTER EL, OLD HUNGARIAN CAPITAL LETTER EL
+assertEq(String.fromCodePoint(0x10CD7).toUpperCase().codePointAt(0), 0x10C97); // OLD HUNGARIAN SMALL LETTER ELY, OLD HUNGARIAN CAPITAL LETTER ELY
+assertEq(String.fromCodePoint(0x10CD8).toUpperCase().codePointAt(0), 0x10C98); // OLD HUNGARIAN SMALL LETTER EM, OLD HUNGARIAN CAPITAL LETTER EM
+assertEq(String.fromCodePoint(0x10CD9).toUpperCase().codePointAt(0), 0x10C99); // OLD HUNGARIAN SMALL LETTER EN, OLD HUNGARIAN CAPITAL LETTER EN
+assertEq(String.fromCodePoint(0x10CDA).toUpperCase().codePointAt(0), 0x10C9A); // OLD HUNGARIAN SMALL LETTER ENY, OLD HUNGARIAN CAPITAL LETTER ENY
+assertEq(String.fromCodePoint(0x10CDB).toUpperCase().codePointAt(0), 0x10C9B); // OLD HUNGARIAN SMALL LETTER O, OLD HUNGARIAN CAPITAL LETTER O
+assertEq(String.fromCodePoint(0x10CDC).toUpperCase().codePointAt(0), 0x10C9C); // OLD HUNGARIAN SMALL LETTER OO, OLD HUNGARIAN CAPITAL LETTER OO
+assertEq(String.fromCodePoint(0x10CDD).toUpperCase().codePointAt(0), 0x10C9D); // OLD HUNGARIAN SMALL LETTER NIKOLSBURG OE, OLD HUNGARIAN CAPITAL LETTER NIKOLSBURG OE
+assertEq(String.fromCodePoint(0x10CDE).toUpperCase().codePointAt(0), 0x10C9E); // OLD HUNGARIAN SMALL LETTER RUDIMENTA OE, OLD HUNGARIAN CAPITAL LETTER RUDIMENTA OE
+assertEq(String.fromCodePoint(0x10CDF).toUpperCase().codePointAt(0), 0x10C9F); // OLD HUNGARIAN SMALL LETTER OEE, OLD HUNGARIAN CAPITAL LETTER OEE
+assertEq(String.fromCodePoint(0x10CE0).toUpperCase().codePointAt(0), 0x10CA0); // OLD HUNGARIAN SMALL LETTER EP, OLD HUNGARIAN CAPITAL LETTER EP
+assertEq(String.fromCodePoint(0x10CE1).toUpperCase().codePointAt(0), 0x10CA1); // OLD HUNGARIAN SMALL LETTER EMP, OLD HUNGARIAN CAPITAL LETTER EMP
+assertEq(String.fromCodePoint(0x10CE2).toUpperCase().codePointAt(0), 0x10CA2); // OLD HUNGARIAN SMALL LETTER ER, OLD HUNGARIAN CAPITAL LETTER ER
+assertEq(String.fromCodePoint(0x10CE3).toUpperCase().codePointAt(0), 0x10CA3); // OLD HUNGARIAN SMALL LETTER SHORT ER, OLD HUNGARIAN CAPITAL LETTER SHORT ER
+assertEq(String.fromCodePoint(0x10CE4).toUpperCase().codePointAt(0), 0x10CA4); // OLD HUNGARIAN SMALL LETTER ES, OLD HUNGARIAN CAPITAL LETTER ES
+assertEq(String.fromCodePoint(0x10CE5).toUpperCase().codePointAt(0), 0x10CA5); // OLD HUNGARIAN SMALL LETTER ESZ, OLD HUNGARIAN CAPITAL LETTER ESZ
+assertEq(String.fromCodePoint(0x10CE6).toUpperCase().codePointAt(0), 0x10CA6); // OLD HUNGARIAN SMALL LETTER ET, OLD HUNGARIAN CAPITAL LETTER ET
+assertEq(String.fromCodePoint(0x10CE7).toUpperCase().codePointAt(0), 0x10CA7); // OLD HUNGARIAN SMALL LETTER ENT, OLD HUNGARIAN CAPITAL LETTER ENT
+assertEq(String.fromCodePoint(0x10CE8).toUpperCase().codePointAt(0), 0x10CA8); // OLD HUNGARIAN SMALL LETTER ETY, OLD HUNGARIAN CAPITAL LETTER ETY
+assertEq(String.fromCodePoint(0x10CE9).toUpperCase().codePointAt(0), 0x10CA9); // OLD HUNGARIAN SMALL LETTER ECH, OLD HUNGARIAN CAPITAL LETTER ECH
+assertEq(String.fromCodePoint(0x10CEA).toUpperCase().codePointAt(0), 0x10CAA); // OLD HUNGARIAN SMALL LETTER U, OLD HUNGARIAN CAPITAL LETTER U
+assertEq(String.fromCodePoint(0x10CEB).toUpperCase().codePointAt(0), 0x10CAB); // OLD HUNGARIAN SMALL LETTER UU, OLD HUNGARIAN CAPITAL LETTER UU
+assertEq(String.fromCodePoint(0x10CEC).toUpperCase().codePointAt(0), 0x10CAC); // OLD HUNGARIAN SMALL LETTER NIKOLSBURG UE, OLD HUNGARIAN CAPITAL LETTER NIKOLSBURG UE
+assertEq(String.fromCodePoint(0x10CED).toUpperCase().codePointAt(0), 0x10CAD); // OLD HUNGARIAN SMALL LETTER RUDIMENTA UE, OLD HUNGARIAN CAPITAL LETTER RUDIMENTA UE
+assertEq(String.fromCodePoint(0x10CEE).toUpperCase().codePointAt(0), 0x10CAE); // OLD HUNGARIAN SMALL LETTER EV, OLD HUNGARIAN CAPITAL LETTER EV
+assertEq(String.fromCodePoint(0x10CEF).toUpperCase().codePointAt(0), 0x10CAF); // OLD HUNGARIAN SMALL LETTER EZ, OLD HUNGARIAN CAPITAL LETTER EZ
+assertEq(String.fromCodePoint(0x10CF0).toUpperCase().codePointAt(0), 0x10CB0); // OLD HUNGARIAN SMALL LETTER EZS, OLD HUNGARIAN CAPITAL LETTER EZS
+assertEq(String.fromCodePoint(0x10CF1).toUpperCase().codePointAt(0), 0x10CB1); // OLD HUNGARIAN SMALL LETTER ENT-SHAPED SIGN, OLD HUNGARIAN CAPITAL LETTER ENT-SHAPED SIGN
+assertEq(String.fromCodePoint(0x10CF2).toUpperCase().codePointAt(0), 0x10CB2); // OLD HUNGARIAN SMALL LETTER US, OLD HUNGARIAN CAPITAL LETTER US
+assertEq(String.fromCodePoint(0x118C0).toUpperCase().codePointAt(0), 0x118A0); // WARANG CITI SMALL LETTER NGAA, WARANG CITI CAPITAL LETTER NGAA
+assertEq(String.fromCodePoint(0x118C1).toUpperCase().codePointAt(0), 0x118A1); // WARANG CITI SMALL LETTER A, WARANG CITI CAPITAL LETTER A
+assertEq(String.fromCodePoint(0x118C2).toUpperCase().codePointAt(0), 0x118A2); // WARANG CITI SMALL LETTER WI, WARANG CITI CAPITAL LETTER WI
+assertEq(String.fromCodePoint(0x118C3).toUpperCase().codePointAt(0), 0x118A3); // WARANG CITI SMALL LETTER YU, WARANG CITI CAPITAL LETTER YU
+assertEq(String.fromCodePoint(0x118C4).toUpperCase().codePointAt(0), 0x118A4); // WARANG CITI SMALL LETTER YA, WARANG CITI CAPITAL LETTER YA
+assertEq(String.fromCodePoint(0x118C5).toUpperCase().codePointAt(0), 0x118A5); // WARANG CITI SMALL LETTER YO, WARANG CITI CAPITAL LETTER YO
+assertEq(String.fromCodePoint(0x118C6).toUpperCase().codePointAt(0), 0x118A6); // WARANG CITI SMALL LETTER II, WARANG CITI CAPITAL LETTER II
+assertEq(String.fromCodePoint(0x118C7).toUpperCase().codePointAt(0), 0x118A7); // WARANG CITI SMALL LETTER UU, WARANG CITI CAPITAL LETTER UU
+assertEq(String.fromCodePoint(0x118C8).toUpperCase().codePointAt(0), 0x118A8); // WARANG CITI SMALL LETTER E, WARANG CITI CAPITAL LETTER E
+assertEq(String.fromCodePoint(0x118C9).toUpperCase().codePointAt(0), 0x118A9); // WARANG CITI SMALL LETTER O, WARANG CITI CAPITAL LETTER O
+assertEq(String.fromCodePoint(0x118CA).toUpperCase().codePointAt(0), 0x118AA); // WARANG CITI SMALL LETTER ANG, WARANG CITI CAPITAL LETTER ANG
+assertEq(String.fromCodePoint(0x118CB).toUpperCase().codePointAt(0), 0x118AB); // WARANG CITI SMALL LETTER GA, WARANG CITI CAPITAL LETTER GA
+assertEq(String.fromCodePoint(0x118CC).toUpperCase().codePointAt(0), 0x118AC); // WARANG CITI SMALL LETTER KO, WARANG CITI CAPITAL LETTER KO
+assertEq(String.fromCodePoint(0x118CD).toUpperCase().codePointAt(0), 0x118AD); // WARANG CITI SMALL LETTER ENY, WARANG CITI CAPITAL LETTER ENY
+assertEq(String.fromCodePoint(0x118CE).toUpperCase().codePointAt(0), 0x118AE); // WARANG CITI SMALL LETTER YUJ, WARANG CITI CAPITAL LETTER YUJ
+assertEq(String.fromCodePoint(0x118CF).toUpperCase().codePointAt(0), 0x118AF); // WARANG CITI SMALL LETTER UC, WARANG CITI CAPITAL LETTER UC
+assertEq(String.fromCodePoint(0x118D0).toUpperCase().codePointAt(0), 0x118B0); // WARANG CITI SMALL LETTER ENN, WARANG CITI CAPITAL LETTER ENN
+assertEq(String.fromCodePoint(0x118D1).toUpperCase().codePointAt(0), 0x118B1); // WARANG CITI SMALL LETTER ODD, WARANG CITI CAPITAL LETTER ODD
+assertEq(String.fromCodePoint(0x118D2).toUpperCase().codePointAt(0), 0x118B2); // WARANG CITI SMALL LETTER TTE, WARANG CITI CAPITAL LETTER TTE
+assertEq(String.fromCodePoint(0x118D3).toUpperCase().codePointAt(0), 0x118B3); // WARANG CITI SMALL LETTER NUNG, WARANG CITI CAPITAL LETTER NUNG
+assertEq(String.fromCodePoint(0x118D4).toUpperCase().codePointAt(0), 0x118B4); // WARANG CITI SMALL LETTER DA, WARANG CITI CAPITAL LETTER DA
+assertEq(String.fromCodePoint(0x118D5).toUpperCase().codePointAt(0), 0x118B5); // WARANG CITI SMALL LETTER AT, WARANG CITI CAPITAL LETTER AT
+assertEq(String.fromCodePoint(0x118D6).toUpperCase().codePointAt(0), 0x118B6); // WARANG CITI SMALL LETTER AM, WARANG CITI CAPITAL LETTER AM
+assertEq(String.fromCodePoint(0x118D7).toUpperCase().codePointAt(0), 0x118B7); // WARANG CITI SMALL LETTER BU, WARANG CITI CAPITAL LETTER BU
+assertEq(String.fromCodePoint(0x118D8).toUpperCase().codePointAt(0), 0x118B8); // WARANG CITI SMALL LETTER PU, WARANG CITI CAPITAL LETTER PU
+assertEq(String.fromCodePoint(0x118D9).toUpperCase().codePointAt(0), 0x118B9); // WARANG CITI SMALL LETTER HIYO, WARANG CITI CAPITAL LETTER HIYO
+assertEq(String.fromCodePoint(0x118DA).toUpperCase().codePointAt(0), 0x118BA); // WARANG CITI SMALL LETTER HOLO, WARANG CITI CAPITAL LETTER HOLO
+assertEq(String.fromCodePoint(0x118DB).toUpperCase().codePointAt(0), 0x118BB); // WARANG CITI SMALL LETTER HORR, WARANG CITI CAPITAL LETTER HORR
+assertEq(String.fromCodePoint(0x118DC).toUpperCase().codePointAt(0), 0x118BC); // WARANG CITI SMALL LETTER HAR, WARANG CITI CAPITAL LETTER HAR
+assertEq(String.fromCodePoint(0x118DD).toUpperCase().codePointAt(0), 0x118BD); // WARANG CITI SMALL LETTER SSUU, WARANG CITI CAPITAL LETTER SSUU
+assertEq(String.fromCodePoint(0x118DE).toUpperCase().codePointAt(0), 0x118BE); // WARANG CITI SMALL LETTER SII, WARANG CITI CAPITAL LETTER SII
+assertEq(String.fromCodePoint(0x118DF).toUpperCase().codePointAt(0), 0x118BF); // WARANG CITI SMALL LETTER VIYO, WARANG CITI CAPITAL LETTER VIYO
+assertEq(String.fromCodePoint(0x1E922).toUpperCase().codePointAt(0), 0x1E900); // ADLAM SMALL LETTER ALIF, ADLAM CAPITAL LETTER ALIF
+assertEq(String.fromCodePoint(0x1E923).toUpperCase().codePointAt(0), 0x1E901); // ADLAM SMALL LETTER DAALI, ADLAM CAPITAL LETTER DAALI
+assertEq(String.fromCodePoint(0x1E924).toUpperCase().codePointAt(0), 0x1E902); // ADLAM SMALL LETTER LAAM, ADLAM CAPITAL LETTER LAAM
+assertEq(String.fromCodePoint(0x1E925).toUpperCase().codePointAt(0), 0x1E903); // ADLAM SMALL LETTER MIIM, ADLAM CAPITAL LETTER MIIM
+assertEq(String.fromCodePoint(0x1E926).toUpperCase().codePointAt(0), 0x1E904); // ADLAM SMALL LETTER BA, ADLAM CAPITAL LETTER BA
+assertEq(String.fromCodePoint(0x1E927).toUpperCase().codePointAt(0), 0x1E905); // ADLAM SMALL LETTER SINNYIIYHE, ADLAM CAPITAL LETTER SINNYIIYHE
+assertEq(String.fromCodePoint(0x1E928).toUpperCase().codePointAt(0), 0x1E906); // ADLAM SMALL LETTER PE, ADLAM CAPITAL LETTER PE
+assertEq(String.fromCodePoint(0x1E929).toUpperCase().codePointAt(0), 0x1E907); // ADLAM SMALL LETTER BHE, ADLAM CAPITAL LETTER BHE
+assertEq(String.fromCodePoint(0x1E92A).toUpperCase().codePointAt(0), 0x1E908); // ADLAM SMALL LETTER RA, ADLAM CAPITAL LETTER RA
+assertEq(String.fromCodePoint(0x1E92B).toUpperCase().codePointAt(0), 0x1E909); // ADLAM SMALL LETTER E, ADLAM CAPITAL LETTER E
+assertEq(String.fromCodePoint(0x1E92C).toUpperCase().codePointAt(0), 0x1E90A); // ADLAM SMALL LETTER FA, ADLAM CAPITAL LETTER FA
+assertEq(String.fromCodePoint(0x1E92D).toUpperCase().codePointAt(0), 0x1E90B); // ADLAM SMALL LETTER I, ADLAM CAPITAL LETTER I
+assertEq(String.fromCodePoint(0x1E92E).toUpperCase().codePointAt(0), 0x1E90C); // ADLAM SMALL LETTER O, ADLAM CAPITAL LETTER O
+assertEq(String.fromCodePoint(0x1E92F).toUpperCase().codePointAt(0), 0x1E90D); // ADLAM SMALL LETTER DHA, ADLAM CAPITAL LETTER DHA
+assertEq(String.fromCodePoint(0x1E930).toUpperCase().codePointAt(0), 0x1E90E); // ADLAM SMALL LETTER YHE, ADLAM CAPITAL LETTER YHE
+assertEq(String.fromCodePoint(0x1E931).toUpperCase().codePointAt(0), 0x1E90F); // ADLAM SMALL LETTER WAW, ADLAM CAPITAL LETTER WAW
+assertEq(String.fromCodePoint(0x1E932).toUpperCase().codePointAt(0), 0x1E910); // ADLAM SMALL LETTER NUN, ADLAM CAPITAL LETTER NUN
+assertEq(String.fromCodePoint(0x1E933).toUpperCase().codePointAt(0), 0x1E911); // ADLAM SMALL LETTER KAF, ADLAM CAPITAL LETTER KAF
+assertEq(String.fromCodePoint(0x1E934).toUpperCase().codePointAt(0), 0x1E912); // ADLAM SMALL LETTER YA, ADLAM CAPITAL LETTER YA
+assertEq(String.fromCodePoint(0x1E935).toUpperCase().codePointAt(0), 0x1E913); // ADLAM SMALL LETTER U, ADLAM CAPITAL LETTER U
+assertEq(String.fromCodePoint(0x1E936).toUpperCase().codePointAt(0), 0x1E914); // ADLAM SMALL LETTER JIIM, ADLAM CAPITAL LETTER JIIM
+assertEq(String.fromCodePoint(0x1E937).toUpperCase().codePointAt(0), 0x1E915); // ADLAM SMALL LETTER CHI, ADLAM CAPITAL LETTER CHI
+assertEq(String.fromCodePoint(0x1E938).toUpperCase().codePointAt(0), 0x1E916); // ADLAM SMALL LETTER HA, ADLAM CAPITAL LETTER HA
+assertEq(String.fromCodePoint(0x1E939).toUpperCase().codePointAt(0), 0x1E917); // ADLAM SMALL LETTER QAAF, ADLAM CAPITAL LETTER QAAF
+assertEq(String.fromCodePoint(0x1E93A).toUpperCase().codePointAt(0), 0x1E918); // ADLAM SMALL LETTER GA, ADLAM CAPITAL LETTER GA
+assertEq(String.fromCodePoint(0x1E93B).toUpperCase().codePointAt(0), 0x1E919); // ADLAM SMALL LETTER NYA, ADLAM CAPITAL LETTER NYA
+assertEq(String.fromCodePoint(0x1E93C).toUpperCase().codePointAt(0), 0x1E91A); // ADLAM SMALL LETTER TU, ADLAM CAPITAL LETTER TU
+assertEq(String.fromCodePoint(0x1E93D).toUpperCase().codePointAt(0), 0x1E91B); // ADLAM SMALL LETTER NHA, ADLAM CAPITAL LETTER NHA
+assertEq(String.fromCodePoint(0x1E93E).toUpperCase().codePointAt(0), 0x1E91C); // ADLAM SMALL LETTER VA, ADLAM CAPITAL LETTER VA
+assertEq(String.fromCodePoint(0x1E93F).toUpperCase().codePointAt(0), 0x1E91D); // ADLAM SMALL LETTER KHA, ADLAM CAPITAL LETTER KHA
+assertEq(String.fromCodePoint(0x1E940).toUpperCase().codePointAt(0), 0x1E91E); // ADLAM SMALL LETTER GBE, ADLAM CAPITAL LETTER GBE
+assertEq(String.fromCodePoint(0x1E941).toUpperCase().codePointAt(0), 0x1E91F); // ADLAM SMALL LETTER ZAL, ADLAM CAPITAL LETTER ZAL
+assertEq(String.fromCodePoint(0x1E942).toUpperCase().codePointAt(0), 0x1E920); // ADLAM SMALL LETTER KPO, ADLAM CAPITAL LETTER KPO
+assertEq(String.fromCodePoint(0x1E943).toUpperCase().codePointAt(0), 0x1E921); // ADLAM SMALL LETTER SHA, ADLAM CAPITAL LETTER SHA
+assertEq(String.fromCodePoint(0x10400).toLowerCase().codePointAt(0), 0x10428); // DESERET CAPITAL LETTER LONG I, DESERET SMALL LETTER LONG I
+assertEq(String.fromCodePoint(0x10401).toLowerCase().codePointAt(0), 0x10429); // DESERET CAPITAL LETTER LONG E, DESERET SMALL LETTER LONG E
+assertEq(String.fromCodePoint(0x10402).toLowerCase().codePointAt(0), 0x1042A); // DESERET CAPITAL LETTER LONG A, DESERET SMALL LETTER LONG A
+assertEq(String.fromCodePoint(0x10403).toLowerCase().codePointAt(0), 0x1042B); // DESERET CAPITAL LETTER LONG AH, DESERET SMALL LETTER LONG AH
+assertEq(String.fromCodePoint(0x10404).toLowerCase().codePointAt(0), 0x1042C); // DESERET CAPITAL LETTER LONG O, DESERET SMALL LETTER LONG O
+assertEq(String.fromCodePoint(0x10405).toLowerCase().codePointAt(0), 0x1042D); // DESERET CAPITAL LETTER LONG OO, DESERET SMALL LETTER LONG OO
+assertEq(String.fromCodePoint(0x10406).toLowerCase().codePointAt(0), 0x1042E); // DESERET CAPITAL LETTER SHORT I, DESERET SMALL LETTER SHORT I
+assertEq(String.fromCodePoint(0x10407).toLowerCase().codePointAt(0), 0x1042F); // DESERET CAPITAL LETTER SHORT E, DESERET SMALL LETTER SHORT E
+assertEq(String.fromCodePoint(0x10408).toLowerCase().codePointAt(0), 0x10430); // DESERET CAPITAL LETTER SHORT A, DESERET SMALL LETTER SHORT A
+assertEq(String.fromCodePoint(0x10409).toLowerCase().codePointAt(0), 0x10431); // DESERET CAPITAL LETTER SHORT AH, DESERET SMALL LETTER SHORT AH
+assertEq(String.fromCodePoint(0x1040A).toLowerCase().codePointAt(0), 0x10432); // DESERET CAPITAL LETTER SHORT O, DESERET SMALL LETTER SHORT O
+assertEq(String.fromCodePoint(0x1040B).toLowerCase().codePointAt(0), 0x10433); // DESERET CAPITAL LETTER SHORT OO, DESERET SMALL LETTER SHORT OO
+assertEq(String.fromCodePoint(0x1040C).toLowerCase().codePointAt(0), 0x10434); // DESERET CAPITAL LETTER AY, DESERET SMALL LETTER AY
+assertEq(String.fromCodePoint(0x1040D).toLowerCase().codePointAt(0), 0x10435); // DESERET CAPITAL LETTER OW, DESERET SMALL LETTER OW
+assertEq(String.fromCodePoint(0x1040E).toLowerCase().codePointAt(0), 0x10436); // DESERET CAPITAL LETTER WU, DESERET SMALL LETTER WU
+assertEq(String.fromCodePoint(0x1040F).toLowerCase().codePointAt(0), 0x10437); // DESERET CAPITAL LETTER YEE, DESERET SMALL LETTER YEE
+assertEq(String.fromCodePoint(0x10410).toLowerCase().codePointAt(0), 0x10438); // DESERET CAPITAL LETTER H, DESERET SMALL LETTER H
+assertEq(String.fromCodePoint(0x10411).toLowerCase().codePointAt(0), 0x10439); // DESERET CAPITAL LETTER PEE, DESERET SMALL LETTER PEE
+assertEq(String.fromCodePoint(0x10412).toLowerCase().codePointAt(0), 0x1043A); // DESERET CAPITAL LETTER BEE, DESERET SMALL LETTER BEE
+assertEq(String.fromCodePoint(0x10413).toLowerCase().codePointAt(0), 0x1043B); // DESERET CAPITAL LETTER TEE, DESERET SMALL LETTER TEE
+assertEq(String.fromCodePoint(0x10414).toLowerCase().codePointAt(0), 0x1043C); // DESERET CAPITAL LETTER DEE, DESERET SMALL LETTER DEE
+assertEq(String.fromCodePoint(0x10415).toLowerCase().codePointAt(0), 0x1043D); // DESERET CAPITAL LETTER CHEE, DESERET SMALL LETTER CHEE
+assertEq(String.fromCodePoint(0x10416).toLowerCase().codePointAt(0), 0x1043E); // DESERET CAPITAL LETTER JEE, DESERET SMALL LETTER JEE
+assertEq(String.fromCodePoint(0x10417).toLowerCase().codePointAt(0), 0x1043F); // DESERET CAPITAL LETTER KAY, DESERET SMALL LETTER KAY
+assertEq(String.fromCodePoint(0x10418).toLowerCase().codePointAt(0), 0x10440); // DESERET CAPITAL LETTER GAY, DESERET SMALL LETTER GAY
+assertEq(String.fromCodePoint(0x10419).toLowerCase().codePointAt(0), 0x10441); // DESERET CAPITAL LETTER EF, DESERET SMALL LETTER EF
+assertEq(String.fromCodePoint(0x1041A).toLowerCase().codePointAt(0), 0x10442); // DESERET CAPITAL LETTER VEE, DESERET SMALL LETTER VEE
+assertEq(String.fromCodePoint(0x1041B).toLowerCase().codePointAt(0), 0x10443); // DESERET CAPITAL LETTER ETH, DESERET SMALL LETTER ETH
+assertEq(String.fromCodePoint(0x1041C).toLowerCase().codePointAt(0), 0x10444); // DESERET CAPITAL LETTER THEE, DESERET SMALL LETTER THEE
+assertEq(String.fromCodePoint(0x1041D).toLowerCase().codePointAt(0), 0x10445); // DESERET CAPITAL LETTER ES, DESERET SMALL LETTER ES
+assertEq(String.fromCodePoint(0x1041E).toLowerCase().codePointAt(0), 0x10446); // DESERET CAPITAL LETTER ZEE, DESERET SMALL LETTER ZEE
+assertEq(String.fromCodePoint(0x1041F).toLowerCase().codePointAt(0), 0x10447); // DESERET CAPITAL LETTER ESH, DESERET SMALL LETTER ESH
+assertEq(String.fromCodePoint(0x10420).toLowerCase().codePointAt(0), 0x10448); // DESERET CAPITAL LETTER ZHEE, DESERET SMALL LETTER ZHEE
+assertEq(String.fromCodePoint(0x10421).toLowerCase().codePointAt(0), 0x10449); // DESERET CAPITAL LETTER ER, DESERET SMALL LETTER ER
+assertEq(String.fromCodePoint(0x10422).toLowerCase().codePointAt(0), 0x1044A); // DESERET CAPITAL LETTER EL, DESERET SMALL LETTER EL
+assertEq(String.fromCodePoint(0x10423).toLowerCase().codePointAt(0), 0x1044B); // DESERET CAPITAL LETTER EM, DESERET SMALL LETTER EM
+assertEq(String.fromCodePoint(0x10424).toLowerCase().codePointAt(0), 0x1044C); // DESERET CAPITAL LETTER EN, DESERET SMALL LETTER EN
+assertEq(String.fromCodePoint(0x10425).toLowerCase().codePointAt(0), 0x1044D); // DESERET CAPITAL LETTER ENG, DESERET SMALL LETTER ENG
+assertEq(String.fromCodePoint(0x10426).toLowerCase().codePointAt(0), 0x1044E); // DESERET CAPITAL LETTER OI, DESERET SMALL LETTER OI
+assertEq(String.fromCodePoint(0x10427).toLowerCase().codePointAt(0), 0x1044F); // DESERET CAPITAL LETTER EW, DESERET SMALL LETTER EW
+assertEq(String.fromCodePoint(0x104B0).toLowerCase().codePointAt(0), 0x104D8); // OSAGE CAPITAL LETTER A, OSAGE SMALL LETTER A
+assertEq(String.fromCodePoint(0x104B1).toLowerCase().codePointAt(0), 0x104D9); // OSAGE CAPITAL LETTER AI, OSAGE SMALL LETTER AI
+assertEq(String.fromCodePoint(0x104B2).toLowerCase().codePointAt(0), 0x104DA); // OSAGE CAPITAL LETTER AIN, OSAGE SMALL LETTER AIN
+assertEq(String.fromCodePoint(0x104B3).toLowerCase().codePointAt(0), 0x104DB); // OSAGE CAPITAL LETTER AH, OSAGE SMALL LETTER AH
+assertEq(String.fromCodePoint(0x104B4).toLowerCase().codePointAt(0), 0x104DC); // OSAGE CAPITAL LETTER BRA, OSAGE SMALL LETTER BRA
+assertEq(String.fromCodePoint(0x104B5).toLowerCase().codePointAt(0), 0x104DD); // OSAGE CAPITAL LETTER CHA, OSAGE SMALL LETTER CHA
+assertEq(String.fromCodePoint(0x104B6).toLowerCase().codePointAt(0), 0x104DE); // OSAGE CAPITAL LETTER EHCHA, OSAGE SMALL LETTER EHCHA
+assertEq(String.fromCodePoint(0x104B7).toLowerCase().codePointAt(0), 0x104DF); // OSAGE CAPITAL LETTER E, OSAGE SMALL LETTER E
+assertEq(String.fromCodePoint(0x104B8).toLowerCase().codePointAt(0), 0x104E0); // OSAGE CAPITAL LETTER EIN, OSAGE SMALL LETTER EIN
+assertEq(String.fromCodePoint(0x104B9).toLowerCase().codePointAt(0), 0x104E1); // OSAGE CAPITAL LETTER HA, OSAGE SMALL LETTER HA
+assertEq(String.fromCodePoint(0x104BA).toLowerCase().codePointAt(0), 0x104E2); // OSAGE CAPITAL LETTER HYA, OSAGE SMALL LETTER HYA
+assertEq(String.fromCodePoint(0x104BB).toLowerCase().codePointAt(0), 0x104E3); // OSAGE CAPITAL LETTER I, OSAGE SMALL LETTER I
+assertEq(String.fromCodePoint(0x104BC).toLowerCase().codePointAt(0), 0x104E4); // OSAGE CAPITAL LETTER KA, OSAGE SMALL LETTER KA
+assertEq(String.fromCodePoint(0x104BD).toLowerCase().codePointAt(0), 0x104E5); // OSAGE CAPITAL LETTER EHKA, OSAGE SMALL LETTER EHKA
+assertEq(String.fromCodePoint(0x104BE).toLowerCase().codePointAt(0), 0x104E6); // OSAGE CAPITAL LETTER KYA, OSAGE SMALL LETTER KYA
+assertEq(String.fromCodePoint(0x104BF).toLowerCase().codePointAt(0), 0x104E7); // OSAGE CAPITAL LETTER LA, OSAGE SMALL LETTER LA
+assertEq(String.fromCodePoint(0x104C0).toLowerCase().codePointAt(0), 0x104E8); // OSAGE CAPITAL LETTER MA, OSAGE SMALL LETTER MA
+assertEq(String.fromCodePoint(0x104C1).toLowerCase().codePointAt(0), 0x104E9); // OSAGE CAPITAL LETTER NA, OSAGE SMALL LETTER NA
+assertEq(String.fromCodePoint(0x104C2).toLowerCase().codePointAt(0), 0x104EA); // OSAGE CAPITAL LETTER O, OSAGE SMALL LETTER O
+assertEq(String.fromCodePoint(0x104C3).toLowerCase().codePointAt(0), 0x104EB); // OSAGE CAPITAL LETTER OIN, OSAGE SMALL LETTER OIN
+assertEq(String.fromCodePoint(0x104C4).toLowerCase().codePointAt(0), 0x104EC); // OSAGE CAPITAL LETTER PA, OSAGE SMALL LETTER PA
+assertEq(String.fromCodePoint(0x104C5).toLowerCase().codePointAt(0), 0x104ED); // OSAGE CAPITAL LETTER EHPA, OSAGE SMALL LETTER EHPA
+assertEq(String.fromCodePoint(0x104C6).toLowerCase().codePointAt(0), 0x104EE); // OSAGE CAPITAL LETTER SA, OSAGE SMALL LETTER SA
+assertEq(String.fromCodePoint(0x104C7).toLowerCase().codePointAt(0), 0x104EF); // OSAGE CAPITAL LETTER SHA, OSAGE SMALL LETTER SHA
+assertEq(String.fromCodePoint(0x104C8).toLowerCase().codePointAt(0), 0x104F0); // OSAGE CAPITAL LETTER TA, OSAGE SMALL LETTER TA
+assertEq(String.fromCodePoint(0x104C9).toLowerCase().codePointAt(0), 0x104F1); // OSAGE CAPITAL LETTER EHTA, OSAGE SMALL LETTER EHTA
+assertEq(String.fromCodePoint(0x104CA).toLowerCase().codePointAt(0), 0x104F2); // OSAGE CAPITAL LETTER TSA, OSAGE SMALL LETTER TSA
+assertEq(String.fromCodePoint(0x104CB).toLowerCase().codePointAt(0), 0x104F3); // OSAGE CAPITAL LETTER EHTSA, OSAGE SMALL LETTER EHTSA
+assertEq(String.fromCodePoint(0x104CC).toLowerCase().codePointAt(0), 0x104F4); // OSAGE CAPITAL LETTER TSHA, OSAGE SMALL LETTER TSHA
+assertEq(String.fromCodePoint(0x104CD).toLowerCase().codePointAt(0), 0x104F5); // OSAGE CAPITAL LETTER DHA, OSAGE SMALL LETTER DHA
+assertEq(String.fromCodePoint(0x104CE).toLowerCase().codePointAt(0), 0x104F6); // OSAGE CAPITAL LETTER U, OSAGE SMALL LETTER U
+assertEq(String.fromCodePoint(0x104CF).toLowerCase().codePointAt(0), 0x104F7); // OSAGE CAPITAL LETTER WA, OSAGE SMALL LETTER WA
+assertEq(String.fromCodePoint(0x104D0).toLowerCase().codePointAt(0), 0x104F8); // OSAGE CAPITAL LETTER KHA, OSAGE SMALL LETTER KHA
+assertEq(String.fromCodePoint(0x104D1).toLowerCase().codePointAt(0), 0x104F9); // OSAGE CAPITAL LETTER GHA, OSAGE SMALL LETTER GHA
+assertEq(String.fromCodePoint(0x104D2).toLowerCase().codePointAt(0), 0x104FA); // OSAGE CAPITAL LETTER ZA, OSAGE SMALL LETTER ZA
+assertEq(String.fromCodePoint(0x104D3).toLowerCase().codePointAt(0), 0x104FB); // OSAGE CAPITAL LETTER ZHA, OSAGE SMALL LETTER ZHA
+assertEq(String.fromCodePoint(0x10C80).toLowerCase().codePointAt(0), 0x10CC0); // OLD HUNGARIAN CAPITAL LETTER A, OLD HUNGARIAN SMALL LETTER A
+assertEq(String.fromCodePoint(0x10C81).toLowerCase().codePointAt(0), 0x10CC1); // OLD HUNGARIAN CAPITAL LETTER AA, OLD HUNGARIAN SMALL LETTER AA
+assertEq(String.fromCodePoint(0x10C82).toLowerCase().codePointAt(0), 0x10CC2); // OLD HUNGARIAN CAPITAL LETTER EB, OLD HUNGARIAN SMALL LETTER EB
+assertEq(String.fromCodePoint(0x10C83).toLowerCase().codePointAt(0), 0x10CC3); // OLD HUNGARIAN CAPITAL LETTER AMB, OLD HUNGARIAN SMALL LETTER AMB
+assertEq(String.fromCodePoint(0x10C84).toLowerCase().codePointAt(0), 0x10CC4); // OLD HUNGARIAN CAPITAL LETTER EC, OLD HUNGARIAN SMALL LETTER EC
+assertEq(String.fromCodePoint(0x10C85).toLowerCase().codePointAt(0), 0x10CC5); // OLD HUNGARIAN CAPITAL LETTER ENC, OLD HUNGARIAN SMALL LETTER ENC
+assertEq(String.fromCodePoint(0x10C86).toLowerCase().codePointAt(0), 0x10CC6); // OLD HUNGARIAN CAPITAL LETTER ECS, OLD HUNGARIAN SMALL LETTER ECS
+assertEq(String.fromCodePoint(0x10C87).toLowerCase().codePointAt(0), 0x10CC7); // OLD HUNGARIAN CAPITAL LETTER ED, OLD HUNGARIAN SMALL LETTER ED
+assertEq(String.fromCodePoint(0x10C88).toLowerCase().codePointAt(0), 0x10CC8); // OLD HUNGARIAN CAPITAL LETTER AND, OLD HUNGARIAN SMALL LETTER AND
+assertEq(String.fromCodePoint(0x10C89).toLowerCase().codePointAt(0), 0x10CC9); // OLD HUNGARIAN CAPITAL LETTER E, OLD HUNGARIAN SMALL LETTER E
+assertEq(String.fromCodePoint(0x10C8A).toLowerCase().codePointAt(0), 0x10CCA); // OLD HUNGARIAN CAPITAL LETTER CLOSE E, OLD HUNGARIAN SMALL LETTER CLOSE E
+assertEq(String.fromCodePoint(0x10C8B).toLowerCase().codePointAt(0), 0x10CCB); // OLD HUNGARIAN CAPITAL LETTER EE, OLD HUNGARIAN SMALL LETTER EE
+assertEq(String.fromCodePoint(0x10C8C).toLowerCase().codePointAt(0), 0x10CCC); // OLD HUNGARIAN CAPITAL LETTER EF, OLD HUNGARIAN SMALL LETTER EF
+assertEq(String.fromCodePoint(0x10C8D).toLowerCase().codePointAt(0), 0x10CCD); // OLD HUNGARIAN CAPITAL LETTER EG, OLD HUNGARIAN SMALL LETTER EG
+assertEq(String.fromCodePoint(0x10C8E).toLowerCase().codePointAt(0), 0x10CCE); // OLD HUNGARIAN CAPITAL LETTER EGY, OLD HUNGARIAN SMALL LETTER EGY
+assertEq(String.fromCodePoint(0x10C8F).toLowerCase().codePointAt(0), 0x10CCF); // OLD HUNGARIAN CAPITAL LETTER EH, OLD HUNGARIAN SMALL LETTER EH
+assertEq(String.fromCodePoint(0x10C90).toLowerCase().codePointAt(0), 0x10CD0); // OLD HUNGARIAN CAPITAL LETTER I, OLD HUNGARIAN SMALL LETTER I
+assertEq(String.fromCodePoint(0x10C91).toLowerCase().codePointAt(0), 0x10CD1); // OLD HUNGARIAN CAPITAL LETTER II, OLD HUNGARIAN SMALL LETTER II
+assertEq(String.fromCodePoint(0x10C92).toLowerCase().codePointAt(0), 0x10CD2); // OLD HUNGARIAN CAPITAL LETTER EJ, OLD HUNGARIAN SMALL LETTER EJ
+assertEq(String.fromCodePoint(0x10C93).toLowerCase().codePointAt(0), 0x10CD3); // OLD HUNGARIAN CAPITAL LETTER EK, OLD HUNGARIAN SMALL LETTER EK
+assertEq(String.fromCodePoint(0x10C94).toLowerCase().codePointAt(0), 0x10CD4); // OLD HUNGARIAN CAPITAL LETTER AK, OLD HUNGARIAN SMALL LETTER AK
+assertEq(String.fromCodePoint(0x10C95).toLowerCase().codePointAt(0), 0x10CD5); // OLD HUNGARIAN CAPITAL LETTER UNK, OLD HUNGARIAN SMALL LETTER UNK
+assertEq(String.fromCodePoint(0x10C96).toLowerCase().codePointAt(0), 0x10CD6); // OLD HUNGARIAN CAPITAL LETTER EL, OLD HUNGARIAN SMALL LETTER EL
+assertEq(String.fromCodePoint(0x10C97).toLowerCase().codePointAt(0), 0x10CD7); // OLD HUNGARIAN CAPITAL LETTER ELY, OLD HUNGARIAN SMALL LETTER ELY
+assertEq(String.fromCodePoint(0x10C98).toLowerCase().codePointAt(0), 0x10CD8); // OLD HUNGARIAN CAPITAL LETTER EM, OLD HUNGARIAN SMALL LETTER EM
+assertEq(String.fromCodePoint(0x10C99).toLowerCase().codePointAt(0), 0x10CD9); // OLD HUNGARIAN CAPITAL LETTER EN, OLD HUNGARIAN SMALL LETTER EN
+assertEq(String.fromCodePoint(0x10C9A).toLowerCase().codePointAt(0), 0x10CDA); // OLD HUNGARIAN CAPITAL LETTER ENY, OLD HUNGARIAN SMALL LETTER ENY
+assertEq(String.fromCodePoint(0x10C9B).toLowerCase().codePointAt(0), 0x10CDB); // OLD HUNGARIAN CAPITAL LETTER O, OLD HUNGARIAN SMALL LETTER O
+assertEq(String.fromCodePoint(0x10C9C).toLowerCase().codePointAt(0), 0x10CDC); // OLD HUNGARIAN CAPITAL LETTER OO, OLD HUNGARIAN SMALL LETTER OO
+assertEq(String.fromCodePoint(0x10C9D).toLowerCase().codePointAt(0), 0x10CDD); // OLD HUNGARIAN CAPITAL LETTER NIKOLSBURG OE, OLD HUNGARIAN SMALL LETTER NIKOLSBURG OE
+assertEq(String.fromCodePoint(0x10C9E).toLowerCase().codePointAt(0), 0x10CDE); // OLD HUNGARIAN CAPITAL LETTER RUDIMENTA OE, OLD HUNGARIAN SMALL LETTER RUDIMENTA OE
+assertEq(String.fromCodePoint(0x10C9F).toLowerCase().codePointAt(0), 0x10CDF); // OLD HUNGARIAN CAPITAL LETTER OEE, OLD HUNGARIAN SMALL LETTER OEE
+assertEq(String.fromCodePoint(0x10CA0).toLowerCase().codePointAt(0), 0x10CE0); // OLD HUNGARIAN CAPITAL LETTER EP, OLD HUNGARIAN SMALL LETTER EP
+assertEq(String.fromCodePoint(0x10CA1).toLowerCase().codePointAt(0), 0x10CE1); // OLD HUNGARIAN CAPITAL LETTER EMP, OLD HUNGARIAN SMALL LETTER EMP
+assertEq(String.fromCodePoint(0x10CA2).toLowerCase().codePointAt(0), 0x10CE2); // OLD HUNGARIAN CAPITAL LETTER ER, OLD HUNGARIAN SMALL LETTER ER
+assertEq(String.fromCodePoint(0x10CA3).toLowerCase().codePointAt(0), 0x10CE3); // OLD HUNGARIAN CAPITAL LETTER SHORT ER, OLD HUNGARIAN SMALL LETTER SHORT ER
+assertEq(String.fromCodePoint(0x10CA4).toLowerCase().codePointAt(0), 0x10CE4); // OLD HUNGARIAN CAPITAL LETTER ES, OLD HUNGARIAN SMALL LETTER ES
+assertEq(String.fromCodePoint(0x10CA5).toLowerCase().codePointAt(0), 0x10CE5); // OLD HUNGARIAN CAPITAL LETTER ESZ, OLD HUNGARIAN SMALL LETTER ESZ
+assertEq(String.fromCodePoint(0x10CA6).toLowerCase().codePointAt(0), 0x10CE6); // OLD HUNGARIAN CAPITAL LETTER ET, OLD HUNGARIAN SMALL LETTER ET
+assertEq(String.fromCodePoint(0x10CA7).toLowerCase().codePointAt(0), 0x10CE7); // OLD HUNGARIAN CAPITAL LETTER ENT, OLD HUNGARIAN SMALL LETTER ENT
+assertEq(String.fromCodePoint(0x10CA8).toLowerCase().codePointAt(0), 0x10CE8); // OLD HUNGARIAN CAPITAL LETTER ETY, OLD HUNGARIAN SMALL LETTER ETY
+assertEq(String.fromCodePoint(0x10CA9).toLowerCase().codePointAt(0), 0x10CE9); // OLD HUNGARIAN CAPITAL LETTER ECH, OLD HUNGARIAN SMALL LETTER ECH
+assertEq(String.fromCodePoint(0x10CAA).toLowerCase().codePointAt(0), 0x10CEA); // OLD HUNGARIAN CAPITAL LETTER U, OLD HUNGARIAN SMALL LETTER U
+assertEq(String.fromCodePoint(0x10CAB).toLowerCase().codePointAt(0), 0x10CEB); // OLD HUNGARIAN CAPITAL LETTER UU, OLD HUNGARIAN SMALL LETTER UU
+assertEq(String.fromCodePoint(0x10CAC).toLowerCase().codePointAt(0), 0x10CEC); // OLD HUNGARIAN CAPITAL LETTER NIKOLSBURG UE, OLD HUNGARIAN SMALL LETTER NIKOLSBURG UE
+assertEq(String.fromCodePoint(0x10CAD).toLowerCase().codePointAt(0), 0x10CED); // OLD HUNGARIAN CAPITAL LETTER RUDIMENTA UE, OLD HUNGARIAN SMALL LETTER RUDIMENTA UE
+assertEq(String.fromCodePoint(0x10CAE).toLowerCase().codePointAt(0), 0x10CEE); // OLD HUNGARIAN CAPITAL LETTER EV, OLD HUNGARIAN SMALL LETTER EV
+assertEq(String.fromCodePoint(0x10CAF).toLowerCase().codePointAt(0), 0x10CEF); // OLD HUNGARIAN CAPITAL LETTER EZ, OLD HUNGARIAN SMALL LETTER EZ
+assertEq(String.fromCodePoint(0x10CB0).toLowerCase().codePointAt(0), 0x10CF0); // OLD HUNGARIAN CAPITAL LETTER EZS, OLD HUNGARIAN SMALL LETTER EZS
+assertEq(String.fromCodePoint(0x10CB1).toLowerCase().codePointAt(0), 0x10CF1); // OLD HUNGARIAN CAPITAL LETTER ENT-SHAPED SIGN, OLD HUNGARIAN SMALL LETTER ENT-SHAPED SIGN
+assertEq(String.fromCodePoint(0x10CB2).toLowerCase().codePointAt(0), 0x10CF2); // OLD HUNGARIAN CAPITAL LETTER US, OLD HUNGARIAN SMALL LETTER US
+assertEq(String.fromCodePoint(0x118A0).toLowerCase().codePointAt(0), 0x118C0); // WARANG CITI CAPITAL LETTER NGAA, WARANG CITI SMALL LETTER NGAA
+assertEq(String.fromCodePoint(0x118A1).toLowerCase().codePointAt(0), 0x118C1); // WARANG CITI CAPITAL LETTER A, WARANG CITI SMALL LETTER A
+assertEq(String.fromCodePoint(0x118A2).toLowerCase().codePointAt(0), 0x118C2); // WARANG CITI CAPITAL LETTER WI, WARANG CITI SMALL LETTER WI
+assertEq(String.fromCodePoint(0x118A3).toLowerCase().codePointAt(0), 0x118C3); // WARANG CITI CAPITAL LETTER YU, WARANG CITI SMALL LETTER YU
+assertEq(String.fromCodePoint(0x118A4).toLowerCase().codePointAt(0), 0x118C4); // WARANG CITI CAPITAL LETTER YA, WARANG CITI SMALL LETTER YA
+assertEq(String.fromCodePoint(0x118A5).toLowerCase().codePointAt(0), 0x118C5); // WARANG CITI CAPITAL LETTER YO, WARANG CITI SMALL LETTER YO
+assertEq(String.fromCodePoint(0x118A6).toLowerCase().codePointAt(0), 0x118C6); // WARANG CITI CAPITAL LETTER II, WARANG CITI SMALL LETTER II
+assertEq(String.fromCodePoint(0x118A7).toLowerCase().codePointAt(0), 0x118C7); // WARANG CITI CAPITAL LETTER UU, WARANG CITI SMALL LETTER UU
+assertEq(String.fromCodePoint(0x118A8).toLowerCase().codePointAt(0), 0x118C8); // WARANG CITI CAPITAL LETTER E, WARANG CITI SMALL LETTER E
+assertEq(String.fromCodePoint(0x118A9).toLowerCase().codePointAt(0), 0x118C9); // WARANG CITI CAPITAL LETTER O, WARANG CITI SMALL LETTER O
+assertEq(String.fromCodePoint(0x118AA).toLowerCase().codePointAt(0), 0x118CA); // WARANG CITI CAPITAL LETTER ANG, WARANG CITI SMALL LETTER ANG
+assertEq(String.fromCodePoint(0x118AB).toLowerCase().codePointAt(0), 0x118CB); // WARANG CITI CAPITAL LETTER GA, WARANG CITI SMALL LETTER GA
+assertEq(String.fromCodePoint(0x118AC).toLowerCase().codePointAt(0), 0x118CC); // WARANG CITI CAPITAL LETTER KO, WARANG CITI SMALL LETTER KO
+assertEq(String.fromCodePoint(0x118AD).toLowerCase().codePointAt(0), 0x118CD); // WARANG CITI CAPITAL LETTER ENY, WARANG CITI SMALL LETTER ENY
+assertEq(String.fromCodePoint(0x118AE).toLowerCase().codePointAt(0), 0x118CE); // WARANG CITI CAPITAL LETTER YUJ, WARANG CITI SMALL LETTER YUJ
+assertEq(String.fromCodePoint(0x118AF).toLowerCase().codePointAt(0), 0x118CF); // WARANG CITI CAPITAL LETTER UC, WARANG CITI SMALL LETTER UC
+assertEq(String.fromCodePoint(0x118B0).toLowerCase().codePointAt(0), 0x118D0); // WARANG CITI CAPITAL LETTER ENN, WARANG CITI SMALL LETTER ENN
+assertEq(String.fromCodePoint(0x118B1).toLowerCase().codePointAt(0), 0x118D1); // WARANG CITI CAPITAL LETTER ODD, WARANG CITI SMALL LETTER ODD
+assertEq(String.fromCodePoint(0x118B2).toLowerCase().codePointAt(0), 0x118D2); // WARANG CITI CAPITAL LETTER TTE, WARANG CITI SMALL LETTER TTE
+assertEq(String.fromCodePoint(0x118B3).toLowerCase().codePointAt(0), 0x118D3); // WARANG CITI CAPITAL LETTER NUNG, WARANG CITI SMALL LETTER NUNG
+assertEq(String.fromCodePoint(0x118B4).toLowerCase().codePointAt(0), 0x118D4); // WARANG CITI CAPITAL LETTER DA, WARANG CITI SMALL LETTER DA
+assertEq(String.fromCodePoint(0x118B5).toLowerCase().codePointAt(0), 0x118D5); // WARANG CITI CAPITAL LETTER AT, WARANG CITI SMALL LETTER AT
+assertEq(String.fromCodePoint(0x118B6).toLowerCase().codePointAt(0), 0x118D6); // WARANG CITI CAPITAL LETTER AM, WARANG CITI SMALL LETTER AM
+assertEq(String.fromCodePoint(0x118B7).toLowerCase().codePointAt(0), 0x118D7); // WARANG CITI CAPITAL LETTER BU, WARANG CITI SMALL LETTER BU
+assertEq(String.fromCodePoint(0x118B8).toLowerCase().codePointAt(0), 0x118D8); // WARANG CITI CAPITAL LETTER PU, WARANG CITI SMALL LETTER PU
+assertEq(String.fromCodePoint(0x118B9).toLowerCase().codePointAt(0), 0x118D9); // WARANG CITI CAPITAL LETTER HIYO, WARANG CITI SMALL LETTER HIYO
+assertEq(String.fromCodePoint(0x118BA).toLowerCase().codePointAt(0), 0x118DA); // WARANG CITI CAPITAL LETTER HOLO, WARANG CITI SMALL LETTER HOLO
+assertEq(String.fromCodePoint(0x118BB).toLowerCase().codePointAt(0), 0x118DB); // WARANG CITI CAPITAL LETTER HORR, WARANG CITI SMALL LETTER HORR
+assertEq(String.fromCodePoint(0x118BC).toLowerCase().codePointAt(0), 0x118DC); // WARANG CITI CAPITAL LETTER HAR, WARANG CITI SMALL LETTER HAR
+assertEq(String.fromCodePoint(0x118BD).toLowerCase().codePointAt(0), 0x118DD); // WARANG CITI CAPITAL LETTER SSUU, WARANG CITI SMALL LETTER SSUU
+assertEq(String.fromCodePoint(0x118BE).toLowerCase().codePointAt(0), 0x118DE); // WARANG CITI CAPITAL LETTER SII, WARANG CITI SMALL LETTER SII
+assertEq(String.fromCodePoint(0x118BF).toLowerCase().codePointAt(0), 0x118DF); // WARANG CITI CAPITAL LETTER VIYO, WARANG CITI SMALL LETTER VIYO
+assertEq(String.fromCodePoint(0x1E900).toLowerCase().codePointAt(0), 0x1E922); // ADLAM CAPITAL LETTER ALIF, ADLAM SMALL LETTER ALIF
+assertEq(String.fromCodePoint(0x1E901).toLowerCase().codePointAt(0), 0x1E923); // ADLAM CAPITAL LETTER DAALI, ADLAM SMALL LETTER DAALI
+assertEq(String.fromCodePoint(0x1E902).toLowerCase().codePointAt(0), 0x1E924); // ADLAM CAPITAL LETTER LAAM, ADLAM SMALL LETTER LAAM
+assertEq(String.fromCodePoint(0x1E903).toLowerCase().codePointAt(0), 0x1E925); // ADLAM CAPITAL LETTER MIIM, ADLAM SMALL LETTER MIIM
+assertEq(String.fromCodePoint(0x1E904).toLowerCase().codePointAt(0), 0x1E926); // ADLAM CAPITAL LETTER BA, ADLAM SMALL LETTER BA
+assertEq(String.fromCodePoint(0x1E905).toLowerCase().codePointAt(0), 0x1E927); // ADLAM CAPITAL LETTER SINNYIIYHE, ADLAM SMALL LETTER SINNYIIYHE
+assertEq(String.fromCodePoint(0x1E906).toLowerCase().codePointAt(0), 0x1E928); // ADLAM CAPITAL LETTER PE, ADLAM SMALL LETTER PE
+assertEq(String.fromCodePoint(0x1E907).toLowerCase().codePointAt(0), 0x1E929); // ADLAM CAPITAL LETTER BHE, ADLAM SMALL LETTER BHE
+assertEq(String.fromCodePoint(0x1E908).toLowerCase().codePointAt(0), 0x1E92A); // ADLAM CAPITAL LETTER RA, ADLAM SMALL LETTER RA
+assertEq(String.fromCodePoint(0x1E909).toLowerCase().codePointAt(0), 0x1E92B); // ADLAM CAPITAL LETTER E, ADLAM SMALL LETTER E
+assertEq(String.fromCodePoint(0x1E90A).toLowerCase().codePointAt(0), 0x1E92C); // ADLAM CAPITAL LETTER FA, ADLAM SMALL LETTER FA
+assertEq(String.fromCodePoint(0x1E90B).toLowerCase().codePointAt(0), 0x1E92D); // ADLAM CAPITAL LETTER I, ADLAM SMALL LETTER I
+assertEq(String.fromCodePoint(0x1E90C).toLowerCase().codePointAt(0), 0x1E92E); // ADLAM CAPITAL LETTER O, ADLAM SMALL LETTER O
+assertEq(String.fromCodePoint(0x1E90D).toLowerCase().codePointAt(0), 0x1E92F); // ADLAM CAPITAL LETTER DHA, ADLAM SMALL LETTER DHA
+assertEq(String.fromCodePoint(0x1E90E).toLowerCase().codePointAt(0), 0x1E930); // ADLAM CAPITAL LETTER YHE, ADLAM SMALL LETTER YHE
+assertEq(String.fromCodePoint(0x1E90F).toLowerCase().codePointAt(0), 0x1E931); // ADLAM CAPITAL LETTER WAW, ADLAM SMALL LETTER WAW
+assertEq(String.fromCodePoint(0x1E910).toLowerCase().codePointAt(0), 0x1E932); // ADLAM CAPITAL LETTER NUN, ADLAM SMALL LETTER NUN
+assertEq(String.fromCodePoint(0x1E911).toLowerCase().codePointAt(0), 0x1E933); // ADLAM CAPITAL LETTER KAF, ADLAM SMALL LETTER KAF
+assertEq(String.fromCodePoint(0x1E912).toLowerCase().codePointAt(0), 0x1E934); // ADLAM CAPITAL LETTER YA, ADLAM SMALL LETTER YA
+assertEq(String.fromCodePoint(0x1E913).toLowerCase().codePointAt(0), 0x1E935); // ADLAM CAPITAL LETTER U, ADLAM SMALL LETTER U
+assertEq(String.fromCodePoint(0x1E914).toLowerCase().codePointAt(0), 0x1E936); // ADLAM CAPITAL LETTER JIIM, ADLAM SMALL LETTER JIIM
+assertEq(String.fromCodePoint(0x1E915).toLowerCase().codePointAt(0), 0x1E937); // ADLAM CAPITAL LETTER CHI, ADLAM SMALL LETTER CHI
+assertEq(String.fromCodePoint(0x1E916).toLowerCase().codePointAt(0), 0x1E938); // ADLAM CAPITAL LETTER HA, ADLAM SMALL LETTER HA
+assertEq(String.fromCodePoint(0x1E917).toLowerCase().codePointAt(0), 0x1E939); // ADLAM CAPITAL LETTER QAAF, ADLAM SMALL LETTER QAAF
+assertEq(String.fromCodePoint(0x1E918).toLowerCase().codePointAt(0), 0x1E93A); // ADLAM CAPITAL LETTER GA, ADLAM SMALL LETTER GA
+assertEq(String.fromCodePoint(0x1E919).toLowerCase().codePointAt(0), 0x1E93B); // ADLAM CAPITAL LETTER NYA, ADLAM SMALL LETTER NYA
+assertEq(String.fromCodePoint(0x1E91A).toLowerCase().codePointAt(0), 0x1E93C); // ADLAM CAPITAL LETTER TU, ADLAM SMALL LETTER TU
+assertEq(String.fromCodePoint(0x1E91B).toLowerCase().codePointAt(0), 0x1E93D); // ADLAM CAPITAL LETTER NHA, ADLAM SMALL LETTER NHA
+assertEq(String.fromCodePoint(0x1E91C).toLowerCase().codePointAt(0), 0x1E93E); // ADLAM CAPITAL LETTER VA, ADLAM SMALL LETTER VA
+assertEq(String.fromCodePoint(0x1E91D).toLowerCase().codePointAt(0), 0x1E93F); // ADLAM CAPITAL LETTER KHA, ADLAM SMALL LETTER KHA
+assertEq(String.fromCodePoint(0x1E91E).toLowerCase().codePointAt(0), 0x1E940); // ADLAM CAPITAL LETTER GBE, ADLAM SMALL LETTER GBE
+assertEq(String.fromCodePoint(0x1E91F).toLowerCase().codePointAt(0), 0x1E941); // ADLAM CAPITAL LETTER ZAL, ADLAM SMALL LETTER ZAL
+assertEq(String.fromCodePoint(0x1E920).toLowerCase().codePointAt(0), 0x1E942); // ADLAM CAPITAL LETTER KPO, ADLAM SMALL LETTER KPO
+assertEq(String.fromCodePoint(0x1E921).toLowerCase().codePointAt(0), 0x1E943); // ADLAM CAPITAL LETTER SHA, ADLAM SMALL LETTER SHA
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);
