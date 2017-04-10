@@ -757,6 +757,20 @@ function showColumn(id, state) {
 }
 
 /**
+ * Toggle sort direction on a column by clicking on the column header.
+ *
+ * @param  {String} id
+ *         The uniqueId of the given column.
+ */
+function clickColumnHeader(id) {
+  let columns = gUI.table.columns;
+  let column = columns.get(id);
+  let header = column.header;
+
+  header.click();
+}
+
+/**
  * Show or hide all columns.
  *
  * @param  {Boolean} state
