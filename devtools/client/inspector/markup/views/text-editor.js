@@ -20,17 +20,16 @@ const INSPECTOR_L10N =
  *         The container owning this editor.
  * @param  {DOMNode} node
  *         The node being edited.
- * @param  {String} templateId
- *         The template id to use to build the editor.
+ * @param  {String} type
+ *         The type of editor to build. This can be either 'text' or 'comment'.
  */
-function TextEditor(container, node, templateId) {
+function TextEditor(container, node, type) {
   this.container = container;
   this.markup = this.container.markup;
   this.node = node;
-  this.template = this.markup.template.bind(templateId);
   this._selected = false;
 
-  this.markup.template(templateId, this);
+  this.buildMarkup(type);
 
   editableField({
     element: this.value,
@@ -63,6 +62,32 @@ function TextEditor(container, node, templateId) {
 }
 
 TextEditor.prototype = {
+  buildMarkup: function (type) {
+    let doc = this.markup.doc;
+
+    this.elt = doc.createElement("span");
+    this.elt.classList.add("editor", type);
+
+    if (type === "comment") {
+      this.elt.classList.add("theme-comment");
+
+      let openComment = doc.createElement("span");
+      openComment.textContent = "<!--";
+      this.elt.appendChild(openComment);
+    }
+
+    this.value = doc.createElement("pre");
+    this.value.setAttribute("style", "display:inline-block;white-space: normal;");
+    this.value.setAttribute("tabindex", "-1");
+    this.elt.appendChild(this.value);
+
+    if (type === "comment") {
+      let closeComment = doc.createElement("span");
+      closeComment.textContent = "-->";
+      this.elt.appendChild(closeComment);
+    }
+  },
+
   get selected() {
     return this._selected;
   },
