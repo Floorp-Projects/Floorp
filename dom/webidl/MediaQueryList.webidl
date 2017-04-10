@@ -4,17 +4,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://dev.w3.org/csswg/cssom-view/#the-mediaquerylist-interface
+ * https://drafts.csswg.org/cssom-view/#mediaquerylist
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
-interface MediaQueryList {
+interface MediaQueryList : EventTarget {
   readonly attribute DOMString media;
   readonly attribute boolean matches;
-  void addListener(MediaQueryListListener listener);
-  void removeListener(MediaQueryListListener listener);
-};
 
-callback MediaQueryListListener = void (MediaQueryList list);
+  [Throws]
+  void addListener(EventListener? listener);
+
+  [Throws]
+  void removeListener(EventListener? listener);
+
+           attribute EventHandler onchange;
+};
