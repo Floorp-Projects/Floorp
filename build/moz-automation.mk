@@ -61,16 +61,6 @@ automation/upload: automation/package-tests
 automation/upload: automation/buildsymbols
 automation/upload: automation/update-packaging
 
-# buildsymbols will modify our test binaries, which can interfere with
-# packaging them. A finer-grained dependency can help performance here
-# once bug 1329020 is fixed.
-automation/package-tests: automation/buildsymbols
-
-# automation/package should depend on build (which is implicit due to the way
-# client.mk invokes automation/build), but buildsymbols changes the
-# binaries/libs, and that's what we package/test.
-automation/package: automation/buildsymbols
-
 # The installer and packager all run stage-package, and may conflict
 # with each other.
 automation/installer: automation/package
