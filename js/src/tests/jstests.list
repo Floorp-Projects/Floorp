@@ -859,13 +859,16 @@ skip script test262/intl402/PluralRules/prototype/select/tainting.js
 skip-if(!xulRuntime.shell) script test262/language/module-code/instn-iee-err-circular.js
 skip-if(!xulRuntime.shell) script test262/language/module-code/instn-iee-err-circular-as.js
 
-# Async generators are now a thing.
-skip script test262/language/statements/async-function/early-errors-no-async-generator-n.js
 
-# Need to be rewritten to follow the change in https://github.com/tc39/proposal-async-iteration/pull/92
+####################################################
+# Tests disabled due to invalid test expectations  #
+####################################################
+
+# https://github.com/tc39/test262/pull/947
 skip script test262/language/statements/async-generator/yield-star-async-next.js
 skip script test262/language/statements/async-generator/yield-star-async-return.js
 skip script test262/language/statements/async-generator/yield-star-async-throw.js
+skip script test262/language/module-code/namespace/internals/delete-non-exported.js
 
 # https://github.com/tc39/test262/pull/947
 skip script test262/intl402/NumberFormat/11.1.1_32.js
