@@ -122,6 +122,9 @@ public:
 
     void UpdateFontList();
 
+    // Initialize the contained mLangService (for stylo, must be done in advance on main thread)
+    void InitLangService();
+
     virtual void ClearLangGroupPrefFonts();
 
     virtual void GetFontFamilyList(nsTArray<RefPtr<gfxFontFamily> >& aFamilyArray);

@@ -343,6 +343,7 @@ mod bindings {
             "FragmentOrURL",
             "FrameRequestCallback",
             "GeckoParserExtraData",
+            "GeckoFontMetrics",
             "gfxAlternateValue",
             "gfxFontFeature",
             "gfxFontVariation",
@@ -614,9 +615,11 @@ mod bindings {
             "RawServoAnimationValue",
             "RawServoAnimationValueMap",
             "RawServoDeclarationBlock",
+            "RawServoStyleRule",
             "RawGeckoPresContext",
             "RawGeckoPresContextOwned",
             "RawGeckoStyleAnimationList",
+            "RawGeckoServoStyleRuleList",
             "RawGeckoURLExtraData",
             "RefPtr",
             "CSSPseudoClassType",
@@ -626,6 +629,7 @@ mod bindings {
             "FontFamilyList",
             "FontFamilyType",
             "FontSizePrefs",
+            "GeckoFontMetrics",
             "Keyframe",
             "ServoBundledURI",
             "ServoElementSnapshot",
@@ -731,6 +735,7 @@ mod bindings {
             "RawGeckoKeyframeList",
             "RawGeckoComputedKeyframeValuesList",
             "RawGeckoFontFaceRuleList",
+            "RawGeckoServoStyleRuleList",
         ];
         for &ty in structs_types.iter() {
             builder = builder.hide_type(ty)

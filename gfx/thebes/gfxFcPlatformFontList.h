@@ -215,7 +215,7 @@ public:
                          bool& aNeedsSyntheticBold) override;
 
 protected:
-    virtual ~gfxFontconfigFontFamily() { }
+    virtual ~gfxFontconfigFontFamily();
 
     nsTArray<nsCountedRef<FcPattern> > mFontPatterns;
 

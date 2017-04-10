@@ -243,6 +243,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
         self.check_name(name)
         self.check_field_types(name, definition)
+        self.check_whitelisted_kind(name, definition)
         self.check_whitelistable_fields(name, definition)
         self.check_expiration(name, definition)
         self.check_label_values(name, definition)
@@ -303,6 +304,30 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         if len(invalid) > 0:
             raise ValueError('Label values for %s are not matching pattern "%s": %s' %
                              (name, pattern, ', '.join(invalid)))
+
+    def check_whitelisted_kind(self, name, definition):
+        # We don't need to run any of these checks on the server.
+        if not self._strict_type_checks or whitelists is None:
+            return
+
+        DOC_URL = ("https://gecko.readthedocs.io/en/latest/toolkit/"
+                   "components/telemetry/telemetry/collection/scalars.html")
+
+        # Disallow "flag" and "count" histograms on desktop, suggest to use
+        # scalars instead. Allow using these histograms on Android, as we
+        # don't support scalars there yet.
+        hist_kind = definition.get("kind")
+        android_cpp_guard =\
+            definition.get("cpp_guard") in ["ANDROID", "MOZ_WIDGET_ANDROID"]
+
+        if not android_cpp_guard and \
+           hist_kind in ["flag", "count"] and \
+           name not in whitelists["kind"]:
+            raise KeyError(('New "%s" histograms are not supported on Desktop, you should'
+                            ' use scalars instead: %s'
+                            ' Are you trying to add a histogram on Android?'
+                            ' Add "cpp_guard": "ANDROID" to your histogram definition.')
+                           % (hist_kind, DOC_URL))
 
     # Check for the presence of fields that old histograms are whitelisted for.
     def check_whitelistable_fields(self, name, definition):
