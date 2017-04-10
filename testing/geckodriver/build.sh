@@ -3,6 +3,7 @@ set -ex
 print_versions() {
     rustc -V
     cargo -V
+    cc --version
 }
 
 rustup_install() {
