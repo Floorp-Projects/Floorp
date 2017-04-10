@@ -8,6 +8,8 @@ loader.lazyRequireGetter(this, "setNamedTimeout",
   "devtools/client/shared/widgets/view-helpers", true);
 loader.lazyRequireGetter(this, "clearNamedTimeout",
   "devtools/client/shared/widgets/view-helpers", true);
+loader.lazyRequireGetter(this, "naturalSortCaseInsensitive",
+  "devtools/client/shared/natural-sort", true);
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -1273,11 +1275,11 @@ Column.prototype = {
       let index;
       if (this.sorted == 1) {
         index = this.cells.findIndex(element => {
-          return value < element.value;
+          return naturalSortCaseInsensitive(value, element.value) === -1;
         });
       } else {
         index = this.cells.findIndex(element => {
-          return value > element.value;
+          return naturalSortCaseInsensitive(value, element.value) === 1;
         });
       }
       index = index >= 0 ? index : this.cells.length;
@@ -1405,7 +1407,7 @@ Column.prototype = {
             a[this.id].textContent : a[this.id];
         let val2 = (b[this.id] instanceof Node) ?
             b[this.id].textContent : b[this.id];
-        return val1 > val2;
+        return naturalSortCaseInsensitive(val1, val2);
       });
     } else if (this.sorted > 1) {
       items.sort((a, b) => {
@@ -1413,7 +1415,7 @@ Column.prototype = {
             a[this.id].textContent : a[this.id];
         let val2 = (b[this.id] instanceof Node) ?
             b[this.id].textContent : b[this.id];
-        return val2 > val1;
+        return naturalSortCaseInsensitive(val2, val1);
       });
     }
 
