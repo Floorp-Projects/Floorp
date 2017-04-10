@@ -1,5 +1,0 @@
-[console_scripts]
-macho_standalone = macholib.macho_standalone:main
-macho_dump = macholib.macho_dump:main
-macho_find = macholib.macho_find:main
-
