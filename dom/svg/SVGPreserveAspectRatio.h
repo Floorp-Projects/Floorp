@@ -53,17 +53,21 @@ class SVGPreserveAspectRatio final
 {
   friend class SVGAnimatedPreserveAspectRatio;
 public:
+  explicit SVGPreserveAspectRatio()
+    : mAlign(SVG_PRESERVEASPECTRATIO_UNKNOWN)
+    , mMeetOrSlice(SVG_MEETORSLICE_UNKNOWN)
+  {}
+
   SVGPreserveAspectRatio(SVGAlign aAlign, SVGMeetOrSlice aMeetOrSlice)
     : mAlign(aAlign)
     , mMeetOrSlice(aMeetOrSlice)
   {}
 
-  bool operator==(const SVGPreserveAspectRatio& aOther) const;
+  static nsresult FromString(const nsAString& aString,
+                             SVGPreserveAspectRatio* aValue);
+  void ToString(nsAString& aValueAsString) const;
 
-  explicit SVGPreserveAspectRatio()
-    : mAlign(SVG_PRESERVEASPECTRATIO_UNKNOWN)
-    , mMeetOrSlice(SVG_MEETORSLICE_UNKNOWN)
-  {}
+  bool operator==(const SVGPreserveAspectRatio& aOther) const;
 
   nsresult SetAlign(uint16_t aAlign) {
     if (aAlign < SVG_ALIGN_MIN_VALID || aAlign > SVG_ALIGN_MAX_VALID)
