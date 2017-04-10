@@ -654,17 +654,14 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     // values: string
     // 
     value = aAttributes->GetAttr(nsGkAtoms::fontfamily_);
-    nsCSSValue* fontFamily = aData->ValueForFontFamily();
     if (value) {
       WarnDeprecated(nsGkAtoms::fontfamily_->GetUTF16String(),
                      nsGkAtoms::mathvariant_->GetUTF16String(),
                      aData->mPresContext->Document());
     }
     if (value && value->Type() == nsAttrValue::eString &&
-        fontFamily->GetUnit() == eCSSUnit_Null) {
-      nsCSSParser parser;
-      parser.ParseFontFamilyListString(value->GetStringValue(),
-                                       nullptr, 0, *fontFamily);
+        !aData->PropertyIsSet(eCSSProperty_font_family)) {
+      aData->SetFontFamily(value->GetStringValue());
     }
 
     // fontstyle
@@ -677,22 +674,21 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     //
     // Note that the font-style property is reset in layout/style/ when
     // -moz-math-variant is specified.
-    nsCSSValue* fontStyle = aData->ValueForFontStyle();
     value = aAttributes->GetAttr(nsGkAtoms::fontstyle_);
     if (value) {
       WarnDeprecated(nsGkAtoms::fontstyle_->GetUTF16String(),
                        nsGkAtoms::mathvariant_->GetUTF16String(),
                        aData->mPresContext->Document());
       if (value->Type() == nsAttrValue::eString &&
-          fontStyle->GetUnit() == eCSSUnit_Null) {
+          !aData->PropertyIsSet(eCSSProperty_font_style)) {
         nsAutoString str(value->GetStringValue());
         str.CompressWhitespace();
         if (str.EqualsASCII("normal")) {
-          fontStyle->SetIntValue(NS_STYLE_FONT_STYLE_NORMAL,
-                                eCSSUnit_Enumerated);
+          aData->SetKeywordValue(eCSSProperty_font_style,
+                                 NS_STYLE_FONT_STYLE_NORMAL);
         } else if (str.EqualsASCII("italic")) {
-          fontStyle->SetIntValue(NS_STYLE_FONT_STYLE_ITALIC,
-                                eCSSUnit_Enumerated);
+          aData->SetKeywordValue(eCSSProperty_font_style,
+                                 NS_STYLE_FONT_STYLE_ITALIC);
         }
       }
     }
@@ -707,22 +703,21 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     //
     // Note that the font-weight property is reset in layout/style/ when
     // -moz-math-variant is specified.
-    nsCSSValue* fontWeight = aData->ValueForFontWeight();
     value = aAttributes->GetAttr(nsGkAtoms::fontweight_);
     if (value) {
       WarnDeprecated(nsGkAtoms::fontweight_->GetUTF16String(),
                        nsGkAtoms::mathvariant_->GetUTF16String(),
                        aData->mPresContext->Document());
       if (value->Type() == nsAttrValue::eString &&
-          fontWeight->GetUnit() == eCSSUnit_Null) {
+          !aData->PropertyIsSet(eCSSProperty_font_weight)) {
         nsAutoString str(value->GetStringValue());
         str.CompressWhitespace();
         if (str.EqualsASCII("normal")) {
-          fontWeight->SetIntValue(NS_STYLE_FONT_WEIGHT_NORMAL,
-                                 eCSSUnit_Enumerated);
+          aData->SetKeywordValue(eCSSProperty_font_weight,
+                                 NS_STYLE_FONT_WEIGHT_NORMAL);
         } else if (str.EqualsASCII("bold")) {
-          fontWeight->SetIntValue(NS_STYLE_FONT_WEIGHT_BOLD,
-                                  eCSSUnit_Enumerated);
+          aData->SetKeywordValue(eCSSProperty_font_weight,
+                                 NS_STYLE_FONT_WEIGHT_BOLD);
         }
       }
     }
@@ -800,11 +795,10 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
                        aData->mPresContext->Document());
       }
     }
-    nsCSSValue* backgroundColor = aData->ValueForBackgroundColor();
-    if (value && backgroundColor->GetUnit() == eCSSUnit_Null) {
+    if (value) {
       nscolor color;
       if (value->GetColorValue(color)) {
-        backgroundColor->SetColorValue(color);
+        aData->SetColorValueIfUnset(eCSSProperty_background_color, color);
       }
     }
   }
@@ -837,10 +831,8 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       }
     }
     nscolor color;
-    nsCSSValue* colorValue = aData->ValueForColor();
-    if (value && value->GetColorValue(color) &&
-        colorValue->GetUnit() == eCSSUnit_Null) {
-      colorValue->SetColorValue(color);
+    if (value && value->GetColorValue(color)) {
+      aData->SetColorValueIfUnset(eCSSProperty_color, color);
     }
   }
 
@@ -890,9 +882,8 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
   //
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Visibility)) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::dir);
-    nsCSSValue* direction = aData->ValueForDirection();
     if (value && value->Type() == nsAttrValue::eString &&
-        direction->GetUnit() == eCSSUnit_Null) {
+        !aData->PropertyIsSet(eCSSProperty_direction)) {
       nsAutoString str(value->GetStringValue());
       static const char dirs[][4] = { "ltr", "rtl" };
       static const int32_t dirValues[MOZ_ARRAY_LENGTH(dirs)] = {
@@ -900,7 +891,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       };
       for (uint32_t i = 0; i < ArrayLength(dirs); ++i) {
         if (str.EqualsASCII(dirs[i])) {
-          direction->SetIntValue(dirValues[i], eCSSUnit_Enumerated);
+          aData->SetKeywordValue(eCSSProperty_direction, dirValues[i]);
           break;
         }
       }
