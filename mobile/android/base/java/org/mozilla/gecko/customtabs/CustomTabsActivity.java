@@ -54,6 +54,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
 
     private final SparseArrayCompat<PendingIntent> menuItemsIntent = new SparseArrayCompat<>();
     private GeckoPopupMenu popupMenu;
+    private View doorhangerOverlay;
     private ActionBarPresenter actionBarPresenter;
     private ProgressBar mProgressView;
     // A state to indicate whether this activity is finishing with customize animation
@@ -77,6 +78,8 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         }
 
         setThemeFromToolbarColor();
+
+        doorhangerOverlay = findViewById(R.id.custom_tabs_doorhanger_overlay);
 
         mProgressView = (ProgressBar) findViewById(R.id.page_progress);
         final Toolbar toolbar = (Toolbar) findViewById(R.id.actionbar);
@@ -152,6 +155,11 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     @Override
     public int getLayout() {
         return R.layout.customtabs_activity;
+    }
+
+    @Override
+    public View getDoorhangerOverlay() {
+        return doorhangerOverlay;
     }
 
     @Override
