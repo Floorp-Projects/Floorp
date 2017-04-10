@@ -196,16 +196,10 @@ function* createTempFile() {
   let browser = gBrowser.selectedBrowser;
   let path = fileInTempDir().path;
   let fileCreated = yield ContentTask.spawn(browser, path, createFile);
-  if (!fileCreated && isWin()) {
-    // TODO: fix 1329294 and enable this test for Windows.
-    // Not using todo() because this only fails on automation.
-    info("ignoring failure to write to content temp due to 1329294\n");
-  } else {
-    ok(fileCreated == true, "creating a file in content temp is permitted");
-    // now delete the file
-    let fileDeleted = yield ContentTask.spawn(browser, path, deleteFile);
-    ok(fileDeleted == true, "deleting a file in content temp is permitted");
-  }
+  ok(fileCreated == true, "creating a file in content temp is permitted");
+  // now delete the file
+  let fileDeleted = yield ContentTask.spawn(browser, path, deleteFile);
+  ok(fileDeleted == true, "deleting a file in content temp is permitted");
 }
 
 // Test reading files and dirs from web and file content processes.
