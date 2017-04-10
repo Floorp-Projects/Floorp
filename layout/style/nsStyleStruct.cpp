@@ -3028,11 +3028,11 @@ nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewL
     // not, it "must" not link to a SVG mask.
     bool maybeSVGMask = false;
     if (mImage.GetURLValue()) {
-      maybeSVGMask = mImage.GetURLValue()->HasRef();
+      maybeSVGMask = mImage.GetURLValue()->MightHaveRef();
     }
 
     if (!maybeSVGMask && aNewLayer.mImage.GetURLValue()) {
-      maybeSVGMask = aNewLayer.mImage.GetURLValue()->HasRef();
+      maybeSVGMask = aNewLayer.mImage.GetURLValue()->MightHaveRef();
     }
 
     // Return nsChangeHint_UpdateOverflow if either URI might link to an SVG
