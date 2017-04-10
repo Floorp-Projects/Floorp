@@ -10,9 +10,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.telemetry.Telemetry;
 import org.mozilla.telemetry.TelemetryHolder;
+import org.mozilla.telemetry.TestUtils;
+import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.measurement.EventsMeasurement;
+import org.mozilla.telemetry.net.TelemetryClient;
 import org.mozilla.telemetry.ping.TelemetryEventPingBuilder;
+import org.mozilla.telemetry.schedule.TelemetryScheduler;
+import org.mozilla.telemetry.storage.TelemetryStorage;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.RuntimeEnvironment;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.doReturn;
@@ -36,19 +42,27 @@ public class TelemetryEventTest {
     }
 
     @Test
-    public void testQueuing() {
-        EventsMeasurement measurement = mock(EventsMeasurement.class);
+    public void testQueuing() throws Exception {
+        final EventsMeasurement measurement = mock(EventsMeasurement.class);
 
-        TelemetryEventPingBuilder builder = mock(TelemetryEventPingBuilder.class);
+        final TelemetryEventPingBuilder builder = mock(TelemetryEventPingBuilder.class);
+        doReturn(TelemetryEventPingBuilder.TYPE).when(builder).getType();
         doReturn(measurement).when(builder).getEventsMeasurement();
 
-        Telemetry telemetry = mock(Telemetry.class);
-        doReturn(builder).when(telemetry).getBuilder(TelemetryEventPingBuilder.TYPE);
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
+        final TelemetryStorage storage = mock(TelemetryStorage.class);
+        final TelemetryClient client = mock(TelemetryClient.class);
+        final TelemetryScheduler scheduler = mock(TelemetryScheduler.class);
+
+        final Telemetry telemetry = new Telemetry(configuration, storage, client, scheduler)
+                .addPingBuilder(builder);
 
         TelemetryHolder.set(telemetry);
 
-        TelemetryEvent event = TelemetryEvent.create("action", "type_url", "search_bar");
+        final TelemetryEvent event = TelemetryEvent.create("action", "type_url", "search_bar");
         event.queue();
+
+        TestUtils.waitForExecutor(telemetry);
 
         verify(measurement).add(event);
 

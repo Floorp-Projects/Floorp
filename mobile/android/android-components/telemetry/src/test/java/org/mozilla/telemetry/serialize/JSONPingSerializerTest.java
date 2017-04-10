@@ -70,9 +70,9 @@ public class JSONPingSerializerTest {
         final TelemetryEventPingBuilder builder = new TelemetryEventPingBuilder(configuration);
 
         final EventsMeasurement measurement = builder.getEventsMeasurement();
-        measurement.add(TelemetryEvent.create("action", "open", "app")).join();
-        measurement.add(TelemetryEvent.create("action", "type_url", "search_bar")).join();
-        measurement.add(TelemetryEvent.create("action", "click", "erase_button")).join();
+        measurement.add(TelemetryEvent.create("action", "open", "app"));
+        measurement.add(TelemetryEvent.create("action", "type_url", "search_bar"));
+        measurement.add(TelemetryEvent.create("action", "click", "erase_button"));
 
         final TelemetryPing ping = builder.build();
         final TelemetryPingSerializer serializer = new JSONPingSerializer();

@@ -13,7 +13,6 @@ import org.json.JSONException;
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.event.TelemetryEvent;
 import org.mozilla.telemetry.util.IOUtils;
-import org.mozilla.telemetry.util.ThreadUtils;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -41,13 +40,8 @@ public class EventsMeasurement extends TelemetryMeasurement {
         this.configuration = configuration;
     }
 
-    public Thread add(final TelemetryEvent event) {
-        return ThreadUtils.runOnThreadAndReturn("Events-Save", new Runnable() {
-            @Override
-            public void run() {
-                saveEventToDisk(event);
-            }
-        });
+    public void add(final TelemetryEvent event) {
+        saveEventToDisk(event);
     }
 
     @Override

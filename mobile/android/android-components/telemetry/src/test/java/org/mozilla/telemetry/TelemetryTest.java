@@ -31,6 +31,7 @@ import org.mozilla.telemetry.schedule.jobscheduler.TelemetryJobService;
 import org.mozilla.telemetry.serialize.JSONPingSerializer;
 import org.mozilla.telemetry.serialize.TelemetryPingSerializer;
 import org.mozilla.telemetry.storage.FileTelemetryStorage;
+import org.mozilla.telemetry.storage.TelemetryStorage;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
@@ -51,6 +52,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
@@ -94,7 +96,7 @@ public class TelemetryTest {
         telemetry.queuePing(TelemetryCorePingBuilder.TYPE);
         telemetry.scheduleUpload();
 
-        waitForExecutor(telemetry);
+        TestUtils.waitForExecutor(telemetry);
 
         assertEquals(1, storage.countStoredPings(TelemetryCorePingBuilder.TYPE));
 
@@ -162,18 +164,19 @@ public class TelemetryTest {
                 .addPingBuilder(pingBuilder);
         TelemetryHolder.set(telemetry);
 
-        TelemetryEvent.create("action", "type_url", "search_bar").queue().join();
-        TelemetryEvent.create("action", "type_query", "search_bar").queue().join();
-        TelemetryEvent.create("action", "click", "erase_button").queue().join();
+        TelemetryEvent.create("action", "type_url", "search_bar").queue();
+        TelemetryEvent.create("action", "type_query", "search_bar").queue();
+        TelemetryEvent.create("action", "click", "erase_button").queue();
+
         telemetry.queuePing(TelemetryEventPingBuilder.TYPE);
 
-        waitForExecutor(telemetry);
+        TestUtils.waitForExecutor(telemetry);
 
         assertEquals(1, storage.countStoredPings(TelemetryEventPingBuilder.TYPE));
 
         telemetry.scheduleUpload();
 
-        waitForExecutor(telemetry);
+        TestUtils.waitForExecutor(telemetry);
 
         assertJobIsScheduled();
         executePendingJob(TelemetryEventPingBuilder.TYPE);
@@ -253,10 +256,10 @@ public class TelemetryTest {
         telemetry.recordSearch(SearchesMeasurement.LOCATION_ACTIONBAR, "duckduckgo");
 
         telemetry.queuePing(TelemetryCorePingBuilder.TYPE);
-        waitForExecutor(telemetry);
+        TestUtils.waitForExecutor(telemetry);
 
         telemetry.scheduleUpload();
-        waitForExecutor(telemetry);
+        TestUtils.waitForExecutor(telemetry);
 
         executePendingJob(TelemetryCorePingBuilder.TYPE);
 
@@ -282,6 +285,40 @@ public class TelemetryTest {
         assertEquals(1, searches.getInt("actionbar.duckduckgo"));
 
         server.shutdown();
+    }
+
+    @Test
+    public void testPingIsQueuedIfEventLimitIsReached() throws Exception {
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
+
+        // This test assumes the maximum number of events is 500
+        assertEquals(500, configuration.getMaximumNumberOfEventsPerPing());
+
+        final TelemetryStorage storage = mock(TelemetryStorage.class);
+        final TelemetryClient client = mock(TelemetryClient.class);
+        final TelemetryScheduler scheduler = mock(TelemetryScheduler.class);
+
+        final TelemetryEventPingBuilder pingBuilder = new TelemetryEventPingBuilder(configuration);
+        final Telemetry telemetry = spy(new Telemetry(configuration, storage, client, scheduler)
+                .addPingBuilder(pingBuilder));
+
+        TelemetryHolder.set(telemetry);
+
+        for (int i = 0; i < 499; i++) {
+            TelemetryEvent.create("category", "method", "object", String.valueOf(i)).queue();
+        }
+
+        TestUtils.waitForExecutor(telemetry);
+
+        // No ping queued so far
+        verify(telemetry, never()).queuePing(TelemetryEventPingBuilder.TYPE);
+
+        // Queue event number 500
+        TelemetryEvent.create("category", "method", "object", "500").queue();
+
+        TestUtils.waitForExecutor(telemetry);
+
+        verify(telemetry).queuePing(TelemetryEventPingBuilder.TYPE);
     }
 
     private void assertJobIsScheduled() {
@@ -316,14 +353,5 @@ public class TelemetryTest {
     @After
     public void tearDown() {
         TelemetryHolder.set(null);
-    }
-
-    private void waitForExecutor(Telemetry telemetry) throws ExecutionException, InterruptedException {
-        telemetry.getExecutor().submit(new Runnable() {
-            @Override
-            public void run() {
-
-            }
-        }).get();
     }
 }

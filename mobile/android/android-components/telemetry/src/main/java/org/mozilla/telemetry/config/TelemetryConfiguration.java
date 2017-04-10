@@ -32,6 +32,7 @@ public class TelemetryConfiguration {
     private static final int DEFAULT_READ_TIMEOUT = 30000;
     private static final int DEFAULT_MINIMUM_EVENTS_FOR_UPLOAD = 3;
     private static final String DEFAULT_UPDATE_CHANNEL = "unknown";
+    private static final int DEFAULT_MAXIMUM_NUMBER_OF_PINGS_PER_EVENT = 500;
 
     private final Context context;
 
@@ -49,6 +50,7 @@ public class TelemetryConfiguration {
     private int readTimeout;
     private String userAgent;
     private int minimumEventsForUpload;
+    private int maximumNumberOfEventsPerPing;
 
     public TelemetryConfiguration(Context context) {
         this.context = context.getApplicationContext();
@@ -67,6 +69,7 @@ public class TelemetryConfiguration {
         setMinimumEventsForUpload(DEFAULT_MINIMUM_EVENTS_FOR_UPLOAD);
         setCollectionEnabled(true);
         setUploadEnabled(true);
+        setMaximumNumberOfEventsPerPing(DEFAULT_MAXIMUM_NUMBER_OF_PINGS_PER_EVENT);
     }
 
     /**
@@ -333,5 +336,21 @@ public class TelemetryConfiguration {
     public TelemetryConfiguration setBuildId(String buildId) {
         this.buildId = buildId;
         return this;
+    }
+
+    /**
+     * Set the maximum number of events per ping. If this limit is reached a ping will built and
+     * stored automatically. The number of stored and uploaded pings might be limited too.
+     */
+    public TelemetryConfiguration setMaximumNumberOfEventsPerPing(int maximumNumberOfEventsPerPing) {
+        this.maximumNumberOfEventsPerPing = maximumNumberOfEventsPerPing;
+        return this;
+    }
+
+    /**
+     * Get the maximum number of events per ping.
+     */
+    public int getMaximumNumberOfEventsPerPing() {
+        return maximumNumberOfEventsPerPing;
     }
 }

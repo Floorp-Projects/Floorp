@@ -31,7 +31,7 @@ public class EventsMeasurementTest {
         final String object = "object" + UUID.randomUUID().toString();
 
         final TelemetryEvent event = TelemetryEvent.create(category, method, object);
-        measurement.add(event).join();
+        measurement.add(event);
 
         final Object value = measurement.flush();
 
@@ -72,7 +72,7 @@ public class EventsMeasurementTest {
         assertFalse(measurement.getEventFile().exists());
 
         final TelemetryEvent event = TelemetryEvent.create("category", "method", "object");
-        measurement.add(event).join();
+        measurement.add(event);
 
         assertTrue(measurement.getEventFile().exists());
 
@@ -86,8 +86,8 @@ public class EventsMeasurementTest {
         final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
         final EventsMeasurement measurement = new EventsMeasurement(configuration);
 
-        measurement.add(TelemetryEvent.create("action", "type_url", "search_bar")).join();
-        measurement.add(TelemetryEvent.create("action", "click", "erase_button")).join();
+        measurement.add(TelemetryEvent.create("action", "type_url", "search_bar"));
+        measurement.add(TelemetryEvent.create("action", "click", "erase_button"));
 
         final Object value = measurement.flush();
         assertNotNull(value);
@@ -121,8 +121,7 @@ public class EventsMeasurementTest {
         extras.put("to", "Yahoo");
 
         measurement
-                .add(TelemetryEvent.create("action", "change", "setting", "pref_search_engine", extras))
-                .join();
+                .add(TelemetryEvent.create("action", "change", "setting", "pref_search_engine", extras));
 
         final Object value = measurement.flush();
         assertNotNull(value);

@@ -9,9 +9,12 @@ import android.support.annotation.RestrictTo;
 import android.support.annotation.VisibleForTesting;
 
 import org.mozilla.telemetry.config.TelemetryConfiguration;
+import org.mozilla.telemetry.event.TelemetryEvent;
 import org.mozilla.telemetry.measurement.DefaultSearchMeasurement;
+import org.mozilla.telemetry.measurement.EventsMeasurement;
 import org.mozilla.telemetry.net.TelemetryClient;
 import org.mozilla.telemetry.ping.TelemetryCorePingBuilder;
+import org.mozilla.telemetry.ping.TelemetryEventPingBuilder;
 import org.mozilla.telemetry.ping.TelemetryPing;
 import org.mozilla.telemetry.ping.TelemetryPingBuilder;
 import org.mozilla.telemetry.schedule.TelemetryScheduler;
@@ -66,6 +69,24 @@ public class Telemetry {
 
                 final TelemetryPing ping = pingBuilder.build();
                 storage.store(ping);
+            }
+        });
+
+        return this;
+    }
+
+    public Telemetry queueEvent(final TelemetryEvent event) {
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                EventsMeasurement measurement = ((TelemetryEventPingBuilder) pingBuilders.get(TelemetryEventPingBuilder.TYPE))
+                        .getEventsMeasurement();
+
+                measurement.add(event);
+
+                if (measurement.getEventCount() >= configuration.getMaximumNumberOfEventsPerPing()) {
+                    queuePing(TelemetryEventPingBuilder.TYPE);
+                }
             }
         });
 

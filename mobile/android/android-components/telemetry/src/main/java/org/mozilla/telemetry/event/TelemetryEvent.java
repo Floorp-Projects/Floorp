@@ -50,6 +50,7 @@ public class TelemetryEvent {
      * @param object identifier. This is the object the event occured on, e.g. reload_button or urlbar.
      * @param value This is a user defined value, providing context for the event.
      */
+    @CheckResult
     public static TelemetryEvent create(@NonNull String category, @NonNull String method, @Nullable String object, String value) {
         final TelemetryEvent event = new TelemetryEvent();
 
@@ -122,12 +123,8 @@ public class TelemetryEvent {
     /**
      * Queue this event to be sent with the next event ping.
      */
-    public Thread queue() {
-        final TelemetryEventPingBuilder builder = (TelemetryEventPingBuilder) TelemetryHolder.get()
-                .getBuilder(TelemetryEventPingBuilder.TYPE);
-
-        return builder.getEventsMeasurement()
-                .add(this);
+    public void queue() {
+        TelemetryHolder.get().queueEvent(this);
     }
 
     /**
