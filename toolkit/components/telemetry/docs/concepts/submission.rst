@@ -9,7 +9,9 @@ If a ping fails to successfully submit to the server immediately (e.g. because
 of missing internet connection), Telemetry will store it on disk and retry to
 send it until the maximum ping age is exceeded (14 days).
 
-*Note:* the :doc:`main pings <../data/main-ping>` are kept locally even after successful submission to enable the HealthReport and SelfSupport features. They will be deleted after their retention period of 180 days.
+.. note::
+
+  The :doc:`main pings <../data/main-ping>` are kept locally even after successful submission to enable the HealthReport and SelfSupport features. They will be deleted after their retention period of 180 days.
 
 Submission logic
 ================
@@ -23,6 +25,12 @@ If it succeeds we trigger the next send of a ping batch. This is delayed as need
 If ping sending encounters an error that means retrying later, a backoff timeout behavior is
 triggered, exponentially increasing the timeout for the next try from 1 minute up to a limit of 120 minutes.
 Any new ping submissions and "idle-daily" events reset this behavior as a safety mechanism and trigger immediate ping sending.
+
+Pingsender
+==========
+Some pings (e.g. :doc:`crash pings <../data/crash-ping>` and :doc:`main pings <../data/main-ping>` with reason `shutdown`) are submitted using the :doc:`../internals/pingsender`.
+
+The pingsender tries to send each ping once and, if it fails, no additional attempt is performed: ``TelemetrySend`` will take care of retrying using the previously described submission logic.
 
 Status codes
 ============
