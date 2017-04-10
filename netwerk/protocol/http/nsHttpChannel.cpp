@@ -119,6 +119,9 @@ namespace {
 // Monotonically increasing ID for generating unique cache entries per
 // intercepted channel.
 static uint64_t gNumIntercepted = 0;
+static bool sRCWNEnabled = false;
+static uint32_t sRCWNQueueSizeNormal = 50;
+static uint32_t sRCWNQueueSizePriority = 10;
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags) \
@@ -2048,7 +2051,9 @@ nsHttpChannel::ProcessResponse()
         MOZ_ASSERT(NS_SUCCEEDED(rv), "ProcessSTSHeader failed, continuing load.");
     }
 
-    MOZ_ASSERT(!mCachedContentIsValid);
+    MOZ_ASSERT(!mCachedContentIsValid || mRacingNetAndCache,
+               "We should not be hitting the network if we have valid cached "
+               "content unless we are racing the network and cache");
 
     ProcessSSLInformation();
 
@@ -3607,6 +3612,10 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
         mCacheOpenWithPriority = cacheEntryOpenFlags & nsICacheStorage::OPEN_PRIORITY;
         mCacheQueueSizeWhenOpen = CacheStorageService::CacheQueueSize(mCacheOpenWithPriority);
 
+        if (sRCWNEnabled && mInterceptCache != INTERCEPTED) {
+            MaybeRaceNetworkWithCache();
+        }
+
         if (!mCacheOpenDelay) {
             rv = cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, this);
         } else {
@@ -5151,7 +5160,7 @@ nsHttpChannel::InstallCacheListener(int64_t offset)
     LOG(("Preparing to write data into the cache [uri=%s]\n", mSpec.get()));
 
     MOZ_ASSERT(mCacheEntry);
-    MOZ_ASSERT(mCacheEntryIsWriteOnly || mCachedContentIsPartial);
+    MOZ_ASSERT(mCacheEntryIsWriteOnly || mCachedContentIsPartial || mRacingNetAndCache);
     MOZ_ASSERT(mListener);
 
     nsAutoCString contentEncoding, contentType;
@@ -5805,6 +5814,14 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         LOG(("  after HTTP shutdown..."));
         ReleaseListeners();
         return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    static bool sRCWNInited = false;
+    if (!sRCWNInited) {
+        sRCWNInited = true;
+        Preferences::AddBoolVarCache(&sRCWNEnabled, "network.http.rcwn.enabled");
+        Preferences::AddUintVarCache(&sRCWNQueueSizeNormal, "network.http.rcwn.cache_queue_normal_threshold");
+        Preferences::AddUintVarCache(&sRCWNQueueSizePriority, "network.http.rcwn.cache_queue_priority_threshold");
     }
 
     rv = NS_CheckPortSafety(mURI);
@@ -7165,22 +7182,23 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
          " count=%" PRIu32 "]\n",
         this, request, offset, count));
 
-    LOG(("OnDataAvailable %p requestFromCache: %d mFirstResponseSource: %d\n", this, request == mCachePump, mFirstResponseSource));
+    LOG(("  requestFromCache: %d mFirstResponseSource: %d\n",
+        request == mCachePump, mFirstResponseSource));
 
     // don't send out OnDataAvailable notifications if we've been canceled.
     if (mCanceled)
         return mStatus;
-
-    MOZ_ASSERT(mResponseHead, "No response head in ODA!!");
-
-    MOZ_ASSERT(!(mCachedContentIsPartial && (request == mTransactionPump)),
-               "transaction pump not suspended");
 
     if (mAuthRetryPending || WRONG_RACING_RESPONSE_SOURCE(request) ||
         (request == mTransactionPump && mTransactionReplaced)) {
         uint32_t n;
         return input->ReadSegments(NS_DiscardSegment, nullptr, count, &n);
     }
+
+    MOZ_ASSERT(mResponseHead, "No response head in ODA!!");
+
+    MOZ_ASSERT(!(mCachedContentIsPartial && (request == mTransactionPump)),
+               "transaction pump not suspended");
 
     mIsReadingFromCache = (request == mCachePump);
 
@@ -8717,7 +8735,9 @@ nsHttpChannel::TriggerNetwork(int32_t aTimeout)
     MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread");
     // If a network request has already gone out, there is no point in
     // doing this again.
+    LOG(("nsHttpChannel::TriggerNetwork [this=%p]\n", this));
     if (mNetworkTriggered) {
+        LOG(("  network already triggered. Returning.\n"));
         return NS_OK;
     }
 
@@ -8740,16 +8760,41 @@ nsHttpChannel::TriggerNetwork(int32_t aTimeout)
         // BeginConnect, and Connect will call TryHSTSPriming even if it's
         // for the cache callbacks.
         if (mProxyRequest) {
+            LOG(("  proxy request in progress. Delaying network trigger.\n"));
             mWaitingForProxy = true;
             return NS_OK;
         }
 
+        LOG(("  triggering network\n"));
         return TryHSTSPriming();
     }
 
+    LOG(("  setting timer to trigger network: %d ms\n", aTimeout));
     mNetworkTriggerTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
     mNetworkTriggerTimer->InitWithCallback(this, aTimeout, nsITimer::TYPE_ONE_SHOT);
     return NS_OK;
+}
+
+nsresult
+nsHttpChannel::MaybeRaceNetworkWithCache()
+{
+    // Don't trigger the network if the load flags say so.
+    if (mLoadFlags & (LOAD_ONLY_FROM_CACHE | LOAD_NO_NETWORK_IO)) {
+        return NS_OK;
+    }
+
+
+    uint32_t threshold = mCacheOpenWithPriority ? sRCWNQueueSizePriority
+                                                : sRCWNQueueSizeNormal;
+    // No need to trigger to trigger the racing, since most likely the cache
+    // will be faster.
+    if (mCacheQueueSizeWhenOpen < threshold) {
+        return NS_OK;
+    }
+
+    MOZ_ASSERT(sRCWNEnabled, "The pref must be truned on.");
+    LOG(("nsHttpChannel::MaybeRaceNetworkWithCache [this=%p]\n", this));
+    return TriggerNetwork(0);
 }
 
 NS_IMETHODIMP
