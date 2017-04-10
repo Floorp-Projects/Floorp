@@ -57,10 +57,6 @@ public:
     mPreserveAspectRatio = aPAR;
   }
 
-  gfxFloat GetGlobalOpacity() const {
-    return mGlobalOpacity;
-  }
-
   const SVGContextPaint* GetContextPaint() const {
     return mContextPaint.get();
   }

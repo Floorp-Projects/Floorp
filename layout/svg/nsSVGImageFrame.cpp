@@ -401,7 +401,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
       const Maybe<const SVGImageContext> context(
         Some(SVGImageContext(CSSIntSize::Truncate(width, height),
                              Some(imgElem->mPreserveAspectRatio.GetAnimValue()),
-                             1.0, /* aIsPaintingSVGImageElement */ true)));
+                             /* aIsPaintingSVGImageElement */ true)));
 
       // For the actual draw operation to draw crisply (and at the right size),
       // our destination rect needs to be |width|x|height|, *in dev pixels*.
