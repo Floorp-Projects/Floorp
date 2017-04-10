@@ -34,6 +34,7 @@
             'common/tls.h',
             'common/utilities.cpp',
             'common/utilities.h',
+            'common/vector_utils.h',
             'common/version.h',
         ],
         'libangle_image_util_sources':
@@ -151,6 +152,8 @@
             'libANGLE/VertexAttribute.cpp',
             'libANGLE/VertexAttribute.h',
             'libANGLE/VertexAttribute.inl',
+            'libANGLE/WorkerThread.cpp',
+            'libANGLE/WorkerThread.h',
             'libANGLE/angletypes.cpp',
             'libANGLE/angletypes.h',
             'libANGLE/angletypes.inl',
@@ -262,13 +265,17 @@
             'libANGLE/renderer/d3d/TextureD3D.cpp',
             'libANGLE/renderer/d3d/TextureD3D.h',
             'libANGLE/renderer/d3d/TextureStorage.h',
-            'libANGLE/renderer/d3d/VaryingPacking.cpp',
-            'libANGLE/renderer/d3d/VaryingPacking.h',
             'libANGLE/renderer/d3d/VertexBuffer.cpp',
             'libANGLE/renderer/d3d/VertexBuffer.h',
             'libANGLE/renderer/d3d/VertexDataManager.cpp',
             'libANGLE/renderer/d3d/VertexDataManager.h',
             'libANGLE/renderer/d3d/WorkaroundsD3D.h',
+        ],
+        'libangle_d3d_hlsl_sources':
+        [
+            'libANGLE/renderer/d3d/hlsl/VaryingPacking.cpp',
+            'libANGLE/renderer/d3d/hlsl/VaryingPacking.h',
+            'libANGLE/renderer/d3d/hlsl/hlsl_utils.h',
         ],
         'libangle_d3d9_sources':
         [
@@ -304,8 +311,11 @@
             'libANGLE/renderer/d3d/d3d9/ShaderExecutable9.cpp',
             'libANGLE/renderer/d3d/d3d9/ShaderExecutable9.h',
             'libANGLE/renderer/d3d/d3d9/shaders/compiled/componentmaskps.h',
-            'libANGLE/renderer/d3d/d3d9/shaders/compiled/flipyvs.h',
+            'libANGLE/renderer/d3d/d3d9/shaders/compiled/componentmaskpremultps.h',
+            'libANGLE/renderer/d3d/d3d9/shaders/compiled/componentmaskunmultps.h',
             'libANGLE/renderer/d3d/d3d9/shaders/compiled/luminanceps.h',
+            'libANGLE/renderer/d3d/d3d9/shaders/compiled/luminancepremultps.h',
+            'libANGLE/renderer/d3d/d3d9/shaders/compiled/luminanceunmultps.h',
             'libANGLE/renderer/d3d/d3d9/shaders/compiled/passthroughps.h',
             'libANGLE/renderer/d3d/d3d9/shaders/compiled/standardvs.h',
             'libANGLE/renderer/d3d/d3d9/StateManager9.cpp',
@@ -805,6 +815,13 @@
                             'ANGLE_ENABLE_VULKAN',
                         ],
                     }],
+                    ['angle_enable_null==1',
+                    {
+                        'defines':
+                        [
+                            'ANGLE_ENABLE_NULL',
+                        ],
+                    }],
                 ],
             },
             'conditions':
@@ -813,6 +830,7 @@
                 {
                     'sources':
                     [
+                        '<@(libangle_d3d_hlsl_sources)',
                         '<@(libangle_d3d_shared_sources)',
                     ],
                 }],

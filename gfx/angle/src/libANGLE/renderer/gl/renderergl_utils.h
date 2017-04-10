@@ -43,6 +43,12 @@ void GenerateCaps(const FunctionsGL *functions, gl::Caps *caps, gl::TextureCapsM
 void GenerateWorkarounds(const FunctionsGL *functions, WorkaroundsGL *workarounds);
 }
 
+namespace nativegl
+{
+bool SupportsFenceSync(const FunctionsGL *functions);
+bool SupportsOcclusionQueries(const FunctionsGL *functions);
+}
+
 bool CanMapBufferForRead(const FunctionsGL *functions);
 uint8_t *MapBufferRangeWithFallback(const FunctionsGL *functions,
                                     GLenum target,

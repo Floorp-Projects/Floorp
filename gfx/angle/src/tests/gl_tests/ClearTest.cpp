@@ -7,7 +7,6 @@
 #include "test_utils/ANGLETest.h"
 
 #include "random_utils.h"
-#include "Vector.h"
 
 using namespace angle;
 
@@ -26,10 +25,10 @@ Vector4 RandomVec4(int seed, float minValue, float maxValue)
 GLColor Vec4ToColor(const Vector4 &vec)
 {
     GLColor color;
-    color.R = static_cast<uint8_t>(vec.x * 255.0f);
-    color.G = static_cast<uint8_t>(vec.y * 255.0f);
-    color.B = static_cast<uint8_t>(vec.z * 255.0f);
-    color.A = static_cast<uint8_t>(vec.w * 255.0f);
+    color.R = static_cast<uint8_t>(vec.x() * 255.0f);
+    color.G = static_cast<uint8_t>(vec.y() * 255.0f);
+    color.B = static_cast<uint8_t>(vec.z() * 255.0f);
+    color.A = static_cast<uint8_t>(vec.w() * 255.0f);
     return color;
 };
 

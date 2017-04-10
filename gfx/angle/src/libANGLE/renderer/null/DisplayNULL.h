@@ -75,6 +75,8 @@ class DisplayNULL : public DisplayImpl
   private:
     void generateExtensions(egl::DisplayExtensions *outExtensions) const override;
     void generateCaps(egl::Caps *outCaps) const override;
+
+    DeviceImpl *mDevice;
 };
 
 }  // namespace rx

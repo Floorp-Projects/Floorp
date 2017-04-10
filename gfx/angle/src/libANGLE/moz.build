@@ -51,7 +51,6 @@ UNIFIED_SOURCES += [
     '../compiler/translator/ExpandIntegerPowExpressions.cpp',
     '../compiler/translator/ExtensionGLSL.cpp',
     '../compiler/translator/FlagStd140Structs.cpp',
-    '../compiler/translator/ForLoopUnroll.cpp',
     '../compiler/translator/InfoSink.cpp',
     '../compiler/translator/Initialize.cpp',
     '../compiler/translator/InitializeDll.cpp',
@@ -62,7 +61,6 @@ UNIFIED_SOURCES += [
     '../compiler/translator/IntermNodePatternMatcher.cpp',
     '../compiler/translator/intermOut.cpp',
     '../compiler/translator/IntermTraverse.cpp',
-    '../compiler/translator/LoopInfo.cpp',
     '../compiler/translator/Operator.cpp',
     '../compiler/translator/OutputESSL.cpp',
     '../compiler/translator/OutputGLSL.cpp',
@@ -173,6 +171,7 @@ UNIFIED_SOURCES += [
     'renderer/d3d/DynamicHLSL.cpp',
     'renderer/d3d/EGLImageD3D.cpp',
     'renderer/d3d/FramebufferD3D.cpp',
+    'renderer/d3d/hlsl/VaryingPacking.cpp',
     'renderer/d3d/ImageD3D.cpp',
     'renderer/d3d/IndexBuffer.cpp',
     'renderer/d3d/IndexDataManager.cpp',
@@ -186,7 +185,6 @@ UNIFIED_SOURCES += [
     'renderer/d3d/SurfaceD3D.cpp',
     'renderer/d3d/SwapChainD3D.cpp',
     'renderer/d3d/TextureD3D.cpp',
-    'renderer/d3d/VaryingPacking.cpp',
     'renderer/d3d/VertexBuffer.cpp',
     'renderer/d3d/VertexDataManager.cpp',
     'renderer/DeviceImpl.cpp',
@@ -283,6 +281,7 @@ UNIFIED_SOURCES += [
     'validationES31.cpp',
     'VertexArray.cpp',
     'VertexAttribute.cpp',
+    'WorkerThread.cpp',
 ]
 SOURCES += [
     '../compiler/translator/EmulateGLFragColorBroadcast.cpp',
@@ -352,6 +351,9 @@ if CONFIG['GNU_CXX']:
             '-Wno-shadow-local',
         ]
 
+if CONFIG['MOZ_DIRECTX_SDK_PATH'] and not CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
+    LOCAL_INCLUDES += ['%' + '%s/include/' % CONFIG['MOZ_DIRECTX_SDK_PATH']]
+
 DEFINES['_CRT_SECURE_NO_DEPRECATE'] = True
 DEFINES['_HAS_EXCEPTIONS'] = 0
 
@@ -384,6 +386,11 @@ DEFINES['ANGLE_DEFAULT_D3D11'] = "0"
 
 if CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
   OS_LIBS += [ 'd3d9', 'dxguid' ]
+else:
+  EXTRA_DSO_LDOPTS += [
+    '\'%s/lib/%s/d3d9.lib\'' % (CONFIG['MOZ_DIRECTX_SDK_PATH'], CONFIG['MOZ_D3D_CPU_SUFFIX']),
+    '\'%s/lib/%s/dxguid.lib\'' % (CONFIG['MOZ_DIRECTX_SDK_PATH'], CONFIG['MOZ_D3D_CPU_SUFFIX']),
+  ]
 
 Library('libANGLE')
 

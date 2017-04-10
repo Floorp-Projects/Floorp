@@ -16,7 +16,7 @@
 #include "libANGLE/renderer/d3d/ProgramD3D.h"
 #include "libANGLE/renderer/d3d/RendererD3D.h"
 #include "libANGLE/renderer/d3d/ShaderD3D.h"
-#include "libANGLE/renderer/d3d/VaryingPacking.h"
+#include "libANGLE/renderer/d3d/hlsl/VaryingPacking.h"
 
 using namespace gl;
 
@@ -120,13 +120,6 @@ void WriteArrayString(std::stringstream &strstr, unsigned int i)
 constexpr const char *VERTEX_ATTRIBUTE_STUB_STRING = "@@ VERTEX ATTRIBUTES @@";
 constexpr const char *PIXEL_OUTPUT_STUB_STRING     = "@@ PIXEL OUTPUT @@";
 }  // anonymous namespace
-
-std::string GetVaryingSemantic(int majorShaderModel, bool programUsesPointSize)
-{
-    // SM3 reserves the TEXCOORD semantic for point sprite texcoords (gl_PointCoord)
-    // In D3D11 we manually compute gl_PointCoord in the GS.
-    return ((programUsesPointSize && majorShaderModel < 4) ? "COLOR" : "TEXCOORD");
-}
 
 // DynamicHLSL implementation
 
