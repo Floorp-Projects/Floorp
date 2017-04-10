@@ -43,11 +43,11 @@
   ClearErrors
   WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" "Write Test"
   ${If} ${Errors}
-    StrCpy $TmpVal "HKCU" ; used primarily for logging
+    StrCpy $TmpVal "HKCU"
   ${Else}
     SetShellVarContext all    ; Set SHCTX to all users (e.g. HKLM)
     DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
-    StrCpy $TmpVal "HKLM" ; used primarily for logging
+    StrCpy $TmpVal "HKLM"
     ${RegCleanMain} "Software\Mozilla"
     ${RegCleanUninstall}
     ${UpdateProtocolHandlers}
@@ -87,6 +87,11 @@
   ${SetAppKeys}
   ${FixClassKeys}
   ${SetUninstallKeys}
+  ${If} $TmpVal == "HKLM"
+    ${SetStartMenuInternet} HKLM
+  ${ElseIf} $TmpVal == "HKCU"
+    ${SetStartMenuInternet} HKCU
+  ${EndIf}
 
   ; Remove files that may be left behind by the application in the
   ; VirtualStore directory.
@@ -465,54 +470,59 @@
   ${GetLongPath} "$INSTDIR\${FileMainEXE}" $8
   ${GetLongPath} "$INSTDIR\uninstall\helper.exe" $7
 
-  ; Avoid writing new keys at the hash-suffixed path if this installation
-  ; already has keys at the old FIREFOX.EXE path. Otherwise we would create a
-  ; second entry in Default Apps for the same installation.
+  ; If we already have keys at the old FIREFOX.EXE path, then just update those.
+  ; We have to be careful to update the existing keys in place so that we don't
+  ; create duplicate keys for the same installation, or cause Windows to think
+  ; something "suspicious" has happened and it should reset the default browser.
   ${StrFilter} "${FileMainEXE}" "+" "" "" $1
   ReadRegStr $0 ${RegKey} "Software\Clients\StartMenuInternet\$1\DefaultIcon" ""
   StrCpy $0 $0 -2
   ${If} $0 != $8
-    StrCpy $0 "Software\Clients\StartMenuInternet\${AppRegName}-$AppUserModelID"
-
-    WriteRegStr ${RegKey} "$0" "" "${BrandFullName}"
-
-    WriteRegStr ${RegKey} "$0\DefaultIcon" "" "$8,0"
-
-    ; The Reinstall Command is defined at
-    ; http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/programmersguide/shell_adv/registeringapps.asp
-    WriteRegStr ${RegKey} "$0\InstallInfo" "HideIconsCommand" "$\"$7$\" /HideShortcuts"
-    WriteRegStr ${RegKey} "$0\InstallInfo" "ShowIconsCommand" "$\"$7$\" /ShowShortcuts"
-    WriteRegStr ${RegKey} "$0\InstallInfo" "ReinstallCommand" "$\"$7$\" /SetAsDefaultAppGlobal"
-    WriteRegDWORD ${RegKey} "$0\InstallInfo" "IconsVisible" 1
-
-    WriteRegStr ${RegKey} "$0\shell\open\command" "" "$\"$8$\""
-
-    WriteRegStr ${RegKey} "$0\shell\properties" "" "$(CONTEXT_OPTIONS)"
-    WriteRegStr ${RegKey} "$0\shell\properties\command" "" "$\"$8$\" -preferences"
-
-    WriteRegStr ${RegKey} "$0\shell\safemode" "" "$(CONTEXT_SAFE_MODE)"
-    WriteRegStr ${RegKey} "$0\shell\safemode\command" "" "$\"$8$\" -safe-mode"
-
-    ; Capabilities registry keys
-    WriteRegStr ${RegKey} "$0\Capabilities" "ApplicationDescription" "$(REG_APP_DESC)"
-    WriteRegStr ${RegKey} "$0\Capabilities" "ApplicationIcon" "$8,0"
-    WriteRegStr ${RegKey} "$0\Capabilities" "ApplicationName" "${BrandShortName}"
-
-    WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".htm"   "FirefoxHTML-$AppUserModelID"
-    WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".html"  "FirefoxHTML-$AppUserModelID"
-    WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".shtml" "FirefoxHTML-$AppUserModelID"
-    WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".xht"   "FirefoxHTML-$AppUserModelID"
-    WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".xhtml" "FirefoxHTML-$AppUserModelID"
-
-    WriteRegStr ${RegKey} "$0\Capabilities\StartMenu" "StartMenuInternet" "${AppRegName}-$AppUserModelID"
-
-    WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "ftp"    "FirefoxURL-$AppUserModelID"
-    WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "http"   "FirefoxURL-$AppUserModelID"
-    WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "https"  "FirefoxURL-$AppUserModelID"
-
-    ; Registered Application
-    WriteRegStr ${RegKey} "Software\RegisteredApplications" "${AppRegName}-$AppUserModelID" "$0\Capabilities"
+    StrCpy $1 "${AppRegName}-$AppUserModelID"
+    StrCpy $2 "-$AppUserModelID"
+  ${Else}
+    StrCpy $2 ""
   ${EndIf}
+  StrCpy $0 "Software\Clients\StartMenuInternet\$1"
+
+  WriteRegStr ${RegKey} "$0" "" "${BrandFullName}"
+
+  WriteRegStr ${RegKey} "$0\DefaultIcon" "" "$8,0"
+
+  ; The Reinstall Command is defined at
+  ; http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/programmersguide/shell_adv/registeringapps.asp
+  WriteRegStr ${RegKey} "$0\InstallInfo" "HideIconsCommand" "$\"$7$\" /HideShortcuts"
+  WriteRegStr ${RegKey} "$0\InstallInfo" "ShowIconsCommand" "$\"$7$\" /ShowShortcuts"
+  WriteRegStr ${RegKey} "$0\InstallInfo" "ReinstallCommand" "$\"$7$\" /SetAsDefaultAppGlobal"
+  WriteRegDWORD ${RegKey} "$0\InstallInfo" "IconsVisible" 1
+
+  WriteRegStr ${RegKey} "$0\shell\open\command" "" "$\"$8$\""
+
+  WriteRegStr ${RegKey} "$0\shell\properties" "" "$(CONTEXT_OPTIONS)"
+  WriteRegStr ${RegKey} "$0\shell\properties\command" "" "$\"$8$\" -preferences"
+
+  WriteRegStr ${RegKey} "$0\shell\safemode" "" "$(CONTEXT_SAFE_MODE)"
+  WriteRegStr ${RegKey} "$0\shell\safemode\command" "" "$\"$8$\" -safe-mode"
+
+  ; Capabilities registry keys
+  WriteRegStr ${RegKey} "$0\Capabilities" "ApplicationDescription" "$(REG_APP_DESC)"
+  WriteRegStr ${RegKey} "$0\Capabilities" "ApplicationIcon" "$8,0"
+  WriteRegStr ${RegKey} "$0\Capabilities" "ApplicationName" "${BrandShortName}"
+
+  WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".htm"   "FirefoxHTML$2"
+  WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".html"  "FirefoxHTML$2"
+  WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".shtml" "FirefoxHTML$2"
+  WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".xht"   "FirefoxHTML$2"
+  WriteRegStr ${RegKey} "$0\Capabilities\FileAssociations" ".xhtml" "FirefoxHTML$2"
+
+  WriteRegStr ${RegKey} "$0\Capabilities\StartMenu" "StartMenuInternet" "$1"
+
+  WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "ftp"    "FirefoxURL$2"
+  WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "http"   "FirefoxURL$2"
+  WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "https"  "FirefoxURL$2"
+
+  ; Registered Application
+  WriteRegStr ${RegKey} "Software\RegisteredApplications" "$1" "$0\Capabilities"
 !macroend
 !define SetStartMenuInternet "!insertmacro SetStartMenuInternet"
 
