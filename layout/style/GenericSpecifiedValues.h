@@ -78,6 +78,9 @@ public:
     inline void SetPixelValue(nsCSSPropertyID aId, float aValue);
     inline void SetPixelValueIfUnset(nsCSSPropertyID aId, float aValue);
 
+    // Set a property to a number value
+    inline void SetNumberValue(nsCSSPropertyID aId, float aValue);
+
     // Set a property to a percent value
     inline void SetPercentValue(nsCSSPropertyID aId, float aValue);
     inline void SetPercentValueIfUnset(nsCSSPropertyID aId, float aValue);
