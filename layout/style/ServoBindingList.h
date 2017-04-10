@@ -250,6 +250,11 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetPixelValue, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsCSSPropertyID property,
                    float value)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetLengthValue, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsCSSPropertyID property,
+                   float value,
+                   nsCSSUnit unit)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetNumberValue, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsCSSPropertyID property,

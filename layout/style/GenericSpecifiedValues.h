@@ -78,6 +78,8 @@ public:
     inline void SetPixelValue(nsCSSPropertyID aId, float aValue);
     inline void SetPixelValueIfUnset(nsCSSPropertyID aId, float aValue);
 
+    inline void SetLengthValue(nsCSSPropertyID aId, nsCSSValue aValue);
+
     // Set a property to a number value
     inline void SetNumberValue(nsCSSPropertyID aId, float aValue);
 

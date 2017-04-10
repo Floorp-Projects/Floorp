@@ -99,6 +99,12 @@ GenericSpecifiedValues::SetPixelValueIfUnset(nsCSSPropertyID aId, float aValue)
 }
 
 void
+GenericSpecifiedValues::SetLengthValue(nsCSSPropertyID aId, nsCSSValue aValue)
+{
+  MOZ_STYLO_FORWARD(SetLengthValue, (aId, aValue))
+}
+
+void
 GenericSpecifiedValues::SetNumberValue(nsCSSPropertyID aId, float aValue)
 {
   MOZ_STYLO_FORWARD(SetNumberValue, (aId, aValue))
