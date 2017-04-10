@@ -48,6 +48,8 @@ import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.webapps.WebAppActivity;
 
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -109,6 +111,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.util.ViewUtil;
+import org.mozilla.gecko.widget.AnchoredPopup;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -137,7 +140,8 @@ public abstract class GeckoApp
     GeckoMenu.Callback,
     GeckoMenu.MenuPresenter,
     Tabs.OnTabsChangedListener,
-    ViewTreeObserver.OnGlobalLayoutListener {
+    ViewTreeObserver.OnGlobalLayoutListener,
+    AnchoredPopup.OnVisibilityChangeListener {
 
     private static final String LOGTAG = "GeckoApp";
     private static final long ONE_DAY_MS = TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS);
@@ -350,6 +354,8 @@ public abstract class GeckoApp
     private boolean mWasFirstTabShownAfterActivityUnhidden;
 
     abstract public int getLayout();
+
+    abstract public View getDoorhangerOverlay();
 
     protected void processTabQueue() {};
 
@@ -1564,8 +1570,31 @@ public abstract class GeckoApp
 
     protected void initializeChrome() {
         mDoorHangerPopup = new DoorHangerPopup(this);
+        mDoorHangerPopup.setOnVisibilityChangeListener(this);
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
+    }
+
+    @Override
+    public void onDoorHangerShow() {
+        final View overlay = getDoorhangerOverlay();
+        if (overlay != null) {
+            final Animator alphaAnimator = ObjectAnimator.ofFloat(overlay, "alpha", 1);
+            alphaAnimator.setDuration(250);
+
+            alphaAnimator.start();
+        }
+    }
+
+    @Override
+    public void onDoorHangerHide() {
+        final View overlay = getDoorhangerOverlay();
+        if (overlay != null) {
+            final Animator alphaAnimator = ObjectAnimator.ofFloat(overlay, "alpha", 0);
+            alphaAnimator.setDuration(200);
+
+            alphaAnimator.start();
+        }
     }
 
     /**
