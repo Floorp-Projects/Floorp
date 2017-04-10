@@ -335,7 +335,6 @@ You may also see all flags and options
 available in geckodriver by viewing the help message:
 
 	% geckodriver -h
-	geckodriver 0.11.1
 	WebDriver implementation for Firefox.
 
 	USAGE:
