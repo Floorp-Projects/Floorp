@@ -104,6 +104,23 @@ ServoStyleSet::Shutdown()
   mRawSet = nullptr;
 }
 
+size_t
+ServoStyleSet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+
+  // Measurement of the following members may be added later if DMD finds it is
+  // worthwhile:
+  // - mRawSet
+  // - mSheets
+  // - mNonInheritingStyleContexts
+  //
+  // The following members are not measured:
+  // - mPresContext, because it a non-owning pointer
+
+  return n;
+}
+
 bool
 ServoStyleSet::GetAuthorStyleDisabled() const
 {
