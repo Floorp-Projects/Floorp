@@ -278,6 +278,10 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetFontFamily, void,
                    const nsAString& value)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetTextDecorationColorOverride, void,
                    RawServoDeclarationBlockBorrowed declarations)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetBackgroundImage, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   const nsAString& value,
+                   RawGeckoURLExtraData* extra_data)
 
 // MediaList
 SERVO_BINDING_FUNC(Servo_MediaList_GetText, void,

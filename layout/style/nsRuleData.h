@@ -223,6 +223,7 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
 
   void SetFontFamily(const nsString& aValue);
   void SetTextDecorationColorOverride();
+  void SetBackgroundImage(nsAttrValue& aValue);
 
 private:
   inline size_t GetPoisonOffset();
