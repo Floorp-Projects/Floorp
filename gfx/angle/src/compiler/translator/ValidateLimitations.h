@@ -8,6 +8,7 @@
 #define COMPILER_TRANSLATOR_VALIDATELIMITATIONS_H_
 
 #include "compiler/translator/IntermNode.h"
+#include "compiler/translator/LoopInfo.h"
 
 namespace sh
 {
@@ -57,7 +58,7 @@ class ValidateLimitations : public TIntermTraverser
     sh::GLenum mShaderType;
     TInfoSinkBase *mSink;
     int mNumErrors;
-    std::vector<int> mLoopSymbolIds;
+    TLoopStack mLoopStack;
     bool mValidateIndexing;
     bool mValidateInnerLoops;
 };
