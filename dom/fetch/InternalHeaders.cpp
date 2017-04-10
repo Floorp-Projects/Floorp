@@ -52,12 +52,14 @@ InternalHeaders::Append(const nsACString& aName, const nsACString& aValue,
 {
   nsAutoCString lowerName;
   ToLowerCase(aName, lowerName);
+  nsAutoCString trimValue;
+  NS_TrimHTTPWhitespace(aValue, trimValue);
 
-  if (IsInvalidMutableHeader(lowerName, aValue, aRv)) {
+  if (IsInvalidMutableHeader(lowerName, trimValue, aRv)) {
     return;
   }
 
-  mList.AppendElement(Entry(lowerName, aValue));
+  mList.AppendElement(Entry(lowerName, trimValue));
 }
 
 void
@@ -151,8 +153,10 @@ InternalHeaders::Set(const nsACString& aName, const nsACString& aValue, ErrorRes
 {
   nsAutoCString lowerName;
   ToLowerCase(aName, lowerName);
+  nsAutoCString trimValue;
+  NS_TrimHTTPWhitespace(aValue, trimValue);
 
-  if (IsInvalidMutableHeader(lowerName, aValue, aRv)) {
+  if (IsInvalidMutableHeader(lowerName, trimValue, aRv)) {
     return;
   }
 
@@ -169,9 +173,9 @@ InternalHeaders::Set(const nsACString& aName, const nsACString& aValue, ErrorRes
   if (firstIndex < INT32_MAX) {
     Entry* entry = mList.InsertElementAt(firstIndex);
     entry->mName = lowerName;
-    entry->mValue = aValue;
+    entry->mValue = trimValue;
   } else {
-    mList.AppendElement(Entry(lowerName, aValue));
+    mList.AppendElement(Entry(lowerName, trimValue));
   }
 }
 
