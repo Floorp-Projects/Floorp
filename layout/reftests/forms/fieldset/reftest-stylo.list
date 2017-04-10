@@ -13,7 +13,7 @@ fails == fieldset-overflow-auto-1.html fieldset-overflow-auto-1.html
 == relpos-legend-4.html relpos-legend-4.html
 fails == sticky-legend-1.html sticky-legend-1.html
 fuzzy-if(skiaContent,1,40768) == abs-pos-child-sizing.html abs-pos-child-sizing.html
-fails == overflow-hidden.html overflow-hidden.html
+== overflow-hidden.html overflow-hidden.html
 == legend-rtl.html legend-rtl.html # Bug 1340696
 fails == fieldset-grid-001.html fieldset-grid-001.html
 fails == fieldset-flexbox-001.html fieldset-flexbox-001.html

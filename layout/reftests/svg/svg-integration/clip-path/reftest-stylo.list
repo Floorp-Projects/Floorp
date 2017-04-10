@@ -17,7 +17,7 @@ default-preferences pref(layout.css.clip-path-shapes.enabled,true)
 == clip-path-polygon-010.html clip-path-polygon-010.html
 == clip-path-polygon-011.html clip-path-polygon-011.html
 == clip-path-polygon-012.html clip-path-polygon-012.html
-fails == clip-path-polygon-013.html clip-path-polygon-013.html
+== clip-path-polygon-013.html clip-path-polygon-013.html
 
 == clip-path-circle-001.html clip-path-circle-001.html
 == clip-path-circle-002.html clip-path-circle-002.html
