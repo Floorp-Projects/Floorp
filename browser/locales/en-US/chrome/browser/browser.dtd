@@ -901,7 +901,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 
 <!ENTITY updateAvailable.message "Update your &brandShorterName; for the latest in speed and privacy.">
 <!ENTITY updateAvailable.whatsnew.label "See what’s new.">
-<!ENTITY updateAvailable.whatsnew.href "http://www.mozilla.org/">
 <!ENTITY updateAvailable.header.message "A new &brandShorterName; update is available.">
 <!ENTITY updateAvailable.acceptButton.label "Download Update">
 <!ENTITY updateAvailable.acceptButton.accesskey "D">
@@ -911,7 +910,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 
 <!ENTITY updateManual.message "Download a fresh copy of &brandShorterName; and we’ll help you to install it.">
 <!ENTITY updateManual.whatsnew.label "See what’s new.">
-<!ENTITY updateManual.whatsnew.href "http://www.mozilla.org/">
 <!ENTITY updateManual.header.message "&brandShorterName; can’t update to the latest version.">
 <!ENTITY updateManual.acceptButton.label "Download &brandShorterName;">
 <!ENTITY updateManual.acceptButton.accesskey "D">
