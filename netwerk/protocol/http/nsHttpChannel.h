@@ -660,6 +660,10 @@ private:
         RESPONSE_FROM_NETWORK,      // response coming from the network
     } mFirstResponseSource = RESPONSE_PENDING;
 
+    // Determines if it's possible and advisable to race the network request
+    // with the cache fetch, and proceeds to do so.
+    nsresult MaybeRaceNetworkWithCache();
+
     nsresult TriggerNetwork(int32_t aTimeout);
     void CancelNetworkRequest(nsresult aStatus);
     // Timer used to delay the network request, or to trigger the network
