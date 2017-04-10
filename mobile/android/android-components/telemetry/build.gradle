@@ -48,7 +48,7 @@ coveralls {
 }
 
 dependencies {
-    compile 'com.android.support:support-annotations:25.2.0'
+    compile 'com.android.support:support-annotations:25.3.1'
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.robolectric:robolectric:3.3.1'
