@@ -171,6 +171,33 @@ NS_IMETHODIMP CacheStorage::Exists(nsIURI *aURI, const nsACString & aIdExtension
     this, asciiSpec, aIdExtension, aResult);
 }
 
+nsresult
+CacheStorage::GetCacheIndexEntryAttrs(nsIURI *aURI,
+                                      const nsACString &aIdExtension,
+                                      bool *aHasAltData,
+                                      uint32_t *aSizeInKB)
+{
+  NS_ENSURE_ARG(aURI);
+  NS_ENSURE_ARG(aHasAltData);
+  NS_ENSURE_ARG(aSizeInKB);
+  if (!CacheStorageService::Self()) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  nsresult rv;
+
+  nsCOMPtr<nsIURI> noRefURI;
+  rv = aURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString asciiSpec;
+  rv = noRefURI->GetAsciiSpec(asciiSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CacheStorageService::Self()->GetCacheIndexEntryAttrs(
+    this, asciiSpec, aIdExtension, aHasAltData, aSizeInKB);
+}
+
 NS_IMETHODIMP CacheStorage::AsyncDoomURI(nsIURI *aURI, const nsACString & aIdExtension,
                                          nsICacheEntryDoomCallback* aCallback)
 {
