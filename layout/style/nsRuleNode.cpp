@@ -9729,6 +9729,48 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
            parentSVG->mTextAnchor,
            NS_STYLE_TEXT_ANCHOR_START);
 
+  // -moz-context-properties:
+  const nsCSSValue* contextPropsValue = aRuleData->ValueForContextProperties();
+  switch (contextPropsValue->GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_List:
+  case eCSSUnit_ListDep: {
+    svg->mContextProps.Clear();
+    svg->mContextPropsBits = 0;
+    for (const nsCSSValueList* item = contextPropsValue->GetListValue();
+         item; item = item->mNext)
+    {
+      nsIAtom* atom = item->mValue.GetAtomValue();
+      svg->mContextProps.AppendElement(atom);
+      if (atom == nsGkAtoms::fill) {
+        svg->mContextPropsBits |= NS_STYLE_CONTEXT_PROPERTY_FILL;
+      } else if (atom == nsGkAtoms::stroke) {
+        svg->mContextPropsBits |= NS_STYLE_CONTEXT_PROPERTY_STROKE;
+      }
+    }
+    break;
+  }
+
+  case eCSSUnit_Inherit:
+    svg->mContextProps.Clear();
+    svg->mContextProps.AppendElements(parentSVG->mContextProps);
+    svg->mContextPropsBits = parentSVG->mContextPropsBits;
+    conditions.SetUncacheable();
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_None:
+  case eCSSUnit_Unset:
+    svg->mContextProps.Clear();
+    svg->mContextPropsBits = 0;
+    break;
+
+  default:
+    MOZ_ASSERT(false, "unrecognized -moz-context-properties value");
+  }
+
   COMPUTE_END_INHERITED(SVG, svg)
 }
 
