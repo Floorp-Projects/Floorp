@@ -125,6 +125,9 @@ function isFlagFilterMatch(item, { type, value, negative }) {
     case "domain":
       match = item.urlDetails.host.toLowerCase().includes(value);
       break;
+    case "remote-ip":
+      match = `${item.remoteAddress}:${item.remotePort}`.toLowerCase().includes(value);
+      break;
     case "cause":
       let causeType = item.cause.type;
       match = typeof causeType === "string" ?
