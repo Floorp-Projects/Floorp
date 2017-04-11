@@ -8,7 +8,8 @@
     android:layout_height="match_parent"
     android:animateLayoutChanges="false"
     android:orientation="horizontal"
-    android:paddingStart="8dp">
+    android:paddingStart="8dp"
+    android:paddingEnd="0dp">
 
     <!-- This button only exists in the tablet layout, hence the Ignore="InconsistentLayout" -->
     <ImageButton

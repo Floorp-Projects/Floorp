@@ -8,7 +8,8 @@
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
     android:orientation="horizontal"
-    android:paddingStart="16dp">
+    android:paddingStart="16dp"
+    android:paddingEnd="0dp">
 
     <ImageView
         android:id="@+id/lock"
