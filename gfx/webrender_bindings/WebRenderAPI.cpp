@@ -533,7 +533,7 @@ DisplayListBuilder::PushStackingContext(const WrRect& aBounds,
                                         const WrMixBlendMode& aMixBlendMode)
 {
   wr_dp_push_stacking_context(mWrState, aBounds, aOverflow, aMask, aOpacity,
-                              &aTransform.components[0], aMixBlendMode);
+                              ToWrMatrix(aTransform), aMixBlendMode);
 }
 
 void

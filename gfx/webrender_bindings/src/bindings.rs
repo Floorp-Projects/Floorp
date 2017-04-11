@@ -205,6 +205,22 @@ impl From<LayoutRect> for WrRect {
 }
 
 #[repr(C)]
+#[derive(Debug)]
+pub struct WrMatrix {
+    values: [f32; 16],
+}
+
+impl WrMatrix {
+    pub fn to_layout_transform(&self) -> LayoutTransform {
+        LayoutTransform::row_major(
+            self.values[0], self.values[1], self.values[2], self.values[3],
+            self.values[4], self.values[5], self.values[6], self.values[7],
+            self.values[8], self.values[9], self.values[10], self.values[11],
+            self.values[12], self.values[13], self.values[14], self.values[15])
+    }
+}
+
+#[repr(C)]
 pub struct WrColor {
     r: f32,
     g: f32,
@@ -1083,7 +1099,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               overflow: WrRect,
                                               mask: *const WrImageMask,
                                               opacity: f32,
-                                              transform: &LayoutTransform,
+                                              transform: WrMatrix,
                                               mix_blend_mode: WrMixBlendMode) {
     assert!(unsafe { is_in_main_thread() });
     state.z_index += 1;
@@ -1114,7 +1130,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
         .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                bounds,
                                state.z_index,
-                               Some(PropertyBinding::Value(*transform)),
+                               Some(PropertyBinding::Value(transform.to_layout_transform())),
                                None,
                                mix_blend_mode,
                                filters);
