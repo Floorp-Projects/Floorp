@@ -2854,14 +2854,15 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
   if (mAPZC) {
     uint64_t inputBlockId = 0;
     ScrollableLayerGuid guid;
+    nsEventStatus result = nsEventStatus_eIgnore;
 
-    nsEventStatus result = mAPZC->ReceiveInputEvent(aEvent, &guid, &inputBlockId);
-    if (result == nsEventStatus_eConsumeNoDefault) {
-      return;
-    }
-
-    switch(aEvent.mInputType) {
+    switch (aEvent.mInputType) {
       case PANGESTURE_INPUT: {
+        result = mAPZC->ReceiveInputEvent(aEvent, &guid, &inputBlockId);
+        if (result == nsEventStatus_eConsumeNoDefault) {
+          return;
+        }
+
         PanGestureInput& panInput = aEvent.AsPanGestureInput();
 
         event = panInput.ToWidgetWheelEvent(this);
@@ -2895,7 +2896,16 @@ nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe
         break;
       }
       case SCROLLWHEEL_INPUT: {
+        // For wheel events on OS X, send it to APZ using the WidgetInputEvent
+        // variant of ReceiveInputEvent, because the IAPZCTreeManager version of
+        // that function has special handling (for delta multipliers etc.) that
+        // we need to run. Using the InputData variant would bypass that and
+        // go straight to the APZCTreeManager subclass.
         event = aEvent.AsScrollWheelInput().ToWidgetWheelEvent(this);
+        result = mAPZC->ReceiveInputEvent(event, &guid, &inputBlockId);
+        if (result == nsEventStatus_eConsumeNoDefault) {
+          return;
+        }
         break;
       };
       default:
