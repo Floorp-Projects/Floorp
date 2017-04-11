@@ -847,8 +847,8 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       }
 
       // If/when we enable support for pan inputs off-main-thread, we'll need
-      // to duplicate this EventStateManager code or something. See the other
-      // call to GetUserPrefsForWheelEvent in this file for why these fields
+      // to duplicate this EventStateManager code or something. See the call to
+      // GetUserPrefsForWheelEvent in IAPZCTreeManager.cpp for why these fields
       // are stored separately.
       MOZ_ASSERT(NS_IsMainThread());
       WidgetWheelEvent wheelEvent = panInput.ToWidgetWheelEvent(nullptr);
