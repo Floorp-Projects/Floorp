@@ -318,7 +318,6 @@ typedef nsClassHashtable<nsUint32HashKey, nsCString> PrefixStringMap;
 
 typedef nsDataHashtable<nsCStringHashKey, int64_t> TableFreshnessMap;
 
-typedef nsCStringHashKey VLHashPrefixString;
 typedef nsCStringHashKey FullHashString;
 
 typedef nsDataHashtable<FullHashString, int64_t> FullHashExpiryCache;
@@ -354,7 +353,7 @@ struct CachedFullHashResponse {
   }
 };
 
-typedef nsClassHashtable<VLHashPrefixString, CachedFullHashResponse> FullHashResponseMap;
+typedef nsClassHashtable<nsUint32HashKey, CachedFullHashResponse> FullHashResponseMap;
 
 } // namespace safebrowsing
 } // namespace mozilla
