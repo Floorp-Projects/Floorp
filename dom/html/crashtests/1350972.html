@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+    try { o1 = document.createElement('tr'); } catch(e) {};
+    try { o2 = document.createElement('div'); } catch(e) {};
+    try { o3 = document.createElement('hr'); } catch(e) {};
+    try { o4 = document.createElement('textarea'); } catch(e) {};
+    try { o5 = document.getSelection(); } catch(e) {};
+    try { o6 = document.createRange(); } catch(e) {};
+    try { document.documentElement.appendChild(o2); } catch(e) {};
+    try { document.documentElement.appendChild(o3); } catch(e) {};
+    try { o2.appendChild(o4); } catch(e) {};
+    try { o3.outerHTML = "<noscript contenteditable='true'>"; } catch(e) {};
+    try { o4.select(); } catch(e) {};
+    try { o5.addRange(o6); } catch(e) {};
+    try { document.documentElement.appendChild(o1); } catch(e) {};
+    try { o5.selectAllChildren(o1); } catch(e) {};
+    try { o6.selectNode(o1); } catch(e) {};
+</script>
+</head>
+</html>
