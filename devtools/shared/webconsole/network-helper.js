@@ -644,14 +644,8 @@ var NetworkHelper = {
           uri = Services.io.newURI("https://" + host);
         }
 
-        let originAttributes = {};
-        if (httpActivity.channel) {
-          originAttributes = httpActivity.channel.loadInfo.originAttributes;
-        }
-        info.hsts = sss.isSecureURI(sss.HEADER_HSTS, uri, flags,
-                                    originAttributes);
-        info.hpkp = sss.isSecureURI(sss.HEADER_HPKP, uri, flags,
-                                    originAttributes);
+        info.hsts = sss.isSecureURI(sss.HEADER_HSTS, uri, flags);
+        info.hpkp = sss.isSecureURI(sss.HEADER_HPKP, uri, flags);
       } else {
         DevToolsUtils.reportException("NetworkHelper.parseSecurityInfo",
           "Could not get HSTS/HPKP status as hostname is not available.");
