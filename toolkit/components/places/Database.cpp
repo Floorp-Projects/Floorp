@@ -597,25 +597,43 @@ Database::BackupAndReplaceDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage)
                                        profDir, getter_AddRefs(backup));
   }
 
+  // If anything fails from this point on, we have a stale connection or
+  // database file, and there's not much more we can do.
+  // The only thing we can try to do is to replace the database on the next
+  // start, and enforce a crash, so it gets reported to us.
+
   // Close database connection if open.
   if (mMainConn) {
-    // If there's any not finalized statement or this fails for any reason
-    // we won't be able to remove the database.
     rv = mMainConn->Close();
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, ForceCrashAndReplaceDatabase(
+      NS_LITERAL_CSTRING("Unable to close the corrupt database.")));
   }
 
   // Remove the broken database.
   rv = databaseFile->Remove(false);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    return ForceCrashAndReplaceDatabase(
+      NS_LITERAL_CSTRING("Unable to remove the corrupt database file."));
+  }
 
   // Create a new database file.
   // Use an unshared connection, it will consume more memory but avoid shared
   // cache contentions across threads.
   rv = aStorage->OpenUnsharedDatabase(databaseFile, getter_AddRefs(mMainConn));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, ForceCrashAndReplaceDatabase(
+    NS_LITERAL_CSTRING("Unable to open a new database connection.")));
 
   return NS_OK;
+}
+
+nsresult
+Database::ForceCrashAndReplaceDatabase(const nsCString& aReason)
+{
+  Preferences::SetBool(PREF_FORCE_DATABASE_REPLACEMENT, true);
+  // We could force an application restart here, but we'd like to get these
+  // cases reported to us, so let's force a crash instead.
+  MOZ_CRASH_UNSAFE_OOL(aReason.get());
+  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -1895,7 +1913,23 @@ Database::MigrateV35Up() {
   MOZ_ASSERT(NS_IsMainThread());
 
   int64_t mobileRootId = CreateMobileRoot();
-  if (mobileRootId <= 0) return NS_ERROR_FAILURE;
+  if (mobileRootId <= 0)  {
+    // Either the schema is broken or there isn't any root. The latter can
+    // happen if a consumer, for example Thunderbird, never used bookmarks.
+    // If there are no roots, this migration should not run.
+    nsCOMPtr<mozIStorageStatement> checkRootsStmt;
+    nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT id FROM moz_bookmarks WHERE parent = 0"
+    ), getter_AddRefs(checkRootsStmt));
+    NS_ENSURE_SUCCESS(rv, rv);
+    mozStorageStatementScoper scoper(checkRootsStmt);
+    bool hasResult = false;
+    rv = checkRootsStmt->ExecuteStep(&hasResult);
+    if (NS_SUCCEEDED(rv) && !hasResult) {
+      return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+  }
 
   // At this point, we should have no more than two folders with the mobile
   // bookmarks anno: the new root, and the old folder if one exists. If, for
