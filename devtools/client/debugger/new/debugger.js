@@ -8940,10 +8940,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	        let flags = (httpActivity.private) ?
 	                      Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0;
 
-	        let host = httpActivity.hostname;
+	        if (!uri) {
+	          // isSecureURI only cares about the host, not the scheme.
+	          let host = httpActivity.hostname;
+	          uri = Services.io.newURI("https://" + host);
+	        }
 
-	        info.hsts = sss.isSecureHost(sss.HEADER_HSTS, host, flags);
-	        info.hpkp = sss.isSecureHost(sss.HEADER_HPKP, host, flags);
+	        let originAttributes = {};
+	        if (httpActivity.channel) {
+	          originAttributes = httpActivity.channel.loadInfo.originAttributes;
+	        }
+	        info.hsts = sss.isSecureURI(sss.HEADER_HSTS, uri, flags,
+	                                    originAttributes);
+	        info.hpkp = sss.isSecureURI(sss.HEADER_HPKP, uri, flags,
+	                                    originAttributes);
 	      } else {
 	        DevToolsUtils.reportException("NetworkHelper.parseSecurityInfo",
 	          "Could not get HSTS/HPKP status as hostname is not available.");

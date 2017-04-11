@@ -9,6 +9,7 @@ const { Curl } = require("devtools/client/shared/curl");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
+const FileSaver = require("devtools/client/shared/file-saver");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 const { HarExporter } = require("./har/har-exporter");
 const { NetMonitorController } = require("./netmonitor-controller");
@@ -153,6 +154,16 @@ RequestListContextMenu.prototype = {
       accesskey: L10N.getStr("netmonitor.context.saveAllAsHar.accesskey"),
       visible: this.sortedRequests.size > 0,
       click: () => this.saveAllAsHar(),
+    }));
+
+    menu.append(new MenuItem({
+      id: "request-list-context-save-image-as",
+      label: L10N.getStr("netmonitor.context.saveImageAs"),
+      accesskey: L10N.getStr("netmonitor.context.saveImageAs.accesskey"),
+      visible: !!(selectedRequest &&
+               selectedRequest.responseContent &&
+               selectedRequest.responseContent.content.mimeType.includes("image/")),
+      click: () => this.saveImageAs(),
     }));
 
     menu.append(new MenuItem({
@@ -321,6 +332,26 @@ RequestListContextMenu.prototype = {
       let data = formDataURI(mimeType, encoding, string);
       clipboardHelper.copyString(data);
     });
+  },
+
+  /**
+   * Save image as.
+   */
+  saveImageAs() {
+    const { encoding, text } = this.selectedRequest.responseContent.content;
+    let fileName = this.selectedRequest.urlDetails.baseNameWithQuery;
+    let data;
+    if (encoding === "base64") {
+      let decoded = atob(text);
+      data = new Uint8Array(decoded.length);
+      for (let i = 0; i < decoded.length; ++i) {
+        data[i] = decoded.charCodeAt(i);
+      }
+    } else {
+      data = text;
+    }
+    let blob = new Blob([data]);
+    FileSaver.saveAs(blob, fileName, document);
   },
 
   /**

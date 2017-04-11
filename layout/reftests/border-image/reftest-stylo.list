@@ -82,7 +82,7 @@ fuzzy(3,18000) fails-if(OSX) fuzzy-if(skiaContent,4,16462) == border-image-repea
 == border-image-repeating-radial-gradient-repeat-round-2.html border-image-repeating-radial-gradient-repeat-round-2.html
 
 # border-image-source (-moz-)element
-fails == border-image-element.html border-image-element.html
+== border-image-element.html border-image-element.html
 
 # svg-as-border-image
 fails == svg-as-border-image-1a.html svg-as-border-image-1a.html

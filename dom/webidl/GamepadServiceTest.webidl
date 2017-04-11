@@ -23,11 +23,13 @@ interface GamepadServiceTest
 
   void newButtonEvent(unsigned long index,
                       unsigned long button,
-                      boolean pressed);
+                      boolean pressed,
+                      boolean touched);
 
   void newButtonValueEvent(unsigned long index,
                            unsigned long button,
                            boolean pressed,
+                           boolean touched,
                            double value);
 
   void newAxisMoveEvent(unsigned long index,

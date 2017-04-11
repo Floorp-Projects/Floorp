@@ -237,11 +237,11 @@ void Gecko_SetListStyleType(nsStyleList* style_struct, uint32_t type);
 void Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src);
 
 // background-image style.
-// TODO: support element() and -moz-image()
 void Gecko_SetNullImageValue(nsStyleImage* image);
 void Gecko_SetGradientImageValue(nsStyleImage* image, nsStyleGradient* gradient);
 void Gecko_SetUrlImageValue(nsStyleImage* image,
                             ServoBundledURI uri);
+void Gecko_SetImageElement(nsStyleImage* image, nsIAtom* atom);
 void Gecko_CopyImageValueFrom(nsStyleImage* image, const nsStyleImage* other);
 void Gecko_InitializeImageCropRect(nsStyleImage* image);
 

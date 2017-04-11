@@ -34,8 +34,8 @@ function checkTimestamp(){
                               index = i;
                               // Press a button to make the gamepad visible
                               // to the page.
-                              GamepadService.newButtonEvent(index, 0, true);
-                              GamepadService.newButtonEvent(index, 0, true);
+                              GamepadService.newButtonEvent(index, 0, true, true);
+                              GamepadService.newButtonEvent(index, 0, true, true);
                               ok(true, "test");
                             });
 }
@@ -56,7 +56,7 @@ function buttonpresshandler(e) {
   } else {
     ok(timea <= e.gamepad.timestamp, "Timestamp less than last timestamp");
   }
-  GamepadService.newButtonEvent(index, 0, false);
+  GamepadService.newButtonEvent(index, 0, false, false);
   if (!firstPress) {
     testOver = true;
     SpecialPowers.executeSoon(cleanup);

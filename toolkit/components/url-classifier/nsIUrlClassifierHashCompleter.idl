@@ -4,6 +4,23 @@
 
 #include "nsISupports.idl"
 
+interface nsIArray;
+
+/**
+ * This interface contains feilds in Matches object of FullHashResponse(V4).
+ * Reference from:
+ * https://developers.google.com/safe-browsing/v4/update-api#http-post-response_2
+ */
+[scriptable, uuid(aabeb50e-d9f7-418e-9469-2cd9608958c0)]
+interface nsIFullHashMatch : nsISupports
+{
+  readonly attribute ACString tableName;
+
+  readonly attribute ACString fullHash;
+
+  readonly attribute uint32_t cacheDuration;
+};
+
 /**
  * This interface is implemented by nsIUrlClassifierHashCompleter clients.
  */
@@ -16,15 +33,33 @@ interface nsIUrlClassifierHashCompleterCallback : nsISupports
    * nsIUrlClassifierCompleter::complete() call.
    *
    * @param hash
-   *        The 128-bit hash that was discovered.
+   *        The 256-bit hash that was discovered.
    * @param table
    *        The name of the table that this hash belongs to.
    * @param chunkId
    *        The database chunk that this hash belongs to.
    */
-  void completion(in ACString hash,
-                  in ACString table,
-                  in uint32_t chunkId);
+  void completionV2(in ACString hash,
+                    in ACString table,
+                    in uint32_t chunkId);
+
+  /**
+   * This will be called when a fullhash response is received and parsed
+   * no matter if any full hash has been found.
+   *
+   * @param partialHash
+   *        The hash that was sent for completion.
+   * @param table
+   *        The name of the table that this hash belongs to.
+   * @param negativeCacheDuration
+   *        The negative cache duration in millisecond.
+   * @param fullHashes
+   *        Array of fullhashes that match the prefix.
+   */
+  void completionV4(in ACString partialHash,
+                    in ACString table,
+                    in uint32_t negativeCacheDuration,
+                    in nsIArray fullHashes);
 
   /**
    * The completion is complete.  This method is called once per
