@@ -6,6 +6,7 @@
 
 const {
   getAbbreviatedMimeType,
+  ipToLong,
 } = require("./request-utils");
 
 /**
@@ -57,6 +58,13 @@ function domain(first, second) {
   return result || waterfall(first, second);
 }
 
+function remoteip(first, second) {
+  const firstIP = ipToLong(first.remoteAddress);
+  const secondIP = ipToLong(second.remoteAddress);
+  const result = compareValues(firstIP, secondIP);
+  return result || waterfall(first, second);
+}
+
 function cause(first, second) {
   const firstCause = first.cause.type;
   const secondCause = second.cause.type;
@@ -86,6 +94,7 @@ exports.Sorters = {
   method,
   file,
   domain,
+  remoteip,
   cause,
   type,
   transferred,
