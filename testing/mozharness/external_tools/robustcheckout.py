@@ -19,6 +19,7 @@ import random
 import re
 import socket
 import time
+import urllib2
 
 from mercurial.i18n import _
 from mercurial.node import hex
@@ -29,13 +30,12 @@ from mercurial import (
     extensions,
     cmdutil,
     hg,
-    pycompat,
     scmutil,
     util,
 )
 
-testedwith = '3.8 3.9 4.0 4.1'
-minimumhgversion = '3.8'
+testedwith = '3.7 3.8 3.9 4.0 4.1'
+minimumhgversion = '3.7'
 
 cmdtable = {}
 command = cmdutil.command(cmdtable)
@@ -267,7 +267,7 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
                 # Will raise if failure limit reached.
                 handlenetworkfailure()
                 return True
-        elif isinstance(e, pycompat.urlerr.urlerror):
+        elif isinstance(e, urllib2.URLError):
             if isinstance(e.reason, socket.error):
                 ui.warn('socket error: %s\n' % e.reason)
                 handlenetworkfailure()
@@ -295,7 +295,7 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
         try:
             res = hg.clone(ui, {}, cloneurl, dest=dest, update=False,
                            shareopts={'pool': sharebase, 'mode': 'identity'})
-        except (error.Abort, pycompat.urlerr.urlerror) as e:
+        except (error.Abort, urllib2.URLError) as e:
             if handlepullerror(e):
                 return callself()
             raise
@@ -354,7 +354,7 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
                 pullop = exchange.pull(repo, remote, heads=pullrevs)
                 if not pullop.rheads:
                     raise error.Abort('unable to pull requested revision')
-        except (error.Abort, pycompat.urlerr.urlerror) as e:
+        except (error.Abort, urllib2.URLError) as e:
             if handlepullerror(e):
                 return callself()
             raise
