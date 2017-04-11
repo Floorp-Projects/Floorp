@@ -30,6 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         , divRect
         , unLockedCoords
         , lockedCoords
+        , mouseMoveIntervalID
         , isUnlocked = false
         , isLocked = false;
 
@@ -50,6 +51,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
       function moveUnlocked(e) {
         info("Got mousemove via moveUnlocked");
+        clearInterval(mouseMoveIntervalID);
         var firstCall = !unLockedCoords;
         if (!firstCall) {
           todo(false, "mousemove is fired twice.");
@@ -72,6 +74,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
       function moveLocked(e) {
         info("Got mousemove via moveLocked");
+        clearInterval(mouseMoveIntervalID);
         div.removeEventListener("mousemove", moveLocked);
 
         isLocked = !!document.pointerLockElement;
@@ -96,8 +99,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           div.removeEventListener("mousemove", moveUnlocked);
           div.addEventListener("mousemove", moveLocked);
           divRect = div.getBoundingClientRect();
-          synthesizeNativeMouseMove(div, (divRect.width / 4) * 3,
-                                    (divRect.height / 4) * 3);
+          // Bug 1295815
+          // Retrigger synthesizeNativeMouseMove until it actually happens.
+          mouseMoveIntervalID = setInterval(() => {
+            synthesizeNativeMouseMove(div, (divRect.width / 4) * 3,
+                                      (divRect.height / 4) * 3);
+          }, 100);
         } else {
           info("Got pointerlockchange for exiting");
         }
@@ -111,7 +118,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           synthesizeNativeMouseMove(div, 0, 0, () => {
             div.addEventListener("mousemove", moveUnlocked);
             divRect = div.getBoundingClientRect();
-            synthesizeNativeMouseMove(div, divRect.width / 2, divRect.height / 2);
+            // Bug 1295815
+            // Retrigger synthesizeNativeMouseMove until it actually happens.
+            mouseMoveIntervalID = setInterval(() => {
+              synthesizeNativeMouseMove(div, divRect.width / 2, divRect.height / 2);
+            }, 100);
           });
         });
         div.requestFullscreen();

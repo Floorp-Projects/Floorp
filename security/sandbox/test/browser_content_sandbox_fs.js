@@ -155,12 +155,6 @@ add_task(function*() {
     // test if the content process can create a temp file, should pass
     let path = fileInTempDir().path;
     let fileCreated = yield ContentTask.spawn(browser, path, createFile);
-    if (!fileCreated && isWin()) {
-      // TODO: fix 1329294 and enable this test for Windows.
-      // Not using todo() because this only fails on automation.
-      info("ignoring failure to write to content temp due to 1329294\n");
-      return;
-    }
     ok(fileCreated == true, "creating a file in content temp is permitted");
     // now delete the file
     let fileDeleted = yield ContentTask.spawn(browser, path, deleteFile);
