@@ -41,10 +41,17 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaList)
 
   /**
-   * Creates a MediaList backed by the StyleBackendType of the document.
+   * Creates a MediaList backed by the given StyleBackendType.
    */
   static already_AddRefed<MediaList> Create(StyleBackendType,
                                             const nsAString& aMedia);
+
+  /**
+   * Creates a MediaList backed by the given StyleBackendType.
+   */
+  static already_AddRefed<MediaList> Create(StyleBackendType aBackendType) {
+    return Create(aBackendType, nsString());
+  }
 
   /**
    * Creates a MediaList backed by the StyleBackendType of the document.
