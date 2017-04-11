@@ -439,6 +439,7 @@ PK11_UnwrapSymKey
 PK11_UpdateSlotAttribute
 PK11_UserDisableSlot
 PK11_UserEnableSlot
+PK11_Verify
 PK11_VerifyWithMechanism
 PK11_WrapPrivKey
 PK11_WrapSymKey
