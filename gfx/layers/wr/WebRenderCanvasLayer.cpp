@@ -87,13 +87,15 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
 
   aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                               wr::ToWrRect(overflow),
-                               mask.ptrOr(nullptr),
                                1.0f,
                                //GetAnimations(),
                                transform,
                                mixBlendMode);
+  aBuilder.PushScrollLayer(wr::ToWrRect(overflow),
+                           wr::ToWrRect(overflow),
+                           mask.ptrOr(nullptr));
   aBuilder.PushImage(wr::ToWrRect(rect), clip, filter, key);
+  aBuilder.PopScrollLayer();
   aBuilder.PopStackingContext();
 }
 

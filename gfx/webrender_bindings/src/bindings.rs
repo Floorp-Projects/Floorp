@@ -1097,8 +1097,6 @@ pub extern "C" fn wr_dp_new_clip_region(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               bounds: WrRect,
-                                              overflow: WrRect,
-                                              mask: *const WrImageMask,
                                               opacity: f32,
                                               transform: WrMatrix,
                                               mix_blend_mode: WrMixBlendMode) {
@@ -1106,20 +1104,6 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     state.z_index += 1;
 
     let bounds = bounds.to_rect();
-    let overflow = overflow.to_rect();
-
-    // convert from the C type to the Rust type
-    let mask = unsafe {
-        mask.as_ref().map(|&WrImageMask { image, ref rect, repeat }| {
-            ImageMask {
-                image: image,
-                rect: rect.to_rect(),
-                repeat: repeat,
-            }
-        })
-    };
-
-    let clip_region = state.frame_builder.dl_builder.new_clip_region(&overflow, vec![], mask);
 
     let mut filters: Vec<FilterOp> = Vec::new();
     if opacity < 1.0 {
@@ -1136,17 +1120,12 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                None,
                                mix_blend_mode,
                                filters);
-
-    let clip_bounds = LayoutRect::new(LayoutPoint::new(0.0, 0.0), bounds.size);
-    state.frame_builder.dl_builder.push_scroll_layer(clip_region, clip_bounds, None);
 }
 
 #[no_mangle]
 pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState) {
     assert!(unsafe { is_in_main_thread() });
-    state.frame_builder.dl_builder.pop_scroll_layer();
     state.frame_builder.dl_builder.pop_stacking_context();
-    //println!("pop_stacking {:?}", state.pipeline_id);
 }
 
 #[no_mangle]
