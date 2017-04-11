@@ -174,6 +174,8 @@ impl SpecNewSessionParameters {
                 "ftpProxyPort" => try!(SpecNewSessionParameters::validate_port("ftpProxyPort", value)),
                 "httpProxy" => try!(SpecNewSessionParameters::validate_host_domain("httpProxy", "http", obj, value)),
                 "httpProxyPort" => try!(SpecNewSessionParameters::validate_port("httpProxyPort", value)),
+                "sslProxy" => try!(SpecNewSessionParameters::validate_host_domain("sslProxy", "http", obj, value)),
+                "sslProxyPort" => try!(SpecNewSessionParameters::validate_port("sslProxyPort", value)),
                 "socksProxy" => try!(SpecNewSessionParameters::validate_host_domain("socksProxy", "ssh", obj, value)),
                 "socksProxyPort" => try!(SpecNewSessionParameters::validate_port("socksProxyPort", value)),
                 "socksUsername" => if !value.is_string() {
@@ -547,8 +549,10 @@ mod tests {
         assert!(validate_host("ftpProxy", "ftp", "{}", "foo:bar@example.org").is_err());
         assert!(validate_host("ftpProxy", "ftp", "{}", "foo@example.org").is_err());
         validate_host("httpProxy", "http", "{}", "example.org:8000").unwrap();
-        validate_host("httpProxy", "http", "{}", "example.org:8000").unwrap();
         validate_host("httpProxy", "http", "{\"ftpProxyPort\": \"1234\"}", "example.org:8000").unwrap();
-        assert!(validate_host("httpProxy", "http", "{\"httpProxyPort\": \"1234\"}", "example.org:8000").is_err())
+        assert!(validate_host("httpProxy", "http", "{\"httpProxyPort\": \"1234\"}", "example.org:8000").is_err());
+        validate_host("sslProxy", "http", "{}", "example.org:8000").unwrap();
+        validate_host("sslProxy", "http", "{\"ftpProxyPort\": \"1234\"}", "example.org:8000").unwrap();
+        assert!(validate_host("sslProxy", "http", "{\"sslProxyPort\": \"1234\"}", "example.org:8000").is_err());
     }
 }
