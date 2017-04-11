@@ -34,13 +34,15 @@ WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   DumpLayerInfo("ColorLayer", rect);
 
   aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                              wr::ToWrRect(overflow),
-                              mask.ptrOr(nullptr),
                               1.0f,
                               //GetAnimations(),
                               transform,
                               mixBlendMode);
+  aBuilder.PushScrollLayer(wr::ToWrRect(overflow),
+                           wr::ToWrRect(overflow),
+                           mask.ptrOr(nullptr));
   aBuilder.PushRect(wr::ToWrRect(rect), clip, wr::ToWrColor(mColor));
+  aBuilder.PopScrollLayer();
   aBuilder.PopStackingContext();
 }
 
