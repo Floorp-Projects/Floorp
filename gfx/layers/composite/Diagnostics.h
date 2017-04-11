@@ -8,6 +8,7 @@
 
 #include "FPSCounter.h"
 #include "gfxPrefs.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #include <deque>
 #include <string>
@@ -31,6 +32,9 @@ public:
   }
 
   float Average() const;
+  bool Empty() const {
+    return mHistory.empty();
+  }
 
 private:
   static const size_t kMaxHistory = 60;
@@ -38,6 +42,7 @@ private:
   std::deque<Entry> mHistory;
 };
 
+// These statistics are collected by layers backends, preferably by the GPU
 struct GPUStats
 {
   GPUStats()
@@ -49,8 +54,10 @@ struct GPUStats
   uint32_t mInvalidPixels;
   uint32_t mScreenPixels;
   uint32_t mPixelsFilled;
+  Maybe<float> mDrawTime;
 };
 
+// Collects various diagnostics about layers performance.
 class Diagnostics
 {
 public:
@@ -101,6 +108,7 @@ private:
   TimedMetric mUpdateMs;
   TimedMetric mPrepareMs;
   TimedMetric mCompositeMs;
+  TimedMetric mGPUDrawMs;
 };
 
 } // namespace layers

@@ -37,6 +37,9 @@ private:
     {}
 
     RefPtr<ID3D11Query> stats;
+    RefPtr<ID3D11Query> timing;
+    RefPtr<ID3D11Query> frameBegin;
+    RefPtr<ID3D11Query> frameEnd;
     uint32_t pixelsPerFrame;
   };
   FrameQueries mPrevFrame;
