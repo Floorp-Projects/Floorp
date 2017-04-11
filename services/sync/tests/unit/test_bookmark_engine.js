@@ -723,7 +723,7 @@ add_task(async function test_misreconciled_root() {
     getBatched() {
       return this.get();
     },
-    get() {
+    async get() {
       this.recordHandler(encrypted);
       return {success: true}
     },

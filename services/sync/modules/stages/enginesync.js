@@ -180,7 +180,7 @@ EngineSynchronizer.prototype = {
       }
 
       // Upload meta/global if any engines changed anything.
-      let meta = this.service.recordManager.get(this.service.metaURL);
+      let meta = Async.promiseSpinningly(this.service.recordManager.get(this.service.metaURL));
       if (meta.isNew || meta.changed) {
         this._log.info("meta/global changed locally: reuploading.");
         try {
@@ -342,7 +342,7 @@ EngineSynchronizer.prototype = {
   },
 
   _updateEnabledEngines() {
-    let meta = this.service.recordManager.get(this.service.metaURL);
+    let meta = Async.promiseSpinningly(this.service.recordManager.get(this.service.metaURL));
     let numClients = this.service.scheduler.numClients;
     let engineManager = this.service.engineManager;
 
