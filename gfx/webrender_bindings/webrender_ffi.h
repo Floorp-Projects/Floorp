@@ -728,10 +728,10 @@ WR_FUNC;
 
 WR_INLINE void
 wr_api_finalize_builder(WrState* wrState,
-                        WrBuiltDisplayListDescriptor& dl_descriptor,
-                        WrVecU8& dl_data,
-                        WrAuxiliaryListsDescriptor& aux_descriptor,
-                        WrVecU8& aux_data)
+                        WrBuiltDisplayListDescriptor* dl_descriptor,
+                        WrVecU8* dl_data,
+                        WrAuxiliaryListsDescriptor* aux_descriptor,
+                        WrVecU8* aux_data)
 WR_FUNC;
 
 WR_INLINE void
