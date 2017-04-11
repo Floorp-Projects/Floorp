@@ -317,13 +317,16 @@ nsAccessibilityService::ListenersChanged(nsIArray* aEventChanges)
       nsIDocument* ownerDoc = node->OwnerDoc();
       DocAccessible* document = GetExistingDocAccessible(ownerDoc);
 
-      // Create an accessible for a inaccessible element having click event
-      // handler.
-      if (document && !document->HasAccessible(node) &&
-          nsCoreUtils::HasClickListener(node)) {
-        nsIContent* parentEl = node->GetFlattenedTreeParent();
-        if (parentEl) {
-          document->ContentInserted(parentEl, node, node->GetNextSibling());
+      // Always recreate for onclick changes.
+      if (document) {
+        if (nsCoreUtils::HasClickListener(node)) {
+          if (!document->GetAccessible(node)) {
+            document->RecreateAccessible(node);
+          }
+        } else {
+          if (document->GetAccessible(node)) {
+            document->RecreateAccessible(node);
+          }
         }
         break;
       }
