@@ -1066,7 +1066,19 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
   firstTileBounds = LayoutDeviceRect::FromUnknownRect(aLayer->RelativeToParent(firstTileBounds.ToUnknownRect()));
   gradientBounds = LayoutDeviceRect::FromUnknownRect(aLayer->RelativeToParent(gradientBounds.ToUnknownRect()));
 
+  // srcTransform is used for scaling the gradient to match aSrc
+  LayoutDeviceRect srcTransform = LayoutDeviceRect(mPresContext->CSSPixelsToAppUnits(aSrc.x),
+                                                   mPresContext->CSSPixelsToAppUnits(aSrc.y),
+                                                   aDest.width / ((float)mPresContext->CSSPixelsToAppUnits(aSrc.width)),
+                                                   aDest.height / ((float)mPresContext->CSSPixelsToAppUnits(aSrc.height)));
+
+  lineStart.x = (lineStart.x - srcTransform.x) * srcTransform.width;
+  lineStart.y = (lineStart.y - srcTransform.y) * srcTransform.height;
+
   if (mGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
+    lineEnd.x = (lineEnd.x - srcTransform.x) * srcTransform.width;
+    lineEnd.y = (lineEnd.y - srcTransform.y) * srcTransform.height;
+
     aBuilder.PushLinearGradient(
       mozilla::wr::ToWrRect(gradientBounds),
       aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(clipBounds)),
@@ -1077,6 +1089,9 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
       mozilla::wr::ToWrSize(firstTileBounds.Size()),
       mozilla::wr::ToWrSize(tileSpacing));
   } else {
+    gradientRadius.width *= srcTransform.width;
+    gradientRadius.height *= srcTransform.height;
+
     aBuilder.PushRadialGradient(
       mozilla::wr::ToWrRect(gradientBounds),
       aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(clipBounds)),
