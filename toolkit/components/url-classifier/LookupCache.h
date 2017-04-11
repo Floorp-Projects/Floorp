@@ -119,6 +119,7 @@ public:
   }
 
   nsCString table;
+  Prefix prefix;
 };
 
 class CacheResultV2 final : public CacheResult
@@ -131,6 +132,7 @@ public:
 
   bool operator==(const CacheResultV2& aOther) const {
     return table == aOther.table &&
+           prefix == aOther.prefix &&
            completion == aOther.completion &&
            addChunk == aOther.addChunk;
   }
@@ -147,11 +149,11 @@ class CacheResultV4 final : public CacheResult
 public:
   static const int VER;
 
-  nsCString prefix;
   CachedFullHashResponse response;
 
   bool operator==(const CacheResultV4& aOther) const {
-    return prefix == aOther.prefix &&
+    return table == aOther.table &&
+           prefix == aOther.prefix &&
            response == aOther.response;
   }
 
