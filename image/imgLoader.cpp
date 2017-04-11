@@ -1370,6 +1370,29 @@ imgLoader::ClearCache(bool chrome)
 }
 
 NS_IMETHODIMP
+imgLoader::RemoveEntry(nsIURI* aURI,
+                       nsIDOMDocument* aDOMDoc)
+{
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
+  if (aURI) {
+    OriginAttributes attrs;
+    if (doc) {
+      nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+      if (principal) {
+        attrs = principal->OriginAttributesRef();
+      }
+    }
+
+    nsresult rv = NS_OK;
+    ImageCacheKey key(aURI, attrs, doc, rv);
+    if (NS_SUCCEEDED(rv) && RemoveFromCache(key)) {
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
 imgLoader::FindEntryProperties(nsIURI* uri,
                                nsIDOMDocument* aDOMDoc,
                                nsIProperties** _retval)
