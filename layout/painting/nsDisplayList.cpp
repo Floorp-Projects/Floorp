@@ -4805,12 +4805,8 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
     case eStyleImageType_Gradient:
     {
       RefPtr<nsStyleGradient> gradientData = mBorderImageRenderer->mImageRenderer.GetGradientData();
-      Maybe<nsCSSGradientRenderer> renderer =
+      nsCSSGradientRenderer renderer =
         nsCSSGradientRenderer::Create(mFrame->PresContext(), gradientData,
-                                      mBorderImageRenderer->mArea,
-                                      mBorderImageRenderer->mArea,
-                                      mBorderImageRenderer->mArea.Size(),
-                                      CSSIntRect(),
                                       mBorderImageRenderer->mImageSize);
 
       WrGradientExtendMode extendMode;
@@ -4818,7 +4814,7 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
       LayoutDevicePoint lineStart;
       LayoutDevicePoint lineEnd;
       LayoutDeviceSize gradientRadius;
-      renderer->BuildWebRenderParameters(1.0, extendMode, stops, lineStart, lineEnd, gradientRadius);
+      renderer.BuildWebRenderParameters(1.0, extendMode, stops, lineStart, lineEnd, gradientRadius);
 
       if (gradientData->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
         Point startPoint = dest.TopLeft();
