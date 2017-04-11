@@ -404,12 +404,12 @@ public:
     DECL_WEBGL_EXTENSION_GOOP
 };
 
-class WebGLExtensionDebugGet final
+class WebGLExtensionMOZDebug final
     : public WebGLExtensionBase
 {
 public:
-    explicit WebGLExtensionDebugGet(WebGLContext* webgl);
-    virtual ~WebGLExtensionDebugGet();
+    explicit WebGLExtensionMOZDebug(WebGLContext* webgl);
+    virtual ~WebGLExtensionMOZDebug();
 
     void GetParameter(JSContext* cx, GLenum pname,
                       JS::MutableHandle<JS::Value> retval, ErrorResult& er) const;
