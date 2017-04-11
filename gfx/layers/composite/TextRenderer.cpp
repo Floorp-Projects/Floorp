@@ -5,6 +5,7 @@
 
 #include "TextRenderer.h"
 #include "FontData.h"
+#include "ConsolasFontData.h"
 #include "png.h"
 #include "mozilla/Base64.h"
 #include "mozilla/layers/Compositor.h"
@@ -186,9 +187,11 @@ TextRenderer::GetFontInfo(FontType aType)
   switch (aType) {
   case FontType::Default:
     return &sDefaultCompositorFont;
-    break;
+  case FontType::FixedWidth:
+    return &sFixedWidthCompositorFont;
   default:
     MOZ_ASSERT_UNREACHABLE("unknown font type");
+    return nullptr;
   }
 }
 
