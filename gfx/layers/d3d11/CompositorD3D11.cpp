@@ -868,6 +868,9 @@ CompositorD3D11::ClearRect(const gfx::Rect& aRect)
   }
 
   mContext->Draw(4, 0);
+
+  // Restore the default blend state.
+  mContext->OMSetBlendState(mAttachments->mPremulBlendState, sBlendFactor, 0xFFFFFFFF);
 }
 
 static inline bool

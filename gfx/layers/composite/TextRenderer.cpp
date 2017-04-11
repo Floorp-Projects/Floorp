@@ -29,11 +29,12 @@ static void PNGAPI row_callback(png_structp png_ptr, png_bytep new_row, png_uint
 {
   MOZ_ASSERT(sTextureFormat == SurfaceFormat::B8G8R8A8);
 
-  DataSourceSurface::MappedSurface map = static_cast<TextRenderer*>(png_get_progressive_ptr(png_ptr))->GetSurfaceMap();
+  TextRenderer::FontCache* cache =
+    static_cast<TextRenderer::FontCache*>(png_get_progressive_ptr(png_ptr));
 
-  uint32_t* dst = (uint32_t*)(map.mData + map.mStride * row_num);
+  uint32_t* dst = (uint32_t*)(cache->mMap.mData + cache->mMap.mStride * row_num);
 
-  for (uint32_t x = 0; x < sTextureWidth; x++) {
+  for (uint32_t x = 0; x < cache->mInfo->mTextureWidth; x++) {
     // We blend to a transparent white background, this will make text readable
     // even if it's on a dark background. Without hurting our ability to
     // interact with the content behind the text.
@@ -46,9 +47,11 @@ static void PNGAPI row_callback(png_structp png_ptr, png_bytep new_row, png_uint
 
 TextRenderer::~TextRenderer()
 {
-  if (mGlyphBitmaps) {
-    mGlyphBitmaps->Unmap();
-  }
+}
+
+TextRenderer::FontCache::~FontCache()
+{
+  mGlyphBitmaps->Unmap();
 }
 
 void
@@ -56,19 +59,22 @@ TextRenderer::RenderText(Compositor* aCompositor,
                          const string& aText,
                          const IntPoint& aOrigin,
                          const Matrix4x4& aTransform, uint32_t aTextSize,
-                         uint32_t aTargetPixelWidth)
+                         uint32_t aTargetPixelWidth,
+                         FontType aFontType)
 {
+  const FontBitmapInfo* info = GetFontInfo(aFontType);
 
-  // For now we only have a bitmap font with a 16px cell size, so we just
+  // For now we only have a bitmap font with a 24px cell size, so we just
   // scale it up if the user wants larger text.
-  Float scaleFactor = Float(aTextSize) / Float(sCellHeight);
+  Float scaleFactor = Float(aTextSize) / Float(info->mCellHeight);
   aTargetPixelWidth /= scaleFactor;
 
   RefPtr<TextureSource> src = RenderText(
     aCompositor,
     aText,
     aTextSize,
-    aTargetPixelWidth);
+    aTargetPixelWidth,
+    aFontType);
   if (!src) {
     return;
   }
@@ -89,9 +95,15 @@ RefPtr<TextureSource>
 TextRenderer::RenderText(TextureSourceProvider* aProvider,
                          const string& aText,
                          uint32_t aTextSize,
-                         uint32_t aTargetPixelWidth)
+                         uint32_t aTargetPixelWidth,
+                         FontType aFontType)
 {
-  EnsureInitialized();
+  if (!EnsureInitialized(aFontType)) {
+    return nullptr;
+  }
+
+  FontCache* cache = mFonts[aFontType].get();
+  const FontBitmapInfo* info = cache->mInfo;
 
   uint32_t numLines = 1;
   uint32_t maxWidth = 0;
@@ -107,13 +119,13 @@ TextRenderer::RenderText(TextureSourceProvider* aProvider,
       continue;
     }
 
-    lineWidth += sGlyphWidths[uint32_t(aText[i])];
+    lineWidth += info->GetGlyphWidth(aText[i]);
     maxWidth = std::max(lineWidth, maxWidth);
   }
 
   // Create a surface to draw our glyphs to.
   RefPtr<DataSourceSurface> textSurf =
-    Factory::CreateDataSourceSurface(IntSize(maxWidth, numLines * sCellHeight), sTextureFormat);
+    Factory::CreateDataSourceSurface(IntSize(maxWidth, numLines * info->mCellHeight), sTextureFormat);
   if (NS_WARN_IF(!textSurf)) {
     return nullptr;
   }
@@ -125,30 +137,35 @@ TextRenderer::RenderText(TextureSourceProvider* aProvider,
 
   // Initialize the surface to transparent white.
   memset(map.mData, uint8_t(sBackgroundOpacity * 255.0f),
-         numLines * sCellHeight * map.mStride);
+         numLines * info->mCellHeight * map.mStride);
 
   uint32_t currentXPos = 0;
   uint32_t currentYPos = 0;
 
+  const unsigned int kGlyphsPerLine = info->mTextureWidth / info->mCellWidth;
+
   // Copy our glyphs onto the surface.
   for (uint32_t i = 0; i < aText.length(); i++) {
     if (aText[i] == '\n' || (aText[i] == ' ' && currentXPos > aTargetPixelWidth)) {
-      currentYPos += sCellHeight;
+      currentYPos += info->mCellHeight;
       currentXPos = 0;
       continue;
     }
 
-    uint32_t glyphXOffset = aText[i] % (sTextureWidth / sCellWidth) * sCellWidth * BytesPerPixel(sTextureFormat);
-    uint32_t truncatedLine = aText[i] / (sTextureWidth / sCellWidth);
-    uint32_t glyphYOffset =  truncatedLine * sCellHeight * mMap.mStride;
+    uint32_t index = aText[i] - info->mFirstChar;
+    uint32_t glyphXOffset = (index % kGlyphsPerLine) * info->mCellWidth * BytesPerPixel(sTextureFormat);
+    uint32_t truncatedLine = index / kGlyphsPerLine;
+    uint32_t glyphYOffset =  truncatedLine * info->mCellHeight * cache->mMap.mStride;
 
-    for (int y = 0; y < 16; y++) {
+    uint32_t glyphWidth = info->GetGlyphWidth(aText[i]);
+
+    for (uint32_t y = 0; y < info->mCellHeight; y++) {
       memcpy(map.mData + (y + currentYPos) * map.mStride + currentXPos * BytesPerPixel(sTextureFormat),
-             mMap.mData + glyphYOffset + y * mMap.mStride + glyphXOffset,
-             sGlyphWidths[uint32_t(aText[i])] * BytesPerPixel(sTextureFormat));
+             cache->mMap.mData + glyphYOffset + y * cache->mMap.mStride + glyphXOffset,
+             glyphWidth * BytesPerPixel(sTextureFormat));
     }
 
-    currentXPos += sGlyphWidths[uint32_t(aText[i])];
+    currentXPos += glyphWidth;
   }
 
   textSurf->Unmap();
@@ -163,32 +180,56 @@ TextRenderer::RenderText(TextureSourceProvider* aProvider,
   return src;
 }
 
-void
-TextRenderer::EnsureInitialized()
+/* static */ const FontBitmapInfo*
+TextRenderer::GetFontInfo(FontType aType)
 {
-  if (mGlyphBitmaps) {
-    return;
+  switch (aType) {
+  case FontType::Default:
+    return &sDefaultCompositorFont;
+    break;
+  default:
+    MOZ_ASSERT_UNREACHABLE("unknown font type");
+  }
+}
+
+bool
+TextRenderer::EnsureInitialized(FontType aType)
+{
+  if (mFonts[aType]) {
+    return true;
   }
 
-  mGlyphBitmaps = Factory::CreateDataSourceSurface(IntSize(sTextureWidth, sTextureHeight), sTextureFormat);
-  if (NS_WARN_IF(!mGlyphBitmaps)) {
-    return;
+  const FontBitmapInfo* info = GetFontInfo(aType);
+
+  IntSize size(info->mTextureWidth, info->mTextureHeight);
+  RefPtr<DataSourceSurface> surface = Factory::CreateDataSourceSurface(size, sTextureFormat);
+  if (NS_WARN_IF(!surface)) {
+    return false;
   }
 
-  if (NS_WARN_IF(!mGlyphBitmaps->Map(DataSourceSurface::MapType::READ_WRITE, &mMap))) {
-    return;
+  DataSourceSurface::MappedSurface map;
+  if (NS_WARN_IF(!surface->Map(DataSourceSurface::MapType::READ_WRITE, &map))) {
+    return false;
   }
+
+  UniquePtr<FontCache> cache = MakeUnique<FontCache>();
+  cache->mGlyphBitmaps = surface;
+  cache->mMap = map;
+  cache->mInfo = info;
 
   png_structp png_ptr = NULL;
   png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
 
-  png_set_progressive_read_fn(png_ptr, this, info_callback, row_callback, nullptr);
+  png_set_progressive_read_fn(png_ptr, cache.get(), info_callback, row_callback, nullptr);
   png_infop info_ptr = NULL;
   info_ptr = png_create_info_struct(png_ptr);
 
-  png_process_data(png_ptr, info_ptr, (uint8_t*)sFontPNG, sizeof(sFontPNG));
+  png_process_data(png_ptr, info_ptr, (uint8_t*)info->mPNG, info->mPNGLength);
 
   png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
+
+  mFonts[aType] = Move(cache);
+  return true;
 }
 
 } // namespace layers
