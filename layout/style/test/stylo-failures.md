@@ -71,7 +71,7 @@ to mochitest command.
     * test_bug887741_at-rules_in_declaration_lists.html `rules[2]` [1]
   * @support
     * test_supports_rules.html [1]
-* test_box_size_keywords.html: moz-prefixed intrinsic size keyword value [64]
+* test_box_size_keywords.html: moz-prefixed intrinsic size keyword value [16]
 * test_bug357614.html: case-insensitivity for old attrs in attr selector servo/servo#15006 [2]
 * mapped attribute not supported
   * test_html_attribute_computed_values.html: also list-style-type [8]
@@ -253,10 +253,10 @@ to mochitest command.
     * ... `-webkit-repeating-` [35]
   * moz-prefixed intrinsic width values
     * test_flexbox_flex_shorthand.html `-moz-fit-content` [4]
-    * test_value_storage.html `-moz-max-content` [52]
-    * ... `-moz-min-content` [12]
-    * ... `-moz-fit-content` [12]
-    * ... `-moz-available` [10]
+    * test_value_storage.html `-moz-max-content` [46]
+    * ... `-moz-min-content` [6]
+    * ... `-moz-fit-content` [6]
+    * ... `-moz-available` [4]
   * -moz-anchor-decoration value on text-decoration
     * test_value_storage.html `-moz-anchor-decoration` [10]
   * several prefixed values in cursor property

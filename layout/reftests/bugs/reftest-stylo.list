@@ -892,7 +892,7 @@ fails == 403519-1.html 403519-1.html
 == 404030-1.html 404030-1.html
 == 404030-1-notref.html 404030-1-notref.html
 == 404030-1-notref2.html 404030-1-notref2.html
-fails == 404123-1.html 404123-1.html
+== 404123-1.html 404123-1.html
 fails == 404123-2.html 404123-2.html
 == 404123-3.html 404123-3.html
 # may fail "randomly" on OS X, doesn't seem to be rendering usefully anyhow - bug 602469
@@ -1138,7 +1138,7 @@ fails == 430412-1.html 430412-1.html
 == 431520-1.html 431520-1.html
 == 431948-1.html 431948-1.html
 == 433640-1.html 433640-1.html
-fails == 433700.html 433700.html
+== 433700.html 433700.html
 == 436356-1.html 436356-1.html
 == 436356-2.html 436356-2.html
 == 438537-1.html 438537-1.html
