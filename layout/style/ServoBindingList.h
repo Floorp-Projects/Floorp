@@ -60,7 +60,7 @@ SERVO_BINDING_FUNC(Servo_StyleSet_InsertStyleSheetBefore, void,
                    RawServoStyleSheetBorrowed reference, bool flush)
 SERVO_BINDING_FUNC(Servo_StyleSet_FlushStyleSheets, void, RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_StyleSet_NoteStyleSheetsChanged, void,
-                   RawServoStyleSetBorrowed set)
+                   RawServoStyleSetBorrowed set, bool author_style_disabled)
 SERVO_BINDING_FUNC(Servo_StyleSet_FillKeyframesForName, bool,
                    RawServoStyleSetBorrowed set,
                    const nsACString* property,
