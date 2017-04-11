@@ -553,7 +553,7 @@ LayerManagerComposite::InvalidateDebugOverlay(nsIntRegion& aInvalidRegion, const
   bool drawFrameColorBars = gfxPrefs::CompositorDrawColorBars();
 
   if (drawFps || drawFrameCounter) {
-    aInvalidRegion.Or(aInvalidRegion, nsIntRect(0, 0, 600, 400));
+    aInvalidRegion.Or(aInvalidRegion, nsIntRect(0, 0, 650, 400));
   }
   if (drawFrameColorBars) {
     aInvalidRegion.Or(aInvalidRegion, nsIntRect(0, 0, 10, aBounds.height));
@@ -639,7 +639,7 @@ LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds)
       IntPoint(2, 5),
       Matrix4x4(),
       30,
-      600);
+      650);
 
     if (mUnusedApzTransformWarning) {
       // If we have an unused APZ transform on this composite, draw a 20x20 red box
