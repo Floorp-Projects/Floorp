@@ -225,6 +225,12 @@ protected:
   nsresult BackupAndReplaceDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage);
 
   /**
+   * This should be used as a last resort in case the database is corrupt and
+   * there's no way to fix it in-place.
+   */
+  nsresult ForceCrashAndReplaceDatabase(const nsCString& aReason);
+
+  /**
    * Initializes the database.  This performs any necessary migrations for the
    * database.  All migration is done inside a transaction that is rolled back
    * if any error occurs.
