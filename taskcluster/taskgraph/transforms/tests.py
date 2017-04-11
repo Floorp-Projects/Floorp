@@ -587,7 +587,7 @@ def set_profile(config, tests):
     """Set profiling mode for tests."""
     for test in tests:
         if config.config['args'].profile and test['suite'] == 'talos':
-            test['mozharness']['extra-options'].append('--spsProfile')
+            test['mozharness']['extra-options'].append('--geckoProfile')
         yield test
 
 
