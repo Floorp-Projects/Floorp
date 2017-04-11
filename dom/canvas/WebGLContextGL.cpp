@@ -1128,6 +1128,13 @@ WebGLContext::PixelStorei(GLenum pname, GLint param)
             return;
         }
 
+    case UNPACK_REQUIRE_FASTPATH:
+        if (IsExtensionEnabled(WebGLExtensionID::MOZ_debug)) {
+            mPixelStore_RequireFastPath = bool(param);
+            return;
+        }
+        break;
+
     case LOCAL_GL_PACK_ALIGNMENT:
     case LOCAL_GL_UNPACK_ALIGNMENT:
         switch (param) {
