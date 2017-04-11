@@ -94,20 +94,6 @@ private:
   TimeStamp mLastInterval;
 };
 
-struct FPSState {
-  FPSState();
-  void DrawFPS(TimeStamp, int offsetX, int offsetY, unsigned, Compositor* aCompositor);
-  void NotifyShadowTreeTransaction() {
-    mTransactionFps.AddFrame(TimeStamp::Now());
-  }
-
-  FPSCounter mCompositionFps;
-  FPSCounter mTransactionFps;
-
-private:
-  RefPtr<DataTextureSource> mFPSTextureSource;
-};
-
 } // namespace layers
 } // namespace mozilla
 
