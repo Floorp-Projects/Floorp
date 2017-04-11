@@ -259,10 +259,13 @@ add_task(function* checkAdvancedDetails() {
                                 .QueryInterface(Ci.nsITransportSecurityInfo)
                                 .QueryInterface(Ci.nsISerializable);
     let serializedSecurityInfo = serhelper.serializeToString(serializable);
+    let originAttributes = docShell.failedChannel.loadInfo.originAttributes;
+    let serializedOriginAttributes = JSON.stringify(originAttributes);
     return {
       divDisplay: content.getComputedStyle(div).display,
       text: text.textContent,
-      securityInfoAsString: serializedSecurityInfo
+      securityInfoAsString: serializedSecurityInfo,
+      originAttributesAsString: serializedOriginAttributes,
     };
   });
   isnot(message.divDisplay, "none", "Debug information is visible");
@@ -328,10 +331,13 @@ add_task(function* checkAdvancedDetailsForHSTS() {
                                 .QueryInterface(Ci.nsITransportSecurityInfo)
                                 .QueryInterface(Ci.nsISerializable);
     let serializedSecurityInfo = serhelper.serializeToString(serializable);
+    let originAttributes = docShell.failedChannel.loadInfo.originAttributes;
+    let serializedOriginAttributes = JSON.stringify(originAttributes);
     return {
       divDisplay: content.getComputedStyle(div).display,
       text: text.textContent,
-      securityInfoAsString: serializedSecurityInfo
+      securityInfoAsString: serializedSecurityInfo,
+      originAttributesAsString: serializedOriginAttributes,
     };
   });
   isnot(message.divDisplay, "none", "Debug information is visible");

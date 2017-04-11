@@ -168,6 +168,7 @@ GamepadServiceTest::RemoveGamepad(uint32_t aIndex)
 void
 GamepadServiceTest::NewButtonEvent(uint32_t aIndex,
                                    uint32_t aButton,
+                                   bool aTouched,
                                    bool aPressed)
 {
   if (mShuttingDown) {
@@ -175,7 +176,7 @@ GamepadServiceTest::NewButtonEvent(uint32_t aIndex,
   }
 
   GamepadButtonInformation a(aIndex, GamepadServiceType::Standard,
-                             aButton, aPressed, aPressed ? 1.0 : 0);
+                             aButton, aPressed ? 1.0 : 0, aPressed, aTouched);
   GamepadChangeEvent e(a);
 
   uint32_t id = ++mEventNumber;
@@ -191,6 +192,7 @@ void
 GamepadServiceTest::NewButtonValueEvent(uint32_t aIndex,
                                         uint32_t aButton,
                                         bool aPressed,
+                                        bool aTouched,
                                         double aValue)
 {
   if (mShuttingDown) {
@@ -198,7 +200,7 @@ GamepadServiceTest::NewButtonValueEvent(uint32_t aIndex,
   }
 
   GamepadButtonInformation a(aIndex, GamepadServiceType::Standard,
-                             aButton, aPressed, aValue);
+                             aButton, aValue, aPressed, aTouched);
   GamepadChangeEvent e(a);
 
   uint32_t id = ++mEventNumber;

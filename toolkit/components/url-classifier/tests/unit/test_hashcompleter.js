@@ -355,7 +355,7 @@ function callback(completion) {
 }
 
 callback.prototype = {
-  completion: function completion(hash, table, chunkId, trusted) {
+  completionV2: function completion(hash, table, chunkId, trusted) {
     do_check_true(this._completion.expectCompletion);
     if (this._completion.multipleCompletions) {
       for (let completion of this._completion.completions) {

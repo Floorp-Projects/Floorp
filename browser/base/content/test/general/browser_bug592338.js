@@ -4,15 +4,34 @@
 
 const TESTROOT = "http://example.com/browser/toolkit/mozapps/extensions/test/xpinstall/";
 
-var tempScope = {};
-Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", tempScope);
-var LightweightThemeManager = tempScope.LightweightThemeManager;
+const {LightweightThemeManager} = Cu.import("resource://gre/modules/LightweightThemeManager.jsm", {});
 
-function wait_for_notification(aCallback) {
-  PopupNotifications.panel.addEventListener("popupshown", function() {
-    aCallback(PopupNotifications.panel);
-  }, {once: true});
+/**
+ * Wait for the given PopupNotification to display
+ *
+ * @param {string} name
+ *        The name of the notification to wait for.
+ *
+ * @returns {Promise}
+ *          Resolves with the notification window.
+ */
+function promisePopupNotificationShown(name) {
+  return new Promise(resolve => {
+    function popupshown() {
+      let notification = PopupNotifications.getNotification(name);
+      if (!notification) { return; }
+
+      ok(notification, `${name} notification shown`);
+      ok(PopupNotifications.isPanelOpen, "notification panel open");
+
+      PopupNotifications.panel.removeEventListener("popupshown", popupshown);
+      resolve(PopupNotifications.panel.firstChild);
+    }
+
+    PopupNotifications.panel.addEventListener("popupshown", popupshown);
+  });
 }
+
 
 var TESTS = [
 function test_install_http() {
@@ -55,20 +74,17 @@ function test_install_lwtheme() {
 
     gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee);
 
+    let promise = promisePopupNotificationShown("addon-installed");
     BrowserTestUtils.synthesizeMouse("#theme-install", 2, 2, {}, gBrowser.selectedBrowser);
-    let notificationBox = gBrowser.getNotificationBox(gBrowser.selectedBrowser);
-    waitForCondition(
-      () => notificationBox.getNotificationWithValue("lwtheme-install-notification"),
-      () => {
-        is(LightweightThemeManager.currentTheme.id, "test", "Should have installed the test theme");
+    promise.then(() => {
+      is(LightweightThemeManager.currentTheme.id, "test", "Should have installed the test theme");
 
-        LightweightThemeManager.currentTheme = null;
-        gBrowser.removeTab(gBrowser.selectedTab);
-        Services.perms.remove(makeURI("http://example.com/"), "install");
+      LightweightThemeManager.currentTheme = null;
+      gBrowser.removeTab(gBrowser.selectedTab);
+      Services.perms.remove(makeURI("http://example.com/"), "install");
 
-        runNextTest();
-      }
-    );
+      runNextTest();
+    });
   });
 }
 ];

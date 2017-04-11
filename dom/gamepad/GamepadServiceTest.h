@@ -43,8 +43,9 @@ public:
                                        uint32_t aNumHaptics,
                                        ErrorResult& aRv);
   void RemoveGamepad(uint32_t aIndex);
-  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed);
-  void NewButtonValueEvent(uint32_t aIndex, uint32_t aButton, bool aPressed, double aValue);
+  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed, bool aTouched);
+  void NewButtonValueEvent(uint32_t aIndex, uint32_t aButton, bool aPressed, bool aTouched,
+                           double aValue);
   void NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis, double aValue);
   void NewPoseMove(uint32_t aIndex,
                    const Nullable<Float32Array>& aOrient,

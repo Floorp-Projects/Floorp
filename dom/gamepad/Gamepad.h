@@ -51,7 +51,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Gamepad)
 
   void SetConnected(bool aConnected);
-  void SetButton(uint32_t aButton, bool aPressed, double aValue);
+  void SetButton(uint32_t aButton, bool aPressed,
+                 bool aTouched, double aValue);
   void SetAxis(uint32_t aAxis, double aValue);
   void SetIndex(uint32_t aIndex);
   void SetPose(const GamepadPoseState& aPose);

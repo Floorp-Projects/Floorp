@@ -117,15 +117,28 @@ GamepadPlatformService::RemoveGamepad(uint32_t aIndex)
 
 void
 GamepadPlatformService::NewButtonEvent(uint32_t aIndex, uint32_t aButton,
-                                       bool aPressed, double aValue)
+                                       bool aPressed, bool aTouched,
+                                       double aValue)
 {
   // This method is called by monitor thread populated in
   // platform-dependent backends
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!NS_IsMainThread());
   GamepadButtonInformation a(aIndex, GamepadServiceType::Standard,
-                             aButton, aPressed, aValue);
+                             aButton, aValue, aPressed, aTouched);
   NotifyGamepadChange<GamepadButtonInformation>(a);
+}
+
+void
+GamepadPlatformService::NewButtonEvent(uint32_t aIndex, uint32_t aButton,
+                                       bool aPressed, bool aTouched)
+{
+  // This method is called by monitor thread populated in
+  // platform-dependent backends
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(!NS_IsMainThread());
+  // When only a digital button is available the value will be synthesized.
+  NewButtonEvent(aIndex, aButton, aPressed, aTouched, aPressed ? 1.0L : 0.0L);
 }
 
 void
@@ -137,7 +150,7 @@ GamepadPlatformService::NewButtonEvent(uint32_t aIndex, uint32_t aButton,
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!NS_IsMainThread());
   // When only a digital button is available the value will be synthesized.
-  NewButtonEvent(aIndex, aButton, aPressed, aPressed ? 1.0L : 0.0L);
+  NewButtonEvent(aIndex, aButton, aPressed, aPressed, aPressed ? 1.0L : 0.0L);
 }
 
 void

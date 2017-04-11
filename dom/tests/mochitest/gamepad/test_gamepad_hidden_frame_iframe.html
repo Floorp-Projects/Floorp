@@ -20,8 +20,8 @@ window.addEventListener("gamepadbuttondown", function() {
 });
 
 function pressButton() {
-  GamepadService.newButtonEvent(index, 0, true);
-  GamepadService.newButtonEvent(index, 0, false);
+  GamepadService.newButtonEvent(index, 0, true, true);
+  GamepadService.newButtonEvent(index, 0, false, false);
 }
 
 function setFrameVisible(f, visible) {
