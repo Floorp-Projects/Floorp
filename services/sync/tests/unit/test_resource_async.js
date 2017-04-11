@@ -163,7 +163,7 @@ function run_test() {
 
 // This apparently has to come first in order for our PAC URL to be hit.
 // Don't put any other HTTP requests earlier in the file!
-add_test(function test_proxy_auth_redirect() {
+add_task(async function test_proxy_auth_redirect() {
   _("Ensure that a proxy auth redirect (which switches out our channel) " +
     "doesn't break AsyncResource.");
   let server = httpd_setup({
@@ -174,18 +174,16 @@ add_test(function test_proxy_auth_redirect() {
   PACSystemSettings.PACURI = server.baseURI + "/pac2";
   installFakePAC();
   let res = new AsyncResource(server.baseURI + "/open");
-  res.get(function(error, result) {
-    do_check_true(!error);
-    do_check_true(pacFetched);
-    do_check_true(fetched);
-    do_check_eq("This path exists", result);
-    pacFetched = fetched = false;
-    uninstallFakePAC();
-    server.stop(run_next_test);
-  });
+  let result = await res.get();
+  do_check_true(pacFetched);
+  do_check_true(fetched);
+  do_check_eq("This path exists", result);
+  pacFetched = fetched = false;
+  uninstallFakePAC();
+  await promiseStopServer(server);
 });
 
-add_test(function test_new_channel() {
+add_task(async function test_new_channel() {
   _("Ensure a redirect to a new channel is handled properly.");
 
   let resourceRequested = false;
@@ -210,15 +208,13 @@ add_test(function test_new_channel() {
   locationURL = server.baseURI + "/resource";
 
   let request = new AsyncResource(server.baseURI + "/redirect");
-  request.get(function onRequest(error, content) {
-    do_check_null(error);
-    do_check_true(resourceRequested);
-    do_check_eq(200, content.status);
-    do_check_true("content-type" in content.headers);
-    do_check_eq("text/plain", content.headers["content-type"]);
+  let content = await request.get()
+  do_check_true(resourceRequested);
+  do_check_eq(200, content.status);
+  do_check_true("content-type" in content.headers);
+  do_check_eq("text/plain", content.headers["content-type"]);
 
-    server.stop(run_next_test);
-  });
+  await promiseStopServer(server);
 });
 
 
@@ -259,42 +255,38 @@ add_test(function test_members() {
   run_next_test();
 });
 
-add_test(function test_get() {
+add_task(async function test_get() {
   _("GET a non-password-protected resource");
   let res = new AsyncResource(server.baseURI + "/open");
-  res.get(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, "This path exists");
-    do_check_eq(content.status, 200);
-    do_check_true(content.success);
-    // res.data has been updated with the result from the request
-    do_check_eq(res.data, content);
+  let content = await res.get();
+  do_check_eq(content, "This path exists");
+  do_check_eq(content.status, 200);
+  do_check_true(content.success);
+  // res.data has been updated with the result from the request
+  do_check_eq(res.data, content);
 
-    // Observe logging messages.
-    let resLogger = res._log;
-    let dbg    = resLogger.debug;
-    let debugMessages = [];
-    resLogger.debug = function(msg) {
-      debugMessages.push(msg);
-      dbg.call(this, msg);
-    }
+  // Observe logging messages.
+  let resLogger = res._log;
+  let dbg    = resLogger.debug;
+  let debugMessages = [];
+  resLogger.debug = function(msg) {
+    debugMessages.push(msg);
+    dbg.call(this, msg);
+  }
 
-    // Since we didn't receive proper JSON data, accessing content.obj
-    // will result in a SyntaxError from JSON.parse
-    let didThrow = false;
-    try {
-      content.obj;
-    } catch (ex) {
-      didThrow = true;
-    }
-    do_check_true(didThrow);
-    do_check_eq(debugMessages.length, 1);
-    do_check_eq(debugMessages[0],
-                "Parse fail: Response body starts: \"\"This path exists\"\".");
-    resLogger.debug = dbg;
-
-    run_next_test();
-  });
+  // Since we didn't receive proper JSON data, accessing content.obj
+  // will result in a SyntaxError from JSON.parse
+  let didThrow = false;
+  try {
+    content.obj;
+  } catch (ex) {
+    didThrow = true;
+  }
+  do_check_true(didThrow);
+  do_check_eq(debugMessages.length, 1);
+  do_check_eq(debugMessages[0],
+              "Parse fail: Response body starts: \"\"This path exists\"\".");
+  resLogger.debug = dbg;
 });
 
 add_test(function test_basicauth() {
@@ -307,19 +299,16 @@ add_test(function test_basicauth() {
   run_next_test();
 });
 
-add_test(function test_get_protected_fail() {
+add_task(async function test_get_protected_fail() {
   _("GET a password protected resource (test that it'll fail w/o pass, no throw)");
   let res2 = new AsyncResource(server.baseURI + "/protected");
-  res2.get(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, "This path exists and is protected - failed");
-    do_check_eq(content.status, 401);
-    do_check_false(content.success);
-    run_next_test();
-  });
+  let content = await res2.get()
+  do_check_eq(content, "This path exists and is protected - failed");
+  do_check_eq(content.status, 401);
+  do_check_false(content.success);
 });
 
-add_test(function test_get_protected_success() {
+add_task(async function test_get_protected_success() {
   _("GET a password protected resource");
   let identityConfig = makeIdentityConfig();
   let browseridManager = new BrowserIDManager();
@@ -328,262 +317,197 @@ add_test(function test_get_protected_success() {
   let res3 = new AsyncResource(server.baseURI + "/protected");
   res3.authenticator = auth;
   do_check_eq(res3.authenticator, auth);
-  res3.get(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, "This path exists and is protected");
-    do_check_eq(content.status, 200);
-    do_check_true(content.success);
-    run_next_test();
-  });
+  let content = await res3.get();
+  do_check_eq(content, "This path exists and is protected");
+  do_check_eq(content.status, 200);
+  do_check_true(content.success);
 });
 
-add_test(function test_get_404() {
+add_task(async function test_get_404() {
   _("GET a non-existent resource (test that it'll fail, but not throw)");
   let res4 = new AsyncResource(server.baseURI + "/404");
-  res4.get(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, "File not found");
-    do_check_eq(content.status, 404);
-    do_check_false(content.success);
+  let content = await res4.get();
+  do_check_eq(content, "File not found");
+  do_check_eq(content.status, 404);
+  do_check_false(content.success);
 
-    // Check some headers of the 404 response
-    do_check_eq(content.headers.connection, "close");
-    do_check_eq(content.headers.server, "httpd.js");
-    do_check_eq(content.headers["content-length"], 14);
-
-    run_next_test();
-  });
+  // Check some headers of the 404 response
+  do_check_eq(content.headers.connection, "close");
+  do_check_eq(content.headers.server, "httpd.js");
+  do_check_eq(content.headers["content-length"], 14);
 });
 
-add_test(function test_put_string() {
+add_task(async function test_put_string() {
   _("PUT to a resource (string)");
   let res_upload = new AsyncResource(server.baseURI + "/upload");
-  res_upload.put(JSON.stringify(sample_data), function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, "Valid data upload via PUT");
-    do_check_eq(content.status, 200);
-    do_check_eq(res_upload.data, content);
-    run_next_test();
-  });
+  let content = await res_upload.put(JSON.stringify(sample_data));
+  do_check_eq(content, "Valid data upload via PUT");
+  do_check_eq(content.status, 200);
+  do_check_eq(res_upload.data, content);
 });
 
-add_test(function test_put_object() {
+add_task(async function test_put_object() {
   _("PUT to a resource (object)");
   let res_upload = new AsyncResource(server.baseURI + "/upload");
-  res_upload.put(sample_data, function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, "Valid data upload via PUT");
-    do_check_eq(content.status, 200);
-    do_check_eq(res_upload.data, content);
-    run_next_test();
-  });
+  let content = await res_upload.put(sample_data);
+  do_check_eq(content, "Valid data upload via PUT");
+  do_check_eq(content.status, 200);
+  do_check_eq(res_upload.data, content);
 });
 
-add_test(function test_put_data_string() {
+add_task(async function test_put_data_string() {
   _("PUT without data arg (uses resource.data) (string)");
   let res_upload = new AsyncResource(server.baseURI + "/upload");
   res_upload.data = JSON.stringify(sample_data);
-  res_upload.put(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, "Valid data upload via PUT");
-    do_check_eq(content.status, 200);
-    do_check_eq(res_upload.data, content);
-    run_next_test();
-  });
+  let content = await res_upload.put();
+  do_check_eq(content, "Valid data upload via PUT");
+  do_check_eq(content.status, 200);
+  do_check_eq(res_upload.data, content);
 });
 
-add_test(function test_put_data_object() {
+add_task(async function test_put_data_object() {
   _("PUT without data arg (uses resource.data) (object)");
   let res_upload = new AsyncResource(server.baseURI + "/upload");
   res_upload.data = sample_data;
-  res_upload.put(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, "Valid data upload via PUT");
-    do_check_eq(content.status, 200);
-    do_check_eq(res_upload.data, content);
-    run_next_test();
-  });
+  let content = await res_upload.put();
+  do_check_eq(content, "Valid data upload via PUT");
+  do_check_eq(content.status, 200);
+  do_check_eq(res_upload.data, content);
 });
 
-add_test(function test_post_string() {
+add_task(async function test_post_string() {
   _("POST to a resource (string)");
   let res_upload = new AsyncResource(server.baseURI + "/upload");
-  res_upload.post(JSON.stringify(sample_data), function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, "Valid data upload via POST");
-    do_check_eq(content.status, 200);
-    do_check_eq(res_upload.data, content);
-    run_next_test();
-  });
+  let content = await res_upload.post(JSON.stringify(sample_data));
+  do_check_eq(content, "Valid data upload via POST");
+  do_check_eq(content.status, 200);
+  do_check_eq(res_upload.data, content);
 });
 
-add_test(function test_post_object() {
+add_task(async function test_post_object() {
   _("POST to a resource (object)");
   let res_upload = new AsyncResource(server.baseURI + "/upload");
-  res_upload.post(sample_data, function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, "Valid data upload via POST");
-    do_check_eq(content.status, 200);
-    do_check_eq(res_upload.data, content);
-    run_next_test();
-  });
+  let content = await res_upload.post(sample_data);
+  do_check_eq(content, "Valid data upload via POST");
+  do_check_eq(content.status, 200);
+  do_check_eq(res_upload.data, content);
 });
 
-add_test(function test_post_data_string() {
+add_task(async function test_post_data_string() {
   _("POST without data arg (uses resource.data) (string)");
   let res_upload = new AsyncResource(server.baseURI + "/upload");
   res_upload.data = JSON.stringify(sample_data);
-  res_upload.post(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, "Valid data upload via POST");
-    do_check_eq(content.status, 200);
-    do_check_eq(res_upload.data, content);
-    run_next_test();
-  });
+  let content = await res_upload.post();
+  do_check_eq(content, "Valid data upload via POST");
+  do_check_eq(content.status, 200);
+  do_check_eq(res_upload.data, content);
 });
 
-add_test(function test_post_data_object() {
+add_task(async function test_post_data_object() {
   _("POST without data arg (uses resource.data) (object)");
   let res_upload = new AsyncResource(server.baseURI + "/upload");
   res_upload.data = sample_data;
-  res_upload.post(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, "Valid data upload via POST");
-    do_check_eq(content.status, 200);
-    do_check_eq(res_upload.data, content);
-    run_next_test();
-  });
+  let content = await res_upload.post();
+  do_check_eq(content, "Valid data upload via POST");
+  do_check_eq(content.status, 200);
+  do_check_eq(res_upload.data, content);
 });
 
-add_test(function test_delete() {
+add_task(async function test_delete() {
   _("DELETE a resource");
   let res6 = new AsyncResource(server.baseURI + "/delete");
-  res6.delete(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, "This resource has been deleted");
-    do_check_eq(content.status, 200);
-    run_next_test();
-  });
+  let content = await res6.delete();
+  do_check_eq(content, "This resource has been deleted");
+  do_check_eq(content.status, 200);
 });
 
-add_test(function test_json_body() {
+add_task(async function test_json_body() {
   _("JSON conversion of response body");
   let res7 = new AsyncResource(server.baseURI + "/json");
-  res7.get(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, JSON.stringify(sample_data));
-    do_check_eq(content.status, 200);
-    do_check_eq(JSON.stringify(content.obj), JSON.stringify(sample_data));
-    run_next_test();
-  });
+  let content = await res7.get();
+  do_check_eq(content, JSON.stringify(sample_data));
+  do_check_eq(content.status, 200);
+  do_check_eq(JSON.stringify(content.obj), JSON.stringify(sample_data));
 });
 
-add_test(function test_weave_timestamp() {
+add_task(async function test_weave_timestamp() {
   _("X-Weave-Timestamp header updates AsyncResource.serverTime");
   // Before having received any response containing the
   // X-Weave-Timestamp header, AsyncResource.serverTime is null.
   do_check_eq(AsyncResource.serverTime, null);
   let res8 = new AsyncResource(server.baseURI + "/timestamp");
-  res8.get(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(AsyncResource.serverTime, TIMESTAMP);
-    run_next_test();
-  });
+  await res8.get();
+  do_check_eq(AsyncResource.serverTime, TIMESTAMP);
 });
 
-add_test(function test_get_no_headers() {
+add_task(async function test_get_no_headers() {
   _("GET: no special request headers");
   let res_headers = new AsyncResource(server.baseURI + "/headers");
-  res_headers.get(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, "{}");
-    run_next_test();
-  });
+  let content = await res_headers.get();
+  do_check_eq(content, "{}");
 });
 
-add_test(function test_put_default_content_type() {
+add_task(async function test_put_default_content_type() {
   _("PUT: Content-Type defaults to text/plain");
   let res_headers = new AsyncResource(server.baseURI + "/headers");
-  res_headers.put("data", function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, JSON.stringify({"content-type": "text/plain"}));
-    run_next_test();
-  });
+  let content = await res_headers.put("data");
+  do_check_eq(content, JSON.stringify({"content-type": "text/plain"}));
 });
 
-add_test(function test_post_default_content_type() {
+add_task(async function test_post_default_content_type() {
   _("POST: Content-Type defaults to text/plain");
   let res_headers = new AsyncResource(server.baseURI + "/headers");
-  res_headers.post("data", function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, JSON.stringify({"content-type": "text/plain"}));
-    run_next_test();
-  });
+  let content = await res_headers.post("data");
+  do_check_eq(content, JSON.stringify({"content-type": "text/plain"}));
 });
 
-add_test(function test_setHeader() {
+add_task(async function test_setHeader() {
   _("setHeader(): setting simple header");
   let res_headers = new AsyncResource(server.baseURI + "/headers");
   res_headers.setHeader("X-What-Is-Weave", "awesome");
   do_check_eq(res_headers.headers["x-what-is-weave"], "awesome");
-  res_headers.get(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, JSON.stringify({"x-what-is-weave": "awesome"}));
-    run_next_test();
-  });
+  let content = await res_headers.get();
+  do_check_eq(content, JSON.stringify({"x-what-is-weave": "awesome"}));
 });
 
-add_test(function test_setHeader_overwrite() {
+add_task(async function test_setHeader_overwrite() {
   _("setHeader(): setting multiple headers, overwriting existing header");
   let res_headers = new AsyncResource(server.baseURI + "/headers");
   res_headers.setHeader("X-WHAT-is-Weave", "more awesomer");
   res_headers.setHeader("X-Another-Header", "hello world");
   do_check_eq(res_headers.headers["x-what-is-weave"], "more awesomer");
   do_check_eq(res_headers.headers["x-another-header"], "hello world");
-  res_headers.get(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, JSON.stringify({"x-another-header": "hello world",
-                                         "x-what-is-weave": "more awesomer"}));
-
-    run_next_test();
-  });
+  let content = await res_headers.get();
+  do_check_eq(content, JSON.stringify({"x-another-header": "hello world",
+                                       "x-what-is-weave": "more awesomer"}));
 });
 
-add_test(function test_headers_object() {
+add_task(async function test_headers_object() {
   _("Setting headers object");
   let res_headers = new AsyncResource(server.baseURI + "/headers");
   res_headers.headers = {};
-  res_headers.get(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, "{}");
-    run_next_test();
-  });
+  let content = await res_headers.get();
+  do_check_eq(content, "{}");
 });
 
-add_test(function test_put_override_content_type() {
+add_task(async function test_put_override_content_type() {
   _("PUT: override default Content-Type");
   let res_headers = new AsyncResource(server.baseURI + "/headers");
   res_headers.setHeader("Content-Type", "application/foobar");
   do_check_eq(res_headers.headers["content-type"], "application/foobar");
-  res_headers.put("data", function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, JSON.stringify({"content-type": "application/foobar"}));
-    run_next_test();
-  });
+  let content = await res_headers.put("data");
+  do_check_eq(content, JSON.stringify({"content-type": "application/foobar"}));
 });
 
-add_test(function test_post_override_content_type() {
+add_task(async function test_post_override_content_type() {
   _("POST: override default Content-Type");
   let res_headers = new AsyncResource(server.baseURI + "/headers");
   res_headers.setHeader("Content-Type", "application/foobar");
-  res_headers.post("data", function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content, JSON.stringify({"content-type": "application/foobar"}));
-    run_next_test();
-  });
+  let content = await res_headers.post("data");
+  do_check_eq(content, JSON.stringify({"content-type": "application/foobar"}));
 });
 
-add_test(function test_weave_backoff() {
+add_task(async function test_weave_backoff() {
   _("X-Weave-Backoff header notifies observer");
   let backoffInterval;
   function onBackoff(subject, data) {
@@ -592,46 +516,37 @@ add_test(function test_weave_backoff() {
   Observers.add("weave:service:backoff:interval", onBackoff);
 
   let res10 = new AsyncResource(server.baseURI + "/backoff");
-  res10.get(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(backoffInterval, 600);
-    run_next_test();
-  });
+  await res10.get();
+  do_check_eq(backoffInterval, 600);
 });
 
-add_test(function test_quota_error() {
+add_task(async function test_quota_error() {
   _("X-Weave-Quota-Remaining header notifies observer on successful requests.");
   let res10 = new AsyncResource(server.baseURI + "/quota-error");
-  res10.get(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content.status, 400);
-    do_check_eq(quotaValue, undefined); // HTTP 400, so no observer notification.
-    run_next_test();
-  });
+  let content = await res10.get();
+  do_check_eq(content.status, 400);
+  do_check_eq(quotaValue, undefined); // HTTP 400, so no observer notification.
 });
 
-add_test(function test_quota_notice() {
+add_task(async function test_quota_notice() {
   let res10 = new AsyncResource(server.baseURI + "/quota-notice");
-  res10.get(function(error, content) {
-    do_check_eq(error, null);
-    do_check_eq(content.status, 200);
-    do_check_eq(quotaValue, 1048576);
-    run_next_test();
-  });
+  let content = await res10.get();
+  do_check_eq(content.status, 200);
+  do_check_eq(quotaValue, 1048576);
 });
 
-add_test(function test_preserve_exceptions() {
+add_task(async function test_preserve_exceptions() {
   _("Error handling in ChannelListener etc. preserves exception information");
   let res11 = new AsyncResource("http://localhost:12345/does/not/exist");
-  res11.get(function(error, content) {
+  await Assert.rejects(res11.get(), error => {
     do_check_neq(error, null);
     do_check_eq(error.result, Cr.NS_ERROR_CONNECTION_REFUSED);
     do_check_eq(error.message, "NS_ERROR_CONNECTION_REFUSED");
-    run_next_test();
+    return true;
   });
 });
 
-add_test(function test_xpc_exception_handling() {
+add_task(async function test_xpc_exception_handling() {
   _("Exception handling inside fetches.");
   let res14 = new AsyncResource(server.baseURI + "/json");
   res14._onProgress = function(rec) {
@@ -641,19 +556,19 @@ add_test(function test_xpc_exception_handling() {
   let warnings = [];
   res14._log.warn = function(msg) { warnings.push(msg); };
 
-  res14.get(function(error, content) {
+  await Assert.rejects(res14.get(), error => {
     do_check_eq(error.result, Cr.NS_ERROR_MALFORMED_URI);
     do_check_eq(error.message, "NS_ERROR_MALFORMED_URI");
-    do_check_eq(content, null);
-    do_check_eq(warnings.pop(),
-                "Got exception calling onProgress handler during fetch of " +
-                server.baseURI + "/json");
-
-    run_next_test();
+    return true;
   });
+  do_check_eq(warnings.pop(),
+              "${action} request to ${url} failed: ${ex}");
+  do_check_eq(warnings.pop(),
+              "Got exception calling onProgress handler during fetch of " +
+              server.baseURI + "/json");
 });
 
-add_test(function test_js_exception_handling() {
+add_task(async function test_js_exception_handling() {
   _("JS exception handling inside fetches.");
   let res15 = new AsyncResource(server.baseURI + "/json");
   res15._onProgress = function(rec) {
@@ -662,25 +577,25 @@ add_test(function test_js_exception_handling() {
   let warnings = [];
   res15._log.warn = function(msg) { warnings.push(msg); };
 
-  res15.get(function(error, content) {
+  await Assert.rejects(res15.get(), error => {
     do_check_eq(error.result, Cr.NS_ERROR_XPC_JS_THREW_STRING);
     do_check_eq(error.message, "NS_ERROR_XPC_JS_THREW_STRING");
-    do_check_eq(content, null);
-    do_check_eq(warnings.pop(),
-                "Got exception calling onProgress handler during fetch of " +
-                server.baseURI + "/json");
-
-    run_next_test();
+    return true;
   });
+  do_check_eq(warnings.pop(),
+              "${action} request to ${url} failed: ${ex}");
+  do_check_eq(warnings.pop(),
+              "Got exception calling onProgress handler during fetch of " +
+              server.baseURI + "/json");
 });
 
-add_test(function test_timeout() {
+add_task(async function test_timeout() {
   _("Ensure channel timeouts are thrown appropriately.");
   let res19 = new AsyncResource(server.baseURI + "/json");
   res19.ABORT_TIMEOUT = 0;
-  res19.get(function(error, content) {
+  await Assert.rejects(res19.get(), error => {
     do_check_eq(error.result, Cr.NS_ERROR_NET_TIMEOUT);
-    run_next_test();
+    return true;
   });
 });
 
@@ -701,21 +616,6 @@ add_test(function test_uri_construction() {
   do_check_eq(uri1.query, uri2.query);
 
   run_next_test();
-});
-
-add_test(function test_not_sending_cookie() {
-  let cookieSer = Cc["@mozilla.org/cookieService;1"]
-                    .getService(Ci.nsICookieService);
-  let uri = CommonUtils.makeURI(server.baseURI);
-  cookieSer.setCookieString(uri, null, "test=test; path=/;", null);
-
-  let res = new AsyncResource(server.baseURI + "/test");
-  res.get(function(error) {
-    do_check_null(error);
-    do_check_true(this.response.success);
-    do_check_eq("COOKIE!", this.response.body);
-    server.stop(run_next_test);
-  });
 });
 
 /**

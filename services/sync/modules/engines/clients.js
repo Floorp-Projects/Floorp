@@ -509,9 +509,9 @@ ClientEngine.prototype = {
     );
   },
 
-  removeClientData: function removeClientData() {
+  async removeClientData() {
     let res = this.service.resource(this.engineURL + "/" + this.localID);
-    res.delete();
+    await res.delete();
   },
 
   // Override the default behavior to delete bad records from the server.

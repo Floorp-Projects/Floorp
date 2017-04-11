@@ -133,7 +133,8 @@ AsyncResource.prototype = {
   // through. It is never called directly, only {{{_doRequest}}} uses it
   // to obtain a request channel.
   //
-  _createRequest: function Res__createRequest(method) {
+  _createRequest(method) {
+    this.method = method;
     let channel = NetUtil.newChannel({uri: this.spec, loadUsingSystemPrincipal: true})
                          .QueryInterface(Ci.nsIRequest)
                          .QueryInterface(Ci.nsIHttpChannel);
@@ -172,55 +173,55 @@ AsyncResource.prototype = {
     return channel;
   },
 
-  _onProgress: function Res__onProgress(channel) {},
+  _onProgress(channel) {},
 
-  _doRequest: function _doRequest(action, data, callback) {
+  _doRequest(action, data) {
     this._log.trace("In _doRequest.");
-    this._callback = callback;
-    let channel = this._createRequest(action);
+    return new Promise((resolve, reject) => {
+      this._deferred = { resolve, reject };
+      let channel = this._createRequest(action);
 
-    if ("undefined" != typeof(data))
-      this._data = data;
+      if ("undefined" != typeof(data))
+        this._data = data;
 
-    // PUT and POST are treated differently because they have payload data.
-    if ("PUT" == action || "POST" == action) {
-      // Convert non-string bodies into JSON
-      if (this._data.constructor.toString() != String)
-        this._data = JSON.stringify(this._data);
+      // PUT and POST are treated differently because they have payload data.
+      if ("PUT" == action || "POST" == action) {
+        // Convert non-string bodies into JSON
+        if (this._data.constructor.toString() != String)
+          this._data = JSON.stringify(this._data);
 
-      this._log.debug(action + " Length: " + this._data.length);
-      this._log.trace(action + " Body: " + this._data);
+        this._log.debug(action + " Length: " + this._data.length);
+        this._log.trace(action + " Body: " + this._data);
 
-      let type = ("content-type" in this._headers) ?
-        this._headers["content-type"] : "text/plain";
+        let type = ("content-type" in this._headers) ?
+          this._headers["content-type"] : "text/plain";
 
-      let stream = Cc["@mozilla.org/io/string-input-stream;1"].
-        createInstance(Ci.nsIStringInputStream);
-      stream.setData(this._data, this._data.length);
+        let stream = Cc["@mozilla.org/io/string-input-stream;1"].
+          createInstance(Ci.nsIStringInputStream);
+        stream.setData(this._data, this._data.length);
 
-      channel.QueryInterface(Ci.nsIUploadChannel);
-      channel.setUploadStream(stream, type, this._data.length);
-    }
+        channel.QueryInterface(Ci.nsIUploadChannel);
+        channel.setUploadStream(stream, type, this._data.length);
+      }
 
-    // Setup a channel listener so that the actual network operation
-    // is performed asynchronously.
-    let listener = new ChannelListener(this._onComplete, this._onProgress,
-                                       this._log, this.ABORT_TIMEOUT);
-    channel.requestMethod = action;
-    try {
+      // Setup a channel listener so that the actual network operation
+      // is performed asynchronously.
+      let listener = new ChannelListener(this._onComplete, this._onProgress,
+                                         this._log, this.ABORT_TIMEOUT);
+      channel.requestMethod = action;
       channel.asyncOpen2(listener);
-    } catch (ex) {
-      // asyncOpen2 can throw in a bunch of cases -- e.g., a forbidden port.
-      this._log.warn("Caught an error in asyncOpen2", ex);
-      CommonUtils.nextTick(callback.bind(this, ex));
-    }
+    });
   },
 
-  _onComplete: function _onComplete(error, data, channel) {
-    this._log.trace("In _onComplete. Error is " + error + ".");
+  _onComplete(ex, data, channel) {
+    this._log.trace("In _onComplete. Error is " + ex + ".");
 
-    if (error) {
-      this._callback(error);
+    if (ex) {
+      if (!Async.isShutdownException(ex)) {
+        this._log.warn("${action} request to ${url} failed: ${ex}",
+                       { action: this.method, url: this.uri.spec, ex});
+      }
+      this._deferred.reject(ex);
       return;
     }
 
@@ -324,117 +325,29 @@ AsyncResource.prototype = {
       }
     }.bind(this));
 
-    this._callback(null, ret);
+    this._deferred.resolve(ret);
   },
 
-  get: function get(callback) {
-    this._doRequest("GET", undefined, callback);
+  get() {
+    return this._doRequest("GET", undefined);
   },
 
-  put: function put(data, callback) {
-    if (typeof data == "function")
-      [data, callback] = [undefined, data];
-    this._doRequest("PUT", data, callback);
+  put(data) {
+    return this._doRequest("PUT", data);
   },
 
-  post: function post(data, callback) {
-    if (typeof data == "function")
-      [data, callback] = [undefined, data];
-    this._doRequest("POST", data, callback);
+  post(data) {
+    return this._doRequest("POST", data);
   },
 
-  delete: function delete_(callback) {
-    this._doRequest("DELETE", undefined, callback);
+  delete() {
+    return this._doRequest("DELETE", undefined);
   }
 };
 
-
-/*
- * Represent a remote network resource, identified by a URI, with a
- * synchronous API.
- *
- * 'Resource' is not recommended for new code. Use the asynchronous API of
- * 'AsyncResource' instead.
- */
-this.Resource = function Resource(uri) {
-  AsyncResource.call(this, uri);
-}
-Resource.prototype = {
-
-  __proto__: AsyncResource.prototype,
-
-  _logName: "Sync.Resource",
-
-  // ** {{{ Resource._request }}} **
-  //
-  // Perform a particular HTTP request on the resource. This method
-  // is never called directly, but is used by the high-level
-  // {{{get}}}, {{{put}}}, {{{post}}} and {{delete}} methods.
-  _request: function Res__request(action, data) {
-    let cb = Async.makeSyncCallback();
-    function callback(error, ret) {
-      if (error)
-        cb.throw(error);
-      else
-        cb(ret);
-    }
-
-    // The channel listener might get a failure code
-    try {
-      this._doRequest(action, data, callback);
-      return Async.waitForSyncCallback(cb);
-    } catch (ex) {
-      if (Async.isShutdownException(ex)) {
-        throw ex;
-      }
-      this._log.warn("${action} request to ${url} failed: ${ex}",
-                     { action, url: this.uri.spec, ex });
-      // Combine the channel stack with this request stack.  Need to create
-      // a new error object for that.
-      let error = Error(ex.message);
-      error.result = ex.result;
-      let chanStack = [];
-      if (ex.stack)
-        chanStack = ex.stack.trim().split(/\n/).slice(1);
-      let requestStack = error.stack.split(/\n/).slice(1);
-
-      // Strip out the args for the last 2 frames because they're usually HUGE!
-      for (let i = 0; i <= 1; i++)
-        requestStack[i] = requestStack[i].replace(/\(".*"\)@/, "(...)@");
-
-      error.stack = chanStack.concat(requestStack).join("\n");
-      throw error;
-    }
-  },
-
-  // ** {{{ Resource.get }}} **
-  //
-  // Perform an asynchronous HTTP GET for this resource.
-  get: function Res_get() {
-    return this._request("GET");
-  },
-
-  // ** {{{ Resource.put }}} **
-  //
-  // Perform a HTTP PUT for this resource.
-  put: function Res_put(data) {
-    return this._request("PUT", data);
-  },
-
-  // ** {{{ Resource.post }}} **
-  //
-  // Perform a HTTP POST for this resource.
-  post: function Res_post(data) {
-    return this._request("POST", data);
-  },
-
-  // ** {{{ Resource.delete }}} **
-  //
-  // Perform a HTTP DELETE for this resource.
-  delete: function Res_delete() {
-    return this._request("DELETE");
-  }
-};
+// TODO: We still export both "Resource" and "AsyncRecourse" as the same
+// object, but we should decide on one and unify all references.
+this.Resource = AsyncResource;
 
 // = ChannelListener =
 //
