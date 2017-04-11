@@ -66,7 +66,7 @@ TEST_F(CTLogVerifierTest, FailsInvalidTimestamp)
   // Mangle the timestamp, so that it should fail signature validation.
   certSct.timestamp = 0;
 
-  EXPECT_EQ(Result::ERROR_BAD_SIGNATURE, mLog.Verify(certEntry, certSct));
+  EXPECT_EQ(pkix::Result::ERROR_BAD_SIGNATURE, mLog.Verify(certEntry, certSct));
 }
 
 TEST_F(CTLogVerifierTest, FailsInvalidSignature)
@@ -74,19 +74,21 @@ TEST_F(CTLogVerifierTest, FailsInvalidSignature)
   LogEntry certEntry;
   GetX509CertLogEntry(certEntry);
 
-  // Mangle the signature, making VerifyECDSASignedDigestNSS (used by
-  // CTLogVerifier) return ERROR_BAD_SIGNATURE.
+  // Mangle the value of the signature, making the underlying signature
+  // verification code return ERROR_BAD_SIGNATURE.
   SignedCertificateTimestamp certSct;
   GetX509CertSCT(certSct);
   certSct.signature.signatureData[20] ^= '\xFF';
-  EXPECT_EQ(Result::ERROR_BAD_SIGNATURE, mLog.Verify(certEntry, certSct));
+  EXPECT_EQ(pkix::Result::ERROR_BAD_SIGNATURE, mLog.Verify(certEntry, certSct));
 
-  // Make VerifyECDSASignedDigestNSS return ERROR_BAD_DER. We still expect
-  // the verifier to return ERROR_BAD_SIGNATURE.
+  // Mangle the encoding of the signature, making the underlying implementation
+  // return ERROR_BAD_DER. We still expect the verifier to return
+  // ERROR_BAD_SIGNATURE.
   SignedCertificateTimestamp certSct2;
   GetX509CertSCT(certSct2);
   certSct2.signature.signatureData[0] ^= '\xFF';
-  EXPECT_EQ(Result::ERROR_BAD_SIGNATURE, mLog.Verify(certEntry, certSct2));
+  EXPECT_EQ(pkix::Result::ERROR_BAD_SIGNATURE, mLog.Verify(certEntry,
+                                                           certSct2));
 }
 
 TEST_F(CTLogVerifierTest, FailsInvalidLogID)
@@ -101,7 +103,8 @@ TEST_F(CTLogVerifierTest, FailsInvalidLogID)
   // attempting signature validation.
   MOZ_RELEASE_ASSERT(certSct.logId.append('\x0'));
 
-  EXPECT_EQ(Result::FATAL_ERROR_INVALID_ARGS, mLog.Verify(certEntry, certSct));
+  EXPECT_EQ(pkix::Result::FATAL_ERROR_INVALID_ARGS, mLog.Verify(certEntry,
+                                                                certSct));
 }
 
 TEST_F(CTLogVerifierTest, VerifiesValidSTH)
@@ -116,7 +119,7 @@ TEST_F(CTLogVerifierTest, DoesNotVerifyInvalidSTH)
   SignedTreeHead sth;
   GetSampleSignedTreeHead(sth);
   sth.sha256RootHash[0] ^= '\xFF';
-  EXPECT_EQ(Result::ERROR_BAD_SIGNATURE, mLog.VerifySignedTreeHead(sth));
+  EXPECT_EQ(pkix::Result::ERROR_BAD_SIGNATURE, mLog.VerifySignedTreeHead(sth));
 }
 
 // Test that excess data after the public key is rejected.
