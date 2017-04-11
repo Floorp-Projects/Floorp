@@ -946,6 +946,8 @@ pref("toolkit.autocomplete.richBoundaryCutoff", 200);
 // Variable controlling logging for osfile.
 pref("toolkit.osfile.log", false);
 
+pref("toolkit.cosmeticAnimations.enabled", true);
+
 pref("toolkit.scrollbox.smoothScroll", true);
 pref("toolkit.scrollbox.scrollIncrement", 20);
 pref("toolkit.scrollbox.verticalScrollDistance", 3);
@@ -4820,8 +4822,6 @@ pref("dom.webnotifications.requireinteraction.enabled", true);
 pref("dom.webnotifications.requireinteraction.enabled", false);
 #endif
 
-// Alert animation effect, name is disableSlidingEffect for backwards-compat.
-pref("alerts.disableSlidingEffect", false);
 // Show favicons in web notifications.
 pref("alerts.showFavicons", false);
 

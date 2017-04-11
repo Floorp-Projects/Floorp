@@ -26,7 +26,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource:///modules/RecentWindow.jsm");
 
-const TAB_ANIMATION_PREF = "browser.tabs.animate";
+const ANIMATION_PREF = "toolkit.cosmeticAnimations.enabled";
 
 const PROCESS_COUNT_PREF = "dom.ipc.processCount";
 
@@ -70,8 +70,8 @@ var TabPaint = {
       Services.mm.addMessageListener(msgName, this);
     }
 
-    this.originalTabsAnimate = Services.prefs.getBoolPref(TAB_ANIMATION_PREF);
-    Services.prefs.setBoolPref(TAB_ANIMATION_PREF, false);
+    this.originalAnimate = Services.prefs.getBoolPref(ANIMATION_PREF);
+    Services.prefs.setBoolPref(ANIMATION_PREF, false);
     this.originalProcessCount = Services.prefs.getIntPref(PROCESS_COUNT_PREF);
     Services.prefs.setIntPref(PROCESS_COUNT_PREF, 1);
   },
@@ -81,7 +81,7 @@ var TabPaint = {
       Services.mm.removeMessageListener(msgName, this);
     }
 
-    Services.prefs.setBoolPref(TAB_ANIMATION_PREF, this.originalTabsAnimate);
+    Services.prefs.setBoolPref(ANIMATION_PREF, this.originalAnimate);
     Services.prefs.setIntPref(PROCESS_COUNT_PREF, this.originalProcessCount);
   },
 

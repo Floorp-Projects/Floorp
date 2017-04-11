@@ -126,8 +126,8 @@ const RECOMMENDED_PREFS = new Map([
   // Do not redirect user when a milstone upgrade of Firefox is detected
   ["browser.startup.homepage_override.mstone", "ignore"],
 
-  // Disable tab animation
-  ["browser.tabs.animate", false],
+  // Disable browser animations
+  ["toolkit.cosmeticAnimations.enabled", false],
 
   // Do not allow background tabs to be zombified, otherwise for tests
   // that open additional tabs, the test harness tab itself might get
