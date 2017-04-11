@@ -13,9 +13,9 @@ add_task(function* () {
                    "<p>hello world";
   let firstTab = gBrowser.selectedTab;
 
-  Services.prefs.setBoolPref("browser.tabs.animate", false);
+  Services.prefs.setBoolPref("toolkit.cosmeticAnimations.enabled", false);
   registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("browser.tabs.animate");
+    Services.prefs.clearUserPref("toolkit.cosmeticAnimations.enabled");
   });
 
   yield loadTab(TEST_URI);
