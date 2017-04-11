@@ -1640,8 +1640,7 @@ MediaDecoder::IsWebMEnabled()
 bool
 MediaDecoder::IsAndroidMediaPluginEnabled()
 {
-  return AndroidBridge::Bridge()
-         && AndroidBridge::Bridge()->GetAPIVersion() < 16
+  return jni::GetAPIVersion() < 16
          && Preferences::GetBool("media.plugins.enabled");
 }
 #endif
