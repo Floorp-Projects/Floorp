@@ -634,7 +634,6 @@ WR_FUNC;
 
 WR_INLINE void
 wr_dp_push_stacking_context(WrState *wrState, WrRect bounds,
-                            WrRect overflow, const WrImageMask *mask,
                             float opacity, WrMatrix transform,
                             WrMixBlendMode mixBlendMode)
 WR_FUNC;

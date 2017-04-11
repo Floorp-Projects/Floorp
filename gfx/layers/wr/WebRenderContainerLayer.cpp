@@ -36,18 +36,20 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                   Stringify(mixBlendMode).c_str());
   }
   aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                               wr::ToWrRect(overflow),
-                               mask.ptrOr(nullptr),
                                GetLocalOpacity(),
                                //GetLayer()->GetAnimations(),
                                transform,
                                mixBlendMode);
+  aBuilder.PushScrollLayer(wr::ToWrRect(overflow),
+                           wr::ToWrRect(overflow),
+                           mask.ptrOr(nullptr));
   for (LayerPolygon& child : children) {
     if (child.layer->IsBackfaceHidden()) {
       continue;
     }
     ToWebRenderLayer(child.layer)->RenderLayer(aBuilder);
   }
+  aBuilder.PopScrollLayer();
   aBuilder.PopStackingContext();
 }
 
