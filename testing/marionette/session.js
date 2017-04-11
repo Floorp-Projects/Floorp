@@ -53,23 +53,21 @@ session.Timeouts = class {
     let t = new session.Timeouts();
 
     for (let [typ, ms] of Object.entries(json)) {
-      assert.positiveInteger(ms);
-
       switch (typ) {
         case "implicit":
-          t.implicit = ms;
+          t.implicit = assert.positiveInteger(ms);
           break;
 
         case "script":
-          t.script = ms;
+          t.script = assert.positiveInteger(ms);
           break;
 
         case "pageLoad":
-          t.pageLoad = ms;
+          t.pageLoad = assert.positiveInteger(ms);
           break;
 
         default:
-          throw new InvalidArgumentError();
+          throw new InvalidArgumentError("Unrecognised timeout: " + typ);
       }
     }
 
