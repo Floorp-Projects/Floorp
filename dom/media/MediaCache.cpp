@@ -389,7 +389,6 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient,
     mPinCount(0),
     mCurrentMode(MODE_PLAYBACK),
     mMetadataInPartialBlockBuffer(false),
-    mPartialBlockBuffer(MakeUnique<int64_t[]>(BLOCK_SIZE/sizeof(int64_t))),
     mIsPrivateBrowsing(aIsPrivateBrowsing)
 {
 }
@@ -1798,13 +1797,12 @@ MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData,
     if (blockOffset + chunkSize == BLOCK_SIZE) {
       // We have a whole block now to write it out.
       auto data1 = MakeSpan<const uint8_t>(
-        reinterpret_cast<uint8_t*>(mPartialBlockBuffer.get()), blockOffset);
+        mPartialBlockBuffer.get(), blockOffset);
       auto data2 = MakeSpan<const uint8_t>(
         reinterpret_cast<const uint8_t*>(data), chunkSize);
       gMediaCache->AllocateAndWriteBlock(this, mode, data1, data2);
     } else {
-      memcpy(reinterpret_cast<char*>(mPartialBlockBuffer.get()) + blockOffset,
-             data, chunkSize);
+      memcpy(mPartialBlockBuffer.get() + blockOffset, data, chunkSize);
     }
 
     mChannelOffset += chunkSize;
@@ -1843,9 +1841,8 @@ MediaCacheStream::FlushPartialBlockInternal(bool aNotifyAll,
                aNotifyAll ? "yes" : "no"));
 
     // Write back the partial block
-    uint8_t* p = reinterpret_cast<uint8_t*>(mPartialBlockBuffer.get());
-    memset(p + blockOffset, 0, BLOCK_SIZE - blockOffset);
-    auto data = MakeSpan<const uint8_t>(p, BLOCK_SIZE);
+    memset(mPartialBlockBuffer.get() + blockOffset, 0, BLOCK_SIZE - blockOffset);
+    auto data = MakeSpan<const uint8_t>(mPartialBlockBuffer.get(), BLOCK_SIZE);
     gMediaCache->AllocateAndWriteBlock(this,
       mMetadataInPartialBlockBuffer ? MODE_METADATA : MODE_PLAYBACK, data);
   }
@@ -2266,7 +2263,7 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
         bytes = std::min(bytes, int64_t(INT32_MAX));
         MOZ_ASSERT(bytes >= 0 && bytes <= aCount, "Bytes out of range.");
         memcpy(aBuffer,
-          reinterpret_cast<char*>(streamWithPartialBlock->mPartialBlockBuffer.get()) + offsetInStreamBlock, bytes);
+          streamWithPartialBlock->mPartialBlockBuffer.get() + offsetInStreamBlock, bytes);
         if (mCurrentMode == MODE_METADATA) {
           streamWithPartialBlock->mMetadataInPartialBlockBuffer = true;
         }
@@ -2366,7 +2363,7 @@ MediaCacheStream::ReadFromCache(char* aBuffer, int64_t aOffset, int64_t aCount)
       bytes = std::min(toCopy, int64_t(INT32_MAX));
       MOZ_ASSERT(bytes >= 0 && bytes <= toCopy, "Bytes out of range.");
       memcpy(aBuffer + count,
-        reinterpret_cast<char*>(mPartialBlockBuffer.get()) + offsetInStreamBlock, bytes);
+        mPartialBlockBuffer.get() + offsetInStreamBlock, bytes);
     } else {
       if (cacheBlock < 0) {
         // We expect all blocks to be cached! Fail!
