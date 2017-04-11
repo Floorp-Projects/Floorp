@@ -852,12 +852,13 @@ HandlerService.prototype = {
   _storeExtensions: function HS__storeExtensions(aHandlerInfo) {
     if (aHandlerInfo instanceof Ci.nsIMIMEInfo) {
       var typeID = this._getTypeID(this._getClass(aHandlerInfo), aHandlerInfo.type);
+      let source = this._rdf.GetResource(typeID);
+      let property = this._rdf.GetResource(NC_FILE_EXTENSIONS);
       var extEnum = aHandlerInfo.getFileExtensions();
       while (extEnum.hasMore()) {
         let ext = extEnum.getNext().toLowerCase();
-        if (!this._hasLiteralAssertion(typeID, NC_FILE_EXTENSIONS, ext)) {
-          this._setLiteral(typeID, NC_FILE_EXTENSIONS, ext);
-        }
+        let target = this._rdf.GetLiteral(ext);
+        this._ds.Assert(source, property, target, true);
       }
     }
   },
