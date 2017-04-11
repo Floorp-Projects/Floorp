@@ -1789,8 +1789,7 @@ ScriptSource::setCompressedSource(SharedImmutableString&& raw, size_t uncompress
 }
 
 bool
-ScriptSource::setSourceCopy(JSContext* cx, SourceBufferHolder& srcBuf,
-                            SourceCompressionTask* task)
+ScriptSource::setSourceCopy(JSContext* cx, SourceBufferHolder& srcBuf)
 {
     MOZ_ASSERT(!hasSourceData());
 
@@ -1805,35 +1804,6 @@ ScriptSource::setSourceCopy(JSContext* cx, SourceBufferHolder& srcBuf,
         return false;
     }
     setSource(mozilla::Move(*deduped));
-
-    // There are several cases where source compression is not a good idea:
-    //  - If the script is tiny, then compression will save little or no space.
-    //  - If there is only one core, then compression will contend with JS
-    //    execution (which hurts benchmarketing).
-    //  - If the source contains a giant string, then parsing will finish much
-    //    faster than compression which increases latency (this case is handled
-    //    in Parser::stringLiteral).
-    //
-    // Lastly, since the parsing thread will eventually perform a blocking wait
-    // on the compression task's thread, require that there are at least 2
-    // helper threads:
-    //  - If we are on a helper thread, there must be another helper thread to
-    //    execute our compression task.
-    //  - If we are on the active thread, there must be at least two helper
-    //    threads since at most one helper thread can be blocking on the active
-    //    thread (see HelperThreadState::canStartParseTask) which would cause a
-    //    deadlock if there wasn't a second helper thread that could make
-    //    progress on our compression task.
-    bool canCompressOffThread =
-        HelperThreadState().cpuCount > 1 &&
-        HelperThreadState().threadCount >= 2 &&
-        CanUseExtraThreads();
-    const size_t TINY_SCRIPT = 256;
-    if (TINY_SCRIPT <= srcBuf.length() && canCompressOffThread) {
-        task->ss = this;
-        if (!StartOffThreadCompression(cx, task))
-            return false;
-    }
 
     return true;
 }
@@ -1874,9 +1844,6 @@ SourceCompressionTask::work()
     bool cont = true;
     bool reallocated = false;
     while (cont) {
-        if (abort_)
-            return Aborted;
-
         switch (comp.compressMore()) {
           case Compressor::CONTINUE:
             break;
