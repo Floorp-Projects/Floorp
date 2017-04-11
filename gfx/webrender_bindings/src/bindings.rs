@@ -1060,6 +1060,7 @@ pub extern "C" fn wr_dp_begin(state: &mut WrState, width: u32, height: u32) {
                                bounds,
                                0,
                                None,
+                               TransformStyle::Flat,
                                None,
                                MixBlendMode::Normal,
                                Vec::new());
@@ -1131,10 +1132,13 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                bounds,
                                state.z_index,
                                Some(PropertyBinding::Value(transform.to_layout_transform())),
+                               TransformStyle::Flat,
                                None,
                                mix_blend_mode,
                                filters);
-    state.frame_builder.dl_builder.push_scroll_layer(clip_region, bounds.size, None);
+
+    let clip_bounds = LayoutRect::new(LayoutPoint::new(0.0, 0.0), bounds.size);
+    state.frame_builder.dl_builder.push_scroll_layer(clip_region, clip_bounds, None);
 }
 
 #[no_mangle]
@@ -1160,7 +1164,7 @@ pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
         }
     });
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&overflow, vec![], mask);
-    state.frame_builder.dl_builder.push_scroll_layer(clip_region, bounds.size, None);
+    state.frame_builder.dl_builder.push_scroll_layer(clip_region, bounds, None);
 }
 
 #[no_mangle]
@@ -1356,9 +1360,13 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                                                   end_point.to_point(),
                                                                   stops,
                                                                   extend_mode.to_gradient_extend_mode());
-    state.frame_builder.dl_builder.push_gradient(rect.to_rect(),
+    let rect = rect.to_rect();
+    let tile_size = rect.size.clone();
+    state.frame_builder.dl_builder.push_gradient(rect,
                                                  clip.to_clip_region(),
-                                                 gradient);
+                                                 gradient,
+                                                 tile_size,
+                                                 LayoutSize::new(0.0, 0.0));
 }
 
 #[no_mangle]
@@ -1379,9 +1387,13 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                                                          radius.to_size(),
                                                                          stops,
                                                                          extend_mode.to_gradient_extend_mode());
-    state.frame_builder.dl_builder.push_radial_gradient(rect.to_rect(),
+    let rect = rect.to_rect();
+    let tile_size = rect.size.clone();
+    state.frame_builder.dl_builder.push_radial_gradient(rect,
                                                         clip.to_clip_region(),
-                                                        gradient);
+                                                        gradient,
+                                                        tile_size,
+                                                        LayoutSize::new(0.0, 0.0));
 }
 
 #[no_mangle]
