@@ -17,7 +17,7 @@ namespace layers {
 using namespace gfx;
 using namespace std;
 
-const Float sBackgroundOpacity = 0.6f;
+const Float sBackgroundOpacity = 0.8f;
 const SurfaceFormat sTextureFormat = SurfaceFormat::B8G8R8A8;
 
 static void PNGAPI info_callback(png_structp png_ptr, png_infop info_ptr)
@@ -52,17 +52,46 @@ TextRenderer::~TextRenderer()
 }
 
 void
-TextRenderer::RenderText(const string& aText, const IntPoint& aOrigin,
+TextRenderer::RenderText(Compositor* aCompositor,
+                         const string& aText,
+                         const IntPoint& aOrigin,
                          const Matrix4x4& aTransform, uint32_t aTextSize,
                          uint32_t aTargetPixelWidth)
 {
-  EnsureInitialized();
 
   // For now we only have a bitmap font with a 16px cell size, so we just
   // scale it up if the user wants larger text.
   Float scaleFactor = Float(aTextSize) / Float(sCellHeight);
-
   aTargetPixelWidth /= scaleFactor;
+
+  RefPtr<TextureSource> src = RenderText(
+    aCompositor,
+    aText,
+    aTextSize,
+    aTargetPixelWidth);
+  if (!src) {
+    return;
+  }
+
+  RefPtr<EffectRGB> effect = new EffectRGB(src, true, SamplingFilter::LINEAR);
+  EffectChain chain;
+  chain.mPrimaryEffect = effect;
+
+  Matrix4x4 transform = aTransform;
+  transform.PreScale(scaleFactor, scaleFactor, 1.0f);
+
+  IntRect drawRect(aOrigin, src->GetSize());
+  IntRect clip(-10000, -10000, 20000, 20000);
+  aCompositor->DrawQuad(Rect(drawRect), clip, chain, 1.0f, transform);
+}
+
+RefPtr<TextureSource>
+TextRenderer::RenderText(TextureSourceProvider* aProvider,
+                         const string& aText,
+                         uint32_t aTextSize,
+                         uint32_t aTargetPixelWidth)
+{
+  EnsureInitialized();
 
   uint32_t numLines = 1;
   uint32_t maxWidth = 0;
@@ -86,12 +115,12 @@ TextRenderer::RenderText(const string& aText, const IntPoint& aOrigin,
   RefPtr<DataSourceSurface> textSurf =
     Factory::CreateDataSourceSurface(IntSize(maxWidth, numLines * sCellHeight), sTextureFormat);
   if (NS_WARN_IF(!textSurf)) {
-    return;
+    return nullptr;
   }
 
   DataSourceSurface::MappedSurface map;
   if (NS_WARN_IF(!textSurf->Map(DataSourceSurface::MapType::READ_WRITE, &map))) {
-    return;
+    return nullptr;
   }
 
   // Initialize the surface to transparent white.
@@ -124,21 +153,14 @@ TextRenderer::RenderText(const string& aText, const IntPoint& aOrigin,
 
   textSurf->Unmap();
 
-  RefPtr<DataTextureSource> src = mCompositor->CreateDataTextureSource();
+  RefPtr<DataTextureSource> src = aProvider->CreateDataTextureSource();
 
   if (!src->Update(textSurf)) {
     // Upload failed.
-    return;
+    return nullptr;
   }
 
-  RefPtr<EffectRGB> effect = new EffectRGB(src, true, SamplingFilter::LINEAR);
-  EffectChain chain;
-  chain.mPrimaryEffect = effect;
-
-  Matrix4x4 transform = aTransform;
-  transform.PreScale(scaleFactor, scaleFactor, 1.0f);
-  mCompositor->DrawQuad(Rect(aOrigin.x, aOrigin.y, maxWidth, numLines * 16),
-                        IntRect(-10000, -10000, 20000, 20000), chain, 1.0f, transform);
+  return src;
 }
 
 void
