@@ -28,6 +28,18 @@ DiagnosticsD3D11::Start(uint32_t aPixelsPerFrame)
     mContext->Begin(mCurrentFrame.stats);
   }
   mCurrentFrame.pixelsPerFrame = aPixelsPerFrame;
+
+  desc = CD3D11_QUERY_DESC(D3D11_QUERY_TIMESTAMP_DISJOINT);
+  mDevice->CreateQuery(&desc, getter_AddRefs(mCurrentFrame.timing));
+  if (mCurrentFrame.timing) {
+    mContext->Begin(mCurrentFrame.timing);
+  }
+
+  desc = CD3D11_QUERY_DESC(D3D11_QUERY_TIMESTAMP);
+  mDevice->CreateQuery(&desc, getter_AddRefs(mCurrentFrame.frameBegin));
+  if (mCurrentFrame.frameBegin) {
+    mContext->End(mCurrentFrame.frameBegin);
+  }
 }
 
 void
@@ -35,6 +47,16 @@ DiagnosticsD3D11::End()
 {
   if (mCurrentFrame.stats) {
     mContext->End(mCurrentFrame.stats);
+  }
+  if (mCurrentFrame.frameBegin) {
+    CD3D11_QUERY_DESC desc(D3D11_QUERY_TIMESTAMP);
+    mDevice->CreateQuery(&desc, getter_AddRefs(mCurrentFrame.frameEnd));
+    if (mCurrentFrame.frameEnd) {
+      mContext->End(mCurrentFrame.frameEnd);
+    }
+  }
+  if (mCurrentFrame.timing) {
+    mContext->End(mCurrentFrame.timing);
   }
 }
 
@@ -53,6 +75,18 @@ DiagnosticsD3D11::Query(GPUStats* aStats)
     if (WaitForGPUQuery(mDevice, mContext, mPrevFrame.stats, &stats)) {
       aStats->mInvalidPixels = mPrevFrame.pixelsPerFrame;
       aStats->mPixelsFilled = uint32_t(stats.PSInvocations);
+    }
+  }
+  if (mPrevFrame.timing) {
+    UINT64 begin, end;
+    D3D11_QUERY_DATA_TIMESTAMP_DISJOINT timing;
+    if (WaitForGPUQuery(mDevice, mContext, mPrevFrame.timing, &timing) &&
+        !timing.Disjoint &&
+        WaitForGPUQuery(mDevice, mContext, mPrevFrame.frameBegin, &begin) &&
+        WaitForGPUQuery(mDevice, mContext, mPrevFrame.frameEnd, &end))
+    {
+      float timeMs = float(end - begin) / float(timing.Frequency) * 1000.0f;
+      aStats->mDrawTime = Some(timeMs);
     }
   }
 }
