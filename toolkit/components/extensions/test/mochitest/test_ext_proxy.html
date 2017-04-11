@@ -63,7 +63,7 @@ add_task(function* test_invalid_FindProxyForURL_type() {
     });
 });
 
-add_task(function* test_invalid_FindProxyForURL_return_type() {
+add_task(function* test_invalid_FindProxyForURL_return_types() {
   yield testProxyScript(
     () => {
       function FindProxyForURL() {
@@ -79,7 +79,70 @@ add_task(function* test_invalid_FindProxyForURL_return_type() {
         return "INVALID";
       }
     }, {
-      message: "FindProxyForURL: Invalid Proxy Rule: INVALID",
+      message: "FindProxyForURL: Unrecognized proxy type: \"INVALID\"",
+    });
+
+  yield testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return "SOCKS";
+      }
+    }, {
+      message: "FindProxyForURL: Missing argument for proxy type: \"SOCKS\"",
+    });
+
+  yield testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return "PROXY 1.2.3.4:8080 EXTRA";
+      }
+    }, {
+      message: "FindProxyForURL: Too many arguments passed for proxy rule: \"PROXY 1.2.3.4:8080 EXTRA\"",
+    });
+
+  yield testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return "PROXY :";
+      }
+    }, {
+      message: "FindProxyForURL: Unable to parse host and port from proxy rule: \"PROXY :\"",
+    });
+
+  yield testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return "PROXY :8080";
+      }
+    }, {
+      message: "FindProxyForURL: Unable to parse host and port from proxy rule: \"PROXY :8080\"",
+    });
+
+  yield testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return "PROXY ::";
+      }
+    }, {
+      message: "FindProxyForURL: Unable to parse host and port from proxy rule: \"PROXY ::\"",
+    });
+
+  yield testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return "PROXY 1.2.3.4:";
+      }
+    }, {
+      message: "FindProxyForURL: Unable to parse host and port from proxy rule: \"PROXY 1.2.3.4:\"",
+    });
+
+  yield testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return "DIRECT 1.2.3.4:8080";
+      }
+    }, {
+      message: "FindProxyForURL: Invalid argument for proxy type: \"DIRECT\"",
     });
 });
 
