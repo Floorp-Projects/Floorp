@@ -459,7 +459,7 @@ nsUrlClassifierUtils::ParseFindFullHashResponseV4(const nsACString& aResponse,
       continue; // Ignore un-convertable threat type.
     }
     auto& hash = m.threat().hash();
-    auto cacheDuration = m.cache_duration().seconds();
+    auto cacheDuration = DurationToMs(m.cache_duration());
     aCallback->OnCompleteHashFound(nsCString(hash.c_str(), hash.length()),
                                    tableNames, cacheDuration);
 
@@ -468,7 +468,7 @@ nsUrlClassifierUtils::ParseFindFullHashResponseV4(const nsACString& aResponse,
   }
 
   auto minWaitDuration = DurationToMs(r.minimum_wait_duration());
-  auto negCacheDuration = r.negative_cache_duration().seconds();
+  auto negCacheDuration = DurationToMs(r.negative_cache_duration());
 
   aCallback->OnResponseParsed(minWaitDuration, negCacheDuration);
 

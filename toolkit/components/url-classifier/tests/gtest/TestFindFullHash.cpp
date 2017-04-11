@@ -159,7 +159,7 @@ public:
   OnResponseParsed(uint32_t aMinWaitDuration,
                    uint32_t aNegCacheDuration) override
   {
-    VerifyDuration(aMinWaitDuration / 1000, EXPECTED_MIN_WAIT_DURATION);
+    VerifyDuration(aMinWaitDuration, EXPECTED_MIN_WAIT_DURATION);
     VerifyDuration(aNegCacheDuration, EXPECTED_NEG_CACHE_DURATION);
 
     return NS_OK;
@@ -191,7 +191,7 @@ private:
   void
   VerifyDuration(uint32_t aToVerify, const MyDuration& aExpected)
   {
-    ASSERT_TRUE(aToVerify == aExpected.mSecs);
+    ASSERT_TRUE(aToVerify == (aExpected.mSecs * 1000));
   }
 
   ~MyParseCallback() {}
