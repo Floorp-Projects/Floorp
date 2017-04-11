@@ -9,6 +9,15 @@
 
 # Add any project specific keep options here:
 
+# The Buddybuild SDK builds using ACRA 4.6.4, which is afflictted
+# by the following bug: https://github.com/ACRA/acra/issues/301
+# That is fixed in ACRA 4.7, but we need to wait for Buddybuild to upgrade
+# for that to be fixed. (Note: this only affects BuddyBuild builds where
+# the BuddyBuild SDK is enabled, and is not visible in local builds. You can
+# enable the BuddyBuild SDK per branch for testing, by default it is only
+# used for master.)
+-dontwarn org.acra.ErrorReporter
+
 # If your project uses WebView with JS, uncomment the following
 # and specify the fully qualified class name to the JavaScript interface
 # class:
