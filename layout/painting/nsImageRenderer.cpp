@@ -525,13 +525,10 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     }
     case eStyleImageType_Gradient:
     {
-      Maybe<nsCSSGradientRenderer> renderer =
-        nsCSSGradientRenderer::Create(aPresContext, mGradientData,
-                                      aDest, aFill, aRepeatSize, aSrc, mSize);
+      nsCSSGradientRenderer renderer =
+        nsCSSGradientRenderer::Create(aPresContext, mGradientData, mSize);
 
-      if (renderer) {
-        renderer->Paint(*ctx, aDirtyRect, aOpacity);
-      }
+      renderer.Paint(*ctx, aDest, aFill, aRepeatSize, aSrc, aDirtyRect, aOpacity);
       break;
     }
     case eStyleImageType_Element:
@@ -605,13 +602,10 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
   switch (mType) {
     case eStyleImageType_Gradient:
     {
-      Maybe<nsCSSGradientRenderer> renderer =
-        nsCSSGradientRenderer::Create(aPresContext, mGradientData,
-                                   aDest, aFill, aRepeatSize, aSrc, mSize);
+      nsCSSGradientRenderer renderer =
+        nsCSSGradientRenderer::Create(aPresContext, mGradientData, mSize);
 
-      if (renderer) {
-        renderer->BuildWebRenderDisplayItems(aBuilder, aLayer, aOpacity);
-      }
+      renderer.BuildWebRenderDisplayItems(aBuilder, aLayer, aDest, aFill, aRepeatSize, aSrc, aOpacity);
       break;
     }
     case eStyleImageType_Image:
