@@ -293,14 +293,6 @@ addMessageListener("DeceptiveBlockedDetails", (message) => {
   });
 });
 
-function getSerializedOriginAttributes(docShell) {
-  let originAttributes = {};
-  if (docShell.failedChannel) {
-    originAttributes = docShell.failedChannel.loadInfo.originAttributes;
-  }
-  return JSON.stringify(originAttributes);
-}
-
 var AboutNetAndCertErrorListener = {
   init(chromeGlobal) {
     addMessageListener("CertErrorDetails", this);
@@ -609,7 +601,6 @@ var ClickEventHandler = {
       elementId: targetElement.getAttribute("id"),
       isTopFrame: (ownerDoc.defaultView.parent === ownerDoc.defaultView),
       securityInfoAsString: getSerializedSecurityInfo(docShell),
-      originAttributesAsString: getSerializedOriginAttributes(docShell),
     });
   },
 
