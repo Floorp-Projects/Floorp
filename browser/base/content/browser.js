@@ -3024,7 +3024,8 @@ var BrowserOnClick = {
       case "Browser:CertExceptionError":
         this.onCertError(msg.target, msg.data.elementId,
                          msg.data.isTopFrame, msg.data.location,
-                         msg.data.securityInfoAsString);
+                         msg.data.securityInfoAsString,
+                         msg.data.originAttributesAsString);
       break;
       case "Browser:OpenCaptivePortalPage":
         CaptivePortalWatcher.ensureCaptivePortalTab();
@@ -3088,7 +3089,8 @@ var BrowserOnClick = {
                                  uri.host, uri.port);
   },
 
-  onCertError(browser, elementId, isTopFrame, location, securityInfoAsString) {
+  onCertError(browser, elementId, isTopFrame, location, securityInfoAsString,
+              originAttributesAsString) {
     let secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
     let securityInfo;
 
@@ -3138,7 +3140,8 @@ var BrowserOnClick = {
 
         securityInfo = getSecurityInfo(securityInfoAsString);
         let errorInfo = getDetailedCertErrorInfo(location,
-                                                 securityInfo);
+                                                 securityInfo,
+                                                 JSON.parse(originAttributesAsString));
         browser.messageManager.sendAsyncMessage( "CertErrorDetails", {
             code: securityInfo.errorCode,
             info: errorInfo
@@ -3150,7 +3153,8 @@ var BrowserOnClick = {
                                     .getService(Ci.nsIClipboardHelper);
         securityInfo = getSecurityInfo(securityInfoAsString);
         let detailedInfo = getDetailedCertErrorInfo(location,
-                                                    securityInfo);
+                                                    securityInfo,
+                                                    JSON.parse(originAttributesAsString));
         gClipboardHelper.copyString(detailedInfo);
         break;
 
@@ -3415,7 +3419,7 @@ function getSecurityInfo(securityInfoAsString) {
  * Returns a string with detailed information about the certificate validation
  * failure from the specified URI that can be used to send a report.
  */
-function getDetailedCertErrorInfo(location, securityInfo) {
+function getDetailedCertErrorInfo(location, securityInfo, originAttributes) {
   if (!securityInfo)
     return "";
 
@@ -3436,8 +3440,8 @@ function getDetailedCertErrorInfo(location, securityInfo) {
 
   let uri = Services.io.newURI(location);
 
-  let hasHSTS = sss.isSecureURI(sss.HEADER_HSTS, uri, flags);
-  let hasHPKP = sss.isSecureURI(sss.HEADER_HPKP, uri, flags);
+  let hasHSTS = sss.isSecureURI(sss.HEADER_HSTS, uri, flags, originAttributes);
+  let hasHPKP = sss.isSecureURI(sss.HEADER_HPKP, uri, flags, originAttributes);
   certErrorDetails += "\r\n\r\n" +
                       gNavigatorBundle.getFormattedString("certErrorDetailsHSTS.label",
                                                           [hasHSTS]);
