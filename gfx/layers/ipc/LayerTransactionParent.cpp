@@ -843,11 +843,7 @@ LayerTransactionParent::RecvGetAPZTestData(APZTestData* aOutData)
 mozilla::ipc::IPCResult
 LayerTransactionParent::RecvRequestProperty(const nsString& aProperty, float* aValue)
 {
-  if (aProperty.Equals(NS_LITERAL_STRING("overdraw"))) {
-    *aValue = layer_manager()->GetCompositor()->GetFillRatio();
-  } else {
-    *aValue = -1;
-  }
+  *aValue = -1;
   return IPC_OK();
 }
 

@@ -38,6 +38,19 @@ private:
   std::deque<Entry> mHistory;
 };
 
+struct GPUStats
+{
+  GPUStats()
+   : mInvalidPixels(0),
+     mScreenPixels(0),
+     mPixelsFilled(0)
+  {}
+
+  uint32_t mInvalidPixels;
+  uint32_t mScreenPixels;
+  uint32_t mPixelsFilled;
+};
+
 class Diagnostics
 {
 public:
@@ -57,7 +70,7 @@ public:
     mTransactionFps.AddFrame(TimeStamp::Now());
   }
 
-  std::string GetFrameOverlayString();
+  std::string GetFrameOverlayString(const GPUStats& aStats);
 
   class Record {
   public:
