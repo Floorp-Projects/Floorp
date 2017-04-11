@@ -1574,6 +1574,10 @@ Navigator::NotifyActiveVRDisplaysChanged()
 VRServiceTest*
 Navigator::RequestVRServiceTest()
 {
+  // Ensure that the Mock VR devices are not released prematurely
+  nsGlobalWindow* win = nsGlobalWindow::Cast(mWindow);
+  win->NotifyVREventListenerAdded();
+
   if (!mVRServiceTest) {
     mVRServiceTest = VRServiceTest::CreateTestService(mWindow);
   }

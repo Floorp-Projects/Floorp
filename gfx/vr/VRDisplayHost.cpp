@@ -177,6 +177,18 @@ VRControllerHost::GetButtonPressed()
 }
 
 void
+VRControllerHost::SetButtonTouched(uint64_t aBit)
+{
+  mButtonTouched = aBit;
+}
+
+uint64_t
+VRControllerHost::GetButtonTouched()
+{
+  return mButtonTouched;
+}
+
+void
 VRControllerHost::SetPose(const dom::GamepadPoseState& aPose)
 {
   mPose = aPose;

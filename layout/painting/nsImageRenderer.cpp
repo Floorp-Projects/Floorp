@@ -174,7 +174,7 @@ nsImageRenderer::PrepareImage()
     case eStyleImageType_Element:
     {
       nsAutoString elementId =
-        NS_LITERAL_STRING("#") + nsDependentString(mImage->GetElementId());
+        NS_LITERAL_STRING("#") + nsDependentAtomString(mImage->GetElementId());
       nsCOMPtr<nsIURI> targetURI;
       nsCOMPtr<nsIURI> base = mForFrame->GetContent()->GetBaseURI();
       nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), elementId,

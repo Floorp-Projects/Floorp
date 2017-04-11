@@ -26,13 +26,18 @@ function loadViewSourceWindow(URL) {
 }
 
 function closeViewSourceWindow(aWindow, aCallback) {
-  Services.wm.addListener({
-    onCloseWindow() {
-      Services.wm.removeListener(this);
-      executeSoon(aCallback);
-    }
+  return new Promise(resolve => {
+    Services.wm.addListener({
+      onCloseWindow() {
+        Services.wm.removeListener(this);
+        if (aCallback) {
+          executeSoon(aCallback);
+        }
+        resolve();
+      }
+    });
+    aWindow.close();
   });
-  aWindow.close();
 }
 
 function testViewSourceWindow(aURI, aTestCallback, aCloseCallback) {
@@ -63,6 +68,25 @@ function waitForViewSourceWindow() {
     };
     Services.wm.addListener(windowListener);
   });
+}
+
+/**
+ * Opens view source for a browser.
+ *
+ * @param browser - the <xul:browser> to open view source for.
+ * @returns the new tab or window which shows the source.
+ */
+function* openViewSource(browser) {
+  let openPromise;
+  if (Services.prefs.getBoolPref("view_source.tab")) {
+    openPromise = BrowserTestUtils.waitForNewTab(gBrowser, null);
+  } else {
+    openPromise = waitForViewSourceWindow();
+  }
+
+  window.BrowserViewSource(browser);
+
+  return (yield openPromise);
 }
 
 /**
