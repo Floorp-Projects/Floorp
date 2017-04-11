@@ -73,9 +73,9 @@ TabEngine.prototype = {
     this.hasSyncedThisSession = false;
   },
 
-  removeClientData() {
+  async removeClientData() {
     let url = this.engineURL + "/" + this.service.clientsEngine.localID;
-    this.service.resource(url).delete();
+    await this.service.resource(url).delete();
   },
 
   /**

@@ -672,7 +672,7 @@ var TPS = {
       Logger.logInfo(`About to perform validation for "${engineName}"`);
       let engine = Weave.Service.engineManager.get(engineName);
       let validator = new ValidatorType(engine);
-      let serverRecords = validator.getServerItems(engine);
+      let serverRecords = Async.promiseSpinningly(validator.getServerItems(engine));
       let clientRecords = Async.promiseSpinningly(validator.getClientItems());
       try {
         // This substantially improves the logs for addons while not making a

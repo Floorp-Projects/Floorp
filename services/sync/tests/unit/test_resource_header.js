@@ -46,7 +46,7 @@ function triggerRedirect() {
   prefs.setCharPref("autoconfig_url", "data:text/plain," + PROXY_FUNCTION);
 }
 
-add_test(function test_headers_copied() {
+add_task(async function test_headers_copied() {
   triggerRedirect();
 
   _("Issuing request.");
@@ -54,12 +54,12 @@ add_test(function test_headers_copied() {
   resource.setHeader("Authorization", "Basic foobar");
   resource.setHeader("X-Foo", "foofoo");
 
-  let result = resource.get(TEST_URL);
+  let result = await resource.get(TEST_URL);
   _("Result: " + result);
 
   do_check_eq(result, BODY);
   do_check_eq(auth, "Basic foobar");
   do_check_eq(foo, "foofoo");
 
-  httpServer.stop(run_next_test);
+  await promiseStopServer(httpServer);
 });
