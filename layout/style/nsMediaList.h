@@ -260,6 +260,10 @@ public:
   bool Matches(nsPresContext& aPresContext,
                nsMediaQueryResultCacheKey* aKey) const final;
 
+#ifdef DEBUG
+  bool IsServo() const final { return false; }
+#endif
+
   void AppendQuery(nsAutoPtr<nsMediaQuery>& aQuery) {
     // Takes ownership of aQuery
     mArray.AppendElement(aQuery.forget());
