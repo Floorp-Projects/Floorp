@@ -1201,7 +1201,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
                                   clip: WrClipRegion,
                                   color: WrColor,
                                   font_key: WrFontKey,
-                                  glyphs: *mut WrGlyphInstance,
+                                  glyphs: *const WrGlyphInstance,
                                   glyph_count: u32,
                                   glyph_size: f32) {
     assert!(unsafe { is_in_main_thread() });
