@@ -62,10 +62,13 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
         EXPORTS.mozilla.layers += [
             'd3d11/CompositorD3D11.h',
+            'd3d11/DiagnosticsD3D11.h',
+            'd3d11/HelpersD3D11.h',
             'd3d11/ReadbackManagerD3D11.h',
             'd3d11/TextureD3D11.h',
         ]
         UNIFIED_SOURCES += [
+            'd3d11/DiagnosticsD3D11.cpp',
             'd3d11/TextureD3D11.cpp',
         ]
         SOURCES += [
@@ -132,6 +135,8 @@ EXPORTS.mozilla.layers += [
     'composite/ColorLayerComposite.h',
     'composite/ContainerLayerComposite.h',
     'composite/ContentHost.h',
+    'composite/Diagnostics.h',
+    'composite/FPSCounter.h',
     'composite/FrameUniformityData.h',
     'composite/GPUVideoTextureHost.h',
     'composite/ImageComposite.h',
@@ -316,6 +321,7 @@ UNIFIED_SOURCES += [
     'composite/CompositableHost.cpp',
     'composite/ContainerLayerComposite.cpp',
     'composite/ContentHost.cpp',
+    'composite/Diagnostics.cpp',
     'composite/FPSCounter.cpp',
     'composite/FrameUniformityData.cpp',
     'composite/GPUVideoTextureHost.cpp',

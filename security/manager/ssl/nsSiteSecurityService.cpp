@@ -378,9 +378,9 @@ nsSiteSecurityService::Init()
   mozilla::Preferences::AddStrongObserver(this,
     "test.currentTimeOffsetSeconds");
   mSiteStateStorage =
-    mozilla::DataStorage::Get(NS_LITERAL_STRING("SiteSecurityServiceState.txt"));
+    mozilla::DataStorage::Get(DataStorageClass::SiteSecurityServiceState);
   mPreloadStateStorage =
-    mozilla::DataStorage::Get(NS_LITERAL_STRING("SecurityPreloadState.txt"));
+    mozilla::DataStorage::Get(DataStorageClass::SecurityPreloadState);
   bool storageWillPersist = false;
   bool preloadStorageWillPersist = false;
   nsresult rv = mSiteStateStorage->Init(storageWillPersist);

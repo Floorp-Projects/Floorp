@@ -27,7 +27,7 @@ function setupUpdaterTestFinished() {
  * Called after the call to waitForHelperSleep finishes.
  */
 function waitForHelperSleepFinished() {
-  stageUpdate();
+  stageUpdate(true);
 }
 
 /**

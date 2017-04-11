@@ -13,7 +13,7 @@
 #include "nsString.h"
 
 #include "mozilla/Atomics.h"
-#include "mozilla/Dispatcher.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/RefPtr.h"
 
 class mozIDOMWindowProxy;
@@ -43,7 +43,7 @@ namespace dom {
 
 class DocGroup;
 
-class TabGroup final : public ValidatingDispatcher
+class TabGroup final : public SchedulerGroup
 {
 private:
   class HashEntry : public nsCStringHashKey

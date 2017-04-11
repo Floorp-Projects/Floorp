@@ -29,10 +29,7 @@ public:
 
   virtual void Initialize(const Data& aData) override;
 
-  virtual CompositableForwarder* GetForwarder() override
-  {
-    return Manager()->WrBridge();
-  }
+  virtual CompositableForwarder* GetForwarder() override;
 
   virtual void AttachCompositable() override;
 

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_Dispatcher_h
-#define mozilla_Dispatcher_h
+#ifndef mozilla_SchedulerGroup_h
+#define mozilla_SchedulerGroup_h
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/TaskCategory.h"
@@ -31,19 +31,38 @@ class TabGroup;
 // only functionality offered by a Dispatcher is the ability to dispatch
 // runnables to the group. TabGroup, DocGroup, and SystemGroup are the concrete
 // implementations of Dispatcher.
-class Dispatcher
+class SchedulerGroup
 {
 public:
+  SchedulerGroup();
+
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
-  // Implementations of this method must be safe to call off the main thread.
+  class MOZ_STACK_CLASS AutoProcessEvent final {
+  public:
+    AutoProcessEvent();
+    ~AutoProcessEvent();
+
+  private:
+    SchedulerGroup* mPrevRunningDispatcher;
+  };
+
+  // Ensure that it's valid to access the TabGroup at this time.
+  void ValidateAccess() const
+  {
+    MOZ_ASSERT(!sRunningDispatcher || mAccessValid);
+  }
+
+  class Runnable;
+  friend class Runnable;
+
+  bool* GetValidAccessPtr() { return &mAccessValid; }
+
   virtual nsresult Dispatch(const char* aName,
                             TaskCategory aCategory,
-                            already_AddRefed<nsIRunnable>&& aRunnable) = 0;
+                            already_AddRefed<nsIRunnable>&& aRunnable);
 
-  // Implementations of this method must be safe to call off the main thread.
-  // The returned nsIEventTarget must also be usable from any thread.
-  virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const = 0;
+  virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const;
 
   // Must always be called on the main thread. The returned AbstractThread can
   // always be used off the main thread.
@@ -60,44 +79,7 @@ public:
 protected:
   // Implementations are guaranteed that this method is called on the main
   // thread.
-  virtual AbstractThread* AbstractMainThreadForImpl(TaskCategory aCategory) = 0;
-};
-
-class ValidatingDispatcher : public Dispatcher
-{
-public:
-  ValidatingDispatcher();
-
-  class MOZ_STACK_CLASS AutoProcessEvent final {
-  public:
-    AutoProcessEvent();
-    ~AutoProcessEvent();
-
-  private:
-    ValidatingDispatcher* mPrevRunningDispatcher;
-  };
-
-  // Ensure that it's valid to access the TabGroup at this time.
-  void ValidateAccess() const
-  {
-    MOZ_ASSERT(!sRunningDispatcher || mAccessValid);
-  }
-
-  class Runnable;
-  friend class Runnable;
-
-  bool* GetValidAccessPtr() { return &mAccessValid; }
-
-  nsresult Dispatch(const char* aName,
-                    TaskCategory aCategory,
-                    already_AddRefed<nsIRunnable>&& aRunnable) override;
-
-  nsIEventTarget* EventTargetFor(TaskCategory aCategory) const override;
-
-protected:
-  // Implementations are guaranteed that this method is called on the main
-  // thread.
-  AbstractThread* AbstractMainThreadForImpl(TaskCategory aCategory) override;
+  virtual AbstractThread* AbstractMainThreadForImpl(TaskCategory aCategory);
 
   // Helper method to create an event target specific to a particular TaskCategory.
   virtual already_AddRefed<nsIEventTarget>
@@ -105,7 +87,7 @@ protected:
 
   // Given an event target returned by |dispatcher->CreateEventTargetFor|, this
   // function returns |dispatcher|.
-  static ValidatingDispatcher* FromEventTarget(nsIEventTarget* aEventTarget);
+  static SchedulerGroup* FromEventTarget(nsIEventTarget* aEventTarget);
 
   nsresult LabeledDispatch(const char* aName,
                            TaskCategory aCategory,
@@ -123,7 +105,7 @@ protected:
   };
   void SetValidatingAccess(ValidationType aType);
 
-  static ValidatingDispatcher* sRunningDispatcher;
+  static SchedulerGroup* sRunningDispatcher;
   bool mAccessValid;
 
   nsCOMPtr<nsIEventTarget> mEventTargets[size_t(TaskCategory::Count)];
@@ -132,4 +114,4 @@ protected:
 
 } // namespace mozilla
 
-#endif // mozilla_dom_Dispatcher_h
+#endif // mozilla_SchedulerGroup_h
