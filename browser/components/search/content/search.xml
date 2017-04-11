@@ -926,7 +926,7 @@
         <xul:treecols anonid="treecols">
           <xul:treecol id="treecolAutoCompleteValue" class="autocomplete-treecol" flex="1" overflow="true"/>
         </xul:treecols>
-        <xul:treechildren class="autocomplete-treebody"/>
+        <xul:treechildren class="autocomplete-treebody searchbar-treebody"/>
       </xul:tree>
       <xul:vbox anonid="search-one-off-buttons" class="search-one-offs"/>
     </content>
@@ -1139,6 +1139,19 @@
 
   </binding>
 
+
+  <!-- This is the same as the autocomplete-treebody binding except it does not
+       select rows on mousemove. -->
+  <binding id="searchbar-treebody"
+           extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-treebody">
+    <handlers>
+      <handler event="mousemove"><![CDATA[
+        // Cancel the event so that the base binding doesn't select the row.
+        event.preventDefault();
+      ]]></handler>
+    </handlers>
+  </binding>
+
   <!-- Used for additional open search providers in the search panel. -->
   <binding id="addengine-icon" extends="xul:box">
     <content>
@@ -1307,7 +1320,27 @@
           return this._selectedButton;
         ]]></getter>
         <setter><![CDATA[
-          this._changeVisuallySelectedButton(val, true);
+          if (val && val.classList.contains("dummy")) {
+            // Never select dummy buttons.
+            val = null;
+          }
+          if (this._selectedButton) {
+            this._selectedButton.removeAttribute("selected");
+          }
+          if (val) {
+            val.setAttribute("selected", "true");
+          }
+          this._selectedButton = val;
+          this._updateStateForButton(null);
+          if (val && !val.engine) {
+            // If the button doesn't have an engine, then clear the popup's
+            // selection to indicate that pressing Return while the button is
+            // selected will do the button's command, not search.
+            this.popup.selectedIndex = -1;
+          }
+          let event = document.createEvent("Events");
+          event.initEvent("SelectedOneOffButtonChanged", true, false);
+          this.dispatchEvent(event);
           return val;
         ]]></setter>
       </property>
@@ -1329,20 +1362,6 @@
           this.selectedButton = buttons[val];
           return val;
         ]]></setter>
-      </property>
-
-      <!-- The visually selected one-off is the same as the selected one-off
-           unless a one-off is moused over.  In that case, the visually selected
-           one-off is the moused-over one-off, which may be different from the
-           selected one-off.  The visually selected one-off is always the one
-           that is visually highlighted.  Includes the add-engine button and the
-           search-settings button.  A xul:button. -->
-      <property name="visuallySelectedButton" readonly="true">
-        <getter><![CDATA[
-          return this.getSelectableButtons(true).find(button => {
-            return button.getAttribute("selected") == "true";
-          });
-        ]]></getter>
       </property>
 
       <property name="compact" readonly="true">
@@ -1738,52 +1757,50 @@
         ]]></body>
       </method>
 
-      <method name="_changeVisuallySelectedButton">
-        <parameter name="val"/>
-        <parameter name="aUpdateLogicallySelectedButton"/>
-        <body><![CDATA[
-          let visuallySelectedButton = this.visuallySelectedButton;
-          if (visuallySelectedButton)
-            visuallySelectedButton.removeAttribute("selected");
+      <!--
+        Updates the popup and textbox for the currently selected or moused-over
+        button.
 
+        @param mousedOverButton
+               The currently moused-over button, or null if there isn't one.
+      -->
+      <method name="_updateStateForButton">
+        <parameter name="mousedOverButton"/>
+        <body><![CDATA[
+          let button = mousedOverButton;
           let header =
             document.getAnonymousElementByAttribute(this, "anonid",
                                                     "search-panel-one-offs-header");
-          // Avoid selecting dummy buttons.
-          if (val && !val.classList.contains("dummy")) {
-            val.setAttribute("selected", "true");
-            if (val.classList.contains("searchbar-engine-one-off-item") &&
-                val.engine) {
-              let headerEngineText =
-                document.getAnonymousElementByAttribute(this, "anonid",
-                                                        "searchbar-oneoffheader-engine");
-              header.selectedIndex = 2;
-              headerEngineText.value = val.engine.name;
-            } else {
-              header.selectedIndex = this.query ? 1 : 0;
-            }
-            if (this.textbox) {
-              this.textbox.setAttribute("aria-activedescendant", val.id);
-            }
-          } else {
-            val = null;
+
+          // Ignore dummy buttons.
+          if (button && button.classList.contains("dummy")) {
+            button = null;
+          }
+
+          // If there's no moused-over button, then the one-offs should reflect
+          // the selected button, if any.
+          button = button || this.selectedButton;
+
+          if (!button) {
             header.selectedIndex = this.query ? 1 : 0;
             if (this.textbox) {
               this.textbox.removeAttribute("aria-activedescendant");
             }
+            return;
           }
 
-          if (aUpdateLogicallySelectedButton) {
-            this._selectedButton = val;
-            if (val && !val.engine) {
-              // If the button doesn't have an engine, then clear the popup's
-              // selection to indicate that pressing Return while the button is
-              // selected will do the button's command, not search.
-              this.popup.selectedIndex = -1;
-            }
-            let event = document.createEvent("Events");
-            event.initEvent("SelectedOneOffButtonChanged", true, false);
-            this.dispatchEvent(event);
+          if (button.classList.contains("searchbar-engine-one-off-item") &&
+              button.engine) {
+            let headerEngineText =
+              document.getAnonymousElementByAttribute(this, "anonid",
+                                                      "searchbar-oneoffheader-engine");
+            header.selectedIndex = 2;
+            headerEngineText.value = button.engine.name;
+          } else {
+            header.selectedIndex = this.query ? 1 : 0;
+          }
+          if (this.textbox) {
+            this.textbox.setAttribute("aria-activedescendant", button.id);
           }
         ]]></body>
       </method>
@@ -1859,75 +1876,55 @@
         @param aForward
                If true, the index is incremented, and if false, the index is
                decremented.
+        @param aIncludeNonEngineButtons
+               If true, non-dummy buttons that do not have engines are included.
+               These buttons include the OpenSearch and settings buttons.  For
+               example, if the currently selected button is an engine button,
+               the next button is the settings button, and you pass true for
+               aForward, then passing true for this value would cause the
+               settings to be selected.  Passing false for this value would
+               cause the selection to clear or wrap around, depending on what
+               value you passed for the aWrapAround parameter.
         @param aWrapAround
-               This has a couple of effects, depending on whether there is
-               currently a selection.
-               (1) If true and the last one-off is currently selected,
-               incrementing the index will cause the selection to be cleared and
-               this method to return true.  Calling advanceSelection again after
-               that (again with aForward=true) will select the first one-off.
-               Likewise if decrementing the index when the first one-off is
-               selected, except in the opposite direction of course.
-               (2) If true and there currently is no selection, decrementing the
-               index will cause the last one-off to become selected and this
-               method to return true.  Only the aForward=false case is affected
-               because it is always the case that if aForward=true and there
-               currently is no selection, the first one-off becomes selected and
-               this method returns true.
-        @param aCycleEngines
-               If true, only engine buttons are included.
+               If true, the selection wraps around between the first and last
+               buttons.
         @return True if the selection can continue to advance after this method
                 returns and false if not.
       -->
       <method name="advanceSelection">
         <parameter name="aForward"/>
+        <parameter name="aIncludeNonEngineButtons"/>
         <parameter name="aWrapAround"/>
-        <parameter name="aCycleEngines"/>
         <body><![CDATA[
-          let selectedButton = this.selectedButton;
-          let buttons = this.getSelectableButtons(aCycleEngines);
-
-          if (selectedButton) {
-            // cycle through one-off buttons.
-            let index = buttons.indexOf(selectedButton);
-            if (aForward)
-              ++index;
-            else
-              --index;
-
-            if (index >= 0 && index < buttons.length)
-              this.selectedButton = buttons[index];
-            else
-              this.selectedButton = null;
-
-            if (this.selectedButton || aWrapAround)
-              return true;
-
-            return false;
+          let buttons = this.getSelectableButtons(aIncludeNonEngineButtons);
+          let index;
+          if (this.selectedButton) {
+            let inc = aForward ? 1 : -1;
+            let oldIndex = buttons.indexOf(this.selectedButton);
+            index = ((oldIndex + inc) + buttons.length) % buttons.length;
+            if (!aWrapAround &&
+                ((aForward && index <= oldIndex) ||
+                 (!aForward && oldIndex <= index))) {
+              // The index has wrapped around, but wrapping around isn't
+              // allowed.
+              index = -1;
+            }
+          } else {
+            index = aForward ? 0 : buttons.length - 1;
           }
-
-          // If no selection, select the first button or ...
-          if (aForward) {
-            this.selectedButton = buttons[0];
-            return true;
-          }
-
-          if (!aForward && aWrapAround) {
-            // the last button.
-            this.selectedButton = buttons[buttons.length - 1];
-            return true;
-          }
-
-          return false;
+          this.selectedButton = index < 0 ? null : buttons[index];
         ]]></body>
       </method>
 
       <!--
         This handles key presses specific to the one-off buttons like Tab and
-        Alt-Up/Down, and Up/Down keys within the buttons.  Since one-off buttons
+        Alt+Up/Down, and Up/Down keys within the buttons.  Since one-off buttons
         are always used in conjunction with a list of some sort (in this.popup),
         it also handles Up/Down keys that cross the boundaries between list
         items and the one-off buttons.
+
+        If this method handles the key press, then event.defaultPrevented will
+        be true when it returns.
 
         @param event
                The key event.
@@ -1946,10 +1943,6 @@
                restored to the value that the user typed.  Pass that value here.
                However, if you pass true for allowEmptySelection, you don't need
                to pass anything for this parameter.  (Pass undefined or null.)
-        @return True if this method handled the keypress and false if not.  If
-                false, then you should let the autocomplete controller handle
-                the keypress.  The value of event.defaultPrevented will be the
-                same as this return value.
       -->
       <method name="handleKeyPress">
         <parameter name="event"/>
@@ -1958,112 +1951,188 @@
         <parameter name="textboxUserValue"/>
         <body><![CDATA[
           if (!this.popup) {
-            return false;
+            return;
           }
+          let handled = this._handleKeyPress(event, numListItems,
+                                             allowEmptySelection,
+                                             textboxUserValue);
+          if (handled) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        ]]></body>
+      </method>
 
-          let stopEvent = false;
-
-          // Tab cycles through the one-offs and moves the focus out at the end.
-          // But only if non-Shift modifiers aren't also pressed, to avoid
-          // clobbering other shortcuts.
-          if (event.keyCode == KeyEvent.DOM_VK_TAB &&
-              !event.altKey &&
-              !event.ctrlKey &&
-              !event.metaKey &&
-              this.getAttribute("disabletab") != "true") {
-            stopEvent = this.advanceSelection(!event.shiftKey, false, true);
-          } else if (event.altKey &&
-                     (event.keyCode == KeyEvent.DOM_VK_DOWN ||
-                      event.keyCode == KeyEvent.DOM_VK_UP)) {
-            // Alt + up/down is very similar to (shift +) tab but differs in that
-            // it loops through the list, whereas tab will move the focus out.
-            stopEvent =
-              this.advanceSelection(event.keyCode == KeyEvent.DOM_VK_DOWN,
-                                    true, false);
-          } else if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_UP) {
-            if (numListItems > 0) {
-              if (this.popup.selectedIndex > 0) {
-                // The autocomplete controller should handle this case.
-              } else if (this.popup.selectedIndex == 0) {
-                if (!allowEmptySelection) {
-                  // Wrap around the selection to the last one-off.
-                  this.selectedButton = null;
-                  this.popup.selectedIndex = -1;
-                  // Call advanceSelection after setting selectedIndex so that
-                  // screen readers see the newly selected one-off. Both trigger
-                  // accessibility events.
-                  this.advanceSelection(false, true, true);
-                  stopEvent = true;
-                }
-              } else {
-                let firstButtonSelected =
-                  this.selectedButton &&
-                  this.selectedButton == this.getSelectableButtons(true)[0];
-                if (firstButtonSelected) {
-                  this.selectedButton = null;
-                } else {
-                  stopEvent = this.advanceSelection(false, true, true);
-                }
-              }
-            } else {
-              stopEvent = this.advanceSelection(false, true, true);
-            }
-          } else if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_DOWN) {
-            if (numListItems > 0) {
-              if (this.popup.selectedIndex >= 0 &&
-                  this.popup.selectedIndex < numListItems - 1) {
-                // The autocomplete controller should handle this case.
-              } else if (this.popup.selectedIndex == numListItems - 1) {
-                this.selectedButton = null;
-                if (!allowEmptySelection) {
-                  this.popup.selectedIndex = -1;
-                  stopEvent = true;
-                }
-                if (this.textbox && typeof(textboxUserValue) == "string") {
-                  this.textbox.value = textboxUserValue;
-                }
-                // Call advanceSelection after setting selectedIndex so that
-                // screen readers see the newly selected one-off. Both trigger
-                // accessibility events.
-                this.advanceSelection(true, true, true);
-              } else {
-                let buttons = this.getSelectableButtons(true);
-                let lastButtonSelected =
-                  this.selectedButton &&
-                  this.selectedButton == buttons[buttons.length - 1];
-                if (lastButtonSelected) {
-                  this.selectedButton = null;
-                  stopEvent = allowEmptySelection;
-                } else if (this.selectedButton) {
-                  stopEvent = this.advanceSelection(true, true, true);
-                } else {
-                  // The autocomplete controller should handle this case.
-                }
-              }
-            } else {
-              stopEvent = this.advanceSelection(true, true, true);
-            }
-          } else if (this.selectedButton &&
-                     this.selectedButton.getAttribute("anonid") ==
-                       "addengine-menu-button" &&
-                     event.keyCode == KeyEvent.DOM_VK_RIGHT) {
+      <method name="_handleKeyPress">
+        <parameter name="event"/>
+        <parameter name="numListItems"/>
+        <parameter name="allowEmptySelection"/>
+        <parameter name="textboxUserValue"/>
+        <body><![CDATA[
+          if (event.keyCode == KeyEvent.DOM_VK_RIGHT &&
+              this.selectedButton &&
+              this.selectedButton.getAttribute("anonid") ==
+                "addengine-menu-button") {
             // If the add-engine overflow menu item is selected and the user
             // presses the right arrow key, open the submenu.  Unfortunately
             // handling the left arrow key -- to close the popup -- isn't
             // straightforward.  Once the popup is open, it consumes all key
             // events.  Setting ignorekeys=handled on it doesn't help, since the
             // popup handles all arrow keys.  Setting ignorekeys=true on it does
-            // mean that the popup no longer consumes the left arrow key, but then
-            // it no longer handles up/down keys to select items in the popup.
+            // mean that the popup no longer consumes the left arrow key, but
+            // then it no longer handles up/down keys to select items in the
+            // popup.
             this.selectedButton.open = true;
-            stopEvent = true;
-          }
-
-          if (stopEvent) {
-            event.preventDefault();
-            event.stopPropagation();
             return true;
           }
+
+          // Handle the Tab key, but only if non-Shift modifiers aren't also
+          // pressed to avoid clobbering other shortcuts (like the Alt+Tab
+          // browser tab switcher).  The reason this uses getModifierState() and
+          // checks for "AltGraph" is that when you press Shift-Alt-Tab,
+          // event.altKey is actually false for some reason, at least on macOS.
+          // getModifierState("Alt") is also false, but "AltGraph" is true.
+          if (event.keyCode == KeyEvent.DOM_VK_TAB &&
+              !event.getModifierState("Alt") &&
+              !event.getModifierState("AltGraph") &&
+              !event.getModifierState("Control") &&
+              !event.getModifierState("Meta")) {
+            if (this.getAttribute("disabletab") == "true" ||
+                (event.shiftKey &&
+                  this.selectedButtonIndex <= 0) ||
+                (!event.shiftKey &&
+                 this.selectedButtonIndex ==
+                   this.getSelectableButtons(true).length - 1)) {
+              this.selectedButton = null;
+              return false;
+            }
+            this.popup.selectedIndex = -1;
+            this.advanceSelection(!event.shiftKey, true, false);
+            return !!this.selectedButton;
+          }
+
+          if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_UP) {
+            if (event.altKey) {
+              // Keep the currently selected result in the list (if any) as a
+              // secondary "alt" selection and move the selection up within the
+              // buttons.
+              this.advanceSelection(false, false, false);
+              return true;
+            }
+            if (numListItems == 0) {
+              this.advanceSelection(false, true, false);
+              return true;
+            }
+            if (this.popup.selectedIndex > 0) {
+              // Moving up within the list.  The autocomplete controller should
+              // handle this case.  A button may be selected, so null it.
+              this.selectedButton = null;
+              return false;
+            }
+            if (this.popup.selectedIndex == 0) {
+              // Moving up from the top of the list.
+              if (allowEmptySelection) {
+                // Let the autocomplete controller remove selection in the list
+                // and revert the typed text in the textbox.
+                return false;
+              }
+              // Wrap selection around to the last button.
+              if (this.textbox && typeof(textboxUserValue) == "string") {
+                this.textbox.value = textboxUserValue;
+              }
+              this.advanceSelection(false, true, true);
+              return true;
+            }
+            if (!this.selectedButton) {
+              // Moving up from no selection in the list or the buttons, back
+              // down to the last button.
+              this.advanceSelection(false, true, true);
+              return true;
+            }
+            if (this.selectedButtonIndex == 0) {
+              // Moving up from the buttons to the bottom of the list.
+              this.selectedButton = null;
+              return false;
+            }
+            // Moving up/left within the buttons.
+            this.advanceSelection(false, true, false);
+            return true;
+          }
+
+          if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_DOWN) {
+            if (event.altKey) {
+              // Keep the currently selected result in the list (if any) as a
+              // secondary "alt" selection and move the selection down within
+              // the buttons.
+              this.advanceSelection(true, false, false);
+              return true;
+            }
+            if (numListItems == 0) {
+              this.advanceSelection(true, true, false);
+              return true;
+            }
+            if (this.popup.selectedIndex >= 0 &&
+                this.popup.selectedIndex < numListItems - 1) {
+              // Moving down within the list.  The autocomplete controller
+              // should handle this case.  A button may be selected, so null it.
+              this.selectedButton = null;
+              return false;
+            }
+            if (this.popup.selectedIndex == numListItems - 1) {
+              // Moving down from the last item in the list to the buttons.
+              this.selectedButtonIndex = 0;
+              if (allowEmptySelection) {
+                // Let the autocomplete controller remove selection in the list
+                // and revert the typed text in the textbox.
+                return false;
+              }
+              if (this.textbox && typeof(textboxUserValue) == "string") {
+                this.textbox.value = textboxUserValue;
+              }
+              this.popup.selectedIndex = -1;
+              return true;
+            }
+            if (this.selectedButton) {
+              let buttons = this.getSelectableButtons(true);
+              if (this.selectedButtonIndex == buttons.length - 1) {
+                // Moving down from the buttons back up to the top of the list.
+                this.selectedButton = null;
+                if (allowEmptySelection) {
+                  // Prevent the selection from wrapping around to the top of
+                  // the list by returning true, since the list currently has no
+                  // selection.  Nothing should be selected after handling this
+                  // Down key.
+                  return true;
+                }
+                return false;
+              }
+              // Moving down/right within the buttons.
+              this.advanceSelection(true, true, false);
+              return true;
+            }
+            return false;
+          }
+
+          if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_LEFT) {
+            if (this.selectedButton &&
+                (this.compact || this.selectedButton.engine)) {
+              // Moving left within the buttons.
+              this.advanceSelection(false, this.compact, true);
+              return true;
+            }
+            return false;
+          }
+
+          if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_RIGHT) {
+            if (this.selectedButton &&
+                (this.compact || this.selectedButton.engine)) {
+              // Moving right within the buttons.
+              this.advanceSelection(true, this.compact, true);
+              return true;
+            }
+            return false;
+          }
+
           return false;
         ]]></body>
       </method>
@@ -2174,14 +2243,10 @@
         if (target.getAttribute("anonid") == "addengine-menu-button" ||
             (target.localName == "menuitem" &&
              target.classList.contains("addengine-item"))) {
-          // Make the menu button visually selected.  It's highlighted in the
-          // CSS when the popup is open, but the popup doesn't open until a
-          // short timeout has elapsed.  Making the button visually selected now
-          // provides better feedback to the user.
           let menuButton = document.getAnonymousElementByAttribute(
             this, "anonid", "addengine-menu-button"
           );
-          this._changeVisuallySelectedButton(menuButton);
+          this._updateStateForButton(menuButton);
           this._addEngineMenuShouldBeOpen = true;
           this._resetAddEngineMenuTimeout();
           return;
@@ -2200,7 +2265,7 @@
         if (isOneOff ||
             target.classList.contains("addengine-item") ||
             target.classList.contains("search-setting-button")) {
-          this._changeVisuallySelectedButton(target);
+          this._updateStateForButton(target);
         }
       ]]></handler>
 
@@ -2212,9 +2277,7 @@
         if (target.getAttribute("anonid") == "addengine-menu-button" ||
             (target.localName == "menuitem" &&
              target.classList.contains("addengine-item"))) {
-          // The menu button will appear selected since the mouse is either over
-          // it or over one of the menu items in the popup.  Make it unselected.
-          this._changeVisuallySelectedButton(null);
+          this._updateStateForButton(null);
           this._addEngineMenuShouldBeOpen = false;
           this._resetAddEngineMenuTimeout();
           return;
@@ -2224,19 +2287,11 @@
           return;
         }
 
-        // Don't deselect the current button if the context menu is open.
+        // Don't update the mouseover state if the context menu is open.
         if (this._ignoreMouseEvents)
           return;
 
-        // Unfortunately this will fire before mouseover hits another item.
-        // If this button is selected, we replace that selection only if
-        // we're not moving to a different one-off item:
-        if (target.getAttribute("selected") == "true" &&
-            (!event.relatedTarget ||
-             !event.relatedTarget.classList.contains("searchbar-engine-one-off-item") ||
-             event.relatedTarget.classList.contains("dummy"))) {
-          this._changeVisuallySelectedButton(this.selectedButton);
-        }
+        this._updateStateForButton(null);
       ]]></handler>
 
       <handler event="click"><![CDATA[
