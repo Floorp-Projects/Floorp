@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils",
 
 let gSiteDataSettings = {
 
-  // Array of meatdata of sites. Each array element is object holding:
+  // Array of metadata of sites. Each array element is object holding:
   // - uri: uri of site; instance of nsIURI
   // - status: persistent-storage permission status
   // - usage: disk usage which site uses
@@ -39,7 +39,7 @@ let gSiteDataSettings = {
     this._prefStrBundle = document.getElementById("bundlePreferences");
     SiteDataManager.getSites().then(sites => {
       this._sites = sites;
-      let sortCol = document.getElementById("hostCol");
+      let sortCol = document.querySelector("treecol[data-isCurrentSortCol=true]");
       this._sortSites(this._sites, sortCol);
       this._buildSitesList(this._sites);
       Services.obs.notifyObservers(null, "sitedata-settings-init");
@@ -92,14 +92,17 @@ let gSiteDataSettings = {
     switch (col.id) {
       case "hostCol":
         sortFunc = (a, b) => {
-          let aHost = a.uri.host.toLowerCase();
-          let bHost = b.uri.host.toLowerCase();
+          let aHost = a.host.toLowerCase();
+          let bHost = b.host.toLowerCase();
           return aHost.localeCompare(bHost);
         }
         break;
 
       case "statusCol":
-        sortFunc = (a, b) => a.status - b.status;
+        sortFunc = (a, b) => {
+          return a.persisted && !b.persisted ? 1 :
+                 !a.persisted && b.persisted ? -1 : 0;
+        };
         break;
 
       case "usageCol":
@@ -133,22 +136,21 @@ let gSiteDataSettings = {
     }
 
     let keyword = this._searchBox.value.toLowerCase().trim();
-    for (let data of sites) {
-      let host = data.uri.host;
+    for (let site of sites) {
+      let host = site.host;
       if (keyword && !host.includes(keyword)) {
         continue;
       }
 
-      if (data.userAction === "remove") {
+      if (site.userAction === "remove") {
         continue;
       }
 
-      let size = DownloadUtils.convertByteUnits(data.usage);
+      let size = DownloadUtils.convertByteUnits(site.usage);
       let item = document.createElement("richlistitem");
-      item.setAttribute("data-origin", data.uri.spec);
       item.setAttribute("host", host);
       item.setAttribute("usage", this._prefStrBundle.getFormattedString("siteUsage", size));
-      if (data.status === Ci.nsIPermissionManager.ALLOW_ACTION ) {
+      if (site.persisted) {
         item.setAttribute("status", this._prefStrBundle.getString("persistent"));
       }
       this._list.appendChild(item);
@@ -159,12 +161,10 @@ let gSiteDataSettings = {
   _removeSiteItems(items) {
     for (let i = items.length - 1; i >= 0; --i) {
       let item = items[i];
-      let origin = item.getAttribute("data-origin");
-      for (let site of this._sites) {
-        if (site.uri.spec === origin) {
-          site.userAction = "remove";
-          break;
-        }
+      let host = item.getAttribute("host");
+      let siteForHost = this._sites.find(site => site.host == host);
+      if (siteForHost) {
+        siteForHost.userAction = "remove";
       }
       item.remove();
     }
@@ -178,7 +178,7 @@ let gSiteDataSettings = {
     let removals = [];
     this._sites = this._sites.filter(site => {
       if (site.userAction === "remove") {
-        removals.push(site.uri);
+        removals.push(site.host);
         return false;
       }
       return true;
@@ -204,24 +204,24 @@ let gSiteDataSettings = {
         // User only removes partial sites.
         // We will remove cookies based on base domain, say, user selects "news.foo.com" to remove.
         // The cookies under "music.foo.com" will be removed together.
-        // We have to prmopt user about this action.
+        // We have to prompt user about this action.
         let hostsTable = new Map();
         // Group removed sites by base domain
-        for (let uri of removals) {
-          let baseDomain = Services.eTLD.getBaseDomain(uri);
+        for (let host of removals) {
+          let baseDomain = Services.eTLD.getBaseDomainFromHost(host);
           let hosts = hostsTable.get(baseDomain);
           if (!hosts) {
             hosts = [];
             hostsTable.set(baseDomain, hosts);
           }
-          hosts.push(uri.host);
+          hosts.push(host);
         }
         // Pick out sites with the same base domain as removed sites
         for (let site of this._sites) {
-          let baseDomain = Services.eTLD.getBaseDomain(site.uri);
+          let baseDomain = Services.eTLD.getBaseDomainFromHost(site.host);
           let hosts = hostsTable.get(baseDomain);
           if (hosts) {
-            hosts.push(site.uri.host);
+            hosts.push(site.host);
           }
         }
 
@@ -233,7 +233,14 @@ let gSiteDataSettings = {
         window.openDialog("chrome://browser/content/preferences/siteDataRemoveSelected.xul", "", features, args);
         allowed = args.allowed;
         if (allowed) {
-          SiteDataManager.remove(removals);
+          try {
+            SiteDataManager.remove(removals);
+          } catch (e) {
+            // Hit error, maybe remove unknown site.
+            // Let's print out the error, then proceed to close this settings dialog.
+            // When we next open again we will once more get sites from the SiteDataManager and refresh the list.
+            Cu.reportError(e);
+          }
         }
       }
     }
