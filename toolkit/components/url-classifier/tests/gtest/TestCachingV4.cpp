@@ -14,8 +14,12 @@ SetupCacheEntry(LookupCacheV4* aLookupCache,
                 bool aPosExpired = false)
 {
   FullHashResponseMap map;
-  CachedFullHashResponse* response = map.LookupOrAdd(
-    GeneratePrefix(aCompletion, PREFIX_SIZE));
+
+  Prefix prefix;
+  nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
+  prefix.FromPlaintext(aCompletion, cryptoHash);
+
+  CachedFullHashResponse* response = map.LookupOrAdd(prefix.ToUint32());
 
   response->negativeCacheExpirySec = aNegExpired ? EXPIRED_TIME_SEC : NOTEXPIRED_TIME_SEC;
   response->fullHashes.Put(GeneratePrefix(aCompletion, COMPLETE_SIZE),
@@ -198,8 +202,10 @@ TEST(CachingV4, NegativeCacheExpire)
   UniquePtr<LookupCacheV4> cache = SetupLookupCacheV4(array);
 
   FullHashResponseMap map;
-  CachedFullHashResponse* response = map.LookupOrAdd(
-    GeneratePrefix(NEG_CACHE_EXPIRED_URL, PREFIX_SIZE));
+  Prefix prefix;
+  nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
+  prefix.FromPlaintext(NEG_CACHE_EXPIRED_URL, cryptoHash);
+  CachedFullHashResponse* response = map.LookupOrAdd(prefix.ToUint32());
 
   response->negativeCacheExpirySec = EXPIRED_TIME_SEC;
 
@@ -211,22 +217,4 @@ TEST(CachingV4, NegativeCacheExpire)
 
   // The second time it should not be found in the cache again
   TestCache(NEG_CACHE_EXPIRED_URL, true, false, false, cache.get());
-}
-
-// This testcase check we only lookup cache with 4-bytes prefix
-TEST(CachingV4, Ensure4BytesLookup)
-{
-  _PrefixArray array = { GeneratePrefix(CACHED_URL, 8) };
-  UniquePtr<LookupCacheV4> cache = SetupLookupCacheV4(array);
-
-  FullHashResponseMap map;
-  CachedFullHashResponse* response = map.LookupOrAdd(
-    GeneratePrefix(CACHED_URL, 5));
-
-  response->negativeCacheExpirySec = NOTEXPIRED_TIME_SEC;
-  response->fullHashes.Put(GeneratePrefix(CACHED_URL, COMPLETE_SIZE),
-                                          NOTEXPIRED_TIME_SEC);
-  cache->AddFullHashResponseToCache(map);
-
-  TestCache(CACHED_URL, true, false, false, cache.get());
 }

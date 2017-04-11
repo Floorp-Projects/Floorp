@@ -1196,6 +1196,7 @@ nsUrlClassifierLookupCallback::CompletionV2(const nsACString& aCompleteHash,
   auto result = new CacheResultV2;
 
   result->table = aTableName;
+  result->prefix.Assign(aCompleteHash);
   result->completion.Assign(aCompleteHash);
   result->addChunk = aChunkId;
 
@@ -1228,7 +1229,7 @@ nsUrlClassifierLookupCallback::CompletionV4(const nsACString& aPartialHash,
   int64_t nowSec = PR_Now() / PR_USEC_PER_SEC;
 
   result->table = aTableName;
-  result->prefix = aPartialHash;
+  result->prefix.Assign(aPartialHash);
   result->response.negativeCacheExpirySec = nowSec + aNegativeCacheDuration;
 
   // Fill in positive cache entries.
