@@ -232,6 +232,7 @@ private:
       : mPromise(new typename AllPromiseType::Private(__func__))
       , mOutstandingPromises(aDependentPromises)
     {
+      MOZ_ASSERT(aDependentPromises > 0);
       mResolveValues.SetLength(aDependentPromises);
     }
 
@@ -279,6 +280,10 @@ public:
 
   static RefPtr<AllPromiseType> All(AbstractThread* aProcessingThread, nsTArray<RefPtr<MozPromise>>& aPromises)
   {
+    if (aPromises.Length() == 0) {
+      return AllPromiseType::CreateAndResolve(nsTArray<ResolveValueType>(), __func__);
+    }
+
     RefPtr<AllPromiseHolder> holder = new AllPromiseHolder(aPromises.Length());
     for (size_t i = 0; i < aPromises.Length(); ++i) {
       aPromises[i]->Then(aProcessingThread, __func__,
