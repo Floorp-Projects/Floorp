@@ -147,6 +147,19 @@ const SELECT_TRANSPARENT_COLOR_WITH_TEXT_SHADOW =
   '  <option selected="true">{"end": "true"}</option>' +
   "</select></body></html>";
 
+let SELECT_LONG_WITH_TRANSITION =
+  "<html><head><style>" +
+  "  select { transition: all .2s linear; }" +
+  "  select:focus { color: purple; }" +
+  "</style></head><body><select id='one'>";
+for (let i = 0; i < 75; i++) {
+  SELECT_LONG_WITH_TRANSITION +=
+    '  <option>{"color": "rgb(128, 0, 128)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>';
+}
+SELECT_LONG_WITH_TRANSITION +=
+    '  <option selected="true">{"end": "true"}</option>' +
+  "</select></body></html>";
+
 function getSystemColor(color) {
   // Need to convert system color to RGB color.
   let textarea = document.createElementNS("http://www.w3.org/1999/xhtml", "textarea");
@@ -257,9 +270,10 @@ function* testSelectColors(select, itemCount, options) {
     child = child.nextSibling;
   }
 
-  yield hideSelectPopup(selectPopup, "escape");
-
-  yield BrowserTestUtils.removeTab(tab);
+  if (!options.leaveOpen) {
+    yield hideSelectPopup(selectPopup, "escape");
+    yield BrowserTestUtils.removeTab(tab);
+  }
 }
 
 add_task(function* setup() {
@@ -413,4 +427,27 @@ add_task(function* test_transparent_color_with_text_shadow() {
   };
 
   yield testSelectColors(SELECT_TRANSPARENT_COLOR_WITH_TEXT_SHADOW, 2, options);
+});
+
+add_task(function* test_select_with_transition_doesnt_lose_scroll_position() {
+  let options = {
+    selectColor: "rgb(128, 0, 128)",
+    selectBgColor: "rgb(255, 255, 255)",
+    waitForComputedStyle: {
+      property: "color",
+      value: "rgb(128, 0, 128)"
+    },
+    leaveOpen: true
+  };
+
+  yield testSelectColors(SELECT_LONG_WITH_TRANSITION, 76, options);
+
+  let menulist = document.getElementById("ContentSelectDropdown");
+  let selectPopup = menulist.menupopup;
+  let scrollBox = selectPopup.scrollBox;
+  is(scrollBox.scrollTop, scrollBox.scrollTopMax,
+    "The popup should be scrolled to the bottom of the list (where the selected item is)");
+
+  yield hideSelectPopup(selectPopup, "escape");
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
