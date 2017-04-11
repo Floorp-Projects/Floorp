@@ -1123,13 +1123,7 @@ body,
   opacity: 0.8;
 }
 
-.requests-list-network-summary-button > .summary-info-text {
-  opacity: 0.8;
-  margin-inline-start: 0.5em;
-}
-
-.requests-list-network-summary-button:hover > .summary-info-icon,
-.requests-list-network-summary-button:hover > .summary-info-text {
+.requests-list-network-summary-button:hover > .summary-info-icon {
   opacity: 1;
 }
 
