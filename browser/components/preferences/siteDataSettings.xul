@@ -38,7 +38,8 @@
       <listheader>
         <treecol flex="4" width="50" label="&hostCol.label;" id="hostCol"/>
         <treecol flex="2" width="50" label="&statusCol.label;" id="statusCol"/>
-        <treecol flex="1" width="50" label="&usageCol.label;" id="usageCol"/>
+        <!-- Sorted by usage so the user can quickly see which sites use the most data. -->
+        <treecol flex="1" width="50" label="&usageCol.label;" id="usageCol" data-isCurrentSortCol="true"/>
       </listheader>
     </richlistbox>
   </vbox>
