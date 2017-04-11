@@ -3194,7 +3194,7 @@ nsRange::AutoInvalidateSelection::~AutoInvalidateSelection()
   mIsNested = false;
   ::InvalidateAllFrames(mCommonAncestor);
   nsINode* commonAncestor = mRange->GetRegisteredCommonAncestor();
-  if (commonAncestor != mCommonAncestor) {
+  if (commonAncestor && commonAncestor != mCommonAncestor) {
     ::InvalidateAllFrames(commonAncestor);
   }
 }
