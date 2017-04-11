@@ -8,7 +8,7 @@ load 255982-2.html
 load 255982-3.html
 load 255982-4.html
 load 264937-1.html
-asserts-if(stylo,4) load 265867-1.html # bug 1324703
+load 265867-1.html
 load 265867-2.html
 load 286491.html
 load 289864-1.html
@@ -297,8 +297,8 @@ load 444861-1.html # bug 1323652
 load 445288.html
 load 448903-1.html
 load 448996-1.html # bug 1323652
-asserts-if(stylo,4) load 451315-1.html # bug 1324672
-asserts-if(stylo,1) load 451317-1.html # bug 1324665
+load 451315-1.html
+load 451317-1.html
 load 451334-1.html
 load 452157-1.html
 load 452157-2.html
@@ -332,7 +332,7 @@ load 468771-1.xhtml
 load 468771-2.xhtml
 load 469859-1.xhtml # bug 1323665
 load 472587-1.xhtml
-asserts-if(stylo,2) load 472617-1.xhtml # bug 1324665
+load 472617-1.xhtml
 load 472774-1.html
 load 472776-1.html
 load 472950-1.html
@@ -350,7 +350,7 @@ load 480345-1.html
 load 481921.html
 load 489462-1.html
 load 489477.html
-asserts-if(stylo,7) load 489480-1.xhtml # bug 1330260
+load 489480-1.xhtml
 load 489647-1.html
 load 493111-1.html
 load 493118-1.html
@@ -363,7 +363,7 @@ load 495875-1.html
 load 495875-2.html
 load 496742.html
 load 499138.html
-asserts-if(stylo,1) load 499857-1.html # bug 1324665
+load 499857-1.html
 load 499862-1.html
 asserts(0-3) load 499885-1.xhtml # Bug 1220265
 load 501535-1.html
@@ -376,7 +376,7 @@ load 508816-1.xul
 load 508908-1.html
 load 509749-1.html
 load 511482.html
-asserts-if(stylo,2) load 512724-1.html # bug 1330259
+load 512724-1.html
 asserts-if(stylo,2) load 512725-1.html # bug 1324640
 load 512749-1.html
 load 513110-1.html
@@ -406,7 +406,7 @@ load 545571-1.html
 load 547338.xul
 load 547843-1.xhtml
 load 551635-1.html
-asserts-if(stylo,4) load 553504-1.xhtml # bug 1324703
+load 553504-1.xhtml
 load 564368-1.xhtml
 load 564968.xhtml
 load 569193-1.html
@@ -558,7 +558,7 @@ load 914891.html
 load 915475.xhtml
 load 927558.html
 load 943509-1.html
-asserts(2-8) asserts-if(stylo,0) load 944909-1.html
+asserts(2-8) load 944909-1.html
 load 946167-1.html
 load 947158.html
 load 949932.html
@@ -571,8 +571,8 @@ load 1001233.html
 load 1001258-1.html
 load 1003441.xul
 pref(layout.css.grid.enabled,true) load 1015562.html
-asserts(1-2) asserts-if(stylo,0) load 1015563-1.html
-asserts(1-2) asserts-if(stylo,0) load 1015563-2.html
+asserts(1-2) load 1015563-1.html
+asserts(1-2) load 1015563-2.html
 asserts(0-300) load 1015844.html # bug 574889
 pref(font.size.inflation.minTwips,200) load 1032450.html
 load 1032613-1.svg
@@ -606,7 +606,7 @@ load 1222783.xhtml
 load 1223568-1.html
 load 1223568-2.html
 load 1224230-1.html
-asserts-if(stylo,4) pref(layout.css.grid.enabled,true) load 1225118.html # bug 1324703
+pref(layout.css.grid.enabled,true) load 1225118.html
 pref(layout.css.grid.enabled,true) load 1225376.html
 pref(layout.css.grid.enabled,true) load 1225592.html
 load 1229437-1.html
@@ -631,7 +631,7 @@ load text-overflow-bug671796.xhtml
 load text-overflow-bug713610.html
 load text-overflow-form-elements.html
 load text-overflow-iframe.html
-asserts-if(Android,2-4) asserts-if(!Android,4) asserts-if(stylo,0) load 1225005.html # bug 682647 and bug 448083
+asserts-if(Android,2-4) asserts-if(!Android,4) load 1225005.html # bug 682647 and bug 448083
 load 1233191.html
 asserts-if(stylo,0-15) load 1271765.html # bug 1324684
 asserts(2) load 1272983-1.html # bug 586628
