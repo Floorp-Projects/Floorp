@@ -101,9 +101,6 @@ public:
    */
   bool GetSystemLocales(nsTArray<nsCString>& aRetVal);
 
-  static bool GetDateTimeConnectorPattern(const nsACString& aLocale,
-                                          nsAString& aRetVal);
-
 protected:
   nsTArray<nsCString> mSystemLocales;
 
@@ -131,6 +128,9 @@ private:
   bool GetPatternForSkeleton(const nsAString& aSkeleton,
                              const nsACString& aLocale,
                              nsAString& aRetVal);
+
+  bool GetDateTimeConnectorPattern(const nsACString& aLocale,
+                                   nsAString& aRetVal);
 
   /**
    * This is a host environment specific method that will be implemented
