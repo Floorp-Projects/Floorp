@@ -335,7 +335,7 @@
 <groupbox id="trackingGroup" data-category="panePrivacy" hidden="true">
   <vbox id="trackingprotectionbox" hidden="true">
     <hbox align="start">
-      <vbox hidden="false">
+      <vbox>
         <caption><label>&trackingProtectionHeader2.label;
           <label id="trackingProtectionLearnMore" class="learnMore text-link"
                  value="&trackingProtectionLearnMore.label;"/>
@@ -353,7 +353,7 @@
         </radiogroup>
       </vbox>
       <spacer flex="1" />
-      <vbox hidden="true">
+      <vbox>
         <button id="trackingProtectionExceptions"
                 label="&trackingProtectionExceptions.label;"
                 accesskey="&trackingProtectionExceptions.accesskey;"
@@ -381,7 +381,7 @@
               preference="pref.privacy.disable_button.change_blocklist"/>
     </hbox>
   </vbox>
-  <vbox hidden="false">
+  <vbox>
     <description>&doNotTrack.pre.label;<label
     class="text-link" id="doNotTrackSettings"
     >&doNotTrack.settings.label;</label>&doNotTrack.post.label;</description>
