@@ -30,6 +30,22 @@ OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
   return false;
 }
 
+/**
+ * Windows distinguishes between System Locale (the locale OS is in), and
+ * User Locale (the locale used for regional settings etc.).
+ *
+ * For DateTimePattern, we want to retrieve the User Locale.
+ */
+static void
+ReadUserLocale(nsCString& aRetVal)
+{
+  nsAutoString locale;
+  LCID win_lcid = GetUserDefaultLCID();
+  nsWin32Locale::GetXPLocale(win_lcid, locale);
+
+  aRetVal.AssignWithConversion(locale);
+}
+
 static LCTYPE
 ToDateLCType(OSPreferences::DateTimeFormatStyle aFormatStyle)
 {
@@ -76,8 +92,8 @@ LPWSTR
 GetWindowsLocaleFor(const nsACString& aLocale, LPWSTR aBuffer)
 {
   nsAutoCString reqLocale;
-  nsAutoCString systemLocale;
-  OSPreferences::GetInstance()->GetSystemLocale(systemLocale);
+  nsAutoCString userLocale;
+  ReadUserLocale(userLocale);
 
   if (aLocale.IsEmpty()) {
     LocaleService::GetInstance()->GetAppLocaleAsBCP47(reqLocale);
@@ -85,12 +101,13 @@ GetWindowsLocaleFor(const nsACString& aLocale, LPWSTR aBuffer)
     reqLocale.Assign(aLocale);
   }
 
-  bool match = LocaleService::LanguagesMatch(reqLocale, systemLocale);
+  bool match = LocaleService::LanguagesMatch(reqLocale, userLocale);
   if (match || reqLocale.Length() >= LOCALE_NAME_MAX_LENGTH) {
-    return LOCALE_NAME_USER_DEFAULT;
+    UTF8ToUnicodeBuffer(userLocale, (char16_t*)aBuffer);
+  } else {
+    UTF8ToUnicodeBuffer(reqLocale, (char16_t*)aBuffer);
   }
 
-  UTF8ToUnicodeBuffer(reqLocale, (char16_t*)aBuffer);
   return aBuffer;
 }
 
