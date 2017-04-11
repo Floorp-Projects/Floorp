@@ -47,6 +47,8 @@ private:
 
   FRIEND_TEST(DateTimeFormat, FormatPRExplodedTime);
   FRIEND_TEST(DateTimeFormat, DateFormatSelectors);
+  FRIEND_TEST(DateTimeFormat, FormatPRExplodedTimeForeign);
+  FRIEND_TEST(DateTimeFormat, DateFormatSelectorsForeign);
 
 #ifdef ENABLE_INTL_API
   // performs a locale sensitive date formatting operation on the UDate parameter
