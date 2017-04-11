@@ -1102,7 +1102,8 @@ PuppetWidget::Paint()
                          "PuppetWidget", 0);
 #endif
 
-    if (mozilla::layers::LayersBackend::LAYERS_CLIENT == mLayerManager->GetBackendType()) {
+    if (mLayerManager->GetBackendType() == mozilla::layers::LayersBackend::LAYERS_CLIENT ||
+        mLayerManager->GetBackendType() == mozilla::layers::LayersBackend::LAYERS_WR) {
       // Do nothing, the compositor will handle drawing
       if (mTabChild) {
         mTabChild->NotifyPainted();
