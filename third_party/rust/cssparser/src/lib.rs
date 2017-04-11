@@ -25,7 +25,7 @@ which can be used together with rust-encoding or encoding-rs.
 * Take (at least) a `input: &mut cssparser::Parser` parameter
 * Return `Result<_, ()>`
 * When returning `Ok(_)`,
-  the function must have consume exactly the amount of input that represents the parsed value.
+  the function must have consumed exactly the amount of input that represents the parsed value.
 * When returning `Err(())`, any amount of input may have been consumed.
 
 As a consequence, when calling another parsing function, either:
@@ -73,7 +73,7 @@ fn parse_border_spacing(_context: &ParserContext, input: &mut Parser)
 #[macro_use] extern crate procedural_masquerade;
 #[doc(hidden)] pub extern crate phf as _internal__phf;
 #[cfg(test)] extern crate encoding_rs;
-#[cfg(test)] extern crate tempdir;
+#[cfg(test)] extern crate difference;
 #[cfg(test)] extern crate rustc_serialize;
 #[cfg(feature = "serde")] extern crate serde;
 #[cfg(feature = "heapsize")] #[macro_use] extern crate heapsize;

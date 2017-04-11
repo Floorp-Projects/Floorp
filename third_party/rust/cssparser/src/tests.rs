@@ -7,12 +7,7 @@ extern crate test;
 
 use encoding_rs;
 use std::borrow::Cow::{self, Borrowed};
-use std::fs::File;
-use std::io::{self, Write};
-use std::path::Path;
-use std::process::Command;
 use rustc_serialize::json::{self, Json, ToJson};
-use tempdir::TempDir;
 
 #[cfg(feature = "bench")]
 use self::test::Bencher;
@@ -29,29 +24,6 @@ macro_rules! JArray {
     ($($e: expr,)*) => { JArray![ $( $e ),* ] };
     ($($e: expr),*) => { Json::Array(vec!( $( $e.to_json() ),* )) }
 }
-
-
-fn write_whole_file(path: &Path, data: &str) -> io::Result<()> {
-    (try!(File::create(path))).write_all(data.as_bytes())
-}
-
-
-fn print_json_diff(results: &Json, expected: &Json) -> io::Result<()> {
-    let temp = try!(TempDir::new("rust-cssparser-tests"));
-    let results = results.pretty().to_string() + "\n";
-    let expected = expected.pretty().to_string() + "\n";
-    let result_path = temp.path().join("results.json");
-    let expected_path = temp.path().join("expected.json");
-    try!(write_whole_file(&result_path, &results));
-    try!(write_whole_file(&expected_path, &expected));
-    try!(Command::new("colordiff")
-        .arg("-u1000")
-        .arg(&result_path)
-        .arg(&expected_path)
-        .status());
-    Ok(())
-}
-
 
 fn almost_equals(a: &Json, b: &Json) -> bool {
     match (a, b) {
@@ -93,7 +65,11 @@ fn normalize(json: &mut Json) {
 fn assert_json_eq(results: json::Json, mut expected: json::Json, message: String) {
     normalize(&mut expected);
     if !almost_equals(&results, &expected) {
-        print_json_diff(&results, &expected).unwrap();
+        println!("{}", ::difference::Changeset::new(
+            &results.pretty().to_string(),
+            &expected.pretty().to_string(),
+            "\n",
+        ));
         panic!(message)
     }
 }
@@ -629,6 +605,18 @@ fn unquoted_url(b: &mut Bencher) {
 
         input.seen_var_functions();
         (result.is_ok(), input.seen_var_functions())
+    })
+}
+
+
+#[cfg(feature = "bench")]
+#[bench]
+fn numeric(b: &mut Bencher) {
+    b.iter(|| {
+        for _ in 0..1000000 {
+            let mut input = Parser::new("10px");
+            let _ = test::black_box(input.next());
+        }
     })
 }
 
