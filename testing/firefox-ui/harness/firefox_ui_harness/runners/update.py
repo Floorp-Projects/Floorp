@@ -12,6 +12,8 @@ from firefox_ui_harness.testcases import UpdateTestCase
 
 
 DEFAULT_PREFS = {
+    # Bug 1355026: Re-enable when support for the new simplified UI update is available
+    'app.update.doorhanger': False,
     'app.update.log': True,
     'startup.homepage_override_url': 'about:blank',
 }
