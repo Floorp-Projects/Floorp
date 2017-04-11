@@ -2089,7 +2089,7 @@ mozilla::ipc::IPCResult
 ContentChild::RecvDataStoragePut(const nsString& aFilename,
                                  const DataStorageItem& aItem)
 {
-  RefPtr<DataStorage> storage = DataStorage::GetIfExists(aFilename);
+  RefPtr<DataStorage> storage = DataStorage::GetFromRawFileName(aFilename);
   if (storage) {
     storage->Put(aItem.key(), aItem.value(), aItem.type());
   }
@@ -2101,7 +2101,7 @@ ContentChild::RecvDataStorageRemove(const nsString& aFilename,
                                     const nsCString& aKey,
                                     const DataStorageType& aType)
 {
-  RefPtr<DataStorage> storage = DataStorage::GetIfExists(aFilename);
+  RefPtr<DataStorage> storage = DataStorage::GetFromRawFileName(aFilename);
   if (storage) {
     storage->Remove(aKey, aType);
   }
@@ -2111,7 +2111,7 @@ ContentChild::RecvDataStorageRemove(const nsString& aFilename,
 mozilla::ipc::IPCResult
 ContentChild::RecvDataStorageClear(const nsString& aFilename)
 {
-  RefPtr<DataStorage> storage = DataStorage::GetIfExists(aFilename);
+  RefPtr<DataStorage> storage = DataStorage::GetFromRawFileName(aFilename);
   if (storage) {
     storage->Clear();
   }

@@ -393,14 +393,21 @@ Classifier::TableRequest(nsACString& aResult)
     HashStore store(tables[i], GetProvider(tables[i]), mRootStoreDirectory);
 
     nsresult rv = store.Open();
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
       continue;
-
-    aResult.Append(store.TableName());
-    aResult.Append(';');
+    }
 
     ChunkSet &adds = store.AddChunks();
     ChunkSet &subs = store.SubChunks();
+
+    // Open HashStore will always succeed even that is not a v2 table.
+    // So skip tables without add and sub chunks.
+    if (adds.Length() == 0 && subs.Length() == 0) {
+      continue;
+    }
+
+    aResult.Append(store.TableName());
+    aResult.Append(';');
 
     if (adds.Length() > 0) {
       aResult.AppendLiteral("a:");
@@ -489,24 +496,17 @@ Classifier::Check(const nsACString& aSpec,
 
     for (uint32_t i = 0; i < cacheArray.Length(); i++) {
       LookupCache *cache = cacheArray[i];
-      bool has, fromCache;
+      bool has, fromCache, confirmed;
       uint32_t matchLength;
 
-      rv = cache->Has(lookupHash, &has, &matchLength, &fromCache);
+      rv = cache->Has(lookupHash, mTableFreshness, aFreshnessGuarantee,
+                      &has, &matchLength, &confirmed, &fromCache);
       NS_ENSURE_SUCCESS(rv, rv);
+
       if (has) {
         LookupResult *result = aResults.AppendElement();
         if (!result)
           return NS_ERROR_OUT_OF_MEMORY;
-
-        // For V2, there is no TTL for caching, so we use table freshness to
-        // decide if matching a completion should trigger a gethash request or not.
-        // For V4, this is done by Positive Caching & Negative Caching mechanism.
-        bool confirmed = false;
-        if (fromCache) {
-          cache->IsHashEntryConfirmed(lookupHash, mTableFreshness,
-                                      aFreshnessGuarantee, &confirmed);
-        }
 
         LOG(("Found a result in %s: %s",
              cache->TableName().get(),
@@ -922,42 +922,51 @@ Classifier::RegenActiveTables()
   mActiveTablesCache.Clear();
 
   nsTArray<nsCString> foundTables;
-  ScanStoreDir(foundTables);
+  ScanStoreDir(mRootStoreDirectory, foundTables);
 
   for (uint32_t i = 0; i < foundTables.Length(); i++) {
     nsCString table(foundTables[i]);
-    HashStore store(table, GetProvider(table), mRootStoreDirectory);
 
-    nsresult rv = store.Open();
-    if (NS_FAILED(rv))
-      continue;
-
-    LookupCache *lookupCache = GetLookupCache(store.TableName());
+    LookupCache *lookupCache = GetLookupCache(table);
     if (!lookupCache) {
       continue;
     }
 
-    if (!lookupCache->IsPrimed())
+    if (!lookupCache->IsPrimed()) {
       continue;
+    }
 
-    const ChunkSet &adds = store.AddChunks();
-    const ChunkSet &subs = store.SubChunks();
+    if (LookupCache::Cast<LookupCacheV4>(lookupCache)) {
+      LOG(("Active v4 table: %s", table.get()));
+    } else {
+      HashStore store(table, GetProvider(table), mRootStoreDirectory);
 
-    if (adds.Length() == 0 && subs.Length() == 0)
-      continue;
+      nsresult rv = store.Open();
+      if (NS_FAILED(rv)) {
+        continue;
+      }
 
-    LOG(("Active table: %s", store.TableName().get()));
-    mActiveTablesCache.AppendElement(store.TableName());
+      const ChunkSet &adds = store.AddChunks();
+      const ChunkSet &subs = store.SubChunks();
+
+      if (adds.Length() == 0 && subs.Length() == 0) {
+        continue;
+      }
+
+      LOG(("Active v2 table: %s", store.TableName().get()));
+    }
+
+    mActiveTablesCache.AppendElement(table);
   }
 
   return NS_OK;
 }
 
 nsresult
-Classifier::ScanStoreDir(nsTArray<nsCString>& aTables)
+Classifier::ScanStoreDir(nsIFile* aDirectory, nsTArray<nsCString>& aTables)
 {
   nsCOMPtr<nsISimpleEnumerator> entries;
-  nsresult rv = mRootStoreDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  nsresult rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasMore;
@@ -968,11 +977,22 @@ Classifier::ScanStoreDir(nsTArray<nsCString>& aTables)
 
     nsCOMPtr<nsIFile> file = do_QueryInterface(supports);
 
+    // If |file| is a directory, recurse to find its entries as well.
+    bool isDirectory;
+    if (NS_FAILED(file->IsDirectory(&isDirectory))) {
+      continue;
+    }
+    if (isDirectory) {
+      ScanStoreDir(file, aTables);
+      continue;
+    }
+
     nsCString leafName;
     rv = file->GetNativeLeafName(leafName);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCString suffix(NS_LITERAL_CSTRING(".sbstore"));
+    // Both v2 and v4 contain .pset file
+    nsCString suffix(NS_LITERAL_CSTRING(".pset"));
 
     int32_t dot = leafName.RFind(suffix, 0);
     if (dot != -1) {
@@ -1306,6 +1326,11 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
     return NS_ERROR_UC_UPDATE_TABLE_NOT_FOUND;
   }
 
+  // Remove cache entries whose negative cache time is expired when update.
+  // We don't check if positive cache time is expired here because we want to
+  // keep the eviction rule simple when doing an update.
+  lookupCache->InvalidateExpiredCacheEntry();
+
   nsresult rv = NS_OK;
 
   // If there are multiple updates for the same table, prefixes1 & prefixes2
@@ -1396,8 +1421,19 @@ Classifier::UpdateCache(TableUpdate* aUpdate)
     return NS_ERROR_FAILURE;
   }
 
-  auto updateV2 = TableUpdate::Cast<TableUpdateV2>(aUpdate);
-  lookupCache->AddCompletionsToCache(updateV2->AddCompletes());
+  auto lookupV2 = LookupCache::Cast<LookupCacheV2>(lookupCache);
+  if (lookupV2) {
+    auto updateV2 = TableUpdate::Cast<TableUpdateV2>(aUpdate);
+    lookupV2->AddCompletionsToCache(updateV2->AddCompletes());
+  } else {
+    auto lookupV4 = LookupCache::Cast<LookupCacheV4>(lookupCache);
+    if (!lookupV4) {
+      return NS_ERROR_FAILURE;
+    }
+
+    auto updateV4 = TableUpdate::Cast<TableUpdateV4>(aUpdate);
+    lookupV4->AddFullHashResponseToCache(updateV4->FullHashResponse());
+  }
 
 #if defined(DEBUG)
   lookupCache->DumpCache();

@@ -127,29 +127,6 @@ ContentPrincipal::GetScriptLocation(nsACString &aStr)
   return mCodebase->GetSpec(aStr);
 }
 
-static nsresult
-AssignFullSpecToOriginNoSuffix(nsIURI* aURI, nsACString& aOriginNoSuffix)
-{
-  nsresult rv = aURI->GetAsciiSpec(aOriginNoSuffix);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // The origin, when taken from the spec, should not contain the ref part of
-  // the URL.
-
-  int32_t pos = aOriginNoSuffix.FindChar('?');
-  int32_t hashPos = aOriginNoSuffix.FindChar('#');
-
-  if (hashPos != kNotFound && (pos == kNotFound || hashPos < pos)) {
-    pos = hashPos;
-  }
-
-  if (pos != kNotFound) {
-    aOriginNoSuffix.Truncate(pos);
-  }
-
-  return NS_OK;
-}
-
 /* static */ nsresult
 ContentPrincipal::GenerateOriginNoSuffixFromURI(nsIURI* aURI,
                                                 nsACString& aOriginNoSuffix)
@@ -183,7 +160,7 @@ ContentPrincipal::GenerateOriginNoSuffixFromURI(nsIURI* aURI,
   rv = NS_URIChainHasFlags(origin, nsIProtocolHandler::ORIGIN_IS_FULL_SPEC, &fullSpec);
   NS_ENSURE_SUCCESS(rv, rv);
   if (fullSpec) {
-    return AssignFullSpecToOriginNoSuffix(origin, aOriginNoSuffix);
+    return origin->GetAsciiSpec(aOriginNoSuffix);
   }
 #endif
 
@@ -258,8 +235,24 @@ ContentPrincipal::GenerateOriginNoSuffixFromURI(nsIURI* aURI,
     return NS_OK;
   }
 
-  // Use the full spec.
-  return AssignFullSpecToOriginNoSuffix(origin, aOriginNoSuffix);
+  rv = aURI->GetAsciiSpec(aOriginNoSuffix);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // The origin, when taken from the spec, should not contain the ref part of
+  // the URL.
+
+  int32_t pos = aOriginNoSuffix.FindChar('?');
+  int32_t hashPos = aOriginNoSuffix.FindChar('#');
+
+  if (hashPos != kNotFound && (pos == kNotFound || hashPos < pos)) {
+    pos = hashPos;
+  }
+
+  if (pos != kNotFound) {
+    aOriginNoSuffix.Truncate(pos);
+  }
+
+  return NS_OK;
 }
 
 bool

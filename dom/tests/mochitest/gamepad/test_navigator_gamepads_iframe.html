@@ -51,7 +51,7 @@ function startTest() {
                      0).then(function(index) {
                        internal_index1 = index;
                        // Press a button to make the gamepad visible to the page.
-                       GamepadService.newButtonEvent(internal_index1, 0, true);
+                       GamepadService.newButtonEvent(internal_index1, 0, true, true);
                      });
 }
 
@@ -75,7 +75,7 @@ function check_first_gamepad(e) {
                      2,
                      0).then(function(index) {
                        internal_index2 = index;
-                       GamepadService.newButtonEvent(internal_index2, 0, true);
+                       GamepadService.newButtonEvent(internal_index2, 0, true, true);
                      });
   ok(true, "Done checking first gamepad");
 }

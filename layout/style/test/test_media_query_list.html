@@ -41,14 +41,18 @@ function run() {
       str: str,
       mql: subwin.matchMedia(str),
       notifyCount: 0,
-      listener: function(mql) {
-                  is(mql, obj.mql,
+      listener: function(event) {
+                  ok(event instanceof MediaQueryListEvent,
                      "correct argument to listener: " + obj.str);
+                  is(event.media, obj.mql.media,
+                     "correct media in the event: " + obj.str);
+                  is(event.target, obj.mql,
+                     "correct target in the event: " + obj.str);
                   ++obj.notifyCount;
                   // Test the last match result only on odd
                   // notifications.
                   if (obj.notifyCount & 1) {
-                    obj.lastOddMatchResult = mql.matches;
+                    obj.lastOddMatchResult = event.target.matches;
                   }
                 }
     }
@@ -151,13 +155,13 @@ function run() {
   (function() {
     var received = [];
     var received_mql = [];
-    function listener1(mql) {
+    function listener1(event) {
       received.push(1);
-      received_mql.push(mql);
+      received_mql.push(event.target);
     }
-    function listener2(mql) {
+    function listener2(event) {
       received.push(2);
-      received_mql.push(mql);
+      received_mql.push(event.target);
     }
 
     iframe.style.width = "200px";
@@ -224,10 +228,10 @@ function run() {
     received = [];
     received_mql = [];
 
-    function removing_listener(mql) {
+    function removing_listener(event) {
       received.push(3);
-      received_mql.push(mql);
-      mql.removeListener(listener2);
+      received_mql.push(event.target);
+      event.target.removeListener(listener2);
       mql2.removeListener(listener1);
     }
 
@@ -238,16 +242,12 @@ function run() {
     iframe.style.width = "100px";
     subroot.offsetWidth; // flush layout
 
-    // mql(1, 3, 2) mql2(1)
-    is(JSON.stringify(received), "[1,3,2,1]",
+    // mql(1, 3)
+    is(JSON.stringify(received), "[1,3]",
        "listeners still notified after removed if change was before");
     is(received_mql[0], mql,
        "notification order (removal tests)");
     is(received_mql[1], mql,
-       "notification order (removal tests)");
-    is(received_mql[2], mql,
-       "notification order (removal tests)");
-    is(received_mql[3], mql2,
        "notification order (removal tests)");
     received = [];
     received_mql = [];
@@ -262,28 +262,6 @@ function run() {
        "notification order (removal tests)");
     is(received_mql[1], mql,
        "notification order (removal tests)");
-  })();
-
-  /* Bug 716751: null-dereference crash */
-  (function() {
-    iframe.style.width = "200px";
-    subroot.offsetWidth; // flush layout
-
-    var mql = subwin.matchMedia("(min-width: 150px)");
-    SimpleTest.doesThrow(function() {
-      mql.addListener(null);
-    }, "expected an exception");
-
-    iframe.style.width = "100px";
-    subroot.offsetWidth; // flush layout
-    // With the bug, we crash here.  No need for test assertions.
-
-    SimpleTest.doesThrow(function() {
-      mql.removeListener(null);
-    }, "expected an exception");
-    SimpleTest.doesThrow(function() {
-      mql.removeListener(null);
-    }, "expected an exception");
   })();
 
   /* Bug 753777: test that things work in a freshly-created iframe */
@@ -303,7 +281,7 @@ function run() {
   var gc_received = [];
   (function() {
     var received = [];
-    var listener1 = function(mql) {
+    var listener1 = function(event) {
       gc_received.push(1);
     }
 
@@ -337,7 +315,7 @@ function run() {
 
   /* Bug 1270626: listeners that throw exceptions */
   function bug1270626() {
-    var throwingListener = function(mql) {
+    var throwingListener = function(event) {
       throw "error";
     }
 

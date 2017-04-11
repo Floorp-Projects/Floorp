@@ -134,7 +134,7 @@ public:
     explicit gfxUserFontFamily(const nsAString& aName)
         : gfxFontFamily(aName) { }
 
-    virtual ~gfxUserFontFamily() { }
+    virtual ~gfxUserFontFamily();
 
     // add the given font entry to the end of the family's list
     void AddFontEntry(gfxFontEntry* aFontEntry) {

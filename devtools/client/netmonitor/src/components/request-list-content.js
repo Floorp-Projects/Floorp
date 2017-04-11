@@ -39,7 +39,7 @@ const RequestListContent = createClass({
     dispatch: PropTypes.func.isRequired,
     displayedRequests: PropTypes.object.isRequired,
     firstRequestStartedMillis: PropTypes.number.isRequired,
-    fromCache: PropTypes.bool.isRequired,
+    fromCache: PropTypes.bool,
     onCauseBadgeClick: PropTypes.func.isRequired,
     onItemMouseDown: PropTypes.func.isRequired,
     onSecurityIconClick: PropTypes.func.isRequired,
@@ -266,6 +266,14 @@ module.exports = connect(
   }),
   (dispatch) => ({
     dispatch,
+    /**
+     * A handler that opens the stack trace tab when a stack trace is available
+     */
+    onCauseBadgeClick: (cause) => {
+      if (cause.stacktrace && cause.stacktrace.length > 0) {
+        dispatch(Actions.selectDetailsPanelTab("stack-trace"));
+      }
+    },
     onItemMouseDown: (id) => dispatch(Actions.selectRequest(id)),
     /**
      * A handler that opens the security tab in the details view if secure or
@@ -274,14 +282,6 @@ module.exports = connect(
     onSecurityIconClick: (securityState) => {
       if (securityState && securityState !== "insecure") {
         dispatch(Actions.selectDetailsPanelTab("security"));
-      }
-    },
-    /**
-     * A handler that opens the stack trace tab when a stack trace is available
-     */
-    onCauseBadgeClick: (cause) => {
-      if (cause.stacktrace && cause.stacktrace.length > 0) {
-        dispatch(Actions.selectDetailsPanelTab("stack-trace"));
       }
     },
     onSelectDelta: (delta) => dispatch(Actions.selectDelta(delta)),

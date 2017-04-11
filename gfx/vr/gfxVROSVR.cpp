@@ -494,6 +494,12 @@ VRSystemManagerOSVR::Init()
 void
 VRSystemManagerOSVR::Destroy()
 {
+  Shutdown();
+}
+
+void
+VRSystemManagerOSVR::Shutdown()
+{
   if (mOSVRInitialized) {
     MOZ_ASSERT(NS_GetCurrentThread() == mOSVRThread);
     mOSVRThread = nullptr;
@@ -515,7 +521,7 @@ VRSystemManagerOSVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
   // make sure context, interface and display are initialized
   CheckOSVRStatus();
 
-  if (!mOSVRInitialized) {
+  if (!Init()) {
     return;
   }
 

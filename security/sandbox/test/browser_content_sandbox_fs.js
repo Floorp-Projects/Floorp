@@ -111,6 +111,21 @@ function minProfileReadSandboxLevel(level) {
   }
 }
 
+// Returns the lowest sandbox level where blanket reading of the home
+// directory from the content process should be blocked by the sandbox.
+function minHomeReadSandboxLevel(level) {
+  switch (Services.appinfo.OS) {
+    case "WINNT":
+      return 3;
+    case "Darwin":
+      return 3;
+    case "Linux":
+      return 3;
+    default:
+      Assert.ok(false, "Unknown OS");
+  }
+}
+
 //
 // Checks that sandboxing is enabled and at the appropriate level
 // setting before triggering tests that do the file I/O.
@@ -197,16 +212,10 @@ function* createTempFile() {
   let browser = gBrowser.selectedBrowser;
   let path = fileInTempDir().path;
   let fileCreated = yield ContentTask.spawn(browser, path, createFile);
-  if (!fileCreated && isWin()) {
-    // TODO: fix 1329294 and enable this test for Windows.
-    // Not using todo() because this only fails on automation.
-    info("ignoring failure to write to content temp due to 1329294\n");
-  } else {
-    ok(fileCreated == true, "creating a file in content temp is permitted");
-    // now delete the file
-    let fileDeleted = yield ContentTask.spawn(browser, path, deleteFile);
-    ok(fileDeleted == true, "deleting a file in content temp is permitted");
-  }
+  ok(fileCreated == true, "creating a file in content temp is permitted");
+  // now delete the file
+  let fileDeleted = yield ContentTask.spawn(browser, path, deleteFile);
+  ok(fileDeleted == true, "deleting a file in content temp is permitted");
 }
 
 // Test reading files and dirs from web and file content processes.
@@ -260,6 +269,24 @@ function* testFileAccess() {
       ok:       true,
       browser:  fileBrowser,
       file:     profileDir,
+      minLevel: 0,
+    });
+  }
+
+  let homeDir = GetHomeDir();
+  tests.push({
+    desc:     "home dir",
+    ok:       false,
+    browser:  webBrowser,
+    file:     homeDir,
+    minLevel: minHomeReadSandboxLevel(),
+  });
+  if (fileContentProcessEnabled) {
+    tests.push({
+      desc:     "home dir",
+      ok:       true,
+      browser:  fileBrowser,
+      file:     homeDir,
       minLevel: 0,
     });
   }

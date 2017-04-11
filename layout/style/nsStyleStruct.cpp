@@ -2186,7 +2186,7 @@ nsStyleImage::DoCopy(const nsStyleImage& aOther)
   } else if (aOther.mType == eStyleImageType_Gradient) {
     SetGradientData(aOther.mGradient);
   } else if (aOther.mType == eStyleImageType_Element) {
-    SetElementId(aOther.mElementId);
+    SetElementId(do_AddRef(aOther.mElementId));
   } else if (aOther.mType == eStyleImageType_URL) {
     SetURLValue(do_AddRef(aOther.mURLValue));
   }
@@ -2206,7 +2206,7 @@ nsStyleImage::SetNull()
   } else if (mType == eStyleImageType_Image) {
     NS_RELEASE(mImage);
   } else if (mType == eStyleImageType_Element) {
-    free(mElementId);
+    NS_RELEASE(mElementId);
   } else if (mType == eStyleImageType_URL) {
     NS_RELEASE(mURLValue);
   }
@@ -2251,14 +2251,14 @@ nsStyleImage::SetGradientData(nsStyleGradient* aGradient)
 }
 
 void
-nsStyleImage::SetElementId(const char16_t* aElementId)
+nsStyleImage::SetElementId(already_AddRefed<nsIAtom> aElementId)
 {
   if (mType != eStyleImageType_Null) {
     SetNull();
   }
 
-  if (aElementId) {
-    mElementId = NS_strdup(aElementId);
+  if (nsCOMPtr<nsIAtom> atom = aElementId) {
+    mElementId = atom.forget().take();
     mType = eStyleImageType_Element;
   }
 }
@@ -2500,7 +2500,7 @@ nsStyleImage::operator==(const nsStyleImage& aOther) const
   }
 
   if (mType == eStyleImageType_Element) {
-    return NS_strcmp(mElementId, aOther.mElementId) == 0;
+    return mElementId == aOther.mElementId;
   }
 
   if (mType == eStyleImageType_URL) {

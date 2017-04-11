@@ -322,6 +322,13 @@ gfxUserFontData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
     // Not counting mURI and mPrincipal, as those will be shared.
 }
 
+/*virtual*/
+gfxUserFontFamily::~gfxUserFontFamily()
+{
+  // Should not be dropped by stylo
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
 void
 gfxUserFontEntry::GetFamilyNameAndURIForLogging(nsACString& aFamilyName,
                                                 nsACString& aURI)

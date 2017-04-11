@@ -146,6 +146,8 @@ nsFontMetrics::nsFontMetrics(const nsFont& aFont, const Params& aParams,
 
 nsFontMetrics::~nsFontMetrics()
 {
+    // Should not be dropped by stylo
+    MOZ_ASSERT(NS_IsMainThread());
     if (mDeviceContext) {
         mDeviceContext->FontMetricsDeleted(this);
     }

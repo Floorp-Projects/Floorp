@@ -1077,6 +1077,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'HashChangeEvent.webidl',
     'HiddenPluginEvent.webidl',
     'ImageCaptureErrorEvent.webidl',
+    'MediaQueryListEvent.webidl',
     'MediaStreamEvent.webidl',
     'MediaStreamTrackEvent.webidl',
     'OfflineAudioCompletionEvent.webidl',

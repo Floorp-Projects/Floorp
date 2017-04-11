@@ -181,6 +181,9 @@ function teardown(monitor) {
 function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
   let deferred = promise.defer();
   let panel = monitor.panelWin;
+  let { windowRequire } = panel;
+  let { NetMonitorController } =
+    windowRequire("devtools/client/netmonitor/src/netmonitor-controller");
   let progress = {};
   let genericEvents = 0;
   let postEvents = 0;
@@ -233,8 +236,7 @@ function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
       postEvents + "/" + (postRequests * 2) + ", " +
       "got " + event + " for " + actor);
 
-    let networkInfo =
-      panel.NetMonitorController.webConsoleClient.getNetworkRequest(actor);
+    let networkInfo = NetMonitorController.webConsoleClient.getNetworkRequest(actor);
     let url = networkInfo.request.url;
     updateProgressForURL(url, event);
 

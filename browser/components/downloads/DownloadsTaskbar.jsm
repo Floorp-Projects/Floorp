@@ -106,9 +106,10 @@ this.DownloadsTaskbar = {
         // In case the method is re-entered, we simply ignore redundant
         // invocations of the callback, instead of keeping separate state.
         if (this._summary) {
-          return;
+          return undefined;
         }
         this._summary = summary;
+        return this._summary.addView(this);
       }).then(null, Cu.reportError);
     }
   },

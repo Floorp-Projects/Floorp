@@ -222,7 +222,7 @@
                     "playing", "waiting", "canplay", "canplaythrough",
                     "seeking", "seeked", "emptied", "loadedmetadata",
                     "error", "suspend", "stalled",
-                    "mozexitvideosuspend", "mozvideoonlyseekcompleted"],
+                    "mozvideoonlyseekbegin", "mozvideoonlyseekcompleted"],
 
       showHours: false,
       firstFrameShown: false,
@@ -505,9 +505,9 @@
        * 250 ms.
        *
        * When an already-suspended video element becomes visible, we
-       * resume its video decoder immediately and queue a seek task to
-       * seek the resumed video decoder to the current position;
-       * meanwhile, we also file a "mozexitvideosuspend" event which
+       * resume its video decoder immediately and queue a video-only seek
+       * task to seek the resumed video decoder to the current position;
+       * meanwhile, we also file a "mozvideoonlyseekbegin" event which
        * we used to start the timer here.
        *
        * Once the queued seek operation is done, we dispatch a
@@ -700,7 +700,7 @@
               this.controlsSpacer.removeAttribute("hideCursor");
             }
             break;
-          case "mozexitvideosuspend":
+          case "mozvideoonlyseekbegin":
             this._delayShowThrobberWhileResumingVideoDecoder();
             break;
           case "mozvideoonlyseekcompleted":

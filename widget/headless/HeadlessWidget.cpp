@@ -126,6 +126,8 @@ HeadlessWidget::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
 
   if (mAttachedWidgetListener) {
     aStatus = mAttachedWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
+  } else if (mWidgetListener) {
+    aStatus = mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
   }
 
   return NS_OK;

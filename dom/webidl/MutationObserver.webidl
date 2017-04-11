@@ -7,7 +7,7 @@
  * http://dom.spec.whatwg.org
  */
 
-[ProbablyShortLivingObject]
+[ProbablyShortLivingWrapper]
 interface MutationRecord {
   [Constant]
   readonly attribute DOMString type;

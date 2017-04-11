@@ -43,9 +43,6 @@ def load_jobs(params):
 
     # resolve keyed_by fields in each job
     jobs = cron_yml['jobs']
-    for job in jobs:
-        resolve_keyed_by(job, 'when', 'Cron job ' + job['name'],
-                         project=params['project'])
 
     return {j['name']: j for j in jobs}
 
@@ -54,6 +51,10 @@ def should_run(job, params):
     run_on_projects = job.get('run-on-projects', ['all'])
     if not match_run_on_projects(params['project'], run_on_projects):
         return False
+    # Resolve when key here, so we don't require it before we know that we
+    # actually want to run on this branch.
+    resolve_keyed_by(job, 'when', 'Cron job ' + job['name'],
+                     project=params['project'])
     if not any(match_utc(params, hour=sched.get('hour'), minute=sched.get('minute'))
                for sched in job.get('when', [])):
         return False

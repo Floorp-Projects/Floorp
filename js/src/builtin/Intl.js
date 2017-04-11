@@ -1225,22 +1225,19 @@ function GetOption(options, property, type, values, fallback) {
 }
 
 /**
- * Extracts a property value from the provided options object, converts it to a
- * Number value, checks whether it is in the allowed range, and fills in a
- * fallback value if necessary.
+ * The abstract operation DefaultNumberOption converts value to a Number value,
+ * checks whether it is in the allowed range, and fills in a fallback value if
+ * necessary.
  *
- * Spec: ECMAScript Internationalization API Specification, 9.2.10.
+ * Spec: ECMAScript Internationalization API Specification, 9.2.11.
  */
-function GetNumberOption(options, property, minimum, maximum, fallback) {
-    assert(typeof minimum === "number" && (minimum | 0) === minimum, "GetNumberOption");
-    assert(typeof maximum === "number" && (maximum | 0) === maximum, "GetNumberOption");
-    assert(typeof fallback === "number" && (fallback | 0) === fallback, "GetNumberOption");
-    assert(minimum <= fallback && fallback <= maximum, "GetNumberOption");
+function DefaultNumberOption(value, minimum, maximum, fallback) {
+    assert(typeof minimum === "number" && (minimum | 0) === minimum, "DefaultNumberOption");
+    assert(typeof maximum === "number" && (maximum | 0) === maximum, "DefaultNumberOption");
+    assert(typeof fallback === "number" && (fallback | 0) === fallback, "DefaultNumberOption");
+    assert(minimum <= fallback && fallback <= maximum, "DefaultNumberOption");
 
     // Step 1.
-    var value = options[property];
-
-    // Step 2.
     if (value !== undefined) {
         value = ToNumber(value);
         if (Number_isNaN(value) || value < minimum || value > maximum)
@@ -1251,8 +1248,20 @@ function GetNumberOption(options, property, minimum, maximum, fallback) {
         return std_Math_floor(value) | 0;
     }
 
-    // Step 3.
+    // Step 2.
     return fallback;
+}
+
+/**
+ * Extracts a property value from the provided options object, converts it to a
+ * Number value, checks whether it is in the allowed range, and fills in a
+ * fallback value if necessary.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.12.
+ */
+function GetNumberOption(options, property, minimum, maximum, fallback) {
+    // Steps 1-3.
+    return DefaultNumberOption(options[property], minimum, maximum, fallback);
 }
 
 
@@ -1939,25 +1948,25 @@ function SetNumberFormatDigitOptions(lazyData, options, mnfdDefault, mxfdDefault
     assert(typeof mxfdDefault === "number", "SetNumberFormatDigitOptions");
     assert(mnfdDefault <= mxfdDefault, "SetNumberFormatDigitOptions");
 
-    // Steps 4-6.
+    // Steps 4-8.
     const mnid = GetNumberOption(options, "minimumIntegerDigits", 1, 21, 1);
     const mnfd = GetNumberOption(options, "minimumFractionDigits", 0, 20, mnfdDefault);
     const mxfdActualDefault = std_Math_max(mnfd, mxfdDefault);
     const mxfd = GetNumberOption(options, "maximumFractionDigits", mnfd, 20, mxfdActualDefault);
 
-    // Steps 7-8.
+    // Steps 9-10.
     let mnsd = options.minimumSignificantDigits;
     let mxsd = options.maximumSignificantDigits;
 
-    // Steps 9-11.
+    // Steps 11-13.
     lazyData.minimumIntegerDigits = mnid;
     lazyData.minimumFractionDigits = mnfd;
     lazyData.maximumFractionDigits = mxfd;
 
-    // Step 12.
+    // Step 14.
     if (mnsd !== undefined || mxsd !== undefined) {
-        mnsd = GetNumberOption(options, "minimumSignificantDigits", 1, 21, 1);
-        mxsd = GetNumberOption(options, "maximumSignificantDigits", mnsd, 21, 21);
+        mnsd = DefaultNumberOption(mnsd, 1, 21, 1);
+        mxsd = DefaultNumberOption(mxsd, mnsd, 21, 21);
         lazyData.minimumSignificantDigits = mnsd;
         lazyData.maximumSignificantDigits = mxsd;
     }

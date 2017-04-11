@@ -7,7 +7,10 @@
 const { TimelineFront } = require("devtools/shared/fronts/timeline");
 const { CurlUtils } = require("devtools/client/shared/curl");
 const { ACTIVITY_TYPE, EVENTS } = require("./constants");
-const Actions = require("./actions/index");
+const {
+  getRequestById,
+  getDisplayedRequestById,
+} = require("./selectors/index");
 const {
   fetchHeaders,
   formDataURI,
@@ -18,12 +21,6 @@ const {
   onFirefoxConnect,
   onFirefoxDisconnect,
 } = require("./utils/client");
-const {
-  getRequestById,
-  getDisplayedRequestById,
-} = require("./selectors/index");
-
-const gStore = window.gStore;
 
 /**
  * Object defining the network monitor controller components.
@@ -35,10 +32,11 @@ var NetMonitorController = {
    * @param {Object} connection connection data wrapper
    * @return {Object} A promise that is resolved when the monitor finishes startup.
    */
-  startupNetMonitor(connection) {
+  startupNetMonitor(connection, actions) {
     if (this._startup) {
       return this._startup;
     }
+    this.actions = actions;
     this._startup = new Promise(async (resolve) => {
       await this.connect(connection);
       resolve();
@@ -57,7 +55,7 @@ var NetMonitorController = {
       return this._shutdown;
     }
     this._shutdown = new Promise(async (resolve) => {
-      gStore.dispatch(Actions.batchReset());
+      this.actions.batchReset();
       onFirefoxDisconnect(this._target);
       this._target.off("close", this._onTabDetached);
       this.NetworkEventsHandler.disconnect();
@@ -87,7 +85,7 @@ var NetMonitorController = {
       // Some actors like AddonActor or RootActor for chrome debugging
       // aren't actual tabs.
       this.toolbox = connection.toolbox;
-      this._target = connection.client.getTabTarget();
+      this._target = connection.tabConnection.tabTarget;
       this.tabClient = this._target.isTabActor ? this._target.activeTab : null;
 
       let connectTimeline = () => {
@@ -107,7 +105,7 @@ var NetMonitorController = {
 
       this.webConsoleClient = getWebConsoleClient();
       this.NetworkEventsHandler = new NetworkEventsHandler();
-      this.NetworkEventsHandler.connect();
+      this.NetworkEventsHandler.connect(this.actions);
 
       window.emit(EVENTS.CONNECTED);
 
@@ -237,24 +235,24 @@ var NetMonitorController = {
    * @return object
    *         A promise resolved once the task finishes.
    */
-  inspectRequest: function (requestId) {
+  inspectRequest(requestId) {
     // Look for the request in the existing ones or wait for it to appear, if
     // the network monitor is still loading.
     return new Promise((resolve) => {
       let request = null;
-      let inspector = function () {
-        request = getDisplayedRequestById(gStore.getState(), requestId);
+      let inspector = () => {
+        request = getDisplayedRequestById(window.gStore.getState(), requestId);
         if (!request) {
           // Reset filters so that the request is visible.
-          gStore.dispatch(Actions.toggleRequestFilterType("all"));
-          request = getDisplayedRequestById(gStore.getState(), requestId);
+          this.actions.toggleRequestFilterType("all");
+          request = getDisplayedRequestById(window.gStore.getState(), requestId);
         }
 
         // If the request was found, select it. Otherwise this function will be
         // called again once new requests arrive.
         if (request) {
           window.off(EVENTS.REQUEST_ADDED, inspector);
-          gStore.dispatch(Actions.selectRequest(request.id));
+          this.actions.selectRequest(request.id);
           resolve();
         }
       };
@@ -330,7 +328,8 @@ NetworkEventsHandler.prototype = {
   /**
    * Connect to the current target client.
    */
-  connect: function () {
+  connect(actions) {
+    this.actions = actions;
     this.webConsoleClient.on("networkEvent", this._onNetworkEvent);
     this.webConsoleClient.on("networkEventUpdate", this._onNetworkEventUpdate);
 
@@ -344,7 +343,7 @@ NetworkEventsHandler.prototype = {
   /**
    * Disconnect from the client.
    */
-  disconnect: function () {
+  disconnect() {
     if (!this.client) {
       return;
     }
@@ -381,7 +380,7 @@ NetworkEventsHandler.prototype = {
    */
   _onDocLoadingMarker: function (marker) {
     window.emit(EVENTS.TIMELINE_EVENT, marker);
-    gStore.dispatch(Actions.addTimingMarker(marker));
+    this.actions.addTimingMarker(marker);
   },
 
   /**
@@ -412,7 +411,7 @@ NetworkEventsHandler.prototype = {
     let { method, url, isXHR, cause, startedDateTime, fromCache,
           fromServiceWorker } = data;
 
-    gStore.dispatch(Actions.addRequest(
+    this.actions.addRequest(
       id,
       {
         // Convert the received date/time string to a unix timestamp.
@@ -425,13 +424,12 @@ NetworkEventsHandler.prototype = {
         fromServiceWorker,
       },
       true
-    ))
+    )
     .then(() => window.emit(EVENTS.REQUEST_ADDED, id));
   },
 
   async updateRequest(id, data) {
-    const action = Actions.updateRequest(id, data, true);
-    await gStore.dispatch(action);
+    await this.actions.updateRequest(id, data, true);
     let {
       responseContent,
       responseCookies,
@@ -439,28 +437,28 @@ NetworkEventsHandler.prototype = {
       requestCookies,
       requestHeaders,
       requestPostData,
-    } = action.data;
-    let request = getRequestById(gStore.getState(), action.id);
+    } = data;
+    let request = getRequestById(window.gStore.getState(), id);
 
     if (requestHeaders && requestHeaders.headers && requestHeaders.headers.length) {
       let headers = await fetchHeaders(requestHeaders, getLongString);
       if (headers) {
-        await gStore.dispatch(Actions.updateRequest(
-          action.id,
+        await this.actions.updateRequest(
+          id,
           { requestHeaders: headers },
           true,
-        ));
+        );
       }
     }
 
     if (responseHeaders && responseHeaders.headers && responseHeaders.headers.length) {
       let headers = await fetchHeaders(responseHeaders, getLongString);
       if (headers) {
-        await gStore.dispatch(Actions.updateRequest(
-          action.id,
+        await this.actions.updateRequest(
+          id,
           { responseHeaders: headers },
           true,
-        ));
+        );
       }
     }
 
@@ -477,7 +475,7 @@ NetworkEventsHandler.prototype = {
       responseContent.content.text = response;
       payload.responseContent = responseContent;
 
-      await gStore.dispatch(Actions.updateRequest(action.id, payload, true));
+      await this.actions.updateRequest(id, payload, true);
 
       if (mimeType.includes("image/")) {
         window.emit(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
@@ -498,7 +496,7 @@ NetworkEventsHandler.prototype = {
       payload.requestPostData = Object.assign({}, requestPostData);
       payload.requestHeadersFromUploadStream = { headers, headersSize };
 
-      await gStore.dispatch(Actions.updateRequest(action.id, payload, true));
+      await this.actions.updateRequest(id, payload, true);
     }
 
     // Fetch request and response cookies long value.
@@ -517,10 +515,7 @@ NetworkEventsHandler.prototype = {
           }));
         }
         if (reqCookies.length) {
-          await gStore.dispatch(Actions.updateRequest(
-            action.id,
-            { requestCookies: reqCookies },
-            true));
+          await this.actions.updateRequest(id, { requestCookies: reqCookies }, true);
         }
       }
     }
@@ -538,10 +533,7 @@ NetworkEventsHandler.prototype = {
           }));
         }
         if (resCookies.length) {
-          await gStore.dispatch(Actions.updateRequest(
-            action.id,
-            { responseCookies: resCookies },
-            true));
+          await this.actions.updateRequest(id, { responseCookies: resCookies }, true);
         }
       }
     }

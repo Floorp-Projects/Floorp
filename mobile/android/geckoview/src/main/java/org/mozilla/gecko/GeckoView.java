@@ -176,7 +176,7 @@ public class GeckoView extends LayerView
 
             if ("GeckoView:DOMTitleChanged".equals(event)) {
                 if (mContentListener != null) {
-                    mContentListener.onTitleChanged(GeckoView.this, message.getString("title"));
+                    mContentListener.onTitleChange(GeckoView.this, message.getString("title"));
                 }
             } else if ("GeckoView:LocationChange".equals(event)) {
                 if (mNavigationListener == null) {
@@ -197,7 +197,7 @@ public class GeckoView extends LayerView
                 }
             } else if ("GeckoView:SecurityChanged".equals(event)) {
                 if (mProgressListener != null) {
-                    mProgressListener.onSecurityChanged(GeckoView.this, message.getInt("status"));
+                    mProgressListener.onSecurityChange(GeckoView.this, message.getInt("status"));
                 }
             }
         }
@@ -613,7 +613,7 @@ public class GeckoView extends LayerView
         * @param result A PromptResult used to send back the result without blocking.
         * Defaults to cancel requests.
         */
-        public void onAlert(GeckoView view, String message, GeckoView.PromptResult result);
+        void onAlert(GeckoView view, String message, GeckoView.PromptResult result);
 
         /**
         * Tell the host application to display a confirmation dialog.
@@ -622,7 +622,7 @@ public class GeckoView extends LayerView
         * @param result A PromptResult used to send back the result without blocking.
         * Defaults to cancel requests.
         */
-        public void onConfirm(GeckoView view, String message, GeckoView.PromptResult result);
+        void onConfirm(GeckoView view, String message, GeckoView.PromptResult result);
 
         /**
         * Tell the host application to display an input prompt dialog.
@@ -632,7 +632,7 @@ public class GeckoView extends LayerView
         * @param result A PromptResult used to send back the result without blocking.
         * Defaults to cancel requests.
         */
-        public void onPrompt(GeckoView view, String message, String defaultValue, GeckoView.PromptResult result);
+        void onPrompt(GeckoView view, String message, String defaultValue, GeckoView.PromptResult result);
 
         /**
         * Tell the host application to display a remote debugging request dialog.
@@ -640,7 +640,7 @@ public class GeckoView extends LayerView
         * @param result A PromptResult used to send back the result without blocking.
         * Defaults to cancel requests.
         */
-        public void onDebugRequest(GeckoView view, GeckoView.PromptResult result);
+        void onDebugRequest(GeckoView view, GeckoView.PromptResult result);
     }
 
     public interface ProgressListener {
@@ -653,21 +653,21 @@ public class GeckoView extends LayerView
         * @param view The GeckoView that initiated the callback.
         * @param url The resource being loaded.
         */
-        public void onPageStart(GeckoView view, String url);
+        void onPageStart(GeckoView view, String url);
 
         /**
         * A View has finished loading content from the network.
         * @param view The GeckoView that initiated the callback.
         * @param success Whether the page loaded successfully or an error occurred.
         */
-        public void onPageStop(GeckoView view, boolean success);
+        void onPageStop(GeckoView view, boolean success);
 
         /**
         * The security status has been updated.
         * @param view The GeckoView that initiated the callback.
         * @param status The new security status.
         */
-        public void onSecurityChanged(GeckoView view, int status);
+        void onSecurityChange(GeckoView view, int status);
     }
 
     public interface ContentListener {
@@ -677,7 +677,7 @@ public class GeckoView extends LayerView
         * @param view The GeckoView that initiated the callback.
         * @param title The title sent from the content.
         */
-        public void onTitleChanged(GeckoView view, String title);
+        void onTitleChange(GeckoView view, String title);
     }
 
     public interface NavigationListener {
@@ -686,20 +686,20 @@ public class GeckoView extends LayerView
         * @param view The GeckoView that initiated the callback.
         * @param url The resource being loaded.
         */
-        public void onLocationChange(GeckoView view, String url);
+        void onLocationChange(GeckoView view, String url);
 
         /**
         * The view's ability to go back has changed.
         * @param view The GeckoView that initiated the callback.
         * @param canGoBack The new value for the ability.
         */
-        public void onCanGoBack(GeckoView view, boolean canGoBack);
+        void onCanGoBack(GeckoView view, boolean canGoBack);
 
         /**
         * The view's ability to go forward has changed.
         * @param view The GeckoView that initiated the callback.
         * @param canGoForward The new value for the ability.
         */
-        public void onCanGoForward(GeckoView view, boolean canGoForward);
+        void onCanGoForward(GeckoView view, boolean canGoForward);
     }
 }

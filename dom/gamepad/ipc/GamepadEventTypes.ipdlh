@@ -38,8 +38,9 @@ struct GamepadButtonInformation {
   uint32_t index;
   GamepadServiceType service_type;
   uint32_t button;
-  bool pressed;
   double value;
+  bool pressed;
+  bool touched;
 };
 
 struct GamepadPoseInformation {

@@ -2236,18 +2236,8 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     }
   }
 
-  // Ensure the SSS is initialized before we try to use its storage.
-  nsCOMPtr<nsISiteSecurityService> sss = do_GetService("@mozilla.org/ssservice;1");
+  DataStorage::GetAllChildProcessData(xpcomInit.dataStorage());
 
-  nsTArray<nsString> storageFiles;
-  DataStorage::GetAllFileNames(storageFiles);
-  for (auto& file : storageFiles) {
-    dom::DataStorageEntry entry;
-    entry.filename() = file;
-    RefPtr<DataStorage> storage = DataStorage::Get(file);
-    storage->GetAll(&entry.items());
-    xpcomInit.dataStorage().AppendElement(Move(entry));
-  }
   // Must send screen info before send initialData
   ScreenManager& screenManager = ScreenManager::GetSingleton();
   screenManager.CopyScreensToRemote(this);

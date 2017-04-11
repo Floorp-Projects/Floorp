@@ -103,6 +103,7 @@ function promiseClearHistory(aUseRange) {
 function promiseCreateThumbnail() {
   return new Promise(resolve => {
     addTab(URL, function() {
+      gBrowserThumbnails.clearTopSiteURLCache();
       whenFileExists(URL, function() {
         gBrowser.removeTab(gBrowser.selectedTab);
         resolve();

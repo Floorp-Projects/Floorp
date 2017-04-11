@@ -9,8 +9,10 @@ const { Curl } = require("devtools/client/shared/curl");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
+const FileSaver = require("devtools/client/shared/file-saver");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 const { HarExporter } = require("./har/har-exporter");
+const { NetMonitorController } = require("./netmonitor-controller");
 const { getLongString } = require("./utils/client");
 const { L10N } = require("./utils/l10n");
 const {
@@ -155,8 +157,18 @@ RequestListContextMenu.prototype = {
     }));
 
     menu.append(new MenuItem({
+      id: "request-list-context-save-image-as",
+      label: L10N.getStr("netmonitor.context.saveImageAs"),
+      accesskey: L10N.getStr("netmonitor.context.saveImageAs.accesskey"),
+      visible: !!(selectedRequest &&
+               selectedRequest.responseContent &&
+               selectedRequest.responseContent.content.mimeType.includes("image/")),
+      click: () => this.saveImageAs(),
+    }));
+
+    menu.append(new MenuItem({
       type: "separator",
-      visible: !!(window.NetMonitorController.supportsCustomRequest &&
+      visible: !!(NetMonitorController.supportsCustomRequest &&
                selectedRequest && !selectedRequest.isCustom),
     }));
 
@@ -164,7 +176,7 @@ RequestListContextMenu.prototype = {
       id: "request-list-context-resend",
       label: L10N.getStr("netmonitor.context.editAndResend"),
       accesskey: L10N.getStr("netmonitor.context.editAndResend.accesskey"),
-      visible: !!(window.NetMonitorController.supportsCustomRequest &&
+      visible: !!(NetMonitorController.supportsCustomRequest &&
                selectedRequest && !selectedRequest.isCustom),
       click: this.cloneSelectedRequest,
     }));
@@ -186,7 +198,7 @@ RequestListContextMenu.prototype = {
       id: "request-list-context-perf",
       label: L10N.getStr("netmonitor.context.perfTools"),
       accesskey: L10N.getStr("netmonitor.context.perfTools.accesskey"),
-      visible: !!window.NetMonitorController.supportsPerfStats,
+      visible: !!NetMonitorController.supportsPerfStats,
       click: () => this.openStatistics(true)
     }));
 
@@ -323,6 +335,26 @@ RequestListContextMenu.prototype = {
   },
 
   /**
+   * Save image as.
+   */
+  saveImageAs() {
+    const { encoding, text } = this.selectedRequest.responseContent.content;
+    let fileName = this.selectedRequest.urlDetails.baseNameWithQuery;
+    let data;
+    if (encoding === "base64") {
+      let decoded = atob(text);
+      data = new Uint8Array(decoded.length);
+      for (let i = 0; i < decoded.length; ++i) {
+        data[i] = decoded.charCodeAt(i);
+      }
+    } else {
+      data = text;
+    }
+    let blob = new Blob([data]);
+    FileSaver.saveAs(blob, fileName, document);
+  },
+
+  /**
    * Copy response data as a string.
    */
   copyResponse() {
@@ -348,7 +380,7 @@ RequestListContextMenu.prototype = {
   },
 
   getDefaultHarOptions() {
-    let form = window.NetMonitorController._target.form;
+    let form = NetMonitorController._target.form;
     let title = form.title || form.url;
 
     return {

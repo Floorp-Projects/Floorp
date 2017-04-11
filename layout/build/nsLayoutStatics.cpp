@@ -132,7 +132,6 @@ using namespace mozilla::system;
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPresData.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
-#include "mozilla/URLExtraData.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -313,8 +312,7 @@ nsLayoutStatics::Initialize()
   mozilla::dom::WebCryptoThreadPool::Initialize();
 
 #ifdef MOZ_STYLO
-  URLExtraData::InitDummy();
-  Servo_Initialize(URLExtraData::Dummy());
+  InitializeServo();
 #endif
 
 #ifndef MOZ_WIDGET_ANDROID
@@ -332,7 +330,7 @@ nsLayoutStatics::Shutdown()
   // memory reporter manager.
 
 #ifdef MOZ_STYLO
-  Servo_Shutdown();
+  ShutdownServo();
   URLExtraData::ReleaseDummy();
 #endif
 

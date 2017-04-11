@@ -10,6 +10,9 @@
 using namespace mozilla;
 using namespace mozilla::safebrowsing;
 
+#define GTEST_SAFEBROWSING_DIR NS_LITERAL_CSTRING("safebrowsing")
+#define GTEST_TABLE NS_LITERAL_CSTRING("gtest-malware-proto")
+
 template<typename Function>
 void RunTestInNewThread(Function&& aFunction) {
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(mozilla::Forward<Function>(aFunction));
@@ -157,3 +160,22 @@ GeneratePrefix(const nsCString& aFragment, uint8_t aLength)
   return hash;
 }
 
+UniquePtr<LookupCacheV4>
+SetupLookupCacheV4(const _PrefixArray& prefixArray)
+{
+  nsCOMPtr<nsIFile> file;
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
+
+  file->AppendNative(GTEST_SAFEBROWSING_DIR);
+
+  UniquePtr<LookupCacheV4> cache = MakeUnique<LookupCacheV4>(GTEST_TABLE, EmptyCString(), file);
+  nsresult rv = cache->Init();
+  EXPECT_EQ(rv, NS_OK);
+
+  PrefixStringMap map;
+  PrefixArrayToPrefixStringMap(prefixArray, map);
+  rv = cache->Build(map);
+  EXPECT_EQ(rv, NS_OK);
+
+  return Move(cache);
+}

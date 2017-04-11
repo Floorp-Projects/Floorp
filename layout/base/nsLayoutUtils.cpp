@@ -3672,6 +3672,14 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     }
 
     builder.LeavePresShell(aFrame, &list);
+
+    if (!record.GetStart().IsNull() && gfxPrefs::LayersDrawFPS()) {
+      if (RefPtr<LayerManager> lm = builder.GetWidgetLayerManager()) {
+        if (PaintTiming* pt = ClientLayerManager::MaybeGetPaintTiming(lm)) {
+          pt->dlMs() = (TimeStamp::Now() - record.GetStart()).ToMilliseconds();
+        }
+      }
+    }
   }
 
   Telemetry::AccumulateTimeDelta(Telemetry::PAINT_BUILD_DISPLAYLIST_TIME,

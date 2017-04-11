@@ -70,7 +70,7 @@ DocGroup::EventTargetFor(TaskCategory aCategory) const
 }
 
 AbstractThread*
-DocGroup::AbstractMainThreadForImpl(TaskCategory aCategory)
+DocGroup::AbstractMainThreadFor(TaskCategory aCategory)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   return mTabGroup->AbstractMainThreadFor(aCategory);

@@ -63,6 +63,11 @@
 #include "nsProxyRelease.h"
 #include "nsWeakReference.h"
 
+#define OPEN_EVENT_STRING NS_LITERAL_STRING("open")
+#define MESSAGE_EVENT_STRING NS_LITERAL_STRING("message")
+#define ERROR_EVENT_STRING NS_LITERAL_STRING("error")
+#define CLOSE_EVENT_STRING NS_LITERAL_STRING("close")
+
 using namespace mozilla::net;
 using namespace mozilla::dom::workers;
 
@@ -781,7 +786,7 @@ WebSocketImpl::OnStart(nsISupports* aContext)
   RefPtr<WebSocket> webSocket = mWebSocket;
 
   // Call 'onopen'
-  rv = webSocket->CreateAndDispatchSimpleEvent(NS_LITERAL_STRING("open"));
+  rv = webSocket->CreateAndDispatchSimpleEvent(OPEN_EVENT_STRING);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch the open event");
   }
@@ -1881,7 +1886,7 @@ WebSocketImpl::DispatchConnectionCloseEvents()
   // Call 'onerror' if needed
   if (mFailed) {
     nsresult rv =
-      webSocket->CreateAndDispatchSimpleEvent(NS_LITERAL_STRING("error"));
+      webSocket->CreateAndDispatchSimpleEvent(ERROR_EVENT_STRING);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to dispatch the error event");
     }
@@ -1993,7 +1998,7 @@ WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
 
   RefPtr<MessageEvent> event = new MessageEvent(this, nullptr, nullptr);
 
-  event->InitMessageEvent(nullptr, NS_LITERAL_STRING("message"), false, false,
+  event->InitMessageEvent(nullptr, MESSAGE_EVENT_STRING, false, false,
                           jsData, mImpl->mUTF16Origin, EmptyString(), nullptr,
                           Sequence<OwningNonNull<MessagePort>>());
   event->SetTrusted(true);
@@ -2030,7 +2035,7 @@ WebSocket::CreateAndDispatchCloseEvent(bool aWasClean,
   init.mReason = aReason;
 
   RefPtr<CloseEvent> event =
-    CloseEvent::Constructor(this, NS_LITERAL_STRING("close"), init);
+    CloseEvent::Constructor(this, CLOSE_EVENT_STRING, init);
   event->SetTrusted(true);
 
   return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
@@ -2150,10 +2155,10 @@ WebSocket::UpdateMustKeepAlive()
     {
       case CONNECTING:
       {
-        if (mListenerManager->HasListenersFor(nsGkAtoms::onopen) ||
-            mListenerManager->HasListenersFor(nsGkAtoms::onmessage) ||
-            mListenerManager->HasListenersFor(nsGkAtoms::onerror) ||
-            mListenerManager->HasListenersFor(nsGkAtoms::onclose)) {
+        if (mListenerManager->HasListenersFor(OPEN_EVENT_STRING) ||
+            mListenerManager->HasListenersFor(MESSAGE_EVENT_STRING) ||
+            mListenerManager->HasListenersFor(ERROR_EVENT_STRING) ||
+            mListenerManager->HasListenersFor(CLOSE_EVENT_STRING)) {
           shouldKeepAlive = true;
         }
       }
@@ -2162,9 +2167,9 @@ WebSocket::UpdateMustKeepAlive()
       case OPEN:
       case CLOSING:
       {
-        if (mListenerManager->HasListenersFor(nsGkAtoms::onmessage) ||
-            mListenerManager->HasListenersFor(nsGkAtoms::onerror) ||
-            mListenerManager->HasListenersFor(nsGkAtoms::onclose) ||
+        if (mListenerManager->HasListenersFor(MESSAGE_EVENT_STRING) ||
+            mListenerManager->HasListenersFor(ERROR_EVENT_STRING) ||
+            mListenerManager->HasListenersFor(CLOSE_EVENT_STRING) ||
             mOutgoingBufferedAmount != 0) {
           shouldKeepAlive = true;
         }

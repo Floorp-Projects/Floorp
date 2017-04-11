@@ -194,10 +194,8 @@ GetGutterSize(HANDLE theme, HDC hdc)
     GetThemePartSize(theme, hdc, MENU_POPUPITEM, MPI_NORMAL, nullptr, TS_TRUE, &itemSize);
 
     // Figure out how big the menuitem's icon will be (if present) at current DPI
-    double scaleFactor = nsIWidget::DefaultScaleOverride();
-    if (scaleFactor <= 0.0) {
-      scaleFactor = WinUtils::LogToPhysFactor(hdc);
-    }
+    // Needs the system scale for consistency with Windows Theme API.
+    double scaleFactor = WinUtils::SystemScaleFactor();
     int iconDevicePixels = NSToIntRound(16 * scaleFactor);
     SIZE iconSize = {
       iconDevicePixels, iconDevicePixels
@@ -1375,7 +1373,8 @@ AssumeThemePartAndStateAreTransparent(int32_t aPart, int32_t aState)
 static inline double
 GetThemeDpiScaleFactor(nsIFrame* aFrame)
 {
-  if (WinUtils::IsPerMonitorDPIAware()) {
+  if (WinUtils::IsPerMonitorDPIAware() ||
+      nsIWidget::DefaultScaleOverride() > 0.0) {
     nsIWidget* rootWidget = aFrame->PresContext()->GetRootWidget();
     if (rootWidget) {
       double systemScale = WinUtils::SystemScaleFactor();
