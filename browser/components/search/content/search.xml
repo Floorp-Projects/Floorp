@@ -1209,7 +1209,7 @@
                     tooltiptext="&changeSearchSettings.tooltip;"
                     xbl:inherits="compact"/>
       </xul:description>
-      <xul:vbox anonid="add-engines"/>
+      <xul:vbox anonid="add-engines" class="search-add-engines"/>
       <xul:button anonid="search-settings"
                   oncommand="showSettings();"
                   class="search-setting-button search-panel-header"
