@@ -28,6 +28,7 @@ config = {
         "repo": "https://hg.mozilla.org/mozilla-central",
         "revision": "%(revision)s",
         "dest": "mozilla-central",
+        "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
     }],
     # purge options
     'is_automation': True,

@@ -19,6 +19,7 @@ config = {
         "repo": "https://hg.mozilla.org/projects/jamun",
         "branch": "%(revision)s",
         "dest": "jamun",
+        "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
     }],
     # purge options
     'purge_minsize': 12,
