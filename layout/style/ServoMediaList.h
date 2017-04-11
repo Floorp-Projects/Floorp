@@ -33,6 +33,12 @@ public:
 
   bool Matches(nsPresContext&, nsMediaQueryResultCacheKey*) const final;
 
+#ifdef DEBUG
+  bool IsServo() const final { return true; }
+#endif
+
+  RawServoMediaList& RawList() { return *mRawList; }
+
 protected:
   nsresult Delete(const nsAString& aOldMedium) final;
   nsresult Append(const nsAString& aNewMedium) final;
