@@ -30,7 +30,7 @@ EXPORTS += [
     'nsSAXXMLReader.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsSAXAttributes.cpp',
     'nsSAXLocator.cpp',
     'nsSAXXMLReader.cpp',
