@@ -233,7 +233,7 @@ add_task(function* test_form1_warning_entry() {
   let popupState = yield getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
 
-  let expectedMenuItems = ["Logins entered here could be compromised. Learn More",
+  let expectedMenuItems = ["This connection is not secure. Logins entered here could be compromised. Learn More",
                            "tempuser1",
                            "testuser2",
                            "testuser3",
@@ -765,7 +765,7 @@ add_task(function* test_form9_filtering() {
   let results = yield shownPromise;
 
   checkACForm("form9userAAB", "");
-  checkArrayValues(results, ["Logins entered here could be compromised. Learn More", "form9userAAB"],
+  checkArrayValues(results, ["This connection is not secure. Logins entered here could be compromised. Learn More", "form9userAAB"],
                             "Check dropdown is updated after inserting 'A'");
   doKey("down"); // skip insecure warning
   doKey("down");
