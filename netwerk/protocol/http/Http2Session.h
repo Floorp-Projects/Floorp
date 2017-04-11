@@ -91,8 +91,9 @@ public:
     FRAME_TYPE_WINDOW_UPDATE = 0x8,
     FRAME_TYPE_CONTINUATION  = 0x9,
     FRAME_TYPE_ALTSVC        = 0xA,
-    FRAME_TYPE_ORIGIN        = 0xB,
-    FRAME_TYPE_LAST          = 0xC
+    FRAME_TYPE_UNUSED        = 0xB,
+    FRAME_TYPE_ORIGIN        = 0xC,
+    FRAME_TYPE_LAST          = 0xD
   };
 
   // NO_ERROR is a macro defined on windows, so we'll name the HTTP2 goaway
@@ -188,6 +189,7 @@ public:
   static nsresult RecvWindowUpdate(Http2Session *);
   static nsresult RecvContinuation(Http2Session *);
   static nsresult RecvAltSvc(Http2Session *);
+  static nsresult RecvUnused(Http2Session *);
   static nsresult RecvOrigin(Http2Session *);
 
   char       *EnsureOutputBuffer(uint32_t needed);
