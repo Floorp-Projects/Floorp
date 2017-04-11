@@ -37,81 +37,92 @@ class OneOf:
     pass
 
 
-class TypeChecker:
-    """This implements a convenience type TypeChecker to make the validation code more readable."""
-    def __init__(self, kind, *args):
-        """This takes 1-3 arguments, specifying the value type to check for.
-        It supports:
-        - atomic values, e.g.: TypeChecker(int)
-        - list values, e.g.: TypeChecker(list, basestring)
-        - dict values, e.g.: TypeChecker(dict, basestring, int)
-        - atomic values that can have different types, e.g.: TypeChecker(OneOf, int, date)"""
-        self._kind = kind
-        self._args = args
+class AtomicTypeChecker:
+    """Validate a simple value against a given type"""
+    def __init__(self, instance_type):
+        self.instance_type = instance_type
 
     def check(self, identifier, key, value):
-        # Check fields that can be one of two different types.
-        if self._kind is OneOf:
-            if not isinstance(value, self._args[0]) and not isinstance(value, self._args[1]):
-                raise ValueError("%s: failed type check for %s - expected %s or %s, got %s" %
-                                 (identifier, key,
-                                  nice_type_name(self._args[0]),
-                                  nice_type_name(self._args[1]),
-                                  nice_type_name(type(value))))
-            return
-
-        # Check basic type of value.
-        if not isinstance(value, self._kind):
+        if not isinstance(value, self.instance_type):
             raise ValueError("%s: failed type check for %s - expected %s, got %s" %
-                             (identifier, key,
-                              nice_type_name(self._kind),
+                             (identifier, key, nice_type_name(self.instance_type),
                               nice_type_name(type(value))))
 
-        # Check types of values in lists.
-        if self._kind is list:
-            if len(value) < 1:
-                raise ValueError("%s: failed check for %s - list should not be empty" % (identifier, key))
-            for x in value:
-                if not isinstance(x, self._args[0]):
-                    raise ValueError("%s: failed type check for %s - expected list value type %s, got %s" %
-                                     (identifier, key,
-                                      nice_type_name(self._args[0]),
-                                      nice_type_name(type(x))))
 
-        # Check types of keys and values in dictionaries.
-        elif self._kind is dict:
-            if len(value.keys()) < 1:
-                    raise ValueError("%s: failed check for %s - dict should not be empty" % (identifier, key))
-            for x in value.iterkeys():
-                if not isinstance(x, self._args[0]):
-                    raise ValueError("%s: failed dict type check for %s - expected key type %s, got %s" %
-                                     (identifier, key,
-                                      nice_type_name(self._args[0]),
-                                      nice_type_name(type(x))))
-            for k, v in value.iteritems():
-                if not isinstance(x, self._args[1]):
-                    raise ValueError("%s: failed dict type check for %s - expected value type %s for key %s, got %s" %
-                                     (identifier, key,
-                                      nice_type_name(self._args[1]),
-                                      k,
-                                      nice_type_name(type(x))))
+class MultiTypeChecker:
+    """Validate a simple value against a list of possible types"""
+    def __init__(self, *instance_types):
+        if not instance_types:
+            raise ValueError("At least one instance type is required")
+        self.instance_types = instance_types
+
+    def check(self, identifier, key, value):
+
+        if not any(isinstance(value, i) for i in self.instance_types):
+            raise ValueError("%s: failed type check for %s - got %s, expected one of: %s," %
+                             (identifier, key,
+                              nice_type_name(type(value)),
+                              " or ".join(map(nice_type_name, self.instance_types))))
+
+
+class ListTypeChecker:
+    """Validate a list of values against a given type"""
+    def __init__(self, instance_type):
+        self.instance_type = instance_type
+
+    def check(self, identifier, key, value):
+        if len(value) < 1:
+            raise ValueError("%s: failed check for %s - list should not be empty" %
+                             (identifier, key))
+
+        for x in value:
+            if not isinstance(x, self.instance_type):
+                raise ValueError("%s: failed type check for %s - expected list value type %s, got"
+                                 " %s" % (identifier, key, nice_type_name(self.instance_type),
+                                          nice_type_name(type(x))))
+
+
+class DictTypeChecker:
+    """Validate keys and values of a dict against a given type"""
+    def __init__(self, keys_instance_type, values_instance_type):
+        self.keys_instance_type = keys_instance_type
+        self.values_instance_type = values_instance_type
+
+    def check(self, identifier, key, value):
+        if len(value.keys()) < 1:
+            raise ValueError("%s: failed check for %s - dict should not be empty" %
+                             (identifier, key))
+        for x in value.iterkeys():
+            if not isinstance(x, self.keys_instance_type):
+                raise ValueError("%s: failed dict type check for %s - expected key type %s, got "
+                                 "%s" %
+                                 (identifier, key,
+                                  nice_type_name(self.keys_instance_type),
+                                  nice_type_name(type(x))))
+        for k, v in value.iteritems():
+            if not isinstance(v, self.values_instance_type):
+                raise ValueError("%s: failed dict type check for %s - "
+                                 "expected value type %s for key %s, got %s" %
+                                 (identifier, key,
+                                  nice_type_name(self.values_instance_type),
+                                  k, nice_type_name(type(v))))
 
 
 def type_check_event_fields(identifier, name, definition):
     """Perform a type/schema check on the event definition."""
     REQUIRED_FIELDS = {
-        'objects': TypeChecker(list, basestring),
-        'bug_numbers': TypeChecker(list, int),
-        'notification_emails': TypeChecker(list, basestring),
-        'record_in_processes': TypeChecker(list, basestring),
-        'description': TypeChecker(basestring),
+        'objects': ListTypeChecker(basestring),
+        'bug_numbers': ListTypeChecker(int),
+        'notification_emails': ListTypeChecker(basestring),
+        'record_in_processes': ListTypeChecker(basestring),
+        'description': AtomicTypeChecker(basestring),
     }
     OPTIONAL_FIELDS = {
-        'methods': TypeChecker(list, basestring),
-        'release_channel_collection': TypeChecker(basestring),
-        'expiry_date': TypeChecker(OneOf, basestring, datetime.date),
-        'expiry_version': TypeChecker(basestring),
-        'extra_keys': TypeChecker(dict, basestring, basestring),
+        'methods': ListTypeChecker(basestring),
+        'release_channel_collection': AtomicTypeChecker(basestring),
+        'expiry_date': MultiTypeChecker(basestring, datetime.date),
+        'expiry_version': AtomicTypeChecker(basestring),
+        'extra_keys': DictTypeChecker(basestring, basestring),
     }
     ALL_FIELDS = REQUIRED_FIELDS.copy()
     ALL_FIELDS.update(OPTIONAL_FIELDS)
