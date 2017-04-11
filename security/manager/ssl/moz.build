@@ -81,6 +81,7 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'DataStorage.h',
+    'DataStorageList.h',
     'PublicSSL.h',
 ]
 

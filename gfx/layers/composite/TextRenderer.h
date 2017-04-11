@@ -6,6 +6,7 @@
 #ifndef GFX_TextRenderer_H
 #define GFX_TextRenderer_H
 
+#include "mozilla/EnumeratedArray.h"
 #include "mozilla/gfx/2D.h"
 #include "nsISupportsImpl.h"
 #include <string>
@@ -14,6 +15,9 @@ namespace mozilla {
 namespace layers {
 
 class Compositor;
+class TextureSource;
+class TextureSourceProvider;
+struct FontBitmapInfo;
 
 class TextRenderer
 {
@@ -22,26 +26,65 @@ class TextRenderer
 public:
   NS_INLINE_DECL_REFCOUNTING(TextRenderer)
 
-  explicit TextRenderer(Compositor *aCompositor)
-    : mCompositor(aCompositor), mMap({nullptr, 0})
-  {
-  }
+  enum class FontType {
+    Default,
+    FixedWidth,
+    NumTypes
+  };
 
-  void RenderText(const std::string& aText, const gfx::IntPoint& aOrigin,
+  explicit TextRenderer()
+  {}
+
+  RefPtr<TextureSource>
+  RenderText(TextureSourceProvider* aProvider,
+             const std::string& aText,
+             uint32_t aTextSize,
+             uint32_t aTargetPixelWidth,
+             FontType aFontType);
+
+  void RenderText(Compositor* aCompositor,
+                  const std::string& aText,
+                  const gfx::IntPoint& aOrigin,
                   const gfx::Matrix4x4& aTransform, uint32_t aTextSize,
-                  uint32_t aTargetPixelWidth);
+                  uint32_t aTargetPixelWidth,
+                  FontType aFontType = FontType::Default);
 
-  gfx::DataSourceSurface::MappedSurface& GetSurfaceMap() { return mMap; }
+  struct FontCache {
+    ~FontCache();
+    RefPtr<gfx::DataSourceSurface> mGlyphBitmaps;
+    gfx::DataSourceSurface::MappedSurface mMap;
+    const FontBitmapInfo* mInfo;
+  };
 
-private:
-
+protected:
   // Note that this may still fail to set mGlyphBitmaps to a valid value
   // if the underlying CreateDataSourceSurface fails for some reason.
-  void EnsureInitialized();
+  bool EnsureInitialized(FontType aType);
 
-  RefPtr<Compositor> mCompositor;
-  RefPtr<gfx::DataSourceSurface> mGlyphBitmaps;
-  gfx::DataSourceSurface::MappedSurface mMap;
+  static const FontBitmapInfo* GetFontInfo(FontType aType);
+
+private:
+  EnumeratedArray<FontType, FontType::NumTypes, UniquePtr<FontCache>> mFonts;
+};
+
+struct FontBitmapInfo {
+  Maybe<unsigned int> mGlyphWidth;
+  Maybe<const unsigned short*> mGlyphWidths;
+  unsigned int mTextureWidth;
+  unsigned int mTextureHeight;
+  unsigned int mCellWidth;
+  unsigned int mCellHeight;
+  unsigned int mFirstChar;
+  const unsigned char* mPNG;
+  size_t mPNGLength;
+
+  unsigned int GetGlyphWidth(char aGlyph) const {
+    if (mGlyphWidth) {
+      return mGlyphWidth.value();
+    }
+    MOZ_ASSERT(unsigned(aGlyph) >= mFirstChar);
+    return mGlyphWidths.value()[unsigned(aGlyph) - mFirstChar];
+  }
 };
 
 } // namespace layers

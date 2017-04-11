@@ -20,6 +20,7 @@ interface DOMRect : DOMRectReadOnly {
     inherit attribute unrestricted double height;
 };
 
+[ProbablyShortLivingWrapper]
 interface DOMRectReadOnly {
     readonly attribute unrestricted double x;
     readonly attribute unrestricted double y;
