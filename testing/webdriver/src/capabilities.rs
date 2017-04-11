@@ -241,8 +241,8 @@ impl SpecNewSessionParameters {
     }
 
     fn validate_port(name: &str, value: &Json) -> WebDriverResult<()> {
-        match value {
-            &Json::I64(x) => {
+        match value.as_i64() {
+            Some(x) => {
                 if x < 0 || x > 2i64.pow(16) - 1 {
                     return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
