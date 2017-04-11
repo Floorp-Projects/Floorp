@@ -35,7 +35,8 @@ interface nsIMutableArray : nsIArrayExtensions
      *                          but the element does not support
      *                          nsIWeakReference.
      */
-    void appendElement(in nsISupports element, in boolean weak);
+    void appendElement(in nsISupports element,
+                       [optional] in boolean weak);
 
     /**
      * removeElementAt()
