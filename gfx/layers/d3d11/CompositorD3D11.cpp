@@ -15,7 +15,10 @@
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/layers/ImageHost.h"
 #include "mozilla/layers/ContentHost.h"
+#include "mozilla/layers/Diagnostics.h"
+#include "mozilla/layers/DiagnosticsD3D11.h"
 #include "mozilla/layers/Effects.h"
+#include "mozilla/layers/HelpersD3D11.h"
 #include "nsWindowsHelpers.h"
 #include "gfxPrefs.h"
 #include "gfxConfig.h"
@@ -286,6 +289,7 @@ CompositorD3D11::Initialize(nsCString* const out_failureReason)
     return false;
   }
 
+  mDiagnostics = MakeUnique<DiagnosticsD3D11>(mDevice, mContext);
   mFeatureLevel = mDevice->GetFeatureLevel();
 
   mHwnd = mWidget->AsWindows()->GetHwnd();
@@ -1398,22 +1402,21 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
       }
     }
   }
+
+  if (gfxPrefs::LayersDrawFPS()) {
+    uint32_t pixelsPerFrame = 0;
+    for (auto iter = mBackBufferInvalid.RectIter(); !iter.Done(); iter.Next()) {
+      pixelsPerFrame += iter.Get().width * iter.Get().height;
+    }
+
+    mDiagnostics->Start(pixelsPerFrame);
+  }
 }
 
-template <typename T> static inline bool
-WaitForGPUQuery(ID3D11Device* aDevice, ID3D11DeviceContext* aContext, ID3D11Query* aQuery, T* aOut)
+void
+CompositorD3D11::NormalDrawingDone()
 {
-  TimeStamp start = TimeStamp::Now();
-  while (aContext->GetData(aQuery, aOut, sizeof(*aOut), 0) != S_OK) {
-    if (aDevice->GetDeviceRemovedReason() != S_OK) {
-      return false;
-    }
-    if (TimeStamp::Now() - start > TimeDuration::FromSeconds(2)) {
-      return false;
-    }
-    Sleep(0);
-  }
-  return true;
+  mDiagnostics->End();
 }
 
 void
@@ -1447,6 +1450,8 @@ CompositorD3D11::EndFrame()
 
   if (oldSize == mSize) {
     Present();
+  } else {
+    mDiagnostics->Cancel();
   }
 
   // Block until the previous frame's work has been completed.
@@ -1460,6 +1465,12 @@ CompositorD3D11::EndFrame()
   Compositor::EndFrame();
 
   mCurrentRT = nullptr;
+}
+
+void
+CompositorD3D11::GetFrameStats(GPUStats* aStats)
+{
+  mDiagnostics->Query(aStats);
 }
 
 void
