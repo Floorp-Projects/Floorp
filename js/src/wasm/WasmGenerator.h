@@ -264,6 +264,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool finishFuncExports();
     MOZ_MUST_USE bool finishCodegen();
     MOZ_MUST_USE bool finishLinkData();
+    void generateBytecodeHash(const ShareableBytes& bytecode);
     MOZ_MUST_USE bool addFuncImport(const Sig& sig, uint32_t globalDataOffset);
     MOZ_MUST_USE bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOff);
     MOZ_MUST_USE bool allocateGlobal(GlobalDesc* global);

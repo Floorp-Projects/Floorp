@@ -7285,15 +7285,9 @@ class DebuggerSourceGetURLMatcher
         return Nothing();
     }
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
-        // TODOshu: Until wasm modules have real URLs, append "> wasm" to the
-        // end to prevent them from being blacklisted by devtools by having
-        // the same value as a source mapped URL.
-        char* buf = JS_smprintf("%s > wasm", wasmInstance->instance().metadata().filename.get());
-        if (!buf)
-            return Nothing();
-        JSString* str = NewStringCopyZ<CanGC>(cx_, buf);
-        JS_smprintf_free(buf);
-        return Some(str);
+        if (JSString* str = wasmInstance->instance().code().debugDisplayURL(cx_))
+            return Some(str);
+        return Nothing();
     }
 };
 
