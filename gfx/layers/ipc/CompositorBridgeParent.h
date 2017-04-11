@@ -147,6 +147,10 @@ public:
                            uint32_t aApzcId) override;
   bool StopSharingMetrics(FrameMetrics::ViewID aScrollId,
                           uint32_t aApzcId) override;
+
+  virtual bool IsRemote() const {
+    return false;
+  }
 };
 
 class CompositorBridgeParent final : public CompositorBridgeParentBase

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Dispatcher.h"
+#include "mozilla/SchedulerGroup.h"
 
 #include "jsfriendapi.h"
 #include "mozilla/AbstractThread.h"
@@ -16,11 +16,11 @@
 
 using namespace mozilla;
 
-class ValidatingDispatcher::Runnable final : public mozilla::Runnable
+class SchedulerGroup::Runnable final : public mozilla::Runnable
 {
 public:
   Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
-           ValidatingDispatcher* aDispatcher);
+           SchedulerGroup* aDispatcher);
 
   NS_IMETHODIMP
   GetName(nsACString& aName) override
@@ -41,10 +41,10 @@ public:
 
 private:
   nsCOMPtr<nsIRunnable> mRunnable;
-  RefPtr<ValidatingDispatcher> mDispatcher;
+  RefPtr<SchedulerGroup> mDispatcher;
 };
 
-/* DispatcherEventTarget */
+/* SchedulerEventTarget */
 
 namespace {
 
@@ -52,15 +52,15 @@ namespace {
 { 0xbf4e36c8, 0x7d04, 0x4ef4, \
   { 0xbb, 0xd8, 0x11, 0x09, 0x0a, 0xdb, 0x4d, 0xf7 } }
 
-class DispatcherEventTarget final : public nsIEventTarget
+class SchedulerEventTarget final : public nsIEventTarget
 {
-  RefPtr<ValidatingDispatcher> mDispatcher;
+  RefPtr<SchedulerGroup> mDispatcher;
   TaskCategory mCategory;
 
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DISPATCHEREVENTTARGET_IID)
 
-  DispatcherEventTarget(ValidatingDispatcher* aDispatcher, TaskCategory aCategory)
+  SchedulerEventTarget(SchedulerGroup* aDispatcher, TaskCategory aCategory)
    : mDispatcher(aDispatcher)
    , mCategory(aCategory)
   {}
@@ -68,26 +68,26 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET
 
-  ValidatingDispatcher* Dispatcher() const { return mDispatcher; }
+  SchedulerGroup* Dispatcher() const { return mDispatcher; }
 
 private:
-  ~DispatcherEventTarget() {}
+  ~SchedulerEventTarget() {}
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(DispatcherEventTarget, NS_DISPATCHEREVENTTARGET_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(SchedulerEventTarget, NS_DISPATCHEREVENTTARGET_IID)
 
 } // namespace
 
-NS_IMPL_ISUPPORTS(DispatcherEventTarget, DispatcherEventTarget, nsIEventTarget)
+NS_IMPL_ISUPPORTS(SchedulerEventTarget, SchedulerEventTarget, nsIEventTarget)
 
 NS_IMETHODIMP
-DispatcherEventTarget::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags)
+SchedulerEventTarget::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags)
 {
   return Dispatch(do_AddRef(aRunnable), aFlags);
 }
 
 NS_IMETHODIMP
-DispatcherEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags)
+SchedulerEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags)
 {
   if (NS_WARN_IF(aFlags != NS_DISPATCH_NORMAL)) {
     return NS_ERROR_UNEXPECTED;
@@ -96,29 +96,22 @@ DispatcherEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_
 }
 
 NS_IMETHODIMP
-DispatcherEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t)
+SchedulerEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-DispatcherEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
+SchedulerEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
 {
   *aIsOnCurrentThread = NS_IsMainThread();
   return NS_OK;
 }
 
-AbstractThread*
-Dispatcher::AbstractMainThreadFor(TaskCategory aCategory)
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  return AbstractMainThreadForImpl(aCategory);
-}
-
 /* static */ nsresult
-Dispatcher::UnlabeledDispatch(const char* aName,
-                              TaskCategory aCategory,
-                              already_AddRefed<nsIRunnable>&& aRunnable)
+SchedulerGroup::UnlabeledDispatch(const char* aName,
+                                  TaskCategory aCategory,
+                                  already_AddRefed<nsIRunnable>&& aRunnable)
 {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
   if (aName) {
@@ -133,23 +126,23 @@ Dispatcher::UnlabeledDispatch(const char* aName,
   }
 }
 
-ValidatingDispatcher* ValidatingDispatcher::sRunningDispatcher;
+SchedulerGroup* SchedulerGroup::sRunningDispatcher;
 
-ValidatingDispatcher::ValidatingDispatcher()
+SchedulerGroup::SchedulerGroup()
  : mAccessValid(false)
 {
 }
 
 nsresult
-ValidatingDispatcher::Dispatch(const char* aName,
-                               TaskCategory aCategory,
-                               already_AddRefed<nsIRunnable>&& aRunnable)
+SchedulerGroup::Dispatch(const char* aName,
+                         TaskCategory aCategory,
+                         already_AddRefed<nsIRunnable>&& aRunnable)
 {
   return LabeledDispatch(aName, aCategory, Move(aRunnable));
 }
 
 nsIEventTarget*
-ValidatingDispatcher::EventTargetFor(TaskCategory aCategory) const
+SchedulerGroup::EventTargetFor(TaskCategory aCategory) const
 {
   MOZ_ASSERT(aCategory != TaskCategory::Count);
   MOZ_ASSERT(mEventTargets[size_t(aCategory)]);
@@ -157,7 +150,14 @@ ValidatingDispatcher::EventTargetFor(TaskCategory aCategory) const
 }
 
 AbstractThread*
-ValidatingDispatcher::AbstractMainThreadForImpl(TaskCategory aCategory)
+SchedulerGroup::AbstractMainThreadFor(TaskCategory aCategory)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  return AbstractMainThreadForImpl(aCategory);
+}
+
+AbstractThread*
+SchedulerGroup::AbstractMainThreadForImpl(TaskCategory aCategory)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCategory != TaskCategory::Count);
@@ -173,7 +173,7 @@ ValidatingDispatcher::AbstractMainThreadForImpl(TaskCategory aCategory)
 }
 
 void
-ValidatingDispatcher::CreateEventTargets(bool aNeedValidation)
+SchedulerGroup::CreateEventTargets(bool aNeedValidation)
 {
   for (size_t i = 0; i < size_t(TaskCategory::Count); i++) {
     TaskCategory category = static_cast<TaskCategory>(i);
@@ -189,9 +189,9 @@ ValidatingDispatcher::CreateEventTargets(bool aNeedValidation)
 }
 
 void
-ValidatingDispatcher::Shutdown(bool aXPCOMShutdown)
+SchedulerGroup::Shutdown(bool aXPCOMShutdown)
 {
-  // There is a RefPtr cycle TabGroup -> DispatcherEventTarget -> TabGroup. To
+  // There is a RefPtr cycle TabGroup -> SchedulerEventTarget -> TabGroup. To
   // avoid leaks, we need to break the chain somewhere. We shouldn't be using
   // the ThrottledEventQueue for this TabGroup when no windows belong to it,
   // so it's safe to null out the queue here.
@@ -202,17 +202,17 @@ ValidatingDispatcher::Shutdown(bool aXPCOMShutdown)
 }
 
 already_AddRefed<nsIEventTarget>
-ValidatingDispatcher::CreateEventTargetFor(TaskCategory aCategory)
+SchedulerGroup::CreateEventTargetFor(TaskCategory aCategory)
 {
-  RefPtr<DispatcherEventTarget> target =
-    new DispatcherEventTarget(this, aCategory);
+  RefPtr<SchedulerEventTarget> target =
+    new SchedulerEventTarget(this, aCategory);
   return target.forget();
 }
 
-/* static */ ValidatingDispatcher*
-ValidatingDispatcher::FromEventTarget(nsIEventTarget* aEventTarget)
+/* static */ SchedulerGroup*
+SchedulerGroup::FromEventTarget(nsIEventTarget* aEventTarget)
 {
-  RefPtr<DispatcherEventTarget> target = do_QueryObject(aEventTarget);
+  RefPtr<SchedulerEventTarget> target = do_QueryObject(aEventTarget);
   if (!target) {
     return nullptr;
   }
@@ -220,9 +220,9 @@ ValidatingDispatcher::FromEventTarget(nsIEventTarget* aEventTarget)
 }
 
 nsresult
-ValidatingDispatcher::LabeledDispatch(const char* aName,
-                                      TaskCategory aCategory,
-                                      already_AddRefed<nsIRunnable>&& aRunnable)
+SchedulerGroup::LabeledDispatch(const char* aName,
+                                TaskCategory aCategory,
+                                already_AddRefed<nsIRunnable>&& aRunnable)
 {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
   if (XRE_IsContentProcess()) {
@@ -232,7 +232,7 @@ ValidatingDispatcher::LabeledDispatch(const char* aName,
 }
 
 void
-ValidatingDispatcher::SetValidatingAccess(ValidationType aType)
+SchedulerGroup::SetValidatingAccess(ValidationType aType)
 {
   sRunningDispatcher = aType == StartValidation ? this : nullptr;
   mAccessValid = aType == StartValidation;
@@ -242,15 +242,15 @@ ValidatingDispatcher::SetValidatingAccess(ValidationType aType)
   js::EnableAccessValidation(jsapi.cx(), !!sRunningDispatcher);
 }
 
-ValidatingDispatcher::Runnable::Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
-                                         ValidatingDispatcher* aDispatcher)
+SchedulerGroup::Runnable::Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
+                                   SchedulerGroup* aDispatcher)
  : mRunnable(Move(aRunnable)),
    mDispatcher(aDispatcher)
 {
 }
 
 NS_IMETHODIMP
-ValidatingDispatcher::Runnable::Run()
+SchedulerGroup::Runnable::Run()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -266,21 +266,21 @@ ValidatingDispatcher::Runnable::Run()
   return result;
 }
 
-ValidatingDispatcher::AutoProcessEvent::AutoProcessEvent()
- : mPrevRunningDispatcher(ValidatingDispatcher::sRunningDispatcher)
+SchedulerGroup::AutoProcessEvent::AutoProcessEvent()
+ : mPrevRunningDispatcher(SchedulerGroup::sRunningDispatcher)
 {
-  ValidatingDispatcher* prev = sRunningDispatcher;
+  SchedulerGroup* prev = sRunningDispatcher;
   if (prev) {
     MOZ_ASSERT(prev->mAccessValid);
     prev->SetValidatingAccess(EndValidation);
   }
 }
 
-ValidatingDispatcher::AutoProcessEvent::~AutoProcessEvent()
+SchedulerGroup::AutoProcessEvent::~AutoProcessEvent()
 {
   MOZ_ASSERT(!sRunningDispatcher);
 
-  ValidatingDispatcher* prev = mPrevRunningDispatcher;
+  SchedulerGroup* prev = mPrevRunningDispatcher;
   if (prev) {
     prev->SetValidatingAccess(StartValidation);
   }

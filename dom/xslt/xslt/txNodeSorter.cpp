@@ -10,8 +10,13 @@
 #include "txNodeSetContext.h"
 #include "txExpr.h"
 #include "txStringUtils.h"
-#include "prmem.h"
 #include "nsQuickSort.h"
+
+#include "mozilla/CheckedInt.h"
+#include "mozilla/UniquePtrExtensions.h"
+
+using mozilla::CheckedUint32;
+using mozilla::MakeUniqueFallible;
 
 /*
  * Sorts Nodes as specified by the W3C XSLT 1.0 Recommendation
@@ -122,7 +127,8 @@ txNodeSorter::sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
                           txNodeSet** aResult)
 {
     if (mNKeys == 0 || aNodes->isEmpty()) {
-        NS_ADDREF(*aResult = aNodes);
+        RefPtr<txNodeSet> ref(aNodes);
+        ref.forget(aResult);
 
         return NS_OK;
     }
@@ -140,62 +146,56 @@ txNodeSorter::sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Create and set up memoryblock for sort-values and indexarray
-    uint32_t len = static_cast<uint32_t>(aNodes->size());
-
-    // Limit resource use to something sane.
-    uint32_t itemSize = sizeof(uint32_t) + mNKeys * sizeof(txObject*);
-    if (mNKeys > (UINT32_MAX - sizeof(uint32_t)) / sizeof(txObject*) ||
-        len >= UINT32_MAX / itemSize) {
+    CheckedUint32 len = aNodes->size();
+    CheckedUint32 numSortValues = len * mNKeys;
+    CheckedUint32 sortValuesSize = numSortValues * sizeof(txObject*);
+    if (!sortValuesSize.isValid()) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    void* mem = PR_Malloc(len * itemSize);
-    NS_ENSURE_TRUE(mem, NS_ERROR_OUT_OF_MEMORY);
-
-    uint32_t* indexes = static_cast<uint32_t*>(mem);
-    txObject** sortValues = reinterpret_cast<txObject**>(indexes + len);
+    auto indexes = MakeUniqueFallible<uint32_t[]>(len.value());
+    auto sortValues = MakeUniqueFallible<txObject*[]>(numSortValues.value());
+    if (!indexes || !sortValues) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     uint32_t i;
-    for (i = 0; i < len; ++i) {
+    for (i = 0; i < len.value(); ++i) {
         indexes[i] = i;
     }
-    memset(sortValues, 0, len * mNKeys * sizeof(txObject*));
+    memset(sortValues.get(), 0, sortValuesSize.value());
 
     // Sort the indexarray
     SortData sortData;
     sortData.mNodeSorter = this;
     sortData.mContext = evalContext;
-    sortData.mSortValues = sortValues;
+    sortData.mSortValues = sortValues.get();
     sortData.mRv = NS_OK;
-    NS_QuickSort(indexes, len, sizeof(uint32_t), compareNodes, &sortData);
+    NS_QuickSort(indexes.get(), len.value(), sizeof(uint32_t), compareNodes, &sortData);
 
     // Delete these here so we don't have to deal with them at every possible
     // failurepoint
-    uint32_t numSortValues = len * mNKeys;
-    for (i = 0; i < numSortValues; ++i) {
+    for (i = 0; i < numSortValues.value(); ++i) {
         delete sortValues[i];
     }
 
     if (NS_FAILED(sortData.mRv)) {
-        PR_Free(mem);
         // The txExecutionState owns the evalcontext so no need to handle it
         return sortData.mRv;
     }
 
     // Insert nodes in sorted order in new nodeset
-    for (i = 0; i < len; ++i) {
+    for (i = 0; i < len.value(); ++i) {
         rv = sortedNodes->append(aNodes->get(indexes[i]));
         if (NS_FAILED(rv)) {
-            PR_Free(mem);
             // The txExecutionState owns the evalcontext so no need to handle it
             return rv;
         }
     }
 
-    PR_Free(mem);
     delete aEs->popEvalContext();
 
-    NS_ADDREF(*aResult = sortedNodes);
+    sortedNodes.forget(aResult);
 
     return NS_OK;
 }
