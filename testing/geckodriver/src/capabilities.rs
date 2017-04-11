@@ -106,7 +106,7 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
     fn accept_insecure_certs(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
         let version_str = try!(self.version().or_else(|x| Err(convert_version_error(x))));
         if let Some(x) = version_str {
-            Ok(try!(Version::from_str(&*x).or_else(|x| Err(convert_version_error(x)))).major > 52)
+            Ok(try!(Version::from_str(&*x).or_else(|x| Err(convert_version_error(x)))).major >= 52)
         } else {
             Ok(false)
         }
