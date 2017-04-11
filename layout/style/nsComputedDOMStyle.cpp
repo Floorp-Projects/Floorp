@@ -6464,6 +6464,27 @@ nsComputedDOMStyle::DoGetMaskType()
 }
 
 already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetContextProperties()
+{
+  const nsTArray<nsCOMPtr<nsIAtom>>& contextProps = StyleSVG()->mContextProps;
+
+  if (contextProps.IsEmpty()) {
+    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+    val->SetIdent(eCSSKeyword_none);
+    return val.forget();
+  }
+
+  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
+  for (const nsIAtom* ident : contextProps) {
+    RefPtr<nsROCSSPrimitiveValue> property = new nsROCSSPrimitiveValue;
+    property->SetString(nsDependentAtomString(ident));
+    valueList->AppendCSSValue(property.forget());
+  }
+
+  return valueList.forget();
+}
+
+already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetPaintOrder()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;

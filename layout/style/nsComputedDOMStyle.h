@@ -600,6 +600,8 @@ private:
   already_AddRefed<CSSValue> DoGetMaskType();
   already_AddRefed<CSSValue> DoGetPaintOrder();
 
+  already_AddRefed<CSSValue> DoGetContextProperties();
+
   /* Custom properties */
   already_AddRefed<CSSValue> DoGetCustomProperty(const nsAString& aPropertyName);
 
