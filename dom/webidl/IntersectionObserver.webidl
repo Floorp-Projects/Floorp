@@ -7,7 +7,7 @@
  * https://wicg.github.io/IntersectionObserver/
  */
 
-[ProbablyShortLivingObject, Pref="dom.IntersectionObserver.enabled"]
+[ProbablyShortLivingWrapper, Pref="dom.IntersectionObserver.enabled"]
 interface IntersectionObserverEntry {
   [Constant]
   readonly attribute DOMHighResTimeStamp time;

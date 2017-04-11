@@ -40,6 +40,7 @@ struct PixelShaderConstants
 };
 
 struct DeviceAttachmentsD3D11;
+class DiagnosticsD3D11;
 
 class CompositorD3D11 : public Compositor
 {
@@ -110,6 +111,8 @@ public:
                           const nsIntRegion& aOpaqueRegion,
                           gfx::IntRect *aClipRectOut = nullptr,
                           gfx::IntRect *aRenderBoundsOut = nullptr) override;
+
+  void NormalDrawingDone() override;
 
   /**
    * Flush the current frame to the screen.
@@ -207,6 +210,10 @@ private:
   void Draw(const gfx::Rect& aGeometry,
             const gfx::Rect* aTexCoords);
 
+  void GetFrameStats(GPUStats* aStats) override;
+
+  void Present();
+
   ID3D11VertexShader* GetVSForGeometry(const nsTArray<gfx::TexturedTriangle>& aTriangles,
                                        const bool aUseBlendShader,
                                        const MaskType aMaskType);
@@ -227,6 +234,7 @@ private:
   RefPtr<ID3D11Query> mQuery;
 
   DeviceAttachmentsD3D11* mAttachments;
+  UniquePtr<DiagnosticsD3D11> mDiagnostics;
 
   LayoutDeviceIntSize mSize;
 

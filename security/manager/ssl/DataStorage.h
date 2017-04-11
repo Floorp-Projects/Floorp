@@ -20,9 +20,13 @@
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"
 
+class psm_DataStorageTest;
+
 namespace mozilla {
+class DataStorageMemoryReporter;
 
 namespace dom {
+class ContentChild;
 class DataStorageEntry;
 class DataStorageItem;
 }
@@ -88,6 +92,12 @@ enum DataStorageType {
   DataStorage_Private
 };
 
+enum class DataStorageClass {
+#define DATA_STORAGE(_) _,
+#include "mozilla/DataStorageList.h"
+#undef DATA_STORAGE
+};
+
 class DataStorage : public nsIObserver
 {
   typedef dom::DataStorageItem DataStorageItem;
@@ -98,8 +108,8 @@ public:
 
   // If there is a profile directory, there is or will eventually be a file
   // by the name specified by aFilename there.
-  static already_AddRefed<DataStorage> Get(const nsString& aFilename);
-  static already_AddRefed<DataStorage> GetIfExists(const nsString& aFilename);
+  static already_AddRefed<DataStorage> Get(DataStorageClass aFilename);
+  static already_AddRefed<DataStorage> GetIfExists(DataStorageClass aFilename);
 
   // Initializes the DataStorage. Must be called before using.
   // aDataWillPersist returns whether or not data can be persistently saved.
@@ -127,6 +137,9 @@ public:
   // Read all file names that we know about.
   static void GetAllFileNames(nsTArray<nsString>& aItems);
 
+  // Read all child process data that we know about.
+  static void GetAllChildProcessData(nsTArray<mozilla::dom::DataStorageEntry>& aEntries);
+
   // Read all of the data items.
   void GetAll(InfallibleTArray<DataStorageItem>* aItems);
 
@@ -138,6 +151,12 @@ public:
 private:
   explicit DataStorage(const nsString& aFilename);
   virtual ~DataStorage();
+
+  static already_AddRefed<DataStorage> GetFromRawFileName(const nsString& aFilename);
+
+  friend class ::psm_DataStorageTest;
+  friend class mozilla::dom::ContentChild;
+  friend class mozilla::DataStorageMemoryReporter;
 
   class Writer;
   class Reader;
@@ -202,8 +221,9 @@ private:
   uint32_t mTimerDelay; // in milliseconds
   bool mPendingWrite; // true if a write is needed but hasn't been dispatched
   bool mShuttingDown;
-  mozilla::Atomic<bool> mInitCalled; // Indicates that Init() has been called.
   // (End list of members protected by mMutex)
+
+  mozilla::Atomic<bool> mInitCalled; // Indicates that Init() has been called.
 
   Monitor mReadyMonitor; // Do not acquire this at the same time as mMutex.
   bool mReady; // Indicates that saved data has been read and Get can proceed.

@@ -15,7 +15,10 @@
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/layers/ImageHost.h"
 #include "mozilla/layers/ContentHost.h"
+#include "mozilla/layers/Diagnostics.h"
+#include "mozilla/layers/DiagnosticsD3D11.h"
 #include "mozilla/layers/Effects.h"
+#include "mozilla/layers/HelpersD3D11.h"
 #include "nsWindowsHelpers.h"
 #include "gfxPrefs.h"
 #include "gfxConfig.h"
@@ -286,6 +289,7 @@ CompositorD3D11::Initialize(nsCString* const out_failureReason)
     return false;
   }
 
+  mDiagnostics = MakeUnique<DiagnosticsD3D11>(mDevice, mContext);
   mFeatureLevel = mDevice->GetFeatureLevel();
 
   mHwnd = mWidget->AsWindows()->GetHwnd();
@@ -864,6 +868,9 @@ CompositorD3D11::ClearRect(const gfx::Rect& aRect)
   }
 
   mContext->Draw(4, 0);
+
+  // Restore the default blend state.
+  mContext->OMSetBlendState(mAttachments->mPremulBlendState, sBlendFactor, 0xFFFFFFFF);
 }
 
 static inline bool
@@ -1398,6 +1405,21 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
       }
     }
   }
+
+  if (gfxPrefs::LayersDrawFPS()) {
+    uint32_t pixelsPerFrame = 0;
+    for (auto iter = mBackBufferInvalid.RectIter(); !iter.Done(); iter.Next()) {
+      pixelsPerFrame += iter.Get().width * iter.Get().height;
+    }
+
+    mDiagnostics->Start(pixelsPerFrame);
+  }
+}
+
+void
+CompositorD3D11::NormalDrawingDone()
+{
+  mDiagnostics->End();
 }
 
 void
@@ -1429,6 +1451,34 @@ CompositorD3D11::EndFrame()
     mContext->End(query);
   }
 
+  if (oldSize == mSize) {
+    Present();
+  } else {
+    mDiagnostics->Cancel();
+  }
+
+  // Block until the previous frame's work has been completed.
+  if (mQuery) {
+    BOOL result;
+    WaitForGPUQuery(mDevice, mContext, mQuery, &result);
+  }
+  // Store the query for this frame so we can flush it next time.
+  mQuery = query;
+
+  Compositor::EndFrame();
+
+  mCurrentRT = nullptr;
+}
+
+void
+CompositorD3D11::GetFrameStats(GPUStats* aStats)
+{
+  mDiagnostics->Query(aStats);
+}
+
+void
+CompositorD3D11::Present()
+{
   UINT presentInterval = 0;
 
   bool isWARP = DeviceManagerDx::Get()->IsWARP();
@@ -1439,71 +1489,48 @@ CompositorD3D11::EndFrame()
     presentInterval = 1;
   }
 
-  if (oldSize == mSize) {
-    // This must be called before present so our back buffer has the validated window content.
-    if (mTarget) {
-      PaintToTarget();
-    }
-
-    RefPtr<IDXGISwapChain1> chain;
-    HRESULT hr = mSwapChain->QueryInterface((IDXGISwapChain1**)getter_AddRefs(chain));
-
-    if (SUCCEEDED(hr) && mAllowPartialPresents) {
-      DXGI_PRESENT_PARAMETERS params;
-      PodZero(&params);
-      params.DirtyRectsCount = mBackBufferInvalid.GetNumRects();
-      StackArray<RECT, 4> rects(params.DirtyRectsCount);
-
-      uint32_t i = 0;
-      for (auto iter = mBackBufferInvalid.RectIter(); !iter.Done(); iter.Next()) {
-        const IntRect& r = iter.Get();
-        rects[i].left = r.x;
-        rects[i].top = r.y;
-        rects[i].bottom = r.YMost();
-        rects[i].right = r.XMost();
-        i++;
-      }
-
-      params.pDirtyRects = params.DirtyRectsCount ? rects.data() : nullptr;
-      chain->Present1(presentInterval, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0, &params);
-    } else {
-      HRESULT hr = mSwapChain->Present(0, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0);
-      if (FAILED(hr)) {
-        gfxCriticalNote << "D3D11 swap chain preset failed " << hexa(hr);
-        HandleError(hr);
-      }
-    }
-
-    if (mIsDoubleBuffered) {
-      mBackBufferInvalid = mFrontBufferInvalid;
-      mFrontBufferInvalid.SetEmpty();
-    } else {
-      mBackBufferInvalid.SetEmpty();
-    }
-
-    mDisableSequenceForNextFrame = false;
+  // This must be called before present so our back buffer has the validated window content.
+  if (mTarget) {
+    PaintToTarget();
   }
 
-  // Block until the previous frame's work has been completed.
-  if (mQuery) {
-    TimeStamp start = TimeStamp::Now();
-    BOOL result;
-    while (mContext->GetData(mQuery, &result, sizeof(BOOL), 0) != S_OK) {
-      if (mDevice->GetDeviceRemovedReason() != S_OK) {
-        break;
-      }
-      if ((TimeStamp::Now() - start) > TimeDuration::FromSeconds(2)) {
-        break;
-      }
-      Sleep(0);
+  RefPtr<IDXGISwapChain1> chain;
+  HRESULT hr = mSwapChain->QueryInterface((IDXGISwapChain1**)getter_AddRefs(chain));
+
+  if (SUCCEEDED(hr) && mAllowPartialPresents) {
+    DXGI_PRESENT_PARAMETERS params;
+    PodZero(&params);
+    params.DirtyRectsCount = mBackBufferInvalid.GetNumRects();
+    StackArray<RECT, 4> rects(params.DirtyRectsCount);
+
+    uint32_t i = 0;
+    for (auto iter = mBackBufferInvalid.RectIter(); !iter.Done(); iter.Next()) {
+      const IntRect& r = iter.Get();
+      rects[i].left = r.x;
+      rects[i].top = r.y;
+      rects[i].bottom = r.YMost();
+      rects[i].right = r.XMost();
+      i++;
+    }
+
+    params.pDirtyRects = params.DirtyRectsCount ? rects.data() : nullptr;
+    chain->Present1(presentInterval, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0, &params);
+  } else {
+    HRESULT hr = mSwapChain->Present(0, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0);
+    if (FAILED(hr)) {
+      gfxCriticalNote << "D3D11 swap chain preset failed " << hexa(hr);
+      HandleError(hr);
     }
   }
-  // Store the query for this frame so we can flush it next time.
-  mQuery = query;
 
-  Compositor::EndFrame();
+  if (mIsDoubleBuffered) {
+    mBackBufferInvalid = mFrontBufferInvalid;
+    mFrontBufferInvalid.SetEmpty();
+  } else {
+    mBackBufferInvalid.SetEmpty();
+  }
 
-  mCurrentRT = nullptr;
+  mDisableSequenceForNextFrame = false;
 }
 
 void

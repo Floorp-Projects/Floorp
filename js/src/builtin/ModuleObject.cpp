@@ -390,8 +390,7 @@ ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(JSContext* cx, Han
 {
     Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
     if (JSID_IS_SYMBOL(id)) {
-        Rooted<JS::Symbol*> symbol(cx, JSID_TO_SYMBOL(id));
-        if (symbol == cx->wellKnownSymbols().toStringTag) {
+        if (JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().toStringTag) {
             RootedValue value(cx, StringValue(cx->names().Module));
             desc.object().set(proxy);
             desc.setWritable(false);
@@ -437,8 +436,7 @@ ModuleNamespaceObject::ProxyHandler::has(JSContext* cx, HandleObject proxy, Hand
 {
     Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
     if (JSID_IS_SYMBOL(id)) {
-        Rooted<JS::Symbol*> symbol(cx, JSID_TO_SYMBOL(id));
-        *bp = symbol == cx->wellKnownSymbols().toStringTag;
+        *bp = JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().toStringTag;
         return true;
     }
 
@@ -452,8 +450,7 @@ ModuleNamespaceObject::ProxyHandler::get(JSContext* cx, HandleObject proxy, Hand
 {
     Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
     if (JSID_IS_SYMBOL(id)) {
-        Rooted<JS::Symbol*> symbol(cx, JSID_TO_SYMBOL(id));
-        if (symbol == cx->wellKnownSymbols().toStringTag) {
+        if (JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().toStringTag) {
             vp.setString(cx->names().Module);
             return true;
         }
@@ -491,8 +488,15 @@ ModuleNamespaceObject::ProxyHandler::delete_(JSContext* cx, HandleObject proxy, 
                                              ObjectOpResult& result) const
 {
     Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
+    if (JSID_IS_SYMBOL(id)) {
+        if (JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().toStringTag)
+            return result.failCantDelete();
+
+        return result.succeed();
+    }
+
     if (ns->bindings().has(id))
-        return result.failReadOnly();
+        return result.failCantDelete();
 
     return result.succeed();
 }
