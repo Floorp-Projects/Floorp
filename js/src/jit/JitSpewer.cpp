@@ -444,7 +444,7 @@ jit::CheckLogging()
             "  profiling     Profiling-related information\n"
             "  trackopts     Optimization tracking information gathered by the Gecko profiler. "
                             "(Note: call enableGeckoProfiling() in your script to enable it).\n"
-            "  trackopts-ext Encoding information about optimization tracking"
+            "  trackopts-ext Encoding information about optimization tracking\n"
             "  dump-mir-expr Dump the MIR expressions\n"
             "  cfg           Control flow graph generation\n"
             "  all           Everything\n"
@@ -458,6 +458,8 @@ jit::CheckLogging()
             "  bl-bails      Baseline bailouts\n"
             "  bl-dbg-osr    Baseline debug mode on stack recompile messages\n"
             "  bl-all        All baseline spew\n"
+            "\n"
+            "  cacheir-logs  CacheIR IC attach logging\n"
             "\n"
         );
         exit(0);

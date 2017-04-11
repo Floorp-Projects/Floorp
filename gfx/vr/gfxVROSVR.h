@@ -64,8 +64,8 @@ class VRSystemManagerOSVR : public VRSystemManager
 {
 public:
   static already_AddRefed<VRSystemManagerOSVR> Create();
-  virtual bool Init() override;
   virtual void Destroy() override;
+  virtual void Shutdown() override;
   virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) override;
   virtual bool GetIsPresenting() override;
   virtual void HandleInput() override;
@@ -88,6 +88,8 @@ protected:
     , m_display(nullptr)
   {
   }
+
+  bool Init();
 
   RefPtr<impl::VRDisplayOSVR> mHMDInfo;
   bool mOSVRInitialized;

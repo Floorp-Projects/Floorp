@@ -248,64 +248,29 @@ endif
 distclean::
 	$(RM) $(DIST_GARBAGE)
 
-ifeq ($(OS_ARCH),WINNT)
-# we want to copy PDB files on Windows
-MAKE_SYM_STORE_ARGS := -c --vcs-info
-ifdef PDBSTR_PATH
-MAKE_SYM_STORE_ARGS += -i
-endif
-ifdef MSVC_HAS_DIA_SDK
-DUMP_SYMS_BIN ?= $(DIST)/host/bin/dump_syms.exe
-else
-DUMP_SYMS_BIN ?= $(topsrcdir)/toolkit/crashreporter/tools/win32/dump_syms_vc$(_MSC_VER).exe
-endif
-# PDB files don't get moved to dist, so we need to scan the whole objdir
-MAKE_SYM_STORE_PATH := .
-endif
-ifeq ($(OS_ARCH),Darwin)
-# need to pass arch flags for universal builds
-MAKE_SYM_STORE_ARGS := -c -a $(OS_TEST) --vcs-info
-MAKE_SYM_STORE_PATH := $(DIST)/bin
-DUMP_SYMS_BIN ?= $(DIST)/host/bin/dump_syms
-endif
-ifeq (,$(filter-out Linux SunOS,$(OS_ARCH)))
-MAKE_SYM_STORE_ARGS := -c --vcs-info
-DUMP_SYMS_BIN ?= $(DIST)/host/bin/dump_syms
-MAKE_SYM_STORE_PATH := $(DIST)/bin
-endif
-MAKE_SYM_STORE_ARGS += --install-manifest=$(DEPTH)/_build_manifests/install/dist_include,$(DIST)/include
-
-SYM_STORE_SOURCE_DIRS := $(topsrcdir)
-
 ifdef MOZ_CRASHREPORTER
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
 endif
 
-.PHONY: generatesymbols
-generatesymbols:
-	echo building symbol store
-	$(RM) -r $(DIST)/crashreporter-symbols
-	$(RM) '$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip'
-	$(RM) '$(DIST)/$(SYMBOL_FULL_ARCHIVE_BASENAME).zip'
-	$(NSINSTALL) -D $(DIST)/crashreporter-symbols
-	OBJCOPY='$(OBJCOPY)' \
-	$(PYTHON) $(topsrcdir)/toolkit/crashreporter/tools/symbolstore.py \
-	  $(MAKE_SYM_STORE_ARGS)                                          \
-	  $(foreach dir,$(SYM_STORE_SOURCE_DIRS),-s $(dir))               \
-	  $(DUMP_SYMS_BIN)                                                \
-	  $(DIST)/crashreporter-symbols                                   \
-	  $(MAKE_SYM_STORE_PATH)
+.PHONY: prepsymbolsarchive
+prepsymbolsarchive:
 	echo packing symbols
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 
+ifndef MOZ_AUTOMATION
+prepsymbolsarchive: recurse_syms
+endif
+
 .PHONY: symbolsfullarchive
-symbolsfullarchive: generatesymbols
+symbolsfullarchive: prepsymbolsarchive
+	$(RM) '$(DIST)/$(SYMBOL_FULL_ARCHIVE_BASENAME).zip'
 	cd $(DIST)/crashreporter-symbols && \
           zip -r5D '../$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip' . -x '*test*' -x '*Test*'
 
 .PHONY: symbolsarchive
-symbolsarchive: generatesymbols
+symbolsarchive: prepsymbolsarchive
+	$(RM) '$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip'
 	cd $(DIST)/crashreporter-symbols && \
           zip -r5D '../$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip' . -i '*.sym'
 

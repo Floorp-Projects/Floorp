@@ -22,6 +22,7 @@
 
 class nsCSSPropertyIDSet;
 class nsCSSValue;
+class nsFontMetrics;
 class nsIStyleRule;
 class nsStyleContext;
 class nsStyleCoord;
@@ -796,6 +797,18 @@ public:
   static void EnsureBlockDisplay(mozilla::StyleDisplay& display,
                                  bool aConvertListItem = false);
   static void EnsureInlineDisplay(mozilla::StyleDisplay& display);
+
+  static already_AddRefed<nsFontMetrics> GetMetricsFor(nsPresContext* aPresContext,
+                                                       bool aIsVertical,
+                                                       const nsStyleFont* aStyleFont,
+                                                       nscoord aFontSize,
+                                                       bool aUseUserFontSet);
+
+  static already_AddRefed<nsFontMetrics> GetMetricsFor(nsPresContext* aPresContext,
+                                                       nsStyleContext* aStyleContext,
+                                                       const nsStyleFont* aStyleFont,
+                                                       nscoord aFontSize,
+                                                       bool aUseUserFontSet);
 
   // Transition never returns null; on out of memory it'll just return |this|.
   nsRuleNode* Transition(nsIStyleRule* aRule, mozilla::SheetType aLevel,

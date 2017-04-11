@@ -23,8 +23,6 @@
 #ifndef mozilla_ovr_capi_dynamic_h_
 #define mozilla_ovr_capi_dynamic_h_
 
-#define OVR_CAPI_LIMITED_MOZILLA 1
-
 #ifdef HAVE_64BIT_BUILD
 #define OVR_PTR_SIZE 8
 #define OVR_ON64(x)     x

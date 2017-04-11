@@ -21,8 +21,8 @@ config = {
     ] + [
         # File, from, to
         ("{}/{}".format(d, f),
-        "ac_add_options --with-l10n-base=../../mozilla-aurora",
-        "ac_add_options --with-l10n-base=../../mozilla-beta")
+        "ac_add_options --with-l10n-base=../../mozilla-beta",
+        "ac_add_options --with-l10n-base=../../mozilla-release")
         for d in ["mobile/android/config/mozconfigs/android-api-15/",
                   "mobile/android/config/mozconfigs/android-x86/"]
         for f in ["l10n-nightly", "l10n-release"]

@@ -83,6 +83,7 @@
 #include "nsCSSProps.h"
 #include "nsPluginFrame.h"
 #include "nsSVGMaskFrame.h"
+#include "ClientLayerManager.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderDisplayItemLayer.h"
@@ -2115,9 +2116,16 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
 
     {
       PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Layerization);
+
       root = layerBuilder->
         BuildContainerLayerFor(aBuilder, layerManager, frame, nullptr, this,
                                containerParameters, nullptr);
+
+      if (!record.GetStart().IsNull() && gfxPrefs::LayersDrawFPS()) {
+        if (PaintTiming* pt = ClientLayerManager::MaybeGetPaintTiming(layerManager)) {
+          pt->flbMs() = (TimeStamp::Now() - record.GetStart()).ToMilliseconds();
+        }
+      }
     }
 
     if (!root) {

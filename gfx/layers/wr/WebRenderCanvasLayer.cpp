@@ -103,5 +103,11 @@ WebRenderCanvasLayer::AttachCompositable()
   mCanvasClient->Connect();
 }
 
+CompositableForwarder*
+WebRenderCanvasLayer::GetForwarder()
+{
+  return Manager()->WrBridge();
+}
+
 } // namespace layers
 } // namespace mozilla

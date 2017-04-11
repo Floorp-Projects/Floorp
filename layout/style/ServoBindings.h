@@ -237,11 +237,11 @@ void Gecko_SetListStyleType(nsStyleList* style_struct, uint32_t type);
 void Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src);
 
 // background-image style.
-// TODO: support element() and -moz-image()
 void Gecko_SetNullImageValue(nsStyleImage* image);
 void Gecko_SetGradientImageValue(nsStyleImage* image, nsStyleGradient* gradient);
 void Gecko_SetUrlImageValue(nsStyleImage* image,
                             ServoBundledURI uri);
+void Gecko_SetImageElement(nsStyleImage* image, nsIAtom* atom);
 void Gecko_CopyImageValueFrom(nsStyleImage* image, const nsStyleImage* other);
 void Gecko_InitializeImageCropRect(nsStyleImage* image);
 
@@ -398,6 +398,20 @@ bool Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id);
 void Gecko_nsStyleFont_SetLang(nsStyleFont* font, nsIAtom* atom);
 void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont, const nsStyleFont* aSource);
 FontSizePrefs Gecko_GetBaseSize(nsIAtom* lang);
+
+struct GeckoFontMetrics
+{
+  nscoord mChSize;
+  nscoord mXSize;
+};
+
+GeckoFontMetrics Gecko_GetFontMetrics(RawGeckoPresContextBorrowed pres_context,
+                                      bool is_vertical,
+                                      const nsStyleFont* font,
+                                      nscoord font_size,
+                                      bool use_user_font_set);
+void InitializeServo();
+void ShutdownServo();
 
 const nsMediaFeature* Gecko_GetMediaFeatures();
 

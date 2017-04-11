@@ -166,6 +166,7 @@ static const char contentSandboxRules[] =
   "(define should-log (param \"SHOULD_LOG\"))\n"
   "(define sandbox-level-1 (param \"SANDBOX_LEVEL_1\"))\n"
   "(define sandbox-level-2 (param \"SANDBOX_LEVEL_2\"))\n"
+  "(define sandbox-level-3 (param \"SANDBOX_LEVEL_3\"))\n"
   "(define macosMinorVersion-9 (param \"MAC_OS_MINOR_9\"))\n"
   "(define appPath (param \"APP_PATH\"))\n"
   "(define appBinaryPath (param \"APP_BINARY_PATH\"))\n"
@@ -175,6 +176,7 @@ static const char contentSandboxRules[] =
   "(define profileDir (param \"PROFILE_DIR\"))\n"
   "(define home-path (param \"HOME_PATH\"))\n"
   "(define hasFilePrivileges (param \"HAS_FILE_PRIVILEGES\"))\n"
+  "(define isDebugBuild (param \"DEBUG_BUILD\"))\n"
   "\n"
   "; Allow read access to standard system paths.\n"
   "(allow file-read*\n"
@@ -388,6 +390,26 @@ static const char contentSandboxRules[] =
   "        ; we don't have a profile dir\n"
   "        (allow file-read* (require-not (home-subpath \"/Library\"))))))\n"
   "\n"
+  "; level 3: global read access permitted, no global write access,\n"
+  ";          no read access to the home directory,\n"
+  ";          read access permitted to $PROFILE/{extensions,chrome}\n"
+  "  (if (string=? sandbox-level-3 \"TRUE\")\n"
+  "    (if (string=? hasFilePrivileges \"TRUE\")\n"
+  "      ; This process has blanket file read privileges\n"
+  "      (allow file-read*)\n"
+  "      ; This process does not have blanket file read privileges\n"
+  "      (if (string=? hasProfileDir \"TRUE\")\n"
+  "        ; we have a profile dir\n"
+  "        (begin\n"
+  "          (allow file-read* (require-all\n"
+  "              (require-not (subpath home-path))\n"
+  "              (require-not (subpath profileDir))))\n"
+  "          (allow file-read*\n"
+  "              (profile-subpath \"/extensions\")\n"
+  "              (profile-subpath \"/chrome\")))\n"
+  "        ; we don't have a profile dir\n"
+  "        (allow file-read* (require-not (subpath home-path))))))\n"
+  "\n"
   "; accelerated graphics\n"
   "  (allow-shared-preferences-read \"com.apple.opengl\")\n"
   "  (allow-shared-preferences-read \"com.nvidia.OpenGL\")\n"
@@ -421,11 +443,10 @@ static const char contentSandboxRules[] =
   "\n"
   "; bug 1324610\n"
   "  (allow network-outbound (literal \"/private/var/run/cupsd\"))\n"
-#ifdef DEBUG
   "\n"
   "; bug 1303987\n"
-  "  (allow file-write* (var-folders-regex \"/\"))\n"
-#endif
+  "  (if (string=? isDebugBuild \"TRUE\")\n"
+  "      (allow file-write* (var-folders-regex \"/\")))\n"
   ")\n";
 
 bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
@@ -462,6 +483,8 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
       params.push_back(aInfo.level == 1 ? "TRUE" : "FALSE");
       params.push_back("SANDBOX_LEVEL_2");
       params.push_back(aInfo.level == 2 ? "TRUE" : "FALSE");
+      params.push_back("SANDBOX_LEVEL_3");
+      params.push_back(aInfo.level == 3 ? "TRUE" : "FALSE");
       params.push_back("MAC_OS_MINOR_9");
       params.push_back(OSXVersion::OSXVersionMinor() == 9 ? "TRUE" : "FALSE");
       params.push_back("APP_PATH");
@@ -480,6 +503,12 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
       params.push_back(aInfo.hasSandboxedProfile ? "TRUE" : "FALSE");
       params.push_back("HAS_FILE_PRIVILEGES");
       params.push_back(aInfo.hasFilePrivileges ? "TRUE" : "FALSE");
+      params.push_back("DEBUG_BUILD");
+#ifdef DEBUG
+      params.push_back("TRUE");
+#else
+      params.push_back("FALSE");
+#endif
     } else {
       fprintf(stderr,
         "Content sandbox disabled due to sandbox level setting\n");

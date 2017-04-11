@@ -122,6 +122,8 @@ parent:
   // input event.
   async SetConfirmedTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
 
+  async RecordPaintTimes(PaintTiming timing);
+
   async Shutdown();
 child:
   async __delete__();

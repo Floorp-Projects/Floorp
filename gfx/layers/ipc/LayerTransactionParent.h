@@ -140,6 +140,7 @@ protected:
   virtual mozilla::ipc::IPCResult RecvRequestProperty(const nsString& aProperty, float* aValue) override;
   virtual mozilla::ipc::IPCResult RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,
                                                              nsTArray<ScrollableLayerGuid>&& aTargets) override;
+  virtual mozilla::ipc::IPCResult RecvRecordPaintTimes(const PaintTiming& aTiming) override;
 
   bool SetLayerAttributes(const OpSetLayerAttributes& aOp);
 

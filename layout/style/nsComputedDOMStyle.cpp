@@ -841,7 +841,7 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
 
   if (!mStyleContext || mStyleContext->HasPseudoElementData()) {
 #ifdef DEBUG
-    if (mStyleContext) {
+    if (mStyleContext && mStyleContext->StyleSource().IsGeckoRuleNodeOrNull()) {
       // We want to check that going through this path because of
       // HasPseudoElementData is rare, because it slows us down a good
       // bit.  So check that we're really inside something associated
@@ -2293,7 +2293,8 @@ nsComputedDOMStyle::SetValueToStyleImage(const nsStyleImage& aStyleImage,
     {
       nsAutoString elementId;
       nsStyleUtil::AppendEscapedCSSIdent(
-        nsDependentString(aStyleImage.GetElementId()), elementId);
+        nsDependentAtomString(aStyleImage.GetElementId()),
+                              elementId);
       nsAutoString elementString = NS_LITERAL_STRING("-moz-element(#") +
                                    elementId +
                                    NS_LITERAL_STRING(")");

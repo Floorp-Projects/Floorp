@@ -2094,33 +2094,13 @@ nsPresContext::MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
 
   if (!PR_CLIST_IS_EMPTY(mDocument->MediaQueryLists())) {
     // We build a list of all the notifications we're going to send
-    // before we send any of them.  (The spec says the notifications
-    // should be a queued task, so any removals that happen during the
-    // notifications shouldn't affect what gets notified.)  Furthermore,
-    // we hold strong pointers to everything we're going to make
-    // notification calls to, since each notification involves calling
-    // arbitrary script that might otherwise destroy these objects, or,
-    // for that matter, |this|.
-    //
-    // Note that we intentionally send the notifications to media query
-    // list in the order they were created and, for each list, to the
-    // listeners in the order added.
-    nsTArray<MediaQueryList::HandleChangeData> notifyList;
+    // before we send any of them.
     for (PRCList *l = PR_LIST_HEAD(mDocument->MediaQueryLists());
          l != mDocument->MediaQueryLists(); l = PR_NEXT_LINK(l)) {
+      nsAutoMicroTask mt;
       MediaQueryList *mql = static_cast<MediaQueryList*>(l);
-      mql->MediumFeaturesChanged(notifyList);
+      mql->MaybeNotify();
     }
-
-    if (!notifyList.IsEmpty()) {
-      for (uint32_t i = 0, i_end = notifyList.Length(); i != i_end; ++i) {
-        nsAutoMicroTask mt;
-        MediaQueryList::HandleChangeData &d = notifyList[i];
-        d.callback->Call(*d.mql);
-      }
-    }
-
-    // NOTE:  When |notifyList| goes out of scope, our destructor could run.
   }
 }
 

@@ -92,6 +92,8 @@ public:
   void BeginShutdown();
   void Shutdown();
 
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
   bool GetAuthorStyleDisabled() const;
   nsresult SetAuthorStyleDisabled(bool aStyleDisabled);
 

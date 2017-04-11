@@ -267,11 +267,11 @@ EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
           }
           Accumulate(id, s.mJitter.Value());
         }
-        if (s.mMozRtt.WasPassed()) {
+        if (s.mRoundTripTime.WasPassed()) {
           MOZ_ASSERT(s.mIsRemote);
           HistogramID id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_RTT :
                                      WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT;
-          Accumulate(id, s.mMozRtt.Value());
+          Accumulate(id, s.mRoundTripTime.Value());
         }
         if (lastInboundStats && s.mBytesReceived.WasPassed()) {
           auto& laststats = *lastInboundStats;

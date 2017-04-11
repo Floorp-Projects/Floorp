@@ -19,15 +19,8 @@ function run_test() {
 
   standardInit();
 
-  if (IS_TOOLKIT_GONK) {
-    // GONK doesn't resume downloads at boot time, so the updateCount will
-    // always be zero.
-    Assert.equal(gUpdateManager.updateCount, 0,
-                 "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
-  } else {
-    Assert.equal(gUpdateManager.updateCount, 1,
-                 "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
-  }
+  Assert.equal(gUpdateManager.updateCount, 1,
+               "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
   Assert.equal(gUpdateManager.activeUpdate.state, STATE_DOWNLOADING,
                "the update manager activeUpdate state attribute" +
                MSG_SHOULD_EQUAL);

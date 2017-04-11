@@ -265,8 +265,6 @@ to mochitest command.
     * ... `-moz-min-content` [12]
     * ... `-moz-fit-content` [12]
     * ... `-moz-available` [10]
-  * -moz-element() function for &lt;image&gt; servo/servo#15443
-    * test_value_storage.html `-moz-element` [49]
   * -moz-anchor-decoration value on text-decoration
     * test_value_storage.html `-moz-anchor-decoration` [10]
   * several prefixed values in cursor property

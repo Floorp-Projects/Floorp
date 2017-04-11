@@ -61,7 +61,8 @@ public:
     nsFontMetrics(const nsFont& aFont, const Params& aParams,
                   nsDeviceContext *aContext);
 
-    NS_INLINE_DECL_REFCOUNTING(nsFontMetrics)
+    // Used by stylo
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsFontMetrics)
 
     /**
      * Destroy this font metrics. This breaks the association between

@@ -192,9 +192,11 @@ CSSStyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
     // is worthwhile:
     // - s->mRuleCollection
     // - s->mRuleProcessors
+    // - s->mStyleSets
     //
     // The following members are not measured:
     // - s->mOwnerRule, because it's non-owning
+    // - s->mScopeElement, because it's non-owning
 
     s = s->mNext ? s->mNext->AsGecko() : nullptr;
   }

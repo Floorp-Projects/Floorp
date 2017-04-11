@@ -96,7 +96,7 @@ public class GeckoViewActivity extends Activity {
 
     private class MyGeckoViewContent implements GeckoView.ContentListener {
         @Override
-        public void onTitleChanged(GeckoView view, String title) {
+        public void onTitleChange(GeckoView view, String title) {
             Log.i(LOGTAG, "Content title changed to " + title);
         }
     }
@@ -113,7 +113,7 @@ public class GeckoViewActivity extends Activity {
         }
 
         @Override
-        public void onSecurityChanged(GeckoView view, int status) {
+        public void onSecurityChange(GeckoView view, int status) {
             String statusString;
             if ((status & STATE_IS_BROKEN) != 0) {
                 statusString = "broken";

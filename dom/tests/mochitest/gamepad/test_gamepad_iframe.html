@@ -42,7 +42,7 @@ function startTest() {
                      0).then(function(i) {
                        index = i;
                        // Simulate button events on the gamepad we added
-                       GamepadService.newButtonEvent(index, 0, true);
+                       GamepadService.newButtonEvent(index, 0, true, true);
                      });
 }
 
@@ -59,12 +59,14 @@ function connecthandler(e) {
 function buttontest1() {
   var gamepads = navigator.getGamepads();
   is(gamepads[0].buttons[0].pressed, true, "gamepad button should register as pressed");
-  GamepadService.newButtonValueEvent(index, 1, true, 0.5);
+  is(gamepads[0].buttons[0].touched, true, "gamepad button should register as touched");
+  GamepadService.newButtonValueEvent(index, 1, true, true, 0.5);
 }
 
 function buttontest2() {
   var gamepads = navigator.getGamepads();
   is(gamepads[0].buttons[1].pressed, true, "gamepad button should register as pressed");
+  is(gamepads[0].buttons[1].touched, true, "gamepad button should register as touched");
   is(gamepads[0].buttons[1].value, 0.5, "gamepad button value should be 0.5");
   GamepadService.removeGamepad(index);
   SimpleTest.finish();
