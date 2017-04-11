@@ -48,11 +48,18 @@ Diagnostics::RecordPaintTimes(const PaintTiming& aPaintTimes)
 }
 
 std::string
-Diagnostics::GetFrameOverlayString()
+Diagnostics::GetFrameOverlayString(const GPUStats& aStats)
 {
   TimeStamp now = TimeStamp::Now();
   unsigned fps = unsigned(mCompositeFps.AddFrameAndGetFps(now));
   unsigned txnFps = unsigned(mTransactionFps.GetFPS(now));
+
+  float pixelFillRatio = aStats.mInvalidPixels
+                         ? float(aStats.mPixelsFilled) / float(aStats.mInvalidPixels)
+                         : 0.0f;
+  float screenFillRatio = aStats.mScreenPixels
+                          ? float(aStats.mPixelsFilled) / float(aStats.mScreenPixels)
+                          : 0.0f;
 
   // DL  = nsDisplayListBuilder
   // FLB = FrameLayerBuilder
@@ -63,18 +70,24 @@ Diagnostics::GetFrameOverlayString()
   // CC_BUILD = Container prepare/composite frame building
   // CC_EXEC  = Container render/composite drawing
   nsPrintfCString line1("FPS: %d (TXN: %d)", fps, txnFps);
-  nsPrintfCString line2("CC_BUILD: %0.1f CC_EXEC: %0.1f",
+  nsPrintfCString line2("[CC] Build: %0.1fms Exec: %0.1fms Fill Ratio: %0.1f/%0.1f",
     mPrepareMs.Average(),
-    mCompositeMs.Average());
-  nsPrintfCString line3("DL: %0.1f FLB: %0.1f R: %0.1f CP: %0.1f TX: %0.1f UP: %0.1f",
+    mCompositeMs.Average(),
+    pixelFillRatio,
+    screenFillRatio);
+  nsPrintfCString line3("[Content] DL: %0.1fms FLB: %0.1fms Raster: %0.1fms",
     mDlbMs.Average(),
     mFlbMs.Average(),
-    mRasterMs.Average(),
+    mRasterMs.Average());
+  nsPrintfCString line4("[IPDL] Build: %0.1fms Send: %0.1fms Update: %0.1fms",
     mSerializeMs.Average(),
     mSendMs.Average(),
     mUpdateMs.Average());
 
-  return std::string(line1.get()) + ", " + std::string(line2.get()) + "\n" + std::string(line3.get());
+  return std::string(line1.get()) + "\n" +
+         std::string(line2.get()) + "\n" +
+         std::string(line3.get()) + "\n" +
+         std::string(line4.get());
 }
 
 } // namespace layers

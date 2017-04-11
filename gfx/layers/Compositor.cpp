@@ -6,6 +6,7 @@
 #include "mozilla/layers/Compositor.h"
 #include "base/message_loop.h"          // for MessageLoop
 #include "mozilla/layers/CompositorBridgeParent.h"  // for CompositorBridgeParent
+#include "mozilla/layers/Diagnostics.h"
 #include "mozilla/layers/Effects.h"     // for Effect, EffectChain, etc
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureHost.h"
@@ -637,6 +638,13 @@ Compositor::NotifyNotUsedAfterComposition(TextureHost* aTextureHost)
     return false;
   }
   return TextureSourceProvider::NotifyNotUsedAfterComposition(aTextureHost);
+}
+
+void
+Compositor::GetFrameStats(GPUStats* aStats)
+{
+  aStats->mInvalidPixels = mPixelsPerFrame;
+  aStats->mPixelsFilled = mPixelsFilled;
 }
 
 } // namespace layers
