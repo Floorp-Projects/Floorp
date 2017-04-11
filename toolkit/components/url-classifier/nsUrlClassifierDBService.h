@@ -218,11 +218,6 @@ private:
                     uint32_t aCount,
                     LookupResultArray& results);
 
-  nsresult CacheResultToTableUpdate(CacheResult* aCacheResult,
-                                    TableUpdate* aUpdate);
-
-  bool IsSameAsLastResults(CacheResultArray& aResult);
-
   // Can only be used on the background thread
   nsCOMPtr<nsICryptoHash> mCryptoHash;
 
@@ -244,7 +239,7 @@ private:
   PrefixArray mMissCache;
 
   // Stores the last results that triggered a table update.
-  nsAutoPtr<CacheResultArray> mLastResults;
+  CacheResultArray mLastResults;
 
   nsresult mUpdateStatus;
   nsTArray<nsCString> mUpdateTables;
