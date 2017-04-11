@@ -191,9 +191,8 @@ NS_IMETHODIMP nsPrefBranch::GetFloatPrefWithDefault(const char *aPrefName,
 NS_IMETHODIMP nsPrefBranch::GetFloatPref(const char *aPrefName, float *_retval)
 {
   NS_ENSURE_ARG(aPrefName);
-  const char *pref = getPrefName(aPrefName);
   nsAutoCString stringVal;
-  nsresult rv = GetCharPref(pref, getter_Copies(stringVal));
+  nsresult rv = GetCharPref(aPrefName, getter_Copies(stringVal));
   if (NS_SUCCEEDED(rv)) {
     *_retval = stringVal.ToFloat(&rv);
   }
