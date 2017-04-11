@@ -240,6 +240,11 @@ struct WrRect
   }
 };
 
+struct WrMatrix
+{
+  float values[16];
+};
+
 struct WrColor
 {
   float r;
@@ -630,7 +635,7 @@ WR_FUNC;
 WR_INLINE void
 wr_dp_push_stacking_context(WrState *wrState, WrRect bounds,
                             WrRect overflow, const WrImageMask *mask,
-                            float opacity, const float* matrix,
+                            float opacity, WrMatrix transform,
                             WrMixBlendMode mixBlendMode)
 WR_FUNC;
 

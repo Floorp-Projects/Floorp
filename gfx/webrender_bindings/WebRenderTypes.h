@@ -8,6 +8,7 @@
 
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/Range.h"
@@ -218,6 +219,16 @@ template<class T>
 static inline WrSize ToWrSize(const gfx::IntSizeTyped<T>& size)
 {
   return ToWrSize(IntSizeToSize(size));
+}
+
+template<class S, class T>
+static inline WrMatrix ToWrMatrix(const gfx::Matrix4x4Typed<S, T>& m)
+{
+  WrMatrix transform;
+  static_assert(sizeof(m.components) == sizeof(transform.values),
+      "Matrix components size mismatch!");
+  memcpy(transform.values, m.components, sizeof(transform.values));
+  return transform;
 }
 
 static inline WrBorderStyle ToWrBorderStyle(const uint8_t& style)
