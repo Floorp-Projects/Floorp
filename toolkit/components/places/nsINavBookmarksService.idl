@@ -675,7 +675,8 @@ interface nsINavBookmarksService : nsISupports
    * aObserver must implement nsISupportsWeakReference, and the bookmark
    * service will keep a weak reference to the observer.
    */
-  void addObserver(in nsINavBookmarkObserver observer, in boolean ownsWeak);
+  void addObserver(in nsINavBookmarkObserver observer,
+                   [optional] in boolean ownsWeak);
 
   /**
    * Removes a bookmark observer.
