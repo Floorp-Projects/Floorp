@@ -28,6 +28,7 @@ public:
 
   enum class FontType {
     Default,
+    FixedWidth,
     NumTypes
   };
 
