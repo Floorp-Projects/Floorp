@@ -380,7 +380,6 @@ ScriptParseTask::parse(JSContext* cx)
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
     script = frontend::CompileGlobalScript(cx, alloc, ScopeKind::Global,
                                            options, srcBuf,
-                                           /* extraSct = */ nullptr,
                                            /* sourceObjectOut = */ &sourceObject);
 }
 

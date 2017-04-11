@@ -485,9 +485,7 @@ class ScriptSource
     MOZ_MUST_USE bool initFromOptions(JSContext* cx,
                                       const ReadOnlyCompileOptions& options,
                                       const mozilla::Maybe<uint32_t>& parameterListEnd = mozilla::Nothing());
-    MOZ_MUST_USE bool setSourceCopy(JSContext* cx,
-                                    JS::SourceBufferHolder& srcBuf,
-                                    SourceCompressionTask* tok);
+    MOZ_MUST_USE bool setSourceCopy(JSContext* cx, JS::SourceBufferHolder& srcBuf);
     void setSourceRetrievable() { sourceRetrievable_ = true; }
     bool sourceRetrievable() const { return sourceRetrievable_; }
     bool hasSourceData() const { return !data.is<Missing>(); }
