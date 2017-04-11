@@ -207,6 +207,8 @@ private:
   void Draw(const gfx::Rect& aGeometry,
             const gfx::Rect* aTexCoords);
 
+  void Present();
+
   ID3D11VertexShader* GetVSForGeometry(const nsTArray<gfx::TexturedTriangle>& aTriangles,
                                        const bool aUseBlendShader,
                                        const MaskType aMaskType);
