@@ -8,4 +8,10 @@
          No need to fail the builds. -->
     <issue id="MissingTranslation" severity="warning" />
     <issue id="ExtraTranslation" severity="warning" />
+
+    <!-- Ignore support library lint bug: https://code.google.com/p/android/issues/detail?id=227098
+         (Present in 25.3.1, despite claims of being fixed in 23) -->
+    <issue id="InconsistentLayout">
+        <ignore path="**/appcompat-v7/**/res/layout/notification_template_custom_big.xml"/>
+    </issue>
 </lint>
