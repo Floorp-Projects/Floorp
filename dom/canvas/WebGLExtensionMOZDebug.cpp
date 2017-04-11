@@ -6,22 +6,23 @@
 #include "WebGLExtensions.h"
 
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "GLContext.h"
 #include "WebGLContext.h"
 #include "WebGLContextUtils.h"
 
 namespace mozilla {
 
-WebGLExtensionDebugGet::WebGLExtensionDebugGet(WebGLContext* webgl)
+WebGLExtensionMOZDebug::WebGLExtensionMOZDebug(WebGLContext* webgl)
     : WebGLExtensionBase(webgl)
 {
 }
 
-WebGLExtensionDebugGet::~WebGLExtensionDebugGet()
+WebGLExtensionMOZDebug::~WebGLExtensionMOZDebug()
 {
 }
 
 void
-WebGLExtensionDebugGet::GetParameter(JSContext* cx, GLenum pname,
+WebGLExtensionMOZDebug::GetParameter(JSContext* cx, GLenum pname,
                                      JS::MutableHandle<JS::Value> retval,
                                      ErrorResult& er) const
 {
@@ -68,12 +69,12 @@ WebGLExtensionDebugGet::GetParameter(JSContext* cx, GLenum pname,
         }
 
     default:
-        mContext->ErrorInvalidEnumArg("MOZ_debug_get.getParameter", "pname", pname);
+        mContext->ErrorInvalidEnumArg("MOZ_debug.getParameter", "pname", pname);
         retval.set(JS::NullValue());
         return;
     }
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDebugGet, MOZ_debug_get)
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionMOZDebug, MOZ_debug)
 
 } // namespace mozilla
