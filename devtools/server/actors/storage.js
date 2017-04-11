@@ -492,7 +492,7 @@ StorageActors.createActor({
       return host == null;
     }
 
-    host = trimHttpHttps(host);
+    host = trimHttpHttpsPort(host);
 
     if (cookie.host.startsWith(".")) {
       return ("." + host).endsWith(cookie.host);
@@ -742,7 +742,7 @@ var cookieHelpers = {
       host = "";
     }
 
-    host = trimHttpHttps(host);
+    host = trimHttpHttpsPort(host);
 
     let cookies = Services.cookies.getCookiesFromHost(host, originAttributes);
     let store = [];
@@ -878,7 +878,7 @@ var cookieHelpers = {
       opts.path = split[2];
     }
 
-    host = trimHttpHttps(host);
+    host = trimHttpHttpsPort(host);
 
     function hostMatches(cookieHost, matchHost) {
       if (cookieHost == null) {
@@ -2418,7 +2418,12 @@ exports.setupParentProcessForIndexedDB = function ({ mm, prefix }) {
 /**
  * General helpers
  */
-function trimHttpHttps(url) {
+function trimHttpHttpsPort(url) {
+  let match = url.match(/(.+):\d+$/);
+
+  if (match) {
+    url = match[1];
+  }
   if (url.startsWith("http://")) {
     return url.substr(7);
   }
