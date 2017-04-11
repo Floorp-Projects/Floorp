@@ -47,7 +47,7 @@ function test_pause_frame() {
       let location = wasmFrame.where;
       do_check_eq(location.line > 0, true);
       do_check_eq(location.column > 0, true);
-      do_check_eq(location.source.url.endsWith(" > wasm"), true);
+      do_check_eq(/^wasm:(?:[^:]*:)*?[0-9a-f]{16}$/.test(location.source.url), true);
 
       finishClient(gClient);
     });
