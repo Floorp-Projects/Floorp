@@ -394,6 +394,8 @@ pref("media.decoder-doctor.notifications-allowed", "MediaWMFNeeded,MediaWidevine
 pref("media.decoder-doctor.verbose", false);
 // Whether DD should consider WMF-disabled a WMF failure, useful for testing.
 pref("media.decoder-doctor.wmf-disabled-is-failure", false);
+// URL to report decode issues
+pref("media.decoder-doctor.new-issue-endpoint", "https://webcompat.com/issues/new");
 
 // Whether to suspend decoding of videos in background tabs.
 #ifdef NIGHTLY_BUILD
