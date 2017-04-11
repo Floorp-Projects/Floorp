@@ -344,6 +344,7 @@ private:
                   nsTArray<RefPtr<ServoStyleSheet>>> mSheets;
   int32_t mBatching;
   bool mAllowResolveStaleStyles;
+  bool mAuthorStyleDisabled;
 
   // Stores pointers to our cached style contexts for non-inheriting anonymous
   // boxes.
