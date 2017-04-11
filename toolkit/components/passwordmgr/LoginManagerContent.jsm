@@ -1493,7 +1493,7 @@ UserAutoCompleteResult.prototype = {
 
     if (this._showInsecureFieldWarning && index === 0) {
       let learnMoreString = getLocalizedString("insecureFieldWarningLearnMore");
-      return getLocalizedString("insecureFieldWarningDescription3", [learnMoreString]);
+      return getLocalizedString("insecureFieldWarningDescription2", [learnMoreString]);
     }
 
     let login = this.logins[index - this._showInsecureFieldWarning];
