@@ -316,6 +316,11 @@ ClientLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
   PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Rasterization);
   GeckoProfilerTracingRAII tracer("Paint", "Rasterize");
 
+  Maybe<TimeStamp> startTime;
+  if (gfxPrefs::LayersDrawFPS()) {
+    startTime = Some(TimeStamp::Now());
+  }
+
 #ifdef WIN32
   if (aCallbackData) {
     // Content processes don't get OnPaint called. So update here whenever we
@@ -382,6 +387,11 @@ ClientLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
 
   if (gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
     FrameLayerBuilder::InvalidateAllLayers(this);
+  }
+
+  if (startTime) {
+    PaintTiming& pt = mForwarder->GetPaintTiming();
+    pt.rasterMs() = (TimeStamp::Now() - startTime.value()).ToMilliseconds();
   }
 
   return !mTransactionIncomplete;
