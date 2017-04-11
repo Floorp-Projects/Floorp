@@ -2,7 +2,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "LookupCacheV4.h"
 #include "Common.h"
+
+#define GTEST_SAFEBROWSING_DIR NS_LITERAL_CSTRING("safebrowsing")
+#define GTEST_TABLE NS_LITERAL_CSTRING("gtest-malware-proto")
+
+typedef nsCString _Fragment;
+typedef nsTArray<nsCString> _PrefixArray;
+
+static UniquePtr<LookupCacheV4>
+SetupLookupCacheV4(const _PrefixArray& prefixArray)
+{
+  nsCOMPtr<nsIFile> file;
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
+
+  file->AppendNative(GTEST_SAFEBROWSING_DIR);
+
+  UniquePtr<LookupCacheV4> cache = MakeUnique<LookupCacheV4>(GTEST_TABLE, EmptyCString(), file);
+  nsresult rv = cache->Init();
+  EXPECT_EQ(rv, NS_OK);
+
+  PrefixStringMap map;
+  PrefixArrayToPrefixStringMap(prefixArray, map);
+  rv = cache->Build(map);
+  EXPECT_EQ(rv, NS_OK);
+
+  return Move(cache);
+}
 
 void
 TestHasPrefix(const _Fragment& aFragment, bool aExpectedHas, bool aExpectedComplete)
@@ -20,18 +47,13 @@ TestHasPrefix(const _Fragment& aFragment, bool aExpectedHas, bool aExpectedCompl
     nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
     lookupHash.FromPlaintext(aFragment, cryptoHash);
 
-    bool has, confirmed, fromCache;
+    bool has, fromCache;
     uint32_t matchLength;
-    // Freshness is not used in V4 so we just put dummy values here.
-    TableFreshnessMap dummy;
-    nsresult rv = cache->Has(lookupHash, dummy, 0,
-                             &has, &matchLength, &confirmed, &fromCache);
+    nsresult rv = cache->Has(lookupHash, &has, &matchLength, &fromCache);
 
     EXPECT_EQ(rv, NS_OK);
     EXPECT_EQ(has, aExpectedHas);
     EXPECT_EQ(matchLength == COMPLETE_SIZE, aExpectedComplete);
-    EXPECT_EQ(confirmed, false);
-    EXPECT_EQ(fromCache, false);
 
     cache->ClearAll();
   });

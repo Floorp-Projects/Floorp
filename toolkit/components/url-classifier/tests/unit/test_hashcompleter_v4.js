@@ -90,18 +90,11 @@ add_test(function test_getHashRequestV4() {
   let completeFinishedCnt = 0;
 
   gCompleter.complete("0123", TEST_TABLE_DATA_V4.gethashUrl, TEST_TABLE_DATA_V4.tableName, {
-    completionV4(hash, table, duration, fullhashes) {
-      equal(hash, "0123");
+    completion(hash, table, chunkId) {
+      equal(hash, "01234567890123456789012345678901");
       equal(table, TEST_TABLE_DATA_V4.tableName);
-      equal(duration, 120);
-      equal(fullhashes.length, 1);
-
-      let match = fullhashes.QueryInterface(Ci.nsIArray)
-                  .queryElementAt(0, Ci.nsIFullHashMatch);
-
-      equal(match.fullHash, "01234567890123456789012345678901");
-      equal(match.cacheDuration, 8)
-      do_print("completion: " + match.fullHash + ", " + table);
+      equal(chunkId, 0);
+      do_print("completion: " + hash + ", " + table + ", " + chunkId);
     },
 
     completionFinished(status) {
@@ -114,18 +107,11 @@ add_test(function test_getHashRequestV4() {
   });
 
   gCompleter.complete("1234567", TEST_TABLE_DATA_V4.gethashUrl, TEST_TABLE_DATA_V4.tableName, {
-    completionV4(hash, table, duration, fullhashes) {
-      equal(hash, "1234567");
+    completion(hash, table, chunkId) {
+      equal(hash, "12345678901234567890123456789012");
       equal(table, TEST_TABLE_DATA_V4.tableName);
-      equal(duration, 120);
-      equal(fullhashes.length, 1);
-
-      let match = fullhashes.QueryInterface(Ci.nsIArray)
-                  .queryElementAt(0, Ci.nsIFullHashMatch);
-
-      equal(match.fullHash, "12345678901234567890123456789012");
-      equal(match.cacheDuration, 7)
-      do_print("completion: " + match.fullHash + ", " + table);
+      equal(chunkId, 0);
+      do_print("completion: " + hash + ", " + table + ", " + chunkId);
     },
 
     completionFinished(status) {
@@ -138,11 +124,8 @@ add_test(function test_getHashRequestV4() {
   });
 
   gCompleter.complete("1111", TEST_TABLE_DATA_V4.gethashUrl, TEST_TABLE_DATA_V4.tableName, {
-    completionV4(hash, table, duration, fullhashes) {
-      equal(hash, "1111");
-      equal(table, TEST_TABLE_DATA_V4.tableName);
-      equal(duration, 120);
-      equal(fullhashes.length, 0);
+    completion(hash, table, chunkId) {
+      ok(false, "1111 is not the prefix of " + hash);
     },
 
     completionFinished(status) {
@@ -166,17 +149,11 @@ add_test(function test_minWaitDuration() {
 
   let successComplete = function() {
     gCompleter.complete("1234567", TEST_TABLE_DATA_V4.gethashUrl, TEST_TABLE_DATA_V4.tableName, {
-      completionV4(hash, table, duration, fullhashes) {
-        equal(hash, "1234567");
+      completion(hash, table, chunkId) {
+        equal(hash, "12345678901234567890123456789012");
         equal(table, TEST_TABLE_DATA_V4.tableName);
-        equal(fullhashes.length, 1);
-
-        let match = fullhashes.QueryInterface(Ci.nsIArray)
-                    .queryElementAt(0, Ci.nsIFullHashMatch);
-
-        equal(match.fullHash, "12345678901234567890123456789012");
-        equal(match.cacheDuration, 7)
-        do_print("completion: " + match.fullHash + ", " + table);
+        equal(chunkId, 0);
+        do_print("completion: " + hash + ", " + table + ", " + chunkId);
       },
 
       completionFinished(status) {
