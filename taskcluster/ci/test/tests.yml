@@ -1096,6 +1096,21 @@ robocop:
         extra-options:
             - --test-suite=robocop
 
+geckoview:
+    description: "Geckoview run"
+    suite: geckoview
+    treeherder-symbol: tc(gv)
+    instance-size: xlarge
+    loopback-video: true
+    e10s: false
+    mozharness:
+        script: android_emulator_unittest.py
+        no-read-buildbot-config: true
+        config:
+            - android/androidarm_4_3.py
+        extra-options:
+            - --test-suite=geckoview
+
 talos-chrome:
     description: "Talos chrome"
     suite: talos

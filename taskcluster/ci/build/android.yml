@@ -146,7 +146,7 @@ android-api-15-gradle/opt:
           - name: public/android/maven
             path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/maven/
             type: directory
-          - name: public/android/geckoview_example.apk
+          - name: public/build/geckoview_example.apk
             path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview_example/outputs/apk/geckoview_example-withGeckoBinaries.apk
             type: file
           - name: public/build
