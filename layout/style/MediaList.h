@@ -69,6 +69,10 @@ public:
   virtual bool Matches(nsPresContext& aPresContext,
                        nsMediaQueryResultCacheKey* = nullptr) const = 0;
 
+#ifdef DEBUG
+  virtual bool IsServo() const = 0;
+#endif
+
   void SetStyleSheet(StyleSheet* aSheet);
 
   NS_DECL_NSIDOMMEDIALIST
