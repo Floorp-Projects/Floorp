@@ -22,19 +22,41 @@ const HPKP_PREF = "security.cert_pinning.process_headers_from_non_builtin_roots"
 // Static pins tested by unit/test_security-info-static-hpkp.js.
 const TEST_CASES = [
   {
-    desc: "no Public Key Pinning",
+    desc: "no HSTS or HPKP",
     url: "https://example.com",
+    usesHSTS: false,
     usesPinning: false,
   },
   {
-    desc: "dynamic Public Key Pinning with this request",
+    desc: "HSTS from this response, no Public Key Pinning",
+    url: "https://example.com/" +
+         "browser/browser/base/content/test/general/browser_star_hsts.sjs",
+    usesHSTS: true,
+    usesPinning: false,
+  },
+  {
+    desc: "stored HSTS from previous response, no Public Key Pinning",
+    url: "https://example.com/",
+    usesHSTS: true,
+    usesPinning: false,
+  },
+  {
+    desc: "no Public Key Pinning or HSTS",
+    url: "https://include-subdomains.pinning-dynamic.example.com/",
+    usesHSTS: false,
+    usesPinning: false,
+  },
+  {
+    desc: "dynamic Public Key Pinning with this request, no HSTS",
     url: "https://include-subdomains.pinning-dynamic.example.com/" +
          "browser/browser/base/content/test/general/pinning_headers.sjs",
+    usesHSTS: false,
     usesPinning: true,
   },
   {
-    desc: "dynamic Public Key Pinning with previous request",
+    desc: "dynamic Public Key Pinning with previous request, no HSTS",
     url: "https://include-subdomains.pinning-dynamic.example.com/",
+    usesHSTS: false,
     usesPinning: true,
   }
 ];
@@ -54,11 +76,13 @@ function startTest() {
                        .getService(Ci.nsIIOService);
     for (let {url} of TEST_CASES) {
       let uri = gIOService.newURI(url);
+      gSSService.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0);
       gSSService.removeState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
     }
   });
 
-  info("Test detection of Public Key Pinning.");
+  info("Test detection of HTTP Strict Transport Security" +
+       " and Public Key Pinning.");
   removeEventListener("load", startTest);
   attachConsoleToTab(["NetworkActivity"], onAttach);
 }
@@ -88,6 +112,8 @@ function runNextCase(state) {
 function onNetworkEventUpdate(state, type, packet) {
   function onSecurityInfo(received) {
     let data = TEST_CASES[gCurrentTestCase];
+    is(received.securityInfo.hsts, data.usesHSTS,
+      "Strict Transport Security detected correctly.");
     is(received.securityInfo.hpkp, data.usesPinning,
       "Public Key Pinning detected correctly.");
 
