@@ -35,6 +35,8 @@ this.EXPORTED_SYMBOLS = ["Schemas"];
 
 const {DEBUG} = AppConstants;
 
+const isParentProcess = Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
+
 /* globals Schemas, URL */
 
 function readJSON(url) {
@@ -2553,12 +2555,18 @@ this.Schemas = {
     }
   },
 
+  _needFlush: true,
   flushSchemas() {
-    XPCOMUtils.defineLazyGetter(this, "rootNamespace",
-                                () => this.parseSchemas());
+    if (this._needFlush) {
+      this._needFlush = false;
+      XPCOMUtils.defineLazyGetter(this, "rootNamespace",
+                                  () => this.parseSchemas());
+    }
   },
 
   parseSchemas() {
+    this._needFlush = true;
+
     Object.defineProperty(this, "rootNamespace", {
       enumerable: true,
       configurable: true,
@@ -2583,18 +2591,40 @@ this.Schemas = {
     }
   },
 
-  load(url) {
-    if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_CONTENT) {
-      return StartupCache.schemas.get(url, readJSON).then(json => {
-        this.schemaJSON.set(url, json);
-
-        let data = Services.ppmm.initialProcessData;
-        data["Extension:Schemas"] = this.schemaJSON;
-
-        Services.ppmm.broadcastAsyncMessage("Schema:Add", {url, schema: json});
-
-        this.flushSchemas();
+  _loadCachedSchemasPromise: null,
+  loadCachedSchemas() {
+    if (!this._loadCachedSchemasPromise) {
+      this._loadCachedSchemasPromise = StartupCache.schemas.getAll().then(results => {
+        return results;
       });
+    }
+
+    return this._loadCachedSchemasPromise;
+  },
+
+  addSchema(url, json) {
+    this.schemaJSON.set(url, json);
+
+    let data = Services.ppmm.initialProcessData;
+    data["Extension:Schemas"] = this.schemaJSON;
+
+    Services.ppmm.broadcastAsyncMessage("Schema:Add", {url, schema: json});
+
+    this.flushSchemas();
+  },
+
+  async load(url) {
+    if (!isParentProcess) {
+      return;
+    }
+
+    let schemaCache = await this.loadCachedSchemas();
+
+    let json = (schemaCache.get(url) ||
+                await StartupCache.schemas.get(url, readJSON));
+
+    if (!this.schemaJSON.has(url)) {
+      this.addSchema(url, json);
     }
   },
 
