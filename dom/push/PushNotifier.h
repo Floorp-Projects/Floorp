@@ -51,6 +51,10 @@ public:
   // are no active content processes. The default behavior is a no-op.
   virtual nsresult HandleNoChildProcesses();
 
+  nsIPrincipal* GetPrincipal() {
+    return mPrincipal;
+  }
+
 protected:
   PushDispatcher(const nsACString& aScope,
                  nsIPrincipal* aPrincipal);

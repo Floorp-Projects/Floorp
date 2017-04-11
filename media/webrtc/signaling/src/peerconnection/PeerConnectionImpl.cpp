@@ -3640,7 +3640,9 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
             s.mPacketsReceived.Construct(packetsReceived);
             s.mBytesReceived.Construct(bytesReceived);
             s.mPacketsLost.Construct(packetsLost);
-            s.mMozRtt.Construct(rtt);
+            if (rtt > 0) {
+              s.mRoundTripTime.Construct(rtt);
+            }
             query->report->mInboundRTPStreamStats.Value().AppendElement(s,
                                                                         fallible);
           }

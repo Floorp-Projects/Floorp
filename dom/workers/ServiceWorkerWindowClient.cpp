@@ -380,11 +380,6 @@ public:
       return RejectPromise(NS_ERROR_TYPE_ERR);
     }
 
-    rv = principal->CheckMayLoad(url, true, false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return RejectPromise(rv);
-    }
-
     nsGlobalWindow* window;
     rv = Navigate(url, principal, &window);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -499,19 +494,18 @@ private:
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
     nsresult rv = docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return NS_ERROR_TYPE_ERR;
     }
 
     loadInfo->SetTriggeringPrincipal(aPrincipal);
-    loadInfo->SetReferrer(doc->GetOriginalURI());
     loadInfo->SetReferrerPolicy(doc->GetReferrerPolicy());
-    loadInfo->SetLoadType(nsIDocShellLoadInfo::loadStopContentAndReplace);
+    loadInfo->SetLoadType(nsIDocShellLoadInfo::loadStopContent);
     loadInfo->SetSourceDocShell(docShell);
     rv =
       docShell->LoadURI(aUrl, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, true);
 
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return NS_ERROR_TYPE_ERR;
     }
 
     *aWindow = window;

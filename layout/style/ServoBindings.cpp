@@ -27,6 +27,7 @@
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
 #include "nsIPrincipal.h"
+#include "nsFontMetrics.h"
 #include "nsMappedAttributes.h"
 #include "nsMediaFeatures.h"
 #include "nsNameSpaceManager.h"
@@ -41,6 +42,7 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Keyframe.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/StyleAnimationValue.h"
@@ -51,6 +53,7 @@
 #include "mozilla/dom/HTMLTableCellElement.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/URLExtraData.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -985,6 +988,12 @@ Gecko_SetUrlImageValue(nsStyleImage* aImage, ServoBundledURI aURI)
 }
 
 void
+Gecko_SetImageElement(nsStyleImage* aImage, nsIAtom* aAtom) {
+  MOZ_ASSERT(aImage);
+  aImage->SetElementId(do_AddRef(aAtom));
+}
+
+void
 Gecko_CopyImageValueFrom(nsStyleImage* aImage, const nsStyleImage* aOther)
 {
   MOZ_ASSERT(aImage);
@@ -1607,6 +1616,47 @@ Gecko_GetBaseSize(nsIAtom* aLanguage)
   sizes.CopyFrom(prefs);
 
   return sizes;
+}
+
+static Mutex* sServoFontMetricsLock = nullptr;
+
+void
+InitializeServo()
+{
+  URLExtraData::InitDummy();
+  Servo_Initialize(URLExtraData::Dummy());
+
+  sServoFontMetricsLock = new Mutex("Gecko_GetFontMetrics");
+}
+
+void
+ShutdownServo()
+{
+  delete sServoFontMetricsLock;
+  Servo_Shutdown();
+}
+
+GeckoFontMetrics
+Gecko_GetFontMetrics(RawGeckoPresContextBorrowed aPresContext,
+                     bool aIsVertical,
+                     const nsStyleFont* aFont,
+                     nscoord aFontSize,
+                     bool aUseUserFontSet)
+{
+  MutexAutoLock lock(*sServoFontMetricsLock);
+  GeckoFontMetrics ret;
+  // Safe because we are locked, and this function is only
+  // ever called from Servo parallel traversal or the main thread
+  nsPresContext* presContext = const_cast<nsPresContext*>(aPresContext);
+  presContext->SetUsesExChUnits(true);
+  RefPtr<nsFontMetrics> fm = nsRuleNode::GetMetricsFor(presContext, aIsVertical,
+                                                       aFont, aFontSize,
+                                                       aUseUserFontSet);
+  ret.mXSize = fm->XHeight();
+  gfxFloat zeroWidth = fm->GetThebesFontGroup()->GetFirstValidFont()->
+                           GetMetrics(fm->Orientation()).zeroOrAveCharWidth;
+  ret.mChSize = ceil(aPresContext->AppUnitsPerDevPixel() * zeroWidth);
+  return ret;
 }
 
 void

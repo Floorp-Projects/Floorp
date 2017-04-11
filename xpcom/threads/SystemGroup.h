@@ -8,7 +8,7 @@
 #define mozilla_SystemGroup_h
 
 #include "mozilla/TaskCategory.h"
-#include "mozilla/Dispatcher.h"
+#include "mozilla/SchedulerGroup.h"
 
 // The SystemGroup should be used for dispatching runnables that don't need to
 // touch web content. Runnables dispatched to the SystemGroup are run in order

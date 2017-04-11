@@ -108,6 +108,11 @@ PushNotifier::Dispatch(PushDispatcher& aDispatcher)
       // At least one content process is active, so e10s must be enabled.
       // Broadcast a message to notify observers and service workers.
       for (uint32_t i = 0; i < contentActors.Length(); ++i) {
+        // Ensure that the content actor has the permissions avaliable for the
+        // principal the push is being sent for before sending the push message
+        // down.
+        Unused << contentActors[i]->
+          TransmitPermissionsForPrincipal(aDispatcher.GetPrincipal());
         if (aDispatcher.SendToChild(contentActors[i])) {
           // Only send the push message to the first content process to avoid
           // multiple SWs showing the same notification. See bug 1300112.

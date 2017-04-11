@@ -19,8 +19,9 @@ class GamepadButton : public nsISupports,
 {
 public:
   explicit GamepadButton(nsISupports* aParent) : mParent(aParent),
+                                                 mValue(0),
                                                  mPressed(false),
-                                                 mValue(0)
+                                                 mTouched(false)
   {
   }
 
@@ -39,6 +40,11 @@ public:
     mPressed = aPressed;
   }
 
+  void SetTouched(bool aTouched)
+  {
+    mTouched = aTouched;
+  }
+
   void SetValue(double aValue)
   {
     mValue = aValue;
@@ -47,6 +53,11 @@ public:
   bool Pressed() const
   {
     return mPressed;
+  }
+
+  bool Touched() const
+  {
+    return mTouched;
   }
 
   double Value() const
@@ -59,8 +70,9 @@ private:
 
 protected:
   nsCOMPtr<nsISupports> mParent;
-  bool mPressed;
   double mValue;
+  bool mPressed;
+  bool mTouched;
 };
 
 } // namespace dom

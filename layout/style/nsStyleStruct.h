@@ -432,7 +432,7 @@ struct nsStyleImage
   void SetNull();
   void SetImageRequest(already_AddRefed<nsStyleImageRequest> aImage);
   void SetGradientData(nsStyleGradient* aGradient);
-  void SetElementId(const char16_t* aElementId);
+  void SetElementId(already_AddRefed<nsIAtom> aElementId);
   void SetCropRect(mozilla::UniquePtr<nsStyleSides> aCropRect);
   void SetURLValue(already_AddRefed<URLValue> aData);
 
@@ -458,7 +458,7 @@ struct nsStyleImage
     NS_ASSERTION(mType == eStyleImageType_Gradient, "Data is not a gradient!");
     return mGradient;
   }
-  const char16_t* GetElementId() const {
+  const nsIAtom* GetElementId() const {
     NS_ASSERTION(mType == eStyleImageType_Element, "Data is not an element!");
     return mElementId;
   }
@@ -558,7 +558,7 @@ private:
     URLValue* mURLValue; // See the comment in SetStyleImage's 'case
                          // eCSSUnit_URL' section to know why we need to
                          // store URLValues separately from mImage.
-    char16_t* mElementId;
+    nsIAtom* mElementId;
   };
 
   // This is _currently_ used only in conjunction with eStyleImageType_Image.

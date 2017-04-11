@@ -194,6 +194,10 @@ const kEventConstructors = {
                                                          });
                                                        },
                                              },
+  MediaQueryListEvent:                       { create: function (aName, aProps) {
+                                                         return new MediaQueryListEvent(aName, aProps);
+                                                       },
+                                             },
   MediaStreamEvent:                          { create: function (aName, aProps) {
                                                          return new MediaStreamEvent(aName, aProps);
                                                        },

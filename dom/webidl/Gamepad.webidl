@@ -11,6 +11,7 @@
 [Pref="dom.gamepad.enabled"]
 interface GamepadButton {
   readonly    attribute boolean pressed;
+  readonly    attribute boolean touched;
   readonly    attribute double  value;
 };
 
