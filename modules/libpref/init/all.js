@@ -5066,7 +5066,12 @@ pref("dom.vr.oculus.enabled", true);
 // OSVR device
 pref("dom.vr.osvr.enabled", false);
 // OpenVR device
+#ifdef XP_WIN
+pref("dom.vr.openvr.enabled", true);
+#else
+// See Bug 1310663 (Linux) and Bug 1310665 (macOS)
 pref("dom.vr.openvr.enabled", false);
+#endif
 // Pose prediction reduces latency effects by returning future predicted HMD
 // poses to callers of the WebVR API.  This currently only has an effect for
 // Oculus Rift on SDK 0.8 or greater.
