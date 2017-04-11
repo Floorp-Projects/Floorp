@@ -458,8 +458,8 @@ class DesktopInstance(GeckoInstance):
         # Start with a blank page by default
         "browser.startup.page": 0,
 
-        # Disable tab animation
-        "browser.tabs.animate": False,
+        # Disable browser animations
+        "toolkit.cosmeticAnimations.enabled": False,
 
         # Do not warn on exit when multiple tabs are open
         "browser.tabs.warnOnClose": False,
