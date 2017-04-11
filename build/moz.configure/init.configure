@@ -368,6 +368,8 @@ def split_triplet(triplet):
         canonical_os = canonical_kernel = 'NetBSD'
     elif os.startswith('openbsd'):
         canonical_os = canonical_kernel = 'OpenBSD'
+    elif os.startswith('solaris'):
+        canonical_os = canonical_kernel = 'SunOS'
     else:
         die('Unknown OS: %s' % os)
 
@@ -625,6 +627,13 @@ def target_is_linux(target):
         return True
 
 set_define('XP_LINUX', target_is_linux)
+
+@depends(target)
+def target_is_solaris(target):
+    if target.kernel == 'SunOS':
+        return True
+
+set_define('XP_SOLARIS', target_is_solaris)
 
 # The application/project to build
 # ==============================================================
