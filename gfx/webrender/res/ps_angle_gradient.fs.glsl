@@ -5,11 +5,21 @@
 uniform sampler2D sGradients;
 
 void main(void) {
+    vec2 pos = mod(vPos, vTileRepeat);
+
+    if (pos.x >= vTileSize.x ||
+        pos.y >= vTileSize.y) {
+        discard;
+    }
+
+    // Normalized offset of this vertex within the gradient, before clamp/repeat.
+    float offset = dot(pos - vStartPoint, vScaledDir);
+
     vec2 texture_size = vec2(textureSize(sGradients, 0));
 
     // Either saturate or modulo the offset depending on repeat mode, then scale to number of
     // gradient color entries (texture width / 2).
-    float x = mix(clamp(vOffset, 0.0, 1.0), fract(vOffset), vGradientRepeat) * 0.5 * texture_size.x;
+    float x = mix(clamp(offset, 0.0, 1.0), fract(offset), vGradientRepeat) * 0.5 * texture_size.x;
 
     x = 2.0 * floor(x) + 0.5 + fract(x);
 
