@@ -963,15 +963,15 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
   let extension = new ExtensionData(uri);
 
   let manifest = yield extension.loadManifest();
-  let theme = !!manifest.theme;
+
+  // If there were any errors loading the extension, bail out now.
+  if (extension.errors.length) {
+    throw new Error("Extension is invalid");
+  }
 
   // Read the list of available locales, and pre-load messages for
   // all locales.
   let locales = yield extension.initAllLocales();
-
-  // If there were any errors loading the extension, bail out now.
-  if (extension.errors.length)
-    throw new Error("Extension is invalid");
 
   let bss = (manifest.browser_specific_settings && manifest.browser_specific_settings.gecko)
       || (manifest.applications && manifest.applications.gecko) || {};
@@ -987,7 +987,7 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
   let addon = new AddonInternal();
   addon.id = bss.id;
   addon.version = manifest.version;
-  addon.type = "webextension" + (theme ? "-theme" : "");
+  addon.type = "webextension" + (manifest.theme ? "-theme" : "");
   addon.unpack = false;
   addon.strictCompatibility = true;
   addon.bootstrap = true;
