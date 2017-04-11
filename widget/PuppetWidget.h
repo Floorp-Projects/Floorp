@@ -183,7 +183,7 @@ public:
                                const InputContextAction& aAction) override;
   virtual InputContext GetInputContext() override;
   virtual NativeIMEContext GetNativeIMEContext() override;
-  virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
+  virtual IMENotificationRequests GetIMENotificationRequests() override;
   TextEventDispatcherListener* GetNativeTextEventDispatcherListener() override
   { return mNativeTextEventDispatcherListener; }
   void SetNativeTextEventDispatcherListener(TextEventDispatcherListener* aListener)
@@ -356,7 +356,7 @@ private:
   // retained-content-only transactions
   RefPtr<DrawTarget> mDrawTarget;
   // IME
-  nsIMEUpdatePreference mIMEPreferenceOfParent;
+  IMENotificationRequests mIMENotificationRequestsOfParent;
   InputContext mInputContext;
   // mNativeIMEContext is initialized when this dispatches every composition
   // event both from parent process's widget and TextEventDispatcher in same

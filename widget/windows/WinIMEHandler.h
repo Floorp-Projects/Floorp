@@ -72,9 +72,9 @@ public:
                             const IMENotification& aIMENotification);
 
   /**
-   * Returns update preferences.
+   * Returns notification requests of IME.
    */
-  static nsIMEUpdatePreference GetUpdatePreference();
+  static IMENotificationRequests GetIMENotificationRequests();
 
   /**
    * Returns native text event dispatcher listener.

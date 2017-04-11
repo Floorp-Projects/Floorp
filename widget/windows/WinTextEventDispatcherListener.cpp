@@ -56,10 +56,10 @@ WinTextEventDispatcherListener::NotifyIME(
   return IMEHandler::NotifyIME(window, aNotification);
 }
 
-NS_IMETHODIMP_(nsIMEUpdatePreference)
-WinTextEventDispatcherListener::GetIMEUpdatePreference()
+NS_IMETHODIMP_(IMENotificationRequests)
+WinTextEventDispatcherListener::GetIMENotificationRequests()
 {
-  return IMEHandler::GetUpdatePreference();
+  return IMEHandler::GetIMENotificationRequests();
 }
 
 NS_IMETHODIMP_(void)
