@@ -698,9 +698,6 @@
       <method name="audioPlaybackStarted">
         <body>
           <![CDATA[
-            if (this._audioMuted) {
-              return;
-            }
             let event = document.createEvent("Events");
             event.initEvent("DOMAudioPlaybackStarted", true, false);
             this.dispatchEvent(event);
