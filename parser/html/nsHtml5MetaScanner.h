@@ -101,7 +101,6 @@ class nsHtml5MetaScanner
     bool handleTagInner();
   protected:
     bool tryCharset(nsHtml5String encoding);
-
   public:
     static void initializeStatics();
     static void releaseStatics();
