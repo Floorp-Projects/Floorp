@@ -30,9 +30,19 @@ class AppInfo(BaseLib):
     def locale(self):
         with self.marionette.using_context('chrome'):
             return self.marionette.execute_script("""
-              return Components.classes["@mozilla.org/intl/localeservice;1"]
-                               .getService(Components.interfaces.mozILocaleService)
-                               .getAppLocaleAsLangTag();
+              // LocaleService has been added in 55, use ChromeRegistry for
+              // earlier releases.
+              // The ChromeRegistry path can be removed when 52esr is not longer
+              // supported.
+              try {
+                return Components.classes["@mozilla.org/intl/localeservice;1"]
+                                 .getService(Components.interfaces.mozILocaleService)
+                                 .getAppLocaleAsLangTag();
+              } catch (e) {
+                return Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                                 .getService(Components.interfaces.nsIXULChromeRegistry)
+                                 .getSelectedLocale("global");
+              }
             """)
 
     @property
