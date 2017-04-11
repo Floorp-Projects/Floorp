@@ -146,7 +146,7 @@ public:
                                 const IMENotification& aIMENotification,
                                 bool aIsIMMActive);
 
-  static nsIMEUpdatePreference GetIMEUpdatePreference();
+  static IMENotificationRequests GetIMENotificationRequests();
 
   // Returns NS_SUCCESS_EVENT_CONSUMED if the mouse button event is consumed by
   // IME.  Otherwise, NS_OK.
