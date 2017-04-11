@@ -1153,9 +1153,10 @@ pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState) {
 pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
                                           bounds: WrRect,
                                           overflow: WrRect,
-                                          mask: Option<&WrImageMask>) {
+                                          mask: *const WrImageMask) {
     let bounds = bounds.to_rect();
     let overflow = overflow.to_rect();
+    let mask = unsafe { mask.as_ref() };
     let mask = mask.map(|&WrImageMask { image, ref rect, repeat }| {
         ImageMask {
             image: image,
