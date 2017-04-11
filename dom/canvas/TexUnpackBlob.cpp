@@ -710,9 +710,16 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
         return true;
     } while (false);
 
-    webgl->GeneratePerfWarning("%s: Failed to hit GPU-copy fast-path. (src type %u)"
-                               " Falling back to CPU upload. (%s)",
-                               funcName, uint32_t(mImage->GetFormat()), fallbackReason);
+    const nsPrintfCString perfMsg("%s: Failed to hit GPU-copy fast-path: %s (src type %u)",
+                                  funcName, fallbackReason, uint32_t(mImage->GetFormat()));
+
+    if (webgl->mPixelStore_RequireFastPath) {
+        webgl->ErrorInvalidOperation("%s", perfMsg.BeginReading());
+        return false;
+    }
+
+    webgl->GeneratePerfWarning("%s Falling back to CPU upload.",
+                               perfMsg.BeginReading());
 
     const RefPtr<gfx::SourceSurface> surf = mImage->GetAsSourceSurface();
 
