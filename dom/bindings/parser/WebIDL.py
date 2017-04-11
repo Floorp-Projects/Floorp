@@ -584,7 +584,7 @@ class IDLExternalInterface(IDLObjectWithIdentifier, IDLExposureMixins):
     def isJSImplemented(self):
         return False
 
-    def isProbablyShortLivingObject(self):
+    def hasProbablyShortLivingWrapper(self):
         return False
 
     def isNavigatorProperty(self):
@@ -1498,10 +1498,10 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
     def isJSImplemented(self):
         return bool(self.getJSImplementation())
 
-    def isProbablyShortLivingObject(self):
+    def hasProbablyShortLivingWrapper(self):
         current = self
         while current:
-            if current.getExtendedAttribute("ProbablyShortLivingObject"):
+            if current.getExtendedAttribute("ProbablyShortLivingWrapper"):
                 return True
             current = current.parent
         return False
@@ -1725,7 +1725,7 @@ class IDLInterface(IDLInterfaceOrNamespace):
                   identifier == "Unforgeable" or
                   identifier == "UnsafeInPrerendering" or
                   identifier == "LegacyEventInit" or
-                  identifier == "ProbablyShortLivingObject" or
+                  identifier == "ProbablyShortLivingWrapper" or
                   identifier == "LegacyUnenumerableNamedProperties" or
                   identifier == "NonOrdinaryGetPrototypeOf"):
                 # Known extended attributes that do not take values

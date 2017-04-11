@@ -13,7 +13,6 @@
 #include "nsString.h"
 
 #include "mozilla/dom/TabGroup.h"
-#include "mozilla/Dispatcher.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 
@@ -36,13 +35,13 @@ namespace dom {
 // (through its DocGroups) the documents from one or more tabs related by
 // window.opener. A DocGroup is a member of exactly one TabGroup.
 
-class DocGroup final : public Dispatcher
+class DocGroup final
 {
 public:
   typedef nsTArray<nsIDocument*>::iterator Iterator;
   friend class TabGroup;
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DocGroup, override)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DocGroup)
 
   // Returns NS_ERROR_FAILURE and sets |aString| to an empty string if the TLD
   // service isn't available. Returns NS_OK on success, but may still set
@@ -81,11 +80,14 @@ public:
     return mDocuments.end();
   }
 
-  virtual nsresult Dispatch(const char* aName,
-                            TaskCategory aCategory,
-                            already_AddRefed<nsIRunnable>&& aRunnable) override;
+  nsresult Dispatch(const char* aName,
+                    TaskCategory aCategory,
+                    already_AddRefed<nsIRunnable>&& aRunnable);
 
-  virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const override;
+  nsIEventTarget* EventTargetFor(TaskCategory aCategory) const;
+
+  AbstractThread*
+  AbstractMainThreadFor(TaskCategory aCategory);
 
   // Ensure that it's valid to access the DocGroup at this time.
   void ValidateAccess() const
@@ -99,9 +101,6 @@ public:
   bool* GetValidAccessPtr();
 
 private:
-  virtual AbstractThread*
-  AbstractMainThreadForImpl(TaskCategory aCategory) override;
-
   DocGroup(TabGroup* aTabGroup, const nsACString& aKey);
   ~DocGroup();
 

@@ -307,13 +307,23 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
                 if (!principalToInherit) {
                   principalToInherit = loadInfo->TriggeringPrincipal();
                 }
-                nsCOMPtr<nsIContentSecurityPolicy> originalCsp;
-                principalToInherit->GetCsp(getter_AddRefs(originalCsp));
-                // if the principalToInherit had a CSP,
-                // add it to the newly created NullPrincipal.
-                if (originalCsp) {
-                  nsresult rv = (*aPrincipal)->SetCsp(originalCsp);
-                  NS_ENSURE_SUCCESS(rv, rv);
+                nsCOMPtr<nsIContentSecurityPolicy> originalCSP;
+                principalToInherit->GetCsp(getter_AddRefs(originalCSP));
+                if (originalCSP) {
+                  // if the principalToInherit had a CSP,
+                  // add it to the newly created NullPrincipal
+                  // (unless it already has one)
+                  nsCOMPtr<nsIContentSecurityPolicy> nullPrincipalCSP;
+                  (*aPrincipal)->GetCsp(getter_AddRefs(nullPrincipalCSP));
+                  if (nullPrincipalCSP) {
+                    MOZ_ASSERT(nullPrincipalCSP == originalCSP,
+                              "There should be no other CSP here.");
+                    // CSPs are equal, no need to set it again.
+                    return NS_OK;
+                  } else {
+                    nsresult rv = (*aPrincipal)->SetCsp(originalCSP);
+                    NS_ENSURE_SUCCESS(rv, rv);
+                  }
                 }
               }
             }

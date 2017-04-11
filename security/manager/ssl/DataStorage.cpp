@@ -52,7 +52,7 @@ public:
     nsTArray<nsString> fileNames;
     DataStorage::GetAllFileNames(fileNames);
     for (const auto& file: fileNames) {
-      RefPtr<DataStorage> ds = DataStorage::Get(file);
+      RefPtr<DataStorage> ds = DataStorage::GetFromRawFileName(file);
       size_t amount = ds->SizeOfIncludingThis(MallocSizeOf);
       nsPrintfCString path("explicit/data-storage/%s",
                            NS_ConvertUTF16toUTF8(file).get());
@@ -88,7 +88,23 @@ DataStorage::~DataStorage()
 
 // static
 already_AddRefed<DataStorage>
-DataStorage::Get(const nsString& aFilename)
+DataStorage::Get(DataStorageClass aFilename)
+{
+  switch (aFilename) {
+#define DATA_STORAGE(_)         \
+    case DataStorageClass::_:   \
+      return GetFromRawFileName(NS_LITERAL_STRING(#_ ".txt"));
+#include "mozilla/DataStorageList.h"
+#undef DATA_STORAGE
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid DataStorage type passed?");
+      return nullptr;
+  }
+}
+
+// static
+already_AddRefed<DataStorage>
+DataStorage::GetFromRawFileName(const nsString& aFilename)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!sDataStorages) {
@@ -105,14 +121,27 @@ DataStorage::Get(const nsString& aFilename)
 
 // static
 already_AddRefed<DataStorage>
-DataStorage::GetIfExists(const nsString& aFilename)
+DataStorage::GetIfExists(DataStorageClass aFilename)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!sDataStorages) {
     sDataStorages = new DataStorages();
   }
+  nsString name;
+  switch (aFilename) {
+#define DATA_STORAGE(_)              \
+    case DataStorageClass::_:        \
+      name.AssignLiteral(#_ ".txt"); \
+      break;
+#include "mozilla/DataStorageList.h"
+#undef DATA_STORAGE
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid DataStorages type passed?");
+  }
   RefPtr<DataStorage> storage;
-  sDataStorages->Get(aFilename, getter_AddRefs(storage));
+  if (!name.IsEmpty()) {
+    sDataStorages->Get(name, getter_AddRefs(storage));
+  }
   return storage.forget();
 }
 
@@ -124,8 +153,34 @@ DataStorage::GetAllFileNames(nsTArray<nsString>& aItems)
   if (!sDataStorages) {
     return;
   }
-  for (auto iter = sDataStorages->Iter(); !iter.Done(); iter.Next()) {
-    aItems.AppendElement(iter.Key());
+#define DATA_STORAGE(_)     \
+  aItems.AppendElement(NS_LITERAL_STRING(#_ ".txt"));
+#include "mozilla/DataStorageList.h"
+#undef DATA_STORAGE
+}
+
+// static
+void
+DataStorage::GetAllChildProcessData(
+  nsTArray<mozilla::dom::DataStorageEntry>& aEntries)
+{
+  nsTArray<nsString> storageFiles;
+  GetAllFileNames(storageFiles);
+  for (auto& file : storageFiles) {
+    dom::DataStorageEntry entry;
+    entry.filename() = file;
+    RefPtr<DataStorage> storage = DataStorage::GetFromRawFileName(file);
+    if (!storage->mInitCalled) {
+      // Perhaps no consumer has initialized the DataStorage object yet,
+      // so do that now!
+      bool dataWillPersist = false;
+      nsresult rv = storage->Init(dataWillPersist);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
+      }
+    }
+    storage->GetAll(&entry.items());
+    aEntries.AppendElement(Move(entry));
   }
 }
 
@@ -136,8 +191,33 @@ DataStorage::SetCachedStorageEntries(
 {
   MOZ_ASSERT(XRE_IsContentProcess());
 
-  for (auto& entry : aEntries) {
-    RefPtr<DataStorage> storage = DataStorage::Get(entry.filename());
+  // Make sure to initialize all DataStorage classes.
+  // For each one, we look through the list of our entries and if we find
+  // a matching DataStorage object, we initialize it.
+  //
+  // Note that this is an O(n^2) operation, but the n here is very small
+  // (currently 3).  There is a comment in the DataStorageList.h header
+  // about updating the algorithm here to something more fancy if the list
+  // of DataStorage items grows some day.
+  nsTArray<dom::DataStorageEntry> entries;
+#define DATA_STORAGE(_)                              \
+  {                                                  \
+    dom::DataStorageEntry entry;                     \
+    entry.filename() = NS_LITERAL_STRING(#_ ".txt"); \
+    for (auto& e : aEntries) {                       \
+      if (entry.filename().Equals(e.filename())) {   \
+        entry.items() = Move(e.items());             \
+        break;                                       \
+      }                                              \
+    }                                                \
+    entries.AppendElement(Move(entry));              \
+  }
+#include "mozilla/DataStorageList.h"
+#undef DATA_STORAGE
+
+  for (auto& entry : entries) {
+    RefPtr<DataStorage> storage =
+      DataStorage::GetFromRawFileName(entry.filename());
     bool dataWillPersist = false;
     storage->Init(dataWillPersist, &entry.items());
   }

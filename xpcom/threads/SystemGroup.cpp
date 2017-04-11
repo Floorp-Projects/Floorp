@@ -12,7 +12,7 @@
 
 using namespace mozilla;
 
-class SystemGroupImpl final : public ValidatingDispatcher
+class SystemGroupImpl final : public SchedulerGroup
 {
 public:
   SystemGroupImpl();

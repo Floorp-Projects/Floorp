@@ -7,7 +7,7 @@
 #include "mozilla/dom/DispatcherTrait.h"
 
 #include "mozilla/AbstractThread.h"
-#include "mozilla/Dispatcher.h"
+#include "mozilla/SchedulerGroup.h"
 #include "nsINamed.h"
 
 using namespace mozilla;
@@ -18,7 +18,7 @@ DispatcherTrait::Dispatch(const char* aName,
                           TaskCategory aCategory,
                           already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  return Dispatcher::UnlabeledDispatch(aName, aCategory, Move(aRunnable));
+  return SchedulerGroup::UnlabeledDispatch(aName, aCategory, Move(aRunnable));
 }
 
 nsIEventTarget*

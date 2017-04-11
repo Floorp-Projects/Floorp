@@ -66,44 +66,6 @@ function check_test_helper_pt1_2() {
   gNextRunFunc();
 }
 
-// The following 3 functions are a workaround for GONK due to Bug 828858 and
-// can be removed after it is fixed and the callers are changed to use the
-// regular helper functions.
-function run_test_helper_bug828858_pt1(aMsg, aExpectedStatusResult, aNextRunFunc) {
-  gUpdates = null;
-  gUpdateCount = null;
-  gStatusResult = null;
-  gCheckFunc = check_test_helper_bug828858_pt1_1;
-  gNextRunFunc = aNextRunFunc;
-  gExpectedStatusResult = aExpectedStatusResult;
-  debugDump(aMsg, Components.stack.caller);
-  gUpdateChecker.checkForUpdates(updateCheckListener, true);
-}
-
-function check_test_helper_bug828858_pt1_1() {
-  Assert.equal(gUpdateCount, 1,
-               "the update count" + MSG_SHOULD_EQUAL);
-  gCheckFunc = check_test_helper_bug828858_pt1_2;
-  let bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
-  let state = gAUS.downloadUpdate(bestUpdate, false);
-  if (state == STATE_NONE || state == STATE_FAILED) {
-    do_throw("nsIApplicationUpdateService:downloadUpdate returned " + state);
-  }
-  gAUS.addDownloadListener(downloadListener);
-}
-
-function check_test_helper_bug828858_pt1_2() {
-  if (gStatusResult == Cr.NS_ERROR_CONTENT_CORRUPTED) {
-    Assert.ok(true,
-              "the status result should equal NS_ERROR_CONTENT_CORRUPTED");
-  } else {
-    Assert.equal(gStatusResult, gExpectedStatusResult,
-                 "the download status result" + MSG_SHOULD_EQUAL);
-  }
-  gAUS.removeDownloadListener(downloadListener);
-  gNextRunFunc();
-}
-
 function setResponseBody(aHashFunction, aHashValue, aSize) {
   let patches = getRemotePatchString(null, null,
                                      aHashFunction, aHashValue, aSize);
@@ -194,17 +156,6 @@ function run_test_pt11() {
 function run_test_pt12() {
   const arbitraryFileSize = 1024000;
   setResponseBody("MD5", MD5_HASH_SIMPLE_MAR, arbitraryFileSize);
-  if (IS_TOOLKIT_GONK) {
-    // There seems to be a race on the web server side when the patchFile is
-    // stored on the SDCard. Sometimes, the webserver will serve up an error
-    // 416 and the contents of the file, and sometimes it will serve up an error
-    // 200 and no contents. This can cause either NS_ERROR_UNEXPECTED or
-    // NS_ERROR_CONTENT_CORRUPTED.
-    // Bug 828858 was filed to follow up on this issue.
-    run_test_helper_bug828858_pt1("mar download with a valid MD5 hash but invalid file size",
-                                  Cr.NS_ERROR_UNEXPECTED, finish_test);
-  } else {
-    run_test_helper_pt1("mar download with a valid MD5 hash but invalid file size",
-                        Cr.NS_ERROR_UNEXPECTED, finish_test);
-  }
+  run_test_helper_pt1("mar download with a valid MD5 hash but invalid file size",
+                      Cr.NS_ERROR_UNEXPECTED, finish_test);
 }
