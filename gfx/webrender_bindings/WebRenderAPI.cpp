@@ -517,10 +517,10 @@ DisplayListBuilder::Finalize()
 {
   BuiltDisplayList dl;
   wr_api_finalize_builder(mWrState,
-                          dl.dl_desc,
-                          dl.dl.inner,
-                          dl.aux_desc,
-                          dl.aux.inner);
+                          &dl.dl_desc,
+                          &dl.dl.inner,
+                          &dl.aux_desc,
+                          &dl.aux.inner);
   return dl;
 }
 
