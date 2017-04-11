@@ -222,7 +222,7 @@ to mochitest command.
     * test_initial_storage.html `contain` [4]
     * test_value_storage.html `'contain'` [30]
   * clip property: servo/servo#15729
-    * test_value_storage.html `should be idempotent for 'clip` [6]
+    * test_value_storage.html `should be idempotent for 'clip` [4]
   * initial-letter property bug 1355001
     * test_compute_data_with_start_struct.html `initial-letter` [2]
     * test_inherit_computation.html `initial-letter` [2]
