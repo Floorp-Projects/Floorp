@@ -8,6 +8,10 @@
   -moz-binding: url("chrome://browser/content/search/search.xml#searchbar-textbox");
 }
 
+.searchbar-treebody {
+  -moz-binding: url("chrome://browser/content/search/search.xml#searchbar-treebody");
+}
+
 .search-one-offs {
   -moz-binding: url("chrome://browser/content/search/search.xml#search-one-offs");
 }
