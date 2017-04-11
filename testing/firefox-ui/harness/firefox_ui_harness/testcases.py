@@ -41,16 +41,11 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
         self.target_buildid = kwargs.pop('update_target_buildid')
         self.target_version = kwargs.pop('update_target_version')
 
-        # Bug 604364 - Preparation to test multiple update steps
-        self.current_update_index = 0
-
-        self.download_duration = None
-        self.updates = []
-
     def setUp(self, is_fallback=False):
         super(UpdateTestCase, self).setUp()
 
         self.software_update = SoftwareUpdate(self.marionette)
+        self.download_duration = None
 
         # If a custom update channel has to be set, force a restart of
         # Firefox to actually get it applied as a default pref. Use the clean
@@ -78,13 +73,13 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
         self.set_preferences_defaults()
 
         # Dictionary which holds the information for each update
-        self.updates = [{
+        self.update_status = {
             'build_pre': self.software_update.build_info,
             'build_post': None,
             'fallback': is_fallback,
             'patch': {},
             'success': False,
-        }]
+        }
 
         # Check if the user has permissions to run the update
         self.assertTrue(self.software_update.allowed,
@@ -95,10 +90,10 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
             self.browser.tabbar.close_all_tabs([self.browser.tabbar.selected_tab])
 
             # Add content of the update log file for detailed failures when applying an update
-            self.updates[self.current_update_index]['update_log'] = self.read_update_log()
+            self.update_status['update_log'] = self.read_update_log()
 
             # Print results for now until we have treeherder integration
-            output = pprint.pformat(self.updates)
+            output = pprint.pformat(self.update_status)
             self.logger.info('Update test results: \n{}'.format(output))
         finally:
             super(UpdateTestCase, self).tearDown()
@@ -139,8 +134,7 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
 
     def check_update_applied(self):
         """Check that the update has been applied correctly"""
-        update = self.updates[self.current_update_index]
-        update['build_post'] = self.software_update.build_info
+        self.update_status['build_post'] = self.software_update.build_info
 
         about_window = self.browser.open_about_window()
         try:
@@ -148,7 +142,7 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
             update_available = self.check_for_updates(about_window)
             self.assertFalse(update_available,
                              'Additional update found due to watershed release {}'.format(
-                                 update['build_post']['version']))
+                                 self.update_status['build_post']['version']))
 
             # The upgraded version should be identical with the version given by
             # the update and we shouldn't have run a downgrade
@@ -156,30 +150,33 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
               Components.utils.import("resource://gre/modules/Services.jsm");
 
               return  Services.vc.compare(arguments[0], arguments[1]);
-            """, script_args=[update['build_post']['version'], update['build_pre']['version']])
+            """, script_args=[self.update_status['build_post']['version'],
+                              self.update_status['build_pre']['version']])
 
             self.assertGreaterEqual(check, 0,
                                     'The version of the upgraded build is higher or equal')
 
             # If a target version has been specified, check if it matches the updated build
             if self.target_version:
-                self.assertEqual(update['build_post']['version'], self.target_version)
+                self.assertEqual(self.update_status['build_post']['version'], self.target_version)
 
             # The post buildid should be identical with the buildid contained in the patch
-            self.assertEqual(update['build_post']['buildid'], update['patch']['buildid'])
+            self.assertEqual(self.update_status['build_post']['buildid'],
+                             self.update_status['patch']['buildid'])
 
             # If a target buildid has been specified, check if it matches the updated build
             if self.target_buildid:
-                self.assertEqual(update['build_post']['buildid'], self.target_buildid)
+                self.assertEqual(self.update_status['build_post']['buildid'], self.target_buildid)
 
             # An upgrade should not change the builds locale
-            self.assertEqual(update['build_post']['locale'], update['build_pre']['locale'])
+            self.assertEqual(self.update_status['build_post']['locale'],
+                             self.update_status['build_pre']['locale'])
 
             # Check that no application-wide add-ons have been disabled
-            self.assertEqual(update['build_post']['disabled_addons'],
-                             update['build_pre']['disabled_addons'])
+            self.assertEqual(self.update_status['build_post']['disabled_addons'],
+                             self.update_status['build_pre']['disabled_addons'])
 
-            update['success'] = True
+            self.update_status['success'] = True
 
         finally:
             about_window.close()
@@ -278,7 +275,7 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
             self.wait_for_update_applied(about_window)
 
         finally:
-            self.updates[self.current_update_index]['patch'] = self.patch_info
+            self.update_status['patch'] = self.patch_info
 
         if force_fallback:
             # Set the downloaded update into failed state
@@ -294,7 +291,7 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
         )
 
         # In case of a broken complete update the about window has to be used
-        if self.updates[self.current_update_index]['patch']['is_complete']:
+        if self.update_status['patch']['is_complete']:
             about_window = None
             try:
                 self.assertEqual(dialog.wizard.selected_panel,
@@ -313,7 +310,7 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
 
             finally:
                 if about_window:
-                    self.updates[self.current_update_index]['patch'] = self.patch_info
+                    self.update_status['patch'] = self.patch_info
 
         else:
             try:
@@ -324,7 +321,7 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
                 self.download_update(dialog)
 
             finally:
-                self.updates[self.current_update_index]['patch'] = self.patch_info
+                self.update_status['patch'] = self.patch_info
 
         # Restart Firefox to apply the update
         self.restart()
