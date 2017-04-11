@@ -674,10 +674,6 @@ struct SourceCompressionTask
 
     ScriptSource* ss;
 
-    // Atomic flag to indicate to a helper thread that it should abort
-    // compression on the source.
-    mozilla::Atomic<bool, mozilla::Relaxed> abort_;
-
     // Stores the result of the compression.
     enum ResultType {
         OOM,
@@ -692,7 +688,6 @@ struct SourceCompressionTask
       : helperThread(nullptr)
       , cx(cx)
       , ss(nullptr)
-      , abort_(false)
       , result(OOM)
     {}
 
@@ -703,7 +698,6 @@ struct SourceCompressionTask
 
     ResultType work();
     bool complete();
-    void abort() { abort_ = true; }
     bool active() const { return !!ss; }
     ScriptSource* source() { return ss; }
 };
