@@ -40,11 +40,12 @@
 #include "nsToolkitCompsCID.h"
 #include "nsIObserverService.h"
 #include "nsPrintfCString.h"
+#include "mozilla/AbstractThread.h"
 
 static nsPermissionManager *gPermissionManager = nullptr;
 
-using mozilla::dom::ContentParent;
-using mozilla::Unused; // ha!
+using namespace mozilla;
+using namespace mozilla::dom;
 
 static bool
 IsChildProcess()
@@ -848,6 +849,15 @@ nsPermissionManager::nsPermissionManager()
 
 nsPermissionManager::~nsPermissionManager()
 {
+  // NOTE: Make sure to reject each of the promises in mPermissionKeyPromiseMap
+  // before destroying.
+  for (auto iter = mPermissionKeyPromiseMap.Iter(); !iter.Done(); iter.Next()) {
+    if (iter.Data()) {
+      iter.Data()->Reject(NS_ERROR_FAILURE, __func__);
+    }
+  }
+  mPermissionKeyPromiseMap.Clear();
+
   RemoveAllFromMemory();
   gPermissionManager = nullptr;
 }
@@ -3044,13 +3054,20 @@ nsPermissionManager::SetPermissionsWithKey(const nsACString& aPermissionKey,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // Record that we have seen the permissions with the given permission key.
-  if (NS_WARN_IF(mAvailablePermissionKeys.Contains(aPermissionKey))) {
+  RefPtr<GenericPromise::Private> promise;
+  bool foundKey = mPermissionKeyPromiseMap.Get(aPermissionKey, getter_AddRefs(promise));
+  if (promise) {
+    MOZ_ASSERT(foundKey);
+    // NOTE: This will resolve asynchronously, so we can mark it as resolved
+    // now, and be confident that we will have filled in the database before any
+    // callbacks run.
+    promise->Resolve(true, __func__);
+  } else if (foundKey) {
     // NOTE: We shouldn't be sent two InitializePermissionsWithKey for the same
     // key, but it's possible.
     return NS_OK;
   }
-  mAvailablePermissionKeys.PutEntry(aPermissionKey);
+  mPermissionKeyPromiseMap.Put(aPermissionKey, nullptr);
 
   // Add the permissions locally to our process
   for (IPC::Permission& perm : aPerms) {
@@ -3171,7 +3188,11 @@ nsPermissionManager::PermissionAvaliable(nsIPrincipal* aPrincipal, const char* a
     nsAutoCString permissionKey;
     // NOTE: GetKeyForPermission accepts a null aType.
     GetKeyForPermission(aPrincipal, aType, permissionKey);
-    if (!mAvailablePermissionKeys.Contains(permissionKey)) {
+
+    // If we have a pending promise for the permission key in question, we don't
+    // have the permission avaliable, so report a warning and return false.
+    RefPtr<GenericPromise::Private> promise;
+    if (!mPermissionKeyPromiseMap.Get(permissionKey, getter_AddRefs(promise)) || promise) {
       // Emit a useful diagnostic warning with the permissionKey for the process
       // which hasn't received permissions yet.
       NS_WARNING(nsPrintfCString("This content process hasn't received the "
@@ -3180,4 +3201,50 @@ nsPermissionManager::PermissionAvaliable(nsIPrincipal* aPrincipal, const char* a
     }
   }
   return true;
+}
+
+NS_IMETHODIMP
+nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
+                                              nsIRunnable* aRunnable)
+{
+  MOZ_ASSERT(aRunnable);
+
+  if (!XRE_IsContentProcess()) {
+    aRunnable->Run();
+    return NS_OK;
+  }
+
+  nsTArray<RefPtr<GenericPromise>> promises;
+  for (auto& key : GetAllKeysForPrincipal(aPrincipal)) {
+    RefPtr<GenericPromise::Private> promise;
+    if (!mPermissionKeyPromiseMap.Get(key, getter_AddRefs(promise))) {
+      // In this case we have found a permission which isn't avaliable in the
+      // content process and hasn't been requested yet. We need to create a new
+      // promise, and send the request to the parent (if we have not already
+      // done so).
+      promise = new GenericPromise::Private(__func__);
+      mPermissionKeyPromiseMap.Put(key, RefPtr<GenericPromise::Private>(promise).forget());
+    }
+
+    if (promise) {
+      promises.AppendElement(Move(promise));
+    }
+  }
+
+  // If all of our permissions are avaliable, immediately run the runnable. This
+  // avoids any extra overhead during fetch interception which is performance
+  // sensitive.
+  if (promises.IsEmpty()) {
+    aRunnable->Run();
+    return NS_OK;
+  }
+
+  RefPtr<nsIRunnable> runnable = aRunnable;
+  GenericPromise::All(AbstractThread::GetCurrent(), promises)->Then(
+    AbstractThread::GetCurrent(), __func__,
+    [runnable] () { runnable->Run(); },
+    [] () {
+      NS_WARNING("nsPermissionManager permission promise rejected. We're probably shutting down.");
+    });
+  return NS_OK;
 }
