@@ -138,7 +138,7 @@ PinchWithPinchInput(const RefPtr<InputReceiver>& aTarget,
       CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_END,
                               // note: negative values here tell APZC
                               //       not to turn the pinch into a pan
-                              aFocus, -1.0, -1.0),
+                              ScreenIntPoint(-1, -1), 10.0 * aScale, 10.0 * aScale),
       nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[2] = actualStatus;

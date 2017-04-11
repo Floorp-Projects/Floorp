@@ -72,9 +72,12 @@ DrawLayerInfo(const RenderTargetIntRect& aClipRect,
   uint32_t maxWidth = std::min<uint32_t>(visibleRegion.GetBounds().width, 500);
 
   IntPoint topLeft = visibleRegion.ToUnknownRegion().GetBounds().TopLeft();
-  aManager->GetTextRenderer()->RenderText(ss.str().c_str(), topLeft,
-                                          aLayer->GetEffectiveTransform(), 16,
-                                          maxWidth);
+  aManager->GetTextRenderer()->RenderText(
+    aManager->GetCompositor(),
+    ss.str().c_str(),
+    topLeft,
+    aLayer->GetEffectiveTransform(), 16,
+    maxWidth);
 }
 
 static void

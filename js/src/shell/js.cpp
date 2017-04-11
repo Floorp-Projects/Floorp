@@ -4363,8 +4363,15 @@ GetModuleLoadPath(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     ShellContext* sc = GetShellContext(cx);
-    MOZ_ASSERT(sc->moduleLoadPath);
-    args.rval().setString(JS_NewStringCopyZ(cx, sc->moduleLoadPath.get()));
+    if (sc->moduleLoadPath) {
+        JSString* str = JS_NewStringCopyZ(cx, sc->moduleLoadPath.get());
+        if (!str)
+            return false;
+
+        args.rval().setString(str);
+    } else {
+        args.rval().setNull();
+    }
     return true;
 }
 

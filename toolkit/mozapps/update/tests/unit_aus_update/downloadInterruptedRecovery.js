@@ -212,19 +212,8 @@ function run_test_pt2() {
   Services.prefs.setIntPref(PREF_APP_UPDATE_SOCKET_MAXERRORS, 2);
   Services.prefs.setIntPref(PREF_APP_UPDATE_RETRYTIMEOUT, 0);
   setResponseBody("MD5", MD5_HASH_SIMPLE_MAR);
-
-  let expectedResult;
-  if (IS_TOOLKIT_GONK) {
-    // Gonk treats interrupted downloads differently. For gonk, if the state
-    // is pending, this means that the download has completed and only the
-    // staging needs to occur. So gonk will skip the download portion which
-    // results in an NS_OK return.
-    expectedResult = Cr.NS_OK;
-  } else {
-    expectedResult = Cr.NS_ERROR_NET_RESET;
-  }
   run_test_helper_pt1("mar download with connection interruption without recovery",
-                      expectedResult, run_test_pt3);
+                      Cr.NS_ERROR_NET_RESET, run_test_pt3);
 }
 
 // Test entering offline mode while downloading

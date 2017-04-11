@@ -103,10 +103,10 @@ TabGroup::GetFromWindowActor(mozIDOMWindowProxy* aWindow)
 
   // We have an event target. We assume the IPC code created it via
   // TabGroup::CreateEventTarget.
-  RefPtr<ValidatingDispatcher> dispatcher =
-    ValidatingDispatcher::FromEventTarget(target);
-  MOZ_RELEASE_ASSERT(dispatcher);
-  auto tabGroup = dispatcher->AsTabGroup();
+  RefPtr<SchedulerGroup> group =
+    SchedulerGroup::FromEventTarget(target);
+  MOZ_RELEASE_ASSERT(group);
+  auto tabGroup = group->AsTabGroup();
   MOZ_RELEASE_ASSERT(tabGroup);
 
   // We delay creating the event targets until now since the TabGroup
@@ -241,7 +241,7 @@ TabGroup::EventTargetFor(TaskCategory aCategory) const
   if (aCategory == TaskCategory::Worker || aCategory == TaskCategory::Timer) {
     MOZ_RELEASE_ASSERT(mThrottledQueuesInitialized || mIsChrome);
   }
-  return ValidatingDispatcher::EventTargetFor(aCategory);
+  return SchedulerGroup::EventTargetFor(aCategory);
 }
 
 AbstractThread*
@@ -255,7 +255,7 @@ TabGroup::AbstractMainThreadForImpl(TaskCategory aCategory)
     return AbstractThread::MainThread();
   }
 
-  return ValidatingDispatcher::AbstractMainThreadForImpl(aCategory);
+  return SchedulerGroup::AbstractMainThreadForImpl(aCategory);
 }
 
 } // namespace dom

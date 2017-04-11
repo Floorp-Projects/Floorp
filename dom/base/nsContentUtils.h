@@ -22,6 +22,7 @@
 #include "js/RootingAPI.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/TaskCategory.h"
 #include "mozilla/TimeStamp.h"
 #include "nsContentListDeclarations.h"
 #include "nsMathUtils.h"
@@ -66,6 +67,7 @@ class nsIDOMKeyEvent;
 class nsIDOMNode;
 class nsIDragSession;
 class nsIEditor;
+class nsIEventTarget;
 class nsIFragmentContentSink;
 class nsIFrame;
 class nsIImageLoadingContent;
@@ -2858,8 +2860,8 @@ public:
   HtmlObjectContentTypeForMIMEType(const nsCString& aMIMEType,
                                    nsIContent* aContent);
 
-  static already_AddRefed<mozilla::Dispatcher>
-  GetDispatcherByLoadInfo(nsILoadInfo* aLoadInfo);
+  static already_AddRefed<nsIEventTarget>
+  GetEventTargetByLoadInfo(nsILoadInfo* aLoadInfo, mozilla::TaskCategory aCategory);
 
 private:
   static bool InitializeEventTable();

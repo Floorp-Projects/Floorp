@@ -2909,10 +2909,6 @@ PluginInstanceChild::NPN_FinalizeAsyncSurface(NPAsyncSurface *surface)
         return NPERR_GENERIC_ERROR;
     }
 
-    // The API forbids this. If it becomes a problem we can revoke the current
-    // surface instead.
-    MOZ_ASSERT(!surface || mCurrentDirectSurface != surface);
-
     switch (mDrawingModel) {
     case NPDrawingModelAsyncBitmapSurface: {
         RefPtr<DirectBitmap> bitmap;

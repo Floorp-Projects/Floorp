@@ -534,6 +534,14 @@ union AsyncParentMessageData {
   OpNotifyNotUsed;
 };
 
+struct PaintTiming {
+  float serializeMs;
+  float sendMs;
+  float dlMs;
+  float flbMs;
+  float rasterMs;
+};
+
 struct TransactionInfo
 {
   Edit[] cset;

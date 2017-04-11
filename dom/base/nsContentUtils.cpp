@@ -10172,8 +10172,8 @@ nsContentUtils::HtmlObjectContentTypeForMIMEType(const nsCString& aMIMEType,
   return nsIObjectLoadingContent::TYPE_NULL;
 }
 
-/* static */ already_AddRefed<Dispatcher>
-nsContentUtils::GetDispatcherByLoadInfo(nsILoadInfo* aLoadInfo)
+/* static */ already_AddRefed<nsIEventTarget>
+  nsContentUtils::GetEventTargetByLoadInfo(nsILoadInfo* aLoadInfo, TaskCategory aCategory)
 {
   if (NS_WARN_IF(!aLoadInfo)) {
     return nullptr;
@@ -10182,9 +10182,11 @@ nsContentUtils::GetDispatcherByLoadInfo(nsILoadInfo* aLoadInfo)
   nsCOMPtr<nsIDOMDocument> domDoc;
   aLoadInfo->GetLoadingDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  RefPtr<Dispatcher> dispatcher;
+  nsCOMPtr<nsIEventTarget> target;
   if (doc) {
-    dispatcher = doc->GetDocGroup();
+    if (DocGroup* group = doc->GetDocGroup()) {
+      target = group->EventTargetFor(aCategory);
+    }
   } else {
     // There's no document yet, but this might be a top-level load where we can
     // find a TabGroup.
@@ -10199,8 +10201,8 @@ nsContentUtils::GetDispatcherByLoadInfo(nsILoadInfo* aLoadInfo)
       return nullptr;
     }
 
-    dispatcher = window->TabGroup();
+    target = window->TabGroup()->EventTargetFor(aCategory);
   }
 
-  return dispatcher.forget();
+  return target.forget();
 }

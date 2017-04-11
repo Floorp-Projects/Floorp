@@ -240,6 +240,16 @@ public:
   virtual already_AddRefed<PersistentBufferProvider>
   CreatePersistentBufferProvider(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat) override;
 
+  static PaintTiming* MaybeGetPaintTiming(LayerManager* aManager) {
+    if (!aManager) {
+      return nullptr;
+    }
+    if (ClientLayerManager* lm = aManager->AsClientLayerManager()) {
+      return &lm->AsShadowForwarder()->GetPaintTiming();
+    }
+    return nullptr;
+  }
+
 protected:
   enum TransactionPhase {
     PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING, PHASE_FORWARD
