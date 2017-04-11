@@ -316,6 +316,7 @@ UNIFIED_SOURCES += [
     'composite/CompositableHost.cpp',
     'composite/ContainerLayerComposite.cpp',
     'composite/ContentHost.cpp',
+    'composite/Diagnostics.cpp',
     'composite/FPSCounter.cpp',
     'composite/FrameUniformityData.cpp',
     'composite/GPUVideoTextureHost.cpp',
