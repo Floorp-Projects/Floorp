@@ -146,13 +146,8 @@ var SessionHistoryInternal = {
    * @return object
    */
   serializeEntry(shEntry) {
-    let entry = { url: shEntry.URI.spec };
+    let entry = { url: shEntry.URI.spec, title: shEntry.title };
 
-    // Save some bytes and don't include the title property
-    // if that's identical to the current entry's URL.
-    if (shEntry.title && shEntry.title != entry.url) {
-      entry.title = shEntry.title;
-    }
     if (shEntry.isSubFrame) {
       entry.subframe = true;
     }
