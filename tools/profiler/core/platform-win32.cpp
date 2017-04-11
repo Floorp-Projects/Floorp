@@ -160,8 +160,7 @@ void
 SamplerThread::SuspendAndSampleAndResumeThread(PS::LockRef aLock,
                                                TickSample* aSample)
 {
-  uintptr_t thread = GetThreadHandle(aSample->mPlatformData);
-  HANDLE profiled_thread = reinterpret_cast<HANDLE>(thread);
+  HANDLE profiled_thread = aSample->mPlatformData->ProfiledThread();
   if (profiled_thread == nullptr)
     return;
 
