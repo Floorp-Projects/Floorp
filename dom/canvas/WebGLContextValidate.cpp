@@ -701,6 +701,7 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     mPixelStore_FlipY = false;
     mPixelStore_PremultiplyAlpha = false;
     mPixelStore_ColorspaceConversion = BROWSER_DEFAULT_WEBGL;
+    mPixelStore_RequireFastPath = false;
 
     // GLES 3.0.4, p259:
     mPixelStore_UnpackImageHeight = 0;
