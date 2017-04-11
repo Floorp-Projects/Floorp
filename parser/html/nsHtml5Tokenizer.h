@@ -194,7 +194,6 @@ class nsHtml5Tokenizer
 
   protected:
     nsHtml5String strBufToString();
-
   private:
     void strBufToDoctypeName();
     void emitStrBuf();
@@ -287,7 +286,6 @@ class nsHtml5Tokenizer
 
   public:
     bool internalEncodingDeclaration(nsHtml5String internalCharset);
-
   private:
     void emitOrAppendTwo(const char16_t* val, int32_t returnState);
     void emitOrAppendOne(const char16_t* val, int32_t returnState);
