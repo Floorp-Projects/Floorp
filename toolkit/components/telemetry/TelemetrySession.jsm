@@ -18,9 +18,11 @@ Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
-Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/AppConstants.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySend",
+                                  "resource://gre/modules/TelemetrySend.jsm");
 
 const Utils = TelemetryUtils;
 
