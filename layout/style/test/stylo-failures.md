@@ -68,7 +68,6 @@ to mochitest command.
   * @keyframes
     * test_keyframes_rules.html [1]
     * test_rules_out_of_sheets.html [1]
-    * test_bug887741_at-rules_in_declaration_lists.html `rules[2]` [1]
   * @support
     * test_supports_rules.html [1]
 * test_box_size_keywords.html: moz-prefixed intrinsic size keyword value [16]
@@ -218,8 +217,6 @@ to mochitest command.
     * test_initial_computation.html `contain` [4]
     * test_initial_storage.html `contain` [4]
     * test_value_storage.html `'contain'` [30]
-  * clip property: servo/servo#15729
-    * test_value_storage.html `should be idempotent for 'clip` [4]
   * font-feature-settings property servo/servo#15975
     * test_compute_data_with_start_struct.html `font-feature-settings` [2]
     * test_inherit_computation.html `font-feature-settings` [8]
@@ -236,8 +233,6 @@ to mochitest command.
     * ... `justify-` [6]
     * test_value_storage.html `align-` [9]
     * ... `justify-` [14]
-* @page should ignore properties with viewport units bug 1353191
-  * test_page_parser.html `2v` [8]
 * Stylesheet cloning is somehow busted bug 1348481
   * test_selectors.html `cloned correctly` [157]
   * ... `matched clone` [204]
@@ -295,6 +290,8 @@ to mochitest command.
   * -moz-box-orient: {block,inline}-axis bug 1355005
     * test_value_storage.html `box-orient` [6]
 * Incorrect parsing
+  * Incorrect bounds
+    * test_bug664955.html `font size is larger than max font size` [2]
   * calc() doesn't support dividing expression servo/servo#15192
     * test_value_storage.html `calc(50px/` [7]
     * ... `calc(2em / ` [9]
@@ -319,8 +316,8 @@ to mochitest command.
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
     * test_priority_preservation.html `border-radius` [4]
-    * test_value_storage.html `border-radius:` [92]
-    * ... `-moz-outline-radius:` [45]
+    * test_value_storage.html `border-radius:` [64]
+    * ... `-moz-outline-radius:` [31]
     * test_shorthand_property_getters.html `should condense to shortest possible` [6]
   * background-position is serialized to invalid value sometimes bug 1355017
     * test_shorthand_property_getters.html `background-position` [1]
@@ -358,10 +355,6 @@ to mochitest command.
 * clamp negative value from calc() servo/servo#15296
   * test_value_storage.html `font-size: calc(` [3]
   * ... `font-size: var(--a)` [3]
-* rounding issue
-  * test_value_storage.html `33.5833px` [2]
-  * ... `0.766667px` [2]
-  * ... `105.333px` [2]
 * Negative value should be rejected
   * test_property_syntax_errors.html `transition-duration`: servo/servo#15343 [20]
   * ... `'text-shadow'`: third length of text-shadow servo/servo#15999 [2]
@@ -379,10 +372,8 @@ to mochitest command.
     * ... `rect(1, ` [2]
 * test_pseudoelement_parsing.html: support parsing some pseudo-classes on some pseudo-elements [5]
 * Unit should be preserved after parsing servo/servo#15346
-  * test_units_length.html [5]
   * test_units_time.html [1]
-  * test_page_parser.html `192px` [8]
-  * test_bug887741_at-rules_in_declaration_lists.html `188.96666px` [1]
+  * test_page_parser.html `2in` [8]
 * insertRule / deleteRule don't work bug 1336863
   * test_rule_insertion.html [5]
 * @-moz-document support
@@ -418,7 +409,6 @@ to mochitest command.
 ## Unknown / Unsure
 
 * test_additional_sheets.html: one sub-test cascade order is wrong [1]
-* test_flexbox_layout.html: resolved width doesn't match expectation [5]
 * test_selectors.html `:nth-child`: &lt;an+b&gt; parsing difference [14]
 * test_selectors_on_anonymous_content.html: xbl and :nth-child [1]
 * test_parse_rule.html `rgb(0, 128, 0)`: color properties not getting computed [6]
