@@ -78,6 +78,11 @@
   opacity: 0.45;
 }
 
+.grid-outline-line {
+  opacity: 0;
+  stroke-width: 10;
+}
+
 /**
  * Container when no grids are present
  */
