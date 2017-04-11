@@ -684,7 +684,7 @@ MessageChannel::Clear()
     }
 
     // Free up any memory used by pending messages.
-    for (RefPtr<MessageTask> task : mPending) {
+    for (MessageTask* task : mPending) {
         task->Clear();
     }
     mPending.clear();
@@ -1041,7 +1041,7 @@ MessageChannel::OnMessageReceivedFromLink(Message&& aMsg)
             reuseTask = true;
         }
     } else if (aMsg.compress_type() == IPC::Message::COMPRESSION_ALL && !mPending.isEmpty()) {
-        for (RefPtr<MessageTask> p = mPending.getLast(); p; p = p->getPrevious()) {
+        for (MessageTask* p = mPending.getLast(); p; p = p->getPrevious()) {
             if (p->Msg().type() == aMsg.type() &&
                 p->Msg().routing_id() == aMsg.routing_id())
             {
@@ -1118,7 +1118,7 @@ MessageChannel::PeekMessages(std::function<bool(const Message& aMsg)> aInvoke)
     // FIXME: We shouldn't be holding the lock for aInvoke!
     MonitorAutoLock lock(*mMonitor);
 
-    for (RefPtr<MessageTask> it : mPending) {
+    for (MessageTask* it : mPending) {
         const Message &msg = it->Msg();
         if (!aInvoke(msg)) {
             break;
@@ -1147,7 +1147,7 @@ MessageChannel::ProcessPendingRequests(AutoEnterTransaction& aTransaction)
 
         mozilla::Vector<Message> toProcess;
 
-        for (RefPtr<MessageTask> p = mPending.getFirst(); p; ) {
+        for (MessageTask* p = mPending.getFirst(); p; ) {
             Message &msg = p->Msg();
 
             MOZ_RELEASE_ASSERT(!aTransaction.IsCanceled(),
@@ -1679,7 +1679,7 @@ MessageChannel::RunMessage(MessageTask& aTask)
 
     // Check that we're going to run the first message that's valid to run.
 #ifdef DEBUG
-    for (RefPtr<MessageTask> task : mPending) {
+    for (MessageTask* task : mPending) {
         if (task == &aTask) {
             break;
         }
@@ -2598,7 +2598,7 @@ void
 MessageChannel::RepostAllMessages()
 {
     bool needRepost = false;
-    for (RefPtr<MessageTask> task : mPending) {
+    for (MessageTask* task : mPending) {
         if (!task->IsScheduled()) {
             needRepost = true;
         }
@@ -2660,7 +2660,7 @@ MessageChannel::CancelTransaction(int transaction)
     }
 
     bool foundSync = false;
-    for (RefPtr<MessageTask> p = mPending.getFirst(); p; ) {
+    for (MessageTask* p = mPending.getFirst(); p; ) {
         Message &msg = p->Msg();
 
         // If there was a race between the parent and the child, then we may
