@@ -14,7 +14,6 @@
 // -----------------------------------------------------------------------------
 
 var fs = require("fs");
-var path = require("path");
 var helpers = require("../helpers");
 var globals = require("../globals");
 
