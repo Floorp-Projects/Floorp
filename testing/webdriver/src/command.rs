@@ -426,10 +426,10 @@ pub trait Parameters: Sized {
 /// the legacy variant is used to store desiredCapabilities/requiredCapabilities
 /// parameters, and is intended to minimise breakage as we transition users to
 /// the spec design.
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum NewSessionParameters {
     Spec(SpecNewSessionParameters),
-    Legacy(LegacyNewSessionParameters)
+    Legacy(LegacyNewSessionParameters),
 }
 
 impl Parameters for NewSessionParameters {
