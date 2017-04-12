@@ -52,7 +52,7 @@ class Debugger;
 class LazyScript;
 class ModuleObject;
 class RegExpObject;
-struct SourceCompressionTask;
+class SourceCompressionTask;
 class Shape;
 
 namespace frontend {
@@ -355,7 +355,7 @@ class UncompressedSourceCache
 
 class ScriptSource
 {
-    friend struct SourceCompressionTask;
+    friend class SourceCompressionTask;
 
     uint32_t refs;
 
@@ -437,6 +437,14 @@ class ScriptSource
     // function should be recorded before their first execution.
     UniquePtr<XDRIncrementalEncoder> xdrEncoder_;
 
+    // Instant at which the first parse of this source ended, or null
+    // if the source hasn't been parsed yet.
+    //
+    // Used for statistics purposes, to determine how much time code spends
+    // syntax parsed before being full parsed, to help determine whether
+    // our syntax parse vs. full parse heuristics are correct.
+    mozilla::TimeStamp parseEnded_;
+
     // True if we can call JSRuntime::sourceHook to load the source on
     // demand. If sourceRetrievable_ and hasSourceData() are false, it is not
     // possible to get source at all.
@@ -445,14 +453,6 @@ class ScriptSource
 
     const char16_t* chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
                                size_t chunk);
-
-    // Instant at which the first parse of this source ended, or null
-    // if the source hasn't been parsed yet.
-    //
-    // Used for statistics purposes, to determine how much time code spends
-    // syntax parsed before being full parsed, to help determine whether
-    // our syntax parse vs. full parse heuristics are correct.
-    mozilla::TimeStamp parseEnded_;
 
   public:
     explicit ScriptSource()
@@ -489,6 +489,7 @@ class ScriptSource
     void setSourceRetrievable() { sourceRetrievable_ = true; }
     bool sourceRetrievable() const { return sourceRetrievable_; }
     bool hasSourceData() const { return !data.is<Missing>(); }
+    bool hasUncompressedSource() const { return data.is<Uncompressed>(); }
     bool hasCompressedSource() const { return data.is<Compressed>(); }
 
     size_t length() const {
@@ -639,10 +640,12 @@ class ScriptSourceHolder
             ss->decref();
     }
     void reset(ScriptSource* newss) {
+        // incref before decref just in case ss == newss.
+        if (newss)
+            newss->incref();
         if (ss)
             ss->decref();
         ss = newss;
-        ss->incref();
     }
     ScriptSource* get() const {
         return ss;
