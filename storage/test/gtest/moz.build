@@ -12,6 +12,7 @@ UNIFIED_SOURCES += [
     'test_file_perms.cpp',
     'test_mutex.cpp',
     'test_service_init_background_thread.cpp',
+    'test_spinningSynchronousClose.cpp',
     'test_statement_scoper.cpp',
     'test_StatementCache.cpp',
     'test_transaction_helper.cpp',
