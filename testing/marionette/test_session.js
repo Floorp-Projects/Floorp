@@ -48,6 +48,43 @@ add_test(function test_Timeouts_fromJSON() {
   run_next_test();
 });
 
+add_test(function test_Timeouts_fromJSON_unrecognised_field() {
+  let json = {
+    sessionId: "foobar",
+    script: 42,
+  };
+  try {
+    session.Timeouts.fromJSON(json);
+  } catch (e) {
+    equal(e.name, InvalidArgumentError.name);
+    equal(e.message, "Unrecognised timeout: sessionId");
+  }
+
+  run_next_test();
+});
+
+add_test(function test_Timeouts_fromJSON_invalid_type() {
+  try {
+    session.Timeouts.fromJSON({script: "foobar"});
+  } catch (e) {
+    equal(e.name, InvalidArgumentError.name);
+    equal(e.message, "Expected [object String] \"foobar\" to be an integer");
+  }
+
+  run_next_test();
+});
+
+add_test(function test_Timeouts_fromJSON_bounds() {
+  try {
+    session.Timeouts.fromJSON({script: -42});
+  } catch (e) {
+    equal(e.name, InvalidArgumentError.name);
+    equal(e.message, "Expected [object Number] -42 to be >= 0");
+  }
+
+  run_next_test();
+});
+
 add_test(function test_PageLoadStrategy() {
   equal(session.PageLoadStrategy.None, "none");
   equal(session.PageLoadStrategy.Eager, "eager");
