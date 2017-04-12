@@ -17,7 +17,6 @@ import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.WebBackForwardList;
 import android.webkit.WebChromeClient;
-import android.webkit.WebHistoryItem;
 import android.webkit.WebSettings;
 import android.webkit.WebStorage;
 import android.webkit.WebView;
@@ -34,6 +33,8 @@ import org.mozilla.focus.webkit.TrackingProtectionWebViewClient;
  * WebViewProvider for creating a WebKit based IWebVIew implementation.
  */
 public class WebViewProvider {
+    private static final String KEY_CURRENTURL = "currenturl";
+
     /**
      * Preload webview data. This allows the webview implementation to load resources and other data
      * it might need, in advance of intialising the view (at which time we are probably wanting to
@@ -216,15 +217,34 @@ public class WebViewProvider {
             // a WebBackForwardList, and we can't overload with different return types:
             final WebBackForwardList backForwardList = restoreState(savedInstanceState);
 
-            // restoreState doesn't actually load the current page, it just restores navigation history,
-            // so we also need to explicitly reload:
-            client.notifyCurrentURL(backForwardList.getCurrentItem().getUrl());
-            reload();
+            // Pages are only added to the back/forward list when loading finishes. If a new page is
+            // loading when the Activity is paused/killed, then that page won't be in the list,
+            // and needs to be restored separately to the history list. We detect this by checking
+            // whether the last fully loaded page (getCurrentItem()) matches the last page that the
+            // WebView was actively loading (which was retrieved during onSaveInstanceState():
+            // WebView.getUrl() always returns the currently loading or loaded page).
+            // If the app is paused/killed before the initial page finished loading, then the entire
+            // list will be null - so we need to additionally check whether the list even exists.
+
+            final String desiredURL = savedInstanceState.getString(KEY_CURRENTURL);
+            client.notifyCurrentURL(desiredURL);
+
+            if (backForwardList != null &&
+                    backForwardList.getCurrentItem().getUrl().equals(desiredURL)) {
+                // restoreState doesn't actually load the current page, it just restores navigation history,
+                // so we also need to explicitly reload in this case:
+                reload();
+            } else {
+                loadUrl(desiredURL);
+            }
         }
 
         @Override
         public void onSaveInstanceState(Bundle outState) {
             saveState(outState);
+            // See restoreWebViewState() for an explanation of why we need to save this in _addition_
+            // to WebView's state
+            outState.putString(KEY_CURRENTURL, getUrl());
         }
 
         @Override
