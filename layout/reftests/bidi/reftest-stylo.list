@@ -48,9 +48,9 @@ fails == unicode-bidi-plaintext-textarea-4.html unicode-bidi-plaintext-textarea-
 == with-first-letter-1b.html with-first-letter-1b.html
 == with-first-letter-2a.html with-first-letter-2a.html
 == with-first-letter-2b.html with-first-letter-2b.html
-fails == 83958-1a.html 83958-1a.html
-fails == 83958-1b.html 83958-1b.html
-fails == 83958-1c.html 83958-1c.html
+== 83958-1a.html 83958-1a.html
+== 83958-1b.html 83958-1b.html
+== 83958-1c.html 83958-1c.html
 == 83958-2a.html 83958-2a.html
 == 83958-2b.html 83958-2b.html
 == 115921-1.html 115921-1.html
