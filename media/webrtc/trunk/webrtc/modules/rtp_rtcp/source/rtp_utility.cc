@@ -325,6 +325,11 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
     // number of bytes - 1.
     const int id = (*ptr & 0xf0) >> 4;
     const int len = (*ptr & 0x0f);
+    if (ptr + len + 1 > ptrRTPDataExtensionEnd) {
+      LOG(LS_WARNING)
+          << "RTP extension header length out of bounds. Terminate parsing.";
+      return;
+    }
     ptr++;
 
     if (id == 15) {
