@@ -162,6 +162,9 @@ SERVO_BINDING_FUNC(Servo_AnimationValue_GetTransform, void,
 SERVO_BINDING_FUNC(Servo_AnimationValue_DeepEqual, bool,
                    RawServoAnimationValueBorrowed,
                    RawServoAnimationValueBorrowed)
+SERVO_BINDING_FUNC(Servo_AnimationValue_Uncompute,
+                   RawServoDeclarationBlockStrong,
+                   RawServoAnimationValueBorrowed value)
 
 // Style attribute
 SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, RawServoDeclarationBlockStrong,
