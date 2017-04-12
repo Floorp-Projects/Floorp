@@ -1539,6 +1539,163 @@ class PackageFrontend(MachCommandBase):
         artifacts.clear_cache()
         return 0
 
+    @SubCommand('artifact', 'toolchain')
+    @CommandArgument('--verbose', '-v', action='store_true',
+        help='Print verbose output.')
+    @CommandArgument('--cache-dir', metavar='DIR',
+        help='Directory where to store the artifacts cache')
+    @CommandArgument('--skip-cache', action='store_true',
+        help='Skip all local caches to force re-fetching remote artifacts.',
+        default=False)
+    @CommandArgument('--tooltool-manifest', metavar='MANIFEST',
+        help='Explicit tooltool manifest to process')
+    @CommandArgument('--authentication-file', metavar='FILE',
+        help='Use the RelengAPI token found in the given file to authenticate')
+    @CommandArgument('--tooltool-url', metavar='URL',
+        help='Use the given url as tooltool server')
+    @CommandArgument('--no-unpack', action='store_true',
+        help='Do not unpack any downloaded file')
+    @CommandArgument('--retry', type=int, default=0,
+        help='Number of times to retry failed downloads')
+    @CommandArgument('files', nargs='*',
+        help='Only download the given file names (you may use file name stems)')
+    def artifact_toolchain(self, verbose=False, cache_dir=None,
+                          skip_cache=False, tooltool_manifest=None,
+                          authentication_file=None, tooltool_url=None,
+                          no_unpack=False, retry=None, files=()):
+        '''Download, cache and install pre-built toolchains.
+        '''
+        from mozbuild.artifacts import ArtifactCache
+        from mozbuild.action.tooltool import (
+            FileRecord,
+            open_manifest,
+            unpack_file,
+        )
+        import redo
+        import requests
+        import shutil
+
+        self._set_log_level(verbose)
+        # Normally, we'd use self.log_manager.enable_unstructured(),
+        # but that enables all logging, while we only really want tooltool's
+        # and it also makes structured log output twice.
+        # So we manually do what it does, and limit that to the tooltool
+        # logger.
+        if self.log_manager.terminal_handler:
+            logging.getLogger('mozbuild.action.tooltool').addHandler(
+                self.log_manager.terminal_handler)
+            logging.getLogger('redo').addHandler(
+                self.log_manager.terminal_handler)
+            self.log_manager.terminal_handler.addFilter(
+                self.log_manager.structured_filter)
+        if not cache_dir:
+            cache_dir = os.path.join(self._mach_context.state_dir, 'toolchains')
+        try:
+            os.makedirs(cache_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        tooltool_url = (tooltool_url or
+                        'https://api.pub.build.mozilla.org/tooltool').rstrip('/')
+
+        cache = ArtifactCache(cache_dir=cache_dir, log=self.log,
+                              skip_cache=skip_cache)
+
+        if authentication_file:
+            with open(authentication_file, 'rb') as f:
+                token = f.read().strip()
+            cache._download_manager.session.headers['Authorization'] = \
+                'Bearer {}'.format(token)
+
+        manifest = open_manifest(tooltool_manifest)
+        downloaded_files = {}
+
+        for record in manifest.file_records:
+            if files and not any(record.filename == f or
+                                      record.filename.startswith('%s.' % f)
+                                      for f in files):
+                continue
+
+            self.log(logging.INFO, 'artifact', {'name': record.filename},
+                     'Downloading {name}')
+            url = '{}/{}/{}'.format(tooltool_url, record.algorithm,
+                                    record.digest)
+            valid = False
+            # sleeptime is 60 per retry.py, used by tooltool_wrapper.sh
+            for attempt, _ in enumerate(redo.retrier(attempts=retry+1,
+                                                     sleeptime=60)):
+                try:
+                    downloaded = cache.fetch(url)
+                except requests.exceptions.HTTPError as e:
+                    status = e.response.status_code
+                    # The relengapi proxy likes to return error 400 bad request
+                    # which seems improbably to be due to our (simple) GET
+                    # being borked.
+                    should_retry = status >= 500 or status == 400
+                    if should_retry or attempt < retry:
+                        level = logging.WARN
+                    else:
+                        level = logging.ERROR
+                    self.log(level, 'artifact', {}, e.message)
+                    if not should_retry:
+                        break
+                    if attempt < retry:
+                        self.log(logging.INFO, 'artifact', {},
+                                 'Will retry in a moment...')
+                    continue
+                validate_record = FileRecord(
+                    os.path.basename(downloaded), record.size, record.digest,
+                    record.algorithm)
+                # FileRecord.validate needs the file in the current directory
+                # (https://github.com/mozilla/build-tooltool/issues/38)
+                curdir = os.getcwd()
+                os.chdir(os.path.dirname(downloaded))
+                try:
+                    valid = validate_record.validate()
+                finally:
+                    os.chdir(curdir)
+                if not valid:
+                    os.unlink(downloaded)
+                    if attempt < retry:
+                        self.log(logging.INFO, 'artifact', {},
+                                 'Will retry in a moment...')
+                    continue
+
+                downloaded_files[record.filename] = downloaded
+                break
+
+            if not valid:
+                self.log(logging.ERROR, 'artifact', {'name': record.filename},
+                         'Failed to download {name}')
+                return 1
+
+        for record in manifest.file_records:
+            downloaded = downloaded_files.get(record.filename)
+            if not downloaded:
+                continue
+            local = os.path.join(os.getcwd(), record.filename)
+            if os.path.exists(local):
+                os.unlink(local)
+            # unpack_file needs the file with its final name to work
+            # (https://github.com/mozilla/build-tooltool/issues/38), so we
+            # need to copy it, even though we remove it later. Use hard links
+            # when possible.
+            try:
+                os.link(downloaded, local)
+            except:
+                shutil.copy(downloaded, local)
+            if record.unpack and not no_unpack:
+                unpack_file(local, record.setup)
+                os.unlink(local)
+
+        if not downloaded_files:
+            self.log(logging.ERROR, 'artifact', {}, 'Nothing to download')
+            return 1
+
+        return 0
+
+
 @CommandProvider
 class Vendor(MachCommandBase):
     """Vendor third-party dependencies into the source repository."""
