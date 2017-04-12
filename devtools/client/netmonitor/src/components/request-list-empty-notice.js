@@ -6,6 +6,7 @@
 
 const {
   createClass,
+  createFactory,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
@@ -14,6 +15,10 @@ const Actions = require("../actions/index");
 const { ACTIVITY_TYPE } = require("../constants");
 const { NetMonitorController } = require("../netmonitor-controller");
 const { L10N } = require("../utils/l10n");
+const { getPerformanceAnalysisURL } = require("../utils/mdn-utils");
+
+// Components
+const MDNLink = createFactory(require("./mdn-link"));
 
 const { button, div, span } = DOM;
 
@@ -54,7 +59,8 @@ const RequestListEmptyNotice = createClass({
           "data-standalone": true,
           onClick: this.props.onPerfClick,
         }),
-        span(null, L10N.getStr("netmonitor.perfNotice2"))
+        span(null, L10N.getStr("netmonitor.perfNotice2")),
+        MDNLink({ url: getPerformanceAnalysisURL() })
       )
     );
   }
