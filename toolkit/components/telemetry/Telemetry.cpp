@@ -1316,31 +1316,6 @@ TelemetryImpl::AddSQLInfo(JSContext *cx, JS::Handle<JSObject*> rootObj, bool mai
 }
 
 NS_IMETHODIMP
-TelemetryImpl::RegisterAddonHistogram(const nsACString &id,
-                                      const nsACString &name,
-                                      uint32_t histogramType,
-                                      uint32_t min, uint32_t max,
-                                      uint32_t bucketCount,
-                                      uint8_t optArgCount)
-{
-  return TelemetryHistogram::RegisterAddonHistogram
-            (id, name, histogramType, min, max, bucketCount, optArgCount);
-}
-
-NS_IMETHODIMP
-TelemetryImpl::GetAddonHistogram(const nsACString &id, const nsACString &name,
-                                 JSContext *cx, JS::MutableHandle<JS::Value> ret)
-{
-  return TelemetryHistogram::GetAddonHistogram(id, name, cx, ret);
-}
-
-NS_IMETHODIMP
-TelemetryImpl::UnregisterAddonHistograms(const nsACString &id)
-{
-  return TelemetryHistogram::UnregisterAddonHistograms(id);
-}
-
-NS_IMETHODIMP
 TelemetryImpl::SetHistogramRecordingEnabled(const nsACString &id, bool aEnabled)
 {
   return TelemetryHistogram::SetHistogramRecordingEnabled(id, aEnabled);
@@ -1363,12 +1338,6 @@ TelemetryImpl::SnapshotSubsessionHistograms(bool clearSubsession,
 #else
   return NS_OK;
 #endif
-}
-
-NS_IMETHODIMP
-TelemetryImpl::GetAddonHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
-{
-  return TelemetryHistogram::GetAddonHistogramSnapshots(cx, ret);
 }
 
 NS_IMETHODIMP
@@ -2557,6 +2526,7 @@ static constexpr TrackedDBEntry kTrackedDBs[] = {
   TRACKEDDB_ENTRY("cookies.sqlite"),
   TRACKEDDB_ENTRY("downloads.sqlite"),
   TRACKEDDB_ENTRY("extensions.sqlite"),
+  TRACKEDDB_ENTRY("favicons.sqlite"),
   TRACKEDDB_ENTRY("formhistory.sqlite"),
   TRACKEDDB_ENTRY("index.sqlite"),
   TRACKEDDB_ENTRY("netpredictions.sqlite"),
@@ -2957,7 +2927,6 @@ TelemetryImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   size_t n = aMallocSizeOf(this);
 
-  // Ignore the hashtables in mAddonMap; they are not significant.
   n += TelemetryHistogram::GetMapShallowSizesOfExcludingThis(aMallocSizeOf);
   n += TelemetryScalar::GetMapShallowSizesOfExcludingThis(aMallocSizeOf);
   n += mWebrtcTelemetry.SizeOfExcludingThis(aMallocSizeOf);

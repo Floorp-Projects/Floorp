@@ -3,12 +3,11 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY     window.title                  "Settings - Site Data">
-<!ENTITY     settings.description          "The following websites asked to store site data in your disk. You can specify which websites are allowed to store site data. Default site data is temporary and could be deleted automatically.">
 <!ENTITY     hostCol.label                 "Site">
 <!ENTITY     statusCol.label               "Status">
 <!ENTITY     usageCol.label                "Storage">
-<!ENTITY     searchPlaceHolder             "Search">
-<!ENTITY     searchPlaceHolder.accesskey   "S">
+<!ENTITY     searchTextboxPlaceHolder             "Search websites">
+<!ENTITY     searchTextboxPlaceHolder.accesskey   "S">
 <!ENTITY     removeSelected.label          "Remove Selected">
 <!ENTITY     removeSelected.accesskey      "r">
 <!ENTITY     save.label                    "Save Changes">
@@ -16,5 +15,5 @@
 <!ENTITY     cancel.label                  "Cancel">
 <!ENTITY     cancel.accesskey              "C">
 <!ENTITY     removingDialog.title          "Removing Site Data">
-<!ENTITY     removingDialog.description    "Removing site data will also remove cookies. This may log you out of websites and remove offline web content. Are you sure you want to make the changes?">
+<!ENTITY     removingSelected.description  "Removing site data will also remove related cookies and offline web content. This may log you out of websites. Are you sure you want to make the changes?">
 <!ENTITY     siteTree.label                "The following website cookies will be removed:">

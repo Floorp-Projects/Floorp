@@ -51,5 +51,8 @@
  "{firefox}\\defaults\\pref\\channel-prefs.js": {"mincount": 4, "maxcount": 4, "minbytes": 1432, "maxbytes": 1432},
  "{profile}\\cert8.db": {"mincount": 0, "maxcount": 12, "minbytes": 0, "maxbytes": 65536},
  "{profile}\\key3.db": {"mincount": 0, "maxcount": 12, "minbytes": 0, "maxbytes": 32768},
- "{appdata}\\local\\temp": {"mincount": 0, "maxcount": 4, "minbytes": 0, "maxbytes": 278528}
+ "{appdata}\\local\\temp": {"mincount": 0, "maxcount": 4, "minbytes": 0, "maxbytes": 278528},
+ "{profile}\\favicons.sqlite": {"mincount": 8, "maxcount": 12, "minbytes": 196808, "maxbytes": 393216},
+ "{profile}\\favicons.sqlite-shm": {"mincount": 0, "maxcount": 4, "minbytes": 65536, "maxbytes": 131072},
+ "{profile}\\favicons.sqlite-wal": {"mincount": 0, "maxcount": 32, "minbytes": 0, "maxbytes": 131072},
 }

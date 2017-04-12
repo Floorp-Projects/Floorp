@@ -128,6 +128,7 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileD
 
   let types = MigrationUtils.resourceTypes;
   let places = getFileResource(types.HISTORY, ["places.sqlite"]);
+  let favicons = getFileResource(types.HISTORY, ["favicons.sqlite"]);
   let cookies = getFileResource(types.COOKIES, ["cookies.sqlite"]);
   let passwords = getFileResource(types.PASSWORDS,
     ["signons.sqlite", "logins.json", "key3.db",
@@ -240,7 +241,7 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileD
   };
 
   return [places, cookies, passwords, formData, dictionary, bookmarksBackups,
-          session, times, telemetry].filter(r => r);
+          session, times, telemetry, favicons].filter(r => r);
 };
 
 Object.defineProperty(FirefoxProfileMigrator.prototype, "startupOnlyMigrator", {

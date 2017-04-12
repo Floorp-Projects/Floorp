@@ -134,8 +134,7 @@ function* compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
         compare_prop_to_value("tags", aNode.tags.replace(/, /g, ","), false);
 
       if (aNode.icon) {
-        let nodeIconData = aNode.icon.replace("moz-anno:favicon:", "");
-        compare_prop_to_value("iconuri", nodeIconData);
+        compareFavicons(aNode.icon, aItem.iconuri);
       } else {
         check_unset(aItem.iconuri);
       }
@@ -223,7 +222,7 @@ add_task(function* () {
   let urlWithCharsetAndFavicon = uri("http://charset.and.favicon");
   yield new_bookmark({ parentGuid: folderGuid, url: urlWithCharsetAndFavicon });
   yield PlacesUtils.setCharsetForURI(urlWithCharsetAndFavicon, "UTF-8");
-  yield promiseSetIconForPage(urlWithCharsetAndFavicon, SMALLPNG_DATA_URI);
+  yield setFaviconForPage(urlWithCharsetAndFavicon, SMALLPNG_DATA_URI);
   // Test the default places root without specifying it.
   yield test_promiseBookmarksTreeAgainstResult();
 

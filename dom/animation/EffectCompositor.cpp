@@ -282,14 +282,9 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
 
   if (aRestyleType == RestyleType::Layer) {
     // FIXME: Bug 1334036: we call RequestRestyle for both stylo and gecko,
-    // so we should fix this after supporting animations on the compositor.
-    if (mPresContext->RestyleManager()->IsServo()) {
-      NS_WARNING("stylo: RequestRestyle to layer, but Servo-backed style "
-                 "system haven't supported compositor-driven animations yet");
-      return;
-    }
+    // so we should make sure we use mAnimationGecneration properly on OMTA.
     // Prompt layers to re-sync their animations.
-    mPresContext->RestyleManager()->AsGecko()->IncrementAnimationGeneration();
+    mPresContext->RestyleManager()->IncrementAnimationGeneration();
     EffectSet* effectSet =
       EffectSet::GetEffectSet(aElement, aPseudoType);
     if (effectSet) {

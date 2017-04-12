@@ -463,34 +463,68 @@ add_task(function* test_addCrash() {
   Assert.ok(crash.isOfType(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_HANG));
 });
 
-add_task(function* test_content_crash_ping() {
+add_task(function* test_child_process_crash_ping() {
+  let m = yield getManager();
+  const EXPECTED_PROCESSES = [
+    m.PROCESS_TYPE_CONTENT,
+    m.PROCESS_TYPE_GPU,
+  ];
+
+  const UNEXPECTED_PROCESSES = [
+    m.PROCESS_TYPE_PLUGIN,
+    m.PROCESS_TYPE_GMPLUGIN,
+    null,
+    12, // non-string process type
+  ];
+
   let ac = new TelemetryArchiveTesting.Checker();
   yield ac.promiseInit();
 
-  let m = yield getManager();
-  let id = yield m.createDummyDump();
-  yield m.addCrash(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_CRASH, id, DUMMY_DATE, {
-    StackTraces: stackTraces,
-    MinidumpSha256Hash: sha256Hash,
-    ThisShouldNot: "end-up-in-the-ping"
-  });
-  yield m._pingPromise;
+  // Add a child-process crash for each allowed process type.
+  for (let p of EXPECTED_PROCESSES) {
+    // Generate a ping.
+    let id = yield m.createDummyDump();
+    yield m.addCrash(p, m.CRASH_TYPE_CRASH, id, DUMMY_DATE, {
+      StackTraces: stackTraces,
+      MinidumpSha256Hash: sha256Hash,
+      ThisShouldNot: "end-up-in-the-ping"
+    });
+    yield m._pingPromise;
 
-  let found = yield ac.promiseFindPing("crash", [
-    [["payload", "crashId"], id],
-    [["payload", "minidumpSha256Hash"], sha256Hash],
-    [["payload", "processType"], m.PROCESS_TYPE_CONTENT],
-    [["payload", "stackTraces", "status"], "OK"],
-  ]);
-  Assert.ok(found, "Telemetry ping submitted for content crash");
+    let found = yield ac.promiseFindPing("crash", [
+      [["payload", "crashId"], id],
+      [["payload", "minidumpSha256Hash"], sha256Hash],
+      [["payload", "processType"], p],
+      [["payload", "stackTraces", "status"], "OK"],
+    ]);
+    Assert.ok(found, "Telemetry ping submitted for " + p + " crash");
 
-  let hoursOnly = new Date(DUMMY_DATE);
-  hoursOnly.setSeconds(0);
-  hoursOnly.setMinutes(0);
-  Assert.equal(new Date(found.payload.crashTime).getTime(), hoursOnly.getTime());
+    let hoursOnly = new Date(DUMMY_DATE);
+    hoursOnly.setSeconds(0);
+    hoursOnly.setMinutes(0);
+    Assert.equal(new Date(found.payload.crashTime).getTime(), hoursOnly.getTime());
 
-  Assert.equal(found.payload.metadata.ThisShouldNot, undefined,
-               "Non-whitelisted fields should be filtered out");
+    Assert.equal(found.payload.metadata.ThisShouldNot, undefined,
+                 "Non-whitelisted fields should be filtered out");
+  }
+
+  // Check that we don't generate a crash ping for invalid/unexpected process
+  // types.
+  for (let p of UNEXPECTED_PROCESSES) {
+    let id = yield m.createDummyDump();
+    yield m.addCrash(p, m.CRASH_TYPE_CRASH, id, DUMMY_DATE, {
+      StackTraces: stackTraces,
+      MinidumpSha256Hash: sha256Hash,
+      ThisShouldNot: "end-up-in-the-ping"
+    });
+    yield m._pingPromise;
+
+    // Check that we didn't receive any new ping.
+    let found = yield ac.promiseFindPing("crash", [
+      [["payload", "crashId"], id],
+    ]);
+    Assert.ok(!found, "No telemetry ping must be submitted for invalid process types");
+  }
 });
 
 add_task(function* test_generateSubmissionID() {
