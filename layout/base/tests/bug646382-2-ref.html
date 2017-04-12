@@ -1,10 +1,14 @@
 <html class="reftest-wait">
   <body onload="start()">
-    <textarea dir="rtl" onfocus="done()" style="-moz-appearance: none; appearance: none">s</textarea>
+    <textarea dir="rtl" onfocus="done()"
+              style="-moz-appearance: none; appearance: none;
+              unicode-bidi: bidi-override;">s</textarea>
     <script>
       var textarea = document.querySelector("textarea");
       function start() {
         textarea.focus();
+        textarea.selectionStart = 1; // place caret after the letter
+        textarea.selectionEnd = 1;
       }
       function done() {
         document.documentElement.removeAttribute("class");
