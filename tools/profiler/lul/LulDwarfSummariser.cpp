@@ -246,19 +246,35 @@ Summariser::Rule(uintptr_t aAddress, int aNewReg,
   // is the heart of the summarisation process.
   switch (aNewReg) {
 
-    case DW_REG_CFA:
-      // This is a rule that defines the CFA.  The only forms we can
-      // represent are: = SP+offset or = FP+offset.
-      if (how != NODEREF) {
-        reason1 = "rule for DW_REG_CFA: invalid |how|";
-        goto cant_summarise;
-      }
-      if (oldReg != DW_REG_INTEL_XSP && oldReg != DW_REG_INTEL_XBP) {
-        reason1 = "rule for DW_REG_CFA: invalid |oldReg|";
-        goto cant_summarise;
+    case DW_REG_CFA: {
+      // This is a rule that defines the CFA.  The only forms we choose to
+      // represent are: = SP+offset, = FP+offset, or =prefix-expr.
+      switch (how) {
+        case NODEREF:
+          if (oldReg != DW_REG_INTEL_XSP && oldReg != DW_REG_INTEL_XBP) {
+            reason1 = "rule for DW_REG_CFA: invalid |oldReg|";
+            goto cant_summarise;
+          }
+          break;
+        case DEREF:
+          reason1 = "rule for DW_REG_CFA: invalid |how|";
+          goto cant_summarise;
+        case PFXEXPR: {
+          // Check that the prefix expression only mentions tracked registers.
+          const vector<PfxInstr>* pfxInstrs = mSecMap->GetPfxInstrs();
+          reason2 = checkPfxExpr(pfxInstrs, offset);
+          if (reason2) {
+            reason1 = "rule for CFA: ";
+            goto cant_summarise;
+          }
+          break;
+        }
+        default:
+          goto cant_summarise;
       }
       mCurrRules.mCfaExpr = LExpr(how, oldReg, offset);
       break;
+    }
 
     case DW_REG_INTEL_XSP: case DW_REG_INTEL_XBP: case DW_REG_INTEL_XIP: {
       // This is a new rule for XSP, XBP or XIP (the return address).
