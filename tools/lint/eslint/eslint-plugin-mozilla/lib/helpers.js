@@ -573,5 +573,18 @@ module.exports = {
    */
   cleanUpPath(pathName) {
     return pathName.replace(/^"/, "").replace(/"$/, "");
+  },
+
+  get globalScriptsPath() {
+    return path.join(this.getRootDir(module.filename), "browser",
+                     "base", "content", "global-scripts.inc");
+  },
+
+  isMozillaCentralBased() {
+    return fs.existsSync(this.globalScriptsPath);
+  },
+
+  getSavedEnvironmentItems(environment) {
+    return require("./environments/saved-globals.json").environments[environment];
   }
 };
