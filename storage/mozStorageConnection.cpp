@@ -369,12 +369,8 @@ WaitForUnlockNotify(sqlite3* aDatabase)
   return srv;
 }
 
-} // namespace
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Local Classes
-
-namespace {
 
 class AsyncCloseConnection final: public Runnable
 {
@@ -488,6 +484,32 @@ private:
   nsCOMPtr<mozIStorageCompletionCallback> mCallback;
 };
 
+/**
+ * A listener for async connection closing.
+ */
+class CloseListener final :  public mozIStorageCompletionCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+  CloseListener()
+    : mClosed(false)
+  {
+  }
+
+  NS_IMETHOD Complete(nsresult, nsISupports*) override
+  {
+    mClosed = true;
+    return NS_OK;
+  }
+
+  bool mClosed;
+
+private:
+  ~CloseListener() = default;
+};
+
+NS_IMPL_ISUPPORTS(CloseListener, mozIStorageCompletionCallback)
+
 } // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -517,8 +539,7 @@ Connection::Connection(Service *aService,
 
 Connection::~Connection()
 {
-  (void)Close();
-
+  Unused << Close();
   MOZ_ASSERT(!mAsyncExecutionThread,
              "The async thread has not been shutdown properly!");
 }
@@ -1250,11 +1271,22 @@ Connection::Close()
 #endif // DEBUG
 
   // Make sure we have not executed any asynchronous statements.
-  // If this fails, the mDBConn will be left open, resulting in a leak.
-  // Ideally we'd schedule some code to destroy the mDBConn once all its
-  // async statements have finished executing;  see bug 704030.
-  bool asyncCloseWasCalled = !mAsyncExecutionThread;
-  NS_ENSURE_TRUE(asyncCloseWasCalled, NS_ERROR_UNEXPECTED);
+  // If this fails, the mDBConn may be left open, resulting in a leak.
+  // We'll try to finalize the pending statements and close the connection.
+  if (isAsyncExecutionThreadAvailable()) {
+#ifdef DEBUG
+    if (NS_IsMainThread()) {
+      nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
+      Unused << xpc->DebugDumpJSStack(false, false, false);
+    }
+#endif
+    MOZ_ASSERT(false,
+               "Close() was invoked on a connection that executed asynchronous statements. "
+               "Should have used asyncClose().");
+    // Try to close the database regardless, to free up resources.
+    Unused << SpinningSynchronousClose();
+    return NS_ERROR_UNEXPECTED;
+  }
 
   // setClosedState nullifies our connection pointer, so we take a raw pointer
   // off it, to pass it through the close procedure.
@@ -1263,6 +1295,32 @@ Connection::Close()
   NS_ENSURE_SUCCESS(rv, rv);
 
   return internalClose(nativeConn);
+}
+
+NS_IMETHODIMP
+Connection::SpinningSynchronousClose()
+{
+  if (threadOpenedOn != NS_GetCurrentThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
+  // As currently implemented, we can't spin to wait for an existing AsyncClose.
+  // Our only existing caller will never have called close; assert if misused
+  // so that no new callers assume this works after an AsyncClose.
+  MOZ_DIAGNOSTIC_ASSERT(connectionReady());
+  if (!connectionReady()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  RefPtr<CloseListener> listener = new CloseListener();
+  nsresult rv = AsyncClose(listener);
+  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
+    return listener->mClosed;
+  }));
+  MOZ_ASSERT(isClosed(), "The connection should be closed at this point");
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1344,7 +1402,10 @@ Connection::AsyncClose(mozIStorageCompletionCallback *aCallback)
       // callers ignore our return value.
       Unused << NS_DispatchToMainThread(completeEvent.forget());
     }
-    return Close();
+    MOZ_ALWAYS_SUCCEEDS(Close());
+    // Return a success inconditionally here, since Close() is unlikely to fail
+    // and we want to reassure the consumer that its callback will be invoked.
+    return NS_OK;
   }
 
   // setClosedState nullifies our connection pointer, so we take a raw pointer
