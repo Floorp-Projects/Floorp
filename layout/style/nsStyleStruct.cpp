@@ -2033,26 +2033,13 @@ nsStyleImageRequest::Resolve(nsPresContext* aPresContext)
   MOZ_ASSERT(aPresContext);
 
   mResolved = true;
-
-  nsIDocument* doc = aPresContext->Document();
-  nsIURI* docURI = doc->GetDocumentURI();
-  if (GetImageValue()->HasRef()) {
-    bool isEqualExceptRef = false;
-    RefPtr<nsIURI> imageURI = GetImageURI();
-    imageURI->EqualsExceptRef(docURI, &isEqualExceptRef);
-    if (isEqualExceptRef) {
-      // Prevent loading an internal resource.
-      return true;
-    }
-  }
-
-  mDocGroup = doc->GetDocGroup();
+  mDocGroup = aPresContext->Document()->GetDocGroup();
 
   // For now, just have unique nsCSSValue/ImageValue objects.  We should
   // really store the ImageValue on the Servo specified value, so that we can
   // share imgRequestProxys that come from the same rule in the same
   // document.
-  mImageValue->Initialize(doc);
+  mImageValue->Initialize(aPresContext->Document());
 
   nsCSSValue value;
   value.SetImageValue(mImageValue);
@@ -2406,7 +2393,7 @@ nsStyleImage::IsOpaque() const
     return mGradient->IsOpaque();
   }
 
-  if (mType == eStyleImageType_Element || mType == eStyleImageType_URL) {
+  if (mType == eStyleImageType_Element) {
     return false;
   }
 
