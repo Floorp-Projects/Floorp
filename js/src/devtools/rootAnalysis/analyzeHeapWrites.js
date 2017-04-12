@@ -1074,6 +1074,13 @@ function isSafeVariable(entry, variable)
             }
         }
 
+        // Coercion via AsAString preserves safety.
+        if (isDirectCall(edge, /AsAString/) &&
+            isEdgeSafeArgument(entry, edge.PEdgeCallInstance.Exp))
+        {
+            return true;
+        }
+
         // Watch out for variables which were assigned arguments.
         var rhsVariable = variableAssignRhs(edge);
         if (rhsVariable)
