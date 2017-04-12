@@ -4270,15 +4270,14 @@ nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
         return;
     }
 
-    if (mWindowType != eWindowType_popup) {
+    bool isTransparent = aMode == eTransparencyTransparent;
+
+    if (mIsTransparent == isTransparent) {
+        return;
+    } else if (mWindowType != eWindowType_popup) {
         NS_WARNING("Cannot set transparency mode on non-popup windows.");
         return;
     }
-
-    bool isTransparent = aMode == eTransparencyTransparent;
-
-    if (mIsTransparent == isTransparent)
-        return;
 
     if (!isTransparent) {
         ClearTransparencyBitmap();
