@@ -19,6 +19,7 @@
 #include "nsTArray.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/PodOperations.h"
+#include "TimeUnits.h"
 
 namespace mozilla {
 
@@ -295,7 +296,7 @@ public:
     , mOffset(aOffset)
     , mTime(aTimestamp)
     , mTimecode(aTimestamp)
-    , mDuration(aDuration)
+    , mDuration(media::TimeUnit::FromMicroseconds(aDuration))
     , mFrames(aFrames)
     , mKeyframe(false)
   {
@@ -315,14 +316,14 @@ public:
   int64_t mTimecode;
 
   // Duration of sample, in microseconds.
-  int64_t mDuration;
+  media::TimeUnit mDuration;
 
   // Amount of frames for contained data.
   const uint32_t mFrames;
 
   bool mKeyframe;
 
-  int64_t GetEndTime() const { return mTime + mDuration; }
+  int64_t GetEndTime() const { return mTime + mDuration.ToMicroseconds(); }
 
   bool AdjustForStartTime(int64_t aStartTime)
   {
@@ -350,7 +351,6 @@ protected:
     , mOffset(0)
     , mTime(0)
     , mTimecode(0)
-    , mDuration(0)
     , mFrames(aFrames)
     , mKeyframe(false)
   {

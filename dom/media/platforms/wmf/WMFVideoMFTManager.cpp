@@ -672,7 +672,7 @@ WMFVideoMFTManager::Input(MediaRawData* aSample)
                                            &inputSample);
   NS_ENSURE_TRUE(SUCCEEDED(hr) && inputSample != nullptr, hr);
 
-  mLastDuration = aSample->mDuration;
+  mLastDuration = aSample->mDuration.ToMicroseconds();
   mLastTime = aSample->mTime;
   mSamplesCount++;
 
@@ -1033,7 +1033,7 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
   aOutData = frame;
   // Set the potentially corrected pts and duration.
   aOutData->mTime = pts.ToMicroseconds();
-  aOutData->mDuration = duration.ToMicroseconds();
+  aOutData->mDuration = duration;
 
   if (mNullOutputCount) {
     mGotValidOutputAfterNullOutput = true;

@@ -223,7 +223,8 @@ public:
                               : &mConfig;
     MOZ_ASSERT(config);
 
-    InputInfo info(aSample->mDuration, config->mImage, config->mDisplay);
+    InputInfo info(
+      aSample->mDuration.ToMicroseconds(), config->mImage, config->mDisplay);
     mInputInfos.Insert(aSample->mTime, info);
     return RemoteDataDecoder::Decode(aSample);
   }

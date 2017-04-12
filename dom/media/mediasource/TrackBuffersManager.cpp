@@ -1465,7 +1465,7 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
     : TimeInterval(mAppendWindow.mStart, mAppendWindow.mEnd,
                    trackBuffer.mLastFrameDuration.isSome()
                    ? trackBuffer.mLongestFrameDuration
-                   : TimeUnit::FromMicroseconds(aSamples[0]->mDuration));
+                   : aSamples[0]->mDuration);
 
   TimeIntervals samplesRange;
   uint32_t sizeNewSamples = 0;
@@ -1491,7 +1491,7 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
                sample->mTime,
                sample->GetEndTime(),
                sample->mTimecode,
-               sample->mDuration,
+               sample->mDuration.ToMicroseconds(),
                sample->mKeyframe);
 
     const TimeUnit sampleEndTime =
@@ -1527,7 +1527,7 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
 
     TimeUnit sampleTime = TimeUnit::FromMicroseconds(sample->mTime);
     TimeUnit sampleTimecode = TimeUnit::FromMicroseconds(sample->mTimecode);
-    TimeUnit sampleDuration = TimeUnit::FromMicroseconds(sample->mDuration);
+    TimeUnit sampleDuration = sample->mDuration;
     TimeUnit timestampOffset = mSourceBufferAttributes->GetTimestampOffset();
 
     TimeInterval sampleInterval =
@@ -1870,7 +1870,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
     lastRemovedIndex = i;
   }
 
-  int64_t maxSampleDuration = 0;
+  TimeUnit maxSampleDuration;
   uint32_t sizeRemoved = 0;
   TimeIntervals removedIntervals;
   for (uint32_t i = firstRemovedIndex.ref(); i <= lastRemovedIndex; i++) {
@@ -1931,7 +1931,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
 
   // Recalculate sanitized buffered ranges.
   aTrackData.mSanitizedBufferedRanges = aTrackData.mBufferedRanges;
-  aTrackData.mSanitizedBufferedRanges.SetFuzz(TimeUnit::FromMicroseconds(maxSampleDuration/2));
+  aTrackData.mSanitizedBufferedRanges.SetFuzz(maxSampleDuration/2);
 
   data.RemoveElementsAt(firstRemovedIndex.ref(),
                         lastRemovedIndex - firstRemovedIndex.ref() + 1);
@@ -2244,7 +2244,7 @@ TrackBuffersManager::SkipToNextRandomAccessPoint(TrackInfo::TrackType aTrack,
       break;
     }
     nextSampleTimecode =
-      TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration);
+      TimeUnit::FromMicroseconds(sample->mTimecode) + sample->mDuration;
     nextSampleTime = TimeUnit::FromMicroseconds(sample->GetEndTime());
     parsed++;
   }
@@ -2360,7 +2360,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
     trackData.mNextGetSampleIndex.ref()++;
     // Estimate decode timestamp and timestamp of the next sample.
     TimeUnit nextSampleTimecode =
-      TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration);
+      TimeUnit::FromMicroseconds(sample->mTimecode) + sample->mDuration;
     TimeUnit nextSampleTime =
       TimeUnit::FromMicroseconds(sample->GetEndTime());
     const MediaRawData* nextSample =
@@ -2384,8 +2384,9 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
     return p.forget();
   }
 
-  if (trackData.mNextSampleTimecode.ToMicroseconds() >
-      track.LastElement()->mTimecode + track.LastElement()->mDuration) {
+  if (trackData.mNextSampleTimecode >
+      TimeUnit::FromMicroseconds(track.LastElement()->mTimecode)
+       + track.LastElement()->mDuration) {
     // The next element is past our last sample. We're done.
     trackData.mNextGetSampleIndex = Some(uint32_t(track.Length()));
     aResult = NS_ERROR_DOM_MEDIA_END_OF_STREAM;
@@ -2417,7 +2418,7 @@ TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
 
   trackData.mNextGetSampleIndex = Some(uint32_t(pos)+1);
   trackData.mNextSampleTimecode =
-    TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration);
+    TimeUnit::FromMicroseconds(sample->mTimecode) + sample->mDuration;
   trackData.mNextSampleTime =
     TimeUnit::FromMicroseconds(sample->GetEndTime());
   aResult = NS_OK;
@@ -2437,7 +2438,7 @@ TrackBuffersManager::FindCurrentPosition(TrackInfo::TrackType aTrack,
     const RefPtr<MediaRawData>& sample = track[i];
     TimeInterval sampleInterval{
       TimeUnit::FromMicroseconds(sample->mTimecode),
-      TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration)};
+      TimeUnit::FromMicroseconds(sample->mTimecode) + sample->mDuration};
 
     if (sampleInterval.ContainsStrict(trackData.mNextSampleTimecode)) {
       return i;
@@ -2453,7 +2454,7 @@ TrackBuffersManager::FindCurrentPosition(TrackInfo::TrackType aTrack,
     const RefPtr<MediaRawData>& sample = track[i];
     TimeInterval sampleInterval{
       TimeUnit::FromMicroseconds(sample->mTimecode),
-      TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration),
+      TimeUnit::FromMicroseconds(sample->mTimecode) + sample->mDuration,
       aFuzz};
 
     if (sampleInterval.ContainsWithStrictEnd(trackData.mNextSampleTimecode)) {
@@ -2514,7 +2515,7 @@ TrackBuffersManager::GetNextRandomAccessPoint(TrackInfo::TrackType aTrack,
       return TimeUnit::FromMicroseconds(sample->mTime);
     }
     nextSampleTimecode =
-      TimeUnit::FromMicroseconds(sample->mTimecode + sample->mDuration);
+      TimeUnit::FromMicroseconds(sample->mTimecode) + sample->mDuration;
     nextSampleTime = TimeUnit::FromMicroseconds(sample->GetEndTime());
   }
   return TimeUnit::FromInfinity();

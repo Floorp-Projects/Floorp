@@ -724,7 +724,7 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
     }
     sample->mTimecode = tstamp;
     sample->mTime = tstamp;
-    sample->mDuration = next_tstamp - tstamp;
+    sample->mDuration = media::TimeUnit::FromMicroseconds(next_tstamp - tstamp);
     sample->mOffset = holder->Offset();
     sample->mKeyframe = isKeyframe;
     if (discardPadding && i == count - 1) {

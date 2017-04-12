@@ -67,7 +67,8 @@ RefPtr<MediaDataDecoder::DecodePromise>
 AppleATDecoder::Decode(MediaRawData* aSample)
 {
   LOG("mp4 input sample %p %lld us %lld pts%s %llu bytes audio", aSample,
-      aSample->mDuration, aSample->mTime, aSample->mKeyframe ? " keyframe" : "",
+      aSample->mDuration.ToMicroseconds(), aSample->mTime,
+      aSample->mKeyframe ? " keyframe" : "",
       (unsigned long long)aSample->Size());
   RefPtr<AppleATDecoder> self = this;
   RefPtr<MediaRawData> sample = aSample;

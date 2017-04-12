@@ -981,13 +981,13 @@ FlacTrackDemuxer::GetNextFrame(const flac::Frame& aFrame)
   }
 
   frame->mTime = aFrame.Time().ToMicroseconds();
-  frame->mDuration = aFrame.Duration().ToMicroseconds();
+  frame->mDuration = aFrame.Duration();
   frame->mTimecode = frame->mTime;
   frame->mOffset = aFrame.Offset();
   frame->mKeyframe = true;
 
   MOZ_ASSERT(frame->mTime >= 0);
-  MOZ_ASSERT(frame->mDuration >= 0);
+  MOZ_ASSERT(!frame->mDuration.IsNegative());
 
   return frame.forget();
 }
