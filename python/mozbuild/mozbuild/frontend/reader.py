@@ -1443,7 +1443,7 @@ class BuildReader(object):
                     if isinstance(paths, tuple):
                         path, tests_root = paths
                         tests_root = mozpath.join(ctx.relsrcdir, tests_root)
-                        for t in (mozpath.join(tests_root, path) for path, _ in obj):
+                        for t in (mozpath.join(tests_root, it[0]) for it in obj):
                             result_context.test_files.add(mozpath.dirname(t) + '/**')
                     else:
                         for t in obj.tests:
