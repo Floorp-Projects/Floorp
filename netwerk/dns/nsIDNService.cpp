@@ -893,7 +893,7 @@ static const Script scriptTable[] = {
 
 static inline int32_t findScriptIndex(Script aScript)
 {
-  int32_t tableLength = sizeof(scriptTable) / sizeof(int32_t);
+  int32_t tableLength = mozilla::ArrayLength(scriptTable);
   for (int32_t index = 0; index < tableLength; ++index) {
     if (aScript == scriptTable[index]) {
       return index;
