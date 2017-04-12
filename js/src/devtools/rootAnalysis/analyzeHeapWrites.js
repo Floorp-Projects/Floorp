@@ -127,6 +127,8 @@ function checkVariableAssignment(entry, location, variable)
     dumpError(entry, location, "Variable assignment " + variable);
 }
 
+// Annotations for function parameters, based on function name and parameter
+// name + type.
 function treatAsSafeArgument(entry, varName, csuName)
 {
     var whitelist = [
@@ -231,7 +233,7 @@ function checkFieldWrite(entry, location, fields)
             return;
         if (/nsCOMPtr<.*?>.mRawPtr/.test(field))
             return;
-    }
+}
 
     var str = "";
     for (var field of fields)
@@ -715,7 +717,7 @@ function dumpError(entry, location, text)
 {
     var stack = entry.stack;
     print("Error: " + text);
-    print("Location: " + entry.readable() + (location ? " @ " + location : "") + stack[0].safeString());
+    print("Location: " + entry.name + (location ? " @ " + location : "") + stack[0].safeString());
     print("Stack Trace:");
     // Include the callers in the stack trace instead of the callees. Make sure
     // the dummy stack entry we added for the original roots is in place.
@@ -886,9 +888,9 @@ function process(entry, body, addCallee)
 
 function maybeProcessMissingFunction(entry, addCallee)
 {
-    // If a function is missing it might be because a destructor Foo::~Foo() is being
-    // called but GCC only gave us an implementation for Foo::~Foo(int32). See
-    // computeCallgraph.js for a little more info.
+    // If a function is missing it might be because a destructor Foo::~Foo() is
+    // being called but GCC only gave us an implementation for
+    // Foo::~Foo(int32). See computeCallgraph.js for a little more info.
     var name = entry.name;
     if (name.indexOf("::~") > 0 && name.indexOf("()") > 0) {
         var callee = name.replace("()", "(int32)");
