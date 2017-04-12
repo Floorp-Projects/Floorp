@@ -1,0 +1,16 @@
+text aom_codec_build_config
+text aom_codec_control_
+text aom_codec_destroy
+text aom_codec_err_to_string
+text aom_codec_error
+text aom_codec_error_detail
+text aom_codec_get_caps
+text aom_codec_iface_name
+text aom_codec_version
+text aom_codec_version_extra_str
+text aom_codec_version_str
+text aom_img_alloc
+text aom_img_flip
+text aom_img_free
+text aom_img_set_rect
+text aom_img_wrap
