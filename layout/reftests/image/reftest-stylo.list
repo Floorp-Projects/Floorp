@@ -1,11 +1,11 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== background-image-zoom-1.html background-image-zoom-1.html
+fails == background-image-zoom-1.html background-image-zoom-1.html
 == background-image-zoom-2.html background-image-zoom-2.html
 == image-seam-1a.html image-seam-1a.html
 == image-seam-1b.html image-seam-1b.html
 == image-seam-2.html image-seam-2.html
-== image-zoom-1.html image-zoom-1.html
-== image-zoom-2.html image-zoom-2.html
+fails == image-zoom-1.html image-zoom-1.html
+fails == image-zoom-2.html image-zoom-2.html
 == invalid-url-image-1.html invalid-url-image-1.html
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1a.html sync-image-switch-1a.html
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1b.html sync-image-switch-1b.html

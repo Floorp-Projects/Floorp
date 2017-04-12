@@ -21,7 +21,7 @@ fuzzy-if(Android,4,34) == image-opacity-02.svg image-opacity-02.svg
 == image-svg-inline-zoom-out-01c.html image-svg-inline-zoom-out-01c.html
 == image-svg-inline-zoom-out-01d.html image-svg-inline-zoom-out-01d.html
 == image-svg-inline-sprite-zoom-in-01a.html image-svg-inline-sprite-zoom-in-01a.html
-== image-svg-inline-sprite-zoom-in-01b.html image-svg-inline-sprite-zoom-in-01b.html
+fails == image-svg-inline-sprite-zoom-in-01b.html image-svg-inline-sprite-zoom-in-01b.html
 == image-svg-inline-sprite-zoom-out-01a.html image-svg-inline-sprite-zoom-out-01a.html
 == image-svg-inline-sprite-zoom-out-01b.html image-svg-inline-sprite-zoom-out-01b.html
 == image-translate-01.svg image-translate-01.svg
