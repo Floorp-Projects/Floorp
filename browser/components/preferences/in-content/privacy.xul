@@ -141,7 +141,7 @@
               name="browser.safebrowsing.downloads.remote.block_uncommon"
               type="bool"/>
 
-   <!-- Network tab -->
+  <!-- Network tab -->
   <preference id="browser.cache.disk.capacity"
               name="browser.cache.disk.capacity"
               type="int"/>
@@ -153,6 +153,13 @@
               name="browser.cache.disk.smart_size.enabled"
               inverted="true"
               type="bool"/>
+
+  <!-- Data Choices tab -->
+#ifdef MOZ_CRASHREPORTER
+  <preference id="browser.crashReports.unsubmittedCheck.autoSubmit"
+              name="browser.crashReports.unsubmittedCheck.autoSubmit"
+              type="bool"/>
+#endif
 
 </preferences>
 
@@ -674,3 +681,54 @@
             accesskey="&siteDataSettings.accesskey;"/>
   </vbox>
 </groupbox>
+
+<!-- Data Choices -->
+#ifdef MOZ_TELEMETRY_REPORTING
+<groupbox id="historyGroup" data-category="panePrivacy" data-subcategory="reports" hidden="true">
+<caption><label>&reports.label;</label></caption>
+  <vbox>
+    <caption>
+    <checkbox id="submitHealthReportBox" label="&enableHealthReport.label;"
+              accesskey="&enableHealthReport.accesskey;"/>
+  </caption>
+    <hbox class="indent" flex="1">
+      <label flex="1">&healthReportDesc.label;</label>
+      <label id="FHRLearnMore" flex="1"
+             class="learnMore text-link">&healthReportLearnMore.label;</label>
+    </hbox>
+    <hbox class="indent">
+      <groupbox flex="1">
+        <caption>
+          <checkbox id="submitTelemetryBox" preference="toolkit.telemetry.enabled"
+                    label="&enableTelemetryData.label;"
+                    accesskey="&enableTelemetryData.accesskey;"/>
+        </caption>
+        <hbox class="indent" flex="1">
+          <label id="telemetryDataDesc" flex="1">&telemetryDesc.label;</label>
+          <label id="telemetryLearnMore" flex="1"
+                 class="learnMore text-link">&telemetryLearnMore.label;</label>
+        </hbox>
+      </groupbox>
+    </hbox>
+  </vbox>
+</groupbox>
+#endif
+
+#ifdef MOZ_DATA_REPORTING
+#ifdef MOZ_CRASHREPORTER
+<groupbox data-category="panePrivacy" data-subcategory="reports" hidden="true">
+  <caption>
+    <checkbox id="automaticallySubmitCrashesBox"
+              preference="browser.crashReports.unsubmittedCheck.autoSubmit"
+              label="&alwaysSubmitCrashReports.label;"
+              accesskey="&alwaysSubmitCrashReports.accesskey;"/>
+  </caption>
+  <hbox class="indent" flex="1">
+    <label flex="1">&crashReporterDesc2.label;</label>
+    <label id="crashReporterLearnMore" flex="1"
+           class="learnMore text-link">&crashReporterLearnMore.label;</label>
+  </hbox>
+</groupbox>
+
+#endif
+#endif
