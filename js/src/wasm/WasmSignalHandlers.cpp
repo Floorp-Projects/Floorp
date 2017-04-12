@@ -108,7 +108,7 @@ class AutoSetHandlingSegFault
 # define R13_sig(p) ((p)->sc_r13)
 # define R14_sig(p) ((p)->sc_r14)
 # define R15_sig(p) ((p)->sc_r15)
-#elif defined(__linux__) || defined(SOLARIS)
+#elif defined(__linux__) || defined(__sun)
 # if defined(__linux__)
 #  define XMM_sig(p,i) ((p)->uc_mcontext.fpregs->_xmm[i])
 #  define EIP_sig(p) ((p)->uc_mcontext.gregs[REG_EIP])
@@ -1530,5 +1530,6 @@ js::wasm::IsPCInWasmCode(void *pc)
     if (!activation)
         return false;
 
-    return !!activation->compartment()->wasm.lookupCode(pc);
+    return !!activation->compartment()->wasm.lookupCode(pc) ||
+           !!activation->cx()->runtime()->wasm().lookupBuiltin(pc);
 }

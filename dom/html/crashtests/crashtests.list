@@ -81,3 +81,4 @@ load 1290904.html
 load 1343886-1.html
 load 1343886-2.xml
 load 1343886-3.xml
+asserts(0-3) load 1350972.html

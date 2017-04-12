@@ -4,6 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Most files are General, a few exceptions
+with Files('**'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('DownloadNotifications.jsm'):
+    BUG_COMPONENT = ('Firefox for Android', 'Download Manager')
+
+with Files('HomeProvider.jsm'):
+    BUG_COMPONENT = ('Firefox for Android', 'Data Providers')
+
+with Files('geckoview/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'GeckoView')
+
 DIRS += ['geckoview']
 
 EXTRA_JS_MODULES += [

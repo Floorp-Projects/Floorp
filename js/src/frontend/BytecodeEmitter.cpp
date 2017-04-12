@@ -244,9 +244,9 @@ class LoopControl : public BreakableControl
         loopDepth_ = enclosingLoop ? enclosingLoop->loopDepth_ + 1 : 1;
 
         int loopSlots;
-        if (loopKind == StatementKind::Spread || loopKind == StatementKind::ForOfLoop)
+        if (loopKind == StatementKind::Spread)
             loopSlots = 3;
-        else if (loopKind == StatementKind::ForInLoop)
+        else if (loopKind == StatementKind::ForInLoop || loopKind == StatementKind::ForOfLoop)
             loopSlots = 2;
         else
             loopSlots = 0;
@@ -267,6 +267,20 @@ class LoopControl : public BreakableControl
 
     bool canIonOsr() const {
         return canIonOsr_;
+    }
+
+    MOZ_MUST_USE bool emitSpecialBreakForDone(BytecodeEmitter* bce) {
+        // This doesn't pop stack values, nor handle any other controls.
+        // Should be called on the toplevel of the loop.
+        MOZ_ASSERT(bce->stackDepth == stackDepth_);
+        MOZ_ASSERT(bce->innermostNestableControl == this);
+
+        if (!bce->newSrcNote(SRC_BREAK))
+            return false;
+        if (!bce->emitJump(JSOP_GOTO, &breaks))
+            return false;
+
+        return true;
     }
 
     MOZ_MUST_USE bool patchBreaksAndContinues(BytecodeEmitter* bce) {
@@ -2080,11 +2094,11 @@ class ForOfLoopControl : public LoopControl
     }
 
     bool emitPrepareForNonLocalJump(BytecodeEmitter* bce, bool isTarget) {
-        // Pop unnecessary values from the stack.  Effectively this means
+        // Pop unnecessary value from the stack.  Effectively this means
         // leaving try-catch block.  However, the performing IteratorClose can
         // reach the depth for try-catch, and effectively re-enter the
         // try-catch block.
-        if (!bce->emitPopN(2))                            // ITER
+        if (!bce->emit1(JSOP_POP))                        // ITER
             return false;
 
         // Clear ITER slot on the stack to tell catch block to avoid performing
@@ -2100,10 +2114,8 @@ class ForOfLoopControl : public LoopControl
         if (isTarget) {
             // At the level of the target block, there's bytecode after the
             // loop that will pop the iterator and the value, so push
-            // undefineds to balance the stack.
+            // an undefined to balance the stack.
             if (!bce->emit1(JSOP_UNDEFINED))              // UNDEF UNDEF
-                return false;
-            if (!bce->emit1(JSOP_UNDEFINED))              // UNDEF UNDEF UNDEF
                 return false;
         } else {
             if (!bce->emit1(JSOP_POP))                    //
@@ -2780,7 +2792,7 @@ NonLocalExitControl::prepareForNonLocalJump(BytecodeEmitter::NestableControl* ta
                 if (!loopinfo.emitPrepareForNonLocalJump(bce_, /* isTarget = */ false)) // ...
                     return false;
             } else {
-                npops += 3;
+                npops += 2;
             }
             break;
 
@@ -2805,7 +2817,7 @@ NonLocalExitControl::prepareForNonLocalJump(BytecodeEmitter::NestableControl* ta
 
     if (target && emitIteratorCloseAtTarget && target->is<ForOfLoopControl>()) {
         ForOfLoopControl& loopinfo = target->as<ForOfLoopControl>();
-        if (!loopinfo.emitPrepareForNonLocalJump(bce_, /* isTarget = */ true)) // ... UNDEF UNDEF UNDEF
+        if (!loopinfo.emitPrepareForNonLocalJump(bce_, /* isTarget = */ true)) // ... UNDEF UNDEF
             return false;
     }
 
@@ -7026,11 +7038,9 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
 
     int32_t iterDepth = stackDepth;
 
-    // For-of loops have both the iterator, the result, and the result.value
-    // on the stack. Push undefineds to balance the stack.
-    if (!emit1(JSOP_UNDEFINED))                           // ITER RESULT
-        return false;
-    if (!emit1(JSOP_UNDEFINED))                           // ITER RESULT UNDEF
+    // For-of loops have both the iterator and the result.value on the stack.
+    // Push an undefined to balance the stack.
+    if (!emit1(JSOP_UNDEFINED))                           // ITER UNDEF
         return false;
 
     ForOfLoopControl loopInfo(this, iterDepth, allowSelfHostedIter, iterKind);
@@ -7041,11 +7051,11 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
         return false;
 
     JumpList initialJump;
-    if (!emitJump(JSOP_GOTO, &initialJump))               // ITER RESULT UNDEF
+    if (!emitJump(JSOP_GOTO, &initialJump))               // ITER UNDEF
         return false;
 
     JumpTarget top{ -1 };
-    if (!emitLoopHead(nullptr, &top))                     // ITER RESULT UNDEF
+    if (!emitLoopHead(nullptr, &top))                     // ITER UNDEF
         return false;
 
     // If the loop had an escaping lexical declaration, replace the current
@@ -7062,7 +7072,7 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
         MOZ_ASSERT(headLexicalEmitterScope->scope(this)->kind() == ScopeKind::Lexical);
 
         if (headLexicalEmitterScope->hasEnvironment()) {
-            if (!emit1(JSOP_RECREATELEXICALENV))          // ITER RESULT UNDEF
+            if (!emit1(JSOP_RECREATELEXICALENV))          // ITER UNDEF
                 return false;
         }
 
@@ -7078,21 +7088,49 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
         auto loopDepth = this->stackDepth;
 #endif
 
+        if (!emit1(JSOP_POP))                             // ITER
+            return false;
+        if (!emit1(JSOP_DUP))                             // ITER ITER
+            return false;
+
+        if (!emitIteratorNext(forOfHead, iterKind, allowSelfHostedIter))
+            return false;                                 // ITER RESULT
+
+        if (!emit1(JSOP_DUP))                             // ITER RESULT RESULT
+            return false;
+        if (!emitAtomOp(cx->names().done, JSOP_GETPROP))  // ITER RESULT DONE
+            return false;
+
+        IfThenElseEmitter ifDone(this);
+
+        if (!ifDone.emitIf())                             // ITER RESULT
+            return false;
+
+        // Remove RESULT from the stack to release it.
+        if (!emit1(JSOP_POP))                             // ITER
+            return false;
+        if (!emit1(JSOP_UNDEFINED))                       // ITER UNDEF
+            return false;
+
+        // If the iteration is done, leave loop here, instead of the branch at
+        // the end of the loop.
+        if (!loopInfo.emitSpecialBreakForDone(this))      // ITER UNDEF
+            return false;
+
+        if (!ifDone.emitEnd())                            // ITER RESULT
+            return false;
+
         // Emit code to assign result.value to the iteration variable.
         //
         // Note that ES 13.7.5.13, step 5.c says getting result.value does not
         // call IteratorClose, so start JSTRY_ITERCLOSE after the GETPROP.
-        if (!emit1(JSOP_POP))                             // ITER RESULT
-            return false;
-        if (!emit1(JSOP_DUP))                             // ITER RESULT RESULT
-            return false;
-        if (!emitAtomOp(cx->names().value, JSOP_GETPROP)) // ITER RESULT VALUE
+        if (!emitAtomOp(cx->names().value, JSOP_GETPROP)) // ITER VALUE
             return false;
 
         if (!loopInfo.emitBeginCodeNeedingIteratorClose(this))
             return false;
 
-        if (!emitInitializeForInOrOfTarget(forOfHead))    // ITER RESULT VALUE
+        if (!emitInitializeForInOrOfTarget(forOfHead))    // ITER VALUE
             return false;
 
         MOZ_ASSERT(stackDepth == loopDepth,
@@ -7100,14 +7138,14 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
                    "operation");
 
         // Remove VALUE from the stack to release it.
-        if (!emit1(JSOP_POP))                             // ITER RESULT
+        if (!emit1(JSOP_POP))                             // ITER
             return false;
-        if (!emit1(JSOP_UNDEFINED))                       // ITER RESULT UNDEF
+        if (!emit1(JSOP_UNDEFINED))                       // ITER UNDEF
             return false;
 
         // Perform the loop body.
         ParseNode* forBody = forOfLoop->pn_right;
-        if (!emitTree(forBody))                           // ITER RESULT UNDEF
+        if (!emitTree(forBody))                           // ITER UNDEF
             return false;
 
         MOZ_ASSERT(stackDepth == loopDepth,
@@ -7119,29 +7157,13 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
         // Set offset for continues.
         loopInfo.continueTarget = { offset() };
 
-        if (!emitLoopEntry(forHeadExpr, initialJump))     // ITER RESULT UNDEF
+        if (!emitLoopEntry(forHeadExpr, initialJump))     // ITER UNDEF
             return false;
 
-        if (!emit1(JSOP_SWAP))                            // ITER UNDEF RESULT
+        if (!emit1(JSOP_FALSE))                           // ITER UNDEF FALSE
             return false;
-        if (!emit1(JSOP_POP))                             // ITER UNDEF
-            return false;
-        if (!emitDupAt(1))                                // ITER UNDEF ITER
-            return false;
-
-        if (!emitIteratorNext(forOfHead, iterKind, allowSelfHostedIter)) // ITER UNDEF RESULT
-            return false;
-
-        if (!emit1(JSOP_SWAP))                            // ITER RESULT UNDEF
-            return false;
-
-        if (!emitDupAt(1))                                // ITER RESULT UNDEF RESULT
-            return false;
-        if (!emitAtomOp(cx->names().done, JSOP_GETPROP))  // ITER RESULT UNDEF DONE
-            return false;
-
         if (!emitBackwardJump(JSOP_IFEQ, top, &beq, &breakTarget))
-            return false;                                 // ITER RESULT UNDEF
+            return false;                                 // ITER UNDEF
 
         MOZ_ASSERT(this->stackDepth == loopDepth);
     }
@@ -7156,7 +7178,7 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
     if (!tryNoteList.append(JSTRY_FOR_OF, stackDepth, top.offset, breakTarget.offset))
         return false;
 
-    return emitPopN(3);                                   //
+    return emitPopN(2);                                   //
 }
 
 bool
@@ -7566,9 +7588,7 @@ BytecodeEmitter::emitComprehensionForOf(ParseNode* pn)
         return false;
 
     // Push a dummy result so that we properly enter iteration midstream.
-    if (!emit1(JSOP_UNDEFINED))                // ITER RESULT
-        return false;
-    if (!emit1(JSOP_UNDEFINED))                // ITER RESULT VALUE
+    if (!emit1(JSOP_UNDEFINED))                // ITER VALUE
         return false;
 
     // Enter the block before the loop body, after evaluating the obj.
@@ -7606,31 +7626,56 @@ BytecodeEmitter::emitComprehensionForOf(ParseNode* pn)
     int loopDepth = this->stackDepth;
 #endif
 
-    // Emit code to assign result.value to the iteration variable.
-    if (!emit1(JSOP_POP))                                 // ITER RESULT
+    if (!emit1(JSOP_POP))                                 // ITER
+        return false;
+    if (!emit1(JSOP_DUP))                                 // ITER ITER
+        return false;
+    if (!emitIteratorNext(forHead))                       // ITER RESULT
         return false;
     if (!emit1(JSOP_DUP))                                 // ITER RESULT RESULT
         return false;
-    if (!emitAtomOp(cx->names().value, JSOP_GETPROP))     // ITER RESULT VALUE
+    if (!emitAtomOp(cx->names().done, JSOP_GETPROP))      // ITER RESULT DONE
+        return false;
+
+    IfThenElseEmitter ifDone(this);
+
+    if (!ifDone.emitIf())                                 // ITER RESULT
+        return false;
+
+    // Remove RESULT from the stack to release it.
+    if (!emit1(JSOP_POP))                                 // ITER
+        return false;
+    if (!emit1(JSOP_UNDEFINED))                           // ITER UNDEF
+        return false;
+
+    // If the iteration is done, leave loop here, instead of the branch at
+    // the end of the loop.
+    if (!loopInfo.emitSpecialBreakForDone(this))          // ITER UNDEF
+        return false;
+
+    if (!ifDone.emitEnd())                                // ITER RESULT
+        return false;
+
+    // Emit code to assign result.value to the iteration variable.
+    if (!emitAtomOp(cx->names().value, JSOP_GETPROP))     // ITER VALUE
         return false;
 
     // Notice: Comprehension for-of doesn't perform IteratorClose, since it's
     // not in the spec.
-
-    if (!emitAssignment(loopVariableName, JSOP_NOP, nullptr)) // ITER RESULT VALUE
+    if (!emitAssignment(loopVariableName, JSOP_NOP, nullptr)) // ITER VALUE
         return false;
 
     // Remove VALUE from the stack to release it.
-    if (!emit1(JSOP_POP))                                 // ITER RESULT
+    if (!emit1(JSOP_POP))                                 // ITER
         return false;
-    if (!emit1(JSOP_UNDEFINED))                           // ITER RESULT UNDEF
+    if (!emit1(JSOP_UNDEFINED))                           // ITER UNDEF
         return false;
 
     // The stack should be balanced around the assignment opcode sequence.
     MOZ_ASSERT(this->stackDepth == loopDepth);
 
     // Emit code for the loop body.
-    if (!emitTree(forBody))                               // ITER RESULT UNDEF
+    if (!emitTree(forBody))                               // ITER UNDEF
         return false;
 
     // The stack should be balanced around the assignment opcode sequence.
@@ -7642,25 +7687,13 @@ BytecodeEmitter::emitComprehensionForOf(ParseNode* pn)
     if (!emitLoopEntry(forHeadExpr, jmp))
         return false;
 
-    if (!emit1(JSOP_SWAP))                                // ITER UNDEF RESULT
-        return false;
-    if (!emit1(JSOP_POP))                                 // ITER UNDEF
-        return false;
-    if (!emitDupAt(1))                                    // ITER UNDEF ITER
-        return false;
-    if (!emitIteratorNext(forHead))                       // ITER UNDEF RESULT
-        return false;
-    if (!emit1(JSOP_SWAP))                                // ITER RESULT UNDEF
-        return false;
-    if (!emitDupAt(1))                                    // ITER RESULT UNDEF RESULT
-        return false;
-    if (!emitAtomOp(cx->names().done, JSOP_GETPROP))      // ITER RESULT UNDEF DONE
+    if (!emit1(JSOP_FALSE))                               // ITER VALUE FALSE
         return false;
 
     JumpList beq;
     JumpTarget breakTarget{ -1 };
-    if (!emitBackwardJump(JSOP_IFEQ, top, &beq, &breakTarget)) // ITER RESULT UNDEF
-        return false;
+    if (!emitBackwardJump(JSOP_IFEQ, top, &beq, &breakTarget))
+        return false;                                     // ITER VALUE
 
     MOZ_ASSERT(this->stackDepth == loopDepth);
 
@@ -7681,7 +7714,7 @@ BytecodeEmitter::emitComprehensionForOf(ParseNode* pn)
     }
 
     // Pop the result and the iter.
-    return emitPopN(3);                                   //
+    return emitPopN(2);                                   //
 }
 
 bool

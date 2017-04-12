@@ -61,6 +61,7 @@ TEST_HARNESS_FILES.testing.mochitest += [
     'nested_setup.js',
     'pywebsocket_wrapper.py',
     'redirect.html',
+    'rungeckoview.py',
     'runrobocop.py',
     'runtests.py',
     'runtestsremote.py',

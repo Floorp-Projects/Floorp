@@ -4,6 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import logging
 import posixpath
 import sys, os
 import subprocess
@@ -578,10 +579,13 @@ def main():
                                     options,
                                     {"tbpl": sys.stdout})
 
+    dm_args = {'deviceRoot': options.remoteTestRoot}
     if options.deviceIP:
-        dm = mozdevice.DroidADB(options.deviceIP, options.devicePort, packageName=None, deviceRoot=options.remoteTestRoot)
-    else:
-        dm = mozdevice.DroidADB(packageName=None, deviceRoot=options.remoteTestRoot)
+        dm_args['host'] = options.deviceIP
+        dm_args['port'] = options.devicePort
+    if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
+        dm_args['logLevel'] = logging.DEBUG
+    dm = mozdevice.DroidADB(**dm_args)
 
     if options.interactive and not options.testPath:
         print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"

@@ -7,6 +7,7 @@ from argparse import ArgumentParser, SUPPRESS
 from distutils.util import strtobool
 from itertools import chain
 from urlparse import urlparse
+import logging
 import json
 import os
 import tempfile
@@ -957,6 +958,9 @@ class AndroidArguments(ArgumentContainer):
             device_args['port'] = options.devicePort
         elif options.deviceSerial:
             device_args['deviceSerial'] = options.deviceSerial
+
+        if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
+            device_args['logLevel'] = logging.DEBUG
         options.dm = DroidADB(**device_args)
 
         if not options.remoteTestRoot:

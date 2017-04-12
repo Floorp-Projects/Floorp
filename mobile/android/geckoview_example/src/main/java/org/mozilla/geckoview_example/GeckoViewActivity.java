@@ -39,7 +39,7 @@ public class GeckoViewActivity extends Activity {
         mGeckoView.setContentListener(new MyGeckoViewContent());
         mGeckoView.setProgressListener(new MyGeckoViewProgress());
 
-        final GeckoProfile profile = GeckoProfile.get(getApplicationContext());
+        final GeckoProfile profile = GeckoProfile.get(this);
 
         GeckoThread.initMainProcess(profile, /* args */ null, /* debugging */ false);
         GeckoThread.launch();
