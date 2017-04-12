@@ -76,7 +76,7 @@ BlankVideoDataCreator::Create(MediaRawData* aSample)
                                       mImageContainer,
                                       aSample->mOffset,
                                       aSample->mTime,
-                                      aSample->mDuration,
+                                      aSample->mDuration.ToMicroseconds(),
                                       buffer,
                                       aSample->mKeyframe,
                                       aSample->mTime,
@@ -93,7 +93,8 @@ BlankAudioDataCreator::Create(MediaRawData* aSample)
 {
   // Convert duration to frames. We add 1 to duration to account for
   // rounding errors, so we get a consistent tone.
-  CheckedInt64 frames = UsecsToFrames(aSample->mDuration+1, mSampleRate);
+  CheckedInt64 frames = UsecsToFrames(
+    aSample->mDuration.ToMicroseconds()+1, mSampleRate);
   if (!frames.isValid()
       || !mChannelCount
       || !mSampleRate
@@ -116,7 +117,7 @@ BlankAudioDataCreator::Create(MediaRawData* aSample)
   }
   RefPtr<AudioData> data(new AudioData(aSample->mOffset,
                                        aSample->mTime,
-                                       aSample->mDuration,
+                                       aSample->mDuration.ToMicroseconds(),
                                        uint32_t(frames.value()),
                                        Move(samples),
                                        mChannelCount,

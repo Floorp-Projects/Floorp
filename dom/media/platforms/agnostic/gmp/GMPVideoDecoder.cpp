@@ -202,7 +202,7 @@ GMPVideoDecoder::CreateFrame(MediaRawData* aSample)
   frame->SetEncodedHeight(mConfig.mDisplay.height);
   frame->SetTimeStamp(aSample->mTime);
   frame->SetCompleteFrame(true);
-  frame->SetDuration(aSample->mDuration);
+  frame->SetDuration(aSample->mDuration.ToMicroseconds());
   frame->SetFrameType(aSample->mKeyframe ? kGMPKeyFrame : kGMPDeltaFrame);
 
   return frame;

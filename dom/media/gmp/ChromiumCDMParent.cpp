@@ -191,7 +191,7 @@ ChromiumCDMParent::InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer,
                                 crypto.mKeyId,
                                 crypto.mIV,
                                 aSample->mTime,
-                                aSample->mDuration,
+                                aSample->mDuration.ToMicroseconds(),
                                 crypto.mPlainSizes,
                                 crypto.mEncryptedSizes,
                                 crypto.mValid);

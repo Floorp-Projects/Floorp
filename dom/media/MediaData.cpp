@@ -22,6 +22,7 @@ using namespace mozilla::gfx;
 using layers::ImageContainer;
 using layers::PlanarYCbCrImage;
 using layers::PlanarYCbCrData;
+using media::TimeUnit;
 
 const char* AudioData::sTypeName = "audio";
 const char* VideoData::sTypeName = "video";
@@ -173,7 +174,7 @@ VideoData::VideoData(int64_t aOffset,
   , mFrameID(aFrameID)
   , mSentToCompositor(false)
 {
-  NS_ASSERTION(mDuration >= 0, "Frame must have non-negative duration.");
+  MOZ_ASSERT(!mDuration.IsNegative(), "Frame must have non-negative duration.");
   mKeyframe = aKeyframe;
   mTimecode = aTimecode;
 }
@@ -226,7 +227,7 @@ VideoData::UpdateDuration(int64_t aDuration)
 {
   MOZ_ASSERT(aDuration >= 0);
 
-  mDuration = aDuration;
+  mDuration = TimeUnit::FromMicroseconds(aDuration);
 }
 
 void
@@ -238,7 +239,7 @@ VideoData::UpdateTimestamp(int64_t aTimestamp)
   MOZ_ASSERT(updatedDuration >= 0);
 
   mTime = aTimestamp;
-  mDuration = updatedDuration;
+  mDuration = TimeUnit::FromMicroseconds(updatedDuration);
 }
 
 /* static */
