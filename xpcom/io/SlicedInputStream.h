@@ -57,6 +57,7 @@ private:
   nsICloneableInputStream* mWeakCloneableInputStream;
   nsIIPCSerializableInputStream* mWeakIPCSerializableInputStream;
   nsISeekableStream* mWeakSeekableInputStream;
+  nsIAsyncInputStream* mWeakAsyncInputStream;
 
   uint64_t mStart;
   uint64_t mLength;
