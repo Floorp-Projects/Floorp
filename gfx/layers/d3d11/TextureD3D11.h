@@ -39,7 +39,9 @@ class DXGITextureData : public TextureData
 public:
   virtual void FillInfo(TextureData::Info& aInfo) const override;
 
+  bool SerializeSpecific(SurfaceDescriptorD3D10* aOutDesc);
   virtual bool Serialize(SurfaceDescriptor& aOutDescrptor) override;
+  virtual void GetSubDescriptor(GPUVideoSubDescriptor* aOutDesc) override;
 
   static DXGITextureData*
   Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat, TextureAllocationFlags aFlags);
@@ -152,7 +154,9 @@ public:
 
   virtual void FillInfo(TextureData::Info& aInfo) const override;
 
+  void SerializeSpecific(SurfaceDescriptorDXGIYCbCr* aOutDesc);
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
+  virtual void GetSubDescriptor(GPUVideoSubDescriptor* aOutDesc) override;
 
   virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override { return nullptr; }
 
