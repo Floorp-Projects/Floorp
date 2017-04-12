@@ -62,16 +62,16 @@ GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame)
 
   gfx::IntRect pictureRegion(
     0, 0, decodedFrame->Width(), decodedFrame->Height());
-  RefPtr<VideoData> v =
-    VideoData::CreateAndCopyData(mConfig,
-                                 mImageContainer,
-                                 mLastStreamOffset,
-                                 decodedFrame->Timestamp(),
-                                 decodedFrame->Duration(),
-                                 b,
-                                 false,
-                                 -1,
-                                 pictureRegion);
+  RefPtr<VideoData> v = VideoData::CreateAndCopyData(
+    mConfig,
+    mImageContainer,
+    mLastStreamOffset,
+    decodedFrame->Timestamp(),
+    media::TimeUnit::FromMicroseconds(decodedFrame->Duration()),
+    b,
+    false,
+    -1,
+    pictureRegion);
   RefPtr<GMPVideoDecoder> self = this;
   if (v) {
     mDecodedData.AppendElement(Move(v));

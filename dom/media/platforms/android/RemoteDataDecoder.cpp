@@ -138,7 +138,8 @@ public:
           gl::OriginPos::BottomLeft);
 
         RefPtr<VideoData> v = VideoData::CreateFromImage(
-          inputInfo.mDisplaySize, offset, presentationTimeUs, inputInfo.mDurationUs,
+          inputInfo.mDisplaySize, offset, presentationTimeUs,
+          TimeUnit::FromMicroseconds(inputInfo.mDurationUs),
           img, !!(flags & MediaCodec::BUFFER_FLAG_SYNC_FRAME),
           presentationTimeUs);
 
