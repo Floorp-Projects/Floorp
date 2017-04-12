@@ -102,8 +102,8 @@ function checkLoginItems(logins, items) {
   }
   let duplicates = findDuplicates(logins);
 
-  let dateAndTimeFormatter = new Intl.DateTimeFormat(undefined,
-                             { day: "numeric", month: "short", year: "numeric" });
+  let dateAndTimeFormatter = Services.intl.createDateTimeFormat(undefined,
+                             { dateStyle: "medium" });
   for (let login of logins) {
     if (login.username && !duplicates.has(login.username)) {
       // If login is not duplicate and we can't find an item for it, fail.

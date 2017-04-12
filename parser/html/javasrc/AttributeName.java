@@ -1,22 +1,22 @@
 /*
  * Copyright (c) 2008-2011 Mozilla Foundation
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
- * copy of this software and associated documentation files (the "Software"), 
- * to deal in the Software without restriction, including without limitation 
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in 
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
 
@@ -29,6 +29,7 @@ import nu.validator.htmlparser.annotation.NoLength;
 import nu.validator.htmlparser.annotation.NsUri;
 import nu.validator.htmlparser.annotation.Prefix;
 import nu.validator.htmlparser.annotation.QName;
+import nu.validator.htmlparser.annotation.Unsigned;
 import nu.validator.htmlparser.annotation.Virtual;
 import nu.validator.htmlparser.common.Interner;
 
@@ -51,7 +52,7 @@ public final class AttributeName
     public static final int BOOLEAN = (1 << 6);
 
     // ]NOCPP]
-    
+
     /**
      * An array representing no namespace regardless of namespace mode (HTML,
      * SVG, MathML, lang-mapping HTML) used.
@@ -170,7 +171,7 @@ public final class AttributeName
     /**
      * An initialization helper for having a one name in the SVG mode and
      * another name in the other modes.
-     * 
+     *
      * @param name
      *            the name for the non-SVG modes
      * @param camel
@@ -192,7 +193,7 @@ public final class AttributeName
     /**
      * An initialization helper for having a one name in the MathML mode and
      * another name in the other modes.
-     * 
+     *
      * @param name
      *            the name for the non-MathML modes
      * @param camel
@@ -214,7 +215,7 @@ public final class AttributeName
     /**
      * An initialization helper for having a different local name in the HTML
      * mode and the SVG and MathML modes.
-     * 
+     *
      * @param name
      *            the name for the HTML mode
      * @param suffix
@@ -235,7 +236,7 @@ public final class AttributeName
 
     /**
      * An initialization helper for having the same local name in all modes.
-     * 
+     *
      * @param name
      *            the name
      * @return the initialized name array
@@ -253,12 +254,12 @@ public final class AttributeName
 
     /**
      * Returns an attribute name by buffer.
-     * 
+     *
      * <p>
      * C++ ownership: The return value is either released by the caller if the
      * attribute is a duplicate or the ownership is transferred to
      * HtmlAttributes and released upon clearing or destroying that object.
-     * 
+     *
      * @param buf
      *            the buffer
      * @param offset
@@ -276,7 +277,7 @@ public final class AttributeName
             // ]NOCPP]
             , Interner interner) {
         // XXX deal with offset
-        int hash = AttributeName.bufToHash(buf, length);
+        @Unsigned int hash = AttributeName.bufToHash(buf, length);
         int index = Arrays.binarySearch(AttributeName.ATTRIBUTE_HASHES, hash);
         if (index < 0) {
             return AttributeName.createAttributeName(
@@ -305,14 +306,14 @@ public final class AttributeName
     /**
      * This method has to return a unique integer for each well-known
      * lower-cased attribute name.
-     * 
+     *
      * @param buf
      * @param len
      * @return
      */
-    private static int bufToHash(@NoLength char[] buf, int len) {
-        int hash2 = 0;
-        int hash = len;
+    private static @Unsigned int bufToHash(@NoLength char[] buf, int len) {
+        @Unsigned int hash2 = 0;
+        @Unsigned int hash = len;
         hash <<= 5;
         hash += buf[0] - 0x60;
         int j = len;
@@ -378,7 +379,7 @@ public final class AttributeName
 
     /**
      * The startup-time constructor.
-     * 
+     *
      * @param uri
      *            the namespace
      * @param local
@@ -394,7 +395,7 @@ public final class AttributeName
             @Local @NoLength String[] local, @Prefix @NoLength String[] prefix
             // [NOCPP[
             , int flags
-    // ]NOCPP]        
+    // ]NOCPP]
     ) {
         this.uri = uri;
         this.local = local;
@@ -407,7 +408,7 @@ public final class AttributeName
 
     /**
      * Creates an <code>AttributeName</code> for a local name.
-     * 
+     *
      * @param name
      *            the name
      * @param checkNcName
@@ -449,7 +450,7 @@ public final class AttributeName
     /**
      * Clones the attribute using an interner. Returns <code>this</code> in Java
      * and for non-dynamic instances in C++.
-     * 
+     *
      * @param interner
      *            an interner
      * @return a clone
@@ -462,7 +463,7 @@ public final class AttributeName
     /**
      * Creator for use when the XML violation policy requires an attribute name
      * to be changed.
-     * 
+     *
      * @param name
      *            the name of the attribute to create
      */
@@ -474,7 +475,7 @@ public final class AttributeName
 
     /**
      * Queries whether this name is an XML 1.0 4th ed. NCName.
-     * 
+     *
      * @param mode
      *            the SVG/MathML/HTML mode
      * @return <code>true</code> if this is an NCName in the given mode
@@ -485,17 +486,17 @@ public final class AttributeName
 
     /**
      * Queries whether this is an <code>xmlns</code> attribute.
-     * 
+     *
      * @return <code>true</code> if this is an <code>xmlns</code> attribute
      */
     public boolean isXmlns() {
         return (flags & IS_XMLNS) != 0;
     }
-        
+
     /**
      * Queries whether this attribute has a case-folded value in the HTML4 mode
      * of the parser.
-     * 
+     *
      * @return <code>true</code> if the value is case-folded
      */
     boolean isCaseFolded() {

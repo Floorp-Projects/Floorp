@@ -269,6 +269,86 @@ add_test(function test_login_error_logOnError_true() {
   Svc.Obs.notify("weave:service:login:error");
 });
 
+add_test(function test_noNewFailed_noErrorLog() {
+  Svc.Prefs.set("log.appender.file.logOnError", true);
+  Svc.Prefs.set("log.appender.file.logOnSuccess", false);
+
+  let log = Log.repository.getLogger("Sync.Test.FileLog");
+  Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
+    Svc.Obs.remove("weave:service:reset-file-log", onResetFileLog);
+    // No log file was written.
+    do_check_false(logsdir.directoryEntries.hasMoreElements());
+
+    Svc.Prefs.resetBranch("");
+    run_next_test();
+  });
+  // failed is nonzero and newFailed is zero -- shouldn't write a log.
+  let count = {
+    applied: 8,
+    succeeded: 4,
+    failed: 5,
+    newFailed: 0,
+    reconciled: 4,
+  };
+  Svc.Obs.notify("weave:engine:sync:applied", count, "foobar-engine");
+  Svc.Obs.notify("weave:service:sync:finish");
+});
+
+add_test(function test_newFailed_errorLog() {
+  Svc.Prefs.set("log.appender.file.logOnError", true);
+  Svc.Prefs.set("log.appender.file.logOnSuccess", false);
+
+  let log = Log.repository.getLogger("Sync.Test.FileLog");
+  const MESSAGE = "this WILL show up 2";
+  log.info(MESSAGE);
+
+  // We need to wait until the log cleanup started by this test is complete
+  // or the next test will fail as it is ongoing.
+  Svc.Obs.add("services-tests:common:log-manager:cleanup-logs", function onCleanupLogs() {
+    Svc.Obs.remove("services-tests:common:log-manager:cleanup-logs", onCleanupLogs);
+    run_next_test();
+  });
+
+  Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
+    Svc.Obs.remove("weave:service:reset-file-log", onResetFileLog);
+
+    // Exactly one log file was written.
+    let entries = logsdir.directoryEntries;
+    do_check_true(entries.hasMoreElements());
+    let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
+    do_check_eq(logfile.leafName.slice(-4), ".txt");
+    do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
+    do_check_false(entries.hasMoreElements());
+
+    // Ensure the log message was actually written to file.
+    readFile(logfile, function(error, data) {
+      do_check_true(Components.isSuccessCode(error));
+      do_check_neq(data.indexOf(MESSAGE), -1);
+
+      // Clean up.
+      try {
+        logfile.remove(false);
+      } catch (ex) {
+        dump("Couldn't delete file: " + ex + "\n");
+        // Stupid Windows box.
+      }
+
+      Svc.Prefs.resetBranch("");
+
+    });
+  });
+  // newFailed is nonzero -- should write a log.
+  let count = {
+    applied: 8,
+    succeeded: 4,
+    failed: 5,
+    newFailed: 4,
+    reconciled: 4,
+  };
+
+  Svc.Obs.notify("weave:engine:sync:applied", count, "foobar-engine");
+  Svc.Obs.notify("weave:service:sync:finish");
+});
 
 add_test(function test_errorLog_dumpAddons() {
   Svc.Prefs.set("log.appender.file.logOnError", true);

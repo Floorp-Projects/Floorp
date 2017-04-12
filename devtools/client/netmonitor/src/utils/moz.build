@@ -11,6 +11,7 @@ DevToolsModules(
     'format-utils.js',
     'l10n.js',
     'mdn-utils.js',
+    'menu.js',
     'prefs.js',
     'request-utils.js',
     'sort-predicates.js',

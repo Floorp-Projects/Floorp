@@ -215,6 +215,9 @@ class State : angle::NonCopyable
     void setArrayBufferBinding(Buffer *buffer);
     GLuint getArrayBufferId() const;
 
+    void setDrawIndirectBufferBinding(Buffer *buffer);
+    Buffer *getDrawIndirectBuffer() const { return mDrawIndirectBuffer.get(); }
+
     // GL_UNIFORM_BUFFER - Both indexed and generic targets
     void setGenericUniformBufferBinding(Buffer *buffer);
     void setIndexedUniformBufferBinding(GLuint index, Buffer *buffer, GLintptr offset, GLsizeiptr size);
@@ -361,6 +364,7 @@ class State : angle::NonCopyable
         DIRTY_BIT_DRAW_FRAMEBUFFER_BINDING,
         DIRTY_BIT_RENDERBUFFER_BINDING,
         DIRTY_BIT_VERTEX_ARRAY_BINDING,
+        DIRTY_BIT_DRAW_INDIRECT_BUFFER_BINDING,
         DIRTY_BIT_PROGRAM_BINDING,
         DIRTY_BIT_MULTISAMPLING,
         DIRTY_BIT_SAMPLE_ALPHA_TO_ONE,
@@ -435,6 +439,7 @@ class State : angle::NonCopyable
     float mFarZ;
 
     BindingPointer<Buffer> mArrayBuffer;
+    BindingPointer<Buffer> mDrawIndirectBuffer;
     Framebuffer *mReadFramebuffer;
     Framebuffer *mDrawFramebuffer;
     BindingPointer<Renderbuffer> mRenderbuffer;

@@ -598,3 +598,75 @@ DesktopNotificationPermissionPrompt.prototype = {
 
 PermissionUI.DesktopNotificationPermissionPrompt =
   DesktopNotificationPermissionPrompt;
+
+/**
+ * Creates a PermissionPrompt for a nsIContentPermissionRequest for
+ * the persistent-storage API.
+ *
+ * @param request (nsIContentPermissionRequest)
+ *        The request for a permission from content.
+ */
+function PersistentStoragePermissionPrompt(request) {
+  this.request = request;
+}
+
+PersistentStoragePermissionPrompt.prototype = {
+  __proto__: PermissionPromptForRequestPrototype,
+
+  get permissionKey() {
+    return "persistent-storage";
+  },
+
+  get popupOptions() {
+    let checkbox = {
+      // In PB mode, we don't want the "always remember" checkbox
+      show: !PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal)
+    };
+    if (checkbox.show) {
+      checkbox.checked = true;
+      checkbox.label = gBrowserBundle.GetStringFromName("persistentStorage.remember");
+    }
+    let learnMoreURL =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") + "storage-permissions";
+    return {
+      checkbox,
+      learnMoreURL
+    };
+  },
+
+  get notificationID() {
+    return "persistent-storage";
+  },
+
+  get anchorID() {
+    return "persistent-storage-notification-icon";
+  },
+
+  get message() {
+    let hostPort = "<>";
+    try {
+      hostPort = this.principal.URI.hostPort;
+    } catch (ex) {}
+    return gBrowserBundle.formatStringFromName(
+      "persistentStorage.allowWithSite", [hostPort], 1);
+  },
+
+  get promptActions() {
+    return [
+      {
+        label: gBrowserBundle.GetStringFromName("persistentStorage.allow"),
+        accessKey:
+          gBrowserBundle.GetStringFromName("persistentStorage.allow.accesskey"),
+        action: Ci.nsIPermissionManager.ALLOW_ACTION
+      },
+      {
+        label: gBrowserBundle.GetStringFromName("persistentStorage.dontAllow"),
+        accessKey:
+          gBrowserBundle.GetStringFromName("persistentStorage.dontAllow.accesskey"),
+        action: Ci.nsIPermissionManager.DENY_ACTION
+      }
+    ];
+  }
+};
+
+PermissionUI.PersistentStoragePermissionPrompt = PersistentStoragePermissionPrompt;

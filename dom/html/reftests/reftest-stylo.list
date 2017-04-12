@@ -44,7 +44,7 @@ fails == 596455-2b.html 596455-2b.html
 # (Fuzzy necessary due to pixel-wise comparison of different JPEGs.
 # The vast majority of the fuzziness comes from Linux and WinXP.)
 == bug917595-iframe-1.html bug917595-iframe-1.html
-fails == bug917595-exif-rotated.jpg bug917595-exif-rotated.jpg
+== bug917595-exif-rotated.jpg bug917595-exif-rotated.jpg
 
 # Test support for SVG-as-image in <picture> elements.
 == bug1106522-1.html bug1106522-1.html

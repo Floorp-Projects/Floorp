@@ -355,7 +355,9 @@ var AboutNetAndCertErrorListener = {
 
         // If the difference is more than a day.
         if (Math.abs(difference) > 60 * 60 * 24) {
-          let formatter = new Intl.DateTimeFormat();
+          let formatter = Services.intl.createDateTimeFormat(undefined, {
+            dateStyle: "short"
+          });
           let systemDate = formatter.format(new Date());
           // negative difference means local time is behind server time
           let actualDate = formatter.format(new Date(Date.now() - difference * 1000));
@@ -385,7 +387,9 @@ var AboutNetAndCertErrorListener = {
           let systemDate = new Date();
 
           if (buildDate > systemDate) {
-            let formatter = new Intl.DateTimeFormat();
+            let formatter = Services.intl.createDateTimeFormat(undefined, {
+              dateStyle: "short"
+            });
 
             content.document.getElementById("wrongSystemTimeWithoutReference_URL")
               .textContent = content.document.location.hostname;

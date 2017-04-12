@@ -7,7 +7,7 @@
 #include "PreprocessorTest.h"
 #include "compiler/preprocessor/Token.h"
 
-class IfTest : public PreprocessorTest
+class IfTest : public SimplePreprocessorTest
 {
 };
 
@@ -609,100 +609,86 @@ TEST_F(IfTest, MissingExpression)
 {
     const char* str = "#if\n"
                       "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_INVALID_EXPRESSION,
                       pp::SourceLocation(0, 1),
                       "syntax error"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 TEST_F(IfTest, DivisionByZero)
 {
     const char* str = "#if 1 / (3 - (1 + 2))\n"
                       "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_DIVISION_BY_ZERO,
                       pp::SourceLocation(0, 1), "1 / 0"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 TEST_F(IfTest, ModuloByZero)
 {
     const char* str = "#if 1 % (3 - (1 + 2))\n"
                       "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_DIVISION_BY_ZERO,
                       pp::SourceLocation(0, 1), "1 % 0"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 TEST_F(IfTest, DecIntegerOverflow)
 {
     const char* str = "#if 4294967296\n"
                       "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_INTEGER_OVERFLOW,
                       pp::SourceLocation(0, 1), "4294967296"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 TEST_F(IfTest, OctIntegerOverflow)
 {
     const char* str = "#if 077777777777\n"
                       "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_INTEGER_OVERFLOW,
                       pp::SourceLocation(0, 1), "077777777777"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 TEST_F(IfTest, HexIntegerOverflow)
 {
     const char* str = "#if 0xfffffffff\n"
                       "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_INTEGER_OVERFLOW,
                       pp::SourceLocation(0, 1), "0xfffffffff"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 TEST_F(IfTest, UndefinedMacro)
 {
     const char* str = "#if UNDEFINED\n"
                       "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_CONDITIONAL_UNEXPECTED_TOKEN,
                       pp::SourceLocation(0, 1),
                       "UNDEFINED"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 TEST_F(IfTest, InvalidExpressionIgnoredForExcludedElif)
@@ -728,43 +714,37 @@ TEST_F(IfTest, InvalidExpressionIgnoredForExcludedElif)
 TEST_F(IfTest, ElseWithoutIf)
 {
     const char* str = "#else\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_CONDITIONAL_ELSE_WITHOUT_IF,
                       pp::SourceLocation(0, 1),
                       "else"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 TEST_F(IfTest, ElifWithoutIf)
 {
     const char* str = "#elif 1\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_CONDITIONAL_ELIF_WITHOUT_IF,
                       pp::SourceLocation(0, 1),
                       "elif"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 TEST_F(IfTest, EndifWithoutIf)
 {
     const char* str = "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_CONDITIONAL_ENDIF_WITHOUT_IF,
                       pp::SourceLocation(0, 1),
                       "endif"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 TEST_F(IfTest, ElseAfterElse)
@@ -773,15 +753,13 @@ TEST_F(IfTest, ElseAfterElse)
                       "#else\n"
                       "#else\n"
                       "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_CONDITIONAL_ELSE_AFTER_ELSE,
                       pp::SourceLocation(0, 3),
                       "else"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 TEST_F(IfTest, ElifAfterElse)
@@ -790,43 +768,37 @@ TEST_F(IfTest, ElifAfterElse)
                       "#else\n"
                       "#elif 0\n"
                       "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_CONDITIONAL_ELIF_AFTER_ELSE,
                       pp::SourceLocation(0, 3),
                       "elif"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 TEST_F(IfTest, UnterminatedIf)
 {
     const char* str = "#if 1\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_CONDITIONAL_UNTERMINATED,
                       pp::SourceLocation(0, 1),
                       "if"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 TEST_F(IfTest, UnterminatedIfdef)
 {
     const char* str = "#ifdef foo\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_CONDITIONAL_UNTERMINATED,
                       pp::SourceLocation(0, 1),
                       "ifdef"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 // The preprocessor only allows one expression to follow an #if directive.
@@ -836,13 +808,11 @@ TEST_F(IfTest, ExtraIntExpression)
     const char *str =
         "#if 1 1\n"
         "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics, print(pp::Diagnostics::PP_CONDITIONAL_UNEXPECTED_TOKEN,
                                     pp::SourceLocation(0, 1), "1"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 // The preprocessor only allows one expression to follow an #if directive.
@@ -853,13 +823,11 @@ TEST_F(IfTest, ExtraIdentifierExpression)
         "#define one 1\n"
         "#if 1 one\n"
         "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics, print(pp::Diagnostics::PP_CONDITIONAL_UNEXPECTED_TOKEN,
                                     pp::SourceLocation(0, 2), "1"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 // Divide by zero that's not evaluated because of short-circuiting should not cause an error.
@@ -902,15 +870,13 @@ TEST_F(IfTest, DefinedOperatorValidAfterMacroExpansion)
         "#if !foo bar\n"
         "pass\n"
         "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics, print(pp::Diagnostics::PP_CONDITIONAL_UNEXPECTED_TOKEN,
                                     pp::SourceLocation(0, 2), "defined"));
     EXPECT_CALL(mDiagnostics, print(pp::Diagnostics::PP_CONDITIONAL_UNEXPECTED_TOKEN,
                                     pp::SourceLocation(0, 2), "bar"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 // Defined operator produced by macro expansion has undefined behavior according to C++ spec,
@@ -922,15 +888,13 @@ TEST_F(IfTest, UnterminatedDefinedInMacro)
         "#define foo defined(\n"
         "#if foo\n"
         "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics, print(pp::Diagnostics::PP_CONDITIONAL_UNEXPECTED_TOKEN,
                                     pp::SourceLocation(0, 2), "defined"));
     EXPECT_CALL(mDiagnostics, print(pp::Diagnostics::PP_CONDITIONAL_UNEXPECTED_TOKEN,
                                     pp::SourceLocation(0, 2), "("));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 // Defined operator produced by macro expansion has undefined behavior according to C++ spec,
@@ -942,15 +906,13 @@ TEST_F(IfTest, UnterminatedDefinedInMacro2)
         "#define foo defined(bar\n"
         "#if foo\n"
         "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics, print(pp::Diagnostics::PP_CONDITIONAL_UNEXPECTED_TOKEN,
                                     pp::SourceLocation(0, 2), "defined"));
     EXPECT_CALL(mDiagnostics, print(pp::Diagnostics::PP_CONDITIONAL_UNEXPECTED_TOKEN,
                                     pp::SourceLocation(0, 2), "("));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 // Undefined shift: negative shift offset.
@@ -960,13 +922,11 @@ TEST_F(IfTest, BitShiftLeftOperatorNegativeOffset)
         "#if 2 << -1 == 1\n"
         "foo\n"
         "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_UNDEFINED_SHIFT, pp::SourceLocation(0, 1), "2 << -1"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 // Undefined shift: shift offset is out of range.
@@ -976,13 +936,11 @@ TEST_F(IfTest, BitShiftLeftOperatorOffset32)
         "#if 2 << 32 == 1\n"
         "foo\n"
         "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_UNDEFINED_SHIFT, pp::SourceLocation(0, 1), "2 << 32"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 // Left hand side of shift is negative.
@@ -1007,13 +965,11 @@ TEST_F(IfTest, BitShiftRightOperatorNegativeOffset)
         "#if 2 >> -1 == 4\n"
         "foo\n"
         "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_UNDEFINED_SHIFT, pp::SourceLocation(0, 1), "2 >> -1"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 // Undefined shift: shift offset is out of range.
@@ -1023,13 +979,11 @@ TEST_F(IfTest, BitShiftRightOperatorOffset32)
         "#if 2 >> 32 == 0\n"
         "foo\n"
         "#endif\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_UNDEFINED_SHIFT, pp::SourceLocation(0, 1), "2 >> 32"));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 // Left hand side of shift is negative.

@@ -6,7 +6,6 @@
 
 #include "test_utils/ANGLETest.h"
 #include "random_utils.h"
-#include "Vector.h"
 
 using namespace angle;
 
@@ -517,9 +516,9 @@ TEST_P(TransformFeedbackTest, MultiplePaused)
 TEST_P(TransformFeedbackTest, MultiContext)
 {
 #if defined(ANGLE_PLATFORM_APPLE)
-    if ((IsNVIDIA() || IsAMD()) && GetParam() == ES3_OPENGL())
+    if ((IsNVIDIA() || IsAMD() || IsIntel()) && GetParam() == ES3_OPENGL())
     {
-        std::cout << "Test skipped on NVidia and AMD OpenGL on OSX." << std::endl;
+        std::cout << "Test skipped on NVidia, AMD and Intel OpenGL on OSX." << std::endl;
         return;
     }
 #endif
