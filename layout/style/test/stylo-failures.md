@@ -208,8 +208,7 @@ to mochitest command.
     * test_value_storage.html `touch-action` [14]
 * Unimplemented SVG properties:
   * stroke properties
-    * test_value_storage.html `on 'stroke` [6]
-    * test_compute_data_with_start_struct.html `initial and other values of stroke-dasharray are different` [2]
+    * test_value_storage.html `on 'stroke` [5]
 * Properties implemented but not in geckolib:
   * contain longhand property bug 1354998
     * test_contain_formatting_context.html [1]
@@ -261,10 +260,6 @@ to mochitest command.
   * moz-prefixed values of overflow shorthand bug 1330888
     * test_bug319381.html [8]
     * test_value_storage.html `'overflow` [8]
-  * -moz-middle-with-baseline on vertical-align
-    * test_value_storage.html `-moz-middle-with-baseline` [1]
-  * -moz-pre-space on white-space
-    * test_value_storage.html `-moz-pre-space` [1]
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
   * test_pixel_lengths.html `mozmm`: mozmm unit [3]
