@@ -129,6 +129,11 @@ const roundedRect = function (ctx, x, y, width, height, radius) {
  *                        columnNumber: Number }
  *     An object containing the grid fragment index, row and column numbers to the
  *     corresponding grid cell to highlight for the current grid.
+ * - showGridLineNames({ gridFragmentIndex: Number, lineNumber: Number,
+ *                       type: String })
+ *     @param  {Object} { gridFragmentIndex: Number, lineNumber: Number }
+ *     An object containing the grid fragment index and line number to the
+ *     corresponding grid line to highlight for the current grid.
  * - showGridLineNumbers(isShown)
  *     @param  {Boolean} isShown
  *     Displays the grid line numbers on the grid lines if isShown is true.
@@ -149,7 +154,7 @@ const roundedRect = function (ctx, x, y, width, height, radius) {
  *     <div class="css-grid-infobar">
  *       <div class="css-grid-infobar-text">
  *         <span class="css-grid-area-infobar-name">Grid Area Name</span>
- *         <span class="css-grid-area-infobar-dimensions"Grid Area Dimensions></span>
+ *         <span class="css-grid-area-infobar-dimensions">Grid Area Dimensions></span>
  *       </div>
  *     </div>
  *   </div>
@@ -157,7 +162,14 @@ const roundedRect = function (ctx, x, y, width, height, radius) {
  *     <div class="css-grid-infobar">
  *       <div class="css-grid-infobar-text">
  *         <span class="css-grid-cell-infobar-position">Grid Cell Position</span>
- *         <span class="css-grid-cell-infobar-dimensions"Grid Cell Dimensions></span>
+ *         <span class="css-grid-cell-infobar-dimensions">Grid Cell Dimensions></span>
+ *       </div>
+ *     </div>
+ *   <div class="css-grid-line-infobar-container">
+ *     <div class="css-grid-infobar">
+ *       <div class="css-grid-infobar-text">
+ *         <span class="css-grid-line-infobar-number">Grid Line Number</span>
+ *         <span class="css-grid-line-infobar-names">Grid Line Names></span>
  *       </div>
  *     </div>
  *   </div>
@@ -361,6 +373,52 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       prefix: this.ID_CLASS_PREFIX
     });
 
+    // Building the grid line infobar markup
+    let lineInfobarContainer = createNode(this.win, {
+      parent: container,
+      attributes: {
+        "class": "line-infobar-container",
+        "id": "line-infobar-container",
+        "position": "top",
+        "hidden": "true"
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
+    let lineInfobar = createNode(this.win, {
+      parent: lineInfobarContainer,
+      attributes: {
+        "class": "infobar"
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
+    let lineTextbox = createNode(this.win, {
+      parent: lineInfobar,
+      attributes: {
+        "class": "infobar-text"
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+    createNode(this.win, {
+      nodeType: "span",
+      parent: lineTextbox,
+      attributes: {
+        "class": "line-infobar-number",
+        "id": "line-infobar-number"
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+    createNode(this.win, {
+      nodeType: "span",
+      parent: lineTextbox,
+      attributes: {
+        "class": "line-infobar-names",
+        "id": "line-infobar-names"
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
     return container;
   },
 
@@ -534,6 +592,20 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   },
 
   /**
+   * Shows the grid line highlight for the given grid line options.
+   *
+   * @param  {Number} options.gridFragmentIndex
+   *         Index of the grid fragment to render the grid line highlight.
+   * @param  {Number} options.lineNumber
+   *         Line number of the grid line to highlight.
+   * @param  {String} options.type
+   *         The dimension type of the grid line.
+   */
+  showGridLineNames({ gridFragmentIndex, lineNumber, type }) {
+    this.renderGridLineNames(gridFragmentIndex, lineNumber, type);
+  },
+
+  /**
    * Clear the grid cell highlights.
    */
   clearGridCell() {
@@ -609,6 +681,11 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       this.showGridCell(this.options.showGridCell);
     }
 
+    // Display the grid line names if needed.
+    if (this.options.showGridLineNames) {
+      this.showGridLineNames(this.options.showGridLineNames);
+    }
+
     this._showGrid();
     this._showGridElements();
 
@@ -660,6 +737,26 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
 
     let container = this.getElement("cell-infobar-container");
     this._moveInfobar(container, x1, x2, y1, y2);
+  },
+
+  /**
+   * Update the grid information displayed in the grid line info bar.
+   *
+   * @param  {String} gridLineNames
+   *         Comma-separated string of names for the grid line.
+   * @param  {Number} gridLineNumber
+   *         The grid line number.
+   * @param  {Number} x
+   *         The x-coordinate of the grid line.
+   * @param  {Number} y
+   *         The y-coordinate of the grid line.
+   */
+  _updateGridLineInfobar(gridLineNames, gridLineNumber, x, y) {
+    this.getElement("line-infobar-number").setTextContent(gridLineNumber);
+    this.getElement("line-infobar-names").setTextContent(gridLineNames);
+
+    let container = this.getElement("line-infobar-container");
+    this._moveInfobar(container, x, x, y, y);
   },
 
   /**
@@ -1171,6 +1268,55 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   },
 
   /**
+   * Render the grid line name highlight for the given grid fragment index, lineNumber,
+   * and dimensionType.
+   *
+   * @param  {Number} gridFragmentIndex
+   *         Index of the grid fragment to render the grid line highlight.
+   * @param  {Number} lineNumber
+   *         Line number of the grid line to highlight.
+   * @param  {String} dimensionType
+   *         The dimension type of the grid line.
+   */
+  renderGridLineNames(gridFragmentIndex, lineNumber, dimensionType) {
+    let fragment = this.gridData[gridFragmentIndex];
+
+    if (!fragment || !lineNumber || !dimensionType) {
+      return;
+    }
+
+    const { names } = fragment[dimensionType].lines[lineNumber - 1];
+    let linePos;
+
+    if (dimensionType === ROWS) {
+      linePos = fragment.rows.lines[lineNumber - 1];
+    } else if (dimensionType === COLUMNS) {
+      linePos = fragment.cols.lines[lineNumber - 1];
+    }
+
+    if (!linePos) {
+      return;
+    }
+
+    let currentZoom = getCurrentZoom(this.win);
+    let { bounds } = this.currentQuads.content[gridFragmentIndex];
+
+    const rowYPosition = fragment.rows.lines[0];
+    const colXPosition = fragment.rows.lines[0];
+
+    let x = dimensionType === COLUMNS
+      ? linePos.start + (bounds.left / currentZoom)
+      : colXPosition.start + (bounds.left / currentZoom);
+
+    let y = dimensionType === ROWS
+      ? linePos.start + (bounds.top / currentZoom)
+      : rowYPosition.start + (bounds.top / currentZoom);
+
+    this._updateGridLineInfobar(names.join(", "), lineNumber, x, y);
+    this._showGridLineInfoBar();
+  },
+
+  /**
    * Hide the highlighter, the canvas and the infobars.
    */
   _hide() {
@@ -1179,6 +1325,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     this._hideGridElements();
     this._hideGridAreaInfoBar();
     this._hideGridCellInfoBar();
+    this._hideGridLineInfoBar();
     setIgnoreLayoutChanges(false, this.highlighterEnv.document.documentElement);
   },
 
@@ -1212,6 +1359,14 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
 
   _showGridCellInfoBar() {
     this.getElement("cell-infobar-container").removeAttribute("hidden");
+  },
+
+  _hideGridLineInfoBar() {
+    this.getElement("line-infobar-container").setAttribute("hidden", "true");
+  },
+
+  _showGridLineInfoBar() {
+    this.getElement("line-infobar-container").removeAttribute("hidden");
   },
 
 });

@@ -28,6 +28,7 @@ config = {
         "repo": "https://hg.mozilla.org/releases/mozilla-aurora",
         "branch": "default",
         "dest": "mozilla-aurora",
+        "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
     }],
     # purge options
     'is_automation': True,

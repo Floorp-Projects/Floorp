@@ -352,41 +352,59 @@ function run_test() {
   //**************************************************************************//
   // preference Observers
 
-  // an observer...
-  var observer = {
-    QueryInterface: function QueryInterface(aIID) {
+  class PrefObserver {
+    /**
+     * Creates and registers a pref observer.
+     *
+     * @param prefBranch The preference branch instance to observe.
+     * @param expectedName The pref name we expect to receive.
+     * @param expectedValue The int pref value we expect to receive.
+     */
+    constructor(prefBranch, expectedName, expectedValue) {
+      this.pb = prefBranch;
+      this.name = expectedName;
+      this.value = expectedValue;
+
+      prefBranch.addObserver(expectedName, this, false);
+    }
+
+    QueryInterface(aIID) {
       if (aIID.equals(Ci.nsIObserver) ||
           aIID.equals(Ci.nsISupports))
          return this;
       throw Components.results.NS_NOINTERFACE;
-    },
+    }
 
-    observe: function observe(aSubject, aTopic, aState) {
+    observe(aSubject, aTopic, aState) {
       do_check_eq(aTopic, "nsPref:changed");
-      do_check_eq(aState, "ReadPref.int");
-      do_check_eq(ps.getIntPref(aState), 76);
-      ps.removeObserver("ReadPref.int", this);
+      do_check_eq(aState, this.name);
+      do_check_eq(this.pb.getIntPref(aState), this.value);
+      pb.removeObserver(aState, this);
 
       // notification received, we may go on...
       do_test_finished();
     }
-  }
+  };
 
-  pb2.addObserver("ReadPref.int", observer, false);
-  ps.setIntPref("ReadPref.int", 76);
-
-  // test will continue upon notification...
+  // Indicate that we'll have 3 more async tests pending so that they all
+  // actually get a chance to run.
   do_test_pending();
+  do_test_pending();
+  do_test_pending();
+
+  let observer = new PrefObserver(pb2, "ReadPref.int", 76);
+  ps.setIntPref("ReadPref.int", 76);
 
   // removed observer should not fire
   pb2.removeObserver("ReadPref.int", observer);
   ps.setIntPref("ReadPref.int", 32);
 
   // let's test observers once more with a non-root prefbranch
-  pb2.getBranch("ReadPref.");
-  pb2.addObserver("int", observer, false);
+  pb = pb2.getBranch("ReadPref.");
+  observer = new PrefObserver(pb, "int", 76);
   ps.setIntPref("ReadPref.int", 76);
 
-  // test will complete upon notification...
-  do_test_pending();
+  // Let's try that again with different pref.
+  observer = new PrefObserver(pb, "another_int", 76);
+  ps.setIntPref("ReadPref.another_int", 76);
 }

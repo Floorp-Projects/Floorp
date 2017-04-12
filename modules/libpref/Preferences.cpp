@@ -353,7 +353,7 @@ PreferenceServiceReporter::CollectReports(
   for (auto iter = rootBranch->mObservers.Iter(); !iter.Done(); iter.Next()) {
     nsAutoPtr<PrefCallback>& callback = iter.Data();
     nsPrefBranch* prefBranch = callback->GetPrefBranch();
-    const char* pref = prefBranch->getPrefName(callback->GetDomain().get());
+    const auto& pref = prefBranch->getPrefName(callback->GetDomain().get());
 
     if (callback->IsWeak()) {
       nsCOMPtr<nsIObserver> callbackRef = do_QueryReferent(callback->mWeakRef);
@@ -366,7 +366,7 @@ PreferenceServiceReporter::CollectReports(
       numStrong++;
     }
 
-    nsDependentCString prefString(pref);
+    nsDependentCString prefString(pref.get());
     uint32_t oldCount = 0;
     prefCounter.Get(prefString, &oldCount);
     uint32_t currentCount = oldCount + 1;

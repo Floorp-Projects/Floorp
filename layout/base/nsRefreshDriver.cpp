@@ -37,6 +37,7 @@
 #include "mozilla/Logging.h"
 #include "nsAutoPtr.h"
 #include "nsIDocument.h"
+#include "nsIXULRuntime.h"
 #include "jsapi.h"
 #include "nsContentUtils.h"
 #include "mozilla/PendingAnimationTracker.h"
@@ -485,6 +486,48 @@ private:
       MOZ_ASSERT(NS_IsMainThread());
     }
 
+    class ParentProcessVsyncNotifier final: public Runnable,
+                                            public nsIRunnablePriority
+    {
+    public:
+      ParentProcessVsyncNotifier(RefreshDriverVsyncObserver* aObserver,
+                                 TimeStamp aVsyncTimestamp)
+        : mObserver(aObserver), mVsyncTimestamp(aVsyncTimestamp) {}
+
+      NS_DECL_ISUPPORTS_INHERITED
+
+      NS_IMETHOD Run() override
+      {
+        MOZ_ASSERT(NS_IsMainThread());
+        static bool sCacheInitialized = false;
+        static bool sHighPriorityPrefValue = false;
+        if (!sCacheInitialized) {
+          sCacheInitialized = true;
+          Preferences::AddBoolVarCache(&sHighPriorityPrefValue,
+                                       "vsync.parentProcess.highPriority",
+                                       mozilla::BrowserTabsRemoteAutostart());
+        }
+        sHighPriorityEnabled = sHighPriorityPrefValue;
+
+        mObserver->TickRefreshDriver(mVsyncTimestamp);
+        return NS_OK;
+      }
+
+      NS_IMETHOD GetPriority(uint32_t* aPriority) override
+      {
+        *aPriority =
+          sHighPriorityEnabled ? nsIRunnablePriority::PRIORITY_HIGH :
+                                 nsIRunnablePriority::PRIORITY_NORMAL;
+        return NS_OK;
+      }
+
+    private:
+      ~ParentProcessVsyncNotifier() {}
+      RefPtr<RefreshDriverVsyncObserver> mObserver;
+      TimeStamp mVsyncTimestamp;
+      static mozilla::Atomic<bool> sHighPriorityEnabled;
+    };
+
     bool NotifyVsync(TimeStamp aVsyncTimestamp) override
     {
       if (!NS_IsMainThread()) {
@@ -502,9 +545,7 @@ private:
         }
 
         nsCOMPtr<nsIRunnable> vsyncEvent =
-             NewRunnableMethod<TimeStamp>(this,
-                                          &RefreshDriverVsyncObserver::TickRefreshDriver,
-                                          aVsyncTimestamp);
+          new ParentProcessVsyncNotifier(this, aVsyncTimestamp);
         NS_DispatchToMainThread(vsyncEvent);
       } else {
         mRecentVsync = aVsyncTimestamp;
@@ -720,6 +761,16 @@ private:
   RefPtr<VsyncChild> mVsyncChild;
   TimeDuration mVsyncRate;
 }; // VsyncRefreshDriverTimer
+
+NS_IMPL_ISUPPORTS_INHERITED(VsyncRefreshDriverTimer::
+                            RefreshDriverVsyncObserver::
+                            ParentProcessVsyncNotifier,
+                            Runnable, nsIRunnablePriority)
+
+mozilla::Atomic<bool>
+VsyncRefreshDriverTimer::
+RefreshDriverVsyncObserver::
+ParentProcessVsyncNotifier::sHighPriorityEnabled(false);
 
 /**
  * Since the content process takes some time to setup

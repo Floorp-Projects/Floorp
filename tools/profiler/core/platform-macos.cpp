@@ -54,25 +54,25 @@ SleepMicro(int aMicroseconds)
 class PlatformData
 {
 public:
-  explicit PlatformData(int aThreadId) : profiled_thread_(mach_thread_self())
+  explicit PlatformData(int aThreadId) : mProfiledThread(mach_thread_self())
   {
     MOZ_COUNT_CTOR(PlatformData);
   }
 
   ~PlatformData() {
     // Deallocate Mach port for thread.
-    mach_port_deallocate(mach_task_self(), profiled_thread_);
+    mach_port_deallocate(mach_task_self(), mProfiledThread);
 
     MOZ_COUNT_DTOR(PlatformData);
   }
 
-  thread_act_t profiled_thread() { return profiled_thread_; }
+  thread_act_t ProfiledThread() { return mProfiledThread; }
 
 private:
-  // Note: for profiled_thread_ Mach primitives are used instead of PThread's
+  // Note: for mProfiledThread Mach primitives are used instead of pthread's
   // because the latter doesn't provide thread manipulation primitives required.
   // For details, consult "Mac OS X Internals" book, Section 7.3.
-  thread_act_t profiled_thread_;
+  thread_act_t mProfiledThread;
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -130,7 +130,7 @@ void
 SamplerThread::SuspendAndSampleAndResumeThread(PS::LockRef aLock,
                                                TickSample* aSample)
 {
-  thread_act_t samplee_thread = aSample->mPlatformData->profiled_thread();
+  thread_act_t samplee_thread = aSample->mPlatformData->ProfiledThread();
 
   //----------------------------------------------------------------//
   // Suspend the samplee thread and get its context.

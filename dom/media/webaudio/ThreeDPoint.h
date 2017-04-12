@@ -36,6 +36,11 @@ struct ThreeDPoint final
 
   void Normalize()
   {
+    // Zero vectors cannot be normalized. For our purpose, normalizing a zero
+    // vector results in a zero vector.
+    if (IsZero()) {
+      return;
+    }
     // Normalize with the maximum norm first to avoid overflow and underflow.
     double invMax = 1 / MaxNorm();
     x *= invMax;

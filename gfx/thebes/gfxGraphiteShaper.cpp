@@ -88,6 +88,7 @@ gfxGraphiteShaper::ShapeText(DrawTarget      *aDrawTarget,
                              uint32_t         aLength,
                              Script           aScript,
                              bool             aVertical,
+                             RoundingFlags    aRounding,
                              gfxShapedText   *aShapedText)
 {
     // some font back-ends require this in order to get proper hinted metrics
@@ -188,8 +189,8 @@ gfxGraphiteShaper::ShapeText(DrawTarget      *aDrawTarget,
         return false;
     }
 
-    nsresult rv = SetGlyphsFromSegment(aDrawTarget, aShapedText, aOffset, aLength,
-                                       aText, seg);
+    nsresult rv = SetGlyphsFromSegment(aShapedText, aOffset, aLength,
+                                       aText, seg, aRounding);
 
     gr_seg_destroy(seg);
 
@@ -208,12 +209,12 @@ struct Cluster {
 };
 
 nsresult
-gfxGraphiteShaper::SetGlyphsFromSegment(DrawTarget      *aDrawTarget,
-                                        gfxShapedText   *aShapedText,
+gfxGraphiteShaper::SetGlyphsFromSegment(gfxShapedText   *aShapedText,
                                         uint32_t         aOffset,
                                         uint32_t         aLength,
                                         const char16_t *aText,
-                                        gr_segment      *aSegment)
+                                        gr_segment      *aSegment,
+                                        RoundingFlags    aRounding)
 {
     int32_t dev2appUnits = aShapedText->GetAppUnitsPerDevUnit();
     bool rtl = aShapedText->IsRightToLeft();
@@ -288,11 +289,11 @@ gfxGraphiteShaper::SetGlyphsFromSegment(DrawTarget      *aDrawTarget,
         }
     }
 
-    bool roundX, roundY;
-    GetRoundOffsetsToPixels(aDrawTarget, &roundX, &roundY);
-
     gfxShapedText::CompressedGlyph *charGlyphs =
         aShapedText->GetCharacterGlyphs() + aOffset;
+
+    bool roundX = bool(aRounding & RoundingFlags::kRoundX);
+    bool roundY = bool(aRounding & RoundingFlags::kRoundY);
 
     // now put glyphs into the textrun, one cluster at a time
     for (uint32_t i = 0; i <= cIndex; ++i) {
@@ -322,8 +323,8 @@ gfxGraphiteShaper::SetGlyphsFromSegment(DrawTarget      *aDrawTarget,
             continue;
         }
 
-        uint32_t appAdvance = roundX ? NSToIntRound(adv) * dev2appUnits :
-                                       NSToIntRound(adv * dev2appUnits);
+        uint32_t appAdvance = roundX ? NSToIntRound(adv) * dev2appUnits
+                                     : NSToIntRound(adv * dev2appUnits);
         if (c.nGlyphs == 1 &&
             gfxShapedText::CompressedGlyph::IsSimpleGlyphID(gids[c.baseGlyph]) &&
             gfxShapedText::CompressedGlyph::IsSimpleAdvance(appAdvance) &&
@@ -338,8 +339,8 @@ gfxGraphiteShaper::SetGlyphsFromSegment(DrawTarget      *aDrawTarget,
             for (uint32_t j = c.baseGlyph; j < c.baseGlyph + c.nGlyphs; ++j) {
                 gfxShapedText::DetailedGlyph* d = details.AppendElement();
                 d->mGlyphID = gids[j];
-                d->mYOffset = roundY ? NSToIntRound(-yLocs[j]) * dev2appUnits :
-                              -yLocs[j] * dev2appUnits;
+                d->mYOffset = roundY ? NSToIntRound(-yLocs[j]) * dev2appUnits
+                                     : -yLocs[j] * dev2appUnits;
                 if (j == c.baseGlyph) {
                     d->mXOffset = 0;
                     d->mAdvance = appAdvance;
@@ -347,8 +348,8 @@ gfxGraphiteShaper::SetGlyphsFromSegment(DrawTarget      *aDrawTarget,
                 } else {
                     float dx = rtl ? (xLocs[j] - clusterLoc) :
                                      (xLocs[j] - clusterLoc - adv);
-                    d->mXOffset = roundX ? NSToIntRound(dx) * dev2appUnits :
-                                           dx * dev2appUnits;
+                    d->mXOffset = roundX ? NSToIntRound(dx) * dev2appUnits
+                                         : dx * dev2appUnits;
                     d->mAdvance = 0;
                 }
             }

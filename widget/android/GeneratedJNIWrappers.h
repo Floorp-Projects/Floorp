@@ -3015,10 +3015,11 @@ public:
                 mozilla::jni::Object::Param,
                 mozilla::jni::String::Param,
                 mozilla::jni::Object::Param,
-                int32_t> Args;
+                int32_t,
+                bool> Args;
         static constexpr char name[] = "open";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoView$Window;Lorg/mozilla/gecko/GeckoView;Ljava/lang/Object;Lorg/mozilla/gecko/EventDispatcher;Ljava/lang/String;Lorg/mozilla/gecko/util/GeckoBundle;I)V";
+                "(Lorg/mozilla/gecko/GeckoView$Window;Lorg/mozilla/gecko/GeckoView;Ljava/lang/Object;Lorg/mozilla/gecko/EventDispatcher;Ljava/lang/String;Lorg/mozilla/gecko/util/GeckoBundle;IZ)V";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;

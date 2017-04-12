@@ -1462,6 +1462,7 @@ xpcshell:
             windows10-64-asan/opt: []
             linux64-qr/.*: ['graphics']
             default: ['all']
+    docker-image: {"in-tree": "desktop1604-test"}
     chunks:
         by-test-platform:
             linux64/debug: 10
