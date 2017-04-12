@@ -24,7 +24,7 @@ module.exports = function(context) {
   // ---------------------------------------------------------------------------
 
   return {
-    Program: function(node) {
+    Program(node) {
       let filePath = helpers.getAbsoluteFilePath(context);
       let relativePath = path.relative(helpers.getRootDir(filePath), filePath);
 
