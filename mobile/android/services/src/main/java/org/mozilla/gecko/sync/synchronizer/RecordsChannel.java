@@ -356,7 +356,6 @@ public class RecordsChannel implements
   }
 
   @Nullable
-  @VisibleForTesting
   public synchronized ReflowIsNecessaryException getReflowException() {
     return reflowException;
   }
