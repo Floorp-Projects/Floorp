@@ -18,6 +18,7 @@ using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::FontKey from "mozilla/webrender/WebRenderTypes.h";
 using WrBuiltDisplayListDescriptor from "mozilla/webrender/webrender_ffi.h";
 using WrAuxiliaryListsDescriptor from "mozilla/webrender/webrender_ffi.h";
 
