@@ -190,6 +190,8 @@ public final class ElementName
         assert this.flags == (TreeBuilder.OTHER | NOT_INTERNED);
     }
 
+    public static final ElementName ANNOTATION_XML = new ElementName("annotation-xml", "annotation-xml", TreeBuilder.ANNOTATION_XML | SCOPING_AS_MATHML);
+
     // START CODE ONLY USED FOR GENERATING CODE uncomment and run to regenerate
 
 //    /**
@@ -228,6 +230,9 @@ public final class ElementName
 //        for (int i = 0; i < name.length(); i++) {
 //            char c = name.charAt(i);
 //            if (c == '-') {
+//                if (!"annotation-xml".equals(name)) {
+//                    throw new RuntimeException("Non-annotation-xml element name with hyphen: " + name);
+//                }
 //                buf[i] = '_';
 //            } else if (c >= '0' && c <= '9') {
 //                buf[i] = c;
@@ -547,7 +552,6 @@ public final class ElementName
     public static final ElementName MASK = new ElementName("mask", "mask", TreeBuilder.OTHER);
     public static final ElementName TRACK = new ElementName("track", "track", TreeBuilder.PARAM_OR_SOURCE_OR_TRACK | SPECIAL);
     public static final ElementName DL = new ElementName("dl", "dl", TreeBuilder.UL_OR_OL_OR_DL | SPECIAL);
-    public static final ElementName ANNOTATION_XML = new ElementName("annotation-xml", "annotation-xml", TreeBuilder.ANNOTATION_XML | SCOPING_AS_MATHML);
     public static final ElementName HTML = new ElementName("html", "html", TreeBuilder.HTML | SPECIAL | SCOPING | OPTIONAL_END_TAG);
     public static final ElementName OL = new ElementName("ol", "ol", TreeBuilder.UL_OR_OL_OR_DL | SPECIAL);
     public static final ElementName LABEL = new ElementName("label", "label", TreeBuilder.OTHER);
@@ -753,7 +757,6 @@ public final class ElementName
     MASK,
     TRACK,
     DL,
-    ANNOTATION_XML,
     HTML,
     OL,
     LABEL,
@@ -960,7 +963,6 @@ public final class ElementName
     1854245076,
     1857653029,
     1864368130,
-    1864643294,
     1868312196,
     1870135298,
     1870268949,

@@ -112,6 +112,7 @@ private:
     nsHtml5ElementName();
     ~nsHtml5ElementName();
     void setNameForNonInterned(nsIAtom* name);
+    static nsHtml5ElementName* ELT_ANNOTATION_XML;
     static nsHtml5ElementName* ELT_BIG;
     static nsHtml5ElementName* ELT_BDO;
     static nsHtml5ElementName* ELT_COL;
@@ -221,7 +222,6 @@ private:
     static nsHtml5ElementName* ELT_MASK;
     static nsHtml5ElementName* ELT_TRACK;
     static nsHtml5ElementName* ELT_DL;
-    static nsHtml5ElementName* ELT_ANNOTATION_XML;
     static nsHtml5ElementName* ELT_HTML;
     static nsHtml5ElementName* ELT_OL;
     static nsHtml5ElementName* ELT_LABEL;

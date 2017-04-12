@@ -95,6 +95,7 @@ nsHtml5Tokenizer::nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler,
   , charRefBuf(jArray<char16_t, int32_t>::newJArray(32))
   , bmpChar(jArray<char16_t, int32_t>::newJArray(1))
   , astralChar(jArray<char16_t, int32_t>::newJArray(2))
+  , containsHyphen(false)
   , tagName(nullptr)
   , nonInternedTagName(new nsHtml5ElementName())
   , attributeName(nullptr)
@@ -286,13 +287,28 @@ nsHtml5Tokenizer::flushChars(char16_t* buf, int32_t pos)
 void 
 nsHtml5Tokenizer::strBufToElementNameString()
 {
-  tagName = nsHtml5ElementName::elementNameByBuffer(strBuf, 0, strBufLen, interner);
-  if (!tagName) {
-    nonInternedTagName->setNameForNonInterned(
-      nsHtml5Portability::newLocalNameFromBuffer(
-        strBuf, 0, strBufLen, interner));
-    tagName = nonInternedTagName;
+  if (containsHyphen) {
+    nsIAtom* annotationName = nsHtml5ElementName::ELT_ANNOTATION_XML->getName();
+    if (nsHtml5Portability::localEqualsBuffer(
+          annotationName, strBuf, 0, strBufLen)) {
+      tagName = nsHtml5ElementName::ELT_ANNOTATION_XML;
+    } else {
+      nonInternedTagName->setNameForNonInterned(
+        nsHtml5Portability::newLocalNameFromBuffer(
+          strBuf, 0, strBufLen, interner));
+      tagName = nonInternedTagName;
+    }
+  } else {
+    tagName =
+      nsHtml5ElementName::elementNameByBuffer(strBuf, 0, strBufLen, interner);
+    if (!tagName) {
+      nonInternedTagName->setNameForNonInterned(
+        nsHtml5Portability::newLocalNameFromBuffer(
+          strBuf, 0, strBufLen, interner));
+      tagName = nonInternedTagName;
+    }
   }
+  containsHyphen = false;
   clearStrBufAfterUse();
 }
 
@@ -490,12 +506,14 @@ nsHtml5Tokenizer::stateLoop(int32_t state, char16_t c, int32_t pos, char16_t* bu
             endTag = false;
             clearStrBufBeforeUse();
             appendStrBuf((char16_t) (c + 0x20));
+            containsHyphen = false;
             state = P::transition(mViewSource, NS_HTML5TOKENIZER_TAG_NAME, reconsume, pos);
             NS_HTML5_BREAK(tagopenloop);
           } else if (c >= 'a' && c <= 'z') {
             endTag = false;
             clearStrBufBeforeUse();
             appendStrBuf(c);
+            containsHyphen = false;
             state = P::transition(mViewSource, NS_HTML5TOKENIZER_TAG_NAME, reconsume, pos);
             NS_HTML5_BREAK(tagopenloop);
           }
@@ -586,6 +604,8 @@ nsHtml5Tokenizer::stateLoop(int32_t state, char16_t c, int32_t pos, char16_t* bu
             default: {
               if (c >= 'A' && c <= 'Z') {
                 c += 0x20;
+              } else if (c == '-') {
+                containsHyphen = true;
               }
               appendStrBuf(c);
               continue;
@@ -1926,6 +1946,7 @@ nsHtml5Tokenizer::stateLoop(int32_t state, char16_t c, int32_t pos, char16_t* bu
               endTag = true;
               clearStrBufBeforeUse();
               appendStrBuf(c);
+              containsHyphen = false;
               state = P::transition(mViewSource, NS_HTML5TOKENIZER_TAG_NAME, reconsume, pos);
               NS_HTML5_CONTINUE(stateloop);
             } else {
@@ -4001,6 +4022,7 @@ nsHtml5Tokenizer::resetToDataState()
   endTag = false;
   shouldSuspend = false;
   initDoctypeFields();
+  containsHyphen = false;
   if (tagName) {
     tagName = nullptr;
   }
@@ -4061,6 +4083,7 @@ nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other)
   } else {
     publicIdentifier = nsHtml5Portability::newStringFromString(other->publicIdentifier);
   }
+  containsHyphen = other->containsHyphen;
   if (!other->tagName) {
     tagName = nullptr;
   } else if (other->tagName->isInterned()) {
