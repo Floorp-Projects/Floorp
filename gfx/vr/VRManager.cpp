@@ -161,10 +161,10 @@ void
 VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
 {
   const double kVRDisplayRefreshMaxDuration = 5000; // milliseconds
+  const double kVRDisplayInactiveMaxDuration = 30000; // milliseconds
 
   bool bHaveEventListener = false;
   bool bHaveControllerListener = false;
-  bool bHaveActiveDisplay = false;
 
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
     VRManagerParent *vmp = iter.Get()->GetKey();
@@ -178,9 +178,6 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
   for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
     gfx::VRDisplayHost* display = iter.UserData();
     display->NotifyVSync();
-    if (display->GetDisplayInfo().GetIsPresenting()) {
-      bHaveActiveDisplay = true;
-    }
   }
 
   if (bHaveEventListener) {
@@ -219,9 +216,17 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
     }
   }
 
-  if (!bHaveEventListener && !bHaveControllerListener && !bHaveActiveDisplay) {
-    // Shut down the VR devices when not in use
+  // Shut down the VR devices when not in use
+  if (bHaveEventListener || bHaveControllerListener) {
+    // We are using a VR device, keep it alive
+    mLastActiveTime = TimeStamp::Now();
+  } else if (mLastActiveTime.IsNull()) {
     Shutdown();
+  } else {
+    TimeDuration duration = TimeStamp::Now() - mLastActiveTime;
+    if (duration.ToMilliseconds() > kVRDisplayInactiveMaxDuration) {
+      Shutdown();
+    }
   }
 }
 
