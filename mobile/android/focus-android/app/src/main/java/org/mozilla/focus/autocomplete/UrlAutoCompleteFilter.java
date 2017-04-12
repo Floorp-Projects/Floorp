@@ -9,6 +9,7 @@ import android.content.res.Resources;
 import android.os.AsyncTask;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.utils.IOUtils;
 import org.mozilla.focus.widget.InlineAutocompleteEditText;
 
 import java.io.BufferedReader;
@@ -78,11 +79,7 @@ public class UrlAutoCompleteFilter implements InlineAutocompleteEditText.OnFilte
                     // No autocomplete for you!
                     return null;
                 } finally {
-                    try {
-                        reader.close();
-                    } catch (IOException e) {
-                        // There's really nothing we can do now.
-                    }
+                    IOUtils.safeClose(reader);
                 }
             }
 
