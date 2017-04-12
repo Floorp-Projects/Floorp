@@ -9,8 +9,6 @@ Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 Components.utils.import("resource://gre/modules/LoadContextInfo.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const PREF_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
-
 var gAdvancedPane = {
   _inited: false,
 
@@ -33,29 +31,15 @@ var gAdvancedPane = {
       window.addEventListener("unload", onUnload);
       Services.prefs.addObserver("app.update.", this, false);
       this.updateReadPrefs();
-    }
-    if (AppConstants.MOZ_CRASHREPORTER) {
-      this.initSubmitCrashes();
-    }
-    this.initTelemetry();
-    if (AppConstants.MOZ_TELEMETRY_REPORTING) {
-      this.initSubmitHealthReport();
-    }
-    this.updateOnScreenKeyboardVisibility();
-
-    setEventListener("layers.acceleration.disabled", "change",
-                     gAdvancedPane.updateHardwareAcceleration);
-    if (AppConstants.MOZ_TELEMETRY_REPORTING) {
-      setEventListener("submitHealthReportBox", "command",
-                       gAdvancedPane.updateSubmitHealthReport);
-    }
-
-    if (AppConstants.MOZ_UPDATER) {
       setEventListener("updateRadioGroup", "command",
                        gAdvancedPane.updateWritePrefs);
       setEventListener("showUpdateHistory", "command",
                        gAdvancedPane.showUpdates);
     }
+    this.updateOnScreenKeyboardVisibility();
+
+    setEventListener("layers.acceleration.disabled", "change",
+                     gAdvancedPane.updateHardwareAcceleration);
   },
 
 
@@ -135,89 +119,6 @@ var gAdvancedPane = {
       var fromPref = document.getElementById("layers.acceleration.disabled");
       var toPref = document.getElementById("gfx.direct2d.disabled");
       toPref.value = fromPref.value;
-    }
-  },
-
-  // DATA CHOICES TAB
-
-  /**
-   * Set up or hide the Learn More links for various data collection options
-   */
-  _setupLearnMoreLink(pref, element) {
-    // set up the Learn More link with the correct URL
-    let url = Services.prefs.getCharPref(pref);
-    let el = document.getElementById(element);
-
-    if (url) {
-      el.setAttribute("href", url);
-    } else {
-      el.setAttribute("hidden", "true");
-    }
-  },
-
-  /**
-   *
-   */
-  initSubmitCrashes() {
-    this._setupLearnMoreLink("toolkit.crashreporter.infoURL",
-                             "crashReporterLearnMore");
-  },
-
-  /**
-   * The preference/checkbox is configured in XUL.
-   *
-   * In all cases, set up the Learn More link sanely.
-   */
-  initTelemetry() {
-    if (AppConstants.MOZ_TELEMETRY_REPORTING) {
-      this._setupLearnMoreLink("toolkit.telemetry.infoURL", "telemetryLearnMore");
-    }
-  },
-
-  /**
-   * Set the status of the telemetry controls based on the input argument.
-   * @param {Boolean} aEnabled False disables the controls, true enables them.
-   */
-  setTelemetrySectionEnabled(aEnabled) {
-    if (AppConstants.MOZ_TELEMETRY_REPORTING) {
-      // If FHR is disabled, additional data sharing should be disabled as well.
-      let disabled = !aEnabled;
-      document.getElementById("submitTelemetryBox").disabled = disabled;
-      if (disabled) {
-        // If we disable FHR, untick the telemetry checkbox.
-        Services.prefs.setBoolPref("toolkit.telemetry.enabled", false);
-      }
-      document.getElementById("telemetryDataDesc").disabled = disabled;
-    }
-  },
-
-  /**
-   * Initialize the health report service reference and checkbox.
-   */
-  initSubmitHealthReport() {
-    if (AppConstants.MOZ_TELEMETRY_REPORTING) {
-      this._setupLearnMoreLink("datareporting.healthreport.infoURL", "FHRLearnMore");
-
-      let checkbox = document.getElementById("submitHealthReportBox");
-
-      if (Services.prefs.prefIsLocked(PREF_UPLOAD_ENABLED)) {
-        checkbox.setAttribute("disabled", "true");
-        return;
-      }
-
-      checkbox.checked = Services.prefs.getBoolPref(PREF_UPLOAD_ENABLED);
-      this.setTelemetrySectionEnabled(checkbox.checked);
-    }
-  },
-
-  /**
-   * Update the health report preference with state from checkbox.
-   */
-  updateSubmitHealthReport() {
-    if (AppConstants.MOZ_TELEMETRY_REPORTING) {
-      let checkbox = document.getElementById("submitHealthReportBox");
-      Services.prefs.setBoolPref(PREF_UPLOAD_ENABLED, checkbox.checked);
-      this.setTelemetrySectionEnabled(checkbox.checked);
     }
   },
 
