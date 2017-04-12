@@ -372,6 +372,15 @@ public:
                            RefPtr<nsStyleContext>* aNewStyleContext /* inout */);
 
   /**
+   * Update transitions for stylo.
+   */
+  bool UpdateTransitions(
+    mozilla::dom::Element *aElement,
+    mozilla::CSSPseudoElementType aPseudoType,
+    const mozilla::ServoComputedValuesWithParent& aOldStyle,
+    const mozilla::ServoComputedValuesWithParent& aNewStyle);
+
+  /**
    * When we're resolving style for an element that previously didn't have
    * style, we might have some old finished transitions for it, if,
    * say, it was display:none for a while, but previously displayed.
@@ -411,17 +420,18 @@ protected:
   typedef nsTArray<RefPtr<mozilla::dom::CSSTransition>>
     OwningCSSTransitionPtrArray;
 
-  // Update the transitions. It'd start new, replace, or stop current
-  // transitions if need. aDisp and aElement shouldn't be nullptr.
+  // Update transitions. This will start new transitions,
+  // replace existing transitions, and stop existing transitions
+  // as needed. aDisp and aElement must be non-null.
   // aElementTransitions is the collection of current transitions, and it
   // could be a nullptr if we don't have any transitions.
   template<typename StyleType> bool
-  UpdateTransitions(const nsStyleDisplay* aDisp,
-                    mozilla::dom::Element* aElement,
-                    mozilla::CSSPseudoElementType aPseudoType,
-                    CSSTransitionCollection*& aElementTransitions,
-                    StyleType aOldStyle,
-                    StyleType aNewStyle);
+  DoUpdateTransitions(const nsStyleDisplay* aDisp,
+                      mozilla::dom::Element* aElement,
+                      mozilla::CSSPseudoElementType aPseudoType,
+                      CSSTransitionCollection*& aElementTransitions,
+                      StyleType aOldStyle,
+                      StyleType aNewStyle);
 
   template<typename StyleType> void
   ConsiderInitiatingTransition(nsCSSPropertyID aProperty,
