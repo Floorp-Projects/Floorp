@@ -84,7 +84,7 @@ namespace net {
 
 nsIOService* gIOService = nullptr;
 static bool gHasWarnedUploadChannel2;
-
+static bool gCaptivePortalEnabled = false;
 static LazyLogModule gIOServiceLog("nsIOService");
 #undef LOG
 #define LOG(args)     MOZ_LOG(gIOServiceLog, LogLevel::Debug, args)
@@ -1158,7 +1158,7 @@ nsIOService::SetConnectivityInternal(bool aConnectivity)
     mLastConnectivityChange = PR_IntervalNow();
 
     if (mCaptivePortalService) {
-        if (aConnectivity && !xpc::AreNonLocalConnectionsDisabled()) {
+        if (aConnectivity && !xpc::AreNonLocalConnectionsDisabled() && gCaptivePortalEnabled) {
             // This will also trigger a captive portal check for the new network
             static_cast<CaptivePortalService*>(mCaptivePortalService.get())->Start();
         } else {
@@ -1301,10 +1301,9 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (!pref || strcmp(pref, NETWORK_CAPTIVE_PORTAL_PREF) == 0) {
-        bool captivePortalEnabled;
-        nsresult rv = prefs->GetBoolPref(NETWORK_CAPTIVE_PORTAL_PREF, &captivePortalEnabled);
+        nsresult rv = prefs->GetBoolPref(NETWORK_CAPTIVE_PORTAL_PREF, &gCaptivePortalEnabled);
         if (NS_SUCCEEDED(rv) && mCaptivePortalService) {
-            if (captivePortalEnabled && !xpc::AreNonLocalConnectionsDisabled()) {
+            if (gCaptivePortalEnabled && !xpc::AreNonLocalConnectionsDisabled()) {
                 static_cast<CaptivePortalService*>(mCaptivePortalService.get())->Start();
             } else {
                 static_cast<CaptivePortalService*>(mCaptivePortalService.get())->Stop();
