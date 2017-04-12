@@ -146,13 +146,6 @@ this.TelemetryReportingPolicy = {
   },
 
   /**
-   * Check if this is the first time the browser ran.
-   */
-  isFirstRun() {
-    return TelemetryReportingPolicyImpl.isFirstRun();
-  },
-
-  /**
    * Test only method, restarts the policy.
    */
   reset() {
@@ -180,9 +173,6 @@ var TelemetryReportingPolicyImpl = {
   _notificationInProgress: false,
   // The timer used to show the datachoices notification at startup.
   _startupNotificationTimerId: null,
-  // Keep track of the first session state, as the related preference
-  // is flipped right after the browser starts.
-  _isFirstRun: true,
 
   get _log() {
     if (!this._logger) {
@@ -362,10 +352,6 @@ var TelemetryReportingPolicyImpl = {
     return this.isUserNotifiedOfCurrentPolicy || bypassNotification;
   },
 
-  isFirstRun() {
-    return this._isFirstRun;
-  },
-
   /**
    * Migrate the data policy preferences, if needed.
    */
@@ -485,8 +471,8 @@ var TelemetryReportingPolicyImpl = {
       return;
     }
 
-    this._isFirstRun = Preferences.get(PREF_FIRST_RUN, true);
-    if (this._isFirstRun) {
+    const isFirstRun = Preferences.get(PREF_FIRST_RUN, true);
+    if (isFirstRun) {
       // We're performing the first run, flip firstRun preference for subsequent runs.
       Preferences.set(PREF_FIRST_RUN, false);
 
@@ -501,7 +487,7 @@ var TelemetryReportingPolicyImpl = {
 
     // Show the info bar.
     const delay =
-      this._isFirstRun ? NOTIFICATION_DELAY_FIRST_RUN_MSEC : NOTIFICATION_DELAY_NEXT_RUNS_MSEC;
+      isFirstRun ? NOTIFICATION_DELAY_FIRST_RUN_MSEC : NOTIFICATION_DELAY_NEXT_RUNS_MSEC;
 
     this._startupNotificationTimerId = Policy.setShowInfobarTimeout(
         // Calling |canUpload| eventually shows the infobar, if needed.
