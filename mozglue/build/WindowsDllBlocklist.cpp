@@ -286,10 +286,6 @@ printf_stderr(const char *fmt, ...)
 
 namespace {
 
-typedef void (__fastcall* BaseThreadInitThunk_func)(BOOL aIsInitialThread, void* aStartAddress, void* aThreadParam);
-
-static BaseThreadInitThunk_func stub_BaseThreadInitThunk = nullptr;
-
 typedef NTSTATUS (NTAPI *LdrLoadDll_func) (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle);
 
 static LdrLoadDll_func stub_LdrLoadDll = 0;
@@ -709,43 +705,7 @@ continue_loading:
   return stub_LdrLoadDll(filePath, flags, moduleFileName, handle);
 }
 
-static bool
-ShouldBlockThread(void* aStartAddress)
-{
-  // Allows crashfirefox.exe to continue to work. Also if your threadproc is null, this crash is intentional.
-  if (aStartAddress == 0)
-    return false;
-
-  bool shouldBlock = false;
-  MEMORY_BASIC_INFORMATION startAddressInfo = {0};
-  if (VirtualQuery(aStartAddress, &startAddressInfo, sizeof(startAddressInfo))) {
-    shouldBlock |= startAddressInfo.State != MEM_COMMIT;
-    shouldBlock |= startAddressInfo.Protect != PAGE_EXECUTE_READ;
-  }
-
-  return shouldBlock;
-}
-
-// Allows blocked threads to still run normally through BaseThreadInitThunk, in case there's any magic there that we shouldn't skip.
-static DWORD WINAPI
-NopThreadProc(void* /* aThreadParam */)
-{
-  return 0;
-}
-
-static MOZ_NORETURN void __fastcall
-patched_BaseThreadInitThunk(BOOL aIsInitialThread, void* aStartAddress,
-                            void* aThreadParam)
-{
-  if (ShouldBlockThread(aStartAddress)) {
-    aStartAddress = NopThreadProc;
-  }
-
-  stub_BaseThreadInitThunk(aIsInitialThread, aStartAddress, aThreadParam);
-}
-
 WindowsDllInterceptor NtDllIntercept;
-WindowsDllInterceptor Kernel32DllIntercept;
 
 } // namespace
 
@@ -779,16 +739,6 @@ DllBlocklist_Initialize()
     sBlocklistInitFailed = true;
 #ifdef DEBUG
     printf_stderr("LdrLoadDll hook failed, no dll blocklisting active\n");
-#endif
-  }
-
-  Kernel32DllIntercept.Init("kernel32.dll");
-  ok = Kernel32DllIntercept.AddHook("BaseThreadInitThunk",
-                                    reinterpret_cast<intptr_t>(patched_BaseThreadInitThunk),
-                                    (void**) &stub_BaseThreadInitThunk);
-  if (!ok) {
-#ifdef DEBUG
-    printf_stderr("BaseThreadInitThunk hook failed\n");
 #endif
   }
 }

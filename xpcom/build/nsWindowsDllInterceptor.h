@@ -577,7 +577,6 @@ protected:
 
   enum JumpType {
    Je,
-   Jne,
    Jmp,
    Call
   };
@@ -599,11 +598,6 @@ protected:
       if (mType == JumpType::Je) {
         // JNE RIP+14
         aCode[offset]     = 0x75;
-        aCode[offset + 1] = 14;
-        offset += 2;
-      } else if (mType == JumpType::Jne) {
-        // JE RIP+14
-        aCode[offset]     = 0x74;
         aCode[offset + 1] = 14;
         offset += 2;
       }
@@ -889,8 +883,8 @@ protected:
           MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
-      } else if ((origBytes[nOrigBytes] & 0xfa) == 0x48) {
-        // REX.W | REX.WR | REX.WRB | REX.WB
+      } else if ((origBytes[nOrigBytes] & 0xfb) == 0x48) {
+        // REX.W | REX.WR
         COPY_CODES(1);
 
         if (origBytes[nOrigBytes] == 0x81 &&
@@ -1069,9 +1063,6 @@ protected:
           return;
         }
         COPY_CODES(2 + nModRmSibBytes);
-      } else if (origBytes[nOrigBytes] == 0x85) {
-        // test r/m32, r32
-        COPY_CODES(2);
       } else if (origBytes[nOrigBytes] == 0xd1 &&
                   (origBytes[nOrigBytes+1] & kMaskMod) == kModReg) {
         // bit shifts/rotates : (SA|SH|RO|RC)(R|L) r32
@@ -1093,13 +1084,6 @@ protected:
                        origBytes[nOrigBytes] == 0xe8 ? JumpType::Call : JumpType::Jmp);
         nTrampBytes = jump.GenerateJump(tramp);
         nOrigBytes += 5;
-      } else if (origBytes[nOrigBytes] == 0x75) {
-        // jne rel8
-        char offset = origBytes[nOrigBytes + 1];
-        JumpPatch jump(nTrampBytes, (intptr_t)(origBytes + nOrigBytes + 2 +
-                       offset), JumpType::Jne);
-        nTrampBytes = jump.GenerateJump(tramp);
-        nOrigBytes += 2;
       } else if (origBytes[nOrigBytes] == 0xff) {
         COPY_CODES(1);
         if ((origBytes[nOrigBytes] & (kMaskMod|kMaskReg)) == 0xf0) {
@@ -1114,9 +1098,6 @@ protected:
           JumpPatch jump(nTrampBytes, jmpDest, JumpType::Jmp);
           nTrampBytes = jump.GenerateJump(tramp);
           nOrigBytes += 5;
-        } else if ((origBytes[nOrigBytes] & (kMaskMod|kMaskReg)) == BuildModRmByte(kModReg, 2, 0)) {// (rm = xx010xxx) | (mod = 11xxxxxx)
-          // CALL reg (ff nn)
-          COPY_CODES(1);
         } else {
           MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
