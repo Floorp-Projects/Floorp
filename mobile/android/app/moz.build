@@ -4,6 +4,33 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files('**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
+
+with Files('findbugs-exclude.xml'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('lint*'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('mobile*'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('ua-update.json.in'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('assets/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('omnijar/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
+
+with Files('src/androidTest/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Testing')
+
+with Files('src/test/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
+
 for var in ('APP_NAME', 'APP_VERSION'):
     DEFINES[var] = CONFIG['MOZ_%s' % var]
 

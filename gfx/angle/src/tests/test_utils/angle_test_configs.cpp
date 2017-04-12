@@ -70,7 +70,10 @@ std::ostream &operator<<(std::ostream& stream, const PlatformParameters &pp)
         break;
       case EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE:
           stream << "OPENGLES";
-        break;
+          break;
+      case EGL_PLATFORM_ANGLE_TYPE_NULL_ANGLE:
+          stream << "NULL";
+          break;
       case EGL_PLATFORM_ANGLE_TYPE_DEFAULT_ANGLE:
         stream << "DEFAULT";
         break;
@@ -593,6 +596,21 @@ PlatformParameters ES31_OPENGL()
 PlatformParameters ES31_OPENGL(EGLint major, EGLint minor)
 {
     return PlatformParameters(3, 1, egl_platform::OPENGL(major, minor));
+}
+
+PlatformParameters ES2_NULL()
+{
+    return PlatformParameters(2, 0, EGLPlatformParameters(EGL_PLATFORM_ANGLE_TYPE_NULL_ANGLE));
+}
+
+PlatformParameters ES3_NULL()
+{
+    return PlatformParameters(3, 0, EGLPlatformParameters(EGL_PLATFORM_ANGLE_TYPE_NULL_ANGLE));
+}
+
+PlatformParameters ES31_NULL()
+{
+    return PlatformParameters(3, 1, EGLPlatformParameters(EGL_PLATFORM_ANGLE_TYPE_NULL_ANGLE));
 }
 
 } // namespace angle

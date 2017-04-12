@@ -32,7 +32,7 @@ to mochitest command.
 * Media query support:
   * test_bug418986-2.html: matchMedia support [3]
   * test_bug453896_deck.html: &lt;style media&gt; support [8]
-  * test_media_queries.html [657]
+  * test_media_queries.html [637]
   * test_media_queries_dynamic.html [11]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
@@ -96,7 +96,7 @@ to mochitest command.
     * test_animations_event_order.html [11]
 * test_bug798843_pref.html: conditional opentype svg support [7]
 * test_computed_style.html `gradient`: -moz-prefixed radient value [9]
-* ... `mask`: mask-image isn't set properly bug 1347398 [10]
+* ... `mask`: mask-image isn't set properly bug 1341667 [10]
 * ... `fill`: svg paint should distinguish whether there is fallback bug 1347409 [2]
 * ... `stroke`: svg paint should distinguish whether there is fallback bug 1347409 [2]
 * character not properly escaped servo/servo#15947
@@ -115,9 +115,18 @@ to mochitest command.
   * ... `'list-style'` [30]
   * ... `'content`: various value as list-style-type in counter functions [13]
 * test_default_computed_style.html: support of getDefaultComputedStyle [1]
-* @font-face support bug 1290237
-  * test_descriptor_storage.html [7]
-  * test_font_face_parser.html `@font-face` [51]
+* Unimplemented \@font-face descriptors:
+  * font-display bug 1355345
+    * test_descriptor_storage.html `font-display` [5]
+    * test_font_face_parser.html `font-display` [15]
+  * test_font_face_parser.html `font-language-override`: bug 1355364 [8]
+  * ... `font-feature-settings`: bug 1355366 [10]
+* test_font_face_parser.html `font-weight`: keyword values should be preserved in \@font-face [4]
+* unicode-range parsing bugs
+  * servo/rust-cssparser#133
+    * test_descriptor_storage.html `U+4????` [1]
+    * test_font_face_parser.html `U+0121` [4]
+  * test_font_face_parser.html `4E00`: servo/rust-cssparser#135 [2]
 * @namespace support:
   * test_namespace_rule.html [17]
 * test_dont_use_document_colors.html: support of disabling document color [21]
@@ -154,8 +163,6 @@ to mochitest command.
     * test_initial_storage.html `-colors` [24]
     * test_value_storage.html `-colors` [96]
     * test_shorthand_property_getters.html `-colors` [1]
-  * -moz-box-ordinal-group servo/servo#16000
-    * test_value_storage.html `-box-` [6]
   * -moz-force-broken-image-icon servo/servo#16001
     * test_compute_data_with_start_struct.html `-moz-force-broken-image-icon` [2]
     * test_inherit_computation.html `-moz-force-broken-image-icon` [2]
@@ -169,16 +176,10 @@ to mochitest command.
     * test_initial_computation.html `-moz-transform`: need different parsing rules [4]
     * test_initial_storage.html `transform`: for -moz-transform [6]
     * test_value_storage.html `-moz-transform`: need different parsing rules [284]
+    * test_specified_value_serialization.html `bug-721136` [26]
+    * test_units_angle.html [3]
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
-  * contain longhand property servo/servo#15955
-    * test_contain_formatting_context.html [1]
-    * test_compute_data_with_start_struct.html `contain` [2]
-    * test_inherit_computation.html `contain` [2]
-    * test_inherit_storage.html `contain` [2]
-    * test_initial_computation.html `contain` [4]
-    * test_initial_storage.html `contain` [4]
-    * test_value_storage.html `'contain'` [30]
   * place-{content,items,self} shorthands servo/servo#15954
     * test_align_shorthand_serialization.html [8]
     * test_inherit_computation.html `place-` [6]
@@ -193,13 +194,6 @@ to mochitest command.
     * test_initial_computation.html `font-variant` [10]
     * test_initial_storage.html `font-variant` [18]
     * test_value_storage.html `font-variant` [332]
-  * initial-letter property servo/servo#15959
-    * test_compute_data_with_start_struct.html `initial-letter` [2]
-    * test_inherit_computation.html `initial-letter` [2]
-    * test_inherit_storage.html `initial-letter` [2]
-    * test_initial_computation.html `initial-letter` [4]
-    * test_initial_storage.html `initial-letter` [4]
-    * test_value_storage.html `initial-letter` [10]
   * shape-outside property servo/servo#15958
     * test_compute_data_with_start_struct.html `shape-outside` [2]
     * test_inherit_computation.html `shape-outside` [2]
@@ -219,8 +213,23 @@ to mochitest command.
     * test_value_storage.html `on 'stroke` [6]
     * test_compute_data_with_start_struct.html `initial and other values of stroke-dasharray are different` [2]
 * Properties implemented but not in geckolib:
+  * contain longhand property bug 1354998
+    * test_contain_formatting_context.html [1]
+    * test_compute_data_with_start_struct.html `contain` [2]
+    * test_inherit_computation.html `contain` [2]
+    * test_inherit_storage.html `contain` [2]
+    * test_initial_computation.html `contain` [4]
+    * test_initial_storage.html `contain` [4]
+    * test_value_storage.html `'contain'` [30]
   * clip property: servo/servo#15729
     * test_value_storage.html `should be idempotent for 'clip` [4]
+  * initial-letter property bug 1355001
+    * test_compute_data_with_start_struct.html `initial-letter` [2]
+    * test_inherit_computation.html `initial-letter` [2]
+    * test_inherit_storage.html `initial-letter` [2]
+    * test_initial_computation.html `initial-letter` [4]
+    * test_initial_storage.html `initial-letter` [4]
+    * test_value_storage.html `initial-letter` [10]
   * font-feature-settings property servo/servo#15975
     * test_compute_data_with_start_struct.html `font-feature-settings` [2]
     * test_inherit_computation.html `font-feature-settings` [8]
@@ -228,15 +237,8 @@ to mochitest command.
     * test_initial_computation.html `font-feature-settings` [4]
     * test_initial_storage.html `font-feature-settings` [6]
     * test_value_storage.html `font-feature-settings` [112]
-  * font-language-override property bug 1347821
-    * test_value_storage.html `font-language-override` [16]
   * image-orientation property
-    * test_compute_data_with_start_struct.html `image-orientation` [2]
-    * test_inherit_computation.html `image-orientation` [4]
-    * test_inherit_storage.html `image-orientation` [4]
-    * test_initial_computation.html `image-orientation` [2]
-    * test_initial_storage.html `image-orientation` [2]
-    * test_value_storage.html `image-orientation` [80]
+    * test_value_storage.html `image-orientation` [40]
   * flexbox / grid position properties servo/servo#15001
     * test_inherit_storage.html `align-` [3]
     * ... `justify-` [3]
@@ -295,24 +297,23 @@ to mochitest command.
     * test_specified_value_serialization.html `css-color-4` [8]
   * color interpolation hint not supported servo/servo#15166
     * test_value_storage.html `'linear-gradient` [50]
-  * two-keyword form of background-repeat/mask-repeat servo/servo#14954
-    * test_value_storage.html `background-repeat` [2]
-    * ... `mask-repeat` [6]
   * SVG-in-OpenType values not supported servo/servo#15211
     * test_value_storage.html `context-` [2]
   * writing-mode: sideways-{lr,rl} and SVG values servo/servo#15213
     * test_logical_properties.html `sideways` [1224]
     * test_value_storage.html `writing-mode` [8]
+  * -moz-box-orient: {block,inline}-axis bug 1355005
+    * test_value_storage.html `box-orient` [6]
 * Incorrect parsing
   * calc() doesn't support dividing expression servo/servo#15192
     * test_value_storage.html `calc(50px/` [7]
     * ... `calc(2em / ` [9]
-  * calc(number) is simplifed eagerly servo/servo#15960
+  * calc(number) is simplifed eagerly bug 1355014
     * test_value_storage.html `calc(-2.5)` [1]
   * size part of shorthand background/mask always desires two values servo/servo#15199
-    * test_value_storage.html `'background'` [18]
-    * ... `/ auto none` [34]
-    * ... `/ auto repeat` [17]
+    * test_value_storage.html `'background'` [20]
+    * ... `/ auto none` [38]
+    * ... `/ auto repeat` [19]
   * border shorthands do not reset border-image servo/servo#15202
     * test_shorthand_property_getters.html `border-image` [1]
     * test_inherit_storage.html `for property 'border-image-` [5]
@@ -325,17 +326,13 @@ to mochitest command.
     * ... `'center right'` [8]
   * mask shorthand servo/servo#15772
     * test_property_syntax_errors.html `mask'` [76]
-  * :-moz-any with combinators in the value bug 1348487 [7]
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
     * test_priority_preservation.html `border-radius` [4]
     * test_value_storage.html `border-radius:` [92]
     * ... `-moz-outline-radius:` [45]
     * test_shorthand_property_getters.html `should condense to shortest possible` [6]
-  * transform property servo/servo#15194
-    * test_specified_value_serialization.html `bug-721136` [26]
-    * test_units_angle.html [3]
-  * {background,mask}-position lacks comma for serialization servo/servo#15200
+  * background-position is serialized to invalid value sometimes bug 1355017
     * test_shorthand_property_getters.html `background-position` [1]
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
@@ -363,17 +360,18 @@ to mochitest command.
     * test_selectors.html `:-moz-window-inactive` [2]
   * :dir
     * test_selectors.html `:dir` [18]
-* issues arround font shorthand servo/servo#15032 servo/servo#15036
+* issues arround font shorthand bug 1349417
   * test_bug377947.html [1]
-  * test_value_storage.html `'font'` [144]
+  * test_value_storage.html `'font'` [160]
   * test_shorthand_property_getters.html `font shorthand` [1]
   * test_system_font_serialization.html [10]
-* test_value_storage.html `font-size: calc(`: clamp negative value servo/servo#15296 [3]
+* clamp negative value from calc() servo/servo#15296
+  * test_value_storage.html `font-size: calc(` [3]
+  * ... `font-size: var(--a)` [3]
 * rounding issue
   * test_value_storage.html `33.5833px` [2]
   * ... `0.766667px` [2]
   * ... `105.333px` [2]
-* test_value_storage.html `: var(--a)`: extra whitespace is added for shorthand with variables servo/servo#15295 [*]
 * Negative value should be rejected
   * test_property_syntax_errors.html `transition-duration`: servo/servo#15343 [20]
   * ... `'text-shadow'`: third length of text-shadow servo/servo#15999 [2]
@@ -410,17 +408,18 @@ to mochitest command.
 
 ## Assertions
 
-* Content glue not implemented
-  * assertion in computed style bug 1337635
-
 ## Need Gecko change
 
 * Servo is correct but Gecko is wrong
-  * unitless zero as angle bug 1234357
-    * test_property_syntax_errors.html `linear-gradient(0,` [10]
-    * ... `hue-rotate(0)` [6]
   * flex-basis should be 0px when omitted in flex shorthand bug 1331530
     * test_flexbox_flex_shorthand.html `flex-basis` [10]
+  * should reject whole value bug 1355352
+    * test_descriptor_storage.html `U+100-17F,U+200-17F` [1]
+    * test_font_face_parser.html `U+90-30` [2]
+    * ... `U+220043` [2]
+  * Gecko clamps rather than rejects invalid unicode range bug 1355356
+    * test_font_face_parser.html `U+??????` [2]
+    * ... `12FFFF` [2]
 
 ## Spec Unclear
 

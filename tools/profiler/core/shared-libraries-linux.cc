@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15,12 +17,56 @@
 #include "platform.h"
 #include "shared-libraries.h"
 #include "mozilla/Unused.h"
+#include "nsDebug.h"
 #include "nsNativeCharsetUtils.h"
 
 #include "common/linux/file_id.h"
 #include <algorithm>
 
-#define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0]))
+
+// There are three different configuration cases:
+//
+// (1) GP_OS_linux
+//       Use dl_iterate_phdr for everything.
+//
+// (2) GP_OS_android non-GONK
+//       If dl_iterate_phdr doesn't exist, give up immediately.  Otherwise use
+//       dl_iterate_phdr for almost all info and /proc/self/maps to get the
+//       mapping for /dev/ashmem/dalvik-jit-code-cache.
+//
+// (3) GP_OS_android GONK
+//       Use /proc/self/maps for everything.
+
+#undef CONFIG_CASE_1
+#undef CONFIG_CASE_2
+#undef CONFIG_CASE_3
+
+#if defined(GP_OS_linux)
+# define CONFIG_CASE_1 1
+# include <link.h> // dl_phdr_info
+# include <features.h>
+# include <dlfcn.h>
+# include <sys/types.h>
+
+#elif defined(GP_OS_android) && !defined(MOZ_WIDGET_GONK)
+# define CONFIG_CASE_2 1
+# include "ElfLoader.h" // dl_phdr_info
+# include <features.h>
+# include <dlfcn.h>
+# include <sys/types.h>
+extern "C" MOZ_EXPORT __attribute__((weak))
+int dl_iterate_phdr(
+          int (*callback)(struct dl_phdr_info *info, size_t size, void *data),
+          void *data);
+
+#elif defined(GP_OS_android) && defined(MOZ_WIDGET_GONK)
+# define CONFIG_CASE_3 1
+  // No config-specific includes.
+
+#else
+# error "Unexpected configuration"
+#endif
+
 
 // Get the breakpad Id for the binary file pointed by bin_name
 static std::string getId(const char *bin_name)
@@ -39,26 +85,9 @@ static std::string getId(const char *bin_name)
   return "";
 }
 
-#if !defined(MOZ_WIDGET_GONK)
-// TODO fix me with proper include
-#include "nsDebug.h"
-#if defined(GP_OS_android)
-#include "ElfLoader.h" // dl_phdr_info
-#else
-#include <link.h> // dl_phdr_info
-#endif
-#include <features.h>
-#include <dlfcn.h>
-#include <sys/types.h>
 
-#if defined(GP_OS_android)
-extern "C" MOZ_EXPORT __attribute__((weak))
-int dl_iterate_phdr(
-          int (*callback) (struct dl_phdr_info *info,
-                           size_t size, void *data),
-          void *data);
-#endif
-
+// Config cases (1) and (2) use dl_iterate_phdr.
+#if defined(CONFIG_CASE_1) || defined(CONFIG_CASE_2)
 static int
 dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
 {
@@ -84,7 +113,9 @@ dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
   const char *path = dl_info->dlpi_name;
 
   nsAutoString pathStr;
-  mozilla::Unused << NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(path), pathStr)));
+  mozilla::Unused <<
+    NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(path),
+                                                pathStr)));
 
   nsAutoString nameStr = pathStr;
   int32_t pos = nameStr.RFindChar('/');
@@ -99,15 +130,15 @@ dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
 
   return 0;
 }
+#endif // config cases (1) and (2)
 
-#endif // !MOZ_WIDGET_GONK
 
 SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
 {
   SharedLibraryInfo info;
 
-#if !defined(MOZ_WIDGET_GONK)
-#if defined(GP_OS_android)
+#if defined(CONFIG_CASE_2)
+  // If dl_iterate_phdr doesn't exist, we give up immediately.
   if (!dl_iterate_phdr) {
     // On ARM Android, dl_iterate_phdr is provided by the custom linker.
     // So if libxul was loaded by the system linker (e.g. as part of
@@ -115,12 +146,12 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     // not call it.
     return info;
   }
-#endif // defined(GP_OS_android)
+#endif
 
-  dl_iterate_phdr(dl_iterate_callback, &info);
-#endif // !defined(MOZ_WIDGET_GONK)
-
-#if defined(GP_OS_android) || defined(MOZ_WIDGET_GONK)
+#if defined(CONFIG_CASE_2) || defined(CONFIG_CASE_3)
+  // Read info from /proc/self/maps.  We do this for config cases (2) and (3),
+  // but only in case (3) are we building the module list from that information.
+  // For case (2) we're collecting information only for one specific mapping.
   pid_t pid = getpid();
   char path[PATH_MAX];
   snprintf(path, PATH_MAX, "/proc/%d/maps", pid);
@@ -129,7 +160,6 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
   int count = 0;
   while (std::getline(maps, line)) {
     int ret;
-    //XXX: needs input sanitizing
     unsigned long start;
     unsigned long end;
     char perm[6] = "";
@@ -143,26 +173,32 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
       continue;
     }
     if (ret != 5 && ret != 4) {
-      LOG("Get maps line failed");
+      LOG("SharedLibraryInfo::GetInfoForSelf(): "
+          "reading /proc/self/maps failed");
       continue;
     }
-#if defined(PROFILE_JAVA)
-    // Use proc/pid/maps to get the dalvik-jit section since it has
-    // no associated phdrs
-    if (strcmp(modulePath, "/dev/ashmem/dalvik-jit-code-cache") != 0) {
+
+#if defined(CONFIG_CASE_2)
+    // Use /proc/pid/maps to get the dalvik-jit section since it has no
+    // associated phdrs.
+    if (0 != strcmp(modulePath, "/dev/ashmem/dalvik-jit-code-cache")) {
       continue;
     }
-#else
+    // Otherwise proceed to the tail of the loop, so as to record the entry.
+#elif defined(CONFIG_CASE_3)
     if (strcmp(perm, "r-xp") != 0) {
       // Ignore entries that are writable and/or shared.
       // At least one graphics driver uses short-lived "rwxs" mappings
       // (see bug 926734 comment 5), so just checking for 'x' isn't enough.
       continue;
     }
+    // Record all other entries.
 #endif
 
     nsAutoString pathStr;
-    mozilla::Unused << NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(nsDependentCString(modulePath), pathStr)));
+    mozilla::Unused <<
+      NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(
+                             nsDependentCString(modulePath), pathStr)));
 
     nsAutoString nameStr = pathStr;
     int32_t pos = nameStr.RFindChar('/');
@@ -171,16 +207,22 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     }
 
     SharedLibrary shlib(start, end, offset, getId(path),
-                        nameStr, pathStr, nameStr, pathStr,
-                        "", "");
+                        nameStr, pathStr, nameStr, pathStr, "", "");
     info.AddSharedLibrary(shlib);
     if (count > 10000) {
-      LOG("Get maps failed");
+      LOG("SharedLibraryInfo::GetInfoForSelf(): "
+          "implausibly large number of mappings acquired");
       break;
     }
     count++;
   }
-#endif // defined(GP_OS_android) || defined(MOZ_WIDGET_GONK)
+#endif // config cases 2 and 3
+
+#if defined(CONFIG_CASE_1) || defined(CONFIG_CASE_2)
+  // For config cases (1) and (2), we collect the bulk of the library info using
+  // dl_iterate_phdr.
+  dl_iterate_phdr(dl_iterate_callback, &info);
+#endif
 
   return info;
 }

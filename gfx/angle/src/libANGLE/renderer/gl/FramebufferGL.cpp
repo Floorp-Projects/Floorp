@@ -127,20 +127,25 @@ static void BindFramebufferAttachment(const FunctionsGL *functions,
 
 Error FramebufferGL::discard(size_t count, const GLenum *attachments)
 {
-    UNIMPLEMENTED();
-    return Error(GL_INVALID_OPERATION);
+    // glInvalidateFramebuffer accepts the same enums as glDiscardFramebufferEXT
+    return invalidate(count, attachments);
 }
 
 Error FramebufferGL::invalidate(size_t count, const GLenum *attachments)
 {
-    // Since this function is just a hint and not available until OpenGL 4.3, only call it if it is available.
+    // Since this function is just a hint, only call a native function if it exists.
     if (mFunctions->invalidateFramebuffer)
     {
         mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebufferID);
         mFunctions->invalidateFramebuffer(GL_FRAMEBUFFER, static_cast<GLsizei>(count), attachments);
     }
+    else if (mFunctions->discardFramebuffer)
+    {
+        mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebufferID);
+        mFunctions->discardFramebuffer(GL_FRAMEBUFFER, static_cast<GLsizei>(count), attachments);
+    }
 
-    return Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 Error FramebufferGL::invalidateSub(size_t count,

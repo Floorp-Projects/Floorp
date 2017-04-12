@@ -78,11 +78,8 @@ function populateReportList() {
   var dateFormatter;
   var timeFormatter;
   try {
-    dateFormatter = new Intl.DateTimeFormat(undefined, { year: "2-digit",
-                                                         month: "numeric",
-                                                         day: "numeric" });
-    timeFormatter = new Intl.DateTimeFormat(undefined, { hour: "numeric",
-                                                         minute: "numeric" });
+    dateFormatter = Services.intl.createDateTimeFormat(undefined, { dateStyle: "short" });
+    timeFormatter = Services.intl.createDateTimeFormat(undefined, { timeStyle: "short" });
   } catch (e) {
     // XXX Fallback to be removed once bug 1215247 is complete
     // and the Intl API is available on all platforms.

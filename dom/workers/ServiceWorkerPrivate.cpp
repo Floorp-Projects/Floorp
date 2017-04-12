@@ -14,6 +14,7 @@
 #include "nsINetworkInterceptController.h"
 #include "nsIPushErrorReporter.h"
 #include "nsISupportsImpl.h"
+#include "nsITimedChannel.h"
 #include "nsIUploadChannel2.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
@@ -1297,6 +1298,7 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable
   nsCString mMethod;
   nsString mClientId;
   bool mIsReload;
+  bool mMarkLaunchServiceWorkerEnd;
   RequestCache mCacheMode;
   RequestMode mRequestMode;
   RequestRedirect mRequestRedirect;
@@ -1315,13 +1317,15 @@ public:
                      const nsACString& aScriptSpec,
                      nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
                      const nsAString& aDocumentId,
-                     bool aIsReload)
+                     bool aIsReload,
+                     bool aMarkLaunchServiceWorkerEnd)
     : ExtendableFunctionalEventWorkerRunnable(
         aWorkerPrivate, aKeepAliveToken, aRegistration)
     , mInterceptedChannel(aChannel)
     , mScriptSpec(aScriptSpec)
     , mClientId(aDocumentId)
     , mIsReload(aIsReload)
+    , mMarkLaunchServiceWorkerEnd(aMarkLaunchServiceWorkerEnd)
     , mCacheMode(RequestCache::Default)
     , mRequestMode(RequestMode::No_cors)
     , mRequestRedirect(RequestRedirect::Follow)
@@ -1474,6 +1478,12 @@ public:
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     MOZ_ASSERT(aWorkerPrivate);
+
+    if (mMarkLaunchServiceWorkerEnd) {
+      mInterceptedChannel->SetLaunchServiceWorkerEnd(TimeStamp::Now());
+    }
+
+    mInterceptedChannel->SetDispatchFetchEventEnd(TimeStamp::Now());
     return DispatchFetchEvent(aCx, aWorkerPrivate);
   }
 
@@ -1502,6 +1512,10 @@ private:
     NS_IMETHOD Run() override
     {
       AssertIsOnMainThread();
+
+      mChannel->SetHandleFetchEventEnd(TimeStamp::Now());
+      mChannel->SaveTimeStampsToUnderlyingChannel();
+
       nsresult rv = mChannel->ResetInterception();
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "Failed to resume intercepted network request");
@@ -1577,6 +1591,8 @@ private:
     event->PostInit(mInterceptedChannel, mRegistration, mScriptSpec);
     event->SetTrusted(true);
 
+    mInterceptedChannel->SetHandleFetchEventStart(TimeStamp::Now());
+
     nsresult rv2 =
       DispatchExtendableEventOnWorkerScope(aCx, aWorkerPrivate->GlobalScope(),
                                            event, nullptr);
@@ -1647,8 +1663,19 @@ ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
   nsCOMPtr<nsIRunnable> failRunnable =
     NewRunnableMethod(aChannel, &nsIInterceptedChannel::ResetInterception);
 
-  nsresult rv = SpawnWorkerIfNeeded(FetchEvent, failRunnable, aLoadGroup);
+  aChannel->SetLaunchServiceWorkerStart(TimeStamp::Now());
+  aChannel->SetDispatchFetchEventStart(TimeStamp::Now());
+
+  bool newWorkerCreated = false;
+  nsresult rv = SpawnWorkerIfNeeded(FetchEvent,
+                                    failRunnable,
+                                    &newWorkerCreated,
+                                    aLoadGroup);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!newWorkerCreated) {
+    aChannel->SetLaunchServiceWorkerEnd(TimeStamp::Now());
+  }
 
   nsMainThreadPtrHandle<nsIInterceptedChannel> handle(
     new nsMainThreadPtrHolder<nsIInterceptedChannel>(aChannel, false));
@@ -1658,10 +1685,11 @@ ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
 
   RefPtr<KeepAliveToken> token = CreateEventKeepAliveToken();
 
+
   RefPtr<FetchEventRunnable> r =
     new FetchEventRunnable(mWorkerPrivate, token, handle,
                            mInfo->ScriptSpec(), regInfo,
-                           aDocumentId, aIsReload);
+                           aDocumentId, aIsReload, newWorkerCreated);
   rv = r->Init();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1684,6 +1712,7 @@ ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
 nsresult
 ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
                                           nsIRunnable* aLoadFailedRunnable,
+                                          bool* aNewWorkerCreated,
                                           nsILoadGroup* aLoadGroup)
 {
   AssertIsOnMainThread();
@@ -1693,6 +1722,12 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   // This should be fixed in bug 1125961, but for now we enforce updating
   // the overriden load group when intercepting a fetch.
   MOZ_ASSERT_IF(aWhy == FetchEvent, aLoadGroup);
+
+  // Defaults to no new worker created, but if there is one, we'll set the value
+  // to true at the end of this function.
+  if (aNewWorkerCreated) {
+    *aNewWorkerCreated = false;
+  }
 
   if (mWorkerPrivate) {
     mWorkerPrivate->UpdateOverridenLoadGroup(aLoadGroup);
@@ -1799,6 +1834,10 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   }
 
   RenewKeepAliveToken(aWhy);
+
+  if (aNewWorkerCreated) {
+    *aNewWorkerCreated = true;
+  }
 
   return NS_OK;
 }

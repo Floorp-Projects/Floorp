@@ -36,6 +36,9 @@ class BufferNULL : public BufferImpl
                             size_t count,
                             bool primitiveRestartEnabled,
                             gl::IndexRange *outRange) override;
+
+  private:
+    std::vector<uint8_t> mData;
 };
 
 }  // namespace rx

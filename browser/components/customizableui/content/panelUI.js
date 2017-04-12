@@ -11,6 +11,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure",
+  "browser.photon.structure.enabled", false);
+
 /**
  * Maintains the state and dispatches events for the main menu panel.
  */
@@ -31,7 +34,7 @@ const PanelUI = {
       multiView: "PanelUI-multiView",
       helpView: "PanelUI-helpView",
       menuButton: "PanelUI-menu-button",
-      panel: "PanelUI-popup",
+      panel: gPhotonStructure ? "PanelUI-photon-popup" : "PanelUI-popup",
       notificationPanel: "PanelUI-notification-popup",
       scroller: "PanelUI-contents-scroller",
       footer: "PanelUI-footer"

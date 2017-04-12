@@ -95,13 +95,13 @@ void TestPlatform::enableMessages()
 
 TestPlatform g_testPlatformInstance;
 
-std::array<Vector3, 4> GetIndexedQuadVertices()
+std::array<angle::Vector3, 4> GetIndexedQuadVertices()
 {
-    std::array<Vector3, 4> vertices;
-    vertices[0] = Vector3(-1.0f, 1.0f, 0.5f);
-    vertices[1] = Vector3(-1.0f, -1.0f, 0.5f);
-    vertices[2] = Vector3(1.0f, -1.0f, 0.5f);
-    vertices[3] = Vector3(1.0f, 1.0f, 0.5f);
+    std::array<angle::Vector3, 4> vertices;
+    vertices[0] = angle::Vector3(-1.0f, 1.0f, 0.5f);
+    vertices[1] = angle::Vector3(-1.0f, -1.0f, 0.5f);
+    vertices[2] = angle::Vector3(1.0f, -1.0f, 0.5f);
+    vertices[3] = angle::Vector3(1.0f, 1.0f, 0.5f);
     return vertices;
 }
 
@@ -115,8 +115,8 @@ GLColorRGB::GLColorRGB(GLubyte r, GLubyte g, GLubyte b) : R(r), G(g), B(b)
 {
 }
 
-GLColorRGB::GLColorRGB(const Vector3 &floatColor)
-    : R(ColorDenorm(floatColor.x)), G(ColorDenorm(floatColor.y)), B(ColorDenorm(floatColor.z))
+GLColorRGB::GLColorRGB(const angle::Vector3 &floatColor)
+    : R(ColorDenorm(floatColor.x())), G(ColorDenorm(floatColor.y())), B(ColorDenorm(floatColor.z()))
 {
 }
 
@@ -128,11 +128,11 @@ GLColor::GLColor(GLubyte r, GLubyte g, GLubyte b, GLubyte a) : R(r), G(g), B(b),
 {
 }
 
-GLColor::GLColor(const Vector4 &floatColor)
-    : R(ColorDenorm(floatColor.x)),
-      G(ColorDenorm(floatColor.y)),
-      B(ColorDenorm(floatColor.z)),
-      A(ColorDenorm(floatColor.w))
+GLColor::GLColor(const angle::Vector4 &floatColor)
+    : R(ColorDenorm(floatColor.x())),
+      G(ColorDenorm(floatColor.y())),
+      B(ColorDenorm(floatColor.z())),
+      A(ColorDenorm(floatColor.w()))
 {
 }
 
@@ -141,9 +141,9 @@ GLColor::GLColor(GLuint colorValue) : R(0), G(0), B(0), A(0)
     memcpy(&R, &colorValue, sizeof(GLuint));
 }
 
-Vector4 GLColor::toNormalizedVector() const
+angle::Vector4 GLColor::toNormalizedVector() const
 {
-    return Vector4(ColorNorm(R), ColorNorm(G), ColorNorm(B), ColorNorm(A));
+    return angle::Vector4(ColorNorm(R), ColorNorm(G), ColorNorm(B), ColorNorm(A));
 }
 
 GLColor ReadColor(GLint x, GLint y)
@@ -170,15 +170,15 @@ std::ostream &operator<<(std::ostream &ostream, const GLColor &color)
 }  // namespace angle
 
 // static
-std::array<Vector3, 6> ANGLETest::GetQuadVertices()
+std::array<angle::Vector3, 6> ANGLETest::GetQuadVertices()
 {
-    std::array<Vector3, 6> vertices;
-    vertices[0] = Vector3(-1.0f, 1.0f, 0.5f);
-    vertices[1] = Vector3(-1.0f, -1.0f, 0.5f);
-    vertices[2] = Vector3(1.0f, -1.0f, 0.5f);
-    vertices[3] = Vector3(-1.0f, 1.0f, 0.5f);
-    vertices[4] = Vector3(1.0f, -1.0f, 0.5f);
-    vertices[5] = Vector3(1.0f, 1.0f, 0.5f);
+    std::array<angle::Vector3, 6> vertices;
+    vertices[0] = angle::Vector3(-1.0f, 1.0f, 0.5f);
+    vertices[1] = angle::Vector3(-1.0f, -1.0f, 0.5f);
+    vertices[2] = angle::Vector3(1.0f, -1.0f, 0.5f);
+    vertices[3] = angle::Vector3(-1.0f, 1.0f, 0.5f);
+    vertices[4] = angle::Vector3(1.0f, -1.0f, 0.5f);
+    vertices[5] = angle::Vector3(1.0f, 1.0f, 0.5f);
     return vertices;
 }
 
@@ -282,11 +282,11 @@ void ANGLETest::setupQuadVertexBuffer(GLfloat positionAttribZ, GLfloat positionA
     }
 
     auto quadVertices = GetQuadVertices();
-    for (Vector3 &vertex : quadVertices)
+    for (angle::Vector3 &vertex : quadVertices)
     {
-        vertex.x *= positionAttribXYScale;
-        vertex.y *= positionAttribXYScale;
-        vertex.z = positionAttribZ;
+        vertex.x() *= positionAttribXYScale;
+        vertex.y() *= positionAttribXYScale;
+        vertex.z() = positionAttribZ;
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, mQuadVertexBuffer);
@@ -301,11 +301,11 @@ void ANGLETest::setupIndexedQuadVertexBuffer(GLfloat positionAttribZ, GLfloat po
     }
 
     auto quadVertices = angle::GetIndexedQuadVertices();
-    for (Vector3 &vertex : quadVertices)
+    for (angle::Vector3 &vertex : quadVertices)
     {
-        vertex.x *= positionAttribXYScale;
-        vertex.y *= positionAttribXYScale;
-        vertex.z = positionAttribZ;
+        vertex.x() *= positionAttribXYScale;
+        vertex.y() *= positionAttribXYScale;
+        vertex.z() = positionAttribZ;
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, mQuadVertexBuffer);
@@ -353,11 +353,11 @@ void ANGLETest::drawQuad(GLuint program,
     else
     {
         auto quadVertices = GetQuadVertices();
-        for (Vector3 &vertex : quadVertices)
+        for (angle::Vector3 &vertex : quadVertices)
         {
-            vertex.x *= positionAttribXYScale;
-            vertex.y *= positionAttribXYScale;
-            vertex.z = positionAttribZ;
+            vertex.x() *= positionAttribXYScale;
+            vertex.y() *= positionAttribXYScale;
+            vertex.z() = positionAttribZ;
         }
 
         glVertexAttribPointer(positionLocation, 3, GL_FLOAT, GL_FALSE, 0, quadVertices.data());
@@ -537,6 +537,12 @@ bool ANGLETest::extensionEnabled(const std::string &extName)
 {
     return checkExtensionExists(reinterpret_cast<const char *>(glGetString(GL_EXTENSIONS)),
                                 extName);
+}
+
+bool ANGLETest::extensionRequestable(const std::string &extName)
+{
+    return checkExtensionExists(
+        reinterpret_cast<const char *>(glGetString(GL_REQUESTABLE_EXTENSIONS_ANGLE)), extName);
 }
 
 bool ANGLETest::eglDisplayExtensionEnabled(EGLDisplay display, const std::string &extName)
@@ -756,6 +762,12 @@ bool IsOpenGL()
 {
     std::string rendererString(reinterpret_cast<const char *>(glGetString(GL_RENDERER)));
     return (rendererString.find("OpenGL") != std::string::npos);
+}
+
+bool IsNULL()
+{
+    std::string rendererString(reinterpret_cast<const char *>(glGetString(GL_RENDERER)));
+    return (rendererString.find("NULL") != std::string::npos);
 }
 
 bool IsAndroid()

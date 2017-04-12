@@ -1981,7 +1981,6 @@ profiler_init(void* aStackTop)
 {
   LOG("profiler_init");
 
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(!gPS);
 
   const char* features[] = { "js"

@@ -7401,6 +7401,20 @@ nsCSSFrameConstructor::MaybeRecreateForFrameset(nsIFrame* aParentFrame,
 }
 
 void
+nsCSSFrameConstructor::LazilyStyleNewChildRange(nsIContent* aStartChild,
+                                                nsIContent* aEndChild)
+{
+  for (nsIContent* child = aStartChild; child != aEndChild;
+       child = child->GetNextSibling()) {
+    nsINode* parent = child->GetFlattenedTreeParent();
+    if (parent->IsElement()) {
+      MOZ_ASSERT(parent);
+      parent->AsElement()->NoteDirtyDescendantsForServo();
+    }
+  }
+}
+
+void
 nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
                                           nsIContent* aEndChild)
 {
@@ -7516,7 +7530,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
       // The Servo-backed style system handles this case like the lazy frame
       // construction case.
       if (isNewlyAddedContentForServo) {
-        aContainer->AsElement()->NoteDirtyDescendantsForServo();
+        LazilyStyleNewChildRange(aFirstNewContent, nullptr);
       }
       return;
     }
@@ -7524,7 +7538,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
     if (aAllowLazyConstruction &&
         MaybeConstructLazily(CONTENTAPPEND, aContainer, aFirstNewContent)) {
       if (isNewlyAddedContentForServo) {
-        aContainer->AsElement()->NoteDirtyDescendantsForServo();
+        LazilyStyleNewChildRange(aFirstNewContent, nullptr);
       }
       return;
     }
@@ -7997,7 +8011,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
       // The Servo-backed style system handles this case like the lazy frame
       // construction case.
       if (isNewlyAddedContentForServo) {
-        aContainer->AsElement()->NoteDirtyDescendantsForServo();
+        LazilyStyleNewChildRange(aStartChild, aEndChild);
       }
       return;
     }
@@ -8009,7 +8023,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     if (aAllowLazyConstruction &&
         MaybeConstructLazily(CONTENTINSERT, aContainer, aStartChild)) {
       if (isNewlyAddedContentForServo) {
-        aContainer->AsElement()->NoteDirtyDescendantsForServo();
+        LazilyStyleNewChildRange(aStartChild, aEndChild);
       }
       return;
     }

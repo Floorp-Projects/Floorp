@@ -27,6 +27,7 @@ import java.util.Arrays;
 import nu.validator.htmlparser.annotation.Inline;
 import nu.validator.htmlparser.annotation.Local;
 import nu.validator.htmlparser.annotation.NoLength;
+import nu.validator.htmlparser.annotation.Unsigned;
 import nu.validator.htmlparser.annotation.Virtual;
 import nu.validator.htmlparser.common.Interner;
 
@@ -108,7 +109,7 @@ public final class ElementName
     }
 
     static ElementName elementNameByBuffer(@NoLength char[] buf, int offset, int length, Interner interner) {
-        int hash = ElementName.bufToHash(buf, length);
+        @Unsigned int hash = ElementName.bufToHash(buf, length);
         int index = Arrays.binarySearch(ElementName.ELEMENT_HASHES, hash);
         if (index < 0) {
             return new ElementName(Portability.newLocalNameFromBuffer(buf, offset, length, interner));
@@ -131,8 +132,8 @@ public final class ElementName
      * @param len
      * @return
      */
-    private static int bufToHash(@NoLength char[] buf, int len) {
-        int hash = len;
+    private static @Unsigned int bufToHash(@NoLength char[] buf, int len) {
+        @Unsigned int hash = len;
         hash <<= 5;
         hash += buf[0] - 0x60;
         int j = len;

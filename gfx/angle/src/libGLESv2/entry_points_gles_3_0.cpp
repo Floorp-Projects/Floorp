@@ -839,6 +839,26 @@ void GL_APIENTRY BindBufferBase(GLenum target, GLuint index, GLuint buffer)
             }
             break;
 
+          case GL_ATOMIC_COUNTER_BUFFER:
+              if (index >= caps.maxAtomicCounterBufferBindings)
+              {
+                  context->handleError(Error(
+                      GL_INVALID_VALUE,
+                      "Binding index must be less than GL_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS."));
+                  return;
+              }
+              break;
+
+          case GL_SHADER_STORAGE_BUFFER:
+              if (index >= caps.maxShaderStorageBufferBindings)
+              {
+                  context->handleError(Error(
+                      GL_INVALID_VALUE,
+                      "Binding index must be less than GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS."));
+                  return;
+              }
+              break;
+
           default:
               context->handleError(Error(GL_INVALID_ENUM));
             return;
@@ -872,6 +892,22 @@ void GL_APIENTRY BindBufferBase(GLenum target, GLuint index, GLuint buffer)
             context->bindIndexedUniformBuffer(buffer, index, 0, 0);
             context->bindGenericUniformBuffer(buffer);
             break;
+
+          case GL_ATOMIC_COUNTER_BUFFER:
+              if (buffer != 0)
+              {
+                  // Binding buffers to this binding point is not implemented yet.
+                  UNIMPLEMENTED();
+              }
+              break;
+
+          case GL_SHADER_STORAGE_BUFFER:
+              if (buffer != 0)
+              {
+                  // Binding buffers to this binding point is not implemented yet.
+                  UNIMPLEMENTED();
+              }
+              break;
 
           default:
             UNREACHABLE();
@@ -1391,28 +1427,15 @@ const GLubyte *GL_APIENTRY GetStringi(GLenum name, GLuint index)
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        if (context->getClientMajorVersion() < 3)
+        if (!context->skipValidation() && !ValidateGetStringi(context, name, index))
         {
-            context->handleError(Error(GL_INVALID_OPERATION));
-            return NULL;
+            return nullptr;
         }
 
-        if (name != GL_EXTENSIONS)
-        {
-            context->handleError(Error(GL_INVALID_ENUM));
-            return NULL;
-        }
-
-        if (index >= context->getExtensionStringCount())
-        {
-            context->handleError(Error(GL_INVALID_VALUE));
-            return NULL;
-        }
-
-        return reinterpret_cast<const GLubyte *>(context->getExtensionString(index));
+        return context->getStringi(name, index);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void GL_APIENTRY CopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)

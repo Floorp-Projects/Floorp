@@ -55,6 +55,12 @@ class OutputHLSL : public TIntermTraverser
   protected:
     void header(TInfoSinkBase &out, const BuiltInFunctionEmulator *builtInFunctionEmulator);
 
+    void writeFloat(TInfoSinkBase &out, float f);
+    void writeSingleConstant(TInfoSinkBase &out, const TConstantUnion *const constUnion);
+    const TConstantUnion *writeConstantUnionArray(TInfoSinkBase &out,
+                                                  const TConstantUnion *const constUnion,
+                                                  const size_t size);
+
     // Visit AST nodes and output their code to the body stream
     void visitSymbol(TIntermSymbol*);
     void visitRaw(TIntermRaw*);

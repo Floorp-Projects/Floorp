@@ -10,6 +10,7 @@
 #define LIBANGLE_ERROR_H_
 
 #include "angle_gl.h"
+#include "common/angleutils.h"
 #include <EGL/egl.h>
 
 #include <string>
@@ -18,10 +19,14 @@
 namespace gl
 {
 
+template <typename T>
+class ErrorOrResult;
+
 class Error final
 {
   public:
     explicit inline Error(GLenum errorCode);
+    Error(GLenum errorCode, std::string &&msg);
     Error(GLenum errorCode, const char *msg, ...);
     Error(GLenum errorCode, GLuint id, const char *msg, ...);
     inline Error(const Error &other);
@@ -47,6 +52,63 @@ class Error final
     GLuint mID;
     mutable std::unique_ptr<std::string> mMessage;
 };
+
+namespace priv
+{
+template <GLenum EnumT>
+class ErrorStream : angle::NonCopyable
+{
+  public:
+    ErrorStream();
+
+    template <typename T>
+    ErrorStream &operator<<(T value);
+
+    operator Error();
+
+    template <typename T>
+    operator ErrorOrResult<T>()
+    {
+        return static_cast<Error>(*this);
+    }
+
+  private:
+    std::ostringstream mErrorStream;
+};
+
+// These convience methods for HRESULTS (really long) are used all over the place in the D3D
+// back-ends.
+#if defined(ANGLE_PLATFORM_WINDOWS)
+template <>
+template <>
+inline ErrorStream<GL_OUT_OF_MEMORY> &ErrorStream<GL_OUT_OF_MEMORY>::operator<<(HRESULT hresult)
+{
+    mErrorStream << "HRESULT: 0x" << std::ios::hex << hresult;
+    return *this;
+}
+
+template <>
+template <>
+inline ErrorStream<GL_INVALID_OPERATION> &ErrorStream<GL_INVALID_OPERATION>::operator<<(
+    HRESULT hresult)
+{
+    mErrorStream << "HRESULT: 0x" << std::ios::hex << hresult;
+    return *this;
+}
+#endif  // defined(ANGLE_PLATFORM_WINDOWS)
+
+template <GLenum EnumT>
+template <typename T>
+ErrorStream<EnumT> &ErrorStream<EnumT>::operator<<(T value)
+{
+    mErrorStream << value;
+    return *this;
+}
+
+}  // namespace priv
+
+using OutOfMemory   = priv::ErrorStream<GL_OUT_OF_MEMORY>;
+using InternalError = priv::ErrorStream<GL_INVALID_OPERATION>;
 
 template <typename T>
 class ErrorOrResult
@@ -109,6 +171,11 @@ class Error final
     EGLint mID;
     mutable std::unique_ptr<std::string> mMessage;
 };
+
+inline Error NoError()
+{
+    return Error(EGL_SUCCESS);
+}
 
 }  // namespace egl
 

@@ -20,7 +20,7 @@ DATE_PATTERN = r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
 
 
 def nice_type_name(t):
-    if isinstance(t, basestring):
+    if issubclass(t, basestring):
         return "string"
     return t.__name__
 

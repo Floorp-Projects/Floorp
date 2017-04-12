@@ -10,6 +10,8 @@
 #include "libANGLE/renderer/null/BufferNULL.h"
 
 #include "common/debug.h"
+#include "common/utilities.h"
+#include "libANGLE/angletypes.h"
 
 namespace rx
 {
@@ -24,14 +26,21 @@ BufferNULL::~BufferNULL()
 
 gl::Error BufferNULL::setData(GLenum target, const void *data, size_t size, GLenum usage)
 {
-    UNIMPLEMENTED();
-    return gl::Error(GL_INVALID_OPERATION);
+    mData.resize(size, 0);
+    if (size > 0 && data != nullptr)
+    {
+        memcpy(mData.data(), data, size);
+    }
+    return gl::NoError();
 }
 
 gl::Error BufferNULL::setSubData(GLenum target, const void *data, size_t size, size_t offset)
 {
-    UNIMPLEMENTED();
-    return gl::Error(GL_INVALID_OPERATION);
+    if (size > 0)
+    {
+        memcpy(mData.data() + offset, data, size);
+    }
+    return gl::NoError();
 }
 
 gl::Error BufferNULL::copySubData(BufferImpl *source,
@@ -39,26 +48,30 @@ gl::Error BufferNULL::copySubData(BufferImpl *source,
                                   GLintptr destOffset,
                                   GLsizeiptr size)
 {
-    UNIMPLEMENTED();
-    return gl::Error(GL_INVALID_OPERATION);
+    BufferNULL *sourceNULL = GetAs<BufferNULL>(source);
+    if (size > 0)
+    {
+        memcpy(mData.data() + destOffset, sourceNULL->mData.data() + sourceOffset, size);
+    }
+    return gl::NoError();
 }
 
 gl::Error BufferNULL::map(GLenum access, GLvoid **mapPtr)
 {
-    UNIMPLEMENTED();
-    return gl::Error(GL_INVALID_OPERATION);
+    *mapPtr = mData.data();
+    return gl::NoError();
 }
 
 gl::Error BufferNULL::mapRange(size_t offset, size_t length, GLbitfield access, GLvoid **mapPtr)
 {
-    UNIMPLEMENTED();
-    return gl::Error(GL_INVALID_OPERATION);
+    *mapPtr = mData.data() + offset;
+    return gl::NoError();
 }
 
 gl::Error BufferNULL::unmap(GLboolean *result)
 {
-    UNIMPLEMENTED();
-    return gl::Error(GL_INVALID_OPERATION);
+    *result = GL_TRUE;
+    return gl::NoError();
 }
 
 gl::Error BufferNULL::getIndexRange(GLenum type,
@@ -67,8 +80,8 @@ gl::Error BufferNULL::getIndexRange(GLenum type,
                                     bool primitiveRestartEnabled,
                                     gl::IndexRange *outRange)
 {
-    UNIMPLEMENTED();
-    return gl::Error(GL_INVALID_OPERATION);
+    *outRange = gl::ComputeIndexRange(type, mData.data() + offset, count, primitiveRestartEnabled);
+    return gl::NoError();
 }
 
 }  // namespace rx

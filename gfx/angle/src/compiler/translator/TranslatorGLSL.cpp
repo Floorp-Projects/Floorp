@@ -58,7 +58,9 @@ void TranslatorGLSL::translate(TIntermNode *root, ShCompileOptions compileOption
     // variables. It should be harmless to do this twice in the case that the shader also explicitly
     // did this. However, it's important to emit invariant qualifiers only for those built-in
     // variables that are actually used, to avoid affecting the behavior of the shader.
-    if ((compileOptions & SH_FLATTEN_PRAGMA_STDGL_INVARIANT_ALL) && getPragma().stdgl.invariantAll)
+    if ((compileOptions & SH_FLATTEN_PRAGMA_STDGL_INVARIANT_ALL) != 0 &&
+        getPragma().stdgl.invariantAll &&
+        !sh::RemoveInvariant(getShaderType(), getShaderVersion(), getOutputType(), compileOptions))
     {
         ASSERT(wereVariablesCollected());
 
@@ -251,13 +253,14 @@ void TranslatorGLSL::writeExtensionBehavior(TIntermNode *root)
     }
 
     // GLSL ES 3 explicit location qualifiers need to use an extension before GLSL 330
-    if (getShaderVersion() >= 300 && getOutputType() < SH_GLSL_330_CORE_OUTPUT)
+    if (getShaderVersion() >= 300 && getOutputType() < SH_GLSL_330_CORE_OUTPUT &&
+        getShaderType() != GL_COMPUTE_SHADER)
     {
         sink << "#extension GL_ARB_explicit_attrib_location : require\n";
     }
 
     // Need to enable gpu_shader5 to have index constant sampler array indexing
-    if (getOutputType() != SH_ESSL_OUTPUT && getOutputType() < SH_GLSL_400_CORE_OUTPUT  &&
+    if (getOutputType() != SH_ESSL_OUTPUT && getOutputType() < SH_GLSL_400_CORE_OUTPUT &&
         getShaderVersion() == 100)
     {
         // Don't use "require" on to avoid breaking WebGL 1 on drivers that silently

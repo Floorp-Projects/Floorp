@@ -11,6 +11,8 @@
 
 #include "common/debug.h"
 
+#include "libANGLE/renderer/null/FramebufferNULL.h"
+
 namespace rx
 {
 
@@ -24,80 +26,64 @@ SurfaceNULL::~SurfaceNULL()
 
 egl::Error SurfaceNULL::initialize()
 {
-    UNIMPLEMENTED();
-    return egl::Error(EGL_BAD_ACCESS);
+    return egl::NoError();
 }
 
 FramebufferImpl *SurfaceNULL::createDefaultFramebuffer(const gl::FramebufferState &state)
 {
-    UNIMPLEMENTED();
-    return static_cast<FramebufferImpl *>(0);
+    return new FramebufferNULL(state);
 }
 
 egl::Error SurfaceNULL::swap()
 {
-    UNIMPLEMENTED();
-    return egl::Error(EGL_BAD_ACCESS);
+    return egl::NoError();
 }
 
 egl::Error SurfaceNULL::postSubBuffer(EGLint x, EGLint y, EGLint width, EGLint height)
 {
-    UNIMPLEMENTED();
-    return egl::Error(EGL_BAD_ACCESS);
+    return egl::NoError();
 }
 
 egl::Error SurfaceNULL::querySurfacePointerANGLE(EGLint attribute, void **value)
 {
-    UNIMPLEMENTED();
-    return egl::Error(EGL_BAD_ACCESS);
+    UNREACHABLE();
+    return egl::NoError();
 }
 
 egl::Error SurfaceNULL::bindTexImage(gl::Texture *texture, EGLint buffer)
 {
-    UNIMPLEMENTED();
-    return egl::Error(EGL_BAD_ACCESS);
+    return egl::NoError();
 }
 
 egl::Error SurfaceNULL::releaseTexImage(EGLint buffer)
 {
-    UNIMPLEMENTED();
-    return egl::Error(EGL_BAD_ACCESS);
+    return egl::NoError();
 }
 
 void SurfaceNULL::setSwapInterval(EGLint interval)
 {
-    UNIMPLEMENTED();
 }
 
 EGLint SurfaceNULL::getWidth() const
 {
-    UNIMPLEMENTED();
-    return EGLint();
+    // TODO(geofflang): Read from an actual window?
+    return 100;
 }
 
 EGLint SurfaceNULL::getHeight() const
 {
-    UNIMPLEMENTED();
-    return EGLint();
+    // TODO(geofflang): Read from an actual window?
+    return 100;
 }
 
 EGLint SurfaceNULL::isPostSubBufferSupported() const
 {
-    UNIMPLEMENTED();
-    return EGLint();
+    return EGL_TRUE;
 }
 
 EGLint SurfaceNULL::getSwapBehavior() const
 {
-    UNIMPLEMENTED();
-    return EGLint();
-}
-
-gl::Error SurfaceNULL::getAttachmentRenderTarget(const gl::FramebufferAttachment::Target &target,
-                                                 FramebufferAttachmentRenderTarget **rtOut)
-{
-    UNIMPLEMENTED();
-    return gl::Error(GL_INVALID_OPERATION);
+    return EGL_BUFFER_PRESERVED;
 }
 
 }  // namespace rx

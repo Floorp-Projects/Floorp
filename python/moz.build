@@ -11,12 +11,6 @@ with Files('**'):
 with Files('PyECC/**'):
     BUG_COMPONENT = ('Core', 'Security: PSM')
 
-with Files('altgraph/**'):
-    BUG_COMPONENT = ('Release Engineering', 'General Automation')
-
-with Files('bitstring/**'):
-    BUG_COMPONENT = ('Release Engineering', 'General Automation')
-
 with Files('blessings/**'):
     BUG_COMPONENT = ('Core', 'Build Config')
 
@@ -32,9 +26,6 @@ with Files('devtools/**'):
 with Files('dlmanager/**'):
     BUG_COMPONENT = ('Core', 'Build Config')
 
-with Files('eme/**'):
-    BUG_COMPONENT = ('Release Engineering', 'General Automation')
-
 with Files('futures/**'):
     BUG_COMPONENT = ('Core', 'Build Config')
 
@@ -49,9 +40,6 @@ with Files('lldbutils/**'):
 
 with Files('mach/**'):
     BUG_COMPONENT = ('Core', 'mach')
-
-with Files('macholib/**'):
-    BUG_COMPONENT = ('Release Engineering', 'General Automation')
 
 with Files('mock-1.0.0/**'):
     BUG_COMPONENT = ('Core', 'Build Config')
