@@ -27,11 +27,8 @@ public class HtmlLoader {
                                            @NonNull final @RawRes int resourceID,
                                            @Nullable final Map<String, String> substitutionTable) {
 
-        BufferedReader fileReader = null;
-
-        try {
-            final InputStream fileStream = context.getResources().openRawResource(resourceID);
-            fileReader = new BufferedReader(new InputStreamReader(fileStream));
+        try (final BufferedReader fileReader =
+                     new BufferedReader(new InputStreamReader(context.getResources().openRawResource(resourceID)))) {
 
             final StringBuilder outputBuffer = new StringBuilder();
 
@@ -49,8 +46,6 @@ public class HtmlLoader {
             return outputBuffer.toString();
         } catch (final IOException e) {
             throw new IllegalStateException("Unable to load error page data");
-        } finally {
-            IOUtils.safeClose(fileReader);
         }
     }
 
@@ -66,10 +61,7 @@ public class HtmlLoader {
         // uses - you are explicitly allowed to open Drawables, but the method has a @RawRes
         // annotation (despite officially supporting Drawables).
         //noinspection ResourceType
-        final InputStream pngInputStream = context.getResources().openRawResource(resourceID);
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(pngInputStream));
-
-        try {
+        try (final InputStream pngInputStream = context.getResources().openRawResource(resourceID)) {
             // Base64 encodes 3 bytes at a time, make sure we have a multiple of 3 here
             // I don't know what a sensible chunk size is, let's just go with 300b.
             final byte[] data = new byte[3*100];
@@ -96,8 +88,6 @@ public class HtmlLoader {
             }
         } catch (IOException e) {
             throw new IllegalStateException("Unable to load png data");
-        } finally {
-            IOUtils.safeClose(reader);
         }
 
         return  builder.toString();

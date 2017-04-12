@@ -73,47 +73,29 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
         final Map<String, String> categoryPrefMap = loadDefaultPrefMap(context);
 
         final Map<String, Trie> categoryMap = new HashMap<>(5);
-        {
-            InputStream inputStream = context.getResources().openRawResource(blockListFile);
-            JsonReader jsonReader = new JsonReader(new InputStreamReader(inputStream));
-
-            try {
-                BlocklistProcessor.loadCategoryMap(jsonReader, categoryMap, BlocklistProcessor.ListType.BASE_LIST);
-            } catch (IOException e) {
-                throw new IllegalStateException("Unable to parse blacklist");
-            } finally {
-                IOUtils.safeClose(jsonReader);
-            }
+        try (final JsonReader jsonReader =
+                     new JsonReader(new InputStreamReader(context.getResources().openRawResource(blockListFile)))) {
+            BlocklistProcessor.loadCategoryMap(jsonReader, categoryMap, BlocklistProcessor.ListType.BASE_LIST);
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to parse blacklist");
         }
 
         if (blockListOverrides != null) {
             for (int i = 0; i < blockListOverrides.length; i++) {
-                InputStream inputStream = context.getResources().openRawResource(blockListOverrides[i]);
-                JsonReader jsonReader = new JsonReader(new InputStreamReader(inputStream));
-
-                try {
+                try (final JsonReader jsonReader =
+                             new JsonReader(new InputStreamReader(context.getResources().openRawResource(blockListOverrides[i])))) {
                     BlocklistProcessor.loadCategoryMap(jsonReader, categoryMap, BlocklistProcessor.ListType.OVERRIDE_LIST);
                 } catch (IOException e) {
                     throw new IllegalStateException("Unable to parse override blacklist");
-                } finally {
-                    IOUtils.safeClose(jsonReader);
                 }
             }
         }
 
         final EntityList entityList;
-        {
-            InputStream inputStream = context.getResources().openRawResource(entityListFile);
-            JsonReader jsonReader = new JsonReader(new InputStreamReader(inputStream));
-
-            try {
-                entityList = EntityListProcessor.getEntityMapFromJSON(jsonReader);
-            } catch (IOException e) {
-                throw new IllegalStateException("Unable to parse entity list");
-            } finally {
-                IOUtils.safeClose(jsonReader);
-            }
-
+        try (final JsonReader jsonReader = new JsonReader(new InputStreamReader(context.getResources().openRawResource(entityListFile)))){
+            entityList = EntityListProcessor.getEntityMapFromJSON(jsonReader);
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to parse entity list");
         }
 
         return new UrlMatcher(context, categoryPrefMap, categoryMap, entityList);

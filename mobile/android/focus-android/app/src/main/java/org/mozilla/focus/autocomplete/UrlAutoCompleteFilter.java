@@ -63,11 +63,11 @@ public class UrlAutoCompleteFilter implements InlineAutocompleteEditText.OnFilte
         new AsyncTask<Resources, Void, List<String>>() {
             @Override
             protected List<String> doInBackground(Resources... resources) {
-                final BufferedReader reader = new BufferedReader(new InputStreamReader(
-                        resources[0].openRawResource(R.raw.topdomains)));
 
-                try {
-                    final List<String> domains = new ArrayList<String>(460);
+                try (final BufferedReader reader =
+                             new BufferedReader(new InputStreamReader(resources[0].openRawResource(R.raw.topdomains)))) {
+
+                    final List<String> domains = new ArrayList<>(460);
 
                     String line;
                     while ((line = reader.readLine()) != null) {
@@ -78,8 +78,6 @@ public class UrlAutoCompleteFilter implements InlineAutocompleteEditText.OnFilte
                 } catch (IOException e) {
                     // No autocomplete for you!
                     return null;
-                } finally {
-                    IOUtils.safeClose(reader);
                 }
             }
 

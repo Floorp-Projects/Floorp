@@ -26,13 +26,8 @@ public class IOUtils {
     }
 
     public static JSONObject readAsset(Context context, String fileName) throws IOException {
-        InputStream stream = null;
-        BufferedReader reader = null;
-
-        try {
-            stream = context.getAssets().open(fileName);
-            reader = new BufferedReader(new InputStreamReader(stream));
-
+        try (final BufferedReader reader =
+                     new BufferedReader(new InputStreamReader(context.getAssets().open(fileName)))){
             final StringBuilder builder = new StringBuilder();
             String line;
 
@@ -43,9 +38,6 @@ public class IOUtils {
             return new JSONObject(builder.toString());
         } catch (JSONException e) {
             throw new AssertionError("Corrupt JSON asset (" + fileName + ")", e);
-        } finally {
-            IOUtils.safeClose(reader);
-            IOUtils.safeClose(stream);
         }
     }
 }

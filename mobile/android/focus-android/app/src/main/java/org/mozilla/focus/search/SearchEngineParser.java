@@ -31,14 +31,10 @@ import java.io.InputStreamReader;
     private static final String IMAGE_URI_PREFIX = "data:image/png;base64,";
 
     public static SearchEngine load(AssetManager assetManager, String identifier, String path) throws IOException {
-        final InputStream stream = assetManager.open(path);
-
-        try {
+        try (final InputStream stream = assetManager.open(path)) {
             return load(identifier, stream);
         } catch (XmlPullParserException e) {
             throw new AssertionError("Parser exception while reading " + path, e);
-        } finally {
-            IOUtils.safeClose(stream);
         }
     }
 
