@@ -16,6 +16,7 @@
 #include <fstream>
 #include "platform.h"
 #include "shared-libraries.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/Unused.h"
 #include "nsDebug.h"
 #include "nsNativeCharsetUtils.h"
@@ -27,7 +28,8 @@
 // There are three different configuration cases:
 //
 // (1) GP_OS_linux
-//       Use dl_iterate_phdr for everything.
+//       Use dl_iterate_phdr for almost everything and /proc/self/{exe,maps}
+//       to identify the main executable name.
 //
 // (2) GP_OS_android non-GONK
 //       If dl_iterate_phdr doesn't exist, give up immediately.  Otherwise use
@@ -137,6 +139,27 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
 {
   SharedLibraryInfo info;
 
+#if defined(CONFIG_CASE_1)
+  // We need to find the name of the executable (exeName, exeNameLen) and the
+  // address of its executable section (exeExeAddr) in the running image.
+  char exeName[PATH_MAX];
+  memset(exeName, 0, sizeof(exeName));
+
+  ssize_t exeNameLen = readlink("/proc/self/exe", exeName, sizeof(exeName) - 1);
+  if (exeNameLen == -1) {
+    // readlink failed for whatever reason.  Note this, but keep going.
+    exeName[0] = '\0';
+    exeNameLen = 0;
+    LOG("SharedLibraryInfo::GetInfoForSelf(): readlink failed");
+  } else {
+    // Assert no buffer overflow.
+    MOZ_RELEASE_ASSERT(exeNameLen >= 0 &&
+                       exeNameLen < static_cast<ssize_t>(sizeof(exeName)));
+  }
+
+  unsigned long exeExeAddr = 0;
+#endif
+
 #if defined(CONFIG_CASE_2)
   // If dl_iterate_phdr doesn't exist, we give up immediately.
   if (!dl_iterate_phdr) {
@@ -148,23 +171,21 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
   }
 #endif
 
-#if defined(CONFIG_CASE_2) || defined(CONFIG_CASE_3)
-  // Read info from /proc/self/maps.  We do this for config cases (2) and (3),
-  // but only in case (3) are we building the module list from that information.
-  // For case (2) we're collecting information only for one specific mapping.
+  // Read info from /proc/self/maps.  We do this for all config cases, but only
+  // in case (3) are we building the module list from that information.  For
+  // cases (1) and (2) we're just collecting some auxiliary information.
   pid_t pid = getpid();
   char path[PATH_MAX];
-  snprintf(path, PATH_MAX, "/proc/%d/maps", pid);
+  SprintfLiteral(path, "/proc/%d/maps", pid);
   std::ifstream maps(path);
   std::string line;
-  int count = 0;
   while (std::getline(maps, line)) {
     int ret;
     unsigned long start;
     unsigned long end;
-    char perm[6] = "";
+    char perm[6 + 1] = "";
     unsigned long offset;
-    char modulePath[PATH_MAX] = "";
+    char modulePath[PATH_MAX + 1] = "";
     ret = sscanf(line.c_str(),
                  "%lx-%lx %6s %lx %*s %*x %" PATH_MAX_STRING(PATH_MAX) "s\n",
                  &start, &end, perm, &offset, modulePath);
@@ -178,7 +199,14 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
       continue;
     }
 
-#if defined(CONFIG_CASE_2)
+#if defined(CONFIG_CASE_1)
+    // Try to establish the main executable's load address.
+    if (exeNameLen > 0 && strcmp(modulePath, exeName) == 0) {
+      exeExeAddr = start;
+    }
+    continue;
+    // NOTREACHED
+#elif defined(CONFIG_CASE_2)
     // Use /proc/pid/maps to get the dalvik-jit section since it has no
     // associated phdrs.
     if (0 != strcmp(modulePath, "/dev/ashmem/dalvik-jit-code-cache")) {
@@ -195,6 +223,9 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     // Record all other entries.
 #endif
 
+#if !defined(CONFIG_CASE_1)
+    // This section has to be conditionalised so as to avoid compiler warnings
+    // about dead code in case (1).
     nsAutoString pathStr;
     mozilla::Unused <<
       NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(
@@ -209,19 +240,37 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     SharedLibrary shlib(start, end, offset, getId(path),
                         nameStr, pathStr, nameStr, pathStr, "", "");
     info.AddSharedLibrary(shlib);
-    if (count > 10000) {
+    if (info.GetSize() > 10000) {
       LOG("SharedLibraryInfo::GetInfoForSelf(): "
           "implausibly large number of mappings acquired");
       break;
     }
-    count++;
+#endif
   }
-#endif // config cases 2 and 3
 
 #if defined(CONFIG_CASE_1) || defined(CONFIG_CASE_2)
   // For config cases (1) and (2), we collect the bulk of the library info using
   // dl_iterate_phdr.
   dl_iterate_phdr(dl_iterate_callback, &info);
+#endif
+
+#if defined(CONFIG_CASE_1)
+  // Make another pass over the information we just harvested from
+  // dl_iterate_phdr.  If we see a nameless object mapped at what we earlier
+  // established to be the main executable's load address, attach the
+  // executable's name to that entry.
+  for (size_t i = 0; i < info.GetSize(); i++) {
+    SharedLibrary& lib = info.GetMutableEntry(i);
+    if (lib.GetStart() == exeExeAddr && lib.GetNativeDebugPath() == "") {
+      nsAutoString exeNameStr;
+      mozilla::Unused <<
+        NS_WARN_IF(NS_FAILED(NS_CopyNativeToUnicode(
+                               nsDependentCString(exeName), exeNameStr)));
+      lib.SetNativeDebugPath(exeNameStr);
+      // We only expect to see one such entry.
+      break;
+    }
+  }
 #endif
 
   return info;
