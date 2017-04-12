@@ -1495,12 +1495,11 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
         // Parse and compile the script from source.
         size_t lazyLength = lazy->end() - lazy->begin();
         UncompressedSourceCache::AutoHoldEntry holder;
-        ScriptSource::PinnedChars chars(cx, lazy->scriptSource(), holder,
-                                        lazy->begin(), lazyLength);
-        if (!chars.get())
+        const char16_t* chars = lazy->scriptSource()->chars(cx, holder, lazy->begin(), lazyLength);
+        if (!chars)
             return false;
 
-        if (!frontend::CompileLazyFunction(cx, lazy, chars.get(), lazyLength)) {
+        if (!frontend::CompileLazyFunction(cx, lazy, chars, lazyLength)) {
             // The frontend may have linked the function and the non-lazy
             // script together during bytecode compilation. Reset it now on
             // error.

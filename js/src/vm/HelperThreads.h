@@ -105,14 +105,8 @@ class GlobalHelperThreadState
     // Parse tasks waiting for an atoms-zone GC to complete.
     ParseTaskVector parseWaitingOnGC_;
 
-    // Source compression worklist of tasks that we do not yet know can start.
-    SourceCompressionTaskVector compressionPendingList_;
-
-    // Source compression worklist of tasks that can start.
+    // Source compression worklist.
     SourceCompressionTaskVector compressionWorklist_;
-
-    // Finished source compression tasks.
-    SourceCompressionTaskVector compressionFinishedList_;
 
     // Runtimes which have sweeping / allocating work to do.
     GCHelperStateVector gcHelperWorklist_;
@@ -196,16 +190,8 @@ class GlobalHelperThreadState
         return parseWaitingOnGC_;
     }
 
-    SourceCompressionTaskVector& compressionPendingList(const AutoLockHelperThreadState&) {
-        return compressionPendingList_;
-    }
-
     SourceCompressionTaskVector& compressionWorklist(const AutoLockHelperThreadState&) {
         return compressionWorklist_;
-    }
-
-    SourceCompressionTaskVector& compressionFinishedList(const AutoLockHelperThreadState&) {
-        return compressionFinishedList_;
     }
 
     GCHelperStateVector& gcHelperWorklist(const AutoLockHelperThreadState&) {
@@ -223,10 +209,6 @@ class GlobalHelperThreadState
     bool canStartCompressionTask(const AutoLockHelperThreadState& lock);
     bool canStartGCHelperTask(const AutoLockHelperThreadState& lock);
     bool canStartGCParallelTask(const AutoLockHelperThreadState& lock);
-
-    // Used by a major GC to signal processing enqueued compression tasks.
-    void startHandlingCompressionTasks(const AutoLockHelperThreadState&);
-    void scheduleCompressionTasks(const AutoLockHelperThreadState&);
 
     // Unlike the methods above, the value returned by this method can change
     // over time, even if the helper thread state lock is held throughout.
@@ -283,6 +265,8 @@ class GlobalHelperThreadState
     JSScript* finishScriptParseTask(JSContext* cx, void* token);
     JSScript* finishScriptDecodeTask(JSContext* cx, void* token);
     JSObject* finishModuleParseTask(JSContext* cx, void* token);
+    bool compressionInProgress(SourceCompressionTask* task, const AutoLockHelperThreadState& lock);
+    SourceCompressionTask* compressionTaskForSource(ScriptSource* ss, const AutoLockHelperThreadState& lock);
 
     bool hasActiveThreads(const AutoLockHelperThreadState&);
     void waitForAllThreads();
@@ -547,14 +531,9 @@ struct AutoEnqueuePendingParseTasksAfterGC {
     ~AutoEnqueuePendingParseTasksAfterGC();
 };
 
-// Enqueue a compression job to be processed if there's a major GC.
+/* Start a compression job for the specified token. */
 bool
-EnqueueOffThreadCompression(JSContext* cx, SourceCompressionTask* task);
-
-// Cancel all scheduled, in progress, or finished compression tasks for
-// runtime.
-void
-CancelOffThreadCompressions(JSRuntime* runtime);
+StartOffThreadCompression(JSContext* cx, SourceCompressionTask* task);
 
 class MOZ_RAII AutoLockHelperThreadState : public LockGuard<Mutex>
 {
@@ -622,10 +601,6 @@ struct ParseTask
     // Holds the ScriptSourceObject generated for the script compilation.
     ScriptSourceObject* sourceObject;
 
-    // Holds the SourceCompressionTask, if any were enqueued for the
-    // ScriptSource of sourceObject.
-    SourceCompressionTask* sourceCompressionTask;
-
     // Any errors or warnings produced during compilation. These are reported
     // when finishing the script.
     Vector<frontend::CompileError*, 0, SystemAllocPolicy> errors;
@@ -682,76 +657,55 @@ struct ScriptDecodeTask : public ParseTask
 extern bool
 OffThreadParsingMustWaitForGC(JSRuntime* rt);
 
-// It is not desirable to eagerly compress: if lazy functions that are tied to
-// the ScriptSource were to be executed relatively soon after parsing, they
-// would need to block on decompression, which hurts responsiveness.
-//
-// To this end, compression tasks are heap allocated and enqueued in a pending
-// list by ScriptSource::setSourceCopy. When a major GC occurs, we schedule
-// pending compression tasks and move the ones that are ready to be compressed
-// to the worklist. Currently, a compression task is considered ready 2 major
-// GCs after being enqueued. Completed tasks are handled during the sweeping
-// phase by AttachCompressedSourcesTask, which runs in parallel with other GC
-// sweeping tasks.
-class SourceCompressionTask
+// Compression tasks are allocated on the stack by their triggering thread,
+// which will block on the compression completing as the task goes out of scope
+// to ensure it completes at the required time.
+struct SourceCompressionTask
 {
-    friend struct HelperThread;
     friend class ScriptSource;
+    friend struct HelperThread;
 
-    // The runtime that the ScriptSource is associated with, in the sense that
-    // it uses the runtime's immutable string cache.
-    JSRuntime* runtime_;
+    // Thread performing the compression.
+    HelperThread* helperThread;
 
-    // The major GC number of the runtime when the task was enqueued.
-    static const uint64_t MajorGCNumberWaitingForFixup = UINT64_MAX;
-    uint64_t majorGCNumber_;
+  private:
+    // Context from the triggering thread. Don't use this off thread!
+    JSContext* cx;
 
-    // The source to be compressed.
-    ScriptSourceHolder sourceHolder_;
+    ScriptSource* ss;
 
-    // The resultant compressed string. If the compressed string is larger
-    // than the original, or we OOM'd during compression, or nothing else
-    // except the task is holding the ScriptSource alive when scheduled to
-    // compress, this will remain None upon completion.
-    mozilla::Maybe<SharedImmutableString> resultString_;
+    // Atomic flag to indicate to a helper thread that it should abort
+    // compression on the source.
+    mozilla::Atomic<bool, mozilla::Relaxed> abort_;
+
+    // Stores the result of the compression.
+    enum ResultType {
+        OOM,
+        Aborted,
+        Success
+    } result;
+
+    mozilla::Maybe<SharedImmutableString> resultString;
 
   public:
-    // The majorGCNumber is used for scheduling tasks. If the task is being
-    // enqueued from an off-thread parsing task, leave the GC number
-    // UINT64_MAX to be fixed up when the parse task finishes.
-    SourceCompressionTask(JSRuntime* rt, ScriptSource* source)
-      : runtime_(rt),
-        majorGCNumber_(CurrentThreadCanAccessRuntime(rt)
-                       ? rt->gc.majorGCCount()
-                       : MajorGCNumberWaitingForFixup),
-        sourceHolder_(source)
-    { }
+    explicit SourceCompressionTask(JSContext* cx)
+      : helperThread(nullptr)
+      , cx(cx)
+      , ss(nullptr)
+      , abort_(false)
+      , result(OOM)
+    {}
 
-    bool runtimeMatches(JSRuntime* runtime) const {
-        return runtime == runtime_;
+    ~SourceCompressionTask()
+    {
+        complete();
     }
 
-    void fixupMajorGCNumber(JSRuntime* runtime) {
-        MOZ_ASSERT(majorGCNumber_ == MajorGCNumberWaitingForFixup);
-        majorGCNumber_ = runtime->gc.majorGCCount();
-    }
-
-    bool shouldStart() const {
-        // We wait 2 major GCs to start compressing, in order to avoid
-        // immediate compression.
-        if (majorGCNumber_ == MajorGCNumberWaitingForFixup)
-            return false;
-        return runtime_->gc.majorGCCount() > majorGCNumber_ + 1;
-    }
-
-    bool shouldCancel() const {
-        // If the refcount is exactly 1, then nothing else is holding on to the
-        // ScriptSource, so no reason to compress it and we should cancel the task.
-        return sourceHolder_.get()->refs == 1;
-    }
-
-    void work();
-    void complete();
+    ResultType work();
+    bool complete();
+    void abort() { abort_ = true; }
+    bool active() const { return !!ss; }
+    ScriptSource* source() { return ss; }
 };
 
 } /* namespace js */
