@@ -72,15 +72,7 @@ MediaList::DoMediaChange(Func aCallback)
 }
 
 /* static */ already_AddRefed<MediaList>
-MediaList::Create(const nsIDocument& aDocument,
-                  const nsAString& aMedia)
-{
-  return Create(aDocument.GetStyleBackendType(), aMedia);
-}
-
-/* static */ already_AddRefed<MediaList>
-MediaList::Create(StyleBackendType aBackendType,
-                  const nsAString& aMedia)
+MediaList::Create(StyleBackendType aBackendType, const nsAString& aMedia)
 {
   if (aBackendType == StyleBackendType::Servo) {
     RefPtr<ServoMediaList> mediaList = new ServoMediaList(aMedia);
