@@ -10,6 +10,7 @@ config = {
         "branch": "default",
         "dest": "mozilla-release",
         "vcs": "hg",
+        "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
     },
     "vcs_share_base": "/builds/hg-shared",
     "push_dest": "ssh://hg.mozilla.org/releases/mozilla-release",
