@@ -320,9 +320,15 @@ class JSFunction : public js::NativeObject
         return hasGuessedAtom() ? nullptr : atom_.get();
     }
 
-    void initAtom(JSAtom* atom) { atom_.init(atom); }
+    void initAtom(JSAtom* atom) {
+        MOZ_ASSERT_IF(atom, js::AtomIsMarked(zone(), atom));
+        atom_.init(atom);
+    }
 
-    void setAtom(JSAtom* atom) { atom_ = atom; }
+    void setAtom(JSAtom* atom) {
+        MOZ_ASSERT_IF(atom, js::AtomIsMarked(zone(), atom));
+        atom_ = atom;
+    }
 
     JSAtom* displayAtom() const {
         return atom_;

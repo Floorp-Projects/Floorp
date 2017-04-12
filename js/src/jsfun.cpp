@@ -2019,7 +2019,11 @@ NewFunctionClone(JSContext* cx, HandleFunction fun, NewObjectKind newKind,
 
     clone->setArgCount(fun->nargs());
     clone->setFlags(flags);
-    clone->initAtom(fun->displayAtom());
+
+    JSAtom* atom = fun->displayAtom();
+    if (atom)
+        cx->markAtom(atom);
+    clone->initAtom(atom);
 
     if (allocKind == AllocKind::FUNCTION_EXTENDED) {
         if (fun->isExtended() && fun->compartment() == cx->compartment()) {
