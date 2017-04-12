@@ -91,10 +91,16 @@ public class SyncAction extends BaseAction {
                     studyRequired |= createContent(catalog, object);
                 }
             }
+
+            DownloadContentTelemetry.eventSyncSuccess(rawCatalog.length() > 0, cleanupRequired || studyRequired);
         } catch (UnrecoverableDownloadContentException e) {
             Log.e(LOGTAG, "UnrecoverableDownloadContentException", e);
+
+            DownloadContentTelemetry.eventSyncFailure(DownloadContentTelemetry.ERROR_UNRECOVERABLE);
         } catch (RecoverableDownloadContentException e) {
             Log.e(LOGTAG, "RecoverableDownloadContentException");
+
+            DownloadContentTelemetry.eventSyncFailure(e);
         } catch (JSONException e) {
             Log.e(LOGTAG, "JSONException", e);
         }

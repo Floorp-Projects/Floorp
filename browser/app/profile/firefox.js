@@ -685,7 +685,11 @@ pref("browser.preferences.search", false);
 // (The Storage Management-related prefs are browser.storageManager.* )
 // The Offline(Appcache) Group section in about:preferences will be hidden.
 // And the task to clear appcache will be done by Storage Management.
+#if defined(NIGHTLY_BUILD)
+pref("browser.preferences.offlineGroup.enabled", false);
+#else
 pref("browser.preferences.offlineGroup.enabled", true);
+#endif
 
 pref("browser.download.show_plugins_in_list", true);
 pref("browser.download.hide_plugins_without_extensions", true);

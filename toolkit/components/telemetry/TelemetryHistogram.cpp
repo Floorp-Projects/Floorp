@@ -57,8 +57,8 @@ namespace TelemetryIPCAccumulator = mozilla::TelemetryIPCAccumulator;
 //
 // * Functions named TelemetryHistogram::*.  This is the external interface.
 //   Entries and exits to these functions are serialised using
-//   |gTelemetryHistogramMutex|, except for GetAddonHistogramSnapshots,
-//   GetKeyedHistogramSnapshots and CreateHistogramSnapshots.
+//   |gTelemetryHistogramMutex|, except for GetKeyedHistogramSnapshots and
+//   CreateHistogramSnapshots.
 //
 // Avoiding races and deadlocks:
 //
@@ -138,14 +138,6 @@ struct HistogramInfo {
   nsresult label_id(const char* label, uint32_t* labelId) const;
 };
 
-struct AddonHistogramInfo {
-  uint32_t min;
-  uint32_t max;
-  uint32_t bucketCount;
-  uint32_t histogramType;
-  Histogram *h;
-};
-
 enum reflectStatus {
   REFLECT_OK,
   REFLECT_CORRUPT,
@@ -153,17 +145,6 @@ enum reflectStatus {
 };
 
 typedef StatisticsRecorder::Histograms::iterator HistogramIterator;
-
-typedef nsBaseHashtableET<nsCStringHashKey, AddonHistogramInfo>
-          AddonHistogramEntryType;
-
-typedef AutoHashtable<AddonHistogramEntryType>
-          AddonHistogramMapType;
-
-typedef nsBaseHashtableET<nsCStringHashKey, AddonHistogramMapType *>
-          AddonEntryType;
-
-typedef AutoHashtable<AddonEntryType> AddonMapType;
 
 } // namespace
 
@@ -189,8 +170,6 @@ bool gCorruptHistograms[mozilla::Telemetry::HistogramCount];
 
 // This is for gHistograms, gHistogramStringTable
 #include "TelemetryHistogramData.inc"
-
-AddonMapType gAddonMap;
 
 // The singleton StatisticsRecorder object for this process.
 base::StatisticsRecorder* gStatisticsRecorder = nullptr;
@@ -1145,108 +1124,6 @@ internal_GetKeyedHistogramById(const nsACString &name)
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 //
-// PRIVATE: functions related to addon histograms
-
-namespace {
-
-// Compute the name to pass into Histogram for the addon histogram
-// 'name' from the addon 'id'.  We can't use 'name' directly because it
-// might conflict with other histograms in other addons or even with our
-// own.
-void
-internal_AddonHistogramName(const nsACString &id, const nsACString &name,
-                            nsACString &ret)
-{
-  ret.Append(id);
-  ret.Append(':');
-  ret.Append(name);
-}
-
-bool
-internal_CreateHistogramForAddon(const nsACString &name,
-                                 AddonHistogramInfo &info)
-{
-  Histogram *h;
-  nsresult rv = internal_HistogramGet(PromiseFlatCString(name).get(), "never",
-                                      info.histogramType, info.min, info.max,
-                                      info.bucketCount, true, &h);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-  // Don't let this histogram be reported via the normal means
-  // (e.g. Telemetry.registeredHistograms); we'll make it available in
-  // other ways.
-  h->ClearFlags(Histogram::kUmaTargetedHistogramFlag);
-  info.h = h;
-  return true;
-}
-
-bool
-internal_AddonHistogramReflector(AddonHistogramEntryType *entry,
-                                 JSContext *cx, JS::Handle<JSObject*> obj)
-{
-  AddonHistogramInfo &info = entry->mData;
-
-  // Never even accessed the histogram.
-  if (!info.h) {
-    // Have to force creation of HISTOGRAM_FLAG histograms.
-    if (info.histogramType != nsITelemetry::HISTOGRAM_FLAG)
-      return true;
-
-    if (!internal_CreateHistogramForAddon(entry->GetKey(), info)) {
-      return false;
-    }
-  }
-
-  if (internal_IsEmpty(info.h)) {
-    return true;
-  }
-
-  JS::Rooted<JSObject*> snapshot(cx, JS_NewPlainObject(cx));
-  if (!snapshot) {
-    // Just consider this to be skippable.
-    return true;
-  }
-  switch (internal_ReflectHistogramSnapshot(cx, snapshot, info.h)) {
-  case REFLECT_FAILURE:
-  case REFLECT_CORRUPT:
-    return false;
-  case REFLECT_OK:
-    const nsACString &histogramName = entry->GetKey();
-    if (!JS_DefineProperty(cx, obj, PromiseFlatCString(histogramName).get(),
-                           snapshot, JSPROP_ENUMERATE)) {
-      return false;
-    }
-    break;
-  }
-  return true;
-}
-
-bool
-internal_AddonReflector(AddonEntryType *entry, JSContext *cx,
-                        JS::Handle<JSObject*> obj)
-{
-  const nsACString &addonId = entry->GetKey();
-  JS::Rooted<JSObject*> subobj(cx, JS_NewPlainObject(cx));
-  if (!subobj) {
-    return false;
-  }
-
-  AddonHistogramMapType *map = entry->mData;
-  if (!(map->ReflectIntoJS(internal_AddonHistogramReflector, cx, subobj)
-        && JS_DefineProperty(cx, obj, PromiseFlatCString(addonId).get(),
-                             subobj, JSPROP_ENUMERATE))) {
-    return false;
-  }
-  return true;
-}
-
-} // namespace
-
-
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-//
 // PRIVATE: thread-unsafe helpers for the external interface
 
 // This is a StaticMutex rather than a plain Mutex (1) so that
@@ -2014,7 +1891,6 @@ void TelemetryHistogram::DeInitializeGlobalState()
   gCanRecordExtended = false;
   gHistogramMap.Clear();
   gKeyedHistograms.Clear();
-  gAddonMap.Clear();
   gInitDone = false;
 }
 
@@ -2419,143 +2295,12 @@ TelemetryHistogram::GetKeyedHistogramSnapshots(JSContext *cx,
   return NS_OK;
 }
 
-nsresult
-TelemetryHistogram::RegisterAddonHistogram(const nsACString &id,
-                                           const nsACString &name,
-                                           uint32_t histogramType,
-                                           uint32_t min, uint32_t max,
-                                           uint32_t bucketCount,
-                                           uint8_t optArgCount)
-{
-  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-  if (histogramType == nsITelemetry::HISTOGRAM_EXPONENTIAL ||
-      histogramType == nsITelemetry::HISTOGRAM_LINEAR) {
-    if (optArgCount != 3) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    // Sanity checks for histogram parameters.
-    if (min >= max)
-      return NS_ERROR_ILLEGAL_VALUE;
-
-    if (bucketCount <= 2)
-      return NS_ERROR_ILLEGAL_VALUE;
-
-    if (min < 1)
-      return NS_ERROR_ILLEGAL_VALUE;
-  } else {
-    min = 1;
-    max = 2;
-    bucketCount = 3;
-  }
-
-  AddonEntryType *addonEntry = gAddonMap.GetEntry(id);
-  if (!addonEntry) {
-    addonEntry = gAddonMap.PutEntry(id);
-    if (MOZ_UNLIKELY(!addonEntry)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    addonEntry->mData = new AddonHistogramMapType();
-  }
-
-  AddonHistogramMapType *histogramMap = addonEntry->mData;
-  AddonHistogramEntryType *histogramEntry = histogramMap->GetEntry(name);
-  // Can't re-register the same histogram.
-  if (histogramEntry) {
-    return NS_ERROR_FAILURE;
-  }
-
-  histogramEntry = histogramMap->PutEntry(name);
-  if (MOZ_UNLIKELY(!histogramEntry)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  AddonHistogramInfo &info = histogramEntry->mData;
-  info.min = min;
-  info.max = max;
-  info.bucketCount = bucketCount;
-  info.histogramType = histogramType;
-
-  return NS_OK;
-}
-
-nsresult
-TelemetryHistogram::GetAddonHistogram(const nsACString &id,
-                                      const nsACString &name,
-                                      JSContext *cx,
-                                      JS::MutableHandle<JS::Value> ret)
-{
-  AddonHistogramInfo* info = nullptr;
-  {
-    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-    AddonEntryType *addonEntry = gAddonMap.GetEntry(id);
-    // The given id has not been registered.
-    if (!addonEntry) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    AddonHistogramMapType *histogramMap = addonEntry->mData;
-    AddonHistogramEntryType *histogramEntry = histogramMap->GetEntry(name);
-    // The given histogram name has not been registered.
-    if (!histogramEntry) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    info = &histogramEntry->mData;
-    if (!info->h) {
-      nsAutoCString actualName;
-      internal_AddonHistogramName(id, name, actualName);
-      if (!internal_CreateHistogramForAddon(actualName, *info)) {
-        return NS_ERROR_FAILURE;
-      }
-    }
-  }
-
-  // Runs without protection from |gTelemetryHistogramMutex|
-  return internal_WrapAndReturnHistogram(info->h, cx, ret);
-}
-
-nsresult
-TelemetryHistogram::UnregisterAddonHistograms(const nsACString &id)
-{
-  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-  AddonEntryType *addonEntry = gAddonMap.GetEntry(id);
-  if (addonEntry) {
-    // Histogram's destructor is private, so this is the best we can do.
-    // The histograms the addon created *will* stick around, but they
-    // will be deleted if and when the addon registers histograms with
-    // the same names.
-    delete addonEntry->mData;
-    gAddonMap.RemoveEntry(addonEntry);
-  }
-
-  return NS_OK;
-}
-
-nsresult
-TelemetryHistogram::GetAddonHistogramSnapshots(JSContext *cx,
-                                               JS::MutableHandle<JS::Value> ret)
-{
-  // Runs without protection from |gTelemetryHistogramMutex|
-  JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
-  if (!obj) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!gAddonMap.ReflectIntoJS(internal_AddonReflector, cx, obj)) {
-    return NS_ERROR_FAILURE;
-  }
-  ret.setObject(*obj);
-  return NS_OK;
-}
-
 size_t
 TelemetryHistogram::GetMapShallowSizesOfExcludingThis(mozilla::MallocSizeOf
                                                       aMallocSizeOf)
 {
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-  return gAddonMap.ShallowSizeOfExcludingThis(aMallocSizeOf) +
-         gHistogramMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  return gHistogramMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
 }
 
 size_t

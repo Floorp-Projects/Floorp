@@ -36,7 +36,7 @@ let gSiteDataSettings = {
 
     this._list = document.getElementById("sitesList");
     this._searchBox = document.getElementById("searchBox");
-    this._prefStrBundle = document.getElementById("bundlePreferences")
+    this._prefStrBundle = document.getElementById("bundlePreferences");
     SiteDataManager.getSites().then(sites => {
       this._sites = sites;
       let sortCol = document.getElementById("hostCol");
@@ -44,6 +44,10 @@ let gSiteDataSettings = {
       this._buildSitesList(this._sites);
       Services.obs.notifyObservers(null, "sitedata-settings-init", null);
     });
+
+    let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
+    let settingsDescription = document.getElementById("settingsDescription");
+    settingsDescription.textContent = this._prefStrBundle.getFormattedString("siteDataSettings.description", [brandShortName]);
 
     setEventListener("hostCol", "click", this.onClickTreeCol);
     setEventListener("usageCol", "click", this.onClickTreeCol);
@@ -139,13 +143,14 @@ let gSiteDataSettings = {
         continue;
       }
 
-      let statusStrId = data.status === Ci.nsIPermissionManager.ALLOW_ACTION ? "important" : "default";
       let size = DownloadUtils.convertByteUnits(data.usage);
       let item = document.createElement("richlistitem");
       item.setAttribute("data-origin", data.uri.spec);
       item.setAttribute("host", host);
-      item.setAttribute("status", this._prefStrBundle.getString(statusStrId));
       item.setAttribute("usage", this._prefStrBundle.getFormattedString("siteUsage", size));
+      if (data.status === Ci.nsIPermissionManager.ALLOW_ACTION ) {
+        item.setAttribute("status", this._prefStrBundle.getString("persistent"));
+      }
       this._list.appendChild(item);
     }
     this._updateButtonsState();

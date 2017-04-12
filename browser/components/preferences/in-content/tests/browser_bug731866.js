@@ -21,6 +21,16 @@ function checkElements(expectedPane) {
         element.id === "drmGroup") {
       continue;
     }
+
+    // The siteDataGroup in the Storage Management project will replace the offlineGroup eventually,
+    // so during the transition period, we have to check the pref to see if the offlineGroup
+    // should be hidden always. See the bug 1354530 for the details.
+    if (element.id == "offlineGroup" &&
+        !SpecialPowers.getBoolPref("browser.preferences.offlineGroup.enabled")) {
+      is_element_hidden(element, "Disabled offlineGroup should be hidden");
+      continue;
+    }
+
     let attributeValue = element.getAttribute("data-category");
     let suffix = " (id=" + element.id + ")";
     if (attributeValue == "pane" + expectedPane) {

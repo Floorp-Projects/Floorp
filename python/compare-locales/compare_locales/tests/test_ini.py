@@ -23,23 +23,30 @@ class TestIniParser(ParserTestMixin, unittest.TestCase):
         self._test('''; This file is in the UTF-8 encoding
 [Strings]
 TitleText=Some Title
-''', (('TitleText', 'Some Title'),))
-        self.assert_('UTF-8' in self.parser.header)
+''', (
+            ('Comment', 'UTF-8 encoding'),
+            ('IniSection', 'Strings'),
+            ('TitleText', 'Some Title'),))
 
     def testMPL2_Space_UTF(self):
         self._test(mpl2 + '''
 ; This file is in the UTF-8 encoding
 [Strings]
 TitleText=Some Title
-''', (('TitleText', 'Some Title'),))
-        self.assert_('MPL' in self.parser.header)
+''', (
+            ('Comment', mpl2),
+            ('Comment', 'UTF-8'),
+            ('IniSection', 'Strings'),
+            ('TitleText', 'Some Title'),))
 
     def testMPL2_Space(self):
         self._test(mpl2 + '''
 [Strings]
 TitleText=Some Title
-''', (('TitleText', 'Some Title'),))
-        self.assert_('MPL' in self.parser.header)
+''', (
+            ('Comment', mpl2),
+            ('IniSection', 'Strings'),
+            ('TitleText', 'Some Title'),))
 
     def testMPL2_MultiSpace(self):
         self._test(mpl2 + '''\
@@ -48,26 +55,33 @@ TitleText=Some Title
 
 [Strings]
 TitleText=Some Title
-''', (('TitleText', 'Some Title'),))
-        self.assert_('MPL' in self.parser.header)
+''', (
+            ('Comment', mpl2),
+            ('Comment', 'more comments'),
+            ('IniSection', 'Strings'),
+            ('TitleText', 'Some Title'),))
 
     def testMPL2_JunkBeforeCategory(self):
         self._test(mpl2 + '''\
 Junk
 [Strings]
 TitleText=Some Title
-''', (('_junk_\\d+_0-213$', mpl2 + '''\
-Junk
-[Strings]'''), ('TitleText', 'Some Title')))
-        self.assert_('MPL' not in self.parser.header)
+''', (
+            ('Comment', mpl2),
+            ('Junk', 'Junk'),
+            ('IniSection', 'Strings'),
+            ('TitleText', 'Some Title')))
 
     def test_TrailingComment(self):
         self._test(mpl2 + '''
 [Strings]
 TitleText=Some Title
 ;Stray trailing comment
-''', (('TitleText', 'Some Title'),))
-        self.assert_('MPL' in self.parser.header)
+''', (
+            ('Comment', mpl2),
+            ('IniSection', 'Strings'),
+            ('TitleText', 'Some Title'),
+            ('Comment', 'Stray trailing')))
 
     def test_SpacedTrailingComments(self):
         self._test(mpl2 + '''
@@ -77,8 +91,11 @@ TitleText=Some Title
 ;Stray trailing comment
 ;Second stray comment
 
-''', (('TitleText', 'Some Title'),))
-        self.assert_('MPL' in self.parser.header)
+''', (
+            ('Comment', mpl2),
+            ('IniSection', 'Strings'),
+            ('TitleText', 'Some Title'),
+            ('Comment', 'Second stray comment')))
 
     def test_TrailingCommentsAndJunk(self):
         self._test(mpl2 + '''
@@ -89,14 +106,13 @@ TitleText=Some Title
 Junk
 ;Second stray comment
 
-''', (('TitleText', 'Some Title'), ('_junk_\\d+_231-284$', '''\
-
-;Stray trailing comment
-Junk
-;Second stray comment
-
-''')))
-        self.assert_('MPL' in self.parser.header)
+''', (
+            ('Comment', mpl2),
+            ('IniSection', 'Strings'),
+            ('TitleText', 'Some Title'),
+            ('Comment', 'Stray trailing'),
+            ('Junk', 'Junk'),
+            ('Comment', 'Second stray comment')))
 
     def test_JunkInbetweenEntries(self):
         self._test(mpl2 + '''
@@ -106,10 +122,18 @@ TitleText=Some Title
 Junk
 
 Good=other string
-''', (('TitleText', 'Some Title'), ('_junk_\\d+_231-236$', '''\
+''', (
+            ('Comment', mpl2),
+            ('IniSection', 'Strings'),
+            ('TitleText', 'Some Title'),
+            ('Junk', 'Junk'),
+            ('Good', 'other string')))
 
-Junk'''), ('Good', 'other string')))
-        self.assert_('MPL' in self.parser.header)
+    def test_empty_file(self):
+        self._test('', tuple())
+        self._test('\n', (('Whitespace', '\n'),))
+        self._test('\n\n', (('Whitespace', '\n\n'),))
+        self._test(' \n\n', (('Whitespace', ' \n\n'),))
 
 if __name__ == '__main__':
     unittest.main()

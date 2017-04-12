@@ -138,8 +138,17 @@ add_task(function* test_history_clear() {
 
   // Check that we only have favicons for retained places
   stmt = mDBConn.createStatement(
-    `SELECT f.id FROM moz_favicons f WHERE NOT EXISTS
-       (SELECT id FROM moz_places WHERE favicon_id = f.id) LIMIT 1`);
+    `SELECT 1
+     FROM moz_pages_w_icons
+     LEFT JOIN moz_places h ON url_hash = page_url_hash AND url = page_url
+     WHERE h.id ISNULL`);
+  do_check_false(stmt.executeStep());
+  stmt.finalize();
+  stmt = mDBConn.createStatement(
+    `SELECT 1
+     FROM moz_icons WHERE id NOT IN (
+       SELECT icon_id FROM moz_icons_to_pages
+     )`);
   do_check_false(stmt.executeStep());
   stmt.finalize();
 

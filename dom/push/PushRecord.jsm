@@ -163,7 +163,7 @@ PushRecord.prototype = {
     // We're using a custom query instead of `nsINavHistoryQueryOptions`
     // because the latter doesn't expose a way to filter by transition type:
     // `setTransitions` performs a logical "and," but we want an "or." We
-    // also avoid an unneeded left join on `moz_favicons`, and an `ORDER BY`
+    // also avoid an unneeded left join with favicons, and an `ORDER BY`
     // clause that emits a suboptimal index warning.
     let rows = yield db.executeCached(
       `SELECT MAX(visit_date) AS lastVisit

@@ -9603,7 +9603,7 @@ public:
 
   NS_IMETHOD
   OnComplete(nsIURI* aFaviconURI, uint32_t aDataLen,
-             const uint8_t* aData, const nsACString& aMimeType) override
+             const uint8_t* aData, const nsACString& aMimeType, uint16_t aWidth) override
   {
     // Continue only if there is an associated favicon.
     if (!aFaviconURI) {
@@ -9662,7 +9662,7 @@ nsDocShell::CopyFavicon(nsIURI* aOldURI,
       new nsCopyFaviconCallback(favSvc, aNewURI,
                                 aLoadingPrincipal,
                                 aInPrivateBrowsing);
-    favSvc->GetFaviconURLForPage(aOldURI, callback);
+    favSvc->GetFaviconURLForPage(aOldURI, callback, 0);
   }
 #endif
 }

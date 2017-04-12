@@ -887,10 +887,13 @@ namespace places {
 
     MOZ_ASSERT(table.EqualsLiteral("moz_places") ||
                table.EqualsLiteral("moz_historyvisits") ||
-               table.EqualsLiteral("moz_bookmarks"));
+               table.EqualsLiteral("moz_bookmarks") ||
+               table.EqualsLiteral("moz_icons"));
 
     if (table.EqualsLiteral("moz_bookmarks")) {
       nsNavBookmarks::StoreLastInsertedId(table, lastInsertedId);
+    } else if (table.EqualsLiteral("moz_icons")) {
+      nsFaviconService::StoreLastInsertedId(table, lastInsertedId);
     } else {
       nsNavHistory::StoreLastInsertedId(table, lastInsertedId);
     }

@@ -101,7 +101,7 @@ HTTP(..) == font-synthesis-2.html font-synthesis-2.html
 == apple-symbols-1.html apple-symbols-1.html
 
 # distinguish between italic and oblique
-fails == simple-oblique.html simple-oblique.html
+== simple-oblique.html simple-oblique.html
 == italic-oblique-1.html italic-oblique-1.html
 == italic-oblique-2.html italic-oblique-2.html
 == italic-oblique-3.html italic-oblique-3.html

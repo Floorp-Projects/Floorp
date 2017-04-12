@@ -14,6 +14,11 @@ let gSiteDataRemoveSelected = {
   _tree: null,
 
   init() {
+    let bundlePreferences = document.getElementById("bundlePreferences");
+    let acceptBtn = document.getElementById("SiteDataRemoveSelectedDialog")
+                            .getButton("accept");
+    acceptBtn.label = bundlePreferences.getString("acceptRemove");
+
     // Organize items for the tree from the argument
     let hostsTable = window.arguments[0].hostsTable;
     let visibleItems = [];

@@ -73,7 +73,9 @@ public:
                    override;
 
   virtual Result IsChainValid(const mozilla::pkix::DERArray& certChain,
-                              mozilla::pkix::Time time) override;
+                              mozilla::pkix::Time time,
+                              const mozilla::pkix::CertPolicyId& requiredPolicy)
+                              override;
 
   virtual void NoteAuxiliaryExtension(
                    mozilla::pkix::AuxiliaryExtension extension,
