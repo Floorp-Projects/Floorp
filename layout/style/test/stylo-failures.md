@@ -30,9 +30,8 @@ to mochitest command.
 ## Failures
 
 * Media query support:
-  * test_bug418986-2.html: matchMedia support [3]
-  * test_bug453896_deck.html: &lt;style media&gt; support [8]
-  * test_media_queries.html [637]
+  * test_bug418986-2.html: matchMedia support [6]
+  * test_media_queries.html [182]
   * test_media_queries_dynamic.html [11]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
