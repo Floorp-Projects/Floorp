@@ -12,9 +12,6 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 var gAdvancedPane = {
   _inited: false,
 
-  /**
-   * Brings the appropriate tab to the front and initializes various bits of UI.
-   */
   init() {
     function setEventListener(aId, aEventType, aCallback) {
       document.getElementById(aId)
@@ -35,99 +32,6 @@ var gAdvancedPane = {
                        gAdvancedPane.updateWritePrefs);
       setEventListener("showUpdateHistory", "command",
                        gAdvancedPane.showUpdates);
-    }
-    this.updateOnScreenKeyboardVisibility();
-
-    setEventListener("layers.acceleration.disabled", "change",
-                     gAdvancedPane.updateHardwareAcceleration);
-  },
-
-
-  // GENERAL TAB
-
-  /*
-   * Preferences:
-   *
-   * accessibility.browsewithcaret
-   * - true enables keyboard navigation and selection within web pages using a
-   *   visible caret, false uses normal keyboard navigation with no caret
-   * accessibility.typeaheadfind
-   * - when set to true, typing outside text areas and input boxes will
-   *   automatically start searching for what's typed within the current
-   *   document; when set to false, no search action happens
-   * ui.osk.enabled
-   * - when set to true, subject to other conditions, we may sometimes invoke
-   *   an on-screen keyboard when a text input is focused.
-   *   (Currently Windows-only, and depending on prefs, may be Windows-8-only)
-   * general.autoScroll
-   * - when set to true, clicking the scroll wheel on the mouse activates a
-   *   mouse mode where moving the mouse down scrolls the document downward with
-   *   speed correlated with the distance of the cursor from the original
-   *   position at which the click occurred (and likewise with movement upward);
-   *   if false, this behavior is disabled
-   * general.smoothScroll
-   * - set to true to enable finer page scrolling than line-by-line on page-up,
-   *   page-down, and other such page movements
-   * layout.spellcheckDefault
-   * - an integer:
-   *     0  disables spellchecking
-   *     1  enables spellchecking, but only for multiline text fields
-   *     2  enables spellchecking for all text fields
-   */
-
-  /**
-   * Stores the original value of the spellchecking preference to enable proper
-   * restoration if unchanged (since we're mapping a tristate onto a checkbox).
-   */
-  _storedSpellCheck: 0,
-
-  /**
-   * Returns true if any spellchecking is enabled and false otherwise, caching
-   * the current value to enable proper pref restoration if the checkbox is
-   * never changed.
-   */
-  readCheckSpelling() {
-    var pref = document.getElementById("layout.spellcheckDefault");
-    this._storedSpellCheck = pref.value;
-
-    return (pref.value != 0);
-  },
-
-  /**
-   * Returns the value of the spellchecking preference represented by UI,
-   * preserving the preference's "hidden" value if the preference is
-   * unchanged and represents a value not strictly allowed in UI.
-   */
-  writeCheckSpelling() {
-    var checkbox = document.getElementById("checkSpelling");
-    if (checkbox.checked) {
-      if (this._storedSpellCheck == 2) {
-        return 2;
-      }
-      return 1;
-    }
-    return 0;
-  },
-
-
-  /**
-   * When the user toggles the layers.acceleration.disabled pref,
-   * sync its new value to the gfx.direct2d.disabled pref too.
-   */
-  updateHardwareAcceleration() {
-    if (AppConstants.platform == "win") {
-      var fromPref = document.getElementById("layers.acceleration.disabled");
-      var toPref = document.getElementById("gfx.direct2d.disabled");
-      toPref.value = fromPref.value;
-    }
-  },
-
-  updateOnScreenKeyboardVisibility() {
-    if (AppConstants.platform == "win") {
-      let minVersion = Services.prefs.getBoolPref("ui.osk.require_win10") ? 10 : 6.2;
-      if (Services.vc.compare(Services.sysinfo.getProperty("version"), minVersion) >= 0) {
-        document.getElementById("useOnScreenKeyboard").hidden = false;
-      }
     }
   },
 
@@ -235,21 +139,6 @@ var gAdvancedPane = {
   showUpdates() {
     gSubDialog.open("chrome://mozapps/content/update/history.xul");
   },
-
-  // ENCRYPTION TAB
-
-  /*
-   * Preferences:
-   *
-   * security.default_personal_cert
-   * - a string:
-   *     "Select Automatically"   select a certificate automatically when a site
-   *                              requests one
-   *     "Ask Every Time"         present a dialog to the user so he can select
-   *                              the certificate to use on a site which
-   *                              requests one
-   */
-
 
   observe(aSubject, aTopic, aData) {
     if (AppConstants.MOZ_UPDATER) {
