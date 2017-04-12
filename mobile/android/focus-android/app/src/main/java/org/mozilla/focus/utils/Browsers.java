@@ -11,6 +11,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.support.annotation.Nullable;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -60,7 +61,7 @@ public class Browsers {
     }
 
     private final Map<String, ActivityInfo> browsers;
-    private ActivityInfo defaultBrowser;
+    private final ActivityInfo defaultBrowser;
     // This will contain installed firefox branded browser ordered by priority from Firefox,
     // Firefox_Beta, Firefox Aurora and Firefox_Nightly. If multiple firefox branded browser is
     // installed then higher priority one will be stored here
@@ -164,7 +165,7 @@ public class Browsers {
                 && !defaultBrowser.packageName.equals(context.getPackageName());
     }
 
-    public ActivityInfo getDefaultBrowser() {
+    public @Nullable ActivityInfo getDefaultBrowser() {
         return defaultBrowser;
     }
 

@@ -6,6 +6,7 @@
 package org.mozilla.focus.fragment;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.drawable.TransitionDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -321,8 +322,16 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                 final Browsers browsers = new Browsers(getContext(), webView.getUrl());
 
+                final ActivityInfo defaultBrowser = browsers.getDefaultBrowser();
+
+                if (defaultBrowser == null) {
+                    // We only add this menu item when a third party default exists, in
+                    // BrowserMenuAdapter.initializeMenu()
+                    throw new IllegalStateException("<Open with $Default> was shown when no default browser is set");
+                }
+
                 final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(webView.getUrl()));
-                intent.setPackage(browsers.getDefaultBrowser().packageName);
+                intent.setPackage(defaultBrowser.packageName);
                 startActivity(intent);
 
                 TelemetryWrapper.openDefaultAppEvent();
