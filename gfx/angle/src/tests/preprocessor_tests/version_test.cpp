@@ -7,7 +7,7 @@
 #include "PreprocessorTest.h"
 #include "compiler/preprocessor/Token.h"
 
-class VersionTest : public PreprocessorTest
+class VersionTest : public SimplePreprocessorTest
 {
 };
 
@@ -100,25 +100,19 @@ TEST_F(VersionTest, AfterValidToken)
 {
     const char* str = "foo\n"
                       "#version 200\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, NULL));
 
     using testing::_;
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_VERSION_NOT_FIRST_STATEMENT,
                       pp::SourceLocation(0, 2), _));
 
-    pp::Token token;
-    do
-    {
-        mPreprocessor.lex(&token);
-    } while (token.type != pp::Token::LAST);
+    preprocess(str);
 }
 
 TEST_F(VersionTest, AfterInvalidToken)
 {
     const char* str = "$\n"
                       "#version 200\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, NULL));
 
     using testing::_;
     EXPECT_CALL(mDiagnostics,
@@ -128,36 +122,26 @@ TEST_F(VersionTest, AfterInvalidToken)
                 print(pp::Diagnostics::PP_VERSION_NOT_FIRST_STATEMENT,
                       pp::SourceLocation(0, 2), _));
 
-    pp::Token token;
-    do
-    {
-        mPreprocessor.lex(&token);
-    } while (token.type != pp::Token::LAST);
+    preprocess(str);
 }
 
 TEST_F(VersionTest, AfterValidDirective)
 {
     const char* str = "#\n"
                       "#version 200\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, NULL));
 
     using testing::_;
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_VERSION_NOT_FIRST_STATEMENT,
                       pp::SourceLocation(0, 2), _));
 
-    pp::Token token;
-    do
-    {
-        mPreprocessor.lex(&token);
-    } while (token.type != pp::Token::LAST);
+    preprocess(str);
 }
 
 TEST_F(VersionTest, AfterInvalidDirective)
 {
     const char* str = "#foo\n"
                       "#version 200\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, NULL));
 
     using testing::_;
     EXPECT_CALL(mDiagnostics,
@@ -167,11 +151,7 @@ TEST_F(VersionTest, AfterInvalidDirective)
                 print(pp::Diagnostics::PP_VERSION_NOT_FIRST_STATEMENT,
                       pp::SourceLocation(0, 2), _));
 
-    pp::Token token;
-    do
-    {
-        mPreprocessor.lex(&token);
-    } while (token.type != pp::Token::LAST);
+    preprocess(str);
 }
 
 TEST_F(VersionTest, AfterExcludedBlock)
@@ -180,18 +160,13 @@ TEST_F(VersionTest, AfterExcludedBlock)
                       "foo\n"
                       "#endif\n"
                       "#version 200\n";
-    ASSERT_TRUE(mPreprocessor.init(1, &str, NULL));
 
     using testing::_;
     EXPECT_CALL(mDiagnostics,
                 print(pp::Diagnostics::PP_VERSION_NOT_FIRST_STATEMENT,
                       pp::SourceLocation(0, 4), _));
 
-    pp::Token token;
-    do
-    {
-        mPreprocessor.lex(&token);
-    } while (token.type != pp::Token::LAST);
+    preprocess(str);
 }
 
 struct VersionTestParam

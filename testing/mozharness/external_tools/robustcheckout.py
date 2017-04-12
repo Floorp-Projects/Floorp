@@ -17,7 +17,9 @@ import functools
 import os
 import random
 import re
+import socket
 import time
+import urllib2
 
 from mercurial.i18n import _
 from mercurial.node import hex
@@ -32,7 +34,7 @@ from mercurial import (
     util,
 )
 
-testedwith = '3.7 3.8 3.9 4.0'
+testedwith = '3.7 3.8 3.9 4.0 4.1'
 minimumhgversion = '3.7'
 
 cmdtable = {}
@@ -226,41 +228,50 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
     # At this point we either have an existing working directory using
     # shared, pooled storage or we have nothing.
 
-    def handlepullabort(e):
-        """Handle an error.Abort raised during a pull.
+    def handlenetworkfailure():
+        if networkattempts[0] >= networkattemptlimit:
+            raise error.Abort('reached maximum number of network attempts; '
+                              'giving up\n')
+
+        ui.warn('(retrying after network failure on attempt %d of %d)\n' %
+                (networkattempts[0], networkattemptlimit))
+
+        # Do a backoff on retries to mitigate the thundering herd
+        # problem. This is an exponential backoff with a multipler
+        # plus random jitter thrown in for good measure.
+        # With the default settings, backoffs will be:
+        # 1) 2.5 - 6.5
+        # 2) 5.5 - 9.5
+        # 3) 11.5 - 15.5
+        backoff = (2 ** networkattempts[0] - 1) * 1.5
+        jittermin = ui.configint('robustcheckout', 'retryjittermin', 1000)
+        jittermax = ui.configint('robustcheckout', 'retryjittermax', 5000)
+        backoff += float(random.randint(jittermin, jittermax)) / 1000.0
+        ui.warn('(waiting %.2fs before retry)\n' % backoff)
+        time.sleep(backoff)
+
+        networkattempts[0] += 1
+
+    def handlepullerror(e):
+        """Handle an exception raised during a pull.
 
         Returns True if caller should call ``callself()`` to retry.
         """
-        if e.args[0] == _('repository is unrelated'):
-            ui.warn('(repository is unrelated; deleting)\n')
-            destvfs.rmtree(forcibly=True)
-            return True
-        elif e.args[0].startswith(_('stream ended unexpectedly')):
-            ui.warn('%s\n' % e.args[0])
-            if networkattempts[0] < networkattemptlimit:
-                ui.warn('(retrying after network failure on attempt %d of %d)\n' %
-                        (networkattempts[0], networkattemptlimit))
-
-                # Do a backoff on retries to mitigate the thundering herd
-                # problem. This is an exponential backoff with a multipler
-                # plus random jitter thrown in for good measure.
-                # With the default settings, backoffs will be:
-                # 1) 2.5 - 6.5
-                # 2) 5.5 - 9.5
-                # 3) 11.5 - 15.5
-                backoff = (2 ** networkattempts[0] - 1) * 1.5
-                jittermin = ui.configint('robustcheckout', 'retryjittermin', 1000)
-                jittermax = ui.configint('robustcheckout', 'retryjittermax', 5000)
-                backoff += float(random.randint(jittermin, jittermax)) / 1000.0
-                ui.warn('(waiting %.2fs before retry)\n' % backoff)
-                time.sleep(backoff)
-
-                networkattempts[0] += 1
-
+        if isinstance(e, error.Abort):
+            if e.args[0] == _('repository is unrelated'):
+                ui.warn('(repository is unrelated; deleting)\n')
+                destvfs.rmtree(forcibly=True)
                 return True
-            else:
-                raise error.Abort('reached maximum number of network attempts; '
-                                  'giving up\n')
+            elif e.args[0].startswith(_('stream ended unexpectedly')):
+                ui.warn('%s\n' % e.args[0])
+                # Will raise if failure limit reached.
+                handlenetworkfailure()
+                return True
+        elif isinstance(e, urllib2.URLError):
+            if isinstance(e.reason, socket.error):
+                ui.warn('socket error: %s\n' % e.reason)
+                handlenetworkfailure()
+                return True
 
         return False
 
@@ -284,8 +295,8 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
         try:
             res = hg.clone(ui, {}, cloneurl, dest=dest, update=False,
                            shareopts={'pool': sharebase, 'mode': 'identity'})
-        except error.Abort as e:
-            if handlepullabort(e):
+        except (error.Abort, urllib2.URLError) as e:
+            if handlepullerror(e):
                 return callself()
             raise
         except error.RepoError as e:
@@ -343,8 +354,8 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
                 pullop = exchange.pull(repo, remote, heads=pullrevs)
                 if not pullop.rheads:
                     raise error.Abort('unable to pull requested revision')
-        except error.Abort as e:
-            if handlepullabort(e):
+        except (error.Abort, urllib2.URLError) as e:
+            if handlepullerror(e):
                 return callself()
             raise
         except error.RepoError as e:

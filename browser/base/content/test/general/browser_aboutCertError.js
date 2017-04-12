@@ -151,7 +151,9 @@ add_task(function* checkWrongSystemTimeWarning() {
     });
   }
 
-  let formatter = new Intl.DateTimeFormat();
+  let formatter = Services.intl.createDateTimeFormat(undefined, {
+    dateStyle: "short"
+  });
 
   // pretend we have a positively skewed (ahead) system time
   let serverDate = new Date("2015/10/27");

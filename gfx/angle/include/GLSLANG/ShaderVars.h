@@ -14,11 +14,13 @@
 #include <string>
 #include <vector>
 
-// Assume ShaderLang.h is included before ShaderVars.h, for sh::GLenum
-// Note: make sure to increment ANGLE_SH_VERSION when changing ShaderVars.h
+// This type is defined here to simplify ANGLE's integration with glslang for SPIRv.
+using ShCompileOptions = uint64_t;
 
 namespace sh
 {
+// GLenum alias
+typedef unsigned int GLenum;
 
 // Varying interpolation qualifier, see section 4.3.9 of the ESSL 3.00.4 spec
 enum InterpolationType

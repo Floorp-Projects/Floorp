@@ -7,7 +7,7 @@
 #include "PreprocessorTest.h"
 #include "compiler/preprocessor/Token.h"
 
-class ErrorTest : public PreprocessorTest
+class ErrorTest : public SimplePreprocessorTest
 {
 };
 

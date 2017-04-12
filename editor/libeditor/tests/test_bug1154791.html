@@ -27,37 +27,45 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   var div = document.getElementById("content");
   div.focus();
-  synthesizeMouseAtCenter(div, {});
-  synthesizeKey("VK_LEFT", {});
-  synthesizeKey("VK_LEFT", {});
+  getSpellChecker().UpdateCurrentDictionary(() => {
+    synthesizeMouseAtCenter(div, {});
+    synthesizeKey("VK_LEFT", {});
+    synthesizeKey("VK_LEFT", {});
 
-  setTimeout(function() {
-    synthesizeKey("VK_BACK_SPACE", {});
     setTimeout(function() {
-      synthesizeKey(" ", {});
-
+      synthesizeKey("VK_BACK_SPACE", {});
       setTimeout(function() {
-        var sel = getSpellCheckSelection();
-        is(sel.rangeCount, 2, "We should have two misspelled words");
-        is(String(sel.getRangeAt(0)), "thiss", "Correct misspelled word");
-        is(String(sel.getRangeAt(1)), "onee", "Correct misspelled word");
+        synthesizeKey(" ", {});
 
-        SimpleTest.finish();
+        setTimeout(function() {
+          var sel = getSpellCheckSelection();
+          is(sel.rangeCount, 2, "We should have two misspelled words");
+          is(String(sel.getRangeAt(0)), "thiss", "Correct misspelled word");
+          is(String(sel.getRangeAt(1)), "onee", "Correct misspelled word");
+
+          SimpleTest.finish();
+        },0);
       },0);
     },0);
-  },0);
-
+  });
 });
 
-function getSpellCheckSelection() {
+function getEditor() {
   var Ci = SpecialPowers.Ci;
   var editingSession = SpecialPowers.wrap(window)
                              .QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIWebNavigation)
                              .QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIEditingSession);
-  var editor = editingSession.getEditorForWindow(window);
-  var selcon = editor.selectionController;
+  return editingSession.getEditorForWindow(window);
+}
+
+function getSpellChecker() {
+  return getEditor().getInlineSpellChecker(false).spellChecker;
+}
+
+function getSpellCheckSelection() {
+  var selcon = getEditor().selectionController;
   return selcon.getSelection(selcon.SELECTION_SPELLCHECK);
 }
 

@@ -232,6 +232,14 @@ void Gecko_FontFamilyList_AppendNamed(FontFamilyList* aList, nsIAtom* aName, boo
 void Gecko_FontFamilyList_AppendGeneric(FontFamilyList* list, FontFamilyType familyType);
 void Gecko_CopyFontFamilyFrom(nsFont* dst, const nsFont* src);
 
+// Visibility style
+void Gecko_SetImageOrientation(nsStyleVisibility* aVisibility,
+                               double aRadians,
+                               bool aFlip);
+void Gecko_SetImageOrientationAsFromImage(nsStyleVisibility* aVisibility);
+void Gecko_CopyImageOrientationFrom(nsStyleVisibility* aDst,
+                                    const nsStyleVisibility* aSrc);
+
 // Counter style.
 void Gecko_SetListStyleType(nsStyleList* style_struct, uint32_t type);
 void Gecko_CopyListStyleTypeFrom(nsStyleList* dst, const nsStyleList* src);

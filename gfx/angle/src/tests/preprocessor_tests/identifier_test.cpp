@@ -9,16 +9,15 @@
 
 #define CLOSED_RANGE(x, y) testing::Range(x, static_cast<char>((y) + 1))
 
-class IdentifierTest : public PreprocessorTest
+class IdentifierTest : public SimplePreprocessorTest
 {
 protected:
     void expectIdentifier(const std::string& str)
     {
         const char* cstr = str.c_str();
-        ASSERT_TRUE(mPreprocessor.init(1, &cstr, 0));
 
         pp::Token token;
-        mPreprocessor.lex(&token);
+        lexSingleToken(cstr, &token);
         EXPECT_EQ(pp::Token::IDENTIFIER, token.type);
         EXPECT_EQ(str, token.text);
     }

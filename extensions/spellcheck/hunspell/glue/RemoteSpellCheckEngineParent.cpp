@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RemoteSpellCheckEngineParent.h"
+#include "mozilla/Unused.h"
 #include "nsISpellChecker.h"
 #include "nsServiceManagerUtils.h"
 
@@ -25,6 +26,23 @@ RemoteSpellcheckEngineParent::RecvSetDictionary(
 {
   nsresult rv = mSpellChecker->SetCurrentDictionary(aDictionary);
   *success = NS_SUCCEEDED(rv);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+RemoteSpellcheckEngineParent::RecvSetDictionaryFromList(
+                                nsTArray<nsString>&& aList,
+                                const intptr_t& aPromiseId)
+{
+  for (auto& dictionary : aList) {
+    MOZ_ASSERT(!dictionary.IsEmpty());
+    nsresult rv = mSpellChecker->SetCurrentDictionary(dictionary);
+    if (NS_SUCCEEDED(rv)) {
+      Unused << SendNotifyOfCurrentDictionary(dictionary, aPromiseId);
+      return IPC_OK();
+    }
+  }
+  Unused << SendNotifyOfCurrentDictionary(EmptyString(), aPromiseId);
   return IPC_OK();
 }
 

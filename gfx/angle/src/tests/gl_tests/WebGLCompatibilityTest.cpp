@@ -30,13 +30,13 @@ class WebGLCompatibilityTest : public ANGLETest
     void SetUp() override
     {
         ANGLETest::SetUp();
-        glEnableExtensionANGLE = reinterpret_cast<PFNGLENABLEEXTENSIONANGLEPROC>(
-            eglGetProcAddress("glEnableExtensionANGLE"));
+        glRequestExtensionANGLE = reinterpret_cast<PFNGLREQUESTEXTENSIONANGLEPROC>(
+            eglGetProcAddress("glRequestExtensionANGLE"));
     }
 
     void TearDown() override { ANGLETest::TearDown(); }
 
-    PFNGLENABLEEXTENSIONANGLEPROC glEnableExtensionANGLE = nullptr;
+    PFNGLREQUESTEXTENSIONANGLEPROC glRequestExtensionANGLE = nullptr;
 };
 
 // Context creation would fail if EGL_ANGLE_create_context_webgl_compatibility was not available so
@@ -49,9 +49,9 @@ TEST_P(WebGLCompatibilityTest, ExtensionStringExposed)
 // Verify that all extension entry points are available
 TEST_P(WebGLCompatibilityTest, EntryPoints)
 {
-    if (extensionEnabled("GL_ANGLE_webgl_compatibility"))
+    if (extensionEnabled("GL_ANGLE_request_extension"))
     {
-        EXPECT_NE(nullptr, eglGetProcAddress("glEnableExtensionANGLE"));
+        EXPECT_NE(nullptr, eglGetProcAddress("glRequestExtensionANGLE"));
     }
 }
 
@@ -74,7 +74,7 @@ TEST_P(WebGLCompatibilityTest, DepthStencilBindingPoint)
 // Test that attempting to enable an extension that doesn't exist generates GL_INVALID_OPERATION
 TEST_P(WebGLCompatibilityTest, EnableExtensionValidation)
 {
-    EXPECT_EQ(GL_FALSE, glEnableExtensionANGLE("invalid_extension_string"));
+    glRequestExtensionANGLE("invalid_extension_string");
     EXPECT_GL_ERROR(GL_INVALID_OPERATION);
 }
 
@@ -102,8 +102,9 @@ TEST_P(WebGLCompatibilityTest, EnableExtensionUintIndices)
     glDrawElements(GL_TRIANGLES, 2, GL_UNSIGNED_INT, nullptr);
     EXPECT_GL_ERROR(GL_INVALID_ENUM);
 
-    if (glEnableExtensionANGLE("GL_OES_element_index_uint"))
+    if (extensionRequestable("GL_OES_element_index_uint"))
     {
+        glRequestExtensionANGLE("GL_OES_element_index_uint");
         EXPECT_GL_NO_ERROR();
         EXPECT_TRUE(extensionEnabled("GL_OES_element_index_uint"));
 

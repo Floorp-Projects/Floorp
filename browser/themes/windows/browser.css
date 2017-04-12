@@ -2074,8 +2074,18 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   font-weight: bold;
 }
 
-.addon-webext-perm-header {
-  font-size: 1.3em;
+html|*.addon-webext-perm-list {
+  margin-block-end: 0;
+  padding-inline-start: 10px;
+}
+
+.addon-webext-perm-text {
+  margin-inline-start: 0;
+}
+
+.popup-notification-description[popupid="addon-webext-permissions"] {
+  margin: 0;
+  padding: 0;
 }
 
 .addon-webext-name {

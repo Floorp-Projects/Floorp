@@ -15,12 +15,6 @@
 #include "compiler/translator/Operator.h"
 #include "compiler/translator/Types.h"
 
-// strtof_clamp is like strtof but
-//   1. it forces C locale, i.e. forcing '.' as decimal point.
-//   2. it clamps the value to -FLT_MAX or FLT_MAX if overflow happens.
-// Return false if overflow happens.
-bool strtof_clamp(const std::string &str, float *value);
-
 // If overflow happens, clamp the value to UINT_MIN or UINT_MAX.
 // Return false if overflow happens.
 bool atoi_clamp(const char *str, unsigned int *value);
@@ -28,6 +22,16 @@ bool atoi_clamp(const char *str, unsigned int *value);
 namespace sh
 {
 class TSymbolTable;
+
+float NumericLexFloat32OutOfRangeToInfinity(const std::string &str);
+
+// strtof_clamp is like strtof but
+//   1. it forces C locale, i.e. forcing '.' as decimal point.
+//   2. it sets the value to infinity if overflow happens.
+//   3. str should be guaranteed to be in the valid format for a floating point number as defined
+//      by the grammar in the ESSL 3.00.6 spec section 4.1.4.
+// Return false if overflow happens.
+bool strtof_clamp(const std::string &str, float *value);
 
 GLenum GLVariableType(const TType &type);
 GLenum GLVariablePrecision(const TType &type);

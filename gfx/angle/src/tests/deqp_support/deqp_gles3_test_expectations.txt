@@ -169,6 +169,45 @@
 1101 WIN : dEQP-GLES3.functional.polygon_offset.fixed24_render_with_units = FAIL
 1101 WIN : dEQP-GLES3.functional.lifetime.attach.deleted_input.buffer_vertex_array = FAIL
 
+// Windows AMD specific failures
+1633 WIN AMD : dEQP-GLES3.functional.fbo.blit.depth_stencil.depth24_stencil8_scale = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.blit.depth_stencil.depth24_stencil8_stencil_only = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.blit.tex2d.r11f_g11f_b10f = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.blit.tex2d.rg32f = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.blit.tex2d.rg16f = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.blit.tex2d.r32f = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.blit.tex2d.r16f = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.blit.tex2d.rgb16f = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.blit.tex2d.rg8 = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.blit.tex2d.rgb10_a2 = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.blit.tex2d.rgba16f = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.blit.tex2d.r8 = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rgba32f = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rgba16f = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.r11f_g11f_b10f = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rg32f = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rg16f = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.r32f = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.r16f = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rgb16f = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rg8 = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.r8 = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.color.repeated_clear.sample.tex2d.rgb10_a2 = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.fbo.render.shared_colorbuffer_clear.tex2d_rgb16f = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.rasterization.fbo.rbo_multisample_max.interpolation.lines = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.rasterization.fbo.rbo_multisample_max.primitives.lines = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.texture.filtering.cube.formats.rgb10_a2_nearest_mipmap_nearest = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.texture.filtering.cube.formats.rgb565_nearest_mipmap_nearest = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.texture.filtering.cube.formats.rgba16f_nearest_mipmap_nearest = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.texture.mipmap.2d.min_lod.nearest_nearest = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.texture.mipmap.2d.min_lod.linear_nearest = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.texture.mipmap.2d.max_lod.nearest_nearest = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.texture.mipmap.2d.max_lod.linear_nearest = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.texture.mipmap.3d.min_lod.nearest_nearest = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.texture.mipmap.3d.min_lod.linear_nearest = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.texture.mipmap.3d.max_lod.nearest_nearest = FAIL
+1633 WIN AMD : dEQP-GLES3.functional.texture.mipmap.3d.max_lod.linear_nearest = FAIL
+
 // Windows Intel-specific failures
 
 1349 WIN INTEL : dEQP-GLES3.functional.shaders.texture_functions.texturelod.isamplercube_* = FAIL

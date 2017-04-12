@@ -91,6 +91,7 @@ TextureState::TextureState(GLenum target)
       mSamplerState(SamplerState::CreateDefaultForTarget(target)),
       mBaseLevel(0),
       mMaxLevel(1000),
+      mDepthStencilTextureMode(GL_DEPTH_COMPONENT),
       mImmutableFormat(false),
       mImmutableLevels(0),
       mUsage(GL_NONE),
@@ -722,6 +723,23 @@ void Texture::setMaxLevel(GLuint maxLevel)
 GLuint Texture::getMaxLevel() const
 {
     return mState.mMaxLevel;
+}
+
+void Texture::setDepthStencilTextureMode(GLenum mode)
+{
+    if (mode != mState.mDepthStencilTextureMode)
+    {
+        // Changing the mode from the default state (GL_DEPTH_COMPONENT) is not implemented yet
+        UNIMPLEMENTED();
+    }
+
+    // TODO(geofflang): add dirty bits
+    mState.mDepthStencilTextureMode = mode;
+}
+
+GLenum Texture::getDepthStencilTextureMode() const
+{
+    return mState.mDepthStencilTextureMode;
 }
 
 bool Texture::getImmutableFormat() const

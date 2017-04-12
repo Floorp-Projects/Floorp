@@ -22,7 +22,10 @@ struct SourceLocation;
 class MacroExpander : public Lexer
 {
   public:
-    MacroExpander(Lexer *lexer, MacroSet *macroSet, Diagnostics *diagnostics);
+    MacroExpander(Lexer *lexer,
+                  MacroSet *macroSet,
+                  Diagnostics *diagnostics,
+                  int allowedMacroExpansionDepth);
     ~MacroExpander() override;
 
     void lex(Token *token) override;
@@ -67,6 +70,8 @@ class MacroExpander : public Lexer
     std::unique_ptr<Token> mReserveToken;
     std::vector<MacroContext *> mContextStack;
     size_t mTotalTokensInContexts;
+
+    int mAllowedMacroExpansionDepth;
 
     bool mDeferReenablingMacros;
     std::vector<const Macro *> mMacrosToReenable;

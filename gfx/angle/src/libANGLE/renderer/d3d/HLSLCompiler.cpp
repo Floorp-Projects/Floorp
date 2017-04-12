@@ -106,11 +106,11 @@ HLSLCompiler::~HLSLCompiler()
     release();
 }
 
-gl::Error HLSLCompiler::initialize()
+gl::Error HLSLCompiler::ensureInitialized()
 {
     if (mInitialized)
     {
-        return gl::Error(GL_NO_ERROR);
+        return gl::NoError();
     }
 
     TRACE_EVENT0("gpu.angle", "HLSLCompiler::initialize");
@@ -160,7 +160,7 @@ gl::Error HLSLCompiler::initialize()
     }
 
     mInitialized = true;
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 void HLSLCompiler::release()
@@ -179,11 +179,7 @@ gl::Error HLSLCompiler::compileToBinary(gl::InfoLog &infoLog, const std::string 
                                         const std::vector<CompileConfig> &configs, const D3D_SHADER_MACRO *overrideMacros,
                                         ID3DBlob **outCompiledBlob, std::string *outDebugInfo)
 {
-    gl::Error error = initialize();
-    if (error.isError())
-    {
-        return error;
-    }
+    ASSERT(mInitialized);
 
 #if !defined(ANGLE_ENABLE_WINDOWS_STORE)
     ASSERT(mD3DCompilerModule);
@@ -270,14 +266,10 @@ gl::Error HLSLCompiler::compileToBinary(gl::InfoLog &infoLog, const std::string 
             }
 
             std::string disassembly;
-            error = disassembleBinary(binary, &disassembly);
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(disassembleBinary(binary, &disassembly));
             (*outDebugInfo) += "\n" + disassembly + "\n// ASSEMBLY END\n";
 #endif  // ANGLE_APPEND_ASSEMBLY_TO_SHADER_DEBUG_INFO == ANGLE_ENABLED
-            return gl::Error(GL_NO_ERROR);
+            return gl::NoError();
         }
 
         if (result == E_OUTOFMEMORY)
@@ -297,16 +289,12 @@ gl::Error HLSLCompiler::compileToBinary(gl::InfoLog &infoLog, const std::string 
 
     // None of the configurations succeeded in compiling this shader but the compiler is still intact
     *outCompiledBlob = nullptr;
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 gl::Error HLSLCompiler::disassembleBinary(ID3DBlob *shaderBinary, std::string *disassemblyOut)
 {
-    gl::Error error = initialize();
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(ensureInitialized());
 
     // Retrieve disassembly
     UINT flags = D3D_DISASM_ENABLE_DEFAULT_VALUE_PRINTS | D3D_DISASM_ENABLE_INSTRUCTION_NUMBERING;
@@ -327,7 +315,7 @@ gl::Error HLSLCompiler::disassembleBinary(ID3DBlob *shaderBinary, std::string *d
 
     SafeRelease(disassembly);
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
 }  // namespace rx
