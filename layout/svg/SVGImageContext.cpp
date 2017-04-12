@@ -13,6 +13,7 @@
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
 #include "nsPresContext.h"
+#include "nsStyleStruct.h"
 
 namespace mozilla {
 
@@ -30,6 +31,12 @@ SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
     sEnabledForContentCached = true;
   }
 
+  if (!aFromFrame->StyleSVG()->ExposesContextProperties()) {
+    // Content must have '-moz-context-properties' set to the names of the
+    // properties it wants to expose to images it links to.
+    return;
+  }
+
   if (!sEnabledForContent &&
       !nsContentUtils::IsChromeDoc(aFromFrame->PresContext()->Document())) {
     // Context paint is pref'ed off for content and this is a content doc.
@@ -40,8 +47,6 @@ SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
     // Avoid this overhead for raster images.
     return;
   }
-
-  // XXX return early if the 'context-properties' property is not set.
 
   bool haveContextPaint = false;
 
