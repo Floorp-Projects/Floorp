@@ -1883,8 +1883,8 @@ JS_GlobalObjectTraceHook(JSTracer* trc, JSObject* global)
         return;
 
     // Trace the compartment for any GC things that should only stick around if
-    // we know the compartment is live.
-    global->compartment()->trace(trc);
+    // we know the global is live.
+    global->compartment()->traceGlobal(trc);
 
     if (JSTraceOp trace = global->compartment()->creationOptions().getTrace())
         trace(trc, global);

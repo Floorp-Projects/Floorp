@@ -95,7 +95,7 @@ public class GeckoView extends LayerView
         static native void open(Window instance, GeckoView view,
                                 Object compositor, EventDispatcher dispatcher,
                                 String chromeUri, GeckoBundle settings,
-                                int screenId);
+                                int screenId, boolean privateMode);
 
         @Override protected native void disposeNative();
 
@@ -209,15 +209,24 @@ public class GeckoView extends LayerView
 
     public GeckoView(Context context) {
         super(context);
-        init(context);
+
+        init(context, null);
     }
 
     public GeckoView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init(context);
+        // TODO: Convert custom attributes to GeckoViewSettings
+        init(context, null);
     }
 
-    private void init(Context context) {
+    public GeckoView(Context context, final GeckoViewSettings settings) {
+        super(context);
+
+        final GeckoViewSettings newSettings = new GeckoViewSettings(settings, getEventDispatcher());
+        init(context, newSettings);
+    }
+
+    private void init(Context context, final GeckoViewSettings settings) {
         if (GeckoAppShell.getApplicationContext() == null) {
             GeckoAppShell.setApplicationContext(context.getApplicationContext());
         }
@@ -235,7 +244,11 @@ public class GeckoView extends LayerView
         initializeView();
         mListener.registerListeners();
 
-        mSettings = new GeckoViewSettings(getEventDispatcher());
+        if (settings == null) {
+            mSettings = new GeckoViewSettings(getEventDispatcher());
+        } else {
+            mSettings = settings;
+        }
     }
 
     @Override
@@ -270,7 +283,8 @@ public class GeckoView extends LayerView
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             Window.open(mWindow, this, getCompositor(), mEventDispatcher,
-                        mChromeUri, mSettings.asBundle(), mScreenId);
+                        mChromeUri, mSettings.asBundle(), mScreenId,
+                        mSettings.getBoolean(GeckoViewSettings.USE_PRIVATE_MODE));
         } else {
             GeckoThread.queueNativeCallUntil(
                 GeckoThread.State.PROFILE_READY,
@@ -280,7 +294,7 @@ public class GeckoView extends LayerView
                 EventDispatcher.class, mEventDispatcher,
                 String.class, mChromeUri,
                 GeckoBundle.class, mSettings.asBundle(),
-                mScreenId);
+                mScreenId, mSettings.getBoolean(GeckoViewSettings.USE_PRIVATE_MODE));
         }
     }
 

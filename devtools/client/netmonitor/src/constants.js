@@ -132,6 +132,11 @@ const HEADERS = [
     canFilter: true,
   },
   {
+    name: "remoteip",
+    canFilter: true,
+    filterKey: "remote-ip",
+  },
+  {
     name: "cause",
     canFilter: true,
   },

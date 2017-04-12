@@ -720,7 +720,7 @@ NativeRegExpMacroAssembler::CheckNotBackReference(int start_reg, Label* on_no_ma
 
     Label loop;
     masm.bind(&loop);
-    if (mode_ == ASCII) {
+    if (mode_ == LATIN1) {
         masm.load8ZeroExtend(Address(current_character, 0), temp0);
         masm.load8ZeroExtend(Address(temp1, 0), temp2);
     } else {
@@ -782,7 +782,7 @@ NativeRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg, Label
     masm.addPtr(temp1, temp0);
     masm.branchPtr(Assembler::GreaterThan, temp0, ImmWord(0), BranchOrBacktrack(on_no_match));
 
-    if (mode_ == ASCII) {
+    if (mode_ == LATIN1) {
         Label success, fail;
 
         // Save register contents to make the registers available below. After
@@ -1000,7 +1000,7 @@ NativeRegExpMacroAssembler::LoadCurrentCharacterUnchecked(int cp_offset, int cha
 {
     JitSpew(SPEW_PREFIX "LoadCurrentCharacterUnchecked(%d, %d)", cp_offset, characters);
 
-    if (mode_ == ASCII) {
+    if (mode_ == LATIN1) {
         BaseIndex address(input_end_pointer, current_position, TimesOne, cp_offset);
         if (characters == 4) {
             masm.load32(address, current_character);
@@ -1276,7 +1276,7 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(char16_t type, Label* on_
     switch (type) {
       case 's':
         // Match space-characters.
-        if (mode_ == ASCII) {
+        if (mode_ == LATIN1) {
             // One byte space characters are '\t'..'\r', ' ' and \u00a0.
             Label success;
             masm.branch32(Assembler::Equal, current_character, Imm32(' '), &success);
@@ -1296,12 +1296,12 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(char16_t type, Label* on_
         // The emitted code for generic character classes is good enough.
         return false;
       case 'd':
-        // Match ASCII digits ('0'..'9')
+        // Match LATIN1 digits ('0'..'9')
         masm.computeEffectiveAddress(Address(current_character, -'0'), temp0);
         masm.branch32(Assembler::Above, temp0, Imm32('9' - '0'), branch);
         return true;
       case 'D':
-        // Match non ASCII-digits
+        // Match non LATIN1-digits
         masm.computeEffectiveAddress(Address(current_character, -'0'), temp0);
         masm.branch32(Assembler::BelowOrEqual, temp0, Imm32('9' - '0'), branch);
         return true;
@@ -1323,8 +1323,8 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(char16_t type, Label* on_
         return true;
       }
       case 'w': {
-        if (mode_ != ASCII) {
-            // Table is 128 entries, so all ASCII characters can be tested.
+        if (mode_ != LATIN1) {
+            // Table is 256 entries, so all LATIN1 characters can be tested.
             masm.branch32(Assembler::Above, current_character, Imm32('z'), branch);
         }
         MOZ_ASSERT(0 == word_character_map[0]);  // Character '\0' is not a word char.
@@ -1335,15 +1335,15 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(char16_t type, Label* on_
       }
       case 'W': {
         Label done;
-        if (mode_ != ASCII) {
-            // Table is 128 entries, so all ASCII characters can be tested.
+        if (mode_ != LATIN1) {
+            // Table is 256 entries, so all LATIN1 characters can be tested.
             masm.branch32(Assembler::Above, current_character, Imm32('z'), &done);
         }
         MOZ_ASSERT(0 == word_character_map[0]);  // Character '\0' is not a word char.
         masm.movePtr(ImmPtr(word_character_map), temp0);
         masm.load8ZeroExtend(BaseIndex(temp0, current_character, TimesOne), temp0);
         masm.branchTest32(Assembler::NonZero, temp0, temp0, branch);
-        if (mode_ != ASCII)
+        if (mode_ != LATIN1)
             masm.bind(&done);
         return true;
       }
@@ -1360,7 +1360,7 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(char16_t type, Label* on_
         // See if current character is '\n'^1 or '\r'^1, i.e., 0x0b or 0x0c
         masm.sub32(Imm32(0x0b), temp0);
 
-        if (mode_ == ASCII) {
+        if (mode_ == LATIN1) {
             masm.branch32(Assembler::Above, temp0, Imm32(0x0c - 0x0b), branch);
         } else {
             Label done;

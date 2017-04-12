@@ -17,33 +17,7 @@ var nostorePath = "/nostore" + suffix;
 var test410Path = "/test410" + suffix;
 var test404Path = "/test404" + suffix;
 
-// We attach this to channel when we want to test Private Browsing mode
-function LoadContext(usePrivateBrowsing) {
-  this.usePrivateBrowsing = usePrivateBrowsing;
-  this.originAttributes.privateBrowsingId = usePrivateBrowsing ? 1 : 0;
-}
-
-LoadContext.prototype = {
-  originAttributes: {
-    privateBrowsingId : 0
-  },
-  usePrivateBrowsing: false,
-  // don't bother defining rest of nsILoadContext fields: don't need 'em
-
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsILoadContext))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
-  getInterface: function(iid) {
-    if (iid.equals(Ci.nsILoadContext))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-};
-
-var PrivateBrowsingLoadContext = new LoadContext(true);
+var PrivateBrowsingLoadContext = Cc["@mozilla.org/privateloadcontext;1"].createInstance(Ci.nsILoadContext);
 
 function make_channel(url, flags, usePrivateBrowsing) {
   var securityFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;

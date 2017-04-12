@@ -18,13 +18,14 @@ public:
 
     virtual ~gfxCoreTextShaper();
 
-    virtual bool ShapeText(DrawTarget      *aDrawTarget,
-                           const char16_t *aText,
-                           uint32_t         aOffset,
-                           uint32_t         aLength,
-                           Script           aScript,
-                           bool             aVertical,
-                           gfxShapedText   *aShapedText);
+    bool ShapeText(DrawTarget      *aDrawTarget,
+                   const char16_t *aText,
+                   uint32_t         aOffset,
+                   uint32_t         aLength,
+                   Script           aScript,
+                   bool             aVertical,
+                   RoundingFlags    aRounding,
+                   gfxShapedText   *aShapedText) override;
 
     // clean up static objects that may have been cached
     static void Shutdown();

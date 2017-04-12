@@ -44,6 +44,9 @@ fuzzy(1,1) == image-orientation-explicit.html?0 image-orientation-explicit.html?
 == image-orientation-explicit.html?270&flip image-orientation-explicit.html?270&flip
 
 # Tests for image-orientation used with non-axis-aligned angles:
+# This is disabled while we added image-orientation support to stylo in Bug 1341758.
+# The reason is due to the slice difference of implementation between Servo and Gecko.
+# Eventually, we should make Servo align with Gecko, and re-enable this. (See Bug 1355380)
 fails == image-orientation-explicit.html?-45 image-orientation-explicit.html?-45
 fuzzy(1,1) == image-orientation-explicit.html?-15 image-orientation-explicit.html?-15
 fuzzy(1,1) == image-orientation-explicit.html?15 image-orientation-explicit.html?15
@@ -56,6 +59,9 @@ fuzzy(1,1) == image-orientation-explicit.html?15 image-orientation-explicit.html
 == image-orientation-explicit.html?225 image-orientation-explicit.html?225
 == image-orientation-explicit.html?255 image-orientation-explicit.html?255
 == image-orientation-explicit.html?285 image-orientation-explicit.html?285
+# This is disabled while we added image-orientation support to stylo in Bug 1341758.
+# The reason is due to the slice difference of implementation between Servo and Gecko.
+# Eventually, we should make Servo align with Gecko, and re-enable this. (See Bug 1355380)
 fails == image-orientation-explicit.html?315 image-orientation-explicit.html?315
 fuzzy(1,1) == image-orientation-explicit.html?345 image-orientation-explicit.html?345
 

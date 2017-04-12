@@ -20,6 +20,9 @@ var gPublicLoader = Cc["@mozilla.org/image/loader;1"].createInstance(Ci.imgILoad
 var gPrivateLoader = Cc["@mozilla.org/image/loader;1"].createInstance(Ci.imgILoader);
 gPrivateLoader.QueryInterface(Ci.imgICache).respectPrivacyNotifications();
 
+var nonPrivateLoadContext = Cc["@mozilla.org/loadcontext;1"].createInstance(Ci.nsILoadContext);
+var privateLoadContext = Cc["@mozilla.org/privateloadcontext;1"].createInstance(Ci.nsILoadContext);
+
 function imageHandler(metadata, response) {
   gHits++;
   response.setHeader("Cache-Control", "max-age=10000", false);
@@ -32,28 +35,6 @@ function imageHandler(metadata, response) {
 var requests = [];
 var listeners = [];
 
-function NotificationCallbacks(isPrivate) {
-  this.originAttributes.privateBrowsingId = isPrivate ? 1 : 0;
-  this.usePrivateBrowsing = isPrivate;
-}
-
-NotificationCallbacks.prototype = {
-  QueryInterface: function (iid) {
-    if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsILoadContext))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-  getInterface: function(iid) {
-    if (iid.equals(Ci.nsILoadContext))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-  originAttributes: {
-    privateBrowsingId: 0
-  }
-};
-
 var gImgPath = 'http://localhost:' + server.identity.primaryPort + '/image.png';
 
 function setup_chan(path, isPrivate, callback) {
@@ -64,7 +45,8 @@ function setup_chan(path, isPrivate, callback) {
   var chan =  NetUtil.newChannel({uri: uri, loadingPrincipal: principal,
                                   securityFlags: securityFlags,
                                   contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE});
-  chan.notificationCallbacks = new NotificationCallbacks(isPrivate);
+  chan.notificationCallbacks = isPrivate ? privateLoadContext
+                                         : nonPrivateLoadContext;
   var channelListener = new ChannelListener();
   chan.asyncOpen2(channelListener);
 
@@ -85,7 +67,8 @@ function loadImage(isPrivate, callback) {
                 .createScriptedObserver(listener);
   var uri = gIoService.newURI(gImgPath);
   var loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(Ci.nsILoadGroup);
-  loadGroup.notificationCallbacks = new NotificationCallbacks(isPrivate);
+  loadGroup.notificationCallbacks = isPrivate ? privateLoadContext
+                                              : nonPrivateLoadContext;
   var loader = isPrivate ? gPrivateLoader : gPublicLoader;
   requests.push(loader.loadImageXPCOM(uri, null, null, "default", null, loadGroup, outer, null, 0, null));
   listener.synchronous = false;

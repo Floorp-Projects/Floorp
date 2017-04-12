@@ -341,6 +341,34 @@ nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
     framePos.y = baseline - ascent;
   }
   Metrics caretMetrics = ComputeMetrics(aFrame, aFrameOffset, height);
+
+  nsTextFrame* textFrame = do_QueryFrame(aFrame);
+  if (textFrame) {
+    gfxTextRun* textRun =
+      textFrame->GetTextRun(nsTextFrame::TextRunType::eInflated);
+    if (textRun) {
+      // For "upstream" text where the textrun direction is reversed from the
+      // frame's inline-dir we want the caret to be painted before rather than
+      // after its nominal inline position, so we offset by its width.
+      bool textRunDirIsReverseOfFrame =
+        wm.IsInlineReversed() != textRun->IsInlineReversed();
+      // However, in sideways-lr mode we invert this behavior because this is
+      // the one writing mode where bidi-LTR corresponds to inline-reversed
+      // already, which reverses the desired caret placement behavior.
+      // Note that the following condition is equivalent to:
+      //   if ( (!textRun->IsSidewaysLeft() && textRunDirIsReverseOfFrame) ||
+      //        (textRun->IsSidewaysLeft()  && !textRunDirIsReverseOfFrame) )
+      if (textRunDirIsReverseOfFrame != textRun->IsSidewaysLeft()) {
+        int dir = wm.IsBidiLTR() ? -1 : 1;
+        if (vertical) {
+          framePos.y += dir * caretMetrics.mCaretWidth;
+        } else {
+          framePos.x += dir * caretMetrics.mCaretWidth;
+        }
+      }
+    }
+  }
+
   rect = nsRect(framePos, vertical ? nsSize(height, caretMetrics.mCaretWidth) :
                                      nsSize(caretMetrics.mCaretWidth, height));
 

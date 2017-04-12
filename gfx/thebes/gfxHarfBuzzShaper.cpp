@@ -1419,6 +1419,7 @@ gfxHarfBuzzShaper::ShapeText(DrawTarget      *aDrawTarget,
                              uint32_t         aLength,
                              Script           aScript,
                              bool             aVertical,
+                             RoundingFlags    aRounding,
                              gfxShapedText   *aShapedText)
 {
     // some font back-ends require this in order to get proper hinted metrics
@@ -1516,8 +1517,8 @@ gfxHarfBuzzShaper::ShapeText(DrawTarget      *aDrawTarget,
         hb_buffer_reverse(buffer);
     }
 
-    nsresult rv = SetGlyphsFromRun(aDrawTarget, aShapedText, aOffset, aLength,
-                                   aText, buffer, aVertical);
+    nsresult rv = SetGlyphsFromRun(aShapedText, aOffset, aLength,
+                                   aText, buffer, aVertical, aRounding);
 
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "failed to store glyphs into gfxShapedWord");
@@ -1531,13 +1532,13 @@ gfxHarfBuzzShaper::ShapeText(DrawTarget      *aDrawTarget,
                             // for charToGlyphArray
 
 nsresult
-gfxHarfBuzzShaper::SetGlyphsFromRun(DrawTarget     *aDrawTarget,
-                                    gfxShapedText  *aShapedText,
+gfxHarfBuzzShaper::SetGlyphsFromRun(gfxShapedText  *aShapedText,
                                     uint32_t        aOffset,
                                     uint32_t        aLength,
                                     const char16_t *aText,
                                     hb_buffer_t    *aBuffer,
-                                    bool            aVertical)
+                                    bool            aVertical,
+                                    RoundingFlags   aRounding)
 {
     uint32_t numGlyphs;
     const hb_glyph_info_t *ginfo = hb_buffer_get_glyph_infos(aBuffer, &numGlyphs);
@@ -1571,9 +1572,11 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(DrawTarget     *aDrawTarget,
 
     bool roundI, roundB;
     if (aVertical) {
-        GetRoundOffsetsToPixels(aDrawTarget, &roundB, &roundI);
+        roundI = bool(aRounding & RoundingFlags::kRoundY);
+        roundB = bool(aRounding & RoundingFlags::kRoundX);
     } else {
-        GetRoundOffsetsToPixels(aDrawTarget, &roundI, &roundB);
+        roundI = bool(aRounding & RoundingFlags::kRoundX);
+        roundB = bool(aRounding & RoundingFlags::kRoundY);
     }
 
     int32_t appUnitsPerDevUnit = aShapedText->GetAppUnitsPerDevUnit();
