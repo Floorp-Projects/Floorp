@@ -1624,6 +1624,45 @@ ScriptSource::chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& 
     return ret;
 }
 
+ScriptSource::PinnedChars::PinnedChars(JSContext* cx, ScriptSource* source,
+                                       UncompressedSourceCache::AutoHoldEntry& holder,
+                                       size_t begin, size_t len)
+  : source_(source)
+{
+    chars_ = source->chars(cx, holder, begin, len);
+    if (chars_) {
+        stack_ = &source->pinnedCharsStack_;
+        prev_ = *stack_;
+        *stack_ = this;
+    }
+}
+
+ScriptSource::PinnedChars::~PinnedChars()
+{
+    if (chars_) {
+        MOZ_ASSERT(*stack_ == this);
+        *stack_ = prev_;
+        if (!prev_)
+            source_->movePendingCompressedSource();
+    }
+}
+
+void
+ScriptSource::movePendingCompressedSource()
+{
+    if (!pendingCompressed_)
+        return;
+
+    MOZ_ASSERT(data.is<Missing>() || data.is<Uncompressed>());
+    MOZ_ASSERT_IF(data.is<Uncompressed>(),
+                  data.as<Uncompressed>().string.length() ==
+                  pendingCompressed_->uncompressedLength);
+
+    data = SourceType(Compressed(mozilla::Move(pendingCompressed_->raw),
+                                 pendingCompressed_->uncompressedLength));
+    pendingCompressed_ = mozilla::Nothing();
+}
+
 const char16_t*
 ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
                     size_t begin, size_t len)
@@ -1711,10 +1750,10 @@ ScriptSource::substring(JSContext* cx, size_t start, size_t stop)
     MOZ_ASSERT(start <= stop);
     size_t len = stop - start;
     UncompressedSourceCache::AutoHoldEntry holder;
-    const char16_t* chars = this->chars(cx, holder, start, len);
-    if (!chars)
+    PinnedChars chars(cx, this, holder, start, len);
+    if (!chars.get())
         return nullptr;
-    return NewStringCopyN<CanGC>(cx, chars, len);
+    return NewStringCopyN<CanGC>(cx, chars.get(), len);
 }
 
 JSFlatString*
@@ -1723,10 +1762,10 @@ ScriptSource::substringDontDeflate(JSContext* cx, size_t start, size_t stop)
     MOZ_ASSERT(start <= stop);
     size_t len = stop - start;
     UncompressedSourceCache::AutoHoldEntry holder;
-    const char16_t* chars = this->chars(cx, holder, start, len);
-    if (!chars)
+    PinnedChars chars(cx, this, holder, start, len);
+    if (!chars.get())
         return nullptr;
-    return NewStringCopyNDontDeflate<CanGC>(cx, chars, len);
+    return NewStringCopyNDontDeflate<CanGC>(cx, chars.get(), len);
 }
 
 JSFlatString*
@@ -1784,8 +1823,10 @@ ScriptSource::setCompressedSource(SharedImmutableString&& raw, size_t uncompress
     MOZ_ASSERT(data.is<Missing>() || data.is<Uncompressed>());
     MOZ_ASSERT_IF(data.is<Uncompressed>(),
                   data.as<Uncompressed>().string.length() == uncompressedLength);
-
-    data = SourceType(Compressed(mozilla::Move(raw), uncompressedLength));
+    if (pinnedCharsStack_)
+        pendingCompressed_ = mozilla::Some(Compressed(mozilla::Move(raw), uncompressedLength));
+    else
+        data = SourceType(Compressed(mozilla::Move(raw), uncompressedLength));
 }
 
 bool
@@ -4347,16 +4388,16 @@ LazyScriptHashPolicy::match(JSScript* script, const Lookup& lookup)
 
     size_t scriptBegin = script->sourceStart();
     size_t length = script->sourceEnd() - scriptBegin;
-    const char16_t* scriptChars = script->scriptSource()->chars(cx, holder, scriptBegin, length);
-    if (!scriptChars)
+    ScriptSource::PinnedChars scriptChars(cx, script->scriptSource(), holder, scriptBegin, length);
+    if (!scriptChars.get())
         return false;
 
     MOZ_ASSERT(scriptBegin == lazy->begin());
-    const char16_t* lazyChars = lazy->scriptSource()->chars(cx, holder, scriptBegin, length);
-    if (!lazyChars)
+    ScriptSource::PinnedChars lazyChars(cx, lazy->scriptSource(), holder, scriptBegin, length);
+    if (!lazyChars.get())
         return false;
 
-    return !memcmp(scriptChars, lazyChars, length);
+    return !memcmp(scriptChars.get(), lazyChars.get(), length);
 }
 
 void
