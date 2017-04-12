@@ -316,7 +316,7 @@ impl MarionetteHandler {
                                                                e.description().to_owned())));
 
         // double-dashed flags are not accepted on Windows systems
-        runner.args().push("-marionette");
+        runner.args().push("-marionette".to_owned());
 
         if let Some(args) = options.args.take() {
             runner.args().extend(args);
