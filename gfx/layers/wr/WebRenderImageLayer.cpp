@@ -129,7 +129,6 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 
   gfx::Matrix4x4 transform = GetTransform();
   gfx::Rect relBounds = GetWrRelBounds();
-  gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
 
   gfx::Rect rect = gfx::Rect(0, 0, size.width, size.height);
   if (mScaleMode != ScaleMode::SCALE_NONE) {
@@ -138,10 +137,10 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     rect = gfx::Rect(0, 0, mScaleToSize.width, mScaleToSize.height);
   }
   rect = RelativeToVisible(rect);
-  gfx::Rect clipRect = GetWrClipRect(rect);
 
+  gfx::Rect clipRect = GetWrClipRect(rect);
   Maybe<WrImageMask> mask = BuildWrMaskLayer();
-  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect));
+  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect), mask.ptrOr(nullptr));
 
   wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
   wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
@@ -163,11 +162,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                             //GetAnimations(),
                             transform,
                             mixBlendMode);
-  aBuilder.PushScrollLayer(wr::ToWrRect(overflow),
-                           wr::ToWrRect(overflow),
-                           mask.ptrOr(nullptr));
   aBuilder.PushImage(wr::ToWrRect(rect), clip, filter, key);
-  aBuilder.PopScrollLayer();
   aBuilder.PopStackingContext();
 }
 
