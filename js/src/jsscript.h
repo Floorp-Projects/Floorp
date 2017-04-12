@@ -52,7 +52,7 @@ class Debugger;
 class LazyScript;
 class ModuleObject;
 class RegExpObject;
-class SourceCompressionTask;
+struct SourceCompressionTask;
 class Shape;
 
 namespace frontend {
@@ -355,35 +355,8 @@ class UncompressedSourceCache
 
 class ScriptSource
 {
-    friend class SourceCompressionTask;
+    friend struct SourceCompressionTask;
 
-  public:
-    // Any users that wish to manipulate the char buffer of the ScriptSource
-    // needs to do so via PinnedChars for GC safety. A GC may compress
-    // ScriptSources. If the source were initially uncompressed, then any raw
-    // pointers to the char buffer would now point to the freed, uncompressed
-    // chars. This is analogous to Rooted.
-    class PinnedChars
-    {
-        PinnedChars** stack_;
-        PinnedChars* prev_;
-
-        ScriptSource* source_;
-        const char16_t* chars_;
-
-      public:
-        PinnedChars(JSContext* cx, ScriptSource* source,
-                    UncompressedSourceCache::AutoHoldEntry& holder,
-                    size_t begin, size_t len);
-
-        ~PinnedChars();
-
-        const char16_t* get() const {
-            return chars_;
-        }
-    };
-
-  private:
     uint32_t refs;
 
     // Note: while ScriptSources may be compressed off thread, they are only
@@ -416,12 +389,6 @@ class ScriptSource
 
     using SourceType = mozilla::Variant<Missing, Uncompressed, Compressed>;
     SourceType data;
-
-    // If the GC attempts to call setCompressedSource with PinnedChars
-    // present, the first PinnedChars (that is, bottom of the stack) will set
-    // the compressed chars upon destruction.
-    PinnedChars* pinnedCharsStack_;
-    mozilla::Maybe<Compressed> pendingCompressed_;
 
     // The filename of this script.
     UniqueChars filename_;
@@ -470,14 +437,6 @@ class ScriptSource
     // function should be recorded before their first execution.
     UniquePtr<XDRIncrementalEncoder> xdrEncoder_;
 
-    // Instant at which the first parse of this source ended, or null
-    // if the source hasn't been parsed yet.
-    //
-    // Used for statistics purposes, to determine how much time code spends
-    // syntax parsed before being full parsed, to help determine whether
-    // our syntax parse vs. full parse heuristics are correct.
-    mozilla::TimeStamp parseEnded_;
-
     // True if we can call JSRuntime::sourceHook to load the source on
     // demand. If sourceRetrievable_ and hasSourceData() are false, it is not
     // possible to get source at all.
@@ -487,21 +446,18 @@ class ScriptSource
     const char16_t* chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
                                size_t chunk);
 
-    // Return a string containing the chars starting at |begin| and ending at
-    // |begin + len|.
+    // Instant at which the first parse of this source ended, or null
+    // if the source hasn't been parsed yet.
     //
-    // Warning: this is *not* GC-safe! Any chars to be handed out should use
-    // PinnedChars. See comment below.
-    const char16_t* chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& asp,
-                          size_t begin, size_t len);
-
-    void movePendingCompressedSource();
+    // Used for statistics purposes, to determine how much time code spends
+    // syntax parsed before being full parsed, to help determine whether
+    // our syntax parse vs. full parse heuristics are correct.
+    mozilla::TimeStamp parseEnded_;
 
   public:
     explicit ScriptSource()
       : refs(0),
         data(SourceType(Missing())),
-        pinnedCharsStack_(nullptr),
         filename_(nullptr),
         displayURL_(nullptr),
         sourceMapURL_(nullptr),
@@ -529,11 +485,12 @@ class ScriptSource
     MOZ_MUST_USE bool initFromOptions(JSContext* cx,
                                       const ReadOnlyCompileOptions& options,
                                       const mozilla::Maybe<uint32_t>& parameterListEnd = mozilla::Nothing());
-    MOZ_MUST_USE bool setSourceCopy(JSContext* cx, JS::SourceBufferHolder& srcBuf);
+    MOZ_MUST_USE bool setSourceCopy(JSContext* cx,
+                                    JS::SourceBufferHolder& srcBuf,
+                                    SourceCompressionTask* tok);
     void setSourceRetrievable() { sourceRetrievable_ = true; }
     bool sourceRetrievable() const { return sourceRetrievable_; }
     bool hasSourceData() const { return !data.is<Missing>(); }
-    bool hasUncompressedSource() const { return data.is<Uncompressed>(); }
     bool hasCompressedSource() const { return data.is<Compressed>(); }
 
     size_t length() const {
@@ -556,6 +513,11 @@ class ScriptSource
         MOZ_ASSERT(hasSourceData());
         return data.match(LengthMatcher());
     }
+
+    // Return a string containing the chars starting at |begin| and ending at
+    // |begin + len|.
+    const char16_t* chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& asp,
+                          size_t begin, size_t len);
 
     JSFlatString* substring(JSContext* cx, size_t start, size_t stop);
     JSFlatString* substringDontDeflate(JSContext* cx, size_t start, size_t stop);
@@ -679,12 +641,10 @@ class ScriptSourceHolder
             ss->decref();
     }
     void reset(ScriptSource* newss) {
-        // incref before decref just in case ss == newss.
-        if (newss)
-            newss->incref();
         if (ss)
             ss->decref();
         ss = newss;
+        ss->incref();
     }
     ScriptSource* get() const {
         return ss;

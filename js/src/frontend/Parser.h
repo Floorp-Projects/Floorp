@@ -770,6 +770,9 @@ class ParserBase : public StrictModeGetter
     // For tracking used names in this parsing session.
     UsedNameTracker& usedNames;
 
+    /* Compression token for aborting. */
+    SourceCompressionTask* sct;
+
     ScriptSource*       ss;
 
     /* Root atoms and objects allocated for the parsed tree. */
@@ -1083,6 +1086,8 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
   private:
     Parser* thisForCtor() { return this; }
+
+    JSAtom* stopStringCompression();
 
     Node stringLiteral();
     Node noSubstitutionTaggedTemplate();
