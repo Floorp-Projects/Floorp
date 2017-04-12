@@ -328,7 +328,7 @@ body,
 .requests-list-status {
   max-width: 6em;
   text-align: center;
-  width: 10vw;
+  width: 8vw;
 }
 
 .requests-list-method,
@@ -355,6 +355,10 @@ body,
 
 .requests-list-security-and-domain {
   width: 14vw;
+}
+
+.requests-list-remoteip {
+  width: 8vw;
 }
 
 .requests-security-state-icon {
@@ -1303,7 +1307,6 @@ body,
 
   .requests-list-status {
     max-width: none;
-    width: 10vw;
   }
 
   .requests-list-status-code {
@@ -1324,12 +1327,16 @@ body,
     width: 16vw;
   }
 
+  .requests-list-remoteip {
+    width: 8vw;
+  }
+
   .requests-list-cause,
   .requests-list-type,
   .requests-list-transferred,
   .requests-list-size {
     max-width: none;
-    width: 10vw;
+    width: 8vw;
   }
 
   .requests-list-waterfall {

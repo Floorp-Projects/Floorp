@@ -35,7 +35,8 @@ interface nsIObserverService : nsISupports
      *                    a weak reference will be held.  Otherwise an error will be
      *                    returned.
      */
- 	void addObserver( in nsIObserver anObserver, in string aTopic, in boolean ownsWeak);
+    void addObserver( in nsIObserver anObserver, in string aTopic,
+                      [optional] in boolean ownsWeak);
 
     /**
      * removeObserver
@@ -60,7 +61,7 @@ interface nsIObserverService : nsISupports
      */
     void notifyObservers( in nsISupports aSubject, 
                           in string aTopic, 
-                          in wstring someData );
+                          [optional] in wstring someData );
 
     /**
      * enumerateObservers

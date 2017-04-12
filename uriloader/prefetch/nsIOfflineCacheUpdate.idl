@@ -168,7 +168,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
    *        observer, FALSE for a strong reference.
    */
   void addObserver(in nsIOfflineCacheUpdateObserver aObserver,
-                   in boolean aHoldWeak);
+                   [optional] in boolean aHoldWeak);
 
   /**
    * Remove an observer from the update.

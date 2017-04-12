@@ -240,6 +240,40 @@ function parseFormData(sections) {
   });
 }
 
+/**
+ * Reduces an IP address into a number for easier sorting
+ *
+ * @param {string} ip - IP address to reduce
+ * @return {number} the number representing the IP address
+ */
+function ipToLong(ip) {
+  if (!ip) {
+    // Invalid IP
+    return -1;
+  }
+
+  let base;
+  let octets = ip.split(".");
+
+  if (octets.length === 4) { // IPv4
+    base = 10;
+  } else if (ip.includes(":")) { // IPv6
+    let numberOfZeroSections = 8 - ip.replace(/^:+|:+$/g, "").split(/:+/g).length;
+    octets = ip
+      .replace("::", `:${"0:".repeat(numberOfZeroSections)}`)
+      .replace(/^:|:$/g, "")
+      .split(":");
+    base = 16;
+  } else { // Invalid IP
+    return -1;
+  }
+  return octets.map((val, ix, arr) => {
+    return parseInt(val, base) * Math.pow(256, (arr.length - 1) - ix);
+  }).reduce((sum, val) => {
+    return sum + val;
+  }, 0);
+}
+
 module.exports = {
   getFormDataSections,
   fetchHeaders,
@@ -255,4 +289,5 @@ module.exports = {
   getUrlDetails,
   parseQueryString,
   parseFormData,
+  ipToLong,
 };

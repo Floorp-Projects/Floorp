@@ -423,7 +423,7 @@ interface nsIPrefBranch : nsISupports
    * @see removeObserver
    */
   void addObserver(in string aDomain, in nsIObserver aObserver,
-                   in boolean aHoldWeak);
+                   [optional] in boolean aHoldWeak);
 
   /**
    * Remove a preference change observer.

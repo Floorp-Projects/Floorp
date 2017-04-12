@@ -19,6 +19,7 @@ config = {
         "repo": "https://hg.mozilla.org/releases/mozilla-release",
         "revision": "%(revision)s",
         "dest": "mozilla-release",
+        "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
     }],
     # purge options
     'purge_minsize': 12,

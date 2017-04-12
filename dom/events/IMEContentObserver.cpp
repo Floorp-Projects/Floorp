@@ -1416,8 +1416,15 @@ IMEContentObserver::FlushMergeableNotifications()
   // it may kick runnable event immediately after DOM tree is changed but
   // the selection range isn't modified yet.
   mQueuedSender = new IMENotificationSender(this);
-  NS_DispatchToCurrentThread(mQueuedSender);
-
+  nsIScriptGlobalObject* globalObject = mDocShell ?
+                                        mDocShell->GetScriptGlobalObject() :
+                                        nullptr;
+  if (globalObject) {
+    RefPtr<IMENotificationSender> queuedSender = mQueuedSender;
+    globalObject->Dispatch(nullptr, TaskCategory::Other, queuedSender.forget());
+  } else {
+    NS_DispatchToCurrentThread(mQueuedSender);
+  }
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("0x%p IMEContentObserver::FlushMergeableNotifications(), "
      "finished", this));
@@ -1542,7 +1549,17 @@ IMEContentObserver::IMENotificationSender::Run()
          "posting IMENotificationSender to current thread", this));
       mIMEContentObserver->mQueuedSender =
         new IMENotificationSender(mIMEContentObserver);
-      NS_DispatchToCurrentThread(mIMEContentObserver->mQueuedSender);
+      nsIScriptGlobalObject* globalObject =
+        mIMEContentObserver->mDocShell ?
+        mIMEContentObserver->mDocShell->GetScriptGlobalObject() : nullptr;
+      if (globalObject) {
+        RefPtr<IMENotificationSender> queuedSender =
+          mIMEContentObserver->mQueuedSender;
+        globalObject->Dispatch(nullptr, TaskCategory::Other,
+                               queuedSender.forget());
+      } else {
+        NS_DispatchToCurrentThread(mIMEContentObserver->mQueuedSender);
+      }
       return NS_OK;
     }
     // This is the first notification to IME. So, we don't need to notify
@@ -1606,7 +1623,17 @@ IMEContentObserver::IMENotificationSender::Run()
          "posting IMENotificationSender to current thread", this));
       mIMEContentObserver->mQueuedSender =
         new IMENotificationSender(mIMEContentObserver);
-      NS_DispatchToCurrentThread(mIMEContentObserver->mQueuedSender);
+      nsIScriptGlobalObject* globalObject =
+        mIMEContentObserver->mDocShell ?
+        mIMEContentObserver->mDocShell->GetScriptGlobalObject() : nullptr;
+      if (globalObject) {
+        RefPtr<IMENotificationSender> queuedSender =
+          mIMEContentObserver->mQueuedSender;
+        globalObject->Dispatch(nullptr, TaskCategory::Other,
+                               queuedSender.forget());
+      } else {
+        NS_DispatchToCurrentThread(mIMEContentObserver->mQueuedSender);
+      }
     }
   }
   return NS_OK;

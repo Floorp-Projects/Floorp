@@ -147,7 +147,7 @@ var tests = [
     yield set("b.com", "foo", 6);
     yield set("b.com", "bar", 7);
 
-    let context = { usePrivateBrowsing: true };
+    let context = privateLoadContext;
     yield set("a.com", "foo", 8, context);
     yield setGlobal("foo", 9, context);
     yield cps.removeByDomainAndName("a.com", "foo", context, makeCallback());

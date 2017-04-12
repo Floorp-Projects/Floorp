@@ -61,13 +61,14 @@ public: // new functions
                                         FontCacheSizes* aSizes) const override;
 
 protected:
-    virtual bool ShapeText(DrawTarget      *aDrawTarget,
-                           const char16_t *aText,
-                           uint32_t         aOffset,
-                           uint32_t         aLength,
-                           Script           aScript,
-                           bool             aVertical,
-                           gfxShapedText   *aShapedText) override;
+    bool ShapeText(DrawTarget      *aDrawTarget,
+                   const char16_t  *aText,
+                   uint32_t         aOffset,
+                   uint32_t         aLength,
+                   Script           aScript,
+                   bool             aVertical,
+                   RoundingFlags    aRounding,
+                   gfxShapedText   *aShapedText) override;
 
     void FillGlyphDataForChar(uint32_t ch, CachedGlyphData *gd);
 

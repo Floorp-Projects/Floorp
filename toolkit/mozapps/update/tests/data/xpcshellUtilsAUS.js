@@ -161,9 +161,6 @@ var gAppDirOrig;
 
 var gApplyToDirOverride;
 
-var gServiceLaunchedCallbackLog = null;
-var gServiceLaunchedCallbackArgs = null;
-
 // Variables are used instead of contants so tests can override these values if
 // necessary.
 var gCallbackBinFile = "callback_app" + BIN_SUFFIX;
@@ -836,6 +833,9 @@ function setupTestCommon() {
   // adjustGeneralPaths registers a cleanup function that calls end_test when
   // it is defined as a function.
   adjustGeneralPaths();
+  // Logged once here instead of in the mock directory provider to lessen test
+  // log spam.
+  debugDump("Updates Directory (UpdRootD) Path: " + getMockUpdRootD().path);
 
   // This prevents a warning about not being able to find the greprefs.js file
   // from being logged.
@@ -1456,7 +1456,6 @@ function getMockUpdRootDWin() {
   let updatesDir = Cc["@mozilla.org/file/local;1"].
                    createInstance(Ci.nsILocalFile);
   updatesDir.initWithPath(localAppDataDir.path + "\\" + relPathUpdates);
-  debugDump("returning UpdRootD Path: " + updatesDir.path);
   return updatesDir;
 }
 
@@ -1496,7 +1495,6 @@ function getMockUpdRootDMac() {
   let updatesDir = Cc["@mozilla.org/file/local;1"].
                    createInstance(Ci.nsILocalFile);
   updatesDir.initWithPath(pathUpdates);
-  debugDump("returning UpdRootD Path: " + updatesDir.path);
   return updatesDir;
 }
 
@@ -3284,50 +3282,6 @@ function checkPostUpdateAppLog() {
   }
 
   do_execute_soon(checkPostUpdateAppLogFinished);
-}
-
-/**
- * Helper function for updater service tests for verifying the contents of the
- * updater callback application log which should contain the arguments passed to
- * the callback application.
- */
-function checkCallbackServiceLog() {
-  let expectedLogContents = gServiceLaunchedCallbackArgs.join("\n") + "\n";
-  let logFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-  logFile.initWithPath(gServiceLaunchedCallbackLog);
-  let logContents = readFile(logFile);
-  // It is possible for the log file contents check to occur before the log file
-  // contents are completely written so wait until the contents are the expected
-  // value. If the contents are never the expected value then the test will
-  // fail by timing out after gTimeoutRuns is greater than MAX_TIMEOUT_RUNS or
-  // the test harness times out the test.
-  if (logContents != expectedLogContents) {
-    gFileInUseTimeoutRuns++;
-    if (gFileInUseTimeoutRuns > FILE_IN_USE_MAX_TIMEOUT_RUNS) {
-      if (logContents == null) {
-        if (logFile.exists()) {
-          logTestInfo("callback service log exists but readFile returned null");
-        } else {
-          logTestInfo("callback service log does not exist");
-        }
-      } else {
-        logTestInfo("callback service log contents are not correct");
-        let aryLog = logContents.split("\n");
-        // xpcshell tests won't display the entire contents so log each line.
-        logTestInfo("contents of " + logFile.path + ":");
-        for (let i = 0; i < aryLog.length; ++i) {
-          logTestInfo(aryLog[i]);
-        }
-      }
-      // This should never happen!
-      do_throw("Unable to find incorrect service callback log contents!");
-    }
-    do_timeout(FILE_IN_USE_TIMEOUT_MS, checkCallbackServiceLog);
-    return;
-  }
-  Assert.ok(true, "the callback service log contents" + MSG_SHOULD_EQUAL);
-
-  waitForFilesInUse();
 }
 
 /**

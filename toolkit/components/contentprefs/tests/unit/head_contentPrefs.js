@@ -131,12 +131,15 @@ var ContentPrefTest = {
 
 };
 
-var gInPrivateBrowsing = false;
-function enterPBMode() {
-  gInPrivateBrowsing = true;
+let loadContext = Cc["@mozilla.org/loadcontext;1"].
+                    createInstance(Ci.nsILoadContext);
+let privateLoadContext = Cc["@mozilla.org/privateloadcontext;1"].
+                           createInstance(Ci.nsILoadContext);
+function enterPBMode(cps) {
+  cps.loadContext = privateLoadContext;
 }
-function exitPBMode() {
-  gInPrivateBrowsing = false;
+function exitPBMode(cps) {
+  cps.loadContext = loadContext;
   Services.obs.notifyObservers(null, "last-pb-context-exited", null);
 }
 

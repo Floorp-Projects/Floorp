@@ -1525,6 +1525,8 @@ gfxTextRun::SetSpaceGlyph(gfxFont* aFont, DrawTarget* aDrawTarget,
                      aOrientation;
     bool vertical =
         (GetFlags() & gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT) != 0;
+    gfxFontShaper::RoundingFlags roundingFlags =
+        aFont->GetRoundOffsetsToPixels(aDrawTarget);
     gfxShapedWord* sw = aFont->GetShapedWord(aDrawTarget,
                                              &space, 1,
                                              gfxShapedWord::HashMix(0, ' '),
@@ -1532,6 +1534,7 @@ gfxTextRun::SetSpaceGlyph(gfxFont* aFont, DrawTarget* aDrawTarget,
                                              vertical,
                                              mAppUnitsPerDevUnit,
                                              flags,
+                                             roundingFlags,
                                              nullptr);
     if (sw) {
         AddGlyphRun(aFont, gfxTextRange::kFontGroup, aCharIndex, false,

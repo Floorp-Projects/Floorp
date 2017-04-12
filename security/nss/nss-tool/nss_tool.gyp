@@ -15,6 +15,7 @@
         'common/argparse.cc',
         'common/util.cc',
         'db/dbtool.cc',
+        'enc/enctool.cc',
       ],
       'include_dirs': [
         'common',

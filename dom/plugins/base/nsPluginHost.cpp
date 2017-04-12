@@ -1033,6 +1033,15 @@ nsPluginHost::HavePluginForExtension(const nsACString & aExtension,
                                      /* out */ nsACString & aMimeType,
                                      PluginFilter aFilter)
 {
+  // As of FF 52, we only support flash and test plugins, so if the extension types
+  // don't match for that, exit before we start loading plugins.
+  //
+  // XXX: Remove tst case when bug 1351885 lands.
+  if (!aExtension.LowerCaseEqualsLiteral("swf") &&
+      !aExtension.LowerCaseEqualsLiteral("tst")) {
+    return false;
+  }
+
   bool checkEnabled = aFilter & eExcludeDisabled;
   bool allowFake = !(aFilter & eExcludeFake);
   return FindNativePluginForExtension(aExtension, aMimeType, checkEnabled) ||
@@ -1171,6 +1180,12 @@ nsPluginHost::FindNativePluginForType(const nsACString & aMimeType,
                                       bool aCheckEnabled)
 {
   if (aMimeType.IsEmpty()) {
+    return nullptr;
+  }
+
+  // As of FF 52, we only support flash and test plugins, so if the mime types
+  // don't match for that, exit before we start loading plugins.
+  if (!nsPluginHost::CanUsePluginForMIMEType(aMimeType)) {
     return nullptr;
   }
 
@@ -1914,40 +1929,39 @@ struct CompareFilesByTime
 
 } // namespace
 
+static
 bool
-nsPluginHost::ShouldAddPlugin(nsPluginTag* aPluginTag)
+ShouldAddPlugin(const nsPluginInfo& info, bool flashOnly)
 {
-#if defined(XP_WIN) && (defined(__x86_64__) || defined(_M_X64))
-  // On 64-bit Windows, the only plugin we should load is Flash. Use library
-  // filename and MIME type to check.
-  if (StringBeginsWith(aPluginTag->FileName(), NS_LITERAL_CSTRING("NPSWF"), nsCaseInsensitiveCStringComparator()) &&
-      (aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-shockwave-flash")) ||
-       aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-shockwave-flash-test")))) {
-    return true;
+  if (!info.fName || (strcmp(info.fName, "Shockwave Flash") != 0 && flashOnly)) {
+    return false;
   }
-
-  // Accept the test plugin MIME types, so mochitests still work.
-  if (aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-test")) ||
-      aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-Second-Test")) ||
-      aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-java-test"))) {
-    return true;
+  for (uint32_t i = 0; i < info.fVariantCount; ++i) {
+    if (info.fMimeTypeArray[i] &&
+        (!strcmp(info.fMimeTypeArray[i], "application/x-shockwave-flash") ||
+         !strcmp(info.fMimeTypeArray[i], "application/x-shockwave-flash-test"))) {
+      return true;
+    }
+    if (flashOnly) {
+      continue;
+    }
+    if (info.fMimeTypeArray[i] &&
+        (!strcmp(info.fMimeTypeArray[i], "application/x-test") ||
+         !strcmp(info.fMimeTypeArray[i], "application/x-Second-Test") ||
+         !strcmp(info.fMimeTypeArray[i], "application/x-java-test"))) {
+      return true;
+    }
   }
 #ifdef PLUGIN_LOGGING
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
              ("ShouldAddPlugin : Ignoring non-flash plugin library %s\n", aPluginTag->FileName().get()));
 #endif // PLUGIN_LOGGING
   return false;
-#else
-  return true;
-#endif // defined(XP_WIN) && (defined(__x86_64__) || defined(_M_X64))
 }
 
 void
 nsPluginHost::AddPluginTag(nsPluginTag* aPluginTag)
 {
-  if (!ShouldAddPlugin(aPluginTag)) {
-    return;
-  }
   aPluginTag->mNext = mPlugins;
   mPlugins = aPluginTag;
 
@@ -1961,22 +1975,6 @@ nsPluginHost::AddPluginTag(nsPluginTag* aPluginTag)
       }
     }
   }
-}
-
-static bool
-PluginInfoIsFlash(const nsPluginInfo& info)
-{
-  if (!info.fName || strcmp(info.fName, "Shockwave Flash") != 0) {
-    return false;
-  }
-  for (uint32_t i = 0; i < info.fVariantCount; ++i) {
-    if (info.fMimeTypeArray[i] &&
-        (!strcmp(info.fMimeTypeArray[i], "application/x-shockwave-flash") ||
-         !strcmp(info.fMimeTypeArray[i], "application/x-shockwave-flash-test"))) {
-      return true;
-    }
-  }
-  return false;
 }
 
 typedef NS_NPAPIPLUGIN_CALLBACK(char *, NP_GETMIMEDESCRIPTION)(void);
@@ -2104,7 +2102,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
       }
       // if we don't have mime type don't proceed, this is not a plugin
       if (NS_FAILED(res) || !info.fMimeTypeArray ||
-          (flashOnly && !PluginInfoIsFlash(info))) {
+          (!ShouldAddPlugin(info, flashOnly))) {
         RefPtr<nsInvalidPluginTag> invalidTag = new nsInvalidPluginTag(filePath.get(),
                                                                          fileModTime);
         pluginFile.FreePluginInfo(info);
@@ -3064,10 +3062,6 @@ nsPluginHost::ReadPluginInfo()
     MOZ_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
       ("LoadCachedPluginsInfo : Loading Cached plugininfo for %s\n", tag->FileName().get()));
 
-    if (!ShouldAddPlugin(tag)) {
-      continue;
-    }
-
     tag->mNext = mCachedPlugins;
     mCachedPlugins = tag;
   }
@@ -3956,6 +3950,25 @@ nsPluginHost::DestroyRunningInstances(nsPluginTag* aPluginTag)
       }
     }
   }
+}
+
+/* static */
+bool
+nsPluginHost::CanUsePluginForMIMEType(const nsACString& aMIMEType)
+{
+  // We only support flash as a plugin, so if the mime types don't match for
+  // those, exit before we start loading plugins.
+  //
+  // XXX: Remove test/java cases when bug 1351885 lands.
+  if (nsPluginHost::GetSpecialType(aMIMEType) == nsPluginHost::eSpecialType_Flash ||
+      aMIMEType.LowerCaseEqualsLiteral("application/x-test") ||
+      aMIMEType.LowerCaseEqualsLiteral("application/x-second-test") ||
+      aMIMEType.LowerCaseEqualsLiteral("application/x-third-test") ||
+      aMIMEType.LowerCaseEqualsLiteral("application/x-java-test")) {
+    return true;
+  }
+
+  return false;
 }
 
 // Runnable that does an async destroy of a plugin.

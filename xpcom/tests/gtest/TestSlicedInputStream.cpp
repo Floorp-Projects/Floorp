@@ -6,13 +6,42 @@
 #include "nsString.h"
 #include "nsStringStream.h"
 #include "SlicedInputStream.h"
+#include "Helpers.h"
+
+// This helper class is used to call OnInputStreamReady with the right stream
+// as argument.
+class InputStreamCallback final : public nsIInputStreamCallback
+{
+  nsCOMPtr<nsIAsyncInputStream> mStream;
+  nsCOMPtr<nsIInputStreamCallback> mCallback;
+
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  InputStreamCallback(nsIAsyncInputStream* aStream,
+                      nsIInputStreamCallback* aCallback)
+    : mStream(aStream)
+    , mCallback(aCallback)
+  {}
+
+  NS_IMETHOD
+  OnInputStreamReady(nsIAsyncInputStream* aStream) override
+  {
+    return mCallback->OnInputStreamReady(mStream);
+  }
+
+private:
+  ~InputStreamCallback() {}
+};
+
+NS_IMPL_ISUPPORTS(InputStreamCallback, nsIInputStreamCallback)
 
 /* We want to ensure that sliced streams work with both seekable and
  * non-seekable input streams.  As our string streams are seekable, we need to
  * provide a string stream that doesn't permit seeking, so we can test the
  * logic that emulates seeking in sliced input streams.
  */
-class NonSeekableStringStream final : public nsIInputStream
+class NonSeekableStringStream final : public nsIAsyncInputStream
 {
   nsCOMPtr<nsIInputStream> mStream;
 
@@ -22,6 +51,11 @@ public:
   explicit NonSeekableStringStream(const nsACString& aBuffer)
   {
     NS_NewCStringInputStream(getter_AddRefs(mStream), aBuffer);
+  }
+
+  explicit NonSeekableStringStream(nsIInputStream* aStream)
+    : mStream(aStream)
+  {
   }
 
   NS_IMETHOD
@@ -55,11 +89,40 @@ public:
     return mStream->IsNonBlocking(aNonBlocking);
   }
 
+  NS_IMETHOD
+  CloseWithStatus(nsresult aStatus) override
+  {
+    nsCOMPtr<nsIAsyncInputStream> async = do_QueryInterface(mStream);
+    if (!async) {
+      MOZ_CRASH("This should not happen.");
+      return NS_ERROR_FAILURE;
+    }
+
+    return async->CloseWithStatus(aStatus);
+  }
+
+  NS_IMETHOD
+  AsyncWait(nsIInputStreamCallback* aCallback,
+            uint32_t aFlags, uint32_t aRequestedCount,
+            nsIEventTarget* aEventTarget) override
+  {
+    nsCOMPtr<nsIAsyncInputStream> async = do_QueryInterface(mStream);
+    if (!async) {
+      MOZ_CRASH("This should not happen.");
+      return NS_ERROR_FAILURE;
+    }
+
+    RefPtr<InputStreamCallback> callback =
+      new InputStreamCallback(this, aCallback);
+
+    return async->AsyncWait(callback, aFlags, aRequestedCount, aEventTarget);
+  }
+
 private:
   ~NonSeekableStringStream() {}
 };
 
-NS_IMPL_ISUPPORTS(NonSeekableStringStream, nsIInputStream)
+NS_IMPL_ISUPPORTS(NonSeekableStringStream, nsIInputStream, nsIAsyncInputStream)
 
 // Helper function for creating a seekable nsIInputStream + a SlicedInputStream.
 SlicedInputStream*
@@ -372,4 +435,61 @@ TEST(TestSlicedInputStream, Seek_END_Lower) {
   ASSERT_EQ(NS_OK, sis->Read(buf2, sizeof(buf2), &count));
   ASSERT_EQ((uint64_t)3, count);
   ASSERT_EQ(0, strncmp(buf2, " wo", count));
+}
+
+// Check the nsIAsyncInputStream interface
+TEST(TestSlicedInputStream, NoAsyncInputStream) {
+  const size_t kBufSize = 4096;
+
+  nsCString buf;
+  nsCOMPtr<nsIInputStream> sis =
+    CreateSeekableStreams(kBufSize, 0, kBufSize, buf);
+
+  // If the stream is not asyncInputStream, also SIS is not.
+  nsCOMPtr<nsIAsyncInputStream> async = do_QueryInterface(sis);
+  ASSERT_TRUE(!async);
+}
+
+TEST(TestSlicedInputStream, AsyncInputStream) {
+  nsCOMPtr<nsIAsyncInputStream> reader;
+  nsCOMPtr<nsIAsyncOutputStream> writer;
+
+  const uint32_t segmentSize = 1024;
+  const uint32_t numSegments = 1;
+
+  nsresult rv = NS_NewPipe2(getter_AddRefs(reader), getter_AddRefs(writer),
+                            true, true,  // non-blocking - reader, writer
+                            segmentSize, numSegments);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  nsTArray<char> inputData;
+  testing::CreateData(segmentSize, inputData);
+
+  // We have to wrap the reader because it implements only a partial
+  // nsISeekableStream interface. When ::Seek() is called, it does a MOZ_CRASH.
+  RefPtr<NonSeekableStringStream> wrapper =
+    new NonSeekableStringStream(reader);
+
+  nsCOMPtr<nsIInputStream> sis = new SlicedInputStream(wrapper, 500, 500);
+  nsCOMPtr<nsIAsyncInputStream> async = do_QueryInterface(sis);
+  ASSERT_TRUE(!!async);
+
+  RefPtr<testing::InputStreamCallback> cb =
+    new testing::InputStreamCallback();
+
+  rv = async->AsyncWait(cb, 0, 0, nullptr);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  ASSERT_FALSE(cb->Called());
+
+  uint32_t numWritten = 0;
+  rv = writer->Write(inputData.Elements(), inputData.Length(), &numWritten);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  ASSERT_TRUE(cb->Called());
+
+  inputData.RemoveElementsAt(0, 500);
+  inputData.RemoveElementsAt(500, 24);
+
+  testing::ConsumeAndValidateStream(async, inputData);
 }

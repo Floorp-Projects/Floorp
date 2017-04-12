@@ -803,11 +803,8 @@ gfxPlatformFontList::GetDefaultFontFamily(const nsACString& aLangGroup,
     }
 
     AutoTArray<nsString,4> names;
-    nsAutoCString prefName("font.name-list.");
-    prefName.Append(aGenericFamily);
-    prefName.Append('.');
-    prefName.Append(aLangGroup);
-    gfxFontUtils::AppendPrefsFontList(prefName.get(), names);
+    gfxFontUtils::AppendPrefsFontList(
+        NameListPref(aGenericFamily, aLangGroup).get(), names);
 
     for (nsString& name : names) {
         gfxFontFamily* fontFamily = FindFamily(name);
@@ -869,18 +866,12 @@ gfxPlatformFontList::ResolveGenericFontNames(
     AutoTArray<nsString,4> genericFamilies;
 
     // load family for "font.name.generic.lang"
-    nsAutoCString prefFontName("font.name.");
-    prefFontName.Append(generic);
-    prefFontName.Append('.');
-    prefFontName.Append(langGroupStr);
-    gfxFontUtils::AppendPrefsFontList(prefFontName.get(), genericFamilies);
+    gfxFontUtils::AppendPrefsFontList(
+        NamePref(generic, langGroupStr).get(), genericFamilies);
 
     // load fonts for "font.name-list.generic.lang"
-    nsAutoCString prefFontListName("font.name-list.");
-    prefFontListName.Append(generic);
-    prefFontListName.Append('.');
-    prefFontListName.Append(langGroupStr);
-    gfxFontUtils::AppendPrefsFontList(prefFontListName.get(), genericFamilies);
+    gfxFontUtils::AppendPrefsFontList(
+        NameListPref(generic, langGroupStr).get(), genericFamilies);
 
     nsIAtom* langGroup = GetLangGroupForPrefLang(aPrefLang);
     NS_ASSERTION(langGroup, "null lang group for pref lang");

@@ -189,10 +189,11 @@
   direction: ltr;
   padding-bottom: 1px;
   display: flex;
+  justify-content: center;
 }
 
 :-moz-native-anonymous .box-model-infobar-tagname {
-  color: hsl(285,100%, 75%);
+  color: hsl(285, 100%, 75%);
 }
 
 :-moz-native-anonymous .box-model-infobar-id {
@@ -236,8 +237,16 @@
 }
 
 :-moz-native-anonymous .css-grid-area-infobar-name,
-:-moz-native-anonymous .css-grid-cell-infobar-position {
+:-moz-native-anonymous .css-grid-cell-infobar-position,
+:-moz-native-anonymous .css-grid-line-infobar-number {
   color: hsl(285, 100%, 75%);
+}
+
+:-moz-native-anonymous .css-grid-line-infobar-names:not(:empty) {
+  color: hsl(210, 30%, 85%);
+  border-inline-start: 1px solid #5a6169;
+  margin-inline-start: 6px;
+  padding-inline-start: 6px;
 }
 
 /* CSS Transform Highlighter */

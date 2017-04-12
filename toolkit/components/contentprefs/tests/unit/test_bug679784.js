@@ -15,8 +15,6 @@ var prefObserver = {
 };
 
 function run_test() {
-  let loadContext = { get usePrivateBrowsing() { return gInPrivateBrowsing; } };
-
   var cps = new ContentPrefInstance(loadContext);
   cps.removeGroupedPrefs();
 
@@ -31,7 +29,7 @@ function run_test() {
   cps.addObserver("value", prefObserver);
   cps.addObserver("value-global", prefObserver);
 
-  enterPBMode();
+  enterPBMode(cps);
 
   // test setPref
   num = prefObserver.setCalledNum;

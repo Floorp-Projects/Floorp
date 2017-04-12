@@ -23,6 +23,7 @@
 #include "nsISupportsImpl.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Variant.h"
 
 namespace mozilla {
 class PreferenceServiceReporter;
@@ -187,8 +188,9 @@ public:
   NS_DECL_NSIOBSERVER
 
   nsPrefBranch(const char *aPrefRoot, bool aDefaultBranch);
+  nsPrefBranch() = delete;
 
-  int32_t GetRootLength() { return mPrefRootLength; }
+  int32_t GetRootLength() const { return mPrefRoot.Length(); }
 
   nsresult RemoveObserverFromMap(const char *aDomain, nsISupports *aObserver);
 
@@ -199,13 +201,46 @@ public:
   static void ReportToConsole(const nsAString& aMessage);
 
 protected:
-  virtual ~nsPrefBranch();
+  /**
+   * Helper class for either returning a raw cstring or nsCString.
+   */
+  typedef mozilla::Variant<const char*, const nsCString> PrefNameBase;
+  class PrefName : public PrefNameBase
+  {
+  public:
+    explicit PrefName(const char* aName) : PrefNameBase(aName) {}
+    explicit PrefName(const nsCString& aName) : PrefNameBase(aName) {}
 
-  nsPrefBranch()    /* disallow use of this constructer */
-    : mPrefRootLength(0)
-    , mIsDefault(false)
-    , mFreeingObserverList(false)
-  {}
+    /**
+     * Use default move constructors, disallow copy constructors.
+     */
+    PrefName(PrefName&& aOther) = default;
+    PrefName& operator=(PrefName&& aOther) = default;
+    PrefName(const PrefName&) = delete;
+    PrefName& operator=(const PrefName&) = delete;
+
+    struct PtrMatcher {
+      static const char* match(const char* aVal) { return aVal; }
+      static const char* match(const nsCString& aVal) { return aVal.get(); }
+    };
+
+    struct LenMatcher {
+      static size_t match(const char* aVal) { return strlen(aVal); }
+      static size_t match(const nsCString& aVal) { return aVal.Length(); }
+    };
+
+    const char* get() const {
+      static PtrMatcher m;
+      return match(m);
+    }
+
+    size_t Length() const {
+      static LenMatcher m;
+      return match(m);
+    }
+  };
+
+  virtual ~nsPrefBranch();
 
   nsresult   GetDefaultFromPropertiesFile(const char *aPrefName, char16_t **return_buf);
   // As SetCharPref, but without any check on the length of |aValue|
@@ -216,12 +251,11 @@ protected:
   nsresult   CheckSanityOfStringLength(const char* aPrefName, const char* aValue);
   nsresult   CheckSanityOfStringLength(const char* aPrefName, const uint32_t aLength);
   void RemoveExpiredCallback(PrefCallback *aCallback);
-  const char *getPrefName(const char *aPrefName);
+  PrefName getPrefName(const char *aPrefName) const;
   void       freeObserverList(void);
 
 private:
-  int32_t               mPrefRootLength;
-  nsCString             mPrefRoot;
+  const nsCString mPrefRoot;
   bool                  mIsDefault;
 
   bool                  mFreeingObserverList;
