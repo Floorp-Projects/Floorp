@@ -223,11 +223,10 @@ VideoData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 void
-VideoData::UpdateDuration(int64_t aDuration)
+VideoData::UpdateDuration(const TimeUnit& aDuration)
 {
-  MOZ_ASSERT(aDuration >= 0);
-
-  mDuration = TimeUnit::FromMicroseconds(aDuration);
+  MOZ_ASSERT(!aDuration.IsNegative());
+  mDuration = aDuration;
 }
 
 void
