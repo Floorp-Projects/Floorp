@@ -2414,15 +2414,15 @@ js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind co
     // For 6.1.3.2.2 and 6.1.3.2.3, steps 7-16 corresponds to steps 11-20.
 
     // Steps 7-8.
-    RootedValue value(cx);
-    if (!GetProperty(cx, resultObj, resultObj, cx->names().value, &value))
-        return AbruptRejectPromise(cx, args, resultPromise, nullptr);
-
-    // Steps 9-10.
     RootedValue doneVal(cx);
     if (!GetProperty(cx, resultObj, resultObj, cx->names().done, &doneVal))
         return AbruptRejectPromise(cx, args, resultPromise, nullptr);
     bool done = ToBoolean(doneVal);
+
+    // Steps 9-10.
+    RootedValue value(cx);
+    if (!GetProperty(cx, resultObj, resultObj, cx->names().value, &value))
+        return AbruptRejectPromise(cx, args, resultPromise, nullptr);
 
     // Step 11.
     Rooted<PromiseObject*> promise(cx, CreatePromiseObjectWithoutResolutionFunctions(cx));

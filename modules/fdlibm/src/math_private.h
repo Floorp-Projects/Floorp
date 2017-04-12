@@ -38,8 +38,10 @@
  * endianness at run time.
  */
 
-#ifdef WIN32
+#ifndef u_int32_t
 #define u_int32_t uint32_t
+#endif
+#ifndef u_int64_t
 #define u_int64_t uint64_t
 #endif
 

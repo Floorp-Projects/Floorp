@@ -9,7 +9,7 @@ add_task(function* setup() {
 /**
  * For loading the initial about:blank in e10s mode, it will be loaded with
  * NullPrincipal, and we also test if the firstPartyDomain of the origin
- * attributes is NULL_PRINCIPAL_FIRST_PARTY_DOMAIN.
+ * attributes is got from the origin itself.
  */
 add_task(function* test_remote_window_open_aboutBlank() {
   let win = yield BrowserTestUtils.openNewBrowserWindow({ remote: true });
@@ -17,15 +17,17 @@ add_task(function* test_remote_window_open_aboutBlank() {
 
   Assert.ok(browser.isRemoteBrowser, "should be a remote browser");
 
-  let attrs = { firstPartyDomain: "1f1841ad-0395-48ba-aec4-c98ee3f6e614.mozilla" };
-  yield ContentTask.spawn(browser, attrs, function* (expectAttrs) {
+  yield ContentTask.spawn(browser, {}, function* () {
     info("origin " + content.document.nodePrincipal.origin);
 
     Assert.ok(content.document.nodePrincipal.isNullPrincipal,
               "The principal of remote about:blank should be a NullPrincipal.");
+
+    let str = content.document.nodePrincipal.originNoSuffix;
+    let expectDomain = str.substring("moz-nullprincipal:{".length, str.length - 1) + ".mozilla";
     Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
-                 expectAttrs.firstPartyDomain,
-                 "remote about:blank should have firstPartyDomain set");
+                 expectDomain,
+                 "remote about:blank should have firstPartyDomain set to " + expectDomain);
   });
 
   win.close();
@@ -75,15 +77,17 @@ add_task(function* test_remote_window_open_data_uri() {
     return url == "data:text/plain,hello";
   });
 
-  let attrs = { firstPartyDomain: "1f1841ad-0395-48ba-aec4-c98ee3f6e614.mozilla" };
-  yield ContentTask.spawn(browser, attrs, function* (expectAttrs) {
+  yield ContentTask.spawn(browser, {}, function* () {
     info("origin: " + content.document.nodePrincipal.origin);
 
     Assert.ok(content.document.nodePrincipal.isNullPrincipal,
               "The principal of data: document should be a NullPrincipal.");
+
+    let str = content.document.nodePrincipal.originNoSuffix;
+    let expectDomain = str.substring("moz-nullprincipal:{".length, str.length - 1) + ".mozilla";
     Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
-                 expectAttrs.firstPartyDomain,
-                 "data: URI should have firstPartyDomain set");
+                 expectDomain,
+                 "data: URI should have firstPartyDomain set to " + expectDomain);
   });
 
   win.close();
@@ -103,8 +107,7 @@ add_task(function* test_remote_window_open_data_uri2() {
   browser.loadURI(DATA_URI);
   yield BrowserTestUtils.browserLoaded(browser, true);
 
-  let attrs = { firstPartyDomain: "1f1841ad-0395-48ba-aec4-c98ee3f6e614.mozilla" };
-  yield ContentTask.spawn(browser, attrs, function* (expectAttrs) {
+  yield ContentTask.spawn(browser, {}, function* () {
     info("origin " + content.document.nodePrincipal.origin);
 
     let iframe = content.document.getElementById("iframe1");
@@ -112,12 +115,15 @@ add_task(function* test_remote_window_open_data_uri2() {
 
     Assert.ok(content.document.nodePrincipal.isNullPrincipal,
               "The principal of data: document should be a NullPrincipal.");
+
+    let str = content.document.nodePrincipal.originNoSuffix;
+    let expectDomain = str.substring("moz-nullprincipal:{".length, str.length - 1) + ".mozilla";
     Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
-                 expectAttrs.firstPartyDomain,
-                 "data: URI should have firstPartyDomain set");
+                 expectDomain,
+                 "data: URI should have firstPartyDomain set to " + expectDomain);
 
     Assert.equal(iframe.contentDocument.nodePrincipal.originAttributes.firstPartyDomain,
-                 expectAttrs.firstPartyDomain,
+                 expectDomain,
                  "iframe should inherit firstPartyDomain from parent document.");
     Assert.equal(iframe.contentDocument.cookie, "test2=foo", "iframe should have cookies");
   });
