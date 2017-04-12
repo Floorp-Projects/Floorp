@@ -38,6 +38,7 @@
   -moz-appearance: none;
   border-style: none;
   list-style-image: url("chrome://browser/skin/page-action.svg");
+  -moz-context-properties: fill;
   margin: 0;
   padding: 0 6px;
   fill: currentColor;
