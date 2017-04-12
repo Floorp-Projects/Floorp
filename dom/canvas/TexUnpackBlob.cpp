@@ -637,6 +637,14 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
             break;
         }
 
+        if (webgl->mPixelStore_UnpackSkipPixels ||
+            webgl->mPixelStore_UnpackSkipRows ||
+            webgl->mPixelStore_UnpackSkipImages)
+        {
+            fallbackReason = "non-zero UNPACK_SKIP_* not yet supported";
+            break;
+        }
+
         const auto fnHasPremultMismatch = [&]() {
             if (mSrcAlphaType == gfxAlphaType::Opaque)
                 return false;
