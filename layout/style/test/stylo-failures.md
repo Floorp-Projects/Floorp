@@ -223,13 +223,6 @@ to mochitest command.
     * test_value_storage.html `'contain'` [30]
   * clip property: servo/servo#15729
     * test_value_storage.html `should be idempotent for 'clip` [4]
-  * initial-letter property bug 1355001
-    * test_compute_data_with_start_struct.html `initial-letter` [2]
-    * test_inherit_computation.html `initial-letter` [2]
-    * test_inherit_storage.html `initial-letter` [2]
-    * test_initial_computation.html `initial-letter` [4]
-    * test_initial_storage.html `initial-letter` [4]
-    * test_value_storage.html `initial-letter` [10]
   * font-feature-settings property servo/servo#15975
     * test_compute_data_with_start_struct.html `font-feature-settings` [2]
     * test_inherit_computation.html `font-feature-settings` [8]
