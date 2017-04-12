@@ -42,8 +42,22 @@ interface mozIStorageAsyncConnection : nsISupports {
    *         If called on a connection that has already been closed or was
    *         never properly opened.  The callback will still be dispatched
    *         to the main thread despite the returned error.
+   * @note If this call should fail, the callback won't be invoked.
    */
   void asyncClose([optional] in mozIStorageCompletionCallback aCallback);
+
+  /**
+   * Forcibly closes a database connection synchronously.
+   * This should only be used when it's required to close and replace the
+   * database synchronously to return control to the consumer, for example in
+   * case of a detected corruption on database opening.
+   * Since this spins the events loop, it should be used only in very particular
+   * and rare situations, or it may cause unexpected consequences (crashes).
+   *
+   * @throws NS_ERROR_NOT_SAME_THREAD
+   *         If called on a thread other than the one that opened it.
+   */
+  [noscript] void spinningSynchronousClose();
 
   /**
    * Clone a database and make the clone read only if needed.
