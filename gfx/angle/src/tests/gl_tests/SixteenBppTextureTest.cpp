@@ -27,7 +27,7 @@ GLColor Convert565(const R5G6B5 &rgb565)
 R5G6B5 Convert565(const GLColor &glColor)
 {
     const Vector4 &vecColor = glColor.toNormalizedVector();
-    gl::ColorF colorf(vecColor.x, vecColor.y, vecColor.z, vecColor.w);
+    gl::ColorF colorf(vecColor.x(), vecColor.y(), vecColor.z(), vecColor.w());
     R5G6B5 rgb565;
     R5G6B5::writeColor(&rgb565, &colorf);
     return rgb565;
@@ -417,7 +417,7 @@ TEST_P(SixteenBppTextureTestES3, RGBA4FramebufferReadback)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA4, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex.get(), 0);
 
-    glClearColor(rawColor.x, rawColor.y, rawColor.z, rawColor.w);
+    glClearColor(rawColor.x(), rawColor.y(), rawColor.z(), rawColor.w());
     glClear(GL_COLOR_BUFFER_BIT);
 
     ASSERT_GL_NO_ERROR();

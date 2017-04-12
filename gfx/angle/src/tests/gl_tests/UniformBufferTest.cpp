@@ -562,6 +562,48 @@ TEST_P(UniformBufferTest, VeryLarge)
     EXPECT_PIXEL_NEAR(0, 0, 128, 191, 64, 255, 1);
 }
 
+// Test that readback from a very large uniform buffer works OK.
+TEST_P(UniformBufferTest, VeryLargeReadback)
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // Generate some random data.
+    GLsizei bigSize = 4096 * 64;
+    std::vector<GLubyte> expectedData(bigSize);
+    for (GLsizei index = 0; index < bigSize; ++index)
+    {
+        expectedData[index] = static_cast<GLubyte>(index);
+    }
+
+    // Initialize the GL buffer.
+    glBindBuffer(GL_UNIFORM_BUFFER, mUniformBuffer);
+    glBufferData(GL_UNIFORM_BUFFER, bigSize, expectedData.data(), GL_STATIC_DRAW);
+
+    // Do a small update.
+    GLsizei smallSize = sizeof(float) * 4;
+    std::array<float, 4> floatData = {{0.5f, 0.75f, 0.25f, 1.0f}};
+    memcpy(expectedData.data(), floatData.data(), smallSize);
+
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, smallSize, expectedData.data());
+
+    // Draw with the buffer.
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, mUniformBuffer);
+    glUniformBlockBinding(mProgram, mUniformBufferIndex, 0);
+    drawQuad(mProgram, "position", 0.5f);
+
+    ASSERT_GL_NO_ERROR();
+    EXPECT_PIXEL_NEAR(0, 0, 128, 191, 64, 255, 1);
+
+    // Read back the large buffer data.
+    const void *mapPtr = glMapBufferRange(GL_UNIFORM_BUFFER, 0, bigSize, GL_MAP_READ_BIT);
+    ASSERT_GL_NO_ERROR();
+    const GLubyte *bytePtr = reinterpret_cast<const GLubyte *>(mapPtr);
+    std::vector<GLubyte> actualData(bytePtr, bytePtr + bigSize);
+    EXPECT_EQ(expectedData, actualData);
+
+    glUnmapBuffer(GL_UNIFORM_BUFFER);
+}
+
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
 ANGLE_INSTANTIATE_TEST(UniformBufferTest,
                        ES3_D3D11(),

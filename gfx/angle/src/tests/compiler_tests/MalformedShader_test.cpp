@@ -3156,3 +3156,22 @@ TEST_F(MalformedFragmentShaderGLES31Test, OverqualifyingImageParameter)
         FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
     }
 }
+
+// Test that work group size can be used to size arrays.
+// GLSL ES 3.10.4 section 7.1.3 Compute Shader Special Variables
+TEST_F(MalformedComputeShaderTest, WorkGroupSizeAsArraySize)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "layout(local_size_x = 5, local_size_y = 3, local_size_z = 1) in;\n"
+        "void main()\n"
+        "{\n"
+        "    int[gl_WorkGroupSize.x] a = int[5](0, 0, 0, 0, 0);\n"
+        "    int[gl_WorkGroupSize.y] b = int[3](0, 0, 0);\n"
+        "    int[gl_WorkGroupSize.z] c = int[1](0);\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}

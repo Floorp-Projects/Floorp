@@ -247,6 +247,8 @@ class Renderer9 : public RendererD3D
                                   bool separatedOutputBuffers,
                                   const D3DCompilerWorkarounds &workarounds,
                                   ShaderExecutableD3D **outExectuable) override;
+    gl::Error ensureHLSLCompilerInitialized() override;
+
     UniformStorageD3D *createUniformStorage(size_t storageSize) override;
 
     // Image operations

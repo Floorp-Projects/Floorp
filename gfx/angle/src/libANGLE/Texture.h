@@ -132,6 +132,8 @@ struct TextureState final : public angle::NonCopyable
     GLuint mBaseLevel;
     GLuint mMaxLevel;
 
+    GLenum mDepthStencilTextureMode;
+
     bool mImmutableFormat;
     GLuint mImmutableLevels;
 
@@ -227,6 +229,9 @@ class Texture final : public egl::ImageSibling,
 
     void setMaxLevel(GLuint maxLevel);
     GLuint getMaxLevel() const;
+
+    void setDepthStencilTextureMode(GLenum mode);
+    GLenum getDepthStencilTextureMode() const;
 
     bool getImmutableFormat() const;
 

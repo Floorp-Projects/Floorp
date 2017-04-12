@@ -65,7 +65,7 @@ unsigned int GetReservedVertexUniformVectors(D3D_FEATURE_LEVEL featureLevel);
 
 unsigned int GetReservedFragmentUniformVectors(D3D_FEATURE_LEVEL featureLevel);
 
-GLint GetMaximumClientVersion(D3D_FEATURE_LEVEL featureLevel);
+gl::Version GetMaximumClientVersion(D3D_FEATURE_LEVEL featureLevel);
 void GenerateCaps(ID3D11Device *device, ID3D11DeviceContext *deviceContext, const Renderer11DeviceCaps &renderer11DeviceCaps, gl::Caps *caps,
                   gl::TextureCapsMap *textureCapsMap, gl::Extensions *extensions, gl::Limitations *limitations);
 
@@ -134,6 +134,12 @@ void SetPositionDepthColorVertex(PositionDepthColorVertex<T>* vertex, float x, f
 }
 
 HRESULT SetDebugName(ID3D11DeviceChild *resource, const char *name);
+
+template <typename T>
+HRESULT SetDebugName(angle::ComPtr<T> &resource, const char *name)
+{
+    return SetDebugName(resource.Get(), name);
+}
 
 template <typename outType>
 outType* DynamicCastComObject(IUnknown* object)

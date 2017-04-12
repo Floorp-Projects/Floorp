@@ -788,7 +788,8 @@ FunctionsGL::FunctionsGL()
       blendBarrier(nullptr),
       primitiveBoundingBox(nullptr),
       eglImageTargetRenderbufferStorageOES(nullptr),
-      eglImageTargetTexture2DOES(nullptr)
+      eglImageTargetTexture2DOES(nullptr),
+      discardFramebuffer(nullptr)
 {
 }
 
@@ -1028,6 +1029,14 @@ void FunctionsGL::initializeProcsDesktopGL()
 
     // GL_KHR_robustness
     AssignGLExtensionEntryPoint(extensions, "GL_KHR_robustness", loadProcAddress("glGetGraphicsResetStatus"), &getGraphicsResetStatus);
+
+    // GL_ARB_invalidate_subdata
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_invalidate_subdata", loadProcAddress("glInvalidateTexSubImage"), &invalidateTexSubImage);
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_invalidate_subdata", loadProcAddress("glInvalidateTexImage"), &invalidateTexImage);
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_invalidate_subdata", loadProcAddress("glInvalidateBufferSubData"), &invalidateBufferSubData);
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_invalidate_subdata", loadProcAddress("glInvalidateBufferData"), &invalidateBufferData);
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_invalidate_subdata", loadProcAddress("glInvalidateFramebuffer"), &invalidateFramebuffer);
+    AssignGLExtensionEntryPoint(extensions, "GL_ARB_invalidate_subdata", loadProcAddress("glInvalidateSubFramebuffer"), &invalidateSubFramebuffer);
 
     // 1.0
     if (isAtLeastGL(gl::Version(1, 0)))
@@ -1896,6 +1905,9 @@ void FunctionsGL::initializeProcsGLES()
 
     // GL_KHR_robustness
     AssignGLExtensionEntryPoint(extensions, "GL_KHR_robustness", loadProcAddress("glGetGraphicsResetStatusKHR"), &getGraphicsResetStatus);
+
+    // GL_EXT_discard_framebuffer
+    AssignGLExtensionEntryPoint(extensions, "GL_EXT_discard_framebuffer", loadProcAddress("glDiscardFramebufferEXT"), &discardFramebuffer);
 
     // 2.0
     if (isAtLeastGLES(gl::Version(2, 0)))

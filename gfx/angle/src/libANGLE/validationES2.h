@@ -350,7 +350,7 @@ bool ValidateBufferSubData(ValidationContext *context,
                            GLsizeiptr size,
                            const GLvoid *data);
 
-bool ValidateEnableExtensionANGLE(ValidationContext *context, const GLchar *name);
+bool ValidateRequestExtensionANGLE(ValidationContext *context, const GLchar *name);
 
 bool ValidateActiveTexture(ValidationContext *context, GLenum texture);
 bool ValidateAttachShader(ValidationContext *context, GLuint program, GLuint shader);
@@ -369,6 +369,9 @@ bool ValidateBlendFuncSeparate(ValidationContext *context,
                                GLenum dstRGB,
                                GLenum srcAlpha,
                                GLenum dstAlpha);
+
+bool ValidateGetString(Context *context, GLenum name);
+bool ValidateLineWidth(ValidationContext *context, GLfloat width);
 
 }  // namespace gl
 

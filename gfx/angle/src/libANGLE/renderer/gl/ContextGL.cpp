@@ -90,7 +90,14 @@ VertexArrayImpl *ContextGL::createVertexArray(const gl::VertexArrayState &data)
 
 QueryImpl *ContextGL::createQuery(GLenum type)
 {
-    return new QueryGL(type, getFunctions(), getStateManager());
+    switch (type)
+    {
+        case GL_COMMANDS_COMPLETED_CHROMIUM:
+            return new SyncQueryGL(type, getFunctions(), getStateManager());
+
+        default:
+            return new StandardQueryGL(type, getFunctions(), getStateManager());
+    }
 }
 
 FenceNVImpl *ContextGL::createFenceNV()
