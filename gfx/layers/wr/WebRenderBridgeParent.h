@@ -181,6 +181,9 @@ private:
                    const ByteBuffer& aux,
                    const WrAuxiliaryListsDescriptor& auxDesc);
 
+  void SampleAnimations(nsTArray<WrOpacityProperty>& aOpacityArray,
+                        nsTArray<WrTransformProperty>& aTransformArray);
+
 private:
   struct PendingTransactionId {
     PendingTransactionId(wr::Epoch aEpoch, uint64_t aId)

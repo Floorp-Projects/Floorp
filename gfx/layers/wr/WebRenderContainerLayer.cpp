@@ -20,6 +20,7 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   nsTArray<LayerPolygon> children = SortChildrenBy3DZOrder(SortMode::WITHOUT_GEOMETRY);
 
   gfx::Matrix4x4 transform = GetTransform();
+  float opacity = GetLocalOpacity();
   gfx::Rect relBounds = GetWrRelBounds();
   gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
 
@@ -35,20 +36,30 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                   Stringify(transform).c_str(),
                   Stringify(mixBlendMode).c_str());
   }
-  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                               GetLocalOpacity(),
-                               transform,
-                               mixBlendMode);
-  aBuilder.PushScrollLayer(wr::ToWrRect(overflow),
-                           wr::ToWrRect(overflow),
-                           mask.ptrOr(nullptr));
 
   if (GetCompositorAnimationsId()) {
     CompositorAnimations anim;
     anim.animations() = GetAnimations();
     anim.id() = GetCompositorAnimationsId();
     WrBridge()->AddWebRenderParentCommand(OpAddCompositorAnimations(anim));
+
+    float* maybeOpacity = HasOpacityAnimation() ? nullptr : &opacity;
+    gfx::Matrix4x4* maybeTransform = HasTransformAnimation() ? nullptr : &transform;
+    aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
+                                 GetCompositorAnimationsId(),
+                                 maybeOpacity,
+                                 maybeTransform,
+                                 mixBlendMode);
+  } else {
+    aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
+                                 opacity,
+                                 transform,
+                                 mixBlendMode);
   }
+
+  aBuilder.PushScrollLayer(wr::ToWrRect(overflow),
+                           wr::ToWrRect(overflow),
+                           mask.ptrOr(nullptr));
 
   for (LayerPolygon& child : children) {
     if (child.layer->IsBackfaceHidden()) {
