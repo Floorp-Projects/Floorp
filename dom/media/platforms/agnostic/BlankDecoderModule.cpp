@@ -76,7 +76,7 @@ BlankVideoDataCreator::Create(MediaRawData* aSample)
                                       mImageContainer,
                                       aSample->mOffset,
                                       aSample->mTime,
-                                      aSample->mDuration.ToMicroseconds(),
+                                      aSample->mDuration,
                                       buffer,
                                       aSample->mKeyframe,
                                       aSample->mTime,

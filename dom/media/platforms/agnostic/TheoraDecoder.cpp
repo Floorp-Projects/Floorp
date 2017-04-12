@@ -172,7 +172,7 @@ TheoraDecoder::ProcessDecode(MediaRawData* aSample)
                                    mImageContainer,
                                    aSample->mOffset,
                                    aSample->mTime,
-                                   aSample->mDuration.ToMicroseconds(),
+                                   aSample->mDuration,
                                    b,
                                    aSample->mKeyframe,
                                    aSample->mTimecode,

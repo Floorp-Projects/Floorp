@@ -176,7 +176,7 @@ bool AndroidMediaReader::DecodeVideoFrame(bool& aKeyframeSkip,
       v = VideoData::CreateFromImage(mInfo.mVideo.mDisplay,
                                      pos,
                                      frame.mTimeUs,
-                                     1, // We don't know the duration yet.
+                                     TimeUnit::FromMicroseconds(1), // We don't know the duration yet.
                                      currentImage,
                                      frame.mKeyFrame,
                                      -1);
@@ -221,7 +221,7 @@ bool AndroidMediaReader::DecodeVideoFrame(bool& aKeyframeSkip,
                                        mDecoder->GetImageContainer(),
                                        pos,
                                        frame.mTimeUs,
-                                       1, // We don't know the duration yet.
+                                       TimeUnit::FromMicroseconds(1), // We don't know the duration yet.
                                        b,
                                        frame.mKeyFrame,
                                        -1,
