@@ -665,6 +665,10 @@ nsEditorSpellCheck::DeleteSuggestedWordList()
 NS_IMETHODIMP
 nsEditorSpellCheck::UpdateCurrentDictionary(nsIEditorSpellCheckCallback* aCallback)
 {
+  if (NS_WARN_IF(!mSpellChecker)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   nsresult rv;
 
   RefPtr<nsEditorSpellCheck> kungFuDeathGrip = this;
