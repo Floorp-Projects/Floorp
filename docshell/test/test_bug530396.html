@@ -5,7 +5,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=530396
 -->
 <head>
   <title>Test for Bug 530396</title>
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -47,7 +46,7 @@ function doNextStep() {
       break;
 
     case 3:
-      is(onloadCount, 2, "don't send referrer with rel=referrer"); 
+      is(onloadCount, 2, "don't send referrer with rel=referrer");
       SimpleTest.finish();
       break;
   }

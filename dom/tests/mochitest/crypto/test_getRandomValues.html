@@ -1,7 +1,6 @@
 <!DOCTYPE HTML>
 <html><head>
   <title>Test window.crypto.getRandomValues</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -54,7 +53,7 @@ function testNsCryptoGetRandomValues(aLength, aType)
         pass = true;
         break;
       }
-    } 
+    }
     else {
       pass = true;
     }
@@ -71,7 +70,7 @@ function onWindowLoad()
       if (testData[i].pass) {
         try {
           testNsCryptoGetRandomValues(testData[i].len, testData[i].type, testData[i].pass);
-        } 
+        }
         catch (ex) {
           ok(false, "testNsCryptoGetRandomValues failed, test should have passed: " + testData[i].type);
         }
