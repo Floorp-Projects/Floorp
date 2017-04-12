@@ -30,8 +30,7 @@ public:
   class Helper
   {
   public:
-    virtual float GetSystemDefaultScale() = 0;
-    virtual ~Helper() {};
+    virtual ~Helper() {}
   };
 
 public:

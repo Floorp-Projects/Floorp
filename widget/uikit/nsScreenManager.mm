@@ -116,10 +116,3 @@ UIKitScreenManager::ScreenForRect(int32_t inLeft,
 {
   return GetPrimaryScreen(outScreen);
 }
-
-NS_IMETHODIMP
-UIKitScreenManager::GetSystemDefaultScale(float* aScale)
-{
-    *aScale = [UIScreen mainScreen].scale;
-    return NS_OK;
-}
