@@ -36,9 +36,6 @@ class SurfaceNULL : public SurfaceImpl
 
     EGLint isPostSubBufferSupported() const override;
     EGLint getSwapBehavior() const override;
-
-    gl::Error getAttachmentRenderTarget(const gl::FramebufferAttachment::Target &target,
-                                        FramebufferAttachmentRenderTarget **rtOut) override;
 };
 
 }  // namespace rx

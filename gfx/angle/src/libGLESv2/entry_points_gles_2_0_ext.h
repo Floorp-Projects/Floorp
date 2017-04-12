@@ -262,8 +262,8 @@ ANGLE_EXPORT void GL_APIENTRY CopySubTextureCHROMIUM(GLuint sourceId,
 // GL_CHROMIUM_copy_compressed_texture
 ANGLE_EXPORT void GL_APIENTRY CompressedCopyTextureCHROMIUM(GLuint sourceId, GLuint destId);
 
-// GL_ANGLE_webgl_compatibility
-GL_APICALL GLboolean GL_APIENTRY EnableExtensionANGLE(const GLchar *name);
+// GL_ANGLE_request_extension
+GL_APICALL void GL_APIENTRY RequestExtensionANGLE(const GLchar *name);
 
 // GL_ANGLE_robust_client_memory
 ANGLE_EXPORT void GL_APIENTRY GetBooleanvRobustANGLE(GLenum pname,

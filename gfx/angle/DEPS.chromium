@@ -11,7 +11,7 @@
 
 vars = {
   'android_git': 'https://android.googlesource.com',
-  'deqp_revision': 'f4f3d8079e7a37d7675ab93583e6438d0bca0e58',
+  'deqp_revision': '455d82c60b096e7bd83b6a2f5ed70c61e4bfa759',
 }
 
 deps_os = {

@@ -364,6 +364,8 @@ bool ValidateCopyBufferSubData(ValidationContext *context,
                                GLintptr writeOffset,
                                GLsizeiptr size);
 
+bool ValidateGetStringi(Context *context, GLenum name, GLuint index);
+
 }  // namespace gl
 
 #endif // LIBANGLE_VALIDATION_ES3_H_

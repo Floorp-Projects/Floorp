@@ -143,6 +143,7 @@ class Context final : public ValidationContext
     void bindPixelUnpackBuffer(GLuint bufferHandle);
     void useProgram(GLuint program);
     void bindTransformFeedback(GLuint transformFeedbackHandle);
+    void bindDrawIndirectBuffer(GLuint bufferHandle);
 
     Error beginQuery(GLenum target, GLuint query);
     Error endQuery(GLenum target);
@@ -485,8 +486,6 @@ class Context final : public ValidationContext
 
     void generateMipmap(GLenum target);
 
-    GLboolean enableExtension(const char *name);
-
     Error flush();
     Error finish();
 
@@ -599,11 +598,13 @@ class Context final : public ValidationContext
     EGLenum getClientType() const;
     EGLenum getRenderBuffer() const;
 
-    const char *getRendererString() const;
+    const GLubyte *getString(GLenum name) const;
+    const GLubyte *getStringi(GLenum name, GLuint index) const;
 
-    const char *getExtensionString() const;
-    const char *getExtensionString(size_t idx) const;
     size_t getExtensionStringCount() const;
+
+    void requestExtension(const char *name);
+    size_t getRequestableExtensionStringCount() const;
 
     rx::ContextImpl *getImplementation() const { return mImplementation.get(); }
     const Workarounds &getWorkarounds() const;
@@ -628,6 +629,7 @@ class Context final : public ValidationContext
     void detachSampler(GLuint sampler);
 
     void initRendererString();
+    void initVersionStrings();
     void initExtensionStrings();
 
     void initCaps(bool webGLContext);
@@ -670,9 +672,13 @@ class Context final : public ValidationContext
     ResourceMap<TransformFeedback> mTransformFeedbackMap;
     HandleAllocator mTransformFeedbackAllocator;
 
+    const char *mVersionString;
+    const char *mShadingLanguageString;
     const char *mRendererString;
     const char *mExtensionString;
     std::vector<const char *> mExtensionStrings;
+    const char *mRequestableExtensionString;
+    std::vector<const char *> mRequestableExtensionStrings;
 
     // Recorded errors
     typedef std::set<GLenum> ErrorSet;

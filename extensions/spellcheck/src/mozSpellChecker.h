@@ -20,7 +20,6 @@
 #include "RemoteSpellCheckEngineChild.h"
 
 namespace mozilla {
-class PRemoteSpellcheckEngineChild;
 class RemoteSpellcheckEngineChild;
 } // namespace mozilla
 
@@ -48,6 +47,8 @@ public:
   NS_IMETHOD GetDictionaryList(nsTArray<nsString> *aDictionaryList) override;
   NS_IMETHOD GetCurrentDictionary(nsAString &aDictionary) override;
   NS_IMETHOD SetCurrentDictionary(const nsAString &aDictionary) override;
+  NS_IMETHOD_(RefPtr<mozilla::GenericPromise>)
+    SetCurrentDictionaryFromList(const nsTArray<nsString>& aList) override;
 
   void DeleteRemoteEngine() {
     mEngine = nullptr;
@@ -71,6 +72,8 @@ protected:
 
   nsresult GetEngineList(nsCOMArray<mozISpellCheckingEngine> *aDictionaryList);
 
-  mozilla::PRemoteSpellcheckEngineChild *mEngine;
+  mozilla::RemoteSpellcheckEngineChild *mEngine;
+
+  friend class mozilla::RemoteSpellcheckEngineChild;
 };
 #endif // mozSpellChecker_h__

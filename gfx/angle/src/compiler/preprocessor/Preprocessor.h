@@ -19,10 +19,18 @@ class DirectiveHandler;
 struct PreprocessorImpl;
 struct Token;
 
+struct PreprocessorSettings : angle::NonCopyable
+{
+    PreprocessorSettings() : maxMacroExpansionDepth(1000) {}
+    int maxMacroExpansionDepth;
+};
+
 class Preprocessor : angle::NonCopyable
 {
   public:
-    Preprocessor(Diagnostics *diagnostics, DirectiveHandler *directiveHandler);
+    Preprocessor(Diagnostics *diagnostics,
+                 DirectiveHandler *directiveHandler,
+                 const PreprocessorSettings &settings);
     ~Preprocessor();
 
     // count: specifies the number of elements in the string and length arrays.

@@ -239,6 +239,9 @@ SyncScheduler.prototype = {
         if (numItems) {
           this.hasIncomingItems = true;
         }
+        if (subject.newFailed) {
+          this._log.error(`Engine ${data} found ${subject.newFailed} new records that failed to apply`);
+        }
         break;
       case "weave:service:setup-complete":
          Services.prefs.savePrefFile(null);
