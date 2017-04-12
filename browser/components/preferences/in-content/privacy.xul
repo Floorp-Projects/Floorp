@@ -97,7 +97,14 @@
               name="pref.privacy.disable_button.view_passwords_exceptions"
               type="bool"/>
 
-  <!-- Certificates tab -->
+  <!-- Certificates tab
+   * security.default_personal_cert
+     - a string:
+         "Select Automatically"   select a certificate automatically when a site
+                                  requests one
+         "Ask Every Time"         present a dialog to the user so he can select
+                                  the certificate to use on a site which
+                                  requests one -->
   <preference id="security.default_personal_cert"
               name="security.default_personal_cert"
               type="string"/>
