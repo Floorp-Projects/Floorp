@@ -1837,6 +1837,7 @@ JS::ProfilingFrameIterator::iteratorConstruct(const RegisterState& state)
     if (activation_->isWasm()) {
         new (storage()) wasm::ProfilingFrameIterator(*activation_->asWasm(), state);
         // Set savedPrevJitTop_ to the actual jitTop_ from the runtime.
+        AutoNoteSingleThreadedRegion anstr;
         savedPrevJitTop_ = activation_->cx()->jitTop;
         return;
     }

@@ -97,7 +97,6 @@ typedef int32_t I32x4[4];
 typedef float F32x4[4];
 
 class Code;
-class CodeRange;
 class GlobalSegment;
 class Memory;
 class Module;
@@ -820,6 +819,120 @@ struct FuncOffsets : CallableOffsets
     }
 };
 
+// A CodeRange describes a single contiguous range of code within a wasm
+// module's code segment. A CodeRange describes what the code does and, for
+// function bodies, the name and source coordinates of the function.
+
+class CodeRange
+{
+  public:
+    enum Kind {
+        Function,          // function definition
+        Entry,             // calls into wasm from C++
+        ImportJitExit,     // fast-path calling from wasm into JIT code
+        ImportInterpExit,  // slow-path calling from wasm into C++ interp
+        ImportNativeExit,  // fast-path calling from wasm into a C++ native
+        TrapExit,          // calls C++ to report and jumps to throw stub
+        DebugTrap,         // calls C++ to handle debug event
+        FarJumpIsland,     // inserted to connect otherwise out-of-range insns
+        Inline,            // stub that is jumped-to within prologue/epilogue
+        Throw,             // special stack-unwinding stub
+        Interrupt          // stub executes asynchronously to interrupt wasm
+    };
+
+  private:
+    // All fields are treated as cacheable POD:
+    uint32_t begin_;
+    uint32_t ret_;
+    uint32_t end_;
+    uint32_t funcIndex_;
+    uint32_t funcLineOrBytecode_;
+    uint8_t funcBeginToNormalEntry_;
+    Kind kind_ : 8;
+
+  public:
+    CodeRange() = default;
+    CodeRange(Kind kind, Offsets offsets);
+    CodeRange(Kind kind, CallableOffsets offsets);
+    CodeRange(uint32_t funcIndex, uint32_t lineOrBytecode, FuncOffsets offsets);
+
+    // All CodeRanges have a begin and end.
+
+    uint32_t begin() const {
+        return begin_;
+    }
+    uint32_t end() const {
+        return end_;
+    }
+
+    // Other fields are only available for certain CodeRange::Kinds.
+
+    Kind kind() const {
+        return kind_;
+    }
+
+    bool isFunction() const {
+        return kind() == Function;
+    }
+    bool isImportExit() const {
+        return kind() == ImportJitExit || kind() == ImportInterpExit || kind() == ImportNativeExit;
+    }
+    bool isTrapExit() const {
+        return kind() == TrapExit;
+    }
+    bool isInline() const {
+        return kind() == Inline;
+    }
+    bool isThunk() const {
+        return kind() == FarJumpIsland;
+    }
+
+    // Every CodeRange except entry and inline stubs are callable and have a
+    // return statement. Asynchronous frame iteration needs to know the offset
+    // of the return instruction to calculate the frame pointer.
+
+    uint32_t ret() const {
+        MOZ_ASSERT(isFunction() || isImportExit() || isTrapExit());
+        return ret_;
+    }
+
+    // Function CodeRanges have two entry points: one for normal calls (with a
+    // known signature) and one for table calls (which involves dynamic
+    // signature checking).
+
+    uint32_t funcTableEntry() const {
+        MOZ_ASSERT(isFunction());
+        return begin_;
+    }
+    uint32_t funcNormalEntry() const {
+        MOZ_ASSERT(isFunction());
+        return begin_ + funcBeginToNormalEntry_;
+    }
+    uint32_t funcIndex() const {
+        MOZ_ASSERT(isFunction());
+        return funcIndex_;
+    }
+    uint32_t funcLineOrBytecode() const {
+        MOZ_ASSERT(isFunction());
+        return funcLineOrBytecode_;
+    }
+
+    // A sorted array of CodeRanges can be looked up via BinarySearch and PC.
+
+    struct PC {
+        size_t offset;
+        explicit PC(size_t offset) : offset(offset) {}
+        bool operator==(const CodeRange& rhs) const {
+            return offset >= rhs.begin() && offset < rhs.end();
+        }
+        bool operator<(const CodeRange& rhs) const {
+            return offset < rhs.begin();
+        }
+    };
+};
+
+WASM_DECLARE_POD_VECTOR(CodeRange, CodeRangeVector)
+
 // A wasm::Trap represents a wasm-defined trap that can occur during execution
 // which triggers a WebAssembly.RuntimeError. Generated code may jump to a Trap
 // symbolically, passing the bytecode offset to report as the trap offset. The
@@ -1018,9 +1131,6 @@ enum class SymbolicAddress
 
 bool
 IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode);
-
-void*
-AddressOf(SymbolicAddress imm);
 
 // Assumptions captures ambient state that must be the same when compiling and
 // deserializing a module for the compiled code to be valid. If it's not, then

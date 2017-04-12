@@ -414,6 +414,7 @@ ModuleGenerator::patchCallSites()
         }
     }
 
+    masm_.flushBuffer();
     return true;
 }
 

@@ -560,6 +560,12 @@ protected:
   TimeStamp                         mAsyncOpenTime;
   TimeStamp                         mCacheReadStart;
   TimeStamp                         mCacheReadEnd;
+  TimeStamp                         mLaunchServiceWorkerStart;
+  TimeStamp                         mLaunchServiceWorkerEnd;
+  TimeStamp                         mDispatchFetchEventStart;
+  TimeStamp                         mDispatchFetchEventEnd;
+  TimeStamp                         mHandleFetchEventStart;
+  TimeStamp                         mHandleFetchEventEnd;
   // copied from the transaction before we null out mTransaction
   // so that the timing can still be queried from OnStopRequest
   TimingStruct                      mTransactionTimings;

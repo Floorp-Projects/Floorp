@@ -161,6 +161,14 @@ struct ImmPtr
 {
     void* value;
 
+    struct NoCheckToken {};
+
+    explicit ImmPtr(void* value, NoCheckToken) : value(value)
+    {
+        // A special unchecked variant for contexts where we know it is safe to
+        // use an immptr. This is assuming the caller knows what they're doing.
+    }
+
     explicit ImmPtr(const void* value) : value(const_cast<void*>(value))
     {
         // To make code serialization-safe, wasm compilation should only
@@ -202,7 +210,6 @@ struct ImmPtr
     {
         MOZ_ASSERT(!IsCompilingWasm());
     }
-
 };
 
 // The same as ImmPtr except that the intention is to patch this
