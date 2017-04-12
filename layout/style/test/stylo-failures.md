@@ -113,6 +113,8 @@ to mochitest command.
   * ... `list-style-type` [60]
   * ... `'list-style'` [30]
   * ... `'content`: various value as list-style-type in counter functions [13]
+* @page support:
+  * test_bug887741_at-rules_in_declaration_lists.html `exception` [1]
 * test_default_computed_style.html: support of getDefaultComputedStyle [1]
 * Unimplemented \@font-face descriptors:
   * font-display bug 1355345
