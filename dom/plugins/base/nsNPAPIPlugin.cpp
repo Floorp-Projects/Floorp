@@ -391,7 +391,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
                           eNPPStreamTypeInternal type,
                           bool bDoNotify = false,
                           void *notifyData = nullptr, uint32_t len = 0,
-                          const char *buf = nullptr, NPBool file = false)
+                          const char *buf = nullptr)
 {
   if (!npp)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -432,7 +432,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
     }
   case eNPPStreamTypeInternal_Post:
     {
-      if (NS_FAILED(pluginHost->PostURL(inst, relativeURL, len, buf, file,
+      if (NS_FAILED(pluginHost->PostURL(inst, relativeURL, len, buf,
                                         target, listener, nullptr, nullptr,
                                         false, 0, nullptr)))
         return NPERR_GENERIC_ERROR;
@@ -753,7 +753,7 @@ _posturlnotify(NPP npp, const char *relativeURL, const char *target,
 
   return MakeNewNPAPIStreamInternal(npp, relativeURL, target,
                                     eNPPStreamTypeInternal_Post, true,
-                                    notifyData, len, buf, file);
+                                    notifyData, len, buf);
 }
 
 NPError
@@ -773,7 +773,7 @@ _posturl(NPP npp, const char *relativeURL, const char *target,
 
   return MakeNewNPAPIStreamInternal(npp, relativeURL, target,
                                     eNPPStreamTypeInternal_Post, false, nullptr,
-                                    len, buf, file);
+                                    len, buf);
 }
 
 NPError
