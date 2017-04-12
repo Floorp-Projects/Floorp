@@ -15,7 +15,6 @@
 
 var path = require("path");
 var helpers = require("../helpers");
-var globals = require("../globals");
 var browserWindowEnv = require("../environments/browser-window");
 
 module.exports = function(context) {

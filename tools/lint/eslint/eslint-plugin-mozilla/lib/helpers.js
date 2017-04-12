@@ -6,7 +6,6 @@
  */
 "use strict";
 
-var escope = require("escope");
 var espree = require("espree");
 var estraverse = require("estraverse");
 var path = require("path");
@@ -229,7 +228,7 @@ module.exports = {
     }
 
     for (var reg of definitions) {
-      var match = source.match(reg);
+      let match = source.match(reg);
       if (match) {
         // Must be in the global scope
         if (!isGlobal) {
@@ -241,7 +240,7 @@ module.exports = {
     }
 
     for (reg of imports) {
-      var match = source.match(reg);
+      let match = source.match(reg);
       if (match) {
         // The two argument form is only acceptable in the global scope
         if (node.expression.arguments.length > 1 && !isGlobal) {
@@ -572,7 +571,7 @@ module.exports = {
    * context.getFileName contain leading and trailing double-quote characters.
    * These characters need to be removed.
    */
-  cleanUpPath(path) {
-    return path.replace(/^"/, "").replace(/"$/, "");
+  cleanUpPath(pathName) {
+    return pathName.replace(/^"/, "").replace(/"$/, "");
   }
 };

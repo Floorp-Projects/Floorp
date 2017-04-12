@@ -12,7 +12,6 @@ const path = require("path");
 const fs = require("fs");
 const helpers = require("./helpers");
 const escope = require("escope");
-const estraverse = require("estraverse");
 
 /**
  * Parses a list of "name:boolean_value" or/and "name" options divided by comma
@@ -125,7 +124,7 @@ module.exports = {
    * import-globals-from directives and also includes globals defined by
    * standard eslint directives.
    *
-   * @param  {String} path
+   * @param  {String} filePath
    *         The absolute path of the file to be parsed.
    * @return {Array}
    *         An array of objects that contain details about the globals:
@@ -134,19 +133,19 @@ module.exports = {
    *         - {Boolean} writable
    *                     If the global is writeable or not.
    */
-  getGlobalsForFile(path) {
-    if (globalCache.has(path)) {
-      return globalCache.get(path);
+  getGlobalsForFile(filePath) {
+    if (globalCache.has(filePath)) {
+      return globalCache.get(filePath);
     }
 
-    if (globalDiscoveryInProgressForFiles.has(path)) {
+    if (globalDiscoveryInProgressForFiles.has(filePath)) {
       // We're already processing this file, so return an empty set for now -
       // the initial processing will pick up on the globals for this file.
       return [];
     }
-    globalDiscoveryInProgressForFiles.add(path);
+    globalDiscoveryInProgressForFiles.add(filePath);
 
-    let content = fs.readFileSync(path, "utf8");
+    let content = fs.readFileSync(filePath, "utf8");
 
     // Parse the content into an AST
     let ast = helpers.getAST(content);
@@ -161,7 +160,7 @@ module.exports = {
     }));
 
     // Walk over the AST to find any of our custom globals
-    let handler = new GlobalsForNode(path);
+    let handler = new GlobalsForNode(filePath);
 
     helpers.walkAST(ast, (type, node, parents) => {
       // We have to discover any globals that ESLint would have defined through
@@ -187,9 +186,9 @@ module.exports = {
       }
     });
 
-    globalCache.set(path, globals);
+    globalCache.set(filePath, globals);
 
-    globalDiscoveryInProgressForFiles.delete(path);
+    globalDiscoveryInProgressForFiles.delete(filePath);
     return globals;
   },
 
