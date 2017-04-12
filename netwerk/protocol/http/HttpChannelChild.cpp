@@ -707,7 +707,11 @@ HttpChannelChild::OnTransportAndData(const nsresult& channelStatus,
 
   DoOnStatus(this, transportStatus);
 
-  const int64_t progressMax = mResponseHead->ContentLength();
+  int64_t progressMax;
+  if (NS_FAILED(GetContentLength(&progressMax))) {
+    progressMax = -1;
+  }
+
   const int64_t progress = offset + count;
   DoOnProgress(this, progress, progressMax);
 
