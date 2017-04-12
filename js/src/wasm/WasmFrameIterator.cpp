@@ -553,6 +553,7 @@ ProfilingFrameIterator::initFromExitFP()
         break;
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
+      case CodeRange::ImportNativeExit:
       case CodeRange::TrapExit:
       case CodeRange::DebugTrap:
       case CodeRange::Inline:
@@ -591,9 +592,23 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
     // If pc isn't in the instance's code, we must have exited the code via an
     // exit trampoline or signal handler.
     code_ = activation_->compartment()->wasm.lookupCode(state.pc);
+
+    const CodeRange* codeRange = nullptr;
+    uint8_t* codeBase = nullptr;
     if (!code_) {
-        MOZ_ASSERT(done());
-        return;
+        // Optimized builtin exits (see MaybeGetMatchingBuiltin in
+        // WasmInstance.cpp) are outside module's code.
+        AutoNoteSingleThreadedRegion anstr;
+        if (BuiltinThunk* thunk = activation_->cx()->runtime()->wasm().lookupBuiltin(state.pc)) {
+            codeRange = &thunk->codeRange;
+            codeBase = (uint8_t*) thunk->base;
+        } else {
+            MOZ_ASSERT(done());
+            return;
+        }
+    } else {
+        codeRange = code_->lookupRange(state.pc);
+        codeBase = code_->segment().base();
     }
 
     // When the pc is inside the prologue/epilogue, the innermost call's Frame
@@ -606,10 +621,9 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
     uint8_t* pc = (uint8_t*)state.pc;
     void** sp = (void**)state.sp;
 
-    const CodeRange* codeRange = code_->lookupRange(pc);
-    uint32_t offsetInModule = pc - code_->segment().base();
-    MOZ_ASSERT(offsetInModule >= codeRange->begin());
-    MOZ_ASSERT(offsetInModule < codeRange->end());
+    uint32_t offsetInCode = pc - codeBase;
+    MOZ_ASSERT(offsetInCode >= codeRange->begin());
+    MOZ_ASSERT(offsetInCode < codeRange->end());
 
     // Compute the offset of the pc from the (normal) entry of the code range.
     // The stack state of the pc for the entire table-entry is equivalent to
@@ -618,12 +632,12 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
     // pc-at-normal-entry case.
     uint32_t offsetFromEntry;
     if (codeRange->isFunction()) {
-        if (offsetInModule < codeRange->funcNormalEntry())
+        if (offsetInCode < codeRange->funcNormalEntry())
             offsetFromEntry = 0;
         else
-            offsetFromEntry = offsetInModule - codeRange->funcNormalEntry();
+            offsetFromEntry = offsetInCode - codeRange->funcNormalEntry();
     } else {
-        offsetFromEntry = offsetInModule - codeRange->begin();
+        offsetFromEntry = offsetInCode - codeRange->begin();
     }
 
     switch (codeRange->kind()) {
@@ -631,6 +645,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
       case CodeRange::FarJumpIsland:
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
+      case CodeRange::ImportNativeExit:
       case CodeRange::TrapExit:
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
         if (offsetFromEntry == BeforePushRetAddr || codeRange->isThunk()) {
@@ -658,11 +673,11 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
             callerPC_ = ReturnAddressFromFP(sp);
             callerFP_ = fp;
             AssertMatchesCallSite(*activation_, callerPC_, callerFP_);
-        } else if (offsetInModule == codeRange->ret() - PoppedFP) {
+        } else if (offsetInCode == codeRange->ret() - PoppedFP) {
             // The callerFP field of the Frame has been popped into fp.
             callerPC_ = sp[1];
             callerFP_ = fp;
-        } else if (offsetInModule == codeRange->ret()) {
+        } else if (offsetInCode == codeRange->ret()) {
             // Both the TLS and callerFP fields have been popped and fp now
             // points to the caller's frame.
             callerPC_ = sp[0];
@@ -740,6 +755,7 @@ ProfilingFrameIterator::operator++()
       case CodeRange::Function:
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
+      case CodeRange::ImportNativeExit:
       case CodeRange::TrapExit:
       case CodeRange::DebugTrap:
       case CodeRange::Inline:
@@ -769,6 +785,7 @@ ProfilingFrameIterator::label() const
     //     devtools/client/performance/modules/logic/frame-utils.js
     static const char* importJitDescription = "fast FFI trampoline (in wasm)";
     static const char* importInterpDescription = "slow FFI trampoline (in wasm)";
+    static const char* importNativeDescription = "fast FFI trampoline to native (in wasm)";
     static const char* trapDescription = "trap handling (in wasm)";
     static const char* debugTrapDescription = "debug trap handling (in wasm)";
 
@@ -779,6 +796,8 @@ ProfilingFrameIterator::label() const
         return importJitDescription;
       case ExitReason::ImportInterp:
         return importInterpDescription;
+      case ExitReason::ImportNative:
+        return importNativeDescription;
       case ExitReason::Trap:
         return trapDescription;
       case ExitReason::DebugTrap:
@@ -789,6 +808,7 @@ ProfilingFrameIterator::label() const
       case CodeRange::Function:         return code_->profilingLabel(codeRange_->funcIndex());
       case CodeRange::Entry:            return "entry trampoline (in wasm)";
       case CodeRange::ImportJitExit:    return importJitDescription;
+      case CodeRange::ImportNativeExit: return importNativeDescription;
       case CodeRange::ImportInterpExit: return importInterpDescription;
       case CodeRange::TrapExit:         return trapDescription;
       case CodeRange::DebugTrap:        return debugTrapDescription;

@@ -4,6 +4,117 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files('**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
+
+with Files('*.java.*'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('*Manifest*'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('adjust-sdk-sandbox.token'):
+    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
+
+with Files('android-services.mozbuild'):
+    BUG_COMPONENT = ('Android Background Services', 'Android Sync')
+
+with Files('geckoview.ddf'):
+    BUG_COMPONENT = ('Firefox for Android', 'GeckoView')
+
+with Files('crashreporter/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('java/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('java/org/mozilla/gecko/activitystream/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Awesomescreen')
+
+with Files('java/org/mozilla/gecko/cleanup/**'):
+    BUG_COMPONENT = ('Android Background Services', 'Firefox Health Report Service')
+
+with Files('java/org/mozilla/gecko/distribution/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Distributions')
+
+with Files('java/org/mozilla/gecko/firstrun/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'First Run')
+
+with Files('java/org/mozilla/gecko/home/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Awesomescreen')
+
+with Files('java/org/mozilla/gecko/icons/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Favicon Handling')
+
+with Files('java/org/mozilla/gecko/javaaddons/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('java/org/mozilla/gecko/mdns/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('java/org/mozilla/gecko/media/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Audio/Video')
+
+with Files('java/org/mozilla/gecko/mdns/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Settings and Preferences')
+
+with Files('java/org/mozilla/gecko/reader/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Reader View')
+
+with Files('java/org/mozilla/gecko/restrictions/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Family Friendly Browsing')
+
+with Files('java/org/mozilla/gecko/telemetry/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Metrics')
+
+with Files('java/org/mozilla/gecko/text/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('java/org/mozilla/gecko/webapps/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Web Apps')
+
+with Files('java/org/mozilla/gecko/*LocaleManager*'):
+    BUG_COMPONENT = ('Firefox for Android', 'Locale switching and selection')
+
+with Files('java/org/mozilla/gecko/*ChromeCast*'):
+    BUG_COMPONENT = ('Firefox for Android', 'Screencasting')
+
+with Files('java/org/mozilla/gecko/*DynamicToolbar*'):
+    BUG_COMPONENT = ('Firefox for Android', 'Graphics, Panning and Zooming')
+
+with Files('java/org/mozilla/gecko/*Presentation*'):
+    BUG_COMPONENT = ('Firefox for Android', 'Screencasting')
+
+with Files('java/org/mozilla/gecko/*GuestSession*'):
+    BUG_COMPONENT = ('Firefox for Android', 'Profile Handling')
+
+with Files('locales/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('resources/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('resources/anim/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Overlays')
+
+with Files('resources/raw/*favicon*'):
+    BUG_COMPONENT = ('Firefox for Android', 'Favicon Handling')
+
+with Files('resources/xml*/*preference*'):
+    BUG_COMPONENT = ('Firefox for Android', 'Settings and Preferences')
+
+with Files('resources/menu/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('resources/menu/*home*'):
+    BUG_COMPONENT = ('Firefox for Android', 'Awesomescreen')
+
+with Files('resources/menu/*activitystream*'):
+    BUG_COMPONENT = ('Firefox for Android', 'Awesomescreen')
+
+with Files('resources/menu/browsersearch_contextmenu.xml'):
+    BUG_COMPONENT = ('Firefox for Android', 'Awesomescreen')
+
 DIRS += ['locales']
 
 GENERATED_FILES += [

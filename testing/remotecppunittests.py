@@ -217,10 +217,14 @@ def run_test_harness(options, args):
     else:
         retryLimit = 5
     try:
+        dm_args = {'deviceRoot': options.remote_test_root}
+        dm_args['retryLimit'] = retryLimit
         if options.device_ip:
-            dm = devicemanagerADB.DeviceManagerADB(options.device_ip, options.device_port, packageName=None, deviceRoot=options.remote_test_root, retryLimit=retryLimit)
-        else:
-            dm = devicemanagerADB.DeviceManagerADB(packageName=None, deviceRoot=options.remote_test_root, retryLimit=retryLimit)
+            dm_args['host'] = options.device_ip
+            dm_args['port'] = options.device_port
+        if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
+            dm_args['logLevel'] = logging.DEBUG
+        dm = devicemanagerADB.DeviceManagerADB(**dm_args)
     except:
         if options.with_b2g_emulator:
             runner.cleanup()

@@ -13,10 +13,10 @@ const Table = WebAssembly.Table;
 function normalize(stack)
 {
     var wasmFrameTypes = [
-        {re:/^entry trampoline \(in wasm\)$/,             sub:">"},
-        {re:/^wasm-function\[(\d+)\] \(.*\)$/,            sub:"$1"},
-        {re:/^(fast|slow) FFI trampoline \(in wasm\)$/,   sub:"<"},
-        {re:/ \(in wasm\)$/,                              sub:""}
+        {re:/^entry trampoline \(in wasm\)$/,                        sub:">"},
+        {re:/^wasm-function\[(\d+)\] \(.*\)$/,                       sub:"$1"},
+        {re:/^(fast|slow) FFI trampoline (to native |)\(in wasm\)$/, sub:"<"},
+        {re:/ \(in wasm\)$/,                                         sub:""}
     ];
 
     var framesIn = stack.split(',');
@@ -112,6 +112,16 @@ test(
 )`,
 {"":{foo:()=>{}}},
 ["", ">", "1,>", "0,1,>", "<,0,1,>", "0,1,>", "1,>", ">", ""]);
+
+test(`(module
+    (import $f32 "Math" "sin" (param f32) (result f32))
+    (func (export "") (param f32) (result f32)
+        get_local 0
+        call $f32
+    )
+)`,
+this,
+["", ">", "1,>", "<,1,>", "1,>", ">", ""]);
 
 function testError(code, error, expect)
 {

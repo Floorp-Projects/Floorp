@@ -769,11 +769,11 @@ PropertyNameToExtraName(PropertyName* name)
 
 #endif // DEBUG
 
-enum {
+enum ABIArgType {
     ArgType_General = 0x1,
     ArgType_Double  = 0x2,
     ArgType_Float32 = 0x3,
-    ArgType_Int64 = 0x4,
+    ArgType_Int64   = 0x4,
 
     RetType_Shift   = 0x0,
     ArgType_Shift   = 0x3,
@@ -828,6 +828,9 @@ enum ABIFunctionType
     // double f(double, double)
     Args_Double_DoubleDouble = Args_Double_Double | (ArgType_Double << (ArgType_Shift * 2)),
 
+    // float f(float, float)
+    Args_Float32_Float32Float32 = Args_Float32_Float32 | (ArgType_Float32 << (ArgType_Shift * 2)),
+
     // double f(int, double)
     Args_Double_IntDouble = Args_Double_None |
         (ArgType_Double << (ArgType_Shift * 1)) |
@@ -856,7 +859,6 @@ enum ABIFunctionType
         (ArgType_General << (ArgType_Shift * 2)) |
         (ArgType_Double  << (ArgType_Shift * 3)) |
         (ArgType_General << (ArgType_Shift * 4))
-
 };
 
 enum class BarrierKind : uint32_t {

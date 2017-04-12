@@ -4,6 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# NOTE: I think there are a few other possible components in this directory
+with Files('**'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('geckoview/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'GeckoView')
+
 DIRS += ['geckoview']
 
 DEFINES['AB_CD'] = CONFIG['MOZ_UI_LOCALE']
