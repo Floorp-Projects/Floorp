@@ -737,7 +737,6 @@
       throw error;
     return result;
   }
-  global.getPromiseResult = getPromiseResult;
 
   function assertEventuallyEq(promise, expected) {
     assertEq(getPromiseResult(promise), expected);
