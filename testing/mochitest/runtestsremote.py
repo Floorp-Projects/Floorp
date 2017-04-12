@@ -355,6 +355,8 @@ def run_test_harness(parser, options):
 
     procName = options.app.split('/')[-1]
     dm.killProcess(procName)
+    if dm.processExist(procName):
+        log.warning("unable to kill %s before running tests!" % procName)
 
     mochitest.mozLogName = "moz.log"
     try:

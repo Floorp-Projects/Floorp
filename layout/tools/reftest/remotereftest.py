@@ -392,8 +392,9 @@ def run_test_harness(parser, options):
         return retVal
 
     procName = options.app.split('/')[-1]
-    if (dm.processExist(procName)):
-        dm.killProcess(procName)
+    dm.killProcess(procName)
+    if dm.processExist(procName):
+        print "unable to kill %s before starting tests!" % procName
 
     if options.printDeviceInfo:
         reftest.printDeviceInfo()
