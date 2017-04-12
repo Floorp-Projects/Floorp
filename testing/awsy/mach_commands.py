@@ -102,15 +102,10 @@ class MachCommands(MachCommandBase):
                                      'tp5n-pageset.manifest')
         tooltool_args = {'args': [
             sys.executable,
-            os.path.join(self.topsrcdir,
-                         'python',
-                         'mozbuild',
-                         'mozbuild',
-                         'action',
-                         'tooltool.py'),
-            '--manifest=%s' % manifest_file,
-            '--cache-folder=%s' % os.path.join(self.topsrcdir, 'tooltool-cache'),
-            'fetch'
+            os.path.join(self.topsrcdir, 'mach'),
+            'artifact', 'toolchain', '-v',
+            '--tooltool-manifest=%s' % manifest_file,
+            '--cache-dir=%s' % os.path.join(self.topsrcdir, 'tooltool-cache'),
         ]}
         self.run_process(cwd=page_load_test_dir, **tooltool_args)
         tp5nzip = os.path.join(page_load_test_dir, 'tp5n.zip')
