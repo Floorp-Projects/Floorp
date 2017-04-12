@@ -113,7 +113,7 @@ bool RemoveInvariant(sh::GLenum shaderType,
         return true;
 
     if ((compileOptions & SH_REMOVE_INVARIANT_AND_CENTROID_FOR_ESSL3) != 0 &&
-        shaderVersion >= 300 && shaderType == GL_VERTEX_SHADER && IsGLSL410OrOlder(outputType))
+        shaderVersion >= 300 && shaderType == GL_VERTEX_SHADER)
         return true;
 
     return false;
@@ -121,7 +121,7 @@ bool RemoveInvariant(sh::GLenum shaderType,
 
 size_t GetGlobalMaxTokenSize(ShShaderSpec spec)
 {
-    // WebGL defines a max token legnth of 256, while ES2 leaves max token
+    // WebGL defines a max token length of 256, while ES2 leaves max token
     // size undefined. ES3 defines a max size of 1024 characters.
     switch (spec)
     {
@@ -537,6 +537,15 @@ bool TCompiler::compile(const char *const shaderStrings[],
 
 bool TCompiler::InitBuiltInSymbolTable(const ShBuiltInResources &resources)
 {
+    if (resources.MaxDrawBuffers < 1)
+    {
+        return false;
+    }
+    if (resources.EXT_blend_func_extended && resources.MaxDualSourceDrawBuffers < 1)
+    {
+        return false;
+    }
+
     compileResources = resources;
     setResourceString();
 

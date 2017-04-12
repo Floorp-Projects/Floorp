@@ -202,14 +202,16 @@ class DefinedParser : public Lexer
 DirectiveParser::DirectiveParser(Tokenizer *tokenizer,
                                  MacroSet *macroSet,
                                  Diagnostics *diagnostics,
-                                 DirectiveHandler *directiveHandler)
+                                 DirectiveHandler *directiveHandler,
+                                 int maxMacroExpansionDepth)
     : mPastFirstStatement(false),
       mSeenNonPreprocessorToken(false),
       mTokenizer(tokenizer),
       mMacroSet(macroSet),
       mDiagnostics(diagnostics),
       mDirectiveHandler(directiveHandler),
-      mShaderVersion(100)
+      mShaderVersion(100),
+      mMaxMacroExpansionDepth(maxMacroExpansionDepth)
 {
 }
 
@@ -843,7 +845,7 @@ void DirectiveParser::parseLine(Token *token)
     bool parsedFileNumber = false;
     int line = 0, file = 0;
 
-    MacroExpander macroExpander(mTokenizer, mMacroSet, mDiagnostics);
+    MacroExpander macroExpander(mTokenizer, mMacroSet, mDiagnostics, mMaxMacroExpansionDepth);
 
     // Lex the first token after "#line" so we can check it for EOD.
     macroExpander.lex(token);
@@ -952,7 +954,7 @@ int DirectiveParser::parseExpressionIf(Token *token)
     ASSERT((getDirective(token) == DIRECTIVE_IF) || (getDirective(token) == DIRECTIVE_ELIF));
 
     DefinedParser definedParser(mTokenizer, mMacroSet, mDiagnostics);
-    MacroExpander macroExpander(&definedParser, mMacroSet, mDiagnostics);
+    MacroExpander macroExpander(&definedParser, mMacroSet, mDiagnostics, mMaxMacroExpansionDepth);
     ExpressionParser expressionParser(&macroExpander, mDiagnostics);
 
     int expression = 0;

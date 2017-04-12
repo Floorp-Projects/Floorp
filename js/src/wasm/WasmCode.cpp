@@ -111,7 +111,8 @@ StaticallyLink(CodeSegment& cs, const LinkData& linkData, JSContext* cx)
         const Uint32Vector& offsets = linkData.symbolicLinks[imm];
         for (size_t i = 0; i < offsets.length(); i++) {
             uint8_t* patchAt = cs.base() + offsets[i];
-            void* target = AddressOf(imm);
+            ABIFunctionType unused;
+            void* target = wasm::AddressOf(imm, &unused);
             Assembler::PatchDataWithValueCheck(CodeLocationLabel(patchAt),
                                                PatchedImmPtr(target),
                                                PatchedImmPtr((void*)-1));
@@ -293,62 +294,6 @@ size_t
 FuncImport::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return sig_.sizeOfExcludingThis(mallocSizeOf);
-}
-
-CodeRange::CodeRange(Kind kind, Offsets offsets)
-  : begin_(offsets.begin),
-    ret_(0),
-    end_(offsets.end),
-    funcIndex_(0),
-    funcLineOrBytecode_(0),
-    funcBeginToNormalEntry_(0),
-    kind_(kind)
-{
-    MOZ_ASSERT(begin_ <= end_);
-#ifdef DEBUG
-    switch (kind_) {
-      case Entry:
-      case DebugTrap:
-      case FarJumpIsland:
-      case Inline:
-      case Throw:
-      case Interrupt:
-        break;
-      case Function:
-      case TrapExit:
-      case ImportJitExit:
-      case ImportInterpExit:
-        MOZ_CRASH("should use more specific constructor");
-    }
-#endif
-}
-
-CodeRange::CodeRange(Kind kind, CallableOffsets offsets)
-  : begin_(offsets.begin),
-    ret_(offsets.ret),
-    end_(offsets.end),
-    funcIndex_(0),
-    funcLineOrBytecode_(0),
-    funcBeginToNormalEntry_(0),
-    kind_(kind)
-{
-    MOZ_ASSERT(begin_ < ret_);
-    MOZ_ASSERT(ret_ < end_);
-    MOZ_ASSERT(kind_ == ImportJitExit || kind_ == ImportInterpExit || kind_ == TrapExit);
-}
-
-CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffsets offsets)
-  : begin_(offsets.begin),
-    ret_(offsets.ret),
-    end_(offsets.end),
-    funcIndex_(funcIndex),
-    funcLineOrBytecode_(funcLineOrBytecode),
-    funcBeginToNormalEntry_(offsets.normalEntry - begin_),
-    kind_(Function)
-{
-    MOZ_ASSERT(begin_ < ret_);
-    MOZ_ASSERT(ret_ < end_);
-    MOZ_ASSERT(offsets.normalEntry - begin_ <= UINT8_MAX);
 }
 
 static size_t

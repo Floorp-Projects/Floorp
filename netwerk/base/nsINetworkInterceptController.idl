@@ -14,11 +14,15 @@ interface nsIURI;
 %{C++
 #include "nsIConsoleReportCollector.h"
 namespace mozilla {
+class TimeStamp;
+
 namespace dom {
 class ChannelInfo;
 }
 }
 %}
+
+native TimeStamp(mozilla::TimeStamp);
 
 [ptr] native ChannelInfo(mozilla::dom::ChannelInfo);
 
@@ -96,6 +100,30 @@ interface nsIInterceptedChannel : nsISupports
 
     [noscript]
     readonly attribute nsIConsoleReportCollector consoleReportCollector;
+
+    /**
+     * Save the timestamps of various service worker interception phases.
+     */
+    [noscript]
+    void SetLaunchServiceWorkerStart(in TimeStamp aTimeStamp);
+
+    [noscript]
+    void SetLaunchServiceWorkerEnd(in TimeStamp aTimeStamp);
+
+    [noscript]
+    void SetDispatchFetchEventStart(in TimeStamp aTimeStamp);
+
+    [noscript]
+    void SetDispatchFetchEventEnd(in TimeStamp aTimeStamp);
+
+    [noscript]
+    void SetHandleFetchEventStart(in TimeStamp aTimeStamp);
+
+    [noscript]
+    void SetHandleFetchEventEnd(in TimeStamp aTimeStamp);
+
+    [noscript]
+    void SaveTimeStampsToUnderlyingChannel();
 
 %{C++
     already_AddRefed<nsIConsoleReportCollector>

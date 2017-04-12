@@ -532,7 +532,7 @@ TEST_P(CopyTextureTest, UnmultiplyAlpha)
 }
 
 // Test that unmultipying and premultiplying the alpha is the same as doing neither
-TEST_P(CopyTextureTest, UnmultiplyAndPremultplyAlpha)
+TEST_P(CopyTextureTest, UnmultiplyAndPremultiplyAlpha)
 {
     if (!checkExtensions())
     {
@@ -557,6 +557,74 @@ TEST_P(CopyTextureTest, UnmultiplyAndPremultplyAlpha)
     EXPECT_PIXEL_COLOR_NEAR(0, 1, GLColor(63, 63, 63, 127), 1.0);
     EXPECT_PIXEL_COLOR_NEAR(1, 1, GLColor(255, 255, 255, 0), 1.0);
     EXPECT_GL_NO_ERROR();
+}
+
+// Test to ensure that CopyTexture works with LUMINANCE_ALPHA texture
+TEST_P(CopyTextureTest, LuminanceAlpha)
+{
+    if (!checkExtensions())
+    {
+        return;
+    }
+
+    uint8_t originalPixels[] = {163u, 67u};
+    GLColor expectedPixels(163u, 163u, 163u, 67u);
+
+    glBindTexture(GL_TEXTURE_2D, mTextures[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, 1, 1, 0, GL_LUMINANCE_ALPHA,
+                 GL_UNSIGNED_BYTE, &originalPixels);
+
+    glCopyTextureCHROMIUM(mTextures[0], mTextures[1], GL_RGBA, GL_UNSIGNED_BYTE, false, false,
+                          false);
+
+    EXPECT_GL_NO_ERROR();
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, expectedPixels);
+}
+
+// Test to ensure that CopyTexture works with LUMINANCE texture
+TEST_P(CopyTextureTest, Luminance)
+{
+    if (!checkExtensions())
+    {
+        return;
+    }
+
+    uint8_t originalPixels[] = {57u};
+    GLColor expectedPixels(57u, 57u, 57u, 255u);
+
+    glBindTexture(GL_TEXTURE_2D, mTextures[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 1, 1, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+                 &originalPixels);
+
+    glCopyTextureCHROMIUM(mTextures[0], mTextures[1], GL_RGBA, GL_UNSIGNED_BYTE, false, false,
+                          false);
+
+    EXPECT_GL_NO_ERROR();
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, expectedPixels);
+}
+
+// Test to ensure that CopyTexture works with ALPHA texture
+TEST_P(CopyTextureTest, Alpha)
+{
+    if (!checkExtensions())
+    {
+        return;
+    }
+
+    uint8_t originalPixels[] = {77u};
+    GLColor expectedPixels(0u, 0u, 0u, 77u);
+
+    glBindTexture(GL_TEXTURE_2D, mTextures[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, 1, 1, 0, GL_ALPHA, GL_UNSIGNED_BYTE, &originalPixels);
+
+    glCopyTextureCHROMIUM(mTextures[0], mTextures[1], GL_RGBA, GL_UNSIGNED_BYTE, false, false,
+                          false);
+
+    EXPECT_GL_NO_ERROR();
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, expectedPixels);
 }
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these

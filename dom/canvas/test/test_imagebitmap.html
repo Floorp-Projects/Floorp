@@ -6,7 +6,7 @@
 <body>
 
 <img src="image_anim-gr.gif" id="image" class="resource">
-<video width="320" height="240" src="http://example.com/tests/dom/canvas/test/crossorigin/video.sjs?name=tests/dom/media/test/320x240.ogv&type=video/ogg&cors=anonymous" id="video" crossOrigin="anonymous" autoplay></video>
+<video width="320" height="240" src="http://example.com/tests/dom/canvas/test/crossorigin/video.sjs?name=tests/dom/canvas/test/320x240.ogv&type=video/ogg&cors=anonymous" id="video" crossOrigin="anonymous" autoplay></video>
 
 <canvas id="c1" class="output" width="128" height="128"></canvas>
 <canvas id="c2" width="128" height="128"></canvas>
@@ -226,7 +226,7 @@ function testSecurityErrors() {
         reject();
       }
 
-      uncleanVideo.src = "http://example.com/tests/dom/canvas/test/crossorigin/video.sjs?name=tests/dom/media/test/320x240.ogv&type=video/ogg";
+      uncleanVideo.src = "http://example.com/tests/dom/canvas/test/crossorigin/video.sjs?name=tests/dom/canvas/test/320x240.ogv&type=video/ogg";
       uncleanVideo.play();
     });
   }

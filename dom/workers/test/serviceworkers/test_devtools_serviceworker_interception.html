@@ -1,0 +1,168 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1168875 - test devtools serviceworker interception.</title>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet"
+        type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+// Constants
+const Ci = Components.interfaces;
+const workerScope = "http://mochi.test:8888/chrome/dom/workers/test/serviceworkers/";
+const workerURL = workerScope + "fetch.js";
+const contentPage = workerScope + "hello.html";
+
+function createTestWindow(aURL) {
+  var mainwindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShellTreeItem)
+                         .rootTreeItem
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindow);
+  var win = mainwindow.OpenBrowserWindow(contentPage);
+
+  return new Promise(aResolve => {
+    win.addEventListener("DOMContentLoaded", function callback() {
+      if (win.content.location.href != aURL) {
+        win.gBrowser.loadURI(aURL);
+        return;
+      }
+
+      win.removeEventListener("DOMContentLoaded", callback);
+      aResolve(win.content);
+    });
+  });
+}
+
+function executeTest(aWindow) {
+  var registration;
+
+  return Promise.resolve()
+    // Should not be intercepted.
+    .then(_ => fetchAndCheckTimedChannel(aWindow, false, true, "hello.html"))
+
+    // Regist a service worker.
+    .then(_ => register(aWindow, workerURL, workerScope))
+    .then(r => registration = r)
+
+    // Should be intercpeted and synthesized.
+    .then(_ => fetchAndCheckTimedChannel(aWindow, true, false, "fake.html"))
+
+    // Should be intercepted but still fetch from network.
+    .then(_ => fetchAndCheckTimedChannel(aWindow, true, true,
+                                         "hello.html?ForBypassingHttpCache"))
+
+    // Tear down
+    .then(_ => registration.unregister());
+}
+
+function register(aWindow, aURL, aScope) {
+  return aWindow.navigator.serviceWorker.register(aURL, {scope: aScope})
+    .then(r => {
+      var worker = r.installing;
+      return new Promise(function(aResolve) {
+        worker.onstatechange = function() {
+          if (worker.state == "activated") {
+            aResolve(r);
+          }
+        }
+      });
+    });
+}
+
+function fetchAndCheckTimedChannel(aWindow, aIntercepted, aFetch, aURL) {
+  var resolveFunction;
+  var promise = new Promise(aResolve => resolveFunction = aResolve);
+
+  var topic = aFetch ? "http-on-examine-response"
+                     : "service-worker-synthesized-response";
+
+  function observer(aSubject) {
+    var channel = aSubject.QueryInterface(Ci.nsIChannel);
+    ok(channel.URI.spec.endsWith(aURL));
+
+    var tc = aSubject.QueryInterface(Ci.nsITimedChannel);
+
+    // Check service worker related timings.
+    var serviceWorkerTimings = [{start: tc.launchServiceWorkerStartTime,
+                                 end:   tc.launchServiceWorkerEndTime},
+                                {start: tc.dispatchFetchEventStartTime,
+                                 end:   tc.dispatchFetchEventEndTime},
+                                {start: tc.handleFetchEventStartTime,
+                                 end:   tc.handleFetchEventEndTime}];
+    if (aIntercepted) {
+      serviceWorkerTimings.reduce((aPreviousTimings, aCurrentTimings) => {
+        ok(aPreviousTimings.start <= aCurrentTimings.start,
+           "Start time order check.");
+        ok(aPreviousTimings.end <= aCurrentTimings.end,
+           "End time order check.");
+        ok(aCurrentTimings.start <= aCurrentTimings.end,
+           "Start time should be smaller than end time.");
+        return aCurrentTimings;
+      });
+    } else {
+      serviceWorkerTimings.forEach(aTimings => {
+        is(aTimings.start, 0);
+        is(aTimings.end, 0);
+      });
+    }
+
+    // Check network related timings.
+    var networkTimings = [tc.domainLookupStartTime,
+                          tc.domainLookupEndTime,
+                          tc.connectStartTime,
+                          tc.connectEndTime,
+                          tc.requestStartTime,
+                          tc.responseStartTime,
+                          tc.responseEndTime];
+    if (aFetch) {
+      networkTimings.reduce((aPreviousTiming, aCurrentTiming) => {
+        ok(aPreviousTiming <= aCurrentTiming);
+        return aCurrentTiming;
+      });
+    } else {
+      networkTimings.forEach(aTiming => is(aTiming, 0));
+    }
+
+    SpecialPowers.removeObserver(observer, topic);
+    resolveFunction();
+  }
+
+  SpecialPowers.addObserver(observer, topic, false);
+
+  // return promise;
+  return Promise.all([aWindow.fetch(aURL), promise]);
+}
+
+function runTest() {
+  return Promise.resolve()
+    .then(_ => createTestWindow(contentPage))
+    .then(w => executeTest(w))
+    .catch(e => ok(false, "Some test failed with error " + e))
+    .then(_ => SimpleTest.finish());
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+  ["dom.serviceWorkers.enabled", true],
+  ["dom.serviceWorkers.testing.enabled", true],
+]}, runTest);
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -18,29 +18,16 @@
 
 #include "wasm/WasmTypes.h"
 
-#include "mozilla/MathAlgorithms.h"
-
-#include "fdlibm.h"
-
-#include "jslibmath.h"
-#include "jsmath.h"
-
-#include "jit/MacroAssembler.h"
-#include "js/Conversions.h"
-#include "vm/Interpreter.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmSerialize.h"
-#include "wasm/WasmSignalHandlers.h"
 
-#include "vm/Debugger-inl.h"
-#include "vm/Stack-inl.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
-using mozilla::IsNaN;
 using mozilla::IsPowerOfTwo;
 
 void
@@ -67,346 +54,6 @@ Val::writePayload(uint8_t* dst) const
     }
 }
 
-#if defined(JS_CODEGEN_ARM)
-extern "C" {
-
-extern MOZ_EXPORT int64_t
-__aeabi_idivmod(int, int);
-
-extern MOZ_EXPORT int64_t
-__aeabi_uidivmod(int, int);
-
-}
-#endif
-
-static void*
-WasmHandleExecutionInterrupt()
-{
-    WasmActivation* activation = JSContext::innermostWasmActivation();
-
-    // wasm::Compartment requires notification when execution is interrupted in
-    // the compartment. Only the innermost compartment has been interrupted;
-    // enclosing compartments necessarily exited through an exit stub.
-    activation->compartment()->wasm.setInterrupted(true);
-    bool success = CheckForInterrupt(activation->cx());
-    activation->compartment()->wasm.setInterrupted(false);
-
-    // Preserve the invariant that having a non-null resumePC means that we are
-    // handling an interrupt.
-    void* resumePC = activation->resumePC();
-    activation->setResumePC(nullptr);
-
-    // Return the resumePC if execution can continue or null if execution should
-    // jump to the throw stub.
-    return success ? resumePC : nullptr;
-}
-
-static bool
-WasmHandleDebugTrap()
-{
-    WasmActivation* activation = JSContext::innermostWasmActivation();
-    MOZ_ASSERT(activation);
-    JSContext* cx = activation->cx();
-
-    FrameIterator iter(activation);
-    MOZ_ASSERT(iter.debugEnabled());
-    const CallSite* site = iter.debugTrapCallsite();
-    MOZ_ASSERT(site);
-    if (site->kind() == CallSite::EnterFrame) {
-        if (!iter.instance()->enterFrameTrapsEnabled())
-            return true;
-        DebugFrame* frame = iter.debugFrame();
-        frame->setIsDebuggee();
-        frame->observe(cx);
-        // TODO call onEnterFrame
-        JSTrapStatus status = Debugger::onEnterFrame(cx, frame);
-        if (status == JSTRAP_RETURN) {
-            // Ignoring forced return (JSTRAP_RETURN) -- changing code execution
-            // order is not yet implemented in the wasm baseline.
-            // TODO properly handle JSTRAP_RETURN and resume wasm execution.
-            JS_ReportErrorASCII(cx, "Unexpected resumption value from onEnterFrame");
-            return false;
-        }
-        return status == JSTRAP_CONTINUE;
-    }
-    if (site->kind() == CallSite::LeaveFrame) {
-        DebugFrame* frame = iter.debugFrame();
-        frame->updateReturnJSValue();
-        bool ok = Debugger::onLeaveFrame(cx, frame, nullptr, true);
-        frame->leave(cx);
-        return ok;
-    }
-
-    DebugFrame* frame = iter.debugFrame();
-    Code& code = iter.instance()->code();
-    MOZ_ASSERT(code.hasBreakpointTrapAtOffset(site->lineOrBytecode()));
-    if (code.stepModeEnabled(frame->funcIndex())) {
-        RootedValue result(cx, UndefinedValue());
-        JSTrapStatus status = Debugger::onSingleStep(cx, &result);
-        if (status == JSTRAP_RETURN) {
-            // TODO properly handle JSTRAP_RETURN.
-            JS_ReportErrorASCII(cx, "Unexpected resumption value from onSingleStep");
-            return false;
-        }
-        if (status != JSTRAP_CONTINUE)
-            return false;
-    }
-    if (code.hasBreakpointSite(site->lineOrBytecode())) {
-        RootedValue result(cx, UndefinedValue());
-        JSTrapStatus status = Debugger::onTrap(cx, &result);
-        if (status == JSTRAP_RETURN) {
-            // TODO properly handle JSTRAP_RETURN.
-            JS_ReportErrorASCII(cx, "Unexpected resumption value from breakpoint handler");
-            return false;
-        }
-        if (status != JSTRAP_CONTINUE)
-            return false;
-    }
-    return true;
-}
-
-static WasmActivation*
-WasmHandleThrow()
-{
-    JSContext* cx = TlsContext.get();
-
-    WasmActivation* activation = cx->wasmActivationStack();
-    MOZ_ASSERT(activation);
-
-    // FrameIterator iterates down wasm frames in the activation starting at
-    // WasmActivation::exitFP. Pass Unwind::True to pop WasmActivation::exitFP
-    // once each time FrameIterator is incremented, ultimately leaving exitFP
-    // null when the FrameIterator is done(). This is necessary to prevent a
-    // DebugFrame from being observed again after we just called onLeaveFrame
-    // (which would lead to the frame being re-added to the map of live frames,
-    // right as it becomes trash).
-    FrameIterator iter(activation, FrameIterator::Unwind::True);
-    if (iter.done())
-        return activation;
-
-    // Live wasm code on the stack is kept alive (in wasm::TraceActivations) by
-    // marking the instance of every wasm::Frame found by FrameIterator.
-    // However, as explained above, we're popping frames while iterating which
-    // means that a GC during this loop could collect the code of frames whose
-    // code is still on the stack. This is actually mostly fine: as soon as we
-    // return to the throw stub, the entire stack will be popped as a whole,
-    // returning to the C++ caller. However, we must keep the throw stub alive
-    // itself which is owned by the innermost instance.
-    RootedWasmInstanceObject keepAlive(cx, iter.instance()->object());
-
-    for (; !iter.done(); ++iter) {
-        if (!iter.debugEnabled())
-            continue;
-
-        DebugFrame* frame = iter.debugFrame();
-        frame->clearReturnJSValue();
-
-        // Assume JSTRAP_ERROR status if no exception is pending --
-        // no onExceptionUnwind handlers must be fired.
-        if (cx->isExceptionPending()) {
-            JSTrapStatus status = Debugger::onExceptionUnwind(cx, frame);
-            if (status == JSTRAP_RETURN) {
-                // Unexpected trap return -- raising error since throw recovery
-                // is not yet implemented in the wasm baseline.
-                // TODO properly handle JSTRAP_RETURN and resume wasm execution.
-                JS_ReportErrorASCII(cx, "Unexpected resumption value from onExceptionUnwind");
-            }
-        }
-
-        bool ok = Debugger::onLeaveFrame(cx, frame, nullptr, false);
-        if (ok) {
-            // Unexpected success from the handler onLeaveFrame -- raising error
-            // since throw recovery is not yet implemented in the wasm baseline.
-            // TODO properly handle success and resume wasm execution.
-            JS_ReportErrorASCII(cx, "Unexpected success from onLeaveFrame");
-        }
-        frame->leave(cx);
-     }
-
-    return activation;
-}
-
-static void
-WasmReportTrap(int32_t trapIndex)
-{
-    JSContext* cx = JSContext::innermostWasmActivation()->cx();
-
-    MOZ_ASSERT(trapIndex < int32_t(Trap::Limit) && trapIndex >= 0);
-    Trap trap = Trap(trapIndex);
-
-    unsigned errorNumber;
-    switch (trap) {
-      case Trap::Unreachable:
-        errorNumber = JSMSG_WASM_UNREACHABLE;
-        break;
-      case Trap::IntegerOverflow:
-        errorNumber = JSMSG_WASM_INTEGER_OVERFLOW;
-        break;
-      case Trap::InvalidConversionToInteger:
-        errorNumber = JSMSG_WASM_INVALID_CONVERSION;
-        break;
-      case Trap::IntegerDivideByZero:
-        errorNumber = JSMSG_WASM_INT_DIVIDE_BY_ZERO;
-        break;
-      case Trap::IndirectCallToNull:
-        errorNumber = JSMSG_WASM_IND_CALL_TO_NULL;
-        break;
-      case Trap::IndirectCallBadSig:
-        errorNumber = JSMSG_WASM_IND_CALL_BAD_SIG;
-        break;
-      case Trap::ImpreciseSimdConversion:
-        errorNumber = JSMSG_SIMD_FAILED_CONVERSION;
-        break;
-      case Trap::OutOfBounds:
-        errorNumber = JSMSG_WASM_OUT_OF_BOUNDS;
-        break;
-      case Trap::StackOverflow:
-        errorNumber = JSMSG_OVER_RECURSED;
-        break;
-      default:
-        MOZ_CRASH("unexpected trap");
-    }
-
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorNumber);
-}
-
-static void
-WasmReportOutOfBounds()
-{
-    JSContext* cx = JSContext::innermostWasmActivation()->cx();
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_OUT_OF_BOUNDS);
-}
-
-static void
-WasmReportUnalignedAccess()
-{
-    JSContext* cx = JSContext::innermostWasmActivation()->cx();
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_UNALIGNED_ACCESS);
-}
-
-static int32_t
-CoerceInPlace_ToInt32(MutableHandleValue val)
-{
-    JSContext* cx = JSContext::innermostWasmActivation()->cx();
-
-    int32_t i32;
-    if (!ToInt32(cx, val, &i32))
-        return false;
-    val.set(Int32Value(i32));
-
-    return true;
-}
-
-static int32_t
-CoerceInPlace_ToNumber(MutableHandleValue val)
-{
-    JSContext* cx = JSContext::innermostWasmActivation()->cx();
-
-    double dbl;
-    if (!ToNumber(cx, val, &dbl))
-        return false;
-    val.set(DoubleValue(dbl));
-
-    return true;
-}
-
-static int64_t
-DivI64(uint32_t x_hi, uint32_t x_lo, uint32_t y_hi, uint32_t y_lo)
-{
-    int64_t x = ((uint64_t)x_hi << 32) + x_lo;
-    int64_t y = ((uint64_t)y_hi << 32) + y_lo;
-    MOZ_ASSERT(x != INT64_MIN || y != -1);
-    MOZ_ASSERT(y != 0);
-    return x / y;
-}
-
-static int64_t
-UDivI64(uint32_t x_hi, uint32_t x_lo, uint32_t y_hi, uint32_t y_lo)
-{
-    uint64_t x = ((uint64_t)x_hi << 32) + x_lo;
-    uint64_t y = ((uint64_t)y_hi << 32) + y_lo;
-    MOZ_ASSERT(y != 0);
-    return x / y;
-}
-
-static int64_t
-ModI64(uint32_t x_hi, uint32_t x_lo, uint32_t y_hi, uint32_t y_lo)
-{
-    int64_t x = ((uint64_t)x_hi << 32) + x_lo;
-    int64_t y = ((uint64_t)y_hi << 32) + y_lo;
-    MOZ_ASSERT(x != INT64_MIN || y != -1);
-    MOZ_ASSERT(y != 0);
-    return x % y;
-}
-
-static int64_t
-UModI64(uint32_t x_hi, uint32_t x_lo, uint32_t y_hi, uint32_t y_lo)
-{
-    uint64_t x = ((uint64_t)x_hi << 32) + x_lo;
-    uint64_t y = ((uint64_t)y_hi << 32) + y_lo;
-    MOZ_ASSERT(y != 0);
-    return x % y;
-}
-
-static int64_t
-TruncateDoubleToInt64(double input)
-{
-    // Note: INT64_MAX is not representable in double. It is actually
-    // INT64_MAX + 1.  Therefore also sending the failure value.
-    if (input >= double(INT64_MAX) || input < double(INT64_MIN) || IsNaN(input))
-        return 0x8000000000000000;
-    return int64_t(input);
-}
-
-static uint64_t
-TruncateDoubleToUint64(double input)
-{
-    // Note: UINT64_MAX is not representable in double. It is actually UINT64_MAX + 1.
-    // Therefore also sending the failure value.
-    if (input >= double(UINT64_MAX) || input <= -1.0 || IsNaN(input))
-        return 0x8000000000000000;
-    return uint64_t(input);
-}
-
-static double
-Int64ToDouble(int32_t x_hi, uint32_t x_lo)
-{
-    int64_t x = int64_t((uint64_t(x_hi) << 32)) + int64_t(x_lo);
-    return double(x);
-}
-
-static float
-Int64ToFloat32(int32_t x_hi, uint32_t x_lo)
-{
-    int64_t x = int64_t((uint64_t(x_hi) << 32)) + int64_t(x_lo);
-    return float(x);
-}
-
-static double
-Uint64ToDouble(int32_t x_hi, uint32_t x_lo)
-{
-    uint64_t x = (uint64_t(x_hi) << 32) + uint64_t(x_lo);
-    return double(x);
-}
-
-static float
-Uint64ToFloat32(int32_t x_hi, uint32_t x_lo)
-{
-    uint64_t x = (uint64_t(x_hi) << 32) + uint64_t(x_lo);
-    return float(x);
-}
-
-template <class F>
-static inline void*
-FuncCast(F* pf, ABIFunctionType type)
-{
-    void *pv = JS_FUNC_TO_DATA_PTR(void*, pf);
-#ifdef JS_SIMULATOR
-    pv = Simulator::RedirectNativeFunction(pv, type);
-#endif
-    return pv;
-}
-
 bool
 wasm::IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode)
 {
@@ -430,125 +77,6 @@ wasm::IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode)
       default:
         return false;
     }
-}
-
-void*
-wasm::AddressOf(SymbolicAddress imm)
-{
-    switch (imm) {
-      case SymbolicAddress::HandleExecutionInterrupt:
-        return FuncCast(WasmHandleExecutionInterrupt, Args_General0);
-      case SymbolicAddress::HandleDebugTrap:
-        return FuncCast(WasmHandleDebugTrap, Args_General0);
-      case SymbolicAddress::HandleThrow:
-        return FuncCast(WasmHandleThrow, Args_General0);
-      case SymbolicAddress::ReportTrap:
-        return FuncCast(WasmReportTrap, Args_General1);
-      case SymbolicAddress::ReportOutOfBounds:
-        return FuncCast(WasmReportOutOfBounds, Args_General0);
-      case SymbolicAddress::ReportUnalignedAccess:
-        return FuncCast(WasmReportUnalignedAccess, Args_General0);
-      case SymbolicAddress::CallImport_Void:
-        return FuncCast(Instance::callImport_void, Args_General4);
-      case SymbolicAddress::CallImport_I32:
-        return FuncCast(Instance::callImport_i32, Args_General4);
-      case SymbolicAddress::CallImport_I64:
-        return FuncCast(Instance::callImport_i64, Args_General4);
-      case SymbolicAddress::CallImport_F64:
-        return FuncCast(Instance::callImport_f64, Args_General4);
-      case SymbolicAddress::CoerceInPlace_ToInt32:
-        return FuncCast(CoerceInPlace_ToInt32, Args_General1);
-      case SymbolicAddress::CoerceInPlace_ToNumber:
-        return FuncCast(CoerceInPlace_ToNumber, Args_General1);
-      case SymbolicAddress::ToInt32:
-        return FuncCast<int32_t (double)>(JS::ToInt32, Args_Int_Double);
-      case SymbolicAddress::DivI64:
-        return FuncCast(DivI64, Args_General4);
-      case SymbolicAddress::UDivI64:
-        return FuncCast(UDivI64, Args_General4);
-      case SymbolicAddress::ModI64:
-        return FuncCast(ModI64, Args_General4);
-      case SymbolicAddress::UModI64:
-        return FuncCast(UModI64, Args_General4);
-      case SymbolicAddress::TruncateDoubleToUint64:
-        return FuncCast(TruncateDoubleToUint64, Args_Int64_Double);
-      case SymbolicAddress::TruncateDoubleToInt64:
-        return FuncCast(TruncateDoubleToInt64, Args_Int64_Double);
-      case SymbolicAddress::Uint64ToDouble:
-        return FuncCast(Uint64ToDouble, Args_Double_IntInt);
-      case SymbolicAddress::Uint64ToFloat32:
-        return FuncCast(Uint64ToFloat32, Args_Float32_IntInt);
-      case SymbolicAddress::Int64ToDouble:
-        return FuncCast(Int64ToDouble, Args_Double_IntInt);
-      case SymbolicAddress::Int64ToFloat32:
-        return FuncCast(Int64ToFloat32, Args_Float32_IntInt);
-#if defined(JS_CODEGEN_ARM)
-      case SymbolicAddress::aeabi_idivmod:
-        return FuncCast(__aeabi_idivmod, Args_General2);
-      case SymbolicAddress::aeabi_uidivmod:
-        return FuncCast(__aeabi_uidivmod, Args_General2);
-      case SymbolicAddress::AtomicCmpXchg:
-        return FuncCast(atomics_cmpxchg_asm_callout, Args_General5);
-      case SymbolicAddress::AtomicXchg:
-        return FuncCast(atomics_xchg_asm_callout, Args_General4);
-      case SymbolicAddress::AtomicFetchAdd:
-        return FuncCast(atomics_add_asm_callout, Args_General4);
-      case SymbolicAddress::AtomicFetchSub:
-        return FuncCast(atomics_sub_asm_callout, Args_General4);
-      case SymbolicAddress::AtomicFetchAnd:
-        return FuncCast(atomics_and_asm_callout, Args_General4);
-      case SymbolicAddress::AtomicFetchOr:
-        return FuncCast(atomics_or_asm_callout, Args_General4);
-      case SymbolicAddress::AtomicFetchXor:
-        return FuncCast(atomics_xor_asm_callout, Args_General4);
-#endif
-      case SymbolicAddress::ModD:
-        return FuncCast(NumberMod, Args_Double_DoubleDouble);
-      case SymbolicAddress::SinD:
-        return FuncCast<double (double)>(sin, Args_Double_Double);
-      case SymbolicAddress::CosD:
-        return FuncCast<double (double)>(cos, Args_Double_Double);
-      case SymbolicAddress::TanD:
-        return FuncCast<double (double)>(tan, Args_Double_Double);
-      case SymbolicAddress::ASinD:
-        return FuncCast<double (double)>(fdlibm::asin, Args_Double_Double);
-      case SymbolicAddress::ACosD:
-        return FuncCast<double (double)>(fdlibm::acos, Args_Double_Double);
-      case SymbolicAddress::ATanD:
-        return FuncCast<double (double)>(fdlibm::atan, Args_Double_Double);
-      case SymbolicAddress::CeilD:
-        return FuncCast<double (double)>(fdlibm::ceil, Args_Double_Double);
-      case SymbolicAddress::CeilF:
-        return FuncCast<float (float)>(fdlibm::ceilf, Args_Float32_Float32);
-      case SymbolicAddress::FloorD:
-        return FuncCast<double (double)>(fdlibm::floor, Args_Double_Double);
-      case SymbolicAddress::FloorF:
-        return FuncCast<float (float)>(fdlibm::floorf, Args_Float32_Float32);
-      case SymbolicAddress::TruncD:
-        return FuncCast<double (double)>(fdlibm::trunc, Args_Double_Double);
-      case SymbolicAddress::TruncF:
-        return FuncCast<float (float)>(fdlibm::truncf, Args_Float32_Float32);
-      case SymbolicAddress::NearbyIntD:
-        return FuncCast<double (double)>(fdlibm::nearbyint, Args_Double_Double);
-      case SymbolicAddress::NearbyIntF:
-        return FuncCast<float (float)>(fdlibm::nearbyintf, Args_Float32_Float32);
-      case SymbolicAddress::ExpD:
-        return FuncCast<double (double)>(fdlibm::exp, Args_Double_Double);
-      case SymbolicAddress::LogD:
-        return FuncCast<double (double)>(fdlibm::log, Args_Double_Double);
-      case SymbolicAddress::PowD:
-        return FuncCast(ecmaPow, Args_Double_DoubleDouble);
-      case SymbolicAddress::ATan2D:
-        return FuncCast(ecmaAtan2, Args_Double_DoubleDouble);
-      case SymbolicAddress::GrowMemory:
-        return FuncCast<uint32_t (Instance*, uint32_t)>(Instance::growMemory_i32, Args_General2);
-      case SymbolicAddress::CurrentMemory:
-        return FuncCast<uint32_t (Instance*)>(Instance::currentMemory_i32, Args_General1);
-      case SymbolicAddress::Limit:
-        break;
-    }
-
-    MOZ_CRASH("Bad SymbolicAddress");
 }
 
 static uint32_t
@@ -1138,4 +666,77 @@ DebugFrame::leave(JSContext* cx)
        instance()->code().adjustEnterAndLeaveFrameTrapsState(cx, /* enabled = */ false);
        observing_ = false;
     }
+}
+
+CodeRange::CodeRange(Kind kind, Offsets offsets)
+  : begin_(offsets.begin),
+    ret_(0),
+    end_(offsets.end),
+    funcIndex_(0),
+    funcLineOrBytecode_(0),
+    funcBeginToNormalEntry_(0),
+    kind_(kind)
+{
+    MOZ_ASSERT(begin_ <= end_);
+#ifdef DEBUG
+    switch (kind_) {
+      case Entry:
+      case DebugTrap:
+      case FarJumpIsland:
+      case Inline:
+      case Throw:
+      case Interrupt:
+        break;
+      case Function:
+      case TrapExit:
+      case ImportJitExit:
+      case ImportNativeExit:
+      case ImportInterpExit:
+        MOZ_CRASH("should use more specific constructor");
+    }
+#endif
+}
+
+CodeRange::CodeRange(Kind kind, CallableOffsets offsets)
+  : begin_(offsets.begin),
+    ret_(offsets.ret),
+    end_(offsets.end),
+    funcIndex_(0),
+    funcLineOrBytecode_(0),
+    funcBeginToNormalEntry_(0),
+    kind_(kind)
+{
+    MOZ_ASSERT(begin_ < ret_);
+    MOZ_ASSERT(ret_ < end_);
+#ifdef DEBUG
+    switch (kind_) {
+      case TrapExit:
+      case ImportJitExit:
+      case ImportNativeExit:
+      case ImportInterpExit:
+        break;
+      case Entry:
+      case DebugTrap:
+      case FarJumpIsland:
+      case Inline:
+      case Throw:
+      case Interrupt:
+      case Function:
+        MOZ_CRASH("should use more specific constructor");
+    }
+#endif
+}
+
+CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffsets offsets)
+  : begin_(offsets.begin),
+    ret_(offsets.ret),
+    end_(offsets.end),
+    funcIndex_(funcIndex),
+    funcLineOrBytecode_(funcLineOrBytecode),
+    funcBeginToNormalEntry_(offsets.normalEntry - begin_),
+    kind_(Function)
+{
+    MOZ_ASSERT(begin_ < ret_);
+    MOZ_ASSERT(ret_ < end_);
+    MOZ_ASSERT(offsets.normalEntry - begin_ <= UINT8_MAX);
 }
