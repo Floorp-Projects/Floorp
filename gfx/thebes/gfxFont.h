@@ -1190,8 +1190,7 @@ public:
     static gfxShapedWord* Create(const uint8_t *aText, uint32_t aLength,
                                  Script aRunScript,
                                  int32_t aAppUnitsPerDevUnit,
-                                 uint32_t aFlags,
-                                 gfxFontShaper::RoundingFlags aRounding) {
+                                 uint32_t aFlags) {
         NS_ASSERTION(aLength <= gfxPlatform::GetPlatform()->WordCacheCharLimit(),
                      "excessive length for gfxShapedWord!");
 
@@ -1207,15 +1206,13 @@ public:
 
         // Construct in the pre-allocated storage, using placement new
         return new (storage) gfxShapedWord(aText, aLength, aRunScript,
-                                           aAppUnitsPerDevUnit, aFlags,
-                                           aRounding);
+                                           aAppUnitsPerDevUnit, aFlags);
     }
 
     static gfxShapedWord* Create(const char16_t *aText, uint32_t aLength,
                                  Script aRunScript,
                                  int32_t aAppUnitsPerDevUnit,
-                                 uint32_t aFlags,
-                                 gfxFontShaper::RoundingFlags aRounding) {
+                                 uint32_t aFlags) {
         NS_ASSERTION(aLength <= gfxPlatform::GetPlatform()->WordCacheCharLimit(),
                      "excessive length for gfxShapedWord!");
 
@@ -1227,8 +1224,7 @@ public:
             LossyAppendUTF16toASCII(nsDependentSubstring(aText, aLength),
                                     narrowText);
             return Create((const uint8_t*)(narrowText.BeginReading()),
-                          aLength, aRunScript, aAppUnitsPerDevUnit, aFlags,
-                          aRounding);
+                          aLength, aRunScript, aAppUnitsPerDevUnit, aFlags);
         }
 
         uint32_t size =
@@ -1240,8 +1236,7 @@ public:
         }
 
         return new (storage) gfxShapedWord(aText, aLength, aRunScript,
-                                           aAppUnitsPerDevUnit, aFlags,
-                                           aRounding);
+                                           aAppUnitsPerDevUnit, aFlags);
     }
 
     // Override operator delete to properly free the object that was
@@ -1277,10 +1272,6 @@ public:
         return mScript;
     }
 
-    gfxFontShaper::RoundingFlags GetRounding() const {
-        return mRounding;
-    }
-
     void ResetAge() {
         mAgeCounter = 0;
     }
@@ -1301,12 +1292,10 @@ private:
     // Construct storage for a ShapedWord, ready to receive glyph data
     gfxShapedWord(const uint8_t *aText, uint32_t aLength,
                   Script aRunScript,
-                  int32_t aAppUnitsPerDevUnit, uint32_t aFlags,
-                  gfxFontShaper::RoundingFlags aRounding)
+                  int32_t aAppUnitsPerDevUnit, uint32_t aFlags)
         : gfxShapedText(aLength, aFlags | gfxTextRunFactory::TEXT_IS_8BIT,
                         aAppUnitsPerDevUnit)
         , mScript(aRunScript)
-        , mRounding(aRounding)
         , mAgeCounter(0)
     {
         memset(mCharGlyphsStorage, 0, aLength * sizeof(CompressedGlyph));
@@ -1316,11 +1305,9 @@ private:
 
     gfxShapedWord(const char16_t *aText, uint32_t aLength,
                   Script aRunScript,
-                  int32_t aAppUnitsPerDevUnit, uint32_t aFlags,
-                  gfxFontShaper::RoundingFlags aRounding)
+                  int32_t aAppUnitsPerDevUnit, uint32_t aFlags)
         : gfxShapedText(aLength, aFlags, aAppUnitsPerDevUnit)
         , mScript(aRunScript)
-        , mRounding(aRounding)
         , mAgeCounter(0)
     {
         memset(mCharGlyphsStorage, 0, aLength * sizeof(CompressedGlyph));
@@ -1330,8 +1317,6 @@ private:
     }
 
     Script           mScript;
-
-    gfxFontShaper::RoundingFlags mRounding;
 
     uint32_t         mAgeCounter;
 
@@ -2047,23 +2032,18 @@ protected:
         int32_t          mAppUnitsPerDevUnit;
         PLDHashNumber    mHashKey;
         bool             mTextIs8Bit;
-        RoundingFlags    mRounding;
 
         CacheHashKey(const uint8_t *aText, uint32_t aLength,
                      uint32_t aStringHash,
                      Script aScriptCode, int32_t aAppUnitsPerDevUnit,
-                     uint32_t aFlags, RoundingFlags aRounding)
+                     uint32_t aFlags)
             : mLength(aLength),
               mFlags(aFlags),
               mScript(aScriptCode),
               mAppUnitsPerDevUnit(aAppUnitsPerDevUnit),
-              mHashKey(aStringHash
-                           + static_cast<int32_t>(aScriptCode)
-                           + aAppUnitsPerDevUnit * 0x100
-                           + aFlags * 0x10000
-                           + int(aRounding)),
-              mTextIs8Bit(true),
-              mRounding(aRounding)
+              mHashKey(aStringHash + static_cast<int32_t>(aScriptCode) +
+                  aAppUnitsPerDevUnit * 0x100 + aFlags * 0x10000),
+              mTextIs8Bit(true)
         {
             NS_ASSERTION(aFlags & gfxTextRunFactory::TEXT_IS_8BIT,
                          "8-bit flag should have been set");
@@ -2073,18 +2053,14 @@ protected:
         CacheHashKey(const char16_t *aText, uint32_t aLength,
                      uint32_t aStringHash,
                      Script aScriptCode, int32_t aAppUnitsPerDevUnit,
-                     uint32_t aFlags, RoundingFlags aRounding)
+                     uint32_t aFlags)
             : mLength(aLength),
               mFlags(aFlags),
               mScript(aScriptCode),
               mAppUnitsPerDevUnit(aAppUnitsPerDevUnit),
-              mHashKey(aStringHash
-                           + static_cast<int32_t>(aScriptCode)
-                           + aAppUnitsPerDevUnit * 0x100
-                           + aFlags * 0x10000
-                           + int(aRounding)),
-              mTextIs8Bit(false),
-              mRounding(aRounding)
+              mHashKey(aStringHash + static_cast<int32_t>(aScriptCode) +
+                  aAppUnitsPerDevUnit * 0x100 + aFlags * 0x10000),
+              mTextIs8Bit(false)
         {
             // We can NOT assert that TEXT_IS_8BIT is false in aFlags here,
             // because this might be an 8bit-only word from a 16-bit textrun,
