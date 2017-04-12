@@ -63,7 +63,7 @@ pub trait CapabilitiesMatching {
                                              -> WebDriverResult<Option<Capabilities>>;
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct SpecNewSessionParameters {
     pub alwaysMatch: Capabilities,
     pub firstMatch: Vec<Capabilities>,
@@ -346,7 +346,6 @@ impl ToJson for SpecNewSessionParameters {
     }
 }
 
-
 impl CapabilitiesMatching for SpecNewSessionParameters {
     fn match_browser<T: BrowserCapabilities>(&self, browser_capabilities: &mut T)
                                              -> WebDriverResult<Option<Capabilities>> {
@@ -456,7 +455,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct LegacyNewSessionParameters {
     pub desired: Capabilities,
     pub required: Capabilities,
