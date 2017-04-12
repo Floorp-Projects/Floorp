@@ -9,8 +9,7 @@
 define(function (require, exports, module) {
   const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 
-  // we'll need to make load-reps define friendly aka UMD
-  const { createFactories } = require("devtools/client/shared/components/reps/reps");
+  const { createFactories } = require("devtools/client/shared/react-utils");
   const { Toolbar, ToolbarButton } = createFactories(require("./reps/toolbar"));
   const { div, pre } = dom;
 
