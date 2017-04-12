@@ -558,7 +558,7 @@ public:
   void MarkSentToCompositor();
   bool IsSentToCompositor() { return mSentToCompositor; }
 
-  void UpdateDuration(int64_t aDuration);
+  void UpdateDuration(const media::TimeUnit& aDuration);
   void UpdateTimestamp(int64_t aTimestamp);
 
 protected:
