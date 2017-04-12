@@ -117,7 +117,8 @@ UpdateTrackInfo(mozilla::TrackInfo& aConfig,
   aConfig.mMimeType = aMimeType;
   aConfig.mDuration = TimeUnit::FromMicroseconds(
     FindInt64(aMetaData, kKeyDuration));
-  aConfig.mMediaTime = FindInt64(aMetaData, kKeyMediaTime);
+  aConfig.mMediaTime = TimeUnit::FromMicroseconds(
+    FindInt64(aMetaData, kKeyMediaTime));
   aConfig.mTrackId = FindInt32(aMetaData, kKeyTrackID);
   aConfig.mCrypto.mValid = aMetaData->findInt32(kKeyCryptoMode, &crypto.mMode) &&
     aMetaData->findInt32(kKeyCryptoDefaultIVSize, &crypto.mIVSize) &&
@@ -231,7 +232,7 @@ MP4AudioInfo::Update(const mp4parse_track_info* track,
   mBitDepth = audio->bit_depth;
   mExtendedProfile = audio->profile;
   mDuration = TimeUnit::FromMicroseconds(track->duration);
-  mMediaTime = track->media_time;
+  mMediaTime = TimeUnit::FromMicroseconds(track->media_time);
   mTrackId = track->track_id;
 
   // In stagefright, mProfile is kKeyAACProfile, mExtendedProfile is kKeyAACAOT.
@@ -263,7 +264,7 @@ MP4VideoInfo::Update(const mp4parse_track_info* track,
   }
   mTrackId = track->track_id;
   mDuration = TimeUnit::FromMicroseconds(track->duration);
-  mMediaTime = track->media_time;
+  mMediaTime = TimeUnit::FromMicroseconds(track->media_time);
   mDisplay.width = video->display_width;
   mDisplay.height = video->display_height;
   mImage.width = video->image_width;
