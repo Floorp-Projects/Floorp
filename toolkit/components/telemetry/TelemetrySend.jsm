@@ -17,7 +17,6 @@ this.EXPORTED_SYMBOLS = [
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/AppConstants.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/ClientID.jsm");
@@ -799,11 +798,8 @@ var TelemetrySendImpl = {
     }
 
     // Send the ping using the PingSender, if requested and the user was
-    // notified of our policy. We don't support the pingsender on Android,
-    // so ignore this option on that platform (see bug 1335917).
-    if (options.usePingSender &&
-        TelemetryReportingPolicy.canUpload() &&
-        AppConstants.platform != "android") {
+    // notified of our policy.
+    if (options.usePingSender && TelemetryReportingPolicy.canUpload()) {
       const url = this._buildSubmissionURL(ping);
       // Serialize the ping to the disk and spawn the PingSender.
       let savePromise = savePing(ping);

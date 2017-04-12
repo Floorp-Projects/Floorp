@@ -154,8 +154,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "GCTelemetry",
                                   "resource://gre/modules/GCTelemetry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
                                   "resource://gre/modules/TelemetryEnvironment.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryReportingPolicy",
-                                  "resource://gre/modules/TelemetryReportingPolicy.jsm");
 
 function generateUUID() {
   let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
@@ -1771,15 +1769,10 @@ var Impl = {
     if (IS_UNIFIED_TELEMETRY) {
       let shutdownPayload = this.getSessionPayload(REASON_SHUTDOWN, false);
 
-      // Only send the shutdown ping using the pingsender from the second
-      // browsing session on, to mitigate issues with "bot" profiles (see bug 1354482).
-      let sendWithPingsender = Preferences.get(PREF_SHUTDOWN_PINGSENDER, true) &&
-                               !TelemetryReportingPolicy.isFirstRun();
-
       let options = {
         addClientId: true,
         addEnvironment: true,
-        usePingSender: sendWithPingsender,
+        usePingSender: Preferences.get(PREF_SHUTDOWN_PINGSENDER, false),
       };
       p.push(TelemetryController.submitExternalPing(getPingType(shutdownPayload), shutdownPayload, options)
                                 .catch(e => this._log.error("saveShutdownPings - failed to submit shutdown ping", e)));
