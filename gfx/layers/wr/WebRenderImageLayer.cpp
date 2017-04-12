@@ -169,8 +169,6 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   aBuilder.PushImage(wr::ToWrRect(rect), clip, filter, key);
   aBuilder.PopScrollLayer();
   aBuilder.PopStackingContext();
-
-  //mContainer->SetImageFactory(originalIF);
 }
 
 Maybe<WrImageMask>
@@ -185,9 +183,12 @@ WebRenderImageLayer::RenderMaskLayer(const gfx::Matrix4x4& aTransform)
     return Nothing();
   }
 
-  MOZ_ASSERT(GetImageClientType() != CompositableType::UNKNOWN);
+  MOZ_ASSERT(GetImageClientType() == CompositableType::IMAGE);
+  if (GetImageClientType() != CompositableType::IMAGE) {
+    return Nothing();
+  }
 
-  if (GetImageClientType() == CompositableType::IMAGE && !mImageClient) {
+  if (!mImageClient) {
     mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
                                                   WrBridge(),
                                                   TextureFlags::DEFAULT);
@@ -198,24 +199,16 @@ WebRenderImageLayer::RenderMaskLayer(const gfx::Matrix4x4& aTransform)
   }
 
   if (!mExternalImageId) {
-    if (GetImageClientType() == CompositableType::IMAGE_BRIDGE) {
-      MOZ_ASSERT(!mImageClient);
-      mExternalImageId = WrBridge()->AllocExternalImageId(mContainer->GetAsyncContainerHandle());
-    } else {
-      // Handle CompositableType::IMAGE case
-      MOZ_ASSERT(mImageClient);
-      mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
-    }
+    mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
   }
   MOZ_ASSERT(mExternalImageId);
 
-  // XXX Not good for async ImageContainer case.
   AutoLockImage autoLock(mContainer);
   Image* image = autoLock.GetImage();
   if (!image) {
     return Nothing();
   }
-  if (mImageClient && !mImageClient->UpdateImage(mContainer, /* unused */0)) {
+  if (!mImageClient->UpdateImage(mContainer, /* unused */0)) {
     return Nothing();
   }
 
