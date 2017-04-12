@@ -511,9 +511,8 @@ WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
     NS_ERROR("CompositableHost not found in the map!");
     return IPC_FAIL_NO_REASON(this);
   }
-  if (host->GetType() != CompositableType::IMAGE &&
-      host->GetType() != CompositableType::CONTENT_SINGLE &&
-      host->GetType() != CompositableType::CONTENT_DOUBLE) {
+  MOZ_ASSERT(host->AsWebRenderImageHost());
+  if (!host->AsWebRenderImageHost()) {
     NS_ERROR("Incompatible CompositableHost");
     return IPC_OK();
   }
@@ -533,9 +532,8 @@ WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const uint64_t& aIm
   MOZ_ASSERT(!mExternalImageIds.Get(aImageId).get());
 
   RefPtr<CompositableHost> host = FindCompositable(aHandle);
-  if (host->GetType() != CompositableType::IMAGE &&
-      host->GetType() != CompositableType::CONTENT_SINGLE &&
-      host->GetType() != CompositableType::CONTENT_DOUBLE) {
+  MOZ_ASSERT(host->AsWebRenderImageHost());
+  if (!host->AsWebRenderImageHost()) {
     NS_ERROR("Incompatible CompositableHost");
     return IPC_OK();
   }
