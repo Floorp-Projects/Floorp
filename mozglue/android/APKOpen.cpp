@@ -4,7 +4,7 @@
 
 /*
  * This custom library loading code is only meant to be called
- * during initialization. As a result, it takes no special 
+ * during initialization. As a result, it takes no special
  * precautions to be threadsafe. Any of the library loading functions
  * like mozload should not be available to other code.
  */
@@ -482,4 +482,45 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_neonCompatible(JNIEnv *jenv, jclass j
 #else
   return true;
 #endif // __ARM_EABI__
+}
+
+// Does current process name end with ':media'?
+static bool
+IsMediaProcess()
+{
+  pid_t pid = getpid();
+  char str[256];
+  snprintf(str, sizeof(str), "/proc/%d/cmdline", pid);
+  FILE* f = fopen(str, "r");
+  if (f) {
+    fgets(str, sizeof(str), f);
+    fclose(f);
+    const size_t strLen = strlen(str);
+    const char suffix[] = ":media";
+    const size_t suffixLen = sizeof(suffix) - 1;
+    if (strLen >= suffixLen &&
+        !strncmp(str + strLen - suffixLen, suffix, suffixLen)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+extern "C" APKOPEN_EXPORT void MOZ_JNICALL
+Java_org_mozilla_gecko_mozglue_GeckoLoader_suppressCrashDialog(JNIEnv *jenv, jclass jc)
+{
+  MOZ_RELEASE_ASSERT(IsMediaProcess(), "Suppress crash dialog only for media process");
+  // Restore all signal actions changed by Android debugger.
+  // See http://androidxref.com/7.1.1_r6/xref/bionic/linker/debugger.cpp#312
+  struct sigaction dfl = {};
+  dfl.sa_handler = SIG_DFL;
+  sigaction(SIGABRT, &dfl, nullptr);
+  sigaction(SIGBUS, &dfl, nullptr);
+  sigaction(SIGILL, &dfl, nullptr);
+  sigaction(SIGFPE, &dfl, nullptr);
+  sigaction(SIGSEGV, &dfl, nullptr);
+#if defined(SIGSTKFLT)
+  sigaction(SIGSTKFLT, &dfl, nullptr);
+#endif
+  sigaction(SIGTRAP, &dfl, nullptr);
 }
