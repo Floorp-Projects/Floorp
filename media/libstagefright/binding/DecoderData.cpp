@@ -18,6 +18,7 @@
 #include "mp4parse.h"
 
 using namespace stagefright;
+using mozilla::media::TimeUnit;
 
 namespace mp4_demuxer
 {
@@ -114,7 +115,8 @@ UpdateTrackInfo(mozilla::TrackInfo& aConfig,
 {
   mozilla::CryptoTrack& crypto = aConfig.mCrypto;
   aConfig.mMimeType = aMimeType;
-  aConfig.mDuration = FindInt64(aMetaData, kKeyDuration);
+  aConfig.mDuration = TimeUnit::FromMicroseconds(
+    FindInt64(aMetaData, kKeyDuration));
   aConfig.mMediaTime = FindInt64(aMetaData, kKeyMediaTime);
   aConfig.mTrackId = FindInt32(aMetaData, kKeyTrackID);
   aConfig.mCrypto.mValid = aMetaData->findInt32(kKeyCryptoMode, &crypto.mMode) &&
@@ -228,7 +230,7 @@ MP4AudioInfo::Update(const mp4parse_track_info* track,
   mChannels = audio->channels;
   mBitDepth = audio->bit_depth;
   mExtendedProfile = audio->profile;
-  mDuration = track->duration;
+  mDuration = TimeUnit::FromMicroseconds(track->duration);
   mMediaTime = track->media_time;
   mTrackId = track->track_id;
 
@@ -260,7 +262,7 @@ MP4VideoInfo::Update(const mp4parse_track_info* track,
     mMimeType = NS_LITERAL_CSTRING("video/vp9");
   }
   mTrackId = track->track_id;
-  mDuration = track->duration;
+  mDuration = TimeUnit::FromMicroseconds(track->duration);
   mMediaTime = track->media_time;
   mDisplay.width = video->display_width;
   mDisplay.height = video->display_height;
