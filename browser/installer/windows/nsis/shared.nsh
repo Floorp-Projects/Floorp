@@ -97,6 +97,9 @@
 
   RmDir /r /REBOOTOK "$INSTDIR\${TO_BE_DELETED}"
 
+  ; Register AccessibleHandler.dll with COM (this writes to HKLM)
+  ${RegisterAccessibleHandler}
+
 !ifdef MOZ_MAINTENANCE_SERVICE
   Call IsUserAdmin
   Pop $R0
@@ -778,6 +781,11 @@
 !macroend
 !define AddMaintCertKeys "!insertmacro AddMaintCertKeys"
 !endif
+
+!macro RegisterAccessibleHandler
+  ${RegisterDLL} "$INSTDIR\AccessibleHandler.dll"
+!macroend
+!define RegisterAccessibleHandler "!insertmacro RegisterAccessibleHandler"
 
 ; Removes various registry entries for reasons noted below (does not use SHCTX).
 !macro RemoveDeprecatedKeys
