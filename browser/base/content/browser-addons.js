@@ -183,8 +183,8 @@ const gXPInstallObserver = {
     messageString = messageString.replace("#2", installInfo.installs.length);
 
     let action = {
-      label: gNavigatorBundle.getString("addonInstall.acceptButton.label"),
-      accessKey: gNavigatorBundle.getString("addonInstall.acceptButton.accesskey"),
+      label: gNavigatorBundle.getString("addonInstall.acceptButton2.label"),
+      accessKey: gNavigatorBundle.getString("addonInstall.acceptButton2.accesskey"),
       callback: acceptInstallation,
     };
 
@@ -338,8 +338,8 @@ const gXPInstallObserver = {
         }
       };
       action = {
-        label: gNavigatorBundle.getString("addonInstall.acceptButton.label"),
-        accessKey: gNavigatorBundle.getString("addonInstall.acceptButton.accesskey"),
+        label: gNavigatorBundle.getString("addonInstall.acceptButton2.label"),
+        accessKey: gNavigatorBundle.getString("addonInstall.acceptButton2.accesskey"),
         callback: () => {},
       };
       let secondaryAction = {
