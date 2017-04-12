@@ -820,7 +820,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
 
   dom::DocumentTimeline* timeline = aElement->OwnerDoc()->Timeline();
 
-  AnimationValue startValue, endValue, dummyValue;
+  AnimationValue startValue, endValue;
   bool haveValues =
     ExtractNonDiscreteComputedValue(aProperty, aOldStyleContext,
                                     startValue.mGecko) &&
@@ -832,14 +832,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
   bool shouldAnimate =
     haveValues &&
     haveChange &&
-    // Check that we can interpolate between these values
-    // (If this is ever a performance problem, we could add a
-    // CanInterpolate method, but it seems fine for now.)
-    StyleAnimationValue::Interpolate(aProperty,
-                                     startValue.mGecko,
-                                     endValue.mGecko,
-                                     0.5,
-                                     dummyValue.mGecko);
+    startValue.IsInterpolableWith(aProperty, endValue);
 
   bool haveCurrentTransition = false;
   size_t currentIndex = nsTArray<ElementPropertyTransition>::NoIndex;
