@@ -33,6 +33,7 @@ public final class MediaManager extends Service {
     public synchronized void onCreate() {
         if (!sNativeLibLoaded) {
             GeckoLoader.doLoadLibrary(this, "mozglue");
+            GeckoLoader.suppressCrashDialog();
             sNativeLibLoaded = true;
         }
     }
