@@ -54,6 +54,8 @@ Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "JSONFile",
                                   "resource://gre/modules/JSONFile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillNameUtils",
+                                  "resource://formautofill/FormAutofillNameUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",
