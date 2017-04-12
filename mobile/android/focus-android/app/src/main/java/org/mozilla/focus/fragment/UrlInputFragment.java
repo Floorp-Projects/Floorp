@@ -197,6 +197,12 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
     }
 
     private void animateAndDismiss() {
+        // Don't allow any more clicks: dismissView is still visible until the animation ends,
+        // but we don't want to restart animations and/or trigger hiding again (which could potentially
+        // cause crashes since we don't know what state we're in). Ignoring further clicks is the simplest
+        // solution, since dismissView is about to disappear anyway.
+        dismissView.setClickable(false);
+
         final String animation = getArguments().getString(ARGUMENT_ANIMATION);
 
         if (ANIMATION_HOME_SCREEN.equals(animation)) {
