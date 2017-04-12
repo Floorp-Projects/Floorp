@@ -415,9 +415,17 @@ public class Tokenizer implements Locator {
     protected boolean endTag;
 
     /**
-     * The current tag token name.
+     * The current tag token name. One of
+     * 1) null,
+     * 2) non-owning reference to nonInternedTagName
+     * 3) non-owning reference to a pre-interned ElementName
      */
     private ElementName tagName = null;
+
+    /**
+     * The recycled ElementName instance for the non-pre-interned cases.
+     */
+    private ElementName nonInternedTagName = null;
 
     /**
      * The current attribute name.
@@ -518,6 +526,7 @@ public class Tokenizer implements Locator {
         this.bmpChar = new char[1];
         this.astralChar = new char[2];
         this.tagName = null;
+        this.nonInternedTagName = new ElementName();
         this.attributeName = null;
         this.doctypeName = null;
         this.publicIdentifier = null;
@@ -547,6 +556,7 @@ public class Tokenizer implements Locator {
         this.bmpChar = new char[1];
         this.astralChar = new char[2];
         this.tagName = null;
+        this.nonInternedTagName = new ElementName();
         this.attributeName = null;
         this.doctypeName = null;
         this.publicIdentifier = null;
@@ -692,6 +702,7 @@ public class Tokenizer implements Locator {
         @Auto char[] asArray = Portability.newCharArrayFromLocal(endTagExpectation);
         this.endTagExpectation = ElementName.elementNameByBuffer(asArray, 0,
                 asArray.length, interner);
+        assert this.endTagExpectation != null;
         endTagExpectationToArray();
     }
 
@@ -1092,6 +1103,11 @@ public class Tokenizer implements Locator {
     private void strBufToElementNameString() {
         tagName = ElementName.elementNameByBuffer(strBuf, 0, strBufLen,
                 interner);
+        if (tagName == null) {
+            nonInternedTagName.setNameForNonInterned(Portability.newLocalNameFromBuffer(strBuf, 0, strBufLen,
+                interner));
+            tagName = nonInternedTagName;
+        }
         clearStrBufAfterUse();
     }
 
@@ -1124,7 +1140,6 @@ public class Tokenizer implements Locator {
             tokenHandler.startTag(tagName, attrs, selfClosing);
             // CPPONLY: }
         }
-        tagName.release();
         tagName = null;
         if (newAttributesEachTime) {
             attributes = null;
@@ -6637,10 +6652,8 @@ public class Tokenizer implements Locator {
             Portability.releaseString(publicIdentifier);
             publicIdentifier = null;
         }
-        if (tagName != null) {
-            tagName.release();
-            tagName = null;
-        }
+        tagName = null;
+        nonInternedTagName.setNameForNonInterned(null);
         if (attributeName != null) {
             attributeName.release();
             attributeName = null;
@@ -6722,7 +6735,6 @@ public class Tokenizer implements Locator {
         shouldSuspend = false;
         initDoctypeFields();
         if (tagName != null) {
-            tagName.release();
             tagName = null;
         }
         if (attributeName != null) {
@@ -6788,13 +6800,17 @@ public class Tokenizer implements Locator {
             publicIdentifier = Portability.newStringFromString(other.publicIdentifier);
         }
 
-        if (tagName != null) {
-            tagName.release();
-        }
         if (other.tagName == null) {
             tagName = null;
+        } else if (other.tagName.isInterned()) {
+            tagName = other.tagName;
         } else {
-            tagName = other.tagName.cloneElementName(interner);
+            // In the C++ case, We might be loading state from another
+            // tokenizer that has atoms from a different tokenizer-scoped
+            // atom table. Therefore, we have to obtain the correspoding
+            // atom from our own atom table.
+            nonInternedTagName.setNameForNonInterned(Portability.newLocalFromLocal(other.tagName.getName(), interner));
+            tagName = nonInternedTagName;
         }
 
         if (attributeName != null) {
@@ -7045,6 +7061,8 @@ public class Tokenizer implements Locator {
     }
 
     void destructor() {
+        Portability.delete(nonInternedTagName);
+        nonInternedTagName = null;
         // The translator will write refcount tracing stuff here
         Portability.delete(attributes);
         attributes = null;

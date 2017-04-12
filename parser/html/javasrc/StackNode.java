@@ -2,22 +2,22 @@
  * Copyright (c) 2007 Henri Sivonen
  * Copyright (c) 2007-2011 Mozilla Foundation
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
- * copy of this software and associated documentation files (the "Software"), 
- * to deal in the Software without restriction, including without limitation 
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in 
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
 
@@ -46,7 +46,7 @@ final class StackNode<T> {
     // [NOCPP[
 
     private final TaintableLocatorImpl locator;
-    
+
     public TaintableLocatorImpl getLocator() {
         return locator;
     }
@@ -78,18 +78,18 @@ final class StackNode<T> {
     }
 
     // [NOCPP[
-    
+
     public boolean isOptionalEndTag() {
         return (flags & ElementName.OPTIONAL_END_TAG) != 0;
     }
-    
+
     // ]NOCPP]
 
     /**
      * Constructor for copying. This doesn't take another <code>StackNode</code>
      * because in C++ the caller is reponsible for reobtaining the local names
      * from another interner.
-     * 
+     *
      * @param flags
      * @param ns
      * @param name
@@ -117,7 +117,7 @@ final class StackNode<T> {
 
     /**
      * Short hand for well-known HTML elements.
-     * 
+     *
      * @param elementName
      * @param node
      */
@@ -127,13 +127,13 @@ final class StackNode<T> {
     // ]NOCPP]
     ) {
         this.flags = elementName.getFlags();
-        this.name = elementName.name;
-        this.popName = elementName.name;
+        this.name = elementName.getName();
+        this.popName = elementName.getName();
         this.ns = "http://www.w3.org/1999/xhtml";
         this.node = node;
         this.attributes = null;
         this.refcount = 1;
-        assert !elementName.isCustom() : "Don't use this constructor for custom elements.";
+        assert elementName.isInterned() : "Don't use this constructor for custom elements.";
         // [NOCPP[
         this.locator = locator;
         // ]NOCPP]
@@ -141,7 +141,7 @@ final class StackNode<T> {
 
     /**
      * Constructor for HTML formatting elements.
-     * 
+     *
      * @param elementName
      * @param node
      * @param attributes
@@ -152,13 +152,13 @@ final class StackNode<T> {
     // ]NOCPP]
     ) {
         this.flags = elementName.getFlags();
-        this.name = elementName.name;
-        this.popName = elementName.name;
+        this.name = elementName.getName();
+        this.popName = elementName.getName();
         this.ns = "http://www.w3.org/1999/xhtml";
         this.node = node;
         this.attributes = attributes;
         this.refcount = 1;
-        assert !elementName.isCustom() : "Don't use this constructor for custom elements.";
+        assert elementName.isInterned() : "Don't use this constructor for custom elements.";
         // [NOCPP[
         this.locator = locator;
         // ]NOCPP]
@@ -166,7 +166,7 @@ final class StackNode<T> {
 
     /**
      * The common-case HTML constructor.
-     * 
+     *
      * @param elementName
      * @param node
      * @param popName
@@ -177,7 +177,7 @@ final class StackNode<T> {
     // ]NOCPP]
     ) {
         this.flags = elementName.getFlags();
-        this.name = elementName.name;
+        this.name = elementName.getName();
         this.popName = popName;
         this.ns = "http://www.w3.org/1999/xhtml";
         this.node = node;
@@ -193,7 +193,7 @@ final class StackNode<T> {
      * what distinguishes this from the HTML constructor. This is ugly, but
      * AFAICT the least disruptive way to make this work with Java's generics
      * and without unnecessary branches. :-(
-     * 
+     *
      * @param elementName
      * @param popName
      * @param node
@@ -204,7 +204,7 @@ final class StackNode<T> {
     // ]NOCPP]
     ) {
         this.flags = prepareSvgFlags(elementName.getFlags());
-        this.name = elementName.name;
+        this.name = elementName.getName();
         this.popName = popName;
         this.ns = "http://www.w3.org/2000/svg";
         this.node = node;
@@ -217,7 +217,7 @@ final class StackNode<T> {
 
     /**
      * Constructor for MathML.
-     * 
+     *
      * @param elementName
      * @param node
      * @param popName
@@ -231,7 +231,7 @@ final class StackNode<T> {
     ) {
         this.flags = prepareMathFlags(elementName.getFlags(),
                 markAsIntegrationPoint);
-        this.name = elementName.name;
+        this.name = elementName.getName();
         this.popName = popName;
         this.ns = "http://www.w3.org/1998/Math/MathML";
         this.node = node;
