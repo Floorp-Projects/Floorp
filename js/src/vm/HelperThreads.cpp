@@ -231,12 +231,14 @@ js::CancelOffThreadIonCompile(const CompilationSelector& selector, bool discardL
     if (discardLazyLinkList) {
         MOZ_ASSERT(!selector.is<AllCompilations>());
         JSRuntime* runtime = GetSelectorRuntime(selector);
-        jit::IonBuilder* builder = runtime->ionLazyLinkList().getFirst();
-        while (builder) {
-            jit::IonBuilder* next = builder->getNext();
-            if (CompiledScriptMatches(selector, builder->script()))
-                jit::FinishOffThreadBuilder(runtime, builder, lock);
-            builder = next;
+        for (ZoneGroupsIter group(runtime); !group.done(); group.next()) {
+            jit::IonBuilder* builder = group->ionLazyLinkList().getFirst();
+            while (builder) {
+                jit::IonBuilder* next = builder->getNext();
+                if (CompiledScriptMatches(selector, builder->script()))
+                    jit::FinishOffThreadBuilder(runtime, builder, lock);
+                builder = next;
+            }
         }
     }
 }
@@ -247,7 +249,7 @@ js::HasOffThreadIonCompile(JSCompartment* comp)
 {
     AutoLockHelperThreadState lock;
 
-    if (!HelperThreadState().threads)
+    if (!HelperThreadState().threads || comp->isAtomsCompartment())
         return false;
 
     GlobalHelperThreadState::IonBuilderVector& worklist = HelperThreadState().ionWorklist(lock);
@@ -269,7 +271,7 @@ js::HasOffThreadIonCompile(JSCompartment* comp)
             return true;
     }
 
-    jit::IonBuilder* builder = comp->runtimeFromActiveCooperatingThread()->ionLazyLinkList().getFirst();
+    jit::IonBuilder* builder = comp->zone()->group()->ionLazyLinkList().getFirst();
     while (builder) {
         if (builder->script()->compartment() == comp)
             return true;
@@ -1871,10 +1873,12 @@ GlobalHelperThreadState::trace(JSTracer* trc)
         }
     }
 
-    jit::IonBuilder* builder = trc->runtime()->ionLazyLinkList().getFirst();
-    while (builder) {
-        builder->trace(trc);
-        builder = builder->getNext();
+    for (ZoneGroupsIter group(trc->runtime()); !group.done(); group.next()) {
+        jit::IonBuilder* builder = group->ionLazyLinkList().getFirst();
+        while (builder) {
+            builder->trace(trc);
+            builder = builder->getNext();
+        }
     }
 
     for (auto parseTask : parseWorklist_)
