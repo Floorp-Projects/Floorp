@@ -452,3 +452,37 @@ android.applicationVariants.all { variant ->
 // Bug 1353055 - Strip 'vars' debugging information to agree with moz.build.
 apply from: "${topsrcdir}/mobile/android/gradle/debug_level.gradle"
 android.applicationVariants.all configureVariantDebugLevel
+
+
+// Bug 1320310 - Hack up the manifest produced by Gradle to match that produced
+// by moz.build.
+import groovy.xml.XmlUtil
+
+android.applicationVariants.all { variant ->
+    variant.outputs.each { output ->
+        output.processManifest.doLast {
+            [output.processManifest.manifestOutputFile,
+             output.processManifest.instantRunManifestOutputFile,
+            ].forEach({ File manifestOutFile ->
+                if (manifestOutFile.exists()) {
+                    def contents = manifestOutFile.getText('UTF-8')
+
+                    // A non-validating, non-namespace aware XML processor.
+                    def xml = new XmlSlurper(false, false).parseText(contents)
+
+                    // First, reinstate our <activity-alias android:name=".App">.
+                    xml.depthFirst()
+                        .findAll { it.name() == 'activity-alias' && it.'@android:name' == 'org.mozilla.gecko.App' }
+                        .each { it.'@android:name' = '.App' }
+
+                    // Second, cull all manifest entries provided by com.google.android.gms.measurement.
+                    xml.depthFirst()
+                        .findAll { it.'@android:name'.text().contains('AppMeasurement') }
+                        .each { it.replaceNode {} }
+
+                    manifestOutFile.write(XmlUtil.serialize(xml), 'UTF-8')
+                }
+            })
+        }
+    }
+}
