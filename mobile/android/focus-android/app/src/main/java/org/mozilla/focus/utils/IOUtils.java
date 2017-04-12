@@ -17,14 +17,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class IOUtils {
-    public static void safeClose(Closeable stream) {
-        try {
-            if (stream != null) {
-                stream.close();
-            }
-        } catch (IOException ignored) { }
-    }
-
     public static JSONObject readAsset(Context context, String fileName) throws IOException {
         try (final BufferedReader reader =
                      new BufferedReader(new InputStreamReader(context.getAssets().open(fileName)))){
