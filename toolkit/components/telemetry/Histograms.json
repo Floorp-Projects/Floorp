@@ -7247,14 +7247,14 @@
   },
   "MEDIA_RUST_MP4PARSE_SUCCESS": {
     "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "boolean",
     "bug_numbers": [1220885],
-    "description": "(Bug 1220885) Whether the rust mp4 demuxer successfully parsed a stream segment."
+    "description": "Whether the rust mp4 demuxer successfully parsed a stream segment."
   },
   "MEDIA_RUST_MP4PARSE_ERROR_CODE": {
     "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 32,
     "bug_numbers": [1238420],
@@ -7262,14 +7262,14 @@
   },
   "MEDIA_RUST_MP4PARSE_TRACK_MATCH_AUDIO": {
     "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "boolean",
     "bug_numbers": [1231169],
     "description": "Whether rust and stagefight mp4 parser audio track results match."
   },
   "MEDIA_RUST_MP4PARSE_TRACK_MATCH_VIDEO": {
     "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "boolean",
     "bug_numbers": [1231169],
     "description": "Whether rust and stagefight mp4 parser video track results match."
@@ -7289,14 +7289,14 @@
   },
   "MEDIA_HLS_CANPLAY_REQUESTED": {
     "alert_emails": ["ajones@mozilla.com", "giles@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "boolean",
     "description": "Reports a true value when a page requests canPlayType for an HTTP Live Streaming media type (or generic m3u playlist).",
     "bug_numbers": [1262659]
   },
   "MEDIA_HLS_DECODER_SUCCESS": {
     "alert_emails": ["ajones@mozilla.com", "giles@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "boolean",
     "description": "Reports whether a decoder for an HTTP Live Streaming media type was created when requested.",
     "bug_numbers": [1262659]
@@ -9786,7 +9786,7 @@
   },
   "VIDEO_PLAY_TIME_MS" : {
     "alert_emails": ["ajones@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "description": "Total time spent playing video in milliseconds. This reports the total play time for an HTML Media Element whenever it is suspended or resumed, such as when the page is unloaded, or when the mute status changes when the AudioChannelAPI pref is set.",
     "kind": "exponential",
     "high": 7200000,
@@ -9794,8 +9794,8 @@
     "bug_numbers": [1261955, 1127646]
   },
   "VIDEO_HIDDEN_PLAY_TIME_MS" : {
-    "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
+    "expires_in_version": "60",
     "description": "Total time spent playing video while element is hidden, in milliseconds. This reports the total hidden play time for an HTML Media Element whenever it is suspended or resumed, such as when the page is unloaded, or when the mute status changes when the AudioChannelAPI pref is set.",
     "kind": "exponential",
     "high": 7200000,
@@ -9803,8 +9803,8 @@
     "bug_numbers": [1285419]
   },
   "VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE" : {
-    "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
+    "expires_in_version": "60",
     "description": "Percentage of total time spent playing video while element is hidden. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "linear",
@@ -9813,8 +9813,8 @@
     "bug_numbers": [1287987]
   },
   "VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE" : {
-    "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
+    "expires_in_version": "60",
     "description": "Percentage of total time spent *not* fully decoding video while element is hidden (simulated, even when feature is not enabled). Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "linear",
@@ -9823,8 +9823,8 @@
     "bug_numbers": [1293145]
   },
   "VIDEO_INTER_KEYFRAME_AVERAGE_MS" : {
-    "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
+    "expires_in_version": "60",
     "description": "Average interval between video keyframes in played videos, in milliseconds. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "exponential",
@@ -9833,8 +9833,8 @@
     "bug_numbers": [1289668]
   },
   "VIDEO_INTER_KEYFRAME_MAX_MS" : {
-    "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
+    "expires_in_version": "60",
     "description": "Maximum interval between video keyframes in played videos, in milliseconds; '0' means only 1 keyframe found. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "exponential",
@@ -9843,8 +9843,8 @@
     "bug_numbers": [1289668]
   },
   "VIDEO_SUSPEND_RECOVERY_TIME_MS" : {
-    "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
+    "expires_in_version": "60",
     "description": "Time taken for a video to resume after decoding was suspended, in milliseconds. Keyed by audio presence, hw acceleration, and by height ranges (boundaries: 240. 480, 720, 1080, 2160), e.g.: 'V,0-240', 'AV(hw),2160+'; and 'All' will accumulate all percentages.",
     "keyed": true,
     "kind": "exponential",
@@ -9870,7 +9870,7 @@
   },
   "VIDEO_UNLOAD_STATE": {
     "alert_emails": ["ajones@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 5,
     "description": "HTML Media Element state when unloading. ended = 0, paused = 1, stalled = 2, seeking = 3, other = 4",
@@ -9878,7 +9878,7 @@
   },
   "VIDEO_VP9_BENCHMARK_FPS": {
     "alert_emails": ["ajones@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "bug_numbers": [1230265],
     "kind": "linear",
     "high": 1000,
@@ -10720,14 +10720,14 @@
     "description": "Note the encoding (e.g. 'UTF-8', 'windows-1252', 'ASCII') of each external <script> element that is successfully loaded and decoded."
   },
   "VIDEO_FASTSEEK_USED": {
-    "alert_emails": ["lchristie@mozilla.com", "cpearce@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["cpearce@mozilla.com", "tkuo@mozilla.com"],
+    "expires_in_version": "60",
     "bug_numbers": [1245982],
     "kind": "count",
     "description": "Uses of HTMLMediaElement.fastSeek"
   },
   "VIDEO_DROPPED_FRAMES_PROPORTION" : {
-    "alert_emails": ["lchristie@mozilla.com", "cpearce@mozilla.com"],
+    "alert_emails": ["cpearce@mozilla.com"],
     "expires_in_version": "55",
     "kind": "linear",
     "high": 100,
