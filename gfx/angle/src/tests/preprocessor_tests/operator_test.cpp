@@ -13,7 +13,7 @@ struct OperatorTestParam
     int op;
 };
 
-class OperatorTest : public PreprocessorTest,
+class OperatorTest : public SimplePreprocessorTest,
                      public testing::WithParamInterface<OperatorTestParam>
 {
 };
@@ -22,10 +22,8 @@ TEST_P(OperatorTest, Identified)
 {
     OperatorTestParam param = GetParam();
 
-    ASSERT_TRUE(mPreprocessor.init(1, &param.str, 0));
-
     pp::Token token;
-    mPreprocessor.lex(&token);
+    lexSingleToken(param.str, &token);
     EXPECT_EQ(param.op, token.type);
     EXPECT_EQ(param.str, token.text);
 }

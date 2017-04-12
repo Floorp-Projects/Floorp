@@ -476,6 +476,17 @@ bool ValidationContext::getQueryParameterInfo(GLenum pname, GLenum *type, unsign
         }
     }
 
+    if (getExtensions().requestExtension)
+    {
+        switch (pname)
+        {
+            case GL_NUM_REQUESTABLE_EXTENSIONS_ANGLE:
+                *type      = GL_INT;
+                *numParams = 1;
+                return true;
+        }
+    }
+
     if (getClientVersion() < Version(3, 1))
     {
         return false;
@@ -483,6 +494,7 @@ bool ValidationContext::getQueryParameterInfo(GLenum pname, GLenum *type, unsign
 
     switch (pname)
     {
+        case GL_DRAW_INDIRECT_BUFFER_BINDING:
         case GL_MAX_FRAMEBUFFER_WIDTH:
         case GL_MAX_FRAMEBUFFER_HEIGHT:
         case GL_MAX_FRAMEBUFFER_SAMPLES:

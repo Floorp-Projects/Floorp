@@ -26,6 +26,7 @@ from mozpack.errors import errors
 import mozpack.path as mozpath
 import buildconfig
 from argparse import ArgumentParser
+from createprecomplete import generate_precomplete
 import os
 from StringIO import StringIO
 import subprocess
@@ -317,6 +318,8 @@ def main():
                 f.preload(log[key])
 
     copier.copy(args.destination)
+    generate_precomplete(os.path.normpath(os.path.join(args.destination,
+                                                       respath)))
 
 
 if __name__ == '__main__':

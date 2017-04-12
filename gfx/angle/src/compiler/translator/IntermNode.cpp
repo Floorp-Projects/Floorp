@@ -1312,19 +1312,51 @@ TConstantUnion *TIntermConstantUnion::foldBinary(TOperator op,
                 switch (getType().getBasicType())
                 {
                   case EbtFloat:
-                    if (rightArray[i] == 0.0f)
-                    {
-                        diagnostics->warning(
-                            getLine(), "Divide by zero error during constant folding", "/", "");
-                        resultArray[i].setFConst(leftArray[i].getFConst() < 0 ? -FLT_MAX : FLT_MAX);
-                    }
-                    else
-                    {
-                        ASSERT(op == EOpDiv);
-                        resultArray[i].setFConst(leftArray[i].getFConst() / rightArray[i].getFConst());
-                    }
-                    break;
-
+                  {
+                      ASSERT(op == EOpDiv);
+                      float dividend = leftArray[i].getFConst();
+                      float divisor  = rightArray[i].getFConst();
+                      if (divisor == 0.0f)
+                      {
+                          if (dividend == 0.0f)
+                          {
+                              diagnostics->warning(
+                                  getLine(),
+                                  "Zero divided by zero during constant folding generated NaN", "/",
+                                  "");
+                              resultArray[i].setFConst(std::numeric_limits<float>::quiet_NaN());
+                          }
+                          else
+                          {
+                              diagnostics->warning(
+                                  getLine(), "Divide by zero during constant folding", "/", "");
+                              bool negativeResult = std::signbit(dividend) != std::signbit(divisor);
+                              resultArray[i].setFConst(
+                                  negativeResult ? -std::numeric_limits<float>::infinity()
+                                                 : std::numeric_limits<float>::infinity());
+                          }
+                      }
+                      else if (gl::isInf(dividend) && gl::isInf(divisor))
+                      {
+                          diagnostics->warning(
+                              getLine(),
+                              "Infinity divided by infinity during constant folding generated NaN",
+                              "/", "");
+                          resultArray[i].setFConst(std::numeric_limits<float>::quiet_NaN());
+                      }
+                      else
+                      {
+                          float result = dividend / divisor;
+                          if (!gl::isInf(dividend) && gl::isInf(result))
+                          {
+                              diagnostics->warning(
+                                  getLine(), "Constant folded division overflowed to infinity", "/",
+                                  "");
+                          }
+                          resultArray[i].setFConst(result);
+                      }
+                      break;
+                  }
                   case EbtInt:
                     if (rightArray[i] == 0)
                     {

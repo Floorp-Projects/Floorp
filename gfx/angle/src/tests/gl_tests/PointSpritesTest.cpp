@@ -49,6 +49,14 @@ TEST_P(PointSpritesTest, PointCoordAndPointSizeCompliance)
         return;
     }
 
+    // TODO(jmadill): Investigate potential AMD driver bug.
+    // http://anglebug.com/1643
+    if (IsAMD() && IsDesktopOpenGL() && IsWindows())
+    {
+        std::cout << "Test skipped on desktop GL AMD Windows." << std::endl;
+        return;
+    }
+
     const std::string fs = SHADER_SOURCE
     (
         precision mediump float;
@@ -154,6 +162,22 @@ TEST_P(PointSpritesTest, PointCoordAndPointSizeCompliance)
 // https://www.khronos.org/registry/webgl/sdk/tests/conformance/rendering/point-no-attributes.html
 TEST_P(PointSpritesTest, PointWithoutAttributesCompliance)
 {
+    // TODO(jmadill): Investigate potential AMD driver bug.
+    // http://anglebug.com/1643
+    if (IsAMD() && IsDesktopOpenGL() && IsWindows())
+    {
+        std::cout << "Test skipped on desktop GL AMD Windows." << std::endl;
+        return;
+    }
+
+    // TODO(jmadill): Figure out why this fails on Intel.
+    // http://anglebug.com/1346
+    if (IsIntel() && IsWindows() && (IsD3D11() || IsD3D9()))
+    {
+        std::cout << "Test skipped on Intel Windows D3D." << std::endl;
+        return;
+    }
+
     // clang-format off
     const std::string fs = SHADER_SOURCE
     (
@@ -191,6 +215,14 @@ TEST_P(PointSpritesTest, PointWithoutAttributesCompliance)
 // https://www.khronos.org/registry/webgl/sdk/tests/conformance/rendering/point-with-gl-pointcoord-in-fragment-shader.html
 TEST_P(PointSpritesTest, PointCoordRegressionTest)
 {
+    // TODO(jmadill): Investigate potential AMD driver bug.
+    // http://anglebug.com/1643
+    if (IsAMD() && IsDesktopOpenGL() && IsWindows())
+    {
+        std::cout << "Test skipped on desktop GL AMD Windows." << std::endl;
+        return;
+    }
+
     const std::string fs = SHADER_SOURCE
     (
         precision mediump float;
@@ -276,6 +308,14 @@ TEST_P(PointSpritesTest, PointCoordRegressionTest)
 // https://www.khronos.org/registry/webgl/sdk/tests/conformance/rendering/point-size.html
 TEST_P(PointSpritesTest, PointSizeEnabledCompliance)
 {
+    // TODO(jmadill): Investigate potential AMD driver bug.
+    // http://anglebug.com/1643
+    if (IsAMD() && IsDesktopOpenGL() && IsWindows())
+    {
+        std::cout << "Test skipped on desktop GL AMD Windows." << std::endl;
+        return;
+    }
+
     const std::string fs = SHADER_SOURCE
     (
         precision mediump float;

@@ -26,6 +26,7 @@
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns:svg="http://www.w3.org/2000/svg"
         xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="gBrowserInit.onLoad()" onunload="gBrowserInit.onUnload()" onclose="return WindowIsClosing();"
         title="&mainWindow.title;"
@@ -719,6 +720,8 @@
                          tooltiptext="&urlbar.microphoneBlocked.tooltip;"/>
                   <image data-permission-id="screen" class="blocked-permission-icon screen-icon" role="button"
                          tooltiptext="&urlbar.screenBlocked.tooltip;"/>
+                  <image data-permission-id="persistent-storage" class="blocked-permission-icon persistent-storage-icon" role="button"
+                         tooltiptext="&urlbar.persistentStorageBlocked.tooltip;"/>
                 </box>
                 <box id="notification-popup-box"
                      hidden="true"
@@ -753,6 +756,8 @@
                          tooltiptext="&urlbar.translatedNotificationAnchor.tooltip;"/>
                   <image id="eme-notification-icon" class="notification-anchor-icon drm-icon" role="button"
                          tooltiptext="&urlbar.emeNotificationAnchor.tooltip;"/>
+                  <image id="persistent-storage-notification-icon" class="notification-anchor-icon persistent-storage-icon" role="button"
+                         tooltiptext="&urlbar.persistentStorageNotificationAnchor.tooltip;"/>
                 </box>
                 <image id="connection-icon"/>
                 <hbox id="identity-icon-labels">

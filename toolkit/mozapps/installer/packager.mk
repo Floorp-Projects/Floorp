@@ -4,7 +4,6 @@
 
 include $(MOZILLA_DIR)/toolkit/mozapps/installer/package-name.mk
 include $(MOZILLA_DIR)/toolkit/mozapps/installer/upload-files.mk
-include $(MOZILLA_DIR)/toolkit/mozapps/installer/make-eme.mk
 
 # This is how we create the binary packages we release to the public.
 
@@ -22,12 +21,11 @@ endif
 	@echo 'Staging installer files...'
 	@$(NSINSTALL) -D $(DEPTH)/installer-stage/core
 	@cp -av $(DIST)/$(MOZ_PKG_DIR)$(_BINPATH)/. $(DEPTH)/installer-stage/core
+	@(cd $(DEPTH)/installer-stage/core && $(CREATE_PRECOMPLETE_CMD))
 ifdef MOZ_SIGN_PREPARED_PACKAGE_CMD
 # The && true is necessary to make sure Pymake spins a shell
 	$(MOZ_SIGN_PREPARED_PACKAGE_CMD) $(DEPTH)/installer-stage && true
 endif
-	$(call MAKE_SIGN_EME_VOUCHER,$(DEPTH)/installer-stage/core)
-	@(cd $(DEPTH)/installer-stage/core && $(CREATE_PRECOMPLETE_CMD))
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 ELF_HACK_FLAGS = --fill

@@ -821,11 +821,13 @@ GL_APICALL void GL_APIENTRY glBlitFramebufferANGLE (GLint srcX0, GLint srcY0, GL
 #endif
 #endif /* GL_ANGLE_framebuffer_blit */
 
-#ifndef GL_ANGLE_webgl_compatibility
-#define GL_ANGLE_webgl_compatibility 1
-typedef GLboolean(GL_APIENTRYP PFNGLENABLEEXTENSIONANGLEPROC) (const GLchar *name);
+#ifndef GL_ANGLE_request_extension
+#define GL_ANGLE_request_extension 1
+#define GL_REQUESTABLE_EXTENSIONS_ANGLE   0x93A8
+#define GL_NUM_REQUESTABLE_EXTENSIONS_ANGLE 0x93A8
+typedef GLboolean(GL_APIENTRYP PFNGLREQUESTEXTENSIONANGLEPROC) (const GLchar *name);
 #ifdef GL_GLEXT_PROTOTYPES
-GL_APICALL GLboolean GL_APIENTRY glEnableExtensionANGLE (const GLchar *name);
+GL_APICALL GLboolean GL_APIENTRY glRequestExtensionANGLE (const GLchar *name);
 #endif
 #endif /* GL_ANGLE_webgl_compatibility */
 

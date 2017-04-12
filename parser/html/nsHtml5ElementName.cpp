@@ -71,7 +71,7 @@ nsHtml5ElementName::isCustom()
 nsHtml5ElementName* 
 nsHtml5ElementName::elementNameByBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner)
 {
-  int32_t hash = nsHtml5ElementName::bufToHash(buf, length);
+  uint32_t hash = nsHtml5ElementName::bufToHash(buf, length);
   int32_t index = nsHtml5ElementName::ELEMENT_HASHES.binarySearch(hash);
   if (index < 0) {
     return new nsHtml5ReleasableElementName(nsHtml5Portability::newLocalNameFromBuffer(buf, offset, length, interner));
@@ -85,10 +85,10 @@ nsHtml5ElementName::elementNameByBuffer(char16_t* buf, int32_t offset, int32_t l
   }
 }
 
-int32_t 
+uint32_t
 nsHtml5ElementName::bufToHash(char16_t* buf, int32_t len)
 {
-  int32_t hash = len;
+  uint32_t hash = len;
   hash <<= 5;
   hash += buf[0] - 0x60;
   int32_t j = len;
