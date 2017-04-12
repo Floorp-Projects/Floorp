@@ -128,9 +128,9 @@ SamplerThread::Stop(PS::LockRef aLock)
 
 void
 SamplerThread::SuspendAndSampleAndResumeThread(PS::LockRef aLock,
-                                               TickSample* aSample)
+                                               TickSample& aSample)
 {
-  thread_act_t samplee_thread = aSample->mPlatformData->ProfiledThread();
+  thread_act_t samplee_thread = aSample.mPlatformData->ProfiledThread();
 
   //----------------------------------------------------------------//
   // Suspend the samplee thread and get its context.
@@ -181,9 +181,9 @@ SamplerThread::SuspendAndSampleAndResumeThread(PS::LockRef aLock,
                        flavor,
                        reinterpret_cast<natural_t*>(&state),
                        &count) == KERN_SUCCESS) {
-    aSample->mPC = reinterpret_cast<Address>(state.REGISTER_FIELD(ip));
-    aSample->mSP = reinterpret_cast<Address>(state.REGISTER_FIELD(sp));
-    aSample->mFP = reinterpret_cast<Address>(state.REGISTER_FIELD(bp));
+    aSample.mPC = reinterpret_cast<Address>(state.REGISTER_FIELD(ip));
+    aSample.mSP = reinterpret_cast<Address>(state.REGISTER_FIELD(sp));
+    aSample.mFP = reinterpret_cast<Address>(state.REGISTER_FIELD(bp));
 
     Tick(aLock, gPS->Buffer(aLock), aSample);
   }
