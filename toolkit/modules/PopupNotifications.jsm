@@ -869,6 +869,7 @@ PopupNotifications.prototype = {
         }
       } else {
         popupnotification.setAttribute("checkboxhidden", "true");
+        popupnotification.setAttribute("warninghidden", "true");
       }
 
       this.panel.appendChild(popupnotification);

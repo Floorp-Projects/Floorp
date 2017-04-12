@@ -59,11 +59,11 @@ let signonReloadDisplay = {
 };
 
 // Formatter for localization.
-let dateFormatter = new Intl.DateTimeFormat(undefined,
-                      { day: "numeric", month: "short", year: "numeric" });
-let dateAndTimeFormatter = new Intl.DateTimeFormat(undefined,
-                             { day: "numeric", month: "short", year: "numeric",
-                               hour: "numeric", minute: "numeric" });
+let dateFormatter = Services.intl.createDateTimeFormat(undefined,
+                      { dateStyle: "medium" });
+let dateAndTimeFormatter = Services.intl.createDateTimeFormat(undefined,
+                             { dateStyle: "medium",
+                               timeStyle: "short" });
 
 function Startup() {
   // be prepared to reload the display if anything changes

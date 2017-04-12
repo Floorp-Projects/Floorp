@@ -25,19 +25,26 @@ struct PreprocessorImpl
     DirectiveParser directiveParser;
     MacroExpander macroExpander;
 
-    PreprocessorImpl(Diagnostics *diag, DirectiveHandler *directiveHandler)
+    PreprocessorImpl(Diagnostics *diag,
+                     DirectiveHandler *directiveHandler,
+                     const PreprocessorSettings &settings)
         : diagnostics(diag),
           tokenizer(diag),
-          directiveParser(&tokenizer, &macroSet, diag, directiveHandler),
-          macroExpander(&directiveParser, &macroSet, diag)
+          directiveParser(&tokenizer,
+                          &macroSet,
+                          diag,
+                          directiveHandler,
+                          settings.maxMacroExpansionDepth),
+          macroExpander(&directiveParser, &macroSet, diag, settings.maxMacroExpansionDepth)
     {
     }
 };
 
 Preprocessor::Preprocessor(Diagnostics *diagnostics,
-                           DirectiveHandler *directiveHandler)
+                           DirectiveHandler *directiveHandler,
+                           const PreprocessorSettings &settings)
 {
-    mImpl = new PreprocessorImpl(diagnostics, directiveHandler);
+    mImpl = new PreprocessorImpl(diagnostics, directiveHandler, settings);
 }
 
 Preprocessor::~Preprocessor()

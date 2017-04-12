@@ -16,6 +16,7 @@
 #include "nsXULAppAPI.h"
 
 using mozilla::dom::ContentChild;
+using mozilla::GenericPromise;
 using mozilla::PRemoteSpellcheckEngineChild;
 using mozilla::RemoteSpellcheckEngineChild;
 
@@ -427,6 +428,28 @@ mozSpellChecker::SetCurrentDictionary(const nsAString &aDictionary)
 
   // We could not find any engine with the requested dictionary
   return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP_(RefPtr<GenericPromise>)
+mozSpellChecker::SetCurrentDictionaryFromList(const nsTArray<nsString>& aList)
+{
+  if (aList.IsEmpty()) {
+    return GenericPromise::CreateAndReject(NS_ERROR_INVALID_ARG, __func__);
+  }
+
+  if (XRE_IsContentProcess()) {
+    // mCurrentDictionary will be set by RemoteSpellCheckEngineChild
+    return mEngine->SetCurrentDictionaryFromList(aList);
+  }
+
+  for (auto& dictionary : aList) {
+    nsresult rv = SetCurrentDictionary(dictionary);
+    if (NS_SUCCEEDED(rv)) {
+      return GenericPromise::CreateAndResolve(true, __func__);
+    }
+  }
+  // We could not find any engine with the requested dictionary
+  return GenericPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
 }
 
 nsresult

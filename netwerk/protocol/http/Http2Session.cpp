@@ -226,7 +226,8 @@ static Http2ControlFx sControlFunctions[] = {
   Http2Session::RecvWindowUpdate,
   Http2Session::RecvContinuation,
   Http2Session::RecvAltSvc, // extension for type 0x0A
-  Http2Session::RecvOrigin  // extension for type 0x0B
+  Http2Session::RecvUnused, // 0x0B was BLOCKED still radioactive
+  Http2Session::RecvOrigin  // extension for type 0x0C
 };
 
 bool
@@ -2304,6 +2305,15 @@ Http2Session::Received421(nsHttpConnectionInfo *ci)
   key.AppendInt(ci->OriginPort());
   mOriginFrame.Remove(key);
   LOG3(("Http2Session::Received421 %p key %s removed\n", this, key.get()));
+}
+
+nsresult
+Http2Session::RecvUnused(Http2Session *self)
+{
+  LOG3(("Http2Session %p unknown frame type %x ignored\n",
+        self, self->mInputFrameType));
+  self->ResetDownstreamState();
+  return NS_OK;
 }
 
 // defined as an http2 extension - origin

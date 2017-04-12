@@ -53,6 +53,7 @@ let webpackConfig = {
       "devtools/client/framework/menu": "devtools-modules/client/framework/menu",
       "devtools/client/framework/menu-item": "devtools-modules/client/framework/menu-item",
       "devtools/client/locales": path.join(__dirname, "../locales/en-US"),
+      "devtools/client/netmonitor/src/utils/menu": "devtools-launchpad/src/components/shared/menu",
       "devtools/client/shared/components/reps/reps": "devtools-reps",
       "devtools/client/shared/components/search-box": "devtools-modules/client/shared/components/search-box",
       "devtools/client/shared/components/splitter/split-box": "devtools-splitter",

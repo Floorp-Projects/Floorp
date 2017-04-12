@@ -9,21 +9,19 @@
 
 #define CLOSED_RANGE(x, y) testing::Range(x, static_cast<char>((y) + 1))
 
-class InvalidNumberTest : public PreprocessorTest,
-                          public testing::WithParamInterface<const char*>
+class InvalidNumberTest : public SimplePreprocessorTest,
+                          public testing::WithParamInterface<const char *>
 {
 };
 
 TEST_P(InvalidNumberTest, InvalidNumberIdentified)
 {
     const char* str = GetParam();
-    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
 
     using testing::_;
     EXPECT_CALL(mDiagnostics, print(pp::Diagnostics::PP_INVALID_NUMBER, _, str));
 
-    pp::Token token;
-    mPreprocessor.lex(&token);
+    preprocess(str);
 }
 
 INSTANTIATE_TEST_CASE_P(InvalidIntegers, InvalidNumberTest,
@@ -34,8 +32,7 @@ INSTANTIATE_TEST_CASE_P(InvalidFloats, InvalidNumberTest,
                         testing::Values("1eg", "0.a", "0.1.2", ".0a", ".0.1"));
 
 typedef std::tr1::tuple<const char*, char> IntegerParams;
-class IntegerTest : public PreprocessorTest,
-                    public testing::WithParamInterface<IntegerParams>
+class IntegerTest : public SimplePreprocessorTest, public testing::WithParamInterface<IntegerParams>
 {
 };
 
@@ -45,10 +42,8 @@ TEST_P(IntegerTest, Identified)
     str.push_back(std::tr1::get<1>(GetParam()));  // digit.
     const char* cstr = str.c_str();
 
-    ASSERT_TRUE(mPreprocessor.init(1, &cstr, 0));
-
     pp::Token token;
-    mPreprocessor.lex(&token);
+    lexSingleToken(cstr, &token);
     EXPECT_EQ(pp::Token::CONST_INT, token.type);
     EXPECT_EQ(str, token.text);
 }
@@ -78,16 +73,15 @@ INSTANTIATE_TEST_CASE_P(HexadecimalInteger_A_F,
                         testing::Combine(testing::Values("0x", "0X"),
                                          CLOSED_RANGE('A', 'F')));
 
-class FloatTest : public PreprocessorTest
+class FloatTest : public SimplePreprocessorTest
 {
   protected:
     void expectFloat(const std::string& str)
     {
         const char* cstr = str.c_str();
-        ASSERT_TRUE(mPreprocessor.init(1, &cstr, 0));
 
         pp::Token token;
-        mPreprocessor.lex(&token);
+        lexSingleToken(cstr, &token);
         EXPECT_EQ(pp::Token::CONST_FLOAT, token.type);
         EXPECT_EQ(str, token.text);
     }

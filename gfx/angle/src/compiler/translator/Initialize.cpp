@@ -491,7 +491,7 @@ void InsertBuiltInFunctions(sh::GLenum type, ShShaderSpec spec, const ShBuiltInR
     symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, int2, "imageSize", gimage2D);
     symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, int3, "imageSize", gimage3D);
     symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, int3, "imageSize", gimage2DArray);
-    symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, int3, "imageSize", gimageCube);
+    symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, int2, "imageSize", gimageCube);
 
     //
     // Depth range in window coordinates

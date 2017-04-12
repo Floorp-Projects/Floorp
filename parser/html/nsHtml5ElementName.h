@@ -71,7 +71,7 @@ class nsHtml5ElementName
     bool isCustom();
     static nsHtml5ElementName* elementNameByBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner);
   private:
-    static int32_t bufToHash(char16_t* buf, int32_t len);
+    static uint32_t bufToHash(char16_t* buf, int32_t len);
     nsHtml5ElementName(nsIAtom* name, nsIAtom* camelCaseName, int32_t flags);
   protected:
     explicit nsHtml5ElementName(nsIAtom* name);

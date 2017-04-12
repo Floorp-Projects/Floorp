@@ -34,15 +34,15 @@
 # testing bindings that have multiple insertion points
 == multipleinsertionpoints-ref2.xhtml multipleinsertionpoints-ref2.xhtml
 # append a single element
-fails == multipleinsertionpoints-appendsingle-1.xhtml multipleinsertionpoints-appendsingle-1.xhtml
-fails == multipleinsertionpoints-appendsingle-2.xhtml multipleinsertionpoints-appendsingle-2.xhtml
+== multipleinsertionpoints-appendsingle-1.xhtml multipleinsertionpoints-appendsingle-1.xhtml
+== multipleinsertionpoints-appendsingle-2.xhtml multipleinsertionpoints-appendsingle-2.xhtml
 # append several elements
-fails == multipleinsertionpoints-appendmultiple.xhtml multipleinsertionpoints-appendmultiple.xhtml
+== multipleinsertionpoints-appendmultiple.xhtml multipleinsertionpoints-appendmultiple.xhtml
 # insert a single element
-fails == multipleinsertionpoints-insertsingle-1.xhtml multipleinsertionpoints-insertsingle-1.xhtml
-fails == multipleinsertionpoints-insertsingle-2.xhtml multipleinsertionpoints-insertsingle-2.xhtml
+== multipleinsertionpoints-insertsingle-1.xhtml multipleinsertionpoints-insertsingle-1.xhtml
+== multipleinsertionpoints-insertsingle-2.xhtml multipleinsertionpoints-insertsingle-2.xhtml
 # insert several elements
-fails == multipleinsertionpoints-insertmultiple.xhtml multipleinsertionpoints-insertmultiple.xhtml
+== multipleinsertionpoints-insertmultiple.xhtml multipleinsertionpoints-insertmultiple.xhtml
 
 # test appending some nodes whose frame construction should be done lazily
 # followed by appending a node that might not be done lazily

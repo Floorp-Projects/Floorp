@@ -7,6 +7,7 @@
 #include "compiler/translator/OutputGLSLBase.h"
 
 #include "common/debug.h"
+#include "common/mathutil.h"
 
 #include <cfloat>
 
@@ -109,6 +110,18 @@ void TOutputGLSLBase::writeInvariantQualifier(const TType &type)
     {
         TInfoSinkBase &out = objSink();
         out << "invariant ";
+    }
+}
+
+void TOutputGLSLBase::writeFloat(TInfoSinkBase &out, float f)
+{
+    if ((gl::isInf(f) || gl::isNaN(f)) && mShaderVersion >= 300)
+    {
+        out << "uintBitsToFloat(" << gl::bitCast<uint32_t>(f) << "u)";
+    }
+    else
+    {
+        out << std::min(FLT_MAX, std::max(-FLT_MAX, f));
     }
 }
 
@@ -329,8 +342,8 @@ const TConstantUnion *TOutputGLSLBase::writeConstantUnion(
             switch (pConstUnion->getType())
             {
               case EbtFloat:
-                out << std::min(FLT_MAX, std::max(-FLT_MAX, pConstUnion->getFConst()));
-                break;
+                  writeFloat(out, pConstUnion->getFConst());
+                  break;
               case EbtInt:
                 out << pConstUnion->getIConst();
                 break;

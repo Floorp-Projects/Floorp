@@ -124,18 +124,21 @@
               case "date":
                 let timeObj = new Date(node.time / 1000);
                 // Default is short date format.
-                let dtOptions = { year: 'numeric', month: 'numeric', day: 'numeric',
-                                  hour: 'numeric', minute: 'numeric' };
+                let dtOptions = {
+                  dateStyle: "short",
+                  timeStyle: "short"
+                };
+
                 // For today's visits we don't show date portion.
                 if (node.uri == "http://at.midnight.com/" ||
                     node.uri == "http://after.midnight.com/") {
-                  dtOptions = { hour: 'numeric', minute: 'numeric' };
+                  dtOptions.dateStyle = undefined;
                 } else if (node.uri != "http://before.midnight.com/") {
                   // Avoid to test spurious uris, due to how the test works
                   // a redirecting uri could be put in the tree while we test.
                   break;
                 }
-                let timeStr = timeObj.toLocaleString(undefined, dtOptions);
+                let timeStr = Services.intl.createDateTimeFormat(undefined, dtOptions).format(timeObj);
 
                 is(text, timeStr, "Date format is correct");
                 break;

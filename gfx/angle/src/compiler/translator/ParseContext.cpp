@@ -99,7 +99,7 @@ TParseContext::TParseContext(TSymbolTable &symt,
                         mShaderVersion,
                         mShaderType,
                         resources.WEBGL_debug_shader_precision == 1),
-      mPreprocessor(&mDiagnostics, &mDirectiveHandler),
+      mPreprocessor(&mDiagnostics, &mDirectiveHandler, pp::PreprocessorSettings()),
       mScanner(nullptr),
       mUsesFragData(false),
       mUsesFragColor(false),
@@ -1470,6 +1470,25 @@ TIntermTyped *TParseContext::parseVariableIdentifier(const TSourceLoc &location,
     {
         const TConstantUnion *constArray = variable->getConstPointer();
         return intermediate.addConstantUnion(constArray, variable->getType(), location);
+    }
+    else if (variable->getType().getQualifier() == EvqWorkGroupSize &&
+             mComputeShaderLocalSizeDeclared)
+    {
+        // gl_WorkGroupSize can be used to size arrays according to the ESSL 3.10.4 spec, so it
+        // needs to be added to the AST as a constant and not as a symbol.
+        sh::WorkGroupSize workGroupSize = getComputeShaderLocalSize();
+        TConstantUnion *constArray      = new TConstantUnion[3];
+        for (size_t i = 0; i < 3; ++i)
+        {
+            constArray[i].setUConst(static_cast<unsigned int>(workGroupSize[i]));
+        }
+
+        ASSERT(variable->getType().getBasicType() == EbtUInt);
+        ASSERT(variable->getType().getObjectSize() == 3);
+
+        TType type(variable->getType());
+        type.setQualifier(EvqConst);
+        return intermediate.addConstantUnion(constArray, type, location);
     }
     else
     {

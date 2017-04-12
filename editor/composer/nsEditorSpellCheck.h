@@ -70,10 +70,15 @@ protected:
 
   bool mUpdateDictionaryRunning;
 
-  nsresult TryDictionary(const nsAString& aDictName, nsTArray<nsString>& aDictList,
-                         enum dictCompare aCompareType);
+  void BuildDictionaryList(const nsAString& aDictName,
+                           const nsTArray<nsString>& aDictList,
+                           enum dictCompare aCompareType,
+                           nsTArray<nsString>& aTryList);
 
   nsresult DictionaryFetched(DictionaryFetcher* aFetchState);
+
+  void SetFallbackDictionary(DictionaryFetcher* aFetcher);
+
 
 public:
   void BeginUpdateDictionary() { mUpdateDictionaryRunning = true ;}

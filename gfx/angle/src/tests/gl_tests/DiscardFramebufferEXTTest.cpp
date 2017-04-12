@@ -24,21 +24,6 @@ protected:
     }
 };
 
-TEST_P(DiscardFramebufferEXTTest, ExtensionEnabled)
-{
-    EGLPlatformParameters platform = GetParam().eglParameters;
-
-    if (platform.renderer == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
-    {
-        EXPECT_TRUE(extensionEnabled("EXT_discard_framebuffer"));
-    }
-    else
-    {
-        // Other platforms don't currently implement this extension
-        EXPECT_FALSE(extensionEnabled("EXT_discard_framebuffer"));
-    }
-}
-
 TEST_P(DiscardFramebufferEXTTest, DefaultFramebuffer)
 {
     if (!extensionEnabled("EXT_discard_framebuffer"))
