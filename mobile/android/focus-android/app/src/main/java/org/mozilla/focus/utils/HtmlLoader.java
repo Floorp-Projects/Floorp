@@ -66,15 +66,15 @@ public class HtmlLoader {
     public static String loadPngAsDataURI(@NonNull final Context context,
                                           @NonNull final @DrawableRes int resourceID) {
 
+        final StringBuilder builder = new StringBuilder();
+        builder.append("data:image/png;base64,");
+
         // We are copying the approach BitmapFactory.decodeResource(Resources, int, Options)
         // uses - you are explicitly allowed to open Drawables, but the method has a @RawRes
         // annotation (despite officially supporting Drawables).
         //noinspection ResourceType
         final InputStream pngInputStream = context.getResources().openRawResource(resourceID);
         final BufferedReader reader = new BufferedReader(new InputStreamReader(pngInputStream));
-
-        final StringBuilder builder = new StringBuilder();
-        builder.append("data:image/png;base64,");
 
         try {
             // Base64 encodes 3 bytes at a time, make sure we have a multiple of 3 here
@@ -103,6 +103,12 @@ public class HtmlLoader {
             }
         } catch (IOException e) {
             throw new IllegalStateException("Unable to load png data");
+        } finally {
+            try {
+                reader.close();
+            } catch (IOException e) {
+                // Nothing to do here...
+            }
         }
 
         return  builder.toString();
