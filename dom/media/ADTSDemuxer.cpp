@@ -159,11 +159,12 @@ public:
   }
 
   // Returns whether the valid
-  bool Parse(int64_t aOffset, uint8_t* aStart, uint8_t* aEnd) {
+  bool Parse(int64_t aOffset, const uint8_t* aStart, const uint8_t* aEnd)
+  {
     MOZ_ASSERT(aStart && aEnd);
 
     bool found = false;
-    uint8_t* ptr = aStart;
+    const uint8_t* ptr = aStart;
     // Require at least 7 bytes of data at the end of the buffer for the minimum
     // ADTS frame header.
     while (ptr < aEnd - 7 && !found) {
@@ -216,7 +217,7 @@ public:
   // true if one was found. After returning, the variable passed to
   // 'aBytesToSkip' holds the amount of bytes to be skipped (if any) in order to
   // jump across a large ID3v2 tag spanning multiple buffers.
-  bool Parse(int64_t aOffset, uint8_t* aStart, uint8_t* aEnd)
+  bool Parse(int64_t aOffset, const uint8_t* aStart, const uint8_t* aEnd)
   {
     const bool found = mFrame.Parse(aOffset, aStart, aEnd);
 
