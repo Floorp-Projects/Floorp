@@ -532,6 +532,13 @@ CertPolicyId::IsAnyPolicy() const {
          std::equal(bytes, bytes + numBytes, ::mozilla::pkix::anyPolicy);
 }
 
+bool
+CertPolicyId::operator==(const CertPolicyId& other) const
+{
+  return numBytes == other.numBytes &&
+         std::equal(bytes, bytes + numBytes, other.bytes);
+}
+
 // certificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation
 Result
 CheckCertificatePolicies(EndEntityOrCA endEntityOrCA,

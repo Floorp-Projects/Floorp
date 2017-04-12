@@ -9,3 +9,9 @@
 <!ENTITY time.second.placeholder "--">
 <!ENTITY time.millisecond.placeholder "--">
 <!ENTITY time.dayperiod.placeholder "--">
+
+<!-- Placeholders for input type=date -->
+
+<!ENTITY date.year.placeholder "yyyy">
+<!ENTITY date.month.placeholder "mm">
+<!ENTITY date.day.placeholder "dd">

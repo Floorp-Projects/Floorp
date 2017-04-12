@@ -30,14 +30,13 @@ to mochitest command.
 ## Failures
 
 * Media query support:
-  * test_bug418986-2.html: matchMedia support [3]
-  * test_bug453896_deck.html: &lt;style media&gt; support [8]
-  * test_media_queries.html [637]
+  * test_bug418986-2.html: matchMedia support [6]
+  * test_media_queries.html [182]
   * test_media_queries_dynamic.html [11]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
-  * test_display_mode.html [7]
+  * test_display_mode.html [5]
   * test_display_mode_reflow.html [2]
 * test_all_shorthand.html: all shorthand servo/servo#15055 [*]
 * Animation support:
@@ -178,13 +177,10 @@ to mochitest command.
     * test_units_angle.html [3]
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
-  * place-{content,items,self} shorthands servo/servo#15954
+  * place-{content,items,self} shorthands servo/servo#16391
+    * test_property_syntax_errors `place-` [30]
     * test_align_shorthand_serialization.html [8]
-    * test_inherit_computation.html `place-` [6]
-    * test_inherit_storage.html `place-` [6]
-    * test_initial_computation.html `place-` [12]
-    * test_initial_storage.html `place-` [12]
-    * test_value_storage.html `place-` [132]
+    * test_value_storage.html `place-` [7]
   * font-variant-{alternates,east-asian,ligatures,numeric} properties servo/servo#15957
     * test_compute_data_with_start_struct.html `font-variant` [8]
     * test_inherit_computation.html `font-variant` [20]
@@ -208,8 +204,7 @@ to mochitest command.
     * test_value_storage.html `touch-action` [14]
 * Unimplemented SVG properties:
   * stroke properties
-    * test_value_storage.html `on 'stroke` [6]
-    * test_compute_data_with_start_struct.html `initial and other values of stroke-dasharray are different` [2]
+    * test_value_storage.html `on 'stroke` [5]
 * Properties implemented but not in geckolib:
   * contain longhand property bug 1354998
     * test_contain_formatting_context.html [1]
@@ -229,10 +224,6 @@ to mochitest command.
   * image-orientation property
     * test_value_storage.html `image-orientation` [40]
   * flexbox / grid position properties servo/servo#15001
-    * test_inherit_storage.html `align-` [3]
-    * ... `justify-` [3]
-    * test_initial_storage.html `align-` [6]
-    * ... `justify-` [6]
     * test_value_storage.html `align-` [9]
     * ... `justify-` [14]
 * Stylesheet cloning is somehow busted bug 1348481
@@ -261,10 +252,6 @@ to mochitest command.
   * moz-prefixed values of overflow shorthand bug 1330888
     * test_bug319381.html [8]
     * test_value_storage.html `'overflow` [8]
-  * -moz-middle-with-baseline on vertical-align
-    * test_value_storage.html `-moz-middle-with-baseline` [1]
-  * -moz-pre-space on white-space
-    * test_value_storage.html `-moz-pre-space` [1]
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
   * test_pixel_lengths.html `mozmm`: mozmm unit [3]
@@ -373,7 +360,6 @@ to mochitest command.
 * test_pseudoelement_parsing.html: support parsing some pseudo-classes on some pseudo-elements [5]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
-  * test_page_parser.html `2in` [8]
 * insertRule / deleteRule don't work bug 1336863
   * test_rule_insertion.html [5]
 * @-moz-document support

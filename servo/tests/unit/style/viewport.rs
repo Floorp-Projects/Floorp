@@ -7,10 +7,11 @@ use euclid::size::TypedSize2D;
 use media_queries::CSSErrorReporterTest;
 use servo_config::prefs::{PREFS, PrefValue};
 use servo_url::ServoUrl;
-use style::media_queries::{Device, MediaType};
+use std::sync::Arc;
+use style::media_queries::{Device, MediaList, MediaType};
 use style::parser::{Parse, ParserContext};
 use style::shared_lock::SharedRwLock;
-use style::stylesheets::{Stylesheet, Origin};
+use style::stylesheets::{CssRuleType, Stylesheet, Origin};
 use style::values::specified::LengthOrPercentageOrAuto::{self, Auto};
 use style::values::specified::NoCalcLength::{self, ViewportPercentage};
 use style::values::specified::ViewportPercentageLength::Vw;
@@ -27,7 +28,7 @@ macro_rules! stylesheet {
             $css,
             ServoUrl::parse("http://localhost").unwrap(),
             Origin::$origin,
-            Default::default(),
+            Arc::new($shared_lock.wrap(MediaList::empty())),
             $shared_lock,
             None,
             &$error_reporter
@@ -290,7 +291,7 @@ fn multiple_stylesheets_cascading() {
 fn constrain_viewport() {
     let url = ServoUrl::parse("http://localhost").unwrap();
     let reporter = CSSErrorReporterTest;
-    let context = ParserContext::new(Origin::Author, &url, &reporter);
+    let context = ParserContext::new(Origin::Author, &url, &reporter, Some(CssRuleType::Viewport));
 
     macro_rules! from_css {
         ($css:expr) => {

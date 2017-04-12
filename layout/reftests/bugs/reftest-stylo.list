@@ -1394,7 +1394,7 @@ fuzzy-if(skiaContent,1,17000) == 498228-1.xul 498228-1.xul
 == 501257-1a.html 501257-1a.html
 == 501257-1b.html 501257-1b.html
 == 501257-1.xhtml 501257-1.xhtml
-fails == 501627-1.html 501627-1.html
+== 501627-1.html 501627-1.html
 == 502288-1.html 502288-1.html
 fails == 502447-1.html 502447-1.html
 == 502795-1.html 502795-1.html
@@ -1757,7 +1757,7 @@ fails == 814952-1.html 814952-1.html
 fails == 815593-1.html 815593-1.html
 == 816359-1.html 816359-1.html
 == 816458-1.html 816458-1.html
-fails == 816948-1.html 816948-1.html
+== 816948-1.html 816948-1.html
 == 817019-1.html 817019-1.html
 fails == 818276-1.html 818276-1.html
 fails == 825999.html 825999.html

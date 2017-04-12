@@ -288,24 +288,19 @@
 <!-- Containers -->
 <groupbox id="browserContainersGroup" data-category="panePrivacy" hidden="true">
   <vbox id="browserContainersbox" hidden="true">
-    <caption><label>&browserContainersHeader.label;
+    <caption><label>&browserContainersHeader.label;</label></caption>
+    <hbox align="center">
+      <checkbox id="browserContainersCheckbox"
+                label="&browserContainersEnabled.label;"
+                accesskey="&browserContainersEnabled.accesskey;"
+                preference="privacy.userContext.enabled"
+                onsyncfrompreference="return gPrivacyPane.readBrowserContainersCheckbox();"/>
       <label id="browserContainersLearnMore" class="learnMore text-link"
              value="&browserContainersLearnMore.label;"/>
-    </label></caption>
-    <hbox align="start">
-      <vbox>
-        <checkbox id="browserContainersCheckbox"
-                  label="&browserContainersEnabled.label;"
-                  accesskey="&browserContainersEnabled.accesskey;"
-                  preference="privacy.userContext.enabled"
-                  onsyncfrompreference="return gPrivacyPane.readBrowserContainersCheckbox();"/>
-      </vbox>
       <spacer flex="1"/>
-      <vbox>
-        <button id="browserContainersSettings"
-                label="&browserContainersSettings.label;"
-                accesskey="&browserContainersSettings.accesskey;"/>
-      </vbox>
+      <button id="browserContainersSettings"
+              label="&browserContainersSettings.label;"
+              accesskey="&browserContainersSettings.accesskey;"/>
     </hbox>
   </vbox>
 </groupbox>

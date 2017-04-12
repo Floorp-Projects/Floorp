@@ -81,6 +81,12 @@
         "svgr-e10s": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart", "tsvg_static"]
         },
+        "perf-reftest": {
+            "tests": ["bloom_basic", "bloom_basic_ref"]
+        },
+        "perf-reftest-e10s": {
+            "tests": ["bloom_basic", "bloom_basic_ref"]
+        },
         "tp5o": {
             "tests": ["tp5o"],
             "pagesets_name": "tp5n.zip",

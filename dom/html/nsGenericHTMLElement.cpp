@@ -1522,36 +1522,13 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
   if (!aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Background)))
     return;
 
-  if (aData->IsServo()) {
-    // FIXME(bug 1339711)
-    NS_WARNING("stylo: cannot handle background presentation attribute");
-    return;
-  }
-
-  nsPresContext* presContext = aData->PresContext();
-
   if (!aData->PropertyIsSet(eCSSProperty_background_image) &&
-      presContext->UseDocumentColors()) {
+      aData->PresContext()->UseDocumentColors()) {
     // background
     nsAttrValue* value =
       const_cast<nsAttrValue*>(aAttributes->GetAttr(nsGkAtoms::background));
     if (value) {
-      nsRuleData* aRuleData = aData->AsGecko();
-      // Gecko-specific code
-      // Gecko caches the image on the attr directly, but we need not
-      // do the same thing for Servo.
-      if (aRuleData) {
-        nsCSSValue* backImage = aRuleData->ValueForBackgroundImage();
-        // If the value is an image, or it is a URL and we attempted a load,
-        // put it in the style tree.
-        if (value->Type() == nsAttrValue::eURL) {
-          value->LoadImage(presContext->Document());
-        }
-        if (value->Type() == nsAttrValue::eImage) {
-          nsCSSValueList* list = backImage->SetListValue();
-          list->mValue.SetImageValue(value->GetImageValue());
-        }
-      }
+      aData->SetBackgroundImage(*value);
     }
   }
 }

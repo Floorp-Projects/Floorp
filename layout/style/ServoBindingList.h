@@ -29,6 +29,7 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetStrong,
                    mozilla::ServoStyleSheet* gecko_stylesheet,
                    const nsACString* data,
                    mozilla::css::SheetParsingMode parsing_mode,
+                   const RawServoMediaList* media_list,
                    RawGeckoURLExtraData* extra_data)
 SERVO_BINDING_FUNC(Servo_ImportRule_GetSheet,
                    RawServoStyleSheetStrong,
@@ -143,6 +144,10 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_ExtractAnimationValue,
                    RawServoAnimationValueStrong,
                    ServoComputedValuesBorrowed computed_values,
                    nsCSSPropertyID property)
+SERVO_BINDING_FUNC(Servo_Property_IsAnimatable, bool,
+                   nsCSSPropertyID property)
+SERVO_BINDING_FUNC(Servo_Property_IsDiscreteAnimatable, bool,
+                   nsCSSPropertyID property)
 
 // AnimationValues handling
 SERVO_BINDING_FUNC(Servo_AnimationValues_Interpolate,
@@ -150,6 +155,9 @@ SERVO_BINDING_FUNC(Servo_AnimationValues_Interpolate,
                    RawServoAnimationValueBorrowed from,
                    RawServoAnimationValueBorrowed to,
                    double progress)
+SERVO_BINDING_FUNC(Servo_AnimationValues_IsInterpolable, bool,
+                   RawServoAnimationValueBorrowed from,
+                   RawServoAnimationValueBorrowed to)
 SERVO_BINDING_FUNC(Servo_AnimationValue_Serialize, void,
                    RawServoAnimationValueBorrowed value,
                    nsCSSPropertyID property,
@@ -162,6 +170,9 @@ SERVO_BINDING_FUNC(Servo_AnimationValue_GetTransform, void,
 SERVO_BINDING_FUNC(Servo_AnimationValue_DeepEqual, bool,
                    RawServoAnimationValueBorrowed,
                    RawServoAnimationValueBorrowed)
+SERVO_BINDING_FUNC(Servo_AnimationValue_Uncompute,
+                   RawServoDeclarationBlockStrong,
+                   RawServoAnimationValueBorrowed value)
 
 // Style attribute
 SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, RawServoDeclarationBlockStrong,
@@ -240,6 +251,15 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetPixelValue, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsCSSPropertyID property,
                    float value)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetLengthValue, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsCSSPropertyID property,
+                   float value,
+                   nsCSSUnit unit)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetNumberValue, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsCSSPropertyID property,
+                   float value)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetPercentValue, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsCSSPropertyID property,
@@ -259,8 +279,18 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetFontFamily, void,
                    const nsAString& value)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetTextDecorationColorOverride, void,
                    RawServoDeclarationBlockBorrowed declarations)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetBackgroundImage, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   const nsAString& value,
+                   RawGeckoURLExtraData* extra_data)
 
 // MediaList
+SERVO_BINDING_FUNC(Servo_MediaList_Create, RawServoMediaListStrong)
+SERVO_BINDING_FUNC(Servo_MediaList_DeepClone, RawServoMediaListStrong,
+                   RawServoMediaListBorrowed list)
+SERVO_BINDING_FUNC(Servo_MediaList_Matches, bool,
+                   RawServoMediaListBorrowed list,
+                   RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_MediaList_GetText, void,
                    RawServoMediaListBorrowed list, nsAString* result)
 SERVO_BINDING_FUNC(Servo_MediaList_SetText, void,

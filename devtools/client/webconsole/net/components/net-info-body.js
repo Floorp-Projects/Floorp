@@ -4,7 +4,7 @@
 "use strict";
 
 const React = require("devtools/client/shared/vendor/react");
-const { createFactories } = require("devtools/client/shared/components/reps/reps");
+const { createFactories } = require("devtools/client/shared/react-utils");
 const { Tabs, TabPanel } = createFactories(require("devtools/client/shared/components/tabs/tabs"));
 
 // Network

@@ -69,6 +69,19 @@ ServoSpecifiedValues::SetPixelValue(nsCSSPropertyID aId, float aValue)
 }
 
 void
+ServoSpecifiedValues::SetLengthValue(nsCSSPropertyID aId, nsCSSValue aValue)
+{
+  MOZ_ASSERT(aValue.IsLengthUnit());
+  Servo_DeclarationBlock_SetLengthValue(mDecl, aId, aValue.GetFloatValue(), aValue.GetUnit());
+}
+
+void
+ServoSpecifiedValues::SetNumberValue(nsCSSPropertyID aId, float aValue)
+{
+  Servo_DeclarationBlock_SetNumberValue(mDecl, aId, aValue);
+}
+
+void
 ServoSpecifiedValues::SetPercentValue(nsCSSPropertyID aId, float aValue)
 {
   Servo_DeclarationBlock_SetPercentValue(mDecl, aId, aValue);
@@ -102,4 +115,15 @@ void
 ServoSpecifiedValues::SetTextDecorationColorOverride()
 {
   Servo_DeclarationBlock_SetTextDecorationColorOverride(mDecl);
+}
+
+void
+ServoSpecifiedValues::SetBackgroundImage(nsAttrValue& aValue)
+{
+  // FIXME (bug 1310885) this should store resolved images directly on the servo
+  // side.
+  nsAutoString str;
+  aValue.ToString(str);
+  Servo_DeclarationBlock_SetBackgroundImage(mDecl, str,
+        mPresContext->Document()->DefaultStyleAttrURLData());
 }

@@ -6,7 +6,7 @@
 // It is expected that the test files importing this file define Cu etc.
 /* global Cu, Ci, Cc, Cr */
 
-const CURRENT_SCHEMA_VERSION = 36;
+const CURRENT_SCHEMA_VERSION = 37;
 const FIRST_UPGRADABLE_SCHEMA_VERSION = 11;
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
@@ -819,23 +819,6 @@ function promiseIsURIVisited(aURI) {
   return deferred.promise;
 }
 
-/**
- * Asynchronously set the favicon associated with a page.
- * @param aPageURI
- *        The page's URI
- * @param aIconURI
- *        The URI of the favicon to be set.
- */
-function promiseSetIconForPage(aPageURI, aIconURI) {
-  let deferred = Promise.defer();
-  PlacesUtils.favicons.setAndFetchFaviconForPage(
-    aPageURI, aIconURI, true,
-    PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-    () => { deferred.resolve(); },
-    Services.scriptSecurityManager.getSystemPrincipal());
-  return deferred.promise;
-}
-
 function checkBookmarkObject(info) {
   do_check_valid_places_guid(info.guid);
   do_check_valid_places_guid(info.parentGuid);
@@ -872,4 +855,74 @@ function compareAscending(a, b) {
 
 function sortBy(array, prop) {
   return array.sort((a, b) => compareAscending(a[prop], b[prop]));
+}
+
+/**
+ * Asynchronously set the favicon associated with a page.
+ * @param page
+ *        The page's URL
+ * @param icon
+ *        The URL of the favicon to be set.
+ */
+function setFaviconForPage(page, icon) {
+  let pageURI = page instanceof Ci.nsIURI ? page
+                                          : NetUtil.newURI(new URL(page).href);
+  let iconURI = icon instanceof Ci.nsIURI ? icon
+                                          : NetUtil.newURI(new URL(icon).href);
+  return new Promise(resolve => {
+    PlacesUtils.favicons.setAndFetchFaviconForPage(
+      pageURI, iconURI, true,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+      resolve,
+      Services.scriptSecurityManager.getSystemPrincipal()
+    );
+  });
+}
+
+function getFaviconUrlForPage(page, width = 0) {
+  let pageURI = page instanceof Ci.nsIURI ? page
+                                          : NetUtil.newURI(new URL(page).href);
+  return new Promise(resolve => {
+    PlacesUtils.favicons.getFaviconURLForPage(pageURI, iconURI => {
+      resolve(iconURI.spec);
+    }, width);
+  });
+}
+
+function getFaviconDataForPage(page, width = 0) {
+  let pageURI = page instanceof Ci.nsIURI ? page
+                                          : NetUtil.newURI(new URL(page).href);
+  return new Promise(resolve => {
+    PlacesUtils.favicons.getFaviconDataForPage(pageURI, (iconUri, len, data, mimeType) => {
+      resolve({ data, mimeType });
+    }, width);
+  });
+}
+
+/**
+ * Asynchronously compares contents from 2 favicon urls.
+ */
+function* compareFavicons(icon1, icon2, msg) {
+  icon1 = new URL(icon1 instanceof Ci.nsIURI ? icon1.spec : icon1);
+  icon2 = new URL(icon2 instanceof Ci.nsIURI ? icon2.spec : icon2);
+
+  function getIconData(icon) {
+    return new Promise((resolve, reject) => {
+      NetUtil.asyncFetch({
+        uri: icon.href, loadUsingSystemPrincipal: true,
+        contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON
+      }, function(inputStream, status) {
+          if (!Components.isSuccessCode(status))
+            reject();
+          let size = inputStream.available();
+          resolve(NetUtil.readInputStreamToString(inputStream, size));
+      });
+    });
+  }
+
+  let data1 = yield getIconData(icon1);
+  Assert.ok(data1.length > 0, "Should fetch icon data");
+  let data2 = yield getIconData(icon2);
+  Assert.ok(data2.length > 0, "Should fetch icon data");
+  Assert.deepEqual(data1, data2, msg);
 }

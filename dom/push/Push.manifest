@@ -5,7 +5,7 @@ contract @mozilla.org/push/PushManager;1 {cde1d019-fad8-4044-b141-65fb4fb7a245}
 # XPCOM components.
 component {daaa8d73-677e-4233-8acd-2c404bd01658} PushComponents.js
 contract @mozilla.org/push/Service;1 {daaa8d73-677e-4233-8acd-2c404bd01658}
-category app-startup PushServiceParent @mozilla.org/push/Service;1
+category app-startup PushServiceParent @mozilla.org/push/Service;1 process=main
 
 # For immediate loading of PushService instead of delayed loading.
-category android-push-service PushServiceParent @mozilla.org/push/Service;1
+category android-push-service PushServiceParent @mozilla.org/push/Service;1 process=main
