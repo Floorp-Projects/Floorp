@@ -415,6 +415,12 @@ public class Tokenizer implements Locator {
     protected boolean endTag;
 
     /**
+     * <code>true</code> iff the current element/attribute name contains
+     * a hyphen.
+     */
+    private boolean containsHyphen;
+
+    /**
      * The current tag token name. One of
      * 1) null,
      * 2) non-owning reference to nonInternedTagName
@@ -525,6 +531,7 @@ public class Tokenizer implements Locator {
         this.charRefBuf = new char[32];
         this.bmpChar = new char[1];
         this.astralChar = new char[2];
+        this.containsHyphen = false;
         this.tagName = null;
         this.nonInternedTagName = new ElementName();
         this.attributeName = null;
@@ -555,6 +562,7 @@ public class Tokenizer implements Locator {
         this.charRefBuf = new char[32];
         this.bmpChar = new char[1];
         this.astralChar = new char[2];
+        this.containsHyphen = false;
         this.tagName = null;
         this.nonInternedTagName = new ElementName();
         this.attributeName = null;
@@ -1101,13 +1109,26 @@ public class Tokenizer implements Locator {
     }
 
     private void strBufToElementNameString() {
-        tagName = ElementName.elementNameByBuffer(strBuf, 0, strBufLen,
-                interner);
-        if (tagName == null) {
-            nonInternedTagName.setNameForNonInterned(Portability.newLocalNameFromBuffer(strBuf, 0, strBufLen,
-                interner));
-            tagName = nonInternedTagName;
+        if (containsHyphen) {
+            // We've got a custom element or annotation-xml.
+            @Local String annotationName = ElementName.ANNOTATION_XML.getName();
+            if (Portability.localEqualsBuffer(annotationName, strBuf, 0, strBufLen)) {
+                tagName = ElementName.ANNOTATION_XML;
+            } else {
+                nonInternedTagName.setNameForNonInterned(Portability.newLocalNameFromBuffer(strBuf, 0, strBufLen,
+                        interner));
+                tagName = nonInternedTagName;
+            }
+        } else {
+            tagName = ElementName.elementNameByBuffer(strBuf, 0, strBufLen,
+                    interner);
+            if (tagName == null) {
+                nonInternedTagName.setNameForNonInterned(Portability.newLocalNameFromBuffer(strBuf, 0, strBufLen,
+                    interner));
+                tagName = nonInternedTagName;
+            }
         }
+        containsHyphen = false;
         clearStrBufAfterUse();
     }
 
@@ -1558,6 +1579,7 @@ public class Tokenizer implements Locator {
                              */
                             clearStrBufBeforeUse();
                             appendStrBuf((char) (c + 0x20));
+                            containsHyphen = false;
                             /* then switch to the tag name state. */
                             state = transition(state, Tokenizer.TAG_NAME, reconsume, pos);
                             /*
@@ -1578,6 +1600,7 @@ public class Tokenizer implements Locator {
                              */
                             clearStrBufBeforeUse();
                             appendStrBuf(c);
+                            containsHyphen = false;
                             /* then switch to the tag name state. */
                             state = transition(state, Tokenizer.TAG_NAME, reconsume, pos);
                             /*
@@ -1721,6 +1744,8 @@ public class Tokenizer implements Locator {
                                      * tag name.
                                      */
                                     c += 0x20;
+                                } else if (c == '-') {
+                                    containsHyphen = true;
                                 }
                                 /*
                                  * Anything else Append the current input
@@ -3622,6 +3647,7 @@ public class Tokenizer implements Locator {
                                  */
                                 clearStrBufBeforeUse();
                                 appendStrBuf(c);
+                                containsHyphen = false;
                                 /*
                                  * then switch to the tag name state. (Don't
                                  * emit the token yet; further details will be
@@ -6734,6 +6760,7 @@ public class Tokenizer implements Locator {
         endTag = false;
         shouldSuspend = false;
         initDoctypeFields();
+        containsHyphen = false;
         if (tagName != null) {
             tagName = null;
         }
@@ -6800,6 +6827,7 @@ public class Tokenizer implements Locator {
             publicIdentifier = Portability.newStringFromString(other.publicIdentifier);
         }
 
+        containsHyphen = other.containsHyphen;
         if (other.tagName == null) {
             tagName = null;
         } else if (other.tagName.isInterned()) {
