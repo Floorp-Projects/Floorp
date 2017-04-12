@@ -75,7 +75,8 @@ HTMLSourceElement::WouldMatchMediaForDocument(const nsAString& aMedia,
   nsIPresShell* presShell = aDocument->GetShell();
   nsPresContext* pctx = presShell ? presShell->GetPresContext() : nullptr;
 
-  RefPtr<MediaList> mediaList = MediaList::Create(*aDocument, aMedia);
+  RefPtr<MediaList> mediaList =
+    MediaList::Create(aDocument->GetStyleBackendType(), aMedia);
   return pctx && mediaList->Matches(*pctx, nullptr);
 }
 
@@ -89,7 +90,7 @@ HTMLSourceElement::UpdateMediaList(const nsAttrValue* aValue)
   }
 
   nsCSSParser cssParser;
-  mMediaList = MediaList::Create(*OwnerDoc(), mediaStr);
+  mMediaList = MediaList::Create(OwnerDoc()->GetStyleBackendType(), mediaStr);
 }
 
 nsresult
