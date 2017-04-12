@@ -77,25 +77,25 @@ Thread::GetCurrentId()
 }
 
 static void
-FillInSample(TickSample* aSample, ucontext_t* aContext)
+FillInSample(TickSample& aSample, ucontext_t* aContext)
 {
-  aSample->mContext = aContext;
+  aSample.mContext = aContext;
   mcontext_t& mcontext = aContext->uc_mcontext;
 
   // Extracting the sample from the context is extremely machine dependent.
 #if defined(GP_ARCH_x86)
-  aSample->mPC = reinterpret_cast<Address>(mcontext.gregs[REG_EIP]);
-  aSample->mSP = reinterpret_cast<Address>(mcontext.gregs[REG_ESP]);
-  aSample->mFP = reinterpret_cast<Address>(mcontext.gregs[REG_EBP]);
+  aSample.mPC = reinterpret_cast<Address>(mcontext.gregs[REG_EIP]);
+  aSample.mSP = reinterpret_cast<Address>(mcontext.gregs[REG_ESP]);
+  aSample.mFP = reinterpret_cast<Address>(mcontext.gregs[REG_EBP]);
 #elif defined(GP_ARCH_amd64)
-  aSample->mPC = reinterpret_cast<Address>(mcontext.gregs[REG_RIP]);
-  aSample->mSP = reinterpret_cast<Address>(mcontext.gregs[REG_RSP]);
-  aSample->mFP = reinterpret_cast<Address>(mcontext.gregs[REG_RBP]);
+  aSample.mPC = reinterpret_cast<Address>(mcontext.gregs[REG_RIP]);
+  aSample.mSP = reinterpret_cast<Address>(mcontext.gregs[REG_RSP]);
+  aSample.mFP = reinterpret_cast<Address>(mcontext.gregs[REG_RBP]);
 #elif defined(GP_ARCH_arm)
-  aSample->mPC = reinterpret_cast<Address>(mcontext.arm_pc);
-  aSample->mSP = reinterpret_cast<Address>(mcontext.arm_sp);
-  aSample->mFP = reinterpret_cast<Address>(mcontext.arm_fp);
-  aSample->mLR = reinterpret_cast<Address>(mcontext.arm_lr);
+  aSample.mPC = reinterpret_cast<Address>(mcontext.arm_pc);
+  aSample.mSP = reinterpret_cast<Address>(mcontext.arm_sp);
+  aSample.mFP = reinterpret_cast<Address>(mcontext.arm_fp);
+  aSample.mLR = reinterpret_cast<Address>(mcontext.arm_lr);
 #else
 # error "bad platform"
 #endif
@@ -357,13 +357,13 @@ SamplerThread::Stop(PS::LockRef aLock)
 
 void
 SamplerThread::SuspendAndSampleAndResumeThread(PS::LockRef aLock,
-                                               TickSample* aSample)
+                                               TickSample& aSample)
 {
   // Only one sampler thread can be sampling at once.  So we expect to have
   // complete control over |sSigHandlerCoordinator|.
   MOZ_ASSERT(!sSigHandlerCoordinator);
 
-  int sampleeTid = aSample->mThreadId;
+  int sampleeTid = aSample.mThreadId;
   MOZ_RELEASE_ASSERT(sampleeTid != mSamplerTid);
 
   //----------------------------------------------------------------//
@@ -509,7 +509,7 @@ TickSample::PopulateContext(ucontext_t* aContext)
   MOZ_ASSERT(aContext);
 
   if (!getcontext(aContext)) {
-    FillInSample(this, aContext);
+    FillInSample(*this, aContext);
   }
 }
 
