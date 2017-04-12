@@ -9,7 +9,7 @@ from itertools import izip_longest
 from pkg_resources import resource_string
 import re
 
-from compare_locales.parser import getParser
+from compare_locales import parser
 
 
 class ParserTestMixin():
@@ -20,7 +20,7 @@ class ParserTestMixin():
     def setUp(self):
         '''Create a parser for this test.
         '''
-        self.parser = getParser(self.filename)
+        self.parser = parser.getParser(self.filename)
 
     def tearDown(self):
         'tear down this test'
@@ -38,12 +38,13 @@ class ParserTestMixin():
         of reference keys and values.
         '''
         self.parser.readContents(content)
-        entities = [entity for entity in self.parser]
+        entities = list(self.parser.walk())
         for entity, ref in izip_longest(entities, refs):
-            self.assertTrue(entity, 'excess reference entity')
-            self.assertTrue(ref, 'excess parsed entity')
-            self.assertEqual(entity.val, ref[1])
-            if ref[0].startswith('_junk'):
-                self.assertTrue(re.match(ref[0], entity.key))
-            else:
+            self.assertTrue(entity, 'excess reference entity ' + unicode(ref))
+            self.assertTrue(ref, 'excess parsed entity ' + unicode(entity))
+            if isinstance(entity, parser.Entity):
                 self.assertEqual(entity.key, ref[0])
+                self.assertEqual(entity.val, ref[1])
+            else:
+                self.assertEqual(type(entity).__name__, ref[0])
+                self.assertIn(ref[1], entity.all)
