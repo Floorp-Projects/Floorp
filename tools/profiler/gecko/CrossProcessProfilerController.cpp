@@ -162,7 +162,8 @@ CrossProcessProfilerController::Observe(nsISupports* aSubject,
 // This is called in response to a SendGatherProfile request, or when the
 // other process exits while the profiler is running.
 void
-CrossProcessProfilerController::RecvProfile(const nsCString& aProfile)
+CrossProcessProfilerController::RecvProfile(const nsCString& aProfile,
+                                            bool aIsExitProfile)
 {
   // Store the profile on this object.
   mProfile = aProfile;

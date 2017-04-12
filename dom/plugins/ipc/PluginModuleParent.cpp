@@ -3261,11 +3261,12 @@ PluginModuleChromeParent::OnCrash(DWORD processID)
 #endif // MOZ_CRASHREPORTER_INJECTOR
 
 mozilla::ipc::IPCResult
-PluginModuleChromeParent::RecvProfile(const nsCString& aProfile)
+PluginModuleChromeParent::RecvProfile(const nsCString& aProfile,
+                                      const bool& aIsExitProfile)
 {
 #ifdef MOZ_GECKO_PROFILER
     if (mProfilerController) {
-        mProfilerController->RecvProfile(aProfile);
+        mProfilerController->RecvProfile(aProfile, aIsExitProfile);
     }
 #endif
     return IPC_OK();
