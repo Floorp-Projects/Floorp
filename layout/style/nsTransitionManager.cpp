@@ -725,25 +725,31 @@ nsTransitionManager::UpdateTransitions(
 static Keyframe&
 AppendKeyframe(double aOffset,
                nsCSSPropertyID aProperty,
-               StyleAnimationValue&& aValue,
+               AnimationValue&& aValue,
                nsTArray<Keyframe>& aKeyframes)
 {
   Keyframe& frame = *aKeyframes.AppendElement();
   frame.mOffset.emplace(aOffset);
   PropertyValuePair& pv = *frame.mPropertyValues.AppendElement();
   pv.mProperty = aProperty;
-  DebugOnly<bool> uncomputeResult =
-    StyleAnimationValue::UncomputeValue(aProperty, Move(aValue), pv.mValue);
-  MOZ_ASSERT(uncomputeResult,
-             "Unable to get specified value from computed value");
+
+  if (aValue.mServo) {
+    pv.mServoDeclarationBlock =
+      Servo_AnimationValue_Uncompute(aValue.mServo).Consume();
+  } else {
+    DebugOnly<bool> uncomputeResult =
+      StyleAnimationValue::UncomputeValue(aProperty, Move(aValue.mGecko),
+                                          pv.mValue);
+    MOZ_ASSERT(uncomputeResult,
+               "Unable to get specified value from computed value");
+  }
   return frame;
 }
 
 static nsTArray<Keyframe>
 GetTransitionKeyframes(nsCSSPropertyID aProperty,
-                       nsStyleContext* aStyleContext,
-                       StyleAnimationValue&& aStartValue,
-                       StyleAnimationValue&& aEndValue,
+                       AnimationValue&& aStartValue,
+                       AnimationValue&& aEndValue,
                        const nsTimingFunction& aTimingFunction)
 {
   nsTArray<Keyframe> keyframes(2);
@@ -798,12 +804,14 @@ nsTransitionManager::ConsiderInitiatingTransition(
 
   dom::DocumentTimeline* timeline = aElement->OwnerDoc()->Timeline();
 
-  StyleAnimationValue startValue, endValue, dummyValue;
+  AnimationValue startValue, endValue, dummyValue;
   bool haveValues =
-    ExtractNonDiscreteComputedValue(aProperty, aOldStyleContext, startValue) &&
-    ExtractNonDiscreteComputedValue(aProperty, aNewStyleContext, endValue);
+    ExtractNonDiscreteComputedValue(aProperty, aOldStyleContext,
+                                    startValue.mGecko) &&
+    ExtractNonDiscreteComputedValue(aProperty, aNewStyleContext,
+                                    endValue.mGecko);
 
-  bool haveChange = startValue != endValue;
+  bool haveChange = startValue.mGecko != endValue.mGecko;
 
   bool shouldAnimate =
     haveValues &&
@@ -811,8 +819,11 @@ nsTransitionManager::ConsiderInitiatingTransition(
     // Check that we can interpolate between these values
     // (If this is ever a performance problem, we could add a
     // CanInterpolate method, but it seems fine for now.)
-    StyleAnimationValue::Interpolate(aProperty, startValue, endValue,
-                                     0.5, dummyValue);
+    StyleAnimationValue::Interpolate(aProperty,
+                                     startValue.mGecko,
+                                     endValue.mGecko,
+                                     0.5,
+                                     dummyValue.mGecko);
 
   bool haveCurrentTransition = false;
   size_t currentIndex = nsTArray<ElementPropertyTransition>::NoIndex;
@@ -846,7 +857,8 @@ nsTransitionManager::ConsiderInitiatingTransition(
   // a new transition for the reasons described in
   // https://lists.w3.org/Archives/Public/www-style/2015Jan/0444.html .
   if (haveCurrentTransition && haveValues &&
-      aElementTransitions->mAnimations[currentIndex]->ToValue() == endValue) {
+      aElementTransitions->mAnimations[currentIndex]->ToValue() ==
+        endValue.mGecko) {
     // GetAnimationRule already called RestyleForAnimation.
     return;
   }
@@ -888,7 +900,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
     duration = 0.0;
   }
 
-  StyleAnimationValue startForReversingTest = startValue;
+  AnimationValue startForReversingTest = startValue;
   double reversePortion = 1.0;
 
   // If the new transition reverses an existing one, we'll need to
@@ -899,7 +911,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
   if (haveCurrentTransition &&
       aElementTransitions->mAnimations[currentIndex]->HasCurrentEffect() &&
       oldPT &&
-      oldPT->mStartForReversingTest == endValue) {
+      oldPT->mStartForReversingTest == endValue.mGecko) {
     // Compute the appropriate negative transition-delay such that right
     // now we'd end up at the current position.
     double valuePortion =
@@ -930,7 +942,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
 
     duration *= valuePortion;
 
-    startForReversingTest = oldPT->ToValue();
+    startForReversingTest.mGecko = oldPT->ToValue();
     reversePortion = valuePortion;
   }
 
@@ -946,10 +958,10 @@ nsTransitionManager::ConsiderInitiatingTransition(
   KeyframeEffectParams effectOptions;
   RefPtr<ElementPropertyTransition> pt =
     new ElementPropertyTransition(aElement->OwnerDoc(), target, timing,
-                                  startForReversingTest, reversePortion,
+                                  startForReversingTest.mGecko, reversePortion,
                                   effectOptions);
 
-  pt->SetKeyframes(GetTransitionKeyframes(aNewStyleContext, aProperty,
+  pt->SetKeyframes(GetTransitionKeyframes(aProperty,
                                           Move(startValue), Move(endValue), tf),
                    aNewStyleContext);
 
