@@ -578,13 +578,16 @@ DisplayListBuilder::PushLinearGradient(const WrRect& aBounds,
                                        const WrPoint& aStartPoint,
                                        const WrPoint& aEndPoint,
                                        const nsTArray<WrGradientStop>& aStops,
-                                       wr::GradientExtendMode aExtendMode)
+                                       wr::GradientExtendMode aExtendMode,
+                                       const WrSize aTileSize,
+                                       const WrSize aTileSpacing)
 {
   wr_dp_push_linear_gradient(mWrState,
                              aBounds, aClip,
                              aStartPoint, aEndPoint,
                              aStops.Elements(), aStops.Length(),
-                             aExtendMode);
+                             aExtendMode,
+                             aTileSize, aTileSpacing);
 }
 
 void
@@ -593,13 +596,16 @@ DisplayListBuilder::PushRadialGradient(const WrRect& aBounds,
                                        const WrPoint& aCenter,
                                        const WrSize& aRadius,
                                        const nsTArray<WrGradientStop>& aStops,
-                                       wr::GradientExtendMode aExtendMode)
+                                       wr::GradientExtendMode aExtendMode,
+                                       const WrSize aTileSize,
+                                       const WrSize aTileSpacing)
 {
   wr_dp_push_radial_gradient(mWrState,
                              aBounds, aClip,
                              aCenter, aRadius,
                              aStops.Elements(), aStops.Length(),
-                             aExtendMode);
+                             aExtendMode,
+                             aTileSize, aTileSpacing);
 }
 
 void

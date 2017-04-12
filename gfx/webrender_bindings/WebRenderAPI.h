@@ -162,14 +162,18 @@ public:
                           const WrPoint& aStartPoint,
                           const WrPoint& aEndPoint,
                           const nsTArray<WrGradientStop>& aStops,
-                          wr::GradientExtendMode aExtendMode);
+                          wr::GradientExtendMode aExtendMode,
+                          const WrSize aTileSize,
+                          const WrSize aTileSpacing);
 
   void PushRadialGradient(const WrRect& aBounds,
                           const WrClipRegion& aClip,
                           const WrPoint& aCenter,
                           const WrSize& aRadius,
                           const nsTArray<WrGradientStop>& aStops,
-                          wr::GradientExtendMode aExtendMode);
+                          wr::GradientExtendMode aExtendMode,
+                          const WrSize aTileSize,
+                          const WrSize aTileSpacing);
 
   void PushImage(const WrRect& aBounds,
                  const WrClipRegion& aClip,

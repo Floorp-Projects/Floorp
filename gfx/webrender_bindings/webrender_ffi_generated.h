@@ -699,7 +699,9 @@ wr_dp_push_linear_gradient(WrState* state,
     WrPoint end_point,
     const WrGradientStop* stops,
     size_t stops_count,
-    WrGradientExtendMode extend_mode)
+    WrGradientExtendMode extend_mode,
+    WrSize tile_size,
+    WrSize tile_spacing)
 WR_FUNC;
 
 WR_INLINE void
@@ -710,7 +712,9 @@ wr_dp_push_radial_gradient(WrState* state,
     WrSize radius,
     const WrGradientStop* stops,
     size_t stops_count,
-    WrGradientExtendMode extend_mode)
+    WrGradientExtendMode extend_mode,
+    WrSize tile_size,
+    WrSize tile_spacing)
 WR_FUNC;
 
 WR_INLINE void
