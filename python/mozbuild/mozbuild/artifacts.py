@@ -42,6 +42,7 @@ consumers will need to arrange this themselves.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import binascii
 import collections
 import functools
 import glob
@@ -764,13 +765,20 @@ class ArtifactCache(object):
             self._log(*args, **kwargs)
 
     def fetch(self, url, force=False):
-        # We download to a temporary name like HASH[:16]-basename to
-        # differentiate among URLs with the same basenames.  We used to then
-        # extract the build ID from the downloaded artifact and use it to make a
-        # human readable unique name, but extracting build IDs is time consuming
-        # (especially on Mac OS X, where we must mount a large DMG file).
-        hash = hashlib.sha256(url).hexdigest()[:16]
-        fname = hash + '-' + os.path.basename(url)
+        fname = os.path.basename(url)
+        try:
+            # Use the file name from the url if it looks like a hash digest.
+            if len(fname) not in (32, 40, 56, 64, 96, 128):
+                raise TypeError()
+            binascii.unhexlify(fname)
+        except TypeError:
+            # We download to a temporary name like HASH[:16]-basename to
+            # differentiate among URLs with the same basenames.  We used to then
+            # extract the build ID from the downloaded artifact and use it to make a
+            # human readable unique name, but extracting build IDs is time consuming
+            # (especially on Mac OS X, where we must mount a large DMG file).
+            hash = hashlib.sha256(url).hexdigest()[:16]
+            fname = hash + '-' + os.path.basename(url)
 
         path = os.path.abspath(mozpath.join(self._cache_dir, fname))
         if self._skip_cache and os.path.exists(path):
