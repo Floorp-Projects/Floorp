@@ -1884,6 +1884,38 @@ or run without that action (ie: --no-{action})"
 
         return data
 
+
+    def _load_sccache_stats(self):
+        stats_file = os.path.join(
+            self.query_abs_dirs()['abs_obj_dir'], 'sccache-stats.json'
+        )
+        if not os.path.exists(stats_file):
+            self.info('%s does not exist; not loading sccache stats' % stats_file)
+            return
+
+        with open(stats_file, 'rb') as fh:
+            stats = json.load(fh)
+
+        total = stats['stats']['requests_executed']
+        hits = stats['stats']['cache_hits']
+        if total > 0:
+            hits /= float(total)
+
+        yield {
+            'name': 'sccache hit rate',
+            'value': hits,
+            'extraOptions': self.perfherder_resource_options(),
+            'subtests': [],
+        }
+
+        for stat in ['cache_write_errors', 'requests_not_cacheable']:
+            yield {
+                'name': 'sccache %s' % stat,
+                'value': stats['stats'][stat],
+                'extraOptions': self.perfherder_resource_options(),
+                'subtests': [],
+            }
+
     def get_firefox_version(self):
         versionFilePath = os.path.join(
             self.query_abs_dirs()['abs_src_dir'], 'browser/config/version.txt')
@@ -1998,6 +2030,7 @@ or run without that action (ie: --no-{action})"
         build_metrics = self._load_build_resources()
         if build_metrics:
             perfherder_data['suites'].append(build_metrics)
+        perfherder_data['suites'].extend(self._load_sccache_stats())
 
         if self.query_is_nightly():
             for suite in perfherder_data['suites']:
