@@ -4,7 +4,7 @@ fails == size-1.html size-1.html
 
 == empty-transaction-1.html empty-transaction-1.html
 
-== image-rendering-test.html image-rendering-test.html
+fails == image-rendering-test.html image-rendering-test.html
 == image-shadow.html image-shadow.html
 
 fails == size-change-1.html size-change-1.html
