@@ -57,4 +57,13 @@ sec_PKCS12ConvertOldSafeToNew(PLArenaPool *arena, PK11SlotInfo *slot,
 
 extern PRBool sec_pkcs12_is_pkcs12_pbe_algorithm(SECOidTag algorithm);
 
+extern PRBool sec_pkcs12_decode_password(PLArenaPool *arena,
+                                         SECItem *result,
+                                         SECOidTag algorithm,
+                                         const SECItem *pwitem);
+extern PRBool sec_pkcs12_encode_password(PLArenaPool *arena,
+                                         SECItem *result,
+                                         SECOidTag algorithm,
+                                         const SECItem *pwitem);
+
 #endif

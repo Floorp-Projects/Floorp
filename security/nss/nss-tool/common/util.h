@@ -5,11 +5,16 @@
 #ifndef util_h__
 #define util_h__
 
+#include "nspr.h"
 #include "scoped_ptrs.h"
 
 #include <secmodt.h>
 #include <string>
 #include <vector>
+
+#ifndef PORT_Malloc
+#define PORT_Malloc PR_Malloc
+#endif
 
 enum PwDataType { PW_NONE = 0, PW_FROMFILE = 1, PW_PLAINTEXT = 2 };
 typedef struct {
@@ -21,6 +26,6 @@ bool InitSlotPassword(void);
 bool ChangeSlotPassword(void);
 bool DBLoginIfNeeded(const ScopedPK11SlotInfo &slot);
 std::string StringToHex(const ScopedSECItem &input);
-std::vector<char> ReadInputData(std::string &dataPath);
+std::vector<uint8_t> ReadInputData(std::string dataPath);
 
 #endif  // util_h__
