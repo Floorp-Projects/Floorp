@@ -1247,14 +1247,10 @@ WebGLContext::GetImageBuffer(int32_t* out_format)
     *out_format = 0;
 
     // Use GetSurfaceSnapshot() to make sure that appropriate y-flip gets applied
-    bool premult;
-    RefPtr<SourceSurface> snapshot =
-      GetSurfaceSnapshot(mOptions.premultipliedAlpha ? nullptr : &premult);
-    if (!snapshot) {
+    gfxAlphaType any;
+    RefPtr<SourceSurface> snapshot = GetSurfaceSnapshot(&any);
+    if (!snapshot)
         return nullptr;
-    }
-
-    MOZ_ASSERT(mOptions.premultipliedAlpha || !premult, "We must get unpremult when we ask for it!");
 
     RefPtr<DataSourceSurface> dataSurface = snapshot->GetDataSurface();
 
@@ -1272,13 +1268,10 @@ WebGLContext::GetInputStream(const char* mimeType,
         return NS_ERROR_FAILURE;
 
     // Use GetSurfaceSnapshot() to make sure that appropriate y-flip gets applied
-    bool premult;
-    RefPtr<SourceSurface> snapshot =
-      GetSurfaceSnapshot(mOptions.premultipliedAlpha ? nullptr : &premult);
+    gfxAlphaType any;
+    RefPtr<SourceSurface> snapshot = GetSurfaceSnapshot(&any);
     if (!snapshot)
         return NS_ERROR_FAILURE;
-
-    MOZ_ASSERT(mOptions.premultipliedAlpha || !premult, "We must get unpremult when we ask for it!");
 
     RefPtr<DataSourceSurface> dataSurface = snapshot->GetDataSurface();
     return gfxUtils::GetInputStream(dataSurface, mOptions.premultipliedAlpha, mimeType,
@@ -1934,21 +1927,19 @@ WebGLContext::MakeContextCurrent() const
 }
 
 already_AddRefed<mozilla::gfx::SourceSurface>
-WebGLContext::GetSurfaceSnapshot(bool* out_premultAlpha)
+WebGLContext::GetSurfaceSnapshot(gfxAlphaType* const out_alphaType)
 {
     if (!gl)
         return nullptr;
 
-    bool hasAlpha = mOptions.alpha;
-    SurfaceFormat surfFormat = hasAlpha ? SurfaceFormat::B8G8R8A8
-                                        : SurfaceFormat::B8G8R8X8;
+    const auto surfFormat = mOptions.alpha ? SurfaceFormat::B8G8R8A8
+                                           : SurfaceFormat::B8G8R8X8;
     RefPtr<DataSourceSurface> surf;
     surf = Factory::CreateDataSourceSurfaceWithStride(IntSize(mWidth, mHeight),
                                                       surfFormat,
                                                       mWidth * 4);
-    if (NS_WARN_IF(!surf)) {
+    if (NS_WARN_IF(!surf))
         return nullptr;
-    }
 
     gl->MakeCurrent();
     {
@@ -1968,15 +1959,22 @@ WebGLContext::GetSurfaceSnapshot(bool* out_premultAlpha)
         }
     }
 
-    if (out_premultAlpha) {
-        *out_premultAlpha = true;
+    gfxAlphaType alphaType;
+    if (!mOptions.alpha) {
+        alphaType = gfxAlphaType::Opaque;
+    } else if (mOptions.premultipliedAlpha) {
+        alphaType = gfxAlphaType::Premult;
+    } else {
+        alphaType = gfxAlphaType::NonPremult;
     }
-    bool srcPremultAlpha = mOptions.premultipliedAlpha;
-    if (!srcPremultAlpha) {
-        if (out_premultAlpha) {
-            *out_premultAlpha = false;
-        } else if(hasAlpha) {
+
+    if (out_alphaType) {
+        *out_alphaType = alphaType;
+    } else {
+        // Expects Opaque or Premult
+        if (alphaType == gfxAlphaType::NonPremult) {
             gfxUtils::PremultiplyDataSurface(surf, surf);
+            alphaType = gfxAlphaType::Premult;
         }
     }
 
@@ -1984,10 +1982,8 @@ WebGLContext::GetSurfaceSnapshot(bool* out_premultAlpha)
         Factory::CreateDrawTarget(gfxPlatform::GetPlatform()->GetSoftwareBackend(),
                                   IntSize(mWidth, mHeight),
                                   SurfaceFormat::B8G8R8A8);
-
-    if (!dt) {
+    if (!dt)
         return nullptr;
-    }
 
     dt->SetTransform(Matrix::Translation(0.0, mHeight).PreScale(1.0, -1.0));
 
