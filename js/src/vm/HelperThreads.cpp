@@ -1781,8 +1781,8 @@ ClearCompressionTaskList(T& list, JSRuntime* runtime)
     for (size_t i = 0; i < list.length(); i++) {
         SourceCompressionTask* task = list[i];
         if (task->runtimeMatches(runtime)) {
-            js_delete(task);
             HelperThreadState().remove(list, &i);
+            js_delete(task);
         }
     }
 }

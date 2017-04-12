@@ -357,6 +357,33 @@ class ScriptSource
 {
     friend class SourceCompressionTask;
 
+  public:
+    // Any users that wish to manipulate the char buffer of the ScriptSource
+    // needs to do so via PinnedChars for GC safety. A GC may compress
+    // ScriptSources. If the source were initially uncompressed, then any raw
+    // pointers to the char buffer would now point to the freed, uncompressed
+    // chars. This is analogous to Rooted.
+    class PinnedChars
+    {
+        PinnedChars** stack_;
+        PinnedChars* prev_;
+
+        ScriptSource* source_;
+        const char16_t* chars_;
+
+      public:
+        PinnedChars(JSContext* cx, ScriptSource* source,
+                    UncompressedSourceCache::AutoHoldEntry& holder,
+                    size_t begin, size_t len);
+
+        ~PinnedChars();
+
+        const char16_t* get() const {
+            return chars_;
+        }
+    };
+
+  private:
     uint32_t refs;
 
     // Note: while ScriptSources may be compressed off thread, they are only
@@ -389,6 +416,12 @@ class ScriptSource
 
     using SourceType = mozilla::Variant<Missing, Uncompressed, Compressed>;
     SourceType data;
+
+    // If the GC attempts to call setCompressedSource with PinnedChars
+    // present, the first PinnedChars (that is, bottom of the stack) will set
+    // the compressed chars upon destruction.
+    PinnedChars* pinnedCharsStack_;
+    mozilla::Maybe<Compressed> pendingCompressed_;
 
     // The filename of this script.
     UniqueChars filename_;
@@ -454,10 +487,21 @@ class ScriptSource
     const char16_t* chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
                                size_t chunk);
 
+    // Return a string containing the chars starting at |begin| and ending at
+    // |begin + len|.
+    //
+    // Warning: this is *not* GC-safe! Any chars to be handed out should use
+    // PinnedChars. See comment below.
+    const char16_t* chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& asp,
+                          size_t begin, size_t len);
+
+    void movePendingCompressedSource();
+
   public:
     explicit ScriptSource()
       : refs(0),
         data(SourceType(Missing())),
+        pinnedCharsStack_(nullptr),
         filename_(nullptr),
         displayURL_(nullptr),
         sourceMapURL_(nullptr),
@@ -512,11 +556,6 @@ class ScriptSource
         MOZ_ASSERT(hasSourceData());
         return data.match(LengthMatcher());
     }
-
-    // Return a string containing the chars starting at |begin| and ending at
-    // |begin + len|.
-    const char16_t* chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& asp,
-                          size_t begin, size_t len);
 
     JSFlatString* substring(JSContext* cx, size_t start, size_t stop);
     JSFlatString* substringDontDeflate(JSContext* cx, size_t start, size_t stop);
