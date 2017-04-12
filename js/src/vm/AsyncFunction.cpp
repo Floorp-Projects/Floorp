@@ -6,8 +6,6 @@
 
 #include "vm/AsyncFunction.h"
 
-#include "mozilla/Maybe.h"
-
 #include "jscompartment.h"
 
 #include "builtin/Promise.h"
@@ -18,8 +16,6 @@
 
 using namespace js;
 using namespace js::gc;
-
-using mozilla::Maybe;
 
 /* static */ bool
 GlobalObject::initAsyncFunction(JSContext* cx, Handle<GlobalObject*> global)
@@ -172,13 +168,6 @@ static bool
 AsyncFunctionResume(JSContext* cx, Handle<PromiseObject*> resultPromise, HandleValue generatorVal,
                     ResumeKind kind, HandleValue valueOrReason)
 {
-    RootedObject stack(cx, resultPromise->allocationSite());
-    Maybe<JS::AutoSetAsyncStackForNewCalls> asyncStack;
-    if (stack) {
-        asyncStack.emplace(cx, stack, "async",
-                           JS::AutoSetAsyncStackForNewCalls::AsyncCallKind::EXPLICIT);
-    }
-
     // Execution context switching is handled in generator.
     HandlePropertyName funName = kind == ResumeKind::Normal
                                  ? cx->names().StarGeneratorNext
