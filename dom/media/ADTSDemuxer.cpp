@@ -405,7 +405,7 @@ ADTSTrackDemuxer::Init()
   mInfo->mRate = mSamplesPerSecond;
   mInfo->mChannels = mChannels;
   mInfo->mBitDepth = 16;
-  mInfo->mDuration = Duration().ToMicroseconds();
+  mInfo->mDuration = Duration();
 
   // AAC Specific information
   mInfo->mMimeType = "audio/mp4a-latm";
@@ -424,7 +424,8 @@ ADTSTrackDemuxer::Init()
 
   ADTSLOG("Init mInfo={mRate=%u mChannels=%u mBitDepth=%u mDuration=%" PRId64
           "}",
-          mInfo->mRate, mInfo->mChannels, mInfo->mBitDepth, mInfo->mDuration);
+          mInfo->mRate, mInfo->mChannels, mInfo->mBitDepth,
+          mInfo->mDuration.ToMicroseconds());
 
   return mSamplesPerSecond && mChannels;
 }

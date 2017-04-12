@@ -681,7 +681,7 @@ FlacTrackDemuxer::Init()
     return false;
   }
 
-  if (!mParser->Info().IsValid() || !mParser->Info().mDuration) {
+  if (!mParser->Info().IsValid() || !mParser->Info().mDuration.IsPositive()) {
     // Check if we can look at the last frame for the end time to determine the
     // duration when we don't have any.
     TimeAtEnd();
@@ -706,7 +706,7 @@ FlacTrackDemuxer::GetInfo() const
   } else if (mParser->FirstFrame().Info().IsValid()) {
     // Use the first frame header.
     UniquePtr<TrackInfo> info = mParser->FirstFrame().Info().Clone();
-    info->mDuration = Duration().ToMicroseconds();
+    info->mDuration = Duration();
     return info;
   }
   return nullptr;
@@ -717,7 +717,7 @@ FlacTrackDemuxer::IsSeekable() const
 {
   // For now we only allow seeking if a STREAMINFO block was found and with
   // a known number of samples (duration is set).
-  return mParser->Info().IsValid() && mParser->Info().mDuration;
+  return mParser->Info().IsValid() && mParser->Info().mDuration.IsPositive();
 }
 
 RefPtr<FlacTrackDemuxer::SeekPromise>
@@ -1015,8 +1015,7 @@ FlacTrackDemuxer::AverageFrameLength() const
 TimeUnit
 FlacTrackDemuxer::Duration() const
 {
-  return std::max(mParsedFramesDuration,
-                  TimeUnit::FromMicroseconds(mParser->Info().mDuration));
+  return std::max(mParsedFramesDuration, mParser->Info().mDuration);
 }
 
 TimeUnit
