@@ -434,12 +434,29 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsTransitionManager, Release)
 static inline bool
 ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
                                 nsStyleContext* aStyleContext,
-                                StyleAnimationValue& aComputedValue)
+                                AnimationValue& aAnimationValue)
 {
   return (nsCSSProps::kAnimTypeTable[aProperty] != eStyleAnimType_Discrete ||
           aProperty == eCSSProperty_visibility) &&
          StyleAnimationValue::ExtractComputedValue(aProperty, aStyleContext,
-                                                   aComputedValue);
+                                                   aAnimationValue.mGecko);
+}
+
+static inline bool
+ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
+                                const ServoComputedValuesWithParent&
+                                  aComputedStyle,
+                                AnimationValue& aAnimationValue)
+{
+  if (Servo_Property_IsDiscreteAnimatable(aProperty) &&
+      aProperty != eCSSProperty_visibility) {
+    return false;
+  }
+
+  aAnimationValue.mServo =
+    Servo_ComputedValues_ExtractAnimationValue(aComputedStyle.mCurrentStyle,
+                                               aProperty).Consume();
+  return !!aAnimationValue.mServo;
 }
 
 void
@@ -700,7 +717,7 @@ nsTransitionManager::UpdateTransitions(
     OwningCSSTransitionPtrArray& animations = aElementTransitions->mAnimations;
     size_t i = animations.Length();
     MOZ_ASSERT(i != 0, "empty transitions list?");
-    StyleAnimationValue currentValue;
+    AnimationValue currentValue;
     do {
       --i;
       CSSTransition* anim = animations[i];
@@ -714,7 +731,7 @@ nsTransitionManager::UpdateTransitions(
           // matching currentValue
           !ExtractNonDiscreteComputedValue(anim->TransitionProperty(),
                                            aNewStyleContext, currentValue) ||
-          currentValue != anim->ToValue().mGecko) {
+          currentValue != anim->ToValue()) {
         // stop the transition
         if (anim->HasCurrentEffect()) {
           EffectSet* effectSet =
@@ -822,10 +839,8 @@ nsTransitionManager::ConsiderInitiatingTransition(
 
   AnimationValue startValue, endValue;
   bool haveValues =
-    ExtractNonDiscreteComputedValue(aProperty, aOldStyleContext,
-                                    startValue.mGecko) &&
-    ExtractNonDiscreteComputedValue(aProperty, aNewStyleContext,
-                                    endValue.mGecko);
+    ExtractNonDiscreteComputedValue(aProperty, aOldStyleContext, startValue) &&
+    ExtractNonDiscreteComputedValue(aProperty, aNewStyleContext, endValue);
 
   bool haveChange = startValue != endValue;
 
@@ -1088,8 +1103,7 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
     // influence style.
     AnimationValue currentValue;
     if (!ExtractNonDiscreteComputedValue(anim->TransitionProperty(),
-                                         aNewStyleContext,
-                                         currentValue.mGecko) ||
+                                         aNewStyleContext, currentValue) ||
         currentValue != anim->ToValue()) {
       anim->CancelFromStyle();
       animations.RemoveElementAt(i);

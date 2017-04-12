@@ -143,6 +143,8 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_ExtractAnimationValue,
                    RawServoAnimationValueStrong,
                    ServoComputedValuesBorrowed computed_values,
                    nsCSSPropertyID property)
+SERVO_BINDING_FUNC(Servo_Property_IsDiscreteAnimatable, bool,
+                   nsCSSPropertyID property)
 
 // AnimationValues handling
 SERVO_BINDING_FUNC(Servo_AnimationValues_Interpolate,
