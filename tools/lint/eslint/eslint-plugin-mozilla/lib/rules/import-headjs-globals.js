@@ -39,7 +39,7 @@ module.exports = function(context) {
   // ---------------------------------------------------------------------------
 
   return {
-    Program: function(node) {
+    Program(node) {
       let heads = helpers.getTestHeadFiles(context);
       for (let head of heads) {
         importHead(head, node);

@@ -53,7 +53,7 @@ function XMLParser(parser) {
 XMLParser.prototype = {
   parser: null,
 
-  onOpenTag: function(tag) {
+  onOpenTag(tag) {
     let node = {
       parentNode: this._currentNode,
       local: tag.local,
@@ -77,30 +77,30 @@ XMLParser.prototype = {
     this._currentNode = node;
   },
 
-  onCloseTag: function(tagname) {
+  onCloseTag(tagname) {
     this._currentNode.textEndLine = this.parser.line;
     this._currentNode = this._currentNode.parentNode;
   },
 
-  addText: function(text) {
+  addText(text) {
     this._currentNode.textContent += text;
   },
 
-  onText: function(text) {
+  onText(text) {
     // Replace entities with some valid JS token.
     this.addText(text.replace(entityRegex, "null"));
   },
 
-  onOpenCDATA: function() {
+  onOpenCDATA() {
     // Turn the CDATA opening tag into whitespace for indent alignment
     this.addText(" ".repeat("<![CDATA[".length));
   },
 
-  onCDATA: function(text) {
+  onCDATA(text) {
     this.addText(text);
   },
 
-  onComment: function(text) {
+  onComment(text) {
     this._currentNode.comments.push(text);
   }
 };
@@ -194,7 +194,7 @@ function addNodeLines(node, reindent) {
 }
 
 module.exports = {
-  preprocess: function(text, filename) {
+  preprocess(text, filename) {
     xmlParseError = null;
     scriptLines = [];
     lineMap = [];
@@ -355,7 +355,7 @@ module.exports = {
     return [script];
   },
 
-  postprocess: function(messages, filename) {
+  postprocess(messages, filename) {
     // If there was an XML parse error then just return that
     if (xmlParseError) {
       return [xmlParseError];

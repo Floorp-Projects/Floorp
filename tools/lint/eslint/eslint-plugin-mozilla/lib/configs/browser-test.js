@@ -12,7 +12,7 @@ module.exports = {
     "browser": true,
     "mozilla/browser-window": true,
     "mozilla/simpletest": true
-    //"node": true
+    // "node": true
   },
 
   "plugins": [
