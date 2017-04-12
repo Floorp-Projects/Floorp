@@ -7,8 +7,6 @@
         href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
@@ -195,7 +193,7 @@
         {
           return new line(aWholeText, aLines, aIndex - 1);
         }
-      }); 
+      });
       Object.defineProperty(this, "nextLine", { get: function()
         {
           return new line(aWholeText, aLines, aIndex + 1);
@@ -418,7 +416,7 @@
         [ "TextBeforeOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ],
         [ "TextAfterOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ]
       ];
-      traverseTextByLines(gQueue, "ta_wrapped", 
+      traverseTextByLines(gQueue, "ta_wrapped",
                           [ [ "hi ", "", 0, 3, { words: [ 0, 2 ] } ],
                             [ "hello ", "", 3, 9, { words: [ 3, 8 ] } ],
                             [ "my ", "", 9, 12, { words: [ 9, 11 ] } ],
