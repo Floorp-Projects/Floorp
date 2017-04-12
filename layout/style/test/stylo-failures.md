@@ -373,7 +373,6 @@ to mochitest command.
 * test_pseudoelement_parsing.html: support parsing some pseudo-classes on some pseudo-elements [5]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
-  * test_page_parser.html `2in` [8]
 * insertRule / deleteRule don't work bug 1336863
   * test_rule_insertion.html [5]
 * @-moz-document support
