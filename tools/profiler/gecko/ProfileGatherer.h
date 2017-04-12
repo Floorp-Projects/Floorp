@@ -11,11 +11,10 @@
 namespace mozilla {
 
 // This class holds the state for an async profile-gathering request.
-class ProfileGatherer final : public nsIObserver
+class ProfileGatherer final : public nsISupports
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
 
   explicit ProfileGatherer();
   void WillGatherOOPProfile();

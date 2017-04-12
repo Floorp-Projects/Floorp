@@ -8,7 +8,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
     XPIDL_MODULE = 'profiler'
     XPIDL_SOURCES += [
         'gecko/nsIProfiler.idl',
-        'gecko/nsIProfileSaveEvent.idl',
     ]
     EXPORTS += [
         'public/CrossProcessProfilerController.h',
