@@ -8,11 +8,6 @@
 
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
-#include "nsLocalFile.h"
-#include "nsIFileStreams.h"
-
-using mozilla::dom::AutoJSAPI;
-using mozilla::dom::Promise;
 
 namespace mozilla {
 
@@ -50,12 +45,6 @@ ProfileGatherer::GatheredOOPProfile(const nsACString& aProfile)
     return;
   }
 
-  if (NS_WARN_IF(!mPromise && !mFile)) {
-    // If we're not holding on to a Promise, then someone is
-    // calling us erroneously.
-    return;
-  }
-
   MOZ_RELEASE_ASSERT(mWriter.isSome(), "Should always have a writer if mGathering is true");
 
   mWriter->Splice(PromiseFlatCString(aProfile).get());
@@ -75,54 +64,19 @@ ProfileGatherer::WillGatherOOPProfile()
   mPendingProfiles++;
 }
 
-void
-ProfileGatherer::Start(double aSinceTime, Promise* aPromise)
+RefPtr<ProfileGatherer::ProfileGatherPromise>
+ProfileGatherer::Start(double aSinceTime)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   if (mGathering) {
-    // If we're already gathering, reject the promise - this isn't going
-    // to end well.
-    if (aPromise) {
-      aPromise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
-    }
-    return;
+    // If we're already gathering, return a rejected promise - this isn't
+    // going to end well.
+    return ProfileGatherPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
   }
-
-  mPromise = aPromise;
-
-  Start2(aSinceTime);
-}
-
-void
-ProfileGatherer::Start(double aSinceTime, const nsACString& aFileName)
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-  nsresult rv = file->InitWithNativePath(aFileName);
-  if (NS_FAILED(rv)) {
-    MOZ_CRASH();
-  }
-
-  if (mGathering) {
-    return;
-  }
-
-  mFile = file;
-
-  Start2(aSinceTime);
-}
-
-// This is the common tail shared by both Start() methods.
-void
-ProfileGatherer::Start2(double aSinceTime)
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   mGathering = true;
   mPendingProfiles = 0;
-  mWriter.emplace();
 
   // Send a notification to request profiles from other processes. The
   // observers of this notification will call WillGatherOOPProfile() which
@@ -137,6 +91,8 @@ ProfileGatherer::Start2(double aSinceTime)
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NotifyObservers failed");
   }
 
+  mWriter.emplace();
+
   // Start building up the JSON result and grab the profile from this process.
   mWriter->Start(SpliceableJSONWriter::SingleLineStyle);
   if (!profiler_stream_json_for_this_process(*mWriter, aSinceTime)) {
@@ -144,8 +100,7 @@ ProfileGatherer::Start2(double aSinceTime)
     // at the time that ProfileGatherer::Start() was called, or that it was
     // stopped on a different thread since that call. Either way, we need to
     // reject the promise and stop gathering.
-    Cancel();
-    return;
+    return ProfileGatherPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
   }
 
   mWriter->StartArrayProperty("processes");
@@ -159,6 +114,9 @@ ProfileGatherer::Start2(double aSinceTime)
   }
   mExitProfiles.Clear();
 
+  mPromiseHolder.emplace();
+  RefPtr<ProfileGatherPromise> promise = mPromiseHolder->Ensure(__func__);
+
   // Keep the array property "processes" and the root object in mWriter open
   // until Finish() is called. As profiles from the other processes come in,
   // they will be inserted and end up in the right spot. Finish() will close
@@ -167,6 +125,8 @@ ProfileGatherer::Start2(double aSinceTime)
   if (!mPendingProfiles) {
     Finish();
   }
+
+  return promise;
 }
 
 void
@@ -174,6 +134,7 @@ ProfileGatherer::Finish()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(mWriter.isSome());
+  MOZ_RELEASE_ASSERT(mPromiseHolder.isSome());
 
   // Close the "processes" array property.
   mWriter->EndArray();
@@ -182,47 +143,8 @@ ProfileGatherer::Finish()
   mWriter->End();
 
   UniquePtr<char[]> buf = mWriter->WriteFunc()->CopyData();
-
-  if (mFile) {
-    nsCOMPtr<nsIFileOutputStream> of =
-      do_CreateInstance("@mozilla.org/network/file-output-stream;1");
-    of->Init(mFile, -1, -1, 0);
-    uint32_t sz;
-    of->Write(buf.get(), strlen(buf.get()), &sz);
-    of->Close();
-    Reset();
-    return;
-  }
-
-  AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(mPromise->GlobalJSObject()))) {
-    // We're really hosed if we can't get a JS context for some reason.
-    Reset();
-    return;
-  }
-
-  JSContext* cx = jsapi.cx();
-
-  // Now parse the JSON so that we resolve with a JS Object.
-  JS::RootedValue val(cx);
-  {
-    NS_ConvertUTF8toUTF16 js_string(nsDependentCString(buf.get()));
-    if (!JS_ParseJSON(cx, static_cast<const char16_t*>(js_string.get()),
-                      js_string.Length(), &val)) {
-      if (!jsapi.HasException()) {
-        mPromise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
-      } else {
-        JS::RootedValue exn(cx);
-        DebugOnly<bool> gotException = jsapi.StealException(&exn);
-        MOZ_ASSERT(gotException);
-
-        jsapi.ClearException();
-        mPromise->MaybeReject(cx, exn);
-      }
-    } else {
-      mPromise->MaybeResolve(val);
-    }
-  }
+  nsCString result(buf.get());
+  mPromiseHolder->Resolve(result, __func__);
 
   Reset();
 }
@@ -230,8 +152,7 @@ ProfileGatherer::Finish()
 void
 ProfileGatherer::Reset()
 {
-  mPromise = nullptr;
-  mFile = nullptr;
+  mPromiseHolder.reset();
   mPendingProfiles = 0;
   mGathering = false;
   mWriter.reset();
@@ -241,8 +162,8 @@ void
 ProfileGatherer::Cancel()
 {
   // If we have a Promise in flight, we should reject it.
-  if (mPromise) {
-    mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+  if (mPromiseHolder.isSome()) {
+    mPromiseHolder->RejectIfExists(NS_ERROR_DOM_ABORT_ERR, __func__);
   }
   Reset();
 }
