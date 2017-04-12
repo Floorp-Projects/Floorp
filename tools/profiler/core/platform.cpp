@@ -28,7 +28,6 @@
 #include "ThreadInfo.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIObserverService.h"
-#include "nsIProfileSaveEvent.h"
 #include "nsIXULAppInfo.h"
 #include "nsIXULRuntime.h"
 #include "nsDirectoryServiceUtils.h"
@@ -1106,31 +1105,6 @@ Tick(PS::LockRef aLock, ProfileBuffer* aBuffer, const TickSample& aSample)
 ////////////////////////////////////////////////////////////////////////
 // BEGIN saving/streaming code
 
-class ProfileSaveEvent final : public nsIProfileSaveEvent
-{
-public:
-  typedef void (*AddSubProfileFunc)(const char* aProfile, void* aClosure);
-  NS_DECL_ISUPPORTS
-
-  ProfileSaveEvent(AddSubProfileFunc aFunc, void* aClosure)
-    : mFunc(aFunc)
-    , mClosure(aClosure)
-  {}
-
-  NS_IMETHOD AddSubProfile(const char* aProfile) override {
-    mFunc(aProfile, mClosure);
-    return NS_OK;
-  }
-
-private:
-  ~ProfileSaveEvent() {}
-
-  AddSubProfileFunc mFunc;
-  void* mClosure;
-};
-
-NS_IMPL_ISUPPORTS(ProfileSaveEvent, nsIProfileSaveEvent)
-
 const static uint64_t kJS_MAX_SAFE_UINTEGER = +9007199254740991ULL;
 
 static int64_t
@@ -1294,26 +1268,6 @@ StreamMetaJSCustomObject(PS::LockRef aLock, SpliceableJSONWriter& aWriter)
   }
 }
 
-struct SubprocessClosure
-{
-  explicit SubprocessClosure(SpliceableJSONWriter* aWriter)
-    : mWriter(aWriter)
-  {}
-
-  SpliceableJSONWriter* mWriter;
-};
-
-static void
-SubProcessCallback(const char* aProfile, void* aClosure)
-{
-  // Called by the observer to get their profile data included as a sub profile.
-  SubprocessClosure* closure = (SubprocessClosure*)aClosure;
-
-  // Add the subprocess profile into the profile, as an element in the
-  // "processes" array.
-  closure->mWriter->Splice(aProfile);
-}
-
 #if defined(PROFILE_JAVA)
 static void
 BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
@@ -1438,7 +1392,7 @@ locked_profiler_stream_json_for_this_process(PS::LockRef aLock, SpliceableJSONWr
   aWriter.EndArray();
 }
 
-static bool
+bool
 profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter, double aSinceTime)
 {
   LOG("profiler_stream_json_for_this_process");
@@ -2155,19 +2109,9 @@ profiler_get_profile(double aSinceTime)
       return nullptr;
     }
 
+    // Don't include profiles from other processes because this is a
+    // synchronous function.
     b.StartArrayProperty("processes");
-    if (CanNotifyObservers()) {
-      // Send a event asking any subprocesses (plugins) to
-      // give us their information
-      SubprocessClosure closure(&b);
-      nsCOMPtr<nsIObserverService> os =
-        mozilla::services::GetObserverService();
-      if (os) {
-        RefPtr<ProfileSaveEvent> pse =
-          new ProfileSaveEvent(SubProcessCallback, &closure);
-        os->NotifyObservers(pse, "profiler-subprocess", nullptr);
-      }
-    }
     b.EndArray();
   }
   b.End();
