@@ -21,24 +21,4 @@ interface nsIScreenManager : nsISupports
     // The screen with the menubar/taskbar. This shouldn't be needed very
     // often.
   readonly attribute nsIScreen primaryScreen;
-
-    // The default DPI scaling factor of the screen environment (number of
-    // screen pixels corresponding to 1 CSS px, at the default zoom level).
-    //
-    // This is currently fixed at 1.0 on most platforms, but varies on Windows
-    // if the "logical DPI" scaling option in the Display control panel is set
-    // to a value other than 100% (e.g. 125% or 150% are increasingly common
-    // defaults on laptops with high-dpi screens). See bug 851520.
-    //
-    // NOTE that on OS X, this does -not- reflect the "backing scale factor"
-    // used to support Retina displays, which is a per-display property,
-    // not a system-wide scaling factor. The default ratio of CSS pixels to
-    // Cocoa points remains 1:1, even on a Retina screen where one Cocoa point
-    // corresponds to two device pixels. (This is exposed via other APIs:
-    // see window.devicePixelRatio).
-    //
-    // NOTE also that on Linux, this does -not- currently reflect changes
-    // to the system-wide (X11 or Gtk2) DPI value, as Firefox does not yet
-    // honor these settings. See bug 798362 and bug 712898.
-  readonly attribute float systemDefaultScale;
 };

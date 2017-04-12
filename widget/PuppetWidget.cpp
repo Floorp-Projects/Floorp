@@ -1429,13 +1429,6 @@ PuppetScreenManager::ScreenForRect(int32_t inLeft,
   return GetPrimaryScreen(outScreen);
 }
 
-NS_IMETHODIMP
-PuppetScreenManager::GetSystemDefaultScale(float *aDefaultScale)
-{
-  *aDefaultScale = 1.0f;
-  return NS_OK;
-}
-
 nsIWidgetListener*
 PuppetWidget::GetCurrentWidgetListener()
 {

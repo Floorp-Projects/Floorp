@@ -21,8 +21,6 @@ public:
   ScreenHelperCocoa();
   ~ScreenHelperCocoa() override;
 
-  float GetSystemDefaultScale() override;
-
   void RefreshScreens();
 
   static NSScreen* CocoaScreenForScreen(nsIScreen* aScreen);
