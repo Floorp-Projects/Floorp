@@ -148,9 +148,8 @@ FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket, size_t aLength)
       mInfo.mChannels = numChannels;
       mInfo.mBitDepth = bps;
       mInfo.mCodecSpecificConfig->AppendElements(blockDataStart, blockDataSize);
-      CheckedInt64 duration =
-        SaferMultDiv(mNumFrames, USECS_PER_S, sampleRate);
-      mInfo.mDuration = duration.isValid() ? duration.value() : 0;
+      auto duration = FramesToTimeUnit(mNumFrames, sampleRate);
+      mInfo.mDuration = duration.IsValid() ? duration : media::TimeUnit::Zero();
       mParser = new OpusParser;
       break;
     }

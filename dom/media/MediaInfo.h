@@ -62,7 +62,6 @@ public:
     , mLanguage(aLanguage)
     , mEnabled(aEnabled)
     , mTrackId(aTrackId)
-    , mDuration(0)
     , mMediaTime(0)
     , mIsRenderedExternally(false)
     , mType(aType)
@@ -94,7 +93,7 @@ public:
   TrackID mTrackId;
 
   nsCString mMimeType;
-  int64_t mDuration;
+  media::TimeUnit mDuration;
   int64_t mMediaTime;
   CryptoTrack mCrypto;
 

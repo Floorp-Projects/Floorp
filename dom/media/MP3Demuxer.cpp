@@ -144,11 +144,11 @@ MP3TrackDemuxer::Init()
   mInfo->mChannels = mChannels;
   mInfo->mBitDepth = 16;
   mInfo->mMimeType = "audio/mpeg";
-  mInfo->mDuration = Duration().ToMicroseconds();
+  mInfo->mDuration = Duration();
 
   MP3LOG("Init mInfo={mRate=%d mChannels=%d mBitDepth=%d mDuration=%" PRId64 "}",
          mInfo->mRate, mInfo->mChannels, mInfo->mBitDepth,
-         mInfo->mDuration);
+         mInfo->mDuration.ToMicroseconds());
 
   return mSamplesPerSecond && mChannels;
 }
