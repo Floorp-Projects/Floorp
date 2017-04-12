@@ -1142,7 +1142,6 @@ impl MarionetteConnection {
         let poll_attempts = timeout / poll_interval;
         let mut poll_attempt = 0;
 
-        info!("Connecting to Marionette on {}:{}", DEFAULT_HOST, self.port);
         loop {
             match TcpStream::connect(&(DEFAULT_HOST, self.port)) {
                 Ok(stream) => {
@@ -1150,7 +1149,7 @@ impl MarionetteConnection {
                     break
                 },
                 Err(e) => {
-                    debug!("  connection attempt {}/{}", poll_attempt, poll_attempts);
+                    trace!("  connection attempt {}/{}", poll_attempt, poll_attempts);
                     if poll_attempt <= poll_attempts {
                         poll_attempt += 1;
                         sleep(Duration::from_millis(poll_interval));
@@ -1162,7 +1161,7 @@ impl MarionetteConnection {
             }
         };
 
-        debug!("TCP connection established");
+        debug!("Connected to Marionette on {}:{}", DEFAULT_HOST, self.port);
 
         try!(self.handshake());
         Ok(())
@@ -1217,7 +1216,7 @@ impl MarionetteConnection {
 
     fn send(&mut self, msg: Json) -> WebDriverResult<String> {
         let data = self.encode_msg(msg);
-        debug!("→ {}", data);
+        trace!("→ {}", data);
 
         match self.stream {
             Some(ref mut stream) => {
@@ -1291,7 +1290,7 @@ impl MarionetteConnection {
 
         // TODO(jgraham): Need to handle the error here
         let data = String::from_utf8(payload).unwrap();
-        debug!("← {}", data);
+        trace!("← {}", data);
 
         Ok(data)
     }
