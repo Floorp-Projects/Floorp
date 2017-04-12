@@ -4589,8 +4589,9 @@ Evaluate(JSContext* cx, ScopeKind scopeKind, HandleObject env,
     MOZ_ASSERT_IF(!IsGlobalLexicalEnvironment(env), scopeKind == ScopeKind::NonSyntactic);
 
     options.setIsRunOnce(true);
+    SourceCompressionTask sct(cx);
     RootedScript script(cx, frontend::CompileGlobalScript(cx, cx->tempLifoAlloc(),
-                                                          scopeKind, options, srcBuf));
+                                                          scopeKind, options, srcBuf, &sct));
     if (!script)
         return false;
 
@@ -4598,6 +4599,8 @@ Evaluate(JSContext* cx, ScopeKind scopeKind, HandleObject env,
 
     bool result = Execute(cx, script, *env,
                           options.noScriptRval ? nullptr : rval.address());
+    if (!sct.complete())
+        result = false;
 
     // After evaluation, the compiled script will not be run again.
     // script->ensureRanAnalysis allocated 1 analyze::Bytecode for every opcode
