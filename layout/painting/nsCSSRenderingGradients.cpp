@@ -1048,53 +1048,47 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
   LayoutDeviceSize gradientRadius;
   BuildWebRenderParameters(aOpacity, extendMode, stops, lineStart, lineEnd, gradientRadius);
 
-  // Do a naive tiling of the gradient by making multiple display items
-  // TODO: this should be done on the WebRender side eventually
-
   nscoord appUnitsPerDevPixel = mPresContext->AppUnitsPerDevPixel();
-  LayoutDeviceRect firstTileBounds = LayoutDevicePixel::FromAppUnits(mDest, appUnitsPerDevPixel);
+
+  // Translate the parameters into device coordinates
   LayoutDeviceRect clipBounds = LayoutDevicePixel::FromAppUnits(mFillArea, appUnitsPerDevPixel);
+  LayoutDeviceRect firstTileBounds = LayoutDevicePixel::FromAppUnits(mDest, appUnitsPerDevPixel);
+  LayoutDeviceSize tileRepeat = LayoutDevicePixel::FromAppUnits(mRepeatSize, appUnitsPerDevPixel);
 
-  // Make the units relative to the parent stacking context
-  firstTileBounds = LayoutDeviceRect::FromUnknownRect(aLayer->RelativeToParent(firstTileBounds.ToUnknownRect()));
+  // Calculate the bounds of the gradient display item, which starts at the first
+  // tile and extends to the end of clip bounds
+  LayoutDevicePoint tileToClip = clipBounds.BottomRight() - firstTileBounds.TopLeft();
+  LayoutDeviceRect gradientBounds = LayoutDeviceRect(firstTileBounds.TopLeft(),
+                                                     LayoutDeviceSize(tileToClip.x, tileToClip.y));
+
+  // Calculate the tile spacing, which is the repeat size minus the tile size
+  LayoutDeviceSize tileSpacing = tileRepeat - firstTileBounds.Size();
+
+  // Make the rects relative to the parent stacking context
   clipBounds = LayoutDeviceRect::FromUnknownRect(aLayer->RelativeToParent(clipBounds.ToUnknownRect()));
+  firstTileBounds = LayoutDeviceRect::FromUnknownRect(aLayer->RelativeToParent(firstTileBounds.ToUnknownRect()));
+  gradientBounds = LayoutDeviceRect::FromUnknownRect(aLayer->RelativeToParent(gradientBounds.ToUnknownRect()));
 
-  float xStart = 0;
-  float yStart = 0;
-  float xEnd = (mFillArea.XMost() - mDest.X()) / appUnitsPerDevPixel;
-  float yEnd = (mFillArea.YMost() - mDest.Y()) / appUnitsPerDevPixel;
-
-  float stepX = mRepeatSize.width / appUnitsPerDevPixel;
-  float stepY = mRepeatSize.height / appUnitsPerDevPixel;
-
-  for (float y = yStart; y < yEnd; y += stepY) {
-    for (float x = xStart; x < xEnd; x += stepX) {
-      LayoutDevicePoint tileOffset = firstTileBounds.TopLeft() + LayoutDevicePoint(x, y);
-      LayoutDeviceRect tileRect = LayoutDeviceRect(tileOffset, firstTileBounds.Size());
-
-      if (mGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
-        LayoutDevicePoint relativeGradientStart = lineStart + tileOffset;
-        LayoutDevicePoint relativeGradientEnd = lineEnd + tileOffset;
-
-        aBuilder.PushLinearGradient(
-          mozilla::wr::ToWrRect(tileRect),
-          aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(clipBounds)),
-          mozilla::wr::ToWrPoint(relativeGradientStart),
-          mozilla::wr::ToWrPoint(relativeGradientEnd),
-          stops,
-          extendMode);
-      } else {
-        LayoutDevicePoint relativeGradientCenter = lineStart + tileOffset;
-
-        aBuilder.PushRadialGradient(
-          mozilla::wr::ToWrRect(tileRect),
-          aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(clipBounds)),
-          mozilla::wr::ToWrPoint(relativeGradientCenter),
-          mozilla::wr::ToWrSize(gradientRadius),
-          stops,
-          extendMode);
-      }
-    }
+  if (mGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
+    aBuilder.PushLinearGradient(
+      mozilla::wr::ToWrRect(gradientBounds),
+      aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(clipBounds)),
+      mozilla::wr::ToWrPoint(lineStart),
+      mozilla::wr::ToWrPoint(lineEnd),
+      stops,
+      extendMode,
+      mozilla::wr::ToWrSize(firstTileBounds.Size()),
+      mozilla::wr::ToWrSize(tileSpacing));
+  } else {
+    aBuilder.PushRadialGradient(
+      mozilla::wr::ToWrRect(gradientBounds),
+      aBuilder.BuildClipRegion(mozilla::wr::ToWrRect(clipBounds)),
+      mozilla::wr::ToWrPoint(lineStart),
+      mozilla::wr::ToWrSize(gradientRadius),
+      stops,
+      extendMode,
+      mozilla::wr::ToWrSize(firstTileBounds.Size()),
+      mozilla::wr::ToWrSize(tileSpacing));
   }
 }
 

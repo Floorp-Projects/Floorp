@@ -1331,7 +1331,9 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                              end_point: WrPoint,
                                              stops: *const WrGradientStop,
                                              stops_count: usize,
-                                             extend_mode: WrGradientExtendMode) {
+                                             extend_mode: WrGradientExtendMode,
+                                             tile_size: WrSize,
+                                             tile_spacing: WrSize) {
     assert!(unsafe { is_in_main_thread() });
 
     let stops =
@@ -1342,12 +1344,13 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                                                   stops,
                                                                   extend_mode.to_gradient_extend_mode());
     let rect = rect.to_rect();
-    let tile_size = rect.size.clone();
+    let tile_size = tile_size.to_size();
+    let tile_spacing = tile_spacing.to_size();
     state.frame_builder.dl_builder.push_gradient(rect,
                                                  clip.to_clip_region(),
                                                  gradient,
                                                  tile_size,
-                                                 LayoutSize::new(0.0, 0.0));
+                                                 tile_spacing);
 }
 
 #[no_mangle]
@@ -1358,7 +1361,9 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                              radius: WrSize,
                                              stops: *const WrGradientStop,
                                              stops_count: usize,
-                                             extend_mode: WrGradientExtendMode) {
+                                             extend_mode: WrGradientExtendMode,
+                                             tile_size: WrSize,
+                                             tile_spacing: WrSize) {
     assert!(unsafe { is_in_main_thread() });
 
     let stops =
@@ -1369,12 +1374,13 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                                                          stops,
                                                                          extend_mode.to_gradient_extend_mode());
     let rect = rect.to_rect();
-    let tile_size = rect.size.clone();
+    let tile_size = tile_size.to_size();
+    let tile_spacing = tile_spacing.to_size();
     state.frame_builder.dl_builder.push_radial_gradient(rect,
                                                         clip.to_clip_region(),
                                                         gradient,
                                                         tile_size,
-                                                        LayoutSize::new(0.0, 0.0));
+                                                        tile_spacing);
 }
 
 #[no_mangle]
