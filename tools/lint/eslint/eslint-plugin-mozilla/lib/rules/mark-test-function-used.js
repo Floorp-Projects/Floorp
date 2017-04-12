@@ -22,7 +22,7 @@ module.exports = function(context) {
   // ---------------------------------------------------------------------------
 
   return {
-    Program: function() {
+    Program() {
       if (helpers.getTestType(context) == "browser") {
         context.markVariableAsUsed("test");
         return;
@@ -30,7 +30,7 @@ module.exports = function(context) {
 
       if (helpers.getTestType(context) == "xpcshell") {
         context.markVariableAsUsed("run_test");
-        return;
+
       }
     }
   };
