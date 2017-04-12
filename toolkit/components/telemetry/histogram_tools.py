@@ -537,7 +537,7 @@ the histograms defined in filenames.
             raise BaseException("histogram parser didn't provide an OrderedDict")
 
         for (name, definition) in histograms.iteritems():
-            if all_histograms.has_key(name):
+            if name in all_histograms:
                 raise DefinitionException("duplicate histogram name %s" % name)
             all_histograms[name] = definition
 
