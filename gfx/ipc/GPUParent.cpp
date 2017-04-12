@@ -430,7 +430,7 @@ GPUParent::RecvGatherProfile()
     profileCString = nsDependentCString(profile.get());
   }
 
-  Unused << SendProfile(profileCString);
+  Unused << SendProfile(profileCString, false /* aIsExitProfile */);
   return IPC_OK();
 }
 
