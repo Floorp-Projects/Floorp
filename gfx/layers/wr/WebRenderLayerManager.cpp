@@ -321,6 +321,7 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
   if (!WrBridge()->DPBegin(size.ToUnknownSize())) {
     return;
   }
+  mRoot->StartPendingAnimations(mAnimationReadyTime);
 
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline());
   WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder);
