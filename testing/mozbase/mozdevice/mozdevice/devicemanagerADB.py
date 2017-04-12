@@ -459,6 +459,12 @@ class DeviceManagerADB(DeviceManager):
         return outputFile
 
     def killProcess(self, appname, sig=None):
+        try:
+            self.shellCheckOutput(["am", "force-stop", appname], timeout=self.short_timeout)
+        except:
+            # no problem - will kill it instead
+            self._logger.info("killProcess failed force-stop of %s" % appname)
+
         shell_args = ["shell"]
         if self._sdk_version >= version_codes.N:
             # Bug 1334613 - force use of root
