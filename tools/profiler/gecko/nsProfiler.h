@@ -9,6 +9,7 @@
 #include "nsIProfiler.h"
 #include "nsIObserver.h"
 #include "mozilla/Attributes.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 class ProfileGatherer;
@@ -39,7 +40,7 @@ public:
 private:
     ~nsProfiler();
 
-    RefPtr<ProfileGatherer> mGatherer;
+    RefPtr<mozilla::ProfileGatherer> mGatherer;
     bool mLockedForPrivateBrowsing;
 };
 
