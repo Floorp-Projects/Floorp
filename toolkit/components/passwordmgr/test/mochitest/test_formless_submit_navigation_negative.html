@@ -76,6 +76,14 @@ const TESTCASES = [
 add_task(function* test() {
   let loginFrame = document.getElementById("loginFrame");
 
+  var android = navigator.appVersion.includes("Android");
+  if (android) {
+    // intermittent failures on Android Debug at 5 seconds
+    waitTime = 10000;
+  } else {
+    waitTime = 5000;
+  }
+
   for (let tc of TESTCASES) {
     for (let scriptName of Object.keys(SCRIPTS)) {
       if (tc.wouldCapture && ["PUSHSTATE", "WINDOW_LOCATION"].includes(scriptName)) {
@@ -101,8 +109,8 @@ add_task(function* test() {
       info("Running " + scriptName + " script to check for a submission");
       frameDoc.defaultView.eval(SCRIPTS[scriptName]);
 
-      // Wait for 5000ms to see if the promise above resolves.
-      yield new Promise(resolve => setTimeout(resolve, 5000));
+      // Wait to see if the promise above resolves.
+      yield new Promise(resolve => setTimeout(resolve, waitTime));
       ok(true, "Done waiting for captures");
     }
   }
