@@ -45,4 +45,5 @@ l10n-repo/
 # Compiled python code
 *.pyc
 
-
+# Infer output
+infer-out/
