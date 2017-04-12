@@ -36,7 +36,7 @@ to mochitest command.
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
-  * test_display_mode.html [7]
+  * test_display_mode.html [5]
   * test_display_mode_reflow.html [2]
 * test_all_shorthand.html: all shorthand servo/servo#15055 [*]
 * Animation support:
@@ -177,13 +177,10 @@ to mochitest command.
     * test_units_angle.html [3]
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
-  * place-{content,items,self} shorthands servo/servo#15954
+  * place-{content,items,self} shorthands servo/servo#16391
+    * test_property_syntax_errors `place-` [30]
     * test_align_shorthand_serialization.html [8]
-    * test_inherit_computation.html `place-` [6]
-    * test_inherit_storage.html `place-` [6]
-    * test_initial_computation.html `place-` [12]
-    * test_initial_storage.html `place-` [12]
-    * test_value_storage.html `place-` [132]
+    * test_value_storage.html `place-` [7]
   * font-variant-{alternates,east-asian,ligatures,numeric} properties servo/servo#15957
     * test_compute_data_with_start_struct.html `font-variant` [8]
     * test_inherit_computation.html `font-variant` [20]
@@ -227,10 +224,6 @@ to mochitest command.
   * image-orientation property
     * test_value_storage.html `image-orientation` [40]
   * flexbox / grid position properties servo/servo#15001
-    * test_inherit_storage.html `align-` [3]
-    * ... `justify-` [3]
-    * test_initial_storage.html `align-` [6]
-    * ... `justify-` [6]
     * test_value_storage.html `align-` [9]
     * ... `justify-` [14]
 * Stylesheet cloning is somehow busted bug 1348481
