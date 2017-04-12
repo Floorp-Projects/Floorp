@@ -37,6 +37,7 @@
 #include "nsStyleStruct.h"
 #include "nsStyleUtil.h"
 #include "nsTArray.h"
+#include "nsTransitionManager.h"
 
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
@@ -448,6 +449,7 @@ Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed aA,
 void
 Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
                        nsIAtom* aPseudoTagOrNull,
+                       ServoComputedValuesBorrowedOrNull aOldComputedValues,
                        ServoComputedValuesBorrowedOrNull aComputedValues,
                        ServoComputedValuesBorrowedOrNull aParentComputedValues,
                        UpdateAnimationsTasks aTaskBits)
@@ -475,6 +477,14 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
       presContext->AnimationManager()->
         UpdateAnimations(const_cast<dom::Element*>(aElement), pseudoType,
                          servoValues);
+    }
+    if (tasks & UpdateAnimationsTasks::CSSTransitions) {
+      MOZ_ASSERT(aOldComputedValues);
+      const ServoComputedValuesWithParent oldServoValues =
+        { aOldComputedValues, nullptr };
+      presContext->TransitionManager()->
+        UpdateTransitions(const_cast<dom::Element*>(aElement), pseudoType,
+                          oldServoValues, servoValues);
     }
     if (tasks & UpdateAnimationsTasks::EffectProperties) {
       presContext->EffectCompositor()->UpdateEffectProperties(

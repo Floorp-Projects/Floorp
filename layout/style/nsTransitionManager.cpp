@@ -585,12 +585,12 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   // We don't have to update transitions if display:none, although we will
   // cancel them after restyling.
   if (!afterChangeStyle->IsInDisplayNoneSubtree()) {
-    startedAny = UpdateTransitions(disp,
-                                   aElement,
-                                   afterChangeStyle->GetPseudoType(),
-                                   collection,
-                                   aOldStyleContext,
-                                   afterChangeStyle.get());
+    startedAny = DoUpdateTransitions(disp,
+                                     aElement,
+                                     afterChangeStyle->GetPseudoType(),
+                                     collection,
+                                     aOldStyleContext,
+                                     afterChangeStyle.get());
   }
 
   MOZ_ASSERT(!startedAny || collection,
@@ -620,9 +620,30 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   }
 }
 
-template<typename StyleType>
 bool
 nsTransitionManager::UpdateTransitions(
+  dom::Element *aElement,
+  CSSPseudoElementType aPseudoType,
+  const ServoComputedValuesWithParent& aOldStyle,
+  const ServoComputedValuesWithParent& aNewStyle)
+{
+  if (!mPresContext->IsDynamic()) {
+    // For print or print preview, ignore transitions.
+    return false;
+  }
+
+  CSSTransitionCollection* collection =
+    CSSTransitionCollection::GetAnimationCollection(aElement, aPseudoType);
+  const nsStyleDisplay *disp = Servo_GetStyleDisplay(aNewStyle.mCurrentStyle);
+  return DoUpdateTransitions(disp,
+                             aElement, aPseudoType,
+                             collection,
+                             aOldStyle, aNewStyle);
+}
+
+template<typename StyleType>
+bool
+nsTransitionManager::DoUpdateTransitions(
   const nsStyleDisplay* aDisp,
   dom::Element* aElement,
   CSSPseudoElementType aPseudoType,

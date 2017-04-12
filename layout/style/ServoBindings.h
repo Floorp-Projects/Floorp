@@ -198,6 +198,7 @@ bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
                                  RawGeckoStyleAnimationListBorrowed);
 void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
                             nsIAtom* aPseudoTagOrNull,
+                            ServoComputedValuesBorrowedOrNull aOldComputedValues,
                             ServoComputedValuesBorrowedOrNull aComputedValues,
                             ServoComputedValuesBorrowedOrNull aParentComputedValues,
                             mozilla::UpdateAnimationsTasks aTaskBits);
