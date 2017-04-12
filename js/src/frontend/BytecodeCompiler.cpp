@@ -43,9 +43,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
                      SourceBufferHolder& sourceBuffer,
                      HandleScope enclosingScope);
 
-    // Call setters for optional arguments.
-    void maybeSetSourceCompressor(SourceCompressionTask* sourceCompressor);
-
     JSScript* compileGlobalScript(ScopeKind scopeKind);
     JSScript* compileEvalScript(HandleObject environment, HandleScope enclosingScope);
     ModuleObject* compileModule();
@@ -59,7 +56,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
     JSScript* compileScript(HandleObject environment, SharedContext* sc);
     bool checkLength();
     bool createScriptSource(const Maybe<uint32_t>& parameterListEnd);
-    bool maybeCompressSource();
     bool canLazilyParse();
     bool createParser();
     bool createSourceAndParser(const Maybe<uint32_t>& parameterListEnd = Nothing());
@@ -67,7 +63,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
     bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter, SharedContext* sharedContext);
     bool handleParseFailure(const Directives& newDirectives);
     bool deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObject environment);
-    bool maybeCompleteCompressSource();
 
     AutoKeepAtoms keepAtoms;
 
@@ -80,9 +75,6 @@ class MOZ_STACK_CLASS BytecodeCompiler
 
     RootedScriptSource sourceObject;
     ScriptSource* scriptSource;
-
-    Maybe<SourceCompressionTask> maybeSourceCompressor;
-    SourceCompressionTask* sourceCompressor;
 
     Maybe<UsedNameTracker> usedNames;
     Maybe<Parser<SyntaxParseHandler>> syntaxParser;
@@ -172,18 +164,11 @@ BytecodeCompiler::BytecodeCompiler(JSContext* cx,
     enclosingScope(cx, enclosingScope),
     sourceObject(cx),
     scriptSource(nullptr),
-    sourceCompressor(nullptr),
     directives(options.strictOption),
     startPosition(keepAtoms),
     script(cx)
 {
     MOZ_ASSERT(sourceBuffer.get());
-}
-
-void
-BytecodeCompiler::maybeSetSourceCompressor(SourceCompressionTask* sourceCompressor)
-{
-    this->sourceCompressor = sourceCompressor;
 }
 
 bool
@@ -212,23 +197,12 @@ BytecodeCompiler::createScriptSource(const Maybe<uint32_t>& parameterListEnd)
         return false;
 
     scriptSource = sourceObject->source();
-    return true;
-}
-
-bool
-BytecodeCompiler::maybeCompressSource()
-{
-    if (!sourceCompressor) {
-        maybeSourceCompressor.emplace(cx);
-        sourceCompressor = maybeSourceCompressor.ptr();
-    }
 
     if (!cx->compartment()->behaviors().discardSource()) {
-        if (options.sourceIsLazy) {
+        if (options.sourceIsLazy)
             scriptSource->setSourceRetrievable();
-        } else if (!scriptSource->setSourceCopy(cx, sourceBuffer, sourceCompressor)) {
+        else if (!scriptSource->setSourceCopy(cx, sourceBuffer))
             return false;
-        }
     }
 
     return true;
@@ -263,7 +237,6 @@ BytecodeCompiler::createParser()
 
     parser.emplace(cx, alloc, options, sourceBuffer.get(), sourceBuffer.length(),
                    /* foldConstants = */ true, *usedNames, syntaxParser.ptrOr(nullptr), nullptr);
-    parser->sct = sourceCompressor;
     parser->ss = scriptSource;
     if (!parser->checkOptions())
         return false;
@@ -276,7 +249,6 @@ bool
 BytecodeCompiler::createSourceAndParser(const Maybe<uint32_t>& parameterListEnd /* = Nothing() */)
 {
     return createScriptSource(parameterListEnd) &&
-           maybeCompressSource() &&
            createParser();
 }
 
@@ -341,12 +313,6 @@ BytecodeCompiler::deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObj
     return true;
 }
 
-bool
-BytecodeCompiler::maybeCompleteCompressSource()
-{
-    return !maybeSourceCompressor || maybeSourceCompressor->complete();
-}
-
 JSScript*
 BytecodeCompiler::compileScript(HandleObject environment, SharedContext* sc)
 {
@@ -393,9 +359,6 @@ BytecodeCompiler::compileScript(HandleObject environment, SharedContext* sc)
         // Reset UsedNameTracker state before trying again.
         usedNames->reset();
     }
-
-    if (!maybeCompleteCompressSource())
-        return nullptr;
 
     // We have just finished parsing the source. Inform the source so that we
     // can compute statistics (e.g. how much time our functions remain lazy).
@@ -462,9 +425,6 @@ BytecodeCompiler::compileModule()
 
     module->setInitialEnvironment(env);
 
-    if (!maybeCompleteCompressSource())
-        return nullptr;
-
     MOZ_ASSERT_IF(!cx->helperThread(), !cx->isExceptionPending());
     return module;
 }
@@ -515,9 +475,6 @@ BytecodeCompiler::compileStandaloneFunction(MutableHandleFunction fun,
     }
 
     if (!NameFunctions(cx, fn))
-        return false;
-
-    if (!maybeCompleteCompressSource())
         return false;
 
     return true;
@@ -597,13 +554,11 @@ JSScript*
 frontend::CompileGlobalScript(JSContext* cx, LifoAlloc& alloc, ScopeKind scopeKind,
                               const ReadOnlyCompileOptions& options,
                               SourceBufferHolder& srcBuf,
-                              SourceCompressionTask* extraSct,
                               ScriptSourceObject** sourceObjectOut)
 {
     MOZ_ASSERT(scopeKind == ScopeKind::Global || scopeKind == ScopeKind::NonSyntactic);
     BytecodeCompiler compiler(cx, alloc, options, srcBuf, /* enclosingScope = */ nullptr);
     AutoInitializeSourceObject autoSSO(compiler, sourceObjectOut);
-    compiler.maybeSetSourceCompressor(extraSct);
     return compiler.compileGlobalScript(scopeKind);
 }
 
@@ -612,12 +567,10 @@ frontend::CompileEvalScript(JSContext* cx, LifoAlloc& alloc,
                             HandleObject environment, HandleScope enclosingScope,
                             const ReadOnlyCompileOptions& options,
                             SourceBufferHolder& srcBuf,
-                            SourceCompressionTask* extraSct,
                             ScriptSourceObject** sourceObjectOut)
 {
     BytecodeCompiler compiler(cx, alloc, options, srcBuf, enclosingScope);
     AutoInitializeSourceObject autoSSO(compiler, sourceObjectOut);
-    compiler.maybeSetSourceCompressor(extraSct);
     return compiler.compileEvalScript(environment, enclosingScope);
 }
 
