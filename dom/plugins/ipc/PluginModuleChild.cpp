@@ -2706,7 +2706,7 @@ PluginModuleChild::RecvGatherProfile()
         profileCString = nsCString("", 0);
     }
 
-    Unused << SendProfile(profileCString);
+    Unused << SendProfile(profileCString, false);
     return IPC_OK();
 }
 
