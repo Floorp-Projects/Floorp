@@ -38,3 +38,6 @@ ecc.pth:python/PyECC
 xpcshell.pth:testing/xpcshell
 pyyaml.pth:python/pyyaml/lib
 pytoml.pth:python/pytoml
+pylru.pth:python/pylru
+taskcluster.pth:taskcluster
+dlmanager.pth:python/dlmanager
