@@ -592,6 +592,10 @@ struct AnimationValue
   // Uncompute this AnimationValue and then serialize it.
   void SerializeSpecifiedValue(nsCSSPropertyID aProperty,
                                nsAString& aString) const;
+
+  // Check if |*this| and |aToValue| can be interpolated.
+  bool IsInterpolableWith(nsCSSPropertyID aProperty,
+                          const AnimationValue& aToValue) const;
 };
 
 struct PropertyStyleAnimationValuePair
