@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import sys
+import logging
 import os
 import time
 import tempfile
@@ -340,6 +341,8 @@ def run_test_harness(parser, options):
     dm_args['adbPath'] = options.adb_path
     if not dm_args['host']:
         dm_args['deviceSerial'] = options.deviceSerial
+    if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
+        dm_args['logLevel'] = logging.DEBUG
 
     try:
         dm = mozdevice.DroidADB(**dm_args)

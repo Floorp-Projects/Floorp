@@ -5424,6 +5424,11 @@ InlinePropertyTable::trimTo(const ObjectVector& targets, const BoolVector& choic
         if (choiceSet[i])
             continue;
 
+        // If the target wasn't a function we would have veto'ed it
+        // and it will not be in the entries list.
+        if (!targets[i]->is<JSFunction>())
+			continue;
+
         JSFunction* target = &targets[i]->as<JSFunction>();
 
         // Eliminate all entries containing the vetoed function from the map.

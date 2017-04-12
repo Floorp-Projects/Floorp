@@ -870,12 +870,11 @@ skip script test262/language/statements/async-generator/yield-star-async-next.js
 skip script test262/language/statements/async-generator/yield-star-async-return.js
 skip script test262/language/statements/async-generator/yield-star-async-throw.js
 skip script test262/language/module-code/namespace/internals/delete-non-exported.js
-
-# https://github.com/tc39/test262/pull/947
 skip script test262/intl402/NumberFormat/11.1.1_32.js
-
-# https://github.com/tc39/test262/pull/947
 skip script test262/intl402/DateTimeFormat/prototype/formatToParts/length.js
-
-# https://github.com/tc39/test262/pull/947
 skip script test262/intl402/PluralRules/this-not-ignored.js
+
+# https://github.com/tc39/test262/pull/961
+skip script test262/language/statements/async-generator/yield-star-sync-return.js
+skip script test262/language/statements/async-generator/yield-star-sync-throw.js
+skip script test262/language/statements/async-generator/yield-star-sync-next.js
