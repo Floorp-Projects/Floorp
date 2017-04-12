@@ -137,15 +137,24 @@ function check_hazards () {
     NUM_HAZARDS=$(grep -c 'Function.*has unrooted.*live across GC call' "$1"/rootingHazards.txt)
     NUM_UNSAFE=$(grep -c '^Function.*takes unsafe address of unrooted' "$1"/refs.txt)
     NUM_UNNECESSARY=$(grep -c '^Function.* has unnecessary root' "$1"/unnecessary.txt)
+    NUM_WRITE_HAZARDS=$(perl -lne 'print $1 if m!found (\d+)/\d+ allowed errors!' "$1"/heapWriteHazards.txt)
 
     set +x
     echo "TinderboxPrint: rooting hazards<br/>$NUM_HAZARDS"
-    echo "TinderboxPrint: unsafe references to unrooted GC pointers<br/>$NUM_UNSAFE"
-    echo "TinderboxPrint: unnecessary roots<br/>$NUM_UNNECESSARY"
+    echo "TinderboxPrint: (unsafe references to unrooted GC pointers)<br/>$NUM_UNSAFE"
+    echo "TinderboxPrint: (unnecessary roots)<br/>$NUM_UNNECESSARY"
+    echo "TinderboxPrint: heap write hazards<br/>$NUM_WRITE_HAZARDS"
 
     if [ $NUM_HAZARDS -gt 0 ]; then
-        echo "TEST-UNEXPECTED-FAIL $NUM_HAZARDS hazards detected" >&2
-        echo "TinderboxPrint: documentation<br/><a href='https://wiki.mozilla.org/Javascript:Hazard_Builds'>static rooting hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"
+        echo "TEST-UNEXPECTED-FAIL $NUM_HAZARDS rooting hazards detected" >&2
+        echo "TinderboxPrint: documentation<br/><a href='https://wiki.mozilla.org/Javascript:Hazard_Builds#Diagnosing_a_rooting_hazards_failure'>static rooting hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"
+        exit 1
+    fi
+
+    NUM_ALLOWED_WRITE_HAZARDS=7
+    if [ $NUM_WRITE_HAZARDS -gt $NUM_ALLOWED_WRITE_HAZARDS ]; then
+        echo "TEST-UNEXPECTED-FAIL $NUM_WRITE_HAZARDS heap write hazards detected out of $NUM_ALLOWED_WRITE_HAZARDS allowed" >&2
+        echo "TinderboxPrint: documentation<br/><a href='https://wiki.mozilla.org/Javascript:Hazard_Builds#Diagnosing_a_heap_write_hazard_failure'>heap write hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"
         exit 1
     fi
     )
