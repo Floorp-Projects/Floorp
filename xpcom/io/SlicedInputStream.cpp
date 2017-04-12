@@ -15,13 +15,14 @@ NS_IMPL_RELEASE(SlicedInputStream);
 
 NS_INTERFACE_MAP_BEGIN(SlicedInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
-  NS_INTERFACE_MAP_ENTRY(nsIAsyncInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICloneableInputStream,
                                      mWeakCloneableInputStream || !mInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
                                      mWeakIPCSerializableInputStream || !mInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream,
                                      mWeakSeekableInputStream || !mInputStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAsyncInputStream,
+                                     mWeakAsyncInputStream || !mInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
@@ -30,6 +31,7 @@ SlicedInputStream::SlicedInputStream(nsIInputStream* aInputStream,
   : mWeakCloneableInputStream(nullptr)
   , mWeakIPCSerializableInputStream(nullptr)
   , mWeakSeekableInputStream(nullptr)
+  , mWeakAsyncInputStream(nullptr)
   , mStart(aStart)
   , mLength(aLength)
   , mCurPos(0)
@@ -43,6 +45,7 @@ SlicedInputStream::SlicedInputStream()
   : mWeakCloneableInputStream(nullptr)
   , mWeakIPCSerializableInputStream(nullptr)
   , mWeakSeekableInputStream(nullptr)
+  , mWeakAsyncInputStream(nullptr)
   , mStart(0)
   , mLength(0)
   , mCurPos(0)
@@ -77,6 +80,12 @@ SlicedInputStream::SetSourceStream(nsIInputStream* aInputStream)
     do_QueryInterface(aInputStream);
   if (seekableStream && SameCOMIdentity(aInputStream, seekableStream)) {
     mWeakSeekableInputStream = seekableStream;
+  }
+
+  nsCOMPtr<nsIAsyncInputStream> asyncInputStream =
+    do_QueryInterface(aInputStream);
+  if (asyncInputStream && SameCOMIdentity(aInputStream, asyncInputStream)) {
+    mWeakAsyncInputStream = asyncInputStream;
   }
 }
 
@@ -218,14 +227,9 @@ NS_IMETHODIMP
 SlicedInputStream::CloseWithStatus(nsresult aStatus)
 {
   NS_ENSURE_STATE(mInputStream);
+  NS_ENSURE_STATE(mWeakAsyncInputStream);
 
-  nsCOMPtr<nsIAsyncInputStream> asyncStream =
-    do_QueryInterface(mInputStream);
-  if (!asyncStream) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return asyncStream->CloseWithStatus(aStatus);
+  return mWeakAsyncInputStream->CloseWithStatus(aStatus);
 }
 
 NS_IMETHODIMP
@@ -235,15 +239,10 @@ SlicedInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
                              nsIEventTarget* aEventTarget)
 {
   NS_ENSURE_STATE(mInputStream);
+  NS_ENSURE_STATE(mWeakAsyncInputStream);
 
-  nsCOMPtr<nsIAsyncInputStream> asyncStream =
-    do_QueryInterface(mInputStream);
-  if (!asyncStream) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return asyncStream->AsyncWait(aCallback, aFlags, aRequestedCount,
-                                aEventTarget);
+  return mWeakAsyncInputStream->AsyncWait(aCallback, aFlags, aRequestedCount,
+                                          aEventTarget);
 }
 
 // nsIIPCSerializableInputStream
