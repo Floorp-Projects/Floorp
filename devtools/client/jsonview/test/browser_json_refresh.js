@@ -24,7 +24,7 @@ add_task(function* () {
        "sanity: correct channel uri");
     let contentPolicyType = channel.loadInfo.externalContentPolicyType;
     is(contentPolicyType, Ci.nsIContentPolicy.TYPE_DOCUMENT,
-      "sanity: correct contentPolicyType");
+       "sanity: correct contentPolicyType");
 
     let loadingPrincipal = channel.loadInfo.loadingPrincipal;
     is(loadingPrincipal, null, "sanity: correct loadingPrincipal");
@@ -33,7 +33,8 @@ add_task(function* () {
        "sanity: correct triggeringPrincipal");
     let principalToInherit = channel.loadInfo.principalToInherit;
     ok(principalToInherit.isNullPrincipal, "sanity: correct principalToInherit");
-    ok(content.document.nodePrincipal.isNullPrincipal, "sanity: correct doc.nodePrincipal");
+    ok(content.document.nodePrincipal.isNullPrincipal,
+       "sanity: correct doc.nodePrincipal");
   });
 
   // reload the tab
@@ -49,7 +50,7 @@ add_task(function* () {
        "reloaded: correct channel uri");
     let contentPolicyType = channel.loadInfo.externalContentPolicyType;
     is(contentPolicyType, Ci.nsIContentPolicy.TYPE_DOCUMENT,
-      "reloaded: correct contentPolicyType");
+       "reloaded: correct contentPolicyType");
 
     let loadingPrincipal = channel.loadInfo.loadingPrincipal;
     is(loadingPrincipal, null, "reloaded: correct loadingPrincipal");
@@ -58,6 +59,7 @@ add_task(function* () {
        "reloaded: correct triggeringPrincipal");
     let principalToInherit = channel.loadInfo.principalToInherit;
     ok(principalToInherit.isNullPrincipal, "reloaded: correct principalToInherit");
-    ok(content.document.nodePrincipal.isNullPrincipal, "reloaded: correct doc.nodePrincipal");
+    ok(content.document.nodePrincipal.isNullPrincipal,
+       "reloaded: correct doc.nodePrincipal");
   });
 });
