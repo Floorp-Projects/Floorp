@@ -241,6 +241,7 @@ android-opt-tests:
 android-gradle-tests:
     - mochitest-chrome
     - robocop
+    - geckoview
 
 android-x86-tests:
     - mochitest-chrome

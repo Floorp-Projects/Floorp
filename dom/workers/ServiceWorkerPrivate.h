@@ -196,6 +196,7 @@ private:
   nsresult
   SpawnWorkerIfNeeded(WakeUpReason aWhy,
                       nsIRunnable* aLoadFailedRunnable,
+                      bool* aNewWorkerCreated = nullptr,
                       nsILoadGroup* aLoadGroup = nullptr);
 
   ~ServiceWorkerPrivate();

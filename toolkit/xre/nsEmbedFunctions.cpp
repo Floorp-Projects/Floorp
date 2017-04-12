@@ -770,6 +770,12 @@ XRE_InitParentProcess(int aArgc,
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
 
+  // Set main thread before we initialize the profiler
+  NS_SetMainThread();
+
+  char aLocal;
+  GeckoProfilerInitRAII profiler(&aLocal);
+
   ScopedXREEmbed embed;
 
   gArgc = aArgc;

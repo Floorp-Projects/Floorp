@@ -267,6 +267,9 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (!caches().init())
         return false;
 
+    if (!wasm().init())
+        return false;
+
     return true;
 }
 
@@ -278,6 +281,8 @@ JSRuntime::destroyRuntime()
     MOZ_ASSERT(initialized_);
 
     sharedIntlData.ref().destroyInstance();
+
+    wasm().destroy();
 
     if (gcInitialized) {
         /*

@@ -32,6 +32,15 @@ using namespace js::wasm;
 using mozilla::ArrayLength;
 
 static void
+FinishOffsets(MacroAssembler& masm, Offsets* offsets)
+{
+    // On old ARM hardware, constant pools could be inserted and they need to
+    // be flushed before considering the size of the masm.
+    masm.flushBuffer();
+    offsets->end = masm.size();
+}
+
+static void
 AssertStackAlignment(MacroAssembler& masm, uint32_t alignment, uint32_t addBeforeAssert = 0)
 {
     MOZ_ASSERT((sizeof(Frame) + masm.framePushed() + addBeforeAssert) % alignment == 0);
@@ -331,7 +340,7 @@ wasm::GenerateEntry(MacroAssembler& masm, const FuncExport& fe)
     masm.move32(Imm32(true), ReturnReg);
     masm.ret();
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }
 
@@ -498,7 +507,7 @@ wasm::GenerateImportFunction(jit::MacroAssembler& masm, const FuncImport& fi, Si
 
     masm.wasmEmitTrapOutOfLineCode();
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }
 
@@ -625,7 +634,7 @@ wasm::GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint3
 
     GenerateExitEpilogue(masm, framePushed, ExitReason::ImportInterp, &offsets);
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }
 
@@ -858,6 +867,94 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
 
     MOZ_ASSERT(masm.framePushed() == 0);
 
+    FinishOffsets(masm, &offsets);
+    return offsets;
+}
+
+struct ABIFunctionArgs
+{
+    ABIFunctionType abiType;
+    size_t len;
+
+    explicit ABIFunctionArgs(ABIFunctionType sig)
+      : abiType(ABIFunctionType(sig >> ArgType_Shift))
+    {
+        len = 0;
+        uint32_t i = uint32_t(abiType);
+        while (i) {
+            i = i >> ArgType_Shift;
+            len++;
+        }
+    }
+
+    size_t length() const { return len; }
+
+    MIRType operator[](size_t i) const {
+        MOZ_ASSERT(i < len);
+        uint32_t abi = uint32_t(abiType);
+        while (i--)
+            abi = abi >> ArgType_Shift;
+        return ToMIRType(ABIArgType(abi));
+    }
+};
+
+CallableOffsets
+wasm::GenerateBuiltinImportExit(MacroAssembler& masm, ABIFunctionType abiType, void* func)
+{
+    masm.setFramePushed(0);
+
+    ABIFunctionArgs args(abiType);
+    uint32_t framePushed = StackDecrementForCall(masm, ABIStackAlignment, args);
+
+    CallableOffsets offsets;
+    GenerateExitPrologue(masm, framePushed, ExitReason::ImportNative, &offsets);
+
+    // Copy out and convert caller arguments, if needed.
+    unsigned offsetToCallerStackArgs = sizeof(Frame) + masm.framePushed();
+    Register scratch = ABINonArgReturnReg0;
+    for (ABIArgIter<ABIFunctionArgs> i(args); !i.done(); i++) {
+        if (i->argInRegister()) {
+#ifdef JS_CODEGEN_ARM
+            // Non hard-fp passes the args values in GPRs.
+            if (!UseHardFpABI() && IsFloatingPointType(i.mirType())) {
+                FloatRegister input = i->fpu();
+                if (i.mirType() == MIRType::Float32) {
+                    masm.ma_vxfer(input, Register::FromCode(input.id()));
+                } else if (i.mirType() == MIRType::Double) {
+                    uint32_t regId = input.singleOverlay().id();
+                    masm.ma_vxfer(input, Register::FromCode(regId), Register::FromCode(regId + 1));
+                }
+            }
+#endif
+            continue;
+        }
+
+        Address src(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
+        Address dst(masm.getStackPointer(), i->offsetFromArgBase());
+        StackCopy(masm, i.mirType(), scratch, src, dst);
+    }
+
+    masm.call(ImmPtr(func, ImmPtr::NoCheckToken()));
+
+#if defined(JS_CODEGEN_X86)
+    // x86 passes the return value on the x87 FP stack.
+    Operand op(esp, 0);
+    MIRType retType = ToMIRType(ABIArgType(abiType & ArgType_Mask));
+    if (retType == MIRType::Float32) {
+        masm.fstp32(op);
+        masm.loadFloat32(op, ReturnFloat32Reg);
+    } else if (retType == MIRType::Double) {
+        masm.fstp(op);
+        masm.loadDouble(op, ReturnDoubleReg);
+    }
+#elif defined(JS_CODEGEN_ARM)
+    // Non hard-fp passes the return values in GPRs.
+    MIRType retType = ToMIRType(ABIArgType(abiType & ArgType_Mask));
+    if (!UseHardFpABI() && IsFloatingPointType(retType))
+        masm.ma_vxfer(r0, r1, d0);
+#endif
+
+    GenerateExitEpilogue(masm, framePushed, ExitReason::ImportNative, &offsets);
     offsets.end = masm.currentOffset();
     return offsets;
 }
@@ -896,7 +993,7 @@ wasm::GenerateTrapExit(MacroAssembler& masm, Trap trap, Label* throwLabel)
 
     GenerateExitEpilogue(masm, framePushed, ExitReason::Trap, &offsets);
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }
 
@@ -926,7 +1023,7 @@ GenerateGenericMemoryAccessTrap(MacroAssembler& masm, SymbolicAddress reporter, 
     masm.call(reporter);
     masm.jump(throwLabel);
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }
 
@@ -1109,7 +1206,7 @@ wasm::GenerateInterruptExit(MacroAssembler& masm, Label* throwLabel)
 # error "Unknown architecture!"
 #endif
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }
 
@@ -1147,7 +1244,7 @@ wasm::GenerateThrowStub(MacroAssembler& masm, Label* throwLabel)
     masm.mov(ImmWord(0), ReturnReg);
     masm.ret();
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }
 
@@ -1198,6 +1295,6 @@ wasm::GenerateDebugTrapStub(MacroAssembler& masm, Label* throwLabel)
 
     GenerateExitEpilogue(masm, 0, ExitReason::DebugTrap, &offsets);
 
-    offsets.end = masm.currentOffset();
+    FinishOffsets(masm, &offsets);
     return offsets;
 }

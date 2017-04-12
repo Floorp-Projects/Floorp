@@ -1370,6 +1370,29 @@ imgLoader::ClearCache(bool chrome)
 }
 
 NS_IMETHODIMP
+imgLoader::RemoveEntry(nsIURI* aURI,
+                       nsIDOMDocument* aDOMDoc)
+{
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
+  if (aURI) {
+    OriginAttributes attrs;
+    if (doc) {
+      nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+      if (principal) {
+        attrs = principal->OriginAttributesRef();
+      }
+    }
+
+    nsresult rv = NS_OK;
+    ImageCacheKey key(aURI, attrs, doc, rv);
+    if (NS_SUCCEEDED(rv) && RemoveFromCache(key)) {
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
 imgLoader::FindEntryProperties(nsIURI* uri,
                                nsIDOMDocument* aDOMDoc,
                                nsIProperties** _retval)
@@ -2169,6 +2192,18 @@ imgLoader::LoadImage(nsIURI* aURI,
         request->SetCacheEntry(entry);
 
         if (mCacheTracker) {
+          if (MOZ_UNLIKELY(!entry->GetExpirationState()->IsTracked())) {
+            bool inCache = false;
+            RefPtr<imgCacheEntry> e;
+            if (cache.Get(key, getter_AddRefs(e)) && e) {
+              inCache = (e == entry);
+            }
+            gfxCriticalNoteOnce << "entry with no proxies is no in tracker "
+                                << "request->HasConsumers() "
+                                << (request->HasConsumers() ? "true" : "false")
+                                << " inCache " << (inCache ? "true" : "false");
+          }
+
           mCacheTracker->MarkUsed(entry);
         }
       }

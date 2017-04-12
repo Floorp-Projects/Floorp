@@ -1,7 +1,7 @@
 diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
 --- a/modules/fdlibm/src/math_private.h
 +++ b/modules/fdlibm/src/math_private.h
-@@ -33,16 +33,21 @@
+@@ -33,16 +33,23 @@
   * to dig two 32 bit words out of the 64 bit IEEE floating point
   * value.  That is non-ANSI, and, moreover, the gcc instruction
   * scheduler gets it wrong.  We instead use the following macros.
@@ -10,8 +10,10 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
   * endianness at run time.
   */
  
-+#ifdef WIN32
++#ifndef u_int32_t
 +#define u_int32_t uint32_t
++#endif
++#ifndef u_int64_t
 +#define u_int64_t uint64_t
 +#endif
 +

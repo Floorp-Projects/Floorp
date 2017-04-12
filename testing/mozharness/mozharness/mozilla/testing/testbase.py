@@ -439,6 +439,7 @@ You can set this by:
             'mochitest-plain-clipboard': 'mochitest',
             'mochitest-plain-gpu': 'mochitest',
             'mochitest-gl': 'mochitest',
+            'geckoview': 'mochitest',
             'jsreftest': 'reftest',
             'crashtest': 'reftest',
             'reftest-debug': 'reftest',
