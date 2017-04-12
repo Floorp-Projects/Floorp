@@ -432,13 +432,13 @@ HasRasterImage(HTMLImageElement& aImageEl)
 }
 
 ImageBitmap::ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData,
-                         bool aIsPremultipliedAlpha /* = true */)
+                         gfxAlphaType aAlphaType)
   : mParent(aGlobal)
   , mData(aData)
   , mSurface(nullptr)
   , mDataWrapper(new ImageUtils(mData))
   , mPictureRect(0, 0, aData->GetSize().width, aData->GetSize().height)
-  , mIsPremultipliedAlpha(aIsPremultipliedAlpha)
+  , mAlphaType(aAlphaType)
   , mIsCroppingAreaOutSideOfSourceImage(false)
 {
   MOZ_ASSERT(aData, "aData is null in ImageBitmap constructor.");
@@ -622,13 +622,10 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
   }
 
   // Pre-multiply alpha here.
-  // Apply pre-multiply alpha only if mIsPremultipliedAlpha is false.
   // Ignore this step if the source surface does not have alpha channel; this
   // kind of source surfaces might come form layers::PlanarYCbCrImage.
-  if (!mIsPremultipliedAlpha &&
-      mSurface->GetFormat() != SurfaceFormat::B8G8R8X8 &&
-      mSurface->GetFormat() != SurfaceFormat::R8G8B8X8 &&
-      mSurface->GetFormat() != SurfaceFormat::X8R8G8B8) {
+  MOZ_ASSERT(IsOpaque(mSurface->GetFormat()) == (mAlphaType == gfxAlphaType::Opaque));
+  if (mAlphaType == gfxAlphaType::NonPremult) {
     MOZ_ASSERT(mSurface->GetFormat() == SurfaceFormat::R8G8B8A8 ||
                mSurface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
                mSurface->GetFormat() == SurfaceFormat::A8R8G8B8);
@@ -692,7 +689,7 @@ ImageBitmap::ToCloneData() const
 {
   UniquePtr<ImageBitmapCloneData> result(new ImageBitmapCloneData());
   result->mPictureRect = mPictureRect;
-  result->mIsPremultipliedAlpha = mIsPremultipliedAlpha;
+  result->mAlphaType = mAlphaType;
   result->mIsCroppingAreaOutSideOfSourceImage = mIsCroppingAreaOutSideOfSourceImage;
   RefPtr<SourceSurface> surface = mData->GetAsSourceSurface();
   result->mSurface = surface->GetDataSurface();
@@ -707,8 +704,7 @@ ImageBitmap::CreateFromCloneData(nsIGlobalObject* aGlobal,
 {
   RefPtr<layers::Image> data = CreateImageFromSurface(aData->mSurface);
 
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data,
-                                            aData->mIsPremultipliedAlpha);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, aData->mAlphaType);
 
   // Report memory allocation.
   RegisterAllocation(aGlobal, aData->mSurface);
@@ -926,6 +922,8 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageData& aImageData,
 
   array.ComputeLengthAndData();
   const SurfaceFormat FORMAT = SurfaceFormat::R8G8B8A8;
+  // ImageData's underlying data is not alpha-premultiplied.
+  const auto alphaType = gfxAlphaType::NonPremult;
   const uint32_t BYTES_PER_PIXEL = BytesPerPixel(FORMAT);
   const uint32_t imageWidth = aImageData.Width();
   const uint32_t imageHeight = aImageData.Height();
@@ -964,8 +962,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageData& aImageData,
   }
 
   // Create an ImageBimtap.
-  // ImageData's underlying data is not alpha-premultiplied.
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, false);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, alphaType);
 
   // Report memory allocation.
   RegisterAllocation(aGlobal, data);
@@ -1035,7 +1032,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageBitmap& aImageBitmap,
   }
 
   RefPtr<layers::Image> data = aImageBitmap.mData;
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, aImageBitmap.mIsPremultipliedAlpha);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, aImageBitmap.mAlphaType);
 
   // Set the picture rectangle.
   if (ret && aCropRect.isSome()) {
@@ -1499,12 +1496,12 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
   uint32_t picRectY_;
   uint32_t picRectWidth_;
   uint32_t picRectHeight_;
-  uint32_t isPremultipliedAlpha_;
+  uint32_t alphaType_;
   uint32_t isCroppingAreaOutSideOfSourceImage_;
 
   if (!JS_ReadUint32Pair(aReader, &picRectX_, &picRectY_) ||
       !JS_ReadUint32Pair(aReader, &picRectWidth_, &picRectHeight_) ||
-      !JS_ReadUint32Pair(aReader, &isPremultipliedAlpha_,
+      !JS_ReadUint32Pair(aReader, &alphaType_,
                                   &isCroppingAreaOutSideOfSourceImage_)) {
     return nullptr;
   }
@@ -1513,6 +1510,7 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
   int32_t picRectY = BitwiseCast<int32_t>(picRectY_);
   int32_t picRectWidth = BitwiseCast<int32_t>(picRectWidth_);
   int32_t picRectHeight = BitwiseCast<int32_t>(picRectHeight_);
+  const auto alphaType = BitwiseCast<gfxAlphaType>(alphaType_);
 
   // Create a new ImageBitmap.
   MOZ_ASSERT(!aClonedSurfaces.IsEmpty());
@@ -1526,8 +1524,7 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
   JS::Rooted<JS::Value> value(aCx);
   {
     RefPtr<layers::Image> img = CreateImageFromSurface(aClonedSurfaces[aIndex]);
-    RefPtr<ImageBitmap> imageBitmap =
-      new ImageBitmap(aParent, img, isPremultipliedAlpha_);
+    RefPtr<ImageBitmap> imageBitmap = new ImageBitmap(aParent, img, alphaType);
 
     imageBitmap->mIsCroppingAreaOutSideOfSourceImage =
       isCroppingAreaOutSideOfSourceImage_;
@@ -1563,7 +1560,7 @@ ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
   const uint32_t picRectY = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.y);
   const uint32_t picRectWidth = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.width);
   const uint32_t picRectHeight = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.height);
-  const uint32_t isPremultipliedAlpha = aImageBitmap->mIsPremultipliedAlpha ? 1 : 0;
+  const uint32_t alphaType = BitwiseCast<uint32_t>(aImageBitmap->mAlphaType);
   const uint32_t isCroppingAreaOutSideOfSourceImage = aImageBitmap->mIsCroppingAreaOutSideOfSourceImage ? 1 : 0;
 
   // Indexing the cloned surfaces and send the index to the receiver.
@@ -1572,7 +1569,7 @@ ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
   if (NS_WARN_IF(!JS_WriteUint32Pair(aWriter, SCTAG_DOM_IMAGEBITMAP, index)) ||
       NS_WARN_IF(!JS_WriteUint32Pair(aWriter, picRectX, picRectY)) ||
       NS_WARN_IF(!JS_WriteUint32Pair(aWriter, picRectWidth, picRectHeight)) ||
-      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, isPremultipliedAlpha,
+      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, alphaType,
                                               isCroppingAreaOutSideOfSourceImage))) {
     return false;
   }
@@ -2135,7 +2132,8 @@ ImageBitmap::Create(nsIGlobalObject* aGlobal,
 
   // Create an ImageBimtap.
   // Assume the data from an external buffer is not alpha-premultiplied.
-  RefPtr<ImageBitmap> imageBitmap = new ImageBitmap(aGlobal, data, false);
+  RefPtr<ImageBitmap> imageBitmap = new ImageBitmap(aGlobal, data,
+                                                    gfxAlphaType::NonPremult);
 
   // Report memory allocation.
   RegisterAllocation(aGlobal, data);

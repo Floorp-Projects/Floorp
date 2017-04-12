@@ -7184,20 +7184,16 @@ nsLayoutUtils::SurfaceFromOffscreenCanvas(OffscreenCanvas* aOffscreenCanvas,
 {
   SurfaceFromElementResult result;
 
-  bool* isPremultiplied = nullptr;
-  if (aSurfaceFlags & SFE_PREFER_NO_PREMULTIPLY_ALPHA) {
-    isPremultiplied = &result.mIsPremultiplied;
-  }
-
   nsIntSize size = aOffscreenCanvas->GetWidthHeight();
 
-  result.mSourceSurface = aOffscreenCanvas->GetSurfaceSnapshot(isPremultiplied);
-    if (!result.mSourceSurface) {
-      // If the element doesn't have a context then we won't get a snapshot. The canvas spec wants us to not error and just
-      // draw nothing, so return an empty surface.
-      DrawTarget *ref = aTarget ? aTarget.get() : gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-      RefPtr<DrawTarget> dt = ref->CreateSimilarDrawTarget(IntSize(size.width, size.height),
-                                                           SurfaceFormat::B8G8R8A8);
+  result.mSourceSurface = aOffscreenCanvas->GetSurfaceSnapshot(&result.mAlphaType);
+  if (!result.mSourceSurface) {
+    // If the element doesn't have a context then we won't get a snapshot. The canvas spec wants us to not error and just
+    // draw nothing, so return an empty surface.
+    result.mAlphaType = gfxAlphaType::Opaque;
+    DrawTarget *ref = aTarget ? aTarget.get() : gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+    RefPtr<DrawTarget> dt = ref->CreateSimilarDrawTarget(IntSize(size.width, size.height),
+                                                         SurfaceFormat::B8G8R8A8);
     if (dt) {
       result.mSourceSurface = dt->Snapshot();
     }
@@ -7276,7 +7272,6 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
     frameFlags |= imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION;
   if (aSurfaceFlags & SFE_PREFER_NO_PREMULTIPLY_ALPHA) {
     frameFlags |= imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
-    result.mIsPremultiplied = false;
   }
 
   int32_t imgWidth, imgHeight;
@@ -7314,6 +7309,15 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
         result.mSourceSurface = optSurface;
       }
     }
+
+    const auto& format = result.mSourceSurface->GetFormat();
+    if (IsOpaque(format)) {
+      result.mAlphaType = gfxAlphaType::Opaque;
+    } else if (frameFlags & imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA) {
+      result.mAlphaType = gfxAlphaType::NonPremult;
+    } else {
+      result.mAlphaType = gfxAlphaType::Premult;
+    }
   } else {
     result.mDrawInfo.mImgContainer = imgContainer;
     result.mDrawInfo.mWhichFrame = whichFrame;
@@ -7348,23 +7352,19 @@ nsLayoutUtils::SurfaceFromElement(HTMLCanvasElement* aElement,
 {
   SurfaceFromElementResult result;
 
-  bool* isPremultiplied = nullptr;
-  if (aSurfaceFlags & SFE_PREFER_NO_PREMULTIPLY_ALPHA) {
-    isPremultiplied = &result.mIsPremultiplied;
-  }
-
   IntSize size = aElement->GetSize();
 
-  result.mSourceSurface = aElement->GetSurfaceSnapshot(isPremultiplied);
+  result.mSourceSurface = aElement->GetSurfaceSnapshot(&result.mAlphaType);
   if (!result.mSourceSurface) {
-     // If the element doesn't have a context then we won't get a snapshot. The canvas spec wants us to not error and just
-     // draw nothing, so return an empty surface.
-     DrawTarget *ref = aTarget ? aTarget.get() : gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-     RefPtr<DrawTarget> dt = ref->CreateSimilarDrawTarget(IntSize(size.width, size.height),
-                                                          SurfaceFormat::B8G8R8A8);
-     if (dt) {
-       result.mSourceSurface = dt->Snapshot();
-     }
+    // If the element doesn't have a context then we won't get a snapshot. The canvas spec wants us to not error and just
+    // draw nothing, so return an empty surface.
+    result.mAlphaType = gfxAlphaType::Opaque;
+    DrawTarget *ref = aTarget ? aTarget.get() : gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+    RefPtr<DrawTarget> dt = ref->CreateSimilarDrawTarget(IntSize(size.width, size.height),
+                                                        SurfaceFormat::B8G8R8A8);
+    if (dt) {
+      result.mSourceSurface = dt->Snapshot();
+    }
   } else if (aTarget) {
     RefPtr<SourceSurface> opt = aTarget->OptimizeSourceSurface(result.mSourceSurface);
     if (opt) {
@@ -7390,6 +7390,7 @@ nsLayoutUtils::SurfaceFromElement(HTMLVideoElement* aElement,
                                   RefPtr<DrawTarget>& aTarget)
 {
   SurfaceFromElementResult result;
+  result.mAlphaType = gfxAlphaType::Opaque; // Assume opaque.
 
   if (aElement->ContainsRestrictedContent()) {
     return result;
@@ -7409,7 +7410,6 @@ nsLayoutUtils::SurfaceFromElement(HTMLVideoElement* aElement,
     return result;
 
   result.mLayersImage = aElement->GetCurrentImage();
-
   if (!result.mLayersImage)
     return result;
 
@@ -8445,7 +8445,7 @@ nsLayoutUtils::SurfaceFromElementResult::SurfaceFromElementResult()
   , mIsStillLoading(false)
   , mHasSize(false)
   , mCORSUsed(false)
-  , mIsPremultiplied(true)
+  , mAlphaType(gfxAlphaType::Opaque)
 {
 }
 

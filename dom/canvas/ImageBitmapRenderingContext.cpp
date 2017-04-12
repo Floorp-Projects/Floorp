@@ -182,14 +182,14 @@ ImageBitmapRenderingContext::GetInputStream(const char* aMimeType,
 }
 
 already_AddRefed<mozilla::gfx::SourceSurface>
-ImageBitmapRenderingContext::GetSurfaceSnapshot(bool* aPremultAlpha)
+ImageBitmapRenderingContext::GetSurfaceSnapshot(gfxAlphaType* const aOutAlphaType)
 {
   if (!mImage) {
     return nullptr;
   }
 
-  if (aPremultAlpha) {
-    *aPremultAlpha = true;
+  if (aOutAlphaType) {
+    *aOutAlphaType = (GetIsOpaque() ? gfxAlphaType::Opaque : gfxAlphaType::Premult);
   }
 
   RefPtr<SourceSurface> surface = mImage->GetAsSourceSurface();
