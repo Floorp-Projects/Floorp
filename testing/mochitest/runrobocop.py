@@ -89,7 +89,10 @@ class RobocopTestRunner(MochitestDesktop):
         self.killNamedOrphans('xpcshell')
         self.auto.deleteANRs()
         self.auto.deleteTombstones()
-        self.dm.killProcess(self.options.app.split('/')[-1])
+        procName = self.options.app.split('/')[-1]
+        self.dm.killProcess(procName)
+        if self.dm.processExist(procName):
+            self.log.warning("unable to kill %s before running tests!" % procName)
         self.dm.removeDir(self.remoteScreenshots)
         self.dm.removeDir(self.remoteMozLog)
         self.dm.mkDir(self.remoteMozLog)
