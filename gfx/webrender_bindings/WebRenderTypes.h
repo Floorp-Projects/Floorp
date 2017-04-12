@@ -353,6 +353,22 @@ static inline WrRepeatMode ToWrRepeatMode(uint8_t repeatMode)
   return WrRepeatMode::Stretch;
 }
 
+static inline WrTransformProperty ToWrTransformProperty(uint64_t id, gfx::Matrix4x4& transform)
+{
+  WrTransformProperty prop;
+  prop.id = id;
+  prop.transform = ToWrMatrix(transform);
+  return prop;
+}
+
+static inline WrOpacityProperty ToWrOpacityProperty(uint64_t id, const float opacity)
+{
+  WrOpacityProperty prop;
+  prop.id = id;
+  prop.opacity = opacity;
+  return prop;
+}
+
 template<class T>
 static inline WrComplexClipRegion ToWrComplexClipRegion(const gfx::RectTyped<T>& rect,
                                                         const LayerSize& size)

@@ -595,12 +595,50 @@ WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 void
+WebRenderBridgeParent::SampleAnimations(nsTArray<WrOpacityProperty>& aOpacityArray,
+                                        nsTArray<WrTransformProperty>& aTransformArray)
+{
+  uint64_t id = mWidget ? 0 : mPipelineId.mHandle;
+  CompositorAnimationStorage* storage =
+    mCompositorBridge->GetAnimationStorage(id);
+
+  AnimationHelper::SampleAnimations(storage,
+                                    mCompositorScheduler->
+                                      GetLastComposeTime());
+
+  // return the animated data if has
+  if (storage->AnimatedValueCount()) {
+    for(auto iter = storage->ConstAnimatedValueTableIter();
+        !iter.Done(); iter.Next()) {
+      AnimatedValue * value = iter.UserData();
+      if (value->mType == AnimatedValue::TRANSFORM) {
+        aTransformArray.AppendElement(
+          wr::ToWrTransformProperty(iter.Key(), value->mTransform.mTransformInDevSpace));
+      } else if (value->mType == AnimatedValue::OPACITY) {
+        aOpacityArray.AppendElement(
+          wr::ToWrOpacityProperty(iter.Key(), value->mOpacity));
+      }
+    }
+  }
+}
+
+void
 WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
   if (mPaused) {
     return;
   }
-  mApi->GenerateFrame();
+
+  nsTArray<WrOpacityProperty> opacityArray;
+  nsTArray<WrTransformProperty> transformArray;
+  SampleAnimations(opacityArray, transformArray);
+
+  if (!transformArray.IsEmpty() || !opacityArray.IsEmpty()) {
+    mApi->GenerateFrame(opacityArray, transformArray);
+    ScheduleComposition();
+  } else {
+    mApi->GenerateFrame();
+  }
 }
 
 void
