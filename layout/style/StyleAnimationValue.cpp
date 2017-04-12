@@ -5249,3 +5249,27 @@ AnimationValue::SerializeSpecifiedValue(nsCSSPropertyID aProperty,
     StyleAnimationValue::UncomputeValue(aProperty, mGecko, aString);
   MOZ_ASSERT(uncomputeResult, "failed to uncompute StyleAnimationValue");
 }
+
+bool
+AnimationValue::IsInterpolableWith(nsCSSPropertyID aProperty,
+                                   const AnimationValue& aToValue) const
+{
+  if (IsNull() || aToValue.IsNull()) {
+    return false;
+  }
+
+  MOZ_ASSERT(!mServo != mGecko.IsNull());
+  MOZ_ASSERT(mGecko.IsNull() == aToValue.mGecko.IsNull() &&
+             !mServo == !aToValue.mServo,
+             "Animation values should have the same style engine");
+
+  if (mServo) {
+    return Servo_AnimationValues_IsInterpolable(mServo, aToValue.mServo);
+  }
+
+  // If this is ever a performance problem, we could add a
+  // StyleAnimationValue::IsInterpolatable method, but it seems fine for now.
+  StyleAnimationValue dummy;
+  return StyleAnimationValue::Interpolate(
+           aProperty, mGecko, aToValue.mGecko, 0.5, dummy);
+}
