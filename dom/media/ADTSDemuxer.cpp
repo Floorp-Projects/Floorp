@@ -6,13 +6,11 @@
 
 #include "ADTSDemuxer.h"
 
-#include <inttypes.h>
-
-#include "nsAutoPtr.h"
-#include "VideoUtils.h"
 #include "TimeUnits.h"
-#include "prenv.h"
+#include "VideoUtils.h"
 #include "mozilla/SizePrintfMacros.h"
+#include "mozilla/UniquePtr.h"
+#include <inttypes.h>
 
 extern mozilla::LazyLogModule gMediaDemuxerLog;
 #define ADTSLOG(msg, ...) \
@@ -738,7 +736,7 @@ ADTSTrackDemuxer::GetNextFrame(const adts::Frame& aFrame)
   RefPtr<MediaRawData> frame = new MediaRawData();
   frame->mOffset = offset;
 
-  nsAutoPtr<MediaRawDataWriter> frameWriter(frame->CreateWriter());
+  UniquePtr<MediaRawDataWriter> frameWriter(frame->CreateWriter());
   if (!frameWriter->SetSize(length)) {
     ADTSLOG("GetNext() Exit failed to allocated media buffer");
     return nullptr;
