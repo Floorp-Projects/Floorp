@@ -13,9 +13,9 @@ function loadListener(event) {
   let document = event.target;
   let window = document.defaultView;
   let url = document.documentURI;
-  let windowId = WebNavigationFrames.getWindowId(window);
-  let parentWindowId = WebNavigationFrames.getParentWindowId(window);
-  sendAsyncMessage("Extension:DOMContentLoaded", {windowId, parentWindowId, url});
+  let frameId = WebNavigationFrames.getFrameId(window);
+  let parentFrameId = WebNavigationFrames.getParentFrameId(window);
+  sendAsyncMessage("Extension:DOMContentLoaded", {frameId, parentFrameId, url});
 }
 
 addEventListener("DOMContentLoaded", loadListener);
@@ -43,7 +43,7 @@ var CreatedNavigationTargetListener = {
     const createdDocShell = props.getPropertyAsInterface("createdTabDocShell", Ci.nsIDocShell);
     const sourceDocShell = props.getPropertyAsInterface("sourceTabDocShell", Ci.nsIDocShell);
 
-    const isSourceTabDescendant = WebNavigationFrames.isDescendantDocShell(sourceDocShell, docShell);
+    const isSourceTabDescendant = sourceDocShell.sameTypeRootTreeItem === docShell;
 
     if (docShell !== createdDocShell && docShell !== sourceDocShell &&
         !isSourceTabDescendant) {
@@ -55,8 +55,8 @@ var CreatedNavigationTargetListener = {
     }
 
     const isSourceTab = docShell === sourceDocShell || isSourceTabDescendant;
-    const sourceWindowId = WebNavigationFrames.getDocShellWindowId(sourceDocShell);
-    const createdWindowId = WebNavigationFrames.getDocShellWindowId(createdDocShell);
+    const sourceFrameId = WebNavigationFrames.getDocShellFrameId(sourceDocShell);
+    const createdWindowId = WebNavigationFrames.getDocShellFrameId(createdDocShell);
 
     let url;
     if (props.hasKey("url")) {
@@ -65,7 +65,7 @@ var CreatedNavigationTargetListener = {
 
     sendAsyncMessage("Extension:CreatedNavigationTarget", {
       url,
-      sourceWindowId,
+      sourceFrameId,
       createdWindowId,
       isSourceTab,
     });
@@ -204,8 +204,8 @@ var WebProgressListener = {
   sendStateChange({webProgress, locationURI, stateFlags, status}) {
     let data = {
       requestURL: locationURI.spec,
-      windowId: webProgress.DOMWindowID,
-      parentWindowId: WebNavigationFrames.getParentWindowId(webProgress.DOMWindow),
+      frameId: WebNavigationFrames.getFrameId(webProgress.DOMWindow),
+      parentFrameId: WebNavigationFrames.getParentFrameId(webProgress.DOMWindow),
       status,
       stateFlags,
     };
@@ -220,8 +220,8 @@ var WebProgressListener = {
     let data = {
       frameTransitionData,
       location: locationURI ? locationURI.spec : "",
-      windowId: webProgress.DOMWindowID,
-      parentWindowId: WebNavigationFrames.getParentWindowId(webProgress.DOMWindow),
+      frameId: WebNavigationFrames.getFrameId(webProgress.DOMWindow),
+      parentFrameId: WebNavigationFrames.getParentFrameId(webProgress.DOMWindow),
     };
 
     sendAsyncMessage("Extension:DocumentChange", data);
@@ -258,8 +258,8 @@ var WebProgressListener = {
         frameTransitionData,
         isHistoryStateUpdated, isReferenceFragmentUpdated,
         location: locationURI ? locationURI.spec : "",
-        windowId: webProgress.DOMWindowID,
-        parentWindowId: WebNavigationFrames.getParentWindowId(webProgress.DOMWindow),
+        frameId: WebNavigationFrames.getFrameId(webProgress.DOMWindow),
+        parentFrameId: WebNavigationFrames.getParentFrameId(webProgress.DOMWindow),
       };
 
       sendAsyncMessage("Extension:HistoryChange", data);
