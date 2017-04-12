@@ -80,10 +80,6 @@ class BrowserProgressListener {
   onStateChange(webProgress, request, stateFlags, status) {
     this.delegate("onStateChange", webProgress, request, stateFlags, status);
   }
-
-  onProgressChange(webProgress, request, curSelfProgress, maxSelfProgress, curTotalProgress, maxTotalProgress) {}
-  onStatusChange(webProgress, request, status, message) {}
-  onSecurityChange(webProgress, request, state) {}
 }
 
 /**
