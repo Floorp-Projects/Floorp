@@ -179,6 +179,18 @@ bool ValidateGetQueryObjectui64vRobustANGLE(Context *context,
                                             GLsizei *length,
                                             GLuint64 *params);
 
+bool ValidateProgramUniform(Context *context,
+                            GLenum uniformType,
+                            GLuint program,
+                            GLint location,
+                            GLsizei count);
+bool ValidateProgramUniformMatrix(Context *context,
+                                  GLenum matrixType,
+                                  GLuint program,
+                                  GLint location,
+                                  GLsizei count,
+                                  GLboolean transpose);
+
 bool ValidateUniform(Context *context, GLenum uniformType, GLint location, GLsizei count);
 bool ValidateUniformMatrix(Context *context, GLenum matrixType, GLint location, GLsizei count,
                            GLboolean transpose);

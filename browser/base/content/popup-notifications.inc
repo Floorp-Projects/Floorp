@@ -74,7 +74,6 @@
 
     <popupnotification id="addon-webext-permissions-notification" hidden="true">
       <popupnotificationcontent orient="vertical">
-        <description id="addon-webext-perm-header" class="addon-webext-perm-header"/>
         <description id="addon-webext-perm-text" class="addon-webext-perm-text"/>
         <label id="addon-webext-perm-intro" class="addon-webext-perm-text"/>
         <html:ul id="addon-webext-perm-list" class="addon-webext-perm-list"/>

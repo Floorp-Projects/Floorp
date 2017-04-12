@@ -1069,7 +1069,10 @@ Deserializer.ALTSVC = function readAltSvc(buffer, frame) {
   }
 };
 
-frameTypes[0xB] = 'ORIGIN';
+// frame 0xB was BLOCKED and some versions of chrome will
+// throw PROTOCOL_ERROR upon seeing it with non 0 payload
+
+frameTypes[0xC] = 'ORIGIN';
 frameFlags.ORIGIN = [];
 typeSpecificAttributes.ORIGIN = ['originList'];
 

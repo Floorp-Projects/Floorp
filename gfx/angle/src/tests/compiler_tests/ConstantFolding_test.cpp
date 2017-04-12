@@ -7,169 +7,20 @@
 //   Tests for constant folding
 //
 
-#include <vector>
-
-#include "angle_gl.h"
-#include "gtest/gtest.h"
-#include "GLSLANG/ShaderLang.h"
-#include "compiler/translator/PoolAlloc.h"
-#include "compiler/translator/TranslatorESSL.h"
+#include "tests/test_utils/ConstantFoldingTest.h"
 
 using namespace sh;
 
-template <typename T>
-class ConstantFinder : public TIntermTraverser
+// Test that zero, true or false are not found in AST when they are not expected. This is to make
+// sure that the subsequent tests run correctly.
+TEST_F(ConstantFoldingExpressionTest, FoldFloatTestSanityCheck)
 {
-  public:
-    ConstantFinder(const std::vector<T> &constantVector)
-        : TIntermTraverser(true, false, false),
-          mConstantVector(constantVector),
-          mFaultTolerance(T()),
-          mFound(false)
-    {}
-
-    ConstantFinder(const std::vector<T> &constantVector, const T &faultTolerance)
-        : TIntermTraverser(true, false, false),
-        mConstantVector(constantVector),
-        mFaultTolerance(faultTolerance),
-        mFound(false)
-    {}
-
-    ConstantFinder(const T &value)
-        : TIntermTraverser(true, false, false),
-          mFaultTolerance(T()),
-          mFound(false)
-    {
-        mConstantVector.push_back(value);
-    }
-
-    void visitConstantUnion(TIntermConstantUnion *node)
-    {
-        if (node->getType().getObjectSize() == mConstantVector.size())
-        {
-            bool found = true;
-            for (size_t i = 0; i < mConstantVector.size(); i++)
-            {
-                if (!isEqual(node->getUnionArrayPointer()[i], mConstantVector[i]))
-                {
-                    found = false;
-                    break;
-                }
-            }
-            if (found)
-            {
-                mFound = found;
-            }
-        }
-    }
-
-    bool found() const { return mFound; }
-
-  private:
-    bool isEqual(const TConstantUnion &node, const float &value) const
-    {
-        return mFaultTolerance >= fabsf(node.getFConst() - value);
-    }
-
-    bool isEqual(const TConstantUnion &node, const int &value) const
-    {
-        ASSERT(mFaultTolerance < std::numeric_limits<int>::max());
-        // abs() returns 0 at least on some platforms when the minimum int value is passed in (it
-        // doesn't have a positive counterpart).
-        return mFaultTolerance >= abs(node.getIConst() - value) &&
-               (node.getIConst() - value) != std::numeric_limits<int>::min();
-    }
-
-    bool isEqual(const TConstantUnion &node, const unsigned int &value) const
-    {
-        ASSERT(mFaultTolerance < static_cast<unsigned int>(std::numeric_limits<int>::max()));
-        return static_cast<int>(mFaultTolerance) >=
-                   abs(static_cast<int>(node.getUConst() - value)) &&
-               static_cast<int>(node.getUConst() - value) != std::numeric_limits<int>::min();
-    }
-
-    bool isEqual(const TConstantUnion &node, const bool &value) const
-    {
-        return node.getBConst() == value;
-    }
-
-    std::vector<T> mConstantVector;
-    T mFaultTolerance;
-    bool mFound;
-};
-
-class ConstantFoldingTest : public testing::Test
-{
-  public:
-    ConstantFoldingTest() {}
-
-  protected:
-    virtual void SetUp()
-    {
-        allocator.push();
-        SetGlobalPoolAllocator(&allocator);
-        ShBuiltInResources resources;
-        InitBuiltInResources(&resources);
-
-        mTranslatorESSL = new TranslatorESSL(GL_FRAGMENT_SHADER, SH_GLES3_SPEC);
-        ASSERT_TRUE(mTranslatorESSL->Init(resources));
-    }
-
-    virtual void TearDown()
-    {
-        delete mTranslatorESSL;
-        SetGlobalPoolAllocator(NULL);
-        allocator.pop();
-    }
-
-    void compile(const std::string& shaderString)
-    {
-        const char *shaderStrings[] = { shaderString.c_str() };
-
-        mASTRoot = mTranslatorESSL->compileTreeForTesting(shaderStrings, 1, SH_OBJECT_CODE);
-        if (!mASTRoot)
-        {
-            TInfoSink &infoSink = mTranslatorESSL->getInfoSink();
-            FAIL() << "Shader compilation into ESSL failed " << infoSink.info.c_str();
-        }
-    }
-
-    template <typename T>
-    bool constantFoundInAST(T constant)
-    {
-        ConstantFinder<T> finder(constant);
-        mASTRoot->traverse(&finder);
-        return finder.found();
-    }
-
-    template <typename T>
-    bool constantVectorFoundInAST(const std::vector<T> &constantVector)
-    {
-        ConstantFinder<T> finder(constantVector);
-        mASTRoot->traverse(&finder);
-        return finder.found();
-    }
-
-    template <typename T>
-    bool constantColumnMajorMatrixFoundInAST(const std::vector<T> &constantMatrix)
-    {
-        return constantVectorFoundInAST(constantMatrix);
-    }
-
-    template <typename T>
-    bool constantVectorNearFoundInAST(const std::vector<T> &constantVector, const T &faultTolerance)
-    {
-        ConstantFinder<T> finder(constantVector, faultTolerance);
-        mASTRoot->traverse(&finder);
-        return finder.found();
-    }
-
-  private:
-    TranslatorESSL *mTranslatorESSL;
-    TIntermNode *mASTRoot;
-
-    TPoolAllocator allocator;
-};
+    const std::string &floatString = "1.0";
+    evaluateFloat(floatString);
+    ASSERT_FALSE(constantFoundInAST(0.0f));
+    ASSERT_FALSE(constantFoundInAST(true));
+    ASSERT_FALSE(constantFoundInAST(false));
+}
 
 TEST_F(ConstantFoldingTest, FoldIntegerAdd)
 {
@@ -1061,4 +912,335 @@ TEST_F(ConstantFoldingTest, FoldShiftByZero)
     compile(shaderString);
     ASSERT_TRUE(constantFoundInAST(3));
     ASSERT_TRUE(constantFoundInAST(73));
+}
+
+// Test that folding IsInf results in true when the parameter is an out-of-range float literal.
+// ESSL 3.00.6 section 4.1.4 Floats:
+// "If the value of the floating point number is too large (small) to be stored as a single
+// precision value, it is converted to positive (negative) infinity."
+// ESSL 3.00.6 section 12.4:
+// "Mandate support for signed infinities."
+TEST_F(ConstantFoldingTest, FoldIsInfOutOfRangeFloatLiteral)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "    bool b = isinf(1.0e2048);\n"
+        "    my_FragColor = vec4(b);\n"
+        "}\n";
+    compile(shaderString);
+    ASSERT_TRUE(constantFoundInAST(true));
+}
+
+// Test that floats that are too small to be represented get flushed to zero.
+// ESSL 3.00.6 section 4.1.4 Floats:
+// "A value with a magnitude too small to be represented as a mantissa and exponent is converted to
+// zero."
+TEST_F(ConstantFoldingExpressionTest, FoldTooSmallFloat)
+{
+    const std::string &floatString = "1.0e-2048";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(0.0f));
+}
+
+// IEEE 754 dictates that behavior of infinity is derived from limiting cases of real arithmetic.
+// lim radians(x) x -> inf = inf
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldRadiansInfinity)
+{
+    const std::string &floatString = "radians(1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// IEEE 754 dictates that behavior of infinity is derived from limiting cases of real arithmetic.
+// lim degrees(x) x -> inf = inf
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldDegreesInfinity)
+{
+    const std::string &floatString = "degrees(1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// IEEE 754 dictates that sinh(inf) = inf.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldSinhInfinity)
+{
+    const std::string &floatString = "sinh(1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// IEEE 754 dictates that sinh(-inf) = -inf.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldSinhNegativeInfinity)
+{
+    const std::string &floatString = "sinh(-1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(-std::numeric_limits<float>::infinity()));
+}
+
+// IEEE 754 dictates that cosh(inf) = inf.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldCoshInfinity)
+{
+    const std::string &floatString = "cosh(1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// IEEE 754 dictates that cosh(-inf) = inf.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldCoshNegativeInfinity)
+{
+    const std::string &floatString = "cosh(-1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// IEEE 754 dictates that asinh(inf) = inf.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldAsinhInfinity)
+{
+    const std::string &floatString = "asinh(1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// IEEE 754 dictates that asinh(-inf) = -inf.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldAsinhNegativeInfinity)
+{
+    const std::string &floatString = "asinh(-1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(-std::numeric_limits<float>::infinity()));
+}
+
+// IEEE 754 dictates that acosh(inf) = inf.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldAcoshInfinity)
+{
+    const std::string &floatString = "acosh(1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// IEEE 754 dictates that pow or powr(0, inf) = 0.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldPowInfinity)
+{
+    const std::string &floatString = "pow(0.0, 1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(0.0f));
+}
+
+// IEEE 754 dictates that exp(inf) = inf.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldExpInfinity)
+{
+    const std::string &floatString = "exp(1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// IEEE 754 dictates that exp(-inf) = 0.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldExpNegativeInfinity)
+{
+    const std::string &floatString = "exp(-1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(0.0f));
+}
+
+// IEEE 754 dictates that log(inf) = inf.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldLogInfinity)
+{
+    const std::string &floatString = "log(1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// IEEE 754 dictates that exp2(inf) = inf.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldExp2Infinity)
+{
+    const std::string &floatString = "exp2(1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// IEEE 754 dictates that exp2(-inf) = 0.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldExp2NegativeInfinity)
+{
+    const std::string &floatString = "exp2(-1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(0.0f));
+}
+
+// IEEE 754 dictates that log2(inf) = inf.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldLog2Infinity)
+{
+    const std::string &floatString = "log2(1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// IEEE 754 dictates that behavior of infinity is derived from limiting cases of real arithmetic.
+// lim sqrt(x) x -> inf = inf
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldSqrtInfinity)
+{
+    const std::string &floatString = "sqrt(1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// IEEE 754 dictates that rSqrt(inf) = 0
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldInversesqrtInfinity)
+{
+    const std::string &floatString = "inversesqrt(1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(0.0f));
+}
+
+// IEEE 754 dictates that behavior of infinity is derived from limiting cases of real arithmetic.
+// lim length(x) x -> inf = inf
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldLengthInfinity)
+{
+    const std::string &floatString = "length(1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// IEEE 754 dictates that behavior of infinity is derived from limiting cases of real arithmetic.
+// lim dot(x, y) x -> inf, y > 0 = inf
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldDotInfinity)
+{
+    const std::string &floatString = "dot(1.0e2048, 1.0)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// IEEE 754 dictates that behavior of infinity is derived from limiting cases of real arithmetic.
+// lim dot(vec2(x, y), vec2(z)) x -> inf, finite y, z > 0 = inf
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldDotInfinity2)
+{
+    const std::string &floatString = "dot(vec2(1.0e2048, -1.0), vec2(1.0))";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// Faceforward behavior with infinity as a parameter can be derived from dot().
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldFaceForwardInfinity)
+{
+    const std::string &floatString = "faceforward(4.0, 1.0e2048, 1.0)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(-4.0f));
+}
+
+// Faceforward behavior with infinity as a parameter can be derived from dot().
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldFaceForwardInfinity2)
+{
+    const std::string &floatString = "faceforward(vec2(4.0), vec2(1.0e2048, -1.0), vec2(1.0)).x";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(-4.0f));
+}
+
+// Test that infinity - finite value evaluates to infinity.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldInfinityMinusFinite)
+{
+    const std::string &floatString = "1.0e2048 - 1.0e20";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// Test that -infinity + finite value evaluates to -infinity.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldMinusInfinityPlusFinite)
+{
+    const std::string &floatString = "(-1.0e2048) + 1.0e20";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(-std::numeric_limits<float>::infinity()));
+}
+
+// Test that infinity * finite value evaluates to infinity.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldInfinityMultipliedByFinite)
+{
+    const std::string &floatString = "1.0e2048 * 1.0e-20";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// Test that infinity * infinity evaluates to infinity.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldInfinityMultipliedByInfinity)
+{
+    const std::string &floatString = "1.0e2048 * 1.0e2048";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+}
+
+// Test that infinity * negative infinity evaluates to negative infinity.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldInfinityMultipliedByNegativeInfinity)
+{
+    const std::string &floatString = "1.0e2048 * (-1.0e2048)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(-std::numeric_limits<float>::infinity()));
+}
+
+// Test that dividing by minus zero results in the appropriately signed infinity.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+// "If both positive and negative zeros are implemented, the correctly signed Inf will be
+// generated".
+TEST_F(ConstantFoldingExpressionTest, FoldDivideByNegativeZero)
+{
+    const std::string &floatString = "1.0 / (-0.0)";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(-std::numeric_limits<float>::infinity()));
+    ASSERT_TRUE(hasWarning());
+}
+
+// Test that infinity divided by zero evaluates to infinity.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldInfinityDividedByZero)
+{
+    const std::string &floatString = "1.0e2048 / 0.0";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(std::numeric_limits<float>::infinity()));
+    ASSERT_TRUE(hasWarning());
+}
+
+// Test that negative infinity divided by zero evaluates to negative infinity.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldMinusInfinityDividedByZero)
+{
+    const std::string &floatString = "(-1.0e2048) / 0.0";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(-std::numeric_limits<float>::infinity()));
+    ASSERT_TRUE(hasWarning());
+}
+
+// Test that dividing a finite number by infinity results in zero.
+// ESSL 3.00.6 section 4.5.1: "Infinities and zeroes are generated as dictated by IEEE".
+TEST_F(ConstantFoldingExpressionTest, FoldDivideByInfinity)
+{
+    const std::string &floatString = "1.0e30 / 1.0e2048";
+    evaluateFloat(floatString);
+    ASSERT_TRUE(constantFoundInAST(0.0f));
 }

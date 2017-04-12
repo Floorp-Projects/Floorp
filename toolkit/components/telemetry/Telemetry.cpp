@@ -921,6 +921,8 @@ public:
 
   static void RecordIceCandidates(const uint32_t iceCandidateBitmask,
                                   const bool success);
+  static bool CanRecordBase();
+  static bool CanRecordExtended();
 private:
   TelemetryImpl();
   ~TelemetryImpl();
@@ -952,6 +954,8 @@ private:
   Mutex mHashMutex;
   HangReports mHangReports;
   Mutex mHangReportsMutex;
+  Atomic<bool> mCanRecordBase;
+  Atomic<bool> mCanRecordExtended;
 
 #if defined(ENABLE_STACK_CAPTURE)
   // Stores data about stacks captured on demand.
@@ -1235,6 +1239,8 @@ TelemetryImpl::AsyncFetchTelemetryData(nsIFetchTelemetryDataCallback *aCallback)
 TelemetryImpl::TelemetryImpl()
   : mHashMutex("Telemetry::mHashMutex")
   , mHangReportsMutex("Telemetry::mHangReportsMutex")
+  , mCanRecordBase(false)
+  , mCanRecordExtended(false)
   , mThreadHangStatsMutex("Telemetry::mThreadHangStatsMutex")
   , mCachedTelemetryData(false)
   , mLastShutdownTime(0)
@@ -2267,15 +2273,18 @@ TelemetryImpl::GetKeyedHistogramById(const nsACString &name, JSContext *cx,
  */
 NS_IMETHODIMP
 TelemetryImpl::GetCanRecordBase(bool *ret) {
-  *ret = TelemetryHistogram::CanRecordBase();
+  *ret = mCanRecordBase;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TelemetryImpl::SetCanRecordBase(bool canRecord) {
-  TelemetryHistogram::SetCanRecordBase(canRecord);
-  TelemetryScalar::SetCanRecordBase(canRecord);
-  TelemetryEvent::SetCanRecordBase(canRecord);
+  if (canRecord != mCanRecordBase) {
+    TelemetryHistogram::SetCanRecordBase(canRecord);
+    TelemetryScalar::SetCanRecordBase(canRecord);
+    TelemetryEvent::SetCanRecordBase(canRecord);
+    mCanRecordBase = canRecord;
+  }
   return NS_OK;
 }
 
@@ -2288,15 +2297,18 @@ TelemetryImpl::SetCanRecordBase(bool canRecord) {
  */
 NS_IMETHODIMP
 TelemetryImpl::GetCanRecordExtended(bool *ret) {
-  *ret = TelemetryHistogram::CanRecordExtended();
+  *ret = mCanRecordExtended;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TelemetryImpl::SetCanRecordExtended(bool canRecord) {
-  TelemetryHistogram::SetCanRecordExtended(canRecord);
-  TelemetryScalar::SetCanRecordExtended(canRecord);
-  TelemetryEvent::SetCanRecordExtended(canRecord);
+  if (canRecord != mCanRecordExtended) {
+    TelemetryHistogram::SetCanRecordExtended(canRecord);
+    TelemetryScalar::SetCanRecordExtended(canRecord);
+    TelemetryEvent::SetCanRecordExtended(canRecord);
+    mCanRecordExtended = canRecord;
+  }
   return NS_OK;
 }
 
@@ -2338,6 +2350,9 @@ TelemetryImpl::CreateTelemetryInstance()
   NS_ADDREF(sTelemetry);
   // AddRef for the caller
   nsCOMPtr<nsITelemetry> ret = sTelemetry;
+
+  sTelemetry->mCanRecordBase = useTelemetry;
+  sTelemetry->mCanRecordExtended = useTelemetry;
 
   sTelemetry->InitMemoryReporter();
   InitHistogramRecordingEnabled(); // requires sTelemetry to exist
@@ -2687,6 +2702,28 @@ TelemetryImpl::RecordThreadHangStats(Telemetry::ThreadHangStats& aStats)
 
   // Ignore OOM.
   mozilla::Unused << sTelemetry->mThreadHangStats.append(Move(aStats));
+}
+
+bool
+TelemetryImpl::CanRecordBase()
+{
+  if (!sTelemetry) {
+    return false;
+  }
+  bool canRecordBase;
+  nsresult rv = sTelemetry->GetCanRecordBase(&canRecordBase);
+  return NS_SUCCEEDED(rv) && canRecordBase;
+}
+
+bool
+TelemetryImpl::CanRecordExtended()
+{
+  if (!sTelemetry) {
+    return false;
+  }
+  bool canRecordExtended;
+  nsresult rv = sTelemetry->GetCanRecordExtended(&canRecordExtended);
+  return NS_SUCCEEDED(rv) && canRecordExtended;
 }
 
 NS_IMPL_ISUPPORTS(TelemetryImpl, nsITelemetry, nsIMemoryReporter)
@@ -3355,13 +3392,13 @@ GetHistogramName(HistogramID id)
 bool
 CanRecordBase()
 {
-  return TelemetryHistogram::CanRecordBase();
+  return TelemetryImpl::CanRecordBase();
 }
 
 bool
 CanRecordExtended()
 {
-  return TelemetryHistogram::CanRecordExtended();
+  return TelemetryImpl::CanRecordExtended();
 }
 
 void

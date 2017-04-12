@@ -77,20 +77,12 @@ class Instance
     FuncImportTls& funcImportTls(const FuncImport& fi);
     TableTls& tableTls(const TableDesc& td) const;
 
-    // Import call slow paths which are called directly from wasm code.
-    friend void* AddressOf(SymbolicAddress);
-    static int32_t callImport_void(Instance*, int32_t, int32_t, uint64_t*);
-    static int32_t callImport_i32(Instance*, int32_t, int32_t, uint64_t*);
-    static int32_t callImport_i64(Instance*, int32_t, int32_t, uint64_t*);
-    static int32_t callImport_f64(Instance*, int32_t, int32_t, uint64_t*);
-    static uint32_t growMemory_i32(Instance* instance, uint32_t delta);
-    static uint32_t currentMemory_i32(Instance* instance);
-    bool callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, const uint64_t* argv,
-                    MutableHandleValue rval);
-
     // Only WasmInstanceObject can call the private trace function.
     friend class js::WasmInstanceObject;
     void tracePrivate(JSTracer* trc);
+
+    bool callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, const uint64_t* argv,
+                    MutableHandleValue rval);
 
   public:
     Instance(JSContext* cx,
@@ -165,6 +157,15 @@ class Instance
                        Table::SeenSet* seenTables,
                        size_t* code,
                        size_t* data) const;
+
+  public:
+    // Functions to be called directly from wasm code.
+    static int32_t callImport_void(Instance*, int32_t, int32_t, uint64_t*);
+    static int32_t callImport_i32(Instance*, int32_t, int32_t, uint64_t*);
+    static int32_t callImport_i64(Instance*, int32_t, int32_t, uint64_t*);
+    static int32_t callImport_f64(Instance*, int32_t, int32_t, uint64_t*);
+    static uint32_t growMemory_i32(Instance* instance, uint32_t delta);
+    static uint32_t currentMemory_i32(Instance* instance);
 };
 
 typedef UniquePtr<Instance> UniqueInstance;

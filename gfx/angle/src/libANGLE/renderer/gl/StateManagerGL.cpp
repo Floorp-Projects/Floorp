@@ -135,6 +135,7 @@ StateManagerGL::StateManagerGL(const FunctionsGL *functions, const gl::Caps &ren
     mTextures[GL_TEXTURE_CUBE_MAP].resize(rendererCaps.maxCombinedTextureImageUnits);
     mTextures[GL_TEXTURE_2D_ARRAY].resize(rendererCaps.maxCombinedTextureImageUnits);
     mTextures[GL_TEXTURE_3D].resize(rendererCaps.maxCombinedTextureImageUnits);
+    mTextures[GL_TEXTURE_2D_MULTISAMPLE].resize(rendererCaps.maxCombinedTextureImageUnits);
 
     mIndexedBuffers[GL_UNIFORM_BUFFER].resize(rendererCaps.maxCombinedUniformBlocks);
 
@@ -661,17 +662,50 @@ gl::Error StateManagerGL::setDrawElementsState(const gl::ContextState &data,
     return setGenericDrawState(data);
 }
 
-gl::Error StateManagerGL::pauseTransformFeedback(const gl::ContextState &data)
+void StateManagerGL::pauseTransformFeedback()
 {
-    // If the context is going to be changed, pause the previous context's transform feedback
-    if (data.getContext() != mPrevDrawContext)
+    if (mPrevDrawTransformFeedback != nullptr)
     {
-        if (mPrevDrawTransformFeedback != nullptr)
+        mPrevDrawTransformFeedback->syncPausedState(true);
+    }
+}
+
+void StateManagerGL::pauseAllQueries()
+{
+    for (QueryGL *prevQuery : mCurrentQueries)
+    {
+        prevQuery->pause();
+    }
+}
+
+void StateManagerGL::pauseQuery(GLenum type)
+{
+    for (QueryGL *prevQuery : mCurrentQueries)
+    {
+        if (prevQuery->getType() == type)
         {
-            mPrevDrawTransformFeedback->syncPausedState(true);
+            prevQuery->pause();
         }
     }
-    return gl::Error(GL_NO_ERROR);
+}
+
+void StateManagerGL::resumeAllQueries()
+{
+    for (QueryGL *prevQuery : mCurrentQueries)
+    {
+        prevQuery->resume();
+    }
+}
+
+void StateManagerGL::resumeQuery(GLenum type)
+{
+    for (QueryGL *prevQuery : mCurrentQueries)
+    {
+        if (prevQuery->getType() == type)
+        {
+            prevQuery->resume();
+        }
+    }
 }
 
 gl::Error StateManagerGL::onMakeCurrent(const gl::ContextState &data)
@@ -681,10 +715,7 @@ gl::Error StateManagerGL::onMakeCurrent(const gl::ContextState &data)
     // If the context has changed, pause the previous context's queries
     if (data.getContext() != mPrevDrawContext)
     {
-        for (QueryGL *prevQuery : mCurrentQueries)
-        {
-            prevQuery->pause();
-        }
+        pauseAllQueries();
     }
     mCurrentQueries.clear();
     mPrevDrawTransformFeedback = nullptr;
@@ -1542,6 +1573,9 @@ void StateManagerGL::syncState(const gl::State &state, const gl::State::DirtyBit
                 break;
             case gl::State::DIRTY_BIT_VERTEX_ARRAY_BINDING:
                 // TODO(jmadill): implement this
+                break;
+            case gl::State::DIRTY_BIT_DRAW_INDIRECT_BUFFER_BINDING:
+                // TODO: implement this
                 break;
             case gl::State::DIRTY_BIT_PROGRAM_BINDING:
                 // TODO(jmadill): implement this

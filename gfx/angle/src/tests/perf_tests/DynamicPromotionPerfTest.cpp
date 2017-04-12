@@ -10,9 +10,9 @@
 //
 
 #include "ANGLEPerfTest.h"
+#include "common/vector_utils.h"
 #include "random_utils.h"
 #include "shader_utils.h"
-#include "Vector.h"
 
 using namespace angle;
 

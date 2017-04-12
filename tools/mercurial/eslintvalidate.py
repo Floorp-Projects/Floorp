@@ -43,7 +43,7 @@ def eslinthook(ui, repo, node=None, **opts):
         if not basepath:
             return
 
-        dir = os.path.join(basepath, "tools", "lint", "eslint", "node_modules", ".bin")
+        dir = os.path.join(basepath, "node_modules", ".bin")
 
         eslint_path = os.path.join(dir, "eslint")
         if os.path.exists(os.path.join(dir, "eslint.cmd")):

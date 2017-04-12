@@ -7,23 +7,61 @@
 #include "PreprocessorTest.h"
 #include "compiler/preprocessor/Token.h"
 
-void PreprocessorTest::preprocess(const char* input, const char* expected)
+void SimplePreprocessorTest::preprocess(const char *input,
+                                        std::stringstream *output,
+                                        pp::Preprocessor *preprocessor)
 {
-    ASSERT_TRUE(mPreprocessor.init(1, &input, NULL));
+    ASSERT_TRUE(preprocessor->init(1, &input, NULL));
 
     int line = 1;
     pp::Token token;
-    std::stringstream stream;
     do
     {
-        mPreprocessor.lex(&token);
-        for (; line < token.location.line; ++line)
+        preprocessor->lex(&token);
+        if (output)
         {
-            stream << "\n";
+            for (; line < token.location.line; ++line)
+            {
+                *output << "\n";
+            }
+            *output << token;
         }
-        stream << token;
     } while (token.type != pp::Token::LAST);
+}
 
-    std::string actual = stream.str();
+void SimplePreprocessorTest::preprocess(const char *input, const pp::PreprocessorSettings &settings)
+{
+    pp::Preprocessor preprocessor(&mDiagnostics, &mDirectiveHandler, settings);
+    preprocess(input, nullptr, &preprocessor);
+}
+
+void SimplePreprocessorTest::preprocess(const char *input)
+{
+    preprocess(input, pp::PreprocessorSettings());
+}
+
+void SimplePreprocessorTest::preprocess(const char *input, const char *expected)
+{
+    pp::Preprocessor preprocessor(&mDiagnostics, &mDirectiveHandler, pp::PreprocessorSettings());
+    std::stringstream output;
+    preprocess(input, &output, &preprocessor);
+
+    std::string actual = output.str();
     EXPECT_STREQ(expected, actual.c_str());
+}
+
+void SimplePreprocessorTest::lexSingleToken(const char *input, pp::Token *token)
+{
+    pp::Preprocessor preprocessor(&mDiagnostics, &mDirectiveHandler, pp::PreprocessorSettings());
+    ASSERT_TRUE(preprocessor.init(1, &input, nullptr));
+    preprocessor.lex(token);
+}
+
+void SimplePreprocessorTest::lexSingleToken(size_t count,
+                                            const char *const input[],
+                                            pp::Token *token)
+{
+    pp::Preprocessor preprocessor(&mDiagnostics, &mDirectiveHandler, pp::PreprocessorSettings());
+    ASSERT_TRUE(preprocessor.init(count, input, nullptr));
+    preprocessor.lex(token);
 }

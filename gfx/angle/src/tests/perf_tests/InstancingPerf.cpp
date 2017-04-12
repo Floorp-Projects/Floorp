@@ -14,7 +14,6 @@
 #include "Matrix.h"
 #include "random_utils.h"
 #include "shader_utils.h"
-#include "Vector.h"
 
 using namespace angle;
 using namespace egl_platform;
@@ -290,17 +289,16 @@ void InstancingPerfBenchmark::drawBenchmark()
         {
             const Vector3 &translate = mTranslateData[pointIndex];
 
-            float tx = translate.x + time;
-            float ty = translate.y + time;
-            float tz = translate.z + time;
+            float tx = translate.x() + time;
+            float ty = translate.y() + time;
+            float tz = translate.z() + time;
 
             float scale           = AnimationSignal(tx) * 0.01f + 0.01f;
             mSizeData[pointIndex] = scale;
 
-            Vector3 color;
-            color.x = AnimationSignal(tx) * 0.5f + 0.5f;
-            color.y = AnimationSignal(ty) * 0.5f + 0.5f;
-            color.z = AnimationSignal(tz) * 0.5f + 0.5f;
+            Vector3 color =
+                Vector3(AnimationSignal(tx), AnimationSignal(ty), AnimationSignal(tz)) * 0.5f +
+                Vector3(0.5f);
 
             mColorData[pointIndex] = color;
         }

@@ -45,6 +45,12 @@ bool IsPlatformAvailable(const PlatformParameters &param)
 #endif
         break;
 
+      case EGL_PLATFORM_ANGLE_TYPE_NULL_ANGLE:
+#ifndef ANGLE_ENABLE_NULL
+          return false;
+#endif
+          break;
+
       default:
         UNREACHABLE();
         break;

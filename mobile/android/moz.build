@@ -4,6 +4,51 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files('**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
+
+with Files('bouncer/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Distributions')
+
+with Files('branding/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('build/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
+
+with Files('config/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
+
+with Files('docs/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
+with Files('geckoview/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'GeckoView')
+
+with Files('geckoview/src/main/aidl/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Audio/Video')
+
+with Files('geckoview/src/main/java/org/mozilla/gecko/mozglue/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Audio/Video')
+
+with Files('geckoview_example/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'GeckoView')
+
+with Files('gradle/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
+
+with Files('search/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Search Activity')
+
+with Files('services/**'):
+    BUG_COMPONENT = ('Android Background Services', 'Android Sync')
+
+with Files('themes/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'Theme and Visual Design')
+
+with Files('thirdparty/**'):
+    BUG_COMPONENT = ('Firefox for Android', 'General')
+
 CONFIGURE_SUBST_FILES += ['installer/Makefile']
 
 DIRS += [

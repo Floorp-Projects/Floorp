@@ -33,6 +33,10 @@ var SetEyeParameter = function(eye, offsetX, offsetY, offsetZ,
                                 downDegree, leftDegree);
 }
 
+var SetMountState = function(isMounted) {
+  vrMockDisplay.setMountState(isMounted);
+}
+
 var UpdateVRDisplay = function() {
   vrMockDisplay.update();
 }
@@ -42,6 +46,7 @@ var API = {
   SetVRDisplayPose: SetVRDisplayPose,
   SetEyeResolution: SetEyeResolution,
   SetEyeParameter: SetEyeParameter,
+  SetMountState: SetMountState,
   UpdateVRDisplay: UpdateVRDisplay,
 
   none: false
