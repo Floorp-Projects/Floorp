@@ -111,7 +111,7 @@ to mochitest command.
   * test_value_storage.html `symbols(` [30]
   * ... `list-style-type` [60]
   * ... `'list-style'` [30]
-  * ... `'content`: various value as list-style-type in counter functions [13]
+  * ... `'content`: various value as list-style-type in counter functions [12]
 * @page support:
   * test_bug887741_at-rules_in_declaration_lists.html `exception` [1]
 * test_default_computed_style.html: support of getDefaultComputedStyle [1]
@@ -189,12 +189,7 @@ to mochitest command.
     * test_initial_storage.html `font-variant` [18]
     * test_value_storage.html `font-variant` [332]
   * shape-outside property servo/servo#15958
-    * test_compute_data_with_start_struct.html `shape-outside` [2]
-    * test_inherit_computation.html `shape-outside` [2]
-    * test_inherit_storage.html `shape-outside` [2]
-    * test_initial_computation.html `shape-outside` [4]
-    * test_initial_storage.html `shape-outside` [4]
-    * test_value_storage.html `shape-outside` [121]
+    * test_value_storage.html `shape-outside` [2]
   * touch-action property
     * test_compute_data_with_start_struct.html `touch-action` [2]
     * test_inherit_computation.html `touch-action` [2]
