@@ -55,6 +55,7 @@
 #include "mozilla/dom/URLClassifierChild.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsProxyRelease.h"
+#include "SBTelemetryUtils.h"
 
 namespace mozilla {
 namespace safebrowsing {
@@ -942,7 +943,7 @@ nsUrlClassifierDBServiceWorker::CacheResultToTableUpdate(CacheResult* aCacheResu
     return NS_OK;
   }
 
-  // tableUpdate object should be either v2 or v4.
+  // tableUpdate object should be either V2 or V4.
   return NS_ERROR_FAILURE;
 }
 
@@ -1283,27 +1284,6 @@ nsUrlClassifierLookupCallback::ProcessComplete(CacheResult* aCacheResult)
   return NS_OK;
 }
 
-
-static uint8_t
-ConvertMatchResultToUint(const MatchResult& aResult)
-{
-  MOZ_ASSERT(!(aResult & MatchResult::eTelemetryDisabled));
-  switch (aResult) {
-  case MatchResult::eNoMatch:          return 0;
-  case MatchResult::eV2Prefix:         return 1;
-  case MatchResult::eV4Prefix:         return 2;
-  case MatchResult::eBothPrefix:       return 3;
-  case MatchResult::eAll:              return 4;
-  case MatchResult::eV2PreAndCom:      return 5;
-  case MatchResult::eV4PreAndCom:      return 6;
-  case MatchResult::eBothPreAndV2Com:  return 7;
-  case MatchResult::eBothPreAndV4Com:  return 8;
-  default:
-    MOZ_ASSERT_UNREACHABLE("Unexpected match result");
-    return 9;
-  }
-}
-
 nsresult
 nsUrlClassifierLookupCallback::HandleResults()
 {
@@ -1380,9 +1360,43 @@ nsUrlClassifierLookupCallback::HandleResults()
     }
   }
 
+  // Only record threat type telemetry when completion is found in V2 & V4.
+  if (matchResult == MatchResult::eAll && mCacheResults) {
+    MatchThreatType types = MatchThreatType::eIdentical;
+
+    // Check all the results because there may be multiple matches being returned.
+    for (uint32_t i = 0; i < mCacheResults->Length(); i++) {
+      CacheResult* c = mCacheResults->ElementAt(i).get();
+      for (LookupResult& l : *(mResults.get())) {
+        if (l.hash.fixedLengthPrefix != c->prefix) {
+          continue;
+        }
+
+        // Ignore unconfirmed results.
+        if (l.Confirmed()) {
+          types |= TableNameToThreatType(CacheResult::V2 == c->Ver(), c->table);
+        }
+        break;
+      }
+    }
+
+    auto fnIsMatchSameThreatType = [&](const MatchThreatType& aTypeMask) {
+      uint8_t val = static_cast<uint8_t>(types & aTypeMask);
+      return val == 0 || val == static_cast<uint8_t>(aTypeMask);
+    };
+    if (fnIsMatchSameThreatType(MatchThreatType::ePhishingMask) &&
+        fnIsMatchSameThreatType(MatchThreatType::eMalwareMask) &&
+        fnIsMatchSameThreatType(MatchThreatType::eUnwantedMask)) {
+      types = MatchThreatType::eIdentical;
+    }
+
+    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_MATCH_THREAT_TYPE_RESULT,
+                          static_cast<uint8_t>(types));
+  }
+
   if (matchResult != MatchResult::eTelemetryDisabled) {
     Telemetry::Accumulate(Telemetry::URLCLASSIFIER_MATCH_RESULT,
-                          ConvertMatchResultToUint(matchResult));
+                          MatchResultToUint(matchResult));
   }
 
   // TODO: Bug 1333328, Refactor cache miss mechanism for v2.
