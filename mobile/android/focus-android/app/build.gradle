@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+apply plugin: 'findbugs'
+
 
 android {
     compileSdkVersion 25
@@ -229,5 +231,28 @@ task stringsCleanUpdate()  {
             workingDir '../l10n-repo/'
             commandLine 'git', 'reset', '--hard', 'origin/master'
         }
+    }
+}
+
+
+task findbugs(type: FindBugs) {
+    // Flip this switch to fail the build when issues are found
+    ignoreFailures = true
+
+    effort = "default"
+    // Switch this to "max" for moar checking - let's do this when we fix all existing issues?
+    reportLevel = "medium"
+
+    excludeFilter = new File("${project.rootDir}/findbugs/exclude.xml")
+
+    classes = files("${project.rootDir}/app/build/intermediates/classes")
+    source = fileTree('src/main/java/')
+    classpath = files()
+
+    // Only one report format is supported. Html is easier for me to read, so let's use that
+    // (xml is the one that's enabled by default).
+    reports {
+        xml.enabled = false
+        html.enabled = true
     }
 }
