@@ -61,26 +61,14 @@ this.PageThumbUtils = {
       let left = {}, top = {}, screenWidth = {}, screenHeight = {};
       screenManager.primaryScreen.GetRectDisplayPix(left, top, screenWidth, screenHeight);
 
-      /** *
-       * The system default scale might be different than
-       * what is reported by the window. For example,
-       * retina displays have 1:1 system scales, but 2:1 window
-       * scale as 1 pixel system wide == 2 device pixels.
+      /**
+       * The primary monitor default scale might be different than
+       * what is reported by the window on mixed-DPI systems.
        * To get the best image quality, query both and take the highest one.
        */
-      let systemScale = screenManager.systemDefaultScale;
-      let windowScale = aWindow ? aWindow.devicePixelRatio : systemScale;
-      let scale = Math.max(systemScale, windowScale);
-
-      /** *
-       * On retina displays, we can sometimes go down this path
-       * without a window object. In those cases, force 2x scaling
-       * as the system scale doesn't represent the 2x scaling
-       * on OS X.
-       */
-      if (AppConstants.platform == "macosx" && !aWindow) {
-        scale = 2;
-      }
+      let primaryScale = screenManager.primaryScreen.defaultCSSScaleFactor;
+      let windowScale = aWindow ? aWindow.devicePixelRatio : primaryScale;
+      let scale = Math.max(primaryScale, windowScale);
 
       /** *
        * THESE VALUES ARE DEFINED IN newtab.css and hard coded.

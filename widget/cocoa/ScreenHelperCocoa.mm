@@ -107,12 +107,6 @@ MakeScreen(NSScreen* aScreen)
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nullptr);
 }
 
-float
-ScreenHelperCocoa::GetSystemDefaultScale()
-{
-  return 1.0f;
-}
-
 void
 ScreenHelperCocoa::RefreshScreens()
 {
