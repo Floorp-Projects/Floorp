@@ -210,10 +210,9 @@ public final class TelemetryWrapper {
     }
 
     public static void settingsEvent(String key, String value) {
-        Map<String, java.lang.Object> extras = new HashMap<>();
-        extras.put(Extra.TO, value);
-
-        TelemetryEvent.create(Category.ACTION, Method.CHANGE, Object.SETTING, key, extras).queue();
+        TelemetryEvent.create(Category.ACTION, Method.CHANGE, Object.SETTING, key)
+                .extra(Extra.TO, value)
+                .queue();
     }
 
     public static void shareEvent() {
