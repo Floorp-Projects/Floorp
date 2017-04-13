@@ -2610,7 +2610,7 @@ CanvasRenderingContext2D::CreatePattern(const CanvasImageSource& aSource,
   // of animated images
   nsLayoutUtils::SurfaceFromElementResult res =
     nsLayoutUtils::SurfaceFromElement(htmlElement,
-      nsLayoutUtils::SFE_WANT_FIRST_FRAME, mTarget);
+      nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE, mTarget);
 
   if (!res.GetSourceSurface()) {
     return nullptr;
@@ -5106,7 +5106,7 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
   if (!srcSurf) {
     // The canvas spec says that drawImage should draw the first frame
     // of animated images. We also don't want to rasterize vector images.
-    uint32_t sfeFlags = nsLayoutUtils::SFE_WANT_FIRST_FRAME |
+    uint32_t sfeFlags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE |
                         nsLayoutUtils::SFE_NO_RASTERIZING_VECTORS;
 
     nsLayoutUtils::SurfaceFromElementResult res =
