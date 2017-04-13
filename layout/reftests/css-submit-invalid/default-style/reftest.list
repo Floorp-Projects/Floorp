@@ -1,3 +1,3 @@
-== input-submit.html input-submit-ref.html
+fails-if(stylo) == input-submit.html input-submit-ref.html
 == input-image.html input-image-ref.html
-== button-submit.html button-submit-ref.html
+fails-if(stylo) == button-submit.html button-submit-ref.html

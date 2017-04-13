@@ -1,7 +1,7 @@
-== first-letter-1.html first-letter-1-ref.html
-!= first-letter-1.html first-letter-1-noref.html
+fails-if(stylo) == first-letter-1.html first-letter-1-ref.html
+fails-if(stylo) != first-letter-1.html first-letter-1-noref.html
 
-== max-height.html max-height-ref.html
+fails-if(stylo) == max-height.html max-height-ref.html
 == min-height.html min-height-ref.html
 
 # Android is off ever-so-slightly on the points where the text
@@ -16,20 +16,20 @@ fuzzy-if(Android,125,20) == percent-width-child.html  percent-width-child-ref.ht
 
 == vertical-centering.html vertical-centering-ref.html
 
-!= line-height-button-0.5.html line-height-button-1.0.html
-!= line-height-button-1.5.html line-height-button-1.0.html
-!= line-height-input-0.5.html line-height-input-1.0.html
-!= line-height-input-1.5.html line-height-input-1.0.html
+fails-if(stylo) != line-height-button-0.5.html line-height-button-1.0.html
+fails-if(stylo) != line-height-button-1.5.html line-height-button-1.0.html
+fails-if(stylo) != line-height-input-0.5.html line-height-input-1.0.html
+fails-if(stylo) != line-height-input-1.5.html line-height-input-1.0.html
 
 # Looks like Android changes the text color, but to something slightly
 # different from ColorGray
-fails-if(Android) == disabled-1.html disabled-1-ref.html
-== disabled-2.html disabled-2-ref.html
+fails-if(Android) fails-if(stylo) == disabled-1.html disabled-1-ref.html
+fails-if(stylo) == disabled-2.html disabled-2-ref.html
 
-!= disabled-3.html disabled-3-notref.html
-!= disabled-4.html disabled-4-notref.html
-!= disabled-5.html disabled-5-notref.html
-!= disabled-6.html disabled-6-notref.html
+fails-if(stylo) != disabled-3.html disabled-3-notref.html
+fails-if(stylo) != disabled-4.html disabled-4-notref.html
+fails-if(stylo) != disabled-5.html disabled-5-notref.html
+fails-if(stylo) != disabled-6.html disabled-6-notref.html
 
 == width-auto-size-em-ltr.html width-auto-size-em-ltr-ref.html
 == width-auto-size-ltr.html width-auto-size-ltr-ref.html
@@ -37,7 +37,7 @@ fails-if(Android) == disabled-1.html disabled-1-ref.html
 == width-auto-size-em-rtl.html width-auto-size-em-rtl-ref.html
 == width-auto-size-rtl.html width-auto-size-rtl-ref.html
 == width-exact-fit-rtl.html width-auto-size-rtl-ref.html
-== display-grid-flex-columnset.html display-grid-flex-columnset-ref.html
+fails-if(stylo) == display-grid-flex-columnset.html display-grid-flex-columnset-ref.html
 == 1317351.html 1317351-ref.html
 
-== dynamic-text-indent.html dynamic-text-indent-ref.html
+fails-if(stylo) == dynamic-text-indent.html dynamic-text-indent-ref.html

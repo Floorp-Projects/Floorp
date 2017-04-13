@@ -13,10 +13,10 @@ fuzzy-if(Android,255,154) == image-seam-2.html  image-seam-2-ref.html  # Bug 112
 
 # Tests for "object-fit" & "object-position"
 == image-object-fit-dyn-1.html image-object-fit-dyn-1-ref.html
-== image-object-fit-with-background-1.html image-object-fit-with-background-1-ref.html
-== image-object-fit-with-background-2.html image-object-fit-with-background-2-ref.html
+fails-if(stylo) == image-object-fit-with-background-1.html image-object-fit-with-background-1-ref.html
+fails-if(stylo) == image-object-fit-with-background-2.html image-object-fit-with-background-2-ref.html
 == image-object-position-dyn-1.html image-object-position-dyn-1-ref.html
-== image-object-position-with-background-1.html image-object-position-with-background-1-ref.html
+fails-if(stylo) == image-object-position-with-background-1.html image-object-position-with-background-1-ref.html
 fuzzy-if(winWidget,117,374) == image-object-position-with-background-2.html image-object-position-with-background-2-ref.html  # Bug 1128229
 
 # Tests for image-orientation used with 'from-image' (note that all
@@ -43,7 +43,7 @@ fuzzy(1,1) == image-orientation-explicit.html?180&flip image-orientation-ref.htm
 fuzzy(1,1) == image-orientation-explicit.html?270&flip image-orientation-ref.html?270&flip
 
 # Tests for image-orientation used with non-axis-aligned angles:
-fuzzy(1,1) == image-orientation-explicit.html?-45      image-orientation-ref.html?0
+fuzzy(1,1) fails-if(stylo) == image-orientation-explicit.html?-45      image-orientation-ref.html?0
 fuzzy(1,1) == image-orientation-explicit.html?-15      image-orientation-ref.html?0
 fuzzy(1,1) == image-orientation-explicit.html?15       image-orientation-ref.html?0
 fuzzy(1,1) == image-orientation-explicit.html?45       image-orientation-ref.html?90
@@ -55,7 +55,7 @@ fuzzy(1,1) == image-orientation-explicit.html?195      image-orientation-ref.htm
 fuzzy(1,1) == image-orientation-explicit.html?225      image-orientation-ref.html?270
 fuzzy(1,1) == image-orientation-explicit.html?255      image-orientation-ref.html?270
 fuzzy(1,1) == image-orientation-explicit.html?285      image-orientation-ref.html?270
-fuzzy(1,1) == image-orientation-explicit.html?315      image-orientation-ref.html?0
+fuzzy(1,1) fails-if(stylo) == image-orientation-explicit.html?315      image-orientation-ref.html?0
 fuzzy(1,1) == image-orientation-explicit.html?345      image-orientation-ref.html?0
 
 # Tests for image-orientation used on generated content:
@@ -72,8 +72,8 @@ fuzzy(1,1) == image-orientation-generated-content.html?270&flip   image-orientat
 # Tests that image-orientation does not apply to decorative images:
 fuzzy(1,1) == image-orientation-background.html?from-image   image-orientation-ref.html?0
 fuzzy(1,1) == image-orientation-background.html?90&flip      image-orientation-ref.html?0
-== image-orientation-border-image.html?from-image            image-orientation-border-image.html?0
-== image-orientation-border-image.html?90&flip               image-orientation-border-image.html?0
+fails-if(stylo) == image-orientation-border-image.html?from-image            image-orientation-border-image.html?0
+fails-if(stylo) == image-orientation-border-image.html?90&flip               image-orientation-border-image.html?0
 == image-orientation-list-style-image.html?from-image        image-orientation-list-style-image.html?0
 == image-orientation-list-style-image.html?90&flip           image-orientation-list-style-image.html?0
 
@@ -109,7 +109,7 @@ fuzzy(1,1) == image-orientation-background.html?90&flip      image-orientation-r
 == image-srcset-basic-selection-1.5x.html image-srcset-basic-selection-1.5x-ref.html
 == image-srcset-basic-selection-1x.html image-srcset-basic-selection-1x-ref.html
 == image-srcset-basic-selection-width-0.5x.html image-srcset-basic-selection-width-0.5x-ref.html
-== image-srcset-basic-selection-width-10x.html image-srcset-basic-selection-width-10x-ref.html
+fails-if(stylo) == image-srcset-basic-selection-width-10x.html image-srcset-basic-selection-width-10x-ref.html
 == image-srcset-basic-selection-width-2x.html image-srcset-basic-selection-width-2x-ref.html
 == image-srcset-basic-selection-width-1x.html image-srcset-basic-selection-width-1x-ref.html
 == image-srcset-default-2x.html image-srcset-default-2x-ref.html
@@ -118,13 +118,13 @@ fuzzy(1,1) == image-orientation-background.html?90&flip      image-orientation-r
 == image-srcset-default-src-1x.html image-srcset-default-src-1x-ref.html
 == image-srcset-orientation-2x.html image-srcset-orientation-2x-ref.html
 == image-srcset-orientation-1x.html image-srcset-orientation-1x-ref.html
-== image-srcset-svg-3x.html image-srcset-svg-3x-ref.html
+fails-if(stylo) == image-srcset-svg-3x.html image-srcset-svg-3x-ref.html
 == image-srcset-svg-2x.html image-srcset-svg-2x-ref.html
 == image-srcset-svg-1x.html image-srcset-svg-1x-ref.html
 == image-srcset-svg-default-2x.html image-srcset-svg-default-2x-ref.html
 == image-srcset-svg-default-1x.html image-srcset-svg-default-1x-ref.html
 
 == image-resize-percent-height.html image-resize-ref.html
-== image-resize-percent-width.html image-resize-ref.html
+fails-if(stylo) == image-resize-percent-width.html image-resize-ref.html
 
 == moz-broken-matching-1.html moz-broken-matching-1-ref.html

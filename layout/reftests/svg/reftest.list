@@ -204,7 +204,7 @@ fails-if(Android) pref(security.fileuri.strict_origin_policy,true) == filter-ext
 fuzzy(71,817) == filter-on-continuation-box-01.html filter-on-continuation-box-ref.html
 == filter-result-01.svg filter-result-01-ref.svg
 == filter-scaled-01.svg pass.svg
-fuzzy-if(skiaContent,1,500) == filter-scaled-02.html filter-scaled-02-ref.html
+fuzzy-if(skiaContent,1,500) fails-if(stylo) == filter-scaled-02.html filter-scaled-02-ref.html
 == filter-translated-01.svg filter-translated-01-ref.svg
 == filter-use-element-01.svg pass.svg
 fuzzy-if(skiaContent,1,800000) == filters-and-group-opacity-01.svg filters-and-group-opacity-01-ref.svg
@@ -316,7 +316,7 @@ fuzzy-if(skiaContent,1,10000) == opacity-and-transform-01.svg opacity-and-transf
 
 fuzzy-if(Android,8,200) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01-ref.svg
 
-== outline.html outline-ref.html
+fails-if(stylo) == outline.html outline-ref.html
 
 == overflow-on-outer-svg-01.svg overflow-on-outer-svg-01-ref.svg
 == overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02-ref.xhtml

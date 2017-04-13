@@ -1,7 +1,7 @@
-== unicode-attribute-selector.html unicode-ref.html
-== unicode-element-selector.html unicode-ref.html
-== unicode-lang.html unicode-ref.html
+fails-if(stylo) == unicode-attribute-selector.html unicode-ref.html
+fails-if(stylo) == unicode-element-selector.html unicode-ref.html
+fails-if(stylo) == unicode-lang.html unicode-ref.html
 == unicode-media-query-media-type.html unicode-ref-print.html
 == unicode-media-query-query.html unicode-ref-print.html
-== unicode-pseudo-selector.html unicode-ref.html
-== langattribute.html langattribute-ref.html
+fails-if(stylo) == unicode-pseudo-selector.html unicode-ref.html
+fails-if(stylo) == langattribute.html langattribute-ref.html

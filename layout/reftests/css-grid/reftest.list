@@ -1,288 +1,283 @@
 default-preferences pref(layout.css.grid.enabled,true)
 
-fails == grid-whitespace-handling-1a.xhtml grid-whitespace-handling-1-ref.xhtml
-fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
-== grid-whitespace-handling-2.xhtml  grid-whitespace-handling-2-ref.xhtml
-== grid-placement-definite-001.html grid-placement-definite-001-ref.html
-== grid-placement-definite-002.html grid-placement-definite-002-ref.html
-== grid-placement-definite-003.html grid-placement-definite-003-ref.html
-== grid-placement-negative-lines-001.html grid-placement-negative-lines-001-ref.html
-== grid-placement-auto-row-sparse-001.html grid-placement-auto-row-sparse-001-ref.html
-== grid-placement-auto-row-dense-001.html grid-placement-auto-row-dense-001-ref.html
-== grid-placement-auto-col-sparse-001.html grid-placement-auto-col-sparse-001-ref.html
-== grid-placement-auto-col-dense-001.html grid-placement-auto-col-dense-001-ref.html
-== grid-placement-implicit-named-areas-001.html grid-placement-implicit-named-areas-001-ref.html
-== grid-placement-named-lines-001.html grid-placement-named-lines-001-ref.html
-== grid-placement-named-lines-002.html grid-placement-named-lines-002-ref.html
-== grid-placement-named-lines-003.html grid-placement-named-lines-003-ref.html
-== grid-track-sizing-001.html grid-track-sizing-001-ref.html
-== grid-track-sizing-002.html grid-track-sizing-002-ref.html
-== grid-abspos-items-001.html grid-abspos-items-001-ref.html
-== grid-abspos-items-002.html grid-abspos-items-002-ref.html
-== grid-abspos-items-003.html grid-abspos-items-003-ref.html
-== grid-abspos-items-004.html grid-abspos-items-004-ref.html
-== grid-abspos-items-005.html grid-abspos-items-005-ref.html
-== grid-abspos-items-006.html grid-abspos-items-006-ref.html
-== grid-abspos-items-007.html grid-abspos-items-007-ref.html
-== grid-abspos-items-008.html grid-abspos-items-008-ref.html
-== grid-abspos-items-009.html grid-abspos-items-009-ref.html
-== grid-abspos-items-010.html grid-abspos-items-010-ref.html
+fails-if(!stylo) == grid-whitespace-handling-1a.xhtml grid-whitespace-handling-1-ref.xhtml
+fails-if(!stylo) == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
+fails-if(stylo) == grid-whitespace-handling-2.xhtml  grid-whitespace-handling-2-ref.xhtml
+fails-if(stylo) == grid-placement-definite-001.html grid-placement-definite-001-ref.html
+fails-if(stylo) == grid-placement-definite-002.html grid-placement-definite-002-ref.html
+fails-if(stylo) == grid-placement-definite-003.html grid-placement-definite-003-ref.html
+fails-if(stylo) == grid-placement-negative-lines-001.html grid-placement-negative-lines-001-ref.html
+fails-if(stylo) == grid-placement-auto-row-sparse-001.html grid-placement-auto-row-sparse-001-ref.html
+fails-if(stylo) == grid-placement-auto-row-dense-001.html grid-placement-auto-row-dense-001-ref.html
+fails-if(stylo) == grid-placement-auto-col-sparse-001.html grid-placement-auto-col-sparse-001-ref.html
+fails-if(stylo) == grid-placement-auto-col-dense-001.html grid-placement-auto-col-dense-001-ref.html
+fails-if(stylo) == grid-placement-implicit-named-areas-001.html grid-placement-implicit-named-areas-001-ref.html
+fails-if(stylo) == grid-placement-named-lines-001.html grid-placement-named-lines-001-ref.html
+fails-if(stylo) == grid-placement-named-lines-002.html grid-placement-named-lines-002-ref.html
+fails-if(stylo) == grid-placement-named-lines-003.html grid-placement-named-lines-003-ref.html
+fails-if(stylo) == grid-track-sizing-001.html grid-track-sizing-001-ref.html
+fails-if(stylo) == grid-track-sizing-002.html grid-track-sizing-002-ref.html
+fails-if(stylo) == grid-abspos-items-001.html grid-abspos-items-001-ref.html
+fails-if(stylo) == grid-abspos-items-002.html grid-abspos-items-002-ref.html
+fails-if(stylo) == grid-abspos-items-003.html grid-abspos-items-003-ref.html
+fails-if(stylo) == grid-abspos-items-004.html grid-abspos-items-004-ref.html
+fails-if(stylo) == grid-abspos-items-005.html grid-abspos-items-005-ref.html
+fails-if(stylo) == grid-abspos-items-006.html grid-abspos-items-006-ref.html
+fails-if(stylo) == grid-abspos-items-007.html grid-abspos-items-007-ref.html
+fails-if(stylo) == grid-abspos-items-008.html grid-abspos-items-008-ref.html
+fails-if(stylo) == grid-abspos-items-009.html grid-abspos-items-009-ref.html
+fails-if(stylo) == grid-abspos-items-010.html grid-abspos-items-010-ref.html
 == grid-abspos-items-011.html grid-abspos-items-011-ref.html
 == grid-abspos-items-012.html grid-abspos-items-012-ref.html
-== grid-abspos-items-013.html grid-abspos-items-013-ref.html
-== grid-abspos-items-014.html grid-abspos-items-014-ref.html
-== grid-abspos-items-015.html grid-abspos-items-015-ref.html
-== grid-order-abspos-items-001.html grid-order-abspos-items-001-ref.html
-== grid-order-placement-auto-001.html grid-order-placement-auto-001-ref.html
-fuzzy-if(skiaContent,1,200) == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
-skip-if(Android) == grid-placement-definite-implicit-001.html grid-placement-definite-implicit-001-ref.html
-== grid-placement-definite-implicit-002.html grid-placement-definite-implicit-002-ref.html
-skip-if(Android) fuzzy-if(winWidget,1,32) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html
-== grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001-ref.html
-== rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001-ref.html
-== rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001-ref.html
-== vlr-grid-placement-auto-row-sparse-001.html vlr-grid-placement-auto-row-sparse-001-ref.html
-== vrl-grid-placement-auto-row-sparse-001.html vrl-grid-placement-auto-row-sparse-001-ref.html
-== grid-relpos-items-001.html grid-relpos-items-001-ref.html
-== grid-item-sizing-percent-001.html grid-item-sizing-percent-001-ref.html
-== grid-item-sizing-percent-002.html grid-item-sizing-percent-002-ref.html
-== grid-item-sizing-percent-003.html grid-item-sizing-percent-003-ref.html
-== grid-item-sizing-percent-004.html grid-item-sizing-percent-004-ref.html
-== grid-item-sizing-px-001.html grid-item-sizing-percent-001-ref.html
-== grid-item-dir-001.html grid-item-dir-001-ref.html
-fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-max-content-001.html grid-col-max-sizing-max-content-001-ref.html
-fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-max-content-002.html grid-col-max-sizing-max-content-002-ref.html
-== grid-min-max-content-sizing-001.html grid-min-max-content-sizing-001-ref.html
-== grid-min-max-content-sizing-002.html grid-min-max-content-sizing-002-ref.html
-fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min-sizing-definite-001-ref.html
-== grid-auto-min-sizing-intrinsic-001.html grid-auto-min-sizing-intrinsic-001-ref.html
-== grid-auto-min-sizing-intrinsic-002.html grid-auto-min-sizing-intrinsic-002-ref.html
-== grid-auto-min-sizing-intrinsic-003.html grid-auto-min-sizing-intrinsic-003-ref.html
-== grid-auto-min-sizing-intrinsic-004.html grid-auto-min-sizing-intrinsic-004-ref.html
+fails-if(stylo) == grid-abspos-items-013.html grid-abspos-items-013-ref.html
+fails-if(stylo) == grid-abspos-items-014.html grid-abspos-items-014-ref.html
+fails-if(stylo) == grid-abspos-items-015.html grid-abspos-items-015-ref.html
+fails-if(stylo) == grid-order-abspos-items-001.html grid-order-abspos-items-001-ref.html
+fails-if(stylo) == grid-order-placement-auto-001.html grid-order-placement-auto-001-ref.html
+fuzzy-if(skiaContent,1,200) fails-if(stylo) == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
+skip-if(Android) fails-if(stylo) == grid-placement-definite-implicit-001.html grid-placement-definite-implicit-001-ref.html
+fails-if(stylo) == grid-placement-definite-implicit-002.html grid-placement-definite-implicit-002-ref.html
+skip-if(Android) fuzzy-if(winWidget,1,32) fails-if(stylo) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html
+fails-if(stylo) == grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001-ref.html
+fails-if(stylo) == rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001-ref.html
+fails-if(stylo) == rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001-ref.html
+fails-if(stylo) == vlr-grid-placement-auto-row-sparse-001.html vlr-grid-placement-auto-row-sparse-001-ref.html
+fails-if(stylo) == vrl-grid-placement-auto-row-sparse-001.html vrl-grid-placement-auto-row-sparse-001-ref.html
+fails-if(stylo) == grid-relpos-items-001.html grid-relpos-items-001-ref.html
+fails-if(stylo) == grid-item-sizing-percent-001.html grid-item-sizing-percent-001-ref.html
+fails-if(stylo) == grid-item-sizing-percent-002.html grid-item-sizing-percent-002-ref.html
+fails-if(stylo) == grid-item-sizing-percent-003.html grid-item-sizing-percent-003-ref.html
+fails-if(stylo) == grid-item-sizing-percent-004.html grid-item-sizing-percent-004-ref.html
+fails-if(stylo) == grid-item-sizing-px-001.html grid-item-sizing-percent-001-ref.html
+fails-if(stylo) == grid-item-dir-001.html grid-item-dir-001-ref.html
+fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) fails-if(stylo) == grid-col-max-sizing-max-content-001.html grid-col-max-sizing-max-content-001-ref.html
+fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) fails-if(stylo) == grid-col-max-sizing-max-content-002.html grid-col-max-sizing-max-content-002-ref.html
+fails-if(stylo) == grid-min-max-content-sizing-001.html grid-min-max-content-sizing-001-ref.html
+fails-if(stylo) == grid-min-max-content-sizing-002.html grid-min-max-content-sizing-002-ref.html
+fuzzy-if(winWidget,1,36) fails-if(stylo) == grid-auto-min-sizing-definite-001.html grid-auto-min-sizing-definite-001-ref.html
+fails-if(stylo) == grid-auto-min-sizing-intrinsic-001.html grid-auto-min-sizing-intrinsic-001-ref.html
+fails-if(stylo) == grid-auto-min-sizing-intrinsic-002.html grid-auto-min-sizing-intrinsic-002-ref.html
+fails-if(stylo) == grid-auto-min-sizing-intrinsic-003.html grid-auto-min-sizing-intrinsic-003-ref.html
+fails-if(stylo) == grid-auto-min-sizing-intrinsic-004.html grid-auto-min-sizing-intrinsic-004-ref.html
 == grid-auto-min-sizing-transferred-size-001.html grid-auto-min-sizing-transferred-size-001-ref.html
-== grid-auto-min-sizing-transferred-size-002.html grid-auto-min-sizing-transferred-size-002-ref.html
-== grid-auto-min-sizing-transferred-size-003.html grid-auto-min-sizing-transferred-size-003-ref.html
-== grid-auto-min-sizing-transferred-size-004.html grid-auto-min-sizing-transferred-size-004-ref.html
+fails-if(stylo) == grid-auto-min-sizing-transferred-size-002.html grid-auto-min-sizing-transferred-size-002-ref.html
+fails-if(stylo) == grid-auto-min-sizing-transferred-size-003.html grid-auto-min-sizing-transferred-size-003-ref.html
+fails-if(stylo) == grid-auto-min-sizing-transferred-size-004.html grid-auto-min-sizing-transferred-size-004-ref.html
 == grid-auto-min-sizing-min-content-min-size-001.html grid-auto-min-sizing-min-content-min-size-001-ref.html
-== grid-auto-min-sizing-min-content-min-size-002.html grid-auto-min-sizing-min-content-min-size-002-ref.html
-== grid-auto-min-sizing-min-content-min-size-003.html grid-auto-min-sizing-min-content-min-size-003-ref.html
-== grid-auto-min-sizing-min-content-min-size-004.html grid-auto-min-sizing-min-content-min-size-004-ref.html
+fails-if(stylo) == grid-auto-min-sizing-min-content-min-size-002.html grid-auto-min-sizing-min-content-min-size-002-ref.html
+fails-if(stylo) == grid-auto-min-sizing-min-content-min-size-003.html grid-auto-min-sizing-min-content-min-size-003-ref.html
+fails-if(stylo) == grid-auto-min-sizing-min-content-min-size-004.html grid-auto-min-sizing-min-content-min-size-004-ref.html
 == grid-min-content-min-sizing-transferred-size-001.html grid-min-content-min-sizing-transferred-size-001-ref.html
-== grid-min-content-min-sizing-transferred-size-002.html grid-min-content-min-sizing-transferred-size-002-ref.html
+fails-if(stylo) == grid-min-content-min-sizing-transferred-size-002.html grid-min-content-min-sizing-transferred-size-002-ref.html
 == grid-min-content-min-sizing-transferred-size-003.html grid-min-content-min-sizing-transferred-size-003-ref.html
-== grid-min-content-min-sizing-transferred-size-004.html grid-min-content-min-sizing-transferred-size-004-ref.html
+fails-if(stylo) == grid-min-content-min-sizing-transferred-size-004.html grid-min-content-min-sizing-transferred-size-004-ref.html
 skip-if(Android) == grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-percent-001-ref.html # bug 1305716
-== grid-track-intrinsic-sizing-001.html grid-track-intrinsic-sizing-001-ref.html
-== grid-track-intrinsic-sizing-002.html grid-track-intrinsic-sizing-002-ref.html
-== grid-track-intrinsic-sizing-003.html grid-track-intrinsic-sizing-003-ref.html
-== grid-track-intrinsic-sizing-004.html grid-track-intrinsic-sizing-004-ref.html
-== grid-track-percent-sizing-001.html grid-track-percent-sizing-001-ref.html
-== grid-track-fit-content-sizing-001.html grid-track-fit-content-sizing-001-ref.html
-== grid-track-fit-content-sizing-002.html grid-track-fit-content-sizing-002-ref.html
-== grid-max-sizing-flex-001.html grid-max-sizing-flex-001-ref.html
-== grid-max-sizing-flex-002.html grid-max-sizing-flex-002-ref.html
-== grid-max-sizing-flex-003.html grid-max-sizing-flex-003-ref.html
-== grid-max-sizing-flex-004.html grid-max-sizing-flex-004-ref.html
-== grid-max-sizing-flex-005.html grid-max-sizing-flex-005-ref.html
-== grid-max-sizing-flex-006.html grid-max-sizing-flex-006-ref.html
-== grid-max-sizing-flex-007.html grid-max-sizing-flex-007-ref.html
-== grid-max-sizing-flex-008.html grid-max-sizing-flex-008-ref.html
-== grid-flex-min-sizing-001.html grid-flex-min-sizing-001-ref.html
-== grid-flex-min-sizing-002.html grid-flex-min-sizing-002-ref.html
-== grid-item-align-001.html grid-item-align-001-ref.html
-== grid-item-align-002.html grid-item-align-002-ref.html
-== grid-item-align-003.html grid-item-align-003-ref.html
-== grid-item-justify-001.html grid-item-justify-001-ref.html
-== grid-item-justify-002.html grid-item-justify-002-ref.html
-== grid-item-stretch-001.html grid-item-stretch-001-ref.html
-== grid-item-intrinsic-ratio-stretch-001.html grid-item-intrinsic-ratio-stretch-001-ref.html
-== grid-item-intrinsic-ratio-stretch-002.html grid-item-intrinsic-ratio-stretch-002-ref.html
-== grid-item-intrinsic-ratio-stretch-003.html grid-item-intrinsic-ratio-stretch-003-ref.html
-== grid-item-intrinsic-ratio-stretch-004.html grid-item-intrinsic-ratio-stretch-004-ref.html
-== grid-item-intrinsic-ratio-stretch-005.html grid-item-intrinsic-ratio-stretch-005-ref.html
-== grid-item-intrinsic-ratio-stretch-006.html grid-item-intrinsic-ratio-stretch-006-ref.html
-== grid-item-intrinsic-ratio-stretch-007.html grid-item-intrinsic-ratio-stretch-007-ref.html
-== grid-item-intrinsic-ratio-normal-001.html grid-item-intrinsic-ratio-normal-001-ref.html
-== grid-item-intrinsic-ratio-normal-002.html grid-item-intrinsic-ratio-normal-002-ref.html
-== grid-item-intrinsic-ratio-normal-003.html grid-item-intrinsic-ratio-normal-003-ref.html
-== grid-item-intrinsic-ratio-normal-004.html grid-item-intrinsic-ratio-normal-004-ref.html
-== grid-item-intrinsic-ratio-normal-005.html grid-item-intrinsic-ratio-normal-005-ref.html
-== grid-item-intrinsic-size-normal-001.html grid-item-intrinsic-size-normal-001-ref.html
-== grid-item-intrinsic-size-normal-002.html grid-item-intrinsic-size-normal-002-ref.html
-== grid-item-auto-min-size-clamp-001.html grid-item-auto-min-size-clamp-001-ref.html
-== grid-item-auto-min-size-clamp-002.html grid-item-auto-min-size-clamp-002-ref.html
-== grid-item-auto-min-size-clamp-003.html grid-item-auto-min-size-clamp-003-ref.html
-== grid-item-auto-min-size-clamp-004.html grid-item-auto-min-size-clamp-004-ref.html
-== grid-item-auto-min-size-clamp-005.html grid-item-auto-min-size-clamp-005-ref.html
-== grid-item-auto-min-size-clamp-006.html grid-item-auto-min-size-clamp-006-ref.html
-== grid-item-auto-min-size-clamp-007.html grid-item-auto-min-size-clamp-007-ref.html
-== grid-item-overflow-stretch-001.html grid-item-overflow-stretch-001-ref.html
-== grid-item-overflow-stretch-002.html grid-item-overflow-stretch-002-ref.html
-== grid-item-overflow-stretch-003.html grid-item-overflow-stretch-003-ref.html
-== grid-item-overflow-stretch-004.html grid-item-overflow-stretch-004-ref.html
-== grid-item-overflow-stretch-005.html grid-item-overflow-stretch-005-ref.html
-== grid-item-overflow-stretch-006.html grid-item-overflow-stretch-006-ref.html
-== grid-item-canvas-001.html grid-item-canvas-001-ref.html
-skip-if(Android) == grid-item-button-001.html grid-item-button-001-ref.html
-== grid-item-table-stretch-001.html grid-item-table-stretch-001-ref.html
-== grid-item-table-stretch-002.html grid-item-table-stretch-002-ref.html
-== grid-item-table-stretch-003.html grid-item-table-stretch-003-ref.html
-== grid-item-table-stretch-004.html grid-item-table-stretch-004-ref.html
-== grid-item-fieldset-stretch-001.html grid-item-fieldset-stretch-001-ref.html
-skip-if(Android) == grid-item-video-stretch-001.html grid-item-video-stretch-001-ref.html # Huh, Android doesn't have webm support?
-skip-if(Android) == grid-item-video-stretch-002.html grid-item-video-stretch-002-ref.html # Huh, Android doesn't have webm support?
-== grid-item-input-stretch-001.html grid-item-input-stretch-001-ref.html
-== grid-item-self-baseline-001.html grid-item-self-baseline-001-ref.html
-random-if(http.oscpu!="Linux\u0020i686") == grid-item-content-baseline-001.html grid-item-content-baseline-001-ref.html # depends on exact Ahem baseline font metrics which seems to differ between platforms: bug 1310792
-random-if(http.oscpu!="Linux\u0020i686") == grid-item-content-baseline-002.html grid-item-content-baseline-002-ref.html # ditto
-random-if(http.oscpu!="Linux\u0020i686") == grid-item-mixed-baseline-001.html grid-item-mixed-baseline-001-ref.html # ditto
-random-if(http.oscpu!="Linux\u0020i686") == grid-item-mixed-baseline-002.html grid-item-mixed-baseline-002-ref.html # ditto
-random-if(http.oscpu!="Linux\u0020i686") == grid-item-mixed-baseline-003.html grid-item-mixed-baseline-003-ref.html # ditto
-skip-if(!gtkWidget) == grid-item-mixed-baseline-004.html grid-item-mixed-baseline-004-ref.html # ditto
-== grid-align-content-001.html grid-align-content-001-ref.html
-== grid-justify-content-001.html grid-justify-content-001-ref.html
-skip-if(Android&&isDebugBuild) == grid-justify-content-002.html grid-justify-content-002-ref.html # Bug 1245884 - slow
-skip-if(Android&&isDebugBuild) == grid-justify-content-003.html grid-justify-content-003-ref.html # Bug 1245884 - slow
-skip-if(!gtkWidget) == grid-container-baselines-001.html grid-container-baselines-001-ref.html
-skip-if(!gtkWidget) == grid-container-baselines-002.html grid-container-baselines-002-ref.html
-skip-if(!gtkWidget) == grid-container-baselines-003.html grid-container-baselines-003-ref.html
+fails-if(stylo) == grid-track-intrinsic-sizing-001.html grid-track-intrinsic-sizing-001-ref.html
+fails-if(stylo) == grid-track-intrinsic-sizing-002.html grid-track-intrinsic-sizing-002-ref.html
+fails-if(stylo) == grid-track-intrinsic-sizing-003.html grid-track-intrinsic-sizing-003-ref.html
+fails-if(stylo) == grid-track-intrinsic-sizing-004.html grid-track-intrinsic-sizing-004-ref.html
+fails-if(stylo) == grid-track-percent-sizing-001.html grid-track-percent-sizing-001-ref.html
+fails-if(stylo) == grid-track-fit-content-sizing-001.html grid-track-fit-content-sizing-001-ref.html
+fails-if(stylo) == grid-track-fit-content-sizing-002.html grid-track-fit-content-sizing-002-ref.html
+fails-if(stylo) == grid-max-sizing-flex-001.html grid-max-sizing-flex-001-ref.html
+fails-if(stylo) == grid-max-sizing-flex-002.html grid-max-sizing-flex-002-ref.html
+fails-if(stylo) == grid-max-sizing-flex-003.html grid-max-sizing-flex-003-ref.html
+fails-if(stylo) == grid-max-sizing-flex-004.html grid-max-sizing-flex-004-ref.html
+fails-if(stylo) == grid-max-sizing-flex-005.html grid-max-sizing-flex-005-ref.html
+fails-if(stylo) == grid-max-sizing-flex-006.html grid-max-sizing-flex-006-ref.html
+fails-if(stylo) == grid-max-sizing-flex-007.html grid-max-sizing-flex-007-ref.html
+fails-if(stylo) == grid-max-sizing-flex-008.html grid-max-sizing-flex-008-ref.html
+fails-if(stylo) == grid-flex-min-sizing-001.html grid-flex-min-sizing-001-ref.html
+fails-if(stylo) == grid-flex-min-sizing-002.html grid-flex-min-sizing-002-ref.html
+fails-if(stylo) == grid-item-align-001.html grid-item-align-001-ref.html
+fails-if(stylo) == grid-item-align-002.html grid-item-align-002-ref.html
+fails-if(stylo) == grid-item-align-003.html grid-item-align-003-ref.html
+fails-if(stylo) == grid-item-justify-001.html grid-item-justify-001-ref.html
+fails-if(stylo) == grid-item-justify-002.html grid-item-justify-002-ref.html
+fails-if(stylo) == grid-item-stretch-001.html grid-item-stretch-001-ref.html
+fails-if(stylo) == grid-item-intrinsic-ratio-stretch-001.html grid-item-intrinsic-ratio-stretch-001-ref.html
+fails-if(stylo) == grid-item-intrinsic-ratio-stretch-002.html grid-item-intrinsic-ratio-stretch-002-ref.html
+fails-if(stylo) == grid-item-intrinsic-ratio-stretch-003.html grid-item-intrinsic-ratio-stretch-003-ref.html
+fails-if(stylo) == grid-item-intrinsic-ratio-stretch-004.html grid-item-intrinsic-ratio-stretch-004-ref.html
+fails-if(stylo) == grid-item-intrinsic-ratio-stretch-005.html grid-item-intrinsic-ratio-stretch-005-ref.html
+fails-if(stylo) == grid-item-intrinsic-ratio-stretch-006.html grid-item-intrinsic-ratio-stretch-006-ref.html
+fails-if(stylo) == grid-item-intrinsic-ratio-stretch-007.html grid-item-intrinsic-ratio-stretch-007-ref.html
+fails-if(stylo) == grid-item-intrinsic-ratio-normal-001.html grid-item-intrinsic-ratio-normal-001-ref.html
+fails-if(stylo) == grid-item-intrinsic-ratio-normal-002.html grid-item-intrinsic-ratio-normal-002-ref.html
+fails-if(stylo) == grid-item-intrinsic-ratio-normal-003.html grid-item-intrinsic-ratio-normal-003-ref.html
+fails-if(stylo) == grid-item-intrinsic-ratio-normal-004.html grid-item-intrinsic-ratio-normal-004-ref.html
+fails-if(stylo) == grid-item-intrinsic-ratio-normal-005.html grid-item-intrinsic-ratio-normal-005-ref.html
+fails-if(stylo) == grid-item-intrinsic-size-normal-001.html grid-item-intrinsic-size-normal-001-ref.html
+fails-if(stylo) == grid-item-intrinsic-size-normal-002.html grid-item-intrinsic-size-normal-002-ref.html
+fails-if(stylo) == grid-item-auto-min-size-clamp-001.html grid-item-auto-min-size-clamp-001-ref.html
+fails-if(stylo) == grid-item-auto-min-size-clamp-002.html grid-item-auto-min-size-clamp-002-ref.html
+fails-if(stylo) == grid-item-auto-min-size-clamp-003.html grid-item-auto-min-size-clamp-003-ref.html
+fails-if(stylo) == grid-item-auto-min-size-clamp-004.html grid-item-auto-min-size-clamp-004-ref.html
+fails-if(stylo) == grid-item-auto-min-size-clamp-005.html grid-item-auto-min-size-clamp-005-ref.html
+fails-if(stylo) == grid-item-auto-min-size-clamp-006.html grid-item-auto-min-size-clamp-006-ref.html
+fails-if(stylo) == grid-item-auto-min-size-clamp-007.html grid-item-auto-min-size-clamp-007-ref.html
+fails-if(stylo) == grid-item-overflow-stretch-001.html grid-item-overflow-stretch-001-ref.html
+fails-if(stylo) == grid-item-overflow-stretch-002.html grid-item-overflow-stretch-002-ref.html
+fails-if(stylo) == grid-item-overflow-stretch-003.html grid-item-overflow-stretch-003-ref.html
+fails-if(stylo) == grid-item-overflow-stretch-004.html grid-item-overflow-stretch-004-ref.html
+fails-if(stylo) == grid-item-overflow-stretch-005.html grid-item-overflow-stretch-005-ref.html
+fails-if(stylo) == grid-item-overflow-stretch-006.html grid-item-overflow-stretch-006-ref.html
+fails-if(stylo) == grid-item-canvas-001.html grid-item-canvas-001-ref.html
+skip-if(Android) fails-if(stylo) == grid-item-button-001.html grid-item-button-001-ref.html
+fails-if(stylo) == grid-item-table-stretch-001.html grid-item-table-stretch-001-ref.html
+fails-if(stylo) == grid-item-table-stretch-002.html grid-item-table-stretch-002-ref.html
+fails-if(stylo) == grid-item-table-stretch-003.html grid-item-table-stretch-003-ref.html
+fails-if(stylo) == grid-item-table-stretch-004.html grid-item-table-stretch-004-ref.html
+fails-if(stylo) == grid-item-fieldset-stretch-001.html grid-item-fieldset-stretch-001-ref.html
+skip-if(Android) fails-if(stylo) == grid-item-video-stretch-001.html grid-item-video-stretch-001-ref.html # Huh, Android doesn't have webm support?
+skip-if(Android) fails-if(stylo) == grid-item-video-stretch-002.html grid-item-video-stretch-002-ref.html # Huh, Android doesn't have webm support?
+fails-if(stylo) == grid-item-input-stretch-001.html grid-item-input-stretch-001-ref.html
+fails-if(stylo) == grid-item-self-baseline-001.html grid-item-self-baseline-001-ref.html
+random-if(http.oscpu!="Linux\u0020i686") fails-if(stylo) == grid-item-content-baseline-001.html grid-item-content-baseline-001-ref.html # depends on exact Ahem baseline font metrics which seems to differ between platforms: bug 1310792
+random-if(http.oscpu!="Linux\u0020i686") fails-if(stylo) == grid-item-content-baseline-002.html grid-item-content-baseline-002-ref.html # ditto
+random-if(http.oscpu!="Linux\u0020i686") fails-if(stylo) == grid-item-mixed-baseline-001.html grid-item-mixed-baseline-001-ref.html # ditto
+random-if(http.oscpu!="Linux\u0020i686") fails-if(stylo) == grid-item-mixed-baseline-002.html grid-item-mixed-baseline-002-ref.html # ditto
+random-if(http.oscpu!="Linux\u0020i686") fails-if(stylo) == grid-item-mixed-baseline-003.html grid-item-mixed-baseline-003-ref.html # ditto
+skip-if(!gtkWidget) fails-if(stylo) == grid-item-mixed-baseline-004.html grid-item-mixed-baseline-004-ref.html # ditto
+fails-if(stylo) == grid-align-content-001.html grid-align-content-001-ref.html
+fails-if(stylo) == grid-justify-content-001.html grid-justify-content-001-ref.html
+skip-if(Android&&isDebugBuild) fails-if(stylo) == grid-justify-content-002.html grid-justify-content-002-ref.html # Bug 1245884 - slow
+skip-if(Android&&isDebugBuild) fails-if(stylo) == grid-justify-content-003.html grid-justify-content-003-ref.html # Bug 1245884 - slow
+skip-if(!gtkWidget) fails-if(stylo) == grid-container-baselines-001.html grid-container-baselines-001-ref.html
+skip-if(!gtkWidget) fails-if(stylo) == grid-container-baselines-002.html grid-container-baselines-002-ref.html
+skip-if(!gtkWidget) fails-if(stylo) == grid-container-baselines-003.html grid-container-baselines-003-ref.html
 == grid-container-baselines-004.html grid-container-baselines-004-ref.html
 == grid-container-synthesized-baseline-001-ref.html grid-container-synthesized-baseline-001-ref.html
-skip-if(Android&&isDebugBuild) == grid-column-gap-001.html grid-column-gap-001-ref.html # Bug 1245884 - slow
-== grid-column-gap-002.html grid-column-gap-002-ref.html
-== grid-column-gap-003.html grid-column-gap-003-ref.html
-== grid-column-gap-004.html grid-column-gap-004-ref.html
-== grid-row-gap-001.html grid-row-gap-001-ref.html
-== grid-percent-grid-gap-001.html grid-percent-grid-gap-001-ref.html
-skip-if(Android&&isDebugBuild) == grid-row-gap-002.html grid-row-gap-002-ref.html # Bug 1245884 - slow
-skip-if(Android&&isDebugBuild) == grid-row-gap-003.html grid-row-gap-003-ref.html # Bug 1245884 - slow
-skip-if(Android&&isDebugBuild) == grid-row-gap-004.html grid-row-gap-004-ref.html # Bug 1245884 - slow
-== grid-row-gap-005.html grid-row-gap-005-ref.html
-== grid-container-overflow-001.html grid-container-overflow-001-ref.html
-== grid-item-margin-left-auto-001.html grid-item-margin-left-auto-001-ref.html
-== grid-item-margin-left-auto-002.html grid-item-margin-left-auto-002-ref.html
-== grid-item-margin-left-auto-003.html grid-item-margin-left-auto-003-ref.html
-== grid-item-margin-left-auto-004.html grid-item-margin-left-auto-004-ref.html
-== grid-item-margin-left-right-auto-001.html grid-item-margin-left-right-auto-001-ref.html
-== grid-item-margin-left-right-auto-002.html grid-item-margin-left-right-auto-002-ref.html
-== grid-item-margin-left-right-auto-003.html grid-item-margin-left-right-auto-003-ref.html
-== grid-item-margin-left-right-auto-004.html grid-item-margin-left-right-auto-004-ref.html
-== grid-item-margin-right-auto-001.html grid-item-margin-right-auto-001-ref.html
-== grid-item-margin-right-auto-002.html grid-item-margin-right-auto-002-ref.html
-== grid-item-margin-right-auto-003.html grid-item-margin-right-auto-003-ref.html
-== grid-item-margin-right-auto-004.html grid-item-margin-right-auto-004-ref.html
-== grid-container-min-max-width-height-001.html grid-container-min-max-width-height-001-ref.html
+skip-if(Android&&isDebugBuild) fails-if(stylo) == grid-column-gap-001.html grid-column-gap-001-ref.html # Bug 1245884 - slow
+fails-if(stylo) == grid-column-gap-002.html grid-column-gap-002-ref.html
+fails-if(stylo) == grid-column-gap-003.html grid-column-gap-003-ref.html
+fails-if(stylo) == grid-column-gap-004.html grid-column-gap-004-ref.html
+fails-if(stylo) == grid-row-gap-001.html grid-row-gap-001-ref.html
+fails-if(stylo) == grid-percent-grid-gap-001.html grid-percent-grid-gap-001-ref.html
+skip-if(Android&&isDebugBuild) fails-if(stylo) == grid-row-gap-002.html grid-row-gap-002-ref.html # Bug 1245884 - slow
+skip-if(Android&&isDebugBuild) fails-if(stylo) == grid-row-gap-003.html grid-row-gap-003-ref.html # Bug 1245884 - slow
+skip-if(Android&&isDebugBuild) fails-if(stylo) == grid-row-gap-004.html grid-row-gap-004-ref.html # Bug 1245884 - slow
+fails-if(stylo) == grid-row-gap-005.html grid-row-gap-005-ref.html
+fails-if(stylo) == grid-container-overflow-001.html grid-container-overflow-001-ref.html
+fails-if(stylo) == grid-item-margin-left-auto-001.html grid-item-margin-left-auto-001-ref.html
+fails-if(stylo) == grid-item-margin-left-auto-002.html grid-item-margin-left-auto-002-ref.html
+fails-if(stylo) == grid-item-margin-left-auto-003.html grid-item-margin-left-auto-003-ref.html
+fails-if(stylo) == grid-item-margin-left-auto-004.html grid-item-margin-left-auto-004-ref.html
+fails-if(stylo) == grid-item-margin-left-right-auto-001.html grid-item-margin-left-right-auto-001-ref.html
+fails-if(stylo) == grid-item-margin-left-right-auto-002.html grid-item-margin-left-right-auto-002-ref.html
+fails-if(stylo) == grid-item-margin-left-right-auto-003.html grid-item-margin-left-right-auto-003-ref.html
+fails-if(stylo) == grid-item-margin-left-right-auto-004.html grid-item-margin-left-right-auto-004-ref.html
+fails-if(stylo) == grid-item-margin-right-auto-001.html grid-item-margin-right-auto-001-ref.html
+fails-if(stylo) == grid-item-margin-right-auto-002.html grid-item-margin-right-auto-002-ref.html
+fails-if(stylo) == grid-item-margin-right-auto-003.html grid-item-margin-right-auto-003-ref.html
+fails-if(stylo) == grid-item-margin-right-auto-004.html grid-item-margin-right-auto-004-ref.html
+fails-if(stylo) == grid-container-min-max-width-height-001.html grid-container-min-max-width-height-001-ref.html
 == grid-clamping-001.html grid-clamping-001-ref.html
-== grid-clamping-002.html grid-clamping-002-ref.html
-== grid-repeat-auto-fill-fit-001.html grid-repeat-auto-fill-fit-001-ref.html
-== grid-repeat-auto-fill-fit-002.html grid-repeat-auto-fill-fit-002-ref.html
-== grid-repeat-auto-fill-fit-003.html grid-repeat-auto-fill-fit-003-ref.html
-== grid-repeat-auto-fill-fit-004.html grid-repeat-auto-fill-fit-004-ref.html
-== grid-repeat-auto-fill-fit-005.html grid-repeat-auto-fill-fit-005-ref.html
-== grid-repeat-auto-fill-fit-006.html grid-repeat-auto-fill-fit-006-ref.html
-== grid-repeat-auto-fill-fit-007.html grid-repeat-auto-fill-fit-007-ref.html
-== grid-repeat-auto-fill-fit-008.html grid-repeat-auto-fill-fit-008-ref.html
-== grid-repeat-auto-fill-fit-009.html grid-repeat-auto-fill-fit-009-ref.html
-== grid-repeat-auto-fill-fit-010.html grid-repeat-auto-fill-fit-010-ref.html
-== grid-repeat-auto-fill-fit-011.html grid-repeat-auto-fill-fit-010-ref.html
-== grid-item-blockifying-001.html grid-item-blockifying-001-ref.html
-== grid-fragmentation-001.html grid-fragmentation-001-ref.html
-== grid-fragmentation-002.html grid-fragmentation-002-ref.html
-== grid-fragmentation-003.html grid-fragmentation-003-ref.html
-== grid-fragmentation-004.html grid-fragmentation-004-ref.html
-== grid-fragmentation-005.html grid-fragmentation-005-ref.html
-== grid-fragmentation-006.html grid-fragmentation-006-ref.html
-== grid-fragmentation-007.html grid-fragmentation-007-ref.html
-== grid-fragmentation-008.html grid-fragmentation-008-ref.html
-== grid-fragmentation-009.html grid-fragmentation-009-ref.html
-== grid-fragmentation-010.html grid-fragmentation-010-ref.html
-== grid-fragmentation-011.html grid-fragmentation-011-ref.html
-== grid-fragmentation-012.html grid-fragmentation-012-ref.html
-== grid-fragmentation-013.html grid-fragmentation-013-ref.html
-== grid-fragmentation-014.html grid-fragmentation-014-ref.html
-asserts(0-10) == grid-fragmentation-015.html grid-fragmentation-015-ref.html # bug 1144852 (due to vertical writing-mode)
-== grid-fragmentation-016.html grid-fragmentation-016-ref.html
-== grid-fragmentation-017.html grid-fragmentation-017-ref.html
-== grid-fragmentation-018.html grid-fragmentation-018-ref.html
-== grid-fragmentation-019.html grid-fragmentation-019-ref.html
-== grid-fragmentation-020.html grid-fragmentation-020-ref.html
-== grid-fragmentation-021.html grid-fragmentation-021-ref.html
-== grid-fragmentation-022.html grid-fragmentation-007-ref.html
-== grid-fragmentation-023.html grid-fragmentation-023-ref.html
-== grid-fragmentation-024.html grid-fragmentation-024-ref.html
-== grid-fragmentation-025.html grid-fragmentation-025-ref.html
-== grid-fragmentation-026.html grid-fragmentation-026-ref.html
-== grid-fragmentation-027.html grid-fragmentation-025-ref.html
-== grid-fragmentation-028.html grid-fragmentation-028-ref.html
-== grid-fragmentation-029.html grid-fragmentation-029-ref.html
-== grid-fragmentation-030.html grid-fragmentation-030-ref.html
-== grid-fragmentation-031.html grid-fragmentation-031-ref.html
+fails-if(stylo) == grid-clamping-002.html grid-clamping-002-ref.html
+fails-if(stylo) == grid-repeat-auto-fill-fit-001.html grid-repeat-auto-fill-fit-001-ref.html
+fails-if(stylo) == grid-repeat-auto-fill-fit-002.html grid-repeat-auto-fill-fit-002-ref.html
+fails-if(stylo) == grid-repeat-auto-fill-fit-003.html grid-repeat-auto-fill-fit-003-ref.html
+fails-if(stylo) == grid-repeat-auto-fill-fit-004.html grid-repeat-auto-fill-fit-004-ref.html
+fails-if(stylo) == grid-repeat-auto-fill-fit-005.html grid-repeat-auto-fill-fit-005-ref.html
+fails-if(stylo) == grid-repeat-auto-fill-fit-006.html grid-repeat-auto-fill-fit-006-ref.html
+fails-if(stylo) == grid-repeat-auto-fill-fit-007.html grid-repeat-auto-fill-fit-007-ref.html
+fails-if(stylo) == grid-repeat-auto-fill-fit-008.html grid-repeat-auto-fill-fit-008-ref.html
+fails-if(stylo) == grid-repeat-auto-fill-fit-009.html grid-repeat-auto-fill-fit-009-ref.html
+fails-if(stylo) == grid-repeat-auto-fill-fit-010.html grid-repeat-auto-fill-fit-010-ref.html
+fails-if(stylo) == grid-repeat-auto-fill-fit-011.html grid-repeat-auto-fill-fit-010-ref.html
+fails-if(stylo) == grid-item-blockifying-001.html grid-item-blockifying-001-ref.html
+fails-if(stylo) == grid-fragmentation-001.html grid-fragmentation-001-ref.html
+fails-if(stylo) == grid-fragmentation-002.html grid-fragmentation-002-ref.html
+fails-if(stylo) == grid-fragmentation-003.html grid-fragmentation-003-ref.html
+fails-if(stylo) == grid-fragmentation-004.html grid-fragmentation-004-ref.html
+fails-if(stylo) == grid-fragmentation-005.html grid-fragmentation-005-ref.html
+fails-if(stylo) == grid-fragmentation-006.html grid-fragmentation-006-ref.html
+fails-if(stylo) == grid-fragmentation-007.html grid-fragmentation-007-ref.html
+fails-if(stylo) == grid-fragmentation-008.html grid-fragmentation-008-ref.html
+fails-if(stylo) == grid-fragmentation-009.html grid-fragmentation-009-ref.html
+fails-if(stylo) == grid-fragmentation-010.html grid-fragmentation-010-ref.html
+fails-if(stylo) == grid-fragmentation-011.html grid-fragmentation-011-ref.html
+fails-if(stylo) == grid-fragmentation-012.html grid-fragmentation-012-ref.html
+fails-if(stylo) == grid-fragmentation-013.html grid-fragmentation-013-ref.html
+fails-if(stylo) == grid-fragmentation-014.html grid-fragmentation-014-ref.html
+asserts(0-10) fails-if(stylo) == grid-fragmentation-015.html grid-fragmentation-015-ref.html # bug 1144852 (due to vertical writing-mode)
+fails-if(stylo) == grid-fragmentation-016.html grid-fragmentation-016-ref.html
+fails-if(stylo) == grid-fragmentation-017.html grid-fragmentation-017-ref.html
+fails-if(stylo) == grid-fragmentation-018.html grid-fragmentation-018-ref.html
+fails-if(stylo) == grid-fragmentation-019.html grid-fragmentation-019-ref.html
+fails-if(stylo) == grid-fragmentation-020.html grid-fragmentation-020-ref.html
+fails-if(stylo) == grid-fragmentation-021.html grid-fragmentation-021-ref.html
+fails-if(stylo) == grid-fragmentation-022.html grid-fragmentation-007-ref.html
+fails-if(stylo) == grid-fragmentation-023.html grid-fragmentation-023-ref.html
+fails-if(stylo) == grid-fragmentation-024.html grid-fragmentation-024-ref.html
+fails-if(stylo) == grid-fragmentation-025.html grid-fragmentation-025-ref.html
+fails-if(stylo) == grid-fragmentation-026.html grid-fragmentation-026-ref.html
+fails-if(stylo) == grid-fragmentation-027.html grid-fragmentation-025-ref.html
+fails-if(stylo) == grid-fragmentation-028.html grid-fragmentation-028-ref.html
+fails-if(stylo) == grid-fragmentation-029.html grid-fragmentation-029-ref.html
+fails-if(stylo) == grid-fragmentation-030.html grid-fragmentation-030-ref.html
+fails-if(stylo) == grid-fragmentation-031.html grid-fragmentation-031-ref.html
 
 # Fragmentation tests that does dynamic content removal/insertions.
 # They should give the same result as the corresponding static test.
-== grid-fragmentation-dyn3-001.html grid-fragmentation-001-ref.html
-== grid-fragmentation-dyn4-001.html grid-fragmentation-001-ref.html
-== grid-fragmentation-dyn1-002.html grid-fragmentation-002-ref.html
-== grid-fragmentation-dyn3-002.html grid-fragmentation-002-ref.html
-== grid-fragmentation-dyn3-003.html grid-fragmentation-003-ref.html
-== grid-fragmentation-dyn4-004.html grid-fragmentation-004-ref.html
-== grid-fragmentation-dyn4-005.html grid-fragmentation-005-ref.html
-== grid-fragmentation-dyn5-005.html grid-fragmentation-005-ref.html
-== grid-fragmentation-dyn1-006.html grid-fragmentation-006-ref.html
-== grid-fragmentation-dyn3-007.html grid-fragmentation-007-ref.html
-== grid-fragmentation-dyn5-007.html grid-fragmentation-007-ref.html
-== grid-fragmentation-dyn5-008.html grid-fragmentation-008-ref.html
-== grid-fragmentation-dyn3-009.html grid-fragmentation-009-ref.html
-== grid-fragmentation-dyn3-009.html grid-fragmentation-009-ref.html
-== grid-fragmentation-dyn4-015.html grid-fragmentation-015-ref.html
-== grid-fragmentation-dyn1-015.html grid-fragmentation-015-ref.html
-== grid-fragmentation-dyn1-016.html grid-fragmentation-016-ref.html
-== grid-fragmentation-dyn5-016.html grid-fragmentation-016-ref.html
-== grid-fragmentation-dyn3-017.html grid-fragmentation-017-ref.html
-== grid-fragmentation-dyn2-018.html grid-fragmentation-018-ref.html
-== grid-fragmentation-dyn1-019.html grid-fragmentation-019-ref.html
-== grid-fragmentation-dyn2-019.html grid-fragmentation-019-ref.html
-== grid-fragmentation-dyn3-019.html grid-fragmentation-019-ref.html
-== grid-fragmentation-dyn4-019.html grid-fragmentation-019-ref.html
-== grid-fragmentation-dyn5-019.html grid-fragmentation-019-ref.html
-== grid-fragmentation-dyn1-020.html grid-fragmentation-020-ref.html
-== grid-fragmentation-dyn2-020.html grid-fragmentation-020-ref.html
-!= grid-fragmentation-dyn1-021.html grid-fragmentation-021-ref.html # bug 1251799
-== grid-fragmentation-dyn2-021.html grid-fragmentation-021-ref.html
-== grid-fragmentation-dyn3-021.html grid-fragmentation-021-ref.html
-asserts(1-10) == grid-fragmentation-dyn4-021.html grid-fragmentation-021-ref.html # assertion related to bug 1251799 ?
-== grid-fragmentation-dyn5-021.html grid-fragmentation-021-ref.html
-== grid-fragmentation-dyn2-022.html grid-fragmentation-007-ref.html
-== grid-fragmentation-dyn1-023.html grid-fragmentation-023-ref.html
-== grid-fragmentation-dyn2-023.html grid-fragmentation-023-ref.html
-== grid-fragmentation-dyn3-023.html grid-fragmentation-023-ref.html
-== grid-fragmentation-dyn4-023.html grid-fragmentation-023-ref.html
-== grid-fragmentation-dyn5-023.html grid-fragmentation-023-ref.html
-== grid-fragmentation-dyn1-024.html grid-fragmentation-024-ref.html
-== grid-fragmentation-dyn2-025.html grid-fragmentation-025-ref.html
-== grid-fragmentation-dyn1-026.html grid-fragmentation-026-ref.html
-== grid-fragmentation-dyn2-026.html grid-fragmentation-026-ref.html
-== grid-fragmentation-dyn3-026.html grid-fragmentation-026-ref.html
-== grid-fragmentation-dyn4-026.html grid-fragmentation-026-ref.html
-== grid-fragmentation-dyn5-026.html grid-fragmentation-026-ref.html
-== grid-fragmentation-dyn1-027.html grid-fragmentation-025-ref.html
-== grid-fragmentation-dyn2-027.html grid-fragmentation-025-ref.html
-== grid-fragmentation-dyn3-027.html grid-fragmentation-025-ref.html
-== grid-fragmentation-dyn4-027.html grid-fragmentation-025-ref.html
-== grid-fragmentation-dyn5-027.html grid-fragmentation-025-ref.html
-== grid-fragmentation-dyn1-028.html grid-fragmentation-028-ref.html
-== grid-fragmentation-dyn2-028.html grid-fragmentation-028-ref.html
-== grid-fragmentation-dyn3-028.html grid-fragmentation-028-ref.html
-== grid-fragmentation-dyn4-028.html grid-fragmentation-028-ref.html
-== grid-fragmentation-dyn5-028.html grid-fragmentation-028-ref.html
-== grid-fragmentation-dyn1-029.html grid-fragmentation-029-ref.html
-== grid-fragmentation-dyn2-029.html grid-fragmentation-029-ref.html
-== grid-fragmentation-dyn2-030.html grid-fragmentation-030-ref.html
-== grid-fragmentation-dyn2-031.html grid-fragmentation-031-ref.html
-== bug1306106.html bug1306106-ref.html
-== grid-percent-intrinsic-sizing-001.html grid-percent-intrinsic-sizing-001-ref.html
-== grid-measuring-reflow-resize-static-001.html grid-measuring-reflow-resize-001-ref.html
-== grid-measuring-reflow-resize-dynamic-001.html grid-measuring-reflow-resize-001-ref.html
-== bug1349571.html bug1349571-ref.html
-== bug1356820.html bug1356820-ref.html
-== bug1350925.html bug1350925-ref.html
+fails-if(stylo) == grid-fragmentation-dyn3-001.html grid-fragmentation-001-ref.html
+fails-if(stylo) == grid-fragmentation-dyn4-001.html grid-fragmentation-001-ref.html
+fails-if(stylo) == grid-fragmentation-dyn1-002.html grid-fragmentation-002-ref.html
+fails-if(stylo) == grid-fragmentation-dyn3-002.html grid-fragmentation-002-ref.html
+fails-if(stylo) == grid-fragmentation-dyn3-003.html grid-fragmentation-003-ref.html
+fails-if(stylo) == grid-fragmentation-dyn4-004.html grid-fragmentation-004-ref.html
+fails-if(stylo) == grid-fragmentation-dyn4-005.html grid-fragmentation-005-ref.html
+fails-if(stylo) == grid-fragmentation-dyn5-005.html grid-fragmentation-005-ref.html
+fails-if(stylo) == grid-fragmentation-dyn1-006.html grid-fragmentation-006-ref.html
+fails-if(stylo) == grid-fragmentation-dyn3-007.html grid-fragmentation-007-ref.html
+fails-if(stylo) == grid-fragmentation-dyn5-007.html grid-fragmentation-007-ref.html
+fails-if(stylo) == grid-fragmentation-dyn5-008.html grid-fragmentation-008-ref.html
+fails-if(stylo) == grid-fragmentation-dyn3-009.html grid-fragmentation-009-ref.html
+fails-if(stylo) == grid-fragmentation-dyn3-009.html grid-fragmentation-009-ref.html
+fails-if(stylo) == grid-fragmentation-dyn4-015.html grid-fragmentation-015-ref.html
+fails-if(stylo) == grid-fragmentation-dyn1-015.html grid-fragmentation-015-ref.html
+fails-if(stylo) == grid-fragmentation-dyn1-016.html grid-fragmentation-016-ref.html
+fails-if(stylo) == grid-fragmentation-dyn5-016.html grid-fragmentation-016-ref.html
+fails-if(stylo) == grid-fragmentation-dyn3-017.html grid-fragmentation-017-ref.html
+fails-if(stylo) == grid-fragmentation-dyn2-018.html grid-fragmentation-018-ref.html
+fails-if(stylo) == grid-fragmentation-dyn1-019.html grid-fragmentation-019-ref.html
+fails-if(stylo) == grid-fragmentation-dyn2-019.html grid-fragmentation-019-ref.html
+fails-if(stylo) == grid-fragmentation-dyn3-019.html grid-fragmentation-019-ref.html
+fails-if(stylo) == grid-fragmentation-dyn4-019.html grid-fragmentation-019-ref.html
+fails-if(stylo) == grid-fragmentation-dyn5-019.html grid-fragmentation-019-ref.html
+fails-if(stylo) == grid-fragmentation-dyn1-020.html grid-fragmentation-020-ref.html
+fails-if(stylo) == grid-fragmentation-dyn2-020.html grid-fragmentation-020-ref.html
+fails-if(stylo) != grid-fragmentation-dyn1-021.html grid-fragmentation-021-ref.html # bug 1251799
+fails-if(stylo) == grid-fragmentation-dyn2-021.html grid-fragmentation-021-ref.html
+fails-if(stylo) == grid-fragmentation-dyn3-021.html grid-fragmentation-021-ref.html
+asserts(1-10) fails-if(stylo) == grid-fragmentation-dyn4-021.html grid-fragmentation-021-ref.html # assertion related to bug 1251799 ?
+fails-if(stylo) == grid-fragmentation-dyn5-021.html grid-fragmentation-021-ref.html
+fails-if(stylo) == grid-fragmentation-dyn2-022.html grid-fragmentation-007-ref.html
+fails-if(stylo) == grid-fragmentation-dyn1-023.html grid-fragmentation-023-ref.html
+fails-if(stylo) == grid-fragmentation-dyn2-023.html grid-fragmentation-023-ref.html
+fails-if(stylo) == grid-fragmentation-dyn3-023.html grid-fragmentation-023-ref.html
+fails-if(stylo) == grid-fragmentation-dyn4-023.html grid-fragmentation-023-ref.html
+fails-if(stylo) == grid-fragmentation-dyn5-023.html grid-fragmentation-023-ref.html
+fails-if(stylo) == grid-fragmentation-dyn1-024.html grid-fragmentation-024-ref.html
+fails-if(stylo) == grid-fragmentation-dyn2-025.html grid-fragmentation-025-ref.html
+fails-if(stylo) == grid-fragmentation-dyn1-026.html grid-fragmentation-026-ref.html
+fails-if(stylo) == grid-fragmentation-dyn2-026.html grid-fragmentation-026-ref.html
+fails-if(stylo) == grid-fragmentation-dyn3-026.html grid-fragmentation-026-ref.html
+fails-if(stylo) == grid-fragmentation-dyn4-026.html grid-fragmentation-026-ref.html
+fails-if(stylo) == grid-fragmentation-dyn5-026.html grid-fragmentation-026-ref.html
+fails-if(stylo) == grid-fragmentation-dyn1-027.html grid-fragmentation-025-ref.html
+fails-if(stylo) == grid-fragmentation-dyn2-027.html grid-fragmentation-025-ref.html
+fails-if(stylo) == grid-fragmentation-dyn3-027.html grid-fragmentation-025-ref.html
+fails-if(stylo) == grid-fragmentation-dyn4-027.html grid-fragmentation-025-ref.html
+fails-if(stylo) == grid-fragmentation-dyn5-027.html grid-fragmentation-025-ref.html
+fails-if(stylo) == grid-fragmentation-dyn1-028.html grid-fragmentation-028-ref.html
+fails-if(stylo) == grid-fragmentation-dyn2-028.html grid-fragmentation-028-ref.html
+fails-if(stylo) == grid-fragmentation-dyn3-028.html grid-fragmentation-028-ref.html
+fails-if(stylo) == grid-fragmentation-dyn4-028.html grid-fragmentation-028-ref.html
+fails-if(stylo) == grid-fragmentation-dyn5-028.html grid-fragmentation-028-ref.html
+fails-if(stylo) == grid-fragmentation-dyn1-029.html grid-fragmentation-029-ref.html
+fails-if(stylo) == grid-fragmentation-dyn2-029.html grid-fragmentation-029-ref.html
+fails-if(stylo) == grid-fragmentation-dyn2-030.html grid-fragmentation-030-ref.html
+fails-if(stylo) == grid-fragmentation-dyn2-031.html grid-fragmentation-031-ref.html
+fails-if(stylo) == bug1306106.html bug1306106-ref.html
+fails-if(stylo) == grid-percent-intrinsic-sizing-001.html grid-percent-intrinsic-sizing-001-ref.html

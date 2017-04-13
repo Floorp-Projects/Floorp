@@ -1,33 +1,33 @@
-!= button-html-not-blank.html about:blank
-!= button-not-blank.html about:blank
+fails-if(stylo) != button-html-not-blank.html about:blank
+fails-if(stylo) != button-not-blank.html about:blank
 != checkbox-not-blank.html about:blank
-!= combobox-not-blank.html about:blank
+fails-if(stylo) != combobox-not-blank.html about:blank
 != fieldset-not-blank.html about:blank
-!= file-not-blank.html about:blank
-!= listbox-not-blank.html about:blank
+fails-if(stylo) != file-not-blank.html about:blank
+fails-if(stylo) != listbox-not-blank.html about:blank
 != radio-not-blank.html about:blank
-!= text-control-not-blank.html about:blank
-!= textarea-not-blank.html about:blank
+fails-if(stylo) != text-control-not-blank.html about:blank
+fails-if(stylo) != textarea-not-blank.html about:blank
 
 # The following tests will fail if the platform does not have native
 # theme support (which all platforms should have).
-fails-if(!nativeThemePref) != text-input-native.html text-input-nonnative.html
-fuzzy-if(skiaContent,2,88) == text-input-nonnative-when-styled.html text-input-nonnative-when-styled-ref.html
-fails-if(!nativeThemePref) != textarea-native.html textarea-nonnative.html
-fuzzy-if(skiaContent,2,53) == textarea-nonnative-when-styled.html textarea-nonnative-when-styled-ref.html
-fails-if(!nativeThemePref) != button-native.html button-nonnative.html
-== button-nonnative-when-styled.html button-nonnative-when-styled-ref.html
-fails-if(!nativeThemePref&&!Android) != combobox-native.html combobox-nonnative.html
-== combobox-nonnative-when-styled.html combobox-nonnative-when-styled-ref.html
-fails-if(!nativeThemePref) needs-focus != listbox-native.html listbox-nonnative.html
-needs-focus == listbox-nonnative-when-styled.html listbox-nonnative-when-styled-ref.html
+fails-if(!nativeThemePref) fails-if(stylo) != text-input-native.html text-input-nonnative.html
+fuzzy-if(skiaContent,2,88) fails-if(stylo) == text-input-nonnative-when-styled.html text-input-nonnative-when-styled-ref.html
+fails-if(!nativeThemePref) fails-if(stylo) != textarea-native.html textarea-nonnative.html
+fuzzy-if(skiaContent,2,53) fails-if(stylo) == textarea-nonnative-when-styled.html textarea-nonnative-when-styled-ref.html
+fails-if(!nativeThemePref) fails-if(stylo) != button-native.html button-nonnative.html
+fails-if(stylo) == button-nonnative-when-styled.html button-nonnative-when-styled-ref.html
+fails-if(!nativeThemePref&&!Android) fails-if(stylo) != combobox-native.html combobox-nonnative.html
+fails-if(stylo) == combobox-nonnative-when-styled.html combobox-nonnative-when-styled-ref.html
+fails-if(!nativeThemePref) needs-focus fails-if(stylo) != listbox-native.html listbox-nonnative.html
+needs-focus fails-if(stylo) == listbox-nonnative-when-styled.html listbox-nonnative-when-styled-ref.html
 fails-if(!nativeThemePref) != radio-native.html radio-nonnative.html
 == radio-still-native-when-styled.html radio-still-native-when-styled-ref.html
 fails-if(!nativeThemePref) != checkbox-native.html checkbox-nonnative.html
 == checkbox-still-native-when-styled.html checkbox-still-native-when-styled-ref.html
-== native-theme-disabled-cascade-levels.html native-theme-disabled-cascade-levels-ref.html
+fails-if(stylo) == native-theme-disabled-cascade-levels.html native-theme-disabled-cascade-levels-ref.html
 
-!= 427122-1.html 427122-1-ref.html
+fails-if(stylo) != 427122-1.html 427122-1-ref.html
 
 # 403458 is a Windows-only bug
 pref(layout.css.moz-appearance.enabled,true) skip-if(!winWidget) != 403458-winmenu-ltr.xul 403458-winmenu-rtl.xul
@@ -39,18 +39,18 @@ pref(layout.css.moz-appearance.enabled,true) == 482955-1.xul 482955-1-ref.xul
 == 492155-1.html about:blank
 == 492155-2.html about:blank
 == 492155-3.html about:blank
-fails-if(Android&&!asyncPan) != 492155-4.html about:blank
+fails-if(Android&&!asyncPan) fails-if(stylo) != 492155-4.html about:blank
 
-!= box-shadow-input.html box-shadow-input-ref.html
-!= box-shadow-button.html box-shadow-button-ref.html
-!= box-shadow-listbox.html box-shadow-listbox-ref.html
-!= box-shadow-combobox.html box-shadow-combobox-ref.html
+fails-if(stylo) != box-shadow-input.html box-shadow-input-ref.html
+fails-if(stylo) != box-shadow-button.html box-shadow-button-ref.html
+fails-if(stylo) != box-shadow-listbox.html box-shadow-listbox-ref.html
+fails-if(stylo) != box-shadow-combobox.html box-shadow-combobox-ref.html
 
 # RTL mirroring tests
 == checkbox-not-mirrored-when-rtl.html checkbox-not-mirrored-when-rtl-ref.html
 skip-if(!cocoaWidget) == menulist-mirrored-when-rtl.xul menulist-mirrored-when-rtl-ref.xul
 skip-if(!cocoaWidget) == searchfield-mirrored-when-rtl.xul searchfield-mirrored-when-rtl-ref.xul
-skip-if(!cocoaWidget) == select-mirrored-when-rtl.html select-mirrored-when-rtl-ref.html
+skip-if(!cocoaWidget) fails-if(stylo) == select-mirrored-when-rtl.html select-mirrored-when-rtl-ref.html
 
 != resizer-bottomend.xul blank-window.xul
 random-if(d2d) == resizer-bottomend.xul resizer-bottomright.xul # bug 581086 
@@ -71,7 +71,7 @@ skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minim
 
 == border-radius.html border-radius-ref.html
 
-== checkbox-dynamic-1.html checkbox-dynamic-1-ref.html
+fails-if(stylo) == checkbox-dynamic-1.html checkbox-dynamic-1-ref.html
 
 # These tests have been written to test the overflow of the window widget
 # (bug 568825) but we can't test it on Windows and Cocoa because they have

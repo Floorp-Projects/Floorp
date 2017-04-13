@@ -2,29 +2,29 @@ default-preferences pref(dom.forms.number,true)
 
 # sanity checks:
 # not valid on Android where type=number looks like type=text
-skip-if(Android) != not-other-type-unthemed-1.html not-other-type-unthemed-1a-notref.html
-skip-if(Android) != not-other-type-unthemed-1.html not-other-type-unthemed-1b-notref.html
+skip-if(Android) fails-if(stylo) != not-other-type-unthemed-1.html not-other-type-unthemed-1a-notref.html
+skip-if(Android) fails-if(stylo) != not-other-type-unthemed-1.html not-other-type-unthemed-1b-notref.html
 # only valid on Android where type=number looks the same as type=text
 skip-if(!Android) == number-same-as-text-unthemed.html number-same-as-text-unthemed-ref.html
 
 # should look the same as type=text, except for the spin box
-== number-similar-to-text-unthemed.html number-similar-to-text-unthemed-ref.html
-== number-similar-to-text-unthemed-rtl.html number-similar-to-text-unthemed-rtl-ref.html
-== number-similar-to-text-unthemed-vertical-lr.html number-similar-to-text-unthemed-vertical-lr-ref.html
-== number-similar-to-text-unthemed-vertical-rl.html number-similar-to-text-unthemed-vertical-rl-ref.html
+fails-if(stylo) == number-similar-to-text-unthemed.html number-similar-to-text-unthemed-ref.html
+fails-if(stylo) == number-similar-to-text-unthemed-rtl.html number-similar-to-text-unthemed-rtl-ref.html
+fails-if(stylo) == number-similar-to-text-unthemed-vertical-lr.html number-similar-to-text-unthemed-vertical-lr-ref.html
+fails-if(stylo) == number-similar-to-text-unthemed-vertical-rl.html number-similar-to-text-unthemed-vertical-rl-ref.html
 
 # dynamic type changes:
-fuzzy-if(cocoaWidget,63,4) fuzzy-if(skiaContent,2,5) == to-number-from-other-type-unthemed-1.html to-number-from-other-type-unthemed-1-ref.html
+fuzzy-if(cocoaWidget,63,4) fuzzy-if(skiaContent,2,5) fails-if(stylo) == to-number-from-other-type-unthemed-1.html to-number-from-other-type-unthemed-1-ref.html
 fuzzy-if(skiaContent,2,5) == from-number-to-other-type-unthemed-1.html from-number-to-other-type-unthemed-1-ref.html
 
 # dynamic value changes:
-fuzzy-if(skiaContent,2,13) == show-value.html show-value-ref.html
+fuzzy-if(skiaContent,2,13) fails-if(stylo) == show-value.html show-value-ref.html
 
 # disabled
-== number-disabled.html number-disabled-ref.html
+fails-if(stylo) == number-disabled.html number-disabled-ref.html
 
 # auto width:
-== number-auto-width-1.html number-auto-width-1-ref.html
+fails-if(stylo) == number-auto-width-1.html number-auto-width-1-ref.html
 
 # min-height/max-height tests:
 pref(layout.css.moz-appearance.enabled,true) skip-if(Android) == number-min-height-1.html number-min-height-1-ref.html
@@ -33,25 +33,25 @@ pref(layout.css.moz-appearance.enabled,true) skip-if(Android) == number-max-heig
 pref(layout.css.moz-appearance.enabled,true) skip-if(Android) == number-max-height-2.html number-max-height-2-ref.html
 
 # number of significant fractional digits:
-== number-significant-fractional-digits.html number-significant-fractional-digits-ref.html
+fails-if(stylo) == number-significant-fractional-digits.html number-significant-fractional-digits-ref.html
 
 # focus
-fuzzy-if(skiaContent,2,5) needs-focus == focus-handling.html focus-handling-ref.html
+fuzzy-if(skiaContent,2,5) needs-focus fails-if(stylo) == focus-handling.html focus-handling-ref.html
 
 # select
-== number-selected.html number-selected-ref.html
+fails-if(stylo) == number-selected.html number-selected-ref.html
 
 # pseudo-elements not usable from content:
-== number-pseudo-elements.html number-pseudo-elements-ref.html
+fails-if(stylo) == number-pseudo-elements.html number-pseudo-elements-ref.html
 
-== number-placeholder.html number-placeholder-ref.html
+fails-if(stylo) == number-placeholder.html number-placeholder-ref.html
 
 # check that if the anonymous text control is reframed, we reframe the whole
 # number control (the fuzzy is for the top-right and bottom-left of the border
 # bevel which gets slightly different antialiasing after invalidation):
-fuzzy(128,4) == number-reframe-anon-text-field.html number-reframe-anon-text-field-ref.html
+fuzzy(128,4) fails-if(stylo) == number-reframe-anon-text-field.html number-reframe-anon-text-field-ref.html
 
 == pseudo-classes.html about:blank
 
 # Style inheritance:
-pref(layout.css.moz-appearance.enabled,true) == number-style-inheritance.html number-style-inheritance-ref.html
+pref(layout.css.moz-appearance.enabled,true) fails-if(stylo) == number-style-inheritance.html number-style-inheritance-ref.html

@@ -1,26 +1,26 @@
-== outline-radius-percent-1.html outline-radius-percent-1-ref.html
+fails-if(stylo) == outline-radius-percent-1.html outline-radius-percent-1-ref.html
 == min-width-1.html min-width-1-ref.html
 == min-height-1.html min-height-1-ref.html
 == max-width-1.html max-width-1-ref.html
 == max-height-1.html max-height-1-ref.html
-== width-special-values-block.html width-special-values-block-ref.html
-== width-special-values-float.html width-special-values-block-ref.html
-== width-special-values-image-block.html width-special-values-image-block-ref.html
-== width-special-values-image.html width-special-values-image-ref.html
-== width-special-values-block-intrinsic.html width-special-values-block-intrinsic-ref.html
-== width-special-values-float-intrinsic.html width-special-values-block-intrinsic-ref.html
+fails-if(stylo) == width-special-values-block.html width-special-values-block-ref.html
+fails-if(stylo) == width-special-values-float.html width-special-values-block-ref.html
+fails-if(stylo) == width-special-values-image-block.html width-special-values-image-block-ref.html
+fails-if(stylo) == width-special-values-image.html width-special-values-image-ref.html
+fails-if(stylo) == width-special-values-block-intrinsic.html width-special-values-block-intrinsic-ref.html
+fails-if(stylo) == width-special-values-float-intrinsic.html width-special-values-block-intrinsic-ref.html
 == minmax-width-special-values-block-intrinsic.html minmax-width-special-values-block-intrinsic-ref.html
-== width-special-values-cell-auto.html width-special-values-cell-auto-ref.html
-== width-special-values-cell-fixed.html width-special-values-cell-fixed-ref.html
-== box-sizing-1.html box-sizing-1-ref.html
-== box-sizing-2.html box-sizing-2-ref.html
-== box-sizing-3.html box-sizing-1-ref.html
-== box-sizing-4.html box-sizing-4-ref.html
+fails-if(stylo) == width-special-values-cell-auto.html width-special-values-cell-auto-ref.html
+fails-if(stylo) == width-special-values-cell-fixed.html width-special-values-cell-fixed-ref.html
+fails-if(stylo) == box-sizing-1.html box-sizing-1-ref.html
+fails-if(stylo) == box-sizing-2.html box-sizing-2-ref.html
+fails-if(stylo) == box-sizing-3.html box-sizing-1-ref.html
+fails-if(stylo) == box-sizing-4.html box-sizing-4-ref.html
 == box-sizing-minmax-height.html box-sizing-minmax-height-ref.html
 == box-sizing-minmax-width.html box-sizing-minmax-width-ref.html
 == box-sizing-mozbox-minmax-height.html box-sizing-mozbox-minmax-height-ref.html
-== abspos-non-replaced-width-offset-margin.html abspos-non-replaced-width-offset-margin-ref.html
-== abspos-replaced-width-offset-margin.html abspos-replaced-width-offset-margin-ref.html
+fails-if(stylo) == abspos-non-replaced-width-offset-margin.html abspos-non-replaced-width-offset-margin-ref.html
+fails-if(stylo) == abspos-replaced-width-offset-margin.html abspos-replaced-width-offset-margin-ref.html
 HTTP(..) == CSS21-t100301.xhtml CSS21-t100301-ref.xhtml
 == CSS21-t100303.xhtml CSS21-t100303-ref.xhtml
 == CSS21-t100303-simple.xhtml CSS21-t100303-ref.xhtml
