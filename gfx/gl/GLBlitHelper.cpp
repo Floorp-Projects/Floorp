@@ -756,13 +756,9 @@ GLBlitHelper::BlitPlanarYCbCrImage(layers::PlanarYCbCrImage* yuvImage)
         mGL->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
         mGL->fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, &oldTex[i]);
     }
-
-    {
-        const ResetUnpackState reset(mGL);
-        BindAndUploadYUVTexture(Channel_Y, yuvData->mYStride, yuvData->mYSize.height, yuvData->mYChannel, needsAllocation);
-        BindAndUploadYUVTexture(Channel_Cb, yuvData->mCbCrStride, yuvData->mCbCrSize.height, yuvData->mCbChannel, needsAllocation);
-        BindAndUploadYUVTexture(Channel_Cr, yuvData->mCbCrStride, yuvData->mCbCrSize.height, yuvData->mCrChannel, needsAllocation);
-    }
+    BindAndUploadYUVTexture(Channel_Y, yuvData->mYStride, yuvData->mYSize.height, yuvData->mYChannel, needsAllocation);
+    BindAndUploadYUVTexture(Channel_Cb, yuvData->mCbCrStride, yuvData->mCbCrSize.height, yuvData->mCbChannel, needsAllocation);
+    BindAndUploadYUVTexture(Channel_Cr, yuvData->mCbCrStride, yuvData->mCbCrSize.height, yuvData->mCrChannel, needsAllocation);
 
     if (needsAllocation) {
         mGL->fUniform2f(mYTexScaleLoc, (float)yuvData->mYSize.width/yuvData->mYStride, 1.0f);
@@ -872,8 +868,13 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
     mGL->fViewport(0, 0, destSize.width, destSize.height);
 
     switch (type) {
-    case ConvertPlanarYCbCr:
-        return BlitPlanarYCbCrImage(static_cast<PlanarYCbCrImage*>(srcImage));
+    case ConvertPlanarYCbCr: {
+            const auto saved = mGL->GetIntAs<GLint>(LOCAL_GL_UNPACK_ALIGNMENT);
+            mGL->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
+            const auto ret = BlitPlanarYCbCrImage(static_cast<PlanarYCbCrImage*>(srcImage));
+            mGL->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, saved);
+            return ret;
+        }
 
 #ifdef MOZ_WIDGET_ANDROID
     case ConvertSurfaceTexture:
