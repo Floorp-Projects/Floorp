@@ -302,6 +302,13 @@
       <method name="permitUnload">
         <body>
         <![CDATA[
+          let { frameLoader } = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
+          let tabParent = frameLoader.tabParent;
+
+          if (!tabParent.hasBeforeUnload) {
+            return { permitUnload: true, timedOut: false };
+          }
+
           const kTimeout = 5000;
 
           let finished = false;
