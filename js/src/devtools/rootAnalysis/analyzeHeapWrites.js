@@ -407,6 +407,9 @@ function ignoreContents(entry)
             /nsCOMArray_base::Clear/,
             /nsCOMArray_base::AppendElement/,
 
+            // UniquePtr is similar.
+            /mozilla::UniquePtr/,
+
             // The use of unique pointers when copying mCropRect here confuses
             // the analysis.
             /nsStyleImage::DoCopy/,
