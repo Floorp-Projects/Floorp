@@ -11014,46 +11014,13 @@ nsGlobalWindow::GetComputedStyle(Element& aElt, const nsAString& aPseudoElt,
                                  ErrorResult& aError)
 {
   MOZ_ASSERT(IsInnerWindow());
-  return GetComputedStyleHelper(aElt, aPseudoElt, false, aError);
+  FORWARD_TO_OUTER_OR_THROW(GetComputedStyleOuter,
+                            (aElt, aPseudoElt), aError, nullptr);
 }
 
 already_AddRefed<nsICSSDeclaration>
-nsGlobalWindow::GetDefaultComputedStyle(Element& aElt,
-                                        const nsAString& aPseudoElt,
-                                        ErrorResult& aError)
-{
-  MOZ_ASSERT(IsInnerWindow());
-  return GetComputedStyleHelper(aElt, aPseudoElt, true, aError);
-}
-
-nsresult
-nsGlobalWindow::GetComputedStyleHelper(nsIDOMElement* aElt,
-                                       const nsAString& aPseudoElt,
-                                       bool aDefaultStylesOnly,
-                                       nsIDOMCSSStyleDeclaration** aReturn)
-{
-  MOZ_ASSERT(IsInnerWindow());
-
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nullptr;
-
-  nsCOMPtr<dom::Element> element = do_QueryInterface(aElt);
-  if (!element) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-
-  ErrorResult rv;
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> declaration =
-    GetComputedStyleHelper(*element, aPseudoElt, aDefaultStylesOnly, rv);
-  declaration.forget(aReturn);
-
-  return rv.StealNSResult();
-}
-
-already_AddRefed<nsICSSDeclaration>
-nsGlobalWindow::GetComputedStyleHelperOuter(Element& aElt,
-                                            const nsAString& aPseudoElt,
-                                            bool aDefaultStylesOnly)
+nsGlobalWindow::GetComputedStyleOuter(Element& aElt,
+                                      const nsAString& aPseudoElt)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -11085,22 +11052,9 @@ nsGlobalWindow::GetComputedStyleHelperOuter(Element& aElt,
   }
 
   RefPtr<nsComputedDOMStyle> compStyle =
-    NS_NewComputedDOMStyle(&aElt, aPseudoElt, presShell,
-                           aDefaultStylesOnly ? nsComputedDOMStyle::eDefaultOnly :
-                                                nsComputedDOMStyle::eAll);
+    NS_NewComputedDOMStyle(&aElt, aPseudoElt, presShell);
 
   return compStyle.forget();
-}
-
-already_AddRefed<nsICSSDeclaration>
-nsGlobalWindow::GetComputedStyleHelper(Element& aElt,
-                                       const nsAString& aPseudoElt,
-                                       bool aDefaultStylesOnly,
-                                       ErrorResult& aError)
-{
-  FORWARD_TO_OUTER_OR_THROW(GetComputedStyleHelperOuter,
-                            (aElt, aPseudoElt, aDefaultStylesOnly),
-                            aError, nullptr);
 }
 
 Storage*
