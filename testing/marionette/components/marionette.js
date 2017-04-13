@@ -17,8 +17,6 @@ XPCOMUtils.defineLazyServiceGetter(
 const MARIONETTE_CONTRACT_ID = "@mozilla.org/marionette;1";
 const MARIONETTE_CID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
 
-const PREF_ENABLED = "marionette.enabled";
-const PREF_ENABLED_FALLBACK = "marionette.defaultPrefs.enabled";
 const PREF_PORT = "marionette.port";
 const PREF_PORT_FALLBACK = "marionette.defaultPrefs.port";
 const PREF_LOG_LEVEL = "marionette.log.level";
@@ -62,9 +60,8 @@ const ENV_ENABLED = "MOZ_MARIONETTE";
 // The environment variable itself, if present, is interpreted as a
 // JSON structure, with the keys mapping to preference names in the
 // "marionette." branch, and the values to the values of those prefs. So
-// something like {"enabled": true} would result in the marionette.enabled
-// pref being set to true, thus triggering marionette being enabled for
-// that startup.
+// something like {"port": 4444} would result in the marionette.port
+// pref being set to 4444.
 const ENV_PRESERVE_PREFS = "MOZ_MARIONETTE_PREF_STATE_ACROSS_RESTARTS";
 
 const ServerSocket = CC("@mozilla.org/network/server-socket;1",
@@ -122,8 +119,6 @@ const prefs = {
 function MarionetteComponent() {
   this.enabled = env.exists(ENV_ENABLED);
   this.running = false;
-
-  // holds a reference to server.TCPListener
   this.server = null;
 
   // holds reference to ChromeWindow
@@ -135,13 +130,6 @@ function MarionetteComponent() {
   this.finalUIStartup = false;
 
   this.logger = this.setupLogger(prefs.logLevel);
-  Services.prefs.addObserver(PREF_ENABLED, this);
-
-  if (Preferences.isSet(PREF_ENABLED_FALLBACK)) {
-    this.logger.warn(`Deprecated preference ${PREF_ENABLED_FALLBACK} detected, ` +
-        `please use ${PREF_ENABLED}`);
-    Preferences.set(PREF_ENABLED, Preferences.get(PREF_ENABLED_FALLBACK));
-  }
 }
 
 MarionetteComponent.prototype = {
@@ -150,7 +138,6 @@ MarionetteComponent.prototype = {
   contractID: MARIONETTE_CONTRACT_ID,
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsICommandLineHandler,
-    Ci.nsIObserver,
   ]),
   _xpcom_categories: [
     {category: "command-line-handler", entry: "b-marionette"},
@@ -175,26 +162,8 @@ MarionetteComponent.prototype.handle = function (cmdLine) {
   }
 };
 
-Object.defineProperty(MarionetteComponent.prototype, "enabled", {
-  set (value) {
-    Preferences.set(PREF_ENABLED, value);
-  },
-
-  get () {
-    return Preferences.get(PREF_ENABLED);
-  },
-});
-
 MarionetteComponent.prototype.observe = function (subject, topic, data) {
   switch (topic) {
-    case "nsPref:changed":
-      if (Preferences.get(PREF_ENABLED)) {
-        this.init();
-      } else {
-        this.uninit();
-      }
-      break;
-
     case "profile-after-change":
       // Using sessionstore-windows-restored as the xpcom category doesn't
       // seem to work, so we wait for that by adding an observer here.
@@ -300,7 +269,6 @@ MarionetteComponent.prototype.uninit = function () {
     return;
   }
   this.server.stop();
-  this.logger.info("Ceased listening");
   this.running = false;
 };
 
