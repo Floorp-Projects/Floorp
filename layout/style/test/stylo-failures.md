@@ -58,7 +58,7 @@ to mochitest command.
   * CSS Timing Functions: Frames timing functions
     * test_value_storage.html `frames` [30]
   * Property parsing and computation:
-    * test_property_syntax_errors.html `animation` [404]
+    * test_property_syntax_errors.html `animation` [20]
     * test_value_storage.html `animation` [91]
 * CSSOM support:
   * \@import bug 1352968
@@ -124,7 +124,6 @@ to mochitest command.
   * test_namespace_rule.html: bug 1355715 [17]
 * test_dont_use_document_colors.html: support of disabling document color bug 1355716 [21]
 * test_exposed_prop_accessors.html: mainly various unsupported properties [*]
-* test_extra_inherit_initial.html: CSS-wide keywords are accepted as part of value servo/servo#15054 [980]
 * test_font_feature_values_parsing.html: \@font-feature-values support bug 1355721 [107]
 * Grid support bug 1341802
   * test_grid_computed_values.html [4]
