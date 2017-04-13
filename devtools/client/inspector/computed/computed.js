@@ -223,7 +223,6 @@ function CssComputedView(inspector, document, pageStyle) {
 
   // Add the tooltips and highlightersoverlay
   this.tooltips = new TooltipsOverlay(this);
-  this.tooltips.addToView();
 
   this.highlighters.addToView(this);
 }

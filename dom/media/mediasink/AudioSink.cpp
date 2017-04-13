@@ -33,7 +33,7 @@ static const int32_t LOW_AUDIO_USECS = 300000;
 
 AudioSink::AudioSink(AbstractThread* aThread,
                      MediaQueue<AudioData>& aAudioQueue,
-                     TimeUnit aStartTime,
+                     const TimeUnit& aStartTime,
                      const AudioInfo& aInfo,
                      dom::AudioChannel aChannel)
   : mStartTime(aStartTime)

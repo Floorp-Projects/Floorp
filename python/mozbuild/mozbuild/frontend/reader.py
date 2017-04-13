@@ -1372,16 +1372,43 @@ class BuildReader(object):
         """
         paths, _ = self.read_relevant_mozbuilds(paths)
 
+        # For thousands of inputs (say every file in a sub-tree),
+        # test_defaults_for_path() gets called with the same contexts multiple
+        # times (once for every path in a directory that doesn't have any
+        # test metadata). So, we cache the function call.
+        defaults_cache = {}
+        def test_defaults_for_path(ctxs):
+            key = tuple(ctx.current_path or ctx.main_path for ctx in ctxs)
+
+            if key not in defaults_cache:
+                defaults_cache[key] = self.test_defaults_for_path(ctxs)
+
+            return defaults_cache[key]
+
         r = {}
 
         for path, ctxs in paths.items():
+            # Should be normalized by read_relevant_mozbuilds.
+            assert '\\' not in path
+
             flags = Files(Context())
 
             for ctx in ctxs:
                 if not isinstance(ctx, Files):
                     continue
 
-                relpath = mozpath.relpath(path, ctx.relsrcdir)
+                # read_relevant_mozbuilds() normalizes paths and ensures that
+                # the contexts have paths in the ancestry of the path. When
+                # iterating over tens of thousands of paths, mozpath.relpath()
+                # can be very expensive. So, given our assumptions about paths,
+                # we implement an optimized version.
+                ctx_rel_dir = ctx.relsrcdir
+                if ctx_rel_dir:
+                    assert path.startswith(ctx_rel_dir)
+                    relpath = path[len(ctx_rel_dir) + 1:]
+                else:
+                    relpath = path
+
                 pattern = ctx.pattern
 
                 # Only do wildcard matching if the '*' character is present.
@@ -1392,7 +1419,7 @@ class BuildReader(object):
                     flags += ctx
 
             if not any([flags.test_tags, flags.test_files, flags.test_flavors]):
-                flags += self.test_defaults_for_path(ctxs)
+                flags += test_defaults_for_path(ctxs)
 
             r[path] = flags
 

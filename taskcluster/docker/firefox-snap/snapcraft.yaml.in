@@ -34,4 +34,5 @@ parts:
       - libpulse0
       - libgl1-mesa-dri
       - libgl1-mesa-glx
+      - libmirclient9
     after: [desktop-gtk3]

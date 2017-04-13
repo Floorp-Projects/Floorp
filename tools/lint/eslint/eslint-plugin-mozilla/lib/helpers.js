@@ -6,7 +6,6 @@
  */
 "use strict";
 
-var escope = require("escope");
 var espree = require("espree");
 var estraverse = require("estraverse");
 var path = require("path");
@@ -51,7 +50,7 @@ module.exports = {
    * @return {Object}
    *         The resulting AST.
    */
-  getAST: function(sourceText) {
+  getAST(sourceText) {
     // Use a permissive config file to allow parsing of anything that Espree
     // can parse.
     var config = this.getPermissiveConfig();
@@ -68,7 +67,7 @@ module.exports = {
    * @return {String}
    *         The JS source for the node.
    */
-  getASTSource: function(node) {
+  getASTSource(node) {
     switch (node.type) {
       case "MemberExpression":
         if (node.computed) {
@@ -179,7 +178,7 @@ module.exports = {
    *         - {Boolean} writable
    *                     If the global is writeable or not.
    */
-  convertWorkerExpressionToGlobals: function(node, isGlobal, repository,
+  convertWorkerExpressionToGlobals(node, isGlobal, repository,
                                              dirname) {
     var getGlobalsForFile = require("./globals").getGlobalsForFile;
 
@@ -216,7 +215,7 @@ module.exports = {
     return results;
   },
 
-  convertExpressionToGlobals: function(node, isGlobal, repository) {
+  convertExpressionToGlobals(node, isGlobal, repository) {
     if (!modules) {
       modules = require(path.join(repository,
         "tools", "lint", "eslint", "modules.json"));
@@ -229,7 +228,7 @@ module.exports = {
     }
 
     for (var reg of definitions) {
-      var match = source.match(reg);
+      let match = source.match(reg);
       if (match) {
         // Must be in the global scope
         if (!isGlobal) {
@@ -241,7 +240,7 @@ module.exports = {
     }
 
     for (reg of imports) {
-      var match = source.match(reg);
+      let match = source.match(reg);
       if (match) {
         // The two argument form is only acceptable in the global scope
         if (node.expression.arguments.length > 1 && !isGlobal) {
@@ -270,7 +269,7 @@ module.exports = {
    * @param {boolean} writable
    *        Whether the global can be overwritten.
    */
-  addVarToScope: function(name, scope, writable) {
+  addVarToScope(name, scope, writable) {
     scope.__defineGeneric(name, scope.set, scope.variables, null, null);
 
     let variable = scope.set.get(name);
@@ -304,7 +303,7 @@ module.exports = {
    * @param {ASTScope} scope
    *        The scope.
    */
-  addGlobals: function(globalVars, scope) {
+  addGlobals(globalVars, scope) {
     globalVars.forEach(v => this.addVarToScope(v.name, scope, v.writable));
   },
 
@@ -315,7 +314,7 @@ module.exports = {
    * @return {Object}
    *         Espree compatible permissive config.
    */
-  getPermissiveConfig: function() {
+  getPermissiveConfig() {
     return {
       range: true,
       loc: true,
@@ -339,7 +338,7 @@ module.exports = {
    * @return {Boolean}
    *         True or false
    */
-  getIsGlobalScope: function(ancestors) {
+  getIsGlobalScope(ancestors) {
     for (let parent of ancestors) {
       if (parent.type == "FunctionExpression" ||
           parent.type == "FunctionDeclaration") {
@@ -359,7 +358,7 @@ module.exports = {
    * @return {Boolean}
    *         True or false
    */
-  getIsHeadFile: function(scope) {
+  getIsHeadFile(scope) {
     var pathAndFilename = this.cleanUpPath(scope.getFilename());
 
     return /.*[\\/]head(_.+)?\.js$/.test(pathAndFilename);
@@ -375,7 +374,7 @@ module.exports = {
    * @return {String[]}
    *         Paths to head files to load for the test
    */
-  getTestHeadFiles: function(scope) {
+  getTestHeadFiles(scope) {
     if (!this.getIsTest(scope)) {
       return [];
     }
@@ -399,7 +398,7 @@ module.exports = {
    * @return {Array}
    *         An array of objects with file and manifest properties
    */
-  getManifestsForDirectory: function(dir) {
+  getManifestsForDirectory(dir) {
     if (directoryManifests.has(dir)) {
       return directoryManifests.get(dir);
     }
@@ -413,7 +412,7 @@ module.exports = {
       }
 
       try {
-        let manifest = ini.parse(fs.readFileSync(path.join(dir, name), 'utf8'));
+        let manifest = ini.parse(fs.readFileSync(path.join(dir, name), "utf8"));
 
         manifests.push({
           file: path.join(dir, name),
@@ -437,7 +436,7 @@ module.exports = {
    * @return {String}
    *         The path to the test manifest file
    */
-  getTestManifest: function(scope) {
+  getTestManifest(scope) {
     let filepath = this.cleanUpPath(scope.getFilename());
 
     let dir = path.dirname(filepath);
@@ -462,7 +461,7 @@ module.exports = {
    * @return {Boolean}
    *         True or false
    */
-  getIsTest: function(scope) {
+  getIsTest(scope) {
     // Regardless of the manifest name being in a manifest means we're a test.
     let manifest = this.getTestManifest(scope);
     if (manifest) {
@@ -482,7 +481,7 @@ module.exports = {
    * @return {String or null}
    *         Test type: xpcshell, browser, chrome, mochitest
    */
-  getTestType: function(scope) {
+  getTestType(scope) {
     let manifest = this.getTestManifest(scope);
     if (manifest) {
       let name = path.basename(manifest);
@@ -507,7 +506,7 @@ module.exports = {
     return null;
   },
 
-  getIsWorker: function(filePath) {
+  getIsWorker(filePath) {
     let filename = path.basename(this.cleanUpPath(filePath)).toLowerCase();
 
     return filename.includes("worker");
@@ -521,7 +520,7 @@ module.exports = {
    *
    * @return {String} The absolute path of the repository directory
    */
-  getRootDir: function(fileName) {
+  getRootDir(fileName) {
     var dirName = path.dirname(fileName);
 
     while (dirName && !fs.existsSync(path.join(dirName, ".eslintignore"))) {
@@ -545,7 +544,7 @@ module.exports = {
    * @param {Context} context
    * @return {String} The absolute path
    */
-  getAbsoluteFilePath: function(context) {
+  getAbsoluteFilePath(context) {
     var fileName = this.cleanUpPath(context.getFilename());
     var cwd = process.cwd();
 
@@ -558,13 +557,13 @@ module.exports = {
       // Case 1b: executed from a nested directory, fileName is the base name
       // without any path info (happens in Atom with linter-eslint)
       return path.join(cwd, fileName);
-    } else {
+    }
       // Case 1: executed form in a nested directory, e.g. from a text editor:
       //   fileName: a/b/c/d.js
       //   cwd: /path/to/mozilla/repo/a/b/c
-      var dirName = path.dirname(fileName);
-      return cwd.slice(0, cwd.length - dirName.length) + fileName;
-    }
+    var dirName = path.dirname(fileName);
+    return cwd.slice(0, cwd.length - dirName.length) + fileName;
+
   },
 
   /**
@@ -572,7 +571,7 @@ module.exports = {
    * context.getFileName contain leading and trailing double-quote characters.
    * These characters need to be removed.
    */
-  cleanUpPath: function(path) {
-    return path.replace(/^"/, "").replace(/"$/, "");
+  cleanUpPath(pathName) {
+    return pathName.replace(/^"/, "").replace(/"$/, "");
   }
 };

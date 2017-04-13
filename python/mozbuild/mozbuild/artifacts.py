@@ -574,30 +574,6 @@ class CacheManager(object):
         with self:
             self._cache.clear()
 
-    def print_cache(self):
-        with self:
-            for item in self._cache.items():
-                self.log(logging.INFO, 'artifact',
-                    {'item': item},
-                    '{item}')
-
-    def print_last_item(self, args, sorted_kwargs, result):
-        # By default, show nothing.
-        pass
-
-    def print_last(self):
-        # We use the persisted LRU caches to our advantage.  The first item is
-        # most recent.
-        with self:
-            item = next(self._cache.items(), None)
-            if item is not None:
-                (name, args, sorted_kwargs), result = item
-                self.print_last_item(args, sorted_kwargs, result)
-            else:
-                self.log(logging.WARN, 'artifact',
-                    {},
-                    'No last cached item found.')
-
     def __enter__(self):
         self.load_cache()
         return self
@@ -687,12 +663,6 @@ class TaskCache(CacheManager):
             raise ValueError('Task for {namespace} existed, but no artifacts found!'.format(namespace=namespace))
         return urls
 
-    def print_last_item(self, args, sorted_kwargs, result):
-        tree, job, rev = args
-        self.log(logging.INFO, 'artifact',
-            {'rev': rev},
-            'Last installed binaries from hg parent revision {rev}')
-
 
 class ArtifactCache(CacheManager):
     '''Fetch Task Cluster artifact URLs and purge least recently used artifacts from disk.'''
@@ -767,18 +737,6 @@ class ArtifactCache(CacheManager):
         finally:
             # Cancel any background downloads in progress.
             self._download_manager.cancel()
-
-    def print_last_item(self, args, sorted_kwargs, result):
-        url, = args
-        self.log(logging.INFO, 'artifact',
-            {'url': url},
-            'Last installed binaries from url {url}')
-        self.log(logging.INFO, 'artifact',
-            {'filename': result},
-            'Last installed binaries from local file {filename}')
-        self.log(logging.INFO, 'artifact',
-            {'filename': result + PROCESSED_SUFFIX},
-            'Last installed binaries from local processed file {filename}')
 
 
 class Artifacts(object):
@@ -1088,14 +1046,6 @@ class Artifacts(object):
             return self.install_from_recent(distdir)
 
 
-    def print_last(self):
-        self.log(logging.INFO, 'artifact',
-            {},
-            'Printing last used artifact details.')
-        self._task_cache.print_last()
-        self._artifact_cache.print_last()
-        self._pushhead_cache.print_last()
-
     def clear_cache(self):
         self.log(logging.INFO, 'artifact',
             {},
@@ -1103,11 +1053,3 @@ class Artifacts(object):
         self._task_cache.clear_cache()
         self._artifact_cache.clear_cache()
         self._pushhead_cache.clear_cache()
-
-    def print_cache(self):
-        self.log(logging.INFO, 'artifact',
-            {},
-            'Printing cached artifacts and caches.')
-        self._task_cache.print_cache()
-        self._artifact_cache.print_cache()
-        self._pushhead_cache.print_cache()

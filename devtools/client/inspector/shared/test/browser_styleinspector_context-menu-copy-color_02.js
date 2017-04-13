@@ -80,7 +80,7 @@ function* testColorPickerEdit(inspector, view) {
     .querySelector(".ruleview-colorswatch");
 
   info("Opening the color picker");
-  let picker = view.tooltips.colorPicker;
+  let picker = view.tooltips.getTooltip("colorPicker");
   let onColorPickerReady = picker.once("ready");
   swatchElement.click();
   yield onColorPickerReady;

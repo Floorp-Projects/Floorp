@@ -21,6 +21,7 @@ The current data collection possibilities include:
 * :doc:`custom pings <custom-pings>`
 * :doc:`stack capture <stack-capture>` allow recording application call stacks
 * :doc:`Use counters <use-counters>` measure the usage of web platform features
+* :doc:`Experiment annotations <experiments>`
 
 .. toctree::
    :maxdepth: 2
@@ -34,16 +35,9 @@ The current data collection possibilities include:
    measuring-time
    custom-pings
    stack-capture
+   experiments
    *
 
 Browser Usage Telemetry
 ~~~~~~~~~~~~~~~~~~~~~~~
 For more information, see :ref:`browserusagetelemetry`.
-
-Experiment Annotation
-~~~~~~~~~~~~~~~~~~~~~
-Experiment annotations can be added through the API exposed in ``TelemetryEnvironment.jsm`` and are collected in the :doc:`environment <../data/environment>`:
-
-- ``TelemetryEnvironment.setExperimentActive(id, branch)``, adds an annotation to the environment for the provided ``id`` and ``branch``. This triggers a new subsession.
-- ``TelemetryEnvironment.setExperimentInactive(id)``, removes the annotation for the experiment with the provided ``id``. This triggers a new subsession.
-- ``TelemetryEnvironment.getActiveExperiments()``, returns a dictionary containing the informations for each active experiment.

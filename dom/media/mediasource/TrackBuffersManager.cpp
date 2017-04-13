@@ -990,8 +990,8 @@ TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult)
     info.mAudio.mTrackId = 1;
   }
 
-  int64_t videoDuration = numVideos ? info.mVideo.mDuration : 0;
-  int64_t audioDuration = numAudios ? info.mAudio.mDuration : 0;
+  int64_t videoDuration = numVideos ? info.mVideo.mDuration.ToMicroseconds() : 0;
+  int64_t audioDuration = numAudios ? info.mAudio.mDuration.ToMicroseconds() : 0;
 
   int64_t duration = std::max(videoDuration, audioDuration);
   // 1. Update the duration attribute if it currently equals NaN.

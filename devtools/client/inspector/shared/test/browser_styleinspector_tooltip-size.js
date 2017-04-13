@@ -28,7 +28,7 @@ add_task(function* () {
 function* testImageDimension(ruleView) {
   info("Testing background-image tooltip dimensions");
 
-  let tooltip = ruleView.tooltips.previewTooltip;
+  let tooltip = ruleView.tooltips.getTooltip("previewTooltip");
   let panel = tooltip.panel;
   let {valueSpan} = getRuleViewProperty(ruleView, "div", "background");
   let uriSpan = valueSpan.querySelector(".theme-link");
@@ -62,7 +62,7 @@ function* testPickerDimension(ruleView) {
 
   let {valueSpan} = getRuleViewProperty(ruleView, "div", "background");
   let swatch = valueSpan.querySelector(".ruleview-colorswatch");
-  let cPicker = ruleView.tooltips.colorPicker;
+  let cPicker = ruleView.tooltips.getTooltip("colorPicker");
 
   let onReady = cPicker.once("ready");
   swatch.click();

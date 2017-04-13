@@ -39,6 +39,7 @@ pref("extensions.checkCompatibility.temporaryThemeOverride_minAppVersion", "29.0
 
 pref("xpinstall.customConfirmationUI", true);
 pref("extensions.webextPermissionPrompts", true);
+pref("extensions.webextOptionalPermissionPrompts", true);
 
 // Preferences for AMO integration
 pref("extensions.getAddons.cache.enabled", true);
