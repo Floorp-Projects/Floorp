@@ -723,14 +723,26 @@ function addTrailingSlash(path) {
   return path.replace(/\/*$/, "/");
 }
 
-const resolveURI = iced(function resolveURI(id, mapping) {
-  // Do not resolve if already a resource URI
-  if (isAbsoluteURI(id))
-    return normalizeExt(id);
+function compileMapping(paths) {
+  // Make mapping array that is sorted from longest path to shortest path.
+  let mapping = Object.keys(paths)
+                      .sort((a, b) => b.length - a.length)
+                      .map(path => [path, paths[path]]);
+
+  const PATTERN = /([.\\?+*(){}[\]^$])/g;
+  const escapeMeta = str => str.replace(PATTERN, '\\$1')
+
+  let patterns = [];
+  paths = {};
 
   for (let [path, uri] of mapping) {
     // Strip off any trailing slashes to make comparisons simpler
-    let stripped = path.replace(/\/+$/, "");
+    if (path.endsWith("/")) {
+      path = path.slice(0, -1);
+      uri = uri.replace(/\/+$/, "");
+    }
+
+    paths[path] = uri;
 
     // We only want to match path segments explicitly. Examples:
     // * "foo/bar" matches for "foo/bar"
@@ -741,11 +753,27 @@ const resolveURI = iced(function resolveURI(id, mapping) {
     //
     // Check for an empty path, an exact match, or a substring match
     // with the next character being a forward slash.
-    if(stripped === "" || id === stripped || id.startsWith(stripped + "/")) {
-      return normalizeExt(id.replace(path, uri));
-    }
+    if (path == "")
+      patterns.push("");
+    else
+      patterns.push(`${escapeMeta(path)}(?=$|/)`);
   }
-  return null;
+
+  let pattern = new RegExp(`^(${patterns.join('|')})`);
+
+  // This will replace the longest matching path mapping at the start of
+  // the ID string with its mapped value.
+  return id => {
+    return id.replace(pattern, (m0, m1) => paths[m1]);
+  };
+}
+
+const resolveURI = iced(function resolveURI(id, mapping) {
+  // Do not resolve if already a resource URI
+  if (isAbsoluteURI(id))
+    return normalizeExt(id);
+
+  return normalizeExt(mapping(id))
 });
 Loader.resolveURI = resolveURI;
 
@@ -1093,10 +1121,7 @@ function Loader(options) {
   // observer notifications.
   let destructor = freeze(Object.create(null));
 
-  // Make mapping array that is sorted from longest path to shortest path.
-  let mapping = Object.keys(paths)
-                      .sort((a, b) => b.length - a.length)
-                      .map(path => [path, paths[path]]);
+  let mapping = compileMapping(paths);
 
   // Define pseudo modules.
   modules = override({
