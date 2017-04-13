@@ -41,6 +41,7 @@ const FILTER_FLAGS = [
   "mime-type",
   "larger-than",
   "is",
+  "has-response-header",
 ];
 
 /*
@@ -132,6 +133,14 @@ function isFlagFilterMatch(item, { type, value, negative }) {
       break;
     case "remote-ip":
       match = `${item.remoteAddress}:${item.remotePort}`.toLowerCase().includes(value);
+      break;
+    case "has-response-header":
+      if (typeof item.responseHeaders === "object") {
+        let { headers } = item.responseHeaders;
+        match = headers.findIndex(h => h.name.toLowerCase() === value) > -1;
+      } else {
+        match = false;
+      }
       break;
     case "cause":
       let causeType = item.cause.type;
