@@ -32,74 +32,6 @@ Press ENTER/RETURN to continue or CTRL+c to abort.
 '''.lstrip()
 
 
-# TODO Bug 794506 Integrate with the in-tree virtualenv configuration.
-SEARCH_PATHS = [
-    'python/mach',
-    'python/mozboot',
-    'python/mozbuild',
-    'python/mozlint',
-    'python/mozversioncontrol',
-    'python/blessings',
-    'python/compare-locales',
-    'python/configobj',
-    'python/dlmanager',
-    'python/futures',
-    'python/jsmin',
-    'python/psutil',
-    'python/pylru',
-    'python/which',
-    'python/pystache',
-    'python/pyyaml/lib',
-    'python/requests',
-    'python/slugid',
-    'python/py',
-    'python/pytest',
-    'python/pytoml',
-    'python/redo',
-    'python/voluptuous',
-    'build',
-    'build/pymake',
-    'config',
-    'dom/bindings',
-    'dom/bindings/parser',
-    'dom/media/test/external',
-    'layout/tools/reftest',
-    'other-licenses/ply',
-    'taskcluster',
-    'testing',
-    'testing/firefox-ui/harness',
-    'testing/marionette/client',
-    'testing/marionette/harness',
-    'testing/marionette/harness/marionette_harness/runner/mixins/browsermob-proxy-py',
-    'testing/marionette/puppeteer/firefox',
-    'testing/mozbase/mozcrash',
-    'testing/mozbase/mozdebug',
-    'testing/mozbase/mozdevice',
-    'testing/mozbase/mozfile',
-    'testing/mozbase/mozhttpd',
-    'testing/mozbase/mozinfo',
-    'testing/mozbase/mozinstall',
-    'testing/mozbase/mozleak',
-    'testing/mozbase/mozlog',
-    'testing/mozbase/moznetwork',
-    'testing/mozbase/mozprocess',
-    'testing/mozbase/mozprofile',
-    'testing/mozbase/mozrunner',
-    'testing/mozbase/mozsystemmonitor',
-    'testing/mozbase/mozscreenshot',
-    'testing/mozbase/moztest',
-    'testing/mozbase/mozversion',
-    'testing/mozbase/manifestparser',
-    'testing/taskcluster',
-    'testing/tools/autotry',
-    'testing/web-platform',
-    'testing/web-platform/harness',
-    'testing/web-platform/tests/tools/wptserve',
-    'testing/web-platform/tests/tools/six',
-    'testing/xpcshell',
-    'xpcom/idl-parser',
-]
-
 # Individual files providing mach commands.
 MACH_MODULES = [
     'addon-sdk/mach_commands.py',
@@ -184,6 +116,21 @@ CATEGORIES = {
 TELEMETRY_SUBMISSION_FREQUENCY = 10
 
 
+def search_path(mozilla_dir, packages_txt):
+    with open(os.path.join(mozilla_dir, packages_txt)) as f:
+        packages = [line.rstrip().split(':') for line in f]
+
+    for package in packages:
+        if package[0] == 'packages.txt':
+            assert len(package) == 2
+            for p in search_path(mozilla_dir, package[1]):
+                yield os.path.join(mozilla_dir, p)
+
+        if package[0].endswith('.pth'):
+            assert len(package) == 2
+            yield os.path.join(mozilla_dir, package[1])
+
+
 def bootstrap(topsrcdir, mozilla_dir=None):
     if mozilla_dir is None:
         mozilla_dir = topsrcdir
@@ -204,7 +151,9 @@ def bootstrap(topsrcdir, mozilla_dir=None):
     # case. For default behavior, we educate users and give them an opportunity
     # to react. We always exit after creating the directory because users don't
     # like surprises.
-    sys.path[0:0] = [os.path.join(mozilla_dir, path) for path in SEARCH_PATHS]
+    sys.path[0:0] = [os.path.join(mozilla_dir, path)
+                     for path in search_path(mozilla_dir,
+                                             'build/virtualenv_packages.txt')]
     import mach.main
     from mozboot.util import get_state_dir
 
