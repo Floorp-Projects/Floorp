@@ -7,6 +7,8 @@ module.exports = {
   "globals": {
     "DevToolsUtils": true,
     "gDevTools": true,
+    "getChromeDir": false,
+    "getResolvedURI": false,
     "once": true,
     "synthesizeKeyFromKeyTag": true,
     "TargetFactory": true,
