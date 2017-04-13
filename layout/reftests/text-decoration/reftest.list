@@ -1,5 +1,5 @@
-== complex-decoration-style-quirks.html complex-decoration-style-quirks-ref.html
-== complex-decoration-style-standards.html complex-decoration-style-standards-ref.html
+fails-if(stylo) == complex-decoration-style-quirks.html complex-decoration-style-quirks-ref.html
+fails-if(stylo) == complex-decoration-style-standards.html complex-decoration-style-standards-ref.html
 == decoration-color-quirks.html decoration-color-quirks-ref.html
 == decoration-color-standards.html decoration-color-standards-ref.html
 == decoration-style-quirks.html decoration-style-quirks-ref.html
@@ -77,7 +77,7 @@
 == underline-table-cell-quirks.html underline-table-cell-quirks-ref.html
 != underline-table-cell-quirks.html underline-table-cell-quirks-notref.html
 == underline-block-propagation-quirks.html underline-block-propagation-quirks-ref.html
-== underline-block-propagation-2-quirks.html underline-block-propagation-2-quirks-ref.html
+fails-if(stylo) == underline-block-propagation-2-quirks.html underline-block-propagation-2-quirks-ref.html
 == underline-block-standards.html underline-block-standards-ref.html
 != underline-block-standards.html underline-block-standards-notref.html
 == underline-inline-block-standards.html underline-inline-block-standards-ref.html
@@ -87,14 +87,14 @@
 == underline-table-cell-standards.html underline-table-cell-standards-ref.html
 != underline-table-cell-standards.html underline-table-cell-standards-notref.html
 == underline-block-propagation-standards.html underline-block-propagation-standards-ref.html
-== underline-block-propagation-2-standards.html underline-block-propagation-2-standards-ref.html
+fails-if(stylo) == underline-block-propagation-2-standards.html underline-block-propagation-2-standards-ref.html
 == text-decoration-zorder-1-standards.html text-decoration-zorder-1-ref.html
 == text-decoration-zorder-1-quirks.html text-decoration-zorder-1-ref.html
 == table-quirk-1.html table-quirk-1-ref.html
 == table-quirk-2.html table-quirk-2-ref.html
 == text-decoration-propagation-1-quirks.html text-decoration-propagation-1-quirks-ref.html
 == text-decoration-propagation-1-standards.html text-decoration-propagation-1-standards-ref.html
-== 641444-1.html 641444-1-ref.html
+fails-if(stylo) == 641444-1.html 641444-1-ref.html
 == decoration-css21.html decoration-css21-ref.html
 fuzzy-if(cocoaWidget,1,5) == decoration-color-override-quirks.html decoration-color-override-quirks-ref.html
 == decoration-color-override-standards.html decoration-color-override-standards-ref.html
@@ -103,10 +103,10 @@ fuzzy-if(cocoaWidget,1,5) == decoration-color-override-quirks.html decoration-co
 != inline-baseline-almost-standards.html inline-baseline-almost-standards-ref.html
 != inline-baseline-quirks.html inline-baseline-quirks-ref.html
 == 676538-1.html 676538-1-ref.html
-fuzzy-if(OSX==1010,1,4) == underline-button-1.html underline-button-1-ref.html
-fuzzy-if(OSX==1010,1,2) == underline-button-2.html underline-button-2-ref.html
-fuzzy-if(skiaContent,4,2) == underline-select-1.html underline-select-1-ref.html
-== underline-select-2.html underline-select-2-ref.html
-== 1133392.html 1133392-ref.html
+fuzzy-if(OSX==1010,1,4) fails-if(stylo) == underline-button-1.html underline-button-1-ref.html
+fuzzy-if(OSX==1010,1,2) fails-if(stylo) == underline-button-2.html underline-button-2-ref.html
+fuzzy-if(skiaContent,4,2) fails-if(stylo) == underline-select-1.html underline-select-1-ref.html
+fails-if(stylo) == underline-select-2.html underline-select-2-ref.html
+fails-if(stylo) == 1133392.html 1133392-ref.html
 != 1159729-offset-adjustment.html 1159729-offset-adjustment-notref.html
 == emphasis-style-dynamic.html emphasis-style-dynamic-ref.html

@@ -6,7 +6,7 @@ fuzzy-if(Android,8,454) == mq_print_height.xhtml mq_print-ref.xhtml # bug 117869
 == mq_print_aspectratio.xhtml mq_print-ref.xhtml
 == mq_print_deviceaspectratio.xhtml mq_print-ref.xhtml
 == mq_print_devicewidth.xhtml mq_print-ref.xhtml
-fuzzy-if(Android,8,454) == mq_print_orientation.xhtml mq_print_orientation-ref.xhtml
+fuzzy-if(Android,8,454) fails-if(stylo) == mq_print_orientation.xhtml mq_print_orientation-ref.xhtml
 fuzzy-if(Android,8,454) == mq_print_maxheight.xhtml mq_print-ref.xhtml
 == mq_print_maxwidth.xhtml mq_print-ref.xhtml
 
@@ -16,4 +16,4 @@ fuzzy-if(Android,8,454) == mq_print_maxheight.xhtml mq_print-ref.xhtml
 == mq_print_minwidth_updown.xhtml mq_print-ref.xhtml
 
 == scoped-mq-update.html scoped-mq-update-ref.html
-== system-metrics-1.html system-metrics-1-ref.html
+fails-if(stylo) == system-metrics-1.html system-metrics-1-ref.html

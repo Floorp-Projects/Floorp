@@ -1,24 +1,24 @@
-== form-static-valid.html form-valid-ref.html
-== form-dynamic-valid.html form-valid-ref.html
+fails-if(stylo) == form-static-valid.html form-valid-ref.html
+fails-if(stylo) == form-dynamic-valid.html form-valid-ref.html
 == form-remove-invalid-element.html form-valid-ref-2.html
 == form-static-invalid.html form-invalid-ref.html
 == form-dynamic-invalid.html form-invalid-ref.html
 == form-add-control.html form-invalid-ref.html
 == form-dynamic-invalid-not-barred.html form-invalid-ref.html
 == form-remove-invalid-element.html form-invalid-ref.html
-== form-dynamic-invalid-barred.html form-invalid-barred-ref.html
-== form-static-invalid-barred.html form-invalid-barred-ref.html
+fails-if(stylo) == form-dynamic-invalid-barred.html form-invalid-barred-ref.html
+fails-if(stylo) == form-static-invalid-barred.html form-invalid-barred-ref.html
 == form-add-invalid-element.html form-invalid-ref.html
 == form-add-valid-with-invalid-element.html form-invalid-ref.html
-== form-invalid-barred.html form-invalid-barred-ref.html
-== form-add-valid-element.html form-valid-ref-4.html
-== form-add-valid-with-no-element.html form-valid-ref.html
+fails-if(stylo) == form-invalid-barred.html form-invalid-barred-ref.html
+fails-if(stylo) == form-add-valid-element.html form-valid-ref-4.html
+fails-if(stylo) == form-add-valid-with-no-element.html form-valid-ref.html
 == form-add-invalid-with-valid-element.html form-invalid-ref.html
 == form-with-valid-and-invalid.html form-invalid-ref.html
 == form-add-invalid-element-dynamic.html form-invalid-ref.html
 == form-invalid-and-barred.html form-invalid-ref.html
 == form-invalid-and-barred-remove-barred.html form-invalid-ref.html
-== form-valid-and-barred.html form-valid-and-barred-ref.html
-== form-valid-and-barred-remove-barred.html form-valid-ref.html
+fails-if(stylo) == form-valid-and-barred.html form-valid-and-barred-ref.html
+fails-if(stylo) == form-valid-and-barred-remove-barred.html form-valid-ref.html
 == form-with-invalid-element-add-barred-dynamic.html form-invalid-ref.html
-== form-with-valid-element-add-barred-dynamic.html form-valid-and-barred-ref.html
+fails-if(stylo) == form-with-valid-element-add-barred-dynamic.html form-valid-and-barred-ref.html

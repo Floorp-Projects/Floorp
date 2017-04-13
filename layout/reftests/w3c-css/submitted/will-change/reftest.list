@@ -10,7 +10,7 @@
 == will-change-stacking-context-transform-1.html green-square-100-by-100-ref.html
 == will-change-stacking-context-transform-style-1.html green-square-100-by-100-ref.html
 == will-change-stacking-context-z-index-1.html green-square-100-by-100-ref.html
-test-pref(layout.css.contain.enabled,true) == will-change-fixpos-cb-contain-1.html green-square-100-by-100-offset-ref.html
+test-pref(layout.css.contain.enabled,true) fails-if(stylo) == will-change-fixpos-cb-contain-1.html green-square-100-by-100-offset-ref.html
 == will-change-fixpos-cb-filter-1.html green-square-100-by-100-offset-ref.html
 == will-change-fixpos-cb-height-1.html green-square-100-by-100-offset-ref.html
 == will-change-fixpos-cb-perspective-1.html green-square-100-by-100-offset-ref.html

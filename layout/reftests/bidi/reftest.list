@@ -10,8 +10,8 @@ include numeral/reftest.list
 fuzzy-if(gtkWidget,255,17) == bidi-004.html bidi-004-ref.html # inconsistency in the Hebrew font that gets used
 fuzzy-if(gtkWidget,255,17) == bidi-004-j.html bidi-004-ref.html # inconsistency in the Hebrew font that gets used
 == bidi-005.html bidi-005-ref.html
-random-if(cocoaWidget) == bidi-006.html bidi-006-ref.html # bug 734313
-random-if(cocoaWidget) == bidi-006-j.html bidi-006-ref.html # bug 734313
+random-if(cocoaWidget) fails-if(stylo) == bidi-006.html bidi-006-ref.html # bug 734313
+random-if(cocoaWidget) fails-if(stylo) == bidi-006-j.html bidi-006-ref.html # bug 734313
 == bidiSVG-01.svg bidiSVG-01-ref.svg
 == bidiSVG-02.svg bidiSVG-02-ref.svg
 == bidiSVG-03.svg bidiSVG-03-ref.svg
@@ -37,12 +37,12 @@ random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
 == unicode-bidi-anonymous-001.html unicode-bidi-anonymous-001-ref.html
 == unicode-bidi-anonymous-002.html unicode-bidi-anonymous-002-ref.html
 == unicode-bidi-isolate-basic.html unicode-bidi-isolate-basic-ref.html
-== unicode-bidi-isolate-aharon.html unicode-bidi-isolate-aharon-ref.html
+fails-if(stylo) == unicode-bidi-isolate-aharon.html unicode-bidi-isolate-aharon-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,73,1) fuzzy-if(skiaContent,104,32) == unicode-bidi-plaintext.html unicode-bidi-plaintext-ref.html
-== unicode-bidi-plaintext-textarea-1.html unicode-bidi-plaintext-textarea-ref.html
-== unicode-bidi-plaintext-textarea-2.html unicode-bidi-plaintext-textarea-ref.html
-== unicode-bidi-plaintext-textarea-3.html unicode-bidi-plaintext-textarea-ref.html
-== unicode-bidi-plaintext-textarea-4.html unicode-bidi-plaintext-textarea-ref.html
+fails-if(stylo) == unicode-bidi-plaintext-textarea-1.html unicode-bidi-plaintext-textarea-ref.html
+fails-if(stylo) == unicode-bidi-plaintext-textarea-2.html unicode-bidi-plaintext-textarea-ref.html
+fails-if(stylo) == unicode-bidi-plaintext-textarea-3.html unicode-bidi-plaintext-textarea-ref.html
+fails-if(stylo) == unicode-bidi-plaintext-textarea-4.html unicode-bidi-plaintext-textarea-ref.html
 == with-first-letter-1a.html with-first-letter-1-ref.html
 == with-first-letter-1b.html with-first-letter-1-ref.html
 random-if(cocoaWidget) == with-first-letter-2a.html with-first-letter-2-ref.html # bug 734313
@@ -53,7 +53,7 @@ random-if(cocoaWidget) == with-first-letter-2b.html with-first-letter-2-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,111,7) == 83958-2a.html 83958-2-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,111,7) == 83958-2b.html 83958-2-ref.html
 == 115921-1.html 115921-1-ref.html
-== 115921-2.html 115921-2-ref.html
+fails-if(stylo) == 115921-2.html 115921-2-ref.html
 == 151407-1.html 151407-1-ref.html
 == 151407-1a.html 151407-1-ref.html
 == 151407-2-ltr.html 151407-2-ltr-ref.html
@@ -66,17 +66,17 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == 151407-3-auto.html 151407-3-auto-ref.html
 == 151407-3-foopy.html 151407-3-empty-ref.html
 == 229367-1.html 229367-1-ref.html
-== 229367-2.html 229367-2-ref.html
+fails-if(stylo) == 229367-2.html 229367-2-ref.html
 == 229367-3.html 229367-3-ref.html
 == 258928-1.html 258928-1-ref.html
 == 263359-1.html 263359-1-ref.html
 == 263359-1a.html 263359-1-ref.html
 != 263359-1b.html 263359-1-ref.html
-== 263359-2.html 263359-2-ref.html
+fails-if(stylo) == 263359-2.html 263359-2-ref.html
 == 263359-3.html 263359-3-ref.html
 == 263359-4.html 263359-4-ref.html
-random-if(winWidget) fuzzy-if(skiaContent,1,1700) == 267459-1.html 267459-1-ref.html # depends on windows version, see bug 590101
-fuzzy-if(skiaContent,1,1100) == 267459-2.html 267459-2-ref.html
+random-if(winWidget) fuzzy-if(skiaContent,1,1700) fails-if(stylo) == 267459-1.html 267459-1-ref.html # depends on windows version, see bug 590101
+fuzzy-if(skiaContent,1,1100) fails-if(stylo) == 267459-2.html 267459-2-ref.html
 == 299065-1.html 299065-1-ref.html
 random-if(winWidget) == 305643-1.html 305643-1-ref.html # depends on windows version, see bug 590101
 == 332655-1.html 332655-1-ref.html
@@ -86,8 +86,8 @@ random-if(winWidget) == 305643-1.html 305643-1-ref.html # depends on windows ver
 == 409375.html 409375-ref.html
 == 413542-1.html 413542-1-ref.html
 == 413542-2.html 413542-2-ref.html
-== 413928-1.html 413928-1-ref.html
-== 413928-2.html 413928-2-ref.html
+fails-if(stylo) == 413928-1.html 413928-1-ref.html
+fails-if(stylo) == 413928-2.html 413928-2-ref.html
 == 425338-1a.html 425338-1-ref.html
 == 425338-1b.html 425338-1-ref.html
 == 489517-1.html 489517-1-ref.html
@@ -99,11 +99,11 @@ random-if(winWidget) == 305643-1.html 305643-1-ref.html # depends on windows ver
 == 525740-1.html 525740-1-ref.html
 == 536963-1.html 536963-1-ref.html
 == 562169-1.html 562169-1-ref.html
-== 562169-1a.html 562169-1-ref.html
+fails-if(stylo) == 562169-1a.html 562169-1-ref.html
 == 562169-2.html 562169-2-ref.html
-== 562169-2a.html 562169-2-ref.html
+fails-if(stylo) == 562169-2a.html 562169-2-ref.html
 == 562169-3.html 562169-3-ref.html
-== 562169-3a.html 562169-3-ref.html
+fails-if(stylo) == 562169-3a.html 562169-3-ref.html
 == 562169-4.html 562169-4-ref.html
 == 588739-1.html 588739-ref.html
 == 588739-2.html 588739-ref.html
@@ -116,9 +116,9 @@ fuzzy-if(Android,24,1) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!laye
 == 613157-1.html 613157-1-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,255,6) == 613157-2.html 613157-2-ref.html
 == 662288-1.html 662288-1-ref.html
-== 670226-1.html 670226-1-ref.html
+fails-if(stylo) == 670226-1.html 670226-1-ref.html
 == 676245-1.html 676245-1-ref.html
-fuzzy-if(skiaContent,1,3) == 698291-1.html 698291-1-ref.html
+fuzzy-if(skiaContent,1,3) fails-if(stylo) == 698291-1.html 698291-1-ref.html
 == 698706-1.html 698706-1-ref.html
 == 704837-1.html 704837-1-ref.html
 == 712600-1.html 712600-1-ref.html
@@ -128,7 +128,7 @@ fuzzy-if(skiaContent,1,3) == 698291-1.html 698291-1-ref.html
 == 718236-1.html 718236-1-ref.html
 == 718236-2.html 718236-2-ref.html
 == 718236-3.html 718236-3-ref.html
-== 726420-1.html 726420-1-ref.html
+fails-if(stylo) == 726420-1.html 726420-1-ref.html
 == 726460-1.html 726460-1-ref.html
 == 729047-1.html 729047-1-ref.html
 == 730562-1.html 730562-1-ref.html
@@ -169,6 +169,6 @@ fuzzy-if(Android,254,231) == brackets-2c-rtl.html brackets-2c-rtl-ref.html
 == brackets-3a-rtl.html brackets-3a-rtl-ref.html
 == brackets-3b-ltr.html brackets-3b-ltr-ref.html
 == brackets-3b-rtl.html brackets-3b-rtl-ref.html
-== 1217833-1.html 1217833-1-ref.html
-== 1217833-2.html 1217833-2-ref.html
+fails-if(stylo) == 1217833-1.html 1217833-1-ref.html
+fails-if(stylo) == 1217833-2.html 1217833-2-ref.html
 == 1231175-1.html 1231175-1-ref.html

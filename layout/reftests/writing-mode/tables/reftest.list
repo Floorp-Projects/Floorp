@@ -79,15 +79,15 @@ fuzzy-if(Android,255,38) == table-caption-bottom-1.html table-caption-bottom-1-r
 fuzzy-if(Android,244,27) == table-caption-left-1.html table-caption-left-1-ref.html
 fuzzy-if(Android,244,27) == table-caption-right-1.html table-caption-right-1-ref.html
 
-== border-collapse-bevels-1a.html border-collapse-bevels-1-ref.html
-fuzzy-if(cocoaWidget,23,162) == border-collapse-bevels-1b.html border-collapse-bevels-1-ref.html
-fuzzy-if(cocoaWidget,23,162) == border-collapse-bevels-1c.html border-collapse-bevels-1-ref.html
-fuzzy-if(cocoaWidget,23,162) == border-collapse-bevels-1d.html border-collapse-bevels-1-ref.html
-fuzzy-if(cocoaWidget,23,162) == border-collapse-bevels-1e.html border-collapse-bevels-1-ref.html
+fails-if(stylo) == border-collapse-bevels-1a.html border-collapse-bevels-1-ref.html
+fuzzy-if(cocoaWidget,23,162) fails-if(stylo) == border-collapse-bevels-1b.html border-collapse-bevels-1-ref.html
+fuzzy-if(cocoaWidget,23,162) fails-if(stylo) == border-collapse-bevels-1c.html border-collapse-bevels-1-ref.html
+fuzzy-if(cocoaWidget,23,162) fails-if(stylo) == border-collapse-bevels-1d.html border-collapse-bevels-1-ref.html
+fuzzy-if(cocoaWidget,23,162) fails-if(stylo) == border-collapse-bevels-1e.html border-collapse-bevels-1-ref.html
 
 == vertical-rl-row-progression-1a.html vertical-rl-row-progression-1-ref.html
 == vertical-rl-row-progression-1b.html vertical-rl-row-progression-1-ref.html
-== sideways-lr-row-progression-1a.html sideways-lr-row-progression-1-ref.html
-== sideways-lr-row-progression-1b.html sideways-lr-row-progression-1-ref.html
-== sideways-rl-row-progression-1a.html sideways-rl-row-progression-1-ref.html
-== sideways-rl-row-progression-1b.html sideways-rl-row-progression-1-ref.html
+fails-if(stylo) == sideways-lr-row-progression-1a.html sideways-lr-row-progression-1-ref.html
+fails-if(stylo) == sideways-lr-row-progression-1b.html sideways-lr-row-progression-1-ref.html
+fails-if(stylo) == sideways-rl-row-progression-1a.html sideways-rl-row-progression-1-ref.html
+fails-if(stylo) == sideways-rl-row-progression-1b.html sideways-rl-row-progression-1-ref.html
