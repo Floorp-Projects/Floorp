@@ -375,8 +375,8 @@ public:
                               const char16_t* encoderOptions,
                               nsIInputStream** out_stream) override;
 
-    virtual already_AddRefed<mozilla::gfx::SourceSurface>
-    GetSurfaceSnapshot(gfxAlphaType* out_alphaType) override;
+    already_AddRefed<mozilla::gfx::SourceSurface>
+    GetSurfaceSnapshot(bool* out_premultAlpha) override;
 
     NS_IMETHOD SetIsOpaque(bool) override { return NS_OK; };
     bool GetIsOpaque() override { return false; }

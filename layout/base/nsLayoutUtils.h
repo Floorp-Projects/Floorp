@@ -2082,8 +2082,9 @@ public:
     SFE_WANT_FIRST_FRAME = 1 << 1,
     /* Whether we should skip colorspace/gamma conversion */
     SFE_NO_COLORSPACE_CONVERSION = 1 << 2,
-    /* Specifies that the caller wants either OPAQUE or NON_PREMULT mAlphaType,
-       if this is can be done efficiently. */
+    /* Specifies that the caller wants unpremultiplied pixel data.
+       If this is can be done efficiently, the result will be a
+       DataSourceSurface and mIsPremultiplied with be set to false. */
     SFE_PREFER_NO_PREMULTIPLY_ALPHA = 1 << 3,
     /* Whether we should skip getting a surface for vector images and
        return a DirectDrawInfo containing an imgIContainer instead. */
@@ -2141,8 +2142,8 @@ public:
     bool mHasSize;
     /* Whether the element used CORS when loading. */
     bool mCORSUsed;
-
-    gfxAlphaType mAlphaType;
+    /* Whether the returned image contains premultiplied pixel data */
+    bool mIsPremultiplied;
 
     // Methods:
 
