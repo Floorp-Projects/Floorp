@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Web sayfalarının ekran görüntülerini alın, ister geçici ister kalıcı olarak kaydedin."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Ekran görüntüsü al"
+  },
+  "myShotsLink": {
+    "message": "Ekran görüntülerim"
+  },
+  "screenshotInstructions": {
+    "message": "Bir bölgeyi seçmek için işaretçiyi sürükleyin veya tıklayın. İptal etmek için ESC tuşuna basın."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Kaydet"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Görünür alanı kaydet"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Tüm sayfayı kaydet"
+  },
+  "cancelScreenshot": {
+    "message": "Vazgeç"
+  },
+  "downloadScreenshot": {
+    "message": "İndir"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Bağlantı kopyalandı"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Ekran görüntünüzün bağlantısı panoya kopyalandı. Yapıştırmak için $META_KEY$-V tuşlarına basabilirsiniz.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Arıza var."
+  },
+  "requestErrorDetails": {
+    "message": "Ekran görüntünüzü kaydedemedik. Lütfen daha sonra yeniden deneyin."
+  },
+  "connectionErrorTitle": {
+    "message": "Ekran görüntülerinize bağlanamadık."
+  },
+  "connectionErrorDetails": {
+    "message": "Lütfen internet bağlantınızı kontrol edin. İnternete bağlanabiliyorsanız Firefox Screenhosts hizmeti ile ilgili geçici bir sorun olabilir."
+  },
+  "loginErrorDetails": {
+    "message": "Firefox Screenshosts hizmetinde bir sorun yaşandığı için ekran görüntünüzü kaydedemedik. Lütfen daha sonra yeniden deneyin."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Bu sayfanın ekran görüntüsü alınamıyor."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Bu sayfa standart bir web sayfası olmadığı için ekran görüntüsünü alamazsınız."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Firefox Screenshots sayfalarının ekran görüntüsünü alamazsınz."
+  },
+  "genericErrorTitle": {
+    "message": "Firefox Screenshosts kafayı yedi!"
+  },
+  "genericErrorDetails": {
+    "message": "Ne olduğunu biz de anlamadık. Bir daha denemeye veya başka bir sayfanın ekran görüntüsünü almaya ne dersiniz?"
+  },
+  "tourBodyOne": {
+    "message": "Firefox'tan çıkmadan ekran görüntüleri alın, kaydedin ve paylaşın."
+  },
+  "tourHeaderTwo": {
+    "message": "İstediğini yakala"
+  },
+  "tourBodyTwo": {
+    "message": "Sayfanın belli bir kısmını yakalamak için işaretçiyi tıklayıp sürükleyin. Seçiminizi vurgulamak için fareyle üzerine gelebilirsiniz."
+  },
+  "tourHeaderThree": {
+    "message": "İstediğin gibi yakala"
+  },
+  "tourBodyThree": {
+    "message": "Ekran görüntülerinizi daha kolay paylşamak veya bilgisayarınıza indirmek için web'e kaydedin. Kaydettiğiniz tüm görüntüleri bulmak için \"Ekran görüntülerim\" düğmesine tıklayabilirsiniz."
+  },
+  "tourHeaderFour": {
+    "message": "Pencereleri veya sayfaların tamamını yakala"
+  },
+  "tourBodyFour": {
+    "message": "Yalnızda pencerede gördüğünüz alanı veya sayfanın tamamını yakalamak için sağ üstteki düğmelerden uygun olanı seçin."
+  },
+  "tourSkip": {
+    "message": "GEÇ"
+  },
+  "tourNext": {
+    "message": "Sonraki slayt"
+  },
+  "tourPrevious": {
+    "message": "Önceki slayt"
+  },
+  "tourDone": {
+    "message": "Tamam"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Firefox Screenshots'ı kullandığınızda Screenshosts $TERMSANDPRIVACYNOTICETERMSLINK$ ve $TERMSANDPRIVACYNOTICEPRIVACYLINK$ kabul etmiş sayılırsınız.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Koşullarını"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Gizlilik Bildirimini"
+  }
+}

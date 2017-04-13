@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Робіть вирізки та знімки екрану в Інтернеті та зберігайте їх для подальшої роботи."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Зробити знімок екрану"
+  },
+  "myShotsLink": {
+    "message": "Мої знімки"
+  },
+  "screenshotInstructions": {
+    "message": "Потягніть або клацніть на сторінці для вибору області. Натисніть ESC для скасування."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Зберегти"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Зберегти видиму область"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Зберегти всю сторінку"
+  },
+  "cancelScreenshot": {
+    "message": "Скасувати"
+  },
+  "downloadScreenshot": {
+    "message": "Завантажити"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Посилання скопійовано"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Посилання на ваш знімок було скопійоване до буфера обміну. Натисніть $META_KEY$-V для вставлення.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Сталася помилка."
+  },
+  "requestErrorDetails": {
+    "message": "Вибачте! Нам не вдалося зберегти ваш знімок. Спробуйте знову пізніше."
+  },
+  "connectionErrorTitle": {
+    "message": "Ми не можемо отримати доступ до ваших знімків."
+  },
+  "connectionErrorDetails": {
+    "message": "Будь ласка, перевірте ваше підключення до Інтернету. Якщо у вас все в порядку з Інтернетом, можливо, виникли тимчасові проблеми зі службою Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Нам не вдалося зберегти ваш знімок, тому що виникли проблеми зі службою Firefox Screenshots. Спробуйте знову пізніше."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Ми не можемо зробити знімок цієї сторінки."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Це не стандартна веб-сторінка, тому ви не можете зробити її знімок."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Ви не можете зробити знімок сторінки Firefox Screenshots!"
+  },
+  "genericErrorTitle": {
+    "message": "Оу! З Firefox Screenshots щось негаразд."
+  },
+  "genericErrorDetails": {
+    "message": "Ми не впевнені, в чому проблема. Спробувати ще раз, або ж зробити знімок іншої сторінки?"
+  },
+  "tourBodyOne": {
+    "message": "Робіть знімки екрану, зберігайте та діліться ними прямо в Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Робіть знімки чого завгодно"
+  },
+  "tourBodyTwo": {
+    "message": "Клацніть і потягніть мишею для захоплення частини сторінки. Ви також можете навести курсор миші для підсвічення вибраної області."
+  },
+  "tourHeaderThree": {
+    "message": "Як вам подобається"
+  },
+  "tourBodyThree": {
+    "message": "Зберігайте свої знімки в Інтернеті, щоб легко ними ділитися, або завантажуйте їх на свій комп'ютер. Ви також можете переглянути всі збережені знімки, натиснувши на кнопку Мої знімки."
+  },
+  "tourHeaderFour": {
+    "message": "Захоплюйте вікна або цілі сторінки"
+  },
+  "tourBodyFour": {
+    "message": "За допомогою кнопок у верхній правій частині обирайте захоплення видимої області вікна, або сторінки повністю."
+  },
+  "tourSkip": {
+    "message": "Пропустити"
+  },
+  "tourNext": {
+    "message": "Наступний слайд"
+  },
+  "tourPrevious": {
+    "message": "Попередній слайд"
+  },
+  "tourDone": {
+    "message": "Готово"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Використовуючи Firefox Screenshots, ви погоджуєтеся з його $TERMSANDPRIVACYNOTICETERMSLINK$ та $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Умовами використання"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Повідомленням про приватність"
+  }
+}

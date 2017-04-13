@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Wzejśo klipy a fota wobrazowki z weba a składujśo je nachylu abo na pśecej."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Foto wobrazowki gótowaś"
+  },
+  "myShotsLink": {
+    "message": "Móje fota wobrazowki"
+  },
+  "screenshotInstructions": {
+    "message": "Śěgniśo abo klikniśo na bok, aby wobcerk wubrał. Tłocćo na ESC, aby pśetergnuł."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Składowaś"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Widobny wobcerk składowaś"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Ceły bok składowaś"
+  },
+  "cancelScreenshot": {
+    "message": "Pśetergnuś"
+  },
+  "downloadScreenshot": {
+    "message": "Ześěgnuś"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Wótkaz kopěrowany"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Wótkaz k wašomu fotoju wobrazowki jo se do mjazywótkłada kopěrował. Tłocćo $META_KEY$-V, aby jen zasajźił.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Njeźěła."
+  },
+  "requestErrorDetails": {
+    "message": "Bóžko njejsmy mógli wašo foto wobrazowki składowaś. Pšosym wopytajśo pózdźej hyšći raz."
+  },
+  "connectionErrorTitle": {
+    "message": "Njamóžomy z wašymi fotami wobrazowki zwězaś."
+  },
+  "connectionErrorDetails": {
+    "message": "Pšosym pśekontrolěrujśo swój internetny zwisk. Jolic móžośo z internetom zwězaś, dajo snaź nachylny problem ze słužbu Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Njesjmy mógli swójo foto wobrazowki składowaś, dokulaž dajo problem ze słužbu Firefox Screenshots. Pšosym wopytajśo pózdźej hyšći raz."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Foto wobrazowki toś togo boka njejo móžne."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "To njejo standardny webbok, togodla foto wobrazowki wót njeje njejo móžne."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Njamóžośo wobrazowku boka Firefox Screenshots fotografěrowaś!"
+  },
+  "genericErrorTitle": {
+    "message": "Hopla! Firefox Screenshots njeźěła."
+  },
+  "genericErrorDetails": {
+    "message": "Njejsmy se wěste, což jo se stało. Cośo hyšći raz wopytaś abo cośo drugi bok fotografěrowaś?"
+  },
+  "tourBodyOne": {
+    "message": "Gótujśo, składujśo a źělśo fota wobrazowki mimo až Firefox spušćaśo."
+  },
+  "tourHeaderTwo": {
+    "message": "Fotografěrujśo jadnorje, což cośo"
+  },
+  "tourBodyTwo": {
+    "message": "Klikniśo a ześěgniśo, aby źěl boka fotografěrował. Móžośo teke špěrku myški nad nim gibaś, aby swój wuběr wuzwignuł."
+  },
+  "tourHeaderThree": {
+    "message": "Tak, kaž se wam spódoba"
+  },
+  "tourBodyThree": {
+    "message": "Składujśo swóje pśirězane fota wobrazowki w interneśe, aby je lažcej źělił, abo ześěgniśo je na swójo licadło. Móžośo teke na tłocašk „Móje fota wobrazowki“ kliknuś, abye wšě fota wobrazowki namakał, kótarež sćo gótował."
+  },
+  "tourHeaderFour": {
+    "message": "Wokna abo cełe boki składowaś"
+  },
+  "tourBodyFour": {
+    "message": "Wubjeŕśo tłocašk górjejce napšawo, aby widobny wobcerk we woknje abo ceły bok fotografěrowaś."
+  },
+  "tourSkip": {
+    "message": "Pśeskócyś"
+  },
+  "tourNext": {
+    "message": "Pśiduce foto"
+  },
+  "tourPrevious": {
+    "message": "Pjerwjejšne foto"
+  },
+  "tourDone": {
+    "message": "Gótowo"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Pśez wužywanje Firefox ScreenShots, zwolijośo do $TERMSANDPRIVACYNOTICETERMSLINK$ a $TERMSANDPRIVACYNOTICEPRIVACYLINK$ Firefox Screenshots.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Wuměnjenja"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Powěźeńka priwatnosći"
+  }
+}

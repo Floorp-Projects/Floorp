@@ -1,0 +1,47 @@
+{
+  "addonAuthorsList": {
+    "message": "ਮੌਜ਼ੀਲਾ <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "ਸਕਰੀਨ-ਸ਼ਾਟ ਲਵੋ"
+  },
+  "myShotsLink": {
+    "message": "ਮੇਰੇ ਸ਼ਾਟ"
+  },
+  "screenshotInstructions": {
+    "message": "ਖੇਤਰ ਨੂੰ ਚੁਣਨ ਵਾਸਤੇ ਖਿੱਚੋ ਜਾਂ ਕਲਿੱਕ ਕਰੋ। ਰੱਦ ਕਰਨ ਵਾਸਤੇ ESC ਦੱਬੋ।"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "ਸੰਭਾਲੋ"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "ਦਿੱਖ ਨੂੰ ਸੰਭਾਲੋ"
+  },
+  "saveScreenshotFullPage": {
+    "message": "ਪੂਰੇ ਸਫ਼ੇ ਨੂੰ ਸੰਭਾਲੋ"
+  },
+  "cancelScreenshot": {
+    "message": "ਰੱਦ ਕਰੋ"
+  },
+  "downloadScreenshot": {
+    "message": "ਡਾਊਨਲੋਡ ਕਰੋ"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "ਲਿੰਕ ਕਾਪੀ ਕੀਤਾ ਗਿਆ"
+  },
+  "requestErrorTitle": {
+    "message": "ਖ਼ਰਾਬ ਹੈ।"
+  },
+  "tourSkip": {
+    "message": "ਛੱਡੋ"
+  },
+  "tourNext": {
+    "message": "ਅਗਲੀ ਸਲਾਈਡ"
+  },
+  "tourPrevious": {
+    "message": "ਪਿਛਲੀ ਸਲਾਈਡ"
+  },
+  "tourDone": {
+    "message": "ਮੁਕੰਮਲ"
+  }
+}
