@@ -643,12 +643,12 @@ nsHttpConnectionMgr::FindCoalescableConnectionByHashKey(nsConnectionEntry *ent,
             couldJoin = potentialMatch->JoinConnection(ci->GetOrigin(), ci->OriginPort());
         }
         if (couldJoin) {
-            LOG(("FindCoalescableConnectionByHashKey() found hashtable match %p for key %s of CI %s join ok\n",
-                 potentialMatch.get(), key.get(), ci->HashKey().get()));
+            LOG(("FindCoalescableConnectionByHashKey() found match conn=%p key=%s newCI=%s matchedCI=%s join ok\n",
+                 potentialMatch.get(), key.get(), ci->HashKey().get(), potentialMatch->ConnectionInfo()->HashKey().get()));
             return potentialMatch.get();
         } else {
-            LOG(("FindCoalescableConnectionByHashKey() found hashtable match %p for key %s of CI %s join failed\n",
-                 potentialMatch.get(), key.get(), ci->HashKey().get()));
+            LOG(("FindCoalescableConnectionByHashKey() found match conn=%p key=%s newCI=%s matchedCI=%s join failed\n",
+                 potentialMatch.get(), key.get(), ci->HashKey().get(), potentialMatch->ConnectionInfo()->HashKey().get()));
         }
         ++j; // bypassed by continue when weakptr fails
     }
@@ -714,33 +714,33 @@ nsHttpConnectionMgr::FindCoalescableConnection(nsConnectionEntry *ent,
 }
 
 void
-nsHttpConnectionMgr::UpdateCoalescingForNewConn(nsHttpConnection *conn,
+nsHttpConnectionMgr::UpdateCoalescingForNewConn(nsHttpConnection *newConn,
                                                 nsConnectionEntry *ent)
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
-    MOZ_ASSERT(conn);
-    MOZ_ASSERT(conn->ConnectionInfo());
+    MOZ_ASSERT(newConn);
+    MOZ_ASSERT(newConn->ConnectionInfo());
     MOZ_ASSERT(ent);
-    MOZ_ASSERT(mCT.Get(conn->ConnectionInfo()->HashKey()) == ent);
+    MOZ_ASSERT(mCT.Get(newConn->ConnectionInfo()->HashKey()) == ent);
 
     nsHttpConnection *existingConn = FindCoalescableConnection(ent, true);
     if (existingConn) {
-        LOG(("UpdateCoalescingForNewConn() found active conn that could have served newConn\n"
-             "graceful close of conn=%p to migrate to %p\n", conn, existingConn));
-        conn->DontReuse();
+        LOG(("UpdateCoalescingForNewConn() found existing active conn that could have served newConn "
+             "graceful close of newConn=%p to migrate to existingConn %p\n", newConn, existingConn));
+        newConn->DontReuse();
         return;
     }
 
     // This connection might go into the mCoalescingHash for new transactions to be coalesced onto
     // if it can accept new transactions
-    if (!conn->CanDirectlyActivate()) {
+    if (!newConn->CanDirectlyActivate()) {
         return;
     }
 
     uint32_t keyLen = ent->mCoalescingKeys.Length();
     for (uint32_t i = 0;i < keyLen; ++i) {
-        LOG(("UpdateCoalescingForNewConn() registering conn %p %s under key %s\n",
-             conn, conn->ConnectionInfo()->HashKey().get(), ent->mCoalescingKeys[i].get()));
+        LOG(("UpdateCoalescingForNewConn() registering newConn %p %s under key %s\n",
+             newConn, newConn->ConnectionInfo()->HashKey().get(), ent->mCoalescingKeys[i].get()));
         nsTArray<nsWeakPtr> *listOfWeakConns =  mCoalescingHash.Get(ent->mCoalescingKeys[i]);
         if (!listOfWeakConns) {
             LOG(("UpdateCoalescingForNewConn() need new list element\n"));
@@ -748,7 +748,7 @@ nsHttpConnectionMgr::UpdateCoalescingForNewConn(nsHttpConnection *conn,
             mCoalescingHash.Put(ent->mCoalescingKeys[i], listOfWeakConns);
         }
         listOfWeakConns->AppendElement(
-            do_GetWeakReference(static_cast<nsISupportsWeakReference*>(conn)));
+            do_GetWeakReference(static_cast<nsISupportsWeakReference*>(newConn)));
     }
 
     // Cancel any other pending connections - their associated transactions
@@ -768,9 +768,9 @@ nsHttpConnectionMgr::UpdateCoalescingForNewConn(nsHttpConnection *conn,
         // that is used only before the host is known to speak h2.
         for (uint32_t index = 0; index < ent->mActiveConns.Length(); ++index) {
             nsHttpConnection *otherConn = ent->mActiveConns[index];
-            if (otherConn != conn) {
-                LOG(("UpdateCoalescingForNewConn() shutting down connection (%p) because new "
-                     "spdy connection (%p) takes precedence\n", otherConn, conn));
+            if (otherConn != newConn) {
+                LOG(("UpdateCoalescingForNewConn() shutting down old connection (%p) because new "
+                     "spdy connection (%p) takes precedence\n", otherConn, newConn));
                 otherConn->DontReuse();
             }
         }
@@ -954,13 +954,13 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool consid
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
     LOG(("nsHttpConnectionMgr::ProcessPendingQForEntry "
-         "[ci=%s ent=%p active=%" PRIuSIZE " idle=%" PRIuSIZE " urgent-start queue=%" PRIuSIZE
-         "queued=%" PRIuSIZE "]\n",
+         "[ci=%s ent=%p active=%" PRIuSIZE " idle=%" PRIuSIZE " urgent-start-queue=%" PRIuSIZE
+         " queued=%" PRIuSIZE "]\n",
          ent->mConnInfo->HashKey().get(), ent, ent->mActiveConns.Length(),
          ent->mIdleConns.Length(), ent->mUrgentStartQ.Length(),
          ent->PendingQLength()));
 
-    if (!ent->mUrgentStartQ.Length() && !ent->mPendingTransactionTable.Count()) {
+    if (!ent->mUrgentStartQ.Length() && !ent->PendingQLength()) {
         return false;
     }
     ProcessSpdyPendingQ(ent);
@@ -1148,6 +1148,15 @@ bool
 nsHttpConnectionMgr::RestrictConnections(nsConnectionEntry *ent)
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+
+    if (ent->AvailableForDispatchNow()) {
+        // this might be a h2/spdy connection in this connection entry that
+        // is able to be immediately muxxed, or it might be one that
+        // was found in the same state through a coalescing hash
+        LOG(("nsHttpConnectionMgr::RestrictConnections %p %s restricted due to active >=h2\n",
+             ent, ent->mConnInfo->HashKey().get()));
+        return true;
+    }
 
     // If this host is trying to negotiate a SPDY session right now,
     // don't create any new ssl connections until the result of the
