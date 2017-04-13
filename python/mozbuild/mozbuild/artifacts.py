@@ -574,13 +574,6 @@ class CacheManager(object):
         with self:
             self._cache.clear()
 
-    def print_cache(self):
-        with self:
-            for item in self._cache.items():
-                self.log(logging.INFO, 'artifact',
-                    {'item': item},
-                    '{item}')
-
     def __enter__(self):
         self.load_cache()
         return self
@@ -1060,11 +1053,3 @@ class Artifacts(object):
         self._task_cache.clear_cache()
         self._artifact_cache.clear_cache()
         self._pushhead_cache.clear_cache()
-
-    def print_cache(self):
-        self.log(logging.INFO, 'artifact',
-            {},
-            'Printing cached artifacts and caches.')
-        self._task_cache.print_cache()
-        self._artifact_cache.print_cache()
-        self._pushhead_cache.print_cache()
