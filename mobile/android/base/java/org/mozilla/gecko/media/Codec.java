@@ -50,12 +50,20 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         }
     }
 
+    private static final class Input {
+        public final Sample sample;
+        public boolean reported;
+
+        public Input(final Sample sample) {
+            this.sample = sample;
+        }
+    }
+
     private final class InputProcessor {
-        private static final int FEW_PENDING_INPUTS = 2;
         private boolean mHasInputCapacitySet;
         private Queue<Integer> mAvailableInputBuffers = new LinkedList<>();
         private Queue<Sample> mDequeuedSamples = new LinkedList<>();
-        private Queue<Sample> mInputSamples = new LinkedList<>();
+        private Queue<Input> mInputSamples = new LinkedList<>();
         private boolean mStopped;
 
         private synchronized Sample onAllocate(int size) {
@@ -86,7 +94,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         }
 
         private void queueSample(Sample sample) {
-            if (!mInputSamples.offer(sample)) {
+            if (!mInputSamples.offer(new Input(sample))) {
                 reportError(Error.FATAL, new Exception("FAIL: input sample queue is full"));
                 return;
             }
@@ -123,7 +131,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
             while (!mAvailableInputBuffers.isEmpty() && !mInputSamples.isEmpty()) {
                 int index = mAvailableInputBuffers.poll();
                 int len = 0;
-                Sample sample = mInputSamples.poll();
+                final Sample sample = mInputSamples.poll().sample;
                 long pts = sample.info.presentationTimeUs;
                 int flags = sample.info.flags;
                 MediaCodec.CryptoInfo cryptoInfo = sample.cryptoInfo;
@@ -144,22 +152,32 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                 } else {
                     mCodec.queueInputBuffer(index, 0, len, pts, flags);
                 }
-            }
-            // To avoid input queue flood, request more input samples only when
-            // there are just a few waiting to be processed.
-            if (mDequeuedSamples.size() + mInputSamples.size() <= FEW_PENDING_INPUTS) {
                 try {
-                    mCallbacks.onInputExhausted();
+                    mCallbacks.onInputQueued(pts);
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
             }
+            reportPendingInputs();
+        }
+
+        private void reportPendingInputs() {
+            try {
+                for (Input i : mInputSamples) {
+                    if (!i.reported) {
+                        i.reported = true;
+                        mCallbacks.onInputPending(i.sample.info.presentationTimeUs);
+                    }
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
         }
 
         private synchronized void reset() {
-            for (Sample s : mInputSamples) {
-                if (!s.isEOS()) {
-                    mSamplePool.recycleInput(s);
+            for (Input i : mInputSamples) {
+                if (!i.sample.isEOS()) {
+                    mSamplePool.recycleInput(i.sample);
                 }
             }
             mInputSamples.clear();
