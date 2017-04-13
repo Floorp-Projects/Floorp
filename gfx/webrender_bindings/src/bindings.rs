@@ -11,7 +11,7 @@ use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
 use app_units::Au;
-use euclid::{TypedPoint2D, SideOffsets2D};
+use euclid::{TypedPoint2D, TypedSize2D, TypedRect, TypedMatrix4D, SideOffsets2D};
 
 extern crate webrender_traits;
 
@@ -161,7 +161,7 @@ pub struct WrPoint {
 }
 
 impl WrPoint {
-    pub fn to_point(&self) -> TypedPoint2D<f32, LayerPixel> {
+    pub fn to_point<U>(&self) -> TypedPoint2D<f32, U> {
         TypedPoint2D::new(self.x, self.y)
     }
 }
@@ -173,8 +173,8 @@ pub struct WrSize {
 }
 
 impl WrSize {
-    pub fn to_size(&self) -> LayoutSize {
-        LayoutSize::new(self.width, self.height)
+    pub fn to_size<U>(&self) -> TypedSize2D<f32, U> {
+        TypedSize2D::new(self.width, self.height)
     }
 }
 
@@ -188,13 +188,13 @@ pub struct WrRect {
 }
 
 impl WrRect {
-    pub fn to_rect(&self) -> LayoutRect {
-        LayoutRect::new(LayoutPoint::new(self.x, self.y),
-                        LayoutSize::new(self.width, self.height))
+    pub fn to_rect<U>(&self) -> TypedRect<f32, U> {
+        TypedRect::new(TypedPoint2D::new(self.x, self.y),
+                       TypedSize2D::new(self.width, self.height))
     }
 }
-impl From<LayoutRect> for WrRect {
-    fn from(rect: LayoutRect) -> Self {
+impl<U> From<TypedRect<f32, U>> for WrRect {
+    fn from(rect: TypedRect<f32, U>) -> Self {
         WrRect {
             x: rect.origin.x,
             y: rect.origin.y,
@@ -211,8 +211,8 @@ pub struct WrMatrix {
 }
 
 impl WrMatrix {
-    pub fn to_layout_transform(&self) -> LayoutTransform {
-        LayoutTransform::row_major(
+    pub fn to_transform<U, E>(&self) -> TypedMatrix4D<f32, U, E> {
+        TypedMatrix4D::row_major(
             self.values[0], self.values[1], self.values[2], self.values[3],
             self.values[4], self.values[5], self.values[6], self.values[7],
             self.values[8], self.values[9], self.values[10], self.values[11],
@@ -1118,7 +1118,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
         .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                bounds,
                                state.z_index,
-                               Some(PropertyBinding::Value(transform.to_layout_transform())),
+                               Some(PropertyBinding::Value(transform.to_transform())),
                                TransformStyle::Flat,
                                None,
                                mix_blend_mode,
