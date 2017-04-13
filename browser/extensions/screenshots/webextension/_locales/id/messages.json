@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Rekam klip dan tangkapan layar dari Web dan simpan untuk sementara atau secara permanen."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Buat Tangkapan layar"
+  },
+  "myShotsLink": {
+    "message": "Gambar Saya"
+  },
+  "screenshotInstructions": {
+    "message": "Seret atau klik pada laman untuk memilih area. Tekan ESC untuk membatalkan."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Simpan"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Simpan yang terlihat"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Simpan laman sepenuhnya"
+  },
+  "cancelScreenshot": {
+    "message": "Batal"
+  },
+  "downloadScreenshot": {
+    "message": "Unduh"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Tautan Disalin"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Tautan ke gambar Anda telah disalin ke papan klip. Tekan $META_KEY$-V untuk menempelkan.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Tak dapat digunakan."
+  },
+  "requestErrorDetails": {
+    "message": "Maaf! Kami tidak dapat menyimpan gambar Anda. Silakan coba lagi."
+  },
+  "connectionErrorTitle": {
+    "message": "Kami tidak dapat terhubung dengan tangkapan layar Anda."
+  },
+  "connectionErrorDetails": {
+    "message": "Silakan periksa sambungan Internet Anda. Jika Anda dapat tersambung ke Internet, mungkin terjadi masalah sementara pada layanan Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Kami tidak dapat menyimpan gambar Anda karena ada masalah dengan layanan Firefox Screenshots. Silakan coba kembali nanti."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Kami tidak dapat menangkap layar laman ini."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Ini bukan laman Web yang standar, sehingga Anda tidak dapat membuat tangkapan dari layar ini."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Anda tidak dapat merekam gambar dari laman Firefox Screenshots!"
+  },
+  "genericErrorTitle": {
+    "message": "Wah! Firefox Screenshots mendadak kacau."
+  },
+  "genericErrorDetails": {
+    "message": "Kami tidak yakin akan apa yang terjadi. Ingin mencoba lagi atau merekam gambar dari laman yang berbeda?"
+  },
+  "tourBodyOne": {
+    "message": "Ambil, simpan, dan bagikan tangkapan layar tanpa meninggalkan Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Rekam Bagian Yang Anda Inginkan"
+  },
+  "tourBodyTwo": {
+    "message": "Klik dan seret untuk merekam sebagian area laman. Anda juga dapat menggeser kursor untuk menyoroti pilihan Anda."
+  },
+  "tourHeaderThree": {
+    "message": "Sesuka Anda"
+  },
+  "tourBodyThree": {
+    "message": "Simpan potongan tangkapan Anda ke Web agar mudah dibagikan, atau unduh ke komputer. Anda pun dapat mengeklik pada tombol Gambar Saya untuk menemukan semua tangkapan yang pernah Anda rekam."
+  },
+  "tourHeaderFour": {
+    "message": "Rekam Jendela atau Seluruh Laman"
+  },
+  "tourBodyFour": {
+    "message": "Pilih tombol di kanan atas untuk merekam area yang terlihat pada jendela atau rekam seluruh laman."
+  },
+  "tourSkip": {
+    "message": "Lewati"
+  },
+  "tourNext": {
+    "message": "Salindia Selanjutnya"
+  },
+  "tourPrevious": {
+    "message": "Salindia Sebelumnya"
+  },
+  "tourDone": {
+    "message": "Selesai"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Dengan menggunakan Firefox Screenshots, Anda setuju dengan $TERMSANDPRIVACYNOTICETERMSLINK$ dan $TERMSANDPRIVACYNOTICEPRIVACYLINK$ Screenshots.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Ketentuan"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Kebijakan Privasi"
+  }
+}

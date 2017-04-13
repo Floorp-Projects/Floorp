@@ -13,9 +13,12 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org'] += [
 # AUTOMATIC INSERTION START
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"] += [
   'webextension/assertIsTrusted.js',
+  'webextension/blank.html',
+  'webextension/buildSettings.js.template',
   'webextension/catcher.js',
   'webextension/clipboard.js',
   'webextension/domainFromUrl.js',
+  'webextension/log.js',
   'webextension/makeUuid.js',
   'webextension/manifest.json',
   'webextension/randomString.js',
@@ -250,7 +253,7 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["backgrou
 ]
 
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["build"] += [
-  'webextension/build/defaultSentryDsn.js',
+  'webextension/build/buildSettings.js',
   'webextension/build/inlineSelectionCss.js',
   'webextension/build/onboardingCss.js',
   'webextension/build/onboardingHtml.js',
