@@ -752,8 +752,6 @@ public:
 
   RefPtr<ShutdownPromise> Shutdown()
   {
-    mData->mAudioDemuxer = nullptr;
-    mData->mVideoDemuxer = nullptr;
     RefPtr<Data> data = mData.forget();
     return InvokeAsync(mTaskQueue, __func__, [data]() {
       // We need to clear our reference to the demuxer now. So that in the event
@@ -761,6 +759,8 @@ public:
       // mediasource demuxer that is waiting on more data, it will force the
       // init promise to be rejected.
       data->mDemuxer = nullptr;
+      data->mAudioDemuxer = nullptr;
+      data->mVideoDemuxer = nullptr;
       return ShutdownPromise::CreateAndResolve(true, __func__);
     });
   }
