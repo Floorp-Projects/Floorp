@@ -35,7 +35,6 @@ to mochitest command.
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
-* test_all_shorthand.html: all shorthand servo/servo#15055 [*]
 * Animation support:
   * test_animations.html [22]
   * test_animations_dynamic_changes.html [1]

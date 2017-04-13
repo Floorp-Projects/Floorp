@@ -246,7 +246,7 @@ needs-focus == selectors-4/focus-within-002.html selectors-4/focus-within-002.ht
 needs-focus == selectors-4/focus-within-003.html selectors-4/focus-within-003.html
 needs-focus == selectors-4/focus-within-004.html selectors-4/focus-within-004.html
 needs-focus == selectors-4/focus-within-005.html selectors-4/focus-within-005.html
-fails needs-focus == selectors-4/focus-within-006.html selectors-4/focus-within-006.html
+needs-focus == selectors-4/focus-within-006.html selectors-4/focus-within-006.html
 needs-focus == selectors-4/focus-within-shadow-001.html selectors-4/focus-within-shadow-001.html
 skip-if(stylo) pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/focus-within-shadow-002.html selectors-4/focus-within-shadow-002.html # Bug 1292285
 skip-if(stylo) pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/focus-within-shadow-003.html selectors-4/focus-within-shadow-003.html # Bug 1292285
