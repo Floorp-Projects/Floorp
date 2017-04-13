@@ -19,7 +19,7 @@ var helpers = require("../helpers");
 var globals = require("../globals");
 var placesGlobals = require("./places-overlay").globals;
 
-const rootDir = helpers.getRootDir(module.filename);
+const rootDir = helpers.rootDir;
 
 // These are scripts not included in global-scripts.inc, but which are loaded
 // via overlays.
