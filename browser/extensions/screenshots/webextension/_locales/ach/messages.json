@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Mak vidio ma ki ngolo macego cego ki cal me wang kio ki i Kakube ka igwok gi pi tutunu onyo matwal."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Mak cal me wang kio"
+  },
+  "myShotsLink": {
+    "message": "Cal Na"
+  },
+  "screenshotInstructions": {
+    "message": "Ywar onyo dii ii potbuk me yero bute. Dii ESC me juko."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Gwoki"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Gwok ma nen"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Gwok potbuk weng"
+  },
+  "cancelScreenshot": {
+    "message": "Juki"
+  },
+  "downloadScreenshot": {
+    "message": "Gam"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Ki loko kakube"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Ki loko kakube me cal mamegi i bao me coc. Dii $META_KEY$-V me mwono ne.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Pe tye katic."
+  },
+  "requestErrorDetails": {
+    "message": "Timwa kica! Pe onongo wa twero gwoko cal mamegi. Tim ber item doki lacen."
+  },
+  "connectionErrorTitle": {
+    "message": "Pe watwero kube ki cal me wang kio mamegi."
+  },
+  "connectionErrorDetails": {
+    "message": "Tim ber i rot kakube ni me intanet. Kace itwero kube i intanet, peko mo pi tutuno romo bedo tye i tic me Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Pe onongo wa twero gwoko cal mamegi pien peko mo tye i tic me Firefox Screenshots. Tim ber item doki lacen."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Pe watwero mako cal me wang kio me potbuk man."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Man pe obedo Kakube me rwom, pi meno pe watwero mako cal me wang kio ne."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Pe itwero mako cal me potbuk pa Firefox Screenshots!"
+  },
+  "genericErrorTitle": {
+    "message": "Woo! Firefox Screenshots opo oo."
+  },
+  "genericErrorDetails": {
+    "message": "Pe wa ngeyo ngo ma otime kombedi. Iromo temo ne doki onyo mako cal pa potbuk mukene?"
+  },
+  "tourBodyOne": {
+    "message": "Maki, gwoki, ki nywak cal me wang kio labongo weko Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Mak ngo ma imito keken"
+  },
+  "tourBodyTwo": {
+    "message": "Dii ka i ywar me mako cal pa but potbuk keken. Itwero bene wot iwiye me wero yer mamegi."
+  },
+  "tourHeaderThree": {
+    "message": "Kit ma imito"
+  },
+  "tourBodyThree": {
+    "message": "Gwok cal mamegi ma ki ngolo ii Kakube pi nywako i yoo ma yot, onyo gamo gi i kompiuta ni. Itwero bene diyo mapeca me Cal Na me nongo cal ma i mako weng."
+  },
+  "tourHeaderFour": {
+    "message": "Mak dirica onyo Potbuk weng"
+  },
+  "tourBodyFour": {
+    "message": "Yer mapeca ma i tung lacuc malo me mako kabedo ma nen i dirica onyo me mako potbuk weng."
+  },
+  "tourSkip": {
+    "message": "Kal"
+  },
+  "tourNext": {
+    "message": "Cal malubo"
+  },
+  "tourPrevious": {
+    "message": "Cal mukato"
+  },
+  "tourDone": {
+    "message": "Otum"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Tic ki Firefox Screenshots nyuto ni, i yee $TERMSANDPRIVACYNOTICETERMSLINK$ ki $TERMSANDPRIVACYNOTICEPRIVACYLINK$ me Screenshots.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Cik"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Ngec me mung"
+  }
+}

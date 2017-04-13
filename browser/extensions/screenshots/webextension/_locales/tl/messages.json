@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Dalhin ang clip at mga screenshot mula sa Web at i-save ang mga ito pansamantala o permanente."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Kumuha ng Screenshot"
+  },
+  "myShotsLink": {
+    "message": "Aking Shots"
+  },
+  "screenshotInstructions": {
+    "message": "I-drag o i-click sa pahina upang pumili ng rehiyon. Pindutin ang ESC upang kanselahin."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "I-save"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "I-save na nakikita"
+  },
+  "saveScreenshotFullPage": {
+    "message": "I-save ang buong pahina"
+  },
+  "cancelScreenshot": {
+    "message": "Kanselahin"
+  },
+  "downloadScreenshot": {
+    "message": "Download"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Kinopya ang Link"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Ang link na ito sa iyong shot ay kinopya sa clipboard. Pindutin $META_KEY$-V i-paste.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Mula sa pagkakasunod-sunod."
+  },
+  "requestErrorDetails": {
+    "message": "Paumanhin! Hindi namin mai-save ang iyong mga shot. Subukang muli mamaya."
+  },
+  "connectionErrorTitle": {
+    "message": "Hindi namin maaaring i-kunekta sa iyong mga screenshot."
+  },
+  "connectionErrorDetails": {
+    "message": "Mangyaring suriin ang iyong koneksyon sa Internet. Kung ikaw ay kumonekta sa Internet, maaaring may isang pansamantalang problema sa serbisyo Firefox screenshot."
+  },
+  "loginErrorDetails": {
+    "message": "Hindi namin mai-save ang iyong mga shot dahil may problema sa serbisyo Firefox screenshot. Subukang muli mamaya."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Hindi namin maaaring screenshot pahinang ito."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Ito ay hindi isang standard na Web page, kaya hindi ka maaaring kumuha ng isang screenshot ng mga ito."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Hindi ka maaaring kumuha ng isang shot ng isang pahina ng Firefox screenshot!"
+  },
+  "genericErrorTitle": {
+    "message": "Whoa! Nagiging magulo ang Firefox screenshot."
+  },
+  "genericErrorDetails": {
+    "message": "Hindi kami sigurado kung ano ang nangyari. Pag-aalaga upang subukang muli o kumuha ng isang shot ng isang iba't ibang mga pahina?"
+  },
+  "tourBodyOne": {
+    "message": "Dumaan, i-save, at ibahagi ang mga screenshot nang hindi umaalis sa Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Kunan Kung Ano Ang Gusto Mo"
+  },
+  "tourBodyTwo": {
+    "message": "I-click at i-drag upang makuha lamang ang isang bahagi ng isang pahina. Maaari mo ring i-hover upang i-highlight ang iyong pagpili."
+  },
+  "tourHeaderThree": {
+    "message": "Bilang Nagustuhan Mo ito"
+  },
+  "tourBodyThree": {
+    "message": "I-save ang iyong crop shot sa Web para sa madaling pagbabahagi, o i-download ito sa iyong computer. Maaari mo ring i-click sa pindutan ng My Shots upang mahanap ang lahat ng mga pag-shot na kinunan mo."
+  },
+  "tourHeaderFour": {
+    "message": "I-capture ang Windows o Buong Pahina"
+  },
+  "tourBodyFour": {
+    "message": "Piliin ang pindutan sa kanang itaas upang makuha ang nakikitang lugar sa window o upang makuha ang isang buong pahina."
+  },
+  "tourSkip": {
+    "message": "Laktawan"
+  },
+  "tourNext": {
+    "message": "Susunod na Slide"
+  },
+  "tourPrevious": {
+    "message": "Nakaraan na Slide"
+  },
+  "tourDone": {
+    "message": "Tapos"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Sa pamamagitan ng paggamit ng Firefox screenshot, sumasang-ayon ka sa mga screenshot $TERMSANDPRIVACYNOTICETERMSLINK$ at $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Mga tuntunin"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Abiso sa Privacy"
+  }
+}

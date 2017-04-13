@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Wzmiće klipy a fota wobrazowki z weba a składujće je nachwilu abo na přeco."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Foto wobrazowki činić"
+  },
+  "myShotsLink": {
+    "message": "Moje fota wobrazowki"
+  },
+  "screenshotInstructions": {
+    "message": "Ćehńće abo klikńće na stronu, zo byšće wobwod wubrał. Tłóčće na ESC, zo byšće přetorhnył."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Składować"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Widźomny wobwod składować"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Cyłu stronu składować"
+  },
+  "cancelScreenshot": {
+    "message": "Přetorhnyć"
+  },
+  "downloadScreenshot": {
+    "message": "Sćahnyć"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Wotkaz kopěrowany"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Wotkaz k wašemu fotu wobrazowki je so do mjezyskłada kopěrował. Tłóčće $META_KEY$-V, zo byšće jón zasadźił.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Skóncowany."
+  },
+  "requestErrorDetails": {
+    "message": "Bohužel njemóžachmy waše foto wobrazowki składować. Prošu spytajće pozdźišo hišće raz."
+  },
+  "connectionErrorTitle": {
+    "message": "Njemóžemy z wašimi fotami wobrazowki zwjazać."
+  },
+  "connectionErrorDetails": {
+    "message": "Prošu přepruwujće swój internetny zwisk. Jeli móžeće z internetom zwjazać, je snano nachwilny problem ze słužbu Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Njemóžachmy swoje foto wobrazowki składować, dokelž je problem ze słužbu Firefox Screenshots. Prošu spytajće pozdźišo hišće raz."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Foto wobrazowki tuteje strony móžne njeje."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "To standardna webstrona njeje, tohodla foto wobrazowki wot njeje móžne njeje."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Njemóžeće wobrazowku strony Firefox Screenshots fotografować!"
+  },
+  "genericErrorTitle": {
+    "message": "Hopla! Firefox Screenshots njefunguje."
+  },
+  "genericErrorDetails": {
+    "message": "Njejsmy sej wěsći, štož je so stało. Chceće hišće raz spytać abo chceće druhu stronu fotografować?"
+  },
+  "tourBodyOne": {
+    "message": "Čińće, składujće a dźělće fota wobrazowki bjez toho, zo byšće Firefox wopušćił."
+  },
+  "tourHeaderTwo": {
+    "message": "Fotografujće prosće, štož chceće"
+  },
+  "tourBodyTwo": {
+    "message": "Klikńće a ćehńće, zo byšće dźěl strony fotografował. Móžeće tež pokazowak myški nad nim pohibować, zo byšće swój wuběr wuzběhnył."
+  },
+  "tourHeaderThree": {
+    "message": "Tak, kaž so wam spodoba"
+  },
+  "tourBodyThree": {
+    "message": "Składujće swoje přitřihane fota wobrazowki w interneće, zo byšće je lóšo dźělił, abo sćehńće je na swój ličak. Móžeće tež na tłóčatko „Moje fota wobrazowki“ kliknyć, zo byšće wšě fota wobrazowki namakał, kotrež sće činił."
+  },
+  "tourHeaderFour": {
+    "message": "Wokna abo cyłe strony składować"
+  },
+  "tourBodyFour": {
+    "message": "Wubjerće tłóčatka horjeka naprawo, zo byšće widźomny wobwod we woknje abo cyłu stronu fotografować."
+  },
+  "tourSkip": {
+    "message": "Přeskočić"
+  },
+  "tourNext": {
+    "message": "Přichodne foto"
+  },
+  "tourPrevious": {
+    "message": "Předchadne foto"
+  },
+  "tourDone": {
+    "message": "Hotowo"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Přez wužiwanje Firefox ScreenShots, zwoliće do $TERMSANDPRIVACYNOTICETERMSLINK$ a $TERMSANDPRIVACYNOTICEPRIVACYLINK$ Firefox Screenshots.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Wuměnjenja"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Pokaz priwatnosće"
+  }
+}
