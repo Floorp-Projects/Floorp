@@ -196,7 +196,7 @@ amManager.prototype = {
         }
 
         return this.installAddonFromWebpage(payload.mimetype,
-          aMessage.target, payload.principalToInherit, payload.uri,
+          aMessage.target, payload.triggeringPrincipal, payload.uri,
           payload.hash, payload.name, payload.icon, callback);
       }
 
