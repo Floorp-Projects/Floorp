@@ -2308,12 +2308,14 @@
     "description": "Websockets Handshake Results (ws-ok-plain, ws-ok-proxy, ws-failed-plain, ws-failed-proxy, wss-ok-plain, wss-ok-proxy, wss-failed-plain, wss-failed-proxy)"
   },
   "SPDY_VERSION2": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 48,
     "description": "SPDY: Protocol Version Used"
   },
   "HTTP_RESPONSE_VERSION": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 48,
@@ -2328,6 +2330,7 @@
     "alert_emails": ["necko@mozilla.com"]
   },
   "SPDY_PARALLEL_STREAMS": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -2335,6 +2338,7 @@
     "description": "SPDY: Streams concurrent active per connection"
   },
   "SPDY_REQUEST_PER_CONN": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -2342,6 +2346,7 @@
     "description": "SPDY: Streams created per connection"
   },
   "SPDY_SERVER_INITIATED_STREAMS": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 100000,
@@ -2349,6 +2354,7 @@
     "description": "SPDY: Streams recevied per connection"
   },
   "SPDY_CHUNK_RECVD": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -2356,6 +2362,7 @@
     "description": "SPDY: Recvd Chunk Size (rounded to KB)"
   },
   "SPDY_SYN_SIZE": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 20,
@@ -2364,6 +2371,7 @@
     "description": "SPDY: SYN Frame Header Size"
   },
   "SPDY_SYN_RATIO": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 99,
@@ -2371,6 +2379,7 @@
     "description": "SPDY: SYN Frame Header Ratio (lower better)"
   },
   "SPDY_SYN_REPLY_SIZE": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 16,
@@ -2379,6 +2388,7 @@
     "description": "SPDY: SYN Reply Header Size"
   },
   "SPDY_SYN_REPLY_RATIO": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 99,
@@ -2386,65 +2396,35 @@
     "description": "SPDY: SYN Reply Header Ratio (lower better)"
   },
   "SPDY_NPN_CONNECT": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "SPDY: NPN Negotiated"
   },
   "SPDY_NPN_JOIN": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "SPDY: Coalesce Succeeded"
   },
   "SPDY_KBREAD_PER_CONN": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 3000,
     "n_buckets": 50,
     "description": "SPDY: KB read per connection"
   },
-  "SPDY_SETTINGS_UL_BW": {
-    "expires_in_version": "42",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 100,
-    "description": "SPDY: Settings Upload Bandwidth"
-  },
-  "SPDY_SETTINGS_DL_BW": {
-    "expires_in_version": "42",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 100,
-    "description": "SPDY: Settings Download Bandwidth"
-  },
-  "SPDY_SETTINGS_RTT": {
-    "expires_in_version": "42",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 100,
-    "description": "SPDY: Settings RTT"
-  },
   "SPDY_SETTINGS_MAX_STREAMS": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 5000,
     "n_buckets": 100,
     "description": "H2: Settings Max Streams parameter"
   },
-  "SPDY_SETTINGS_CWND": {
-    "expires_in_version": "42",
-    "kind": "exponential",
-    "high": 500,
-    "n_buckets": 50,
-    "description": "SPDY: Settings CWND (packets)"
-  },
-  "SPDY_SETTINGS_RETRANS": {
-    "expires_in_version": "42",
-    "kind": "exponential",
-    "high": 100,
-    "n_buckets": 50,
-    "description": "SPDY: Retransmission Rate"
-  },
   "SPDY_SETTINGS_IW": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -2452,12 +2432,14 @@
     "description": "H2: Settings Initial Window (rounded to KB)"
   },
   "SPDY_GOAWAY_LOCAL": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 32,
     "description": "H2: goaway reason client sent from rfc 7540. 31 is none sent."
   },
   "SPDY_GOAWAY_PEER": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 32,
@@ -2739,6 +2721,7 @@
     "description": "Time to search offline cache (ms)"
   },
   "TRANSACTION_WAIT_TIME_HTTP": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 5000,
@@ -2746,6 +2729,7 @@
     "description": "Time from submission to dispatch of HTTP transaction (ms)"
   },
   "TRANSACTION_WAIT_TIME_SPDY": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 5000,
@@ -2753,11 +2737,13 @@
     "description": "Time from submission to dispatch of SPDY transaction (ms)"
   },
   "HTTP_SAW_QUIC_ALT_PROTOCOL": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Fraction of responses with a quic alt-protocol advertisement."
   },
   "HTTP_CONTENT_ENCODING": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 6,
