@@ -1626,10 +1626,12 @@ CacheIRCompiler::emitLoadBooleanResult()
     if (output.hasValue()) {
         Value val = BooleanValue(reader.readBool());
         masm.moveValue(val, output.valueReg());
+    } else {
+        MOZ_ASSERT(output.type() == JSVAL_TYPE_BOOLEAN);
+        bool b = reader.readBool();
+        masm.movePtr(ImmWord(b), output.typedReg().gpr());
     }
-    else {
-        MOZ_CRASH("NYI: Typed LoadBooleanResult");
-    }
+
     return true;
 }
 

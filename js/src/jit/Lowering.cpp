@@ -4187,6 +4187,27 @@ LIRGenerator::visitIn(MIn* ins)
 }
 
 void
+LIRGenerator::visitHasOwnCache(MHasOwnCache* ins)
+{
+    MDefinition* value = ins->value();
+    MOZ_ASSERT(value->type() == MIRType::Object || value->type() == MIRType::Value);
+
+    MDefinition* id = ins->idval();
+    MOZ_ASSERT(id->type() == MIRType::String ||
+               id->type() == MIRType::Symbol ||
+               id->type() == MIRType::Int32 ||
+               id->type() == MIRType::Value);
+
+    gen->setPerformsCall();
+
+    LHasOwnCache* lir =
+        new(alloc()) LHasOwnCache(useBoxOrTyped(value),
+                                  useBoxOrTyped(id));
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitInstanceOf(MInstanceOf* ins)
 {
     MDefinition* lhs = ins->getOperand(0);
