@@ -5115,18 +5115,7 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
   const nsCSSValue* decorationLineValue =
     aRuleData->ValueForTextDecorationLine();
   if (eCSSUnit_Enumerated == decorationLineValue->GetUnit()) {
-    int32_t td = decorationLineValue->GetIntValue();
-    text->mTextDecorationLine = td;
-    if (td & NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS) {
-      bool underlineLinks =
-        mPresContext->GetCachedBoolPref(kPresContext_UnderlineLinks);
-      if (underlineLinks) {
-        text->mTextDecorationLine |= NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
-      }
-      else {
-        text->mTextDecorationLine &= ~NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
-      }
-    }
+    text->mTextDecorationLine = decorationLineValue->GetIntValue();
   } else if (eCSSUnit_Inherit == decorationLineValue->GetUnit()) {
     conditions.SetUncacheable();
     text->mTextDecorationLine = parentText->mTextDecorationLine;

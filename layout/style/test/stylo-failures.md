@@ -364,8 +364,6 @@ to mochitest command.
   * should reject whole value bug 1355352
   * Gecko clamps rather than rejects invalid unicode range bug 1355356
 * test_default_computed_style.html: unship getDefaultComputedStyle bug 1355683 [1]
-* -moz-anchor-decoration value on text-decoration bug 1355734
-  * test_value_storage.html `-moz-anchor-decoration` [10]
 
 ## Spec Unclear
 
