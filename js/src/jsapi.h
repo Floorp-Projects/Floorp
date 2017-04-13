@@ -641,7 +641,7 @@ typedef enum JSExnType {
     JSEXN_LIMIT
 } JSExnType;
 
-typedef struct JSErrorFormatString {
+struct JSErrorFormatString {
      /** The error message name in ASCII. */
     const char* name;
 
@@ -653,7 +653,7 @@ typedef struct JSErrorFormatString {
 
     /** One of the JSExnType constants above. */
     int16_t exnType;
-} JSErrorFormatString;
+};
 
 typedef const JSErrorFormatString*
 (* JSErrorCallback)(void* userRef, const unsigned errorNumber);
@@ -1620,8 +1620,6 @@ struct JSCTypesCallbacks {
     JSCTypesUnicodeToNativeFun unicodeToNative;
 };
 
-typedef struct JSCTypesCallbacks JSCTypesCallbacks;
-
 /**
  * Set the callbacks on the provided 'ctypesObj' object. 'callbacks' should be a
  * pointer to static data that exists for the lifetime of 'ctypesObj', but it
@@ -1953,10 +1951,10 @@ struct JSJitInfo;
  * allow us to pass one JSJitInfo per function with the property/function spec,
  * without additional field overhead.
  */
-typedef struct JSNativeWrapper {
+struct JSNativeWrapper {
     JSNative        op;
     const JSJitInfo* info;
-} JSNativeWrapper;
+};
 
 /*
  * Macro static initializers which make it easy to pass no JSJitInfo as part of a
