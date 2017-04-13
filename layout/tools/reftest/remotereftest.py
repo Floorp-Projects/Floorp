@@ -227,15 +227,12 @@ class RemoteReftest(RefTest):
     def stopWebServer(self, options):
         self.server.stop()
 
-    def createReftestProfile(self, options, manifest, startAfter=None):
+    def createReftestProfile(self, options, manifest):
         profile = RefTest.createReftestProfile(self,
                                                options,
                                                manifest,
                                                server=options.remoteWebServer,
                                                port=options.httpPort)
-        if startAfter is not None:
-            print ("WARNING: Continuing after a crash is not supported for remote "
-                   "reftest yet.")
         profileDir = profile.profile
 
         prefs = {}
