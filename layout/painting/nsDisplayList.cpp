@@ -4789,6 +4789,7 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
       key.mNamespace = aLayer->WrBridge()->GetNamespace();
       key.mHandle = aLayer->WrBridge()->GetNextResourceId();
       aParentCommands.AppendElement(OpAddExternalImage(externalImageId, key));
+      aLayer->WrManager()->AddImageKeyForDiscard(key);
       aBuilder.PushBorderImage(wr::ToWrRect(dest),
                                aBuilder.BuildClipRegion(wr::ToWrRect(clip)),
                                wr::ToWrBorderWidths(widths[0], widths[1], widths[2], widths[3]),

@@ -260,6 +260,9 @@ WebRenderBridgeParent::RecvDeleteImage(const wr::ImageKey& aImageKey)
     return IPC_OK();
   }
   MOZ_ASSERT(mApi);
+  if (mActiveKeys.Get(wr::AsUint64(aImageKey), nullptr)) {
+    mActiveKeys.Remove(wr::AsUint64(aImageKey));
+  }
   mKeysToDelete.push_back(aImageKey);
   return IPC_OK();
 }
@@ -351,6 +354,8 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
         const OpAddExternalImage& op = cmd.get_OpAddExternalImage();
         wr::ImageKey key = op.key();
         MOZ_ASSERT(mExternalImageIds.Get(op.externalImageId()).get());
+        MOZ_ASSERT(!mActiveKeys.Get(wr::AsUint64(key), nullptr));
+        mActiveKeys.Put(wr::AsUint64(key), key);
 
         RefPtr<CompositableHost> host = mExternalImageIds.Get(op.externalImageId());
         if (!host) {
@@ -691,6 +696,10 @@ WebRenderBridgeParent::ClearResources()
   if (mApi) {
     ++mWrEpoch; // Update webrender epoch
     mApi->ClearRootDisplayList(wr::NewEpoch(mWrEpoch), mPipelineId);
+    for (auto iter = mActiveKeys.Iter(); !iter.Done(); iter.Next()) {
+      mKeysToDelete.push_back(iter.Data());
+      iter.Remove();
+    }
     if (!mKeysToDelete.empty()) {
       // XXX Sync wait.
       mApi->WaitFlushed();

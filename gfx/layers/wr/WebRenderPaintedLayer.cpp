@@ -200,6 +200,7 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   key.mNamespace = WrBridge()->GetNamespace();
   key.mHandle = WrBridge()->GetNextResourceId();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
+  Manager()->AddImageKeyForDiscard(key);
 
   aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
                               1.0f,
@@ -208,7 +209,6 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                               mixBlendMode);
   aBuilder.PushImage(wr::ToWrRect(rect), clip, wr::ImageRendering::Auto, key);
   aBuilder.PopStackingContext();
-  Manager()->AddImageKeyForDiscard(key);
 }
 
 } // namespace layers
