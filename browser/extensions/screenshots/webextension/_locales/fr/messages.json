@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Effectuez des captures d’écran sur le Web et sauvegardez-les de manière temporaire ou permanente."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Effectuer une capture d’écran"
+  },
+  "myShotsLink": {
+    "message": "Mes captures d’écran"
+  },
+  "screenshotInstructions": {
+    "message": "Sélectionnez une zone de la page par cliquer-glisser ou en cliquant sur l’élément à sélectionner. Appuyez sur Échap pour annuler."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Enregistrer"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Capturer la zone visible"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Capturer la page complète"
+  },
+  "cancelScreenshot": {
+    "message": "Annuler"
+  },
+  "downloadScreenshot": {
+    "message": "Télécharger"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Lien copié"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Le lien de votre capture a été copié dans le presse-papiers. Appuyez sur $META_KEY$-V pour le coller.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Impossible d’effectuer cette action."
+  },
+  "requestErrorDetails": {
+    "message": "Votre capture d’écran n’a pas pu être enregistrée. Veuillez réessayer plus tard."
+  },
+  "connectionErrorTitle": {
+    "message": "Nous ne pouvons pas nous connecter à vos captures d’écran."
+  },
+  "connectionErrorDetails": {
+    "message": "Veuillez vérifier votre connexion à Internet. Si celle-ci fonctionne normalement, il peut y avoir un problème temporaire avec le service de Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Nous n’avons pas pu enregistrer votre capture d’écran, car le service de Firefox Screenshot rencontre des difficultés. Veuillez réessayer plus tard."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Impossible d’effectuer une capture d’écran de cette page."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Impossible d’effectuer une capture d’écran, car cette page web n’est pas standard."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Vous ne pouvez pas effectuer une capture d’écran d’une page Firefox Screenshots."
+  },
+  "genericErrorTitle": {
+    "message": "Firefox Screenshots semble avoir un petit problème."
+  },
+  "genericErrorDetails": {
+    "message": "Un problème non identifié est survenu. Vous pouvez réessayer ou effectuer une capture d’écran d’une autre page."
+  },
+  "tourBodyOne": {
+    "message": "Effectuez des captures d’écran, enregistrez et partagez-les sans quitter Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Capturez ce que vous voulez"
+  },
+  "tourBodyTwo": {
+    "message": "Cliquez et glissez pour capturer seulement une partie de la page. Vous pouvez aussi survoler une zone avec votre curseur pour surligner votre sélection."
+  },
+  "tourHeaderThree": {
+    "message": "À votre guise"
+  },
+  "tourBodyThree": {
+    "message": "Sauvegardez en ligne vos captures recadrées pour les partager plus facilement, ou téléchargez-les sur votre ordinateur. Vous pouvez aussi cliquer sur « Mes captures d’écran » pour retrouver toutes vos captures."
+  },
+  "tourHeaderFour": {
+    "message": "Effectuez des captures d’écran de fenêtres ou de pages entières"
+  },
+  "tourBodyFour": {
+    "message": "Utilisez les boutons en haut à droite pour capturer au choix la zone visible dans la fenêtre ou la page entière."
+  },
+  "tourSkip": {
+    "message": "IGNORER"
+  },
+  "tourNext": {
+    "message": "Écran suivant"
+  },
+  "tourPrevious": {
+    "message": "Écran précédent"
+  },
+  "tourDone": {
+    "message": "Terminé"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "En utilisant Firefox Screenshots, vous acceptez les $TERMSANDPRIVACYNOTICETERMSLINK$ et la $TERMSANDPRIVACYNOTICEPRIVACYLINK$ de Screenshots.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "mentions légales"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "politique de confidentialité"
+  }
+}

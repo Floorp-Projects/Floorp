@@ -1,0 +1,106 @@
+{
+  "addonDescription": {
+    "message": "Ambil klip dan skrinshot dari Web dan simpan untuk sementara waktu atau kekal."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Ambil skrinshot"
+  },
+  "myShotsLink": {
+    "message": "Shot Saya"
+  },
+  "screenshotInstructions": {
+    "message": "Seret atau klik pada halaman untuk memilih kawasan. Tekan ESC untuk batalkan."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Simpan"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Simpan yang terpapar"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Simpan halaman penuh"
+  },
+  "cancelScreenshot": {
+    "message": "Batal"
+  },
+  "downloadScreenshot": {
+    "message": "Muat turun"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Pautan Disalin"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Pautan ke shot anda telah disalin ke klipbod. Tekan $META_KEY$-V untuk tampal.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Tidak berfungsi."
+  },
+  "requestErrorDetails": {
+    "message": "Maaf! Kita tidak dapat menyimpan shot anda. Sila cuba lagi nanti."
+  },
+  "connectionErrorTitle": {
+    "message": "Kami tidak dapat menyambungkan ke skrinshot anda."
+  },
+  "connectionErrorDetails": {
+    "message": "Sila semak sambungan Internet anda. Jika anda boleh dapat sambungan ke Internet, mungkin ada masalah sementara dengan perkhidmatan screenshot di Firefox."
+  },
+  "loginErrorDetails": {
+    "message": "Kita tidak dapat menyimpan skrinshot anda kerana ada masalah dengan perkhidmatan skrinshot di Firefox. Sila cuba lagi nanti."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Halaman ini tidak boleh diskrinshot."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Ini bukan halaman Web piawai, jadi anda tidak boleh membuat skrinshot."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Anda tidak boleh mengambil gambar halaman Firefox Screenshots!"
+  },
+  "genericErrorTitle": {
+    "message": "Oh tidak! Firefox Screenshot tidak berfungsi dengan betul."
+  },
+  "genericErrorDetails": {
+    "message": "Kami tidak pasti apa yang baru berlaku. Anda mahu cuba lagi atau mengambil gambar halaman lain?"
+  },
+  "tourBodyOne": {
+    "message": "Ambil, simpan, dan kongsi screenshot tanpa meninggalkan pelayar Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Ambil gambar hanya yang anda mahu"
+  },
+  "tourBodyTwo": {
+    "message": "Klik dan seret untuk mengambil gambar sebahagian daripada halaman. Anda boleh juga serlahkan pilihan anda."
+  },
+  "tourHeaderThree": {
+    "message": "Seperti Yang Anda Suka"
+  },
+  "tourBodyThree": {
+    "message": "Simpan rakaman yang dipotong ke Web, cara yang lebih mudah untuk berkongsi, atau memuatturunnya ke komputer anda. Anda juga boleh klik pada butang Shot Saya untuk mencari semua rakaman yang telah diambil."
+  },
+  "tourHeaderFour": {
+    "message": "Tangkap Tetingkap atau Keseluruhan Halaman"
+  },
+  "tourBodyFour": {
+    "message": "Pilih butang di bahagian atas kanan untuk merakam kawasan paparan dalam tetingkap atau untuk merakamkan keseluruhan halaman."
+  },
+  "tourSkip": {
+    "message": "Langkau"
+  },
+  "tourNext": {
+    "message": "Slaid Seterusnya"
+  },
+  "tourPrevious": {
+    "message": "Slaid Sebelumnya"
+  },
+  "tourDone": {
+    "message": "Selesai"
+  }
+}
