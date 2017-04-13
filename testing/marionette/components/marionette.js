@@ -154,7 +154,7 @@ MarionetteComponent.prototype.onStopListening = function (socket, status) {
   socket.close();
 };
 
-// Handle --marionette flag
+// Handle -marionette flag
 MarionetteComponent.prototype.handle = function (cmdLine) {
   if (cmdLine.handleFlag("marionette", false)) {
     this.enabled = true;

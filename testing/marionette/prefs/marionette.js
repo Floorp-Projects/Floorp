@@ -6,7 +6,7 @@
 // with, instrument, and control Gecko.
 //
 // It is included in Firefox, but not enabled by default unless the
-// --marionette flag is passed.
+// -marionette flag is passed.
 
 // Port to start Marionette server on.
 pref("marionette.port", 2828);
