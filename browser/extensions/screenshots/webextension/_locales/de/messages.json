@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Speichern Sie Ausschnitte und Bildschirmfotos von Webseiten, die Sie temporär oder dauerhaft speichern können."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Bildschirmfoto aufnehmen"
+  },
+  "myShotsLink": {
+    "message": "Meine Bildschirmfotos"
+  },
+  "screenshotInstructions": {
+    "message": "Ziehen oder Klicken Sie auf der Seite, um einen Bereich auszuwählen. Drücken Sie ESC zum Abbrechen."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Speichern"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Sichtbaren Bereich speichern"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Gesamte Seite speichern"
+  },
+  "cancelScreenshot": {
+    "message": "Abbrechen"
+  },
+  "downloadScreenshot": {
+    "message": "Herunterladen"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Link kopiert"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Der Link zu Ihrem Bildschirmfoto wurde in die Zwischenablage kopiert. Drücken Sie $META_KEY$-V zum Einfügen.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Außer Betrieb."
+  },
+  "requestErrorDetails": {
+    "message": "Wir konnten Ihr Bildschirmfoto leider nicht speichern. Bitte versuchen Sie es später erneut."
+  },
+  "connectionErrorTitle": {
+    "message": "Es war keine Verbindung zu Ihren Bildschirmfotos möglich."
+  },
+  "connectionErrorDetails": {
+    "message": "Bitte überprüfen Sie Ihre Internetverbindung. Wenn diese funktioniert, gibt es eventuell ein temporäres Problem mit dem Dienst von Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Ihr Bildschirmfoto konnte nicht gespeichert werden, weil ein Problem mit dem Dienst Firefox Screenshots aufgetreten ist. Bitte versuchen Sie es später erneut."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Ein Bildschirmfoto dieser Seite ist nicht möglich."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Dies ist keine Standard-Webseite, daher sind keine Bildschirmfotos von ihr möglich."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Sie können kein Bildschirmfoto einer Firefox-Screenshots-Seite machen!"
+  },
+  "genericErrorTitle": {
+    "message": "Firefox Screenshots funktioniert nicht richtig."
+  },
+  "genericErrorDetails": {
+    "message": "Wir wissen auch nicht, was gerade passiert ist. Könnten Sie das Bildschirmfoto erneut oder auf einer anderen Seite aufnehmen?"
+  },
+  "tourBodyOne": {
+    "message": "Bildschirmfotos aufnehmen, speichern und teilen, ohne Firefox zu verlassen."
+  },
+  "tourHeaderTwo": {
+    "message": "Nehmen Sie auf, was Sie möchten"
+  },
+  "tourBodyTwo": {
+    "message": "Klicken und ziehen Sie, um nur einen Teil einer Seite aufzunehmen. Sie können den Mauszeiger auch darüber bewegen, um Ihre Auswahl hervorzuheben."
+  },
+  "tourHeaderThree": {
+    "message": "Wie Sie möchten"
+  },
+  "tourBodyThree": {
+    "message": "Speichern Sie Ihre zugeschnittenen Bildschirmfotos im Internet, sodass sie leicht zu teilen sind, oder laden Sie sie auf Ihren Computer herunter. Sie können auch auf die Schaltfläche „Meine Bildschirmfotos“ klicken, um alle Ihre Bildschirmfotos zu finden."
+  },
+  "tourHeaderFour": {
+    "message": "Fenster oder ganze Seiten speichern"
+  },
+  "tourBodyFour": {
+    "message": "Nutzen Sie die Schaltflächen rechts oben, um den sichtbaren Bereich im Fenster oder eine ganze Seite zu speichern."
+  },
+  "tourSkip": {
+    "message": "Überspringen"
+  },
+  "tourNext": {
+    "message": "Nächste Folie"
+  },
+  "tourPrevious": {
+    "message": "Vorherige Folie"
+  },
+  "tourDone": {
+    "message": "Fertig"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Durch die Verwendung von Firefox Screenshots stimmen Sie den entsprechenden $TERMSANDPRIVACYNOTICETERMSLINK$ und dem $TERMSANDPRIVACYNOTICEPRIVACYLINK$ zu.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Nutzungsbedingungen"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Datenschutzhinweis"
+  }
+}

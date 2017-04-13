@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Twórz wycinki i zrzuty stron internetowych i zapisuj je tymczasowo lub trwale."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Wykonaj zrzut ekranu"
+  },
+  "myShotsLink": {
+    "message": "Moje zrzuty"
+  },
+  "screenshotInstructions": {
+    "message": "Przeciągnij lub kliknij na stronie, aby wybrać obszar. Naciśnij klawisz Esc, aby anulować."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Zapisz"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Zapisz widoczne"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Zapisz całą stronę"
+  },
+  "cancelScreenshot": {
+    "message": "Anuluj"
+  },
+  "downloadScreenshot": {
+    "message": "Pobierz"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Skopiowano odnośnik"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Odnośnik do zrzutu został skopiowany do schowka. Naciśnij $META_KEY$-V, aby go wkleić.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Awaria."
+  },
+  "requestErrorDetails": {
+    "message": "Nie można zapisać zrzutu. Spróbuj ponownie później."
+  },
+  "connectionErrorTitle": {
+    "message": "Nie można połączyć się z zrzutami ekranu."
+  },
+  "connectionErrorDetails": {
+    "message": "Sprawdź swoje połączenie z Internetem. Jeśli działa ono prawidłowo, to może występować tymczasowy problem z usługą Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Nie można zapisać zrzutu, ponieważ występuje problem z usługą Firefox Screenshots. Spróbuj ponownie później."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Nie można wykonać zrzutu tej strony."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "To nie jest standardowa strona internetowa, więc nie można wykonać jej zrzutu."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Nie można wykonać zrzutu strony Firefox Screenshots."
+  },
+  "genericErrorTitle": {
+    "message": "Firefox Screenshots wymknęło się spod kontroli."
+  },
+  "genericErrorDetails": {
+    "message": "Nie bardzo wiemy, co się wydarzyło. Spróbujesz ponownie lub wykonasz zrzut innej strony?"
+  },
+  "tourBodyOne": {
+    "message": "Wykonuj, zapisuj i udostępniaj zrzuty ekranu bez wychodzenia z Firefoksa."
+  },
+  "tourHeaderTwo": {
+    "message": "Zapisuj tylko to, co potrzebujesz"
+  },
+  "tourBodyTwo": {
+    "message": "Kliknij i przeciągnij, aby zapisać tylko część strony. Możesz także najechać, aby wyróżnić zaznaczony obszar."
+  },
+  "tourHeaderThree": {
+    "message": "Tak, jak lubisz"
+  },
+  "tourBodyThree": {
+    "message": "Zapisuj przycięte zrzuty w Internecie, aby łatwiej je udostępniać, albo pobierz je na swój komputer. Możesz też kliknąć przycisk „Moje zrzuty”, aby przeglądać wszystkie wykonane zrzuty."
+  },
+  "tourHeaderFour": {
+    "message": "Zapisuj zrzuty okien lub całych stron"
+  },
+  "tourBodyFour": {
+    "message": "Kliknij przycisk w górnym prawym rogu, aby zapisać obszar widoczny w oknie lub całą stronę."
+  },
+  "tourSkip": {
+    "message": "Pomiń"
+  },
+  "tourNext": {
+    "message": "Dalej"
+  },
+  "tourPrevious": {
+    "message": "Wstecz"
+  },
+  "tourDone": {
+    "message": "Zamknij"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Używając Firefox Screenshots, zgadzasz się na $TERMSANDPRIVACYNOTICETERMSLINK$ i $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "warunki korzystania z usługi"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "zasady ochrony prywatności"
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Haz capturas y recortes de la web y guárdalos temporal o permanentemente."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Hacer una captura de pantalla"
+  },
+  "myShotsLink": {
+    "message": "Mis capturas"
+  },
+  "screenshotInstructions": {
+    "message": "Arrastra o haz clic en la página para seleccionar una región. Pulsa ESC para cancelar."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Guardar"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Guardar visible"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Guardar página completa"
+  },
+  "cancelScreenshot": {
+    "message": "Cancelar"
+  },
+  "downloadScreenshot": {
+    "message": "Descargar"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Enlace copiado"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Se ha copiado el enlace a la captura en el portapapeles. Pulsa $META_KEY$-V para pegar.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "No funciona."
+  },
+  "requestErrorDetails": {
+    "message": "¡Lo sentimos! No hemos podido guardar tu captura. Inténtalo más tarde."
+  },
+  "connectionErrorTitle": {
+    "message": "No podemos acceder a tus capturas de pantalla."
+  },
+  "connectionErrorDetails": {
+    "message": "Comprueba tu conexión a Internet. Si puedes conectarte, puede que haya un problema temporal con el servicio de capturas de pantalla de Firefox."
+  },
+  "loginErrorDetails": {
+    "message": "No se pudo guardar la captura porque hay un problema con el servicio de capturas de pantalla de Firefox. Inténtalo más tarde."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "No podemos hacer una captura de esta página."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "No es una página web común, por lo que no podemos hacer captura de pantalla."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "¡No puedes hacer una captura de la página de capturas de Firefox!"
+  },
+  "genericErrorTitle": {
+    "message": "¡Vaya! La página de capturas de pantalla de Firefox se ha vuelto loca."
+  },
+  "genericErrorDetails": {
+    "message": "No estamos seguros de lo que acaba de pasar. ¿Te importa volver a intentarlo o hacer una captura de otra página?"
+  },
+  "tourBodyOne": {
+    "message": "Hacer, guardar y compartir capturas de pantalla sin salir de Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Haz capturas solo de lo que tú quieras"
+  },
+  "tourBodyTwo": {
+    "message": "Haz clic y arrastra para capturar solo una parte de la página. También puedes pasar por encima para resaltar tu selección."
+  },
+  "tourHeaderThree": {
+    "message": "Como más te guste"
+  },
+  "tourBodyThree": {
+    "message": "Guarda las capturas de la Web recortadas para compartirlas mejor o descárgalas en tu ordenador. También puedes hacer clic en Mis capturas para ver todas las capturas que has hecho."
+  },
+  "tourHeaderFour": {
+    "message": "Haz capturas de Windows o páginas completas"
+  },
+  "tourBodyFour": {
+    "message": "Selecciona los botones de la parte superior derecha para capturar el área visible en Windows o la página completa."
+  },
+  "tourSkip": {
+    "message": "Saltar"
+  },
+  "tourNext": {
+    "message": "Diapositiva siguiente"
+  },
+  "tourPrevious": {
+    "message": "Diapositiva anterior"
+  },
+  "tourDone": {
+    "message": "Hecho"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Al usar Firefox Screenshots, aceptas los $TERMSANDPRIVACYNOTICETERMSLINK$ y el $TERMSANDPRIVACYNOTICEPRIVACYLINK$ de Screenshots.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Términos"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Aviso de privacidad"
+  }
+}

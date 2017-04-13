@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Fai maletgs da visur dal web ed als memorisescha temporarmain u permanentamain."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Far in maletg dal visur"
+  },
+  "myShotsLink": {
+    "message": "Mes maletgs da visur"
+  },
+  "screenshotInstructions": {
+    "message": "Tira u clicca sin la pagina per tscherner ina regiun. Smatga ESC per interrumper."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Memorisar"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Memorisar la regiun visibla"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Memorisar la pagina cumpletta"
+  },
+  "cancelScreenshot": {
+    "message": "Interrumper"
+  },
+  "downloadScreenshot": {
+    "message": "Telechargiar"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Copià la colliaziun"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "La colliaziun tar tes maletg da visur è vegnida copiada en l'archiv provisoric. Smatga $META_KEY$-V per l'encollar.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Ord funcziun."
+  },
+  "requestErrorDetails": {
+    "message": "Perstgisa! I è actualmain betg pussibel da memorisar tes maletg da visur. Emprova p.pl. pli tard anc ina giada."
+  },
+  "connectionErrorTitle": {
+    "message": "Impussibel da connectar a tes maletgs da visur."
+  },
+  "connectionErrorDetails": {
+    "message": "Controllescha tia connexiun a l'internet. Sche ti has access a l'internet ha il servetsch da Firefox Screenshots forsa temporarmain in problem."
+  },
+  "loginErrorDetails": {
+    "message": "Impussibel da memorisar tes maletg da virus perquai ch'i dat in problem un il servetsch da Firefox Screenshots. Emprova p.pl. pli tard."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Impussibel da far in maletg da visur da questa pagina."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Quai n'è betg ina pagina web da standard, perquai n'èsi betg pussaivel da far in maletg da visur dad ella."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Impussibel da far in maletg da visur dad ina pagina da Firefox Screenshots."
+  },
+  "genericErrorTitle": {
+    "message": "Oh dieu! Firefox Screenshots ha il singlut."
+  },
+  "genericErrorDetails": {
+    "message": "Nus na savain betg tge ch'è gist capità. Vuls empruvar anc ina giada, forsa cun in'autra pagina?"
+  },
+  "tourBodyOne": {
+    "message": "Far, memorisar e cundivider maletgs da visur senza bandunar Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Far maletgs da visur da tut che vi vuls"
+  },
+  "tourBodyTwo": {
+    "message": "Clicca e tira per far in maletg da be ina part da la pagina. Ti pos posiziunar la mieur sur la selecziun per la relevar."
+  },
+  "tourHeaderThree": {
+    "message": "Co che ti prefereschas"
+  },
+  "tourBodyThree": {
+    "message": "Memorisescha ils maletgs da visur en il web per als pudair cundivider u telechargiar sin tes computer. Ti pos era cliccar sin il buttun «Mes maletgs da visur» per vesair tut ils maletgs dal visur che ti has fatg."
+  },
+  "tourHeaderFour": {
+    "message": "Far maletgs da fanestras u paginas cumplettas"
+  },
+  "tourBodyFour": {
+    "message": "Tscherna il buttun sura dretg per far in maletg da la part visibla en la fanestra u per far in maletg da la pagina cumpletta."
+  },
+  "tourSkip": {
+    "message": "Sursiglir"
+  },
+  "tourNext": {
+    "message": "Proxim pass"
+  },
+  "tourPrevious": {
+    "message": "Ultim pass"
+  },
+  "tourDone": {
+    "message": "Finì"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Cun utilisar Firefox Screenshots accepteschas ti $TERMSANDPRIVACYNOTICETERMSLINK$ e $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "las cundiziuns d'utilisaziun"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "la decleraziun da protecziun da datas"
+  }
+}

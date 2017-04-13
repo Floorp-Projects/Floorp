@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Maak clips en schermafbeeldingen van het web en sla deze tijdelijk of permanent op."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Een schermafbeelding maken"
+  },
+  "myShotsLink": {
+    "message": "Mijn afbeeldingen"
+  },
+  "screenshotInstructions": {
+    "message": "Sleep of klik op de pagina om een gebied te selecteren. Druk op ESC om te annuleren."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Opslaan"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Zichtbaar gebied opslaan"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Volledige pagina opslaan"
+  },
+  "cancelScreenshot": {
+    "message": "Annuleren"
+  },
+  "downloadScreenshot": {
+    "message": "Downloaden"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Koppeling gekopieerd"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "De koppeling naar uw afbeelding is naar het klembord gekopieerd. Druk op $META_KEY$-V om te plakken.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Buiten werking."
+  },
+  "requestErrorDetails": {
+    "message": "Sorry! Uw afbeelding kon niet worden opgeslagen. Probeer het later opnieuw."
+  },
+  "connectionErrorTitle": {
+    "message": "We kunnen geen verbinding met uw schermafdrukken maken."
+  },
+  "connectionErrorDetails": {
+    "message": "Controleer uw internetverbinding. Als u verbinding met het internet kunt maken, kan er sprake zijn van een tijdelijk probleem met de Firefox Screenshots-service."
+  },
+  "loginErrorDetails": {
+    "message": "Uw afbeelding kon niet worden opgeslagen, omdat er een probleem is met de Firefox Screenshots-service. Probeer het later opnieuw."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Van deze pagina kan geen schermafbeelding worden gemaakt."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Dit is geen standaardwebpagina, dus u kunt er geen schermafbeelding van maken."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "U kunt geen afbeelding van een Firefox Screenshots-pagina maken!"
+  },
+  "genericErrorTitle": {
+    "message": "Ho! Er is iets mis met Firefox Screenshots."
+  },
+  "genericErrorDetails": {
+    "message": "We weten niet precies wat er zonet is gebeurd. Wilt u het nogmaals proberen of een schermafbeelding van een andere pagina maken?"
+  },
+  "tourBodyOne": {
+    "message": "Maak, bewaar en deel schermafbeeldingen zonder Firefox te verlaten."
+  },
+  "tourHeaderTwo": {
+    "message": "Leg alleen vast wat u wilt"
+  },
+  "tourBodyTwo": {
+    "message": "Klik en sleep om alleen een gedeelte van een pagina vast te leggen. U kunt ook de muisaanwijzer boven een gebied houden om uw selectie te accentueren."
+  },
+  "tourHeaderThree": {
+    "message": "Zoals u wilt"
+  },
+  "tourBodyThree": {
+    "message": "Sla uw bijgesneden afbeeldingen op op het web voor makkelijker delen, of download ze naar uw computer. U kunt ook op de knop Mijn afbeeldingen klikken om al uw gemaakte afbeeldingen te vinden."
+  },
+  "tourHeaderFour": {
+    "message": "Leg vensters of hele pagina’s vast"
+  },
+  "tourBodyFour": {
+    "message": "Selecteer de knoppen rechtsboven om het zichtbare gebied in het venster vast te leggen, of om een hele pagina vast te leggen."
+  },
+  "tourSkip": {
+    "message": "Overslaan"
+  },
+  "tourNext": {
+    "message": "Volgende slide"
+  },
+  "tourPrevious": {
+    "message": "Vorige slide"
+  },
+  "tourDone": {
+    "message": "Gereed"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Door Firefox Screenshots te gebruiken, gaat u akkoord met de $TERMSANDPRIVACYNOTICETERMSLINK$ en $TERMSANDPRIVACYNOTICEPRIVACYLINK$ van Screenshots.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Voorwaarden"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Privacyverklaring"
+  }
+}
