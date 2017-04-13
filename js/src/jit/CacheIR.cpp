@@ -2038,6 +2038,13 @@ HasOwnIRGenerator::tryAttachNativeHasOwn(HandleId key, ValOperandId keyId,
     if (!prop.isNativeProperty())
         return false;
 
+    if (mode_ == ICState::Mode::Megamorphic) {
+        writer.megamorphicHasOwnResult(objId, keyId);
+        writer.returnFromIC();
+        trackAttached("MegamorphicHasOwn");
+        return true;
+    }
+
     Maybe<ObjOperandId> holderId;
     emitIdGuard(keyId, key);
     EmitReadSlotGuard(writer, obj, obj, prop.shape(), objId, &holderId);
@@ -2054,6 +2061,13 @@ HasOwnIRGenerator::tryAttachNativeHasOwnDoesNotExist(HandleId key, ValOperandId 
 {
     if (!CheckHasNoSuchOwnProperty(cx_, obj, key))
         return false;
+
+    if (mode_ == ICState::Mode::Megamorphic) {
+        writer.megamorphicHasOwnResult(objId, keyId);
+        writer.returnFromIC();
+        trackAttached("MegamorphicHasOwn");
+        return true;
+    }
 
     Maybe<ObjOperandId> expandoId;
     emitIdGuard(keyId, key);

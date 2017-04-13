@@ -186,6 +186,7 @@ extern const char* CacheKindNames[];
     _(MegamorphicLoadSlotResult)          \
     _(MegamorphicLoadSlotByValueResult)   \
     _(MegamorphicStoreSlot)               \
+    _(MegamorphicHasOwnResult)            \
                                           \
     /* See CacheIR.cpp 'DOM proxies' comment. */ \
     _(LoadDOMExpandoValue)                \
@@ -780,6 +781,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         addStubField(uintptr_t(name), StubField::Type::String);
         writeOperandId(rhs);
         buffer_.writeByte(needsTypeBarrier);
+    }
+    void megamorphicHasOwnResult(ObjOperandId obj, ValOperandId id) {
+        writeOpWithOperandId(CacheOp::MegamorphicHasOwnResult, obj);
+        writeOperandId(id);
     }
 
     void loadBooleanResult(bool val) {
