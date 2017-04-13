@@ -32,6 +32,20 @@ function WaterfallBackground() {
   this.prevState = {};
 }
 
+/**
+ * Changes the element being used as the CSS background for a background
+ * with a given background element ID.
+ *
+ * The funtion wrap the Firefox only API. Waterfall Will not draw the
+ * vertical line when running on non-firefox browser.
+ * Could be fixed by Bug 1308695
+ */
+function setImageElement(imageElementId, imageElement) {
+  if (document.mozSetImageElement) {
+    document.mozSetImageElement(imageElementId, imageElement);
+  }
+}
+
 WaterfallBackground.prototype = {
   draw(state) {
     // Do a shallow compare of the previous and the new state
@@ -43,7 +57,7 @@ WaterfallBackground.prototype = {
     this.prevState = state;
 
     if (state.waterfallWidth === null || state.scale === null) {
-      document.mozSetImageElement("waterfall-background", null);
+      setImageElement("waterfall-background", null);
       return;
     }
 
@@ -113,11 +127,11 @@ WaterfallBackground.prototype = {
     pixelArray.set(view8bit);
     this.ctx.putImageData(imageData, 0, 0);
 
-    document.mozSetImageElement("waterfall-background", this.canvas);
+    setImageElement("waterfall-background", this.canvas);
   },
 
   destroy() {
-    document.mozSetImageElement("waterfall-background", null);
+    setImageElement("waterfall-background", null);
   }
 };
 
