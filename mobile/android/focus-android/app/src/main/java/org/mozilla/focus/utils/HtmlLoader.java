@@ -45,7 +45,7 @@ public class HtmlLoader {
 
             return outputBuffer.toString();
         } catch (final IOException e) {
-            throw new IllegalStateException("Unable to load error page data");
+            throw new IllegalStateException("Unable to load error page data", e);
         }
     }
 
