@@ -78,9 +78,14 @@ public class EventsMeasurement extends TelemetryMeasurement {
             // However in case the file disappears: Continue with no events.
             return new JSONArray();
         } catch (IOException e) {
-            // TODO: What do we want to do here? (Issue #17)
-            // TODO: - Continue with the events we have so far? And keep or remove the file on disk?
-            // TODO: - Report no events and try another time?
+            // Handling this exception at this time is tricky: We might have been able to read some
+            // events at the time this exception occurred. We can either try to add them to the
+            // ping and remove the file or we retry later again.
+
+            // We just log an error here. This means we are going to continue building the ping
+            // with the events we were able to read from disk. The events file will be removed and
+            // we might potentially lose events that we couldn't ready because of the exception.
+            Log.w(LOG_TAG, "IOException while reading events from disk", e);
         } finally {
             IOUtils.safeClose(stream);
 
