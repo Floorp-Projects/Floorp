@@ -156,6 +156,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   key.mNamespace = WrBridge()->GetNamespace();
   key.mHandle = WrBridge()->GetNextResourceId();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
+  Manager()->AddImageKeyForDiscard(key);
 
   aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
                             1.0f,

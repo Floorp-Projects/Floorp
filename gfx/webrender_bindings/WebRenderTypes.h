@@ -98,6 +98,12 @@ struct ImageDescriptor: public WrImageDescriptor {
   }
 };
 
+// Whenever possible, use wr::ImageKey instead of manipulating uint64_t.
+inline uint64_t AsUint64(const ImageKey& aId) {
+  return (static_cast<uint64_t>(aId.mNamespace) << 32)
+        + static_cast<uint64_t>(aId.mHandle);
+}
+
 // Whenever possible, use wr::PipelineId instead of manipulating uint64_t.
 inline uint64_t AsUint64(const PipelineId& aId) {
   return (static_cast<uint64_t>(aId.mNamespace) << 32)

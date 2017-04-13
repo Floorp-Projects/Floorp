@@ -635,6 +635,7 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
       key.mNamespace = aLayer->WrBridge()->GetNamespace();
       key.mHandle = aLayer->WrBridge()->GetNextResourceId();
       aParentCommands.AppendElement(OpAddExternalImage(externalImageId, key));
+      aLayer->WrManager()->AddImageKeyForDiscard(key);
       aBuilder.PushImage(wr::ToWrRect(fill), aBuilder.BuildClipRegion(wr::ToWrRect(clip)),
                          wr::ToWrSize(dest.Size()), wr::ToWrSize(gapSize),
                          wr::ImageRendering::Auto, key);

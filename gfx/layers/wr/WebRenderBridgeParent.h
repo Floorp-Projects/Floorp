@@ -198,6 +198,8 @@ private:
   RefPtr<WebRenderCompositableHolder> mCompositableHolder;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   std::vector<wr::ImageKey> mKeysToDelete;
+  // XXX How to handle active keys of non-ExternalImages?
+  nsDataHashtable<nsUint64HashKey, wr::ImageKey> mActiveKeys;
   nsDataHashtable<nsUint64HashKey, RefPtr<CompositableHost>> mExternalImageIds;
   nsTArray<ImageCompositeNotificationInfo> mImageCompositeNotifications;
 
