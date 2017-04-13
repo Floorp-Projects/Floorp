@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ADTSDemuxer.h"
 #include "FlacDemuxer.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ModuleUtils.h"
@@ -130,6 +131,11 @@ static bool MatchesFLAC(const uint8_t* aData, const uint32_t aLength)
   return mozilla::FlacDemuxer::FlacSniffer(aData, aLength);
 }
 
+static bool MatchesADTS(const uint8_t* aData, const uint32_t aLength)
+{
+  return mozilla::ADTSDemuxer::ADTSSniffer(aData, aLength);
+}
+
 NS_IMETHODIMP
 nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
                                        const uint8_t* aData,
@@ -194,6 +200,11 @@ nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
   // recognize flac content if it starts with a frame.
   if (MatchesFLAC(aData, clampedLength)) {
     aSniffedType.AssignLiteral(AUDIO_FLAC);
+    return NS_OK;
+  }
+
+  if (MatchesADTS(aData, clampedLength)) {
+    aSniffedType.AssignLiteral(AUDIO_AAC);
     return NS_OK;
   }
 
