@@ -188,8 +188,6 @@ to mochitest command.
     * test_initial_computation.html `font-variant` [10]
     * test_initial_storage.html `font-variant` [18]
     * test_value_storage.html `font-variant` [332]
-  * shape-outside property servo/servo#15958
-    * test_value_storage.html `shape-outside` [2]
   * touch-action property
     * test_compute_data_with_start_struct.html `touch-action` [2]
     * test_inherit_computation.html `touch-action` [2]
