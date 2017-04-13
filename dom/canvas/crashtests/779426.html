@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var canvas = document.createElementNS('http://www.w3.org/1999/xhtml', 'canvas');
+  var canvas2d = canvas.getContext('2d');
+  canvas2d.rect(0, 0, 1, 1);
+  canvas2d.transform(1, 0, 0, 1, 0, 0);
+  canvas.setAttributeNS(null, "height", "99");
+  canvas2d.rect(0, 0, 1, 1);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
