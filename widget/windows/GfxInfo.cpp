@@ -450,11 +450,14 @@ GfxInfo::Init()
   adapterDeviceID[0] = ParseIDFromDeviceID(mDeviceID[0], "&DEV_", 4);
   adapterSubsysID[0] = ParseIDFromDeviceID(mDeviceID[0],  "&SUBSYS_", 8);
 
-  mAdapterVendorID[0].AppendPrintf("0x%04x", adapterVendorID[0]);
-  mAdapterDeviceID[0].AppendPrintf("0x%04x", adapterDeviceID[0]);
-  mAdapterSubsysID[0].AppendPrintf("%08x", adapterSubsysID[0]);
+  // Sometimes we don't get the valid device using this method.  For now,
+  // allow zero vendor or device as valid, as long as the other value is
+  // non-zero.
+  bool foundValidDevice = (adapterVendorID[0] != 0 ||
+                           adapterDeviceID[0] != 0);
 
-  // We now check for second display adapter.
+  // We now check for second display adapter.  If we didn't find the valid
+  // device using the original approach, we will try the alternative.
 
   // Device interface class for display adapters.
   CLSID GUID_DISPLAY_DEVICE_ARRIVAL;
@@ -503,8 +506,11 @@ GfxInfo::Init()
             deviceID2 = value;
             adapterVendorID[1] = ParseIDFromDeviceID(deviceID2, "VEN_", 4);
             adapterDeviceID[1] = ParseIDFromDeviceID(deviceID2, "&DEV_", 4);
-            if (adapterVendorID[0] == adapterVendorID[1] &&
-                adapterDeviceID[0] == adapterDeviceID[1]) {
+            // Skip the devices we already considered, as well as any
+            // "zero" ones.
+            if ((adapterVendorID[0] == adapterVendorID[1] &&
+                 adapterDeviceID[0] == adapterDeviceID[1]) ||
+                (adapterVendorID[1] == 0 && adapterDeviceID[1] == 0)) {
               RegCloseKey(key);
               continue;
             }
@@ -542,6 +548,21 @@ GfxInfo::Init()
             }
             RegCloseKey(key);
             if (result == ERROR_SUCCESS) {
+              // If we didn't find a valid device with the original method
+              // take this one, and continue looking for the second GPU.
+              if (!foundValidDevice) {
+                foundValidDevice = true;
+                adapterVendorID[0] = adapterVendorID[1];
+                adapterDeviceID[0] = adapterDeviceID[1];
+                mDeviceString[0] = value;
+                mDeviceID[0] = deviceID2;
+                mDeviceKey[0] = driverKey2;
+                mDriverVersion[0] = driverVersion2;
+                mDriverDate[0] = driverDate2;
+                adapterSubsysID[0] = ParseIDFromDeviceID(mDeviceID[0], "&SUBSYS_", 8);
+                continue;
+              }
+
               mHasDualGPU = true;
               mDeviceString[1] = value;
               mDeviceID[1] = deviceID2;
@@ -561,6 +582,10 @@ GfxInfo::Init()
       SetupDiDestroyDeviceInfoList(devinfo);
     }
   }
+
+  mAdapterVendorID[0].AppendPrintf("0x%04x", adapterVendorID[0]);
+  mAdapterDeviceID[0].AppendPrintf("0x%04x", adapterDeviceID[0]);
+  mAdapterSubsysID[0].AppendPrintf("%08x", adapterSubsysID[0]);
 
   // Sometimes, the enumeration is not quite right and the two adapters
   // end up being swapped.  Actually enumerate the adapters that come

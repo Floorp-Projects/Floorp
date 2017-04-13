@@ -51,7 +51,7 @@ function* userAgentStylesUneditable(inspector, view) {
     let colorswatch = rule.editor.element
       .querySelector(".ruleview-colorswatch");
     if (colorswatch) {
-      ok(!view.tooltips.colorPicker.swatches.has(colorswatch),
+      ok(!view.tooltips.getTooltip("colorPicker").swatches.has(colorswatch),
         "The swatch is not editable");
     }
   }

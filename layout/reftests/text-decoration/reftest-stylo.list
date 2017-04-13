@@ -108,6 +108,6 @@ fails == underline-button-1.html underline-button-1.html
 fails == underline-button-2.html underline-button-2.html
 fails == underline-select-1.html underline-select-1.html
 fails == underline-select-2.html underline-select-2.html
-fails == 1133392.html 1133392.html
+== 1133392.html 1133392.html
 == 1159729-offset-adjustment.html 1159729-offset-adjustment.html
 == emphasis-style-dynamic.html emphasis-style-dynamic.html

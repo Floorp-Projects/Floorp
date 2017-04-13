@@ -22,7 +22,7 @@ const { FILTER_SEARCH_DELAY } = require("../constants");
 const SearchBox = createFactory(require("devtools/client/shared/components/search-box"));
 const TreeView = createFactory(require("devtools/client/shared/components/tree/tree-view"));
 const TreeRow = createFactory(require("devtools/client/shared/components/tree/tree-row"));
-const Editor = createFactory(require("./editor"));
+const SourceEditor = createFactory(require("./source-editor"));
 
 const { div, tr, td } = DOM;
 const AUTO_EXPAND_MAX_LEVEL = 7;
@@ -88,9 +88,9 @@ const PropertiesView = createClass({
     // Display source editor when specifying to EDITOR_CONFIG_ID along with config
     if (level === 1 && name === EDITOR_CONFIG_ID) {
       return (
-        tr({ className: "editor-row-container" },
+        tr({ key: EDITOR_CONFIG_ID, className: "editor-row-container" },
           td({ colSpan: 2 },
-            Editor(value)
+            SourceEditor(value)
           )
         )
       );

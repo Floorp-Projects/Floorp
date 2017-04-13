@@ -1313,7 +1313,7 @@ Gecko_SetStyleCoordCalcValue(nsStyleUnit* aUnit, nsStyleUnion* aValue, nsStyleCo
 }
 
 void
-Gecko_CopyClipPathValueFrom(mozilla::StyleShapeSource* aDst, const mozilla::StyleShapeSource* aSrc)
+Gecko_CopyShapeSourceFrom(mozilla::StyleShapeSource* aDst, const mozilla::StyleShapeSource* aSrc)
 {
   MOZ_ASSERT(aDst);
   MOZ_ASSERT(aSrc);
@@ -1322,16 +1322,16 @@ Gecko_CopyClipPathValueFrom(mozilla::StyleShapeSource* aDst, const mozilla::Styl
 }
 
 void
-Gecko_DestroyClipPath(mozilla::StyleShapeSource* aClip)
+Gecko_DestroyShapeSource(mozilla::StyleShapeSource* aShape)
 {
-  aClip->~StyleShapeSource();
+  aShape->~StyleShapeSource();
 }
 
 void
-Gecko_StyleClipPath_SetURLValue(mozilla::StyleShapeSource* aClip, ServoBundledURI aURI)
+Gecko_StyleShapeSource_SetURLValue(mozilla::StyleShapeSource* aShape, ServoBundledURI aURI)
 {
   RefPtr<css::URLValue> url = aURI.IntoCssUrl();
-  aClip->SetURL(url.get());
+  aShape->SetURL(url.get());
 }
 
 mozilla::StyleBasicShape*

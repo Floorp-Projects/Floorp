@@ -149,7 +149,9 @@ ContainerContains(const Container& aContainer, const Value& value)
          != aContainer.end();
 }
 
-nsresult FileBlockCache::WriteBlock(uint32_t aBlockIndex, const uint8_t* aData)
+nsresult
+FileBlockCache::WriteBlock(uint32_t aBlockIndex,
+  Span<const uint8_t> aData1, Span<const uint8_t> aData2)
 {
   MonitorAutoLock mon(mDataMonitor);
 
@@ -159,7 +161,7 @@ nsresult FileBlockCache::WriteBlock(uint32_t aBlockIndex, const uint8_t* aData)
   // Check if we've already got a pending write scheduled for this block.
   mBlockChanges.EnsureLengthAtLeast(aBlockIndex + 1);
   bool blockAlreadyHadPendingChange = mBlockChanges[aBlockIndex] != nullptr;
-  mBlockChanges[aBlockIndex] = new BlockChange(aData);
+  mBlockChanges[aBlockIndex] = new BlockChange(aData1, aData2);
 
   if (!blockAlreadyHadPendingChange || !ContainerContains(mChangeIndexList, aBlockIndex)) {
     // We either didn't already have a pending change for this block, or we

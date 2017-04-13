@@ -12,7 +12,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsITimer.h"
 #include "nsServiceManagerUtils.h"
-#include "nsTHashtable.h"
+#include "nsDataHashtable.h"
 
 namespace mozilla {
 class MemoryReportingProcess;

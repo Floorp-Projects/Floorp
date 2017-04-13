@@ -169,8 +169,9 @@ public:
   // Free all blocks belonging to aStream.
   void ReleaseStreamBlocks(MediaCacheStream* aStream);
   // Find a cache entry for this data, and write the data into it
-  void AllocateAndWriteBlock(MediaCacheStream* aStream, const void* aData,
-                             MediaCacheStream::ReadMode aMode);
+  void AllocateAndWriteBlock(MediaCacheStream* aStream,
+    MediaCacheStream::ReadMode aMode, Span<const uint8_t> aData1,
+    Span<const uint8_t> aData2 = Span<const uint8_t>());
 
   // mReentrantMonitor must be held; can be called on any thread
   // Notify the cache that a seek has been requested. Some blocks may
@@ -1482,8 +1483,9 @@ MediaCache::InsertReadaheadBlock(BlockOwner* aBlockOwner,
 }
 
 void
-MediaCache::AllocateAndWriteBlock(MediaCacheStream* aStream, const void* aData,
-                                    MediaCacheStream::ReadMode aMode)
+MediaCache::AllocateAndWriteBlock(
+  MediaCacheStream* aStream, MediaCacheStream::ReadMode aMode,
+  Span<const uint8_t> aData1, Span<const uint8_t> aData2)
 {
   mReentrantMonitor.AssertCurrentThreadIn();
 
@@ -1545,7 +1547,7 @@ MediaCache::AllocateAndWriteBlock(MediaCacheStream* aStream, const void* aData,
       }
     }
 
-    nsresult rv = mFileCache->WriteBlock(blockIndex, reinterpret_cast<const uint8_t*>(aData));
+    nsresult rv = mFileCache->WriteBlock(blockIndex, aData1, aData2);
     if (NS_FAILED(rv)) {
       CACHE_LOG(LogLevel::Debug, ("Released block %d from stream %p block %d(%lld)",
                 blockIndex, aStream, streamBlockIndex, (long long)streamBlockIndex*BLOCK_SIZE));
@@ -1784,34 +1786,25 @@ MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData,
     int32_t blockOffset = int32_t(mChannelOffset - blockIndex*BLOCK_SIZE);
     int32_t chunkSize = std::min<int64_t>(BLOCK_SIZE - blockOffset, size);
 
-    // This gets set to something non-null if we have a whole block
-    // of data to write to the cache
-    const char* blockDataToStore = nullptr;
-    ReadMode mode = MODE_PLAYBACK;
-    if (blockOffset == 0 && chunkSize == BLOCK_SIZE) {
-      // We received a whole block, so avoid a useless copy through
-      // mPartialBlockBuffer
-      blockDataToStore = data;
-    } else {
-      if (blockOffset == 0) {
-        // We've just started filling this buffer so now is a good time
-        // to clear this flag.
-        mMetadataInPartialBlockBuffer = false;
-      }
-      memcpy(reinterpret_cast<char*>(mPartialBlockBuffer.get()) + blockOffset,
-             data, chunkSize);
-
-      if (blockOffset + chunkSize == BLOCK_SIZE) {
-        // We completed a block, so lets write it out.
-        blockDataToStore = reinterpret_cast<char*>(mPartialBlockBuffer.get());
-        if (mMetadataInPartialBlockBuffer) {
-          mode = MODE_METADATA;
-        }
-      }
+    if (blockOffset == 0) {
+      // We've just started filling this buffer so now is a good time
+      // to clear this flag.
+      mMetadataInPartialBlockBuffer = false;
     }
 
-    if (blockDataToStore) {
-      gMediaCache->AllocateAndWriteBlock(this, blockDataToStore, mode);
+    ReadMode mode = mMetadataInPartialBlockBuffer
+      ? MODE_METADATA : MODE_PLAYBACK;
+
+    if (blockOffset + chunkSize == BLOCK_SIZE) {
+      // We have a whole block now to write it out.
+      auto data1 = MakeSpan<const uint8_t>(
+        reinterpret_cast<uint8_t*>(mPartialBlockBuffer.get()), blockOffset);
+      auto data2 = MakeSpan<const uint8_t>(
+        reinterpret_cast<const uint8_t*>(data), chunkSize);
+      gMediaCache->AllocateAndWriteBlock(this, mode, data1, data2);
+    } else {
+      memcpy(reinterpret_cast<char*>(mPartialBlockBuffer.get()) + blockOffset,
+             data, chunkSize);
     }
 
     mChannelOffset += chunkSize;
@@ -1850,10 +1843,11 @@ MediaCacheStream::FlushPartialBlockInternal(bool aNotifyAll,
                aNotifyAll ? "yes" : "no"));
 
     // Write back the partial block
-    memset(reinterpret_cast<char*>(mPartialBlockBuffer.get()) + blockOffset, 0,
-           BLOCK_SIZE - blockOffset);
-    gMediaCache->AllocateAndWriteBlock(this, mPartialBlockBuffer.get(),
-        mMetadataInPartialBlockBuffer ? MODE_METADATA : MODE_PLAYBACK);
+    uint8_t* p = reinterpret_cast<uint8_t*>(mPartialBlockBuffer.get());
+    memset(p + blockOffset, 0, BLOCK_SIZE - blockOffset);
+    auto data = MakeSpan<const uint8_t>(p, BLOCK_SIZE);
+    gMediaCache->AllocateAndWriteBlock(this,
+      mMetadataInPartialBlockBuffer ? MODE_METADATA : MODE_PLAYBACK, data);
   }
 
   // |mChannelOffset == 0| means download ends with no bytes received.

@@ -161,9 +161,9 @@ WAVTrackDemuxer::Init()
   mInfo->mExtendedProfile = (mFmtParser.FmtChunk().WaveFormat() & 0xFF00) >> 8;
   mInfo->mMimeType = "audio/wave; codecs=";
   mInfo->mMimeType.AppendInt(mFmtParser.FmtChunk().WaveFormat());
-  mInfo->mDuration = Duration().ToMicroseconds();
+  mInfo->mDuration = Duration();
 
-  return !!(mInfo->mDuration);
+  return mInfo->mDuration.IsPositive();
 }
 
 bool
