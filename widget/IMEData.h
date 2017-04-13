@@ -73,6 +73,10 @@ struct IMENotificationRequests final
     mWantUpdates |= aOther.mWantUpdates;
     return *this;
   }
+  bool operator==(const IMENotificationRequests& aOther) const
+  {
+    return mWantUpdates == aOther.mWantUpdates;
+  }
 
   bool WantTextChange() const
   {
