@@ -1483,12 +1483,6 @@ class PackageFrontend(MachCommandBase):
         state_dir = self._mach_context.state_dir
         cache_dir = os.path.join(state_dir, 'package-frontend')
 
-        try:
-            os.makedirs(cache_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-
         import which
 
         here = os.path.abspath(os.path.dirname(__file__))
@@ -1590,11 +1584,6 @@ class PackageFrontend(MachCommandBase):
                 self.log_manager.structured_filter)
         if not cache_dir:
             cache_dir = os.path.join(self._mach_context.state_dir, 'toolchains')
-        try:
-            os.makedirs(cache_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
 
         tooltool_url = (tooltool_url or
                         'https://api.pub.build.mozilla.org/tooltool').rstrip('/')

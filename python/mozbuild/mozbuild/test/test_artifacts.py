@@ -79,27 +79,31 @@ class TestArtifactCache(unittest.TestCase):
             self.timestamp += 2
         self._real_utime(path, times)
 
+    def listtmpdir(self):
+        return [p for p in os.listdir(self.tmpdir)
+                if p != '.metadata_never_index']
+
     def test_artifact_cache_persistence(self):
         cache = ArtifactCache(self.tmpdir)
         cache._download_manager.session = FakeSession()
 
         path = cache.fetch('http://server/foo')
         expected = [os.path.basename(path)]
-        self.assertEqual(os.listdir(self.tmpdir), expected)
+        self.assertEqual(self.listtmpdir(), expected)
 
         path = cache.fetch('http://server/bar')
         expected.append(os.path.basename(path))
-        self.assertEqual(sorted(os.listdir(self.tmpdir)), sorted(expected))
+        self.assertEqual(sorted(self.listtmpdir()), sorted(expected))
 
         # We're downloading more than the cache allows us, but since it's all
         # in the same session, no purge happens.
         path = cache.fetch('http://server/qux')
         expected.append(os.path.basename(path))
-        self.assertEqual(sorted(os.listdir(self.tmpdir)), sorted(expected))
+        self.assertEqual(sorted(self.listtmpdir()), sorted(expected))
 
         path = cache.fetch('http://server/fuga')
         expected.append(os.path.basename(path))
-        self.assertEqual(sorted(os.listdir(self.tmpdir)), sorted(expected))
+        self.assertEqual(sorted(self.listtmpdir()), sorted(expected))
 
         cache = ArtifactCache(self.tmpdir)
         cache._download_manager.session = FakeSession()
@@ -109,14 +113,14 @@ class TestArtifactCache(unittest.TestCase):
         path = cache.fetch('http://server/hoge')
         expected.append(os.path.basename(path))
         expected = expected[2:]
-        self.assertEqual(sorted(os.listdir(self.tmpdir)), sorted(expected))
+        self.assertEqual(sorted(self.listtmpdir()), sorted(expected))
 
         # Downloading a file already in the cache leaves the cache untouched
         cache = ArtifactCache(self.tmpdir)
         cache._download_manager.session = FakeSession()
 
         path = cache.fetch('http://server/qux')
-        self.assertEqual(sorted(os.listdir(self.tmpdir)), sorted(expected))
+        self.assertEqual(sorted(self.listtmpdir()), sorted(expected))
 
         # bar was purged earlier, re-downloading it should purge the oldest
         # downloaded file, which at this point would be qux, but we also
@@ -128,7 +132,7 @@ class TestArtifactCache(unittest.TestCase):
         path = cache.fetch('http://server/bar')
         expected.append(os.path.basename(path))
         expected = [p for p in expected if 'fuga' not in p]
-        self.assertEqual(sorted(os.listdir(self.tmpdir)), sorted(expected))
+        self.assertEqual(sorted(self.listtmpdir()), sorted(expected))
 
         # Downloading one file larger than the cache size should still leave
         # MIN_CACHED_ARTIFACTS files.
@@ -138,7 +142,7 @@ class TestArtifactCache(unittest.TestCase):
         path = cache.fetch('http://server/larger')
         expected.append(os.path.basename(path))
         expected = expected[-2:]
-        self.assertEqual(sorted(os.listdir(self.tmpdir)), sorted(expected))
+        self.assertEqual(sorted(self.listtmpdir()), sorted(expected))
 
 
 if __name__ == '__main__':
