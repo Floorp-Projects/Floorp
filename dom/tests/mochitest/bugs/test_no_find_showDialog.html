@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1348409</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <iframe src="about:blank"></iframe>
+  <script type="text/javascript; version=1.8">
+
+  function checkForFindDialog() {
+    let chromeScript = SpecialPowers.loadChromeScript(_ => {
+      addMessageListener("test:check", () => {
+        const { utils: Cu } = Components;
+
+        Cu.import("resource://gre/modules/Services.jsm");
+
+        let sawFind = false;
+        let findDialog = Services.wm.getMostRecentWindow("findInPage");
+        if (findDialog) {
+          findDialog.close();
+          sawFind = true;
+        }
+
+        return sawFind;
+      });
+
+    });
+
+    let sawFind = chromeScript.sendSyncMessage("test:check")[0][0];
+    chromeScript.destroy();
+    return sawFind;
+  }
+
+  function ensureFinished(chromeScript) {
+    return new Promise(resolve => {
+      chromeScript.addMessageListener("test:disarm:done", (sawWindow) => {
+        resolve(sawWindow);
+      });
+      chromeScript.sendAsyncMessage("test:disarm");
+    });
+  }
+
+  function doWraparoundFind(findString, showDialog) {
+    let result = window.find(findString,
+                             false /* aCaseSensitive */,
+                             false /* aBackwards*/,
+                             true /* aWrapAround */,
+                             false /* aWholeWord */,
+                             false /* aSearchInFrames */,
+                             showDialog /* aShowInDialog */)
+    // Collapse selection so that we can do another find outside
+    // of the selection result.
+    document.getSelection().collapseToStart();
+    return result;
+  }
+
+  function startTest() {
+    add_task(function*() {
+      ok(doWraparoundFind("text to search for", false),
+         "Found the text in the document body.");
+
+      // We're asking for the dialog now. We should just ignore that request.
+      ok(doWraparoundFind("fhqwhgads", true),
+         "Should return true and not show a dialog if the string exists in the page.");
+      ok(!doWraparoundFind(null, true),
+         "Should return false and not show a dialog if we pass a null string.");
+      ok(!doWraparoundFind("", true),
+         "Should return false and not show a dialog if we pass an empty string.");
+
+      // Double check to ensure that the parent didn't open a find dialog
+      let sawWindow = checkForFindDialog();
+      ok(!sawWindow, "Should never have seen the dialog.");
+    });
+  }
+  </script>
+</head>
+<body onload="startTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1348409">Mozilla Bug 1348409</a>
+
+<p>
+  Here's some text to search for: fhqwhgads! A hovercraft full of eels!
+</p>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
