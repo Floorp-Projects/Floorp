@@ -274,6 +274,13 @@ function ipToLong(ip) {
   }, 0);
 }
 
+/**
+ * Compare two objects on a subset of their properties
+ */
+function propertiesEqual(props, item1, item2) {
+  return item1 === item2 || props.every(p => item1[p] === item2[p]);
+}
+
 module.exports = {
   getFormDataSections,
   fetchHeaders,
@@ -289,5 +296,6 @@ module.exports = {
   getUrlDetails,
   parseQueryString,
   parseFormData,
+  propertiesEqual,
   ipToLong,
 };
