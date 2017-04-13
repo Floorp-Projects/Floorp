@@ -21,19 +21,6 @@ this.FormAutofillUtils = {
     });
   },
 
-  generateFullName(firstName, lastName, middleName) {
-    // TODO: The implementation should depend on the L10N spec, but a simplified
-    // rule is used here.
-    let fullName = firstName;
-    if (middleName) {
-      fullName += " " + middleName;
-    }
-    if (lastName) {
-      fullName += " " + lastName;
-    }
-    return fullName;
-  },
-
   findLabelElements(element) {
     let document = element.ownerDocument;
     let labels = [];
