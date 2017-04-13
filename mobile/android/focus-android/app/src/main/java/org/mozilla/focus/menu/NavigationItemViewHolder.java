@@ -12,7 +12,7 @@ import org.mozilla.focus.fragment.BrowserFragment;
 
 public class NavigationItemViewHolder extends BrowserMenuViewHolder
         implements BrowserFragment.LoadStateListener {
-    public static int LAYOUT_ID = R.layout.menu_navigation;
+    public static final int LAYOUT_ID = R.layout.menu_navigation;
 
     final View refreshButton;
     final View stopButton;
