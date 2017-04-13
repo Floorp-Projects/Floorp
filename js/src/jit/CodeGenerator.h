@@ -422,6 +422,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitCallSetProperty(LInstruction* ins);
     void visitSetPropertyCache(LSetPropertyCache* ins);
     void visitGetNameCache(LGetNameCache* ins);
+    void visitHasOwnCache(LHasOwnCache* ins);
 
     void visitBindNameIC(OutOfLineUpdateCache* ool, DataPtr<BindNameIC>& ic);
 
