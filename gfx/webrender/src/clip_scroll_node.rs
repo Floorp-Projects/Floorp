@@ -118,15 +118,18 @@ pub struct ClipScrollNode {
 impl ClipScrollNode {
     pub fn new(pipeline_id: PipelineId,
                parent_id: ScrollLayerId,
-               local_viewport_rect: &LayerRect,
-               content_size: LayerSize,
+               content_rect: &LayerRect,
+               clip_rect: &LayerRect,
                clip_info: ClipInfo)
                -> ClipScrollNode {
+        // FIXME(mrobinson): We don't yet handle clipping rectangles that don't start at the origin
+        // of the node.
+        let local_viewport_rect = LayerRect::new(content_rect.origin, clip_rect.size);
         ClipScrollNode {
             scrolling: ScrollingState::new(),
-            content_size: content_size,
-            local_viewport_rect: *local_viewport_rect,
-            local_clip_rect: *local_viewport_rect,
+            content_size: content_rect.size,
+            local_viewport_rect: local_viewport_rect,
+            local_clip_rect: local_viewport_rect,
             combined_local_viewport_rect: LayerRect::zero(),
             world_viewport_transform: LayerToWorldTransform::identity(),
             world_content_transform: LayerToWorldTransform::identity(),
@@ -213,7 +216,7 @@ impl ClipScrollNode {
         self.scrolling.offset = new_offset;
         self.scrolling.bouncing_back = false;
         self.scrolling.started_bouncing_back = false;
-        return true;
+        true
     }
 
     pub fn update_transform(&mut self,

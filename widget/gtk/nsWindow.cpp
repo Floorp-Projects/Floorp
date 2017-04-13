@@ -2073,13 +2073,11 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     LayoutDeviceIntRegion region = exposeRegion;
     region.ScaleRoundOut(scale, scale);
 
-    ClientLayerManager *clientLayers = GetLayerManager()->AsClientLayerManager();
-
-    if (clientLayers && mCompositorSession) {
+    if (GetLayerManager()->AsKnowsCompositor() && mCompositorSession) {
         // We need to paint to the screen even if nothing changed, since if we
         // don't have a compositing window manager, our pixels could be stale.
-        clientLayers->SetNeedsComposite(true);
-        clientLayers->SendInvalidRegion(region.ToUnknownRegion());
+        GetLayerManager()->SetNeedsComposite(true);
+        GetLayerManager()->SendInvalidRegion(region.ToUnknownRegion());
     }
 
     RefPtr<nsWindow> strongThis(this);
@@ -2101,9 +2099,9 @@ nsWindow::OnExposeEvent(cairo_t *cr)
             return FALSE;
     }
 
-    if (clientLayers && clientLayers->NeedsComposite()) {
-      clientLayers->Composite();
-      clientLayers->SetNeedsComposite(false);
+    if (GetLayerManager()->AsKnowsCompositor() && GetLayerManager()->NeedsComposite()) {
+      GetLayerManager()->Composite();
+      GetLayerManager()->SetNeedsComposite(false);
     }
 
     LOGDRAW(("sending expose event [%p] %p 0x%lx (rects follow):\n",

@@ -301,7 +301,7 @@ impl RenderBackend {
                             if let Some(ref wrapper) = self.webrender_context_handle {
                                 let dispatcher: Option<Box<GLContextDispatcher>> = if cfg!(target_os = "windows") {
                                     Some(Box::new(WebRenderGLDispatcher {
-                                        dispatcher: self.main_thread_dispatcher.clone()
+                                        dispatcher: Arc::clone(&self.main_thread_dispatcher)
                                     }))
                                 } else {
                                     None
