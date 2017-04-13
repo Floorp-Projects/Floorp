@@ -51,7 +51,6 @@ a:active:-moz-read-write img {
    so we must set explicitly. This isn't good!
 */
 a:link:-moz-read-write {
-  text-decoration: underline -moz-anchor-decoration;
   color: -moz-hyperlinktext;
 }
 
