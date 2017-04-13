@@ -37,12 +37,6 @@ ChooseValidatorCompileOptions(const ShBuiltInResources& resources,
                                SH_OBJECT_CODE |
                                SH_INIT_GL_POSITION;
 
-    // Sampler arrays indexed with non-constant expressions are forbidden in
-    // GLSL 1.30 and later.
-    // ESSL 3 requires constant-integral-expressions for this as well.
-    // Just do it universally.
-    options |= SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX;
-
 #ifndef XP_MACOSX
     // We want to do this everywhere, but to do this on Mac, we need
     // to do it only on Mac OSX > 10.6 as this causes the shader
