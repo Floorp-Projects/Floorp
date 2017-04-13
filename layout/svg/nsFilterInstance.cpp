@@ -503,8 +503,14 @@ nsFilterInstance::Render(DrawTarget* aDrawTarget)
   }
 
   AutoRestoreTransform autoRestoreTransform(aDrawTarget);
+  gfxMatrix filterSpaceToUserSpace = mPaintTransform;
+  DebugOnly<bool> invertible = filterSpaceToUserSpace.Invert();
+  MOZ_ASSERT(invertible);
+  filterSpaceToUserSpace *= nsSVGUtils::GetCSSPxToDevPxMatrix(mTargetFrame);
+
   Matrix newTM =
-    aDrawTarget->GetTransform().PreTranslate(filterRect.x, filterRect.y);
+    ToMatrix(filterSpaceToUserSpace).PreTranslate(filterRect.x, filterRect.y) *
+    aDrawTarget->GetTransform();
   aDrawTarget->SetTransform(newTM);
 
   ComputeNeededBoxes();
