@@ -11,7 +11,6 @@ import android.net.Uri;
 import android.support.annotation.VisibleForTesting;
 import android.util.Base64;
 
-import org.mozilla.focus.utils.IOUtils;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -19,6 +18,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 /**
  * A very simple parser for search plugins.
@@ -42,7 +42,7 @@ import java.io.InputStreamReader;
         final SearchEngine searchEngine = new SearchEngine(identifier);
 
         XmlPullParser parser = XmlPullParserFactory.newInstance().newPullParser();
-        parser.setInput(new InputStreamReader(stream));
+        parser.setInput(new InputStreamReader(stream, StandardCharsets.UTF_8));
         parser.next();
 
         readSearchPlugin(parser, searchEngine);

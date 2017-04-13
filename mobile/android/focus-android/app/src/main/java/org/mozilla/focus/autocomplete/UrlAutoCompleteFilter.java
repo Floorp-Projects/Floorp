@@ -9,12 +9,12 @@ import android.content.res.Resources;
 import android.os.AsyncTask;
 
 import org.mozilla.focus.R;
-import org.mozilla.focus.utils.IOUtils;
 import org.mozilla.focus.widget.InlineAutocompleteEditText;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -65,7 +65,7 @@ public class UrlAutoCompleteFilter implements InlineAutocompleteEditText.OnFilte
             protected List<String> doInBackground(Resources... resources) {
 
                 try (final BufferedReader reader =
-                             new BufferedReader(new InputStreamReader(resources[0].openRawResource(R.raw.topdomains)))) {
+                             new BufferedReader(new InputStreamReader(resources[0].openRawResource(R.raw.topdomains), StandardCharsets.UTF_8))) {
 
                     final List<String> domains = new ArrayList<>(460);
 

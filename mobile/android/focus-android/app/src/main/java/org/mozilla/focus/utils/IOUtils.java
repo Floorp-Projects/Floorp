@@ -15,11 +15,12 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 public class IOUtils {
     public static JSONObject readAsset(Context context, String fileName) throws IOException {
         try (final BufferedReader reader =
-                     new BufferedReader(new InputStreamReader(context.getAssets().open(fileName)))){
+                     new BufferedReader(new InputStreamReader(context.getAssets().open(fileName), StandardCharsets.UTF_8))){
             final StringBuilder builder = new StringBuilder();
             String line;
 
