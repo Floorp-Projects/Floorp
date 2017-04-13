@@ -901,10 +901,15 @@ function maybeProcessMissingFunction(entry, addCallee)
         return true;
     }
 
-    // Similarly, a call to a C1 constructor might invoke the C4 constructor.
-    if (name.includes("C1E")) {
-        var callee = name.replace("C1E", "C4E");
-        addCallee(new CallSite(name, entry.safeArguments, entry.stack[0].location));
+    // Similarly, a call to a C1 constructor might invoke the C4 constructor. A
+    // mangled constructor will be something like _ZN<length><name>C1E... or in
+    // the case of a templatized constructor, _ZN<length><name>C1I...EE... so
+    // we hack it and look for "C1E" or "C1I" and replace them with their C4
+    // variants. This will have rare false matches, but so far we haven't hit
+    // any external function calls of that sort.
+    if (entry.mangledName().includes("C1E") || entry.mangledName().includes("C1I")) {
+        var callee = name.replace("C1E", "C4E").replace("C1I", "C4I");
+        addCallee(new CallSite(name, entry.safeArguments, entry.stack[0].location, entry.parameterNames));
         return true;
     }
 
