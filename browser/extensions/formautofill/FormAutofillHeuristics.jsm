@@ -17,6 +17,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
  */
 this.FormAutofillHeuristics = {
   VALID_FIELDS: [
+    "name",
     "given-name",
     "additional-name",
     "family-name",
