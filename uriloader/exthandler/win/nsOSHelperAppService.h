@@ -40,6 +40,8 @@ public:
   NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString &aScheme, 
                                           bool *found,
                                           nsIHandlerInfo **_retval);
+  virtual bool GetMIMETypeFromOSForExtension(const nsACString& aExtension,
+                                             nsACString& aMIMEType) override;
 
   /** Get the string value of a registry value and store it in result.
    * @return true on success, false on failure
