@@ -30,6 +30,7 @@
 
 using mozilla::dom::cache::Cache;
 using mozilla::dom::cache::CacheStorage;
+using mozilla::ipc::PrincipalInfo;
 
 BEGIN_WORKERS_NAMESPACE
 
@@ -93,6 +94,7 @@ public:
   explicit CompareNetwork(CompareManager* aManager)
     : mManager(aManager)
     , mIsMainScript(true)
+    , mInternalHeaders(new InternalHeaders())
   {
     MOZ_ASSERT(aManager);
     AssertIsOnMainThread();
@@ -113,17 +115,50 @@ public:
     return mBuffer;
   }
 
+  const nsString&
+  URL() const
+  {
+    AssertIsOnMainThread();
+    return mURL;
+  }
+
+  const ChannelInfo&
+  GetChannelInfo() const
+  {
+    return mChannelInfo;
+  }
+
+  already_AddRefed<InternalHeaders>
+  GetInternalHeaders() const
+  {
+    RefPtr<InternalHeaders> internalHeaders = mInternalHeaders;
+    return internalHeaders.forget();
+  }
+
+  UniquePtr<PrincipalInfo>
+  TakePrincipalInfo()
+  {
+    return Move(mPrincipalInfo);
+  }
+
 private:
   ~CompareNetwork()
   {
     AssertIsOnMainThread();
   }
 
+  nsresult
+  SetPrincipalInfo(nsIChannel* aChannel);
+
   RefPtr<CompareManager> mManager;
   nsCOMPtr<nsIChannel> mChannel;
   nsString mBuffer;
 
+  nsString mURL;
   bool mIsMainScript;
+  ChannelInfo mChannelInfo;
+  RefPtr<InternalHeaders> mInternalHeaders;
+  UniquePtr<PrincipalInfo> mPrincipalInfo;
 };
 
 NS_IMPL_ISUPPORTS(CompareNetwork, nsIStreamLoaderObserver,
@@ -207,7 +242,6 @@ public:
                           CompareCallback* aCallback)
     : mRegistration(aRegistration)
     , mCallback(aCallback)
-    , mInternalHeaders(new InternalHeaders())
     , mState(WaitingForInitialization)
     , mNetworkFinished(false)
     , mCacheFinished(false)
@@ -316,43 +350,6 @@ public:
     AssertIsOnMainThread();
     MOZ_ASSERT(mCacheStorage);
     return mCacheStorage;
-  }
-
-  nsresult
-  OnStartRequest(nsIChannel* aChannel)
-  {
-    nsresult rv = SetPrincipalInfo(aChannel);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    mChannelInfo.InitFromChannel(aChannel);
-
-    mInternalHeaders->FillResponseHeaders(aChannel);
-
-    return NS_OK;
-  }
-
-  nsresult
-  SetPrincipalInfo(nsIChannel* aChannel)
-  {
-    nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-    NS_ASSERTION(ssm, "Should never be null!");
-
-    nsCOMPtr<nsIPrincipal> channelPrincipal;
-    nsresult rv = ssm->GetChannelResultPrincipal(aChannel, getter_AddRefs(channelPrincipal));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    UniquePtr<mozilla::ipc::PrincipalInfo> principalInfo(new mozilla::ipc::PrincipalInfo());
-    rv = PrincipalToPrincipalInfo(channelPrincipal, principalInfo.get());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    mPrincipalInfo = Move(principalInfo);
-    return NS_OK;
   }
 
   void
@@ -571,13 +568,15 @@ private:
       new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
     ir->SetBody(body, mCN->Buffer().Length());
 
-    ir->InitChannelInfo(mChannelInfo);
-    if (mPrincipalInfo) {
-      ir->SetPrincipalInfo(Move(mPrincipalInfo));
+    ir->InitChannelInfo(mCN->GetChannelInfo());
+    UniquePtr<PrincipalInfo> principalInfo = mCN->TakePrincipalInfo();
+    if (principalInfo) {
+      ir->SetPrincipalInfo(Move(principalInfo));
     }
 
     IgnoredErrorResult ignored;
-    ir->Headers()->Fill(*mInternalHeaders, ignored);
+    RefPtr<InternalHeaders> internalHeaders = mCN->GetInternalHeaders();
+    ir->Headers()->Fill(*(internalHeaders.get()), ignored);
 
     RefPtr<Response> response = new Response(aCache->GetGlobalObject(), ir);
 
@@ -616,11 +615,6 @@ private:
   // Only used if the network script has changed and needs to be cached.
   nsString mNewCacheName;
 
-  ChannelInfo mChannelInfo;
-  RefPtr<InternalHeaders> mInternalHeaders;
-
-  UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
-
   nsCString mMaxScope;
 
   enum {
@@ -648,6 +642,8 @@ CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
 {
   MOZ_ASSERT(aPrincipal);
   AssertIsOnMainThread();
+
+  mURL = aURL;
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr, nullptr);
@@ -739,11 +735,39 @@ CompareNetwork::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   MOZ_ASSERT(channel == mChannel);
 #endif
 
-  nsresult rv = mManager->OnStartRequest(mChannel);
+  MOZ_ASSERT(!mChannelInfo.IsInitialized());
+  mChannelInfo.InitFromChannel(mChannel);
+
+  nsresult rv = SetPrincipalInfo(mChannel);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
+  mInternalHeaders->FillResponseHeaders(mChannel);
+
+  return NS_OK;
+}
+
+nsresult
+CompareNetwork::SetPrincipalInfo(nsIChannel* aChannel)
+{
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  NS_ASSERTION(ssm, "Should never be null!");
+
+  nsCOMPtr<nsIPrincipal> channelPrincipal;
+  nsresult rv = ssm->GetChannelResultPrincipal(aChannel, getter_AddRefs(channelPrincipal));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  UniquePtr<PrincipalInfo> principalInfo = MakeUnique<PrincipalInfo>();
+  rv = PrincipalToPrincipalInfo(channelPrincipal, principalInfo.get());
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mPrincipalInfo = Move(principalInfo);
   return NS_OK;
 }
 
