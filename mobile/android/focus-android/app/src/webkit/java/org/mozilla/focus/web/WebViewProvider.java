@@ -88,6 +88,10 @@ public class WebViewProvider {
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
 
+        // Also increase text size to fill the viewport (this mirrors the behaviour of Firefox,
+        // Chrome does this in the current Chrome Dev, but not Chrome release).
+        settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
+
         // Disable access to arbitrary local files by webpages - assets can still be loaded
         // via file:///android_asset/res, so at least error page images won't be blocked.
         settings.setAllowFileAccess(false);
