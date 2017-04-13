@@ -472,6 +472,7 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
   aParentCommands.AppendElement(layers::OpAddExternalImage(
                                 externalImageId,
                                 key));
+  layer->WrManager()->AddImageKeyForDiscard(key);
   aBuilder.PushImage(wr::ToWrRect(dest),
                      clipRegion,
                      WrImageRendering::Auto,
