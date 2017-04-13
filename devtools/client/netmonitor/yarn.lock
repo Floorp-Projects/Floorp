@@ -1352,22 +1352,11 @@ devtools-modules@^0.0.23:
   dependencies:
     properties-parser "^0.3.1"
 
-devtools-reps@^0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/devtools-reps/-/devtools-reps-0.4.0.tgz#a0600a773cc7e13e0a0d684cec24767cc861e488"
-  dependencies:
-    lodash "^4.17.2"
-    svg-inline-react "^1.0.2"
-
 devtools-source-editor@^0.0.2:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/devtools-source-editor/-/devtools-source-editor-0.0.2.tgz#16408f2507560c7a37d857ea74333b362397caf4"
   dependencies:
     codemirror "^5.25.0"
-
-devtools-splitter@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/devtools-splitter/-/devtools-splitter-0.0.2.tgz#2a18fa86f1e010a4664de655d61c3490f2844174"
 
 doctrine@^1.2.2:
   version "1.5.0"
@@ -1671,7 +1660,7 @@ expand-range@^1.8.1:
   dependencies:
     fill-range "^2.1.0"
 
-express@^4.13.4, express@^4.15.2:
+express@^4.13.4:
   version "4.15.2"
   resolved "https://registry.yarnpkg.com/express/-/express-4.15.2.tgz#af107fc148504457f2dca9a6f2571d7129b97b35"
   dependencies:
@@ -2564,7 +2553,7 @@ lodash.uniq@^4.5.0:
   version "4.5.0"
   resolved "https://registry.yarnpkg.com/lodash.uniq/-/lodash.uniq-4.5.0.tgz#d0225373aeb652adc1bc82e4945339a842754773"
 
-lodash@^4.0.0, lodash@^4.15.0, lodash@^4.17.2, lodash@^4.2.0, lodash@^4.2.1, lodash@^4.3.0:
+lodash@^4.0.0, lodash@^4.15.0, lodash@^4.2.0, lodash@^4.2.1, lodash@^4.3.0:
   version "4.17.4"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.4.tgz#78203a4d1c328ae1d86dca6460e369b57f4055ae"
 
@@ -3935,10 +3924,6 @@ svg-inline-loader@^0.7.1:
     loader-utils "^0.2.11"
     object-assign "^4.0.1"
     simple-html-tokenizer "^0.1.1"
-
-svg-inline-react@^1.0.2:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/svg-inline-react/-/svg-inline-react-1.0.3.tgz#68d15bf88f99f64daa52821ed5441612d8ad9041"
 
 svgo@^0.7.0:
   version "0.7.2"
