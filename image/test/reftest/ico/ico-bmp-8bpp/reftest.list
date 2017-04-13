@@ -17,7 +17,7 @@
 == ico-size-32x32-8bpp.ico ico-size-32x32-8bpp.png
 == ico-size-33x33-8bpp.ico ico-size-33x33-8bpp.png
 == ico-size-256x256-8bpp.ico ico-size-256x256-8bpp.png
-== ico-partial-transparent-8bpp.ico ico-partial-transparent-8bpp.png
-== ico-transparent-8bpp.ico ico-transparent-8bpp.png
-== ico-not-square-transparent-8bpp.ico ico-not-square-transparent-8bpp.png
+fails-if(stylo) == ico-partial-transparent-8bpp.ico ico-partial-transparent-8bpp.png
+fails-if(stylo) == ico-transparent-8bpp.ico ico-transparent-8bpp.png
+fails-if(stylo) == ico-not-square-transparent-8bpp.ico ico-not-square-transparent-8bpp.png
 

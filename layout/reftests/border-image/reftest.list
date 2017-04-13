@@ -10,7 +10,7 @@ fuzzy-if(winWidget,1,1) == multicolor-image-2.html multicolor-image-2-ref.html
 == multicolor-image-4.html multicolor-image-4-ref.html
 == multicolor-image-5.html multicolor-image-5-ref.html
 == transparent-image-1.html transparent-image-1-ref.html
-!= repeat-image-1.html repeat-image-1-ref.html
+fails-if(stylo) != repeat-image-1.html repeat-image-1-ref.html
 == 470250-1.html 470250-1-ref.html
 == 470250-2.html 470250-2-ref.html
 != different-h-v-1.html different-h-v-ref.html
@@ -30,7 +30,7 @@ fails-if(Android) fails-if(usesRepeatResampling) == center-scaling-3.html center
 == border-image-width-1a.html border-image-width-1-ref.html
 == border-image-width-1b.html border-image-width-1-ref.html
 == border-image-width-1c.html border-image-width-1-ref.html
-== border-image-width-large.html border-image-width-large-ref.html
+fails-if(stylo) == border-image-width-large.html border-image-width-large-ref.html
 == border-image-outset-1a.html border-image-outset-1-ref.html
 == border-image-outset-1b.html border-image-outset-1-ref.html
 == border-image-outset-1c.html border-image-outset-1-ref.html

@@ -12,17 +12,17 @@ default-preferences pref(layout.css.shape-outside.enabled,true) pref(layout.css.
 
 # <shape-box> with border-radius
 == shape-outside-margin-box-border-radius-001.html shape-outside-margin-box-border-radius-001-ref.html
-fails == shape-outside-margin-box-border-radius-002.html shape-outside-margin-box-border-radius-002-ref.html # Bug 1309830
+fails-if(!stylo) == shape-outside-margin-box-border-radius-002.html shape-outside-margin-box-border-radius-002-ref.html # Bug 1309830
 == shape-outside-margin-box-border-radius-003.html shape-outside-margin-box-border-radius-003-ref.html
-fails == shape-outside-margin-box-border-radius-004.html shape-outside-margin-box-border-radius-004-ref.html # Bug 1309830
+fails-if(!stylo) == shape-outside-margin-box-border-radius-004.html shape-outside-margin-box-border-radius-004-ref.html # Bug 1309830
 == shape-outside-margin-box-border-radius-005.html shape-outside-margin-box-border-radius-005-ref.html
 == shape-outside-margin-box-border-radius-006.html shape-outside-margin-box-border-radius-006-ref.html
 == shape-outside-margin-box-border-radius-007.html shape-outside-margin-box-border-radius-007-ref.html
 == shape-outside-margin-box-border-radius-008.html shape-outside-margin-box-border-radius-008-ref.html
 == shape-outside-border-box-border-radius-001.html shape-outside-border-box-border-radius-001-ref.html
-fails == shape-outside-border-box-border-radius-002.html shape-outside-border-box-border-radius-002-ref.html # Bug 1309830
+fails-if(!stylo) == shape-outside-border-box-border-radius-002.html shape-outside-border-box-border-radius-002-ref.html # Bug 1309830
 == shape-outside-border-box-border-radius-003.html shape-outside-border-box-border-radius-003-ref.html
-fails == shape-outside-border-box-border-radius-004.html shape-outside-border-box-border-radius-004-ref.html # Bug 1309830
+fails-if(!stylo) == shape-outside-border-box-border-radius-004.html shape-outside-border-box-border-radius-004-ref.html # Bug 1309830
 == shape-outside-border-box-border-radius-005.html shape-outside-border-box-border-radius-005-ref.html
 == shape-outside-border-box-border-radius-006.html shape-outside-border-box-border-radius-006-ref.html
 == shape-outside-border-box-border-radius-007.html shape-outside-border-box-border-radius-007-ref.html
