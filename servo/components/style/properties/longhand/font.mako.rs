@@ -225,7 +225,8 @@ ${helpers.single_keyword("font-style",
                          gecko_constant_prefix="NS_FONT_STYLE",
                          gecko_ffi_name="mFont.style",
                          spec="https://drafts.csswg.org/css-fonts/#propdef-font-style",
-                         animation_type="none")}
+                         animation_type="none",
+                         needs_conversion=True)}
 
 ${helpers.single_keyword("font-variant",
                          "normal small-caps",
@@ -292,19 +293,24 @@ ${helpers.single_keyword("font-variant-caps",
                 _ => Err(())
             }
         }).or_else(|()| {
-            match try!(input.expect_integer()) {
-                100 => Ok(SpecifiedValue::Weight100),
-                200 => Ok(SpecifiedValue::Weight200),
-                300 => Ok(SpecifiedValue::Weight300),
-                400 => Ok(SpecifiedValue::Weight400),
-                500 => Ok(SpecifiedValue::Weight500),
-                600 => Ok(SpecifiedValue::Weight600),
-                700 => Ok(SpecifiedValue::Weight700),
-                800 => Ok(SpecifiedValue::Weight800),
-                900 => Ok(SpecifiedValue::Weight900),
+            SpecifiedValue::from_int(input.expect_integer()?)
+        })
+    }
+
+    impl SpecifiedValue {
+        pub fn from_int(kw: i32) -> Result<Self, ()> {
+            match kw {
+                % for weight in range(100, 901, 100):
+                    ${weight} => Ok(SpecifiedValue::Weight${weight}),
+                % endfor
                 _ => Err(())
             }
-        })
+        }
+
+        pub fn from_gecko_keyword(kw: u32) -> Self {
+            Self::from_int(kw as i32).expect("Found unexpected value in style
+                                              struct for font-weight property")
+        }
     }
 
     /// Used in @font-face, where relative keywords are not allowed.
@@ -415,13 +421,14 @@ ${helpers.single_keyword("font-variant-caps",
     use std::fmt;
     use style_traits::ToCss;
     use values::{FONT_MEDIUM_PX, HasViewportPercentage};
-    use values::specified::{LengthOrPercentage, Length, NoCalcLength, Percentage};
+    use values::specified::{FontRelativeLength, LengthOrPercentage, Length};
+    use values::specified::{NoCalcLength, Percentage};
 
     impl ToCss for SpecifiedValue {
         fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
             match *self {
                 SpecifiedValue::Length(ref lop) => lop.to_css(dest),
-                SpecifiedValue::Keyword(kw) => kw.to_css(dest),
+                SpecifiedValue::Keyword(kw, _) => kw.to_css(dest),
                 SpecifiedValue::Smaller => dest.write_str("smaller"),
                 SpecifiedValue::Larger => dest.write_str("larger"),
             }
@@ -441,9 +448,21 @@ ${helpers.single_keyword("font-variant-caps",
     #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
     pub enum SpecifiedValue {
         Length(specified::LengthOrPercentage),
-        Keyword(KeywordSize),
+        /// A keyword value, along with a ratio.
+        /// The ratio in any specified keyword value
+        /// will be 1, but we cascade keywordness even
+        /// after font-relative (percent and em) values
+        /// have been applied, which is where the keyword
+        /// comes in. See bug 1355707
+        Keyword(KeywordSize, f32),
         Smaller,
         Larger,
+    }
+
+    impl From<specified::LengthOrPercentage> for SpecifiedValue {
+        fn from(other: specified::LengthOrPercentage) -> Self {
+            SpecifiedValue::Length(other)
+        }
     }
 
     pub mod computed_value {
@@ -596,7 +615,22 @@ ${helpers.single_keyword("font-variant-caps",
                 6 => XXLarge,
                 // If value is greater than 7, let it be 7.
                 _ => XXXLarge,
-            })
+            }, 1.)
+        }
+
+        /// If this value is specified as a ratio of the parent font (em units or percent)
+        /// return the ratio
+        pub fn as_font_ratio(&self) -> Option<f32> {
+            if let SpecifiedValue::Length(ref lop) = *self {
+                if let LengthOrPercentage::Percentage(pc) = *lop {
+                    return Some(pc.0)
+                } else if let LengthOrPercentage::Length(ref nocalc) = *lop {
+                    if let NoCalcLength::FontRelative(FontRelativeLength::Em(em)) = *nocalc {
+                        return Some(em)
+                    }
+                }
+            }
+            None
         }
     }
 
@@ -608,7 +642,7 @@ ${helpers.single_keyword("font-variant-caps",
 
     #[inline]
     pub fn get_initial_specified_value() -> SpecifiedValue {
-        SpecifiedValue::Keyword(Medium)
+        SpecifiedValue::Keyword(Medium, 1.)
     }
 
     impl ToComputedValue for SpecifiedValue {
@@ -637,8 +671,8 @@ ${helpers.single_keyword("font-variant-caps",
                     calc.length() + context.inherited_style().get_font().clone_font_size()
                                            .scale_by(calc.percentage())
                 }
-                SpecifiedValue::Keyword(ref key) => {
-                    key.to_computed_value(context)
+                SpecifiedValue::Keyword(ref key, fraction) => {
+                    key.to_computed_value(context).scale_by(fraction)
                 }
                 SpecifiedValue::Smaller => {
                     FontRelativeLength::Em(0.85).to_computed_value(context,
@@ -659,13 +693,13 @@ ${helpers.single_keyword("font-variant-caps",
         }
     }
     /// <length> | <percentage> | <absolute-size> | <relative-size>
-    pub fn parse(_: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
-        if let Ok(lop) = input.try(specified::LengthOrPercentage::parse_non_negative) {
+    pub fn parse(context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
+        if let Ok(lop) = input.try(|i| specified::LengthOrPercentage::parse_non_negative(context, i)) {
             return Ok(SpecifiedValue::Length(lop))
         }
 
         if let Ok(kw) = input.try(KeywordSize::parse) {
-            return Ok(SpecifiedValue::Keyword(kw))
+            return Ok(SpecifiedValue::Keyword(kw, 1.))
         }
 
         match_ignore_ascii_case! {&*input.expect_ident()?,
@@ -766,14 +800,14 @@ ${helpers.single_keyword("font-variant-caps",
     }
 
     /// none | <number>
-    pub fn parse(_context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
+    pub fn parse(context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
         use values::specified::Number;
 
         if input.try(|input| input.expect_ident_matching("none")).is_ok() {
             return Ok(SpecifiedValue::None);
         }
 
-        Ok(SpecifiedValue::Number(try!(Number::parse_non_negative(input))))
+        Ok(SpecifiedValue::Number(try!(Number::parse_non_negative(context, input))))
     }
 </%helpers:longhand>
 
@@ -1096,8 +1130,7 @@ ${helpers.single_keyword("font-variant-position",
 </%helpers:longhand>
 
 <%helpers:longhand name="-x-lang" products="gecko" animation_type="none" internal="True"
-                   spec="Internal (not web-exposed)"
-                   internal="True">
+                   spec="Internal (not web-exposed)">
     use values::HasViewportPercentage;
     use values::computed::ComputedValueAsSpecified;
     pub use self::computed_value::T as SpecifiedValue;
@@ -1131,3 +1164,156 @@ ${helpers.single_keyword("font-variant-position",
         Err(())
     }
 </%helpers:longhand>
+
+// MathML properties
+<%helpers:longhand name="-moz-script-size-multiplier" products="gecko" animation_type="none"
+                   predefined_type="Number" gecko_ffi_name="mScriptSizeMultiplier"
+                   spec="Internal (not web-exposed)"
+                   internal="True" disable_when_testing="True">
+    use values::HasViewportPercentage;
+    use values::computed::ComputedValueAsSpecified;
+    pub use self::computed_value::T as SpecifiedValue;
+
+    impl ComputedValueAsSpecified for SpecifiedValue {}
+    no_viewport_percentage!(SpecifiedValue);
+
+    pub mod computed_value {
+        pub type T = f32;
+    }
+
+    #[inline]
+    pub fn get_initial_value() -> computed_value::T {
+        ::gecko_bindings::structs::NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER
+    }
+
+    pub fn parse(_context: &ParserContext, _input: &mut Parser) -> Result<SpecifiedValue, ()> {
+        debug_assert!(false, "Should be set directly by presentation attributes only.");
+        Err(())
+    }
+</%helpers:longhand>
+
+<%helpers:longhand name="-moz-script-level" products="gecko" animation_type="none"
+                   predefined_type="Integer" gecko_ffi_name="mScriptLevel"
+                   spec="Internal (not web-exposed)"
+                   internal="True" disable_when_testing="True" need_clone="True">
+    use std::fmt;
+    use style_traits::ToCss;
+    use values::HasViewportPercentage;
+
+    no_viewport_percentage!(SpecifiedValue);
+
+    pub mod computed_value {
+        pub type T = i8;
+    }
+
+    #[inline]
+    pub fn get_initial_value() -> computed_value::T {
+        0
+    }
+
+    #[derive(Copy, Clone, PartialEq, Debug)]
+    pub enum SpecifiedValue {
+        Relative(i32),
+        Absolute(i32),
+        Auto
+    }
+
+    impl ToCss for SpecifiedValue {
+        fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
+            match *self {
+                SpecifiedValue::Auto => dest.write_str("auto"),
+                SpecifiedValue::Relative(rel) => write!(dest, "{}", rel),
+                // can only be specified by pres attrs; should not
+                // serialize to anything else
+                SpecifiedValue::Absolute(_) => Ok(()),
+            }
+        }
+    }
+
+    impl ToComputedValue for SpecifiedValue {
+        type ComputedValue = computed_value::T;
+
+        fn to_computed_value(&self, cx: &Context) -> i8 {
+            use properties::longhands::_moz_math_display::SpecifiedValue as DisplayValue;
+            use std::{cmp, i8};
+
+            let int = match *self {
+                SpecifiedValue::Auto => {
+                    let parent = cx.inherited_style().get_font().clone__moz_script_level() as i32;
+                    let display = cx.inherited_style().get_font().clone__moz_math_display();
+                    if display == DisplayValue::inline {
+                        parent + 1
+                    } else {
+                        parent
+                    }
+                }
+                SpecifiedValue::Relative(rel) => {
+                    let parent = cx.inherited_style().get_font().clone__moz_script_level();
+                    parent as i32 + rel
+                }
+                SpecifiedValue::Absolute(abs) => abs,
+            };
+            cmp::min(int, i8::MAX as i32) as i8
+        }
+        fn from_computed_value(other: &computed_value::T) -> Self {
+            SpecifiedValue::Absolute(*other as i32)
+        }
+    }
+
+    pub fn parse(_context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
+        if let Ok(i) = input.try(|i| i.expect_integer()) {
+            return Ok(SpecifiedValue::Relative(i))
+        }
+        input.expect_ident_matching("auto")?;
+        Ok(SpecifiedValue::Auto)
+    }
+</%helpers:longhand>
+
+${helpers.single_keyword("-moz-math-display",
+                         "inline block",
+                         gecko_constant_prefix="NS_MATHML_DISPLAYSTYLE",
+                         gecko_ffi_name="mMathDisplay",
+                         products="gecko",
+                         spec="Internal (not web-exposed)",
+                         animation_type="none",
+                         need_clone="True")}
+
+${helpers.single_keyword("-moz-math-variant",
+                         """normal bold italic bold-italic script bold-script
+                            fraktur double-struck bold-fraktur sans-serif
+                            bold-sans-serif sans-serif-italic sans-serif-bold-italic
+                            monospace initial tailed looped stretched""",
+                         gecko_constant_prefix="NS_MATHML_MATHVARIANT",
+                         gecko_ffi_name="mMathVariant",
+                         products="gecko",
+                         spec="Internal (not web-exposed)",
+                         animation_type="none",
+                         needs_conversion=True)}
+
+<%helpers:longhand name="-moz-script-min-size" products="gecko" animation_type="none"
+                   predefined_type="Length" gecko_ffi_name="mScriptMinSize"
+                   spec="Internal (not web-exposed)"
+                   internal="True" disable_when_testing="True">
+    use app_units::Au;
+    use gecko_bindings::structs::NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT;
+    use values::HasViewportPercentage;
+    use values::computed::ComputedValueAsSpecified;
+    use values::specified::length::{AU_PER_PT, Length};
+
+    pub type SpecifiedValue = Length;
+
+    pub mod computed_value {
+        pub type T = super::Au;
+    }
+
+    #[inline]
+    pub fn get_initial_value() -> computed_value::T {
+        Au((NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT as f32 * AU_PER_PT) as i32)
+    }
+
+    pub fn parse(_context: &ParserContext, _input: &mut Parser) -> Result<SpecifiedValue, ()> {
+        debug_assert!(false, "Should be set directly by presentation attributes only.");
+        Err(())
+    }
+</%helpers:longhand>
+

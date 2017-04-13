@@ -49,7 +49,7 @@ public:
 
   NS_IMETHOD
   OnComplete(nsIURI *aIconURI, uint32_t aIconSize, const uint8_t *aIconData,
-             const nsACString &aMimeType) override
+             const nsACString &aMimeType, uint16_t aWidth) override
   {
     nsresult rv = NS_ERROR_FAILURE;
     if (aIconSize > 0) {
@@ -111,9 +111,9 @@ ShowWithIconBackend(nsIAlertsService* aBackend, nsIAlertNotification* aAlert,
   nsCOMPtr<nsIFaviconDataCallback> callback =
     new IconCallback(aBackend, aAlert, aAlertListener);
   if (alertsIconData) {
-    return favicons->GetFaviconDataForPage(uri, callback);
+    return favicons->GetFaviconDataForPage(uri, callback, 0);
   }
-  return favicons->GetFaviconURLForPage(uri, callback);
+  return favicons->GetFaviconURLForPage(uri, callback, 0);
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif // !MOZ_PLACES

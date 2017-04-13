@@ -10,7 +10,6 @@
 #include "MediaData.h"
 #include "MediaInfo.h"
 #include "MediaFormatReader.h"
-#include "MediaPrefs.h"
 #include "MediaResource.h"
 #include "VideoUtils.h"
 #include "VideoFrameContainer.h"
@@ -1328,10 +1327,15 @@ MediaFormatReader::AsyncReadMetadata()
 }
 
 void
-MediaFormatReader::OnDemuxerInitDone(nsresult)
+MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult)
 {
   MOZ_ASSERT(OnTaskQueue());
   mDemuxerInitRequest.Complete();
+
+  if (NS_FAILED(aResult) && MediaPrefs::MediaWarningsAsErrors()) {
+    mMetadataPromise.Reject(aResult, __func__);
+    return;
+  }
 
   mDemuxerInitDone = true;
 
@@ -1451,6 +1455,16 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
     if (HasVideo()) {
       RequestDemuxSamples(TrackInfo::kVideoTrack);
     }
+  }
+
+  if (aResult != NS_OK && mDecoder) {
+    RefPtr<AbstractMediaDecoder> decoder = mDecoder;
+    mDecoder->AbstractMainThread()->Dispatch(NS_NewRunnableFunction(
+      [decoder, aResult] () {
+        if (decoder->GetOwner()) {
+          decoder->GetOwner()->DecodeWarning(aResult);
+        }
+      }));
   }
 
   MaybeResolveMetadataPromise();

@@ -324,23 +324,22 @@ IMContextWrapper::GetTextEventDispatcher()
   return dispatcher;
 }
 
-NS_IMETHODIMP_(nsIMEUpdatePreference)
-IMContextWrapper::GetIMEUpdatePreference()
+NS_IMETHODIMP_(IMENotificationRequests)
+IMContextWrapper::GetIMENotificationRequests()
 {
     // While a plugin has focus, IMContextWrapper doesn't need any
     // notifications.
     if (mInputContext.mIMEState.mEnabled == IMEState::PLUGIN) {
-      return nsIMEUpdatePreference();
+      return IMENotificationRequests();
     }
 
-    nsIMEUpdatePreference::Notifications notifications =
-        nsIMEUpdatePreference::NOTIFY_NOTHING;
+    IMENotificationRequests::Notifications notifications =
+        IMENotificationRequests::NOTIFY_NOTHING;
     // If it's not enabled, we don't need position change notification.
     if (IsEnabled()) {
-        notifications |= nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE;
+        notifications |= IMENotificationRequests::NOTIFY_POSITION_CHANGE;
     }
-    nsIMEUpdatePreference updatePreference(notifications);
-    return updatePreference;
+    return IMENotificationRequests(notifications);
 }
 
 void

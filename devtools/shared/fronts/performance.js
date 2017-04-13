@@ -11,8 +11,6 @@ const { Task } = require("devtools/shared/task");
 
 loader.lazyRequireGetter(this, "PerformanceIO",
   "devtools/client/performance/modules/io");
-loader.lazyRequireGetter(this, "LegacyPerformanceFront",
-  "devtools/client/performance/legacy/front", true);
 loader.lazyRequireGetter(this, "getSystemInfo",
   "devtools/shared/system", true);
 
@@ -136,13 +134,5 @@ const PerformanceFront = FrontClassWithSpec(performanceSpec, {
 exports.PerformanceFront = PerformanceFront;
 
 exports.createPerformanceFront = function createPerformanceFront(target) {
-  // If we force legacy mode, or the server does not have a performance actor (< Fx42),
-  // use our LegacyPerformanceFront which will handle
-  // the communication over RDP to other underlying actors.
-  if (target.TEST_PERFORMANCE_LEGACY_FRONT || !target.form.performanceActor) {
-    return new LegacyPerformanceFront(target);
-  }
-  // If our server has a PerformanceActor implementation, set this
-  // up like a normal front.
   return new PerformanceFront(target.client, target.form);
 };

@@ -232,7 +232,7 @@ def parse_message(message):
     parser.add_argument('--rebuild-talos', dest='talos_trigger_tests', action='store',
                         type=int, default=1)
     parser.add_argument('--setenv', dest='env', action='append')
-    parser.add_argument('--spsProfile', dest='profile', action='store_true')
+    parser.add_argument('--geckoProfile', dest='profile', action='store_true')
     parser.add_argument('--tag', dest='tag', action='store', default=None)
     parser.add_argument('--no-retry', dest='no_retry', action='store_true')
     parser.add_argument('--include-nightly', dest='include_nightly', action='store_true')

@@ -7407,8 +7407,7 @@ nsCSSFrameConstructor::LazilyStyleNewChildRange(nsIContent* aStartChild,
   for (nsIContent* child = aStartChild; child != aEndChild;
        child = child->GetNextSibling()) {
     nsINode* parent = child->GetFlattenedTreeParent();
-    if (parent->IsElement()) {
-      MOZ_ASSERT(parent);
+    if (MOZ_LIKELY(parent) && parent->IsElement()) {
       parent->AsElement()->NoteDirtyDescendantsForServo();
     }
   }
@@ -7433,8 +7432,9 @@ nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
     // children checking HasServoData (which is fast).
     if (child->IsElement() && !child->AsElement()->HasServoData()) {
       Element* parent = child->AsElement()->GetFlattenedTreeParentElement();
-      MOZ_ASSERT(parent);
-      if (parent->HasServoData()) {
+      // NB: Parent may be null if the content is appended to a shadow root, and
+      // isn't assigned to any insertion point.
+      if (MOZ_LIKELY(parent) && parent->HasServoData()) {
         styleSet->StyleNewChildren(parent);
       }
     }

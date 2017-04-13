@@ -4834,21 +4834,21 @@ TSFTextStore::CreateAndSetFocus(nsWindowBase* aFocusedWidget,
 }
 
 // static
-nsIMEUpdatePreference
-TSFTextStore::GetIMEUpdatePreference()
+IMENotificationRequests
+TSFTextStore::GetIMENotificationRequests()
 {
   if (sThreadMgr && sEnabledTextStore && sEnabledTextStore->mDocumentMgr) {
     RefPtr<ITfDocumentMgr> docMgr;
     sThreadMgr->GetFocus(getter_AddRefs(docMgr));
     if (docMgr == sEnabledTextStore->mDocumentMgr) {
-      return nsIMEUpdatePreference(
-               nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE |
-               nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE |
-               nsIMEUpdatePreference::NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR |
-               nsIMEUpdatePreference::NOTIFY_DURING_DEACTIVE);
+      return IMENotificationRequests(
+               IMENotificationRequests::NOTIFY_TEXT_CHANGE |
+               IMENotificationRequests::NOTIFY_POSITION_CHANGE |
+               IMENotificationRequests::NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR |
+               IMENotificationRequests::NOTIFY_DURING_DEACTIVE);
     }
   }
-  return nsIMEUpdatePreference();
+  return IMENotificationRequests();
 }
 
 nsresult

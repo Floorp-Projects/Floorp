@@ -236,7 +236,7 @@ public:
   // Does this query apply to the presentation?
   // If |aKey| is non-null, add cache information to it.
   bool Matches(nsPresContext* aPresContext,
-                 nsMediaQueryResultCacheKey* aKey) const;
+               nsMediaQueryResultCacheKey* aKey) const;
 
 private:
   bool mNegated;
@@ -257,8 +257,12 @@ public:
 
   // Does this query apply to the presentation?
   // If |aKey| is non-null, add cache information to it.
-  bool Matches(nsPresContext* aPresContext,
-                 nsMediaQueryResultCacheKey* aKey);
+  bool Matches(nsPresContext& aPresContext,
+               nsMediaQueryResultCacheKey* aKey) const final;
+
+#ifdef DEBUG
+  bool IsServo() const final { return false; }
+#endif
 
   void AppendQuery(nsAutoPtr<nsMediaQuery>& aQuery) {
     // Takes ownership of aQuery

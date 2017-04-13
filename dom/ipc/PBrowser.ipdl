@@ -45,8 +45,8 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
 using nscolor from "nsColor.h";
 using class mozilla::WidgetCompositionEvent from "ipc/nsGUIEventIPC.h";
-using struct mozilla::widget::IMENotification from "nsIWidget.h";
-using struct nsIMEUpdatePreference from "nsIWidget.h";
+using struct mozilla::widget::IMENotification from "mozilla/widget/IMEData.h";
+using struct mozilla::widget::IMENotificationRequests from "mozilla/widget/IMEData.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 using mozilla::gfx::IntPoint from "mozilla/gfx/Point.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
@@ -219,11 +219,11 @@ parent:
      *
      *  contentCache Cache of content
      *  notification Whole data of the notification
-     *  preference   Native widget preference for IME updates
+     *  requests     Requests of notification for IME of the native widget
      */
     nested(inside_cpow) sync NotifyIMEFocus(ContentCache contentCache,
                                             IMENotification notification)
-      returns (nsIMEUpdatePreference preference);
+      returns (IMENotificationRequests requests);
 
     /**
      * Notifies chrome that there has been a change in text content

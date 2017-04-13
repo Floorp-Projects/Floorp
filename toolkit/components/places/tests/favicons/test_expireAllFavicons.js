@@ -12,7 +12,7 @@ add_task(function* test_expireAllFavicons() {
   yield PlacesTestUtils.addVisits({ uri: TEST_PAGE_URI, transition: TRANSITION_TYPED });
 
   // Set a favicon for our test page.
-  yield promiseSetIconForPage(TEST_PAGE_URI, SMALLPNG_DATA_URI);
+  yield setFaviconForPage(TEST_PAGE_URI, SMALLPNG_DATA_URI);
 
   // Add a page with a bookmark.
   yield PlacesUtils.bookmarks.insert({
@@ -22,7 +22,7 @@ add_task(function* test_expireAllFavicons() {
   });
 
   // Set a favicon for our bookmark.
-  yield promiseSetIconForPage(BOOKMARKED_PAGE_URI, SMALLPNG_DATA_URI);
+  yield setFaviconForPage(BOOKMARKED_PAGE_URI, SMALLPNG_DATA_URI);
 
   // Start expiration only after data has been saved in the database.
   let promise = promiseTopicObserved(PlacesUtils.TOPIC_FAVICONS_EXPIRED);

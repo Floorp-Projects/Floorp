@@ -154,7 +154,7 @@ private:
     return Success;
   }
 
-  Result IsChainValid(const DERArray&, Time) override
+  Result IsChainValid(const DERArray&, Time, const CertPolicyId&) override
   {
     return Success;
   }
@@ -291,7 +291,7 @@ public:
     return checker.Check(rootCert, nullptr, keepGoing);
   }
 
-  Result IsChainValid(const DERArray&, Time) override
+  Result IsChainValid(const DERArray&, Time, const CertPolicyId&) override
   {
     return Success;
   }
@@ -444,7 +444,7 @@ public:
     return Success;
   }
 
-  Result IsChainValid(const DERArray&, Time) override
+  Result IsChainValid(const DERArray&, Time, const CertPolicyId&) override
   {
     return Success;
   }

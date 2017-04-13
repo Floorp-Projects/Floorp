@@ -93,6 +93,7 @@ struct CertPolicyId final
   uint8_t bytes[MAX_BYTES];
 
   bool IsAnyPolicy() const;
+  bool operator==(const CertPolicyId& other) const;
 
   static const CertPolicyId anyPolicy;
 };
@@ -279,7 +280,8 @@ public:
   // wrong to assume that the certificate chain is valid.
   //
   // certChain.GetDER(0) is the trust anchor.
-  virtual Result IsChainValid(const DERArray& certChain, Time time) = 0;
+  virtual Result IsChainValid(const DERArray& certChain, Time time,
+                              const CertPolicyId& requiredPolicy) = 0;
 
   virtual Result CheckRevocation(EndEntityOrCA endEntityOrCA,
                                  const CertID& certID, Time time,

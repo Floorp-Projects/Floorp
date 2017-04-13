@@ -222,6 +222,13 @@
   background-image: none;
 }
 
+.searchbar-engine-one-off-item:not([selected]):not(.dummy):hover,
+.search-setting-button:hover,
+.addengine-item:hover {
+  background-color: hsla(0, 0%, 0%, 0.06);
+  color: inherit;
+}
+
 .searchbar-engine-one-off-item[selected] {
   background-color: Highlight;
   background-image: none;

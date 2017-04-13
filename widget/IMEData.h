@@ -16,7 +16,7 @@ namespace mozilla {
 
 class WritingMode;
 
-} // namespace mozilla
+namespace widget {
 
 /**
  * Preference for receiving IME updates
@@ -32,7 +32,7 @@ class WritingMode;
  * If the IME implementation needs notifications even while our process is
  * deactive, it should also set NOTIFY_DURING_DEACTIVE.
  */
-struct nsIMEUpdatePreference final
+struct IMENotificationRequests final
 {
   typedef uint8_t Notifications;
 
@@ -52,19 +52,19 @@ struct nsIMEUpdatePreference final
     NOTIFY_DURING_DEACTIVE               = 1 << 7
   };
 
-  nsIMEUpdatePreference()
+  IMENotificationRequests()
     : mWantUpdates(NOTIFY_NOTHING)
   {
   }
 
-  explicit nsIMEUpdatePreference(Notifications aWantUpdates)
+  explicit IMENotificationRequests(Notifications aWantUpdates)
     : mWantUpdates(aWantUpdates)
   {
   }
 
-  nsIMEUpdatePreference operator|(const nsIMEUpdatePreference& aOther) const
+  IMENotificationRequests operator|(const IMENotificationRequests& aOther) const
   {
-    return nsIMEUpdatePreference(aOther.mWantUpdates | mWantUpdates);
+    return IMENotificationRequests(aOther.mWantUpdates | mWantUpdates);
   }
 
   bool WantTextChange() const
@@ -99,9 +99,6 @@ struct nsIMEUpdatePreference final
  * Contains IMEStatus plus information about the current 
  * input context that the IME can use as hints if desired.
  */
-
-namespace mozilla {
-namespace widget {
 
 struct IMEState final
 {

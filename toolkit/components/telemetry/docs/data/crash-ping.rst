@@ -2,13 +2,13 @@
 "crash" ping
 ============
 
-This ping is captured after the main Firefox process crashes or after a content
+This ping is captured after the main Firefox process crashes or after a child process
 process crashes, whether or not the crash report is submitted to
 crash-stats.mozilla.org. It includes non-identifying metadata about the crash.
 
 This ping is sent either by the ```CrashManager``` or by the crash reporter
 client. The ```CrashManager``` is responsible for sending crash pings for the
-content process crashes, which are sent right after the crash is detected,
+child processes crashes, which are sent right after the crash is detected,
 as well as for main process crashes, which are sent after Firefox restarts
 successfully. The crash reporter client sends crash pings only for main process
 crashes whether or not the user also reports the crash. The crash reporter
@@ -88,6 +88,8 @@ are sent only for the ones below:
 | main          | Main process, also known as the browser process   |
 +---------------+---------------------------------------------------+
 | content       | Content process                                   |
++---------------+---------------------------------------------------+
+| gpu           | GPU process                                       |
 +---------------+---------------------------------------------------+
 
 Stack Traces

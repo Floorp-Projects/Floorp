@@ -16,7 +16,7 @@
 #include "nsIReflowObserver.h"
 #include "nsISelectionListener.h"
 #include "nsIScrollObserver.h"
-#include "nsIWidget.h" // for nsIMEUpdatePreference
+#include "nsIWidget.h"
 #include "nsStubMutationObserver.h"
 #include "nsThreadUtils.h"
 #include "nsWeakReference.h"
@@ -46,6 +46,7 @@ public:
   typedef widget::IMENotification::SelectionChangeData SelectionChangeData;
   typedef widget::IMENotification::TextChangeData TextChangeData;
   typedef widget::IMENotification::TextChangeDataBase TextChangeDataBase;
+  typedef widget::IMENotificationRequests IMENotificationRequests;
   typedef widget::IMEMessage IMEMessage;
 
   IMEContentObserver();
@@ -98,7 +99,7 @@ public:
   bool IsEditorHandlingEventForComposition() const;
   bool KeepAliveDuringDeactive() const
   {
-    return mUpdatePreference.WantDuringDeactive();
+    return mIMENotificationRequests.WantDuringDeactive();
   }
   nsIWidget* GetWidget() const { return mWidget; }
   nsIEditor* GetEditor() const { return mEditor; }
@@ -325,7 +326,7 @@ private:
 
   EventStateManager* mESM;
 
-  nsIMEUpdatePreference mUpdatePreference;
+  IMENotificationRequests mIMENotificationRequests;
   uint32_t mPreAttrChangeLength;
   uint32_t mSuppressNotifications;
   int64_t mPreCharacterDataChangeLength;

@@ -112,9 +112,8 @@ LookupCacheV4::Has(const Completion& aCompletion,
   }
 
   // We always send 4-bytes for completion(Bug 1323953) so the prefix used to
-  // lookup for cache should be 4-bytes too.
-  nsDependentCSubstring prefix(reinterpret_cast<const char*>(aCompletion.buf),
-                               PREFIX_SIZE);
+  // lookup for cache should be 4-bytes(uint32_t) too.
+  uint32_t prefix = aCompletion.ToUint32();
 
   // Check if prefix can be found in cache.
   CachedFullHashResponse* fullHashResponse = mCache.Get(prefix);
@@ -663,12 +662,9 @@ LookupCacheV4::DumpCache()
   }
 
   for (auto iter = mCache.ConstIter(); !iter.Done(); iter.Next()) {
-    nsAutoCString strPrefix;
-    CStringToHexString(iter.Key(), strPrefix);
-
     CachedFullHashResponse* response = iter.Data();
-    LOG(("Caches prefix: %s, Expire time: %s",
-         strPrefix.get(),
+    LOG(("Caches prefix: %X, Expire time: %s",
+         iter.Key(),
          GetFormattedTimeString(response->negativeCacheExpirySec).get()));
 
     FullHashExpiryCache& fullHashes = response->fullHashes;

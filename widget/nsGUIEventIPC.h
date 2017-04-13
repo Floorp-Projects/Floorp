@@ -723,9 +723,9 @@ struct ParamTraits<mozilla::WidgetSelectionEvent>
 };
 
 template<>
-struct ParamTraits<nsIMEUpdatePreference>
+struct ParamTraits<mozilla::widget::IMENotificationRequests>
 {
-  typedef nsIMEUpdatePreference paramType;
+  typedef mozilla::widget::IMENotificationRequests paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {

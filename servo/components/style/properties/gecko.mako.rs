@@ -79,7 +79,21 @@ pub struct ComputedValues {
     custom_properties: Option<Arc<ComputedValuesMap>>,
     pub writing_mode: WritingMode,
     pub root_font_size: Au,
-    pub font_size_keyword: Option<longhands::font_size::KeywordSize>,
+    /// font-size keyword values (and font-size-relative values applied
+    /// to keyword values) need to preserve their identity as originating
+    /// from keywords and relative font sizes. We store this information
+    /// out of band in the ComputedValues. When None, the font size on the
+    /// current struct was computed from a value that was not a keyword
+    /// or a chain of font-size-relative values applying to successive parents
+    /// terminated by a keyword. When Some, this means the font-size was derived
+    /// from a keyword value or a keyword value on some ancestor with only
+    /// font-size-relative keywords and regular inheritance in between. The
+    /// integer stores the final ratio of the chain of font size relative values.
+    /// and is 1 when there was just a keyword and no relative values.
+    ///
+    /// When this is Some, we compute font sizes by computing the keyword against
+    /// the generic font, and then multiplying it by the ratio.
+    pub font_size_keyword: Option<(longhands::font_size::KeywordSize, f32)>,
 }
 
 impl ComputedValues {
@@ -102,7 +116,7 @@ impl ComputedValues {
     pub fn new(custom_properties: Option<Arc<ComputedValuesMap>>,
            writing_mode: WritingMode,
            root_font_size: Au,
-           font_size_keyword: Option<longhands::font_size::KeywordSize>,
+           font_size_keyword: Option<(longhands::font_size::KeywordSize, f32)>,
             % for style_struct in data.style_structs:
            ${style_struct.ident}: Arc<style_structs::${style_struct.name}>,
             % endfor
@@ -123,7 +137,7 @@ impl ComputedValues {
             custom_properties: None,
             writing_mode: WritingMode::empty(), // FIXME(bz): This seems dubious
             root_font_size: longhands::font_size::get_initial_value(), // FIXME(bz): Also seems dubious?
-            font_size_keyword: Some(Default::default()),
+            font_size_keyword: Some((Default::default(), 1.)),
             % for style_struct in data.style_structs:
                 ${style_struct.ident}: style_structs::${style_struct.name}::default(pres_context),
             % endfor
@@ -650,6 +664,7 @@ impl Debug for ${style_struct.gecko_struct_name} {
         "MaxLength": impl_style_coord,
         "MinLength": impl_style_coord,
         "Number": impl_simple,
+        "Integer": impl_simple,
         "Opacity": impl_simple,
         "CSSColor": impl_color,
         "SVGPaint": impl_svg_paint,
@@ -1245,8 +1260,12 @@ fn static_assert() {
     }
 </%self:impl_trait>
 
+<%
+    skip_font_longhands = """font-family font-size font-size-adjust font-weight
+                             font-synthesis -x-lang font-language-override"""
+%>
 <%self:impl_trait style_struct_name="Font"
-    skip_longhands="font-family font-size font-size-adjust font-weight font-synthesis -x-lang font-language-override"
+    skip_longhands="${skip_font_longhands}"
     skip_additionals="*">
 
     pub fn set_font_family(&mut self, v: longhands::font_family::computed_value::T) {
@@ -1890,6 +1909,19 @@ fn static_assert() {
             self.gecko.mTransitions[0].mProperty = nsCSSPropertyID_eCSSPropertyExtra_no_properties;
         }
     }
+
+    /// Returns whether there are any transitions specified.
+    pub fn specifies_transitions(&self) -> bool {
+        use gecko_bindings::structs::nsCSSPropertyID::eCSSPropertyExtra_all_properties;
+        if self.gecko.mTransitionPropertyCount == 1 &&
+            self.gecko.mTransitions[0].mProperty == eCSSPropertyExtra_all_properties &&
+            self.gecko.mTransitions[0].mDuration.max(0.0) + self.gecko.mTransitions[0].mDelay <= 0.0f32 {
+            return false;
+        }
+
+        self.gecko.mTransitionPropertyCount > 0
+    }
+
     pub fn transition_property_at(&self, index: usize)
         -> longhands::transition_property::computed_value::SingleComputedValue {
         self.gecko.mTransitions[index].mProperty.into()
@@ -2374,8 +2406,8 @@ fn static_assert() {
             % else:
                 use properties::longhands::mask_image::single_value::computed_value::T;
                 match image {
-                    T::Image(image) => geckoimage.mImage.set(image, false, cacheable),
-                    _ => () // we need to support url valeus
+                    T::Image(image) => geckoimage.mImage.set(image, true, cacheable),
+                    _ => ()
                 }
             % endif
 
@@ -3039,7 +3071,7 @@ fn static_assert() {
 </%self:impl_trait>
 
 <%self:impl_trait style_struct_name="Text"
-                  skip_longhands="text-decoration-line text-overflow"
+                  skip_longhands="text-decoration-line text-overflow initial-letter"
                   skip_additionals="*">
 
     pub fn set_text_decoration_line(&mut self, v: longhands::text_decoration_line::computed_value::T) {
@@ -3118,6 +3150,29 @@ fn static_assert() {
         set(&mut self.gecko.mTextOverflow.mLeft, &other.gecko.mTextOverflow.mLeft);
         set(&mut self.gecko.mTextOverflow.mRight, &other.gecko.mTextOverflow.mRight);
         self.gecko.mTextOverflow.mLogicalDirections = other.gecko.mTextOverflow.mLogicalDirections;
+    }
+
+    pub fn set_initial_letter(&mut self, v: longhands::initial_letter::computed_value::T) {
+        use properties::longhands::initial_letter::computed_value::T;
+        match v {
+            T::Normal => {
+                self.gecko.mInitialLetterSize = 0.;
+                self.gecko.mInitialLetterSink = 0;
+            },
+            T::Specified(size, sink) => {
+                self.gecko.mInitialLetterSize = size.value;
+                if let Some(sink) = sink {
+                    self.gecko.mInitialLetterSink = sink.value();
+                } else {
+                    self.gecko.mInitialLetterSink = size.value.floor() as i32;
+                }
+            }
+        }
+    }
+
+    pub fn copy_initial_letter_from(&mut self, other: &Self) {
+        self.gecko.mInitialLetterSize = other.gecko.mInitialLetterSize;
+        self.gecko.mInitialLetterSink = other.gecko.mInitialLetterSink;
     }
 
     #[inline]

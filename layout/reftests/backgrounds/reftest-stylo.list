@@ -112,14 +112,14 @@ pref(layout.css.box-decoration-break.enabled,true) == background-size-cover-clon
 pref(layout.css.box-decoration-break.enabled,true) == background-size-cover-slice.html background-size-cover-slice.html
 
 fails == background-size-monster-ch.html background-size-monster-ch.html
-fails == background-size-monster-cm.html background-size-monster-cm.html
+== background-size-monster-cm.html background-size-monster-cm.html
 fails == background-size-monster-em.html background-size-monster-em.html
 fails == background-size-monster-ex.html background-size-monster-ex.html
-fails == background-size-monster-inches.html background-size-monster-inches.html
-fails == background-size-monster-mm.html background-size-monster-mm.html
-fails == background-size-monster-pc.html background-size-monster-pc.html
-fails == background-size-monster-pt.html background-size-monster-pt.html
-fails == background-size-monster-px.html background-size-monster-px.html
+== background-size-monster-inches.html background-size-monster-inches.html
+== background-size-monster-mm.html background-size-monster-mm.html
+== background-size-monster-pc.html background-size-monster-pc.html
+== background-size-monster-pt.html background-size-monster-pt.html
+== background-size-monster-px.html background-size-monster-px.html
 fails == background-size-monster-rem.html background-size-monster-rem.html
 
 # There seems to be a pixel-snapping problem here, where the repeated background
@@ -139,16 +139,16 @@ HTTP == root-background-1.html root-background-1.html
 HTTP == root-background-1.html root-background-1.html
 
 fails == really-big-background.html really-big-background.html # Bug 1341690
-fails == body-background.html body-background.html # Bug 1339711
-fails == table-background.html table-background.html # Bug 1339711
-fails == table-background-print.html table-background-print.html
+== body-background.html body-background.html # Bug 1339711
+== table-background.html table-background.html # Bug 1339711
+== table-background-print.html table-background-print.html
 == div-background.html div-background.html
 
 == background-repeat-1-ref.html background-repeat-1-ref.html
 
 == multi-background-clip-content-border.html multi-background-clip-content-border.html
 
-fails HTTP == background-referrer.html background-referrer.html
+HTTP == background-referrer.html background-referrer.html
 
 == attachment-scroll-positioning-1.html attachment-scroll-positioning-1.html
 == attachment-local-positioning-1.html attachment-local-positioning-1.html

@@ -71,7 +71,7 @@ var gDataNotificationInfoBar = {
         if (Preferences.get("browser.preferences.useOldOrganization", false)) {
           window.openAdvancedPreferences("dataChoicesTab");
         } else {
-          window.openPreferences("paneAdvanced");
+          window.openPreferences("advanced-reports");
         }
       },
     }];

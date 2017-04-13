@@ -385,11 +385,17 @@ pref("media.gmp.storage.version.expected", 1);
 
 // Filter what triggers user notifications.
 // See DecoderDoctorDocumentWatcher::ReportAnalysis for details.
+#ifdef NIGHTLY_BUILD
+pref("media.decoder-doctor.notifications-allowed", "MediaWMFNeeded,MediaWidevineNoWMF,MediaCannotInitializePulseAudio,MediaCannotPlayNoDecoders,MediaUnsupportedLibavcodec,MediaDecodeError");
+#else
 pref("media.decoder-doctor.notifications-allowed", "MediaWMFNeeded,MediaWidevineNoWMF,MediaCannotInitializePulseAudio,MediaCannotPlayNoDecoders,MediaUnsupportedLibavcodec");
+#endif
 // Whether we report partial failures.
 pref("media.decoder-doctor.verbose", false);
 // Whether DD should consider WMF-disabled a WMF failure, useful for testing.
 pref("media.decoder-doctor.wmf-disabled-is-failure", false);
+// URL to report decode issues
+pref("media.decoder-doctor.new-issue-endpoint", "https://webcompat.com/issues/new");
 
 // Whether to suspend decoding of videos in background tabs.
 #ifdef NIGHTLY_BUILD
@@ -599,6 +605,9 @@ pref("media.decoder.recycle.enabled", false);
 // Log level for cubeb, the audio input/output system. Valid values are
 // "verbose", "normal" and "" (log disabled).
 pref("media.cubeb.log_level", "");
+
+// Set to true to force demux/decode warnings to be treated as errors.
+pref("media.playback.warnings-as-errors", false);
 
 // Weather we allow AMD switchable graphics
 pref("layers.amd-switchable-gfx.enabled", true);
@@ -5059,7 +5068,12 @@ pref("dom.vr.oculus.enabled", true);
 // OSVR device
 pref("dom.vr.osvr.enabled", false);
 // OpenVR device
+#ifdef XP_WIN
+pref("dom.vr.openvr.enabled", true);
+#else
+// See Bug 1310663 (Linux) and Bug 1310665 (macOS)
 pref("dom.vr.openvr.enabled", false);
+#endif
 // Pose prediction reduces latency effects by returning future predicted HMD
 // poses to callers of the WebVR API.  This currently only has an effect for
 // Oculus Rift on SDK 0.8 or greater.
@@ -5069,8 +5083,6 @@ pref("dom.vr.poseprediction.enabled", true);
 // this requirement to be disabled for special cases such as during automated
 // tests or in a headless kiosk system.
 pref("dom.vr.require-gesture", true);
-// path to openvr DLL
-pref("gfx.vr.openvr-runtime", "");
 // path to OSVR DLLs
 pref("gfx.vr.osvr.utilLibPath", "");
 pref("gfx.vr.osvr.commonLibPath", "");

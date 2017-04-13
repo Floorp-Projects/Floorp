@@ -96,13 +96,15 @@ function transformPacket(packet) {
           break;
         case "group":
           type = MESSAGE_TYPE.START_GROUP;
-          parameters = null;
-          messageText = message.groupName || l10n.getStr("noGroupLabel");
+          if (parameters.length === 0) {
+            parameters = [l10n.getStr("noGroupLabel")];
+          }
           break;
         case "groupCollapsed":
           type = MESSAGE_TYPE.START_GROUP_COLLAPSED;
-          parameters = null;
-          messageText = message.groupName || l10n.getStr("noGroupLabel");
+          if (parameters.length === 0) {
+            parameters = [l10n.getStr("noGroupLabel")];
+          }
           break;
         case "groupEnd":
           type = MESSAGE_TYPE.END_GROUP;

@@ -233,7 +233,7 @@ ${helpers.predefined_type(
 
 <%helpers:longhand name="initial-letter"
                    animation_type="none"
-                   products="none"
+                   products="gecko"
                    spec="https://drafts.csswg.org/css-inline/#sizing-drop-initials">
     use std::fmt;
     use style_traits::ToCss;
@@ -288,7 +288,7 @@ ${helpers.predefined_type(
             return Ok(SpecifiedValue::Normal);
         }
 
-        let size = try!(Number::parse_at_least_one(input));
+        let size = try!(Number::parse_at_least_one(context, input));
 
         match input.try(|input| Integer::parse(context, input)) {
             Ok(number) => {

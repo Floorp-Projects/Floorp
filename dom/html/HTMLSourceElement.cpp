@@ -9,11 +9,11 @@
 
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/ResponsiveImageSelector.h"
+#include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/MediaSource.h"
 
 #include "nsGkAtoms.h"
 
-#include "nsMediaList.h"
 #include "nsCSSParser.h"
 #include "nsHostObjectProtocolHandler.h"
 
@@ -57,7 +57,7 @@ HTMLSourceElement::MatchesCurrentMedia()
   if (mMediaList) {
     nsIPresShell* presShell = OwnerDoc()->GetShell();
     nsPresContext* pctx = presShell ? presShell->GetPresContext() : nullptr;
-    return pctx && mMediaList->Matches(pctx, nullptr);
+    return pctx && mMediaList->Matches(*pctx);
   }
 
   // No media specified
@@ -75,11 +75,9 @@ HTMLSourceElement::WouldMatchMediaForDocument(const nsAString& aMedia,
   nsIPresShell* presShell = aDocument->GetShell();
   nsPresContext* pctx = presShell ? presShell->GetPresContext() : nullptr;
 
-  nsCSSParser cssParser;
-  RefPtr<nsMediaList> mediaList = new nsMediaList();
-  cssParser.ParseMediaList(aMedia, nullptr, 0, mediaList);
-
-  return pctx && mediaList->Matches(pctx, nullptr);
+  RefPtr<MediaList> mediaList =
+    MediaList::Create(aDocument->GetStyleBackendType(), aMedia);
+  return pctx && mediaList->Matches(*pctx, nullptr);
 }
 
 void
@@ -92,8 +90,7 @@ HTMLSourceElement::UpdateMediaList(const nsAttrValue* aValue)
   }
 
   nsCSSParser cssParser;
-  mMediaList = new nsMediaList();
-  cssParser.ParseMediaList(mediaStr, nullptr, 0, mMediaList);
+  mMediaList = MediaList::Create(OwnerDoc()->GetStyleBackendType(), mediaStr);
 }
 
 nsresult

@@ -17,9 +17,11 @@ Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
-Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/AppConstants.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySend",
+                                  "resource://gre/modules/TelemetrySend.jsm");
 
 const Utils = TelemetryUtils;
 
@@ -908,23 +910,6 @@ var Impl = {
     return ret;
   },
 
-  getAddonHistograms: function getAddonHistograms() {
-    let ahs = Telemetry.addonHistogramSnapshots;
-    let ret = {};
-
-    for (let addonName in ahs) {
-      let addonHistograms = ahs[addonName];
-      let packedHistograms = {};
-      for (let name in addonHistograms) {
-        packedHistograms[name] = this.packHistogram(addonHistograms[name]);
-      }
-      if (Object.keys(packedHistograms).length != 0)
-        ret[addonName] = packedHistograms;
-    }
-
-    return ret;
-  },
-
   getKeyedHistograms(subsession, clearSubsession) {
     let registered =
       Telemetry.registeredKeyedHistograms(this.getDatasetType(), []);
@@ -1330,12 +1315,6 @@ var Impl = {
       payloadObj.slowSQL = protect(() => Telemetry.slowSQL);
       payloadObj.fileIOReports = protect(() => Telemetry.fileIOReports);
       payloadObj.lateWrites = protect(() => Telemetry.lateWrites);
-
-      // Add the addon histograms if they are present
-      let addonHistograms = protect(() => this.getAddonHistograms());
-      if (addonHistograms && Object.keys(addonHistograms).length > 0) {
-        payloadObj.addonHistograms = addonHistograms;
-      }
 
       payloadObj.addonDetails = protect(() => AddonManagerPrivate.getTelemetryDetails());
 
