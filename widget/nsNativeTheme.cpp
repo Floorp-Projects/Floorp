@@ -647,6 +647,9 @@ nsNativeTheme::QueueAnimatedContentForRefresh(nsIContent* aContent,
       NS_ENSURE_SUCCESS(rv, false);
     }
 
+    if (XRE_IsContentProcess() && NS_IsMainThread()) {
+      mAnimatedContentTimer->SetTarget(aContent->OwnerDoc()->EventTargetFor(TaskCategory::Other));
+    }
     rv = mAnimatedContentTimer->InitWithCallback(this, timeout,
                                                  nsITimer::TYPE_ONE_SHOT);
     NS_ENSURE_SUCCESS(rv, false);
