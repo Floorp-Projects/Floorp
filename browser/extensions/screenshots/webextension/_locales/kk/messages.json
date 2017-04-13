@@ -1,0 +1,85 @@
+{
+  "addonDescription": {
+    "message": "Интернеттен скриншоттарды түсіріп, оларды уақытша немесе тұрақты түрде сақтаңыз."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Скриншотты түсіру"
+  },
+  "myShotsLink": {
+    "message": "Менің скриншоттарым"
+  },
+  "screenshotInstructions": {
+    "message": "Аймақты таңдау үшін бетте шертіңіз. Бас тарту үшін ESC басыңыз."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Сақтау"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Көрінетінді сақтау"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Толық парақты сақтау"
+  },
+  "cancelScreenshot": {
+    "message": "Бас тарту"
+  },
+  "downloadScreenshot": {
+    "message": "Жүктеп алу"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Сілтеме көшірілді"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Сіздің скриншотыңызға сілтеме алмасу буферіне көшірілді. Кірістіру үшін $META_KEY$-V басыңыз.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Жұмыс істемейді."
+  },
+  "requestErrorDetails": {
+    "message": "Кешіріңіз! Сіздің скриншотыңызды сақтай алмадық. Кейінірек қайталап көріңіз."
+  },
+  "connectionErrorTitle": {
+    "message": "Скриншоттарыңызға байланыса алмадық."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Бұл беттің скриншотын түсіре алмаймыз."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Бұл қалыпты веб беті емес, сондықтан оның скриншотын түсіру мүмкін емес."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Firefox скриншоттары бетінің скриншотын түсіру мүмкін емес!"
+  },
+  "genericErrorTitle": {
+    "message": "Қап! Firefox скриншоттары жасамай қалған сияқты."
+  },
+  "tourBodyOne": {
+    "message": "Firefox ішінен скриншоттарды түсіру, сақтау және олармен бөлісу."
+  },
+  "tourHeaderTwo": {
+    "message": "Тек керек нәрсені түсіріңіз"
+  },
+  "tourHeaderThree": {
+    "message": "Өзіңізге керек түрде"
+  },
+  "tourSkip": {
+    "message": "Аттап кету"
+  },
+  "tourNext": {
+    "message": "Келесі слайд"
+  },
+  "tourPrevious": {
+    "message": "Алдыңғы слайд"
+  },
+  "tourDone": {
+    "message": "Дайын"
+  }
+}

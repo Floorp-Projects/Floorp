@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Take clips and screenshots from the Web and save them temporarily or permanently."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Take a Screenshot"
+  },
+  "myShotsLink": {
+    "message": "My Shots"
+  },
+  "screenshotInstructions": {
+    "message": "Drag or click on the page to select a region. Press ESC to cancel."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Save"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Save visible"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Save full page"
+  },
+  "cancelScreenshot": {
+    "message": "Cancel"
+  },
+  "downloadScreenshot": {
+    "message": "Download"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Link Copied"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "The link to your shot has been copied to the clipboard. Press $META_KEY$-V to paste.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Out of order."
+  },
+  "requestErrorDetails": {
+    "message": "Sorry! We couldn’t save your shot. Please try again later."
+  },
+  "connectionErrorTitle": {
+    "message": "We can’t connect to your screenshots."
+  },
+  "connectionErrorDetails": {
+    "message": "Please check your Internet connection. If you are able to connect to the Internet, there may be a temporary problem with the Firefox Screenshots service."
+  },
+  "loginErrorDetails": {
+    "message": "We couldn’t save your shot because there is a problem with the Firefox Screenshots service. Please try again later."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "We can’t screenshot this page."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "This isn’t a standard Web page, so you can’t take a screenshot of it."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "You can’t take a shot of a Firefox Screenshots page!"
+  },
+  "genericErrorTitle": {
+    "message": "Whoa! Firefox Screenshots went haywire."
+  },
+  "genericErrorDetails": {
+    "message": "We’re not sure what just happened. Care to try again or take a shot of a different page?"
+  },
+  "tourBodyOne": {
+    "message": "Take, save, and share screenshots without leaving Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Capture Just What You Want"
+  },
+  "tourBodyTwo": {
+    "message": "Click and drag to capture just a portion of a page. You can also hover to highlight your selection."
+  },
+  "tourHeaderThree": {
+    "message": "As You Like it"
+  },
+  "tourBodyThree": {
+    "message": "Save your cropped shots to the Web for easier sharing, or download them to your computer. You also can click on the My Shots button to find all the shots you’ve taken."
+  },
+  "tourHeaderFour": {
+    "message": "Capture Windows or Entire Pages"
+  },
+  "tourBodyFour": {
+    "message": "Select the buttons in the upper right to capture the visible area in the window or to capture an entire page."
+  },
+  "tourSkip": {
+    "message": "SKIP"
+  },
+  "tourNext": {
+    "message": "Next Slide"
+  },
+  "tourPrevious": {
+    "message": "Previous Slide"
+  },
+  "tourDone": {
+    "message": "Done"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "By using Firefox Screenshots, you agree to the Screenshots $TERMSANDPRIVACYNOTICETERMSLINK$ and $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Terms"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Privacy Notice"
+  }
+}

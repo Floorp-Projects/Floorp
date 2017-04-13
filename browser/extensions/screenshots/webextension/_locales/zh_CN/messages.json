@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "剪辑和拍摄 Web 截图，临时或永久保存它们。"
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "拍摄截图"
+  },
+  "myShotsLink": {
+    "message": "我的截图"
+  },
+  "screenshotInstructions": {
+    "message": "在页面上拖动或点击以选择范围。按 ESC 取消。"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "保存"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "保存可见范围"
+  },
+  "saveScreenshotFullPage": {
+    "message": "保存整个页面"
+  },
+  "cancelScreenshot": {
+    "message": "取消"
+  },
+  "downloadScreenshot": {
+    "message": "下载"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "链接已复制"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "您的截图的链接已复制到剪贴板。按 $META_KEY$-V 粘贴。",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "出故障了。"
+  },
+  "requestErrorDetails": {
+    "message": "很抱歉，我们无法为您保存截图。请稍后再试。"
+  },
+  "connectionErrorTitle": {
+    "message": "我们无法连接到您的截图。"
+  },
+  "connectionErrorDetails": {
+    "message": "请检查您的互联网连接。如果您正常连接到互联网，Firefox Screenshots 的服务器可能遇到了问题。"
+  },
+  "loginErrorDetails": {
+    "message": "Firefox Screenshots 服务遇到问题，我们现在无法保存您的截图。请稍后再试。"
+  },
+  "unshootablePageErrorTitle": {
+    "message": "我们无法截图此页面。"
+  },
+  "unshootablePageErrorDetails": {
+    "message": "这不是一个标准的网页，所以无法截图。"
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "您不能拍摄 Firefox Screenshots 的页面！"
+  },
+  "genericErrorTitle": {
+    "message": "哎呀，Firefox Screenshots 遇到问题。"
+  },
+  "genericErrorDetails": {
+    "message": "我们不确定发生了什么。您可以再试一次或者试试另一个页面。"
+  },
+  "tourBodyOne": {
+    "message": "拍摄、保存和分享屏幕截图，无需 Firefox 以外的工具。"
+  },
+  "tourHeaderTwo": {
+    "message": "只拍摄想要的部分"
+  },
+  "tourBodyTwo": {
+    "message": "单击并拖动以只拍摄页面某个区域。您也可以悬停以高亮您的选择范围。"
+  },
+  "tourHeaderThree": {
+    "message": "做你所想"
+  },
+  "tourBodyThree": {
+    "message": "将您裁剪后的截图保存到网上以便共享，或者下载到您的计算机。您也可以点击“我的截图”按钮找到您拍摄的所有截图。"
+  },
+  "tourHeaderFour": {
+    "message": "拍摄窗口或整个页面"
+  },
+  "tourBodyFour": {
+    "message": "选择右上角的按钮可以拍摄窗口中的可见区域或者整个页面。"
+  },
+  "tourSkip": {
+    "message": "跳过"
+  },
+  "tourNext": {
+    "message": "下一页"
+  },
+  "tourPrevious": {
+    "message": "上一页"
+  },
+  "tourDone": {
+    "message": "完成"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "使用 Firefox Screenshots 即代表您同意 Screenshots 的$TERMSANDPRIVACYNOTICETERMSLINK$和$TERMSANDPRIVACYNOTICEPRIVACYLINK$。",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "条款"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "隐私声明"
+  }
+}

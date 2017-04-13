@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Πραγματοποιήστε λήψη στιγμιοτύπων από το Διαδίκτυο και αποθηκεύστε τα προσωρινά ή μόνιμα."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Λήψη στιγμιότυπου"
+  },
+  "myShotsLink": {
+    "message": "Οι λήψεις μου"
+  },
+  "screenshotInstructions": {
+    "message": "Σύρετε ή κάντε κλικ στη σελίδα για να επιλέξετε μια περιοχή. Για ακύρωση πιέστε το πλήκτρο ESC."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Αποθήκευση"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Αποθήκευση ορατής περιοχής"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Αποθήκευση ολόκληρης σελίδας"
+  },
+  "cancelScreenshot": {
+    "message": "Ακύρωση"
+  },
+  "downloadScreenshot": {
+    "message": "Λήψη"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Αντιγραφή Συνδέσμου"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Ο σύνδεσμος προς την λήψη σας αντιγράφηκε στο πρόχειρο. Πατήστε $META_KEY$-V για επικόλληση.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Εκτός λειτουργίας."
+  },
+  "requestErrorDetails": {
+    "message": "Συγνώμη! Δεν μπορέσαμε να αποθηκεύουμε την λήψη σας. Προσπαθήστε ξανά αργότερα."
+  },
+  "connectionErrorTitle": {
+    "message": "Δεν μπορούμε να συνδεθούμε στις λήψεις σας."
+  },
+  "connectionErrorDetails": {
+    "message": "Ελέγξτε τη σύνδεσή σας στο Internet. Εάν είστε σε θέση να συνδεθείτε στο Internet, ίσως υπάρχει ένα προσωρινό πρόβλημα με την υπηρεσία Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Δεν μπορέσαμε να αποθηκεύσουμε την λήψη σας γιατί υπάρχει κάποιο πρόβλημα με την υπηρεσία Firefox Screenshots. Προσπαθήστε ξανά αργότερα."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Δεν μπορούμε να λάβουμε στιγμιότυπο αυτής της σελίδας."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Δεν μπορεί να γίνει λήψη στιγμιότυπου καθώς αυτή δεν είναι μια τυπική σελίδα του Διαδικτύου."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Δεν μπορεί να γίνει λήψη ενός στιγμιότυπου της σελίδας Firefox Screenshots!"
+  },
+  "genericErrorTitle": {
+    "message": "Ωχ! Κάτι πήγε στραβά στην υπηρεσία Firefox Screenshots."
+  },
+  "genericErrorDetails": {
+    "message": "Δεν είμαστε σίγουροι για το τι ακριβώς συνέβη. Προσπαθήστε ξανά ή κάντε λήψη σε μια άλλη σελίδα."
+  },
+  "tourBodyOne": {
+    "message": "Λήψη, αποθήκευση και διαμοιρασμός στιγμιοτύπων μέσα από το Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Καταγράψτε αυτό που Εσείς Επιθυμείτε"
+  },
+  "tourBodyTwo": {
+    "message": "Κάντε κλικ και σύρετε για την καταγραφή ενός τμήματος της σελίδας. Μπορείτε να επισημάνετε την επιλογή σας μετακινώντας τον ποντίκι σας επάνω της."
+  },
+  "tourHeaderThree": {
+    "message": "Ακριβώς όπως το θέλετε"
+  },
+  "tourBodyThree": {
+    "message": "Αποθηκεύστε της λήψεις σας στο Διαδίκτυο για ευκολότερο διαμοιρασμό, η λήψη τους στον υπολογιστή σας. Μπορείτε να βρείτε όλες τις λήψεις σας πατώντας στο κουμπί «Οι λήψεις μου»."
+  },
+  "tourHeaderFour": {
+    "message": "Καταγράψτε Παράθυρα ή Ολόκληρες Σελίδες"
+  },
+  "tourBodyFour": {
+    "message": "Επιλέξτε τα κουμπιά επάνω δεξιά για να καταγράψετε την ορατή περιοχή του παραθύρου ή να καταγράψετε μια ολόκληρη σελίδα."
+  },
+  "tourSkip": {
+    "message": "Παράβλεψη"
+  },
+  "tourNext": {
+    "message": "Επόμενη διαφάνεια"
+  },
+  "tourPrevious": {
+    "message": "Προηγούμενη διαφάνεια"
+  },
+  "tourDone": {
+    "message": "Τέλος"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Χρησιμοποιώντας το Firefox Screenshots, συμφωνείτε με τους $TERMSANDPRIVACYNOTICETERMSLINK$ Στιγμιότυπων και τη $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Όρους"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Σημείωση απορρήτου"
+  }
+}
