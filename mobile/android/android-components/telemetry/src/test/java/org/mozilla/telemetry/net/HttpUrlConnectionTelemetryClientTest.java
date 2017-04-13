@@ -88,11 +88,10 @@ public class HttpUrlConnectionTelemetryClientTest {
     }
 
     @Test
-    public void testReturnsFalseForNon200ResponseCodes() throws IOException {
+    public void testReturnsFalseFor5XXResponseCodes() throws IOException {
         final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
 
-        // Test everything between 201 and 527 - even though not all of them are valid response codes
-        for (int responseCode = 201; responseCode <= 527; responseCode++) {
+        for (int responseCode = 500; responseCode <= 527; responseCode++) {
             final HttpURLConnection connection = mock(HttpURLConnection.class);
             doReturn(responseCode).when(connection).getResponseCode();
             doReturn(mock(OutputStream.class)).when(connection).getOutputStream();
@@ -101,6 +100,38 @@ public class HttpUrlConnectionTelemetryClientTest {
             doReturn(connection).when(client).openConnectionConnection(anyString(), anyString());
 
             assertFalse(client.uploadPing(configuration, TEST_PATH, TEST_PING));
+        }
+    }
+
+    @Test
+    public void testReturnsTrueFor2XXResponseCodes() throws IOException {
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
+
+        for (int responseCode = 200; responseCode <= 226; responseCode++) {
+            final HttpURLConnection connection = mock(HttpURLConnection.class);
+            doReturn(responseCode).when(connection).getResponseCode();
+            doReturn(mock(OutputStream.class)).when(connection).getOutputStream();
+
+            final HttpURLConnectionTelemetryClient client = spy(new HttpURLConnectionTelemetryClient());
+            doReturn(connection).when(client).openConnectionConnection(anyString(), anyString());
+
+            assertTrue(client.uploadPing(configuration, TEST_PATH, TEST_PING));
+        }
+    }
+
+    @Test
+    public void testReturnsTrueFor4XXResponseCodes() throws IOException {
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
+
+        for (int responseCode = 400; responseCode <= 451; responseCode++) {
+            final HttpURLConnection connection = mock(HttpURLConnection.class);
+            doReturn(responseCode).when(connection).getResponseCode();
+            doReturn(mock(OutputStream.class)).when(connection).getOutputStream();
+
+            final HttpURLConnectionTelemetryClient client = spy(new HttpURLConnectionTelemetryClient());
+            doReturn(connection).when(client).openConnectionConnection(anyString(), anyString());
+
+            assertTrue(client.uploadPing(configuration, TEST_PATH, TEST_PING));
         }
     }
 

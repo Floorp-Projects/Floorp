@@ -40,7 +40,34 @@ public class HttpURLConnectionTelemetryClient implements TelemetryClient {
 
             Log.d(LOG_TAG, "Ping upload: " + responseCode);
 
-            return responseCode == 200;
+            if (responseCode >= 200 && responseCode <= 299) {
+                // Known success errors (2xx):
+                // 200 - OK. Request accepted into the pipeline.
+
+                // We treat all success codes as successful upload even though we only expect 200.
+                return true;
+            } else if (responseCode >= 400 && responseCode <= 499) {
+                // Known client (4xx) errors:
+                // 404 - not found - POST/PUT to an unknown namespace
+                // 405 - wrong request type (anything other than POST/PUT)
+                // 411 - missing content-length header
+                // 413 - request body too large (Note that if we have badly-behaved clients that
+                //       retry on 4XX, we should send back 202 on body/path too long).
+                // 414 - request path too long (See above)
+
+                // Something our client did is not correct. It's unlikely that the client is going
+                // to recover from this by re-trying again, so we just log and error and report a
+                // successful upload to the service.
+                Log.e(LOG_TAG, "Server returned client error code: " + responseCode);
+                return true;
+            } else {
+                // Known other errors:
+                // 500 - internal error
+
+                // For all other errors we log a warning an try again at a later time.
+                Log.w(LOG_TAG, "Server returned response code: " + responseCode);
+                return false;
+            }
         } catch (MalformedURLException e) {
             // There's nothing we can do to recover from this here. So let's just log an error and
             // notify the service that this job has been completed - even though we didn't upload
