@@ -9,21 +9,14 @@
 namespace mozilla {
 namespace layers {
 
-LayerPolygon PopFront(std::deque<LayerPolygon>& aLayers)
-{
-  LayerPolygon layer = Move(aLayers.front());
-  aLayers.pop_front();
-  return layer;
-}
-
 void
-BSPTree::BuildDrawOrder(const UniquePtr<BSPTreeNode>& aNode,
+BSPTree::BuildDrawOrder(BSPTreeNode* aNode,
                         nsTArray<LayerPolygon>& aLayers) const
 {
   const gfx::Point4D& normal = aNode->First().GetNormal();
 
-  UniquePtr<BSPTreeNode> *front = &aNode->front;
-  UniquePtr<BSPTreeNode> *back = &aNode->back;
+  BSPTreeNode* front = aNode->front;
+  BSPTreeNode* back = aNode->back;
 
   // Since the goal is to return the draw order from back to front, we reverse
   // the traversal order if the current polygon is facing towards the camera.
@@ -33,8 +26,8 @@ BSPTree::BuildDrawOrder(const UniquePtr<BSPTreeNode>& aNode,
     std::swap(front, back);
   }
 
-  if (*front) {
-    BuildDrawOrder(*front, aLayers);
+  if (front) {
+    BuildDrawOrder(front, aLayers);
   }
 
   for (LayerPolygon& layer : aNode->layers) {
@@ -45,27 +38,38 @@ BSPTree::BuildDrawOrder(const UniquePtr<BSPTreeNode>& aNode,
     }
   }
 
-  if (*back) {
-    BuildDrawOrder(*back, aLayers);
+  if (back) {
+    BuildDrawOrder(back, aLayers);
   }
 }
 
 void
-BSPTree::BuildTree(UniquePtr<BSPTreeNode>& aRoot,
-                   std::deque<LayerPolygon>& aLayers)
+BSPTree::BuildTree(BSPTreeNode* aRoot,
+                   std::list<LayerPolygon>& aLayers)
 {
+  MOZ_ASSERT(!aLayers.empty());
+
+  aRoot->layers.push_back(Move(aLayers.front()));
+  aLayers.pop_front();
+
   if (aLayers.empty()) {
     return;
   }
 
   const gfx::Polygon& plane = aRoot->First();
-  std::deque<LayerPolygon> backLayers, frontLayers;
+  MOZ_ASSERT(!plane.IsEmpty());
 
+  const gfx::Point4D& planeNormal = plane.GetNormal();
+  const gfx::Point4D& planePoint = plane.GetPoints()[0];
+
+  std::list<LayerPolygon> backLayers, frontLayers;
   for (LayerPolygon& layerPolygon : aLayers) {
-    const Maybe<gfx::Polygon>& geometry = layerPolygon.geometry;
+    const nsTArray<gfx::Point4D>& geometry = layerPolygon.geometry->GetPoints();
 
+    // Calculate the plane-point distances for the polygon classification.
     size_t pos = 0, neg = 0;
-    nsTArray<float> dots = geometry->CalculateDotProducts(plane, pos, neg);
+    nsTArray<float> distances =
+      CalculatePointPlaneDistances(geometry, planeNormal, planePoint, pos, neg);
 
     // Back polygon
     if (pos == 0 && neg > 0) {
@@ -82,28 +86,31 @@ BSPTree::BuildTree(UniquePtr<BSPTreeNode>& aRoot,
     // Polygon intersects with the splitting plane.
     else if (pos > 0 && neg > 0) {
       nsTArray<gfx::Point4D> backPoints, frontPoints;
-      geometry->SplitPolygon(plane.GetNormal(), dots, backPoints, frontPoints);
+      // Clip the polygon against the plane. We reuse the previously calculated
+      // distances to find the plane-edge intersections.
+      ClipPointsWithPlane(geometry, planeNormal, distances,
+                          backPoints, frontPoints);
 
-      const gfx::Point4D& normal = geometry->GetNormal();
-      Layer *layer = layerPolygon.layer;
+      const gfx::Point4D& normal = layerPolygon.geometry->GetNormal();
+      Layer* layer = layerPolygon.layer;
 
       if (backPoints.Length() >= 3) {
-        backLayers.push_back(LayerPolygon(layer, Move(backPoints), normal));
+        backLayers.emplace_back(layer, Move(backPoints), normal);
       }
 
       if (frontPoints.Length() >= 3) {
-        frontLayers.push_back(LayerPolygon(layer, Move(frontPoints), normal));
+        frontLayers.emplace_back(layer, Move(frontPoints), normal);
       }
     }
   }
 
   if (!backLayers.empty()) {
-    aRoot->back.reset(new BSPTreeNode(PopFront(backLayers)));
+    aRoot->back = new (mPool) BSPTreeNode(mListPointers);
     BuildTree(aRoot->back, backLayers);
   }
 
   if (!frontLayers.empty()) {
-    aRoot->front.reset(new BSPTreeNode(PopFront(frontLayers)));
+    aRoot->front = new (mPool) BSPTreeNode(mListPointers);
     BuildTree(aRoot->front, frontLayers);
   }
 }

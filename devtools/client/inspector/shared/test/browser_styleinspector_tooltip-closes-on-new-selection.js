@@ -25,7 +25,7 @@ add_task(function* () {
 function* testRuleView(ruleView, inspector) {
   info("Showing the tooltip");
 
-  let tooltip = ruleView.tooltips.previewTooltip;
+  let tooltip = ruleView.tooltips.getTooltip("previewTooltip");
   let tooltipContent = ruleView.styleDocument.createElementNS(XHTML_NS, "div");
   yield tooltip.setContent(tooltipContent, {width: 100, height: 30});
 
@@ -50,7 +50,7 @@ function* testRuleView(ruleView, inspector) {
 function* testComputedView(computedView, inspector) {
   info("Showing the tooltip");
 
-  let tooltip = computedView.tooltips.previewTooltip;
+  let tooltip = computedView.tooltips.getTooltip("previewTooltip");
   let tooltipContent = computedView.styleDocument.createElementNS(XHTML_NS, "div");
   yield tooltip.setContent(tooltipContent, {width: 100, height: 30});
 

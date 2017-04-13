@@ -51,13 +51,13 @@ function* performChecks(view, propertyValue) {
   }
 
   let links = propertyValue.querySelectorAll(".theme-link");
-  let panel = view.tooltips.previewTooltip.panel;
+  let panel = view.tooltips.getTooltip("previewTooltip").panel;
 
   info("Checking first link tooltip");
-  yield assertHoverTooltipOn(view.tooltips.previewTooltip, links[0]);
+  yield assertHoverTooltipOn(view.tooltips.getTooltip("previewTooltip"), links[0]);
   checkTooltip(panel, YELLOW_DOT);
 
   info("Checking second link tooltip");
-  yield assertHoverTooltipOn(view.tooltips.previewTooltip, links[1]);
+  yield assertHoverTooltipOn(view.tooltips.getTooltip("previewTooltip"), links[1]);
   checkTooltip(panel, BLUE_DOT);
 }

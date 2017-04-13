@@ -27,7 +27,7 @@ add_task(function* () {
 });
 
 function* testPressingEnterCommitsChanges(swatch, ruleView) {
-  let bezierTooltip = ruleView.tooltips.cubicBezier;
+  let bezierTooltip = ruleView.tooltips.getTooltip("cubicBezier");
 
   info("Showing the tooltip");
   let onBezierWidgetReady = bezierTooltip.once("ready");

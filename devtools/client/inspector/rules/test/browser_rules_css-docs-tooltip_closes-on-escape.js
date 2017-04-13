@@ -38,13 +38,14 @@ add_task(function* () {
   let {nameSpan} = getRuleViewProperty(view, "element", PROPERTYNAME);
 
   info("Showing the MDN docs tooltip");
-  let onShown = view.tooltips.cssDocs.tooltip.once("shown");
-  view.tooltips.cssDocs.show(nameSpan, PROPERTYNAME);
+  let cssDocs = view.tooltips.getTooltip("cssDocs");
+  let onShown = cssDocs.tooltip.once("shown");
+  cssDocs.show(nameSpan, PROPERTYNAME);
   yield onShown;
   ok(true, "The MDN docs tooltip was shown");
 
   info("Simulate pressing the 'Escape' key");
-  let onHidden = view.tooltips.cssDocs.tooltip.once("hidden");
+  let onHidden = cssDocs.tooltip.once("hidden");
   EventUtils.sendKey("escape");
   yield onHidden;
   ok(true, "The MDN docs tooltip was hidden on pressing 'escape'");

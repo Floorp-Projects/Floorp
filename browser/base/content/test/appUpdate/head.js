@@ -8,6 +8,9 @@ const BIN_SUFFIX = (IS_WIN ? ".exe" : "");
 const FILE_UPDATER_BIN = "updater" + (IS_MACOSX ? ".app" : BIN_SUFFIX);
 const FILE_UPDATER_BIN_BAK = FILE_UPDATER_BIN + ".bak";
 
+const PREF_APP_UPDATE_INTERVAL = "app.update.interval";
+const PREF_APP_UPDATE_LASTUPDATETIME = "app.update.lastUpdateTime.background-update-timer";
+
 let gRembemberedPrefs = [];
 
 const DATA_URI_SPEC =  "chrome://mochitests/content/browser/browser/base/content/test/appUpdate/";
@@ -67,6 +70,18 @@ function cleanUpUpdates() {
 }
 
 /**
+ * Prevent nsIUpdateTimerManager from notifying nsIApplicationUpdateService
+ * to check for updates by setting the app update last update time to the
+ * current time minus one minute in seconds and the interval time to 12 hours
+ * in seconds.
+ */
+function setUpdateTimerPrefs() {
+  let now = Math.round(Date.now() / 1000) - 60;
+  Services.prefs.setIntPref(PREF_APP_UPDATE_LASTUPDATETIME, now);
+  Services.prefs.setIntPref(PREF_APP_UPDATE_INTERVAL, 43200);
+}
+
+/**
  * Runs a typical update test. Will set various common prefs for using the
  * updater doorhanger, runs the provided list of steps, and makes sure
  * everything is cleaned up afterwards.
@@ -89,6 +104,8 @@ function runUpdateTest(updateParams, checkAttempts, steps) {
       gMenuButtonUpdateBadge.init();
       cleanUpUpdates();
     });
+
+    setUpdateTimerPrefs();
     yield SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DOWNLOADPROMPTATTEMPTS, 0],
@@ -142,6 +159,7 @@ function runUpdateProcessingTest(updates, steps) {
       cleanUpUpdates();
     });
 
+    setUpdateTimerPrefs();
     SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DOWNLOADPROMPTATTEMPTS, 0],

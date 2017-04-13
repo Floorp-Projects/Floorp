@@ -16,7 +16,7 @@ add_task(function* () {
   let swatch = getRuleViewProperty(view, "body", "filter").valueSpan
     .querySelector(".ruleview-filterswatch");
 
-  let filterTooltip = view.tooltips.filterEditor;
+  let filterTooltip = view.tooltips.getTooltip("filterEditor");
   // Clicking on a cssfilter swatch sets the current filter value in the tooltip
   // which, in turn, makes the FilterWidget emit an "updated" event that causes
   // the rule-view to refresh. So we must wait for the ruleview-changed event.
