@@ -422,6 +422,8 @@ void InitializeServo();
 void ShutdownServo();
 
 const nsMediaFeature* Gecko_GetMediaFeatures();
+nsCSSKeyword Gecko_LookupCSSKeyword(const uint8_t* string, uint32_t len);
+const char* Gecko_CSSKeywordString(nsCSSKeyword keyword, uint32_t* len);
 
 // Font face rule
 // Creates and returns a new (already-addrefed) nsCSSFontFaceRule object.
