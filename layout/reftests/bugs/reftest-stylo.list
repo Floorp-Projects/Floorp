@@ -532,7 +532,7 @@ fails == 349695-1b.html 349695-1b.html
 fails == 359903-1.html 359903-1.html
 fails == 359903-2.html 359903-2.html
 == 360065-1.html 360065-1.html
-asserts-if(stylo,1) == 360746-1.html 360746-1.html # Bug 1341721
+== 360746-1.html 360746-1.html
 == 360757-1a.html 360757-1a.html
 == 360757-1b.html 360757-1b.html
 == 361091-1.html 361091-1.html
