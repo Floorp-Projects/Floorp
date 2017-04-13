@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Zajemajte posnetke zaslona s spleta ter jih shranite začasno ali trajno."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Zajemi posnetek zaslona"
+  },
+  "myShotsLink": {
+    "message": "Moji posnetki"
+  },
+  "screenshotInstructions": {
+    "message": "Povlecite ali kliknite na strani za izbiro območja. Pritisnite ESC za preklic."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Shrani"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Shrani vidno"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Shrani celotno stran"
+  },
+  "cancelScreenshot": {
+    "message": "Prekliči"
+  },
+  "downloadScreenshot": {
+    "message": "Prenesi"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Povezava kopirana"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Povezava do vašega posnetka zaslona je bila kopirana v odložišče. Pritisnite $META_KEY$-V, da jo prilepite.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Ne dela."
+  },
+  "requestErrorDetails": {
+    "message": "Vašega posnetka nismo uspeli shraniti. Poskusite znova kasneje."
+  },
+  "connectionErrorTitle": {
+    "message": "Ne moremo vzpostaviti povezave do vaših posnetkov."
+  },
+  "connectionErrorDetails": {
+    "message": "Preverite svojo internetno povezavo. V kolikor povezava deluje, gre morda za začasno težavo s storitvijo Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Ne moremo shraniti vašega posnetka, ker je prišlo do težave s storitvijo Firefox Screenshots. Poskusite znova kasneje."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Ne moremo zajeti posnetka te strani."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "To ni običajna spletna stran, zato ne morete zajeti njenega zaslonskega posnetka."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Posnetka strani Firefox Screenshots ni mogoče zajeti!"
+  },
+  "genericErrorTitle": {
+    "message": "Uf! Firefox Screenshots se je pokvaril."
+  },
+  "genericErrorDetails": {
+    "message": "Ne vemo točno, kaj se je pravkar zgodilo. Bi radi poskusili znova ali pa zajeli posnetek kakšne druge strani?"
+  },
+  "tourBodyOne": {
+    "message": "Zajemite, shranite in delite zaslonske posnetke, ne da bi zapustili Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Zajemite to, kar hočete"
+  },
+  "tourBodyTwo": {
+    "message": "Kliknite in povlecite, če želite zajeti samo del strani. Svojo izbiro lahko tudi poudarite, tako da preko nje povlečete miškin kazalec."
+  },
+  "tourHeaderThree": {
+    "message": "Kot vi želite"
+  },
+  "tourBodyThree": {
+    "message": "Shranite obrezane posnetke na splet za lažje deljenje ali jih prenesite na svoj računalnik. Vse zajete posnetke lahko najdete s klikom na gumb My Shots."
+  },
+  "tourHeaderFour": {
+    "message": "Zajemite okna ali celotne strani"
+  },
+  "tourBodyFour": {
+    "message": "V zgornjem desnem kotu izberite gumb za zajem vidnega območja v oknu ali celotne strani."
+  },
+  "tourSkip": {
+    "message": "Preskoči"
+  },
+  "tourNext": {
+    "message": "Naslednji diapozitiv"
+  },
+  "tourPrevious": {
+    "message": "Prejšnji diapozitiv"
+  },
+  "tourDone": {
+    "message": "Končano"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Z uporabo razširitve Firefox Screenshots se strinjate s $TERMSANDPRIVACYNOTICETERMSLINK$ in $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "pogoji"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "obvestilom o zasebnosti"
+  }
+}

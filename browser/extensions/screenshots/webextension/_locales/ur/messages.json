@@ -1,0 +1,103 @@
+{
+  "addonDescription": {
+    "message": "ویب سے کللبس یاا اسکرین شاٹیں لیں اور ان کو عارظی یا مستقل طور پر محفوظ کریں۔"
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "ایک سکرین شاٹ لیں"
+  },
+  "myShotsLink": {
+    "message": "میری شاٹس"
+  },
+  "screenshotInstructions": {
+    "message": "علاقہ منتخب کرنے کے لیئے گھسیٹیں یا صفحہ پر کلک کریں۔ منسوخ کرنے کے لیئے ESC دبائیں۔"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "محفوظ کریں"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "مرئی محفوظ کریں"
+  },
+  "saveScreenshotFullPage": {
+    "message": "پورا صفحہ محفوظ کریں"
+  },
+  "cancelScreenshot": {
+    "message": "منسوخ کریں"
+  },
+  "downloadScreenshot": {
+    "message": "ڈاؤن لوڈ"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "تبط نقل کر دیا گیا"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "آُپ کی شاٹس کا ربط و تختہ تراشہ پر نقل کر دیا گیا ہے۔ چسپاں کرنے کے لیئے $META_KEY$-V دبائِں۔",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "خراب ہے۔"
+  },
+  "requestErrorDetails": {
+    "message": "معاف کیجیئے گا! ہم آپ کی شاٹ محفوظ نہیں کر سکے۔ براہ مہربانی کچھ دیر بعد کوشش کریں۔"
+  },
+  "connectionErrorTitle": {
+    "message": "ہم آپ کی اسکرین شاٹس سے نہیں جڑ سکتے۔"
+  },
+  "connectionErrorDetails": {
+    "message": "براہ مہربانی اپنے انٹرنیٹ کنکشن کی پڑتال کریں۔ اگر آپ انٹرنیٹ سے جڑنے کے قابل ہیں، تو شاید Firefox اسکرین شاٹ خدمات کے ساتھ عارظی مسلہ ہو۔"
+  },
+  "loginErrorDetails": {
+    "message": "ہم آُپ کی شاٹ محفوظ نہیں کر سکے کیونکہ Firefox اسکرین شاٹ خدمت کے ساتھ مسلہ ہے۔ براہ مہربانی کچھ دیربعد کوشش کیجیئے۔ "
+  },
+  "unshootablePageErrorTitle": {
+    "message": "ہم اس صفحہ کی اسکرین شاٹ نہیں کر سکتے۔"
+  },
+  "unshootablePageErrorDetails": {
+    "message": "یہ ایک میعاری صفحہ نہہیں، تو آپ اسکی اسکرین شاٹ نہیں لے سکتے۔"
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "آپ Firefox اسکرین شاٹس صفحے! کی ایک شاٹ نہیں لے سکت"
+  },
+  "genericErrorDetails": {
+    "message": "ہمیں یقین نہیں کہ کیا ہوا تھا۔ خیال رکھ کر پھر کوشش کریں یا بھر مختلف صفحہ کی تصویرلیں؟"
+  },
+  "tourBodyOne": {
+    "message": "۔Firefox کو چھوڑے بغیر اسکرینشاٹس لیں، محفوظ کریں اور شیئر کریں۔"
+  },
+  "tourHeaderTwo": {
+    "message": "جو آپ چاہتے ہیں وہ گرفت کریں"
+  },
+  "tourBodyTwo": {
+    "message": "صفحہ کا ایک حصہ گرفت کرنے کے لیئے گھسیتیں اور کلک کریں.آُپ اپنے انتخاب کو نمایاں کرنے کے لیئے منڈلا سکتے ہیں۔"
+  },
+  "tourHeaderThree": {
+    "message": "جس طرح آپ کو پسند ہے"
+  },
+  "tourBodyThree": {
+    "message": "اپنے کمپیوٹڑ میں ڈائونلوڈ کرنے یا ویب پر آسانی سے شیئر کرنے کے لیئےاپنی کتری ہوئی شاٹس محفوظ کریں۔ آپ میری شاٹس کے بٹن پ کلک کر کے بھی اتمام پنی لی گئی شاٹس ڈھّونڈ سکتےہیں۔"
+  },
+  "tourHeaderFour": {
+    "message": "دریچہ ہا مکمل صفحہ گرفت کریں"
+  },
+  "tourBodyFour": {
+    "message": "دریچہ میں نظر آنے والے علاقے یا مکمل صفحہ کو گرفت کرنے کے لیئے بالائی دائیں جانب بٹن کا انتخاب کریں۔"
+  },
+  "tourSkip": {
+    "message": "اچٹیں\t "
+  },
+  "tourNext": {
+    "message": "اگلى سلائيڈ"
+  },
+  "tourPrevious": {
+    "message": "پچھلی سلائڈ"
+  },
+  "tourDone": {
+    "message": "ہوگیا"
+  }
+}

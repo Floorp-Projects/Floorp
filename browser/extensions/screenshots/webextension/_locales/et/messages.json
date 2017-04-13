@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Tee veebist klippe või ekraanipilte ning salvesta need ajutiselt või püsivalt."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Tee ekraanipilt"
+  },
+  "myShotsLink": {
+    "message": "Minu pildid"
+  },
+  "screenshotInstructions": {
+    "message": "Ala valimiseks klõpsavõi lohista lehel. Tühistamiseks vajuta ESC."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Salvesta"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Salvesta nähtav"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Salvesta terve leht"
+  },
+  "cancelScreenshot": {
+    "message": "Tühista"
+  },
+  "downloadScreenshot": {
+    "message": "Laadi alla"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Link kopeeriti"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Link sinu pildile kopeeriti lõikepuhvrisse. Asetamiseks vajuta $META_KEY$-V.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Tekkis viga."
+  },
+  "requestErrorDetails": {
+    "message": "Vabandame! Me ei suutnud su pilti salvestada. Palun proovi hiljem uuesti."
+  },
+  "connectionErrorTitle": {
+    "message": "Ühendumine sinu ekraanipiltidega ei õnnestunud."
+  },
+  "connectionErrorDetails": {
+    "message": "Palun kontrolli internetiühenduse toimimist. Kui saad internetiga ühendust, siis võib tegemist olla Firefox Screenshots teenuse ajutise probleemiga."
+  },
+  "loginErrorDetails": {
+    "message": "Ekraanipildi salvestamine ebaõnnestus Firefox Screenshots teenuse probleemi tõttu. Palun proovi hiljem uuesti."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Sellest lehest ei saa ekraanipilti teha."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Tegemist pole standardse veebilehega, seetõttu ei saa sellest ekraanipilti teha."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Firefox Screenshots lehest ei saa ekraanipilti teha!"
+  },
+  "genericErrorTitle": {
+    "message": "Oi-oi! Firefox Screenshots läks sassi."
+  },
+  "genericErrorDetails": {
+    "message": "Me pole kindlad, mis just juhtus. Proovid ehk uuesti või teed ekraanipildi mõnest teisest lehest?"
+  },
+  "tourBodyOne": {
+    "message": "Tee, salvesta ja jaga ekraanipilte Firefoxist lahkumata."
+  },
+  "tourHeaderTwo": {
+    "message": "Salvesta just seda, mida soovid"
+  },
+  "tourBodyTwo": {
+    "message": "Klõpsa ja lohista lehe osa valimiseks. Samuti võid valiku esile toomiseks kursorit selle kohal hoida."
+  },
+  "tourHeaderThree": {
+    "message": "Nii, kuidas sulle meeldib"
+  },
+  "tourBodyThree": {
+    "message": "Salvesta kärbitud pilte lihtsamaks jagamiseks veebi või laadi need alla enda arvutisse. Võid ka klõpsata Minu pildid nupul kõigi tehtud piltide vaatamiseks."
+  },
+  "tourHeaderFour": {
+    "message": "Salvesta aknaid või terveid lehti"
+  },
+  "tourBodyFour": {
+    "message": "Kasuta nuppe ülal paremal aknas nähtava ala või terve lehe salvestamiseks."
+  },
+  "tourSkip": {
+    "message": "Jäta vahele"
+  },
+  "tourNext": {
+    "message": "Järgmine slaid"
+  },
+  "tourPrevious": {
+    "message": "Eelmine slaid"
+  },
+  "tourDone": {
+    "message": "Valmis"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Firefox Screenshots kasutamisel nõustud Screenshots $TERMSANDPRIVACYNOTICETERMSLINK$ ja $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "kasutustingimuste"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "privaatsuspoliitikaga"
+  }
+}
