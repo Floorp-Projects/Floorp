@@ -42,10 +42,6 @@ if (options.isNative) {
 else {
   moduleResolve = loaderModule.resolve;
 }
-// Build the sorted path mapping structure that resolveURI requires
-var pathMapping = Object.keys(options.paths)
-                        .sort((a, b) => b.length - a.length)
-                        .map(p => [p, options.paths[p]]);
 
 // Load the scripts in the child processes
 var { getNewLoaderID } = require('../../framescript/FrameScriptManager.jsm');
@@ -326,13 +322,12 @@ function remoteRequire(id, module = null) {
   // Resolve relative to calling module if passed
   if (module)
     id = moduleResolve(id, module.id);
-  let uri = loaderModule.resolveURI(id, pathMapping);
 
   // Don't reload the same module
-  if (remoteModules.has(uri))
+  if (remoteModules.has(id))
     return;
 
-  remoteModules.add(uri);
-  processes.port.emit('sdk/remote/require', uri);
+  remoteModules.add(id);
+  processes.port.emit('sdk/remote/require', id);
 }
 exports.remoteRequire = remoteRequire;
