@@ -237,9 +237,9 @@ private:
   uint64_t mProcessedInput;
   Maybe<media::TimeUnit> mLastParsedEndTime;
 
-  void OnDemuxerInitDone(nsresult);
+  void OnDemuxerInitDone(const MediaResult& aResult);
   void OnDemuxerInitFailed(const MediaResult& aFailure);
-  void OnDemuxerResetDone(nsresult);
+  void OnDemuxerResetDone(const MediaResult& aResult);
   MozPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;
 
   void OnDemuxFailed(TrackType aTrack, const MediaResult& aError);

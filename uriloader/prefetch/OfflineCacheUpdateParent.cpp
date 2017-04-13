@@ -263,7 +263,7 @@ OfflineCacheUpdateParent::GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMo
 }
 
 NS_IMETHODIMP
-OfflineCacheUpdateParent::GetOriginAttributes(JS::MutableHandleValue aAttrs)
+OfflineCacheUpdateParent::GetScriptableOriginAttributes(JS::MutableHandleValue aAttrs)
 {
     NS_ENSURE_TRUE(mLoadingPrincipal, NS_ERROR_UNEXPECTED);
 
@@ -274,6 +274,14 @@ OfflineCacheUpdateParent::GetOriginAttributes(JS::MutableHandleValue aAttrs)
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
+}
+
+NS_IMETHODIMP_(void)
+OfflineCacheUpdateParent::GetOriginAttributes(mozilla::OriginAttributes& aAttrs)
+{
+    if (mLoadingPrincipal) {
+        aAttrs = mLoadingPrincipal->OriginAttributesRef();
+    }
 }
 
 NS_IMETHODIMP

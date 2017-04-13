@@ -79,13 +79,13 @@ fails pref(layers.single-tile.enabled,false) == fast-scrolling.html fast-scrolli
 == zero-opacity-text.html zero-opacity-text.html
 == negative-w-component.html negative-w-component.html
 
-fails == mask-invalidation-1a.html mask-invalidation-1a.html
-fails == mask-invalidation-1b.html mask-invalidation-1b.html
+== mask-invalidation-1a.html mask-invalidation-1a.html
+== mask-invalidation-1b.html mask-invalidation-1b.html
 
-fails == mask-invalidation-2a.html mask-invalidation-2a.html
-fails == mask-invalidation-2b.html mask-invalidation-2b.html
-fails == mask-invalidation-2c.html mask-invalidation-2c.html
-fails == mask-invalidation-2d.html mask-invalidation-2d.html
+== mask-invalidation-2a.html mask-invalidation-2a.html
+== mask-invalidation-2b.html mask-invalidation-2b.html
+== mask-invalidation-2c.html mask-invalidation-2c.html
+== mask-invalidation-2d.html mask-invalidation-2d.html
 
 == clip-path-invalidation-1a.html clip-path-invalidation-1a.html
 == clip-path-invalidation-1b.html clip-path-invalidation-1b.html

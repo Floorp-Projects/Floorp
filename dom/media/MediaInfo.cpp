@@ -11,10 +11,9 @@ namespace mozilla {
 const char*
 TrackTypeToStr(TrackInfo::TrackType aTrack)
 {
-  MOZ_ASSERT(aTrack == TrackInfo::kAudioTrack
-             || aTrack == TrackInfo::kVideoTrack
-             || aTrack == TrackInfo::kTextTrack);
   switch (aTrack) {
+  case TrackInfo::kUndefinedTrack:
+    return "Undefined";
   case TrackInfo::kAudioTrack:
     return "Audio";
   case TrackInfo::kVideoTrack:

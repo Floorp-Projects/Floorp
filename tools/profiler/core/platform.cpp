@@ -1016,10 +1016,8 @@ DoNativeBacktrace(PS::LockRef aLock, ProfileBuffer* aBuffer,
     reinterpret_cast<void**>(framePCs),
     reinterpret_cast<void**>(frameSPs),
     mozilla::ArrayLength(framePCs),
-    0
+    framesUsed
   };
-
-  nativeStack.count = framesUsed;
 
   MergeStacksIntoProfile(aLock, aBuffer, aSample, nativeStack);
 

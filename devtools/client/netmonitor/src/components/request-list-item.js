@@ -135,6 +135,7 @@ const RequestListItem = createClass({
         columns.get("method") && MethodColumn({ item }),
         columns.get("file") && FileColumn({ item }),
         columns.get("domain") && DomainColumn({ item, onSecurityIconClick }),
+        columns.get("remoteip") && RemoteIPColumn({ item }),
         columns.get("cause") && CauseColumn({ item, onCauseBadgeClick }),
         columns.get("type") && TypeColumn({ item }),
         columns.get("transferred") && TransferredSizeColumn({ item }),
@@ -298,6 +299,29 @@ const DomainColumn = createFactory(createClass({
           onClick: onSecurityIconClick,
         }),
         span({ className: "subitem-label requests-list-domain", title }, urlDetails.host),
+      )
+    );
+  }
+}));
+
+const RemoteIPColumn = createFactory(createClass({
+  displayName: "RemoteIP",
+
+  propTypes: {
+    item: PropTypes.object.isRequired,
+  },
+
+  shouldComponentUpdate(nextProps) {
+    return this.props.item.remoteAddress !== nextProps.item.remoteAddress;
+  },
+
+  render() {
+    const { remoteAddress, remotePort } = this.props.item;
+    let remoteSummary = remoteAddress ? `${remoteAddress}:${remotePort}` : "";
+
+    return (
+      div({ className: "requests-list-subitem requests-list-remoteip" },
+        span({ className: "subitem-label", title: remoteSummary }, remoteSummary),
       )
     );
   }

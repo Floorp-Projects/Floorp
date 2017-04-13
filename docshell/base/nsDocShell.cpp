@@ -9603,7 +9603,7 @@ public:
 
   NS_IMETHOD
   OnComplete(nsIURI* aFaviconURI, uint32_t aDataLen,
-             const uint8_t* aData, const nsACString& aMimeType) override
+             const uint8_t* aData, const nsACString& aMimeType, uint16_t aWidth) override
   {
     // Continue only if there is an associated favicon.
     if (!aFaviconURI) {
@@ -9662,7 +9662,7 @@ nsDocShell::CopyFavicon(nsIURI* aOldURI,
       new nsCopyFaviconCallback(favSvc, aNewURI,
                                 aLoadingPrincipal,
                                 aInPrivateBrowsing);
-    favSvc->GetFaviconURLForPage(aOldURI, callback);
+    favSvc->GetFaviconURLForPage(aOldURI, callback, 0);
   }
 #endif
 }
@@ -14520,7 +14520,7 @@ nsDocShell::GetIsTopLevelContentDocShell(bool* aIsTopLevelContentDocShell)
 
 // Implements nsILoadContext.originAttributes
 NS_IMETHODIMP
-nsDocShell::GetOriginAttributes(JS::MutableHandle<JS::Value> aVal)
+nsDocShell::GetScriptableOriginAttributes(JS::MutableHandle<JS::Value> aVal)
 {
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
   MOZ_ASSERT(cx);
@@ -14971,4 +14971,10 @@ nsDocShell::GetAwaitingLargeAlloc(bool* aResult)
   }
   *aResult = static_cast<TabChild*>(tabChild.get())->IsAwaitingLargeAlloc();
   return NS_OK;
+}
+
+NS_IMETHODIMP_(void)
+nsDocShell::GetOriginAttributes(mozilla::OriginAttributes& aAttrs)
+{
+  aAttrs = mOriginAttributes;
 }

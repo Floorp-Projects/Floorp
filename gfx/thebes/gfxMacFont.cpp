@@ -289,6 +289,7 @@ gfxMacFont::ShapeText(DrawTarget     *aDrawTarget,
                       uint32_t        aLength,
                       Script          aScript,
                       bool            aVertical,
+                      RoundingFlags   aRounding,
                       gfxShapedText  *aShapedText)
 {
     if (!mIsValid) {
@@ -304,7 +305,8 @@ gfxMacFont::ShapeText(DrawTarget     *aDrawTarget,
             mCoreTextShaper = MakeUnique<gfxCoreTextShaper>(this);
         }
         if (mCoreTextShaper->ShapeText(aDrawTarget, aText, aOffset, aLength,
-                                       aScript, aVertical, aShapedText)) {
+                                       aScript, aVertical, aRounding,
+                                       aShapedText)) {
             PostShapingFixup(aDrawTarget, aText, aOffset,
                              aLength, aVertical, aShapedText);
             return true;
@@ -312,7 +314,7 @@ gfxMacFont::ShapeText(DrawTarget     *aDrawTarget,
     }
 
     return gfxFont::ShapeText(aDrawTarget, aText, aOffset, aLength, aScript,
-                              aVertical, aShapedText);
+                              aVertical, aRounding, aShapedText);
 }
 
 bool

@@ -390,6 +390,27 @@ class TlsInspectorClientHelloVersionSetter : public TlsHandshakeFilter {
   uint16_t version_;
 };
 
+// Damages the last byte of a handshake message.
+class TlsLastByteDamager : public TlsHandshakeFilter {
+ public:
+  TlsLastByteDamager(uint8_t type) : type_(type) {}
+  PacketFilter::Action FilterHandshake(
+      const TlsHandshakeFilter::HandshakeHeader& header,
+      const DataBuffer& input, DataBuffer* output) override {
+    if (header.handshake_type() != type_) {
+      return KEEP;
+    }
+
+    *output = input;
+
+    output->data()[output->len() - 1]++;
+    return CHANGE;
+  }
+
+ private:
+  uint8_t type_;
+};
+
 }  // namespace nss_test
 
 #endif

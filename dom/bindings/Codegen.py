@@ -5479,7 +5479,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 do_QueryInterface(promiseGlobal.GetAsSupports());
               if (!global) {
                 promiseRv.ThrowWithCustomCleanup(NS_ERROR_UNEXPECTED);
-                promiseRv.MaybeSetPendingException(cx);
+                MOZ_ALWAYS_TRUE(promiseRv.MaybeSetPendingException(cx));
                 $*{exceptionCode}
               }
               $${declName} = Promise::Resolve(global, cx, valueToResolve,

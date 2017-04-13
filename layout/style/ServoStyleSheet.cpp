@@ -9,9 +9,11 @@
 #include "mozilla/css/Rule.h"
 #include "mozilla/StyleBackendType.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/ServoMediaList.h"
 #include "mozilla/ServoCSSRuleList.h"
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/dom/CSSRuleList.h"
+#include "mozilla/dom/MediaList.h"
 
 #include "mozAutoDocUpdate.h"
 
@@ -97,15 +99,22 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                             nsIPrincipal* aSheetPrincipal,
                             uint32_t aLineNumber)
 {
+  MOZ_ASSERT_IF(mMedia, mMedia->IsServo());
   RefPtr<URLExtraData> extraData =
     new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal);
 
   NS_ConvertUTF16toUTF8 input(aInput);
   if (!Inner()->mSheet) {
+    auto* mediaList = static_cast<ServoMediaList*>(mMedia.get());
+    RawServoMediaList* media = mediaList ?  &mediaList->RawList() : nullptr;
+
     Inner()->mSheet =
-      Servo_StyleSheet_FromUTF8Bytes(aLoader, this, &input,
-                                     mParsingMode, extraData).Consume();
+      Servo_StyleSheet_FromUTF8Bytes(
+          aLoader, this, &input, mParsingMode, media, extraData).Consume();
   } else {
+    // TODO(emilio): Once we have proper inner cloning (which we don't right
+    // now) we should update the mediaList here too, though it's slightly
+    // tricky.
     Servo_StyleSheet_ClearAndUpdate(Inner()->mSheet, aLoader,
                                     this, &input, extraData);
   }

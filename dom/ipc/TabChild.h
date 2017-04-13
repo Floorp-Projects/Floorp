@@ -769,6 +769,7 @@ private:
 
   TextureFactoryIdentifier mTextureFactoryIdentifier;
   nsCOMPtr<nsIWebNavigation> mWebNav;
+  RefPtr<mozilla::dom::TabGroup> mTabGroup;
   RefPtr<PuppetWidget> mPuppetWidget;
   nsCOMPtr<nsIURI> mLastURI;
   RenderFrameChild* mRemoteFrame;

@@ -25,6 +25,7 @@
 ^gfx/ots/.*
 ^gfx/qcms/.*
 ^gfx/skia/.*
+^gfx/vr/openvr/.*
 ^gfx/webrender.*
 ^gfx/webrender_traits.*
 ^gfx/ycbcr/.*

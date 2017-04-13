@@ -23,11 +23,15 @@ function configureStore() {
     activeFilters[filter] = true;
   });
 
-  let hiddenColumns = Services.prefs.getCharPref("devtools.netmonitor.hiddenColumns");
-  let inactiveColumns = JSON.parse(hiddenColumns).reduce((acc, col) => {
-    acc[col] = false;
-    return acc;
-  }, {});
+  let columns = new Columns();
+  let hiddenColumns =
+    JSON.parse(Services.prefs.getCharPref("devtools.netmonitor.hiddenColumns"));
+
+  for (let [col] of columns) {
+    columns = columns.withMutations((state) => {
+      state.set(col, !hiddenColumns.includes(col));
+    });
+  }
 
   const initialState = {
     filters: new Filters({
@@ -37,7 +41,7 @@ function configureStore() {
     sort: new Sort(),
     timingMarkers: new TimingMarkers(),
     ui: new UI({
-      columns: new Columns(inactiveColumns)
+      columns,
     }),
   };
 

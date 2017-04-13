@@ -88,14 +88,13 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsNavHistoryResultNode)
 
 nsNavHistoryResultNode::nsNavHistoryResultNode(
     const nsACString& aURI, const nsACString& aTitle, uint32_t aAccessCount,
-    PRTime aTime, const nsACString& aIconURI) :
+    PRTime aTime) :
   mParent(nullptr),
   mURI(aURI),
   mTitle(aTitle),
   mAreTagsSorted(false),
   mAccessCount(aAccessCount),
   mTime(aTime),
-  mFaviconURI(aIconURI),
   mBookmarkIndex(-1),
   mItemId(-1),
   mFolderId(-1),
@@ -115,14 +114,13 @@ nsNavHistoryResultNode::nsNavHistoryResultNode(
 NS_IMETHODIMP
 nsNavHistoryResultNode::GetIcon(nsACString& aIcon)
 {
-  if (mFaviconURI.IsEmpty()) {
-    aIcon.Truncate();
+  if (this->IsContainer() || mURI.IsEmpty()) {
     return NS_OK;
   }
 
-  nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
-  NS_ENSURE_TRUE(faviconService, NS_ERROR_OUT_OF_MEMORY);
-  faviconService->GetFaviconSpecForIconString(mFaviconURI, aIcon);
+  aIcon.AppendLiteral("page-icon:");
+  aIcon.Append(mURI);
+
   return NS_OK;
 }
 
@@ -345,10 +343,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsNavHistoryContainerResultNod
 NS_INTERFACE_MAP_END_INHERITING(nsNavHistoryResultNode)
 
 nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
-    const nsACString& aURI, const nsACString& aTitle,
-    const nsACString& aIconURI, uint32_t aContainerType,
+    const nsACString& aURI, const nsACString& aTitle, uint32_t aContainerType,
     nsNavHistoryQueryOptions* aOptions) :
-  nsNavHistoryResultNode(aURI, aTitle, 0, 0, aIconURI),
+  nsNavHistoryResultNode(aURI, aTitle, 0, 0),
   mResult(nullptr),
   mContainerType(aContainerType),
   mExpanded(false),
@@ -359,10 +356,9 @@ nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
 
 nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
     const nsACString& aURI, const nsACString& aTitle,
-    PRTime aTime,
-    const nsACString& aIconURI, uint32_t aContainerType,
+    PRTime aTime, uint32_t aContainerType,
     nsNavHistoryQueryOptions* aOptions) :
-  nsNavHistoryResultNode(aURI, aTitle, 0, aTime, aIconURI),
+  nsNavHistoryResultNode(aURI, aTitle, 0, aTime),
   mResult(nullptr),
   mContainerType(aContainerType),
   mExpanded(false),
@@ -1763,9 +1759,8 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNavHistoryQueryResultNode,
                             nsINavHistoryQueryResultNode)
 
 nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
-    const nsACString& aTitle, const nsACString& aIconURI,
-    const nsACString& aQueryURI) :
-  nsNavHistoryContainerResultNode(aQueryURI, aTitle, aIconURI,
+    const nsACString& aTitle, const nsACString& aQueryURI) :
+  nsNavHistoryContainerResultNode(aQueryURI, aTitle,
                                   nsNavHistoryResultNode::RESULT_TYPE_QUERY,
                                   nullptr),
   mLiveUpdate(QUERYUPDATE_COMPLEX_WITH_BOOKMARKS),
@@ -1776,10 +1771,9 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
 }
 
 nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
-    const nsACString& aTitle, const nsACString& aIconURI,
-    const nsCOMArray<nsNavHistoryQuery>& aQueries,
+    const nsACString& aTitle, const nsCOMArray<nsNavHistoryQuery>& aQueries,
     nsNavHistoryQueryOptions* aOptions) :
-  nsNavHistoryContainerResultNode(EmptyCString(), aTitle, aIconURI,
+  nsNavHistoryContainerResultNode(EmptyCString(), aTitle,
                                   nsNavHistoryResultNode::RESULT_TYPE_QUERY,
                                   aOptions),
   mQueries(aQueries),
@@ -1808,11 +1802,11 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
 }
 
 nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
-    const nsACString& aTitle, const nsACString& aIconURI,
+    const nsACString& aTitle,
     PRTime aTime,
     const nsCOMArray<nsNavHistoryQuery>& aQueries,
     nsNavHistoryQueryOptions* aOptions) :
-  nsNavHistoryContainerResultNode(EmptyCString(), aTitle, aTime, aIconURI,
+  nsNavHistoryContainerResultNode(EmptyCString(), aTitle, aTime,
                                   nsNavHistoryResultNode::RESULT_TYPE_QUERY,
                                   aOptions),
   mQueries(aQueries),
@@ -2715,12 +2709,9 @@ nsNavHistoryQueryResultNode::OnClearHistory()
 
 
 static nsresult setFaviconCallback(nsNavHistoryResultNode* aNode,
-                                   const void* aClosure,
+                                   const void * aClosure,
                                    const nsNavHistoryResult* aResult)
 {
-  const nsCString* newFavicon = static_cast<const nsCString*>(aClosure);
-  aNode->mFaviconURI = *newFavicon;
-
   if (aResult && (!aNode->mParent || aNode->mParent->AreChildrenVisible()))
     NOTIFY_RESULT_OBSERVERS(aResult, NodeIconChanged(aNode));
 
@@ -2740,13 +2731,12 @@ nsNavHistoryQueryResultNode::OnPageChanged(nsIURI* aURI,
 
   switch (aChangedAttribute) {
     case nsINavHistoryObserver::ATTRIBUTE_FAVICON: {
-      NS_ConvertUTF16toUTF8 newFavicon(aNewValue);
       bool onlyOneEntry = (mOptions->ResultType() ==
                              nsINavHistoryQueryOptions::RESULTS_AS_URI ||
                              mOptions->ResultType() ==
                              nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS);
       UpdateURIs(true, onlyOneEntry, false, spec, setFaviconCallback,
-                 &newFavicon);
+                 nullptr);
       break;
     }
     default:
@@ -3031,7 +3021,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNavHistoryFolderResultNode,
 nsNavHistoryFolderResultNode::nsNavHistoryFolderResultNode(
     const nsACString& aTitle, nsNavHistoryQueryOptions* aOptions,
     int64_t aFolderId) :
-  nsNavHistoryContainerResultNode(EmptyCString(), aTitle, EmptyCString(),
+  nsNavHistoryContainerResultNode(EmptyCString(), aTitle,
                                   nsNavHistoryResultNode::RESULT_TYPE_FOLDER,
                                   aOptions),
   mContentsValid(false),
@@ -3766,7 +3756,6 @@ nsNavHistoryResultNode::OnItemChanged(int64_t aItemId,
       NOTIFY_RESULT_OBSERVERS(result, NodeURIChanged(this, mURI));
   }
   else if (aProperty.EqualsLiteral("favicon")) {
-    mFaviconURI = aNewValue;
     if (shouldNotify)
       NOTIFY_RESULT_OBSERVERS(result, NodeIconChanged(this));
   }
@@ -4007,7 +3996,7 @@ nsNavHistoryFolderResultNode::OnItemMoved(int64_t aItemId,
  */
 nsNavHistorySeparatorResultNode::nsNavHistorySeparatorResultNode()
   : nsNavHistoryResultNode(EmptyCString(), EmptyCString(),
-                           0, 0, EmptyCString())
+                           0, 0)
 {
 }
 

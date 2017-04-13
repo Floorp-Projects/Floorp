@@ -45,10 +45,11 @@ gfxFT2Font::ShapeText(DrawTarget     *aDrawTarget,
                       uint32_t        aLength,
                       Script          aScript,
                       bool            aVertical,
+                      RoundingFlags   aRounding,
                       gfxShapedText  *aShapedText)
 {
     if (!gfxFont::ShapeText(aDrawTarget, aText, aOffset, aLength, aScript,
-                            aVertical, aShapedText)) {
+                            aVertical, aRounding, aShapedText)) {
         // harfbuzz must have failed(?!), just render raw glyphs
         AddRange(aText, aOffset, aLength, aShapedText);
         PostShapingFixup(aDrawTarget, aText, aOffset, aLength,

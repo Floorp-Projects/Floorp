@@ -469,8 +469,9 @@ this.CrashManager.prototype = Object.freeze({
         deferred.resolve();
       }
 
-      // Send a telemetry ping for each content process crash
-      if (processType === this.PROCESS_TYPE_CONTENT) {
+      // Send a telemetry ping for each non-main process crash
+      if (processType === this.PROCESS_TYPE_CONTENT ||
+          processType === this.PROCESS_TYPE_GPU) {
         this._sendCrashPing(id, processType, date, metadata);
       }
     }.bind(this));

@@ -107,12 +107,13 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::mpsc::{Receiver, Sender, channel};
 use std::thread;
 use style::animation::Animation;
-use style::context::{QuirksMode, ReflowGoal, SharedStyleContext, ThreadLocalStyleContextCreationInfo};
+use style::context::{QuirksMode, ReflowGoal, SharedStyleContext};
+use style::context::{StyleSystemOptions, ThreadLocalStyleContextCreationInfo};
 use style::data::StoredRestyleHint;
 use style::dom::{ShowSubtree, ShowSubtreeDataAndPrimaryValues, TElement, TNode};
 use style::error_reporting::StdoutErrorReporter;
 use style::logical_geometry::LogicalPoint;
-use style::media_queries::{Device, MediaType};
+use style::media_queries::{Device, MediaList, MediaType};
 use style::servo::restyle_damage::{REFLOW, REFLOW_OUT_OF_FLOW, REPAINT, REPOSITION, STORE_OVERFLOW};
 use style::shared_lock::{SharedRwLock, SharedRwLockReadGuard, StylesheetGuards};
 use style::stylesheets::{Origin, Stylesheet, UserAgentStylesheets};
@@ -516,6 +517,7 @@ impl LayoutThread {
         LayoutContext {
             style_context: SharedStyleContext {
                 stylist: rw_data.stylist.clone(),
+                options: StyleSystemOptions::default(),
                 guards: guards,
                 running_animations: self.running_animations.clone(),
                 expired_animations: self.expired_animations.clone(),
@@ -1581,7 +1583,7 @@ fn get_ua_stylesheets() -> Result<UserAgentStylesheets, &'static str> {
             None,
             None,
             Origin::UserAgent,
-            Default::default(),
+            MediaList::empty(),
             shared_lock.clone(),
             None,
             &StdoutErrorReporter))
@@ -1596,7 +1598,7 @@ fn get_ua_stylesheets() -> Result<UserAgentStylesheets, &'static str> {
     }
     for &(ref contents, ref url) in &opts::get().user_stylesheets {
         user_or_user_agent_stylesheets.push(Stylesheet::from_bytes(
-            &contents, url.clone(), None, None, Origin::User, Default::default(),
+            &contents, url.clone(), None, None, Origin::User, MediaList::empty(),
             shared_lock.clone(), None, &StdoutErrorReporter));
     }
 

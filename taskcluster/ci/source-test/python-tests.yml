@@ -99,7 +99,7 @@ mozharness:
         command: >
             cd /home/worker/checkouts/gecko/testing/mozharness &&
             /usr/bin/pip2 install tox &&
-            /home/worker/.local/bin/tox -e py27-hg3.7
+            /home/worker/.local/bin/tox -e py27-hg4.1
     run-on-projects:
         - integration
         - release

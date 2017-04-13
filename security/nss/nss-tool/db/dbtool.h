@@ -8,13 +8,14 @@
 #include <string>
 #include <vector>
 #include "argparse.h"
+#include "tool.h"
 
-class DBTool {
+class DBTool : public Tool {
  public:
-  bool Run(const std::vector<std::string>& arguments);
+  bool Run(const std::vector<std::string>& arguments) override;
 
  private:
-  void Usage();
+  void Usage() override;
   bool PathHasDBFiles(std::string path);
   void ListCertificates();
   bool ImportCertificate(const ArgParser& parser);

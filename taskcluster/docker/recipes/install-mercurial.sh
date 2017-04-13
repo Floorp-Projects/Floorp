@@ -130,6 +130,14 @@ cacerts = ${CERT_PATH}
 [extensions]
 robustcheckout = /usr/local/mercurial/robustcheckout.py
 
+[hostsecurity]
+# When running a modern Python, Mercurial will default to TLS 1.1+.
+# When running on a legacy Python, Mercurial will default to TLS 1.0+.
+# There is no good reason we shouldn't be running a modern Python
+# capable of speaking TLS 1.2. And the only Mercurial servers we care
+# about should be running TLS 1.2. So make TLS 1.2 the minimum.
+minimumprotocol = tls1.2
+
 # Settings to make 1-click loaners more useful.
 [extensions]
 color =

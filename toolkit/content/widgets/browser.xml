@@ -1088,7 +1088,7 @@
               this._selectParentHelper.populate(menulist, data.options, data.selectedIndex, this._fullZoom,
                                                 data.uaBackgroundColor, data.uaColor,
                                                 data.uaSelectBackgroundColor, data.uaSelectColor,
-                                                data.selectBackgroundColor, data.selectColor);
+                                                data.selectBackgroundColor, data.selectColor, data.selectTextShadow);
               this._selectParentHelper.open(this, menulist, data.rect, data.isOpenedViaTouch);
               break;
             }

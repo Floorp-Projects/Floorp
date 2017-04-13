@@ -596,7 +596,8 @@ interface nsINavHistoryResult : nsISupports
    *
    * @see nsINavHistoryResultObserver
    */
-  void addObserver(in nsINavHistoryResultObserver aObserver, in boolean aOwnsWeak);
+  void addObserver(in nsINavHistoryResultObserver aObserver,
+                   [optional] in boolean aOwnsWeak);
 
   /**
    * Removes an observer that was added by addObserver.
@@ -1408,7 +1409,8 @@ interface nsINavHistoryService : nsISupports
    * aObserver must implement nsISupportsWeakReference, and the history service
    * will keep a weak reference to the observer.
    */
-  void addObserver(in nsINavHistoryObserver observer, in boolean ownsWeak);
+  void addObserver(in nsINavHistoryObserver observer,
+                   [optional] in boolean ownsWeak);
 
   /**
    * Removes a history observer.

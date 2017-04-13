@@ -19,6 +19,7 @@ config = {
         "repo": "https://hg.mozilla.org/projects/date",
         "branch": "%(revision)s",
         "dest": "date",
+        "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
     }],
     # purge options
     'is_automation': True,

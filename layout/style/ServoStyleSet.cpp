@@ -170,10 +170,9 @@ ServoStyleSet::GetContext(nsIContent* aContent,
   MOZ_ASSERT(aContent->IsElement());
   Element* element = aContent->AsElement();
 
-
-  PreTraverseSync();
   RefPtr<ServoComputedValues> computedValues;
   if (aMayCompute == LazyComputeBehavior::Allow) {
+    PreTraverseSync();
     computedValues = ResolveStyleLazily(element, nullptr);
   } else {
     computedValues = ResolveServoStyle(element);

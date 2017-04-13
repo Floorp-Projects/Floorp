@@ -343,6 +343,7 @@ class nsIWidget : public nsISupports
     typedef mozilla::layers::ZoomConstraints ZoomConstraints;
     typedef mozilla::widget::IMEMessage IMEMessage;
     typedef mozilla::widget::IMENotification IMENotification;
+    typedef mozilla::widget::IMENotificationRequests IMENotificationRequests;
     typedef mozilla::widget::IMEState IMEState;
     typedef mozilla::widget::InputContext InputContext;
     typedef mozilla::widget::InputContextAction InputContextAction;
@@ -1825,7 +1826,7 @@ public:
     /*
      * Retrieves preference for IME updates
      */
-    virtual nsIMEUpdatePreference GetIMEUpdatePreference() = 0;
+    virtual IMENotificationRequests GetIMENotificationRequests() = 0;
 
     /*
      * Call this method when a dialog is opened which has a default button.
