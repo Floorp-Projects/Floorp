@@ -2272,6 +2272,22 @@ MTypeBarrier::congruentTo(const MDefinition* def) const
     return congruentIfOperandsEqual(other);
 }
 
+MDefinition*
+MTypeBarrier::foldsTo(TempAllocator& alloc)
+{
+    MIRType type = resultTypeSet()->getKnownMIRType();
+    if (type == MIRType::Value || type == MIRType::Object)
+        return this;
+
+    if (!input()->isConstant())
+        return this;
+
+    if (input()->type() != type)
+        return this;
+
+    return input();
+}
+
 #ifdef DEBUG
 void
 MPhi::assertLoopPhi() const
