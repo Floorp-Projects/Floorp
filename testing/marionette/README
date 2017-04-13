@@ -14,11 +14,8 @@ DESCRIPTION
 
 USAGE
 
-  It is included in Firefox, but not enabled by default unless the
-  --marionette flag is passed or the marionette.enabled preference is
-  set to true.
-
-  To start Firefox with the remote protocol turned on:
+  Marionette can be activated by passing the --marionette flag.  To start
+  Firefox with the remote protocol turned on:
 
   	% firefox --marionette
   	…
