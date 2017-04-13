@@ -7,7 +7,6 @@
 const Services = require("Services");
 const { Curl } = require("devtools/client/shared/curl");
 const { gDevTools } = require("devtools/client/framework/devtools");
-const { showMenu } = require("devtools/client/netmonitor/src/utils/menu");
 const { saveAs } = require("devtools/client/shared/file-saver");
 const { copyString } = require("devtools/shared/platform/clipboard");
 const { HarExporter } = require("./har/har-exporter");
@@ -18,6 +17,7 @@ const {
 } = require("./selectors/index");
 const { getLongString } = require("./utils/client");
 const { L10N } = require("./utils/l10n");
+const { showMenu } = require("./utils/menu");
 const {
   getUrlQuery,
   parseQueryString,
@@ -194,6 +194,7 @@ RequestListContextMenu.prototype = {
       id: "request-list-context-perf",
       label: L10N.getStr("netmonitor.context.perfTools"),
       accesskey: L10N.getStr("netmonitor.context.perfTools.accesskey"),
+      visible: this.sortedRequests.size > 0,
       click: () => this.openStatistics(true)
     });
 
