@@ -533,11 +533,6 @@ public:
     : mBroker(aBroker),
       mSyscallWhitelist(aSyscallWhitelist) {}
   ~ContentSandboxPolicy() override = default;
-  ResultExpr PrctlPolicy() const override {
-    // Ideally this should be restricted to a whitelist, but content
-    // uses enough things that it's not trivial to determine it.
-    return Allow();
-  }
   Maybe<ResultExpr> EvaluateSocketCall(int aCall) const override {
     switch(aCall) {
     case SYS_RECVFROM:
@@ -844,11 +839,6 @@ public:
       // NSPR will start a thread to wait for child processes even if
       // fork() fails; see bug 227246 and bug 1299581.
       return Error(ECHILD);
-
-#ifdef __NR_arch_prctl
-    case __NR_arch_prctl:
-#endif
-      return Allow();
 
     case __NR_eventfd2:
     case __NR_inotify_init:
