@@ -27,7 +27,7 @@ const simpleTestPath = "testing/mochitest/tests/SimpleTest";
 
 function getScriptGlobals() {
   let fileGlobals = [];
-  let root = helpers.getRootDir(module.filename);
+  let root = helpers.rootDir;
   for (let file of simpleTestFiles) {
     let fileName = path.join(root, simpleTestPath, file);
     try {
