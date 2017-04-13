@@ -180,8 +180,32 @@ describe("ConsoleAPICall component:", () => {
       const message = stubPreparedMessages.get("console.group('bar')");
       const wrapper = render(ConsoleApiCall({ message, serviceContainer, open: true }));
 
-      expect(wrapper.find(".message-body").text()).toBe(message.messageText);
+      expect(wrapper.find(".message-body").text()).toBe("bar");
       expect(wrapper.find(".theme-twisty.open").length).toBe(1);
+    });
+
+    it("renders group with custom style", () => {
+      const message = stubPreparedMessages.get("console.group(%cfoo%cbar)");
+      const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+
+      const elements = wrapper.find(".objectBox-string");
+      expect(elements.text()).toBe("foobar");
+      expect(elements.length).toBe(2);
+
+      const firstElementStyle = elements.eq(0).prop("style");
+      // Allowed styles are applied accordingly on the first element.
+      expect(firstElementStyle.color).toBe(`blue`);
+      expect(firstElementStyle["font-size"]).toBe(`1.3em`);
+      // Forbidden styles are not applied.
+      expect(firstElementStyle["background-image"]).toBe(undefined);
+      expect(firstElementStyle.position).toBe(undefined);
+      expect(firstElementStyle.top).toBe(undefined);
+
+      const secondElementStyle = elements.eq(1).prop("style");
+      // Allowed styles are applied accordingly on the second element.
+      expect(secondElementStyle.color).toBe(`red`);
+      // Forbidden styles are not applied.
+      expect(secondElementStyle.background).toBe(undefined);
     });
 
     it("toggle the group when the collapse button is clicked", () => {
@@ -235,8 +259,32 @@ describe("ConsoleAPICall component:", () => {
       const message = stubPreparedMessages.get("console.groupCollapsed('foo')");
       const wrapper = render(ConsoleApiCall({ message, serviceContainer, open: false}));
 
-      expect(wrapper.find(".message-body").text()).toBe(message.messageText);
+      expect(wrapper.find(".message-body").text()).toBe("foo");
       expect(wrapper.find(".theme-twisty:not(.open)").length).toBe(1);
+    });
+
+    it("renders group with custom style", () => {
+      const message = stubPreparedMessages.get("console.groupCollapsed(%cfoo%cbaz)");
+      const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+
+      const elements = wrapper.find(".objectBox-string");
+      expect(elements.text()).toBe("foobaz");
+      expect(elements.length).toBe(2);
+
+      const firstElementStyle = elements.eq(0).prop("style");
+      // Allowed styles are applied accordingly on the first element.
+      expect(firstElementStyle.color).toBe(`blue`);
+      expect(firstElementStyle["font-size"]).toBe(`1.3em`);
+      // Forbidden styles are not applied.
+      expect(firstElementStyle["background-image"]).toBe(undefined);
+      expect(firstElementStyle.position).toBe(undefined);
+      expect(firstElementStyle.top).toBe(undefined);
+
+      const secondElementStyle = elements.eq(1).prop("style");
+      // Allowed styles are applied accordingly on the second element.
+      expect(secondElementStyle.color).toBe(`red`);
+      // Forbidden styles are not applied.
+      expect(secondElementStyle.background).toBe(undefined);
     });
   });
 

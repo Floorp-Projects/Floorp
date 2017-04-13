@@ -330,7 +330,7 @@ impl PropertyDeclarationIdSet {
                     //
                     // FIXME(pcwalton): Cloning the error reporter is slow! But so are custom
                     // properties, so whatever...
-                    let context = ParserContext::new(Origin::Author, url_data, error_reporter);
+                    let context = ParserContext::new(Origin::Author, url_data, error_reporter, None);
                     Parser::new(&css).parse_entirely(|input| {
                         match from_shorthand {
                             None => {
@@ -976,9 +976,9 @@ impl ParsedDeclaration {
     /// This will not actually parse Importance values, and will always set things
     /// to Importance::Normal. Parsing Importance values is the job of PropertyDeclarationParser,
     /// we only set them here so that we don't have to reallocate
-    pub fn parse(id: PropertyId, context: &ParserContext, input: &mut Parser,
-                 in_keyframe_block: bool, rule_type: CssRuleType)
+    pub fn parse(id: PropertyId, context: &ParserContext, input: &mut Parser)
                  -> Result<ParsedDeclaration, PropertyDeclarationParseError> {
+        let rule_type = context.rule_type();
         debug_assert!(rule_type == CssRuleType::Keyframe ||
                       rule_type == CssRuleType::Page ||
                       rule_type == CssRuleType::Style,
@@ -999,7 +999,7 @@ impl ParsedDeclaration {
                 LonghandId::${property.camel_case} => {
                     % if not property.derived_from:
                         % if not property.allowed_in_keyframe_block:
-                            if in_keyframe_block {
+                            if rule_type == CssRuleType::Keyframe {
                                 return Err(PropertyDeclarationParseError::AnimationPropertyInKeyframeBlock)
                             }
                         % endif
@@ -1032,7 +1032,7 @@ impl ParsedDeclaration {
             % for shorthand in data.shorthands:
                 ShorthandId::${shorthand.camel_case} => {
                     % if not shorthand.allowed_in_keyframe_block:
-                        if in_keyframe_block {
+                        if rule_type == CssRuleType::Keyframe {
                             return Err(PropertyDeclarationParseError::AnimationPropertyInKeyframeBlock)
                         }
                     % endif
@@ -1509,6 +1509,12 @@ pub mod style_structs {
             pub fn specifies_animations(&self) -> bool {
                 self.animation_name_iter().any(|name| name.0 != atom!(""))
             }
+
+            /// Returns whether there are any transitions specified.
+            #[cfg(feature = "servo")]
+            pub fn specifies_transitions(&self) -> bool {
+                self.transition_property_count() > 0
+            }
         % endif
     }
 
@@ -1563,7 +1569,7 @@ pub struct ComputedValues {
     /// The root element's computed font size.
     pub root_font_size: Au,
     /// The keyword behind the current font-size property, if any
-    pub font_size_keyword: Option<longhands::font_size::KeywordSize>,
+    pub font_size_keyword: Option<(longhands::font_size::KeywordSize, f32)>,
 }
 
 #[cfg(feature = "servo")]
@@ -1572,7 +1578,7 @@ impl ComputedValues {
     pub fn new(custom_properties: Option<Arc<::custom_properties::ComputedValuesMap>>,
                writing_mode: WritingMode,
                root_font_size: Au,
-               font_size_keyword: Option<longhands::font_size::KeywordSize>,
+               font_size_keyword: Option<(longhands::font_size::KeywordSize, f32)>,
             % for style_struct in data.active_style_structs():
                ${style_struct.ident}: Arc<style_structs::${style_struct.name}>,
             % endfor
@@ -1904,7 +1910,7 @@ mod lazy_static_module {
             custom_properties: None,
             writing_mode: WritingMode::empty(),
             root_font_size: longhands::font_size::get_initial_value(),
-            font_size_keyword: Some(Default::default()),
+            font_size_keyword: Some((Default::default(), 1.)),
         };
     }
 }
@@ -2199,12 +2205,12 @@ pub fn apply_declarations<'a, F, I>(device: &Device,
                                                  &mut cacheable,
                                                  &mut cascade_info,
                                                  error_reporter);
-            } else if let Some(kw) = inherited_style.font_size_keyword {
+            } else if let Some((kw, fraction)) = inherited_style.font_size_keyword {
                 // Font size keywords will inherit as keywords and be recomputed
                 // each time.
                 let discriminant = LonghandId::FontSize as usize;
                 let size = PropertyDeclaration::FontSize(
-                    longhands::font_size::SpecifiedValue::Keyword(kw)
+                    longhands::font_size::SpecifiedValue::Keyword(kw, fraction)
                 );
                 (CASCADE_PROPERTY[discriminant])(&size,
                                                  inherited_style,

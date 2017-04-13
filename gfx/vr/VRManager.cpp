@@ -7,7 +7,6 @@
 #include "VRManager.h"
 #include "VRManagerParent.h"
 #include "gfxVR.h"
-#include "gfxVROpenVR.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/VRDisplay.h"
 #include "mozilla/dom/GamepadEventTypes.h"
@@ -18,6 +17,7 @@
 #include "gfxVR.h"
 #if defined(XP_WIN)
 #include "gfxVROculus.h"
+#include "gfxVROpenVR.h"
 #endif
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
 #include "gfxVROSVR.h"
@@ -75,15 +75,14 @@ VRManager::VRManager()
   if (mgr) {
     mManagers.AppendElement(mgr);
   }
-#endif
-
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
-  // OpenVR is cross platform compatible
+  // OpenVR is cross platform compatible, but supported only on Windows for now
   mgr = VRSystemManagerOpenVR::Create();
   if (mgr) {
     mManagers.AppendElement(mgr);
   }
+#endif
 
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
   // OSVR is cross platform compatible
   mgr = VRSystemManagerOSVR::Create();
   if (mgr) {
@@ -162,10 +161,10 @@ void
 VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
 {
   const double kVRDisplayRefreshMaxDuration = 5000; // milliseconds
+  const double kVRDisplayInactiveMaxDuration = 30000; // milliseconds
 
   bool bHaveEventListener = false;
   bool bHaveControllerListener = false;
-  bool bHaveActiveDisplay = false;
 
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
     VRManagerParent *vmp = iter.Get()->GetKey();
@@ -179,9 +178,6 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
   for (auto iter = mVRDisplays.Iter(); !iter.Done(); iter.Next()) {
     gfx::VRDisplayHost* display = iter.UserData();
     display->NotifyVSync();
-    if (display->GetDisplayInfo().GetIsPresenting()) {
-      bHaveActiveDisplay = true;
-    }
   }
 
   if (bHaveEventListener) {
@@ -220,9 +216,17 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
     }
   }
 
-  if (!bHaveEventListener && !bHaveControllerListener && !bHaveActiveDisplay) {
-    // Shut down the VR devices when not in use
+  // Shut down the VR devices when not in use
+  if (bHaveEventListener || bHaveControllerListener) {
+    // We are using a VR device, keep it alive
+    mLastActiveTime = TimeStamp::Now();
+  } else if (mLastActiveTime.IsNull()) {
     Shutdown();
+  } else {
+    TimeDuration duration = TimeStamp::Now() - mLastActiveTime;
+    if (duration.ToMilliseconds() > kVRDisplayInactiveMaxDuration) {
+      Shutdown();
+    }
   }
 }
 

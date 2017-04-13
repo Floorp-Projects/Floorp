@@ -14,7 +14,6 @@
 #include "mozilla/CSSStyleSheet.h"
 
 #include "mozAutoDocUpdate.h"
-#include "nsMediaList.h"
 #include "NullPrincipal.h"
 
 namespace mozilla {
@@ -692,7 +691,7 @@ dom::MediaList*
 StyleSheet::Media()
 {
   if (!mMedia) {
-    mMedia = new nsMediaList();
+    mMedia = dom::MediaList::Create(mType, nsString());
     mMedia->SetStyleSheet(this);
   }
 

@@ -308,7 +308,7 @@ public:
     return Success;
   }
 
-  Result IsChainValid(const DERArray&, Time) override
+  Result IsChainValid(const DERArray&, Time, const CertPolicyId&) override
   {
     return Success;
   }

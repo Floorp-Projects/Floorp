@@ -77,7 +77,7 @@ public:
     }
   }
 
-  void HandleInputExhausted() override
+  void HandleInput(jlong aTimestamp, bool aProcessed) override
   {
     CSFLogDebug(logTag,  "%s %p", __FUNCTION__, this);
   }

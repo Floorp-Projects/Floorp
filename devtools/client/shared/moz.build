@@ -44,6 +44,7 @@ DevToolsModules(
     'output-parser.js',
     'poller.js',
     'prefs.js',
+    'react-utils.js',
     'scroll.js',
     'source-utils.js',
     'SplitView.jsm',

@@ -1698,9 +1698,19 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   border: 1px solid transparent;
 }
 
+.autocomplete-richlistitem:hover,
+treechildren.searchbar-treebody::-moz-tree-row(hover) {
+  background-color: hsla(0, 0%, 0%, 0.06);
+  border-color: hsla(0, 0%, 0%, 0.1);
+}
+
 .autocomplete-richlistitem[selected] {
   background-color: hsl(210, 80%, 52%);
   color: hsl(0, 0%, 100%);
+}
+
+treechildren.searchbar-treebody::-moz-tree-row(selected) {
+  background-color: Highlight;
 }
 
 .ac-title {

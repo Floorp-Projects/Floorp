@@ -12,30 +12,6 @@
 #include "nsContentUtils.h"
 #include "xpcpublic.h"
 
-bool
-nsILoadContext::GetOriginAttributes(mozilla::OriginAttributes& aAttrs)
-{
-  mozilla::dom::AutoJSAPI jsapi;
-  bool ok = jsapi.Init(xpc::PrivilegedJunkScope());
-  NS_ENSURE_TRUE(ok, false);
-  JS::Rooted<JS::Value> v(jsapi.cx());
-  nsresult rv = GetOriginAttributes(&v);
-  NS_ENSURE_SUCCESS(rv, false);
-  NS_ENSURE_TRUE(v.isObject(), false);
-  JS::Rooted<JSObject*> obj(jsapi.cx(), &v.toObject());
-
-  // If we're JS-implemented, the object will be left in a different (System-Principaled)
-  // scope, so we may need to enter its compartment.
-  MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(obj)));
-  JSAutoCompartment ac(jsapi.cx(), obj);
-
-  mozilla::OriginAttributes attrs;
-  ok = attrs.Init(jsapi.cx(), v);
-  NS_ENSURE_TRUE(ok, false);
-  aAttrs = attrs;
-  return true;
-}
-
 namespace mozilla {
 
 NS_IMPL_ISUPPORTS(LoadContext, nsILoadContext, nsIInterfaceRequestor)
@@ -171,7 +147,7 @@ LoadContext::GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserEleme
 }
 
 NS_IMETHODIMP
-LoadContext::GetOriginAttributes(JS::MutableHandleValue aAttrs)
+LoadContext::GetScriptableOriginAttributes(JS::MutableHandleValue aAttrs)
 {
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
   MOZ_ASSERT(cx);
@@ -179,6 +155,12 @@ LoadContext::GetOriginAttributes(JS::MutableHandleValue aAttrs)
   bool ok = ToJSValue(cx, mOriginAttributes, aAttrs);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
   return NS_OK;
+}
+
+NS_IMETHODIMP_(void)
+LoadContext::GetOriginAttributes(mozilla::OriginAttributes& aAttrs)
+{
+  aAttrs = mOriginAttributes;
 }
 
 NS_IMETHODIMP
@@ -216,6 +198,36 @@ LoadContext::GetInterface(const nsIID& aIID, void** aResult)
   }
 
   return NS_NOINTERFACE;
+}
+
+static nsresult
+CreateTestInstance(bool aPrivate, nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  // Shamelessly modified from NS_GENERIC_FACTORY_CONSTRUCTOR
+  *aResult = nullptr;
+
+  if (aOuter) {
+    return NS_ERROR_NO_AGGREGATION;
+  }
+
+  OriginAttributes oa;
+  oa.mPrivateBrowsingId = aPrivate ? 1 : 0;
+
+  RefPtr<LoadContext> lc = new LoadContext(oa);
+
+  return lc->QueryInterface(aIID, aResult);
+}
+
+nsresult
+CreateTestLoadContext(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  return CreateTestInstance(false, aOuter, aIID, aResult);
+}
+
+nsresult
+CreatePrivateTestLoadContext(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  return CreateTestInstance(true, aOuter, aIID, aResult);
 }
 
 } // namespace mozilla

@@ -816,8 +816,7 @@ nsDOMOfflineResourceList::CacheKeys()
   nsAutoCString originSuffix;
   if (loadContext) {
     mozilla::OriginAttributes oa;
-    bool ok = loadContext->GetOriginAttributes(oa);
-    NS_ENSURE_TRUE(ok, NS_ERROR_UNEXPECTED);
+    loadContext->GetOriginAttributes(oa);
 
     oa.CreateSuffix(originSuffix);
   }

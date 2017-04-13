@@ -56,7 +56,7 @@ public:
   // not work in this case. We're using OpenThread because DuplicateHandle
   // for some reason doesn't work in Chrome's sandbox.
   explicit PlatformData(int aThreadId)
-    : profiled_thread_(OpenThread(THREAD_GET_CONTEXT | THREAD_SUSPEND_RESUME |
+    : mProfiledThread(OpenThread(THREAD_GET_CONTEXT | THREAD_SUSPEND_RESUME |
                                   THREAD_QUERY_INFORMATION,
                                   false,
                                   aThreadId))
@@ -66,23 +66,23 @@ public:
 
   ~PlatformData()
   {
-    if (profiled_thread_ != nullptr) {
-      CloseHandle(profiled_thread_);
-      profiled_thread_ = nullptr;
+    if (mProfiledThread != nullptr) {
+      CloseHandle(mProfiledThread);
+      mProfiledThread = nullptr;
     }
     MOZ_COUNT_DTOR(PlatformData);
   }
 
-  HANDLE profiled_thread() { return profiled_thread_; }
+  HANDLE ProfiledThread() { return mProfiledThread; }
 
 private:
-  HANDLE profiled_thread_;
+  HANDLE mProfiledThread;
 };
 
 uintptr_t
 GetThreadHandle(PlatformData* aData)
 {
-  return (uintptr_t) aData->profiled_thread();
+  return (uintptr_t) aData->ProfiledThread();
 }
 
 static const HANDLE kNoThread = INVALID_HANDLE_VALUE;
@@ -160,8 +160,7 @@ void
 SamplerThread::SuspendAndSampleAndResumeThread(PS::LockRef aLock,
                                                TickSample* aSample)
 {
-  uintptr_t thread = GetThreadHandle(aSample->mPlatformData);
-  HANDLE profiled_thread = reinterpret_cast<HANDLE>(thread);
+  HANDLE profiled_thread = aSample->mPlatformData->ProfiledThread();
   if (profiled_thread == nullptr)
     return;
 

@@ -40,6 +40,9 @@ else:
     if CONFIG['OS_ARCH'] == 'Darwin':
         DEFINES['OS_MACOSX'] = 1
 
+    elif CONFIG['OS_ARCH'] == 'SunOS':
+        DEFINES['OS_SOLARIS'] = 1
+
     elif CONFIG['OS_ARCH'] == 'DragonFly':
         DEFINES.update({
             'OS_DRAGONFLY': 1,

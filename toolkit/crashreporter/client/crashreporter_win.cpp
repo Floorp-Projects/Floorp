@@ -206,8 +206,8 @@ static void SetBoolKey(const wchar_t* key, const wchar_t* value, bool enabled)
 static bool GetStringValue(HKEY hRegKey, LPCTSTR valueName, wstring& value)
 {
   DWORD type, dataSize;
-  wchar_t buf[2048];
-  dataSize = sizeof(buf);
+  wchar_t buf[2048] = {};
+  dataSize = sizeof(buf) - 1;
   if (RegQueryValueEx(hRegKey, valueName, nullptr,
                      &type, (LPBYTE)buf, &dataSize) == ERROR_SUCCESS &&
       type == REG_SZ) {
@@ -1391,7 +1391,7 @@ bool UIGetSettingsPath(const string& vendor,
                        const string& product,
                        string& settings_path)
 {
-  wchar_t path[MAX_PATH];
+  wchar_t path[MAX_PATH] = {};
   HRESULT hRes = SHGetFolderPath(nullptr,
                                  CSIDL_APPDATA,
                                  nullptr,
@@ -1402,7 +1402,8 @@ bool UIGetSettingsPath(const string& vendor,
     // registry when the call to SHGetFolderPath is unable to provide this path
     // (Bug 513958).
     HKEY key;
-    DWORD type, size, dwRes;
+    DWORD type, dwRes;
+    DWORD size = sizeof(path) - 1;
     dwRes = ::RegOpenKeyExW(HKEY_CURRENT_USER,
                             L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
                             0,

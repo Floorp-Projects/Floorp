@@ -10,6 +10,11 @@ var cps;
 var asyncRunner;
 var next;
 
+let loadContext = Cc["@mozilla.org/loadcontext;1"].
+                    createInstance(Ci.nsILoadContext);
+let privateLoadContext = Cc["@mozilla.org/privateloadcontext;1"].
+                           createInstance(Ci.nsILoadContext);
+
 (function init() {
   // There has to be a profile directory before the CPS service is gotten.
   do_get_profile();

@@ -19,6 +19,7 @@ config = {
         "repo": "https://hg.mozilla.org/releases/mozilla-esr52",
         "revision": "%(revision)s",
         "dest": "mozilla-esr52",
+        "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
     }],
     # purge options
     'purge_minsize': 12,

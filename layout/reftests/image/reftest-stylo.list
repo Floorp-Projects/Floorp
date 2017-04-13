@@ -1,11 +1,11 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == background-image-zoom-1.html background-image-zoom-1.html
+== background-image-zoom-1.html background-image-zoom-1.html
 == background-image-zoom-2.html background-image-zoom-2.html
 == image-seam-1a.html image-seam-1a.html
 == image-seam-1b.html image-seam-1b.html
 == image-seam-2.html image-seam-2.html
-fails == image-zoom-1.html image-zoom-1.html
-fails == image-zoom-2.html image-zoom-2.html
+== image-zoom-1.html image-zoom-1.html
+== image-zoom-2.html image-zoom-2.html
 == invalid-url-image-1.html invalid-url-image-1.html
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1a.html sync-image-switch-1a.html
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1b.html sync-image-switch-1b.html
@@ -44,6 +44,9 @@ fuzzy(1,1) == image-orientation-explicit.html?0 image-orientation-explicit.html?
 == image-orientation-explicit.html?270&flip image-orientation-explicit.html?270&flip
 
 # Tests for image-orientation used with non-axis-aligned angles:
+# This is disabled while we added image-orientation support to stylo in Bug 1341758.
+# The reason is due to the slice difference of implementation between Servo and Gecko.
+# Eventually, we should make Servo align with Gecko, and re-enable this. (See Bug 1355380)
 fails == image-orientation-explicit.html?-45 image-orientation-explicit.html?-45
 fuzzy(1,1) == image-orientation-explicit.html?-15 image-orientation-explicit.html?-15
 fuzzy(1,1) == image-orientation-explicit.html?15 image-orientation-explicit.html?15
@@ -56,6 +59,9 @@ fuzzy(1,1) == image-orientation-explicit.html?15 image-orientation-explicit.html
 == image-orientation-explicit.html?225 image-orientation-explicit.html?225
 == image-orientation-explicit.html?255 image-orientation-explicit.html?255
 == image-orientation-explicit.html?285 image-orientation-explicit.html?285
+# This is disabled while we added image-orientation support to stylo in Bug 1341758.
+# The reason is due to the slice difference of implementation between Servo and Gecko.
+# Eventually, we should make Servo align with Gecko, and re-enable this. (See Bug 1355380)
 fails == image-orientation-explicit.html?315 image-orientation-explicit.html?315
 fuzzy(1,1) == image-orientation-explicit.html?345 image-orientation-explicit.html?345
 

@@ -801,7 +801,9 @@ IToplevelProtocol::GetMessageEventTarget(const Message& aMsg)
 {
   int32_t route = aMsg.routing_id();
 
-  MutexAutoLock lock(mEventTargetMutex);
+  Maybe<MutexAutoLock> lock;
+  lock.emplace(mEventTargetMutex);
+
   nsCOMPtr<nsIEventTarget> target = mEventTargetMap.Lookup(route);
 
   if (aMsg.is_constructor()) {
@@ -820,6 +822,11 @@ IToplevelProtocol::GetMessageEventTarget(const Message& aMsg)
     }
 
     mEventTargetMap.AddWithID(target, handle.mId);
+  } else if (!target) {
+    // We don't need the lock after this point.
+    lock.reset();
+
+    target = GetSpecificMessageEventTarget(aMsg);
   }
 
   return target.forget();

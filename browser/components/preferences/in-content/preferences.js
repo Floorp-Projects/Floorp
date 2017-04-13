@@ -142,12 +142,19 @@ function gotoPref(aCategory) {
   let categories = document.getElementById("categories");
   const kDefaultCategoryInternalName = "paneGeneral";
   let hash = document.location.hash;
+  // Subcategories allow for selecting smaller sections of the preferences
+  // until proper search support is enabled (bug 1353954).
+  let breakIndex = hash.indexOf("-");
+  let subcategory = breakIndex != -1 && hash.substring(breakIndex + 1);
+  if (subcategory) {
+    hash = hash.substring(0, breakIndex);
+  }
   let category = aCategory || hash.substr(1) || kDefaultCategoryInternalName;
   category = friendlyPrefCategoryNameToInternalName(category);
 
   // Updating the hash (below) or changing the selected category
   // will re-enter gotoPref.
-  if (gLastHash == category)
+  if (gLastHash == category && !subcategory)
     return;
   let item = categories.querySelector(".category[value=" + category + "]");
   if (!item) {
@@ -163,7 +170,7 @@ function gotoPref(aCategory) {
   }
 
   let friendlyName = internalPrefCategoryNameToFriendlyName(category);
-  if (gLastHash || category != kDefaultCategoryInternalName) {
+  if (gLastHash || category != kDefaultCategoryInternalName || subcategory) {
     document.location.hash = friendlyName;
   }
   // Need to set the gLastHash before setting categories.selectedItem since
@@ -171,7 +178,8 @@ function gotoPref(aCategory) {
   gLastHash = category;
   categories.selectedItem = item;
   window.history.replaceState(category, document.title);
-  search(category, "data-category");
+  search(category, "data-category", subcategory, "data-subcategory");
+
   let mainContent = document.querySelector(".main-content");
   mainContent.scrollTop = 0;
 
@@ -180,7 +188,7 @@ function gotoPref(aCategory) {
           .add(telemetryBucketForCategory(friendlyName));
 }
 
-function search(aQuery, aAttribute) {
+function search(aQuery, aAttribute, aSubquery, aSubAttribute) {
   let mainPrefPane = document.getElementById("mainPrefPane");
   let elements = mainPrefPane.children;
   for (let element of elements) {
@@ -190,7 +198,17 @@ function search(aQuery, aAttribute) {
     // development and should not be shown for any reason.
     if (element.getAttribute("data-hidden-from-search") != "true") {
       let attributeValue = element.getAttribute(aAttribute);
-      element.hidden = (attributeValue != aQuery);
+      if (attributeValue == aQuery) {
+        if (!element.classList.contains("header") &&
+             aSubquery && aSubAttribute) {
+          let subAttributeValue = element.getAttribute(aSubAttribute);
+          element.hidden = subAttributeValue != aSubquery;
+        } else {
+          element.hidden = false;
+        }
+      } else {
+        element.hidden = true;
+      }
     }
   }
 

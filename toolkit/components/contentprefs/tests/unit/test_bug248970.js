@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function run_test() {
-    let loadContext = { get usePrivateBrowsing() { return gInPrivateBrowsing; } };
-
     ContentPrefTest.deleteDatabase();
     var cp = new ContentPrefInstance(loadContext);
     do_check_neq(cp, null, "Retrieving the content prefs service failed");
@@ -19,7 +17,7 @@ function run_test() {
       // make sure Zoom-A is retrievable
       do_check_eq(cp.getPref(uri1, pref_name), zoomA);
       // enter private browsing mode
-      enterPBMode();
+      enterPBMode(cp);
       // make sure Zoom-A is retrievable
       do_check_eq(cp.getPref(uri1, pref_name), zoomA);
       // save Zoom-B
@@ -31,7 +29,7 @@ function run_test() {
       // make sure Zoom-A has changed
       do_check_eq(cp.getPref(uri1, pref_name), zoomA_new);
       // exit private browsing mode
-      exitPBMode();
+      exitPBMode(cp);
       // make sure Zoom-A change has not persisted
       do_check_eq(cp.getPref(uri1, pref_name), zoomA);
       // make sure Zoom-B change has not persisted

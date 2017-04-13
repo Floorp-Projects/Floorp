@@ -1959,12 +1959,12 @@ WebGLContext::GetSurfaceSnapshot(bool* out_premultAlpha)
         const GLenum readBufferMode = gl->Screen()->GetReadBufferMode();
 
         if (readBufferMode != LOCAL_GL_BACK) {
-            gl->fReadBuffer(LOCAL_GL_BACK);
+            gl->Screen()->SetReadBuffer(LOCAL_GL_BACK);
         }
         ReadPixelsIntoDataSurface(gl, surf);
 
         if (readBufferMode != LOCAL_GL_BACK) {
-            gl->fReadBuffer(readBufferMode);
+            gl->Screen()->SetReadBuffer(readBufferMode);
         }
     }
 

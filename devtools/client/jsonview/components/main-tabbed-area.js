@@ -9,7 +9,7 @@
 define(function (require, exports, module) {
   const { createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 
-  const { createFactories } = require("devtools/client/shared/components/reps/reps");
+  const { createFactories } = require("devtools/client/shared/react-utils");
   const { JsonPanel } = createFactories(require("./json-panel"));
   const { TextPanel } = createFactories(require("./text-panel"));
   const { HeadersPanel } = createFactories(require("./headers-panel"));

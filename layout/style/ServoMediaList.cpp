@@ -9,16 +9,27 @@
 #include "mozilla/ServoMediaList.h"
 
 #include "mozilla/ServoBindings.h"
+#include "mozilla/ServoStyleSet.h"
 
 namespace mozilla {
 
 already_AddRefed<dom::MediaList>
 ServoMediaList::Clone()
 {
-  // Currently MediaList::Clone() is only called from CSSStyleSheet's
-  // constructor, so we don't need to support it at the moment.
-  MOZ_ASSERT_UNREACHABLE("stylo: ServoMediaList doesn't support clone");
-  return nullptr;
+  RefPtr<ServoMediaList> clone =
+    new ServoMediaList(Servo_MediaList_DeepClone(mRawList).Consume());
+  return clone.forget();
+}
+
+ServoMediaList::ServoMediaList()
+  : mRawList(Servo_MediaList_Create().Consume())
+{
+}
+
+ServoMediaList::ServoMediaList(const nsAString& aMedia)
+  : ServoMediaList()
+{
+  SetText(aMedia);
 }
 
 void
@@ -66,6 +77,14 @@ ServoMediaList::Delete(const nsAString& aOldMedium)
     return NS_OK;
   }
   return NS_ERROR_DOM_NOT_FOUND_ERR;
+}
+
+bool
+ServoMediaList::Matches(nsPresContext& aPresContext,
+                        nsMediaQueryResultCacheKey*) const
+{
+  const RawServoStyleSet& rawSet = aPresContext.StyleSet()->AsServo()->RawSet();
+  return Servo_MediaList_Matches(mRawList, &rawSet);
 }
 
 } // namespace mozilla

@@ -10,7 +10,10 @@
 
 #include "mozAutoDocUpdate.h"
 #include "mozilla/dom/MediaListBinding.h"
+#include "mozilla/ServoMediaList.h"
 #include "mozilla/StyleSheetInlines.h"
+#include "nsCSSParser.h"
+#include "nsMediaList.h"
 
 namespace mozilla {
 namespace dom {
@@ -66,6 +69,20 @@ MediaList::DoMediaChange(Func aCallback)
     doc->StyleRuleChanged(mStyleSheet, nullptr);
   }
   return rv;
+}
+
+/* static */ already_AddRefed<MediaList>
+MediaList::Create(StyleBackendType aBackendType, const nsAString& aMedia)
+{
+  if (aBackendType == StyleBackendType::Servo) {
+    RefPtr<ServoMediaList> mediaList = new ServoMediaList(aMedia);
+    return mediaList.forget();
+  }
+
+  nsCSSParser parser;
+  RefPtr<nsMediaList> mediaList = new nsMediaList();
+  parser.ParseMediaList(aMedia, nullptr, 0, mediaList);
+  return mediaList.forget();
 }
 
 NS_IMETHODIMP

@@ -259,16 +259,15 @@ let urlbarListener = {
             .getHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX")
             .add(idx);
 
-    // Ideally this would be a keyed histogram and we'd just add(actionType),
-    // but keyed histograms aren't currently shown on the telemetry dashboard
-    // (bug 1151756).
-    //
     // You can add values but don't change any of the existing values.
     // Otherwise you'll break our data.
     if (actionType in URLBAR_SELECTED_RESULT_TYPES) {
       Services.telemetry
               .getHistogramById("FX_URLBAR_SELECTED_RESULT_TYPE")
               .add(URLBAR_SELECTED_RESULT_TYPES[actionType]);
+      Services.telemetry
+              .getKeyedHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE")
+              .add(actionType, idx);
     } else {
       Cu.reportError("Unknown FX_URLBAR_SELECTED_RESULT_TYPE type: " +
                      actionType);
