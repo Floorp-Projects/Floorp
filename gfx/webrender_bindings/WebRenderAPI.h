@@ -138,8 +138,6 @@ public:
   wr::BuiltDisplayList Finalize();
 
   void PushStackingContext(const WrRect& aBounds, // TODO: We should work with strongly typed rects
-                           const WrRect& aOverflow,
-                           const WrImageMask* aMask, // TODO: needs a wrapper.
                            const float aOpacity,
                            const gfx::Matrix4x4& aTransform,
                            const WrMixBlendMode& aMixBlendMode);
@@ -164,17 +162,28 @@ public:
                           const WrPoint& aStartPoint,
                           const WrPoint& aEndPoint,
                           const nsTArray<WrGradientStop>& aStops,
-                          wr::GradientExtendMode aExtendMode);
+                          wr::GradientExtendMode aExtendMode,
+                          const WrSize aTileSize,
+                          const WrSize aTileSpacing);
 
   void PushRadialGradient(const WrRect& aBounds,
                           const WrClipRegion& aClip,
                           const WrPoint& aCenter,
                           const WrSize& aRadius,
                           const nsTArray<WrGradientStop>& aStops,
-                          wr::GradientExtendMode aExtendMode);
+                          wr::GradientExtendMode aExtendMode,
+                          const WrSize aTileSize,
+                          const WrSize aTileSpacing);
 
   void PushImage(const WrRect& aBounds,
                  const WrClipRegion& aClip,
+                 wr::ImageRendering aFilter,
+                 wr::ImageKey aImage);
+
+  void PushImage(const WrRect& aBounds,
+                 const WrClipRegion& aClip,
+                 const WrSize& aStretchSize,
+                 const WrSize& aTileSpacing,
                  wr::ImageRendering aFilter,
                  wr::ImageKey aImage);
 
@@ -199,6 +208,24 @@ public:
                        const WrSideOffsets2Df32& aOutset,
                        const WrRepeatMode& aRepeatHorizontal,
                        const WrRepeatMode& aRepeatVertical);
+
+  void PushBorderGradient(const WrRect& aBounds,
+                          const WrClipRegion& aClip,
+                          const WrBorderWidths& aWidths,
+                          const WrPoint& aStartPoint,
+                          const WrPoint& aEndPoint,
+                          const nsTArray<WrGradientStop>& aStops,
+                          wr::GradientExtendMode aExtendMode,
+                          const WrSideOffsets2Df32& aOutset);
+
+  void PushBorderRadialGradient(const WrRect& aBounds,
+                                const WrClipRegion& aClip,
+                                const WrBorderWidths& aWidths,
+                                const WrPoint& aCenter,
+                                const WrSize& aRadius,
+                                const nsTArray<WrGradientStop>& aStops,
+                                wr::GradientExtendMode aExtendMode,
+                                const WrSideOffsets2Df32& aOutset);
 
   void PushText(const WrRect& aBounds,
                 const WrClipRegion& aClip,

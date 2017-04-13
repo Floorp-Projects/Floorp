@@ -197,8 +197,8 @@ WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArra
 
     for (size_t j = 0; j < glyphs.Length(); j++) {
       wr_glyph_instances[j].index = glyphs[j].mIndex;
-      wr_glyph_instances[j].x = glyphs[j].mPosition.x - aOffset.x;
-      wr_glyph_instances[j].y = glyphs[j].mPosition.y - aOffset.y;
+      wr_glyph_instances[j].point.x = glyphs[j].mPosition.x - aOffset.x;
+      wr_glyph_instances[j].point.y = glyphs[j].mPosition.y - aOffset.y;
     }
     aBuilder.PushText(wr::ToWrRect(aBounds),
                       clipRegion,
