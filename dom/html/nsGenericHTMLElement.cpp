@@ -962,14 +962,8 @@ nsGenericHTMLElement::ParseBackgroundAttribute(int32_t aNamespaceID,
       return false;
     }
 
-    nsString value(aValue);
-    RefPtr<nsStringBuffer> buffer = nsCSSValue::BufferFromString(value);
-    if (MOZ_UNLIKELY(!buffer)) {
-      return false;
-    }
-
     mozilla::css::URLValue *url =
-      new mozilla::css::URLValue(uri, buffer, baseURI, doc->GetDocumentURI(),
+      new mozilla::css::URLValue(uri, aValue, baseURI, doc->GetDocumentURI(),
                                  NodePrincipal());
     aResult.SetTo(url, &aValue);
     return true;
