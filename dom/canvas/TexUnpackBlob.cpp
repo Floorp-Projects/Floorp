@@ -270,7 +270,7 @@ FallbackOnZero(uint32_t val, uint32_t fallback)
 
 TexUnpackBlob::TexUnpackBlob(const WebGLContext* webgl, TexImageTarget target,
                              uint32_t rowLength, uint32_t width, uint32_t height,
-                             uint32_t depth, gfxAlphaType srcAlphaType)
+                             uint32_t depth, bool srcIsPremult)
     : mAlignment(webgl->mPixelStore_UnpackAlignment)
     , mRowLength(rowLength)
     , mImageHeight(FallbackOnZero(ZeroOn2D(target, webgl->mPixelStore_UnpackImageHeight),
@@ -284,7 +284,7 @@ TexUnpackBlob::TexUnpackBlob(const WebGLContext* webgl, TexImageTarget target,
     , mHeight(height)
     , mDepth(depth)
 
-    , mSrcAlphaType(srcAlphaType)
+    , mSrcIsPremult(srcIsPremult)
 
     , mNeedsExactUpload(false)
 {
@@ -327,18 +327,7 @@ TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
     if (!rowLength || !rowCount)
         return true;
 
-    const auto srcIsPremult = (mSrcAlphaType == gfxAlphaType::Premult);
     const auto& dstIsPremult = webgl->mPixelStore_PremultiplyAlpha;
-    const auto fnHasPremultMismatch = [&]() {
-        if (mSrcAlphaType == gfxAlphaType::Opaque)
-            return false;
-
-        if (!HasColorAndAlpha(srcFormat))
-            return false;
-
-        return srcIsPremult != dstIsPremult;
-    };
-
     const auto srcOrigin = (webgl->mPixelStore_FlipY ? gl::OriginPos::TopLeft
                                                      : gl::OriginPos::BottomLeft);
     const auto dstOrigin = gl::OriginPos::BottomLeft;
@@ -347,7 +336,7 @@ TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
         webgl->GeneratePerfWarning("%s: Conversion requires pixel reformatting. (%u->%u)",
                                    funcName, uint32_t(srcFormat),
                                    uint32_t(dstFormat));
-    } else if (fnHasPremultMismatch()) {
+    } else if (mSrcIsPremult != dstIsPremult && HasColorAndAlpha(srcFormat)) {
         webgl->GeneratePerfWarning("%s: Conversion requires change in"
                                    " alpha-premultiplication.",
                                    funcName);
@@ -380,7 +369,7 @@ TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
     // And go!:
     bool wasTrivial;
     if (!ConvertImage(rowLength, rowCount,
-                      srcBegin, srcStride, srcOrigin, srcFormat, srcIsPremult,
+                      srcBegin, srcStride, srcOrigin, srcFormat, mSrcIsPremult,
                       dstBegin, dstStride, dstOrigin, dstFormat, dstIsPremult,
                       &wasTrivial))
     {
@@ -414,7 +403,7 @@ TexUnpackBytes::TexUnpackBytes(const WebGLContext* webgl, TexImageTarget target,
                                bool isClientData, const uint8_t* ptr, size_t availBytes)
     : TexUnpackBlob(webgl, target,
                     FallbackOnZero(webgl->mPixelStore_UnpackRowLength, width),
-                    width, height, depth, gfxAlphaType::NonPremult)
+                    width, height, depth, false)
     , mIsClientData(isClientData)
     , mPtr(ptr)
     , mAvailBytes(availBytes)
@@ -589,9 +578,9 @@ TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
 
 TexUnpackImage::TexUnpackImage(const WebGLContext* webgl, TexImageTarget target,
                                uint32_t width, uint32_t height, uint32_t depth,
-                               layers::Image* image, gfxAlphaType srcAlphaType)
+                               layers::Image* image, bool isAlphaPremult)
     : TexUnpackBlob(webgl, target, image->GetSize().width, width, height, depth,
-                    srcAlphaType)
+                    isAlphaPremult)
     , mImage(image)
 { }
 
@@ -637,24 +626,15 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
             break;
         }
 
-        const auto fnHasPremultMismatch = [&]() {
-            if (mSrcAlphaType == gfxAlphaType::Opaque)
-                return false;
-
-            const bool srcIsPremult = (mSrcAlphaType == gfxAlphaType::Premult);
-            const auto& dstIsPremult = webgl->mPixelStore_PremultiplyAlpha;
-            if (srcIsPremult == dstIsPremult)
-                return false;
-
+        const auto& dstIsPremult = webgl->mPixelStore_PremultiplyAlpha;
+        if (mSrcIsPremult != dstIsPremult) {
             if (dstIsPremult) {
                 fallbackReason = "UNPACK_PREMULTIPLY_ALPHA_WEBGL is not true";
             } else {
                 fallbackReason = "UNPACK_PREMULTIPLY_ALPHA_WEBGL is not false";
             }
-            return true;
-        };
-        if (fnHasPremultMismatch())
             break;
+        }
 
         if (dui->unpackFormat != LOCAL_GL_RGB && dui->unpackFormat != LOCAL_GL_RGBA) {
             fallbackReason = "`format` is not RGB or RGBA";
@@ -721,7 +701,7 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
     }
 
     const TexUnpackSurface surfBlob(webgl, target, mWidth, mHeight, mDepth, dataSurf,
-                                    mSrcAlphaType);
+                                    mSrcIsPremult);
 
     return surfBlob.TexOrSubImage(isSubImage, needsRespec, funcName, tex, target, level,
                                   dui, xOffset, yOffset, zOffset, out_error);
@@ -733,10 +713,9 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
 
 TexUnpackSurface::TexUnpackSurface(const WebGLContext* webgl, TexImageTarget target,
                                    uint32_t width, uint32_t height, uint32_t depth,
-                                   gfx::DataSourceSurface* surf,
-                                   gfxAlphaType srcAlphaType)
+                                   gfx::DataSourceSurface* surf, bool isAlphaPremult)
     : TexUnpackBlob(webgl, target, surf->GetSize().width, width, height, depth,
-                    srcAlphaType)
+                    isAlphaPremult)
     , mSurf(surf)
 { }
 

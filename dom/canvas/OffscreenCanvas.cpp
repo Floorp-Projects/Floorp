@@ -302,13 +302,13 @@ OffscreenCanvas::ToBlob(JSContext* aCx,
 }
 
 already_AddRefed<gfx::SourceSurface>
-OffscreenCanvas::GetSurfaceSnapshot(gfxAlphaType* const aOutAlphaType)
+OffscreenCanvas::GetSurfaceSnapshot(bool* aPremultAlpha)
 {
   if (!mCurrentContext) {
     return nullptr;
   }
 
-  return mCurrentContext->GetSurfaceSnapshot(aOutAlphaType);
+  return mCurrentContext->GetSurfaceSnapshot(aPremultAlpha);
 }
 
 nsCOMPtr<nsIGlobalObject>

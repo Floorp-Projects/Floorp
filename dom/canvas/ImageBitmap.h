@@ -63,7 +63,7 @@ struct ImageBitmapCloneData final
 {
   RefPtr<gfx::DataSourceSurface> mSurface;
   gfx::IntRect mPictureRect;
-  gfxAlphaType mAlphaType;
+  bool mIsPremultipliedAlpha;
   bool mIsCroppingAreaOutSideOfSourceImage;
 };
 
@@ -200,7 +200,7 @@ protected:
    * CreateInternal(from ImageData) method.
    */
   ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData,
-              gfxAlphaType aAlphaType = gfxAlphaType::Premult);
+              bool aIsPremultipliedAlpha = true);
 
   virtual ~ImageBitmap();
 
@@ -272,7 +272,7 @@ protected:
    */
   gfx::IntRect mPictureRect;
 
-  const gfxAlphaType mAlphaType;
+  const bool mIsPremultipliedAlpha;
 
   /*
    * Set mIsCroppingAreaOutSideOfSourceImage if image bitmap was cropped to the
