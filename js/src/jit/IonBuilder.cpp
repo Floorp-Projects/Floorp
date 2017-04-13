@@ -658,6 +658,7 @@ IonBuilder::analyzeNewLoopTypes(const CFGBlock* loopEntryBlock)
               case JSOP_STRICTNE:
               case JSOP_IN:
               case JSOP_INSTANCEOF:
+              case JSOP_HASOWN:
                 type = MIRType::Boolean;
                 break;
               case JSOP_DOUBLE:
@@ -2267,6 +2268,9 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_IN:
         return jsop_in();
+
+      case JSOP_HASOWN:
+        return jsop_hasown();
 
       case JSOP_SETRVAL:
         MOZ_ASSERT(!script()->noScriptRval());
@@ -12689,6 +12693,20 @@ IonBuilder::inTryFold(bool* emitted, MDefinition* obj, MDefinition* id)
     pushConstant(BooleanValue(false));
     obj->setImplicitlyUsedUnchecked();
     id->setImplicitlyUsedUnchecked();
+    return Ok();
+}
+
+AbortReasonOr<Ok>
+IonBuilder::jsop_hasown()
+{
+    MDefinition* obj = convertUnboxedObjects(current->pop());
+    MDefinition* id = current->pop();
+
+    MHasOwnCache* ins = MHasOwnCache::New(alloc(), obj, id);
+    current->add(ins);
+    current->push(ins);
+
+    MOZ_TRY(resumeAfter(ins));
     return Ok();
 }
 

@@ -578,6 +578,7 @@ class IonBuilder
     AbortReasonOr<Ok> jsop_isnoiter();
     AbortReasonOr<Ok> jsop_iterend();
     AbortReasonOr<Ok> jsop_in();
+    AbortReasonOr<Ok> jsop_hasown();
     AbortReasonOr<Ok> jsop_instanceof();
     AbortReasonOr<Ok> jsop_getaliasedvar(EnvironmentCoordinate ec);
     AbortReasonOr<Ok> jsop_setaliasedvar(EnvironmentCoordinate ec);

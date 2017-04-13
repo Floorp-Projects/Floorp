@@ -236,6 +236,11 @@ typedef bool (*IonGetNameICFn)(JSContext*, HandleScript, IonGetNameIC*, HandleOb
 static const VMFunction IonGetNameICInfo =
     FunctionInfo<IonGetNameICFn>(IonGetNameIC::update, "IonGetNameIC::update");
 
+typedef bool (*IonHasOwnICFn)(JSContext*, HandleScript, IonHasOwnIC*, HandleValue, HandleValue,
+                              int32_t*);
+static const VMFunction IonHasOwnICInfo =
+    FunctionInfo<IonHasOwnICFn>(IonHasOwnIC::update, "IonHasOwnIC::update");
+
 void
 CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
 {
@@ -306,6 +311,24 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
       }
       case CacheKind::In:
         MOZ_CRASH("Baseline-specific for now");
+      case CacheKind::HasOwn: {
+        IonHasOwnIC* hasOwnIC = ic->asHasOwnIC();
+
+        saveLive(lir);
+
+        pushArg(hasOwnIC->id());
+        pushArg(hasOwnIC->value());
+        icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
+        pushArg(ImmGCPtr(gen->info().script()));
+
+        callVM(IonHasOwnICInfo, lir);
+
+        StoreRegisterTo(hasOwnIC->output()).generate(this);
+        restoreLiveIgnore(lir, StoreRegisterTo(hasOwnIC->output()).clobbered());
+
+        masm.jump(ool->rejoin());
+        return;
+      }
     }
     MOZ_CRASH();
 }
@@ -10411,6 +10434,20 @@ CodeGenerator::visitBindNameIC(OutOfLineUpdateCache* ool, DataPtr<BindNameIC>& i
     restoreLiveIgnore(lir, StoreRegisterTo(ic->outputReg()).clobbered());
 
     masm.jump(ool->rejoin());
+}
+
+void
+CodeGenerator::visitHasOwnCache(LHasOwnCache* ins)
+{
+    LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
+    TypedOrValueRegister value =
+        toConstantOrRegister(ins, LHasOwnCache::Value, ins->mir()->value()->type()).reg();
+    TypedOrValueRegister id =
+        toConstantOrRegister(ins, LHasOwnCache::Id, ins->mir()->idval()->type()).reg();
+    Register output = ToRegister(ins->output());
+
+    IonHasOwnIC cache(liveRegs, value, id, output);
+    addIC(ins, allocateIC(cache));
 }
 
 typedef bool (*SetPropertyFn)(JSContext*, HandleObject,
