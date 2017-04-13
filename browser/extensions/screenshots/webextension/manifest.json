@@ -1,0 +1,87 @@
+{
+  "manifest_version": 2,
+  "name": "Firefox Screenshots",
+  "version": "6.3.0",
+  "description": "__MSG_addonDescription__",
+  "author": "__MSG_addonAuthorsList__",
+  "homepage_url": "https://github.com/mozilla-services/screenshots",
+  "applications": {
+    "gecko": {
+      "id": "screenshots@mozilla.org"
+    }
+  },
+  "default_locale": "en_US",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "64": "icons/icon-64.png",
+    "128": "icons/icon-128.png",
+    "256": "icons/icon-256.png"
+  },
+  "browser_action": {
+    "default_icon": {
+      "19": "icons/icon-19.png",
+      "38": "icons/icon-38.png"
+    },
+    "default_title": "__MSG_contextMenuLabel__",
+    "browser_style": false
+  },
+  "background": {
+    "scripts": [
+      "build/buildSettings.js",
+      "log.js",
+      "makeUuid.js",
+      "catcher.js",
+      "background/selectorLoader.js",
+      "background/communication.js",
+      "background/auth.js",
+      "background/senderror.js",
+      "build/raven.js",
+      "build/shot.js",
+      "background/analytics.js",
+      "background/deviceInfo.js",
+      "background/takeshot.js",
+      "background/main.js"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://screenshots.firefox.com/*"],
+      "js": [
+        "build/buildSettings.js",
+        "log.js",
+        "catcher.js",
+        "selector/callBackground.js",
+        "sitehelper.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    "blank.html",
+    "icons/cancel.svg",
+    "icons/download.svg",
+    "icons/icon-256.png",
+    "icons/back.svg",
+    "icons/menu-fullpage.svg",
+    "icons/menu-visible.svg",
+    "icons/menu-myshot.svg",
+    "icons/onboarding-1.png",
+    "icons/onboarding-2.png",
+    "icons/onboarding-3.png",
+    "icons/onboarding-4.png",
+    "icons/done.svg"
+  ],
+  "permissions": [
+    "activeTab",
+    "downloads",
+    "tabs",
+    "storage",
+    "notifications",
+    "clipboardWrite",
+    "contextMenus",
+    "<all_urls>",
+    "https://screenshots.firefox.com/"
+  ]
+}

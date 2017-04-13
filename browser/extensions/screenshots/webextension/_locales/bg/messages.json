@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Прави клипове и снимки на уебстраница и ги запазва временно или за постоянно."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Снимка на екрана"
+  },
+  "myShotsLink": {
+    "message": "Моите снимки"
+  },
+  "screenshotInstructions": {
+    "message": "За да изберете участък влачете или щракнете с мишката в страницата. Натиснете ESC за отказ."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Запазване"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Запазване на видимата област"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Запазване на цялата страница"
+  },
+  "cancelScreenshot": {
+    "message": "Отказ"
+  },
+  "downloadScreenshot": {
+    "message": "Изтегляне"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Препратката е копирана"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Препратка към снимката е копирана в системния буфер. За да я поставите натиснете $META_KEY$-V.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Повреда."
+  },
+  "requestErrorDetails": {
+    "message": "Съжаляваме! Снимката не е запазена. Опитайте по-късно."
+  },
+  "connectionErrorTitle": {
+    "message": "Няма връзка с вашите снимки."
+  },
+  "connectionErrorDetails": {
+    "message": "Моля, проверете своята връзка към интернет. Ако имате връзка с Мрежата, в такъв случай може да има временен проблем с услугата на Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Снимката не може да бъде запазена, защото има проблем с услугата на Firefox Screenshots. Опитайте по-късно."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Снимка на тази страница не може да бъде направена."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Това не е обикновена уебстраница и за това снимка не може да ѝ бъде направена."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Не може да правите снимки на страницата на Firefox Screenshots!"
+  },
+  "genericErrorTitle": {
+    "message": "Леле! Нещо се обърка с Firefox Screenshots."
+  },
+  "genericErrorDetails": {
+    "message": "Не сме сигурни какво точно се случи. Може да опитате отново, както и да снимате друга страница."
+  },
+  "tourBodyOne": {
+    "message": "Правете, запазвайте и споделяйте снимки на екрана без да напускате Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Уловете само нужното"
+  },
+  "tourBodyTwo": {
+    "message": "Щракнете с мишката или влачете, за да уловите части от страницата. Посочвайки елементите на страницата те се осветяват."
+  },
+  "tourHeaderThree": {
+    "message": "Както ви харесва"
+  },
+  "tourBodyThree": {
+    "message": "Запазете снимките на страници от Мрежата за по-лесно споделяне или ги изтеглете на компютъра си. А бутонът „Моите снимки“ ще ви покаже всички направени от вас снимки."
+  },
+  "tourHeaderFour": {
+    "message": "Улавяйте прозорци и цели страници"
+  },
+  "tourBodyFour": {
+    "message": "Използвайте бутоните в горния десен ъгъл, за да уловите само видимата част или цялата страница."
+  },
+  "tourSkip": {
+    "message": "Прескачане"
+  },
+  "tourNext": {
+    "message": "Напред"
+  },
+  "tourPrevious": {
+    "message": "Назад"
+  },
+  "tourDone": {
+    "message": "Готово"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Използвайки Firefox Screenshots вие се съгласявате с тези $TERMSANDPRIVACYNOTICETERMSLINK$ и $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Условия"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Политика на поверителност"
+  }
+}
