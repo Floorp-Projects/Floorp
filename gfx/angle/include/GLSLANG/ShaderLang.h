@@ -75,12 +75,29 @@ const ShCompileOptions SH_OBJECT_CODE                        = UINT64_C(1) << 2;
 const ShCompileOptions SH_VARIABLES                          = UINT64_C(1) << 3;
 const ShCompileOptions SH_LINE_DIRECTIVES                    = UINT64_C(1) << 4;
 const ShCompileOptions SH_SOURCE_PATH                        = UINT64_C(1) << 5;
-const ShCompileOptions SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX = UINT64_C(1) << 6;
-// If a sampler array index happens to be a loop index,
-//   1) if its type is integer, unroll the loop.
-//   2) if its type is float, fail the shader compile.
-// This is to work around a mac driver bug.
-const ShCompileOptions SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX = UINT64_C(1) << 7;
+
+// This flag will keep invariant declaration for input in fragment shader for GLSL >=4.20 on AMD.
+// From GLSL >= 4.20, it's optional to add invariant for fragment input, but GPU vendors have
+// different implementations about this. Some drivers forbid invariant in fragment for GLSL>= 4.20,
+// e.g. Linux Mesa, some drivers treat that as optional, e.g. NVIDIA, some drivers require invariant
+// must match between vertex and fragment shader, e.g. AMD. The behavior on AMD is obviously wrong.
+// Remove invariant for input in fragment shader to workaround the restriction on Intel Mesa.
+// But don't remove on AMD Linux to avoid triggering the bug on AMD.
+const ShCompileOptions SH_DONT_REMOVE_INVARIANT_FOR_FRAGMENT_INPUT = UINT64_C(1) << 6;
+
+// Due to spec difference between GLSL 4.1 or lower and ESSL3, some platforms (for example, Mac OSX
+// core profile) require a variable's "invariant"/"centroid" qualifiers to match between vertex and
+// fragment shader. A simple solution to allow such shaders to link is to omit the two qualifiers.
+// AMD driver in Linux requires invariant qualifier to match between vertex and fragment shaders,
+// while ESSL3 disallows invariant qualifier in fragment shader and GLSL >= 4.2 doesn't require
+// invariant qualifier to match between shaders. Remove invariant qualifier from vertex shader to
+// workaround AMD driver bug.
+// Note that the two flags take effect on ESSL3 input shaders translated to GLSL 4.1 or lower and to
+// GLSL 4.2 or newer on Linux AMD.
+// TODO(zmo): This is not a good long-term solution. Simply dropping these qualifiers may break some
+// developers' content. A more complex workaround of dynamically generating, compiling, and
+// re-linking shaders that use these qualifiers should be implemented.
+const ShCompileOptions SH_REMOVE_INVARIANT_AND_CENTROID_FOR_ESSL3 = UINT64_C(1) << 7;
 
 // This flag works around bug in Intel Mac drivers related to abs(i) where
 // i is an integer.
@@ -185,29 +202,6 @@ const ShCompileOptions SH_EMULATE_ISNAN_FLOAT_FUNCTION = UINT64_C(1) << 27;
 // OpenGL ES3.0.4 requires all members of a named uniform block declared with a shared or std140
 // layout qualifier to be considered active. The uniform block itself is also considered active.
 const ShCompileOptions SH_USE_UNUSED_STANDARD_SHARED_BLOCKS = UINT64_C(1) << 28;
-
-// This flag will keep invariant declaration for input in fragment shader for GLSL >=4.20 on AMD.
-// From GLSL >= 4.20, it's optional to add invariant for fragment input, but GPU vendors have
-// different implementations about this. Some drivers forbid invariant in fragment for GLSL>= 4.20,
-// e.g. Linux Mesa, some drivers treat that as optional, e.g. NVIDIA, some drivers require invariant
-// must match between vertex and fragment shader, e.g. AMD. The behavior on AMD is obviously wrong.
-// Remove invariant for input in fragment shader to workaround the restriction on Intel Mesa.
-// But don't remove on AMD Linux to avoid triggering the bug on AMD.
-const ShCompileOptions SH_DONT_REMOVE_INVARIANT_FOR_FRAGMENT_INPUT = UINT64_C(1) << 29;
-
-// Due to spec difference between GLSL 4.1 or lower and ESSL3, some platforms (for example, Mac OSX
-// core profile) require a variable's "invariant"/"centroid" qualifiers to match between vertex and
-// fragment shader. A simple solution to allow such shaders to link is to omit the two qualifiers.
-// AMD driver in Linux requires invariant qualifier to match between vertex and fragment shaders,
-// while ESSL3 disallows invariant qualifier in fragment shader and GLSL >= 4.2 doesn't require
-// invariant qualifier to match between shaders. Remove invariant qualifier from vertex shader to
-// workaround AMD driver bug.
-// Note that the two flags take effect on ESSL3 input shaders translated to GLSL 4.1 or lower and to
-// GLSL 4.2 or newer on Linux AMD.
-// TODO(zmo): This is not a good long-term solution. Simply dropping these qualifiers may break some
-// developers' content. A more complex workaround of dynamically generating, compiling, and
-// re-linking shaders that use these qualifiers should be implemented.
-const ShCompileOptions SH_REMOVE_INVARIANT_AND_CENTROID_FOR_ESSL3 = UINT64_C(1) << 30;
 
 // Defines alternate strategies for implementing array index clamping.
 enum ShArrayIndexClampingStrategy
