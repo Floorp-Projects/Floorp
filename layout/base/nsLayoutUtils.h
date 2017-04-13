@@ -2073,7 +2073,7 @@ public:
     SFE_WANT_IMAGE_SURFACE = 1 << 0,
     /* Whether to extract the first frame (as opposed to the
        current frame) in the case that the element is an image. */
-    SFE_WANT_FIRST_FRAME = 1 << 1,
+    SFE_WANT_FIRST_FRAME_IF_IMAGE = 1 << 1,
     /* Whether we should skip colorspace/gamma conversion */
     SFE_NO_COLORSPACE_CONVERSION = 1 << 2,
     /* Specifies that the caller wants unpremultiplied pixel data.
