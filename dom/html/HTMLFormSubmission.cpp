@@ -35,6 +35,7 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIFileStreams.h"
 #include "nsContentUtils.h"
+#include "mozilla/Telemetry.h"
 
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/EncodingUtils.h"
@@ -188,6 +189,7 @@ FSURLEncoded::AddIsindex(const nsAString& aValue)
 
   // Append data to string
   if (mQueryString.IsEmpty()) {
+    Telemetry::Accumulate(Telemetry::FORM_ISINDEX_USED, true);
     mQueryString.Assign(convValue);
   } else {
     mQueryString += NS_LITERAL_CSTRING("&isindex=") + convValue;
