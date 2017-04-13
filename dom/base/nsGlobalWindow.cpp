@@ -10069,6 +10069,8 @@ nsGlobalWindow::FindOuter(const nsAString& aString, bool aCaseSensitive,
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
+  Unused << aShowDialog;
+
   if (Preferences::GetBool("dom.disable_window_find", false)) {
     aError.Throw(NS_ERROR_NOT_AVAILABLE);
     return false;
@@ -10101,32 +10103,7 @@ nsGlobalWindow::FindOuter(const nsAString& aString, bool aCaseSensitive,
     framesFinder->SetCurrentSearchFrame(AsOuter());
   }
 
-  // The Find API does not accept empty strings. Launch the Find Dialog.
-  if (aString.IsEmpty() || aShowDialog) {
-    // See if the find dialog is already up using nsIWindowMediator
-    nsCOMPtr<nsIWindowMediator> windowMediator =
-      do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
-
-    nsCOMPtr<mozIDOMWindowProxy> findDialog;
-
-    if (windowMediator) {
-      windowMediator->GetMostRecentWindow(u"findInPage",
-                                          getter_AddRefs(findDialog));
-    }
-
-    if (findDialog) {
-      // The Find dialog is already open, bring it to the top.
-      auto* piFindDialog = nsPIDOMWindowOuter::From(findDialog);
-      aError = piFindDialog->Focus();
-    } else if (finder) {
-      // Open a Find dialog
-      nsCOMPtr<nsPIDOMWindowOuter> dialog;
-      aError = OpenDialog(NS_LITERAL_STRING("chrome://global/content/finddialog.xul"),
-                          NS_LITERAL_STRING("_blank"),
-                          NS_LITERAL_STRING("chrome, resizable=no, dependent=yes"),
-                          finder, getter_AddRefs(dialog));
-    }
-
+  if (aString.IsEmpty()) {
     return false;
   }
 
