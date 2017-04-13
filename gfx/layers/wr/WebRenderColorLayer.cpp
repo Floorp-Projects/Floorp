@@ -24,7 +24,7 @@ WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   gfx::Rect rect = GetWrBoundsRect();
 
   gfx::Rect clipRect = GetWrClipRect(rect);
-  Maybe<WrImageMask> mask = BuildWrMaskLayer();
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
   WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect), mask.ptrOr(nullptr));
 
   wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());

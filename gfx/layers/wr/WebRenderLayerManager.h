@@ -59,7 +59,7 @@ protected:
   gfx::Rect GetWrClipRect(gfx::Rect& aRect);
   gfx::Matrix4x4 GetWrBoundTransform();
   void DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect);
-  Maybe<WrImageMask> BuildWrMaskLayer();
+  Maybe<WrImageMask> BuildWrMaskLayer(bool aUnapplyLayerTransform);
 };
 
 class WebRenderLayerManager final : public LayerManager
