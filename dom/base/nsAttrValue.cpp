@@ -1675,17 +1675,12 @@ nsAttrValue::LoadImage(nsIDocument* aDocument)
 {
   NS_ASSERTION(Type() == eURL, "wrong type");
 
-#ifdef DEBUG
-  {
-    nsString val;
-    ToString(val);
-    NS_ASSERTION(!val.IsEmpty(),
-                 "How did we end up with an empty string for eURL");
-  }
-#endif
-
   MiscContainer* cont = GetMiscContainer();
   mozilla::css::URLValue* url = cont->mValue.mURL;
+
+  NS_ASSERTION(!url->mString.IsEmpty(),
+               "How did we end up with an empty string for eURL");
+
   mozilla::css::ImageValue* image =
     new css::ImageValue(url->GetURI(), url->mString,
                         do_AddRef(url->mExtraData), aDocument);
