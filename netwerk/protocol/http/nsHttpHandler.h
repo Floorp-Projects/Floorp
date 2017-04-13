@@ -204,6 +204,12 @@ public:
         return mConnMgr->RescheduleTransaction(trans, priority);
     }
 
+    void ThrottleTransaction(nsHttpTransaction *trans,
+                                              bool throttle)
+    {
+        mConnMgr->ThrottleTransaction(trans, throttle);
+    }
+
     // Called to cancel a transaction, which may or may not be assigned to
     // a connection.  Callable from any thread.
     MOZ_MUST_USE nsresult CancelTransaction(nsHttpTransaction *trans,
