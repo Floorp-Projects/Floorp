@@ -175,7 +175,8 @@
             // don't search the children, if we're looking for none of them
             if (aItem == null)
               return -1;
-
+            if (this._selecting && this._selecting.item == aItem)
+              return this._selecting.index;
             return this.children.indexOf(aItem);
           ]]>
         </body>
@@ -184,7 +185,11 @@
       <method name="getItemAtIndex">
         <parameter name="aIndex"/>
         <body>
-          return this.children[aIndex] || null;
+          <![CDATA[
+            if (this._selecting && this._selecting.index == aIndex)
+              return this._selecting.item;
+            return this.children[aIndex] || null;
+          ]]>
         </body>
       </method>
 
@@ -315,16 +320,13 @@
       <property name="children" readonly="true">
         <getter>
           <![CDATA[
-            var childNodes = [];
-            var isReverse = this.dir == "reverse" && this._mayReverse;
-            var child = isReverse ? this.lastChild : this.firstChild;
-            var prop = isReverse ? "previousSibling" : "nextSibling";
-            while (child) {
-              if (child instanceof Components.interfaces.nsIDOMXULSelectControlItemElement)
-                childNodes.push(child);
-              child = child[prop];
+            let iface = Components.interfaces.nsIDOMXULSelectControlItemElement;
+            let children = Array.from(this.childNodes)
+                                .filter(node => node instanceof iface);
+            if (this.dir == "reverse" && this._mayReverse) {
+              children.reverse();
             }
-            return childNodes;
+            return children;
           ]]>
         </getter>
       </property>
