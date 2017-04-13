@@ -923,13 +923,6 @@ static NPError
 _setvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
                 const char *value, uint32_t len);
 
-static NPError
-_getauthenticationinfo(NPP npp, const char *protocol,
-                       const char *host, int32_t port,
-                       const char *scheme, const char *realm,
-                       char **username, uint32_t *ulen,
-                       char **password, uint32_t *plen);
-
 static uint32_t
 _scheduletimer(NPP instance, uint32_t interval, NPBool repeat,
                void (*timerFunc)(NPP npp, uint32_t timerID));
@@ -1013,7 +1006,7 @@ const NPNetscapeFuncs PluginModuleChild::sBrowserFuncs = {
     mozilla::plugins::child::_construct,
     mozilla::plugins::child::_getvalueforurl,
     mozilla::plugins::child::_setvalueforurl,
-    mozilla::plugins::child::_getauthenticationinfo,
+    nullptr, //NPN GetAuthenticationInfo, not supported
     mozilla::plugins::child::_scheduletimer,
     mozilla::plugins::child::_unscheduletimer,
     mozilla::plugins::child::_popupcontextmenu,
@@ -1646,38 +1639,6 @@ _setvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
     return NPERR_INVALID_PARAM;
 }
 
-NPError
-_getauthenticationinfo(NPP npp, const char *protocol,
-                       const char *host, int32_t port,
-                       const char *scheme, const char *realm,
-                       char **username, uint32_t *ulen,
-                       char **password, uint32_t *plen)
-{
-    PLUGIN_LOG_DEBUG_FUNCTION;
-    AssertPluginThread();
-
-    if (!protocol || !host || !scheme || !realm || !username || !ulen ||
-        !password || !plen)
-        return NPERR_INVALID_PARAM;
-
-    nsCString u;
-    nsCString p;
-    NPError result;
-    InstCast(npp)->
-        CallNPN_GetAuthenticationInfo(nsDependentCString(protocol),
-                                      nsDependentCString(host),
-                                      port,
-                                      nsDependentCString(scheme),
-                                      nsDependentCString(realm),
-                                      &u, &p, &result);
-    if (NPERR_NO_ERROR == result) {
-        *username = ToNewCString(u);
-        *ulen = u.Length();
-        *password = ToNewCString(p);
-        *plen = p.Length();
-    }
-    return result;
-}
 
 uint32_t
 _scheduletimer(NPP npp, uint32_t interval, NPBool repeat,
