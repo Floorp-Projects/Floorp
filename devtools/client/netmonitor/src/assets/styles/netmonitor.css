@@ -186,11 +186,9 @@ body,
 }
 
 .requests-list-contents {
-  display: flex;
-  flex-direction: column;
+  height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
-  flex: 1;
   --timings-scale: 1;
   --timings-rev-scale: 1;
 }
