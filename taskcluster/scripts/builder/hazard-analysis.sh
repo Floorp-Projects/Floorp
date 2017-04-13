@@ -70,12 +70,15 @@ sixgill = "$TOOLTOOL_DIR/sixgill/usr/libexec/sixgill"
 sixgill_bin = "$TOOLTOOL_DIR/sixgill/usr/bin"
 EOF
 
+        local rev
+        rev=$(cd $GECKO_DIR && hg log -r . -T '{node|short}')
         cat > run-analysis.sh <<EOF
 #!/bin/sh
 if [ \$# -eq 0 ]; then
   set gcTypes
 fi
 export ANALYSIS_SCRIPTDIR="$ANALYSIS_SRCDIR"
+export URLPREFIX="https://hg.mozilla.org/mozilla-unified/file/$rev/"
 exec "$ANALYSIS_SRCDIR/analyze.py" "\$@"
 EOF
         chmod +x run-analysis.sh
@@ -111,7 +114,7 @@ function grab_artifacts () {
         # Do not error out if no files found
         shopt -s nullglob
         set +e
-        for f in *.txt *.lst; do
+        for f in *.txt *.lst run-analysis.sh; do
             gzip -9 -c "$f" > "${artifacts}/$f.gz"
         done
 

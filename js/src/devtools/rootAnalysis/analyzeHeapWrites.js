@@ -631,6 +631,37 @@ function elapsedTime()
     return "[" + seconds.toFixed(2) + "s] ";
 }
 
+var options = parse_options([
+    {
+        name: '--strip-prefix',
+        default: os.getenv('SOURCE') || '',
+        type: 'string'
+    },
+    {
+        name: '--add-prefix',
+        default: os.getenv('URLPREFIX') || '',
+        type: 'string'
+    },
+    {
+        name: '--verbose',
+        type: 'bool'
+    },
+]);
+
+function add_trailing_slash(str) {
+    if (str == '')
+        return str;
+    return str.endsWith("/") ? str : str + "/";
+}
+
+var removePrefix = add_trailing_slash(options.strip_prefix);
+var addPrefix = add_trailing_slash(options.add_prefix);
+
+if (options.verbose) {
+    printErr(`Removing prefix ${removePrefix} from paths`);
+    printErr(`Prepending ${addPrefix} to paths`);
+}
+
 print(elapsedTime() + "Loading types...");
 loadTypes('src_comp.xdb');
 print(elapsedTime() + "Starting analysis...");
@@ -762,6 +793,11 @@ function processAssign(entry, location, lhs, edge)
     dumpError(entry, location, "Unknown assignment " + JSON.stringify(lhs));
 }
 
+function get_location(rawLocation) {
+    const filename = rawLocation.CacheString.replace(removePrefix, '');
+    return addPrefix + filename + "#" + rawLocation.Line;
+}
+
 function process(entry, body, addCallee)
 {
     if (!("PEdge" in body))
@@ -794,8 +830,7 @@ function process(entry, body, addCallee)
         if (!(edge.Index[0] in nonMainThreadPoints))
             continue;
 
-        var rawLocation = body.PPoint[edge.Index[0] - 1].Location;
-        var location = rawLocation.CacheString + ":" + rawLocation.Line;
+        var location = get_location(body.PPoint[edge.Index[0] - 1].Location);
 
         var callees = getCallees(edge);
         for (var callee of callees) {
