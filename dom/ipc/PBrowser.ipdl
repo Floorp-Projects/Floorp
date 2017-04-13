@@ -555,6 +555,8 @@ parent:
 
     async AccessKeyNotHandled(WidgetKeyboardEvent event);
 
+    async SetHasBeforeUnload(bool aHasBeforeUnload);
+
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
 
