@@ -270,22 +270,21 @@ bool
 OSPreferences::GetDateTimeConnectorPattern(const nsACString& aLocale,
                                            nsAString& aRetVal)
 {
+  bool result = false;
 #ifdef ENABLE_INTL_API
   UErrorCode status = U_ZERO_ERROR;
   UDateTimePatternGenerator* pg = udatpg_open(PromiseFlatCString(aLocale).get(), &status);
-  if (U_FAILURE(status)) {
-    return false;
+  if (U_SUCCESS(status)) {
+    int32_t resultSize;
+    const UChar* value = udatpg_getDateTimeFormat(pg, &resultSize);
+    MOZ_ASSERT(resultSize >= 0);
+
+    aRetVal.Assign((char16_t*)value, resultSize);
+    result = true;
   }
-
-  int32_t resultSize;
-  const UChar* value = udatpg_getDateTimeFormat(pg, &resultSize);
-  MOZ_ASSERT(resultSize >= 0);
-
-  aRetVal.Assign((char16_t*)value, resultSize);
-  return true;
-#else
-  return false;
+  udatpg_close(pg);
 #endif
+  return result;
 }
 
 /**
