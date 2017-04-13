@@ -2904,6 +2904,16 @@ private:
                                       CallOnRemoteChildFunction aCallback,
                                       void* aArg);
 
+  /**
+   * Gets the current cookie lifetime policy and cookie behavior for a given
+   * principal by checking with preferences and the permission manager.
+   *
+   * Used in the implementation of InternalStorageAllowedForPrincipal.
+   */
+  static void GetCookieBehaviorForPrincipal(nsIPrincipal* aPrincipal,
+                                            uint32_t* aLifetimePolicy,
+                                            uint32_t* aBehavior);
+
   /*
    * Checks if storage for a given principal is permitted by the user's
    * preferences. If aWindow is non-null, its principal must be passed as
