@@ -2841,7 +2841,7 @@ bool
 css::URLValueData::DefinitelyEqualURIs(const URLValueData& aOther) const
 {
   return mExtraData->BaseURI() == aOther.mExtraData->BaseURI() &&
-         (mString == aOther.mString);
+         mString == aOther.mString;
 }
 
 bool
