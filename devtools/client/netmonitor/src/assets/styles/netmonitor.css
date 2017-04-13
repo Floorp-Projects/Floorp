@@ -81,7 +81,9 @@ body,
   display: flex;
 }
 
-.devtools-toolbar-container {
+.devtools-toolbar-container.devtools-toolbar {
+  height: auto !important;
+  flex-wrap: wrap;
   justify-content: space-between;
 }
 
