@@ -13,7 +13,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/PlacesUtils.jsm", this);
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://gre/modules/Preferences.jsm");
 
@@ -23,6 +22,9 @@ XPCOMUtils.defineLazyGetter(this, "weaveXPCService", function() {
            .getService(Ci.nsISupports)
            .wrappedJSObject;
 });
+
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
 
 // from MDN...
 function escapeRegExp(string) {
@@ -294,4 +296,3 @@ this.SyncedTabs = {
     });
   },
 };
-
