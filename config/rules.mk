@@ -906,7 +906,7 @@ cargo_target_flag := --target=$(RUST_TARGET)
 
 # Permit users to pass flags to cargo from their mozconfigs (e.g. --color=always).
 cargo_build_flags = $(CARGOFLAGS)
-ifndef MOZ_DEBUG
+ifndef MOZ_DEBUG_RUST
 cargo_build_flags += --release
 endif
 cargo_build_flags += --frozen
@@ -936,8 +936,8 @@ endif
 ifndef MOZ_OPTIMIZE
 rustflags = -C opt-level=0
 # Unfortunately, -C opt-level=0 implies -C debug-assertions, so we need
-# to explicitly disable them when MOZ_DEBUG is not set.
-ifndef MOZ_DEBUG
+# to explicitly disable them when MOZ_DEBUG_RUST is not set.
+ifndef MOZ_DEBUG_RUST
 rustflags += -C debug-assertions=no
 endif
 rustflags_override = RUSTFLAGS='$(rustflags)'
