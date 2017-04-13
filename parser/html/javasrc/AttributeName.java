@@ -31,7 +31,6 @@ import nu.validator.htmlparser.annotation.NsUri;
 import nu.validator.htmlparser.annotation.Prefix;
 import nu.validator.htmlparser.annotation.QName;
 import nu.validator.htmlparser.annotation.Unsigned;
-import nu.validator.htmlparser.annotation.Virtual;
 import nu.validator.htmlparser.common.Interner;
 
 public final class AttributeName
@@ -273,35 +272,19 @@ public final class AttributeName
      */
     static AttributeName nameByBuffer(@NoLength char[] buf, int offset,
             int length
-            // [NOCPP[
-            , boolean checkNcName
-            // ]NOCPP]
             , Interner interner) {
         // XXX deal with offset
         @Unsigned int hash = AttributeName.bufToHash(buf, length);
         int index = Arrays.binarySearch(AttributeName.ATTRIBUTE_HASHES, hash);
         if (index < 0) {
-            return AttributeName.createAttributeName(
-                    Portability.newLocalNameFromBuffer(buf, offset, length,
-                            interner)
-                    // [NOCPP[
-                    , checkNcName
-            // ]NOCPP]
-            );
-        } else {
-            AttributeName attributeName = AttributeName.ATTRIBUTE_NAMES[index];
-            @Local String name = attributeName.getLocal(AttributeName.HTML);
-            if (!Portability.localEqualsBuffer(name, buf, offset, length)) {
-                return AttributeName.createAttributeName(
-                        Portability.newLocalNameFromBuffer(buf, offset, length,
-                                interner)
-                        // [NOCPP[
-                        , checkNcName
-                // ]NOCPP]
-                );
-            }
-            return attributeName;
+            return null;
         }
+        AttributeName attributeName = AttributeName.ATTRIBUTE_NAMES[index];
+        @Local String name = attributeName.getLocal(AttributeName.HTML);
+        if (!Portability.localEqualsBuffer(name, buf, offset, length)) {
+            return null;
+        }
+        return attributeName;
     }
 
     /**
@@ -383,6 +366,8 @@ public final class AttributeName
      */
     private final @Prefix @NoLength String[] prefix;
 
+    // CPPONLY: private final boolean custom;
+
     // [NOCPP[
 
     private final int flags;
@@ -408,7 +393,7 @@ public final class AttributeName
      * @param xmlns
      *            whether this is an xmlns attribute
      */
-    protected AttributeName(@NsUri @NoLength String[] uri,
+    private AttributeName(@NsUri @NoLength String[] uri,
             @Local @NoLength String[] local, @Prefix @NoLength String[] prefix
             // [NOCPP[
             , int flags
@@ -421,7 +406,26 @@ public final class AttributeName
         this.qName = COMPUTE_QNAME(local, prefix);
         this.flags = flags;
         // ]NOCPP]
+        // CPPONLY: this.custom = false;
     }
+
+    // CPPONLY: public AttributeName() {
+    // CPPONLY:     this.uri = AttributeName.ALL_NO_NS;
+    // CPPONLY:     this.local = AttributeName.SAME_LOCAL(null);
+    // CPPONLY:     this.prefix = ALL_NO_PREFIX;
+    // CPPONLY:     this.custom = true;
+    // CPPONLY: }
+    // CPPONLY:
+    // CPPONLY: public boolean isInterned() {
+    // CPPONLY:     return !custom;
+    // CPPONLY: }
+    // CPPONLY:
+    // CPPONLY: public void setNameForNonInterned(@Local String name) {
+    // CPPONLY:     assert custom;
+    // CPPONLY:     local[0] = name;
+    // CPPONLY:     local[1] = name;
+    // CPPONLY:     local[2] = name;
+    // CPPONLY: }
 
     /**
      * Creates an <code>AttributeName</code> for a local name.
@@ -432,7 +436,7 @@ public final class AttributeName
      *            whether to check ncnameness
      * @return an <code>AttributeName</code>
      */
-    private static AttributeName createAttributeName(@Local String name
+    static AttributeName createAttributeName(@Local String name
     // [NOCPP[
             , boolean checkNcName
     // ]NOCPP]
@@ -450,30 +454,10 @@ public final class AttributeName
     }
 
     /**
-     * Deletes runtime-allocated instances in C++.
-     */
-    @Virtual void release() {
-        // No-op in Java.
-        // Implement as |delete this;| in subclass.
-    }
-
-    /**
      * The C++ destructor.
      */
-    @SuppressWarnings("unused") @Virtual private void destructor() {
+    @SuppressWarnings("unused") private void destructor() {
         Portability.deleteArray(local);
-    }
-
-    /**
-     * Clones the attribute using an interner. Returns <code>this</code> in Java
-     * and for non-dynamic instances in C++.
-     *
-     * @param interner
-     *            an interner
-     * @return a clone
-     */
-    @Virtual public AttributeName cloneAttributeName(Interner interner) {
-        return this;
     }
 
     // [NOCPP[
