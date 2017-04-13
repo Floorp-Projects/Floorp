@@ -170,6 +170,9 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvAccessKeyNotHandled(const WidgetKeyboardEvent& aEvent) override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvSetHasBeforeUnload(const bool& aHasBeforeUnload) override;
+
   virtual mozilla::ipc::IPCResult RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
                                                              PRenderFrameParent* aRenderFrame,
                                                              const nsString& aURL,
@@ -761,6 +764,10 @@ private:
   // True if this TabParent has had its layer tree sent to the compositor
   // at least once.
   bool mHasPresented;
+
+  // True if at least one window hosted in the TabChild has added a
+  // beforeunload event listener.
+  bool mHasBeforeUnload;
 
 public:
   static TabParent* GetTabParentFromLayersId(uint64_t aLayersId);

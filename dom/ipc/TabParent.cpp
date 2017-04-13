@@ -168,6 +168,7 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mLayerTreeEpoch(0)
   , mPreserveLayers(false)
   , mHasPresented(false)
+  , mHasBeforeUnload(false)
 {
   MOZ_ASSERT(aManager);
 }
@@ -2025,6 +2026,13 @@ TabParent::RecvAccessKeyNotHandled(const WidgetKeyboardEvent& aEvent)
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+TabParent::RecvSetHasBeforeUnload(const bool& aHasBeforeUnload)
+{
+  mHasBeforeUnload = aHasBeforeUnload;
+  return IPC_OK();
+}
+
 bool
 TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
 {
@@ -2795,6 +2803,13 @@ TabParent::TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal)
 
   return manager->AsContentParent()
     ->TransmitPermissionsForPrincipal(aPrincipal);
+}
+
+NS_IMETHODIMP
+TabParent::GetHasBeforeUnload(bool* aResult)
+{
+  *aResult = mHasBeforeUnload;
+  return NS_OK;
 }
 
 class LayerTreeUpdateRunnable final
