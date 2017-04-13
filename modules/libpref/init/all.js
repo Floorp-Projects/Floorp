@@ -5043,11 +5043,12 @@ pref("dom.browserElement.maxScreenshotDelayMS", 2000);
 // Whether we should show the placeholder when the element is focused but empty.
 pref("dom.placeholder.show_on_focus", true);
 
-// VR is disabled by default in release and enabled for nightly and aurora
-#ifdef RELEASE_OR_BETA
-pref("dom.vr.enabled", false);
-#else
+// WebVR is enabled by default in beta and release for Windows and for all
+// platforms in nightly and aurora.
+#if defined(XP_WIN) || !defined(RELEASE_OR_BETA)
 pref("dom.vr.enabled", true);
+#else
+pref("dom.vr.enabled", false);
 #endif
 // It is often desirable to automatically start vr presentation when
 // a user puts on the VR headset.  This is done by emitting the
