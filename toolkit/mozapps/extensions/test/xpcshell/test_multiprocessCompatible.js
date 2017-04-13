@@ -102,6 +102,76 @@ for (let bootstrap of [false, true]) {
   }
 }
 
+add_task(async function test_disable() {
+  const PREF = "extensions.allow-non-mpc-extensions";
+  const ID_MPC = "mpc@tests.mozilla.org";
+  const ID_NON_MPC = "non-mpc@tests.mozilla.org";
+
+  let addonData = {
+    name: "Test Add-on",
+    version: "1.0",
+    bootstrap: true,
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }]
+  }
+
+  let xpi1 = createTempXPIFile(Object.assign({
+    id: ID_MPC,
+    multiprocessCompatible: true,
+  }, addonData));
+  let xpi2 = createTempXPIFile(Object.assign({
+      id: ID_NON_MPC,
+      multiprocessCompatible: false,
+  }, addonData));
+
+  async function testOnce(initialAllow) {
+    if (initialAllow !== undefined) {
+      Services.prefs.setBoolPref(PREF, initialAllow);
+    }
+
+    let install1 = await AddonManager.getInstallForFile(xpi1);
+    let install2 = await AddonManager.getInstallForFile(xpi2);
+    await promiseCompleteAllInstalls([install1, install2]);
+
+    let [addon1, addon2] = await AddonManager.getAddonsByIDs([ID_MPC, ID_NON_MPC]);
+    do_check_neq(addon1, null);
+    do_check_eq(addon1.multiprocessCompatible, true);
+    do_check_eq(addon1.appDisabled, false);
+
+    do_check_neq(addon2, null);
+    do_check_eq(addon2.multiprocessCompatible, false);
+    do_check_eq(addon2.appDisabled, initialAllow === false);
+
+    // Flip the allow-non-mpc preference
+    let newValue = (initialAllow === true) ? false : true;
+    Services.prefs.setBoolPref(PREF, newValue);
+
+    // the mpc extension should never become appDisabled
+    do_check_eq(addon1.appDisabled, false);
+
+    // The non-mpc extension should become disabled if we don't allow non-mpc
+    do_check_eq(addon2.appDisabled, !newValue);
+
+    // Flip the pref back and check appDisabled
+    Services.prefs.setBoolPref(PREF, !newValue);
+
+    do_check_eq(addon1.appDisabled, false);
+    do_check_eq(addon2.appDisabled, newValue);
+
+    addon1.uninstall();
+    addon2.uninstall();
+  }
+
+  await testOnce(undefined);
+  await testOnce(true);
+  await testOnce(false);
+
+  Services.prefs.clearUserPref(PREF);
+});
+
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
   startupManager();
