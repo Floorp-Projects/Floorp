@@ -9,6 +9,7 @@
 #include "jsapi.h"
 #include "jsfun.h" // XXXefaust Bug 1064662
 
+#include "proxy/ScriptedProxyHandler.h"
 #include "vm/ProxyObject.h"
 
 using namespace js;
@@ -146,6 +147,22 @@ DeadObjectProxy::regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard*
 {
     ReportDead(cx);
     return false;
+}
+
+bool
+DeadObjectProxy::isCallable(JSObject* obj) const
+{
+    static const uint32_t slot = ScriptedProxyHandler::IS_CALLCONSTRUCT_EXTRA;
+    uint32_t callConstruct = obj->as<ProxyObject>().extra(slot).toPrivateUint32();
+    return !!(callConstruct & ScriptedProxyHandler::IS_CALLABLE);
+}
+
+bool
+DeadObjectProxy::isConstructor(JSObject* obj) const
+{
+    static const uint32_t slot = ScriptedProxyHandler::IS_CALLCONSTRUCT_EXTRA;
+    uint32_t callConstruct = obj->as<ProxyObject>().extra(slot).toPrivateUint32();
+    return !!(callConstruct & ScriptedProxyHandler::IS_CONSTRUCTOR);
 }
 
 const char DeadObjectProxy::family = 0;
