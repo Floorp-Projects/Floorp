@@ -21,7 +21,6 @@ type WrBorderStyle = BorderStyle;
 type WrBoxShadowClipMode = BoxShadowClipMode;
 type WrBuiltDisplayListDescriptor = BuiltDisplayListDescriptor;
 type WrEpoch = Epoch;
-type WrExternalImageId = ExternalImageId;
 type WrFontKey = FontKey;
 type WrIdNamespace = IdNamespace;
 type WrImageFormat = ImageFormat;
@@ -39,6 +38,21 @@ type WrSideOffsets2Df32 = WrSideOffsets2D<f32>;
 // be disabled in WebRenderBridgeParent::ProcessWebRenderCommands
 // by commenting out the path that adds an external image ID
 static ENABLE_RECORDING: bool = false;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct WrExternalImageId(pub u64);
+
+impl Into<ExternalImageId> for WrExternalImageId {
+    fn into(self) -> ExternalImageId {
+        ExternalImageId(self.0)
+    }
+}
+impl Into<WrExternalImageId> for ExternalImageId {
+    fn into(self) -> WrExternalImageId {
+        WrExternalImageId(self.0)
+    }
+}
 
 // This macro adds some checks to make sure we notice when the memory representation of
 // types change.
@@ -519,8 +533,8 @@ pub struct WrExternalImageHandler {
 }
 
 impl ExternalImageHandler for WrExternalImageHandler {
-    fn lock(&mut self, id: WrExternalImageId) -> ExternalImage {
-        let image = (self.lock_func)(self.external_image_obj, id);
+    fn lock(&mut self, id: ExternalImageId) -> ExternalImage {
+        let image = (self.lock_func)(self.external_image_obj, id.into());
 
         match image.image_type {
             WrExternalImageType::NativeTexture => {
@@ -547,12 +561,12 @@ impl ExternalImageHandler for WrExternalImageHandler {
         }
     }
 
-    fn unlock(&mut self, id: WrExternalImageId) {
-        (self.unlock_func)(self.external_image_obj, id);
+    fn unlock(&mut self, id: ExternalImageId) {
+        (self.unlock_func)(self.external_image_obj, id.into());
     }
 
-    fn release(&mut self, id: WrExternalImageId) {
-        (self.release_func)(self.external_image_obj, id);
+    fn release(&mut self, id: ExternalImageId) {
+        (self.release_func)(self.external_image_obj, id.into());
     }
 }
 
