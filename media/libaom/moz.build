@@ -1,0 +1,123 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files('*'):
+    BUG_COMPONENT = ('Core', 'Audio/Video')
+
+include('sources.mozbuild')
+
+# Linux, Mac and Win share file lists for x86* but not configurations.
+if CONFIG['CPU_ARCH'] == 'x86_64':
+    EXPORTS.aom += files['X64_EXPORTS']
+    SOURCES += files['X64_SOURCES']
+    if CONFIG['OS_TARGET'] == 'WINNT':
+        ASFLAGS += [ '-I%s/media/libaom/config/win/x64/' % TOPSRCDIR ]
+        CFLAGS += [ '-I%s/media/libaom/config/win/x64/' % TOPSRCDIR ]
+    elif CONFIG['OS_TARGET'] == 'Darwin':
+        ASFLAGS += [ '-I%s/media/libaom/config/mac/x64/' % TOPSRCDIR ]
+        CFLAGS += [ '-I%s/media/libaom/config/mac/x64/' % TOPSRCDIR ]
+    else: # Android, Linux, BSDs, etc.
+        ASFLAGS += [ '-I%s/media/libaom/config/linux/x64/' % TOPSRCDIR ]
+        CFLAGS += [ '-I%s/media/libaom/config/linux/x64/' % TOPSRCDIR ]
+elif CONFIG['CPU_ARCH'] == 'x86':
+    EXPORTS.aom += files['IA32_EXPORTS']
+    SOURCES += files['IA32_SOURCES']
+    if CONFIG['OS_TARGET'] == 'WINNT':
+        ASFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
+        CFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
+    elif CONFIG['OS_TARGET'] == 'Darwin':
+        ASFLAGS += [ '-I%s/media/libaom/config/mac/ia32/' % TOPSRCDIR ]
+        CFLAGS += [ '-I%s/media/libaom/config/mac/ia32/' % TOPSRCDIR ]
+    else: # Android, Linux, BSDs, etc.
+        ASFLAGS += [ '-I%s/media/libaom/config/linux/ia32/' % TOPSRCDIR ]
+        CFLAGS += [ '-I%s/media/libaom/config/linux/ia32/' % TOPSRCDIR ]
+elif CONFIG['CPU_ARCH'] == 'arm':
+    EXPORTS.aom += files['ARM_EXPORTS']
+    ASFLAGS += [
+        '-I%s/media/libaom/config/linux/arm/' % TOPSRCDIR,
+        '-I%s/libaom' % OBJDIR,
+    ]
+    CFLAGS += [ '-I%s/media/libaom/config/linux/arm/' % TOPSRCDIR ]
+
+    arm_asm_files = files['ARM_SOURCES']
+
+    if CONFIG['VPX_AS_CONVERSION']:
+        SOURCES += sorted([
+            "!%s.S" % f if f.endswith('.asm') else f for f in arm_asm_files
+        ])
+    else:
+        SOURCES += sorted(arm_asm_files)
+
+    for f in SOURCES:
+        if f.endswith('neon.c'):
+            SOURCES[f].flags += CONFIG['VPX_ASFLAGS']
+
+    if CONFIG['OS_TARGET'] == 'Android':
+        # For cpu-features.h
+        LOCAL_INCLUDES += [
+            '%%%s/sources/android/cpufeatures' % CONFIG['ANDROID_NDK'],
+        ]
+    if CONFIG['CLANG_CXX']:
+        ASFLAGS += [
+            '-no-integrated-as',
+        ]
+else:
+    # Generic C-only configuration
+    EXPORTS.aom += files['GENERIC_EXPORTS']
+    SOURCES += files['GENERIC_SOURCES']
+    ASFLAGS += [ '-I%s/media/libaom/config/generic/' % TOPSRCDIR ]
+    CFLAGS += [ '-I%s/media/libaom/config/generic/' % TOPSRCDIR ]
+
+# We allow warnings for third-party code that can be updated from upstream.
+ALLOW_COMPILER_WARNINGS = True
+
+FINAL_LIBRARY = 'gkmedias'
+
+if CONFIG['OS_TARGET'] == 'Android':
+    # Older versions of the Android NDK don't pre-define anything to indicate
+    # the OS they're on, so do it for them.
+    DEFINES['__linux__'] = True
+
+    if not CONFIG['MOZ_WEBRTC']:
+        SOURCES += [
+            '%%%s/sources/android/cpufeatures/cpu-features.c' % CONFIG['ANDROID_NDK'],
+        ]
+
+if CONFIG['CLANG_CL'] or not CONFIG['_MSC_VER']:
+    for f in SOURCES:
+        if f.endswith('sse2.c'):
+            SOURCES[f].flags += CONFIG['SSE2_FLAGS']
+        elif f.endswith('ssse3.c'):
+            SOURCES[f].flags += ['-mssse3']
+        elif f.endswith('sse4.c'):
+            SOURCES[f].flags += ['-msse4.1']
+        elif f.endswith('avx.c'):
+            SOURCES[f].flags += ['-mavx']
+        elif f.endswith('avx2.c'):
+            SOURCES[f].flags += ['-mavx2']
+
+# Suppress warnings in third-party code.
+if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
+    CFLAGS += [
+        '-Wno-sign-compare',
+        '-Wno-unused-function', # so many of these warnings; just ignore them
+    ]
+if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+    CFLAGS += [
+        '-Wno-unreachable-code',
+        '-Wno-unneeded-internal-declaration',
+    ]
+
+ASFLAGS += CONFIG['VPX_ASFLAGS']
+ASFLAGS += [
+    '-I.',
+    '-I%s/third_party/aom' % TOPSRCDIR,
+]
+
+CFLAGS += [
+    '-I%s/third_party/aom' % TOPSRCDIR,
+    '-I%s/media/libaom/config' % TOPSRCDIR, # aom_version.h
+]
