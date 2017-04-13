@@ -15,23 +15,6 @@ use euclid::{TypedPoint2D, TypedSize2D, TypedRect, TypedMatrix4D, SideOffsets2D}
 
 extern crate webrender_traits;
 
-type WrAPI = RenderApi;
-type WrAuxiliaryListsDescriptor = AuxiliaryListsDescriptor;
-type WrBorderStyle = BorderStyle;
-type WrBoxShadowClipMode = BoxShadowClipMode;
-type WrBuiltDisplayListDescriptor = BuiltDisplayListDescriptor;
-type WrEpoch = Epoch;
-type WrFontKey = FontKey;
-type WrIdNamespace = IdNamespace;
-type WrImageFormat = ImageFormat;
-type WrImageRendering = ImageRendering;
-type WrImageKey = ImageKey;
-type WrMixBlendMode = MixBlendMode;
-type WrPipelineId = PipelineId;
-type WrRenderer = Renderer;
-type WrSideOffsets2Du32 = WrSideOffsets2D<u32>;
-type WrSideOffsets2Df32 = WrSideOffsets2D<f32>;
-
 // Enables binary recording that can be used with `wrench replay`
 // Outputs a wr-record-*.bin file for each window that is shown
 // Note: wrench will panic if external images are used, they can
@@ -39,6 +22,35 @@ type WrSideOffsets2Df32 = WrSideOffsets2D<f32>;
 // by commenting out the path that adds an external image ID
 static ENABLE_RECORDING: bool = false;
 
+type WrAPI = RenderApi;
+type WrAuxiliaryListsDescriptor = AuxiliaryListsDescriptor;
+type WrBorderStyle = BorderStyle;
+type WrBoxShadowClipMode = BoxShadowClipMode;
+type WrBuiltDisplayListDescriptor = BuiltDisplayListDescriptor;
+type WrImageFormat = ImageFormat;
+type WrImageRendering = ImageRendering;
+type WrMixBlendMode = MixBlendMode;
+type WrRenderer = Renderer;
+type WrSideOffsets2Du32 = WrSideOffsets2D<u32>;
+type WrSideOffsets2Df32 = WrSideOffsets2D<f32>;
+
+/// cbindgen:field-names=[mHandle]
+/// cbindgen:struct-gen-op-lt=true
+/// cbindgen:struct-gen-op-lte=true
+type WrEpoch = Epoch;
+/// cbindgen:field-names=[mHandle]
+/// cbindgen:struct-gen-op-lt=true
+/// cbindgen:struct-gen-op-lte=true
+type WrIdNamespace = IdNamespace;
+
+/// cbindgen:field-names=[mNamespace, mHandle]
+type WrPipelineId = PipelineId;
+/// cbindgen:field-names=[mNamespace, mHandle]
+type WrImageKey = ImageKey;
+/// cbindgen:field-names=[mNamespace, mHandle]
+type WrFontKey = FontKey;
+
+/// cbindgen:field-names=[mHandle]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct WrExternalImageId(pub u64);
@@ -53,37 +65,6 @@ impl Into<WrExternalImageId> for ExternalImageId {
         WrExternalImageId(self.0)
     }
 }
-
-// This macro adds some checks to make sure we notice when the memory representation of
-// types change.
-macro_rules! check_ffi_type {
-    ($check_sizes_match:ident struct $TypeName:ident as ($T1:ident, $T2:ident)) => (
-        fn $check_sizes_match() {
-            #[repr(C)] struct TestType($T1, $T2);
-            let _ = mem::transmute::<$TypeName, TestType>;
-        }
-    );
-    ($check_sizes_match:ident struct $TypeName:ident as ($T:ident)) => (
-        fn $check_sizes_match() {
-            #[repr(C)] struct TestType($T);
-            let _ = mem::transmute::<$TypeName, TestType>;
-        }
-    );
-    ($check_sizes_match:ident enum $TypeName:ident as $T:ident) => (
-        fn $check_sizes_match() { let _ = mem::transmute::<$TypeName, $T>; }
-    );
-}
-
-check_ffi_type!(_pipeline_id_repr struct WrPipelineId as (u32, u32));
-check_ffi_type!(_image_key_repr struct WrImageKey as (u32, u32));
-check_ffi_type!(_font_key_repr struct WrFontKey as (u32, u32));
-check_ffi_type!(_epoch_repr struct WrEpoch as (u32));
-check_ffi_type!(_image_format_repr enum WrImageFormat as u32);
-check_ffi_type!(_border_style_repr enum WrBorderStyle as u32);
-check_ffi_type!(_image_rendering_repr enum WrImageRendering as u32);
-check_ffi_type!(_mix_blend_mode_repr enum WrMixBlendMode as u32);
-check_ffi_type!(_box_shadow_clip_mode_repr enum WrBoxShadowClipMode as u32);
-check_ffi_type!(_namespace_id_repr struct WrIdNamespace as (u32));
 
 const GL_FORMAT_BGRA_GL: gl::GLuint = gl::BGRA;
 const GL_FORMAT_BGRA_GLES: gl::GLuint = gl::BGRA_EXT;
@@ -570,6 +551,9 @@ impl ExternalImageHandler for WrExternalImageHandler {
     }
 }
 
+/// cbindgen:field-names=[mHandle]
+/// cbindgen:struct-gen-op-lt=true
+/// cbindgen:struct-gen-op-lte=true
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct WrWindowId(u64);
@@ -752,7 +736,7 @@ pub extern "C" fn wr_renderer_current_epoch(renderer: &mut WrRenderer,
     return false;
 }
 
-/// wr-binding:destructor_safe // This is used by the binding generator
+/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_renderer_delete(renderer: *mut WrRenderer) {
     Box::from_raw(renderer);
@@ -785,7 +769,7 @@ pub unsafe extern "C" fn wr_rendered_epochs_next(pipeline_epochs: &mut WrRendere
     return false;
 }
 
-/// wr-binding:destructor_safe // This is used by the binding generator
+/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_rendered_epochs_delete(pipeline_epochs: *mut WrRenderedEpochs) {
     Box::from_raw(pipeline_epochs);
@@ -1001,7 +985,7 @@ pub extern "C" fn wr_api_generate_frame(api: &mut WrAPI) {
     api.generate_frame(None);
 }
 
-/// wr-binding:destructor_safe // This is used by the binding generator
+/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub extern "C" fn wr_api_send_external_event(api: &mut WrAPI, evt: usize) {
     assert!(unsafe { !is_in_render_thread() });

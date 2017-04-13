@@ -9,59 +9,8 @@
 
 #include "mozilla/gfx/Types.h"
 #include "nsTArray.h"
-#include "mozilla/gfx/Point.h"
-// ---
-#define WR_DECL_FFI_1(WrType, t1)                 \
-struct WrType {                                   \
-  t1 mHandle;                                     \
-  bool operator==(const WrType& rhs) const {      \
-    return mHandle == rhs.mHandle;                \
-  }                                               \
-  bool operator!=(const WrType& rhs) const {      \
-    return mHandle != rhs.mHandle;                \
-  }                                               \
-  bool operator<(const WrType& rhs) const {       \
-    return mHandle < rhs.mHandle;                 \
-  }                                               \
-  bool operator<=(const WrType& rhs) const {      \
-    return mHandle <= rhs.mHandle;                \
-  }                                               \
-};                                                \
-// ---
-
-// ---
-#define WR_DECL_FFI_2(WrType, t1, t2)             \
-struct WrType {                                   \
-  t1 mNamespace;                                  \
-  t2 mHandle;                                     \
-  bool operator==(const WrType& rhs) const {      \
-    return mNamespace == rhs.mNamespace           \
-        && mHandle == rhs.mHandle;                \
-  }                                               \
-  bool operator!=(const WrType& rhs) const {      \
-    return mNamespace != rhs.mNamespace           \
-        || mHandle != rhs.mHandle;                \
-  }                                               \
-};                                                \
-// ---
-
 
 extern "C" {
-
-// If you modify any of the declarations below, make sure to update the
-// serialization code in WebRenderMessageUtils.h and the rust bindings.
-
-WR_DECL_FFI_1(WrEpoch, uint32_t)
-WR_DECL_FFI_1(WrIdNamespace, uint32_t)
-WR_DECL_FFI_1(WrWindowId, uint64_t)
-WR_DECL_FFI_1(WrExternalImageId, uint64_t)
-
-WR_DECL_FFI_2(WrPipelineId, uint32_t, uint32_t)
-WR_DECL_FFI_2(WrImageKey, uint32_t, uint32_t)
-WR_DECL_FFI_2(WrFontKey, uint32_t, uint32_t)
-
-#undef WR_DECL_FFI_1
-#undef WR_DECL_FFI_2
 
 // ----
 // Functions invoked from Rust code
@@ -90,12 +39,6 @@ void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
 #  define WR_FUNC { MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("WebRender disabled"); }
 #  define WR_DESTRUCTOR_SAFE_FUNC {}
 #endif
-
-// Structs defined in Rust, but opaque to C++ code.
-struct WrRenderedEpochs;
-struct WrRenderer;
-struct WrState;
-struct WrAPI;
 
 #include "webrender_ffi_generated.h"
 
