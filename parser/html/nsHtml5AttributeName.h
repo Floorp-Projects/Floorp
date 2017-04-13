@@ -49,7 +49,6 @@ class nsHtml5Tokenizer;
 class nsHtml5TreeBuilder;
 class nsHtml5MetaScanner;
 class nsHtml5ElementName;
-class nsHtml5HtmlAttributes;
 class nsHtml5UTF16Buffer;
 class nsHtml5StateSnapshot;
 class nsHtml5Portability;
@@ -112,14 +111,14 @@ class nsHtml5AttributeName
     int32_t* uri;
     nsIAtom** local;
     nsIAtom** prefix;
-  protected:
+    bool custom;
     nsHtml5AttributeName(int32_t* uri, nsIAtom** local, nsIAtom** prefix);
-  private:
-    static nsHtml5AttributeName* createAttributeName(nsIAtom* name);
   public:
-    virtual void release();
-    virtual ~nsHtml5AttributeName();
-    virtual nsHtml5AttributeName* cloneAttributeName(nsHtml5AtomTable* interner);
+    nsHtml5AttributeName();
+    bool isInterned();
+    void setNameForNonInterned(nsIAtom* name);
+    static nsHtml5AttributeName* createAttributeName(nsIAtom* name);
+    ~nsHtml5AttributeName();
     int32_t getUri(int32_t mode);
     nsIAtom* getLocal(int32_t mode);
     nsIAtom* getPrefix(int32_t mode);
