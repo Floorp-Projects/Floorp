@@ -233,12 +233,6 @@ NPError
 _setvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
                 const char *value, uint32_t len);
 
-NPError
-_getauthenticationinfo(NPP instance, const char *protocol, const char *host,
-                       int32_t port, const char *scheme, const char *realm,
-                       char **username, uint32_t *ulen, char **password,
-                       uint32_t *plen);
-
 typedef void(*PluginTimerFunc)(NPP npp, uint32_t timerID);
 
 uint32_t
