@@ -12,8 +12,8 @@ default-preferences pref(layout.css.prefixes.webkit,true)
 # it turns out that the web depends on WebKit/Blink's behavior in these cases.
 == webkit-box-anon-flex-items-1a.html webkit-box-anon-flex-items-1-ref.html
 == webkit-box-anon-flex-items-1b.html webkit-box-anon-flex-items-1-ref.html
-fails == webkit-box-anon-flex-items-2.html webkit-box-anon-flex-items-2-ref.html
-fails == webkit-box-anon-flex-items-3.html webkit-box-anon-flex-items-3-ref.html
+fails-if(!stylo) == webkit-box-anon-flex-items-2.html webkit-box-anon-flex-items-2-ref.html
+fails-if(!stylo) == webkit-box-anon-flex-items-3.html webkit-box-anon-flex-items-3-ref.html
 
 # Tests for "-webkit-box" & "-webkit-inline-box" as display values:
 == webkit-display-values-1.html webkit-display-values-1-ref.html
@@ -37,7 +37,7 @@ fails == webkit-box-anon-flex-items-3.html webkit-box-anon-flex-items-3-ref.html
 # how its aliased property (-moz-box-ordinal-group) behaves. This shouldn't
 # matter in practice; it could only cause trouble if sites accidentally depend
 # on the "0" value being rejected.
-fails == webkit-box-ordinal-group-2.html webkit-box-ordinal-group-2-ref.html
+fails-if(!stylo) == webkit-box-ordinal-group-2.html webkit-box-ordinal-group-2-ref.html
 == webkit-box-ordinal-group-3.html webkit-box-ordinal-group-3-ref.html
 
 # Tests for "-webkit-box-pack" (main-axis alignment):

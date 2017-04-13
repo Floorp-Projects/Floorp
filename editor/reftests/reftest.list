@@ -1,109 +1,109 @@
 # include the XUL reftests
 include xul/reftest.list
 
-!= newline-1.html newline-ref.html
-== newline-2.html newline-ref.html
-== newline-3.html newline-ref.html
-== newline-4.html newline-ref.html
-== dynamic-1.html dynamic-ref.html
-== dynamic-type-1.html dynamic-ref.html
-== dynamic-type-2.html dynamic-ref.html
-== dynamic-type-3.html dynamic-ref.html
-== dynamic-type-4.html dynamic-ref.html
-== passwd-1.html passwd-ref.html
-!= passwd-2.html passwd-ref.html
-== passwd-3.html passwd-ref.html
-needs-focus == passwd-4.html passwd-ref.html
-== emptypasswd-1.html emptypasswd-ref.html
-== emptypasswd-2.html emptypasswd-ref.html
+fails-if(stylo) != newline-1.html newline-ref.html
+fails-if(stylo) == newline-2.html newline-ref.html
+fails-if(stylo) == newline-3.html newline-ref.html
+fails-if(stylo) == newline-4.html newline-ref.html
+fails-if(stylo) == dynamic-1.html dynamic-ref.html
+fails-if(stylo) == dynamic-type-1.html dynamic-ref.html
+fails-if(stylo) == dynamic-type-2.html dynamic-ref.html
+fails-if(stylo) == dynamic-type-3.html dynamic-ref.html
+fails-if(stylo) == dynamic-type-4.html dynamic-ref.html
+fails-if(stylo) == passwd-1.html passwd-ref.html
+fails-if(stylo) != passwd-2.html passwd-ref.html
+fails-if(stylo) == passwd-3.html passwd-ref.html
+needs-focus fails-if(stylo) == passwd-4.html passwd-ref.html
+fails-if(stylo) == emptypasswd-1.html emptypasswd-ref.html
+fails-if(stylo) == emptypasswd-2.html emptypasswd-ref.html
 == caret_on_positioned.html caret_on_positioned-ref.html
-fails-if(Android) needs-focus != spellcheck-input-disabled.html spellcheck-input-ref.html
-== spellcheck-input-attr-before.html spellcheck-input-nofocus-ref.html
-fails-if(Android) needs-focus != spellcheck-input-attr-before.html spellcheck-input-ref.html
-== spellcheck-input-attr-after.html spellcheck-input-nofocus-ref.html
-fails-if(Android) needs-focus != spellcheck-input-attr-after.html spellcheck-input-ref.html
-== spellcheck-input-attr-inherit.html spellcheck-input-nofocus-ref.html
-fails-if(Android) needs-focus != spellcheck-input-attr-inherit.html spellcheck-input-ref.html
-== spellcheck-input-attr-dynamic.html spellcheck-input-nofocus-ref.html
-fails-if(Android) needs-focus != spellcheck-input-attr-dynamic.html spellcheck-input-ref.html
-== spellcheck-input-attr-dynamic-inherit.html spellcheck-input-nofocus-ref.html
-fails-if(Android) needs-focus != spellcheck-input-attr-dynamic-inherit.html spellcheck-input-ref.html
-== spellcheck-input-property-dynamic.html spellcheck-input-nofocus-ref.html
-fails-if(Android) needs-focus != spellcheck-input-property-dynamic.html spellcheck-input-ref.html
-== spellcheck-input-property-dynamic-inherit.html spellcheck-input-nofocus-ref.html
-fails-if(Android) needs-focus != spellcheck-input-property-dynamic-inherit.html spellcheck-input-ref.html
-== spellcheck-input-attr-dynamic-override.html spellcheck-input-nofocus-ref.html
-fails-if(Android) needs-focus != spellcheck-input-attr-dynamic-override.html spellcheck-input-ref.html
-== spellcheck-input-attr-dynamic-override-inherit.html spellcheck-input-nofocus-ref.html
-fails-if(Android) needs-focus != spellcheck-input-attr-dynamic-override-inherit.html spellcheck-input-ref.html
-== spellcheck-input-property-dynamic-override.html spellcheck-input-nofocus-ref.html
-fails-if(Android) needs-focus != spellcheck-input-property-dynamic-override.html spellcheck-input-ref.html
-== spellcheck-input-property-dynamic-override-inherit.html spellcheck-input-nofocus-ref.html
-fails-if(Android) needs-focus != spellcheck-input-property-dynamic-override-inherit.html spellcheck-input-ref.html
-== spellcheck-textarea-attr.html spellcheck-textarea-nofocus-ref.html
+fails-if(Android) needs-focus fails-if(stylo) != spellcheck-input-disabled.html spellcheck-input-ref.html
+fails-if(stylo) == spellcheck-input-attr-before.html spellcheck-input-nofocus-ref.html
+fails-if(Android) needs-focus fails-if(stylo) != spellcheck-input-attr-before.html spellcheck-input-ref.html
+fails-if(stylo) == spellcheck-input-attr-after.html spellcheck-input-nofocus-ref.html
+fails-if(Android) needs-focus fails-if(stylo) != spellcheck-input-attr-after.html spellcheck-input-ref.html
+fails-if(stylo) == spellcheck-input-attr-inherit.html spellcheck-input-nofocus-ref.html
+fails-if(Android) needs-focus fails-if(stylo) != spellcheck-input-attr-inherit.html spellcheck-input-ref.html
+fails-if(stylo) == spellcheck-input-attr-dynamic.html spellcheck-input-nofocus-ref.html
+fails-if(Android) needs-focus fails-if(stylo) != spellcheck-input-attr-dynamic.html spellcheck-input-ref.html
+fails-if(stylo) == spellcheck-input-attr-dynamic-inherit.html spellcheck-input-nofocus-ref.html
+fails-if(Android) needs-focus fails-if(stylo) != spellcheck-input-attr-dynamic-inherit.html spellcheck-input-ref.html
+fails-if(stylo) == spellcheck-input-property-dynamic.html spellcheck-input-nofocus-ref.html
+fails-if(Android) needs-focus fails-if(stylo) != spellcheck-input-property-dynamic.html spellcheck-input-ref.html
+fails-if(stylo) == spellcheck-input-property-dynamic-inherit.html spellcheck-input-nofocus-ref.html
+fails-if(Android) needs-focus fails-if(stylo) != spellcheck-input-property-dynamic-inherit.html spellcheck-input-ref.html
+fails-if(stylo) == spellcheck-input-attr-dynamic-override.html spellcheck-input-nofocus-ref.html
+fails-if(Android) needs-focus fails-if(stylo) != spellcheck-input-attr-dynamic-override.html spellcheck-input-ref.html
+fails-if(stylo) == spellcheck-input-attr-dynamic-override-inherit.html spellcheck-input-nofocus-ref.html
+fails-if(Android) needs-focus fails-if(stylo) != spellcheck-input-attr-dynamic-override-inherit.html spellcheck-input-ref.html
+fails-if(stylo) == spellcheck-input-property-dynamic-override.html spellcheck-input-nofocus-ref.html
+fails-if(Android) needs-focus fails-if(stylo) != spellcheck-input-property-dynamic-override.html spellcheck-input-ref.html
+fails-if(stylo) == spellcheck-input-property-dynamic-override-inherit.html spellcheck-input-nofocus-ref.html
+fails-if(Android) needs-focus fails-if(stylo) != spellcheck-input-property-dynamic-override-inherit.html spellcheck-input-ref.html
+fails-if(stylo) == spellcheck-textarea-attr.html spellcheck-textarea-nofocus-ref.html
 #the random-if(Android) tests pass on android native, but fail on android-xul, see bug 728942
-random-if(Android) needs-focus != spellcheck-textarea-attr.html spellcheck-textarea-ref.html
-needs-focus == spellcheck-textarea-focused.html spellcheck-textarea-ref.html
-needs-focus == spellcheck-textarea-focused-reframe.html spellcheck-textarea-ref.html
-needs-focus == spellcheck-textarea-focused-notreadonly.html spellcheck-textarea-ref2.html
-random-if(Android) needs-focus != spellcheck-textarea-nofocus.html spellcheck-textarea-ref.html
-random-if(Android) needs-focus != spellcheck-textarea-disabled.html spellcheck-textarea-ref.html
-random-if(Android) needs-focus != spellcheck-textarea-attr-inherit.html spellcheck-textarea-ref.html
-random-if(Android) needs-focus != spellcheck-textarea-attr-dynamic.html spellcheck-textarea-ref.html
-random-if(Android) needs-focus != spellcheck-textarea-attr-dynamic-inherit.html spellcheck-textarea-ref.html
-random-if(Android) needs-focus != spellcheck-textarea-property-dynamic.html spellcheck-textarea-ref.html
-random-if(Android) needs-focus != spellcheck-textarea-property-dynamic-inherit.html spellcheck-textarea-ref.html
-random-if(Android) needs-focus != spellcheck-textarea-attr-dynamic-override.html spellcheck-textarea-ref.html
-random-if(Android) needs-focus != spellcheck-textarea-attr-dynamic-override-inherit.html spellcheck-textarea-ref.html
-random-if(Android) needs-focus != spellcheck-textarea-property-dynamic-override.html spellcheck-textarea-ref.html
-random-if(Android) needs-focus != spellcheck-textarea-property-dynamic-override-inherit.html spellcheck-textarea-ref.html
+random-if(Android) needs-focus fails-if(stylo) != spellcheck-textarea-attr.html spellcheck-textarea-ref.html
+needs-focus fails-if(stylo) == spellcheck-textarea-focused.html spellcheck-textarea-ref.html
+needs-focus fails-if(stylo) == spellcheck-textarea-focused-reframe.html spellcheck-textarea-ref.html
+needs-focus fails-if(stylo) == spellcheck-textarea-focused-notreadonly.html spellcheck-textarea-ref2.html
+random-if(Android) needs-focus fails-if(stylo) != spellcheck-textarea-nofocus.html spellcheck-textarea-ref.html
+random-if(Android) needs-focus fails-if(stylo) != spellcheck-textarea-disabled.html spellcheck-textarea-ref.html
+random-if(Android) needs-focus fails-if(stylo) != spellcheck-textarea-attr-inherit.html spellcheck-textarea-ref.html
+random-if(Android) needs-focus fails-if(stylo) != spellcheck-textarea-attr-dynamic.html spellcheck-textarea-ref.html
+random-if(Android) needs-focus fails-if(stylo) != spellcheck-textarea-attr-dynamic-inherit.html spellcheck-textarea-ref.html
+random-if(Android) needs-focus fails-if(stylo) != spellcheck-textarea-property-dynamic.html spellcheck-textarea-ref.html
+random-if(Android) needs-focus fails-if(stylo) != spellcheck-textarea-property-dynamic-inherit.html spellcheck-textarea-ref.html
+random-if(Android) needs-focus fails-if(stylo) != spellcheck-textarea-attr-dynamic-override.html spellcheck-textarea-ref.html
+random-if(Android) needs-focus fails-if(stylo) != spellcheck-textarea-attr-dynamic-override-inherit.html spellcheck-textarea-ref.html
+random-if(Android) needs-focus fails-if(stylo) != spellcheck-textarea-property-dynamic-override.html spellcheck-textarea-ref.html
+random-if(Android) needs-focus fails-if(stylo) != spellcheck-textarea-property-dynamic-override-inherit.html spellcheck-textarea-ref.html
 needs-focus == caret_on_focus.html caret_on_focus-ref.html
-needs-focus != caret_on_textarea_lastline.html caret_on_textarea_lastline-ref.html
-needs-focus == input-text-onfocus-reframe.html input-text-onfocus-reframe-ref.html
-needs-focus == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocus-reframe-ref.html
-needs-focus == caret_after_reframe.html caret_after_reframe-ref.html
+needs-focus fails-if(stylo) != caret_on_textarea_lastline.html caret_on_textarea_lastline-ref.html
+needs-focus fails-if(stylo) == input-text-onfocus-reframe.html input-text-onfocus-reframe-ref.html
+needs-focus fails-if(stylo) == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocus-reframe-ref.html
+needs-focus fails-if(stylo) == caret_after_reframe.html caret_after_reframe-ref.html
 == nobogusnode-1.html nobogusnode-ref.html
 == nobogusnode-2.html nobogusnode-ref.html
-== spellcheck-hyphen-valid.html spellcheck-hyphen-valid-ref.html
-fails-if(Android) needs-focus != spellcheck-hyphen-invalid.html spellcheck-hyphen-invalid-ref.html
-== spellcheck-slash-valid.html spellcheck-slash-valid-ref.html
-== spellcheck-period-valid.html spellcheck-period-valid-ref.html
-== spellcheck-space-valid.html spellcheck-space-valid-ref.html
-== spellcheck-comma-valid.html spellcheck-comma-valid-ref.html
-== spellcheck-hyphen-multiple-valid.html spellcheck-hyphen-multiple-valid-ref.html
-fails-if(Android) needs-focus != spellcheck-hyphen-multiple-invalid.html spellcheck-hyphen-multiple-invalid-ref.html
-== spellcheck-dotafterquote-valid.html spellcheck-dotafterquote-valid-ref.html
-== spellcheck-url-valid.html spellcheck-url-valid-ref.html
-needs-focus == spellcheck-non-latin-arabic.html spellcheck-non-latin-arabic-ref.html
-needs-focus == spellcheck-non-latin-chinese-simplified.html spellcheck-non-latin-chinese-simplified-ref.html
-needs-focus == spellcheck-non-latin-chinese-traditional.html spellcheck-non-latin-chinese-traditional-ref.html
-needs-focus == spellcheck-non-latin-hebrew.html spellcheck-non-latin-hebrew-ref.html
-needs-focus == spellcheck-non-latin-japanese.html spellcheck-non-latin-japanese-ref.html
-needs-focus == spellcheck-non-latin-korean.html spellcheck-non-latin-korean-ref.html
-== unneeded_scroll.html unneeded_scroll-ref.html
+fails-if(stylo) == spellcheck-hyphen-valid.html spellcheck-hyphen-valid-ref.html
+fails-if(Android) needs-focus fails-if(stylo) != spellcheck-hyphen-invalid.html spellcheck-hyphen-invalid-ref.html
+fails-if(stylo) == spellcheck-slash-valid.html spellcheck-slash-valid-ref.html
+fails-if(stylo) == spellcheck-period-valid.html spellcheck-period-valid-ref.html
+fails-if(stylo) == spellcheck-space-valid.html spellcheck-space-valid-ref.html
+fails-if(stylo) == spellcheck-comma-valid.html spellcheck-comma-valid-ref.html
+fails-if(stylo) == spellcheck-hyphen-multiple-valid.html spellcheck-hyphen-multiple-valid-ref.html
+fails-if(Android) needs-focus fails-if(stylo) != spellcheck-hyphen-multiple-invalid.html spellcheck-hyphen-multiple-invalid-ref.html
+fails-if(stylo) == spellcheck-dotafterquote-valid.html spellcheck-dotafterquote-valid-ref.html
+fails-if(stylo) == spellcheck-url-valid.html spellcheck-url-valid-ref.html
+needs-focus fails-if(stylo) == spellcheck-non-latin-arabic.html spellcheck-non-latin-arabic-ref.html
+needs-focus fails-if(stylo) == spellcheck-non-latin-chinese-simplified.html spellcheck-non-latin-chinese-simplified-ref.html
+needs-focus fails-if(stylo) == spellcheck-non-latin-chinese-traditional.html spellcheck-non-latin-chinese-traditional-ref.html
+needs-focus fails-if(stylo) == spellcheck-non-latin-hebrew.html spellcheck-non-latin-hebrew-ref.html
+needs-focus fails-if(stylo) == spellcheck-non-latin-japanese.html spellcheck-non-latin-japanese-ref.html
+needs-focus fails-if(stylo) == spellcheck-non-latin-korean.html spellcheck-non-latin-korean-ref.html
+fails-if(stylo) == unneeded_scroll.html unneeded_scroll-ref.html
 == caret_on_presshell_reinit.html caret_on_presshell_reinit-ref.html
-fuzzy-if(browserIsRemote,255,3) asserts-if(browserIsRemote,0-3) asserts-if(webrender&&!browserIsRemote,0-1) == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html
-fuzzy-if(asyncPan&&!layersGPUAccelerated,102,2824) == 642800.html 642800-ref.html
-== selection_visibility_after_reframe.html selection_visibility_after_reframe-ref.html
-!= selection_visibility_after_reframe-2.html selection_visibility_after_reframe-ref.html
-!= selection_visibility_after_reframe-3.html selection_visibility_after_reframe-ref.html
+fuzzy-if(browserIsRemote,255,3) asserts-if(browserIsRemote,0-2) asserts-if(webrender&&!browserIsRemote,0-1) == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html
+fuzzy-if(asyncPan&&!layersGPUAccelerated,102,2824) fails-if(stylo) == 642800.html 642800-ref.html
+fails-if(stylo) == selection_visibility_after_reframe.html selection_visibility_after_reframe-ref.html
+fails-if(stylo) != selection_visibility_after_reframe-2.html selection_visibility_after_reframe-ref.html
+fails-if(stylo) != selection_visibility_after_reframe-3.html selection_visibility_after_reframe-ref.html
 == 672709.html 672709-ref.html
-== 338427-1.html 338427-1-ref.html
+fails-if(stylo) == 338427-1.html 338427-1-ref.html
 skip-if(Android) needs-focus == 674212-spellcheck.html 674212-spellcheck-ref.html
 skip-if(Android) needs-focus == 338427-2.html 338427-2-ref.html
-skip-if(Android) needs-focus == 338427-3.html 338427-3-ref.html
+skip-if(Android) needs-focus fails-if(stylo) == 338427-3.html 338427-3-ref.html
 skip-if(Android) needs-focus == 462758-grabbers-resizers.html 462758-grabbers-resizers-ref.html
-== readwrite-non-editable.html readwrite-non-editable-ref.html
-== readwrite-editable.html readwrite-editable-ref.html
-== readonly-non-editable.html readonly-non-editable-ref.html
-== readonly-editable.html readonly-editable-ref.html
-== dynamic-overflow-change.html dynamic-overflow-change-ref.html
+fails-if(stylo) == readwrite-non-editable.html readwrite-non-editable-ref.html
+fails-if(stylo) == readwrite-editable.html readwrite-editable-ref.html
+fails-if(stylo) == readonly-non-editable.html readonly-non-editable-ref.html
+fails-if(stylo) == readonly-editable.html readonly-editable-ref.html
+fails-if(stylo) == dynamic-overflow-change.html dynamic-overflow-change-ref.html
 == 694880-1.html 694880-ref.html
 == 694880-2.html 694880-ref.html
 == 694880-3.html 694880-ref.html
 == 388980-1.html 388980-1-ref.html
-needs-focus == spellcheck-superscript-1.html spellcheck-superscript-1-ref.html
-fails-if(Android) needs-focus != spellcheck-superscript-2.html spellcheck-superscript-2-ref.html # bug 783658
+needs-focus fails-if(stylo) == spellcheck-superscript-1.html spellcheck-superscript-1-ref.html
+fails-if(Android) needs-focus fails-if(stylo) != spellcheck-superscript-2.html spellcheck-superscript-2-ref.html # bug 783658
 fuzzy-if(skiaContent,1,3400) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-1.html 824080-1-ref.html
 fuzzy-if(OSX,1,1) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-2.html 824080-2-ref.html #Bug 1313253
 fuzzy-if(OSX,1,1) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-3.html 824080-3-ref.html #Bug 1312951
@@ -111,9 +111,9 @@ needs-focus != 824080-2.html 824080-3.html
 fuzzy-if(skiaContent,1,3200) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-4.html 824080-4-ref.html
 fuzzy-if(skiaContent,2,1800) needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-5.html 824080-5-ref.html
 needs-focus != 824080-4.html 824080-5.html
-needs-focus == 824080-6.html 824080-6-ref.html
-needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-7.html 824080-7-ref.html
-needs-focus != 824080-6.html 824080-7.html
+needs-focus fails-if(stylo) == 824080-6.html 824080-6-ref.html
+needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) fails-if(stylo) == 824080-7.html 824080-7-ref.html
+needs-focus fails-if(stylo) != 824080-6.html 824080-7.html
 # Bug 674927: copy spellcheck-textarea tests to contenteditable
 == spellcheck-contenteditable-attr.html spellcheck-contenteditable-nofocus-ref.html
 fails-if(Android) needs-focus != spellcheck-contenteditable-attr.html spellcheck-contenteditable-ref.html
@@ -133,5 +133,5 @@ needs-focus == spellcheck-contenteditable-focused-reframe.html spellcheck-conten
 == spellcheck-contenteditable-property-dynamic-override-inherit.html spellcheck-contenteditable-disabled-ref.html
 == 911201.html 911201-ref.html
 needs-focus == 969773.html 969773-ref.html
-fuzzy-if(skiaContent,1,220) == 997805.html 997805-ref.html
-fuzzy-if(skiaContent,1,220) == 1088158.html 1088158-ref.html
+fuzzy-if(skiaContent,1,220) fails-if(stylo) == 997805.html 997805-ref.html
+fuzzy-if(skiaContent,1,220) fails-if(stylo) == 1088158.html 1088158-ref.html

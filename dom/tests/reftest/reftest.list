@@ -1,9 +1,9 @@
-== bug453105.html bug453105-ref.html
-== optiontext.html optiontext-ref.html
+fails-if(stylo) == bug453105.html bug453105-ref.html
+fails-if(stylo) == optiontext.html optiontext-ref.html
 == bug456008.xhtml bug456008-ref.html
 fuzzy-if(skiaContent,2,3) == bug439965.html bug439965-ref.html
 == bug427779.xml bug427779-ref.xml
-fuzzy-if(skiaContent,1,5) == bug559996.html bug559996-ref.html
+fuzzy-if(skiaContent,1,5) fails-if(stylo) == bug559996.html bug559996-ref.html
 == bug591981-1.html bug591981-ref.html
 == bug591981-2.html bug591981-ref.html
 == bug592366-1.html bug592366-ref.html

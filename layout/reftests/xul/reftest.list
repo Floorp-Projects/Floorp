@@ -40,8 +40,8 @@ fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1
 == object-fit-fill-svg-002.xul object-fit-fill-svg-002-ref.html
 == object-fit-fill-svg-003.xul object-fit-fill-svg-003-ref.html
 == object-fit-fill-svg-004.xul object-fit-fill-svg-004-ref.html
-fails == object-fit-fill-svg-005.xul object-fit-fill-svg-005-ref.html # bug 1092436
-fails == object-fit-fill-svg-006.xul object-fit-fill-svg-006-ref.html # bug 1092436
+fails-if(!stylo) == object-fit-fill-svg-005.xul object-fit-fill-svg-005-ref.html # bug 1092436
+fails-if(!stylo) == object-fit-fill-svg-006.xul object-fit-fill-svg-006-ref.html # bug 1092436
 == object-fit-none-png-001.xul object-fit-none-png-001-ref.html
 == object-fit-none-png-002.xul object-fit-none-png-002-ref.html
 == object-fit-none-svg-001.xul object-fit-none-svg-001-ref.html

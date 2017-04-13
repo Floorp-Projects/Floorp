@@ -1,14 +1,14 @@
-skip-if(Android) == resize.html resize-ref.html
+skip-if(Android) fails-if(stylo) == resize.html resize-ref.html
 # an offset seems to apply to the native resizer on windows so skip this test for now
-skip-if(Android) skip-if(winWidget) fuzzy-if(cocoaWidget,1,33) fuzzy-if(skiaContent&&!winWidget&&!Android,5,10) == resize-background.html resize-background-ref.html
-skip-if(Android) != ltr.html rtl.html
-skip-if(Android) != ltr-scrollbar.html rtl-scrollbar.html
-skip-if(Android) != in-ltr-doc-scrollbar.html in-rtl-doc-scrollbar.html
-skip-if(Android) != ltr.html no-resize.html
-skip-if(Android) fails-if(xulRuntime.widgetToolkit=="gtk2") != rtl.html no-resize.html # bug 834724
-== rtl.html rtl-dynamic-attr.html
-== rtl.html rtl-dynamic-style.html
-== rtl.html in-dynamic-rtl-doc.html
-fuzzy-if(skiaContent,1,3) == setvalue-framereconstruction-1.html setvalue-framereconstruction-ref.html
-fuzzy-if(asyncPan&&!layersGPUAccelerated,102,4168) == padding-scrollbar-placement.html padding-scrollbar-placement-ref.html
-== various-cols.html various-cols-ref.html
+skip-if(Android) skip-if(winWidget) fuzzy-if(cocoaWidget,1,33) fuzzy-if(skiaContent&&!winWidget&&!Android,5,10) fails-if(stylo) == resize-background.html resize-background-ref.html
+skip-if(Android) fails-if(stylo) != ltr.html rtl.html
+skip-if(Android) fails-if(stylo) != ltr-scrollbar.html rtl-scrollbar.html
+skip-if(Android) fails-if(stylo) != in-ltr-doc-scrollbar.html in-rtl-doc-scrollbar.html
+skip-if(Android) fails-if(stylo) != ltr.html no-resize.html
+skip-if(Android) fails-if(xulRuntime.widgetToolkit=="gtk2") fails-if(stylo) != rtl.html no-resize.html # bug 834724
+fails-if(stylo) == rtl.html rtl-dynamic-attr.html
+fails-if(stylo) == rtl.html rtl-dynamic-style.html
+fails-if(stylo) == rtl.html in-dynamic-rtl-doc.html
+fuzzy-if(skiaContent,1,3) fails-if(stylo) == setvalue-framereconstruction-1.html setvalue-framereconstruction-ref.html
+fuzzy-if(asyncPan&&!layersGPUAccelerated,102,4168) fails-if(stylo) == padding-scrollbar-placement.html padding-scrollbar-placement-ref.html
+fails-if(stylo) == various-cols.html various-cols-ref.html

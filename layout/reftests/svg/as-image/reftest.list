@@ -30,8 +30,8 @@ include zoom/reftest.list
 == background-image-rect-2.html     lime100x100-ref.html
 
 # Test for border-image
-== border-image-simple-1.html       lime100x100-ref.html
-== border-image-simple-2.html       lime100x100-ref.html
+fails-if(stylo) == border-image-simple-1.html       lime100x100-ref.html
+fails-if(stylo) == border-image-simple-2.html       lime100x100-ref.html
 
 # Test for canvas "drawImage" method
 == canvas-drawImage-simple-1a.html lime100x100-ref.html
@@ -60,7 +60,7 @@ fuzzy(1,2) fuzzy-if(azureSkia,1,40000) == canvas-drawImage-alpha-2.html canvas-d
 test-pref(svg.context-properties.content.enabled,true) == context-fill-01.html lime100x100-ref.html
 == context-fill-02.html transparent100x100-w-border-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-fill-02.html lime100x100-w-border-ref.html
-test-pref(svg.context-properties.content.enabled,true) == context-fill-03.html lime100x100-50pct-ref.html
+test-pref(svg.context-properties.content.enabled,true) fails-if(stylo) == context-fill-03.html lime100x100-50pct-ref.html
 # fuzz because on win8 the r & b components are off by one
 fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-04.html lime100x100-50pct-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-fill-05.html context-fill-or-stroke-05-ref.html
@@ -72,7 +72,7 @@ test-pref(svg.context-properties.content.enabled,true) == context-fill-bg-image-
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-01.html lime100x100-ref.html
 == context-stroke-02.html transparent100x100-w-border-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-02.html lime100x100-w-border-ref.html
-test-pref(svg.context-properties.content.enabled,true) == context-stroke-03.html lime100x100-50pct-ref.html
+test-pref(svg.context-properties.content.enabled,true) fails-if(stylo) == context-stroke-03.html lime100x100-50pct-ref.html
 # fuzz because on win8 the r & b components are off by one
 fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-04.html lime100x100-50pct-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-05.html context-fill-or-stroke-05-ref.html
@@ -112,7 +112,7 @@ fuzzy-if(d2d,16,10) == img-content-outside-viewBox-1.html img-content-outside-vi
 != img-foreignObject-embed-1-helper.svg   lime100x100-ref.html
 == img-foreignObject-iframe-1a.html       lime100x100-ref.html
 == img-foreignObject-iframe-1b.html       lime100x100-ref.html
-!= img-foreignObject-iframe-1b-helper.svg lime100x100-ref.html
+fails-if(stylo) != img-foreignObject-iframe-1b-helper.svg lime100x100-ref.html
 
 == img-widthAndHeight-meet-1.html  img-widthAndHeight-meet-1-ref.html
 == img-widthAndHeight-meet-2.html  img-widthAndHeight-meet-2-ref.html
@@ -144,12 +144,12 @@ fuzzy-if(skiaContent,255,10) == img-novb-width-meet-1.html     img-novb-width-al
 fuzzy-if(skiaContent,255,10) == img-novb-width-slice-1.html    img-novb-width-all-1-ref.html
 
 # with with a fragmentIdentifier viewBox
-== img-fragment-1a.html  img-fragment-1-ref.html
-== img-fragment-1b.html  img-fragment-1-ref.html
-== img-fragment-1c.html  img-fragment-1-ref.html
-== img-fragment-2a.html  img-fragment-2-ref.html
-== img-fragment-2b.html  img-fragment-2-ref.html
-== img-fragment-2c.html  img-fragment-2-ref.html
+fails-if(stylo) == img-fragment-1a.html  img-fragment-1-ref.html
+fails-if(stylo) == img-fragment-1b.html  img-fragment-1-ref.html
+fails-if(stylo) == img-fragment-1c.html  img-fragment-1-ref.html
+fails-if(stylo) == img-fragment-2a.html  img-fragment-2-ref.html
+fails-if(stylo) == img-fragment-2b.html  img-fragment-2-ref.html
+fails-if(stylo) == img-fragment-2c.html  img-fragment-2-ref.html
 
 == list-simple-1.html list-simple-1-ref.html
 
@@ -191,7 +191,7 @@ HTTP == svg-stylesheet-external-1.html blue100x100.svg
 # XXXseth: The underlying problems also apply to media fragments,
 # but the test case would be much simpler. This should be switched
 # over to use media fragments once bug 790640 lands.
-fuzzy(2,1) == svg-border-image-repaint-1.html svg-border-image-repaint-1-ref.html
+fuzzy(2,1) fails-if(stylo) == svg-border-image-repaint-1.html svg-border-image-repaint-1-ref.html
 
 # Tests for image-orientation with a viewbox and an intrinsic size:
 == image-orientation-viewbox-and-size.html?0        image-orientation-ref.html?0

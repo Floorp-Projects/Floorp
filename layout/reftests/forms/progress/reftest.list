@@ -1,22 +1,22 @@
 # This enables '-moz-appearance' for author sheets:
 default-preferences pref(layout.css.moz-appearance.enabled,true)
 
-== values.html values-ref.html
-== values-rtl.html values-rtl-ref.html
-== margin-padding.html margin-padding-ref.html
-== margin-padding-rtl.html margin-padding-rtl-ref.html
-== bar-pseudo-element.html bar-pseudo-element-ref.html
-== bar-pseudo-element-rtl.html bar-pseudo-element-rtl-ref.html
-== indeterminate-style-width.html indeterminate-style-width-ref.html
+fails-if(stylo) == values.html values-ref.html
+fails-if(stylo) == values-rtl.html values-rtl-ref.html
+fails-if(stylo) == margin-padding.html margin-padding-ref.html
+fails-if(stylo) == margin-padding-rtl.html margin-padding-rtl-ref.html
+fails-if(stylo) == bar-pseudo-element.html bar-pseudo-element-ref.html
+fails-if(stylo) == bar-pseudo-element-rtl.html bar-pseudo-element-rtl-ref.html
+fails-if(stylo) == indeterminate-style-width.html indeterminate-style-width-ref.html
 
 # vertical tests
-== values-vertical.html values-vertical-ref.html
-== values-vertical-rtl.html values-vertical-rtl-ref.html
-== margin-padding-vertical.html margin-padding-vertical-ref.html
-== margin-padding-vertical-rtl.html margin-padding-vertical-rtl-ref.html
-== bar-pseudo-element-vertical.html bar-pseudo-element-vertical-ref.html
-== bar-pseudo-element-vertical-rtl.html bar-pseudo-element-vertical-rtl-ref.html
-== indeterminate-style-height.html indeterminate-style-height-ref.html
+fails-if(stylo) == values-vertical.html values-vertical-ref.html
+fails-if(stylo) == values-vertical-rtl.html values-vertical-rtl-ref.html
+fails-if(stylo) == margin-padding-vertical.html margin-padding-vertical-ref.html
+fails-if(stylo) == margin-padding-vertical-rtl.html margin-padding-vertical-rtl-ref.html
+fails-if(stylo) == bar-pseudo-element-vertical.html bar-pseudo-element-vertical-ref.html
+fails-if(stylo) == bar-pseudo-element-vertical-rtl.html bar-pseudo-element-vertical-rtl-ref.html
+fails-if(stylo) == indeterminate-style-height.html indeterminate-style-height-ref.html
 
 # The following test is disabled but kept in the repository because the
 # transformations will not behave exactly the same for <progress> and two divs.
@@ -24,22 +24,22 @@ default-preferences pref(layout.css.moz-appearance.enabled,true)
 # == transformations.html transformations-ref.html
 
 # Tests for bugs:
-== block-invalidate.html block-invalidate-ref.html
-== in-cells.html in-cells-ref.html
+fails-if(stylo) == block-invalidate.html block-invalidate-ref.html
+fails-if(stylo) == in-cells.html in-cells-ref.html
 == max-height.html max-height-ref.html
 
 # Tests for block and inline orientation in combination with writing-mode
-!= progress-orient-horizontal.html progress-orient-vertical.html
-fails-if(!cocoaWidget||OSX==1010) != progress-orient-vertical.html progress-orient-vertical-rtl.html # only OS X currently has direction-dependent rendering here
-== progress-orient-block.html progress-orient-vertical.html
-== progress-orient-inline.html progress-orient-horizontal.html
-== progress-vlr.html progress-orient-vertical.html
-== progress-vlr-orient-block.html progress-orient-horizontal.html
-== progress-vlr-orient-inline.html progress-orient-vertical.html
-== progress-vlr-orient-horizontal.html progress-orient-horizontal.html
-== progress-vlr-orient-vertical.html progress-orient-vertical.html
-== progress-vrl.html progress-orient-vertical-rtl.html
-== progress-vrl-orient-block.html progress-orient-horizontal-rtl.html
-== progress-vrl-orient-inline.html progress-orient-vertical-rtl.html
-== progress-vrl-orient-horizontal.html progress-orient-horizontal-rtl.html
-== progress-vrl-orient-vertical.html progress-orient-vertical-rtl.html
+fails-if(stylo) != progress-orient-horizontal.html progress-orient-vertical.html
+fails-if(!cocoaWidget||OSX==1010) fails-if(stylo) != progress-orient-vertical.html progress-orient-vertical-rtl.html # only OS X currently has direction-dependent rendering here
+fails-if(stylo) == progress-orient-block.html progress-orient-vertical.html
+fails-if(stylo) == progress-orient-inline.html progress-orient-horizontal.html
+fails-if(stylo) == progress-vlr.html progress-orient-vertical.html
+fails-if(stylo) == progress-vlr-orient-block.html progress-orient-horizontal.html
+fails-if(stylo) == progress-vlr-orient-inline.html progress-orient-vertical.html
+fails-if(stylo) == progress-vlr-orient-horizontal.html progress-orient-horizontal.html
+fails-if(stylo) == progress-vlr-orient-vertical.html progress-orient-vertical.html
+fails-if(stylo) == progress-vrl.html progress-orient-vertical-rtl.html
+fails-if(stylo) == progress-vrl-orient-block.html progress-orient-horizontal-rtl.html
+fails-if(stylo) == progress-vrl-orient-inline.html progress-orient-vertical-rtl.html
+fails-if(stylo) == progress-vrl-orient-horizontal.html progress-orient-horizontal-rtl.html
+fails-if(stylo) == progress-vrl-orient-vertical.html progress-orient-vertical-rtl.html
