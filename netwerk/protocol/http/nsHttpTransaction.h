@@ -307,6 +307,9 @@ private:
     Atomic<uint32_t>                mCapsToClear;
     Atomic<bool, ReleaseAcquire>    mResponseIsComplete;
 
+    // If true, this transaction was asked to stop receiving the response.
+    bool                            mThrottleResponse;
+
     // state flags, all logically boolean, but not packed together into a
     // bitfield so as to avoid bitfield-induced races.  See bug 560579.
     bool                            mClosed;
@@ -368,6 +371,10 @@ public:
     // transaction is believed to be HTTP/1 (and thus subject to rate pacing)
     // but later can be dispatched via spdy (not subject to rate pacing).
     void CancelPacing(nsresult reason);
+
+    // Forwards to the connection's ThrottleResponse.  If there is no connection
+    // at the time, we set a flag to do it on connection assignment.
+    void ThrottleResponse(bool aThrottle);
 
 private:
     bool mSubmittedRatePacing;

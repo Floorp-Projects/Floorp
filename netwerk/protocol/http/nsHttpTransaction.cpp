@@ -109,6 +109,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mCurrentHttpResponseHeaderSize(0)
     , mCapsToClear(0)
     , mResponseIsComplete(false)
+    , mThrottleResponse(false)
     , mClosed(false)
     , mConnected(false)
     , mHaveStatusLine(false)
@@ -152,6 +153,18 @@ nsHttpTransaction::nsHttpTransaction()
 #endif
     mSelfAddr.raw.family = PR_AF_UNSPEC;
     mPeerAddr.raw.family = PR_AF_UNSPEC;
+}
+
+void nsHttpTransaction::ThrottleResponse(bool aThrottle)
+{
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+
+    // Just in case we suspend, get a connection, release a connection, get another connection.
+    mThrottleResponse = aThrottle;
+
+    if (mConnection) {
+        mConnection->ThrottleResponse(aThrottle);
+    }
 }
 
 nsHttpTransaction::~nsHttpTransaction()
@@ -471,6 +484,10 @@ nsHttpTransaction::SetConnection(nsAHttpConnection *conn)
     {
         MutexAutoLock lock(mLock);
         mConnection = conn;
+    }
+
+    if (conn && mThrottleResponse) {
+        gHttpHandler->ThrottleTransaction(this, true);
     }
 }
 
