@@ -168,9 +168,9 @@ const JNINativeMethod CodecProxy::NativeCallbacks::Natives<Impl>::methods[] = {
             mozilla::jni::NativeStub<CodecProxy::NativeCallbacks::OnError_t, Impl>
             ::template Wrap<&Impl::OnError>),
 
-    mozilla::jni::MakeNativeMethod<CodecProxy::NativeCallbacks::OnInputExhausted_t>(
-            mozilla::jni::NativeStub<CodecProxy::NativeCallbacks::OnInputExhausted_t, Impl>
-            ::template Wrap<&Impl::OnInputExhausted>),
+    mozilla::jni::MakeNativeMethod<CodecProxy::NativeCallbacks::OnInputStatus_t>(
+            mozilla::jni::NativeStub<CodecProxy::NativeCallbacks::OnInputStatus_t, Impl>
+            ::template Wrap<&Impl::OnInputStatus>),
 
     mozilla::jni::MakeNativeMethod<CodecProxy::NativeCallbacks::OnOutput_t>(
             mozilla::jni::NativeStub<CodecProxy::NativeCallbacks::OnOutput_t, Impl>
