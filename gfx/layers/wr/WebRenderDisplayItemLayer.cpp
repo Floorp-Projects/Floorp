@@ -22,6 +22,16 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     return;
   }
 
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(false);
+  WrImageMask* imageMask = mask.ptrOr(nullptr);
+  if (imageMask) {
+    gfx::Rect rect = TransformedVisibleBoundsRelativeToParent();
+    gfx::Rect overflow(0.0, 0.0, rect.width, rect.height);
+    aBuilder.PushScrollLayer(wr::ToWrRect(rect),
+                             wr::ToWrRect(overflow),
+                             imageMask);
+  }
+
   if (mItem) {
     wr::DisplayListBuilder builder(WrBridge()->GetPipeline());
     // We might have recycled this layer. Throw away the old commands.
@@ -34,6 +44,10 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 
   aBuilder.PushBuiltDisplayList(Move(mBuiltDisplayList));
   WrBridge()->AddWebRenderParentCommands(mParentCommands);
+
+  if (imageMask) {
+    aBuilder.PopScrollLayer();
+  }
 }
 
 uint64_t

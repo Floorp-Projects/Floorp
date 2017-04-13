@@ -67,34 +67,34 @@ pub enum ApiMsg {
 
 impl fmt::Debug for ApiMsg {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            &ApiMsg::AddRawFont(..) => { write!(f, "ApiMsg::AddRawFont") }
-            &ApiMsg::AddNativeFont(..) => { write!(f, "ApiMsg::AddNativeFont") }
-            &ApiMsg::DeleteFont(..) => { write!(f, "ApiMsg::DeleteFont") }
-            &ApiMsg::GetGlyphDimensions(..) => { write!(f, "ApiMsg::GetGlyphDimensions") }
-            &ApiMsg::AddImage(..) => { write!(f, "ApiMsg::AddImage") }
-            &ApiMsg::UpdateImage(..) => { write!(f, "ApiMsg::UpdateImage") }
-            &ApiMsg::DeleteImage(..) => { write!(f, "ApiMsg::DeleteImage") }
-            &ApiMsg::CloneApi(..) => { write!(f, "ApiMsg::CloneApi") }
-            &ApiMsg::SetDisplayList(..) => { write!(f, "ApiMsg::SetDisplayList") }
-            &ApiMsg::SetRootPipeline(..) => { write!(f, "ApiMsg::SetRootPipeline") }
-            &ApiMsg::Scroll(..) => { write!(f, "ApiMsg::Scroll") }
-            &ApiMsg::ScrollLayerWithId(..) => { write!(f, "ApiMsg::ScrollLayerWithId") }
-            &ApiMsg::TickScrollingBounce => { write!(f, "ApiMsg::TickScrollingBounce") }
-            &ApiMsg::TranslatePointToLayerSpace(..) => { write!(f, "ApiMsg::TranslatePointToLayerSpace") }
-            &ApiMsg::GetScrollLayerState(..) => { write!(f, "ApiMsg::GetScrollLayerState") }
-            &ApiMsg::RequestWebGLContext(..) => { write!(f, "ApiMsg::RequestWebGLContext") }
-            &ApiMsg::ResizeWebGLContext(..) => { write!(f, "ApiMsg::ResizeWebGLContext") }
-            &ApiMsg::WebGLCommand(..) => { write!(f, "ApiMsg::WebGLCommand") }
-            &ApiMsg::GenerateFrame(..) => { write!(f, "ApiMsg::GenerateFrame") }
-            &ApiMsg::VRCompositorCommand(..) => { write!(f, "ApiMsg::VRCompositorCommand") }
-            &ApiMsg::ExternalEvent(..) => { write!(f, "ApiMsg::ExternalEvent") }
-            &ApiMsg::ShutDown => { write!(f, "ApiMsg::ShutDown") }
-            &ApiMsg::SetPageZoom(..) => { write!(f, "ApiMsg::SetPageZoom") }
-            &ApiMsg::SetPinchZoom(..) => { write!(f, "ApiMsg::SetPinchZoom") }
-            &ApiMsg::SetPan(..) => { write!(f, "ApiMsg::SetPan") }
-            &ApiMsg::SetWindowParameters(..) => { write!(f, "ApiMsg::SetWindowParameters") }
-        }
+        f.write_str(match *self {
+            ApiMsg::AddRawFont(..) => "ApiMsg::AddRawFont",
+            ApiMsg::AddNativeFont(..) => "ApiMsg::AddNativeFont",
+            ApiMsg::DeleteFont(..) => "ApiMsg::DeleteFont",
+            ApiMsg::GetGlyphDimensions(..) => "ApiMsg::GetGlyphDimensions",
+            ApiMsg::AddImage(..) => "ApiMsg::AddImage",
+            ApiMsg::UpdateImage(..) => "ApiMsg::UpdateImage",
+            ApiMsg::DeleteImage(..) => "ApiMsg::DeleteImage",
+            ApiMsg::CloneApi(..) => "ApiMsg::CloneApi",
+            ApiMsg::SetDisplayList(..) => "ApiMsg::SetDisplayList",
+            ApiMsg::SetRootPipeline(..) => "ApiMsg::SetRootPipeline",
+            ApiMsg::Scroll(..) => "ApiMsg::Scroll",
+            ApiMsg::ScrollLayerWithId(..) => "ApiMsg::ScrollLayerWithId",
+            ApiMsg::TickScrollingBounce => "ApiMsg::TickScrollingBounce",
+            ApiMsg::TranslatePointToLayerSpace(..) => "ApiMsg::TranslatePointToLayerSpace",
+            ApiMsg::GetScrollLayerState(..) => "ApiMsg::GetScrollLayerState",
+            ApiMsg::RequestWebGLContext(..) => "ApiMsg::RequestWebGLContext",
+            ApiMsg::ResizeWebGLContext(..) => "ApiMsg::ResizeWebGLContext",
+            ApiMsg::WebGLCommand(..) => "ApiMsg::WebGLCommand",
+            ApiMsg::GenerateFrame(..) => "ApiMsg::GenerateFrame",
+            ApiMsg::VRCompositorCommand(..) => "ApiMsg::VRCompositorCommand",
+            ApiMsg::ExternalEvent(..) => "ApiMsg::ExternalEvent",
+            ApiMsg::ShutDown => "ApiMsg::ShutDown",
+            ApiMsg::SetPageZoom(..) => "ApiMsg::SetPageZoom",
+            ApiMsg::SetPinchZoom(..) => "ApiMsg::SetPinchZoom",
+            ApiMsg::SetPan(..) => "ApiMsg::SetPan",
+            ApiMsg::SetWindowParameters(..) => "ApiMsg::SetWindowParameters",
+        })
     }
 }
 
@@ -265,12 +265,14 @@ impl RenderApi {
     ///
     /// # Examples
     ///
-    /// ```ignore
-    /// let (mut renderer, sender) = webrender::renderer::Renderer::new(opts);
+    /// ```
+    /// # use webrender_traits::{PipelineId, RenderApiSender};
+    /// # fn example(sender: RenderApiSender) {
     /// let api = sender.create_api();
-    /// ...
-    /// let pipeline_id = PipelineId(0,0);
+    /// // ...
+    /// let pipeline_id = PipelineId(0, 0);
     /// api.set_root_pipeline(pipeline_id);
+    /// # }
     /// ```
     pub fn set_root_pipeline(&self, pipeline_id: PipelineId) {
         let msg = ApiMsg::SetRootPipeline(pipeline_id);
@@ -289,8 +291,8 @@ impl RenderApi {
     ///
     /// * `background_color`: The background color of this pipeline.
     /// * `epoch`: The unique Frame ID, monotonically increasing.
-    /// * `pipeline_id`: The ID of the pipeline that is supplying this display list.
     /// * `viewport_size`: The size of the viewport for this frame.
+    /// * `pipeline_id`: The ID of the pipeline that is supplying this display list.
     /// * `display_list`: The root Display list used in this frame.
     /// * `auxiliary_lists`: Various items that the display lists and stacking contexts reference.
     /// * `preserve_frame_state`: If a previous frame exists which matches this pipeline
@@ -325,7 +327,7 @@ impl RenderApi {
 
     /// Scrolls the scrolling layer under the `cursor`
     ///
-    /// Webrender looks for the layer closest to the user
+    /// WebRender looks for the layer closest to the user
     /// which has `ScrollPolicy::Scrollable` set.
     pub fn scroll(&self, scroll_location: ScrollLocation, cursor: WorldPoint, phase: ScrollEventPhase) {
         let msg = ApiMsg::Scroll(scroll_location, cursor, phase);
@@ -557,7 +559,7 @@ pub struct PropertyValue<T> {
     pub value: T,
 }
 
-/// When using generate_frame(), a list of PropertyValue structures
+/// When using `generate_frame()`, a list of `PropertyValue` structures
 /// can optionally be supplied to provide the current value of any
 /// animated properties.
 #[derive(Clone, Deserialize, Serialize, Debug)]
@@ -590,7 +592,7 @@ pub trait RenderNotifier: Send {
     fn shut_down(&mut self) {}
 }
 
-// Trait to allow dispatching functions to a specific thread or event loop.
+/// Trait to allow dispatching functions to a specific thread or event loop.
 pub trait RenderDispatcher: Send {
     fn dispatch(&self, Box<Fn() + Send>);
 }

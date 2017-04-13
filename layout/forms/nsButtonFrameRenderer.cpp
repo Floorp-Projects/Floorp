@@ -352,7 +352,7 @@ nsDisplayButtonForeground::GetLayerState(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  if (!br) {
+  if (!br || !br->CanCreateWebRenderCommands()) {
     return LAYER_NONE;
   }
 
