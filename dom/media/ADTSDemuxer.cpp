@@ -853,4 +853,26 @@ ADTSTrackDemuxer::AverageFrameLength() const
   return 0.0;
 }
 
+/* static */ bool
+ADTSDemuxer::ADTSSniffer(const uint8_t* aData, const uint32_t aLength)
+{
+  if (aLength < 7) {
+    return false;
+  }
+  auto parser = MakeUnique<adts::FrameParser>();
+
+  if (!parser->Parse(0, aData, aData + aLength)) {
+    return false;
+  }
+  const adts::Frame& currentFrame = parser->CurrentFrame();
+  // Check for sync marker after the found frame, since it's
+  // possible to find sync marker in AAC data. If sync marker
+  // exists after the current frame then we've found a frame
+  // header.
+  int64_t nextFrameHeaderOffset = currentFrame.Offset() + currentFrame.Length();
+  return int64_t(aLength) > nextFrameHeaderOffset &&
+         aLength - nextFrameHeaderOffset >= 2 &&
+         adts::FrameHeader::MatchesSync(aData + nextFrameHeaderOffset);
+}
+
 } // namespace mozilla
