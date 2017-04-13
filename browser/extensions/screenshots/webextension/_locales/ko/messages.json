@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "웹 페이지를 찍거나 영상으로 만들어 임시로, 혹은 영구히 보관하세요."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "스크린샷 찍기"
+  },
+  "myShotsLink": {
+    "message": "내 스크린샷"
+  },
+  "screenshotInstructions": {
+    "message": "캡처 할 범위를 드래그하거나 클릭하세요. ESC를 누르면 취소됩니다."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "저장"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "보이는 내용 저장"
+  },
+  "saveScreenshotFullPage": {
+    "message": "전체 페이지 저장"
+  },
+  "cancelScreenshot": {
+    "message": "취소"
+  },
+  "downloadScreenshot": {
+    "message": "다운로드"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "링크 복사됨"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "방금 찍은 스냅샷의 링크가 클립보드에 저장됐습니다. 붙여넣으려면 $META_KEY$-V를 누르세요.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "문제가 발생했습니다."
+  },
+  "requestErrorDetails": {
+    "message": "죄송합니다. 스크린샷을 저장하지 못했습니다. 잠시 후에 다시 시도해주세요."
+  },
+  "connectionErrorTitle": {
+    "message": "스크린샷에 접속할 수 없습니다."
+  },
+  "connectionErrorDetails": {
+    "message": "인터넷 연결 상태를 확인해주세요. 만약 인터넷이 연결돼있다면, Firefox Screenshots 서비스에 잠깐 문제가 있을 수도 있습니다."
+  },
+  "loginErrorDetails": {
+    "message": "Firefox Screenshots 서비스에 잠시 문제가 있어 저장에 실패했습니다. 잠시 후에 다시 시도해주세요."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "이 페이지를 캡처할 수 없습니다."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "표준 웹 페이지가 아니어서 스크린샷을 찍을 수 없습니다."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Firefox Screenshots 페이지는 캡처할 수 없어요!"
+  },
+  "genericErrorTitle": {
+    "message": "와우! Firefox Screenshots이 망가졌네요."
+  },
+  "genericErrorDetails": {
+    "message": "무슨 일이 있었는지 모르겠네요. 다시 시도하시거나 다른 페이지 스크린샷을 찍어 보시겠어요?"
+  },
+  "tourBodyOne": {
+    "message": "Firefox를 떠나지 않은 채로 찍고, 저장하고, 공유하세요."
+  },
+  "tourHeaderTwo": {
+    "message": "원하는 것을 캡춰하세요"
+  },
+  "tourBodyTwo": {
+    "message": "캡춰할 페이지의 부분을 클릭해서 드래그 해 보세요. 마우스를 올려서 선택한 부분을 확인할 수 있습니다."
+  },
+  "tourHeaderThree": {
+    "message": "내가 원하는 대로"
+  },
+  "tourBodyThree": {
+    "message": "스크린샷을 공유하거나, 컴퓨터로 다운로드할 수도 있습니다. 내 스크린샷 버튼을 눌러서 지금까지 찍었던 모든 스크린샷을 찾을 수도 있습니다."
+  },
+  "tourHeaderFour": {
+    "message": "창이나 페이지 전체를 캡춰할 수 있습니다"
+  },
+  "tourBodyFour": {
+    "message": "우측 위에 있는 버튼을 눌러 창을 캡처하거나 페이지 전체를 캡처할 수 있습니다."
+  },
+  "tourSkip": {
+    "message": "건너뛰기"
+  },
+  "tourNext": {
+    "message": "다음 슬라이드"
+  },
+  "tourPrevious": {
+    "message": "이전 슬라이드"
+  },
+  "tourDone": {
+    "message": "완료"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Firefox Screenshots를 사용하므로써, $TERMSANDPRIVACYNOTICETERMSLINK$와 $TERMSANDPRIVACYNOTICEPRIVACYLINK$에 동의하게 됩니다.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "이용약관"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "개인 정보 취급 방침"
+  }
+}

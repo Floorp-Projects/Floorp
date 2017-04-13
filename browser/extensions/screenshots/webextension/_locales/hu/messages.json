@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Készítsen videoklipeket és képernyőképeket a webről, és mentse őket ideiglenesen vagy véglegesen."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Készítsen képernyőképet"
+  },
+  "myShotsLink": {
+    "message": "Az Ön képei"
+  },
+  "screenshotInstructions": {
+    "message": "Húzza, vagy kattintson a lapra a terület kiválasztásához. Nyomjon ESC-t a megszakításhoz."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Mentés"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Láthatóak mentése"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Teljes oldal mentése"
+  },
+  "cancelScreenshot": {
+    "message": "Mégse"
+  },
+  "downloadScreenshot": {
+    "message": "Letöltés"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Hivatkozás másolva"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "A képernyőképre mutató hivatkozás a vágólapra lett másolva. Nyomjon $META_KEY$-V-t a beillesztéshez.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Nem működik."
+  },
+  "requestErrorDetails": {
+    "message": "Bocsánat! Nem tudtuk menteni a képet. Próbálkozzon később."
+  },
+  "connectionErrorTitle": {
+    "message": "Nem tudunk kapcsolódni a képernyőképekhez."
+  },
+  "connectionErrorDetails": {
+    "message": "Ellenőrizze az internetkapcsolatot. Ha tud kapcsolódni az internetre, akkor lehet, hogy ideiglenes probléma van a Firefox képernyőképek szolgáltatással."
+  },
+  "loginErrorDetails": {
+    "message": "Nem tudtuk elmenteni a képét, mert probléma lépett fel a Firefox képernyőképek szolgáltatással. Próbálja újra később."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Nem lehet képet készíteni erről a lapról."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Ez egy nem szabványos weblap, így nem készíthet róla képernyőképet."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Nem készíthet képet a Firefox képernyőképek oldalról!"
+  },
+  "genericErrorTitle": {
+    "message": "Húha! A Firefox képernyőképek megkergült."
+  },
+  "genericErrorDetails": {
+    "message": "Nem vagyunk benne biztosak, hogy mi történt. Próbálja újra, vagy készítsen képet egy másik oldalról."
+  },
+  "tourBodyOne": {
+    "message": "Készítsen, mentsen és osszon meg képernyőképeket, anélkül, hogy elhagyná a Firefoxot."
+  },
+  "tourHeaderTwo": {
+    "message": "Csak azt mentse, amit szeretne"
+  },
+  "tourBodyTwo": {
+    "message": "Kattintson és húzzon, hogy csak a lap egy részét mentse el. Vagy csak rá is mutathat a kijelöléshez."
+  },
+  "tourHeaderThree": {
+    "message": "Ahogy tetszik"
+  },
+  "tourBodyThree": {
+    "message": "Mentse a kivágott képeket a webre a könnyebb megosztáshoz, vagy töltse le a számítógépére. Rá is kattinthat a Képernyőképek gombra, hogy megtalálja az összes képét."
+  },
+  "tourHeaderFour": {
+    "message": "Mentsen ablakokat vagy teljes lapokat"
+  },
+  "tourBodyFour": {
+    "message": "Válassza a jobb felső sarokban lévő gombokat, hogy egy látható területet mentsen az ablakból, vagy elmentsen egy teljes oldalt."
+  },
+  "tourSkip": {
+    "message": "Kihagyás"
+  },
+  "tourNext": {
+    "message": "Következő dia"
+  },
+  "tourPrevious": {
+    "message": "Előző dia"
+  },
+  "tourDone": {
+    "message": "Kész"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "A Firefox képernyőképek használatával, Ön beleegyezik a képernyőképek $TERMSANDPRIVACYNOTICETERMSLINK$ és $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Feltételeibe"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Adatvédelmi nyilatkozatába"
+  }
+}

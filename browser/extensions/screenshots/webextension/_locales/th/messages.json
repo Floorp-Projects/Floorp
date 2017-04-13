@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "จับภาพหน้าจอจากเว็บและบันทึกไว้ชั่วคราวหรือถาวร"
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "จับภาพหน้าจอ"
+  },
+  "myShotsLink": {
+    "message": "ภาพของฉัน"
+  },
+  "screenshotInstructions": {
+    "message": "ลากหรือคลิกหน้าเว็บเพื่อเลือกบริเวณ กด ESC เพื่อยกเลิก"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "บันทึก"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "บันทึกส่วนที่เห็น"
+  },
+  "saveScreenshotFullPage": {
+    "message": "บันทึกเต็มหน้า"
+  },
+  "cancelScreenshot": {
+    "message": "ยกเลิก"
+  },
+  "downloadScreenshot": {
+    "message": "ดาวน์โหลด"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "คัดลอกลิงก์แล้ว"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "คัดลอกลิงก์ภาพของไว้ในคลิปบอร์ดแล้ว กด $META_KEY$-V เพื่อวาง",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "ใช้งานไม่ได้"
+  },
+  "requestErrorDetails": {
+    "message": "ขออภัย! เราไม่สามารถบันทึกภาพของคุณได้ โปรดลองอีกครั้งหลังจากนี้"
+  },
+  "connectionErrorTitle": {
+    "message": "เราเชื่อมต่อภาพหน้าจอของคุณไม่ได้"
+  },
+  "connectionErrorDetails": {
+    "message": "กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต หากคุณสามารถเชื่อมต่อกับอินเทอร์เน็ต บริการ Firefox Screenshots อาจมีปัญหาชั่วคราว "
+  },
+  "loginErrorDetails": {
+    "message": "เราไม่สามารถบันทึกภาพได้เพราะมีปัญหากับบริการ Firefox Screenshots โปรดลองใหม่ภายหลัง"
+  },
+  "unshootablePageErrorTitle": {
+    "message": "เราไม่สามารถจับภาพหน้าจอหน้านี้"
+  },
+  "unshootablePageErrorDetails": {
+    "message": "นี่ไม่ใช่หน้าเว็บมาตรฐานดังนั้นคุณไม่สามารถจับภาพได้"
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "คุณไม่สามารถจับภาพหน้าจอของหน้า Firefox Screenshots"
+  },
+  "genericErrorTitle": {
+    "message": "โอ๊ย! Firefox Screenshots รวน"
+  },
+  "genericErrorDetails": {
+    "message": "เราไม่แน่ใจว่าเกิดอะไรขึ้น โปรดลองอีกครั้งหรือจับภาพของหน้าอื่น"
+  },
+  "tourBodyOne": {
+    "message": "จับ บันทึกและแบ่งปันภาพหน้าจอโดยที่ไม่ต้องออกจาก Firefox"
+  },
+  "tourHeaderTwo": {
+    "message": "จับภาพตามที่คุณต้องการ"
+  },
+  "tourBodyTwo": {
+    "message": "คลิกหรือลากเพื่อจับภาพเฉพาะบางส่วนของหน้าเว็บ คุณสามารถเลื่อนมาชี้เพื่อเน้นภาพส่วนที่คุณเลือก"
+  },
+  "tourHeaderThree": {
+    "message": "ตามที่คุณโปรด"
+  },
+  "tourBodyThree": {
+    "message": "บันทึกและครอปภาพลงในเว็บเพื่อให้แบ่งปันได้ง่าย หรือดาวน์โหลดลงคอมพิวเตอร์ของคุณ คุณยังสามารถคลิกที่ปุ่มภาพของฉันเพื่อที่จะหาภาพที่คุณจับไว้"
+  },
+  "tourHeaderFour": {
+    "message": "จับภาพหน้าต่างหรือทั้งหน้า"
+  },
+  "tourBodyFour": {
+    "message": "กดปุ่มด้านบนขวาเพื่อจับภาพบริเวณที่มองเห็นในหน้าต่างหรือทั้งหน้าเว็บ"
+  },
+  "tourSkip": {
+    "message": "ข้าม"
+  },
+  "tourNext": {
+    "message": "ภาพนิ่งถัดไป"
+  },
+  "tourPrevious": {
+    "message": "ภาพนิ่งก่อนหน้า"
+  },
+  "tourDone": {
+    "message": "เสร็จสิ้น"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "เพื่อใช้  Firefox Screenshots คุณยอมรับ $TERMSANDPRIVACYNOTICETERMSLINK$ และ $TERMSANDPRIVACYNOTICEPRIVACYLINK$ ของ Screenshots",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "ข้อกำหนด"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "ประกาศความเป็นส่วนตัว"
+  }
+}

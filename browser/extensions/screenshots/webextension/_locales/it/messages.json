@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Crea screenshot di contenuti sul Web e salvali, solo per un periodo di tempo o in modo permanente."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Cattura screenshot"
+  },
+  "myShotsLink": {
+    "message": "I miei screenshot"
+  },
+  "screenshotInstructions": {
+    "message": "Trascina o fai clic su una pagina per selezionare una regione. Premi ESC per annullare."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Salva"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Salva l’area visibile"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Salva l’intera schermata"
+  },
+  "cancelScreenshot": {
+    "message": "Annulla"
+  },
+  "downloadScreenshot": {
+    "message": "Scarica"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Link aggiunto agli appunti"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Il link all’immagine è stato copiato negli appunti. Utilizza $META_KEY$-V per incollarlo.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Fuori servizio"
+  },
+  "requestErrorDetails": {
+    "message": "Siamo spiacenti, non è stato possibile salvare l’immagine. Riprova più tardi."
+  },
+  "connectionErrorTitle": {
+    "message": "Non è possibile accedere agli screenshot salvati."
+  },
+  "connectionErrorDetails": {
+    "message": "Verifica che la connessione a Internet stia funzionando correttamente. Se è possibile accedere ad altri siti, potrebbe trattarsi di un problema temporaneo con il servizio Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Non è stato possibile salvare l’immagine in quanto si è verificato un problema con il servizio Firefox Screenshots. Riprova più tardi."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Non è possibile salvare uno screenshot di questa pagina."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Non è possibile salvare uno screenshot in quanto non si tratta di una normale pagina web."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Non è possibile salvare uno screenshot di una pagina di Firefox Screenshots"
+  },
+  "genericErrorTitle": {
+    "message": "Wow! Firefox Screenshots è andato in tilt"
+  },
+  "genericErrorDetails": {
+    "message": "Non sappiamo che cosa sia successo. Riprova, magari con una pagina diversa."
+  },
+  "tourBodyOne": {
+    "message": "Cattura, salva e condividi screenshot senza mai uscire da Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Cattura solo ciò che ti serve"
+  },
+  "tourBodyTwo": {
+    "message": "Fai clic e trascina per catturare solo una parte della pagina. Posiziona il mouse sopra all’area selezionata per evidenziarla."
+  },
+  "tourHeaderThree": {
+    "message": "Come piace a te"
+  },
+  "tourBodyThree": {
+    "message": "Cattura lo screenshot di una pagina web, ritaglialo e salvalo online per condividerlo in modo più veloce, oppure scaricalo sul tuo computer. Puoi anche utilizzare il pulsante “I miei screenshot” per ritrovare tutte le immagini che hai salvato."
+  },
+  "tourHeaderFour": {
+    "message": "Cattura una finestra o una pagina intera"
+  },
+  "tourBodyFour": {
+    "message": "Utilizza i pulsanti in alto a destra per catturare una parte della finestra o l’intera pagina."
+  },
+  "tourSkip": {
+    "message": "Ignora"
+  },
+  "tourNext": {
+    "message": "Schermata successiva"
+  },
+  "tourPrevious": {
+    "message": "Schermata precedente"
+  },
+  "tourDone": {
+    "message": "Fine"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Utilizzando Firefox Screenshots si accettano le $TERMSANDPRIVACYNOTICETERMSLINK$ e l’$TERMSANDPRIVACYNOTICEPRIVACYLINK$ del servizio.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "condizioni di utilizzo"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "informativa sulla privacy"
+  }
+}
