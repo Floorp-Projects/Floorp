@@ -1258,6 +1258,57 @@ ICIn_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     return tailCallVM(DoInFallbackInfo, masm);
 }
 
+//
+// HasOwn_Fallback
+//
+
+static bool
+DoHasOwnFallback(JSContext* cx, BaselineFrame* frame, ICHasOwn_Fallback* stub_,
+                 HandleValue keyValue, HandleValue objValue, MutableHandleValue res)
+{
+    // This fallback stub may trigger debug mode toggling.
+    DebugModeOSRVolatileStub<ICIn_Fallback*> stub(frame, stub_);
+
+    FallbackICSpew(cx, stub, "HasOwn");
+
+    bool found;
+    if (!HasOwnProperty(cx, objValue, keyValue, &found))
+        return false;
+
+    res.setBoolean(found);
+    return true;
+}
+
+typedef bool (*DoHasOwnFallbackFn)(JSContext*, BaselineFrame*, ICHasOwn_Fallback*, HandleValue,
+                               HandleValue, MutableHandleValue);
+static const VMFunction DoHasOwnFallbackInfo =
+    FunctionInfo<DoHasOwnFallbackFn>(DoHasOwnFallback, "DoHasOwnFallback", TailCall, PopValues(2));
+
+bool
+ICHasOwn_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
+{
+    MOZ_ASSERT(engine_ == Engine::Baseline);
+
+    EmitRestoreTailCallReg(masm);
+
+    // Sync for the decompiler.
+    masm.pushValue(R0);
+    masm.pushValue(R1);
+
+    // Push arguments.
+    masm.pushValue(R1);
+    masm.pushValue(R0);
+    masm.push(ICStubReg);
+    pushStubPayload(masm, R0.scratchReg());
+
+    return tailCallVM(DoHasOwnFallbackInfo, masm);
+}
+
+
+//
+// GetName_Fallback
+//
+
 static bool
 DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub_,
                   HandleObject envChain, MutableHandleValue res)
