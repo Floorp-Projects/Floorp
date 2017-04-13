@@ -103,14 +103,17 @@ WebRenderLayer::TransformedVisibleBoundsRelativeToParent()
 }
 
 Maybe<WrImageMask>
-WebRenderLayer::BuildWrMaskLayer()
+WebRenderLayer::BuildWrMaskLayer(bool aUnapplyLayerTransform)
 {
   if (GetLayer()->GetMaskLayer()) {
     WebRenderLayer* maskLayer = ToWebRenderLayer(GetLayer()->GetMaskLayer());
-    // The size of mask layer is transformed, and we also push the layer transform to wr stacking context.
+    // The size of mask layer is transformed, and we may set the layer transform to wr stacking context.
     // So we should apply inverse transform for mask layer.
-    gfx::Matrix4x4 transform = GetWrBoundTransform();
-    return maskLayer->RenderMaskLayer(transform.Inverse());
+    gfx::Matrix4x4 transform;
+    if (aUnapplyLayerTransform) {
+      transform = GetWrBoundTransform().Inverse();
+    }
+    return maskLayer->RenderMaskLayer(transform);
   }
 
   return Nothing();

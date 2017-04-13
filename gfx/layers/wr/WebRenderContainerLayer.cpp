@@ -23,7 +23,7 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   gfx::Rect relBounds = GetWrRelBounds();
   gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
 
-  Maybe<WrImageMask> mask = BuildWrMaskLayer();
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
 
   wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 

@@ -139,7 +139,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   rect = RelativeToVisible(rect);
 
   gfx::Rect clipRect = GetWrClipRect(rect);
-  Maybe<WrImageMask> mask = BuildWrMaskLayer();
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
   WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect), mask.ptrOr(nullptr));
 
   wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
