@@ -155,6 +155,9 @@ add_task(function* test_about_page_navigate() {
   is(entries.length, 1, "there is one shistory entry");
   is(entries[0].url, "about:blank", "url is correct");
 
+  // Verify that the title is also recorded.
+  is(entries[0].title, "about:blank", "title is correct");
+
   browser.loadURI("about:robots");
   yield promiseBrowserLoaded(browser);
 

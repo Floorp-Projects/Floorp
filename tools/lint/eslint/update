@@ -53,22 +53,23 @@ npm shrinkwrap
 echo "Creating eslint.tar.gz..."
 tar cvfz eslint.tar.gz node_modules
 
-cd $DIR
-
 echo "Downloading tooltool..."
 wget https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py
 chmod +x tooltool.py
 
 echo "Adding eslint.tar.gz to tooltool..."
 rm manifest.tt
-./tooltool.py add --visibility public ../../../eslint.tar.gz
+./tooltool.py add --visibility public eslint.tar.gz
 
 echo "Uploading eslint.tar.gz to tooltool..."
 ./tooltool.py upload --authentication-file=~/.tooltool-token --message "node_modules folder update for tools/lint/eslint"
 
 echo "Cleaning up..."
-rm ../../../eslint.tar.gz
+mv manifest.tt tools/lint/eslint/manifest.tt
+rm eslint.tar.gz
 rm tooltool.py
+
+cd $DIR
 
 echo ""
 echo "Update complete, please commit and check in your changes."

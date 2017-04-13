@@ -8,6 +8,7 @@
 
 use Atom;
 use cssparser::{Delimiter, Parser, Token};
+use parser::ParserContext;
 use serialize_comma_separated_list;
 use std::ascii::AsciiExt;
 use std::fmt;
@@ -19,11 +20,11 @@ pub use servo::media_queries::{Device, Expression};
 pub use gecko::media_queries::{Device, Expression};
 
 /// A type that encapsulates a media query list.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "servo", derive(HeapSizeOf))]
 pub struct MediaList {
     /// The list of media queries.
-    pub media_queries: Vec<MediaQuery>
+    pub media_queries: Vec<MediaQuery>,
 }
 
 impl ToCss for MediaList {
@@ -34,8 +35,9 @@ impl ToCss for MediaList {
     }
 }
 
-impl Default for MediaList {
-    fn default() -> MediaList {
+impl MediaList {
+    /// Create an empty MediaList.
+    pub fn empty() -> Self {
         MediaList { media_queries: vec![] }
     }
 }
@@ -206,7 +208,7 @@ impl MediaQuery {
     /// Parse a media query given css input.
     ///
     /// Returns an error if any of the expressions is unknown.
-    pub fn parse(input: &mut Parser) -> Result<MediaQuery, ()> {
+    pub fn parse(context: &ParserContext, input: &mut Parser) -> Result<MediaQuery, ()> {
         let mut expressions = vec![];
 
         let qualifier = if input.try(|input| input.expect_ident_matching("only")).is_ok() {
@@ -226,7 +228,7 @@ impl MediaQuery {
                 }
 
                 // Without a media type, require at least one expression.
-                expressions.push(try!(Expression::parse(input)));
+                expressions.push(try!(Expression::parse(context, input)));
 
                 MediaQueryType::All
             }
@@ -237,7 +239,7 @@ impl MediaQuery {
             if input.try(|input| input.expect_ident_matching("and")).is_err() {
                 return Ok(MediaQuery::new(qualifier, media_type, expressions))
             }
-            expressions.push(try!(Expression::parse(input)))
+            expressions.push(try!(Expression::parse(context, input)))
         }
     }
 }
@@ -248,14 +250,14 @@ impl MediaQuery {
 /// media query list is only filled with the equivalent of "not all", see:
 ///
 /// https://drafts.csswg.org/mediaqueries/#error-handling
-pub fn parse_media_query_list(input: &mut Parser) -> MediaList {
+pub fn parse_media_query_list(context: &ParserContext, input: &mut Parser) -> MediaList {
     if input.is_exhausted() {
-        return Default::default()
+        return MediaList::empty()
     }
 
     let mut media_queries = vec![];
     loop {
-        match input.parse_until_before(Delimiter::Comma, MediaQuery::parse) {
+        match input.parse_until_before(Delimiter::Comma, |i| MediaQuery::parse(context, i)) {
             Ok(mq) => {
                 media_queries.push(mq);
             },
@@ -307,9 +309,9 @@ impl MediaList {
     /// https://drafts.csswg.org/cssom/#dom-medialist-appendmedium
     ///
     /// Returns true if added, false if fail to parse the medium string.
-    pub fn append_medium(&mut self, new_medium: &str) -> bool {
+    pub fn append_medium(&mut self, context: &ParserContext, new_medium: &str) -> bool {
         let mut parser = Parser::new(new_medium);
-        let new_query = match MediaQuery::parse(&mut parser) {
+        let new_query = match MediaQuery::parse(&context, &mut parser) {
             Ok(query) => query,
             Err(_) => { return false; }
         };
@@ -325,9 +327,9 @@ impl MediaList {
     /// https://drafts.csswg.org/cssom/#dom-medialist-deletemedium
     ///
     /// Returns true if found and deleted, false otherwise.
-    pub fn delete_medium(&mut self, old_medium: &str) -> bool {
+    pub fn delete_medium(&mut self, context: &ParserContext, old_medium: &str) -> bool {
         let mut parser = Parser::new(old_medium);
-        let old_query = match MediaQuery::parse(&mut parser) {
+        let old_query = match MediaQuery::parse(context, &mut parser) {
             Ok(query) => query,
             Err(_) => { return false; }
         };

@@ -214,6 +214,7 @@ private:
   uint32_t mHashKey;
   // Stores the last time a given table was updated (seconds).
   TableFreshnessMap mTableFreshness;
+  TableFreshnessMap mNewTableFreshness;
 
   // In-memory cache for the result of TableRequest. See
   // nsIUrlClassifierDBService.getTables for the format.

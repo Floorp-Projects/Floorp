@@ -160,7 +160,7 @@ PuppetWidget::InitIMEState()
   if (mNeedIMEStateInit) {
     mContentCache.Clear();
     mTabChild->SendUpdateContentCache(mContentCache);
-    mIMEPreferenceOfParent = nsIMEUpdatePreference();
+    mIMENotificationRequestsOfParent = IMENotificationRequests();
     mNeedIMEStateInit = false;
   }
 }
@@ -840,9 +840,9 @@ PuppetWidget::NotifyIMEOfFocusChange(const IMENotification& aIMENotification)
     mContentCache.Clear();
   }
 
-  mIMEPreferenceOfParent = nsIMEUpdatePreference();
+  mIMENotificationRequestsOfParent = IMENotificationRequests();
   if (!mTabChild->SendNotifyIMEFocus(mContentCache, aIMENotification,
-                                     &mIMEPreferenceOfParent)) {
+                                     &mIMENotificationRequestsOfParent)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -864,12 +864,13 @@ PuppetWidget::NotifyIMEOfCompositionUpdate(
   return NS_OK;
 }
 
-nsIMEUpdatePreference
-PuppetWidget::GetIMEUpdatePreference()
+IMENotificationRequests
+PuppetWidget::GetIMENotificationRequests()
 {
   if (mNativeTextEventDispatcherListener) {
-    // Use mNativeTextEventDispatcherListener for IME preference.
-    return mNativeTextEventDispatcherListener->GetIMEUpdatePreference();
+    // Use mNativeTextEventDispatcherListener for retrieving IME notification
+    // requests because non-native IME may have transaction.
+    return mNativeTextEventDispatcherListener->GetIMENotificationRequests();
   }
 
   // e10s requires IME content cache in in the TabParent for handling query
@@ -880,12 +881,14 @@ PuppetWidget::GetIMEUpdatePreference()
     // But if a plugin has focus, we cannot receive text nor selection change
     // in the plugin.  Therefore, PuppetWidget needs to receive only position
     // change event for updating the editor rect cache.
-    return nsIMEUpdatePreference(mIMEPreferenceOfParent.mWantUpdates |
-                                 nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE);
+    return IMENotificationRequests(
+             mIMENotificationRequestsOfParent.mWantUpdates |
+             IMENotificationRequests::NOTIFY_POSITION_CHANGE);
   }
-  return nsIMEUpdatePreference(mIMEPreferenceOfParent.mWantUpdates |
-                               nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE |
-                               nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE );
+  return IMENotificationRequests(
+           mIMENotificationRequestsOfParent.mWantUpdates |
+           IMENotificationRequests::NOTIFY_TEXT_CHANGE |
+           IMENotificationRequests::NOTIFY_POSITION_CHANGE);
 }
 
 nsresult
@@ -912,7 +915,7 @@ PuppetWidget::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
 
   // TabParent doesn't this this to cache.  we don't send the notification
   // if parent process doesn't request NOTIFY_TEXT_CHANGE.
-  if (mIMEPreferenceOfParent.WantTextChange()) {
+  if (mIMENotificationRequestsOfParent.WantTextChange()) {
     mTabChild->SendNotifyIMETextChange(mContentCache, aIMENotification);
   } else {
     mTabChild->SendUpdateContentCache(mContentCache);
@@ -990,7 +993,7 @@ PuppetWidget::NotifyIMEOfPositionChange(const IMENotification& aIMENotification)
       NS_WARN_IF(!mContentCache.CacheSelection(this, &aIMENotification))) {
     return NS_ERROR_FAILURE;
   }
-  if (mIMEPreferenceOfParent.WantPositionChanged()) {
+  if (mIMENotificationRequestsOfParent.WantPositionChanged()) {
     mTabChild->SendNotifyIMEPositionChange(mContentCache, aIMENotification);
   } else {
     mTabChild->SendUpdateContentCache(mContentCache);

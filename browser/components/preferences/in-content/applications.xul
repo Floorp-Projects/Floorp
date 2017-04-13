@@ -73,9 +73,7 @@
       flex="1">
 
   <!--Downloads-->
-  <groupbox id="downloadsGroup"
-            data-category="paneApplications"
-            hidden="false">
+  <groupbox id="downloadsGroup">
     <caption><label>&downloads.label;</label></caption>
 
     <radiogroup id="saveWhere"

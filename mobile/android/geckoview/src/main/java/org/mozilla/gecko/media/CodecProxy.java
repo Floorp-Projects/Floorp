@@ -35,7 +35,7 @@ public final class CodecProxy {
     private Queue<Sample> mSurfaceOutputs = new ConcurrentLinkedQueue<>();
 
     public interface Callbacks {
-        void onInputExhausted();
+        void onInputStatus(long timestamp, boolean processed);
         void onOutputFormatChanged(MediaFormat format);
         void onOutput(Sample output);
         void onError(boolean fatal);
@@ -43,7 +43,7 @@ public final class CodecProxy {
 
     @WrapForJNI
     public static class NativeCallbacks extends JNIObject implements Callbacks {
-        public native void onInputExhausted();
+        public native void onInputStatus(long timestamp, boolean processed);
         public native void onOutputFormatChanged(MediaFormat format);
         public native void onOutput(Sample output);
         public native void onError(boolean fatal);
@@ -63,9 +63,16 @@ public final class CodecProxy {
         }
 
         @Override
-        public void onInputExhausted() throws RemoteException {
+        public synchronized void onInputQueued(long timestamp) throws RemoteException {
             if (!mEndOfInput) {
-                mCallbacks.onInputExhausted();
+                mCallbacks.onInputStatus(timestamp, true /* processed */);
+            }
+        }
+
+        @Override
+        public synchronized void onInputPending(long timestamp) throws RemoteException {
+            if (!mEndOfInput) {
+                mCallbacks.onInputStatus(timestamp, false /* processed */);
             }
         }
 

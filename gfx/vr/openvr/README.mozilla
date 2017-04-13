@@ -1,0 +1,50 @@
+This directory contains files from the OpenVR SDK, version 1.0.6.
+
+This SDK contains the OpenVR API interface headers and functions to load the
+OpenVR runtime libraries which actually implement the functionality. The
+loading functions parse a .json file in a pre-defined location on the
+end-user's machine to get details used to bind the correct runtime library.
+The OpenVR implementation ensures forward and backwards compatibility as of
+the current version.
+
+Updated versions of the OpenVR SDK are available on Github:
+
+https://github.com/ValveSoftware/openvr
+
+
+We only use some files from the SDK:
+
+- We strip out files such as C# headers, plain C API versions, and files
+  needed only when implementing OpenVR drivers.
+
+- CMake related files, such as CMakeLists.txt are skipped as we use moz.build
+  files to configure the library.
+
+- The "src/jsoncpp.cpp" file and the "src/json" directory can be skipped. OpenVR
+  uses the jsoncpp library, which we have already imported elsewhere.
+
+
+Steps to update the library:
+
+- Copy "README.md" from the root of the openvr repo to the "gfx/vr/openvr" directory.
+
+- Copy "headers/openvr.h" to "gfx/vr/openvr/headers" directory. The other files
+  in this directory can be ignored.
+
+- The rest of the files in the "src" directory and the "src/vrcommon" are copied
+  to the "gfx/vr/openvr/src" directory.
+
+- Update "gfx/vr/openvr/moz.build" when files are added or removed.
+
+- Update the "strtools_public.h" and "strtools_public.cpp" files, commenting out
+  the "Uint64ToString" function. This function name conflicts with another used
+  in Gecko. Fortunately, the OpenVR SDK does not use this function either.
+
+- Replace the #define VR_INTERFACE in openvr.h to avoid extern'ing the functions.
+  Unlike the usual OpenVR API builds, we are not building a separate dll.
+
+- Update this README.mozilla file with the new OpenVR SDK version and any
+  additional steps needed for newer versions.
+
+- Ensure that any changes made within the OpenVR files have comments including
+  the string "Mozilla" and reference this file for easy identification.

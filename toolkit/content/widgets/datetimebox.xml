@@ -26,12 +26,12 @@
     <implementation>
       <constructor>
       <![CDATA[
-        // TODO: Bug 1320227 - [DateTimeInput] localization for
-        // <input type=date> input box
-        this.mMonthPlaceHolder = "mm";
-        this.mDayPlaceHolder = "dd";
-        this.mYearPlaceHolder = "yyyy";
-        this.mSeparatorText = "/";
+        /* eslint-disable no-multi-spaces */
+        this.mYearPlaceHolder = ]]>"&date.year.placeholder;"<![CDATA[;
+        this.mMonthPlaceHolder = ]]>"&date.month.placeholder;"<![CDATA[;
+        this.mDayPlaceHolder = ]]>"&date.day.placeholder;"<![CDATA[;
+        /* eslint-enable no-multi-spaces */
+
         this.mMinMonth = 1;
         this.mMaxMonth = 12;
         this.mMinDay = 1;
@@ -460,7 +460,6 @@
         /* eslint-enable no-multi-spaces */
 
         this.mHour12 = this.is12HourTime(this.mLocales);
-        this.mSeparatorText = ":";
         this.mMillisecSeparatorText = ".";
         this.mMaxLength = 2;
         this.mMillisecMaxLength = 3;

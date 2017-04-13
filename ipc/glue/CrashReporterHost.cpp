@@ -141,7 +141,8 @@ public:
   {
     MOZ_ASSERT(!NS_IsMainThread());
 
-    if (mProcessType == nsICrashService::PROCESS_TYPE_CONTENT) {
+    if (mProcessType == nsICrashService::PROCESS_TYPE_CONTENT ||
+        mProcessType == nsICrashService::PROCESS_TYPE_GPU) {
       CrashReporter::RunMinidumpAnalyzer(mChildDumpID);
     }
 

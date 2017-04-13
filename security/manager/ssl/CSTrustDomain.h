@@ -39,7 +39,9 @@ public:
     /*optional*/ const mozilla::pkix::Input* stapledOCSPresponse,
     /*optional*/ const mozilla::pkix::Input* aiaExtension) override;
   virtual Result IsChainValid(const mozilla::pkix::DERArray& certChain,
-                              mozilla::pkix::Time time) override;
+                              mozilla::pkix::Time time,
+                              const mozilla::pkix::CertPolicyId& requiredPolicy)
+                              override;
   virtual Result CheckSignatureDigestAlgorithm(
     mozilla::pkix::DigestAlgorithm digestAlg,
     mozilla::pkix::EndEntityOrCA endEntityOrCA,

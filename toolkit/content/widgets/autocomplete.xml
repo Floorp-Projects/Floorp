@@ -1104,7 +1104,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
       <method name="onSearchBegin">
         <body><![CDATA[
-          this.richlistbox.mouseSelectedIndex = -1;
+          this.richlistbox.mousedOverIndex = -1;
 
           if (typeof this._onSearchBegin == "function") {
             this._onSearchBegin();
@@ -1351,14 +1351,14 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
             // Completely reuse the existing richlistitem for invalidation
             // due to new results, but only when: the item is the same, *OR*
-            // we are about to replace the currently mouse-selected item, to
+            // we are about to replace the currently moused-over item, to
             // avoid surprising the user.
             let iface = Components.interfaces.nsIAutoCompletePopup;
             if (reusable &&
                 originalText == trimmedSearchString &&
                 invalidateReason == iface.INVALIDATE_REASON_NEW_RESULT &&
                 (originalValue == value ||
-                 this.richlistbox.mouseSelectedIndex === this._currentIndex)) {
+                 this.richlistbox.mousedOverIndex === this._currentIndex)) {
 
               // try to re-use the existing item
               let reused = item._reuseAcItem();
@@ -2507,7 +2507,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
   <binding id="autocomplete-richlistbox" extends="chrome://global/content/bindings/richlistbox.xml#richlistbox">
     <implementation>
       <field name="mLastMoveTime">Date.now()</field>
-      <field name="mouseSelectedIndex">-1</field>
+      <field name="mousedOverIndex">-1</field>
     </implementation>
     <handlers>
       <handler event="mouseup">
@@ -2527,22 +2527,21 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
       <handler event="mousemove">
         <![CDATA[
-        if (Date.now() - this.mLastMoveTime > 30) {
-         let item = event.target;
-         while (item && item.localName != "richlistitem") {
-           item = item.parentNode;
-         }
-
-         if (!item)
-           return;
-
-         let index = this.getIndexOfItem(item);
-         if (index != this.selectedIndex) {
-            this.mouseSelectedIndex = this.selectedIndex = index;
-         }
-
-         this.mLastMoveTime = Date.now();
+        if (Date.now() - this.mLastMoveTime <= 30) {
+          return;
         }
+
+        let item = event.target;
+        while (item && item.localName != "richlistitem") {
+          item = item.parentNode;
+        }
+
+        if (!item) {
+          return;
+        }
+
+        this.mousedOverIndex = this.getIndexOfItem(item);
+        this.mLastMoveTime = Date.now();
       ]]>
       </handler>
     </handlers>
@@ -2563,6 +2562,11 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       ]]></handler>
 
       <handler event="mousemove"><![CDATA[
+        if (event.defaultPrevented) {
+          // Allow bindings that extend this one to cancel the event so that
+          // nothing is selected.
+          return;
+        }
         if (Date.now() - this.mLastMoveTime > 30) {
          var rc = this.parentNode.treeBoxObject.getRowAt(event.clientX, event.clientY);
          if (rc != this.parentNode.currentIndex)

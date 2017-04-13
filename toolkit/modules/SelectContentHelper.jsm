@@ -100,6 +100,7 @@ this.SelectContentHelper.prototype = {
     let computedStyles = getComputedStyles(this.element);
     this._selectBackgroundColor = computedStyles.backgroundColor;
     this._selectColor = computedStyles.color;
+    this._selectTextShadow = computedStyles.textShadow;
     DOMUtils.clearPseudoClassLocks(this.element);
     this.global.sendAsyncMessage("Forms:ShowDropDown", {
       direction: computedStyles.direction,
@@ -109,6 +110,7 @@ this.SelectContentHelper.prototype = {
       selectedIndex: this.element.selectedIndex,
       selectBackgroundColor: this._selectBackgroundColor,
       selectColor: this._selectColor,
+      selectTextShadow: this._selectTextShadow,
       uaBackgroundColor: this.uaBackgroundColor,
       uaColor: this.uaColor,
       uaSelectBackgroundColor: this.uaSelectBackgroundColor,
@@ -138,12 +140,14 @@ this.SelectContentHelper.prototype = {
     let computedStyles = getComputedStyles(this.element);
     this._selectBackgroundColor = computedStyles.backgroundColor;
     this._selectColor = computedStyles.color;
+    this._selectTextShadow = computedStyles.textShadow;
     DOMUtils.clearPseudoClassLocks(this.element);
     this.global.sendAsyncMessage("Forms:UpdateDropDown", {
       options: this._buildOptionList(),
       selectedIndex: this.element.selectedIndex,
       selectBackgroundColor: this._selectBackgroundColor,
       selectColor: this._selectColor,
+      selectTextShadow: this._selectTextShadow,
       uaBackgroundColor: this.uaBackgroundColor,
       uaColor: this.uaColor,
       uaSelectBackgroundColor: this.uaSelectBackgroundColor,
@@ -334,6 +338,10 @@ function buildOptionListForChildren(node) {
         color: cs.color,
         children: tagName == "OPTGROUP" ? buildOptionListForChildren(child) : []
       };
+
+      if (cs.textShadow != "none") {
+        info.textShadow = cs.textShadow;
+      }
 
       // We must wait until all computedStyles have been
       // read before we clear the locks.

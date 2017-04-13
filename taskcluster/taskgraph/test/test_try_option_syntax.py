@@ -289,8 +289,8 @@ class TestTryOptionSyntax(unittest.TestCase):
         self.assertEqual(tos.env, ['VAR1=value1', 'VAR2=value2'])
 
     def test_profile(self):
-        "--spsProfile sets profile to true"
-        tos = TryOptionSyntax('try: --spsProfile', empty_graph)
+        "--geckoProfile sets profile to true"
+        tos = TryOptionSyntax('try: --geckoProfile', empty_graph)
         self.assertTrue(tos.profile)
 
     def test_tag(self):

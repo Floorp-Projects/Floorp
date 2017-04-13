@@ -320,7 +320,7 @@ AccessCheck::reportCrossOriginDenial(JSContext* cx, JS::HandleId id,
     }
     ErrorResult rv;
     rv.ThrowDOMException(NS_ERROR_DOM_SECURITY_ERR, message);
-    rv.MaybeSetPendingException(cx);
+    MOZ_ALWAYS_TRUE(rv.MaybeSetPendingException(cx));
 }
 
 enum Access { READ = (1<<0), WRITE = (1<<1), NO_ACCESS = 0 };
