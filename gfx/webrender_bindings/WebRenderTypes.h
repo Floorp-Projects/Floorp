@@ -365,7 +365,9 @@ static inline WrComplexClipRegion ToWrComplexClipRegion(const gfx::RectTyped<T>&
 
 static inline WrExternalImageId ToWrExternalImageId(uint64_t aID)
 {
-  return aID;
+  WrExternalImageId Id;
+  Id.mHandle = aID;
+  return Id;
 }
 
 static inline WrExternalImage RawDataToWrExternalImage(const uint8_t* aBuff,

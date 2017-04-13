@@ -174,7 +174,7 @@ RendererOGL::FlushRenderedEpochs()
 }
 
 RenderTextureHost*
-RendererOGL::GetRenderTexture(uint64_t aExternalImageId)
+RendererOGL::GetRenderTexture(WrExternalImageId aExternalImageId)
 {
   return mThread->GetRenderTexture(aExternalImageId);
 }

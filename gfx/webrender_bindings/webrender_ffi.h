@@ -54,6 +54,7 @@ extern "C" {
 WR_DECL_FFI_1(WrEpoch, uint32_t)
 WR_DECL_FFI_1(WrIdNamespace, uint32_t)
 WR_DECL_FFI_1(WrWindowId, uint64_t)
+WR_DECL_FFI_1(WrExternalImageId, uint64_t)
 
 WR_DECL_FFI_2(WrPipelineId, uint32_t, uint32_t)
 WR_DECL_FFI_2(WrImageKey, uint32_t, uint32_t)
@@ -72,12 +73,6 @@ bool is_in_render_thread();
 bool is_glcontext_egl(void* glcontext_ptr);
 void gfx_critical_note(const char* msg);
 void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname);
-
-// -----
-// Typedefs for struct fields and function signatures below.
-// -----
-
-typedef uint64_t WrExternalImageId;
 
 // Some useful defines to stub out webrender binding functions for when we
 // build gecko without webrender. We try to tell the compiler these functions
