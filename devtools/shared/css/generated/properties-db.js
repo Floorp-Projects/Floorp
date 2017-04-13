@@ -3172,7 +3172,6 @@ exports.CSS_PROPERTIES = {
       "COLOR",
       "-moz-all",
       "-moz-alt-content",
-      "-moz-anchor-decoration",
       "-moz-available",
       "-moz-block-height",
       "-moz-box",
@@ -9111,7 +9110,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
-      "-moz-anchor-decoration",
       "-moz-none",
       "blink",
       "currentColor",
@@ -9162,7 +9160,6 @@ exports.CSS_PROPERTIES = {
     ],
     "supports": [],
     "values": [
-      "-moz-anchor-decoration",
       "blink",
       "inherit",
       "initial",
