@@ -34,6 +34,11 @@ type WrRenderer = Renderer;
 type WrSideOffsets2Du32 = WrSideOffsets2D<u32>;
 type WrSideOffsets2Df32 = WrSideOffsets2D<f32>;
 
+// Enables binary recording that can be used with `wrench replay`
+// Outputs a wr-record-*.bin file for each window that is shown
+// Note: wrench will panic if external images are used, they can
+// be disabled in WebRenderBridgeParent::ProcessWebRenderCommands
+// by commenting out the path that adds an external image ID
 static ENABLE_RECORDING: bool = false;
 
 // This macro adds some checks to make sure we notice when the memory representation of
