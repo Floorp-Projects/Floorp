@@ -1923,7 +1923,6 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_NOP_DESTRUCTURING)
-CASE(JSOP_UNUSED211)
 CASE(JSOP_UNUSED220)
 CASE(JSOP_UNUSED221)
 CASE(JSOP_UNUSED222)
@@ -2170,6 +2169,20 @@ CASE(JSOP_IN)
     REGS.sp[-1].setBoolean(found);
 }
 END_CASE(JSOP_IN)
+
+CASE(JSOP_HASOWN)
+{
+    HandleValue val = REGS.stackHandleAt(-1);
+    HandleValue idval = REGS.stackHandleAt(-2);
+
+    bool found;
+    if (!HasOwnProperty(cx, val, idval, &found))
+        goto error;
+
+    REGS.sp--;
+    REGS.sp[-1].setBoolean(found);
+}
+END_CASE(JSOP_HASOWN)
 
 CASE(JSOP_ITER)
 {

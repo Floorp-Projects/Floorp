@@ -258,6 +258,39 @@ GetEnvironmentName(JSContext* cx, HandleObject envChain, HandlePropertyName name
 }
 
 inline bool
+HasOwnProperty(JSContext* cx, HandleValue val, HandleValue idValue, bool* result)
+{
+
+    // As an optimization, provide a fast path when rooting is not necessary and
+    // we can safely retrieve the object's shape.
+    jsid id;
+    if (val.isObject() && ValueToId<NoGC>(cx, idValue, &id)) {
+        JSObject* obj = &val.toObject();
+        PropertyResult prop;
+        if (obj->isNative() &&
+            NativeLookupOwnProperty<NoGC>(cx, &obj->as<NativeObject>(), id, &prop))
+        {
+            *result = prop.isFound();
+            return true;
+        }
+    }
+
+    // Step 1.
+    RootedId key(cx);
+    if (!ToPropertyKey(cx, idValue, &key))
+        return false;
+
+    // Step 2.
+    RootedObject obj(cx, ToObject(cx, val));
+    if (!obj)
+        return false;
+
+    // Step 3.
+    return HasOwnProperty(cx, obj, key, result);
+}
+
+
+inline bool
 GetIntrinsicOperation(JSContext* cx, jsbytecode* pc, MutableHandleValue vp)
 {
     RootedPropertyName name(cx, cx->currentScript()->getName(pc));

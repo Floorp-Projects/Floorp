@@ -28,11 +28,6 @@
 #define DESCR_STRUCT_FIELD_OFFSETS(obj) \
     UnsafeGetObjectFromReservedSlot(obj, JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS)
 
-// Other
-
-#define HAS_PROPERTY(obj, prop) \
-    callFunction(std_Object_hasOwnProperty, obj, prop)
-
 ///////////////////////////////////////////////////////////////////////////
 // Getting values
 //
