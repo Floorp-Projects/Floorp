@@ -1,0 +1,5 @@
+window.buildSettings = {
+  defaultSentryDsn: process.env.SCREENSHOTS_SENTRY,
+  logLevel: process.env.SCREENSHOTS_LOG_LEVEL || "warn"
+};
+null;

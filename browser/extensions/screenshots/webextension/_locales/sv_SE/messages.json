@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Ta klipp och skärmbilder från webben och spara dem tillfälligt eller permanent."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Ta en skärmbild"
+  },
+  "myShotsLink": {
+    "message": "Mina skärmbilder"
+  },
+  "screenshotInstructions": {
+    "message": "Dra eller klicka på sidan för att välja en region. Tryck på ESC för att avbryta."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Spara"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Spara synligt område"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Spara hela sidan"
+  },
+  "cancelScreenshot": {
+    "message": "Avbryt"
+  },
+  "downloadScreenshot": {
+    "message": "Ladda ner"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Länk kopierad"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Länken till din skärmbild har kopierats till urklipp. Tryck på $META_KEY$-V för att klistra in.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Ur funktion."
+  },
+  "requestErrorDetails": {
+    "message": "Förlåt! Vi kunde inte spara din skärmbild. Försök igen senare."
+  },
+  "connectionErrorTitle": {
+    "message": "Vi kan inte ansluta till dina skärmbilder."
+  },
+  "connectionErrorDetails": {
+    "message": "Kontrollera din internetanslutning. Om du kan ansluta till internet, kan det vara ett tillfälligt problem med tjänsten Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Vi kunde inte spara din skärmbild eftersom det finns ett problem med tjänsten Firefox Screenshots. Försök igen senare."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Vi kan inte ta en skärmbild av sidan."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Detta är inte en vanlig webbsida, så du kan inte ta en skärmbild av den."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Du kan inte ta en skärmbild av sidan Firefox Screenshots!"
+  },
+  "genericErrorTitle": {
+    "message": "Oj! Firefox Screenshots verkar inte fungera korrekt."
+  },
+  "genericErrorDetails": {
+    "message": "Vi är inte säkra på vad som just hände. Kan du försöka igen eller ta en bild på en annan sida?"
+  },
+  "tourBodyOne": {
+    "message": "Ta, spara, och dela skärmbilder utan att lämna Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Fånga precis vad du vill"
+  },
+  "tourBodyTwo": {
+    "message": "Klicka och dra för att fånga bara en del av en sida. Du kan också hovra för att markera ditt val."
+  },
+  "tourHeaderThree": {
+    "message": "Som du vill ha det"
+  },
+  "tourBodyThree": {
+    "message": "Spara dina beskurna bilder till webben för enklare delning, eller hämta dem till datorn. Du kan också klicka på knappen Mina skärmbilder för att hitta alla bilder du tagit."
+  },
+  "tourHeaderFour": {
+    "message": "Fånga fönster eller hela sidor"
+  },
+  "tourBodyFour": {
+    "message": "Välj knapparna i det övre högra hörnet för att fånga det synliga området i fönstret eller för att fånga en hel sida."
+  },
+  "tourSkip": {
+    "message": "Hoppa över"
+  },
+  "tourNext": {
+    "message": "Nästa sida"
+  },
+  "tourPrevious": {
+    "message": "Föregående sida"
+  },
+  "tourDone": {
+    "message": "Färdig"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Genom att använda Firefox Screenshots, godkänner du $TERMSANDPRIVACYNOTICETERMSLINK$ och $TERMSANDPRIVACYNOTICEPRIVACYLINK$ för Screenshots.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Villkor"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Sekretesspolicy"
+  }
+}
