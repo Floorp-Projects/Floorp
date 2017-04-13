@@ -157,12 +157,17 @@ public:
     nsStringHashKey(aKey), mNameContentList(nullptr)
   {
   }
-  nsIdentifierMapEntry(const nsIdentifierMapEntry& aOther) :
-    nsStringHashKey(&aOther.GetKey())
+  nsIdentifierMapEntry(nsIdentifierMapEntry&& aOther) :
+    nsStringHashKey(&aOther.GetKey()),
+    mIdContentList(mozilla::Move(aOther.mIdContentList)),
+    mNameContentList(aOther.mNameContentList.forget()),
+    mChangeCallbacks(aOther.mChangeCallbacks.forget()),
+    mImageElement(aOther.mImageElement.forget())
   {
-    NS_ERROR("Should never be called");
   }
   ~nsIdentifierMapEntry();
+
+  enum { ALLOW_MEMMOVE = false };
 
   void AddNameElement(nsINode* aDocument, Element* aElement);
   void RemoveNameElement(Element* aElement);
@@ -254,12 +259,15 @@ public:
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
+  nsIdentifierMapEntry(const nsIdentifierMapEntry& aOther) = delete;
+  nsIdentifierMapEntry& operator=(const nsIdentifierMapEntry& aOther) = delete;
+
   void FireChangeCallbacks(Element* aOldElement, Element* aNewElement,
                            bool aImageOnly = false);
 
   // empty if there are no elements with this ID.
   // The elements are stored as weak pointers.
-  nsTArray<Element*> mIdContentList;
+  AutoTArray<Element*, 1> mIdContentList;
   RefPtr<nsBaseContentList> mNameContentList;
   nsAutoPtr<nsTHashtable<ChangeCallbackEntry> > mChangeCallbacks;
   RefPtr<Element> mImageElement;
