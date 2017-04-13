@@ -40,6 +40,11 @@ fn main() {
     assert!(result.success(), "autospider should exit OK");
 
     println!("cargo:rustc-link-search=native={}/js/src/build", out_dir);
+    println!("cargo:rustc-link-search=native={}/js/src", out_dir);
+    println!("cargo:rustc-link-lib=static=js_static");
+
+    println!("cargo:rustc-link-search=native={}/dist/bin", out_dir);
+    println!("cargo:rustc-link-lib=nspr4");
 
     if target.contains("windows") {
         println!("cargo:rustc-link-lib=winmm");
@@ -50,6 +55,5 @@ fn main() {
         println!("cargo:rustc-link-lib=stdc++");
     }
 
-    println!("cargo:rustc-link-lib=static=js_static");
     println!("cargo:outdir={}", out_dir);
 }
