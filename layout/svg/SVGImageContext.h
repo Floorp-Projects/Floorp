@@ -24,7 +24,8 @@ class SVGImageContext
 {
 public:
   SVGImageContext()
-    : mIsPaintingSVGImageElement(false)
+    : mGlobalOpacity(1.0)
+    , mIsPaintingSVGImageElement(false)
   { }
 
   /**
@@ -48,9 +49,11 @@ public:
    */
   explicit SVGImageContext(const Maybe<CSSIntSize>& aViewportSize,
                            const Maybe<SVGPreserveAspectRatio>& aPreserveAspectRatio = Nothing(),
+                           gfxFloat aOpacity = 1.0,
                            bool aIsPaintingSVGImageElement = false)
     : mViewportSize(aViewportSize)
     , mPreserveAspectRatio(aPreserveAspectRatio)
+    , mGlobalOpacity(aOpacity)
     , mIsPaintingSVGImageElement(aIsPaintingSVGImageElement)
   { }
 
@@ -74,6 +77,10 @@ public:
     mPreserveAspectRatio = aPAR;
   }
 
+  gfxFloat GetGlobalOpacity() const {
+    return mGlobalOpacity;
+  }
+
   const SVGEmbeddingContextPaint* GetContextPaint() const {
     return mContextPaint.get();
   }
@@ -93,6 +100,7 @@ public:
     return contextPaintIsEqual &&
            mViewportSize == aOther.mViewportSize &&
            mPreserveAspectRatio == aOther.mPreserveAspectRatio &&
+           mGlobalOpacity == aOther.mGlobalOpacity &&
            mIsPaintingSVGImageElement == aOther.mIsPaintingSVGImageElement;
   }
 
@@ -108,6 +116,7 @@ public:
     return HashGeneric(hash,
                        mViewportSize.map(HashSize).valueOr(0),
                        mPreserveAspectRatio.map(HashPAR).valueOr(0),
+                       HashBytes(&mGlobalOpacity, sizeof(mGlobalOpacity)),
                        mIsPaintingSVGImageElement);
   }
 
@@ -123,6 +132,7 @@ private:
   RefPtr<SVGEmbeddingContextPaint> mContextPaint;
   Maybe<CSSIntSize>             mViewportSize;
   Maybe<SVGPreserveAspectRatio> mPreserveAspectRatio;
+  gfxFloat                      mGlobalOpacity;
   bool                          mIsPaintingSVGImageElement;
 };
 
