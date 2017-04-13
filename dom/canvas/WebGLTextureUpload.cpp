@@ -220,6 +220,8 @@ FromImageBitmap(WebGLContext* webgl, const char* funcName, TexImageTarget target
     UniquePtr<dom::ImageBitmapCloneData> cloneData = Move(imageBitmap.ToCloneData());
     const RefPtr<gfx::DataSourceSurface> surf = cloneData->mSurface;
 
+    ////
+
     if (!width) {
         width = surf->GetSize().width;
     }
@@ -228,11 +230,15 @@ FromImageBitmap(WebGLContext* webgl, const char* funcName, TexImageTarget target
         height = surf->GetSize().height;
     }
 
+    ////
+
+
     // WhatWG "HTML Living Standard" (30 October 2015):
     // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be returned as
     //  non-premultiplied alpha values."
+    const bool isAlphaPremult = cloneData->mIsPremultipliedAlpha;
     return MakeUnique<webgl::TexUnpackSurface>(webgl, target, width, height, depth, surf,
-                                               cloneData->mAlphaType);
+                                               isAlphaPremult);
 }
 
 static UniquePtr<webgl::TexUnpackBlob>
@@ -250,11 +256,6 @@ FromImageData(WebGLContext* webgl, const char* funcName, TexImageTarget target,
     const gfx::IntSize size(imageData.Width(), imageData.Height());
     const size_t stride = size.width * 4;
     const gfx::SurfaceFormat surfFormat = gfx::SurfaceFormat::R8G8B8A8;
-
-    // WhatWG "HTML Living Standard" (30 October 2015):
-    // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be returned as
-    //  non-premultiplied alpha values."
-    const auto alphaType = gfxAlphaType::NonPremult;
 
     MOZ_ASSERT(dataSize == stride * size.height);
 
@@ -280,8 +281,12 @@ FromImageData(WebGLContext* webgl, const char* funcName, TexImageTarget target,
 
     ////
 
+    // WhatWG "HTML Living Standard" (30 October 2015):
+    // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be returned as
+    //  non-premultiplied alpha values."
+    const bool isAlphaPremult = false;
     return MakeUnique<webgl::TexUnpackSurface>(webgl, target, width, height, depth, surf,
-                                               alphaType);
+                                               isAlphaPremult);
 }
 
 UniquePtr<webgl::TexUnpackBlob>
@@ -370,14 +375,16 @@ WebGLContext::FromDomElem(const char* funcName, TexImageTarget target, uint32_t 
     //////
     // Ok, we're good!
 
+    const bool isAlphaPremult = sfer.mIsPremultiplied;
+
     if (layersImage) {
         return MakeUnique<webgl::TexUnpackImage>(this, target, width, height, depth,
-                                                 layersImage, sfer.mAlphaType);
+                                                 layersImage,  isAlphaPremult);
     }
 
     MOZ_ASSERT(dataSurf);
     return MakeUnique<webgl::TexUnpackSurface>(this, target, width, height, depth,
-                                               dataSurf, sfer.mAlphaType);
+                                               dataSurf, isAlphaPremult);
 }
 
 ////////////////////////////////////////

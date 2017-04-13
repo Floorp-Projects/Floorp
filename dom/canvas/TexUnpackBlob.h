@@ -51,14 +51,13 @@ public:
     const uint32_t mHeight;
     const uint32_t mDepth;
 
-    const gfxAlphaType mSrcAlphaType;
+    const bool mSrcIsPremult;
 
     bool mNeedsExactUpload;
 
 protected:
     TexUnpackBlob(const WebGLContext* webgl, TexImageTarget target, uint32_t rowLength,
-                  uint32_t width, uint32_t height, uint32_t depth,
-                  gfxAlphaType srcAlphaType);
+                  uint32_t width, uint32_t height, uint32_t depth, bool isSrcPremult);
 
 public:
     virtual ~TexUnpackBlob() { }
@@ -118,7 +117,7 @@ public:
 
     TexUnpackImage(const WebGLContext* webgl, TexImageTarget target, uint32_t width,
                    uint32_t height, uint32_t depth, layers::Image* image,
-                   gfxAlphaType srcAlphaType);
+                   bool isAlphaPremult);
 
     ~TexUnpackImage(); // Prevent needing to define layers::Image in the header.
 
@@ -138,7 +137,7 @@ public:
 
     TexUnpackSurface(const WebGLContext* webgl, TexImageTarget target, uint32_t width,
                      uint32_t height, uint32_t depth, gfx::DataSourceSurface* surf,
-                     gfxAlphaType srcAlphaType);
+                     bool isAlphaPremult);
 
     virtual bool Validate(WebGLContext* webgl, const char* funcName,
                           const webgl::PackingInfo& pi) override;

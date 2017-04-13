@@ -1308,12 +1308,12 @@ HTMLCanvasElement::SetFrameCapture(already_AddRefed<SourceSurface> aSurface,
 }
 
 already_AddRefed<SourceSurface>
-HTMLCanvasElement::GetSurfaceSnapshot(gfxAlphaType* const aOutAlphaType)
+HTMLCanvasElement::GetSurfaceSnapshot(bool* aPremultAlpha)
 {
   if (!mCurrentContext)
     return nullptr;
 
-  return mCurrentContext->GetSurfaceSnapshot(aOutAlphaType);
+  return mCurrentContext->GetSurfaceSnapshot(aPremultAlpha);
 }
 
 AsyncCanvasRenderer*

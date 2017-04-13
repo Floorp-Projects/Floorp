@@ -124,7 +124,7 @@ public:
     return mCurrentContext;
   }
 
-  already_AddRefed<gfx::SourceSurface> GetSurfaceSnapshot(gfxAlphaType* aOutAlphaType = nullptr);
+  already_AddRefed<gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha = nullptr);
 
   static already_AddRefed<OffscreenCanvas>
   CreateFromCloneData(nsIGlobalObject* aGlobal, OffscreenCanvasCloneData* aData);
