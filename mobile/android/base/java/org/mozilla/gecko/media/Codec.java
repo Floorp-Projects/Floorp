@@ -188,11 +188,20 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         }
     }
 
+    private static final class Output {
+        public final Sample sample;
+        public final int index;
+
+        public Output(final Sample sample, int index) {
+            this.sample = sample;
+            this.index = index;
+        }
+    }
+
     private class OutputProcessor {
         private final boolean mRenderToSurface;
         private boolean mHasOutputCapacitySet;
-        private Queue<Integer> mSentIndices = new LinkedList<>();
-        private Queue<Sample> mSentOutputs = new LinkedList<>();
+        private Queue<Output> mSentOutputs = new LinkedList<>();
         private boolean mStopped;
 
         private OutputProcessor(boolean renderToSurface) {
@@ -206,8 +215,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
             try {
                 Sample output = obtainOutputSample(index, info);
-                mSentIndices.add(index);
-                mSentOutputs.add(output);
+                mSentOutputs.add(new Output(output, index));
                 mCallbacks.onOutput(output);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -248,14 +256,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         }
 
         private synchronized void onRelease(Sample sample, boolean render) {
-            Integer i = mSentIndices.poll();
-            Sample output = mSentOutputs.poll();
-            if (i == null || output == null) {
-                Log.d(LOGTAG, "output buffer#" + i + "(" + output + ")" + ": " + sample + " already released");
+            final Output output = mSentOutputs.poll();
+            if (output == null) {
+                if (DEBUG) { Log.d(LOGTAG, sample + " already released"); }
                 return;
             }
-            mCodec.releaseOutputBuffer(i, render);
-            mSamplePool.recycleOutput(output);
+            mCodec.releaseOutputBuffer(output.index, render);
+            mSamplePool.recycleOutput(output.sample);
 
             sample.dispose();
         }
@@ -270,12 +277,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         }
 
         private synchronized void reset() {
-            for (int i : mSentIndices) {
-                mCodec.releaseOutputBuffer(i, false);
-            }
-            mSentIndices.clear();
-            for (Sample s : mSentOutputs) {
-                mSamplePool.recycleOutput(s);
+            for (final Output o : mSentOutputs) {
+                mCodec.releaseOutputBuffer(o.index, false);
+                mSamplePool.recycleOutput(o.sample);
             }
             mSentOutputs.clear();
         }
@@ -301,7 +305,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     private InputProcessor mInputProcessor;
     private OutputProcessor mOutputProcessor;
     private SamplePool mSamplePool;
-    private Queue<Sample> mSentOutputs = new ConcurrentLinkedQueue<>();
     // Value will be updated after configure called.
     private volatile boolean mIsAdaptivePlaybackSupported = false;
 
