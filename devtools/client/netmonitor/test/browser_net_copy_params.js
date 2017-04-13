@@ -94,6 +94,14 @@ add_task(function* () {
   }
 
   function* testCopyPostData(index, postData) {
+    // Wait for formDataSections and requestPostData state are ready in redux store
+    // since copyPostData API needs to read these state.
+    yield waitUntil(() => {
+      let { requests } = gStore.getState().requests;
+      let actIDs = Object.keys(requests.toJS());
+      let { formDataSections, requestPostData } = requests.get(actIDs[index]).toJS();
+      return formDataSections && requestPostData;
+    });
     EventUtils.sendMouseEvent({ type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]);
     EventUtils.sendMouseEvent({ type: "contextmenu" },
