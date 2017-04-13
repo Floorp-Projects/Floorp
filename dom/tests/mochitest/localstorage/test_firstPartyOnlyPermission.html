@@ -1,0 +1,62 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>first party storage permission test</title>
+
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+  TRY_ACCESS_SESSION_STORAGE =
+    'http://example.com/tests/dom/tests/mochitest/localstorage/file_tryAccessSessionStorage.html';
+
+  add_task(function*() {
+    yield SpecialPowers.pushPrefEnv({
+      set: [['network.cookie.cookieBehavior', SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT]],
+    });
+
+    try {
+      sessionStorage.setItem("blocked", "blocked");
+      ok(false, "Shouldn't be avaliable yet");
+    } catch (ex) {
+      ok(true, "Shouldn't be avaliable yet");
+    }
+
+    yield new Promise(resolve => SpecialPowers.pushPermissions([{
+      type: 'cookie',
+      allow: SpecialPowers.Ci.nsICookiePermission.ACCESS_ALLOW_FIRST_PARTY_ONLY,
+      context: document,
+    }], resolve));
+
+    // With the permission set to ACCESS_ALLOW_FIRST_PARTY_ONLY, we should be
+    // able to run it from this iframe (as we are first party with the test
+    // runner parent document).
+    try {
+      sessionStorage.setItem("blocked", "blocked");
+      ok(true, "Should be avaliable");
+    } catch (ex) {
+      ok(false, "Should be avaliable");
+    }
+
+    // A third party iframe should not have access however.
+    yield new Promise(resolve => {
+      window.onmessage = evt => {
+        window.onmessage = null;
+        is(evt.data, "sessionStorage=false");
+        resolve();
+      };
+
+      let iframe = document.createElement('iframe');
+      iframe.setAttribute('src', TRY_ACCESS_SESSION_STORAGE);
+      document.body.appendChild(iframe);
+    });
+  });
+
+</script>
+
+</head>
+
+<body>
+
+</body>
+</html>
