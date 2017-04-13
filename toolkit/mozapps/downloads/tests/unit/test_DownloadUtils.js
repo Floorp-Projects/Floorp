@@ -78,17 +78,13 @@ function testAllGetReadableDates() {
   const sixdaysago      = new Date(2000, 11, 25, 11, 30, 15);
   const sevendaysago    = new Date(2000, 11, 24, 11, 30, 15);
 
-  let cDtf = typeof Intl === "undefined" ? null : Services.intl.createDateTimeFormat;
+  let dts = Components.classes["@mozilla.org/intl/scriptabledateformat;1"].
+            getService(Components.interfaces.nsIScriptableDateFormat);
 
-  testGetReadableDates(today_11_30,
-                       typeof Intl === "undefined"
-                       ? today_11_30.toLocaleFormat("%X")
-                       : cDtf(undefined, {timeStyle: "short"}).format(today_11_30));
-  testGetReadableDates(today_12_30,
-                       typeof Intl === "undefined"
-                       ? today_12_30.toLocaleFormat("%X")
-                       : cDtf(undefined, {timeStyle: "short"}).format(today_12_30));
-
+  testGetReadableDates(today_11_30, dts.FormatTime("", dts.timeFormatNoSeconds,
+                                                   11, 30, 0));
+  testGetReadableDates(today_12_30, dts.FormatTime("", dts.timeFormatNoSeconds,
+                                                   12, 30, 0));
   testGetReadableDates(yesterday_11_30, "Yesterday");
   testGetReadableDates(yesterday_12_30, "Yesterday");
   testGetReadableDates(twodaysago,
@@ -106,11 +102,9 @@ function testAllGetReadableDates() {
                        sevendaysago.getDate().toString().padStart(2, "0"));
 
   let [, dateTimeFull] = DownloadUtils.getReadableDates(today_11_30);
-
-  const dtOptions = { dateStyle: "long", timeStyle: "short" };
-  do_check_eq(dateTimeFull, typeof Intl === "undefined"
-                            ? today_11_30.toLocaleFormat("%x %X")
-                            : cDtf(undefined, dtOptions).format(today_11_30));
+  do_check_eq(dateTimeFull, dts.FormatDateTime("", dts.dateFormatLong,
+                                                   dts.timeFormatNoSeconds,
+                                                   2000, 12, 31, 11, 30, 0));
 }
 
 function run_test() {
