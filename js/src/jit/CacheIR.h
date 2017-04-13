@@ -139,7 +139,8 @@ class TypedOperandId : public OperandId
     _(GetName)              \
     _(SetProp)              \
     _(SetElem)              \
-    _(In)
+    _(In)                   \
+    _(HasOwn)
 
 enum class CacheKind : uint8_t
 {
@@ -1249,6 +1250,27 @@ class MOZ_RAII InIRGenerator : public IRGenerator
   public:
     InIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode, HandleValue key,
                   HandleObject obj);
+
+    bool tryAttachStub();
+};
+
+// HasOwnIRGenerator generates CacheIR for a HasOwn IC.
+class MOZ_RAII HasOwnIRGenerator : public IRGenerator
+{
+    HandleValue key_;
+    HandleValue val_;
+
+    bool tryAttachNativeHasOwn(HandleId key, ValOperandId keyId,
+                           HandleObject obj, ObjOperandId objId);
+    bool tryAttachNativeHasOwnDoesNotExist(HandleId key, ValOperandId keyId,
+                                           HandleObject obj, ObjOperandId objId);
+
+    void trackAttached(const char* name);
+    void trackNotAttached();
+
+  public:
+    HasOwnIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode, HandleValue key,
+                      HandleValue value);
 
     bool tryAttachStub();
 };
