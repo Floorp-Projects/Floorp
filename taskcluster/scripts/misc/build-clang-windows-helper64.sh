@@ -14,7 +14,7 @@ if [ ! -e ${TOOLTOOL_AUTH_FILE} ]; then
 fi
 
 TOOLTOOL_MANIFEST=build/src/browser/config/tooltool-manifests/win32/build-clang-cl.manifest
-./build/src/mach artifact toolchain -v --authentication-file="${TOOLTOOL_AUTH_FILE}" --tooltool-manifest "${TOOLTOOL_MANIFEST}"
+./build/src/mach artifact toolchain -v --authentication-file="${TOOLTOOL_AUTH_FILE}" --tooltool-manifest "${TOOLTOOL_MANIFEST}"${TOOLTOOL_CACHE:+ --cache-dir ${TOOLTOOL_CACHE}}
 
 # Set up all the Visual Studio paths.
 MSVC_DIR=vs2015u3
