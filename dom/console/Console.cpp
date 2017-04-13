@@ -1560,6 +1560,9 @@ Console::PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
     case MethodException:
     case MethodDebug:
     case MethodAssert:
+    case MethodGroup:
+    case MethodGroupCollapsed:
+    case MethodGroupEnd:
       event.mArguments.Construct();
       event.mStyles.Construct();
       if (NS_WARN_IF(!ProcessArguments(aCx, aArguments,
@@ -1581,7 +1584,7 @@ Console::PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
   if (aData->mMethodName == MethodGroup ||
       aData->mMethodName == MethodGroupCollapsed ||
       aData->mMethodName == MethodGroupEnd) {
-    ComposeGroupName(aCx, aArguments, event.mGroupName);
+    ComposeGroupName(aCx, event.mArguments.Value(), event.mGroupName);
   }
 
   else if (aData->mMethodName == MethodTime && !aArguments.IsEmpty()) {

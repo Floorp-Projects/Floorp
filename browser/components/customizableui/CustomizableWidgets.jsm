@@ -218,7 +218,6 @@ const CustomizableWidgets = [
           while ((row = aResultSet.getNextRow())) {
             let uri = row.getResultByIndex(1);
             let title = row.getResultByIndex(2);
-            let icon = row.getResultByIndex(6);
 
             let item = doc.createElementNS(kNSXUL, "toolbarbutton");
             item.setAttribute("label", title || uri);
@@ -226,10 +225,7 @@ const CustomizableWidgets = [
             item.setAttribute("class", "subviewbutton");
             item.addEventListener("command", onItemCommand);
             item.addEventListener("click", onItemCommand);
-            if (icon) {
-              let iconURL = "moz-anno:favicon:" + icon;
-              item.setAttribute("image", iconURL);
-            }
+            item.setAttribute("image", "page-icon:" + uri);
             fragment.appendChild(item);
           }
           items.appendChild(fragment);

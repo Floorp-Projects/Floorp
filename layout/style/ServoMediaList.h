@@ -19,6 +19,8 @@ class ServoMediaList final : public dom::MediaList
 public:
   explicit ServoMediaList(already_AddRefed<RawServoMediaList> aRawList)
     : mRawList(aRawList) {}
+  explicit ServoMediaList(const nsAString& aMedia);
+  ServoMediaList();
 
   already_AddRefed<dom::MediaList> Clone() final;
 
@@ -28,6 +30,14 @@ public:
   uint32_t Length() final;
   void IndexedGetter(uint32_t aIndex, bool& aFound,
                      nsAString& aReturn) final;
+
+  bool Matches(nsPresContext&, nsMediaQueryResultCacheKey*) const final;
+
+#ifdef DEBUG
+  bool IsServo() const final { return true; }
+#endif
+
+  RawServoMediaList& RawList() { return *mRawList; }
 
 protected:
   nsresult Delete(const nsAString& aOldMedium) final;

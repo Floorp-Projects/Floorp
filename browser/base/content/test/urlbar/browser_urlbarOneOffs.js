@@ -73,6 +73,18 @@ add_task(function* history() {
     assertState(-1, i, "");
   }
 
+  // Key right through each one-off.
+  for (let i = 1; i < numButtons; i++) {
+    EventUtils.synthesizeKey("VK_RIGHT", {})
+    assertState(-1, i, "");
+  }
+
+  // Key left through each one-off.
+  for (let i = numButtons - 2; i >= 0; i--) {
+    EventUtils.synthesizeKey("VK_LEFT", {})
+    assertState(-1, i, "");
+  }
+
   // Key up through each result.
   for (let i = gMaxResults - 1; i >= 0; i--) {
     EventUtils.synthesizeKey("VK_UP", {})

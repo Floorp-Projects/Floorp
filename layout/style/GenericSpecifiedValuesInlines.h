@@ -99,6 +99,18 @@ GenericSpecifiedValues::SetPixelValueIfUnset(nsCSSPropertyID aId, float aValue)
 }
 
 void
+GenericSpecifiedValues::SetLengthValue(nsCSSPropertyID aId, nsCSSValue aValue)
+{
+  MOZ_STYLO_FORWARD(SetLengthValue, (aId, aValue))
+}
+
+void
+GenericSpecifiedValues::SetNumberValue(nsCSSPropertyID aId, float aValue)
+{
+  MOZ_STYLO_FORWARD(SetNumberValue, (aId, aValue))
+}
+
+void
 GenericSpecifiedValues::SetPercentValue(nsCSSPropertyID aId, float aValue)
 {
   MOZ_STYLO_FORWARD(SetPercentValue, (aId, aValue))
@@ -156,6 +168,12 @@ void
 GenericSpecifiedValues::SetTextDecorationColorOverride()
 {
   MOZ_STYLO_FORWARD(SetTextDecorationColorOverride, ())
+}
+
+void
+GenericSpecifiedValues::SetBackgroundImage(nsAttrValue& aValue)
+{
+  MOZ_STYLO_FORWARD(SetBackgroundImage, (aValue))
 }
 
 } // namespace mozilla

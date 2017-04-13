@@ -102,6 +102,8 @@ add_task(function* test_simpleQuery() {
   Services.telemetry.clearEvents();
   let resultIndexHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX");
   let resultTypeHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_TYPE");
+  let resultIndexByTypeHist = Services.telemetry.getKeyedHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
+  resultIndexByTypeHist.clear();
   resultIndexHist.clear();
   resultTypeHist.clear();
 
@@ -138,6 +140,11 @@ add_task(function* test_simpleQuery() {
     URLBAR_SELECTED_RESULT_TYPES.searchengine,
     "FX_URLBAR_SELECTED_RESULT_TYPE");
 
+  let resultIndexByType = resultIndexByTypeHist.snapshot("searchengine");
+  checkHistogramResults(resultIndexByType,
+    0,
+    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
+
   yield BrowserTestUtils.removeTab(tab);
 });
 
@@ -147,6 +154,8 @@ add_task(function* test_searchAlias() {
   Services.telemetry.clearEvents();
   let resultIndexHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX");
   let resultTypeHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_TYPE");
+  let resultIndexByTypeHist = Services.telemetry.getKeyedHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
+  resultIndexByTypeHist.clear();
   resultIndexHist.clear();
   resultTypeHist.clear();
 
@@ -183,6 +192,11 @@ add_task(function* test_searchAlias() {
     URLBAR_SELECTED_RESULT_TYPES.searchengine,
     "FX_URLBAR_SELECTED_RESULT_TYPE");
 
+  let resultIndexByType = resultIndexByTypeHist.snapshot("searchengine");
+  checkHistogramResults(resultIndexByType,
+    0,
+    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
+
   yield BrowserTestUtils.removeTab(tab);
 });
 
@@ -192,6 +206,8 @@ add_task(function* test_oneOff() {
   Services.telemetry.clearEvents();
   let resultIndexHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX");
   let resultTypeHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_TYPE");
+  let resultIndexByTypeHist = Services.telemetry.getKeyedHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
+  resultIndexByTypeHist.clear();
   resultIndexHist.clear();
   resultTypeHist.clear();
 
@@ -231,6 +247,11 @@ add_task(function* test_oneOff() {
     URLBAR_SELECTED_RESULT_TYPES.searchengine,
     "FX_URLBAR_SELECTED_RESULT_TYPE");
 
+  let resultIndexByType = resultIndexByTypeHist.snapshot("searchengine");
+  checkHistogramResults(resultIndexByType,
+    0,
+    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
+
   yield BrowserTestUtils.removeTab(tab);
 });
 
@@ -240,6 +261,8 @@ add_task(function* test_suggestion() {
   Services.telemetry.clearEvents();
   let resultIndexHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX");
   let resultTypeHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_TYPE");
+  let resultIndexByTypeHist = Services.telemetry.getKeyedHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
+  resultIndexByTypeHist.clear();
   resultIndexHist.clear();
   resultTypeHist.clear();
 
@@ -290,6 +313,11 @@ add_task(function* test_suggestion() {
   checkHistogramResults(resultTypes,
     URLBAR_SELECTED_RESULT_TYPES.searchsuggestion,
     "FX_URLBAR_SELECTED_RESULT_TYPE");
+
+  let resultIndexByType = resultIndexByTypeHist.snapshot("searchsuggestion");
+  checkHistogramResults(resultIndexByType,
+    3,
+    "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
 
   Services.search.currentEngine = previousEngine;
   Services.search.removeEngine(suggestionEngine);

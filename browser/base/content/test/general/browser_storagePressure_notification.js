@@ -57,6 +57,6 @@ add_task(function* () {
   prefBtn.doCommand();
   yield aboutPrefPromise;
   let prefDoc = gBrowser.selectedBrowser.contentDocument;
-  let offlineGroup = prefDoc.getElementById("offlineGroup");
-  is_element_visible(offlineGroup, "Should open the Network tab in about:preferences#privacy");
+  let siteDataGroup = prefDoc.getElementById("siteDataGroup");
+  is_element_visible(siteDataGroup, "Should open the Network tab in about:preferences#privacy");
 });

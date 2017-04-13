@@ -2545,8 +2545,18 @@
             // we decide that we're animating, we cancel the non-animating case,
             // and vice-versa. Then, in _endRemoveTab, we "finish" both
             // stopwatches, which is a no-op for cancelled stopwatches.
-            TelemetryStopwatch.start("FX_TAB_CLOSE_TIME_ANIM_MS", aTab);
-            TelemetryStopwatch.start("FX_TAB_CLOSE_TIME_NO_ANIM_MS", aTab);
+            //
+            // Note that removeTab might be re-entrant, as we currently spin an
+            // event loop while waiting for remote browsers to tell us whether or
+            // not we're allowed to unload them via permitUnload. This means that
+            // subsequent calls to removeTab will also have these stopwatches
+            // on file. There's also the case that the tab was animating closed,
+            // and removeTab was called on it before it completed. In either case,
+            // we skip (re)starting the stopwatches.
+            if (!aTab._pendingPermitUnload && !aTab.closing) {
+              TelemetryStopwatch.start("FX_TAB_CLOSE_TIME_ANIM_MS", aTab);
+              TelemetryStopwatch.start("FX_TAB_CLOSE_TIME_NO_ANIM_MS", aTab);
+            }
 
             if (aParams) {
               var animate = aParams.animate;

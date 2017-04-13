@@ -1742,11 +1742,11 @@ TabParent::RecvHideTooltip()
 mozilla::ipc::IPCResult
 TabParent::RecvNotifyIMEFocus(const ContentCache& aContentCache,
                               const IMENotification& aIMENotification,
-                              nsIMEUpdatePreference* aPreference)
+                              IMENotificationRequests* aRequests)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
-    *aPreference = nsIMEUpdatePreference();
+    *aRequests = IMENotificationRequests();
     return IPC_OK();
   }
 
@@ -1754,7 +1754,7 @@ TabParent::RecvNotifyIMEFocus(const ContentCache& aContentCache,
   IMEStateManager::NotifyIME(aIMENotification, widget, true);
 
   if (aIMENotification.mMessage == NOTIFY_IME_OF_FOCUS) {
-    *aPreference = widget->GetIMEUpdatePreference();
+    *aRequests = widget->GetIMENotificationRequests();
   }
   return IPC_OK();
 }
@@ -1769,8 +1769,8 @@ TabParent::RecvNotifyIMETextChange(const ContentCache& aContentCache,
   }
 
 #ifdef DEBUG
-  nsIMEUpdatePreference updatePreference = widget->GetIMEUpdatePreference();
-  NS_ASSERTION(updatePreference.WantTextChange(),
+  IMENotificationRequests requests = widget->GetIMENotificationRequests();
+  NS_ASSERTION(requests.WantTextChange(),
     "Don't call Send/RecvNotifyIMETextChange without NOTIFY_TEXT_CHANGE");
 #endif
 

@@ -185,7 +185,7 @@ public:
     return textStore->OnMouseButtonEventInternal(aIMENotification);
   }
 
-  static nsIMEUpdatePreference GetIMEUpdatePreference();
+  static IMENotificationRequests GetIMENotificationRequests();
 
   // Returns the address of the pointer so that the TSF automatic test can
   // replace the system object with a custom implementation for testing.

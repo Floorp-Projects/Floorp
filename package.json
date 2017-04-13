@@ -1,12 +1,12 @@
 {
-  "name": "Mozilla ESLint Setup",
+  "name": "mozillaeslintsetup",
   "description": "This package file is for setup of ESLint only for editor integration.",
   "repository": {},
   "license": "MPL-2.0",
   "dependencies": {
-    "eslint": "3.18.0",
+    "eslint": "3.19.0",
     "eslint-plugin-html": "1.5.2",
-    "eslint-plugin-react": "4.2.3",
+    "eslint-plugin-react": "6.10.3",
     "escope": "^3.6.0",
     "espree": "^3.4.0",
     "estraverse": "^4.2.0",

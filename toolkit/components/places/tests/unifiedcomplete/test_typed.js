@@ -11,7 +11,7 @@ add_task(function* test_domain() {
   do_print("Searching for domain should autoFill it");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   yield PlacesTestUtils.addVisits(NetUtil.newURI("http://mozilla.org/link/"));
-  yield setFaviconForHref("http://mozilla.org/link/", FAVICON_HREF);
+  yield setFaviconForPage("http://mozilla.org/link/", FAVICON_HREF);
   yield check_autocomplete({
     search: "moz",
     autofilled: "mozilla.org/",
@@ -25,7 +25,7 @@ add_task(function* test_url() {
   do_print("Searching for url should autoFill it");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   yield PlacesTestUtils.addVisits(NetUtil.newURI("http://mozilla.org/link/"));
-  yield setFaviconForHref("http://mozilla.org/link/", FAVICON_HREF);
+  yield setFaviconForPage("http://mozilla.org/link/", FAVICON_HREF);
   yield check_autocomplete({
     search: "mozilla.org/li",
     autofilled: "mozilla.org/link/",

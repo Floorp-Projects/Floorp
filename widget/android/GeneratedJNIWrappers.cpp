@@ -1825,8 +1825,8 @@ auto CodecProxy::NativeCallbacks::DisposeNative() const -> void
 constexpr char CodecProxy::NativeCallbacks::OnError_t::name[];
 constexpr char CodecProxy::NativeCallbacks::OnError_t::signature[];
 
-constexpr char CodecProxy::NativeCallbacks::OnInputExhausted_t::name[];
-constexpr char CodecProxy::NativeCallbacks::OnInputExhausted_t::signature[];
+constexpr char CodecProxy::NativeCallbacks::OnInputStatus_t::name[];
+constexpr char CodecProxy::NativeCallbacks::OnInputStatus_t::signature[];
 
 constexpr char CodecProxy::NativeCallbacks::OnOutput_t::name[];
 constexpr char CodecProxy::NativeCallbacks::OnOutput_t::signature[];

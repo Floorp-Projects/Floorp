@@ -85,6 +85,26 @@ console.log(
   "color:red;background:\\165rl('http://example.com/test')");
 `});
 
+consoleApi.set("console.group(%cfoo%cbar)", {
+  keys: ["console.group(%cfoo%cbar)", "console.groupEnd(%cfoo%cbar)"],
+  code: `
+console.group(
+  "%cfoo%cbar",
+  "color:blue;font-size:1.3em;background:url('http://example.com/test');position:absolute;top:10px",
+  "color:red;background:\\165rl('http://example.com/test')");
+console.groupEnd();
+`});
+
+consoleApi.set("console.groupCollapsed(%cfoo%cbaz)", {
+  keys: ["console.groupCollapsed(%cfoo%cbaz)", "console.groupEnd(%cfoo%cbaz)"],
+  code: `
+console.groupCollapsed(
+  "%cfoo%cbaz",
+  "color:blue;font-size:1.3em;background:url('http://example.com/test');position:absolute;top:10px",
+  "color:red;background:\\165rl('http://example.com/test')");
+console.groupEnd();
+`});
+
 // CSS messages
 const cssMessage = new Map();
 

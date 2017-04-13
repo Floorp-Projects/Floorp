@@ -172,7 +172,7 @@
   "AUDIOSTREAM_BACKEND_USED": {
     "alert_emails": ["padenot@mozilla.com", "kinetik@flim.org"],
     "bug_numbers": [1280630],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 16,
     "description": "The operating system audio back-end used when successfully opening an audio stream, or whether the failure occurred on the first try or not <https://dxr.mozilla.org/mozilla-central/search?q=AUDIOSTREAM_BACKEND_ID_STR>",
@@ -4375,7 +4375,16 @@
     "kind": "enumerated",
     "n_values": 16,
     "bug_numbers": [1311931],
-    "description": "The result of each URL lookup against both google and google4 lists(0 = no match, 1 = V2 prefix only, 2 = V4 prefix only, 3 = V2 and V4 prefixes, 4 = V2 and V4 completions, 5 = V2 completion only, 6 = V4 completion only, 7 = V2 completion and v4 prefix, 8 = V2 prefix and V4 completion, 9 = unexpected result)"
+    "description": "The result of each URL lookup against both google and google4 lists. (0 = no match, 1 = V2 prefix only, 2 = V4 prefix only, 3 = V2 and V4 prefixes, 4 = V2 and V4 completions, 5 = V2 completion only, 6 = V4 completion only, 7 = V2 completion and v4 prefix, 8 = V2 prefix and V4 completion, 9 = unexpected result)"
+
+  },
+  "URLCLASSIFIER_MATCH_THREAT_TYPE_RESULT" : {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 64,
+    "bug_numbers": [1311933],
+    "description": "Whether or not a full URL match is of the same threat type on V2 and V4. (0 = same, otherwise the value is a bit flag where 0x01 = V2 phishing, 0x02 = V2 malware, 0x04 = V2 unwanted, 0x08 = V4 phishing, 0x10 = V4 malware, 0x20 = V4 unwanted)"
   },
   "URLCLASSIFIER_POSITIVE_CACHE_DURATION": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
@@ -5905,6 +5914,16 @@
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [775825],
     "description": "Firefox: The type of the selected result in the URL bar popup. See BrowserUsageTelemetry.jsm:URLBAR_SELECTED_RESULT_TYPES for the result types."
+  },
+  "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE": {
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 14,
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1345834],
+    "description": "Firefox: The index of the selected result in the URL bar popup by the type of the selected result in the URL bar popup. See BrowserUsageTelemetry.jsm:URLBAR_SELECTED_RESULT_TYPES for the result types."
   },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "expires_in_version": "never",

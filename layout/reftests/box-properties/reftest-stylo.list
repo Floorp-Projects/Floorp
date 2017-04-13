@@ -10,7 +10,7 @@ fails == width-special-values-image-block.html width-special-values-image-block.
 fails == width-special-values-image.html width-special-values-image.html
 fails == width-special-values-block-intrinsic.html width-special-values-block-intrinsic.html
 fails == width-special-values-float-intrinsic.html width-special-values-float-intrinsic.html
-fails == minmax-width-special-values-block-intrinsic.html minmax-width-special-values-block-intrinsic.html
+== minmax-width-special-values-block-intrinsic.html minmax-width-special-values-block-intrinsic.html
 fails == width-special-values-cell-auto.html width-special-values-cell-auto.html
 fails == width-special-values-cell-fixed.html width-special-values-cell-fixed.html
 fails == box-sizing-1.html box-sizing-1.html

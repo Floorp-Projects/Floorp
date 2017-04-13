@@ -24,10 +24,6 @@ Cu.import("resource://testing-common/httpd.js");
 
 const TITLE_SEARCH_ENGINE_SEPARATOR = " \u00B7\u2013\u00B7 ";
 
-function run_test() {
-  run_next_test();
-}
-
 function* cleanup() {
   Services.prefs.clearUserPref("browser.urlbar.autocomplete.enabled");
   Services.prefs.clearUserPref("browser.urlbar.autoFill");
@@ -111,7 +107,7 @@ AutoCompleteInput.prototype = {
 
 // A helper for check_autocomplete to check a specific match against data from
 // the controller.
-function _check_autocomplete_matches(match, result) {
+function* _check_autocomplete_matches(match, result) {
   let { uri, title, tags, style } = match;
   if (tags)
     title += " \u2013 " + tags.sort().join(", ");
@@ -133,8 +129,9 @@ function _check_autocomplete_matches(match, result) {
     Assert.ok(actualStyle.includes("action"), "moz-action results should always have 'action' in their style");
   }
 
-  if (match.icon)
-    Assert.equal(result.image, match.icon, "Match should have expected image");
+  if (match.icon) {
+    yield compareFavicons(result.image, match.icon, "Match should have the expected icon");
+  }
 
   return true;
 }
@@ -207,7 +204,7 @@ function* check_autocomplete(test) {
           image: controller.getImageAt(0),
         }
         do_print(`First match is "${result.value}", "${result.comment}"`);
-        Assert.ok(_check_autocomplete_matches(matches[0], result), "first item is correct");
+        Assert.ok(yield _check_autocomplete_matches(matches[0], result), "first item is correct");
         do_print("Checking rest of the matches");
       }
 
@@ -226,7 +223,7 @@ function* check_autocomplete(test) {
           // Skip processed expected results
           if (matches[j] == undefined)
             continue;
-          if (_check_autocomplete_matches(matches[j], result)) {
+          if (yield _check_autocomplete_matches(matches[j], result)) {
             do_print("Got a match at index " + j + "!");
             // Make it undefined so we don't process it again
             matches[j] = undefined;
@@ -430,19 +427,6 @@ function makeExtensionMatch(extra = {}) {
     title: extra.description,
     style,
   };
-}
-
-function setFaviconForHref(href, iconHref) {
-  return new Promise(resolve => {
-    PlacesUtils.favicons.setAndFetchFaviconForPage(
-      NetUtil.newURI(href),
-      NetUtil.newURI(iconHref),
-      true,
-      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-      resolve,
-      Services.scriptSecurityManager.getSystemPrincipal()
-    );
-  });
 }
 
 function makeTestServer(port = -1) {

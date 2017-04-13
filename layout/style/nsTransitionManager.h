@@ -39,7 +39,7 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
   ElementPropertyTransition(nsIDocument* aDocument,
                             Maybe<OwningAnimationTarget>& aTarget,
                             const TimingParams &aTiming,
-                            StyleAnimationValue aStartForReversingTest,
+                            AnimationValue aStartForReversingTest,
                             double aReversePortion,
                             const KeyframeEffectParams& aEffectOptions)
     : dom::KeyframeEffectReadOnly(aDocument, aTarget, aTiming, aEffectOptions)
@@ -63,7 +63,7 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
     return mKeyframes[0].mPropertyValues[0].mProperty;
   }
 
-  StyleAnimationValue ToValue() const {
+  AnimationValue ToValue() const {
     // If we failed to generate properties from the transition frames,
     // return a null value but also show a warning since we should be
     // detecting that kind of situation in advance and not generating a
@@ -71,9 +71,9 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
     if (mProperties.Length() < 1 ||
         mProperties[0].mSegments.Length() < 1) {
       NS_WARNING("Failed to generate transition property values");
-      return StyleAnimationValue();
+      return AnimationValue();
     }
-    return mProperties[0].mSegments[0].mToValue.mGecko;
+    return mProperties[0].mSegments[0].mToValue;
   }
 
   // This is the start value to be used for a check for whether a
@@ -81,7 +81,7 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
   // mProperties[0].mSegments[0].mFromValue, except when this transition
   // started as the reversal of another in-progress transition.
   // Needed so we can handle two reverses in a row.
-  StyleAnimationValue mStartForReversingTest;
+  AnimationValue mStartForReversingTest;
   // Likewise, the portion (in value space) of the "full" reversed
   // transition that we're actually covering.  For example, if a :hover
   // effect has a transition that moves the element 10px to the right
@@ -108,7 +108,7 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
     double mPlaybackRate;
     TimingParams mTiming;
     Maybe<ComputedTimingFunction> mTimingFunction;
-    StyleAnimationValue mFromValue, mToValue;
+    AnimationValue mFromValue, mToValue;
   };
   Maybe<ReplacedTransitionProperties> mReplacedTransition;
 };
@@ -175,7 +175,7 @@ public:
   void Tick() override;
 
   nsCSSPropertyID TransitionProperty() const;
-  StyleAnimationValue ToValue() const;
+  AnimationValue ToValue() const;
 
   bool HasLowerCompositeOrderThan(const CSSTransition& aOther) const;
   EffectCompositor::CascadeLevel CascadeLevel() const override
@@ -275,7 +275,7 @@ protected:
   // ElementPropertyTransition (effect) however since it can be replaced
   // using the Web Animations API.
   nsCSSPropertyID mTransitionProperty;
-  StyleAnimationValue mTransitionToValue;
+  AnimationValue mTransitionToValue;
 };
 
 } // namespace dom
@@ -372,6 +372,15 @@ public:
                            RefPtr<nsStyleContext>* aNewStyleContext /* inout */);
 
   /**
+   * Update transitions for stylo.
+   */
+  bool UpdateTransitions(
+    mozilla::dom::Element *aElement,
+    mozilla::CSSPseudoElementType aPseudoType,
+    const mozilla::ServoComputedValuesWithParent& aOldStyle,
+    const mozilla::ServoComputedValuesWithParent& aNewStyle);
+
+  /**
    * When we're resolving style for an element that previously didn't have
    * style, we might have some old finished transitions for it, if,
    * say, it was display:none for a while, but previously displayed.
@@ -411,33 +420,29 @@ protected:
   typedef nsTArray<RefPtr<mozilla::dom::CSSTransition>>
     OwningCSSTransitionPtrArray;
 
-  // Update the transitions. It'd start new, replace, or stop current
-  // transitions if need. aDisp and aElement shouldn't be nullptr.
+  // Update transitions. This will start new transitions,
+  // replace existing transitions, and stop existing transitions
+  // as needed. aDisp and aElement must be non-null.
   // aElementTransitions is the collection of current transitions, and it
   // could be a nullptr if we don't have any transitions.
-  bool
-  UpdateTransitions(const nsStyleDisplay* aDisp,
-                    mozilla::dom::Element* aElement,
-                    CSSTransitionCollection*& aElementTransitions,
-                    nsStyleContext* aOldStyleContext,
-                    nsStyleContext* aNewStyleContext);
+  template<typename StyleType> bool
+  DoUpdateTransitions(const nsStyleDisplay* aDisp,
+                      mozilla::dom::Element* aElement,
+                      mozilla::CSSPseudoElementType aPseudoType,
+                      CSSTransitionCollection*& aElementTransitions,
+                      StyleType aOldStyle,
+                      StyleType aNewStyle);
 
-  void
+  template<typename StyleType> void
   ConsiderInitiatingTransition(nsCSSPropertyID aProperty,
                                const mozilla::StyleTransition& aTransition,
                                mozilla::dom::Element* aElement,
+                               mozilla::CSSPseudoElementType aPseudoType,
                                CSSTransitionCollection*& aElementTransitions,
-                               nsStyleContext* aOldStyleContext,
-                               nsStyleContext* aNewStyleContext,
+                               StyleType aOldStyle,
+                               StyleType aNewStyle,
                                bool* aStartedAny,
                                nsCSSPropertyIDSet* aWhichStarted);
-
-  nsTArray<mozilla::Keyframe> GetTransitionKeyframes(
-    nsStyleContext* aStyleContext,
-    nsCSSPropertyID aProperty,
-    mozilla::StyleAnimationValue&& aStartValue,
-    mozilla::StyleAnimationValue&& aEndValue,
-    const nsTimingFunction& aTimingFunction);
 
   bool mInAnimationOnlyStyleUpdate;
 

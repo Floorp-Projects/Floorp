@@ -13,6 +13,7 @@ cppunit:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            windows10-64-asan/opt: []
             windows.*: ['mozilla-central', 'try']
             linux64-qr/.*: ['graphics']
             linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
@@ -53,6 +54,7 @@ crashtest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            windows10-64-asan/opt: []
             linux64-qr/.*: ['graphics', 'mozilla-central']
             linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
             default: ['all']
@@ -175,6 +177,10 @@ firefox-ui-functional-local:
     max-run-time: 5400
     tier: 1
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            windows10-64-asan/opt: []
+            default: ['all']
     mozharness:
         script: firefox_ui_tests/functional.py
         config:
@@ -191,6 +197,10 @@ firefox-ui-functional-remote:
     max-run-time: 5400
     tier: 2
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            windows10-64-asan/opt: []
+            default: ['all']
     mozharness:
         script: firefox_ui_tests/functional.py
         config:
@@ -209,6 +219,7 @@ gtest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            windows10-64-asan/opt: []
             linux64-qr/.*: ['graphics']
             default: ['all']
     mozharness:
@@ -235,6 +246,7 @@ jittest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            windows10-64-asan/opt: []
             linux64-qr/.*: ['graphics']
             default: ['all']
     chunks:
@@ -297,6 +309,7 @@ jsreftest:
             default: 3600
     run-on-projects:
         by-test-platform:
+            windows10-64-asan/opt: []
             windows.*: ['mozilla-central', 'try']
             linux64-qr/.*: ['graphics', 'mozilla-central']
             default: ['all']
@@ -355,6 +368,10 @@ marionette:
         by-test-platform:
             macosx.*: true
             default: both
+    run-on-projects:
+        by-test-platform:
+            windows10-64-asan/opt: []
+            default: ['all']
     mozharness:
         by-test-platform:
             android.*:
@@ -407,6 +424,10 @@ mochitest:
             linux64-jsdcov/opt: 10800
             default: 5400
     allow-software-gl-layers: false
+    run-on-projects:
+        by-test-platform:
+            windows10-64-asan/opt: []
+            default: ['all']
     mozharness:
         by-test-platform:
             android.*:
@@ -448,6 +469,7 @@ mochitest-a11y:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            windows10-64-asan/opt: []
             linux64-qr/.*: ['graphics']
             default: ['all']
     mozharness:
@@ -495,6 +517,10 @@ mochitest-browser-chrome:
             linux64/debug: 5400
             linux32/debug: 5400
             default: 3600
+    run-on-projects:
+        by-test-platform:
+            windows10-64-asan/opt: []
+            default: ['all']
     mozharness:
         mochitest-flavor: browser
         script: desktop_unittest.py
@@ -569,6 +595,10 @@ mochitest-chrome:
             default: 3
     max-run-time: 3600
     e10s: false
+    run-on-projects:
+        by-test-platform:
+            windows10-64-asan/opt: []
+            default: ['all']
     mozharness:
         by-test-platform:
             android.*:
@@ -612,6 +642,10 @@ mochitest-clipboard:
       by-test-platform:
         macosx64/debug: true
         default: both
+    run-on-projects:
+        by-test-platform:
+            windows10-64-asan/opt: []
+            default: ['all']
     mozharness:
         by-test-platform:
             android.*:
@@ -657,6 +691,7 @@ mochitest-devtools-chrome:
             default: 10
     run-on-projects:
         by-test-platform:
+            windows10-64-asan/opt: []
             windows.*: ['mozilla-central', 'try']
             default: ['all']
     e10s:
@@ -703,6 +738,7 @@ mochitest-gpu:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            windows10-64-asan/opt: []
             linux64-qr/.*: ['graphics']
             default: ['all']
     e10s:
@@ -750,6 +786,7 @@ mochitest-jetpack:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            windows10-64-asan/opt: []
             windows.*: ['mozilla-central', 'try']
             default: ['all']
     mozharness:
@@ -793,6 +830,7 @@ mochitest-media:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            windows10-64-asan/opt: []
             linux64-qr/.*: ['graphics']
             default: ['all']
     mozharness:
@@ -860,6 +898,7 @@ mochitest-webgl:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            windows10-64-asan/opt: []
             linux64-qr/.*: ['graphics', 'mozilla-central']
             default: ['all']
     chunks:
@@ -963,6 +1002,7 @@ reftest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            windows10-64-asan/opt: []
             linux64-qr/.*: ['graphics', 'mozilla-central']
             default: ['all']
     instance-size:
@@ -1020,6 +1060,7 @@ reftest-no-accel:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            windows10-64-asan/opt: []
             linux64-qr/.*: ['graphics', 'mozilla-central']
             default: ['all']
     chunks:
@@ -1418,6 +1459,7 @@ xpcshell:
     treeherder-symbol: tc-X(X)
     run-on-projects:
         by-test-platform:
+            windows10-64-asan/opt: []
             linux64-qr/.*: ['graphics']
             default: ['all']
     docker-image: {"in-tree": "desktop1604-test"}

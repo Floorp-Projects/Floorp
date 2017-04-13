@@ -168,13 +168,16 @@ class SourceTreeConfigParser(L10nConfigParser):
     we do for real builds.
     '''
 
-    def __init__(self, inipath, basepath):
+    def __init__(self, inipath, basepath, redirects):
         '''Add additional arguments basepath.
 
         basepath is used to resolve local paths via branchnames.
+        redirects is used in unified repository, mapping upstream
+        repos to local clones.
         '''
         L10nConfigParser.__init__(self, inipath)
         self.basepath = basepath
+        self.redirects = redirects
         self.tld = None
 
     def getDepth(self, cp):
@@ -199,11 +202,13 @@ class SourceTreeConfigParser(L10nConfigParser):
         details = 'include_' + title
         if orig_cp.has_section(details):
             branch = orig_cp.get(details, 'mozilla')
+            branch = self.redirects.get(branch, branch)
             inipath = orig_cp.get(details, 'l10n.ini')
             path = self.basepath + '/' + branch + '/' + inipath
         else:
             path = urljoin(self.baseurl, path)
-        cp = SourceTreeConfigParser(path, self.basepath, **self.defaults)
+        cp = SourceTreeConfigParser(path, self.basepath, self.redirects,
+                                    **self.defaults)
         cp.loadConfigs()
         self.children.append(cp)
 
@@ -376,12 +381,15 @@ class EnumerateSourceTreeApp(EnumerateApp):
     'locales/en-US/...' in their root dir, but claim to be 'mobile'.
     '''
 
-    def __init__(self, inipath, basepath, l10nbase, locales=None):
+    def __init__(self, inipath, basepath, l10nbase, redirects,
+                 locales=None):
         self.basepath = basepath
+        self.redirects = redirects
         EnumerateApp.__init__(self, inipath, l10nbase, locales)
 
     def setupConfigParser(self, inipath):
-        self.config = SourceTreeConfigParser(inipath, self.basepath)
+        self.config = SourceTreeConfigParser(inipath, self.basepath,
+                                             self.redirects)
         self.config.loadConfigs()
 
 

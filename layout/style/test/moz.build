@@ -19,6 +19,8 @@
 #CPP_UNIT_TESTS = TestCSSPropertyLookup.cpp
 #LIBS += ../nsCSSKeywords.$(OBJ_SUFFIX) ../nsCSSProps.$(OBJ_SUFFIX) $(XPCOM_LIBS)
 
+DIRS += ['gtest']
+
 HAS_MISC_RULE = True
 
 HostSimplePrograms([

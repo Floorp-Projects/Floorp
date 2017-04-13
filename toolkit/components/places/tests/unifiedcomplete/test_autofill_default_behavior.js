@@ -24,9 +24,9 @@ add_task(function* test_default_behavior_host() {
   yield addBookmark( { uri: uri4, title: "tpbk" } );
   yield addBookmark( { uri: uri5, title: "title", tags: ["foo"] } );
 
-  yield setFaviconForHref(uri1.spec, "chrome://global/skin/icons/info.svg");
-  yield setFaviconForHref(uri3.spec, "chrome://global/skin/icons/error-16.png");
-  yield setFaviconForHref(uri6.spec, "chrome://global/skin/icons/question-16.png");
+  yield setFaviconForPage(uri1, "chrome://global/skin/icons/info.svg");
+  yield setFaviconForPage(uri3, "chrome://global/skin/icons/error-16.png");
+  yield setFaviconForPage(uri6, "chrome://global/skin/icons/question-16.png");
 
   // RESTRICT TO HISTORY.
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
@@ -223,8 +223,8 @@ add_task(function* test_default_behavior_url() {
   yield addBookmark( { uri: uri3, title: "bookmarked" } );
   yield addBookmark( { uri: uri4, title: "tpbk" } );
 
-  yield setFaviconForHref(uri1.spec, "chrome://global/skin/icons/info.svg");
-  yield setFaviconForHref(uri3.spec, "chrome://global/skin/icons/error-16.png");
+  yield setFaviconForPage(uri1, "chrome://global/skin/icons/info.svg");
+  yield setFaviconForPage(uri3, "chrome://global/skin/icons/error-16.png");
 
   // RESTRICT TO HISTORY.
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);

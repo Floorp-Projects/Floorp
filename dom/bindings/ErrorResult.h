@@ -262,6 +262,7 @@ public:
   //
   // After this call, the TErrorResult will no longer return true from Failed(),
   // since the exception will have moved to the JSContext.
+  MOZ_MUST_USE
   bool MaybeSetPendingException(JSContext* cx)
   {
     WouldReportJSException();
