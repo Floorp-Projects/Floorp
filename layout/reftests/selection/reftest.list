@@ -28,7 +28,7 @@ fuzzy-if(skiaContent,1,700) == extend-3i.html extend-3-ref.html
 random-if(Android) needs-focus != pseudo-element-of-native-anonymous.html pseudo-element-of-native-anonymous-ref.html # bug 676641
 # These tests uses Highlight and HighlightText color keywords, they are not same as text selection color on Mac.
 random-if(Android) fails-if(cocoaWidget) needs-focus == non-themed-widget.html non-themed-widget-ref.html
-random-if(Android) fails-if(cocoaWidget) needs-focus == themed-widget.html themed-widget-ref.html
+random-if(Android) fails-if(cocoaWidget) needs-focus fails-if(stylo) == themed-widget.html themed-widget-ref.html
 == addrange-1.html addrange-ref.html
 fuzzy-if(skiaContent,1,1200) == addrange-2.html addrange-ref.html
 == splitText-normalize.html splitText-normalize-ref.html

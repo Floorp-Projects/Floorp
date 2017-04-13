@@ -80,18 +80,18 @@
 
 
 # These all fail due bug 371180, plus a bunch of other bugs that ought to be filed.
-fails == collapsed-border-height-4.html border-base-ref.html
-fails == collapsed-border-height-5.html border-height-10-ref.html
-fails == collapsed-border-height-6.html border-height-10-ref.html
-fails == collapsed-border-width-4.html border-base-ref.html
-fails == collapsed-border-width-5.html border-width-10-ref.html
-fails == collapsed-border-width-6.html border-width-10-ref.html
-fails == collapsed-border-left-4.html border-base-ref.html
-fails == collapsed-border-left-5.html border-left-10-ref.html
-fails == collapsed-border-left-6.html border-left-10-ref.html
-fails == collapsed-border-top-4.html border-base-ref.html
-fails == collapsed-border-top-5.html border-top-10-ref.html
-fails == collapsed-border-top-6.html border-top-10-ref.html
+fails-if(!stylo) == collapsed-border-height-4.html border-base-ref.html
+fails-if(!stylo) == collapsed-border-height-5.html border-height-10-ref.html
+fails-if(!stylo) == collapsed-border-height-6.html border-height-10-ref.html
+fails-if(!stylo) == collapsed-border-width-4.html border-base-ref.html
+fails-if(!stylo) == collapsed-border-width-5.html border-width-10-ref.html
+fails-if(!stylo) == collapsed-border-width-6.html border-width-10-ref.html
+fails-if(!stylo) == collapsed-border-left-4.html border-base-ref.html
+fails-if(!stylo) == collapsed-border-left-5.html border-left-10-ref.html
+fails-if(!stylo) == collapsed-border-left-6.html border-left-10-ref.html
+fails-if(!stylo) == collapsed-border-top-4.html border-base-ref.html
+fails-if(!stylo) == collapsed-border-top-5.html border-top-10-ref.html
+fails-if(!stylo) == collapsed-border-top-6.html border-top-10-ref.html
 
 
 != image-base-ref.html image-height-10-ref.html
@@ -177,7 +177,7 @@ fuzzy-if(skiaContent,1,145) == rounded-background-color-width-left-6.html rounde
 == border-image-width-4.html border-image-width-0.html
 == border-image-width-9.html border-image-width-0.html
 
-== iframe-1.html iframe-1-ref.html
+fails-if(stylo) == iframe-1.html iframe-1-ref.html
 
-== viewport-units-rounding-1.html viewport-units-rounding-1-ref.html
+fails-if(stylo) == viewport-units-rounding-1.html viewport-units-rounding-1-ref.html
 == viewport-units-rounding-2.html about:blank
