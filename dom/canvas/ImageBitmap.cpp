@@ -624,8 +624,9 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
   // Pre-multiply alpha here.
   // Ignore this step if the source surface does not have alpha channel; this
   // kind of source surfaces might come form layers::PlanarYCbCrImage.
-  MOZ_ASSERT(IsOpaque(mSurface->GetFormat()) == (mAlphaType == gfxAlphaType::Opaque));
-  if (mAlphaType == gfxAlphaType::NonPremult) {
+  if (mAlphaType == gfxAlphaType::NonPremult &&
+      !IsOpaque(mSurface->GetFormat()))
+  {
     MOZ_ASSERT(mSurface->GetFormat() == SurfaceFormat::R8G8B8A8 ||
                mSurface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
                mSurface->GetFormat() == SurfaceFormat::A8R8G8B8);
