@@ -65,6 +65,8 @@ tasks:
         - "index.gecko.v2.{{project}}.latest.firefox.decision"
         - "tc-treeherder.v2.{{project}}.{{revision}}.{{pushlog_id}}"
         - "tc-treeherder-stage.v2.{{project}}.{{revision}}.{{pushlog_id}}"
+        - "notify.email.{{owner}}.on-failed"
+        - "notify.email.{{owner}}.on-exception"
 
       payload:
         env:
