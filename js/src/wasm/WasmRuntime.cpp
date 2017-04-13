@@ -584,9 +584,19 @@ GenerateBuiltinThunk(JSContext* cx, void* func, ABIFunctionType abiType, UniqueB
         AutoFlushICache afc("GenerateBuiltinThunk");
 
         masm.executableCopy(codeBase);
+        masm.processCodeLabels(codeBase);
         memset(codeBase + masm.bytesNeeded(), 0, codeLength - masm.bytesNeeded());
 
-        MOZ_ASSERT(!masm.numSymbolicAccesses(), "doesn't need any patching");
+#ifdef DEBUG
+        if (!masm.oom()) {
+            MOZ_ASSERT(masm.callSites().empty());
+            MOZ_ASSERT(masm.callFarJumps().empty());
+            MOZ_ASSERT(masm.trapSites().empty());
+            MOZ_ASSERT(masm.trapFarJumps().empty());
+            MOZ_ASSERT(masm.extractMemoryAccesses().empty());
+            MOZ_ASSERT(!masm.numSymbolicAccesses());
+        }
+#endif
     }
 
     *thunk = js::MakeUnique<BuiltinThunk>(codeBase, codeLength, pool, offsets);
