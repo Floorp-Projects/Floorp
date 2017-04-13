@@ -34,6 +34,7 @@ function synthesizeDblClickOnCell(aTree, column, row) {
 function* togglePasswords() {
   pwmgrdlg.document.querySelector("#togglePasswords").doCommand();
   yield new Promise(resolve => waitForFocus(resolve, pwmgrdlg));
+  pwmgrdlg.document.documentElement.clientWidth; // flush to ensure UI up-to-date
 }
 
 function* editUsernamePromises(site, oldUsername, newUsername) {
@@ -42,8 +43,7 @@ function* editUsernamePromises(site, oldUsername, newUsername) {
   is(login.username, oldUsername, "Correct username saved");
   is(getUsername(0), oldUsername, "Correct username shown");
   synthesizeDblClickOnCell(signonsTree, 1, 0);
-  yield ContentTaskUtils.waitForCondition(() => signonsTree.getAttribute("editing"),
-                                          "Waiting for editing");
+  yield BrowserTestUtils.waitForEvent(signonsTree, "focus", true);
 
   EventUtils.sendString(newUsername, pwmgrdlg);
   let signonsIntro = doc.querySelector("#signonsIntro");
@@ -64,8 +64,7 @@ function* editPasswordPromises(site, oldPassword, newPassword) {
   is(getPassword(0), oldPassword, "Correct password shown");
 
   synthesizeDblClickOnCell(signonsTree, 2, 0);
-  yield ContentTaskUtils.waitForCondition(() => signonsTree.getAttribute("editing"),
-                                          "Waiting for editing");
+  yield BrowserTestUtils.waitForEvent(signonsTree, "focus", true);
 
   EventUtils.sendString(newPassword, pwmgrdlg);
   let signonsIntro = doc.querySelector("#signonsIntro");
