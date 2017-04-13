@@ -852,14 +852,16 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    struct OnInputExhausted_t {
+    struct OnInputStatus_t {
         typedef NativeCallbacks Owner;
         typedef void ReturnType;
         typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "onInputExhausted";
+        typedef mozilla::jni::Args<
+                int64_t,
+                bool> Args;
+        static constexpr char name[] = "onInputStatus";
         static constexpr char signature[] =
-                "()V";
+                "(JZ)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
