@@ -12825,6 +12825,7 @@ class MTypeBarrier
     BarrierKind barrierKind() const {
         return barrierKind_;
     }
+    MDefinition* foldsTo(TempAllocator& alloc) override;
 
     bool alwaysBails() const {
         // If mirtype of input doesn't agree with mirtype of barrier,
