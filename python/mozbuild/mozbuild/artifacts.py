@@ -71,6 +71,7 @@ from taskgraph.util.taskcluster import (
 from mozbuild.util import (
     ensureParentDir,
     FileAvoidWrite,
+    mkdir,
 )
 import mozinstall
 from mozpack.files import (
@@ -533,6 +534,7 @@ class CacheManager(object):
         self._cache = pylru.lrucache(cache_size, callback=cache_callback)
         self._cache_filename = mozpath.join(cache_dir, cache_name + '-cache.pickle')
         self._log = log
+        mkdir(cache_dir, not_indexed=True)
 
     def log(self, *args, **kwargs):
         if self._log:
@@ -703,7 +705,8 @@ class ArtifactPersistLimit(PersistLimit):
             self._log(*args, **kwargs)
 
     def register_file(self, path):
-        if path.endswith('.pickle'):
+        if path.endswith('.pickle') or \
+                os.path.basename(path) == '.metadata_never_index':
             return
         if not self._registering_dir:
             # Touch the file so that subsequent calls to a mach artifact
@@ -752,6 +755,7 @@ class ArtifactCache(object):
     '''Fetch Task Cluster artifact URLs and purge least recently used artifacts from disk.'''
 
     def __init__(self, cache_dir, log=None, skip_cache=False):
+        mkdir(cache_dir, not_indexed=True)
         self._cache_dir = cache_dir
         self._log = log
         self._skip_cache = skip_cache
