@@ -257,9 +257,19 @@ enum class WrImageRendering: uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+struct WrPoint {
+  float x;
+  float y;
+
+  bool operator==(const WrPoint& aOther) const {
+    return x == aOther.x &&
+      y == aOther.y;
+  }
+};
+
 struct WrGlyphInstance {
   uint32_t index;
-  Point2D point;
+  WrPoint point;
 
   bool operator==(const WrGlyphInstance& aOther) const {
     return index == aOther.index &&
@@ -369,16 +379,6 @@ struct WrGradientStop {
   bool operator==(const WrGradientStop& aOther) const {
     return offset == aOther.offset &&
       color == aOther.color;
-  }
-};
-
-struct WrPoint {
-  float x;
-  float y;
-
-  bool operator==(const WrPoint& aOther) const {
-    return x == aOther.x &&
-      y == aOther.y;
   }
 };
 
