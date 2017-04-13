@@ -10,9 +10,19 @@ var fs = require("fs");
 var path = require("path");
 var helpers = require("../lib/helpers");
 
-const globalsFile = path.join(helpers.getRootDir(module.filename),
-                              "tools", "lint", "eslint", "eslint-plugin-mozilla",
+const eslintDir = path.join(helpers.getRootDir(module.filename),
+                            "tools", "lint", "eslint");
+
+const globalsFile = path.join(eslintDir, "eslint-plugin-mozilla",
                               "lib", "environments", "saved-globals.json");
+
+console.log("Copying modules.json");
+
+const modulesFile = path.join(eslintDir, "modules.json");
+const shipModulesFile = path.join(eslintDir, "eslint-plugin-mozilla", "lib",
+                                  "modules.json");
+
+fs.writeFileSync(shipModulesFile, fs.readFileSync(modulesFile));
 
 console.log("Generating globals file");
 
