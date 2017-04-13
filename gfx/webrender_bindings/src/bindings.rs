@@ -29,7 +29,6 @@ type WrImageRendering = ImageRendering;
 type WrImageKey = ImageKey;
 type WrMixBlendMode = MixBlendMode;
 type WrPipelineId = PipelineId;
-type WrRenderedEpochs = Vec<(WrPipelineId, WrEpoch)>;
 type WrRenderer = Renderer;
 type WrSideOffsets2Du32 = WrSideOffsets2D<u32>;
 type WrSideOffsets2Df32 = WrSideOffsets2D<f32>;
@@ -745,11 +744,17 @@ pub unsafe extern "C" fn wr_renderer_delete(renderer: *mut WrRenderer) {
     Box::from_raw(renderer);
 }
 
+pub struct WrRenderedEpochs {
+    data: Vec<(WrPipelineId, WrEpoch)>,
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn wr_renderer_flush_rendered_epochs(renderer: &mut WrRenderer)
                                                            -> *mut WrRenderedEpochs {
     let map = renderer.flush_rendered_epochs();
-    let pipeline_epochs = Box::new(map.into_iter().collect());
+    let pipeline_epochs = Box::new(WrRenderedEpochs {
+        data: map.into_iter().collect()
+    });
     return Box::into_raw(pipeline_epochs);
 }
 
@@ -758,7 +763,7 @@ pub unsafe extern "C" fn wr_rendered_epochs_next(pipeline_epochs: &mut WrRendere
                                                  out_pipeline: &mut WrPipelineId,
                                                  out_epoch: &mut WrEpoch)
                                                  -> bool {
-    if let Some((pipeline, epoch)) = pipeline_epochs.pop() {
+    if let Some((pipeline, epoch)) = pipeline_epochs.data.pop() {
         *out_pipeline = pipeline;
         *out_epoch = epoch;
         return true;
