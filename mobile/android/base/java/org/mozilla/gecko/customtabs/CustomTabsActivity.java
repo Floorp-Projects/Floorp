@@ -405,6 +405,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             intent.setData(Uri.parse(tab.getURL()));
             intent.setAction(Intent.ACTION_VIEW);
             startActivity(intent);
+            finish();
         }
     }
 
