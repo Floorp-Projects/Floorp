@@ -108,6 +108,15 @@ public:
   virtual nsresult OSProtocolHandlerExists(const char *aScheme,
                                                        bool *aExists) = 0;
 
+  /**
+   * Given an extension, get a MIME type string. If not overridden by
+   * the OS-specific nsOSHelperAppService, will call into GetMIMEInfoFromOS
+   * with an empty mimetype.
+   * @return true if we successfully found a mimetype.
+   */
+  virtual bool GetMIMETypeFromOSForExtension(const nsACString& aExtension,
+                                             nsACString& aMIMEType);
+
 protected:
   virtual ~nsExternalHelperAppService();
 
