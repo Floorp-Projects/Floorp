@@ -121,7 +121,7 @@ to mochitest command.
     * test_font_face_parser.html `U+0121` [4]
   * test_font_face_parser.html `4E00`: servo/rust-cssparser#135 [2]
 * @namespace support:
-  * test_namespace_rule.html bug 1355715 [17]
+  * test_namespace_rule.html: bug 1355715 [17]
 * test_dont_use_document_colors.html: support of disabling document color bug 1355716 [21]
 * test_exposed_prop_accessors.html: mainly various unsupported properties [*]
 * test_extra_inherit_initial.html: CSS-wide keywords are accepted as part of value servo/servo#15054 [980]
@@ -355,6 +355,7 @@ to mochitest command.
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
 * test_selectors.html `this_better_be_unvisited`: visited handling [2]
+* test_selectors.html `:nth-child`: &lt;an+b&gt; parsing difference servo/rust-cssparser#138 [14]
 
 ## Assertions
 
@@ -381,7 +382,6 @@ to mochitest command.
 ## Unknown / Unsure
 
 * test_additional_sheets.html: one sub-test cascade order is wrong [1]
-* test_selectors.html `:nth-child`: &lt;an+b&gt; parsing difference [14]
 * test_selectors_on_anonymous_content.html: xbl and :nth-child [1]
 * test_parse_rule.html `rgb(0, 128, 0)`: color properties not getting computed [6]
 
