@@ -14,7 +14,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.mozilla.telemetry.TelemetryHolder;
 import org.mozilla.telemetry.ping.TelemetryEventPingBuilder;
+import org.mozilla.telemetry.util.StringUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -23,6 +25,14 @@ import java.util.Map;
  */
 public class TelemetryEvent {
     private static final long startTime = SystemClock.elapsedRealtime();
+
+    private static final int MAX_LENGTH_CATEGORY = 30;
+    private static final int MAX_LENGTH_METHOD = 20;
+    private static final int MAX_LENGTH_OBJECT = 20;
+    private static final int MAX_LENGTH_VALUE = 80;
+    private static final int MAX_EXTRA_KEYS = 10;
+    private static final int MAX_LENGTH_EXTRA_KEY = 15;
+    private static final int MAX_LENGTH_EXTRA_VALUE = 80;
 
     /**
      * Create a new event with mandatory category, method and object.
@@ -33,13 +43,7 @@ public class TelemetryEvent {
      */
     @CheckResult
     public static TelemetryEvent create(@NonNull String category, @NonNull String method, @Nullable String object) {
-        final TelemetryEvent event = new TelemetryEvent();
-
-        event.category = category;
-        event.method = method;
-        event.object = object;
-
-        return event;
+        return new TelemetryEvent(category, method, object, null);
     }
 
     /**
@@ -52,72 +56,62 @@ public class TelemetryEvent {
      */
     @CheckResult
     public static TelemetryEvent create(@NonNull String category, @NonNull String method, @Nullable String object, String value) {
-        final TelemetryEvent event = new TelemetryEvent();
-
-        event.category = category;
-        event.method = method;
-        event.object = object;
-        event.value = value;
-
-        return event;
-    }
-
-    /**
-     * Create a new event with mandatory category, method, object, value and extras.
-     *
-     * @param category identifier. The category is a group name for events and helps to avoid name conflicts.
-     * @param method identifier. This describes the type of event that occured, e.g. click, keydown or focus.
-     * @param object identifier. This is the object the event occured on, e.g. reload_button or urlbar.
-     * @param value This is a user defined value, providing context for the event.
-     * @param extras This is an map of the form {"key": "value", ...}, used for events where additional context is needed.
-     */
-    @CheckResult
-    public static TelemetryEvent create(@NonNull String category, @NonNull String method, @Nullable String object, String value, Map<String, Object> extras) {
-        final TelemetryEvent event = new TelemetryEvent();
-
-        event.category = category;
-        event.method = method;
-        event.object = object;
-        event.value = value;
-        event.extras = extras;
-
-        return event;
+        return new TelemetryEvent(category, method, object, value);
     }
 
     /**
      * Positive number. This is the time in ms when the event was recorded, relative to the main
      * process start time.
      */
-    private long timestamp;
+    private final long timestamp;
 
     /**
      * Identifier. The category is a group name for events and helps to avoid name conflicts.
      */
-    private String category;
+    private final String category;
 
     /**
      * Identifier. This describes the type of event that occurred, e.g. click, keydown or focus.
      */
-    private String method;
+    private final String method;
 
     /**
      * Identifier. This is the object the event occurred on, e.g. reload_button or urlbar.
      */
-    private String object;
+    private @Nullable final String object;
 
     /**
      * Optional, may be null. This is a user defined value, providing context for the event.
      */
-    private @Nullable  String value;
+    private @Nullable String value;
 
     /**
      * Optional, may be null. This is an object of the form {"key": "value", ...}, used for events
      * where additional context is needed.
      */
-    private @Nullable  Map<String, Object> extras;
+    private final Map<String, Object> extras;
 
-    private TelemetryEvent() {
+    private TelemetryEvent(@NonNull String category, @NonNull String method, @Nullable String object, @Nullable String value) {
         timestamp = SystemClock.elapsedRealtime() - startTime;
+
+        // We are naively assuming that all strings here are ASCII (1 character = 1 bytes) as the max lengths are defined in bytes
+        // There's an opportunity here to make this more strict and throw - however we may want to make this configurable.
+        this.category = StringUtils.safeSubstring(category, 0, MAX_LENGTH_CATEGORY);
+        this.method = StringUtils.safeSubstring(method, 0, MAX_LENGTH_METHOD);
+        this.object = object == null ? null : StringUtils.safeSubstring(object, 0, MAX_LENGTH_OBJECT);
+        this.value = value == null ? null : StringUtils.safeSubstring(value, 0, MAX_LENGTH_VALUE);
+        this.extras = new HashMap<>();
+    }
+
+    public TelemetryEvent extra(String key, String value) {
+        if (extras.size() > MAX_EXTRA_KEYS) {
+            throw new IllegalArgumentException("Exceeding limit of " + MAX_EXTRA_KEYS + " extra keys");
+        }
+
+        extras.put(StringUtils.safeSubstring(key, 0, MAX_LENGTH_EXTRA_KEY),
+                StringUtils.safeSubstring(value, 0, MAX_LENGTH_EXTRA_VALUE));
+
+        return this;
     }
 
     /**
@@ -143,7 +137,7 @@ public class TelemetryEvent {
             array.put(value);
         }
 
-        if (extras != null) {
+        if (extras != null && !extras.isEmpty()) {
             if (value == null) {
                 array.put(null);
             }

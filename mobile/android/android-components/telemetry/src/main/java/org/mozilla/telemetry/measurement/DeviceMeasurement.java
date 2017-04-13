@@ -8,6 +8,8 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
+import org.mozilla.telemetry.util.StringUtils;
+
 public class DeviceMeasurement extends TelemetryMeasurement {
     private static final String FIELD_NAME = "device";
 
@@ -21,7 +23,7 @@ public class DeviceMeasurement extends TelemetryMeasurement {
         // characters to the manufacturer because we're less likely to have manufacturers with
         // similar names than we are for a manufacturer to have two devices with the similar names
         // (e.g. Galaxy S6 vs. Galaxy Note 6).
-        return safeSubstring(getManufacturer(), 0, 12) + '-' + safeSubstring(getModel(), 0, 19);
+        return StringUtils.safeSubstring(getManufacturer(), 0, 12) + '-' +  StringUtils.safeSubstring(getModel(), 0, 19);
     }
 
     @VisibleForTesting String getManufacturer() {
@@ -30,11 +32,5 @@ public class DeviceMeasurement extends TelemetryMeasurement {
 
     @VisibleForTesting String getModel() {
         return Build.MODEL;
-    }
-
-    private static String safeSubstring(@NonNull final String str, final int start, final int end) {
-        return str.substring(
-                Math.max(0, start),
-                Math.min(end, str.length()));
     }
 }

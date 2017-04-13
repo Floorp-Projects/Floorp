@@ -26,9 +26,9 @@ public class EventsMeasurementTest {
         final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
         final EventsMeasurement measurement = new EventsMeasurement(configuration);
 
-        final String category = "category" + UUID.randomUUID().toString();
-        final String method = "method" + UUID.randomUUID().toString();
-        final String object = "object" + UUID.randomUUID().toString();
+        final String category = "category828";
+        final String method = "method910";
+        final String object = "object010";
 
         final TelemetryEvent event = TelemetryEvent.create(category, method, object);
         measurement.add(event);
@@ -116,12 +116,10 @@ public class EventsMeasurementTest {
         final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
         final EventsMeasurement measurement = new EventsMeasurement(configuration);
 
-        final Map<String, Object> extras = new HashMap<>();
-        extras.put("from", "Google");
-        extras.put("to", "Yahoo");
-
         measurement
-                .add(TelemetryEvent.create("action", "change", "setting", "pref_search_engine", extras));
+                .add(TelemetryEvent.create("action", "change", "setting", "pref_search_engine")
+                    .extra("from", "Google")
+                    .extra("to", "Yahoo"));
 
         final Object value = measurement.flush();
         assertNotNull(value);
