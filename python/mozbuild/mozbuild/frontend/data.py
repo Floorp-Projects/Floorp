@@ -425,7 +425,7 @@ def cargo_output_directory(context, target_var):
     # in those directories.  The directory structure depends not only
     # on the target, but also what sort of build we are doing.
     rust_build_kind = 'release'
-    if context.config.substs.get('MOZ_DEBUG'):
+    if context.config.substs.get('MOZ_DEBUG_RUST'):
         rust_build_kind = 'debug'
     return mozpath.join(context.config.substs[target_var], rust_build_kind)
 
