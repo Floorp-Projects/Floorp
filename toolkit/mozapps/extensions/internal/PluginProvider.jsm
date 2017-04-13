@@ -549,10 +549,7 @@ PluginWrapper.prototype = {
   },
 
   get optionsType() {
-    if (canDisableFlashProtectedMode(this)) {
-      return AddonManager.OPTIONS_TYPE_INLINE;
-    }
-    return AddonManager.OPTIONS_TYPE_INLINE_INFO;
+    return AddonManager.OPTIONS_TYPE_INLINE;
   },
 
   get optionsURL() {

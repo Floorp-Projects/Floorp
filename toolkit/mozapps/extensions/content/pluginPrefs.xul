@@ -13,6 +13,10 @@
   <setting type="control" title="&plugin.mimeTypes;">
     <label class="text-list" id="pluginMimeTypes"/>
   </setting>
+  <setting type="bool" pref="plugins.flashBlock.enabled"
+           id="pluginFlashBlocking"
+           title="&plugin.enableBlocklists.label;"
+           learnmore="https://support.mozilla.org/kb/flash-blocklists" />
   <setting type="bool" pref="dom.ipc.plugins.flash.disable-protected-mode"
            inverted="true" title="&plugin.flashProtectedMode.label;"
            id="pluginEnableProtectedMode"
