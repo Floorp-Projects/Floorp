@@ -176,6 +176,7 @@ extern const char* CacheKindNames[];
     _(GuardAndLoadUnboxedExpando)         \
     _(GuardAndGetIndexFromString)         \
     _(GuardHasGetterSetter)               \
+    _(GuardGroupHasUnanalyzedNewScript)   \
     _(LoadObject)                         \
     _(LoadProto)                          \
     _(LoadEnclosingEnvironment)           \
@@ -543,6 +544,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void guardHasGetterSetter(ObjOperandId obj, Shape* shape) {
         writeOpWithOperandId(CacheOp::GuardHasGetterSetter, obj);
         addStubField(uintptr_t(shape), StubField::Type::Shape);
+    }
+    void guardGroupHasUnanalyzedNewScript(ObjectGroup* group) {
+        writeOp(CacheOp::GuardGroupHasUnanalyzedNewScript);
+        addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
     }
 
     void loadFrameCalleeResult() {
