@@ -72,7 +72,7 @@ RemoteMediator.prototype = {
     let callbackID = this._addCallback(callback);
 
     install.mimetype = XPINSTALL_MIMETYPE;
-    install.principalToInherit = principal;
+    install.triggeringPrincipal = principal;
     install.callbackID = callbackID;
 
     if (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
