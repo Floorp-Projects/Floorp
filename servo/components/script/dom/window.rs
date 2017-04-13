@@ -86,13 +86,15 @@ use servo_atoms::Atom;
 use servo_config::opts;
 use servo_config::prefs::PREFS;
 use servo_geometry::{f32_rect_to_au_rect, max_rect};
-use servo_url::{ImmutableOrigin, ServoUrl};
+use servo_url::{Host, ImmutableOrigin, ServoUrl};
 use std::ascii::AsciiExt;
 use std::borrow::ToOwned;
 use std::cell::Cell;
 use std::collections::{HashMap, HashSet};
 use std::collections::hash_map::Entry;
 use std::default::Default;
+use std::env;
+use std::fs;
 use std::io::{Write, stderr, stdout};
 use std::mem;
 use std::rc::Rc;
@@ -103,10 +105,12 @@ use std::sync::mpsc::TryRecvError::{Disconnected, Empty};
 use style::context::ReflowGoal;
 use style::error_reporting::ParseErrorReporter;
 use style::media_queries;
+use style::parser::ParserContext as CssParserContext;
 use style::properties::PropertyId;
 use style::properties::longhands::overflow_x;
 use style::selector_parser::PseudoElement;
 use style::str::HTML_SPACE_CHARACTERS;
+use style::stylesheets::CssRuleType;
 use task_source::dom_manipulation::DOMManipulationTaskSource;
 use task_source::file_reading::FileReadingTaskSource;
 use task_source::history_traversal::HistoryTraversalTaskSource;
@@ -265,6 +269,10 @@ pub struct Window {
     /// to ensure that the element can be marked dirty when the image data becomes
     /// available at some point in the future.
     pending_layout_images: DOMRefCell<HashMap<PendingImageId, Vec<JS<Node>>>>,
+
+    /// Directory to store unminified scripts for this window if unminify-js
+    /// opt is enabled.
+    unminified_js_dir: DOMRefCell<Option<String>>,
 }
 
 impl Window {
@@ -963,7 +971,9 @@ impl WindowMethods for Window {
     // https://drafts.csswg.org/cssom-view/#dom-window-matchmedia
     fn MatchMedia(&self, query: DOMString) -> Root<MediaQueryList> {
         let mut parser = Parser::new(&query);
-        let media_query_list = media_queries::parse_media_query_list(&mut parser);
+        let url = self.get_url();
+        let context = CssParserContext::new_for_cssom(&url, self.css_error_reporter(), Some(CssRuleType::Media));
+        let media_query_list = media_queries::parse_media_query_list(&context, &mut parser);
         let document = self.Document();
         let mql = MediaQueryList::new(&document, media_query_list);
         self.media_query_lists.push(&*mql);
@@ -1484,6 +1494,23 @@ impl Window {
         assert!(self.document.get().is_none());
         assert!(document.window() == self);
         self.document.set(Some(&document));
+        if !opts::get().unminify_js {
+            return;
+        }
+        // Create a folder for the document host to store unminified scripts.
+        if let Some(&Host::Domain(ref host)) = document.url().origin().host() {
+            let mut path = env::current_dir().unwrap();
+            path.push("unminified-js");
+            path.push(host);
+            let _ = fs::remove_dir_all(&path);
+            match fs::create_dir_all(&path) {
+                Ok(_) => {
+                    *self.unminified_js_dir.borrow_mut() = Some(path.into_os_string().into_string().unwrap());
+                    debug!("Created folder for {:?} unminified scripts {:?}", host, self.unminified_js_dir.borrow());
+                },
+                Err(_) => warn!("Could not create unminified dir for {:?}", host),
+            }
+        }
     }
 
     /// Commence a new URL load which will either replace this window or scroll to a fragment.
@@ -1691,6 +1718,10 @@ impl Window {
             self.upcast::<GlobalScope>().slow_down_timers();
         }
     }
+
+    pub fn unminified_js_dir(&self) -> Option<String> {
+        self.unminified_js_dir.borrow().clone()
+    }
 }
 
 impl Window {
@@ -1785,6 +1816,7 @@ impl Window {
             webvr_thread: webvr_thread,
             permission_state_invocation_results: DOMRefCell::new(HashMap::new()),
             pending_layout_images: DOMRefCell::new(HashMap::new()),
+            unminified_js_dir: DOMRefCell::new(None),
         };
 
         unsafe {

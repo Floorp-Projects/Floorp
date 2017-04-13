@@ -166,6 +166,17 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
     }
   }
 
+  void SetLengthValue(nsCSSPropertyID aId,
+                      nsCSSValue aValue) {
+    nsCSSValue* val = ValueFor(aId);
+    *val = aValue;
+  }
+
+  void SetNumberValue(nsCSSPropertyID aId,
+                     float aValue) {
+    ValueFor(aId)->SetFloatValue(aValue, eCSSUnit_Number);
+  }
+
   void SetPercentValue(nsCSSPropertyID aId,
                        float aValue) {
     ValueFor(aId)->SetPercentValue(aValue);
@@ -212,6 +223,7 @@ struct nsRuleData final: mozilla::GenericSpecifiedValues
 
   void SetFontFamily(const nsString& aValue);
   void SetTextDecorationColorOverride();
+  void SetBackgroundImage(nsAttrValue& aValue);
 
 private:
   inline size_t GetPoisonOffset();

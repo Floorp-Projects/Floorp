@@ -931,6 +931,17 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   border: 1px solid transparent;
 }
 
+.autocomplete-richlistitem:hover,
+treechildren.searchbar-treebody::-moz-tree-row(hover) {
+  background-color: hsla(0, 0%, 0%, 0.06);
+  border-color: hsla(0, 0%, 0%, 0.1);
+}
+
+.autocomplete-richlistitem[selected],
+treechildren.searchbar-treebody::-moz-tree-row(selected) {
+  background-color: Highlight;
+}
+
 .ac-title {
   font-size: 1.05em;
 }

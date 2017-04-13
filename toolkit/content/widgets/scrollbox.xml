@@ -340,7 +340,12 @@
           if (isContinuousScroll && this.distance) {
             // |this.startPos| is integer due to cache of |.scrollPosition|.  Therefore,
             // we need to manage actual destination with |this.destination|.
-            this.destination += distance;
+            var oldDestination = this.destination;
+            this.destination = this._clampPosition(this.destination + distance);
+
+            // If scroll position has already reached the ends, we need to do nothing.
+            if (oldDestination == this.destination)
+              return;
 
             // If the integer part of the destination isn't changed, we need to do
             // nothing now, wait next event.
@@ -357,7 +362,7 @@
             }
           } else {
             this.startPos = this.scrollbox.scrollPosition;
-            this.destination = this.startPos + distance;
+            this.destination = this._clampPosition(this.startPos + distance);
             this.distance = this.destination - this.startPos;
 
             // If absolute value of |this.distance| is less than 1px and this call is
@@ -394,6 +399,17 @@
             this.scrollbox._stopSmoothScroll();
           else
             this.requestHandle = window.requestAnimationFrame(this.sample.bind(this));
+        },
+
+        _clampPosition: function scrollAnim_clampPosition(aScrollPosition) {
+          if (aScrollPosition < 0) {
+            return 0;
+          }
+          var maxPos = this.scrollbox.scrollSize - this.scrollbox.scrollClientSize;
+          if (aScrollPosition > maxPos) {
+            return maxPos;
+          }
+          return aScrollPosition;
         }
       })]]></field>
 

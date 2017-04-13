@@ -67,12 +67,11 @@ GetContentChild()
  */
 
 nsPrefBranch::nsPrefBranch(const char *aPrefRoot, bool aDefaultBranch)
+  : mPrefRoot(aPrefRoot)
+  , mIsDefault(aDefaultBranch)
+  , mFreeingObserverList(false)
+  , mObservers()
 {
-  mPrefRoot = aPrefRoot;
-  mPrefRootLength = mPrefRoot.Length();
-  mIsDefault = aDefaultBranch;
-  mFreeingObserverList = false;
-
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (observerService) {
@@ -118,7 +117,6 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP nsPrefBranch::GetRoot(char **aRoot)
 {
   NS_ENSURE_ARG_POINTER(aRoot);
-  mPrefRoot.Truncate(mPrefRootLength);
   *aRoot = ToNewCString(mPrefRoot);
   return NS_OK;
 }
@@ -126,8 +124,8 @@ NS_IMETHODIMP nsPrefBranch::GetRoot(char **aRoot)
 NS_IMETHODIMP nsPrefBranch::GetPrefType(const char *aPrefName, int32_t *_retval)
 {
   NS_ENSURE_ARG(aPrefName);
-  const char *pref = getPrefName(aPrefName);
-  switch (PREF_GetPrefType(pref)) {
+  const PrefName& pref = getPrefName(aPrefName);
+  switch (PREF_GetPrefType(pref.get())) {
     case PrefType::String:
       *_retval = PREF_STRING;
       break;
@@ -162,16 +160,16 @@ NS_IMETHODIMP nsPrefBranch::GetBoolPrefWithDefault(const char *aPrefName,
 NS_IMETHODIMP nsPrefBranch::GetBoolPref(const char *aPrefName, bool *_retval)
 {
   NS_ENSURE_ARG(aPrefName);
-  const char *pref = getPrefName(aPrefName);
-  return PREF_GetBoolPref(pref, _retval, mIsDefault);
+  const PrefName& pref = getPrefName(aPrefName);
+  return PREF_GetBoolPref(pref.get(), _retval, mIsDefault);
 }
 
 NS_IMETHODIMP nsPrefBranch::SetBoolPref(const char *aPrefName, bool aValue)
 {
   ENSURE_MAIN_PROCESS("Cannot SetBoolPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
-  const char *pref = getPrefName(aPrefName);
-  return PREF_SetBoolPref(pref, aValue, mIsDefault);
+  const PrefName& pref = getPrefName(aPrefName);
+  return PREF_SetBoolPref(pref.get(), aValue, mIsDefault);
 }
 
 NS_IMETHODIMP nsPrefBranch::GetFloatPrefWithDefault(const char *aPrefName,
@@ -191,9 +189,8 @@ NS_IMETHODIMP nsPrefBranch::GetFloatPrefWithDefault(const char *aPrefName,
 NS_IMETHODIMP nsPrefBranch::GetFloatPref(const char *aPrefName, float *_retval)
 {
   NS_ENSURE_ARG(aPrefName);
-  const char *pref = getPrefName(aPrefName);
   nsAutoCString stringVal;
-  nsresult rv = GetCharPref(pref, getter_Copies(stringVal));
+  nsresult rv = GetCharPref(aPrefName, getter_Copies(stringVal));
   if (NS_SUCCEEDED(rv)) {
     *_retval = stringVal.ToFloat(&rv);
   }
@@ -219,8 +216,8 @@ NS_IMETHODIMP nsPrefBranch::GetCharPrefWithDefault(const char *aPrefName,
 NS_IMETHODIMP nsPrefBranch::GetCharPref(const char *aPrefName, char **_retval)
 {
   NS_ENSURE_ARG(aPrefName);
-  const char *pref = getPrefName(aPrefName);
-  return PREF_CopyCharPref(pref, _retval, mIsDefault);
+  const PrefName& pref = getPrefName(aPrefName);
+  return PREF_CopyCharPref(pref.get(), _retval, mIsDefault);
 }
 
 NS_IMETHODIMP nsPrefBranch::SetCharPref(const char *aPrefName, const char *aValue)
@@ -238,8 +235,8 @@ nsresult nsPrefBranch::SetCharPrefInternal(const char *aPrefName, const char *aV
   ENSURE_MAIN_PROCESS("Cannot SetCharPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
   NS_ENSURE_ARG(aValue);
-  const char *pref = getPrefName(aPrefName);
-  return PREF_SetCharPref(pref, aValue, mIsDefault);
+  const PrefName& pref = getPrefName(aPrefName);
+  return PREF_SetCharPref(pref.get(), aValue, mIsDefault);
 }
 
 NS_IMETHODIMP nsPrefBranch::GetStringPref(const char *aPrefName,
@@ -289,16 +286,16 @@ NS_IMETHODIMP nsPrefBranch::GetIntPrefWithDefault(const char *aPrefName,
 NS_IMETHODIMP nsPrefBranch::GetIntPref(const char *aPrefName, int32_t *_retval)
 {
   NS_ENSURE_ARG(aPrefName);
-  const char *pref = getPrefName(aPrefName);
-  return PREF_GetIntPref(pref, _retval, mIsDefault);
+  const PrefName& pref = getPrefName(aPrefName);
+  return PREF_GetIntPref(pref.get(), _retval, mIsDefault);
 }
 
 NS_IMETHODIMP nsPrefBranch::SetIntPref(const char *aPrefName, int32_t aValue)
 {
   ENSURE_MAIN_PROCESS("Cannot SetIntPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
-  const char *pref = getPrefName(aPrefName);
-  return PREF_SetIntPref(pref, aValue, mIsDefault);
+  const PrefName& pref = getPrefName(aPrefName);
+  return PREF_SetIntPref(pref.get(), aValue, mIsDefault);
 }
 
 NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID & aType, void **_retval)
@@ -313,14 +310,14 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     nsCOMPtr<nsIPrefLocalizedString> theString(do_CreateInstance(NS_PREFLOCALIZEDSTRING_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
 
-    const char *pref = getPrefName(aPrefName);
+    const PrefName& pref = getPrefName(aPrefName);
     bool    bNeedDefault = false;
 
     if (mIsDefault) {
       bNeedDefault = true;
     } else {
       // if there is no user (or locked) value
-      if (!PREF_HasUserPref(pref) && !PREF_PrefIsLocked(pref)) {
+      if (!PREF_HasUserPref(pref.get()) && !PREF_PrefIsLocked(pref.get())) {
         bNeedDefault = true;
       }
     }
@@ -329,7 +326,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     // value we pulled in at the top of this function
     if (bNeedDefault) {
       nsXPIDLString utf16String;
-      rv = GetDefaultFromPropertiesFile(pref, getter_Copies(utf16String));
+      rv = GetDefaultFromPropertiesFile(pref.get(), getter_Copies(utf16String));
       if (NS_SUCCEEDED(rv)) {
         theString->SetData(utf16String.get());
       }
@@ -476,7 +473,7 @@ nsresult nsPrefBranch::CheckSanityOfStringLength(const char* aPrefName, const ui
                                         "should rather be written to an external file. This preference will "
                                         "not be sent to any content processes.",
                                         aLength,
-                                        getPrefName(aPrefName)));
+                                        getPrefName(aPrefName).get()));
   rv = console->LogStringMessage(NS_ConvertUTF8toUTF16(message).get());
   if (NS_FAILED(rv)) {
     return rv;
@@ -596,16 +593,16 @@ NS_IMETHODIMP nsPrefBranch::ClearUserPref(const char *aPrefName)
 {
   ENSURE_MAIN_PROCESS("Cannot ClearUserPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
-  const char *pref = getPrefName(aPrefName);
-  return PREF_ClearUserPref(pref);
+  const PrefName& pref = getPrefName(aPrefName);
+  return PREF_ClearUserPref(pref.get());
 }
 
 NS_IMETHODIMP nsPrefBranch::PrefHasUserValue(const char *aPrefName, bool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   NS_ENSURE_ARG(aPrefName);
-  const char *pref = getPrefName(aPrefName);
-  *_retval = PREF_HasUserPref(pref);
+  const PrefName& pref = getPrefName(aPrefName);
+  *_retval = PREF_HasUserPref(pref.get());
   return NS_OK;
 }
 
@@ -613,8 +610,8 @@ NS_IMETHODIMP nsPrefBranch::LockPref(const char *aPrefName)
 {
   ENSURE_MAIN_PROCESS("Cannot LockPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
-  const char *pref = getPrefName(aPrefName);
-  return PREF_LockPref(pref, true);
+  const PrefName& pref = getPrefName(aPrefName);
+  return PREF_LockPref(pref.get(), true);
 }
 
 NS_IMETHODIMP nsPrefBranch::PrefIsLocked(const char *aPrefName, bool *_retval)
@@ -622,8 +619,8 @@ NS_IMETHODIMP nsPrefBranch::PrefIsLocked(const char *aPrefName, bool *_retval)
   ENSURE_MAIN_PROCESS("Cannot check PrefIsLocked from content process:", aPrefName);
   NS_ENSURE_ARG_POINTER(_retval);
   NS_ENSURE_ARG(aPrefName);
-  const char *pref = getPrefName(aPrefName);
-  *_retval = PREF_PrefIsLocked(pref);
+  const PrefName& pref = getPrefName(aPrefName);
+  *_retval = PREF_PrefIsLocked(pref.get());
   return NS_OK;
 }
 
@@ -631,8 +628,8 @@ NS_IMETHODIMP nsPrefBranch::UnlockPref(const char *aPrefName)
 {
   ENSURE_MAIN_PROCESS("Cannot UnlockPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
-  const char *pref = getPrefName(aPrefName);
-  return PREF_LockPref(pref, false);
+  const PrefName& pref = getPrefName(aPrefName);
+  return PREF_LockPref(pref.get(), false);
 }
 
 NS_IMETHODIMP nsPrefBranch::ResetBranch(const char *aStartingAt)
@@ -644,8 +641,8 @@ NS_IMETHODIMP nsPrefBranch::DeleteBranch(const char *aStartingAt)
 {
   ENSURE_MAIN_PROCESS("Cannot DeleteBranch from content process:", aStartingAt);
   NS_ENSURE_ARG(aStartingAt);
-  const char *pref = getPrefName(aStartingAt);
-  return PREF_DeleteBranch(pref);
+  const PrefName& pref = getPrefName(aStartingAt);
+  return PREF_DeleteBranch(pref.get());
 }
 
 NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, uint32_t *aCount, char ***aChildArray)
@@ -665,11 +662,11 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, uint32_t *aCou
   // this will contain a list of all the pref name strings
   // allocate on the stack for speed
 
-  const char* parent = getPrefName(aStartingAt);
-  size_t parentLen = strlen(parent);
+  const PrefName& parent = getPrefName(aStartingAt);
+  size_t parentLen = parent.Length();
   for (auto iter = gHashTable->Iter(); !iter.Done(); iter.Next()) {
     auto entry = static_cast<PrefHashEntry*>(iter.Get());
-    if (strncmp(entry->key, parent, parentLen) == 0) {
+    if (strncmp(entry->key, parent.get(), parentLen) == 0) {
       prefArray.AppendElement(entry->key);
     }
   }
@@ -688,7 +685,7 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, uint32_t *aCou
       // back to us because if they do we are going to add mPrefRoot again.
       const nsCString& element = prefArray[dwIndex];
       outArray[dwIndex] = (char *)nsMemory::Clone(
-        element.get() + mPrefRootLength, element.Length() - mPrefRootLength + 1);
+        element.get() + mPrefRoot.Length(), element.Length() - mPrefRoot.Length() + 1);
 
       if (!outArray[dwIndex]) {
         // we ran out of memory... this is annoying
@@ -706,7 +703,6 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, uint32_t *aCou
 NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObserver, bool aHoldWeak)
 {
   PrefCallback *pCallback;
-  const char *pref;
 
   NS_ENSURE_ARG(aDomain);
   NS_ENSURE_ARG(aObserver);
@@ -738,8 +734,8 @@ NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObser
   // We must pass a fully qualified preference name to the callback
   // aDomain == nullptr is the only possible failure, and we trapped it with
   // NS_ENSURE_ARG above.
-  pref = getPrefName(aDomain);
-  PREF_RegisterCallback(pref, NotifyObserver, pCallback);
+  const PrefName& pref = getPrefName(aDomain);
+  PREF_RegisterCallback(pref.get(), NotifyObserver, pCallback);
   return NS_OK;
 }
 
@@ -768,8 +764,8 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
   mObservers.RemoveAndForget(&key, pCallback);
   if (pCallback) {
     // aDomain == nullptr is the only possible failure, trapped above
-    const char *pref = getPrefName(aDomain);
-    rv = PREF_UnregisterCallback(pref, NotifyObserver, pCallback);
+    const PrefName& pref = getPrefName(aDomain);
+    rv = PREF_UnregisterCallback(pref.get(), NotifyObserver, pCallback);
   }
 
   return rv;
@@ -825,8 +821,8 @@ void nsPrefBranch::freeObserverList(void)
   for (auto iter = mObservers.Iter(); !iter.Done(); iter.Next()) {
     nsAutoPtr<PrefCallback>& callback = iter.Data();
     nsPrefBranch *prefBranch = callback->GetPrefBranch();
-    const char *pref = prefBranch->getPrefName(callback->GetDomain().get());
-    PREF_UnregisterCallback(pref, nsPrefBranch::NotifyObserver, callback);
+    const PrefName& pref = prefBranch->getPrefName(callback->GetDomain().get());
+    PREF_UnregisterCallback(pref.get(), nsPrefBranch::NotifyObserver, callback);
     iter.Remove();
   }
   mFreeingObserverList = false;
@@ -868,18 +864,16 @@ nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char *aPrefName, char1
   return bundle->GetStringFromName(stringId.get(), return_buf);
 }
 
-const char *nsPrefBranch::getPrefName(const char *aPrefName)
+nsPrefBranch::PrefName
+nsPrefBranch::getPrefName(const char *aPrefName) const
 {
   NS_ASSERTION(aPrefName, "null pref name!");
 
   // for speed, avoid strcpy if we can:
   if (mPrefRoot.IsEmpty())
-    return aPrefName;
+    return PrefName(aPrefName);
 
-  // isn't there a better way to do this? this is really kind of gross.
-  mPrefRoot.Truncate(mPrefRootLength);
-  mPrefRoot.Append(aPrefName);
-  return mPrefRoot.get();
+  return PrefName(mPrefRoot + nsDependentCString(aPrefName));
 }
 
 //----------------------------------------------------------------------------

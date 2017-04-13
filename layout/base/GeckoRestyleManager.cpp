@@ -91,7 +91,6 @@ GeckoRestyleManager::GeckoRestyleManager(nsPresContext* aPresContext)
   , mHavePendingNonAnimationRestyles(false)
   , mRebuildAllExtraHint(nsChangeHint(0))
   , mRebuildAllRestyleHint(nsRestyleHint(0))
-  , mAnimationGeneration(0)
   , mReframingStyleContexts(nullptr)
   , mPendingRestyles(ELEMENT_HAS_PENDING_RESTYLE |
                      ELEMENT_IS_POTENTIAL_RESTYLE_ROOT |
@@ -331,13 +330,6 @@ GeckoRestyleManager::AttributeChanged(Element* aElement,
                                            aOldValue,
                                            rsdata);
   PostRestyleEvent(aElement, rshint, hint, &rsdata);
-}
-
-/* static */ uint64_t
-GeckoRestyleManager::GetAnimationGenerationForFrame(nsIFrame* aFrame)
-{
-  EffectSet* effectSet = EffectSet::GetEffectSet(aFrame);
-  return effectSet ? effectSet->GetAnimationGeneration() : 0;
 }
 
 void

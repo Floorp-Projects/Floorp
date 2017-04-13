@@ -10,7 +10,6 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/debug.js", this);
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
@@ -18,9 +17,11 @@ Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
-Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/AppConstants.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySend",
+                                  "resource://gre/modules/TelemetrySend.jsm");
 
 const Utils = TelemetryUtils;
 
@@ -1124,15 +1125,16 @@ var Impl = {
     // data continuity.
     //
     let boundHandleMemoryReport = this.handleMemoryReport.bind(this);
-    function h(id, units, amountName) {
+    let h = (id, units, amountName) => {
       try {
         // If mgr[amountName] throws an exception, just move on -- some amounts
         // aren't available on all platforms.  But if the attribute simply
         // isn't present, that indicates the distinguished amounts have changed
         // and this file hasn't been updated appropriately.
         let amount = mgr[amountName];
-        NS_ASSERT(amount !== undefined,
-                  "telemetry accessed an unknown distinguished amount");
+        if (amount === undefined) {
+          this._log.error("gatherMemory - telemetry accessed an unknown distinguished amount");
+        }
         boundHandleMemoryReport(id, units, amount);
       } catch (e) {
       }
@@ -1219,7 +1221,7 @@ var Impl = {
       val = amount - this._prevValues[id];
       this._prevValues[id] = amount;
     } else {
-      NS_ASSERT(false, "Can't handle memory reporter with units " + units);
+      this._log.error("handleMemoryReport - Can't handle memory reporter with units " + units);
       return;
     }
 

@@ -71,5 +71,9 @@ ContentPrefInstance.prototype = {
 
   get DBConnection() {
     return this._contentPrefSvc.DBConnection;
+  },
+
+  set loadContext(aLoadContext) {
+    this._context = aLoadContext;
   }
 };

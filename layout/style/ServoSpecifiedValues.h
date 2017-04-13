@@ -60,6 +60,12 @@ public:
     }
   }
 
+  void SetLengthValue(nsCSSPropertyID aId,
+                      nsCSSValue aValue);
+
+  void SetNumberValue(nsCSSPropertyID aId,
+                     float aValue);
+
   void SetPercentValue(nsCSSPropertyID aId,
                        float aValue);
 
@@ -98,6 +104,7 @@ public:
 
   void SetFontFamily(const nsString& aValue);
   void SetTextDecorationColorOverride();
+  void SetBackgroundImage(nsAttrValue& aValue);
 
 private:
   RefPtr<RawServoDeclarationBlock> mDecl;

@@ -621,6 +621,8 @@ Classifier::RemoveUpdateIntermediaries()
   }
   mNewLookupCaches.Clear();
 
+  mNewTableFreshness.Clear();
+
   // Remove the "old" directory. (despite its looking-new name)
   if (NS_FAILED(mUpdatingDirectory->Remove(true))) {
     // If the directory is locked from removal for some reason,
@@ -685,16 +687,21 @@ Classifier::SwapInNewTablesAndCleanup()
   // up later.
   MergeNewLookupCaches();
 
-  // Step 3. Re-generate active tables based on on-disk tables.
+  // Step 3. Merge mTableFreshnessForUpdate.
+  for (auto itr = mNewTableFreshness.ConstIter(); !itr.Done(); itr.Next()) {
+    mTableFreshness.Put(itr.Key(), itr.Data());
+  }
+
+  // Step 4. Re-generate active tables based on on-disk tables.
   rv = RegenActiveTables();
   if (NS_FAILED(rv)) {
     LOG(("Failed to re-generate active tables!"));
   }
 
-  // Step 4. Clean up intermediaries for update.
+  // Step 5. Clean up intermediaries for update.
   RemoveUpdateIntermediaries();
 
-  // Step 5. Invalidate cached tableRequest request.
+  // Step 6. Invalidate cached tableRequest request.
   mIsTableRequestResultOutdated = true;
 
   LOG(("Done swap in updated tables."));
@@ -1299,7 +1306,7 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
 
   int64_t now = (PR_Now() / PR_USEC_PER_SEC);
   LOG(("Successfully updated %s", store.TableName().get()));
-  mTableFreshness.Put(store.TableName(), now);
+  mNewTableFreshness.Put(store.TableName(), now);
 
   return NS_OK;
 }
@@ -1401,7 +1408,7 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
 
   int64_t now = (PR_Now() / PR_USEC_PER_SEC);
   LOG(("Successfully updated %s\n", PromiseFlatCString(aTable).get()));
-  mTableFreshness.Put(aTable, now);
+  mNewTableFreshness.Put(aTable, now);
 
   return NS_OK;
 }

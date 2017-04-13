@@ -178,7 +178,7 @@ private:
   TrackType mType;
 };
 
-// String version of track type. Don't use with kUndefinedTrack.
+// String version of track type.
 const char* TrackTypeToStr(TrackInfo::TrackType aTrack);
 
 // Stores info relevant to presenting media frames.

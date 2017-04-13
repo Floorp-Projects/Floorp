@@ -3700,8 +3700,7 @@ var SessionStoreInternal = {
       userTypedClear: tabData.userTypedClear || 0
     });
 
-    browser.messageManager.sendAsyncMessage("SessionStore:restoreHistory",
-                                            {tabData, epoch, loadArguments});
+    this._sendRestoreHistory(browser, {tabData, epoch, loadArguments});
 
     // Update tab label and icon to show something
     // while we wait for the messages to be processed.
@@ -3784,7 +3783,7 @@ var SessionStoreInternal = {
       // will be ignored and don't override any tab data set when restoring.
       let epoch = this.startNextEpoch(browser);
 
-      browser.messageManager.sendAsyncMessage("SessionStore:restoreHistory", {
+      this._sendRestoreHistory(browser, {
         tabData,
         epoch,
         loadArguments: aLoadArguments,
@@ -4720,7 +4719,40 @@ var SessionStoreInternal = {
     // and not garbage-collected until then.
     promise.then(() => timer.cancel(), () => timer.cancel());
     return promise;
-  }
+  },
+
+  /**
+   * Send the "SessionStore:restoreHistory" message to content, triggering a
+   * content restore. This method is intended to be used internally by
+   * SessionStore, as it also ensures that permissions are avaliable in the
+   * content process before triggering the history restore in the content
+   * process.
+   *
+   * @param browser The browser to transmit the permissions for
+   * @param options The options data to send to content.
+   */
+  _sendRestoreHistory(browser, options) {
+    // If the tabData which we're sending down has any sessionStorage associated
+    // with it, we need to send down permissions for the domains, as this
+    // information will be needed to correctly restore the session.
+    if (options.tabData.storage) {
+      for (let origin of Object.getOwnPropertyNames(options.tabData.storage)) {
+        try {
+          let {frameLoader} = browser.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
+          if (frameLoader.tabParent) {
+            let attrs = browser.contentPrincipal.originAttributes;
+            let dataPrincipal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
+            let principal = Services.scriptSecurityManager.createCodebasePrincipal(dataPrincipal.URI, attrs);
+            frameLoader.tabParent.transmitPermissionsForPrincipal(principal);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+
+    browser.messageManager.sendAsyncMessage("SessionStore:restoreHistory", options);
+  },
 };
 
 /**

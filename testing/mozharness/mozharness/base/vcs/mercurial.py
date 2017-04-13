@@ -396,57 +396,6 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
 
         return parser.revision
 
-    def apply_and_push(self, localrepo, remote, changer, max_attempts=10,
-                       ssh_username=None, ssh_key=None):
-        """This function calls `changer' to make changes to the repo, and
-        tries its hardest to get them to the origin repo. `changer' must be
-        a callable object that receives two arguments: the directory of the
-        local repository, and the attempt number. This function will push
-        ALL changesets missing from remote.
-        """
-        self.info("Applying and pushing local changes from %s to %s." % (localrepo, remote))
-        assert callable(changer)
-        branch = self.get_branch_from_path(localrepo)
-        changer(localrepo, 1)
-        for n in range(1, max_attempts + 1):
-            try:
-                new_revs = self.out(src=localrepo, remote=remote,
-                                    ssh_username=ssh_username,
-                                    ssh_key=ssh_key)
-                if len(new_revs) < 1:
-                    raise VCSException("No revs to push")
-                self.push(src=localrepo, remote=remote,
-                          ssh_username=ssh_username,
-                          ssh_key=ssh_key)
-                return
-            except VCSException, e:
-                self.debug("Hit error when trying to push: %s" % str(e))
-                if n == max_attempts:
-                    self.debug("Tried %d times, giving up" % max_attempts)
-                    for r in reversed(new_revs):
-                        self.run_command(self.hg + ['strip', '-n', r[REVISION]],
-                                         cwd=localrepo, error_list=HgErrorList)
-                    raise VCSException("Failed to push")
-                self.pull(remote, localrepo, update_dest=False,
-                          ssh_username=ssh_username, ssh_key=ssh_key)
-                # After we successfully rebase or strip away heads the push
-                # is is attempted again at the start of the loop
-                try:
-                    self.run_command(self.hg + ['rebase'], cwd=localrepo,
-                                     error_list=HgErrorList,
-                                     throw_exception=True)
-                except subprocess.CalledProcessError, e:
-                    self.debug("Failed to rebase: %s" % str(e))
-                    # clean up any hanging rebase. ignore errors if we aren't
-                    # in the middle of a rebase.
-                    self.run_command(self.hg + ['rebase', '--abort'],
-                                     cwd=localrepo, success_codes=[0, 255])
-                    self.update(localrepo, branch=branch)
-                    for r in reversed(new_revs):
-                        self.run_command(self.hg + ['strip', '-n', r[REVISION]],
-                                         cwd=localrepo, error_list=HgErrorList)
-                    changer(localrepo, n + 1)
-
     def cleanOutgoingRevs(self, reponame, remote, username, sshKey):
         # TODO retry
         self.info("Wiping outgoing local changes from %s to %s." % (reponame, remote))

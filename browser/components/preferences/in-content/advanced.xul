@@ -99,7 +99,7 @@
 
 <!-- Data Choices -->
 #ifdef MOZ_TELEMETRY_REPORTING
-<groupbox id="historyGroup" data-category="paneAdvanced" hidden="true">
+<groupbox id="historyGroup" data-category="paneAdvanced" data-subcategory="reports" hidden="true">
 <caption><label>&reports.label;</label></caption>
   <vbox>
     <caption>
@@ -131,7 +131,7 @@
 
 #ifdef MOZ_DATA_REPORTING
 #ifdef MOZ_CRASHREPORTER
-<groupbox data-category="paneAdvanced" hidden="true">
+<groupbox data-category="paneAdvanced" data-subcategory="reports" hidden="true">
   <caption>
     <checkbox id="automaticallySubmitCrashesBox"
               preference="browser.crashReports.unsubmittedCheck.autoSubmit"

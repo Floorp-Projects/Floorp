@@ -2623,13 +2623,13 @@ IMEInputHandler::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
   }
 }
 
-NS_IMETHODIMP_(nsIMEUpdatePreference)
-IMEInputHandler::GetIMEUpdatePreference()
+NS_IMETHODIMP_(IMENotificationRequests)
+IMEInputHandler::GetIMENotificationRequests()
 {
   // XXX Shouldn't we move floating window which shows composition string
   //     when plugin has focus and its parent is scrolled or the window is
   //     moved?
-  return nsIMEUpdatePreference();
+  return IMENotificationRequests();
 }
 
 NS_IMETHODIMP_(void)

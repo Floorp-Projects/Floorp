@@ -264,10 +264,10 @@ bool DBTool::ImportCertificate(const ArgParser &parser) {
     return false;
   }
 
-  std::vector<char> certData = ReadInputData(derFilePath);
+  std::vector<uint8_t> certData = ReadInputData(derFilePath);
 
-  ScopedCERTCertificate cert(
-      CERT_DecodeCertFromPackage(certData.data(), certData.size()));
+  ScopedCERTCertificate cert(CERT_DecodeCertFromPackage(
+      reinterpret_cast<char *>(certData.data()), certData.size()));
   if (cert.get() == nullptr) {
     std::cerr << "Error: Could not decode certificate!" << std::endl;
     return false;
@@ -379,7 +379,7 @@ bool DBTool::ImportKey(const ArgParser &parser) {
     return false;
   }
 
-  std::vector<char> privKeyData = ReadInputData(privKeyFilePath);
+  std::vector<uint8_t> privKeyData = ReadInputData(privKeyFilePath);
   if (privKeyData.empty()) {
     return false;
   }

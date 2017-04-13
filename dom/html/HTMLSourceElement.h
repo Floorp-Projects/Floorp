@@ -12,11 +12,12 @@
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 
-class nsMediaList;
 class nsAttrValue;
 
 namespace mozilla {
 namespace dom {
+
+class MediaList;
 
 class HTMLSourceElement final : public nsGenericHTMLElement,
                                 public nsIDOMHTMLSourceElement
@@ -113,10 +114,10 @@ protected:
                                 bool aNotify) override;
 
 private:
-  RefPtr<nsMediaList> mMediaList;
+  RefPtr<MediaList> mMediaList;
   RefPtr<MediaSource> mSrcMediaSource;
 
-  // Generates a new nsMediaList using the given input
+  // Generates a new MediaList using the given input
   void UpdateMediaList(const nsAttrValue* aValue);
 };
 

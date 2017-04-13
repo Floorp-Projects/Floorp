@@ -139,6 +139,27 @@ const SELECT_STYLE_OF_OPTION_CHANGES_AFTER_TRANSITIONEND =
   '  <option selected="true">{"end": "true"}</option>' +
   "</select></body></html>";
 
+const SELECT_TRANSPARENT_COLOR_WITH_TEXT_SHADOW =
+  "<html><head><style>" +
+  "  select { color: transparent; text-shadow: 0 0 0 #303030; }" +
+  "</style></head><body><select id='one'>" +
+  '  <option>{"color": "rgba(0, 0, 0, 0)", "backgroundColor": "rgba(0, 0, 0, 0)", "textShadow": "rgb(48, 48, 48) 0px 0px 0px"}</option>' +
+  '  <option selected="true">{"end": "true"}</option>' +
+  "</select></body></html>";
+
+let SELECT_LONG_WITH_TRANSITION =
+  "<html><head><style>" +
+  "  select { transition: all .2s linear; }" +
+  "  select:focus { color: purple; }" +
+  "</style></head><body><select id='one'>";
+for (let i = 0; i < 75; i++) {
+  SELECT_LONG_WITH_TRANSITION +=
+    '  <option>{"color": "rgb(128, 0, 128)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>';
+}
+SELECT_LONG_WITH_TRANSITION +=
+    '  <option selected="true">{"end": "true"}</option>' +
+  "</select></body></html>";
+
 function getSystemColor(color) {
   // Need to convert system color to RGB color.
   let textarea = document.createElementNS("http://www.w3.org/1999/xhtml", "textarea");
@@ -174,6 +195,10 @@ function testOptionColors(index, item, menulist) {
        "Item " + (index) + " has correct foreground color");
     is(getComputedStyle(item).backgroundColor, expected.backgroundColor,
        "Item " + (index) + " has correct background color");
+    if (expected.textShadow) {
+      is(getComputedStyle(item).textShadow, expected.textShadow,
+         "Item " + (index) + " has correct text-shadow color");
+    }
   }
 }
 
@@ -204,6 +229,11 @@ function* testSelectColors(select, itemCount, options) {
   if (!options.skipSelectColorTest) {
     is(getComputedStyle(selectPopup).color, options.selectColor,
       "popup has expected foreground color");
+
+    if (options.selectTextShadow) {
+      is(getComputedStyle(selectPopup).textShadow, options.selectTextShadow,
+        "popup has expected text-shadow color");
+    }
 
     // Combine the select popup's backgroundColor and the
     // backgroundImage color to get the color that is seen by
@@ -240,9 +270,10 @@ function* testSelectColors(select, itemCount, options) {
     child = child.nextSibling;
   }
 
-  yield hideSelectPopup(selectPopup, "escape");
-
-  yield BrowserTestUtils.removeTab(tab);
+  if (!options.leaveOpen) {
+    yield hideSelectPopup(selectPopup, "escape");
+    yield BrowserTestUtils.removeTab(tab);
+  }
 }
 
 add_task(function* setup() {
@@ -388,3 +419,35 @@ add_task(function* test_style_of_options_is_dependent_on_transitionend() {
   yield testSelectColors(SELECT_STYLE_OF_OPTION_CHANGES_AFTER_TRANSITIONEND, 2, options);
 });
 
+add_task(function* test_transparent_color_with_text_shadow() {
+  let options = {
+    selectColor: "rgba(0, 0, 0, 0)",
+    selectTextShadow: "rgb(48, 48, 48) 0px 0px 0px",
+    selectBgColor: "rgb(255, 255, 255)"
+  };
+
+  yield testSelectColors(SELECT_TRANSPARENT_COLOR_WITH_TEXT_SHADOW, 2, options);
+});
+
+add_task(function* test_select_with_transition_doesnt_lose_scroll_position() {
+  let options = {
+    selectColor: "rgb(128, 0, 128)",
+    selectBgColor: "rgb(255, 255, 255)",
+    waitForComputedStyle: {
+      property: "color",
+      value: "rgb(128, 0, 128)"
+    },
+    leaveOpen: true
+  };
+
+  yield testSelectColors(SELECT_LONG_WITH_TRANSITION, 76, options);
+
+  let menulist = document.getElementById("ContentSelectDropdown");
+  let selectPopup = menulist.menupopup;
+  let scrollBox = selectPopup.scrollBox;
+  is(scrollBox.scrollTop, scrollBox.scrollTopMax,
+    "The popup should be scrolled to the bottom of the list (where the selected item is)");
+
+  yield hideSelectPopup(selectPopup, "escape");
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});

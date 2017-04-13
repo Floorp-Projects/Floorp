@@ -11,9 +11,14 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/ServoUtils.h"
+#include "mozilla/StyleBackendType.h"
 
 #include "nsIDOMMediaList.h"
 #include "nsWrapperCache.h"
+
+class nsIDocument;
+class nsPresContext;
+class nsMediaQueryResultCacheKey;
 
 namespace mozilla {
 class StyleSheet;
@@ -35,6 +40,12 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaList)
 
+  /**
+   * Creates a MediaList backed by the given StyleBackendType.
+   */
+  static already_AddRefed<MediaList> Create(StyleBackendType,
+                                            const nsAString& aMedia);
+
   virtual already_AddRefed<MediaList> Clone() = 0;
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
@@ -42,6 +53,12 @@ public:
 
   virtual void GetText(nsAString& aMediaText) = 0;
   virtual void SetText(const nsAString& aMediaText) = 0;
+  virtual bool Matches(nsPresContext& aPresContext,
+                       nsMediaQueryResultCacheKey* = nullptr) const = 0;
+
+#ifdef DEBUG
+  virtual bool IsServo() const = 0;
+#endif
 
   void SetStyleSheet(StyleSheet* aSheet);
 

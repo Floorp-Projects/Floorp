@@ -1671,6 +1671,23 @@ this.PlacesUtils = {
     return deferred.promise;
   },
 
+   /**
+   * Returns the passed URL with a #size ref for the specified size and
+   * devicePixelRatio.
+   *
+   * @param window
+   *        The window where the icon will appear.
+   * @param href
+   *        The string href we should add the ref to.
+   * @param size
+   *        The target image size
+   * @return The URL with the fragment at the end, in the same formar as input.
+   */
+  urlWithSizeRef(window, href, size) {
+    return href + (href.includes("#") ? "&" : "#") +
+           "size=" + (Math.round(size) * window.devicePixelRatio);
+  },
+
   /**
    * Get the unique id for an item (a bookmark, a folder or a separator) given
    * its item id.
@@ -1869,7 +1886,11 @@ this.PlacesUtils = {
          JOIN descendants ON b2.parent = descendants.id AND b2.id <> :tags_folder)
        SELECT d.level, d.id, d.guid, d.parent, d.parentGuid, d.type,
               d.position AS [index], d.title, d.dateAdded, d.lastModified,
-              h.url, f.url AS iconuri,
+              h.url, (SELECT icon_url FROM moz_icons i
+                      JOIN moz_icons_to_pages ON icon_id = i.id
+                      JOIN moz_pages_w_icons pi ON page_id = pi.id
+                      WHERE pi.page_url_hash = hash(h.url) AND pi.page_url = h.url
+                      ORDER BY width DESC LIMIT 1) AS iconuri,
               (SELECT GROUP_CONCAT(t.title, ',')
                FROM moz_bookmarks b2
                JOIN moz_bookmarks t ON t.id = +b2.parent AND t.parent = :tags_folder
@@ -1884,7 +1905,6 @@ this.PlacesUtils = {
        FROM descendants d
        LEFT JOIN moz_bookmarks b3 ON b3.id = d.parent
        LEFT JOIN moz_places h ON h.id = d.fk
-       LEFT JOIN moz_favicons f ON f.id = h.favicon_id
        ORDER BY d.level, d.parent, d.position`;
 
 

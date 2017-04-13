@@ -7,13 +7,12 @@
 
 #include "nsWeakReference.h"
 
-struct nsIMEUpdatePreference;
-
 namespace mozilla {
 namespace widget {
 
 class TextEventDispatcher;
 struct IMENotification;
+struct IMENotificationRequests;
 
 #define NS_TEXT_INPUT_PROXY_LISTENER_IID \
 { 0xf2226f55, 0x6ddb, 0x40d5, \
@@ -35,7 +34,7 @@ public:
   /**
    * Returns preference for which IME notification are received by NotifyIME().
    */
-  NS_IMETHOD_(nsIMEUpdatePreference) GetIMEUpdatePreference() = 0;
+  NS_IMETHOD_(IMENotificationRequests) GetIMENotificationRequests() = 0;
 
   /**
    * OnRemovedFrom() is called when the TextEventDispatcher stops working and

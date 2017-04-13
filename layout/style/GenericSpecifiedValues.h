@@ -78,6 +78,11 @@ public:
     inline void SetPixelValue(nsCSSPropertyID aId, float aValue);
     inline void SetPixelValueIfUnset(nsCSSPropertyID aId, float aValue);
 
+    inline void SetLengthValue(nsCSSPropertyID aId, nsCSSValue aValue);
+
+    // Set a property to a number value
+    inline void SetNumberValue(nsCSSPropertyID aId, float aValue);
+
     // Set a property to a percent value
     inline void SetPercentValue(nsCSSPropertyID aId, float aValue);
     inline void SetPercentValueIfUnset(nsCSSPropertyID aId, float aValue);
@@ -98,6 +103,7 @@ public:
     inline void SetFontFamily(const nsString& aValue);
     // Add a quirks-mode override to the decoration color of elements nested in <a>
     inline void SetTextDecorationColorOverride();
+    inline void SetBackgroundImage(nsAttrValue& value);
 
     const mozilla::StyleBackendType mType;
     nsPresContext* const mPresContext;

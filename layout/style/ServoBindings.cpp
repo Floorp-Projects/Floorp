@@ -37,7 +37,9 @@
 #include "nsStyleStruct.h"
 #include "nsStyleUtil.h"
 #include "nsTArray.h"
+#include "nsTransitionManager.h"
 
+#include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventStates.h"
@@ -47,7 +49,7 @@
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/SystemGroup.h"
-#include "mozilla/DeclarationBlockInlines.h"
+#include "mozilla/ServoMediaList.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/HTMLTableCellElement.h"
@@ -448,6 +450,7 @@ Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed aA,
 void
 Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
                        nsIAtom* aPseudoTagOrNull,
+                       ServoComputedValuesBorrowedOrNull aOldComputedValues,
                        ServoComputedValuesBorrowedOrNull aComputedValues,
                        ServoComputedValuesBorrowedOrNull aParentComputedValues,
                        UpdateAnimationsTasks aTaskBits)
@@ -475,6 +478,14 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
       presContext->AnimationManager()->
         UpdateAnimations(const_cast<dom::Element*>(aElement), pseudoType,
                          servoValues);
+    }
+    if (tasks & UpdateAnimationsTasks::CSSTransitions) {
+      MOZ_ASSERT(aOldComputedValues);
+      const ServoComputedValuesWithParent oldServoValues =
+        { aOldComputedValues, nullptr };
+      presContext->TransitionManager()->
+        UpdateTransitions(const_cast<dom::Element*>(aElement), pseudoType,
+                          oldServoValues, servoValues);
     }
     if (tasks & UpdateAnimationsTasks::EffectProperties) {
       presContext->EffectCompositor()->UpdateEffectProperties(
@@ -1687,25 +1698,14 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
                      RawGeckoURLExtraData* aBaseURLData,
                      const uint8_t* aURLString,
                      uint32_t aURLStringLength,
-                     const uint8_t* aMediaString,
-                     uint32_t aMediaStringLength)
+                     RawServoMediaListStrong aMediaList)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aLoader, "Should've catched this before");
   MOZ_ASSERT(aParent, "Only used for @import, so parent should exist!");
   MOZ_ASSERT(aURLString, "Invalid URLs shouldn't be loaded!");
   MOZ_ASSERT(aBaseURLData, "Need base URL data");
-  RefPtr<nsMediaList> media = new nsMediaList();
-  if (aMediaStringLength) {
-    MOZ_ASSERT(aMediaString);
-    // TODO(emilio, bug 1325878): This is not great, though this is going away
-    // soon anyway, when we can have a Servo-backed nsMediaList.
-    nsDependentCSubstring medium(reinterpret_cast<const char*>(aMediaString),
-                                 aMediaStringLength);
-    nsCSSParser mediumParser(aLoader);
-    mediumParser.ParseMediaList(
-        NS_ConvertUTF8toUTF16(medium), nullptr, 0, media);
-  }
+  RefPtr<dom::MediaList> media = new ServoMediaList(aMediaList.Consume());
 
   nsDependentCSubstring urlSpec(reinterpret_cast<const char*>(aURLString),
                                 aURLStringLength);

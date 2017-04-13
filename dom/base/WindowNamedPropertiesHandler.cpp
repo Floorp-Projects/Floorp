@@ -163,7 +163,7 @@ WindowNamedPropertiesHandler::defineProperty(JSContext* aCx,
 {
   ErrorResult rv;
   rv.ThrowTypeError<MSG_DEFINEPROPERTY_ON_GSP>();
-  rv.MaybeSetPendingException(aCx);
+  MOZ_ALWAYS_TRUE(rv.MaybeSetPendingException(aCx));
   return false;
 }
 

@@ -983,7 +983,7 @@ defineLazyGetter(DevToolsContextChild.prototype, "childManager", function() {
   devtoolsAPIManager.lazyInit();
 
   let localApis = {};
-  let can = new CanOfAPIs(this, apiManager, localApis);
+  let can = new CanOfAPIs(this, devtoolsAPIManager, localApis);
 
   let childManager = new ChildAPIManager(this, this.messageManager, can, {
     envType: "devtools_parent",

@@ -50,12 +50,20 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         }
     }
 
+    private static final class Input {
+        public final Sample sample;
+        public boolean reported;
+
+        public Input(final Sample sample) {
+            this.sample = sample;
+        }
+    }
+
     private final class InputProcessor {
-        private static final int FEW_PENDING_INPUTS = 2;
         private boolean mHasInputCapacitySet;
         private Queue<Integer> mAvailableInputBuffers = new LinkedList<>();
         private Queue<Sample> mDequeuedSamples = new LinkedList<>();
-        private Queue<Sample> mInputSamples = new LinkedList<>();
+        private Queue<Input> mInputSamples = new LinkedList<>();
         private boolean mStopped;
 
         private synchronized Sample onAllocate(int size) {
@@ -86,7 +94,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         }
 
         private void queueSample(Sample sample) {
-            if (!mInputSamples.offer(sample)) {
+            if (!mInputSamples.offer(new Input(sample))) {
                 reportError(Error.FATAL, new Exception("FAIL: input sample queue is full"));
                 return;
             }
@@ -123,7 +131,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
             while (!mAvailableInputBuffers.isEmpty() && !mInputSamples.isEmpty()) {
                 int index = mAvailableInputBuffers.poll();
                 int len = 0;
-                Sample sample = mInputSamples.poll();
+                final Sample sample = mInputSamples.poll().sample;
                 long pts = sample.info.presentationTimeUs;
                 int flags = sample.info.flags;
                 MediaCodec.CryptoInfo cryptoInfo = sample.cryptoInfo;
@@ -144,22 +152,32 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                 } else {
                     mCodec.queueInputBuffer(index, 0, len, pts, flags);
                 }
-            }
-            // To avoid input queue flood, request more input samples only when
-            // there are just a few waiting to be processed.
-            if (mDequeuedSamples.size() + mInputSamples.size() <= FEW_PENDING_INPUTS) {
                 try {
-                    mCallbacks.onInputExhausted();
+                    mCallbacks.onInputQueued(pts);
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
             }
+            reportPendingInputs();
+        }
+
+        private void reportPendingInputs() {
+            try {
+                for (Input i : mInputSamples) {
+                    if (!i.reported) {
+                        i.reported = true;
+                        mCallbacks.onInputPending(i.sample.info.presentationTimeUs);
+                    }
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
         }
 
         private synchronized void reset() {
-            for (Sample s : mInputSamples) {
-                if (!s.isEOS()) {
-                    mSamplePool.recycleInput(s);
+            for (Input i : mInputSamples) {
+                if (!i.sample.isEOS()) {
+                    mSamplePool.recycleInput(i.sample);
                 }
             }
             mInputSamples.clear();
@@ -188,11 +206,20 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         }
     }
 
+    private static final class Output {
+        public final Sample sample;
+        public final int index;
+
+        public Output(final Sample sample, int index) {
+            this.sample = sample;
+            this.index = index;
+        }
+    }
+
     private class OutputProcessor {
         private final boolean mRenderToSurface;
         private boolean mHasOutputCapacitySet;
-        private Queue<Integer> mSentIndices = new LinkedList<>();
-        private Queue<Sample> mSentOutputs = new LinkedList<>();
+        private Queue<Output> mSentOutputs = new LinkedList<>();
         private boolean mStopped;
 
         private OutputProcessor(boolean renderToSurface) {
@@ -206,8 +233,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
             try {
                 Sample output = obtainOutputSample(index, info);
-                mSentIndices.add(index);
-                mSentOutputs.add(output);
+                mSentOutputs.add(new Output(output, index));
                 mCallbacks.onOutput(output);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -248,14 +274,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         }
 
         private synchronized void onRelease(Sample sample, boolean render) {
-            Integer i = mSentIndices.poll();
-            Sample output = mSentOutputs.poll();
-            if (i == null || output == null) {
-                Log.d(LOGTAG, "output buffer#" + i + "(" + output + ")" + ": " + sample + " already released");
+            final Output output = mSentOutputs.poll();
+            if (output == null) {
+                if (DEBUG) { Log.d(LOGTAG, sample + " already released"); }
                 return;
             }
-            mCodec.releaseOutputBuffer(i, render);
-            mSamplePool.recycleOutput(output);
+            mCodec.releaseOutputBuffer(output.index, render);
+            mSamplePool.recycleOutput(output.sample);
 
             sample.dispose();
         }
@@ -270,12 +295,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         }
 
         private synchronized void reset() {
-            for (int i : mSentIndices) {
-                mCodec.releaseOutputBuffer(i, false);
-            }
-            mSentIndices.clear();
-            for (Sample s : mSentOutputs) {
-                mSamplePool.recycleOutput(s);
+            for (final Output o : mSentOutputs) {
+                mCodec.releaseOutputBuffer(o.index, false);
+                mSamplePool.recycleOutput(o.sample);
             }
             mSentOutputs.clear();
         }
@@ -301,7 +323,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     private InputProcessor mInputProcessor;
     private OutputProcessor mOutputProcessor;
     private SamplePool mSamplePool;
-    private Queue<Sample> mSentOutputs = new ConcurrentLinkedQueue<>();
     // Value will be updated after configure called.
     private volatile boolean mIsAdaptivePlaybackSupported = false;
 

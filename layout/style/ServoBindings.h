@@ -131,8 +131,7 @@ void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
                           RawGeckoURLExtraData* base_url_data,
                           const uint8_t* url_bytes,
                           uint32_t url_length,
-                          const uint8_t* media_bytes,
-                          uint32_t media_length);
+                          RawServoMediaListStrong media_list);
 
 // By default, Servo walks the DOM by traversing the siblings of the DOM-view
 // first child. This generally works, but misses anonymous children, which we
@@ -198,6 +197,7 @@ bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
                                  RawGeckoStyleAnimationListBorrowed);
 void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
                             nsIAtom* aPseudoTagOrNull,
+                            ServoComputedValuesBorrowedOrNull aOldComputedValues,
                             ServoComputedValuesBorrowedOrNull aComputedValues,
                             ServoComputedValuesBorrowedOrNull aParentComputedValues,
                             mozilla::UpdateAnimationsTasks aTaskBits);

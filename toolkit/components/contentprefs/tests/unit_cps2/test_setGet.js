@@ -85,7 +85,7 @@ var tests = [
     yield setGlobal("bar", 4);
     yield set("b.com", "foo", 5);
 
-    let context = { usePrivateBrowsing: true };
+    let context = privateLoadContext;
     yield set("a.com", "foo", 6, context);
     yield setGlobal("foo", 7, context);
     yield dbOK([
@@ -181,7 +181,7 @@ var tests = [
       {"domain": null, "name": "foo", "value": 4}
     ]);
 
-    let context = { usePrivateBrowsing: true };
+    let context = privateLoadContext;
     yield set("b.com", "foo", 5, context);
 
     yield getOKEx("getByName", ["foo", context], [

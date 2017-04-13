@@ -1187,8 +1187,7 @@ nsScriptSecurityManager::
 {
   NS_ENSURE_STATE(aLoadContext);
   OriginAttributes docShellAttrs;
-  bool result = aLoadContext->GetOriginAttributes(docShellAttrs);
-  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+  aLoadContext->GetOriginAttributes(docShellAttrs);
 
   nsCOMPtr<nsIPrincipal> prin =
     BasePrincipal::CreateCodebasePrincipal(aURI, docShellAttrs);

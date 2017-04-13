@@ -334,31 +334,31 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
 }
 
 // static
-nsIMEUpdatePreference
-IMEHandler::GetUpdatePreference()
+IMENotificationRequests
+IMEHandler::GetIMENotificationRequests()
 {
   // While a plugin has focus, neither TSFTextStore nor IMMHandler needs
   // notifications.
   if (sPluginHasFocus) {
-    return nsIMEUpdatePreference();
+    return IMENotificationRequests();
   }
 
 #ifdef NS_ENABLE_TSF
   if (IsTSFAvailable()) {
     if (!sIsIMMEnabled) {
-      return TSFTextStore::GetIMEUpdatePreference();
+      return TSFTextStore::GetIMENotificationRequests();
     }
     // Even if TSF is available, the active IME may be an IMM-IME.
-    // Unfortunately, changing the result of GetUpdatePreference() while an
-    // editor has focus isn't supported by IMEContentObserver nor
+    // Unfortunately, changing the result of GetIMENotificationRequests() while
+    // an editor has focus isn't supported by IMEContentObserver nor
     // ContentCacheInParent.  Therefore, we need to request whole notifications
     // which are necessary either IMMHandler or TSFTextStore.
-    return IMMHandler::GetIMEUpdatePreference() |
-             TSFTextStore::GetIMEUpdatePreference();
+    return IMMHandler::GetIMENotificationRequests() |
+             TSFTextStore::GetIMENotificationRequests();
   }
 #endif //NS_ENABLE_TSF
 
-  return IMMHandler::GetIMEUpdatePreference();
+  return IMMHandler::GetIMENotificationRequests();
 }
 
 // static

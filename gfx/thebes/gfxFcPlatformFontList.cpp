@@ -1627,9 +1627,6 @@ gfxFcPlatformFontList::GetStandardFamilyName(const nsAString& aFontName,
     return true;
 }
 
-static const char kFontNamePrefix[] = "font.name.";
-static const char kFontNameListPrefix[] = "font.name-list.";
-
 void
 gfxFcPlatformFontList::AddGenericFonts(mozilla::FontFamilyType aGenericType,
                                        nsIAtom* aLanguage,
@@ -1655,25 +1652,15 @@ gfxFcPlatformFontList::AddGenericFonts(mozilla::FontFamilyType aGenericType,
     if ((!mAlwaysUseFontconfigGenerics && aLanguage) ||
         aLanguage == nsGkAtoms::x_math) {
         nsIAtom* langGroup = GetLangGroup(aLanguage);
-        nsAutoCString langGroupStr;
-        if (langGroup) {
-            langGroup->ToUTF8String(langGroupStr);
-        }
-        nsAutoCString prefFontName(kFontNamePrefix);
-        prefFontName.Append(generic);
-        prefFontName.Append('.');
-        prefFontName.Append(langGroupStr);
-        nsAdoptingString fontlistValue = Preferences::GetString(prefFontName.get());
+        nsAdoptingString fontlistValue =
+            Preferences::GetString(NamePref(generic, langGroup).get());
         if (fontlistValue.IsEmpty()) {
-            nsAutoCString prefFontNameListName(kFontNameListPrefix);
-            prefFontNameListName.Append(generic);
-            prefFontNameListName.Append('.');
-            prefFontNameListName.Append(langGroupStr);
             // The font name list may have two or more family names as comma
             // separated list.  In such case, not matching with generic font
             // name is fine because if the list prefers specific font, we
             // should try to use the pref with complicated path.
-            fontlistValue = Preferences::GetString(prefFontNameListName.get());
+            fontlistValue =
+                 Preferences::GetString(NameListPref(generic, langGroup).get());
         }
         if (fontlistValue) {
             if (!fontlistValue.EqualsLiteral("serif") &&
@@ -1840,6 +1827,8 @@ gfxFcPlatformFontList::FindGenericFamilies(const nsAString& aGeneric,
 bool
 gfxFcPlatformFontList::PrefFontListsUseOnlyGenerics()
 {
+    static const char kFontNamePrefix[] = "font.name.";
+
     bool prefFontsUseOnlyGenerics = true;
     uint32_t count;
     char** names;
@@ -1865,15 +1854,13 @@ gfxFcPlatformFontList::PrefFontListsUseOnlyGenerics()
             const nsDependentCSubstring& langGroup = tokenizer.nextToken();
             nsAdoptingCString fontPrefValue = Preferences::GetCString(names[i]);
             if (fontPrefValue.IsEmpty()) {
-                nsAutoCString nameListPrefName(kFontNameListPrefix);
-                nameListPrefName.Append(generic);
-                nameListPrefName.Append('.');
-                nameListPrefName.Append(langGroup);
                 // The font name list may have two or more family names as comma
                 // separated list.  In such case, not matching with generic font
                 // name is fine because if the list prefers specific font, this
                 // should return false.
-                fontPrefValue = Preferences::GetCString(nameListPrefName.get());
+                fontPrefValue =
+                    Preferences::GetCString(NameListPref(generic,
+                                                         langGroup).get());
             }
 
             if (!langGroup.EqualsLiteral("x-math") &&

@@ -1,4 +1,3 @@
-
 {
   "A11Y_INSTANTIATED_FLAG": {
     "expires_in_version": "never",
@@ -173,7 +172,7 @@
   "AUDIOSTREAM_BACKEND_USED": {
     "alert_emails": ["padenot@mozilla.com", "kinetik@flim.org"],
     "bug_numbers": [1280630],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 16,
     "description": "The operating system audio back-end used when successfully opening an audio stream, or whether the failure occurred on the first try or not <https://dxr.mozilla.org/mozilla-central/search?q=AUDIOSTREAM_BACKEND_ID_STR>",
@@ -4376,7 +4375,16 @@
     "kind": "enumerated",
     "n_values": 16,
     "bug_numbers": [1311931],
-    "description": "The result of each URL lookup against both google and google4 lists(0 = no match, 1 = V2 prefix only, 2 = V4 prefix only, 3 = V2 and V4 prefixes, 4 = V2 and V4 completions, 5 = V2 completion only, 6 = V4 completion only, 7 = V2 completion and v4 prefix, 8 = V2 prefix and V4 completion, 9 = unexpected result)"
+    "description": "The result of each URL lookup against both google and google4 lists. (0 = no match, 1 = V2 prefix only, 2 = V4 prefix only, 3 = V2 and V4 prefixes, 4 = V2 and V4 completions, 5 = V2 completion only, 6 = V4 completion only, 7 = V2 completion and v4 prefix, 8 = V2 prefix and V4 completion, 9 = unexpected result)"
+
+  },
+  "URLCLASSIFIER_MATCH_THREAT_TYPE_RESULT" : {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 64,
+    "bug_numbers": [1311933],
+    "description": "Whether or not a full URL match is of the same threat type on V2 and V4. (0 = same, otherwise the value is a bit flag where 0x01 = V2 phishing, 0x02 = V2 malware, 0x04 = V2 unwanted, 0x08 = V4 phishing, 0x10 = V4 malware, 0x20 = V4 unwanted)"
   },
   "URLCLASSIFIER_POSITIVE_CACHE_DURATION": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
@@ -5906,6 +5914,16 @@
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [775825],
     "description": "Firefox: The type of the selected result in the URL bar popup. See BrowserUsageTelemetry.jsm:URLBAR_SELECTED_RESULT_TYPES for the result types."
+  },
+  "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE": {
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 14,
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1345834],
+    "description": "Firefox: The index of the selected result in the URL bar popup by the type of the selected result in the URL bar popup. See BrowserUsageTelemetry.jsm:URLBAR_SELECTED_RESULT_TYPES for the result types."
   },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "expires_in_version": "never",
@@ -10518,15 +10536,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Graphics Crash Reason (...)"
   },
-  "PLUGIN_ACTIVATION_COUNT": {
-    "alert_emails": ["cpeterson@mozilla.com"],
-    "expires_in_version": "53",
-    "kind": "count",
-    "keyed": true,
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [722110,1260065],
-    "description": "Counts number of times a certain plugin has been activated."
-  },
   "SCROLL_INPUT_METHODS": {
     "alert_emails": ["botond@mozilla.com"],
     "bug_numbers": [1238137],
@@ -10694,22 +10703,6 @@
     "kind": "count",
     "description": "Number of origins that have shown a web notification. Excludes system alerts like update reminders and add-ons."
   },
-  "YOUTUBE_REWRITABLE_EMBED_SEEN": {
-    "alert_emails": ["cpeterson@mozilla.com"],
-    "expires_in_version": "53",
-    "kind": "flag",
-    "bug_numbers": [1229971],
-    "releaseChannelCollection": "opt-out",
-    "description": "Flag activated whenever a rewritable youtube flash embed is seen during a session."
-  },
-  "YOUTUBE_NONREWRITABLE_EMBED_SEEN": {
-    "alert_emails": ["cpeterson@mozilla.com"],
-    "expires_in_version": "53",
-    "kind": "flag",
-    "bug_numbers": [1237401],
-    "releaseChannelCollection": "opt-out",
-    "description": "Flag activated whenever a non-rewritable (enablejsapi=1) youtube flash embed is seen during a session."
-  },
   "PLUGIN_DRAWING_MODEL": {
     "alert_emails": ["danderson@mozilla.com"],
     "expires_in_version": "never",
@@ -10756,20 +10749,6 @@
     "kind": "enumerated",
     "n_values": 10,
     "description": "Media decoder backend (0=WMF Software, 1=DXVA2D3D9, 2=DXVA2D3D11)"
-  },
-  "PLUGIN_BLOCKED_FOR_STABILITY": {
-    "alert_emails": ["cpeterson@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "count",
-    "bug_numbers": [1237198],
-    "description": "Count plugins blocked for stability"
-  },
-  "PLUGIN_TINY_CONTENT": {
-    "alert_emails": ["cpeterson@mozilla.com"],
-    "expires_in_version": "52",
-    "kind": "count",
-    "bug_numbers": [1237198],
-    "description": "Count tiny plugin content"
   },
   "IPC_MESSAGE_SIZE": {
     "alert_emails": ["wmccloskey@mozilla.com"],

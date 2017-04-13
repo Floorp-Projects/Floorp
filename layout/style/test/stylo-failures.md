@@ -30,14 +30,13 @@ to mochitest command.
 ## Failures
 
 * Media query support:
-  * test_bug418986-2.html: matchMedia support [3]
-  * test_bug453896_deck.html: &lt;style media&gt; support [8]
-  * test_media_queries.html [637]
+  * test_bug418986-2.html: matchMedia support [6]
+  * test_media_queries.html [182]
   * test_media_queries_dynamic.html [11]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
-  * test_display_mode.html [7]
+  * test_display_mode.html [5]
   * test_display_mode_reflow.html [2]
 * test_all_shorthand.html: all shorthand servo/servo#15055 [*]
 * Animation support:
@@ -68,10 +67,9 @@ to mochitest command.
   * @keyframes
     * test_keyframes_rules.html [1]
     * test_rules_out_of_sheets.html [1]
-    * test_bug887741_at-rules_in_declaration_lists.html `rules[2]` [1]
   * @support
     * test_supports_rules.html [1]
-* test_box_size_keywords.html: moz-prefixed intrinsic size keyword value [64]
+* test_box_size_keywords.html: moz-prefixed intrinsic size keyword value [16]
 * test_bug357614.html: case-insensitivity for old attrs in attr selector servo/servo#15006 [2]
 * mapped attribute not supported
   * test_html_attribute_computed_values.html: also list-style-type [8]
@@ -114,6 +112,8 @@ to mochitest command.
   * ... `list-style-type` [60]
   * ... `'list-style'` [30]
   * ... `'content`: various value as list-style-type in counter functions [13]
+* @page support:
+  * test_bug887741_at-rules_in_declaration_lists.html `exception` [1]
 * test_default_computed_style.html: support of getDefaultComputedStyle [1]
 * Unimplemented \@font-face descriptors:
   * font-display bug 1355345
@@ -149,11 +149,8 @@ to mochitest command.
 * test_hover_quirk.html: hover quirks [6]
 * url value from decl setter bug 1330503
   * test_compute_data_with_start_struct.html `border-image-source` [2]
-  * ... `mask-image` [2]
   * test_inherit_computation.html `border-image` [2]
-  * ... `mask-image` [4]
   * test_initial_computation.html `border-image` [4]
-  * ... `mask-image` [8]
 * Unimplemented prefixed properties:
   * -moz-border-*-colors bug 1348173
     * test_compute_data_with_start_struct.html `-colors` [8]
@@ -180,13 +177,10 @@ to mochitest command.
     * test_units_angle.html [3]
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
-  * place-{content,items,self} shorthands servo/servo#15954
+  * place-{content,items,self} shorthands servo/servo#16391
+    * test_property_syntax_errors.html `place-` [30]
     * test_align_shorthand_serialization.html [8]
-    * test_inherit_computation.html `place-` [6]
-    * test_inherit_storage.html `place-` [6]
-    * test_initial_computation.html `place-` [12]
-    * test_initial_storage.html `place-` [12]
-    * test_value_storage.html `place-` [132]
+    * test_value_storage.html `place-` [7]
   * font-variant-{alternates,east-asian,ligatures,numeric} properties servo/servo#15957
     * test_compute_data_with_start_struct.html `font-variant` [8]
     * test_inherit_computation.html `font-variant` [20]
@@ -210,8 +204,7 @@ to mochitest command.
     * test_value_storage.html `touch-action` [14]
 * Unimplemented SVG properties:
   * stroke properties
-    * test_value_storage.html `on 'stroke` [6]
-    * test_compute_data_with_start_struct.html `initial and other values of stroke-dasharray are different` [2]
+    * test_value_storage.html `on 'stroke` [5]
 * Properties implemented but not in geckolib:
   * contain longhand property bug 1354998
     * test_contain_formatting_context.html [1]
@@ -221,15 +214,6 @@ to mochitest command.
     * test_initial_computation.html `contain` [4]
     * test_initial_storage.html `contain` [4]
     * test_value_storage.html `'contain'` [30]
-  * clip property: servo/servo#15729
-    * test_value_storage.html `should be idempotent for 'clip` [4]
-  * initial-letter property bug 1355001
-    * test_compute_data_with_start_struct.html `initial-letter` [2]
-    * test_inherit_computation.html `initial-letter` [2]
-    * test_inherit_storage.html `initial-letter` [2]
-    * test_initial_computation.html `initial-letter` [4]
-    * test_initial_storage.html `initial-letter` [4]
-    * test_value_storage.html `initial-letter` [10]
   * font-feature-settings property servo/servo#15975
     * test_compute_data_with_start_struct.html `font-feature-settings` [2]
     * test_inherit_computation.html `font-feature-settings` [8]
@@ -240,14 +224,8 @@ to mochitest command.
   * image-orientation property
     * test_value_storage.html `image-orientation` [40]
   * flexbox / grid position properties servo/servo#15001
-    * test_inherit_storage.html `align-` [3]
-    * ... `justify-` [3]
-    * test_initial_storage.html `align-` [6]
-    * ... `justify-` [6]
     * test_value_storage.html `align-` [9]
     * ... `justify-` [14]
-* @page should ignore properties with viewport units bug 1353191
-  * test_page_parser.html `2v` [8]
 * Stylesheet cloning is somehow busted bug 1348481
   * test_selectors.html `cloned correctly` [157]
   * ... `matched clone` [204]
@@ -263,10 +241,10 @@ to mochitest command.
     * ... `-webkit-repeating-` [35]
   * moz-prefixed intrinsic width values
     * test_flexbox_flex_shorthand.html `-moz-fit-content` [4]
-    * test_value_storage.html `-moz-max-content` [52]
-    * ... `-moz-min-content` [12]
-    * ... `-moz-fit-content` [12]
-    * ... `-moz-available` [10]
+    * test_value_storage.html `-moz-max-content` [46]
+    * ... `-moz-min-content` [6]
+    * ... `-moz-fit-content` [6]
+    * ... `-moz-available` [4]
   * -moz-anchor-decoration value on text-decoration
     * test_value_storage.html `-moz-anchor-decoration` [10]
   * several prefixed values in cursor property
@@ -274,12 +252,6 @@ to mochitest command.
   * moz-prefixed values of overflow shorthand bug 1330888
     * test_bug319381.html [8]
     * test_value_storage.html `'overflow` [8]
-  * -moz-middle-with-baseline on vertical-align
-    * test_value_storage.html `-moz-middle-with-baseline` [1]
-  * -moz-pre-space on white-space
-    * test_value_storage.html `-moz-pre-space` [1]
-  * -moz-crisp-edges on image-rendering
-    * test_value_storage.html `-moz-crisp-edges` [1]
   * -webkit-{flex,inline-flex} for display servo/servo#15400
     * test_webkit_flex_display.html [4]
   * test_pixel_lengths.html `mozmm`: mozmm unit [3]
@@ -305,6 +277,8 @@ to mochitest command.
   * -moz-box-orient: {block,inline}-axis bug 1355005
     * test_value_storage.html `box-orient` [6]
 * Incorrect parsing
+  * Incorrect bounds
+    * test_bug664955.html `font size is larger than max font size` [2]
   * calc() doesn't support dividing expression servo/servo#15192
     * test_value_storage.html `calc(50px/` [7]
     * ... `calc(2em / ` [9]
@@ -329,8 +303,8 @@ to mochitest command.
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
     * test_priority_preservation.html `border-radius` [4]
-    * test_value_storage.html `border-radius:` [92]
-    * ... `-moz-outline-radius:` [45]
+    * test_value_storage.html `border-radius:` [64]
+    * ... `-moz-outline-radius:` [31]
     * test_shorthand_property_getters.html `should condense to shortest possible` [6]
   * background-position is serialized to invalid value sometimes bug 1355017
     * test_shorthand_property_getters.html `background-position` [1]
@@ -368,10 +342,6 @@ to mochitest command.
 * clamp negative value from calc() servo/servo#15296
   * test_value_storage.html `font-size: calc(` [3]
   * ... `font-size: var(--a)` [3]
-* rounding issue
-  * test_value_storage.html `33.5833px` [2]
-  * ... `0.766667px` [2]
-  * ... `105.333px` [2]
 * Negative value should be rejected
   * test_property_syntax_errors.html `transition-duration`: servo/servo#15343 [20]
   * ... `'text-shadow'`: third length of text-shadow servo/servo#15999 [2]
@@ -389,10 +359,7 @@ to mochitest command.
     * ... `rect(1, ` [2]
 * test_pseudoelement_parsing.html: support parsing some pseudo-classes on some pseudo-elements [5]
 * Unit should be preserved after parsing servo/servo#15346
-  * test_units_length.html [5]
   * test_units_time.html [1]
-  * test_page_parser.html `192px` [8]
-  * test_bug887741_at-rules_in_declaration_lists.html `188.96666px` [1]
 * insertRule / deleteRule don't work bug 1336863
   * test_rule_insertion.html [5]
 * @-moz-document support
@@ -428,7 +395,6 @@ to mochitest command.
 ## Unknown / Unsure
 
 * test_additional_sheets.html: one sub-test cascade order is wrong [1]
-* test_flexbox_layout.html: resolved width doesn't match expectation [5]
 * test_selectors.html `:nth-child`: &lt;an+b&gt; parsing difference [14]
 * test_selectors_on_anonymous_content.html: xbl and :nth-child [1]
 * test_parse_rule.html `rgb(0, 128, 0)`: color properties not getting computed [6]

@@ -3020,6 +3020,16 @@ function* runKeyEventTests()
                    modifiers:{}, chars:"a"},
                   ["a", "a", "F4"], "F4", nsIDOMKeyEvent.DOM_VK_F4, "a", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
+    // Even if key message is processed by IME, when the key causes inputting text,
+    // keypress event(s) should be fired.
+    const WIN_VK_PROCESSKEY_WITH_SC_A = WIN_VK_PROCESSKEY | 0x001E0000;
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_PROCESSKEY_WITH_SC_A,
+                   modifiers:{}, chars:"a"},
+                  ["a", "a", "Unidentified" /* TODO: Process */], "KeyA", 0 /* TODO: 0xE5 */, "a", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_PROCESSKEY_WITH_SC_A,
+                   modifiers:{altKey:1}, chars:"a"},
+                  ["a", "a", "Unidentified" /* TODO: Process */], "KeyA", 0 /* TODO: 0xE5 */, "a", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+
     // US
     // Alphabet
     yield testKey({layout:KEYBOARD_LAYOUT_EN_US, keyCode:WIN_VK_A,

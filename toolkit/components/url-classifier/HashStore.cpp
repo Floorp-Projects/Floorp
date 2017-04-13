@@ -194,11 +194,11 @@ TableUpdateV4::NewChecksum(const std::string& aChecksum)
 }
 
 nsresult
-TableUpdateV4::NewFullHashResponse(const nsACString& aPrefix,
+TableUpdateV4::NewFullHashResponse(const Prefix& aPrefix,
                                    CachedFullHashResponse& aResponse)
 {
   CachedFullHashResponse* response =
-    mFullHashResponseMap.LookupOrAdd(aPrefix);
+    mFullHashResponseMap.LookupOrAdd(aPrefix.ToUint32());
   if (!response) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

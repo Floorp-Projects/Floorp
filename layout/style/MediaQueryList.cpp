@@ -234,7 +234,7 @@ MediaQueryList::RecomputeMatches()
     return;
   }
 
-  mMatches = mMediaList->Matches(presContext, nullptr);
+  mMatches = mMediaList->Matches(*presContext, nullptr);
   mMatchesValid = true;
 }
 

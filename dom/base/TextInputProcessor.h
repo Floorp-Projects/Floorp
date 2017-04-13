@@ -21,6 +21,7 @@ class TextInputProcessor final : public nsITextInputProcessor
                                , public widget::TextEventDispatcherListener
 {
   typedef mozilla::widget::IMENotification IMENotification;
+  typedef mozilla::widget::IMENotificationRequests IMENotificationRequests;
   typedef mozilla::widget::TextEventDispatcher TextEventDispatcher;
 
 public:
@@ -33,7 +34,7 @@ public:
   NS_IMETHOD NotifyIME(TextEventDispatcher* aTextEventDispatcher,
                        const IMENotification& aNotification) override;
 
-  NS_IMETHOD_(nsIMEUpdatePreference) GetIMEUpdatePreference() override;
+  NS_IMETHOD_(IMENotificationRequests) GetIMENotificationRequests() override;
 
   NS_IMETHOD_(void)
     OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher) override;

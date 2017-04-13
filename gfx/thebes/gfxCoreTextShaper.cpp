@@ -122,6 +122,7 @@ gfxCoreTextShaper::ShapeText(DrawTarget      *aDrawTarget,
                              uint32_t         aLength,
                              Script           aScript,
                              bool             aVertical,
+                             RoundingFlags    aRounding,
                              gfxShapedText   *aShapedText)
 {
     // Create a CFAttributedString with text and style info, so we can use CoreText to lay it out.

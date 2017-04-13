@@ -453,6 +453,17 @@ associated with the histogram.  Returns None if no guarding is necessary."""
                 definition['n_buckets'])
 
 
+# This hook function loads the histograms into an OrderedDict.
+# It will raise a ValueError if duplicate keys are found.
+def load_histograms_into_dict(ordered_pairs):
+    d = collections.OrderedDict()
+    for key, value in ordered_pairs:
+        if key in d:
+            raise ValueError("Found duplicate key in Histograms file: %s" % key)
+        d[key] = value
+    return d
+
+
 # We support generating histograms from multiple different input files, not
 # just Histograms.json.  For each file's basename, we have a specific
 # routine to parse that file, and return a dictionary mapping histogram
@@ -460,7 +471,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 def from_Histograms_json(filename):
     with open(filename, 'r') as f:
         try:
-            histograms = json.load(f, object_pairs_hook=OrderedDict)
+            histograms = json.load(f, object_pairs_hook=load_histograms_into_dict)
         except ValueError, e:
             raise BaseException("error parsing histograms in %s: %s" % (filename, e.message))
     return histograms

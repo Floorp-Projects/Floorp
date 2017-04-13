@@ -23,7 +23,6 @@ LOCAL_INCLUDES += [
 
 UNIFIED_SOURCES += [
     'gfxVR.cpp',
-    'gfxVROpenVR.cpp',
     'gfxVROSVR.cpp',
     'gfxVRPuppet.cpp',
     'ipc/VRLayerChild.cpp',
@@ -37,8 +36,12 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    DIRS += [
+        'openvr',
+    ]
     SOURCES += [
         'gfxVROculus.cpp',
+        'gfxVROpenVR.cpp',
     ]
 
 IPDL_SOURCES = [

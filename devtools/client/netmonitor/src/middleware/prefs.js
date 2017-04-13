@@ -31,15 +31,12 @@ function prefsMiddleware(store) {
           "devtools.netmonitor.filters", JSON.stringify(filters));
         break;
       case TOGGLE_COLUMN:
+      case RESET_COLUMNS:
         let hiddenColumns = [...store.getState().ui.columns]
           .filter(([column, shown]) => !shown)
           .map(([column, shown]) => column);
         Services.prefs.setCharPref(
           "devtools.netmonitor.hiddenColumns", JSON.stringify(hiddenColumns));
-        break;
-      case RESET_COLUMNS:
-        Services.prefs.setCharPref(
-          "devtools.netmonitor.hiddenColumns", JSON.stringify([]));
         break;
     }
     return res;

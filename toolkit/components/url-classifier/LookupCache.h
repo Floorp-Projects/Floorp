@@ -14,6 +14,7 @@
 #include "nsIFileStreams.h"
 #include "mozilla/RefPtr.h"
 #include "nsUrlClassifierPrefixSet.h"
+#include "SBTelemetryUtils.h"
 #include "VariableLengthPrefixSet.h"
 #include "mozilla/Logging.h"
 #include "mozilla/TypedEnumBits.h"
@@ -23,25 +24,6 @@ namespace safebrowsing {
 
 #define MAX_HOST_COMPONENTS 5
 #define MAX_PATH_COMPONENTS 4
-
-enum class MatchResult : uint8_t
-{
-  eNoMatch           = 0x00,
-  eV2Prefix          = 0x01,
-  eV4Prefix          = 0x02,
-  eV2Completion      = 0x04,
-  eV4Completion      = 0x08,
-  eTelemetryDisabled = 0x10,
-
-  eBothPrefix      = eV2Prefix     | eV4Prefix,
-  eBothCompletion  = eV2Completion | eV4Completion,
-  eV2PreAndCom     = eV2Prefix     | eV2Completion,
-  eV4PreAndCom     = eV4Prefix     | eV4Completion,
-  eBothPreAndV2Com = eBothPrefix   | eV2Completion,
-  eBothPreAndV4Com = eBothPrefix   | eV4Completion,
-  eAll             = eBothPrefix   | eBothCompletion,
-};
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MatchResult)
 
 class LookupResult {
 public:
@@ -119,6 +101,7 @@ public:
   }
 
   nsCString table;
+  Prefix prefix;
 };
 
 class CacheResultV2 final : public CacheResult
@@ -131,6 +114,7 @@ public:
 
   bool operator==(const CacheResultV2& aOther) const {
     return table == aOther.table &&
+           prefix == aOther.prefix &&
            completion == aOther.completion &&
            addChunk == aOther.addChunk;
   }
@@ -147,11 +131,11 @@ class CacheResultV4 final : public CacheResult
 public:
   static const int VER;
 
-  nsCString prefix;
   CachedFullHashResponse response;
 
   bool operator==(const CacheResultV4& aOther) const {
-    return prefix == aOther.prefix &&
+    return table == aOther.table &&
+           prefix == aOther.prefix &&
            response == aOther.response;
   }
 

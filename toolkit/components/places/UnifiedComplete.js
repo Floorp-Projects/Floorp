@@ -94,15 +94,14 @@ const REGEXP_SPACES = /\s+/;
 const QUERYINDEX_QUERYTYPE     = 0;
 const QUERYINDEX_URL           = 1;
 const QUERYINDEX_TITLE         = 2;
-const QUERYINDEX_ICONURL       = 3;
-const QUERYINDEX_BOOKMARKED    = 4;
-const QUERYINDEX_BOOKMARKTITLE = 5;
-const QUERYINDEX_TAGS          = 6;
-const QUERYINDEX_VISITCOUNT    = 7;
-const QUERYINDEX_TYPED         = 8;
-const QUERYINDEX_PLACEID       = 9;
-const QUERYINDEX_SWITCHTAB     = 10;
-const QUERYINDEX_FRECENCY      = 11;
+const QUERYINDEX_BOOKMARKED    = 3;
+const QUERYINDEX_BOOKMARKTITLE = 4;
+const QUERYINDEX_TAGS          = 5;
+const QUERYINDEX_VISITCOUNT    = 6;
+const QUERYINDEX_TYPED         = 7;
+const QUERYINDEX_PLACEID       = 8;
+const QUERYINDEX_SWITCHTAB     = 9;
+const QUERYINDEX_FRECENCY      = 10;
 
 // This SQL query fragment provides the following:
 //   - whether the entry is bookmarked (QUERYINDEX_BOOKMARKED)
@@ -125,10 +124,9 @@ const SQL_BOOKMARK_TAGS_FRAGMENT =
 // and "tags" queries for bookmarked entries.
 function defaultQuery(conditions = "") {
   let query =
-    `SELECT :query_type, h.url, h.title, f.url, ${SQL_BOOKMARK_TAGS_FRAGMENT},
+    `SELECT :query_type, h.url, h.title, ${SQL_BOOKMARK_TAGS_FRAGMENT},
             h.visit_count, h.typed, h.id, t.open_count, h.frecency
      FROM moz_places h
-     LEFT JOIN moz_favicons f ON f.id = h.favicon_id
      LEFT JOIN moz_openpages_temp t
             ON t.url = h.url
            AND t.userContextId = :userContextId
@@ -150,7 +148,7 @@ function defaultQuery(conditions = "") {
 }
 
 const SQL_SWITCHTAB_QUERY =
-  `SELECT :query_type, t.url, t.url, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+  `SELECT :query_type, t.url, t.url, NULL, NULL, NULL, NULL, NULL, NULL,
           t.open_count, NULL
    FROM moz_openpages_temp t
    LEFT JOIN moz_places h ON h.url_hash = hash(t.url) AND h.url = t.url
@@ -164,7 +162,7 @@ const SQL_SWITCHTAB_QUERY =
 
 const SQL_ADAPTIVE_QUERY =
   `/* do not warn (bug 487789) */
-   SELECT :query_type, h.url, h.title, f.url, ${SQL_BOOKMARK_TAGS_FRAGMENT},
+   SELECT :query_type, h.url, h.title, ${SQL_BOOKMARK_TAGS_FRAGMENT},
           h.visit_count, h.typed, h.id, t.open_count, h.frecency
    FROM (
      SELECT ROUND(MAX(use_count) * (1 + (input = :search_string)), 1) AS rank,
@@ -174,7 +172,6 @@ const SQL_ADAPTIVE_QUERY =
      GROUP BY place_id
    ) AS i
    JOIN moz_places h ON h.id = i.place_id
-   LEFT JOIN moz_favicons f ON f.id = h.favicon_id
    LEFT JOIN moz_openpages_temp t
           ON t.url = h.url
          AND t.userContextId = :userContextId
@@ -189,12 +186,7 @@ const SQL_ADAPTIVE_QUERY =
 function hostQuery(conditions = "") {
   let query =
     `/* do not warn (bug NA): not worth to index on (typed, frecency) */
-     SELECT :query_type, host || '/', IFNULL(prefix, '') || host || '/',
-            ( SELECT f.url FROM moz_favicons f
-              JOIN moz_places h ON h.favicon_id = f.id
-              WHERE rev_host = get_unreversed_host(host || '.') || '.'
-                 OR rev_host = get_unreversed_host(host || '.') || '.www.'
-            ) AS favicon_url,
+     SELECT :query_type, host || '/', IFNULL(prefix, 'http://') || host || '/',
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, frecency
      FROM moz_hosts
      WHERE host BETWEEN :searchString AND :searchString || X'FFFF'
@@ -212,12 +204,7 @@ const SQL_TYPED_HOST_QUERY = hostQuery("AND typed = 1");
 function bookmarkedHostQuery(conditions = "") {
   let query =
     `/* do not warn (bug NA): not worth to index on (typed, frecency) */
-     SELECT :query_type, host || '/', IFNULL(prefix, '') || host || '/',
-            ( SELECT f.url FROM moz_favicons f
-              JOIN moz_places h ON h.favicon_id = f.id
-              WHERE rev_host = get_unreversed_host(host || '.') || '.'
-                 OR rev_host = get_unreversed_host(host || '.') || '.www.'
-            ) AS favicon_url,
+     SELECT :query_type, host || '/', IFNULL(prefix, 'http://') || host || '/',
             ( SELECT foreign_count > 0 FROM moz_places
               WHERE rev_host = get_unreversed_host(host || '.') || '.'
                  OR rev_host = get_unreversed_host(host || '.') || '.www.'
@@ -238,11 +225,10 @@ const SQL_BOOKMARKED_TYPED_HOST_QUERY = bookmarkedHostQuery("AND typed = 1");
 
 function urlQuery(conditions = "") {
   return `/* do not warn (bug no): cannot use an index to sort */
-          SELECT :query_type, h.url, NULL, f.url AS favicon_url,
+          SELECT :query_type, h.url, NULL,
             foreign_count > 0 AS bookmarked,
             NULL, NULL, NULL, NULL, NULL, NULL, h.frecency
           FROM moz_places h
-          LEFT JOIN moz_favicons f ON h.favicon_id = f.id
           WHERE (rev_host = :revHost OR rev_host = :revHost || "www.")
           AND h.frecency <> 0
           AND fixup_url(h.url) BETWEEN :searchString AND :searchString || X'FFFF'
@@ -1392,7 +1378,12 @@ Search.prototype = {
     // The title will end up being "host: queryString"
     let comment = entry.url.host;
 
-    this._addMatch({ value, comment, style, frecency: FRECENCY_DEFAULT });
+    this._addMatch({
+      value,
+      comment,
+      icon: "page-icon:" + url,
+      style,
+      frecency: FRECENCY_DEFAULT });
     return true;
   },
 
@@ -1533,12 +1524,7 @@ Search.prototype = {
       // It's rare that Sync supplies the icon for the page (but if it does, it
       // is a string URL)
       if (!icon) {
-        try {
-          let favicon = yield PlacesUtils.promiseFaviconLinkUrl(url);
-          if (favicon) {
-            icon = favicon.spec;
-          }
-        } catch (ex) {} // no favicon for this URL.
+        icon = "page-icon:" + url;
       } else {
         icon = PlacesUtils.favicons
                           .getFaviconLinkForIcon(NetUtil.newURI(icon)).spec;
@@ -1621,15 +1607,8 @@ Search.prototype = {
       comment: displayURL,
       style: "action visiturl",
       frecency: 0,
+      icon: "page-icon:" + escapedURL
     };
-
-    try {
-      let favicon = yield PlacesUtils.promiseFaviconLinkUrl(uri);
-      if (favicon)
-        match.icon = favicon.spec;
-    } catch (e) {
-      // It's possible we don't have a favicon for this - and that's ok.
-    }
 
     this._addMatch(match);
     return true;
@@ -1784,9 +1763,9 @@ Search.prototype = {
   _processHostRow(row) {
     let match = {};
     let strippedHost = row.getResultByIndex(QUERYINDEX_URL);
-    let unstrippedHost = row.getResultByIndex(QUERYINDEX_TITLE);
+    let url = row.getResultByIndex(QUERYINDEX_TITLE);
+    let unstrippedHost = stripHttpAndTrim(url, false);
     let frecency = row.getResultByIndex(QUERYINDEX_FRECENCY);
-    let faviconUrl = row.getResultByIndex(QUERYINDEX_ICONURL);
 
     // If the unfixup value doesn't preserve the user's input just
     // ignore it and complete to the found host.
@@ -1797,10 +1776,8 @@ Search.prototype = {
     match.value = this._strippedPrefix + strippedHost;
     match.finalCompleteValue = unstrippedHost;
 
-    if (faviconUrl) {
-      match.icon = PlacesUtils.favicons
-                              .getFaviconLinkForIcon(NetUtil.newURI(faviconUrl)).spec;
-    }
+    match.icon = "page-icon:" + url;
+
     // Although this has a frecency, this query is executed before any other
     // queries that would result in frecency matches.
     match.frecency = frecency;
@@ -1813,7 +1790,6 @@ Search.prototype = {
     let strippedUrl = stripPrefix(url);
     let prefix = url.substr(0, url.length - strippedUrl.length);
     let frecency = row.getResultByIndex(QUERYINDEX_FRECENCY);
-    let faviconUrl = row.getResultByIndex(QUERYINDEX_ICONURL);
 
     // We must complete the URL up to the next separator (which is /, ? or #).
     let searchString = stripPrefix(this._trimmedOriginalSearchString);
@@ -1835,16 +1811,13 @@ Search.prototype = {
       style: "autofill"
     };
 
-    if (faviconUrl) {
-      match.icon = PlacesUtils.favicons
-                              .getFaviconLinkForIcon(NetUtil.newURI(faviconUrl)).spec;
-    }
-
     // Complete to the found url only if its untrimmed value preserves the
     // user's input.
     if (url.toLowerCase().includes(this._trimmedOriginalSearchString.toLowerCase())) {
       match.finalCompleteValue = prefix + strippedUrl;
     }
+
+    match.icon = "page-icon:" + (match.finalCompleteValue || match.value);
 
     return match;
   },
@@ -1855,7 +1828,6 @@ Search.prototype = {
     let escapedURL = row.getResultByIndex(QUERYINDEX_URL);
     let openPageCount = row.getResultByIndex(QUERYINDEX_SWITCHTAB) || 0;
     let historyTitle = row.getResultByIndex(QUERYINDEX_TITLE) || "";
-    let iconurl = row.getResultByIndex(QUERYINDEX_ICONURL) || "";
     let bookmarked = row.getResultByIndex(QUERYINDEX_BOOKMARKED);
     let bookmarkTitle = bookmarked ?
       row.getResultByIndex(QUERYINDEX_BOOKMARKTITLE) : null;
@@ -1911,10 +1883,7 @@ Search.prototype = {
 
     match.value = url;
     match.comment = title;
-    if (iconurl) {
-      match.icon = PlacesUtils.favicons
-                              .getFaviconLinkForIcon(NetUtil.newURI(iconurl)).spec;
-    }
+    match.icon = "page-icon:" + escapedURL;
     match.frecency = frecency;
 
     return match;

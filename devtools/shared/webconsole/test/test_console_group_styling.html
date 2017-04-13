@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for console.group styling with %c</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+  <script>
+"use strict";
+
+const TEST_URL = "data:text/html,<html><body>Hello</body></html>";
+
+window.onload = async function () {
+  SimpleTest.waitForExplicitFinish();
+  let state;
+  try {
+    const onAttachConsole = new Promise(resolve => attachConsole(
+      ["ConsoleAPI"],
+      (consoleState, response) => resolve(consoleState)
+    ));
+    state = await onAttachConsole;
+    const debuggerClient = state.dbgClient;
+
+    await testSingleCustomStyleGroup(debuggerClient);
+    await testSingleCustomStyleGroupCollapsed(debuggerClient);
+    await testMultipleCustomStyleGroup(debuggerClient);
+    await testMultipleCustomStyleGroupCollapsed(debuggerClient);
+    await testFormatterWithNoStyleGroup(debuggerClient);
+    await testFormatterWithNoStyleGroupCollapsed(debuggerClient);
+  } catch (e) {
+    ok(false, `Error thrown: ${e.message}`);
+  }
+
+  closeDebugger(state, () => SimpleTest.finish());
+};
+
+async function testSingleCustomStyleGroup(debuggerClient) {
+  info("Testing console.group with a custom style");
+  let {packet} = await consoleAPICall(
+    debuggerClient,
+    () => top.console.group("%cfoobar", "color:red")
+  );
+
+  checkConsoleAPICall(packet.message, {
+    arguments: ["foobar"],
+    styles: ["color:red"]
+  });
+}
+
+async function testSingleCustomStyleGroupCollapsed(debuggerClient) {
+  info("Testing console.groupCollapsed with a custom style");
+  let {packet} = await consoleAPICall(
+    debuggerClient,
+    () => top.console.groupCollapsed("%cfoobaz", "color:blue")
+  );
+
+  checkConsoleAPICall(packet.message, {
+    arguments: ["foobaz"],
+    styles: ["color:blue"]
+  });
+}
+
+async function testMultipleCustomStyleGroup(debuggerClient) {
+  info("Testing console.group with multiple custom styles");
+  let {packet} = await consoleAPICall(
+    debuggerClient,
+    () => top.console.group("%cfoo%cbar", "color:red", "color:blue")
+  );
+
+  checkConsoleAPICall(packet.message, {
+    arguments: ["foo", "bar"],
+    styles: ["color:red", "color:blue"]
+  });
+}
+
+async function testMultipleCustomStyleGroupCollapsed(debuggerClient) {
+  info("Testing console.groupCollapsed with multiple custom styles");
+  let {packet} = await consoleAPICall(
+    debuggerClient,
+    () => top.console.group("%cfoo%cbaz", "color:red", "color:green")
+  );
+
+  checkConsoleAPICall(packet.message, {
+    arguments: ["foo", "baz"],
+    styles: ["color:red", "color:green"]
+  });
+}
+
+async function testFormatterWithNoStyleGroup(debuggerClient) {
+  info("Testing console.group with one formatter but no style");
+  let {packet} = await consoleAPICall(
+    debuggerClient,
+    () => top.console.group("%cfoobar")
+  );
+
+  checkConsoleAPICall(packet.message, {
+    arguments: ["%cfoobar"],
+    styles: []
+  });
+}
+
+async function testFormatterWithNoStyleGroupCollapsed(debuggerClient) {
+  info("Testing console.groupCollapsed with one formatter but no style");
+  let {packet} = await consoleAPICall(
+    debuggerClient,
+    () => top.console.groupCollapsed("%cfoobaz")
+  );
+
+  checkConsoleAPICall(packet.message, {
+    arguments: ["%cfoobaz"],
+    styles: []
+  });
+}
+
+function consoleAPICall(debuggerClient, consoleCall) {
+  const onConsoleAPICall = new Promise((resolve, reject) => {
+    debuggerClient.addOneTimeListener(
+      "consoleAPICall",
+      (type, packet) => resolve({type, packet})
+    );
+  });
+  consoleCall();
+  return onConsoleAPICall;
+}
+
+  </script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+  <pre id="test">
+  </pre>
+</body>
+</html>

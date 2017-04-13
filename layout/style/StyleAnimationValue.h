@@ -579,6 +579,7 @@ struct AnimationValue
   RefPtr<RawServoAnimationValue> mServo;
 
   bool operator==(const AnimationValue& aOther) const;
+  bool operator!=(const AnimationValue& aOther) const;
 
   bool IsNull() const { return mGecko.IsNull() && !mServo; }
 
@@ -591,6 +592,10 @@ struct AnimationValue
   // Uncompute this AnimationValue and then serialize it.
   void SerializeSpecifiedValue(nsCSSPropertyID aProperty,
                                nsAString& aString) const;
+
+  // Check if |*this| and |aToValue| can be interpolated.
+  bool IsInterpolableWith(nsCSSPropertyID aProperty,
+                          const AnimationValue& aToValue) const;
 };
 
 struct PropertyStyleAnimationValuePair

@@ -9,7 +9,8 @@ import org.mozilla.gecko.media.FormatParam;
 import org.mozilla.gecko.media.Sample;
 
 interface ICodecCallbacks {
-    oneway void onInputExhausted();
+    oneway void onInputQueued(long timestamp);
+    oneway void onInputPending(long timestamp);
     oneway void onOutputFormatChanged(in FormatParam format);
     oneway void onOutput(in Sample sample);
     oneway void onError(boolean fatal);

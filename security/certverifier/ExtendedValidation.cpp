@@ -875,17 +875,6 @@ static const struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     "XIuZxVqUxdJxVt7NiYDMJg==",
   },
   {
-    // CN=GlobalSign,O=GlobalSign,OU=GlobalSign ECC Root CA - R4
-    "1.3.6.1.4.1.4146.1.1",
-    "GlobalSign EV OID",
-    { 0xBE, 0xC9, 0x49, 0x11, 0xC2, 0x95, 0x56, 0x76, 0xDB, 0x6C, 0x0A,
-      0x55, 0x09, 0x86, 0xD7, 0x6E, 0x3B, 0xA0, 0x05, 0x66, 0x7C, 0x44,
-      0x2C, 0x97, 0x62, 0xB4, 0xFB, 0xB7, 0x73, 0xDE, 0x22, 0x8C },
-    "MFAxJDAiBgNVBAsTG0dsb2JhbFNpZ24gRUNDIFJvb3QgQ0EgLSBSNDETMBEGA1UE"
-    "ChMKR2xvYmFsU2lnbjETMBEGA1UEAxMKR2xvYmFsU2lnbg==",
-    "KjikHJYKBN5CsiilC+g0mAI=",
-  },
-  {
     // CN=GlobalSign,O=GlobalSign,OU=GlobalSign ECC Root CA - R5
     "1.3.6.1.4.1.4146.1.1",
     "GlobalSign EV OID",
