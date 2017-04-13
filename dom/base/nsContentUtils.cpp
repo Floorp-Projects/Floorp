@@ -8791,6 +8791,44 @@ nsContentUtils::StorageAllowedForPrincipal(nsIPrincipal* aPrincipal)
 }
 
 // static, private
+void
+nsContentUtils::GetCookieBehaviorForPrincipal(nsIPrincipal* aPrincipal,
+                                              uint32_t* aLifetimePolicy,
+                                              uint32_t* aBehavior)
+{
+  *aLifetimePolicy = sCookiesLifetimePolicy;
+  *aBehavior = sCookiesBehavior;
+
+  // Any permissions set for the given principal will override our default
+  // settings from preferences.
+  nsCOMPtr<nsIPermissionManager> permissionManager =
+    services::GetPermissionManager();
+  if (!permissionManager) {
+    return;
+  }
+
+  uint32_t perm;
+  permissionManager->TestPermissionFromPrincipal(aPrincipal, "cookie", &perm);
+  switch (perm) {
+    case nsICookiePermission::ACCESS_ALLOW:
+      *aBehavior = nsICookieService::BEHAVIOR_ACCEPT;
+      break;
+    case nsICookiePermission::ACCESS_DENY:
+      *aBehavior = nsICookieService::BEHAVIOR_REJECT;
+      break;
+    case nsICookiePermission::ACCESS_SESSION:
+      *aLifetimePolicy = nsICookieService::ACCEPT_SESSION;
+      break;
+    case nsICookiePermission::ACCESS_ALLOW_FIRST_PARTY_ONLY:
+      *aBehavior = nsICookieService::BEHAVIOR_REJECT_FOREIGN;
+      break;
+    case nsICookiePermission::ACCESS_LIMIT_THIRD_PARTY:
+      *aBehavior = nsICookieService::BEHAVIOR_LIMIT_FOREIGN;
+      break;
+  }
+}
+
+// static, private
 nsContentUtils::StorageAccess
 nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
                                                    nsPIDOMWindowInner* aWindow)
@@ -8819,28 +8857,12 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
     }
   }
 
-  nsCOMPtr<nsIPermissionManager> permissionManager =
-    services::GetPermissionManager();
-  if (!permissionManager) {
-    return StorageAccess::eDeny;
-  }
-
-  // check the permission manager for any allow or deny permissions
-  // for cookies for the window.
-  uint32_t perm;
-  permissionManager->TestPermissionFromPrincipal(aPrincipal, "cookie", &perm);
-  if (perm == nsIPermissionManager::DENY_ACTION) {
-    return StorageAccess::eDeny;
-  }
-  if (perm == nsICookiePermission::ACCESS_SESSION) {
-    return std::min(access, StorageAccess::eSessionScoped);
-  }
-  if (perm == nsIPermissionManager::ALLOW_ACTION) {
-    return access;
-  }
+  uint32_t lifetimePolicy;
+  uint32_t behavior;
+  GetCookieBehaviorForPrincipal(aPrincipal, &lifetimePolicy, &behavior);
 
   // Check if we should only allow storage for the session, and record that fact
-  if (sCookiesLifetimePolicy == nsICookieService::ACCEPT_SESSION) {
+  if (lifetimePolicy == nsICookieService::ACCEPT_SESSION) {
     // Storage could be StorageAccess::ePrivateBrowsing or StorageAccess::eAllow
     // so perform a std::min comparison to make sure we preserve ePrivateBrowsing
     // if it has been set.
@@ -8881,13 +8903,13 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
   }
 
   // We don't want to prompt for every attempt to access permissions.
-  if (sCookiesBehavior == nsICookieService::BEHAVIOR_REJECT) {
+  if (behavior == nsICookieService::BEHAVIOR_REJECT) {
     return StorageAccess::eDeny;
   }
 
   // In the absense of a window, we assume that we are first-party.
-  if (aWindow && (sCookiesBehavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN ||
-                  sCookiesBehavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN)) {
+  if (aWindow && (behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN ||
+                  behavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN)) {
     nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
       do_GetService(THIRDPARTYUTIL_CONTRACTID);
     MOZ_ASSERT(thirdPartyUtil);
