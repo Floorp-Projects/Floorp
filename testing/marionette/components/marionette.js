@@ -22,7 +22,6 @@ const PREF_PORT_FALLBACK = "marionette.defaultPrefs.port";
 const PREF_LOG_LEVEL = "marionette.log.level";
 const PREF_LOG_LEVEL_FALLBACK = "marionette.logging";
 
-const DEFAULT_PORT = 2828;
 const DEFAULT_LOG_LEVEL = "info";
 const LOG_LEVELS = new class extends Map {
   constructor () {
