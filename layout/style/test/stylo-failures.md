@@ -277,8 +277,6 @@ to mochitest command.
   * calc() doesn't support dividing expression servo/servo#15192
     * test_value_storage.html `calc(50px/` [7]
     * ... `calc(2em / ` [9]
-  * calc(number) is simplifed eagerly bug 1355014
-    * test_value_storage.html `calc(-2.5)` [1]
   * size part of shorthand background/mask always desires two values servo/servo#15199
     * test_value_storage.html `'background'` [20]
     * ... `/ auto none` [38]
