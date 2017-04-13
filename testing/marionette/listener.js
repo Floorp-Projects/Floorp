@@ -1098,13 +1098,18 @@ function waitForPageLoaded(msg) {
 function get(msg) {
   let {command_id, pageTimeout, url} = msg.json;
 
-  // We need to move to the top frame before navigating
-  sendSyncMessage("Marionette:switchedToFrame", {frameValue: null});
-  curContainer.frame = content;
+  try {
+    // We need to move to the top frame before navigating
+    sendSyncMessage("Marionette:switchedToFrame", {frameValue: null});
+    curContainer.frame = content;
 
-  loadListener.navigate(() => {
-    curContainer.frame.location = url;
-  }, command_id, pageTimeout, url);
+    loadListener.navigate(() => {
+      curContainer.frame.location = url;
+    }, command_id, pageTimeout, url);
+
+  } catch (e) {
+    sendError(e, command_id);
+  }
 }
 
 /**
@@ -1119,9 +1124,14 @@ function get(msg) {
 function goBack(msg) {
   let {command_id, pageTimeout} = msg.json;
 
-  loadListener.navigate(() => {
-    curContainer.frame.history.back();
-  }, command_id, pageTimeout);
+  try {
+    loadListener.navigate(() => {
+      curContainer.frame.history.back();
+    }, command_id, pageTimeout);
+
+  } catch (e) {
+    sendError(e, command_id);
+  }
 }
 
 /**
@@ -1136,9 +1146,14 @@ function goBack(msg) {
 function goForward(msg) {
   let {command_id, pageTimeout} = msg.json;
 
-  loadListener.navigate(() => {
-    curContainer.frame.history.forward();
-  }, command_id, pageTimeout);
+  try {
+    loadListener.navigate(() => {
+      curContainer.frame.history.forward();
+    }, command_id, pageTimeout);
+
+  } catch (e) {
+    sendError(e, command_id);
+  }
 }
 
 /**
@@ -1152,13 +1167,18 @@ function goForward(msg) {
 function refresh(msg) {
   let {command_id, pageTimeout} = msg.json;
 
-  // We need to move to the top frame before navigating
-  sendSyncMessage("Marionette:switchedToFrame", {frameValue: null});
-  curContainer.frame = content;
+  try {
+    // We need to move to the top frame before navigating
+    sendSyncMessage("Marionette:switchedToFrame", {frameValue: null});
+    curContainer.frame = content;
 
-  loadListener.navigate(() => {
-    curContainer.frame.location.reload(true);
-  }, command_id, pageTimeout);
+    loadListener.navigate(() => {
+      curContainer.frame.location.reload(true);
+    }, command_id, pageTimeout);
+
+  } catch (e) {
+    sendError(e, command_id);
+  }
 }
 
 /**
