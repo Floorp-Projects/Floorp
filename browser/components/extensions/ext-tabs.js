@@ -103,15 +103,11 @@ this.tabs = class extends ExtensionAPI {
 
     let self = {
       tabs: {
-        onActivated: new SingletonEventManager(context, "tabs.onActivated", fire => {
-          let listener = (eventName, event) => {
-            fire.async(event);
-          };
-
-          tabTracker.on("tab-activated", listener);
-          return () => {
-            tabTracker.off("tab-activated", listener);
-          };
+        onActivated: new WindowEventManager(context, "tabs.onActivated", "TabSelect", (fire, event) => {
+          let nativeTab = event.originalTarget;
+          let tabId = tabTracker.getId(nativeTab);
+          let windowId = windowTracker.getId(nativeTab.ownerGlobal);
+          fire.async({tabId, windowId});
         }).api(),
 
         onCreated: new SingletonEventManager(context, "tabs.onCreated", fire => {
@@ -131,15 +127,11 @@ this.tabs = class extends ExtensionAPI {
          * the tabId in an array to match the API.
          * @see  https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/Tabs/onHighlighted
         */
-        onHighlighted: new SingletonEventManager(context, "tabs.onHighlighted", fire => {
-          let listener = (eventName, event) => {
-            fire.async({tabIds: [event.tabId], windowId: event.windowId});
-          };
-
-          tabTracker.on("tab-activated", listener);
-          return () => {
-            tabTracker.off("tab-activated", listener);
-          };
+        onHighlighted: new WindowEventManager(context, "tabs.onHighlighted", "TabSelect", (fire, event) => {
+          let nativeTab = event.originalTarget;
+          let tabIds = [tabTracker.getId(nativeTab)];
+          let windowId = windowTracker.getId(nativeTab.ownerGlobal);
+          fire.async({tabIds, windowId});
         }).api(),
 
         onAttached: new SingletonEventManager(context, "tabs.onAttached", fire => {
