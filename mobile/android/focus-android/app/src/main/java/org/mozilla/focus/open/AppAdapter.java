@@ -21,7 +21,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class AppAdapter extends RecyclerView.Adapter<AppViewHolder> {
-    /* package-private */ class App {
+    /* package-private */ static class App {
         private Context context;
         private ActivityInfo info;
         private String label;
