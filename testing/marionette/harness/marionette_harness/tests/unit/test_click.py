@@ -8,7 +8,7 @@ from marionette_driver.by import By
 from marionette_driver import errors
 from marionette_driver.wait import Wait
 
-from marionette_harness import MarionetteTestCase
+from marionette_harness import MarionetteTestCase, run_if_e10s
 
 
 def inline(doc):
@@ -97,11 +97,7 @@ class TestLegacyClick(MarionetteTestCase):
         test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
         self.marionette.find_element(By.LINK_TEXT, "333333").click()
-        # Bug 1335778 - Missing implicit wait for page being loaded
-        Wait(self.marionette, timeout=self.marionette.timeout.page_load,
-             ignored_exceptions=errors.NoSuchElementException).until(
-            lambda m: m.find_element(By.ID, "username"),
-            message="Username field hasn't been found")
+        self.marionette.find_element(By.ID, "username")
         self.assertEqual(self.marionette.title, "XHTML Test Page")
 
     def test_clicking_an_element_that_is_not_displayed_raises(self):
@@ -115,11 +111,7 @@ class TestLegacyClick(MarionetteTestCase):
         test_html = self.marionette.absolute_url("clicks.html")
         self.marionette.navigate(test_html)
         self.marionette.find_element(By.ID, "overflowLink").click()
-        # Bug 1335778 - Missing implicit wait for page being loaded
-        Wait(self.marionette, timeout=self.marionette.timeout.page_load,
-             ignored_exceptions=errors.NoSuchElementException).until(
-            lambda m: m.find_element(By.ID, "username"),
-            message="Username field hasn't been found")
+        self.marionette.find_element(By.ID, "username")
         self.assertEqual(self.marionette.title, "XHTML Test Page")
 
     def test_scroll_into_view_near_end(self):
@@ -260,3 +252,45 @@ class TestClick(TestLegacyClick):
         with self.assertRaises(errors.ElementClickInterceptedException):
             obscured.click()
         self.assertFalse(self.marionette.execute_script("return window.clicked", sandbox=None))
+
+
+class TestClickNavigation(MarionetteTestCase):
+
+    def setUp(self):
+        super(TestClickNavigation, self).setUp()
+
+    def test_click_link_page_load(self):
+        test_html = self.marionette.absolute_url("clicks.html")
+        self.marionette.navigate(test_html)
+        self.marionette.find_element(By.LINK_TEXT, "333333").click()
+        self.assertNotEqual(self.marionette.get_url(), test_html)
+        self.assertEqual(self.marionette.title, "XHTML Test Page")
+
+    def test_click_link_anchor(self):
+        test_html = self.marionette.absolute_url("clicks.html")
+        self.marionette.navigate(test_html)
+        self.marionette.find_element(By.ID, "anchor").click()
+        self.assertEqual(self.marionette.get_url(), "{}#".format(test_html))
+
+    def test_click_no_link(self):
+        test_html = self.marionette.absolute_url("clicks.html")
+        self.marionette.navigate(test_html)
+        self.marionette.find_element(By.ID, "showbutton").click()
+        self.assertEqual(self.marionette.get_url(), test_html)
+
+    @run_if_e10s("Requires e10s mode enabled")
+    def test_click_remoteness_change(self):
+        test_html = self.marionette.absolute_url("clicks.html")
+
+        self.marionette.navigate("about:robots")
+        self.marionette.navigate(test_html)
+        self.marionette.find_element(By.ID, "anchor")
+        self.marionette.navigate("about:robots")
+        with self.assertRaises(errors.NoSuchElementException):
+            self.marionette.find_element(By.ID, "anchor")
+
+        self.marionette.go_back()
+        self.marionette.find_element(By.ID, "anchor")
+        self.marionette.find_element(By.ID, "history-back").click()
+        with self.assertRaises(errors.NoSuchElementException):
+            self.marionette.find_element(By.ID, "anchor")
