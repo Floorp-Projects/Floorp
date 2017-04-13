@@ -901,8 +901,11 @@ VectorImage::Draw(gfxContext* aContext,
   Maybe<AutoSetRestoreSVGContextPaint> autoContextPaint;
   if (aSVGContext &&
       aSVGContext->GetContextPaint()) {
-    autoContextPaint.emplace(aSVGContext->GetContextPaint(),
-                             mSVGDocumentWrapper->GetDocument());
+    nsCOMPtr<nsIURI> uri = mURI->ToIURI();
+    if (SVGContextPaint::IsAllowedForImageFromURI(uri)) {
+      autoContextPaint.emplace(aSVGContext->GetContextPaint(),
+                               mSVGDocumentWrapper->GetDocument());
+    }
   }
 
   // We didn't get a hit in the surface cache, so we'll need to rerasterize.
