@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Pořizujte snímky webových stránek a ukládejte je dočasně nebo natrvalo."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Pořídit snímek obrazovky"
+  },
+  "myShotsLink": {
+    "message": "Mé snímky"
+  },
+  "screenshotInstructions": {
+    "message": "Stiskněte tlačítko myši a tahem označte oblast snímku. Pro zrušení výběru stiskněte klávesu ESC."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Uložit"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Uložit viditelnou oblast"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Uložit celou stránku"
+  },
+  "cancelScreenshot": {
+    "message": "Zrušit"
+  },
+  "downloadScreenshot": {
+    "message": "Stáhnout"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Odkaz zkopírován"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Odkaz na váš snímek byl zkopírován do schránky. Pro vložení stiskněte $META_KEY$-V.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Mimo provoz."
+  },
+  "requestErrorDetails": {
+    "message": "Je nám líto, ale nemohli jsme vás snímek uložit. Zkuste to prosím znovu později."
+  },
+  "connectionErrorTitle": {
+    "message": "Nedaří se nám připojit k vašim snímkům."
+  },
+  "connectionErrorDetails": {
+    "message": "Zkontrolujte prosím připojení k internetu. Pokud vám připojení funguje, mohlo dojít k dočasnému problému s naší službou Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Nemohli jsme uložit váš snímek, protože došlo k problému se službou Firefox Screenshots. Zkuste to prosím znovu později."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Snímek této stránky nelze pořídit."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Toto není běžná webová stránka, a proto z ní nelze pořizovat žádné snímky."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Nelze pořizovat snímek stránky Firefox Screenshots!"
+  },
+  "genericErrorTitle": {
+    "message": "Jejda! Služba Firefox Screenshots přestala pracovat."
+  },
+  "genericErrorDetails": {
+    "message": "Nejsme si jistí, co se právě stalo. Chcete to zkusit znovu, nebo zkusíte pořídit snímek na jiné stránce?"
+  },
+  "tourBodyOne": {
+    "message": "Pořizujte, ukládejte a sdílejte snímky webových stránek bez opuštění Firefoxu."
+  },
+  "tourHeaderTwo": {
+    "message": "Zachyťte, cokoliv chcete"
+  },
+  "tourBodyTwo": {
+    "message": "Stiskem tlačítka myši a tahem můžete vybrat oblast stránky. Výběr můžete provést také najetím myši na prvek stránky."
+  },
+  "tourHeaderThree": {
+    "message": "Jak sami chcete"
+  },
+  "tourBodyThree": {
+    "message": "Uložte si oříznutý snímek stránky na web pro rychlejší sdílení, nebo si ho stáhněte do počítače. Pro zobrazení všech snímků stačí klepnout na tlačítko Mé snímky."
+  },
+  "tourHeaderFour": {
+    "message": "Pořizujte snímky jen částí nebo i celých stránek"
+  },
+  "tourBodyFour": {
+    "message": "Pomocí tlačítek vpravo nahoře můžete pořídit snímek jen viditelné části nebo úplně celé stránky."
+  },
+  "tourSkip": {
+    "message": "Přeskočit"
+  },
+  "tourNext": {
+    "message": "Další snímek"
+  },
+  "tourPrevious": {
+    "message": "Předchozí snímek"
+  },
+  "tourDone": {
+    "message": "Hotovo"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Používáním služby Firefox Screenshots souhlasíte s jejími $TERMSANDPRIVACYNOTICETERMSLINK$ a $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "podmínkami"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "zásadami ochrany osobních údajů"
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "addonDescription": {
+    "message": "Ստացեք հոլովակներ և էկրանի հանույթներ վեբից և պահպանեք դանք ժամանակավոր կամ մշտապես:"
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Ստանալ էկրանի պատկերը"
+  },
+  "myShotsLink": {
+    "message": "Իմ պատկերները"
+  },
+  "screenshotInstructions": {
+    "message": "Քաշեք և սեղմեք էջի վրա՝ ընտրելու տարածքը: Սեղմեք ESC՝ չեղարկելու համար:"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Պահպանել"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Պահպանելի տեսանելի"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Պահպանել ամբողջ էջը"
+  },
+  "cancelScreenshot": {
+    "message": "Չեղարկել"
+  },
+  "downloadScreenshot": {
+    "message": "Ներբեռնել"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Հղումը պատճենվել է"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Ձեր պատկերի հղումը պատճենվել է: Սեղմեք $META_KEY$-V՝ այն տեղադրելու համար:",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Անսարք:"
+  },
+  "requestErrorDetails": {
+    "message": "Ցավոք մենք չենք կարող պահպանել պատկեր: Կրկին փորձեք ավելի ուշ:"
+  },
+  "connectionErrorTitle": {
+    "message": "Հնարավոր չէ ապակցել էկրանի ձեր հանույթներին:"
+  },
+  "connectionErrorDetails": {
+    "message": "Խնդրում ենք ստուգել համացանցային կապակցումը: Եթե մուտք չունեք համացանց՝ հնարավոր է՝ դա Firefox Screenshots ծառայության հետ կապված ժամանակավոր խնդիր է:"
+  },
+  "loginErrorDetails": {
+    "message": "Մենք չենք կարող պահպանել ձեր պատկերը, քանի որ խնդիր կա Firefox Screenshots ծառայության հետ: Փորձեք ավելի ուշ:"
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Հնարավոր չէ ստանալ էկրանի պատկերը:"
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Սա ստանդարտ վեբ էջ չէ, ուստի դուք չեք կարող ստանալ դրա պատկերը:"
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Դուք չեք կարող ստանալ Firefox Screenshots-ի էջի պատկերը:"
+  },
+  "genericErrorTitle": {
+    "message": "Firefox Screenshots-ը գնաց գլխիվայր:"
+  },
+  "genericErrorDetails": {
+    "message": "Մենք վստահ չենք, թե ինչ է տեղի ունեցնել: Կրկին փորձեք կամ փորձեք ստանալ մեկ այլ էջի պատկերը:"
+  },
+  "tourBodyOne": {
+    "message": "Ստացեք, պահպանեք և համօգտագործեք էկրանի հանույթները՝ առանց Firefox-ը լքելու: "
+  },
+  "tourHeaderTwo": {
+    "message": "Ստացեք միայն այն, ինչ Ձեզ պետք է:"
+  },
+  "tourBodyTwo": {
+    "message": "Սեղմեք և քաշեք՝ ստանալու համար միայն էջի մի մասը: Նաև կարող եք վրայով անցկացնել՝ գունանշելու համար ընտրումը:"
+  },
+  "tourHeaderThree": {
+    "message": "Ինչպես որ հավանում եք այն"
+  },
+  "tourBodyThree": {
+    "message": "Պահպանեք ձեր եզրատած որոշ պատկերներ վեբում՝ դրանք հեշտությամբ համօգտագործելու կամ ներբեռնելու համար ձեր համակարգչում: Նաև կարող եք սեղմել Իմ պատկերները՝ գտնելու ձեր բոլոր ֆայլերը:"
+  },
+  "tourHeaderFour": {
+    "message": "Ստանալ պատուհանը կամ ամբողջ էջեր"
+  },
+  "tourBodyFour": {
+    "message": "Ընտրեք կոճակները վերևի աջ մասում՝ տեսանելի հատվածը ստանալու համար պատուհանում կամ ամբողջ էջը ստանալու համար:"
+  },
+  "tourSkip": {
+    "message": "Բաց թողնել"
+  },
+  "tourNext": {
+    "message": "Հաջորդ սահիկը"
+  },
+  "tourPrevious": {
+    "message": "Նախորդ սահիկը"
+  },
+  "tourDone": {
+    "message": "Պատրաստ է"
+  }
+}
