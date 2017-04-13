@@ -13,6 +13,9 @@ promises = []
 name = "mozjs_sys"
 path = "lib.rs"
 
+[build-dependencies]
+num_cpus = "1.1.0"
+
 [dependencies]
 libc = "0.2"
 libz-sys = "1.0"
