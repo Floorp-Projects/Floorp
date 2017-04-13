@@ -1,0 +1,14 @@
+{
+  "saveScreenshotSelectedArea": {
+    "message": "Ruaje"
+  },
+  "cancelScreenshot": {
+    "message": "Anuloje"
+  },
+  "downloadScreenshot": {
+    "message": "Shkarkoje"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Lidhja u Kopjua"
+  }
+}

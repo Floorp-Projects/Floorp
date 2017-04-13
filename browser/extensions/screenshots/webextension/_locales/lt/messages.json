@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Darykite iškarpas ir ekrano nuotraukos su interneto turiniu bei saugokite jas laikinai arba visąlaik."
+  },
+  "addonAuthorsList": {
+    "message": "„Mozilla“ <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Padaryti ekrano nuotrauką"
+  },
+  "myShotsLink": {
+    "message": "Mano kadrai"
+  },
+  "screenshotInstructions": {
+    "message": "Tempkite arba spustelėkite tinklalapyje norėdami pasirinkti regioną. Spustelėkite „ESC“ norėdami atsisakyti."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Įrašyti"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Įrašyti matomą"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Įrašyti visą tinklalapį"
+  },
+  "cancelScreenshot": {
+    "message": "Atsisakyti"
+  },
+  "downloadScreenshot": {
+    "message": "Atsisiųsti"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Saitas nukopijuotas"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Jūsų nuotraukos saitas buvo nukopijuotas į iškarpinę. Spustelėkite „$META_KEY$-V“ norėdami įdėti.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Neveikia."
+  },
+  "requestErrorDetails": {
+    "message": "Atsiprašome! Mums nepavyko įrašyti jūsų nuotraukos. Prašome pabandyti vėliau."
+  },
+  "connectionErrorTitle": {
+    "message": "Mums nepavyko prisijungti prie jūsų ekrano nuotraukų."
+  },
+  "connectionErrorDetails": {
+    "message": "Patikrinkite savo interneto ryšį. Jeigu galite prisijungti prie interneto, gali būti, kad yra laikina problema su „Firefox Screenshots“ paslauga."
+  },
+  "loginErrorDetails": {
+    "message": "Mums nepavyko įrašyti jūsų nuotraukos, nes yra problema su „Firefox Screenshots“ paslauga. Prašome pabandyti vėliau."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Mums nepavyko nufotografuoti šio tinklalapio."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Tai nėra įprastas tinklalapis, tad negalite padaryti jo nuotraukos."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Negalite padaryti „Firefox Screenshots“ tinklalapio nuotraukos!"
+  },
+  "genericErrorTitle": {
+    "message": "Vau! „Firefox Screenshots“ sugedo."
+  },
+  "genericErrorDetails": {
+    "message": "Mes nesame tikri, kas ką tik nutiko. Norite pabandyti dar kartą arba nufotografuoti kitą tinklalapį?"
+  },
+  "tourBodyOne": {
+    "message": "Darykite, įrašykite ir dalinkitės ekrano nuotraukomis nepalikdami „Firefox“."
+  },
+  "tourHeaderTwo": {
+    "message": "Užfiksuokite būtent tai, ką norite"
+  },
+  "tourBodyTwo": {
+    "message": "Spustelėkite ir tempkite, kad užfiksuotumėte tik dalį tinklalapio. Taip pat galite užvesti pelę, norėdami paryškinti savo pasirinkimą."
+  },
+  "tourHeaderThree": {
+    "message": "Kaip jums patogiau"
+  },
+  "tourBodyThree": {
+    "message": "Įrašykite padarytas nuotraukas saityne patogesniam dalinimuisi, arba atsisiųskite jas į savo kompiuterį. Spustelėję mygtuką „Mano kadrai“, matysite visas savo padarytas nuotraukas."
+  },
+  "tourHeaderFour": {
+    "message": "Fiksuokite langus arba ištisus tinklalapius"
+  },
+  "tourBodyFour": {
+    "message": "Pasirinkite mygtukus aukščiau dešinėje, norėdami užfiksuoti matomą lango dalį arba visą tinklalapį."
+  },
+  "tourSkip": {
+    "message": "SKIP"
+  },
+  "tourNext": {
+    "message": "Kita skaidrė"
+  },
+  "tourPrevious": {
+    "message": "Buvusi skaidrė"
+  },
+  "tourDone": {
+    "message": "Baigta"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Naudodamiesi „Firefox Screenshots“, sutinkate su jų $TERMSANDPRIVACYNOTICETERMSLINK$ ir $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "sąlygomis"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "privatumo nuostatais"
+  }
+}

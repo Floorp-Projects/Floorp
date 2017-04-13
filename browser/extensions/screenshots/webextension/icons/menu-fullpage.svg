@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 21.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 46 46" style="enable-background:new 0 0 46 46;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#00FDFF;}
+	.st1{fill:#3E3D40;}
+	.st2{fill:#004C66;}
+	.st3{fill:#00D1E6;}
+</style>
+<polygon id="bg" class="st0" points="7,42 39,42 39,5.1 7,5.1 "/>
+<g id="frame" transform="translate(0.000000, 6.000000)">
+	<path class="st1" d="M40,5c0.5,0,1,0.4,1,1v24c0,0.5-0.5,1-1,1H6c-0.6,0-1-0.5-1-1V6c0-0.6,0.4-1,1-1H40z M7,29h32V7H7V29z"/>
+	<polygon id="Fill-4" class="st2" points="7,7 39,7 39,5 7,5 	"/>
+	<polygon id="Fill-6" class="st2" points="7,31 39,31 39,29 7,29 	"/>
+</g>
+<path id="dash" class="st3" d="M38,11h1V9h-1V11z M38,14h1v-2h-1V14z M38,17h1v-2h-1V17z M38,20h1v-2h-1V20z M38,23h1v-2h-1V23z
+	 M38,26h1v-2h-1V26z M38,29h1v-2h-1V29z M38,32h1v-2h-1V32z M38,35h1v-2h-1V35z M38,38h1v-2h-1V38z M38,41h1v-2h-1V41z M37,42h2v-1
+	h-2V42z M34,42h2v-1h-2V42z M31,42h2v-1h-2V42z M28,42h2v-1h-2V42z M25,42h2v-1h-2V42z M22,42h2v-1h-2V42z M19,42h2v-1h-2V42z
+	 M16,42h2v-1h-2V42z M13,42h2v-1h-2V42z M10,42h2v-1h-2V42z M8,39H7v2v1h2v-1H8V39z M7,38h1v-2H7V38z M7,35h1v-2H7V35z M7,32h1v-2H7
+	V32z M7,29h1v-2H7V29z M7,26h1v-2H7V26z M7,23h1v-2H7V23z M7,20h1v-2H7V20z M7,17h1v-2H7V17z M7,14h1v-2H7V14z M7,11h1V9H7V11z M9,5
+	H7v1v2h1V6h1V5z M10,6h2V5h-2V6z M13,6h2V5h-2V6z M16,6h2V5h-2V6z M19,6h2V5h-2V6z M22,6h2V5h-2V6z M25,6h2V5h-2V6z M28,6h2V5h-2V6z
+	 M31,6h2V5h-2V6z M34,6h2V5h-2V6z M39,5h-2v1h1v2h1V5z"/>
+</svg>

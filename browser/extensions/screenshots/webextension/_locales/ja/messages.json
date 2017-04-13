@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "ウェブからスクリーンショットを撮って、一時的または永久にそれを保存しましょう。"
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "スクリーンショットを撮る"
+  },
+  "myShotsLink": {
+    "message": "自分のショット"
+  },
+  "screenshotInstructions": {
+    "message": "ページをドラッグまたはクリックして範囲を選択してください。ESC キーを押すとキャンセルできます。"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "保存"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "表示範囲を保存"
+  },
+  "saveScreenshotFullPage": {
+    "message": "ページ全体を保存"
+  },
+  "cancelScreenshot": {
+    "message": "キャンセル"
+  },
+  "downloadScreenshot": {
+    "message": "ダウンロード"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "リンクをコピーしました"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "ショットへのリンクがクリップボードにコピーされました。$META_KEY$+V キーで貼り付けられます。",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "問題が発生しました。"
+  },
+  "requestErrorDetails": {
+    "message": "申し訳ありませんが、ショットを保存できませんでした。また後で試してください。"
+  },
+  "connectionErrorTitle": {
+    "message": "スクリーンショットへ接続できません。"
+  },
+  "connectionErrorDetails": {
+    "message": "お使いのインターネット接続を確認してください。インターネットへ接続できる場合は、Firefox Screenshots サービスに一時的な問題が発生しているものと思われます。"
+  },
+  "loginErrorDetails": {
+    "message": "Firefox Screenshots サービスに問題があるため、ショットを保存できませんでした。また後で試してください。"
+  },
+  "unshootablePageErrorTitle": {
+    "message": "このページはスクリーンショットを撮れません。"
+  },
+  "unshootablePageErrorDetails": {
+    "message": "これは通常のウェブページでないため、スクリーンショットを撮ることができません。"
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Firefox Screenshots ページのショットは撮れません。"
+  },
+  "genericErrorTitle": {
+    "message": "Firefox Screenshots に問題が発生しました。"
+  },
+  "genericErrorDetails": {
+    "message": "何か問題が発生したようです。再度試すか、別のページのショットを撮ってみてください。"
+  },
+  "tourBodyOne": {
+    "message": "Firefox を離れることなく、スクリーンショットを撮影、保存、共有。"
+  },
+  "tourHeaderTwo": {
+    "message": "必要なものだけをキャプチャー"
+  },
+  "tourBodyTwo": {
+    "message": "クリック＆ドラッグでページの一部だけをキャプチャーできます。また、マウスを当てれば選択範囲が強調表示されます。"
+  },
+  "tourHeaderThree": {
+    "message": "お好きなように"
+  },
+  "tourBodyThree": {
+    "message": "切り取ったショットを簡単に共有できるようウェブ上に保存したり、手元へダウンロードしたり。また「自分のショット」ボタンをクリックすれば、これまでに撮ったすべてのショットを見られます。"
+  },
+  "tourHeaderFour": {
+    "message": "ウィンドウもしくはページ全体をキャプチャー"
+  },
+  "tourBodyFour": {
+    "message": "右上のボタンを選択して、ウィンドウ内の表示範囲もしくはページ全体をキャプチャーしましょう。"
+  },
+  "tourSkip": {
+    "message": "スキップ"
+  },
+  "tourNext": {
+    "message": "次のスライド"
+  },
+  "tourPrevious": {
+    "message": "前のスライド"
+  },
+  "tourDone": {
+    "message": "完了"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Firefox Screenshots を使うことで、あなたは Screenshots の $TERMSANDPRIVACYNOTICETERMSLINK$ と $TERMSANDPRIVACYNOTICEPRIVACYLINK$ に同意したことになります。",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "利用規約"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "プライバシー通知"
+  }
+}
