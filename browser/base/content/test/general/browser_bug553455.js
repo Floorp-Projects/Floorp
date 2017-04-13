@@ -715,16 +715,32 @@ function test_tabNavigate() {
 
 function test_urlBar() {
   return Task.spawn(function* () {
-    let notificationPromise = waitForNotification("addon-install-origin-blocked");
+    let progressPromise = waitForProgressNotification();
+    let dialogPromise = waitForInstallDialog();
+
     gBrowser.selectedTab = gBrowser.addTab("about:blank");
     yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     gURLBar.value = TESTROOT + "amosigned.xpi";
     gURLBar.focus();
     EventUtils.synthesizeKey("VK_RETURN", {});
+
+    yield progressPromise;
+    let installDialog = yield dialogPromise;
+
+    let notificationPromise = waitForNotification("addon-install-restart");
+    acceptInstallDialog(installDialog);
     let panel = yield notificationPromise;
 
     let notification = panel.childNodes[0];
-    ok(!notification.hasAttribute("buttonlabel"), "Button to allow install should be hidden.");
+    is(notification.button.label, "Restart Now", "Should have seen the right button");
+    is(notification.getAttribute("label"),
+             "XPI Test will be installed after you restart " + gApp + ".",
+             "Should have seen the right message");
+
+    let installs = yield getInstalls();
+    is(installs.length, 1, "Should be one pending install");
+    installs[0].cancel();
+
     yield removeTab();
   });
 },
