@@ -1087,6 +1087,11 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
   gfxMatrix scaleMatrix(scaleFactors.width, 0.0f,
                         0.0f, scaleFactors.height,
                         0.0f, 0.0f);
+  gfxMatrix reverseScaleMatrix = scaleMatrix;
+  DebugOnly<bool> invertible = reverseScaleMatrix.Invert();
+  MOZ_ASSERT(invertible);
+  context.SetMatrix(reverseScaleMatrix * context.CurrentMatrix());
+
   gfxMatrix tm =
     scaleMatrix * nsSVGUtils::GetCSSPxToDevPxMatrix(frame);
   DrawResult result =
