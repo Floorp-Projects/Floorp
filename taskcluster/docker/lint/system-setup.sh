@@ -11,6 +11,7 @@ cd /setup
 
 apt_packages=()
 apt_packages+=('curl')
+apt_packages+=('locales')
 apt_packages+=('python')
 apt_packages+=('python-pip')
 apt_packages+=('sudo')
