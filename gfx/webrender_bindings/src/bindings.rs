@@ -23,7 +23,6 @@ type WrBuiltDisplayListDescriptor = BuiltDisplayListDescriptor;
 type WrEpoch = Epoch;
 type WrExternalImageId = ExternalImageId;
 type WrFontKey = FontKey;
-type WrGlyphInstance = GlyphInstance;
 type WrIdNamespace = IdNamespace;
 type WrImageFormat = ImageFormat;
 type WrImageRendering = ImageRendering;
@@ -155,6 +154,7 @@ impl From<ItemRange> for WrItemRange {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone)]
 pub struct WrPoint {
     x: f32,
     y: f32,
@@ -231,6 +231,25 @@ pub struct WrColor {
 impl WrColor {
     pub fn to_color(&self) -> ColorF {
         ColorF::new(self.r, self.g, self.b, self.a)
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Clone)]
+pub struct WrGlyphInstance {
+    index: u32,
+    point: WrPoint,
+}
+
+impl WrGlyphInstance {
+    pub fn to_glyph_instance(&self) -> GlyphInstance {
+        GlyphInstance {
+            index: self.index,
+            point: self.point.to_point(),
+        }
+    }
+    pub fn to_glyph_instances(glyphs: &[WrGlyphInstance]) -> Vec<GlyphInstance> {
+        glyphs.iter().map(|x| x.to_glyph_instance()).collect()
     }
 }
 
@@ -1211,7 +1230,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
 
     let glyph_slice = unsafe { slice::from_raw_parts(glyphs, glyph_count as usize) };
     let mut glyph_vector = Vec::new();
-    glyph_vector.extend_from_slice(&glyph_slice);
+    glyph_vector.extend_from_slice(&WrGlyphInstance::to_glyph_instances(glyph_slice));
 
     let colorf = ColorF::new(color.r, color.g, color.b, color.a);
 

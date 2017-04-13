@@ -78,7 +78,6 @@ void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
 // -----
 
 typedef uint64_t WrExternalImageId;
-typedef mozilla::gfx::Point Point2D;    // TODO: get rid of this somehow
 
 // Some useful defines to stub out webrender binding functions for when we
 // build gecko without webrender. We try to tell the compiler these functions
