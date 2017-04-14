@@ -29,7 +29,7 @@ function changeMimeHandler(preferredAction, alwaysAskBeforeHandling) {
   handlerInfo.preferredAction = preferredAction;
   handlerService.store(handlerInfo);
 
-  Services.obs.notifyObservers(null, "pdfjs:handlerChanged", null);
+  Services.obs.notifyObservers(null, "pdfjs:handlerChanged");
 
   // Refresh data
   handlerInfo = mimeService.getFromTypeAndExtension("application/pdf", "pdf");

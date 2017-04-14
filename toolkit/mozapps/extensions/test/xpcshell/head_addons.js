@@ -1071,7 +1071,7 @@ function promiseInstallWebExtension(aData) {
   let addonFile = createTempWebExtensionFile(aData);
 
   return promiseInstallAllFiles([addonFile]).then(installs => {
-    Services.obs.notifyObservers(addonFile, "flush-cache-entry", null);
+    Services.obs.notifyObservers(addonFile, "flush-cache-entry");
     // Since themes are disabled by default, it won't start up.
     if (aData.manifest.theme)
       return installs[0].addon;

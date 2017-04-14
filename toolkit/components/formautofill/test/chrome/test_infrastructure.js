@@ -40,7 +40,7 @@ add_task(function* test_utility_functions() {
   yield TestUtils.waitMs(50);
 
   let promiseMyNotification = TestUtils.waitForNotification("my-topic");
-  Services.obs.notifyObservers(null, "my-topic", "");
+  Services.obs.notifyObservers(null, "my-topic");
   yield promiseMyNotification;
 
   // Check the file size.  The file will be deleted automatically later.

@@ -32,7 +32,7 @@ do_get_profile();
 
 // Mock the system app proxy; make message passing possible
 var mockSendCustomEvent = function(aEventName, aMsg) {
-  Services.obs.notifyObservers({wrappedJSObject: aMsg}, aEventName, null);
+  Services.obs.notifyObservers({wrappedJSObject: aMsg}, aEventName);
 };
 
 function run_test() {

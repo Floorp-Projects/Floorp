@@ -864,7 +864,7 @@ add_task(function* test_checkEnvironment() {
   checkEnvironmentData(environmentData, true);
 
   spoofPartnerInfo();
-  Services.obs.notifyObservers(null, DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC, null);
+  Services.obs.notifyObservers(null, DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC);
 
   environmentData = TelemetryEnvironment.currentEnvironment;
   checkEnvironmentData(environmentData);
@@ -1043,7 +1043,7 @@ add_task(function* test_pluginsWatch_Add() {
   };
   TelemetryEnvironment.registerChangeListener("testWatchPlugins_Add", callback);
 
-  Services.obs.notifyObservers(null, PLUGIN_UPDATED_TOPIC, null);
+  Services.obs.notifyObservers(null, PLUGIN_UPDATED_TOPIC);
   yield deferred.promise;
 
   Assert.equal(TelemetryEnvironment.currentEnvironment.addons.activePlugins.length, 2);
@@ -1074,7 +1074,7 @@ add_task(function* test_pluginsWatch_Remove() {
   };
   TelemetryEnvironment.registerChangeListener("testWatchPlugins_Remove", callback);
 
-  Services.obs.notifyObservers(null, PLUGIN_UPDATED_TOPIC, null);
+  Services.obs.notifyObservers(null, PLUGIN_UPDATED_TOPIC);
   yield deferred.promise;
 
   TelemetryEnvironment.unregisterChangeListener("testWatchPlugins_Remove");

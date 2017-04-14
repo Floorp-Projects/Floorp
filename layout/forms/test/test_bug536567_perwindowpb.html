@@ -110,7 +110,7 @@ function runTest() {
     testIndex++;
     runTest();
   } else if (test == "clear history") {
-    Services.obs.notifyObservers(null, "browser:purge-session-history", "");
+    Services.obs.notifyObservers(null, "browser:purge-session-history");
     testIndex++;
     runTest();
   } else {

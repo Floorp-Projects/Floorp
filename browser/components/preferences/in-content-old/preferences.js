@@ -99,7 +99,7 @@ function init_all() {
 
   // Wait until initialization of all preferences are complete before
   // notifying observers that the UI is now ready.
-  Services.obs.notifyObservers(window, "advanced-pane-loaded", null);
+  Services.obs.notifyObservers(window, "advanced-pane-loaded");
 }
 
 // Make the space above the categories list shrink on low window heights

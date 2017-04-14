@@ -116,7 +116,7 @@ add_task(function* test_experiments_api() {
 
   do_register_cleanup(() => {
     for (let file of [apiAddonFile, addonFile, boringAddonFile]) {
-      Services.obs.notifyObservers(file, "flush-cache-entry", null);
+      Services.obs.notifyObservers(file, "flush-cache-entry");
       file.remove(false);
     }
   });

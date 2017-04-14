@@ -817,7 +817,7 @@ var gEditItemOverlay = {
 
       // Auto-show the bookmarks toolbar when adding / moving an item there.
       if (containerId == PlacesUtils.toolbarFolderId) {
-        Services.obs.notifyObservers(null, "autoshow-bookmarks-toolbar", null);
+        Services.obs.notifyObservers(null, "autoshow-bookmarks-toolbar");
       }
     }
 
