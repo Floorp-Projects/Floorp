@@ -25,7 +25,7 @@ SimpleTest.waitForExplicitFinish();
 var manifest = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingManifest.sjs";
 var manifestURI = Cc["@mozilla.org/network/io-service;1"]
                   .getService(Ci.nsIIOService)
-                  .newURI(manifest);
+                  .newURI(manifest, null, null);
 var updateService = Cc['@mozilla.org/offlinecacheupdate-service;1']
                     .getService(Ci.nsIOfflineCacheUpdateService);
 

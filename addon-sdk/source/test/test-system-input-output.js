@@ -106,7 +106,7 @@ exports["test send messages to nsIObserverService"] = assert => {
                    "null message received");
 
 
-  const uri = newURI("http://www.foo.com");
+  const uri = newURI("http://www.foo.com", null, null);
   send(output, uri);
 
   assert.deepEqual(messages.shift(), { topic: topic, subject: uri },

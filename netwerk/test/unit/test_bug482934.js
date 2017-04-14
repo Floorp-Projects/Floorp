@@ -36,7 +36,7 @@ function make_uri(aUrl)
 {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
-  return ios.newURI(aUrl);
+  return ios.newURI(aUrl, null, null);
 }
 
 function resource_handler(aMetadata, aResponse)
