@@ -41,13 +41,11 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
             mIsValid = false;
             return;
         }
-        MOZ_ASSERT(sizeof(ScaledFont::VariationSetting) == sizeof(gfxFontVariation));
         mCGFont =
             UnscaledFontMac::CreateCGFontWithVariations(
                 baseFont,
                 aFontStyle->variationSettings.Length(),
-                reinterpret_cast<const ScaledFont::VariationSetting*>(
-                    aFontStyle->variationSettings.Elements()));
+                aFontStyle->variationSettings.Elements());
         if (!mCGFont) {
           ::CFRetain(baseFont);
           mCGFont = baseFont;
