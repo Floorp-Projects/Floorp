@@ -269,7 +269,7 @@ public:
    *                 whether aSyncObj is a proxy, however there may be a
    *                 performance penalty associated with that.
    */
-  explicit AsyncInvoker(SyncInterface* aSyncObj, Maybe<bool> aIsProxy = Nothing())
+  explicit AsyncInvoker(SyncInterface* aSyncObj, const Maybe<bool>& aIsProxy = Nothing())
     : mSyncObj(ResolveIsProxy(aSyncObj, aIsProxy) ? nullptr : aSyncObj)
   {
     MOZ_ASSERT(aSyncObj);
