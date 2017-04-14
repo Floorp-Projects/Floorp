@@ -160,7 +160,7 @@ to mochitest command.
     * test_inherit_storage.html `transform`: for -moz-transform [3]
     * test_initial_computation.html `-moz-transform`: need different parsing rules [4]
     * test_initial_storage.html `transform`: for -moz-transform [6]
-    * test_value_storage.html `-moz-transform`: need different parsing rules [284]
+    * test_value_storage.html `-moz-transform`: need different parsing rules [280]
     * test_specified_value_serialization.html `bug-721136` [26]
     * test_units_angle.html [3]
   * test_variables.html `var(--var6)`: -x-system-font [1]
@@ -210,9 +210,9 @@ to mochitest command.
     * ... `-moz-repeating-` [298]
   * webkit-prefixed gradient functions servo/servo#15441
     * test_value_storage.html `-webkit-gradient` [225]
-    * ... `-webkit-linear-gradient` [40]
+    * ... `-webkit-linear-gradient` [10]
     * ... `-webkit-radial-gradient` [105]
-    * ... `-webkit-repeating-` [35]
+    * ... `-webkit-repeating-` [20]
   * moz-prefixed intrinsic width values bug 1355402
     * test_box_size_keywords.html [16]
     * test_flexbox_flex_shorthand.html `-moz-fit-content` [4]
@@ -264,16 +264,12 @@ to mochitest command.
     * test_value_storage.html `(for 'border-image-` [60]
   * -moz-alt-content parsing is wrong: servo/servo#15726
     * test_property_syntax_errors.html `-moz-alt-content` [4]
-  * {transform,perspective}-origin fail to parse 'center left' and 'center right' servo/servo#15750
-    * test_value_storage.html `'center left'` [8]
-    * ... `'center right'` [8]
   * mask shorthand servo/servo#15772
     * test_property_syntax_errors.html `mask'` [76]
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
     * test_priority_preservation.html `border-radius` [4]
     * test_value_storage.html `border-radius:` [64]
-    * ... `-moz-outline-radius:` [31]
     * test_shorthand_property_getters.html `should condense to shortest possible` [6]
   * background-position is serialized to invalid value sometimes bug 1355017
     * test_shorthand_property_getters.html `background-position` [1]
@@ -355,6 +351,7 @@ to mochitest command.
     * test_flexbox_flex_shorthand.html `flex-basis` [10]
   * should reject whole value bug 1355352
   * Gecko clamps rather than rejects invalid unicode range bug 1355356
+* test_property_syntax_errors.html `linear-gradient(0,`: unitless zero as degree [10]
 * test_default_computed_style.html: unship getDefaultComputedStyle bug 1355683 [1]
 
 ## Spec Unclear
