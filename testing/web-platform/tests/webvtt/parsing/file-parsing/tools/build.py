@@ -43,7 +43,7 @@ function trackLoaded(event) {
 }
 
 function trackError(e) {
-    assert_unreached('got unexpected error event');
+    assert_unreached('got unexpected error event: ' + JSON.stringify(e));
 }
 </script>
 """

@@ -1,8 +1,0 @@
-@font-face {
-  font-family: 'Ahem';
-  src: url('/content-security-policy/support/Ahem.ttf');
-}
-
-body {
-  font-family: 'Ahem', Fallback, sans-serif;
-}

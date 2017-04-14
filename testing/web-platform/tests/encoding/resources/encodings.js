@@ -1,7 +1,37 @@
+// Based on https://dom.spec.whatwg.org/#dom-document-characterset
+
+var compatibility_names = {
+  "utf-8": "UTF-8",
+  "ibm866": "IBM866",
+  "iso-8859-2": "ISO-8859-2",
+  "iso-8859-3": "ISO-8859-3",
+  "iso-8859-4": "ISO-8859-4",
+  "iso-8859-5": "ISO-8859-5",
+  "iso-8859-6": "ISO-8859-6",
+  "iso-8859-7": "ISO-8859-7",
+  "iso-8859-8": "ISO-8859-8",
+  "iso-8859-8-i": "ISO-8859-8-I",
+  "iso-8859-10": "ISO-8859-10",
+  "iso-8859-13": "ISO-8859-13",
+  "iso-8859-14": "ISO-8859-14",
+  "iso-8859-15": "ISO-8859-15",
+  "iso-8859-16": "ISO-8859-16",
+  "koi8-r": "KOI8-R",
+  "koi8-u": "KOI8-U",
+  "gbk": "GBK",
+  "big5": "Big5",
+  "euc-jp": "EUC-JP",
+  "iso-2022-jp": "ISO-2022-JP",
+  "shift_jis": "Shift_JIS",
+  "euc-kr": "EUC-KR",
+  "utf-16be": "UTF-16BE",
+  "utf-16le": "UTF-16LE"
+};
+
 // Based on https://encoding.spec.whatwg.org/
+
 var utf_encodings = ['utf-8', 'utf-16le', 'utf-16be'];
 
-// Straight from https://encoding.spec.whatwg.org/encodings.json
 var encodings_table =
 [
   {
@@ -12,7 +42,7 @@ var encodings_table =
           "utf-8",
           "utf8"
         ],
-        "name": "UTF-8"
+        "name": "utf-8"
       }
     ],
     "heading": "The Encoding"
@@ -26,7 +56,7 @@ var encodings_table =
           "csibm866",
           "ibm866"
         ],
-        "name": "IBM866"
+        "name": "ibm866"
       },
       {
         "labels": [
@@ -40,7 +70,7 @@ var encodings_table =
           "l2",
           "latin2"
         ],
-        "name": "ISO-8859-2"
+        "name": "iso-8859-2"
       },
       {
         "labels": [
@@ -54,7 +84,7 @@ var encodings_table =
           "l3",
           "latin3"
         ],
-        "name": "ISO-8859-3"
+        "name": "iso-8859-3"
       },
       {
         "labels": [
@@ -68,7 +98,7 @@ var encodings_table =
           "l4",
           "latin4"
         ],
-        "name": "ISO-8859-4"
+        "name": "iso-8859-4"
       },
       {
         "labels": [
@@ -81,7 +111,7 @@ var encodings_table =
           "iso_8859-5",
           "iso_8859-5:1988"
         ],
-        "name": "ISO-8859-5"
+        "name": "iso-8859-5"
       },
       {
         "labels": [
@@ -100,7 +130,7 @@ var encodings_table =
           "iso_8859-6",
           "iso_8859-6:1987"
         ],
-        "name": "ISO-8859-6"
+        "name": "iso-8859-6"
       },
       {
         "labels": [
@@ -117,7 +147,7 @@ var encodings_table =
           "iso_8859-7:1987",
           "sun_eu_greek"
         ],
-        "name": "ISO-8859-7"
+        "name": "iso-8859-7"
       },
       {
         "labels": [
@@ -133,7 +163,7 @@ var encodings_table =
           "iso_8859-8:1988",
           "visual"
         ],
-        "name": "ISO-8859-8"
+        "name": "iso-8859-8"
       },
       {
         "labels": [
@@ -141,7 +171,7 @@ var encodings_table =
           "iso-8859-8-i",
           "logical"
         ],
-        "name": "ISO-8859-8-I"
+        "name": "iso-8859-8-i"
       },
       {
         "labels": [
@@ -153,7 +183,7 @@ var encodings_table =
           "l6",
           "latin6"
         ],
-        "name": "ISO-8859-10"
+        "name": "iso-8859-10"
       },
       {
         "labels": [
@@ -161,7 +191,7 @@ var encodings_table =
           "iso8859-13",
           "iso885913"
         ],
-        "name": "ISO-8859-13"
+        "name": "iso-8859-13"
       },
       {
         "labels": [
@@ -169,7 +199,7 @@ var encodings_table =
           "iso8859-14",
           "iso885914"
         ],
-        "name": "ISO-8859-14"
+        "name": "iso-8859-14"
       },
       {
         "labels": [
@@ -180,13 +210,13 @@ var encodings_table =
           "iso_8859-15",
           "l9"
         ],
-        "name": "ISO-8859-15"
+        "name": "iso-8859-15"
       },
       {
         "labels": [
           "iso-8859-16"
         ],
-        "name": "ISO-8859-16"
+        "name": "iso-8859-16"
       },
       {
         "labels": [
@@ -196,14 +226,13 @@ var encodings_table =
           "koi8-r",
           "koi8_r"
         ],
-        "name": "KOI8-R"
+        "name": "koi8-r"
       },
       {
         "labels": [
-          "koi8-ru",
           "koi8-u"
         ],
-        "name": "KOI8-U"
+        "name": "koi8-u"
       },
       {
         "labels": [
@@ -344,7 +373,7 @@ var encodings_table =
           "iso-ir-58",
           "x-gbk"
         ],
-        "name": "GBK"
+        "name": "gbk"
       },
       {
         "labels": [
@@ -365,7 +394,7 @@ var encodings_table =
           "csbig5",
           "x-x-big5"
         ],
-        "name": "Big5"
+        "name": "big5"
       }
     ],
     "heading": "Legacy multi-byte Chinese (traditional) encodings"
@@ -378,14 +407,14 @@ var encodings_table =
           "euc-jp",
           "x-euc-jp"
         ],
-        "name": "EUC-JP"
+        "name": "euc-jp"
       },
       {
         "labels": [
           "csiso2022jp",
           "iso-2022-jp"
         ],
-        "name": "ISO-2022-JP"
+        "name": "iso-2022-jp"
       },
       {
         "labels": [
@@ -398,7 +427,7 @@ var encodings_table =
           "windows-31j",
           "x-sjis"
         ],
-        "name": "Shift_JIS"
+        "name": "shift_jis"
       }
     ],
     "heading": "Legacy multi-byte Japanese encodings"
@@ -418,7 +447,7 @@ var encodings_table =
           "ksc_5601",
           "windows-949"
         ],
-        "name": "EUC-KR"
+        "name": "euc-kr"
       }
     ],
     "heading": "Legacy multi-byte Korean encodings"
@@ -439,14 +468,14 @@ var encodings_table =
         "labels": [
           "utf-16be"
         ],
-        "name": "UTF-16BE"
+        "name": "utf-16be"
       },
       {
         "labels": [
           "utf-16",
           "utf-16le"
         ],
-        "name": "UTF-16LE"
+        "name": "utf-16le"
       },
       {
         "labels": [
