@@ -149,6 +149,11 @@ public:
   void AddImageKeyForDiscard(wr::ImageKey);
   void DiscardImages();
 
+  // Before destroying a layer with animations, add its compositorAnimationsId
+  // to a list of ids that will be discarded on the next transaction
+  void AddCompositorAnimationsIdForDiscard(uint64_t aId);
+  void DiscardCompositorAnimations();
+
   WebRenderBridgeChild* WrBridge() const { return mWrChild; }
 
   void Hold(Layer* aLayer);
@@ -165,6 +170,7 @@ private:
 private:
   nsIWidget* MOZ_NON_OWNING_REF mWidget;
   std::vector<wr::ImageKey> mImageKeys;
+  std::vector<uint64_t> mDiscardedCompositorAnimationsIds;
 
   /* PaintedLayer callbacks; valid at the end of a transaciton,
    * while rendering */
