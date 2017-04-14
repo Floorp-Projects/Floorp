@@ -80,8 +80,7 @@ function setImmediate(callback, ...params) {
   // if dispatch loop is not scheduled schedule one. Own scheduler
   if (!dispatcher.scheduled) {
     dispatcher.scheduled = true;
-    threadManager.currentThread.dispatch(dispatcher,
-                                         Ci.nsIThread.DISPATCH_NORMAL);
+    threadManager.dispatchToMainThread(dispatcher);
   }
   return id;
 }

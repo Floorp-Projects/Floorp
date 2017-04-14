@@ -71,8 +71,7 @@ IndexedDBHelper.prototype = {
       req = indexedDB.open(this.dbName, this.dbVersion);
     } catch (e) {
       if (DEBUG) debug("Error opening database: " + self.dbName);
-      Services.tm.currentThread.dispatch(() => invokeCallbacks(getErrorName(e)),
-                                         Ci.nsIThread.DISPATCH_NORMAL);
+      Services.tm.dispatchToMainThread(() => invokeCallbacks(getErrorName(e)));
       return;
     }
     req.onsuccess = function (event) {
@@ -114,8 +113,7 @@ IndexedDBHelper.prototype = {
     if (this._db) {
       if (DEBUG) debug("ensureDB: already have a database, returning early.");
       if (aSuccessCb) {
-        Services.tm.currentThread.dispatch(aSuccessCb,
-                                           Ci.nsIThread.DISPATCH_NORMAL);
+        Services.tm.dispatchToMainThread(aSuccessCb);
       }
       return;
     }

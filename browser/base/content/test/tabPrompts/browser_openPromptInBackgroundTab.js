@@ -43,7 +43,7 @@ add_task(function*() {
   ourPrompt.onButtonClick(0);
   // Wait for that click to actually be handled completely.
   yield new Promise(function(resolve) {
-    Services.tm.mainThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
+    Services.tm.dispatchToMainThread(resolve);
   });
   // check permission is set
   let ps = Services.perms;

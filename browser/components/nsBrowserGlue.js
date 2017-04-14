@@ -1033,9 +1033,9 @@ BrowserGlue.prototype = {
       } catch (ex) { /* Don't break the default prompt if telemetry is broken. */ }
 
       if (willPrompt) {
-        Services.tm.mainThread.dispatch(function() {
+        Services.tm.dispatchToMainThread(function() {
           DefaultBrowserCheck.prompt(RecentWindow.getMostRecentBrowserWindow());
-        }, Ci.nsIThread.DISPATCH_NORMAL);
+        });
       }
     }
 
