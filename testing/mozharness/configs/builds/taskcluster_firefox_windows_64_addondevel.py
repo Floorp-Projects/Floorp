@@ -61,7 +61,6 @@ config = {
     'publish_nightly_en_US_routes': False,
     'env': {
         'HG_SHARE_BASE_DIR': os.path.join('y:', os.sep, 'hg-shared'),
-        'MOZ_AUTOMATION': '1',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
         'MOZ_OBJDIR': 'obj-firefox',
         'PDBSTR_PATH': 'C:/Program Files (x86)/Windows Kits/10/Debuggers/x64/srcsrv/pdbstr.exe',
