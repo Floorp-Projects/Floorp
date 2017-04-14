@@ -57,8 +57,8 @@ function WebRequestEventManager(context, eventName) {
         tabId: browserData.tabId,
         type: data.type,
         timeStamp: Date.now(),
-        frameId: data.type == "main_frame" ? 0 : ExtensionManagement.getFrameId(data.windowId),
-        parentFrameId: ExtensionManagement.getParentFrameId(data.parentWindowId, data.windowId),
+        frameId: data.type == "main_frame" ? 0 : data.windowId,
+        parentFrameId: data.type == "main_frame" ? -1 : data.parentWindowId,
       };
 
       const maybeCached = ["onResponseStarted", "onBeforeRedirect", "onCompleted", "onErrorOccurred"];

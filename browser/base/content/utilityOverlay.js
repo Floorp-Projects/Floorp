@@ -326,7 +326,7 @@ function openLinkIn(url, where, params) {
 
     const sourceWindow = (w || window);
     let win;
-    if (params.frameOuterWindowID && sourceWindow) {
+    if (params.frameOuterWindowID != undefined && sourceWindow) {
       // Only notify it as a WebExtensions' webNavigation.onCreatedNavigationTarget
       // event if it contains the expected frameOuterWindowID params.
       // (e.g. we should not notify it as a onCreatedNavigationTarget if the user is
@@ -450,7 +450,7 @@ function openLinkIn(url, where, params) {
     });
     targetBrowser = tabUsedForLoad.linkedBrowser;
 
-    if (params.frameOuterWindowID && w) {
+    if (params.frameOuterWindowID != undefined && w) {
       // Only notify it as a WebExtensions' webNavigation.onCreatedNavigationTarget
       // event if it contains the expected frameOuterWindowID params.
       // (e.g. we should not notify it as a onCreatedNavigationTarget if the user is

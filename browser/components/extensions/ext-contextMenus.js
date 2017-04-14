@@ -496,11 +496,6 @@ MenuItem.prototype = {
       mediaType = "image";
     }
 
-    let frameId;
-    if (contextData.windowId) {
-      frameId = ExtensionManagement.getFrameId(contextData.windowId);
-    }
-
     let info = {
       menuItemId: this.id,
       editable: contextData.onEditableArea || contextData.onPassword,
@@ -518,7 +513,7 @@ MenuItem.prototype = {
     setIfDefined("srcUrl", contextData.srcUrl);
     setIfDefined("pageUrl", contextData.pageUrl);
     setIfDefined("frameUrl", contextData.frameUrl);
-    setIfDefined("frameId", frameId);
+    setIfDefined("frameId", contextData.frameId);
     setIfDefined("selectionText", contextData.selectionText);
 
     if ((this.type === "checkbox") || (this.type === "radio")) {

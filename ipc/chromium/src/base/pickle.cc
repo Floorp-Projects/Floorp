@@ -457,6 +457,11 @@ bool Pickle::ReadSentinel(PickleIterator* iter, uint32_t sentinel) const {
   return found == sentinel;
 }
 
+bool Pickle::IgnoreSentinel(PickleIterator* iter) const {
+  uint32_t found;
+  return ReadUInt32(iter, &found);
+}
+
 bool Pickle::WriteSentinel(uint32_t sentinel) {
   return WriteUInt32(sentinel);
 }

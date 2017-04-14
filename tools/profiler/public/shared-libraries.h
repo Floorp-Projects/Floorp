@@ -108,6 +108,10 @@ public:
   const std::string &GetVersion() const { return mVersion; }
   const std::string &GetArch() const { return mArch; }
 
+  void SetNativeDebugPath(nsString path) {
+    mDebugPath = path;
+  }
+
 private:
   SharedLibrary() {}
 
@@ -140,6 +144,11 @@ public:
   }
 
   const SharedLibrary& GetEntry(size_t i) const
+  {
+    return mEntries[i];
+  }
+
+  SharedLibrary& GetMutableEntry(size_t i)
   {
     return mEntries[i];
   }

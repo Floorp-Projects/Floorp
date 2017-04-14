@@ -110,6 +110,16 @@ public class GeckoView extends LayerView
         private synchronized void setState(final State newState) {
             mNativeQueue.setState(newState);
         }
+
+        @WrapForJNI(calledFrom = "gecko")
+        private synchronized void onReattach(final GeckoView view) {
+            if (view.mNativeQueue == mNativeQueue) {
+                return;
+            }
+            view.mNativeQueue.setState(mNativeQueue.getState());
+            mNativeQueue = view.mNativeQueue;
+        }
+
     }
 
     // Object to hold onto our nsWindow connection when GeckoView gets destroyed.
@@ -299,13 +309,6 @@ public class GeckoView extends LayerView
     }
 
     protected void reattachWindow() {
-        synchronized (mWindow) {
-            if (mNativeQueue != mWindow.mNativeQueue) {
-                mNativeQueue.setState(mWindow.mNativeQueue.getState());
-                mWindow.mNativeQueue = mNativeQueue;
-            }
-        }
-
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             mWindow.reattach(this, getCompositor(), mEventDispatcher);
         } else {

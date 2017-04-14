@@ -237,7 +237,8 @@ public final class EventDispatcher extends JNIObject {
     public void dispatch(final String type, final GeckoBundle message,
                          final EventCallback callback) {
         synchronized (this) {
-            if (isReadyForDispatchingToGecko() && hasGeckoListener(type)) {
+            if (isReadyForDispatchingToGecko() && mAttachedToGecko &&
+                hasGeckoListener(type)) {
                 dispatchToGecko(type, message, JavaCallbackDelegate.wrap(callback));
                 return;
             }

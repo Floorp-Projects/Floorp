@@ -254,7 +254,8 @@ public:
   bool GetIsOpaque();
   virtual bool GetOpaqueAttr() override;
 
-  virtual already_AddRefed<gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha = nullptr);
+  virtual already_AddRefed<gfx::SourceSurface>
+  GetSurfaceSnapshot(gfxAlphaType* aOutAlphaType = nullptr);
 
   /*
    * Register a FrameCaptureListener with this canvas.

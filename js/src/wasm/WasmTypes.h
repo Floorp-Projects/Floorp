@@ -1629,7 +1629,9 @@ class DebugFrame
 
     // Padding so that DebugFrame has Alignment.
 #if JS_BITS_PER_WORD == 32
+  protected: // suppress clang's -Wunused-private-field warning-as-error
     void* padding_;
+  private:
 #endif
 
     // The Frame goes at the end since the stack grows down.

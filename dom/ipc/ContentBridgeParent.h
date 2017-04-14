@@ -40,6 +40,7 @@ public:
   virtual PBrowserParent*
   SendPBrowserConstructor(PBrowserParent* aActor,
                           const TabId& aTabId,
+                          const TabId& aSameTabGroupAs,
                           const IPCTabContext& aContext,
                           const uint32_t& aChromeFlags,
                           const ContentParentId& aCpID,
@@ -124,6 +125,7 @@ protected:
 
   virtual PBrowserParent*
   AllocPBrowserParent(const TabId& aTabId,
+                      const TabId& aSameTabGroupAs,
                       const IPCTabContext &aContext,
                       const uint32_t& aChromeFlags,
                       const ContentParentId& aCpID,

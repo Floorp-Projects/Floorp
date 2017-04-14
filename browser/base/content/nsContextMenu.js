@@ -15,6 +15,8 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
+  "resource://gre/modules/WebNavigationFrames.jsm");
 
 var gContextMenuContentData = null;
 
@@ -62,7 +64,7 @@ nsContextMenu.prototype = {
         pageUrl: this.browser ? this.browser.currentURI.spec : undefined,
         linkUrl: this.linkURL,
         selectionText: this.isTextSelected ? this.selectionInfo.text : undefined,
-        windowId: this.frameOuterWindowID,
+        frameId: this.frameOuterWindowID,
       };
       subject.wrappedJSObject = subject;
       Services.obs.notifyObservers(subject, "on-build-contextmenu", null);
@@ -670,10 +672,7 @@ nsContextMenu.prototype = {
                              .QueryInterface(Ci.nsIDocShell)
                              .chromeEventHandler;
       this.principal = ownerDoc.nodePrincipal;
-      this.frameOuterWindowID = ownerDoc.defaultView
-                                        .QueryInterface(Ci.nsIInterfaceRequestor)
-                                        .getInterface(Ci.nsIDOMWindowUtils)
-                                        .outerWindowID;
+      this.frameOuterWindowID = WebNavigationFrames.getFrameId(ownerDoc.defaultView);
     }
     this.onSocial = !!this.browser.getAttribute("origin");
 
@@ -996,9 +995,7 @@ nsContextMenu.prototype = {
     }
 
     if (!this.isRemote) {
-      params.frameOuterWindowID = this.target.ownerGlobal
-                                      .QueryInterface(Ci.nsIInterfaceRequestor)
-                                      .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+      params.frameOuterWindowID = WebNavigationFrames.getFrameId(this.target.ownerGlobal);
     }
     // If we want to change userContextId, we must be sure that we don't
     // propagate the referrer.

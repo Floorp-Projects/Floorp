@@ -168,6 +168,9 @@ interface ISimpleDOMNode : IUnknown
 
   [propget, local] HRESULT localInterface([out][retval] void **localInterface);
 
+  [propget, call_as(get_localInterface)]
+  HRESULT remoteLocalInterface([out][retval] IUnknown **localInterface);
+
   [propget] HRESULT language([out, retval] BSTR *language);
 }
 
