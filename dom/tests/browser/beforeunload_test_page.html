@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<body>
+
+<p>
+  There are currently <span id="totalInnerHandlers">0</span> beforeunload handlers registered in this frame.
+</p>
+<p>
+  There are currently <span id="totalOuterHandlers">0</span> beforeunload handlers registered on my subframe.
+</p>
+
+<iframe src="about:blank" id="subframe"></iframe>
+
+<script>
+  this.BeforeUnloader = {
+    _innerEventHandlers: [],
+    _outerEventHandlers: [],
+
+    get $totalInner() {
+      delete this.$totalInner;
+      return this.$totalInner = document.getElementById("totalInnerHandlers");
+    },
+
+    get $totalOuter() {
+      delete this.$totalOuter;
+      return this.$totalOuter = document.getElementById("totalOuterHandlers");
+    },
+
+    get $subframe() {
+      delete this.$subframe;
+      return this.$subframe = document.getElementById("subframe");
+    },
+
+    pushInner(howMany) {
+      for (let i = 0; i < howMany; ++i) {
+        let func = () => {};
+        this._innerEventHandlers.push(func);
+        addEventListener("beforeunload", func);
+      }
+
+      this.$totalInner.textContent = this._innerEventHandlers.length;
+    },
+
+    popInner(howMany) {
+      for (let i = 0; i < howMany; ++i) {
+        let func = this._innerEventHandlers.pop();
+        if (func) {
+          removeEventListener("beforeunload", func);
+        }
+      }
+
+      this.$totalInner.textContent = this._innerEventHandlers.length;
+    },
+
+    pushOuter(howMany) {
+      if (!this.$subframe.parentNode) {
+        throw new Error("Subframe I'm holding a reference to detached!");
+      }
+
+      for (let i = 0; i < howMany; ++i) {
+        let func = () => {};
+        this._outerEventHandlers.push(func);
+        this.$subframe.contentWindow.addEventListener("beforeunload", func);
+      }
+
+      this.$totalOuter.textContent = this._outerEventHandlers.length;
+    },
+
+    popOuter(howMany) {
+      if (!this.$subframe.parentNode) {
+        throw new Error("Subframe I'm holding a reference to detached!");
+      }
+
+      for (let i = 0; i < howMany; ++i) {
+        let func = this._outerEventHandlers.pop();
+        if (func) {
+          this.$subframe.contentWindow.removeEventListener("beforeunload", func);
+        }
+      }
+
+      this.$totalOuter.textContent = this._outerEventHandlers.length;
+    },
+
+    reset() {
+      this.popInner(this._innerEventHandlers.length);
+      this.popOuter(this._outerEventHandlers.length);
+    }
+  };
+</script>
+
+</body>
+</html>
