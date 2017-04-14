@@ -1023,7 +1023,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // Tell anyone who cares of the resume (as of now, that's the xpcshell harness and
       // devtools-startup.js when handling the --wait-for-jsdebugger flag)
       if (Services.obs) {
-        Services.obs.notifyObservers(this, "devtools-thread-resumed", null);
+        Services.obs.notifyObservers(this, "devtools-thread-resumed");
       }
       return packet;
     }, error => {

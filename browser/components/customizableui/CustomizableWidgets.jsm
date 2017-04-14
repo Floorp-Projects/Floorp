@@ -442,7 +442,7 @@ const CustomizableWidgets = [
         Cu.reportError(err);
       }).then(() => {
         // an observer for tests.
-        Services.obs.notifyObservers(null, "synced-tabs-menu:test:tabs-updated", null);
+        Services.obs.notifyObservers(null, "synced-tabs-menu:test:tabs-updated");
       });
     },
     _clearTabList() {
@@ -623,14 +623,14 @@ const CustomizableWidgets = [
           if (aWidgetId != this.id)
             return;
 
-          Services.obs.notifyObservers(null, "social:" + this.id + "-added", null);
+          Services.obs.notifyObservers(null, "social:" + this.id + "-added");
         },
 
         onWidgetRemoved: aWidgetId => {
           if (aWidgetId != this.id)
             return;
 
-          Services.obs.notifyObservers(null, "social:" + this.id + "-removed", null);
+          Services.obs.notifyObservers(null, "social:" + this.id + "-removed");
         },
 
         onWidgetInstanceRemoved: (aWidgetId, aDoc) => {

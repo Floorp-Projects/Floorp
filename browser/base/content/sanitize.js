@@ -88,7 +88,7 @@ Sanitizer.prototype = {
     try {
       yield promise;
     } finally {
-      Services.obs.notifyObservers(null, "sanitizer-sanitization-complete", "");
+      Services.obs.notifyObservers(null, "sanitizer-sanitization-complete");
     }
   }),
 
@@ -437,7 +437,7 @@ Sanitizer.prototype = {
           sdr.logoutAndTeardown();
 
           // clear FTP and plain HTTP auth sessions
-          Services.obs.notifyObservers(null, "net:clear-active-logins", null);
+          Services.obs.notifyObservers(null, "net:clear-active-logins");
         } finally {
           TelemetryStopwatch.finish("FX_SANITIZE_SESSIONS", refObj);
         }

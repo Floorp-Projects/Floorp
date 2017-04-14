@@ -342,7 +342,7 @@ function openLinkIn(url, where, params) {
               sourceTabBrowser,
               sourceFrameOuterWindowID: params.frameOuterWindowID,
             },
-          }, "webNavigation-createdNavigationTarget", null);
+          }, "webNavigation-createdNavigationTarget");
         }
       };
       Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished");
@@ -462,7 +462,7 @@ function openLinkIn(url, where, params) {
           sourceTabBrowser: w.gBrowser.selectedBrowser,
           sourceFrameOuterWindowID: params.frameOuterWindowID,
         },
-      }, "webNavigation-createdNavigationTarget", null);
+      }, "webNavigation-createdNavigationTarget");
     }
     break;
   }

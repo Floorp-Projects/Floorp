@@ -818,7 +818,7 @@ AboutReader.prototype = {
 
     this._goToReference(articleUri.ref);
 
-    Services.obs.notifyObservers(this._win, "AboutReader:Ready", "");
+    Services.obs.notifyObservers(this._win, "AboutReader:Ready");
 
     this._doc.dispatchEvent(
       new this._win.CustomEvent("AboutReaderContentReady", { bubbles: true, cancelable: false }));

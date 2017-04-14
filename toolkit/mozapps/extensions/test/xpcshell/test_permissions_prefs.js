@@ -62,7 +62,7 @@ function run_test() {
   // Then, request to flush just install permissions
   clear_imported_preferences_cache();
   Services.prefs.setCharPref("xpinstall.whitelist.add.TEST3", "https://whitelist3.example.com");
-  Services.obs.notifyObservers(null, "flush-pending-permissions", "");
+  Services.obs.notifyObservers(null, "flush-pending-permissions");
   do_check_permission_prefs(preferences);
 
   // And a request to flush some other permissions sholdn't flush install permissions

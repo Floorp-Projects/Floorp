@@ -188,7 +188,7 @@ CommonDialog.prototype = {
         let topic = "common-dialog-loaded";
         if (!xulDialog)
             topic = "tabmodal-dialog-loaded";
-        Services.obs.notifyObservers(this.ui.prompt, topic, null);
+        Services.obs.notifyObservers(this.ui.prompt, topic);
     },
 
     setLabelForNode(aNode, aLabel) {
