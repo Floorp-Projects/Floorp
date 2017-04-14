@@ -309,15 +309,15 @@ function openLinkIn(url, where, params) {
                                  createInstance(Ci.nsISupportsPRUint32);
     userContextIdSupports.data = aUserContextId;
 
-    sa.appendElement(wuri);
-    sa.appendElement(charset);
-    sa.appendElement(referrerURISupports);
-    sa.appendElement(aPostData);
-    sa.appendElement(allowThirdPartyFixupSupports);
-    sa.appendElement(referrerPolicySupports);
-    sa.appendElement(userContextIdSupports);
-    sa.appendElement(aPrincipal);
-    sa.appendElement(aTriggeringPrincipal);
+    sa.appendElement(wuri, /* weak =*/ false);
+    sa.appendElement(charset, /* weak =*/ false);
+    sa.appendElement(referrerURISupports, /* weak =*/ false);
+    sa.appendElement(aPostData, /* weak =*/ false);
+    sa.appendElement(allowThirdPartyFixupSupports, /* weak =*/ false);
+    sa.appendElement(referrerPolicySupports, /* weak =*/ false);
+    sa.appendElement(userContextIdSupports, /* weak =*/ false);
+    sa.appendElement(aPrincipal, /* weak =*/ false);
+    sa.appendElement(aTriggeringPrincipal, /* weak =*/ false);
 
     let features = "chrome,dialog=no,all";
     if (aIsPrivate) {
@@ -747,7 +747,7 @@ function openPreferences(paneID, extraArgs) {
     let supportsStringPrefURL = Cc["@mozilla.org/supports-string;1"]
                                   .createInstance(Ci.nsISupportsString);
     supportsStringPrefURL.data = preferencesURL;
-    windowArguments.appendElement(supportsStringPrefURL);
+    windowArguments.appendElement(supportsStringPrefURL, /* weak =*/ false);
 
     win = Services.ww.openWindow(null, Services.prefs.getCharPref("browser.chromeURL"),
                                  "_blank", "chrome,dialog=no,all", windowArguments);

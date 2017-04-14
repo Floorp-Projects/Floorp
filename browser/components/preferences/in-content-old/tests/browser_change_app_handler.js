@@ -9,7 +9,7 @@ function setupFakeHandler() {
   let handler = info.possibleLocalHandlers.queryElementAt(0, Ci.nsILocalHandlerApp);
 
   let infoToModify = gMimeSvc.getFromTypeAndExtension("text/x-test-handler", null);
-  infoToModify.possibleApplicationHandlers.appendElement(handler);
+  infoToModify.possibleApplicationHandlers.appendElement(handler, false);
 
   gHandlerSvc.store(infoToModify);
 }

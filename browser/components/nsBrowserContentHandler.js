@@ -197,20 +197,20 @@ function openWindow(parent, url, target, features, args, noExternalArgs) {
       var sstring = Components.classes["@mozilla.org/supports-string;1"]
                               .createInstance(nsISupportsString);
       sstring.data = uri;
-      uriArray.appendElement(sstring);
+      uriArray.appendElement(sstring, /* weak = */ false);
     });
-    argArray.appendElement(uriArray);
+    argArray.appendElement(uriArray, /* weak =*/ false);
   } else {
-    argArray.appendElement(null);
+    argArray.appendElement(null, /* weak =*/ false);
   }
 
   // Pass these as null to ensure that we always trigger the "single URL"
   // behavior in browser.js's gBrowserInit.onLoad (which handles the window
   // arguments)
-  argArray.appendElement(null); // charset
-  argArray.appendElement(null); // referer
-  argArray.appendElement(null); // postData
-  argArray.appendElement(null); // allowThirdPartyFixup
+  argArray.appendElement(null, /* weak =*/ false); // charset
+  argArray.appendElement(null, /* weak =*/ false); // referer
+  argArray.appendElement(null, /* weak =*/ false); // postData
+  argArray.appendElement(null, /* weak =*/ false); // allowThirdPartyFixup
 
   return Services.ww.openWindow(parent, url, target, features, argArray);
 }
@@ -223,7 +223,7 @@ function openPreferences() {
                        .createInstance(Components.interfaces.nsISupportsString);
   wuri.data = "about:preferences";
 
-  args.appendElement(wuri);
+  args.appendElement(wuri, /* weak = */ false);
 
   Services.ww.openWindow(null, gBrowserContentHandler.chromeURL,
                          "_blank",
@@ -251,10 +251,10 @@ function doSearch(searchTerm, cmdLine) {
                        .createInstance(Components.interfaces.nsISupportsString);
   wuri.data = submission.uri.spec;
 
-  args.appendElement(wuri);
-  args.appendElement(null);
-  args.appendElement(null);
-  args.appendElement(submission.postData);
+  args.appendElement(wuri, /* weak =*/ false);
+  args.appendElement(null, /* weak =*/ false);
+  args.appendElement(null, /* weak =*/ false);
+  args.appendElement(submission.postData, /* weak =*/ false);
 
   // XXXbsmedberg: use handURIToExistingBrowser to obey tabbed-browsing
   // preferences, but need nsIBrowserDOMWindow extensions

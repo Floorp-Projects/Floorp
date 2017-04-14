@@ -279,7 +279,7 @@ this.WinTaskbarJumpList =
         return;
       var item = this._getHandlerAppItem(task.title, task.description,
                                          task.args, task.iconIndex, null);
-      items.appendElement(item);
+      items.appendElement(item, false);
     }, this);
 
     if (items.length > 0)
@@ -324,7 +324,7 @@ this.WinTaskbarJumpList =
         let faviconPageUri = Services.io.newURI(aResult.uri);
         let shortcut = this._getHandlerAppItem(title, title, aResult.uri, 1,
                                                faviconPageUri);
-        items.appendElement(shortcut);
+        items.appendElement(shortcut, false);
         this._frequentHashList.push(aResult.uri);
       },
       this
@@ -369,7 +369,7 @@ this.WinTaskbarJumpList =
         let faviconPageUri = Services.io.newURI(aResult.uri);
         let shortcut = this._getHandlerAppItem(title, title, aResult.uri, 1,
                                                faviconPageUri);
-        items.appendElement(shortcut);
+        items.appendElement(shortcut, false);
         count++;
       },
       this

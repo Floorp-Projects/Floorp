@@ -36,7 +36,7 @@ function createMockedObjects(createHandlerApp) {
   if (createHandlerApp) {
     let mockedHandlerApp = createMockedHandlerApp();
     internalMockedMIME.description = mockedHandlerApp.detailedDescription;
-    internalMockedMIME.possibleApplicationHandlers.appendElement(mockedHandlerApp);
+    internalMockedMIME.possibleApplicationHandlers.appendElement(mockedHandlerApp, false);
     internalMockedMIME.preferredApplicationHandler = mockedHandlerApp;
   }
 

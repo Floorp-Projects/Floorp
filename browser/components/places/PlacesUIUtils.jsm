@@ -947,7 +947,7 @@ this.PlacesUIUtils = {
       var uriList = PlacesUtils.toISupportsString(urls.join("|"));
       var args = Cc["@mozilla.org/array;1"].
                   createInstance(Ci.nsIMutableArray);
-      args.appendElement(uriList);
+      args.appendElement(uriList, /* weak =*/ false);
       browserWindow = Services.ww.openWindow(aWindow,
                                              "chrome://browser/content/browser.xul",
                                              null, "chrome,dialog=no,all", args);

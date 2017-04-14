@@ -227,7 +227,7 @@ function test_jumplist()
   if (notepad.exists()) {
     handlerApp.executable = notepad;
     sc.app = handlerApp;
-    items.appendElement(sc);
+    items.appendElement(sc, false);
 
     var removed = Cc["@mozilla.org/array;1"]
                   .createInstance(Ci.nsIMutableArray);
