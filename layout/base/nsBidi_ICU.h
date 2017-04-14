@@ -183,6 +183,10 @@ public:
   static nsresult ReorderVisual(const nsBidiLevel* aLevels, int32_t aLength,
                                 int32_t* aIndexMap);
 
+private:
+  nsBidi(const nsBidi&) = delete;
+  void operator=(const nsBidi&) = delete;
+
 protected:
   UBiDi* mBiDi;
 };
