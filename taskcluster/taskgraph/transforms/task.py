@@ -958,6 +958,18 @@ def build_task(config, tasks):
         attributes = task.get('attributes', {})
         attributes['run_on_projects'] = task.get('run-on-projects', ['all'])
 
+        # Set MOZ_AUTOMATION on all jobs.
+        if task['worker']['implementation'] in (
+            'generic-worker',
+            'docker-engine',
+            'native-engine',
+            'docker-worker',
+        ):
+            payload = task_def.get('payload')
+            if payload:
+                env = payload.setdefault('env', {})
+                env['MOZ_AUTOMATION'] = '1'
+
         yield {
             'label': task['label'],
             'task': task_def,
