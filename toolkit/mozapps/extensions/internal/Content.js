@@ -24,7 +24,7 @@ try {
     });
     // Propagate message manager caches flush notifications across processes.
     addMessageListener(MSG_MESSAGE_MANAGER_CACHES_FLUSH, function() {
-      Services.obs.notifyObservers(null, "message-manager-flush-caches", null);
+      Services.obs.notifyObservers(null, "message-manager-flush-caches");
     });
   }
 } catch (e) {

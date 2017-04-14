@@ -952,7 +952,7 @@ var SessionStoreInternal = {
         // This callback is used exclusively by tests that want to
         // monitor the progress of network loads.
         if (gDebuggingEnabled) {
-          Services.obs.notifyObservers(browser, NOTIFY_TAB_RESTORED, null);
+          Services.obs.notifyObservers(browser, NOTIFY_TAB_RESTORED);
         }
 
         SessionStoreInternal._resetLocalTabRestoringState(tab);
@@ -1149,7 +1149,7 @@ var SessionStoreInternal = {
           this._deferredInitialState = gSessionStartup.state;
 
           // Nothing to restore now, notify observers things are complete.
-          Services.obs.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
+          Services.obs.notifyObservers(null, NOTIFY_WINDOWS_RESTORED);
         } else {
           TelemetryTimestamps.add("sessionRestoreRestoring");
           this._restoreCount = aInitialState.windows ? aInitialState.windows.length : 0;
@@ -1167,7 +1167,7 @@ var SessionStoreInternal = {
         }
       } else {
         // Nothing to restore, notify observers things are complete.
-        Services.obs.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
+        Services.obs.notifyObservers(null, NOTIFY_WINDOWS_RESTORED);
       }
     // this window was opened by _openWindowWithState
     } else if (!this._isWindowLoaded(aWindow)) {
@@ -1309,7 +1309,7 @@ var SessionStoreInternal = {
         this._sessionInitialized = true;
 
         if (initialState) {
-          Services.obs.notifyObservers(null, NOTIFY_RESTORING_ON_STARTUP, "");
+          Services.obs.notifyObservers(null, NOTIFY_RESTORING_ON_STARTUP);
         }
         TelemetryStopwatch.start("FX_SESSION_RESTORE_STARTUP_ONLOAD_INITIAL_WINDOW_MS");
         this.initializeWindow(aWindow, initialState);
@@ -2663,7 +2663,7 @@ var SessionStoreInternal = {
       throw Components.Exception("Last session can not be restored");
     }
 
-    Services.obs.notifyObservers(null, NOTIFY_INITIATING_MANUAL_RESTORE, "");
+    Services.obs.notifyObservers(null, NOTIFY_INITIATING_MANUAL_RESTORE);
 
     // First collect each window with its id...
     let windows = {};
@@ -3443,7 +3443,7 @@ var SessionStoreInternal = {
 
     this._sendWindowRestoredNotification(aWindow);
 
-    Services.obs.notifyObservers(aWindow, NOTIFY_SINGLE_WINDOW_RESTORED, "");
+    Services.obs.notifyObservers(aWindow, NOTIFY_SINGLE_WINDOW_RESTORED);
 
     this._sendRestoreCompletedNotifications();
   },
@@ -4033,7 +4033,7 @@ var SessionStoreInternal = {
     }
     this._closedObjectsChanged = false;
     setTimeout(() => {
-      Services.obs.notifyObservers(null, NOTIFY_CLOSED_OBJECTS_CHANGED, null);
+      Services.obs.notifyObservers(null, NOTIFY_CLOSED_OBJECTS_CHANGED);
     }, 0);
   },
 
@@ -4424,8 +4424,7 @@ var SessionStoreInternal = {
 
     // This was the last window restored at startup, notify observers.
     Services.obs.notifyObservers(null,
-      this._browserSetState ? NOTIFY_BROWSER_STATE_RESTORED : NOTIFY_WINDOWS_RESTORED,
-      "");
+      this._browserSetState ? NOTIFY_BROWSER_STATE_RESTORED : NOTIFY_WINDOWS_RESTORED);
 
     this._browserSetState = false;
     this._restoreCount = -1;
@@ -4987,7 +4986,7 @@ var LastSession = {
   clear() {
     if (this._state) {
       this._state = null;
-      Services.obs.notifyObservers(null, NOTIFY_LAST_SESSION_CLEARED, null);
+      Services.obs.notifyObservers(null, NOTIFY_LAST_SESSION_CLEARED);
     }
   }
 };

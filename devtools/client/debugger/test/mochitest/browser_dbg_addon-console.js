@@ -34,7 +34,7 @@ function test() {
     let consolePromise = addonDebugger.once("console");
 
     console.log("Bad message");
-    Services.obs.notifyObservers(null, "addon-test-ping", "");
+    Services.obs.notifyObservers(null, "addon-test-ping");
 
     let messageGrip = yield consolePromise;
     is(messageGrip.arguments[0].type, "object", "Should have logged an object");

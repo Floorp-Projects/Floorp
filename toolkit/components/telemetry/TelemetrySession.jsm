@@ -1416,7 +1416,7 @@ var Impl = {
 
         // Notify that there was a subsession split in the parent process. This is an
         // internal topic and is only meant for internal Telemetry usage.
-        Services.obs.notifyObservers(null, "internal-telemetry-after-subsession-split", null);
+        Services.obs.notifyObservers(null, "internal-telemetry-after-subsession-split");
       }
     }
 
@@ -1721,7 +1721,7 @@ var Impl = {
             });
 
             // This notification is for testing only.
-            Services.obs.notifyObservers(null, "gather-memory-telemetry-finished", null);
+            Services.obs.notifyObservers(null, "gather-memory-telemetry-finished");
           }
           this._USSFromChildProcesses = undefined;
         }
@@ -1978,7 +1978,7 @@ var Impl = {
         // Notify that data should be gathered now.
         // TODO: We are keeping this behaviour for now but it will be removed as soon as
         // bug 1127907 lands.
-        Services.obs.notifyObservers(null, "gather-telemetry", null);
+        Services.obs.notifyObservers(null, "gather-telemetry");
       }));
       break;
 

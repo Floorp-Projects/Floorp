@@ -124,7 +124,7 @@ this.SafeMode = {
 
         // browser-ui-startup-complete is used by the AppShell to stop the
         // boot animation and start gecko rendering.
-        Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
+        Services.obs.notifyObservers(null, "browser-ui-startup-complete");
         content.addEventListener("mozContentEvent", handleEvent, true);
       }
 
