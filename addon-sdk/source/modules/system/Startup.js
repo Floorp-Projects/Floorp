@@ -53,5 +53,5 @@ else {
                                        Ci.nsIThread.DISPATCH_NORMAL);
   }
 
-  Services.obs.addObserver(listener, appStartup, false);
+  Services.obs.addObserver(listener, appStartup);
 }

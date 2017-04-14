@@ -68,7 +68,7 @@ CustomizedReload.prototype = {
           if (this.injectedScript) {
             // Listen to the newly created document elements only if there is an
             // injectedScript to evaluate.
-            Services.obs.addObserver(this, "document-element-inserted", false);
+            Services.obs.addObserver(this, "document-element-inserted");
           }
 
           // Watch the loading progress and clear the current CustomizedReload once the

@@ -14548,7 +14548,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return {
 	    register: function() {
 	      this._branch = Services.prefs.getBranch(prefsRoot + ".");
-	      this._branch.addObserver("", this, false);
+	      this._branch.addObserver("", this);
 	    },
 	    unregister: function() {
 	      this._branch.removeObserver("", this);

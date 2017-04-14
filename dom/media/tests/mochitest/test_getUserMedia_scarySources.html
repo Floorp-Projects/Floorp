@@ -15,7 +15,7 @@ const { Services } = SpecialPowers.Cu.import('resource://gre/modules/Services.js
 let observe = topic => new Promise(r => Services.obs.addObserver(function o(...args) {
   Services.obs.removeObserver(o, topic);
   r(args);
-}, topic, false));
+}, topic));
 
 let getDevices = async constraints => {
   let [{ windowID, innerWindowID, callID }] = await Promise.race([

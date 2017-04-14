@@ -73,7 +73,7 @@ function waitForObserver() {
   return new Promise((resolve, reject) => {
     Services.obs.addObserver((subject, topic) => {
       resolve();
-    }, SyncedTabs.TOPIC_TABS_CHANGED, false);
+    }, SyncedTabs.TOPIC_TABS_CHANGED);
   });
 }
 

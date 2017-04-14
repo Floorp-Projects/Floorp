@@ -58,10 +58,10 @@ this.SafeBrowsing = {
       return;
     }
 
-    Services.prefs.addObserver("browser.safebrowsing", this, false);
-    Services.prefs.addObserver("privacy.trackingprotection", this, false);
-    Services.prefs.addObserver("urlclassifier", this, false);
-    Services.prefs.addObserver("plugins.flashBlock.enabled", this, false);
+    Services.prefs.addObserver("browser.safebrowsing", this);
+    Services.prefs.addObserver("privacy.trackingprotection", this);
+    Services.prefs.addObserver("urlclassifier", this);
+    Services.prefs.addObserver("plugins.flashBlock.enabled", this);
 
     this.readPrefs();
     this.addMozEntries();
@@ -458,6 +458,6 @@ this.SafeBrowsing = {
       }
       resolve();
     };
-    Services.obs.addObserver(finished, "mozentries-update-finished", false);
+    Services.obs.addObserver(finished, "mozentries-update-finished");
   }),
 };

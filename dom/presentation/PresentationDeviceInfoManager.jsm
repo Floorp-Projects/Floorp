@@ -33,7 +33,7 @@ this.PresentationDeviceInfoService = {
     log("init");
     ppmm.addMessageListener("PresentationDeviceInfoManager:GetAll", this);
     ppmm.addMessageListener("PresentationDeviceInfoManager:ForceDiscovery", this);
-    Services.obs.addObserver(this, "presentation-device-change", false);
+    Services.obs.addObserver(this, "presentation-device-change");
   },
 
   getAll: function(aData, aMm) {

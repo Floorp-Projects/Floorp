@@ -155,7 +155,7 @@ function watch_update(update, stateChangeHandler, cacheAvailHandler) {
     updateStateChanged: stateChangeHandler,
     applicationCacheAvailable: cacheAvailHandler
   };
-  update.addObserver(observer, false);
+  update.addObserver(observer);
 
   return update;
 }

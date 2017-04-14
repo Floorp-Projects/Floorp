@@ -80,7 +80,7 @@ function test() {
   const PREF = "extensions.getAddons.getWithPerformance.url";
 
   // Watch HTTP requests
-  Services.obs.addObserver(observe, "http-on-modify-request", false);
+  Services.obs.addObserver(observe, "http-on-modify-request");
   Services.prefs.setCharPref(PREF,
     "http://127.0.0.1:8888/extensions-dummy/metadata?appOS=%OS%&appVersion=%VERSION%&tMain=%TIME_MAIN%&tFirstPaint=%TIME_FIRST_PAINT%&tSessionRestored=%TIME_SESSION_RESTORED%");
 

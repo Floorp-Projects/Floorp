@@ -80,7 +80,7 @@ var gSetBackground = {
     } else {
       Components.classes["@mozilla.org/observer-service;1"]
                 .getService(Ci.nsIObserverService)
-                .addObserver(this, "shell:desktop-background-changed", false);
+                .addObserver(this, "shell:desktop-background-changed");
 
       var bundle = document.getElementById("backgroundBundle");
       var setDesktopBackground = document.getElementById("setDesktopBackground");

@@ -24,7 +24,7 @@ function expectProcessCreated() {
         Services.obs.removeObserver(obs, topic);
         sendAsyncMessage('process-created');
       }}
-      Services.obs.addObserver(obs, topic, /* weak = */ false);
+      Services.obs.addObserver(obs, topic);
     }
 
     let helper = SpecialPowers.loadChromeScript(parentExpectProcessCreated);

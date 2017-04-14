@@ -158,8 +158,8 @@ function providerName(aProvider) {
  */
 var PrefObserver = {
     init() {
-      Services.prefs.addObserver(PREF_LOGGING_ENABLED, this, false);
-      Services.obs.addObserver(this, "xpcom-shutdown", false);
+      Services.prefs.addObserver(PREF_LOGGING_ENABLED, this);
+      Services.obs.addObserver(this, "xpcom-shutdown");
       this.observe(null, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, PREF_LOGGING_ENABLED);
     },
 
@@ -837,11 +837,11 @@ var AddonManagerInternal = {
 
       gCheckCompatibility = Services.prefs.getBoolPref(PREF_EM_CHECK_COMPATIBILITY,
                                                        gCheckCompatibility);
-      Services.prefs.addObserver(PREF_EM_CHECK_COMPATIBILITY, this, false);
+      Services.prefs.addObserver(PREF_EM_CHECK_COMPATIBILITY, this);
 
       gStrictCompatibility = Services.prefs.getBoolPref(PREF_EM_STRICT_COMPATIBILITY,
                                                         gStrictCompatibility);
-      Services.prefs.addObserver(PREF_EM_STRICT_COMPATIBILITY, this, false);
+      Services.prefs.addObserver(PREF_EM_STRICT_COMPATIBILITY, this);
 
       let defaultBranch = Services.prefs.getDefaultBranch("");
       gCheckUpdateSecurityDefault = defaultBranch.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY,
@@ -849,22 +849,22 @@ var AddonManagerInternal = {
 
       gCheckUpdateSecurity = Services.prefs.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY,
                                                         gCheckUpdateSecurity);
-      Services.prefs.addObserver(PREF_EM_CHECK_UPDATE_SECURITY, this, false);
+      Services.prefs.addObserver(PREF_EM_CHECK_UPDATE_SECURITY, this);
 
       gUpdateEnabled = Services.prefs.getBoolPref(PREF_EM_UPDATE_ENABLED, gUpdateEnabled);
-      Services.prefs.addObserver(PREF_EM_UPDATE_ENABLED, this, false);
+      Services.prefs.addObserver(PREF_EM_UPDATE_ENABLED, this);
 
       gAutoUpdateDefault = Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT,
                                                       gAutoUpdateDefault);
-      Services.prefs.addObserver(PREF_EM_AUTOUPDATE_DEFAULT, this, false);
+      Services.prefs.addObserver(PREF_EM_AUTOUPDATE_DEFAULT, this);
 
       gHotfixID = Services.prefs.getCharPref(PREF_EM_HOTFIX_ID, gHotfixID);
-      Services.prefs.addObserver(PREF_EM_HOTFIX_ID, this, false);
+      Services.prefs.addObserver(PREF_EM_HOTFIX_ID, this);
 
       gWebExtensionsMinPlatformVersion =
         Services.prefs.getCharPref(PREF_MIN_WEBEXT_PLATFORM_VERSION,
                                    gWebExtensionsMinPlatformVersion);
-      Services.prefs.addObserver(PREF_MIN_WEBEXT_PLATFORM_VERSION, this, false);
+      Services.prefs.addObserver(PREF_MIN_WEBEXT_PLATFORM_VERSION, this);
 
       let defaultProvidersEnabled = Services.prefs.getBoolPref(PREF_DEFAULT_PROVIDERS_ENABLED, true);
       AddonManagerPrivate.recordSimpleMeasure("default_providers", defaultProvidersEnabled);

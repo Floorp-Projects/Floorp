@@ -233,7 +233,7 @@ exports["test emit to nsIObserverService observers"] = function(assert) {
     }
   };
 
-  nsIObserverService.addObserver(nsIObserver, topic, false);
+  nsIObserverService.addObserver(nsIObserver, topic);
 
   events.emit(topic, { subject: uri, data: "some data" });
 
@@ -258,7 +258,7 @@ exports["test emit to nsIObserverService observers"] = function(assert) {
 
   assert.equal(timesCalled, 2, "removed observers no longer invoked");
 
-  nsIObserverService.addObserver(nsIObserver, "*", false);
+  nsIObserverService.addObserver(nsIObserver, "*");
 
   events.emit(topic, { data: "data again" });
 

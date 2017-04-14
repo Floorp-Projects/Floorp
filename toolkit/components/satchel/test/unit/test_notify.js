@@ -64,7 +64,7 @@ yield countEntries(null, null, function(num) { do_check_false(num, "Checking ini
 // Add the observer
 var os = Cc["@mozilla.org/observer-service;1"].
          getService(Ci.nsIObserverService);
-os.addObserver(TestObserver, "satchel-storage-changed", false);
+os.addObserver(TestObserver, "satchel-storage-changed");
 
 /* ========== 2 ========== */
 testnum++;

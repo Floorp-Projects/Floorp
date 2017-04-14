@@ -35,7 +35,7 @@ class UAOverrider {
   }
 
   init() {
-    Services.obs.addObserver(this, NS_HTTP_ON_USERAGENT_REQUEST_TOPIC, false);
+    Services.obs.addObserver(this, NS_HTTP_ON_USERAGENT_REQUEST_TOPIC);
   }
 
   uninit() {

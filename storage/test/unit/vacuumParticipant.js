@@ -31,7 +31,7 @@ function getDatabase(aFile) {
 
 function vacuumParticipant() {
   this._dbConn = getDatabase(new_db_file("testVacuum"));
-  Services.obs.addObserver(this, "test-options", false);
+  Services.obs.addObserver(this, "test-options");
 }
 
 vacuumParticipant.prototype =

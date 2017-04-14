@@ -87,7 +87,7 @@ add_test(function check_history_query() {
   options.resultType = options.RESULTS_AS_VISIT;
   var query = PlacesUtils.history.getNewQuery();
   var result = PlacesUtils.history.executeQuery(query, options);
-  result.addObserver(resultObserver, false);
+  result.addObserver(resultObserver);
   var root = result.root;
   root.containerOpen = true;
 
@@ -158,7 +158,7 @@ add_test(function check_bookmarks_query() {
   var query = PlacesUtils.history.getNewQuery();
   query.setFolders([PlacesUtils.bookmarks.bookmarksMenuFolder], 1);
   var result = PlacesUtils.history.executeQuery(query, options);
-  result.addObserver(resultObserver, false);
+  result.addObserver(resultObserver);
   var root = result.root;
   root.containerOpen = true;
 
@@ -230,7 +230,7 @@ add_test(function check_mixed_query() {
   var query = PlacesUtils.history.getNewQuery();
   query.onlyBookmarked = true;
   var result = PlacesUtils.history.executeQuery(query, options);
-  result.addObserver(resultObserver, false);
+  result.addObserver(resultObserver);
   var root = result.root;
   root.containerOpen = true;
 

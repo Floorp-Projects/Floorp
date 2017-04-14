@@ -44,7 +44,7 @@ function NotificationStorage() {
   this._requests = {};
   this._requestCount = 0;
 
-  Services.obs.addObserver(this, "xpcom-shutdown", false);
+  Services.obs.addObserver(this, "xpcom-shutdown");
 
   // Register for message listeners.
   this.registerListeners();

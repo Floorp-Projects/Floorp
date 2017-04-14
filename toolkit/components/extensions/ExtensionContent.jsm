@@ -646,12 +646,12 @@ DocumentManager = {
 
   init() {
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
-      Services.obs.addObserver(this, "http-on-opening-request", false);
+      Services.obs.addObserver(this, "http-on-opening-request");
     }
-    Services.obs.addObserver(this, "content-document-global-created", false);
-    Services.obs.addObserver(this, "document-element-inserted", false);
-    Services.obs.addObserver(this, "inner-window-destroyed", false);
-    Services.obs.addObserver(this, "memory-pressure", false);
+    Services.obs.addObserver(this, "content-document-global-created");
+    Services.obs.addObserver(this, "document-element-inserted");
+    Services.obs.addObserver(this, "inner-window-destroyed");
+    Services.obs.addObserver(this, "memory-pressure");
   },
 
   uninit() {

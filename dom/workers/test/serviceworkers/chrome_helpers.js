@@ -69,6 +69,6 @@ function waitForServiceWorkerShutdown() {
         resolve();
       }
     };
-    SpecialPowers.addObserver(observer, "service-worker-shutdown", false);
+    SpecialPowers.addObserver(observer, "service-worker-shutdown");
   });
 }

@@ -352,7 +352,7 @@ const CustomizableWidgets = [
     onViewShowing(aEvent) {
       let doc = aEvent.target.ownerDocument;
       this._tabsList = doc.getElementById("PanelUI-remotetabs-tabslist");
-      Services.obs.addObserver(this, SyncedTabs.TOPIC_TABS_CHANGED, false);
+      Services.obs.addObserver(this, SyncedTabs.TOPIC_TABS_CHANGED);
 
       if (SyncedTabs.isConfiguredToSyncTabs) {
         if (SyncedTabs.hasSyncedThisSession) {

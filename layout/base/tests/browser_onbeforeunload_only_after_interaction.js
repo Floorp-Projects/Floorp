@@ -20,7 +20,7 @@ add_task(function* doClick() {
     dismissButton.click();
   }
   let obsName = "tabmodal-dialog-loaded";
-  Services.obs.addObserver(onDialogShown, obsName, false);
+  Services.obs.addObserver(onDialogShown, obsName);
   yield* openPage(true);
   Services.obs.removeObserver(onDialogShown, obsName);
   Assert.ok(dialogShown, "Should have shown dialog.");

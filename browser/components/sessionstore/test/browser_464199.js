@@ -12,7 +12,7 @@ function promiseClearHistory() {
         resolve();
       }
     };
-    Services.obs.addObserver(observer, "browser:purge-domain-data", false);
+    Services.obs.addObserver(observer, "browser:purge-domain-data");
   });
 }
 

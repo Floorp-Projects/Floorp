@@ -40,7 +40,7 @@ function onModifyListener(callback) {
       obs.removeObserver(this, "http-on-modify-request");
       callback(subject.QueryInterface(Ci.nsIHttpChannel));
     }
-  }, "http-on-modify-request", false);
+  }, "http-on-modify-request");
 }
 
 function startChannelRequest(baseUrl, flags, expectedResponse=null) {

@@ -36,7 +36,7 @@ var addTestEngines = Task.async(function* (aItems) {
         } catch (ex) {
           reject(ex);
         }
-      }, "browser-search-engine-modified", false);
+      }, "browser-search-engine-modified");
 
       Services.search.addEngineWithDetails(item.name, ...item.details);
     });
