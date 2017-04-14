@@ -18,8 +18,8 @@ fails == grid-placement-named-lines-002.html grid-placement-named-lines-002.html
 fails == grid-placement-named-lines-003.html grid-placement-named-lines-003.html
 fails == grid-track-sizing-001.html grid-track-sizing-001.html
 fails == grid-track-sizing-002.html grid-track-sizing-002.html
-grid-abspos-items-001.html grid-abspos-items-001.html
-grid-abspos-items-002.html grid-abspos-items-002.html
+== grid-abspos-items-001.html grid-abspos-items-001.html
+== grid-abspos-items-002.html grid-abspos-items-002.html
 fails == grid-abspos-items-003.html grid-abspos-items-003.html
 fails == grid-abspos-items-004.html grid-abspos-items-004.html
 fails == grid-abspos-items-005.html grid-abspos-items-005.html
