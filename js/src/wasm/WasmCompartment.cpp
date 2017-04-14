@@ -28,13 +28,11 @@ using namespace js;
 using namespace wasm;
 
 Compartment::Compartment(Zone* zone)
-  : mutatingInstances_(false),
-    interruptedCount_(0)
+  : mutatingInstances_(false)
 {}
 
 Compartment::~Compartment()
 {
-    MOZ_ASSERT(interruptedCount_ == 0);
     MOZ_ASSERT(instances_.empty());
     MOZ_ASSERT(!mutatingInstances_);
 }
@@ -57,23 +55,6 @@ struct InstanceComparator
         return target.codeBase() < instance->codeBase() ? -1 : 1;
     }
 };
-
-void
-Compartment::trace(JSTracer* trc)
-{
-    // A WasmInstanceObject that was initially reachable when called can become
-    // unreachable while executing on the stack. When execution in a compartment
-    // is interrupted inside wasm code, wasm::TraceActivations() may miss frames
-    // due to its use of FrameIterator which assumes wasm has exited through an
-    // exit stub. This could be fixed by changing wasm::TraceActivations() to
-    // use a ProfilingFrameIterator, which inspects register state, but for now
-    // just mark everything in the compartment in this super-rare case.
-
-    if (interruptedCount_) {
-        for (Instance* i : instances_)
-            i->trace(trc);
-    }
-}
 
 bool
 Compartment::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceObj)
@@ -131,9 +112,9 @@ struct PCComparator
 Code*
 Compartment::lookupCode(const void* pc) const
 {
-    // lookupInstanceDeprecated can be called asynchronously from the interrupt
-    // signal handler. In that case, the signal handler is just asking whether
-    // the pc is in wasm code. If instances_ is being mutated then we can't be
+    // lookupCode() can be called asynchronously from the interrupt signal
+    // handler. In that case, the signal handler is just asking whether the pc
+    // is in wasm code. If instances_ is being mutated then we can't be
     // executing wasm code so returning nullptr is fine.
     if (mutatingInstances_)
         return nullptr;
@@ -143,17 +124,6 @@ Compartment::lookupCode(const void* pc) const
         return nullptr;
 
     return &instances_[index]->code();
-}
-
-void
-Compartment::setInterrupted(bool interrupted)
-{
-    if (interrupted) {
-        interruptedCount_++;
-    } else {
-        MOZ_ASSERT(interruptedCount_ > 0);
-        interruptedCount_--;
-    }
 }
 
 void

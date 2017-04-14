@@ -192,8 +192,9 @@ class Simulator
     template <typename T>
     T get_pc_as() const { return reinterpret_cast<T>(get_pc()); }
 
-    void set_resume_pc(void* value) {
-        resume_pc_ = int32_t(value);
+    void trigger_wasm_interrupt() {
+        MOZ_ASSERT(!wasm_interrupt_);
+        wasm_interrupt_ = true;
     }
 
     void enable_single_stepping(SingleStepCallback cb, void* arg);
@@ -284,8 +285,11 @@ class Simulator
     inline void increaseStopCounter(uint32_t bkpt_code);
     void printStopInfo(uint32_t code);
 
+    // Handle a wasm interrupt triggered by an async signal handler.
+    void handleWasmInterrupt();
+
     // Handle any wasm faults, returning true if the fault was handled.
-    inline bool handleWasmFault(int32_t addr, unsigned numBytes);
+    bool handleWasmFault(int32_t addr, unsigned numBytes);
 
     // Read and write memory.
     inline uint8_t readBU(int32_t addr);
@@ -413,7 +417,8 @@ class Simulator
     bool pc_modified_;
     int64_t icount_;
 
-    int32_t resume_pc_;
+    // wasm async interrupt support
+    bool wasm_interrupt_;
 
     // Debugger input.
     char* lastDebuggerInput_;

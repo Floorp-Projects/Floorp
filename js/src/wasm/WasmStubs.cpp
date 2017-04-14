@@ -727,7 +727,7 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
     AssertStackAlignment(masm, JitStackAlignment, sizeOfRetAddr);
 
     // The JIT callee clobbers all registers, including WasmTlsReg and
-    // FrameRegister, so restore those here.
+    // FramePointer, so restore those here.
     masm.loadWasmTlsRegFromFrame();
     masm.moveStackPtrTo(FramePointer);
     masm.addPtr(Imm32(masm.framePushed()), FramePointer);
@@ -1054,13 +1054,12 @@ static const LiveRegisterSet AllRegsExceptSP(
 #endif
 
 // The async interrupt-callback exit is called from arbitrarily-interrupted wasm
-// code. That means we must first save *all* registers and restore *all*
-// registers (except the stack pointer) when we resume. The address to resume to
-// (assuming that js::HandleExecutionInterrupt doesn't indicate that the
-// execution should be aborted) is stored in WasmActivation::resumePC_.
-// Unfortunately, loading this requires a scratch register which we don't have
-// after restoring all registers. To hack around this, push the resumePC on the
-// stack so that it can be popped directly into PC.
+// code. It calls into the WasmHandleExecutionInterrupt to determine whether we must
+// really halt execution which can reenter the VM (e.g., to display the slow
+// script dialog). If execution is not interrupted, this stub must carefully
+// preserve *all* register state. If execution is interrupted, the entire
+// activation will be popped by the throw stub, so register state does not need
+// to be restored.
 Offsets
 wasm::GenerateInterruptExit(MacroAssembler& masm, Label* throwLabel)
 {
