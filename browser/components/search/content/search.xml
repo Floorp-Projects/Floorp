@@ -72,6 +72,8 @@
       <constructor><![CDATA[
         if (this.parentNode.parentNode.localName == "toolbarpaletteitem")
           return;
+        // Make sure we rebuild the popup in onpopupshowing
+        this._needToBuildPopup = true;
 
         Services.obs.addObserver(this, "browser-search-engine-modified", false);
 
@@ -90,10 +92,6 @@
             Components.utils.reportError("Cannot initialize search service, bailing out: " + aStatus);
           }
         }).bind(this));
-
-        this.textbox.popup.oneOffButtons.telemetryOrigin = "searchbar";
-        this.textbox.popup.oneOffButtons.popup = this.textbox.popup;
-        this.textbox.popup.oneOffButtons.textbox = this.textbox;
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -1064,7 +1062,7 @@
 
     <handlers>
       <handler event="popupshowing"><![CDATA[
-        if (!this._computedMinWidth) {
+        if (!this.oneOffButtons.popup) {
           // The panel width only spans to the textbox size, but we also want it
           // to include the magnifier icon's width.
           let ltr = getComputedStyle(this).direction == "ltr";
@@ -1078,7 +1076,12 @@
           );
           this.style.minWidth = minWidth + "px";
 
-          this._computedMinWidth = true;
+          // Set the origin before assigning the popup, as the assignment does
+          // a rebuild and would miss the origin.
+          this.oneOffButtons.telemetryOrigin = "searchbar";
+          // Set popup after setting the minWidth since it builds the buttons.
+          this.oneOffButtons.popup = this;
+          this.oneOffButtons.textbox = this.input;
         }
 
         // First handle deciding if we are showing the reduced version of the
