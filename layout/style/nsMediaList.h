@@ -255,10 +255,14 @@ public:
   void GetText(nsAString& aMediaText) final;
   void SetText(const nsAString& aMediaText) final;
 
+  bool Matches(nsPresContext* aPresContext) const final {
+    return Matches(aPresContext, nullptr);
+  }
+
   // Does this query apply to the presentation?
   // If |aKey| is non-null, add cache information to it.
-  bool Matches(nsPresContext& aPresContext,
-               nsMediaQueryResultCacheKey* aKey) const final;
+  bool Matches(nsPresContext* aPresContext,
+               nsMediaQueryResultCacheKey* aKey) const;
 
 #ifdef DEBUG
   bool IsServo() const final { return false; }

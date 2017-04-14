@@ -62,7 +62,6 @@ public:
     , mLanguage(aLanguage)
     , mEnabled(aEnabled)
     , mTrackId(aTrackId)
-    , mMediaTime(0)
     , mIsRenderedExternally(false)
     , mType(aType)
   {
@@ -94,7 +93,7 @@ public:
 
   nsCString mMimeType;
   media::TimeUnit mDuration;
-  int64_t mMediaTime;
+  media::TimeUnit mMediaTime;
   CryptoTrack mCrypto;
 
   nsTArray<MetadataTag> mTags;

@@ -247,11 +247,6 @@ parent:
                          nsCString value)
     returns (NPError result);
 
-  intr NPN_GetAuthenticationInfo(nsCString protocol_, nsCString host,
-                                int32_t port, nsCString scheme,
-                                nsCString realm)
-    returns (nsCString username, nsCString password, NPError result);
-
   intr NPN_ConvertPoint(double sourceX, bool ignoreDestX, double sourceY, bool ignoreDestY, NPCoordinateSpace sourceSpace,
                        NPCoordinateSpace destSpace)
     returns (double destX, double destY, bool result);

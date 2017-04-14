@@ -28,7 +28,7 @@ HTTP(..) == font-features-turkish.html font-features-turkish.html
 fails HTTP(..) == font-features-hlig-2.html font-features-hlig-2.html
 fails HTTP(..) == font-features-hlig-4.html font-features-hlig-4.html
 HTTP(..) == font-features-hlig-5.html font-features-hlig-5.html
-fails HTTP(..) == font-features-ligatures-none.html font-features-ligatures-none.html
+HTTP(..) == font-features-ligatures-none.html font-features-ligatures-none.html
 
 # check that feature in style rule overrides @font-face
 fails HTTP(..) == font-features-hlig-3.html font-features-hlig-3.html
@@ -48,7 +48,7 @@ fails HTTP(..) == font-features-order-2.html font-features-order-2.html
 
 # check priority of feature settings vs. font-variant subproperty
 fails HTTP(..) == font-features-order-3.html font-features-order-3.html
-fails HTTP(..) == font-features-order-4.html font-features-order-4.html
+HTTP(..) == font-features-order-4.html font-features-order-4.html
 fails HTTP(..) == font-features-order-5.html font-features-order-5.html
 
 # check priority involving feature settings and font-variant-alternates
@@ -62,9 +62,9 @@ fails HTTP(..) == annotations.html annotations.html
 # (debug problems with font-variant-debug.html which displays all props)
 fails HTTP(..) == font-variant-alternates.html font-variant-alternates.html
 fails HTTP(..) == font-variant-caps.html font-variant-caps.html
-fails HTTP(..) == font-variant-east-asian.html font-variant-east-asian.html
-fails HTTP(..) == font-variant-ligatures.html font-variant-ligatures.html
-fails HTTP(..) == font-variant-numeric.html font-variant-numeric.html
+HTTP(..) == font-variant-east-asian.html font-variant-east-asian.html
+HTTP(..) == font-variant-ligatures.html font-variant-ligatures.html
+HTTP(..) == font-variant-numeric.html font-variant-numeric.html
 HTTP(..) == font-variant-position.html font-variant-position.html
 
 # font-kerning
@@ -97,13 +97,13 @@ random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) random-if(/
 
 # font-variant-caps fallback
 # -- sanity check - none of these should look like the default rendering
-fails HTTP(..) == caps-fallback-smallcaps1.html caps-fallback-smallcaps1.html
+HTTP(..) == caps-fallback-smallcaps1.html caps-fallback-smallcaps1.html
 HTTP(..) == caps-fallback-smallcaps2.html caps-fallback-smallcaps2.html
 HTTP(..) == caps-fallback-petitecaps.html caps-fallback-petitecaps.html
 fails HTTP(..) == caps-fallback-allsmallcaps.html caps-fallback-allsmallcaps.html
 fails HTTP(..) == caps-fallback-allpetitecaps.html caps-fallback-allpetitecaps.html
 # -- normal or fallback rendering
-fails HTTP(..) == caps-fallback-smallcaps1.html caps-fallback-smallcaps1.html
+HTTP(..) == caps-fallback-smallcaps1.html caps-fallback-smallcaps1.html
 HTTP(..) == caps-fallback-smallcaps2.html caps-fallback-smallcaps2.html
 HTTP(..) == caps-fallback-petitecaps.html caps-fallback-petitecaps.html
 fails HTTP(..) == caps-fallback-allsmallcaps.html caps-fallback-allsmallcaps.html

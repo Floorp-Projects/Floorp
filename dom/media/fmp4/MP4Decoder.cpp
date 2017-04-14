@@ -221,7 +221,6 @@ CreateTestH264Decoder(layers::KnowsCompositor* aKnowsCompositor,
   aConfig.mMimeType = "video/avc";
   aConfig.mId = 1;
   aConfig.mDuration = media::TimeUnit::FromMicroseconds(40000);
-  aConfig.mMediaTime = 0;
   aConfig.mImage = aConfig.mDisplay = nsIntSize(640, 360);
   aConfig.mExtraData = new MediaByteBuffer();
   aConfig.mExtraData->AppendElements(sTestH264ExtraData,

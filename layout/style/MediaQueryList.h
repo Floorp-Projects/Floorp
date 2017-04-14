@@ -20,10 +20,11 @@
 #include "mozilla/dom/MediaQueryListBinding.h"
 
 class nsIDocument;
-class nsMediaList;
 
 namespace mozilla {
 namespace dom {
+
+class MediaList;
 
 class MediaQueryList final : public DOMEventTargetHelper,
                              public PRCList
@@ -93,7 +94,7 @@ private:
   // linked list.
   nsCOMPtr<nsIDocument> mDocument;
 
-  RefPtr<nsMediaList> mMediaList;
+  RefPtr<MediaList> mMediaList;
   bool mMatches;
   bool mMatchesValid;
   bool mIsKeptAlive;

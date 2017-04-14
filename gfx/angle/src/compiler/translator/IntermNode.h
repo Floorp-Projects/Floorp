@@ -201,7 +201,7 @@ class TIntermLoop : public TIntermNode
                 TIntermTyped *cond,
                 TIntermTyped *expr,
                 TIntermBlock *body)
-        : mType(type), mInit(init), mCond(cond), mExpr(expr), mBody(body), mUnrollFlag(false)
+        : mType(type), mInit(init), mCond(cond), mExpr(expr), mBody(body)
     {
     }
 
@@ -219,17 +219,12 @@ class TIntermLoop : public TIntermNode
     void setExpression(TIntermTyped *expression) { mExpr = expression; }
     void setBody(TIntermBlock *body) { mBody = body; }
 
-    void setUnrollFlag(bool flag) { mUnrollFlag = flag; }
-    bool getUnrollFlag() const { return mUnrollFlag; }
-
   protected:
     TLoopType mType;
     TIntermNode *mInit;  // for-loop initialization
     TIntermTyped *mCond; // loop exit condition
     TIntermTyped *mExpr; // for-loop expression
     TIntermBlock *mBody;  // loop body
-
-    bool mUnrollFlag; // Whether the loop should be unrolled or not.
 };
 
 //

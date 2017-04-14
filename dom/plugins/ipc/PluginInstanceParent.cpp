@@ -2012,32 +2012,6 @@ PluginInstanceParent::AnswerNPN_SetValueForURL(const NPNURLVariable& variable,
 }
 
 mozilla::ipc::IPCResult
-PluginInstanceParent::AnswerNPN_GetAuthenticationInfo(const nsCString& protocol,
-                                                      const nsCString& host,
-                                                      const int32_t& port,
-                                                      const nsCString& scheme,
-                                                      const nsCString& realm,
-                                                      nsCString* username,
-                                                      nsCString* password,
-                                                      NPError* result)
-{
-    char* u;
-    uint32_t ulen;
-    char* p;
-    uint32_t plen;
-
-    *result = mNPNIface->getauthenticationinfo(mNPP, protocol.get(),
-                                               host.get(), port,
-                                               scheme.get(), realm.get(),
-                                               &u, &ulen, &p, &plen);
-    if (NPERR_NO_ERROR == *result) {
-        username->Adopt(u, ulen);
-        password->Adopt(p, plen);
-    }
-    return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 PluginInstanceParent::AnswerNPN_ConvertPoint(const double& sourceX,
                                              const bool&   ignoreDestX,
                                              const double& sourceY,

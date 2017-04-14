@@ -203,13 +203,6 @@ nsScreenManagerAndroid::ScreenForRect(int32_t inLeft,
     return GetPrimaryScreen(outScreen);
 }
 
-NS_IMETHODIMP
-nsScreenManagerAndroid::GetSystemDefaultScale(float *aDefaultScale)
-{
-    *aDefaultScale = 1.0f;
-    return NS_OK;
-}
-
 already_AddRefed<nsScreenAndroid>
 nsScreenManagerAndroid::AddScreen(DisplayType aDisplayType, nsIntRect aRect)
 {
