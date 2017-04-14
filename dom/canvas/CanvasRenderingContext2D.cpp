@@ -95,6 +95,7 @@
 #include "mozilla/layers/PersistentBufferProvider.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -2802,6 +2803,41 @@ GetFontStyleContext(Element* aElement, const nsAString& aFont,
   decl->GetPropertyValueByID(eCSSProperty_font, aOutUsedFont);
 
   return sc.forget();
+}
+
+static already_AddRefed<RawServoDeclarationBlock>
+CreateDeclarationForServo(nsCSSPropertyID aProperty,
+                          const nsAString& aPropertyValue,
+                          nsIDocument* aDocument)
+{
+  RefPtr<URLExtraData> data =
+    new URLExtraData(aDocument->GetDocBaseURI(),
+                     aDocument->GetDocumentURI(),
+                     aDocument->NodePrincipal());
+
+  NS_ConvertUTF16toUTF8 value(aPropertyValue);
+
+  RefPtr<RawServoDeclarationBlock> servoDeclarations =
+    Servo_ParseProperty(aProperty, &value, data).Consume();
+
+  if (!servoDeclarations) {
+    // We got a syntax error.  The spec says this value must be ignored.
+    return nullptr;
+  }
+
+  // From canvas spec, force to set line-height property to 'normal' font
+  // property.
+  if (aProperty == eCSSProperty_font) {
+    const nsCString normalString = NS_LITERAL_CSTRING("normal");
+    Servo_DeclarationBlock_SetPropertyById(servoDeclarations,
+                                           eCSSProperty_line_height,
+                                           &normalString,
+                                           false,
+                                           data,
+                                           LengthParsingMode::Default);
+  }
+
+  return servoDeclarations.forget();
 }
 
 static already_AddRefed<Declaration>
