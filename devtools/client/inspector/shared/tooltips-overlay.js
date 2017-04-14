@@ -18,17 +18,17 @@ const {
   VIEW_NODE_IMAGE_URL_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
 const { getColor } = require("devtools/client/shared/theme");
-const { getCssProperties } = require("devtools/shared/fronts/css-properties");
-const CssDocsTooltip = require("devtools/client/shared/widgets/tooltip/CssDocsTooltip");
 const { HTMLTooltip } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
-const {
-  getImageDimensions,
-  setImageTooltip,
-  setBrokenImageTooltip,
-} = require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
-const SwatchColorPickerTooltip = require("devtools/client/shared/widgets/tooltip/SwatchColorPickerTooltip");
-const SwatchCubicBezierTooltip = require("devtools/client/shared/widgets/tooltip/SwatchCubicBezierTooltip");
-const SwatchFilterTooltip = require("devtools/client/shared/widgets/tooltip/SwatchFilterTooltip");
+
+loader.lazyRequireGetter(this, "getCssProperties",
+  "devtools/shared/fronts/css-properties", true);
+
+loader.lazyRequireGetter(this, "getImageDimensions",
+  "devtools/client/shared/widgets/tooltip/ImageTooltipHelper", true);
+loader.lazyRequireGetter(this, "setImageTooltip",
+  "devtools/client/shared/widgets/tooltip/ImageTooltipHelper", true);
+loader.lazyRequireGetter(this, "setBrokenImageTooltip",
+  "devtools/client/shared/widgets/tooltip/ImageTooltipHelper", true);
 
 const PREF_IMAGE_TOOLTIP_SIZE = "devtools.inspector.imagePreviewTooltipSize";
 
@@ -44,21 +44,29 @@ const TOOLTIP_FONTFAMILY_TYPE = "font-family";
  */
 function TooltipsOverlay(view) {
   this.view = view;
-
-  let {CssRuleView} = require("devtools/client/inspector/rules/rules");
-  this.isRuleView = view instanceof CssRuleView;
-  this._cssProperties = getCssProperties(this.view.inspector.toolbox);
+  this._instances = new Map();
 
   this._onNewSelection = this._onNewSelection.bind(this);
   this.view.inspector.selection.on("new-node-front", this._onNewSelection);
+
+  this.addToView();
 }
 
 TooltipsOverlay.prototype = {
+  get _cssProperties() {
+    delete TooltipsOverlay.prototype._cssProperties;
+    let properties = getCssProperties(this.view.inspector.toolbox);
+    TooltipsOverlay.prototype._cssProperties = properties;
+    return properties;
+  },
+
   get isEditing() {
-    return this.colorPicker.tooltip.isVisible() ||
-           this.colorPicker.eyedropperOpen ||
-           this.cubicBezier.tooltip.isVisible() ||
-           this.filterEditor.tooltip.isVisible();
+    for (let [, tooltip] of this._instances) {
+      if (typeof (tooltip.isEditing) == "function" && tooltip.isEditing()) {
+        return true;
+      }
+    }
+    return false;
   },
 
   /**
@@ -70,35 +78,64 @@ TooltipsOverlay.prototype = {
       return;
     }
 
-    let { toolbox } = this.view.inspector;
-
-    // Initializing the different tooltips that are used in the inspector.
-    // These tooltips are attached to the toolbox document if they require a popup panel.
-    // Otherwise, it is attached to the inspector panel document if it is an inline
-    // editor.
-    this.previewTooltip = new HTMLTooltip(toolbox.doc, {
-      type: "arrow",
-      useXulWrapper: true
-    });
-    this.previewTooltip.startTogglingOnHover(this.view.element,
-      this._onPreviewTooltipTargetHover.bind(this));
-
-    // MDN CSS help tooltip
-    this.cssDocs = new CssDocsTooltip(toolbox.doc);
-
-    if (this.isRuleView) {
-      // Color picker tooltip
-      this.colorPicker = new SwatchColorPickerTooltip(toolbox.doc,
-                                                      this.view.inspector,
-                                                      this._cssProperties);
-      // Cubic bezier tooltip
-      this.cubicBezier = new SwatchCubicBezierTooltip(toolbox.doc);
-      // Filter editor tooltip
-      this.filterEditor = new SwatchFilterTooltip(toolbox.doc,
-        this._cssProperties.getValidityChecker(this.view.inspector.panelDoc));
-    }
-
     this._isStarted = true;
+
+    // For now, preview tooltip has to be instanciated on startup in order to
+    // call tooltip.startTogglingOnHover. Ideally startTogglingOnHover wouldn't be part
+    // of HTMLTooltip and offer a way to lazy load this tooltip.
+    this.getTooltip("previewTooltip");
+  },
+
+  /**
+   * Lazily fetch and initialize the different tooltips that are used in the inspector.
+   * These tooltips are attached to the toolbox document if they require a popup panel.
+   * Otherwise, it is attached to the inspector panel document if it is an inline editor.
+   *
+   * @param {String} name
+   *        Identifier name for the tooltip
+   */
+  getTooltip: function (name) {
+    let tooltip = this._instances.get(name);
+    if (tooltip) {
+      return tooltip;
+    }
+    let { doc } = this.view.inspector.toolbox;
+    switch (name) {
+      case "colorPicker":
+        const SwatchColorPickerTooltip =
+          require("devtools/client/shared/widgets/tooltip/SwatchColorPickerTooltip");
+        tooltip = new SwatchColorPickerTooltip(doc, this.view.inspector,
+          this._cssProperties);
+        break;
+      case "cubicBezier":
+        const SwatchCubicBezierTooltip =
+          require("devtools/client/shared/widgets/tooltip/SwatchCubicBezierTooltip");
+        tooltip = new SwatchCubicBezierTooltip(doc);
+        break;
+      case "filterEditor":
+        const SwatchFilterTooltip =
+          require("devtools/client/shared/widgets/tooltip/SwatchFilterTooltip");
+        tooltip = new SwatchFilterTooltip(doc,
+          this._cssProperties.getValidityChecker(this.view.inspector.panelDoc));
+        break;
+      case "cssDocs":
+        const CssDocsTooltip =
+          require("devtools/client/shared/widgets/tooltip/CssDocsTooltip");
+        tooltip = new CssDocsTooltip(doc);
+        break;
+      case "previewTooltip":
+        tooltip = new HTMLTooltip(doc, {
+          type: "arrow",
+          useXulWrapper: true
+        });
+        tooltip.startTogglingOnHover(this.view.element,
+          this._onPreviewTooltipTargetHover.bind(this));
+        break;
+      default:
+        throw new Error(`Unsupported tooltip '${name}'`);
+    }
+    this._instances.set(name, tooltip);
+    return tooltip;
   },
 
   /**
@@ -110,23 +147,8 @@ TooltipsOverlay.prototype = {
       return;
     }
 
-    this.previewTooltip.stopTogglingOnHover(this.view.element);
-    this.previewTooltip.destroy();
-
-    if (this.colorPicker) {
-      this.colorPicker.destroy();
-    }
-
-    if (this.cubicBezier) {
-      this.cubicBezier.destroy();
-    }
-
-    if (this.cssDocs) {
-      this.cssDocs.destroy();
-    }
-
-    if (this.filterEditor) {
-      this.filterEditor.destroy();
+    for (let [, tooltip] of this._instances) {
+      tooltip.destroy();
     }
 
     this._isStarted = false;
@@ -182,23 +204,11 @@ TooltipsOverlay.prototype = {
       return false;
     }
 
-    if (this.isRuleView && this.colorPicker.tooltip.isVisible()) {
-      this.colorPicker.revert();
-      this.colorPicker.hide();
-    }
-
-    if (this.isRuleView && this.cubicBezier.tooltip.isVisible()) {
-      this.cubicBezier.revert();
-      this.cubicBezier.hide();
-    }
-
-    if (this.isRuleView && this.cssDocs.tooltip.isVisible()) {
-      this.cssDocs.hide();
-    }
-
-    if (this.isRuleView && this.filterEditor.tooltip.isVisible()) {
-      this.filterEditor.revert();
-      this.filterEdtior.hide();
+    for (let [, tooltip] of this._instances) {
+      if (tooltip.isVisible()) {
+        tooltip.revert();
+        tooltip.hide();
+      }
     }
 
     let inspector = this.view.inspector;
@@ -207,7 +217,8 @@ TooltipsOverlay.prototype = {
       try {
         yield this._setImagePreviewTooltip(nodeInfo.value.url);
       } catch (e) {
-        yield setBrokenImageTooltip(this.previewTooltip, this.view.inspector.panelDoc);
+        yield setBrokenImageTooltip(this.getTooltip("previewTooltip"),
+          this.view.inspector.panelDoc);
       }
       return true;
     }
@@ -249,7 +260,7 @@ TooltipsOverlay.prototype = {
       naturalHeight = size.naturalHeight;
     }
 
-    yield setImageTooltip(this.previewTooltip, doc, imageUrl,
+    yield setImageTooltip(this.getTooltip("previewTooltip"), doc, imageUrl,
       {maxDim, naturalWidth, naturalHeight});
   }),
 
@@ -279,30 +290,14 @@ TooltipsOverlay.prototype = {
     let doc = this.view.inspector.panelDoc;
     let {naturalWidth, naturalHeight} = yield getImageDimensions(doc, imageUrl);
 
-    yield setImageTooltip(this.previewTooltip, doc, imageUrl,
+    yield setImageTooltip(this.getTooltip("previewTooltip"), doc, imageUrl,
       {hideDimensionLabel: true, hideCheckeredBackground: true,
        maxDim, naturalWidth, naturalHeight});
   }),
 
   _onNewSelection: function () {
-    if (this.previewTooltip) {
-      this.previewTooltip.hide();
-    }
-
-    if (this.colorPicker) {
-      this.colorPicker.hide();
-    }
-
-    if (this.cubicBezier) {
-      this.cubicBezier.hide();
-    }
-
-    if (this.cssDocs) {
-      this.cssDocs.hide();
-    }
-
-    if (this.filterEditor) {
-      this.filterEditor.hide();
+    for (let [, tooltip] of this._instances) {
+      tooltip.hide();
     }
   },
 

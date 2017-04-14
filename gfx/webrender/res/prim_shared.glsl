@@ -231,16 +231,18 @@ ClipArea fetch_clip_area(int index) {
 
 struct Gradient {
     vec4 start_end_point;
+    vec4 tile_size_repeat;
     vec4 extend_mode;
 };
 
 Gradient fetch_gradient(int index) {
     Gradient gradient;
 
-    ivec2 uv = get_fetch_uv_2(index);
+    ivec2 uv = get_fetch_uv_4(index);
 
-    gradient.start_end_point = texelFetchOffset(sData32, uv, 0, ivec2(0, 0));
-    gradient.extend_mode = texelFetchOffset(sData32, uv, 0, ivec2(1, 0));
+    gradient.start_end_point = texelFetchOffset(sData64, uv, 0, ivec2(0, 0));
+    gradient.tile_size_repeat = texelFetchOffset(sData64, uv, 0, ivec2(1, 0));
+    gradient.extend_mode = texelFetchOffset(sData64, uv, 0, ivec2(2, 0));
 
     return gradient;
 }
@@ -264,15 +266,17 @@ GradientStop fetch_gradient_stop(int index) {
 struct RadialGradient {
     vec4 start_end_center;
     vec4 start_end_radius_ratio_xy_extend_mode;
+    vec4 tile_size_repeat;
 };
 
 RadialGradient fetch_radial_gradient(int index) {
     RadialGradient gradient;
 
-    ivec2 uv = get_fetch_uv_2(index);
+    ivec2 uv = get_fetch_uv_4(index);
 
-    gradient.start_end_center = texelFetchOffset(sData32, uv, 0, ivec2(0, 0));
-    gradient.start_end_radius_ratio_xy_extend_mode = texelFetchOffset(sData32, uv, 0, ivec2(1, 0));
+    gradient.start_end_center = texelFetchOffset(sData64, uv, 0, ivec2(0, 0));
+    gradient.start_end_radius_ratio_xy_extend_mode = texelFetchOffset(sData64, uv, 0, ivec2(1, 0));
+    gradient.tile_size_repeat = texelFetchOffset(sData64, uv, 0, ivec2(2, 0));
 
     return gradient;
 }
@@ -763,8 +767,9 @@ vec4 dither(vec4 color) {
     const int matrix_mask = 7;
 
     ivec2 pos = ivec2(gl_FragCoord.xy) & ivec2(matrix_mask);
-    float noise_factor = 4.0 / 255.0;
-    float noise = texelFetch(sDither, pos, 0).r * noise_factor;
+    float noise_normalized = (texelFetch(sDither, pos, 0).r * 255.0 + 0.5) / 64.0;
+    float noise = (noise_normalized - 0.5) / 256.0; // scale down to the unit length
+
     return color + vec4(noise, noise, noise, 0);
 }
 #endif //WR_FRAGMENT_SHADER

@@ -5,7 +5,6 @@
 <window title="Toolbar" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="startTest();">
 
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <toolbox>
@@ -19,7 +18,7 @@
   <!-- test resuls are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml"
         style="height: 300px; overflow: auto;"/>
-  
+
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
 

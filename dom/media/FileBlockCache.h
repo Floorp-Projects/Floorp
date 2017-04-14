@@ -70,7 +70,8 @@ public:
   void Close();
 
   // Can be called on any thread. This defers to a non-main thread.
-  nsresult WriteBlock(uint32_t aBlockIndex, const uint8_t* aData);
+  nsresult WriteBlock(uint32_t aBlockIndex,
+    Span<const uint8_t> aData1, Span<const uint8_t> aData2);
 
   // Performs block writes and block moves on its own thread.
   NS_IMETHOD Run() override;
@@ -101,6 +102,15 @@ public:
     {
       mData = MakeUnique<uint8_t[]>(BLOCK_SIZE);
       memcpy(mData.get(), aData, BLOCK_SIZE);
+    }
+
+    BlockChange(Span<const uint8_t> aData1, Span<const uint8_t> aData2)
+      : mSourceBlockIndex(-1)
+    {
+      MOZ_ASSERT(aData1.Length() + aData2.Length() == BLOCK_SIZE);
+      mData = MakeUnique<uint8_t[]>(BLOCK_SIZE);
+      memcpy(mData.get(), aData1.Elements(), aData1.Length());
+      memcpy(mData.get() + aData1.Length(), aData2.Elements(), aData2.Length());
     }
 
     // This block's contents are located in another file

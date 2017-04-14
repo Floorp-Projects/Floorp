@@ -237,64 +237,6 @@ EventEmitter.decorate(SimulatorScanner);
 RuntimeScanners.add(SimulatorScanner);
 
 /**
- * TODO: Remove this comaptibility layer in the future (bug 1085393)
- * This runtime exists to support the ADB Helper add-on below version 0.7.0.
- *
- * This scanner will list all ADB devices as runtimes, even if they may or may
- * not actually connect (since the |DeprecatedUSBRuntime| assumes a Firefox OS
- * device).
- */
-var DeprecatedAdbScanner = {
-
-  _runtimes: [],
-
-  enable() {
-    this._updateRuntimes = this._updateRuntimes.bind(this);
-    Devices.on("register", this._updateRuntimes);
-    Devices.on("unregister", this._updateRuntimes);
-    Devices.on("addon-status-updated", this._updateRuntimes);
-    this._updateRuntimes();
-  },
-
-  disable() {
-    Devices.off("register", this._updateRuntimes);
-    Devices.off("unregister", this._updateRuntimes);
-    Devices.off("addon-status-updated", this._updateRuntimes);
-  },
-
-  _emitUpdated() {
-    this.emit("runtime-list-updated");
-  },
-
-  _updateRuntimes() {
-    this._runtimes = [];
-    for (let id of Devices.available()) {
-      let runtime = new DeprecatedUSBRuntime(id);
-      this._runtimes.push(runtime);
-      runtime.updateNameFromADB().then(() => {
-        this._emitUpdated();
-      }, () => {});
-    }
-    this._emitUpdated();
-  },
-
-  scan() {
-    return promise.resolve();
-  },
-
-  listRuntimes: function () {
-    return this._runtimes;
-  }
-
-};
-
-EventEmitter.decorate(DeprecatedAdbScanner);
-RuntimeScanners.add(DeprecatedAdbScanner);
-
-// ADB Helper 0.7.0 and later will replace this scanner on startup
-exports.DeprecatedAdbScanner = DeprecatedAdbScanner;
-
-/**
  * This is a lazy ADB scanner shim which only tells the ADB Helper to start and
  * stop as needed.  The real scanner that lists devices lives in ADB Helper.
  * ADB Helper 0.8.0 and later wait until these signals are received before
@@ -424,58 +366,6 @@ var RuntimeTypes = exports.RuntimeTypes = {
   LOCAL: "LOCAL",
   OTHER: "OTHER"
 };
-
-/**
- * TODO: Remove this comaptibility layer in the future (bug 1085393)
- * This runtime exists to support the ADB Helper add-on below version 0.7.0.
- *
- * This runtime assumes it is connecting to a Firefox OS device.
- */
-function DeprecatedUSBRuntime(id) {
-  this._id = id;
-}
-
-DeprecatedUSBRuntime.prototype = {
-  type: RuntimeTypes.USB,
-  get device() {
-    return Devices.getByName(this._id);
-  },
-  connect: function (connection) {
-    if (!this.device) {
-      return promise.reject(new Error("Can't find device: " + this.name));
-    }
-    return this.device.connect().then((port) => {
-      connection.host = "localhost";
-      connection.port = port;
-      connection.connect();
-    });
-  },
-  get id() {
-    return this._id;
-  },
-  get name() {
-    return this._productModel || this._id;
-  },
-  updateNameFromADB: function () {
-    if (this._productModel) {
-      return promise.reject();
-    }
-    let deferred = promise.defer();
-    if (this.device && this.device.shell) {
-      this.device.shell("getprop ro.product.model").then(stdout => {
-        this._productModel = stdout;
-        deferred.resolve();
-      }, () => {});
-    } else {
-      this._productModel = null;
-      deferred.reject();
-    }
-    return deferred.promise;
-  },
-};
-
-// For testing use only
-exports._DeprecatedUSBRuntime = DeprecatedUSBRuntime;
 
 function WiFiRuntime(deviceName) {
   this.deviceName = deviceName;

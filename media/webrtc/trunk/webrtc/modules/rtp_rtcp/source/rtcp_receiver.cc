@@ -568,7 +568,7 @@ void RTCPReceiver::HandleReportBlock(
                      reportBlock->lastReceivedRRNTPfrac);
 
   // time when we received this in MS
-  uint32_t receiveTimeMS = Clock::NtpToMs(reportBlock->lastReceivedRRNTPsecs,
+  uint64_t receiveTimeMS = Clock::NtpToMs(reportBlock->lastReceivedRRNTPsecs,
                                           reportBlock->lastReceivedRRNTPfrac);
 
   // Estimate RTT

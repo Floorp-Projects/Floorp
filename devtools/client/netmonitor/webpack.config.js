@@ -75,7 +75,7 @@ let webpackConfig = {
       "devtools/client/shared/widgets/tooltip/HTMLTooltip": "devtools-modules",
       "devtools/client/shared/widgets/tooltip/ImageTooltipHelper": "devtools-modules/client/shared/widgets/tooltip/ImageTooltipHelper",
       "devtools/client/shared/widgets/Chart": "devtools-modules",
-      "devtools/client/sourceeditor/editor": "devtools-modules",
+      "devtools/client/sourceeditor/editor": "devtools-source-editor/src/source-editor",
       "devtools/shared/fronts/timeline": "devtools-modules",
       "devtools/shared/l10n": "devtools-modules/shared/l10n",
       "devtools/shared/locales": path.join(__dirname, "../../shared/locales/en-US"),
@@ -93,6 +93,13 @@ const mappings = [
     (result) => {
       result.request = result.request
         .replace("./chrome://devtools/skin", path.join(__dirname, "../themes"));
+    }
+  ],
+  [
+    /chrome:\/\/devtools\/content/,
+    (result) => {
+      result.request = result.request
+        .replace("./chrome://devtools/content", path.join(__dirname, ".."));
     }
   ],
   [

@@ -129,7 +129,6 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 
   gfx::Matrix4x4 transform = GetTransform();
   gfx::Rect relBounds = GetWrRelBounds();
-  gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
 
   gfx::Rect rect = gfx::Rect(0, 0, size.width, size.height);
   if (mScaleMode != ScaleMode::SCALE_NONE) {
@@ -138,10 +137,10 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     rect = gfx::Rect(0, 0, mScaleToSize.width, mScaleToSize.height);
   }
   rect = RelativeToVisible(rect);
-  gfx::Rect clipRect = GetWrClipRect(rect);
 
-  Maybe<WrImageMask> mask = BuildWrMaskLayer();
-  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect));
+  gfx::Rect clipRect = GetWrClipRect(rect);
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
+  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect), mask.ptrOr(nullptr));
 
   wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
   wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
@@ -157,22 +156,19 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   key.mNamespace = WrBridge()->GetNamespace();
   key.mHandle = WrBridge()->GetNextResourceId();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
+  Manager()->AddImageKeyForDiscard(key);
 
   aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                            wr::ToWrRect(overflow),
-                            mask.ptrOr(nullptr),
                             1.0f,
                             //GetAnimations(),
                             transform,
                             mixBlendMode);
   aBuilder.PushImage(wr::ToWrRect(rect), clip, filter, key);
   aBuilder.PopStackingContext();
-
-  //mContainer->SetImageFactory(originalIF);
 }
 
 Maybe<WrImageMask>
-WebRenderImageLayer::RenderMaskLayer()
+WebRenderImageLayer::RenderMaskLayer(const gfx::Matrix4x4& aTransform)
 {
   if (!mContainer) {
      return Nothing();
@@ -183,9 +179,12 @@ WebRenderImageLayer::RenderMaskLayer()
     return Nothing();
   }
 
-  MOZ_ASSERT(GetImageClientType() != CompositableType::UNKNOWN);
+  MOZ_ASSERT(GetImageClientType() == CompositableType::IMAGE);
+  if (GetImageClientType() != CompositableType::IMAGE) {
+    return Nothing();
+  }
 
-  if (GetImageClientType() == CompositableType::IMAGE && !mImageClient) {
+  if (!mImageClient) {
     mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
                                                   WrBridge(),
                                                   TextureFlags::DEFAULT);
@@ -196,24 +195,16 @@ WebRenderImageLayer::RenderMaskLayer()
   }
 
   if (!mExternalImageId) {
-    if (GetImageClientType() == CompositableType::IMAGE_BRIDGE) {
-      MOZ_ASSERT(!mImageClient);
-      mExternalImageId = WrBridge()->AllocExternalImageId(mContainer->GetAsyncContainerHandle());
-    } else {
-      // Handle CompositableType::IMAGE case
-      MOZ_ASSERT(mImageClient);
-      mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
-    }
+    mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
   }
   MOZ_ASSERT(mExternalImageId);
 
-  // XXX Not good for async ImageContainer case.
   AutoLockImage autoLock(mContainer);
   Image* image = autoLock.GetImage();
   if (!image) {
     return Nothing();
   }
-  if (mImageClient && !mImageClient->UpdateImage(mContainer, /* unused */0)) {
+  if (!mImageClient->UpdateImage(mContainer, /* unused */0)) {
     return Nothing();
   }
 
@@ -221,11 +212,13 @@ WebRenderImageLayer::RenderMaskLayer()
   key.mNamespace = WrBridge()->GetNamespace();
   key.mHandle = WrBridge()->GetNextResourceId();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
+  Manager()->AddImageKeyForDiscard(key);
 
   gfx::IntSize size = image->GetSize();
   WrImageMask imageMask;
   imageMask.image = key;
-  imageMask.rect = wr::ToWrRect(Rect(0, 0, size.width, size.height));
+  Rect maskRect = aTransform.TransformBounds(Rect(0, 0, size.width, size.height));
+  imageMask.rect = wr::ToWrRect(maskRect);
   imageMask.repeat = false;
   return Some(imageMask);
 }
