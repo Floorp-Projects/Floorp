@@ -21,7 +21,7 @@ var Ci = Components.interfaces;
 function make_uri(url) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
-  return ios.newURI(url);
+  return ios.newURI(url, null, null);
 }
 
 // Ensure "fullscreen" permissions are not present on the test URI.
