@@ -703,7 +703,7 @@ this.LoginHelper = {
       dataObject = Cc["@mozilla.org/array;1"].
                    createInstance(Ci.nsIMutableArray);
       for (let i = 0; i < data.length; i++) {
-        dataObject.appendElement(data[i]);
+        dataObject.appendElement(data[i], false);
       }
     } else if (typeof(data) == "string") {
       dataObject = Cc["@mozilla.org/supports-string;1"].

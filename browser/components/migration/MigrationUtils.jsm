@@ -865,7 +865,7 @@ this.MigrationUtils = Object.freeze({
               throw new Error("Unexpected parameter type " + (typeof item) + ": " + item);
           }
         }
-        params.appendElement(comtaminatedVal);
+        params.appendElement(comtaminatedVal, false);
       }
     } else {
       params = aParams;
