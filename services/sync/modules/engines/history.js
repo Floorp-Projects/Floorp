@@ -363,7 +363,7 @@ HistoryStore.prototype = {
     for (i = 0, k = 0; i < record.visits.length; i++) {
       let visit = record.visits[k] = record.visits[i];
 
-      if (!visit.date || typeof visit.date != "number") {
+      if (!visit.date || typeof visit.date != "number" || !Number.isInteger(visit.date)) {
         this._log.warn("Encountered record with invalid visit date: "
                        + visit.date);
         continue;
