@@ -134,6 +134,7 @@ const RequestListItem = createClass({
         columns.get("status") && StatusColumn({ item }),
         columns.get("method") && MethodColumn({ item }),
         columns.get("file") && FileColumn({ item }),
+        columns.get("protocol") && ProtocolColumn({ item }),
         columns.get("domain") && DomainColumn({ item, onSecurityIconClick }),
         columns.get("remoteip") && RemoteIPColumn({ item }),
         columns.get("cause") && CauseColumn({ item, onCauseBadgeClick }),
@@ -252,6 +253,27 @@ const FileColumn = createFactory(createClass({
         },
           urlDetails.baseNameWithQuery,
         ),
+      )
+    );
+  }
+}));
+
+const ProtocolColumn = createFactory(createClass({
+  displayName: "Protocol",
+
+  propTypes: {
+    item: PropTypes.object.isRequired,
+  },
+
+  shouldComponentUpdate(nextProps) {
+    return this.props.item.httpVersion !== nextProps.item.httpVersion;
+  },
+
+  render() {
+    const { httpVersion } = this.props.item;
+    return (
+      div({ className: "requests-list-subitem requests-list-protocol" },
+        span({ className: "subitem-label", title: httpVersion }, httpVersion),
       )
     );
   }

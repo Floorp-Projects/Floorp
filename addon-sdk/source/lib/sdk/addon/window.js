@@ -12,7 +12,7 @@ const { when: unload } = require("../system/unload");
 const prefs = require("../preferences/service");
 
 if (!prefs.get("extensions.usehiddenwindow", false)) {
-  const {HiddenFrame} = require("resource:///modules/HiddenFrame.jsm", {});
+  const {HiddenFrame} = require("resource://gre/modules/HiddenFrame.jsm", {});
   let hiddenFrame = new HiddenFrame();
   exports.window = hiddenFrame.getWindow();
   exports.ready = hiddenFrame.get();
