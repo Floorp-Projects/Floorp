@@ -402,15 +402,13 @@ AsyncScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
 
 nsresult
 mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri,
-                                      JSObject* targetObjArg,
+                                      HandleObject targetObj,
                                       const nsAString& charset,
                                       nsIIOService* serv,
                                       bool reuseGlobal,
                                       bool cache,
                                       MutableHandleValue retval)
 {
-    RootedObject targetObj(RootingCx(), targetObjArg);
-
     nsCOMPtr<nsIGlobalObject> globalObject = xpc::NativeGlobal(targetObj);
     ErrorResult result;
 
@@ -466,7 +464,7 @@ mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri,
 bool
 mozJSSubScriptLoader::ReadScript(nsIURI* uri,
                                  JSContext* cx,
-                                 JSObject* targetObjArg,
+                                 HandleObject targetObj,
                                  const nsAString& charset,
                                  const char* uriStr,
                                  nsIIOService* serv,
@@ -477,8 +475,6 @@ mozJSSubScriptLoader::ReadScript(nsIURI* uri,
 {
     script.set(nullptr);
     function.set(nullptr);
-
-    RootedObject targetObj(cx, targetObjArg);
 
     // We create a channel and call SetContentType, to avoid expensive MIME type
     // lookups (bug 632490).
