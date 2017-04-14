@@ -222,6 +222,7 @@ public abstract class GeckoApp
 
     protected int mLastSelectedTabId = INVALID_TAB_ID;
     protected String mLastSessionUUID = null;
+    protected boolean mCheckTabSelectionOnResume = false;
 
     private boolean foregrounded = false;
 
@@ -2403,7 +2404,9 @@ public abstract class GeckoApp
         GeckoAppShell.setGeckoInterface(this);
         GeckoAppShell.setScreenOrientationDelegate(this);
 
-        if (mLastActiveGeckoApp == null || mLastActiveGeckoApp.get() != this) {
+        if (mLastActiveGeckoApp == null || mLastActiveGeckoApp.get() != this ||
+                mCheckTabSelectionOnResume) {
+            mCheckTabSelectionOnResume = false;
             restoreLastSelectedTab();
         }
 
@@ -2854,7 +2857,8 @@ public abstract class GeckoApp
                         data.putInt("nextSelectedTabId", nextSelectedTab.getId());
                         EventDispatcher.getInstance().dispatch("Tab:KeepZombified", data);
                     }
-                    tabs.closeTab(tab);
+                    tabs.closeTabNoActivitySwitch(tab);
+                    mCheckTabSelectionOnResume = true;
                     return;
                 }
 
