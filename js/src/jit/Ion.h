@@ -214,7 +214,6 @@ bool OffThreadCompilationAvailable(JSContext* cx);
 
 void ForbidCompilation(JSContext* cx, JSScript* script);
 
-void PurgeCaches(JSScript* script);
 size_t SizeOfIonData(JSScript* script, mozilla::MallocSizeOf mallocSizeOf);
 void DestroyJitScripts(FreeOp* fop, JSScript* script);
 void TraceJitScripts(JSTracer* trc, JSScript* script);

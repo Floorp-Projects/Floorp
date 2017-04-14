@@ -1857,6 +1857,130 @@ GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId, HandleId id)
     return true;
 }
 
+BindNameIRGenerator::BindNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
+                                         ICState::Mode mode, HandleObject env,
+                                         HandlePropertyName name)
+  : IRGenerator(cx, script, pc, CacheKind::BindName, mode),
+    env_(env),
+    name_(name)
+{}
+
+bool
+BindNameIRGenerator::tryAttachStub()
+{
+    MOZ_ASSERT(cacheKind_ == CacheKind::BindName);
+
+    AutoAssertNoPendingException aanpe(cx_);
+
+    ObjOperandId envId(writer.setInputOperandId(0));
+    RootedId id(cx_, NameToId(name_));
+
+    if (tryAttachGlobalName(envId, id))
+        return true;
+    if (tryAttachEnvironmentName(envId, id))
+        return true;
+
+    return false;
+}
+
+bool
+BindNameIRGenerator::tryAttachGlobalName(ObjOperandId objId, HandleId id)
+{
+    if (!IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope())
+        return false;
+
+    Handle<LexicalEnvironmentObject*> globalLexical = env_.as<LexicalEnvironmentObject>();
+    MOZ_ASSERT(globalLexical->isGlobal());
+
+    JSObject* result = nullptr;
+    if (Shape* shape = globalLexical->lookup(cx_, id)) {
+        // If this is an uninitialized lexical or a const, we need to return a
+        // RuntimeLexicalErrorObject.
+        if (globalLexical->getSlot(shape->slot()).isMagic() || !shape->writable())
+            return false;
+        result = globalLexical;
+    } else {
+        result = &globalLexical->global();
+    }
+
+    if (result == globalLexical) {
+        // Lexical bindings are non-configurable so we can just return the
+        // global lexical.
+        writer.loadObjectResult(objId);
+    } else {
+        // If the property exists on the global and is non-configurable, it cannot be
+        // shadowed by the lexical scope so we can just return the global without a
+        // shape guard.
+        Shape* shape = result->as<GlobalObject>().lookup(cx_, id);
+        if (!shape || shape->configurable())
+            writer.guardShape(objId, globalLexical->lastProperty());
+        ObjOperandId globalId = writer.loadEnclosingEnvironment(objId);
+        writer.loadObjectResult(globalId);
+    }
+    writer.returnFromIC();
+
+    return true;
+}
+
+bool
+BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId, HandleId id)
+{
+    if (IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope())
+        return false;
+
+    RootedObject env(cx_, env_);
+    RootedShape shape(cx_);
+    while (true) {
+        if (!env->is<GlobalObject>() && !env->is<EnvironmentObject>())
+            return false;
+        if (env->is<WithEnvironmentObject>())
+            return false;
+
+        MOZ_ASSERT(!env->hasUncacheableProto());
+
+        // When we reach an unqualified variables object (like the global) we
+        // have to stop looking and return that object.
+        if (env->isUnqualifiedVarObj())
+            break;
+
+        // Check for an 'own' property on the env. There is no need to
+        // check the prototype as non-with scopes do not inherit properties
+        // from any prototype.
+        shape = env->as<NativeObject>().lookup(cx_, id);
+        if (shape)
+            break;
+
+        env = env->enclosingEnvironment();
+    }
+
+    // If this is an uninitialized lexical or a const, we need to return a
+    // RuntimeLexicalErrorObject.
+    RootedNativeObject holder(cx_, &env->as<NativeObject>());
+    if (shape &&
+        holder->is<EnvironmentObject>() &&
+        (holder->getSlot(shape->slot()).isMagic() || !shape->writable()))
+    {
+        return false;
+    }
+
+    ObjOperandId lastObjId = objId;
+    env = env_;
+    while (env) {
+        if (NeedEnvironmentShapeGuard(env) && !env->is<GlobalObject>())
+            writer.guardShape(lastObjId, env->maybeShape());
+
+        if (env == holder)
+            break;
+
+        lastObjId = writer.loadEnclosingEnvironment(lastObjId);
+        env = env->enclosingEnvironment();
+    }
+    writer.loadObjectResult(lastObjId);
+    writer.returnFromIC();
+
+    return true;
+}
+
 InIRGenerator::InIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
                              ICState::Mode mode, HandleValue key, HandleObject obj)
   : IRGenerator(cx, script, pc, CacheKind::In, mode),
