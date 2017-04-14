@@ -27,6 +27,7 @@ TextEventDispatcher::TextEventDispatcher(nsIWidget* aWidget)
   , mDispatchingEvent(0)
   , mInputTransactionType(eNoInputTransaction)
   , mIsComposing(false)
+  , mHasFocus(false)
 {
   MOZ_RELEASE_ASSERT(mWidget, "aWidget must not be nullptr");
 
@@ -38,6 +39,8 @@ TextEventDispatcher::TextEventDispatcher(nsIWidget* aWidget)
       false);
     sInitialized = true;
   }
+
+  ClearNotificationRequests();
 }
 
 nsresult
@@ -83,6 +86,7 @@ TextEventDispatcher::BeginInputTransactionInternal(
   nsCOMPtr<TextEventDispatcherListener> listener = do_QueryReferent(mListener);
   if (listener) {
     if (listener == aListener && mInputTransactionType == aType) {
+      UpdateNotificationRequests();
       return NS_OK;
     }
     // If this has composition or is dispatching an event, any other listener
@@ -98,6 +102,7 @@ TextEventDispatcher::BeginInputTransactionInternal(
   if (listener && listener != aListener) {
     listener->OnRemovedFrom(this);
   }
+  UpdateNotificationRequests();
   return NS_OK;
 }
 
@@ -121,12 +126,15 @@ TextEventDispatcher::EndInputTransaction(TextEventDispatcherListener* aListener)
 
   mListener = nullptr;
   listener->OnRemovedFrom(this);
+  UpdateNotificationRequests();
 }
 
 void
 TextEventDispatcher::OnDestroyWidget()
 {
   mWidget = nullptr;
+  mHasFocus = false;
+  ClearNotificationRequests();
   mPendingComposition.Clear();
   nsCOMPtr<TextEventDispatcherListener> listener = do_QueryReferent(mListener);
   mListener = nullptr;
@@ -338,13 +346,19 @@ TextEventDispatcher::NotifyIME(const IMENotification& aIMENotification)
 {
   nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
 
+  if (aIMENotification.mMessage == NOTIFY_IME_OF_BLUR) {
+    mHasFocus = false;
+    ClearNotificationRequests();
+  }
+
+
   // First, send the notification to current input transaction's listener.
   nsCOMPtr<TextEventDispatcherListener> listener = do_QueryReferent(mListener);
   if (listener) {
     rv = listener->NotifyIME(this, aIMENotification);
   }
 
-  if (mInputTransactionType == eNativeInputTransaction || !mWidget) {
+  if (!mWidget) {
     return rv;
   }
 
@@ -360,24 +374,66 @@ TextEventDispatcher::NotifyIME(const IMENotification& aIMENotification)
   // focus move).
   nsCOMPtr<TextEventDispatcherListener> nativeListener =
     mWidget->GetNativeTextEventDispatcherListener();
-  if (!nativeListener) {
-    return rv;
+  if (listener != nativeListener && nativeListener) {
+    switch (aIMENotification.mMessage) {
+      case REQUEST_TO_COMMIT_COMPOSITION:
+      case REQUEST_TO_CANCEL_COMPOSITION:
+        // It's not necessary to notify native IME of requests.
+        break;
+      default: {
+        // Even if current input transaction's listener returns NS_OK or
+        // something, we need to notify native IME of notifications because
+        // when user typing after TIP does something, the changed information
+        // is necessary for them.
+        nsresult rv2 =
+          nativeListener->NotifyIME(this, aIMENotification);
+        // But return the result from current listener except when the
+        // notification isn't handled.
+        if (rv == NS_ERROR_NOT_IMPLEMENTED) {
+          rv = rv2;
+        }
+        break;
+      }
+    }
   }
-  switch (aIMENotification.mMessage) {
-    case REQUEST_TO_COMMIT_COMPOSITION:
-    case REQUEST_TO_CANCEL_COMPOSITION:
-      // It's not necessary to notify native IME of requests.
-      return rv;
-    default: {
-      // Even if current input transaction's listener returns NS_OK or
-      // something, we need to notify native IME of notifications because
-      // when user typing after TIP does something, the changed information
-      // is necessary for them.
-      nsresult rv2 =
-        nativeListener->NotifyIME(this, aIMENotification);
-      // But return the result from current listener except when the
-      // notification isn't handled.
-      return rv == NS_ERROR_NOT_IMPLEMENTED ? rv2 : rv;
+
+  if (aIMENotification.mMessage == NOTIFY_IME_OF_FOCUS) {
+    mHasFocus = true;
+    UpdateNotificationRequests();
+  }
+
+  return rv;
+}
+
+void
+TextEventDispatcher::ClearNotificationRequests()
+{
+  mIMENotificationRequests = IMENotificationRequests();
+}
+
+void
+TextEventDispatcher::UpdateNotificationRequests()
+{
+  ClearNotificationRequests();
+
+  // If it doesn't has focus, no notifications are available.
+  if (!mHasFocus || !mWidget) {
+    return;
+  }
+
+  // If there is a listener, its requests are necessary.
+  nsCOMPtr<TextEventDispatcherListener> listener = do_QueryReferent(mListener);
+  if (listener) {
+    mIMENotificationRequests = listener->GetIMENotificationRequests();
+  }
+
+  // Even if this is in non-native input transaction, native IME needs
+  // requests.  So, add native IME requests too.
+  if (!IsInNativeInputTransaction()) {
+    nsCOMPtr<TextEventDispatcherListener> nativeListener =
+      mWidget->GetNativeTextEventDispatcherListener();
+    if (nativeListener) {
+      mIMENotificationRequests |= nativeListener->GetIMENotificationRequests();
     }
   }
 }

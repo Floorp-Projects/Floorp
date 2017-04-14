@@ -39,11 +39,18 @@ namespace widget {
 struct AutoCacheNativeKeyCommands;
 
 class PuppetWidget : public nsBaseWidget
+                   , public TextEventDispatcherListener
 {
+  typedef mozilla::CSSRect CSSRect;
   typedef mozilla::dom::TabChild TabChild;
   typedef mozilla::gfx::DrawTarget DrawTarget;
+
+  // Avoiding to make compiler confused between mozilla::widget and nsIWidget.
+  typedef mozilla::widget::TextEventDispatcher TextEventDispatcher;
+  typedef mozilla::widget::TextEventDispatcherListener
+                             TextEventDispatcherListener;
+
   typedef nsBaseWidget Base;
-  typedef mozilla::CSSRect CSSRect;
 
   // The width and height of the "widget" are clamped to this.
   static const size_t kMaxDimension;
@@ -183,9 +190,11 @@ public:
                                const InputContextAction& aAction) override;
   virtual InputContext GetInputContext() override;
   virtual NativeIMEContext GetNativeIMEContext() override;
-  virtual IMENotificationRequests GetIMENotificationRequests() override;
   TextEventDispatcherListener* GetNativeTextEventDispatcherListener() override
-  { return mNativeTextEventDispatcherListener; }
+  {
+    return mNativeTextEventDispatcherListener ?
+             mNativeTextEventDispatcherListener.get() : this;
+  }
   void SetNativeTextEventDispatcherListener(TextEventDispatcherListener* aListener)
   { mNativeTextEventDispatcherListener = aListener; }
 
@@ -290,6 +299,19 @@ public:
                  const nsTArray<mozilla::FontRange>& aFontRangeArray,
                  const bool aIsVertical,
                  const LayoutDeviceIntPoint& aPoint) override;
+
+  // TextEventDispatcherListener
+  using nsBaseWidget::NotifyIME;
+  NS_IMETHOD NotifyIME(TextEventDispatcher* aTextEventDispatcher,
+                       const IMENotification& aNotification) override;
+  NS_IMETHOD_(IMENotificationRequests) GetIMENotificationRequests() override;
+  NS_IMETHOD_(void) OnRemovedFrom(
+                      TextEventDispatcher* aTextEventDispatcher) override;
+  NS_IMETHOD_(void) WillDispatchKeyboardEvent(
+                      TextEventDispatcher* aTextEventDispatcher,
+                      WidgetKeyboardEvent& aKeyboardEvent,
+                      uint32_t aIndexOfKeypress,
+                      void* aData) override;
 
 protected:
   virtual nsresult NotifyIMEInternal(
