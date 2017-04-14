@@ -1,4 +1,4 @@
-importScripts('/common/get-host-info.sub.js');
+importScripts('get-host-info.sub.js');
 const host_info = get_host_info();
 
 self.onfetch = e => {

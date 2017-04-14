@@ -42,6 +42,6 @@ assert_equals(cues[1].endTime, 1);
 }
 
 function trackError(e) {
-    assert_unreached('got unexpected error event');
+    assert_unreached('got unexpected error event: ' + JSON.stringify(e));
 }
 </script>
