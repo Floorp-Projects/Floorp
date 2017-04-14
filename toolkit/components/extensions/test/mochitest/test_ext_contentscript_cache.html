@@ -44,7 +44,7 @@ add_task(function* test_contentscript_cache() {
   let origin = yield extension.awaitMessage("origin");
   let scriptUrl = `${origin}/content_script.js`;
 
-  let {ExtensionManager} = SpecialPowers.Cu.import("resource://gre/modules/ExtensionContent.jsm", {});
+  let {ExtensionManager} = SpecialPowers.Cu.import("resource://gre/modules/ExtensionChild.jsm", {});
   let ext = ExtensionManager.extensions.get(extension.id);
 
   ext.staticScripts.expiryTimeout = 3000;
@@ -64,7 +64,7 @@ add_task(function* test_contentscript_cache() {
     /* globals addMessageListener, assert */
     chromeScript = SpecialPowers.loadChromeScript(() => {
       addMessageListener("check-script-cache", extensionId => {
-        let {ExtensionManager} = Components.utils.import("resource://gre/modules/ExtensionContent.jsm", {});
+        let {ExtensionManager} = Components.utils.import("resource://gre/modules/ExtensionChild.jsm", {});
         let ext = ExtensionManager.extensions.get(extensionId);
 
         if (ext) {

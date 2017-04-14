@@ -30,6 +30,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionChild",
                                   "resource://gre/modules/ExtensionChild.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionContent",
                                   "resource://gre/modules/ExtensionContent.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionPageChild",
+                                  "resource://gre/modules/ExtensionPageChild.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionUtils",
                                   "resource://gre/modules/ExtensionUtils.jsm");
 
@@ -262,6 +264,18 @@ DocumentManager = {
     Services.obs.removeObserver(this, "content-document-global-created");
   },
 
+  extensionProcessInitialized: false,
+  initExtensionProcess() {
+    if (this.extensionProcessInitialized || !ExtensionManagement.isExtensionProcess) {
+      return;
+    }
+    this.extensionProcessInitialized = true;
+
+    for (let global of this.globals.keys()) {
+      ExtensionPageChild.init(global);
+    }
+  },
+
   // Initialize a frame script global which extension contexts may be loaded
   // into.
   initGlobal(global) {
@@ -271,13 +285,14 @@ DocumentManager = {
     });
 
     this.globals.set(global, new ExtensionGlobal(global));
-    if (ExtensionManagement.isExtensionProcess) {
-      ExtensionChild.init(global);
+    this.initExtensionProcess();
+    if (this.extensionProcessInitialized && ExtensionManagement.isExtensionProcess) {
+      ExtensionPageChild.init(global);
     }
   },
   uninitGlobal(global) {
-    if (ExtensionManagement.isExtensionProcess) {
-      ExtensionChild.uninit(global);
+    if (this.extensionProcessInitialized) {
+      ExtensionPageChild.uninit(global);
     }
     this.globals.get(global).uninit();
     this.globals.delete(global);
@@ -286,6 +301,7 @@ DocumentManager = {
   initExtension(extension) {
     if (this.extensionCount === 0) {
       this.init();
+      this.initExtensionProcess();
     }
     this.extensionCount++;
 
@@ -446,7 +462,7 @@ DocumentManager = {
     if (apiLevel === levels.CONTENTSCRIPT_PRIVILEGES) {
       ExtensionContent.initExtensionContext(extension.realExtension, window);
     } else if (apiLevel === levels.FULL_PRIVILEGES) {
-      ExtensionChild.initExtensionContext(extension.realExtension, window);
+      ExtensionPageChild.initExtensionContext(extension.realExtension, window);
     } else {
       throw new Error(`Unexpected window with extension ID ${extensionId}`);
     }
@@ -509,7 +525,7 @@ class StubExtension {
   // Lazily create the real extension object when needed.
   get realExtension() {
     if (!this._realExtension) {
-      this._realExtension = new ExtensionContent.BrowserExtensionContent(this.data);
+      this._realExtension = new ExtensionChild.BrowserExtensionContent(this.data);
     }
     return this._realExtension;
   }
