@@ -2118,7 +2118,7 @@ CacheIRCompiler::emitLoadObjectResult()
     if (output.hasValue())
         masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
     else
-        MOZ_CRASH("NYI: Typed LoadObjectResult");
+        masm.mov(obj, output.typedReg().gpr());
 
     return true;
 }
