@@ -80,10 +80,10 @@ ServoMediaList::Delete(const nsAString& aOldMedium)
 }
 
 bool
-ServoMediaList::Matches(nsPresContext& aPresContext,
-                        nsMediaQueryResultCacheKey*) const
+ServoMediaList::Matches(nsPresContext* aPresContext) const
 {
-  const RawServoStyleSet& rawSet = aPresContext.StyleSet()->AsServo()->RawSet();
+  const RawServoStyleSet& rawSet =
+    aPresContext->StyleSet()->AsServo()->RawSet();
   return Servo_MediaList_Matches(mRawList, &rawSet);
 }
 
