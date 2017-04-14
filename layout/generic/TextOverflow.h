@@ -127,7 +127,7 @@ class TextOverflow {
    * @param aAlignmentEdges the outermost edges of all text and atomic
    *   inline-level frames that are inside the area between the markers
    * @return the area inside which we should add any markers;
-   *   this is the block's content area.
+   *   this is the block's content area narrowed by any floats on this line.
    */
   LogicalRect ExamineLineFrames(nsLineBox*      aLine,
                                 FrameHashtable* aFramesToHide,
@@ -201,7 +201,7 @@ class TextOverflow {
    * @param aCreateIEnd if true, create a marker on the inline end side
    * @param aInsideMarkersArea is the area inside the markers
    * @param aContentArea is the area inside which we should add the markers;
-   *   this is the block's content area.
+   *   this is the block's content area narrowed by any floats on this line.
    */
   void CreateMarkers(const nsLineBox* aLine,
                      bool aCreateIStart, bool aCreateIEnd,
