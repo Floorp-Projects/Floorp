@@ -37,7 +37,9 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                   Stringify(mixBlendMode).c_str());
   }
 
-  if (GetCompositorAnimationsId()) {
+  if (GetAnimations().Length()) {
+    MOZ_ASSERT(GetCompositorAnimationsId());
+
     CompositorAnimations anim;
     anim.animations() = GetAnimations();
     anim.id() = GetCompositorAnimationsId();

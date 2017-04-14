@@ -25,6 +25,11 @@ public:
 protected:
   virtual ~WebRenderContainerLayer()
   {
+    if (GetAnimations().Length()) {
+      mManager->AsWebRenderLayerManager()->
+        AddCompositorAnimationsIdForDiscard(GetCompositorAnimationsId());
+    }
+
     ContainerLayer::RemoveAllChildren();
     MOZ_COUNT_DTOR(WebRenderContainerLayer);
   }
