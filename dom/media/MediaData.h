@@ -562,7 +562,7 @@ public:
   bool IsSentToCompositor() { return mSentToCompositor; }
 
   void UpdateDuration(const media::TimeUnit& aDuration);
-  void UpdateTimestamp(int64_t aTimestamp);
+  void UpdateTimestamp(const media::TimeUnit& aTimestamp);
 
 protected:
   ~VideoData();

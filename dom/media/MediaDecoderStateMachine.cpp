@@ -1420,7 +1420,7 @@ private:
           aVideo->GetEndTime() >= target) {
         // The seek target lies inside this frame's time slice. Adjust the
         // frame's start time to match the seek target.
-        aVideo->UpdateTimestamp(target.ToMicroseconds());
+        aVideo->UpdateTimestamp(target);
       }
       mFirstVideoFrameAfterSeek = nullptr;
 
