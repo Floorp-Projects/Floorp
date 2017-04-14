@@ -4,6 +4,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Widget")
+
+with Files("crashtests/*1128214*"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("crashtests/*303901*"):
+    BUG_COMPONENT = ("Core", "Graphics")
+
+with Files("crashtests/*380359*"):
+    BUG_COMPONENT = ("Core", "Widget")
+
+with Files("reftests/**"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
+with Files("reftests/*fallback*"):
+    BUG_COMPONENT = ("Core", "Layout: Form Controls")
+
+with Files("*CompositorWidget*"):
+    BUG_COMPONENT = ("Core", "Graphics")
+
+with Files("*FontRange*"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
 toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
 if toolkit in ('cocoa', 'android', 'gonk', 'uikit'):
