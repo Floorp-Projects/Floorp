@@ -1565,6 +1565,7 @@ class PackageFrontend(MachCommandBase):
             open_manifest,
             unpack_file,
         )
+        from requests.adapters import HTTPAdapter
         import redo
         import requests
         import shutil
@@ -1594,8 +1595,16 @@ class PackageFrontend(MachCommandBase):
         if authentication_file:
             with open(authentication_file, 'rb') as f:
                 token = f.read().strip()
-            cache._download_manager.session.headers['Authorization'] = \
-                'Bearer {}'.format(token)
+
+            class TooltoolAuthenticator(HTTPAdapter):
+                def send(self, request, *args, **kwargs):
+                    request.headers['Authorization'] = \
+                        'Bearer {}'.format(token)
+                    return super(TooltoolAuthenticator, self).send(
+                        request, *args, **kwargs)
+
+            cache._download_manager.session.mount(
+                tooltool_url, TooltoolAuthenticator())
 
         manifest = open_manifest(tooltool_manifest)
         downloaded_files = {}
