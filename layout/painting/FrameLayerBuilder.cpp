@@ -3208,6 +3208,8 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
   }
 
   for (auto& item : data->mAssignedDisplayItems) {
+    MOZ_ASSERT(item.mItem->GetType() != nsDisplayItem::TYPE_LAYER_EVENT_REGIONS);
+
     InvalidateForLayerChange(item.mItem, data->mLayer);
     mLayerBuilder->AddPaintedDisplayItem(data, item.mItem, item.mClip,
                                          *this, item.mLayerState,
@@ -4465,7 +4467,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
                                      topLeft);
         });
 
-      nsIntRegion opaquePixels;
       if (itemType == nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
         nsDisplayLayerEventRegions* eventRegions =
             static_cast<nsDisplayLayerEventRegions*>(item);
@@ -4476,26 +4477,26 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         if (mManager->IsWidgetLayerManager()) {
           paintedLayerData->UpdateCommonClipCount(itemClip);
         }
-        opaquePixels = ComputeOpaqueRect(item,
+        nsIntRegion opaquePixels = ComputeOpaqueRect(item,
             animatedGeometryRoot, itemClip, aList,
             &paintedLayerData->mHideAllLayersBelow,
             &paintedLayerData->mOpaqueForAnimatedGeometryRootParent);
         MOZ_ASSERT(nsIntRegion(itemDrawRect).Contains(opaquePixels));
         opaquePixels.AndWith(itemVisibleRect);
-      }
+        paintedLayerData->Accumulate(this, item, opaquePixels,
+            itemVisibleRect, itemClip, layerState);
 
-      paintedLayerData->Accumulate(this, item, opaquePixels,
-          itemVisibleRect, itemClip, layerState);
-      if (!paintedLayerData->mLayer) {
-        // Try to recycle the old layer of this display item.
-        RefPtr<PaintedLayer> layer =
-          AttemptToRecyclePaintedLayer(animatedGeometryRoot, item, topLeft);
-        if (layer) {
-          paintedLayerData->mLayer = layer;
+        if (!paintedLayerData->mLayer) {
+          // Try to recycle the old layer of this display item.
+          RefPtr<PaintedLayer> layer =
+            AttemptToRecyclePaintedLayer(animatedGeometryRoot, item, topLeft);
+          if (layer) {
+            paintedLayerData->mLayer = layer;
 
-          NS_ASSERTION(FindIndexOfLayerIn(mNewChildLayers, layer) < 0,
-                       "Layer already in list???");
-          mNewChildLayers[paintedLayerData->mNewChildLayersIndex].mLayer = layer.forget();
+            NS_ASSERTION(FindIndexOfLayerIn(mNewChildLayers, layer) < 0,
+                         "Layer already in list???");
+            mNewChildLayers[paintedLayerData->mNewChildLayersIndex].mLayer = layer.forget();
+          }
         }
       }
     }

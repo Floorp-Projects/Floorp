@@ -4444,12 +4444,6 @@ nsDisplayLayerEventRegions::WriteDebugInfo(std::stringstream& aStream)
   }
 }
 
-mozilla::Maybe<nscolor>
-nsDisplayLayerEventRegions::IsUniform(nsDisplayListBuilder* aBuilder)
-{
-  return Some(NS_RGBA(0,0,0,0));
-}
-
 nsDisplayCaret::nsDisplayCaret(nsDisplayListBuilder* aBuilder,
                                nsIFrame* aCaretFrame)
   : nsDisplayItem(aBuilder, aCaretFrame)
