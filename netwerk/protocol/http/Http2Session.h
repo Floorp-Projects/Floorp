@@ -427,6 +427,9 @@ private:
   // the session received a GoAway frame with a valid GoAwayID
   bool                 mCleanShutdown;
 
+  // the session received the opening SETTINGS frame from the server
+  bool                 mReceivedSettings;
+
   // The TLS comlpiance checks are not done in the ctor beacuse of bad
   // exception handling - so we do them at IO time and cache the result
   bool                 mTLSProfileConfirmed;
@@ -518,9 +521,12 @@ private:
   // The ID(s) of the stream(s) that we are getting 0RTT data from.
   nsTArray<uint32_t> m0RTTStreams;
 
+  bool RealJoinConnection(const nsACString &hostname, int32_t port, bool jk);
   bool TestOriginFrame(const nsACString &name, int32_t port);
   bool mOriginFrameActivated;
   nsDataHashtable<nsCStringHashKey, bool> mOriginFrame;
+
+  nsDataHashtable<nsCStringHashKey, bool> mJoinConnectionCache;
 
 private:
 /// connect tunnels
