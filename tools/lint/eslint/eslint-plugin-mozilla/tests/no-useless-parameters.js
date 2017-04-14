@@ -29,13 +29,6 @@ exports.runTest = function(ruleTester) {
       "elt.addEventListener('click', handler, {once: true});",
       "elt.removeEventListener('click', handler);",
       "elt.removeEventListener('click', handler, true);",
-      "Services.obs.addObserver(this, 'topic', true);",
-      "Services.obs.addObserver(this, 'topic');",
-      "Services.prefs.addObserver('branch', this, true);",
-      "Services.prefs.addObserver('branch', this);",
-      "array.appendElement(elt);",
-      "Services.obs.notifyObservers(obj, 'topic', 'data');",
-      "Services.obs.notifyObservers(obj, 'topic');",
       "window.getComputedStyle(elt);",
       "window.getComputedStyle(elt, ':before');"
     ],
@@ -82,34 +75,6 @@ exports.runTest = function(ruleTester) {
         errors: callError(
           "removeEventListener's third parameter can be omitted when it's" +
           " false.")
-      },
-      {
-        code: "Services.obs.addObserver(this, 'topic', false);",
-        errors: callError(
-          "addObserver's third parameter can be omitted when it's" +
-          " false.")
-      },
-      {
-        code: "Services.prefs.addObserver('branch', this, false);",
-        errors: callError(
-          "addObserver's third parameter can be omitted when it's" +
-          " false.")
-      },
-      {
-        code: "array.appendElement(elt, false);",
-        errors: callError(
-          "appendElement's second parameter can be omitted when it's" +
-          " false.")
-      },
-      {
-        code: "Services.obs.notifyObservers(obj, 'topic', null);",
-        errors: callError(
-          "notifyObservers's third parameter can be omitted.")
-      },
-      {
-        code: "Services.obs.notifyObservers(obj, 'topic', '');",
-        errors: callError(
-          "notifyObservers's third parameter can be omitted.")
       },
       {
         code: "window.getComputedStyle(elt, null);",
