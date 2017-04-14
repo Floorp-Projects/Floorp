@@ -141,7 +141,7 @@ add_task(function* test_expiration_history_observer() {
     visitDate: Date.now() * 1000,
     transition: Ci.nsINavHistoryService.TRANSITION_LINK
   });
-  Services.obs.notifyObservers(null, 'idle-daily');
+  Services.obs.notifyObservers(null, 'idle-daily', '');
 
   // And we should receive notifications for both scopes.
   yield subChangePromise;

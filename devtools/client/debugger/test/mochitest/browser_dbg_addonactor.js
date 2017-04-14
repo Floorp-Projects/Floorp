@@ -64,7 +64,7 @@ function testDebugger() {
     gThreadClient.resume(deferred.resolve);
   });
 
-  Services.obs.notifyObservers(null, "debuggerAttached");
+  Services.obs.notifyObservers(null, "debuggerAttached", null);
 
   return deferred.promise;
 }

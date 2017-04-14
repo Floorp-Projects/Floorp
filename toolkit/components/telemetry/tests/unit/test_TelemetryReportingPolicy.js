@@ -82,13 +82,13 @@ add_task(function* test_firstRun() {
   fakeShowPolicyTimeout((callback, timeout) => startupTimeout = timeout, () => {});
   TelemetryReportingPolicy.reset();
 
-  Services.obs.notifyObservers(null, "sessionstore-windows-restored");
+  Services.obs.notifyObservers(null, "sessionstore-windows-restored", null);
   Assert.equal(startupTimeout, FIRST_RUN_TIMEOUT_MSEC,
                "The infobar display timeout should be 60s on the first run.");
 
   // Run again, and check that we actually wait only 10 seconds.
   TelemetryReportingPolicy.reset();
-  Services.obs.notifyObservers(null, "sessionstore-windows-restored");
+  Services.obs.notifyObservers(null, "sessionstore-windows-restored", null);
   Assert.equal(startupTimeout, OTHER_RUNS_TIMEOUT_MSEC,
                "The infobar display timeout should be 10s on other runs.");
 });

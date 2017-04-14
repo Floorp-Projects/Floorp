@@ -104,7 +104,7 @@ this.StartupPerformance = {
     this._promiseFinished.then(() => {
       try {
         this._isRestored = true;
-        Services.obs.notifyObservers(null, this.RESTORED_TOPIC);
+        Services.obs.notifyObservers(null, this.RESTORED_TOPIC, "");
 
         if (this._latestRestoredTimeStamp == this._startTimeStamp) {
           // Apparently, we haven't restored any tab.

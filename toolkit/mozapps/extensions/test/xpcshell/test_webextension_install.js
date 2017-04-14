@@ -110,7 +110,7 @@ add_task(function* test_unsigned_no_id_temp_install() {
   equal(secondAddon.id, addon.id, "Reinstalled add-on has the expected ID");
 
   secondAddon.uninstall();
-  Services.obs.notifyObservers(addonDir, "flush-cache-entry");
+  Services.obs.notifyObservers(addonDir, "flush-cache-entry", null);
   addonDir.remove(true);
   AddonTestUtils.useRealCertChecks = false;
 });

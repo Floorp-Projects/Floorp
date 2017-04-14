@@ -1275,7 +1275,7 @@ var LoginManagerContent = {
         usernameField.addEventListener("mousedown", observer);
       }
 
-      Services.obs.notifyObservers(form.rootElement, "passwordmgr-processed-form");
+      Services.obs.notifyObservers(form.rootElement, "passwordmgr-processed-form", null);
     }
   },
 

@@ -67,7 +67,7 @@ nsContextMenu.prototype = {
         frameId: this.frameOuterWindowID,
       };
       subject.wrappedJSObject = subject;
-      Services.obs.notifyObservers(subject, "on-build-contextmenu");
+      Services.obs.notifyObservers(subject, "on-build-contextmenu", null);
     }
 
     this.isFrameImage = document.getElementById("isFrameImage");

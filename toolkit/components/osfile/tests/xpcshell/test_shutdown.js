@@ -50,7 +50,7 @@ add_task(function* system_shutdown() {
         }
       };
       Services.console.registerListener(observer);
-      Services.obs.notifyObservers(null, topic);
+      Services.obs.notifyObservers(null, topic, null);
       do_timeout(1000, function() {
         do_print("Timeout while waiting for resource: " + resource);
         deferred.reject("timeout");

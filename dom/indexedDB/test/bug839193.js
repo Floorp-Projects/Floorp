@@ -21,12 +21,12 @@ function onLoad()
   quotaRequest.cancel();
   Components.classes["@mozilla.org/observer-service;1"]
             .getService(Components.interfaces.nsIObserverService)
-            .notifyObservers(window, "bug839193-loaded");
+            .notifyObservers(window, "bug839193-loaded", null);
 }
 
 function onUnload()
 {
   Components.classes["@mozilla.org/observer-service;1"]
             .getService(Components.interfaces.nsIObserverService)
-            .notifyObservers(window, "bug839193-unloaded");
+            .notifyObservers(window, "bug839193-unloaded", null);
 }

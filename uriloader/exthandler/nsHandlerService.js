@@ -294,7 +294,7 @@ HandlerService.prototype = {
           this._rdf.UnregisterDataSource(this.__ds);
           this.__ds = null;
         }
-        this._observerSvc.notifyObservers(null, "handlersvc-rdf-replace-complete");
+        this._observerSvc.notifyObservers(null, "handlersvc-rdf-replace-complete", null);
         break;
     }
   },

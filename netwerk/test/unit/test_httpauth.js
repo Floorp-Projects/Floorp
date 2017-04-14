@@ -70,7 +70,7 @@ function run_test() {
     }
 
     // simulate leaving private browsing mode
-    Services.obs.notifyObservers(null, "last-pb-context-exited");
+    Services.obs.notifyObservers(null, "last-pb-context-exited", null);
 
     // make sure the added auth entry is no longer accessible in any privacy state
     domain = {value: kEmpty}, user = {value: kEmpty}, pass = {value: kEmpty};

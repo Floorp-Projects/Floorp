@@ -32,6 +32,6 @@ add_task(function* test_json_parser() {
   Assert.deepEqual(extension.rawManifest, expectedManifest,
                    "Manifest with correctly-filtered comments");
 
-  Services.obs.notifyObservers(xpi, "flush-cache-entry");
+  Services.obs.notifyObservers(xpi, "flush-cache-entry", null);
   xpi.remove(false);
 });

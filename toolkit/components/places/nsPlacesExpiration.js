@@ -748,7 +748,7 @@ nsPlacesExpiration.prototype = {
       }
 
       // Dispatch a notification that expiration has finished.
-      Services.obs.notifyObservers(null, TOPIC_EXPIRATION_FINISHED);
+      Services.obs.notifyObservers(null, TOPIC_EXPIRATION_FINISHED, null);
     }
   },
 

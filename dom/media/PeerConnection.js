@@ -840,7 +840,7 @@ class RTCPeerConnection {
           let chrome = new CreateOfferRequest(outerId, this._winID,
                                               this._globalPCListId, false);
           let request = this._win.CreateOfferRequest._create(this._win, chrome);
-          Services.obs.notifyObservers(request, "PeerConnection:request");
+          Services.obs.notifyObservers(request, "PeerConnection:request", null);
         });
       }
     }

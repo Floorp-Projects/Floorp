@@ -120,7 +120,7 @@ function addAdaptiveFeedback(aUrl, aSearch, aCallback) {
     searchString: aSearch
   };
 
-  os.notifyObservers(thing, "autocomplete-will-enter-text");
+  os.notifyObservers(thing, "autocomplete-will-enter-text", null);
 }
 
 

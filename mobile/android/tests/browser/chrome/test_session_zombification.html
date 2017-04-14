@@ -163,7 +163,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
     ok(tabTest.browser.__SS_restore, "Test tab is still set for delay loading.");
 
     // Fake an "application-foreground" notification
-    observerService.notifyObservers(null, "application-foreground");
+    observerService.notifyObservers(null, "application-foreground", null);
 
     // The test tab should now start reloading
     yield promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");

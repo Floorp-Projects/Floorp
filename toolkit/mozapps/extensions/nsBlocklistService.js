@@ -203,7 +203,7 @@ function restartApp() {
            getService(Ci.nsIObserverService);
   var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].
                    createInstance(Ci.nsISupportsPRBool);
-  os.notifyObservers(cancelQuit, "quit-application-requested");
+  os.notifyObservers(cancelQuit, "quit-application-requested", null);
 
   // Something aborted the quit process.
   if (cancelQuit.data)
@@ -360,7 +360,7 @@ Blocklist.prototype = {
                                             aMsg.data.appVersion,
                                             aMsg.data.toolkitVersion);
       case "Blocklist:content-blocklist-updated":
-        Services.obs.notifyObservers(null, "content-blocklist-updated");
+        Services.obs.notifyObservers(null, "content-blocklist-updated", null);
         break;
       default:
         throw new Error("Unknown blocklist message received from content: " + aMsg.name);
@@ -1294,7 +1294,7 @@ Blocklist.prototype = {
   },
 
   _notifyObserversBlocklistUpdated() {
-    Services.obs.notifyObservers(this, "blocklist-updated");
+    Services.obs.notifyObservers(this, "blocklist-updated", "");
     Services.ppmm.broadcastAsyncMessage("Blocklist:blocklistInvalidated", {});
   },
 

@@ -1191,7 +1191,7 @@ SpecialPowersAPI.prototype = {
       Services.obs.notifyObservers(null, "specialpowers-http-notify-request", uri);
     },
     "specialpowers-browser-fullZoom:zoomReset": function() {
-      Services.obs.notifyObservers(null, "specialpowers-browser-fullZoom:zoomReset");
+      Services.obs.notifyObservers(null, "specialpowers-browser-fullZoom:zoomReset", null);
     },
   },
 

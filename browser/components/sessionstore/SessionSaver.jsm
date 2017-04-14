@@ -54,7 +54,7 @@ const PREF_IDLE_DELAY = "browser.sessionstore.idleDelay";
 
 // Notify observers about a given topic with a given subject.
 function notify(subject, topic) {
-  Services.obs.notifyObservers(subject, topic);
+  Services.obs.notifyObservers(subject, topic, "");
 }
 
 // TelemetryStopwatch helper functions.

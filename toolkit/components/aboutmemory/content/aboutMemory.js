@@ -421,14 +421,14 @@ function onLoad() {
 // ---------------------------------------------------------------------------
 
 function doGC() {
-  Services.obs.notifyObservers(null, "child-gc-request");
+  Services.obs.notifyObservers(null, "child-gc-request", null);
   Cu.forceGC();
   updateMainAndFooter("Garbage collection completed", SHOW_TIMESTAMP,
                       HIDE_FOOTER);
 }
 
 function doCC() {
-  Services.obs.notifyObservers(null, "child-cc-request");
+  Services.obs.notifyObservers(null, "child-cc-request", null);
   window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindowUtils)
         .cycleCollect();
@@ -437,7 +437,7 @@ function doCC() {
 }
 
 function doMMU() {
-  Services.obs.notifyObservers(null, "child-mmu-request");
+  Services.obs.notifyObservers(null, "child-mmu-request", null);
   gMgr.minimizeMemoryUsage(
     () => updateMainAndFooter("Memory minimization completed",
                               SHOW_TIMESTAMP, HIDE_FOOTER));

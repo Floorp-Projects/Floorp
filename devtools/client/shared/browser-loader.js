@@ -37,7 +37,7 @@ const browserBasedDirsRegExp =
   /^resource\:\/\/devtools\/client\/\S*\/components\//;
 
 function clearCache() {
-  Services.obs.notifyObservers(null, "startupcache-invalidate");
+  Services.obs.notifyObservers(null, "startupcache-invalidate", null);
 }
 
 /*

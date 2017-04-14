@@ -112,7 +112,7 @@ function updateTabListVisibility() {
 }
 
 function restoreSession() {
-  Services.obs.notifyObservers(null, "sessionstore-initiating-manual-restore");
+  Services.obs.notifyObservers(null, "sessionstore-initiating-manual-restore", "");
   document.getElementById("errorTryAgain").disabled = true;
 
   if (isTreeViewVisible()) {

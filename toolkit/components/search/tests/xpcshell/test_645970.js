@@ -16,5 +16,5 @@ function run_test() {
   // set in order to initiate it correctly
   let engine = Services.search.getEngineByName("bug645970");
   do_check_neq(engine, null);
-  Services.obs.notifyObservers(null, "quit-application");
+  Services.obs.notifyObservers(null, "quit-application", null);
 }

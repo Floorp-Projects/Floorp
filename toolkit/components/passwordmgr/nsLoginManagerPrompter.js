@@ -969,7 +969,7 @@ LoginManagerPrompter.prototype = {
       callback: () => {
         histogram.add(PROMPT_ADD_OR_UPDATE);
         if (histogramName == "PWMGR_PROMPT_REMEMBER_ACTION") {
-          Services.obs.notifyObservers(null, "LoginStats:NewSavedPassword");
+          Services.obs.notifyObservers(null, "LoginStats:NewSavedPassword", null);
         }
         readDataFromUI();
         persistData();
@@ -1138,7 +1138,7 @@ LoginManagerPrompter.prototype = {
                                   notificationText, buttons);
     }
 
-    Services.obs.notifyObservers(aLogin, "passwordmgr-prompt-save");
+    Services.obs.notifyObservers(aLogin, "passwordmgr-prompt-save", null);
   },
 
   _removeLoginNotifications() {
@@ -1219,7 +1219,7 @@ LoginManagerPrompter.prototype = {
       this.log("Ignoring login.");
     }
 
-    Services.obs.notifyObservers(aLogin, "passwordmgr-prompt-save");
+    Services.obs.notifyObservers(aLogin, "passwordmgr-prompt-save", null);
   },
 
 

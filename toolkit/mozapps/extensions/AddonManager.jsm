@@ -1358,7 +1358,7 @@ var AddonManagerInternal = {
         permissions: difference,
         resolve, reject
       }};
-      Services.obs.notifyObservers(subject, "webextension-update-permissions");
+      Services.obs.notifyObservers(subject, "webextension-update-permissions", null);
     });
   },
 
@@ -1382,7 +1382,7 @@ var AddonManagerInternal = {
 
       logger.debug("Background update check beginning");
 
-      Services.obs.notifyObservers(null, "addons-background-update-start");
+      Services.obs.notifyObservers(null, "addons-background-update-start", null);
 
       if (this.updateEnabled) {
         let scope = {};
@@ -1531,7 +1531,8 @@ var AddonManagerInternal = {
 
       logger.debug("Background update check complete");
       Services.obs.notifyObservers(null,
-                                   "addons-background-update-complete");
+                                   "addons-background-update-complete",
+                                   null);
     }.bind(this));
     // Fork the promise chain so we can log the error and let our caller see it too.
     buPromise.then(null, e => logger.warn("Error in background update", e));
@@ -1769,7 +1770,7 @@ var AddonManagerInternal = {
       }
 
       // only tests should care about this
-      Services.obs.notifyObservers(null, "TEST:addon-repository-data-updated");
+      Services.obs.notifyObservers(null, "TEST:addon-repository-data-updated", null);
     }.bind(this));
   },
 
@@ -2017,7 +2018,7 @@ var AddonManagerInternal = {
         install: aInstallFn,
       },
     };
-    Services.obs.notifyObservers(info, aTopic);
+    Services.obs.notifyObservers(info, aTopic, null);
   },
 
   startInstall(browser, url, install) {
@@ -2074,7 +2075,7 @@ var AddonManagerInternal = {
 
         if (WEBEXT_PERMISSION_PROMPTS && !needsRestart) {
           let subject = {wrappedJSObject: {target: browser, addon: install.addon}};
-          Services.obs.notifyObservers(subject, "webextension-install-notify");
+          Services.obs.notifyObservers(subject, "webextension-install-notify", null);
         } else {
           self.installNotifyObservers("addon-install-complete", browser, url, install);
         }
@@ -2816,7 +2817,7 @@ var AddonManagerInternal = {
           }
         };
         subject.wrappedJSObject.info.permissions = info.addon.userPermissions;
-        Services.obs.notifyObservers(subject, "webextension-permission-prompt");
+        Services.obs.notifyObservers(subject, "webextension-permission-prompt", null);
       } else if (requireConfirm) {
         // The methods below all want to call the install() or cancel()
         // method on the provided AddonInstall object to either accept
@@ -3056,7 +3057,7 @@ var AddonManagerInternal = {
         let callback = () => resolve(result);
         if (Preferences.get(PREF_WEBEXT_PERM_PROMPTS, false)) {
           let subject = {wrappedJSObject: {target, addon, callback}};
-          Services.obs.notifyObservers(subject, "webextension-install-notify")
+          Services.obs.notifyObservers(subject, "webextension-install-notify", null)
         } else {
           callback();
         }

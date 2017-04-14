@@ -212,7 +212,7 @@ function test_private_browsing1() {
     ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
                                IS_PRIVATE));
     // Simulate leaving private browsing mode
-    Services.obs.notifyObservers(null, "last-pb-context-exited");
+    Services.obs.notifyObservers(null, "last-pb-context-exited", null);
   });
 }
 

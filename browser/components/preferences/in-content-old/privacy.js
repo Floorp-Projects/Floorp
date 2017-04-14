@@ -659,7 +659,7 @@ var gPrivacyPane = {
         ts.value = timeSpanOrig;
       }
 
-      Services.obs.notifyObservers(null, "clear-private-data");
+      Services.obs.notifyObservers(null, "clear-private-data", null);
     });
   },
 

@@ -24,7 +24,7 @@ const MSG_JAR_FLUSH = "AddonJarFlush";
  *        The ZIP/XPI/JAR file as a nsIFile
  */
 function flushJarCache(aJarFile) {
-  Services.obs.notifyObservers(aJarFile, "flush-cache-entry");
+  Services.obs.notifyObservers(aJarFile, "flush-cache-entry", null);
   Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageBroadcaster)
     .broadcastAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
 }

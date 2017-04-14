@@ -174,7 +174,7 @@ FxAccountsPushService.prototype = {
       case ON_PROFILE_UPDATED_NOTIFICATION:
         // We already have a "profile updated" notification sent via WebChannel,
         // let's just re-use that.
-        Services.obs.notifyObservers(null, ON_PROFILE_CHANGE_NOTIFICATION);
+        Services.obs.notifyObservers(null, ON_PROFILE_CHANGE_NOTIFICATION, null);
         return;
       case ON_PASSWORD_CHANGED_NOTIFICATION:
       case ON_PASSWORD_RESET_NOTIFICATION:
@@ -197,7 +197,7 @@ FxAccountsPushService.prototype = {
   _onPasswordChanged: Task.async(function* () {
     if (!(yield this.fxAccounts.sessionStatus())) {
       yield this.fxAccounts.resetCredentials();
-      Services.obs.notifyObservers(null, ON_ACCOUNT_STATE_CHANGE_NOTIFICATION);
+      Services.obs.notifyObservers(null, ON_ACCOUNT_STATE_CHANGE_NOTIFICATION, null);
     }
   }),
   /**

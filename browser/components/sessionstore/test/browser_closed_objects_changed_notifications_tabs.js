@@ -57,7 +57,7 @@ add_task(function* test_closedObjectsChangedNotifications() {
 
   // Forget any previous closed windows or tabs from other tests that may have
   // run in the same session.
-  yield awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-session-history"));
+  yield awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-session-history", 0));
 
   // Add an observer to count the number of notifications.
   Services.obs.addObserver(countingObserver, TOPIC);
@@ -90,7 +90,7 @@ add_task(function* test_closedObjectsChangedNotifications() {
   assertNotificationCount(5);
 
   info("Purging session history.");
-  yield awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-session-history"));
+  yield awaitNotification(() => Services.obs.notifyObservers(null, "browser:purge-session-history", 0));
   assertNotificationCount(6);
 
   info("Opening and closing another tab.");

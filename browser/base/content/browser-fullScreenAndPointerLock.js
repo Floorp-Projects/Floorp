@@ -393,7 +393,7 @@ var FullScreen = {
         break;
       }
       case "DOMFullscreen:Painted": {
-        Services.obs.notifyObservers(window, "fullscreen-painted");
+        Services.obs.notifyObservers(window, "fullscreen-painted", "");
         TelemetryStopwatch.finish("FULLSCREEN_CHANGE_MS");
         break;
       }
