@@ -370,7 +370,7 @@ ContextToPC(CONTEXT* context)
 #endif
 }
 
-uint8_t*
+static uint8_t*
 ContextToFP(CONTEXT* context)
 {
 #ifdef JS_CODEGEN_NONE
@@ -379,6 +379,22 @@ ContextToFP(CONTEXT* context)
     return reinterpret_cast<uint8_t*>(FP_sig(context));
 #endif
 }
+
+#if defined(XP_DARWIN)
+static uint8_t*
+ContextToFP(EMULATOR_CONTEXT* context)
+{
+# if defined(__x86_64__)
+    return (uint8_t*)context->thread.__rbp;
+# elif defined(__i386__)
+    return (uint8_t*)context->thread.uts.ts32.__ebp;
+# elif defined(__arm__)
+    return (uint8_t*)context->thread.__fp;
+# else
+#  error Unsupported architecture
+# endif
+}
+#endif  // XP_DARWIN
 
 #if defined(WASM_HUGE_MEMORY)
 MOZ_COLD static void
@@ -616,7 +632,7 @@ ComputeAccessAddress(EMULATOR_CONTEXT* context, const Disassembler::ComplexAddre
 
 MOZ_COLD static void
 HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
-                   const Instance& instance, uint8_t** ppc)
+                   const Instance& instance, WasmActivation* activation, uint8_t** ppc)
 {
     MOZ_RELEASE_ASSERT(instance.codeSegment().containsFunctionPC(pc));
 
@@ -626,6 +642,7 @@ HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddr
         // experimental SIMD.js or Atomics. When these are converted to
         // non-experimental wasm features, this case, as well as outOfBoundsCode,
         // can be removed.
+        activation->startInterrupt(pc, ContextToFP(context));
         *ppc = instance.codeSegment().outOfBoundsCode();
         return;
     }
@@ -761,13 +778,14 @@ HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddr
 
 MOZ_COLD static void
 HandleMemoryAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
-                   const Instance& instance, uint8_t** ppc)
+                   const Instance& instance, WasmActivation* activation, uint8_t** ppc)
 {
     MOZ_RELEASE_ASSERT(instance.codeSegment().containsFunctionPC(pc));
 
     const MemoryAccess* memoryAccess = instance.code().lookupMemoryAccess(pc);
     if (!memoryAccess) {
         // See explanation in the WASM_HUGE_MEMORY HandleMemoryAccess.
+        activation->startInterrupt(pc, ContextToFP(context));
         *ppc = instance.codeSegment().outOfBoundsCode();
         return;
     }
@@ -820,9 +838,9 @@ HandleFault(PEXCEPTION_POINTERS exception)
         return false;
 
     if (!code->segment().containsFunctionPC(pc)) {
-        // On Windows, it is possible for InterruptRunningCode to execute
+        // On Windows, it is possible for InterruptRunningJitCode to execute
         // between a faulting heap access and the handling of the fault due
-        // to InterruptRunningCode's use of SuspendThread. When this happens,
+        // to InterruptRunningJitCode's use of SuspendThread. When this happens,
         // after ResumeThread, the exception handler is called with pc equal to
         // CodeSegment.interrupt, which is logically wrong. The Right Thing would
         // be for the OS to make fault-handling atomic (so that CONTEXT.pc was
@@ -830,6 +848,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
         // case and silence the exception ourselves (the exception will
         // retrigger after the interrupt jumps back to resumePC).
         return pc == code->segment().interruptCode() &&
+               activation->interrupted() &&
                code->segment().containsFunctionPC(activation->resumePC());
     }
 
@@ -844,7 +863,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (!IsHeapAccessAddress(*instance, faultingAddress))
         return false;
 
-    HandleMemoryAccess(context, pc, faultingAddress, *instance, ppc);
+    HandleMemoryAccess(context, pc, faultingAddress, *instance, activation, ppc);
     return true;
 }
 
@@ -876,20 +895,6 @@ ContextToPC(EMULATOR_CONTEXT* context)
     static_assert(sizeof(context->thread.__pc) == sizeof(void*),
                   "stored IP should be compile-time pointer-sized");
     return reinterpret_cast<uint8_t**>(&context->thread.__pc);
-# else
-#  error Unsupported architecture
-# endif
-}
-
-static void*
-ContextToFP(EMULATOR_CONTEXT* context)
-{
-# if defined(__x86_64__)
-    return (void*)context->thread.__rbp;
-# elif defined(__i386__)
-    return (void*)context->thread.uts.ts32.__ebp;
-# elif defined(__arm__)
-    return (void*)context->thread.__fp;
 # else
 #  error Unsupported architecture
 # endif
@@ -981,7 +986,7 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
     if (!IsHeapAccessAddress(*instance, faultingAddress))
         return false;
 
-    HandleMemoryAccess(&context, pc, faultingAddress, *instance, ppc);
+    HandleMemoryAccess(&context, pc, faultingAddress, *instance, activation, ppc);
 
     // Update the thread state with the new pc and register values.
     kret = thread_set_state(cxThread, float_state, (thread_state_t)&context.float_, float_state_count);
@@ -1208,12 +1213,13 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
         // partly overlaps the end of the heap.  In this case, it is an out-of-bounds
         // error and we should signal that properly, but to do so we must inspect
         // the operand of the failed access.
+        activation->startInterrupt(pc, ContextToFP(context));
         *ppc = instance->codeSegment().unalignedAccessCode();
         return true;
     }
 #endif
 
-    HandleMemoryAccess(context, pc, faultingAddress, *instance, ppc);
+    HandleMemoryAccess(context, pc, faultingAddress, *instance, activation, ppc);
     return true;
 }
 
@@ -1290,14 +1296,15 @@ RedirectJitCodeToInterruptCheck(JSContext* cx, CONTEXT* context)
 
         const Code* code = activation->compartment()->wasm.lookupCode(pc);
         if (code && code->segment().containsFunctionPC(pc))
-            cx->simulator()->set_resume_pc(code->segment().interruptCode());
+            cx->simulator()->trigger_wasm_interrupt();
 #else
         uint8_t** ppc = ContextToPC(context);
         uint8_t* pc = *ppc;
+        uint8_t* fp = ContextToFP(context);
 
         const Code* code = activation->compartment()->wasm.lookupCode(pc);
-        if (code && code->segment().containsFunctionPC(pc)) {
-            activation->setResumePC(pc);
+        if (code && code->segment().containsFunctionPC(pc) && fp) {
+            activation->startInterrupt(pc, fp);
             *ppc = code->segment().interruptCode();
             return true;
         }
@@ -1500,7 +1507,7 @@ js::InterruptRunningJitCode(JSContext* cx)
     HANDLE thread = (HANDLE)cx->threadNative();
     if (SuspendThread(thread) != -1) {
         CONTEXT context;
-        context.ContextFlags = CONTEXT_CONTROL;
+        context.ContextFlags = CONTEXT_FULL;
         if (GetThreadContext(thread, &context)) {
             if (RedirectJitCodeToInterruptCheck(cx, &context))
                 SetThreadContext(thread, &context);
