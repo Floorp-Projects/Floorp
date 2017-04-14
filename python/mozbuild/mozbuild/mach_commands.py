@@ -14,6 +14,8 @@ import os
 import subprocess
 import sys
 
+from collections import OrderedDict
+
 import mozpack.path as mozpath
 
 from mach.decorators import (
@@ -1541,6 +1543,8 @@ class PackageFrontend(MachCommandBase):
     @CommandArgument('--skip-cache', action='store_true',
         help='Skip all local caches to force re-fetching remote artifacts.',
         default=False)
+    @CommandArgument('--from-build', metavar='BUILD', nargs='+',
+        help='Get toolchains resulting from the given build(s)')
     @CommandArgument('--tooltool-manifest', metavar='MANIFEST',
         help='Explicit tooltool manifest to process')
     @CommandArgument('--authentication-file', metavar='FILE',
@@ -1554,9 +1558,10 @@ class PackageFrontend(MachCommandBase):
     @CommandArgument('files', nargs='*',
         help='Only download the given file names (you may use file name stems)')
     def artifact_toolchain(self, verbose=False, cache_dir=None,
-                          skip_cache=False, tooltool_manifest=None,
-                          authentication_file=None, tooltool_url=None,
-                          no_unpack=False, retry=None, files=()):
+                          skip_cache=False, from_build=(),
+                          tooltool_manifest=None, authentication_file=None,
+                          tooltool_url=None, no_unpack=False, retry=None,
+                          files=()):
         '''Download, cache and install pre-built toolchains.
         '''
         from mozbuild.artifacts import ArtifactCache
@@ -1569,6 +1574,14 @@ class PackageFrontend(MachCommandBase):
         import redo
         import requests
         import shutil
+
+        from taskgraph.generator import Kind
+        from taskgraph.optimize import optimize_task
+        from taskgraph.util.taskcluster import (
+            get_artifact_url,
+            list_artifacts,
+        )
+        import yaml
 
         self._set_log_level(verbose)
         # Normally, we'd use self.log_manager.enable_unstructured(),
@@ -1606,25 +1619,109 @@ class PackageFrontend(MachCommandBase):
             cache._download_manager.session.mount(
                 tooltool_url, TooltoolAuthenticator())
 
-        manifest = open_manifest(tooltool_manifest)
-        downloaded_files = {}
+        class DownloadRecord(FileRecord):
+            def __init__(self, url, *args, **kwargs):
+                super(DownloadRecord, self).__init__(*args, **kwargs)
+                self.url = url
+                self.basename = self.filename
 
-        for record in manifest.file_records:
-            if files and not any(record.filename == f or
-                                      record.filename.startswith('%s.' % f)
+            def fetch_with(self, cache):
+                self.filename = cache.fetch(self.url)
+                return self.filename
+
+            def validate(self):
+                if self.size is None and self.digest is None:
+                    return True
+                return super(DownloadRecord, self).validate()
+
+        records = OrderedDict()
+        downloaded = []
+
+        if tooltool_manifest:
+            manifest = open_manifest(tooltool_manifest)
+            for record in manifest.file_records:
+                url = '{}/{}/{}'.format(tooltool_url, record.algorithm,
+                                        record.digest)
+                records[record.filename] = DownloadRecord(
+                    url, record.filename, record.size, record.digest,
+                    record.algorithm, unpack=record.unpack,
+                    version=record.version, visibility=record.visibility,
+                    setup=record.setup)
+
+        if from_build:
+            params = {
+                'message': '',
+                'project': '',
+                'level': os.environ.get('MOZ_SCM_LEVEL', '3'),
+                'base_repository': '',
+                'head_repository': '',
+                'head_rev': '',
+                'moz_build_date': '',
+                'build_date': 0,
+                'pushlog_id': 0,
+                'owner': '',
+            }
+
+            # TODO: move to the taskcluster package
+            def tasks(kind):
+                kind_path = mozpath.join('taskcluster', 'ci', kind)
+                with open(mozpath.join(self.topsrcdir, kind_path, 'kind.yml')) as f:
+                    config = yaml.load(f)
+                    tasks = Kind(kind, kind_path, config).load_tasks(params, {})
+                    return {
+                        task.task['metadata']['name']: task
+                        for task in tasks
+                    }
+
+            toolchains = tasks('toolchain')
+
+            for b in from_build:
+                user_value = b
+
+                if '/' not in b:
+                    b = '{}/opt'.format(b)
+
+                if not b.startswith('toolchain-'):
+                    b = 'toolchain-{}'.format(b)
+
+                task = toolchains.get(b)
+                if not task:
+                    self.log(logging.ERROR, 'artifact', {'build': user_value},
+                             'Could not find a toolchain build named `{build}`')
+                    return 1
+
+                optimized, task_id = optimize_task(task, {})
+                if not optimized:
+                    self.log(logging.ERROR, 'artifact', {'build': user_value},
+                             'Could not find artifacts for a toolchain build '
+                             'named `{build}`')
+                    return 1
+
+                for artifact in list_artifacts(task_id):
+                    name = artifact['name']
+                    if not name.startswith('public/'):
+                        continue
+                    name = name[len('public/'):]
+                    if name.startswith('logs/'):
+                        continue
+                    records[name] = DownloadRecord(
+                        get_artifact_url(task_id, 'public/{}'.format(name)),
+                        name, None, None, None, unpack=True)
+
+        for record in records.itervalues():
+            if files and not any(record.basename == f or
+                                      record.basename.startswith('%s.' % f)
                                       for f in files):
                 continue
 
-            self.log(logging.INFO, 'artifact', {'name': record.filename},
+            self.log(logging.INFO, 'artifact', {'name': record.basename},
                      'Downloading {name}')
-            url = '{}/{}/{}'.format(tooltool_url, record.algorithm,
-                                    record.digest)
             valid = False
             # sleeptime is 60 per retry.py, used by tooltool_wrapper.sh
             for attempt, _ in enumerate(redo.retrier(attempts=retry+1,
                                                      sleeptime=60)):
                 try:
-                    downloaded = cache.fetch(url)
+                    record.fetch_with(cache)
                 except requests.exceptions.HTTPError as e:
                     status = e.response.status_code
                     # The relengapi proxy likes to return error 400 bad request
@@ -1642,37 +1739,27 @@ class PackageFrontend(MachCommandBase):
                         self.log(logging.INFO, 'artifact', {},
                                  'Will retry in a moment...')
                     continue
-                validate_record = FileRecord(
-                    os.path.basename(downloaded), record.size, record.digest,
-                    record.algorithm)
-                # FileRecord.validate needs the file in the current directory
-                # (https://github.com/mozilla/build-tooltool/issues/38)
-                curdir = os.getcwd()
-                os.chdir(os.path.dirname(downloaded))
                 try:
-                    valid = validate_record.validate()
-                finally:
-                    os.chdir(curdir)
+                    valid = record.validate()
+                except Exception:
+                    pass
                 if not valid:
-                    os.unlink(downloaded)
+                    os.unlink(record.filename)
                     if attempt < retry:
                         self.log(logging.INFO, 'artifact', {},
                                  'Will retry in a moment...')
                     continue
 
-                downloaded_files[record.filename] = downloaded
+                downloaded.append(record)
                 break
 
             if not valid:
-                self.log(logging.ERROR, 'artifact', {'name': record.filename},
+                self.log(logging.ERROR, 'artifact', {'name': record.basename},
                          'Failed to download {name}')
                 return 1
 
-        for record in manifest.file_records:
-            downloaded = downloaded_files.get(record.filename)
-            if not downloaded:
-                continue
-            local = os.path.join(os.getcwd(), record.filename)
+        for record in downloaded:
+            local = os.path.join(os.getcwd(), record.basename)
             if os.path.exists(local):
                 os.unlink(local)
             # unpack_file needs the file with its final name to work
@@ -1680,14 +1767,14 @@ class PackageFrontend(MachCommandBase):
             # need to copy it, even though we remove it later. Use hard links
             # when possible.
             try:
-                os.link(downloaded, local)
-            except:
-                shutil.copy(downloaded, local)
+                os.link(record.filename, local)
+            except Exception:
+                shutil.copy(record.filename, local)
             if record.unpack and not no_unpack:
                 unpack_file(local, record.setup)
                 os.unlink(local)
 
-        if not downloaded_files:
+        if not downloaded:
             self.log(logging.ERROR, 'artifact', {}, 'Nothing to download')
             return 1
 
