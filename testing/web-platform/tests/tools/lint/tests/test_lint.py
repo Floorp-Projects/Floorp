@@ -21,38 +21,35 @@ def _mock_lint(name, **kwargs):
 
 def test_filter_whitelist_errors():
     whitelist = {
-        'CONSOLE': {
-            'svg/*': {12}
-        },
-        'INDENT TABS': {
-            'svg/*': {None}
+        'svg/*': {
+            'CONSOLE': {12},
+            'INDENT TABS': {None}
         }
     }
     # parse_whitelist normalises the case/path of the match string so need to do the same
-    whitelist = {e: {os.path.normcase(k): v for k, v in p.items()}
-                 for e, p in whitelist.items()}
+    whitelist = {os.path.normcase(p): e for p, e in whitelist.items()}
     # paths passed into filter_whitelist_errors are always Unix style
     filteredfile = 'svg/test.html'
     unfilteredfile = 'html/test.html'
     # Tests for passing no errors
-    filtered = filter_whitelist_errors(whitelist, [])
+    filtered = filter_whitelist_errors(whitelist, filteredfile, [])
     assert filtered == []
-    filtered = filter_whitelist_errors(whitelist, [])
+    filtered = filter_whitelist_errors(whitelist, unfilteredfile, [])
     assert filtered == []
     # Tests for filtering on file and line number
-    filtered = filter_whitelist_errors(whitelist, [['CONSOLE', '', filteredfile, 12]])
+    filtered = filter_whitelist_errors(whitelist, filteredfile, [['CONSOLE', '', filteredfile, 12]])
     assert filtered == []
-    filtered = filter_whitelist_errors(whitelist, [['CONSOLE', '', unfilteredfile, 12]])
+    filtered = filter_whitelist_errors(whitelist, unfilteredfile, [['CONSOLE', '', unfilteredfile, 12]])
     assert filtered == [['CONSOLE', '', unfilteredfile, 12]]
-    filtered = filter_whitelist_errors(whitelist, [['CONSOLE', '', filteredfile, 11]])
+    filtered = filter_whitelist_errors(whitelist, filteredfile, [['CONSOLE', '', filteredfile, 11]])
     assert filtered == [['CONSOLE', '', filteredfile, 11]]
     # Tests for filtering on just file
-    filtered = filter_whitelist_errors(whitelist, [['INDENT TABS', '', filteredfile, 12]])
+    filtered = filter_whitelist_errors(whitelist, filteredfile, [['INDENT TABS', filteredfile, '', 12]])
     assert filtered == []
-    filtered = filter_whitelist_errors(whitelist, [['INDENT TABS', '', filteredfile, 11]])
+    filtered = filter_whitelist_errors(whitelist, filteredfile, [['INDENT TABS', filteredfile, '', 11]])
     assert filtered == []
-    filtered = filter_whitelist_errors(whitelist, [['INDENT TABS', '', unfilteredfile, 11]])
-    assert filtered == [['INDENT TABS', '', unfilteredfile, 11]]
+    filtered = filter_whitelist_errors(whitelist, unfilteredfile, [['INDENT TABS', unfilteredfile, '', 11]])
+    assert filtered == [['INDENT TABS', unfilteredfile, '', 11]]
 
 
 def test_parse_whitelist():
@@ -69,40 +66,31 @@ TRAILING WHITESPACE: app-uri/*
 
 CONSOLE:streams/resources/test-utils.js: 12
 
-CR AT EOL, INDENT TABS: html/test.js
-
-CR AT EOL, INDENT TABS: html/test2.js: 42
-
 *:*.pdf
 *:resources/*
-
-*, CR AT EOL: *.png
 """)
 
     expected_data = {
-        'INDENT TABS': {
-            '.gitmodules': {None},
-            'app-uri/*': {None},
-            'svg/*': {None},
-            'html/test.js': {None},
-            'html/test2.js': {42},
+        '.gitmodules': {
+            'INDENT TABS': {None},
         },
-        'TRAILING WHITESPACE': {
-            'app-uri/*': {None},
+        'app-uri/*': {
+            'TRAILING WHITESPACE': {None},
+            'INDENT TABS': {None},
         },
-        'CONSOLE': {
-            'streams/resources/test-utils.js': {12},
+        'streams/resources/test-utils.js': {
+            'CONSOLE': {12},
+            'CR AT EOL': {None},
         },
-        'CR AT EOL': {
-            'streams/resources/test-utils.js': {None},
-            'svg/import/*': {None},
-            'html/test.js': {None},
-            'html/test2.js': {42},
-        }
+        'svg/*': {
+            'INDENT TABS': {None},
+        },
+        'svg/import/*': {
+            'CR AT EOL': {None},
+        },
     }
-    expected_data = {e: {os.path.normcase(k): v for k, v in p.items()}
-                     for e, p in expected_data.items()}
-    expected_ignored = {os.path.normcase(x) for x in {"*.pdf", "resources/*", "*.png"}}
+    expected_data = {os.path.normcase(p): e for p, e in expected_data.items()}
+    expected_ignored = {os.path.normcase(x) for x in {"*.pdf", "resources/*"}}
     data, ignored = parse_whitelist(input_buffer)
     assert data == expected_data
     assert ignored == expected_ignored
@@ -270,150 +258,6 @@ def test_lint_passing_and_failing(capsys):
     assert "TRAILING WHITESPACE" in out
     assert "broken.html:1" in out
     assert "okay.html" not in out
-    assert err == ""
-
-
-def test_check_css_globally_unique_identical_test(capsys):
-    with _mock_lint("check_path") as mocked_check_path:
-        with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css-unique/match/a.html", "css-unique/a.html"], False, True)
-            assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
-    out, err = capsys.readouterr()
-    assert out == ""
-    assert err == ""
-
-
-def test_check_css_globally_unique_different_test(capsys):
-    with _mock_lint("check_path") as mocked_check_path:
-        with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css-unique/not-match/a.html", "css-unique/a.html"], False, True)
-            assert rv == 2
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
-    out, err = capsys.readouterr()
-    assert "CSS-COLLIDING-TEST-NAME" in out
-    assert err == ""
-
-
-def test_check_css_globally_unique_different_spec_test(capsys):
-    with _mock_lint("check_path") as mocked_check_path:
-        with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css-unique/selectors/a.html", "css-unique/a.html"], False, True)
-            assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
-    out, err = capsys.readouterr()
-    assert out == ""
-    assert err == ""
-
-
-def test_check_css_globally_unique_support_ignored(capsys):
-    with _mock_lint("check_path") as mocked_check_path:
-        with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css-unique/support/a.html", "css-unique/support/tools/a.html"], False, True)
-            assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
-    out, err = capsys.readouterr()
-    assert out == ""
-    assert err == ""
-
-
-def test_check_css_globally_unique_support_identical(capsys):
-    with _mock_lint("check_path") as mocked_check_path:
-        with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css-unique/support/a.html", "css-unique/match/support/a.html"], False, True)
-            assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
-    out, err = capsys.readouterr()
-    assert out == ""
-    assert err == ""
-
-
-def test_check_css_globally_unique_support_different(capsys):
-    with _mock_lint("check_path") as mocked_check_path:
-        with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css-unique/not-match/support/a.html", "css-unique/support/a.html"], False, True)
-            assert rv == 2
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
-    out, err = capsys.readouterr()
-    assert "CSS-COLLIDING-SUPPORT-NAME" in out
-    assert err == ""
-
-
-def test_check_css_globally_unique_test_support(capsys):
-    with _mock_lint("check_path") as mocked_check_path:
-        with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css-unique/support/a.html", "css-unique/a.html"], False, True)
-            assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
-    out, err = capsys.readouterr()
-    assert out == ""
-    assert err == ""
-
-
-def test_check_css_globally_unique_ref_identical(capsys):
-    with _mock_lint("check_path") as mocked_check_path:
-        with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css-unique/a-ref.html", "css-unique/match/a-ref.html"], False, True)
-            assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
-    out, err = capsys.readouterr()
-    assert out == ""
-    assert err == ""
-
-
-def test_check_css_globally_unique_ref_different(capsys):
-    with _mock_lint("check_path") as mocked_check_path:
-        with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css-unique/not-match/a-ref.html", "css-unique/a-ref.html"], False, True)
-            assert rv == 2
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
-    out, err = capsys.readouterr()
-    assert "CSS-COLLIDING-REF-NAME" in out
-    assert err == ""
-
-
-def test_check_css_globally_unique_test_ref(capsys):
-    with _mock_lint("check_path") as mocked_check_path:
-        with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css-unique/a-ref.html", "css-unique/a.html"], False, True)
-            assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
-    out, err = capsys.readouterr()
-    assert out == ""
-    assert err == ""
-
-
-def test_check_css_globally_unique_ignored(capsys):
-    with _mock_lint("check_path") as mocked_check_path:
-        with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css-unique/tools/a.html", "css-unique/not-match/tools/a.html"], False, True)
-            assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
-    out, err = capsys.readouterr()
-    assert out == ""
-    assert err == ""
-
-
-def test_check_css_globally_unique_ignored_dir(capsys):
-    with _mock_lint("check_path") as mocked_check_path:
-        with _mock_lint("check_file_contents") as mocked_check_file_contents:
-            rv = lint(_dummy_repo, ["css-unique/support/a.html", "css/work-in-progress/foo/support/a.html"], False, True)
-            assert rv == 0
-            assert mocked_check_path.call_count == 2
-            assert mocked_check_file_contents.call_count == 2
-    out, err = capsys.readouterr()
-    assert out == ""
     assert err == ""
 
 

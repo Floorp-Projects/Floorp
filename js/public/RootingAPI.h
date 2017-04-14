@@ -755,6 +755,24 @@ class alignas(8) DispatchWrapper
 
 namespace JS {
 
+namespace detail {
+
+/*
+ * For pointer types, the TraceKind for tracing is based on the list it is
+ * in (selected via MapTypeToRootKind), so no additional storage is
+ * required here. Non-pointer types, however, share the same list, so the
+ * function to call for tracing is stored adjacent to the struct. Since C++
+ * cannot templatize on storage class, this is implemented via the wrapper
+ * class DispatchWrapper.
+ */
+template <typename T>
+using MaybeWrapped = typename mozilla::Conditional<
+    MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
+    js::DispatchWrapper<T>,
+    T>::Type;
+
+} /* namespace detail */
+
 /**
  * Local variable of type T whose value is always rooted. This is typically
  * used for local variables, or for non-rooted values being passed to a
@@ -825,19 +843,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>>
     Rooted<void*>** stack;
     Rooted<void*>* prev;
 
-    /*
-     * For pointer types, the TraceKind for tracing is based on the list it is
-     * in (selected via MapTypeToRootKind), so no additional storage is
-     * required here. Non-pointer types, however, share the same list, so the
-     * function to call for tracing is stored adjacent to the struct. Since C++
-     * cannot templatize on storage class, this is implemented via the wrapper
-     * class DispatchWrapper.
-     */
-    using MaybeWrapped = typename mozilla::Conditional<
-        MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
-        js::DispatchWrapper<T>,
-        T>::Type;
-    MaybeWrapped ptr;
+    detail::MaybeWrapped<T> ptr;
 
     Rooted(const Rooted&) = delete;
 } JS_HAZ_ROOTED;
@@ -1188,12 +1194,7 @@ class PersistentRooted : public js::RootedBase<T, PersistentRooted<T>>,
         ptr = mozilla::Forward<U>(value);
     }
 
-    // See the comment above Rooted::ptr.
-    using MaybeWrapped = typename mozilla::Conditional<
-        MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
-        js::DispatchWrapper<T>,
-        T>::Type;
-    MaybeWrapped ptr;
+    detail::MaybeWrapped<T> ptr;
 } JS_HAZ_ROOTED;
 
 class JS_PUBLIC_API(ObjectPtr)

@@ -20,17 +20,13 @@ function corsFilter(corsUrl, headerName, headerValue, isFiltered) {
   }, "CORS filter on " + headerName + " header");
 }
 
-function corsExposeFilter(corsUrl, headerName, headerValue, isForbidden, withCredentials) {
+function corsExposeFilter(corsUrl, headerName, headerValue, isForbidden) {
   var url = corsUrl + "?pipe=header(" + headerName + "," + encodeURIComponent(headerValue) +")|" +
-                            "header(Access-Control-Allow-Origin, http://{{host}}:{{ports[http][0]}})" +
-                            "header(Access-Control-Allow-Credentials, true)" +
+                            "header(Access-Control-Allow-Origin,*)" +
                             "header(Access-Control-Expose-Headers," + headerName + ")";
 
-  var title = "CORS filter on " + headerName + " header, header is " + (isForbidden ? "forbidden" : "exposed");
-  if (withCredentials)
-      title+= "(credentials = include)";
   promise_test(function(test) {
-    return fetch(new Request(url, { credentials: withCredentials ? "include" : "omit" })).then(function(resp) {
+    return fetch(url).then(function(resp) {
       assert_equals(resp.status, 200, "Fetch success with code 200");
       assert_equals(resp.type , "cors", "CORS fetch's response has cors type");
       if (!isForbidden) {
@@ -41,7 +37,7 @@ function corsExposeFilter(corsUrl, headerName, headerValue, isForbidden, withCre
       }
       test.done();
     });
-  }, title);
+  }, "CORS filter on " + headerName + " header, header is exposed");
 }
 
 var url = "http://{{host}}:{{ports[http][1]}}" + dirname(location.pathname) + RESOURCES_DIR + "top.txt";
@@ -64,10 +60,7 @@ corsExposeFilter(url, "Age", "27", false);
 corsExposeFilter(url, "Server", "wptServe" , false);
 corsExposeFilter(url, "Warning", "Mind the gap" , false);
 corsExposeFilter(url, "Content-Length", "0" , false);
-
 corsExposeFilter(url, "Set-Cookie", "name=value" , true);
 corsExposeFilter(url, "Set-Cookie2", "name=value" , true);
-corsExposeFilter(url, "Set-Cookie", "name=value" , true, true);
-corsExposeFilter(url, "Set-Cookie2", "name=value" , true, true);
 
 done();

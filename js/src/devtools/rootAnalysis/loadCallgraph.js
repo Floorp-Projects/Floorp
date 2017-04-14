@@ -99,7 +99,7 @@ function loadCallgraph(file)
             var name = match[2];
             if (!indirectCallCannotGC(functionNames[match[1]], name) && !suppressed)
                 addGCFunction(mangledCaller, "IndirectCall: " + name);
-        } else if (match = tag == 'F' && /^F (\d+) CLASS (.*?) FIELD (.*)/.exec(line)) {
+        } else if (match = (tag == 'F' || tag == 'V') && /^[FV] (\d+) CLASS (.*?) FIELD (.*)/.exec(line)) {
             var caller = idToMangled[match[1]];
             var csu = match[2];
             var fullfield = csu + "." + match[3];

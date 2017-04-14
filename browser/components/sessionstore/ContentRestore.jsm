@@ -429,9 +429,4 @@ ProgressListener.prototype = {
       this.callbacks.onStopRequest();
     }
   },
-
-  onLocationChange() {},
-  onProgressChange() {},
-  onStatusChange() {},
-  onSecurityChange() {},
 };

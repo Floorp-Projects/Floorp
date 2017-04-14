@@ -798,9 +798,9 @@ struct MOZ_RAII AutoHandleWasmTruncateToIntErrors
     MacroAssembler& masm;
     Label inputIsNaN;
     Label fail;
-    wasm::TrapOffset off;
+    wasm::BytecodeOffset off;
 
-    explicit AutoHandleWasmTruncateToIntErrors(MacroAssembler& masm, wasm::TrapOffset off)
+    explicit AutoHandleWasmTruncateToIntErrors(MacroAssembler& masm, wasm::BytecodeOffset off)
       : masm(masm), off(off)
     { }
 
@@ -832,7 +832,7 @@ MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input, Register output,
 
 void
 MacroAssembler::outOfLineWasmTruncateDoubleToInt32(FloatRegister input, bool isUnsigned,
-                                                   wasm::TrapOffset off, Label* rejoin)
+                                                   wasm::BytecodeOffset off, Label* rejoin)
 {
     AutoHandleWasmTruncateToIntErrors traps(*this, off);
 
@@ -855,7 +855,7 @@ MacroAssembler::outOfLineWasmTruncateDoubleToInt32(FloatRegister input, bool isU
 
 void
 MacroAssembler::outOfLineWasmTruncateFloat32ToInt32(FloatRegister input, bool isUnsigned,
-                                                    wasm::TrapOffset off, Label* rejoin)
+                                                    wasm::BytecodeOffset off, Label* rejoin)
 {
     AutoHandleWasmTruncateToIntErrors traps(*this, off);
 
@@ -876,7 +876,7 @@ MacroAssembler::outOfLineWasmTruncateFloat32ToInt32(FloatRegister input, bool is
 
 void
 MacroAssembler::outOfLineWasmTruncateDoubleToInt64(FloatRegister input, bool isUnsigned,
-                                                   wasm::TrapOffset off, Label* rejoin)
+                                                   wasm::BytecodeOffset off, Label* rejoin)
 {
     AutoHandleWasmTruncateToIntErrors traps(*this, off);
 
@@ -903,7 +903,7 @@ MacroAssembler::outOfLineWasmTruncateDoubleToInt64(FloatRegister input, bool isU
 
 void
 MacroAssembler::outOfLineWasmTruncateFloat32ToInt64(FloatRegister input, bool isUnsigned,
-                                                    wasm::TrapOffset off, Label* rejoin)
+                                                    wasm::BytecodeOffset off, Label* rejoin)
 {
     AutoHandleWasmTruncateToIntErrors traps(*this, off);
 

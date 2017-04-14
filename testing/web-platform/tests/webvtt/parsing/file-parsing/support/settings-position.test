@@ -12,6 +12,8 @@ var valid_positions = [
     [1, 'center'],
     [1, 'line-right'],
     [1, 'auto'],
+    [1, 'auto'],
+    [1, 'auto'],
 ];
 valid_positions.forEach(function(pair, index) {
     var position = pair[0];
@@ -21,7 +23,7 @@ valid_positions.forEach(function(pair, index) {
     assert_equals(cues[index].positionAlign, positionAlign, 'Failed with cue ' + index);
 });
 
-for (var i = 0; i < 14; i++) {
+for (var i = 0; i < 12; i++) {
     var index = valid_positions.length + i;
 
     assert_equals(cues[index].position, 'auto', 'Failed with cue ' + index);
@@ -54,16 +56,16 @@ text5
 00:00:00.000 --> 00:00:01.000 position:1%,line-right
 text6
 
-00:00:00.000 --> 00:00:01.000 position:1% ,center
+00:00:00.000 --> 00:00:01.000 position:1%,middle
 text7
 
-NOTE invalid
-
-00:00:00.000 --> 00:00:01.000 position:1%,middle
-invalid8
+00:00:00.000 --> 00:00:01.000 position:1% ,center
+text8
 
 00:00:00.000 --> 00:00:01.000 position:1%, center
-invalid9
+text9
+
+NOTE invalid
 
 00:00:00.000 --> 00:00:01.000 position:-1%
 invalid10
