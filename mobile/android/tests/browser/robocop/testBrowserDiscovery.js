@@ -14,7 +14,7 @@ var browser;
 
 function setHandlerFunc(handler, test) {
   browser.addEventListener("DOMLinkAdded", function(event) {
-    Services.tm.dispatchToMainThread(handler.bind(this, test));
+    Services.tm.mainThread.dispatch(handler.bind(this, test), Ci.nsIThread.DISPATCH_NORMAL);
   }, {once: true});
 }
 
@@ -27,7 +27,7 @@ add_test(function setup_browser() {
   let url = "http://mochi.test:8888/tests/robocop/link_discovery.html";
   browser = BrowserApp.addTab(url, { selected: true, parentId: BrowserApp.selectedTab.id }).browser;
   browser.addEventListener("load", function(event) {
-    Services.tm.dispatchToMainThread(run_next_test);
+    Services.tm.mainThread.dispatch(run_next_test, Ci.nsIThread.DISPATCH_NORMAL);
   }, {capture: true, once: true});
 });
 

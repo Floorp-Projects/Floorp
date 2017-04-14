@@ -343,9 +343,9 @@ SPConsoleListener.prototype = {
 
     // Run in a separate runnable since console listeners aren't
     // supposed to touch content and this one might.
-    Services.tm.dispatchToMainThread(() => {
+    Services.tm.mainThread.dispatch(() => {
       this.callback.call(undefined, m);
-    });
+    }, Ci.nsIThread.DISPATCH_NORMAL);
 
     if (!m.isScriptError && m.message === "SENTINEL")
       Services.console.unregisterListener(this);
@@ -1237,13 +1237,13 @@ SpecialPowersAPI.prototype = {
       obs.observe = wrapCallback(obs.observe);
     }
     let asyncObs = (...args) => {
-      Services.tm.dispatchToMainThread(() => {
+      Services.tm.mainThread.dispatch(() => {
         if (typeof obs == 'function') {
           obs.call(undefined, ...args);
         } else {
           obs.observe.call(undefined, ...args);
         }
-      });
+      }, Ci.nsIThread.DISPATCH_NORMAL);
     };
     this._asyncObservers.set(obs, asyncObs);
     Services.obs.addObserver(asyncObs, notification, weak);
@@ -2139,13 +2139,13 @@ SpecialPowersAPI.prototype = {
       Cc["@mozilla.org/url-classifier/dbservice;1"].getService(Ci.nsIURIClassifier);
 
     let wrapCallback = (...args) => {
-      Services.tm.dispatchToMainThread(() => {
+      Services.tm.mainThread.dispatch(() => {
         if (typeof callback == 'function') {
           callback.call(undefined, ...args);
         } else {
           callback.onClassifyComplete.call(undefined, ...args);
         }
-      });
+      }, Ci.nsIThread.DISPATCH_NORMAL);
     };
 
     return classifierService.classify(unwrapIfWrapped(principal), eventTarget,
@@ -2158,13 +2158,13 @@ SpecialPowersAPI.prototype = {
       Cc["@mozilla.org/url-classifier/dbservice;1"].getService(Ci.nsIURIClassifier);
 
     let wrapCallback = (...args) => {
-      Services.tm.dispatchToMainThread(() => {
+      Services.tm.mainThread.dispatch(() => {
         if (typeof callback == 'function') {
           callback.call(undefined, ...args);
         } else {
           callback.onClassifyComplete.call(undefined, ...args);
         }
-      });
+      }, Ci.nsIThread.DISPATCH_NORMAL);
     };
 
     return classifierService.asyncClassifyLocalWithTables(unwrapIfWrapped(uri),

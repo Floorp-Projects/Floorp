@@ -315,7 +315,7 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
       // Execute the reload in a dispatched runnable, so that we can
       // return the reply to the caller before the reload is actually
       // started.
-      Services.tm.dispatchToMainThread(delayedReload);
+      Services.tm.currentThread.dispatch(delayedReload, 0);
 
       return {};
     },

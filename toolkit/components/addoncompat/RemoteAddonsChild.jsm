@@ -354,7 +354,7 @@ AboutProtocolChannel.prototype = {
         } catch (e) {}
       }
     };
-    Services.tm.dispatchToMainThread(runnable);
+    Services.tm.currentThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
   },
 
   asyncOpen2(listener) {

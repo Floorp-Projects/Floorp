@@ -330,7 +330,7 @@ function initService() {
 }
 
 function schedule(callback) {
-  Services.tm.dispatchToMainThread(callback);
+  Services.tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
 }
 
 // Public API

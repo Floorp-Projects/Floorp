@@ -172,7 +172,7 @@ let SyncedTabsInternal = {
     // Sync is currently synchronous, so do it after an event-loop spin to help
     // keep the UI responsive.
     return new Promise((resolve, reject) => {
-      Services.tm.dispatchToMainThread(() => {
+      Services.tm.currentThread.dispatch(() => {
         try {
           log.info("Doing a tab sync.");
           Weave.Service.sync(["tabs"]);
@@ -181,7 +181,7 @@ let SyncedTabsInternal = {
           log.error("Sync failed", ex);
           reject(ex);
         }
-      });
+      }, Ci.nsIThread.DISPATCH_NORMAL);
     });
   },
 

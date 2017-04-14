@@ -70,7 +70,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     let url = "http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/video_discovery.html";
     browser = BrowserApp.addTab(url, { selected: true, parentId: BrowserApp.selectedTab.id }).browser;
     browser.addEventListener("load", function(event) {
-      Services.tm.dispatchToMainThread(test_video);
+      Services.tm.mainThread.dispatch(test_video, Ci.nsIThread.DISPATCH_NORMAL);
     }, {capture: true, once: true});
   }
 

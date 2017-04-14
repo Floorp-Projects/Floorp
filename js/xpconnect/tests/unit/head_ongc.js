@@ -26,7 +26,8 @@ function newGlobal() {
 addTestingFunctionsToGlobal(this);
 
 function executeSoon(f) {
-  Services.tm.dispatchToMainThread({ run: f });
+  Services.tm.mainThread.dispatch({ run: f },
+                                  Ci.nsIThread.DISPATCH_NORMAL);
 }
 
 // The onGarbageCollection tests don't play well gczeal settings and lead to

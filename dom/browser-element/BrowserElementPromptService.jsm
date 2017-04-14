@@ -369,7 +369,7 @@ BrowserElementAuthPrompt.prototype = {
       }
     }
 
-    Services.tm.dispatchToMainThread(runnable);
+    Services.tm.currentThread.dispatch(runnable, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   _getFrameFromChannel: function(channel) {

@@ -784,7 +784,8 @@ ContentPrefService2.prototype = {
   },
 
   _schedule: function CPS2__schedule(fn) {
-    Services.tm.dispatchToMainThread(fn.bind(this));
+    Services.tm.mainThread.dispatch(fn.bind(this),
+                                    Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   addObserverForName: function CPS2_addObserverForName(name, observer) {

@@ -60,7 +60,7 @@ add_task(function*() {
       // The click is handled async; wait for an event loop turn for that to
       // happen.
       yield new Promise(function(resolve) {
-        Services.tm.dispatchToMainThread(resolve);
+        Services.tm.mainThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
       });
     }
   }

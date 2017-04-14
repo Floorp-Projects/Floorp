@@ -49,9 +49,9 @@ const mockControlChannelOfSender = {
         .notifyReconnected();
   },
   sendOffer: function(offer) {
-    Services.tm.dispatchToMainThread(() => {
+    Services.tm.mainThread.dispatch(() => {
       mockControlChannelOfReceiver.onOffer(offer);
-    });
+    }, Ci.nsIThread.DISPATCH_NORMAL);
   },
   onAnswer: function(answer) {
     this._listener
@@ -127,9 +127,9 @@ const mockControlChannelOfReceiver = {
         .onOffer(offer);
   },
   sendAnswer: function(answer) {
-    Services.tm.dispatchToMainThread(() => {
+    Services.tm.mainThread.dispatch(() => {
       mockControlChannelOfSender.onAnswer(answer);
-    });
+    }, Ci.nsIThread.DISPATCH_NORMAL);
   },
   disconnect: function(reason) {
     if (!this._listener) {

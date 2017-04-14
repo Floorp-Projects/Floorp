@@ -33,9 +33,9 @@ function run_test_with_server(server, callback) {
         // XXX: We have to do an executeSoon so that the error isn't caught and
         // reported by DebuggerClient.requester (because we are using the local
         // transport and share a stack) which causes the test to fail.
-        Services.tm.dispatchToMainThread({
+        Services.tm.mainThread.dispatch({
           run: test_simple_stepping
-        });
+        }, Ci.nsIThread.DISPATCH_NORMAL);
       });
   });
 }

@@ -804,9 +804,9 @@ function ignoreIncompatibleDevice() {
   let mockServerObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlService]),
     startServer: function() {
-      Services.tm.dispatchToMainThread(() => {
+      Services.tm.currentThread.dispatch(() => {
         this.listener.onServerReady(this.port, this.certFingerprint);
-      });
+      }, Ci.nsIThread.DISPATCH_NORMAL);
     },
     sessionRequest: function() {},
     close: function() {},
@@ -889,9 +889,9 @@ function ignoreSelfDevice() {
   let mockServerObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlService]),
     startServer: function() {
-      Services.tm.dispatchToMainThread(() => {
+      Services.tm.currentThread.dispatch(() => {
         this.listener.onServerReady(this.port, this.certFingerprint);
-      });
+      }, Ci.nsIThread.DISPATCH_NORMAL);
     },
     sessionRequest: function() {},
     close: function() {},
@@ -1253,14 +1253,14 @@ function serverRetry() {
     startServer: function(encrypted, port) {
       if (!isRetrying) {
         isRetrying = true;
-        Services.tm.dispatchToMainThread(() => {
+        Services.tm.currentThread.dispatch(() => {
           this.listener.onServerStopped(Cr.NS_ERROR_FAILURE);
-        });
+        }, Ci.nsIThread.DISPATCH_NORMAL);
       } else {
         this.port = 54321;
-        Services.tm.dispatchToMainThread(() => {
+        Services.tm.currentThread.dispatch(() => {
           this.listener.onServerReady(this.port, this.certFingerprint);
-        });
+        }, Ci.nsIThread.DISPATCH_NORMAL);
       }
     },
     sessionRequest: function() {},
