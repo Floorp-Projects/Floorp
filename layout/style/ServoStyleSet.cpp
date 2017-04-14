@@ -422,6 +422,8 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
 already_AddRefed<nsStyleContext>
 ServoStyleSet::ResolveTransientStyle(Element* aElement, CSSPseudoElementType aType)
 {
+  PreTraverseSync();
+
   nsIAtom* pseudoTag = nullptr;
   if (aType != CSSPseudoElementType::NotPseudo) {
     pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
