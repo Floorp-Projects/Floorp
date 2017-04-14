@@ -46,8 +46,9 @@ IonIC::scratchRegisterForEntryJump()
         return asSetPropertyIC()->temp();
       case CacheKind::GetName:
         return asGetNameIC()->temp();
-      case CacheKind::In:
       case CacheKind::BindName:
+        return asBindNameIC()->temp();
+      case CacheKind::In:
         MOZ_CRASH("Baseline-specific for now");
       case CacheKind::HasOwn:
         return asHasOwnIC()->output();
@@ -286,12 +287,11 @@ IonGetNameIC::update(JSContext* cx, HandleScript outerScript, IonGetNameIC* ic,
                      HandleObject envChain, MutableHandleValue res)
 {
     IonScript* ionScript = outerScript->ionScript();
+    jsbytecode* pc = ic->pc();
+    RootedPropertyName name(cx, ic->script()->getName(pc));
 
     if (ic->state().maybeTransition())
         ic->discardStubs(cx->zone());
-
-    jsbytecode* pc = ic->pc();
-    RootedPropertyName name(cx, ic->script()->getName(pc));
 
     if (ic->state().canAttachStub()) {
         bool attached = false;
@@ -322,6 +322,35 @@ IonGetNameIC::update(JSContext* cx, HandleScript outerScript, IonGetNameIC* ic,
     // barrier after GetName ICs.
 
     return true;
+}
+
+/* static */ JSObject*
+IonBindNameIC::update(JSContext* cx, HandleScript outerScript, IonBindNameIC* ic,
+                      HandleObject envChain)
+{
+    IonScript* ionScript = outerScript->ionScript();
+    jsbytecode* pc = ic->pc();
+    RootedPropertyName name(cx, ic->script()->getName(pc));
+
+    if (ic->state().maybeTransition())
+        ic->discardStubs(cx->zone());
+
+    if (ic->state().canAttachStub()) {
+        bool attached = false;
+        RootedScript script(cx, ic->script());
+        BindNameIRGenerator gen(cx, script, pc, ic->state().mode(), envChain, name);
+        if (gen.tryAttachStub())
+            ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
+
+        if (!attached)
+            ic->state().trackNotAttached();
+    }
+
+    RootedObject holder(cx);
+    if (!LookupNameUnqualified(cx, name, envChain, &holder))
+        return nullptr;
+
+    return holder;
 }
 
 /* static */ bool
