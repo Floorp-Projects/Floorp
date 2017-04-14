@@ -79,7 +79,7 @@ add_test(function setup_browser() {
   let url = "about:blank";
   gBrowser = BrowserApp.addTab(url, { selected: true, parentId: BrowserApp.selectedTab.id }).browser;
   gBrowser.addEventListener("load", function(event) {
-    Services.tm.dispatchToMainThread(run_next_test);
+    Services.tm.mainThread.dispatch(run_next_test, Ci.nsIThread.DISPATCH_NORMAL);
   }, {capture: true, once: true});
 });
 

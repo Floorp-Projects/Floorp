@@ -180,7 +180,7 @@ LoginManagerPromptFactory.prototype = {
       prompt.inProgress = true;
     }
 
-    Services.tm.dispatchToMainThread(runnable);
+    Services.tm.mainThread.dispatch(runnable, Ci.nsIThread.DISPATCH_NORMAL);
     this.log("_doAsyncPrompt:run dispatched");
   },
 

@@ -232,7 +232,7 @@ HashCompleter.prototype = {
 
     // Start off this request. Without dispatching to a thread, every call to
     // complete makes an individual HTTP request.
-    Services.tm.dispatchToMainThread(this);
+    Services.tm.currentThread.dispatch(this, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   // This is called after several calls to |complete|, or after the
@@ -273,7 +273,7 @@ HashCompleter.prototype = {
   // gethashUrl and fetch the next pending request, if there is one.
   finishRequest: function(url, aStatus) {
     this._backoffs[url].noteServerResponse(aStatus);
-    Services.tm.dispatchToMainThread(this);
+    Services.tm.currentThread.dispatch(this, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   // Returns true if we can make a request from the given url, false otherwise.

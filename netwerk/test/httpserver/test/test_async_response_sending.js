@@ -1616,7 +1616,7 @@ CopyTest.prototype =
           }
         }
       };
-    gThreadManager.dispatchToMainThread(event);
+    gThreadManager.currentThread.dispatch(event, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   /**

@@ -92,7 +92,7 @@ add_task(function* test_tracking_pb() {
   let browser = BrowserApp.addTab("about:blank", { selected: true, parentId: BrowserApp.selectedTab.id, isPrivate: true }).browser;
   yield new Promise((resolve, reject) => {
     browser.addEventListener("load", function(event) {
-      Services.tm.dispatchToMainThread(resolve);
+      Services.tm.mainThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
     }, {capture: true, once: true});
   });
 
@@ -147,7 +147,7 @@ add_task(function* test_tracking_not_pb() {
   let browser = BrowserApp.addTab("about:blank", { selected: true }).browser;
   yield new Promise((resolve, reject) => {
     browser.addEventListener("load", function(event) {
-      Services.tm.dispatchToMainThread(resolve);
+      Services.tm.mainThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
     }, {capture: true, once: true});
   });
 

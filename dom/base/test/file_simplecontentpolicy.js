@@ -7,7 +7,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function executeSoon(f)
 {
-  Services.tm.dispatchToMainThread(f);
+  Services.tm.mainThread.dispatch(f, Ci.nsIThread.DISPATCH_NORMAL);
 }
 
 var urlSuffix = "/this/is/the/test/url";

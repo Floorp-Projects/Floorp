@@ -126,7 +126,8 @@ this.Credentials = Object.freeze({
       deferred.resolve(result);
     }
 
-    Services.tm.dispatchToMainThread(runnable);
+    Services.tm.currentThread.dispatch(runnable,
+        Ci.nsIThread.DISPATCH_NORMAL);
     log.debug("Dispatched thread for credentials setup crypto work");
 
     return deferred.promise;

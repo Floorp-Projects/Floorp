@@ -86,7 +86,8 @@ const PingServer = {
     const deferred = this._defers[this._currentDeferred++];
     // Send the ping to the consumer on the next tick, so that the completion gets
     // signaled to Telemetry.
-    return new Promise(r => Services.tm.dispatchToMainThread(() => r(deferred.promise)));
+    return new Promise(r => Services.tm.currentThread.dispatch(() => r(deferred.promise),
+                                                               Ci.nsIThread.DISPATCH_NORMAL));
   },
 
   promiseNextPing() {
@@ -314,7 +315,7 @@ if (runningInParent) {
 
 
   fakePingSendTimer((callback, timeout) => {
-    Services.tm.dispatchToMainThread(() => callback());
+    Services.tm.mainThread.dispatch(() => callback(), Ci.nsIThread.DISPATCH_NORMAL);
   },
   () => {});
 

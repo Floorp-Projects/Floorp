@@ -1497,7 +1497,7 @@ Scope.prototype = {
       this._openEnum();
     }
     if (this._variablesView._nonEnumVisible) {
-      Services.tm.dispatchToMainThread({ run: this._openNonEnum });
+      Services.tm.currentThread.dispatch({ run: this._openNonEnum }, 0);
     }
     this._isExpanded = true;
 

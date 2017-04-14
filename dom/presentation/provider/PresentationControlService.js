@@ -124,19 +124,19 @@ PresentationControlService.prototype = {
   },
 
   _notifyServerReady: function() {
-    Services.tm.dispatchToMainThread(() => {
+    Services.tm.mainThread.dispatch(() => {
       if (this._listener) {
         this._listener.onServerReady(this._port, this.certFingerprint);
       }
-    });
+    }, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   _notifyServerStopped: function(aRv) {
-    Services.tm.dispatchToMainThread(() => {
+    Services.tm.mainThread.dispatch(() => {
       if (this._listener) {
         this._listener.onServerStopped(aRv);
       }
-    });
+    }, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   isCompatibleServer: function(aVersion) {

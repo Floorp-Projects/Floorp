@@ -68,7 +68,7 @@
     var domWindowUtils = gWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
 
     function runSoon(f) {
-        threadMan.dispatchToMainThread({ run: f });
+        threadMan.mainThread.dispatch({ run: f }, Ci.nsIThread.DISPATCH_NORMAL);
     }
 
     function cc() {

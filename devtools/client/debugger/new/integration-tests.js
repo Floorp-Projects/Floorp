@@ -8048,13 +8048,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  copy: function() {
 	    // Dispatch to the next tick so that it's possible to attach a progress
 	    // event listener, even for extremely fast copies (like when testing).
-	    Services.tm.dispatchToMainThread(() => {
+	    Services.tm.currentThread.dispatch(() => {
 	      try {
 	        this._copy();
 	      } catch (e) {
 	        this._deferred.reject(e);
 	      }
-	    });
+	    }, 0);
 	    return this;
 	  },
 	
