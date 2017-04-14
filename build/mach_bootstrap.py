@@ -312,11 +312,12 @@ def bootstrap(topsrcdir, mozilla_dir=None):
                     os.makedirs(state_dir, mode=0o770)
             else:
                 if not os.path.exists(state_dir):
-                    print(STATE_DIR_FIRST_RUN.format(userdir=state_dir))
-                    try:
-                        sys.stdin.readline()
-                    except KeyboardInterrupt:
-                        sys.exit(1)
+                    if not os.environ.get('MOZ_AUTOMATION'):
+                        print(STATE_DIR_FIRST_RUN.format(userdir=state_dir))
+                        try:
+                            sys.stdin.readline()
+                        except KeyboardInterrupt:
+                            sys.exit(1)
 
                     print('\nCreating default state directory: %s' % state_dir)
                     os.makedirs(state_dir, mode=0o770)
