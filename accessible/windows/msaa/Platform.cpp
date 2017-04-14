@@ -132,14 +132,6 @@ a11y::ProxyTextChangeEvent(ProxyAccessible* aText, const nsString& aStr,
     return;
   }
 
-  static const bool useHandler =
-    Preferences::GetBool("accessibility.handler.enabled", false);
-
-  if (useHandler) {
-    wrapper->DispatchTextChangeToHandler(aInsert, aStr, aStart, aLen);
-    return;
-  }
-
   auto text = static_cast<HyperTextAccessibleWrap*>(wrapper->AsHyperText());
   if (text) {
     ia2AccessibleText::UpdateTextChangeData(text, aInsert, aStr, aStart, aLen);
