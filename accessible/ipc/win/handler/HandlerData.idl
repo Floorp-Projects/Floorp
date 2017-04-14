@@ -9,8 +9,6 @@
 import "ocidl.idl";
 import "ServProv.idl";
 
-import "AccessibleText.idl";
-
 typedef struct _IA2Data
 {
   long mUniqueId;
@@ -86,9 +84,6 @@ interface HandlerData
 interface IHandlerControl : IUnknown
 {
   HRESULT Invalidate();
-  HRESULT OnTextChange([in] long aHwnd, [in] long aIA2UniqueId,
-                       [in] VARIANT_BOOL aIsInsert,
-                       [in] IA2TextSegment* aText);
 }
 
 [object,
