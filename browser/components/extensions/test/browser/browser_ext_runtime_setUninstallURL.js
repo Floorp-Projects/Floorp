@@ -9,7 +9,7 @@ function* makeAndInstallXPI(id, backgroundScript, loadedURL) {
     background: backgroundScript,
   });
   SimpleTest.registerCleanupFunction(function cleanupXPI() {
-    Services.obs.notifyObservers(xpi, "flush-cache-entry");
+    Services.obs.notifyObservers(xpi, "flush-cache-entry", null);
     xpi.remove(false);
   });
 

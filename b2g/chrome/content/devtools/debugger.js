@@ -265,7 +265,7 @@ var USBRemoteDebugger = {
       this._listener.open();
       // Temporary event, until bug 942756 lands and offers a way to know
       // when the server is up and running.
-      Services.obs.notifyObservers(null, "debugger-server-started");
+      Services.obs.notifyObservers(null, "debugger-server-started", null);
     } catch (e) {
       debug("Unable to start USB debugger server: " + e);
     }

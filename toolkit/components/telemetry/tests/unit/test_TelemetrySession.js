@@ -1815,7 +1815,7 @@ add_task(function* test_schedulerComputerSleep() {
   // We emulate the mentioned timeout behavior by sending the wake notification
   // instead of triggering the timeout callback.
   // This should trigger a daily ping, because we passed midnight.
-  Services.obs.notifyObservers(null, "wake_notification");
+  Services.obs.notifyObservers(null, "wake_notification", null);
 
   dailyPing = yield PingServer.promiseNextPing();
   Assert.equal(dailyPing.payload.info.reason, REASON_DAILY,

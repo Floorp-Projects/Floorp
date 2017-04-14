@@ -55,7 +55,7 @@ add_task(function* test_embedded_webextension_utils() {
   // Remove the generated xpi file and flush the its jar cache
   // on cleanup.
   do_register_cleanup(() => {
-    Services.obs.notifyObservers(fakeHybridAddonFile, "flush-cache-entry");
+    Services.obs.notifyObservers(fakeHybridAddonFile, "flush-cache-entry", null);
     fakeHybridAddonFile.remove(false);
   });
 
@@ -117,7 +117,7 @@ function* createManifestErrorTestCase(id, xpi, expectedError) {
   // Remove the generated xpi file and flush the its jar cache
   // on cleanup.
   do_register_cleanup(() => {
-    Services.obs.notifyObservers(xpi, "flush-cache-entry");
+    Services.obs.notifyObservers(xpi, "flush-cache-entry", null);
     xpi.remove(false);
   });
 

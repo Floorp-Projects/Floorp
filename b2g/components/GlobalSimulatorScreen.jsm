@@ -71,12 +71,12 @@ this.GlobalSimulatorScreen = {
       this.mozOrientation = orientation;
 
       // Notify each app screen object to fire the event
-      Services.obs.notifyObservers(null, 'simulator-orientation-change');
+      Services.obs.notifyObservers(null, 'simulator-orientation-change', null);
     }
 
     // Finally, in any case, we update the window size and orientation
     // (Use wrappedJSObject trick to be able to pass a raw JS object)
-    Services.obs.notifyObservers({wrappedJSObject:this}, 'simulator-adjust-window-size');
+    Services.obs.notifyObservers({wrappedJSObject:this}, 'simulator-adjust-window-size', null);
   },
 
   flipScreen: function() {

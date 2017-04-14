@@ -236,7 +236,7 @@ var gSyncUI = {
       if (!needsSetup) {
         setTimeout(() => Weave.Service.errorHandler.syncAndReportErrors(), 0);
       }
-      Services.obs.notifyObservers(null, "cloudsync:user-sync");
+      Services.obs.notifyObservers(null, "cloudsync:user-sync", null);
     }).catch(err => {
       this.log.error("Failed to force a sync", err);
     });

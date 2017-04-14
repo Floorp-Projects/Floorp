@@ -57,7 +57,7 @@ function run_test() {
   do_check_false(ps.getBoolPref("testPref.bool1"));
   
   dirSvc.registerProvider(extProvider);
-  Services.obs.notifyObservers(null, "load-extension-defaults");
+  Services.obs.notifyObservers(null, "load-extension-defaults", null);
 
   // The extension default should be available.
   do_check_true(ps.getBoolPref("testExtPref.bool"));

@@ -496,7 +496,7 @@ var gInstallingPage = {
     this._currentInstall++;
 
     if (this._installs.length == this._currentInstall) {
-      Services.obs.notifyObservers(null, "TEST:all-updates-done");
+      Services.obs.notifyObservers(null, "TEST:all-updates-done", null);
       AddonManagerPrivate.recordSimpleMeasure("appUpdate_upgraded",
           gUpdateWizard.upgraded);
       AddonManagerPrivate.recordSimpleMeasure("appUpdate_upgradeFailed",

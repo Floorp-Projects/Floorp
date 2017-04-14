@@ -43,7 +43,7 @@ function newFileInDirectory(aDir) {
 
 function clearHistory() {
   // simulate clearing the private data
-  Services.obs.notifyObservers(null, "browser:purge-session-history");
+  Services.obs.notifyObservers(null, "browser:purge-session-history", "");
 }
 
 function _initTest() {

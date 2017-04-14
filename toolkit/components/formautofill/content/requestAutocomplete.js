@@ -31,7 +31,7 @@ const RequestAutocompleteDialog = {
       window.sizeToContent();
 
       Services.obs.notifyObservers(window,
-                                   "formautofill-window-initialized");
+                                   "formautofill-window-initialized", "");
     }.bind(this)).catch(Cu.reportError);
   },
 

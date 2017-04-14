@@ -91,7 +91,7 @@ let buttonCount = (UpdateUtils.UpdateChannel == "aurora" ? 3 : 2);
 
 add_task(function* terminateScriptTest() {
   let promise = promiseNotificationShown(window, "process-hang");
-  Services.obs.notifyObservers(gTestHangReport, "process-hang-report");
+  Services.obs.notifyObservers(gTestHangReport, "process-hang-report", null);
   let notification = yield promise;
 
   let buttons = notification.currentNotification.getElementsByTagName("button");
@@ -112,7 +112,7 @@ add_task(function* terminateScriptTest() {
 
 add_task(function* waitForScriptTest() {
   let promise = promiseNotificationShown(window, "process-hang");
-  Services.obs.notifyObservers(gTestHangReport, "process-hang-report");
+  Services.obs.notifyObservers(gTestHangReport, "process-hang-report", null);
   let notification = yield promise;
 
   let buttons = notification.currentNotification.getElementsByTagName("button");
@@ -131,11 +131,11 @@ add_task(function* waitForScriptTest() {
   gTestHangReport.testCallback = oldcb;
 
   // send another hang pulse, we should not get a notification here
-  Services.obs.notifyObservers(gTestHangReport, "process-hang-report");
+  Services.obs.notifyObservers(gTestHangReport, "process-hang-report", null);
   is(notification.currentNotification, null, "no notification should be visible");
 
   gTestHangReport.testCallback = function() {};
-  Services.obs.notifyObservers(gTestHangReport, "clear-hang-report");
+  Services.obs.notifyObservers(gTestHangReport, "clear-hang-report", null);
   gTestHangReport.testCallback = oldcb;
 
   yield popPrefs();
@@ -150,11 +150,11 @@ add_task(function* hangGoesAwayTest() {
   yield pushPrefs(["browser.hangNotification.expiration", 1000]);
 
   let promise = promiseNotificationShown(window, "process-hang");
-  Services.obs.notifyObservers(gTestHangReport, "process-hang-report");
+  Services.obs.notifyObservers(gTestHangReport, "process-hang-report", null);
   yield promise;
 
   promise = promiseReportCallMade(gTestHangReport.TEST_CALLBACK_CANCELED);
-  Services.obs.notifyObservers(gTestHangReport, "clear-hang-report");
+  Services.obs.notifyObservers(gTestHangReport, "clear-hang-report", null);
   yield promise;
 
   yield popPrefs();
@@ -167,7 +167,7 @@ add_task(function* hangGoesAwayTest() {
 
 add_task(function* terminatePluginTest() {
   let promise = promiseNotificationShown(window, "process-hang");
-  Services.obs.notifyObservers(gTestHangReport, "process-hang-report");
+  Services.obs.notifyObservers(gTestHangReport, "process-hang-report", null);
   let notification = yield promise;
 
   let buttons = notification.currentNotification.getElementsByTagName("button");

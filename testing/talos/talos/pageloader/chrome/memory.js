@@ -52,7 +52,7 @@ function collectMemory(callback, args) {
     var os = Components.classes["@mozilla.org/observer-service;1"].
         getService(Components.interfaces.nsIObserverService);
 
-    os.notifyObservers(null, "child-memory-reporter-request");
+    os.notifyObservers(null, "child-memory-reporter-request", null);
   } else {
     collectAndReport(null, null, null);
   }

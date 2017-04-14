@@ -146,7 +146,7 @@ var WindowWatcher = {
     }
 
     // run the code after the blocklist is closed
-    Services.obs.notifyObservers(null, "addon-blocklist-closed");
+    Services.obs.notifyObservers(null, "addon-blocklist-closed", null);
 
     // Call the next test after the blocklist has finished up
     do_timeout(0, gTestCheck);

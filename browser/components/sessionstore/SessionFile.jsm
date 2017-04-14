@@ -374,7 +374,7 @@ var SessionFileInternal = {
       AsyncShutdown.profileBeforeChange.removeBlocker(promise);
 
       if (isFinalWrite) {
-        Services.obs.notifyObservers(null, "sessionstore-final-state-write-complete");
+        Services.obs.notifyObservers(null, "sessionstore-final-state-write-complete", "");
       }
     });
   },

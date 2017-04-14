@@ -75,7 +75,7 @@
         if (domWindowUtils.cycleCollect) {
             domWindowUtils.cycleCollect();
         }
-        Services.obs.notifyObservers(null, "child-cc-request");
+        Services.obs.notifyObservers(null, "child-cc-request", null);
     }
 
     function minimizeInner() {
@@ -87,7 +87,7 @@
                 schedGC = Cu.schedulePreciseGC;
             }
 
-            Services.obs.notifyObservers(null, "child-gc-request");
+            Services.obs.notifyObservers(null, "child-gc-request", null);
 
             if (schedGC) {
                 schedGC.call(Cu, { callback: function () {

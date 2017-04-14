@@ -70,7 +70,8 @@ add_task(function* init_tests() {
     getValueAt() { return TEST_URI.spec; },
     searchString: TEST_TITLE,
   };
-  Services.obs.notifyObservers(thing, TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING);
+  Services.obs.notifyObservers(thing, TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING,
+                               null);
 });
 
 add_task(function* test_timed() {

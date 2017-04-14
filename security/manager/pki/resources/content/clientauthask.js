@@ -101,7 +101,7 @@ function onLoad() {
   setDetails();
 
   Services.obs.notifyObservers(document.getElementById("certAuthAsk"),
-                               "cert-dialog-loaded");
+                               "cert-dialog-loaded", null);
 }
 
 /**

@@ -38,7 +38,7 @@ this.FxAccountsManager = {
 
     if (aData == ONVERIFIED_NOTIFICATION) {
       log.debug("FxAccountsManager: cache cleared, broadcasting: " + aData);
-      Services.obs.notifyObservers(null, aData);
+      Services.obs.notifyObservers(null, aData, null);
     }
   },
 

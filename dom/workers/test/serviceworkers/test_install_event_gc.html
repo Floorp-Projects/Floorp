@@ -76,9 +76,9 @@ function gcWorker() {
     // process's main thread.  IPDL PContent::CycleCollect is an async message.
     // Ordering will be maintained if the postMessage goes via PContent as well,
     // but that seems unlikely.)
-    SpecialPowers.notifyObservers(null, 'child-gc-request');
-    SpecialPowers.notifyObservers(null, 'child-cc-request');
-    SpecialPowers.notifyObservers(null, 'child-gc-request');
+    SpecialPowers.notifyObservers(null, 'child-gc-request', null);
+    SpecialPowers.notifyObservers(null, 'child-cc-request', null);
+    SpecialPowers.notifyObservers(null, 'child-gc-request', null);
     // (Only send the ping after we set the gc/cc/gc in motion.)
     registration.installing.postMessage({ type: 'ping' });
   });

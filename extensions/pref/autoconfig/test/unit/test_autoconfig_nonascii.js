@@ -54,7 +54,7 @@ function run_test() {
       autoConfigCfg.append(test.filename);
       autoConfigCfg.copyTo(greD, "autoconfig.cfg");
   
-      obsvc.notifyObservers(ps, "prefservice:before-read-userprefs");
+      obsvc.notifyObservers(ps, "prefservice:before-read-userprefs", null);
   
       for (let prefName in test.prefs) {
         do_check_eq(test.prefs[prefName],

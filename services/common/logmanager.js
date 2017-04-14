@@ -326,6 +326,6 @@ LogManager.prototype = {
     this._cleaningUpFileLogs = false;
     this._log.debug("Done deleting files.");
     // This notification is used only for tests.
-    Services.obs.notifyObservers(null, "services-tests:common:log-manager:cleanup-logs");
+    Services.obs.notifyObservers(null, "services-tests:common:log-manager:cleanup-logs", null);
   }),
 }

@@ -336,7 +336,7 @@ function onLoadPageInfo() {
   loadTab(args);
   Components.classes["@mozilla.org/observer-service;1"]
             .getService(Components.interfaces.nsIObserverService)
-            .notifyObservers(window, "page-info-dialog-loaded");
+            .notifyObservers(window, "page-info-dialog-loaded", null);
 }
 
 function loadPageInfo(frameOuterWindowID, imageElement, browser) {

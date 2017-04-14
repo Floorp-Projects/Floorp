@@ -97,7 +97,7 @@ SessionStartup.prototype = {
    * Initialize the component
    */
   init: function sss_init() {
-    Services.obs.notifyObservers(null, "sessionstore-init-started");
+    Services.obs.notifyObservers(null, "sessionstore-init-started", null);
     StartupPerformance.init();
 
     // do not need to initialize anything in auto-started private browsing sessions
@@ -132,7 +132,7 @@ SessionStartup.prototype = {
 
     // Let observers modify the state before it is used
     let supportsStateString = this._createSupportsString(source);
-    Services.obs.notifyObservers(supportsStateString, "sessionstore-state-read");
+    Services.obs.notifyObservers(supportsStateString, "sessionstore-state-read", "");
     let stateString = supportsStateString.data;
 
     if (stateString != source) {
@@ -152,7 +152,7 @@ SessionStartup.prototype = {
     if (this._initialState == null) {
       // No valid session found.
       this._sessionType = Ci.nsISessionStartup.NO_SESSION;
-      Services.obs.notifyObservers(null, "sessionstore-state-finalized");
+      Services.obs.notifyObservers(null, "sessionstore-state-finalized", "");
       gOnceInitializedDeferred.resolve();
       return;
     }
@@ -220,7 +220,7 @@ SessionStartup.prototype = {
         Services.obs.addObserver(this, "browser:purge-session-history", true);
 
       // We're ready. Notify everyone else.
-      Services.obs.notifyObservers(null, "sessionstore-state-finalized");
+      Services.obs.notifyObservers(null, "sessionstore-state-finalized", "");
       gOnceInitializedDeferred.resolve();
     });
   },

@@ -321,7 +321,7 @@ this.LightweightThemeManager = {
       _prefs.setCharPref("selectedThemeID", "");
 
     _notifyWindows(aData);
-    Services.obs.notifyObservers(null, "lightweight-theme-changed");
+    Services.obs.notifyObservers(null, "lightweight-theme-changed", null);
   },
 
   /**
@@ -787,7 +787,7 @@ function _updateUsedThemes(aList) {
 
   _prefs.setStringPref("usedThemes", JSON.stringify(aList));
 
-  Services.obs.notifyObservers(null, "lightweight-theme-list-changed");
+  Services.obs.notifyObservers(null, "lightweight-theme-list-changed", null);
 }
 
 function _notifyWindows(aThemeData) {

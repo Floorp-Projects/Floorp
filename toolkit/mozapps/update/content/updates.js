@@ -1349,7 +1349,7 @@ var gFinishedPage = {
    * When elevation is required and the user clicks "No Thanks" in the wizard.
    */
   onExtra2: Task.async(function*() {
-    Services.obs.notifyObservers(null, "update-canceled");
+    Services.obs.notifyObservers(null, "update-canceled", null);
     let um = CoC["@mozilla.org/updates/update-manager;1"].
                getService(CoI.nsIUpdateManager);
     um.cleanupActiveUpdate();

@@ -101,7 +101,7 @@ this.Social = {
   // Called to update our cache of providers and set the current provider
   _updateProviderCache(providers) {
     this.providers = providers;
-    Services.obs.notifyObservers(null, "social:providers-changed");
+    Services.obs.notifyObservers(null, "social:providers-changed", null);
   },
 
   get enabled() {

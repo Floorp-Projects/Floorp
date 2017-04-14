@@ -27,6 +27,6 @@ function afterSessionStartupInitialization(cb) {
     getService(Ci.nsIObserver);
   Services.obs.addObserver(startup, "final-ui-startup");
   Services.obs.addObserver(startup, "quit-application");
-  Services.obs.notifyObservers(null, "final-ui-startup");
+  Services.obs.notifyObservers(null, "final-ui-startup", "");
   Services.obs.addObserver(observer, "sessionstore-state-finalized");
 }

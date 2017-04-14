@@ -44,7 +44,7 @@ function makeLock(kind) {
         return phase.removeBlocker(blocker);
       },
       wait() {
-        Services.obs.notifyObservers(null, topic);
+        Services.obs.notifyObservers(null, topic, null);
         return Promise.resolve();
       }
     };

@@ -52,7 +52,7 @@ Blocklist.prototype = {
   receiveMessage(aMsg) {
     switch (aMsg.name) {
       case "Blocklist:blocklistInvalidated":
-        Services.obs.notifyObservers(null, "blocklist-updated");
+        Services.obs.notifyObservers(null, "blocklist-updated", null);
         Services.cpmm.sendAsyncMessage("Blocklist:content-blocklist-updated");
         break;
       default:

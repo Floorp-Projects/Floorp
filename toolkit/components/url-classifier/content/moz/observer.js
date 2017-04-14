@@ -132,8 +132,8 @@ this.TEST_G_Observer = function TEST_G_Observer() {
                                   observerServiceObserver, true /* once */);
 
     // Notifications happen synchronously, so this is easy
-    service.notifyObservers(null, topic);
-    service.notifyObservers(null, topic);
+    service.notifyObservers(null, topic, null);
+    service.notifyObservers(null, topic, null);
 
     G_Assert(z, regularObserverRan == 2, "Regular observer broken");
     G_Assert(z, observerServiceObserverRan == 1, "ObsServObs broken");

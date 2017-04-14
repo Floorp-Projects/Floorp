@@ -288,7 +288,7 @@ NetworkManager.prototype = {
     this.networkInterfaces[networkId] = network;
     this.networkInterfaceLinks[networkId] = new NetworkInterfaceLinks();
 
-    Services.obs.notifyObservers(network.info, TOPIC_INTERFACE_REGISTERED);
+    Services.obs.notifyObservers(network.info, TOPIC_INTERFACE_REGISTERED, null);
     debug("Network '" + networkId + "' registered.");
   },
 
@@ -485,7 +485,7 @@ NetworkManager.prototype = {
 
     delete this.networkInterfaces[networkId];
 
-    Services.obs.notifyObservers(network.info, TOPIC_INTERFACE_UNREGISTERED);
+    Services.obs.notifyObservers(network.info, TOPIC_INTERFACE_UNREGISTERED, null);
     debug("Network '" + networkId + "' unregistered.");
   },
 
@@ -843,7 +843,7 @@ NetworkManager.prototype = {
         this._activeNetwork = this._overriddenActive;
         this._setDefaultRouteAndProxy(this._activeNetwork, oldActive);
         Services.obs.notifyObservers(this.activeNetworkInfo,
-                                     TOPIC_ACTIVE_CHANGED);
+                                     TOPIC_ACTIVE_CHANGED, null);
       }
       return;
     }
@@ -904,7 +904,7 @@ NetworkManager.prototype = {
       .then(() => {
         if (this._activeNetwork != oldActive) {
           Services.obs.notifyObservers(this.activeNetworkInfo,
-                                       TOPIC_ACTIVE_CHANGED);
+                                       TOPIC_ACTIVE_CHANGED, null);
         }
 
         if (this._manageOfflineStatus) {
