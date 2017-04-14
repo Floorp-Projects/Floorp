@@ -1415,13 +1415,6 @@ CompositorD3D11::EndFrame()
     return;
   }
 
-  if (mDevice->GetDeviceRemovedReason() != S_OK) {
-    gfxCriticalNote << "GFX: D3D11 skip EndFrame with device-removed.";
-    Compositor::EndFrame();
-    mCurrentRT = nullptr;
-    return;
-  }
-
   LayoutDeviceIntSize oldSize = mSize;
   EnsureSize();
   if (mSize.width <= 0 || mSize.height <= 0) {
