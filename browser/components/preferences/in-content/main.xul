@@ -241,6 +241,7 @@
       <hbox align="center" class="indent">
         <label id="isNotDefaultLabel" flex="1">&isNotDefault.label;</label>
         <button id="setDefaultButton"
+                class="accessory-button"
                 label="&setAsMyDefaultBrowser2.label;" accesskey="&setAsMyDefaultBrowser2.accesskey;"
                 preference="pref.general.disable_button.default_browser"/>
       </hbox>
@@ -357,15 +358,13 @@
   <hbox>
     <button id="restoreDefaultSearchEngines"
             label="&restoreDefaultSearchEngines.label;"
-            accesskey="&restoreDefaultSearchEngines.accesskey;"
-            />
+            accesskey="&restoreDefaultSearchEngines.accesskey;"/>
     <spacer flex="1"/>
     <button id="removeEngineButton"
-            class="searchEngineAction"
+            class="searchEngineAction accessory-button"
             label="&removeEngine.label;"
             accesskey="&removeEngine.accesskey;"
-            disabled="true"
-            />
+            disabled="true"/>
   </hbox>
 
   <separator class="thin"/>
@@ -441,6 +440,7 @@
   <hbox id="languagesBox" align="center">
     <description flex="1" control="chooseLanguage">&chooseLanguage.label;</description>
     <button id="chooseLanguage"
+            class="accessory-button"
             label="&chooseButton.label;"
             accesskey="&chooseButton.accesskey;"/>
   </hbox>
@@ -460,7 +460,9 @@
         <label>&translation.options.attribution.afterLogo;</label>
       </hbox>
     </hbox>
-    <button id="translateButton" label="&translateExceptions.label;"
+    <button id="translateButton"
+            class="accessory-button"
+            label="&translateExceptions.label;"
             accesskey="&translateExceptions.accesskey;"/>
   </hbox>
   <hbox>
@@ -519,13 +521,17 @@
             </menupopup>
           </menulist>
         </hbox>
-        <button id="advancedFonts" icon="select-font"
+        <button id="advancedFonts"
+                class="accessory-button"
+                icon="select-font"
                 label="&advancedFonts.label;"
                 accesskey="&advancedFonts.accesskey;"/>
       </row>
       <row id="colorsRow">
         <hbox/>
-        <button id="colors" icon="select-color"
+        <button id="colors"
+                class="accessory-button"
+                icon="select-color"
                 label="&colors.label;"
                 accesskey="&colors.accesskey;"/>
       </row>
