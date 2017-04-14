@@ -235,9 +235,9 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
         // Dispatch subsequent document manipulation operations, to avoid
         // blocking the main thread when a large number of search results
         // is found, thus giving the impression of faster searching.
-        Services.tm.currentThread.dispatch({ run:
+        Services.tm.dispatchToMainThread({ run:
           this._createSourceResultsUI.bind(this, sourceResults)
-        }, 0);
+        });
       }
     }
   },
@@ -332,12 +332,12 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
    *        The match to start a bounce animation for.
    */
   _bounceMatch: function (aMatch) {
-    Services.tm.currentThread.dispatch({ run: () => {
+    Services.tm.dispatchToMainThread({ run: () => {
       aMatch.addEventListener("transitionend", function () {
         aMatch.removeAttribute("focused");
       }, {once: true});
       aMatch.setAttribute("focused", "");
-    }}, 0);
+    }});
     aMatch.setAttribute("focusing", "");
   },
 

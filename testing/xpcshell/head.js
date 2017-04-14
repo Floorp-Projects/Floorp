@@ -697,7 +697,7 @@ function do_execute_soon(callback, aName) {
   var tm = Components.classes["@mozilla.org/thread-manager;1"]
                      .getService(Components.interfaces.nsIThreadManager);
 
-  tm.mainThread.dispatch({
+  tm.dispatchToMainThread({
     run: function() {
       try {
         callback();
@@ -722,7 +722,7 @@ function do_execute_soon(callback, aName) {
         do_test_finished(funcName);
       }
     }
-  }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+  });
 }
 
 /**

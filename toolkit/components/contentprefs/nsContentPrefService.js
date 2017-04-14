@@ -574,7 +574,7 @@ ContentPrefService.prototype = {
 
   _scheduleCallback(func) {
     let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
-    tm.mainThread.dispatch(func, Ci.nsIThread.DISPATCH_NORMAL);
+    tm.dispatchToMainThread(func);
   },
 
   _selectPref: function ContentPrefService__selectPref(aGroup, aSetting, aCallback) {
