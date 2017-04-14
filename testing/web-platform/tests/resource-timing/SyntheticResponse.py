@@ -20,7 +20,7 @@ def main(request, response):
                 response.write_status_headers()
                 headersSent = 1
 
-            response.writer.write_content(text)
+            response.writer.write(text)
 #        else:
 #            error "  INVALID ARGUMENT %s" % arg
 

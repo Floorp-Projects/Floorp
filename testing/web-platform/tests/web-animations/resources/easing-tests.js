@@ -80,25 +80,15 @@ var gEasingTests = [
   }
 ];
 
-const gInvalidEasings = [
+var gInvalidEasings = [
   '',
-  '7',
   'test',
-  'initial',
-  'inherit',
-  'unset',
   'cubic-bezier(1.1, 0, 1, 1)',
   'cubic-bezier(0, 0, 1.1, 1)',
   'cubic-bezier(-0.1, 0, 1, 1)',
   'cubic-bezier(0, 0, -0.1, 1)',
-  'cubic-bezier(0.1, 0, 4, 0.4)',
   'steps(-1, start)',
   'steps(0.1, start)',
-  'steps(3, nowhere)',
-  'steps(-3, end)',
-  'function (a){return a}',
-  'function (x){return x}',
-  'function(x, y){return 0.3}',
   'frames(1)',
   'frames',
   'frames()',
@@ -106,18 +96,5 @@ const gInvalidEasings = [
   'frames(a)',
   'frames(2.0)',
   'frames(2.5)',
-  'frames(2 3)',
-];
-
-// Easings that should serialize to the same string
-const gRoundtripEasings = [
-  'ease',
-  'linear',
-  'ease-in',
-  'ease-out',
-  'ease-in-out',
-  'cubic-bezier(0.1, 5, 0.23, 0)',
-  'steps(3, start)',
-  'steps(3)',
-  'frames(3)',
+  'frames(2 3)'
 ];

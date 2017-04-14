@@ -20,6 +20,7 @@ var aliases = {
   "MouseEvents": "MouseEvent",
   "PageTransitionEvent": "PageTransitionEvent",
   "PopStateEvent": "PopStateEvent",
+  "ProgressEvent": "ProgressEvent",
   "StorageEvent": "StorageEvent",
   "SVGEvents": "Event",
   "TextEvent": "CompositionEvent",
