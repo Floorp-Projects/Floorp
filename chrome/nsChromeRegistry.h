@@ -136,10 +136,6 @@ public:
 
   // Available flags
   enum {
-    // This is a "platform" package (e.g. chrome://global-platform/).
-    // Appends one of win/ unix/ mac/ to the base URI.
-    PLATFORM_PACKAGE = 1 << 0,
-
     // This package should use the new XPCNativeWrappers to separate
     // content from chrome. This flag is currently unused (because we call
     // into xpconnect at registration time).
