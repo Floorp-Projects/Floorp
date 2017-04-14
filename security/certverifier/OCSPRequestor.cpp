@@ -86,7 +86,7 @@ DoOCSPRequest(const UniquePLArenaPool& arena, const char* url,
   if (!arena.get() || !url || !encodedRequest || !encodedRequest->data) {
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
-  uint32_t urlLen = PL_strlen(url);
+  uint32_t urlLen = strlen(url);
   if (urlLen > static_cast<uint32_t>(std::numeric_limits<int32_t>::max())) {
     return Result::FATAL_ERROR_INVALID_ARGS;
   }

@@ -81,7 +81,15 @@ private:
 
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIUrlClassifierDBService> mDBService;
-  nsCOMPtr<nsITimer> mTimer;
+
+  // In v2, a update response might contain redirection and this
+  // timer is for fetching the redirected update.
+  nsCOMPtr<nsITimer> mFetchIndirectUpdatesTimer;
+
+  // When we DownloadUpdate(), the DBService might be busy on processing
+  // request issused outside of StreamUpdater. We have to fire a timer to
+  // retry on our own.
+  nsCOMPtr<nsITimer> mFetchNextRequestTimer;
 
   struct PendingRequest {
     nsCString mTables;

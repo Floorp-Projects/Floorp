@@ -278,6 +278,10 @@ typedef nsTArray<Link*> LinkArray;
 static LazyLogModule gDocumentLeakPRLog("DocumentLeak");
 static LazyLogModule gCspPRLog("CSP");
 
+static const char kChromeInContentPref[] = "security.allow_chrome_frames_inside_content";
+static bool sChromeInContentAllowed = false;
+static bool sChromeInContentPrefCached = false;
+
 static nsresult
 GetHttpChannelHelper(nsIChannel* aChannel, nsIHttpChannel** aHttpChannel)
 {
@@ -2079,6 +2083,8 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
     }
   }
 
+  principal = MaybeDowngradePrincipal(principal);
+
   ResetToURI(uri, aLoadGroup, principal);
 
   // Note that, since mTiming does not change during a reset, the
@@ -2223,6 +2229,43 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   if (nsPIDOMWindowInner* win = GetInnerWindow()) {
     nsGlobalWindow::Cast(win)->RefreshCompartmentPrincipal();
   }
+}
+
+already_AddRefed<nsIPrincipal>
+nsDocument::MaybeDowngradePrincipal(nsIPrincipal* aPrincipal)
+{
+  if (!aPrincipal) {
+    return nullptr;
+  }
+
+  if (!sChromeInContentPrefCached) {
+    sChromeInContentPrefCached = true;
+    Preferences::AddBoolVarCache(&sChromeInContentAllowed,
+                                 kChromeInContentPref, false);
+  }
+  if (!sChromeInContentAllowed &&
+      nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    // We basically want the parent document here, but because this is very
+    // early in the load, GetParentDocument() returns null, so we use the
+    // docshell hierarchy to get this information instead.
+    if (mDocumentContainer) {
+      nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem;
+      mDocumentContainer->GetParent(getter_AddRefs(parentDocShellItem));
+      nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentDocShellItem);
+      if (parentDocShell) {
+        nsCOMPtr<nsIDocument> parentDoc;
+        parentDoc = parentDocShell->GetDocument();
+        if (!parentDoc ||
+            !nsContentUtils::IsSystemPrincipal(parentDoc->NodePrincipal())) {
+          nsCOMPtr<nsIPrincipal> nullPrincipal =
+            do_CreateInstance("@mozilla.org/nullprincipal;1");
+          return nullPrincipal.forget();
+        }
+      }
+    }
+  }
+  nsCOMPtr<nsIPrincipal> principal(aPrincipal);
+  return principal.forget();
 }
 
 void
@@ -10596,14 +10639,18 @@ public:
 protected:
   virtual ~UnblockParsingPromiseHandler()
   {
-    MaybeUnblockParser();
+    // If we're being cleaned up by the cycle collector, our mDocument reference
+    // may have been unlinked while our mParser weak reference is still alive.
+    if (mDocument) {
+      MaybeUnblockParser();
+    }
   }
 
 private:
   void MaybeUnblockParser() {
     nsCOMPtr<nsIParser> parser = do_QueryReferent(mParser);
     if (parser) {
-      MOZ_ASSERT(mDocument);
+      MOZ_DIAGNOSTIC_ASSERT(mDocument);
       nsCOMPtr<nsIParser> docParser = mDocument->CreatorParserOrNull();
       if (parser == docParser) {
         parser->UnblockParser();

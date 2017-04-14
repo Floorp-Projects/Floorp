@@ -3615,9 +3615,14 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
     FunctionBox* funbox = pc->functionBox();
     RootedFunction fun(context, funbox->function());
 
-    AutoAwaitIsKeyword<ParseHandler> awaitIsKeyword(this, funbox->isAsync());
-    if (!functionArguments(yieldHandling, kind, pn))
-        return false;
+    // See below for an explanation why arrow function parameters and arrow
+    // function bodies are parsed with different yield/await settings.
+    {
+        bool asyncOrArrowInAsync = funbox->isAsync() || (kind == Arrow && awaitIsKeyword());
+        AutoAwaitIsKeyword<ParseHandler> awaitIsKeyword(this, asyncOrArrowInAsync);
+        if (!functionArguments(yieldHandling, kind, pn))
+            return false;
+    }
 
     Maybe<ParseContext::VarScope> varScope;
     if (funbox->hasParameterExprs) {
@@ -3683,32 +3688,36 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
     // |yield| in the parameters is either a name or keyword, depending on
     // whether the arrow function is enclosed in a generator function or not.
     // Whereas the |yield| in the function body is always parsed as a name.
+    // The same goes when parsing |await| in arrow functions.
     YieldHandling bodyYieldHandling = GetYieldHandling(pc->generatorKind());
-    Node body = functionBody(inHandling, bodyYieldHandling, kind, bodyType);
-    if (!body)
-        return false;
+    Node body;
+    {
+        AutoAwaitIsKeyword<ParseHandler> awaitIsKeyword(this, funbox->isAsync());
+        body = functionBody(inHandling, bodyYieldHandling, kind, bodyType);
+        if (!body)
+            return false;
+    }
 
-    if ((kind != Method && !IsConstructorKind(kind)) && fun->explicitName()) {
+    if ((kind == Statement || kind == Expression) && fun->explicitName()) {
         RootedPropertyName propertyName(context, fun->explicitName()->asPropertyName());
-        // `await` cannot be checked at this point because of different context.
-        // It should already be checked before this point.
-        if (propertyName != context->names().await) {
-            YieldHandling nameYieldHandling;
-            if (kind == Expression) {
-                // Named lambda has binding inside it.
-                nameYieldHandling = bodyYieldHandling;
-            } else {
-                // Otherwise YieldHandling cannot be checked at this point
-                // because of different context.
-                // It should already be checked before this point.
-                nameYieldHandling = YieldIsName;
-            }
+        YieldHandling nameYieldHandling;
+        if (kind == Expression) {
+            // Named lambda has binding inside it.
+            nameYieldHandling = bodyYieldHandling;
+        } else {
+            // Otherwise YieldHandling cannot be checked at this point
+            // because of different context.
+            // It should already be checked before this point.
+            nameYieldHandling = YieldIsName;
+        }
 
-            if (!checkBindingIdentifier(propertyName, handler.getPosition(pn).begin,
-                                        nameYieldHandling))
-            {
-                return false;
-            }
+        // We already use the correct await-handling at this point, therefore
+        // we don't need call AutoAwaitIsKeyword here.
+
+        if (!checkBindingIdentifier(propertyName, handler.getPosition(pn).begin,
+                                    nameYieldHandling))
+        {
+            return false;
         }
     }
 

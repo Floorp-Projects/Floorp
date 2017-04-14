@@ -150,6 +150,12 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "default": False,
             "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor."}
          ],
+        [["--parallel-stylo-traversal"], {
+            "action": "store_true",
+            "dest": "parallel_stylo_traversal",
+            "default": False,
+            "help": "Forcibly enable parallel traversal in Stylo with STYLO_THREADS=4"}
+         ],
     ] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(blobupload_config_options) + \
         copy.deepcopy(code_coverage_config_options)
@@ -704,6 +710,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
 
                 if self.config['allow_software_gl_layers']:
                     env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
+                env['STYLO_THREADS'] = '4' if self.config['parallel_stylo_traversal'] else '1'
 
                 env = self.query_env(partial_env=env, log_level=INFO)
                 cmd_timeout = self.get_timeout_for_category(suite_category)

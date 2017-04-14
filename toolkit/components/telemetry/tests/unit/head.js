@@ -308,6 +308,11 @@ if (runningInParent) {
   Services.prefs.setBoolPref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
   // FHR uploads should be enabled.
   Services.prefs.setBoolPref("datareporting.healthreport.uploadEnabled", true);
+  // Many tests expect the shutdown ping to not be sent on shutdown and will fail
+  // if receive an unexpected ping. Let's globally disable the shutdown ping sender:
+  // the relevant tests will enable this pref when needed.
+  Services.prefs.setBoolPref("toolkit.telemetry.shutdownPingSender.enabled", false);
+
 
   fakePingSendTimer((callback, timeout) => {
     Services.tm.mainThread.dispatch(() => callback(), Ci.nsIThread.DISPATCH_NORMAL);

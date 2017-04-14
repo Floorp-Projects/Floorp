@@ -31,6 +31,10 @@ static const char* gQuitApplicationMessage = "quit-application";
 // Limit the list file size to 32mb
 const uint32_t MAX_FILE_SIZE = (32 * 1024 * 1024);
 
+// Retry delay when we failed to DownloadUpdate() if due to
+// DBService busy.
+const uint32_t FETCH_NEXT_REQUEST_RETRY_DELAY_MS = 1000;
+
 #undef LOG
 
 // MOZ_LOG=UrlClassifierStreamUpdater:5
@@ -282,6 +286,17 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
     request->mSuccessCallback = aSuccessCallback;
     request->mUpdateErrorCallback = aUpdateErrorCallback;
     request->mDownloadErrorCallback = aDownloadErrorCallback;
+
+    // We cannot guarantee that we will be notified when DBService is done
+    // processing the current update, so we fire a retry timer on our own.
+    nsresult rv;
+    mFetchNextRequestTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = mFetchNextRequestTimer->InitWithCallback(this,
+                                                    FETCH_NEXT_REQUEST_RETRY_DELAY_MS,
+                                                    nsITimer::TYPE_ONE_SHOT);
+    }
+
     return NS_OK;
   }
 
@@ -414,10 +429,10 @@ nsUrlClassifierStreamUpdater::StreamFinished(nsresult status,
   // scheduling the next time we pull the list from the server. That's a different
   // timer in listmanager.js (see bug 1110891).
   nsresult rv;
-  mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+  mFetchIndirectUpdatesTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_SUCCEEDED(rv)) {
-    rv = mTimer->InitWithCallback(this, requestedDelay,
-                                  nsITimer::TYPE_ONE_SHOT);
+    rv = mFetchIndirectUpdatesTimer->InitWithCallback(this, requestedDelay,
+                                                      nsITimer::TYPE_ONE_SHOT);
   }
 
   if (NS_FAILED(rv)) {
@@ -817,9 +832,13 @@ nsUrlClassifierStreamUpdater::Observe(nsISupports *aSubject, const char *aTopic,
       mChannel = nullptr;
       mTelemetryClockStart = 0;
     }
-    if (mTimer) {
-      mTimer->Cancel();
-      mTimer = nullptr;
+    if (mFetchIndirectUpdatesTimer) {
+      mFetchIndirectUpdatesTimer->Cancel();
+      mFetchIndirectUpdatesTimer = nullptr;
+    }
+    if (mFetchNextRequestTimer) {
+      mFetchNextRequestTimer->Cancel();
+      mFetchNextRequestTimer = nullptr;
     }
   }
   return NS_OK;
@@ -842,11 +861,20 @@ nsUrlClassifierStreamUpdater::Notify(nsITimer *timer)
 {
   LOG(("nsUrlClassifierStreamUpdater::Notify [%p]", this));
 
-  mTimer = nullptr;
+  if (timer == mFetchNextRequestTimer) {
+    mFetchNextRequestTimer = nullptr;
+    FetchNextRequest();
+    return NS_OK;
+  }
 
-  // Start the update process up again.
-  FetchNext();
+  if (timer == mFetchIndirectUpdatesTimer) {
+    mFetchIndirectUpdatesTimer = nullptr;
+    // Start the update process up again.
+    FetchNext();
+    return NS_OK;
+  }
 
+  MOZ_ASSERT_UNREACHABLE("A timer is fired from nowhere.");
   return NS_OK;
 }
 

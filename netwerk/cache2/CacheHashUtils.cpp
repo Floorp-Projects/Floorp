@@ -38,7 +38,6 @@ CacheHash::Hash(const char *aData, uint32_t aSize, uint32_t aInitval)
   const uint8_t *k = reinterpret_cast<const uint8_t*>(aData);
   uint32_t a, b, c, len;
 
-//  length = PL_strlen(key);
   /* Set up the internal state */
   len = aSize;
   a = b = 0x9e3779b9;  /* the golden ratio; an arbitrary value */
