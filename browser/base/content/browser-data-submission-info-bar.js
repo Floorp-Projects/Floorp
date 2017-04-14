@@ -85,7 +85,7 @@ var gDataNotificationInfoBar = {
       buttons,
       event => {
         if (event == "removed") {
-          Services.obs.notifyObservers(null, "datareporting:notify-data-policy:close", null);
+          Services.obs.notifyObservers(null, "datareporting:notify-data-policy:close");
         }
       }
     );

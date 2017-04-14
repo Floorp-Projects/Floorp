@@ -243,7 +243,7 @@ function initialize(event) {
   gHeader.initialize();
   gEventManager.initialize();
   Services.obs.addObserver(sendEMPong, "EM-ping");
-  Services.obs.notifyObservers(window, "EM-loaded", "");
+  Services.obs.notifyObservers(window, "EM-loaded");
 
   // If the initial view has already been selected (by a call to loadView from
   // the above notifications) then bail out now
@@ -289,7 +289,7 @@ function shutdown() {
 }
 
 function sendEMPong(aSubject, aTopic, aData) {
-  Services.obs.notifyObservers(window, "EM-pong", "");
+  Services.obs.notifyObservers(window, "EM-pong");
 }
 
 // Used by external callers to load a specific view into the manager
@@ -745,7 +745,7 @@ function attachUpdateHandler(install) {
           },
         },
       };
-      Services.obs.notifyObservers(subject, "webextension-permission-prompt", null);
+      Services.obs.notifyObservers(subject, "webextension-permission-prompt");
     });
   };
 }
@@ -1113,7 +1113,7 @@ var gViewController = {
           document.getElementById("updates-progress").hidden = true;
           gUpdatesView.maybeRefresh();
 
-          Services.obs.notifyObservers(null, "EM-update-check-finished", null);
+          Services.obs.notifyObservers(null, "EM-update-check-finished");
 
           if (numManualUpdates > 0 && numUpdated == 0) {
             document.getElementById("updates-manualUpdatesFound-btn").hidden = false;
@@ -1307,7 +1307,7 @@ var gViewController = {
                 },
               },
             };
-            Services.obs.notifyObservers(subject, "webextension-permission-prompt", null);
+            Services.obs.notifyObservers(subject, "webextension-permission-prompt");
             return;
           }
         }
@@ -2766,7 +2766,7 @@ var gSearchView = {
             addon: aInstall.addon,
           },
         };
-        Services.obs.notifyObservers(subject, "webextension-install-notify", null);
+        Services.obs.notifyObservers(subject, "webextension-install-notify");
         return;
       }
     }

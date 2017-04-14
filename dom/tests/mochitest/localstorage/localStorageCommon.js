@@ -41,7 +41,7 @@ function os()
 
 function notify(top)
 {
-  os().notifyObservers(null, top, null);
+  os().notifyObservers(null, top);
 }
 
 /**

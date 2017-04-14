@@ -53,7 +53,7 @@ vacuumParticipant.prototype =
       this._grant = true;
       return false;
     }
-    Services.obs.notifyObservers(null, "test-begin-vacuum", null);
+    Services.obs.notifyObservers(null, "test-begin-vacuum");
     return true;
   },
   onEndVacuum: function TVP_EndVacuum(aSucceeded) {

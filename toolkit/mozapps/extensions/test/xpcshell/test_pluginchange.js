@@ -101,7 +101,7 @@ function run_test_2() {
   PLUGINS[2] = PLUGINS[1];
   PLUGINS[1] = tag;
 
-  Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC, null);
+  Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
 
   AddonManager.getAddonsByTypes(["plugin"], function(addons) {
     sortAddons(addons);
@@ -133,7 +133,7 @@ function run_test_3() {
     "onExternalInstall"
   ]);
 
-  Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC, null);
+  Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
 
   ensure_test_completed();
 
@@ -166,7 +166,7 @@ function run_test_4() {
 
   prepare_test(test_params);
 
-  Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC, null);
+  Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
 
   ensure_test_completed();
 
@@ -188,7 +188,7 @@ function run_test_4() {
 function run_test_5() {
   PLUGINS.splice(0, 1);
 
-  Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC, null);
+  Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
 
   ensure_test_completed();
 
@@ -227,7 +227,7 @@ function run_test_6() {
     "onExternalInstall"
   ]);
 
-  Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC, null);
+  Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
 
   ensure_test_completed();
 
@@ -264,7 +264,7 @@ function run_test_7() {
 
   prepare_test(test_params);
 
-  Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC, null);
+  Services.obs.notifyObservers(null, LIST_UPDATED_TOPIC);
 
   ensure_test_completed();
 

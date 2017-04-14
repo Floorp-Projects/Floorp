@@ -126,7 +126,7 @@ function* task_setCountRank(aURI, aCount, aRank, aSearch, aBookmark) {
 
   // Bump up the instrumentation feedback.
   for (let i = 0; i < aRank; i++) {
-    Services.obs.notifyObservers(thing, "autocomplete-will-enter-text", null);
+    Services.obs.notifyObservers(thing, "autocomplete-will-enter-text");
   }
 
   // If this is supposed to be a bookmark, add it.
