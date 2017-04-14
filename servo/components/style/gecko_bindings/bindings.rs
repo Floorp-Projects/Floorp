@@ -188,6 +188,7 @@ use gecko_bindings::structs::Loader;
 use gecko_bindings::structs::ServoStyleSheet;
 use gecko_bindings::structs::EffectCompositor_CascadeLevel;
 use gecko_bindings::structs::UpdateAnimationsTasks;
+use gecko_bindings::structs::LengthParsingMode;
 pub type nsTArrayBorrowed_uintptr_t<'a> = &'a mut ::gecko_bindings::structs::nsTArray<usize>;
 pub type ServoCssRulesStrong = ::gecko_bindings::sugar::ownership::Strong<ServoCssRules>;
 pub type ServoCssRulesBorrowed<'a> = &'a ServoCssRules;
@@ -1109,6 +1110,14 @@ extern "C" {
     pub fn Gecko_GetMediaFeatures() -> *const nsMediaFeature;
 }
 extern "C" {
+    pub fn Gecko_LookupCSSKeyword(string: *const u8, len: u32)
+     -> nsCSSKeyword;
+}
+extern "C" {
+    pub fn Gecko_CSSKeywordString(keyword: nsCSSKeyword, len: *mut u32)
+     -> *const ::std::os::raw::c_char;
+}
+extern "C" {
     pub fn Gecko_CSSFontFaceRule_Create() -> *mut nsCSSFontFaceRule;
 }
 extern "C" {
@@ -1525,7 +1534,8 @@ extern "C" {
 }
 extern "C" {
     pub fn Servo_StyleSet_NoteStyleSheetsChanged(set:
-                                                     RawServoStyleSetBorrowed);
+                                                     RawServoStyleSetBorrowed,
+                                                 author_style_disabled: bool);
 }
 extern "C" {
     pub fn Servo_StyleSet_FillKeyframesForName(set: RawServoStyleSetBorrowed,
@@ -1808,8 +1818,9 @@ extern "C" {
                                               property: *const nsACString,
                                               value: *const nsACString,
                                               is_important: bool,
-                                              data: *mut RawGeckoURLExtraData)
-     -> bool;
+                                              data: *mut RawGeckoURLExtraData,
+                                              length_parsing_mode:
+                                                  LengthParsingMode) -> bool;
 }
 extern "C" {
     pub fn Servo_DeclarationBlock_SetPropertyById(declarations:
@@ -1818,7 +1829,9 @@ extern "C" {
                                                   value: *const nsACString,
                                                   is_important: bool,
                                                   data:
-                                                      *mut RawGeckoURLExtraData)
+                                                      *mut RawGeckoURLExtraData,
+                                                  length_parsing_mode:
+                                                      LengthParsingMode)
      -> bool;
 }
 extern "C" {
@@ -1915,6 +1928,13 @@ extern "C" {
 extern "C" {
     pub fn Servo_DeclarationBlock_SetTextDecorationColorOverride(declarations:
                                                                      RawServoDeclarationBlockBorrowed);
+}
+extern "C" {
+    pub fn Servo_DeclarationBlock_SetBackgroundImage(declarations:
+                                                         RawServoDeclarationBlockBorrowed,
+                                                     value: *const nsAString,
+                                                     extra_data:
+                                                         *mut RawGeckoURLExtraData);
 }
 extern "C" {
     pub fn Servo_MediaList_Create() -> RawServoMediaListStrong;

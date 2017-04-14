@@ -751,8 +751,6 @@ public:
 
   RefPtr<ShutdownPromise> Shutdown()
   {
-    mData->mAudioDemuxer = nullptr;
-    mData->mVideoDemuxer = nullptr;
     RefPtr<Data> data = mData.forget();
     return InvokeAsync(mTaskQueue, __func__, [data]() {
       // We need to clear our reference to the demuxer now. So that in the event
@@ -760,6 +758,8 @@ public:
       // mediasource demuxer that is waiting on more data, it will force the
       // init promise to be rejected.
       data->mDemuxer = nullptr;
+      data->mAudioDemuxer = nullptr;
+      data->mVideoDemuxer = nullptr;
       return ShutdownPromise::CreateAndResolve(true, __func__);
     });
   }
@@ -919,7 +919,7 @@ public:
 
   nsresult GetNextRandomAccessPoint(TimeUnit* aTime) override
   {
-    AutoLock lock(this, __func__);
+    MutexAutoLock lock(mMutex);
     if (NS_SUCCEEDED(mNextRandomAccessPointResult)) {
       *aTime = mNextRandomAccessPoint;
     }
@@ -943,32 +943,14 @@ public:
 
   TimeIntervals GetBuffered() override
   {
-    AutoLock lock(this, __func__);
+    MutexAutoLock lock(mMutex);
     return mBuffered;
   }
 
   void BreakCycles() override { }
 
 private:
-  class AutoLock : public MutexAutoLock
-  {
-  public:
-    AutoLock(Wrapper* aThis, const char* aCallSite)
-      : MutexAutoLock(aThis->mMutex)
-      , mThis(aThis)
-    {
-      mThis->mCallSite = aCallSite;
-    }
-    ~AutoLock()
-    {
-      mThis->mCallSite = nullptr;
-    }
-  private:
-    Wrapper* const mThis;
-  };
-
   Mutex mMutex;
-  const char* mCallSite = nullptr;
   const RefPtr<AutoTaskQueue> mTaskQueue;
   const bool mGetSamplesMayBlock;
   const UniquePtr<TrackInfo> mInfo;
@@ -982,9 +964,6 @@ private:
 
   ~Wrapper()
   {
-    if (mCallSite != nullptr) {
-      MOZ_CRASH_UNSAFE_PRINTF("destroying a still-owned lock! callsite=%s", mCallSite);
-    }
     RefPtr<MediaTrackDemuxer> trackDemuxer = mTrackDemuxer.forget();
     mTaskQueue->Dispatch(NS_NewRunnableFunction(
       [trackDemuxer]() { trackDemuxer->BreakCycles(); }));
@@ -997,7 +976,7 @@ private:
       // Detached.
       return;
     }
-    AutoLock lock(this, __func__);
+    MutexAutoLock lock(mMutex);
     mNextRandomAccessPointResult =
       mTrackDemuxer->GetNextRandomAccessPoint(&mNextRandomAccessPoint);
   }
@@ -1009,7 +988,7 @@ private:
       // Detached.
       return;
     }
-    AutoLock lock(this, __func__);
+    MutexAutoLock lock(mMutex);
     mBuffered = mTrackDemuxer->GetBuffered();
   }
 };

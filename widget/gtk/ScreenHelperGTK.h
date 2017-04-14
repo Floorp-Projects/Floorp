@@ -24,8 +24,6 @@ public:
   ScreenHelperGTK();
   ~ScreenHelperGTK() override;
 
-  float GetSystemDefaultScale() override;
-
   static gint GetGTKMonitorScaleFactor();
 
 #ifdef MOZ_X11

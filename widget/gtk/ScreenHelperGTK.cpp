@@ -148,16 +148,6 @@ GetDefaultCssScale()
   return ScreenHelperGTK::GetGTKMonitorScaleFactor() * gfxPlatformGtk::GetDPIScale();
 }
 
-float
-ScreenHelperGTK::GetSystemDefaultScale()
-{
-  double scale = nsIWidget::DefaultScaleOverride();
-  if (scale <= 0.0) {
-    scale = GetDefaultCssScale();
-  }
-  return scale;
-}
-
 static uint32_t
 GetGTKPixelDepth()
 {

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-loader: taskgraph.loader.post_build:loader
+loader: taskgraph.loader.single_dep:loader
 
 transforms:
    - taskgraph.transforms.upload_symbols:transforms
@@ -10,8 +10,6 @@ transforms:
 
 kind-dependencies:
     - build
-
-job-template: job-template.yml
 
 only-for-build-platforms:
     - linux64/opt
@@ -21,3 +19,25 @@ only-for-build-platforms:
     - android-api-15/opt
     - android-api-15-nightly/opt
     - android-x86-nightly/opt
+
+job-template:
+   label: # see transforms
+   description: Upload Symbols
+   dependencies: # see transforms
+   expires-after: 7 days
+   deadline-after: 24 hours
+   run-on-projects:
+       - try
+       - release
+   worker-type: aws-provisioner-v1/gecko-symbol-upload
+   worker:
+       implementation: docker-worker
+       max-run-time: 600
+       command: ["/bin/bash", "bin/upload.sh"]
+       docker-image: taskclusterprivate/upload_symbols:0.0.4
+       env:
+           GECKO_HEAD_REPOSITORY: # see transforms
+           GECKO_HEAD_REV: # see transforms
+           ARTIFACT_TASKID: {"task-reference": "<build>"}
+   scopes:
+       - docker-worker:image:taskclusterprivate/upload_symbols:0.0.4

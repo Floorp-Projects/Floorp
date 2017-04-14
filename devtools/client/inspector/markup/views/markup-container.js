@@ -39,10 +39,11 @@ MarkupContainer.prototype = {
    *         The markup view that owns this container.
    * @param  {NodeFront} node
    *         The node to display.
-   * @param  {String} templateID
-   *         Which template to render for this container
+   * @param  {String} type
+   *         The type of container to build. This can be either 'textcontainer',
+   *         'readonlycontainer' or 'elementcontainer'.
    */
-  initialize: function (markupView, node, templateID) {
+  initialize: function (markupView, node, type) {
     this.markup = markupView;
     this.node = node;
     this.undo = this.markup.undo;
@@ -50,13 +51,8 @@ MarkupContainer.prototype = {
     this.id = "treeitem-" + markupContainerID++;
     this.htmlElt = this.win.document.documentElement;
 
-    // The template will fill the following properties
-    this.elt = null;
-    this.expander = null;
-    this.tagState = null;
-    this.tagLine = null;
-    this.children = null;
-    this.markup.template(templateID, this);
+    this.buildMarkup(type);
+
     this.elt.container = this;
 
     this._onMouseDown = this._onMouseDown.bind(this);
@@ -76,6 +72,37 @@ MarkupContainer.prototype = {
 
     // Marking the node as shown or hidden
     this.updateIsDisplayed();
+  },
+
+  buildMarkup: function (type) {
+    this.elt = this.win.document.createElement("li");
+    this.elt.classList.add("child", "collapsed");
+    this.elt.setAttribute("role", "presentation");
+
+    this.tagLine = this.win.document.createElement("div");
+    this.tagLine.setAttribute("id", this.id);
+    this.tagLine.classList.add("tag-line");
+    this.tagLine.setAttribute("role", "treeitem");
+    this.tagLine.setAttribute("aria-level", this.level);
+    this.tagLine.setAttribute("aria-grabbed", this.isDragging);
+    this.elt.appendChild(this.tagLine);
+
+    this.tagState = this.win.document.createElement("span");
+    this.tagState.classList.add("tag-state");
+    this.tagState.setAttribute("role", "presentation");
+    this.tagLine.appendChild(this.tagState);
+
+    if (type !== "textcontainer") {
+      this.expander = this.win.document.createElement("span");
+      this.expander.classList.add("theme-twisty", "expander");
+      this.expander.setAttribute("role", "presentation");
+      this.tagLine.appendChild(this.expander);
+    }
+
+    this.children = this.win.document.createElement("ul");
+    this.children.classList.add("children");
+    this.children.setAttribute("role", "group");
+    this.elt.appendChild(this.children);
   },
 
   toString: function () {
@@ -237,7 +264,7 @@ MarkupContainer.prototype = {
    * Set an appropriate DOM tree depth level for a node and its subtree.
    */
   updateLevel: function () {
-    // ARIA level should already be set when container template is rendered.
+    // ARIA level should already be set when the container markup is created.
     let currentLevel = this.tagLine.getAttribute("aria-level");
     let newLevel = this.level;
     if (currentLevel === newLevel) {

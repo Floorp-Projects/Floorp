@@ -149,12 +149,6 @@ class MalformedComputeShaderTest : public MalformedShaderTest
     }
 };
 
-class UnrollForLoopsTest : public MalformedShaderTest
-{
-  public:
-    UnrollForLoopsTest() { mExtraCompileOptions = SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX; }
-};
-
 // This is a test for a bug that used to exist in ANGLE:
 // Calling a function with all parameters missing should not succeed.
 TEST_F(MalformedShaderTest, FunctionParameterMismatch)
@@ -1442,45 +1436,6 @@ TEST_F(MalformedWebGL1ShaderTest, NonConstantLoopIndex)
     if (compile(shaderString))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
-    }
-}
-
-// Regression test for an old crash bug in ANGLE.
-// ForLoopUnroll used to crash when it encountered a while loop.
-TEST_F(UnrollForLoopsTest, WhileLoop)
-{
-    const std::string &shaderString =
-        "precision mediump float;\n"
-        "void main()\n"
-        "{\n"
-        "    while (true) {\n"
-        "        gl_FragColor = vec4(0.0);\n"
-        "        break;\n"
-        "    }\n"
-        "}\n";
-    if (!compile(shaderString))
-    {
-        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
-    }
-}
-
-// Regression test for an old crash bug in ANGLE.
-// ForLoopUnroll used to crash when it encountered a loop that didn't fit the ESSL 1.00
-// Appendix A limitations.
-TEST_F(UnrollForLoopsTest, UnlimitedForLoop)
-{
-    const std::string &shaderString =
-        "precision mediump float;\n"
-        "void main()\n"
-        "{\n"
-        "    for (;true;) {\n"
-        "        gl_FragColor = vec4(0.0);\n"
-        "        break;\n"
-        "    }\n"
-        "}\n";
-    if (!compile(shaderString))
-    {
-        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
     }
 }
 

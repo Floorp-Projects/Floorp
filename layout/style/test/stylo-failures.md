@@ -30,15 +30,11 @@ to mochitest command.
 ## Failures
 
 * Media query support:
-  * test_bug418986-2.html: matchMedia support [6]
-  * test_media_queries.html [182]
+  * test_media_queries.html [156]
   * test_media_queries_dynamic.html [11]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
-  * test_display_mode.html [5]
-  * test_display_mode_reflow.html [2]
-* test_all_shorthand.html: all shorthand servo/servo#15055 [*]
 * Animation support:
   * test_animations.html [22]
   * test_animations_dynamic_changes.html [1]
@@ -164,7 +160,7 @@ to mochitest command.
     * test_inherit_storage.html `transform`: for -moz-transform [3]
     * test_initial_computation.html `-moz-transform`: need different parsing rules [4]
     * test_initial_storage.html `transform`: for -moz-transform [6]
-    * test_value_storage.html `-moz-transform`: need different parsing rules [284]
+    * test_value_storage.html `-moz-transform`: need different parsing rules [280]
     * test_specified_value_serialization.html `bug-721136` [26]
     * test_units_angle.html [3]
   * test_variables.html `var(--var6)`: -x-system-font [1]
@@ -174,12 +170,8 @@ to mochitest command.
     * test_align_shorthand_serialization.html [8]
     * test_value_storage.html `place-` [7]
   * font-variant-{alternates,east-asian,ligatures,numeric} properties servo/servo#15957
-    * test_compute_data_with_start_struct.html `font-variant` [8]
-    * test_inherit_computation.html `font-variant` [20]
-    * test_inherit_storage.html `font-variant` [36]
-    * test_initial_computation.html `font-variant` [10]
-    * test_initial_storage.html `font-variant` [18]
-    * test_value_storage.html `font-variant` [332]
+    * test_property_syntax_errors.html `font-variant-alternates` [2]
+    * test_value_storage.html `font-variant` [176]
   * touch-action property servo/servo#16372
     * test_compute_data_with_start_struct.html `touch-action` [2]
     * test_inherit_computation.html `touch-action` [2]
@@ -218,9 +210,9 @@ to mochitest command.
     * ... `-moz-repeating-` [298]
   * webkit-prefixed gradient functions servo/servo#15441
     * test_value_storage.html `-webkit-gradient` [225]
-    * ... `-webkit-linear-gradient` [40]
+    * ... `-webkit-linear-gradient` [10]
     * ... `-webkit-radial-gradient` [105]
-    * ... `-webkit-repeating-` [35]
+    * ... `-webkit-repeating-` [20]
   * moz-prefixed intrinsic width values bug 1355402
     * test_box_size_keywords.html [16]
     * test_flexbox_flex_shorthand.html `-moz-fit-content` [4]
@@ -272,23 +264,15 @@ to mochitest command.
     * test_value_storage.html `(for 'border-image-` [60]
   * -moz-alt-content parsing is wrong: servo/servo#15726
     * test_property_syntax_errors.html `-moz-alt-content` [4]
-  * {transform,perspective}-origin fail to parse 'center left' and 'center right' servo/servo#15750
-    * test_value_storage.html `'center left'` [8]
-    * ... `'center right'` [8]
   * mask shorthand servo/servo#15772
     * test_property_syntax_errors.html `mask'` [76]
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
     * test_priority_preservation.html `border-radius` [4]
     * test_value_storage.html `border-radius:` [64]
-    * ... `-moz-outline-radius:` [31]
     * test_shorthand_property_getters.html `should condense to shortest possible` [6]
-  * background-position is serialized to invalid value sometimes bug 1355017
-    * test_shorthand_property_getters.html `background-position` [1]
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
-  * background-position invalid 3-value form **issue to be filed**
-    * test_shorthand_property_getters.html `should serialize to 4-value` [2]
   * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
   * :not(*) doesn't serialize properly servo/servo#16017
     * test_selectors.html `:not()` [8]
@@ -363,6 +347,7 @@ to mochitest command.
     * test_flexbox_flex_shorthand.html `flex-basis` [10]
   * should reject whole value bug 1355352
   * Gecko clamps rather than rejects invalid unicode range bug 1355356
+* test_property_syntax_errors.html `linear-gradient(0,`: unitless zero as degree [10]
 * test_default_computed_style.html: unship getDefaultComputedStyle bug 1355683 [1]
 
 ## Spec Unclear

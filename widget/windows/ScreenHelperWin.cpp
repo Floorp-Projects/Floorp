@@ -67,13 +67,6 @@ CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam)
   return TRUE;
 }
 
-float
-ScreenHelperWin::GetSystemDefaultScale()
-{
-  HMONITOR primary = widget::WinUtils::GetPrimaryMonitor();
-  return float(widget::WinUtils::LogToPhysFactor(primary));
-}
-
 void
 ScreenHelperWin::RefreshScreens()
 {

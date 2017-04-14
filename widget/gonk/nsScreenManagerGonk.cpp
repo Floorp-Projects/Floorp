@@ -831,13 +831,6 @@ nsScreenManagerGonk::ScreenForRect(int32_t inLeft,
     return GetPrimaryScreen(outScreen);
 }
 
-NS_IMETHODIMP
-nsScreenManagerGonk::GetSystemDefaultScale(float *aDefaultScale)
-{
-    *aDefaultScale = 1.0f;
-    return NS_OK;
-}
-
 void
 nsScreenManagerGonk::VsyncControl(bool aEnabled)
 {
