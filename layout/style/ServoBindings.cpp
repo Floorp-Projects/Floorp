@@ -513,16 +513,9 @@ bool
 Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,
                               nsIAtom* aPseudoTagOrNull)
 {
-  MOZ_ASSERT(!aPseudoTagOrNull ||
-             aPseudoTagOrNull == nsCSSPseudoElements::before ||
-             aPseudoTagOrNull == nsCSSPseudoElements::after);
-
-  CSSPseudoElementType pseudoType =
-    nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
-                                       CSSEnabledState::eForAllContent);
   nsAnimationManager::CSSAnimationCollection* collection =
     nsAnimationManager::CSSAnimationCollection
-                      ::GetAnimationCollection(aElement, pseudoType);
+                      ::GetAnimationCollection(aElement, aPseudoTagOrNull);
 
   return collection && !collection->mAnimations.IsEmpty();
 }
@@ -531,16 +524,9 @@ bool
 Gecko_ElementHasCSSTransitions(RawGeckoElementBorrowed aElement,
                                nsIAtom* aPseudoTagOrNull)
 {
-  MOZ_ASSERT(!aPseudoTagOrNull ||
-             aPseudoTagOrNull == nsCSSPseudoElements::before ||
-             aPseudoTagOrNull == nsCSSPseudoElements::after);
-
-  CSSPseudoElementType pseudoType =
-    nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
-                                       CSSEnabledState::eForAllContent);
   nsTransitionManager::CSSTransitionCollection* collection =
     nsTransitionManager::CSSTransitionCollection
-                       ::GetAnimationCollection(aElement, pseudoType);
+                       ::GetAnimationCollection(aElement, aPseudoTagOrNull);
 
   return collection && !collection->mAnimations.IsEmpty();
 }
@@ -549,16 +535,9 @@ size_t
 Gecko_ElementTransitions_Length(RawGeckoElementBorrowed aElement,
                                 nsIAtom* aPseudoTagOrNull)
 {
-  MOZ_ASSERT(!aPseudoTagOrNull ||
-             aPseudoTagOrNull == nsCSSPseudoElements::before ||
-             aPseudoTagOrNull == nsCSSPseudoElements::after);
-
-  CSSPseudoElementType pseudoType =
-    nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
-                                       CSSEnabledState::eForAllContent);
   nsTransitionManager::CSSTransitionCollection* collection =
     nsTransitionManager::CSSTransitionCollection
-                       ::GetAnimationCollection(aElement, pseudoType);
+                       ::GetAnimationCollection(aElement, aPseudoTagOrNull);
 
   return collection ? collection->mAnimations.Length() : 0;
 }
@@ -568,16 +547,9 @@ GetCurrentTransitionAt(RawGeckoElementBorrowed aElement,
                        nsIAtom* aPseudoTagOrNull,
                        size_t aIndex)
 {
-  MOZ_ASSERT(!aPseudoTagOrNull ||
-             aPseudoTagOrNull == nsCSSPseudoElements::before ||
-             aPseudoTagOrNull == nsCSSPseudoElements::after);
-
-  CSSPseudoElementType pseudoType =
-    nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
-                                       CSSEnabledState::eForAllContent);
   nsTransitionManager::CSSTransitionCollection* collection =
     nsTransitionManager::CSSTransitionCollection
-                       ::GetAnimationCollection(aElement, pseudoType);
+                       ::GetAnimationCollection(aElement, aPseudoTagOrNull);
   if (!collection) {
     return nullptr;
   }
