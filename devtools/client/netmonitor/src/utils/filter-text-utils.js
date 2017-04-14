@@ -122,6 +122,11 @@ function isFlagFilterMatch(item, { type, value, negative }) {
     case "method":
       match = item.method.toLowerCase() === value;
       break;
+    case "protocol":
+      let protocol = item.httpVersion;
+      match = typeof protocol === "string" ?
+                protocol.toLowerCase().includes(value) : false;
+      break;
     case "domain":
       match = item.urlDetails.host.toLowerCase().includes(value);
       break;

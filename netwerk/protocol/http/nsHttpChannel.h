@@ -341,6 +341,8 @@ private:
     MOZ_MUST_USE nsresult ContinueOnStartRequest2(nsresult);
     MOZ_MUST_USE nsresult ContinueOnStartRequest3(nsresult);
 
+    void OnClassOfServiceUpdated();
+
     bool InitLocalBlockList(const InitLocalBlockListCallback& aCallback);
 
     // redirection specific methods

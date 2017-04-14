@@ -2028,7 +2028,6 @@ const KTableEntry nsCSSProps::kTextDecorationLineKTable[] = {
   { eCSSKeyword_overline, NS_STYLE_TEXT_DECORATION_LINE_OVERLINE },
   { eCSSKeyword_line_through, NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH },
   { eCSSKeyword_blink, NS_STYLE_TEXT_DECORATION_LINE_BLINK },
-  { eCSSKeyword__moz_anchor_decoration, NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

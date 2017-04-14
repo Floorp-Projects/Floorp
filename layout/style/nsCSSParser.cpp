@@ -15568,14 +15568,12 @@ CSSParserImpl::ParseTextDecorationLine(nsCSSValue& aValue)
                  NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE ^
                  NS_STYLE_TEXT_DECORATION_LINE_OVERLINE ^
                  NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH ^
-                 NS_STYLE_TEXT_DECORATION_LINE_BLINK ^
-                 NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS) ==
+                 NS_STYLE_TEXT_DECORATION_LINE_BLINK) ==
                 (NS_STYLE_TEXT_DECORATION_LINE_NONE |
                  NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE |
                  NS_STYLE_TEXT_DECORATION_LINE_OVERLINE |
                  NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH |
-                 NS_STYLE_TEXT_DECORATION_LINE_BLINK |
-                 NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS),
+                 NS_STYLE_TEXT_DECORATION_LINE_BLINK),
                 "text decoration constants need to be bitmasks");
   if (ParseSingleTokenVariant(aValue, VARIANT_HK,
                               nsCSSProps::kTextDecorationLineKTable)) {

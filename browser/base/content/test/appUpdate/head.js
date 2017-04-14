@@ -28,6 +28,9 @@ Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
 var gURLData = URL_HOST + "/" + REL_PATH_DATA;
 const URL_MANUAL_UPDATE = gURLData + "downloadPage.html";
 
+const gEnv = Cc["@mozilla.org/process/environment;1"].
+             getService(Components.interfaces.nsIEnvironment);
+
 const NOTIFICATIONS = [
   "update-available",
   "update-manual",
@@ -100,11 +103,13 @@ function setUpdateTimerPrefs() {
 function runUpdateTest(updateParams, checkAttempts, steps) {
   return Task.spawn(function*() {
     registerCleanupFunction(() => {
+      gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "");
       gMenuButtonUpdateBadge.uninit();
       gMenuButtonUpdateBadge.init();
       cleanUpUpdates();
     });
 
+    gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     setUpdateTimerPrefs();
     yield SpecialPowers.pushPrefEnv({
       set: [
@@ -155,11 +160,13 @@ function runUpdateTest(updateParams, checkAttempts, steps) {
 function runUpdateProcessingTest(updates, steps) {
   return Task.spawn(function*() {
     registerCleanupFunction(() => {
+      gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "");
       gMenuButtonUpdateBadge.reset();
       cleanUpUpdates();
     });
 
     setUpdateTimerPrefs();
+    gEnv.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     SpecialPowers.pushPrefEnv({
       set: [
         [PREF_APP_UPDATE_DOWNLOADPROMPTATTEMPTS, 0],

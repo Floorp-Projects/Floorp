@@ -67,7 +67,6 @@ from taskgraph.util.taskcluster import (
     list_artifacts,
 )
 
-from mozbuild.action.test_archive import OBJDIR_TEST_FILES
 from mozbuild.util import (
     ensureParentDir,
     FileAvoidWrite,
@@ -99,9 +98,12 @@ NUM_REVISIONS_TO_QUERY = 500
 
 MAX_CACHED_TASKS = 400  # Number of pushheads to cache Task Cluster task data for.
 
-# Number of downloaded artifacts to cache.  Each artifact can be very large,
-# so don't make this to large!  TODO: make this a size (like 500 megs) rather than an artifact count.
-MAX_CACHED_ARTIFACTS = 6
+# Minimum number of downloaded artifacts to keep. Each artifact can be very large,
+# so don't make this to large!
+MIN_CACHED_ARTIFACTS = 6
+
+# Maximum size of the downloaded artifacts to keep in cache, in bytes (1GiB).
+MAX_CACHED_ARTIFACTS_SIZE = 1024 * 1024 * 1024
 
 # Downloaded artifacts are cached, and a subset of their contents extracted for
 # easy installation.  This is most noticeable on Mac OS X: since mounting and
@@ -185,6 +187,7 @@ class ArtifactJob(object):
         raise NotImplementedError("Subclasses must specialize process_package_artifact!")
 
     def process_tests_artifact(self, filename, processed_filename):
+        from mozbuild.action.test_archive import OBJDIR_TEST_FILES
         added_entry = False
 
         with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
@@ -664,37 +667,102 @@ class TaskCache(CacheManager):
         return urls
 
 
-class ArtifactCache(CacheManager):
+class ArtifactPersistLimit(PersistLimit):
+    '''Handle persistence for artifacts cache
+
+    When instantiating a DownloadManager, it starts by filling the
+    PersistLimit instance it's given with register_dir_content.
+    In practice, this registers all the files already in the cache directory.
+    After a download finishes, the newly downloaded file is registered, and the
+    oldest files registered to the PersistLimit instance are removed depending
+    on the size and file limits it's configured for.
+    This is all good, but there are a few tweaks we want here:
+    - We have pickle files in the cache directory that we don't want purged.
+    - Files that were just downloaded in the same session shouldn't be purged.
+      (if for some reason we end up downloading more than the default max size,
+       we don't want the files to be purged)
+    To achieve this, this subclass of PersistLimit inhibits the register_file
+    method for pickle files and tracks what files were downloaded in the same
+    session to avoid removing them.
+
+    The register_file method may be used to register cache matches too, so that
+    later sessions know they were freshly used.
+    '''
+
+    def __init__(self, log=None):
+        super(ArtifactPersistLimit, self).__init__(
+            size_limit=MAX_CACHED_ARTIFACTS_SIZE,
+            file_limit=MIN_CACHED_ARTIFACTS)
+        self._log = log
+        self._registering_dir = False
+        self._downloaded_now = set()
+
+    def log(self, *args, **kwargs):
+        if self._log:
+            self._log(*args, **kwargs)
+
+    def register_file(self, path):
+        if path.endswith('.pickle'):
+            return
+        if not self._registering_dir:
+            # Touch the file so that subsequent calls to a mach artifact
+            # command know it was recently used. While remove_old_files
+            # is based on access time, in various cases, the access time is not
+            # updated when just reading the file, so we force an update.
+            try:
+                os.utime(path, None)
+            except OSError:
+                pass
+            self._downloaded_now.add(path)
+        super(ArtifactPersistLimit, self).register_file(path)
+
+    def register_dir_content(self, directory, pattern="*"):
+        self._registering_dir = True
+        super(ArtifactPersistLimit, self).register_dir_content(
+            directory, pattern)
+        self._registering_dir = False
+
+    def remove_old_files(self):
+        from dlmanager import fs
+        files = sorted(self.files, key=lambda f: f.stat.st_atime)
+        kept = []
+        while len(files) > self.file_limit and \
+                self._files_size >= self.size_limit:
+            f = files.pop(0)
+            if f.path in self._downloaded_now:
+                kept.append(f)
+                continue
+            fs.remove(f.path)
+            self.log(logging.INFO, 'artifact',
+                {'filename': f.path},
+                'Purged artifact {filename}')
+            self._files_size -= f.stat.st_size
+        self.files = files + kept
+
+    def remove_all(self):
+        from dlmanager import fs
+        for f in self.files:
+            fs.remove(f.path)
+        self._files_size = 0
+        self.files = []
+
+
+class ArtifactCache(object):
     '''Fetch Task Cluster artifact URLs and purge least recently used artifacts from disk.'''
 
     def __init__(self, cache_dir, log=None, skip_cache=False):
-        # TODO: instead of storing N artifact packages, store M megabytes.
-        CacheManager.__init__(self, cache_dir, 'fetch', MAX_CACHED_ARTIFACTS, cache_callback=self.delete_file, log=log, skip_cache=skip_cache)
         self._cache_dir = cache_dir
-        size_limit = 1024 * 1024 * 1024 # 1Gb in bytes.
-        file_limit = 4 # But always keep at least 4 old artifacts around.
-        persist_limit = PersistLimit(size_limit, file_limit)
-        self._download_manager = DownloadManager(self._cache_dir, persist_limit=persist_limit)
+        self._log = log
+        self._skip_cache = skip_cache
+        self._persist_limit = ArtifactPersistLimit(log)
+        self._download_manager = DownloadManager(
+            self._cache_dir, persist_limit=self._persist_limit)
         self._last_dl_update = -1
 
-    def delete_file(self, key, value):
-        try:
-            os.remove(value)
-            self.log(logging.INFO, 'artifact',
-                {'filename': value},
-                'Purged artifact {filename}')
-        except (OSError, IOError):
-            pass
+    def log(self, *args, **kwargs):
+        if self._log:
+            self._log(*args, **kwargs)
 
-        try:
-            os.remove(value + PROCESSED_SUFFIX)
-            self.log(logging.INFO, 'artifact',
-                {'filename': value + PROCESSED_SUFFIX},
-                'Purged processed artifact {filename}')
-        except (OSError, IOError):
-            pass
-
-    @cachedmethod(operator.attrgetter('_cache'))
     def fetch(self, url, force=False):
         # We download to a temporary name like HASH[:16]-basename to
         # differentiate among URLs with the same basenames.  We used to then
@@ -718,6 +786,8 @@ class ArtifactCache(CacheManager):
             dl = self._download_manager.download(url, fname)
 
             def download_progress(dl, bytes_so_far, total_size):
+                if not total_size:
+                    return
                 percent = (float(bytes_so_far) / total_size) * 100
                 now = int(percent / 5)
                 if now == self._last_dl_update:
@@ -730,6 +800,11 @@ class ArtifactCache(CacheManager):
             if dl:
                 dl.set_progress(download_progress)
                 dl.wait()
+            else:
+                # Avoid the file being removed if it was in the cache already.
+                path = os.path.join(self._cache_dir, fname)
+                self._persist_limit.register_file(path)
+
             self.log(logging.INFO, 'artifact',
                 {'path': os.path.abspath(mozpath.join(self._cache_dir, fname))},
                 'Downloaded artifact to {path}')
@@ -737,6 +812,15 @@ class ArtifactCache(CacheManager):
         finally:
             # Cancel any background downloads in progress.
             self._download_manager.cancel()
+
+    def clear_cache(self):
+        if self._skip_cache:
+            self.log(logging.DEBUG, 'artifact',
+                {},
+                'Skipping cache: ignoring clear_cache!')
+            return
+
+        self._persist_limit.remove_all()
 
 
 class Artifacts(object):
@@ -939,6 +1023,8 @@ class Artifacts(object):
                 'Writing processed {processed_filename}')
             self._artifact_job.process_artifact(filename, processed_filename)
 
+        self._artifact_cache._persist_limit.register_file(processed_filename)
+
         self.log(logging.INFO, 'artifact',
             {'processed_filename': processed_filename},
             'Installing from processed {processed_filename}')
@@ -969,8 +1055,7 @@ class Artifacts(object):
         self.log(logging.INFO, 'artifact',
             {'url': url},
             'Installing from {url}')
-        with self._artifact_cache as artifact_cache:  # The with block handles persistence.
-            filename = artifact_cache.fetch(url)
+        filename = self._artifact_cache.fetch(url)
         return self.install_from_file(filename, distdir)
 
     def _install_from_hg_pushheads(self, hg_pushheads, distdir):

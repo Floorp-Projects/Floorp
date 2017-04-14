@@ -2028,8 +2028,8 @@ pref("network.auth.private-browsing-sso", false);
 
 // Control how the throttling service works - number of ms that each
 // suspend and resume period lasts (prefs named appropriately)
-pref("network.throttle.suspend-for", 2000);
-pref("network.throttle.resume-for", 2000);
+pref("network.throttle.suspend-for", 3000);
+pref("network.throttle.resume-for", 200);
 pref("network.throttle.enable", true);
 
 pref("permissions.default.image",           1); // 1-Accept, 2-Deny, 3-dontAcceptForeign
@@ -5043,11 +5043,12 @@ pref("dom.browserElement.maxScreenshotDelayMS", 2000);
 // Whether we should show the placeholder when the element is focused but empty.
 pref("dom.placeholder.show_on_focus", true);
 
-// VR is disabled by default in release and enabled for nightly and aurora
-#ifdef RELEASE_OR_BETA
-pref("dom.vr.enabled", false);
-#else
+// WebVR is enabled by default in beta and release for Windows and for all
+// platforms in nightly and aurora.
+#if defined(XP_WIN) || !defined(RELEASE_OR_BETA)
 pref("dom.vr.enabled", true);
+#else
+pref("dom.vr.enabled", false);
 #endif
 // It is often desirable to automatically start vr presentation when
 // a user puts on the VR headset.  This is done by emitting the
