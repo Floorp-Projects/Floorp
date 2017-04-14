@@ -2924,10 +2924,10 @@ CreateFilterDeclaration(const nsAString& aFilter,
 }
 
 static already_AddRefed<nsStyleContext>
-ResolveStyleForFilter(const nsAString& aFilterString,
-                      nsIPresShell* aPresShell,
-                      nsStyleContext* aParentContext,
-                      ErrorResult& aError)
+ResolveFilterStyle(const nsAString& aFilterString,
+                   nsIPresShell* aPresShell,
+                   nsStyleContext* aParentContext,
+                   ErrorResult& aError)
 {
   nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
   if (!styleSet) {
@@ -2963,6 +2963,42 @@ ResolveStyleForFilter(const nsAString& aFilterString,
   return sc.forget();
 }
 
+static already_AddRefed<RawServoDeclarationBlock>
+CreateFilterDeclarationForServo(const nsAString& aFilter,
+                                nsIDocument* aDocument)
+{
+  return CreateDeclarationForServo(eCSSProperty_filter, aFilter, aDocument);
+}
+
+static already_AddRefed<ServoComputedValues>
+ResolveFilterStyleForServo(const nsAString& aFilterString,
+                           const ServoComputedValues* aParentStyle,
+                           nsIPresShell* aPresShell,
+                           ErrorResult& aError)
+{
+  MOZ_ASSERT(aPresShell->StyleSet()->IsServo());
+
+  RefPtr<RawServoDeclarationBlock> declarations =
+    CreateFilterDeclarationForServo(aFilterString, aPresShell->GetDocument());
+  if (!declarations) {
+    // Refuse to accept the filter, but do not throw an error.
+    return nullptr;
+  }
+
+  // In addition to unparseable values, the spec says we need to reject
+  // 'inherit' and 'initial'.
+  if (Servo_DeclarationBlock_HasCSSWideKeyword(declarations,
+                                               eCSSProperty_filter)) {
+    return nullptr;
+  }
+
+  ServoStyleSet* styleSet = aPresShell->StyleSet()->AsServo();
+  RefPtr<ServoComputedValues> computedValues =
+    styleSet->ResolveForDeclarations(aParentStyle, declarations);
+
+  return computedValues.forget();
+}
+
 bool
 CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
                                       nsTArray<nsStyleFilter>& aFilterChain,
@@ -2990,7 +3026,7 @@ CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
   }
 
   RefPtr<nsStyleContext> sc =
-    ResolveStyleForFilter(aString, presShell, parentContext, aError);
+    ResolveFilterStyle(aString, presShell, parentContext, aError);
 
   if (!sc) {
     return false;
