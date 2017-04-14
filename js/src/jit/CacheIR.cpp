@@ -1857,6 +1857,27 @@ GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId, HandleId id)
     return true;
 }
 
+BindNameIRGenerator::BindNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
+                                         ICState::Mode mode, HandleObject env,
+                                         HandlePropertyName name)
+  : IRGenerator(cx, script, pc, CacheKind::BindName, mode),
+    env_(env),
+    name_(name)
+{}
+
+bool
+BindNameIRGenerator::tryAttachStub()
+{
+    MOZ_ASSERT(cacheKind_ == CacheKind::BindName);
+
+    AutoAssertNoPendingException aanpe(cx_);
+
+    ObjOperandId envId(writer.setInputOperandId(0));
+    RootedId id(cx_, NameToId(name_));
+
+    return false;
+}
+
 InIRGenerator::InIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
                              ICState::Mode mode, HandleValue key, HandleObject obj)
   : IRGenerator(cx, script, pc, CacheKind::In, mode),

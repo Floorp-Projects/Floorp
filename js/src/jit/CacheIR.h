@@ -139,6 +139,7 @@ class TypedOperandId : public OperandId
     _(GetName)              \
     _(SetProp)              \
     _(SetElem)              \
+    _(BindName)             \
     _(In)                   \
     _(HasOwn)
 
@@ -1104,6 +1105,19 @@ class MOZ_RAII GetNameIRGenerator : public IRGenerator
   public:
     GetNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
                        HandleObject env, HandlePropertyName name);
+
+    bool tryAttachStub();
+};
+
+// BindNameIRGenerator generates CacheIR for a BindName IC.
+class MOZ_RAII BindNameIRGenerator : public IRGenerator
+{
+    HandleObject env_;
+    HandlePropertyName name_;
+
+  public:
+    BindNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
+                        HandleObject env, HandlePropertyName name);
 
     bool tryAttachStub();
 };

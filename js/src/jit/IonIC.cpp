@@ -47,6 +47,7 @@ IonIC::scratchRegisterForEntryJump()
       case CacheKind::GetName:
         return asGetNameIC()->temp();
       case CacheKind::In:
+      case CacheKind::BindName:
         MOZ_CRASH("Baseline-specific for now");
       case CacheKind::HasOwn:
         return asHasOwnIC()->output();
