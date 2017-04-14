@@ -234,11 +234,12 @@ VideoData::UpdateTimestamp(int64_t aTimestamp)
 {
   MOZ_ASSERT(aTimestamp >= 0);
 
-  int64_t updatedDuration = GetEndTime() - aTimestamp;
-  MOZ_ASSERT(updatedDuration >= 0);
+  auto updatedDuration =
+    GetEndTime() - TimeUnit::FromMicroseconds(aTimestamp);
+  MOZ_ASSERT(!updatedDuration.IsNegative());
 
   mTime = aTimestamp;
-  mDuration = TimeUnit::FromMicroseconds(updatedDuration);
+  mDuration = updatedDuration;
 }
 
 /* static */

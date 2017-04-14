@@ -323,7 +323,10 @@ public:
 
   bool mKeyframe;
 
-  int64_t GetEndTime() const { return mTime + mDuration.ToMicroseconds(); }
+  media::TimeUnit GetEndTime() const
+  {
+    return media::TimeUnit::FromMicroseconds(mTime) + mDuration;
+  }
 
   bool AdjustForStartTime(int64_t aStartTime)
   {
