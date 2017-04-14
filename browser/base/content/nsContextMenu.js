@@ -20,6 +20,44 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
 
 var gContextMenuContentData = null;
 
+function openContextMenu(aMessage) {
+  let data = aMessage.data;
+  let browser = aMessage.target;
+
+  let spellInfo = data.spellInfo;
+  if (spellInfo)
+    spellInfo.target = aMessage.target.messageManager;
+  let documentURIObject = makeURI(data.docLocation,
+                                  data.charSet,
+                                  makeURI(data.baseURI));
+  gContextMenuContentData = { isRemote: true,
+                              event: aMessage.objects.event,
+                              popupNode: aMessage.objects.popupNode,
+                              browser,
+                              editFlags: data.editFlags,
+                              spellInfo,
+                              principal: data.principal,
+                              customMenuItems: data.customMenuItems,
+                              addonInfo: data.addonInfo,
+                              documentURIObject,
+                              docLocation: data.docLocation,
+                              charSet: data.charSet,
+                              referrer: data.referrer,
+                              referrerPolicy: data.referrerPolicy,
+                              contentType: data.contentType,
+                              contentDisposition: data.contentDisposition,
+                              frameOuterWindowID: data.frameOuterWindowID,
+                              selectionInfo: data.selectionInfo,
+                              disableSetDesktopBackground: data.disableSetDesktopBg,
+                              loginFillInfo: data.loginFillInfo,
+                              parentAllowsMixedContent: data.parentAllowsMixedContent,
+                              userContextId: data.userContextId,
+                            };
+  let popup = browser.ownerDocument.getElementById("contentAreaContextMenu");
+  let event = gContextMenuContentData.event;
+  popup.openPopupAtScreen(event.screenX, event.screenY, true);
+}
+
 function nsContextMenu(aXulMenu, aIsShift) {
   this.shouldDisplay = true;
   this.initMenu(aXulMenu, aIsShift);
