@@ -32,9 +32,7 @@ add_task(async function testPanelPlaceholders() {
   // Bug 1229236 is for these tests to be smarter so the test doesn't need to
   // change when the default placements change.
   let expectedPlaceholders = 1;
-  if (isInDevEdition()) {
-    expectedPlaceholders += 1;
-  } else if (isInNightly()) {
+  if (isInNightly()) {
     expectedPlaceholders += 2;
   }
   is(panel.querySelectorAll(".panel-customization-placeholder").length, expectedPlaceholders, "The number of placeholders should be correct.");
