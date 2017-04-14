@@ -7244,14 +7244,6 @@ js::ReleaseAllJITCode(FreeOp* fop)
 }
 
 void
-js::PurgeJITCaches(Zone* zone)
-{
-    /* Discard Ion caches. */
-    for (auto script = zone->cellIter<JSScript>(); !script.done(); script.next())
-        jit::PurgeCaches(script);
-}
-
-void
 ArenaLists::normalizeBackgroundFinalizeState(AllocKind thingKind)
 {
     ArenaLists::BackgroundFinalizeState* bfs = &backgroundFinalizeState(thingKind);

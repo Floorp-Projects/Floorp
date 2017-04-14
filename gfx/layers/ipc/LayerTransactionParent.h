@@ -172,6 +172,13 @@ protected:
   friend class layout::RenderFrameParent;
 
 private:
+  // This is a function so we can log or breakpoint on why hit
+  // testing tree changes are made.
+  void UpdateHitTestingTree(Layer* aLayer, const char* aWhy) {
+    mUpdateHitTestingTree = true;
+  }
+
+private:
   RefPtr<HostLayerManager> mLayerManager;
   CompositorBridgeParentBase* mCompositorBridge;
 
@@ -216,8 +223,11 @@ private:
   // transactions posted by the child.
 
   bool mDestroyed;
-
   bool mIPCOpen;
+
+  // This is set during RecvUpdate to track whether we'll need to update
+  // APZ's hit test regions.
+  bool mUpdateHitTestingTree;
 };
 
 } // namespace layers

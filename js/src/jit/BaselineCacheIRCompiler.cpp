@@ -1855,10 +1855,11 @@ BaselineCacheIRCompiler::init(CacheKind kind)
         allocator.initInputLocation(2, BaselineFrameSlot(0));
         break;
       case CacheKind::GetName:
+      case CacheKind::BindName:
         MOZ_ASSERT(numInputs == 1);
         allocator.initInputLocation(0, R0.scratchReg(), JSVAL_TYPE_OBJECT);
 #if defined(JS_NUNBOX32)
-        // availableGeneralRegs can't know that GetName is only using
+        // availableGeneralRegs can't know that GetName/BindName is only using
         // the payloadReg and not typeReg on x86.
         available.add(R0.typeReg());
 #endif
@@ -1900,6 +1901,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
     switch (kind) {
       case CacheKind::In:
       case CacheKind::HasOwn:
+      case CacheKind::BindName:
         stubDataOffset = sizeof(ICCacheIR_Regular);
         stubKind = CacheIRStubKind::Regular;
         break;
