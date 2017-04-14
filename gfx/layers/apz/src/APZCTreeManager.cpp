@@ -480,6 +480,9 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
 
   RefPtr<HitTestingTreeNode> node = nullptr;
   if (!needsApzc) {
+    // Note: if layer properties must be propagated to nodes, RecvUpdate in
+    // LayerTransactionParent.cpp must ensure that APZ will be notified
+    // when those properties change.
     node = RecycleOrCreateNode(aState, nullptr, aLayersId);
     AttachNodeToTree(node, aParent, aNextSibling);
     node->SetHitTestData(
@@ -674,6 +677,9 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
         GetEventRegionsOverride(aParent, aLayer));
   }
 
+  // Note: if layer properties must be propagated to nodes, RecvUpdate in
+  // LayerTransactionParent.cpp must ensure that APZ will be notified
+  // when those properties change.
   node->SetScrollbarData(aLayer.GetScrollbarTargetContainerId(),
                          aLayer.GetScrollbarDirection(),
                          aLayer.GetScrollThumbLength(),
