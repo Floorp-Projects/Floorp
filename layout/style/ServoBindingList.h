@@ -70,6 +70,11 @@ SERVO_BINDING_FUNC(Servo_StyleSet_FillKeyframesForName, bool,
 SERVO_BINDING_FUNC(Servo_StyleSet_GetFontFaceRules, void,
                    RawServoStyleSetBorrowed set,
                    RawGeckoFontFaceRuleListBorrowedMut list)
+SERVO_BINDING_FUNC(Servo_StyleSet_ResolveForDeclarations,
+                   ServoComputedValuesStrong,
+                   RawServoStyleSetBorrowed set,
+                   ServoComputedValuesBorrowedOrNull parent_style,
+                   RawServoDeclarationBlockBorrowed declarations)
 
 // CSSRuleList
 SERVO_BINDING_FUNC(Servo_CssRules_ListTypes, void,
