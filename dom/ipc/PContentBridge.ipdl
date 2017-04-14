@@ -71,7 +71,8 @@ parent:
 both:
     // Both the parent and the child can construct the PBrowser.
     // See the comment in PContent::PBrowser().
-    async PBrowser(TabId tabId, IPCTabContext context, uint32_t chromeFlags,
+    async PBrowser(TabId tabId, TabId sameTabGroupAs,
+                   IPCTabContext context, uint32_t chromeFlags,
                    ContentParentId cpId, bool isForBrowser);
 
     async PBlob(BlobConstructorParams params);

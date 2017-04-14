@@ -51,16 +51,12 @@ read_procmaps(lul::LUL* aLUL)
       aLUL->NotifyAfterMap(lib.GetStart(), lib.GetEnd()-lib.GetStart(),
                            nativePath.c_str(), image);
     } else if (!ok && lib.GetDebugName().IsEmpty()) {
-      // The object has no name and (as a consequence) the mapper
-      // failed to map it.  This happens on Linux, where
-      // GetInfoForSelf() produces two such mappings: one for the
-      // executable and one for the VDSO.  The executable one isn't a
-      // big deal since there's not much interesting code in there,
-      // but the VDSO one is a problem on x86-{linux,android} because
-      // lack of knowledge about the mapped area inhibits LUL's
-      // special __kernel_syscall handling.  Hence notify |aLUL| at
-      // least of the mapping, even though it can't read any unwind
-      // information for the area.
+      // The object has no name and (as a consequence) the mapper failed to map
+      // it.  This happens on Linux, where GetInfoForSelf() produces such a
+      // mapping for the VDSO.  This is a problem on x86-{linux,android} because
+      // lack of knowledge about the mapped area inhibits LUL's special
+      // __kernel_syscall handling.  Hence notify |aLUL| at least of the
+      // mapping, even though it can't read any unwind information for the area.
       aLUL->NotifyExecutableArea(lib.GetStart(), lib.GetEnd()-lib.GetStart());
     }
 

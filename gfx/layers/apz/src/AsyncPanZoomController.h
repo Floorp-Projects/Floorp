@@ -457,7 +457,6 @@ protected:
   nsEventStatus OnPanEnd(const PanGestureInput& aEvent);
   nsEventStatus OnPanMomentumStart(const PanGestureInput& aEvent);
   nsEventStatus OnPanMomentumEnd(const PanGestureInput& aEvent);
-  nsEventStatus HandleEndOfPan();
 
   /**
    * Helper methods for handling scroll wheel events.
@@ -577,7 +576,7 @@ protected:
    * Sets up anything needed for panning. This takes us out of the "TOUCHING"
    * state and starts actually panning us.
    */
-  nsEventStatus StartPanning(const ParentLayerPoint& aStartPoint);
+  nsEventStatus StartPanning(const MultiTouchInput& aStartPoint);
 
   /**
    * Wrapper for Axis::UpdateWithTouchAtDevicePoint(). Calls this function for

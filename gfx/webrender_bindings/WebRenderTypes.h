@@ -8,6 +8,7 @@
 
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/Range.h"
@@ -96,6 +97,12 @@ struct ImageDescriptor: public WrImageDescriptor {
     is_opaque = gfx::IsOpaqueFormat(aFormat);
   }
 };
+
+// Whenever possible, use wr::ImageKey instead of manipulating uint64_t.
+inline uint64_t AsUint64(const ImageKey& aId) {
+  return (static_cast<uint64_t>(aId.mNamespace) << 32)
+        + static_cast<uint64_t>(aId.mHandle);
+}
 
 // Whenever possible, use wr::PipelineId instead of manipulating uint64_t.
 inline uint64_t AsUint64(const PipelineId& aId) {
@@ -218,6 +225,16 @@ template<class T>
 static inline WrSize ToWrSize(const gfx::IntSizeTyped<T>& size)
 {
   return ToWrSize(IntSizeToSize(size));
+}
+
+template<class S, class T>
+static inline WrMatrix ToWrMatrix(const gfx::Matrix4x4Typed<S, T>& m)
+{
+  WrMatrix transform;
+  static_assert(sizeof(m.components) == sizeof(transform.values),
+      "Matrix components size mismatch!");
+  memcpy(transform.values, m.components, sizeof(transform.values));
+  return transform;
 }
 
 static inline WrBorderStyle ToWrBorderStyle(const uint8_t& style)
@@ -348,16 +365,14 @@ static inline WrComplexClipRegion ToWrComplexClipRegion(const gfx::RectTyped<T>&
 
 static inline WrExternalImageId ToWrExternalImageId(uint64_t aID)
 {
-  WrExternalImageId id;
-  id.id = aID;
-  return id;
+  return aID;
 }
 
 static inline WrExternalImage RawDataToWrExternalImage(const uint8_t* aBuff,
                                                        size_t size)
 {
   return WrExternalImage {
-    WrExternalImageIdType::RawData,
+    WrExternalImageType::RawData,
     0, 0.0f, 0.0f, 0.0f, 0.0f,
     aBuff, size
   };
@@ -368,7 +383,7 @@ static inline WrExternalImage NativeTextureToWrExternalImage(uint8_t aHandle,
                                                              float u1, float v1)
 {
   return WrExternalImage {
-    WrExternalImageIdType::NativeTexture,
+    WrExternalImageType::NativeTexture,
     aHandle, u0, v0, u1, v1,
     nullptr, 0
   };
@@ -479,8 +494,8 @@ inline WrByteSlice RangeToByteSlice(mozilla::Range<uint8_t> aRange) {
   return WrByteSlice { aRange.begin().get(), aRange.length() };
 }
 
-inline mozilla::Range<uint8_t> ByteSliceToRange(WrByteSlice aWrSlice) {
-  return mozilla::Range<uint8_t>(aWrSlice.mBuffer, aWrSlice.mLength);
+inline mozilla::Range<const uint8_t> ByteSliceToRange(WrByteSlice aWrSlice) {
+  return mozilla::Range<const uint8_t>(aWrSlice.buffer, aWrSlice.len);
 }
 
 struct BuiltDisplayList {

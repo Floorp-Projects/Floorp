@@ -36,29 +36,55 @@ struct ColorStop {
 class nsCSSGradientRenderer final {
 public:
   /**
-   * Render a gradient for an element.
-   * aDest is the rect for a single tile of the gradient on the destination.
-   * aFill is the rect on the destination to be covered by repeated tiling of
-   * the gradient.
-   * aSrc is the part of the gradient to be rendered into a tile (aDest), if
-   * aSrc and aDest are different sizes, the image will be scaled to map aSrc
-   * onto aDest.
-   * aIntrinsicSize is the size of the source gradient.
+   * Prepare a nsCSSGradientRenderer for a gradient for an element.
+   * aIntrinsicSize - the size of the source gradient.
    */
-  static Maybe<nsCSSGradientRenderer> Create(nsPresContext* aPresContext,
-                                             nsStyleGradient* aGradient,
-                                             const nsRect& aDest,
-                                             const nsRect& aFill,
-                                             const nsSize& aRepeatSize,
-                                             const mozilla::CSSIntRect& aSrc,
-                                             const nsSize& aIntrinsiceSize);
+  static nsCSSGradientRenderer Create(nsPresContext* aPresContext,
+                                      nsStyleGradient* aGradient,
+                                      const nsSize& aIntrinsiceSize);
 
+  /**
+   * Draw the gradient to aContext
+   * aDest - where the first tile of gradient is
+   * aFill - the area to be filled with tiles of aDest
+   * aSrc - the area of the gradient that will fill aDest
+   * aRepeatSize - the distance from the origin of a tile
+   *               to the next origin of a tile
+   * aDirtyRect - pixels outside of this area may be skipped
+   */
   void Paint(gfxContext& aContext,
+             const nsRect& aDest,
+             const nsRect& aFill,
+             const nsSize& aRepeatSize,
+             const mozilla::CSSIntRect& aSrc,
              const nsRect& aDirtyRect,
              float aOpacity = 1.0);
 
+  /**
+   * Collect the gradient parameters
+   */
+  void BuildWebRenderParameters(float aOpacity,
+                                WrGradientExtendMode& aMode,
+                                nsTArray<WrGradientStop>& aStops,
+                                LayoutDevicePoint& aLineStart,
+                                LayoutDevicePoint& aLineEnd,
+                                LayoutDeviceSize& aGradientRadius);
+
+  /**
+   * Build display items for the gradient
+   * aLayer - the layer to make this display item relative to
+   * aDest - where the first tile of gradient is
+   * aFill - the area to be filled with tiles of aDest
+   * aRepeatSize - the distance from the origin of a tile
+   *               to the next origin of a tile
+   * aSrc - the area of the gradient that will fill aDest
+   */
   void BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuilder,
                                   layers::WebRenderDisplayItemLayer* aLayer,
+                                  const nsRect& aDest,
+                                  const nsRect& aFill,
+                                  const nsSize& aRepeatSize,
+                                  const mozilla::CSSIntRect& aSrc,
                                   float aOpacity = 1.0);
 
 private:
@@ -66,16 +92,9 @@ private:
 
   nsPresContext* mPresContext;
   nsStyleGradient* mGradient;
-  CSSIntRect mSrc;
-  nsRect mDest;
-  nsRect mDirtyRect;
-  nsRect mFillArea;
-  nsSize mRepeatSize;
   nsTArray<ColorStop> mStops;
   gfxPoint mLineStart, mLineEnd;
   double mRadiusX, mRadiusY;
-  bool mForceRepeatToCoverTiles;
-  bool mForceRepeatToCoverTilesFlip;
 };
 
 } // namespace mozilla

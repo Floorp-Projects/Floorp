@@ -16,7 +16,7 @@ use scene::{Scene, SceneProperties};
 use std::collections::HashMap;
 use std::hash::BuildHasherDefault;
 use tiling::{AuxiliaryListsMap, CompositeOps, PrimitiveFlags};
-use util::subtract_rect;
+use util::{ComplexClipRegionHelpers, subtract_rect};
 use webrender_traits::{AuxiliaryLists, ClipDisplayItem, ClipRegion, ColorF, DeviceUintRect};
 use webrender_traits::{DeviceUintSize, DisplayItem, Epoch, FilterOp, ImageDisplayItem, LayerPoint};
 use webrender_traits::{LayerRect, LayerSize, LayerToScrollTransform, LayoutRect, LayoutTransform};
@@ -217,7 +217,7 @@ fn clip_intersection(original_rect: &LayerRect,
     let base_rect = region.main.intersection(original_rect);
     clips.iter().fold(base_rect, |inner_combined, ccr| {
         inner_combined.and_then(|combined| {
-            ccr.get_inner_rect().and_then(|ir| ir.intersection(&combined))
+            ccr.get_inner_rect_full().and_then(|ir| ir.intersection(&combined))
         })
     })
 }
@@ -341,8 +341,8 @@ impl Frame {
                                           scroll_layer_id,
                                           LayerPoint::zero(),
                                           0,
-                                          &root_bounds,
-                                          &root_stacking_context);
+                                          root_bounds,
+                                          root_stacking_context);
         }
 
         self.frame_builder = Some(frame_builder);
@@ -354,14 +354,12 @@ impl Frame {
                         pipeline_id: PipelineId,
                         parent_id: ScrollLayerId,
                         item: &ClipDisplayItem,
-                        reference_frame_relative_offset: LayerPoint,
+                        content_rect: &LayerRect,
                         clip: &ClipRegion) {
-        let clip_rect = clip.main.translate(&reference_frame_relative_offset);
         context.builder.add_clip_scroll_node(item.id,
                                              parent_id,
                                              pipeline_id,
-                                             &clip_rect,
-                                             &item.content_size,
+                                             &content_rect,
                                              clip,
                                              &mut self.clip_scroll_tree);
 
@@ -439,7 +437,8 @@ impl Frame {
         context.builder.push_stacking_context(&reference_frame_relative_offset,
                                               pipeline_id,
                                               level == 0,
-                                              composition_operations);
+                                              composition_operations,
+                                              stacking_context.transform_style);
 
         // For the root pipeline, there's no need to add a full screen rectangle
         // here, as it's handled by the framebuffer clear.
@@ -450,7 +449,7 @@ impl Frame {
                     // it's already processed by the node we just pushed.
                     let background_rect = LayerRect::new(LayerPoint::zero(), bounds.size);
                     context.builder.add_solid_rectangle(scroll_layer_id,
-                                                        &bounds,
+                                                        bounds,
                                                         &ClipRegion::simple(&background_rect),
                                                         &bg_color,
                                                         PrimitiveFlags::None);
@@ -492,7 +491,6 @@ impl Frame {
                           bounds: &LayerRect,
                           context: &mut FlattenContext,
                           reference_frame_relative_offset: LayerPoint) {
-
         let pipeline = match context.scene.pipeline_map.get(&pipeline_id) {
             Some(pipeline) => pipeline,
             None => return,
@@ -533,9 +531,8 @@ impl Frame {
             iframe_scroll_layer_id,
             iframe_reference_frame_id,
             pipeline_id,
-            &LayerRect::new(LayerPoint::zero(), iframe_rect.size),
-            &iframe_stacking_context_bounds.size,
-            &ClipRegion::simple(&iframe_stacking_context_bounds),
+            &LayerRect::new(LayerPoint::zero(), iframe_stacking_context_bounds.size),
+            &ClipRegion::simple(&iframe_rect),
             &mut self.clip_scroll_tree);
 
         let mut traversal = DisplayListTraversal::new_skipping_first(display_list);
@@ -545,8 +542,8 @@ impl Frame {
                                       iframe_scroll_layer_id,
                                       LayerPoint::zero(),
                                       0,
-                                      &iframe_stacking_context_bounds,
-                                      &iframe_stacking_context);
+                                      iframe_stacking_context_bounds,
+                                      iframe_stacking_context);
 
         context.builder.pop_reference_frame();
     }
@@ -616,7 +613,7 @@ impl Frame {
                                               .get(&pipeline_id)
                                               .expect("No auxiliary lists?!");
                     // Try to extract the opaque inner rectangle out of the clipped primitive.
-                    if let Some(opaque_rect) = clip_intersection(&item.rect, &item.clip, &auxiliary_lists) {
+                    if let Some(opaque_rect) = clip_intersection(&item.rect, &item.clip, auxiliary_lists) {
                         let mut results = Vec::new();
                         subtract_rect(&item.rect, &opaque_rect, &mut results);
                         // The inner rectangle is considered opaque within this layer.
@@ -648,7 +645,9 @@ impl Frame {
                                                  info.gradient.start_point,
                                                  info.gradient.end_point,
                                                  info.gradient.stops,
-                                                 info.gradient.extend_mode);
+                                                 info.gradient.extend_mode,
+                                                 info.tile_size,
+                                                 info.tile_spacing);
                 }
                 SpecificDisplayItem::RadialGradient(ref info) => {
                     context.builder.add_radial_gradient(scroll_layer_id,
@@ -660,7 +659,9 @@ impl Frame {
                                                         info.gradient.end_radius,
                                                         info.gradient.ratio_xy,
                                                         info.gradient.stops,
-                                                        info.gradient.extend_mode);
+                                                        info.gradient.extend_mode,
+                                                        info.tile_size,
+                                                        info.tile_spacing);
                 }
                 SpecificDisplayItem::BoxShadow(ref box_shadow_info) => {
                     context.builder.add_box_shadow(scroll_layer_id,
@@ -697,11 +698,12 @@ impl Frame {
                                         reference_frame_relative_offset);
                 }
                 SpecificDisplayItem::Clip(ref info) => {
+                    let content_rect = &item.rect.translate(&reference_frame_relative_offset);
                     self.flatten_clip(context,
                                       pipeline_id,
                                       scroll_layer_id,
                                       &info,
-                                      reference_frame_relative_offset,
+                                      &content_rect,
                                       &item.clip);
                 }
                 SpecificDisplayItem::PopStackingContext => return,
@@ -744,7 +746,7 @@ impl Frame {
                 item_rect.origin.y + (i as f32) * layout_stride,
                 item_rect.size.width,
                 info.stretch_size.height
-            ).intersection(&item_rect) {
+            ).intersection(item_rect) {
                 self.decompose_image_row(scroll_layer_id, context, &row_rect, item_clip, info, image_size, tile_size);
             }
         }
@@ -774,7 +776,7 @@ impl Frame {
                 item_rect.origin.y,
                 info.stretch_size.width,
                 item_rect.size.height,
-            ).intersection(&item_rect) {
+            ).intersection(item_rect) {
                 self.decompose_tiled_image(scroll_layer_id, context, &decomposed_rect, item_clip, info, image_size, tile_size);
             }
         }
@@ -963,10 +965,10 @@ impl Frame {
         }
 
         // Fix up the primitive's rect if it overflows the original item rect.
-        if let Some(prim_rect) = prim_rect.intersection(&item_rect) {
+        if let Some(prim_rect) = prim_rect.intersection(item_rect) {
             context.builder.add_image(scroll_layer_id,
                                       prim_rect,
-                                      &item_clip,
+                                      item_clip,
                                       &stretched_size,
                                       &info.tile_spacing,
                                       None,

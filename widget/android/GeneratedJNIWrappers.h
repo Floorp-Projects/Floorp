@@ -3004,6 +3004,26 @@ public:
                 mozilla::jni::DispatchTarget::PROXY;
     };
 
+    struct OnReattach_t {
+        typedef Window Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                GeckoView::Param> Args;
+        static constexpr char name[] = "onReattach";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/GeckoView;)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::GECKO;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto OnReattach(GeckoView::Param) const -> void;
+
     struct Open_t {
         typedef Window Owner;
         typedef void ReturnType;

@@ -67,7 +67,7 @@ using namespace js::jit;
 
 NativeRegExpMacroAssembler::NativeRegExpMacroAssembler(JSContext* cx, LifoAlloc* alloc, RegExpShared* shared,
                                                        Mode mode, int registers_to_save)
-  : RegExpMacroAssembler(*alloc, shared, registers_to_save),
+  : RegExpMacroAssembler(cx, *alloc, shared, registers_to_save),
     cx(cx), mode_(mode)
 {
     // Find physical registers for each compiler register.

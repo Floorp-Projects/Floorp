@@ -772,6 +772,8 @@ function setupTestCommon() {
   let caller = Components.stack.caller;
   gTestID = caller.filename.toString().split("/").pop().split(".")[0];
 
+  createAppInfo("xpcshell@tests.mozilla.org", APP_INFO_NAME, "1.0", "2.0");
+
   // Tests that don't work with XULRunner.
   const XUL_RUNNER_INCOMPATIBLE = ["marAppApplyUpdateAppBinInUseStageSuccess_win",
                                    "marAppApplyUpdateStageSuccess",
@@ -1105,7 +1107,6 @@ function checkPostUpdateRunningFile(aShouldExist) {
  * update service stub.
  */
 function standardInit() {
-  createAppInfo("xpcshell@tests.mozilla.org", APP_INFO_NAME, "1.0", "2.0");
   // Initialize the update service stub component
   initUpdateServiceStub();
 }
@@ -1892,10 +1893,15 @@ function stageUpdate(aCheckSvcLog) {
 
   setAppBundleModTime();
   setEnvironment();
-  // Stage the update.
-  Cc["@mozilla.org/updates/update-processor;1"].
-    createInstance(Ci.nsIUpdateProcessor).
-    processUpdate(gUpdateManager.activeUpdate);
+  try {
+    // Stage the update.
+    Cc["@mozilla.org/updates/update-processor;1"].
+      createInstance(Ci.nsIUpdateProcessor).
+      processUpdate(gUpdateManager.activeUpdate);
+  } catch (e) {
+    Assert.ok(false,
+              "error thrown while calling processUpdate, exception: " + e);
+  }
 
   // The environment is not reset here because processUpdate in
   // nsIUpdateProcessor uses a new thread and clearing the environment

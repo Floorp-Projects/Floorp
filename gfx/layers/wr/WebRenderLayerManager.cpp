@@ -61,17 +61,12 @@ WebRenderLayer::RelativeToTransformedVisible(Rect aRect)
 }
 
 Rect
-WebRenderLayer::ParentStackingContextBounds(size_t aScrollMetadataIndex)
+WebRenderLayer::ParentStackingContextBounds()
 {
   // Walk up to find the parent stacking context. This will be created either
   // by the nearest scrollable metrics, or by the parent layer which must be a
   // ContainerLayer.
   Layer* layer = GetLayer();
-  for (size_t i = aScrollMetadataIndex + 1; i < layer->GetScrollMetadataCount(); i++) {
-    if (layer->GetFrameMetrics(i).IsScrollable()) {
-      return layer->GetFrameMetrics(i).GetCompositionBounds().ToUnknownRect();
-    }
-  }
   if (layer->GetParent()) {
     return IntRectToRect(layer->GetParent()->GetVisibleRegion().GetBounds().ToUnknownRect());
   }
@@ -81,7 +76,7 @@ WebRenderLayer::ParentStackingContextBounds(size_t aScrollMetadataIndex)
 Rect
 WebRenderLayer::RelativeToParent(Rect aRect)
 {
-  Rect parentBounds = ParentStackingContextBounds(-1);
+  Rect parentBounds = ParentStackingContextBounds();
   aRect.MoveBy(-parentBounds.x, -parentBounds.y);
   return aRect;
 }
@@ -89,7 +84,7 @@ WebRenderLayer::RelativeToParent(Rect aRect)
 Point
 WebRenderLayer::GetOffsetToParent()
 {
-  Rect parentBounds = ParentStackingContextBounds(-1);
+  Rect parentBounds = ParentStackingContextBounds();
   return parentBounds.TopLeft();
 }
 
@@ -108,11 +103,17 @@ WebRenderLayer::TransformedVisibleBoundsRelativeToParent()
 }
 
 Maybe<WrImageMask>
-WebRenderLayer::BuildWrMaskLayer()
+WebRenderLayer::BuildWrMaskLayer(bool aUnapplyLayerTransform)
 {
   if (GetLayer()->GetMaskLayer()) {
     WebRenderLayer* maskLayer = ToWebRenderLayer(GetLayer()->GetMaskLayer());
-    return maskLayer->RenderMaskLayer();
+    // The size of mask layer is transformed, and we may set the layer transform to wr stacking context.
+    // So we should apply inverse transform for mask layer.
+    gfx::Matrix4x4 transform;
+    if (aUnapplyLayerTransform) {
+      transform = GetWrBoundTransform().Inverse();
+    }
+    return maskLayer->RenderMaskLayer(transform);
   }
 
   return Nothing();
@@ -142,21 +143,27 @@ WebRenderLayer::GetWrClipRect(gfx::Rect& aRect)
   return clip;
 }
 
+gfx::Matrix4x4
+WebRenderLayer::GetWrBoundTransform()
+{
+  gfx::Matrix4x4 transform = GetLayer()->GetTransform();
+  transform._41 = 0.0f;
+  transform._42 = 0.0f;
+  transform._43 = 0.0f;
+  return transform;
+}
+
 gfx::Rect
 WebRenderLayer::GetWrRelBounds()
 {
-  gfx::Rect relBounds = VisibleBoundsRelativeToParent();
-  gfx::Matrix4x4 transform = GetLayer()->GetTransform();
+  gfx::Rect bounds = IntRectToRect(GetLayer()->GetVisibleRegion().GetBounds().ToUnknownRect());
+  gfx::Matrix4x4 transform = GetWrBoundTransform();
   if (!transform.IsIdentity()) {
     // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
-    gfx::Matrix4x4 boundTransform = transform;
-    boundTransform._41 = 0.0f;
-    boundTransform._42 = 0.0f;
-    boundTransform._43 = 0.0f;
-    relBounds.MoveTo(boundTransform.TransformPoint(relBounds.TopLeft()));
+    bounds.MoveTo(transform.TransformPoint(bounds.TopLeft()));
   }
 
-  return relBounds;
+  return RelativeToParent(bounds);
 }
 
 void
@@ -186,6 +193,7 @@ WebRenderLayer::DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect)
 WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   : mWidget(aWidget)
   , mLatestTransactionId(0)
+  , mNeedsComposite(false)
   , mTarget(nullptr)
 {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
@@ -314,6 +322,7 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
   WrBridge()->DPEnd(builder, size.ToUnknownSize(), sync, mLatestTransactionId);
 
   MakeSnapshotIfRequired(size);
+  mNeedsComposite = false;
 
   ClearDisplayItemLayers();
 
@@ -484,6 +493,27 @@ void
 WebRenderLayerManager::RemoveDidCompositeObserver(DidCompositeObserver* aObserver)
 {
   mDidCompositeObservers.RemoveElement(aObserver);
+}
+
+void
+WebRenderLayerManager::FlushRendering()
+{
+  CompositorBridgeChild* bridge = GetCompositorBridgeChild();
+  if (bridge) {
+    bridge->SendFlushRendering();
+  }
+}
+
+void
+WebRenderLayerManager::SendInvalidRegion(const nsIntRegion& aRegion)
+{
+  // XXX Webrender does not support invalid region yet.
+}
+
+void
+WebRenderLayerManager::Composite()
+{
+  WrBridge()->SendForceComposite();
 }
 
 void

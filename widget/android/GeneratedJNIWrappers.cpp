@@ -998,6 +998,14 @@ constexpr char GeckoView::Window::DisposeNative_t::signature[];
 constexpr char GeckoView::Window::LoadUri_t::name[];
 constexpr char GeckoView::Window::LoadUri_t::signature[];
 
+constexpr char GeckoView::Window::OnReattach_t::name[];
+constexpr char GeckoView::Window::OnReattach_t::signature[];
+
+auto GeckoView::Window::OnReattach(GeckoView::Param a0) const -> void
+{
+    return mozilla::jni::Method<OnReattach_t>::Call(Window::mCtx, nullptr, a0);
+}
+
 constexpr char GeckoView::Window::Open_t::name[];
 constexpr char GeckoView::Window::Open_t::signature[];
 

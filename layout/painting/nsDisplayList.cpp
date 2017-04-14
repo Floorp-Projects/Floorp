@@ -3424,7 +3424,7 @@ nsDisplayBackgroundImage::CreateWebRenderCommands(wr::DisplayListBuilder& aBuild
                                                   CompositionOp::OP_OVER);
   params.bgClipRect = &mBounds;
 
-  nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(params, aBuilder, aLayer);
+  nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(params, aBuilder, aParentCommands, aLayer);
 }
 
 void
@@ -4618,7 +4618,9 @@ nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
   const nsStyleImage* image = &styleBorder->mBorderImageSource;
   mBorderRenderer = Nothing();
   mBorderImageRenderer = Nothing();
-  if ((!image || image->GetType() != eStyleImageType_Image) && !br) {
+  if ((!image ||
+       image->GetType() != eStyleImageType_Image ||
+       image->GetType() != eStyleImageType_Gradient) && !br) {
     return LAYER_NONE;
   }
 
@@ -4736,29 +4738,21 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
                                                     nsTArray<WebRenderParentCommand>& aParentCommands,
                                                     WebRenderDisplayItemLayer* aLayer)
 {
-  // Only support border-image currently
   MOZ_ASSERT(mBorderImageRenderer);
   if (!mBorderImageRenderer->mImageRenderer.IsReady()) {
     return;
   }
 
-  nsDisplayListBuilder* builder = aLayer->GetDisplayListBuilder();
-  uint32_t flags = builder->ShouldSyncDecodeImages() ?
-                   imgIContainer::FLAG_SYNC_DECODE :
-                   imgIContainer::FLAG_NONE;
-
-  RefPtr<imgIContainer> img = mBorderImageRenderer->mImageRenderer.GetImage();
-  RefPtr<layers::ImageContainer> container = img->GetImageContainer(aLayer->WrManager(), flags);
-  if (!container) {
-    return;
-  }
-
-  uint64_t externalImageId = aLayer->SendImageContainer(container);
-  if (!externalImageId) {
-    return;
-  }
-
+  float widths[4];
+  float slice[4];
+  float outset[4];
   const int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  NS_FOR_CSS_SIDES(i) {
+    slice[i] = (float)(mBorderImageRenderer->mSlice.Side(i)) / appUnitsPerDevPixel;
+    widths[i] = (float)(mBorderImageRenderer->mWidths.Side(i)) / appUnitsPerDevPixel;
+    outset[i] = (float)(mBorderImageRenderer->mImageOutset.Side(i)) / appUnitsPerDevPixel;
+  }
+
   Rect destRect =
     NSRectToRect(mBorderImageRenderer->mArea, appUnitsPerDevPixel);
   Rect destRectTransformed = aLayer->RelativeToParent(destRect);
@@ -4772,30 +4766,86 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
     clip = RoundedToInt(clipRectTransformed);
   }
 
-  float widths[4];
-  float slice[4];
-  float outset[4];
-  NS_FOR_CSS_SIDES(i) {
-    slice[i] = (float)(mBorderImageRenderer->mSlice.Side(i)) / appUnitsPerDevPixel;
-    widths[i] = (float)(mBorderImageRenderer->mWidths.Side(i)) / appUnitsPerDevPixel;
-    outset[i] = (float)(mBorderImageRenderer->mImageOutset.Side(i)) / appUnitsPerDevPixel;
-  }
+  switch (mBorderImageRenderer->mImageRenderer.GetType()) {
+    case eStyleImageType_Image:
+    {
+      nsDisplayListBuilder* builder = aLayer->GetDisplayListBuilder();
+      uint32_t flags = builder->ShouldSyncDecodeImages() ?
+                       imgIContainer::FLAG_SYNC_DECODE :
+                       imgIContainer::FLAG_NONE;
 
-  WrImageKey key;
-  key.mNamespace = aLayer->WrBridge()->GetNamespace();
-  key.mHandle = aLayer->WrBridge()->GetNextResourceId();
-  aParentCommands.AppendElement(OpAddExternalImage(externalImageId, key));
-  aBuilder.PushBorderImage(wr::ToWrRect(dest),
-                           aBuilder.BuildClipRegion(wr::ToWrRect(clip)),
-                           wr::ToWrBorderWidths(widths[0], widths[1], widths[2], widths[3]),
-                           key,
-                           wr::ToWrNinePatchDescriptor(
-                             (float)(mBorderImageRenderer->mImageSize.width) / appUnitsPerDevPixel,
-                             (float)(mBorderImageRenderer->mImageSize.height) / appUnitsPerDevPixel,
-                             wr::ToWrSideOffsets2Du32(slice[0], slice[1], slice[2], slice[3])),
-                           wr::ToWrSideOffsets2Df32(outset[0], outset[1], outset[2], outset[3]),
-                           wr::ToWrRepeatMode(mBorderImageRenderer->mRepeatModeHorizontal),
-                           wr::ToWrRepeatMode(mBorderImageRenderer->mRepeatModeVertical));
+      RefPtr<imgIContainer> img = mBorderImageRenderer->mImageRenderer.GetImage();
+      RefPtr<layers::ImageContainer> container = img->GetImageContainer(aLayer->WrManager(), flags);
+      if (!container) {
+        return;
+      }
+
+      uint64_t externalImageId = aLayer->SendImageContainer(container);
+      if (!externalImageId) {
+        return;
+      }
+
+      WrImageKey key;
+      key.mNamespace = aLayer->WrBridge()->GetNamespace();
+      key.mHandle = aLayer->WrBridge()->GetNextResourceId();
+      aParentCommands.AppendElement(OpAddExternalImage(externalImageId, key));
+      aLayer->WrManager()->AddImageKeyForDiscard(key);
+      aBuilder.PushBorderImage(wr::ToWrRect(dest),
+                               aBuilder.BuildClipRegion(wr::ToWrRect(clip)),
+                               wr::ToWrBorderWidths(widths[0], widths[1], widths[2], widths[3]),
+                               key,
+                               wr::ToWrNinePatchDescriptor(
+                                 (float)(mBorderImageRenderer->mImageSize.width) / appUnitsPerDevPixel,
+                                 (float)(mBorderImageRenderer->mImageSize.height) / appUnitsPerDevPixel,
+                                 wr::ToWrSideOffsets2Du32(slice[0], slice[1], slice[2], slice[3])),
+                               wr::ToWrSideOffsets2Df32(outset[0], outset[1], outset[2], outset[3]),
+                               wr::ToWrRepeatMode(mBorderImageRenderer->mRepeatModeHorizontal),
+                               wr::ToWrRepeatMode(mBorderImageRenderer->mRepeatModeVertical));
+      break;
+    }
+    case eStyleImageType_Gradient:
+    {
+      RefPtr<nsStyleGradient> gradientData = mBorderImageRenderer->mImageRenderer.GetGradientData();
+      nsCSSGradientRenderer renderer =
+        nsCSSGradientRenderer::Create(mFrame->PresContext(), gradientData,
+                                      mBorderImageRenderer->mImageSize);
+
+      WrGradientExtendMode extendMode;
+      nsTArray<WrGradientStop> stops;
+      LayoutDevicePoint lineStart;
+      LayoutDevicePoint lineEnd;
+      LayoutDeviceSize gradientRadius;
+      renderer.BuildWebRenderParameters(1.0, extendMode, stops, lineStart, lineEnd, gradientRadius);
+
+      if (gradientData->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
+        Point startPoint = dest.TopLeft();
+        startPoint = startPoint + Point(lineStart.x, lineStart.y);
+        Point endPoint = dest.TopLeft();
+        endPoint = endPoint + Point(lineEnd.x, lineEnd.y);
+
+        aBuilder.PushBorderGradient(wr::ToWrRect(dest),
+                                    aBuilder.BuildClipRegion(wr::ToWrRect(clip)),
+                                    wr::ToWrBorderWidths(widths[0], widths[1], widths[2], widths[3]),
+                                    wr::ToWrPoint(startPoint),
+                                    wr::ToWrPoint(endPoint),
+                                    stops,
+                                    extendMode,
+                                    wr::ToWrSideOffsets2Df32(outset[0], outset[1], outset[2], outset[3]));
+      } else {
+        aBuilder.PushBorderRadialGradient(wr::ToWrRect(dest),
+                                          aBuilder.BuildClipRegion(wr::ToWrRect(clip)),
+                                          wr::ToWrBorderWidths(widths[0], widths[1], widths[2], widths[3]),
+                                          wr::ToWrPoint(lineStart),
+                                          wr::ToWrSize(gradientRadius),
+                                          stops,
+                                          extendMode,
+                                          wr::ToWrSideOffsets2Df32(outset[0], outset[1], outset[2], outset[3]));
+      }
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupport border image type");
+  }
 }
 
 void
@@ -5011,6 +5061,13 @@ nsDisplayBoxShadowOuter::CanBuildWebRenderDisplayItems()
   bool hasBorderRadius;
   bool nativeTheme =
       nsCSSRendering::HasBoxShadowNativeTheme(mFrame, hasBorderRadius);
+
+  // We don't support native themed things yet like box shadows around
+  // input buttons.
+  if (nativeTheme) {
+    return false;
+  }
+
   nsPoint offset = ToReferenceFrame();
   nsRect borderRect = mFrame->VisualBorderRectRelativeToSelf() + offset;
   nsRect frameRect =
@@ -5022,11 +5079,15 @@ nsDisplayBoxShadowOuter::CanBuildWebRenderDisplayItems()
     hasBorderRadius = mFrame->GetBorderRadii(sz, sz, Sides(), twipsRadii);
   }
 
-  // WebRender doesn't support clipping properly with a border radius.
-  // We don't support native themed things yet like box shadows around
-  // input buttons.
-  if (hasBorderRadius || nativeTheme) {
-    return false;
+  if (hasBorderRadius) {
+    RectCornerRadii borderRadii;
+    nsCSSRendering::GetBorderRadii(frameRect,
+                                   borderRect,
+                                   mFrame,
+                                   borderRadii);
+    if (!borderRadii.AreRadiiSame()) {
+      return false;
+    }
   }
 
   for (uint32_t j = shadows->Length(); j  > 0; j--) {

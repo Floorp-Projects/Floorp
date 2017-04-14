@@ -34,6 +34,7 @@ class DrawTarget;
 namespace layers {
 class ImageContainer;
 class WebRenderDisplayItemLayer;
+class WebRenderParentCommand;
 } // namespace layers
 
 namespace wr {
@@ -496,10 +497,12 @@ struct nsCSSRendering {
                                                               int32_t aLayer);
   static void BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams& aParams,
                                                            mozilla::wr::DisplayListBuilder& aBuilder,
+                                                           nsTArray<mozilla::layers::WebRenderParentCommand>& aParentCommands,
                                                            mozilla::layers::WebRenderDisplayItemLayer* aLayer);
 
   static void BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBGParams& aParams,
                                                                  mozilla::wr::DisplayListBuilder& aBuilder,
+                                                                 nsTArray<mozilla::layers::WebRenderParentCommand>& aParentCommands,
                                                                  mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                                                  nsStyleContext *mBackgroundSC,
                                                                  const nsStyleBorder& aBorder);
