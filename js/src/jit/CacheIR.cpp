@@ -1875,7 +1875,49 @@ BindNameIRGenerator::tryAttachStub()
     ObjOperandId envId(writer.setInputOperandId(0));
     RootedId id(cx_, NameToId(name_));
 
+    if (tryAttachGlobalName(envId, id))
+        return true;
+
     return false;
+}
+
+bool
+BindNameIRGenerator::tryAttachGlobalName(ObjOperandId objId, HandleId id)
+{
+    if (!IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope())
+        return false;
+
+    Handle<LexicalEnvironmentObject*> globalLexical = env_.as<LexicalEnvironmentObject>();
+    MOZ_ASSERT(globalLexical->isGlobal());
+
+    JSObject* result = nullptr;
+    if (Shape* shape = globalLexical->lookup(cx_, id)) {
+        // If this is an uninitialized lexical or a const, we need to return a
+        // RuntimeLexicalErrorObject.
+        if (globalLexical->getSlot(shape->slot()).isMagic() || !shape->writable())
+            return false;
+        result = globalLexical;
+    } else {
+        result = &globalLexical->global();
+    }
+
+    if (result == globalLexical) {
+        // Lexical bindings are non-configurable so we can just return the
+        // global lexical.
+        writer.loadObjectResult(objId);
+    } else {
+        // If the property exists on the global and is non-configurable, it cannot be
+        // shadowed by the lexical scope so we can just return the global without a
+        // shape guard.
+        Shape* shape = result->as<GlobalObject>().lookup(cx_, id);
+        if (!shape || shape->configurable())
+            writer.guardShape(objId, globalLexical->lastProperty());
+        ObjOperandId globalId = writer.loadEnclosingEnvironment(objId);
+        writer.loadObjectResult(globalId);
+    }
+    writer.returnFromIC();
+
+    return true;
 }
 
 InIRGenerator::InIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
