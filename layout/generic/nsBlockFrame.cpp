@@ -2832,6 +2832,26 @@ nsBlockFrame::ReflowLine(BlockReflowInput& aState,
   } else {
     aLine->SetLineWrapped(false);
     ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
+
+    // Store the line's float edges for text-overflow analysis if needed.
+    aLine->ClearFloatEdges();
+    if (aState.mFlags.mCanHaveTextOverflow) {
+      WritingMode wm = aLine->mWritingMode;
+      nsFlowAreaRect r = aState.GetFloatAvailableSpaceForBSize(aLine->BStart(),
+                                                               aLine->BSize(),
+                                                               nullptr);
+      if (r.mHasFloats) {
+        LogicalRect so =
+          aLine->GetOverflowArea(eScrollableOverflow, wm, aLine->mContainerSize);
+        nscoord s = r.mRect.IStart(wm);
+        nscoord e = r.mRect.IEnd(wm);
+        if (so.IEnd(wm) > e || so.IStart(wm) < s) {
+          // This line is overlapping a float - store the edges marking the area
+          // between the floats for text-overflow analysis.
+          aLine->SetFloatEdges(s, e);
+        }
+      }
+    }
   }
 }
 
