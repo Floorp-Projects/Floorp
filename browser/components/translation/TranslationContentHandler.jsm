@@ -107,12 +107,6 @@ TranslationContentHandler.prototype = {
     });
   },
 
-  // Unused methods.
-  onProgressChange() {},
-  onLocationChange() {},
-  onStatusChange() {},
-  onSecurityChange() {},
-
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
                                          Ci.nsISupportsWeakReference]),
 

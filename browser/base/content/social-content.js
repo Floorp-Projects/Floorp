@@ -165,10 +165,6 @@ const SocialErrorListener = {
       this.setErrorPage();
     }
   },
-
-  onProgressChange() {},
-  onStatusChange() {},
-  onSecurityChange() {},
 };
 
 SocialErrorListener.init();

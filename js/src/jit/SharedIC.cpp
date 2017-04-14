@@ -1919,34 +1919,46 @@ StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub)
 }
 
 bool
+CheckHasNoSuchOwnProperty(JSContext* cx, JSObject* obj, jsid id)
+{
+    if (obj->isNative()) {
+        // Don't handle proto chains with resolve hooks.
+        if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj))
+            return false;
+        if (obj->as<NativeObject>().contains(cx, id))
+            return false;
+        if (obj->getClass()->getGetProperty())
+            return false;
+    } else if (obj->is<UnboxedPlainObject>()) {
+        if (obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id))
+            return false;
+    } else if (obj->is<UnboxedArrayObject>()) {
+        if (JSID_IS_ATOM(id, cx->names().length))
+            return false;
+    } else if (obj->is<TypedObject>()) {
+        if (obj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id))
+            return false;
+    } else {
+        return false;
+    }
+
+    return true;
+}
+
+bool
 CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id,
                        JSObject** lastProto, size_t* protoChainDepthOut)
 {
     size_t depth = 0;
     JSObject* curObj = obj;
     while (curObj) {
-        if (curObj->isNative()) {
-            // Don't handle proto chains with resolve hooks.
-            if (ClassMayResolveId(cx->names(), curObj->getClass(), id, curObj))
-                return false;
-            if (curObj->as<NativeObject>().contains(cx, id))
-                return false;
-            if (curObj->getClass()->getGetProperty())
-                return false;
-        } else if (curObj != obj) {
+        if (!CheckHasNoSuchOwnProperty(cx, curObj, id))
+            return false;
+
+        if (!curObj->isNative()) {
             // Non-native objects are only handled as the original receiver.
-            return false;
-        } else if (curObj->is<UnboxedPlainObject>()) {
-            if (curObj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id))
+            if (curObj != obj)
                 return false;
-        } else if (curObj->is<UnboxedArrayObject>()) {
-            if (JSID_IS_ATOM(id, cx->names().length))
-                return false;
-        } else if (curObj->is<TypedObject>()) {
-            if (curObj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id))
-                return false;
-        } else {
-            return false;
         }
 
         JSObject* proto = curObj->staticPrototype();

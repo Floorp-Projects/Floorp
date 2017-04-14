@@ -600,7 +600,6 @@ HighlighterEnvironment.prototype = {
     };
 
     this.webProgress.addProgressListener(this.listener,
-      Ci.nsIWebProgress.NOTIFY_STATUS |
       Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
       Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
   },

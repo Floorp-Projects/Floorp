@@ -482,11 +482,6 @@ var gViewSourceUtils = {
       }
     },
 
-    onLocationChange() { return 0; },
-    onProgressChange() { return 0; },
-    onStatusChange() { return 0; },
-    onSecurityChange() { return 0; },
-
     webShell: null,
     editor: null,
     callBack: null,

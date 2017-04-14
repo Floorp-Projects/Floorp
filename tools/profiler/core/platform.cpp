@@ -2516,7 +2516,8 @@ locked_profiler_stop(PS::LockRef aLock)
     PS::ThreadVector& liveThreads = gPS->LiveThreads(aLock);
     for (uint32_t i = 0; i < liveThreads.size(); i++) {
       ThreadInfo* info = liveThreads.at(i);
-      if (info->HasProfile()) {
+      if (ShouldProfileThread(aLock, info)) {
+        MOZ_RELEASE_ASSERT(info->HasProfile());
         info->Stack()->stopJSSampling();
       }
     }
