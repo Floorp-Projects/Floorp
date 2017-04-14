@@ -69,11 +69,6 @@ class SidebarAction {
       }
     }
 
-    // Bug 1331507: UX review/analysis of sidebar-button injection.
-    if (AppConstants.RELEASE_OR_BETA) {
-      return;
-    }
-
     if (install && !Services.prefs.prefHasUserValue("extensions.sidebar-button.shown")) {
       Services.prefs.setBoolPref("extensions.sidebar-button.shown", true);
       // If the sidebar button has never been moved to the toolbar, move it now
