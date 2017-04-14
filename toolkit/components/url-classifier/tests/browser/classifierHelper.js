@@ -46,7 +46,7 @@ classifierHelper.waitForInit = function() {
   const table = "test-phish-simple";
   const url = "http://itisatrap.org/firefox/its-a-trap.html";
   let principal = secMan.createCodebasePrincipal(
-    iosvc.newURI(url, null, null), {});
+    iosvc.newURI(url), {});
 
   return new Promise(function(resolve, reject) {
     observerService.addObserver(function() {
