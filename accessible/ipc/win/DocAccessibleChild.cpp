@@ -190,6 +190,13 @@ DocAccessibleChild::SendTextChangeEvent(const uint64_t& aID,
                                         const bool& aFromUser)
 {
   if (IsConstructedInParentProcess()) {
+    if (aStr.Contains(L'\xfffc')) {
+      // The AT is going to need to reenter content while the event is being
+      // dispatched synchronously.
+      return PDocAccessibleChild::SendSyncTextChangeEvent(aID, aStr, aStart,
+                                                          aLen, aIsInsert,
+                                                          aFromUser);
+    }
     return PDocAccessibleChild::SendTextChangeEvent(aID, aStr, aStart,
                                                     aLen, aIsInsert, aFromUser);
   }
