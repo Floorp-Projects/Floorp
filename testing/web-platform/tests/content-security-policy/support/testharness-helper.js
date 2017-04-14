@@ -19,15 +19,6 @@ function waitUntilCSPEventForURL(test, url) {
   });
 }
 
-function waitUntilCSPEventForEval(test, line) {
-  return new Promise((resolve, reject) => {
-    self.addEventListener("securitypolicyviolation", test.step_func(e => {
-      if (e.blockedURI == "eval" && e.lineNumber == line)
-        resolve(e);
-    }));
-  });
-}
-
 function waitUntilEvent(obj, name) {
   return new Promise((resolve, reject) => {
     obj.addEventListener(name, resolve);

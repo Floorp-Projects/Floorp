@@ -30,10 +30,10 @@ using namespace mozilla;
 using namespace mozilla::css;
 
 static bool
-IsLocalRefURL(nsStringBuffer* aString)
+IsLocalRefURL(const nsString& aString)
 {
   // Find the first non-"C0 controls + space" character.
-  char16_t* current = static_cast<char16_t*>(aString->Data());
+  const char16_t* current = aString.get();
   for (; *current != '\0'; current++) {
     if (*current > 0x20) {
       // if the first non-"C0 controls + space" character is '#', this is a
@@ -46,9 +46,9 @@ IsLocalRefURL(nsStringBuffer* aString)
 }
 
 static bool
-MightHaveRef(nsStringBuffer* aString)
+MightHaveRef(const nsString& aString)
 {
-  char16_t* current = static_cast<char16_t*>(aString->Data());
+  const char16_t* current = aString.get();
   for (; *current != '\0'; current++) {
     if (*current == '#') {
       return true;
@@ -2795,25 +2795,23 @@ nsCSSValue::Array::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
 }
 
 css::URLValueData::URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
-                                nsStringBuffer* aString,
+                                const nsAString& aString,
                                 already_AddRefed<URLExtraData> aExtraData)
   : mURI(Move(aURI))
   , mString(aString)
   , mExtraData(Move(aExtraData))
   , mURIResolved(true)
 {
-  MOZ_ASSERT(mString);
   MOZ_ASSERT(mExtraData);
   MOZ_ASSERT(mExtraData->GetPrincipal());
 }
 
-css::URLValueData::URLValueData(nsStringBuffer* aString,
+css::URLValueData::URLValueData(const nsAString& aString,
                                 already_AddRefed<URLExtraData> aExtraData)
   : mString(aString)
   , mExtraData(Move(aExtraData))
   , mURIResolved(false)
 {
-  MOZ_ASSERT(aString);
   MOZ_ASSERT(mExtraData);
   MOZ_ASSERT(mExtraData->GetPrincipal());
 }
@@ -2824,11 +2822,9 @@ css::URLValueData::Equals(const URLValueData& aOther) const
   MOZ_ASSERT(NS_IsMainThread());
 
   bool eq;
-  // Cast away const so we can call nsIPrincipal::Equals.
   const URLExtraData* self = mExtraData;
   const URLExtraData* other = aOther.mExtraData;
-  return NS_strcmp(nsCSSValue::GetBufferValue(mString),
-                   nsCSSValue::GetBufferValue(aOther.mString)) == 0 &&
+  return mString == aOther.mString &&
           (GetURI() == aOther.GetURI() || // handles null == null
            (mURI && aOther.mURI &&
             NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) &&
@@ -2845,9 +2841,7 @@ bool
 css::URLValueData::DefinitelyEqualURIs(const URLValueData& aOther) const
 {
   return mExtraData->BaseURI() == aOther.mExtraData->BaseURI() &&
-         (mString == aOther.mString ||
-          NS_strcmp(nsCSSValue::GetBufferValue(mString),
-                    nsCSSValue::GetBufferValue(aOther.mString)) == 0);
+         mString == aOther.mString;
 }
 
 bool
@@ -2867,7 +2861,7 @@ css::URLValueData::GetURI() const
     MOZ_ASSERT(!mURI);
     nsCOMPtr<nsIURI> newURI;
     NS_NewURI(getter_AddRefs(newURI),
-              NS_ConvertUTF16toUTF8(nsCSSValue::GetBufferValue(mString)),
+              NS_ConvertUTF16toUTF8(mString),
               nullptr, mExtraData->BaseURI());
     mURI = new PtrHolder<nsIURI>(newURI.forget());
     mURIResolved = true;
@@ -2987,7 +2981,7 @@ size_t
 css::URLValueData::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
-  n += mString->SizeOfIncludingThisIfUnshared(aMallocSizeOf);
+  n += mString.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:
@@ -2996,7 +2990,7 @@ css::URLValueData::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
   return n;
 }
 
-URLValue::URLValue(nsStringBuffer* aString, nsIURI* aBaseURI, nsIURI* aReferrer,
+URLValue::URLValue(const nsAString& aString, nsIURI* aBaseURI, nsIURI* aReferrer,
                    nsIPrincipal* aOriginPrincipal)
   : URLValueData(aString, do_AddRef(new URLExtraData(aBaseURI, aReferrer,
                                                      aOriginPrincipal)))
@@ -3004,7 +2998,7 @@ URLValue::URLValue(nsStringBuffer* aString, nsIURI* aBaseURI, nsIURI* aReferrer,
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-URLValue::URLValue(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aBaseURI,
+URLValue::URLValue(nsIURI* aURI, const nsAString& aString, nsIURI* aBaseURI,
                    nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal)
   : URLValueData(do_AddRef(new PtrHolder<nsIURI>(aURI)),
                  aString,
@@ -3026,7 +3020,7 @@ css::URLValue::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
-css::ImageValue::ImageValue(nsIURI* aURI, nsStringBuffer* aString,
+css::ImageValue::ImageValue(nsIURI* aURI, const nsAString& aString,
                             already_AddRefed<URLExtraData> aExtraData,
                             nsIDocument* aDocument)
   : URLValueData(do_AddRef(new PtrHolder<nsIURI>(aURI)),
@@ -3035,7 +3029,7 @@ css::ImageValue::ImageValue(nsIURI* aURI, nsStringBuffer* aString,
   Initialize(aDocument);
 }
 
-css::ImageValue::ImageValue(nsStringBuffer* aString,
+css::ImageValue::ImageValue(const nsAString& aString,
                             already_AddRefed<URLExtraData> aExtraData)
   : URLValueData(aString, Move(aExtraData))
 {

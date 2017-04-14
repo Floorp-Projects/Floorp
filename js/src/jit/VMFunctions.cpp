@@ -1599,6 +1599,38 @@ GetNativeDataProperty<true>(JSContext* cx, JSObject* obj, PropertyName* name, Va
 template bool
 GetNativeDataProperty<false>(JSContext* cx, JSObject* obj, PropertyName* name, Value* vp);
 
+static MOZ_ALWAYS_INLINE bool
+ValueToAtomOrSymbol(JSContext* cx, Value& idVal, jsid* id)
+{
+    JS::AutoCheckCannotGC nogc;
+
+    if (MOZ_LIKELY(idVal.isString())) {
+        JSString* s = idVal.toString();
+        JSAtom* atom;
+        if (s->isAtom()) {
+            atom = &s->asAtom();
+        } else {
+            atom = AtomizeString(cx, s);
+            if (!atom)
+                return false;
+        }
+        *id = AtomToId(atom);
+    } else if (idVal.isSymbol()) {
+        *id = SYMBOL_TO_JSID(idVal.toSymbol());
+    } else {
+        if (!ValueToIdPure(idVal, id))
+            return false;
+    }
+
+    // Watch out for ids that may be stored in dense elements.
+    static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT < JSID_INT_MAX,
+                  "All dense elements must have integer jsids");
+    if (MOZ_UNLIKELY(JSID_IS_INT(*id)))
+        return false;
+
+    return true;
+}
+
 template <bool HandleMissing>
 bool
 GetNativeDataPropertyByValue(JSContext* cx, JSObject* obj, Value* vp)
@@ -1610,30 +1642,8 @@ GetNativeDataPropertyByValue(JSContext* cx, JSObject* obj, Value* vp)
 
     // vp[0] contains the id, result will be stored in vp[1].
     Value idVal = vp[0];
-
     jsid id;
-    if (MOZ_LIKELY(idVal.isString())) {
-        JSString* s = idVal.toString();
-        JSAtom* atom;
-        if (s->isAtom()) {
-            atom = &s->asAtom();
-        } else {
-            atom = AtomizeString(cx, s);
-            if (!atom)
-                return false;
-        }
-        id = AtomToId(atom);
-    } else if (idVal.isSymbol()) {
-        id = SYMBOL_TO_JSID(idVal.toSymbol());
-    } else {
-        if (!ValueToIdPure(idVal, &id))
-            return false;
-    }
-
-    // Watch out for ids that may be stored in dense elements.
-    static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT < JSID_INT_MAX,
-                  "All dense elements must have integer jsids");
-    if (MOZ_UNLIKELY(JSID_IS_INT(id)))
+    if (!ValueToAtomOrSymbol(cx, idVal, &id))
         return false;
 
     Value* res = vp + 1;
@@ -1723,6 +1733,37 @@ ObjectHasGetterSetter(JSContext* cx, JSObject* objArg, Shape* propShape)
             return false;
         nobj = &proto->as<NativeObject>();
     }
+}
+
+bool
+HasOwnNativeDataProperty(JSContext* cx, JSObject* obj, Value* vp)
+{
+    JS::AutoCheckCannotGC nogc;
+
+    if (MOZ_UNLIKELY(!obj->isNative()))
+        return false;
+
+    // vp[0] contains the id, result will be stored in vp[1].
+    Value idVal = vp[0];
+    jsid id;
+    if (!ValueToAtomOrSymbol(cx, idVal, &id))
+        return false;
+
+    NativeObject* nobj = &obj->as<NativeObject>();
+    if (nobj->lastProperty()->search(cx, id)) {
+        vp[1].setBoolean(true);
+        return true;
+    }
+
+    // Property not found. Watch out for Class hooks.
+    if (MOZ_UNLIKELY(!nobj->is<PlainObject>())) {
+        if (ClassMayResolveId(cx->names(), nobj->getClass(), id, nobj))
+            return false;
+    }
+
+    // Missing property.
+    vp[1].setBoolean(false);
+    return true;
 }
 
 } // namespace jit

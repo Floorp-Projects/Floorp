@@ -52,6 +52,7 @@ namespace jit {
     _(SetElem_Fallback)                          \
                                                  \
     _(In_Fallback)                               \
+    _(HasOwn_Fallback)                           \
                                                  \
     _(GetName_Fallback)                          \
                                                  \

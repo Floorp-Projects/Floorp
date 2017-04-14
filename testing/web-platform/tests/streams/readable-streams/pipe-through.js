@@ -9,8 +9,8 @@ test(() => {
 
   let pipeToArguments;
   const thisValue = {
-    pipeTo(...args) {
-      pipeToArguments = args;
+    pipeTo() {
+      pipeToArguments = arguments;
     }
   };
 

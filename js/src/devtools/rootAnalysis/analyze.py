@@ -139,7 +139,11 @@ JOBS = { 'dbs':
                '%(analysis_scriptdir)s/explain.py',
                '%(hazards)s', '%(gcFunctions)s',
                '[explained_hazards]', '[unnecessary]', '[refs]'),
-              ('hazards.txt', 'unnecessary.txt', 'refs.txt'))
+              ('hazards.txt', 'unnecessary.txt', 'refs.txt')),
+
+         'heapwrites':
+             (('%(js)s', '%(analysis_scriptdir)s/analyzeHeapWrites.js'),
+              'heapWriteHazards.txt'),
          }
 
 def out_indexes(command):
@@ -258,7 +262,7 @@ if 'SOURCE' in os.environ:
     data['source'] = os.environ['SOURCE']
 if not data.get('source') and data.get('sixgill_bin'):
     path = subprocess.check_output(['sh', '-c', data['sixgill_bin'] + '/xdbkeys file_source.xdb | grep jsapi.cpp'])
-    data['source'] = path.replace("/js/src/jsapi.cpp", "")
+    data['source'] = path.replace("\n", "").replace("/js/src/jsapi.cpp", "")
 
 steps = [ 'dbs',
           'gcTypes',
@@ -266,7 +270,8 @@ steps = [ 'dbs',
           'gcFunctions',
           'allFunctions',
           'hazards',
-          'explain' ]
+          'explain',
+          'heapwrites' ]
 
 if args.list:
     for step in steps:

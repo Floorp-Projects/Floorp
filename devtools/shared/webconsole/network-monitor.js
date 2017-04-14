@@ -2019,11 +2019,6 @@ ConsoleProgressListener.prototype = {
     }
   },
 
-  onLocationChange: function () {},
-  onStatusChange: function () {},
-  onProgressChange: function () {},
-  onSecurityChange: function () {},
-
   /**
    * Destroy the ConsoleProgressListener.
    */

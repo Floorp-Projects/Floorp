@@ -8192,11 +8192,8 @@ CSSParserImpl::SetValueToURL(nsCSSValue& aValue, const nsString& aURL)
     return false;
   }
 
-  RefPtr<nsStringBuffer> buffer(nsCSSValue::BufferFromString(aURL));
-
-  // Note: urlVal retains its own reference to |buffer|.
   mozilla::css::URLValue *urlVal =
-    new mozilla::css::URLValue(buffer, mBaseURI, mSheetURI, mSheetPrincipal);
+    new mozilla::css::URLValue(aURL, mBaseURI, mSheetURI, mSheetPrincipal);
   aValue.SetURLValue(urlVal);
   return true;
 }

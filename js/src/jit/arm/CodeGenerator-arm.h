@@ -236,8 +236,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void visitWasmSelect(LWasmSelect* ins);
     void visitWasmReinterpret(LWasmReinterpret* ins);
     void emitWasmCall(LWasmCallBase* ins);
-    void visitWasmCall(LWasmCall* ins);
-    void visitWasmCallI64(LWasmCallI64* ins);
     void visitWasmLoad(LWasmLoad* ins);
     void visitWasmLoadI64(LWasmLoadI64* ins);
     void visitWasmUnalignedLoad(LWasmUnalignedLoad* ins);

@@ -345,12 +345,12 @@ GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason 
         MOZ_ASSERT_IF(!masm.oom(), SetFP == masm.currentOffset() - *entry);
     }
 
-    if (reason != ExitReason::None) {
+    if (!reason.isNone()) {
         Register scratch = ABINonArgReg0;
         masm.loadWasmActivationFromTls(scratch);
         masm.wasmAssertNonExitInvariants(scratch);
         Address exitReason(scratch, WasmActivation::offsetOfExitReason());
-        masm.store32(Imm32(int32_t(reason)), exitReason);
+        masm.store32(Imm32(reason.raw()), exitReason);
         Address exitFP(scratch, WasmActivation::offsetOfExitFP());
         masm.storePtr(FramePointer, exitFP);
     }
@@ -366,14 +366,23 @@ GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason 
     if (framePushed)
         masm.addToStackPtr(Imm32(framePushed));
 
-
-    if (reason != ExitReason::None) {
+    if (!reason.isNone()) {
         Register scratch = ABINonArgReturnReg0;
         masm.loadWasmActivationFromTls(scratch);
         Address exitFP(scratch, WasmActivation::offsetOfExitFP());
         masm.storePtr(ImmWord(0), exitFP);
         Address exitReason(scratch, WasmActivation::offsetOfExitReason());
-        masm.store32(Imm32(int32_t(ExitReason::None)), exitReason);
+#ifdef DEBUG
+        // Check the passed exitReason is the same as the one on entry.
+        masm.push(scratch);
+        masm.loadPtr(exitReason, ABINonArgReturnReg0);
+        Label ok;
+        masm.branch32(Assembler::Condition::Equal, ABINonArgReturnReg0, Imm32(reason.raw()), &ok);
+        masm.breakpoint();
+        masm.bind(&ok);
+        masm.pop(scratch);
+#endif
+        masm.store32(Imm32(ExitReason::None().raw()), exitReason);
     }
 
     // Forbid pools for the same reason as described in GenerateCallablePrologue.
@@ -409,7 +418,7 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
 
     // Generate table entry:
     offsets->begin = masm.currentOffset();
-    TrapOffset trapOffset(0);  // ignored by masm.wasmEmitTrapOutOfLineCode
+    BytecodeOffset trapOffset(0);  // ignored by masm.wasmEmitTrapOutOfLineCode
     TrapDesc trap(trapOffset, Trap::IndirectCallBadSig, masm.framePushed());
     switch (sigId.kind()) {
       case SigIdDesc::Kind::Global: {
@@ -432,7 +441,7 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
 
     // Generate normal entry:
     masm.nopAlign(CodeAlignment);
-    GenerateCallablePrologue(masm, framePushed, ExitReason::None, &offsets->normalEntry);
+    GenerateCallablePrologue(masm, framePushed, ExitReason::None(), &offsets->normalEntry);
 
     masm.setFramePushed(framePushed);
 }
@@ -441,7 +450,7 @@ void
 wasm::GenerateFunctionEpilogue(MacroAssembler& masm, unsigned framePushed, FuncOffsets* offsets)
 {
     MOZ_ASSERT(masm.framePushed() == framePushed);
-    GenerateCallableEpilogue(masm, framePushed, ExitReason::None, &offsets->ret);
+    GenerateCallableEpilogue(masm, framePushed, ExitReason::None(), &offsets->ret);
     masm.setFramePushed(0);
 }
 
@@ -474,7 +483,7 @@ ProfilingFrameIterator::ProfilingFrameIterator()
     callerFP_(nullptr),
     callerPC_(nullptr),
     stackAddress_(nullptr),
-    exitReason_(ExitReason::None)
+    exitReason_(ExitReason::Fixed::None)
 {
     MOZ_ASSERT(done());
 }
@@ -486,7 +495,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation)
     callerFP_(nullptr),
     callerPC_(nullptr),
     stackAddress_(nullptr),
-    exitReason_(ExitReason::None)
+    exitReason_(ExitReason::Fixed::None)
 {
     initFromExitFP();
 }
@@ -553,7 +562,7 @@ ProfilingFrameIterator::initFromExitFP()
         break;
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
-      case CodeRange::ImportNativeExit:
+      case CodeRange::BuiltinNativeExit:
       case CodeRange::TrapExit:
       case CodeRange::DebugTrap:
       case CodeRange::Inline:
@@ -580,7 +589,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
     callerFP_(nullptr),
     callerPC_(nullptr),
     stackAddress_(nullptr),
-    exitReason_(ExitReason::None)
+    exitReason_(ExitReason::Fixed::None)
 {
     // In the case of ImportJitExit, the fp register may be temporarily
     // clobbered on return from Ion so always use activation.fp when it is set.
@@ -645,7 +654,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
       case CodeRange::FarJumpIsland:
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
-      case CodeRange::ImportNativeExit:
+      case CodeRange::BuiltinNativeExit:
       case CodeRange::TrapExit:
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
         if (offsetFromEntry == BeforePushRetAddr || codeRange->isThunk()) {
@@ -727,9 +736,9 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
 void
 ProfilingFrameIterator::operator++()
 {
-    if (exitReason_ != ExitReason::None) {
+    if (!exitReason_.isNone()) {
         MOZ_ASSERT(codeRange_);
-        exitReason_ = ExitReason::None;
+        exitReason_ = ExitReason::None();
         MOZ_ASSERT(!done());
         return;
     }
@@ -755,7 +764,7 @@ ProfilingFrameIterator::operator++()
       case CodeRange::Function:
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
-      case CodeRange::ImportNativeExit:
+      case CodeRange::BuiltinNativeExit:
       case CodeRange::TrapExit:
       case CodeRange::DebugTrap:
       case CodeRange::Inline:
@@ -773,6 +782,115 @@ ProfilingFrameIterator::operator++()
     MOZ_ASSERT(!done());
 }
 
+static const char*
+ThunkedNativeToDescription(SymbolicAddress func)
+{
+    MOZ_ASSERT(NeedsBuiltinThunk(func));
+    switch (func) {
+      case SymbolicAddress::HandleExecutionInterrupt:
+      case SymbolicAddress::HandleDebugTrap:
+      case SymbolicAddress::HandleThrow:
+      case SymbolicAddress::ReportTrap:
+      case SymbolicAddress::ReportOutOfBounds:
+      case SymbolicAddress::ReportUnalignedAccess:
+      case SymbolicAddress::CallImport_Void:
+      case SymbolicAddress::CallImport_I32:
+      case SymbolicAddress::CallImport_I64:
+      case SymbolicAddress::CallImport_F64:
+      case SymbolicAddress::CoerceInPlace_ToInt32:
+      case SymbolicAddress::CoerceInPlace_ToNumber:
+        MOZ_ASSERT(!NeedsBuiltinThunk(func), "not in sync with NeedsBuiltinThunk");
+        break;
+      case SymbolicAddress::ToInt32:
+        return "call to asm.js native ToInt32 coercion (in wasm)";
+      case SymbolicAddress::DivI64:
+        return "call to native i64.div_s (in wasm)";
+      case SymbolicAddress::UDivI64:
+        return "call to native i64.div_u (in wasm)";
+      case SymbolicAddress::ModI64:
+        return "call to native i64.rem_s (in wasm)";
+      case SymbolicAddress::UModI64:
+        return "call to native i64.rem_u (in wasm)";
+      case SymbolicAddress::TruncateDoubleToUint64:
+        return "call to native i64.trunc_u/f64 (in wasm)";
+      case SymbolicAddress::TruncateDoubleToInt64:
+        return "call to native i64.trunc_s/f64 (in wasm)";
+      case SymbolicAddress::Uint64ToDouble:
+        return "call to native f64.convert_u/i64 (in wasm)";
+      case SymbolicAddress::Uint64ToFloat32:
+        return "call to native f32.convert_u/i64 (in wasm)";
+      case SymbolicAddress::Int64ToDouble:
+        return "call to native f64.convert_s/i64 (in wasm)";
+      case SymbolicAddress::Int64ToFloat32:
+        return "call to native f32.convert_s/i64 (in wasm)";
+#if defined(JS_CODEGEN_ARM)
+      case SymbolicAddress::aeabi_idivmod:
+        return "call to native i32.div_s (in wasm)";
+      case SymbolicAddress::aeabi_uidivmod:
+        return "call to native i32.div_u (in wasm)";
+      case SymbolicAddress::AtomicCmpXchg:
+        return "call to native atomic compare exchange (in wasm)";
+      case SymbolicAddress::AtomicXchg:
+        return "call to native atomic exchange (in wasm)";
+      case SymbolicAddress::AtomicFetchAdd:
+        return "call to native atomic fetch add (in wasm)";
+      case SymbolicAddress::AtomicFetchSub:
+        return "call to native atomic fetch sub (in wasm)";
+      case SymbolicAddress::AtomicFetchAnd:
+        return "call to native atomic fetch and (in wasm)";
+      case SymbolicAddress::AtomicFetchOr:
+        return "call to native atomic fetch or (in wasm)";
+      case SymbolicAddress::AtomicFetchXor:
+        return "call to native atomic fetch xor (in wasm)";
+#endif
+      case SymbolicAddress::ModD:
+        return "call to asm.js native f64 % (mod)";
+      case SymbolicAddress::SinD:
+        return "call to asm.js native f64 Math.sin";
+      case SymbolicAddress::CosD:
+        return "call to asm.js native f64 Math.cos";
+      case SymbolicAddress::TanD:
+        return "call to asm.js native f64 Math.tan";
+      case SymbolicAddress::ASinD:
+        return "call to asm.js native f64 Math.asin";
+      case SymbolicAddress::ACosD:
+        return "call to asm.js native f64 Math.acos";
+      case SymbolicAddress::ATanD:
+        return "call to asm.js native f64 Math.atan";
+      case SymbolicAddress::CeilD:
+        return "call to native f64.ceil (in wasm)";
+      case SymbolicAddress::CeilF:
+        return "call to native f32.ceil (in wasm)";
+      case SymbolicAddress::FloorD:
+        return "call to native f64.floor (in wasm)";
+      case SymbolicAddress::FloorF:
+        return "call to native f32.floor (in wasm)";
+      case SymbolicAddress::TruncD:
+        return "call to native f64.trunc (in wasm)";
+      case SymbolicAddress::TruncF:
+        return "call to native f32.trunc (in wasm)";
+      case SymbolicAddress::NearbyIntD:
+        return "call to native f64.nearest (in wasm)";
+      case SymbolicAddress::NearbyIntF:
+        return "call to native f32.nearest (in wasm)";
+      case SymbolicAddress::ExpD:
+        return "call to asm.js native f64 Math.exp";
+      case SymbolicAddress::LogD:
+        return "call to asm.js native f64 Math.log";
+      case SymbolicAddress::PowD:
+        return "call to asm.js native f64 Math.pow";
+      case SymbolicAddress::ATan2D:
+        return "call to asm.js native f64 Math.atan2";
+      case SymbolicAddress::GrowMemory:
+        return "call to native grow_memory (in wasm)";
+      case SymbolicAddress::CurrentMemory:
+        return "call to native current_memory (in wasm)";
+      case SymbolicAddress::Limit:
+        break;
+    }
+    return "?";
+}
+
 const char*
 ProfilingFrameIterator::label() const
 {
@@ -785,37 +903,40 @@ ProfilingFrameIterator::label() const
     //     devtools/client/performance/modules/logic/frame-utils.js
     static const char* importJitDescription = "fast FFI trampoline (in wasm)";
     static const char* importInterpDescription = "slow FFI trampoline (in wasm)";
-    static const char* importNativeDescription = "fast FFI trampoline to native (in wasm)";
+    static const char* builtinNativeDescription = "fast FFI trampoline to native (in wasm)";
     static const char* trapDescription = "trap handling (in wasm)";
     static const char* debugTrapDescription = "debug trap handling (in wasm)";
 
-    switch (exitReason_) {
-      case ExitReason::None:
+    if (!exitReason_.isFixed())
+        return ThunkedNativeToDescription(exitReason_.symbolic());
+
+    switch (exitReason_.fixed()) {
+      case ExitReason::Fixed::None:
         break;
-      case ExitReason::ImportJit:
+      case ExitReason::Fixed::ImportJit:
         return importJitDescription;
-      case ExitReason::ImportInterp:
+      case ExitReason::Fixed::ImportInterp:
         return importInterpDescription;
-      case ExitReason::ImportNative:
-        return importNativeDescription;
-      case ExitReason::Trap:
+      case ExitReason::Fixed::BuiltinNative:
+        return builtinNativeDescription;
+      case ExitReason::Fixed::Trap:
         return trapDescription;
-      case ExitReason::DebugTrap:
+      case ExitReason::Fixed::DebugTrap:
         return debugTrapDescription;
     }
 
     switch (codeRange_->kind()) {
-      case CodeRange::Function:         return code_->profilingLabel(codeRange_->funcIndex());
-      case CodeRange::Entry:            return "entry trampoline (in wasm)";
-      case CodeRange::ImportJitExit:    return importJitDescription;
-      case CodeRange::ImportNativeExit: return importNativeDescription;
-      case CodeRange::ImportInterpExit: return importInterpDescription;
-      case CodeRange::TrapExit:         return trapDescription;
-      case CodeRange::DebugTrap:        return debugTrapDescription;
-      case CodeRange::Inline:           return "inline stub (in wasm)";
-      case CodeRange::FarJumpIsland:    return "interstitial (in wasm)";
-      case CodeRange::Throw:            MOZ_FALLTHROUGH;
-      case CodeRange::Interrupt:        MOZ_CRASH("does not have a frame");
+      case CodeRange::Function:          return code_->profilingLabel(codeRange_->funcIndex());
+      case CodeRange::Entry:             return "entry trampoline (in wasm)";
+      case CodeRange::ImportJitExit:     return importJitDescription;
+      case CodeRange::BuiltinNativeExit: return builtinNativeDescription;
+      case CodeRange::ImportInterpExit:  return importInterpDescription;
+      case CodeRange::TrapExit:          return trapDescription;
+      case CodeRange::DebugTrap:         return debugTrapDescription;
+      case CodeRange::Inline:            return "inline stub (in wasm)";
+      case CodeRange::FarJumpIsland:     return "interstitial (in wasm)";
+      case CodeRange::Throw:             MOZ_FALLTHROUGH;
+      case CodeRange::Interrupt:         MOZ_CRASH("does not have a frame");
     }
 
     MOZ_CRASH("bad code range kind");

@@ -533,7 +533,7 @@ nsIdentifierMapEntry::HasIdElementExposedAsHTMLDocumentProperty()
 size_t
 nsIdentifierMapEntry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
-  return nsStringHashKey::SizeOfExcludingThis(aMallocSizeOf);
+  return mKey.mString.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 }
 
 // Helper structs for the content->subdoc map
@@ -2891,8 +2891,7 @@ nsDocument::AddToNameTable(Element *aElement, nsIAtom* aName)
              "Only put elements that need to be exposed as document['name'] in "
              "the named table.");
 
-  nsIdentifierMapEntry *entry =
-    mIdentifierMap.PutEntry(nsDependentAtomString(aName));
+  nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aName);
 
   // Null for out-of-memory
   if (entry) {
@@ -2911,8 +2910,7 @@ nsDocument::RemoveFromNameTable(Element *aElement, nsIAtom* aName)
   if (mIdentifierMap.Count() == 0)
     return;
 
-  nsIdentifierMapEntry *entry =
-    mIdentifierMap.GetEntry(nsDependentAtomString(aName));
+  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aName);
   if (!entry) // Could be false if the element was anonymous, hence never added
     return;
 
@@ -2926,8 +2924,7 @@ nsDocument::RemoveFromNameTable(Element *aElement, nsIAtom* aName)
 void
 nsDocument::AddToIdTable(Element *aElement, nsIAtom* aId)
 {
-  nsIdentifierMapEntry *entry =
-    mIdentifierMap.PutEntry(nsDependentAtomString(aId));
+  nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aId);
 
   if (entry) { /* True except on OOM */
     if (nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(aElement) &&
@@ -2949,8 +2946,7 @@ nsDocument::RemoveFromIdTable(Element *aElement, nsIAtom* aId)
     return;
   }
 
-  nsIdentifierMapEntry *entry =
-    mIdentifierMap.GetEntry(nsDependentAtomString(aId));
+  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aId);
   if (!entry) // Can be null for XML elements with changing ids.
     return;
 
@@ -5166,7 +5162,7 @@ nsDocument::AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
   if (!CheckGetElementByIdArg(id))
     return nullptr;
 
-  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(id);
+  nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aID);
   NS_ENSURE_TRUE(entry, nullptr);
 
   entry->AddContentChangeCallback(aObserver, aData, aForImage);
@@ -5182,7 +5178,7 @@ nsDocument::RemoveIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
   if (!CheckGetElementByIdArg(id))
     return;
 
-  nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(id);
+  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aID);
   if (!entry) {
     return;
   }

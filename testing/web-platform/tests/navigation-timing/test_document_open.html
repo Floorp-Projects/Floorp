@@ -19,7 +19,7 @@ var didOpen = false;
 
 function onload_test() {
   if (!didOpen) {
-    step_timeout(testTimingWithDocumentOpen, 0);
+    setTimeout(testTimingWithDocumentOpen, 0);
     didOpen = true;
   }
 }
@@ -52,7 +52,7 @@ function testTimingWithDocumentOpen() {
   subdocument.write('</html>');
   subdocument.close();
 
-  step_timeout(function() {
+  setTimeout(function() {
     var timing = subcontentWindow.performance.timing;
     for (var i in timingAttributes) {
       test_equals(timing[timingAttributes[i]],

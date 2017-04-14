@@ -168,10 +168,10 @@ class LUDivOrMod : public LBinaryMath<1>
         return mir_->toDiv()->trapOnError();
     }
 
-    wasm::TrapOffset trapOffset() const {
+    wasm::BytecodeOffset bytecodeOffset() const {
         if (mir_->isMod())
-            return mir_->toMod()->trapOffset();
-        return mir_->toDiv()->trapOffset();
+            return mir_->toMod()->bytecodeOffset();
+        return mir_->toDiv()->bytecodeOffset();
     }
 };
 
@@ -183,13 +183,13 @@ class LUDivOrModConstant : public LInstructionHelper<1, 1, 1>
     LIR_HEADER(UDivOrModConstant)
 
     LUDivOrModConstant(const LAllocation &lhs, uint32_t denominator, const LDefinition& temp)
-    : denominator_(denominator)
+      : denominator_(denominator)
     {
         setOperand(0, lhs);
         setTemp(0, temp);
     }
 
-    const LAllocation *numerator() {
+    const LAllocation* numerator() {
         return getOperand(0);
     }
     uint32_t denominator() const {
@@ -209,10 +209,10 @@ class LUDivOrModConstant : public LInstructionHelper<1, 1, 1>
             return mir_->toMod()->trapOnError();
         return mir_->toDiv()->trapOnError();
     }
-    wasm::TrapOffset trapOffset() const {
+    wasm::BytecodeOffset bytecodeOffset() const {
         if (mir_->isMod())
-            return mir_->toMod()->trapOffset();
-        return mir_->toDiv()->trapOffset();
+            return mir_->toMod()->bytecodeOffset();
+        return mir_->toDiv()->bytecodeOffset();
     }
 };
 

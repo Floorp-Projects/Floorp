@@ -1843,6 +1843,7 @@ BaselineCacheIRCompiler::init(CacheKind kind)
       case CacheKind::GetElem:
       case CacheKind::SetProp:
       case CacheKind::In:
+      case CacheKind::HasOwn:
         MOZ_ASSERT(numInputs == 2);
         allocator.initInputLocation(0, R0);
         allocator.initInputLocation(1, R1);
@@ -1898,6 +1899,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
     CacheIRStubKind stubKind;
     switch (kind) {
       case CacheKind::In:
+      case CacheKind::HasOwn:
         stubDataOffset = sizeof(ICCacheIR_Regular);
         stubKind = CacheIRStubKind::Regular;
         break;

@@ -412,3 +412,25 @@ TEST(GeckoProfiler, SetFrameNumber)
   profiler_set_frame_number(7);
 }
 
+TEST(GeckoProfiler, Bug1355807)
+{
+  const char* features[] = { "js" };
+  const char* manyThreadsFilter[] = { "" };
+  const char* fewThreadsFilter[] = { "GeckoMain" };
+
+  profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+                 features, MOZ_ARRAY_LENGTH(features),
+                 manyThreadsFilter, MOZ_ARRAY_LENGTH(manyThreadsFilter));
+
+  profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+                 features, MOZ_ARRAY_LENGTH(features),
+                 fewThreadsFilter, MOZ_ARRAY_LENGTH(fewThreadsFilter));
+
+  // In bug 1355807 this caused an assertion failure in stopJSSampling().
+  profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+                 features, MOZ_ARRAY_LENGTH(features),
+                 fewThreadsFilter, MOZ_ARRAY_LENGTH(fewThreadsFilter));
+
+  profiler_stop();
+}
+

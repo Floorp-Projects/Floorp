@@ -34,8 +34,10 @@ namespace jit {
 
 namespace wasm {
 
-void*
-AddressOf(SymbolicAddress imm, jit::ABIFunctionType*);
+class ExitReason;
+
+bool
+NeedsBuiltinThunk(SymbolicAddress imm);
 
 struct TypedFuncPtr
 {
@@ -68,7 +70,7 @@ struct BuiltinThunk
     BuiltinThunk(uint8_t* base, size_t size, jit::ExecutablePool* executablePool,
                  CallableOffsets offsets)
       : executablePool(executablePool),
-        codeRange(CodeRange(CodeRange::ImportNativeExit, offsets)),
+        codeRange(CodeRange(CodeRange::BuiltinNativeExit, offsets)),
         size(size),
         base(base)
     {}
@@ -86,12 +88,14 @@ class Runtime
     BuiltinThunkMap builtinThunkMap_;
     BuiltinThunkVector builtinThunkVector_;
 
-    bool getBuiltinThunk(JSContext* cx, void* funcPtr, jit::ABIFunctionType type, void** thunkPtr);
+    bool getBuiltinThunk(JSContext* cx, void* funcPtr, jit::ABIFunctionType type,
+                         ExitReason exitReason, void** thunkPtr);
 
   public:
     bool init() { return builtinThunkMap_.init(); }
     void destroy();
 
+    bool getBuiltinThunk(JSContext* cx, SymbolicAddress func, void** thunkPtr);
     bool getBuiltinThunk(JSContext* cx, void* funcPtr, const Sig& sig, void** thunkPtr);
     BuiltinThunk* lookupBuiltin(void* pc);
 };

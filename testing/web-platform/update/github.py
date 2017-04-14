@@ -49,7 +49,6 @@ class GitHub(object):
         if 200 <= resp.status_code < 300:
             return resp.json()
         else:
-            print method, path, resp.status_code, resp.json()
             raise GitHubError(resp.status_code, resp.json())
 
     def repo(self, owner, name):
@@ -140,7 +139,7 @@ class PullRequest(object):
         """Merge the Pull Request into its base branch.
         """
         self.repo.gh.put(self.path("merge"),
-                         {"merge_method": "merge"},
+                         {"merge_method": "rebase"},
                          headers={"Accept": "application/vnd.github.polaris-preview+json"})
 
 
