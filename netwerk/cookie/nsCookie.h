@@ -58,12 +58,22 @@ class nsCookie : public nsICookie2
      , mLastAccessed(aLastAccessed)
      , mCreationTime(aCreationTime)
        // Defaults to 60s
-     , mCookieStaleThreshold(mozilla::Preferences::GetInt("network.cookie.staleThreshold", 60))
      , mIsSession(aIsSession)
      , mIsSecure(aIsSecure)
      , mIsHttpOnly(aIsHttpOnly)
      , mOriginAttributes(aOriginAttributes)
     {
+    }
+
+    static int CookieStaleThreshold()
+    {
+      static bool initialized = false;
+      static int value = 60;
+      if (!initialized) {
+        mozilla::Preferences::AddIntVarCache(&value, "network.cookie.staleThreshold", 60);
+        initialized = true;
+      }
+      return value;
     }
 
   public:
@@ -130,7 +140,6 @@ class nsCookie : public nsICookie2
     int64_t      mExpiry;
     int64_t      mLastAccessed;
     int64_t      mCreationTime;
-    int64_t      mCookieStaleThreshold;
     bool mIsSession;
     bool mIsSecure;
     bool mIsHttpOnly;
