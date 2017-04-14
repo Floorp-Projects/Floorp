@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScaledFontMac.h"
+#include "UnscaledFontMac.h"
 #ifdef USE_SKIA
 #include "PathSkia.h"
 #include "skia/include/core/SkPaint.h"
@@ -30,6 +31,40 @@ CGPathRef CGFontGetGlyphPath(CGFontRef fontRef, CGAffineTransform *textTransform
 
 namespace mozilla {
 namespace gfx {
+
+// Simple helper class to automatically release a CFObject when it goes out
+// of scope.
+template<class T>
+class AutoRelease
+{
+public:
+  explicit AutoRelease(T aObject)
+    : mObject(aObject)
+  {
+  }
+
+  ~AutoRelease()
+  {
+    if (mObject) {
+      CFRelease(mObject);
+    }
+  }
+
+  operator T()
+  {
+    return mObject;
+  }
+
+  T forget()
+  {
+    T obj = mObject;
+    mObject = nullptr;
+    return obj;
+  }
+
+private:
+  T mObject;
+};
 
 ScaledFontMac::CTFontDrawGlyphsFuncT* ScaledFontMac::CTFontDrawGlyphsPtr = nullptr;
 bool ScaledFontMac::sSymbolLookupDone = false;
@@ -69,7 +104,8 @@ CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont, CGFloat aSize)
 
 ScaledFontMac::ScaledFontMac(CGFontRef aFont,
                              const RefPtr<UnscaledFont>& aUnscaledFont,
-                             Float aSize)
+                             Float aSize,
+                             bool aOwnsFont)
   : ScaledFontBase(aUnscaledFont, aSize)
 {
   if (!sSymbolLookupDone) {
@@ -78,8 +114,11 @@ ScaledFontMac::ScaledFontMac(CGFontRef aFont,
     sSymbolLookupDone = true;
   }
 
-  // XXX: should we be taking a reference
-  mFont = CGFontRetain(aFont);
+  if (!aOwnsFont) {
+    // XXX: should we be taking a reference
+    mFont = CGFontRetain(aFont);
+  }
+
   if (CTFontDrawGlyphsPtr != nullptr) {
     // only create mCTFont if we're going to be using the CTFontDrawGlyphs API
     mCTFont = CreateCTFontFromCGFontWithVariations(aFont, aSize);
@@ -214,7 +253,7 @@ static void CollectVariationSetting(const void *key, const void *value, void *co
 }
 
 bool
-ScaledFontMac::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
+UnscaledFontMac::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
 {
     // We'll reconstruct a TTF font from the tables we can get from the CGFont
     CFArrayRef tags = CGFontCopyTableTags(mFont);
@@ -281,6 +320,15 @@ ScaledFontMac::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
     // set checkSumAdjust to the computed checksum
     memcpy(&buf.data[checkSumAdjustmentOffset], &fontChecksum, sizeof(fontChecksum));
 
+    // we always use an index of 0
+    aDataCallback(buf.data, buf.offset, 0, aBaton);
+
+    return true;
+}
+
+bool
+ScaledFontMac::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
+{
     // Collect any variation settings that were incorporated into the CTFont.
     uint32_t variationCount = 0;
     VariationSetting* variations = nullptr;
@@ -302,12 +350,158 @@ ScaledFontMac::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
       }
     }
 
-    // we always use an index of 0
-    aDataCallback(buf.data, buf.offset, 0, mSize, variationCount, variations, aBaton);
+    aCb(reinterpret_cast<uint8_t*>(variations), variationCount * sizeof(VariationSetting), aBaton);
     delete[] variations;
 
     return true;
+}
 
+static CFDictionaryRef
+CreateVariationDictionaryOrNull(CGFontRef aCGFont, uint32_t aVariationCount,
+                                const ScaledFont::VariationSetting* aVariations)
+{
+  // Avoid calling potentially buggy variation APIs on pre-Sierra macOS
+  // versions (see bug 1331683)
+  if (!nsCocoaFeatures::OnSierraOrLater()) {
+    return nullptr;
+  }
+
+  AutoRelease<CTFontRef>
+    ctFont(CTFontCreateWithGraphicsFont(aCGFont, 0, nullptr, nullptr));
+  AutoRelease<CFArrayRef> axes(CTFontCopyVariationAxes(ctFont));
+  if (!axes) {
+    return nullptr;
+  }
+
+  CFIndex axisCount = CFArrayGetCount(axes);
+  AutoRelease<CFMutableDictionaryRef>
+    dict(CFDictionaryCreateMutable(kCFAllocatorDefault, axisCount,
+                                   &kCFTypeDictionaryKeyCallBacks,
+                                   &kCFTypeDictionaryValueCallBacks));
+
+  // Number of variation settings passed in the aVariations parameter.
+  // This will typically be a very low value, so we just linear-search them.
+  bool allDefaultValues = true;
+
+  for (CFIndex i = 0; i < axisCount; ++i) {
+    // We sanity-check the axis info found in the CTFont, and bail out
+    // (returning null) if it doesn't have the expected types.
+    CFTypeRef axisInfo = CFArrayGetValueAtIndex(axes, i);
+    if (CFDictionaryGetTypeID() != CFGetTypeID(axisInfo)) {
+      return nullptr;
+    }
+    CFDictionaryRef axis = static_cast<CFDictionaryRef>(axisInfo);
+
+    CFTypeRef axisTag =
+        CFDictionaryGetValue(axis, kCTFontVariationAxisIdentifierKey);
+    if (!axisTag || CFGetTypeID(axisTag) != CFNumberGetTypeID()) {
+      return nullptr;
+    }
+    int64_t tagLong;
+    if (!CFNumberGetValue(static_cast<CFNumberRef>(axisTag),
+                          kCFNumberSInt64Type, &tagLong)) {
+      return nullptr;
+    }
+
+    CFTypeRef axisName =
+      CFDictionaryGetValue(axis, kCTFontVariationAxisNameKey);
+    if (!axisName || CFGetTypeID(axisName) != CFStringGetTypeID()) {
+      return nullptr;
+    }
+
+    // Clamp axis values to the supported range.
+    CFTypeRef min = CFDictionaryGetValue(axis, kCTFontVariationAxisMinimumValueKey);
+    CFTypeRef max = CFDictionaryGetValue(axis, kCTFontVariationAxisMaximumValueKey);
+    CFTypeRef def = CFDictionaryGetValue(axis, kCTFontVariationAxisDefaultValueKey);
+    if (!min || CFGetTypeID(min) != CFNumberGetTypeID() ||
+        !max || CFGetTypeID(max) != CFNumberGetTypeID() ||
+        !def || CFGetTypeID(def) != CFNumberGetTypeID()) {
+      return nullptr;
+    }
+    double minDouble;
+    double maxDouble;
+    double defDouble;
+    if (!CFNumberGetValue(static_cast<CFNumberRef>(min), kCFNumberDoubleType,
+                          &minDouble) ||
+        !CFNumberGetValue(static_cast<CFNumberRef>(max), kCFNumberDoubleType,
+                          &maxDouble) ||
+        !CFNumberGetValue(static_cast<CFNumberRef>(def), kCFNumberDoubleType,
+                          &defDouble)) {
+      return nullptr;
+    }
+
+    double value = defDouble;
+    for (uint32_t j = 0; j < aVariationCount; ++j) {
+      if (aVariations[j].mTag == tagLong) {
+        value = std::min(std::max<double>(aVariations[j].mValue,
+                                          minDouble),
+                         maxDouble);
+        if (value != defDouble) {
+          allDefaultValues = false;
+        }
+        break;
+      }
+    }
+    AutoRelease<CFNumberRef> valueNumber(CFNumberCreate(kCFAllocatorDefault,
+                                                        kCFNumberDoubleType,
+                                                        &value));
+    CFDictionaryAddValue(dict, axisName, valueNumber);
+  }
+
+  if (allDefaultValues) {
+    // We didn't actually set any non-default values, so throw away the
+    // variations dictionary and just use the default rendering.
+    return nullptr;
+  }
+
+  return dict.forget();
+}
+
+CGFontRef
+UnscaledFontMac::CreateCGFontWithVariations(CGFontRef aFont,
+                                            uint32_t aVariationCount,
+                                            const ScaledFont::VariationSetting* aVariations)
+{
+  MOZ_ASSERT(aVariationCount > 0);
+  MOZ_ASSERT(aVariations);
+
+  AutoRelease<CFDictionaryRef>
+    varDict(CreateVariationDictionaryOrNull(aFont, aVariationCount, aVariations));
+  if (!varDict) {
+    return nullptr;
+  }
+
+  return CGFontCreateCopyWithVariations(aFont, varDict);
+}
+
+already_AddRefed<ScaledFont>
+UnscaledFontMac::CreateScaledFont(Float aGlyphSize,
+                                  const uint8_t* aInstanceData,
+                                  uint32_t aInstanceDataLength)
+{
+  uint32_t variationCount =
+    aInstanceDataLength / sizeof(ScaledFont::VariationSetting);
+  const ScaledFont::VariationSetting* variations =
+    reinterpret_cast<const ScaledFont::VariationSetting*>(aInstanceData);
+
+  CGFontRef fontRef = mFont;
+  if (variationCount > 0) {
+    CGFontRef varFont =
+      CreateCGFontWithVariations(mFont, variationCount, variations);
+    if (varFont) {
+      fontRef = varFont;
+    }
+  }
+
+  RefPtr<ScaledFontMac> scaledFont =
+    new ScaledFontMac(fontRef, this, aGlyphSize, fontRef != mFont);
+
+  if (!scaledFont->PopulateCairoScaledFont()) {
+    gfxWarning() << "Unable to create cairo scaled Mac font.";
+    return nullptr;
+  }
+
+  return scaledFont.forget();
 }
 
 #ifdef USE_CAIRO_SCALED_FONT

@@ -5,6 +5,7 @@
 
 #include "DrawTargetD2D1.h"
 #include "ScaledFontDWrite.h"
+#include "UnscaledFontDWrite.h"
 #include "PathD2D.h"
 #include "gfxFont.h"
 
@@ -221,7 +222,7 @@ ScaledFontDWrite::CopyGlyphsToSink(const GlyphBuffer &aBuffer, ID2D1GeometrySink
 }
 
 bool
-ScaledFontDWrite::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
+UnscaledFontDWrite::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
 {
   UINT32 fileCount = 0;
   mFontFace->GetFiles(&fileCount, nullptr);
@@ -242,13 +243,13 @@ ScaledFontDWrite::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton
   UINT32 refKeySize;
   // XXX - This can currently crash for webfonts, as when we get the reference
   // key out of the file, that can be an invalid reference key for the loader
-  // we use it with. The fix to this is not obvious but it will probably 
+  // we use it with. The fix to this is not obvious but it will probably
   // have to happen inside thebes.
   file->GetReferenceKey(&referenceKey, &refKeySize);
 
   RefPtr<IDWriteFontFileLoader> loader;
   file->GetLoader(getter_AddRefs(loader));
-  
+
   RefPtr<IDWriteFontFileStream> stream;
   loader->CreateStreamFromKey(referenceKey, refKeySize, getter_AddRefs(stream));
 
@@ -258,18 +259,31 @@ ScaledFontDWrite::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton
     MOZ_ASSERT(false);
     return false;
   }
-  
+
   uint32_t fileSize = static_cast<uint32_t>(fileSize64);
   const void *fragmentStart;
   void *context;
   stream->ReadFileFragment(&fragmentStart, 0, fileSize, &context);
 
-  aDataCallback((uint8_t*)fragmentStart, fileSize, mFontFace->GetIndex(), mSize,
-                0, nullptr, aBaton);
+  aDataCallback((uint8_t*)fragmentStart, fileSize, mFontFace->GetIndex(), aBaton);
 
   stream->ReleaseFileFragment(context);
 
   return true;
+}
+
+already_AddRefed<ScaledFont>
+UnscaledFontDWrite::CreateScaledFont(Float aGlyphSize,
+                                     const uint8_t* aInstanceData,
+                                     uint32_t aInstanceDataLength)
+{
+  RefPtr<ScaledFontBase> scaledFont = new ScaledFontDWrite(mFontFace, this, aGlyphSize);
+  if (mNeedsCairo && !scaledFont->PopulateCairoScaledFont()) {
+    gfxWarning() << "Unable to create cairo scaled font DWrite font.";
+    return nullptr;
+  }
+
+  return scaledFont.forget();
 }
 
 AntialiasMode

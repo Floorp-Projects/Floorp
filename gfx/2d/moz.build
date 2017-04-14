@@ -98,6 +98,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3'):
     EXPORTS.mozilla.gfx += [
         'UnscaledFontFreeType.h',
     ]
+    SOURCES += [
+        'UnscaledFontFreeType.cpp',
+    ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
     SOURCES += [

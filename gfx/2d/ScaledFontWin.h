@@ -15,26 +15,19 @@ namespace gfx {
 class ScaledFontWin : public ScaledFontBase
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontWin)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontWin, override)
   ScaledFontWin(const LOGFONT* aFont,
                 const RefPtr<UnscaledFont>& aUnscaledFont,
                 Float aSize);
 
-  virtual FontType GetType() const { return FontType::GDI; }
-
-  bool GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton) override;
+  FontType GetType() const override { return FontType::GDI; }
 
   bool GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton) override;
 
-  virtual bool GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton) override;
-
-  static already_AddRefed<ScaledFont>
-    CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength, Float aSize);
-
-  virtual AntialiasMode GetDefaultAAMode() override;
+  AntialiasMode GetDefaultAAMode() override;
 
 #ifdef USE_SKIA
-  virtual SkTypeface* GetSkTypeface();
+  SkTypeface* GetSkTypeface() override;
 #endif
 
 protected:
