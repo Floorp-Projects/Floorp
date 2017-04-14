@@ -39,17 +39,17 @@ class EitherParser
     struct TokenStreamMatcher
     {
         template<class Parser>
-        TokenStreamBase& match(Parser* parser) {
+        TokenStreamAnyChars& match(Parser* parser) {
             return parser->tokenStream;
         }
     };
 
   public:
-    TokenStreamBase& tokenStream() {
+    TokenStreamAnyChars& tokenStream() {
         return parser.match(TokenStreamMatcher());
     }
 
-    const TokenStreamBase& tokenStream() const {
+    const TokenStreamAnyChars& tokenStream() const {
         return parser.match(TokenStreamMatcher());
     }
 

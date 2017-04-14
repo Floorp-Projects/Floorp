@@ -227,7 +227,7 @@ frontend::ReservedWordToCharZ(TokenKind tt)
 }
 
 PropertyName*
-TokenStreamBase::reservedWordToPropertyName(TokenKind tt) const
+TokenStreamAnyChars::reservedWordToPropertyName(TokenKind tt) const
 {
     MOZ_ASSERT(tt != TOK_NAME);
     switch (tt) {
@@ -293,7 +293,7 @@ TokenStream::SourceCoords::add(uint32_t lineNum, uint32_t lineStartOffset)
 }
 
 MOZ_ALWAYS_INLINE bool
-TokenStreamBase::SourceCoords::fill(const TokenStreamBase::SourceCoords& other)
+TokenStreamAnyChars::SourceCoords::fill(const TokenStreamAnyChars::SourceCoords& other)
 {
     MOZ_ASSERT(lineStartOffsets_.back() == MAX_PTR);
     MOZ_ASSERT(other.lineStartOffsets_.back() == MAX_PTR);
@@ -312,7 +312,7 @@ TokenStreamBase::SourceCoords::fill(const TokenStreamBase::SourceCoords& other)
 }
 
 MOZ_ALWAYS_INLINE uint32_t
-TokenStreamBase::SourceCoords::lineIndexOf(uint32_t offset) const
+TokenStreamAnyChars::SourceCoords::lineIndexOf(uint32_t offset) const
 {
     uint32_t iMin, iMax, iMid;
 
@@ -363,14 +363,14 @@ TokenStreamBase::SourceCoords::lineIndexOf(uint32_t offset) const
 }
 
 uint32_t
-TokenStreamBase::SourceCoords::lineNum(uint32_t offset) const
+TokenStreamAnyChars::SourceCoords::lineNum(uint32_t offset) const
 {
     uint32_t lineIndex = lineIndexOf(offset);
     return lineIndexToNum(lineIndex);
 }
 
 uint32_t
-TokenStreamBase::SourceCoords::columnIndex(uint32_t offset) const
+TokenStreamAnyChars::SourceCoords::columnIndex(uint32_t offset) const
 {
     uint32_t lineIndex = lineIndexOf(offset);
     uint32_t lineStartOffset = lineStartOffsets_[lineIndex];
@@ -379,8 +379,8 @@ TokenStreamBase::SourceCoords::columnIndex(uint32_t offset) const
 }
 
 void
-TokenStreamBase::SourceCoords::lineNumAndColumnIndex(uint32_t offset, uint32_t* lineNum,
-                                                     uint32_t* columnIndex) const
+TokenStreamAnyChars::SourceCoords::lineNumAndColumnIndex(uint32_t offset, uint32_t* lineNum,
+                                                         uint32_t* columnIndex) const
 {
     uint32_t lineIndex = lineIndexOf(offset);
     *lineNum = lineIndexToNum(lineIndex);
@@ -394,8 +394,8 @@ TokenStreamBase::SourceCoords::lineNumAndColumnIndex(uint32_t offset, uint32_t* 
 #pragma warning(disable:4351)
 #endif
 
-TokenStreamBase::TokenStreamBase(JSContext* cx, const ReadOnlyCompileOptions& options,
-                                 StrictModeGetter* smg)
+TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, const ReadOnlyCompileOptions& options,
+                                         StrictModeGetter* smg)
   : srcCoords(cx, options.lineno),
     options_(options),
     tokens(),
@@ -416,7 +416,7 @@ TokenStreamBase::TokenStreamBase(JSContext* cx, const ReadOnlyCompileOptions& op
 
 TokenStream::TokenStream(JSContext* cx, const ReadOnlyCompileOptions& options,
                          const CharT* base, size_t length, StrictModeGetter* smg)
-  : TokenStreamBase(cx, options, smg),
+  : TokenStreamAnyChars(cx, options, smg),
     userbuf(cx, base, length, options.column),
     tokenbuf(cx)
 {
@@ -439,7 +439,7 @@ TokenStream::TokenStream(JSContext* cx, const ReadOnlyCompileOptions& options,
 #endif
 
 bool
-TokenStreamBase::checkOptions()
+TokenStreamAnyChars::checkOptions()
 {
     // Constrain starting columns to half of the range of a signed 32-bit value,
     // to avoid overflow.
@@ -470,7 +470,7 @@ TokenStream::updateLineInfoForEOL()
 }
 
 MOZ_ALWAYS_INLINE void
-TokenStreamBase::updateFlagsForEOL()
+TokenStreamAnyChars::updateFlagsForEOL()
 {
     flags.isDirtyLine = false;
 }
@@ -683,8 +683,8 @@ TokenStream::reportStrictModeErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32
 }
 
 bool
-TokenStreamBase::compileWarning(ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes,
-                                unsigned flags, unsigned errorNumber, va_list args)
+TokenStreamAnyChars::compileWarning(ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes,
+                                    unsigned flags, unsigned errorNumber, va_list args)
 {
     if (options().werrorOption) {
         flags &= ~JSREPORT_WARNING;
@@ -696,7 +696,7 @@ TokenStreamBase::compileWarning(ErrorMetadata&& metadata, UniquePtr<JSErrorNotes
 }
 
 void
-TokenStreamBase::computeErrorMetadataNoOffset(ErrorMetadata* err)
+TokenStreamAnyChars::computeErrorMetadataNoOffset(ErrorMetadata* err)
 {
     err->isMuted = mutedErrors;
     err->filename = filename;
@@ -707,7 +707,7 @@ TokenStreamBase::computeErrorMetadataNoOffset(ErrorMetadata* err)
 }
 
 bool
-TokenStreamBase::fillExcludingContext(ErrorMetadata* err, uint32_t offset)
+TokenStreamAnyChars::fillExcludingContext(ErrorMetadata* err, uint32_t offset)
 {
     err->isMuted = mutedErrors;
 
@@ -826,7 +826,7 @@ TokenStream::reportError(unsigned errorNumber, ...)
 }
 
 void
-TokenStreamBase::reportErrorNoOffset(unsigned errorNumber, ...)
+TokenStreamAnyChars::reportErrorNoOffset(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);

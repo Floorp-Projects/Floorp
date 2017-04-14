@@ -96,7 +96,7 @@ enum class InvalidEscapeType {
     Octal
 };
 
-class TokenStreamBase;
+class TokenStreamAnyChars;
 
 struct Token
 {
@@ -164,7 +164,7 @@ struct Token
         // gotten with None, but we expect Operand.
         OperandIsNone,
     };
-    friend class TokenStreamBase;
+    friend class TokenStreamAnyChars;
 
   public:
     TokenKind           type;           // char value or above enumerator
@@ -264,10 +264,10 @@ class StrictModeGetter {
     virtual bool strictMode() = 0;
 };
 
-class TokenStreamBase
+class TokenStreamAnyChars
 {
   protected:
-    TokenStreamBase(JSContext* cx, const ReadOnlyCompileOptions& options, StrictModeGetter* smg);
+    TokenStreamAnyChars(JSContext* cx, const ReadOnlyCompileOptions& options, StrictModeGetter* smg);
 
     static const size_t ntokens = 4;                // 1 current + 2 lookahead, rounded
                                                     // to power of 2 to avoid divmod by 3
@@ -628,7 +628,7 @@ class TokenStreamBase
 // The methods seek() and tell() allow to rescan from a previous visited
 // location of the buffer.
 //
-class MOZ_STACK_CLASS TokenStream final : public TokenStreamBase
+class MOZ_STACK_CLASS TokenStream final : public TokenStreamAnyChars
 {
   public:
     using CharT = char16_t;
