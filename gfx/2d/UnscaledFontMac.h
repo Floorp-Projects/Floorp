@@ -46,7 +46,7 @@ public:
   static CGFontRef
     CreateCGFontWithVariations(CGFontRef aFont,
                                uint32_t aVariationCount,
-                               const ScaledFont::VariationSetting* aVariations);
+                               const FontVariation* aVariations);
 
 private:
   CGFontRef mFont;

@@ -26,6 +26,7 @@ EXPORTS.mozilla.gfx += [
     'DrawEventRecorder.h',
     'DrawTargetTiled.h',
     'Filters.h',
+    'FontVariation.h',
     'Helpers.h',
     'HelpersCairo.h',
     'IterableArena.h',

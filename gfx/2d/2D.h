@@ -12,6 +12,7 @@
 #include "Matrix.h"
 #include "Quaternion.h"
 #include "UserData.h"
+#include "FontVariation.h"
 #include <vector>
 
 // GenericRefCountedBase allows us to hold on to refcounted objects of any type
@@ -769,11 +770,6 @@ public:
   /* This gets the metrics of a set of glyphs for the current font face.
    */
   virtual void GetGlyphDesignMetrics(const uint16_t* aGlyphIndices, uint32_t aNumGlyphs, GlyphMetrics* aGlyphMetrics) = 0;
-
-  struct VariationSetting {
-    uint32_t mTag;
-    float    mValue;
-  };
 
   typedef void (*FontInstanceDataOutput)(const uint8_t* aData, uint32_t aLength, void* aBaton);
 
