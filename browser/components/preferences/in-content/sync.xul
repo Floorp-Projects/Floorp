@@ -96,7 +96,7 @@
                 <label id="fxaDisplayName" hidden="true"/>
                 <label id="fxaEmailAddress1"/>
                 <hbox class="fxaAccountBoxButtons">
-                  <button id="fxaUnlinkButton" label="&disconnect.label;" accesskey="&disconnect.accesskey;"/>
+                  <button id="fxaUnlinkButton" label="&disconnect2.label;" accesskey="&disconnect2.accesskey;"/>
                   <html:a id="verifiedManage" target="_blank"
                          accesskey="&verifiedManage.accesskey;"
                          onkeypress="gSyncPane.openManageFirefoxAccount(event);"><!--
@@ -149,7 +149,8 @@
           </deck>
         </groupbox>
         <groupbox id="syncOptions">
-          <caption><label>&signedIn.engines.label;</label></caption>
+          <caption><label>&signedIn.settings.label;</label></caption>
+          <description>&signedIn.settings.description;</description>
           <hbox id="fxaSyncEngines">
             <vbox align="start" flex="1">
               <checkbox label="&engine.tabs.label2;"
