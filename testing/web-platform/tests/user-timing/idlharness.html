@@ -17,11 +17,9 @@
 <div id="log"></div>
 
 <pre id='untested_idl' style='display:none'>
-[Exposed=(Window,Worker)]
 interface Performance {
 };
 
-[Exposed=(Window,Worker)]
 interface PerformanceEntry {
 };
 </pre>
@@ -35,11 +33,9 @@ partial interface Performance {
     void clearMeasures(optional DOMString measureName);
 };
 
-[Exposed=(Window,Worker)]
 interface PerformanceMark : PerformanceEntry {
 };
 
-[Exposed=(Window,Worker)]
 interface PerformanceMeasure : PerformanceEntry {
 };
 

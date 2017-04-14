@@ -23,16 +23,16 @@ text5
 00:00:00.000 --> 00:00:01.000 position:1%,line-right
 text6
 
-00:00:00.000 --> 00:00:01.000 position:1% ,center
+00:00:00.000 --> 00:00:01.000 position:1%,middle
 text7
 
-NOTE invalid
-
-00:00:00.000 --> 00:00:01.000 position:1%,middle
-invalid8
+00:00:00.000 --> 00:00:01.000 position:1% ,center
+text8
 
 00:00:00.000 --> 00:00:01.000 position:1%, center
-invalid9
+text9
+
+NOTE invalid
 
 00:00:00.000 --> 00:00:01.000 position:-1%
 invalid10
