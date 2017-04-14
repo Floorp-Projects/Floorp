@@ -3,6 +3,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY  trackingProtectionHeader2.label      "Tracking Protection">
+<!ENTITY  trackingProtection.description       "Tracking is when companies collect information about you to build a profile and display content based on your browsing and personal data.">
+<!ENTITY  trackingProtection.radioGroupLabel   "Block known tracking companies from displaying content">
 <!ENTITY  trackingProtectionAlways.label       "Always">
 <!ENTITY  trackingProtectionAlways.accesskey   "y">
 <!ENTITY  trackingProtectionPrivate.label      "Only in private windows">
@@ -30,7 +32,7 @@
 
 <!ENTITY  locationBar.label             "Location Bar">
 
-<!ENTITY  locbar.suggest.label          "When using the location bar, suggest:">
+<!ENTITY  locbar.suggest2.label         "When using the location bar, suggest">
 <!ENTITY  locbar.history.label          "History">
 <!ENTITY  locbar.history.accesskey      "H">
 <!ENTITY  locbar.bookmarks.label        "Bookmarks">
@@ -40,8 +42,7 @@
 <!ENTITY  locbar.searches.label         "Related searches from the default search engine">
 <!ENTITY  locbar.searches.accesskey     "d">
 
-<!ENTITY  suggestionSettings.label      "Change preferences for search engine suggestions…">
-<!ENTITY  suggestionSettings.accesskey  "g">
+<!ENTITY  suggestionSettings2.label     "Change preferences for search engine suggestions">
 
 <!ENTITY  acceptCookies.label           "Accept cookies from sites">
 <!ENTITY  acceptCookies.accesskey       "A">
@@ -64,8 +65,8 @@
 <!ENTITY  showCookies.label             "Show Cookies…">
 <!ENTITY  showCookies.accesskey         "S">
 
-<!ENTITY  historyHeader.pre.label          "&brandShortName; will:">
-<!ENTITY  historyHeader.pre.accesskey      "w">
+<!ENTITY  historyHeader2.pre.label         "&brandShortName; will">
+<!ENTITY  historyHeader2.pre.accesskey     "w">
 <!ENTITY  historyHeader.remember.label     "Remember history">
 <!ENTITY  historyHeader.dontremember.label "Never remember history">
 <!ENTITY  historyHeader.custom.label       "Use custom settings for history">

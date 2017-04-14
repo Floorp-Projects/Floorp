@@ -88,6 +88,10 @@ var gPrivacyPane = {
    */
   _initBrowserContainers() {
     if (!Services.prefs.getBoolPref("privacy.userContext.ui.enabled")) {
+      // The browserContainersGroup element has its own internal padding that
+      // is visible even if the browserContainersbox is visible, so hide the whole
+      // groupbox if the feature is disabled to prevent a gap in the preferences.
+      document.getElementById("browserContainersGroup").setAttribute("data-hidden-from-search", "true");
       return;
     }
 
