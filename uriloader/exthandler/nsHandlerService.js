@@ -267,7 +267,7 @@ HandlerService.prototype = {
         handlerApp.name = handlerPrefs.name;                
 
         if (!this._isInHandlerArray(possibleHandlers, handlerApp)) {
-          possibleHandlers.appendElement(handlerApp, false);
+          possibleHandlers.appendElement(handlerApp);
         }
       }
 
@@ -515,7 +515,7 @@ HandlerService.prototype = {
     // include the preferred handler, so check if it's included as we build
     // the list of handlers, and, if it's not included, add it to the list.
     if (aPreferredHandler)
-      aPossibleHandlers.appendElement(aPreferredHandler, false);
+      aPossibleHandlers.appendElement(aPreferredHandler);
 
     var possibleHandlerTargets = this._getTargets(aInfoID, NC_POSSIBLE_APP);
 
@@ -528,7 +528,7 @@ HandlerService.prototype = {
       let possibleHandler = this._retrieveHandlerApp(possibleHandlerID);
       if (possibleHandler && (!aPreferredHandler ||
                               !possibleHandler.equals(aPreferredHandler)))
-        aPossibleHandlers.appendElement(possibleHandler, false);
+        aPossibleHandlers.appendElement(possibleHandler);
     }
   },
 
@@ -1169,7 +1169,7 @@ HandlerService.prototype = {
       else
         handler = this._protocolSvc.getProtocolHandlerInfo(type);
 
-      aHandlers.appendElement(handler, false);
+      aHandlers.appendElement(handler);
     }
   },
 
