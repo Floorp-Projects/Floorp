@@ -15,11 +15,9 @@ StaticAutoPtr<gfxVars> gfxVars::sInstance;
 StaticAutoPtr<nsTArray<gfxVars::VarBase*>> gfxVars::sVarList;
 
 void
-gfxVars::Initialize(const nsTArray<GfxVarUpdate>* aInitUpdates /* = nullptr */)
+gfxVars::Initialize()
 {
   if (sInstance) {
-    // We expect aInitUpdates to be provided before any other gfxVars operation.
-    MOZ_RELEASE_ASSERT(!aInitUpdates, "aInitUpdates should not be provided after any gfxVars operation");
     return;
   }
 
@@ -28,18 +26,14 @@ gfxVars::Initialize(const nsTArray<GfxVarUpdate>* aInitUpdates /* = nullptr */)
   sVarList = new nsTArray<gfxVars::VarBase*>();
   sInstance = new gfxVars;
 
-  // Note the GPU process is not handled here - it cannot send sync
+  // Like Preferences, we want content to synchronously get initial data on
+  // init. Note the GPU process is not handled here - it cannot send sync
   // messages, so instead the initial data is pushed down.
   if (XRE_IsContentProcess()) {
-    MOZ_RELEASE_ASSERT(aInitUpdates, "aInitUpdates must be provided in content process");
-    InfallibleTArray<GfxVarUpdate> initUpdates;
-    if (!aInitUpdates) {
-      // No provided initial updates, sync-request them from parent.
-      dom::ContentChild::GetSingleton()->SendGetGfxVars(&initUpdates);
-      aInitUpdates = &initUpdates;
-    }
-    for (const auto& varUpdate : *aInitUpdates) {
-      ApplyUpdate(varUpdate);
+    InfallibleTArray<GfxVarUpdate> vars;
+    dom::ContentChild::GetSingleton()->SendGetGfxVars(&vars);
+    for (const auto& var : vars) {
+      ApplyUpdate(var);
     }
   }
 }
