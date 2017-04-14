@@ -321,6 +321,7 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
   if (!WrBridge()->DPBegin(size.ToUnknownSize())) {
     return;
   }
+  DiscardCompositorAnimations();
   mRoot->StartPendingAnimations(mAnimationReadyTime);
 
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline());
@@ -417,6 +418,22 @@ WebRenderLayerManager::DiscardImages()
   }
   mImageKeys.clear();
 }
+
+void
+WebRenderLayerManager::AddCompositorAnimationsIdForDiscard(uint64_t aId)
+{
+  mDiscardedCompositorAnimationsIds.push_back(aId);
+}
+
+void
+WebRenderLayerManager::DiscardCompositorAnimations()
+{
+  for (auto id : mDiscardedCompositorAnimationsIds) {
+    WrBridge()->AddWebRenderParentCommand(OpRemoveCompositorAnimations(id));
+  }
+  mDiscardedCompositorAnimationsIds.clear();
+}
+
 
 void
 WebRenderLayerManager::Hold(Layer* aLayer)

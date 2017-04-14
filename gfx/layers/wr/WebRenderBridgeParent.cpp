@@ -429,6 +429,18 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
         }
         break;
       }
+      case WebRenderParentCommand::TOpRemoveCompositorAnimations: {
+        const OpRemoveCompositorAnimations& op = cmd.get_OpRemoveCompositorAnimations();
+        if (op.id()) {
+          uint64_t id = mWidget ? 0 : mPipelineId.mHandle;
+          CompositorAnimationStorage* storage =
+            mCompositorBridge->GetAnimationStorage(id);
+          if (storage) {
+            storage->ClearById(op.id());
+          }
+        }
+        break;
+      }
       default: {
         // other commands are handle on the child
         break;
