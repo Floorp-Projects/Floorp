@@ -17,7 +17,7 @@ function startTest()
   var dsm = Components.classes["@mozilla.org/dom/localStorage-manager;1"]
     .getService(Components.interfaces.nsIDOMStorageManager);
 
-  var uri = ios.newURI(url, "", null);
+  var uri = ios.newURI(url);
   var principal = ssm.createCodebasePrincipal(uri, {});
   var storage = dsm.createStorage(window, principal, "");
 
