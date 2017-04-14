@@ -616,8 +616,8 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
         NS_WARNING("Failed to get image container");
         return;
       }
-      uint64_t externalImageId = aLayer->SendImageContainer(container);
-      if (!externalImageId) {
+      Maybe<wr::ImageKey> key = aLayer->SendImageContainer(container, aParentCommands);
+      if (key.isNothing()) {
         return;
       }
 
@@ -631,14 +631,9 @@ nsImageRenderer::BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
       Rect clip = fill;
       Size gapSize((aRepeatSize.width - aDest.width) / appUnitsPerDevPixel,
                    (aRepeatSize.height - aDest.height) / appUnitsPerDevPixel);
-      WrImageKey key;
-      key.mNamespace = aLayer->WrBridge()->GetNamespace();
-      key.mHandle = aLayer->WrBridge()->GetNextResourceId();
-      aParentCommands.AppendElement(OpAddExternalImage(externalImageId, key));
-      aLayer->WrManager()->AddImageKeyForDiscard(key);
       aBuilder.PushImage(wr::ToWrRect(fill), aBuilder.BuildClipRegion(wr::ToWrRect(clip)),
                          wr::ToWrSize(dest.Size()), wr::ToWrSize(gapSize),
-                         wr::ImageRendering::Auto, key);
+                         wr::ImageRendering::Auto, key.value());
       break;
     }
     default:
