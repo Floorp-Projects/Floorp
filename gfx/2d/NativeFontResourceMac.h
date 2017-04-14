@@ -20,13 +20,12 @@ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(NativeFontResourceMac)
 
   static already_AddRefed<NativeFontResourceMac>
-    Create(uint8_t *aFontData, uint32_t aDataLength,
-           uint32_t aVariationCount,
-           const ScaledFont::VariationSetting* aVariations);
+    Create(uint8_t *aFontData, uint32_t aDataLength);
 
-  already_AddRefed<ScaledFont>
-    CreateScaledFont(uint32_t aIndex, Float aGlyphSize,
-                     const uint8_t* aInstanceData, uint32_t aInstanceDataLength) final;
+  already_AddRefed<UnscaledFont>
+    CreateUnscaledFont(uint32_t aIndex,
+                       const uint8_t* aInstanceData,
+                       uint32_t aInstanceDataLength) final;
 
   ~NativeFontResourceMac()
   {

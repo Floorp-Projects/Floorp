@@ -36,6 +36,18 @@ public:
 
   CGFontRef GetFont() const { return mFont; }
 
+  bool GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton) override;
+
+  already_AddRefed<ScaledFont>
+    CreateScaledFont(Float aGlyphSize,
+                     const uint8_t* aInstanceData,
+                     uint32_t aInstanceDataLength) override;
+
+  static CGFontRef
+    CreateCGFontWithVariations(CGFontRef aFont,
+                               uint32_t aVariationCount,
+                               const ScaledFont::VariationSetting* aVariations);
+
 private:
   CGFontRef mFont;
 };
