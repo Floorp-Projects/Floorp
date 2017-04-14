@@ -178,7 +178,7 @@ let ProfileAutocomplete = {
     this._factory.register(AutofillProfileAutoCompleteSearch);
     this._registered = true;
 
-    Services.obs.addObserver(this, "autocomplete-will-enter-text", false);
+    Services.obs.addObserver(this, "autocomplete-will-enter-text");
   },
 
   ensureUnregistered() {

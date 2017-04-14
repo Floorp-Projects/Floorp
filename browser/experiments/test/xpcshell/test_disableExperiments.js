@@ -63,7 +63,7 @@ add_task(function* test_disableExperiments() {
   let observerFireCount = 0;
   let expectedObserverFireCount = 0;
   let observer = () => ++observerFireCount;
-  Services.obs.addObserver(observer, OBSERVER_TOPIC, false);
+  Services.obs.addObserver(observer, OBSERVER_TOPIC);
 
   // Dates the following tests are based on.
 

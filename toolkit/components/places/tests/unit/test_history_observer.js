@@ -32,7 +32,7 @@ function onNotify(callback) {
       callback.apply(this, arguments);
       resolve();
     };
-    PlacesUtils.history.addObserver(obs, false);
+    PlacesUtils.history.addObserver(obs);
   });
 }
 
@@ -132,7 +132,7 @@ add_task(function* test_multiple_onVisit() {
         }
       }
     };
-    PlacesUtils.history.addObserver(observer, false);
+    PlacesUtils.history.addObserver(observer);
   });
   yield PlacesTestUtils.addVisits([
     { uri: testuri, transition: TRANSITION_LINK },

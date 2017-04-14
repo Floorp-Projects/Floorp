@@ -566,7 +566,7 @@ PerformanceMonitor.makeId = function() {
 // release the probes unless `dispose()` has already been called.
 Services.obs.addObserver(function(subject, topic, value) {
   PerformanceMonitor.dispose(value);
-}, FINALIZATION_TOPIC, false);
+}, FINALIZATION_TOPIC);
 
 // Public API
 this.PerformanceStats = {

@@ -151,7 +151,7 @@ add_test(function test_invalidEmailCase_signIn() {
     }
   }
 
-  Services.obs.addObserver(onMessage, "mozFxAccountsChromeEvent", false);
+  Services.obs.addObserver(onMessage, "mozFxAccountsChromeEvent");
 
   SystemAppProxy._sendCustomEvent = mockSendCustomEvent;
 

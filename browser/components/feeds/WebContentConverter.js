@@ -841,7 +841,7 @@ WebContentConverterRegistrar.prototype = {
     let os = Services.obs;
     switch (topic) {
     case "app-startup":
-      os.addObserver(this, "browser-ui-startup-complete", false);
+      os.addObserver(this, "browser-ui-startup-complete");
       break;
     case "browser-ui-startup-complete":
       os.removeObserver(this, "browser-ui-startup-complete");

@@ -322,7 +322,7 @@ const ProfilerManager = (function () {
     registerEventListeners: function () {
       if (!this._eventsRegistered) {
         PROFILER_SYSTEM_EVENTS.forEach(eventName =>
-          Services.obs.addObserver(this, eventName, false));
+          Services.obs.addObserver(this, eventName));
         this._eventsRegistered = true;
       }
     },

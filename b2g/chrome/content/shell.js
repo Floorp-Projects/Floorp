@@ -222,7 +222,7 @@ var shell = {
 
         Services.obs.removeObserver(observer, topic);
       }
-    }, "network-connection-state-changed", false);
+    }, "network-connection-state-changed");
   },
 
   get homeURL() {
@@ -758,22 +758,22 @@ var shell = {
 Services.obs.addObserver(function onFullscreenOriginChange(subject, topic, data) {
   shell.sendChromeEvent({ type: "fullscreenoriginchange",
                           fullscreenorigin: data });
-}, "fullscreen-origin-change", false);
+}, "fullscreen-origin-change");
 
 Services.obs.addObserver(function onBluetoothVolumeChange(subject, topic, data) {
   shell.sendChromeEvent({
     type: "bluetooth-volumeset",
     value: data
   });
-}, 'bluetooth-volume-change', false);
+}, 'bluetooth-volume-change');
 
 Services.obs.addObserver(function(subject, topic, data) {
   shell.sendCustomEvent('mozmemorypressure');
-}, 'memory-pressure', false);
+}, 'memory-pressure');
 
 Services.obs.addObserver(function(subject, topic, data) {
   shell.notifyEventListenerReady();
-}, 'system-message-listener-ready', false);
+}, 'system-message-listener-ready');
 
 var permissionMap = new Map([
   ['unknown', Services.perms.UNKNOWN_ACTION],
@@ -903,14 +903,14 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
         shell.reportCrash(false, props.getProperty("dumpID"));
       }
     },
-    "ipc:content-shutdown", false);
+    "ipc:content-shutdown");
 })();
 
 var CaptivePortalLoginHelper = {
   init: function init() {
-    Services.obs.addObserver(this, 'captive-portal-login', false);
-    Services.obs.addObserver(this, 'captive-portal-login-abort', false);
-    Services.obs.addObserver(this, 'captive-portal-login-success', false);
+    Services.obs.addObserver(this, 'captive-portal-login');
+    Services.obs.addObserver(this, 'captive-portal-login-abort');
+    Services.obs.addObserver(this, 'captive-portal-login-success');
   },
   handleEvent: function handleEvent(detail) {
     Services.captivePortalDetector.cancelLogin(detail.id);
@@ -997,7 +997,7 @@ window.addEventListener('ContentStart', function update_onContentStart() {
         prompt: promptWarning
       });
     }
-}, "geolocation-device-events", false);
+}, "geolocation-device-events");
 })();
 
 (function headphonesStatusTracker() {
@@ -1006,7 +1006,7 @@ window.addEventListener('ContentStart', function update_onContentStart() {
       type: 'headphones-status-changed',
       state: aData
     });
-}, "headphones-status-changed", false);
+}, "headphones-status-changed");
 })();
 
 (function audioChannelChangedTracker() {
@@ -1015,7 +1015,7 @@ window.addEventListener('ContentStart', function update_onContentStart() {
       type: 'audio-channel-changed',
       channel: aData
     });
-}, "audio-channel-changed", false);
+}, "audio-channel-changed");
 })();
 
 (function defaultVolumeChannelChangedTracker() {
@@ -1024,7 +1024,7 @@ window.addEventListener('ContentStart', function update_onContentStart() {
       type: 'default-volume-channel-changed',
       channel: aData
     });
-}, "default-volume-channel-changed", false);
+}, "default-volume-channel-changed");
 })();
 
 (function visibleAudioChannelChangedTracker() {
@@ -1034,7 +1034,7 @@ window.addEventListener('ContentStart', function update_onContentStart() {
       channel: aData
     });
     shell.visibleNormalAudioActive = (aData == 'normal');
-}, "visible-audio-channel-changed", false);
+}, "visible-audio-channel-changed");
 })();
 
 (function recordingStatusTracker() {
@@ -1133,8 +1133,8 @@ window.addEventListener('ContentStart', function update_onContentStart() {
       delete gRecordingActiveProcesses[processId];
     }
   };
-  Services.obs.addObserver(recordingHandler, 'recording-device-events', false);
-  Services.obs.addObserver(recordingHandler, 'recording-device-ipc-events', false);
+  Services.obs.addObserver(recordingHandler, 'recording-device-events');
+  Services.obs.addObserver(recordingHandler, 'recording-device-ipc-events');
 
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     // send additional recording events if content process is being killed
@@ -1142,7 +1142,7 @@ window.addEventListener('ContentStart', function update_onContentStart() {
     if (gRecordingActiveProcesses.hasOwnProperty(processId)) {
       Services.obs.notifyObservers(aSubject, 'recording-device-ipc-events', 'content-shutdown');
     }
-  }, 'ipc:content-shutdown', false);
+  }, 'ipc:content-shutdown');
 })();
 
 (function volumeStateTracker() {
@@ -1151,7 +1151,7 @@ window.addEventListener('ContentStart', function update_onContentStart() {
       type: 'volume-state-changed',
       active: (aData == 'Shared')
     });
-}, 'volume-state-changed', false);
+}, 'volume-state-changed');
 })();
 
 if (isGonk) {
@@ -1229,12 +1229,12 @@ Services.obs.addObserver(function resetProfile(subject, topic, data) {
       }
     }
   },
-  'profile-before-change-telemetry', false);
+  'profile-before-change-telemetry');
 
   let appStartup = Cc['@mozilla.org/toolkit/app-startup;1']
                      .getService(Ci.nsIAppStartup);
   appStartup.quit(Ci.nsIAppStartup.eForceQuit);
-}, 'b2g-reset-profile', false);
+}, 'b2g-reset-profile');
 
 var showInstallScreen;
 

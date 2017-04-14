@@ -158,7 +158,7 @@ function CreatePocketWidget(reason) {
 // When the context menu is opened check if we need to build and enable pocket UI.
 var PocketContextMenu = {
   init() {
-    Services.obs.addObserver(this, "on-build-contextmenu", false);
+    Services.obs.addObserver(this, "on-build-contextmenu");
   },
   shutdown() {
     Services.obs.removeObserver(this, "on-build-contextmenu");
@@ -487,7 +487,7 @@ function startup(data, reason) {
       Services.prefs.clearUserPref("browser.pocket.enabled");
     }
     // watch pref change and enable/disable if necessary
-    Services.prefs.addObserver("extensions.pocket.enabled", prefObserver, false);
+    Services.prefs.addObserver("extensions.pocket.enabled", prefObserver);
     if (!Services.prefs.getBoolPref("extensions.pocket.enabled"))
       return;
     PocketOverlay.startup(reason);

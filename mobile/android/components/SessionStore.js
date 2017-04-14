@@ -114,18 +114,18 @@ SessionStore.prototype = {
     this._updateMaxTabsUndo();
     Services.prefs.addObserver(PREFS_MAX_TABS_UNDO, () => {
       this._updateMaxTabsUndo();
-    }, false);
+    });
 
     // Copy changes in Gecko settings to their Java counterparts,
     // so the startup code can access them
     Services.prefs.addObserver(PREFS_RESTORE_FROM_CRASH, function() {
       SharedPreferences.forApp().setBoolPref(PREFS_RESTORE_FROM_CRASH,
         Services.prefs.getBoolPref(PREFS_RESTORE_FROM_CRASH));
-    }, false);
+    });
     Services.prefs.addObserver(PREFS_MAX_CRASH_RESUMES, function() {
       SharedPreferences.forApp().setIntPref(PREFS_MAX_CRASH_RESUMES,
         Services.prefs.getIntPref(PREFS_MAX_CRASH_RESUMES));
-    }, false);
+    });
   },
 
   _updateMaxTabsUndo: function ss_updateMaxTabsUndo() {
@@ -191,7 +191,7 @@ SessionStore.prototype = {
               this._startupRestoreFinished = true;
               log("startupRestoreFinished = true (through notification)");
           }).bind(this);
-          Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
+          Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored");
 
           // Do a restore, triggered by Java
           this.restoreLastSession(data.sessionString);

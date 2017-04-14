@@ -60,8 +60,8 @@ var PluginProvider = {
   plugins: null,
 
   startup() {
-    Services.obs.addObserver(this, LIST_UPDATED_TOPIC, false);
-    Services.obs.addObserver(this, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED, false);
+    Services.obs.addObserver(this, LIST_UPDATED_TOPIC);
+    Services.obs.addObserver(this, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
   },
 
   /**

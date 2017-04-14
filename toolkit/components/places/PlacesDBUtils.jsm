@@ -759,7 +759,7 @@ this.PlacesDBUtils = {
       Services.obs.removeObserver(arguments.callee, aTopic);
       tasks.log("+ Database cleaned up");
       PlacesDBUtils._executeTasks(tasks);
-    }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
+    }, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
 
     // Force an orphans expiration step.
     expiration.observe(null, "places-debug-start-expiration", 0);

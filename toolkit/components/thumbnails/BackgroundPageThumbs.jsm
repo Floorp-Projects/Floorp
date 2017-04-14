@@ -120,8 +120,8 @@ const BackgroundPageThumbs = {
           Services.obs.removeObserver(observe, "page-thumbnail:error");
         }
       }
-      Services.obs.addObserver(observe, "page-thumbnail:create", false);
-      Services.obs.addObserver(observe, "page-thumbnail:error", false);
+      Services.obs.addObserver(observe, "page-thumbnail:create");
+      Services.obs.addObserver(observe, "page-thumbnail:error");
     });
     try {
       this.capture(url, options);
@@ -336,8 +336,7 @@ Services.prefs.addObserver(ABOUT_NEWTAB_SEGREGATION_PREF,
     if (aTopic == "nsPref:changed" && aData == ABOUT_NEWTAB_SEGREGATION_PREF) {
       BackgroundPageThumbs.renewThumbnailBrowser();
     }
-  },
-  false);
+  });
 
 Object.defineProperty(this, "BackgroundPageThumbs", {
   value: BackgroundPageThumbs,

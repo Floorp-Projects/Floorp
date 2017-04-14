@@ -19,7 +19,7 @@ function load_blocklist(file, aCallback) {
     Services.obs.removeObserver(arguments.callee, "blocklist-updated");
 
     do_execute_soon(aCallback);
-  }, "blocklist-updated", false);
+  }, "blocklist-updated");
 
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
                              gPort + "/data/" + file);
@@ -43,19 +43,19 @@ function run_test() {
     do_check_eq(aSubject.getAttribute("testattr"), "GFX");
     do_check_eq(aSubject.childNodes.length, 2);
     gSawGFX = true;
-  }, "blocklist-data-gfxItems", false);
+  }, "blocklist-data-gfxItems");
 
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     do_check_true(aSubject instanceof AM_Ci.nsIDOMElement);
     do_check_eq(aSubject.getAttribute("testattr"), "FOO");
     do_check_eq(aSubject.childNodes.length, 3);
     gSawTest = true;
-  }, "blocklist-data-testItems", false);
+  }, "blocklist-data-testItems");
 
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     do_check_true(gSawGFX);
     do_check_true(gSawTest);
-  }, "blocklist-data-fooItems", false);
+  }, "blocklist-data-fooItems");
 
   // Need to wait for the blocklist to load; Bad Things happen if the test harness
   // shuts down AddonManager before the blocklist service is done telling it about

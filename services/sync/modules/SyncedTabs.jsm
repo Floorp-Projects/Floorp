@@ -228,12 +228,12 @@ let SyncedTabsInternal = {
   },
 };
 
-Services.obs.addObserver(SyncedTabsInternal, "weave:engine:sync:finish", false);
-Services.obs.addObserver(SyncedTabsInternal, "weave:service:start-over", false);
+Services.obs.addObserver(SyncedTabsInternal, "weave:engine:sync:finish");
+Services.obs.addObserver(SyncedTabsInternal, "weave:service:start-over");
 // Observe the pref the indicates the state of the tabs engine has changed.
 // This will force consumers to re-evaluate the state of sync and update
 // accordingly.
-Services.prefs.addObserver("services.sync.engine.tabs", SyncedTabsInternal, false);
+Services.prefs.addObserver("services.sync.engine.tabs", SyncedTabsInternal);
 
 // The public interface.
 this.SyncedTabs = {

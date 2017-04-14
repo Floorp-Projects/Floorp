@@ -97,7 +97,7 @@ function addDevice() {
     Assert.equal(device.type, testDevice.type, 'expected device type');
 
     run_next_test();
-  }, 'presentation-device-change', false);
+  }, 'presentation-device-change');
   manager.QueryInterface(Ci.nsIPresentationDeviceListener).addDevice(testDevice);
 }
 
@@ -122,7 +122,7 @@ function updateDevice() {
     Assert.equal(device.type, testDevice.type, 'expected device type');
 
     run_next_test();
-  }, 'presentation-device-change', false);
+  }, 'presentation-device-change');
   testDevice.name = 'updated-name';
   manager.QueryInterface(Ci.nsIPresentationDeviceListener).updateDevice(testDevice);
 }
@@ -151,7 +151,7 @@ function sessionRequest() {
     Assert.equal(request.presentationId, testPresentationId, 'expected presentation Id');
 
     run_next_test();
-  }, 'presentation-session-request', false);
+  }, 'presentation-session-request');
   manager.QueryInterface(Ci.nsIPresentationDeviceListener)
          .onSessionRequest(testDevice, testUrl, testPresentationId, testControlChannel);
 }
@@ -171,7 +171,7 @@ function terminateRequest() {
     Assert.equal(request.isFromReceiver, testIsFromReceiver, 'expected isFromReceiver');
 
     run_next_test();
-  }, 'presentation-terminate-request', false);
+  }, 'presentation-terminate-request');
   manager.QueryInterface(Ci.nsIPresentationDeviceListener)
          .onTerminateRequest(testDevice, testPresentationId,
                              testControlChannel, testIsFromReceiver);
@@ -191,7 +191,7 @@ function reconnectRequest() {
     Assert.equal(request.presentationId, testPresentationId, 'expected presentation Id');
 
     run_next_test();
-  }, 'presentation-reconnect-request', false);
+  }, 'presentation-reconnect-request');
   manager.QueryInterface(Ci.nsIPresentationDeviceListener)
          .onReconnectRequest(testDevice, testUrl, testPresentationId, testControlChannel);
 }
@@ -212,7 +212,7 @@ function removeDevice() {
     Assert.equal(devices.length, 0, 'expect 0 available device');
 
     run_next_test();
-  }, 'presentation-device-change', false);
+  }, 'presentation-device-change');
   manager.QueryInterface(Ci.nsIPresentationDeviceListener).removeDevice(testDevice);
 }
 

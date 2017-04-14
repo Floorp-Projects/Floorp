@@ -131,8 +131,8 @@ add_task(function* test_experiments_api() {
     }
   };
 
-  Services.obs.addObserver(observer, "webext-api-loaded", false);
-  Services.obs.addObserver(observer, "webext-api-hello", false);
+  Services.obs.addObserver(observer, "webext-api-loaded");
+  Services.obs.addObserver(observer, "webext-api-hello");
   do_register_cleanup(() => {
     Services.obs.removeObserver(observer, "webext-api-loaded");
     Services.obs.removeObserver(observer, "webext-api-hello");

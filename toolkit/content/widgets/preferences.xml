@@ -127,7 +127,7 @@
           return;
 
         this.preferences.rootBranchInternal
-            .addObserver(this.name, this.preferences, false);
+            .addObserver(this.name, this.preferences);
         // In non-instant apply mode, we must try and use the last saved state
         // from any previous opens of a child dialog instead of the value from
         // preferences, to pick up any edits a user may have made.
