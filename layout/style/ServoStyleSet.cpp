@@ -420,20 +420,26 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
 }
 
 already_AddRefed<nsStyleContext>
-ServoStyleSet::ResolveTransientStyle(Element* aElement, CSSPseudoElementType aType)
+ServoStyleSet::ResolveTransientStyle(Element* aElement,
+                                     nsIAtom* aPseudoTag,
+                                     CSSPseudoElementType aPseudoType)
+{
+  RefPtr<ServoComputedValues> computedValues =
+    ResolveTransientServoStyle(aElement, aPseudoTag);
+
+  return GetContext(computedValues.forget(),
+                    nullptr,
+                    aPseudoTag,
+                    aPseudoType, nullptr);
+}
+
+already_AddRefed<ServoComputedValues>
+ServoStyleSet::ResolveTransientServoStyle(Element* aElement,
+                                          nsIAtom* aPseudoTag)
 {
   PreTraverseSync();
 
-  nsIAtom* pseudoTag = nullptr;
-  if (aType != CSSPseudoElementType::NotPseudo) {
-    pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
-  }
-
-  RefPtr<ServoComputedValues> computedValues =
-    ResolveStyleLazily(aElement, pseudoTag);
-
-  return GetContext(computedValues.forget(), nullptr, pseudoTag, aType,
-                    nullptr);
+  return ResolveStyleLazily(aElement, aPseudoTag);
 }
 
 // aFlags is an nsStyleSet flags bitfield
