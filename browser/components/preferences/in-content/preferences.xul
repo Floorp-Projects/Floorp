@@ -118,10 +118,10 @@
                     class="category"
                     value="paneApplications"
                     helpTopic="prefs-applications"
-                    tooltiptext="&paneDownloadLinks.title;"
+                    tooltiptext="&paneFilesApplications.title;"
                     align="center">
         <image class="category-icon"/>
-        <label class="category-name" flex="1">&paneDownloadLinks.title;</label>
+        <label class="category-name" flex="1">&paneFilesApplications.title;</label>
       </richlistitem>
 
       <richlistitem id="category-containers"
