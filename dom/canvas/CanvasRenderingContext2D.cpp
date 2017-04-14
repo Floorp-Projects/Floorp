@@ -26,6 +26,7 @@
 #include "nsError.h"
 
 #include "nsCSSParser.h"
+#include "nsCSSPseudoElements.h"
 #include "mozilla/css/StyleRule.h"
 #include "mozilla/css/Declaration.h"
 #include "nsComputedDOMStyle.h"
@@ -2838,6 +2839,77 @@ CreateDeclarationForServo(nsCSSPropertyID aProperty,
   }
 
   return servoDeclarations.forget();
+}
+
+static already_AddRefed<RawServoDeclarationBlock>
+CreateFontDeclarationForServo(const nsAString& aFont,
+                              nsIDocument* aDocument)
+{
+  return CreateDeclarationForServo(eCSSProperty_font, aFont, aDocument);
+}
+
+static already_AddRefed<ServoComputedValues>
+GetFontStyleForServo(Element* aElement, const nsAString& aFont,
+                     nsIPresShell* aPresShell,
+                     nsAString& aOutUsedFont,
+                     ErrorResult& aError)
+{
+  MOZ_ASSERT(aPresShell->StyleSet()->IsServo());
+
+  RefPtr<RawServoDeclarationBlock> declarations =
+    CreateFontDeclarationForServo(aFont, aPresShell->GetDocument());
+  if (!declarations) {
+    // We got a syntax error.  The spec says this value must be ignored.
+    return nullptr;
+  }
+
+  // In addition to unparseable values, the spec says we need to reject
+  // 'inherit' and 'initial'. The easiest way to check for this is to look
+  // at font-size-adjust, which the font shorthand resets to 'none'.
+  if (Servo_DeclarationBlock_HasCSSWideKeyword(declarations,
+                                               eCSSProperty_font_size_adjust)) {
+    return nullptr;
+  }
+
+  ServoStyleSet* styleSet = aPresShell->StyleSet()->AsServo();
+
+  RefPtr<ServoComputedValues> parentStyle;
+  // have to get a parent style context for inherit-like relative
+  // values (2em, bolder, etc.)
+  if (aElement && aElement->IsInUncomposedDoc()) {
+    // Inherit from the canvas element.
+    aPresShell->FlushPendingNotifications(FlushType::Style);
+    // We need to use ResolveTransientServoStyle, which involves traversal,
+    // instead of ResolveServoStyle() because we need up-to-date style even if
+    // the canvas element is display:none.
+    parentStyle = styleSet->ResolveTransientServoStyle(aElement, nullptr);
+  } else {
+    RefPtr<RawServoDeclarationBlock> declarations =
+      CreateFontDeclarationForServo(NS_LITERAL_STRING("10px sans-serif"),
+                                    aPresShell->GetDocument());
+    MOZ_ASSERT(declarations);
+
+    parentStyle = aPresShell->StyleSet()->AsServo()->
+      ResolveForDeclarations(nullptr, declarations);
+  }
+
+  MOZ_RELEASE_ASSERT(parentStyle, "Should have a valid parent style");
+
+  MOZ_ASSERT(!aPresShell->IsDestroying(),
+             "GetFontParentStyleContext should have returned an error if the presshell is being destroyed.");
+
+  RefPtr<ServoComputedValues> sc =
+    styleSet->ResolveForDeclarations(parentStyle, declarations);
+
+  // The font getter is required to be reserialized based on what we
+  // parsed (including having line-height removed).  (Older drafts of
+  // the spec required font sizes be converted to pixels, but that no
+  // longer seems to be required.)
+  Servo_DeclarationBlock_SerializeOneValue(declarations,
+                                           eCSSProperty_font,
+                                           &aOutUsedFont);
+
+  return sc.forget();
 }
 
 static already_AddRefed<Declaration>
