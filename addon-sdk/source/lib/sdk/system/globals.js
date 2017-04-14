@@ -14,6 +14,8 @@ var { stdout } = require('../system');
 var ScriptError = CC('@mozilla.org/scripterror;1', 'nsIScriptError');
 var consoleService = Cc['@mozilla.org/consoleservice;1'].getService(Ci.nsIConsoleService);
 
+exports = module.exports = {};
+
 // On windows dump does not writes into stdout so cfx can't read thous dumps.
 // To workaround this issue we write to a special file from which cfx will
 // read and print to the console.

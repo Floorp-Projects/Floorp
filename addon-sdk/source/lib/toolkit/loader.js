@@ -473,11 +473,6 @@ const load = iced(function load(loader, module) {
     // Create a new object in this sandbox, that will be used as
     // the scope object for this particular module
     sandbox = new loader.sharedGlobalSandbox.Object();
-    // Inject all expected globals in the scope object
-    getOwnIdentifiers(globals).forEach(function(name) {
-      descriptors[name] = getOwnPropertyDescriptor(globals, name)
-      descriptors[name].configurable = true;
-    });
     descriptors.lazyRequire = {
       configurable: true,
       value: lazyRequire.bind(sandbox),
@@ -486,6 +481,20 @@ const load = iced(function load(loader, module) {
       configurable: true,
       value: lazyRequireModule.bind(sandbox),
     };
+
+    if ("console" in globals) {
+      descriptors.console = {
+        configurable: true,
+        get() {
+          return globals.console;
+        },
+      };
+    }
+    let define = Object.getOwnPropertyDescriptor(globals, "define");
+    if (define && define.value)
+      descriptors.define = define;
+    if ("DOMParser" in globals)
+      descriptors.DOMParser = Object.getOwnPropertyDescriptor(globals, "DOMParser");
     Object.defineProperties(sandbox, descriptors);
   }
   else {
@@ -1137,8 +1146,17 @@ function Loader(options) {
       addonID: options.id,
       URI: "Addon-SDK"
     },
-    prototype: options.sandboxPrototype || {}
+    prototype: options.sandboxPrototype || globals,
   });
+
+  if (options.sandboxPrototype) {
+    // If we were given a sandboxPrototype, we have to define the globals on
+    // the sandbox directly. Note that this will not work for callers who
+    // depend on being able to add globals after the loader was created.
+    for (let name of getOwnIdentifiers(globals))
+      Object.defineProperty(sharedGlobalSandbox, name,
+                            getOwnPropertyDescriptor(globals, name));
+  }
 
   // Loader object is just a representation of a environment
   // state. We freeze it and mark make it's properties non-enumerable
