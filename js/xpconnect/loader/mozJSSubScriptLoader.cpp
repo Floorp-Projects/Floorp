@@ -80,13 +80,12 @@ public:
 #define LOAD_ERROR_NOSPEC "Failed to get URI spec.  This is bad."
 #define LOAD_ERROR_CONTENTTOOBIG "ContentLength is too large"
 
-mozJSSubScriptLoader::mozJSSubScriptLoader() : mSystemPrincipal(nullptr)
+mozJSSubScriptLoader::mozJSSubScriptLoader()
 {
 }
 
 mozJSSubScriptLoader::~mozJSSubScriptLoader()
 {
-    /* empty */
 }
 
 NS_IMPL_ISUPPORTS(mozJSSubScriptLoader, mozIJSSubScriptLoader)
@@ -275,12 +274,12 @@ private:
         mozilla::DropJSObjects(this);
     }
 
-    RefPtr<nsIChannel>      mChannel;
-    Heap<JSObject*>           mTargetObj;
-    RefPtr<Promise>         mPromise;
-    nsString                  mCharset;
-    bool                      mReuseGlobal;
-    bool                      mCache;
+    RefPtr<nsIChannel> mChannel;
+    Heap<JSObject*> mTargetObj;
+    RefPtr<Promise> mPromise;
+    nsString mCharset;
+    bool mReuseGlobal;
+    bool mCache;
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(AsyncScriptLoader)
@@ -332,8 +331,8 @@ public:
     }
 
 private:
-    AutoEntryScript&          mAutoEntryScript;
-    RefPtr<Promise>           mPromise;
+    AutoEntryScript& mAutoEntryScript;
+    RefPtr<Promise> mPromise;
     nsCOMPtr<nsIGlobalObject> mGlobalObject;
 };
 
