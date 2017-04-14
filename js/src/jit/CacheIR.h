@@ -237,6 +237,7 @@ extern const char* CacheKindNames[];
     _(LoadFrameArgumentResult)            \
     _(LoadEnvironmentFixedSlotResult)     \
     _(LoadEnvironmentDynamicSlotResult)   \
+    _(LoadObjectResult)                   \
     _(CallScriptedGetterResult)           \
     _(CallNativeGetterResult)             \
     _(CallProxyGetResult)                 \
@@ -892,6 +893,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::LoadEnvironmentDynamicSlotResult, obj);
         addStubField(offset, StubField::Type::RawWord);
     }
+    void loadObjectResult(ObjOperandId obj) {
+        writeOpWithOperandId(CacheOp::LoadObjectResult, obj);
+    }
 
     void typeMonitorResult() {
         writeOp(CacheOp::TypeMonitorResult);
@@ -1114,6 +1118,8 @@ class MOZ_RAII BindNameIRGenerator : public IRGenerator
 {
     HandleObject env_;
     HandlePropertyName name_;
+
+    bool tryAttachGlobalName(ObjOperandId objId, HandleId id);
 
   public:
     BindNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
