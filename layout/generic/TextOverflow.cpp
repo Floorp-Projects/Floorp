@@ -490,6 +490,24 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
 
   LogicalRect contentArea = mContentArea;
   bool snapStart = true, snapEnd = true;
+  nscoord startEdge, endEdge;
+  if (aLine->GetFloatEdges(&startEdge, &endEdge)) {
+    // Narrow the |contentArea| to account for any floats on this line, and
+    // don't bother with the snapping quirk on whichever side(s) we narrow.
+    nscoord delta = endEdge - contentArea.IEnd(mBlockWM);
+    if (delta < 0) {
+      nscoord newSize = contentArea.ISize(mBlockWM) + delta;
+      contentArea.ISize(mBlockWM) = std::max(nscoord(0), newSize);
+      snapEnd = false;
+    }
+    delta = startEdge - contentArea.IStart(mBlockWM);
+    if (delta > 0) {
+      contentArea.IStart(mBlockWM) = startEdge;
+      nscoord newSize = contentArea.ISize(mBlockWM) - delta;
+      contentArea.ISize(mBlockWM) = std::max(nscoord(0), newSize);
+      snapStart = false;
+    }
+  }
   // Save the non-snapped area since that's what we want to use when placing
   // the markers (our return value).  The snapped area is only for analysis.
   LogicalRect nonSnappedContentArea = contentArea;
