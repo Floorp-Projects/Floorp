@@ -237,7 +237,7 @@ VideoData::UpdateTimestamp(const TimeUnit& aTimestamp)
   auto updatedDuration = GetEndTime() - aTimestamp;
   MOZ_ASSERT(!updatedDuration.IsNegative());
 
-  mTime = aTimestamp.ToMicroseconds();
+  mTime = aTimestamp;
   mDuration = updatedDuration;
 }
 

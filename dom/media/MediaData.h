@@ -294,7 +294,7 @@ public:
             uint32_t aFrames)
     : mType(aType)
     , mOffset(aOffset)
-    , mTime(aTimestamp)
+    , mTime(media::TimeUnit::FromMicroseconds(aTimestamp))
     , mTimecode(media::TimeUnit::FromMicroseconds(aTimestamp))
     , mDuration(media::TimeUnit::FromMicroseconds(aDuration))
     , mFrames(aFrames)
@@ -308,8 +308,8 @@ public:
   // Approximate byte offset where this data was demuxed from its media.
   int64_t mOffset;
 
-  // Start time of sample, in microseconds.
-  int64_t mTime;
+  // Start time of sample.
+  media::TimeUnit mTime;
 
   // Codec specific internal time code. For Ogg based codecs this is the
   // granulepos.
@@ -325,13 +325,13 @@ public:
 
   media::TimeUnit GetEndTime() const
   {
-    return media::TimeUnit::FromMicroseconds(mTime) + mDuration;
+    return mTime + mDuration;
   }
 
   bool AdjustForStartTime(int64_t aStartTime)
   {
-    mTime = mTime - aStartTime;
-    return mTime >= 0;
+    mTime = mTime - media::TimeUnit::FromMicroseconds(aStartTime);
+    return !mTime.IsNegative();
   }
 
   template <typename ReturnType>
@@ -352,7 +352,6 @@ protected:
   MediaData(Type aType, uint32_t aFrames)
     : mType(aType)
     , mOffset(0)
-    , mTime(0)
     , mFrames(aFrames)
     , mKeyframe(false)
   {
