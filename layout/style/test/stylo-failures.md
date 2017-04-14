@@ -271,12 +271,8 @@ to mochitest command.
     * test_priority_preservation.html `border-radius` [4]
     * test_value_storage.html `border-radius:` [64]
     * test_shorthand_property_getters.html `should condense to shortest possible` [6]
-  * background-position is serialized to invalid value sometimes bug 1355017
-    * test_shorthand_property_getters.html `background-position` [1]
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
-  * background-position invalid 3-value form **issue to be filed**
-    * test_shorthand_property_getters.html `should serialize to 4-value` [2]
   * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
   * :not(*) doesn't serialize properly servo/servo#16017
     * test_selectors.html `:not()` [8]
