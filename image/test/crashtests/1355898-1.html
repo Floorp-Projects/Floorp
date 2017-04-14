@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+  <head>
+    <script>
+// Test that texImage2D on an animated image doesn't assert.
+
+var gl;
+
+function start() {
+  canvas = document.getElementById("glcanvas");
+  gl = null;
+
+  try {
+    gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+  }
+  catch(e) {
+  }
+
+  if (!gl) {
+    return;
+  }
+
+  var texture = gl.createTexture();
+  var image = new Image();
+  image.onload = function() { handleTextureLoaded(image, texture); }
+  image.src = "1249576-1.png"; // an animated png
+}
+
+function handleTextureLoaded(image, texture) {
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+}
+    </script>
+  </head>
+
+  <body onload="start()">
+    <canvas id="glcanvas" width="640" height="480">
+      Your browser doesn't appear to support the <code>&lt;canvas&gt;</code> element.
+    </canvas>
+  </body>
+</html>
