@@ -156,7 +156,7 @@ function runTest() {
         return;
       }
       let test = testDatas.shift();
-      let uri = ios.newURI(test.url);
+      let uri = ios.newURI(test.url, null, null);
       let prin = ssm.createCodebasePrincipal(uri, {});
       SpecialPowers.doUrlClassify(prin, null, false, function(errorCode, table, provider, prefix) {
         is(errorCode, test.expect.error, `Test url ${test.url} correct error`);
