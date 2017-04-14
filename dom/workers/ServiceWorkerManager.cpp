@@ -187,9 +187,16 @@ PopulateRegistrationData(nsIPrincipal* aPrincipal,
     aData.currentWorkerURL() = aRegistration->GetActive()->ScriptSpec();
     aData.cacheName() = aRegistration->GetActive()->CacheName();
     aData.currentWorkerHandlesFetch() = aRegistration->GetActive()->HandlesFetch();
+
+    aData.currentWorkerInstalledTime() =
+      aRegistration->GetActive()->GetInstalledTime();
+    aData.currentWorkerActivatedTime() =
+      aRegistration->GetActive()->GetActivatedTime();
   }
 
   aData.loadFlags() = aRegistration->GetLoadFlags();
+
+  aData.lastUpdateTime() = aRegistration->GetLastUpdateTime();
 
   return NS_OK;
 }
@@ -2024,6 +2031,8 @@ ServiceWorkerManager::LoadRegistration(
     }
   }
 
+  registration->SetLastUpdateTime(aRegistration.lastUpdateTime());
+
   const nsCString& currentWorkerURL = aRegistration.currentWorkerURL();
   if (!currentWorkerURL.IsEmpty()) {
     registration->SetActive(
@@ -2033,7 +2042,8 @@ ServiceWorkerManager::LoadRegistration(
                             aRegistration.cacheName(),
                             registration->GetLoadFlags()));
     registration->GetActive()->SetHandlesFetch(aRegistration.currentWorkerHandlesFetch());
-    registration->GetActive()->SetActivateStateUncheckedWithoutEvent(ServiceWorkerState::Activated);
+    registration->GetActive()->SetInstalledTime(aRegistration.currentWorkerInstalledTime());
+    registration->GetActive()->SetActivatedTime(aRegistration.currentWorkerActivatedTime());
   }
 }
 

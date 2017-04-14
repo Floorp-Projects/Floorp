@@ -30,7 +30,6 @@ EXTRA_JS_MODULES += [
     'FormSubmitObserver.jsm',
     'FormValidationHandler.jsm',
     'FullZoomUI.jsm',
-    'HiddenFrame.jsm',
     'LaterRun.jsm',
     'NetworkPrioritizer.jsm',
     'offlineAppCache.jsm',

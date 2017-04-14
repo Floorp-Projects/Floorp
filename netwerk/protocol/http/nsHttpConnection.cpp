@@ -85,6 +85,8 @@ nsHttpConnection::nsHttpConnection()
     , mContentBytesWritten0RTT(0)
     , mEarlyDataNegotiated(false)
     , mDid0RTTSpdy(false)
+    , mResponseThrottled(false)
+    , mResumeRecvOnUnthrottle(false)
 {
     LOG(("Creating nsHttpConnection @%p\n", this));
 
@@ -1394,6 +1396,21 @@ nsHttpConnection::ResumeRecv()
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
+    // mResponseThrottled is an indication from above layers to stop reading
+    // the socket.
+    if (mResponseThrottled) {
+        mResumeRecvOnUnthrottle = true;
+
+        if (mSocketIn) {
+            LOG(("  throttled, waiting for closure only"));
+            return mSocketIn->AsyncWait(this,
+                                        nsIAsyncInputStream::WAIT_CLOSURE_ONLY,
+                                        0, nullptr);
+        }
+        LOG(("  throttled, and no socket input stream"));
+        return NS_OK;
+    }
+
     // the mLastReadTime timestamp is used for finding slowish readers
     // and can be pretty sensitive. For that reason we actually reset it
     // when we ask to read (resume recv()) so that when we get called back
@@ -2086,6 +2103,32 @@ nsHttpConnection::DisableTCPKeepalives()
         mTCPKeepaliveTransitionTimer = nullptr;
     }
     return NS_OK;
+}
+
+void nsHttpConnection::ThrottleResponse(bool aThrottle)
+{
+    LOG(("nsHttpConnection::ThrottleResponse this=%p, throttle=%d", this, aThrottle));
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+
+    if (aThrottle) {
+        mResponseThrottled = true;
+        return;
+    }
+
+    mResponseThrottled = false;
+
+    if (!mResumeRecvOnUnthrottle) {
+        // We didn't get to the point when ResumeRecv was called
+        // during the throttle period, nothing to do.
+        return;
+    }
+
+    mResumeRecvOnUnthrottle = false;
+
+    nsresult rv = ResumeRecv();
+    if (NS_FAILED(rv)) {
+        CloseTransaction(mTransaction, rv);
+    }
 }
 
 //-----------------------------------------------------------------------------

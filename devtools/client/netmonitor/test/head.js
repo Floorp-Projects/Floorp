@@ -95,19 +95,19 @@ registerCleanupFunction(() => {
 });
 
 function waitForNavigation(target) {
-  let deferred = promise.defer();
-  target.once("will-navigate", () => {
-    target.once("navigate", () => {
-      deferred.resolve();
+  return new Promise((resolve) => {
+    target.once("will-navigate", () => {
+      target.once("navigate", () => {
+        resolve();
+      });
     });
   });
-  return deferred.promise;
 }
 
 function reconfigureTab(target, options) {
-  let deferred = promise.defer();
-  target.activeTab.reconfigure(options, deferred.resolve);
-  return deferred.promise;
+  return new Promise((resolve) => {
+    target.activeTab.reconfigure(options, resolve);
+  });
 }
 
 function toggleCache(target, disabled) {
@@ -179,82 +179,82 @@ function teardown(monitor) {
 }
 
 function waitForNetworkEvents(monitor, getRequests, postRequests = 0) {
-  let deferred = promise.defer();
-  let panel = monitor.panelWin;
-  let { windowRequire } = panel;
-  let { NetMonitorController } =
-    windowRequire("devtools/client/netmonitor/src/netmonitor-controller");
-  let progress = {};
-  let genericEvents = 0;
-  let postEvents = 0;
-  let awaitedEventsToListeners = [
-    ["UPDATING_REQUEST_HEADERS", onGenericEvent],
-    ["RECEIVED_REQUEST_HEADERS", onGenericEvent],
-    ["UPDATING_REQUEST_COOKIES", onGenericEvent],
-    ["RECEIVED_REQUEST_COOKIES", onGenericEvent],
-    ["UPDATING_REQUEST_POST_DATA", onPostEvent],
-    ["RECEIVED_REQUEST_POST_DATA", onPostEvent],
-    ["UPDATING_RESPONSE_HEADERS", onGenericEvent],
-    ["RECEIVED_RESPONSE_HEADERS", onGenericEvent],
-    ["UPDATING_RESPONSE_COOKIES", onGenericEvent],
-    ["RECEIVED_RESPONSE_COOKIES", onGenericEvent],
-    ["STARTED_RECEIVING_RESPONSE", onGenericEvent],
-    ["UPDATING_RESPONSE_CONTENT", onGenericEvent],
-    ["RECEIVED_RESPONSE_CONTENT", onGenericEvent],
-    ["UPDATING_EVENT_TIMINGS", onGenericEvent],
-    ["RECEIVED_EVENT_TIMINGS", onGenericEvent]
-  ];
+  return new Promise((resolve) => {
+    let panel = monitor.panelWin;
+    let { windowRequire } = panel;
+    let { NetMonitorController } =
+      windowRequire("devtools/client/netmonitor/src/netmonitor-controller");
+    let progress = {};
+    let genericEvents = 0;
+    let postEvents = 0;
+    let awaitedEventsToListeners = [
+      ["UPDATING_REQUEST_HEADERS", onGenericEvent],
+      ["RECEIVED_REQUEST_HEADERS", onGenericEvent],
+      ["UPDATING_REQUEST_COOKIES", onGenericEvent],
+      ["RECEIVED_REQUEST_COOKIES", onGenericEvent],
+      ["UPDATING_REQUEST_POST_DATA", onPostEvent],
+      ["RECEIVED_REQUEST_POST_DATA", onPostEvent],
+      ["UPDATING_RESPONSE_HEADERS", onGenericEvent],
+      ["RECEIVED_RESPONSE_HEADERS", onGenericEvent],
+      ["UPDATING_RESPONSE_COOKIES", onGenericEvent],
+      ["RECEIVED_RESPONSE_COOKIES", onGenericEvent],
+      ["STARTED_RECEIVING_RESPONSE", onGenericEvent],
+      ["UPDATING_RESPONSE_CONTENT", onGenericEvent],
+      ["RECEIVED_RESPONSE_CONTENT", onGenericEvent],
+      ["UPDATING_EVENT_TIMINGS", onGenericEvent],
+      ["RECEIVED_EVENT_TIMINGS", onGenericEvent]
+    ];
 
-  function initProgressForURL(url) {
-    if (progress[url]) {
-      return;
+    function initProgressForURL(url) {
+      if (progress[url]) {
+        return;
+      }
+      progress[url] = {};
+      awaitedEventsToListeners.forEach(function ([e]) {
+        progress[url][e] = 0;
+      });
     }
-    progress[url] = {};
-    awaitedEventsToListeners.forEach(function ([e]) {
-      progress[url][e] = 0;
-    });
-  }
 
-  function updateProgressForURL(url, event) {
-    initProgressForURL(url);
-    progress[url][Object.keys(EVENTS).find(e => EVENTS[e] == event)] = 1;
-  }
-
-  function onGenericEvent(event, actor) {
-    genericEvents++;
-    maybeResolve(event, actor);
-  }
-
-  function onPostEvent(event, actor) {
-    postEvents++;
-    maybeResolve(event, actor);
-  }
-
-  function maybeResolve(event, actor) {
-    info("> Network events progress: " +
-      genericEvents + "/" + ((getRequests + postRequests) * 13) + ", " +
-      postEvents + "/" + (postRequests * 2) + ", " +
-      "got " + event + " for " + actor);
-
-    let networkInfo = NetMonitorController.webConsoleClient.getNetworkRequest(actor);
-    let url = networkInfo.request.url;
-    updateProgressForURL(url, event);
-
-    // Uncomment this to get a detailed progress logging (when debugging a test)
-    // info("> Current state: " + JSON.stringify(progress, null, 2));
-
-    // There are 15 updates which need to be fired for a request to be
-    // considered finished. The "requestPostData" packet isn't fired for
-    // non-POST requests.
-    if (genericEvents >= (getRequests + postRequests) * 13 &&
-        postEvents >= postRequests * 2) {
-      awaitedEventsToListeners.forEach(([e, l]) => panel.off(EVENTS[e], l));
-      executeSoon(deferred.resolve);
+    function updateProgressForURL(url, event) {
+      initProgressForURL(url);
+      progress[url][Object.keys(EVENTS).find(e => EVENTS[e] == event)] = 1;
     }
-  }
 
-  awaitedEventsToListeners.forEach(([e, l]) => panel.on(EVENTS[e], l));
-  return deferred.promise;
+    function onGenericEvent(event, actor) {
+      genericEvents++;
+      maybeResolve(event, actor);
+    }
+
+    function onPostEvent(event, actor) {
+      postEvents++;
+      maybeResolve(event, actor);
+    }
+
+    function maybeResolve(event, actor) {
+      info("> Network events progress: " +
+        genericEvents + "/" + ((getRequests + postRequests) * 13) + ", " +
+        postEvents + "/" + (postRequests * 2) + ", " +
+        "got " + event + " for " + actor);
+
+      let networkInfo = NetMonitorController.webConsoleClient.getNetworkRequest(actor);
+      let url = networkInfo.request.url;
+      updateProgressForURL(url, event);
+
+      // Uncomment this to get a detailed progress logging (when debugging a test)
+      // info("> Current state: " + JSON.stringify(progress, null, 2));
+
+      // There are 15 updates which need to be fired for a request to be
+      // considered finished. The "requestPostData" packet isn't fired for
+      // non-POST requests.
+      if (genericEvents >= (getRequests + postRequests) * 13 &&
+          postEvents >= postRequests * 2) {
+        awaitedEventsToListeners.forEach(([e, l]) => panel.off(EVENTS[e], l));
+        executeSoon(resolve);
+      }
+    }
+
+    awaitedEventsToListeners.forEach(([e, l]) => panel.on(EVENTS[e], l));
+  });
 }
 
 function verifyRequestItemTarget(document, requestList, requestItem, method,
@@ -385,9 +385,9 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
  *        Returns a promise that resolves upon firing of the event.
  */
 function waitFor(subject, eventName) {
-  let deferred = promise.defer();
-  subject.once(eventName, deferred.resolve);
-  return deferred.promise;
+  return new Promise((resolve) => {
+    subject.once(eventName, resolve);
+  });
 }
 
 /**
@@ -500,10 +500,10 @@ function executeInContent(name, data = {}, objects = {}, expectResponse = true) 
 function waitForContentMessage(name) {
   let mm = gBrowser.selectedBrowser.messageManager;
 
-  let def = promise.defer();
-  mm.addMessageListener(name, function onMessage(msg) {
-    mm.removeMessageListener(name, onMessage);
-    def.resolve(msg);
+  return new Promise((resolve) => {
+    mm.addMessageListener(name, function onMessage(msg) {
+      mm.removeMessageListener(name, onMessage);
+      resolve(msg);
+    });
   });
-  return def.promise;
 }

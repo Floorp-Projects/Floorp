@@ -230,6 +230,9 @@ typedef void (*PrefChangedFunc) (const char *, void *);
 // matched all the parameters; otherwise it returns PREF_ERROR.
 // </font>
 */
+void PREF_RegisterPriorityCallback(const char* domain,
+                                   PrefChangedFunc callback,
+                                   void* instance_data );
 void PREF_RegisterCallback(const char* domain,
                            PrefChangedFunc callback, void* instance_data );
 nsresult PREF_UnregisterCallback(const char* domain,

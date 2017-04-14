@@ -9,7 +9,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIMutableArray.h"
 
-#include "plstr.h"
 #include <glib.h>
 
 #define DLADM_STRSIZE 256
@@ -50,7 +49,8 @@ do_parse_str(char *bssid_str, char *essid_str, char *strength)
   if (ap) {
     ap->setMac(mac_as_int);
     ap->setSignal(signal);
-    ap->setSSID(essid_str, PL_strnlen(essid_str, DLADM_STRSIZE));
+    size_t len = essid_str ? strnlen(essid_str, DLADM_STRSIZE) : 0;
+    ap->setSSID(essid_str, len);
   }
   return ap;
 }

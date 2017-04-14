@@ -1538,7 +1538,7 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
         nsStyleUtil::AppendBitmaskCSSValue(
           aProperty, intValue,
           NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
-          NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS,
+          NS_STYLE_TEXT_DECORATION_LINE_BLINK,
           aResult);
       }
       break;

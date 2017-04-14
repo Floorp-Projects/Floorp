@@ -93,7 +93,7 @@ to mochitest command.
 * ... `fill`: svg paint should distinguish whether there is fallback bug 1347409 [2]
 * ... `stroke`: svg paint should distinguish whether there is fallback bug 1347409 [2]
 * character not properly escaped servo/servo#15947
-  * test_parse_url.html [4]
+  * test_parse_url.html [1]
   * test_bug829816.html [8]
 * test_compute_data_with_start_struct.html `timing-function`: incorrectly computing keywords to bezier function servo/servo#15086 [2]
 * \@counter-style support bug 1328319
@@ -117,9 +117,10 @@ to mochitest command.
 * test_font_face_parser.html `font-weight`: keyword values should be preserved in \@font-face [4]
 * unicode-range parsing bugs
   * servo/rust-cssparser#133
-    * test_descriptor_storage.html `U+4????` [1]
-    * test_font_face_parser.html `U+0121` [4]
   * test_font_face_parser.html `4E00`: servo/rust-cssparser#135 [2]
+* @font-face support bug 1290237
+  * test_descriptor_storage.html [1]
+  * test_font_face_parser.html `@font-face` [8]
 * @namespace support:
   * test_namespace_rule.html: bug 1355715 [17]
 * test_dont_use_document_colors.html: support of disabling document color bug 1355716 [21]
@@ -243,10 +244,7 @@ to mochitest command.
     * test_pointer-events.html [2]
     * test_value_storage.html `pointer-events` [8]
   * new syntax of rgba?() and hsla?() functions servo/rust-cssparser#113
-    * test_value_storage.html `'color'` [35]
-    * ... `rgb(100, 100.0, 100)` [1]
-    * test_computed_style.html `css-color-4` [8]
-    * test_specified_value_serialization.html `css-color-4` [8]
+    * test_computed_style.html `css-color-4` [2]
   * color interpolation hint not supported servo/servo#15166
     * test_value_storage.html `'linear-gradient` [50]
   * SVG-in-OpenType values not supported servo/servo#15211 bug 1355412
@@ -364,15 +362,8 @@ to mochitest command.
   * flex-basis should be 0px when omitted in flex shorthand bug 1331530
     * test_flexbox_flex_shorthand.html `flex-basis` [10]
   * should reject whole value bug 1355352
-    * test_descriptor_storage.html `U+100-17F,U+200-17F` [1]
-    * test_font_face_parser.html `U+90-30` [2]
-    * ... `U+220043` [2]
   * Gecko clamps rather than rejects invalid unicode range bug 1355356
-    * test_font_face_parser.html `U+??????` [2]
-    * ... `12FFFF` [2]
 * test_default_computed_style.html: unship getDefaultComputedStyle bug 1355683 [1]
-* -moz-anchor-decoration value on text-decoration bug 1355734
-  * test_value_storage.html `-moz-anchor-decoration` [10]
 
 ## Spec Unclear
 
@@ -382,7 +373,7 @@ to mochitest command.
 
 * test_additional_sheets.html: one sub-test cascade order is wrong [1]
 * test_selectors_on_anonymous_content.html: xbl and :nth-child [1]
-* test_parse_rule.html `rgb(0, 128, 0)`: color properties not getting computed [6]
+* test_parse_rule.html `rgb(0, 128, 0)`: color properties not getting computed [5]
 
 ## Ignore
 
