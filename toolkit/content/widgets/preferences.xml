@@ -181,7 +181,7 @@
               .removeObserver(this.name, this.preferences);
           this.setAttribute("name", val);
           this.preferences.rootBranchInternal
-              .addObserver(val, this.preferences, false);
+              .addObserver(val, this.preferences);
 
           return val;
         </setter>
