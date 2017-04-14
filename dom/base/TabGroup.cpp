@@ -86,17 +86,22 @@ TabGroup::GetChromeTabGroup()
 }
 
 /* static */ TabGroup*
-TabGroup::GetFromWindowActor(mozIDOMWindowProxy* aWindow)
+TabGroup::GetFromWindow(mozIDOMWindowProxy* aWindow)
+{
+  if (TabChild* tabChild = TabChild::GetFrom(aWindow)) {
+    return tabChild->TabGroup();
+  }
+
+  return nullptr;
+}
+
+/* static */ TabGroup*
+TabGroup::GetFromActor(TabChild* aTabChild)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  TabChild* tabChild = TabChild::GetFrom(aWindow);
-  if (!tabChild) {
-    return nullptr;
-  }
-
   ContentChild* cc = ContentChild::GetSingleton();
-  nsCOMPtr<nsIEventTarget> target = cc->GetActorEventTarget(tabChild);
+  nsCOMPtr<nsIEventTarget> target = cc->GetActorEventTarget(aTabChild);
   if (!target) {
     return nullptr;
   }

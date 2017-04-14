@@ -8,9 +8,12 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "mozilla/intl/LocaleService.h"
+#include "OSPreferences.h"
+#include "mozIOSPreferences.h"
 #include "unicode/udatpg.h"
 
 namespace mozilla {
+using namespace mozilla::intl;
 
 nsCString* DateTimeFormat::mLocale = nullptr;
 
@@ -84,48 +87,115 @@ DateTimeFormat::FormatUDateTime(const nsDateFormatSelector aDateFormatSelector,
     return rv;
   }
 
-  // Get the date style for the formatter:
-  UDateFormatStyle dateStyle;
+  // Get the date style for the formatter.
+  nsAutoString skeletonDate;
+  nsAutoString patternDate;
+  bool haveSkeleton = true;
   switch (aDateFormatSelector) {
-    case kDateFormatLong:
-      dateStyle = UDAT_LONG;
-      break;
-    case kDateFormatShort:
-      dateStyle = UDAT_SHORT;
-      break;
-    case kDateFormatYearMonth:
-    case kDateFormatYearMonthLong:
-    case kDateFormatMonthLong:
-    case kDateFormatWeekday:
-      dateStyle = UDAT_PATTERN;
-      break;
-    case kDateFormatNone:
-      dateStyle = UDAT_NONE;
-      break;
-    default:
-      NS_ERROR("Unknown nsDateFormatSelector");
-      return NS_ERROR_ILLEGAL_VALUE;
+  case kDateFormatLong:
+    rv = OSPreferences::GetInstance()->GetDateTimePattern(mozIOSPreferences::dateTimeFormatStyleLong,
+                                                          mozIOSPreferences::dateTimeFormatStyleNone,
+                                                          nsDependentCString(mLocale->get()),
+                                                          patternDate);
+    NS_ENSURE_SUCCESS(rv, rv);
+    haveSkeleton = false;
+    break;
+  case kDateFormatShort:
+    rv = OSPreferences::GetInstance()->GetDateTimePattern(mozIOSPreferences::dateTimeFormatStyleShort,
+                                                          mozIOSPreferences::dateTimeFormatStyleNone,
+                                                          nsDependentCString(mLocale->get()),
+                                                          patternDate);
+    NS_ENSURE_SUCCESS(rv, rv);
+    haveSkeleton = false;
+    break;
+  case kDateFormatYearMonth:
+    skeletonDate.AssignLiteral("yyyyMM");
+    break;
+  case kDateFormatYearMonthLong:
+    skeletonDate.AssignLiteral("yyyyMMMM");
+    break;
+  case kDateFormatMonthLong:
+    skeletonDate.AssignLiteral("MMMM");
+    break;
+  case kDateFormatWeekday:
+    skeletonDate.AssignLiteral("EEE");
+    break;
+  case kDateFormatNone:
+    haveSkeleton = false;
+    break;
+  default:
+    NS_ERROR("Unknown nsDateFormatSelector");
+    return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  // Get the time style for the formatter:
-  UDateFormatStyle timeStyle;
+  UErrorCode status = U_ZERO_ERROR;
+  if (haveSkeleton) {
+    // Get pattern for skeleton.
+    UDateTimePatternGenerator* patternGenerator = udatpg_open(mLocale->get(), &status);
+    if (U_SUCCESS(status)) {
+      int32_t patternLength;
+      patternDate.SetLength(DATETIME_FORMAT_INITIAL_LEN);
+      patternLength = udatpg_getBestPattern(patternGenerator,
+                                            reinterpret_cast<const UChar*>(skeletonDate.BeginReading()),
+                                            skeletonDate.Length(),
+                                            reinterpret_cast<UChar*>(patternDate.BeginWriting()),
+                                            DATETIME_FORMAT_INITIAL_LEN,
+                                            &status);
+      patternDate.SetLength(patternLength);
+
+      if (status == U_BUFFER_OVERFLOW_ERROR) {
+        status = U_ZERO_ERROR;
+        udatpg_getBestPattern(patternGenerator,
+                              reinterpret_cast<const UChar*>(skeletonDate.BeginReading()),
+                              skeletonDate.Length(),
+                              reinterpret_cast<UChar*>(patternDate.BeginWriting()),
+                              patternLength,
+                              &status);
+      }
+    }
+    udatpg_close(patternGenerator);
+  }
+
+  // Get the time style for the formatter.
+  nsAutoString patternTime;
   switch (aTimeFormatSelector) {
-    case kTimeFormatSeconds:
-      timeStyle = UDAT_MEDIUM;
-      break;
-    case kTimeFormatNoSeconds:
-      timeStyle = UDAT_SHORT;
-      break;
-    case kTimeFormatNone:
-      timeStyle = UDAT_NONE;
-      break;
-    default:
-      NS_ERROR("Unknown nsTimeFormatSelector");
-      return NS_ERROR_ILLEGAL_VALUE;
+  case kTimeFormatSeconds:
+    rv = OSPreferences::GetInstance()->GetDateTimePattern(mozIOSPreferences::dateTimeFormatStyleNone,
+                                                          mozIOSPreferences::dateTimeFormatStyleLong,
+                                                          nsDependentCString(mLocale->get()),
+                                                          patternTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+    break;
+  case kTimeFormatNoSeconds:
+    rv = OSPreferences::GetInstance()->GetDateTimePattern(mozIOSPreferences::dateTimeFormatStyleNone,
+                                                          mozIOSPreferences::dateTimeFormatStyleShort,
+                                                          nsDependentCString(mLocale->get()),
+                                                          patternTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+    break;
+  case kTimeFormatNone:
+    break;
+  default:
+    NS_ERROR("Unknown nsTimeFormatSelector");
+    return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  // generate date/time string
+  nsAutoString pattern;
+  if (patternTime.Length() == 0) {
+    pattern.Assign(patternDate);
+  } else if (patternDate.Length() == 0) {
+    pattern.Assign(patternTime);
+  } else {
+    OSPreferences::GetDateTimeConnectorPattern(nsDependentCString(mLocale->get()), pattern);
+    int32_t index = pattern.Find("{1}");
+    if (index != kNotFound)
+      pattern.Replace(index, 3, patternDate);
+    index = pattern.Find("{0}");
+    if (index != kNotFound)
+      pattern.Replace(index, 3, patternTime);
+  }
 
+  // Generate date/time string.
   nsAutoString timeZoneID(u"GMT");
   if (aTimeParameters) {
     int32_t totalOffsetMinutes = (aTimeParameters->tp_gmt_offset + aTimeParameters->tp_dst_offset) / 60;
@@ -137,100 +207,38 @@ DateTimeFormat::FormatUDateTime(const nsDateFormatSelector aDateFormatSelector,
     }
   }
 
-  UErrorCode status = U_ZERO_ERROR;
-
   UDateFormat* dateTimeFormat;
-  if (dateStyle == UDAT_PATTERN) {
-    nsAutoString pattern;
-
-    dateTimeFormat = udat_open(timeStyle, UDAT_NONE, mLocale->get(), nullptr, -1, nullptr, -1, &status);
-
-    if (U_SUCCESS(status) && dateTimeFormat) {
-      int32_t patternLength;
-      if (timeStyle != UDAT_NONE) {
-        pattern.SetLength(DATETIME_FORMAT_INITIAL_LEN);
-        patternLength = udat_toPattern(dateTimeFormat, FALSE, reinterpret_cast<UChar*>(pattern.BeginWriting()), DATETIME_FORMAT_INITIAL_LEN, &status);
-        pattern.SetLength(patternLength);
-
-        if (status == U_BUFFER_OVERFLOW_ERROR) {
-          status = U_ZERO_ERROR;
-          udat_toPattern(dateTimeFormat, FALSE, reinterpret_cast<UChar*>(pattern.BeginWriting()), patternLength, &status);
-        }
-      }
-
-      nsAutoString skeleton;
-      switch (aDateFormatSelector) {
-      case kDateFormatYearMonth:
-        skeleton.AssignLiteral("yyyyMM ");
-        break;
-      case kDateFormatYearMonthLong:
-        skeleton.AssignLiteral("yyyyMMMM ");
-        break;
-      case kDateFormatMonthLong:
-        skeleton.AssignLiteral("MMMM ");
-        break;
-      case kDateFormatWeekday:
-        skeleton.AssignLiteral("EEE ");
-        break;
-      default:
-        break;
-      }
-      int32_t dateSkeletonLen = skeleton.Length();
-
-      if (timeStyle != UDAT_NONE) {
-        skeleton.SetLength(DATETIME_FORMAT_INITIAL_LEN);
-        int32_t skeletonLength = udatpg_getSkeleton(nullptr, reinterpret_cast<const UChar*>(pattern.BeginReading()), patternLength,
-          reinterpret_cast<UChar*>(skeleton.BeginWriting() + dateSkeletonLen), DATETIME_FORMAT_INITIAL_LEN - dateSkeletonLen, &status);
-        skeleton.SetLength(dateSkeletonLen + skeletonLength);
-
-        if (status == U_BUFFER_OVERFLOW_ERROR) {
-          status = U_ZERO_ERROR;
-          udatpg_getSkeleton(nullptr, reinterpret_cast<const UChar*>(pattern.BeginReading()), patternLength,
-            reinterpret_cast<UChar*>(skeleton.BeginWriting() + dateSkeletonLen), dateSkeletonLen + skeletonLength, &status);
-        }
-      }
-
-      UDateTimePatternGenerator* patternGenerator = udatpg_open(mLocale->get(), &status);
-      if (U_SUCCESS(status)) {
-        pattern.SetLength(DATETIME_FORMAT_INITIAL_LEN);
-        patternLength = udatpg_getBestPattern(patternGenerator, reinterpret_cast<const UChar*>(skeleton.BeginReading()), skeleton.Length(), 
-                                              reinterpret_cast<UChar*>(pattern.BeginWriting()), DATETIME_FORMAT_INITIAL_LEN, &status);
-        pattern.SetLength(patternLength);
-
-        if (status == U_BUFFER_OVERFLOW_ERROR) {
-          status = U_ZERO_ERROR;
-          udatpg_getBestPattern(patternGenerator, reinterpret_cast<const UChar*>(skeleton.BeginReading()), skeleton.Length(),
-                                reinterpret_cast<UChar*>(pattern.BeginWriting()), patternLength, &status);
-        }
-      }
-
-      udatpg_close(patternGenerator);
-    }
-
-    udat_close(dateTimeFormat);
-
-    if (aTimeParameters) {
-      dateTimeFormat = udat_open(UDAT_PATTERN, UDAT_PATTERN, mLocale->get(), reinterpret_cast<const UChar*>(timeZoneID.BeginReading()), timeZoneID.Length(), 
-                                 reinterpret_cast<const UChar*>(pattern.BeginReading()), pattern.Length(), &status);
-    } else {
-      dateTimeFormat = udat_open(UDAT_PATTERN, UDAT_PATTERN, mLocale->get(), nullptr, -1, reinterpret_cast<const UChar*>(pattern.BeginReading()), pattern.Length(), &status);
-    }
+  if (aTimeParameters) {
+    dateTimeFormat = udat_open(UDAT_PATTERN, UDAT_PATTERN, mLocale->get(),
+                               reinterpret_cast<const UChar*>(timeZoneID.BeginReading()),
+                               timeZoneID.Length(),
+                               reinterpret_cast<const UChar*>(pattern.BeginReading()),
+                               pattern.Length(),
+                               &status);
   } else {
-    if (aTimeParameters) {
-      dateTimeFormat = udat_open(timeStyle, dateStyle, mLocale->get(), reinterpret_cast<const UChar*>(timeZoneID.BeginReading()), timeZoneID.Length(), nullptr, -1, &status);
-    } else {
-      dateTimeFormat = udat_open(timeStyle, dateStyle, mLocale->get(), nullptr, -1, nullptr, -1, &status);
-    }
+    dateTimeFormat = udat_open(UDAT_PATTERN, UDAT_PATTERN, mLocale->get(),
+                               nullptr, -1,
+                               reinterpret_cast<const UChar*>(pattern.BeginReading()),
+                               pattern.Length(),
+                               &status);
   }
 
   if (U_SUCCESS(status) && dateTimeFormat) {
     aStringOut.SetLength(DATETIME_FORMAT_INITIAL_LEN);
-    dateTimeLen = udat_format(dateTimeFormat, aUDateTime, reinterpret_cast<UChar*>(aStringOut.BeginWriting()), DATETIME_FORMAT_INITIAL_LEN, nullptr, &status);
+    dateTimeLen = udat_format(dateTimeFormat, aUDateTime,
+                              reinterpret_cast<UChar*>(aStringOut.BeginWriting()),
+                              DATETIME_FORMAT_INITIAL_LEN,
+                              nullptr,
+                              &status);
     aStringOut.SetLength(dateTimeLen);
 
     if (status == U_BUFFER_OVERFLOW_ERROR) {
       status = U_ZERO_ERROR;
-      udat_format(dateTimeFormat, aUDateTime, reinterpret_cast<UChar*>(aStringOut.BeginWriting()), dateTimeLen, nullptr, &status);
+      udat_format(dateTimeFormat, aUDateTime,
+                  reinterpret_cast<UChar*>(aStringOut.BeginWriting()),
+                  dateTimeLen,
+                  nullptr,
+                  &status);
     }
   }
 

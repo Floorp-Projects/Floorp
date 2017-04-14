@@ -1,7 +1,5 @@
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
-                                  "resource://gre/modules/ExtensionManagement.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MatchURLFilters",
                                   "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WebNavigation",
@@ -113,13 +111,13 @@ function WebNavigationEventManager(context, eventName) {
         data2.error = data.error;
       }
 
-      if (data.windowId) {
-        data2.frameId = ExtensionManagement.getFrameId(data.windowId);
-        data2.parentFrameId = ExtensionManagement.getParentFrameId(data.parentWindowId, data.windowId);
+      if (data.frameId != undefined) {
+        data2.frameId = data.frameId;
+        data2.parentFrameId = data.parentFrameId;
       }
 
-      if (data.sourceWindowId) {
-        data2.sourceFrameId = ExtensionManagement.getFrameId(data.sourceWindowId);
+      if (data.sourceFrameId != undefined) {
+        data2.sourceFrameId = data.sourceFrameId;
       }
 
       // Fills in tabId typically.
@@ -153,8 +151,8 @@ function convertGetFrameResult(tabId, data) {
     errorOccurred: data.errorOccurred,
     url: data.url,
     tabId,
-    frameId: ExtensionManagement.getFrameId(data.windowId),
-    parentFrameId: ExtensionManagement.getParentFrameId(data.parentWindowId, data.windowId),
+    frameId: data.frameId,
+    parentFrameId: data.parentFrameId,
   };
 }
 

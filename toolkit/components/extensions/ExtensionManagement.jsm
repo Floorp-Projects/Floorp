@@ -34,71 +34,6 @@ var ExtensionManagement;
  * when no extensions are running.
  */
 
-// Keep track of frame IDs for content windows. Mostly we can just use
-// the outer window ID as the frame ID. However, the API specifies
-// that top-level windows have a frame ID of 0. So we need to keep
-// track of which windows are top-level. This code listens to messages
-// from ExtensionContent to do that.
-var Frames = {
-  // Window IDs of top-level content windows.
-  topWindowIds: new Set(),
-
-  init() {
-    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
-      return;
-    }
-
-    Services.mm.addMessageListener("Extension:TopWindowID", this);
-    Services.mm.addMessageListener("Extension:RemoveTopWindowID", this, true);
-  },
-
-  isTopWindowId(windowId) {
-    return this.topWindowIds.has(windowId);
-  },
-
-  // Convert an outer window ID to a frame ID. An outer window ID of 0
-  // is invalid.
-  getId(windowId) {
-    if (this.isTopWindowId(windowId)) {
-      return 0;
-    }
-    if (windowId == 0) {
-      return -1;
-    }
-    return windowId;
-  },
-
-  // Convert an outer window ID for a parent window to a frame
-  // ID. Outer window IDs follow the same convention that
-  // |window.top.parent === window.top|. The API works differently,
-  // giving a frame ID of -1 for the the parent of a top-level
-  // window. This function handles the conversion.
-  getParentId(parentWindowId, windowId) {
-    if (parentWindowId == windowId) {
-      // We have a top-level window.
-      return -1;
-    }
-
-    // Not a top-level window. Just return the ID as normal.
-    return this.getId(parentWindowId);
-  },
-
-  receiveMessage({name, data}) {
-    switch (name) {
-      case "Extension:TopWindowID":
-        // FIXME: Need to handle the case where the content process
-        // crashes. Right now we leak its top window IDs.
-        this.topWindowIds.add(data.windowId);
-        break;
-
-      case "Extension:RemoveTopWindowID":
-        this.topWindowIds.delete(data.windowId);
-        break;
-    }
-  },
-};
-Frames.init();
-
 var APIs = {
   apis: new Map(),
 
@@ -339,9 +274,6 @@ ExtensionManagement = {
 
   registerAPI: APIs.register.bind(APIs),
   unregisterAPI: APIs.unregister.bind(APIs),
-
-  getFrameId: Frames.getId.bind(Frames),
-  getParentFrameId: Frames.getParentId.bind(Frames),
 
   getURLForExtension,
 

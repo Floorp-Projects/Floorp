@@ -770,9 +770,6 @@ class ParserBase : public StrictModeGetter
     // For tracking used names in this parsing session.
     UsedNameTracker& usedNames;
 
-    /* Compression token for aborting. */
-    SourceCompressionTask* sct;
-
     ScriptSource*       ss;
 
     /* Root atoms and objects allocated for the parsed tree. */
@@ -806,8 +803,7 @@ class ParserBase : public StrictModeGetter
 
     ParserBase(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
                const char16_t* chars, size_t length, bool foldConstants,
-               UsedNameTracker& usedNames, Parser<SyntaxParseHandler>* syntaxParser,
-               LazyScript* lazyOuterFunction);
+               UsedNameTracker& usedNames, LazyScript* lazyOuterFunction);
     ~ParserBase();
 
     const char* getFilename() const { return tokenStream.getFilename(); }
@@ -895,6 +891,47 @@ class ParserBase : public StrictModeGetter
 
     bool warnOnceAboutExprClosure();
     bool warnOnceAboutForEach();
+
+    bool allowsForEachIn() {
+#if !JS_HAS_FOR_EACH_IN
+        return false;
+#else
+        return options().forEachStatementOption && versionNumber() >= JSVERSION_1_6;
+#endif
+    }
+
+    bool hasValidSimpleStrictParameterNames();
+
+
+    /*
+     * Create a new function object given a name (which is optional if this is
+     * a function expression).
+     */
+    JSFunction* newFunction(HandleAtom atom, FunctionSyntaxKind kind,
+                            GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+                            HandleObject proto);
+
+    // A Parser::Mark is the extension of the LifoAlloc::Mark to the entire
+    // Parser's state. Note: clients must still take care that any ParseContext
+    // that points into released ParseNodes is destroyed.
+    class Mark
+    {
+        friend class ParserBase;
+        LifoAlloc::Mark mark;
+        ObjectBox* traceListHead;
+    };
+    Mark mark() const {
+        Mark m;
+        m.mark = alloc.mark();
+        m.traceListHead = traceListHead;
+        return m;
+    }
+    void release(Mark m) {
+        alloc.release(m.mark);
+        traceListHead = m.traceListHead;
+    }
+
+    ObjectBox* newObjectBox(JSObject* obj);
 
   protected:
     enum InvokedPrediction { PredictUninvoked = false, PredictInvoked = true };
@@ -1037,26 +1074,6 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
     bool checkOptions();
 
-    // A Parser::Mark is the extension of the LifoAlloc::Mark to the entire
-    // Parser's state. Note: clients must still take care that any ParseContext
-    // that points into released ParseNodes is destroyed.
-    class Mark
-    {
-        friend class Parser;
-        LifoAlloc::Mark mark;
-        ObjectBox* traceListHead;
-    };
-    Mark mark() const {
-        Mark m;
-        m.mark = alloc.mark();
-        m.traceListHead = traceListHead;
-        return m;
-    }
-    void release(Mark m) {
-        alloc.release(m.mark);
-        traceListHead = m.traceListHead;
-    }
-
     friend void js::frontend::TraceParser(JSTracer* trc, JS::AutoGCRooter* parser);
 
     /*
@@ -1064,30 +1081,15 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
      */
     Node parse();
 
-    /*
-     * Allocate a new parsed object or function container from
-     * cx->tempLifoAlloc.
-     */
-    ObjectBox* newObjectBox(JSObject* obj);
     FunctionBox* newFunctionBox(Node fn, JSFunction* fun, uint32_t preludeStart,
                                 Directives directives,
                                 GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                                 bool tryAnnexB);
 
-    /*
-     * Create a new function object given a name (which is optional if this is
-     * a function expression).
-     */
-    JSFunction* newFunction(HandleAtom atom, FunctionSyntaxKind kind,
-                            GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-                            HandleObject proto);
-
     void trace(JSTracer* trc);
 
   private:
     Parser* thisForCtor() { return this; }
-
-    JSAtom* stopStringCompression();
 
     Node stringLiteral();
     Node noSubstitutionTaggedTemplate();
@@ -1407,14 +1409,6 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
     bool matchLabel(YieldHandling yieldHandling, MutableHandle<PropertyName*> label);
 
-    bool allowsForEachIn() {
-#if !JS_HAS_FOR_EACH_IN
-        return false;
-#else
-        return options().forEachStatementOption && versionNumber() >= JSVERSION_1_6;
-#endif
-    }
-
     bool matchInOrOf(bool* isForInp, bool* isForOfp);
 
     bool hasUsedFunctionSpecialName(HandlePropertyName name);
@@ -1458,8 +1452,6 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
   private:
     bool checkIncDecOperand(Node operand, uint32_t operandOffset);
     bool checkStrictAssignment(Node lhs);
-
-    bool hasValidSimpleStrictParameterNames();
 
     void reportMissingClosing(unsigned errorNumber, unsigned noteNumber, uint32_t openedPos);
 

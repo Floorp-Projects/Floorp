@@ -3593,7 +3593,7 @@ BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...)
     TokenStream& ts = tokenStream();
     ErrorMetadata metadata;
     if (ts.computeErrorMetadata(&metadata, pos.begin))
-        ts.compileError(Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
+        ReportCompileError(cx, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
 
     va_end(args);
 }

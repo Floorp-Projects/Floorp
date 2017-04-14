@@ -943,7 +943,12 @@
       "label": "LuxTrust_Global_Root_2",
       "binNumber": 187,
       "sha256Fingerprint": "VEVfcSnCCxRHxBj5lxaPJMWPxQI79dpb4utuHdiQLtU="
+    },
+    {
+      "label": "TUBITAK_Kamu_SM_SSL_Kok_Sertifikasi___Surum_1",
+      "binNumber": 188,
+      "sha256Fingerprint": "Ru3DaJBG1TpFP7MQSrgNyuxliyZg6hYp3X6GeZBkhxY="
     }
   ],
-  "maxBin": 187
+  "maxBin": 188
 }
