@@ -197,7 +197,8 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample, bool* aGotFrame,
       int size;
       int len = mLib->av_parser_parse2(
         mCodecParser, mCodecContext, &data, &size, inputData, inputSize,
-        aSample->mTime, aSample->mTimecode.ToMicroseconds(), aSample->mOffset);
+        aSample->mTime.ToMicroseconds(), aSample->mTimecode.ToMicroseconds(),
+        aSample->mOffset);
       if (size_t(len) > inputSize) {
         return NS_ERROR_DOM_MEDIA_DECODE_ERR;
       }
@@ -232,7 +233,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
   packet.data = aData;
   packet.size = aSize;
   packet.dts = mLastInputDts = aSample->mTimecode.ToMicroseconds();
-  packet.pts = aSample->mTime;
+  packet.pts = aSample->mTime.ToMicroseconds();
   packet.flags = aSample->mKeyframe ? AV_PKT_FLAG_KEY : 0;
   packet.pos = aSample->mOffset;
 

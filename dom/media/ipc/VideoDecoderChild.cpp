@@ -230,7 +230,7 @@ VideoDecoderChild::Decode(MediaRawData* aSample)
   memcpy(buffer.get<uint8_t>(), aSample->Data(), aSample->Size());
 
   MediaRawDataIPDL sample(MediaDataIPDL(aSample->mOffset,
-                                        aSample->mTime,
+                                        aSample->mTime.ToMicroseconds(),
                                         aSample->mTimecode.ToMicroseconds(),
                                         aSample->mDuration.ToMicroseconds(),
                                         aSample->mFrames,

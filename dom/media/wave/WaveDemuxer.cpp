@@ -531,7 +531,7 @@ WAVTrackDemuxer::GetNextChunk(const MediaByteRange& aRange)
   ++mNumParsedChunks;
   ++mChunkIndex;
 
-  datachunk->mTime = Duration(mChunkIndex - 1).ToMicroseconds();
+  datachunk->mTime = Duration(mChunkIndex - 1);
 
   if (static_cast<uint32_t>(mChunkIndex) * DATA_CHUNK_SIZE < mDataLength) {
     datachunk->mDuration = Duration(1);
@@ -540,10 +540,10 @@ WAVTrackDemuxer::GetNextChunk(const MediaByteRange& aRange)
       mDataLength - mChunkIndex * DATA_CHUNK_SIZE;
     datachunk->mDuration = DurationFromBytes(mBytesRemaining);
   }
-  datachunk->mTimecode = media::TimeUnit::FromMicroseconds(datachunk->mTime);
+  datachunk->mTimecode = datachunk->mTime;
   datachunk->mKeyframe = true;
 
-  MOZ_ASSERT(datachunk->mTime >= 0);
+  MOZ_ASSERT(!datachunk->mTime.IsNegative());
   MOZ_ASSERT(!datachunk->mDuration.IsNegative());
 
   return datachunk.forget();
