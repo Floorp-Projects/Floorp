@@ -67,7 +67,7 @@ interface nsIDOMCrypto;
   getter object (DOMString name);
 
   // the user agent
-  [Throws] readonly attribute Navigator navigator;
+  readonly attribute Navigator navigator;
 #ifdef HAVE_SIDEBAR
   [Replaceable, Throws] readonly attribute External external;
 #endif
