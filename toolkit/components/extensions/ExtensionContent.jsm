@@ -15,10 +15,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "LanguageDetector",
                                   "resource:///modules/translation/LanguageDetector.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MatchGlobs",
-                                  "resource://gre/modules/MatchPattern.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
-                                  "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
@@ -43,8 +39,6 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 const {
   DefaultMap,
   DefaultWeakMap,
-  EventEmitter,
-  LocaleData,
   defineLazyGetter,
   getInnerWindowID,
   getWinUtils,
@@ -60,11 +54,15 @@ const {
 } = ExtensionCommon;
 
 const {
+  BrowserExtensionContent,
   ChildAPIManager,
   Messenger,
 } = ExtensionChild;
 
 XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
+
+
+var DocumentManager;
 
 const CATEGORY_EXTENSION_SCRIPTS_CONTENT = "webextension-scripts-content";
 
@@ -176,6 +174,22 @@ class CSSCache extends CacheMap {
   }
 }
 
+defineLazyGetter(BrowserExtensionContent.prototype, "staticScripts", () => {
+  return new ScriptCache({hasReturnValue: false});
+});
+
+defineLazyGetter(BrowserExtensionContent.prototype, "dynamicScripts", () => {
+  return new ScriptCache({hasReturnValue: true});
+});
+
+defineLazyGetter(BrowserExtensionContent.prototype, "userCSS", () => {
+  return new CSSCache(Ci.nsIStyleSheetService.USER_SHEET);
+});
+
+defineLazyGetter(BrowserExtensionContent.prototype, "authorCSS", () => {
+  return new CSSCache(Ci.nsIStyleSheetService.AUTHOR_SHEET);
+});
+
 // Represents a content script.
 class Script {
   constructor(extension, options) {
@@ -248,6 +262,7 @@ class Script {
    *        execution is complete.
    */
   async inject(context) {
+    DocumentManager.lazyInit();
     if (this.requiresCleanup) {
       context.addScript(this);
     }
@@ -319,8 +334,6 @@ defineLazyGetter(Script.prototype, "cssURLs", function() {
 
   return urls;
 });
-
-var DocumentManager;
 
 /**
  * An execution context for semi-privileged extension content scripts.
@@ -485,11 +498,6 @@ defineLazyGetter(ContentScriptContextChild.prototype, "childManager", function()
   return childManager;
 });
 
-// For test use only.
-var ExtensionManager = {
-  extensions: new Map(),
-};
-
 // Responsible for creating ExtensionContexts and injecting content
 // scripts into them when new documents are created.
 DocumentManager = {
@@ -528,8 +536,6 @@ DocumentManager = {
 
         this.contexts.delete(windowId);
       }
-
-      ExtensionChild.destroyExtensionContext(windowId);
     },
     "memory-pressure"(subject, topic, data) {
       let timeout = data === "heap-minimize" ? 0 : undefined;
@@ -590,137 +596,13 @@ DocumentManager = {
   },
 };
 
-// Represents a browser extension in the content process.
-class BrowserExtensionContent extends EventEmitter {
-  constructor(data) {
-    super();
-
-    this.data = data;
-    this.id = data.id;
-    this.uuid = data.uuid;
-    this.instanceId = data.instanceId;
-
-    this.MESSAGE_EMIT_EVENT = `Extension:EmitEvent:${this.instanceId}`;
-    Services.cpmm.addMessageListener(this.MESSAGE_EMIT_EVENT, this);
-
-    defineLazyGetter(this, "scripts", () => {
-      return data.content_scripts.map(scriptData => new Script(this, scriptData));
-    });
-
-    this.webAccessibleResources = new MatchGlobs(data.webAccessibleResources);
-    this.whiteListedHosts = new MatchPattern(data.whiteListedHosts);
-    this.permissions = data.permissions;
-    this.optionalPermissions = data.optionalPermissions;
-    this.principal = data.principal;
-
-    this.localeData = new LocaleData(data.localeData);
-
-    this.manifest = data.manifest;
-    this.baseURI = Services.io.newURI(data.baseURL);
-
-    // Only used in addon processes.
-    this.views = new Set();
-
-    // Only used for devtools views.
-    this.devtoolsViews = new Set();
-
-    /* eslint-disable mozilla/balanced-listeners */
-    this.on("add-permissions", (ignoreEvent, permissions) => {
-      if (permissions.permissions.length > 0) {
-        for (let perm of permissions.permissions) {
-          this.permissions.add(perm);
-        }
-      }
-
-      if (permissions.origins.length > 0) {
-        this.whiteListedHosts = new MatchPattern(this.whiteListedHosts.pat.concat(...permissions.origins));
-      }
-    });
-
-    this.on("remove-permissions", (ignoreEvent, permissions) => {
-      if (permissions.permissions.length > 0) {
-        for (let perm of permissions.permissions) {
-          this.permissions.delete(perm);
-        }
-      }
-
-      if (permissions.origins.length > 0) {
-        for (let origin of permissions.origins) {
-          this.whiteListedHosts.removeOne(origin);
-        }
-      }
-    });
-    /* eslint-enable mozilla/balanced-listeners */
-
-    ExtensionManager.extensions.set(this.id, this);
-    DocumentManager.lazyInit();
-  }
-
-  shutdown() {
-    ExtensionManager.extensions.delete(this.id);
-    DocumentManager.shutdownExtension(this);
-    Services.cpmm.removeMessageListener(this.MESSAGE_EMIT_EVENT, this);
-  }
-
-  getContext(window) {
-    let extensions = DocumentManager.getContexts(window);
-
-    let context = extensions.get(this);
-    if (!context) {
-      context = new ContentScriptContextChild(this, window);
-      extensions.set(this, context);
-    }
-    return context;
-  }
-
-  emit(event, ...args) {
-    Services.cpmm.sendAsyncMessage(this.MESSAGE_EMIT_EVENT, {event, args});
-
-    super.emit(event, ...args);
-  }
-
-  receiveMessage({name, data}) {
-    if (name === this.MESSAGE_EMIT_EVENT) {
-      super.emit(data.event, ...data.args);
-    }
-  }
-
-  localizeMessage(...args) {
-    return this.localeData.localizeMessage(...args);
-  }
-
-  localize(...args) {
-    return this.localeData.localize(...args);
-  }
-
-  hasPermission(perm) {
-    let match = /^manifest:(.*)/.exec(perm);
-    if (match) {
-      return this.manifest[match[1]] != null;
-    }
-    return this.permissions.has(perm);
-  }
-}
-
-defineLazyGetter(BrowserExtensionContent.prototype, "staticScripts", () => {
-  return new ScriptCache({hasReturnValue: false});
-});
-
-defineLazyGetter(BrowserExtensionContent.prototype, "dynamicScripts", () => {
-  return new ScriptCache({hasReturnValue: true});
-});
-
-defineLazyGetter(BrowserExtensionContent.prototype, "userCSS", () => {
-  return new CSSCache(Ci.nsIStyleSheetService.USER_SHEET);
-});
-
-defineLazyGetter(BrowserExtensionContent.prototype, "authorCSS", () => {
-  return new CSSCache(Ci.nsIStyleSheetService.AUTHOR_SHEET);
-});
-
 this.ExtensionContent = {
   BrowserExtensionContent,
   Script,
+
+  shutdownExtension(extension) {
+    DocumentManager.shutdownExtension(extension);
+  },
 
   // This helper is exported to be integrated in the devtools RDP actors,
   // that can use it to retrieve the existent WebExtensions ContentScripts
@@ -732,6 +614,17 @@ this.ExtensionContent = {
 
   initExtensionContext(extension, window) {
     DocumentManager.initExtensionContext(extension, window);
+  },
+
+  getContext(extension, window) {
+    let extensions = DocumentManager.getContexts(window);
+
+    let context = extensions.get(this);
+    if (!context) {
+      context = new ContentScriptContextChild(extension, window);
+      extensions.set(extension, context);
+    }
+    return context;
   },
 
   handleExtensionCapture(global, width, height, options) {
