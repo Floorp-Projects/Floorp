@@ -91,7 +91,7 @@ this.PlacesTestUtils = Object.freeze({
       Services.obs.addObserver(function observe(subj, topic, data) {
         Services.obs.removeObserver(observe, topic);
         resolve();
-      }, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+      }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
     });
 
     return Promise.all([expirationFinished, PlacesUtils.history.clear()]);

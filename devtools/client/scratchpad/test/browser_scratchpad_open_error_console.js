@@ -28,7 +28,7 @@ function runTests()
     is(aSubject.data, hud.hudId, "notification hudId is correct");
 
     HUDService.toggleBrowserConsole().then(finish);
-  }, "web-console-created");
+  }, "web-console-created", false);
 
   let hud = HUDService.getBrowserConsole();
   ok(!hud, "browser console is not open");

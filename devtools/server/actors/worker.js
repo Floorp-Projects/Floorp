@@ -267,7 +267,7 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
     this._waitingWorker = new ServiceWorkerActor(conn, waitingWorker);
     this._activeWorker = new ServiceWorkerActor(conn, activeWorker);
 
-    Services.obs.addObserver(this, PushService.subscriptionModifiedTopic);
+    Services.obs.addObserver(this, PushService.subscriptionModifiedTopic, false);
   },
 
   onChange() {

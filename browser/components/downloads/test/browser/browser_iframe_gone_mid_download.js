@@ -22,7 +22,7 @@ function test_deleted_iframe(perSitePref, windowOptions = {}) {
           Services.obs.removeObserver(obs, topic);
           resolve();
         }
-      }, "dom-window-destroyed");
+      }, "dom-window-destroyed", false);
     });
     iframe.remove();
     yield promiseIframeWindowGone;

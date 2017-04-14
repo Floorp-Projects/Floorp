@@ -231,7 +231,7 @@ function unloadLibraries() {
 }
 
 function loadLibraries() {
-  Services.obs.addObserver(unloadLibraries, "xpcom-shutdown");
+  Services.obs.addObserver(unloadLibraries, "xpcom-shutdown", false);
   gLibs.ese = ctypes.open("esent.dll");
   gLibs.kernel = ctypes.open("kernel32.dll");
   KERNEL.FileTimeToSystemTime = gLibs.kernel.declare("FileTimeToSystemTime",

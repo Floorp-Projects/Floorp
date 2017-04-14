@@ -58,7 +58,8 @@ DevToolsStartup.prototype = {
         this.handleDevToolsFlag(window);
       }
     }.bind(this);
-    Services.obs.addObserver(onStartup, "browser-delayed-startup-finished");
+    Services.obs.addObserver(onStartup, "browser-delayed-startup-finished",
+                             false);
   },
 
   initDevTools: function () {
@@ -131,7 +132,7 @@ DevToolsStartup.prototype = {
         devtoolsThreadResumed = true;
         Services.obs.removeObserver(observe, "devtools-thread-resumed");
       };
-      Services.obs.addObserver(observe, "devtools-thread-resumed");
+      Services.obs.addObserver(observe, "devtools-thread-resumed", false);
     }
 
     const { BrowserToolboxProcess } = Cu.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});

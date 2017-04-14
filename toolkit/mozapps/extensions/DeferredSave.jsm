@@ -53,8 +53,8 @@ const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 */
 var PrefObserver = {
  init() {
-   Services.prefs.addObserver(PREF_LOGGING_ENABLED, this);
-   Services.obs.addObserver(this, "xpcom-shutdown");
+   Services.prefs.addObserver(PREF_LOGGING_ENABLED, this, false);
+   Services.obs.addObserver(this, "xpcom-shutdown", false);
    this.observe(null, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, PREF_LOGGING_ENABLED);
  },
 

@@ -51,7 +51,7 @@ this.ReaderMode = {
   get maxElemsToParse() {
     delete this.parseNodeLimit;
 
-    Services.prefs.addObserver("reader.parse-node-limit", this);
+    Services.prefs.addObserver("reader.parse-node-limit", this, false);
     return this.parseNodeLimit = Services.prefs.getIntPref("reader.parse-node-limit");
   },
 
@@ -59,7 +59,7 @@ this.ReaderMode = {
     delete this.isEnabledForParseOnLoad;
 
     // Listen for future pref changes.
-    Services.prefs.addObserver("reader.parse-on-load.", this);
+    Services.prefs.addObserver("reader.parse-on-load.", this, false);
 
     return this.isEnabledForParseOnLoad = this._getStateForParseOnLoad();
   },

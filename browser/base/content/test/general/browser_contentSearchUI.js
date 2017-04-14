@@ -339,7 +339,7 @@ add_task(function* formHistory() {
       Services.obs.removeObserver(onAdd, "satchel-storage-changed");
       executeSoon(() => deferred.resolve());
     }
-  }, "satchel-storage-changed");
+  }, "satchel-storage-changed", false);
   yield Promise.all([msg("addInputValueToFormHistory"), deferred.promise]);
 
   // Reset the input.
@@ -363,7 +363,7 @@ add_task(function* formHistory() {
       Services.obs.removeObserver(onRemove, "satchel-storage-changed");
       executeSoon(() => deferred.resolve());
     }
-  }, "satchel-storage-changed");
+  }, "satchel-storage-changed", false);
 
   state = yield msg("key", "VK_DELETE");
   checkState(state, "x", ["xfoo", "xbar"], -1);
@@ -394,7 +394,7 @@ add_task(function* cycleEngines() {
       SimpleTest.is(subj.name, newEngineName, "Engine cycled correctly");
       Services.obs.removeObserver(resolver, "browser-search-engine-modified");
       deferred.resolve();
-    }, "browser-search-engine-modified");
+    }, "browser-search-engine-modified", false);
     return deferred.promise;
   }
 
@@ -608,7 +608,7 @@ add_task(function* search() {
       Services.obs.removeObserver(onRemove, "satchel-storage-changed");
       executeSoon(() => deferred.resolve());
     }
-  }, "satchel-storage-changed");
+  }, "satchel-storage-changed", false);
 
   yield msg("key", { key: "x", waitForSuggestions: true });
   yield msg("key", "VK_DOWN");

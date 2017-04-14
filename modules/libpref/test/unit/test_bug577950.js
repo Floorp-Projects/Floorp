@@ -23,6 +23,6 @@ function run_test() {
   }
 
   /* Set the same pref twice.  This shouldn't leak. */
-  pb.addObserver("UserPref.nonexistent.setIntPref", observer);
-  pb.addObserver("UserPref.nonexistent.setIntPref", observer);
+  pb.addObserver("UserPref.nonexistent.setIntPref", observer, false);
+  pb.addObserver("UserPref.nonexistent.setIntPref", observer, false);
 }

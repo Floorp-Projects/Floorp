@@ -194,7 +194,7 @@
             res(ctx);
           }
         }
-        SpecialPowers.addObserver(ctx.observer, "service-worker-shutdown");
+        SpecialPowers.addObserver(ctx.observer, "service-worker-shutdown", false);
       });
 
       return ctx;

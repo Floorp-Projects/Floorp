@@ -307,7 +307,7 @@ this.tabs = class extends ExtensionAPI {
                 Services.obs.removeObserver(obs, "browser-delayed-startup-finished");
                 resolve(window);
               };
-              Services.obs.addObserver(obs, "browser-delayed-startup-finished");
+              Services.obs.addObserver(obs, "browser-delayed-startup-finished", false);
             } else {
               resolve(window);
             }

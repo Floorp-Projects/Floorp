@@ -198,7 +198,7 @@ XPCOMUtils.defineLazyGetter(this, "gMap", function() {
 function SecureElementManager() {
   this._registerMessageListeners();
   this._registerSEListeners();
-  Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   this._acEnforcer =
     Cc["@mozilla.org/secureelement/access-control/ace;1"]
     .getService(Ci.nsIAccessControlEnforcer);

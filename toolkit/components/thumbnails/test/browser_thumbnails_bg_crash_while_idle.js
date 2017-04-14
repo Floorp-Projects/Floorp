@@ -29,7 +29,7 @@ function* runTests() {
         next();
       }});
     });
-  }, "oop-frameloader-crashed");
+  }, "oop-frameloader-crashed", false);
 
   // Nothing is pending - crash the process.
   info("Crashing the thumbnail content process.");

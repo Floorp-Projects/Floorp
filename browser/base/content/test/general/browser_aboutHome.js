@@ -260,7 +260,7 @@ add_task(function* () {
         } catch (ex) {}
         resolve();
       });
-      Services.obs.addObserver(searchObserver, "browser-search-engine-modified");
+      Services.obs.addObserver(searchObserver, "browser-search-engine-modified", false);
       Services.search.addEngine("http://test:80/browser/browser/base/content/test/general/POSTSearchEngine.xml",
                                 null, null, false);
     });

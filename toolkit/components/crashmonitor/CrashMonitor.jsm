@@ -166,7 +166,7 @@ this.CrashMonitor = {
     CrashMonitorInternal.checkpoints["profile-after-change"] = true;
 
     NOTIFICATIONS.forEach(function(aTopic) {
-      Services.obs.addObserver(this, aTopic);
+      Services.obs.addObserver(this, aTopic, false);
     }, this);
 
     // Add shutdown blocker for profile-before-change

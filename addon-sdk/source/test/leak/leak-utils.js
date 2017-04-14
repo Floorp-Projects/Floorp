@@ -53,7 +53,7 @@ exports.asyncWindowLeakTest = function*(assert, asyncTestFunc) {
       weakWindows.push(Cu.getWeakReference(supportsWeak));
     }
   }
-  Services.obs.addObserver(windowObserver, "domwindowopened");
+  Services.obs.addObserver(windowObserver, "domwindowopened", false);
 
   // Execute the body of the test.
   let testLoader = yield asyncTestFunc(assert);

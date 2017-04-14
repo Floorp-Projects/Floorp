@@ -57,7 +57,7 @@ function LOG(string) {
  *  @constructor
  */
 function TimerManager() {
-  Services.obs.addObserver(this, "xpcom-shutdown");
+  Services.obs.addObserver(this, "xpcom-shutdown", false);
 }
 TimerManager.prototype = {
   /**

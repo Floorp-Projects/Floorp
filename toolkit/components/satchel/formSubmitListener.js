@@ -24,8 +24,8 @@ var satchelFormListener = {
     saveHttpsForms: true,
 
     init() {
-        Services.obs.addObserver(this, "earlyformsubmit");
-        Services.prefs.addObserver("browser.formfill.", this);
+        Services.obs.addObserver(this, "earlyformsubmit", false);
+        Services.prefs.addObserver("browser.formfill.", this, false);
         this.updatePrefs();
         addEventListener("unload", this, false);
     },

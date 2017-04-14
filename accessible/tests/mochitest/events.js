@@ -2120,7 +2120,7 @@ function listenA11yEvents(aStartToListen)
   if (aStartToListen) {
     // Add observer when adding the first applicant only.
     if (!(gA11yEventApplicantsCount++))
-      Services.obs.addObserver(gA11yEventObserver, "accessible-event");
+      Services.obs.addObserver(gA11yEventObserver, "accessible-event", false);
   } else {
     // Remove observer when there are no more applicants only.
     // '< 0' case should not happen, but just in case: removeObserver() will throw.

@@ -115,7 +115,7 @@ var gFxAccounts = {
     }
 
     for (let topic of this.topics) {
-      Services.obs.addObserver(this, topic);
+      Services.obs.addObserver(this, topic, false);
     }
 
     gNavToolbox.addEventListener("customizationstarting", this);

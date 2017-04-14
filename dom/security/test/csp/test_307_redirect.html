@@ -22,8 +22,8 @@ Test that CSP violation reports are not sent when a 307 redirect is encountered
 
 // This is used to watch the redirect of the report POST get blocked
 function examiner() {
-  SpecialPowers.addObserver(this, "csp-on-violate-policy");
-  SpecialPowers.addObserver(this, "specialpowers-http-notify-request");
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request", false);
 }
 
 examiner.prototype  = {

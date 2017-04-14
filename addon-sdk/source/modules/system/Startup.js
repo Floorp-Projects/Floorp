@@ -52,5 +52,5 @@ else {
     Services.tm.dispatchToMainThread(() => gOnceInitializedDeferred.resolve());
   }
 
-  Services.obs.addObserver(listener, appStartup);
+  Services.obs.addObserver(listener, appStartup, false);
 }

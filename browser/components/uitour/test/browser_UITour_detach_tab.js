@@ -41,7 +41,7 @@ var tests = [
     Services.obs.addObserver(function onBrowserDelayedStartup(aWindow) {
       Services.obs.removeObserver(onBrowserDelayedStartup, "browser-delayed-startup-finished");
       browserStartupDeferred.resolve(aWindow);
-    }, "browser-delayed-startup-finished");
+    }, "browser-delayed-startup-finished", false);
 
     yield ContentTask.spawn(gBrowser.selectedBrowser, myDocIdentifier, contentMyDocIdentifier => {
       let onVisibilityChange = () => {
@@ -86,7 +86,7 @@ var tests = [
     gContentAPI.hideMenu("appMenu");
     gTestTab = null;
 
-    Services.obs.addObserver(onDOMWindowDestroyed, "dom-window-destroyed");
+    Services.obs.addObserver(onDOMWindowDestroyed, "dom-window-destroyed", false);
     gContentWindow.close();
 
     yield windowDestroyedDeferred.promise;

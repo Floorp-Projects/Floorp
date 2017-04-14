@@ -28,7 +28,7 @@ function doTest()
       SimpleTest.finish();
     }
   });
-  SpecialPowers.addObserver(observer, "speculative-connect-request");
+  SpecialPowers.addObserver(observer, "speculative-connect-request", false);
 
   // test the link rel=preconnect element in the head for both normal
   // and crossOrigin=anonymous

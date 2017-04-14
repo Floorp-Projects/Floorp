@@ -93,7 +93,7 @@ function onZoomReset(aCallback) {
   SpecialPowers.addObserver(function observe() {
     SpecialPowers.removeObserver(observe, specialPowersTopic);
     SimpleTest.executeSoon(aCallback);
-  }, specialPowersTopic);
+  }, specialPowersTopic, false);
 }
 
 function setDeltaMultiplierSettings(aSettings, aCallback)

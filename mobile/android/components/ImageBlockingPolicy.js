@@ -32,7 +32,7 @@ const OPTION_WIFI_ONLY = 2;
  * Content policy for blocking images
  */
 function ImageBlockingPolicy() {
-  Services.obs.addObserver(this, TOPIC_GATHER_TELEMETRY);
+  Services.obs.addObserver(this, TOPIC_GATHER_TELEMETRY, false);
 }
 
 ImageBlockingPolicy.prototype = {

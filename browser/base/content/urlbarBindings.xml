@@ -64,7 +64,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                                 .getService(Components.interfaces.nsIPrefService)
                                 .getBranch("browser.urlbar.");
 
-        this._prefs.addObserver("", this);
+        this._prefs.addObserver("", this, false);
         this.clickSelectsAll = this._prefs.getBoolPref("clickSelectsAll");
         this.doubleClickSelectsAll = this._prefs.getBoolPref("doubleClickSelectsAll");
         this.completeDefaultIndex = this._prefs.getBoolPref("autoFill");

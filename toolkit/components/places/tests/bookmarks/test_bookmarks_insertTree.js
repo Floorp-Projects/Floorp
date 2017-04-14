@@ -216,7 +216,7 @@ add_task(function* create_hierarchy() {
       Assert.greater(itemId, 0, "Should have a valid itemId");
     },
   };
-  PlacesUtils.bookmarks.addObserver(obs);
+  PlacesUtils.bookmarks.addObserver(obs, false);
   let bms = yield PlacesUtils.bookmarks.insertTree({children: [{
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     title: "Root item",
@@ -283,7 +283,7 @@ add_task(function* insert_many_non_nested() {
       Assert.greater(itemId, 0, "Should have a valid itemId");
     },
   };
-  PlacesUtils.bookmarks.addObserver(obs);
+  PlacesUtils.bookmarks.addObserver(obs, false);
   let bms = yield PlacesUtils.bookmarks.insertTree({children: [{
       url: "http://www.example.com/1",
       title: "Item 1",

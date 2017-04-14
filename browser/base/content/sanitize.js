@@ -627,8 +627,8 @@ Sanitizer.prototype = {
               }
             }
           }
-          Services.obs.addObserver(onWindowOpened, "browser-delayed-startup-finished");
-          Services.obs.addObserver(onWindowClosed, "xul-window-destroyed");
+          Services.obs.addObserver(onWindowOpened, "browser-delayed-startup-finished", false);
+          Services.obs.addObserver(onWindowClosed, "xul-window-destroyed", false);
         });
 
         // Start the process of closing windows

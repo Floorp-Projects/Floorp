@@ -43,7 +43,7 @@ function test() {
     });
   }
 
-  Services.obs.addObserver(observer, "keyword-search");
+  Services.obs.addObserver(observer, "keyword-search", false);
 
   gURLBar.value = "firefox health report";
   gURLBar.handleCommand();

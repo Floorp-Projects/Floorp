@@ -31,7 +31,7 @@ var gAdvancedPane = {
         Services.prefs.removeObserver("app.update.", this);
       }.bind(this);
       window.addEventListener("unload", onUnload);
-      Services.prefs.addObserver("app.update.", this);
+      Services.prefs.addObserver("app.update.", this, false);
       this.updateReadPrefs();
     }
     if (AppConstants.MOZ_CRASHREPORTER) {

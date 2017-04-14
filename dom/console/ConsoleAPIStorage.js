@@ -76,9 +76,9 @@ ConsoleAPIStorageService.prototype = {
   /** @private */
   init: function CS_init()
   {
-    Services.obs.addObserver(this, "xpcom-shutdown");
-    Services.obs.addObserver(this, "inner-window-destroyed");
-    Services.obs.addObserver(this, "memory-pressure");
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
+    Services.obs.addObserver(this, "inner-window-destroyed", false);
+    Services.obs.addObserver(this, "memory-pressure", false);
   },
 
   /**

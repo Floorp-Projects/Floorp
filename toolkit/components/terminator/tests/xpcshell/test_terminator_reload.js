@@ -54,7 +54,8 @@ add_task(function* test_reload() {
         Services.obs.removeObserver(observer, TOPIC);
         resolve();
       },
-      TOPIC));
+      TOPIC,
+      false));
 
   do_print("Starting nsTerminatorTelemetry");
   let tt = Cc["@mozilla.org/toolkit/shutdown-terminator-telemetry;1"].

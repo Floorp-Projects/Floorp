@@ -15,7 +15,7 @@ add_task(function* () {
         Ci.nsIAnnotationObserver
       ]),
     };
-    PlacesUtils.annotations.addObserver(annoObserver);
+    PlacesUtils.annotations.addObserver(annoObserver, false);
   });
 
 

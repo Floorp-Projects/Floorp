@@ -27,7 +27,7 @@ function promiseOnClearHistoryObserved() {
       Ci.nsINavHistoryObserver,
     ])
   }
-  PlacesUtils.history.addObserver(historyObserver);
+  PlacesUtils.history.addObserver(historyObserver, false);
   return deferred.promise;
 }
 

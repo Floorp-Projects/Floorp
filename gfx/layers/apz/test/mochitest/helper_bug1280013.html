@@ -15,7 +15,7 @@ function* test(testDriver) {
 
   // This listener will trigger the test to continue once APZ is done with
   // processing the scroll.
-  SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
+  SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd", false);
 
   // Scroll down to the iframe. Do it in two drags instead of one in case the
   // device screen is short

@@ -420,8 +420,8 @@ this.cookies = class extends ExtensionAPI {
             }
           };
 
-          Services.obs.addObserver(observer, "cookie-changed");
-          Services.obs.addObserver(observer, "private-cookie-changed");
+          Services.obs.addObserver(observer, "cookie-changed", false);
+          Services.obs.addObserver(observer, "private-cookie-changed", false);
           return () => {
             Services.obs.removeObserver(observer, "cookie-changed");
             Services.obs.removeObserver(observer, "private-cookie-changed");

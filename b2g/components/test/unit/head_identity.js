@@ -131,7 +131,7 @@ function makeObserver(aObserveTopic, aObserveFunc) {
     }
   };
 
-  Services.obs.addObserver(observer, aObserveTopic);
+  Services.obs.addObserver(observer, aObserveTopic, false);
 }
 
 // a hook to set up the ID service with an identity with keypair and all

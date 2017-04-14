@@ -55,7 +55,7 @@ function forceScrollAndWait(scrollbox, callback) {
     SpecialPowers.Services.obs.removeObserver(postApzFlush, "apz-repaints-flushed", false);
     waitForPaint(win, utils, callback);
   }
-  SpecialPowers.Services.obs.addObserver(postApzFlush, "apz-repaints-flushed");
+  SpecialPowers.Services.obs.addObserver(postApzFlush, "apz-repaints-flushed", false);
   if (!utils.flushApzRepaints()) {
     postApzFlush();
   }

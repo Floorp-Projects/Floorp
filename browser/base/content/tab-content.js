@@ -603,7 +603,7 @@ function gKeywordURIFixup(fixupInfo) {
 
   sendAsyncMessage("Browser:URIFixup", data);
 }
-Services.obs.addObserver(gKeywordURIFixup, "keyword-uri-fixup");
+Services.obs.addObserver(gKeywordURIFixup, "keyword-uri-fixup", false);
 addEventListener("unload", () => {
   Services.obs.removeObserver(gKeywordURIFixup, "keyword-uri-fixup");
 }, false);
@@ -884,7 +884,7 @@ var RefreshBlocker = {
       this.enable();
     }
 
-    Services.prefs.addObserver(this.PREF, this);
+    Services.prefs.addObserver(this.PREF, this, false);
   },
 
   uninit() {

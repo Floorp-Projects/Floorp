@@ -55,7 +55,7 @@ var NotificationDB = {
     this.tasks = []; // read/write operation queue
     this.runningTask = null;
 
-    Services.obs.addObserver(this, "xpcom-shutdown");
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
     this.registerListeners();
   },
 

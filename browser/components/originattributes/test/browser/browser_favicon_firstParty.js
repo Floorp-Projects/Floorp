@@ -47,7 +47,7 @@ function clearAllPlacesFavicons() {
       }
     };
 
-    Services.obs.addObserver(observer, "places-favicons-expired");
+    Services.obs.addObserver(observer, "places-favicons-expired", false);
     faviconService.expireAllFavicons();
   });
 }
@@ -108,7 +108,7 @@ function observeFavicon(aFirstPartyDomain, aExpectedCookie, aPageURI) {
       }
     };
 
-    Services.obs.addObserver(observer, "http-on-modify-request");
+    Services.obs.addObserver(observer, "http-on-modify-request", false);
   });
 }
 
@@ -138,8 +138,8 @@ function waitOnFaviconResponse(aFaviconURL) {
       }
     };
 
-    Services.obs.addObserver(observer, "http-on-examine-response");
-    Services.obs.addObserver(observer, "http-on-examine-cached-response");
+    Services.obs.addObserver(observer, "http-on-examine-response", false);
+    Services.obs.addObserver(observer, "http-on-examine-cached-response", false);
   });
 }
 
@@ -156,7 +156,7 @@ function waitOnFaviconLoaded(aFaviconURL) {
       },
     };
 
-    PlacesUtils.history.addObserver(observer);
+    PlacesUtils.history.addObserver(observer, false);
   });
 }
 

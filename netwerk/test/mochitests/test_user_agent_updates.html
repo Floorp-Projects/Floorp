@@ -241,7 +241,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
       _notifyOnUpdate = false; // Only notify once, for the first update.
       sendAsyncMessage("useragent-update-complete");
     }
-  });
+  } , false);
 
   var OVERRIDES = null;
 

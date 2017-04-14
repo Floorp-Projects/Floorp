@@ -271,10 +271,10 @@ SessionRecorder.prototype = Object.freeze({
 
     this._started = true;
 
-    this._os.addObserver(this, "profile-before-change");
-    this._os.addObserver(this, "user-interaction-active");
-    this._os.addObserver(this, "user-interaction-inactive");
-    this._os.addObserver(this, "idle-daily");
+    this._os.addObserver(this, "profile-before-change", false);
+    this._os.addObserver(this, "user-interaction-active", false);
+    this._os.addObserver(this, "user-interaction-inactive", false);
+    this._os.addObserver(this, "idle-daily", false);
 
     // This has the side-effect of clearing current session state.
     this._moveCurrentToPrevious();

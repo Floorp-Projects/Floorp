@@ -128,6 +128,6 @@ function promiseSearchTopic(expectedVerb) {
       Services.obs.removeObserver(observe, "browser-search-engine-modified");
       deferred.resolve();
     }
-  }, "browser-search-engine-modified");
+  }, "browser-search-engine-modified", false);
   return deferred.promise;
 }

@@ -154,7 +154,7 @@ var Logins = {
   init: function () {
     window.addEventListener("popstate", this);
 
-    Services.obs.addObserver(this, "passwordmgr-storage-changed");
+    Services.obs.addObserver(this, "passwordmgr-storage-changed", false);
     document.getElementById("update-btn").addEventListener("click", this._onSaveEditLogin.bind(this));
     document.getElementById("password-btn").addEventListener("click", this._onPasswordBtn.bind(this));
 

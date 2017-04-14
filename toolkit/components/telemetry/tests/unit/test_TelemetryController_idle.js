@@ -49,7 +49,7 @@ add_task(function* testSendPendingOnIdleDaily() {
     gHttpServer.registerPrefixHandler("/submit/telemetry/", request => resolve(request)));
 
   let gatherPromise = PromiseUtils.defer();
-  Services.obs.addObserver(gatherPromise.resolve, "gather-telemetry");
+  Services.obs.addObserver(gatherPromise.resolve, "gather-telemetry", false);
 
   // Check that we are correctly receiving the gather-telemetry notification.
   TelemetrySession.observe(null, "idle-daily", null);

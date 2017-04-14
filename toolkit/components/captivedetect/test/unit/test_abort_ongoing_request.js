@@ -32,7 +32,7 @@ function fakeUIResponse() {
       loginFinished = true;
       do_check_eq(++step, 3);
     }
-  }, "captive-portal-login");
+  }, "captive-portal-login", false);
 }
 
 function test_multiple_requests_abort() {

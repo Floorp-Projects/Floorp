@@ -87,7 +87,7 @@ function run_test() {
     // If we wait until after we go through the event loop, gfxInfo is sure to
     // have processed the gfxItems event.
     do_execute_soon(checkBlacklist);
-  }, "blocklist-data-gfxItems");
+  }, "blocklist-data-gfxItems", false);
 
   load_blocklist("test_gfxBlacklist.xml");
 }

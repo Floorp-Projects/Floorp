@@ -102,7 +102,7 @@ var ServerLoggerMonitor = {
     if (!size) {
       trace.log("ServerLoggerMonitor.onAttatchChild; Add HTTP Observer");
       Services.obs.addObserver(this.onExamineResponse,
-        "http-on-examine-response");
+        "http-on-examine-response", false);
     }
 
     // Collect child loggers. The frame element where the

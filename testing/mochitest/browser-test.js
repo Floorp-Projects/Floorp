@@ -33,8 +33,8 @@ var TabDestroyObserver = {
   promiseResolver: null,
 
   init: function() {
-    Services.obs.addObserver(this, "message-manager-close");
-    Services.obs.addObserver(this, "message-manager-disconnect");
+    Services.obs.addObserver(this, "message-manager-close", false);
+    Services.obs.addObserver(this, "message-manager-disconnect", false);
   },
 
   destroy: function() {

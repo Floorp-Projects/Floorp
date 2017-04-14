@@ -99,7 +99,7 @@ var gNextLoaderID = 0;
 this.DevToolsLoader = function DevToolsLoader() {
   this.require = this.require.bind(this);
 
-  Services.obs.addObserver(this, "devtools-unload");
+  Services.obs.addObserver(this, "devtools-unload", false);
 };
 
 DevToolsLoader.prototype = {

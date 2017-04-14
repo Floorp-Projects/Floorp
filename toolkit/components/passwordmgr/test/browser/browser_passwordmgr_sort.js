@@ -91,7 +91,7 @@ add_task(function* test() {
                     Services.obs.removeObserver(arguments.callee, aTopic);
                     func();
                 }
-            }, "passwordmgr-password-toggle-complete");
+            }, "passwordmgr-password-toggle-complete", false);
 
             EventUtils.synthesizeMouse(toggleButton, 1, 1, {}, win);
         }

@@ -45,7 +45,7 @@ add_task(function* () {
             }
         };
 
-        historyService.addObserver(historyObserver);
+        historyService.addObserver(historyObserver, false);
     });
 
     /* Queries nsINavHistoryService and returns a single history entry

@@ -121,7 +121,7 @@ add_task(function* test_notifications_onDeleteVisits() {
         do_check_eq(aReason, Ci.nsINavHistoryObserver.REASON_EXPIRED);
       },
     };
-    hs.addObserver(historyObserver);
+    hs.addObserver(historyObserver, false);
 
     // Expire now.
     yield promiseForceExpirationStep(currentTest.limitExpiration);

@@ -32,7 +32,7 @@ add_task(function*() {
         info("Prompts opened.");
         resolve();
       }
-    }, "tabmodal-dialog-loaded");
+    }, "tabmodal-dialog-loaded", false);
   });
 
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, url, true);

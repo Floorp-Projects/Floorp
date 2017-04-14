@@ -591,7 +591,7 @@ this.PlacesUtils = {
   registerShutdownFunction: function PU_registerShutdownFunction(aFunc) {
     // If this is the first registered function, add the shutdown observer.
     if (this._shutdownFunctions.length == 0) {
-      Services.obs.addObserver(this, this.TOPIC_SHUTDOWN);
+      Services.obs.addObserver(this, this.TOPIC_SHUTDOWN, false);
     }
     this._shutdownFunctions.push(aFunc);
   },
@@ -2459,7 +2459,7 @@ XPCOMUtils.defineLazyGetter(this, "gKeywordsCachePromise", () =>
         }),
       };
 
-      PlacesUtils.bookmarks.addObserver(observer);
+      PlacesUtils.bookmarks.addObserver(observer, false);
       PlacesUtils.registerShutdownFunction(() => {
         PlacesUtils.bookmarks.removeObserver(observer);
       });
@@ -2601,7 +2601,7 @@ var GuidHelper = {
         onItemVisited() {},
         onItemMoved() {},
       };
-      PlacesUtils.bookmarks.addObserver(this.observer);
+      PlacesUtils.bookmarks.addObserver(this.observer, false);
       PlacesUtils.registerShutdownFunction(() => {
         PlacesUtils.bookmarks.removeObserver(this.observer);
       });

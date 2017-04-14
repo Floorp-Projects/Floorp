@@ -18,6 +18,6 @@ function run_test() {
     }
   };
   var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-  os.addObserver(obs, "last-pb-context-exited");
+  os.addObserver(obs, "last-pb-context-exited", false);
   destroy_transient_docshell();
 }

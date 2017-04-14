@@ -54,7 +54,7 @@ function load_blocklist(aFile) {
       Services.obs.removeObserver(arguments.callee, "blocklist-updated");
 
       resolve();
-    }, "blocklist-updated");
+    }, "blocklist-updated", false);
 
     Services.prefs.setCharPref("extensions.blocklist.url", `http://localhost:${gPort}/data/${aFile}`);
     var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].

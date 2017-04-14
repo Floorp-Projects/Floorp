@@ -67,7 +67,7 @@ MainProcessSingleton.prototype = {
   observe(subject, topic, data) {
     switch (topic) {
     case "app-startup": {
-      Services.obs.addObserver(this, "xpcom-shutdown");
+      Services.obs.addObserver(this, "xpcom-shutdown", false);
 
       // Load this script early so that console.* is initialized
       // before other frame scripts.

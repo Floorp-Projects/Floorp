@@ -345,7 +345,7 @@ function openLinkIn(url, where, params) {
           }, "webNavigation-createdNavigationTarget", null);
         }
       };
-      Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished");
+      Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished", false);
     }
     win = Services.ww.openWindow(sourceWindow, getBrowserURL(), null, features, sa);
     return;
@@ -767,7 +767,7 @@ function openPreferences(paneID, extraArgs) {
       }
       Services.obs.removeObserver(advancedPaneLoadedObs, "advanced-pane-loaded");
       switchToAdvancedSubPane(browser.contentDocument);
-    }, "advanced-pane-loaded");
+    }, "advanced-pane-loaded", false);
   } else {
     if (paneID) {
       browser.contentWindow.gotoPref(paneID);

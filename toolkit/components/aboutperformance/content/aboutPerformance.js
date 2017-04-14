@@ -990,7 +990,7 @@ var go = Task.async(function*() {
     Control._setOptions(options);
     Control.update();
   };
-  Services.obs.addObserver(testUpdate, TEST_DRIVER_TOPIC);
+  Services.obs.addObserver(testUpdate, TEST_DRIVER_TOPIC, false);
   window.addEventListener("unload", () => Services.obs.removeObserver(testUpdate, TEST_DRIVER_TOPIC));
 
   yield Control.update();

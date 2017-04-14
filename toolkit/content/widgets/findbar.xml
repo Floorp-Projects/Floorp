@@ -375,14 +375,14 @@
         this._useModalHighlight = prefsvc.getBoolPref("findbar.modalHighlight");
 
         prefsvc.addObserver("accessibility.typeaheadfind",
-                            this._observer);
+                            this._observer, false);
         prefsvc.addObserver("accessibility.typeaheadfind.linksonly",
-                            this._observer);
+                            this._observer, false);
         prefsvc.addObserver("accessibility.typeaheadfind.casesensitive",
-                            this._observer);
-        prefsvc.addObserver("findbar.entireword", this._observer);
-        prefsvc.addObserver("findbar.highlightAll", this._observer);
-        prefsvc.addObserver("findbar.modalHighlight", this._observer);
+                            this._observer, false);
+        prefsvc.addObserver("findbar.entireword", this._observer, false);
+        prefsvc.addObserver("findbar.highlightAll", this._observer, false);
+        prefsvc.addObserver("findbar.modalHighlight", this._observer, false);
 
         this._findAsYouType =
           prefsvc.getBoolPref("accessibility.typeaheadfind");

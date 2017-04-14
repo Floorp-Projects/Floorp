@@ -620,7 +620,7 @@ function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWind
         });
       }
 
-      SpecialPowers.Services.obs.addObserver(waitForPaints, "apz-repaints-flushed");
+      SpecialPowers.Services.obs.addObserver(waitForPaints, "apz-repaints-flushed", false);
       if (!utils.flushApzRepaints(aWindow)) {
         waitForPaints();
       }

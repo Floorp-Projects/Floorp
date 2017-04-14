@@ -306,7 +306,7 @@ var testRunner = {
           let os = Cc["@mozilla.org/observer-service;1"]
                      .getService(Ci.nsIObserverService);
 
-          os.addObserver(permObserver, "perm-changed");
+          os.addObserver(permObserver, "perm-changed", false);
 
           if (testRunner._currentTest == 0) {
             is(params.tree.view.rowCount, 0, "no cookie exceptions");

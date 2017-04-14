@@ -48,7 +48,7 @@ function waitForFail() {
       Services.obs.removeObserver(listener, topic);
       resolve();
     }
-    Services.obs.addObserver(listener, "addon-install-origin-blocked");
+    Services.obs.addObserver(listener, "addon-install-origin-blocked", false);
   });
 }
 

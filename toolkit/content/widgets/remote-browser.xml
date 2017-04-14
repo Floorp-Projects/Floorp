@@ -337,7 +337,7 @@
 
           mm.sendAsyncMessage("PermitUnload", {id});
           mm.addMessageListener("PermitUnload", msgListener);
-          Services.obs.addObserver(observer, "message-manager-close");
+          Services.obs.addObserver(observer, "message-manager-close", false);
 
           let timedOut = false;
           function timeout() {

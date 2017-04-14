@@ -441,7 +441,7 @@ function _setupDebuggerServer(breakpointFiles, callback) {
   };
 
   for (let topic of TOPICS) {
-    obsSvc.addObserver(observe, topic);
+    obsSvc.addObserver(observe, topic, false);
   }
   return DebuggerServer;
 }

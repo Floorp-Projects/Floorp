@@ -239,7 +239,7 @@ PrefTracker.prototype = {
   },
 
   startTracking() {
-    Services.prefs.addObserver("", this);
+    Services.prefs.addObserver("", this, false);
   },
 
   stopTracking() {

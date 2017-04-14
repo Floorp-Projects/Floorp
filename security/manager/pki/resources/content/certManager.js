@@ -68,8 +68,8 @@ function DeregisterSmartCardObservers() {
 }
 
 function LoadCerts() {
-  Services.obs.addObserver(smartCardObserver, "smartcard-insert");
-  Services.obs.addObserver(smartCardObserver, "smartcard-remove");
+  Services.obs.addObserver(smartCardObserver, "smartcard-insert", false);
+  Services.obs.addObserver(smartCardObserver, "smartcard-remove", false);
 
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
   var certcache = certdb.getCerts();

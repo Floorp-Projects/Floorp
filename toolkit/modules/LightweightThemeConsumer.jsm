@@ -22,7 +22,7 @@ this.LightweightThemeConsumer =
   this._lastScreenWidth = screen.width;
   this._lastScreenHeight = screen.height;
 
-  Services.obs.addObserver(this, "lightweight-theme-styling-update");
+  Services.obs.addObserver(this, "lightweight-theme-styling-update", false);
 
   var temp = {};
   Cu.import("resource://gre/modules/LightweightThemeManager.jsm", temp);

@@ -49,7 +49,7 @@ add_test(function test_intl_accept_language() {
 
   let hawk = new HAWKAuthenticatedRESTRequest("https://example.com");
 
-  Services.prefs.addObserver("intl.accept_languages", checkLanguagePref);
+  Services.prefs.addObserver("intl.accept_languages", checkLanguagePref, false);
   setLanguagePref(languages[testCount]);
 
   function checkLanguagePref() {

@@ -85,7 +85,7 @@ function closeConsoles() {
     }
   }
 
-  Services.obs.addObserver(onWebConsoleClose, "web-console-destroyed");
+  Services.obs.addObserver(onWebConsoleClose, "web-console-destroyed", false);
 
   registerCleanupFunction(() => {
     Services.obs.removeObserver(onWebConsoleClose, "web-console-destroyed");

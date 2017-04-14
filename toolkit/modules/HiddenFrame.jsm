@@ -24,7 +24,7 @@ function ensureCleanupRegistered() {
       for (let hiddenFrame of ChromeUtils.nondeterministicGetWeakSetKeys(gAllHiddenFrames)) {
         hiddenFrame.destroy();
       }
-    }, "xpcom-shutdown");
+    }, "xpcom-shutdown", false);
   }
 }
 

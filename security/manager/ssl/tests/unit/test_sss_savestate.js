@@ -122,5 +122,5 @@ function run_test() {
   }
 
   do_test_pending();
-  Services.obs.addObserver(checkStateWritten, "data-storage-written");
+  Services.obs.addObserver(checkStateWritten, "data-storage-written", false);
 }

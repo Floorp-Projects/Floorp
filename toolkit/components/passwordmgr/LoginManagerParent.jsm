@@ -197,8 +197,8 @@ var LoginManagerParent = {
       // never return). We should guarantee that at least one of these
       // will fire.
       // See bug XXX.
-      Services.obs.addObserver(observer, "passwordmgr-crypto-login");
-      Services.obs.addObserver(observer, "passwordmgr-crypto-loginCanceled");
+      Services.obs.addObserver(observer, "passwordmgr-crypto-login", false);
+      Services.obs.addObserver(observer, "passwordmgr-crypto-loginCanceled", false);
       return;
     }
 

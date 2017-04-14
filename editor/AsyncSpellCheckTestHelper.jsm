@@ -69,8 +69,8 @@ function onSpellCheck(editableElement, callback) {
 
   let os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
-  os.addObserver(observe, SPELL_CHECK_STARTED_TOPIC);
-  os.addObserver(observe, SPELL_CHECK_ENDED_TOPIC);
+  os.addObserver(observe, SPELL_CHECK_STARTED_TOPIC, false);
+  os.addObserver(observe, SPELL_CHECK_ENDED_TOPIC, false);
 
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.init(function tick() {

@@ -51,7 +51,7 @@ classifierHelper.waitForInit = function() {
   return new Promise(function(resolve, reject) {
     observerService.addObserver(function() {
       resolve();
-    }, "mozentries-update-finished");
+    }, "mozentries-update-finished", false);
 
     let listener = {
       QueryInterface: function(iid)

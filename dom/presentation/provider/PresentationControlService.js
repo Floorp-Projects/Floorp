@@ -118,7 +118,7 @@ PresentationControlService.prototype = {
     DEBUG && log("PresentationControlService - service start on port: " + this._port); // jshint ignore:line
 
     // Monitor network interface change to restart server socket.
-    Services.obs.addObserver(this, "network:offline-status-changed");
+    Services.obs.addObserver(this, "network:offline-status-changed", false);
 
     this._notifyServerReady();
   },

@@ -99,7 +99,7 @@ add_task(function* initializeState() {
     GMPScope.GMPProvider.startup();
   }));
 
-  Services.obs.addObserver(gOptionsObserver, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
+  Services.obs.addObserver(gOptionsObserver, AddonManager.OPTIONS_NOTIFICATION_DISPLAYED, false);
 
   // Start out with plugins not being installed, disabled and automatic updates
   // disabled.

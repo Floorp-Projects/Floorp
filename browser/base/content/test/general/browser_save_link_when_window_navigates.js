@@ -140,7 +140,7 @@ function test() {
         executeSoon(aCallback);
         info("whenDelayedStartupFinished found our window");
       }
-    }, "browser-delayed-startup-finished");
+    }, "browser-delayed-startup-finished", false);
   }
 
   mockTransferRegisterer.register();

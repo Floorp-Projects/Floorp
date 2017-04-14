@@ -29,7 +29,7 @@ function* do_run_test() {
   let principal = ssm.createCodebasePrincipal(uri, {});
 
   let observer = new permission_observer(test_generator, now, permType);
-  Services.obs.addObserver(observer, "perm-changed");
+  Services.obs.addObserver(observer, "perm-changed", false);
 
   // Add a permission, to test the 'add' notification. Note that we use
   // do_execute_soon() so that we can use our generator to continue the test

@@ -66,7 +66,7 @@ function do_wait_observer(obsTopic, cb) {
     Services.obs.removeObserver(observer, topic);
     cb();
   }
-  Services.obs.addObserver(observer, obsTopic);
+  Services.obs.addObserver(observer, obsTopic, false);
 }
 
 function do_add_providers(cb) {

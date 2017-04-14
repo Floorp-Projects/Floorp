@@ -33,7 +33,7 @@ add_task(function* test_search() {
         Services.obs.removeObserver(observer, "browser-search-service");
         resolve();
       }
-    }, "browser-search-service");
+    }, "browser-search-service", false);
   });
   Services.search.init();
   yield observerPromise;

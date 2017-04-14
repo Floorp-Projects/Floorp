@@ -44,7 +44,7 @@ const kTopicAlertFinished      = "alertfinished";
 const kTopicAlertClickCallback = "alertclickcallback";
 
 function AlertsService() {
-  Services.obs.addObserver(this, "xpcom-shutdown");
+  Services.obs.addObserver(this, "xpcom-shutdown", false);
 }
 
 AlertsService.prototype = {

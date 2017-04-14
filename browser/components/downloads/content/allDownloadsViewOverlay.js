@@ -912,7 +912,7 @@ DownloadsPlacesView.prototype = {
 
     let result = history.executeQueries(queries.value, queries.value.length,
                                         options.value);
-    result.addObserver(this);
+    result.addObserver(this, false);
     return val;
   },
 

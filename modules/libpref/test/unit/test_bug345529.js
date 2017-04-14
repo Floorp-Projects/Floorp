@@ -22,7 +22,7 @@ function run_test() {
       prefs.removeObserver(PREF_NAME, observer);
     }
   }
-  prefs.addObserver(PREF_NAME, observer);
+  prefs.addObserver(PREF_NAME, observer, false);
 
   prefs.setCharPref(PREF_NAME, "test0")
   // This second call isn't needed on a clean profile: it makes sure 

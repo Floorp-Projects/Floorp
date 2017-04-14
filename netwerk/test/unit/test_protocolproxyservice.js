@@ -879,7 +879,7 @@ function failed_script_callback(pi)
   // test that on-modify-request contains the proxy info too
   var obs = Components.classes["@mozilla.org/observer-service;1"].getService();
   obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
-  obs.addObserver(directFilterListener, "http-on-modify-request");
+  obs.addObserver(directFilterListener, "http-on-modify-request", false);
 
   var chan = NetUtil.newChannel({
     uri: "http://127.0.0.1:7247",

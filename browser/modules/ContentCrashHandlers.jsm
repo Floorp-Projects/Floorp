@@ -60,8 +60,8 @@ this.TabCrashHandler = {
       return;
     this.initialized = true;
 
-    Services.obs.addObserver(this, "ipc:content-shutdown");
-    Services.obs.addObserver(this, "oop-frameloader-crashed");
+    Services.obs.addObserver(this, "ipc:content-shutdown", false);
+    Services.obs.addObserver(this, "oop-frameloader-crashed", false);
 
     this.pageListener = new RemotePages("about:tabcrashed");
     // LOAD_BACKGROUND pages don't fire load events, so the about:tabcrashed
@@ -579,8 +579,10 @@ this.UnsubmittedCrashHandler = {
         this.prefs.clearUserPref("suppressUntilDate");
       }
 
-      Services.obs.addObserver(this, "browser-delayed-startup-finished");
-      Services.obs.addObserver(this, "profile-before-change");
+      Services.obs.addObserver(this, "browser-delayed-startup-finished",
+                               false);
+      Services.obs.addObserver(this, "profile-before-change",
+                               false);
     }
   },
 
@@ -901,9 +903,9 @@ this.PluginCrashReporter = {
     this.initialized = true;
     this.crashReports = new Map();
 
-    Services.obs.addObserver(this, "plugin-crashed");
-    Services.obs.addObserver(this, "gmp-plugin-crash");
-    Services.obs.addObserver(this, "profile-after-change");
+    Services.obs.addObserver(this, "plugin-crashed", false);
+    Services.obs.addObserver(this, "gmp-plugin-crash", false);
+    Services.obs.addObserver(this, "profile-after-change", false);
   },
 
   uninit() {

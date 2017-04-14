@@ -599,7 +599,7 @@ const AccessibilityEventObserver = {
     if (this.started || this.listenerCount === 0) {
       return;
     }
-    Services.obs.addObserver(this, 'accessible-event');
+    Services.obs.addObserver(this, 'accessible-event', false);
     this.started = true;
   },
 

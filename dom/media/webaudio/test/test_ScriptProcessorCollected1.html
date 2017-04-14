@@ -19,7 +19,7 @@ var observer = function(subject, topic, data) {
   }
 }
 
-SpecialPowers.addObserver(observer, "webaudio-node-demise");
+SpecialPowers.addObserver(observer, "webaudio-node-demise", false);
 
 SimpleTest.registerCleanupFunction(function() {
   if (observer) {

@@ -76,7 +76,7 @@ function observer(subject, topic, data) {
 
 function run_test() {
   startHttpServer();
-  Services.obs.addObserver(observer, "http-on-modify-request");
+  Services.obs.addObserver(observer, "http-on-modify-request", false);
   run_test_in_child("child_channel_id.js", makeRequests);
 }
 

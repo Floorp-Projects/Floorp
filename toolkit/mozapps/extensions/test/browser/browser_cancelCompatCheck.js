@@ -57,7 +57,7 @@ function promise_observer(aTopic) {
   Services.obs.addObserver(function observe(aSubject, aObsTopic, aData) {
     Services.obs.removeObserver(arguments.callee, aObsTopic);
     deferred.resolve([aSubject, aData]);
-  }, aTopic);
+  }, aTopic, false);
   return deferred.promise;
 }
 

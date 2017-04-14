@@ -123,7 +123,7 @@ function run_test() {
     observe(aSubject, aTopic, aData) {
       gCachePurged = true;
     }
-  }, "startupcache-invalidate");
+  }, "startupcache-invalidate", false);
 
   startupManager();
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);

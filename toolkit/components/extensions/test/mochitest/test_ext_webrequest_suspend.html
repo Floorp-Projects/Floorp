@@ -84,7 +84,7 @@ add_task(function* test_error_resume() {
       }
     };
 
-    Services.obs.addObserver(observer, "http-on-modify-request");
+    Services.obs.addObserver(observer, "http-on-modify-request", false);
   });
 
   let extension = ExtensionTestUtils.loadExtension({

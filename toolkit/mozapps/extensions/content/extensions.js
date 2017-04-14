@@ -242,7 +242,7 @@ function initialize(event) {
   gCategories.initialize();
   gHeader.initialize();
   gEventManager.initialize();
-  Services.obs.addObserver(sendEMPong, "EM-ping");
+  Services.obs.addObserver(sendEMPong, "EM-ping", false);
   Services.obs.notifyObservers(window, "EM-loaded", "");
 
   // If the initial view has already been selected (by a call to loadView from

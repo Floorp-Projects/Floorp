@@ -100,7 +100,7 @@ const browserElementTestHelpers = {
       observe: observerFn
     };
 
-    SpecialPowers.addObserver(observer, topic);
+    SpecialPowers.addObserver(observer, topic, /* weak = */ false);
     this._observers.push([observer, topic]);
   },
 

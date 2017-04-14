@@ -58,7 +58,7 @@ exports.whenUnknownPrefChanged = function (branch, callback) {
       callback(data);
     }
   }
-  Services.prefs.addObserver(branch, onObserve);
+  Services.prefs.addObserver(branch, onObserve, false);
   return () => Services.prefs.removeObserver(branch, onObserve);
 };
 

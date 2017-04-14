@@ -48,7 +48,7 @@ add_task(function* test_query_result_favicon_changed_on_child() {
                " not for the containing query.");
     }
   };
-  result.addObserver(resultObserver);
+  result.addObserver(resultObserver, false);
 
   // Open the container and wait for containerStateChanged. We should start
   // observing before setting |containerOpen| as that's caused by the

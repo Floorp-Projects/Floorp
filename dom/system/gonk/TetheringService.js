@@ -122,11 +122,11 @@ function updateDebug() {
 updateDebug();
 
 function TetheringService() {
-  Services.obs.addObserver(this, TOPIC_XPCOM_SHUTDOWN);
-  Services.obs.addObserver(this, TOPIC_MOZSETTINGS_CHANGED);
-  Services.obs.addObserver(this, TOPIC_CONNECTION_STATE_CHANGED);
-  Services.prefs.addObserver(PREF_NETWORK_DEBUG_ENABLED, this);
-  Services.prefs.addObserver(PREF_MANAGE_OFFLINE_STATUS, this);
+  Services.obs.addObserver(this, TOPIC_XPCOM_SHUTDOWN, false);
+  Services.obs.addObserver(this, TOPIC_MOZSETTINGS_CHANGED, false);
+  Services.obs.addObserver(this, TOPIC_CONNECTION_STATE_CHANGED, false);
+  Services.prefs.addObserver(PREF_NETWORK_DEBUG_ENABLED, this, false);
+  Services.prefs.addObserver(PREF_MANAGE_OFFLINE_STATUS, this, false);
 
   try {
     this._manageOfflineStatus =

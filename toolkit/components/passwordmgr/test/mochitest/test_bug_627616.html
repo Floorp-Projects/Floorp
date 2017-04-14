@@ -126,7 +126,7 @@
         sendAsyncMessage("promptAccepted");
       }
 
-      Services.obs.addObserver(dialogObserver, dialogObserverTopic);
+      Services.obs.addObserver(dialogObserver, dialogObserverTopic, false);
 
       addMessageListener("cleanup", message => {
         Services.obs.removeObserver(dialogObserver, dialogObserverTopic);

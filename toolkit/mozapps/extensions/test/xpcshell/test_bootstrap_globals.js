@@ -20,14 +20,14 @@ function run_test() {
 
   Services.obs.addObserver(function(subject) {
     subject.wrappedJSObject.expectedGlobals = EXPECTED_GLOBALS;
-  }, "bootstrap-request-globals");
+  }, "bootstrap-request-globals", false);
 
   Services.obs.addObserver(function({ wrappedJSObject: seenGlobals }) {
     for (let [name, ] of EXPECTED_GLOBALS)
       do_check_true(seenGlobals.has(name));
 
     sawGlobals = true;
-  }, "bootstrap-seen-globals");
+  }, "bootstrap-seen-globals", false);
 
   installAllFiles([do_get_addon("bootstrap_globals")], function() {
     do_check_true(sawGlobals);

@@ -20,9 +20,9 @@ const Observer = {
   _frames: new Map(),
 
   start: function () {
-    Services.obs.addObserver(this, 'remote-browser-shown');
-    Services.obs.addObserver(this, 'inprocess-browser-shown');
-    Services.obs.addObserver(this, 'message-manager-close');
+    Services.obs.addObserver(this, 'remote-browser-shown', false);
+    Services.obs.addObserver(this, 'inprocess-browser-shown', false);
+    Services.obs.addObserver(this, 'message-manager-close', false);
 
     SystemAppProxy.getFrames().forEach(frame => {
       let mm = frame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;

@@ -63,7 +63,7 @@
           os.removeObserver(this, URI_VISITED_RESOLUTION_TOPIC);
         },
       };
-      os.addObserver(observer, URI_VISITED_RESOLUTION_TOPIC);
+      os.addObserver(observer, URI_VISITED_RESOLUTION_TOPIC, false);
       function notified() {
         return observer.notified;
       }
@@ -117,7 +117,7 @@
           maybeRunNextTest();
         },
       };
-      os.addObserver(visitObserver, "uri-visit-saved");
+      os.addObserver(visitObserver, "uri-visit-saved", false);
       // Load the page that the link on the previous page points to.
       doPageNavigation({
         uri: getHttpUrl("bug293235_p2.html"),

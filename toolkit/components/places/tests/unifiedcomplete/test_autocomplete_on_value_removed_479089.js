@@ -20,7 +20,7 @@ function promiseURIDeleted(testURI) {
       Assert.equal(uri.spec, testURI.spec, "Deleted URI should be the expected one");
       resolve();
     };
-    PlacesUtils.history.addObserver(obs);
+    PlacesUtils.history.addObserver(obs, false);
   });
 }
 

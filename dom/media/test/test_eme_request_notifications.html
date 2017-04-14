@@ -22,7 +22,7 @@ function observe() {
       SpecialPowers.Services.obs.removeObserver(observer, "mediakeys-request");
       resolve(JSON.parse(data).status);
     };
-    SpecialPowers.Services.obs.addObserver(observer, "mediakeys-request");
+    SpecialPowers.Services.obs.addObserver(observer, "mediakeys-request", false);
   });
 }
 

@@ -200,7 +200,7 @@ function promiseObserver(topic, count = 1) {
         resolve(aSubject);
       }
     }
-    Services.obs.addObserver(obs, topic);
+    Services.obs.addObserver(obs, topic, false);
   });
 }
 

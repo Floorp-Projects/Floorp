@@ -168,7 +168,7 @@ var GCTelemetry = {
     }
 
     this.initialized = true;
-    Services.obs.addObserver(this, "garbage-collection-statistics");
+    Services.obs.addObserver(this, "garbage-collection-statistics", false);
 
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {
       Services.ppmm.addMessageListener("Telemetry:GCStatistics", this);

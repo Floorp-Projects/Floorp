@@ -491,7 +491,7 @@ EnvironmentAddonBuilder.prototype = {
   watchForChanges() {
     this._loaded = true;
     AddonManager.addAddonListener(this);
-    Services.obs.addObserver(this, EXPERIMENTS_CHANGED_TOPIC);
+    Services.obs.addObserver(this, EXPERIMENTS_CHANGED_TOPIC, false);
   },
 
   // AddonListener
@@ -1005,12 +1005,12 @@ EnvironmentCache.prototype = {
 
   _addObservers() {
     // Watch the search engine change and service topics.
-    Services.obs.addObserver(this, COMPOSITOR_CREATED_TOPIC);
-    Services.obs.addObserver(this, COMPOSITOR_PROCESS_ABORTED_TOPIC);
-    Services.obs.addObserver(this, DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC);
-    Services.obs.addObserver(this, GFX_FEATURES_READY_TOPIC);
-    Services.obs.addObserver(this, SEARCH_ENGINE_MODIFIED_TOPIC);
-    Services.obs.addObserver(this, SEARCH_SERVICE_TOPIC);
+    Services.obs.addObserver(this, COMPOSITOR_CREATED_TOPIC, false);
+    Services.obs.addObserver(this, COMPOSITOR_PROCESS_ABORTED_TOPIC, false);
+    Services.obs.addObserver(this, DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC, false);
+    Services.obs.addObserver(this, GFX_FEATURES_READY_TOPIC, false);
+    Services.obs.addObserver(this, SEARCH_ENGINE_MODIFIED_TOPIC, false);
+    Services.obs.addObserver(this, SEARCH_SERVICE_TOPIC, false);
   },
 
   _removeObservers() {

@@ -27,7 +27,7 @@ var CreatedNavigationTargetListener = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   init() {
-    Services.obs.addObserver(this, "webNavigation-createdNavigationTarget-from-js");
+    Services.obs.addObserver(this, "webNavigation-createdNavigationTarget-from-js", false);
   },
   uninit() {
     Services.obs.removeObserver(this, "webNavigation-createdNavigationTarget-from-js");
@@ -78,7 +78,7 @@ var FormSubmitListener = {
                                          Ci.nsISupportsWeakReference]),
   init() {
     this.formSubmitWindows = new WeakSet();
-    Services.obs.addObserver(FormSubmitListener, "earlyformsubmit");
+    Services.obs.addObserver(FormSubmitListener, "earlyformsubmit", false);
   },
 
   uninit() {

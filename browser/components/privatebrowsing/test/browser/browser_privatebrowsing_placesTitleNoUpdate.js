@@ -32,7 +32,7 @@ add_task(function* test() {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
       };
 
-      PlacesUtils.history.addObserver(historyObserver);
+      PlacesUtils.history.addObserver(historyObserver, false);
     });
   }
 

@@ -31,14 +31,14 @@ function fakeUIResponse() {
       loginFinished = true;
       do_check_eq(++step, 2);
     }
-  }, "captive-portal-login");
+  }, "captive-portal-login", false);
 
   Services.obs.addObserver(function observe(subject, topic, data) {
     if (topic === "captive-portal-login-success") {
       do_check_eq(++step, 4);
       gServer.stop(do_test_finished);
     }
-  }, "captive-portal-login-success");
+  }, "captive-portal-login-success", false);
 }
 
 function test_portal_found() {

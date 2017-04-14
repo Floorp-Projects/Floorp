@@ -23,7 +23,7 @@ function promiseTopicObserved(topic) {
   Services.obs.addObserver(function PTO_observe(obsSubject, obsTopic, obsData) {
     Services.obs.removeObserver(PTO_observe, obsTopic);
     deferred.resolve([obsSubject, obsData]);
-  }, topic);
+  }, topic, false);
   return deferred.promise;
 }
 

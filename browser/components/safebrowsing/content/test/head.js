@@ -72,7 +72,7 @@ function waitForDBInit(callback) {
     ok(true, "Received internal event!");
     callbackOnce();
   }
-  Services.obs.addObserver(obsFunc, "mozentries-update-finished");
+  Services.obs.addObserver(obsFunc, "mozentries-update-finished", false);
 
   // The second part: we might have missed the event. Just do
   // an internal database lookup to confirm if the url has been

@@ -49,7 +49,7 @@ add_task(function* () {
       ok(true, "thumbnail created after preloaded tab was shown");
 
       resolve();
-    }, "page-thumbnail:create");
+    }, "page-thumbnail:create", false);
   });
 
   // Enable captures.

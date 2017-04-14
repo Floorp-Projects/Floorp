@@ -104,11 +104,11 @@ function observe(subject, topic, data) {
   }
 }
 
-Services.obs.addObserver(observe, "weave:engine:sync:finish");
-Services.obs.addObserver(observe, "weave:service:start-over");
+Services.obs.addObserver(observe, "weave:engine:sync:finish", false);
+Services.obs.addObserver(observe, "weave:service:start-over", false);
 
 // Observe the pref for showing remote icons and prime our bool that reflects its value.
-Services.prefs.addObserver(PREF_SHOW_REMOTE_ICONS, observe);
+Services.prefs.addObserver(PREF_SHOW_REMOTE_ICONS, observe, false);
 observe(null, "nsPref:changed", PREF_SHOW_REMOTE_ICONS);
 
 // This public object is a static singleton.

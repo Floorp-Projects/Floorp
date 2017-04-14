@@ -70,7 +70,7 @@ function load_blocklist(aFile, aCallback) {
     Services.obs.removeObserver(arguments.callee, "blocklist-updated");
 
     do_execute_soon(aCallback);
-  }, "blocklist-updated");
+  }, "blocklist-updated", false);
 
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
                              gPort + "/data/" + aFile);

@@ -100,7 +100,7 @@ function waitForEvent(eventType, expectedIdOrAcc) {
         }
       }
     };
-    Services.obs.addObserver(eventObserver, 'accessible-event');
+    Services.obs.addObserver(eventObserver, 'accessible-event', false);
   });
 }
 

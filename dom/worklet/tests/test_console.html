@@ -12,7 +12,7 @@
 
 function configureTest() {
   function consoleListener() {
-    SpecialPowers.addObserver(this, "console-api-log-event");
+    SpecialPowers.addObserver(this, "console-api-log-event", false);
   }
 
   consoleListener.prototype  = {

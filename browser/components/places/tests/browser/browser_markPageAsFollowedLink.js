@@ -27,7 +27,7 @@ add_task(function* test() {
         deferredRightFrameVisit.resolve();
       }
     });
-  }, "uri-visit-saved");
+  }, "uri-visit-saved", false);
 
   // Open a tab and wait for all the subframes to load.
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE_URL);
