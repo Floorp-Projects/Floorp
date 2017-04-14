@@ -49,7 +49,6 @@ config = {
     'stage_platform': 'macosx64',
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
-        'MOZ_AUTOMATION': '1',
         'HG_SHARE_BASE_DIR': '/builds/hg-shared',
         'MOZ_OBJDIR': 'obj-firefox',
         'TINDERBOX_OUTPUT': '1',
