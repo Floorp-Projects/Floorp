@@ -246,7 +246,6 @@ gc::GCRuntime::startVerifyPreBarriers()
 
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         MOZ_ASSERT(!zone->usedByHelperThread());
-        PurgeJITCaches(zone);
         zone->setNeedsIncrementalBarrier(true, Zone::UpdateJit);
         zone->arenas.purge();
     }
@@ -342,7 +341,6 @@ gc::GCRuntime::endVerifyPreBarriers()
             compartmentCreated = true;
 
         zone->setNeedsIncrementalBarrier(false, Zone::UpdateJit);
-        PurgeJITCaches(zone);
     }
 
     /*
