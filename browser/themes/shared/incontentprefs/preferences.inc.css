@@ -110,11 +110,6 @@ treecol {
   display: none;
 }
 
-#header-advanced {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
 /* General Pane */
 
 #startupTable {
