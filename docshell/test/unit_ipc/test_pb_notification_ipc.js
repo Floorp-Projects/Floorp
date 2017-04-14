@@ -10,7 +10,7 @@ function run_test() {
     }
   };
   var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-  os.addObserver(obs, "last-pb-context-exited", false);
+  os.addObserver(obs, "last-pb-context-exited");
  
   run_test_in_child("../unit/test_pb_notification.js",
                     function() {

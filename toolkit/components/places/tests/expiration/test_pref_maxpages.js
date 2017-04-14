@@ -102,7 +102,7 @@ add_task(function* test_pref_maxpages() {
         print("onDeleteVisits " + aURI.spec + " " + aTime);
       },
     };
-    hs.addObserver(historyObserver, false);
+    hs.addObserver(historyObserver);
 
     setMaxPages(currentTest.maxPages);
 

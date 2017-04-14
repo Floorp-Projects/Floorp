@@ -68,8 +68,8 @@ function* doTest() {
 
   var os = Components.classes["@mozilla.org/observer-service;1"].
     getService(Components.interfaces.nsIObserverService);
-  os.addObserver(observer, "chrome-document-global-created", false);
-  os.addObserver(observer, "content-document-global-created", false);
+  os.addObserver(observer, "chrome-document-global-created");
+  os.addObserver(observer, "content-document-global-created");
 
   is(notificationCount, 0, "initial count");
 

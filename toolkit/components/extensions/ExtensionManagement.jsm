@@ -255,7 +255,7 @@ let cacheInvalidated = 0;
 function onCacheInvalidate() {
   cacheInvalidated++;
 }
-Services.obs.addObserver(onCacheInvalidate, "startupcache-invalidate", false);
+Services.obs.addObserver(onCacheInvalidate, "startupcache-invalidate");
 
 ExtensionManagement = {
   get cacheInvalidated() {

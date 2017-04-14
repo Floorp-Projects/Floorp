@@ -338,7 +338,7 @@ this.LightweightThemeManager = {
       Services.prefs.clearUserPref(PREF_LWTHEME_TO_SELECT);
     }
 
-    _prefs.addObserver("", _prefObserver, false);
+    _prefs.addObserver("", _prefObserver);
   },
 
   /**

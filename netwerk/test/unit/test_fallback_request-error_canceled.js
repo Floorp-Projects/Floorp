@@ -106,7 +106,7 @@ function run_test()
 
   var os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
-  os.addObserver(cacheUpdateObserver, "offline-cache-update-completed", false);
+  os.addObserver(cacheUpdateObserver, "offline-cache-update-completed");
 
   var us = Cc["@mozilla.org/offlinecacheupdate-service;1"].
            getService(Ci.nsIOfflineCacheUpdateService);

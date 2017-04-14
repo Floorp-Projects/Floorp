@@ -51,9 +51,9 @@ function run_test() {
 
   var obs = Cc["@mozilla.org/observer-service;1"].getService();
   obs = obs.QueryInterface(Ci.nsIObserverService);
-  obs.addObserver(observer, "http-on-examine-response", false);
-  obs.addObserver(observer, "http-on-examine-merged-response", false);
-  obs.addObserver(observer, "http-on-examine-cached-response", false);
+  obs.addObserver(observer, "http-on-examine-response");
+  obs.addObserver(observer, "http-on-examine-merged-response");
+  obs.addObserver(observer, "http-on-examine-cached-response");
 
   do_timeout(0, do_test);
   do_test_pending();

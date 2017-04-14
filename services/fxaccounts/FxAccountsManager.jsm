@@ -28,8 +28,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "permissionManager",
 this.FxAccountsManager = {
 
   init() {
-    Services.obs.addObserver(this, ONLOGOUT_NOTIFICATION, false);
-    Services.obs.addObserver(this, ON_FXA_UPDATE_NOTIFICATION, false);
+    Services.obs.addObserver(this, ONLOGOUT_NOTIFICATION);
+    Services.obs.addObserver(this, ON_FXA_UPDATE_NOTIFICATION);
   },
 
   observe(aSubject, aTopic, aData) {

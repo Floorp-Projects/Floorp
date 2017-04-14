@@ -91,7 +91,7 @@ add_task(function* () {
     onItemMoved() {},
   };
 
-  PlacesUtils.bookmarks.addObserver(bmObserver, false);
+  PlacesUtils.bookmarks.addObserver(bmObserver);
   const PROFILE = {
     id: "Default",
     name: "Default",

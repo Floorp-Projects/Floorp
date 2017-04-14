@@ -64,7 +64,7 @@ add_task(function* test_insertMany() {
           PlacesUtils.history.removeObserver(obs);
           reject();
         };
-        PlacesUtils.history.addObserver(obs, false);
+        PlacesUtils.history.addObserver(obs);
       });
     }
 

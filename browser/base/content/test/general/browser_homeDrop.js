@@ -44,7 +44,7 @@ add_task(function*() {
           resolve();
         }
       };
-      Services.prefs.addObserver(HOMEPAGE_PREF, observer, false);
+      Services.prefs.addObserver(HOMEPAGE_PREF, observer);
     });
 
     setHomepageDialog.document.documentElement.acceptDialog();

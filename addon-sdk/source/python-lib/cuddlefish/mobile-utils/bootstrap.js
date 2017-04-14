@@ -37,7 +37,7 @@ function startup(data, reason) {
         dump("MU: APPLICATION-QUIT\n");
       }
     };
-    Services.obs.addObserver(QuitObserver, "quit-application", false);
+    Services.obs.addObserver(QuitObserver, "quit-application");
     log("MU: ready to watch firefox exit.");
   } catch(e) {
     log("MU: unable to register quit-application observer: " + e);

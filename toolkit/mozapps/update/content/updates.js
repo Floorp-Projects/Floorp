@@ -871,7 +871,7 @@ var gDownloadingPage = {
     let applyingStatus = gUpdates.getAUSString("applyingUpdate");
     this._setStatus(applyingStatus);
 
-    Services.obs.addObserver(this, "update-staged", false);
+    Services.obs.addObserver(this, "update-staged");
     this._updateApplyingObserver = true;
   },
 

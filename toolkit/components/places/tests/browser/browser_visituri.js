@@ -8,7 +8,7 @@ function promiseObserve(name, checkFn) {
         Services.obs.removeObserver(observer, name);
         resolve();
       }
-    }, name, false);
+    }, name);
   });
 }
 

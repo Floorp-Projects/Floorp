@@ -44,7 +44,7 @@ var CrashObserver = {
     }
   }
 }
-Services.obs.addObserver(CrashObserver, "ipc:content-shutdown", false);
+Services.obs.addObserver(CrashObserver, "ipc:content-shutdown");
 
 registerCleanupFunction(() => {
   Services.obs.removeObserver(CrashObserver, "ipc:content-shutdown");

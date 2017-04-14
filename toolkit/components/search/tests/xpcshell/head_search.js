@@ -394,7 +394,7 @@ var addTestEngines = Task.async(function* (aItems) {
         } catch (ex) {
           reject(ex);
         }
-      }, "browser-search-engine-modified", false);
+      }, "browser-search-engine-modified");
 
       if (item.xmlFileName) {
         Services.search.addEngine(gDataUrl + item.xmlFileName,
@@ -492,7 +492,7 @@ function waitForSearchNotification(aExpectedData) {
 
       Services.obs.removeObserver(observer, SEARCH_SERVICE_TOPIC);
       resolve(aSubject);
-    }, SEARCH_SERVICE_TOPIC, false);
+    }, SEARCH_SERVICE_TOPIC);
   });
 }
 
