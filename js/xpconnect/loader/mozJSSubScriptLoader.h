@@ -35,7 +35,7 @@ private:
 
     bool ReadScript(nsIURI* uri, JSContext* cx, JS::HandleObject targetObj,
                     const nsAString& charset, const char* uriStr,
-                    nsIIOService* serv, nsIPrincipal* principal,
+                    nsIIOService* serv,
                     bool reuseGlobal, JS::MutableHandleScript script,
                     JS::MutableHandleFunction function);
 
