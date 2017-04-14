@@ -4,6 +4,121 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Widget")
+
+with Files("unit/*macwebapputils*"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
+with Files("unit/*taskbar_jumplistitems*"):
+    BUG_COMPONENT = ("Core", "Widget: Win32")
+
+with Files("TestAppShellSteadyState.cpp"):
+    BUG_COMPONENT = ("Core", "DOM: IndexedDB")
+
+with Files("TestChromeMargin.cpp"):
+    BUG_COMPONENT = ("Core", "Widget: win32")
+
+with Files("*1151186*"):
+    BUG_COMPONENT = ("Core", "Event Handling")
+
+with Files("*413277*"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
+with Files("*428405*"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
+with Files("*429954*"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
+with Files("*444800*"):
+    BUG_COMPONENT = ("Core", "Widget: Win32")
+
+with Files("*466599*"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
+with Files("*478536*"):
+    BUG_COMPONENT = ("Core", "Event Handling")
+
+with Files("*485118*"):
+    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+
+with Files("*517396*"):
+    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+
+with Files("*522217*"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
+with Files("*538242*"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
+with Files("*565392*"):
+    BUG_COMPONENT = ("Core", "Serializers")
+
+with Files("*586713*"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
+with Files("*593307*"):
+    BUG_COMPONENT = ("Core", "Widget: Win32")
+
+with Files("*596600*"):
+    BUG_COMPONENT = ("Core", "Event Handling")
+
+with Files("*673301*"):
+    BUG_COMPONENT = ("Firefox", "Bookmarks & History")
+
+with Files("test_assign_event_data.html"):
+    BUG_COMPONENT = ("Core", "Event Handling")
+
+with Files("test_input_events_on_deactive_window.xul"):
+    BUG_COMPONENT = ("Core", "Event Handling")
+
+with Files("*chrome_context_menus_win*"):
+    BUG_COMPONENT = ("Core", "General")
+
+with Files("*composition_text_querycontent*"):
+    BUG_COMPONENT = ("Core", "Internationalization")
+
+with Files("*key_event_counts*"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
+with Files("*imestate*"):
+    BUG_COMPONENT = ("Core", "Internationalization")
+
+with Files("*mouse_scroll*"):
+    BUG_COMPONENT = ("Core", "Widget: Win32")
+
+with Files("*native*"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
+with Files("*panel_mouse_coords*"):
+    BUG_COMPONENT = ("Core", "Widget: Gtk")
+
+with Files("*picker_no_crash*"):
+    BUG_COMPONENT = ("Core", "Widget: Win32")
+
+with Files("*platform_colors*"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
+with Files("*plugin*"):
+    BUG_COMPONENT = ("Core", "Plug-ins")
+
+with Files("*position_on_resize*"):
+    BUG_COMPONENT = ("Core", "Widget: Gtk")
+
+with Files("test_sizemode_events.xul"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
+with Files("*system_status_bar*"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
+with Files("*taskbar_progress*"):
+    BUG_COMPONENT = ("Core", "Widget: Win32")
+
+with Files("*wheeltransaction*"):
+    BUG_COMPONENT = ("Core", "Event Handling")
+
+
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 MOCHITEST_MANIFESTS += ['mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
