@@ -52,8 +52,8 @@ both, to better adapt this sentence to their language.
 <!ENTITY profilePicture.tooltip      "Change profile picture">
 <!ENTITY verifiedManage.label        "Manage Account">
 <!ENTITY verifiedManage.accesskey    "o">
-<!ENTITY disconnect.label            "Disconnect…">
-<!ENTITY disconnect.accesskey        "D">
+<!ENTITY disconnect2.label           "Disconnect">
+<!ENTITY disconnect2.accesskey       "D">
 <!ENTITY verify.label                "Verify Email">
 <!ENTITY verify.accesskey            "V">
 <!ENTITY forget.label                "Forget this Email">
@@ -67,7 +67,8 @@ both, to better adapt this sentence to their language.
 <!ENTITY signedOut.accountBox.signin  "Sign In">
 <!ENTITY signedOut.accountBox.signin.accesskey  "I">
 
-<!ENTITY signedIn.engines.label       "Sync Across All Devices">
+<!ENTITY signedIn.settings.label       "Sync Settings">
+<!ENTITY signedIn.settings.description "Choose what to synchronize on your devices using &brandShortName;.">
 
 <!-- LOCALIZATION NOTE (mobilePromo3.*): the following strings will be used to
      create a single sentence with active links.
