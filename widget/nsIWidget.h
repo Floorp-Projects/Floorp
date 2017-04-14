@@ -1818,9 +1818,12 @@ public:
                         void* aCallbackData) = 0;
 
     /*
-     * Retrieves preference for IME updates
+     * Retrieves a reference to notification requests of IME.  Note that the
+     * reference is valid while the nsIWidget instance is alive.  So, if you
+     * need to store the reference for a long time, you need to grab the widget
+     * instance too.
      */
-    virtual IMENotificationRequests GetIMENotificationRequests() = 0;
+    const IMENotificationRequests& IMENotificationRequestsRef();
 
     /*
      * Call this method when a dialog is opened which has a default button.

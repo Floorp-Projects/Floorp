@@ -1742,7 +1742,7 @@ TabParent::RecvNotifyIMEFocus(const ContentCache& aContentCache,
   IMEStateManager::NotifyIME(aIMENotification, widget, true);
 
   if (aIMENotification.mMessage == NOTIFY_IME_OF_FOCUS) {
-    *aRequests = widget->GetIMENotificationRequests();
+    *aRequests = widget->IMENotificationRequestsRef();
   }
   return IPC_OK();
 }
@@ -1757,7 +1757,8 @@ TabParent::RecvNotifyIMETextChange(const ContentCache& aContentCache,
   }
 
 #ifdef DEBUG
-  IMENotificationRequests requests = widget->GetIMENotificationRequests();
+  const IMENotificationRequests& requests =
+    widget->IMENotificationRequestsRef();
   NS_ASSERTION(requests.WantTextChange(),
     "Don't call Send/RecvNotifyIMETextChange without NOTIFY_TEXT_CHANGE");
 #endif

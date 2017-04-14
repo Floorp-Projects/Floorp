@@ -433,7 +433,7 @@ IMEContentObserver::ObserveEditableNode()
     mEditor->AddEditorObserver(this);
   }
 
-  mIMENotificationRequests = mWidget->GetIMENotificationRequests();
+  mIMENotificationRequests = mWidget->IMENotificationRequestsRef();
   if (!WasInitializedWithPlugin()) {
     // Add selection change listener only when this starts to observe
     // non-plugin content since we cannot detect selection changes in
