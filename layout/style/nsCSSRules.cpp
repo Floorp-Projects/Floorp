@@ -498,7 +498,7 @@ MediaRule::UseForPresentation(nsPresContext* aPresContext,
 {
   if (mMedia) {
     MOZ_ASSERT(aPresContext);
-    return mMedia->Matches(*aPresContext, &aKey);
+    return mMedia->Matches(aPresContext, &aKey);
   }
   return true;
 }
