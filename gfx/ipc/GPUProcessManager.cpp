@@ -379,6 +379,8 @@ GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost)
     SprintfLiteral(disableMessage, "GPU process disabled after %d attempts",
                    mNumProcessAttempts);
     DisableGPUProcess(disableMessage);
+  } else if (mNumProcessAttempts > uint32_t(gfxPrefs::GPUProcessMaxRestartsWithDecoder())) {
+    mDecodeVideoOnGpuProcess = false;
   }
 
   HandleProcessLost();
@@ -797,7 +799,9 @@ void
 GPUProcessManager::CreateContentVideoDecoderManager(base::ProcessId aOtherProcess,
                                                     ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutEndpoint)
 {
-  if (!EnsureGPUReady() || !MediaPrefs::PDMUseGPUDecoder()) {
+  if (!EnsureGPUReady() ||
+      !MediaPrefs::PDMUseGPUDecoder() ||
+      !mDecodeVideoOnGpuProcess) {
     return;
   }
 

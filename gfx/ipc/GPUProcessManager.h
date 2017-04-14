@@ -235,6 +235,8 @@ private:
   friend class Observer;
 
 private:
+  bool mDecodeVideoOnGpuProcess = true;
+
   RefPtr<Observer> mObserver;
   ipc::TaskFactory<GPUProcessManager> mTaskFactory;
   RefPtr<VsyncIOThreadHolder> mVsyncIOThread;
