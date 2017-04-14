@@ -176,7 +176,7 @@ VideoData::VideoData(int64_t aOffset,
 {
   MOZ_ASSERT(!mDuration.IsNegative(), "Frame must have non-negative duration.");
   mKeyframe = aKeyframe;
-  mTimecode = aTimecode;
+  mTimecode = TimeUnit::FromMicroseconds(aTimecode);
 }
 
 VideoData::~VideoData()

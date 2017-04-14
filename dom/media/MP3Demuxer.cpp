@@ -606,7 +606,7 @@ MP3TrackDemuxer::GetNextFrame(const MediaByteRange& aRange)
 
   frame->mTime = Duration(mFrameIndex - 1).ToMicroseconds();
   frame->mDuration = Duration(1);
-  frame->mTimecode = frame->mTime;
+  frame->mTimecode = media::TimeUnit::FromMicroseconds(frame->mTime);
   frame->mKeyframe = true;
 
   MOZ_ASSERT(frame->mTime >= 0);

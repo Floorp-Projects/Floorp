@@ -100,7 +100,7 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext()
   }
 
   RefPtr<MediaRawData> sample = new MediaRawData();
-  sample->mTimecode= s->mDecodeTime;
+  sample->mTimecode= TimeUnit::FromMicroseconds(s->mDecodeTime);
   sample->mTime = s->mCompositionRange.start;
   sample->mDuration = TimeUnit::FromMicroseconds(s->mCompositionRange.Length());
   sample->mOffset = s->mByteRange.mStart;

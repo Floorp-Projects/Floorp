@@ -259,7 +259,7 @@ OggCodecState::PacketOutAsMediaRawData()
   int64_t duration = PacketDuration(packet.get());
   NS_ASSERTION(duration >= 0, "duration invalid");
 
-  sample->mTimecode = packet->granulepos;
+  sample->mTimecode = media::TimeUnit::FromMicroseconds(packet->granulepos);
   sample->mTime = end_tstamp - duration;
   sample->mDuration = media::TimeUnit::FromMicroseconds(duration);
   sample->mKeyframe = IsKeyframe(packet.get());

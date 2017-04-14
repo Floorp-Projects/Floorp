@@ -125,7 +125,7 @@ public:
               for (uint32_t i = 0; i < (binding->mSamples.Length() - 1); i++) {
                 EXPECT_LT(binding->mSamples[i]->mTimecode, binding->mSamples[i + 1]->mTimecode);
                 if (binding->mSamples[i]->mKeyframe) {
-                  binding->mKeyFrameTimecodes.AppendElement(binding->mSamples[i]->mTimecode);
+                  binding->mKeyFrameTimecodes.AppendElement(binding->mSamples[i]->mTimecode.ToMicroseconds());
                 }
               }
               binding->mCheckTrackSamples.Resolve(true, __func__);

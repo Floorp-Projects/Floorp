@@ -134,7 +134,7 @@ TimingInfoFromSample(MediaRawData* aSample)
   timestamp.presentationTimeStamp =
     CMTimeMake(aSample->mTime, USECS_PER_S);
   timestamp.decodeTimeStamp =
-    CMTimeMake(aSample->mTimecode, USECS_PER_S);
+    CMTimeMake(aSample->mTimecode.ToMicroseconds(), USECS_PER_S);
 
   return timestamp;
 }

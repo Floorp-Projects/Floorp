@@ -722,7 +722,7 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
-    sample->mTimecode = tstamp;
+    sample->mTimecode = media::TimeUnit::FromMicroseconds(tstamp);
     sample->mTime = tstamp;
     sample->mDuration = media::TimeUnit::FromMicroseconds(next_tstamp - tstamp);
     sample->mOffset = holder->Offset();
@@ -1157,7 +1157,7 @@ WebMTrackDemuxer::SetNextKeyFrameTime()
   Maybe<int64_t> startTime;
   if (skipSamplesQueue.GetSize()) {
     const RefPtr<MediaRawData>& sample = skipSamplesQueue.First();
-    startTime.emplace(sample->mTimecode);
+    startTime.emplace(sample->mTimecode.ToMicroseconds());
   }
   // Demux and buffer frames until we find a keyframe.
   RefPtr<MediaRawData> sample;
@@ -1167,7 +1167,7 @@ WebMTrackDemuxer::SetNextKeyFrameTime()
       frameTime = sample->mTime;
       foundKeyframe = true;
     }
-    int64_t sampleTimecode = sample->mTimecode;
+    int64_t sampleTimecode = sample->mTimecode.ToMicroseconds();
     skipSamplesQueue.Push(sample.forget());
     if (!startTime) {
       startTime.emplace(sampleTimecode);
@@ -1186,9 +1186,7 @@ WebMTrackDemuxer::SetNextKeyFrameTime()
     WEBM_DEBUG("Next Keyframe %f (%u queued %.02fs)",
                mNextKeyframeTime.value().ToSeconds(),
                uint32_t(mSamples.GetSize()),
-               media::TimeUnit::FromMicroseconds(mSamples.Last()->mTimecode
-                                                 - mSamples.First()->mTimecode)
-                 .ToSeconds());
+               (mSamples.Last()->mTimecode - mSamples.First()->mTimecode).ToSeconds());
   } else {
     WEBM_DEBUG("Couldn't determine next keyframe time  (%u queued)",
                uint32_t(mSamples.GetSize()));

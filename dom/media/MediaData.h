@@ -295,7 +295,7 @@ public:
     : mType(aType)
     , mOffset(aOffset)
     , mTime(aTimestamp)
-    , mTimecode(aTimestamp)
+    , mTimecode(media::TimeUnit::FromMicroseconds(aTimestamp))
     , mDuration(media::TimeUnit::FromMicroseconds(aDuration))
     , mFrames(aFrames)
     , mKeyframe(false)
@@ -313,7 +313,7 @@ public:
 
   // Codec specific internal time code. For Ogg based codecs this is the
   // granulepos.
-  int64_t mTimecode;
+  media::TimeUnit mTimecode;
 
   // Duration of sample, in microseconds.
   media::TimeUnit mDuration;
@@ -353,7 +353,6 @@ protected:
     : mType(aType)
     , mOffset(0)
     , mTime(0)
-    , mTimecode(0)
     , mFrames(aFrames)
     , mKeyframe(false)
   {

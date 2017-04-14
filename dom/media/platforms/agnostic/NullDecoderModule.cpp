@@ -20,7 +20,7 @@ public:
                                       aSample->mTime,
                                       aSample->mDuration.ToMicroseconds(),
                                       aSample->mKeyframe,
-                                      aSample->mTimecode,
+                                      aSample->mTimecode.ToMicroseconds(),
                                       gfx::IntSize(),
                                       0));
     return v.forget();
