@@ -672,8 +672,9 @@ BacktrackingAllocator::buildLivenessInfo()
                     // use and temp are fixed registers, as they can't alias.
                     if (ins->isCall() && use->usedAtStart()) {
                         for (size_t i = 0; i < ins->numTemps(); i++) {
-                            MOZ_ASSERT(vreg(ins->getTemp(i)).type() != vreg(use).type() ||
-                                       (use->isFixedRegister() && ins->getTemp(i)->isFixed()));
+                            MOZ_ASSERT_IF(!ins->getTemp(i)->isBogusTemp(),
+                                          vreg(ins->getTemp(i)).type() != vreg(use).type() ||
+                                          (use->isFixedRegister() && ins->getTemp(i)->isFixed()));
                         }
                     }
 

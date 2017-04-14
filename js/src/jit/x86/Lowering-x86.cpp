@@ -618,6 +618,8 @@ LIRGeneratorX86::lowerDivI64(MDiv* div)
         return;
     }
 
+    gen->setPerformsCall();
+
     LDivOrModI64* lir = new(alloc()) LDivOrModI64(useInt64FixedAtStart(div->lhs(), Register64(eax, ebx)),
                                                   useInt64FixedAtStart(div->rhs(), Register64(ecx, edx)),
                                                   tempFixed(esi));
@@ -632,6 +634,8 @@ LIRGeneratorX86::lowerModI64(MMod* mod)
         return;
     }
 
+    gen->setPerformsCall();
+
     LDivOrModI64* lir = new(alloc()) LDivOrModI64(useInt64FixedAtStart(mod->lhs(), Register64(eax, ebx)),
                                                   useInt64FixedAtStart(mod->rhs(), Register64(ecx, edx)),
                                                   tempFixed(esi));
@@ -641,6 +645,8 @@ LIRGeneratorX86::lowerModI64(MMod* mod)
 void
 LIRGeneratorX86::lowerUDivI64(MDiv* div)
 {
+    gen->setPerformsCall();
+
     LUDivOrModI64* lir = new(alloc()) LUDivOrModI64(useInt64FixedAtStart(div->lhs(), Register64(eax, ebx)),
                                                     useInt64FixedAtStart(div->rhs(), Register64(ecx, edx)),
                                                     tempFixed(esi));
@@ -650,6 +656,8 @@ LIRGeneratorX86::lowerUDivI64(MDiv* div)
 void
 LIRGeneratorX86::lowerUModI64(MMod* mod)
 {
+    gen->setPerformsCall();
+
     LUDivOrModI64* lir = new(alloc()) LUDivOrModI64(useInt64FixedAtStart(mod->lhs(), Register64(eax, ebx)),
                                                     useInt64FixedAtStart(mod->rhs(), Register64(ecx, edx)),
                                                     tempFixed(esi));

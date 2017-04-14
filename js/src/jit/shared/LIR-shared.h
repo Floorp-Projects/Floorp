@@ -4001,6 +4001,9 @@ class LModD : public LBinaryMath<1>
     bool isCall() const {
         return true;
     }
+    MMod* mir() const {
+        return mir_->toMod();
+    }
 };
 
 // Call a VM function to perform a binary operation.
@@ -7864,6 +7867,24 @@ class LIn : public LCallInstructionHelper<1, BOX_PIECES+1, 0>
 
     static const size_t LHS = 0;
     static const size_t RHS = BOX_PIECES;
+};
+
+class LHasOwnCache : public LInstructionHelper<1, 2 * BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(HasOwnCache)
+
+    static const size_t Value = 0;
+    static const size_t Id = BOX_PIECES;
+
+    LHasOwnCache(const LBoxAllocation& value, const LBoxAllocation& id) {
+        setBoxOperand(Value, value);
+        setBoxOperand(Id, id);
+    }
+
+    const MHasOwnCache* mir() const {
+        return mir_->toHasOwnCache();
+    }
 };
 
 class LInstanceOfO : public LInstructionHelper<1, 1, 0>

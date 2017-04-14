@@ -775,40 +775,45 @@ struct JSClass {
     void* reserved[3];
 };
 
-#define JSCLASS_HAS_PRIVATE             (1<<0)  // objects have private slot
-#define JSCLASS_DELAY_METADATA_BUILDER  (1<<1)  // class's initialization code
-                                                // will call
-                                                // SetNewObjectMetadata itself
-#define JSCLASS_IS_WRAPPED_NATIVE       (1<<2)  // class is an XPCWrappedNative.
-                                                // WeakMaps use this to override
-                                                // the wrapper disposal
-                                                // mechanism.
-#define JSCLASS_PRIVATE_IS_NSISUPPORTS  (1<<3)  // private is (nsISupports*)
-#define JSCLASS_IS_DOMJSCLASS           (1<<4)  // objects are DOM
-#define JSCLASS_HAS_XRAYED_CONSTRUCTOR  (1<<5)  // if wrapped by an xray
-                                                // wrapper, the builtin
-                                                // class's constructor won't
-                                                // be unwrapped and invoked.
-                                                // Instead, the constructor is
-                                                // resolved in the caller's
-                                                // compartment and invoked
-                                                // with a wrapped newTarget.
-                                                // The constructor has to
-                                                // detect and handle this
-                                                // situation.
-                                                // See PromiseConstructor for
-                                                // details.
-#define JSCLASS_EMULATES_UNDEFINED      (1<<6)  // objects of this class act
-                                                // like the value undefined,
-                                                // in some contexts
-#define JSCLASS_USERBIT1                (1<<7)  // Reserved for embeddings.
+// Objects have private slot.
+static const uint32_t JSCLASS_HAS_PRIVATE = 1 << 0;
+
+// Class's initialization code will call `SetNewObjectMetadata` itself.
+static const uint32_t JSCLASS_DELAY_METADATA_BUILDER = 1 << 1;
+
+// Class is an XPCWrappedNative. WeakMaps use this to override the wrapper
+// disposal mechanism.
+static const uint32_t JSCLASS_IS_WRAPPED_NATIVE = 1 << 2;
+
+// Private is `nsISupports*`.
+static const uint32_t JSCLASS_PRIVATE_IS_NSISUPPORTS = 1 << 3;
+
+// Objects are DOM.
+static const uint32_t JSCLASS_IS_DOMJSCLASS = 1 << 4;
+
+// If wrapped by an xray wrapper, the builtin class's constructor won't be
+// unwrapped and invoked. Instead, the constructor is resolved in the caller's
+// compartment and invoked with a wrapped newTarget. The constructor has to
+// detect and handle this situation. See PromiseConstructor for details.
+static const uint32_t JSCLASS_HAS_XRAYED_CONSTRUCTOR = 1 << 5;
+
+// Objects of this class act like the value undefined, in some contexts.
+static const uint32_t JSCLASS_EMULATES_UNDEFINED = 1 << 6;
+
+// Reserved for embeddings.
+static const uint32_t JSCLASS_USERBIT1 = 1 << 7;
 
 // To reserve slots fetched and stored via JS_Get/SetReservedSlot, bitwise-or
-// JSCLASS_HAS_RESERVED_SLOTS(n) into the initializer for JSClass.flags, where
-// n is a constant in [1, 255].  Reserved slots are indexed from 0 to n-1.
-#define JSCLASS_RESERVED_SLOTS_SHIFT    8       // room for 8 flags below */
-#define JSCLASS_RESERVED_SLOTS_WIDTH    8       // and 16 above this field */
-#define JSCLASS_RESERVED_SLOTS_MASK     JS_BITMASK(JSCLASS_RESERVED_SLOTS_WIDTH)
+// JSCLASS_HAS_RESERVED_SLOTS(n) into the initializer for JSClass.flags, where n
+// is a constant in [1, 255]. Reserved slots are indexed from 0 to n-1.
+
+// Room for 8 flags below ...
+static const uintptr_t JSCLASS_RESERVED_SLOTS_SHIFT = 8;
+// ... and 16 above this field.
+static const uint32_t JSCLASS_RESERVED_SLOTS_WIDTH = 8;
+
+static const uint32_t JSCLASS_RESERVED_SLOTS_MASK = JS_BITMASK(JSCLASS_RESERVED_SLOTS_WIDTH);
+
 #define JSCLASS_HAS_RESERVED_SLOTS(n)   (((n) & JSCLASS_RESERVED_SLOTS_MASK)  \
                                          << JSCLASS_RESERVED_SLOTS_SHIFT)
 #define JSCLASS_RESERVED_SLOTS(clasp)   (((clasp)->flags                      \
@@ -818,21 +823,19 @@ struct JSClass {
 #define JSCLASS_HIGH_FLAGS_SHIFT        (JSCLASS_RESERVED_SLOTS_SHIFT +       \
                                          JSCLASS_RESERVED_SLOTS_WIDTH)
 
-#define JSCLASS_IS_ANONYMOUS            (1<<(JSCLASS_HIGH_FLAGS_SHIFT+0))
-#define JSCLASS_IS_GLOBAL               (1<<(JSCLASS_HIGH_FLAGS_SHIFT+1))
-#define JSCLASS_INTERNAL_FLAG2          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+2))
-#define JSCLASS_INTERNAL_FLAG3          (1<<(JSCLASS_HIGH_FLAGS_SHIFT+3))
-
-#define JSCLASS_IS_PROXY                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
-
-#define JSCLASS_SKIP_NURSERY_FINALIZE   (1<<(JSCLASS_HIGH_FLAGS_SHIFT+5))
+static const uint32_t JSCLASS_IS_ANONYMOUS =            1 << (JSCLASS_HIGH_FLAGS_SHIFT + 0);
+static const uint32_t JSCLASS_IS_GLOBAL =               1 << (JSCLASS_HIGH_FLAGS_SHIFT + 1);
+static const uint32_t JSCLASS_INTERNAL_FLAG2 =          1 << (JSCLASS_HIGH_FLAGS_SHIFT + 2);
+static const uint32_t JSCLASS_INTERNAL_FLAG3 =          1 << (JSCLASS_HIGH_FLAGS_SHIFT + 3);
+static const uint32_t JSCLASS_IS_PROXY =                1 << (JSCLASS_HIGH_FLAGS_SHIFT + 4);
+static const uint32_t JSCLASS_SKIP_NURSERY_FINALIZE =   1 << (JSCLASS_HIGH_FLAGS_SHIFT + 5);
 
 // Reserved for embeddings.
-#define JSCLASS_USERBIT2                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+6))
-#define JSCLASS_USERBIT3                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+7))
+static const uint32_t JSCLASS_USERBIT2 =                1 << (JSCLASS_HIGH_FLAGS_SHIFT + 6);
+static const uint32_t JSCLASS_USERBIT3 =                1 << (JSCLASS_HIGH_FLAGS_SHIFT + 7);
 
-#define JSCLASS_BACKGROUND_FINALIZE     (1<<(JSCLASS_HIGH_FLAGS_SHIFT+8))
-#define JSCLASS_FOREGROUND_FINALIZE     (1<<(JSCLASS_HIGH_FLAGS_SHIFT+9))
+static const uint32_t JSCLASS_BACKGROUND_FINALIZE =     1 << (JSCLASS_HIGH_FLAGS_SHIFT + 8);
+static const uint32_t JSCLASS_FOREGROUND_FINALIZE =     1 << (JSCLASS_HIGH_FLAGS_SHIFT + 9);
 
 // Bits 26 through 31 are reserved for the CACHED_PROTO_KEY mechanism, see
 // below.
@@ -850,10 +853,11 @@ struct JSClass {
 // JSCLASS_GLOBAL_APPLICATION_SLOTS is the number of slots reserved at
 // the beginning of every global object's slots for use by the
 // application.
-#define JSCLASS_GLOBAL_APPLICATION_SLOTS 5
-#define JSCLASS_GLOBAL_SLOT_COUNT                                             \
-    (JSCLASS_GLOBAL_APPLICATION_SLOTS + JSProto_LIMIT * 2 + 46)
-#define JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(n)                                    \
+static const uint32_t JSCLASS_GLOBAL_APPLICATION_SLOTS = 5;
+static const uint32_t JSCLASS_GLOBAL_SLOT_COUNT =
+    JSCLASS_GLOBAL_APPLICATION_SLOTS + JSProto_LIMIT * 2 + 46;
+
+#define JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(n)                              \
     (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + (n)))
 #define JSCLASS_GLOBAL_FLAGS                                                  \
     JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(0)
@@ -862,8 +866,9 @@ struct JSClass {
    && JSCLASS_RESERVED_SLOTS(clasp) >= JSCLASS_GLOBAL_SLOT_COUNT)
 
 // Fast access to the original value of each standard class's prototype.
-#define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 10)
-#define JSCLASS_CACHED_PROTO_MASK       JS_BITMASK(js::JSCLASS_CACHED_PROTO_WIDTH)
+static const uint32_t JSCLASS_CACHED_PROTO_SHIFT = JSCLASS_HIGH_FLAGS_SHIFT + 10;
+static const uint32_t JSCLASS_CACHED_PROTO_MASK = JS_BITMASK(js::JSCLASS_CACHED_PROTO_WIDTH);
+
 #define JSCLASS_HAS_CACHED_PROTO(key)   (uint32_t(key) << JSCLASS_CACHED_PROTO_SHIFT)
 #define JSCLASS_CACHED_PROTO_KEY(clasp) ((JSProtoKey)                         \
                                          (((clasp)->flags                     \

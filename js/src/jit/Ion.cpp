@@ -477,10 +477,8 @@ jit::FinishOffThreadBuilder(JSRuntime* runtime, IonBuilder* builder,
     }
 
     // If the builder is still in one of the helper thread list, then remove it.
-    if (builder->isInList()) {
-        MOZ_ASSERT(runtime);
-        runtime->ionLazyLinkListRemove(builder);
-    }
+    if (builder->isInList())
+        builder->script()->zone()->group()->ionLazyLinkListRemove(builder);
 
     // Clear the recompiling flag of the old ionScript, since we continue to
     // use the old ionScript if recompiling fails.
@@ -550,7 +548,7 @@ jit::LinkIonScript(JSContext* cx, HandleScript calleeScript)
         calleeScript->baselineScript()->removePendingIonBuilder(calleeScript);
 
         // Remove from pending.
-        cx->runtime()->ionLazyLinkListRemove(builder);
+        cx->zone()->group()->ionLazyLinkListRemove(builder);
     }
 
     {
@@ -2097,12 +2095,12 @@ AttachFinishedCompilations(JSContext* cx)
             JSScript* script = builder->script();
             MOZ_ASSERT(script->hasBaselineScript());
             script->baselineScript()->setPendingIonBuilder(cx->runtime(), script, builder);
-            cx->runtime()->ionLazyLinkListAdd(builder);
+            cx->zone()->group()->ionLazyLinkListAdd(builder);
 
-            // Don't keep more than 100 lazy link builders.
+            // Don't keep more than 100 lazy link builders in a zone group.
             // Link the oldest ones immediately.
-            while (cx->runtime()->ionLazyLinkListSize() > 100) {
-                jit::IonBuilder* builder = cx->runtime()->ionLazyLinkList().getLast();
+            while (cx->zone()->group()->ionLazyLinkListSize() > 100) {
+                jit::IonBuilder* builder = cx->zone()->group()->ionLazyLinkList().getLast();
                 RootedScript script(cx, builder->script());
 
                 AutoUnlockHelperThreadState unlock(lock);

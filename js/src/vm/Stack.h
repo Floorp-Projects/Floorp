@@ -1765,7 +1765,7 @@ class WasmActivation : public Activation
     void* resumePC() const { return resumePC_; }
 
     // Used by wasm::FrameIterator during stack unwinding.
-    void unwindExitFP(uint8_t* exitFP) { exitFP_ = exitFP; exitReason_ = wasm::ExitReason::None; }
+    void unwindExitFP(uint8_t* exitFP);
 };
 
 // A FrameIter walks over a context's stack of JS script activations,

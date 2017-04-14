@@ -48,6 +48,8 @@ IonIC::scratchRegisterForEntryJump()
         return asGetNameIC()->temp();
       case CacheKind::In:
         MOZ_CRASH("Baseline-specific for now");
+      case CacheKind::HasOwn:
+        return asHasOwnIC()->output();
     }
 
     MOZ_CRASH("Invalid kind");
@@ -318,6 +320,36 @@ IonGetNameIC::update(JSContext* cx, HandleScript outerScript, IonGetNameIC* ic,
     // No need to call TypeScript::Monitor, IonBuilder always inserts a type
     // barrier after GetName ICs.
 
+    return true;
+}
+
+/* static */ bool
+IonHasOwnIC::update(JSContext* cx, HandleScript outerScript, IonHasOwnIC* ic,
+                    HandleValue val, HandleValue idVal, int32_t* res)
+{
+    IonScript* ionScript = outerScript->ionScript();
+
+    if (ic->state().maybeTransition())
+        ic->discardStubs(cx->zone());
+
+    jsbytecode* pc = ic->pc();
+
+    if (ic->state().canAttachStub()) {
+        bool attached = false;
+        RootedScript script(cx, ic->script());
+        HasOwnIRGenerator gen(cx, script, pc, ic->state().mode(), idVal, val);
+        if (gen.tryAttachStub())
+            ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
+
+        if (!attached)
+            ic->state().trackNotAttached();
+    }
+
+    bool found;
+    if (!HasOwnProperty(cx, val, idVal, &found))
+        return false;
+
+    *res = found;
     return true;
 }
 

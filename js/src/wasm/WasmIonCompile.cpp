@@ -173,11 +173,11 @@ class FunctionCompiler
     TempAllocator&             alloc() const { return alloc_; }
     const Sig&                 sig() const   { return func_.sig(); }
 
-    TrapOffset trapOffset() const {
-        return iter_.trapOffset();
+    BytecodeOffset bytecodeOffset() const {
+        return iter_.bytecodeOffset();
     }
-    Maybe<TrapOffset> trapIfNotAsmJS() const {
-        return env_.isAsmJS() ? Nothing() : Some(iter_.trapOffset());
+    Maybe<BytecodeOffset> bytecodeIfNotAsmJS() const {
+        return env_.isAsmJS() ? Nothing() : Some(iter_.bytecodeOffset());
     }
 
     bool init()
@@ -553,7 +553,7 @@ class FunctionCompiler
             return nullptr;
 
         MOZ_ASSERT(IsSimdType(from) && IsSimdType(to) && from != to);
-        return MSimdConvert::AddLegalized(alloc(), curBlock_, vec, to, sign, trapOffset());
+        return MSimdConvert::AddLegalized(alloc(), curBlock_, vec, to, sign, bytecodeOffset());
     }
 
     MDefinition* splatSimd(MDefinition* v, MIRType type)
@@ -608,6 +608,10 @@ class FunctionCompiler
             //
             // Do this for Int32 only since Int64 is not subject to the same
             // issues.
+            //
+            // Note the offsets passed to MTruncateToInt32 are wrong here, but
+            // it doesn't matter: they're not codegen'd to calls since inputs
+            // already are int32.
             auto* lhs2 = MTruncateToInt32::New(alloc(), lhs);
             curBlock_->add(lhs2);
             lhs = lhs2;
@@ -615,7 +619,7 @@ class FunctionCompiler
             curBlock_->add(rhs2);
             rhs = rhs2;
         }
-        auto* ins = MDiv::New(alloc(), lhs, rhs, type, unsignd, trapOnError, trapOffset(),
+        auto* ins = MDiv::New(alloc(), lhs, rhs, type, unsignd, trapOnError, bytecodeOffset(),
                               mustPreserveNaN(type));
         curBlock_->add(ins);
         return ins;
@@ -635,7 +639,7 @@ class FunctionCompiler
             curBlock_->add(rhs2);
             rhs = rhs2;
         }
-        auto* ins = MMod::New(alloc(), lhs, rhs, type, unsignd, trapOnError, trapOffset());
+        auto* ins = MMod::New(alloc(), lhs, rhs, type, unsignd, trapOnError, bytecodeOffset());
         curBlock_->add(ins);
         return ins;
     }
@@ -671,7 +675,7 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        auto* ins = MInt64ToFloatingPoint::New(alloc(), op, type, isUnsigned);
+        auto* ins = MInt64ToFloatingPoint::New(alloc(), op, type, bytecodeOffset(), isUnsigned);
         curBlock_->add(ins);
         return ins;
     }
@@ -690,7 +694,7 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        auto* ins = T::New(alloc(), op, isUnsigned, trapOffset());
+        auto* ins = T::New(alloc(), op, isUnsigned, bytecodeOffset());
         curBlock_->add(ins);
         return ins;
     }
@@ -741,7 +745,7 @@ class FunctionCompiler
         // If the offset is bigger than the guard region, a separate instruction
         // is necessary to add the offset to the base and check for overflow.
         if (access->offset() >= OffsetGuardLimit || !JitOptions.wasmFoldOffsets) {
-            auto* ins = MWasmAddOffset::New(alloc(), *base, access->offset(), trapOffset());
+            auto* ins = MWasmAddOffset::New(alloc(), *base, access->offset(), bytecodeOffset());
             curBlock_->add(ins);
 
             *base = ins;
@@ -750,7 +754,7 @@ class FunctionCompiler
 
         MWasmLoadTls* boundsCheckLimit = maybeLoadBoundsCheckLimit();
         if (boundsCheckLimit)
-            curBlock_->add(MWasmBoundsCheck::New(alloc(), *base, boundsCheckLimit, trapOffset()));
+            curBlock_->add(MWasmBoundsCheck::New(alloc(), *base, boundsCheckLimit, bytecodeOffset()));
     }
 
   public:
@@ -807,8 +811,8 @@ class FunctionCompiler
 
         checkOffsetAndBounds(access, &base);
         MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
-        auto* cas = MAsmJSCompareExchangeHeap::New(alloc(), memoryBase, base, *access, oldv, newv,
-                                                   tlsPointer_);
+        auto* cas = MAsmJSCompareExchangeHeap::New(alloc(), bytecodeOffset(), memoryBase, base,
+                                                   *access, oldv, newv, tlsPointer_);
         if (cas)
             curBlock_->add(cas);
         return cas;
@@ -822,7 +826,8 @@ class FunctionCompiler
 
         checkOffsetAndBounds(access, &base);
         MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
-        auto* cas = MAsmJSAtomicExchangeHeap::New(alloc(), memoryBase, base, *access, value, tlsPointer_);
+        auto* cas = MAsmJSAtomicExchangeHeap::New(alloc(), bytecodeOffset(), memoryBase, base,
+                                                  *access, value, tlsPointer_);
         if (cas)
             curBlock_->add(cas);
         return cas;
@@ -836,8 +841,8 @@ class FunctionCompiler
 
         checkOffsetAndBounds(access, &base);
         MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
-        auto* binop = MAsmJSAtomicBinopHeap::New(alloc(), op, memoryBase, base, *access, v,
-                                                 tlsPointer_);
+        auto* binop = MAsmJSAtomicBinopHeap::New(alloc(), bytecodeOffset(), op, memoryBase, base,
+                                                 *access, v, tlsPointer_);
         if (binop)
             curBlock_->add(binop);
         return binop;
@@ -1160,7 +1165,7 @@ class FunctionCompiler
         if (inDeadCode())
             return;
 
-        auto* ins = MWasmTrap::New(alloc(), wasm::Trap::Unreachable, trapOffset());
+        auto* ins = MWasmTrap::New(alloc(), wasm::Trap::Unreachable, bytecodeOffset());
         curBlock_->end(ins);
         curBlock_ = nullptr;
     }
@@ -1542,7 +1547,7 @@ class FunctionCompiler
     uint32_t readCallSiteLineOrBytecode() {
         if (!func_.callSiteLineNums().empty())
             return func_.callSiteLineNums()[lastReadCallSite_++];
-        return iter_.errorOffset();
+        return iter_.lastOpcodeOffset();
     }
 
     bool done() const { return iter_.done(); }
@@ -1628,6 +1633,16 @@ MDefinition* FunctionCompiler::unary<MToFloat32>(MDefinition* op)
     if (inDeadCode())
         return nullptr;
     auto* ins = MToFloat32::New(alloc(), op, mustPreserveNaN(op->type()));
+    curBlock_->add(ins);
+    return ins;
+}
+
+template <>
+MDefinition* FunctionCompiler::unary<MTruncateToInt32>(MDefinition* op)
+{
+    if (inDeadCode())
+        return nullptr;
+    auto* ins = MTruncateToInt32::New(alloc(), op, bytecodeOffset());
     curBlock_->add(ins);
     return ins;
 }
@@ -2438,7 +2453,7 @@ EmitLoad(FunctionCompiler& f, ValType type, Scalar::Type viewType)
     if (!f.iter().readLoad(type, Scalar::byteSize(viewType), &addr))
         return false;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, f.trapIfNotAsmJS());
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeIfNotAsmJS());
     auto* ins = f.load(addr.base, &access, type);
     if (!f.inDeadCode() && !ins)
         return false;
@@ -2455,7 +2470,7 @@ EmitStore(FunctionCompiler& f, ValType resultType, Scalar::Type viewType)
     if (!f.iter().readStore(resultType, Scalar::byteSize(viewType), &addr, &value))
         return false;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, f.trapIfNotAsmJS());
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeIfNotAsmJS());
 
     return f.store(addr.base, &access, value);
 }
@@ -2468,7 +2483,7 @@ EmitTeeStore(FunctionCompiler& f, ValType resultType, Scalar::Type viewType)
     if (!f.iter().readTeeStore(resultType, Scalar::byteSize(viewType), &addr, &value))
         return false;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, f.trapIfNotAsmJS());
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeIfNotAsmJS());
 
     return f.store(addr.base, &access, value);
 }
@@ -2488,7 +2503,7 @@ EmitTeeStoreWithCoercion(FunctionCompiler& f, ValType resultType, Scalar::Type v
     else
         MOZ_CRASH("unexpected coerced store");
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, f.trapIfNotAsmJS());
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeIfNotAsmJS());
 
     return f.store(addr.base, &access, value);
 }
@@ -2581,7 +2596,7 @@ EmitAtomicsLoad(FunctionCompiler& f)
     if (!f.iter().readAtomicLoad(&addr, &viewType))
         return false;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()), 0,
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()), 0,
                             MembarBeforeLoad, MembarAfterLoad);
 
     auto* ins = f.load(addr.base, &access, ValType::I32);
@@ -2601,7 +2616,7 @@ EmitAtomicsStore(FunctionCompiler& f)
     if (!f.iter().readAtomicStore(&addr, &viewType, &value))
         return false;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()), 0,
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()), 0,
                             MembarBeforeStore, MembarAfterStore);
 
     if (!f.store(addr.base, &access, value))
@@ -2621,7 +2636,7 @@ EmitAtomicsBinOp(FunctionCompiler& f)
     if (!f.iter().readAtomicBinOp(&addr, &viewType, &op, &value))
         return false;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()));
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()));
 
     auto* ins = f.atomicBinopHeap(op, addr.base, &access, value);
     if (!f.inDeadCode() && !ins)
@@ -2641,7 +2656,7 @@ EmitAtomicsCompareExchange(FunctionCompiler& f)
     if (!f.iter().readAtomicCompareExchange(&addr, &viewType, &oldValue, &newValue))
         return false;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()));
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()));
 
     auto* ins = f.atomicCompareExchangeHeap(addr.base, &access, oldValue, newValue);
     if (!f.inDeadCode() && !ins)
@@ -2660,7 +2675,7 @@ EmitAtomicsExchange(FunctionCompiler& f)
     if (!f.iter().readAtomicExchange(&addr, &viewType, &value))
         return false;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()));
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()));
 
     auto* ins = f.atomicExchangeHeap(addr.base, &access, value);
     if (!f.inDeadCode() && !ins)
@@ -2887,7 +2902,7 @@ EmitSimdLoad(FunctionCompiler& f, ValType resultType, unsigned numElems)
     if (!f.iter().readLoad(resultType, Scalar::byteSize(viewType), &addr))
         return false;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()), numElems);
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()), numElems);
 
     auto* ins = f.load(addr.base, &access, resultType);
     if (!f.inDeadCode() && !ins)
@@ -2911,7 +2926,7 @@ EmitSimdStore(FunctionCompiler& f, ValType resultType, unsigned numElems)
     if (!f.iter().readTeeStore(resultType, Scalar::byteSize(viewType), &addr, &value))
         return false;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.trapOffset()), numElems);
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(f.bytecodeOffset()), numElems);
 
     return f.store(addr.base, &access, value);
 }
@@ -3828,7 +3843,7 @@ wasm::IonCompileFunction(CompileTask* task, FuncCompileUnit* unit, UniqueChars* 
 
         CodeGenerator codegen(&mir, lir, &task->masm());
 
-        TrapOffset prologueTrapOffset(func.lineOrBytecode());
+        BytecodeOffset prologueTrapOffset(func.lineOrBytecode());
         FuncOffsets offsets;
         if (!codegen.generateWasm(sigId, prologueTrapOffset, &offsets))
             return false;

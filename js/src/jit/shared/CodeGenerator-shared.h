@@ -364,11 +364,15 @@ class CodeGeneratorShared : public LElementVisitor
     //      an invalidation marker.
     void ensureOsiSpace();
 
-    OutOfLineCode* oolTruncateDouble(FloatRegister src, Register dest, MInstruction* mir);
-    void emitTruncateDouble(FloatRegister src, Register dest, MInstruction* mir);
-    void emitTruncateFloat32(FloatRegister src, Register dest, MInstruction* mir);
+    OutOfLineCode* oolTruncateDouble(FloatRegister src, Register dest, MInstruction* mir,
+                                     wasm::BytecodeOffset callOffset = wasm::BytecodeOffset());
+    void emitTruncateDouble(FloatRegister src, Register dest, MTruncateToInt32* mir);
+    void emitTruncateFloat32(FloatRegister src, Register dest, MTruncateToInt32* mir);
 
     void emitWasmCallBase(LWasmCallBase* ins);
+    void visitWasmCall(LWasmCall* ins) { emitWasmCallBase(ins); }
+    void visitWasmCallI64(LWasmCallI64* ins) { emitWasmCallBase(ins); }
+
     void visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins);
     void visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins);
     void visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins);
@@ -525,7 +529,7 @@ class CodeGeneratorShared : public LElementVisitor
 
     template <class T>
     wasm::TrapDesc trap(T* mir, wasm::Trap trap) {
-        return wasm::TrapDesc(mir->trapOffset(), trap, masm.framePushed());
+        return wasm::TrapDesc(mir->bytecodeOffset(), trap, masm.framePushed());
     }
 
   private:
@@ -863,17 +867,17 @@ class OutOfLineWasmTruncateCheck : public OutOfLineCodeBase<CodeGeneratorShared>
     MIRType toType_;
     FloatRegister input_;
     bool isUnsigned_;
-    wasm::TrapOffset trapOffset_;
+    wasm::BytecodeOffset bytecodeOffset_;
 
   public:
     OutOfLineWasmTruncateCheck(MWasmTruncateToInt32* mir, FloatRegister input)
       : fromType_(mir->input()->type()), toType_(MIRType::Int32), input_(input),
-        isUnsigned_(mir->isUnsigned()), trapOffset_(mir->trapOffset())
+        isUnsigned_(mir->isUnsigned()), bytecodeOffset_(mir->bytecodeOffset())
     { }
 
     OutOfLineWasmTruncateCheck(MWasmTruncateToInt64* mir, FloatRegister input)
       : fromType_(mir->input()->type()), toType_(MIRType::Int64), input_(input),
-        isUnsigned_(mir->isUnsigned()), trapOffset_(mir->trapOffset())
+        isUnsigned_(mir->isUnsigned()), bytecodeOffset_(mir->bytecodeOffset())
     { }
 
     void accept(CodeGeneratorShared* codegen) {
@@ -884,7 +888,7 @@ class OutOfLineWasmTruncateCheck : public OutOfLineCodeBase<CodeGeneratorShared>
     MIRType toType() const { return toType_; }
     MIRType fromType() const { return fromType_; }
     bool isUnsigned() const { return isUnsigned_; }
-    wasm::TrapOffset trapOffset() const { return trapOffset_; }
+    wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
 };
 
 } // namespace jit

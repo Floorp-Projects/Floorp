@@ -564,16 +564,10 @@ this.EventManager.prototype = {
     }
   },
 
-  onProgressChange: function onProgressChange() {},
-
   onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
     let docAcc = Utils.AccService.getAccessibleFor(aWebProgress.DOMWindow.document);
     this.present(Presentation.tabStateChanged(docAcc, 'newdoc'));
   },
-
-  onStatusChange: function onStatusChange() {},
-
-  onSecurityChange: function onSecurityChange() {},
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
                                          Ci.nsISupportsWeakReference,

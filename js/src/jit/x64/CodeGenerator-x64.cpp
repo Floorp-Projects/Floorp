@@ -395,18 +395,6 @@ CodeGeneratorX64::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStati
 }
 
 void
-CodeGeneratorX64::visitWasmCall(LWasmCall* ins)
-{
-    emitWasmCallBase(ins);
-}
-
-void
-CodeGeneratorX64::visitWasmCallI64(LWasmCallI64* ins)
-{
-    emitWasmCallBase(ins);
-}
-
-void
 CodeGeneratorX64::wasmStore(const wasm::MemoryAccessDesc& access, const LAllocation* value,
                             Operand dstAddr)
 {

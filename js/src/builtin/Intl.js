@@ -379,7 +379,7 @@ function CanonicalizeLanguageTag(locale) {
     locale = callFunction(std_String_toLowerCase, locale);
 
     // Handle mappings for complete tags.
-    if (callFunction(std_Object_hasOwnProperty, langTagMappings, locale))
+    if (hasOwn(locale, langTagMappings))
         return langTagMappings[locale];
 
     var subtags = StringSplitString(ToString(locale), "-");
@@ -411,7 +411,7 @@ function CanonicalizeLanguageTag(locale) {
                 subtag = callFunction(std_String_toUpperCase, subtag);
             }
         }
-        if (callFunction(std_Object_hasOwnProperty, langSubtagMappings, subtag)) {
+        if (hasOwn(subtag, langSubtagMappings)) {
             // Replace deprecated subtags with their preferred values.
             // "BU" -> "MM"
             // This has to come after we capitalize region codes because
@@ -421,7 +421,7 @@ function CanonicalizeLanguageTag(locale) {
             // Note that the script generating langSubtagMappings makes sure
             // that no regular subtag mapping will replace an extlang code.
             subtag = langSubtagMappings[subtag];
-        } else if (callFunction(std_Object_hasOwnProperty, extlangMappings, subtag)) {
+        } else if (hasOwn(subtag, extlangMappings)) {
             // Replace deprecated extlang subtags with their preferred values,
             // and remove the preceding subtag if it's a redundant prefix.
             // "zh-nan" -> "nan"
@@ -510,11 +510,10 @@ function ValidateAndCanonicalizeLanguageTag(locale) {
 
         // langTagMappings doesn't contain any 2*3ALPHA keys, so we don't need
         // to check for possible replacements in this map.
-        assert(!callFunction(std_Object_hasOwnProperty, langTagMappings, locale),
-               "langTagMappings contains no 2*3ALPHA mappings");
+        assert(!hasOwn(locale, langTagMappings), "langTagMappings contains no 2*3ALPHA mappings");
 
         // Replace deprecated subtags with their preferred values.
-        locale = callFunction(std_Object_hasOwnProperty, langSubtagMappings, locale)
+        locale = hasOwn(locale, langSubtagMappings)
                  ? langSubtagMappings[locale]
                  : locale;
         assert(locale === CanonicalizeLanguageTag(locale), "expected same canonicalization");
@@ -607,7 +606,7 @@ function DefaultLocaleIgnoringAvailableLocales() {
         // remove any present in the candidate.
         candidate = removeUnicodeExtensions(candidate);
 
-        if (callFunction(std_Object_hasOwnProperty, oldStyleLanguageTagMappings, candidate))
+        if (hasOwn(candidate, oldStyleLanguageTagMappings))
             candidate = oldStyleLanguageTagMappings[candidate];
     }
 
@@ -1370,16 +1369,14 @@ function getIntlObjectInternals(obj) {
     var internals = UnsafeGetReservedSlot(obj, INTL_INTERNALS_OBJECT_SLOT);
 
     assert(IsObject(internals), "internals not an object");
-    assert(callFunction(std_Object_hasOwnProperty, internals, "type"), "missing type");
+    assert(hasOwn("type", internals), "missing type");
     assert((internals.type === "Collator" && IsCollator(obj)) ||
            (internals.type === "DateTimeFormat" && IsDateTimeFormat(obj)) ||
            (internals.type === "NumberFormat" && IsNumberFormat(obj)) ||
            (internals.type === "PluralRules" && IsPluralRules(obj)),
            "type must match the object's class");
-    assert(callFunction(std_Object_hasOwnProperty, internals, "lazyData"),
-           "missing lazyData");
-    assert(callFunction(std_Object_hasOwnProperty, internals, "internalProps"),
-           "missing internalProps");
+    assert(hasOwn("lazyData", internals), "missing lazyData");
+    assert(hasOwn("internalProps", internals), "missing internalProps");
 
     return internals;
 }
@@ -2119,7 +2116,7 @@ function CurrencyDigits(currency) {
     assert(typeof currency === "string", "CurrencyDigits");
     assert(regexp_test_no_statics(getCurrencyDigitsRE(), currency), "CurrencyDigits");
 
-    if (callFunction(std_Object_hasOwnProperty, currencyDigits, currency))
+    if (hasOwn(currency, currencyDigits))
         return currencyDigits[currency];
     return 2;
 }
@@ -2269,7 +2266,7 @@ function Intl_NumberFormat_resolvedOptions() {
     ];
     for (var i = 0; i < optionalProperties.length; i++) {
         var p = optionalProperties[i];
-        if (callFunction(std_Object_hasOwnProperty, internals, p))
+        if (hasOwn(p, internals))
             _DefineDataProperty(result, p, internals[p]);
     }
     return result;
@@ -3060,7 +3057,7 @@ function resolveICUPattern(pattern, result) {
             default:
                 // skip other pattern characters and literal text
             }
-            if (callFunction(std_Object_hasOwnProperty, icuPatternCharToComponent, c))
+            if (hasOwn(c, icuPatternCharToComponent))
                 _DefineDataProperty(result, icuPatternCharToComponent[c], value);
             if (c === "h" || c === "K")
                 _DefineDataProperty(result, "hour12", true);
@@ -3295,7 +3292,7 @@ function Intl_PluralRules_resolvedOptions() {
 
     for (var i = 0; i < optionalProperties.length; i++) {
         var p = optionalProperties[i];
-        if (callFunction(std_Object_hasOwnProperty, internals, p))
+        if (hasOwn(p, internals))
             _DefineDataProperty(result, p, internals[p]);
     }
     return result;

@@ -1626,10 +1626,12 @@ CacheIRCompiler::emitLoadBooleanResult()
     if (output.hasValue()) {
         Value val = BooleanValue(reader.readBool());
         masm.moveValue(val, output.valueReg());
+    } else {
+        MOZ_ASSERT(output.type() == JSVAL_TYPE_BOOLEAN);
+        bool b = reader.readBool();
+        masm.movePtr(ImmWord(b), output.typedReg().gpr());
     }
-    else {
-        MOZ_CRASH("NYI: Typed LoadBooleanResult");
-    }
+
     return true;
 }
 
@@ -2262,6 +2264,54 @@ CacheIRCompiler::emitMegamorphicLoadSlotByValueResult()
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyByValue<true>)));
     else
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyByValue<false>)));
+    masm.mov(ReturnReg, scratch);
+    masm.PopRegsInMask(volatileRegs);
+
+    masm.Pop(idVal);
+
+    Label ok;
+    uint32_t framePushed = masm.framePushed();
+    masm.branchIfTrueBool(scratch, &ok);
+    masm.adjustStack(sizeof(Value));
+    masm.jump(failure->label());
+
+    masm.bind(&ok);
+    masm.setFramePushed(framePushed);
+    masm.loadTypedOrValue(Address(masm.getStackPointer(), 0), output);
+    masm.adjustStack(sizeof(Value));
+    return true;
+}
+
+bool
+CacheIRCompiler::emitMegamorphicHasOwnResult()
+{
+    AutoOutputRegister output(*this);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
+
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // idVal will be in vp[0], result will be stored in vp[1].
+    masm.reserveStack(sizeof(Value));
+    masm.Push(idVal);
+    masm.moveStackPtrTo(idVal.scratchReg());
+
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    volatileRegs.takeUnchecked(scratch);
+    volatileRegs.takeUnchecked(idVal);
+    masm.PushRegsInMask(volatileRegs);
+
+    masm.setupUnalignedABICall(scratch);
+    masm.loadJSContext(scratch);
+    masm.passABIArg(scratch);
+    masm.passABIArg(obj);
+    masm.passABIArg(idVal.scratchReg());
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, HasOwnNativeDataProperty));
     masm.mov(ReturnReg, scratch);
     masm.PopRegsInMask(volatileRegs);
 

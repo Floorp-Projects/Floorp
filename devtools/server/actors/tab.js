@@ -1516,7 +1516,6 @@ DebuggerProgressListener.prototype = {
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(this,
-                                    Ci.nsIWebProgress.NOTIFY_STATUS |
                                     Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
                                     Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
 

@@ -77,8 +77,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
     this._onTabLoad = this._onTabLoad.bind(this);
     this._onChange = this._onChange.bind(this);
 
-    this._notifyOn = Ci.nsIWebProgress.NOTIFY_STATUS |
-                     Ci.nsIWebProgress.NOTIFY_STATE_ALL;
+    this._notifyOn = Ci.nsIWebProgress.NOTIFY_STATE_ALL;
   },
 
   destroy: function () {
@@ -121,10 +120,6 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
         }
       },
 
-      onLocationChange: () => {},
-      onProgressChange: () => {},
-      onSecurityChange: () => {},
-      onStatusChange: () => {},
       destroy: () => {}
     };
 

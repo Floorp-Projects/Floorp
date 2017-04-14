@@ -2299,6 +2299,9 @@ void
 StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub);
 
 MOZ_MUST_USE bool
+CheckHasNoSuchOwnProperty(JSContext* cx, JSObject* obj, jsid id);
+
+MOZ_MUST_USE bool
 CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id,
                        JSObject** lastProto = nullptr, size_t* protoChainDepthOut = nullptr);
 

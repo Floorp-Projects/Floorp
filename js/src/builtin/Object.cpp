@@ -685,50 +685,6 @@ obj_unwatch(JSContext* cx, unsigned argc, Value* vp)
 
 #endif /* JS_HAS_OBJ_WATCHPOINT */
 
-/* ECMA 15.2.4.5. */
-bool
-js::obj_hasOwnProperty(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    HandleValue idValue = args.get(0);
-
-    // As an optimization, provide a fast path when rooting is not necessary and
-    // we can safely retrieve the object's shape.
-
-    /* Step 1, 2. */
-    jsid id;
-    if (args.thisv().isObject() && ValueToId<NoGC>(cx, idValue, &id)) {
-        JSObject* obj = &args.thisv().toObject();
-        PropertyResult prop;
-        if (obj->isNative() &&
-            NativeLookupOwnProperty<NoGC>(cx, &obj->as<NativeObject>(), id, &prop))
-        {
-            args.rval().setBoolean(prop.isFound());
-            return true;
-        }
-    }
-
-    /* Step 1. */
-    RootedId idRoot(cx);
-    if (!ToPropertyKey(cx, idValue, &idRoot))
-        return false;
-
-    /* Step 2. */
-    RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
-        return false;
-
-    /* Step 3. */
-    bool found;
-    if (!HasOwnProperty(cx, obj, idRoot, &found))
-        return false;
-
-    /* Step 4,5. */
-    args.rval().setBoolean(found);
-    return true;
-}
-
 /* ES5 15.2.4.6. */
 static bool
 obj_isPrototypeOf(JSContext* cx, unsigned argc, Value* vp)
@@ -1320,7 +1276,7 @@ static const JSFunctionSpec object_methods[] = {
     JS_FN(js_watch_str,                obj_watch,                   2,0),
     JS_FN(js_unwatch_str,              obj_unwatch,                 1,0),
 #endif
-    JS_FN(js_hasOwnProperty_str,       obj_hasOwnProperty,          1,0),
+    JS_SELF_HOSTED_FN(js_hasOwnProperty_str, "Object_hasOwnProperty", 1,0),
     JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,           1,0),
     JS_FN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable,    1,0),
 #if JS_OLD_GETTER_SETTER_METHODS
