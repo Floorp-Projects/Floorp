@@ -20,6 +20,10 @@ add_task(async function check_developer_subview_in_overflow() {
   gOriginalWidth = window.outerWidth;
 
   CustomizableUI.addWidgetToArea("developer-button", CustomizableUI.AREA_NAVBAR);
+  if (isNotReleaseOrBeta()) {
+    CustomizableUI.addWidgetToArea("webcompat-reporter-button", CustomizableUI.AREA_NAVBAR);
+  }
+
 
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
