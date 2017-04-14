@@ -1155,14 +1155,9 @@ class ExtensionGlobal {
     MessageChannel.addListener(global, "Extension:Execute", this);
     MessageChannel.addListener(global, "WebNavigation:GetFrame", this);
     MessageChannel.addListener(global, "WebNavigation:GetAllFrames", this);
-
-    this.windowId = getWinUtils(global.content).outerWindowID;
-
-    global.sendAsyncMessage("Extension:TopWindowID", {windowId: this.windowId});
   }
 
   uninit() {
-    this.global.sendAsyncMessage("Extension:RemoveTopWindowID", {windowId: this.windowId});
   }
 
   get messageFilterStrict() {

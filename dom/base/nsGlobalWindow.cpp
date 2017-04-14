@@ -15005,15 +15005,14 @@ nsGlobalWindow::TabGroupOuter()
     } else if (parent) {
       toJoin = parent->TabGroup();
     } else {
-      // If the tab was created by the parent process, the IPC code may have
-      // already created a TabGroup for us. Fetch it in that case.
-      toJoin = TabGroup::GetFromWindowActor(AsOuter());
+      toJoin = TabGroup::GetFromWindow(AsOuter());
     }
+
 #ifdef DEBUG
     // Make sure that, if we have a tab group from the actor, it matches the one
     // we're planning to join.
-    mozilla::dom::TabGroup* actorTabGroup = TabGroup::GetFromWindowActor(AsOuter());
-    MOZ_ASSERT_IF(actorTabGroup, actorTabGroup == toJoin);
+    mozilla::dom::TabGroup* testGroup = TabGroup::GetFromWindow(AsOuter());
+    MOZ_ASSERT_IF(testGroup, testGroup == toJoin);
 #endif
 
     mTabGroup = mozilla::dom::TabGroup::Join(AsOuter(), toJoin);

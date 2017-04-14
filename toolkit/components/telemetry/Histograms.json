@@ -1219,7 +1219,7 @@
     "keyed": true,
     "high": 200,
     "n_buckets": 100,
-    "description": "Absolute difference of each content process' USS and the mean of USS's, normalized by the mean, in percentage. 100 means that the content process uses twice as much memory as the mean of the rest (or theoretically it could also mean that it uses 0 while the mean of the others are non 0.)"
+    "description": "Absolute difference of each content process' USS and the mean of USS's, normalized by the mean, in percentage. It will be recorded with the rest of the memory probes when gatherMemory is called, if at least 2 content processes are alive. Example: in case of 4 content processes with USS's: 1G, 500MB, 1G, 1.5G, the reported numbers will be: 0, 50, 0, 50. Which indicates that 2 processes used 50% more or 50% less memory than the avarage and 2 used exactly as much as the avarage."
   },
   "MEMORY_UNIQUE": {
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],

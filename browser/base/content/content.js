@@ -47,6 +47,8 @@ XPCOMUtils.defineLazyGetter(this, "PageMenuChild", function() {
   Cu.import("resource://gre/modules/PageMenu.jsm", tmp);
   return new tmp.PageMenuChild();
 });
+XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
+  "resource://gre/modules/WebNavigationFrames.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Feeds",
   "resource:///modules/Feeds.jsm");
 
@@ -120,9 +122,7 @@ var handleContentContextMenu = function(event) {
   let baseURI = doc.baseURI;
   let referrer = doc.referrer;
   let referrerPolicy = doc.referrerPolicy;
-  let frameOuterWindowID = doc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
-                                          .getInterface(Ci.nsIDOMWindowUtils)
-                                          .outerWindowID;
+  let frameOuterWindowID = WebNavigationFrames.getFrameId(doc.defaultView);
   let loginFillInfo = LoginManagerContent.getFieldContext(event.target);
 
   // The same-origin check will be done in nsContextMenu.openLinkInTab.
@@ -536,9 +536,7 @@ var ClickEventHandler = {
       }
     }
 
-    let frameOuterWindowID = ownerDoc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
-                                     .getInterface(Ci.nsIDOMWindowUtils)
-                                     .outerWindowID;
+    let frameOuterWindowID = WebNavigationFrames.getFrameId(ownerDoc.defaultView);
 
     let json = { button: event.button, shiftKey: event.shiftKey,
                  ctrlKey: event.ctrlKey, metaKey: event.metaKey,
@@ -1055,7 +1053,7 @@ var PageInfoListener = {
     let frameOuterWindowID = message.data.frameOuterWindowID;
 
     // If inside frame then get the frame's window and document.
-    if (frameOuterWindowID) {
+    if (frameOuterWindowID != undefined) {
       window = Services.wm.getOuterWindowWithId(frameOuterWindowID);
       document = window.document;
     } else {

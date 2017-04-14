@@ -77,12 +77,12 @@ function TestCoreBehavior(headers, name) {
   headers.append(name, "bar");
 
   checkHas(headers, name, "Has the header");
-  var expected = (start ? start.concat(",bar") : "bar");
+  var expected = (start ? start.concat(", bar") : "bar");
   checkGet(headers, name, expected, "Retrieve all headers for name");
 
   headers.append(name, "baz");
   checkHas(headers, name, "Has the header");
-  expected = (start ? start.concat(",bar,baz") : "bar,baz");
+  expected = (start ? start.concat(", bar, baz") : "bar, baz");
   checkGet(headers, name, expected, "Retrieve all headers for name");
 
   headers.set(name, "snafu");
@@ -151,7 +151,7 @@ function TestFilledHeaders() {
     ["uts", "321"]
   ]);
   checkGet(filled, "zxy", "987", "Has first sequence filled key");
-  checkGet(filled, "xwv", "654,abc", "Has second sequence filled key");
+  checkGet(filled, "xwv", "654, abc", "Has second sequence filled key");
   checkGet(filled, "uts", "321", "Has third sequence filled key");
   TestCoreBehavior(filled, "xwv");
 

@@ -3970,7 +3970,7 @@ TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group, bool* regenerate,
 
     // Transfer this TypeNewScript from the fully initialized group to the
     // partially initialized group.
-    group->setNewScript(nullptr);
+    group->detachNewScript();
     initialGroup->setNewScript(this);
 
     initializedShape_ = prefixShape;

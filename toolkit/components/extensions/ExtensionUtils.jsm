@@ -97,7 +97,7 @@ function validateThemeManifest(manifestProperties) {
 let StartupCache = {
   DB_NAME: "ExtensionStartupCache",
 
-  SCHEMA_VERSION: 1,
+  SCHEMA_VERSION: 2,
 
   STORE_NAMES: Object.freeze(["locales", "manifests", "schemas"]),
 
@@ -112,7 +112,7 @@ let StartupCache = {
       } catch (e) {
         // Don't worry if the store doesn't already exist.
       }
-      db.createObjectStore(name);
+      db.createObjectStore(name, {keyPath: "key"});
     }
   },
 
@@ -173,11 +173,11 @@ class CacheStore {
 
   async get(key, createFunc) {
     let db;
-    let value;
+    let result;
     try {
       db = await StartupCache.open();
 
-      value = await db.objectStore(this.storeName)
+      result = await db.objectStore(this.storeName)
                       .get(key);
     } catch (e) {
       Cu.reportError(e);
@@ -185,14 +185,32 @@ class CacheStore {
       return createFunc(key);
     }
 
-    if (value === undefined) {
-      value = await createFunc(key);
+    if (result === undefined) {
+      let value = await createFunc(key);
+      result = {key, value};
 
       db.objectStore(this.storeName, "readwrite")
-        .put(value, key);
+        .put(result);
     }
 
-    return value;
+    return result && result.value;
+  }
+
+  async getAll() {
+    let result = new Map();
+    try {
+      let db = await StartupCache.open();
+
+      let results = await db.objectStore(this.storeName)
+                            .getAll();
+      for (let {key, value} of results) {
+        result.set(key, value);
+      }
+    } catch (e) {
+      Cu.reportError(e);
+    }
+
+    return result;
   }
 
   async delete(key) {

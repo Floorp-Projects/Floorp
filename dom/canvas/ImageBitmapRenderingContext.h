@@ -64,7 +64,7 @@ public:
                             nsIInputStream** aStream) override;
 
   virtual already_AddRefed<mozilla::gfx::SourceSurface>
-  GetSurfaceSnapshot(bool* aPremultAlpha = nullptr) override;
+  GetSurfaceSnapshot(gfxAlphaType* aOutAlphaType) override;
 
   NS_IMETHOD SetIsOpaque(bool aIsOpaque) override;
   virtual bool GetIsOpaque() override;
