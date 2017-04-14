@@ -177,7 +177,7 @@ def target_tasks_graphics(full_task_graph, parameters):
 def target_tasks_valgrind(full_task_graph, parameters):
     """Target tasks that only run on the cedar branch."""
     def filter(task):
-        platform = task.attributes.get('test_platform')
+        platform = task.attributes.get('test_platform').split('/')[0]
         if platform not in ['linux64']:
             return False
 
@@ -193,7 +193,7 @@ def target_tasks_valgrind(full_task_graph, parameters):
 def target_tasks_code_coverage(full_task_graph, parameters):
     """Target tasks that generate coverage data."""
     def filter(task):
-        platform = task.attributes.get('test_platform')
+        platform = task.attributes.get('test_platform').split('/')[0]
         if platform not in ('linux64-ccov', 'linux64-jsdcov'):
             return False
         return True
