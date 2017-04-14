@@ -51,7 +51,7 @@ function run_test() {
   writeLine("example3.example.com:HSTS\t0\t\t\t\t\t\t\n", outputStream);
   writeLine("example2.example.com:HSTS\t0\t0\t" + (now + 100000) + ",1,0\n", outputStream);
   outputStream.close();
-  Services.obs.addObserver(checkStateRead, "data-storage-ready", false);
+  Services.obs.addObserver(checkStateRead, "data-storage-ready");
   do_test_pending();
   gSSService = Cc["@mozilla.org/ssservice;1"]
                  .getService(Ci.nsISiteSecurityService);

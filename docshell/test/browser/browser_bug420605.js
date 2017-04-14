@@ -100,7 +100,7 @@ function test() {
             throw Cr.NS_ERROR_NO_INTERFACE;
         }
     };
-    historyService.addObserver(historyObserver, false);
+    historyService.addObserver(historyObserver);
 
     function onPageLoad() {
       gBrowser.selectedBrowser

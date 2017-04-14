@@ -171,7 +171,7 @@ function waitForConsole() {
     is(aSubject.data, hud.hudId, "notification hudId is correct");
 
     executeSoon(() => deferred.resolve(hud));
-  }, "web-console-created", false);
+  }, "web-console-created");
 
   return deferred.promise;
 }

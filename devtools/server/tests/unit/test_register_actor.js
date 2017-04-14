@@ -59,7 +59,7 @@ function test_lazy_api() {
       isActorInstanciated = true;
     }
   }
-  Services.obs.addObserver(onActorEvent, "actor", false);
+  Services.obs.addObserver(onActorEvent, "actor");
   DebuggerServer.registerModule("xpcshell-test/registertestactors-03", {
     prefix: "lazy",
     constructor: "LazyActor",

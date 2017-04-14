@@ -180,7 +180,7 @@ function HashCompleter() {
   // A map of gethash URLs to next gethash time in miliseconds
   this._nextGethashTimeMs = {};
 
-  Services.obs.addObserver(this, "quit-application", false);
+  Services.obs.addObserver(this, "quit-application");
 
 }
 
@@ -382,7 +382,7 @@ HashCompleterRequest.prototype = {
       return;
     }
 
-    Services.obs.addObserver(this, "quit-application", false);
+    Services.obs.addObserver(this, "quit-application");
 
     // V4 requires table states to build the request so we need
     // a async call to retrieve the table states from disk.

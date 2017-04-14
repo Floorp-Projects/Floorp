@@ -75,7 +75,7 @@
         // Make sure we rebuild the popup in onpopupshowing
         this._needToBuildPopup = true;
 
-        Services.obs.addObserver(this, "browser-search-engine-modified", false);
+        Services.obs.addObserver(this, "browser-search-engine-modified");
 
         this._initialized = true;
 
@@ -642,7 +642,7 @@
         document.getBindingParent(this)._textboxInitialized = true;
 
         // Add observer for suggest preference
-        Services.prefs.addObserver("browser.search.suggest.enabled", this, false);
+        Services.prefs.addObserver("browser.search.suggest.enabled", this);
       ]]></constructor>
 
       <destructor><![CDATA[

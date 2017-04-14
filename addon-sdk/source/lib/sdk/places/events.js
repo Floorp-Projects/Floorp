@@ -129,10 +129,10 @@ historyObserver.onVisit = function(url, visitId, time, sessionId,
   }
   this.realOnVisit(url, visitId, time, sessionId, referringId, transitionType);
 };
-historyService.addObserver(historyObserver, false);
+historyService.addObserver(historyObserver);
 
 var bookmarkObserver = createObserverInstance(BOOKMARK_EVENTS, BOOKMARK_ARGS);
-bookmarkService.addObserver(bookmarkObserver, false);
+bookmarkService.addObserver(bookmarkObserver);
 
 when(() => {
   historyService.removeObserver(historyObserver);

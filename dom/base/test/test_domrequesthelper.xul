@@ -148,7 +148,7 @@
 
       let frame = document.createElement("iframe");
       frame.onload = function() {
-        obs.addObserver(observer, TOPIC, false);
+        obs.addObserver(observer, TOPIC);
         // Create dummy DOMRequestHelper specific to checkWindowDestruction()
         let cwdDummy = new DummyHelperSubclass();
         cwdDummy.onuninit = function() {

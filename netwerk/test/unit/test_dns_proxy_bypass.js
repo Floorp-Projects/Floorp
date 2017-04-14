@@ -16,7 +16,7 @@ var dnsRequestObserver = {
   register: function() {
     this.obs = Cc["@mozilla.org/observer-service;1"].
       getService(Ci.nsIObserverService);
-    this.obs.addObserver(this, "dns-resolution-request", false);
+    this.obs.addObserver(this, "dns-resolution-request");
   },
 
   unregister: function() {

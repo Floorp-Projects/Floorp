@@ -2144,7 +2144,7 @@ this.Experiments.PreviousExperimentProvider.prototype = Object.freeze({
 
   startup() {
     this._log.trace("startup()");
-    Services.obs.addObserver(this, EXPERIMENTS_CHANGED_TOPIC, false);
+    Services.obs.addObserver(this, EXPERIMENTS_CHANGED_TOPIC);
   },
 
   shutdown() {

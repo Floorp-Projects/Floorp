@@ -96,7 +96,7 @@ function run_test() {
                 Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
     Services.obs.removeObserver(blacklistAdded, "blocklist-data-gfxItems");
-    Services.obs.addObserver(blacklistRemoved, "blocklist-data-gfxItems", false);
+    Services.obs.addObserver(blacklistRemoved, "blocklist-data-gfxItems");
     load_blocklist("test_gfxBlacklist2.xml");
   }
 
@@ -126,6 +126,6 @@ function run_test() {
     gTestserver.stop(do_test_finished);
   }
 
-  Services.obs.addObserver(blacklistAdded, "blocklist-data-gfxItems", false);
+  Services.obs.addObserver(blacklistAdded, "blocklist-data-gfxItems");
   load_blocklist("test_gfxBlacklist.xml");
 }

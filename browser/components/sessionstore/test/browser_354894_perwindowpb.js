@@ -126,7 +126,7 @@ let setupTest = Task.async(function*(options, testFunction) {
   }
 
   for (let o in observing) {
-    Services.obs.addObserver(observer, o, false);
+    Services.obs.addObserver(observer, o);
   }
 
   let private = options.private || false;

@@ -52,7 +52,7 @@ function* Tests()
 
   // Listen for dom-storage2-changed notification
   SpecialPowers.Services.obs.addObserver(onStorageChanged,
-    "dom-storage2-changed", false);
+    "dom-storage2-changed");
 
   // add an empty-value key
   localStorage.setItem("empty", "");

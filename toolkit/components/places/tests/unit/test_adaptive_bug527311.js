@@ -106,7 +106,7 @@ function addAdaptiveFeedback(aUrl, aSearch, aCallback) {
       do_timeout(0, aCallback);
     }
   };
-  os.addObserver(observer, PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC, false);
+  os.addObserver(observer, PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC);
 
   let thing = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput,

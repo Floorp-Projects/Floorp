@@ -187,7 +187,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1328868
 
     // Flipping the Android pref "on" should enable font inflation
     let observer = makeObserver(_observerId++);
-    Services.prefs.addObserver(GECKO_PREF_FONT_INFLATION, observer, false);
+    Services.prefs.addObserver(GECKO_PREF_FONT_INFLATION, observer);
 
     try {
       sharedPrefs.setBoolPref(ANDROID_PREF, true);
@@ -202,7 +202,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1328868
 
     // ... and turning it back off should disable it again.
     observer = makeObserver(_observerId++);
-    Services.prefs.addObserver(GECKO_PREF_FONT_INFLATION, observer, false);
+    Services.prefs.addObserver(GECKO_PREF_FONT_INFLATION, observer);
 
     try {
       sharedPrefs.setBoolPref(ANDROID_PREF, false);

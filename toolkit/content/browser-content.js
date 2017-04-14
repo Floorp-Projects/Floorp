@@ -970,9 +970,9 @@ var AudioPlaybackListener = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
   init() {
-    Services.obs.addObserver(this, "audio-playback", false);
-    Services.obs.addObserver(this, "AudioFocusChanged", false);
-    Services.obs.addObserver(this, "MediaControl", false);
+    Services.obs.addObserver(this, "audio-playback");
+    Services.obs.addObserver(this, "AudioFocusChanged");
+    Services.obs.addObserver(this, "MediaControl");
 
     addMessageListener("AudioPlayback", this);
     addEventListener("unload", () => {

@@ -399,7 +399,7 @@ function Pload_blocklist(aFile) {
       Services.obs.removeObserver(arguments.callee, "blocklist-updated");
 
       resolve();
-    }, "blocklist-updated", false);
+    }, "blocklist-updated");
   });
 
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" + gPort + "/data/blocklistchange/" + aFile);
@@ -448,7 +448,7 @@ function Pbackground_update() {
         return;
 
       resolve();
-    }, "addons-background-update-complete", false);
+    }, "addons-background-update-complete");
   });
 
   AddonManagerPrivate.backgroundUpdateCheck();

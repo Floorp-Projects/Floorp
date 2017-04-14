@@ -34,7 +34,7 @@ add_task(function* test() {
     Services.obs.addObserver(function onOpened(subject) {
       Services.obs.removeObserver(onOpened, "domwindowopened");
       resolve(subject);
-    }, "domwindowopened", false);
+    }, "domwindowopened");
   });
 
   // Set the new browser state that will

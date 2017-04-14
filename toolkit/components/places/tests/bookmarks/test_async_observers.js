@@ -65,7 +65,7 @@ var observer = {
     Ci.nsINavBookmarkObserver,
   ])
 };
-PlacesUtils.bookmarks.addObserver(observer, false);
+PlacesUtils.bookmarks.addObserver(observer);
 
 add_task(function* test_add_visit() {
   let observerPromise = observer.setupCompletionPromise();
@@ -141,7 +141,7 @@ add_task(function* shutdown() {
                                           "test", "test");
       deferred.resolve(promiseTopicObserved("places-connection-closed"));
     });
-  }, "places-will-close-connection", false);
+  }, "places-will-close-connection");
   shutdownPlaces();
 
   yield deferred.promise;

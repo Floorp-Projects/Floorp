@@ -91,7 +91,7 @@ var PdfjsChromeUtils = {
       this._mmg.addMessageListener("PDFJS:Parent:updateControlState", this);
 
       // observer to handle shutdown
-      Services.obs.addObserver(this, "quit-application", false);
+      Services.obs.addObserver(this, "quit-application");
     }
   },
 

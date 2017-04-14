@@ -91,7 +91,7 @@ function execute_test() {
 
   var obs = Components.classes["@mozilla.org/observer-service;1"].getService();
   obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
-  obs.addObserver(observer, "http-on-modify-request", false);
+  obs.addObserver(observer, "http-on-modify-request");
 
   chan.asyncOpen2(listener);
 }

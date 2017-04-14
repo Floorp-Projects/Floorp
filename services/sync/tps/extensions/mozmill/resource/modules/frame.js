@@ -417,7 +417,7 @@ try {
 function AppQuitObserver() {
   this.runner = null;
 
-  Services.obs.addObserver(this, "quit-application-requested", false);
+  Services.obs.addObserver(this, "quit-application-requested");
 }
 
 AppQuitObserver.prototype = {

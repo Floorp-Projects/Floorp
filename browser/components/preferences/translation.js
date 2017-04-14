@@ -108,14 +108,14 @@ var gTranslationExceptions = {
         this._sites.push(perm.principal.origin);
       }
     }
-    Services.obs.addObserver(this, "perm-changed", false);
+    Services.obs.addObserver(this, "perm-changed");
     this._sites.sort();
 
     this._siteTree = new Tree("sitesTree", this._sites);
     this.onSiteSelected();
 
     this._langs = this.getLanguageExceptions();
-    Services.prefs.addObserver(kLanguagesPref, this, false);
+    Services.prefs.addObserver(kLanguagesPref, this);
     this._langTree = new Tree("languagesTree", this._langs);
     this.onLanguageSelected();
   },

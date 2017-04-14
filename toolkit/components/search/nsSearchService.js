@@ -4674,11 +4674,11 @@ SearchService.prototype = {
     }
     this._observersAdded = true;
 
-    Services.obs.addObserver(this, SEARCH_ENGINE_TOPIC, false);
-    Services.obs.addObserver(this, QUIT_APPLICATION_TOPIC, false);
+    Services.obs.addObserver(this, SEARCH_ENGINE_TOPIC);
+    Services.obs.addObserver(this, QUIT_APPLICATION_TOPIC);
 
     if (AppConstants.MOZ_BUILD_APP == "mobile/android") {
-      Services.prefs.addObserver(LOCALE_PREF, this, false);
+      Services.prefs.addObserver(LOCALE_PREF, this);
     }
 
     // The current stage of shutdown. Used to help analyze crash

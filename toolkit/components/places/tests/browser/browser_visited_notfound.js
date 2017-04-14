@@ -28,7 +28,7 @@ add_task(function* test() {
         resolve();
       }
     };
-    PlacesUtils.history.addObserver(historyObserver, false);
+    PlacesUtils.history.addObserver(historyObserver);
   });
   gBrowser.selectedBrowser.loadURI(TEST_URL);
   yield promiseVisit;
