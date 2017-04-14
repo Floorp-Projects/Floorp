@@ -1455,12 +1455,6 @@ interface nsIDOMWindowUtils : nsISupports {
                              [retval, array, size_is(frameCount)] out float frameIntervals);
 
   /**
-   * Signals that we're begining to tab switch. This is used by painting code to
-   * determine total tab switch time.
-   */
-  void beginTabSwitch();
-
-  /**
    * The DPI of the display
    */
   readonly attribute float displayDPI;

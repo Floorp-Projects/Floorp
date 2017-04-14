@@ -6,7 +6,7 @@ use gpu_store::GpuStoreAddress;
 use prim_store::{ClipData, GpuBlock32, PrimitiveStore};
 use prim_store::{CLIP_DATA_GPU_SIZE, MASK_DATA_GPU_SIZE};
 use renderer::VertexDataStore;
-use util::{MatrixHelpers, TransformedRect};
+use util::{ComplexClipRegionHelpers, MatrixHelpers, TransformedRect};
 use webrender_traits::{AuxiliaryLists, BorderRadius, ClipRegion, ComplexClipRegion, ImageMask};
 use webrender_traits::{DeviceIntRect, LayerToWorldTransform};
 use webrender_traits::{LayerRect, LayerPoint, LayerSize};
@@ -39,9 +39,9 @@ pub enum ClipSource {
 
 impl ClipSource {
     pub fn image_mask(&self) -> Option<ImageMask> {
-        match self {
-            &ClipSource::Complex(..) => None,
-            &ClipSource::Region(ref region, _) => region.image_mask,
+        match *self {
+            ClipSource::Complex(..) => None,
+            ClipSource::Region(ref region, _) => region.image_mask,
         }
     }
 }
@@ -73,7 +73,7 @@ impl Geometry {
               transform: &LayerToWorldTransform,
               device_pixel_ratio: f32) {
         let transformed = TransformedRect::new(&self.local_rect,
-                                               &transform,
+                                               transform,
                                                device_pixel_ratio);
         self.bounding_rect = transformed.bounding_rect;
     }
@@ -123,11 +123,11 @@ impl MaskCacheInfo {
         // Work out how much clip data space we need to allocate
         // and if we have an image mask.
         for clip in clips {
-            match clip {
-                &ClipSource::Complex(..) => {
+            match *clip {
+                ClipSource::Complex(..) => {
                     clip_count += 1;
                 },
-                &ClipSource::Region(ref region, region_mode) => {
+                ClipSource::Region(ref region, region_mode) => {
                     if let Some(info) = region.image_mask {
                         debug_assert!(image.is_none());     // TODO(gw): Support >1 image mask!
                         image = Some((info, clip_store.alloc(MASK_DATA_GPU_SIZE)));
@@ -179,8 +179,8 @@ impl MaskCacheInfo {
             self.is_aligned = is_aligned;
 
             for source in sources {
-                match source {
-                    &ClipSource::Complex(rect, radius, mode) => {
+                match *source {
+                    ClipSource::Complex(rect, radius, mode) => {
                         // Once we encounter a clip-out, we just assume the worst
                         // case clip mask size, for now.
                         if mode == ClipMode::ClipOut {
@@ -195,9 +195,9 @@ impl MaskCacheInfo {
                         PrimitiveStore::populate_clip_data(slice, data);
                         local_rect = local_rect.and_then(|r| r.intersection(&rect));
                         local_inner = ComplexClipRegion::new(rect, BorderRadius::uniform(radius))
-                                                        .get_inner_rect();
+                                                        .get_inner_rect_safe();
                     }
-                    &ClipSource::Region(ref region, region_mode) => {
+                    ClipSource::Region(ref region, region_mode) => {
                         local_rect = local_rect.and_then(|r| r.intersection(&region.main));
                         local_inner = match region.image_mask {
                             Some(ref mask) if !mask.repeat => {
@@ -228,8 +228,8 @@ impl MaskCacheInfo {
                             let data = ClipData::from_clip_region(clip);
                             PrimitiveStore::populate_clip_data(chunk, data);
                             local_rect = local_rect.and_then(|r| r.intersection(&clip.rect));
-                            local_inner = local_inner.and_then(|r| clip.get_inner_rect()
-                                                                       .and_then(|ref inner| r.intersection(&inner)));
+                            local_inner = local_inner.and_then(|r| clip.get_inner_rect_safe()
+                                                                       .and_then(|ref inner| r.intersection(inner)));
                         }
                     }
                 }

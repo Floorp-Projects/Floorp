@@ -362,6 +362,28 @@ protected:
     void UnwrapImpl();
 };
 
+struct ResetUnpackState
+    : public ScopedGLWrapper<ResetUnpackState>
+{
+    friend struct ScopedGLWrapper<ResetUnpackState>;
+
+protected:
+    GLuint mAlignment;
+
+    GLuint mPBO;
+    GLuint mRowLength;
+    GLuint mImageHeight;
+    GLuint mSkipPixels;
+    GLuint mSkipRows;
+    GLuint mSkipImages;
+
+public:
+    explicit ResetUnpackState(GLContext* gl);
+
+protected:
+    void UnwrapImpl();
+};
+
 struct ScopedBindPBO final
     : public ScopedGLWrapper<ScopedBindPBO>
 {

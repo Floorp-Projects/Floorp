@@ -2415,22 +2415,6 @@ nsDOMWindowUtils::StopFrameTimeRecording(uint32_t   startIndex,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMWindowUtils::BeginTabSwitch()
-{
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget)
-    return NS_ERROR_FAILURE;
-
-  LayerManager *mgr = widget->GetLayerManager();
-  if (!mgr)
-    return NS_ERROR_FAILURE;
-
-  mgr->BeginTabSwitch();
-
-  return NS_OK;
-}
-
 static bool
 ComputeAnimationValue(nsCSSPropertyID aProperty,
                       Element* aElement,

@@ -348,6 +348,7 @@ void draw_solid_border(float distanceFromMixLine, vec2 localPos) {
     default:
       oFragColor = vHorizontalColor;
       discard_pixels_in_rounded_borders(localPos);
+      break;
   }
 }
 
@@ -427,6 +428,7 @@ void main(void) {
 #endif
 
     vec2 brightness_mod = vec2(0.7, 1.3);
+    bool needs_discard = false;
 
     // Note: we can't pass-through in the following cases,
     // because Angle doesn't support it and fails to compile the shaders.
@@ -459,9 +461,15 @@ void main(void) {
           draw_mixed_border(distance_from_mix_line, distance_from_middle, local_pos, brightness_mod.xy);
           break;
         case BORDER_STYLE_HIDDEN:
-          discard;
         default:
-          discard;
+          needs_discard = true;
+          break;
+    }
+
+    // Note: Workaround for Angle on Windows,
+    // because non-empty case statements must have break or return.
+    if (needs_discard) {
+      discard;
     }
 
 #ifdef WR_FEATURE_TRANSFORM

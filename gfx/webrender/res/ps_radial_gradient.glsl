@@ -8,4 +8,6 @@ flat varying vec2 vStartCenter;
 flat varying vec2 vEndCenter;
 flat varying float vStartRadius;
 flat varying float vEndRadius;
+flat varying vec2 vTileSize;
+flat varying vec2 vTileRepeat;
 varying vec2 vPos;

@@ -148,7 +148,7 @@ impl FontContext {
     }
 
     pub fn delete_font(&mut self, font_key: &FontKey) {
-        if let Some(cg_font) = self.cg_fonts.remove(font_key) {
+        if let Some(_) = self.cg_fonts.remove(font_key) {
             // Unstable Rust has a retain() method on HashMap that will
             // let us do this in-place. https://github.com/rust-lang/rust/issues/36648
             let ct_font_keys = self.ct_fonts.keys()
@@ -220,7 +220,7 @@ impl FontContext {
     }
 
     #[allow(dead_code)]
-    fn print_glyph_data(&mut self, data: &Vec<u8>, width: usize, height: usize) {
+    fn print_glyph_data(&mut self, data: &[u8], width: usize, height: usize) {
         // Rust doesn't have step_by support on stable :(
         println!("Width is: {:?} height: {:?}", width, height);
         for i in 0..height {
@@ -376,7 +376,7 @@ impl FontContext {
                 })
             }
             None => {
-                return Some(RasterizedGlyph::blank());
+                Some(RasterizedGlyph::blank())
             }
         }
     }

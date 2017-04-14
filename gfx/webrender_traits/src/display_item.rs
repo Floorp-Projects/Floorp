@@ -43,7 +43,6 @@ pub struct ItemRange {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ClipDisplayItem {
-    pub content_size: LayoutSize,
     pub id: ScrollLayerId,
     pub parent_id: ScrollLayerId,
 }
@@ -211,6 +210,8 @@ pub struct Gradient {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct GradientDisplayItem {
     pub gradient: Gradient,
+    pub tile_size: LayoutSize,
+    pub tile_spacing: LayoutSize,
 }
 
 #[repr(C)]
@@ -235,6 +236,8 @@ pub struct RadialGradient {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct RadialGradientDisplayItem {
     pub gradient: RadialGradient,
+    pub tile_size: LayoutSize,
+    pub tile_spacing: LayoutSize,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -247,6 +250,7 @@ pub struct StackingContext {
     pub scroll_policy: ScrollPolicy,
     pub z_index: i32,
     pub transform: Option<PropertyBinding<LayoutTransform>>,
+    pub transform_style: TransformStyle,
     pub perspective: Option<LayoutTransform>,
     pub mix_blend_mode: MixBlendMode,
     pub filters: ItemRange,
@@ -260,6 +264,13 @@ pub enum ScrollPolicy {
 }
 
 known_heap_size!(0, ScrollPolicy);
+
+#[repr(u32)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub enum TransformStyle {
+    Flat,
+    Preserve3D,
+}
 
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -358,6 +369,7 @@ impl StackingContext {
     pub fn new(scroll_policy: ScrollPolicy,
                z_index: i32,
                transform: Option<PropertyBinding<LayoutTransform>>,
+               transform_style: TransformStyle,
                perspective: Option<LayoutTransform>,
                mix_blend_mode: MixBlendMode,
                filters: Vec<FilterOp>,
@@ -367,6 +379,7 @@ impl StackingContext {
             scroll_policy: scroll_policy,
             z_index: z_index,
             transform: transform,
+            transform_style: transform_style,
             perspective: perspective,
             mix_blend_mode: mix_blend_mode,
             filters: auxiliary_lists_builder.add_filters(&filters),
@@ -487,24 +500,6 @@ impl ComplexClipRegion {
             radii: radii,
         }
     }
-
-    //TODO: move to `util` module?
-    /// Return an aligned rectangle that is fully inside the clip region.
-    pub fn get_inner_rect(&self) -> Option<LayoutRect> {
-        let xl = self.rect.origin.x +
-            self.radii.top_left.width.max(self.radii.bottom_left.width);
-        let xr = self.rect.origin.x + self.rect.size.width -
-            self.radii.top_right.width.max(self.radii.bottom_right.width);
-        let yt = self.rect.origin.y +
-            self.radii.top_left.height.max(self.radii.top_right.height);
-        let yb = self.rect.origin.y + self.rect.size.height -
-            self.radii.bottom_left.height.max(self.radii.bottom_right.height);
-        if xl <= xr && yt <= yb {
-            Some(LayoutRect::new(LayoutPoint::new(xl, yt), LayoutSize::new(xr-xl, yb-yt)))
-        } else {
-            None
-        }
-    }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -529,8 +524,8 @@ impl ScrollLayerId {
 
     pub fn pipeline_id(&self) -> PipelineId {
         match *self {
-            ScrollLayerId::Clip(_, pipeline_id) => pipeline_id,
-            ScrollLayerId::ClipExternalId(_, pipeline_id) => pipeline_id,
+            ScrollLayerId::Clip(_, pipeline_id) |
+            ScrollLayerId::ClipExternalId(_, pipeline_id) |
             ScrollLayerId::ReferenceFrame(_, pipeline_id) => pipeline_id,
         }
     }

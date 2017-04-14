@@ -30,7 +30,7 @@ class WebRenderLayer
 public:
   virtual Layer* GetLayer() = 0;
   virtual void RenderLayer(wr::DisplayListBuilder& aBuilder) = 0;
-  virtual Maybe<WrImageMask> RenderMaskLayer()
+  virtual Maybe<WrImageMask> RenderMaskLayer(const gfx::Matrix4x4& aTransform)
   {
     MOZ_ASSERT(false);
     return Nothing();
@@ -48,7 +48,7 @@ public:
 
   gfx::Rect RelativeToVisible(gfx::Rect aRect);
   gfx::Rect RelativeToTransformedVisible(gfx::Rect aRect);
-  gfx::Rect ParentStackingContextBounds(size_t aScrollMetadataIndex);
+  gfx::Rect ParentStackingContextBounds();
   gfx::Rect RelativeToParent(gfx::Rect aRect);
   gfx::Rect VisibleBoundsRelativeToParent();
   gfx::Point GetOffsetToParent();
@@ -57,8 +57,9 @@ protected:
   gfx::Rect GetWrBoundsRect();
   gfx::Rect GetWrRelBounds();
   gfx::Rect GetWrClipRect(gfx::Rect& aRect);
+  gfx::Matrix4x4 GetWrBoundTransform();
   void DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect);
-  Maybe<WrImageMask> BuildWrMaskLayer();
+  Maybe<WrImageMask> BuildWrMaskLayer(bool aUnapplyLayerTransform);
 };
 
 class WebRenderLayerManager final : public LayerManager
@@ -105,7 +106,7 @@ public:
   virtual already_AddRefed<BorderLayer> CreateBorderLayer() override;
   virtual already_AddRefed<DisplayItemLayer> CreateDisplayItemLayer() override;
 
-  virtual bool NeedsWidgetInvalidation() override { return true; }
+  virtual bool NeedsWidgetInvalidation() override { return false; }
 
   virtual void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch) override;
 
@@ -123,6 +124,18 @@ public:
 
   virtual void AddDidCompositeObserver(DidCompositeObserver* aObserver) override;
   virtual void RemoveDidCompositeObserver(DidCompositeObserver* aObserver) override;
+
+  virtual void FlushRendering() override;
+
+  virtual void SendInvalidRegion(const nsIntRegion& aRegion) override;
+
+  virtual void Composite() override;
+
+  virtual void SetNeedsComposite(bool aNeedsComposite) override
+  {
+    mNeedsComposite = aNeedsComposite;
+  }
+  virtual bool NeedsComposite() const override { return mNeedsComposite; }
 
   DrawPaintedLayerCallback GetPaintedLayerCallback() const
   { return mPaintedLayerCallback; }
@@ -165,6 +178,8 @@ private:
   nsTArray<DidCompositeObserver*> mDidCompositeObservers;
 
   LayerRefArray mKeepAlive;
+
+  bool mNeedsComposite;
 
  // When we're doing a transaction in order to draw to a non-default
  // target, the layers transaction is only performed in order to send

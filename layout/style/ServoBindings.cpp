@@ -88,7 +88,7 @@ Gecko_IsInDocument(RawGeckoNodeBorrowed aNode)
   return aNode->IsInComposedDoc();
 }
 
-#ifdef DEBUG
+#ifdef MOZ_DEBUG_RUST
 bool
 Gecko_FlattenedTreeParentIsParent(RawGeckoNodeBorrowed aNode)
 {

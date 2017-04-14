@@ -1021,6 +1021,11 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
                                                         ICStubEngine::Baseline, frame->script(),
                                                         stub, &attached);
             if (newStub) {
+                if (gen.shouldNotePreliminaryObjectStub())
+                    newStub->toCacheIR_Updated()->notePreliminaryObject();
+                else if (gen.shouldUnlinkPreliminaryObjectStubs())
+                    StripPreliminaryObjectStubs(cx, stub);
+
                 JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
                 SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
                 return true;
@@ -1589,6 +1594,11 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
                                                         ICStubEngine::Baseline, frame->script(),
                                                         stub, &attached);
             if (newStub) {
+                if (gen.shouldNotePreliminaryObjectStub())
+                    newStub->toCacheIR_Updated()->notePreliminaryObject();
+                else if (gen.shouldUnlinkPreliminaryObjectStubs())
+                    StripPreliminaryObjectStubs(cx, stub);
+
                 JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
                 SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
             }

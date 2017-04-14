@@ -69,8 +69,8 @@ impl Payload {
 }
 
 
-/// A helper to handle the interface difference between IpcBytesSender and
-/// Sender<Vec<u8>>.
+/// A helper to handle the interface difference between `IpcBytesSender`
+/// and `Sender<Vec<u8>>`.
 pub trait PayloadSenderHelperMethods {
     fn send_payload(&self, data: Payload) -> Result<(), Error>;
 }

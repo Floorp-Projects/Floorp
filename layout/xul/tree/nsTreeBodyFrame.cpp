@@ -907,6 +907,10 @@ nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
     }
   }
 
+  if (!horizontalOverflowChanged && !verticalOverflowChanged) {
+    return;
+  }
+
   AutoWeakFrame weakFrame(this);
 
   RefPtr<nsPresContext> presContext = PresContext();

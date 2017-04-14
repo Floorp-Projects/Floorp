@@ -129,6 +129,15 @@ class Pickle {
   }
 #endif
 
+  bool IgnoreSentinel(PickleIterator* iter) const
+#ifdef MOZ_PICKLE_SENTINEL_CHECKING
+    ;
+#else
+  {
+    return true;
+  }
+#endif
+
   // NOTE: The message type optional parameter should _only_ be called from
   // generated IPDL code, as it is used to trigger the IPC_READ_LATENCY_MS
   // telemetry probe.

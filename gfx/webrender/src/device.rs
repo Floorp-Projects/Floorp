@@ -676,10 +676,10 @@ impl<T> GpuProfiler<T> {
         GpuProfiler {
             next_frame: 0,
             frames: [
-                      GpuFrameProfile::new(gl.clone()),
-                      GpuFrameProfile::new(gl.clone()),
-                      GpuFrameProfile::new(gl.clone()),
-                      GpuFrameProfile::new(gl.clone()),
+                      GpuFrameProfile::new(Rc::clone(gl)),
+                      GpuFrameProfile::new(Rc::clone(gl)),
+                      GpuFrameProfile::new(Rc::clone(gl)),
+                      GpuFrameProfile::new(Rc::clone(gl)),
                     ],
         }
     }
@@ -721,12 +721,12 @@ impl GpuMarker {
             gl::GlType::Gl =>  {
                 gl.push_group_marker_ext(message);
                 GpuMarker{
-                    gl: gl.clone(),
+                    gl: Rc::clone(gl),
                 }
             }
             gl::GlType::Gles => {
                 GpuMarker{
-                    gl: gl.clone(),
+                    gl: Rc::clone(gl),
                 }
             }
         }
@@ -973,7 +973,7 @@ impl Device {
         let mut s = String::new();
         s.push_str(get_shader_version(gl));
         for prefix in shader_preamble {
-            s.push_str(&prefix);
+            s.push_str(prefix);
         }
         s.push_str(source_str);
 
@@ -1108,7 +1108,7 @@ impl Device {
             };
 
             let texture = Texture {
-                gl: self.gl.clone(),
+                gl: Rc::clone(&self.gl),
                 id: id,
                 width: 0,
                 height: 0,
@@ -1451,7 +1451,7 @@ impl Device {
         }
 
         let program = Program {
-            gl: self.gl.clone(),
+            gl: Rc::clone(&self.gl),
             name: base_filename.to_owned(),
             id: pid,
             u_transform: -1,
@@ -1795,7 +1795,7 @@ impl Device {
         ibo_id.bind(self.gl()); // force it to be a part of VAO
 
         let vao = VAO {
-            gl: self.gl.clone(),
+            gl: Rc::clone(&self.gl),
             id: vao_id,
             ibo_id: ibo_id,
             main_vbo_id: main_vbo_id,
@@ -1851,7 +1851,7 @@ impl Device {
         debug_assert_eq!(self.bound_vao, vao_id);
 
         vao.main_vbo_id.bind(self.gl());
-        gl::buffer_data(self.gl(), gl::ARRAY_BUFFER, &vertices, usage_hint.to_gl());
+        gl::buffer_data(self.gl(), gl::ARRAY_BUFFER, vertices, usage_hint.to_gl());
     }
 
     pub fn update_vao_instances<V>(&mut self,
@@ -1865,7 +1865,7 @@ impl Device {
         debug_assert_eq!(vao.instance_stride as usize, mem::size_of::<V>());
 
         vao.instance_vbo_id.bind(self.gl());
-        gl::buffer_data(self.gl(), gl::ARRAY_BUFFER, &instances, usage_hint.to_gl());
+        gl::buffer_data(self.gl(), gl::ARRAY_BUFFER, instances, usage_hint.to_gl());
     }
 
     pub fn update_vao_indices<I>(&mut self,
@@ -1878,7 +1878,7 @@ impl Device {
         debug_assert_eq!(self.bound_vao, vao_id);
 
         vao.ibo_id.bind(self.gl());
-        gl::buffer_data(self.gl(), gl::ELEMENT_ARRAY_BUFFER, &indices, usage_hint.to_gl());
+        gl::buffer_data(self.gl(), gl::ELEMENT_ARRAY_BUFFER, indices, usage_hint.to_gl());
     }
 
     pub fn draw_triangles_u16(&mut self, first_vertex: i32, index_count: i32) {

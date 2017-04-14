@@ -41,13 +41,14 @@ namespace irregexp {
 class MOZ_STACK_CLASS RegExpMacroAssembler
 {
   public:
-    RegExpMacroAssembler(LifoAlloc& alloc, RegExpShared* shared, size_t numSavedRegisters)
+    RegExpMacroAssembler(JSContext* cx, LifoAlloc& alloc, RegExpShared* shared,
+                         size_t numSavedRegisters)
       : slow_safe_compiler_(false),
         global_mode_(NOT_GLOBAL),
         alloc_(alloc),
         num_registers_(numSavedRegisters),
         num_saved_registers_(numSavedRegisters),
-        shared(shared)
+        shared(cx, shared)
     {}
 
     enum StackCheckFlag {
@@ -215,7 +216,7 @@ class MOZ_STACK_CLASS RegExpMacroAssembler
     }
 
   public:
-    RegExpShared* shared;
+    RootedRegExpShared shared;
 };
 
 template <typename CharT>
@@ -230,7 +231,8 @@ CaseInsensitiveCompareUCStrings(const CharT* substring1, const CharT* substring2
 class MOZ_STACK_CLASS InterpretedRegExpMacroAssembler final : public RegExpMacroAssembler
 {
   public:
-    InterpretedRegExpMacroAssembler(LifoAlloc* alloc, RegExpShared* shared, size_t numSavedRegisters);
+    InterpretedRegExpMacroAssembler(JSContext* cx, LifoAlloc* alloc, RegExpShared* shared,
+                                    size_t numSavedRegisters);
     ~InterpretedRegExpMacroAssembler();
 
     // Inherited virtual methods.

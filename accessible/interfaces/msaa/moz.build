@@ -10,6 +10,7 @@ SOURCES += [
     '!dlldata.c',
     '!ISimpleDOM_i.c',
     '!ISimpleDOM_p.c',
+    'AccessibleMarshalThunk.c',
 ]
 
 DEFINES['REGISTER_PROXY_DLL'] = True
