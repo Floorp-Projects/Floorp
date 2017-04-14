@@ -33,7 +33,7 @@ public:
 
     explicit AppleFrameRef(const MediaRawData& aSample)
       : decode_timestamp(aSample.mTimecode)
-      , composition_timestamp(media::TimeUnit::FromMicroseconds(aSample.mTime))
+      , composition_timestamp(aSample.mTime)
       , duration(aSample.mDuration)
       , byte_offset(aSample.mOffset)
       , is_sync_point(aSample.mKeyframe)

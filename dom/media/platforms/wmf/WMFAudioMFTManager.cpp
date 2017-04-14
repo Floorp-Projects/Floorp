@@ -193,7 +193,7 @@ WMFAudioMFTManager::Input(MediaRawData* aSample)
 {
   return mDecoder->Input(aSample->Data(),
                          uint32_t(aSample->Size()),
-                         aSample->mTime);
+                         aSample->mTime.ToMicroseconds());
 }
 
 HRESULT
