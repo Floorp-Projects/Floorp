@@ -61,6 +61,7 @@ function newIFrame(context, src) {
     }
 
     var iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
 
     if (typeof (src) != 'undefined') {
         iframe.src = src;

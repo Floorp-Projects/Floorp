@@ -6,9 +6,6 @@ if (self.importScripts) {
   self.importScripts('/resources/testharness.js');
 }
 
-const error1 = new Error('error1');
-error1.name = 'error1';
-
 test(() => {
 
   new ReadableStream(); // ReadableStream constructed with no parameters
@@ -35,8 +32,6 @@ test(() => {
     'constructor should throw when the type is empty string');
   assert_throws(new RangeError(), () => new ReadableStream({ type: 'asdf' }),
     'constructor should throw when the type is asdf');
-  assert_throws(error1, () => new ReadableStream({ type: { get toString() {throw error1;} } }), 'constructor should throw when ToString() throws');
-  assert_throws(error1, () => new ReadableStream({ type: { toString() {throw error1;} } }), 'constructor should throw when ToString() throws');
 
 }, 'ReadableStream can\'t be constructed with an invalid type');
 
@@ -162,13 +157,6 @@ test(() => {
 
 }, 'ReadableStream start controller parameter should be extensible');
 
-test(() => {
-  (new ReadableStream()).getReader(undefined);
-  (new ReadableStream()).getReader({});
-  (new ReadableStream()).getReader({ mode: undefined, notmode: 'ignored' });
-  assert_throws(new RangeError(), () => (new ReadableStream()).getReader({ mode: 'potato' }));
-}, 'default ReadableStream getReader() should only accept mode:undefined');
-
 promise_test(() => {
 
   function SimpleStreamSource() {}
@@ -207,9 +195,7 @@ promise_test(() => {
   const theError = new Error('rejected!');
   const rs = new ReadableStream({
     start() {
-      return delay(1).then(() => {
-        throw theError;
-      });
+      return delay(1).then(() => { throw theError; });
     }
   });
 
@@ -747,7 +733,7 @@ promise_test(() => {
 }, 'ReadableStream: should call underlying source methods as methods');
 
 test(() => {
-  new ReadableStream({
+  const rs = new ReadableStream({
     start(c) {
       assert_equals(c.desiredSize, 10, 'desiredSize must start at highWaterMark');
       c.close();
@@ -759,7 +745,7 @@ test(() => {
 }, 'ReadableStream: desiredSize when closed');
 
 test(() => {
-  new ReadableStream({
+  const rs = new ReadableStream({
     start(c) {
       assert_equals(c.desiredSize, 10, 'desiredSize must start at highWaterMark');
       c.error();
