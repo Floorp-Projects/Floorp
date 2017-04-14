@@ -255,8 +255,8 @@ add_task(function* testPreferHandlerIsTheFirstOrder() {
       HandlerServiceTestUtils.getBlankHandlerInfo("nonexistent/type2");
   handlerInfo2.preferredAction = Ci.nsIHandlerInfo.useHelperApp;
   handlerInfo2.preferredApplicationHandler = webHandler;
-  handlerInfo2.possibleApplicationHandlers.appendElement(localHandler, false);
-  handlerInfo2.possibleApplicationHandlers.appendElement(webHandler, false);
+  handlerInfo2.possibleApplicationHandlers.appendElement(localHandler);
+  handlerInfo2.possibleApplicationHandlers.appendElement(webHandler);
   handlerInfo2.alwaysAskBeforeHandling = false;
   gHandlerService.store(handlerInfo2);
 

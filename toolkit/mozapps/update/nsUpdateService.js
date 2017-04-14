@@ -4577,7 +4577,7 @@ UpdatePrompt.prototype = {
     if (update) {
       ary = Cc["@mozilla.org/array;1"].
             createInstance(Ci.nsIMutableArray);
-      ary.appendElement(update, /* weak =*/ false);
+      ary.appendElement(update);
     }
 
     var win = this._getUpdateWindow();
