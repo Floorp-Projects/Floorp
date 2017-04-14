@@ -540,7 +540,7 @@ WAVTrackDemuxer::GetNextChunk(const MediaByteRange& aRange)
       mDataLength - mChunkIndex * DATA_CHUNK_SIZE;
     datachunk->mDuration = DurationFromBytes(mBytesRemaining);
   }
-  datachunk->mTimecode = datachunk->mTime;
+  datachunk->mTimecode = media::TimeUnit::FromMicroseconds(datachunk->mTime);
   datachunk->mKeyframe = true;
 
   MOZ_ASSERT(datachunk->mTime >= 0);

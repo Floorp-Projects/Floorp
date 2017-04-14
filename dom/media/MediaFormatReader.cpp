@@ -2023,7 +2023,7 @@ MediaFormatReader::HandleDemuxedSamples(
     }
 
     LOGV("Input:%" PRId64 " (dts:%" PRId64 " kf:%d)",
-         sample->mTime, sample->mTimecode, sample->mKeyframe);
+         sample->mTime, sample->mTimecode.ToMicroseconds(), sample->mKeyframe);
     decoder.mNumSamplesInput++;
     decoder.mSizeOfQueue++;
     if (aTrack == TrackInfo::kVideoTrack) {

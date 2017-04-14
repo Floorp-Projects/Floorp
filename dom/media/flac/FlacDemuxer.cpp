@@ -982,7 +982,7 @@ FlacTrackDemuxer::GetNextFrame(const flac::Frame& aFrame)
 
   frame->mTime = aFrame.Time().ToMicroseconds();
   frame->mDuration = aFrame.Duration();
-  frame->mTimecode = frame->mTime;
+  frame->mTimecode = TimeUnit::FromMicroseconds(frame->mTime);
   frame->mOffset = aFrame.Offset();
   frame->mKeyframe = true;
 

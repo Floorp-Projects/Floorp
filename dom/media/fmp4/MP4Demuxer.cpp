@@ -463,7 +463,7 @@ MP4TrackDemuxer::GetNextSample()
                                        " dts:%" PRId64,
                                        keyframe ? "" : "non-", sample->mTime,
                                        sample->mDuration.ToMicroseconds(),
-                                       sample->mTimecode)
+                                       sample->mTimecode.ToMicroseconds())
                          .get());
             sample->mKeyframe = keyframe;
           }
@@ -474,7 +474,7 @@ MP4TrackDemuxer::GetNextSample()
             nsPrintfCString("Invalid H264 frame @ pts:%" PRId64 " dur:%" PRId64
                             " dts:%" PRId64,
                             sample->mTime, sample->mDuration.ToMicroseconds(),
-                            sample->mTimecode)
+                            sample->mTimecode.ToMicroseconds())
               .get());
           // We could reject the sample now, however demuxer errors are fatal.
           // So we keep the invalid frame, relying on the H264 decoder to
