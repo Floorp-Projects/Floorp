@@ -3201,14 +3201,13 @@ FireControllerChangeOnDocument(nsIDocument* aDocument)
   }
 
   auto* window = nsGlobalWindow::Cast(w.get());
-  ErrorResult result;
-  dom::Navigator* navigator = window->GetNavigator(result);
-  if (NS_WARN_IF(result.Failed())) {
-    result.SuppressException();
+  dom::Navigator* navigator = window->Navigator();
+  if (!navigator) {
     return;
   }
 
   RefPtr<ServiceWorkerContainer> container = navigator->ServiceWorker();
+  ErrorResult result;
   container->ControllerChanged(result);
   if (result.Failed()) {
     NS_WARNING("Failed to dispatch controllerchange event");
