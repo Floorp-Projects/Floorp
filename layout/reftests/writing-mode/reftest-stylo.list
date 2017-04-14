@@ -14,10 +14,10 @@ HTTP(..) == 1083848-2-inline-background.html 1083848-2-inline-background.html # 
 == 1089388-1.html 1089388-1.html
 == 1089388-2.html 1089388-2.html
 == 1090159-1.html 1090159-1.html
-fails asserts-if(stylo,1) == 1090168-1.html 1090168-1.html
-fails asserts-if(stylo,1) == 1090168-1.html 1090168-1.html
-fails asserts-if(stylo,1) == 1090168-2.html 1090168-2.html # bug 1324700
-fails asserts-if(stylo,1) == 1090168-3.html 1090168-3.html # bug 1324700
+== 1090168-1.html 1090168-1.html
+== 1090168-1.html 1090168-1.html
+== 1090168-2.html 1090168-2.html
+== 1090168-3.html 1090168-3.html
 == 1091058-1.html 1091058-1.html
 fails == 1094434-1.html 1094434-1.html
 fails == 1094434-2.html 1094434-2.html
