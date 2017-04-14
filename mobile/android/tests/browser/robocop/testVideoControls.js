@@ -39,7 +39,7 @@ add_test(function setup_browser() {
     video = contentDocument.getElementById("video");
     ok(video, "Found the video element");
 
-    Services.tm.mainThread.dispatch(run_next_test, Ci.nsIThread.DISPATCH_NORMAL);
+    Services.tm.dispatchToMainThread(run_next_test);
   }, {capture: true, once: true});
 });
 
@@ -47,14 +47,14 @@ add_test(function test_webm() {
   // Load the test video
   video.src = "http://mochi.test:8888/tests/robocop/video-pattern.webm";
 
-  Services.tm.mainThread.dispatch(testLoad, Ci.nsIThread.DISPATCH_NORMAL);
+  Services.tm.dispatchToMainThread(testLoad);
 });
 
 add_test(function test_ogg() {
   // Load the test video
   video.src = "http://mochi.test:8888/tests/robocop/video-pattern.ogg";
 
-  Services.tm.mainThread.dispatch(testLoad, Ci.nsIThread.DISPATCH_NORMAL);
+  Services.tm.dispatchToMainThread(testLoad);
 });
 
 function getButtonByAttribute(aName, aValue) {
