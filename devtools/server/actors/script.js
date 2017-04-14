@@ -2305,7 +2305,7 @@ exports.AddonThreadActor = AddonThreadActor;
  *        An optional prefix for the reported error message.
  */
 var oldReportError = reportError;
-reportError = function (aError, aPrefix = "") {
+this.reportError = function (aError, aPrefix = "") {
   assert(aError instanceof Error, "Must pass Error objects to reportError");
   let msg = aPrefix + aError.message + ":\n" + aError.stack;
   oldReportError(msg);
