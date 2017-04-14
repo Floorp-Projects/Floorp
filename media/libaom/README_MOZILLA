@@ -17,3 +17,5 @@ To update to a specific upstream git tag or commit, use
 The upstream aom git repository is:
 
     https://aomedia.googlesource.com/aom
+
+The git commit ID used was 4d668d7feb1f8abd809d1bca0418570a7f142a36 (Wed May 03 17:10:13 2017 +0000).
