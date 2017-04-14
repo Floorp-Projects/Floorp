@@ -48,8 +48,6 @@ obj_getOwnPropertyDescriptor(JSContext* cx, unsigned argc, JS::Value* vp);
 MOZ_MUST_USE bool
 obj_getPrototypeOf(JSContext* cx, unsigned argc, JS::Value* vp);
 
-MOZ_MUST_USE bool
-obj_hasOwnProperty(JSContext* cx, unsigned argc, JS::Value* vp);
 
 MOZ_MUST_USE bool
 obj_isExtensible(JSContext* cx, unsigned argc, JS::Value* vp);

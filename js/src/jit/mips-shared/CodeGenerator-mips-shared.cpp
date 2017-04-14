@@ -1866,18 +1866,6 @@ CodeGeneratorMIPSShared::visitStoreTypedArrayElementStatic(LStoreTypedArrayEleme
     MOZ_CRASH("NYI");
 }
 
-void
-CodeGeneratorMIPSShared::visitWasmCall(LWasmCall* ins)
-{
-    emitWasmCallBase(ins);
-}
-
-void
-CodeGeneratorMIPSShared::visitWasmCallI64(LWasmCallI64* ins)
-{
-    emitWasmCallBase(ins);
-}
-
 template <typename T>
 void
 CodeGeneratorMIPSShared::emitWasmLoad(T* lir)

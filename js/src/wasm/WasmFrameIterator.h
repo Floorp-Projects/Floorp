@@ -38,7 +38,6 @@ class Instance;
 class SigIdDesc;
 struct FuncOffsets;
 struct CallableOffsets;
-struct TrapOffset;
 
 // Iterates over the frames of a single WasmActivation, called synchronously
 // from C++ in the thread of the asm.js.
@@ -82,16 +81,56 @@ class FrameIterator
     const CallSite* debugTrapCallsite() const;
 };
 
-// An ExitReason describes the possible reasons for leaving compiled wasm code
-// or the state of not having left compiled wasm code (ExitReason::None).
-enum class ExitReason : uint32_t
+enum class SymbolicAddress;
+
+// An ExitReason describes the possible reasons for leaving compiled wasm
+// code or the state of not having left compiled wasm code
+// (ExitReason::None). It is either a known reason, or a enumeration to a native
+// function that is used for better display in the profiler.
+class ExitReason
 {
-    None,          // default state, the pc is in wasm code
-    ImportJit,     // fast-path call directly into JIT code
-    ImportInterp,  // slow-path call into C++ Invoke()
-    ImportNative,  // fast-path call directly into native C++ code
-    Trap,          // call to trap handler for the trap in WasmActivation::trap
-    DebugTrap      // call to debug trap handler
+    uint32_t payload_;
+
+  public:
+    enum class Fixed : uint32_t
+    {
+        None,          // default state, the pc is in wasm code
+        ImportJit,     // fast-path call directly into JIT code
+        ImportInterp,  // slow-path call into C++ Invoke()
+        BuiltinNative, // fast-path call directly into native C++ code
+        Trap,          // call to trap handler for the trap in WasmActivation::trap
+        DebugTrap      // call to debug trap handler
+    };
+
+    MOZ_IMPLICIT ExitReason(Fixed exitReason)
+      : payload_(0x0 | (uint32_t(exitReason) << 1))
+    {
+        MOZ_ASSERT(isFixed());
+    }
+
+    explicit ExitReason(SymbolicAddress sym)
+      : payload_(0x1 | (uint32_t(sym) << 1))
+    {
+        MOZ_ASSERT(uint32_t(sym) <= (UINT32_MAX << 1), "packing constraints");
+        MOZ_ASSERT(!isFixed());
+    }
+
+    static ExitReason None() { return ExitReason(ExitReason::Fixed::None); }
+
+    bool isFixed() const { return (payload_ & 0x1) == 0; }
+    bool isNone() const { return isFixed() && fixed() == Fixed::None; }
+
+    uint32_t raw() const {
+        return payload_;
+    }
+    Fixed fixed() const {
+        MOZ_ASSERT(isFixed());
+        return Fixed(payload_ >> 1);
+    }
+    SymbolicAddress symbolic() const {
+        MOZ_ASSERT(!isFixed());
+        return SymbolicAddress(payload_ >> 1);
+    }
 };
 
 // Iterates over the frames of a single WasmActivation, given an

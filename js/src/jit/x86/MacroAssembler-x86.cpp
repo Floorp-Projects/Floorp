@@ -364,6 +364,7 @@ MacroAssembler::subFromStackPtr(Imm32 imm32)
 void
 MacroAssembler::setupUnalignedABICall(Register scratch)
 {
+    MOZ_ASSERT(!IsCompilingWasm(), "wasm should only use aligned ABI calls");
     setupABICall();
     dynamicAlignment_ = true;
 
@@ -407,20 +408,26 @@ MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm)
 }
 
 void
-MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
+MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result, bool callFromWasm)
 {
     freeStack(stackAdjust);
-    if (result == MoveOp::DOUBLE) {
-        reserveStack(sizeof(double));
-        fstp(Operand(esp, 0));
-        loadDouble(Operand(esp, 0), ReturnDoubleReg);
-        freeStack(sizeof(double));
-    } else if (result == MoveOp::FLOAT32) {
-        reserveStack(sizeof(float));
-        fstp32(Operand(esp, 0));
-        loadFloat32(Operand(esp, 0), ReturnFloat32Reg);
-        freeStack(sizeof(float));
+
+    // Calls to native functions in wasm pass through a thunk which already
+    // fixes up the return value for us.
+    if (!callFromWasm) {
+        if (result == MoveOp::DOUBLE) {
+            reserveStack(sizeof(double));
+            fstp(Operand(esp, 0));
+            loadDouble(Operand(esp, 0), ReturnDoubleReg);
+            freeStack(sizeof(double));
+        } else if (result == MoveOp::FLOAT32) {
+            reserveStack(sizeof(float));
+            fstp32(Operand(esp, 0));
+            loadFloat32(Operand(esp, 0), ReturnFloat32Reg);
+            freeStack(sizeof(float));
+        }
     }
+
     if (dynamicAlignment_)
         pop(esp);
 

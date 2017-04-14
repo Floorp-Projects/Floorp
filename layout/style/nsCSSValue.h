@@ -102,11 +102,11 @@ protected:
   // For both constructors principal of aExtraData must not be null.
   // Construct with a base URI; this will create the actual URI lazily from
   // aString and aExtraData.
-  URLValueData(nsStringBuffer* aString,
+  URLValueData(const nsAString& aString,
                already_AddRefed<URLExtraData> aExtraData);
   // Construct with the actual URI.
   URLValueData(already_AddRefed<PtrHolder<nsIURI>> aURI,
-               nsStringBuffer* aString,
+               const nsAString& aString,
                already_AddRefed<URLExtraData> aExtraData);
 
 public:
@@ -161,7 +161,7 @@ private:
   // invalid, even once resolved.
   mutable PtrHandle<nsIURI> mURI;
 public:
-  RefPtr<nsStringBuffer> mString;
+  nsString mString;
   RefPtr<URLExtraData> mExtraData;
 private:
   mutable bool mURIResolved;
@@ -182,13 +182,13 @@ private:
 struct URLValue final : public URLValueData
 {
   // These two constructors are safe to call only on the main thread.
-  URLValue(nsStringBuffer* aString, nsIURI* aBaseURI, nsIURI* aReferrer,
+  URLValue(const nsAString& aString, nsIURI* aBaseURI, nsIURI* aReferrer,
            nsIPrincipal* aOriginPrincipal);
-  URLValue(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aBaseURI,
+  URLValue(nsIURI* aURI, const nsAString& aString, nsIURI* aBaseURI,
            nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal);
 
   // This constructor is safe to call from any thread.
-  URLValue(nsStringBuffer* aString,
+  URLValue(const nsAString& aString,
            already_AddRefed<URLExtraData> aExtraData)
     : URLValueData(aString, Move(aExtraData)) {}
 
@@ -203,16 +203,15 @@ struct ImageValue final : public URLValueData
   // Not making the constructor and destructor inline because that would
   // force us to include imgIRequest.h, which leads to REQUIRES hell, since
   // this header is included all over.
-  // aString must not be null.
   //
   // This constructor is only safe to call from the main thread.
-  ImageValue(nsIURI* aURI, nsStringBuffer* aString,
+  ImageValue(nsIURI* aURI, const nsAString& aString,
              already_AddRefed<URLExtraData> aExtraData,
              nsIDocument* aDocument);
 
   // This constructor is safe to call from any thread, but Initialize
   // must be called later for the object to be useful.
-  ImageValue(nsStringBuffer* aString,
+  ImageValue(const nsAString& aString,
              already_AddRefed<URLExtraData> aExtraData);
 
   ImageValue(const ImageValue&) = delete;
@@ -856,9 +855,9 @@ public:
   {
     MOZ_ASSERT(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
                "not a URL value");
-    return GetBufferValue(mUnit == eCSSUnit_URL ?
-                            mValue.mURL->mString :
-                            mValue.mImage->mString);
+    return mUnit == eCSSUnit_URL ?
+             mValue.mURL->mString.get() :
+             mValue.mImage->mString.get();
   }
 
   // Not making this inline because that would force us to include

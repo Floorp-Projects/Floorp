@@ -377,6 +377,7 @@
     _(NearbyIntF)                   \
     _(In)                           \
     _(InArray)                      \
+    _(HasOwnCache)                  \
     _(InstanceOfO)                  \
     _(InstanceOfV)                  \
     _(CallInstanceOf)               \

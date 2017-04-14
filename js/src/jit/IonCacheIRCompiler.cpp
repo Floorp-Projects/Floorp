@@ -428,6 +428,20 @@ IonCacheIRCompiler::init()
       }
       case CacheKind::In:
         MOZ_CRASH("Invalid cache");
+      case CacheKind::HasOwn: {
+        IonHasOwnIC* ic = ic_->asHasOwnIC();
+        Register output = ic->output();
+
+        available.add(output);
+
+        liveRegs_.emplace(ic->liveRegs());
+        outputUnchecked_.emplace(TypedOrValueRegister(MIRType::Boolean, AnyRegister(output)));
+
+        MOZ_ASSERT(numInputs == 2);
+        allocator.initInputLocation(0, ic->id());
+        allocator.initInputLocation(1, ic->value());
+        break;
+      }
     }
 
     if (liveRegs_)

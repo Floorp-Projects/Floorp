@@ -59,6 +59,7 @@ class IonICStub
 class IonGetPropertyIC;
 class IonSetPropertyIC;
 class IonGetNameIC;
+class IonHasOwnIC;
 
 class IonIC
 {
@@ -143,6 +144,10 @@ class IonIC
     IonGetNameIC* asGetNameIC() {
         MOZ_ASSERT(kind_ == CacheKind::GetName);
         return (IonGetNameIC*)this;
+    }
+    IonHasOwnIC* asHasOwnIC() {
+        MOZ_ASSERT(kind_ == CacheKind::HasOwn);
+        return (IonHasOwnIC*)this;
     }
 
     void updateBaseAddress(JitCode* code, MacroAssembler& masm);
@@ -273,6 +278,33 @@ class IonGetNameIC : public IonIC
 
     static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript, IonGetNameIC* ic,
                                     HandleObject envChain, MutableHandleValue res);
+};
+
+class IonHasOwnIC : public IonIC
+{
+    LiveRegisterSet liveRegs_;
+
+    TypedOrValueRegister value_;
+    TypedOrValueRegister id_;
+    Register output_;
+
+  public:
+    IonHasOwnIC(LiveRegisterSet liveRegs, TypedOrValueRegister value,
+                TypedOrValueRegister id, Register output)
+      : IonIC(CacheKind::HasOwn),
+        liveRegs_(liveRegs),
+        value_(value),
+        id_(id),
+        output_(output)
+    { }
+
+    TypedOrValueRegister value() const { return value_; }
+    TypedOrValueRegister id() const { return id_; }
+    Register output() const { return output_; }
+    LiveRegisterSet liveRegs() const { return liveRegs_; }
+
+    static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript, IonHasOwnIC* ic,
+                                    HandleValue val, HandleValue idVal, int32_t* res);
 };
 
 } // namespace jit

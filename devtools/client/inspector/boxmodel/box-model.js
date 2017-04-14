@@ -183,6 +183,10 @@ BoxModel.prototype = {
    * Hides the box-model highlighter on the currently selected element.
    */
   onHideBoxModelHighlighter() {
+    if (!this.inspector) {
+      return;
+    }
+
     let toolbox = this.inspector.toolbox;
     toolbox.highlighterUtils.unhighlight();
   },
@@ -305,6 +309,10 @@ BoxModel.prototype = {
           return;
         }
 
+        if (!this.inspector) {
+          return;
+        }
+
         let node = this.inspector.selection.nodeFront;
         this.inspector.pageStyle.getLayout(node, {
           autoMargins: true,
@@ -324,6 +332,10 @@ BoxModel.prototype = {
    *         Options passed to the highlighter actor.
    */
   onShowBoxModelHighlighter(options = {}) {
+    if (!this.inspector) {
+      return;
+    }
+
     let toolbox = this.inspector.toolbox;
     let nodeFront = this.inspector.selection.nodeFront;
 
