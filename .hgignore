@@ -141,3 +141,6 @@ GPATH
 \.vscode/(?!extensions.json$)
 
 subinclude:servo/.hgignore
+
+# Ignore Infer output
+^infer-out/
