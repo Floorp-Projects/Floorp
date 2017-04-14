@@ -39,7 +39,11 @@ const ConsoleOutput = createClass({
   },
 
   componentDidMount() {
-    scrollToBottom(this.outputNode);
+    // Do the scrolling in the nextTick since this could hit console startup performances.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1355869
+    setTimeout(() => {
+      scrollToBottom(this.outputNode);
+    }, 0);
     this.props.serviceContainer.attachRefToHud("outputScroller", this.outputNode);
   },
 

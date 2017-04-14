@@ -924,7 +924,7 @@ public:
                 nsIDocShellLoadInfo* aLoadInfo,
                 bool aForceNoOpener,
                 nsPIDOMWindowOuter **_retval) override;
-  mozilla::dom::Navigator* GetNavigator(mozilla::ErrorResult& aError);
+  mozilla::dom::Navigator* Navigator();
   nsIDOMNavigator* GetNavigator() override;
   nsIDOMOfflineResourceList* GetApplicationCache(mozilla::ErrorResult& aError);
   already_AddRefed<nsIDOMOfflineResourceList> GetApplicationCache() override;
@@ -1147,10 +1147,6 @@ public:
     GetSpeechSynthesis(mozilla::ErrorResult& aError);
   bool HasActiveSpeechSynthesis();
 #endif
-  already_AddRefed<nsICSSDeclaration>
-    GetDefaultComputedStyle(mozilla::dom::Element& aElt,
-                            const nsAString& aPseudoElt,
-                            mozilla::ErrorResult& aError);
   void SizeToContentOuter(mozilla::dom::CallerType aCallerType,
                           mozilla::ErrorResult& aError);
   void SizeToContent(mozilla::dom::CallerType aCallerType,
@@ -1729,20 +1725,9 @@ public:
   nsDOMWindowList* GetWindowList();
 
 protected:
-  // Helper for getComputedStyle and getDefaultComputedStyle
   already_AddRefed<nsICSSDeclaration>
-    GetComputedStyleHelperOuter(mozilla::dom::Element& aElt,
-                                const nsAString& aPseudoElt,
-                                bool aDefaultStylesOnly);
-  already_AddRefed<nsICSSDeclaration>
-    GetComputedStyleHelper(mozilla::dom::Element& aElt,
-                           const nsAString& aPseudoElt,
-                           bool aDefaultStylesOnly,
-                           mozilla::ErrorResult& aError);
-  nsresult GetComputedStyleHelper(nsIDOMElement* aElt,
-                                  const nsAString& aPseudoElt,
-                                  bool aDefaultStylesOnly,
-                                  nsIDOMCSSStyleDeclaration** aReturn);
+    GetComputedStyleOuter(mozilla::dom::Element& aElt,
+                          const nsAString& aPseudoElt);
 
   // Outer windows only.
   void PreloadLocalStorage();

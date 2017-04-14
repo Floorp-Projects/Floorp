@@ -250,6 +250,11 @@ html[dir='rtl'] #toolbarSidebar {
               0 0 1px hsla(0,0%,0%,.1);
 }
 
+#toolbarSidebar .toolbarLabel {
+  margin-left: 4px;
+  display: inline-block;
+}
+
 #toolbarContainer, .findbar, .secondaryToolbar {
   position: relative;
   height: var(--toolbar-height);
@@ -1049,12 +1054,12 @@ html[dir='rtl'] .verticalToolbarSeparator {
   -moz-user-select: none;
 }
 
-html[dir='ltr'] .outlineWithDeepNesting > .outlineItem,
+html[dir='ltr'] .outlineWithMultipleLayer > .outlineItem,
 html[dir='ltr'] .outlineItem > .outlineItems {
   margin-left: 20px;
 }
 
-html[dir='rtl'] .outlineWithDeepNesting > .outlineItem,
+html[dir='rtl'] .outlineWithMultipleLayer > .outlineItem,
 html[dir='rtl'] .outlineItem > .outlineItems {
   margin-right: 20px;
 }

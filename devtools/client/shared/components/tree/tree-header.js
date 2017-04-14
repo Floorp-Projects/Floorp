@@ -81,10 +81,9 @@ define(function (require, exports, module) {
             style: cellStyle,
             role: "presentation",
             id: col.id,
-            key: col.id},
-            visible ? div({ className: "treeHeaderCellBox"},
-              col.title
-            ) : null,
+            key: col.id,
+          },
+            visible ? div({ className: "treeHeaderCellBox" }, col.title) : null
           )
         );
       });

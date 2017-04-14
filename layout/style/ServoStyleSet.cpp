@@ -30,6 +30,7 @@ ServoStyleSet::ServoStyleSet()
   : mPresContext(nullptr)
   , mBatching(0)
   , mAllowResolveStaleStyles(false)
+  , mAuthorStyleDisabled(false)
 {
 }
 
@@ -124,13 +125,28 @@ ServoStyleSet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 bool
 ServoStyleSet::GetAuthorStyleDisabled() const
 {
-  return false;
+  return mAuthorStyleDisabled;
 }
 
 nsresult
 ServoStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled)
 {
-  MOZ_CRASH("stylo: not implemented");
+  if (mAuthorStyleDisabled == aStyleDisabled) {
+    return NS_OK;
+  }
+
+  mAuthorStyleDisabled = aStyleDisabled;
+
+  // If we've just disabled, we have to note the stylesheets have changed and
+  // call flush directly, since the PresShell won't.
+  if (mAuthorStyleDisabled) {
+    NoteStyleSheetsChanged();
+    Servo_StyleSet_FlushStyleSheets(mRawSet.get());
+  }
+  // If we've just enabled, then PresShell will trigger the notification and
+  // later flush when the stylesheet objects are enabled in JS.
+
+  return NS_OK;
 }
 
 void
@@ -796,7 +812,7 @@ ServoStyleSet::StyleSubtreeForReconstruct(Element* aRoot)
 void
 ServoStyleSet::NoteStyleSheetsChanged()
 {
-  Servo_StyleSet_NoteStyleSheetsChanged(mRawSet.get());
+  Servo_StyleSet_NoteStyleSheetsChanged(mRawSet.get(), mAuthorStyleDisabled);
 }
 
 #ifdef DEBUG
