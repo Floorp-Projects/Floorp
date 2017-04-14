@@ -192,69 +192,67 @@ Zone::discardJitCode(FreeOp* fop, bool discardBaselineCode)
     if (!jitZone())
         return;
 
-    if (isPreservingCode()) {
-        PurgeJITCaches(this);
-    } else {
+    if (isPreservingCode())
+        return;
 
-        if (discardBaselineCode) {
+    if (discardBaselineCode) {
 #ifdef DEBUG
-            /* Assert no baseline scripts are marked as active. */
-            for (auto script = cellIter<JSScript>(); !script.done(); script.next())
-                MOZ_ASSERT_IF(script->hasBaselineScript(), !script->baselineScript()->active());
+        /* Assert no baseline scripts are marked as active. */
+        for (auto script = cellIter<JSScript>(); !script.done(); script.next())
+            MOZ_ASSERT_IF(script->hasBaselineScript(), !script->baselineScript()->active());
 #endif
 
-            /* Mark baseline scripts on the stack as active. */
-            jit::MarkActiveBaselineScripts(this);
-        }
-
-        /* Only mark OSI points if code is being discarded. */
-        jit::InvalidateAll(fop, this);
-
-        for (auto script = cellIter<JSScript>(); !script.done(); script.next())  {
-            jit::FinishInvalidation(fop, script);
-
-            /*
-             * Discard baseline script if it's not marked as active. Note that
-             * this also resets the active flag.
-             */
-            if (discardBaselineCode)
-                jit::FinishDiscardBaselineScript(fop, script);
-
-            /*
-             * Warm-up counter for scripts are reset on GC. After discarding code we
-             * need to let it warm back up to get information such as which
-             * opcodes are setting array holes or accessing getter properties.
-             */
-            script->resetWarmUpCounter();
-
-            /*
-             * Make it impossible to use the control flow graphs cached on the
-             * BaselineScript. They get deleted.
-             */
-            if (script->hasBaselineScript())
-                script->baselineScript()->setControlFlowGraph(nullptr);
-        }
-
-        /*
-         * When scripts contains pointers to nursery things, the store buffer
-         * can contain entries that point into the optimized stub space. Since
-         * this method can be called outside the context of a GC, this situation
-         * could result in us trying to mark invalid store buffer entries.
-         *
-         * Defer freeing any allocated blocks until after the next minor GC.
-         */
-        if (discardBaselineCode) {
-            jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(this);
-            jitZone()->purgeIonCacheIRStubInfo();
-        }
-
-        /*
-         * Free all control flow graphs that are cached on BaselineScripts.
-         * Assuming this happens on the active thread and all control flow
-         * graph reads happen on the active thread, this is safe.
-         */
-        jitZone()->cfgSpace()->lifoAlloc().freeAll();
+        /* Mark baseline scripts on the stack as active. */
+        jit::MarkActiveBaselineScripts(this);
     }
+
+    /* Only mark OSI points if code is being discarded. */
+    jit::InvalidateAll(fop, this);
+
+    for (auto script = cellIter<JSScript>(); !script.done(); script.next())  {
+        jit::FinishInvalidation(fop, script);
+
+        /*
+         * Discard baseline script if it's not marked as active. Note that
+         * this also resets the active flag.
+         */
+        if (discardBaselineCode)
+            jit::FinishDiscardBaselineScript(fop, script);
+
+        /*
+         * Warm-up counter for scripts are reset on GC. After discarding code we
+         * need to let it warm back up to get information such as which
+         * opcodes are setting array holes or accessing getter properties.
+         */
+        script->resetWarmUpCounter();
+
+        /*
+         * Make it impossible to use the control flow graphs cached on the
+         * BaselineScript. They get deleted.
+         */
+        if (script->hasBaselineScript())
+            script->baselineScript()->setControlFlowGraph(nullptr);
+    }
+
+    /*
+     * When scripts contains pointers to nursery things, the store buffer
+     * can contain entries that point into the optimized stub space. Since
+     * this method can be called outside the context of a GC, this situation
+     * could result in us trying to mark invalid store buffer entries.
+     *
+     * Defer freeing any allocated blocks until after the next minor GC.
+     */
+    if (discardBaselineCode) {
+        jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(this);
+        jitZone()->purgeIonCacheIRStubInfo();
+    }
+
+    /*
+     * Free all control flow graphs that are cached on BaselineScripts.
+     * Assuming this happens on the active thread and all control flow
+     * graph reads happen on the active thread, this is safe.
+     */
+    jitZone()->cfgSpace()->lifoAlloc().freeAll();
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS

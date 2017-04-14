@@ -59,6 +59,7 @@ class IonICStub
 class IonGetPropertyIC;
 class IonSetPropertyIC;
 class IonGetNameIC;
+class IonBindNameIC;
 class IonHasOwnIC;
 
 class IonIC
@@ -144,6 +145,10 @@ class IonIC
     IonGetNameIC* asGetNameIC() {
         MOZ_ASSERT(kind_ == CacheKind::GetName);
         return (IonGetNameIC*)this;
+    }
+    IonBindNameIC* asBindNameIC() {
+        MOZ_ASSERT(kind_ == CacheKind::BindName);
+        return (IonBindNameIC*)this;
     }
     IonHasOwnIC* asHasOwnIC() {
         MOZ_ASSERT(kind_ == CacheKind::HasOwn);
@@ -278,6 +283,32 @@ class IonGetNameIC : public IonIC
 
     static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript, IonGetNameIC* ic,
                                     HandleObject envChain, MutableHandleValue res);
+};
+
+class IonBindNameIC : public IonIC
+{
+    LiveRegisterSet liveRegs_;
+
+    Register environment_;
+    Register output_;
+    Register temp_;
+
+  public:
+    IonBindNameIC(LiveRegisterSet liveRegs, Register environment, Register output, Register temp)
+      : IonIC(CacheKind::BindName),
+        liveRegs_(liveRegs),
+        environment_(environment),
+        output_(output),
+        temp_(temp)
+    { }
+
+    Register environment() const { return environment_; }
+    Register output() const { return output_; }
+    Register temp() const { return temp_; }
+    LiveRegisterSet liveRegs() const { return liveRegs_; }
+
+    static JSObject* update(JSContext* cx, HandleScript outerScript, IonBindNameIC* ic,
+                            HandleObject envChain);
 };
 
 class IonHasOwnIC : public IonIC
