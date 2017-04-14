@@ -750,6 +750,24 @@ fn consume_name<'a>(tokenizer: &mut Tokenizer<'a>) -> Cow<'a, str> {
     )
 }
 
+fn byte_to_hex_digit(b: u8) -> Option<u32> {
+    Some(match_byte! { b,
+        b'0' ... b'9' => { b - b'0' },
+        b'a' ... b'f' => { b - b'a' + 10 },
+        b'A' ... b'F' => { b - b'A' + 10 },
+        _ => {
+            return None
+        }
+    } as u32)
+}
+
+fn byte_to_decimal_digit(b: u8) -> Option<u32> {
+    if b >= b'0' && b <= b'9' {
+        Some((b - b'0') as u32)
+    } else {
+        None
+    }
+}
 
 fn consume_numeric<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
     // Parse [+-]?\d*(\.\d+)?([eE][+-]?\d+)?
@@ -768,7 +786,7 @@ fn consume_numeric<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
     }
 
     let mut integral_part: f64 = 0.;
-    while let Some(digit) = tokenizer.next_char().to_digit(10) {
+    while let Some(digit) = byte_to_decimal_digit(tokenizer.next_byte_unchecked()) {
         integral_part = integral_part * 10. + digit as f64;
         tokenizer.advance(1);
         if tokenizer.is_eof() {
@@ -784,7 +802,7 @@ fn consume_numeric<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
         is_integer = false;
         tokenizer.advance(1);  // Consume '.'
         let mut factor = 0.1;
-        while let Some(digit) = tokenizer.next_char().to_digit(10) {
+        while let Some(digit) = byte_to_decimal_digit(tokenizer.next_byte_unchecked()) {
             fractional_part += digit as f64 * factor;
             factor *= 0.1;
             tokenizer.advance(1);
@@ -796,35 +814,34 @@ fn consume_numeric<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
 
     let mut value = sign * (integral_part + fractional_part);
 
-    if (
-        tokenizer.has_at_least(1)
-        && matches!(tokenizer.next_byte_unchecked(), b'e' | b'E')
-        && matches!(tokenizer.byte_at(1), b'0'...b'9')
-    ) || (
-        tokenizer.has_at_least(2)
-        && matches!(tokenizer.next_byte_unchecked(), b'e' | b'E')
-        && matches!(tokenizer.byte_at(1), b'+' | b'-')
-        && matches!(tokenizer.byte_at(2), b'0'...b'9')
-    ) {
-        is_integer = false;
-        tokenizer.advance(1);
-        let (has_sign, sign) = match tokenizer.next_byte_unchecked() {
-            b'-' => (true, -1.),
-            b'+' => (true, 1.),
-            _ => (false, 1.),
-        };
-        if has_sign {
+    if tokenizer.has_at_least(1)
+       && matches!(tokenizer.next_byte_unchecked(), b'e' | b'E') {
+
+        if matches!(tokenizer.byte_at(1), b'0'...b'9') ||
+           (tokenizer.has_at_least(2)
+            && matches!(tokenizer.byte_at(1), b'+' | b'-')
+            && matches!(tokenizer.byte_at(2), b'0'...b'9'))
+        {
+            is_integer = false;
             tokenizer.advance(1);
-        }
-        let mut exponent: f64 = 0.;
-        while let Some(digit) = tokenizer.next_char().to_digit(10) {
-            exponent = exponent * 10. + digit as f64;
-            tokenizer.advance(1);
-            if tokenizer.is_eof() {
-                break
+            let (has_sign, sign) = match tokenizer.next_byte_unchecked() {
+                b'-' => (true, -1.),
+                b'+' => (true, 1.),
+                _ => (false, 1.),
+            };
+            if has_sign {
+                tokenizer.advance(1);
             }
+            let mut exponent: f64 = 0.;
+            while let Some(digit) = byte_to_decimal_digit(tokenizer.next_byte_unchecked()) {
+                exponent = exponent * 10. + digit as f64;
+                tokenizer.advance(1);
+                if tokenizer.is_eof() {
+                    break
+                }
+            }
+            value *= f64::powf(10., sign * exponent);
         }
-        value *= f64::powf(10., sign * exponent);
     }
 
     let int_value = if is_integer {
@@ -1007,7 +1024,7 @@ fn consume_hex_digits<'a>(tokenizer: &mut Tokenizer<'a>) -> (u32, u32) {
     let mut value = 0;
     let mut digits = 0;
     while digits < 6 && !tokenizer.is_eof() {
-        match tokenizer.next_char().to_digit(16) {
+        match byte_to_hex_digit(tokenizer.next_byte_unchecked()) {
             Some(digit) => {
                 value = value * 16 + digit;
                 digits += 1;

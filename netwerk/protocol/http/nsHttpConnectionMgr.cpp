@@ -345,6 +345,15 @@ nsHttpConnectionMgr::RescheduleTransaction(nsHttpTransaction *trans, int32_t pri
     return PostEvent(&nsHttpConnectionMgr::OnMsgReschedTransaction, priority, trans);
 }
 
+void
+nsHttpConnectionMgr::ThrottleTransaction(nsHttpTransaction *trans, bool throttle)
+{
+    LOG(("nsHttpConnectionMgr::ThrottleTransaction [trans=%p throttle=%" PRIx32 "]\n",
+         trans, static_cast<uint32_t>(throttle)));
+    Unused << PostEvent(&nsHttpConnectionMgr::OnMsgThrottleTransaction,
+                        static_cast<int32_t>(throttle), trans);
+}
+
 nsresult
 nsHttpConnectionMgr::CancelTransaction(nsHttpTransaction *trans, nsresult reason)
 {
@@ -1587,6 +1596,7 @@ class ConnectionHandle : public nsAHttpConnection
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSAHTTPCONNECTION(mConn)
+    virtual void ThrottleResponse(bool aThrottle) override;
 
     explicit ConnectionHandle(nsHttpConnection *conn) : mConn(conn) { }
     void Reset() { mConn = nullptr; }
@@ -1599,6 +1609,13 @@ nsAHttpConnection *
 nsHttpConnectionMgr::MakeConnectionHandle(nsHttpConnection *aWrapped)
 {
     return new ConnectionHandle(aWrapped);
+}
+
+void ConnectionHandle::ThrottleResponse(bool aThrottle)
+{
+    if (mConn) {
+        mConn->ThrottleResponse(aThrottle);
+    }
 }
 
 ConnectionHandle::~ConnectionHandle()
@@ -2160,6 +2177,17 @@ nsHttpConnectionMgr::OnMsgReschedTransaction(int32_t priority, ARefBase *param)
             InsertTransactionSorted(*pendingQ, pendingTransInfo);
         }
     }
+}
+
+void nsHttpConnectionMgr::OnMsgThrottleTransaction(int32_t arg, ARefBase *param)
+{
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    LOG(("nsHttpConnectionMgr::OnMsgThrottleTransaction [trans=%p]\n", param));
+
+    bool throttle = static_cast<bool>(arg);
+    nsHttpTransaction *trans = static_cast<nsHttpTransaction *>(param);
+
+    trans->ThrottleResponse(throttle);
 }
 
 void
