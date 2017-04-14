@@ -427,6 +427,7 @@ IonCacheIRCompiler::init()
         break;
       }
       case CacheKind::In:
+      case CacheKind::BindName:
         MOZ_CRASH("Invalid cache");
       case CacheKind::HasOwn: {
         IonHasOwnIC* ic = ic_->asHasOwnIC();

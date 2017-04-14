@@ -310,6 +310,7 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
         return;
       }
       case CacheKind::In:
+      case CacheKind::BindName:
         MOZ_CRASH("Baseline-specific for now");
       case CacheKind::HasOwn: {
         IonHasOwnIC* hasOwnIC = ic->asHasOwnIC();
