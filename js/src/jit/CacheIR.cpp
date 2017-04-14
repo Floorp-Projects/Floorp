@@ -1877,6 +1877,8 @@ BindNameIRGenerator::tryAttachStub()
 
     if (tryAttachGlobalName(envId, id))
         return true;
+    if (tryAttachEnvironmentName(envId, id))
+        return true;
 
     return false;
 }
@@ -1915,6 +1917,65 @@ BindNameIRGenerator::tryAttachGlobalName(ObjOperandId objId, HandleId id)
         ObjOperandId globalId = writer.loadEnclosingEnvironment(objId);
         writer.loadObjectResult(globalId);
     }
+    writer.returnFromIC();
+
+    return true;
+}
+
+bool
+BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId, HandleId id)
+{
+    if (IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope())
+        return false;
+
+    RootedObject env(cx_, env_);
+    RootedShape shape(cx_);
+    while (true) {
+        if (!env->is<GlobalObject>() && !env->is<EnvironmentObject>())
+            return false;
+        if (env->is<WithEnvironmentObject>())
+            return false;
+
+        MOZ_ASSERT(!env->hasUncacheableProto());
+
+        // When we reach an unqualified variables object (like the global) we
+        // have to stop looking and return that object.
+        if (env->isUnqualifiedVarObj())
+            break;
+
+        // Check for an 'own' property on the env. There is no need to
+        // check the prototype as non-with scopes do not inherit properties
+        // from any prototype.
+        shape = env->as<NativeObject>().lookup(cx_, id);
+        if (shape)
+            break;
+
+        env = env->enclosingEnvironment();
+    }
+
+    // If this is an uninitialized lexical or a const, we need to return a
+    // RuntimeLexicalErrorObject.
+    RootedNativeObject holder(cx_, &env->as<NativeObject>());
+    if (shape &&
+        holder->is<EnvironmentObject>() &&
+        (holder->getSlot(shape->slot()).isMagic() || !shape->writable()))
+    {
+        return false;
+    }
+
+    ObjOperandId lastObjId = objId;
+    env = env_;
+    while (env) {
+        if (NeedEnvironmentShapeGuard(env) && !env->is<GlobalObject>())
+            writer.guardShape(lastObjId, env->maybeShape());
+
+        if (env == holder)
+            break;
+
+        lastObjId = writer.loadEnclosingEnvironment(lastObjId);
+        env = env->enclosingEnvironment();
+    }
+    writer.loadObjectResult(lastObjId);
     writer.returnFromIC();
 
     return true;
