@@ -3017,22 +3017,49 @@ CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
   }
 
   nsString usedFont;
-  RefPtr<nsStyleContext> parentContext =
-    GetFontStyleContext(mCanvasElement, GetFont(),
-                        presShell, usedFont, aError);
-  if (!parentContext) {
-    aError.Throw(NS_ERROR_FAILURE);
+  if (presShell->StyleSet()->IsGecko()) {
+    RefPtr<nsStyleContext> parentContext =
+      GetFontStyleContext(mCanvasElement, GetFont(),
+                          presShell, usedFont, aError);
+    if (!parentContext) {
+      aError.Throw(NS_ERROR_FAILURE);
+      return false;
+    }
+    RefPtr<nsStyleContext> sc =
+      ResolveFilterStyle(aString, presShell, parentContext, aError);
+
+    if (!sc) {
+      return false;
+    }
+    aFilterChain = sc->StyleEffects()->mFilters;
+    return true;
+  }
+
+  // For stylo
+  MOZ_ASSERT(presShell->StyleSet()->IsServo());
+
+  RefPtr<ServoComputedValues> parentStyle =
+    GetFontStyleForServo(mCanvasElement,
+                         GetFont(),
+                         presShell,
+                         usedFont,
+                         aError);
+  if (!parentStyle) {
     return false;
   }
 
-  RefPtr<nsStyleContext> sc =
-    ResolveFilterStyle(aString, presShell, parentContext, aError);
-
-  if (!sc) {
-    return false;
+  RefPtr<ServoComputedValues> computedValues =
+    ResolveFilterStyleForServo(aString,
+                               parentStyle,
+                               presShell,
+                               aError);
+  if (!computedValues) {
+     return false;
   }
 
-  aFilterChain = sc->StyleEffects()->mFilters;
+  const nsStyleEffects* effects = Servo_GetStyleEffects(computedValues);
+  // XXX: This mFilters is a one shot object, we probably could avoid copying.
+  aFilterChain = effects->mFilters;
   return true;
 }
 
