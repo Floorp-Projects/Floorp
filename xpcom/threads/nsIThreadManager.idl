@@ -8,6 +8,7 @@
 
 [ptr] native PRThread(PRThread);
 
+interface nsIRunnable;
 interface nsIThread;
 
 /**
@@ -79,4 +80,14 @@ interface nsIThreadManager : nsISupports
    * application process.
    */
   readonly attribute boolean isMainThread;
+
+  /**
+   * This queues a runnable to the main thread. It's a shortcut for JS callers
+   * to be used instead of
+   *   .mainThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
+   * or
+   *   .currentThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
+   * C++ callers should instead use NS_DispatchToMainThread.
+   */
+  void dispatchToMainThread(in nsIRunnable event);
 };
