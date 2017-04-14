@@ -70,9 +70,9 @@ SyncedTabsDeckComponent.prototype = {
   },
 
   init() {
-    Services.obs.addObserver(this, this._SyncedTabs.TOPIC_TABS_CHANGED);
-    Services.obs.addObserver(this, FxAccountsCommon.ONLOGIN_NOTIFICATION);
-    Services.obs.addObserver(this, "weave:service:login:change");
+    Services.obs.addObserver(this, this._SyncedTabs.TOPIC_TABS_CHANGED, false);
+    Services.obs.addObserver(this, FxAccountsCommon.ONLOGIN_NOTIFICATION, false);
+    Services.obs.addObserver(this, "weave:service:login:change", false);
 
     // Go ahead and trigger sync
     this._SyncedTabs.syncTabs()

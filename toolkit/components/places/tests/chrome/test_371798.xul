@@ -40,7 +40,7 @@ function promiseOnItemChanged() {
       },
 
       QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver])
-    });
+    }, false);
   });
 }
 

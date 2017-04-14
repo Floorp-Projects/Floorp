@@ -98,8 +98,8 @@ function test() {
               currentTest.cleanup(postFunc);
             });
         }
-        Services.obs.addObserver(observer, "common-dialog-loaded");
-        Services.obs.addObserver(observer, "tabmodal-dialog-loaded");
+        Services.obs.addObserver(observer, "common-dialog-loaded", false);
+        Services.obs.addObserver(observer, "tabmodal-dialog-loaded", false);
 
         let tree = sidebar.contentDocument.getElementById(currentTest.treeName);
 

@@ -29,6 +29,6 @@ function run_test() {
       do_check_eq(aItemId, id);
       do_check_eq(aTitle, TITLE);
     }
-  });
+  }, false);
   transaction.undoTransaction();
 }

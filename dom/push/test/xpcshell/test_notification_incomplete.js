@@ -56,7 +56,7 @@ add_task(function* test_notification_incomplete() {
   }
   do_register_cleanup(() =>
     Services.obs.removeObserver(observeMessage, PushServiceComponent.pushTopic));
-  Services.obs.addObserver(observeMessage, PushServiceComponent.pushTopic);
+  Services.obs.addObserver(observeMessage, PushServiceComponent.pushTopic, false);
 
   let notificationDone;
   let notificationPromise = new Promise(resolve => notificationDone = after(2, resolve));

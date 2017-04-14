@@ -327,7 +327,7 @@ var TelemetryReportingPolicyImpl = {
     this._migratePreferences();
 
     // Add the event observers.
-    Services.obs.addObserver(this, "sessionstore-windows-restored");
+    Services.obs.addObserver(this, "sessionstore-windows-restored", false);
   },
 
   /**

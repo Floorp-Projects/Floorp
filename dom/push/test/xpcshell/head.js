@@ -48,7 +48,7 @@ Services.obs.addObserver(function observe(subject, topic, data) {
       Cu.reportError(e);
     }
   }
-}, 'profile-change-net-teardown');
+}, 'profile-change-net-teardown', false);
 
 /**
  * Gates a function so that it is called only after the wrapper is called a
@@ -94,7 +94,7 @@ function promiseObserverNotification(topic, matchFunc) {
       }
       Services.obs.removeObserver(observe, topic);
       resolve({subject, data});
-    }, topic);
+    }, topic, false);
   });
 }
 

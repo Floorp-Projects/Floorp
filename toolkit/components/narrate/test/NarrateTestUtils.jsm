@@ -103,7 +103,7 @@ this.NarrateTestUtils = {
       if (window.document.body.classList.contains("loaded")) {
         resolve();
       } else {
-        Services.obs.addObserver(observeReady, "AboutReader:Ready");
+        Services.obs.addObserver(observeReady, "AboutReader:Ready", false);
       }
     });
   },
@@ -121,7 +121,7 @@ this.NarrateTestUtils = {
         resolve(Preferences.get(pref));
       }
 
-      Services.prefs.addObserver(pref, observeChange);
+      Services.prefs.addObserver(pref, observeChange, false);
     });
   },
 

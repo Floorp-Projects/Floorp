@@ -34,7 +34,7 @@ this.webrtcUI = {
   emitter: new EventEmitter(),
 
   init() {
-    Services.obs.addObserver(maybeAddMenuIndicator, "browser-delayed-startup-finished");
+    Services.obs.addObserver(maybeAddMenuIndicator, "browser-delayed-startup-finished", false);
 
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
                  .getService(Ci.nsIMessageBroadcaster);

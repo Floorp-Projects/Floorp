@@ -45,7 +45,7 @@ function promiseNotification(topic) {
       Services.obs.removeObserver(observe, topic);
       resolve();
     }
-    Services.obs.addObserver(observe, topic);
+    Services.obs.addObserver(observe, topic, false);
     info("Now waiting for " + topic + " notification from Gecko");
   });
 }
@@ -66,7 +66,7 @@ function promiseLinkVisit(url) {
       Services.obs.removeObserver(observe, topic);
       resolve();
     };
-    Services.obs.addObserver(observe, topic);
+    Services.obs.addObserver(observe, topic, false);
     info("Now waiting for " + topic + " notification from Gecko with URL " + url);
   });
 }

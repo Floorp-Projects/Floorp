@@ -44,7 +44,7 @@ modal.addHandler = function (handler) {
 
   Object.keys(this.handlers).map(topic => {
     this.handlers[topic].add(handler);
-    Services.obs.addObserver(handler, topic);
+    Services.obs.addObserver(handler, topic, false);
   });
 };
 

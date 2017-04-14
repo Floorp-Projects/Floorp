@@ -67,7 +67,7 @@ var gSyncPane = {
       this._init();
     }.bind(this);
 
-    Services.obs.addObserver(onReady, "weave:service:ready");
+    Services.obs.addObserver(onReady, "weave:service:ready", false);
     window.addEventListener("unload", onUnload);
 
     xps.ensureLoaded();

@@ -65,7 +65,7 @@ function run_test() {
 
   do_test_pending();
 
-  Services.obs.addObserver(search_observer, "browser-search-engine-modified");
+  Services.obs.addObserver(search_observer, "browser-search-engine-modified", false);
 
   Services.search.addEngine(gDataUrl + "engine.xml", null, null, false);
 }

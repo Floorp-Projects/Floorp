@@ -48,7 +48,7 @@ function run_test() {
     observe(aSubject, aTopic, aData) {
       gCachePurged = true;
     }
-  }, "startupcache-invalidate");
+  }, "startupcache-invalidate", false);
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
   startupManager();

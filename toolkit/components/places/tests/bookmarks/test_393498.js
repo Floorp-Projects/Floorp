@@ -19,7 +19,7 @@ var observer = {
     this._itemChangedValue = value;
   }
 };
-PlacesUtils.bookmarks.addObserver(observer);
+PlacesUtils.bookmarks.addObserver(observer, false);
 
 do_register_cleanup(function() {
   PlacesUtils.bookmarks.removeObserver(observer);

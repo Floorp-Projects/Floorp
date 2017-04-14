@@ -300,7 +300,7 @@ var TelemetryScheduler = {
     this._rescheduleTimeout();
 
     idleService.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
-    Services.obs.addObserver(this, "wake_notification");
+    Services.obs.addObserver(this, "wake_notification", false);
   },
 
   /**
@@ -1443,9 +1443,9 @@ var Impl = {
   attachObservers: function attachObservers() {
     if (!this._initialized)
       return;
-    Services.obs.addObserver(this, "idle-daily");
+    Services.obs.addObserver(this, "idle-daily", false);
     if (Telemetry.canRecordExtended) {
-      Services.obs.addObserver(this, TOPIC_CYCLE_COLLECTOR_BEGIN);
+      Services.obs.addObserver(this, TOPIC_CYCLE_COLLECTOR_BEGIN, false);
     }
   },
 
@@ -1505,11 +1505,11 @@ var Impl = {
       Preferences.set(PREF_PREVIOUS_BUILDID, thisBuildID);
     }
 
-    Services.obs.addObserver(this, "sessionstore-windows-restored");
+    Services.obs.addObserver(this, "sessionstore-windows-restored", false);
     if (AppConstants.platform === "android") {
-      Services.obs.addObserver(this, "application-background");
+      Services.obs.addObserver(this, "application-background", false);
     }
-    Services.obs.addObserver(this, "xul-window-visible");
+    Services.obs.addObserver(this, "xul-window-visible", false);
     this._hasWindowRestoredObserver = true;
     this._hasXulWindowVisibleObserver = true;
 
@@ -1600,7 +1600,7 @@ var Impl = {
       return;
     }
 
-    Services.obs.addObserver(this, "content-child-shutdown");
+    Services.obs.addObserver(this, "content-child-shutdown", false);
     cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_THREAD_HANGS, this);
     cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_USS, this);
 

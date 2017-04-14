@@ -57,8 +57,8 @@ var innerObserver = {
 };
 
 function removeFrame(iframe) {
-  SpecialPowers.addObserver(outerObserver, "outer-window-destroyed");
-  SpecialPowers.addObserver(innerObserver, "inner-window-destroyed");
+  SpecialPowers.addObserver(outerObserver, "outer-window-destroyed", false);
+  SpecialPowers.addObserver(innerObserver, "inner-window-destroyed", false);
 
   iframe.remove();
 }

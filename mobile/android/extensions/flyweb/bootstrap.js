@@ -134,7 +134,7 @@ function uninstall(aData, aReason) {}
 
 function startup(aData, aReason) {
   // Observe pref changes and enable/disable as necessary.
-  Services.prefs.addObserver(FLYWEB_ENABLED_PREF, prefObserver);
+  Services.prefs.addObserver(FLYWEB_ENABLED_PREF, prefObserver, false);
 
   // Only initialize if pref is enabled.
   let enabled = Services.prefs.getBoolPref(FLYWEB_ENABLED_PREF);

@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1339722
       let channel = subject.QueryInterface(Ci.nsIHttpChannel);
       let win = channel.notificationCallbacks.getInterface(Ci.mozIDOMWindowProxy);
     }
-  }, TOPIC);
+  }, TOPIC, false);
 
   let docShell = SpecialPowers.wrap(window)
                               .QueryInterface(Ci.nsIInterfaceRequestor)

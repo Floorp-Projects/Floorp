@@ -65,7 +65,8 @@ PresentationRequestUIGlue.prototype = {
       };
 
       Services.obs.addObserver(handleObserve,
-                               TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE);
+                               TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE,
+                               false);
 
       let data = {
         url: aURL,

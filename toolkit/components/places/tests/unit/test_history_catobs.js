@@ -15,11 +15,11 @@ add_task(function* () {
   Services.obs.addObserver(function created() {
     Services.obs.removeObserver(created, "dummy-observer-created");
     dummyCreated = true;
-  }, "dummy-observer-created");
+  }, "dummy-observer-created", false);
   Services.obs.addObserver(function visited() {
     Services.obs.removeObserver(visited, "dummy-observer-visited");
     dummyReceivedOnVisit = true;
-  }, "dummy-observer-visited");
+  }, "dummy-observer-visited", false);
 
   let initialObservers = PlacesUtils.history.getObservers();
 
@@ -45,7 +45,7 @@ add_task(function* () {
         Assert.ok(dummyReceivedOnVisit);
         resolve();
       }
-    });
+    }, false);
   });
 
   // Add a visit.

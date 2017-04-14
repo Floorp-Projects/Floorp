@@ -349,8 +349,8 @@ var Prefetcher = {
     }
 
     this.prefetchingEnabled = Preferences.get(PREF_PREFETCHING_ENABLED, false);
-    Services.prefs.addObserver(PREF_PREFETCHING_ENABLED, this);
-    Services.obs.addObserver(this, "xpcom-shutdown");
+    Services.prefs.addObserver(PREF_PREFETCHING_ENABLED, this, false);
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
   observe(subject, topic, data) {

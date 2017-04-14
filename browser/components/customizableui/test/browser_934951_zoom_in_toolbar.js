@@ -69,7 +69,7 @@ function promiseObserverNotification(aObserver) {
     Services.obs.removeObserver(notificationCallback, aObserver);
     deferred.reject("Notification '" + aObserver + "' did not happen within 20 seconds.");
   }, kTimeoutInMS);
-  Services.obs.addObserver(notificationCallback, aObserver);
+  Services.obs.addObserver(notificationCallback, aObserver, false);
   return deferred.promise;
 }
 

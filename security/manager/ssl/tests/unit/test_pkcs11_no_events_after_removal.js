@@ -20,10 +20,10 @@ function run_test() {
   pkcs11.deleteModule("PKCS11 Test Module");
   Services.obs.addObserver(function() {
     ok(false, "smartcard-insert event should not have been emitted");
-  }, "smartcard-insert");
+  }, "smartcard-insert", false);
   Services.obs.addObserver(function() {
     ok(false, "smartcard-remove event should not have been emitted");
-  }, "smartcard-remove");
+  }, "smartcard-remove", false);
   do_timeout(500, do_test_finished);
   do_test_pending();
 }

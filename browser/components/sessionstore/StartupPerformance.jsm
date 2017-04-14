@@ -59,7 +59,7 @@ this.StartupPerformance = {
 
   init() {
     for (let topic of OBSERVED_TOPICS) {
-      Services.obs.addObserver(this, topic);
+      Services.obs.addObserver(this, topic, false);
     }
   },
 
@@ -97,7 +97,7 @@ this.StartupPerformance = {
       Services.obs.removeObserver(this, topic);
     }
 
-    Services.obs.addObserver(this, "sessionstore-single-window-restored");
+    Services.obs.addObserver(this, "sessionstore-single-window-restored", false);
     this._promiseFinished = new Promise(resolve => {
       this._resolveFinished = resolve;
     });

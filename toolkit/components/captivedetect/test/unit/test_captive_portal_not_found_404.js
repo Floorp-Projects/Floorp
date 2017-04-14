@@ -21,7 +21,7 @@ function fakeUIResponse() {
     if (topic === "captive-portal-login") {
       do_throw("should not receive captive-portal-login event");
     }
-  }, "captive-portal-login");
+  }, "captive-portal-login", false);
 }
 
 function test_portal_not_found() {

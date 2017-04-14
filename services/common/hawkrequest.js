@@ -158,7 +158,7 @@ this.Intl = function Intl() {
 
 this.Intl.prototype = {
   init() {
-    Services.prefs.addObserver("intl.accept_languages", this);
+    Services.prefs.addObserver("intl.accept_languages", this, false);
   },
 
   uninit() {

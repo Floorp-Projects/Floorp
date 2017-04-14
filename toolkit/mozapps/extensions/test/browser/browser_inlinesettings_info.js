@@ -109,9 +109,11 @@ function test() {
       gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
       Services.obs.addObserver(observer,
-                               AddonManager.OPTIONS_NOTIFICATION_DISPLAYED);
+                               AddonManager.OPTIONS_NOTIFICATION_DISPLAYED,
+                               false);
       Services.obs.addObserver(observer,
-                               AddonManager.OPTIONS_NOTIFICATION_HIDDEN);
+                               AddonManager.OPTIONS_NOTIFICATION_HIDDEN,
+                               false);
 
       run_next_test();
     });

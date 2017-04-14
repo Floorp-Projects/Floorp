@@ -58,11 +58,11 @@ this.LoginHelper = {
       this.schemeUpgrades = Services.prefs.getBoolPref("signon.schemeUpgrades");
       this.insecureAutofill = Services.prefs.getBoolPref("signon.autofillForms.http");
       logger.maxLogLevel = getMaxLogLevel();
-    });
+    }, false);
 
     Services.prefs.addObserver("security.insecure_field_warning.", () => {
       this.showInsecureFieldWarning = Services.prefs.getBoolPref("security.insecure_field_warning.contextual.enabled");
-    });
+    }, false);
 
     return logger;
   },

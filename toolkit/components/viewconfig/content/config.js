@@ -346,7 +346,7 @@ function ShowPrefs() {
   gSortFunction = gSortFunctions[gSortedColumn];
   gPrefArray.sort(gSortFunction);
 
-  gPrefBranch.addObserver("", gPrefListener);
+  gPrefBranch.addObserver("", gPrefListener, false);
 
   var configTree = document.getElementById("configTree");
   configTree.view = view;

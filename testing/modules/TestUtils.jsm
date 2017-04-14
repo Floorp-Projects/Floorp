@@ -58,7 +58,7 @@ this.TestUtils = {
           Services.obs.removeObserver(observer, topic);
           reject(ex);
         }
-      }, topic);
+      }, topic, false);
     });
   },
 };

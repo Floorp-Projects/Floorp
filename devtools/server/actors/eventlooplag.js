@@ -25,7 +25,7 @@ exports.EventLoopLagActor = ActorClassWithSpec(eventLoopLagSpec, {
    */
   start: function () {
     if (!this._observerAdded) {
-      Services.obs.addObserver(this, "event-loop-lag");
+      Services.obs.addObserver(this, "event-loop-lag", false);
       this._observerAdded = true;
     }
     return Services.appShell.startEventLoopLagTracking();

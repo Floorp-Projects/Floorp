@@ -623,7 +623,7 @@ function ConsoleAPI(aConsoleOptions = {}) {
 
   if (aConsoleOptions.maxLogLevelPref) {
     updateMaxLogLevel();
-    Services.prefs.addObserver(aConsoleOptions.maxLogLevelPref, updateMaxLogLevel);
+    Services.prefs.addObserver(aConsoleOptions.maxLogLevelPref, updateMaxLogLevel, false);
   }
 
   // Bind all the functions to this object.

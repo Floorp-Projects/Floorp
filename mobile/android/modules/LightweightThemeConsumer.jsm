@@ -15,8 +15,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
 
 function LightweightThemeConsumer(aDocument) {
   this._doc = aDocument;
-  Services.obs.addObserver(this, "lightweight-theme-styling-update");
-  Services.obs.addObserver(this, "lightweight-theme-apply");
+  Services.obs.addObserver(this, "lightweight-theme-styling-update", false);
+  Services.obs.addObserver(this, "lightweight-theme-apply", false);
 
   this._update(LightweightThemeManager.currentThemeForDisplay);
 }

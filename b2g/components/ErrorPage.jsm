@@ -170,8 +170,8 @@ var ErrorPage = {
   },
 
   init: function errorPageInit() {
-    Services.obs.addObserver(this, 'inprocess-browser-shown');
-    Services.obs.addObserver(this, 'remote-browser-shown');
+    Services.obs.addObserver(this, 'inprocess-browser-shown', false);
+    Services.obs.addObserver(this, 'remote-browser-shown', false);
   },
 
   observe: function errorPageObserve(aSubject, aTopic, aData) {

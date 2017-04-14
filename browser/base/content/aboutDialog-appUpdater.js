@@ -388,7 +388,7 @@ appUpdater.prototype =
             return;
           }
           Services.obs.removeObserver(arguments.callee, "update-staged");
-        }, "update-staged");
+        }, "update-staged", false);
       } else {
         this.selectPanel("apply");
       }

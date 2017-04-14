@@ -42,7 +42,7 @@ function waitForSearchNotification(aExpectedData, aCallback) {
 
     Services.obs.removeObserver(observer, SEARCH_SERVICE_TOPIC);
     aCallback();
-  }, SEARCH_SERVICE_TOPIC);
+  }, SEARCH_SERVICE_TOPIC, false);
 }
 
 function asyncInit() {

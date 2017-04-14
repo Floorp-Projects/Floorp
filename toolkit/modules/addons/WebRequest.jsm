@@ -558,7 +558,7 @@ HttpObserverManager = {
     let needModify = this.listeners.opening.size || this.listeners.modify.size || this.listeners.afterModify.size;
     if (needModify && !this.modifyInitialized) {
       this.modifyInitialized = true;
-      Services.obs.addObserver(this, "http-on-modify-request");
+      Services.obs.addObserver(this, "http-on-modify-request", false);
     } else if (!needModify && this.modifyInitialized) {
       this.modifyInitialized = false;
       Services.obs.removeObserver(this, "http-on-modify-request");
@@ -573,9 +573,9 @@ HttpObserverManager = {
 
     if (needExamine && !this.examineInitialized) {
       this.examineInitialized = true;
-      Services.obs.addObserver(this, "http-on-examine-response");
-      Services.obs.addObserver(this, "http-on-examine-cached-response");
-      Services.obs.addObserver(this, "http-on-examine-merged-response");
+      Services.obs.addObserver(this, "http-on-examine-response", false);
+      Services.obs.addObserver(this, "http-on-examine-cached-response", false);
+      Services.obs.addObserver(this, "http-on-examine-merged-response", false);
     } else if (!needExamine && this.examineInitialized) {
       this.examineInitialized = false;
       Services.obs.removeObserver(this, "http-on-examine-response");

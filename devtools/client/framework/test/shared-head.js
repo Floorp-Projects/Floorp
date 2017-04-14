@@ -73,7 +73,7 @@ const ConsoleObserver = {
   }
 };
 
-Services.obs.addObserver(ConsoleObserver, "console-api-log-event");
+Services.obs.addObserver(ConsoleObserver, "console-api-log-event", false);
 registerCleanupFunction(() => {
   Services.obs.removeObserver(ConsoleObserver, "console-api-log-event");
 });

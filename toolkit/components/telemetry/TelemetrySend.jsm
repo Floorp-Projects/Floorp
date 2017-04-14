@@ -613,7 +613,7 @@ var TelemetrySendImpl = {
     this._testMode = testing;
     this._sendingEnabled = true;
 
-    Services.obs.addObserver(this, TOPIC_IDLE_DAILY);
+    Services.obs.addObserver(this, TOPIC_IDLE_DAILY, false);
 
     this._server = Preferences.get(PREF_SERVER, undefined);
 

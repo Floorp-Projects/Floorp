@@ -219,6 +219,6 @@ function waitForNetObserver(aTest) {
         resolve();
       },
     };
-    SpecialPowers.addObserver(observer, "csp-on-violate-policy");
+    SpecialPowers.addObserver(observer, "csp-on-violate-policy", false);
   });
 }

@@ -178,7 +178,7 @@ function promiseBookmarksNotification(notification, conditionFn) {
         return () => {};
       }
     });
-    PlacesUtils.bookmarks.addObserver(proxifiedObserver);
+    PlacesUtils.bookmarks.addObserver(proxifiedObserver, false);
   });
 }
 
@@ -199,7 +199,7 @@ function promiseHistoryNotification(notification, conditionFn) {
         return () => {};
       }
     });
-    PlacesUtils.history.addObserver(proxifiedObserver);
+    PlacesUtils.history.addObserver(proxifiedObserver, false);
   });
 }
 

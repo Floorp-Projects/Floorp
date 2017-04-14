@@ -263,9 +263,9 @@ var Observer = {
     throw "Can't handle topic "+topic;
   },
   add_observers: function (services, include_on_modify = false) {
-    services.obs.addObserver(Observer, "console-api-log-event");
-    services.obs.addObserver(Observer, "http-on-examine-response");
-    services.obs.addObserver(Observer, "http-on-modify-request");
+    services.obs.addObserver(Observer, "console-api-log-event", false);
+    services.obs.addObserver(Observer, "http-on-examine-response", false);
+    services.obs.addObserver(Observer, "http-on-modify-request", false);
   },
   cleanup: function () {
     this.listeners = {};

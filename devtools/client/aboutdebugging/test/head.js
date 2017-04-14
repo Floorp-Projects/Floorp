@@ -193,7 +193,7 @@ function* installAddon({document, path, name, isWebExtension}) {
         Services.obs.removeObserver(listener, "test-devtools");
 
         done();
-      }, "test-devtools");
+      }, "test-devtools", false);
     });
   }
   // Trigger the file picker by clicking on the button
@@ -360,7 +360,7 @@ function waitForDelayedStartupFinished(win) {
         Services.obs.removeObserver(observer, topic);
         resolve();
       }
-    }, "browser-delayed-startup-finished");
+    }, "browser-delayed-startup-finished", false);
   });
 }
 

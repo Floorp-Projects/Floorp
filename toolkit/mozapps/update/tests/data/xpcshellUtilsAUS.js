@@ -1889,7 +1889,7 @@ function stageUpdate(aCheckSvcLog) {
     gSvcOriginalLogContents = readServiceLogFile();
   }
 
-  Services.obs.addObserver(gUpdateStagedObserver, "update-staged");
+  Services.obs.addObserver(gUpdateStagedObserver, "update-staged", false);
 
   setAppBundleModTime();
   setEnvironment();

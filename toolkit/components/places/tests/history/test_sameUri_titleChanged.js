@@ -16,7 +16,7 @@ add_task(function* test() {
         }
       }
     };
-    PlacesUtils.history.addObserver(historyObserver);
+    PlacesUtils.history.addObserver(historyObserver, false);
   });
 
   // This repeats the url on purpose, don't merge it into a single place entry.

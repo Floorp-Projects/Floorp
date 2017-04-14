@@ -277,7 +277,7 @@ var gEditItemOverlay = {
 
     // Observe changes.
     if (!this._observersAdded) {
-      PlacesUtils.bookmarks.addObserver(this);
+      PlacesUtils.bookmarks.addObserver(this, false);
       window.addEventListener("unload", this);
       this._observersAdded = true;
     }

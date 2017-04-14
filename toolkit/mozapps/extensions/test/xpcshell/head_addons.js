@@ -201,7 +201,7 @@ this.BootstrapMonitor = {
 
   init() {
     this.inited = true;
-    Services.obs.addObserver(this, "bootstrapmonitor-event");
+    Services.obs.addObserver(this, "bootstrapmonitor-event", false);
   },
 
   shutdownCheck() {
@@ -1335,7 +1335,7 @@ function* updateAllSystemAddons(xml, testserver) {
         Services.obs.removeObserver(arguments.callee, "addons-background-update-complete");
 
         resolve();
-      }, "addons-background-update-complete");
+      }, "addons-background-update-complete", false);
 
       // Trigger the background update timer handler
       gInternalManager.notify(null);

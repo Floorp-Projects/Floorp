@@ -5,7 +5,7 @@ function test() {
 
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function() {
-    Services.obs.addObserver(observer, "page-info-dialog-loaded");
+    Services.obs.addObserver(observer, "page-info-dialog-loaded", false);
     pageInfo = BrowserPageInfo();
   }, {capture: true, once: true});
   content.location =

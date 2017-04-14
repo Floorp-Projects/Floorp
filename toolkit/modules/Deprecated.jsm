@@ -18,7 +18,7 @@ var logWarnings = Services.prefs.getBoolPref(PREF_DEPRECATION_WARNINGS);
 Services.prefs.addObserver(PREF_DEPRECATION_WARNINGS,
   function(aSubject, aTopic, aData) {
     logWarnings = Services.prefs.getBoolPref(PREF_DEPRECATION_WARNINGS);
-  });
+  }, false);
 
 /**
  * Build a callstack log message.

@@ -30,7 +30,7 @@ function checkInstallConfirmation(...urls) {
       notificationCount++;
     }
   };
-  Services.obs.addObserver(observer, "addon-install-started");
+  Services.obs.addObserver(observer, "addon-install-started", false);
 
   let windows = new Set();
 

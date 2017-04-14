@@ -22,8 +22,8 @@
         function dialogMonitor() {
             var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
                                                .getService(Ci.nsIObserverService);
-            observerService.addObserver(this, "domwindowopened");
-            observerService.addObserver(this, "domwindowclosed");
+            observerService.addObserver(this, "domwindowopened", false);
+            observerService.addObserver(this, "domwindowclosed", false);
         }
 
         /*

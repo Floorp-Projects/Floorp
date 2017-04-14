@@ -124,7 +124,7 @@ this.Async = {
         exception.appIsShuttingDown = true;
         throw exception;
       };
-    }, "quit-application");
+    }, "quit-application", false);
     // In the common case, checkAppReady just returns true
     return (Async.checkAppReady = function() { return true; })();
   },

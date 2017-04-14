@@ -10,4 +10,4 @@ var permChangedObs = {
   }
 };
 
-Services.obs.addObserver(permChangedObs, 'perm-changed');
+Services.obs.addObserver(permChangedObs, 'perm-changed', false);

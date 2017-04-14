@@ -387,7 +387,7 @@ function waitForPurgeNotification() {
       });
     }
   };
-  Services.obs.addObserver(observer, "browser:purge-domain-data");
+  Services.obs.addObserver(observer, "browser:purge-domain-data", false);
 
   return deferred.promise;
 }
@@ -521,7 +521,7 @@ function* test_cache_cleared() {
       do_test_finished();
     }
   };
-  os.addObserver(observer, "cacheservice:empty-cache");
+  os.addObserver(observer, "cacheservice:empty-cache", false);
   yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
   do_test_pending();
 }

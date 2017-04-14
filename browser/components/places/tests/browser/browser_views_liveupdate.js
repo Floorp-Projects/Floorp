@@ -57,8 +57,8 @@ function fakeOpenPopup(aPopup) {
 function startTest() {
   var bs = PlacesUtils.bookmarks;
   // Add observers.
-  bs.addObserver(bookmarksObserver);
-  PlacesUtils.annotations.addObserver(bookmarksObserver);
+  bs.addObserver(bookmarksObserver, false);
+  PlacesUtils.annotations.addObserver(bookmarksObserver, false);
   var addedBookmarks = [];
 
   // MENU

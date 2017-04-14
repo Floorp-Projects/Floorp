@@ -46,7 +46,7 @@ add_task(function* () {
     Services.obs.addObserver(function listener() {
       Services.obs.removeObserver(listener, "addon-console-works");
       done();
-    }, "addon-console-works");
+    }, "addon-console-works", false);
   });
 
   // Be careful, this JS function is going to be executed in the addon toolbox,

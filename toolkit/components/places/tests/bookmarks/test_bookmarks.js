@@ -81,7 +81,7 @@ function run_test() {
 }
 
 add_task(function* test_bookmarks() {
-  bs.addObserver(bookmarksObserver);
+  bs.addObserver(bookmarksObserver, false);
 
   // test special folders
   do_check_true(bs.placesRoot > 0);

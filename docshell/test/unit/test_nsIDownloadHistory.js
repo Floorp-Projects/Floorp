@@ -35,7 +35,7 @@ function testLinkVistedObserver()
 
   var os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
-  os.addObserver(obs, NS_LINK_VISITED_EVENT_TOPIC);
+  os.addObserver(obs, NS_LINK_VISITED_EVENT_TOPIC, false);
 
   var dh = Components.classesByID[NS_DOWNLOADHISTORY_CID].
            getService(Ci.nsIDownloadHistory);

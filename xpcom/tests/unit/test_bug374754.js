@@ -46,8 +46,8 @@ function run_test() {
   do_test_pending();
 
   var observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-  observerService.addObserver(observer, addedTopic);
-  observerService.addObserver(observer, removedTopic);
+  observerService.addObserver(observer, addedTopic, false);
+  observerService.addObserver(observer, removedTopic, false);
 
   var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
   categoryManager.addCategoryEntry(testCategory, testEntry, testValue, false, true);

@@ -35,12 +35,12 @@ this.UserAgentOverrides = {
       return;
 
     gPrefBranch = Services.prefs.getBranch("general.useragent.override.");
-    gPrefBranch.addObserver("", buildOverrides);
+    gPrefBranch.addObserver("", buildOverrides, false);
 
-    Services.prefs.addObserver(PREF_OVERRIDES_ENABLED, buildOverrides);
+    Services.prefs.addObserver(PREF_OVERRIDES_ENABLED, buildOverrides, false);
 
     try {
-      Services.obs.addObserver(HTTP_on_useragent_request, "http-on-useragent-request");
+      Services.obs.addObserver(HTTP_on_useragent_request, "http-on-useragent-request", false);
     } catch (x) {
       // The http-on-useragent-request notification is disallowed in content processes.
     }

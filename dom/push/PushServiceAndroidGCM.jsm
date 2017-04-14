@@ -149,7 +149,7 @@ this.PushServiceAndroidGCM = {
     this._serverURI = serverURL;
 
     prefs.observe("debug", this);
-    Services.obs.addObserver(this, "PushServiceAndroidGCM:ReceivedPushMessage");
+    Services.obs.addObserver(this, "PushServiceAndroidGCM:ReceivedPushMessage", false);
 
     return this._configure(serverURL, !!prefs.get("debug")).then(() => {
       EventDispatcher.instance.sendRequestForResult({

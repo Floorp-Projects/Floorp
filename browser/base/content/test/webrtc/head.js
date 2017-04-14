@@ -58,7 +58,7 @@ function promiseWindow(url) {
         Services.obs.removeObserver(obs, "domwindowopened");
         resolve(win);
       }, {once: true});
-    }, "domwindowopened");
+    }, "domwindowopened", false);
   });
 }
 
@@ -70,7 +70,7 @@ function whenDelayedStartupFinished(aWindow) {
         Services.obs.removeObserver(observer, aTopic);
         resolve();
       }
-    }, "browser-delayed-startup-finished");
+    }, "browser-delayed-startup-finished", false);
   });
 }
 

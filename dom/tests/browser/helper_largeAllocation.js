@@ -15,7 +15,7 @@ function expectProcessCreated() {
       ok(true, "Expect process created");
       resolve();
     }
-    os.addObserver(observer, topic);
+    os.addObserver(observer, topic, /* weak = */ false);
     kill = () => {
       os.removeObserver(observer, topic);
       ok(true, "Expect process created killed");
@@ -33,7 +33,7 @@ function expectNoProcess() {
     ok(false, "A process was created!");
     os.removeObserver(observer, topic);
   }
-  os.addObserver(observer, topic);
+  os.addObserver(observer, topic, /* weak = */ false);
 
   return () => os.removeObserver(observer, topic);
 }

@@ -47,7 +47,7 @@ worker.addEventListener("message", function (aEvent) {
   }
   if (data.type === "redirect_test") {
     if (data.status === "start") {
-      SpecialPowers.addObserver(requestObserver, "specialpowers-http-notify-request");
+      SpecialPowers.addObserver(requestObserver, "specialpowers-http-notify-request", false);
       return;
     }
     if (data.status === "end") {

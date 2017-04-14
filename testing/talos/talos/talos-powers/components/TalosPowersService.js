@@ -42,7 +42,7 @@ TalosPowersService.prototype = {
     Services.mm.addMessageListener("TalosPowersContent:ForceCCAndGC", this);
     Services.mm.addMessageListener("TalosPowersContent:GetStartupInfo", this);
     Services.mm.addMessageListener("TalosPowers:ParentExec:QueryMsg", this);
-    Services.obs.addObserver(this, "xpcom-shutdown");
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
   uninit() {
@@ -255,7 +255,7 @@ TalosPowersService.prototype = {
         mm.sendAsyncMessage("TalosPowersContent:GetStartupInfo:Result",
                             startupInfo);
       };
-      Services.obs.addObserver(obs, "widget-first-paint");
+      Services.obs.addObserver(obs, "widget-first-paint", false);
     } else {
       mm.sendAsyncMessage("TalosPowersContent:GetStartupInfo:Result",
                           startupInfo);

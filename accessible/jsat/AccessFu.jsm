@@ -135,8 +135,8 @@ this.AccessFu = { // jshint ignore:line
       ]);
     }
 
-    Services.obs.addObserver(this, 'remote-browser-shown');
-    Services.obs.addObserver(this, 'inprocess-browser-shown');
+    Services.obs.addObserver(this, 'remote-browser-shown', false);
+    Services.obs.addObserver(this, 'inprocess-browser-shown', false);
     Utils.win.addEventListener('TabOpen', this);
     Utils.win.addEventListener('TabClose', this);
     Utils.win.addEventListener('TabSelect', this);

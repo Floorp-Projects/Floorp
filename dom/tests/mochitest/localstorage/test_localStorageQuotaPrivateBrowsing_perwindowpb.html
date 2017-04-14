@@ -164,7 +164,7 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
 
       aWindow.gBrowser.loadURI(CONTENT_PAGE);
     }
-  }, "browser-delayed-startup-finished");
+  }, "browser-delayed-startup-finished", false);
 }
 
 function testOnWindow(aIsPrivate, callback) {

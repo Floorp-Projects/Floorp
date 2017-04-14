@@ -531,7 +531,7 @@ var observer = {
 };
 
 function registerObserver() {
-  Services.obs.addObserver(observer, "predictor-reset-complete");
+  Services.obs.addObserver(observer, "predictor-reset-complete", false);
 }
 
 function unregisterObserver() {

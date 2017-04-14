@@ -33,7 +33,7 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
       Services.obs.removeObserver(observer, aTopic);
       setTimeout(aCallback, 0);
     }
-  }, "browser-delayed-startup-finished");
+  }, "browser-delayed-startup-finished", false);
 }
 
 function testOnWindow(options, callback) {
@@ -60,7 +60,7 @@ function beginTest() {
       Services.obs.removeObserver(waitCookie, "cookie-changed");
       ok(true, "cookie set by beacon request in normal window");
       testOnPrivateWindow();
-    }, "cookie-changed");
+    }, "cookie-changed", false);
     aNormalWindow.gBrowser.selectedBrowser.loadURI(baseURL + "file_beaconCookies.html");
   });
 }
@@ -71,7 +71,7 @@ function testOnPrivateWindow() {
       Services.obs.removeObserver(waitCookie, "private-cookie-changed");
       ok(true, "private cookie set by beacon request in private window");
       cleanup();
-    }, "private-cookie-changed");
+    }, "private-cookie-changed", false);
     aPrivateWindow.gBrowser.selectedBrowser.loadURI(baseURL + "file_beaconCookies.html");
   });
 }

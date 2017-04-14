@@ -23,7 +23,7 @@ const FXA_PUSH_SCOPE = "chrome://fxa-push";
 const Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.bind("FxAccountsPush");
 
 function FxAccountsPush() {
-  Services.obs.addObserver(this, "FxAccountsPush:ReceivedPushMessageToDecode");
+  Services.obs.addObserver(this, "FxAccountsPush:ReceivedPushMessageToDecode", false);
 
   EventDispatcher.instance.sendRequestForResult({
     type: "FxAccountsPush:Initialized"

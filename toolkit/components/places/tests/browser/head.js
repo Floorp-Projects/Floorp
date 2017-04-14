@@ -123,7 +123,7 @@ function waitForFaviconChanged(aExpectedPageURI, aExpectedFaviconURI, aWindow,
       }
     }
   };
-  aWindow.PlacesUtils.history.addObserver(historyObserver);
+  aWindow.PlacesUtils.history.addObserver(historyObserver, false);
 }
 
 /**
@@ -284,7 +284,7 @@ function DBConn(aForceNewConnection) {
     Services.obs.addObserver(function DBCloseCallback(aSubject, aTopic, aData) {
       Services.obs.removeObserver(DBCloseCallback, aTopic);
       dbConn.asyncClose();
-    }, "profile-before-change");
+    }, "profile-before-change", false);
   }
 
   return gDBConn.connectionReady ? gDBConn : null;

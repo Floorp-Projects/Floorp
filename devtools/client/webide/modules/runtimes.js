@@ -271,7 +271,7 @@ var WiFiScanner = {
 
   init() {
     this.updateRegistration();
-    Services.prefs.addObserver(this.ALLOWED_PREF, this);
+    Services.prefs.addObserver(this.ALLOWED_PREF, this, false);
   },
 
   enable() {

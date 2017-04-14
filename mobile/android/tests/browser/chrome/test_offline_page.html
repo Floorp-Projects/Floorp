@@ -30,7 +30,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
         Services.obs.removeObserver(observe, "network:offline-status-changed");
         resolve();
       }
-      Services.obs.addObserver(observe, "network:offline-status-changed");
+      Services.obs.addObserver(observe, "network:offline-status-changed", false);
       Services.io.offline = isOffline;
     });
   }

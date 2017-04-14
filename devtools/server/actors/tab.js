@@ -586,9 +586,9 @@ TabActor.prototype = {
   _watchDocshells() {
     // In child processes, we watch all docshells living in the process.
     if (this.listenForNewDocShells) {
-      Services.obs.addObserver(this, "webnavigation-create");
+      Services.obs.addObserver(this, "webnavigation-create", false);
     }
-    Services.obs.addObserver(this, "webnavigation-destroy");
+    Services.obs.addObserver(this, "webnavigation-destroy", false);
 
     // We watch for all child docshells under the current document,
     this._progressListener.watch(this.docShell);
@@ -1482,7 +1482,7 @@ function DebuggerProgressListener(tabActor) {
   this._onWindowHidden = this.onWindowHidden.bind(this);
 
   // Watch for windows destroyed (global observer that will need filtering)
-  Services.obs.addObserver(this, "inner-window-destroyed");
+  Services.obs.addObserver(this, "inner-window-destroyed", false);
 
   // XXX: for now we maintain the list of windows we know about in this instance
   // so that we can discriminate windows we care about when observing

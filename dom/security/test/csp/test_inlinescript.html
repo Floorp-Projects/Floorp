@@ -39,7 +39,7 @@ var curTest;
 // This is used to watch the blocked data bounce off CSP and allowed data
 // get sent out to the wire.
 function examiner() {
-  SpecialPowers.addObserver(this, "csp-on-violate-policy");
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
 }
 examiner.prototype  = {
   observe: function(subject, topic, data) {

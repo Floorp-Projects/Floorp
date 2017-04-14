@@ -165,7 +165,7 @@ var ShutdownObserver = {
       return;
     }
 
-    Services.obs.addObserver(this, "quit-application-granted");
+    Services.obs.addObserver(this, "quit-application-granted", false);
 
     this._initialized = true;
   },

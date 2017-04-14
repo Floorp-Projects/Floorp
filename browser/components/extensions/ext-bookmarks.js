@@ -174,7 +174,7 @@ function decrementListeners() {
 function incrementListeners() {
   listenerCount++;
   if (listenerCount == 1) {
-    PlacesUtils.bookmarks.addObserver(observer);
+    PlacesUtils.bookmarks.addObserver(observer, false);
   }
 }
 

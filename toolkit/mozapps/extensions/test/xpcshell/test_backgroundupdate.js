@@ -42,7 +42,7 @@ function run_test_1() {
       Services.obs.removeObserver(arguments.callee, "addons-background-update-complete");
 
       do_execute_soon(run_test_2);
-    }, "addons-background-update-complete");
+    }, "addons-background-update-complete", false);
 
     // Trigger the background update timer handler
     gInternalManager.notify(null);
@@ -105,7 +105,7 @@ function run_test_2() {
 
     do_check_eq(installCount, 3);
     sawCompleteNotification = true;
-  }, "addons-background-update-complete");
+  }, "addons-background-update-complete", false);
 
   AddonManager.addInstallListener({
     onNewInstall(aInstall) {

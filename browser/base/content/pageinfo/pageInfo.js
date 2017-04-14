@@ -599,7 +599,7 @@ function addImage(imageViewRow) {
       document.getElementById("mediaTab").hidden = false;
       Components.classes["@mozilla.org/observer-service;1"]
                 .getService(Components.interfaces.nsIObserverService)
-                .addObserver(imagePermissionObserver, "perm-changed");
+                .addObserver(imagePermissionObserver, "perm-changed", false);
     }
   } else {
     var i = gImageHash[url][type][alt];

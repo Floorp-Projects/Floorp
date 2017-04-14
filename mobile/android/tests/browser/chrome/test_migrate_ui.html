@@ -38,7 +38,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
         Services.obs.removeObserver(searchObserver, "default-search-engine-migrated");
         is(Services.search.defaultEngine.name, engines[0].name, "found expected default search engine");
       }
-      Services.obs.addObserver(searchObserver, "default-search-engine-migrated");
+      Services.obs.addObserver(searchObserver, "default-search-engine-migrated", false);
     });
 
   </script>

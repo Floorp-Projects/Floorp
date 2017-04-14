@@ -1088,7 +1088,8 @@ function RedirectLoad({ target: browser, data }) {
       }
     };
     Services.obs.addObserver(delayedStartupFinished,
-                             "browser-delayed-startup-finished");
+                             "browser-delayed-startup-finished",
+                             false);
   }
 }
 
@@ -1133,7 +1134,7 @@ var gBrowserInit = {
   onLoad() {
     gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver);
 
-    Services.obs.addObserver(gPluginHandler.NPAPIPluginCrashed, "plugin-crashed");
+    Services.obs.addObserver(gPluginHandler.NPAPIPluginCrashed, "plugin-crashed", false);
 
     window.addEventListener("AppCommand", HandleAppCommandEvent, true);
 
@@ -1371,16 +1372,16 @@ var gBrowserInit = {
     // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
     setTimeout(function() { SafeBrowsing.init(); }, 2000);
 
-    Services.obs.addObserver(gIdentityHandler, "perm-changed");
-    Services.obs.addObserver(gSessionHistoryObserver, "browser:purge-session-history");
-    Services.obs.addObserver(gStoragePressureObserver, "QuotaManager::StoragePressure");
-    Services.obs.addObserver(gXPInstallObserver, "addon-install-disabled");
-    Services.obs.addObserver(gXPInstallObserver, "addon-install-started");
-    Services.obs.addObserver(gXPInstallObserver, "addon-install-blocked");
-    Services.obs.addObserver(gXPInstallObserver, "addon-install-origin-blocked");
-    Services.obs.addObserver(gXPInstallObserver, "addon-install-failed");
-    Services.obs.addObserver(gXPInstallObserver, "addon-install-confirmation");
-    Services.obs.addObserver(gXPInstallObserver, "addon-install-complete");
+    Services.obs.addObserver(gIdentityHandler, "perm-changed", false);
+    Services.obs.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
+    Services.obs.addObserver(gStoragePressureObserver, "QuotaManager::StoragePressure", false);
+    Services.obs.addObserver(gXPInstallObserver, "addon-install-disabled", false);
+    Services.obs.addObserver(gXPInstallObserver, "addon-install-started", false);
+    Services.obs.addObserver(gXPInstallObserver, "addon-install-blocked", false);
+    Services.obs.addObserver(gXPInstallObserver, "addon-install-origin-blocked", false);
+    Services.obs.addObserver(gXPInstallObserver, "addon-install-failed", false);
+    Services.obs.addObserver(gXPInstallObserver, "addon-install-confirmation", false);
+    Services.obs.addObserver(gXPInstallObserver, "addon-install-complete", false);
     window.messageManager.addMessageListener("Browser:URIFixup", gKeywordURIFixup);
 
     BrowserOffline.init();
@@ -1424,7 +1425,7 @@ var gBrowserInit = {
     BookmarkingUI.init();
     AutoShowBookmarksToolbar.init();
 
-    gPrefService.addObserver(gHomeButton.prefDomain, gHomeButton);
+    gPrefService.addObserver(gHomeButton.prefDomain, gHomeButton, false);
 
     var homeButton = document.getElementById("home-button");
     gHomeButton.updateTooltip(homeButton);
@@ -1456,7 +1457,7 @@ var gBrowserInit = {
     PlacesToolbarHelper.init();
 
     ctrlTab.readPref();
-    gPrefService.addObserver(ctrlTab.prefName, ctrlTab);
+    gPrefService.addObserver(ctrlTab.prefName, ctrlTab, false);
 
     // Initialize the download manager some time after the app starts so that
     // auto-resume downloads begin (such as after crashing or quitting with
@@ -2767,7 +2768,7 @@ var gMenuButtonUpdateBadge = {
   init() {
     if (this.enabled) {
       this.kTopics.forEach(t => {
-        Services.obs.addObserver(this, t);
+        Services.obs.addObserver(this, t, false);
       });
     }
   },
@@ -2989,8 +2990,8 @@ var BrowserOnClick = {
     mm.addMessageListener("Browser:SSLErrorReportTelemetry", this);
     mm.addMessageListener("Browser:SSLErrorGoBack", this);
 
-    Services.obs.addObserver(this, "captive-portal-login-abort");
-    Services.obs.addObserver(this, "captive-portal-login-success");
+    Services.obs.addObserver(this, "captive-portal-login-abort", false);
+    Services.obs.addObserver(this, "captive-portal-login-success", false);
   },
 
   uninit() {
@@ -3818,7 +3819,7 @@ const BrowserSearch = {
         }
         win = window.openDialog(getBrowserURL(), "_blank",
                                 "chrome,all,dialog=no", "about:blank");
-        Services.obs.addObserver(observer, "browser-delayed-startup-finished");
+        Services.obs.addObserver(observer, "browser-delayed-startup-finished", false);
       }
       return;
     }
@@ -4196,8 +4197,8 @@ function OpenBrowserWindow(options) {
 
   // Make sure to remove the 'document-shown' observer in case the window
   // is being closed right after it was opened to avoid leaking.
-  Services.obs.addObserver(newDocumentShown, "document-shown");
-  Services.obs.addObserver(windowClosed, "domwindowclosed");
+  Services.obs.addObserver(newDocumentShown, "document-shown", false);
+  Services.obs.addObserver(windowClosed, "domwindowclosed", false);
 
   var charsetArg = new String();
   var handler = Components.classes["@mozilla.org/browser/clh;1"]
@@ -5416,7 +5417,7 @@ var TabletModeUpdater = {
   init() {
     if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
       this.update(WindowsUIUtils.inTabletMode);
-      Services.obs.addObserver(this, "tablet-mode-change");
+      Services.obs.addObserver(this, "tablet-mode-change", false);
     }
   },
 
@@ -6122,7 +6123,7 @@ var BrowserOffline = {
     if (!this._uiElement)
       this._uiElement = document.getElementById("workOfflineMenuitemState");
 
-    Services.obs.addObserver(this, "network:offline-status-changed");
+    Services.obs.addObserver(this, "network:offline-status-changed", false);
 
     this._updateOfflineUI(Services.io.offline);
 
@@ -6351,7 +6352,7 @@ var IndexedDBPromptHelper = {
 
   init:
   function IndexedDBPromptHelper_init() {
-    Services.obs.addObserver(this, this._permissionsPrompt);
+    Services.obs.addObserver(this, this._permissionsPrompt, false);
   },
 
   uninit:
@@ -6565,7 +6566,7 @@ function BrowserOpenAddonsMgr(aView) {
         browserWindow = browserWin;
       }
     }
-    Services.obs.addObserver(receivePong, "EM-pong");
+    Services.obs.addObserver(receivePong, "EM-pong", false);
     Services.obs.notifyObservers(null, "EM-ping", "");
     Services.obs.removeObserver(receivePong, "EM-pong");
 
@@ -6595,7 +6596,7 @@ function BrowserOpenAddonsMgr(aView) {
       aSubject.QueryInterface(Ci.nsIDOMWindow);
       aSubject.focus();
       resolve(aSubject);
-    }, "EM-loaded");
+    }, "EM-loaded", false);
   });
 }
 
@@ -8158,7 +8159,8 @@ function duplicateTabIn(aTab, where, delta) {
       };
 
       Services.obs.addObserver(delayedStartupFinished,
-                               "browser-delayed-startup-finished");
+                               "browser-delayed-startup-finished",
+                               false);
       break;
     case "tabshifted":
       SessionStore.duplicateTab(window, aTab, delta);
@@ -8259,7 +8261,7 @@ var ToolbarIconColor = {
 
     window.addEventListener("activate", this);
     window.addEventListener("deactivate", this);
-    Services.obs.addObserver(this, "lightweight-theme-styling-update");
+    Services.obs.addObserver(this, "lightweight-theme-styling-update", false);
 
     // If the window isn't active now, we assume that it has never been active
     // before and will soon become active such that inferFromText will be

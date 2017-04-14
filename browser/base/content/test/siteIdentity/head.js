@@ -298,7 +298,7 @@ function* loadBadCertPage(url) {
     };
 
     Services.obs.addObserver(certExceptionDialogObserver,
-                             "cert-exception-ui-ready");
+                             "cert-exception-ui-ready", false);
   });
 
   let loaded = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);

@@ -55,7 +55,7 @@ function promiseVisitedURIObserver(redirectURI, targetURI, expectedTargetFrecenc
       onDeleteVisits() {},
       QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
     };
-    PlacesUtils.history.addObserver(historyObserver);
+    PlacesUtils.history.addObserver(historyObserver, false);
   });
 }
 

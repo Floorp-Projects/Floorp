@@ -93,10 +93,10 @@ var CastingApps = {
       "Casting:Stop",
     ]);
 
-    Services.obs.addObserver(this, "ssdp-service-found");
-    Services.obs.addObserver(this, "ssdp-service-lost");
-    Services.obs.addObserver(this, "application-background");
-    Services.obs.addObserver(this, "application-foreground");
+    Services.obs.addObserver(this, "ssdp-service-found", false);
+    Services.obs.addObserver(this, "ssdp-service-lost", false);
+    Services.obs.addObserver(this, "application-background", false);
+    Services.obs.addObserver(this, "application-foreground", false);
 
     BrowserApp.deck.addEventListener("TabSelect", this, true);
     BrowserApp.deck.addEventListener("pageshow", this, true);

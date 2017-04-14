@@ -185,8 +185,8 @@ function do_tests() {
   };
 
   branch0.addObserver("devtools.branch1", null, null);
-  branch0.addObserver("devtools.branch1.", observer);
-  branch1.addObserver("", observer);
+  branch0.addObserver("devtools.branch1.", observer, false);
+  branch1.addObserver("", observer, false);
 
   Services.prefs.setCharPref("devtools.branch1.somestring", "elf owl");
   isDeeply(notifications, {
@@ -206,7 +206,7 @@ function do_tests() {
   }, "removeObserver worked");
 
   clearNotificationList();
-  branch0.addObserver("devtools.branch1.somestring", observer);
+  branch0.addObserver("devtools.branch1.somestring", observer, false);
   Services.prefs.setCharPref("devtools.branch1.somestring", "northern shoveler");
   isDeeply(notifications, {
     "devtools.branch1.somestring": true,
@@ -228,7 +228,7 @@ function do_tests() {
   // Regression test for bug 1319150.
   let seen = false;
   let fnObserver = () => { seen = true; };
-  branch0.addObserver("devtools.branch1.somestring", fnObserver);
+  branch0.addObserver("devtools.branch1.somestring", fnObserver, false);
   Services.prefs.setCharPref("devtools.branch1.somestring", "common merganser");
   ok(seen, "function-style observer was called");
   branch0.removeObserver("devtools.branch1.somestring", fnObserver);

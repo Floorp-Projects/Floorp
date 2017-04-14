@@ -31,7 +31,7 @@ MonitorActor.prototype = {
   start: function () {
     if (!this._started) {
       this._started = true;
-      Services.obs.addObserver(this, "devtools-monitor-update");
+      Services.obs.addObserver(this, "devtools-monitor-update", false);
       Services.obs.notifyObservers(null, "devtools-monitor-start", "");
       this._agents.forEach(agent => this._startAgent(agent));
     }

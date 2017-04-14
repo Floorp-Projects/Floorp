@@ -51,7 +51,7 @@
       Services.obs.removeObserver(crashObserver, 'ipc:content-shutdown');
       p.then(done);
     }
-    Services.obs.addObserver(crashObserver, 'ipc:content-shutdown');
+    Services.obs.addObserver(crashObserver, 'ipc:content-shutdown', false);
 
     document.getElementById('thebrowser')
             .QueryInterface(Components.interfaces.nsIFrameLoaderOwner)

@@ -108,7 +108,7 @@ SpecialPowersObserver.prototype._receiveMessage = function(aMessage) {
 SpecialPowersObserver.prototype.init = function()
 {
   var obs = Services.obs;
-  obs.addObserver(this, "chrome-document-global-created");
+  obs.addObserver(this, "chrome-document-global-created", false);
 
   // Register special testing modules.
   var testsURI = Cc["@mozilla.org/file/directory_service;1"].
@@ -123,7 +123,7 @@ SpecialPowersObserver.prototype.init = function()
   Components.manager.QueryInterface(Ci.nsIComponentRegistrar).
                  autoRegister(manifestFile);
 
-  obs.addObserver(this, "http-on-modify-request");
+  obs.addObserver(this, "http-on-modify-request", false);
 
   this._loadFrameScript();
 };
@@ -174,8 +174,8 @@ SpecialPowersObserver.prototype._addProcessCrashObservers = function() {
   var obs = Components.classes["@mozilla.org/observer-service;1"]
                       .getService(Components.interfaces.nsIObserverService);
 
-  obs.addObserver(this, "plugin-crashed");
-  obs.addObserver(this, "ipc:content-shutdown");
+  obs.addObserver(this, "plugin-crashed", false);
+  obs.addObserver(this, "ipc:content-shutdown", false);
   this._processCrashObserversRegistered = true;
 };
 
@@ -198,7 +198,7 @@ SpecialPowersObserver.prototype._registerObservers = {
   _add: function(topic) {
     if (this._topics.indexOf(topic) < 0) {
       this._topics.push(topic);
-      Services.obs.addObserver(this, topic);
+      Services.obs.addObserver(this, topic, false);
     }
   },
   observe: function (aSubject, aTopic, aData) {

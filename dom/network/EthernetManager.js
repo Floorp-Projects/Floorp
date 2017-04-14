@@ -135,7 +135,7 @@ function EthernetManager() {
   // Used to memorize last connection information.
   this.lastStaticConfig = {};
 
-  Services.obs.addObserver(this, "xpcom-shutdown");
+  Services.obs.addObserver(this, "xpcom-shutdown", false);
 }
 
 EthernetManager.prototype = {

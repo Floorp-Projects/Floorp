@@ -55,7 +55,7 @@ function waitForProgressNotification(aPanelOpen = false, aExpectedCount = 1) {
         }
         Services.obs.removeObserver(observer, topic);
         resolve();
-      }, topic);
+      }, topic, false);
     });
 
     let panelEventPromise;
@@ -102,7 +102,7 @@ function waitForNotification(aId, aExpectedCount = 1) {
         }
         Services.obs.removeObserver(observer, topic);
         resolve();
-      }, topic);
+      }, topic, false);
     });
 
     let panelEventPromise = new Promise(resolve => {
@@ -507,7 +507,7 @@ function test_sequential() {
       Services.obs.addObserver(function observer() {
         Services.obs.removeObserver(observer, "addon-install-confirmation");
         resolve();
-      }, "addon-install-confirmation");
+      }, "addon-install-confirmation", false);
     });
 
     // Make sure browser-addons.js executes first
@@ -630,7 +630,7 @@ function test_localFile() {
       Services.obs.addObserver(function observer() {
         Services.obs.removeObserver(observer, "addon-install-failed");
         resolve();
-      }, "addon-install-failed");
+      }, "addon-install-failed", false);
     });
     gBrowser.selectedTab = gBrowser.addTab("about:blank");
     yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
@@ -1017,7 +1017,7 @@ function test_failedSecurity() {
       Services.obs.addObserver(function observer() {
         Services.obs.removeObserver(observer, "addon-install-failed");
         resolve();
-      }, "addon-install-failed");
+      }, "addon-install-failed", false);
     });
 
     // Allow the browser code to add the failure notification and then wait
@@ -1053,9 +1053,9 @@ add_task(function* () {
   Services.prefs.setBoolPref("extensions.install.requireSecureOrigin", false);
   Services.prefs.setIntPref("security.dialog_enable_delay", 0);
 
-  Services.obs.addObserver(XPInstallObserver, "addon-install-started");
-  Services.obs.addObserver(XPInstallObserver, "addon-install-blocked");
-  Services.obs.addObserver(XPInstallObserver, "addon-install-failed");
+  Services.obs.addObserver(XPInstallObserver, "addon-install-started", false);
+  Services.obs.addObserver(XPInstallObserver, "addon-install-blocked", false);
+  Services.obs.addObserver(XPInstallObserver, "addon-install-failed", false);
 
   registerCleanupFunction(function() {
     // Make sure no more test parts run in case we were timed out

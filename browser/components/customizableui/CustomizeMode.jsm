@@ -109,7 +109,7 @@ function CustomizeMode(aWindow) {
   }
   if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
     this._updateTitlebarButton();
-    Services.prefs.addObserver(kDrawInTitlebarPref, this);
+    Services.prefs.addObserver(kDrawInTitlebarPref, this, false);
   }
   this.window.addEventListener("unload", this);
 }
@@ -254,7 +254,7 @@ CustomizeMode.prototype = {
             }
           };
 
-          Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished");
+          Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished", false);
         });
       }
 
@@ -326,7 +326,7 @@ CustomizeMode.prototype = {
 
       yield this._doTransition(true);
 
-      Services.obs.addObserver(this, "lightweight-theme-window-updated");
+      Services.obs.addObserver(this, "lightweight-theme-window-updated", false);
 
       // Let everybody in this window know that we're about to customize.
       CustomizableUI.dispatchToolboxEvent("customizationstarting", {}, window);

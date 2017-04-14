@@ -121,7 +121,8 @@ http://creativecommons.org/licenses/publicdomain/
       var obsService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
                          .getService(SpecialPowers.Ci.nsIObserverService);
       obsService.addObserver(SpecialPowers.wrapCallbackObject(new offlineObserver(res)),
-                             "network:offline-status-changed");
+                             "network:offline-status-changed",
+                             false);
       chromeScript.sendAsyncMessage("change-status", offline);
     });
   }

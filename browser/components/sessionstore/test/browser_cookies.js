@@ -14,7 +14,7 @@ function waitForCookieChanged() {
     Services.obs.addObserver(function observer(subj, topic, data) {
       Services.obs.removeObserver(observer, topic);
       resolve();
-    }, "cookie-changed");
+    }, "cookie-changed", false);
   });
 }
 

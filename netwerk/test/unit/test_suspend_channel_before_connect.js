@@ -87,7 +87,7 @@ add_test(function testNoConnectChannelCanceledEarly() {
 
   serv = new TestServer();
 
-  obs.addObserver(requestListenerObserver, "http-on-modify-request");
+  obs.addObserver(requestListenerObserver, "http-on-modify-request", false);
   var chan = NetUtil.newChannel({
     uri:"http://localhost:" + serv.port,
     loadUsingSystemPrincipal: true

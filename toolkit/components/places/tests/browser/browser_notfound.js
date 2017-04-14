@@ -35,7 +35,7 @@ add_task(function* () {
       onDeleteVisits() {},
       QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
     };
-    PlacesUtils.history.addObserver(historyObserver);
+    PlacesUtils.history.addObserver(historyObserver, false);
   });
 
   let newTabPromise = BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);

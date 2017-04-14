@@ -47,7 +47,7 @@ function onLoadPermission(uri, principal) {
       initRow(i);
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
-    os.addObserver(permissionObserver, "perm-changed");
+    os.addObserver(permissionObserver, "perm-changed", false);
     onUnloadRegistry.push(onUnloadPermission);
     permTab.hidden = false;
   } else

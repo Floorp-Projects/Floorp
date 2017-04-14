@@ -679,7 +679,7 @@ this.UITour = {
     }
     this.tourBrowsersByWindow.get(window).add(aBrowser);
 
-    Services.obs.addObserver(this, "message-manager-close");
+    Services.obs.addObserver(this, "message-manager-close", false);
 
     window.addEventListener("SSWindowClosing", this);
   },

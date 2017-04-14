@@ -404,8 +404,8 @@ function RadioInterfaceLayer() {
     this.radioInterfaces.push(new RadioInterface(clientId, workerMessenger));
   }
 
-  Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-  Services.prefs.addObserver(kPrefRilDebuggingEnabled, this);
+  Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  Services.prefs.addObserver(kPrefRilDebuggingEnabled, this, false);
 
   gRadioEnabledController.init(this);
 }
@@ -649,11 +649,11 @@ function RadioInterface(aClientId, aWorkerMessenger) {
   // Set "time.timezone.automatic-update.available" to false when starting up.
   this.setTimezoneAutoUpdateAvailable(false);
 
-  Services.obs.addObserver(this, kMozSettingsChangedObserverTopic);
-  Services.obs.addObserver(this, kSysClockChangeObserverTopic);
-  Services.obs.addObserver(this, kScreenStateChangedTopic);
+  Services.obs.addObserver(this, kMozSettingsChangedObserverTopic, false);
+  Services.obs.addObserver(this, kSysClockChangeObserverTopic, false);
+  Services.obs.addObserver(this, kScreenStateChangedTopic, false);
 
-  Services.obs.addObserver(this, kNetworkConnStateChangedTopic);
+  Services.obs.addObserver(this, kNetworkConnStateChangedTopic, false);
 
   this._sntp = new Sntp(this.setClockBySntp.bind(this),
                         Services.prefs.getIntPref("network.sntp.maxRetryCount"),

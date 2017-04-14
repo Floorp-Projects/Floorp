@@ -58,9 +58,9 @@ const PanelUI = {
     this.menuButton.addEventListener("keypress", this);
     this._overlayScrollListenerBoundFn = this._overlayScrollListener.bind(this);
 
-    Services.obs.addObserver(this, "fullscreen-nav-toolbox");
-    Services.obs.addObserver(this, "panelUI-notification-main-action");
-    Services.obs.addObserver(this, "panelUI-notification-dismissed");
+    Services.obs.addObserver(this, "fullscreen-nav-toolbox", false);
+    Services.obs.addObserver(this, "panelUI-notification-main-action", false);
+    Services.obs.addObserver(this, "panelUI-notification-dismissed", false);
 
     window.addEventListener("fullscreen", this);
     window.matchMedia("(-moz-overlay-scrollbars)").addListener(this._overlayScrollListenerBoundFn);
@@ -349,7 +349,7 @@ const PanelUI = {
               resolve();
             }
           };
-          Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished");
+          Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished", false);
         });
       }
 

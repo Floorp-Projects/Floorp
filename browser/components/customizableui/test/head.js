@@ -236,7 +236,7 @@ function promiseObserverNotified(aTopic) {
   Services.obs.addObserver(function onNotification(subject, topic, data) {
     Services.obs.removeObserver(onNotification, topic);
       deferred.resolve({subject, data});
-    }, aTopic);
+    }, aTopic, false);
   return deferred.promise;
 }
 
@@ -250,7 +250,7 @@ function openAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
       }
       Services.obs.removeObserver(onDS, "browser-delayed-startup-finished");
       deferred.resolve(win);
-    }, "browser-delayed-startup-finished");
+    }, "browser-delayed-startup-finished", false);
 
   } else {
     win.addEventListener("load", function() {

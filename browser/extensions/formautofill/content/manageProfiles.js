@@ -252,7 +252,7 @@ ManageProfileDialog.prototype = {
     window.addEventListener("unload", this, {once: true});
     this._elements.profiles.addEventListener("change", this);
     this._elements.controlsContainer.addEventListener("click", this);
-    Services.obs.addObserver(this, "formautofill-storage-changed");
+    Services.obs.addObserver(this, "formautofill-storage-changed", false);
   },
 
   /**

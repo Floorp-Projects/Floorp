@@ -129,7 +129,7 @@ class MulticastDNS {
 
     if (!this._isNetworkLinkObserverAttached) {
       DEBUG && debug('Attaching observer ' + NS_NETWORK_LINK_TOPIC);
-      observerService.addObserver(this._networkLinkObserver, NS_NETWORK_LINK_TOPIC);
+      observerService.addObserver(this._networkLinkObserver, NS_NETWORK_LINK_TOPIC, false);
       this._isNetworkLinkObserverAttached = true;
     }
   }

@@ -24,7 +24,7 @@ var CompactTheme = {
 
   init() {
     this.initialized = true;
-    Services.obs.addObserver(this, "lightweight-theme-styling-update");
+    Services.obs.addObserver(this, "lightweight-theme-styling-update", false);
 
     if (this.isThemeCurrentlyApplied) {
       this._toggleStyleSheet(true);

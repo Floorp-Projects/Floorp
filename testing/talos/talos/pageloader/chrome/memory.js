@@ -20,9 +20,9 @@ function initializeMemoryCollector(callback, args) {
         memTimer = null;
 
         os.removeObserver(arguments.callee, "child-memory-reporter-update");
-        os.addObserver(collectAndReport, "child-memory-reporter-update");
+        os.addObserver(collectAndReport, "child-memory-reporter-update", false);
         gMemCallback();
-    }, "child-memory-reporter-update");
+    }, "child-memory-reporter-update", false);
 
    /*
     * Assume we have a child process, but if timer fires before we call the observer

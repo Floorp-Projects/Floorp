@@ -559,7 +559,7 @@ MenuItem.prototype = {
 // for contex-menu events from both content and chrome.
 const contextMenuTracker = {
   register() {
-    Services.obs.addObserver(this, "on-build-contextmenu");
+    Services.obs.addObserver(this, "on-build-contextmenu", false);
     for (const window of windowTracker.browserWindows()) {
       this.onWindowOpen(window);
     }

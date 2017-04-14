@@ -53,7 +53,7 @@ function promiseTabsUpdated() {
     Services.obs.addObserver(function onNotification(aSubject, aTopic, aData) {
       Services.obs.removeObserver(onNotification, aTopic);
       resolve();
-    }, "synced-tabs-menu:test:tabs-updated");
+    }, "synced-tabs-menu:test:tabs-updated", false);
   });
 }
 

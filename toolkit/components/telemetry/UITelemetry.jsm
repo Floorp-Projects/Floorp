@@ -32,8 +32,8 @@ this.UITelemetry = {
     }
 
     // Set an observer to watch for changes at runtime.
-    Services.prefs.addObserver(PREF_ENABLED, this);
-    Services.obs.addObserver(this, "profile-before-change");
+    Services.prefs.addObserver(PREF_ENABLED, this, false);
+    Services.obs.addObserver(this, "profile-before-change", false);
 
     // Pick up the current value.
     this._enabled = Services.prefs.getBoolPref(PREF_ENABLED, false);

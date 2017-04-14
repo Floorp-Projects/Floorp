@@ -114,7 +114,7 @@
           // Observer removal is done within the view itself.  When the tree
           // goes away, treeboxobject calls view.setTree(null), which then
           // calls removeObserver.
-          result.addObserver(treeView);
+          result.addObserver(treeView, false);
           this.view = treeView;
 
           if (this.getAttribute("selectfirstnode") == "true" && treeView.rowCount > 0) {

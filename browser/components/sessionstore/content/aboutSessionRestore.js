@@ -166,7 +166,7 @@ function restoreSession() {
     var tabbrowser = top.gBrowser;
     var tabIndex = tabbrowser.getBrowserIndexForDocument(document);
     tabbrowser.removeTab(tabbrowser.tabs[tabIndex]);
-  }, "browser-delayed-startup-finished");
+  }, "browser-delayed-startup-finished", false);
 }
 
 function startNewSession() {

@@ -266,8 +266,8 @@ var gPrivacyPane = {
     }
 
     if (Services.prefs.getBoolPref("browser.storageManager.enabled")) {
-      Services.obs.addObserver(this, "sitedatamanager:sites-updated");
-      Services.obs.addObserver(this, "sitedatamanager:updating-sites");
+      Services.obs.addObserver(this, "sitedatamanager:sites-updated", false);
+      Services.obs.addObserver(this, "sitedatamanager:updating-sites", false);
       let unload = () => {
         window.removeEventListener("unload", unload);
         Services.obs.removeObserver(this, "sitedatamanager:sites-updated");

@@ -232,7 +232,7 @@ var RootFolder = function(rootId, rootName) {
 
   let resume = function() {
     if (suspended) {
-      PlacesUtils.bookmarks.addObserver(observer);
+      PlacesUtils.bookmarks.addObserver(observer, false);
       suspended = false;
     }
   };

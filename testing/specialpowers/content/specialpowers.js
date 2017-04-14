@@ -62,7 +62,7 @@ function SpecialPowers(window) {
         ;
       }
     }
-  }, "inner-window-destroyed");
+  }, "inner-window-destroyed", false);
 }
 
 SpecialPowers.prototype = new SpecialPowersAPI();
@@ -219,7 +219,7 @@ SpecialPowers.prototype.nestedFrameSetup = function() {
       let frameScript = "SpecialPowers.prototype.IsInNestedFrame=true;";
       mm.loadFrameScript("data:," + frameScript, false);
     }
-  }, "remote-browser-shown");
+  }, "remote-browser-shown", false);
 };
 
 SpecialPowers.prototype.isServiceWorkerRegistered = function() {

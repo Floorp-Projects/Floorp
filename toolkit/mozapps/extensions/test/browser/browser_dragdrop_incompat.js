@@ -10,7 +10,7 @@ add_task(async function() {
         resolve();
       }
     };
-    Services.obs.addObserver(observer, "addon-install-failed");
+    Services.obs.addObserver(observer, "addon-install-failed", false);
   });
 
   let url = `${TESTROOT}/addons/browser_dragdrop_incompat.xpi`;

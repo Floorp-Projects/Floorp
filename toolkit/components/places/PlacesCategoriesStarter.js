@@ -29,8 +29,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesDBUtils",
  * certain categories are invoked.
  */
 function PlacesCategoriesStarter() {
-  Services.obs.addObserver(this, TOPIC_GATHER_TELEMETRY);
-  Services.obs.addObserver(this, PlacesUtils.TOPIC_SHUTDOWN);
+  Services.obs.addObserver(this, TOPIC_GATHER_TELEMETRY, false);
+  Services.obs.addObserver(this, PlacesUtils.TOPIC_SHUTDOWN, false);
 
   // nsINavBookmarkObserver implementation.
   let notify = () => {

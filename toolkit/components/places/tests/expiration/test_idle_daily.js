@@ -13,7 +13,7 @@ function run_test() {
     Services.obs.removeObserver(observeExpiration,
                                 PlacesUtils.TOPIC_EXPIRATION_FINISHED);
     do_test_finished();
-  }, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+  }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
 
   let expire = Cc["@mozilla.org/places/expiration;1"].
                getService(Ci.nsIObserver);

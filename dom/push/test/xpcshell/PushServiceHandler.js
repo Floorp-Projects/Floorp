@@ -14,9 +14,9 @@ function PushServiceHandler() {
   this.wrappedJSObject = this;
   // Register a push observer.
   this.observed = [];
-  Services.obs.addObserver(this, pushService.pushTopic);
-  Services.obs.addObserver(this, pushService.subscriptionChangeTopic);
-  Services.obs.addObserver(this, pushService.subscriptionModifiedTopic);
+  Services.obs.addObserver(this, pushService.pushTopic, false);
+  Services.obs.addObserver(this, pushService.subscriptionChangeTopic, false);
+  Services.obs.addObserver(this, pushService.subscriptionModifiedTopic, false);
 }
 
 PushServiceHandler.prototype = {

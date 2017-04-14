@@ -44,5 +44,5 @@ if (!isWorker) {
   Services.obs.addObserver(function observer(subject, topic, data) {
     let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
     delete globalsCache[id];
-  }, "inner-window-destroyed");
+  }, "inner-window-destroyed", false);
 }

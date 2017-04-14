@@ -56,5 +56,5 @@ function test() {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
   };
 
-  PlacesUtils.history.addObserver(observer);
+  PlacesUtils.history.addObserver(observer, false);
 }

@@ -29,7 +29,7 @@ function fullZoomLocationChangeObserver(aSubject, aTopic) {
   }
   updateZoomUI(aSubject, false);
 }
-Services.obs.addObserver(fullZoomLocationChangeObserver, "browser-fullZoom:location-change");
+Services.obs.addObserver(fullZoomLocationChangeObserver, "browser-fullZoom:location-change", false);
 
 function onEndSwapDocShells(event) {
   updateZoomUI(event.originalTarget);

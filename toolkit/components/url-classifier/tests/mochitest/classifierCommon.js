@@ -66,7 +66,7 @@ function waitForInit() {
 
   observerService.addObserver(function() {
     sendAsyncMessage("safeBrowsingInited");
-  }, "mozentries-update-finished");
+  }, "mozentries-update-finished", false);
 
   // This url must sync with the table, url in SafeBrowsing.jsm addMozEntries
   const table = "test-phish-simple";

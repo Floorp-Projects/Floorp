@@ -100,8 +100,8 @@ var gBookmarkSkipObserver = {
 
 
 add_task(function setup() {
-  PlacesUtils.bookmarks.addObserver(gBookmarksObserver);
-  PlacesUtils.bookmarks.addObserver(gBookmarkSkipObserver);
+  PlacesUtils.bookmarks.addObserver(gBookmarksObserver, false);
+  PlacesUtils.bookmarks.addObserver(gBookmarkSkipObserver, false);
 });
 
 add_task(function* batch() {

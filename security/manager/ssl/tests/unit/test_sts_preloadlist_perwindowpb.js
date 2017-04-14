@@ -22,7 +22,7 @@ function cleanup() {
 
 function run_test() {
   do_register_cleanup(cleanup);
-  Services.obs.addObserver(gObserver, "last-pb-context-exited");
+  Services.obs.addObserver(gObserver, "last-pb-context-exited", false);
 
   add_test(test_part1);
   add_test(test_private_browsing1);

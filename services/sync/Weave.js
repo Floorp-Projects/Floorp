@@ -87,7 +87,7 @@ WeaveService.prototype = {
     Services.obs.addObserver(function onReady() {
       Services.obs.removeObserver(onReady, "weave:service:ready");
       deferred.resolve();
-    }, "weave:service:ready");
+    }, "weave:service:ready", false);
     this.ensureLoaded();
     return deferred.promise;
   },
