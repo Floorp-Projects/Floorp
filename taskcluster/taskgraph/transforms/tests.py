@@ -627,6 +627,28 @@ def set_test_type(config, tests):
 
 
 @transforms.add
+def parallel_stylo_tests(config, tests):
+    """Ensure that any stylo tests running with e10s enabled also test
+    parallel traversal in the style system."""
+
+    for test in tests:
+        if not test['test-platform'].startswith('linux64-stylo/'):
+            yield test
+            continue
+
+        e10s = test['e10s']
+        # We should have already handled 'both' in an earlier transform.
+        assert e10s != 'both'
+        if not e10s:
+            yield test
+            continue
+
+        test['mozharness'].setdefault('extra-options', [])\
+                          .append('--parallel-stylo-traversal')
+        yield test
+
+
+@transforms.add
 def make_job_description(config, tests):
     """Convert *test* descriptions to *job* descriptions (input to
     taskgraph.transforms.job)"""

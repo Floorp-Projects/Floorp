@@ -201,6 +201,7 @@ EXTRA_JS_MODULES += [
     'Geometry.jsm',
     'GMPInstallManager.jsm',
     'GMPUtils.jsm',
+    'HiddenFrame.jsm',
     'Http.jsm',
     'IndexedDB.jsm',
     'InlineSpellChecker.jsm',

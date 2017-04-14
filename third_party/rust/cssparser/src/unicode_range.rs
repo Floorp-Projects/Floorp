@@ -82,10 +82,8 @@ fn concatenate_tokens(input: &mut Parser, remaining: &mut &mut [u8]) -> Result<(
             let int_value = positive_integer_with_plus_sign(value)?;
             write!(remaining, "{}", int_value)?;
 
+            let after_number = input.position();
             match input.next_including_whitespace() {
-                // EOF here is fine
-                Err(()) => {},
-
                 Ok(Token::Delim('?')) => {
                     // If `remaining` is already full, `int_value` has too many digits
                     // so we can use `result?` Rust syntax.
@@ -105,7 +103,7 @@ fn concatenate_tokens(input: &mut Parser, remaining: &mut &mut [u8]) -> Result<(
                     write!(remaining, "{}", int_value)?
                 }
 
-                _ => return Err(Error)
+                _ => input.reset(after_number)
             }
         }
 
