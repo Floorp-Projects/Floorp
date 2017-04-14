@@ -1031,23 +1031,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::PerformanceMonitoring& performanceMonitoring() { return performanceMonitoring_.ref(); }
 
   private:
-    /* List of Ion compilation waiting to get linked. */
-    typedef mozilla::LinkedList<js::jit::IonBuilder> IonBuilderList;
-
-    js::HelperThreadLockData<IonBuilderList> ionLazyLinkList_;
-    js::HelperThreadLockData<size_t> ionLazyLinkListSize_;
-
-  public:
-    IonBuilderList& ionLazyLinkList();
-
-    size_t ionLazyLinkListSize() {
-        return ionLazyLinkListSize_;
-    }
-
-    void ionLazyLinkListRemove(js::jit::IonBuilder* builder);
-    void ionLazyLinkListAdd(js::jit::IonBuilder* builder);
-
-  private:
     /* The stack format for the current runtime.  Only valid on non-child
      * runtimes. */
     mozilla::Atomic<js::StackFormat, mozilla::ReleaseAcquire> stackFormat_;

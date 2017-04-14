@@ -7,8 +7,14 @@
 <script src="/resources/testharnessreport.js"></script>
 <script src="/resources/WebIDLParser.js"></script>
 <script src="/resources/idlharness.js"></script>
+<style>
+  pre {
+    display: none;
+  }
+</style>
+<div id="log"></div>
 
-<script type="text/plain" id="untested_idl">
+<pre id="untested_idl">
 interface Event {
 };
 
@@ -20,12 +26,12 @@ dictionary EventInit {
 
 interface Window {
 };
-</script>
+</pre>
 
-<script type="text/plain" id="idl">
+<pre id='idl'>
 partial interface Window {
-  attribute EventHandler ondeviceorientation;
-  attribute EventHandler ondevicemotion;
+    attribute EventHandler ondeviceorientation;
+    attribute EventHandler ondevicemotion;
 };
 
 [Constructor(DOMString type, optional DeviceOrientationEventInit eventInitDict)]
@@ -37,10 +43,10 @@ interface DeviceOrientationEvent : Event {
 };
 
 dictionary DeviceOrientationEventInit : EventInit {
-  double? alpha = null;
-  double? beta = null;
-  double? gamma = null;
-  boolean absolute = false;
+      double? alpha = null;
+      double? beta = null;
+      double? gamma = null;
+      boolean absolute = false;
 };
 
 [NoInterfaceObject]
@@ -62,7 +68,7 @@ interface DeviceMotionEvent : Event {
   readonly attribute DeviceAcceleration? acceleration;
   readonly attribute DeviceAcceleration? accelerationIncludingGravity;
   readonly attribute DeviceRotationRate? rotationRate;
-  readonly attribute double interval;
+  readonly attribute double? interval;
 };
 
 dictionary DeviceAccelerationInit {
@@ -81,9 +87,9 @@ dictionary DeviceMotionEventInit : EventInit {
   DeviceAcceleration? acceleration;
   DeviceAcceleration? accelerationIncludingGravity;
   DeviceRotationRate? rotationRate;
-  double interval = 0;
+  double? interval = null;
 };
-</script>
+</pre>
 
 <script>
 "use strict";

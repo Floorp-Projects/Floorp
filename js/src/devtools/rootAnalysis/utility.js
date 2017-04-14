@@ -51,6 +51,70 @@ function xprint(x, padding)
     }
 }
 
+function parse_options(parameters, inArgs = scriptArgs) {
+    const options = {};
+
+    const optional = {};
+    const positional = [];
+    for (const param of parameters) {
+        if (param.name.startsWith("-")) {
+            optional[param.name] = param;
+            param.dest = param.dest || param.name.substring(2).replace("-", "_");
+        } else {
+            positional.push(param);
+            param.dest = param.dest || param.name.replace("-", "_");
+        }
+
+        param.type = param.type || 'bool';
+        if ('default' in param)
+            options[param.dest] = param.default;
+    }
+
+    options.rest = [];
+    const args = [...inArgs];
+    while (args.length > 0) {
+        let param;
+        let pos = -1;
+        if (args[0] in optional)
+            param = optional[args[0]];
+        else {
+            pos = args[0].indexOf("=");
+            if (pos != -1) {
+                param = optional[args[0].substring(0, pos)];
+                pos++;
+            }
+        }
+
+        if (!param) {
+            if (positional.length > 0) {
+                param = positional.shift();
+                options[param.dest] = args.shift();
+            } else {
+                options.rest.push(args.shift());
+            }
+            continue;
+        }
+
+        if (param.type != 'bool') {
+            if (pos != -1) {
+                options[param.dest] = args.shift().substring(pos);
+            } else {
+                args.shift();
+                if (args.length == 0)
+                    throw(new Error(`--${param.name} requires an argument`));
+                options[param.dest] = args.shift();
+            }
+        } else {
+            if (pos != -1)
+                throw(new Error(`--${param.name} does not take an argument`));
+            options[param.dest] = true;
+            args.shift();
+        }
+    }
+
+    return options;
+}
+
 function sameBlockId(id0, id1)
 {
     if (id0.Kind != id1.Kind)

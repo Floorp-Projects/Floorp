@@ -97,29 +97,26 @@ CheckIsValidConstructible(const Value& v);
 
 class MOZ_STACK_CLASS IncludeUsedRval
 {
-  protected:
-#ifdef JS_DEBUG
     mutable bool usedRval_;
+
+  public:
+    bool usedRval() const { return usedRval_; }
     void setUsedRval() const { usedRval_ = true; }
     void clearUsedRval() const { usedRval_ = false; }
     void assertUnusedRval() const { MOZ_ASSERT(!usedRval_); }
-#else
-    void setUsedRval() const {}
-    void clearUsedRval() const {}
-    void assertUnusedRval() const {}
-#endif
 };
 
 class MOZ_STACK_CLASS NoUsedRval
 {
-  protected:
+  public:
+    bool usedRval() const { return false; }
     void setUsedRval() const {}
     void clearUsedRval() const {}
     void assertUnusedRval() const {}
 };
 
 template<class WantUsedRval>
-class MOZ_STACK_CLASS CallArgsBase : public WantUsedRval
+class MOZ_STACK_CLASS CallArgsBase
 {
     static_assert(mozilla::IsSame<WantUsedRval, IncludeUsedRval>::value ||
                   mozilla::IsSame<WantUsedRval, NoUsedRval>::value,
@@ -132,6 +129,19 @@ class MOZ_STACK_CLASS CallArgsBase : public WantUsedRval
 
     // True if the caller does not use the return value.
     bool ignoresReturnValue_:1;
+
+#ifdef JS_DEBUG
+    WantUsedRval wantUsedRval_;
+    bool usedRval() const { return wantUsedRval_.usedRval(); }
+    void setUsedRval() const { wantUsedRval_.setUsedRval(); }
+    void clearUsedRval() const { wantUsedRval_.clearUsedRval(); }
+    void assertUnusedRval() const { wantUsedRval_.assertUnusedRval(); }
+#else
+    bool usedRval() const { return false; }
+    void setUsedRval() const {}
+    void clearUsedRval() const {}
+    void assertUnusedRval() const {}
+#endif
 
   public:
     // CALLEE ACCESS
@@ -160,7 +170,7 @@ class MOZ_STACK_CLASS CallArgsBase : public WantUsedRval
             return false;
 
 #ifdef JS_DEBUG
-        if (!this->usedRval_)
+        if (!this->usedRval())
             CheckIsValidConstructible(calleev());
 #endif
 

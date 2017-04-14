@@ -14,6 +14,7 @@ sys.path.insert(0, SCRIPT_DIR)
 
 from argparse import Namespace
 from collections import defaultdict
+from contextlib import closing
 import ctypes
 import glob
 import json
@@ -391,8 +392,14 @@ class MochitestServer(object):
         self._profileDir = options['profilePath']
         self.webServer = options['webServer']
         self.httpPort = options['httpPort']
+        if options.get('remoteWebServer') == "10.0.2.2":
+            # probably running an Android emulator and 10.0.2.2 will
+            # not be visible from host
+            shutdownServer = "127.0.0.1"
+        else:
+            shutdownServer = self.webServer
         self.shutdownURL = "http://%(server)s:%(port)s/server/shutdown" % {
-            "server": self.webServer,
+            "server": shutdownServer,
             "port": self.httpPort}
         self.testPrefix = "undefined"
 
@@ -482,7 +489,7 @@ class MochitestServer(object):
 
     def stop(self):
         try:
-            with urllib2.urlopen(self.shutdownURL) as c:
+            with closing(urllib2.urlopen(self.shutdownURL)) as c:
                 c.read()
 
             # TODO: need ProcessHandler.poll()
@@ -495,6 +502,8 @@ class MochitestServer(object):
                 # self._process.terminate()
                 self._process.proc.terminate()
         except:
+            self._log.info("Failed to stop web server on %s" % self.shutdownURL)
+            traceback.print_exc()
             self._process.kill()
 
 

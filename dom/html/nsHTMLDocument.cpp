@@ -2312,7 +2312,7 @@ nsHTMLDocument::GetSupportedNames(nsTArray<nsString>& aNames)
     nsIdentifierMapEntry* entry = iter.Get();
     if (entry->HasNameElement() ||
         entry->HasIdElementExposedAsHTMLDocumentProperty()) {
-      aNames.AppendElement(entry->GetKey());
+      aNames.AppendElement(entry->GetKeyAsString());
     }
   }
 }

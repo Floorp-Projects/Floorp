@@ -473,6 +473,31 @@ class ICIn_Fallback : public ICFallbackStub
     };
 };
 
+// HasOwn
+//      JSOP_HASOWN
+class ICHasOwn_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    explicit ICHasOwn_Fallback(JitCode* stubCode)
+      : ICFallbackStub(ICStub::HasOwn_Fallback, stubCode)
+    { }
+
+  public:
+    class Compiler : public ICStubCompiler {
+      protected:
+        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
+
+      public:
+        explicit Compiler(JSContext* cx)
+          : ICStubCompiler(cx, ICStub::HasOwn_Fallback, Engine::Baseline)
+        { }
+
+        ICStub* getStub(ICStubSpace* space) {
+            return newStub<ICHasOwn_Fallback>(space, getStubCode());
+        }
+    };
+};
 
 // GetName
 //      JSOP_GETNAME

@@ -2020,6 +2020,135 @@ InIRGenerator::trackNotAttached()
 #endif
 }
 
+HasOwnIRGenerator::HasOwnIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
+                                     ICState::Mode mode, HandleValue key, HandleValue value)
+  : IRGenerator(cx, script, pc, CacheKind::HasOwn, mode),
+    key_(key), val_(value)
+{ }
+
+
+bool
+HasOwnIRGenerator::tryAttachNativeHasOwn(HandleId key, ValOperandId keyId,
+                                         HandleObject obj, ObjOperandId objId)
+{
+    PropertyResult prop;
+    if (!LookupOwnPropertyPure(cx_, obj, key, &prop))
+        return false;
+
+    if (!prop.isNativeProperty())
+        return false;
+
+    if (mode_ == ICState::Mode::Megamorphic) {
+        writer.megamorphicHasOwnResult(objId, keyId);
+        writer.returnFromIC();
+        trackAttached("MegamorphicHasOwn");
+        return true;
+    }
+
+    Maybe<ObjOperandId> holderId;
+    emitIdGuard(keyId, key);
+    EmitReadSlotGuard(writer, obj, obj, prop.shape(), objId, &holderId);
+    writer.loadBooleanResult(true);
+    writer.returnFromIC();
+
+    trackAttached("NativeHasOwn");
+    return true;
+}
+
+bool
+HasOwnIRGenerator::tryAttachNativeHasOwnDoesNotExist(HandleId key, ValOperandId keyId,
+                                                     HandleObject obj, ObjOperandId objId)
+{
+    if (!CheckHasNoSuchOwnProperty(cx_, obj, key))
+        return false;
+
+    if (mode_ == ICState::Mode::Megamorphic) {
+        writer.megamorphicHasOwnResult(objId, keyId);
+        writer.returnFromIC();
+        trackAttached("MegamorphicHasOwn");
+        return true;
+    }
+
+    Maybe<ObjOperandId> expandoId;
+    emitIdGuard(keyId, key);
+    TestMatchingReceiver(writer, obj, nullptr, objId, &expandoId);
+    writer.loadBooleanResult(false);
+    writer.returnFromIC();
+
+    trackAttached("NativeHasOwnDoesNotExist");
+    return true;
+}
+
+bool
+HasOwnIRGenerator::tryAttachStub()
+{
+    MOZ_ASSERT(cacheKind_ == CacheKind::HasOwn);
+
+    AutoAssertNoPendingException aanpe(cx_);
+
+    ValOperandId keyId(writer.setInputOperandId(0));
+    ValOperandId valId(writer.setInputOperandId(1));
+
+    if (!val_.isObject()) {
+        trackNotAttached();
+        return false;
+    }
+    RootedObject obj(cx_, &val_.toObject());
+
+    ObjOperandId objId = writer.guardIsObject(valId);
+
+    RootedId id(cx_);
+    bool nameOrSymbol;
+    if (!ValueToNameOrSymbolId(cx_, key_, &id, &nameOrSymbol)) {
+        cx_->clearPendingException();
+        return false;
+    }
+
+    if (nameOrSymbol) {
+        if (tryAttachNativeHasOwn(id, keyId, obj, objId))
+            return true;
+        if (tryAttachNativeHasOwnDoesNotExist(id, keyId, obj, objId))
+            return true;
+
+        trackNotAttached();
+        return false;
+    }
+
+    trackNotAttached();
+    return false;
+}
+
+void
+HasOwnIRGenerator::trackAttached(const char* name)
+{
+#ifdef JS_JITSPEW
+    CacheIRSpewer& sp = GetCacheIRSpewerSingleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "base", val_);
+        sp.valueProperty(guard, "property", key_);
+        sp.attached(guard, name);
+        sp.endCache(guard);
+    }
+#endif
+}
+
+void
+HasOwnIRGenerator::trackNotAttached()
+{
+#ifdef JS_JITSPEW
+    CacheIRSpewer& sp = GetCacheIRSpewerSingleton();
+    if (sp.enabled()) {
+        LockGuard<Mutex> guard(sp.lock());
+        sp.beginCache(guard, *this);
+        sp.valueProperty(guard, "base", val_);
+        sp.valueProperty(guard, "property", key_);
+        sp.endCache(guard);
+    }
+#endif
+}
+
 bool
 IRGenerator::maybeGuardInt32Index(const Value& index, ValOperandId indexId,
                                   uint32_t* int32Index, Int32OperandId* int32IndexId)
