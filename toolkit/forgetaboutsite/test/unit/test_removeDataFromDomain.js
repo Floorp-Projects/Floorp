@@ -382,9 +382,9 @@ function waitForPurgeNotification() {
       // test_storage_cleared needs this extra executeSoon because
       // the DOMStorage clean-up is also listening to this same observer
       // which is run synchronously.
-      Services.tm.mainThread.dispatch(function() {
+      Services.tm.dispatchToMainThread(function() {
         deferred.resolve();
-      }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+      });
     }
   };
   Services.obs.addObserver(observer, "browser:purge-domain-data", false);

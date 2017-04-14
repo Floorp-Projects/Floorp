@@ -148,8 +148,7 @@ DownloadLastDir.prototype = {
   getFileAsync(aURI, aCallback) {
     let plainPrefFile = this._getLastFile();
     if (!aURI || !isContentPrefEnabled()) {
-      Services.tm.mainThread.dispatch(() => aCallback(plainPrefFile),
-                                      Components.interfaces.nsIThread.DISPATCH_NORMAL);
+      Services.tm.dispatchToMainThread(() => aCallback(plainPrefFile));
       return;
     }
 

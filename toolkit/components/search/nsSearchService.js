@@ -2637,7 +2637,7 @@ const gEmptyParseSubmissionResult =
       Object.freeze(new ParseSubmissionResult(null, "", -1, 0));
 
 function executeSoon(func) {
-  Services.tm.mainThread.dispatch(func, Ci.nsIThread.DISPATCH_NORMAL);
+  Services.tm.dispatchToMainThread(func);
 }
 
 /**

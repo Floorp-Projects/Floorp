@@ -521,6 +521,6 @@ var FullZoom = {
   _executeSoon: function FullZoom__executeSoon(callback) {
     if (!callback)
       return;
-    Services.tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
+    Services.tm.dispatchToMainThread(callback);
   },
 };
