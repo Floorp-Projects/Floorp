@@ -863,6 +863,18 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (!IsHeapAccessAddress(*instance, faultingAddress))
         return false;
 
+    // Similar to the non-atomic situation above, on Windows, an OOB fault at a
+    // PC can trigger *after* an async interrupt observed that PC and attempted
+    // to redirect to the async stub. In this unique case, interrupted() is
+    // already true when the OOB handler is called. Since the point of the async
+    // interrupt is to get out of an iloop and the OOB trap will do just that,
+    // we can simply clear the interrupt. (The update to CONTEXT.pc made by
+    // HandleMemoryAccess will clobber the interrupt's previous update.)
+    if (activation->interrupted()) {
+        MOZ_ASSERT(activation->resumePC() == pc);
+        activation->finishInterrupt();
+    }
+
     HandleMemoryAccess(context, pc, faultingAddress, *instance, activation, ppc);
     return true;
 }
@@ -1302,8 +1314,14 @@ RedirectJitCodeToInterruptCheck(JSContext* cx, CONTEXT* context)
         uint8_t* pc = *ppc;
         uint8_t* fp = ContextToFP(context);
 
+        // Only interrupt in function code so that the frame iterators have the
+        // invariant that resumePC always has a function CodeRange and we can't
+        // get into any weird interrupt-during-interrupt-stub cases. Note that
+        // the out-of-bounds/unaligned trap paths which call startInterrupt() go
+        // through function code, so test if already interrupted. All these
+        // paths are temporary though, so this case can be removed later.
         const Code* code = activation->compartment()->wasm.lookupCode(pc);
-        if (code && code->segment().containsFunctionPC(pc) && fp) {
+        if (code && code->segment().containsFunctionPC(pc) && fp && !activation->interrupted()) {
             activation->startInterrupt(pc, fp);
             *ppc = code->segment().interruptCode();
             return true;
