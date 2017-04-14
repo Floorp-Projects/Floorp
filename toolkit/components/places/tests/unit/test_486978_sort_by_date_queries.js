@@ -26,10 +26,6 @@ var pages = [
   "http://b.mozilla.org/8/",
 ];
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function* test_initialize() {
   var noon = new Date();
   noon.setHours(12);
@@ -39,7 +35,7 @@ add_task(function* test_initialize() {
     let page = pages[pageIndex];
     yield PlacesTestUtils.addVisits({
       uri: uri(page),
-      visitDate: noon - (pages.length - pageIndex) * 1000
+      visitDate: new Date(noon - (pages.length - pageIndex))
     });
   }
 });

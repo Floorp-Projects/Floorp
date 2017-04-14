@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://testing-common/PlacesTestUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/engines/history.js");
@@ -88,23 +89,9 @@ add_test(function test_store() {
   _("Let's create an entry in the database.");
   fxuri = Utils.makeURI("http://getfirefox.com/");
 
-  let place = {
-    uri: fxuri,
-    title: "Get Firefox!",
-    visits: [{
-      visitDate: TIMESTAMP1,
-      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK
-    }]
-  };
-  PlacesUtils.asyncHistory.updatePlaces(place, {
-    handleError: function handleError() {
-      do_throw("Unexpected error in adding visit.");
-    },
-    handleResult: function handleResult() {},
-    handleCompletion: onVisitAdded
-  });
-
-  function onVisitAdded() {
+  PlacesTestUtils.addVisits({ uri: fxuri, title: "Get Firefox!",
+                              visitDate: TIMESTAMP1 })
+                 .then(() => {
     _("Verify that the entry exists.");
     let ids = Object.keys(store.getAllIDs());
     do_check_eq(ids.length, 1);
@@ -141,7 +128,7 @@ add_test(function test_store() {
        title: "Hol Dir Firefox!",
        visits: [record.visits[0], secondvisit]}
     ]);
-  }
+  });
 });
 
 add_test(function test_store_create() {
