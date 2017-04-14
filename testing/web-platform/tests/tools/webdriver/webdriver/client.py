@@ -336,7 +336,8 @@ class UserPrompt(object):
 
 class Session(object):
     def __init__(self, host, port, url_prefix="/", desired_capabilities=None,
-                 required_capabilities=None, extension=None, timeout=None):
+                 required_capabilities=None, timeout=transport.HTTP_TIMEOUT,
+                 extension=None):
         self.transport = transport.HTTPWireProtocol(
             host, port, url_prefix, timeout=timeout)
         self.desired_capabilities = desired_capabilities
