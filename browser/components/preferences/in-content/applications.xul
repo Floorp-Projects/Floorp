@@ -63,7 +63,7 @@
       class="header"
       hidden="true"
       data-category="paneApplications">
-  <label class="header-name" flex="1">&paneDownloadLinks.title;</label>
+  <label class="header-name" flex="1">&paneFilesApplications.title;</label>
   <html:a class="help-button" target="_blank" aria-label="&helpButton.label;"></html:a>
 </hbox>
 
@@ -109,25 +109,26 @@
       </hbox>
     </radiogroup>
   </groupbox>
-  <hbox>
+
+  <groupbox id="applicationsGroup">
+    <caption><label>&applications.label;</label></caption>
+    <description>&applications.description;</description>
     <textbox id="filter" flex="1"
              type="search"
-             placeholder="&filter.emptytext;"
+             placeholder="&filter2.emptytext;"
              aria-controls="handlersView"/>
-  </hbox>
 
-  <separator class="thin"/>
-
-  <richlistbox id="handlersView" orient="vertical" persist="lastSelectedType"
-               preference="pref.downloads.disable_button.edit_actions"
-               flex="1">
-    <listheader equalsize="always">
-        <treecol id="typeColumn" label="&typeColumn.label;" value="type"
-                 accesskey="&typeColumn.accesskey;" persist="sortDirection"
-                 flex="1" sortDirection="ascending"/>
-        <treecol id="actionColumn" label="&actionColumn2.label;" value="action"
-                 accesskey="&actionColumn2.accesskey;" persist="sortDirection"
-                 flex="1"/>
-    </listheader>
-  </richlistbox>
+    <richlistbox id="handlersView" orient="vertical" persist="lastSelectedType"
+                 preference="pref.downloads.disable_button.edit_actions"
+                 flex="1">
+      <listheader equalsize="always">
+          <treecol id="typeColumn" label="&typeColumn.label;" value="type"
+                   accesskey="&typeColumn.accesskey;" persist="sortDirection"
+                   flex="1" sortDirection="ascending"/>
+          <treecol id="actionColumn" label="&actionColumn2.label;" value="action"
+                   accesskey="&actionColumn2.accesskey;" persist="sortDirection"
+                   flex="1"/>
+      </listheader>
+    </richlistbox>
+  </groupbox>
 </vbox>
