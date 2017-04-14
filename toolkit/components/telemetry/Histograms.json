@@ -1152,6 +1152,15 @@
     "releaseChannelCollection": "opt-out",
     "description": "GPU process initialization (excluding XPCOM and fork time) time in milliseconds"
   },
+  "GPU_PROCESS_CRASH_FALLBACKS": {
+    "alert_emails": ["cpearce@mozilla.com", "gsquelart@mozilla.com"],
+    "expires_in_version": "60",
+    "bug_numbers": [1338011],
+    "kind": "enumerated",
+    "releaseChannelCollection": "opt-out",
+    "n_values":  10,
+    "description": "Count how often we use different fallbacks when the GPU process crashes: None=0, GPUProcessDecodingDisabled=1, GPUProcessDisabled=2"
+  },
   "JS_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT": {
     "alert_emails": ["jdemooij@mozilla.com"],
     "expires_in_version": "never",
