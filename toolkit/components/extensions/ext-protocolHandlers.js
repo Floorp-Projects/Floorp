@@ -39,7 +39,7 @@ this.protocolHandlers = class extends ExtensionAPI {
       handler.uriTemplate = handlerConfig.uriTemplate;
 
       let protoInfo = protocolService.getProtocolHandlerInfo(handlerConfig.protocol);
-      protoInfo.possibleApplicationHandlers.appendElement(handler);
+      protoInfo.possibleApplicationHandlers.appendElement(handler, false);
       handlerService.store(protoInfo);
     }
   }

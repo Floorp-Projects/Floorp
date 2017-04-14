@@ -685,7 +685,7 @@ HashCompleterRequest.prototype = {
 
       req.response.matches.forEach(m => {
         matches.appendElement(
-          new FullHashMatch(m.tableName, m.completeHash, m.cacheDuration));
+          new FullHashMatch(m.tableName, m.completeHash, m.cacheDuration), false);
       });
 
       req.callback.completionV4(req.partialHash, req.tableName,

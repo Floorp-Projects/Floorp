@@ -67,7 +67,7 @@ function openOAuthWindow(details, redirectURI) {
   let supportsStringPrefURL = Cc["@mozilla.org/supports-string;1"]
                                 .createInstance(Ci.nsISupportsString);
   supportsStringPrefURL.data = details.url;
-  args.appendElement(supportsStringPrefURL);
+  args.appendElement(supportsStringPrefURL, /* weak =*/ false);
 
   let window = Services.ww.openWindow(null,
                                       Services.prefs.getCharPref("browser.chromeURL"),

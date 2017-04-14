@@ -45,7 +45,7 @@ function TestDescription(aType, aTcpAddress, aTcpPort) {
     let wrapper = Cc["@mozilla.org/supports-cstring;1"]
       .createInstance(Ci.nsISupportsCString);
     wrapper.data = address;
-    this.tcpAddress.appendElement(wrapper);
+    this.tcpAddress.appendElement(wrapper, false);
   }
   this.tcpPort = aTcpPort;
 }

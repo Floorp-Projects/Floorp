@@ -131,7 +131,7 @@ function filterDevice() {
   let presentationUrls = Cc['@mozilla.org/array;1'].createInstance(Ci.nsIMutableArray);
   let url = Cc['@mozilla.org/supports-string;1'].createInstance(Ci.nsISupportsString);
   url.data = forbiddenRequestedUrl;
-  presentationUrls.appendElement(url);
+  presentationUrls.appendElement(url, false);
   let devices = manager.getAvailableDevices(presentationUrls);
   Assert.equal(devices.length, 0, 'expect 0 available device for example.com');
   run_next_test();

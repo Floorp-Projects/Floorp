@@ -31,7 +31,7 @@ var cert;
  */
 function openClientAuthDialog(cert) {
   let certList = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-  certList.appendElement(cert);
+  certList.appendElement(cert, false);
 
   let returnVals = Cc["@mozilla.org/hash-property-bag;1"]
                      .createInstance(Ci.nsIWritablePropertyBag2);
