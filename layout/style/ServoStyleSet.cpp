@@ -924,4 +924,14 @@ ServoStyleSet::AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray)
   return true;
 }
 
+already_AddRefed<ServoComputedValues>
+ServoStyleSet::ResolveForDeclarations(
+  ServoComputedValuesBorrowedOrNull aParentOrNull,
+  RawServoDeclarationBlockBorrowed aDeclarations)
+{
+  return Servo_StyleSet_ResolveForDeclarations(mRawSet.get(),
+                                               aParentOrNull,
+                                               aDeclarations).Consume();
+}
+
 bool ServoStyleSet::sInServoTraversal = false;

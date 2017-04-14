@@ -297,6 +297,15 @@ public:
   already_AddRefed<ServoComputedValues>
   GetBaseComputedValuesForElement(dom::Element* aElement, nsIAtom* aPseudoTag);
 
+  /**
+   * Resolve style for a given declaration block with/without the parent style.
+   * If the parent style is not specified, the document default computed values
+   * is used.
+   */
+  already_AddRefed<ServoComputedValues>
+  ResolveForDeclarations(ServoComputedValuesBorrowedOrNull aParentOrNull,
+                         RawServoDeclarationBlockBorrowed aDeclarations);
+
 private:
   already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
                                               nsStyleContext* aParentContext,
