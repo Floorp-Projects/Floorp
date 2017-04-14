@@ -29,13 +29,14 @@ InProcessCompositorSession::Create(nsIWidget* aWidget,
                                    CSSToLayoutDeviceScale aScale,
                                    const CompositorOptions& aOptions,
                                    bool aUseExternalSurfaceSize,
-                                   const gfx::IntSize& aSurfaceSize)
+                                   const gfx::IntSize& aSurfaceSize,
+                                   uint32_t aNamespace)
 {
   CompositorWidgetInitData initData;
   aWidget->GetCompositorWidgetInitData(&initData);
 
   RefPtr<CompositorWidget> widget = CompositorWidget::CreateLocal(initData, aOptions, aWidget);
-  RefPtr<CompositorBridgeChild> child = new CompositorBridgeChild(aLayerManager);
+  RefPtr<CompositorBridgeChild> child = new CompositorBridgeChild(aLayerManager, aNamespace);
   RefPtr<CompositorBridgeParent> parent =
     child->InitSameProcess(widget, aRootLayerTreeId, aScale, aOptions, aUseExternalSurfaceSize, aSurfaceSize);
 

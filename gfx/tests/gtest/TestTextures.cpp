@@ -269,7 +269,8 @@ TEST(Layers, TextureYCbCrSerialization) {
   clientData.mPicX = 0;
   clientData.mPicX = 0;
 
-  ImageBridgeChild::InitSameProcess();
+  uint32_t namespaceId = 1;
+  ImageBridgeChild::InitSameProcess(namespaceId);
 
   RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton();
   static int retry = 5;
