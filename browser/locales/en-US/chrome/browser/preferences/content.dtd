@@ -21,10 +21,10 @@
 
 <!ENTITY  fontsAndColors.label        "Fonts &amp; Colors">
 
-<!ENTITY  defaultFont.label           "Default font:">
-<!ENTITY  defaultFont.accesskey       "D">
-<!ENTITY  defaultSize.label           "Size:">
-<!ENTITY  defaultSize.accesskey       "S">
+<!ENTITY  defaultFont2.label          "Default font">
+<!ENTITY  defaultFont2.accesskey      "D">
+<!ENTITY  defaultSize2.label          "Size">
+<!ENTITY  defaultSize2.accesskey      "S">
 
 <!ENTITY  advancedFonts.label         "Advanced…">
 <!ENTITY  advancedFonts.accesskey     "A">
