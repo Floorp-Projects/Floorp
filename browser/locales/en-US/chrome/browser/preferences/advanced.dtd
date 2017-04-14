@@ -84,22 +84,22 @@
 <!ENTITY updateTab.label                 "Update">
 
 <!ENTITY updateApplication.label         "&brandShortName; Updates">
-<!ENTITY updateAuto1.label               "Automatically install updates (recommended: improved security)">
-<!ENTITY updateAuto1.accesskey           "A">
-<!ENTITY updateCheckChoose.label         "Check for updates, but let you choose whether to install them">
-<!ENTITY updateCheckChoose.accesskey     "C">
-<!ENTITY updateManual.label              "Never check for updates (not recommended: security risk)">
-<!ENTITY updateManual.accesskey          "N">
+<!ENTITY updateApplication.description   "Allow &brandShortName; to">
+<!ENTITY updateAuto2.label               "Automatically install updates (recommended for improved security)">
+<!ENTITY updateAuto2.accesskey           "A">
+<!ENTITY updateCheckChoose2.label        "Check for updates but let you choose to install them">
+<!ENTITY updateCheckChoose2.accesskey    "C">
+<!ENTITY updateManual2.label             "Never check for updates (not recommended)">
+<!ENTITY updateManual2.accesskey         "N">
 
-<!ENTITY updateHistory.label             "Show Update History">
-<!ENTITY updateHistory.accesskey         "p">
+<!ENTITY updateHistory2.label            "Show Update History…">
+<!ENTITY updateHistory2.accesskey        "p">
 
 <!ENTITY useService.label                "Use a background service to install updates">
 <!ENTITY useService.accesskey            "b">
 
-<!ENTITY autoUpdateOthers.label          "Automatically Update">
-<!ENTITY enableSearchUpdate.label        "Search Engines">
-<!ENTITY enableSearchUpdate.accesskey    "E">
+<!ENTITY enableSearchUpdate2.label       "Automatically update search engines">
+<!ENTITY enableSearchUpdate2.accesskey   "e">
 
 <!ENTITY reports.label                   "Reports">
 
