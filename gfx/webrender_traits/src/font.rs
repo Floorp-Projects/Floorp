@@ -47,6 +47,14 @@ pub enum FontRenderMode {
     Subpixel,
 }
 
+const FIXED16_SHIFT: i32 = 16;
+
+// This matches the behaviour of SkScalarToFixed
+fn f32_truncate_to_fixed16(x: f32) -> i32 {
+    let fixed1 = (1 << FIXED16_SHIFT) as f32;
+    (x * fixed1) as i32
+}
+
 impl FontRenderMode {
     // Skia quantizes subpixel offets into 1/4 increments.
     // Given the absolute position, return the quantized increment
@@ -55,14 +63,18 @@ impl FontRenderMode {
             return SubpixelOffset::Zero;
         }
 
-        const SUBPIXEL_ROUNDING :f32 = 0.125; // Skia chosen value.
-        let fraction = (pos + SUBPIXEL_ROUNDING).fract();
+        const SUBPIXEL_BITS: i32 = 2;
+        const SUBPIXEL_FIXED16_MASK: i32 = ((1 << SUBPIXEL_BITS) - 1) << (FIXED16_SHIFT - SUBPIXEL_BITS);
+
+        const SUBPIXEL_ROUNDING: f32 = 0.5 / (1 << SUBPIXEL_BITS) as f32;
+        let pos = pos + SUBPIXEL_ROUNDING;
+        let fraction = (f32_truncate_to_fixed16(pos) & SUBPIXEL_FIXED16_MASK) >> (FIXED16_SHIFT - SUBPIXEL_BITS);
 
         match fraction {
-            0.0...0.25 => SubpixelOffset::Zero,
-            0.25...0.5 => SubpixelOffset::Quarter,
-            0.5...0.75 => SubpixelOffset::Half,
-            0.75...1.0 => SubpixelOffset::ThreeQuarters,
+            0 => SubpixelOffset::Zero,
+            1 => SubpixelOffset::Quarter,
+            2 => SubpixelOffset::Half,
+            3 => SubpixelOffset::ThreeQuarters,
             _ => panic!("Should only be given the fractional part"),
         }
     }
@@ -104,7 +116,7 @@ impl SubpixelPoint {
     }
 
     pub fn to_f64(&self) -> (f64, f64) {
-        return (self.x.into(), self.y.into());
+        (self.x.into(), self.y.into())
     }
 
     pub fn set_offset(&mut self, point: Point2D<f32>, render_mode: FontRenderMode) {

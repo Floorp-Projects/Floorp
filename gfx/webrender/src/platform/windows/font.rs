@@ -150,7 +150,7 @@ impl FontContext {
     // Assumes RGB format from dwrite, which is 3 bytes per pixel as dwrite
     // doesn't output an alpha value via GlyphRunAnalysis::CreateAlphaTexture
     #[allow(dead_code)]
-    fn print_glyph_data(&self, data: &Vec<u8>, width: usize, height: usize) {
+    fn print_glyph_data(&self, data: &[u8], width: usize, height: usize) {
         // Rust doesn't have step_by support on stable :(
         for i in 0..height {
             let current_height = i * width * 3;
@@ -218,7 +218,7 @@ impl FontContext {
 
     // DWRITE gives us values in RGB. WR doesn't really touch it after. Note, CG returns in BGR
     // TODO: Decide whether all fonts should return RGB or BGR
-    fn convert_to_rgba(&self, pixels: &Vec<u8>, render_mode: FontRenderMode) -> Vec<u8> {
+    fn convert_to_rgba(&self, pixels: &[u8], render_mode: FontRenderMode) -> Vec<u8> {
         match render_mode {
             FontRenderMode::Mono => {
                 let mut rgba_pixels: Vec<u8> = vec![0; pixels.len() * 4];

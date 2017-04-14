@@ -14,6 +14,7 @@ EXPORTS.mozilla.webrender += [
     'RenderTextureHostOGL.h',
     'RenderThread.h',
     'webrender_ffi.h',
+    'webrender_ffi_generated.h',
     'WebRenderAPI.h',
     'WebRenderTypes.h',
 ]

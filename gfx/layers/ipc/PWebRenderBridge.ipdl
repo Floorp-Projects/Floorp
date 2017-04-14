@@ -58,6 +58,8 @@ parent:
   async RemoveExternalImageId(uint64_t aImageId);
   async SetLayerObserverEpoch(uint64_t layerObserverEpoch);
   async ClearCachedResources();
+  // Schedule a composite if one isn't already scheduled.
+  async ForceComposite();
 
   async Shutdown();
 child:

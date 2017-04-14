@@ -409,7 +409,7 @@ public:
   }
 
   void DrawWindow(nsGlobalWindow& aWindow, double aX, double aY,
-		  double aW, double aH,
+                  double aW, double aH,
                   const nsAString& aBgColor, uint32_t aFlags,
                   mozilla::ErrorResult& aError);
 
@@ -451,11 +451,12 @@ public:
                             const char16_t* aEncoderOptions,
                             nsIInputStream** aStream) override;
 
-  already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha = nullptr) override
+  already_AddRefed<mozilla::gfx::SourceSurface>
+  GetSurfaceSnapshot(gfxAlphaType* aOutAlphaType = nullptr) override
   {
     EnsureTarget();
-    if (aPremultAlpha) {
-      *aPremultAlpha = true;
+    if (aOutAlphaType) {
+      *aOutAlphaType = (mOpaque ? gfxAlphaType::Opaque : gfxAlphaType::Premult);
     }
     return mTarget->Snapshot();
   }

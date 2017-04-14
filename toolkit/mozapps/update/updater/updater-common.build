@@ -90,17 +90,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     LOCAL_INCLUDES += [
         '/toolkit/xre',
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    have_progressui = 1
-    srcs += [
-        'automounter_gonk.cpp',
-        'progressui_gonk.cpp',
-    ]
-    DISABLE_STL_WRAPPING = True
-    OS_LIBS += [
-        'cutils',
-        'sysutils',
-    ]
 
 if have_progressui == 0:
     srcs += [

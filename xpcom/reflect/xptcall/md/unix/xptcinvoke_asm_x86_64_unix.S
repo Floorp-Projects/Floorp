@@ -5,8 +5,20 @@
 # Darwin gives a leading '_' to symbols defined in C code.
 #ifdef XP_DARWIN
 #define SYM(x) _ ## x
+#define CFI_STARTPROC
+#define CFI_ENDPROC
+#define CFI_DEF_CFA_OFFSET(offset)
+#define CFI_OFFSET(reg, offset)
+#define CFI_DEF_CFA_REGISTER(reg)
+#define CFI_DEF_CFA(reg, offset)
 #else
 #define SYM(x) x
+#define CFI_STARTPROC .cfi_startproc
+#define CFI_ENDPROC .cfi_endproc
+#define CFI_DEF_CFA_OFFSET(offset) .cfi_def_cfa_offset offset
+#define CFI_OFFSET(reg, offset) .cfi_offset reg, offset
+#define CFI_DEF_CFA_REGISTER(reg) .cfi_def_cfa_register reg
+#define CFI_DEF_CFA(reg, offset) .cfi_def_cfa reg, offset
 #endif
 
 .intel_syntax noprefix
@@ -20,12 +32,18 @@
 #endif
 .align 4
 SYM(NS_InvokeByIndex):
+  CFI_STARTPROC
   push rbp
+  CFI_DEF_CFA_OFFSET(16)
+  CFI_OFFSET(6, -16)
   mov rbp, rsp
+  CFI_DEF_CFA_REGISTER(6)
 
 # save r12 and r13 because we use them and they are callee saved.
   push r12
   push r13
+  CFI_OFFSET(12, -24)
+  CFI_OFFSET(13, -32)
 
 # save this and the vtable index because we need them after setting up the
 # stack.
@@ -94,7 +112,9 @@ SYM(NS_InvokeByIndex):
 
   mov rsp, rbp
   pop rbp
+  CFI_DEF_CFA(7, 8)
   ret
+  CFI_ENDPROC
 
 #ifndef XP_DARWIN
 // Magic indicating no need for an executable stack

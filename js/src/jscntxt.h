@@ -17,6 +17,7 @@
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "threading/ProtectedData.h"
+#include "vm/ErrorReporting.h"
 #include "vm/Runtime.h"
 
 #ifdef _MSC_VER
@@ -64,8 +65,6 @@ class MOZ_RAII AutoCycleDetector
 };
 
 struct AutoResolving;
-
-namespace frontend { class CompileError; }
 
 struct HelperThread;
 
@@ -281,7 +280,7 @@ struct JSContext : public JS::RootingContext,
     }
 
     // Methods specific to any HelperThread for the context.
-    bool addPendingCompileError(js::frontend::CompileError** err);
+    bool addPendingCompileError(js::CompileError** err);
     void addPendingOverRecursed();
     void addPendingOutOfMemory();
 
@@ -1031,12 +1030,6 @@ ReportUsageErrorASCII(JSContext* cx, HandleObject callee, const char* msg);
 extern bool
 PrintError(JSContext* cx, FILE* file, JS::ConstUTF8CharsZ toStringResult,
            JSErrorReport* report, bool reportWarnings);
-
-/*
- * Send a JSErrorReport to the warningReporter callback.
- */
-void
-CallWarningReporter(JSContext* cx, JSErrorReport* report);
 
 extern bool
 ReportIsNotDefined(JSContext* cx, HandlePropertyName name);

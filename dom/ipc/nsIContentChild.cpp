@@ -46,6 +46,7 @@ nsIContentChild::DeallocPJavaScriptChild(PJavaScriptChild* aChild)
 
 PBrowserChild*
 nsIContentChild::AllocPBrowserChild(const TabId& aTabId,
+                                    const TabId& aSameTabGroupAs,
                                     const IPCTabContext& aContext,
                                     const uint32_t& aChromeFlags,
                                     const ContentParentId& aCpID,
@@ -64,7 +65,8 @@ nsIContentChild::AllocPBrowserChild(const TabId& aTabId,
   }
 
   RefPtr<TabChild> child =
-    TabChild::Create(this, aTabId, tc.GetTabContext(), aChromeFlags);
+    TabChild::Create(this, aTabId, aSameTabGroupAs,
+                     tc.GetTabContext(), aChromeFlags);
 
   // The ref here is released in DeallocPBrowserChild.
   return child.forget().take();
@@ -81,6 +83,7 @@ nsIContentChild::DeallocPBrowserChild(PBrowserChild* aIframe)
 mozilla::ipc::IPCResult
 nsIContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
                                          const TabId& aTabId,
+                                         const TabId& aSameTabGroupAs,
                                          const IPCTabContext& aContext,
                                          const uint32_t& aChromeFlags,
                                          const ContentParentId& aCpID,

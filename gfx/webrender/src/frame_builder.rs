@@ -26,14 +26,15 @@ use tiling::StackingContextIndex;
 use tiling::{AuxiliaryListsMap, ClipScrollGroup, ClipScrollGroupIndex, CompositeOps, Frame};
 use tiling::{PackedLayer, PackedLayerIndex, PrimitiveFlags, PrimitiveRunCmd, RenderPass};
 use tiling::{RenderTargetContext, RenderTaskCollection, ScrollbarPrimitive, StackingContext};
-use util::{self, pack_as_float, rect_from_points_f, subtract_rect};
-use util::{RectHelpers, TransformedRectKind};
-use webrender_traits::{BorderDetails, BorderDisplayItem, BorderSide, BorderStyle};
+use util::{self, pack_as_float, subtract_rect};
+use util::RectHelpers;
+use webrender_traits::{BorderDetails, BorderDisplayItem};
 use webrender_traits::{BoxShadowClipMode, ClipRegion, ColorF, DeviceIntPoint, DeviceIntRect};
 use webrender_traits::{DeviceIntSize, DeviceUintRect, DeviceUintSize, ExtendMode, FontKey};
 use webrender_traits::{FontRenderMode, GlyphOptions, ImageKey, ImageRendering, ItemRange};
 use webrender_traits::{LayerPoint, LayerRect, LayerSize, LayerToScrollTransform, PipelineId};
 use webrender_traits::{RepeatMode, ScrollLayerId, TileOffset, WebGLContextId, YuvColorSpace};
+use webrender_traits::{TransformStyle};
 
 #[derive(Debug, Clone)]
 struct ImageBorderSegment {
@@ -219,7 +220,8 @@ impl FrameBuilder {
                                  reference_frame_offset: &LayerPoint,
                                  pipeline_id: PipelineId,
                                  is_page_root: bool,
-                                 composite_ops: CompositeOps) {
+                                 composite_ops: CompositeOps,
+                                 transform_style: TransformStyle) {
         if let Some(parent_index) = self.stacking_context_stack.last() {
             let parent_is_root = self.stacking_context_store[parent_index.0].is_page_root;
 
@@ -235,6 +237,7 @@ impl FrameBuilder {
         self.stacking_context_store.push(StackingContext::new(pipeline_id,
                                                               *reference_frame_offset,
                                                               is_page_root,
+                                                              transform_style,
                                                               composite_ops));
         self.cmds.push(PrimitiveRunCmd::PushStackingContext(stacking_context_index));
         self.stacking_context_stack.push(stacking_context_index);
@@ -309,8 +312,7 @@ impl FrameBuilder {
         self.add_clip_scroll_node(topmost_scroll_layer_id,
                                    clip_scroll_tree.root_reference_frame_id,
                                    pipeline_id,
-                                   &viewport_rect,
-                                   content_size,
+                                   &LayerRect::new(LayerPoint::zero(), *content_size),
                                    &ClipRegion::simple(&viewport_rect),
                                    clip_scroll_tree);
         topmost_scroll_layer_id
@@ -320,8 +322,7 @@ impl FrameBuilder {
                                 new_node_id: ScrollLayerId,
                                 parent_id: ScrollLayerId,
                                 pipeline_id: PipelineId,
-                                local_viewport_rect: &LayerRect,
-                                content_size: &LayerSize,
+                                content_rect: &LayerRect,
                                 clip_region: &ClipRegion,
                                 clip_scroll_tree: &mut ClipScrollTree) {
         let clip_info = ClipInfo::new(clip_region,
@@ -329,8 +330,8 @@ impl FrameBuilder {
                                       PackedLayerIndex(self.packed_layers.len()));
         let node = ClipScrollNode::new(pipeline_id,
                                        parent_id,
-                                       local_viewport_rect,
-                                       *content_size,
+                                       content_rect,
+                                       &clip_region.main,
                                        clip_info);
 
         clip_scroll_tree.add_node(node, new_node_id);
@@ -369,26 +370,6 @@ impl FrameBuilder {
                     scroll_layer_id: scroll_layer_id,
                     border_radius: border_radius,
                 });
-            }
-        }
-    }
-
-    pub fn supported_style(&mut self, border: &BorderSide) -> bool {
-        match border.style {
-            BorderStyle::Solid |
-            BorderStyle::None |
-            BorderStyle::Dotted |
-            BorderStyle::Dashed |
-            BorderStyle::Inset |
-            BorderStyle::Ridge |
-            BorderStyle::Groove |
-            BorderStyle::Outset |
-            BorderStyle::Double => {
-                return true;
-            }
-            _ => {
-                println!("TODO: Other border styles {:?}", border.style);
-                return false;
             }
         }
     }
@@ -542,17 +523,22 @@ impl FrameBuilder {
                 }
             }
             BorderDetails::Normal(ref border) => {
+                // Gradually move border types over to a simplified
+                // shader and code path that can handle all border
+                // cases correctly.
+                if self.add_simple_border(&rect,
+                                          border,
+                                          &border_item.widths,
+                                          scroll_layer_id,
+                                          clip_region) {
+                    return;
+                }
+
                 let radius = &border.radius;
                 let left = &border.left;
                 let right = &border.right;
                 let top = &border.top;
                 let bottom = &border.bottom;
-
-                if !self.supported_style(left) || !self.supported_style(right) ||
-                   !self.supported_style(top) || !self.supported_style(bottom) {
-                    println!("Unsupported border style, not rendering border");
-                    return;
-                }
 
                 // These colors are used during inset/outset scaling.
                 let left_color      = left.border_color(1.0, 2.0/3.0, 0.3, 0.7);
@@ -560,78 +546,7 @@ impl FrameBuilder {
                 let right_color     = right.border_color(2.0/3.0, 1.0, 0.7, 0.3);
                 let bottom_color    = bottom.border_color(2.0/3.0, 1.0, 0.7, 0.3);
 
-                let tl_outer = LayerPoint::new(rect.origin.x, rect.origin.y);
-                let tl_inner = tl_outer + LayerPoint::new(radius.top_left.width.max(border_item.widths.left),
-                                                          radius.top_left.height.max(border_item.widths.top));
-
-                let tr_outer = LayerPoint::new(rect.origin.x + rect.size.width, rect.origin.y);
-                let tr_inner = tr_outer + LayerPoint::new(-radius.top_right.width.max(border_item.widths.right),
-                                                          radius.top_right.height.max(border_item.widths.top));
-
-                let bl_outer = LayerPoint::new(rect.origin.x, rect.origin.y + rect.size.height);
-                let bl_inner = bl_outer + LayerPoint::new(radius.bottom_left.width.max(border_item.widths.left),
-                                                          -radius.bottom_left.height.max(border_item.widths.bottom));
-
-                let br_outer = LayerPoint::new(rect.origin.x + rect.size.width,
-                                               rect.origin.y + rect.size.height);
-                let br_inner = br_outer - LayerPoint::new(radius.bottom_right.width.max(border_item.widths.right),
-                                                          radius.bottom_right.height.max(border_item.widths.bottom));
-
-                // The border shader is quite expensive. For simple borders, we can just draw
-                // the border with a few rectangles. This generally gives better batching, and
-                // a GPU win in fragment shader time.
-                // More importantly, the software (OSMesa) implementation we run tests on is
-                // particularly slow at running our complex border shader, compared to the
-                // rectangle shader. This has the effect of making some of our tests time
-                // out more often on CI (the actual cause is simply too many Servo processes and
-                // threads being run on CI at once).
-                // TODO(gw): Detect some more simple cases and handle those with simpler shaders too.
-                // TODO(gw): Consider whether it's only worth doing this for large rectangles (since
-                //           it takes a little more CPU time to handle multiple rectangles compared
-                //           to a single border primitive).
-                if left.style == BorderStyle::Solid {
-                    let same_color = left_color == top_color &&
-                                     left_color == right_color &&
-                                     left_color == bottom_color;
-                    let same_style = left.style == top.style &&
-                                     left.style == right.style &&
-                                     left.style == bottom.style;
-
-                    if same_color && same_style && radius.is_zero() {
-                        let rects = [
-                            LayerRect::new(rect.origin,
-                                           LayerSize::new(rect.size.width, border_item.widths.top)),
-                            LayerRect::new(LayerPoint::new(tl_outer.x, tl_inner.y),
-                                           LayerSize::new(border_item.widths.left,
-                                                          rect.size.height - border_item.widths.top - border_item.widths.bottom)),
-                            LayerRect::new(tr_inner,
-                                           LayerSize::new(border_item.widths.right,
-                                                          rect.size.height - border_item.widths.top - border_item.widths.bottom)),
-                            LayerRect::new(LayerPoint::new(bl_outer.x, bl_inner.y),
-                                           LayerSize::new(rect.size.width, border_item.widths.bottom))
-                        ];
-
-                        for rect in &rects {
-                            self.add_solid_rectangle(scroll_layer_id,
-                                                     rect,
-                                                     clip_region,
-                                                     &top_color,
-                                                     PrimitiveFlags::None);
-                        }
-
-                        return;
-                    }
-                }
-
-                //Note: while similar to `ComplexClipRegion::get_inner_rect()` in spirit,
-                // this code is a bit more complex and can not there for be merged.
-                let inner_rect = rect_from_points_f(tl_inner.x.max(bl_inner.x),
-                                                    tl_inner.y.max(tr_inner.y),
-                                                    tr_inner.x.min(br_inner.x),
-                                                    bl_inner.y.min(br_inner.y));
-
                 let prim_cpu = BorderPrimitiveCpu {
-                    inner_rect: LayerRect::from_untyped(&inner_rect),
                 };
 
                 let prim_gpu = BorderPrimitiveGpu {
@@ -662,27 +577,35 @@ impl FrameBuilder {
             }
             BorderDetails::Gradient(ref border) => {
                 for segment in create_segments(border.outset) {
+                    let segment_rel = segment.origin - rect.origin;
+
                     self.add_gradient(scroll_layer_id,
                                       segment,
                                       clip_region,
-                                      border.gradient.start_point,
-                                      border.gradient.end_point,
+                                      border.gradient.start_point - segment_rel,
+                                      border.gradient.end_point - segment_rel,
                                       border.gradient.stops,
-                                      border.gradient.extend_mode);
+                                      border.gradient.extend_mode,
+                                      segment.size,
+                                      LayerSize::zero());
                 }
             }
             BorderDetails::RadialGradient(ref border) => {
                 for segment in create_segments(border.outset) {
+                    let segment_rel = segment.origin - rect.origin;
+
                     self.add_radial_gradient(scroll_layer_id,
                                              segment,
                                              clip_region,
-                                             border.gradient.start_center,
+                                             border.gradient.start_center - segment_rel,
                                              border.gradient.start_radius,
-                                             border.gradient.end_center,
+                                             border.gradient.end_center - segment_rel,
                                              border.gradient.end_radius,
                                              border.gradient.ratio_xy,
                                              border.gradient.stops,
-                                             border.gradient.extend_mode);
+                                             border.gradient.extend_mode,
+                                             segment.size,
+                                             LayerSize::zero());
                 }
             }
         }
@@ -695,15 +618,23 @@ impl FrameBuilder {
                         start_point: LayerPoint,
                         end_point: LayerPoint,
                         stops: ItemRange,
-                        extend_mode: ExtendMode) {
-        // Fast path for clamped, axis-aligned gradients:
-        let aligned = extend_mode == ExtendMode::Clamp &&
-                      (start_point.x == end_point.x &&
-                       start_point.x.min(end_point.x) <= rect.min_x() &&
-                       start_point.x.max(end_point.x) >= rect.max_x()) ||
-                       (start_point.y == end_point.y &&
-                       start_point.y.min(end_point.y) <= rect.min_y() &&
-                       start_point.y.max(end_point.y) >= rect.max_y());
+                        extend_mode: ExtendMode,
+                        tile_size: LayerSize,
+                        tile_spacing: LayerSize) {
+        let tile_repeat = tile_size + tile_spacing;
+        let is_not_tiled = tile_repeat.width >= rect.size.width &&
+                           tile_repeat.height >= rect.size.height;
+
+        let aligned_and_fills_rect = (start_point.x == end_point.x &&
+                                      start_point.y.min(end_point.y) <= 0.0 &&
+                                      start_point.y.max(end_point.y) >= rect.size.height) ||
+                                     (start_point.y == end_point.y &&
+                                      start_point.x.min(end_point.x) <= 0.0 &&
+                                      start_point.x.max(end_point.x) >= rect.size.width);
+
+        // Fast path for clamped, axis-aligned gradients, with gradient lines intersecting all of rect:
+        let aligned = extend_mode == ExtendMode::Clamp && is_not_tiled && aligned_and_fills_rect;
+
         // Try to ensure that if the gradient is specified in reverse, then so long as the stops
         // are also supplied in reverse that the rendered result will be equivalent. To do this,
         // a reference orientation for the gradient line must be chosen, somewhat arbitrarily, so
@@ -735,7 +666,9 @@ impl FrameBuilder {
             start_point: sp,
             end_point: ep,
             extend_mode: pack_as_float(extend_mode as u32),
-            padding: [0.0, 0.0, 0.0],
+            tile_size: tile_size,
+            tile_repeat: tile_repeat,
+            padding: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         };
 
         let prim = if aligned {
@@ -761,7 +694,9 @@ impl FrameBuilder {
                                end_radius: f32,
                                ratio_xy: f32,
                                stops: ItemRange,
-                               extend_mode: ExtendMode) {
+                               extend_mode: ExtendMode,
+                               tile_size: LayerSize,
+                               tile_spacing: LayerSize) {
         let radial_gradient_cpu = RadialGradientPrimitiveCpu {
             stops_range: stops,
             extend_mode: extend_mode,
@@ -775,6 +710,9 @@ impl FrameBuilder {
             end_radius: end_radius,
             ratio_xy: ratio_xy,
             extend_mode: pack_as_float(extend_mode as u32),
+            tile_size: tile_size,
+            tile_repeat: tile_size + tile_spacing,
+            padding: [0.0, 0.0, 0.0, 0.0],
         };
 
         self.add_primitive(scroll_layer_id,
@@ -802,57 +740,39 @@ impl FrameBuilder {
             return
         }
 
-        let (render_mode, glyphs_per_run) = if blur_radius == Au(0) {
-            // TODO(gw): Use a proper algorithm to select
-            // whether this item should be rendered with
-            // subpixel AA!
-            let render_mode = if self.config.enable_subpixel_aa {
-                FontRenderMode::Subpixel
-            } else {
-                FontRenderMode::Alpha
-            };
-
-            (render_mode, 8)
+        // TODO(gw): Use a proper algorithm to select
+        // whether this item should be rendered with
+        // subpixel AA!
+        let render_mode = if blur_radius == Au(0) &&
+                             self.config.enable_subpixel_aa {
+            FontRenderMode::Subpixel
         } else {
-            // TODO(gw): Support breaking up text shadow when
-            // the size of the text run exceeds the dimensions
-            // of the render target texture.
-            (FontRenderMode::Alpha, glyph_range.length)
+            FontRenderMode::Alpha
         };
 
-        let text_run_count = (glyph_range.length + glyphs_per_run - 1) / glyphs_per_run;
-        for run_index in 0..text_run_count {
-            let start = run_index * glyphs_per_run;
-            let end = cmp::min(start + glyphs_per_run, glyph_range.length);
-            let sub_range = ItemRange {
-                start: glyph_range.start + start,
-                length: end - start,
-            };
+        let prim_cpu = TextRunPrimitiveCpu {
+            font_key: font_key,
+            logical_font_size: size,
+            blur_radius: blur_radius,
+            glyph_range: glyph_range,
+            cache_dirty: true,
+            glyph_instances: Vec::new(),
+            color_texture_id: SourceTexture::Invalid,
+            color: *color,
+            render_mode: render_mode,
+            glyph_options: glyph_options,
+            resource_address: GpuStoreAddress(0),
+        };
 
-            let prim_cpu = TextRunPrimitiveCpu {
-                font_key: font_key,
-                logical_font_size: size,
-                blur_radius: blur_radius,
-                glyph_range: sub_range,
-                cache_dirty: true,
-                glyph_instances: Vec::new(),
-                color_texture_id: SourceTexture::Invalid,
-                color: *color,
-                render_mode: render_mode,
-                glyph_options: glyph_options,
-                resource_address: GpuStoreAddress(0),
-            };
+        let prim_gpu = TextRunPrimitiveGpu {
+            color: *color,
+        };
 
-            let prim_gpu = TextRunPrimitiveGpu {
-                color: *color,
-            };
-
-            self.add_primitive(scroll_layer_id,
-                               &rect,
-                               clip_region,
-                               None,
-                               PrimitiveContainer::TextRun(prim_cpu, prim_gpu));
-        }
+        self.add_primitive(scroll_layer_id,
+                           &rect,
+                           clip_region,
+                           None,
+                           PrimitiveContainer::TextRun(prim_cpu, prim_gpu));
     }
 
     pub fn add_box_shadow(&mut self,
@@ -872,7 +792,7 @@ impl FrameBuilder {
         // Fast path.
         if blur_radius == 0.0 && spread_radius == 0.0 && clip_mode == BoxShadowClipMode::None {
             self.add_solid_rectangle(scroll_layer_id,
-                                     &box_bounds,
+                                     box_bounds,
                                      clip_region,
                                      color,
                                      PrimitiveFlags::None);
@@ -967,12 +887,17 @@ impl FrameBuilder {
                     BoxShadowClipMode::Inset => 1.0,
                 };
 
-                // If we have a border radius, we'll need to apply
-                // a clip-out mask.
+                // Outset box shadows with border radius
+                // need a clip out of the center box.
+                let extra_clip_mode = match clip_mode {
+                    BoxShadowClipMode::Outset | BoxShadowClipMode::None => ClipMode::ClipOut,
+                    BoxShadowClipMode::Inset => ClipMode::Clip,
+                };
+
                 let extra_clip = if border_radius > 0.0 {
                     Some(ClipSource::Complex(*box_bounds,
                                              border_radius,
-                                             ClipMode::ClipOut))
+                                             extra_clip_mode))
                 } else {
                     None
                 };
@@ -1206,7 +1131,7 @@ impl FrameBuilder {
                                                                       HardwareCompositeOp::PremultipliedAlpha,
                                                                       next_z);
                         next_z += 1;
-                        prev_task.as_alpha_batch().alpha_items.push(item);
+                        prev_task.as_alpha_batch().items.push(item);
                         prev_task.children.push(current_task);
                         current_task = prev_task;
                     }
@@ -1218,7 +1143,7 @@ impl FrameBuilder {
                                                           *filter,
                                                           next_z);
                         next_z += 1;
-                        prev_task.as_alpha_batch().alpha_items.push(item);
+                        prev_task.as_alpha_batch().items.push(item);
                         prev_task.children.push(current_task);
                         current_task = prev_task;
                     }
@@ -1234,7 +1159,7 @@ impl FrameBuilder {
                                                               mix_blend_mode,
                                                               next_z);
                         next_z += 1;
-                        prev_task.as_alpha_batch().alpha_items.push(item);
+                        prev_task.as_alpha_batch().items.push(item);
                         prev_task.children.push(current_task);
                         prev_task.children.push(readback_task);
                         current_task = prev_task;
@@ -1251,10 +1176,9 @@ impl FrameBuilder {
                     let stacking_context_index = *sc_stack.last().unwrap();
                     let group_index = self.stacking_context_store[stacking_context_index.0]
                                           .clip_scroll_group(scroll_layer_id);
-                    let xf_rect = match &self.clip_scroll_group_store[group_index.0].xf_rect {
-                        &Some(ref xf_rect) => xf_rect,
-                        &None => continue,
-                    };
+                    if self.clip_scroll_group_store[group_index.0].xf_rect.is_none() {
+                        continue
+                    }
 
                     for i in 0..prim_count {
                         let prim_index = PrimitiveIndex(first_prim_index.0 + i);
@@ -1270,17 +1194,8 @@ impl FrameBuilder {
                                 current_task.children.push(clip_task.clone());
                             }
 
-                            let needs_clipping = prim_metadata.clip_task.is_some();
-                            let needs_blending = xf_rect.kind == TransformedRectKind::Complex ||
-                                                 !prim_metadata.is_opaque ||
-                                                 needs_clipping;
-
-                            let items = if needs_blending {
-                                &mut current_task.as_alpha_batch().alpha_items
-                            } else {
-                                &mut current_task.as_alpha_batch().opaque_items
-                            };
-                            items.push(AlphaRenderItem::Primitive(group_index, prim_index, next_z));
+                            let item = AlphaRenderItem::Primitive(group_index, prim_index, next_z);
+                            current_task.as_alpha_batch().items.push(item);
                             next_z += 1;
                         }
                     }
@@ -1449,12 +1364,12 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
 
         let commands = mem::replace(&mut self.frame_builder.cmds, Vec::new());
         for cmd in &commands {
-            match cmd {
-                &PrimitiveRunCmd::PushStackingContext(stacking_context_index) =>
+            match *cmd {
+                PrimitiveRunCmd::PushStackingContext(stacking_context_index) =>
                     self.handle_push_stacking_context(stacking_context_index),
-                &PrimitiveRunCmd::PrimitiveRun(prim_index, prim_count, scroll_layer_id) =>
+                PrimitiveRunCmd::PrimitiveRun(prim_index, prim_count, scroll_layer_id) =>
                     self.handle_primitive_run(prim_index, prim_count, scroll_layer_id),
-                &PrimitiveRunCmd::PopStackingContext => self.handle_pop_stacking_context(),
+                PrimitiveRunCmd::PopStackingContext => self.handle_pop_stacking_context(),
             }
         }
 
