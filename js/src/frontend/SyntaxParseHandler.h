@@ -402,7 +402,7 @@ class SyntaxParseHandlerBase
     void setEndPosition(Node pn, Node oth) {}
     void setEndPosition(Node pn, uint32_t end) {}
 
-    uint32_t getFunctionNameOffset(Node func, TokenStreamBase& ts) {
+    uint32_t getFunctionNameOffset(Node func, TokenStreamAnyChars& ts) {
         // XXX This offset isn't relevant to the offending function name.  But
         //     we may not *have* that function name around, because of how lazy
         //     parsing works -- the actual name could be outside

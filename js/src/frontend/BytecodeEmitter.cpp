@@ -2565,7 +2565,7 @@ LengthOfSetLine(unsigned line)
 bool
 BytecodeEmitter::updateLineNumberNotes(uint32_t offset)
 {
-    TokenStreamBase* ts = &parser.tokenStream();
+    TokenStreamAnyChars* ts = &parser.tokenStream();
     bool onThisLine;
     if (!ts->srcCoords.isOnThisLine(offset, currentLine(), &onThisLine)) {
         ts->reportErrorNoOffset(JSMSG_OUT_OF_MEMORY);
@@ -3626,7 +3626,7 @@ BytecodeEmitter::tellDebuggerAboutCompiledScript(JSContext* cx)
         Debugger::onNewScript(cx, script);
 }
 
-inline TokenStreamBase&
+inline TokenStreamAnyChars&
 BytecodeEmitter::tokenStream()
 {
     return parser.tokenStream();
