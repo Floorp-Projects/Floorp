@@ -1760,6 +1760,9 @@ Gecko_GetFontMetrics(RawGeckoPresContextBorrowed aPresContext,
                      nscoord aFontSize,
                      bool aUseUserFontSet)
 {
+  // This function is still unsafe due to frobbing DOM and network
+  // off main thread. We currently disable it in Servo, see bug 1356105
+  MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(*sServoFontMetricsLock);
   GeckoFontMetrics ret;
   // Safe because we are locked, and this function is only
