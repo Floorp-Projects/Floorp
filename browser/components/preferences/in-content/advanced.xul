@@ -85,6 +85,7 @@
     <spacer flex="1"/>
     <vbox>
       <button id="showUpdateHistory"
+              class="accessory-button"
               label="&updateHistory2.label;"
               accesskey="&updateHistory2.accesskey;"
               preference="app.update.disable_button.showUpdateHistory"/>
