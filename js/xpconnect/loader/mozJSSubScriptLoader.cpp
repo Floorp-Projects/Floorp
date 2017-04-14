@@ -120,7 +120,7 @@ ReportError(JSContext* cx, const char* origMsg, nsIURI* uri)
     ReportError(cx, msg);
 }
 
-bool
+static bool
 PrepareScript(nsIURI* uri,
               JSContext* cx,
               RootedObject& targetObj,
@@ -183,7 +183,7 @@ PrepareScript(nsIURI* uri,
                                buf, len, function);
 }
 
-bool
+static bool
 EvalScript(JSContext* cx,
            RootedObject& targetObj,
            MutableHandleValue retval,
