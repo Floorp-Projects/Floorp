@@ -238,7 +238,7 @@ static void CollectVariationSetting(const void *key, const void *value, void *co
 {
   auto keyPtr = static_cast<const CFTypeRef>(key);
   auto valuePtr = static_cast<const CFTypeRef>(value);
-  auto vpp = static_cast<ScaledFont::VariationSetting**>(context);
+  auto vpp = static_cast<FontVariation**>(context);
   if (CFGetTypeID(keyPtr) == CFNumberGetTypeID() &&
       CFGetTypeID(valuePtr) == CFNumberGetTypeID()) {
     uint64_t t;
@@ -331,7 +331,7 @@ ScaledFontMac::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
 {
     // Collect any variation settings that were incorporated into the CTFont.
     uint32_t variationCount = 0;
-    VariationSetting* variations = nullptr;
+    FontVariation* variations = nullptr;
     // Avoid calling potentially buggy variation APIs on pre-Sierra macOS
     // versions (see bug 1331683)
     if (nsCocoaFeatures::OnSierraOrLater()) {
@@ -340,8 +340,8 @@ ScaledFontMac::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
         if (dict) {
           CFIndex count = CFDictionaryGetCount(dict);
           if (count > 0) {
-            variations = new VariationSetting[count];
-            VariationSetting* vPtr = variations;
+            variations = new FontVariation[count];
+            FontVariation* vPtr = variations;
             CFDictionaryApplyFunction(dict, CollectVariationSetting, &vPtr);
             variationCount = vPtr - variations;
           }
@@ -350,7 +350,7 @@ ScaledFontMac::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
       }
     }
 
-    aCb(reinterpret_cast<uint8_t*>(variations), variationCount * sizeof(VariationSetting), aBaton);
+    aCb(reinterpret_cast<uint8_t*>(variations), variationCount * sizeof(FontVariation), aBaton);
     delete[] variations;
 
     return true;
@@ -358,7 +358,7 @@ ScaledFontMac::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
 
 static CFDictionaryRef
 CreateVariationDictionaryOrNull(CGFontRef aCGFont, uint32_t aVariationCount,
-                                const ScaledFont::VariationSetting* aVariations)
+                                const FontVariation* aVariations)
 {
   // Avoid calling potentially buggy variation APIs on pre-Sierra macOS
   // versions (see bug 1331683)
@@ -460,7 +460,7 @@ CreateVariationDictionaryOrNull(CGFontRef aCGFont, uint32_t aVariationCount,
 CGFontRef
 UnscaledFontMac::CreateCGFontWithVariations(CGFontRef aFont,
                                             uint32_t aVariationCount,
-                                            const ScaledFont::VariationSetting* aVariations)
+                                            const FontVariation* aVariations)
 {
   MOZ_ASSERT(aVariationCount > 0);
   MOZ_ASSERT(aVariations);
@@ -480,9 +480,9 @@ UnscaledFontMac::CreateScaledFont(Float aGlyphSize,
                                   uint32_t aInstanceDataLength)
 {
   uint32_t variationCount =
-    aInstanceDataLength / sizeof(ScaledFont::VariationSetting);
-  const ScaledFont::VariationSetting* variations =
-    reinterpret_cast<const ScaledFont::VariationSetting*>(aInstanceData);
+    aInstanceDataLength / sizeof(FontVariation);
+  const FontVariation* variations =
+    reinterpret_cast<const FontVariation*>(aInstanceData);
 
   CGFontRef fontRef = mFont;
   if (variationCount > 0) {
