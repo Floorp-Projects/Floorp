@@ -42,7 +42,7 @@ function setup() {
 
       aResolve(iframe);
     });
-    obs.notifyObservers(promise, "setup-request-promise", null);
+    obs.notifyObservers(promise, "setup-request-promise");
 
     aResolve();
   });

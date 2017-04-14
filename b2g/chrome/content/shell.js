@@ -695,7 +695,7 @@ var shell = {
 
     this.sendEvent(window, 'ContentStart');
 
-    Services.obs.notifyObservers(null, 'content-start', null);
+    Services.obs.notifyObservers(null, 'content-start');
 
     if (AppConstants.MOZ_GRAPHENE &&
         Services.prefs.getBoolPref("b2g.nativeWindowGeometry.fullscreen")) {
@@ -732,7 +732,7 @@ var shell = {
 
     // This will cause Gonk Widget to remove boot animation from the screen
     // and reveals the page.
-    Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
+    Services.obs.notifyObservers(null, "browser-ui-startup-complete");
 
     SystemAppProxy.setIsLoaded();
   },
@@ -797,7 +797,7 @@ var CustomEventManager = {
 
     switch(detail.type) {
       case 'system-message-listener-ready':
-        Services.obs.notifyObservers(null, 'system-message-listener-ready', null);
+        Services.obs.notifyObservers(null, 'system-message-listener-ready');
         break;
       case 'captive-portal-login-cancel':
         CaptivePortalLoginHelper.handleEvent(detail);

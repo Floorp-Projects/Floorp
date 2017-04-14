@@ -250,14 +250,14 @@ add_task(function *() {
                           is(actual, expected, "Should show the right total site data size");
                        });
 
-  Services.obs.notifyObservers(null, "sitedatamanager:updating-sites", null);
+  Services.obs.notifyObservers(null, "sitedatamanager:updating-sites");
   is(clearBtn.disabled, true, "Should disable clear button while updating sites");
   is(settingsButton.disabled, true, "Should disable settings button while updating sites");
   actual = totalSiteDataSizeLabel.textContent;
   expected = prefStrBundle.getString("loadingSiteDataSize");
   is(actual, expected, "Should show the loading message while updating");
 
-  Services.obs.notifyObservers(null, "sitedatamanager:sites-updated", null);
+  Services.obs.notifyObservers(null, "sitedatamanager:sites-updated");
   is(clearBtn.disabled, false, "Should enable clear button after sites updated");
   is(settingsButton.disabled, false, "Should enable settings button after sites updated");
   yield SiteDataManager.getTotalUsage()

@@ -76,7 +76,7 @@ function setup() {
 
     var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
                            .getService(SpecialPowers.Ci.nsIObserverService);
-    obs.notifyObservers(promise, 'setup-request-promise', null);
+    obs.notifyObservers(promise, 'setup-request-promise');
   });
 
   gScript.addMessageListener('promise-setup-ready', function promiseSetupReadyHandler() {

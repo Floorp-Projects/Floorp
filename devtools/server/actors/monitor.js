@@ -32,7 +32,7 @@ MonitorActor.prototype = {
     if (!this._started) {
       this._started = true;
       Services.obs.addObserver(this, "devtools-monitor-update");
-      Services.obs.notifyObservers(null, "devtools-monitor-start", "");
+      Services.obs.notifyObservers(null, "devtools-monitor-start");
       this._agents.forEach(agent => this._startAgent(agent));
     }
     return {};
@@ -41,7 +41,7 @@ MonitorActor.prototype = {
   stop: function () {
     if (this._started) {
       this._agents.forEach(agent => agent.stop());
-      Services.obs.notifyObservers(null, "devtools-monitor-stop", "");
+      Services.obs.notifyObservers(null, "devtools-monitor-stop");
       Services.obs.removeObserver(this, "devtools-monitor-update");
       this._started = false;
     }

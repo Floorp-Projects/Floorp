@@ -196,15 +196,15 @@ let SyncedTabsInternal = {
         // Set our lastTabFetch pref here so it tracks both explicit sync calls
         // and normally scheduled ones.
         Preferences.set("services.sync.lastTabFetch", Math.floor(Date.now() / 1000));
-        Services.obs.notifyObservers(null, TOPIC_TABS_CHANGED, null);
+        Services.obs.notifyObservers(null, TOPIC_TABS_CHANGED);
         break;
       case "weave:service:start-over":
         // start-over needs to notify so consumers find no tabs.
         Preferences.reset("services.sync.lastTabFetch");
-        Services.obs.notifyObservers(null, TOPIC_TABS_CHANGED, null);
+        Services.obs.notifyObservers(null, TOPIC_TABS_CHANGED);
         break;
       case "nsPref:changed":
-        Services.obs.notifyObservers(null, TOPIC_TABS_CHANGED, null);
+        Services.obs.notifyObservers(null, TOPIC_TABS_CHANGED);
         break;
       default:
         break;

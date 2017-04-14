@@ -26,7 +26,7 @@ function setup() {
     var promise = new Promise(function(aResolve, aReject) {
       // In order to trigger timeout, do not resolve the promise.
     });
-    obs.notifyObservers(promise, 'setup-request-promise', null);
+    obs.notifyObservers(promise, 'setup-request-promise');
 
     aResolve();
   });

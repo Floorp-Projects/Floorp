@@ -160,7 +160,7 @@ ConsoleAPIStorageService.prototype = {
     }
     else {
       _consoleStorage.clear();
-      Services.obs.notifyObservers(null, "console-storage-reset", null);
+      Services.obs.notifyObservers(null, "console-storage-reset");
     }
   },
 };

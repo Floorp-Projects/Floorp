@@ -129,7 +129,7 @@ LoginManagerPrompter.prototype = {
   promptToSavePassword : function (aLogin) {
     this._showSaveLoginNotification(aLogin);
       Services.telemetry.getHistogramById("PWMGR_PROMPT_REMEMBER_ACTION").add(PROMPT_DISPLAYED);
-    Services.obs.notifyObservers(aLogin, "passwordmgr-prompt-save", null);
+    Services.obs.notifyObservers(aLogin, "passwordmgr-prompt-save");
   },
 
   /*

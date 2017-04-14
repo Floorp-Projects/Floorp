@@ -40,7 +40,7 @@ function* setupPrefsAndRecentWindowBehavior() {
 }
 
 function* portalDetected() {
-  Services.obs.notifyObservers(null, "captive-portal-login", null);
+  Services.obs.notifyObservers(null, "captive-portal-login");
   yield BrowserTestUtils.waitForCondition(() => {
     return cps.state == cps.LOCKED_PORTAL;
   }, "Waiting for Captive Portal Service to update state after portal detected.");
@@ -48,7 +48,7 @@ function* portalDetected() {
 
 function* freePortal(aSuccess) {
   Services.obs.notifyObservers(null,
-    "captive-portal-login-" + (aSuccess ? "success" : "abort"), null);
+    "captive-portal-login-" + (aSuccess ? "success" : "abort"));
   yield BrowserTestUtils.waitForCondition(() => {
     return cps.state != cps.LOCKED_PORTAL;
   }, "Waiting for Captive Portal Service to update state after portal freed.");
@@ -76,7 +76,7 @@ function* focusWindowAndWaitForPortalUI(aLongRecheck, win) {
   yield BrowserTestUtils.waitForCondition(() => {
     return win.CaptivePortalWatcher._waitingForRecheck;
   }, "Waiting for CaptivePortalWatcher to trigger a recheck.");
-  Services.obs.notifyObservers(null, "captive-portal-check-complete", null);
+  Services.obs.notifyObservers(null, "captive-portal-check-complete");
 
   let notification = ensurePortalNotification(win);
 

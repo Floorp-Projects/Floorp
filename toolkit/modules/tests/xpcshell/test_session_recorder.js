@@ -272,7 +272,7 @@ add_task(function* test_record_activity() {
   yield sleep(25);
 
   for (let i = 0; i < 3; i++) {
-    Services.obs.notifyObservers(null, "user-interaction-active", null);
+    Services.obs.notifyObservers(null, "user-interaction-active");
     yield sleep(25);
     do_check_true(recorder.fineTotalTime > total);
     total = recorder.fineTotalTime;
@@ -281,24 +281,24 @@ add_task(function* test_record_activity() {
   do_check_eq(recorder.activeTicks, 3);
 
   // Now send inactive. We should increment total time but not active.
-  Services.obs.notifyObservers(null, "user-interaction-inactive", null);
+  Services.obs.notifyObservers(null, "user-interaction-inactive");
   do_check_eq(recorder.activeTicks, 3);
   do_check_true(recorder.fineTotalTime > total);
   total = recorder.fineTotalTime;
   yield sleep(25);
 
   // If we send active again, this should be counted as inactive.
-  Services.obs.notifyObservers(null, "user-interaction-active", null);
+  Services.obs.notifyObservers(null, "user-interaction-active");
   do_check_eq(recorder.activeTicks, 3);
   do_check_true(recorder.fineTotalTime > total);
   total = recorder.fineTotalTime;
   yield sleep(25);
 
   // If we send active again, this should be counted as active.
-  Services.obs.notifyObservers(null, "user-interaction-active", null);
+  Services.obs.notifyObservers(null, "user-interaction-active");
   do_check_eq(recorder.activeTicks, 4);
 
-  Services.obs.notifyObservers(null, "user-interaction-active", null);
+  Services.obs.notifyObservers(null, "user-interaction-active");
   do_check_eq(recorder.activeTicks, 5);
 
   recorder.onShutdown();
