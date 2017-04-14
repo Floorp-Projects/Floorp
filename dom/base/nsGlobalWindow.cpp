@@ -4167,12 +4167,12 @@ nsGlobalWindow::Self()
 }
 
 Navigator*
-nsGlobalWindow::GetNavigator(ErrorResult& aError)
+nsGlobalWindow::Navigator()
 {
   MOZ_RELEASE_ASSERT(IsInnerWindow());
 
   if (!mNavigator) {
-    mNavigator = new Navigator(AsInner());
+    mNavigator = new mozilla::dom::Navigator(AsInner());
   }
 
   return mNavigator;
@@ -4183,10 +4183,7 @@ nsGlobalWindow::GetNavigator()
 {
   FORWARD_TO_INNER(GetNavigator, (), nullptr);
 
-  ErrorResult dummy;
-  nsIDOMNavigator* navigator = GetNavigator(dummy);
-  dummy.SuppressException();
-  return navigator;
+  return Navigator();
 }
 
 nsScreen*

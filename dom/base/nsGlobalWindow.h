@@ -924,7 +924,7 @@ public:
                 nsIDocShellLoadInfo* aLoadInfo,
                 bool aForceNoOpener,
                 nsPIDOMWindowOuter **_retval) override;
-  mozilla::dom::Navigator* GetNavigator(mozilla::ErrorResult& aError);
+  mozilla::dom::Navigator* Navigator();
   nsIDOMNavigator* GetNavigator() override;
   nsIDOMOfflineResourceList* GetApplicationCache(mozilla::ErrorResult& aError);
   already_AddRefed<nsIDOMOfflineResourceList> GetApplicationCache() override;
