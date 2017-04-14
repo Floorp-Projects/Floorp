@@ -1120,6 +1120,7 @@ class MOZ_RAII BindNameIRGenerator : public IRGenerator
     HandlePropertyName name_;
 
     bool tryAttachGlobalName(ObjOperandId objId, HandleId id);
+    bool tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
 
   public:
     BindNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
