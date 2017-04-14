@@ -2702,15 +2702,6 @@ GetFontParentStyleContext(Element* aElement, nsIPresShell* aPresShell,
 
   // otherwise inherit from default (10px sans-serif)
 
-  nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
-  if (!styleSet) {
-    // XXXheycam ServoStyleSets do not support resolving style from a list of
-    // rules yet.
-    NS_ERROR("stylo: cannot resolve style for canvas from a ServoStyleSet yet");
-    aError.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
   bool changed;
   RefPtr<css::Declaration> parentRule =
     CreateFontDeclaration(NS_LITERAL_STRING("10px sans-serif"),
@@ -2718,6 +2709,10 @@ GetFontParentStyleContext(Element* aElement, nsIPresShell* aPresShell,
 
   nsTArray<nsCOMPtr<nsIStyleRule>> parentRules;
   parentRules.AppendElement(parentRule);
+
+  nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
+  MOZ_RELEASE_ASSERT(styleSet);
+
   RefPtr<nsStyleContext> result =
     styleSet->ResolveStyleForRules(nullptr, parentRules);
 
@@ -2746,15 +2741,6 @@ GetFontStyleContext(Element* aElement, const nsAString& aFont,
                     nsAString& aOutUsedFont,
                     ErrorResult& aError)
 {
-  nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
-  if (!styleSet) {
-    // XXXheycam ServoStyleSets do not support resolving style from a list of
-    // rules yet.
-    NS_ERROR("stylo: cannot resolve style for canvas from a ServoStyleSet yet");
-    aError.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
   bool fontParsedSuccessfully = false;
   RefPtr<css::Declaration> decl =
     CreateFontDeclaration(aFont, aPresShell->GetDocument(),
@@ -2793,6 +2779,9 @@ GetFontStyleContext(Element* aElement, const nsAString& aFont,
   rules.AppendElement(decl);
   // add a rule to prevent text zoom from affecting the style
   rules.AppendElement(new nsDisableTextZoomStyleRule);
+
+  nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
+  MOZ_RELEASE_ASSERT(styleSet);
 
   RefPtr<nsStyleContext> sc =
     styleSet->ResolveStyleForRules(parentContext, rules);
@@ -2929,15 +2918,6 @@ ResolveFilterStyle(const nsAString& aFilterString,
                    nsStyleContext* aParentContext,
                    ErrorResult& aError)
 {
-  nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
-  if (!styleSet) {
-    // XXXheycam ServoStyleSets do not support resolving style from a list of
-    // rules yet.
-    NS_ERROR("stylo: cannot resolve style for canvas from a ServoStyleSet yet");
-    aError.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
   nsIDocument* document = aPresShell->GetDocument();
   bool filterChanged = false;
   RefPtr<css::Declaration> decl =
@@ -2956,6 +2936,9 @@ ResolveFilterStyle(const nsAString& aFilterString,
 
   nsTArray<nsCOMPtr<nsIStyleRule>> rules;
   rules.AppendElement(decl);
+
+  nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
+  MOZ_RELEASE_ASSERT(styleSet);
 
   RefPtr<nsStyleContext> sc =
     styleSet->ResolveStyleForRules(aParentContext, rules);
