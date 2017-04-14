@@ -79,7 +79,7 @@ function waitForDelayedStartupFinished(win) {
       Services.obs.removeObserver(observer, topic);
       deferred.resolve();
     }
-  }, "browser-delayed-startup-finished");
+  }, "browser-delayed-startup-finished", false);
 
   return deferred.promise;
 }

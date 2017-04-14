@@ -258,7 +258,7 @@ var gPermissionManager = {
     });
 
     Services.obs.notifyObservers(null, NOTIFICATION_FLUSH_PERMISSIONS, this._type);
-    Services.obs.addObserver(this, "perm-changed");
+    Services.obs.addObserver(this, "perm-changed", false);
 
     this._loadPermissions();
 

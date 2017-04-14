@@ -47,7 +47,7 @@ function a11yInitOrShutdownPromise() {
       Services.obs.removeObserver(observe, 'a11y-init-or-shutdown');
       resolve(data);
     };
-    Services.obs.addObserver(observe, 'a11y-init-or-shutdown');
+    Services.obs.addObserver(observe, 'a11y-init-or-shutdown', false);
   });
 }
 
@@ -123,7 +123,7 @@ function waitForEvent(eventType, expectedId) {
         }
       }
     };
-    Services.obs.addObserver(eventObserver, 'accessible-event');
+    Services.obs.addObserver(eventObserver, 'accessible-event', false);
   });
 }
 

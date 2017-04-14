@@ -40,7 +40,7 @@ SocialUI = {
     mm.loadFrameScript("chrome://browser/content/content.js", true);
     mm.loadFrameScript("chrome://browser/content/social-content.js", true);
 
-    Services.obs.addObserver(this, "social:providers-changed");
+    Services.obs.addObserver(this, "social:providers-changed", false);
 
     CustomizableUI.addListener(this);
     SocialActivationListener.init();

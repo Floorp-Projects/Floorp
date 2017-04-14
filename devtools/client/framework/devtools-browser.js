@@ -217,7 +217,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   ensurePrefObserver: function () {
     if (!this._prefObserverRegistered) {
       this._prefObserverRegistered = true;
-      Services.prefs.addObserver("devtools.", this);
+      Services.prefs.addObserver("devtools.", this, false);
     }
   },
 
@@ -867,11 +867,11 @@ gDevTools.on("tool-unregistered", function (ev, toolId) {
 gDevTools.on("toolbox-ready", gDevToolsBrowser._updateMenuCheckbox);
 gDevTools.on("toolbox-destroyed", gDevToolsBrowser._updateMenuCheckbox);
 
-Services.obs.addObserver(gDevToolsBrowser, "quit-application");
-Services.obs.addObserver(gDevToolsBrowser, "browser-delayed-startup-finished");
+Services.obs.addObserver(gDevToolsBrowser, "quit-application", false);
+Services.obs.addObserver(gDevToolsBrowser, "browser-delayed-startup-finished", false);
 // Watch for module loader unload. Fires when the tools are reloaded.
-Services.obs.addObserver(gDevToolsBrowser, "sdk:loader:destroy");
-Services.obs.addObserver(gDevToolsBrowser, "lightweight-theme-changed");
+Services.obs.addObserver(gDevToolsBrowser, "sdk:loader:destroy", false);
+Services.obs.addObserver(gDevToolsBrowser, "lightweight-theme-changed", false);
 
 // Fake end of browser window load event for all already opened windows
 // that is already fully loaded.

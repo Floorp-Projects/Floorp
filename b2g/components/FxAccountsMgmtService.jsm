@@ -48,9 +48,9 @@ this.FxAccountsMgmtService = {
   },
 
   init: function() {
-    Services.obs.addObserver(this, ONLOGIN_NOTIFICATION);
-    Services.obs.addObserver(this, ONVERIFIED_NOTIFICATION);
-    Services.obs.addObserver(this, ONLOGOUT_NOTIFICATION);
+    Services.obs.addObserver(this, ONLOGIN_NOTIFICATION, false);
+    Services.obs.addObserver(this, ONVERIFIED_NOTIFICATION, false);
+    Services.obs.addObserver(this, ONLOGOUT_NOTIFICATION, false);
     SystemAppProxy.addEventListener("mozFxAccountsContentEvent",
                                     FxAccountsMgmtService);
   },

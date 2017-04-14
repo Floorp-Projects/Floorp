@@ -67,7 +67,7 @@ function onFrecencyChanged(expectedURI) {
       do_check_true(uri.equals(expectedURI));
       deferred.resolve();
     };
-  PlacesUtils.history.addObserver(obs);
+  PlacesUtils.history.addObserver(obs, false);
   return deferred.promise;
 }
 
@@ -79,6 +79,6 @@ function onManyFrecenciesChanged() {
     do_check_true(true);
     deferred.resolve();
   };
-  PlacesUtils.history.addObserver(obs);
+  PlacesUtils.history.addObserver(obs, false);
   return deferred.promise;
 }

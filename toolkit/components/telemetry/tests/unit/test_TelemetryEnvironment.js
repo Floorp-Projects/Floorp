@@ -1440,7 +1440,7 @@ add_task(function* test_defaultSearchEngine() {
       } catch (ex) {
         reject(ex);
       }
-    }, "browser-search-engine-modified");
+    }, "browser-search-engine-modified", false);
     Services.search.addEngine("file://" + do_get_cwd().path + "/engine.xml",
                               null, null, false);
   });

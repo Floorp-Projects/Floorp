@@ -65,7 +65,7 @@ add_task(function* SetCurrentEngine() {
       Services.obs.removeObserver(obs, "browser-search-engine-modified");
       deferred.resolve();
     }
-  }, "browser-search-engine-modified");
+  }, "browser-search-engine-modified", false);
   let searchPromise = waitForTestMsg("CurrentEngine");
   info("Waiting for test to observe engine-current...");
   yield deferred.promise;
@@ -195,7 +195,7 @@ add_task(function* GetSuggestions_AddFormHistoryEntry_RemoveFormHistoryEntry() {
       Services.obs.removeObserver(onAdd, "satchel-storage-changed");
       executeSoon(() => deferred.resolve());
     }
-  }, "satchel-storage-changed");
+  }, "satchel-storage-changed", false);
   yield deferred.promise;
 
   // Send GetSuggestions using the test engine.  Its suggestions should appear
@@ -231,7 +231,7 @@ add_task(function* GetSuggestions_AddFormHistoryEntry_RemoveFormHistoryEntry() {
       Services.obs.removeObserver(onRemove, "satchel-storage-changed");
       executeSoon(() => deferred.resolve());
     }
-  }, "satchel-storage-changed");
+  }, "satchel-storage-changed", false);
   yield deferred.promise;
 
   // Send GetSuggestions again.

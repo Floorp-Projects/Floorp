@@ -26,8 +26,8 @@ addMessageListener('init-chrome-event', function(message) {
     }
   }, true);
 
-  Services.obs.addObserver(peekChildId, 'recording-device-events');
-  Services.obs.addObserver(peekChildId, 'recording-device-ipc-events');
+  Services.obs.addObserver(peekChildId, 'recording-device-events', false);
+  Services.obs.addObserver(peekChildId, 'recording-device-ipc-events', false);
 });
 
 addMessageListener('fake-content-shutdown', function(message) {

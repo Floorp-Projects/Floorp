@@ -189,7 +189,7 @@ function StackTraceCollector(filters) {
 
 StackTraceCollector.prototype = {
   init() {
-    Services.obs.addObserver(this, "http-on-opening-request");
+    Services.obs.addObserver(this, "http-on-opening-request", false);
     ChannelEventSinkFactory.getService().registerCollector(this);
   },
 
@@ -782,16 +782,16 @@ NetworkMonitor.prototype = {
     if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT) {
       gActivityDistributor.addObserver(this);
       Services.obs.addObserver(this._httpResponseExaminer,
-                               "http-on-examine-response");
+                               "http-on-examine-response", false);
       Services.obs.addObserver(this._httpResponseExaminer,
-                               "http-on-examine-cached-response");
+                               "http-on-examine-cached-response", false);
       Services.obs.addObserver(this._httpModifyExaminer,
-                               "http-on-modify-request");
+                               "http-on-modify-request", false);
     }
     // In child processes, only watch for service worker requests
     // everything else only happens in the parent process
     Services.obs.addObserver(this._serviceWorkerRequest,
-                             "service-worker-synthesized-response");
+                             "service-worker-synthesized-response", false);
   },
 
   get throttleData() {

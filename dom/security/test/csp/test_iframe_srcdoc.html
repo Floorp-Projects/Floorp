@@ -86,7 +86,7 @@ function receiveMessage(event) {
 }
 
 function examiner() {
-  SpecialPowers.addObserver(this, "csp-on-violate-policy");
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
 }
 
 examiner.prototype  = {

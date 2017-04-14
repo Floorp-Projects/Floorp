@@ -62,7 +62,7 @@ var AlertsHelper = {
   _listeners: {},
 
   init: function() {
-    Services.obs.addObserver(this, "xpcom-shutdown");
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
     for (let message of kMessages) {
       ppmm.addMessageListener(message, this);
     }

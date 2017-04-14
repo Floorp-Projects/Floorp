@@ -30,7 +30,7 @@ if (gInContentProcess) {
 
     init() {
       for (let topic of this.TOPICS) {
-        Services.obs.addObserver(this, topic);
+        Services.obs.addObserver(this, topic, false);
         Services.cpmm.addMessageListener("Memory:GetSummary", this);
       }
     },

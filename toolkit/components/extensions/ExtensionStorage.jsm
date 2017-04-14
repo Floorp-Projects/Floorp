@@ -234,8 +234,8 @@ this.ExtensionStorage = {
     if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
       return;
     }
-    Services.obs.addObserver(this, "extension-invalidate-storage-cache");
-    Services.obs.addObserver(this, "xpcom-shutdown");
+    Services.obs.addObserver(this, "extension-invalidate-storage-cache", false);
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
   observe(subject, topic, data) {

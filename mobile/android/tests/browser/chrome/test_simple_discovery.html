@@ -50,7 +50,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
       Services.obs.removeObserver(discovery_observer, "ssdp-service-found");
     });
 
-    Services.obs.addObserver(discovery_observer, "ssdp-service-found");
+    Services.obs.addObserver(discovery_observer, "ssdp-service-found", false);
 
     // We need to register a device or processService will ignore us
     SimpleServiceDiscovery.registerDevice(testDevice);

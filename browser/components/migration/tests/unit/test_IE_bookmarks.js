@@ -32,7 +32,7 @@ add_task(function* () {
     onItemVisited() {},
     onItemMoved() {},
   };
-  PlacesUtils.bookmarks.addObserver(bmObserver);
+  PlacesUtils.bookmarks.addObserver(bmObserver, false);
 
   yield promiseMigration(migrator, MigrationUtils.resourceTypes.BOOKMARKS);
   PlacesUtils.bookmarks.removeObserver(bmObserver);

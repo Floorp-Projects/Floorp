@@ -65,9 +65,9 @@ function waitForEvents(onConsoleOpened) {
     },
 
     init: function init() {
-      Services.obs.addObserver(this, "web-console-created");
-      Services.obs.addObserver(this, "web-console-destroyed");
-      Services.obs.addObserver(this, "web-console-message-created");
+      Services.obs.addObserver(this, "web-console-created", false);
+      Services.obs.addObserver(this, "web-console-destroyed", false);
+      Services.obs.addObserver(this, "web-console-message-created", false);
     }
   };
 

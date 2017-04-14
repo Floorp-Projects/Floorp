@@ -2809,13 +2809,13 @@ this.XPIProvider = {
                                                           null);
       this.enabledAddons = "";
 
-      Services.prefs.addObserver(PREF_EM_MIN_COMPAT_APP_VERSION, this);
-      Services.prefs.addObserver(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, this);
-      Services.prefs.addObserver(PREF_E10S_ADDON_BLOCKLIST, this);
-      Services.prefs.addObserver(PREF_E10S_ADDON_POLICY, this);
+      Services.prefs.addObserver(PREF_EM_MIN_COMPAT_APP_VERSION, this, false);
+      Services.prefs.addObserver(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, this, false);
+      Services.prefs.addObserver(PREF_E10S_ADDON_BLOCKLIST, this, false);
+      Services.prefs.addObserver(PREF_E10S_ADDON_POLICY, this, false);
       if (!REQUIRE_SIGNING)
-        Services.prefs.addObserver(PREF_XPI_SIGNATURES_REQUIRED, this);
-      Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS);
+        Services.prefs.addObserver(PREF_XPI_SIGNATURES_REQUIRED, this, false);
+      Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS, false);
 
       // Cu.isModuleLoaded can fail here for external XUL apps where there is
       // no chrome.manifest that defines resource://devtools.
@@ -2828,7 +2828,7 @@ this.XPIProvider = {
                                    this.onDebugConnectionChange.bind(this));
         } else {
           // Else, wait for it to load
-          Services.obs.addObserver(this, NOTIFICATION_TOOLBOXPROCESS_LOADED);
+          Services.obs.addObserver(this, NOTIFICATION_TOOLBOXPROCESS_LOADED, false);
         }
       }
 
@@ -2929,7 +2929,7 @@ this.XPIProvider = {
           }
           Services.obs.removeObserver(this, "quit-application-granted");
         }
-      }, "quit-application-granted");
+      }, "quit-application-granted", false);
 
       // Detect final-ui-startup for telemetry reporting
       Services.obs.addObserver({
@@ -2938,7 +2938,7 @@ this.XPIProvider = {
           XPIProvider.runPhase = XPI_AFTER_UI_STARTUP;
           Services.obs.removeObserver(this, "final-ui-startup");
         }
-      }, "final-ui-startup");
+      }, "final-ui-startup", false);
 
       AddonManagerPrivate.recordTimestamp("XPI_startup_end");
 
@@ -6307,7 +6307,7 @@ class DownloadAddonInstall extends AddonInstall {
       }
       this.channel.asyncOpen2(listener);
 
-      Services.obs.addObserver(this, "network:offline-about-to-go-offline");
+      Services.obs.addObserver(this, "network:offline-about-to-go-offline", false);
     } catch (e) {
       logger.warn("Failed to start download for addon " + this.sourceURI.spec, e);
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;

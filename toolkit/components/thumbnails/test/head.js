@@ -297,8 +297,8 @@ function bgAddPageThumbObserver(url) {
         Services.obs.removeObserver(observe, "page-thumbnail:error");
       }
     }
-    Services.obs.addObserver(observe, "page-thumbnail:create");
-    Services.obs.addObserver(observe, "page-thumbnail:error");
+    Services.obs.addObserver(observe, "page-thumbnail:create", false);
+    Services.obs.addObserver(observe, "page-thumbnail:error", false);
   });
 }
 
@@ -328,7 +328,7 @@ function bgAddCrashObserver() {
       removeFile(minidumpDirectory, dumpID + ".dmp");
       removeFile(minidumpDirectory, dumpID + ".extra");
     }
-  }, "ipc:content-shutdown");
+  }, "ipc:content-shutdown", false);
   return {
     get crashed() {
       return crashed;

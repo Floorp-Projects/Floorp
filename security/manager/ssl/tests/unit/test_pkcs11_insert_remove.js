@@ -33,9 +33,9 @@ SmartcardObserver.prototype = {
 
 function run_test() {
   Services.obs.addObserver(new SmartcardObserver("smartcard-insert"),
-                           "smartcard-insert");
+                           "smartcard-insert", false);
   Services.obs.addObserver(new SmartcardObserver("smartcard-remove"),
-                           "smartcard-remove");
+                           "smartcard-remove", false);
 
   loadPKCS11TestModule(false);
 }

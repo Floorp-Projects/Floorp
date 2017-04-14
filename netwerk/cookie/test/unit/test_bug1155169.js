@@ -60,7 +60,7 @@ function setCookie(value, expected) {
       do_check_eq(cookie.isHttpOnly, expected.isHttpOnly);
     }
 
-    Services.obs.addObserver(observer, "cookie-changed");
+    Services.obs.addObserver(observer, "cookie-changed", false);
     cs.setCookieStringFromHttp(URI, null, null, value, null, null);
     Services.obs.removeObserver(observer, "cookie-changed");
   }

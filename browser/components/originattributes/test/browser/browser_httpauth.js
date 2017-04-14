@@ -35,7 +35,7 @@ function onCommonDialogLoaded(subject) {
   dialog.ui.button0.click();
 }
 
-Services.obs.addObserver(onCommonDialogLoaded, "common-dialog-loaded");
+Services.obs.addObserver(onCommonDialogLoaded, "common-dialog-loaded", false);
 
 registerCleanupFunction(() => {
   Services.obs.removeObserver(onCommonDialogLoaded, "common-dialog-loaded");

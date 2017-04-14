@@ -518,7 +518,7 @@ function expectNotifications() {
       return undefined;
     }
   });
-  PlacesUtils.bookmarks.addObserver(observer);
+  PlacesUtils.bookmarks.addObserver(observer, false);
   return observer;
 }
 

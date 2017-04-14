@@ -8,7 +8,7 @@ function* runTests() {
     numNotifications += 1;
   }
 
-  Services.obs.addObserver(observe, "page-thumbnail:create");
+  Services.obs.addObserver(observe, "page-thumbnail:create", false);
 
   let url = "http://example.com/";
   let file = thumbnailFile(url);

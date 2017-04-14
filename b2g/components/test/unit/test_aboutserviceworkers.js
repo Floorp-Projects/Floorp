@@ -104,7 +104,7 @@ function run_test() {
       run_next_test();
     }
 
-    Services.obs.addObserver(onMessage, CHROME_MSG);
+    Services.obs.addObserver(onMessage, CHROME_MSG, false);
 
     attachMocks();
 

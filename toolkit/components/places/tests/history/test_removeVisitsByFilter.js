@@ -168,7 +168,7 @@ add_task(function* test_removeVisitsByFilter() {
         // Not sure we can test anything.
       }
     };
-    PlacesUtils.history.addObserver(observer);
+    PlacesUtils.history.addObserver(observer, false);
 
     let cbarg;
     if (options.useCallback) {

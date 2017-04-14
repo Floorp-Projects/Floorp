@@ -149,7 +149,7 @@ function waitForXulWindowVisible() {
     Services.obs.addObserver(function observe() {
       Services.obs.removeObserver(observe, "xul-window-visible");
       resolve();
-    }, "xul-window-visible");
+    }, "xul-window-visible", false);
   });
 }
 

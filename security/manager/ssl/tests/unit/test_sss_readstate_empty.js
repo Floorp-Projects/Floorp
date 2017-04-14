@@ -35,7 +35,7 @@ function run_test() {
   ok(stateFile.exists());
   // Initialize nsISiteSecurityService after do_get_profile() so it
   // can read the state file.
-  Services.obs.addObserver(checkStateRead, "data-storage-ready");
+  Services.obs.addObserver(checkStateRead, "data-storage-ready", false);
   do_test_pending();
   gSSService = Cc["@mozilla.org/ssservice;1"]
                  .getService(Ci.nsISiteSecurityService);

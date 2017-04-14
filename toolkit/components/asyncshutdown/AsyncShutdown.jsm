@@ -83,7 +83,7 @@ var DELAY_CRASH_MS = Services.prefs.getIntPref(PREF_DELAY_CRASH_MS,
                                                60 * 1000); // One minute
 Services.prefs.addObserver(PREF_DELAY_CRASH_MS, function() {
   DELAY_CRASH_MS = Services.prefs.getIntPref(PREF_DELAY_CRASH_MS);
-});
+}, false);
 
 /**
  * A set of Promise that supports waiting.
@@ -206,7 +206,7 @@ const PREF_DEBUG_LOG = "toolkit.asyncshutdown.log";
 var DEBUG_LOG = Services.prefs.getBoolPref(PREF_DEBUG_LOG, false);
 Services.prefs.addObserver(PREF_DEBUG_LOG, function() {
   DEBUG_LOG = Services.prefs.getBoolPref(PREF_DEBUG_LOG);
-});
+}, false);
 
 function debug(msg, error = null) {
   if (DEBUG_LOG) {
@@ -470,7 +470,7 @@ function getPhase(topic) {
 function Spinner(topic) {
   this._barrier = new Barrier(topic);
   this._topic = topic;
-  Services.obs.addObserver(this, topic);
+  Services.obs.addObserver(this, topic, false);
 }
 
 Spinner.prototype = {

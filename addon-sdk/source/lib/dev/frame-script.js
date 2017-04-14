@@ -111,10 +111,10 @@ const observer = {
   }
 };
 
-observerService.addObserver(observer, "content-document-interactive");
-observerService.addObserver(observer, "content-document-loaded");
-observerService.addObserver(observer, "chrome-document-interactive");
-observerService.addObserver(observer, "chrome-document-loaded");
+observerService.addObserver(observer, "content-document-interactive", false);
+observerService.addObserver(observer, "content-document-loaded", false);
+observerService.addObserver(observer, "chrome-document-interactive", false);
+observerService.addObserver(observer, "chrome-document-loaded", false);
 addEventListener("unload", observer, false);
 
 })(this);

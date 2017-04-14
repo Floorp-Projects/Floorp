@@ -90,7 +90,7 @@ function run_loadImage_tests() {
     });
   }
 
-  Services.obs.addObserver(observer, "cacheservice:empty-cache");
+  Services.obs.addObserver(observer, "cacheservice:empty-cache", false);
   let cs = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
              .getService(Ci.nsICacheStorageService);
   cs.clear();

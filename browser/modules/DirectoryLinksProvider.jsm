@@ -250,7 +250,7 @@ var DirectoryLinksProvider = {
   _addPrefsObserver: function DirectoryLinksProvider_addObserver() {
     for (let pref in this._observedPrefs) {
       let prefName = this._observedPrefs[pref];
-      Services.prefs.addObserver(prefName, this);
+      Services.prefs.addObserver(prefName, this, false);
     }
   },
 

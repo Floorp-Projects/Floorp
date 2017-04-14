@@ -91,7 +91,7 @@ add_task(function* test() {
 
   function startTest() {
     Services.obs.addObserver(
-      testObserver, "passwordmgr-dialog-updated");
+      testObserver, "passwordmgr-dialog-updated", false);
     is(countLogins(), 0, "Verify starts with 0 logins");
     createLogins();
     runNextTest();

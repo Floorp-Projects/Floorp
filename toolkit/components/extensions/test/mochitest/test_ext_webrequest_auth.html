@@ -269,7 +269,7 @@ add_task(function* test_webRequest_auth_nonblocking_forwardAuthProvider() {
         },
       };
     };
-    Services.obs.addObserver(observer, "http-on-modify-request");
+    Services.obs.addObserver(observer, "http-on-modify-request", false);
     sendAsyncMessage("chrome-ready");
   });
   yield chromeScript.promiseOneMessage("chrome-ready");
@@ -324,7 +324,7 @@ add_task(function* test_webRequest_auth_nonblocking_forwardAuthPrompt2() {
         },
       };
     };
-    Services.obs.addObserver(observer, "http-on-modify-request");
+    Services.obs.addObserver(observer, "http-on-modify-request", false);
     sendAsyncMessage("chrome-ready");
   });
   yield chromeScript.promiseOneMessage("chrome-ready");

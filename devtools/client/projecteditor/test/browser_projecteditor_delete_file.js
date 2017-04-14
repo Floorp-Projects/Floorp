@@ -72,8 +72,8 @@ function deleteWithContextMenu(projecteditor, container) {
       aSubject.Dialog.ui.button0.click();
     }
 
-    Services.obs.addObserver(onConfirmShown, "common-dialog-loaded");
-    Services.obs.addObserver(onConfirmShown, "tabmodal-dialog-loaded");
+    Services.obs.addObserver(onConfirmShown, "common-dialog-loaded", false);
+    Services.obs.addObserver(onConfirmShown, "tabmodal-dialog-loaded", false);
 
     deleteCommand.click();
     popup.hidePopup();

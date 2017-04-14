@@ -284,9 +284,9 @@ function init() {
   // Activate observer for new top level windows
   var observerService = Cc["@mozilla.org/observer-service;1"].
                         getService(Ci.nsIObserverService);
-  observerService.addObserver(windowReadyObserver, "toplevel-window-ready");
-  observerService.addObserver(windowCloseObserver, "outer-window-destroyed");
-  observerService.addObserver(enterLeavePrivateBrowsingObserver, "private-browsing");
+  observerService.addObserver(windowReadyObserver, "toplevel-window-ready", false);
+  observerService.addObserver(windowCloseObserver, "outer-window-destroyed", false);
+  observerService.addObserver(enterLeavePrivateBrowsingObserver, "private-browsing", false);
 
   handleAttachEventListeners();
 }

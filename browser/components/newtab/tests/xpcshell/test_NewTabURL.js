@@ -47,6 +47,6 @@ function promiseNewtabURLNotification(aNewURL) {
       Services.obs.removeObserver(observer, aTopic);
       Assert.equal(aData, aNewURL, "Data for newtab-url-changed notification should be new URL.");
       resolve();
-    }, "newtab-url-changed");
+    }, "newtab-url-changed", false);
   });
 }

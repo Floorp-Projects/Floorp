@@ -39,8 +39,8 @@ var healthReportWrapper = {
     iframe.src = report.spec;
     console.log("AboutHealthReport: loading content from " + report.spec);
 
-    sharedPrefs.addObserver(PREF_UPLOAD_ENABLED, this);
-    Services.obs.addObserver(this, EVENT_HEALTH_RESPONSE);
+    sharedPrefs.addObserver(PREF_UPLOAD_ENABLED, this, false);
+    Services.obs.addObserver(this, EVENT_HEALTH_RESPONSE, false);
   },
 
   observe: function (subject, topic, data) {

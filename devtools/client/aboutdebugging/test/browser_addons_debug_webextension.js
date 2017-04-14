@@ -33,7 +33,7 @@ add_task(function* testWebExtensionsToolboxWebConsole() {
       }
       Services.obs.removeObserver(listener, "console-api-log-event");
       done(apiMessage.arguments);
-    }, "console-api-log-event");
+    }, "console-api-log-event", false);
   });
 
   // Be careful, this JS function is going to be executed in the addon toolbox,

@@ -586,7 +586,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
                 state = STATE_WAITING_TO_FINISH;
                 MakeProgress();
             };
-            os.addObserver(flushWaiter, "apz-repaints-flushed");
+            os.addObserver(flushWaiter, "apz-repaints-flushed", false);
 
             var willSnapshot = (gCurrentTestType != TYPE_SCRIPT) &&
                                (gCurrentTestType != TYPE_LOAD);

@@ -132,8 +132,8 @@ function Pipe() {
 
 Pipe.prototype = {
   init: function pipe_init() {
-    Services.obs.addObserver(this, "identity-child-process-shutdown");
-    Services.obs.addObserver(this, "identity-controller-unwatch");
+    Services.obs.addObserver(this, "identity-child-process-shutdown", false);
+    Services.obs.addObserver(this, "identity-controller-unwatch", false);
   },
 
   uninit: function pipe_uninit() {
@@ -329,9 +329,9 @@ this.SignInToWebsiteController = {
   init: function SignInToWebsiteController_init(aOptions) {
     aOptions = aOptions || {};
     this.pipe = aOptions.pipe || new Pipe();
-    Services.obs.addObserver(this, "identity-controller-watch");
-    Services.obs.addObserver(this, "identity-controller-request");
-    Services.obs.addObserver(this, "identity-controller-logout");
+    Services.obs.addObserver(this, "identity-controller-watch", false);
+    Services.obs.addObserver(this, "identity-controller-request", false);
+    Services.obs.addObserver(this, "identity-controller-logout", false);
   },
 
   uninit: function SignInToWebsiteController_uninit() {

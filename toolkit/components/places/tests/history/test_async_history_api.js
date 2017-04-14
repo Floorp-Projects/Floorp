@@ -948,7 +948,7 @@ add_task(function* test_title_change_notifies() {
       do_throw("unexpected callback!");
     });
 
-  PlacesUtils.history.addObserver(silentObserver);
+  PlacesUtils.history.addObserver(silentObserver, false);
   let placesResult = yield promiseUpdatePlaces(place);
   if (placesResult.errors.length > 0) {
     do_throw("Unexpected error.");
@@ -970,7 +970,7 @@ add_task(function* test_title_change_notifies() {
         resolve();
       }
     });
-    PlacesUtils.history.addObserver(titleChangeObserver);
+    PlacesUtils.history.addObserver(titleChangeObserver, false);
   });
 
   let visitPromise = new Promise(resolve => {
@@ -980,7 +980,7 @@ add_task(function* test_title_change_notifies() {
         PlacesUtils.history.removeObserver(this);
         resolve();
       }
-    });
+    }, false);
   });
   PlacesUtils.asyncHistory.updatePlaces(place);
   yield visitPromise;
@@ -1026,7 +1026,7 @@ add_task(function* test_visit_notifies() {
         PlacesUtils.history.removeObserver(visitObserver);
         finisher();
       });
-      PlacesUtils.history.addObserver(visitObserver);
+      PlacesUtils.history.addObserver(visitObserver, false);
       let observer = function(aSubject, aTopic, aData) {
         do_print("observe(" + aSubject + ", " + aTopic + ", " + aData + ")");
         do_check_true(aSubject instanceof Ci.nsIURI);
@@ -1035,7 +1035,7 @@ add_task(function* test_visit_notifies() {
         Services.obs.removeObserver(observer, URI_VISIT_SAVED);
         finisher();
       };
-      Services.obs.addObserver(observer, URI_VISIT_SAVED);
+      Services.obs.addObserver(observer, URI_VISIT_SAVED, false);
       PlacesUtils.asyncHistory.updatePlaces(place);
     });
   }
@@ -1134,7 +1134,7 @@ add_task(function* test_omit_frecency_notifications() {
         resolve();
       },
     };
-    PlacesUtils.history.addObserver(frecencyObserverCheck);
+    PlacesUtils.history.addObserver(frecencyObserverCheck, false);
   });
   yield promiseUpdatePlaces(places, {}, true);
   yield promiseFrecenciesChanged;
@@ -1266,7 +1266,7 @@ add_task(function* test_title_on_initial_visit() {
       PlacesUtils.history.removeObserver(visitObserver);
       resolve();
     });
-    PlacesUtils.history.addObserver(visitObserver);
+    PlacesUtils.history.addObserver(visitObserver, false);
   });
   yield promiseUpdatePlaces(place);
   yield visitPromise;
@@ -1290,7 +1290,7 @@ add_task(function* test_title_on_initial_visit() {
       PlacesUtils.history.removeObserver(visitObserver);
       resolve();
     });
-    PlacesUtils.history.addObserver(visitObserver);
+    PlacesUtils.history.addObserver(visitObserver, false);
   });
   yield promiseUpdatePlaces(place);
   yield visitPromise;
@@ -1313,7 +1313,7 @@ add_task(function* test_title_on_initial_visit() {
       PlacesUtils.history.removeObserver(visitObserver);
       resolve();
     });
-    PlacesUtils.history.addObserver(visitObserver);
+    PlacesUtils.history.addObserver(visitObserver, false);
   });
   yield promiseUpdatePlaces(place);
   yield visitPromise;

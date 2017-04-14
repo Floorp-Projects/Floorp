@@ -109,17 +109,17 @@ HandlerService.prototype = {
   _init: function HS__init() {
     // Observe profile-before-change so we can switch to the datasource
     // in the new profile when the user changes profiles.
-    this._observerSvc.addObserver(this, "profile-before-change");
+    this._observerSvc.addObserver(this, "profile-before-change", false);
 
     // Observe xpcom-shutdown so we can remove these observers
     // when the application shuts down.
-    this._observerSvc.addObserver(this, "xpcom-shutdown");
+    this._observerSvc.addObserver(this, "xpcom-shutdown", false);
 
     // Observe profile-do-change so that non-default profiles get upgraded too
-    this._observerSvc.addObserver(this, "profile-do-change");
+    this._observerSvc.addObserver(this, "profile-do-change", false);
 
     // Observe handlersvc-rdf-replace so we can switch to the datasource
-    this._observerSvc.addObserver(this, "handlersvc-rdf-replace");
+    this._observerSvc.addObserver(this, "handlersvc-rdf-replace", false);
   },
 
   _updateDB: function HS__updateDB() {

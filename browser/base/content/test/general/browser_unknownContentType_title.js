@@ -10,7 +10,7 @@ function waitForNewWindow() {
       });
     };
 
-    Services.obs.addObserver(listener, "toplevel-window-ready")
+    Services.obs.addObserver(listener, "toplevel-window-ready", false)
   });
 }
 

@@ -34,6 +34,6 @@ function observe_category(subj, topic, data) {
 
 function run_test() {
   do_test_pending();
-  Services.obs.addObserver(observe_category, observerTopic);
+  Services.obs.addObserver(observe_category, observerTopic, false);
   Components.manager.QueryInterface(Ci.nsIComponentRegistrar).autoRegister(manifest);
 }

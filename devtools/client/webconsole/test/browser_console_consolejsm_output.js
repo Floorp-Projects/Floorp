@@ -302,7 +302,7 @@ add_task(function* testProfile() {
     profilerEvents.push(event);
   }
 
-  Services.obs.addObserver(observer, "console-api-profiler");
+  Services.obs.addObserver(observer, "console-api-profiler", false);
 
   console.profile("test");
   console.profileEnd("test");

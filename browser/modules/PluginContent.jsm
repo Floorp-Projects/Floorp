@@ -59,7 +59,7 @@ PluginContent.prototype = {
     global.addMessageListener("BrowserPlugins:CrashReportSubmitted", this);
     global.addMessageListener("BrowserPlugins:Test:ClearCrashData", this);
 
-    Services.obs.addObserver(this, "decoder-doctor-notification");
+    Services.obs.addObserver(this, "decoder-doctor-notification", false);
   },
 
   uninit() {

@@ -83,7 +83,7 @@ function startup(aData) {
   if (Services.prefs.getBoolPref(prefPdfiumEnable)) {
     pdfium.init();
   }
-  Services.prefs.addObserver(prefPdfiumEnable, prefObserver);
+  Services.prefs.addObserver(prefPdfiumEnable, prefObserver, false);
   Services.ppmm.addMessageListener(messageGenerateRandomBytes, pdfium.generateRandomBytesListener);
   dump("<<<STARTED!!!\n");
 }

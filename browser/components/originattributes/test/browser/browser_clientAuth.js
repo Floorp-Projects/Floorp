@@ -7,7 +7,7 @@ function onCertDialogLoaded(subject) {
   subject.acceptDialog();
 }
 
-Services.obs.addObserver(onCertDialogLoaded, "cert-dialog-loaded");
+Services.obs.addObserver(onCertDialogLoaded, "cert-dialog-loaded", false);
 
 registerCleanupFunction(() => {
   Services.obs.removeObserver(onCertDialogLoaded, "cert-dialog-loaded");

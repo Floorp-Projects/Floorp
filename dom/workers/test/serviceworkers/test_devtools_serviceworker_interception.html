@@ -140,7 +140,7 @@ function fetchAndCheckTimedChannel(aWindow, aIntercepted, aFetch, aURL) {
     resolveFunction();
   }
 
-  SpecialPowers.addObserver(observer, topic);
+  SpecialPowers.addObserver(observer, topic, false);
 
   // return promise;
   return Promise.all([aWindow.fetch(aURL), promise]);

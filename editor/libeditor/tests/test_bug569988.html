@@ -31,8 +31,8 @@ function runTest()
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
 
-    os.addObserver(onPromptLoad, "common-dialog-loaded");
-    os.addObserver(onPromptLoad, "tabmodal-dialog-loaded");
+    os.addObserver(onPromptLoad, "common-dialog-loaded", false);
+    os.addObserver(onPromptLoad, "tabmodal-dialog-loaded", false);
 
     function onPromptLoad(subject, topic, data) {
       sendAsyncMessage("ok", [true, "onPromptLoad is called"]);

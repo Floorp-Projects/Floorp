@@ -120,7 +120,7 @@ function runTests() {
       Services.obs.removeObserver(listener, "sdk:loader:destroy");
       sendAsyncMessage("test:getProcess-destroy", null);
     };
-    Services.obs.addObserver(listener, "sdk:loader:destroy");
+    Services.obs.addObserver(listener, "sdk:loader:destroy", false);
   }
 
   function closeClient() {

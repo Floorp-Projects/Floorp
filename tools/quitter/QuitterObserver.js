@@ -43,8 +43,8 @@ QuitterObserver.prototype = {
   init: function()
   {
     var obs = Services.obs;
-    obs.addObserver(this, "xpcom-shutdown");
-    obs.addObserver(this, "chrome-document-global-created");
+    obs.addObserver(this, "xpcom-shutdown", false);
+    obs.addObserver(this, "chrome-document-global-created", false);
   },
 
   uninit: function()

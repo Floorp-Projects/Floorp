@@ -105,12 +105,12 @@ var SessionCookiesInternal = {
     if (!this._initialized) {
       this._reloadCookies();
       this._initialized = true;
-      Services.obs.addObserver(this, "cookie-changed");
+      Services.obs.addObserver(this, "cookie-changed", false);
 
       // Listen for privacy level changes to reload cookies when needed.
       Services.prefs.addObserver("browser.sessionstore.privacy_level", () => {
         this._reloadCookies();
-      });
+      }, false);
     }
   },
 

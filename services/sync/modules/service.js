@@ -308,7 +308,7 @@ Sync11Service.prototype = {
 
     Svc.Obs.add("weave:service:setup-complete", this);
     Svc.Obs.add("sync:collection_changed", this); // Pulled from FxAccountsCommon
-    Services.prefs.addObserver(PREFS_BRANCH + "engine.", this);
+    Services.prefs.addObserver(PREFS_BRANCH + "engine.", this, false);
 
     this.scheduler = new SyncScheduler(this);
 

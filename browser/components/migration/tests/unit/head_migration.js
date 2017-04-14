@@ -40,7 +40,7 @@ function promiseMigration(migrator, resourceType, aProfile = null) {
     Services.obs.addObserver(function onMigrationEnded() {
       Services.obs.removeObserver(onMigrationEnded, "Migration:Ended");
       resolve();
-    }, "Migration:Ended");
+    }, "Migration:Ended", false);
 
     migrator.migrate(resourceType, null, aProfile);
   });

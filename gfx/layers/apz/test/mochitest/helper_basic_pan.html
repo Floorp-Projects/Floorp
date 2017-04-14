@@ -15,7 +15,7 @@ function scrollPage() {
     dump("Transform complete; flushing repaints...\n");
     flushApzRepaints(checkScroll);
   };
-  SpecialPowers.Services.obs.addObserver(transformEnd, "APZ:TransformEnd");
+  SpecialPowers.Services.obs.addObserver(transformEnd, "APZ:TransformEnd", false);
 
   synthesizeNativeTouchDrag(document.body, 10, 100, 0, -(50 + TOUCH_SLOP));
   dump("Finished native drag, waiting for transform-end observer...\n");

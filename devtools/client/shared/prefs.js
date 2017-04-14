@@ -157,7 +157,7 @@ function makeObserver(self, cache, prefsRoot, prefsBlueprint) {
   return {
     register: function () {
       this._branch = Services.prefs.getBranch(prefsRoot + ".");
-      this._branch.addObserver("", this);
+      this._branch.addObserver("", this, false);
     },
     unregister: function () {
       this._branch.removeObserver("", this);
@@ -184,7 +184,7 @@ exports.PrefsHelper = PrefsHelper;
 function PrefObserver(branchName) {
   this.branchName = branchName;
   this.branch = Services.prefs.getBranch(branchName);
-  this.branch.addObserver("", this);
+  this.branch.addObserver("", this, false);
 
   EventEmitter.decorate(this);
 }

@@ -32,7 +32,7 @@ Blocklist.prototype = {
 
   init() {
     Services.cpmm.addMessageListener("Blocklist:blocklistInvalidated", this);
-    Services.obs.addObserver(this, "xpcom-shutdown");
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
   uninit() {

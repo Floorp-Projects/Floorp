@@ -27,7 +27,7 @@ function waitForOnVisit(aCallback) {
       aCallback.apply(null, arguments);
     }
   };
-  PlacesUtils.history.addObserver(historyObserver);
+  PlacesUtils.history.addObserver(historyObserver, false);
 }
 
 /**
@@ -44,7 +44,7 @@ function waitForOnDeleteURI(aCallback) {
       aCallback.apply(null, arguments);
     }
   };
-  PlacesUtils.history.addObserver(historyObserver);
+  PlacesUtils.history.addObserver(historyObserver, false);
 }
 
 /**
@@ -61,7 +61,7 @@ function waitForOnDeleteVisits(aCallback) {
       aCallback.apply(null, arguments);
     }
   };
-  PlacesUtils.history.addObserver(historyObserver);
+  PlacesUtils.history.addObserver(historyObserver, false);
 }
 
 function run_test() {
@@ -257,8 +257,8 @@ add_test(function test_dh_details() {
     onDeleteVisits() {}
   };
 
-  PlacesUtils.annotations.addObserver(annoObserver);
-  PlacesUtils.history.addObserver(historyObserver);
+  PlacesUtils.annotations.addObserver(annoObserver, false);
+  PlacesUtils.history.addObserver(historyObserver, false);
 
   // Both null values and remote URIs should not cause errors.
   gDownloadHistory.addDownload(SOURCE_URI, null, Date.now() * 1000);

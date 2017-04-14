@@ -142,7 +142,7 @@ addMessageListener("getPopupState", () => {
 });
 
 addMessageListener("addObserver", () => {
-  Services.obs.addObserver(ParentUtils, "satchel-storage-changed");
+  Services.obs.addObserver(ParentUtils, "satchel-storage-changed", false);
 });
 addMessageListener("removeObserver", () => {
   Services.obs.removeObserver(ParentUtils, "satchel-storage-changed");

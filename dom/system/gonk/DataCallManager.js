@@ -107,9 +107,9 @@ function DataCallManager() {
   // Read the default client id for data call.
   lock.get("ril.data.defaultServiceId", this);
 
-  Services.obs.addObserver(this, TOPIC_XPCOM_SHUTDOWN);
-  Services.obs.addObserver(this, TOPIC_MOZSETTINGS_CHANGED);
-  Services.prefs.addObserver(PREF_RIL_DEBUG_ENABLED, this);
+  Services.obs.addObserver(this, TOPIC_XPCOM_SHUTDOWN, false);
+  Services.obs.addObserver(this, TOPIC_MOZSETTINGS_CHANGED, false);
+  Services.prefs.addObserver(PREF_RIL_DEBUG_ENABLED, this, false);
 }
 DataCallManager.prototype = {
   classID:   DATACALLMANAGER_CID,

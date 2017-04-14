@@ -139,8 +139,8 @@ ConverterObserver.prototype = {
       this.register();
     }
 
-    Services.prefs.addObserver(JSON_VIEW_PREF, this);
-    Services.obs.addObserver(this, "xpcom-shutdown");
+    Services.prefs.addObserver(JSON_VIEW_PREF, this, false);
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
   observe: function (subject, topic, data) {

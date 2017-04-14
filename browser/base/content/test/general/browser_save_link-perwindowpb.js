@@ -93,7 +93,7 @@ function test() {
         executeSoon(aCallback);
         info("whenDelayedStartupFinished found our window");
       }
-    }, "browser-delayed-startup-finished");
+    }, "browser-delayed-startup-finished", false);
   }
 
   mockTransferRegisterer.register();
@@ -161,8 +161,8 @@ function test() {
     }
   }
 
-  Services.obs.addObserver(observer, "http-on-modify-request");
-  Services.obs.addObserver(observer, "http-on-examine-response");
+  Services.obs.addObserver(observer, "http-on-modify-request", false);
+  Services.obs.addObserver(observer, "http-on-examine-response", false);
 
   testOnWindow(undefined, function(win) {
     // The first save from a regular window sets a cookie.

@@ -210,7 +210,7 @@ function setUserMadeChoicePref(userMadeChoice) {
       Services.prefs.addObserver(CHOICE_PREF, function obs(subj, topic, data) {
         Services.prefs.removeObserver(CHOICE_PREF, obs);
         resolve();
-      });
+      }, false);
     }
     Services.prefs.setBoolPref(CHOICE_PREF, userMadeChoice);
     if (currentUserMadeChoice == userMadeChoice) {

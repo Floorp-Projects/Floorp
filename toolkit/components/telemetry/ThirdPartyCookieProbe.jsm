@@ -47,9 +47,9 @@ this.ThirdPartyCookieProbe = function() {
 this.ThirdPartyCookieProbe.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
   init() {
-    Services.obs.addObserver(this, "profile-before-change");
-    Services.obs.addObserver(this, "third-party-cookie-accepted");
-    Services.obs.addObserver(this, "third-party-cookie-rejected");
+    Services.obs.addObserver(this, "profile-before-change", false);
+    Services.obs.addObserver(this, "third-party-cookie-accepted", false);
+    Services.obs.addObserver(this, "third-party-cookie-rejected", false);
   },
   dispose() {
     Services.obs.removeObserver(this, "profile-before-change");

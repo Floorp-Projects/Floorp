@@ -67,7 +67,7 @@ let dateAndTimeFormatter = Services.intl.createDateTimeFormat(undefined,
 
 function Startup() {
   // be prepared to reload the display if anything changes
-  Services.obs.addObserver(signonReloadDisplay, "passwordmgr-storage-changed");
+  Services.obs.addObserver(signonReloadDisplay, "passwordmgr-storage-changed", false);
 
   signonsTree = document.getElementById("signonsTree");
   kSignonBundle = document.getElementById("signonBundle");

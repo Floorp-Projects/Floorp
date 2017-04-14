@@ -48,7 +48,7 @@ var observer = {
   }
 };
 
-bmSvc.addObserver(observer);
+bmSvc.addObserver(observer, false);
 
 function add_bookmarks() {
   // This is the folder we will cleanup

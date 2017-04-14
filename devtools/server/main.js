@@ -789,7 +789,7 @@ var DebuggerServer = {
       }
     });
     Services.obs.addObserver(onMessageManagerClose,
-                             "message-manager-close");
+                             "message-manager-close", false);
 
     events.on(connection, "closed", onClose);
 
@@ -1182,7 +1182,7 @@ var DebuggerServer = {
       }
     };
     Services.obs.addObserver(onMessageManagerClose,
-                             "message-manager-close");
+                             "message-manager-close", false);
 
     // Listen for connection close to cleanup things
     // when user unplug the device or we lose the connection somehow.

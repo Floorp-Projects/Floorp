@@ -483,7 +483,7 @@ var ObserverChild = {
   track(path, register) {
     let topic = path[1];
     if (register) {
-      Services.obs.addObserver(this, topic);
+      Services.obs.addObserver(this, topic, false);
     } else {
       Services.obs.removeObserver(this, topic);
     }

@@ -103,6 +103,6 @@ function createNetObserver(test) {
       success = true;
     },
   };
-  SpecialPowers.addObserver(observer, "csp-on-violate-policy");
+  SpecialPowers.addObserver(observer, "csp-on-violate-policy", false);
   return observer;
 }

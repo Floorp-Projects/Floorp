@@ -146,7 +146,7 @@ XPCOMUtils.defineLazyGetter(this, "Barriers", () => {
                    "' was not properly closed. Auto-close triggered by garbage collection.\n");
     connectionData.close();
   };
-  Services.obs.addObserver(finalizationObserver, "sqlite-finalization-witness");
+  Services.obs.addObserver(finalizationObserver, "sqlite-finalization-witness", false);
 
   /**
    * Ensure that Sqlite.jsm:

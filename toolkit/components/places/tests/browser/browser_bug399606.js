@@ -38,7 +38,7 @@ function test() {
     onDeleteVisits() {},
     QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
   };
-  hs.addObserver(historyObserver);
+  hs.addObserver(historyObserver, false);
 
   function confirm_results() {
     gBrowser.removeCurrentTab();

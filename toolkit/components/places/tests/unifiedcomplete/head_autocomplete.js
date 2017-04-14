@@ -454,7 +454,7 @@ function* addTestEngine(basename, httpServer = undefined) {
       Services.obs.removeObserver(obs, "browser-search-engine-modified");
       do_register_cleanup(() => Services.search.removeEngine(engine));
       resolve(engine);
-    }, "browser-search-engine-modified");
+    }, "browser-search-engine-modified", false);
 
     do_print("Adding engine from URL: " + dataUrl + basename);
     Services.search.addEngine(dataUrl + basename, null, null, false);

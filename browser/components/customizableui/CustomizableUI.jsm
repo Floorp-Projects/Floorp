@@ -4013,7 +4013,7 @@ function OverflowableToolbar(aToolbarNode) {
   if (window.gBrowserInit.delayedStartupFinished) {
     this.init();
   } else {
-    Services.obs.addObserver(this, "browser-delayed-startup-finished");
+    Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
   }
 }
 

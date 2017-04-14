@@ -467,4 +467,4 @@ obs.addObserver(function observer(aSubject, aTopic, aData) {
   obs.removeObserver(observer, aTopic);
 
   requestPromise = aSubject;
-}, 'setup-request-promise');
+}, 'setup-request-promise', false);

@@ -48,7 +48,7 @@
 
       os = Components.classes["@mozilla.org/observer-service;1"].
         getService(Components.interfaces.nsIObserverService);
-      os.addObserver(observer, "content-document-global-created");
+      os.addObserver(observer, "content-document-global-created", false);
 
       browser.loadURI("http://mochi.test:8888/tests/docshell/test/chrome/582176_dummy.html");
       yield undefined;

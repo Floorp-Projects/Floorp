@@ -181,7 +181,7 @@ function fetch_blocklist(blocklistPath) {
     }
   };
 
-  Services.obs.addObserver(certblockObserver, "blocklist-updated");
+  Services.obs.addObserver(certblockObserver, "blocklist-updated", false);
   Services.prefs.setCharPref("extensions.blocklist.url",
                               `http://localhost:${port}/${blocklistPath}`);
   let blocklist = Cc["@mozilla.org/extensions/blocklist;1"]

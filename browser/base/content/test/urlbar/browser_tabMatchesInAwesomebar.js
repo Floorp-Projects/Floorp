@@ -125,7 +125,8 @@ function loadTab(tab, url) {
         Services.obs.removeObserver(observer, aTopic);
         resolve();
       },
-      "uri-visit-saved"
+      "uri-visit-saved",
+      false
     );
   });
 

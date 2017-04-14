@@ -58,7 +58,7 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
       Services.obs.removeObserver(observer, aTopic);
       executeSoon(aCallback);
     }
-  }, "browser-delayed-startup-finished");
+  }, "browser-delayed-startup-finished", false);
 }
 
 function updateTabContextMenu(tab, onOpened) {
@@ -199,7 +199,7 @@ function updateBlocklist(aCallback) {
     Services.obs.removeObserver(observer, "blocklist-updated");
     SimpleTest.executeSoon(aCallback);
   };
-  Services.obs.addObserver(observer, "blocklist-updated");
+  Services.obs.addObserver(observer, "blocklist-updated", false);
   blocklistNotifier.notify(null);
 }
 
@@ -229,7 +229,7 @@ function promiseWindowWillBeClosed(win) {
         Services.obs.removeObserver(observe, topic);
         resolve();
       }
-    }, "domwindowclosed");
+    }, "domwindowclosed", false);
   });
 }
 
@@ -249,7 +249,7 @@ function promiseOpenAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
       }
       Services.obs.removeObserver(onDS, "browser-delayed-startup-finished");
       deferred.resolve(win);
-    }, "browser-delayed-startup-finished");
+    }, "browser-delayed-startup-finished", false);
 
   } else {
     win.addEventListener("load", function() {
@@ -506,7 +506,7 @@ var FullZoomHelper = {
       Services.obs.addObserver(function obs(subj, topic, data) {
         Services.obs.removeObserver(obs, topic);
         resolve();
-      }, "browser-fullZoom:location-change");
+      }, "browser-fullZoom:location-change", false);
     });
   },
 
@@ -721,7 +721,7 @@ function promiseTopicObserved(aTopic) {
       function PTO_observe(aSubject, aTopic2, aData) {
         Services.obs.removeObserver(PTO_observe, aTopic2);
         resolve({subject: aSubject, data: aData});
-      }, aTopic);
+      }, aTopic, false);
   });
 }
 
@@ -769,7 +769,7 @@ function promiseOnBookmarkItemAdded(aExpectedURI) {
       ])
     };
     info("Waiting for a bookmark to be added");
-    PlacesUtils.bookmarks.addObserver(bookmarksObserver);
+    PlacesUtils.bookmarks.addObserver(bookmarksObserver, false);
   });
 }
 
@@ -793,7 +793,7 @@ function* loadBadCertPage(url) {
     };
 
     Services.obs.addObserver(certExceptionDialogObserver,
-                             "cert-exception-ui-ready");
+                             "cert-exception-ui-ready", false);
   });
 
   let loaded = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);

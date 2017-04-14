@@ -48,5 +48,5 @@ function run_test() {
 
       do_check_true(Services.search.isInitialized);
     }
-  }, "browser-search-service");
+  }, "browser-search-service", false);
 }

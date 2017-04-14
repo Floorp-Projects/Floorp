@@ -38,7 +38,7 @@ var observer = {
   }
 };
 
-SpecialPowers.addObserver(observer, "cycle-collector-begin");
+SpecialPowers.addObserver(observer, "cycle-collector-begin", false);
 
 SpecialPowers.Cu.forceCC();
 

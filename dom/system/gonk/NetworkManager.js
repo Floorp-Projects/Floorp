@@ -177,9 +177,9 @@ function NetworkManager() {
   } catch(ex) {
     // Ignore.
   }
-  Services.prefs.addObserver(PREF_MANAGE_OFFLINE_STATUS, this);
-  Services.prefs.addObserver(PREF_NETWORK_DEBUG_ENABLED, this);
-  Services.obs.addObserver(this, TOPIC_XPCOM_SHUTDOWN);
+  Services.prefs.addObserver(PREF_MANAGE_OFFLINE_STATUS, this, false);
+  Services.prefs.addObserver(PREF_NETWORK_DEBUG_ENABLED, this, false);
+  Services.obs.addObserver(this, TOPIC_XPCOM_SHUTDOWN, false);
 
   this.setAndConfigureActive();
 

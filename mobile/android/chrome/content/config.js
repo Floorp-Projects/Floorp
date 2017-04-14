@@ -219,7 +219,7 @@ var AboutConfig = {
     this.bufferFilterInput();
 
     // Setup the prefs observers
-    Services.prefs.addObserver("", this);
+    Services.prefs.addObserver("", this, false);
   },
 
   // Uninit the main AboutConfig dialog

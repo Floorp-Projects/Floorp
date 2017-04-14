@@ -100,7 +100,7 @@ this.UserAgentUpdates = {
     this._lastUpdated = 0;
     this._applySavedUpdate();
 
-    Services.prefs.addObserver(PREF_UPDATES, this);
+    Services.prefs.addObserver(PREF_UPDATES, this, false);
   },
 
   uninit: function() {

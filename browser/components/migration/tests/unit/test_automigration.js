@@ -256,7 +256,7 @@ add_task(function* checkUndoRemoval() {
         resolve();
       },
     };
-    PlacesUtils.history.addObserver(observer);
+    PlacesUtils.history.addObserver(observer, false);
   });
   yield MigrationUtils.insertVisitsWrapper([{
     uri: visitedURI,
@@ -580,7 +580,7 @@ add_task(function* checkUndoVisitsState() {
         PlacesUtils.history.removeObserver(this);
         resolve();
       }
-    });
+    }, false);
   });
   yield PlacesUtils.history.insertMany([{
     url: "http://www.example.com/",
@@ -646,7 +646,7 @@ add_task(function* checkUndoVisitsState() {
       uriDeletedExpected.get(aURI.spec).resolve();
     },
   };
-  PlacesUtils.history.addObserver(observer);
+  PlacesUtils.history.addObserver(observer, false);
 
   yield AutoMigrate._removeSomeVisits(undoVisitData);
   PlacesUtils.history.removeObserver(observer);

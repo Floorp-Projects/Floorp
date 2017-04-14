@@ -20,7 +20,7 @@ function promiseFrecencyChanged(expectedURI, expectedFrecency) {
       Assert.equal(newFrecency, expectedFrecency, "Frecency should be the expected one");
       deferred.resolve();
     };
-  PlacesUtils.history.addObserver(obs);
+  PlacesUtils.history.addObserver(obs, false);
   return deferred.promise;
 }
 
@@ -37,7 +37,7 @@ function promiseManyFrecenciesChanged() {
     Assert.ok(true);
     deferred.resolve();
   };
-  PlacesUtils.history.addObserver(obs);
+  PlacesUtils.history.addObserver(obs, false);
   return deferred.promise;
 }
 

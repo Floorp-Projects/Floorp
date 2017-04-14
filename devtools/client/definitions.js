@@ -177,7 +177,8 @@ switchDebugger();
 
 Services.prefs.addObserver(
   "devtools.debugger.new-debugger-frontend",
-  { observe: switchDebugger }
+  { observe: switchDebugger },
+  false
 );
 
 Tools.styleEditor = {

@@ -54,7 +54,7 @@ function checkPage(data) {
                              "online.");
     Services.obs.removeObserver(observer, "network:offline-status-changed");
     finish();
-  }, "network:offline-status-changed");
+  }, "network:offline-status-changed", false);
 
   ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
     content.document.getElementById("errorTryAgain").click();

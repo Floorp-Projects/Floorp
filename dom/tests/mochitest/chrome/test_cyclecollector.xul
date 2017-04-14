@@ -45,7 +45,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   SpecialPowers.finishCC();
   SpecialPowers.ccSlice(1);
 
-  obs.addObserver(observer, "cycle-collector-begin");
+  obs.addObserver(observer, "cycle-collector-begin", false);
 
   SpecialPowers.DOMWindowUtils.cycleCollect();
 

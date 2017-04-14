@@ -50,9 +50,9 @@ var ProcessHangMonitor = {
    * Initialize hang reporting. Called once in the parent process.
    */
   init() {
-    Services.obs.addObserver(this, "process-hang-report");
-    Services.obs.addObserver(this, "clear-hang-report");
-    Services.obs.addObserver(this, "xpcom-shutdown");
+    Services.obs.addObserver(this, "process-hang-report", false);
+    Services.obs.addObserver(this, "clear-hang-report", false);
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
     Services.ww.registerNotification(this);
   },
 

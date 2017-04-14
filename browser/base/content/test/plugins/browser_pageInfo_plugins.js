@@ -23,7 +23,7 @@ function pageLoad() {
 }
 
 function doOnOpenPageInfo(continuation) {
-  Services.obs.addObserver(pageInfoObserve, "page-info-dialog-loaded");
+  Services.obs.addObserver(pageInfoObserve, "page-info-dialog-loaded", false);
   gNextTest = continuation;
   // An explanation: it looks like the test harness complains about leaked
   // windows if we don't keep a reference to every window we've opened.

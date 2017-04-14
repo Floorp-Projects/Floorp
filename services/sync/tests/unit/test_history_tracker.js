@@ -45,7 +45,7 @@ async function promiseVisit(expectedType, expectedURI) {
       onPageChanged() {},
       onDeleteVisits() {},
     };
-    PlacesUtils.history.addObserver(observer);
+    PlacesUtils.history.addObserver(observer, false);
   });
 }
 
@@ -223,7 +223,7 @@ add_task(async function test_dont_track_expiration() {
     Services.obs.removeObserver(onExpiration, aTopic);
     // Remove the remaining page to update its score.
     PlacesUtils.history.remove(uriToRemove);
-  }, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+  }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
 
   // Force expiration of 1 entry.
   Services.prefs.setIntPref("places.history.expiration.max_pages", 0);

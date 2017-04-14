@@ -416,7 +416,7 @@ function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
           return;
         }
         setup_manager(aSubject);
-      }, "EM-loaded");
+      }, "EM-loaded", false);
 
       gBrowser.selectedTab = gBrowser.addTab();
       switchToTabHavingURI(MANAGER_URI, true);
@@ -425,7 +425,7 @@ function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
       Services.obs.addObserver(function(aSubject, aTopic, aData) {
         Services.obs.removeObserver(arguments.callee, aTopic);
         setup_manager(aSubject);
-      }, "EM-loaded");
+      }, "EM-loaded", false);
 
       openDialog(MANAGER_URI);
     }

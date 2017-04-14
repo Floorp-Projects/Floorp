@@ -163,7 +163,7 @@ add_test(function observePushTopicDeviceConnected() {
     Services.obs.removeObserver(obs, topic);
     run_next_test();
   };
-  Services.obs.addObserver(obs, ON_DEVICE_CONNECTED_NOTIFICATION);
+  Services.obs.addObserver(obs, ON_DEVICE_CONNECTED_NOTIFICATION, false);
 
   let pushService = new FxAccountsPushService({
     pushService: mockPushService,
@@ -218,7 +218,7 @@ add_test(function observePushTopicProfileUpdated() {
     Services.obs.removeObserver(obs, topic);
     run_next_test();
   };
-  Services.obs.addObserver(obs, ON_PROFILE_CHANGE_NOTIFICATION);
+  Services.obs.addObserver(obs, ON_PROFILE_CHANGE_NOTIFICATION, false);
 
   let pushService = new FxAccountsPushService({
     pushService: mockPushService,

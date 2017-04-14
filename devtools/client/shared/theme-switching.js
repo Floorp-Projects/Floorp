@@ -175,7 +175,7 @@
   } else {
     switchTheme(Services.prefs.getCharPref("devtools.theme"));
 
-    Services.prefs.addObserver("devtools.theme", handlePrefChange);
+    Services.prefs.addObserver("devtools.theme", handlePrefChange, false);
     window.addEventListener("unload", function () {
       Services.prefs.removeObserver("devtools.theme", handlePrefChange);
     }, { once: true });

@@ -201,7 +201,7 @@ let InternalFaviconLoader = {
     }
     this._initialized = true;
 
-    Services.obs.addObserver(this, "inner-window-destroyed");
+    Services.obs.addObserver(this, "inner-window-destroyed", false);
     Services.ppmm.addMessageListener("Toolkit:inner-window-destroyed", msg => {
       this.removeRequestsForInner(msg.data);
     });

@@ -1485,7 +1485,7 @@ var BookmarkingUI = {
       }
     };
 
-    Services.prefs.addObserver(this.RECENTLY_BOOKMARKED_PREF, prefObserver);
+    Services.prefs.addObserver(this.RECENTLY_BOOKMARKED_PREF, prefObserver, false);
     PlacesUtils.bookmarks.addObserver(this._recentlyBookmarkedObserver, true);
 
     // The context menu doesn't exist in non-browser windows on Mac
@@ -2014,7 +2014,7 @@ var BookmarkingUI = {
 
 var AutoShowBookmarksToolbar = {
   init() {
-    Services.obs.addObserver(this, "autoshow-bookmarks-toolbar");
+    Services.obs.addObserver(this, "autoshow-bookmarks-toolbar", false);
   },
 
   uninit() {

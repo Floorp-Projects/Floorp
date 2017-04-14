@@ -49,7 +49,7 @@ WeaveCrypto.prototype = {
     init() {
         // Preferences. Add observer so we get notified of changes.
         this.prefBranch = Services.prefs.getBranch("services.sync.log.");
-        this.prefBranch.addObserver("cryptoDebug", this.observer);
+        this.prefBranch.addObserver("cryptoDebug", this.observer, false);
         this.observer._self = this;
         this.debug = this.prefBranch.getBoolPref("cryptoDebug", false);
         XPCOMUtils.defineLazyGetter(this, "encoder", () => new TextEncoder(UTF_LABEL));

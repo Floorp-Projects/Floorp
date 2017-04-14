@@ -50,7 +50,7 @@ add_task(function* () {
           Services.obs.removeObserver(observe, test.topic);
           resolve();
         }
-      }, test.topic);
+      }, test.topic, false);
     });
     ContentTask.spawn(test.win.gBrowser.selectedBrowser, prefix + test.subtest, function* (aSrc) {
       content.document.getElementById("iframe").src = aSrc;

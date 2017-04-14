@@ -825,7 +825,7 @@ SpecialPowersAPI.prototype = {
         // main-process) and get signals from it.
         if (this.isMainProcess()) {
           this.permissionObserverProxy._specialPowersAPI = this;
-          Services.obs.addObserver(this.permissionObserverProxy, "perm-changed");
+          Services.obs.addObserver(this.permissionObserverProxy, "perm-changed", false);
         } else {
           this.registerObservers("perm-changed");
           // bind() is used to set 'this' to SpecialPowersAPI itself.
@@ -1173,7 +1173,7 @@ SpecialPowersAPI.prototype = {
         // Now apply any prefs that may have been queued while we were applying
         self._applyPrefs();
       });
-    });
+    }, false);
 
     for (var idx in pendingActions) {
       var pref = pendingActions[idx];

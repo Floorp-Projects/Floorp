@@ -70,7 +70,7 @@ var AccessFuTest = {
       isDeeply(data.details, aWaitForData, "Data is correct");
       aListener.apply(listener);
     };
-    Services.obs.addObserver(listener, 'accessibility-output');
+    Services.obs.addObserver(listener, 'accessibility-output', false);
     return listener;
   },
 

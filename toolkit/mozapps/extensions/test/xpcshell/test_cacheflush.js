@@ -24,7 +24,7 @@ var CacheFlushObserver = {
 
 function run_test() {
   do_test_pending();
-  Services.obs.addObserver(CacheFlushObserver, "flush-cache-entry");
+  Services.obs.addObserver(CacheFlushObserver, "flush-cache-entry", false);
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "2");
 
   startupManager();

@@ -194,7 +194,7 @@ function registerRunTests() {
           resolve();
         });
       });
-      SpecialPowers.addObserver(observer, "passwordmgr-processed-form");
+      SpecialPowers.addObserver(observer, "passwordmgr-processed-form", false);
 
       document.body.appendChild(form);
     });
@@ -283,7 +283,7 @@ function promiseFormsProcessed(expectedCount = 1) {
         resolve(SpecialPowers.Cu.waiveXrays(subject), data);
       }
     }
-    SpecialPowers.addObserver(onProcessedForm, "passwordmgr-processed-form");
+    SpecialPowers.addObserver(onProcessedForm, "passwordmgr-processed-form", false);
   });
 }
 
@@ -384,7 +384,7 @@ if (this.addMessageListener) {
       data,
     });
   }
-  Services.obs.addObserver(onStorageChanged, "passwordmgr-storage-changed");
+  Services.obs.addObserver(onStorageChanged, "passwordmgr-storage-changed", false);
 
   function onPrompt(subject, topic, data) {
     sendAsyncMessage("promptShown", {
@@ -392,8 +392,8 @@ if (this.addMessageListener) {
       data,
     });
   }
-  Services.obs.addObserver(onPrompt, "passwordmgr-prompt-change");
-  Services.obs.addObserver(onPrompt, "passwordmgr-prompt-save");
+  Services.obs.addObserver(onPrompt, "passwordmgr-prompt-change", false);
+  Services.obs.addObserver(onPrompt, "passwordmgr-prompt-save", false);
 
   addMessageListener("setupParent", ({selfFilling = false} = {selfFilling: false}) => {
     // Force LoginManagerParent to init for the tests since it's normally delayed

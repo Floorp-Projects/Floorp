@@ -28,9 +28,9 @@ ContentObserver.prototype = {
    */
   startListening: function () {
     Services.obs.addObserver(
-      this._onContentGlobalCreated, "content-document-global-created");
+      this._onContentGlobalCreated, "content-document-global-created", false);
     Services.obs.addObserver(
-      this._onInnerWindowDestroyed, "inner-window-destroyed");
+      this._onInnerWindowDestroyed, "inner-window-destroyed", false);
   },
 
   /**

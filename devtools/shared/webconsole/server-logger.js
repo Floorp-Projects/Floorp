@@ -87,7 +87,7 @@ var ServerLoggingListener = Class({
       this.attachParentProcess();
     } else {
       Services.obs.addObserver(this.onExamineResponse,
-        "http-on-examine-response");
+        "http-on-examine-response", false);
     }
   }),
 

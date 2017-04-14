@@ -190,7 +190,7 @@ function waitForObserverEvent(aTopic) {
       obs.removeObserver(observer, aTopic);
       deferred.resolve(subject);
     }
-  }, aTopic);
+  }, aTopic, false);
 
   return deferred.promise;
 }

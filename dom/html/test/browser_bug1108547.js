@@ -26,7 +26,7 @@ function runPass(getterFile, finishedCallback) {
 
       Services.obs.removeObserver(onStartup, topic);
       executeSoon(callback);
-    }, topic);
+    }, topic, false);
   }
 
   // First, set the cookie in a normal window.

@@ -109,6 +109,6 @@ exports.observeTimes = function (notificationName, receiveCount, options = {}) {
         Services.obs.removeObserver(onObserve, topic);
         resolve(data);
       }
-    }, notificationName);
+    }, notificationName, false);
   });
 };

@@ -126,8 +126,8 @@ const AutoMigrate = {
     };
 
     MigrationUtils.initializeUndoData();
-    Services.obs.addObserver(migrationObserver, "Migration:Ended");
-    Services.obs.addObserver(migrationObserver, "Migration:ItemError");
+    Services.obs.addObserver(migrationObserver, "Migration:Ended", false);
+    Services.obs.addObserver(migrationObserver, "Migration:ItemError", false);
     migrator.migrate(this.resourceTypesToUse, profileStartup, profileToMigrate);
     histogram.add(20);
   },

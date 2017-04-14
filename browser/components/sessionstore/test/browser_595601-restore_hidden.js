@@ -58,7 +58,7 @@ function test_loadTabs(restoreHiddenTabs, callback) {
 var TabsProgressListener = {
   init(win) {
     this.window = win;
-    Services.obs.addObserver(this, "sessionstore-debug-tab-restored");
+    Services.obs.addObserver(this, "sessionstore-debug-tab-restored", false);
   },
 
   uninit() {

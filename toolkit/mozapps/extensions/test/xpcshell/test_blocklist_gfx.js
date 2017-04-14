@@ -44,7 +44,7 @@ add_task(function* test_sends_serialized_data() {
                    "versionRange:0,*";
   let received;
   const observe = (subject, topic, data) => { received = data };
-  Services.obs.addObserver(observe, EVENT_NAME);
+  Services.obs.addObserver(observe, EVENT_NAME, false);
   blocklist._notifyObserversBlocklistGFX();
   equal(received, expected);
   Services.obs.removeObserver(observe, EVENT_NAME);
@@ -80,7 +80,7 @@ add_task(function* test_empty_values_are_ignored() {
   const blocklist = Blocklist();
   let received;
   const observe = (subject, topic, data) => { received = data };
-  Services.obs.addObserver(observe, EVENT_NAME);
+  Services.obs.addObserver(observe, EVENT_NAME, false);
   blocklist._loadBlocklistFromString(input);
   ok(received.indexOf("os" < 0));
   Services.obs.removeObserver(observe, EVENT_NAME);
@@ -97,7 +97,7 @@ add_task(function* test_empty_devices_are_ignored() {
   const blocklist = Blocklist();
   let received;
   const observe = (subject, topic, data) => { received = data };
-  Services.obs.addObserver(observe, EVENT_NAME);
+  Services.obs.addObserver(observe, EVENT_NAME, false);
   blocklist._loadBlocklistFromString(input);
   ok(received.indexOf("devices" < 0));
   Services.obs.removeObserver(observe, EVENT_NAME);

@@ -707,7 +707,7 @@ var SessionStoreInternal = {
 
     Services.prefs.addObserver("browser.sessionstore.debug", () => {
       gDebuggingEnabled = this._prefBranch.getBoolPref("sessionstore.debug");
-    });
+    }, false);
 
     this._max_tabs_undo = this._prefBranch.getIntPref("sessionstore.max_tabs_undo");
     this._prefBranch.addObserver("sessionstore.max_tabs_undo", this, true);
@@ -717,7 +717,7 @@ var SessionStoreInternal = {
 
 
     gResistFingerprintingEnabled = Services.prefs.getBoolPref("privacy.resistFingerprinting");
-    Services.prefs.addObserver("privacy.resistFingerprinting", this);
+    Services.prefs.addObserver("privacy.resistFingerprinting", this, false);
   },
 
   /**
@@ -1282,7 +1282,7 @@ var SessionStoreInternal = {
             Services.obs.removeObserver(obs, topic);
             resolve();
           }
-        }, "browser-delayed-startup-finished");
+        }, "browser-delayed-startup-finished", false);
       });
 
       // We are ready for initialization as soon as the session file has been
@@ -1603,7 +1603,7 @@ var SessionStoreInternal = {
             Services.obs.addObserver(function obs(subject, topic) {
               Services.obs.removeObserver(obs, topic);
               resolve();
-            }, "oop-frameloader-crashed");
+            }, "oop-frameloader-crashed", false);
           });
           promises.push(promiseOFC);
 
@@ -1611,7 +1611,7 @@ var SessionStoreInternal = {
             Services.obs.addObserver(function obs(subject, topic) {
               Services.obs.removeObserver(obs, topic);
               resolve();
-            }, "ipc:content-shutdown");
+            }, "ipc:content-shutdown", false);
           });
           promises.push(promiseICS);
 
@@ -4778,7 +4778,7 @@ var TabRestoreQueue = {
       }
 
       const PREF = "browser.sessionstore.restore_on_demand";
-      Services.prefs.addObserver(PREF, updateValue);
+      Services.prefs.addObserver(PREF, updateValue, false);
       return updateValue();
     },
 
@@ -4792,7 +4792,7 @@ var TabRestoreQueue = {
       }
 
       const PREF = "browser.sessionstore.restore_pinned_tabs_on_demand";
-      Services.prefs.addObserver(PREF, updateValue);
+      Services.prefs.addObserver(PREF, updateValue, false);
       return updateValue();
     },
 
@@ -4806,7 +4806,7 @@ var TabRestoreQueue = {
       }
 
       const PREF = "browser.sessionstore.restore_hidden_tabs";
-      Services.prefs.addObserver(PREF, updateValue);
+      Services.prefs.addObserver(PREF, updateValue, false);
       return updateValue();
     }
   },
