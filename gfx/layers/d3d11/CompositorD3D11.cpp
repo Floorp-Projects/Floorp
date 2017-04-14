@@ -1534,12 +1534,14 @@ CompositorD3D11::Present()
 }
 
 void
-CompositorD3D11::CancelFrame()
+CompositorD3D11::CancelFrame(bool aNeedFlush)
 {
   ReadUnlockTextures();
   // Flush the context, otherwise the driver might hold some resources alive
   // until the next flush or present.
-  mContext->Flush();
+  if (aNeedFlush) {
+    mContext->Flush();
+  }
 }
 
 void
