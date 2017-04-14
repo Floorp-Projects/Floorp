@@ -2294,5 +2294,5 @@ function __dumpDragData(aEvent, caller) {
 }
 
 function dispatchFunction(aFunc) {
-  Services.tm.currentThread.dispatch(aFunc, Ci.nsIThread.DISPATCH_NORMAL);
+  Services.tm.dispatchToMainThread(aFunc);
 }

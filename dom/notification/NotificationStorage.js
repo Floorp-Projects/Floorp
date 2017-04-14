@@ -224,7 +224,7 @@ NotificationStorage.prototype = {
     // fetching from the database.
     notifications.forEach(function(notification) {
       try {
-        Services.tm.currentThread.dispatch(
+        Services.tm.dispatchToMainThread(
           callback.handle.bind(callback,
                                notification.id,
                                notification.title,
@@ -235,15 +235,13 @@ NotificationStorage.prototype = {
                                notification.icon,
                                notification.data,
                                notification.mozbehavior,
-                               notification.serviceWorkerRegistrationScope),
-          Ci.nsIThread.DISPATCH_NORMAL);
+                               notification.serviceWorkerRegistrationScope));
       } catch (e) {
         if (DEBUG) { debug("Error calling callback handle: " + e); }
       }
     });
     try {
-      Services.tm.currentThread.dispatch(callback.done,
-                                         Ci.nsIThread.DISPATCH_NORMAL);
+      Services.tm.dispatchToMainThread(callback.done);
     } catch (e) {
       if (DEBUG) { debug("Error calling callback done: " + e); }
     }

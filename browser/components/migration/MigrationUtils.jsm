@@ -235,7 +235,7 @@ this.MigratorPrototype = {
     // Used to periodically give back control to the main-thread loop.
     let unblockMainThread = function() {
       return new Promise(resolve => {
-        Services.tm.mainThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
+        Services.tm.dispatchToMainThread(resolve);
       });
     };
 
