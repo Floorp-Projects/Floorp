@@ -695,10 +695,27 @@ public:
   };
 
   struct ExtraInlineData : public ExtraData {
-    explicit ExtraInlineData(const nsRect& aBounds) : ExtraData(aBounds) {
-    }
+    explicit ExtraInlineData(const nsRect& aBounds)
+      : ExtraData(aBounds)
+      , mFloatEdgeIStart(nscoord_MIN)
+      , mFloatEdgeIEnd(nscoord_MIN)
+    {}
+    nscoord mFloatEdgeIStart;
+    nscoord mFloatEdgeIEnd;
     nsFloatCacheList mFloats;
   };
+
+  bool GetFloatEdges(nscoord* aStart, nscoord* aEnd) const {
+    MOZ_ASSERT(IsInline(), "block line can't have float edges");
+    if (mInlineData && mInlineData->mFloatEdgeIStart != nscoord_MIN) {
+      *aStart = mInlineData->mFloatEdgeIStart;
+      *aEnd = mInlineData->mFloatEdgeIEnd;
+      return true;
+    }
+    return false;
+  }
+  void SetFloatEdges(nscoord aStart, nscoord aEnd);
+  void ClearFloatEdges();
 
 protected:
   nscoord mAscent;           // see |SetAscent| / |GetAscent|
