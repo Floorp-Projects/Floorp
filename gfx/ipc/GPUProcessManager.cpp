@@ -51,6 +51,13 @@ namespace gfx {
 
 using namespace mozilla::layers;
 
+enum class FallbackType : uint32_t
+{
+  NONE = 0,
+  DECODINGDISABLED,
+  DISABLED,
+};
+
 static StaticAutoPtr<GPUProcessManager> sSingleton;
 
 GPUProcessManager*
@@ -162,6 +169,9 @@ GPUProcessManager::DisableGPUProcess(const char* aMessage)
   gfxCriticalNote << aMessage;
 
   gfxPlatform::NotifyGPUProcessDisabled();
+
+  Telemetry::Accumulate(Telemetry::GPU_PROCESS_CRASH_FALLBACKS,
+                        uint32_t(FallbackType::DISABLED));
 
   DestroyProcess();
   ShutdownVsyncIOThread();
@@ -379,8 +389,14 @@ GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost)
     SprintfLiteral(disableMessage, "GPU process disabled after %d attempts",
                    mNumProcessAttempts);
     DisableGPUProcess(disableMessage);
-  } else if (mNumProcessAttempts > uint32_t(gfxPrefs::GPUProcessMaxRestartsWithDecoder())) {
+  } else if (mNumProcessAttempts > uint32_t(gfxPrefs::GPUProcessMaxRestartsWithDecoder()) &&
+             mDecodeVideoOnGpuProcess) {
     mDecodeVideoOnGpuProcess = false;
+    Telemetry::Accumulate(Telemetry::GPU_PROCESS_CRASH_FALLBACKS,
+                                     uint32_t(FallbackType::DECODINGDISABLED));
+  } else {
+    Telemetry::Accumulate(Telemetry::GPU_PROCESS_CRASH_FALLBACKS,
+                                     uint32_t(FallbackType::NONE));
   }
 
   HandleProcessLost();
