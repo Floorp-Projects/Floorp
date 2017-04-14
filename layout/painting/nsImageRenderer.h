@@ -14,6 +14,7 @@ class gfxDrawable;
 namespace mozilla {
 
 namespace layers {
+class WebRenderParentCommand;
 class WebRenderDisplayItemLayer;
 } // namespace layers
 
@@ -207,6 +208,7 @@ public:
    */
   void BuildWebRenderDisplayItemsForLayer(nsPresContext*       aPresContext,
                                           mozilla::wr::DisplayListBuilder& aBuilder,
+                                          nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                           mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                           const nsRect&        aDest,
                                           const nsRect&        aFill,
@@ -260,6 +262,8 @@ public:
   void SetMaskOp(uint8_t aMaskOp) { mMaskOp = aMaskOp; }
   void PurgeCacheForViewportChange(const mozilla::Maybe<nsSize>& aSVGViewportSize,
                                    const bool aHasRatio);
+  nsStyleImageType GetType() const { return mType; }
+  already_AddRefed<nsStyleGradient> GetGradientData();
 
 private:
   /**
@@ -288,6 +292,7 @@ private:
    */
   void BuildWebRenderDisplayItems(nsPresContext*       aPresContext,
                                   mozilla::wr::DisplayListBuilder& aBuilder,
+                                  nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                   mozilla::layers::WebRenderDisplayItemLayer* aLayer,
                                   const nsRect&        aDirtyRect,
                                   const nsRect&        aDest,

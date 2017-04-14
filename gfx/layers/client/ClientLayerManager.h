@@ -106,7 +106,7 @@ public:
   }
 
   virtual void FlushRendering() override;
-  void SendInvalidRegion(const nsIntRegion& aRegion);
+  virtual void SendInvalidRegion(const nsIntRegion& aRegion) override;
 
   virtual uint32_t StartFrameTimeRecording(int32_t aBufferSize) override;
 
@@ -172,11 +172,11 @@ public:
 #endif
   bool InTransaction() { return mPhase != PHASE_NONE; }
 
-  void SetNeedsComposite(bool aNeedsComposite)
+  virtual void SetNeedsComposite(bool aNeedsComposite) override
   {
     mNeedsComposite = aNeedsComposite;
   }
-  bool NeedsComposite() const { return mNeedsComposite; }
+  virtual bool NeedsComposite() const override { return mNeedsComposite; }
 
   virtual void Composite() override;
   virtual void GetFrameUniformity(FrameUniformityData* aFrameUniformityData) override;

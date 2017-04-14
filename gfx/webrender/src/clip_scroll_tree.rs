@@ -292,14 +292,14 @@ impl ClipScrollTree {
         // TODO(gw): These are all independent - can be run through thread pool if it shows up
         // in the profile!
         for (scroll_layer_id, node) in &mut self.nodes {
-            let scrolling_state = match old_states.get(&scroll_layer_id) {
+            let scrolling_state = match old_states.get(scroll_layer_id) {
                 Some(old_scrolling_state) => *old_scrolling_state,
                 None => ScrollingState::new(),
             };
 
             node.finalize(&scrolling_state);
 
-            if let Some(pending_offset) = self.pending_scroll_offsets.remove(&scroll_layer_id) {
+            if let Some(pending_offset) = self.pending_scroll_offsets.remove(scroll_layer_id) {
                 node.set_scroll_origin(&pending_offset);
             }
         }
@@ -318,9 +318,9 @@ impl ClipScrollTree {
         self.current_reference_frame_id += 1;
 
         let node = ClipScrollNode::new_reference_frame(parent_id,
-                                                       &rect,
+                                                       rect,
                                                        rect.size,
-                                                       &transform,
+                                                       transform,
                                                        pipeline_id);
         self.add_node(node, reference_frame_id);
         reference_frame_id

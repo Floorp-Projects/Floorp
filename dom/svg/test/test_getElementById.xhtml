@@ -1,7 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title>Test getElementById behaviour</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="matrixUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -33,22 +32,22 @@ SimpleTest.waitForExplicitFinish();
 function main()
 {
   var svgns = "http://www.w3.org/2000/svg";
-  
+
   var svg = document.getElementById("inner");
-  
+
   is(svg.getElementById("g").nodeName, "g", "expected to find g element child");
   is(svg.getElementById("foo bar").nodeName, "g", "expected to find foo bar element child");
   is(svg.getElementById("goo > car").nodeName, "g", "expected to find goo > car element child");
   is(svg.getElementById("hoo~dar").nodeName, "g", "expected to find hoo~dar element child");
   is(svg.getElementById("ioo+ear").nodeName, "g", "expected to find ioo+ear element child");
-  
+
   is(svg.getElementById("g2"), null, "did not expect to find an element with id g2");
 
   // no element with Id = "g3" in the document at all
   is(svg.getElementById("g3"), null, "did not expect to find an element with id g3");
-  
+
   svg = document.createElementNS(svgns, "svg");
-  
+
   var c = document.createElementNS(svgns, "circle");
   c.setAttribute("id", "c");
   svg.appendChild(c);

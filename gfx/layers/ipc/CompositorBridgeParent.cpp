@@ -542,8 +542,7 @@ CompositorBridgeParent::RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
 mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRendering()
 {
-  if (mCompositorScheduler->NeedsComposite())
-  {
+  if (mCompositorScheduler->NeedsComposite()) {
     CancelCurrentCompositeTask();
     ForceComposeToTarget(nullptr);
   }

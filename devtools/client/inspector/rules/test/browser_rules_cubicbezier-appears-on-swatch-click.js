@@ -53,7 +53,7 @@ add_task(function* () {
 function* testAppears(view, swatch) {
   ok(swatch, "The cubic-swatch exists");
 
-  let bezier = view.tooltips.cubicBezier;
+  let bezier = view.tooltips.getTooltip("cubicBezier");
   ok(bezier, "The rule-view has the expected cubicBezier property");
 
   let bezierPanel = bezier.tooltip.panel;

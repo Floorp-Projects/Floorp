@@ -11,10 +11,10 @@
 namespace mozilla {
 namespace wr {
 
-static bool Moz2DRenderCallback(const Range<uint8_t> aBlob,
+static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
                                 gfx::IntSize aSize,
                                 gfx::SurfaceFormat aFormat,
-                                Range<uint8_t> output)
+                                Range<const uint8_t> output)
 {
   return false; // TODO(nical)
 }

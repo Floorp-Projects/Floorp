@@ -414,7 +414,7 @@ StyleInspectorMenu.prototype = {
   _onShowMdnDocs: function () {
     let cssPropertyName = this.styleDocument.popupNode.textContent;
     let anchor = this.styleDocument.popupNode.parentNode;
-    let cssDocsTooltip = this.view.tooltips.cssDocs;
+    let cssDocsTooltip = this.view.tooltips.getTooltip("cssDocs");
     cssDocsTooltip.show(anchor, cssPropertyName);
   },
 

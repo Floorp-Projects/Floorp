@@ -6,13 +6,11 @@
 
 #include "ADTSDemuxer.h"
 
-#include <inttypes.h>
-
-#include "nsAutoPtr.h"
-#include "VideoUtils.h"
 #include "TimeUnits.h"
-#include "prenv.h"
+#include "VideoUtils.h"
 #include "mozilla/SizePrintfMacros.h"
+#include "mozilla/UniquePtr.h"
+#include <inttypes.h>
 
 extern mozilla::LazyLogModule gMediaDemuxerLog;
 #define ADTSLOG(msg, ...) \
@@ -161,11 +159,12 @@ public:
   }
 
   // Returns whether the valid
-  bool Parse(int64_t aOffset, uint8_t* aStart, uint8_t* aEnd) {
+  bool Parse(int64_t aOffset, const uint8_t* aStart, const uint8_t* aEnd)
+  {
     MOZ_ASSERT(aStart && aEnd);
 
     bool found = false;
-    uint8_t* ptr = aStart;
+    const uint8_t* ptr = aStart;
     // Require at least 7 bytes of data at the end of the buffer for the minimum
     // ADTS frame header.
     while (ptr < aEnd - 7 && !found) {
@@ -218,7 +217,7 @@ public:
   // true if one was found. After returning, the variable passed to
   // 'aBytesToSkip' holds the amount of bytes to be skipped (if any) in order to
   // jump across a large ID3v2 tag spanning multiple buffers.
-  bool Parse(int64_t aOffset, uint8_t* aStart, uint8_t* aEnd)
+  bool Parse(int64_t aOffset, const uint8_t* aStart, const uint8_t* aEnd)
   {
     const bool found = mFrame.Parse(aOffset, aStart, aEnd);
 
@@ -406,7 +405,7 @@ ADTSTrackDemuxer::Init()
   mInfo->mRate = mSamplesPerSecond;
   mInfo->mChannels = mChannels;
   mInfo->mBitDepth = 16;
-  mInfo->mDuration = Duration().ToMicroseconds();
+  mInfo->mDuration = Duration();
 
   // AAC Specific information
   mInfo->mMimeType = "audio/mp4a-latm";
@@ -425,7 +424,8 @@ ADTSTrackDemuxer::Init()
 
   ADTSLOG("Init mInfo={mRate=%u mChannels=%u mBitDepth=%u mDuration=%" PRId64
           "}",
-          mInfo->mRate, mInfo->mChannels, mInfo->mBitDepth, mInfo->mDuration);
+          mInfo->mRate, mInfo->mChannels, mInfo->mBitDepth,
+          mInfo->mDuration.ToMicroseconds());
 
   return mSamplesPerSecond && mChannels;
 }
@@ -738,7 +738,7 @@ ADTSTrackDemuxer::GetNextFrame(const adts::Frame& aFrame)
   RefPtr<MediaRawData> frame = new MediaRawData();
   frame->mOffset = offset;
 
-  nsAutoPtr<MediaRawDataWriter> frameWriter(frame->CreateWriter());
+  UniquePtr<MediaRawDataWriter> frameWriter(frame->CreateWriter());
   if (!frameWriter->SetSize(length)) {
     ADTSLOG("GetNext() Exit failed to allocated media buffer");
     return nullptr;
@@ -852,6 +852,28 @@ ADTSTrackDemuxer::AverageFrameLength() const
   }
 
   return 0.0;
+}
+
+/* static */ bool
+ADTSDemuxer::ADTSSniffer(const uint8_t* aData, const uint32_t aLength)
+{
+  if (aLength < 7) {
+    return false;
+  }
+  auto parser = MakeUnique<adts::FrameParser>();
+
+  if (!parser->Parse(0, aData, aData + aLength)) {
+    return false;
+  }
+  const adts::Frame& currentFrame = parser->CurrentFrame();
+  // Check for sync marker after the found frame, since it's
+  // possible to find sync marker in AAC data. If sync marker
+  // exists after the current frame then we've found a frame
+  // header.
+  int64_t nextFrameHeaderOffset = currentFrame.Offset() + currentFrame.Length();
+  return int64_t(aLength) > nextFrameHeaderOffset &&
+         aLength - nextFrameHeaderOffset >= 2 &&
+         adts::FrameHeader::MatchesSync(aData + nextFrameHeaderOffset);
 }
 
 } // namespace mozilla

@@ -9,10 +9,12 @@ use animation::{Animation, PropertyAnimation};
 use app_units::Au;
 use bit_vec::BitVec;
 use bloom::StyleBloom;
+use cache::LRUCache;
 use data::ElementData;
 use dom::{OpaqueNode, TNode, TElement, SendElement};
 use error_reporting::ParseErrorReporter;
 use euclid::Size2D;
+use fnv::FnvHashMap;
 use font_metrics::FontMetricsProvider;
 #[cfg(feature = "gecko")] use gecko_bindings::structs;
 use matching::StyleSharingCandidateCache;
@@ -171,6 +173,16 @@ pub struct TraversalStatistics {
     pub elements_matched: u32,
     /// The number of cache hits from the StyleSharingCache.
     pub styles_shared: u32,
+    /// The number of selectors in the stylist.
+    pub selectors: u32,
+    /// The number of revalidation selectors.
+    pub revalidation_selectors: u32,
+    /// The number of state/attr dependencies in the dependency set.
+    pub dependency_selectors: u32,
+    /// The number of declarations in the stylist.
+    pub declarations: u32,
+    /// The number of times the stylist was rebuilt.
+    pub stylist_rebuilds: u32,
     /// Time spent in the traversal, in milliseconds.
     pub traversal_time_ms: f64,
     /// Whether this was a parallel traversal.
@@ -183,11 +195,21 @@ impl<'a> Add for &'a TraversalStatistics {
     fn add(self, other: Self) -> TraversalStatistics {
         debug_assert!(self.traversal_time_ms == 0.0 && other.traversal_time_ms == 0.0,
                       "traversal_time_ms should be set at the end by the caller");
+        debug_assert!(self.selectors == 0, "set at the end");
+        debug_assert!(self.revalidation_selectors == 0, "set at the end");
+        debug_assert!(self.dependency_selectors == 0, "set at the end");
+        debug_assert!(self.declarations == 0, "set at the end");
+        debug_assert!(self.stylist_rebuilds == 0, "set at the end");
         TraversalStatistics {
             elements_traversed: self.elements_traversed + other.elements_traversed,
             elements_styled: self.elements_styled + other.elements_styled,
             elements_matched: self.elements_matched + other.elements_matched,
             styles_shared: self.styles_shared + other.styles_shared,
+            selectors: 0,
+            revalidation_selectors: 0,
+            dependency_selectors: 0,
+            declarations: 0,
+            stylist_rebuilds: 0,
             traversal_time_ms: 0.0,
             is_parallel: None,
         }
@@ -209,6 +231,11 @@ impl fmt::Display for TraversalStatistics {
         try!(writeln!(f, "[PERF],elements_styled,{}", self.elements_styled));
         try!(writeln!(f, "[PERF],elements_matched,{}", self.elements_matched));
         try!(writeln!(f, "[PERF],styles_shared,{}", self.styles_shared));
+        try!(writeln!(f, "[PERF],selectors,{}", self.selectors));
+        try!(writeln!(f, "[PERF],revalidation_selectors,{}", self.revalidation_selectors));
+        try!(writeln!(f, "[PERF],dependency_selectors,{}", self.dependency_selectors));
+        try!(writeln!(f, "[PERF],declarations,{}", self.declarations));
+        try!(writeln!(f, "[PERF],stylist_rebuilds,{}", self.stylist_rebuilds));
         try!(writeln!(f, "[PERF],traversal_time_ms,{}", self.traversal_time_ms));
         writeln!(f, "[PERF] perf block end")
     }
@@ -222,6 +249,17 @@ impl TraversalStatistics {
     {
         self.is_parallel = Some(traversal.is_parallel());
         self.traversal_time_ms = (time::precise_time_s() - start) * 1000.0;
+        self.selectors = traversal.shared_context().stylist.num_selectors() as u32;
+        self.revalidation_selectors = traversal.shared_context().stylist.num_revalidation_selectors() as u32;
+        self.dependency_selectors = traversal.shared_context().stylist.num_dependencies() as u32;
+        self.declarations = traversal.shared_context().stylist.num_declarations() as u32;
+        self.stylist_rebuilds = traversal.shared_context().stylist.num_rebuilds() as u32;
+    }
+
+    /// Returns whether this traversal is 'large' in order to avoid console spam
+    /// from lots of tiny traversals.
+    pub fn is_large_traversal(&self) -> bool {
+        self.elements_traversed >= 50
     }
 }
 
@@ -245,10 +283,8 @@ bitflags! {
 /// is used by the style system to queue up work which is not safe to do during
 /// the parallel traversal.
 pub enum SequentialTask<E: TElement> {
-    /// Sets selector flags. This is used when we need to set flags on an
-    /// element that we don't have exclusive access to (i.e. the parent).
-    SetSelectorFlags(SendElement<E>, ElementSelectorFlags),
-
+    /// Entry to avoid an unused type parameter error on servo.
+    Unused(SendElement<E>),
     #[cfg(feature = "gecko")]
     /// Marks that we need to update CSS animations, update effect properties of
     /// any type of animations after the normal traversal.
@@ -261,20 +297,12 @@ impl<E: TElement> SequentialTask<E> {
         use self::SequentialTask::*;
         debug_assert!(thread_state::get() == thread_state::LAYOUT);
         match self {
-            SetSelectorFlags(el, flags) => {
-                unsafe { el.set_selector_flags(flags) };
-            }
+            Unused(_) => unreachable!(),
             #[cfg(feature = "gecko")]
             UpdateAnimations(el, pseudo, tasks) => {
                 unsafe { el.update_animations(pseudo.as_ref(), tasks) };
             }
         }
-    }
-
-    /// Creates a task to set the selector flags on an element.
-    pub fn set_selector_flags(el: E, flags: ElementSelectorFlags) -> Self {
-        use self::SequentialTask::*;
-        SetSelectorFlags(unsafe { SendElement::new(el) }, flags)
     }
 
     #[cfg(feature = "gecko")]
@@ -283,6 +311,59 @@ impl<E: TElement> SequentialTask<E> {
                              tasks: UpdateAnimationsTasks) -> Self {
         use self::SequentialTask::*;
         UpdateAnimations(unsafe { SendElement::new(el) }, pseudo, tasks)
+    }
+}
+
+/// Map from Elements to ElementSelectorFlags. Used to defer applying selector
+/// flags until after the traversal.
+pub struct SelectorFlagsMap<E: TElement> {
+    /// The hashmap storing the flags to apply.
+    map: FnvHashMap<SendElement<E>, ElementSelectorFlags>,
+    /// An LRU cache to avoid hashmap lookups, which can be slow if the map
+    /// gets big.
+    cache: LRUCache<(SendElement<E>, ElementSelectorFlags)>,
+}
+
+#[cfg(debug_assertions)]
+impl<E: TElement> Drop for SelectorFlagsMap<E> {
+    fn drop(&mut self) {
+        debug_assert!(self.map.is_empty());
+    }
+}
+
+impl<E: TElement> SelectorFlagsMap<E> {
+    /// Creates a new empty SelectorFlagsMap.
+    pub fn new() -> Self {
+        SelectorFlagsMap {
+            map: FnvHashMap::default(),
+            cache: LRUCache::new(4),
+        }
+    }
+
+    /// Inserts some flags into the map for a given element.
+    pub fn insert_flags(&mut self, element: E, flags: ElementSelectorFlags) {
+        let el = unsafe { SendElement::new(element) };
+        // Check the cache. If the flags have already been noted, we're done.
+        if self.cache.iter().find(|x| x.0 == el)
+               .map_or(ElementSelectorFlags::empty(), |x| x.1)
+               .contains(flags) {
+            return;
+        }
+
+        let f = self.map.entry(el).or_insert(ElementSelectorFlags::empty());
+        *f |= flags;
+
+        // Insert into the cache. We don't worry about duplicate entries,
+        // which lets us avoid reshuffling.
+        self.cache.insert((unsafe { SendElement::new(element) }, *f))
+    }
+
+    /// Applies the flags. Must be called on the main thread.
+    pub fn apply_flags(&mut self) {
+        debug_assert!(thread_state::get() == thread_state::LAYOUT);
+        for (el, flags) in self.map.drain() {
+            unsafe { el.set_selector_flags(flags); }
+        }
     }
 }
 
@@ -303,6 +384,11 @@ pub struct ThreadLocalStyleContext<E: TElement> {
     /// the rest of the styling is complete. This is useful for infrequently-needed
     /// non-threadsafe operations.
     pub tasks: Vec<SequentialTask<E>>,
+    /// ElementSelectorFlags that need to be applied after the traversal is
+    /// complete. This map is used in cases where the matching algorithm needs
+    /// to set flags on elements it doesn't have exclusive access to (i.e. other
+    /// than the current element).
+    pub selector_flags: SelectorFlagsMap<E>,
     /// Statistics about the traversal.
     pub statistics: TraversalStatistics,
     /// Information related to the current element, non-None during processing.
@@ -320,6 +406,7 @@ impl<E: TElement> ThreadLocalStyleContext<E> {
             bloom_filter: StyleBloom::new(),
             new_animations_sender: shared.local_context_creation_data.lock().unwrap().new_animations_sender.clone(),
             tasks: Vec::new(),
+            selector_flags: SelectorFlagsMap::new(),
             statistics: TraversalStatistics::default(),
             current_element_info: None,
             font_metrics_provider: E::FontMetricsProvider::create_from(shared),
@@ -357,9 +444,12 @@ impl<E: TElement> ThreadLocalStyleContext<E> {
 impl<E: TElement> Drop for ThreadLocalStyleContext<E> {
     fn drop(&mut self) {
         debug_assert!(self.current_element_info.is_none());
+        debug_assert!(thread_state::get() == thread_state::LAYOUT);
+
+        // Apply any slow selector flags that need to be set on parents.
+        self.selector_flags.apply_flags();
 
         // Execute any enqueued sequential tasks.
-        debug_assert!(thread_state::get() == thread_state::LAYOUT);
         for task in self.tasks.drain(..) {
             task.execute();
         }

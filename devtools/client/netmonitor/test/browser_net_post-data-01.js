@@ -73,12 +73,10 @@ add_task(function* () {
 
   // Wait for all tree sections and editor updated by react
   let waitForSections = waitForDOM(document, "#params-panel .tree-section", 2);
-  let waitForEditor = waitForDOM(document, "#params-panel .editor-mount iframe");
+  let waitForSourceEditor = waitForDOM(document, "#params-panel .CodeMirror-code");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]);
-  let [, editorFrames] = yield Promise.all([waitForSections, waitForEditor]);
-  yield once(editorFrames[0], "DOMContentLoaded");
-  yield waitForDOM(editorFrames[0].contentDocument, ".CodeMirror-code");
+  yield Promise.all([waitForSections, waitForSourceEditor]);
   yield testParamsTab("multipart");
 
   return teardown(monitor);
@@ -89,7 +87,7 @@ add_task(function* () {
     function checkVisibility(box) {
       is(!tabpanel.querySelector(".treeTable"), !box.includes("params"),
         "The request params doesn't have the indended visibility.");
-      is(tabpanel.querySelector(".editor-mount") === null,
+      is(tabpanel.querySelector(".CodeMirror-code") === null,
         !box.includes("editor"),
         "The request post data doesn't have the indended visibility.");
     }
@@ -133,8 +131,7 @@ add_task(function* () {
 
       is(labels.length, 3, "There should be 3 param values displayed in this tabpanel.");
 
-      let text = editorFrames[0].contentDocument.querySelector(".CodeMirror-code")
-                                                .textContent;
+      let text = document.querySelector(".CodeMirror-code").textContent;
 
       ok(text.includes("Content-Disposition: form-data; name=\"text\""),
         "The text shown in the source editor is incorrect (1.1).");

@@ -40,14 +40,12 @@ add_task(function* () {
       fullMimeType: "text/json; charset=utf-8"
     });
 
-  wait = waitForDOM(document, "#response-panel .editor-mount iframe");
+  wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".network-details-panel-toggle"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#response-tab"));
-  let [editor] = yield wait;
-  yield once(editor, "DOMContentLoaded");
-  yield waitForDOM(editor.contentDocument, ".CodeMirror-code");
+  yield wait;
 
   let tabpanel = document.querySelector("#response-panel");
   is(tabpanel.querySelector(".response-error-header") === null, false,
@@ -63,16 +61,13 @@ add_task(function* () {
   let jsonView = tabpanel.querySelector(".tree-section .treeLabel") || {};
   is(jsonView.textContent === L10N.getStr("jsonScopeName"), false,
     "The response json view doesn't have the intended visibility.");
-  is(tabpanel.querySelector(".editor-mount iframe") === null, false,
+  is(tabpanel.querySelector(".CodeMirror-code") === null, false,
     "The response editor doesn't have the intended visibility.");
   is(tabpanel.querySelector(".response-image-box") === null, true,
     "The response image box doesn't have the intended visibility.");
 
-  // Strip CodeMirror line number through slice(1)
-  let text = editor.contentDocument
-    .querySelector(".CodeMirror-line").textContent;
-
-  is(text, "{ \"greeting\": \"Hello malformed JSON!\" },",
+  is(document.querySelector(".CodeMirror-line").textContent,
+    "{ \"greeting\": \"Hello malformed JSON!\" },",
     "The text shown in the source editor is incorrect.");
 
   yield teardown(monitor);

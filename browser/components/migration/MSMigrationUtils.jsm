@@ -537,7 +537,7 @@ Cookies.prototype = {
   },
 
   _readCookieFile(aFile, aCallback) {
-    File.createFromNsIFile(aFile).then(aFile => {
+    File.createFromNsIFile(aFile).then(file => {
       let fileReader = new FileReader();
       let onLoadEnd = () => {
         fileReader.removeEventListener("loadend", onLoadEnd);
@@ -559,7 +559,7 @@ Cookies.prototype = {
         }
       };
       fileReader.addEventListener("loadend", onLoadEnd);
-      fileReader.readAsText(aFile);
+      fileReader.readAsText(file);
     }, () => {
       aCallback(false);
     });
