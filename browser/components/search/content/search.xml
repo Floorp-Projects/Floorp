@@ -931,10 +931,6 @@
       <xul:vbox anonid="search-one-off-buttons" class="search-one-offs"/>
     </content>
     <implementation>
-      <field name="AppConstants" readonly="true">
-        (Components.utils.import("resource://gre/modules/AppConstants.jsm", {})).AppConstants;
-      </field>
-
       <method name="openAutocompletePopup">
         <parameter name="aInput"/>
         <parameter name="aElement"/>
@@ -983,7 +979,7 @@
             let params = {};
 
             // But open ctrl/cmd clicks on autocomplete items in a new background tab.
-            let modifier = this.AppConstants.platform == "macosx" ?
+            let modifier = AppConstants.platform == "macosx" ?
                            aEvent.metaKey :
                            aEvent.ctrlKey;
             if (where == "tab" && (aEvent instanceof MouseEvent) &&
