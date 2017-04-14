@@ -7,6 +7,7 @@ const FIXTURE = [
   {
     "id": "2xU5h-4bkWqA",
     "type": "client",
+    "lastModified": 1492201200,
     "name": "laptop",
     "isMobile": false,
     "tabs": [
@@ -31,6 +32,7 @@ const FIXTURE = [
   {
     "id": "OL3EJCsdb2JD",
     "type": "client",
+    "lastModified": 1492201200,
     "name": "desktop",
     "isMobile": false,
     "tabs": []

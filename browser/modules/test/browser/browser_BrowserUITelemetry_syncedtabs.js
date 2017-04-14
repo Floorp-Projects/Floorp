@@ -14,6 +14,7 @@ function mockSyncedTabs() {
           id: "guid_desktop",
           type: "client",
           name: "My Desktop",
+          lastModified: 1492201200,
           tabs: [
             {
               title: "http://example.com/10",
