@@ -161,9 +161,16 @@ public:
   // Resolves style for a (possibly-pseudo) Element without assuming that the
   // style has been resolved, and without worrying about setting the style
   // context up to live in the style context tree (a null parent is used).
+  // |aPeudoTag| and |aPseudoType| must match.
   already_AddRefed<nsStyleContext>
   ResolveTransientStyle(dom::Element* aElement,
-                        mozilla::CSSPseudoElementType aPseudoType);
+                        nsIAtom* aPseudoTag,
+                        CSSPseudoElementType aPseudoType);
+
+  // Similar to ResolveTransientStyle() but returns ServoComputedValues.
+  // Unlike ResolveServoStyle() this function calls PreTraverseSync().
+  already_AddRefed<ServoComputedValues>
+  ResolveTransientServoStyle(dom::Element* aElement, nsIAtom* aPseudoTag);
 
   // Get a style context for an anonymous box.  aPseudoTag is the pseudo-tag to
   // use and must be non-null.  It must be an anon box, and must be one that
