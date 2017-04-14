@@ -191,7 +191,7 @@ document.getElementById('form').submit();
         } catch(e) {}
       }
     };
-    Services.tm.currentThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
+    Services.tm.dispatchToMainThread(runnable);
   },
   asyncOpen2: function(aListener) {
     this.asyncOpen(aListener, null);

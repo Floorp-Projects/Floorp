@@ -246,7 +246,7 @@ FormHandler.prototype = {
    */
   waitForTick() {
     return new Promise(function(resolve) {
-      Services.tm.currentThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
+      Services.tm.dispatchToMainThread(resolve);
     });
   },
 };

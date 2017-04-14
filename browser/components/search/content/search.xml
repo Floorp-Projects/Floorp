@@ -1427,10 +1427,10 @@
               this._rebuild();
               break;
             case "popuphidden":
-              Services.tm.mainThread.dispatch(() => {
+              Services.tm.dispatchToMainThread(() => {
                 this.selectedButton = null;
                 this._contextEngine = null;
-              }, Ci.nsIThread.DISPATCH_NORMAL);
+              });
               break;
           }
         ]]></body>

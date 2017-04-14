@@ -90,7 +90,7 @@ this.PropertyListUtils = Object.freeze({
 
     // We guarantee not to throw directly for any other exceptions, and always
     // call aCallback.
-    Services.tm.mainThread.dispatch(function() {
+    Services.tm.dispatchToMainThread(function() {
       let self = this;
       function readDOMFile(aFile) {
         let fileReader = new FileReader();
@@ -126,7 +126,7 @@ this.PropertyListUtils = Object.freeze({
         aCallback(null);
         throw ex;
       }
-    }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
+    }.bind(this));
   },
 
   /**
