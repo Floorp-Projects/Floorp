@@ -459,7 +459,7 @@ DistributionCustomizer.prototype = {
         prefDefaultsApplied) {
       let os = Cc["@mozilla.org/observer-service;1"].
                getService(Ci.nsIObserverService);
-      os.notifyObservers(null, DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC);
+      os.notifyObservers(null, DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC, null);
     }
   }
 };

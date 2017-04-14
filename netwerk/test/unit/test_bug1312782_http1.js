@@ -177,5 +177,5 @@ function run_test() {
   windowIdWrapper.data = FOCUSED_WINDOW_ID;
   var obsvc = Cc["@mozilla.org/observer-service;1"].
     getService(Ci.nsIObserverService);
-  obsvc.notifyObservers(windowIdWrapper, "net:current-toplevel-outer-content-windowid");
+  obsvc.notifyObservers(windowIdWrapper, "net:current-toplevel-outer-content-windowid", null);
 }

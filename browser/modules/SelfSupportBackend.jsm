@@ -140,7 +140,7 @@ var SelfSupportBackendInternal = {
       this._frame = null;
     }
     if (this._testing) {
-      Services.obs.notifyObservers(this._browser, "self-support-browser-destroyed");
+      Services.obs.notifyObservers(this._browser, "self-support-browser-destroyed", "");
     }
   },
 
@@ -202,7 +202,7 @@ var SelfSupportBackendInternal = {
       this._browser.setAttribute("src", aURL);
 
       if (this._testing) {
-        Services.obs.notifyObservers(this._browser, "self-support-browser-created");
+        Services.obs.notifyObservers(this._browser, "self-support-browser-created", "");
       }
       doc.documentElement.appendChild(this._browser);
     });

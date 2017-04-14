@@ -45,7 +45,7 @@ webideCli.prototype = {
       // If this is a new Firefox instance, and because we will only start
       // webide, we need to notify "sessionstore-windows-restored" to trigger
       // addons registration (for simulators and adb helper).
-      Services.obs.notifyObservers(null, "sessionstore-windows-restored");
+      Services.obs.notifyObservers(null, "sessionstore-windows-restored", "");
     }
   },
 

@@ -625,7 +625,7 @@ DeveloperToolbar.prototype.destroy = function () {
 DeveloperToolbar.prototype._notify = function (topic) {
   let data = { toolbar: this };
   data.wrappedJSObject = data;
-  Services.obs.notifyObservers(data, topic);
+  Services.obs.notifyObservers(data, topic, null);
 };
 
 /**

@@ -24,7 +24,7 @@ function setup() {
 
       aResolve(receiverIframe);
     });
-    obs.notifyObservers(promise, 'setup-request-promise');
+    obs.notifyObservers(promise, 'setup-request-promise', null);
 
     aResolve();
   });

@@ -26,7 +26,7 @@ function notifyAndPromiseUIUpdated(topic) {
       });
     };
     // Now send the notification.
-    Services.obs.notifyObservers(null, topic);
+    Services.obs.notifyObservers(null, topic, null);
   });
 }
 
@@ -84,7 +84,7 @@ add_task(function* prepare() {
     window.gSyncUI._needsSetup = oldNeedsSetup;
     // and an observer to set the state back to what it should be now we've
     // restored the stub.
-    Services.obs.notifyObservers(null, "weave:service:login:finish");
+    Services.obs.notifyObservers(null, "weave:service:login:finish", null);
   });
   // and a notification to have the state change away from "needs setup"
   yield notifyAndPromiseUIUpdated("weave:service:login:finish");

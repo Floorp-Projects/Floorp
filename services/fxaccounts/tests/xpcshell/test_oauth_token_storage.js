@@ -134,7 +134,7 @@ add_task(function* testCacheStorage() {
   let origPersistCached = cas._persistCachedTokens.bind(cas)
   cas._persistCachedTokens = function() {
     return origPersistCached().then(() => {
-      Services.obs.notifyObservers(null, "testhelper-fxa-cache-persist-done");
+      Services.obs.notifyObservers(null, "testhelper-fxa-cache-persist-done", null);
     });
   };
 

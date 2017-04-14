@@ -23,7 +23,7 @@ function setup_crash() {
     return deferred.promise;
   });
 
-  Services.obs.notifyObservers(null, TOPIC);
+  Services.obs.notifyObservers(null, TOPIC, null);
   dump(new Error().stack + "\n");
   dump("Waiting for crash\n");
 }
@@ -52,7 +52,7 @@ function setup_osfile_crash_noerror() {
   OS.File.profileBeforeChange.addBlocker("Adding a blocker that will never be resolved", () => Promise.defer().promise);
   OS.File.getCurrentDirectory();
 
-  Services.obs.notifyObservers(null, "profile-before-change");
+  Services.obs.notifyObservers(null, "profile-before-change", null);
   dump("Waiting for crash\n");
 }
 
@@ -83,7 +83,7 @@ function setup_osfile_crash_exn() {
   OS.File.profileBeforeChange.addBlocker("Adding a blocker that will never be resolved", () => Promise.defer().promise);
   OS.File.read("I do not exist");
 
-  Services.obs.notifyObservers(null, "profile-before-change");
+  Services.obs.notifyObservers(null, "profile-before-change", null);
   dump("Waiting for crash\n");
 }
 

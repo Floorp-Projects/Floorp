@@ -93,7 +93,8 @@ nsTerminatorTelemetry.prototype = {
 
       // Inform observers that we are done.
       Services.obs.notifyObservers(null,
-        "shutdown-terminator-telemetry-updated");
+        "shutdown-terminator-telemetry-updated",
+        "");
     });
   },
 };

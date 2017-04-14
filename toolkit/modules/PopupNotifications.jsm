@@ -1503,6 +1503,6 @@ PopupNotifications.prototype = {
   },
 
   _notify: function PopupNotifications_notify(topic) {
-    Services.obs.notifyObservers(null, "PopupNotifications-" + topic);
+    Services.obs.notifyObservers(null, "PopupNotifications-" + topic, "");
   },
 };

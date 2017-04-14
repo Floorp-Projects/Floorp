@@ -412,7 +412,7 @@ class AOMExtensionWrapper extends ExtensionWrapper {
 
     for (let file of this.cleanupFiles.splice(0)) {
       try {
-        Services.obs.notifyObservers(file, "flush-cache-entry");
+        Services.obs.notifyObservers(file, "flush-cache-entry", null);
         file.remove(false);
       } catch (e) {
         Cu.reportError(e);

@@ -140,7 +140,7 @@ function run_test3() {
   // Simulate all private browsing instances being closed
   var obsvc = Cc["@mozilla.org/observer-service;1"].
     getService(Ci.nsIObserverService);
-  obsvc.notifyObservers(null, "last-pb-context-exited");
+  obsvc.notifyObservers(null, "last-pb-context-exited", null);
 
   // Make sure the memory device is not empty
   get_device_entry_count(kMemoryDevice, null, function(count) {

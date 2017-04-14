@@ -517,7 +517,7 @@ function* test_cache_cleared() {
     observe(aSubject, aTopic, aData) {
       os.removeObserver(observer, "cacheservice:empty-cache");
       // Shutdown the download manager.
-      Services.obs.notifyObservers(null, "quit-application");
+      Services.obs.notifyObservers(null, "quit-application", null);
       do_test_finished();
     }
   };

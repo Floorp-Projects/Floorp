@@ -46,7 +46,7 @@ this.permissions = class extends ExtensionAPI {
                   resolve,
                 },
               };
-              Services.obs.notifyObservers(subject, "webextension-optional-permission-prompt");
+              Services.obs.notifyObservers(subject, "webextension-optional-permission-prompt", null);
             });
             if (!allow) {
               return false;

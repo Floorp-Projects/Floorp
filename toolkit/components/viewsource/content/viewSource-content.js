@@ -458,7 +458,7 @@ var ViewSourceContent = {
     };
 
     subject.wrappedJSObject = subject;
-    Services.obs.notifyObservers(subject, "content-contextmenu");
+    Services.obs.notifyObservers(subject, "content-contextmenu", null);
 
     let node = event.target;
 

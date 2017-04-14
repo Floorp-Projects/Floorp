@@ -30,6 +30,6 @@ var reloadData = Task.async(function* () {
   // Force the initialization of handlerService to prevent observer is not initialized yet.
   let svc = gHandlerService;
   let promise = TestUtils.topicObserved("handlersvc-json-replace-complete");
-  Services.obs.notifyObservers(null, "handlersvc-json-replace");
+  Services.obs.notifyObservers(null, "handlersvc-json-replace", null);
   yield promise;
 });

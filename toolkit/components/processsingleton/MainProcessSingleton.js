@@ -21,7 +21,7 @@ MainProcessSingleton.prototype = {
   logConsoleMessage(message) {
     let logMsg = message.data;
     logMsg.wrappedJSObject = logMsg;
-    Services.obs.notifyObservers(logMsg, "console-api-log-event");
+    Services.obs.notifyObservers(logMsg, "console-api-log-event", null);
   },
 
   // Called when a webpage calls window.external.AddSearchProvider

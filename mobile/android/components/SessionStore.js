@@ -199,7 +199,7 @@ SessionStore.prototype = {
           // Not doing a restore; just send restore message
           this._startupRestoreFinished = true;
           log("startupRestoreFinished = true");
-          Services.obs.notifyObservers(null, "sessionstore-windows-restored");
+          Services.obs.notifyObservers(null, "sessionstore-windows-restored", "");
         }
         break;
       }
@@ -331,7 +331,7 @@ SessionStore.prototype = {
           }
         }
 
-        Services.obs.notifyObservers(null, "sessionstore-state-purge-complete");
+        Services.obs.notifyObservers(null, "sessionstore-state-purge-complete", "");
         if (this._notifyClosedTabs) {
           this._sendClosedTabsToJava(Services.wm.getMostRecentWindow("navigator:browser"));
         }
@@ -1173,7 +1173,7 @@ SessionStore.prototype = {
     let buffer = new TextEncoder().encode(state);
     Services.telemetry.getHistogramById("FX_SESSION_RESTORE_FILE_SIZE_BYTES").add(buffer.byteLength);
 
-    Services.obs.notifyObservers(null, "sessionstore-state-write");
+    Services.obs.notifyObservers(null, "sessionstore-state-write", "");
     let startWriteMs = Cu.now();
 
     log("_writeFile(aAsync = " + aAsync + "), _pendingWrite = " + this._pendingWrite);
@@ -1195,7 +1195,7 @@ SessionStore.prototype = {
       // We don't use a stopwatch here since the calls are async and stopwatches can only manage
       // a single timer per histogram.
       Services.telemetry.getHistogramById("FX_SESSION_RESTORE_WRITE_FILE_MS").add(Math.round(stopWriteMs - startWriteMs));
-      Services.obs.notifyObservers(null, "sessionstore-state-write-complete");
+      Services.obs.notifyObservers(null, "sessionstore-state-write-complete", "");
       this._sessionDataIsGood = true;
     });
   },

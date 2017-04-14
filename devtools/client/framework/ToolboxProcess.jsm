@@ -333,4 +333,4 @@ Services.prefs.addObserver("devtools.debugger.log", {
   }
 });
 
-Services.obs.notifyObservers(null, "ToolboxProcessLoaded");
+Services.obs.notifyObservers(null, "ToolboxProcessLoaded", null);

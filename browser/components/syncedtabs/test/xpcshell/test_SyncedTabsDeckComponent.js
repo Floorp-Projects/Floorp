@@ -109,7 +109,7 @@ add_task(function* testObserver() {
   SyncedTabs.syncTabs.restore();
   Assert.ok(component.updatePanel.called, "triggers panel update during init");
 
-  Services.obs.notifyObservers(null, SyncedTabs.TOPIC_TABS_CHANGED);
+  Services.obs.notifyObservers(null, SyncedTabs.TOPIC_TABS_CHANGED, "");
 
   Assert.ok(component.observe.calledWith(null, SyncedTabs.TOPIC_TABS_CHANGED, ""),
     "component is notified");
@@ -117,13 +117,13 @@ add_task(function* testObserver() {
   Assert.ok(listStore.getData.called, "gets list data");
   Assert.ok(component.updatePanel.calledTwice, "triggers panel update");
 
-  Services.obs.notifyObservers(null, FxAccountsCommon.ONLOGIN_NOTIFICATION);
+  Services.obs.notifyObservers(null, FxAccountsCommon.ONLOGIN_NOTIFICATION, "");
 
   Assert.ok(component.observe.calledWith(null, FxAccountsCommon.ONLOGIN_NOTIFICATION, ""),
     "component is notified of login");
   Assert.equal(component.updatePanel.callCount, 3, "triggers panel update again");
 
-  Services.obs.notifyObservers(null, "weave:service:login:change");
+  Services.obs.notifyObservers(null, "weave:service:login:change", "");
 
   Assert.ok(component.observe.calledWith(null, "weave:service:login:change", ""),
     "component is notified of login change");

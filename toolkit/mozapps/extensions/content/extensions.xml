@@ -675,7 +675,7 @@
                   },
                 },
               };
-              Services.obs.notifyObservers(subject, "webextension-permission-prompt");
+              Services.obs.notifyObservers(subject, "webextension-permission-prompt", null);
             });
           }
           this.mInstall.install();

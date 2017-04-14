@@ -67,7 +67,7 @@ add_task(function* test_management_uninstall_no_prompt() {
   notEqual(addon, null, "Add-on is installed");
   extension.sendMessage("uninstall");
   yield waitForUninstalled();
-  Services.obs.notifyObservers(extension.extension.file, "flush-cache-entry");
+  Services.obs.notifyObservers(extension.extension.file, "flush-cache-entry", null);
 });
 
 add_task(function* test_management_uninstall_prompt_uninstall() {
@@ -97,7 +97,7 @@ add_task(function* test_management_uninstall_prompt_uninstall() {
         `The extension “${manifest.name}” is requesting to be uninstalled. What would you like to do?`);
   equal(promptService._confirmExArgs[4], "Uninstall");
   equal(promptService._confirmExArgs[5], "Keep Installed");
-  Services.obs.notifyObservers(extension.extension.file, "flush-cache-entry");
+  Services.obs.notifyObservers(extension.extension.file, "flush-cache-entry", null);
 });
 
 add_task(function* test_management_uninstall_prompt_keep() {
