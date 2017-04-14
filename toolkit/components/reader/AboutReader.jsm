@@ -73,7 +73,7 @@ var AboutReader = function(mm, win, articlePromise) {
   win.addEventListener("scroll", this);
   win.addEventListener("resize", this);
 
-  Services.obs.addObserver(this, "inner-window-destroyed", false);
+  Services.obs.addObserver(this, "inner-window-destroyed");
 
   doc.addEventListener("visibilitychange", this);
 

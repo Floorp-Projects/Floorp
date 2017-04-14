@@ -134,7 +134,7 @@ function MarionetteComponent() {
   this.finalUIStartup = false;
 
   this.logger = this.setupLogger(prefs.logLevel);
-  Services.prefs.addObserver(PREF_ENABLED, this, false);
+  Services.prefs.addObserver(PREF_ENABLED, this);
 
   if (Preferences.isSet(PREF_ENABLED_FALLBACK)) {
     this.logger.warn(`Deprecated preference ${PREF_ENABLED_FALLBACK} detected, ` +
@@ -197,7 +197,7 @@ MarionetteComponent.prototype.observe = function (subject, topic, data) {
     case "profile-after-change":
       // Using sessionstore-windows-restored as the xpcom category doesn't
       // seem to work, so we wait for that by adding an observer here.
-      Services.obs.addObserver(this, "sessionstore-windows-restored", false);
+      Services.obs.addObserver(this, "sessionstore-windows-restored");
 
       prefs.readFromEnvironment(ENV_PREF_VAR);
 
@@ -205,7 +205,7 @@ MarionetteComponent.prototype.observe = function (subject, topic, data) {
         // We want to suppress the modal dialog that's shown
         // when starting up in safe-mode to enable testing.
         if (Services.appinfo.inSafeMode) {
-          Services.obs.addObserver(this, "domwindowopened", false);
+          Services.obs.addObserver(this, "domwindowopened");
         }
       }
       break;
@@ -214,7 +214,7 @@ MarionetteComponent.prototype.observe = function (subject, topic, data) {
       if (this.gfxWindow === null || subject === this.gfxWindow) {
         Services.obs.removeObserver(this, topic);
 
-        Services.obs.addObserver(this, "xpcom-shutdown", false);
+        Services.obs.addObserver(this, "xpcom-shutdown");
         this.finalUIStartup = true;
         this.init();
       }
@@ -241,9 +241,9 @@ MarionetteComponent.prototype.observe = function (subject, topic, data) {
       }
 
       if (this.gfxWindow) {
-        Services.obs.addObserver(this, "domwindowclosed", false);
+        Services.obs.addObserver(this, "domwindowclosed");
       } else {
-        Services.obs.addObserver(this, "xpcom-shutdown", false);
+        Services.obs.addObserver(this, "xpcom-shutdown");
         this.finalUIStartup = true;
         this.init();
       }

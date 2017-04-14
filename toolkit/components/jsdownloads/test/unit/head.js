@@ -212,7 +212,7 @@ function promiseWaitForVisit(aUrl) {
     onClearHistory() {},
     onPageChanged() {},
     onDeleteVisits() {},
-  }, false);
+  });
 
   return deferred.promise;
 }

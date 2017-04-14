@@ -20,7 +20,7 @@ add_task(function* enableDialogs() {
     dismissButton.click();
   }
   let obsName = "tabmodal-dialog-loaded";
-  Services.obs.addObserver(onDialogShown, obsName, false);
+  Services.obs.addObserver(onDialogShown, obsName);
   yield openPage(true);
   Services.obs.removeObserver(onDialogShown, obsName);
   Assert.ok(dialogShown);
@@ -44,7 +44,7 @@ function* openPage(enableDialogs) {
           content.QueryInterface(Ci.nsIInterfaceRequestor).
             getInterface(Ci.nsIDOMWindowUtils)[name]();
         }
-      }, "document-element-inserted", false);
+      }, "document-element-inserted");
     });
     // Load the page.
     yield BrowserTestUtils.loadURI(browser, PAGE_URL);

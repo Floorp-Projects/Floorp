@@ -7,7 +7,7 @@ function observeOneRestore(callback) {
   Services.obs.addObserver(function onRestore() {
     Services.obs.removeObserver(onRestore, topic);
     callback();
-  }, topic, false);
+  }, topic);
 }
 
 function test() {

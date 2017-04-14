@@ -121,7 +121,7 @@ function getObserver() {
       },
     };
     EventEmitter.decorate(_observer);
-    PlacesUtils.history.addObserver(_observer, false);
+    PlacesUtils.history.addObserver(_observer);
   }
   return _observer;
 }

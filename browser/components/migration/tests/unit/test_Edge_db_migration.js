@@ -437,7 +437,7 @@ add_task(function*() {
     onItemVisited() {},
     onItemMoved() {},
   };
-  PlacesUtils.bookmarks.addObserver(bookmarkObserver, false);
+  PlacesUtils.bookmarks.addObserver(bookmarkObserver);
 
   let migrateResult = yield new Promise(resolve => bookmarksMigrator.migrate(resolve)).catch(ex => {
     Cu.reportError(ex);
@@ -513,7 +513,7 @@ add_task(function*() {
     onItemVisited() {},
     onItemMoved() {},
   };
-  PlacesUtils.bookmarks.addObserver(bookmarkObserver, false);
+  PlacesUtils.bookmarks.addObserver(bookmarkObserver);
 
   let readingListMigrator = migrator.wrappedJSObject.getReadingListMigratorForTesting(db);
   Assert.ok(readingListMigrator.exists, "Should recognize db we just created");

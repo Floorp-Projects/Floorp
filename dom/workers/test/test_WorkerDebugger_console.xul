@@ -23,7 +23,7 @@
     consoleMessagesReceived = 0;
     function test() {
       function consoleListener() {
-        SpecialPowers.addObserver(this, "console-api-log-event", false);
+        SpecialPowers.addObserver(this, "console-api-log-event");
       }
 
       consoleListener.prototype  = {

@@ -7,7 +7,7 @@ function localStorageFlush(cb)
       cb();
     }
   };
-  os().addObserver(ob, "domstorage-test-flushed", false);
+  os().addObserver(ob, "domstorage-test-flushed");
   notify("domstorage-test-flush-force");
 }
 

@@ -147,8 +147,8 @@ function NetworkService() {
   this.netWorkerRequestQueue = new NetworkWorkerRequestQueue(this);
   this.shutdown = false;
 
-  Services.prefs.addObserver(PREF_NETWORK_DEBUG_ENABLED, this, false);
-  Services.obs.addObserver(this, TOPIC_XPCOM_SHUTDOWN, false);
+  Services.prefs.addObserver(PREF_NETWORK_DEBUG_ENABLED, this);
+  Services.obs.addObserver(this, TOPIC_XPCOM_SHUTDOWN);
 }
 
 NetworkService.prototype = {

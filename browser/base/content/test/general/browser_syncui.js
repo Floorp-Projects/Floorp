@@ -48,7 +48,7 @@ function promiseObserver(topic) {
       Services.obs.removeObserver(obs, aTopic);
       resolve(aSubject);
     }
-    Services.obs.addObserver(obs, topic, false);
+    Services.obs.addObserver(obs, topic);
   });
 }
 

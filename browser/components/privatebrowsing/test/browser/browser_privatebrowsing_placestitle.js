@@ -57,7 +57,7 @@ add_task(function* test() {
     onDeleteVisits() {},
     QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
   };
-  PlacesUtils.history.addObserver(historyObserver, false);
+  PlacesUtils.history.addObserver(historyObserver);
 
 
   let win = yield BrowserTestUtils.openNewBrowserWindow();

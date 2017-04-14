@@ -332,7 +332,7 @@ function initMockAndListener() {
     obs.removeObserver(setupRequestPromiseHandler, aTopic);
     mockRequestUIGlue.promise = aSubject;
     sendAsyncMessage('promise-setup-ready');
-  }, 'setup-request-promise', false);
+  }, 'setup-request-promise');
 }
 
 function teardown() {

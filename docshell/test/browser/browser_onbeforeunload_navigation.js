@@ -105,7 +105,7 @@ function onTabModalDialogLoaded(node) {
 }
 
 // Listen for the dialog being created
-Services.obs.addObserver(onTabModalDialogLoaded, "tabmodal-dialog-loaded", false);
+Services.obs.addObserver(onTabModalDialogLoaded, "tabmodal-dialog-loaded");
 
 function runNextTest() {
   currentTest++;

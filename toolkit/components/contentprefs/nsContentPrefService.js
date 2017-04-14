@@ -24,10 +24,10 @@ function ContentPrefService() {
   // was due to a temporary condition (like being out of disk space).
   this._dbInit();
 
-  this._observerSvc.addObserver(this, "last-pb-context-exited", false);
+  this._observerSvc.addObserver(this, "last-pb-context-exited");
 
   // Observe shutdown so we can shut down the database connection.
-  this._observerSvc.addObserver(this, "xpcom-shutdown", false);
+  this._observerSvc.addObserver(this, "xpcom-shutdown");
 }
 
 Cu.import("resource://gre/modules/ContentPrefStore.jsm");

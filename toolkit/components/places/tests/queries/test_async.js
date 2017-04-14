@@ -211,7 +211,7 @@ Test.prototype = {
         }
       },
     };
-    this.result.addObserver(this.observer, false);
+    this.result.addObserver(this.observer);
 
     print("Opening container");
     this.result.root.containerOpen = true;

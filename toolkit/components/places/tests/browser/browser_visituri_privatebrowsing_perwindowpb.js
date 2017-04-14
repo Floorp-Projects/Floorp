@@ -36,7 +36,7 @@ function test() {
       }
     };
 
-    aWindow.Services.obs.addObserver(observer, "uri-visit-saved", false);
+    aWindow.Services.obs.addObserver(observer, "uri-visit-saved");
 
     BrowserTestUtils.browserLoaded(aWindow.gBrowser.selectedBrowser).then(aCallback);
     aWindow.gBrowser.selectedBrowser.loadURI(aTestURI);

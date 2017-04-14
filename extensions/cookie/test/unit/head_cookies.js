@@ -56,7 +56,7 @@ function do_finish_generator_test(generator)
 }
 
 function _observer(generator, topic) {
-  Services.obs.addObserver(this, topic, false);
+  Services.obs.addObserver(this, topic);
 
   this.generator = generator;
   this.topic = topic;

@@ -38,7 +38,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1214366
     var uri = subject.QueryInterface(Ci.nsIURI);
     info("Witnessed " + topic + " notification from Gecko with URI " + uri.spec);
   }
-  Services.obs.addObserver(observe, "link-visited", false);
+  Services.obs.addObserver(observe, "link-visited");
 
   SimpleTest.registerCleanupFunction(function cleanup() {
     BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));

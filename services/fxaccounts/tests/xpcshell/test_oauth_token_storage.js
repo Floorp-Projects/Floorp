@@ -17,7 +17,7 @@ function promiseNotification(topic) {
       Services.obs.removeObserver(observe, topic);
       resolve();
     }
-    Services.obs.addObserver(observe, topic, false);
+    Services.obs.addObserver(observe, topic);
   });
 }
 

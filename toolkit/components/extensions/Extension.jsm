@@ -649,7 +649,7 @@ this.Extension = class extends ExtensionData {
     Services.ppmm.addMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
     if (addonData.cleanupFile) {
-      Services.obs.addObserver(this, "xpcom-shutdown", false);
+      Services.obs.addObserver(this, "xpcom-shutdown");
       this.cleanupFile = addonData.cleanupFile || null;
       delete addonData.cleanupFile;
     }
@@ -856,8 +856,8 @@ this.Extension = class extends ExtensionData {
         }
       };
       ppmm.addMessageListener(msg + "Complete", listener);
-      Services.obs.addObserver(observer, "message-manager-close", false);
-      Services.obs.addObserver(observer, "message-manager-disconnect", false);
+      Services.obs.addObserver(observer, "message-manager-close");
+      Services.obs.addObserver(observer, "message-manager-disconnect");
 
       ppmm.broadcastAsyncMessage(msg, data);
     });

@@ -35,7 +35,7 @@ audio.loop = true;
 
 var tests = [
   function() {
-    observerService.addObserver(observer, "audio-playback", false);
+    observerService.addObserver(observer, "audio-playback");
     ok(true, "Observer set");
 
     audio.src = "audio.ogg";

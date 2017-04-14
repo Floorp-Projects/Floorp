@@ -81,7 +81,7 @@ function G_ObserverServiceObserver(topic, observeFunction, opt_onlyOnce) {
                                          BindToObject(this.observe_, this));
   this.observerService_ = Cc["@mozilla.org/observer-service;1"]
                           .getService(Ci.nsIObserverService);
-  this.observerService_.addObserver(this.observer_, this.topic_, false);
+  this.observerService_.addObserver(this.observer_, this.topic_);
 }
 
 /**
@@ -126,7 +126,7 @@ this.TEST_G_Observer = function TEST_G_Observer() {
     var topic = "google-observer-test";
 
     var o1 = new G_ObserverWrapper(topic, regularObserver);
-    service.addObserver(o1, topic, false);
+    service.addObserver(o1, topic);
 
     new G_ObserverServiceObserver(topic, 
                                   observerServiceObserver, true /* once */);
