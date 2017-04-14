@@ -86,4 +86,5 @@ config = {
     'tooltool_manifest_src': 'browser/config/tooltool-manifests/linux64/\
 clang.manifest.centos6',
     #######################
+    'artifact_flag_build_variant_in_try': None,
 }
