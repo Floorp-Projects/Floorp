@@ -16,7 +16,7 @@ function create_n_element_array(n)
   for (let i=0; i<n; i++) {
     let str = new SupportsString();
     str.data = "element " + i;
-    arr.appendElement(str, false);
+    arr.appendElement(str);
   }
   return arr;
 }
@@ -25,7 +25,7 @@ function test_appending_null_actually_inserts()
 {
   var arr = new MutableArray();
   do_check_eq(0, arr.length);
-  arr.appendElement(null, false);
+  arr.appendElement(null);
   do_check_eq(1, arr.length);
 }
 
@@ -34,7 +34,7 @@ function test_object_gets_appended()
   var arr = new MutableArray();
   var str = new SupportsString();
   str.data = "hello";
-  arr.appendElement(str, false);
+  arr.appendElement(str);
   do_check_eq(1, arr.length);
   var obj = arr.queryElementAt(0, Ci.nsISupportsString);
   do_check_eq(str, obj);

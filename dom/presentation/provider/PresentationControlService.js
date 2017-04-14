@@ -375,7 +375,7 @@ function ChannelDescription(aInit) {
         let wrapper = Cc["@mozilla.org/supports-cstring;1"]
                       .createInstance(Ci.nsISupportsCString);
         wrapper.data = address;
-        this._tcpAddresses.appendElement(wrapper, false);
+        this._tcpAddresses.appendElement(wrapper);
       }
 
       this._tcpPort = aInit.tcpPort;
