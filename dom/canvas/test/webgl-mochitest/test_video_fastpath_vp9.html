@@ -1,0 +1,21 @@
+<html>
+    <head>
+        <meta name="timeout" content="long"/>
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8"/>
+        <title>Video Fastpath upload test</title>
+        <script src="/tests/SimpleTest/SimpleTest.js"></script>
+        <script src="test_video_fastpath.js"></script>
+        <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+    </head>
+    <body>
+        <script>
+
+            function runTest() {
+                startTest("red-green.webmvp9.webm");
+            }
+
+            SimpleTest.waitForExplicitFinish();
+            SpecialPowers.pushPrefEnv({"set" : [["webgl.enable-privileged-extensions", true]]}, runTest);
+        </script>
+    </body>
+</html>
