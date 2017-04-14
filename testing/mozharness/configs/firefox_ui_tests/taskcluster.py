@@ -7,5 +7,5 @@ config = {
 
     "pip_index": False,
 
-    "tooltool_cache": "/builds/tooltool_cache",
+    "tooltool_cache": "/home/worker/tooltool-cache",
 }
