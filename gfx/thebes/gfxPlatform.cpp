@@ -2242,8 +2242,8 @@ gfxPlatform::InitAcceleration()
       NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING,
                                                discardFailureId, &status))) {
       if (status == nsIGfxInfo::FEATURE_STATUS_OK || gfxPrefs::HardwareVideoDecodingForceEnabled()) {
-         sLayersSupportsHardwareVideoDecoding = true;
-    }
+        sLayersSupportsHardwareVideoDecoding = true;
+      }
   }
 
   sLayersAccelerationPrefsInitialized = true;
