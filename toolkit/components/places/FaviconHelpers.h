@@ -92,6 +92,7 @@ struct IconData
   }
 
   nsCString spec;
+  nsCString host;
   PRTime expiration;
   enum AsyncFaviconFetchMode fetchMode;
   uint16_t status; // This is a bitset, see ICON_STATUS_* defines above.
@@ -115,8 +116,8 @@ struct PageData
   int64_t id; // This is the moz_pages_w_icons id.
   int64_t placeId; // This is the moz_places page id.
   nsCString spec;
+  nsCString host;
   nsCString bookmarkedSpec;
-  nsString revHost;
   bool canAddToHistory; // False for disabled history and unsupported schemas.
   nsCString guid;
 };
