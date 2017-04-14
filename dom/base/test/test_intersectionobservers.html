@@ -967,7 +967,7 @@ limitations under the License.
         targetEl4.src = "intersectionobserver_iframe.html";
       });
 
-      it('rootBounds should is set to null for cross-origin observations', function(done) {
+      it('rootBounds is set to null for cross-origin observations', function(done) {
 
         window.onmessage = function (e) {
           expect(e.data).to.be(true);
