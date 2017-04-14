@@ -305,7 +305,7 @@ BrowserGlue.prototype = {
           this._initPlaces(false);
         } else if (data == "smart-bookmarks-init") {
           this.ensurePlacesDefaultQueriesInitialized().then(() => {
-            Services.obs.notifyObservers(null, "test-smart-bookmarks-done", null);
+            Services.obs.notifyObservers(null, "test-smart-bookmarks-done");
           });
         } else if (data == "mock-fxaccounts") {
           Object.defineProperty(this, "fxAccounts", {
@@ -561,7 +561,7 @@ BrowserGlue.prototype = {
       UnsubmittedCrashHandler.init();
     }
 
-    Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
+    Services.obs.notifyObservers(null, "browser-ui-startup-complete");
   },
 
   _checkForOldBuildUpdates() {
@@ -1495,7 +1495,7 @@ BrowserGlue.prototype = {
     }).then(() => {
       // NB: deliberately after the catch so that we always do this, even if
       // we threw halfway through initializing in the Task above.
-      Services.obs.notifyObservers(null, "places-browser-init-complete", "");
+      Services.obs.notifyObservers(null, "places-browser-init-complete");
     });
   },
 

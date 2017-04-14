@@ -701,7 +701,7 @@ ConsoleAPI.prototype = {
         action: "profile",
         arguments: [ profileName ]
       }
-    }, "console-api-profiler", null);
+    }, "console-api-profiler");
     dumpMessage(this, "profile", `'${profileName}'`);
   },
 
@@ -714,7 +714,7 @@ ConsoleAPI.prototype = {
         action: "profileEnd",
         arguments: [ profileName ]
       }
-    }, "console-api-profiler", null);
+    }, "console-api-profiler");
     dumpMessage(this, "profileEnd", `'${profileName}'`);
   },
 

@@ -170,7 +170,7 @@ LoginManager.prototype = {
           this._pwmgr._initStorage();
           yield this._pwmgr.initializationPromise;
           Services.obs.notifyObservers(null,
-                       "passwordmgr-storage-replace-complete", null);
+                       "passwordmgr-storage-replace-complete");
         }.bind(this));
       } else if (topic == "gather-telemetry") {
         // When testing, the "data" parameter is a string containing the

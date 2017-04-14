@@ -382,7 +382,7 @@ var BrowserApp = {
   startup: function startup() {
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
     dump("zerdatime " + Date.now() + " - browser chrome startup finished.");
-    Services.obs.notifyObservers(this.browser, "BrowserChrome:Ready", null);
+    Services.obs.notifyObservers(this.browser, "BrowserChrome:Ready");
 
     this.deck = document.getElementById("browsers");
 
@@ -548,7 +548,7 @@ var BrowserApp = {
     this.deck.addEventListener("DOMContentLoaded", function() {
       InitLater(() => Cu.import("resource://gre/modules/NotificationDB.jsm"));
 
-      InitLater(() => Services.obs.notifyObservers(window, "browser-delayed-startup-finished", ""));
+      InitLater(() => Services.obs.notifyObservers(window, "browser-delayed-startup-finished"));
       InitLater(() => GlobalEventDispatcher.sendRequest({ type: "Gecko:DelayedStartup" }));
 
       if (!AppConstants.RELEASE_OR_BETA) {
@@ -1059,7 +1059,7 @@ var BrowserApp = {
           let engine = Services.search.getEngineByName(name);
           if (engine) {
             Services.search.defaultEngine = engine;
-            Services.obs.notifyObservers(null, "default-search-engine-migrated", "");
+            Services.obs.notifyObservers(null, "default-search-engine-migrated");
           }
         });
       }
@@ -1437,14 +1437,14 @@ var BrowserApp = {
   quit: function quit(aClear = { sanitize: {}, dontSaveSession: false }) {
     // Notify all windows that an application quit has been requested.
     let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-    Services.obs.notifyObservers(cancelQuit, "quit-application-requested", null);
+    Services.obs.notifyObservers(cancelQuit, "quit-application-requested");
 
     // Quit aborted.
     if (cancelQuit.data) {
       return;
     }
 
-    Services.obs.notifyObservers(null, "quit-application-proceeding", null);
+    Services.obs.notifyObservers(null, "quit-application-proceeding");
 
     // Tell session store to forget about this window
     if (aClear.dontSaveSession) {
@@ -1529,7 +1529,7 @@ var BrowserApp = {
           break;
         case "openTabs":
           if (aShutdown === true) {
-            Services.obs.notifyObservers(null, "browser:purge-session-tabs", "");
+            Services.obs.notifyObservers(null, "browser:purge-session-tabs");
             break;
           }
           // fall-through if aShutdown is false
@@ -2813,7 +2813,7 @@ var NativeWindow = {
       // If no context-menu for long-press event, it may be meant to trigger text-selection.
       this.menus = null;
       Services.obs.notifyObservers(
-        {target: this._target, x: event.clientX, y: event.clientY}, "context-menu-not-shown", "");
+        {target: this._target, x: event.clientX, y: event.clientY}, "context-menu-not-shown");
     },
 
     // Returns a title for a context menu. If no title attribute exists, will fall back to looking for a url
@@ -4528,7 +4528,7 @@ Tab.prototype = {
       // browser.contentDocument is changed to the new document we're loading
       this.contentDocumentIsDisplayed = false;
       this.hasTouchListener = false;
-      Services.obs.notifyObservers(this.browser, "Session:NotifyLocationChange", null);
+      Services.obs.notifyObservers(this.browser, "Session:NotifyLocationChange");
     }
   },
 
@@ -4567,36 +4567,36 @@ Tab.prototype = {
   },
 
   OnHistoryNewEntry: function(newURI, oldIndex) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+    Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
   },
 
   OnHistoryGoBack: function(backURI) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+    Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
     return true;
   },
 
   OnHistoryGoForward: function(forwardURI) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+    Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
     return true;
   },
 
   OnHistoryReload: function(reloadURI, reloadFlags) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+    Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
     return true;
   },
 
   OnHistoryGotoIndex: function(index, gotoURI) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+    Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
     return true;
   },
 
   OnHistoryPurge: function(numEntries) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+    Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
     return true;
   },
 
   OnHistoryReplaceEntry: function(index) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+    Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
   },
 
   ShouldNotifyMediaPlaybackChange: function(activeState) {
@@ -5597,7 +5597,7 @@ var XPInstallObserver = {
 
         // If nothing aborted, quit the app
         if (cancelQuit.data == false) {
-          Services.obs.notifyObservers(null, "quit-application-proceeding", null);
+          Services.obs.notifyObservers(null, "quit-application-proceeding");
           SharedPreferences.forApp().setBoolPref("browser.sessionstore.resume_session_once", true);
           let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
           appStartup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
@@ -6853,7 +6853,7 @@ var Distribution = {
 
     // Apply a lightweight theme if necessary
     if (prefs && prefs["lightweightThemes.selectedThemeID"]) {
-      Services.obs.notifyObservers(null, "lightweight-theme-apply", "");
+      Services.obs.notifyObservers(null, "lightweight-theme-apply");
     }
 
     let localizedString = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(Ci.nsIPrefLocalizedString);

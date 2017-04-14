@@ -157,7 +157,7 @@ HandlerService.prototype = {
     }
     let promise = this._onDBChange();
     promise.then(() => {
-      Services.obs.notifyObservers(null, "handlersvc-json-replace-complete", null);
+      Services.obs.notifyObservers(null, "handlersvc-json-replace-complete");
     });
   },
 
