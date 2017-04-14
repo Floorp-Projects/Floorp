@@ -9,6 +9,8 @@
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsStringGlue.h"
+#include "nsXULAppAPI.h"
+#include "Units.h"
 
 class nsIWidget;
 
@@ -65,6 +67,11 @@ struct IMENotificationRequests final
   IMENotificationRequests operator|(const IMENotificationRequests& aOther) const
   {
     return IMENotificationRequests(aOther.mWantUpdates | mWantUpdates);
+  }
+  IMENotificationRequests& operator|=(const IMENotificationRequests& aOther)
+  {
+    mWantUpdates |= aOther.mWantUpdates;
+    return *this;
   }
 
   bool WantTextChange() const

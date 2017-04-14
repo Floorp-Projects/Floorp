@@ -12,13 +12,12 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/TextEventDispatcherListener.h"
 #include "mozilla/TextRange.h"
+#include "mozilla/widget/IMEData.h"
 
 class nsIWidget;
 
 namespace mozilla {
 namespace widget {
-
-struct IMENotification;
 
 /**
  * TextEventDispatcher is a helper class for dispatching widget events defined
@@ -74,6 +73,11 @@ public:
   void OnDestroyWidget();
 
   nsIWidget* GetWidget() const { return mWidget; }
+
+  const IMENotificationRequests& IMENotificationRequestsRef() const
+  {
+    return mIMENotificationRequests;
+  }
 
   /**
    * GetState() returns current state of this class.
@@ -307,6 +311,9 @@ private:
   // check if a method to uninstall the listener is called by valid instance.
   // So, using weak reference is the best way in this case.
   nsWeakPtr mListener;
+  // mIMENotificationRequests should store current IME's notification requests.
+  // So, this may be invalid when IME doesn't have focus.
+  IMENotificationRequests mIMENotificationRequests;
 
   // mPendingComposition stores new composition string temporarily.
   // These values will be used for dispatching eCompositionChange event
@@ -412,6 +419,10 @@ private:
   // See IsComposing().
   bool mIsComposing;
 
+  // true while NOTIFY_IME_OF_FOCUS is received but NOTIFY_IME_OF_BLUR has not
+  // received yet.  Otherwise, false.
+  bool mHasFocus;
+
   // If this is true, keydown and keyup events are dispatched even when there
   // is a composition.
   static bool sDispatchKeyEventsDuringComposition;
@@ -495,6 +506,19 @@ private:
                                      void* aData,
                                      uint32_t aIndexOfKeypress = 0,
                                      bool aNeedsCallback = false);
+
+  /**
+   * ClearNotificationRequests() clears mIMENotificationRequests.
+   */
+  void ClearNotificationRequests();
+
+  /**
+   * UpdateNotificationRequests() updates mIMENotificationRequests with
+   * current state.  If the instance doesn't have focus, this clears
+   * mIMENotificationRequests.  Otherwise, updates it with both requests of
+   * current listener and native listener.
+   */
+  void UpdateNotificationRequests();
 };
 
 } // namespace widget
