@@ -4780,20 +4780,15 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
         return;
       }
 
-      uint64_t externalImageId = aLayer->SendImageContainer(container);
-      if (!externalImageId) {
+      Maybe<wr::ImageKey> key = aLayer->SendImageContainer(container, aParentCommands);
+      if (key.isNothing()) {
         return;
       }
 
-      WrImageKey key;
-      key.mNamespace = aLayer->WrBridge()->GetNamespace();
-      key.mHandle = aLayer->WrBridge()->GetNextResourceId();
-      aParentCommands.AppendElement(OpAddExternalImage(externalImageId, key));
-      aLayer->WrManager()->AddImageKeyForDiscard(key);
       aBuilder.PushBorderImage(wr::ToWrRect(dest),
                                aBuilder.BuildClipRegion(wr::ToWrRect(clip)),
                                wr::ToWrBorderWidths(widths[0], widths[1], widths[2], widths[3]),
-                               key,
+                               key.value(),
                                wr::ToWrNinePatchDescriptor(
                                  (float)(mBorderImageRenderer->mImageSize.width) / appUnitsPerDevPixel,
                                  (float)(mBorderImageRenderer->mImageSize.height) / appUnitsPerDevPixel,
