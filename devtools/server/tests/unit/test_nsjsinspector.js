@@ -22,7 +22,7 @@ function run_test() {
 function test_nesting() {
   do_check_eq(inspector.eventLoopNestLevel, 0);
 
-  tm.dispatchToMainThread({ run: enterEventLoop});
+  tm.currentThread.dispatch({ run: enterEventLoop}, 0);
 
   do_check_eq(inspector.enterNestedEventLoop(requestor(gCount)), 0);
   do_check_eq(inspector.eventLoopNestLevel, 0);
@@ -31,7 +31,7 @@ function test_nesting() {
 
 function enterEventLoop() {
   if (gCount++ < MAX) {
-    tm.dispatchToMainThread({ run: enterEventLoop});
+    tm.currentThread.dispatch({ run: enterEventLoop}, 0);
 
     Object.create(requestor(gCount));
 
@@ -41,7 +41,7 @@ function enterEventLoop() {
     do_check_eq(inspector.enterNestedEventLoop(requestor(gCount)), gCount);
   } else {
     do_check_eq(gCount, MAX + 1);
-    tm.dispatchToMainThread({ run: exitEventLoop});
+    tm.currentThread.dispatch({ run: exitEventLoop}, 0);
   }
 }
 
@@ -50,7 +50,7 @@ function exitEventLoop() {
     do_check_eq(inspector.lastNestRequestor.url, requestor(gCount - 1).url);
     do_check_eq(inspector.lastNestRequestor.connection, requestor(gCount - 1).connection);
     if (gCount-- > 1) {
-      tm.dispatchToMainThread({ run: exitEventLoop});
+      tm.currentThread.dispatch({ run: exitEventLoop}, 0);
     }
 
     do_check_eq(inspector.exitNestedEventLoop(), gCount);

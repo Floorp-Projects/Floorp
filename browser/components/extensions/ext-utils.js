@@ -394,9 +394,9 @@ class TabTracker extends TabTrackerBase {
     // `tabs.onRemoved.addListener`, then the tab would be closed before the
     // event listener is registered. To make sure that the event listener is
     // notified, we dispatch `tabs.onRemoved` asynchronously.
-    Services.tm.dispatchToMainThread(() => {
+    Services.tm.mainThread.dispatch(() => {
       this.emit("tab-removed", {nativeTab, tabId, windowId, isWindowClosing});
-    });
+    }, Ci.nsIThread.DISPATCH_NORMAL);
   }
 
   getBrowserData(browser) {

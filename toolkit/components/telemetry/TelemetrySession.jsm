@@ -1974,12 +1974,12 @@ var Impl = {
     case "idle-daily":
       // Enqueue to main-thread, otherwise components may be inited by the
       // idle-daily category and miss the gather-telemetry notification.
-      Services.tm.dispatchToMainThread((function() {
+      Services.tm.mainThread.dispatch((function() {
         // Notify that data should be gathered now.
         // TODO: We are keeping this behaviour for now but it will be removed as soon as
         // bug 1127907 lands.
         Services.obs.notifyObservers(null, "gather-telemetry", null);
-      }));
+      }), Ci.nsIThread.DISPATCH_NORMAL);
       break;
 
     case "application-background":

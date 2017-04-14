@@ -174,9 +174,9 @@ this.webrtcUI = {
     let identityBox = browserWindow.document.getElementById("identity-box");
     if (AppConstants.platform == "macosx" && !Services.focus.activeWindow) {
       browserWindow.addEventListener("activate", function() {
-        Services.tm.dispatchToMainThread(function() {
+        Services.tm.mainThread.dispatch(function() {
           identityBox.click();
-        });
+        }, Ci.nsIThread.DISPATCH_NORMAL);
       }, {once: true});
       Cc["@mozilla.org/widget/macdocksupport;1"].getService(Ci.nsIMacDockSupport)
         .activateApplication(true);

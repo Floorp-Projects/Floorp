@@ -285,7 +285,8 @@ function handleAsyncOrdering(request, response)
     // Use gThreadManager here because it's expedient, *not* because it's
     // intended for public use!  If you do this in client code, expect me to
     // knowingly break your code by changing the variable name.  :-P
-    gThreadManager.dispatchToMainThread(writeData);
+    gThreadManager.currentThread
+                  .dispatch(writeData, Ci.nsIThread.DISPATCH_NORMAL);
   }
   step();
   response.processAsync();

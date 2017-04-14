@@ -593,9 +593,9 @@ TetheringService.prototype = {
 
     if (aCallback) {
       // Callback asynchronously to avoid netsted toggling.
-      Services.tm.dispatchToMainThread(() => {
+      Services.tm.currentThread.dispatch(() => {
         aCallback.wifiTetheringEnabledChange(aMsg);
-      });
+      }, Ci.nsIThread.DISPATCH_NORMAL);
     }
   },
 

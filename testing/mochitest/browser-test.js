@@ -949,11 +949,11 @@ function testScope(aTester, aTest, expected) {
   };
 
   this.executeSoon = function test_executeSoon(func) {
-    Services.tm.dispatchToMainThread({
+    Services.tm.mainThread.dispatch({
       run: function() {
         func();
       }
-    });
+    }, Ci.nsIThread.DISPATCH_NORMAL);
   };
 
   this.waitForExplicitFinish = function test_waitForExplicitFinish() {

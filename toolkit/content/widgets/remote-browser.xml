@@ -346,7 +346,7 @@
             }
 
             // Dispatch something to ensure that the main thread wakes up.
-            Services.tm.dispatchToMainThread(function() {});
+            Services.tm.mainThread.dispatch(function() {}, Components.interfaces.nsIThread.DISPATCH_NORMAL);
           }
 
           let timer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);

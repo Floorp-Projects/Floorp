@@ -491,7 +491,7 @@ InternalPrompt.prototype = {
       }
     }
 
-    Services.tm.dispatchToMainThread(runnable);
+    Services.tm.mainThread.dispatch(runnable, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   asyncPromptAuth: function asyncPromptAuth(aChannel, aCallback, aContext, aLevel, aAuthInfo) {

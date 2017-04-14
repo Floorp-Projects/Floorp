@@ -257,7 +257,7 @@
 
     function executeSoon(callback) {
       let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
-      tm.dispatchToMainThread(callback);
+      tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
     }
 
     function waitForFocus(callback, win) {

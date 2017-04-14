@@ -56,7 +56,7 @@ function do_log_info(aMessage)
 // from the operation callback.
 function executeSoon(fn) {
   var tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
-  tm.dispatchToMainThread({run: fn});
+  tm.mainThread.dispatch({run: fn}, Ci.nsIThread.DISPATCH_NORMAL);
 }
 
 //

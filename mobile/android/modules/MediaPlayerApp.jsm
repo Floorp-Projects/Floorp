@@ -68,9 +68,9 @@ function RemoteMedia(id, listener) {
   this._listener = listener;
 
   if ("onRemoteMediaStart" in this._listener) {
-    Services.tm.dispatchToMainThread((function() {
+    Services.tm.mainThread.dispatch((function() {
       this._listener.onRemoteMediaStart(this);
-    }).bind(this));
+    }).bind(this), Ci.nsIThread.DISPATCH_NORMAL);
   }
 }
 

@@ -151,7 +151,8 @@ this.Troubleshoot = {
       snapshot[providerName] = providerData;
       if (--numPending == 0)
         // Ensure that done is always and truly called asynchronously.
-        Services.tm.dispatchToMainThread(done.bind(null, snapshot));
+        Services.tm.mainThread.dispatch(done.bind(null, snapshot),
+                                        Ci.nsIThread.DISPATCH_NORMAL);
     }
     for (let name in dataProviders) {
       try {

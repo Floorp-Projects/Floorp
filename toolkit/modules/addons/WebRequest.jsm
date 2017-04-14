@@ -67,7 +67,7 @@ var RequestId = {
 };
 
 function runLater(job) {
-  Services.tm.dispatchToMainThread(job);
+  Services.tm.currentThread.dispatch(job, Ci.nsIEventTarget.DISPATCH_NORMAL);
 }
 
 function parseFilter(filter) {

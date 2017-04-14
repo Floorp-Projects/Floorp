@@ -676,9 +676,9 @@ Livemark.prototype = {
         let nodes = this._nodes.get(container);
         for (let node of nodes) {
           if (!aURI || node.uri == aURI.spec) {
-            Services.tm.dispatchToMainThread(() => {
+            Services.tm.mainThread.dispatch(() => {
               observer.nodeHistoryDetailsChanged(node, 0, aVisitedStatus);
-            });
+            }, Ci.nsIThread.DISPATCH_NORMAL);
           }
         }
       }

@@ -14,7 +14,7 @@ Cu.import("resource:///modules/sessionstore/FrameTree.jsm", this);
 var gFrameTree = new FrameTree(this);
 
 function executeSoon(callback) {
-  Services.tm.dispatchToMainThread(callback);
+  Services.tm.mainThread.dispatch(callback, Components.interfaces.nsIThread.DISPATCH_NORMAL);
 }
 
 gFrameTree.addObserver({

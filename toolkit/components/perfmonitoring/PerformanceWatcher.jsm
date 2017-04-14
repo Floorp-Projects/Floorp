@@ -274,7 +274,7 @@ BufferedObserver.prototype.observe = function(source, details) {
   this._buffer.push({source, details});
   if (!this._isDispatching) {
     this._isDispatching = true;
-    Services.tm.dispatchToMainThread(() => {
+    Services.tm.mainThread.dispatch(() => {
       // Grab buffer, in case something in the listener could modify it.
       let buffer = this._buffer;
       this._buffer = [];
@@ -284,7 +284,7 @@ BufferedObserver.prototype.observe = function(source, details) {
       this._isDispatching = false;
 
       this._listener(buffer);
-    });
+    }, Ci.nsIThread.DISPATCH_NORMAL);
   }
 };
 
