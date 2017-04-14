@@ -270,7 +270,7 @@ class ParseContext : public Nestable<ParseContext>
     SharedContext* sc_;
 
     // TokenStream used for error reporting.
-    TokenStreamBase& tokenStream_;
+    TokenStreamAnyChars& tokenStream_;
 
     // The innermost statement, i.e., top of the statement stack.
     Statement* innermostStatement_;

@@ -26,7 +26,7 @@ class ScriptSourceObject;
 
 namespace frontend {
 
-class TokenStreamBase;
+class TokenStreamAnyChars;
 class FunctionBox;
 class ParseNode;
 
@@ -143,13 +143,13 @@ class MOZ_STACK_CLASS AutoFrontendTraceLog
                          const char* filename, size_t line, size_t column);
 
     AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
-                         const TokenStreamBase& tokenStream);
+                         const TokenStreamAnyChars& tokenStream);
 
     AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
-                         const TokenStreamBase& tokenStream, FunctionBox* funbox);
+                         const TokenStreamAnyChars& tokenStream, FunctionBox* funbox);
 
     AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
-                         const TokenStreamBase& tokenStream, ParseNode* pn);
+                         const TokenStreamAnyChars& tokenStream, ParseNode* pn);
 };
 
 } /* namespace frontend */

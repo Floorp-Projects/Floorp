@@ -781,7 +781,7 @@ class FullParseHandlerBase
         MOZ_ASSERT(pn->pn_pos.begin <= pn->pn_pos.end);
     }
 
-    uint32_t getFunctionNameOffset(ParseNode* func, TokenStreamBase& ts) {
+    uint32_t getFunctionNameOffset(ParseNode* func, TokenStreamAnyChars& ts) {
         return func->pn_pos.begin;
     }
 
