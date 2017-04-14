@@ -468,7 +468,6 @@ mozJSSubScriptLoader::ReadScript(nsIURI* uri,
                                  const nsAString& charset,
                                  const char* uriStr,
                                  nsIIOService* serv,
-                                 nsIPrincipal* principal,
                                  bool reuseGlobal,
                                  MutableHandleScript script,
                                  MutableHandleFunction function)
@@ -693,7 +692,7 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
     if (!script) {
         if (!ReadScript(uri, cx, targetObj, options.charset,
                         static_cast<const char*>(uriStr.get()), serv,
-                        principal, reusingGlobal, &script, &function))
+                        reusingGlobal, &script, &function))
         {
             return NS_OK;
         }
