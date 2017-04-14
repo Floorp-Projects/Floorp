@@ -156,13 +156,11 @@ struct FontFileData
 {
   wr::ByteBuffer mFontBuffer;
   uint32_t mFontIndex;
-  float mGlyphSize;
 };
 
 static void
 WriteFontFileData(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
-                  float aGlyphSize, uint32_t aVariationCount,
-                  const ScaledFont::VariationSetting* aVariations, void* aBaton)
+                  void* aBaton)
 {
   FontFileData* data = static_cast<FontFileData*>(aBaton);
 
@@ -172,7 +170,6 @@ WriteFontFileData(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
   memcpy(data->mFontBuffer.mData, aData, aLength);
 
   data->mFontIndex = aIndex;
-  data->mGlyphSize = aGlyphSize;
 }
 
 void
@@ -228,7 +225,7 @@ WebRenderBridgeChild::GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont)
   }
 
   FontFileData data;
-  if (!aScaledFont->GetFontFileData(WriteFontFileData, &data) ||
+  if (!unscaled->GetFontFileData(WriteFontFileData, &data) ||
       !data.mFontBuffer.mData) {
     return key;
   }

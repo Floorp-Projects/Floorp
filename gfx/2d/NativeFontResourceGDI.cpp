@@ -9,14 +9,14 @@
 #include "Logging.h"
 #include "mozilla/RefPtr.h"
 #include "ScaledFontWin.h"
+#include "UnscaledFontGDI.h"
 
 namespace mozilla {
 namespace gfx {
 
 /* static */
 already_AddRefed<NativeFontResourceGDI>
-NativeFontResourceGDI::Create(uint8_t *aFontData, uint32_t aDataLength,
-                              bool aNeedsCairo)
+NativeFontResourceGDI::Create(uint8_t *aFontData, uint32_t aDataLength)
 {
   DWORD numberOfFontsAdded;
   HANDLE fontResourceHandle = ::AddFontMemResourceEx(aFontData, aDataLength,
@@ -27,7 +27,7 @@ NativeFontResourceGDI::Create(uint8_t *aFontData, uint32_t aDataLength,
   }
 
   RefPtr<NativeFontResourceGDI> fontResouce =
-    new NativeFontResourceGDI(fontResourceHandle, aNeedsCairo);
+    new NativeFontResourceGDI(fontResourceHandle);
 
   return fontResouce.forget();
 }
@@ -37,26 +37,19 @@ NativeFontResourceGDI::~NativeFontResourceGDI()
   ::RemoveFontMemResourceEx(mFontResourceHandle);
 }
 
-already_AddRefed<ScaledFont>
-NativeFontResourceGDI::CreateScaledFont(uint32_t aIndex, Float aGlyphSize,
-                                        const uint8_t* aInstanceData, uint32_t aInstanceDataLength)
+already_AddRefed<UnscaledFont>
+NativeFontResourceGDI::CreateUnscaledFont(uint32_t aIndex,
+                                          const uint8_t* aInstanceData,
+                                          uint32_t aInstanceDataLength)
 {
   if (aInstanceDataLength < sizeof(LOGFONT)) {
-    gfxWarning() << "GDI scaled font instance data is truncated.";
+    gfxWarning() << "GDI unscaled font instance data is truncated.";
     return nullptr;
   }
 
   const LOGFONT* logFont = reinterpret_cast<const LOGFONT*>(aInstanceData);
-
-  // Constructor for ScaledFontWin dereferences and copies the LOGFONT, so we
-  // are safe to pass this reference.
-  RefPtr<ScaledFontBase> scaledFont = new ScaledFontWin(logFont, nullptr, aGlyphSize);
-  if (mNeedsCairo && !scaledFont->PopulateCairoScaledFont()) {
-    gfxWarning() << "Unable to create cairo scaled font GDI font.";
-    return nullptr;
-  }
-
-  return scaledFont.forget();
+  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontGDI(*logFont);
+  return unscaledFont.forget();
 }
 
 } // gfx

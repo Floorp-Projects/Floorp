@@ -24,6 +24,18 @@ public:
 
   const LOGFONT& GetLogFont() const { return mLogFont; }
 
+  bool GetFontFileData(FontFileDataOutput aDataCallback, void* aBaton) override;
+
+  bool GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton) override;
+
+  static already_AddRefed<UnscaledFont>
+    CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength);
+
+  already_AddRefed<ScaledFont>
+    CreateScaledFont(Float aGlyphSize,
+                     const uint8_t* aInstanceData,
+                     uint32_t aInstanceDataLength) override;
+
 private:
   LOGFONT mLogFont;
 };
