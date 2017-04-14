@@ -30,14 +30,11 @@ to mochitest command.
 ## Failures
 
 * Media query support:
-  * test_bug418986-2.html: matchMedia support [6]
-  * test_media_queries.html [182]
+  * test_media_queries.html [156]
   * test_media_queries_dynamic.html [11]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
-  * test_display_mode.html [5]
-  * test_display_mode_reflow.html [2]
 * test_all_shorthand.html: all shorthand servo/servo#15055 [*]
 * Animation support:
   * test_animations.html [22]

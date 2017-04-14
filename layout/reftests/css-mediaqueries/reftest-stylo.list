@@ -7,7 +7,7 @@
 == mq_print_aspectratio.xhtml mq_print_aspectratio.xhtml
 == mq_print_deviceaspectratio.xhtml mq_print_deviceaspectratio.xhtml
 == mq_print_devicewidth.xhtml mq_print_devicewidth.xhtml
-fails == mq_print_orientation.xhtml mq_print_orientation.xhtml
+== mq_print_orientation.xhtml mq_print_orientation.xhtml
 == mq_print_maxheight.xhtml mq_print_maxheight.xhtml
 == mq_print_maxwidth.xhtml mq_print_maxwidth.xhtml
 
