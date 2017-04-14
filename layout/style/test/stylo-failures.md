@@ -174,12 +174,8 @@ to mochitest command.
     * test_align_shorthand_serialization.html [8]
     * test_value_storage.html `place-` [7]
   * font-variant-{alternates,east-asian,ligatures,numeric} properties servo/servo#15957
-    * test_compute_data_with_start_struct.html `font-variant` [8]
-    * test_inherit_computation.html `font-variant` [20]
-    * test_inherit_storage.html `font-variant` [36]
-    * test_initial_computation.html `font-variant` [10]
-    * test_initial_storage.html `font-variant` [18]
-    * test_value_storage.html `font-variant` [332]
+    * test_property_syntax_errors.html `font-variant-alternates` [2]
+    * test_value_storage.html `font-variant` [176]
   * touch-action property servo/servo#16372
     * test_compute_data_with_start_struct.html `touch-action` [2]
     * test_inherit_computation.html `touch-action` [2]
