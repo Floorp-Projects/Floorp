@@ -115,9 +115,11 @@ const mappings = [
 webpackConfig.plugins = mappings.map(([regex, res]) =>
   new NormalModuleReplacementPlugin(regex, res));
 
-// Exclude to transplie all scripts in devtools/ but not for this folder
-webpackConfig.babelExcludes = new RegExp(
-  `^${path.join(__dirname, "../../")}(.(?!${path.basename(__dirname)}))*$`);
+// Exclude to transpile all scripts in devtools/ but not for this folder
+const basePath = path.join(__dirname, "../../").replace(/\\/g, "\\\\");
+const baseName = path.basename(__dirname);
+webpackConfig.babelExcludes = new RegExp(`^${basePath}(.(?!${baseName}))*$`);
+
 let config = toolboxConfig(webpackConfig, getConfig());
 
 // Remove loaders from devtools-launchpad's webpack.config.js
