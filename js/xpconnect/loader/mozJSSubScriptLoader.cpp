@@ -123,7 +123,7 @@ ReportError(JSContext* cx, const char* origMsg, nsIURI* uri)
 static bool
 PrepareScript(nsIURI* uri,
               JSContext* cx,
-              RootedObject& targetObj,
+              HandleObject targetObj,
               const char* uriStr,
               const nsAString& charset,
               const char* buf,
@@ -185,15 +185,15 @@ PrepareScript(nsIURI* uri,
 
 static bool
 EvalScript(JSContext* cx,
-           RootedObject& targetObj,
+           HandleObject targetObj,
            MutableHandleValue retval,
            nsIURI* uri,
            bool cache,
-           RootedScript& script,
-           RootedFunction& function)
+           MutableHandleScript script,
+           HandleFunction function)
 {
     if (function) {
-        script = JS_GetFunctionScript(cx, function);
+        script.set(JS_GetFunctionScript(cx, function));
     }
 
     if (function) {
@@ -393,7 +393,7 @@ AsyncScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
     }
 
     JS::Rooted<JS::Value> retval(cx);
-    if (EvalScript(cx, targetObj, &retval, uri, mCache, script, function)) {
+    if (EvalScript(cx, targetObj, &retval, uri, mCache, &script, function)) {
         autoPromise.ResolvePromise(retval);
     }
 
@@ -697,7 +697,7 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
         cache = nullptr;
     }
 
-    Unused << EvalScript(cx, targetObj, retval, uri, !!cache, script, function);
+    Unused << EvalScript(cx, targetObj, retval, uri, !!cache, &script, function);
     return NS_OK;
 }
 
