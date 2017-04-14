@@ -152,8 +152,9 @@ VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
     mLastFrameTime = Some(aSample->mTime);
   }
 
-  ogg_packet pkt = InitVorbisPacket(aData, aLength, false, aSample->mEOS,
-                                    aSample->mTimecode, mPacketCount++);
+  ogg_packet pkt = InitVorbisPacket(
+    aData, aLength, false, aSample->mEOS,
+    aSample->mTimecode.ToMicroseconds(), mPacketCount++);
 
   int err = vorbis_synthesis(&mVorbisBlock, &pkt);
   if (err) {
