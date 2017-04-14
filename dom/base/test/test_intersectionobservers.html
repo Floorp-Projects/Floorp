@@ -964,8 +964,7 @@ limitations under the License.
 
     describe('takeRecords', function() {
 
-      it('supports getting records before the callback is invoked',
-          function(done) {
+      it('supports getting records before the callback is invoked', function(done) {
 
         var lastestRecords = [];
         io = new IntersectionObserver(function(records) {
@@ -973,19 +972,22 @@ limitations under the License.
         }, {root: rootEl});
         io.observe(targetEl1);
 
-        window.requestAnimationFrame && requestAnimationFrame(function() {
+        window.requestAnimationFrame && requestAnimationFrame(function wait() {
           lastestRecords = lastestRecords.concat(io.takeRecords());
+          if (!lastestRecords.length) {
+            requestAnimationFrame(wait);
+            return;
+          }
+          callDelayed(function() {
+            expect(lastestRecords.length).to.be(1);
+            expect(lastestRecords[0].intersectionRatio).to.be(1);
+            done();
+          }, ASYNC_TIMEOUT);
         });
-
-        callDelayed(function() {
-          expect(lastestRecords.length).to.be(1);
-          expect(lastestRecords[0].intersectionRatio).to.be(1);
-          done();
-        }, ASYNC_TIMEOUT);
+        
       });
 
     });
-
 
     describe('unobserve', function() {
 
