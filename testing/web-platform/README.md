@@ -187,7 +187,7 @@ Setting per-Directory Metadata
 ------------------------------
 
 Occasionally it is useful to set metadata for an entire directory of
-tests e.g. to disable them all, or to enable prefs for every test. In
+tests e.g. to disable then all, or to enable prefs for every test. In
 that case it is possible to create a `__dir__.ini` file in the
 metadata directory corresponding to the tests for which you want to
 set this metadata e.g. to disable all the tests in

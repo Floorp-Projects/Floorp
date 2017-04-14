@@ -38,6 +38,8 @@ var valid_positions = [
     [1, 'center'],
     [1, 'line-right'],
     [1, 'auto'],
+    [1, 'auto'],
+    [1, 'auto'],
 ];
 valid_positions.forEach(function(pair, index) {
     var position = pair[0];
@@ -47,7 +49,7 @@ valid_positions.forEach(function(pair, index) {
     assert_equals(cues[index].positionAlign, positionAlign, 'Failed with cue ' + index);
 });
 
-for (var i = 0; i < 14; i++) {
+for (var i = 0; i < 12; i++) {
     var index = valid_positions.length + i;
 
     assert_equals(cues[index].position, 'auto', 'Failed with cue ' + index);
@@ -59,6 +61,6 @@ for (var i = 0; i < 14; i++) {
 }
 
 function trackError(e) {
-    assert_unreached('got unexpected error event');
+    assert_unreached('got unexpected error event: ' + JSON.stringify(e));
 }
 </script>

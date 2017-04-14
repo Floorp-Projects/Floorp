@@ -9276,6 +9276,22 @@
             isTransparentBlack = false;
     @assert isTransparentBlack;
 
+- name: 2d.imageData.create2.tiny
+  desc: createImageData(sw, sh) works for sizes smaller than one pixel
+  testing:
+    - 2d.imageData.create2.size
+    - 2d.imageData.one
+  code: |
+    var imgdata = ctx.createImageData(0.0001, 0.0001);
+    @assert imgdata.data.length === imgdata.width*imgdata.height*4;
+    @assert imgdata.width === 1;
+    @assert imgdata.height === 1;
+    var isTransparentBlack = true;
+    for (var i = 0; i < imgdata.data.length; ++i)
+        if (imgdata.data[i] !== 0)
+            isTransparentBlack = false;
+    @assert isTransparentBlack;
+
 - name: 2d.imageData.create2.negative
   desc: createImageData(sw, sh) takes the absolute magnitude of the size arguments
   testing:
@@ -9297,8 +9313,6 @@
     @assert throws INDEX_SIZE_ERR ctx.createImageData(10, 0);
     @assert throws INDEX_SIZE_ERR ctx.createImageData(0, 10);
     @assert throws INDEX_SIZE_ERR ctx.createImageData(0, 0);
-    @assert throws INDEX_SIZE_ERR ctx.createImageData(0.99, 10);
-    @assert throws INDEX_SIZE_ERR ctx.createImageData(10, 0.1);
 
 - name: 2d.imageData.create2.nonfinite
   desc: createImageData() throws TypeError if arguments are not finite
@@ -9319,17 +9333,15 @@
   code: |
     @assert throws TypeError ctx.createImageData(null);
 
-- name: 2d.imageData.create2.double
-  desc: createImageData(w, h) double is converted to long
+- name: 2d.imageData.create2.round
+  desc: createImageData(w, h) is rounded the same as getImageData(0, 0, w, h)
   testing:
-    - 2d.imageData.create2.size
+    - 2d.imageData.createround
   code: |
     var imgdata1 = ctx.createImageData(10.01, 10.99);
-    var imgdata2 = ctx.createImageData(-10.01, -10.99);
-    @assert imgdata1.width === 10;
-    @assert imgdata1.height === 10;
-    @assert imgdata2.width === 10;
-    @assert imgdata2.height === 10;
+    var imgdata2 = ctx.getImageData(0, 0, 10.01, 10.99);
+    @assert imgdata1.width === imgdata2.width;
+    @assert imgdata1.height === imgdata2.height;
 
 - name: 2d.imageData.get.basic
   desc: getImageData() exists and returns something
@@ -9359,10 +9371,6 @@
     @assert throws INDEX_SIZE_ERR ctx.getImageData(1, 1, 10, 0);
     @assert throws INDEX_SIZE_ERR ctx.getImageData(1, 1, 0, 10);
     @assert throws INDEX_SIZE_ERR ctx.getImageData(1, 1, 0, 0);
-    @assert throws INDEX_SIZE_ERR ctx.getImageData(1, 1, 0.1, 10);
-    @assert throws INDEX_SIZE_ERR ctx.getImageData(1, 1, 10, 0.99);
-    @assert throws INDEX_SIZE_ERR ctx.getImageData(1, 1, -0.1, 10);
-    @assert throws INDEX_SIZE_ERR ctx.getImageData(1, 1, 10, -0.99);
 
 - name: 2d.imageData.get.nonfinite
   desc: getImageData() throws TypeError if arguments are not finite
@@ -9480,17 +9488,15 @@
     @assert imgdata2.width > imgdata1.width;
     @assert imgdata2.height > imgdata1.height;
 
-- name: 2d.imageData.get.double
-  desc: createImageData(w, h) double is converted to long
+- name: 2d.imageData.get.tiny
+  desc: getImageData() works for sizes smaller than one pixel
   testing:
-    - 2d.imageData.get.basic
+    - 2d.imageData.one
   code: |
-    var imgdata1 = ctx.getImageData(0, 0, 10.01, 10.99);
-    var imgdata2 = ctx.getImageData(0, 0, -10.01, -10.99);
-    @assert imgdata1.width === 10;
-    @assert imgdata1.height === 10;
-    @assert imgdata2.width === 10;
-    @assert imgdata2.height === 10;
+    var imgdata = ctx.getImageData(0, 0, 0.0001, 0.0001);
+    @assert imgdata.data.length === imgdata.width*imgdata.height*4;
+    @assert imgdata.width === 1;
+    @assert imgdata.height === 1;
 
 - name: 2d.imageData.get.nonpremul
   desc: getImageData() returns non-premultiplied colours
@@ -9658,57 +9664,13 @@
     @assert imgdata.data[2] === 0;
     @assert imgdata.data[3] === 0;
 
-- name: 2d.imageData.object.ctor.size
-  desc: ImageData has a usable constructor
+- name: 2d.imageData.object.ctor
+  desc: ImageData does not have a usable constructor
   testing:
     - 2d.imageData.type
   code: |
     @assert window.ImageData !== undefined;
-
-    var imgdata = new window.ImageData(2, 3);
-    @assert imgdata.width === 2;
-    @assert imgdata.height === 3;
-    @assert imgdata.data.length === 2 * 3 * 4;
-    for (var i = 0; i < imgdata.data.length; ++i) {
-      @assert imgdata.data[i] === 0;
-    }
-
-- name: 2d.imageData.object.ctor.size.bounds
-  desc: ImageData has a usable constructor
-  testing:
-    - 2d.imageData.type
-  code: |
-    @assert window.ImageData !== undefined;
-    @assert throws INDEX_SIZE_ERR new window.ImageData(0, 0);
-    @assert throws INDEX_SIZE_ERR new window.ImageData(0, 1);
-    @assert throws INDEX_SIZE_ERR new window.ImageData(1, 0);
-
-- name: 2d.imageData.object.ctor.array
-  desc: ImageData has a usable constructor
-  testing:
-    - 2d.imageData.type
-  code: |
-    @assert window.ImageData !== undefined;
-
-    var array = new Uint8ClampedArray(8);
-    var imgdata = new window.ImageData(array, 1, 2);
-    @assert imgdata.width === 1;
-    @assert imgdata.height === 2;
-    @assert imgdata.data === array;
-
-- name: 2d.imageData.object.ctor.array.bounds
-  desc: ImageData has a usable constructor
-  testing:
-    - 2d.imageData.type
-  code: |
-    @assert window.ImageData !== undefined;
-
-    @assert throws INVALID_STATE_ERR new ImageData(new Uint8ClampedArray(0), 1);
-    @assert throws INVALID_STATE_ERR new ImageData(new Uint8ClampedArray(3), 1);
-    @assert throws INDEX_SIZE_ERR new ImageData(new Uint8ClampedArray(4), 0);
-    @assert throws INDEX_SIZE_ERR new ImageData(new Uint8ClampedArray(4), 1, 2);
-    @assert throws TypeError new ImageData(new Uint8Array(8), 1, 2);
-    @assert throws TypeError new ImageData(new Int8Array(8), 1, 2);
+    @assert throws TypeError new window.ImageData(1,1);
 
 - name: 2d.imageData.object.set
   desc: ImageData.data can be modified
