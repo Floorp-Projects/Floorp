@@ -186,13 +186,11 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 
   gfx::Matrix4x4 transform = GetTransform();
   gfx::Rect relBounds = GetWrRelBounds();
-  gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
-
   gfx::Rect rect(0, 0, size.width, size.height);
-  gfx::Rect clipRect = GetWrClipRect(rect);
 
-  Maybe<WrImageMask> mask = BuildWrMaskLayer();
-  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect));
+  gfx::Rect clipRect = GetWrClipRect(rect);
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
+  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect), mask.ptrOr(nullptr));
 
   wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
@@ -202,10 +200,9 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   key.mNamespace = WrBridge()->GetNamespace();
   key.mHandle = WrBridge()->GetNextResourceId();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
+  Manager()->AddImageKeyForDiscard(key);
 
   aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                              wr::ToWrRect(overflow),
-                              mask.ptrOr(nullptr),
                               1.0f,
                               //GetAnimations(),
                               transform,

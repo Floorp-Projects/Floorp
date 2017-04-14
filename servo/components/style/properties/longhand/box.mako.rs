@@ -574,8 +574,8 @@ ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
                             p2y = try!(specified::parse_number(context, input));
                             Ok(())
                         }));
-                        if p1x.value < 0.0 || p1x.value > 1.0 ||
-                           p2x.value < 0.0 || p2x.value > 1.0 {
+                        if p1x.get() < 0.0 || p1x.get() > 1.0 ||
+                           p2x.get() < 0.0 || p2x.get() > 1.0 {
                             return Err(())
                         }
 
@@ -816,16 +816,26 @@ ${helpers.single_keyword("overflow-x", "visible hidden scroll auto",
     impl Parse for SpecifiedValue {
         fn parse(_context: &ParserContext, input: &mut ::cssparser::Parser) -> Result<Self, ()> {
             use cssparser::Token;
-            Ok(match input.next() {
-                Ok(Token::Ident(ref value)) => SpecifiedValue(if value == "none" {
-                    // FIXME We may want to support `@keyframes ""` at some point.
-                    atom!("")
-                } else {
-                    Atom::from(&**value)
-                }),
-                Ok(Token::QuotedString(value)) => SpecifiedValue(Atom::from(&*value)),
+            use properties::CSSWideKeyword;
+            use std::ascii::AsciiExt;
+
+            let atom = match input.next() {
+                Ok(Token::Ident(ref value)) => {
+                    if CSSWideKeyword::from_ident(value).is_some() {
+                        // We allow any ident for the animation-name except one
+                        // of the CSS-wide keywords.
+                        return Err(());
+                    } else if value.eq_ignore_ascii_case("none") {
+                        // FIXME We may want to support `@keyframes ""` at some point.
+                        atom!("")
+                    } else {
+                        Atom::from(&**value)
+                    }
+                }
+                Ok(Token::QuotedString(value)) => Atom::from(&*value),
                 _ => return Err(()),
-            })
+            };
+            Ok(SpecifiedValue(atom))
         }
     }
     no_viewport_percentage!(SpecifiedValue);
@@ -2296,5 +2306,32 @@ ${helpers.single_keyword("-moz-orient",
                 Ok((Atom::from(ident)))
             }).map(SpecifiedValue::AnimateableFeatures)
         }
+    }
+</%helpers:longhand>
+
+<%helpers:longhand name="shape-outside" products="gecko" animation_type="none" boxed="True"
+                   spec="https://drafts.csswg.org/css-shapes/#shape-outside-property">
+    use std::fmt;
+    use style_traits::ToCss;
+    use values::specified::basic_shape::{ShapeBox, ShapeSource};
+    use values::HasViewportPercentage;
+
+    no_viewport_percentage!(SpecifiedValue);
+
+    pub mod computed_value {
+        use values::computed::basic_shape::{ShapeBox, ShapeSource};
+
+        pub type T = ShapeSource<ShapeBox>;
+    }
+
+    pub type SpecifiedValue = ShapeSource<ShapeBox>;
+
+    #[inline]
+    pub fn get_initial_value() -> computed_value::T {
+        Default::default()
+    }
+
+    pub fn parse(context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
+        ShapeSource::parse(context, input)
     }
 </%helpers:longhand>

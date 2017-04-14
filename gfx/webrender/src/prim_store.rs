@@ -128,6 +128,12 @@ pub struct PrimitiveMetadata {
     pub clip_task: Option<RenderTask>,
 }
 
+impl PrimitiveMetadata {
+    pub fn needs_clipping(&self) -> bool {
+        self.clip_task.is_some()
+    }
+}
+
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct RectanglePrimitive {
@@ -185,7 +191,6 @@ impl YuvImagePrimitiveGpu {
 
 #[derive(Debug, Clone)]
 pub struct BorderPrimitiveCpu {
-    pub inner_rect: LayerRect,
 }
 
 #[derive(Debug, Clone)]
@@ -230,8 +235,10 @@ pub struct GradientStopGpu {
 pub struct GradientPrimitiveGpu {
     pub start_point: LayerPoint,
     pub end_point: LayerPoint,
+    pub tile_size: LayerSize,
+    pub tile_repeat: LayerSize,
     pub extend_mode: f32,
-    pub padding: [f32; 3],
+    pub padding: [f32; 7],
 }
 
 #[derive(Debug)]
@@ -251,6 +258,9 @@ pub struct RadialGradientPrimitiveGpu {
     pub end_radius: f32,
     pub ratio_xy: f32,
     pub extend_mode: f32,
+    pub tile_size: LayerSize,
+    pub tile_repeat: LayerSize,
+    pub padding: [f32; 4],
 }
 
 #[derive(Debug)]
@@ -718,7 +728,7 @@ impl PrimitiveStore {
                 metadata
             }
             PrimitiveContainer::AlignedGradient(gradient_cpu, gradient_gpu) => {
-                let gpu_address = self.gpu_data32.push(gradient_gpu);
+                let gpu_address = self.gpu_data64.push(gradient_gpu);
                 let gpu_stops_address = self.gpu_data32.alloc(gradient_cpu.stops_range.length);
 
                 let metadata = PrimitiveMetadata {
@@ -739,7 +749,7 @@ impl PrimitiveStore {
                 metadata
             }
             PrimitiveContainer::AngleGradient(gradient_cpu, gradient_gpu) => {
-                let gpu_address = self.gpu_data32.push(gradient_gpu);
+                let gpu_address = self.gpu_data64.push(gradient_gpu);
                 let gpu_gradient_address = self.gpu_gradient_data.alloc(1);
 
                 let metadata = PrimitiveMetadata {
@@ -760,7 +770,7 @@ impl PrimitiveStore {
                 metadata
             }
             PrimitiveContainer::RadialGradient(radial_gradient_cpu, radial_gradient_gpu) => {
-                let gpu_address = self.gpu_data32.push(radial_gradient_gpu);
+                let gpu_address = self.gpu_data64.push(radial_gradient_gpu);
                 let gpu_gradient_address = self.gpu_gradient_data.alloc(1);
 
                 let metadata = PrimitiveMetadata {
@@ -1068,7 +1078,7 @@ impl PrimitiveStore {
                              device_pixel_ratio,
                              auxiliary_lists);
             for clip in &metadata.clips {
-                if let &ClipSource::Region(ClipRegion{ image_mask: Some(ref mask), .. }, _) = clip {
+                if let ClipSource::Region(ClipRegion{ image_mask: Some(ref mask), .. }, _) = *clip {
                     resource_cache.request_image(mask.image, ImageRendering::Auto, None);
                     prim_needs_resolve = true;
                 }
@@ -1337,26 +1347,10 @@ impl Default for GpuBlock32 {
     }
 }
 
-impl From<GradientPrimitiveGpu> for GpuBlock32 {
-    fn from(data: GradientPrimitiveGpu) -> GpuBlock32 {
-        unsafe {
-            mem::transmute::<GradientPrimitiveGpu, GpuBlock32>(data)
-        }
-    }
-}
-
 impl From<GradientStopGpu> for GpuBlock32 {
     fn from(data: GradientStopGpu) -> GpuBlock32 {
         unsafe {
             mem::transmute::<GradientStopGpu, GpuBlock32>(data)
-        }
-    }
-}
-
-impl From<RadialGradientPrimitiveGpu> for GpuBlock32 {
-    fn from(data: RadialGradientPrimitiveGpu) -> GpuBlock32 {
-        unsafe {
-            mem::transmute::<RadialGradientPrimitiveGpu, GpuBlock32>(data)
         }
     }
 }
@@ -1403,6 +1397,22 @@ impl Default for GpuBlock64 {
     fn default() -> GpuBlock64 {
         GpuBlock64 {
             data: unsafe { mem::uninitialized() }
+        }
+    }
+}
+
+impl From<GradientPrimitiveGpu> for GpuBlock64 {
+    fn from(data: GradientPrimitiveGpu) -> GpuBlock64 {
+        unsafe {
+            mem::transmute::<GradientPrimitiveGpu, GpuBlock64>(data)
+        }
+    }
+}
+
+impl From<RadialGradientPrimitiveGpu> for GpuBlock64 {
+    fn from(data: RadialGradientPrimitiveGpu) -> GpuBlock64 {
+        unsafe {
+            mem::transmute::<RadialGradientPrimitiveGpu, GpuBlock64>(data)
         }
     }
 }

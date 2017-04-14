@@ -39,6 +39,15 @@ function CssDocsTooltip(toolboxDoc) {
 
 CssDocsTooltip.prototype = {
   /**
+   * Reports if the tooltip is currently shown
+   *
+   * @return {Boolean} True if the tooltip is displayed.
+   */
+  isVisible: function () {
+    return this.tooltip.isVisible();
+  },
+
+  /**
    * Load CSS docs for the given property,
    * then display the tooltip.
    */
@@ -52,6 +61,8 @@ CssDocsTooltip.prototype = {
   hide: function () {
     this.tooltip.hide();
   },
+
+  revert: function () {},
 
   _onShortcut: function (shortcut, event) {
     if (!this.tooltip.isVisible()) {

@@ -45,26 +45,19 @@ add_task(function* () {
       time: true
     });
 
-  wait = waitForDOM(document, "#response-panel .editor-mount iframe");
+  wait = waitForDOM(document, ".CodeMirror-code");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".network-details-panel-toggle"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#response-tab"));
-  let [editorFrame] = yield wait;
-
-  yield once(editorFrame, "DOMContentLoaded");
-  yield waitForDOM(editorFrame.contentDocument, ".CodeMirror-code");
+  yield wait;
   yield testResponse("br");
-
   yield teardown(monitor);
 
   function* testResponse(type) {
     switch (type) {
       case "br": {
-        let text = editorFrame.contentDocument
-          .querySelector(".CodeMirror-line").textContent;
-
-        is(text, "X".repeat(64),
+        is(document.querySelector(".CodeMirror-line").textContent, "X".repeat(64),
           "The text shown in the source editor is incorrect for the brotli request.");
         break;
       }

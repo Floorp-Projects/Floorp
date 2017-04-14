@@ -43,17 +43,14 @@ add_task(function* () {
       statusText: "OK"
     });
 
-  let waitDOM = waitForDOM(document, "#response-panel .editor-mount iframe");
+  wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".network-details-panel-toggle"));
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#response-tab"));
-  let [editor] = yield waitDOM;
-  yield once(editor, "DOMContentLoaded");
-  yield waitForDOM(editor.contentDocument, ".CodeMirror-code");
+  yield wait;
 
-  let text = editor.contentDocument
-        .querySelector(".CodeMirror-line").textContent;
+  let text = document.querySelector(".CodeMirror-line").textContent;
 
   ok(text.match(/^<p>/), "The text shown in the source editor is incorrect.");
 

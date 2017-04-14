@@ -1420,12 +1420,12 @@ MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult)
     mInfo.mCrypto = *crypto;
   }
 
-  int64_t videoDuration = HasVideo() ? mInfo.mVideo.mDuration : 0;
-  int64_t audioDuration = HasAudio() ? mInfo.mAudio.mDuration : 0;
+  auto videoDuration = HasVideo() ? mInfo.mVideo.mDuration : TimeUnit::Zero();
+  auto audioDuration = HasAudio() ? mInfo.mAudio.mDuration : TimeUnit::Zero();
 
-  int64_t duration = std::max(videoDuration, audioDuration);
-  if (duration != -1) {
-    mInfo.mMetadataDuration = Some(TimeUnit::FromMicroseconds(duration));
+  auto duration = std::max(videoDuration, audioDuration);
+  if (duration.IsPositive()) {
+    mInfo.mMetadataDuration = Some(duration);
   }
 
   mInfo.mMediaSeekable = mDemuxer->IsSeekable();

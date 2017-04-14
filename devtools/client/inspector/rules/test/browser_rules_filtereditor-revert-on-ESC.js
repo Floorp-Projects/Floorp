@@ -102,7 +102,7 @@ function* clickOnFilterSwatch(swatch, view) {
 function* setValueInFilterWidget(value, view) {
   info("Setting the CSS filter value in the tooltip");
 
-  let filterTooltip = view.tooltips.filterEditor;
+  let filterTooltip = view.tooltips.getTooltip("filterEditor");
   let onRuleViewChanged = view.once("ruleview-changed");
   filterTooltip.widget.setCssValue(value);
   yield onRuleViewChanged;
@@ -111,7 +111,7 @@ function* setValueInFilterWidget(value, view) {
 function* pressEscapeToCloseTooltip(view) {
   info("Pressing ESCAPE to close the tooltip");
 
-  let filterTooltip = view.tooltips.filterEditor;
+  let filterTooltip = view.tooltips.getTooltip("filterEditor");
   let onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.sendKey("ESCAPE", filterTooltip.widget.styleWindow);
   yield onRuleViewChanged;

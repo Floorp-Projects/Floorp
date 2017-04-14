@@ -4,7 +4,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=602759
 -->
 <head>
   <title>Tests specific to SVGTransformList</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="matrixUtils.js"></script>
   <script type="text/javascript" src="MutationEventChecker.js"></script>
@@ -126,7 +125,7 @@ function testConsolidateMatrixOneElem(g)
   cmpMatrix(consolidated.matrix, [1, 0, 0, 1, 50, 90],
      "Unexpected consolidated matrix value");
 }
-  
+
 function testConsolidateMatrixZeroElem(g)
 {
   // Check that zero items returns null
@@ -210,7 +209,7 @@ function testReadOnly(g)
     "baseVal should be read-only but its value has changed");
   is(otherg.transform.baseVal.numberOfItems, 0,
     "baseVal changed after attempting to use it set another value");
- 
+
   // Read-only SVGTransformList:
   // Standard list methods are covered in test_SVGxxxList.xhtml so here we
   // just add tests for SVGTransformList-specific methods

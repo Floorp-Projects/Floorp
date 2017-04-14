@@ -348,13 +348,13 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
       return NS_OK;
     }
 
-    nsSecurityFlags securityFlags = loadInfo->GetSecurityMode();
+    auto securityMode = loadInfo->GetSecurityMode();
     // The data: inheritance flags should only apply to the initial load,
     // not to loads that it might have redirected to.
     if (loadInfo->RedirectChain().IsEmpty() &&
-        (securityFlags == nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS ||
-         securityFlags == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS ||
-         securityFlags == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS)) {
+        (securityMode == nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS ||
+         securityMode == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS ||
+         securityMode == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS)) {
 
       nsCOMPtr<nsIURI> uri;
       nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));

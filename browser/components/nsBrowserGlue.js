@@ -1585,56 +1585,6 @@ BrowserGlue.prototype = {
 
     let xulStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
 
-    if (currentUIVersion < 9) {
-      // This code adds the customizable downloads buttons.
-      let currentset = xulStore.getValue(BROWSER_DOCURL, "nav-bar", "currentset");
-
-      // Since the Downloads button is located in the navigation bar by default,
-      // migration needs to happen only if the toolbar was customized using a
-      // previous UI version, and the button was not already placed on the
-      // toolbar manually.
-      if (currentset &&
-          currentset.indexOf("downloads-button") == -1) {
-        // The element is added either after the search bar or before the home
-        // button. As a last resort, the element is added just before the
-        // non-customizable window controls.
-        if (currentset.indexOf("search-container") != -1) {
-          currentset = currentset.replace(/(^|,)search-container($|,)/,
-                                          "$1search-container,downloads-button$2")
-        } else if (currentset.indexOf("home-button") != -1) {
-          currentset = currentset.replace(/(^|,)home-button($|,)/,
-                                          "$1downloads-button,home-button$2")
-        } else {
-          currentset = currentset.replace(/(^|,)window-controls($|,)/,
-                                          "$1downloads-button,window-controls$2")
-        }
-        xulStore.setValue(BROWSER_DOCURL, "nav-bar", "currentset", currentset);
-      }
-    }
-
-    if (AppConstants.platform == "win") {
-      if (currentUIVersion < 10) {
-        // For Windows systems with display set to > 96dpi (i.e. systemDefaultScale
-        // will return a value > 1.0), we want to discard any saved full-zoom settings,
-        // as we'll now be scaling the content according to the system resolution
-        // scale factor (Windows "logical DPI" setting)
-        let sm = Cc["@mozilla.org/gfx/screenmanager;1"].getService(Ci.nsIScreenManager);
-        if (sm.systemDefaultScale > 1.0) {
-          let cps2 = Cc["@mozilla.org/content-pref/service;1"].
-                     getService(Ci.nsIContentPrefService2);
-          cps2.removeByName("browser.content.full-zoom", null);
-        }
-      }
-    }
-
-    if (currentUIVersion < 11) {
-      Services.prefs.clearUserPref("dom.disable_window_move_resize");
-      Services.prefs.clearUserPref("dom.disable_window_flip");
-      Services.prefs.clearUserPref("dom.event.contextmenu.enabled");
-      Services.prefs.clearUserPref("javascript.enabled");
-      Services.prefs.clearUserPref("permissions.default.image");
-    }
-
     if (currentUIVersion < 14) {
       // DOM Storage doesn't specially handle about: pages anymore.
       let path = OS.Path.join(OS.Constants.Path.profileDir,
@@ -1844,8 +1794,6 @@ BrowserGlue.prototype = {
     if (currentUIVersion < 32) {
       this._notifyNotificationsUpgrade().catch(Cu.reportError);
     }
-
-    // version 35 migrated tab groups data.
 
     if (currentUIVersion < 36) {
       xulStore.removeValue("chrome://passwordmgr/content/passwordManager.xul",

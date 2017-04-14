@@ -260,6 +260,9 @@ WebRenderBridgeParent::RecvDeleteImage(const wr::ImageKey& aImageKey)
     return IPC_OK();
   }
   MOZ_ASSERT(mApi);
+  if (mActiveKeys.Get(wr::AsUint64(aImageKey), nullptr)) {
+    mActiveKeys.Remove(wr::AsUint64(aImageKey));
+  }
   mKeysToDelete.push_back(aImageKey);
   return IPC_OK();
 }
@@ -343,8 +346,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                                 const ByteBuffer& aux,
                                                 const WrAuxiliaryListsDescriptor& auxDesc)
 {
-  // XXX remove it when external image key is used.
-  std::vector<wr::ImageKey> keysToDelete;
 
   for (InfallibleTArray<WebRenderParentCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderParentCommand& cmd = aCommands[i];
@@ -353,6 +354,8 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
         const OpAddExternalImage& op = cmd.get_OpAddExternalImage();
         wr::ImageKey key = op.key();
         MOZ_ASSERT(mExternalImageIds.Get(op.externalImageId()).get());
+        MOZ_ASSERT(!mActiveKeys.Get(wr::AsUint64(key), nullptr));
+        mActiveKeys.Put(wr::AsUint64(key), key);
 
         RefPtr<CompositableHost> host = mExternalImageIds.Get(op.externalImageId());
         if (!host) {
@@ -375,7 +378,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                          descriptor,
                                          wrTexture->GetExternalImageKey());
             mCompositableHolder->HoldExternalImage(mPipelineId, aEpoch, texture->AsWebRenderTextureHost());
-            keysToDelete.push_back(key);
           } else {
             // XXX handling YUV
             gfx::SurfaceFormat format =
@@ -385,7 +387,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                          descriptor,
                                          wrTexture->GetExternalImageKey());
             mCompositableHolder->HoldExternalImage(mPipelineId, aEpoch, texture->AsWebRenderTextureHost());
-            keysToDelete.push_back(key);
           }
 
           break;
@@ -405,7 +406,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
         auto slice = Range<uint8_t>(map.mData, size.height * map.mStride);
         mApi->AddImage(key, descriptor, slice);
 
-        keysToDelete.push_back(key);
         dSurf->Unmap();
         break;
       }
@@ -432,11 +432,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
 
   ScheduleComposition();
   DeleteOldImages();
-
-  // XXX remove it when external image key is used.
-  if (!keysToDelete.empty()) {
-    mKeysToDelete.swap(keysToDelete);
-  }
 
   if (ShouldParentObserveEpoch()) {
     mCompositorBridge->ObserveLayerUpdate(wr::AsUint64(mPipelineId), GetChildLayerObserverEpoch(), true);
@@ -511,9 +506,8 @@ WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
     NS_ERROR("CompositableHost not found in the map!");
     return IPC_FAIL_NO_REASON(this);
   }
-  if (host->GetType() != CompositableType::IMAGE &&
-      host->GetType() != CompositableType::CONTENT_SINGLE &&
-      host->GetType() != CompositableType::CONTENT_DOUBLE) {
+  MOZ_ASSERT(host->AsWebRenderImageHost());
+  if (!host->AsWebRenderImageHost()) {
     NS_ERROR("Incompatible CompositableHost");
     return IPC_OK();
   }
@@ -533,9 +527,8 @@ WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const uint64_t& aIm
   MOZ_ASSERT(!mExternalImageIds.Get(aImageId).get());
 
   RefPtr<CompositableHost> host = FindCompositable(aHandle);
-  if (host->GetType() != CompositableType::IMAGE &&
-      host->GetType() != CompositableType::CONTENT_SINGLE &&
-      host->GetType() != CompositableType::CONTENT_DOUBLE) {
+  MOZ_ASSERT(host->AsWebRenderImageHost());
+  if (!host->AsWebRenderImageHost()) {
     NS_ERROR("Incompatible CompositableHost");
     return IPC_OK();
   }
@@ -568,6 +561,16 @@ mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvClearCachedResources()
 {
   mCompositorBridge->ObserveLayerUpdate(wr::AsUint64(mPipelineId), GetChildLayerObserverEpoch(), false);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvForceComposite()
+{
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+  ScheduleComposition();
   return IPC_OK();
 }
 
@@ -693,6 +696,10 @@ WebRenderBridgeParent::ClearResources()
   if (mApi) {
     ++mWrEpoch; // Update webrender epoch
     mApi->ClearRootDisplayList(wr::NewEpoch(mWrEpoch), mPipelineId);
+    for (auto iter = mActiveKeys.Iter(); !iter.Done(); iter.Next()) {
+      mKeysToDelete.push_back(iter.Data());
+      iter.Remove();
+    }
     if (!mKeysToDelete.empty()) {
       // XXX Sync wait.
       mApi->WaitFlushed();

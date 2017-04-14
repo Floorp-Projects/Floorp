@@ -13,8 +13,6 @@
 // Rule Definition
 // -----------------------------------------------------------------------------
 
-var helpers = require("../helpers");
-
 function isNsISupportsString(arg) {
   let isNsISupportsStringIdentifier = obj =>
     obj.type == "Identifier" && obj.name == "nsISupportsString";

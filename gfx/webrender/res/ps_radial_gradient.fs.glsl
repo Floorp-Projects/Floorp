@@ -5,8 +5,15 @@
 uniform sampler2D sGradients;
 
 void main(void) {
+    vec2 pos = mod(vPos, vTileRepeat);
+
+    if (pos.x >= vTileSize.x ||
+        pos.y >= vTileSize.y) {
+        discard;
+    }
+
     vec2 cd = vEndCenter - vStartCenter;
-    vec2 pd = vPos - vStartCenter;
+    vec2 pd = pos - vStartCenter;
     float rd = vEndRadius - vStartRadius;
 
     // Solve for t in length(t * cd - pd) = vStartRadius + t * rd

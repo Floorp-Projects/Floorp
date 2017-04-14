@@ -226,12 +226,10 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     return true;
   }
 
-  ClientLayerManager *clientLayerManager = GetLayerManager()->AsClientLayerManager();
-
-  if (clientLayerManager && !mBounds.IsEqualEdges(mLastPaintBounds)) {
+  if (GetLayerManager()->AsKnowsCompositor() && !mBounds.IsEqualEdges(mLastPaintBounds)) {
     // Do an early async composite so that we at least have something on the
     // screen in the right place, even if the content is out of date.
-    clientLayerManager->Composite();
+    GetLayerManager()->Composite();
   }
   mLastPaintBounds = mBounds;
 
@@ -278,11 +276,11 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 #endif
   nsIntRegion region = GetRegionToPaint(forceRepaint, ps, hDC);
 
-  if (clientLayerManager) {
+  if (GetLayerManager()->AsKnowsCompositor()) {
     // We need to paint to the screen even if nothing changed, since if we
     // don't have a compositing window manager, our pixels could be stale.
-    clientLayerManager->SetNeedsComposite(true);
-    clientLayerManager->SendInvalidRegion(region);
+    GetLayerManager()->SetNeedsComposite(true);
+    GetLayerManager()->SendInvalidRegion(region);
   }
 
   RefPtr<nsWindow> strongThis(this);
@@ -297,9 +295,9 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     return false;
   }
 
-  if (clientLayerManager && clientLayerManager->NeedsComposite()) {
-    clientLayerManager->Composite();
-    clientLayerManager->SetNeedsComposite(false);
+  if (GetLayerManager()->AsKnowsCompositor() && GetLayerManager()->NeedsComposite()) {
+    GetLayerManager()->Composite();
+    GetLayerManager()->SetNeedsComposite(false);
   }
 
   bool result = true;

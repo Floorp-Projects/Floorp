@@ -21,21 +21,17 @@ WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
   gfx::Matrix4x4 transform = GetTransform();
   gfx::Rect relBounds = GetWrRelBounds();
-  gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
-
   gfx::Rect rect = GetWrBoundsRect();
-  gfx::Rect clipRect = GetWrClipRect(rect);
 
-  Maybe<WrImageMask> mask = BuildWrMaskLayer();
-  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect));
+  gfx::Rect clipRect = GetWrClipRect(rect);
+  Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
+  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect), mask.ptrOr(nullptr));
 
   wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   DumpLayerInfo("ColorLayer", rect);
 
   aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
-                              wr::ToWrRect(overflow),
-                              mask.ptrOr(nullptr),
                               1.0f,
                               //GetAnimations(),
                               transform,

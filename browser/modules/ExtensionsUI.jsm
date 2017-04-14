@@ -211,6 +211,13 @@ this.ExtensionsUI = {
         addon: {name},
         permissions,
       });
+
+      // If we don't have any promptable permissions, just proceed
+      if (strings.msgs.length == 0) {
+        resolve();
+        return;
+      }
+
       resolve(this.showPermissionsPrompt(browser, strings, icon));
     }
   },
@@ -334,6 +341,13 @@ this.ExtensionsUI = {
       result.text = bundle.formatStringFromName("webextPerms.updateText", [addonName], 1);
       result.acceptText = bundle.GetStringFromName("webextPerms.updateAccept.label");
       result.acceptKey = bundle.GetStringFromName("webextPerms.updateAccept.accessKey");
+    } else if (info.type == "optional") {
+      result.header = bundle.formatStringFromName("webextPerms.optionalPermsHeader", [addonName], 1);
+      result.text = "";
+      result.listIntro = bundle.GetStringFromName("webextPerms.optionalPermsListIntro");
+      result.acceptText = bundle.GetStringFromName("webextPerms.optionalPermsAllow.label");
+      result.acceptKey = bundle.GetStringFromName("webextPerms.optionalPermsAllow.accessKey");
+      result.cancelText = bundle.GetStringFromName("webextPerms.optionalPermsDeny.label");
     }
 
     return result;

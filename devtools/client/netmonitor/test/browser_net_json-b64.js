@@ -37,7 +37,7 @@ add_task(function* () {
   let jsonView = tabpanel.querySelector(".tree-section .treeLabel") || {};
   is(jsonView.textContent === L10N.getStr("jsonScopeName"), true,
     "The response json view has the intended visibility.");
-  is(tabpanel.querySelector(".editor-mount iframe") === null, true,
+  is(tabpanel.querySelector(".CodeMirror-code") === null, true,
     "The response editor doesn't have the intended visibility.");
   is(tabpanel.querySelector(".response-image-box") === null, true,
     "The response image box doesn't have the intended visibility.");

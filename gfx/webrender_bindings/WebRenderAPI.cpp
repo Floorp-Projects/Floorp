@@ -517,23 +517,21 @@ DisplayListBuilder::Finalize()
 {
   BuiltDisplayList dl;
   wr_api_finalize_builder(mWrState,
-                          dl.dl_desc,
-                          dl.dl.inner,
-                          dl.aux_desc,
-                          dl.aux.inner);
+                          &dl.dl_desc,
+                          &dl.dl.inner,
+                          &dl.aux_desc,
+                          &dl.aux.inner);
   return dl;
 }
 
 void
 DisplayListBuilder::PushStackingContext(const WrRect& aBounds,
-                                        const WrRect& aOverflow,
-                                        const WrImageMask* aMask,
                                         const float aOpacity,
                                         const gfx::Matrix4x4& aTransform,
                                         const WrMixBlendMode& aMixBlendMode)
 {
-  wr_dp_push_stacking_context(mWrState, aBounds, aOverflow, aMask, aOpacity,
-                              &aTransform.components[0], aMixBlendMode);
+  wr_dp_push_stacking_context(mWrState, aBounds, aOpacity,
+                              ToWrMatrix(aTransform), aMixBlendMode);
 }
 
 void
@@ -580,13 +578,16 @@ DisplayListBuilder::PushLinearGradient(const WrRect& aBounds,
                                        const WrPoint& aStartPoint,
                                        const WrPoint& aEndPoint,
                                        const nsTArray<WrGradientStop>& aStops,
-                                       wr::GradientExtendMode aExtendMode)
+                                       wr::GradientExtendMode aExtendMode,
+                                       const WrSize aTileSize,
+                                       const WrSize aTileSpacing)
 {
   wr_dp_push_linear_gradient(mWrState,
                              aBounds, aClip,
                              aStartPoint, aEndPoint,
                              aStops.Elements(), aStops.Length(),
-                             aExtendMode);
+                             aExtendMode,
+                             aTileSize, aTileSpacing);
 }
 
 void
@@ -595,13 +596,16 @@ DisplayListBuilder::PushRadialGradient(const WrRect& aBounds,
                                        const WrPoint& aCenter,
                                        const WrSize& aRadius,
                                        const nsTArray<WrGradientStop>& aStops,
-                                       wr::GradientExtendMode aExtendMode)
+                                       wr::GradientExtendMode aExtendMode,
+                                       const WrSize aTileSize,
+                                       const WrSize aTileSpacing)
 {
   wr_dp_push_radial_gradient(mWrState,
                              aBounds, aClip,
                              aCenter, aRadius,
                              aStops.Elements(), aStops.Length(),
-                             aExtendMode);
+                             aExtendMode,
+                             aTileSize, aTileSpacing);
 }
 
 void
@@ -610,7 +614,21 @@ DisplayListBuilder::PushImage(const WrRect& aBounds,
                               wr::ImageRendering aFilter,
                               wr::ImageKey aImage)
 {
-  wr_dp_push_image(mWrState, aBounds, aClip, aFilter, aImage);
+  WrSize size;
+  size.width = aBounds.width;
+  size.height = aBounds.height;
+  PushImage(aBounds, aClip, size, size, aFilter, aImage);
+}
+
+void
+DisplayListBuilder::PushImage(const WrRect& aBounds,
+                              const WrClipRegion& aClip,
+                              const WrSize& aStretchSize,
+                              const WrSize& aTileSpacing,
+                              wr::ImageRendering aFilter,
+                              wr::ImageKey aImage)
+{
+  wr_dp_push_image(mWrState, aBounds, aClip, aStretchSize, aTileSpacing, aFilter, aImage);
 }
 
 void
@@ -648,6 +666,38 @@ DisplayListBuilder::PushBorderImage(const WrRect& aBounds,
   wr_dp_push_border_image(mWrState, aBounds, aClip,
                           aWidths, aImage, aPatch, aOutset,
                           aRepeatHorizontal, aRepeatVertical);
+}
+
+void
+DisplayListBuilder::PushBorderGradient(const WrRect& aBounds,
+                                       const WrClipRegion& aClip,
+                                       const WrBorderWidths& aWidths,
+                                       const WrPoint& aStartPoint,
+                                       const WrPoint& aEndPoint,
+                                       const nsTArray<WrGradientStop>& aStops,
+                                       wr::GradientExtendMode aExtendMode,
+                                       const WrSideOffsets2Df32& aOutset)
+{
+  wr_dp_push_border_gradient(mWrState, aBounds, aClip,
+                             aWidths, aStartPoint, aEndPoint,
+                             aStops.Elements(), aStops.Length(),
+                             aExtendMode, aOutset);
+}
+
+void
+DisplayListBuilder::PushBorderRadialGradient(const WrRect& aBounds,
+                                             const WrClipRegion& aClip,
+                                             const WrBorderWidths& aWidths,
+                                             const WrPoint& aCenter,
+                                             const WrSize& aRadius,
+                                             const nsTArray<WrGradientStop>& aStops,
+                                             wr::GradientExtendMode aExtendMode,
+                                             const WrSideOffsets2Df32& aOutset)
+{
+  wr_dp_push_border_radial_gradient(
+    mWrState, aBounds, aClip, aWidths, aCenter,
+    aRadius, aStops.Elements(), aStops.Length(),
+    aExtendMode, aOutset);
 }
 
 void

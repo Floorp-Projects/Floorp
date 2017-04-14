@@ -27,14 +27,14 @@ add_task(function* () {
 });
 
 function* testImageTooltipAfterColorChange(swatch, url, ruleView) {
+  let previewTooltip = ruleView.tooltips.getTooltip("previewTooltip");
   info("First, verify that the image preview tooltip works");
-  let anchor = yield isHoverTooltipTarget(ruleView.tooltips.previewTooltip,
-                                          url);
+  let anchor = yield isHoverTooltipTarget(previewTooltip, url);
   ok(anchor, "The image preview tooltip is shown on the url span");
   is(anchor, url, "The anchor returned by the showOnHover callback is correct");
 
   info("Open the color picker tooltip and change the color");
-  let picker = ruleView.tooltips.colorPicker;
+  let picker = ruleView.tooltips.getTooltip("colorPicker");
   let onColorPickerReady = picker.once("ready");
   swatch.click();
   yield onColorPickerReady;
@@ -57,7 +57,7 @@ function* testImageTooltipAfterColorChange(swatch, url, ruleView) {
   // dom node
   url = getRuleViewProperty(ruleView, "body", "background").valueSpan
     .querySelector(".theme-link");
-  anchor = yield isHoverTooltipTarget(ruleView.tooltips.previewTooltip, url);
+  anchor = yield isHoverTooltipTarget(previewTooltip, url);
   ok(anchor, "The image preview tooltip is shown on the url span");
   is(anchor, url, "The anchor returned by the showOnHover callback is correct");
 }

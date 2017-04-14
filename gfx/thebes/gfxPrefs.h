@@ -493,7 +493,7 @@ private:
   DECL_OVERRIDE_PREF(Live, "layers.advanced.boxshadow-inset-layers", LayersAllowInsetBoxShadow, gfxPrefs::OverrideBase_WebRender());
   DECL_OVERRIDE_PREF(Live, "layers.advanced.boxshadow-outer-layers", LayersAllowOuterBoxShadow, gfxPrefs::OverrideBase_WebRender());
   DECL_GFX_PREF(Live, "layers.advanced.bullet-layers",         LayersAllowBulletLayers, bool, false);
-  DECL_GFX_PREF(Live, "layers.advanced.button-foreground-layers", LayersAllowButtonForegroundLayers, bool, false);
+  DECL_OVERRIDE_PREF(Live, "layers.advanced.button-foreground-layers", LayersAllowButtonForegroundLayers, gfxPrefs::OverrideBase_WebRender());
   DECL_GFX_PREF(Live, "layers.advanced.canvas-background-color", LayersAllowCanvasBackgroundColorLayers, bool, false);
   DECL_OVERRIDE_PREF(Live, "layers.advanced.caret-layers",     LayersAllowCaretLayers, gfxPrefs::OverrideBase_WebRender());
   DECL_GFX_PREF(Live, "layers.advanced.columnRule-layers",     LayersAllowColumnRuleLayers, bool, false);
@@ -545,6 +545,7 @@ private:
   DECL_GFX_PREF(Once, "layers.gpu-process.force-enabled",      GPUProcessForceEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.gpu-process.timeout_ms",         GPUProcessTimeoutMs, int32_t, 5000);
   DECL_GFX_PREF(Live, "layers.gpu-process.max_restarts",       GPUProcessMaxRestarts, int32_t, 0);
+  DECL_GFX_PREF(Once, "layers.gpu-process.allow-software",     GPUProcessAllowSoftware, bool, false);
   DECL_GFX_PREF(Live, "layers.low-precision-buffer",           UseLowPrecisionBuffer, bool, false);
   DECL_GFX_PREF(Live, "layers.low-precision-opacity",          LowPrecisionOpacity, float, 1.0f);
   DECL_GFX_PREF(Live, "layers.low-precision-resolution",       LowPrecisionResolution, float, 0.25f);

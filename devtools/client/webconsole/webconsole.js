@@ -1533,7 +1533,7 @@ WebConsoleFrame.prototype = {
 
     // Collect telemetry data regarding JavaScript errors
     this._telemetry.logKeyed("DEVTOOLS_JAVASCRIPT_ERROR_DISPLAYED",
-                             scriptError.errorMessageName,
+                             scriptError.errorMessageName || "Unknown",
                              true);
 
     if (objectActors.size > 0) {

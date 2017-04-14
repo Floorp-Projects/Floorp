@@ -111,6 +111,7 @@ public:
   mozilla::ipc::IPCResult RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch) override;
 
   mozilla::ipc::IPCResult RecvClearCachedResources() override;
+  mozilla::ipc::IPCResult RecvForceComposite() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void SetWebRenderProfilerEnabled(bool aEnabled);
@@ -197,6 +198,8 @@ private:
   RefPtr<WebRenderCompositableHolder> mCompositableHolder;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   std::vector<wr::ImageKey> mKeysToDelete;
+  // XXX How to handle active keys of non-ExternalImages?
+  nsDataHashtable<nsUint64HashKey, wr::ImageKey> mActiveKeys;
   nsDataHashtable<nsUint64HashKey, RefPtr<CompositableHost>> mExternalImageIds;
   nsTArray<ImageCompositeNotificationInfo> mImageCompositeNotifications;
 
