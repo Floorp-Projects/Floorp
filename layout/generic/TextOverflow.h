@@ -53,8 +53,7 @@ class TextOverflow {
   /**
    * @return true if aBlockFrame needs analysis for text overflow.
    */
-  static bool CanHaveTextOverflow(nsDisplayListBuilder* aBuilder,
-                                  nsIFrame*             aBlockFrame);
+  static bool CanHaveTextOverflow(nsIFrame* aBlockFrame);
 
   typedef nsTHashtable<nsPtrHashKey<nsIFrame> > FrameHashtable;
 
