@@ -2109,6 +2109,20 @@ CacheIRCompiler::emitLoadTypedObjectResultShared(const Address& fieldAddr, Regis
     }
 }
 
+bool
+CacheIRCompiler::emitLoadObjectResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+
+    if (output.hasValue())
+        masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
+    else
+        masm.mov(obj, output.typedReg().gpr());
+
+    return true;
+}
+
 void
 CacheIRCompiler::emitStoreTypedObjectReferenceProp(ValueOperand val, ReferenceTypeDescr::Type type,
                                                    const Address& dest, Register scratch)

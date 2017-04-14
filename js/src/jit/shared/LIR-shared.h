@@ -6850,16 +6850,20 @@ class LSetPropertyPolymorphicT : public LInstructionHelper<0, 2, 1>
     }
 };
 
-class LBindNameCache : public LInstructionHelper<1, 1, 0>
+class LBindNameCache : public LInstructionHelper<1, 1, 1>
 {
   public:
     LIR_HEADER(BindNameCache)
 
-    explicit LBindNameCache(const LAllocation& envChain) {
+    LBindNameCache(const LAllocation& envChain, const LDefinition& temp) {
         setOperand(0, envChain);
+        setTemp(0, temp);
     }
     const LAllocation* environmentChain() {
         return getOperand(0);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
     }
     const MBindNameCache* mir() const {
         return mir_->toBindNameCache();
