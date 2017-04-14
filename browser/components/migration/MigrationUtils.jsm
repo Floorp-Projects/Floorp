@@ -399,7 +399,7 @@ this.MigratorPrototype = {
             Services.obs.removeObserver(onPlacesInited, TOPIC_PLACES_DEFAULTS_FINISHED);
             resolve();
           };
-          Services.obs.addObserver(onPlacesInited, TOPIC_PLACES_DEFAULTS_FINISHED, false);
+          Services.obs.addObserver(onPlacesInited, TOPIC_PLACES_DEFAULTS_FINISHED);
         });
         browserGlue.observe(null, TOPIC_DID_IMPORT_BOOKMARKS, "");
         yield placesInitedPromise;

@@ -79,7 +79,7 @@ ObjectApp.prototype =
     {
         this.mDoc = aDoc;
         this.mPanelSet = document.getElementById(aId).contentDocument.getElementById("bxPanelSet");
-        this.mPanelSet.addObserver("panelsetready", this, false);
+        this.mPanelSet.addObserver("panelsetready", this);
         this.mPanelSet.initialize();
     },
 

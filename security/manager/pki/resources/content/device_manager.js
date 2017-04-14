@@ -38,8 +38,8 @@ function DeregisterSmartCardObservers() {
 function LoadModules() {
   bundle = document.getElementById("pippki_bundle");
   secmoddb = Components.classes[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
-  Services.obs.addObserver(smartCardObserver, "smartcard-insert", false);
-  Services.obs.addObserver(smartCardObserver, "smartcard-remove", false);
+  Services.obs.addObserver(smartCardObserver, "smartcard-insert");
+  Services.obs.addObserver(smartCardObserver, "smartcard-remove");
 
   RefreshDeviceList();
 }

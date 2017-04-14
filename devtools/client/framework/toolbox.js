@@ -430,10 +430,9 @@ Toolbox.prototype = {
       this.isReady = true;
       let framesPromise = this._listFrames();
 
-      Services.prefs.addObserver("devtools.cache.disabled", this._applyCacheSettings,
-                                false);
+      Services.prefs.addObserver("devtools.cache.disabled", this._applyCacheSettings);
       Services.prefs.addObserver("devtools.serviceWorkers.testing.enabled",
-                                 this._applyServiceWorkersTestingSettings, false);
+                                 this._applyServiceWorkersTestingSettings);
 
       this.textBoxContextMenuPopup =
         this.doc.getElementById("toolbox-textbox-context-popup");
@@ -2426,7 +2425,7 @@ Toolbox.prototype = {
     };
 
     let topic = "shutdown-leaks-before-check";
-    Services.obs.addObserver(leakCheckObserver, topic, false);
+    Services.obs.addObserver(leakCheckObserver, topic);
     this._destroyer.then(() => {
       Services.obs.removeObserver(leakCheckObserver, topic);
     });

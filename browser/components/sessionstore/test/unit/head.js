@@ -25,8 +25,8 @@ function afterSessionStartupInitialization(cb) {
   // Start sessionstartup initialization.
   let startup = Cc["@mozilla.org/browser/sessionstartup;1"].
     getService(Ci.nsIObserver);
-  Services.obs.addObserver(startup, "final-ui-startup", false);
-  Services.obs.addObserver(startup, "quit-application", false);
+  Services.obs.addObserver(startup, "final-ui-startup");
+  Services.obs.addObserver(startup, "quit-application");
   Services.obs.notifyObservers(null, "final-ui-startup", "");
-  Services.obs.addObserver(observer, "sessionstore-state-finalized", false);
+  Services.obs.addObserver(observer, "sessionstore-state-finalized");
 }

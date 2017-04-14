@@ -43,9 +43,9 @@ module.exports = createClass({
     AddonManager.addAddonListener(this);
 
     Services.prefs.addObserver(CHROME_ENABLED_PREF,
-      this.updateDebugStatus, false);
+      this.updateDebugStatus);
     Services.prefs.addObserver(REMOTE_ENABLED_PREF,
-      this.updateDebugStatus, false);
+      this.updateDebugStatus);
 
     this.updateDebugStatus();
     this.updateAddonsList();

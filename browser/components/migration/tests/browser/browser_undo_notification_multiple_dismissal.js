@@ -61,7 +61,7 @@ add_task(function* checkNotificationsDismissed() {
         }
       },
     };
-    PlacesUtils.bookmarks.addObserver(bmObserver, false);
+    PlacesUtils.bookmarks.addObserver(bmObserver);
     registerCleanupFunction(() => PlacesUtils.bookmarks.removeObserver(bmObserver));
   });
 
@@ -103,7 +103,7 @@ add_task(function* checkNotificationsDismissed() {
          "Pref should have been reset");
       resolve();
     };
-    Services.prefs.addObserver(kObservedPref, obs, false);
+    Services.prefs.addObserver(kObservedPref, obs);
   });
 
   // Click "Don't keep" button:

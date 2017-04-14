@@ -49,8 +49,8 @@ function amManager() {
   Services.mm.addMessageListener(MSG_INSTALL_CLEANUP, this);
   Services.mm.addMessageListener(MSG_ADDON_EVENT_REQ, this);
 
-  Services.obs.addObserver(this, "message-manager-close", false);
-  Services.obs.addObserver(this, "message-manager-disconnect", false);
+  Services.obs.addObserver(this, "message-manager-close");
+  Services.obs.addObserver(this, "message-manager-disconnect");
 
   AddonManager.webAPI.setEventHandler(this.sendEvent);
 

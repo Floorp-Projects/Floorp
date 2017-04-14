@@ -122,7 +122,7 @@ this.BrowserIDManager.prototype = {
 
   initialize() {
     for (let topic of OBSERVER_TOPICS) {
-      Services.obs.addObserver(this, topic, false);
+      Services.obs.addObserver(this, topic);
     }
   },
 

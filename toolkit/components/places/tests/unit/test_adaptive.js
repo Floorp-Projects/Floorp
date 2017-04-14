@@ -180,7 +180,7 @@ var observer = {
     ensure_results(this.results, this.search);
   }
 };
-Services.obs.addObserver(observer, PlacesUtils.TOPIC_FEEDBACK_UPDATED, false);
+Services.obs.addObserver(observer, PlacesUtils.TOPIC_FEEDBACK_UPDATED);
 
 /**
  * Make the result object for a given URI that will be passed to ensure_results.

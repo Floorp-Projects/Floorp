@@ -164,7 +164,7 @@ let StartupCache = {
   },
 };
 
-Services.obs.addObserver(StartupCache, "startupcache-invalidate", false);
+Services.obs.addObserver(StartupCache, "startupcache-invalidate");
 
 class CacheStore {
   constructor(storeName) {
@@ -1061,7 +1061,7 @@ function promiseObserved(topic, test = () => true) {
         resolve({subject, data});
       }
     };
-    Services.obs.addObserver(observer, topic, false);
+    Services.obs.addObserver(observer, topic);
   });
 }
 

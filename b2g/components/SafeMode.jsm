@@ -50,7 +50,7 @@ this.SafeMode = {
         }
       }
 
-      Services.prefs.addObserver(kSafeModePref, observer, false);
+      Services.prefs.addObserver(kSafeModePref, observer);
     });
   },
 

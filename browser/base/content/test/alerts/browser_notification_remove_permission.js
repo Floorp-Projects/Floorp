@@ -40,7 +40,7 @@ function onAlertShowing() {
      "Permission should exist prior to removal");
   let disableForOriginMenuItem = alertWindow.document.getElementById("disableForOriginMenuItem");
   is(disableForOriginMenuItem.localName, "menuitem", "menuitem found");
-  Services.obs.addObserver(permObserver, "perm-changed", false);
+  Services.obs.addObserver(permObserver, "perm-changed");
   alertWindow.addEventListener("beforeunload", onAlertClosing);
   disableForOriginMenuItem.click();
   info("Clicked on disable-for-origin menuitem")

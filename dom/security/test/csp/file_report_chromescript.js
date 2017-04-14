@@ -51,4 +51,4 @@ var openingObserver = {
   }
 };
 
-Services.obs.addObserver(openingObserver, 'http-on-opening-request', false);
+Services.obs.addObserver(openingObserver, 'http-on-opening-request');

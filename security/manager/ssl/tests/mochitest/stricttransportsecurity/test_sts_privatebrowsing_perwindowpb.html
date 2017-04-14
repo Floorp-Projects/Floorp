@@ -66,7 +66,7 @@
         SpecialPowers.Services.obs.removeObserver(observer, aTopic);
         SimpleTest.executeSoon(aCallback);
       }
-    }, "browser-delayed-startup-finished", false);
+    }, "browser-delayed-startup-finished");
   }
 
   function testOnWindow(aIsPrivate, aCallback) {

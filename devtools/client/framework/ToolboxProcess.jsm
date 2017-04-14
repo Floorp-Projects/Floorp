@@ -71,7 +71,7 @@ this.BrowserToolboxProcess = function BrowserToolboxProcess(onClose, onRun, opti
   this._telemetry = new Telemetry();
 
   this.close = this.close.bind(this);
-  Services.obs.addObserver(this.close, "quit-application", false);
+  Services.obs.addObserver(this.close, "quit-application");
   this._initServer();
   this._initProfile();
   this._create();
@@ -331,6 +331,6 @@ Services.prefs.addObserver("devtools.debugger.log", {
   observe: (...args) => {
     wantLogging = Services.prefs.getBoolPref(args.pop());
   }
-}, false);
+});
 
 Services.obs.notifyObservers(null, "ToolboxProcessLoaded", null);

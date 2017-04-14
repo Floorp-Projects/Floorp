@@ -224,7 +224,7 @@ function onStart() {
     defaultOrientation = screenOrientation;
 
     queueResize();
-  }, 'simulator-adjust-window-size', false);
+  }, 'simulator-adjust-window-size');
 
   // Queue resize request in order to prevent race and slowdowns
   // by requesting resize multiple times per loop

@@ -100,7 +100,7 @@ function oneTimeObserve(name, callback) {
       }
       resolve();
     };
-    Services.obs.addObserver(func, name, false);
+    Services.obs.addObserver(func, name);
   });
 }
 

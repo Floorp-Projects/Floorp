@@ -475,7 +475,7 @@ ParentAPIManager = {
   proxyContexts: new Map(),
 
   init() {
-    Services.obs.addObserver(this, "message-manager-close", false);
+    Services.obs.addObserver(this, "message-manager-close");
 
     Services.mm.addMessageListener("API:CreateProxyContext", this);
     Services.mm.addMessageListener("API:CloseProxyContext", this, true);

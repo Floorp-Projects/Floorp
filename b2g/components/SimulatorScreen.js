@@ -79,9 +79,9 @@ SimulatorScreen.prototype = {
     let windows = this._windows;
     switch (topic) {
       case 'profile-after-change':
-        Services.obs.addObserver(this, 'document-element-inserted', false);
-        Services.obs.addObserver(this, 'simulator-orientation-change', false);
-        Services.obs.addObserver(this, 'inner-window-destroyed', false);
+        Services.obs.addObserver(this, 'document-element-inserted');
+        Services.obs.addObserver(this, 'simulator-orientation-change');
+        Services.obs.addObserver(this, 'inner-window-destroyed');
         break;
 
       case 'document-element-inserted':

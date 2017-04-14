@@ -166,8 +166,8 @@ this.LogManager = {
 
 var PrefObserver = {
   init() {
-    Services.prefs.addObserver(PREF_LOGGING_ENABLED, this, false);
-    Services.obs.addObserver(this, "xpcom-shutdown", false);
+    Services.prefs.addObserver(PREF_LOGGING_ENABLED, this);
+    Services.obs.addObserver(this, "xpcom-shutdown");
     this.observe(null, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, PREF_LOGGING_ENABLED);
   },
 

@@ -11,7 +11,7 @@ function waitForDialog(callback) {
   }
 
   // Listen for the dialog being created
-  Services.obs.addObserver(onTabModalDialogLoaded, "tabmodal-dialog-loaded", false);
+  Services.obs.addObserver(onTabModalDialogLoaded, "tabmodal-dialog-loaded");
 }
 
 function waitForDialogDestroyed(node, callback) {

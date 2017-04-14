@@ -181,7 +181,7 @@ function testObserver() {
       Services.obs.removeObserver(observer, "document-element-inserted");
       observerFired++;
     }
-    Services.obs.addObserver(observer, "document-element-inserted", false);
+    Services.obs.addObserver(observer, "document-element-inserted");
 
     let count = 0;
     const url = baseURL + "browser_addonShims_testpage.html";
