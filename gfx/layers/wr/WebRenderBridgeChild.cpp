@@ -147,7 +147,12 @@ WebRenderBridgeChild::AllocExternalImageIdForCompositable(CompositableClient* aC
 void
 WebRenderBridgeChild::DeallocExternalImageId(uint64_t aImageId)
 {
-  MOZ_ASSERT(!mDestroyed);
+  if (mDestroyed) {
+    // This can happen if the IPC connection was torn down, because, e.g.
+    // the GPU process died.
+    return;
+  }
+
   MOZ_ASSERT(aImageId);
   SendRemoveExternalImageId(aImageId);
 }
