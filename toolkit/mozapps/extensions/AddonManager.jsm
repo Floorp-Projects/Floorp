@@ -3081,6 +3081,11 @@ this.AddonManagerPrivate = {
     AddonManagerInternal.startup();
   },
 
+  addonIsActive(addonId) {
+    return AddonManagerInternal._getProviderByName("XPIProvider")
+                               .addonIsActive(addonId);
+  },
+
   get browserUpdated() {
     return gBrowserUpdated;
   },
