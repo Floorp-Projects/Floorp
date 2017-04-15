@@ -4833,8 +4833,9 @@ this.XPIProvider = {
         activeAddon.bootstrapScope[feature] = gGlobalScope[feature];
 
       // Define a console for the add-on
-      activeAddon.bootstrapScope["console"] = new ConsoleAPI(
-        { consoleID: "addon/" + aId });
+      XPCOMUtils.defineLazyGetter(
+        activeAddon.bootstrapScope, "console",
+        () => new ConsoleAPI({ consoleID: "addon/" + aId }));
 
       // As we don't want our caller to control the JS version used for the
       // bootstrap file, we run loadSubScript within the context of the
