@@ -378,6 +378,11 @@
           let selection = this.telemetrySearchDetails;
           let oneOffRecorded = false;
 
+          BrowserUsageTelemetry.recordSearchbarSelectedResultMethod(
+            aEvent,
+            selection ? selection.index : -1
+          );
+
           if (!selection || (selection.index == -1)) {
             oneOffRecorded = this.textbox.popup.oneOffButtons
                                  .maybeRecordTelemetry(aEvent, aWhere, aParams);
@@ -971,6 +976,11 @@
 
           // Check for middle-click or modified clicks on the search bar
           if (popupForSearchBar) {
+            BrowserUsageTelemetry.recordSearchbarSelectedResultMethod(
+              aEvent,
+              this.selectedIndex
+            );
+
             // Handle search bar popup clicks
             var search = controller.getValueAt(this.selectedIndex);
 
