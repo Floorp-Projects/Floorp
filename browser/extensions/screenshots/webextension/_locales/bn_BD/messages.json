@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "ওয়েব থেকে ক্লিপ এবং স্ক্রিনশট নিন এবং সেগুলো সাময়িকভাবে বা স্থায়ীভাবে সংরক্ষণ করুন।"
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "একটি স্ক্রীনশট নিন"
+  },
+  "myShotsLink": {
+    "message": "আমার সটসমূহ"
+  },
+  "screenshotInstructions": {
+    "message": "ড্রাগ করে অথবা পেজে ক্লিক করে একটি অংশ নির্বাচন করুন। বাতিল করতে ESC টিপুন।"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "সংরক্ষণ"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "যতটুকু দেখা যাচ্ছে সংরক্ষণ করুন"
+  },
+  "saveScreenshotFullPage": {
+    "message": "সম্পূর্ণ পেজ সংরক্ষণ করুন"
+  },
+  "cancelScreenshot": {
+    "message": "বাতিল"
+  },
+  "downloadScreenshot": {
+    "message": "ডাউনলোড"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "লিঙ্ক কপি করা হয়েছে"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "আপার সট এর লিংক ক্লিপবোর্ডে কপি করা হয়েছে। পেস্ট করতে $META_KEY$-V চাপুন।",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "বিকল।"
+  },
+  "requestErrorDetails": {
+    "message": "দুঃখিত! আমরা আপনার সট সংরক্ষণ করতে পারিনি। অনুগ্রহ পুনরায় চেষ্টা করুন।"
+  },
+  "connectionErrorTitle": {
+    "message": "আমরা আপনার স্ক্রিটসটসমূহ সংযোগ করতে পারছি না।"
+  },
+  "connectionErrorDetails": {
+    "message": "অনুগ্রহ করে আপনার ইন্টারনেট সংযোগ পরীক্ষা করুন। আর যদি আপনার ইন্টারনেট সংযোগ ঠিক থাকে, তাহলে Firefox স্ক্রিনশট সেবাটিতে সাময়িক সমস্যা দেখা দিয়েছে।"
+  },
+  "loginErrorDetails": {
+    "message": "আমরা আপনার শট সংরক্ষণ করতে পারিনি কারণ সেখানে Firefox স্ক্রিণশট সেবার সমস্যা আছে। অনুগ্রহ করে আবার চেস্টা করুন।"
+  },
+  "unshootablePageErrorTitle": {
+    "message": "আমার এই পেজের স্ক্রিনশট নিতে পারব না।"
+  },
+  "unshootablePageErrorDetails": {
+    "message": "এটা কোন আদর্শ ওয়েব পেজ না, তাই আপনি এটার স্ক্রিনশট তুলতে পারবেন না।"
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "আপনি Firefox স্ক্রিনশটের পেজের শট নিতে পারেন না!"
+  },
+  "genericErrorTitle": {
+    "message": "আয় হায়! Firefox স্ক্রিনশট পাগল হয়ে গেছে।"
+  },
+  "genericErrorDetails": {
+    "message": "এই মাত্র কি ঘটেছে আমরা নিশ্চিত নই। আপনি কি অনুগ্রহ করে পুরনায় সট নেবেন কিংবা ভিন্ন একটি পেজে চেষ্টা করবেন?"
+  },
+  "tourBodyOne": {
+    "message": "Firefox ত্যাগ করা ছাড়াই স্ক্রিনশট তোল, সংরক্ষণ কর এবং শেয়ার কর।"
+  },
+  "tourHeaderTwo": {
+    "message": "ক্যাপচার করুন আপনি যা চান"
+  },
+  "tourBodyTwo": {
+    "message": "একটি পেজের কিয়দংশ ক্যাপচার করতে ক্লিক করে ড্রাগ করুন। অতঃপর আপনি মাউজ হোভার করে আপনার নির্বাচিত অংশ হাইলাইট করতে পারবেন।"
+  },
+  "tourHeaderThree": {
+    "message": "আপনি যেমন পছন্দ করেন"
+  },
+  "tourBodyThree": {
+    "message": "আপনার ক্রপ করা সটসমূহ ওয়েবে রাখুন সহজে শেয়ার করার সুবিধার্থে, অথবা আপনার কম্পিউটারে ডাউনলোড করুন। আপনার সকল সটসমূহ খুঁজে পেতে আমার সটসমূহ বাটনে ক্লিক করুন।"
+  },
+  "tourHeaderFour": {
+    "message": "উইন্ডো ক্যাপচার করুন অথবা পুরো পেজ"
+  },
+  "tourBodyFour": {
+    "message": "ইউন্ডোতে দৃশ্যমান অংশ অথবা সম্পূর্ণ পেজ ক্যাপচার করতে উপরে ডানদিকের বাটনগুলো থেকে নির্বাচন করুন।"
+  },
+  "tourSkip": {
+    "message": "এড়িয়ে যান"
+  },
+  "tourNext": {
+    "message": "পরবর্তী স্লাইড"
+  },
+  "tourPrevious": {
+    "message": "পূর্ববর্তী স্লাইড"
+  },
+  "tourDone": {
+    "message": "সম্পন্ন"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Firefox Screenshots ব্যবহারের জন্য, আপনি স্ক্রিনশটের $TERMSANDPRIVACYNOTICETERMSLINK$ এবং $TERMSANDPRIVACYNOTICEPRIVACYLINK$ নীতিতে আগ্রহী।",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "শর্তাবলী"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "গোপনীয়তা নীতি"
+  }
+}

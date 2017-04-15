@@ -499,7 +499,7 @@ function initObservers() {
   }
 
   for (let topic of OBSERVER_TOPICS) {
-    Services.obs.addObserver(observe, topic, false);
+    Services.obs.addObserver(observe, topic);
   }
   window.addEventListener("unload", function(event) {
     log("about:accounts unloading")

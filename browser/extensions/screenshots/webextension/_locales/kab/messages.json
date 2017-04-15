@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Ṭṭef imrayen akked igdilen si Web sakin sekles-iten s wudem askudan neɣ s wudem yezgan."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Ṭṭef agdil"
+  },
+  "myShotsLink": {
+    "message": "Tuṭṭfiwin-iw"
+  },
+  "screenshotInstructions": {
+    "message": "Zuγer sakin sit γef af usebter akken ad tferneḍ tamnaṭ. Senned γef ESC akken ad tesfesxeḍ."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Sekles"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Sekles ayen ibanen"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Sekles asebter meṛṛa"
+  },
+  "cancelScreenshot": {
+    "message": "Sefsex"
+  },
+  "downloadScreenshot": {
+    "message": "Sider"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Aseγwen yettwanγel"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Aseγwen ar tuṭṭfa-ik yettwanγel yef afus. Senned yef $META_KEY$-V akken ad tsenṭḍeḍ.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Yeffeγ i talast."
+  },
+  "requestErrorDetails": {
+    "message": "Suref-aγ! Ur nezmir ara ad nsekles tuṭṭfa-ik. Ɛreḍ tikelt-nniḍen."
+  },
+  "connectionErrorTitle": {
+    "message": "Ur nezmir ara ad neqqen ar tuṭṭfiwin-ik n ugdil."
+  },
+  "connectionErrorDetails": {
+    "message": "Senqed tuqqna-ik Internet. Ma yella tzemred ad teqqneḍ ar Internet, ahat d ugur kan meẓẓiyen deg umeẓlu Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "UR nseklas ara tuṭṭfa-ik acku yella ugur akked umezlu Firefox Screenshots. Ma ulac aɣilif ɛreḍ tikelt-nniḍen."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Ur nezmir ara ad neṭṭef agdil n usebter-agi."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Mačči d asebter Web am iyaḍ, ur tizmireḍ ara ad s-teṭṭfeḍ agdil."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Ur tezmireḍ ar ad teṭṭfeḍ agdil n usebter Firefox Screenshots!"
+  },
+  "genericErrorTitle": {
+    "message": "Ihuh! Firefox Screenshots ur iteddu ara."
+  },
+  "genericErrorDetails": {
+    "message": "Ur neẓri ara acu yeḍran. Ɛreḍ tikelt-nniḍen neɣ ṭṭef agdil n usebter-nniḍen?"
+  },
+  "tourBodyOne": {
+    "message": "Ṭṭef, sekles, bḍu igdilen war ma teffɣeḍ si Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Ṭṭef kan ayen tebγiḍ"
+  },
+  "tourBodyTwo": {
+    "message": "Sit sakin zuɣer akken ad teṭṭfeḍ aḥric seg usebter. Tzemreḍ daɣen ad tesrifgeḍ akken ad tsebṛuṛqeḍ afran-ik."
+  },
+  "tourHeaderThree": {
+    "message": "Akken tebγiḍ"
+  },
+  "tourBodyThree": {
+    "message": "Sekles tuṭṭfiwin-ik ar Web i beṭṭu fessusen, neɣ sider-itent-id ar uselkim-ik. Tzemr€d daɣen ad tiseḍ ɣef tqeffalt Tiṭṭfiwin-iw akken ad tafeḍ akk tuṭṭfiwin n ugdil i teggid."
+  },
+  "tourHeaderFour": {
+    "message": "Ṭṭef isfuyla neγ isebtar meṛṛa"
+  },
+  "tourBodyFour": {
+    "message": "Fren tiqeffalin s afella ayeffus akken ad teṭṭfeḍ tamnaṭ yettbanen deg usfaylu neɣ asebter i meṛṛa."
+  },
+  "tourSkip": {
+    "message": "Zgel"
+  },
+  "tourNext": {
+    "message": "Tigri n zdat"
+  },
+  "tourPrevious": {
+    "message": "Tigri n deffir"
+  },
+  "tourDone": {
+    "message": "Immed"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "S useqdec Firefox Screenshots,  ad tqebleḍ $TERMSANDPRIVACYNOTICETERMSLINK$ n Screenshots akked $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Tiwtilin"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Tasertit n tbaḍnit"
+  }
+}

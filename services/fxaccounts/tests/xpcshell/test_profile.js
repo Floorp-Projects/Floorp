@@ -356,7 +356,7 @@ add_task(function* fetchAndCacheProfileBeforeThresholdOnNotification() {
   yield profile.getProfile();
   do_check_eq(numFetches, 1);
 
-  Services.obs.notifyObservers(null, ON_PROFILE_CHANGE_NOTIFICATION, null);
+  Services.obs.notifyObservers(null, ON_PROFILE_CHANGE_NOTIFICATION);
 
   yield profile.getProfile();
   do_check_eq(numFetches, 2);
@@ -473,6 +473,6 @@ function makeObserver(aObserveTopic, aObserveFunc) {
     Services.obs.removeObserver(callback, aObserveTopic);
   }
 
-  Services.obs.addObserver(callback, aObserveTopic, false);
+  Services.obs.addObserver(callback, aObserveTopic);
   return removeMe;
 }

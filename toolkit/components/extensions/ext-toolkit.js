@@ -3,6 +3,10 @@
 XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
                                   "resource://gre/modules/ContextualIdentityService.jsm");
 
+Cu.import("resource://gre/modules/ExtensionCommon.jsm");
+
+global.SingletonEventManager = ExtensionCommon.SingletonEventManager;
+
 /* globals DEFAULT_STORE, PRIVATE_STORE, CONTAINER_STORE */
 
 global.DEFAULT_STORE = "firefox-default";

@@ -233,7 +233,7 @@ protected:
 
     virtual mozilla::ipc::IPCResult RecvNotifyContentModuleDestroyed() override { return IPC_OK(); }
 
-    virtual mozilla::ipc::IPCResult RecvProfile(const nsCString& aProfile) override { return IPC_OK(); }
+    virtual mozilla::ipc::IPCResult RecvProfile(const nsCString& aProfile, const bool& aIsExitProfile) override { return IPC_OK(); }
 
     virtual mozilla::ipc::IPCResult AnswerGetKeyState(const int32_t& aVirtKey, int16_t* aRet) override;
 
@@ -527,7 +527,7 @@ class PluginModuleChromeParent
     void CachedSettingChanged();
 
     virtual mozilla::ipc::IPCResult
-    RecvProfile(const nsCString& aProfile) override;
+    RecvProfile(const nsCString& aProfile, const bool& aIsExitProfile) override;
 
     virtual mozilla::ipc::IPCResult
     AnswerGetKeyState(const int32_t& aVirtKey, int16_t* aRet) override;

@@ -215,7 +215,7 @@ function displayUsages(results) {
   // Notify that we are done determining the certificate's valid usages (this
   // should be treated as an implementation detail that enables tests to run
   // efficiently - other code in the browser probably shouldn't rely on this).
-  Services.obs.notifyObservers(window, "ViewCertDetails:CertUsagesDone", null);
+  Services.obs.notifyObservers(window, "ViewCertDetails:CertUsagesDone");
 }
 
 function addChildrenToTree(parentTree, label, value, addTwistie) {

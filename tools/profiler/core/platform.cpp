@@ -28,7 +28,6 @@
 #include "ThreadInfo.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIObserverService.h"
-#include "nsIProfileSaveEvent.h"
 #include "nsIXULAppInfo.h"
 #include "nsIXULRuntime.h"
 #include "nsDirectoryServiceUtils.h"
@@ -1106,31 +1105,6 @@ Tick(PS::LockRef aLock, ProfileBuffer* aBuffer, const TickSample& aSample)
 ////////////////////////////////////////////////////////////////////////
 // BEGIN saving/streaming code
 
-class ProfileSaveEvent final : public nsIProfileSaveEvent
-{
-public:
-  typedef void (*AddSubProfileFunc)(const char* aProfile, void* aClosure);
-  NS_DECL_ISUPPORTS
-
-  ProfileSaveEvent(AddSubProfileFunc aFunc, void* aClosure)
-    : mFunc(aFunc)
-    , mClosure(aClosure)
-  {}
-
-  NS_IMETHOD AddSubProfile(const char* aProfile) override {
-    mFunc(aProfile, mClosure);
-    return NS_OK;
-  }
-
-private:
-  ~ProfileSaveEvent() {}
-
-  AddSubProfileFunc mFunc;
-  void* mClosure;
-};
-
-NS_IMPL_ISUPPORTS(ProfileSaveEvent, nsIProfileSaveEvent)
-
 const static uint64_t kJS_MAX_SAFE_UINTEGER = +9007199254740991ULL;
 
 static int64_t
@@ -1222,7 +1196,7 @@ StreamMetaJSCustomObject(PS::LockRef aLock, SpliceableJSONWriter& aWriter)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  aWriter.IntProperty("version", 4);
+  aWriter.IntProperty("version", 5);
   aWriter.DoubleProperty("interval", gPS->Interval(aLock));
   aWriter.IntProperty("stackwalk", gPS->FeatureStackWalk(aLock));
 
@@ -1294,25 +1268,6 @@ StreamMetaJSCustomObject(PS::LockRef aLock, SpliceableJSONWriter& aWriter)
   }
 }
 
-struct SubprocessClosure
-{
-  explicit SubprocessClosure(SpliceableJSONWriter* aWriter)
-    : mWriter(aWriter)
-  {}
-
-  SpliceableJSONWriter* mWriter;
-};
-
-static void
-SubProcessCallback(const char* aProfile, void* aClosure)
-{
-  // Called by the observer to get their profile data included as a sub profile.
-  SubprocessClosure* closure = (SubprocessClosure*)aClosure;
-
-  // Add the string profile into the profile.
-  closure->mWriter->StringElement(aProfile);
-}
-
 #if defined(PROFILE_JAVA)
 static void
 BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
@@ -1369,38 +1324,36 @@ BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
 #endif
 
 static void
-StreamJSON(PS::LockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime)
+locked_profiler_stream_json_for_this_process(PS::LockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime)
 {
-  LOG("StreamJSON");
+  LOG("locked_profiler_stream_json_for_this_process");
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS && gPS->IsActive(aLock));
 
-  aWriter.Start(SpliceableJSONWriter::SingleLineStyle);
+  // Put shared library info
+  aWriter.StartArrayProperty("libs");
+  AppendSharedLibraries(aWriter);
+  aWriter.EndArray();
+
+  // Put meta data
+  aWriter.StartObjectProperty("meta");
   {
-    // Put shared library info
-    aWriter.StartArrayProperty("libs");
-    AppendSharedLibraries(aWriter);
-    aWriter.EndArray();
+    StreamMetaJSCustomObject(aLock, aWriter);
+  }
+  aWriter.EndObject();
 
-    // Put meta data
-    aWriter.StartObjectProperty("meta");
-    {
-      StreamMetaJSCustomObject(aLock, aWriter);
-    }
+  // Data of TaskTracer doesn't belong in the circular buffer.
+  if (gPS->FeatureTaskTracer(aLock)) {
+    aWriter.StartObjectProperty("tasktracer");
+    StreamTaskTracer(aLock, aWriter);
     aWriter.EndObject();
+  }
 
-    // Data of TaskTracer doesn't belong in the circular buffer.
-    if (gPS->FeatureTaskTracer(aLock)) {
-      aWriter.StartObjectProperty("tasktracer");
-      StreamTaskTracer(aLock, aWriter);
-      aWriter.EndObject();
-    }
-
-    // Lists the samples for each thread profile
-    aWriter.StartArrayProperty("threads");
-    {
-      gPS->SetIsPaused(aLock, true);
+  // Lists the samples for each thread profile
+  aWriter.StartArrayProperty("threads");
+  {
+    gPS->SetIsPaused(aLock, true);
 
       const PS::ThreadVector& liveThreads = gPS->LiveThreads(aLock);
       for (size_t i = 0; i < liveThreads.size(); i++) {
@@ -1420,42 +1373,41 @@ StreamJSON(PS::LockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime)
                          aSinceTime);
       }
 
-      // When notifying observers in other places in this file we are careful
-      // to do it when gPSMutex is unlocked, to avoid deadlocks. But that's not
-      // necessary here, because "profiler-subprocess" observers just call back
-      // into SubprocessCallback, which is simple and doesn't lock gPSMutex.
-      if (CanNotifyObservers()) {
-        // Send a event asking any subprocesses (plugins) to
-        // give us their information
-        SubprocessClosure closure(&aWriter);
-        nsCOMPtr<nsIObserverService> os =
-          mozilla::services::GetObserverService();
-        if (os) {
-          RefPtr<ProfileSaveEvent> pse =
-            new ProfileSaveEvent(SubProcessCallback, &closure);
-          os->NotifyObservers(pse, "profiler-subprocess", nullptr);
-        }
-      }
-
 #if defined(PROFILE_JAVA)
-      if (gPS->FeatureJava(aLock)) {
-        java::GeckoJavaSampler::Pause();
+    if (gPS->FeatureJava(aLock)) {
+      java::GeckoJavaSampler::Pause();
 
-        aWriter.Start();
-        {
-          BuildJavaThreadJSObject(aWriter);
-        }
-        aWriter.End();
-
-        java::GeckoJavaSampler::Unpause();
+      aWriter.Start();
+      {
+        BuildJavaThreadJSObject(aWriter);
       }
+      aWriter.End();
+
+      java::GeckoJavaSampler::Unpause();
+    }
 #endif
 
-      gPS->SetIsPaused(aLock, false);
-    }
-    aWriter.EndArray();
+    gPS->SetIsPaused(aLock, false);
   }
-  aWriter.End();
+  aWriter.EndArray();
+}
+
+bool
+profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter, double aSinceTime)
+{
+  LOG("profiler_stream_json_for_this_process");
+
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(gPS);
+
+  PS::AutoLock lock(gPSMutex);
+
+  if (!gPS->IsActive(lock)) {
+    return false;
+  }
+
+  locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime);
+  return true;
 }
 
 // END saving/streaming code
@@ -2150,14 +2102,20 @@ profiler_get_profile(double aSinceTime)
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(gPS);
 
-  PS::AutoLock lock(gPSMutex);
-
-  if (!gPS->IsActive(lock)) {
-    return nullptr;
-  }
-
   SpliceableChunkedJSONWriter b;
-  StreamJSON(lock, b, aSinceTime);
+  b.Start(SpliceableJSONWriter::SingleLineStyle);
+  {
+    if (!profiler_stream_json_for_this_process(b, aSinceTime)) {
+      return nullptr;
+    }
+
+    // Don't include profiles from other processes because this is a
+    // synchronous function.
+    b.StartArrayProperty("processes");
+    b.EndArray();
+  }
+  b.End();
+
   return b.WriteFunc()->CopyData();
 }
 
@@ -2204,7 +2162,17 @@ locked_profiler_save_profile_to_file(PS::LockRef aLock, const char* aFilename)
   stream.open(aFilename);
   if (stream.is_open()) {
     SpliceableJSONWriter w(mozilla::MakeUnique<OStreamJSONWriteFunc>(stream));
-    StreamJSON(aLock, w, /* sinceTime */ 0);
+    w.Start(SpliceableJSONWriter::SingleLineStyle);
+    {
+      locked_profiler_stream_json_for_this_process(aLock, w, /* sinceTime */ 0);
+
+      // Don't include profiles from other processes because this is a
+      // synchronous function.
+      w.StartArrayProperty("processes");
+      w.EndArray();
+    }
+    w.End();
+
     stream.close();
   }
 }

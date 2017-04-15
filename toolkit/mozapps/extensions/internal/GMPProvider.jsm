@@ -530,7 +530,7 @@ var GMPProvider = {
     this.buildPluginList();
     this.ensureProperCDMInstallState();
 
-    Services.prefs.addObserver(GMPPrefs.KEY_LOG_BASE, configureLogging, false);
+    Services.prefs.addObserver(GMPPrefs.KEY_LOG_BASE, configureLogging);
 
     for (let plugin of this._plugins.values()) {
       let wrapper = plugin.wrapper;

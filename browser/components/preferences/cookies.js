@@ -26,8 +26,8 @@ var gCookiesWindow = {
   init() {
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
-    os.addObserver(this, "cookie-changed", false);
-    os.addObserver(this, "perm-changed", false);
+    os.addObserver(this, "cookie-changed");
+    os.addObserver(this, "perm-changed");
 
     this._bundle = document.getElementById("bundlePreferences");
     this._tree = document.getElementById("cookiesList");

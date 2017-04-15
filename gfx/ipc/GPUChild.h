@@ -61,7 +61,7 @@ public:
   mozilla::ipc::IPCResult RecvGraphicsError(const nsCString& aError) override;
   mozilla::ipc::IPCResult RecvNotifyUiObservers(const nsCString& aTopic) override;
   mozilla::ipc::IPCResult RecvNotifyDeviceReset(const GPUDeviceData& aData) override;
-  mozilla::ipc::IPCResult RecvProfile(const nsCString& aProfile) override;
+  mozilla::ipc::IPCResult RecvProfile(const nsCString& aProfile, const bool& aIsExitProfile) override;
   mozilla::ipc::IPCResult RecvAddMemoryReport(const MemoryReport& aReport) override;
   mozilla::ipc::IPCResult RecvFinishMemoryReport(const uint32_t& aGeneration) override;
 

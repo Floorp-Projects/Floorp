@@ -73,7 +73,7 @@ var AboutReader = function(mm, win, articlePromise) {
   win.addEventListener("scroll", this);
   win.addEventListener("resize", this);
 
-  Services.obs.addObserver(this, "inner-window-destroyed", false);
+  Services.obs.addObserver(this, "inner-window-destroyed");
 
   doc.addEventListener("visibilitychange", this);
 
@@ -818,7 +818,7 @@ AboutReader.prototype = {
 
     this._goToReference(articleUri.ref);
 
-    Services.obs.notifyObservers(this._win, "AboutReader:Ready", "");
+    Services.obs.notifyObservers(this._win, "AboutReader:Ready");
 
     this._doc.dispatchEvent(
       new this._win.CustomEvent("AboutReaderContentReady", { bubbles: true, cancelable: false }));

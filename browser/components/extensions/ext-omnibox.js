@@ -4,9 +4,6 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionSearchHandler",
                                   "resource://gre/modules/ExtensionSearchHandler.jsm");
-var {
-  SingletonEventManager,
-} = ExtensionUtils;
 
 this.omnibox = class extends ExtensionAPI {
   onManifestEntry(entryName) {

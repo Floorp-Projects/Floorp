@@ -34,14 +34,14 @@ function fakeUIResponse() {
       requestId = JSON.parse(data).id;
       gCaptivePortalDetector.abort(kInterfaceName);
     }
-  }, "captive-portal-login", false);
+  }, "captive-portal-login");
   Services.obs.addObserver(function observe(subject, topic, data) {
     if (topic === "captive-portal-login-abort") {
       do_check_eq(++step, 3);
       do_check_eq(JSON.parse(data).id, requestId);
       gServer.stop(do_test_finished);
     }
-  }, "captive-portal-login-abort", false);
+  }, "captive-portal-login-abort");
 }
 
 function test_abort() {

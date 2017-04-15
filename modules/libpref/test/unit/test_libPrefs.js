@@ -365,7 +365,7 @@ function run_test() {
       this.name = expectedName;
       this.value = expectedValue;
 
-      prefBranch.addObserver(expectedName, this, false);
+      prefBranch.addObserver(expectedName, this);
     }
 
     QueryInterface(aIID) {

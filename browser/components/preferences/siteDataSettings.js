@@ -42,7 +42,7 @@ let gSiteDataSettings = {
       let sortCol = document.getElementById("hostCol");
       this._sortSites(this._sites, sortCol);
       this._buildSitesList(this._sites);
-      Services.obs.notifyObservers(null, "sitedata-settings-init", null);
+      Services.obs.notifyObservers(null, "sitedata-settings-init");
     });
 
     let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");

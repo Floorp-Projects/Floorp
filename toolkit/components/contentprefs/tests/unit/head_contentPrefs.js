@@ -140,7 +140,7 @@ function enterPBMode(cps) {
 }
 function exitPBMode(cps) {
   cps.loadContext = loadContext;
-  Services.obs.notifyObservers(null, "last-pb-context-exited", null);
+  Services.obs.notifyObservers(null, "last-pb-context-exited");
 }
 
 ContentPrefTest.deleteDatabase();

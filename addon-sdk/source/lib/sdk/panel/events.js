@@ -12,7 +12,7 @@ module.metadata = {
 };
 
 const events = require("../system/events");
-const { emit } = require("../event/core");
+lazyRequire(this, "../event/core", "emit");
 
 var channel = {};
 

@@ -20,7 +20,7 @@ add_task(function* checkTitleNotificationForNavigation() {
         }
       },
     };
-    PlacesUtils.history.addObserver(obs, false);
+    PlacesUtils.history.addObserver(obs);
   });
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, EXPECTED_URL.spec);
   yield promiseTitleChanged;

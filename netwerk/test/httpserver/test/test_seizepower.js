@@ -47,12 +47,12 @@ function checkException(fun, err, msg)
 
 function callASAPLater(fun)
 {
-  gThreadManager.currentThread.dispatch({
+  gThreadManager.dispatchToMainThread({
     run: function()
     {
       fun();
     }
-  }, Ci.nsIThread.DISPATCH_NORMAL);
+  });
 }
 
 

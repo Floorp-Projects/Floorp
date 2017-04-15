@@ -279,7 +279,7 @@ this.WinTaskbarJumpList =
         return;
       var item = this._getHandlerAppItem(task.title, task.description,
                                          task.args, task.iconIndex, null);
-      items.appendElement(item, false);
+      items.appendElement(item);
     }, this);
 
     if (items.length > 0)
@@ -324,7 +324,7 @@ this.WinTaskbarJumpList =
         let faviconPageUri = Services.io.newURI(aResult.uri);
         let shortcut = this._getHandlerAppItem(title, title, aResult.uri, 1,
                                                faviconPageUri);
-        items.appendElement(shortcut, false);
+        items.appendElement(shortcut);
         this._frequentHashList.push(aResult.uri);
       },
       this
@@ -369,7 +369,7 @@ this.WinTaskbarJumpList =
         let faviconPageUri = Services.io.newURI(aResult.uri);
         let shortcut = this._getHandlerAppItem(title, title, aResult.uri, 1,
                                                faviconPageUri);
-        items.appendElement(shortcut, false);
+        items.appendElement(shortcut);
         count++;
       },
       this
@@ -493,9 +493,9 @@ this.WinTaskbarJumpList =
     // If the browser is closed while in private browsing mode, the "exit"
     // notification is fired on quit-application-granted.
     // History cleanup can happen at profile-change-teardown.
-    Services.obs.addObserver(this, "profile-before-change", false);
-    Services.obs.addObserver(this, "browser:purge-session-history", false);
-    _prefs.addObserver("", this, false);
+    Services.obs.addObserver(this, "profile-before-change");
+    Services.obs.addObserver(this, "browser:purge-session-history");
+    _prefs.addObserver("", this);
   },
 
   _freeObs: function WTBJL__freeObs() {

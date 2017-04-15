@@ -191,7 +191,7 @@ function makeObserver(aObserveTopic, aObserveFunc) {
     Services.obs.removeObserver(callback, aObserveTopic);
   }
 
-  Services.obs.addObserver(callback, aObserveTopic, false);
+  Services.obs.addObserver(callback, aObserveTopic);
   return removeMe;
 }
 

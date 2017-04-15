@@ -59,7 +59,7 @@ this.StartupPerformance = {
 
   init() {
     for (let topic of OBSERVED_TOPICS) {
-      Services.obs.addObserver(this, topic, false);
+      Services.obs.addObserver(this, topic);
     }
   },
 
@@ -97,14 +97,14 @@ this.StartupPerformance = {
       Services.obs.removeObserver(this, topic);
     }
 
-    Services.obs.addObserver(this, "sessionstore-single-window-restored", false);
+    Services.obs.addObserver(this, "sessionstore-single-window-restored");
     this._promiseFinished = new Promise(resolve => {
       this._resolveFinished = resolve;
     });
     this._promiseFinished.then(() => {
       try {
         this._isRestored = true;
-        Services.obs.notifyObservers(null, this.RESTORED_TOPIC, "");
+        Services.obs.notifyObservers(null, this.RESTORED_TOPIC);
 
         if (this._latestRestoredTimeStamp == this._startTimeStamp) {
           // Apparently, we haven't restored any tab.

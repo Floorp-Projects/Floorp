@@ -37,7 +37,7 @@ var Manager = {
 
     Services.obs.addObserver(this, "autocomplete-did-enter-text", true);
 
-    Services.obs.addObserver(this, "webNavigation-createdNavigationTarget", false);
+    Services.obs.addObserver(this, "webNavigation-createdNavigationTarget");
 
     Services.mm.addMessageListener("Content:Click", this);
     Services.mm.addMessageListener("Extension:DOMContentLoaded", this);

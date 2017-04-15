@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Vytvorte si snímky obrazovky na webe a uložte si ich dočasne či navždy."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Urobiť snímku obrazovky"
+  },
+  "myShotsLink": {
+    "message": "Moje snímky"
+  },
+  "screenshotInstructions": {
+    "message": "Potiahnutím alebo kliknutím si vyberte oblasť, ktorú chcete zachytiť. Výber zrušíte stlačením klávesa ESC."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Uložiť"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Uložiť viditeľnú časť"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Uložiť celú stránku"
+  },
+  "cancelScreenshot": {
+    "message": "Zrušiť"
+  },
+  "downloadScreenshot": {
+    "message": "Prevziať"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Odkaz bol skopírovaný"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Odkaz na vašu snímku bol skopírovaný do schránky. Stlačením $META_KEY$-V ho prilepíte.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Mimo prevádzky."
+  },
+  "requestErrorDetails": {
+    "message": "Mrzí nás to, no nemôžeme uložiť vašu snímku. Skúste to, prosím, neskôr."
+  },
+  "connectionErrorTitle": {
+    "message": "Nemôžeme sa spojiť s vašimi snímkami."
+  },
+  "connectionErrorDetails": {
+    "message": "Prosím, skontrolujte svoje internetové pripojenie. Ak ste pripojení na internet, môže ísť o dočasný problém na strane služby Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Nemohli sme uložiť vašu snímku, pretože nastal problém so službou Firefox Screenshots. Skúste to, prosím, neskôr."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Túto stránku nemôžeme zachytiť."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Toto nie je štandardná webová stránka, takže z nej nemôžeme vytvoriť snímku obrazovky."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Nemôžete vytvoriť snímku obrazovky stránky Firefox Screenshots!"
+  },
+  "genericErrorTitle": {
+    "message": "Ups! Služba Firefox Screenshots prestala pracovať."
+  },
+  "genericErrorDetails": {
+    "message": "Nie sme si istí, čo sa práve stalo. Chcete tú skúsiť znova alebo chcete vytvoriť snímku inej stránky?"
+  },
+  "tourBodyOne": {
+    "message": "Tvorte, ukladajte a zdieľajte snímky obrazovky bez toho, aby ste museli opustiť Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Zachyťte to, čo chcete"
+  },
+  "tourBodyTwo": {
+    "message": "Ak chcete zachytiť časť stránky, urobíte to kliknutím a potiahnutím. Váš výber zvýrazníte tak, že sa naň presuniete myšou."
+  },
+  "tourHeaderThree": {
+    "message": "Tak ako to chcete"
+  },
+  "tourBodyThree": {
+    "message": "Uložte si orezanú snímku na web, aby ste ju mohli ľahšie zdieľať alebo si ju prevziať do počítača. Môžete si taktiež pozrieť všetky vaše snímky, stačí ak kliknete na tlačidlo Moje snímky."
+  },
+  "tourHeaderFour": {
+    "message": "Zachyťte okná alebo celé webové stránky"
+  },
+  "tourBodyFour": {
+    "message": "Kliknutím na tlačidlo v pravom hornom rohu môžete zachytiť viditeľnú časť stránky. Pomocou ďalšieho tlačidla zachytíte celú stránku."
+  },
+  "tourSkip": {
+    "message": "Preskočiť"
+  },
+  "tourNext": {
+    "message": "Ďalšia snímka"
+  },
+  "tourPrevious": {
+    "message": "Predchádzajúca snímka"
+  },
+  "tourDone": {
+    "message": "Hotovo"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Používaním služby Firefox Screenshots vyjadrujete súhlas s $TERMSANDPRIVACYNOTICETERMSLINK$ služby Screenshots a so $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "podmienkami"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "zásadami ochrany súkromia"
+  }
+}

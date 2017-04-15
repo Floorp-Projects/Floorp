@@ -26,10 +26,10 @@ var RemoteTabViewer = {
   _tabsList: null,
 
   init() {
-    Services.obs.addObserver(this, "weave:service:login:finish", false);
-    Services.obs.addObserver(this, "weave:engine:sync:finish", false);
+    Services.obs.addObserver(this, "weave:service:login:finish");
+    Services.obs.addObserver(this, "weave:engine:sync:finish");
 
-    Services.obs.addObserver(this, "cloudsync:tabs:update", false);
+    Services.obs.addObserver(this, "cloudsync:tabs:update");
 
     this._tabsList = document.getElementById("tabsList");
 

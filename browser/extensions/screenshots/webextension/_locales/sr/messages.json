@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Бележите снимке екрана са веба и сачувајте их привремено или трајно."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Усликајте екран"
+  },
+  "myShotsLink": {
+    "message": "Моји снимци"
+  },
+  "screenshotInstructions": {
+    "message": "Превуците или кликните на страници да изаберете област. Притисните ESC да прекинете."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Сачувај"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Сачувај видљиво"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Сачувај целу страницу"
+  },
+  "cancelScreenshot": {
+    "message": "Откажи"
+  },
+  "downloadScreenshot": {
+    "message": "Преузми"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Веза копирана"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Веза коју сте забележили је копирана у бележницу. Притисните $META_KEY$-V да налепите.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Не ради."
+  },
+  "requestErrorDetails": {
+    "message": "Жао нам је! Нисмо могли сачувати ваш снимак. Покушајте поново касније."
+  },
+  "connectionErrorTitle": {
+    "message": "Не можемо се повезати на ваше снимке."
+  },
+  "connectionErrorDetails": {
+    "message": "Проверите вашу интернет конекцију. Ако можете да се конектујете, онда можда постоји привремени проблем са Firefox Screenshots-ом."
+  },
+  "loginErrorDetails": {
+    "message": "Нисмо могли сачувати ваш снимак јер постоји проблем са Firefox Screenshots-ом. Покушајте поново касније."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Не можемо забележити снимак ове странице."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Ово није стандардна веб страница, тако да не можете забележити њен снимак."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Не можете усликати Firefox Screenshots страницу!"
+  },
+  "genericErrorTitle": {
+    "message": "Ајој! Firefox Screenshots је пошашавио."
+  },
+  "genericErrorDetails": {
+    "message": "Нисмо сигурни шта се управо догодило. Желите ли покушати поново или да усликате другачију страницу?"
+  },
+  "tourBodyOne": {
+    "message": "Забележите, сачувајте и поделите снимке екрана без напуштања Firefox-а."
+  },
+  "tourHeaderTwo": {
+    "message": "Усликајте баш оно што желите"
+  },
+  "tourBodyTwo": {
+    "message": "Кликните и превуците да усликате само део странице. Такође можете означити вашу селекцију."
+  },
+  "tourHeaderThree": {
+    "message": "Као што волите"
+  },
+  "tourBodyThree": {
+    "message": "Сачувајте ваш исечени снимак на веб ради лакшег дељења или преузимања на ваш рачунар. Такође можете кликнути на дугме \"Моји снимци\" да пронађете све ваше снимке."
+  },
+  "tourHeaderFour": {
+    "message": "Усликајте прозоре или целе странице"
+  },
+  "tourBodyFour": {
+    "message": "Изаберите дугмад у горњем десном углу да усликате видљиве делове прозора или да усликате целу страницу."
+  },
+  "tourSkip": {
+    "message": "Прескочи"
+  },
+  "tourNext": {
+    "message": "Следећи слајд"
+  },
+  "tourPrevious": {
+    "message": "Претходни слајд"
+  },
+  "tourDone": {
+    "message": "Готово"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Коришћењем услуге Firefox Screenshots, слажете се са $TERMSANDPRIVACYNOTICETERMSLINK$ и $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "условима"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "обавештењем о приватности"
+  }
+}

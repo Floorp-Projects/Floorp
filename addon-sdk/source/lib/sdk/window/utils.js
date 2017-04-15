@@ -8,7 +8,7 @@ module.metadata = {
 };
 
 const { Cc, Ci } = require('chrome');
-const array = require('../util/array');
+lazyRequireModule(this, "../util/array", "array");
 const { defer } = require('sdk/core/promise');
 const { dispatcher } = require("../util/dispatcher");
 

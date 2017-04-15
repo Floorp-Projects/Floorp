@@ -32,7 +32,7 @@ add_task(function*() {
         info("Prompts opened.");
         resolve();
       }
-    }, "tabmodal-dialog-loaded", false);
+    }, "tabmodal-dialog-loaded");
   });
 
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, url, true);
@@ -60,7 +60,7 @@ add_task(function*() {
       // The click is handled async; wait for an event loop turn for that to
       // happen.
       yield new Promise(function(resolve) {
-        Services.tm.mainThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
+        Services.tm.dispatchToMainThread(resolve);
       });
     }
   }

@@ -14,7 +14,7 @@ function* generateAddon(data) {
 
   let xpi = Extension.generateXPI(data);
   do_register_cleanup(() => {
-    Services.obs.notifyObservers(xpi, "flush-cache-entry", null);
+    Services.obs.notifyObservers(xpi, "flush-cache-entry");
     xpi.remove(false);
   });
 

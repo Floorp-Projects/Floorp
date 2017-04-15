@@ -8,6 +8,7 @@
 
 #include "BlockReflowInput.h"
 
+#include <algorithm>
 #include "LayoutLogging.h"
 #include "nsBlockFrame.h"
 #include "nsLineLayout.h"
@@ -16,7 +17,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
-#include <algorithm>
+#include "TextOverflow.h"
 
 #ifdef DEBUG
 #include "nsBlockDebugFlags.h"
@@ -96,6 +97,7 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
   if (aBlockNeedsFloatManager) {
     mFlags.mBlockNeedsFloatManager = true;
   }
+  mFlags.mCanHaveTextOverflow = css::TextOverflow::CanHaveTextOverflow(mBlock);
 
   MOZ_ASSERT(FloatManager(),
              "Float manager should be valid when creating BlockReflowInput!");

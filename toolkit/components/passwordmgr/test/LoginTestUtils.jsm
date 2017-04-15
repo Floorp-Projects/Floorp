@@ -37,7 +37,7 @@ this.LoginTestUtils = {
    * to replace the storage module with a newly initialized instance.
    */
   * reloadData() {
-    Services.obs.notifyObservers(null, "passwordmgr-storage-replace", null);
+    Services.obs.notifyObservers(null, "passwordmgr-storage-replace");
     yield TestUtils.topicObserved("passwordmgr-storage-replace-complete");
   },
 

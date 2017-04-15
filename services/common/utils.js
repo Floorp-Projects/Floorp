@@ -132,7 +132,7 @@ this.CommonUtils = {
     if (thisObj) {
       callback = callback.bind(thisObj);
     }
-    Services.tm.currentThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
+    Services.tm.dispatchToMainThread(callback);
   },
 
   /**

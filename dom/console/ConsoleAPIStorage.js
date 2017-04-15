@@ -76,9 +76,9 @@ ConsoleAPIStorageService.prototype = {
   /** @private */
   init: function CS_init()
   {
-    Services.obs.addObserver(this, "xpcom-shutdown", false);
-    Services.obs.addObserver(this, "inner-window-destroyed", false);
-    Services.obs.addObserver(this, "memory-pressure", false);
+    Services.obs.addObserver(this, "xpcom-shutdown");
+    Services.obs.addObserver(this, "inner-window-destroyed");
+    Services.obs.addObserver(this, "memory-pressure");
   },
 
   /**
@@ -160,7 +160,7 @@ ConsoleAPIStorageService.prototype = {
     }
     else {
       _consoleStorage.clear();
-      Services.obs.notifyObservers(null, "console-storage-reset", null);
+      Services.obs.notifyObservers(null, "console-storage-reset");
     }
   },
 };

@@ -122,7 +122,7 @@ HandlerService.prototype = {
       for (let handlerNumber of Object.keys(schemes[scheme])) {
         let handlerApp = this.handlerAppFromSerializable(schemes[scheme][handlerNumber]);
         if (!this._isInHandlerArray(possibleHandlers, handlerApp)) {
-          possibleHandlers.appendElement(handlerApp, false);
+          possibleHandlers.appendElement(handlerApp);
         }
       }
 
@@ -157,7 +157,7 @@ HandlerService.prototype = {
     }
     let promise = this._onDBChange();
     promise.then(() => {
-      Services.obs.notifyObservers(null, "handlersvc-json-replace-complete", null);
+      Services.obs.notifyObservers(null, "handlersvc-json-replace-complete");
     });
   },
 
@@ -167,11 +167,11 @@ HandlerService.prototype = {
                      createInstance(Ci.nsIMutableArray);
     for (let type of Object.keys(this._store.data.mimetypes)) {
       let handler = gMIMEService.getFromTypeAndExtension(type, null);
-      handlers.appendElement(handler, false);
+      handlers.appendElement(handler);
     }
     for (let type of Object.keys(this._store.data.schemes)) {
       let handler = gExternalProtocolService.getProtocolHandlerInfo(type);
-      handlers.appendElement(handler, false);
+      handlers.appendElement(handler);
     }
     return handlers.enumerate();
   },
@@ -245,7 +245,7 @@ HandlerService.prototype = {
     }
     handlerInfo.preferredApplicationHandler = preferHandler;
     if (preferHandler) {
-      handlerInfo.possibleApplicationHandlers.appendElement(preferHandler, false);
+      handlerInfo.possibleApplicationHandlers.appendElement(preferHandler);
     }
 
     if (storedHandlerInfo.possibleHandlers) {
@@ -253,7 +253,7 @@ HandlerService.prototype = {
         let possibleHandler = this.handlerAppFromSerializable(handler);
         if (possibleHandler && (!preferHandler ||
                                 !possibleHandler.equals(preferHandler))) {
-          handlerInfo.possibleApplicationHandlers.appendElement(possibleHandler, false);
+          handlerInfo.possibleApplicationHandlers.appendElement(possibleHandler);
         }
       }
     }

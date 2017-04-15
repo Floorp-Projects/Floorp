@@ -1,16 +1,11 @@
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
+                                  "resource://gre/modules/ExtensionManagement.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WebRequest",
                                   "resource://gre/modules/WebRequest.jsm");
-
-Cu.import("resource://gre/modules/ExtensionManagement.jsm");
-var {
-  SingletonEventManager,
-} = ExtensionUtils;
 
 // EventManager-like class specifically for WebRequest. Inherits from
 // SingletonEventManager. Takes care of converting |details| parameter
@@ -27,13 +22,13 @@ function WebRequestEventManager(context, eventName) {
 
       // Check hosts permissions for both the resource being requested,
       const hosts = context.extension.whiteListedHosts;
-      if (!hosts.matchesIgnoringPath(NetUtil.newURI(data.url))) {
+      if (!hosts.matchesIgnoringPath(Services.io.newURI(data.url))) {
         return;
       }
       // and the origin that is loading the resource.
       const origin = data.documentUrl;
       const own = origin && origin.startsWith(context.extension.getURL());
-      if (origin && !own && !hosts.matchesIgnoringPath(NetUtil.newURI(origin))) {
+      if (origin && !own && !hosts.matchesIgnoringPath(Services.io.newURI(origin))) {
         return;
       }
 

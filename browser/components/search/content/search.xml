@@ -73,7 +73,7 @@
         if (this.parentNode.parentNode.localName == "toolbarpaletteitem")
           return;
 
-        Services.obs.addObserver(this, "browser-search-engine-modified", false);
+        Services.obs.addObserver(this, "browser-search-engine-modified");
 
         this._initialized = true;
 
@@ -653,7 +653,7 @@
         document.getBindingParent(this)._textboxInitialized = true;
 
         // Add observer for suggest preference
-        Services.prefs.addObserver("browser.search.suggest.enabled", this, false);
+        Services.prefs.addObserver("browser.search.suggest.enabled", this);
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -1434,10 +1434,10 @@
               this._rebuild();
               break;
             case "popuphidden":
-              Services.tm.mainThread.dispatch(() => {
+              Services.tm.dispatchToMainThread(() => {
                 this.selectedButton = null;
                 this._contextEngine = null;
-              }, Ci.nsIThread.DISPATCH_NORMAL);
+              });
               break;
           }
         ]]></body>

@@ -153,7 +153,7 @@ parent:
   // down the plugin process in response.
   async NotifyContentModuleDestroyed();
 
-  async Profile(nsCString aProfile);
+  async Profile(nsCString aProfile, bool aIsExitProfile);
 
   // Answers to request about site data
   async ReturnClearSiteData(NPError aRv, uint64_t aCallbackId);

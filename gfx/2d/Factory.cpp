@@ -24,6 +24,7 @@
 #if defined(WIN32)
 #include "ScaledFontWin.h"
 #include "NativeFontResourceGDI.h"
+#include "UnscaledFontGDI.h"
 #endif
 
 #ifdef XP_DARWIN
@@ -34,6 +35,7 @@
 #ifdef MOZ_WIDGET_GTK
 #include "ScaledFontFontconfig.h"
 #include "NativeFontResourceFontconfig.h"
+#include "UnscaledFontFreeType.h"
 #endif
 
 #ifdef WIN32
@@ -505,10 +507,7 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont,
 }
 
 already_AddRefed<NativeFontResource>
-Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize,
-                                  uint32_t aVariationCount,
-                                  const ScaledFont::VariationSetting* aVariations,
-                                  FontType aType)
+Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize, FontType aType)
 {
   switch (aType) {
 #ifdef WIN32
@@ -528,12 +527,10 @@ Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize,
         return NativeFontResourceDWrite::Create(aData, aSize,
                                                 /* aNeedsCairo = */ true);
       } else {
-        return NativeFontResourceGDI::Create(aData, aSize,
-                                             /* aNeedsCairo = */ true);
+        return NativeFontResourceGDI::Create(aData, aSize);
       }
 #elif defined(XP_DARWIN)
-      return NativeFontResourceMac::Create(aData, aSize,
-                                           aVariationCount, aVariations);
+      return NativeFontResourceMac::Create(aData, aSize);
 #elif defined(MOZ_WIDGET_GTK)
       return NativeFontResourceFontconfig::Create(aData, aSize);
 #else
@@ -547,20 +544,20 @@ Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize,
   }
 }
 
-already_AddRefed<ScaledFont>
-Factory::CreateScaledFontFromFontDescriptor(FontType aType, const uint8_t* aData, uint32_t aDataLength, Float aSize)
+already_AddRefed<UnscaledFont>
+Factory::CreateUnscaledFontFromFontDescriptor(FontType aType, const uint8_t* aData, uint32_t aDataLength)
 {
   switch (aType) {
 #ifdef WIN32
   case FontType::GDI:
-    return ScaledFontWin::CreateFromFontDescriptor(aData, aDataLength, aSize);
+    return UnscaledFontGDI::CreateFromFontDescriptor(aData, aDataLength);
 #endif
 #ifdef MOZ_WIDGET_GTK
   case FontType::FONTCONFIG:
-    return ScaledFontFontconfig::CreateFromFontDescriptor(aData, aDataLength, aSize);
+    return UnscaledFontFontconfig::CreateFromFontDescriptor(aData, aDataLength);
 #endif
   default:
-    gfxWarning() << "Invalid type specified for ScaledFont font descriptor";
+    gfxWarning() << "Invalid type specified for UnscaledFont font descriptor";
     return nullptr;
   }
 }

@@ -57,7 +57,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=895340
     throw new Error("Will you report me?");
   };
 
-  Services.obs.addObserver(foo_obs, "foo", false);
+  Services.obs.addObserver(foo_obs, "foo");
   Services.obs.notifyObservers(null, "foo", "foo");
   Services.obs.removeObserver(foo_obs, "foo");
   ]]></script>

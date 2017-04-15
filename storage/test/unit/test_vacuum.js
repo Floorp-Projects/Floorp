@@ -90,7 +90,7 @@ const TESTS = [
     Services.obs.addObserver(function onVacuum(aSubject, aTopic, aData) {
       Services.obs.removeObserver(onVacuum, aTopic);
       beginVacuumReceived = true;
-    }, "test-begin-vacuum", false);
+    }, "test-begin-vacuum");
 
     // Wait for heavy IO notifications.
     let heavyIOTaskBeginReceived = false;
@@ -105,7 +105,7 @@ const TESTS = [
       } else if (aData == "vacuum-end") {
         heavyIOTaskEndReceived = true;
       }
-    }, "heavy-io-task", false);
+    }, "heavy-io-task");
 
     // Wait for VACUUM end.
     Services.obs.addObserver(function onVacuum(aSubject, aTopic, aData) {
@@ -117,7 +117,7 @@ const TESTS = [
       do_check_true(heavyIOTaskEndReceived);
       print("Received onEndVacuum");
       run_next_test();
-    }, "test-end-vacuum", false);
+    }, "test-end-vacuum");
 
     synthesize_idle_daily();
   },
@@ -135,7 +135,7 @@ const TESTS = [
       },
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
     };
-    Services.obs.addObserver(vacuumObserver, "test-begin-vacuum", false);
+    Services.obs.addObserver(vacuumObserver, "test-begin-vacuum");
 
     // Check after a couple seconds that no VACUUM has been run.
     do_timeout(2000, function() {
@@ -179,7 +179,7 @@ const TESTS = [
       },
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
     };
-    Services.obs.addObserver(vacuumObserver, "test-begin-vacuum", false);
+    Services.obs.addObserver(vacuumObserver, "test-begin-vacuum");
 
     // Check after a couple seconds that no VACUUM has been run.
     do_timeout(2000, function() {
@@ -271,7 +271,7 @@ const TESTS = [
       },
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
     };
-    Services.obs.addObserver(vacuumObserver, "test-begin-vacuum", false);
+    Services.obs.addObserver(vacuumObserver, "test-begin-vacuum");
 
     // Check after a couple seconds that no VACUUM has been run.
     do_timeout(2000, function() {

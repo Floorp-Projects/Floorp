@@ -61,7 +61,7 @@ function frameScript() {
         }
       }
     }
-    Services.obs.addObserver(observer, "about:performance-update-complete", false);
+    Services.obs.addObserver(observer, "about:performance-update-complete");
     Services.obs.notifyObservers(null, "test-about:performance-test-driver", JSON.stringify(options));
   });
 
@@ -183,7 +183,7 @@ function frameScript() {
         sendAsyncMessage("aboutperformance-test:hasItems", {hasTitleInWebpages, mode});
       }
     }
-    Services.obs.addObserver(observer, "about:performance-update-complete", false);
+    Services.obs.addObserver(observer, "about:performance-update-complete");
     Services.obs.notifyObservers(null, "test-about:performance-test-driver", JSON.stringify(options));
   });
 }

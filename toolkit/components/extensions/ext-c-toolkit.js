@@ -1,5 +1,9 @@
 "use strict";
 
+Cu.import("resource://gre/modules/ExtensionCommon.jsm");
+
+global.SingletonEventManager = ExtensionCommon.SingletonEventManager;
+
 global.initializeBackgroundPage = (contentWindow) => {
   // Override the `alert()` method inside background windows;
   // we alias it to console.log().

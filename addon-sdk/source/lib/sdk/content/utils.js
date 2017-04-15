@@ -7,12 +7,12 @@ module.metadata = {
   'stability': 'unstable'
 };
 
-var { merge } = require('../util/object');
-var { data } = require('../self');
+lazyRequire(this, '../util/object', "merge");
+lazyRequire(this, '../self', "data");
 var assetsURI = data.url();
 var isArray = Array.isArray;
 var method = require('../../method/core');
-var { uuid } = require('../util/uuid');
+lazyRequire(this, '../util/uuid', "uuid");
 
 const isAddonContent = ({ contentURL }) =>
   contentURL && data.url(contentURL).startsWith(assetsURI);

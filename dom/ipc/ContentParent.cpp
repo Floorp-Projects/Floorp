@@ -4678,11 +4678,11 @@ ContentParent::RecvCreateWindowInDifferentProcess(
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvProfile(const nsCString& aProfile)
+ContentParent::RecvProfile(const nsCString& aProfile, const bool& aIsExitProfile)
 {
 #ifdef MOZ_GECKO_PROFILER
   if (mProfilerController) {
-    mProfilerController->RecvProfile(aProfile);
+    mProfilerController->RecvProfile(aProfile, aIsExitProfile);
   }
 #endif
   return IPC_OK();

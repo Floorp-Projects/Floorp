@@ -23,9 +23,9 @@ public:
   static already_AddRefed<NativeFontResourceFontconfig>
     Create(uint8_t *aFontData, uint32_t aDataLength);
 
-  already_AddRefed<ScaledFont>
-    CreateScaledFont(uint32_t aIndex, Float aGlyphSize,
-                     const uint8_t* aInstanceData, uint32_t aInstanceDataLength) final;
+  already_AddRefed<UnscaledFont>
+    CreateUnscaledFont(uint32_t aIndex,
+                       const uint8_t* aInstanceData, uint32_t aInstanceDataLength) final;
 
   ~NativeFontResourceFontconfig();
 

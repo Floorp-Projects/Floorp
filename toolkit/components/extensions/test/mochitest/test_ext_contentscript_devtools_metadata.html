@@ -60,7 +60,7 @@ add_task(function* test_contentscript_devtools_sandbox_metadata() {
     "resource://gre/modules/ExtensionContent.jsm", {}
   );
 
-  let res = ExtensionContent.getContentScriptGlobalsForWindow(win);
+  let res = ExtensionContent.getContentScriptGlobals(win);
   is(res.length, 1, "Got the expected array of globals");
   let metadata = SpecialPowers.Cu.getSandboxMetadata(res[0]) || {};
 
@@ -70,7 +70,7 @@ add_task(function* test_contentscript_devtools_sandbox_metadata() {
   yield extension.unload();
   info("extension unloaded");
 
-  res = ExtensionContent.getContentScriptGlobalsForWindow(win);
+  res = ExtensionContent.getContentScriptGlobals(win);
   is(res.length, 0, "No content scripts globals found once the extension is unloaded");
 
   win.close();

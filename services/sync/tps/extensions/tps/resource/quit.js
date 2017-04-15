@@ -15,7 +15,7 @@ function canQuitApplication() {
   try {
     var cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
                      .createInstance(Components.interfaces.nsISupportsPRBool);
-    Services.obs.notifyObservers(cancelQuit, "quit-application-requested", null);
+    Services.obs.notifyObservers(cancelQuit, "quit-application-requested");
 
     // Something aborted the quit process.
     if (cancelQuit.data) {

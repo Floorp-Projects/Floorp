@@ -44,7 +44,7 @@ function run_test() {
     onItemVisited() {},
     onItemMoved() {},
   };
-  PlacesUtils.bookmarks.addObserver(bookmarksObserver, false);
+  PlacesUtils.bookmarks.addObserver(bookmarksObserver);
 
   PlacesUtils.tagging.tagURI(uri, ["d"]);
   PlacesUtils.tagging.tagURI(uri, ["e"]);

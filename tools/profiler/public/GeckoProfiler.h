@@ -31,6 +31,8 @@
 #include "mozilla/Vector.h"
 #include "nsString.h"
 
+class SpliceableJSONWriter;
+
 namespace mozilla {
 class TimeStamp;
 
@@ -214,6 +216,12 @@ PROFILER_FUNC_VOID(profiler_set_frame_number(int frameNumber))
 // profiler is inactive.
 PROFILER_FUNC(mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0),
               nullptr)
+
+// Write the profile for this process (excluding subprocesses) into aWriter.
+// Returns false if the profiler is inactive.
+PROFILER_FUNC(bool profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
+                                                         double aSinceTime = 0),
+              false)
 
 // Get the params used to start the profiler. Returns 0 and empty vectors (via
 // outparams) if the profile is inactive.

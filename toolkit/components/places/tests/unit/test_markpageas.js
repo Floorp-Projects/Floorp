@@ -34,7 +34,7 @@ add_task(function* test_execute() {
     };
   });
 
-  PlacesUtils.history.addObserver(observer, false);
+  PlacesUtils.history.addObserver(observer);
 
   for (var visit of gVisits) {
     if (visit.transition == TRANSITION_TYPED)

@@ -101,7 +101,7 @@ function loadNextTest() {
     observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
       SimpleTest.executeSoon(() => { iframe.contentWindow.postMessage("go", "*"); });
     });
-    SpecialPowers.addObserver(observer, "passwordmgr-processed-form", false);
+    SpecialPowers.addObserver(observer, "passwordmgr-processed-form");
   }
 
   ok(true, "Starting test #" + testNum);
@@ -209,7 +209,7 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
       Services.obs.removeObserver(obs, aTopic);
       setTimeout(aCallback, 0);
     }
-  }, "browser-delayed-startup-finished", false);
+  }, "browser-delayed-startup-finished");
 }
 
 function testOnWindow(aIsPrivate, aCallback) {

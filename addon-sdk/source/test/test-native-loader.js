@@ -110,35 +110,6 @@ for (let variant of variants) {
   };
   */
 
-  exports[`test native Loader with mappings (${variant.description})`] = function (assert, done) {
-    all([
-      getJSON('/fixtures/native-addon-test/expectedmap.json'),
-      getJSON('/fixtures/native-addon-test/package.json')
-    ]).then(([expectedMap, manifest]) => {
-
-      // Override dummy module and point it to `test-math` to see if the
-      // require is pulling from the mapping
-      expectedMap['./index.js']['./dir/dummy'] = './dir/a.js';
-
-      let rootURI = variant.getRootURI('native-addon-test');
-      let loader = Loader({
-        paths: makePaths(rootURI),
-        rootURI: rootURI,
-        manifest: manifest,
-        requireMap: expectedMap,
-        isNative: true
-      });
-
-      let program = main(loader);
-      assert.equal(program.dummyModule, 'dir/a',
-        'The lookup uses the information given in the mapping');
-
-      testLoader(program, assert);
-      unload(loader);
-      done();
-    }).then(null, (reason) => console.error(reason));
-  };
-
   exports[`test native Loader overrides (${variant.description})`] = function*(assert) {
     const expectedKeys = Object.keys(require("sdk/io/fs")).join(", ");
     const manifest = yield getJSON('/fixtures/native-overrides-test/package.json');

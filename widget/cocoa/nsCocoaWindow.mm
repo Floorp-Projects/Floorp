@@ -3384,6 +3384,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  [super setBackgroundColor:[NSColor whiteColor]];
   [mColor release];
   [mBackgroundColor release];
   [mTitlebarView release];
@@ -3417,7 +3418,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
 - (void)restoreBackgroundColor
 {
-  [super setBackgroundColor:mBackgroundColor];
+  [super setBackgroundColor:mColor];
 }
 
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect

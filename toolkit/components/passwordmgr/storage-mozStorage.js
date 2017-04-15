@@ -852,7 +852,7 @@ LoginManagerStorage_mozStorage.prototype = {
       throw e;
     }
 
-    Services.obs.addObserver(this, "profile-before-change", false);
+    Services.obs.addObserver(this, "profile-before-change");
     return isFirstRun;
   },
 

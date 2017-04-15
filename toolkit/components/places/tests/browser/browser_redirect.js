@@ -68,7 +68,7 @@ function promiseVisitedWithFrecency(expectedRedirectFrecency, expectedTargetFrec
       onDeleteVisits() {},
       QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
     };
-    PlacesUtils.history.addObserver(historyObserver, false);
+    PlacesUtils.history.addObserver(historyObserver);
   });
 }
 

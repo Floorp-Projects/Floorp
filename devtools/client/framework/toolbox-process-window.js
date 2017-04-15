@@ -210,7 +210,7 @@ function setTitle(title) {
 function quitApp() {
   let quit = Cc["@mozilla.org/supports-PRBool;1"]
              .createInstance(Ci.nsISupportsPRBool);
-  Services.obs.notifyObservers(quit, "quit-application-requested", null);
+  Services.obs.notifyObservers(quit, "quit-application-requested");
 
   let shouldProceed = !quit.data;
   if (shouldProceed) {

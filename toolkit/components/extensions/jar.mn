@@ -4,6 +4,7 @@
 
 toolkit.jar:
 % content extensions %content/extensions/
+    content/extensions/extension-process-script.js
     content/extensions/ext-alarms.js
     content/extensions/ext-backgroundPage.js
     content/extensions/ext-browser-content.js

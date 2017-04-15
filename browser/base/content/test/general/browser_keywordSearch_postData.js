@@ -41,7 +41,7 @@ function test() {
     executeSoon(nextTest);
   };
 
-  Services.obs.addObserver(searchObserver, "browser-search-engine-modified", false);
+  Services.obs.addObserver(searchObserver, "browser-search-engine-modified");
 
   registerCleanupFunction(function() {
     gBrowser.removeTab(tab);

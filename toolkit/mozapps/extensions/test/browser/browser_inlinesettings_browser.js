@@ -24,7 +24,7 @@ function installAddon(details) {
     SimpleTest.registerCleanupFunction(function() {
       addon.uninstall();
 
-      Services.obs.notifyObservers(xpi, "flush-cache-entry", null);
+      Services.obs.notifyObservers(xpi, "flush-cache-entry");
       xpi.remove(false);
     });
 

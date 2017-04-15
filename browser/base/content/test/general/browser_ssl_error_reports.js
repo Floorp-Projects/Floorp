@@ -162,7 +162,7 @@ function createReportResponseStatusPromise(expectedURI) {
         resolve(subject.responseStatus);
       }
     };
-    Services.obs.addObserver(observer, "http-on-examine-response", false);
+    Services.obs.addObserver(observer, "http-on-examine-response");
   });
 }
 

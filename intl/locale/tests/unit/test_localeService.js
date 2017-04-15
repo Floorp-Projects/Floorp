@@ -82,7 +82,7 @@ add_test(function test_getRequestedLocales_matchOS() {
     }
   };
 
-  Services.obs.addObserver(observer, REQ_LOC_CHANGE_EVENT, false);
+  Services.obs.addObserver(observer, REQ_LOC_CHANGE_EVENT);
   Services.prefs.setBoolPref(PREF_MATCH_OS_LOCALE, true);
 
   run_next_test();
@@ -111,7 +111,7 @@ add_test(function test_getRequestedLocales_matchOS() {
     }
   };
 
-  Services.obs.addObserver(observer, REQ_LOC_CHANGE_EVENT, false);
+  Services.obs.addObserver(observer, REQ_LOC_CHANGE_EVENT);
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "sr-RU");
 
   run_next_test();
