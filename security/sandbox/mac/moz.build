@@ -6,6 +6,7 @@
 
 EXPORTS.mozilla += [
     'Sandbox.h',
+    'SandboxPolicies.h'
 ]
 
 SOURCES += [

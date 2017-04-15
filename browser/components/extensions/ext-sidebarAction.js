@@ -101,17 +101,13 @@ this.sidebarAction = class extends ExtensionAPI {
                        (evt, tab) => { this.updateWindow(tab.ownerGlobal); });
 
     let install = this.extension.startupReason === "ADDON_INSTALL";
+    let upgrade = ["ADDON_UPGRADE", "ADDON_DOWNGRADE"].includes(this.extension.startupReason);
     for (let window of windowTracker.browserWindows()) {
       this.updateWindow(window);
-      if (install) {
-        let {SidebarUI} = window;
+      let {SidebarUI} = window;
+      if (install || (upgrade && SidebarUI.lastOpenedId == this.id)) {
         SidebarUI.show(this.id);
       }
-    }
-
-    // Bug 1331507: UX review/analysis of sidebar-button injection.
-    if (AppConstants.RELEASE_OR_BETA) {
-      return;
     }
 
     if (install && !Services.prefs.prefHasUserValue("extensions.sidebar-button.shown")) {

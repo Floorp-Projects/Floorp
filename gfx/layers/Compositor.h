@@ -648,6 +648,15 @@ BlendOpIsMixBlendMode(gfx::CompositionOp aOp)
   }
 }
 
+struct TexturedVertex
+{
+  float position[2];
+  float texCoords[2];
+};
+
+nsTArray<TexturedVertex>
+TexturedTrianglesToVertexArray(const nsTArray<gfx::TexturedTriangle>& aTriangles);
+
 } // namespace layers
 } // namespace mozilla
 

@@ -18,8 +18,8 @@ fails == grid-placement-named-lines-002.html grid-placement-named-lines-002.html
 fails == grid-placement-named-lines-003.html grid-placement-named-lines-003.html
 fails == grid-track-sizing-001.html grid-track-sizing-001.html
 fails == grid-track-sizing-002.html grid-track-sizing-002.html
-fails == grid-abspos-items-001.html grid-abspos-items-001.html
-fails == grid-abspos-items-002.html grid-abspos-items-002.html
+== grid-abspos-items-001.html grid-abspos-items-001.html
+== grid-abspos-items-002.html grid-abspos-items-002.html
 fails == grid-abspos-items-003.html grid-abspos-items-003.html
 fails == grid-abspos-items-004.html grid-abspos-items-004.html
 fails == grid-abspos-items-005.html grid-abspos-items-005.html
@@ -39,7 +39,7 @@ fails == grid-order-placement-definite-001.html grid-order-placement-definite-00
 fails skip-if(Android) == grid-placement-definite-implicit-001.html grid-placement-definite-implicit-001.html
 fails == grid-placement-definite-implicit-002.html grid-placement-definite-implicit-002.html
 fails skip-if(Android) fuzzy-if(winWidget,1,32) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001.html
-fails == grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001.html
+== grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001.html
 fails == rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001.html
 fails == rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001.html
 fails == vlr-grid-placement-auto-row-sparse-001.html vlr-grid-placement-auto-row-sparse-001.html
@@ -79,8 +79,8 @@ fails == grid-track-fit-content-sizing-001.html grid-track-fit-content-sizing-00
 fails == grid-track-fit-content-sizing-002.html grid-track-fit-content-sizing-002.html
 fails == grid-max-sizing-flex-001.html grid-max-sizing-flex-001.html
 fails == grid-max-sizing-flex-002.html grid-max-sizing-flex-002.html
-fails == grid-max-sizing-flex-003.html grid-max-sizing-flex-003.html
-fails == grid-max-sizing-flex-004.html grid-max-sizing-flex-004.html
+== grid-max-sizing-flex-003.html grid-max-sizing-flex-003.html
+== grid-max-sizing-flex-004.html grid-max-sizing-flex-004.html
 fails == grid-max-sizing-flex-005.html grid-max-sizing-flex-005.html
 fails == grid-max-sizing-flex-006.html grid-max-sizing-flex-006.html
 fails == grid-max-sizing-flex-007.html grid-max-sizing-flex-007.html
@@ -132,7 +132,7 @@ random-if(http.oscpu!="Linux\u0020i686") == grid-item-mixed-baseline-003.html gr
 fails == grid-item-mixed-baseline-004.html grid-item-mixed-baseline-004.html
 fails == grid-align-content-001.html grid-align-content-001.html
 fails == grid-justify-content-001.html grid-justify-content-001.html
-fails skip-if(Android&&isDebugBuild) == grid-justify-content-002.html grid-justify-content-002.html
+skip-if(Android&&isDebugBuild) == grid-justify-content-002.html grid-justify-content-002.html
 fails skip-if(Android&&isDebugBuild) == grid-justify-content-003.html grid-justify-content-003.html
 fails == grid-container-baselines-001.html grid-container-baselines-001.html
 fails == grid-container-baselines-002.html grid-container-baselines-002.html
@@ -175,7 +175,7 @@ fails == grid-repeat-auto-fill-fit-008.html grid-repeat-auto-fill-fit-008.html
 fails == grid-repeat-auto-fill-fit-009.html grid-repeat-auto-fill-fit-009.html
 fails == grid-repeat-auto-fill-fit-010.html grid-repeat-auto-fill-fit-010.html
 fails == grid-repeat-auto-fill-fit-011.html grid-repeat-auto-fill-fit-011.html
-fails == grid-item-blockifying-001.html grid-item-blockifying-001.html
+== grid-item-blockifying-001.html grid-item-blockifying-001.html
 fails == grid-fragmentation-001.html grid-fragmentation-001.html
 fails == grid-fragmentation-002.html grid-fragmentation-002.html
 fails == grid-fragmentation-003.html grid-fragmentation-003.html

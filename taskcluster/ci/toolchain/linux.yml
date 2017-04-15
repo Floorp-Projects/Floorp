@@ -20,6 +20,7 @@ linux64-clang/opt:
         tooltool-downloads: public
         resources:
             - 'build/build-clang/**'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
 
 linux64-clang-tidy/opt:
     description: "Clang-tidy build"
@@ -43,6 +44,7 @@ linux64-clang-tidy/opt:
         resources:
             - 'build/clang-plugin/**'
             - 'build/build-clang/**'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
 
 linux64-gcc/opt:
     description: "GCC toolchain build"
@@ -114,6 +116,7 @@ linux64-hfsplus/opt:
         tooltool-downloads: public
         resources:
             - 'build/unix/build-hfsplus/**'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
 
 linux64-libdmg/opt:
     description: "libdmg-hfsplus toolchain build"

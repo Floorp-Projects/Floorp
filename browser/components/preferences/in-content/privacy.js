@@ -18,6 +18,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "SiteDataManager",
 
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
+const PREF_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
+
 XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
   try {
     let alertsService = Cc["@mozilla.org/alerts-service;1"]
@@ -86,6 +88,10 @@ var gPrivacyPane = {
    */
   _initBrowserContainers() {
     if (!Services.prefs.getBoolPref("privacy.userContext.ui.enabled")) {
+      // The browserContainersGroup element has its own internal padding that
+      // is visible even if the browserContainersbox is visible, so hide the whole
+      // groupbox if the feature is disabled to prevent a gap in the preferences.
+      document.getElementById("browserContainersGroup").setAttribute("data-hidden-from-search", "true");
       return;
     }
 
@@ -286,12 +292,10 @@ var gPrivacyPane = {
       siteDataGroup.removeAttribute("data-hidden-from-search");
     }
 
-
     let notificationInfoURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") + "push";
     document.getElementById("notificationsPolicyLearnMore").setAttribute("href",
                                                                          notificationInfoURL);
-
     let drmInfoURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") + "drm-content";
     document.getElementById("playDRMContentLink").setAttribute("href", drmInfoURL);
@@ -306,6 +310,15 @@ var gPrivacyPane = {
       document.getElementById("drmGroup").setAttribute("style", "display: none !important");
     }
 
+    if (AppConstants.MOZ_CRASHREPORTER) {
+      this.initSubmitCrashes();
+    }
+    this.initTelemetry();
+    if (AppConstants.MOZ_TELEMETRY_REPORTING) {
+      this.initSubmitHealthReport();
+      setEventListener("submitHealthReportBox", "command",
+                       gPrivacyPane.updateSubmitHealthReport);
+    }
   },
 
   // TRACKING PROTECTION MODE
@@ -1293,6 +1306,87 @@ var gPrivacyPane = {
     if (result == 0) {
       SiteDataManager.removeAll();
     }
+  },
+
+  initSubmitCrashes() {
+    this._setupLearnMoreLink("toolkit.crashreporter.infoURL",
+                             "crashReporterLearnMore");
+  },
+
+  /**
+   * The preference/checkbox is configured in XUL.
+   *
+   * In all cases, set up the Learn More link sanely.
+   */
+  initTelemetry() {
+    if (AppConstants.MOZ_TELEMETRY_REPORTING) {
+      this._setupLearnMoreLink("toolkit.telemetry.infoURL", "telemetryLearnMore");
+    }
+  },
+
+  /**
+   * Set up or hide the Learn More links for various data collection options
+   */
+  _setupLearnMoreLink(pref, element) {
+    // set up the Learn More link with the correct URL
+    let url = Services.prefs.getCharPref(pref);
+    let el = document.getElementById(element);
+
+    if (url) {
+      el.setAttribute("href", url);
+    } else {
+      el.setAttribute("hidden", "true");
+    }
+  },
+
+  /**
+   * Set the status of the telemetry controls based on the input argument.
+   * @param {Boolean} aEnabled False disables the controls, true enables them.
+   */
+  setTelemetrySectionEnabled(aEnabled) {
+    if (!AppConstants.MOZ_TELEMETRY_REPORTING) {
+      return;
+    }
+    // If FHR is disabled, additional data sharing should be disabled as well.
+    let disabled = !aEnabled;
+    document.getElementById("submitTelemetryBox").disabled = disabled;
+    if (disabled) {
+      // If we disable FHR, untick the telemetry checkbox.
+      Services.prefs.setBoolPref("toolkit.telemetry.enabled", false);
+    }
+    document.getElementById("telemetryDataDesc").disabled = disabled;
+  },
+
+  /**
+   * Initialize the health report service reference and checkbox.
+   */
+  initSubmitHealthReport() {
+    if (!AppConstants.MOZ_TELEMETRY_REPORTING) {
+      return;
+    }
+    this._setupLearnMoreLink("datareporting.healthreport.infoURL", "FHRLearnMore");
+
+    let checkbox = document.getElementById("submitHealthReportBox");
+
+    if (Services.prefs.prefIsLocked(PREF_UPLOAD_ENABLED)) {
+      checkbox.setAttribute("disabled", "true");
+      return;
+    }
+
+    checkbox.checked = Services.prefs.getBoolPref(PREF_UPLOAD_ENABLED);
+    this.setTelemetrySectionEnabled(checkbox.checked);
+  },
+
+  /**
+   * Update the health report preference with state from checkbox.
+   */
+  updateSubmitHealthReport() {
+    if (!AppConstants.MOZ_TELEMETRY_REPORTING) {
+      return;
+    }
+    let checkbox = document.getElementById("submitHealthReportBox");
+    Services.prefs.setBoolPref(PREF_UPLOAD_ENABLED, checkbox.checked);
+    this.setTelemetrySectionEnabled(checkbox.checked);
   },
 
   // Methods for Offline Apps (AppCache)

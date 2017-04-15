@@ -80,13 +80,12 @@ public:
 #define LOAD_ERROR_NOSPEC "Failed to get URI spec.  This is bad."
 #define LOAD_ERROR_CONTENTTOOBIG "ContentLength is too large"
 
-mozJSSubScriptLoader::mozJSSubScriptLoader() : mSystemPrincipal(nullptr)
+mozJSSubScriptLoader::mozJSSubScriptLoader()
 {
 }
 
 mozJSSubScriptLoader::~mozJSSubScriptLoader()
 {
-    /* empty */
 }
 
 NS_IMPL_ISUPPORTS(mozJSSubScriptLoader, mozIJSSubScriptLoader)
@@ -121,10 +120,10 @@ ReportError(JSContext* cx, const char* origMsg, nsIURI* uri)
     ReportError(cx, msg);
 }
 
-bool
+static bool
 PrepareScript(nsIURI* uri,
               JSContext* cx,
-              RootedObject& targetObj,
+              HandleObject targetObj,
               const char* uriStr,
               const nsAString& charset,
               const char* buf,
@@ -184,31 +183,31 @@ PrepareScript(nsIURI* uri,
                                buf, len, function);
 }
 
-bool
+static bool
 EvalScript(JSContext* cx,
-           RootedObject& target_obj,
+           HandleObject targetObj,
            MutableHandleValue retval,
            nsIURI* uri,
            bool cache,
-           RootedScript& script,
-           RootedFunction& function)
+           MutableHandleScript script,
+           HandleFunction function)
 {
     if (function) {
-        script = JS_GetFunctionScript(cx, function);
+        script.set(JS_GetFunctionScript(cx, function));
     }
 
     if (function) {
-        if (!JS_CallFunction(cx, target_obj, function, JS::HandleValueArray::empty(), retval)) {
+        if (!JS_CallFunction(cx, targetObj, function, JS::HandleValueArray::empty(), retval)) {
             return false;
         }
     } else {
-        if (JS_IsGlobalObject(target_obj)) {
+        if (JS_IsGlobalObject(targetObj)) {
             if (!JS_ExecuteScript(cx, script, retval)) {
                 return false;
             }
         } else {
             JS::AutoObjectVector envChain(cx);
-            if (!envChain.append(target_obj)) {
+            if (!envChain.append(targetObj)) {
                 return false;
             }
             if (!JS_ExecuteScript(cx, envChain, script, retval)) {
@@ -217,7 +216,7 @@ EvalScript(JSContext* cx,
         }
     }
 
-    JSAutoCompartment rac(cx, target_obj);
+    JSAutoCompartment rac(cx, targetObj);
     if (!JS_WrapValue(cx, retval)) {
         return false;
     }
@@ -275,12 +274,12 @@ private:
         mozilla::DropJSObjects(this);
     }
 
-    RefPtr<nsIChannel>      mChannel;
-    Heap<JSObject*>           mTargetObj;
-    RefPtr<Promise>         mPromise;
-    nsString                  mCharset;
-    bool                      mReuseGlobal;
-    bool                      mCache;
+    RefPtr<nsIChannel> mChannel;
+    Heap<JSObject*> mTargetObj;
+    RefPtr<Promise> mPromise;
+    nsString mCharset;
+    bool mReuseGlobal;
+    bool mCache;
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(AsyncScriptLoader)
@@ -332,8 +331,8 @@ public:
     }
 
 private:
-    AutoEntryScript&          mAutoEntryScript;
-    RefPtr<Promise>           mPromise;
+    AutoEntryScript& mAutoEntryScript;
+    RefPtr<Promise> mPromise;
     nsCOMPtr<nsIGlobalObject> mGlobalObject;
 };
 
@@ -384,9 +383,9 @@ AsyncScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
     nsresult rv = uri->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    RootedObject target_obj(cx, mTargetObj);
+    RootedObject targetObj(cx, mTargetObj);
 
-    if (!PrepareScript(uri, cx, target_obj, spec.get(), mCharset,
+    if (!PrepareScript(uri, cx, targetObj, spec.get(), mCharset,
                        reinterpret_cast<const char*>(aBuf), aLength,
                        mReuseGlobal, &script, &function))
     {
@@ -394,7 +393,7 @@ AsyncScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
     }
 
     JS::Rooted<JS::Value> retval(cx);
-    if (EvalScript(cx, target_obj, &retval, uri, mCache, script, function)) {
+    if (EvalScript(cx, targetObj, &retval, uri, mCache, &script, function)) {
         autoPromise.ResolvePromise(retval);
     }
 
@@ -407,9 +406,9 @@ mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri, JSObject* targetObjArg,
                                       nsIIOService* serv, bool reuseGlobal,
                                       bool cache, MutableHandleValue retval)
 {
-    RootedObject target_obj(RootingCx(), targetObjArg);
+    RootedObject targetObj(RootingCx(), targetObjArg);
 
-    nsCOMPtr<nsIGlobalObject> globalObject = xpc::NativeGlobal(target_obj);
+    nsCOMPtr<nsIGlobalObject> globalObject = xpc::NativeGlobal(targetObj);
     ErrorResult result;
 
     AutoJSAPI jsapi;
@@ -448,7 +447,7 @@ mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri, JSObject* targetObjArg,
     RefPtr<AsyncScriptLoader> loadObserver =
         new AsyncScriptLoader(channel,
                               reuseGlobal,
-                              target_obj,
+                              targetObj,
                               charset,
                               cache,
                               promise);
@@ -471,7 +470,7 @@ mozJSSubScriptLoader::ReadScript(nsIURI* uri, JSContext* cx, JSObject* targetObj
     script.set(nullptr);
     function.set(nullptr);
 
-    RootedObject target_obj(cx, targetObjArg);
+    RootedObject targetObj(cx, targetObjArg);
 
     // We create a channel and call SetContentType, to avoid expensive MIME type
     // lookups (bug 632490).
@@ -515,7 +514,7 @@ mozJSSubScriptLoader::ReadScript(nsIURI* uri, JSContext* cx, JSObject* targetObj
     rv = NS_ReadInputStreamToString(instream, buf, len);
     NS_ENSURE_SUCCESS(rv, false);
 
-    return PrepareScript(uri, cx, target_obj, uriStr, charset,
+    return PrepareScript(uri, cx, targetObj, uriStr, charset,
                          buf.get(), len,
                          reuseGlobal,
                          script, function);
@@ -533,8 +532,8 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
      * Synchronous (an async version would be cool too.)
      *   url: The url to load.  Must be local so that it can be loaded
      *        synchronously.
-     *   target_obj: Optional object to eval the script onto (defaults to context
-     *               global)
+     *   targetObj: Optional object to eval the script onto (defaults to context
+     *              global)
      *   charset: Optional character set to use for reading
      *   returns: Whatever jsval the script pointed to by the url returns.
      * Should ONLY (O N L Y !) be called from JavaScript code.
@@ -698,7 +697,7 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
         cache = nullptr;
     }
 
-    Unused << EvalScript(cx, targetObj, retval, uri, !!cache, script, function);
+    Unused << EvalScript(cx, targetObj, retval, uri, !!cache, &script, function);
     return NS_OK;
 }
 

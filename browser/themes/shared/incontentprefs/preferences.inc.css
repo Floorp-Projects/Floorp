@@ -110,11 +110,6 @@ treecol {
   display: none;
 }
 
-#header-advanced {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
 /* General Pane */
 
 #startupTable {
@@ -183,10 +178,6 @@ treecol {
 
 /* Applications Pane Styles */
 
-#applicationsContent {
-  padding: 15px 0;
-}
-
 #filter {
   margin-inline-start: 0;
 }
@@ -232,6 +223,21 @@ treecol {
 .doNotTrackLearnMore > label {
   font-size: 1em !important;
   margin-left: 0;
+}
+
+/* This learn-more link is inserted at the end of a
+   xul:description element so it should behave like normal text. */
+#trackingProtectionLearnMore {
+  white-space: normal;
+  margin-inline-start: 0;
+}
+
+#trackingProtectionAdvancedSettings {
+  margin-inline-start: 15px;
+}
+
+#crashReporterGroup {
+  margin-top: 0;
 }
 
 /* Collapse the non-active vboxes in decks to use only the height the
