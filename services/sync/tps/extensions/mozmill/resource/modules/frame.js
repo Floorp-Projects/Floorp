@@ -63,7 +63,7 @@ function shutdownApplication(aFlags) {
   // we really force the shutdown.
   let cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"].
                    createInstance(Components.interfaces.nsISupportsPRBool);
-  Services.obs.notifyObservers(cancelQuit, "quit-application-requested", null);
+  Services.obs.notifyObservers(cancelQuit, "quit-application-requested");
 
   // Use a timer to trigger the application restart, which will allow us to
   // send an ACK packet via jsbridge if the method has been called via Python.
@@ -417,7 +417,7 @@ try {
 function AppQuitObserver() {
   this.runner = null;
 
-  Services.obs.addObserver(this, "quit-application-requested", false);
+  Services.obs.addObserver(this, "quit-application-requested");
 }
 
 AppQuitObserver.prototype = {

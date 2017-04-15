@@ -284,11 +284,10 @@
                 // runnable, and if exiting moral state posts a runnable we will
                 // incorrectly process that runnable before leaving our event
                 // loop spin.
-                Services.tm.mainThread.dispatch(() => {
+                Services.tm.dispatchToMainThread(() => {
                     this.Dialog["onButton" + buttonNum]();
                     this.shutdownPrompt();
-                  },
-                  Ci.nsIThread.DISPATCH_NORMAL);
+                  });
             ]]>
             </body>
         </method>

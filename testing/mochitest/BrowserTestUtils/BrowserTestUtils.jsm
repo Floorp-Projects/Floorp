@@ -989,7 +989,7 @@ this.BrowserTestUtils = {
         });
       };
 
-      Services.obs.addObserver(observer, 'ipc:content-shutdown', false);
+      Services.obs.addObserver(observer, 'ipc:content-shutdown');
     });
 
     expectedPromises.push(crashCleanupPromise);

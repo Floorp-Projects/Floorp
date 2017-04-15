@@ -19,7 +19,7 @@ add_task(function* test_windowlessBrowserTroubleshootCrash() {
           }
         }
     }
-    Services.obs.addObserver(listener, "content-document-global-created", false);
+    Services.obs.addObserver(listener, "content-document-global-created");
   });
   webNav.loadURI("about:blank", 0, null, null, null);
 

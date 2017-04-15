@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Tire clipes e capturas de tela da Web e guarde-as temporariamente ou permanentemente."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Tirar uma captura de tela"
+  },
+  "myShotsLink": {
+    "message": "Minhas capturas"
+  },
+  "screenshotInstructions": {
+    "message": "Arraste ou clique na página para selecionar uma área. Pressione ESC para cancelar."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Salvar"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Salvar área visível"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Salvar página completa"
+  },
+  "cancelScreenshot": {
+    "message": "Cancelar"
+  },
+  "downloadScreenshot": {
+    "message": "Baixar"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Link copiado"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "O link da sua captura foi copiado para a área de transferência. Pressione $META_KEY$-V para colar.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Fora de ordem."
+  },
+  "requestErrorDetails": {
+    "message": "Desculpa! Não pudemos salvar a sua captura de tela. Por favor, tente novamente mais tarde."
+  },
+  "connectionErrorTitle": {
+    "message": "Não conseguimos conectar suas capturas de tela."
+  },
+  "connectionErrorDetails": {
+    "message": "Por favor verifique a sua conexão com a Internet. Se consegue conecta-se à Internet, pode existir um problema temporário com o serviço capturas de tela do Firefox."
+  },
+  "loginErrorDetails": {
+    "message": "Não conseguimos salvar a sua captura porque existe um problema com o serviço de capturas de tela do Firefox. Por favor tente novamente mais tarde."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Não conseguimos capturar a tela nesta página."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Esta não é uma página web padrão, por isso não podemos tirar uma captura de tela da mesma."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Você não pode tirar uma captura em uma página de capturas de tela do Firefox!"
+  },
+  "genericErrorTitle": {
+    "message": "Uau! Algo correu mal com a capturas de tela do Firefox."
+  },
+  "genericErrorDetails": {
+    "message": "Não temos certeza do que acabou de acontecer. Tentar novamente ou fazer uma captura de uma página diferente?"
+  },
+  "tourBodyOne": {
+    "message": "Capture, salve e compartilhe telas sem sair do Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Capture apenas o que você quer"
+  },
+  "tourBodyTwo": {
+    "message": "Clique e arraste para capturar apenas uma parte de uma página. Você também pode passar o mouse para realçar sua seleção."
+  },
+  "tourHeaderThree": {
+    "message": "Como você quiser"
+  },
+  "tourBodyThree": {
+    "message": "Salve as suas capturas na Web para compartilhar mais facilmente ou baixe-as no seu computador. Você também pode clicar no botão Minhas capturas para encontras todas as capturas que tirou."
+  },
+  "tourHeaderFour": {
+    "message": "Capture janelas ou páginas inteiras"
+  },
+  "tourBodyFour": {
+    "message": "Selecione os botões no canto superior direito para capturar a área visível na janela ou capturar uma página inteira."
+  },
+  "tourSkip": {
+    "message": "Pular"
+  },
+  "tourNext": {
+    "message": "Próximo slide"
+  },
+  "tourPrevious": {
+    "message": "Slide anterior"
+  },
+  "tourDone": {
+    "message": "Concluir"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Usando Firefox Screenshots, você concorda com os $TERMSANDPRIVACYNOTICETERMSLINK$ e $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Termos"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Política de privacidade"
+  }
+}

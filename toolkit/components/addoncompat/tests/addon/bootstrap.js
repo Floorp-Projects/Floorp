@@ -181,7 +181,7 @@ function testObserver() {
       Services.obs.removeObserver(observer, "document-element-inserted");
       observerFired++;
     }
-    Services.obs.addObserver(observer, "document-element-inserted", false);
+    Services.obs.addObserver(observer, "document-element-inserted");
 
     let count = 0;
     const url = baseURL + "browser_addonShims_testpage.html";
@@ -288,7 +288,7 @@ function testAboutModuleRegistration() {
           } catch (e) {}
         }
       };
-      Services.tm.currentThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
+      Services.tm.dispatchToMainThread(runnable);
     },
 
     asyncOpen2(listener) {

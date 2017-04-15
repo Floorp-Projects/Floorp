@@ -160,7 +160,7 @@ ProcessGlobal.prototype = {
   observe: function pg_observe(subject, topic, data) {
     switch (topic) {
     case 'app-startup': {
-      Services.obs.addObserver(this, 'console-api-log-event', false);
+      Services.obs.addObserver(this, 'console-api-log-event');
       let inParent = Cc["@mozilla.org/xre/app-info;1"]
                        .getService(Ci.nsIXULRuntime)
                        .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;

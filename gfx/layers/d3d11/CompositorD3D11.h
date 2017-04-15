@@ -119,7 +119,7 @@ public:
    */
   virtual void EndFrame() override;
 
-  virtual void CancelFrame() override;
+  virtual void CancelFrame(bool aNeedFlush = true) override;
 
   /**
    * Setup the viewport and projection matrix for rendering

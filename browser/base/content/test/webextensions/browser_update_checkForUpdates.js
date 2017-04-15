@@ -8,7 +8,7 @@ function checkAll(win) {
         resolve();
       },
     };
-    Services.obs.addObserver(observer, "EM-update-check-finished", false);
+    Services.obs.addObserver(observer, "EM-update-check-finished");
   });
 }
 

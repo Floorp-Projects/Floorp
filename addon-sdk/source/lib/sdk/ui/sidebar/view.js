@@ -10,11 +10,11 @@ module.metadata = {
   }
 };
 
-const { models, buttons, views, viewsFor, modelFor } = require('./namespace');
-const { isBrowser, getMostRecentBrowserWindow, windows, isWindowPrivate } = require('../../window/utils');
-const { setStateFor } = require('../state');
-const { defer } = require('../../core/promise');
-const { isPrivateBrowsingSupported, data } = require('../../self');
+lazyRequire(this, './namespace', "models", "buttons", "views", "viewsFor", "modelFor");
+lazyRequire(this, '../../window/utils', "isBrowser", "getMostRecentBrowserWindow", "windows", "isWindowPrivate");
+lazyRequire(this, '../state', "setStateFor");
+lazyRequire(this, '../../core/promise', "defer");
+lazyRequire(this, '../../self', "isPrivateBrowsingSupported", "data");
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const WEB_PANEL_BROWSER_ID = 'web-panels-browser';

@@ -68,5 +68,5 @@ function run_test() {
       }
     });
     stmt.finalize();
-  }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
+  }, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
 }

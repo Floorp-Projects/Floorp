@@ -42,7 +42,7 @@ function playOscillatorNode() {
 }
 
 function audioPlayingStart() {
-  observerService.addObserver(observer, "audio-playback", false);
+  observerService.addObserver(observer, "audio-playback");
   ok(true, "Observer set");
 
   expectedPlaybackActive = 'active';

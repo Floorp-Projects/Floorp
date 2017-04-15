@@ -24,7 +24,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 this.TestUtils = {
   executeSoon(callbackFn) {
-    Services.tm.mainThread.dispatch(callbackFn, Ci.nsIThread.DISPATCH_NORMAL);
+    Services.tm.dispatchToMainThread(callbackFn);
   },
 
   /**
@@ -58,7 +58,7 @@ this.TestUtils = {
           Services.obs.removeObserver(observer, topic);
           reject(ex);
         }
-      }, topic, false);
+      }, topic);
     });
   },
 };

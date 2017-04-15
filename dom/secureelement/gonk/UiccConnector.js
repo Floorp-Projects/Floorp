@@ -85,7 +85,7 @@ UiccConnector.prototype = {
   _isPresent: false,
 
   _init: function() {
-    Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+    Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     let icc = iccService.getIccByServiceId(PREFERRED_UICC_CLIENTID);
     icc.registerListener(this);
 

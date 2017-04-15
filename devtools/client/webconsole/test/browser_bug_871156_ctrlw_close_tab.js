@@ -66,7 +66,7 @@ add_task(function* () {
     ok(true, "the Browser Console closed");
 
     deferred.resolve(null);
-  }, "web-console-destroyed", false);
+  }, "web-console-destroyed");
 
   waitForFocus(() => {
     EventUtils.synthesizeKey("w", { accelKey: true }, hud.iframeWindow);

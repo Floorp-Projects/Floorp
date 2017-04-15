@@ -50,6 +50,6 @@ function waitForNewWindow() {
     Services.obs.addObserver(function observe(win, topic) {
       Services.obs.removeObserver(observe, topic);
       resolve(win);
-    }, "browser-delayed-startup-finished", false);
+    }, "browser-delayed-startup-finished");
   });
 }

@@ -585,9 +585,9 @@ StubTransport.prototype.send = function () {};
 StubTransport.prototype.close = function () {};
 
 function executeSoon(func) {
-  Services.tm.mainThread.dispatch({
+  Services.tm.dispatchToMainThread({
     run: DevToolsUtils.makeInfallible(func)
-  }, Ci.nsIThread.DISPATCH_NORMAL);
+  });
 }
 
 // The do_check_* family of functions expect their last argument to be an

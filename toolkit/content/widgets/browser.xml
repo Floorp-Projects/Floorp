@@ -390,10 +390,11 @@
       <method name="getTabBrowser">
         <body>
           <![CDATA[
-            var tabBrowser = this.parentNode;
-            while (tabBrowser && tabBrowser.localName != "tabbrowser")
-              tabBrowser = tabBrowser.parentNode;
-            return tabBrowser;
+            for (let node = this.parentNode; node instanceof Element; node = node.parentNode) {
+              if (node.localName == "tabbrowser")
+                return node;
+            }
+            return null;
           ]]>
         </body>
       </method>

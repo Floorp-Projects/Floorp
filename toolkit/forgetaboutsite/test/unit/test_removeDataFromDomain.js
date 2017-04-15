@@ -382,12 +382,12 @@ function waitForPurgeNotification() {
       // test_storage_cleared needs this extra executeSoon because
       // the DOMStorage clean-up is also listening to this same observer
       // which is run synchronously.
-      Services.tm.mainThread.dispatch(function() {
+      Services.tm.dispatchToMainThread(function() {
         deferred.resolve();
-      }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+      });
     }
   };
-  Services.obs.addObserver(observer, "browser:purge-domain-data", false);
+  Services.obs.addObserver(observer, "browser:purge-domain-data");
 
   return deferred.promise;
 }
@@ -517,11 +517,11 @@ function* test_cache_cleared() {
     observe(aSubject, aTopic, aData) {
       os.removeObserver(observer, "cacheservice:empty-cache");
       // Shutdown the download manager.
-      Services.obs.notifyObservers(null, "quit-application", null);
+      Services.obs.notifyObservers(null, "quit-application");
       do_test_finished();
     }
   };
-  os.addObserver(observer, "cacheservice:empty-cache", false);
+  os.addObserver(observer, "cacheservice:empty-cache");
   yield ForgetAboutSite.removeDataFromDomain("mozilla.org");
   do_test_pending();
 }

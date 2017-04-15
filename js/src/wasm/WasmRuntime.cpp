@@ -58,22 +58,22 @@ static void*
 WasmHandleExecutionInterrupt()
 {
     WasmActivation* activation = JSContext::innermostWasmActivation();
+    MOZ_ASSERT(activation->interrupted());
 
-    // wasm::Compartment requires notification when execution is interrupted in
-    // the compartment. Only the innermost compartment has been interrupted;
-    // enclosing compartments necessarily exited through an exit stub.
-    activation->compartment()->wasm.setInterrupted(true);
-    bool success = CheckForInterrupt(activation->cx());
-    activation->compartment()->wasm.setInterrupted(false);
+    if (!CheckForInterrupt(activation->cx())) {
+        // If CheckForInterrupt failed, it is time to interrupt execution.
+        // Returning nullptr to the caller will jump to the throw stub which
+        // will call WasmHandleThrow. The WasmActivation must stay in the
+        // interrupted state until then so that stack unwinding works in
+        // WasmHandleThrow.
+        return nullptr;
+    }
 
-    // Preserve the invariant that having a non-null resumePC means that we are
-    // handling an interrupt.
+    // If CheckForInterrupt succeeded, then execution can proceed and the
+    // interrupt is over.
     void* resumePC = activation->resumePC();
-    activation->setResumePC(nullptr);
-
-    // Return the resumePC if execution can continue or null if execution should
-    // jump to the throw stub.
-    return success ? resumePC : nullptr;
+    activation->finishInterrupt();
+    return resumePC;
 }
 
 static bool
@@ -156,8 +156,10 @@ WasmHandleThrow()
     // (which would lead to the frame being re-added to the map of live frames,
     // right as it becomes trash).
     FrameIterator iter(activation, FrameIterator::Unwind::True);
-    if (iter.done())
+    if (iter.done()) {
+        MOZ_ASSERT(!activation->interrupted());
         return activation;
+    }
 
     // Live wasm code on the stack is kept alive (in wasm::TraceActivations) by
     // marking the instance of every wasm::Frame found by FrameIterator.
@@ -198,6 +200,7 @@ WasmHandleThrow()
         frame->leave(cx);
      }
 
+    MOZ_ASSERT(!activation->interrupted(), "unwinding clears the interrupt");
     return activation;
 }
 

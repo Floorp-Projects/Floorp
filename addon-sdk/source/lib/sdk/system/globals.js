@@ -8,39 +8,42 @@ module.metadata = {
   "stability": "unstable"
 };
 
-var { Cc, Ci, CC } = require('chrome');
-var { PlainTextConsole } = require('../console/plain-text');
-var { stdout } = require('../system');
-var ScriptError = CC('@mozilla.org/scripterror;1', 'nsIScriptError');
-var consoleService = Cc['@mozilla.org/consoleservice;1'].getService(Ci.nsIConsoleService);
+defineLazyGetter(this, "console", () => new (require('../console/plain-text').PlainTextConsole)());
 
-// On windows dump does not writes into stdout so cfx can't read thous dumps.
-// To workaround this issue we write to a special file from which cfx will
-// read and print to the console.
-// For more details see: bug-673383
-exports.dump = stdout.write;
+exports = module.exports = {};
 
-exports.console = new PlainTextConsole();
+defineLazyGetter(exports, "console", () => console);
 
 // Provide CommonJS `define` to allow authoring modules in a format that can be
 // loaded both into jetpack and into browser via AMD loaders.
-Object.defineProperty(exports, 'define', {
-  // `define` is provided as a lazy getter that binds below defined `define`
-  // function to the module scope, so that require, exports and module
-  // variables remain accessible.
-  configurable: true,
-  get: function() {
-    let sandbox = this;
-    return function define(factory) {
-      factory = Array.slice(arguments).pop();
-      factory.call(sandbox, sandbox.require, sandbox.exports, sandbox.module);
-    }
-  },
-  set: function(value) {
-    Object.defineProperty(this, 'define', {
+
+// `define` is provided as a lazy getter that binds below defined `define`
+// function to the module scope, so that require, exports and module
+// variables remain accessible.
+defineLazyGetter(exports, 'define', function() {
+  return (...args) => {
+    let factory = args.pop();
+    factory.call(this, this.require, this.exports, this.module);
+  };
+});
+
+function defineLazyGetter(object, prop, getter) {
+  let redefine = (obj, value) => {
+    Object.defineProperty(obj, prop, {
       configurable: true,
-      enumerable: true,
+      writable: true,
       value,
     });
-  },
-});
+    return value;
+  };
+
+  Object.defineProperty(object, prop, {
+    configurable: true,
+    get() {
+      return redefine(this, getter.call(this));
+    },
+    set(value) {
+      redefine(this, value);
+    }
+  });
+}

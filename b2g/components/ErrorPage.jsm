@@ -50,9 +50,9 @@ SSLExceptions.prototype = {
                                                      aSslStatus,
                                                      aTargetHost) {
     this._sslStatus = aSslStatus.QueryInterface(Ci.nsISSLStatus);
-    Services.tm.currentThread.dispatch({
+    Services.tm.dispatchToMainThread({
       run: this._addOverride.bind(this)
-    }, Ci.nsIThread.DISPATCH_NORMAL);
+    });
     return true; // suppress error UI
   },
 
@@ -170,8 +170,8 @@ var ErrorPage = {
   },
 
   init: function errorPageInit() {
-    Services.obs.addObserver(this, 'inprocess-browser-shown', false);
-    Services.obs.addObserver(this, 'remote-browser-shown', false);
+    Services.obs.addObserver(this, 'inprocess-browser-shown');
+    Services.obs.addObserver(this, 'remote-browser-shown');
   },
 
   observe: function errorPageObserve(aSubject, aTopic, aData) {

@@ -6,6 +6,7 @@
 
 #include "NativeFontResourceFontconfig.h"
 #include "ScaledFontFontconfig.h"
+#include "UnscaledFontFreeType.h"
 #include "Logging.h"
 
 namespace mozilla {
@@ -48,17 +49,12 @@ NativeFontResourceFontconfig::Create(uint8_t *aFontData, uint32_t aDataLength)
   return resource.forget();
 }
 
-already_AddRefed<ScaledFont>
-NativeFontResourceFontconfig::CreateScaledFont(uint32_t aIndex, Float aGlyphSize,
-                                               const uint8_t* aInstanceData, uint32_t aInstanceDataLength)
+already_AddRefed<UnscaledFont>
+NativeFontResourceFontconfig::CreateUnscaledFont(uint32_t aIndex,
+                                                 const uint8_t* aInstanceData, uint32_t aInstanceDataLength)
 {
-  if (aInstanceDataLength < sizeof(ScaledFontFontconfig::InstanceData)) {
-    gfxWarning() << "Fontconfig scaled font instance data is truncated.";
-    return nullptr;
-  }
-  return ScaledFontFontconfig::CreateFromInstanceData(
-           *reinterpret_cast<const ScaledFontFontconfig::InstanceData*>(aInstanceData),
-           mFace, nullptr, 0, aGlyphSize);
+  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontFontconfig(mFace);
+  return unscaledFont.forget();
 }
 
 } // gfx

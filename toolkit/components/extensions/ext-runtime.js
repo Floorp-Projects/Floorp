@@ -9,10 +9,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
-var {
-  SingletonEventManager,
-} = ExtensionUtils;
-
 this.runtime = class extends ExtensionAPI {
   getAPI(context) {
     let {extension} = context;

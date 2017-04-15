@@ -9,10 +9,11 @@ module.metadata = {
 
 const { Cc, Ci, CC } = require("chrome");
 
-const { setTimeout } = require("../timers");
-const { Stream, InputStream, OutputStream } = require("./stream");
-const { emit, on } = require("../event/core");
-const { Buffer } = require("./buffer");
+lazyRequire(this, "../timers", "setTimeout");
+lazyRequire(this, "./stream", "Stream", "InputStream", "OutputStream");
+lazyRequire(this, "../event/core", "emit", "on");
+lazyRequire(this, "./buffer", "Buffer");
+
 const { ns } = require("../core/namespace");
 const { Class } = require("../core/heritage");
 

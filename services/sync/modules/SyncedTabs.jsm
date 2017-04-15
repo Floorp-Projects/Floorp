@@ -172,7 +172,7 @@ let SyncedTabsInternal = {
     // Sync is currently synchronous, so do it after an event-loop spin to help
     // keep the UI responsive.
     return new Promise((resolve, reject) => {
-      Services.tm.currentThread.dispatch(() => {
+      Services.tm.dispatchToMainThread(() => {
         try {
           log.info("Doing a tab sync.");
           Weave.Service.sync(["tabs"]);
@@ -181,7 +181,7 @@ let SyncedTabsInternal = {
           log.error("Sync failed", ex);
           reject(ex);
         }
-      }, Ci.nsIThread.DISPATCH_NORMAL);
+      });
     });
   },
 
@@ -196,15 +196,15 @@ let SyncedTabsInternal = {
         // Set our lastTabFetch pref here so it tracks both explicit sync calls
         // and normally scheduled ones.
         Preferences.set("services.sync.lastTabFetch", Math.floor(Date.now() / 1000));
-        Services.obs.notifyObservers(null, TOPIC_TABS_CHANGED, null);
+        Services.obs.notifyObservers(null, TOPIC_TABS_CHANGED);
         break;
       case "weave:service:start-over":
         // start-over needs to notify so consumers find no tabs.
         Preferences.reset("services.sync.lastTabFetch");
-        Services.obs.notifyObservers(null, TOPIC_TABS_CHANGED, null);
+        Services.obs.notifyObservers(null, TOPIC_TABS_CHANGED);
         break;
       case "nsPref:changed":
-        Services.obs.notifyObservers(null, TOPIC_TABS_CHANGED, null);
+        Services.obs.notifyObservers(null, TOPIC_TABS_CHANGED);
         break;
       default:
         break;
@@ -228,12 +228,12 @@ let SyncedTabsInternal = {
   },
 };
 
-Services.obs.addObserver(SyncedTabsInternal, "weave:engine:sync:finish", false);
-Services.obs.addObserver(SyncedTabsInternal, "weave:service:start-over", false);
+Services.obs.addObserver(SyncedTabsInternal, "weave:engine:sync:finish");
+Services.obs.addObserver(SyncedTabsInternal, "weave:service:start-over");
 // Observe the pref the indicates the state of the tabs engine has changed.
 // This will force consumers to re-evaluate the state of sync and update
 // accordingly.
-Services.prefs.addObserver("services.sync.engine.tabs", SyncedTabsInternal, false);
+Services.prefs.addObserver("services.sync.engine.tabs", SyncedTabsInternal);
 
 // The public interface.
 this.SyncedTabs = {

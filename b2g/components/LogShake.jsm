@@ -155,7 +155,7 @@ var LogShake = {
     SystemAppProxy.addEventListener(CAPTURE_LOGS_CONTENT_EVENT, this);
     SystemAppProxy.addEventListener(SCREEN_CHANGE_EVENT, this);
 
-    Services.obs.addObserver(this, "xpcom-shutdown", false);
+    Services.obs.addObserver(this, "xpcom-shutdown");
   },
 
   /**

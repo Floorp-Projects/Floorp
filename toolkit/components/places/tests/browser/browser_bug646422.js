@@ -31,7 +31,7 @@ add_task(function* () {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
     };
 
-    PlacesUtils.history.addObserver(observer, false);
+    PlacesUtils.history.addObserver(observer);
   });
 
   yield ContentTask.spawn(tab.linkedBrowser, null, function* () {

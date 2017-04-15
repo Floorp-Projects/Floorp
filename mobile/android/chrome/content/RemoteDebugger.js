@@ -199,7 +199,7 @@ RemoteDebugger.receiveOOB =
 var USBRemoteDebugger = {
 
   init() {
-    Services.prefs.addObserver("devtools.", this, false);
+    Services.prefs.addObserver("devtools.", this);
 
     if (this.isEnabled) {
       this.start();
@@ -279,7 +279,7 @@ var USBRemoteDebugger = {
 var WiFiRemoteDebugger = {
 
   init() {
-    Services.prefs.addObserver("devtools.", this, false);
+    Services.prefs.addObserver("devtools.", this);
 
     if (this.isEnabled) {
       this.start();

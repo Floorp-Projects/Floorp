@@ -254,7 +254,7 @@ var PreferenceObserver = {
     }
 
     this.branch = Services.prefs.getBranch("devtools.scratchpad.");
-    this.branch.addObserver("", this, false);
+    this.branch.addObserver("", this);
     this._initialized = true;
   },
 

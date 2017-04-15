@@ -47,7 +47,7 @@ const make = (exports, rootURI, components) => {
       // during development is acceptable.
       components.classes["@mozilla.org/observer-service;1"].
         getService(components.interfaces.nsIObserverService).
-        notifyObservers({}, "startupcache-invalidate", null);
+        notifyObservers({}, "startupcache-invalidate");
 
       if (all) {
         for (let uri of Object.keys(loader.sandboxes)) {

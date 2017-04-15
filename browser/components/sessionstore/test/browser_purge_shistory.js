@@ -44,7 +44,7 @@ add_task(function* () {
   yield promise;
 
   // Purge session history.
-  Services.obs.notifyObservers(null, "browser:purge-session-history", "");
+  Services.obs.notifyObservers(null, "browser:purge-session-history");
   yield checkTabContents(browser);
   ok(tab2.hasAttribute("pending"), "tab is still pending");
 
