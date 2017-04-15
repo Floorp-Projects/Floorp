@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Tomá imágenes y capturas de la web y guardalos temporal o permanentemente."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Hacer captura de pantalla"
+  },
+  "myShotsLink": {
+    "message": "Mis capturas"
+  },
+  "screenshotInstructions": {
+    "message": "Arrastrá o hacé clic en la página para seleccionar una región. Presioná ESC para cancelar."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Guardar"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Guardar visible"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Guardar página completa"
+  },
+  "cancelScreenshot": {
+    "message": "Cancelar"
+  },
+  "downloadScreenshot": {
+    "message": "Descargar"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Enlace copiado"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "EL enlace a la captura ha sido copiado al portapapeles. Presioná $META_KEY$-V para pegar.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "No funciona."
+  },
+  "requestErrorDetails": {
+    "message": "¡Perdón! No pudimos guardar la captura. Intentá más tarde."
+  },
+  "connectionErrorTitle": {
+    "message": "No podemos conectar a las capturas de pantalla."
+  },
+  "connectionErrorDetails": {
+    "message": "Verificá la conexión a Internet. Si te podés conectar a Internet, hay un problema temporal con el servicio de capturas de Firefox."
+  },
+  "loginErrorDetails": {
+    "message": "No pudimos guardar la captura porque hay un problema con el servicio de capturas de Firefox. Intentá más tarde."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "No podemos capturar esta página."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Esta no es una página web estándar, así que no podemos guardar una captura."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "¡No se puede hacer una captura de la página de capturas de Firefox!"
+  },
+  "genericErrorTitle": {
+    "message": "¡Apa! La capturas de pantalla de Firefox se volvieron locas."
+  },
+  "genericErrorDetails": {
+    "message": "No estamos seguros de lo que pasó. ¿Querés intenar de nuevo o tomar una captura de una página diferente?"
+  },
+  "tourBodyOne": {
+    "message": "Hacer, guardar y compartir capturas de pantalla sin dejar Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Capturar sólo lo que querés"
+  },
+  "tourBodyTwo": {
+    "message": "Hacé clic y arrastrá para capturar una porción de la página. También podés pasar por encima para resaltar la selección."
+  },
+  "tourHeaderThree": {
+    "message": "Como te guste"
+  },
+  "tourBodyThree": {
+    "message": "Guardá tus capturas recortadas a la web para compartir o descargarlas más fácilmente a tu computadora. También podés hacer clic en el botón Mis capturas para encontrar todas las capturas hechas."
+  },
+  "tourHeaderFour": {
+    "message": "Capturar ventanas o páginas enteras"
+  },
+  "tourBodyFour": {
+    "message": "Seleccioná los botones arriba a la derecha para capturar el área visible en la ventana o la página completa."
+  },
+  "tourSkip": {
+    "message": "Saltear"
+  },
+  "tourNext": {
+    "message": "Próxima diapositiva"
+  },
+  "tourPrevious": {
+    "message": "Diapositiva anterior"
+  },
+  "tourDone": {
+    "message": "Listo"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Al usar Firefox Screenshots, aceptás los $TERMSANDPRIVACYNOTICETERMSLINK$ y $TERMSANDPRIVACYNOTICEPRIVACYLINK$ de Screenshots.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Términos"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Nota de privacidad"
+  }
+}

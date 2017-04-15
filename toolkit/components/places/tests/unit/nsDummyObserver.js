@@ -10,7 +10,7 @@ const Ci = Components.interfaces;
 
 // Dummy boomark/history observer
 function DummyObserver() {
-  Services.obs.notifyObservers(null, "dummy-observer-created", null);
+  Services.obs.notifyObservers(null, "dummy-observer-created");
 }
 
 DummyObserver.prototype = {
@@ -18,7 +18,7 @@ DummyObserver.prototype = {
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
   onVisit(aURI, aVisitID, aTime, aSessionID, aReferringID, aTransitionType) {
-    Services.obs.notifyObservers(null, "dummy-observer-visited", null);
+    Services.obs.notifyObservers(null, "dummy-observer-visited");
   },
   onTitleChanged() {},
   onDeleteURI() {},
@@ -30,7 +30,7 @@ DummyObserver.prototype = {
   // onBeginUpdateBatch: function() {},
   // onEndUpdateBatch: function() {},
   onItemAdded(aItemId, aParentId, aIndex, aItemType, aURI) {
-    Services.obs.notifyObservers(null, "dummy-observer-item-added", null);
+    Services.obs.notifyObservers(null, "dummy-observer-item-added");
   },
   onItemChanged() {},
   onItemRemoved() {},

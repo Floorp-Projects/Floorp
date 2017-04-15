@@ -72,7 +72,7 @@ const onPrefChange = function () {
 
 Services.prefs.addObserver(HOTRELOAD_PREF, {
   observe: onPrefChange
-}, false);
+});
 onPrefChange();
 
 EventEmitter.decorate(module.exports);

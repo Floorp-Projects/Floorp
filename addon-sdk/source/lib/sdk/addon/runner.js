@@ -10,14 +10,10 @@ const { Cc, Ci, Cu } = require('chrome');
 const { rootURI, metadata, isNative } = require('@loader/options');
 const { id, loadReason } = require('../self');
 const { descriptor, Sandbox, evaluate, main, resolveURI } = require('toolkit/loader');
-const { once } = require('../system/events');
 const { exit, env, staticArgs } = require('../system');
 const { when: unload } = require('../system/unload');
 const globals = require('../system/globals');
-const xulApp = require('../system/xul-app');
 const { get } = require('../preferences/service');
-const appShellService = Cc['@mozilla.org/appshell/appShellService;1'].
-                        getService(Ci.nsIAppShellService);
 const { preferences } = metadata;
 
 const Startup = Cu.import("resource://gre/modules/sdk/system/Startup.js", {}).exports;

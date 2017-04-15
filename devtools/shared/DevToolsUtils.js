@@ -46,9 +46,9 @@ exports.executeSoon = function (fn) {
     } else {
       executor = fn;
     }
-    Services.tm.mainThread.dispatch({
+    Services.tm.dispatchToMainThread({
       run: exports.makeInfallible(executor)
-    }, Ci.nsIThread.DISPATCH_NORMAL);
+    });
   }
 };
 

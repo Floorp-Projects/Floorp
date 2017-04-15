@@ -83,7 +83,7 @@ function runTests() {
 
     cleanup();
   };
-  Services.obs.addObserver(onParent, "test:setupParent", false);
+  Services.obs.addObserver(onParent, "test:setupParent");
 
   // Instanciate e10s machinery and call setupInChild
   DebuggerServer.connectToChild(conn, iframe).then(actor => {

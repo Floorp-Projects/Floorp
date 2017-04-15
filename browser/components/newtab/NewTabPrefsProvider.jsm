@@ -88,7 +88,7 @@ PrefsProvider.prototype = {
 
   init() {
     for (let pref of gPrefsMap.keys()) {
-      Services.prefs.addObserver(pref, this, false);
+      Services.prefs.addObserver(pref, this);
     }
   },
 

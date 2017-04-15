@@ -12,9 +12,9 @@ const { Cc, Ci, Cr, Cm, components: { classesByID } } = require('chrome');
 const { registerFactory, unregisterFactory, isCIDRegistered } =
       Cm.QueryInterface(Ci.nsIComponentRegistrar);
 
-const { merge } = require('../util/object');
 const { Class, extend, mix } = require('../core/heritage');
-const { uuid } = require('../util/uuid');
+lazyRequire(this, '../util/object', 'merge');
+lazyRequire(this, '../util/uuid', 'uuid');
 
 // This is a base prototype, that provides bare bones of XPCOM. JS based
 // components can be easily implement by extending it.

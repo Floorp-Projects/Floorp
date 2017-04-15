@@ -126,7 +126,7 @@ var PendingErrors = {
   init() {
     Services.obs.addObserver(function observe(aSubject, aTopic, aValue) {
       PendingErrors.report(aValue);
-    }, "promise-finalization-witness", false);
+    }, "promise-finalization-witness");
   },
 
   /**

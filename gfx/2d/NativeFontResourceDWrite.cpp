@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "NativeFontResourceDWrite.h"
+#include "UnscaledFontDWrite.h"
 
 #include <unordered_map>
 
@@ -258,9 +259,10 @@ NativeFontResourceDWrite::Create(uint8_t *aFontData, uint32_t aDataLength,
   return fontResource.forget();
 }
 
-already_AddRefed<ScaledFont>
-NativeFontResourceDWrite::CreateScaledFont(uint32_t aIndex, Float aGlyphSize,
-                                           const uint8_t* aInstanceData, uint32_t aInstanceDataLength)
+already_AddRefed<UnscaledFont>
+NativeFontResourceDWrite::CreateUnscaledFont(uint32_t aIndex,
+                                             const uint8_t* aInstanceData,
+                                             uint32_t aInstanceDataLength)
 {
   if (aIndex >= mNumberOfFaces) {
     gfxWarning() << "Font face index is too high for font resource.";
@@ -275,13 +277,12 @@ NativeFontResourceDWrite::CreateScaledFont(uint32_t aIndex, Float aGlyphSize,
     return nullptr;
   }
 
-  RefPtr<ScaledFontBase> scaledFont = new ScaledFontDWrite(fontFace, nullptr, aGlyphSize);
-  if (mNeedsCairo && !scaledFont->PopulateCairoScaledFont()) {
-    gfxWarning() << "Unable to create cairo scaled font DWrite font.";
-    return nullptr;
-  }
+  RefPtr<UnscaledFont> unscaledFont =
+    new UnscaledFontDWrite(fontFace,
+                           DWRITE_FONT_SIMULATIONS_NONE,
+                           mNeedsCairo);
 
-  return scaledFont.forget();
+  return unscaledFont.forget();
 }
 
 } // gfx

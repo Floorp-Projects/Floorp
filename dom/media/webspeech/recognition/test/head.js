@@ -127,7 +127,7 @@ function EventManager(sr) {
   }
 
   self.requestTestEnd = function EventManager_requestTestEnd() {
-    Services.obs.notifyObservers(null, SPEECH_RECOGNITION_TEST_END_TOPIC, null);
+    Services.obs.notifyObservers(null, SPEECH_RECOGNITION_TEST_END_TOPIC);
   }
 }
 

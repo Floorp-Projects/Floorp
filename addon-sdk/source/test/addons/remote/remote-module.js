@@ -105,7 +105,7 @@ function listener(event) {
   // Use the raw observer service here since it will be usable even if the
   // loader has unloaded
   let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-  Services.obs.notifyObservers(null, "Test:Reply", "");
+  Services.obs.notifyObservers(null, "Test:Reply");
 }
 
 frames.port.on('sdk/test/registerframesevent', (frame) => {

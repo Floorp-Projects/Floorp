@@ -25,18 +25,18 @@ function notifyPromptObservers(aIsPrivate, aExpectedCount, aExpectedPBCount) {
 
   // Notify quit application requested observer.
   DownloadIntegration._testPromptDownloads = -1;
-  Services.obs.notifyObservers(cancelQuit, "quit-application-requested", null);
+  Services.obs.notifyObservers(cancelQuit, "quit-application-requested");
   do_check_eq(DownloadIntegration._testPromptDownloads, aExpectedCount);
 
   // Notify offline requested observer.
   DownloadIntegration._testPromptDownloads = -1;
-  Services.obs.notifyObservers(cancelQuit, "offline-requested", null);
+  Services.obs.notifyObservers(cancelQuit, "offline-requested");
   do_check_eq(DownloadIntegration._testPromptDownloads, aExpectedCount);
 
   if (aIsPrivate) {
     // Notify last private browsing requested observer.
     DownloadIntegration._testPromptDownloads = -1;
-    Services.obs.notifyObservers(cancelQuit, "last-pb-context-exiting", null);
+    Services.obs.notifyObservers(cancelQuit, "last-pb-context-exiting");
     do_check_eq(DownloadIntegration._testPromptDownloads, aExpectedPBCount);
   }
 
@@ -337,7 +337,7 @@ add_task(function* test_suspend_resume() {
   let download5 = yield addDownload(publicList);
 
   // First, check that the downloads are all canceled when going to sleep.
-  Services.obs.notifyObservers(null, "sleep_notification", null);
+  Services.obs.notifyObservers(null, "sleep_notification");
   do_check_true(download1.canceled);
   do_check_true(download2.canceled);
   do_check_true(download3.canceled);
@@ -351,7 +351,7 @@ add_task(function* test_suspend_resume() {
   // When waking up again, the downloads start again after the wake delay. To be
   // more robust, don't check after a delay but instead just wait for the
   // downloads to finish.
-  Services.obs.notifyObservers(null, "wake_notification", null);
+  Services.obs.notifyObservers(null, "wake_notification");
   yield download1.whenSucceeded();
   yield download2.whenSucceeded();
   yield download3.whenSucceeded();
@@ -370,7 +370,7 @@ add_task(function* test_suspend_resume() {
   download4 = yield addDownload(privateList);
 
   // Going offline should cancel the downloads.
-  Services.obs.notifyObservers(null, "network:offline-about-to-go-offline", null);
+  Services.obs.notifyObservers(null, "network:offline-about-to-go-offline");
   do_check_true(download1.canceled);
   do_check_true(download2.canceled);
   do_check_true(download3.canceled);
@@ -411,7 +411,7 @@ add_task(function* test_exit_private_browsing() {
   // Simulate exiting the private browsing.
   yield new Promise(resolve => {
     DownloadIntegration._testResolveClearPrivateList = resolve;
-    Services.obs.notifyObservers(null, "last-pb-context-exited", null);
+    Services.obs.notifyObservers(null, "last-pb-context-exited");
   });
   delete DownloadIntegration._testResolveClearPrivateList;
 

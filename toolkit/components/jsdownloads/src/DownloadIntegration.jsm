@@ -855,7 +855,7 @@ this.DownloadIntegration = {
     if (!DownloadObserver.observersAdded) {
       DownloadObserver.observersAdded = true;
       for (let topic of kObserverTopics) {
-        Services.obs.addObserver(DownloadObserver, topic, false);
+        Services.obs.addObserver(DownloadObserver, topic);
       }
     }
     return Promise.resolve();
@@ -1111,7 +1111,7 @@ this.DownloadObserver = {
 this.DownloadHistoryObserver = function (aList)
 {
   this._list = aList;
-  PlacesUtils.history.addObserver(this, false);
+  PlacesUtils.history.addObserver(this);
 }
 
 this.DownloadHistoryObserver.prototype = {

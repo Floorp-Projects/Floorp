@@ -25,7 +25,7 @@ function iterStyleNodes(window, func) {
 function replaceCSS(window, fileURI) {
   const document = window.document;
   const randomKey = Math.random();
-  Services.obs.notifyObservers(null, "startupcache-invalidate", null);
+  Services.obs.notifyObservers(null, "startupcache-invalidate");
 
   // Scan every CSS tag and reload ones that match the file we are
   // looking for.

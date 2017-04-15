@@ -441,7 +441,7 @@ function _setupDebuggerServer(breakpointFiles, callback) {
   };
 
   for (let topic of TOPICS) {
-    obsSvc.addObserver(observe, topic, false);
+    obsSvc.addObserver(observe, topic);
   }
   return DebuggerServer;
 }
@@ -621,10 +621,10 @@ function _execute_test() {
     // the end of the current test, to ensure correct cleanup on shutdown.
     let obs = Components.classes["@mozilla.org/observer-service;1"]
                         .getService(Components.interfaces.nsIObserverService);
-    obs.notifyObservers(null, "profile-change-net-teardown", null);
-    obs.notifyObservers(null, "profile-change-teardown", null);
-    obs.notifyObservers(null, "profile-before-change", null);
-    obs.notifyObservers(null, "profile-before-change-qm", null);
+    obs.notifyObservers(null, "profile-change-net-teardown");
+    obs.notifyObservers(null, "profile-change-teardown");
+    obs.notifyObservers(null, "profile-before-change");
+    obs.notifyObservers(null, "profile-before-change-qm");
 
     _profileInitialized = false;
   }
@@ -697,7 +697,7 @@ function do_execute_soon(callback, aName) {
   var tm = Components.classes["@mozilla.org/thread-manager;1"]
                      .getService(Components.interfaces.nsIThreadManager);
 
-  tm.mainThread.dispatch({
+  tm.dispatchToMainThread({
     run: function() {
       try {
         callback();
@@ -722,7 +722,7 @@ function do_execute_soon(callback, aName) {
         do_test_finished(funcName);
       }
     }
-  }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+  });
 }
 
 /**

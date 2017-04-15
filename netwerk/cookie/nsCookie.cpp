@@ -128,7 +128,7 @@ nsCookie::IsStale() const
 {
   int64_t currentTimeInUsec = PR_Now();
 
-  return currentTimeInUsec - LastAccessed() > mCookieStaleThreshold * PR_USEC_PER_SEC;
+  return currentTimeInUsec - LastAccessed() > CookieStaleThreshold() * PR_USEC_PER_SEC;
 }
 
 /******************************************************************************

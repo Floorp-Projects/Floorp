@@ -317,7 +317,7 @@ function initService() {
     ActiveProviders.flush();
     SocialService._providerListeners = null;
     Services.obs.removeObserver(xpcomShutdown, "xpcom-shutdown");
-  }, "xpcom-shutdown", false);
+  }, "xpcom-shutdown");
 
   try {
     migrateSettings();
@@ -330,7 +330,7 @@ function initService() {
 }
 
 function schedule(callback) {
-  Services.tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
+  Services.tm.dispatchToMainThread(callback);
 }
 
 // Public API

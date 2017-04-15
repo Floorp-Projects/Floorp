@@ -5,9 +5,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
 XPCOMUtils.defineLazyServiceGetter(this, "idleService",
                                    "@mozilla.org/widget/idleservice;1",
                                    "nsIIdleService");
-var {
-  SingletonEventManager,
-} = ExtensionUtils;
 
 // WeakMap[Extension -> Object]
 let observersMap = new WeakMap();

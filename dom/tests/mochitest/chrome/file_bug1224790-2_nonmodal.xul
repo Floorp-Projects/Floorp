@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1224790
     var windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).
       getInterface(Ci.nsIDOMWindowUtils);
 
-    Services.obs.notifyObservers(null, "child-cc-request", null);
+    Services.obs.notifyObservers(null, "child-cc-request");
     windowUtils.cycleCollect();
 
     // Wait for a while.

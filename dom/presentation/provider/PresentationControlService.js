@@ -118,25 +118,25 @@ PresentationControlService.prototype = {
     DEBUG && log("PresentationControlService - service start on port: " + this._port); // jshint ignore:line
 
     // Monitor network interface change to restart server socket.
-    Services.obs.addObserver(this, "network:offline-status-changed", false);
+    Services.obs.addObserver(this, "network:offline-status-changed");
 
     this._notifyServerReady();
   },
 
   _notifyServerReady: function() {
-    Services.tm.mainThread.dispatch(() => {
+    Services.tm.dispatchToMainThread(() => {
       if (this._listener) {
         this._listener.onServerReady(this._port, this.certFingerprint);
       }
-    }, Ci.nsIThread.DISPATCH_NORMAL);
+    });
   },
 
   _notifyServerStopped: function(aRv) {
-    Services.tm.mainThread.dispatch(() => {
+    Services.tm.dispatchToMainThread(() => {
       if (this._listener) {
         this._listener.onServerStopped(aRv);
       }
-    }, Ci.nsIThread.DISPATCH_NORMAL);
+    });
   },
 
   isCompatibleServer: function(aVersion) {
@@ -375,7 +375,7 @@ function ChannelDescription(aInit) {
         let wrapper = Cc["@mozilla.org/supports-cstring;1"]
                       .createInstance(Ci.nsISupportsCString);
         wrapper.data = address;
-        this._tcpAddresses.appendElement(wrapper, false);
+        this._tcpAddresses.appendElement(wrapper);
       }
 
       this._tcpPort = aInit.tcpPort;

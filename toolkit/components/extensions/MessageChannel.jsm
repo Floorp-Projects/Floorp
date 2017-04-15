@@ -280,8 +280,8 @@ const MESSAGE_RESPONSE = "MessageChannel:Response";
 
 this.MessageChannel = {
   init() {
-    Services.obs.addObserver(this, "message-manager-close", false);
-    Services.obs.addObserver(this, "message-manager-disconnect", false);
+    Services.obs.addObserver(this, "message-manager-close");
+    Services.obs.addObserver(this, "message-manager-disconnect");
 
     this.messageManagers = new FilteringMessageManagerMap(
       MESSAGE_MESSAGE, this._handleMessage.bind(this));
@@ -535,6 +535,7 @@ this.MessageChannel = {
     let deferred = PromiseUtils.defer();
     deferred.sender = recipient;
     deferred.messageManager = target;
+    deferred.channelId = channelId;
 
     this._addPendingResponse(deferred);
 
@@ -636,6 +637,7 @@ this.MessageChannel = {
     let deferred = {
       sender: data.sender,
       messageManager: target,
+      channelId: data.channelId,
     };
     deferred.promise = new Promise((resolve, reject) => {
       deferred.reject = reject;

@@ -8,12 +8,6 @@
 
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
-#include "nsIProfileSaveEvent.h"
-#include "nsLocalFile.h"
-#include "nsIFileStreams.h"
-
-using mozilla::dom::AutoJSAPI;
-using mozilla::dom::Promise;
 
 namespace mozilla {
 
@@ -26,11 +20,10 @@ namespace mozilla {
  */
 static const uint32_t MAX_SUBPROCESS_EXIT_PROFILES = 5;
 
-NS_IMPL_ISUPPORTS(ProfileGatherer, nsIObserver)
+NS_IMPL_ISUPPORTS0(ProfileGatherer)
 
 ProfileGatherer::ProfileGatherer()
-  : mSinceTime(0)
-  , mPendingProfiles(0)
+  : mPendingProfiles(0)
   , mGathering(false)
 {
 }
@@ -41,7 +34,7 @@ ProfileGatherer::~ProfileGatherer()
 }
 
 void
-ProfileGatherer::GatheredOOPProfile()
+ProfileGatherer::GatheredOOPProfile(const nsACString& aProfile)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -52,11 +45,9 @@ ProfileGatherer::GatheredOOPProfile()
     return;
   }
 
-  if (NS_WARN_IF(!mPromise && !mFile)) {
-    // If we're not holding on to a Promise, then someone is
-    // calling us erroneously.
-    return;
-  }
+  MOZ_RELEASE_ASSERT(mWriter.isSome(), "Should always have a writer if mGathering is true");
+
+  mWriter->Splice(PromiseFlatCString(aProfile).get());
 
   mPendingProfiles--;
 
@@ -73,140 +64,87 @@ ProfileGatherer::WillGatherOOPProfile()
   mPendingProfiles++;
 }
 
-void
-ProfileGatherer::Start(double aSinceTime, Promise* aPromise)
+RefPtr<ProfileGatherer::ProfileGatherPromise>
+ProfileGatherer::Start(double aSinceTime)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   if (mGathering) {
-    // If we're already gathering, reject the promise - this isn't going
-    // to end well.
-    if (aPromise) {
-      aPromise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
-    }
-    return;
+    // If we're already gathering, return a rejected promise - this isn't
+    // going to end well.
+    return ProfileGatherPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
   }
 
-  mPromise = aPromise;
-
-  Start2(aSinceTime);
-}
-
-void
-ProfileGatherer::Start(double aSinceTime, const nsACString& aFileName)
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-  nsresult rv = file->InitWithNativePath(aFileName);
-  if (NS_FAILED(rv)) {
-    MOZ_CRASH();
-  }
-
-  if (mGathering) {
-    return;
-  }
-
-  mFile = file;
-
-  Start2(aSinceTime);
-}
-
-// This is the common tail shared by both Start() methods.
-void
-ProfileGatherer::Start2(double aSinceTime)
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  mSinceTime = aSinceTime;
   mGathering = true;
   mPendingProfiles = 0;
 
+  // Send a notification to request profiles from other processes. The
+  // observers of this notification will call WillGatherOOPProfile() which
+  // increments mPendingProfiles.
+  // Do this before the call to profiler_stream_json_for_this_process because
+  // that call is slow and we want to let the other processes grab their
+  // profiles as soon as possible.
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
     DebugOnly<nsresult> rv =
-      os->AddObserver(this, "profiler-subprocess", false);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AddObserver failed");
-
-    rv = os->NotifyObservers(this, "profiler-subprocess-gather", nullptr);
+      os->NotifyObservers(this, "profiler-subprocess-gather", nullptr);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NotifyObservers failed");
   }
+
+  mWriter.emplace();
+
+  // Start building up the JSON result and grab the profile from this process.
+  mWriter->Start(SpliceableJSONWriter::SingleLineStyle);
+  if (!profiler_stream_json_for_this_process(*mWriter, aSinceTime)) {
+    // The profiler is inactive. This either means that it was inactive even
+    // at the time that ProfileGatherer::Start() was called, or that it was
+    // stopped on a different thread since that call. Either way, we need to
+    // reject the promise and stop gathering.
+    return ProfileGatherPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
+  }
+
+  mWriter->StartArrayProperty("processes");
+
+  // If we have any process exit profiles, add them immediately, and clear
+  // mExitProfiles.
+  for (size_t i = 0; i < mExitProfiles.Length(); ++i) {
+    if (!mExitProfiles[i].IsEmpty()) {
+      mWriter->Splice(mExitProfiles[i].get());
+    }
+  }
+  mExitProfiles.Clear();
+
+  mPromiseHolder.emplace();
+  RefPtr<ProfileGatherPromise> promise = mPromiseHolder->Ensure(__func__);
+
+  // Keep the array property "processes" and the root object in mWriter open
+  // until Finish() is called. As profiles from the other processes come in,
+  // they will be inserted and end up in the right spot. Finish() will close
+  // the array and the root object.
 
   if (!mPendingProfiles) {
     Finish();
   }
+
+  return promise;
 }
 
 void
 ProfileGatherer::Finish()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(mWriter.isSome());
+  MOZ_RELEASE_ASSERT(mPromiseHolder.isSome());
 
-  // It's unlikely but possible that profiler_stop() could be called while the
-  // profile gathering is in flight, but not via nsProfiler::StopProfiler().
-  // This check will detect that case.
-  //
-  // XXX: However, it won't detect the case where profiler_stop() *and*
-  // profiler_start() have both been called. (If that does happen, we'll end up
-  // with a franken-profile that includes a mix of data from the old and new
-  // profile activations.) We could include the activity generation to detect
-  // that, but it's not worth it for what should be an extremely unlikely case.
-  // It would be better if this class was rearranged so that
-  // profiler_get_profile() was called for the parent process in Start2()
-  // instead of in Finish(). Then we wouldn't have to worry about cancelling.
-  if (!profiler_is_active()) {
-    Cancel();
-    return;
-  }
+  // Close the "processes" array property.
+  mWriter->EndArray();
 
-  UniquePtr<char[]> buf = profiler_get_profile(mSinceTime);
+  // Close the root object of the generated JSON.
+  mWriter->End();
 
-  if (mFile) {
-    nsCOMPtr<nsIFileOutputStream> of =
-      do_CreateInstance("@mozilla.org/network/file-output-stream;1");
-    of->Init(mFile, -1, -1, 0);
-    uint32_t sz;
-    of->Write(buf.get(), strlen(buf.get()), &sz);
-    of->Close();
-    Reset();
-    return;
-  }
-
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os) {
-    DebugOnly<nsresult> rv = os->RemoveObserver(this, "profiler-subprocess");
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "RemoveObserver failed");
-  }
-
-  AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(mPromise->GlobalJSObject()))) {
-    // We're really hosed if we can't get a JS context for some reason.
-    Reset();
-    return;
-  }
-
-  JSContext* cx = jsapi.cx();
-
-  // Now parse the JSON so that we resolve with a JS Object.
-  JS::RootedValue val(cx);
-  {
-    NS_ConvertUTF8toUTF16 js_string(nsDependentCString(buf.get()));
-    if (!JS_ParseJSON(cx, static_cast<const char16_t*>(js_string.get()),
-                      js_string.Length(), &val)) {
-      if (!jsapi.HasException()) {
-        mPromise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
-      } else {
-        JS::RootedValue exn(cx);
-        DebugOnly<bool> gotException = jsapi.StealException(&exn);
-        MOZ_ASSERT(gotException);
-
-        jsapi.ClearException();
-        mPromise->MaybeReject(cx, exn);
-      }
-    } else {
-      mPromise->MaybeResolve(val);
-    }
-  }
+  UniquePtr<char[]> buf = mWriter->WriteFunc()->CopyData();
+  nsCString result(buf.get());
+  mPromiseHolder->Resolve(result, __func__);
 
   Reset();
 }
@@ -214,51 +152,34 @@ ProfileGatherer::Finish()
 void
 ProfileGatherer::Reset()
 {
-  mSinceTime = 0;
-  mPromise = nullptr;
-  mFile = nullptr;
+  mPromiseHolder.reset();
   mPendingProfiles = 0;
   mGathering = false;
+  mWriter.reset();
 }
 
 void
 ProfileGatherer::Cancel()
 {
-  // We're about to stop profiling. If we have a Promise in flight, we should
-  // reject it.
-  if (mPromise) {
-    mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+  // If we have a Promise in flight, we should reject it.
+  if (mPromiseHolder.isSome()) {
+    mPromiseHolder->RejectIfExists(NS_ERROR_DOM_ABORT_ERR, __func__);
   }
-  mPromise = nullptr;
-  mFile = nullptr;
+  Reset();
 }
 
 void
 ProfileGatherer::OOPExitProfile(const nsACString& aProfile)
 {
+  // Append the exit profile to mExitProfiles so that it can be picked up the
+  // next time a profile is requested. If we're currently gathering a profile,
+  // do not add this exit profile to it; chances are that we already have a
+  // profile from the exiting process and we don't want another one.
+  // We only keep around at most MAX_SUBPROCESS_EXIT_PROFILES exit profiles.
   if (mExitProfiles.Length() >= MAX_SUBPROCESS_EXIT_PROFILES) {
     mExitProfiles.RemoveElementAt(0);
   }
   mExitProfiles.AppendElement(aProfile);
-}
-
-NS_IMETHODIMP
-ProfileGatherer::Observe(nsISupports* aSubject,
-                         const char* aTopic,
-                         const char16_t *someData)
-{
-  if (!strcmp(aTopic, "profiler-subprocess")) {
-    nsCOMPtr<nsIProfileSaveEvent> pse = do_QueryInterface(aSubject);
-    if (pse) {
-      for (size_t i = 0; i < mExitProfiles.Length(); ++i) {
-        if (!mExitProfiles[i].IsEmpty()) {
-          pse->AddSubProfile(mExitProfiles[i].get());
-        }
-      }
-      mExitProfiles.Clear();
-    }
-  }
-  return NS_OK;
 }
 
 } // namespace mozilla

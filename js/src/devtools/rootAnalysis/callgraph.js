@@ -139,6 +139,9 @@ function getCallees(edge)
         return [{'kind': 'direct', 'name': callee.Variable.Name[0]}];
     }
 
+    if (callee.Kind == "Int")
+        return []; // Intentional crash
+  
     assert(callee.Kind == "Drf");
     const called = callee.Exp[0];
     if (called.Kind == "Var") {

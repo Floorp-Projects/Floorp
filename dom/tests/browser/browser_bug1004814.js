@@ -24,7 +24,7 @@ add_task(function*() {
           }
         };
 
-        Services.obs.addObserver(ConsoleObserver, "console-api-log-event", false);
+        Services.obs.addObserver(ConsoleObserver, "console-api-log-event");
 
         // Redirect the browser to the correct document to start the test
         content.document.location = TEST_URI;

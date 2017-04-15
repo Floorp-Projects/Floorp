@@ -11,11 +11,11 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 // This function is called from the webconsole test:
 // browser_addons_debug_bootstrapped.js
 function myBootstrapAddonFunction() { // eslint-disable-line no-unused-vars
-  Services.obs.notifyObservers(null, "addon-console-works", null);
+  Services.obs.notifyObservers(null, "addon-console-works");
 }
 
 function startup() {
-  Services.obs.notifyObservers(null, "test-devtools", null);
+  Services.obs.notifyObservers(null, "test-devtools");
 }
 function shutdown() {}
 function install() {}

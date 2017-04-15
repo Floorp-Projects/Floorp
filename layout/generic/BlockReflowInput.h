@@ -102,6 +102,9 @@ class BlockReflowInput {
 
     // Set when the pref layout.float-fragments-inside-column.enabled is true.
     bool mFloatFragmentsInsideColumnEnabled : 1;
+
+    // Set when we need text-overflow processing.
+    bool mCanHaveTextOverflow : 1;
   };
 
 public:

@@ -545,6 +545,27 @@ nsLineBox::RemoveFloat(nsIFrame* aFrame)
 }
 
 void
+nsLineBox::SetFloatEdges(nscoord aStart, nscoord aEnd)
+{
+  MOZ_ASSERT(IsInline(), "block line can't have float edges");
+  if (!mInlineData) {
+    mInlineData = new ExtraInlineData(GetPhysicalBounds());
+  }
+  mInlineData->mFloatEdgeIStart = aStart;
+  mInlineData->mFloatEdgeIEnd = aEnd;
+}
+
+void
+nsLineBox::ClearFloatEdges()
+{
+  MOZ_ASSERT(IsInline(), "block line can't have float edges");
+  if (mInlineData) {
+    mInlineData->mFloatEdgeIStart = NS_INTRINSIC_WIDTH_UNKNOWN;
+    mInlineData->mFloatEdgeIEnd = NS_INTRINSIC_WIDTH_UNKNOWN;
+  }
+}
+
+void
 nsLineBox::SetOverflowAreas(const nsOverflowAreas& aOverflowAreas)
 {
   NS_FOR_FRAME_OVERFLOW_TYPES(otype) {

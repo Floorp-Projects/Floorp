@@ -47,8 +47,8 @@ ContentProcessSingleton.prototype = {
   observe(subject, topic, data) {
     switch (topic) {
     case "app-startup": {
-      Services.obs.addObserver(this, "console-api-log-event", false);
-      Services.obs.addObserver(this, "xpcom-shutdown", false);
+      Services.obs.addObserver(this, "console-api-log-event");
+      Services.obs.addObserver(this, "xpcom-shutdown");
       cpmm.addMessageListener("DevTools:InitDebuggerServer", this);
       TelemetryController.observe(null, topic, null);
       break;

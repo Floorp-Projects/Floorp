@@ -27,7 +27,7 @@
           }
         }
       };
-      obsService.addObserver(observer, "plugin-info-updated", false);
+      obsService.addObserver(observer, "plugin-info-updated");
 
       var navTestPlugin1 = navigator.plugins.namedItem("Test Plug-in");
       ok(navTestPlugin1, "navigator.plugins should have Test Plug-in");

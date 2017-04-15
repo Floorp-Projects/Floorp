@@ -163,7 +163,7 @@ add_test(function observerFires() {
     ps.removeObserver("testPref.sticky.bool", observe);
     run_next_test();
   }
-  ps.addObserver("testPref.sticky.bool", observe, false);
+  ps.addObserver("testPref.sticky.bool", observe);
 
   ps.setBoolPref("testPref.sticky.bool", ps.getBoolPref("testPref.sticky.bool"));
   // and the observer will fire triggering the next text.

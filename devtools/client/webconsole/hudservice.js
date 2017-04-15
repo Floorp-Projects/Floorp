@@ -588,7 +588,7 @@ WebConsole.prototype = {
       }
 
       let id = WebConsoleUtils.supportsString(this.hudId);
-      Services.obs.notifyObservers(id, "web-console-destroyed", null);
+      Services.obs.notifyObservers(id, "web-console-destroyed");
       this._destroyer.resolve(null);
     }.bind(this));
 

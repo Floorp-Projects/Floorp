@@ -22,8 +22,8 @@ var TrackingProtection = {
     this.icon = $("#tracking-protection-icon");
 
     this.updateEnabled();
-    Services.prefs.addObserver(this.PREF_ENABLED_GLOBALLY, this, false);
-    Services.prefs.addObserver(this.PREF_ENABLED_IN_PRIVATE_WINDOWS, this, false);
+    Services.prefs.addObserver(this.PREF_ENABLED_GLOBALLY, this);
+    Services.prefs.addObserver(this.PREF_ENABLED_IN_PRIVATE_WINDOWS, this);
 
     this.activeTooltipText =
       gNavigatorBundle.getString("trackingProtection.icon.activeTooltip");

@@ -42,7 +42,7 @@ function test() {
           windowsToClose.push(aSubject);
           aCallback(aSubject);
       }, {once: true});
-    }, "domwindowopened", false);
+    }, "domwindowopened");
 
     cmd = aWindow.document.getElementById("Tools:PrivateBrowsing");
     var func = new Function("", cmd.getAttribute("oncommand"));
