@@ -175,7 +175,7 @@ PrefObserver.prototype = {
     Preferences.set(fullName, value);
   },
   register: function () {
-    this.branch.addObserver("", this, false);
+    this.branch.addObserver("", this);
   },
   unregister: function () {
     this.branch.removeObserver("", this);

@@ -158,8 +158,8 @@ function providerName(aProvider) {
  */
 var PrefObserver = {
     init() {
-      Services.prefs.addObserver(PREF_LOGGING_ENABLED, this, false);
-      Services.obs.addObserver(this, "xpcom-shutdown", false);
+      Services.prefs.addObserver(PREF_LOGGING_ENABLED, this);
+      Services.obs.addObserver(this, "xpcom-shutdown");
       this.observe(null, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, PREF_LOGGING_ENABLED);
     },
 
@@ -837,11 +837,11 @@ var AddonManagerInternal = {
 
       gCheckCompatibility = Services.prefs.getBoolPref(PREF_EM_CHECK_COMPATIBILITY,
                                                        gCheckCompatibility);
-      Services.prefs.addObserver(PREF_EM_CHECK_COMPATIBILITY, this, false);
+      Services.prefs.addObserver(PREF_EM_CHECK_COMPATIBILITY, this);
 
       gStrictCompatibility = Services.prefs.getBoolPref(PREF_EM_STRICT_COMPATIBILITY,
                                                         gStrictCompatibility);
-      Services.prefs.addObserver(PREF_EM_STRICT_COMPATIBILITY, this, false);
+      Services.prefs.addObserver(PREF_EM_STRICT_COMPATIBILITY, this);
 
       let defaultBranch = Services.prefs.getDefaultBranch("");
       gCheckUpdateSecurityDefault = defaultBranch.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY,
@@ -849,22 +849,22 @@ var AddonManagerInternal = {
 
       gCheckUpdateSecurity = Services.prefs.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY,
                                                         gCheckUpdateSecurity);
-      Services.prefs.addObserver(PREF_EM_CHECK_UPDATE_SECURITY, this, false);
+      Services.prefs.addObserver(PREF_EM_CHECK_UPDATE_SECURITY, this);
 
       gUpdateEnabled = Services.prefs.getBoolPref(PREF_EM_UPDATE_ENABLED, gUpdateEnabled);
-      Services.prefs.addObserver(PREF_EM_UPDATE_ENABLED, this, false);
+      Services.prefs.addObserver(PREF_EM_UPDATE_ENABLED, this);
 
       gAutoUpdateDefault = Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT,
                                                       gAutoUpdateDefault);
-      Services.prefs.addObserver(PREF_EM_AUTOUPDATE_DEFAULT, this, false);
+      Services.prefs.addObserver(PREF_EM_AUTOUPDATE_DEFAULT, this);
 
       gHotfixID = Services.prefs.getCharPref(PREF_EM_HOTFIX_ID, gHotfixID);
-      Services.prefs.addObserver(PREF_EM_HOTFIX_ID, this, false);
+      Services.prefs.addObserver(PREF_EM_HOTFIX_ID, this);
 
       gWebExtensionsMinPlatformVersion =
         Services.prefs.getCharPref(PREF_MIN_WEBEXT_PLATFORM_VERSION,
                                    gWebExtensionsMinPlatformVersion);
-      Services.prefs.addObserver(PREF_MIN_WEBEXT_PLATFORM_VERSION, this, false);
+      Services.prefs.addObserver(PREF_MIN_WEBEXT_PLATFORM_VERSION, this);
 
       let defaultProvidersEnabled = Services.prefs.getBoolPref(PREF_DEFAULT_PROVIDERS_ENABLED, true);
       AddonManagerPrivate.recordSimpleMeasure("default_providers", defaultProvidersEnabled);
@@ -1358,7 +1358,7 @@ var AddonManagerInternal = {
         permissions: difference,
         resolve, reject
       }};
-      Services.obs.notifyObservers(subject, "webextension-update-permissions", null);
+      Services.obs.notifyObservers(subject, "webextension-update-permissions");
     });
   },
 
@@ -1382,7 +1382,7 @@ var AddonManagerInternal = {
 
       logger.debug("Background update check beginning");
 
-      Services.obs.notifyObservers(null, "addons-background-update-start", null);
+      Services.obs.notifyObservers(null, "addons-background-update-start");
 
       if (this.updateEnabled) {
         let scope = {};
@@ -1531,8 +1531,7 @@ var AddonManagerInternal = {
 
       logger.debug("Background update check complete");
       Services.obs.notifyObservers(null,
-                                   "addons-background-update-complete",
-                                   null);
+                                   "addons-background-update-complete");
     }.bind(this));
     // Fork the promise chain so we can log the error and let our caller see it too.
     buPromise.then(null, e => logger.warn("Error in background update", e));
@@ -1770,7 +1769,7 @@ var AddonManagerInternal = {
       }
 
       // only tests should care about this
-      Services.obs.notifyObservers(null, "TEST:addon-repository-data-updated", null);
+      Services.obs.notifyObservers(null, "TEST:addon-repository-data-updated");
     }.bind(this));
   },
 
@@ -2018,7 +2017,7 @@ var AddonManagerInternal = {
         install: aInstallFn,
       },
     };
-    Services.obs.notifyObservers(info, aTopic, null);
+    Services.obs.notifyObservers(info, aTopic);
   },
 
   startInstall(browser, url, install) {
@@ -2075,7 +2074,7 @@ var AddonManagerInternal = {
 
         if (WEBEXT_PERMISSION_PROMPTS && !needsRestart) {
           let subject = {wrappedJSObject: {target: browser, addon: install.addon}};
-          Services.obs.notifyObservers(subject, "webextension-install-notify", null);
+          Services.obs.notifyObservers(subject, "webextension-install-notify");
         } else {
           self.installNotifyObservers("addon-install-complete", browser, url, install);
         }
@@ -2817,7 +2816,7 @@ var AddonManagerInternal = {
           }
         };
         subject.wrappedJSObject.info.permissions = info.addon.userPermissions;
-        Services.obs.notifyObservers(subject, "webextension-permission-prompt", null);
+        Services.obs.notifyObservers(subject, "webextension-permission-prompt");
       } else if (requireConfirm) {
         // The methods below all want to call the install() or cancel()
         // method on the provided AddonInstall object to either accept
@@ -3057,7 +3056,7 @@ var AddonManagerInternal = {
         let callback = () => resolve(result);
         if (Preferences.get(PREF_WEBEXT_PERM_PROMPTS, false)) {
           let subject = {wrappedJSObject: {target, addon, callback}};
-          Services.obs.notifyObservers(subject, "webextension-install-notify", null)
+          Services.obs.notifyObservers(subject, "webextension-install-notify")
         } else {
           callback();
         }

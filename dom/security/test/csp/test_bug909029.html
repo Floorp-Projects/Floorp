@@ -25,8 +25,8 @@ window.tests = {
 }
 
 function examiner() {
-  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
-  SpecialPowers.addObserver(this, "specialpowers-http-notify-request", false);
+  SpecialPowers.addObserver(this, "csp-on-violate-policy");
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request");
 }
 examiner.prototype  = {
   observe: function(subject, topic, data) {

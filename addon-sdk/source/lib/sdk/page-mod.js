@@ -12,13 +12,13 @@ const { contract } = require('./util/contract');
 const { WorkerHost, connect } = require('./content/utils');
 const { Class } = require('./core/heritage');
 const { Disposable } = require('./core/disposable');
-const { Worker } = require('./content/worker');
+lazyRequire(this, './content/worker', "Worker");
 const { EventTarget } = require('./event/target');
-const { on, emit, once, setListeners } = require('./event/core');
-const { isRegExp, isUndefined } = require('./lang/type');
+lazyRequire(this, './event/core', "on", "emit", "once", "setListeners");
+lazyRequire(this, './lang/type', "isRegExp", "isUndefined");
 const { merge, omit } = require('./util/object');
-const { remove, has, hasAny } = require("./util/array");
-const { Rules } = require("./util/rules");
+lazyRequire(this, "./util/array", "remove", "has", "hasAny");
+lazyRequire(this, "./util/rules", "Rules");
 const { processes, frames, remoteRequire } = require('./remote/parent');
 remoteRequire('sdk/content/page-mod');
 

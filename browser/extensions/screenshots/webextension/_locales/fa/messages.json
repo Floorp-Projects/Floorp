@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "از وب عکس بگیرید و کلیپ بسازید و به صورت موقت یا دایمی ذخیره کنید."
+  },
+  "addonAuthorsList": {
+    "message": "موزیلا <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "از صفحه عکس بگیرید"
+  },
+  "myShotsLink": {
+    "message": "عکس‌های من"
+  },
+  "screenshotInstructions": {
+    "message": "با کشیدن یا کلیک کردن روی صفحه یک منطقه را انتخاب کنید. برای لغو، ESC را فشار دهید."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "ذخیره"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "ذخیره ناحیه قابل مشاهده"
+  },
+  "saveScreenshotFullPage": {
+    "message": "ذخیره صفحه کامل"
+  },
+  "cancelScreenshot": {
+    "message": "لغو"
+  },
+  "downloadScreenshot": {
+    "message": "دریافت"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "پیوند کپی شد"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "لینک عکس شما در کلیپ‌بورد رونوشت شد. $META_KEY$-V را برای جای‌گذاری فشار دهید.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "خارج از سرویس."
+  },
+  "requestErrorDetails": {
+    "message": "متاسفم! نتوانستیم عکس شما را ذخیره کنیم. لطفاً بعدا دوباره تلاش کنید."
+  },
+  "connectionErrorTitle": {
+    "message": "نمی‌توانیم به تصاویر صفحه شما متصل شویم."
+  },
+  "connectionErrorDetails": {
+    "message": "لطفا اتصال اینترنت خود را بررسی کنید. اگر قادر به اتصال به اینترنت هستید، ممکن است مشکلی موقتی در سرویس تصاویر صفحهٔ فایرفاکس وجود داشته باشد."
+  },
+  "loginErrorDetails": {
+    "message": "به علت وجود مشکل در سرویس تصاویر صفحه فایرفاکس نتوانستیم عکس شما را ذخیره کنیم. لطفاً بعدا دوباره تلاش کنید."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "نمی‌توانیم از این صفحه تصویر بگیریم."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "این یک صفحه استاندارد وب نیست، بنابراین شما نمی‌توانید از آن تصویر بگیرید."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "نمی‌توانید از صفحهٔ تصاویرِ فایرفاکس عکس بگیرید!"
+  },
+  "genericErrorTitle": {
+    "message": "اوه! سرویس تصاویر صفحه فایرفاکس قاطی کرده."
+  },
+  "genericErrorDetails": {
+    "message": "مطمئن نیستیم چه اتفاقی افتاده است. می‌خواهید دوباره امتحان کنید یا از یک صفحهٔ دیگر عکس بگیرید؟"
+  },
+  "tourBodyOne": {
+    "message": "بدون خارج شدن از فایرفاکس، عکس بگیرید، ذخیره کنید و به اشتراک بگذارید."
+  },
+  "tourHeaderTwo": {
+    "message": "ضبط آنچه شما می‌خواهید"
+  },
+  "tourBodyTwo": {
+    "message": "کلیک کنید و بکشید تا فقط از قسمتی از صفحه عکس بگیرید. می‌توانید برای برجسته کردن روی ناحیه انتخاب شده حرکت کنید."
+  },
+  "tourHeaderThree": {
+    "message": "همانطور که می‌پسندید"
+  },
+  "tourBodyThree": {
+    "message": "عکس‌های بریده شده خود را برای به اشتراک‌گذاری راحت‌تر روی وب ذخیره کنید، یا آن‌ها را روی رایانه خود دریافت کنید. همچنین برای دیدن همهٔ عکس‌هایی که گرفتید می‌توانید روی دکمه «عکس‌های من» کلیک کنید."
+  },
+  "tourHeaderFour": {
+    "message": "ضبط پنجره یا کل صفحه‌ها"
+  },
+  "tourBodyFour": {
+    "message": "برای گرفتن عکس از ناحیه قابل مشاهده در پنجره یا تمام صفحه از دکمه‌های بالا سمت راست استفاده کنید."
+  },
+  "tourSkip": {
+    "message": "رد کردن"
+  },
+  "tourNext": {
+    "message": "اسلاید بعدی"
+  },
+  "tourPrevious": {
+    "message": "اسلاید قبلی"
+  },
+  "tourDone": {
+    "message": "انجام شد"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "با استفاده از سرویسِ تصاویرِ صفحهٔ فایرفاکس، شما با $TERMSANDPRIVACYNOTICETERMSLINK$ و $TERMSANDPRIVACYNOTICEPRIVACYLINK$ موافقت می‌کنید.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "شرایط"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "نکات حریم‌خصوصی"
+  }
+}

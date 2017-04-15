@@ -61,7 +61,7 @@ function do_state_read(aSubject, aTopic, aData) {
                             "max-age=1000", sslStatus, 0);
   }
   do_test_pending();
-  Services.obs.addObserver(do_state_written, "data-storage-written", false);
+  Services.obs.addObserver(do_state_written, "data-storage-written");
   do_test_finished();
 }
 
@@ -78,7 +78,7 @@ function run_test() {
   let line = "frequentlyused.example.com:HSTS\t4\t0\t" + (now + 100000) + ",1,0\n";
   outputStream.write(line, line.length);
   outputStream.close();
-  Services.obs.addObserver(do_state_read, "data-storage-ready", false);
+  Services.obs.addObserver(do_state_read, "data-storage-ready");
   do_test_pending();
   gSSService = Cc["@mozilla.org/ssservice;1"]
                  .getService(Ci.nsISiteSecurityService);

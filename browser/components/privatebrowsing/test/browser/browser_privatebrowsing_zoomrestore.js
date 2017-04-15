@@ -15,7 +15,7 @@ add_task(function* test() {
       Services.obs.addObserver(function onLocationChange(subj, topic, data) {
         Services.obs.removeObserver(onLocationChange, topic);
         resolve();
-      }, "browser-fullZoom:location-change", false);
+      }, "browser-fullZoom:location-change");
     });
   }
 

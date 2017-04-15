@@ -180,7 +180,7 @@ class SharedIntlData
      * by ICU when compared to IANA.
      */
     bool tryCanonicalizeTimeZoneConsistentWithIANA(JSContext* cx, JS::HandleString timeZone,
-                                                   JS::MutableHandleString result);
+                                                   MutableHandleAtom result);
 
   private:
     /**

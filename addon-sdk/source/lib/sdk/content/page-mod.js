@@ -7,26 +7,20 @@ module.metadata = {
   "stability": "stable"
 };
 
-const { getAttachEventType } = require('../content/utils');
+lazyRequire(this, '../content/utils', 'getAttachEventType');
 const { Class } = require('../core/heritage');
 const { Disposable } = require('../core/disposable');
-const { WeakReference } = require('../core/reference');
-const { WorkerChild } = require('./worker-child');
+lazyRequire(this, './worker-child', 'WorkerChild');
 const { EventTarget } = require('../event/target');
 const { on, emit, once, setListeners } = require('../event/core');
-const { on: domOn, removeListener: domOff } = require('../dom/events');
-const { isRegExp, isUndefined } = require('../lang/type');
-const { merge } = require('../util/object');
-const { isBrowser, getFrames } = require('../window/utils');
-const { getTabs, getURI: getTabURI } = require('../tabs/utils');
-const { ignoreWindow } = require('../private-browsing/utils');
-const { Style } = require("../stylesheet/style");
-const { attach, detach } = require("../content/mod");
-const { has, hasAny } = require("../util/array");
-const { Rules } = require("../util/rules");
-const { List, addListItem, removeListItem } = require('../util/list');
-const { when } = require("../system/unload");
-const { uuid } = require('../util/uuid');
+lazyRequire(this, '../dom/events',{'on': 'domOn', 'removeListener': 'domOff'});
+lazyRequire(this, '../util/object', "merge");
+lazyRequire(this, '../window/utils', "getFrames");
+lazyRequire(this, '../private-browsing/utils', "ignoreWindow");
+lazyRequire(this, '../stylesheet/style', 'Style');
+lazyRequire(this, '../content/mod', 'attach', 'detach');
+lazyRequire(this, '../util/rules', 'Rules');
+lazyRequire(this, '../util/uuid', 'uuid');
 const { frames, process } = require('../remote/child');
 
 const pagemods = new Map();
@@ -79,7 +73,7 @@ const ChildPageMod = Class({
 
     // `applyOnExistingDocuments` has to be called after `pagemods.add()`
     // otherwise its calls to `onContent` method won't do anything.
-    if (has(this.attachTo, 'existing'))
+    if (this.attachTo.includes('existing'))
       applyOnExistingDocuments(this);
   },
 
@@ -132,9 +126,9 @@ function applyOnExistingDocuments (mod) {
     if (!window || !window.frames)
       return;
     let uri = window.location.href;
-    if (has(mod.attachTo, "top") && modMatchesURI(mod, uri))
+    if (mod.attachTo.includes("top") && modMatchesURI(mod, uri))
       onContent(mod, window);
-    if (has(mod.attachTo, "frame"))
+    if (mod.attachTo.includes("frame"))
       getFrames(window).
         filter(iframe => modMatchesURI(mod, iframe.location.href)).
         forEach(frame => onContent(mod, frame));
@@ -167,10 +161,10 @@ function createWorker(mod, window) {
 function onContent (mod, window) {
   let isTopDocument = window.top === window;
   // Is a top level document and `top` is not set, ignore
-  if (isTopDocument && !has(mod.attachTo, "top"))
+  if (isTopDocument && !mod.attachTo.includes("top"))
     return;
   // Is a frame document and `frame` is not set, ignore
-  if (!isTopDocument && !has(mod.attachTo, "frame"))
+  if (!isTopDocument && !mod.attachTo.includes("frame"))
     return;
 
   // ensure we attach only once per document

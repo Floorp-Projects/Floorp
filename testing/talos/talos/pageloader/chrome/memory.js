@@ -20,9 +20,9 @@ function initializeMemoryCollector(callback, args) {
         memTimer = null;
 
         os.removeObserver(arguments.callee, "child-memory-reporter-update");
-        os.addObserver(collectAndReport, "child-memory-reporter-update", false);
+        os.addObserver(collectAndReport, "child-memory-reporter-update");
         gMemCallback();
-    }, "child-memory-reporter-update", false);
+    }, "child-memory-reporter-update");
 
    /*
     * Assume we have a child process, but if timer fires before we call the observer
@@ -52,7 +52,7 @@ function collectMemory(callback, args) {
     var os = Components.classes["@mozilla.org/observer-service;1"].
         getService(Components.interfaces.nsIObserverService);
 
-    os.notifyObservers(null, "child-memory-reporter-request", null);
+    os.notifyObservers(null, "child-memory-reporter-request");
   } else {
     collectAndReport(null, null, null);
   }

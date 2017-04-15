@@ -27,45 +27,47 @@ module.exports = function(context) {
         return;
       }
 
-      if ((callee.property.name === "addEventListener" ||
-           callee.property.name === "removeEventListener") &&
-          node.arguments.length === 3) {
-        let arg = node.arguments[2];
-        if (arg.type === "Literal" && arg.value === false) {
-          context.report(node, callee.property.name +
-                         "'s third parameter can be omitted when it's false.");
-        }
+      let isFalse = arg => arg.type === "Literal" && arg.value === false;
+      let isFalsy = arg => arg.type === "Literal" && !arg.value;
+      let isBool = arg => arg.type === "Literal" && (arg.value === false ||
+                                                     arg.value === true);
+      let name = callee.property.name;
+      let args = node.arguments;
+
+      if (["addEventListener", "removeEventListener", "addObserver"]
+          .includes(name) && args.length === 3 && isFalse(args[2])) {
+        context.report(node, name +
+                       "'s third parameter can be omitted when it's false.");
       }
 
-      if (callee.property.name == "clearUserPref" &&
-          node.arguments.length > 1) {
-        context.report(node, callee.property.name + " takes only 1 parameter.");
+      if (name === "clearUserPref" && args.length > 1) {
+        context.report(node, name + " takes only 1 parameter.");
       }
 
-      if (callee.property.name === "removeObserver" &&
-          node.arguments.length === 3) {
-        let arg = node.arguments[2];
-        if (arg.type === "Literal" && (arg.value === false ||
-                                       arg.value === true)) {
-          context.report(node, "removeObserver only takes 2 parameters.");
-        }
+      if (name === "removeObserver" && args.length === 3 && isBool(args[2])) {
+        context.report(node, "removeObserver only takes 2 parameters.");
       }
 
-      if (callee.property.name === "getComputedStyle" &&
-          node.arguments.length === 2) {
-        let arg = node.arguments[1];
-        if (arg.type === "Literal" && !arg.value) {
-          context.report(node,
-                         "getComputedStyle's second parameter can be omitted.");
-        }
+      if (name === "appendElement" && args.length === 2 && isFalse(args[1])) {
+        context.report(node, name +
+                       "'s second parameter can be omitted when it's false.");
       }
 
-      if (callee.property.name === "newURI" &&
-          node.arguments.length > 1) {
-        let arg = node.arguments[node.arguments.length - 1];
-        if (arg.type === "Literal" && !arg.value) {
-          context.report(node, "newURI's last parameters are optional.");
-        }
+      if (name === "notifyObservers" && args.length === 3 &&
+          isFalsy(args[2])) {
+        context.report(node, name +
+                       "'s third parameter can be omitted.");
+      }
+
+      if (name === "getComputedStyle" && args.length === 2 &&
+          isFalsy(args[1])) {
+        context.report(node,
+                       "getComputedStyle's second parameter can be omitted.");
+      }
+
+      if (name === "newURI" && args.length > 1 &&
+          isFalsy(args[args.length - 1])) {
+        context.report(node, "newURI's last parameters are optional.");
       }
     }
   };

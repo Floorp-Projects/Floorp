@@ -27,7 +27,7 @@ add_task(function* runTest() {
     Services.obs.addObserver(function listener() {
       Services.obs.removeObserver(listener, "browser-toolbox-console-works");
       done();
-    }, "browser-toolbox-console-works", false);
+    }, "browser-toolbox-console-works");
   });
 
   // Be careful, this JS function is going to be executed in the addon toolbox,

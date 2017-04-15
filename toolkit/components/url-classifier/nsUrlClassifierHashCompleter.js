@@ -180,7 +180,7 @@ function HashCompleter() {
   // A map of gethash URLs to next gethash time in miliseconds
   this._nextGethashTimeMs = {};
 
-  Services.obs.addObserver(this, "quit-application", false);
+  Services.obs.addObserver(this, "quit-application");
 
 }
 
@@ -232,7 +232,7 @@ HashCompleter.prototype = {
 
     // Start off this request. Without dispatching to a thread, every call to
     // complete makes an individual HTTP request.
-    Services.tm.currentThread.dispatch(this, Ci.nsIThread.DISPATCH_NORMAL);
+    Services.tm.dispatchToMainThread(this);
   },
 
   // This is called after several calls to |complete|, or after the
@@ -273,7 +273,7 @@ HashCompleter.prototype = {
   // gethashUrl and fetch the next pending request, if there is one.
   finishRequest: function(url, aStatus) {
     this._backoffs[url].noteServerResponse(aStatus);
-    Services.tm.currentThread.dispatch(this, Ci.nsIThread.DISPATCH_NORMAL);
+    Services.tm.dispatchToMainThread(this);
   },
 
   // Returns true if we can make a request from the given url, false otherwise.
@@ -382,7 +382,7 @@ HashCompleterRequest.prototype = {
       return;
     }
 
-    Services.obs.addObserver(this, "quit-application", false);
+    Services.obs.addObserver(this, "quit-application");
 
     // V4 requires table states to build the request so we need
     // a async call to retrieve the table states from disk.
@@ -685,7 +685,7 @@ HashCompleterRequest.prototype = {
 
       req.response.matches.forEach(m => {
         matches.appendElement(
-          new FullHashMatch(m.tableName, m.completeHash, m.cacheDuration), false);
+          new FullHashMatch(m.tableName, m.completeHash, m.cacheDuration));
       });
 
       req.callback.completionV4(req.partialHash, req.tableName,

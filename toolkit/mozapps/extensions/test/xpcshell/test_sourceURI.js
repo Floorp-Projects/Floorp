@@ -29,7 +29,7 @@ function backgroundUpdate(aCallback) {
   Services.obs.addObserver(function() {
     Services.obs.removeObserver(arguments.callee, "addons-background-update-complete");
     aCallback();
-  }, "addons-background-update-complete", false);
+  }, "addons-background-update-complete");
 
   AddonManagerPrivate.backgroundUpdateCheck();
 }

@@ -27,7 +27,7 @@ var mockSendResult = (aId, aResult) => {
     id: aId,
     result: aResult
   };
-  Services.obs.notifyObservers({wrappedJSObject: msg}, CHROME_MSG, null);
+  Services.obs.notifyObservers({wrappedJSObject: msg}, CHROME_MSG);
 };
 
 var mockSendError = (aId, aError) => {
@@ -35,7 +35,7 @@ var mockSendError = (aId, aError) => {
     id: aId,
     result: aError
   };
-  Services.obs.notifyObservers({wrappedJSObject: msg}, CHROME_MSG, null);
+  Services.obs.notifyObservers({wrappedJSObject: msg}, CHROME_MSG);
 };
 
 function attachMocks() {
@@ -104,7 +104,7 @@ function run_test() {
       run_next_test();
     }
 
-    Services.obs.addObserver(onMessage, CHROME_MSG, false);
+    Services.obs.addObserver(onMessage, CHROME_MSG);
 
     attachMocks();
 

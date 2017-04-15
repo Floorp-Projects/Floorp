@@ -32,7 +32,7 @@ var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
 var tests = [
   function() {
     iframe = document.querySelector("iframe");
-    observerService.addObserver(observer, "audio-playback", false);
+    observerService.addObserver(observer, "audio-playback");
     ok(true, "Observer set");
     runTest();
   },

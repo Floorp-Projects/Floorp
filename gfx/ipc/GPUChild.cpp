@@ -206,11 +206,11 @@ GPUChild::RecvNotifyDeviceReset(const GPUDeviceData& aData)
 }
 
 mozilla::ipc::IPCResult
-GPUChild::RecvProfile(const nsCString& aProfile)
+GPUChild::RecvProfile(const nsCString& aProfile, const bool& aIsExitProfile)
 {
 #ifdef MOZ_GECKO_PROFILER
   if (mProfilerController) {
-    mProfilerController->RecvProfile(aProfile);
+    mProfilerController->RecvProfile(aProfile, aIsExitProfile);
   }
 #endif
   return IPC_OK();

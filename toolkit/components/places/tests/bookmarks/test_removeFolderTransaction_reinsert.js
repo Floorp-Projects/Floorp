@@ -38,7 +38,7 @@ add_task(function* test_removeFolderTransaction_reinsert() {
       notifications.push(["onItemRemoved", itemId, parentId, guid, parentGuid]);
     },
   };
-  PlacesUtils.bookmarks.addObserver(observer, false);
+  PlacesUtils.bookmarks.addObserver(observer);
   PlacesUtils.registerShutdownFunction(function() {
     PlacesUtils.bookmarks.removeObserver(observer);
   });

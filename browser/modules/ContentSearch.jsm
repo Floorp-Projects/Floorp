@@ -112,9 +112,9 @@ this.ContentSearch = {
     Cc["@mozilla.org/globalmessagemanager;1"].
       getService(Ci.nsIMessageListenerManager).
       addMessageListener(INBOUND_MESSAGE, this);
-    Services.obs.addObserver(this, "browser-search-engine-modified", false);
-    Services.obs.addObserver(this, "shutdown-leaks-before-check", false);
-    Services.prefs.addObserver("browser.search.hiddenOneOffs", this, false);
+    Services.obs.addObserver(this, "browser-search-engine-modified");
+    Services.obs.addObserver(this, "shutdown-leaks-before-check");
+    Services.prefs.addObserver("browser.search.hiddenOneOffs", this);
     this._stringBundle = Services.strings.createBundle("chrome://global/locale/autocomplete.properties");
   },
 

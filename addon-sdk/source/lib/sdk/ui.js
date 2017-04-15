@@ -10,8 +10,16 @@ module.metadata = {
   }
 };
 
-exports.ActionButton = require('./ui/button/action').ActionButton;
-exports.ToggleButton = require('./ui/button/toggle').ToggleButton;
-exports.Sidebar = require('./ui/sidebar').Sidebar;
-exports.Frame = require('./ui/frame').Frame;
-exports.Toolbar = require('./ui/toolbar').Toolbar;
+lazyRequire(this, './ui/button/action', 'ActionButton');
+lazyRequire(this, './ui/button/toggle', 'ToggleButton');
+lazyRequire(this, './ui/sidebar', 'Sidebar');
+lazyRequire(this, './ui/frame', 'Frame');
+lazyRequire(this, './ui/toolbar', 'Toolbar');
+
+module.exports = Object.freeze({
+  get ActionButton() { return ActionButton; },
+  get ToggleButton() { return ToggleButton; },
+  get Sidebar() { return Sidebar; },
+  get Frame() { return Frame; },
+  get Toolbar() { return Toolbar; },
+});

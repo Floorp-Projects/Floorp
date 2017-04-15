@@ -113,7 +113,7 @@ function promiseCurrentEngineChanged() {
       }
     }
 
-    Services.obs.addObserver(observer, "browser-search-engine-modified", false);
+    Services.obs.addObserver(observer, "browser-search-engine-modified");
   });
 }
 

@@ -46,7 +46,7 @@ function send(element, event, handler) {
               }
             };
 
-            SpecialPowers.addObserver(observer, "outer-window-destroyed", false);
+            SpecialPowers.addObserver(observer, "outer-window-destroyed");
           });
         })(win));
         win.close();

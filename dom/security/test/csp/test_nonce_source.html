@@ -18,8 +18,8 @@ var totalTests = 20;
 
 // This is used to watch the blocked data bounce off CSP
 function examiner() {
-  SpecialPowers.addObserver(this, "specialpowers-http-notify-request", false);
-  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request");
+  SpecialPowers.addObserver(this, "csp-on-violate-policy");
 }
 
 examiner.prototype = {

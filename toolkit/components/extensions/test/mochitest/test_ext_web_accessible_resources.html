@@ -237,7 +237,7 @@ add_task(function* test_web_accessible_resources_csp() {
 
   // This is used to watch the blocked data bounce off CSP.
   function examiner() {
-    SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+    SpecialPowers.addObserver(this, "csp-on-violate-policy");
   }
 
   let cspEventCount = 0;
