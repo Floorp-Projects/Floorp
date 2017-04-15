@@ -472,8 +472,8 @@ mozJSSubScriptLoader::ReadScript(nsIURI* uri,
                                  nsIIOService* serv,
                                  nsIPrincipal* principal,
                                  bool reuseGlobal,
-                                 JS::MutableHandleScript script,
-                                 JS::MutableHandleFunction function)
+                                 MutableHandleScript script,
+                                 MutableHandleFunction function)
 {
     script.set(nullptr);
     function.set(nullptr);
