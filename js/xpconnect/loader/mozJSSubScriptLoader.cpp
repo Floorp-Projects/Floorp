@@ -401,10 +401,13 @@ AsyncScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
 }
 
 nsresult
-mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri, JSObject* targetObjArg,
+mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri,
+                                      JSObject* targetObjArg,
                                       const nsAString& charset,
-                                      nsIIOService* serv, bool reuseGlobal,
-                                      bool cache, MutableHandleValue retval)
+                                      nsIIOService* serv,
+                                      bool reuseGlobal,
+                                      bool cache,
+                                      MutableHandleValue retval)
 {
     RootedObject targetObj(RootingCx(), targetObjArg);
 
@@ -461,10 +464,15 @@ mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri, JSObject* targetObjArg,
 }
 
 bool
-mozJSSubScriptLoader::ReadScript(nsIURI* uri, JSContext* cx, JSObject* targetObjArg,
-                                 const nsAString& charset, const char* uriStr,
-                                 nsIIOService* serv, nsIPrincipal* principal,
-                                 bool reuseGlobal, JS::MutableHandleScript script,
+mozJSSubScriptLoader::ReadScript(nsIURI* uri,
+                                 JSContext* cx,
+                                 JSObject* targetObjArg,
+                                 const nsAString& charset,
+                                 const char* uriStr,
+                                 nsIIOService* serv,
+                                 nsIPrincipal* principal,
+                                 bool reuseGlobal,
+                                 JS::MutableHandleScript script,
                                  JS::MutableHandleFunction function)
 {
     script.set(nullptr);
