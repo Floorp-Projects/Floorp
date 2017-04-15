@@ -18,6 +18,7 @@ win32-clang-cl/opt:
         script: build-clang32-windows.sh
         resources:
             - 'build/build-clang/**'
+            - 'taskcluster/scripts/misc/build-clang-windows-helper32.sh'
 
 win64-clang-cl/opt:
     description: "Clang-cl toolchain build"
@@ -35,6 +36,7 @@ win64-clang-cl/opt:
         script: build-clang64-windows.sh
         resources:
             - 'build/build-clang/**'
+            - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
 
 win32-clang-tidy/opt:
     description: "Clang-tidy toolchain build"
@@ -55,6 +57,7 @@ win32-clang-tidy/opt:
         script: build-clang-tidy32-windows.sh
         resources:
             - 'build/build-clang/**'
+            - 'taskcluster/scripts/misc/build-clang-windows-helper32.sh'
 
 win64-clang-tidy/opt:
     description: "Clang-tidy toolchain build"
@@ -75,3 +78,4 @@ win64-clang-tidy/opt:
         script: build-clang-tidy64-windows.sh
         resources:
             - 'build/build-clang/**'
+            - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'

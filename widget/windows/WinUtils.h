@@ -96,6 +96,11 @@ typedef enum DPI_AWARENESS {
 #define DPI_AWARENESS_CONTEXT_DECLARED
 #endif // (DPI_AWARENESS_CONTEXT_DECLARED)
 
+#if WINVER < 0x0605
+WINUSERAPI DPI_AWARENESS_CONTEXT WINAPI GetThreadDpiAwarenessContext();
+WINUSERAPI BOOL WINAPI
+AreDpiAwarenessContextsEqual(DPI_AWARENESS_CONTEXT, DPI_AWARENESS_CONTEXT);
+#endif /* WINVER < 0x0605 */
 typedef DPI_AWARENESS_CONTEXT(WINAPI * SetThreadDpiAwarenessContextProc)(DPI_AWARENESS_CONTEXT);
 typedef BOOL(WINAPI * EnableNonClientDpiScalingProc)(HWND);
 
@@ -152,6 +157,12 @@ class WinUtils
   static SetThreadDpiAwarenessContextProc sSetThreadDpiAwarenessContext;
   static EnableNonClientDpiScalingProc sEnableNonClientDpiScaling;
 
+  // Wrapper for DefWindowProc that will enable non-client dpi scaling on the
+  // window during creation.
+  static LRESULT WINAPI
+  NonClientDpiScalingDefWindowProcW(HWND hWnd, UINT msg,
+                                    WPARAM wParam, LPARAM lParam);
+
 public:
   class AutoSystemDpiAware
   {
@@ -174,11 +185,11 @@ public:
     DPI_AWARENESS_CONTEXT mPrevContext;
   };
 
-  // Wrapper for DefWindowProc that will enable non-client dpi scaling on the
-  // window during creation.
-  static LRESULT WINAPI
-  NonClientDpiScalingDefWindowProcW(HWND hWnd, UINT msg,
-                                    WPARAM wParam, LPARAM lParam);
+  static decltype(::DefWindowProcW)* GetDefWindowProc()
+  {
+    return sEnableNonClientDpiScaling ? NonClientDpiScalingDefWindowProcW :
+                                        ::DefWindowProcW;
+  }
 
   /**
    * Get the system's default logical-to-physical DPI scaling factor,

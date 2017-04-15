@@ -756,7 +756,11 @@ HttpChannelChild::OnTransportAndData(const nsresult& channelStatus,
   // necko msg in between them.
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-  const int64_t progressMax = mResponseHead->ContentLength();
+  int64_t progressMax;
+  if (NS_FAILED(GetContentLength(&progressMax))) {
+    progressMax = -1;
+  }
+
   const int64_t progress = offset + count;
 
   // OnTransportAndData will be run on retargeted thread if applicable, however

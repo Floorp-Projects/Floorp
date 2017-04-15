@@ -268,9 +268,9 @@ to mochitest command.
     * test_property_syntax_errors.html `mask'` [76]
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
-    * test_priority_preservation.html `border-radius` [4]
-    * test_value_storage.html `border-radius:` [64]
-    * test_shorthand_property_getters.html `should condense to shortest possible` [6]
+    * test_priority_preservation.html `border-radius` [0]
+    * test_value_storage.html `border-radius:` [0]
+    * test_shorthand_property_getters.html `should condense to shortest possible` [0]
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
   * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]

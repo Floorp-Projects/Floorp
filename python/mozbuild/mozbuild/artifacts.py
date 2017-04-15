@@ -42,6 +42,7 @@ consumers will need to arrange this themselves.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import binascii
 import collections
 import functools
 import glob
@@ -70,6 +71,7 @@ from taskgraph.util.taskcluster import (
 from mozbuild.util import (
     ensureParentDir,
     FileAvoidWrite,
+    mkdir,
 )
 import mozinstall
 from mozpack.files import (
@@ -532,6 +534,7 @@ class CacheManager(object):
         self._cache = pylru.lrucache(cache_size, callback=cache_callback)
         self._cache_filename = mozpath.join(cache_dir, cache_name + '-cache.pickle')
         self._log = log
+        mkdir(cache_dir, not_indexed=True)
 
     def log(self, *args, **kwargs):
         if self._log:
@@ -702,7 +705,8 @@ class ArtifactPersistLimit(PersistLimit):
             self._log(*args, **kwargs)
 
     def register_file(self, path):
-        if path.endswith('.pickle'):
+        if path.endswith('.pickle') or \
+                os.path.basename(path) == '.metadata_never_index':
             return
         if not self._registering_dir:
             # Touch the file so that subsequent calls to a mach artifact
@@ -751,6 +755,7 @@ class ArtifactCache(object):
     '''Fetch Task Cluster artifact URLs and purge least recently used artifacts from disk.'''
 
     def __init__(self, cache_dir, log=None, skip_cache=False):
+        mkdir(cache_dir, not_indexed=True)
         self._cache_dir = cache_dir
         self._log = log
         self._skip_cache = skip_cache
@@ -764,13 +769,20 @@ class ArtifactCache(object):
             self._log(*args, **kwargs)
 
     def fetch(self, url, force=False):
-        # We download to a temporary name like HASH[:16]-basename to
-        # differentiate among URLs with the same basenames.  We used to then
-        # extract the build ID from the downloaded artifact and use it to make a
-        # human readable unique name, but extracting build IDs is time consuming
-        # (especially on Mac OS X, where we must mount a large DMG file).
-        hash = hashlib.sha256(url).hexdigest()[:16]
-        fname = hash + '-' + os.path.basename(url)
+        fname = os.path.basename(url)
+        try:
+            # Use the file name from the url if it looks like a hash digest.
+            if len(fname) not in (32, 40, 56, 64, 96, 128):
+                raise TypeError()
+            binascii.unhexlify(fname)
+        except TypeError:
+            # We download to a temporary name like HASH[:16]-basename to
+            # differentiate among URLs with the same basenames.  We used to then
+            # extract the build ID from the downloaded artifact and use it to make a
+            # human readable unique name, but extracting build IDs is time consuming
+            # (especially on Mac OS X, where we must mount a large DMG file).
+            hash = hashlib.sha256(url).hexdigest()[:16]
+            fname = hash + '-' + os.path.basename(url)
 
         path = os.path.abspath(mozpath.join(self._cache_dir, fname))
         if self._skip_cache and os.path.exists(path):

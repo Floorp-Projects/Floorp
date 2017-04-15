@@ -1152,6 +1152,15 @@
     "releaseChannelCollection": "opt-out",
     "description": "GPU process initialization (excluding XPCOM and fork time) time in milliseconds"
   },
+  "GPU_PROCESS_CRASH_FALLBACKS": {
+    "alert_emails": ["cpearce@mozilla.com", "gsquelart@mozilla.com"],
+    "expires_in_version": "60",
+    "bug_numbers": [1338011],
+    "kind": "enumerated",
+    "releaseChannelCollection": "opt-out",
+    "n_values":  10,
+    "description": "Count how often we use different fallbacks when the GPU process crashes: None=0, GPUProcessDecodingDisabled=1, GPUProcessDisabled=2"
+  },
   "JS_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT": {
     "alert_emails": ["jdemooij@mozilla.com"],
     "expires_in_version": "never",
@@ -5910,6 +5919,32 @@
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1345834],
     "description": "Firefox: The index of the selected result in the URL bar popup by the type of the selected result in the URL bar popup. See BrowserUsageTelemetry.jsm:URLBAR_SELECTED_RESULT_TYPES for the result types."
+  },
+  "FX_URLBAR_SELECTED_RESULT_METHOD": {
+    "alert_emails": ["dzeber@mozilla.com"],
+    "expires_in_version": "63",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "enter",
+      "enterSelection",
+      "click"
+    ],
+    "bug_numbers": [1334615],
+    "description": "The input method the user used to select a result in the urlbar. 'enter' => The user hit the Enter key on the heuristic result at index 0. 'enterSelection' => The user chose a non-heuristic result and then hit the Enter key. 'click' => The user clicked a result with the mouse."
+  },
+  "FX_SEARCHBAR_SELECTED_RESULT_METHOD": {
+    "alert_emails": ["dzeber@mozilla.com"],
+    "expires_in_version": "63",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "enter",
+      "enterSelection",
+      "click"
+    ],
+    "bug_numbers": [1334615],
+    "description": "The input method the user used to select a result in the searchbar. 'enter' => The user hit the Enter key without choosing a result in the popup. 'enterSelection' => The user chose a result and then hit the Enter key. 'click' => The user clicked a result with the mouse."
   },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "expires_in_version": "never",
