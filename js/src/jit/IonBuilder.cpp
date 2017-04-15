@@ -13078,10 +13078,10 @@ IonBuilder::typedObjectPrediction(TemporaryTypeSet* types)
     TypedObjectPrediction out;
     for (uint32_t i = 0; i < types->getObjectCount(); i++) {
         ObjectGroup* group = types->getGroup(i);
-        if (!group || !TypeSet::ObjectKey::get(group)->hasStableClassAndProto(constraints()))
+        if (!group || !IsTypedObjectClass(group->clasp()))
             return TypedObjectPrediction();
 
-        if (!IsTypedObjectClass(group->clasp()))
+        if (!TypeSet::ObjectKey::get(group)->hasStableClassAndProto(constraints()))
             return TypedObjectPrediction();
 
         out.addDescr(group->typeDescr());
