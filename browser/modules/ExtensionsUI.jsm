@@ -35,13 +35,15 @@ this.ExtensionsUI = {
   sideloadListener: null,
   histogram: null,
 
-  init() {
+  async init() {
     this.histogram = Services.telemetry.getHistogramById("EXTENSION_INSTALL_PROMPT_RESULT");
 
     Services.obs.addObserver(this, "webextension-permission-prompt");
     Services.obs.addObserver(this, "webextension-update-permissions");
     Services.obs.addObserver(this, "webextension-install-notify");
     Services.obs.addObserver(this, "webextension-optional-permission-prompt");
+
+    await RecentWindow.getMostRecentBrowserWindow().delayedStartupPromise;
 
     this._checkForSideloaded();
   },
