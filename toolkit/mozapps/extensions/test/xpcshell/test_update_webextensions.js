@@ -44,7 +44,7 @@ function promiseInstallWebExtension(aData) {
   return promiseInstallAllFiles([addonFile]).then(() => {
     return startupPromise;
   }).then(() => {
-    Services.obs.notifyObservers(addonFile, "flush-cache-entry", null);
+    Services.obs.notifyObservers(addonFile, "flush-cache-entry");
     return promiseAddonByID(aData.id);
   });
 }
@@ -238,7 +238,7 @@ add_task(function* checkIllegalUpdateURL() {
       });
 
       return AddonManager.getInstallForFile(addonFile).then(install => {
-        Services.obs.notifyObservers(addonFile, "flush-cache-entry", null);
+        Services.obs.notifyObservers(addonFile, "flush-cache-entry");
 
         if (!install || install.state != AddonManager.STATE_DOWNLOAD_FAILED)
           throw new Error("Unexpected state: " + (install && install.state));

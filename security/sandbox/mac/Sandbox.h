@@ -8,6 +8,8 @@
 
 #include <string>
 
+#include "SandboxPolicies.h"
+
 enum MacSandboxType {
   MacSandboxType_Default = 0,
   MacSandboxType_Plugin,

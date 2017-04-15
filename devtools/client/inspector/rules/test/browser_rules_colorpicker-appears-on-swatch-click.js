@@ -33,7 +33,7 @@ add_task(function* () {
 });
 
 function* testColorPickerAppearsOnColorSwatchClick(view, swatch) {
-  let cPicker = view.tooltips.colorPicker;
+  let cPicker = view.tooltips.getTooltip("colorPicker");
   ok(cPicker, "The rule-view has the expected colorPicker property");
 
   let cPickerPanel = cPicker.tooltip.panel;

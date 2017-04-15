@@ -15,7 +15,6 @@
 
 var path = require("path");
 var helpers = require("../helpers");
-var globals = require("../globals");
 var browserWindowEnv = require("../environments/browser-window");
 
 module.exports = function(context) {
@@ -24,9 +23,9 @@ module.exports = function(context) {
   // ---------------------------------------------------------------------------
 
   return {
-    Program: function(node) {
+    Program(node) {
       let filePath = helpers.getAbsoluteFilePath(context);
-      let relativePath = path.relative(helpers.getRootDir(filePath), filePath);
+      let relativePath = path.relative(helpers.rootDir, filePath);
 
       if (browserWindowEnv.browserjsScripts &&
           browserWindowEnv.browserjsScripts.includes(relativePath)) {

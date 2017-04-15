@@ -73,7 +73,7 @@ function WebConsoleActor(aConnection, aParentActor)
   this._onObserverNotification = this._onObserverNotification.bind(this);
   if (this.parentActor.isRootActor) {
     Services.obs.addObserver(this._onObserverNotification,
-                             "last-pb-context-exited", false);
+                             "last-pb-context-exited");
   }
 
   this.traits = {
@@ -193,7 +193,7 @@ WebConsoleActor.prototype =
           Services.obs.removeObserver(onChromeWindowOpened, "domwindowopened");
           this._lastChromeWindow = null;
         };
-        Services.obs.addObserver(onChromeWindowOpened, "domwindowopened", false);
+        Services.obs.addObserver(onChromeWindowOpened, "domwindowopened");
       }
 
       this._handleNewWindow(window);

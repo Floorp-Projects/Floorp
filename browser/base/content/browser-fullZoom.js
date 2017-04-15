@@ -287,7 +287,7 @@ var FullZoom = {
       if (token.isCurrent) {
         ZoomManager.setZoomForBrowser(browser, value === undefined ? 1 : value);
         this._ignorePendingZoomAccesses(browser);
-        Services.obs.notifyObservers(browser, "browser-fullZoom:zoomReset", "");
+        Services.obs.notifyObservers(browser, "browser-fullZoom:zoomReset");
       }
     });
     this._removePref(browser);
@@ -355,7 +355,7 @@ var FullZoom = {
    * @param browser  The zoom of this browser will be saved.  Required.
    */
   _applyZoomToPref: function FullZoom__applyZoomToPref(browser) {
-    Services.obs.notifyObservers(browser, "browser-fullZoom:zoomChange", "");
+    Services.obs.notifyObservers(browser, "browser-fullZoom:zoomChange");
     if (!this.siteSpecific ||
         gInPrintPreviewMode ||
         browser.isSyntheticDocument)
@@ -376,7 +376,7 @@ var FullZoom = {
    * @param browser  The zoom of this browser will be removed.  Required.
    */
   _removePref: function FullZoom__removePref(browser) {
-    Services.obs.notifyObservers(browser, "browser-fullZoom:zoomReset", "");
+    Services.obs.notifyObservers(browser, "browser-fullZoom:zoomReset");
     if (browser.isSyntheticDocument)
       return;
     let ctxt = this._loadContextFromBrowser(browser);
@@ -514,13 +514,13 @@ var FullZoom = {
    */
   _notifyOnLocationChange: function FullZoom__notifyOnLocationChange(browser) {
     this._executeSoon(function() {
-      Services.obs.notifyObservers(browser, "browser-fullZoom:location-change", "");
+      Services.obs.notifyObservers(browser, "browser-fullZoom:location-change");
     });
   },
 
   _executeSoon: function FullZoom__executeSoon(callback) {
     if (!callback)
       return;
-    Services.tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
+    Services.tm.dispatchToMainThread(callback);
   },
 };

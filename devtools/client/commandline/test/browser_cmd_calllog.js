@@ -88,7 +88,7 @@ tests.testCallLogExec = function (options) {
       deferred.resolve();
     });
   };
-  Services.obs.addObserver(onWebConsoleOpen, "web-console-created", false);
+  Services.obs.addObserver(onWebConsoleOpen, "web-console-created");
 
   helpers.audit(options, [
     {

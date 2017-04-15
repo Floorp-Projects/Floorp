@@ -18,9 +18,7 @@
 // Rule Definition
 // -----------------------------------------------------------------------------
 
-var path = require("path");
 var helpers = require("../helpers");
-var globals = require("../globals");
 var frameScriptEnv = require("../environments/frame-script");
 
 module.exports = function(context) {

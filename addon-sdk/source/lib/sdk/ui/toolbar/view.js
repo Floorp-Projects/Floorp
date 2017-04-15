@@ -20,10 +20,10 @@ const { CustomizationInput } = require("../../input/customizable-ui");
 const { pairs, map, isEmpty, object,
         each, keys, values } = require("../../util/sequence");
 const { curry, flip } = require("../../lang/functional");
-const { patch, diff } = require("diffpatcher/index");
+lazyRequire(this, "diffpatcher/index", "patch", "diff");
 const prefs = require("../../preferences/service");
-const { getByOuterId } = require("../../window/utils");
-const { ignoreWindow } = require('../../private-browsing/utils');
+lazyRequire(this, "../../window/utils", "getByOuterId");
+lazyRequire(this, '../../private-browsing/utils', "ignoreWindow");
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const PREF_ROOT = "extensions.sdk-toolbar-collapsed.";

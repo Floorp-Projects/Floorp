@@ -325,7 +325,10 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
 TextOverflow::WillProcessLines(nsDisplayListBuilder*   aBuilder,
                                nsIFrame*               aBlockFrame)
 {
-  if (!CanHaveTextOverflow(aBuilder, aBlockFrame)) {
+  // Ignore 'text-overflow' for event and frame visibility processing.
+  if (aBuilder->IsForEventDelivery() ||
+      aBuilder->IsForFrameVisibility() ||
+      !CanHaveTextOverflow(aBlockFrame)) {
     return nullptr;
   }
   nsIScrollableFrame* scrollableFrame = nsLayoutUtils::GetScrollableFrameFor(aBlockFrame);
@@ -462,7 +465,7 @@ TextOverflow::AnalyzeMarkerEdges(nsIFrame*       aFrame,
   }
 }
 
-void
+LogicalRect
 TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
                                 FrameHashtable* aFramesToHide,
                                 AlignmentEdges* aAlignmentEdges)
@@ -486,10 +489,38 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
   }
 
   LogicalRect contentArea = mContentArea;
-  const nscoord scrollAdjust = mAdjustForPixelSnapping ?
-    mBlock->PresContext()->AppUnitsPerDevPixel() : 0;
-  InflateIStart(mBlockWM, &contentArea, scrollAdjust);
-  InflateIEnd(mBlockWM, &contentArea, scrollAdjust);
+  bool snapStart = true, snapEnd = true;
+  nscoord startEdge, endEdge;
+  if (aLine->GetFloatEdges(&startEdge, &endEdge)) {
+    // Narrow the |contentArea| to account for any floats on this line, and
+    // don't bother with the snapping quirk on whichever side(s) we narrow.
+    nscoord delta = endEdge - contentArea.IEnd(mBlockWM);
+    if (delta < 0) {
+      nscoord newSize = contentArea.ISize(mBlockWM) + delta;
+      contentArea.ISize(mBlockWM) = std::max(nscoord(0), newSize);
+      snapEnd = false;
+    }
+    delta = startEdge - contentArea.IStart(mBlockWM);
+    if (delta > 0) {
+      contentArea.IStart(mBlockWM) = startEdge;
+      nscoord newSize = contentArea.ISize(mBlockWM) - delta;
+      contentArea.ISize(mBlockWM) = std::max(nscoord(0), newSize);
+      snapStart = false;
+    }
+  }
+  // Save the non-snapped area since that's what we want to use when placing
+  // the markers (our return value).  The snapped area is only for analysis.
+  LogicalRect nonSnappedContentArea = contentArea;
+  if (mAdjustForPixelSnapping) {
+    const nscoord scrollAdjust = mBlock->PresContext()->AppUnitsPerDevPixel();
+    if (snapStart) {
+      InflateIStart(mBlockWM, &contentArea, scrollAdjust);
+    }
+    if (snapEnd) {
+      InflateIEnd(mBlockWM, &contentArea, scrollAdjust);
+    }
+  }
+
   LogicalRect lineRect(mBlockWM, aLine->GetScrollableOverflowArea(),
                        mBlockSize);
   const bool istartOverflow =
@@ -498,7 +529,7 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
     !suppressIEnd && lineRect.IEnd(mBlockWM) > contentArea.IEnd(mBlockWM);
   if (!istartOverflow && !iendOverflow) {
     // The line does not overflow on a side we should ellipsize.
-    return;
+    return nonSnappedContentArea;
   }
 
   int pass = 0;
@@ -529,7 +560,7 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
 
     // Calculate the area between the potential markers aligned at the
     // block's edge.
-    LogicalRect insideMarkersArea = mContentArea;
+    LogicalRect insideMarkersArea = nonSnappedContentArea;
     if (guessIStart) {
       InflateIStart(mBlockWM, &insideMarkersArea, -istartMarkerISize);
     }
@@ -555,9 +586,9 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
       pass = -1;
       if (mIStart.IsNeeded() && mIStart.mActive && !clippedIStartMarker) {
         if (clippedMarkerEdges.mAssignedIStart &&
-            clippedMarkerEdges.mIStart > mContentArea.IStart(mBlockWM)) {
-          mIStart.mISize =
-            clippedMarkerEdges.mIStart - mContentArea.IStart(mBlockWM);
+            clippedMarkerEdges.mIStart > nonSnappedContentArea.IStart(mBlockWM)) {
+          mIStart.mISize = clippedMarkerEdges.mIStart -
+                           nonSnappedContentArea.IStart(mBlockWM);
           NS_ASSERTION(mIStart.mISize < mIStart.mIntrinsicISize,
                       "clipping a marker should make it strictly smaller");
           clippedIStartMarker = true;
@@ -568,8 +599,9 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
       }
       if (mIEnd.IsNeeded() && mIEnd.mActive && !clippedIEndMarker) {
         if (clippedMarkerEdges.mAssignedIEnd &&
-            mContentArea.IEnd(mBlockWM) > clippedMarkerEdges.mIEnd) {
-          mIEnd.mISize = mContentArea.IEnd(mBlockWM) - clippedMarkerEdges.mIEnd;
+            nonSnappedContentArea.IEnd(mBlockWM) > clippedMarkerEdges.mIEnd) {
+          mIEnd.mISize = nonSnappedContentArea.IEnd(mBlockWM) -
+                         clippedMarkerEdges.mIEnd;
           NS_ASSERTION(mIEnd.mISize < mIEnd.mIntrinsicISize,
                       "clipping a marker should make it strictly smaller");
           clippedIEndMarker = true;
@@ -605,6 +637,7 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
   if (!iendOverflow || !mIEnd.mActive) {
     mIEnd.Reset();
   }
+  return nonSnappedContentArea;
 }
 
 void
@@ -621,7 +654,8 @@ TextOverflow::ProcessLine(const nsDisplayListSet& aLists,
 
   FrameHashtable framesToHide(64);
   AlignmentEdges alignmentEdges;
-  ExamineLineFrames(aLine, &framesToHide, &alignmentEdges);
+  const LogicalRect contentArea =
+    ExamineLineFrames(aLine, &framesToHide, &alignmentEdges);
   bool needIStart = mIStart.IsNeeded();
   bool needIEnd = mIEnd.IsNeeded();
   if (!needIStart && !needIEnd) {
@@ -635,10 +669,10 @@ TextOverflow::ProcessLine(const nsDisplayListSet& aLists,
   // If there is insufficient space for both markers then keep the one on the
   // end side per the block's 'direction'.
   if (needIStart && needIEnd &&
-      mIStart.mISize + mIEnd.mISize > mContentArea.ISize(mBlockWM)) {
+      mIStart.mISize + mIEnd.mISize > contentArea.ISize(mBlockWM)) {
     needIStart = false;
   }
-  LogicalRect insideMarkersArea = mContentArea;
+  LogicalRect insideMarkersArea = contentArea;
   if (needIStart) {
     InflateIStart(mBlockWM, &insideMarkersArea, -mIStart.mISize);
   }
@@ -657,7 +691,7 @@ TextOverflow::ProcessLine(const nsDisplayListSet& aLists,
   for (uint32_t i = 0; i < ArrayLength(lists); ++i) {
     PruneDisplayListContents(lists[i], framesToHide, insideMarkersArea);
   }
-  CreateMarkers(aLine, needIStart, needIEnd, insideMarkersArea);
+  CreateMarkers(aLine, needIStart, needIEnd, insideMarkersArea, contentArea);
 }
 
 void
@@ -717,15 +751,11 @@ TextOverflow::HasClippedOverflow(nsIFrame* aBlockFrame)
 }
 
 /* static */ bool
-TextOverflow::CanHaveTextOverflow(nsDisplayListBuilder* aBuilder,
-                                  nsIFrame*             aBlockFrame)
+TextOverflow::CanHaveTextOverflow(nsIFrame* aBlockFrame)
 {
-  // Nothing to do for text-overflow:clip or if 'overflow-x/y:visible' or if
-  // we're just building items for event processing or frame visibility.
+  // Nothing to do for text-overflow:clip or if 'overflow-x/y:visible'.
   if (HasClippedOverflow(aBlockFrame) ||
-      IsInlineAxisOverflowVisible(aBlockFrame) ||
-      aBuilder->IsForEventDelivery() ||
-      aBuilder->IsForFrameVisibility()) {
+      IsInlineAxisOverflowVisible(aBlockFrame)) {
     return false;
   }
 
@@ -755,7 +785,8 @@ TextOverflow::CanHaveTextOverflow(nsDisplayListBuilder* aBuilder,
 void
 TextOverflow::CreateMarkers(const nsLineBox* aLine,
                             bool aCreateIStart, bool aCreateIEnd,
-                            const mozilla::LogicalRect& aInsideMarkersArea)
+                            const LogicalRect& aInsideMarkersArea,
+                            const LogicalRect& aContentArea)
 {
   if (aCreateIStart) {
     DisplayListClipState::AutoSaveRestore clipState(mBuilder);
@@ -766,7 +797,7 @@ TextOverflow::CreateMarkers(const nsLineBox* aLine,
     nsPoint offset = mBuilder->ToReferenceFrame(mBlock);
     nsRect markerRect =
       markerLogicalRect.GetPhysicalRect(mBlockWM, mBlockSize) + offset;
-    ClipMarker(mContentArea.GetPhysicalRect(mBlockWM, mBlockSize) + offset,
+    ClipMarker(aContentArea.GetPhysicalRect(mBlockWM, mBlockSize) + offset,
                markerRect, clipState);
     nsDisplayItem* marker = new (mBuilder)
       nsDisplayTextOverflowMarker(mBuilder, mBlock, markerRect,
@@ -783,7 +814,7 @@ TextOverflow::CreateMarkers(const nsLineBox* aLine,
     nsPoint offset = mBuilder->ToReferenceFrame(mBlock);
     nsRect markerRect =
       markerLogicalRect.GetPhysicalRect(mBlockWM, mBlockSize) + offset;
-    ClipMarker(mContentArea.GetPhysicalRect(mBlockWM, mBlockSize) + offset,
+    ClipMarker(aContentArea.GetPhysicalRect(mBlockWM, mBlockSize) + offset,
                markerRect, clipState);
     nsDisplayItem* marker = new (mBuilder)
       nsDisplayTextOverflowMarker(mBuilder, mBlock, markerRect,

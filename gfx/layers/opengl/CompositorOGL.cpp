@@ -995,31 +995,33 @@ CompositorOGL::DrawQuad(const Rect& aRect,
   PROFILER_LABEL("CompositorOGL", "DrawQuad",
     js::ProfileEntry::Category::GRAPHICS);
 
-  DrawGeometry(aRect, aClipRect, aEffectChain,
+  DrawGeometry(aRect, aRect, aClipRect, aEffectChain,
                aOpacity, aTransform, aVisibleRect);
 }
 
 void
-CompositorOGL::DrawTriangle(const gfx::TexturedTriangle& aTriangle,
-                            const gfx::IntRect& aClipRect,
-                            const EffectChain& aEffectChain,
-                            gfx::Float aOpacity,
-                            const gfx::Matrix4x4& aTransform,
-                            const gfx::Rect& aVisibleRect)
+CompositorOGL::DrawTriangles(const nsTArray<gfx::TexturedTriangle>& aTriangles,
+                             const gfx::Rect& aRect,
+                             const gfx::IntRect& aClipRect,
+                             const EffectChain& aEffectChain,
+                             gfx::Float aOpacity,
+                             const gfx::Matrix4x4& aTransform,
+                             const gfx::Rect& aVisibleRect)
 {
-  PROFILER_LABEL("CompositorOGL", "DrawTriangle",
+  PROFILER_LABEL("CompositorOGL", "DrawTriangles",
     js::ProfileEntry::Category::GRAPHICS);
 
-  DrawGeometry(aTriangle, aClipRect, aEffectChain,
+  DrawGeometry(aTriangles, aRect, aClipRect, aEffectChain,
                aOpacity, aTransform, aVisibleRect);
 }
 
 template<typename Geometry>
 void
 CompositorOGL::DrawGeometry(const Geometry& aGeometry,
-                            const IntRect& aClipRect,
-                            const EffectChain &aEffectChain,
-                            Float aOpacity,
+                            const gfx::Rect& aRect,
+                            const gfx::IntRect& aClipRect,
+                            const EffectChain& aEffectChain,
+                            gfx::Float aOpacity,
                             const gfx::Matrix4x4& aTransform,
                             const gfx::Rect& aVisibleRect)
 {
@@ -1035,7 +1037,7 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
   renderBound.IntersectRect(renderBound, Rect(aClipRect));
   renderBound.MoveBy(offset);
 
-  Rect destRect = aTransform.TransformAndClipBounds(aGeometry, renderBound);
+  Rect destRect = aTransform.TransformAndClipBounds(aRect, renderBound);
 
   // XXX: This doesn't handle 3D transforms. It also doesn't handled rotated
   //      quads. Fix me.
@@ -1160,7 +1162,7 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
       gl()->fTextureBarrier();
       mixBlendBackdrop = mCurrentRenderTarget->GetTextureHandle();
     } else {
-      gfx::IntRect rect = ComputeBackdropCopyRect(aGeometry, aClipRect,
+      gfx::IntRect rect = ComputeBackdropCopyRect(aRect, aClipRect,
                                                   aTransform, &backdropTransform);
       mixBlendBackdrop = CreateTexture(rect, true, mCurrentRenderTarget->GetFBO());
       createdMixBlendBackdropTexture = true;
@@ -1474,45 +1476,35 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
   MakeCurrent();
 
   LayerScope::DrawEnd(mGLContext, aEffectChain,
-                      aGeometry.width, aGeometry.height);
+                      aRect.width, aRect.height);
 }
 
 void
 CompositorOGL::BindAndDrawGeometry(ShaderProgramOGL* aProgram,
-                                   const gfx::Rect& aRect,
-                                   const gfx::Rect& aTextureRect)
+                                   const gfx::Rect& aRect)
 {
-  BindAndDrawQuad(aProgram, aRect, aTextureRect);
+  BindAndDrawQuad(aProgram, aRect);
 }
 
 void
 CompositorOGL::BindAndDrawGeometry(ShaderProgramOGL* aProgram,
-                                   const gfx::TexturedTriangle& aTriangle,
-                                   const gfx::Rect& aTextureRect)
+                                   const nsTArray<gfx::TexturedTriangle>& aTriangles)
 {
   NS_ASSERTION(aProgram->HasInitialized(), "Shader program not correctly initialized");
 
-  const gfx::TexturedTriangle& t = aTriangle;
-  const gfx::Triangle& tex = t.textureCoords;
+  const nsTArray<TexturedVertex> vertices = TexturedTrianglesToVertexArray(aTriangles);
 
-  GLfloat vertices[] = {
-    t.p1.x, t.p1.y, 0.0f, 1.0f, tex.p1.x, tex.p1.y,
-    t.p2.x, t.p2.y, 0.0f, 1.0f, tex.p2.x, tex.p2.y,
-    t.p3.x, t.p3.y, 0.0f, 1.0f, tex.p3.x, tex.p3.y
-  };
-
-  HeapCopyOfStackArray<GLfloat> verticesOnHeap(vertices);
   mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mTriangleVBO);
   mGLContext->fBufferData(LOCAL_GL_ARRAY_BUFFER,
-                          verticesOnHeap.ByteLength(),
-                          verticesOnHeap.Data(),
+                          vertices.Length() * sizeof(TexturedVertex),
+                          vertices.Elements(),
                           LOCAL_GL_STREAM_DRAW);
 
-  const GLsizei stride = 6 * sizeof(GLfloat);
-  InitializeVAO(kCoordinateAttributeIndex, 4, stride, 0);
-  InitializeVAO(kTexCoordinateAttributeIndex, 2, stride, 4 * sizeof(GLfloat));
+  const GLsizei stride = 4 * sizeof(GLfloat);
+  InitializeVAO(kCoordinateAttributeIndex, 2, stride, 0);
+  InitializeVAO(kTexCoordinateAttributeIndex, 2, stride, 2 * sizeof(GLfloat));
 
-  mGLContext->fDrawArrays(LOCAL_GL_TRIANGLES, 0, 3);
+  mGLContext->fDrawArrays(LOCAL_GL_TRIANGLES, 0, vertices.Length());
 
   mGLContext->fDisableVertexAttribArray(kCoordinateAttributeIndex);
   mGLContext->fDisableVertexAttribArray(kTexCoordinateAttributeIndex);
@@ -1544,12 +1536,11 @@ CompositorOGL::BindAndDrawGeometryWithTextureRect(ShaderProgramOGL *aProg,
 
 void
 CompositorOGL::BindAndDrawGeometryWithTextureRect(ShaderProgramOGL *aProg,
-                                                  const gfx::TexturedTriangle& aTriangle,
+                                                  const nsTArray<gfx::TexturedTriangle>& aTriangles,
                                                   const gfx::Rect& aTexCoordRect,
                                                   TextureSource *aTexture)
 {
-  BindAndDrawGeometry(aProg, aTriangle,
-                      GetTextureCoordinates(aTexCoordRect, aTexture));
+  BindAndDrawGeometry(aProg, aTriangles);
 }
 
 void

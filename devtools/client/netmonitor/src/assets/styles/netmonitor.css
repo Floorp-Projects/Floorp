@@ -9,6 +9,9 @@
 @import "resource://devtools/client/shared/components/tabs/tabs.css";
 @import "resource://devtools/client/shared/components/tabs/tabbar.css";
 @import "chrome://devtools/skin/components-frame.css";
+@import "chrome://devtools/content/sourceeditor/codemirror/lib/codemirror.css";
+@import "chrome://devtools/content/sourceeditor/codemirror/addon/dialog/dialog.css";
+@import "chrome://devtools/content/sourceeditor/codemirror/mozilla.css";
 
 :root.theme-dark {
   --table-splitter-color: rgba(255,255,255,0.15);
@@ -78,7 +81,9 @@ body,
   display: flex;
 }
 
-.devtools-toolbar-container {
+.devtools-toolbar-container.devtools-toolbar {
+  height: auto !important;
+  flex-wrap: wrap;
   justify-content: space-between;
 }
 
@@ -183,11 +188,9 @@ body,
 }
 
 .requests-list-contents {
-  display: flex;
-  flex-direction: column;
+  height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
-  flex: 1;
   --timings-scale: 1;
   --timings-rev-scale: 1;
 }
@@ -359,6 +362,10 @@ body,
 
 .requests-list-remoteip {
   width: 8vw;
+}
+
+.requests-list-protocol {
+  width: 7vw;
 }
 
 .requests-security-state-icon {
@@ -829,10 +836,7 @@ body,
   height: 100%;
 }
 
-.editor-container,
-.editor-mount,
-.panel-container iframe {
-  border: none;
+.source-editor-mount {
   width: 100%;
   height: 100%;
 }

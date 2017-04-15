@@ -31,6 +31,7 @@
 #include "jit/IonTypes.h"
 #include "threading/LockGuard.h"
 #include "vm/Runtime.h"
+#include "wasm/WasmCode.h"
 
 js::jit::SimulatorProcess* js::jit::SimulatorProcess::singleton_ = nullptr;
 
@@ -81,6 +82,7 @@ void Simulator::ResetState() {
   // Reset registers to 0.
   pc_ = nullptr;
   pc_modified_ = false;
+  wasm_interrupt_ = false;
   for (unsigned i = 0; i < kNumberOfRegisters; i++) {
     set_xreg(i, 0xbadbeef);
   }
@@ -93,7 +95,6 @@ void Simulator::ResetState() {
   }
   // Returning to address 0 exits the Simulator.
   set_lr(kEndOfSimAddress);
-  set_resume_pc(nullptr);
 }
 
 
@@ -189,17 +190,15 @@ void Simulator::ExecuteInstruction() {
   // The program counter should always be aligned.
   VIXL_ASSERT(IsWordAligned(pc_));
   decoder_->Decode(pc_);
-  const Instruction* rpc = resume_pc_;
   increment_pc();
 
-  if (MOZ_UNLIKELY(rpc)) {
-    JSContext::innermostWasmActivation()->setResumePC((void*)pc());
-    set_pc(rpc);
+  if (MOZ_UNLIKELY(wasm_interrupt_)) {
+    handle_wasm_interrupt();
     // Just calling set_pc turns the pc_modified_ flag on, which means it doesn't
     // auto-step after executing the next instruction.  Force that to off so it
     // will auto-step after executing the first instruction of the handler.
     pc_modified_ = false;
-    resume_pc_ = nullptr;
+    wasm_interrupt_ = false;
   }
 }
 
@@ -227,8 +226,28 @@ bool Simulator::overRecursedWithExtra(uint32_t extra) const {
 }
 
 
-void Simulator::set_resume_pc(void* new_resume_pc) {
-  resume_pc_ = AddressUntag(reinterpret_cast<Instruction*>(new_resume_pc));
+void Simulator::trigger_wasm_interrupt() {
+  MOZ_ASSERT(!wasm_interrupt_);
+  wasm_interrupt_ = true;
+}
+
+
+// The signal handler only redirects the PC to the interrupt stub when the PC is
+// in function code. However, this guard is racy for the ARM simulator since the
+// signal handler samples PC in the middle of simulating an instruction and thus
+// the current PC may have advanced once since the signal handler's guard. So we
+// re-check here.
+void Simulator::handle_wasm_interrupt() {
+  void* pc = (void*)get_pc();
+  uint8_t* fp = (uint8_t*)xreg(30);
+
+  js::WasmActivation* activation = JSContext::innermostWasmActivation();
+  const js::wasm::Code* code = activation->compartment()->wasm.lookupCode(pc);
+  if (!code || !code->segment().containsFunctionPC(pc))
+    return;
+
+  activation->startInterrupt(pc, fp);
+  set_pc((Instruction*)code->segment().interruptCode());
 }
 
 

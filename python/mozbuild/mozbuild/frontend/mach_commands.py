@@ -200,10 +200,14 @@ class MozbuildFileCommands(MachCommandBase):
             reader_finder = default_finder
 
         # Expand wildcards.
+        # One variable is for ordering. The other for membership tests.
+        # (Membership testing on a list can be slow.)
         allpaths = []
+        all_paths_set = set()
         for p in relpaths:
             if '*' not in p:
-                if p not in allpaths:
+                if p not in all_paths_set:
+                    all_paths_set.add(p)
                     allpaths.append(p)
                 continue
 
@@ -211,7 +215,8 @@ class MozbuildFileCommands(MachCommandBase):
                 raise InvalidPathException('cannot use wildcard in version control mode')
 
             for path, f in finder.find(p):
-                if path not in allpaths:
+                if path not in all_paths_set:
+                    all_paths_set.add(path)
                     allpaths.append(path)
 
         reader = self._get_reader(finder=reader_finder)

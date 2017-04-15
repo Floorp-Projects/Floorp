@@ -24,7 +24,7 @@ const uint32_t kMagicInt = 0xc001feed;
 // loss of backwards compatibility. Old streams will not work in a player
 // using a newer major revision. And new streams will not work in a player
 // using an older major revision.
-const uint16_t kMajorRevision = 8;
+const uint16_t kMajorRevision = 9;
 // A change in minor revision means additions of new events. New streams will
 // not play in older players.
 const uint16_t kMinorRevision = 0;
@@ -67,8 +67,6 @@ struct RecordedFontDetails
   uint64_t fontDataKey;
   uint32_t size;
   uint32_t index;
-  uint32_t variationCount;
-  Float glyphSize;
 };
 
 // Used by the Azure drawing debugger (player2d)
@@ -90,6 +88,7 @@ public:
   virtual FilterNode *LookupFilterNode(ReferencePtr aRefPtr) = 0;
   virtual GradientStops *LookupGradientStops(ReferencePtr aRefPtr) = 0;
   virtual ScaledFont *LookupScaledFont(ReferencePtr aRefPtr) = 0;
+  virtual UnscaledFont* LookupUnscaledFont(ReferencePtr aRefPtr) = 0;
   virtual NativeFontResource *LookupNativeFontResource(uint64_t aKey) = 0;
   virtual void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget *aDT) = 0;
   virtual void RemoveDrawTarget(ReferencePtr aRefPtr) = 0;
@@ -103,6 +102,8 @@ public:
   virtual void RemoveGradientStops(ReferencePtr aRefPtr) = 0;
   virtual void AddScaledFont(ReferencePtr aRefPtr, ScaledFont *aScaledFont) = 0;
   virtual void RemoveScaledFont(ReferencePtr aRefPtr) = 0;
+  virtual void AddUnscaledFont(ReferencePtr aRefPtr, UnscaledFont* aUnscaledFont) = 0;
+  virtual void RemoveUnscaledFont(ReferencePtr aRefPtr) = 0;
   virtual void AddNativeFontResource(uint64_t aKey,
                                      NativeFontResource *aNativeFontResource) = 0;
 
@@ -197,6 +198,8 @@ public:
     FONTDESC,
     PUSHLAYER,
     POPLAYER,
+    UNSCALEDFONTCREATION,
+    UNSCALEDFONTDESTRUCTION,
   };
   static const uint32_t kTotalEventTypes = RecordedEvent::FILTERNODESETINPUT + 1;
 
@@ -1015,23 +1018,21 @@ class RecordedFontData : public RecordedEvent {
 public:
 
   static void FontDataProc(const uint8_t *aData, uint32_t aSize,
-                           uint32_t aIndex, Float aGlyphSize,
-                           uint32_t aVariationCount,
-                           const ScaledFont::VariationSetting* aVariations,
-                           void* aBaton)
+                           uint32_t aIndex, void* aBaton)
   {
     auto recordedFontData = static_cast<RecordedFontData*>(aBaton);
-    recordedFontData->SetFontData(aData, aSize, aIndex, aGlyphSize,
-                                  aVariationCount, aVariations);
+    recordedFontData->SetFontData(aData, aSize, aIndex);
   }
 
-  explicit RecordedFontData(ScaledFont *aScaledFont)
-    : RecordedEvent(FONTDATA), mData(nullptr), mVariations(nullptr)
+  explicit RecordedFontData(UnscaledFont *aUnscaledFont)
+    : RecordedEvent(FONTDATA), mData(nullptr)
   {
-    mGetFontFileDataSucceeded = aScaledFont->GetFontFileData(&FontDataProc, this);
+    mGetFontFileDataSucceeded = aUnscaledFont->GetFontFileData(&FontDataProc, this);
   }
 
   ~RecordedFontData();
+
+  bool IsValid() const { return mGetFontFileDataSucceeded; }
 
   virtual bool PlayEvent(Translator *aTranslator) const;
 
@@ -1041,9 +1042,7 @@ public:
   virtual std::string GetName() const { return "Font Data"; }
   virtual ReferencePtr GetObjectRef() const { return nullptr; };
 
-  void SetFontData(const uint8_t *aData, uint32_t aSize, uint32_t aIndex,
-                   Float aGlyphSize, uint32_t aVariationCount,
-                   const ScaledFont::VariationSetting* aVariations);
+  void SetFontData(const uint8_t *aData, uint32_t aSize, uint32_t aIndex);
 
   bool GetFontDetails(RecordedFontDetails& fontDetails);
 
@@ -1051,7 +1050,6 @@ private:
   friend class RecordedEvent;
 
   uint8_t* mData;
-  ScaledFont::VariationSetting* mVariations;
   RecordedFontDetails mFontDetails;
 
   bool mGetFontFileDataSucceeded;
@@ -1063,18 +1061,18 @@ class RecordedFontDescriptor : public RecordedEvent {
 public:
 
   static void FontDescCb(const uint8_t* aData, uint32_t aSize,
-                         Float aFontSize, void* aBaton)
+                         void* aBaton)
   {
     auto recordedFontDesc = static_cast<RecordedFontDescriptor*>(aBaton);
-    recordedFontDesc->SetFontDescriptor(aData, aSize, aFontSize);
+    recordedFontDesc->SetFontDescriptor(aData, aSize);
   }
 
-  explicit RecordedFontDescriptor(ScaledFont* aScaledFont)
+  explicit RecordedFontDescriptor(UnscaledFont* aUnscaledFont)
     : RecordedEvent(FONTDESC)
-    , mType(aScaledFont->GetType())
-    , mRefPtr(aScaledFont)
+    , mType(aUnscaledFont->GetType())
+    , mRefPtr(aUnscaledFont)
   {
-    mHasDesc = aScaledFont->GetFontDescriptor(FontDescCb, this);
+    mHasDesc = aUnscaledFont->GetFontDescriptor(FontDescCb, this);
   }
 
   ~RecordedFontDescriptor();
@@ -1092,16 +1090,75 @@ public:
 private:
   friend class RecordedEvent;
 
-  void SetFontDescriptor(const uint8_t* aData, uint32_t aSize, Float aFontSize);
+  void SetFontDescriptor(const uint8_t* aData, uint32_t aSize);
 
   bool mHasDesc;
 
   FontType mType;
-  Float mFontSize;
   std::vector<uint8_t> mData;
   ReferencePtr mRefPtr;
 
   MOZ_IMPLICIT RecordedFontDescriptor(std::istream &aStream);
+};
+
+class RecordedUnscaledFontCreation : public RecordedEvent {
+public:
+  static void FontInstanceDataProc(const uint8_t* aData, uint32_t aSize, void* aBaton)
+  {
+    auto recordedUnscaledFontCreation = static_cast<RecordedUnscaledFontCreation*>(aBaton);
+    recordedUnscaledFontCreation->SetFontInstanceData(aData, aSize);
+  }
+
+  RecordedUnscaledFontCreation(UnscaledFont* aUnscaledFont,
+                               RecordedFontDetails aFontDetails)
+    : RecordedEvent(UNSCALEDFONTCREATION)
+    , mRefPtr(aUnscaledFont)
+    , mFontDataKey(aFontDetails.fontDataKey)
+    , mIndex(aFontDetails.index)
+  {
+    aUnscaledFont->GetFontInstanceData(FontInstanceDataProc, this);
+  }
+
+  virtual bool PlayEvent(Translator *aTranslator) const;
+
+  virtual void RecordToStream(std::ostream &aStream) const;
+  virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
+
+  virtual std::string GetName() const { return "UnscaledFont Creation"; }
+  virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
+
+  void SetFontInstanceData(const uint8_t *aData, uint32_t aSize);
+
+private:
+  friend class RecordedEvent;
+
+  ReferencePtr mRefPtr;
+  uint64_t mFontDataKey;
+  uint32_t mIndex;
+  std::vector<uint8_t> mInstanceData;
+
+  MOZ_IMPLICIT RecordedUnscaledFontCreation(std::istream &aStream);
+};
+
+class RecordedUnscaledFontDestruction : public RecordedEvent {
+public:
+  MOZ_IMPLICIT RecordedUnscaledFontDestruction(ReferencePtr aRefPtr)
+    : RecordedEvent(UNSCALEDFONTDESTRUCTION), mRefPtr(aRefPtr)
+  {}
+
+  virtual bool PlayEvent(Translator *aTranslator) const;
+
+  virtual void RecordToStream(std::ostream &aStream) const;
+  virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
+
+  virtual std::string GetName() const { return "UnscaledFont Destruction"; }
+  virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
+private:
+  friend class RecordedEvent;
+
+  ReferencePtr mRefPtr;
+
+  MOZ_IMPLICIT RecordedUnscaledFontDestruction(std::istream &aStream);
 };
 
 class RecordedScaledFontCreation : public RecordedEvent {
@@ -1114,12 +1171,11 @@ public:
   }
 
   RecordedScaledFontCreation(ScaledFont* aScaledFont,
-                             RecordedFontDetails aFontDetails)
+                             UnscaledFont* aUnscaledFont)
     : RecordedEvent(SCALEDFONTCREATION)
     , mRefPtr(aScaledFont)
-    , mFontDataKey(aFontDetails.fontDataKey)
-    , mGlyphSize(aFontDetails.glyphSize)
-    , mIndex(aFontDetails.index)
+    , mUnscaledFont(aUnscaledFont)
+    , mGlyphSize(aScaledFont->GetSize())
   {
     aScaledFont->GetFontInstanceData(FontInstanceDataProc, this);
   }
@@ -1138,9 +1194,8 @@ private:
   friend class RecordedEvent;
 
   ReferencePtr mRefPtr;
-  uint64_t mFontDataKey;
+  ReferencePtr mUnscaledFont;
   Float mGlyphSize;
-  uint32_t mIndex;
   std::vector<uint8_t> mInstanceData;
 
   MOZ_IMPLICIT RecordedScaledFontCreation(std::istream &aStream);

@@ -831,7 +831,7 @@ class CodeRange
         Entry,             // calls into wasm from C++
         ImportJitExit,     // fast-path calling from wasm into JIT code
         ImportInterpExit,  // slow-path calling from wasm into C++ interp
-        ImportNativeExit,  // fast-path calling from wasm into a C++ native
+        BuiltinNativeExit, // fast-path calling from wasm into a C++ native
         TrapExit,          // calls C++ to report and jumps to throw stub
         DebugTrap,         // calls C++ to handle debug event
         FarJumpIsland,     // inserted to connect otherwise out-of-range insns
@@ -875,7 +875,7 @@ class CodeRange
         return kind() == Function;
     }
     bool isImportExit() const {
-        return kind() == ImportJitExit || kind() == ImportInterpExit || kind() == ImportNativeExit;
+        return kind() == ImportJitExit || kind() == ImportInterpExit || kind() == BuiltinNativeExit;
     }
     bool isTrapExit() const {
         return kind() == TrapExit;
@@ -968,15 +968,19 @@ enum class Trap
 };
 
 // A wrapper around the bytecode offset of a wasm instruction within a whole
-// module. Trap offsets should refer to the first byte of the instruction that
-// triggered the trap and should ultimately derive from OpIter::trapOffset.
+// module, used for trap offsets or call offsets. These offsets should refer to
+// the first byte of the instruction that triggered the trap / did the call and
+// should ultimately derive from OpIter::bytecodeOffset.
 
-struct TrapOffset
+struct BytecodeOffset
 {
+    static const uint32_t INVALID = -1;
     uint32_t bytecodeOffset;
 
-    TrapOffset() = default;
-    explicit TrapOffset(uint32_t bytecodeOffset) : bytecodeOffset(bytecodeOffset) {}
+    BytecodeOffset() : bytecodeOffset(INVALID) {}
+    explicit BytecodeOffset(uint32_t bytecodeOffset) : bytecodeOffset(bytecodeOffset) {}
+
+    bool isValid() const { return bytecodeOffset != INVALID; }
 };
 
 // While the frame-pointer chain allows the stack to be unwound without
@@ -991,9 +995,9 @@ class CallSiteDesc
     uint32_t kind_ : 3;
   public:
     enum Kind {
-        Func,      // pc-relative call to a specific function
-        Dynamic,   // dynamic callee called via register
-        Symbolic,  // call to a single symbolic callee
+        Func,       // pc-relative call to a specific function
+        Dynamic,    // dynamic callee called via register
+        Symbolic,   // call to a single symbolic callee
         TrapExit,   // call to a trap exit
         EnterFrame, // call to a enter frame handler
         LeaveFrame, // call to a leave frame handler
@@ -1629,7 +1633,9 @@ class DebugFrame
 
     // Padding so that DebugFrame has Alignment.
 #if JS_BITS_PER_WORD == 32
+  protected: // suppress clang's -Wunused-private-field warning-as-error
     void* padding_;
+  private:
 #endif
 
     // The Frame goes at the end since the stack grows down.

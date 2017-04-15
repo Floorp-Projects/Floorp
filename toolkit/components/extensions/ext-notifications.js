@@ -4,7 +4,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
                                   "resource://devtools/shared/event-emitter.js");
 
 var {
-  SingletonEventManager,
   ignoreEvent,
 } = ExtensionUtils;
 

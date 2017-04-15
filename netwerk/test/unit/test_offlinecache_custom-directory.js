@@ -145,7 +145,7 @@ function run_test()
     applicationCacheAvailable: function(appCache)
     {
     }
-  }, false);
+  });
 
   do_test_pending();
 }

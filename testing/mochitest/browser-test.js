@@ -33,8 +33,8 @@ var TabDestroyObserver = {
   promiseResolver: null,
 
   init: function() {
-    Services.obs.addObserver(this, "message-manager-close", false);
-    Services.obs.addObserver(this, "message-manager-disconnect", false);
+    Services.obs.addObserver(this, "message-manager-close");
+    Services.obs.addObserver(this, "message-manager-disconnect");
   },
 
   destroy: function() {
@@ -644,7 +644,7 @@ Tester.prototype = {
         let barrier = new AsyncShutdown.Barrier(
           "ShutdownLeaks: Wait for cleanup to be finished before checking for leaks");
         Services.obs.notifyObservers({wrappedJSObject: barrier},
-          "shutdown-leaks-before-check", null);
+          "shutdown-leaks-before-check");
 
         barrier.client.addBlocker("ShutdownLeaks: Wait for tabs to finish closing",
                                   TabDestroyObserver.wait());
@@ -949,11 +949,11 @@ function testScope(aTester, aTest, expected) {
   };
 
   this.executeSoon = function test_executeSoon(func) {
-    Services.tm.mainThread.dispatch({
+    Services.tm.dispatchToMainThread({
       run: function() {
         func();
       }
-    }, Ci.nsIThread.DISPATCH_NORMAL);
+    });
   };
 
   this.waitForExplicitFinish = function test_waitForExplicitFinish() {

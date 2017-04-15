@@ -65,7 +65,7 @@ function run_test() {
   writeLine(`a.preload.example.com:HPKP\t0\t0\t${now + 100000},1,1,${PINNING_ROOT_KEY_HASH}\n`, outputStream);
   outputStream.close();
 
-  Services.obs.addObserver(checkStateRead, "data-storage-ready", false);
+  Services.obs.addObserver(checkStateRead, "data-storage-ready");
   do_test_pending();
   gSSService = Cc["@mozilla.org/ssservice;1"]
                  .getService(Ci.nsISiteSecurityService);

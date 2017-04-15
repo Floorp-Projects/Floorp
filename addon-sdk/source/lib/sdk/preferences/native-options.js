@@ -8,12 +8,13 @@ module.metadata = {
 };
 
 const { Cc, Ci, Cu } = require('chrome');
-const { on } = require('../system/events');
-const { id, preferencesBranch } = require('../self');
-const { localizeInlineOptions } = require('../l10n/prefs');
-const { Services } = require("resource://gre/modules/Services.jsm");
-const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm");
-const { defer } = require("sdk/core/promise");
+lazyRequire(this, '../system/events', "on");
+lazyRequire(this, '../self', "preferencesBranch");
+lazyRequire(this, '../l10n/prefs', "localizeInlineOptions");
+
+lazyRequire(this, "resource://gre/modules/Services.jsm", "Services");
+lazyRequire(this, "resource://gre/modules/AddonManager.jsm", "AddonManager");
+lazyRequire(this, "resource://gre/modules/Preferences.jsm", "Preferences");
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";;
 const DEFAULT_OPTIONS_URL = 'data:text/xml,<placeholder/>';
@@ -24,48 +25,46 @@ const VALID_PREF_TYPES = ['bool', 'boolint', 'integer', 'string', 'color',
 const isFennec = require("sdk/system/xul-app").is("Fennec");
 
 function enable({ preferences, id }) {
-  let enabled = defer();
+  return new Promise(resolve => {
+    validate(preferences);
 
-  validate(preferences);
+    setDefaults(preferences, preferencesBranch);
 
-  setDefaults(preferences, preferencesBranch);
+    // allow the use of custom options.xul
+    AddonManager.getAddonByID(id, (addon) => {
+      on('addon-options-displayed', onAddonOptionsDisplayed, true);
+      resolve({ id });
+    });
 
-  // allow the use of custom options.xul
-  AddonManager.getAddonByID(id, (addon) => {
-    on('addon-options-displayed', onAddonOptionsDisplayed, true);
-    enabled.resolve({ id: id });
-  });
+    function onAddonOptionsDisplayed({ subject: doc, data }) {
+      if (data === id) {
+        let parent;
 
-  function onAddonOptionsDisplayed({ subject: doc, data }) {
-    if (data === id) {
-      let parent;
+        if (isFennec) {
+          parent = doc.querySelector('.options-box');
 
-      if (isFennec) {
-        parent = doc.querySelector('.options-box');
+          // NOTE: This disable the CSS rule that makes the options invisible
+          let item = doc.querySelector('#addons-details .addon-item');
+          item.removeAttribute("optionsURL");
+        } else {
+          parent = doc.getElementById('detail-downloads').parentNode;
+        }
 
-        // NOTE: This disable the CSS rule that makes the options invisible
-        let item = doc.querySelector('#addons-details .addon-item');
-        item.removeAttribute("optionsURL");
-      } else {
-        parent = doc.getElementById('detail-downloads').parentNode;
-      }
-
-      if (parent) {
-        injectOptions({
-          preferences: preferences,
-          preferencesBranch: preferencesBranch,
-          document: doc,
-          parent: parent,
-          id: id
-        });
-        localizeInlineOptions(doc);
-      } else {
-        throw Error("Preferences parent node not found in Addon Details. The configured custom preferences will not be visible.");
+        if (parent) {
+          injectOptions({
+            preferences: preferences,
+            preferencesBranch: preferencesBranch,
+            document: doc,
+            parent: parent,
+            id: id
+          });
+          localizeInlineOptions(doc);
+        } else {
+          throw Error("Preferences parent node not found in Addon Details. The configured custom preferences will not be visible.");
+        }
       }
     }
-  }
-
-  return enabled.promise;
+  });
 }
 exports.enable = enable;
 
@@ -103,28 +102,14 @@ exports.validate = validate;
 
 // initializes default preferences, emulates defaults/prefs.js
 function setDefaults(preferences, preferencesBranch) {
-  const branch = Cc['@mozilla.org/preferences-service;1'].
-                 getService(Ci.nsIPrefService).
-                 getDefaultBranch('extensions.' + preferencesBranch + '.');
-  for (let { name, value } of preferences) {
-    switch (typeof value) {
-      case 'boolean':
-        branch.setBoolPref(name, value);
-        break;
-      case 'number':
-        // must be integer, ignore otherwise
-        if (value % 1 === 0) {
-          branch.setIntPref(name, value);
-        }
-        break;
-      case 'string':
-        let str = Cc["@mozilla.org/supports-string;1"].
-                  createInstance(Ci.nsISupportsString);
-        str.data = value;
-        branch.setComplexValue(name, Ci.nsISupportsString, str);
-        break;
-    }
-  }
+  let prefs = new Preferences({
+    branch: `extensions.${preferencesBranch}.`,
+    defaultBranch: true,
+  });
+
+  for (let { name, value } of preferences)
+    if (value !== undefined)
+      prefs.set(name, value);
 }
 exports.setDefaults = setDefaults;
 

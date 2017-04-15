@@ -1152,6 +1152,15 @@
     "releaseChannelCollection": "opt-out",
     "description": "GPU process initialization (excluding XPCOM and fork time) time in milliseconds"
   },
+  "GPU_PROCESS_CRASH_FALLBACKS": {
+    "alert_emails": ["cpearce@mozilla.com", "gsquelart@mozilla.com"],
+    "expires_in_version": "60",
+    "bug_numbers": [1338011],
+    "kind": "enumerated",
+    "releaseChannelCollection": "opt-out",
+    "n_values":  10,
+    "description": "Count how often we use different fallbacks when the GPU process crashes: None=0, GPUProcessDecodingDisabled=1, GPUProcessDisabled=2"
+  },
   "JS_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT": {
     "alert_emails": ["jdemooij@mozilla.com"],
     "expires_in_version": "never",
@@ -1219,7 +1228,7 @@
     "keyed": true,
     "high": 200,
     "n_buckets": 100,
-    "description": "Absolute difference of each content process' USS and the mean of USS's, normalized by the mean, in percentage. 100 means that the content process uses twice as much memory as the mean of the rest (or theoretically it could also mean that it uses 0 while the mean of the others are non 0.)"
+    "description": "Absolute difference of each content process' USS and the mean of USS's, normalized by the mean, in percentage. It will be recorded with the rest of the memory probes when gatherMemory is called, if at least 2 content processes are alive. Example: in case of 4 content processes with USS's: 1G, 500MB, 1G, 1.5G, the reported numbers will be: 0, 50, 0, 50. Which indicates that 2 processes used 50% more or 50% less memory than the avarage and 2 used exactly as much as the avarage."
   },
   "MEMORY_UNIQUE": {
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
@@ -2308,12 +2317,14 @@
     "description": "Websockets Handshake Results (ws-ok-plain, ws-ok-proxy, ws-failed-plain, ws-failed-proxy, wss-ok-plain, wss-ok-proxy, wss-failed-plain, wss-failed-proxy)"
   },
   "SPDY_VERSION2": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 48,
     "description": "SPDY: Protocol Version Used"
   },
   "HTTP_RESPONSE_VERSION": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 48,
@@ -2328,6 +2339,7 @@
     "alert_emails": ["necko@mozilla.com"]
   },
   "SPDY_PARALLEL_STREAMS": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -2335,6 +2347,7 @@
     "description": "SPDY: Streams concurrent active per connection"
   },
   "SPDY_REQUEST_PER_CONN": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -2342,6 +2355,7 @@
     "description": "SPDY: Streams created per connection"
   },
   "SPDY_SERVER_INITIATED_STREAMS": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 100000,
@@ -2349,6 +2363,7 @@
     "description": "SPDY: Streams recevied per connection"
   },
   "SPDY_CHUNK_RECVD": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -2356,6 +2371,7 @@
     "description": "SPDY: Recvd Chunk Size (rounded to KB)"
   },
   "SPDY_SYN_SIZE": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 20,
@@ -2364,6 +2380,7 @@
     "description": "SPDY: SYN Frame Header Size"
   },
   "SPDY_SYN_RATIO": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 99,
@@ -2371,6 +2388,7 @@
     "description": "SPDY: SYN Frame Header Ratio (lower better)"
   },
   "SPDY_SYN_REPLY_SIZE": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 16,
@@ -2379,6 +2397,7 @@
     "description": "SPDY: SYN Reply Header Size"
   },
   "SPDY_SYN_REPLY_RATIO": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 99,
@@ -2386,65 +2405,35 @@
     "description": "SPDY: SYN Reply Header Ratio (lower better)"
   },
   "SPDY_NPN_CONNECT": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "SPDY: NPN Negotiated"
   },
   "SPDY_NPN_JOIN": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "SPDY: Coalesce Succeeded"
   },
   "SPDY_KBREAD_PER_CONN": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 3000,
     "n_buckets": 50,
     "description": "SPDY: KB read per connection"
   },
-  "SPDY_SETTINGS_UL_BW": {
-    "expires_in_version": "42",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 100,
-    "description": "SPDY: Settings Upload Bandwidth"
-  },
-  "SPDY_SETTINGS_DL_BW": {
-    "expires_in_version": "42",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 100,
-    "description": "SPDY: Settings Download Bandwidth"
-  },
-  "SPDY_SETTINGS_RTT": {
-    "expires_in_version": "42",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 100,
-    "description": "SPDY: Settings RTT"
-  },
   "SPDY_SETTINGS_MAX_STREAMS": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 5000,
     "n_buckets": 100,
     "description": "H2: Settings Max Streams parameter"
   },
-  "SPDY_SETTINGS_CWND": {
-    "expires_in_version": "42",
-    "kind": "exponential",
-    "high": 500,
-    "n_buckets": 50,
-    "description": "SPDY: Settings CWND (packets)"
-  },
-  "SPDY_SETTINGS_RETRANS": {
-    "expires_in_version": "42",
-    "kind": "exponential",
-    "high": 100,
-    "n_buckets": 50,
-    "description": "SPDY: Retransmission Rate"
-  },
   "SPDY_SETTINGS_IW": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1000,
@@ -2452,12 +2441,14 @@
     "description": "H2: Settings Initial Window (rounded to KB)"
   },
   "SPDY_GOAWAY_LOCAL": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 32,
     "description": "H2: goaway reason client sent from rfc 7540. 31 is none sent."
   },
   "SPDY_GOAWAY_PEER": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 32,
@@ -2739,6 +2730,7 @@
     "description": "Time to search offline cache (ms)"
   },
   "TRANSACTION_WAIT_TIME_HTTP": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 5000,
@@ -2746,6 +2738,7 @@
     "description": "Time from submission to dispatch of HTTP transaction (ms)"
   },
   "TRANSACTION_WAIT_TIME_SPDY": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 5000,
@@ -2753,11 +2746,13 @@
     "description": "Time from submission to dispatch of SPDY transaction (ms)"
   },
   "HTTP_SAW_QUIC_ALT_PROTOCOL": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Fraction of responses with a quic alt-protocol advertisement."
   },
   "HTTP_CONTENT_ENCODING": {
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 6,
@@ -5925,6 +5920,32 @@
     "bug_numbers": [1345834],
     "description": "Firefox: The index of the selected result in the URL bar popup by the type of the selected result in the URL bar popup. See BrowserUsageTelemetry.jsm:URLBAR_SELECTED_RESULT_TYPES for the result types."
   },
+  "FX_URLBAR_SELECTED_RESULT_METHOD": {
+    "alert_emails": ["dzeber@mozilla.com"],
+    "expires_in_version": "63",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "enter",
+      "enterSelection",
+      "click"
+    ],
+    "bug_numbers": [1334615],
+    "description": "The input method the user used to select a result in the urlbar. 'enter' => The user hit the Enter key on the heuristic result at index 0. 'enterSelection' => The user chose a non-heuristic result and then hit the Enter key. 'click' => The user clicked a result with the mouse."
+  },
+  "FX_SEARCHBAR_SELECTED_RESULT_METHOD": {
+    "alert_emails": ["dzeber@mozilla.com"],
+    "expires_in_version": "63",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "enter",
+      "enterSelection",
+      "click"
+    ],
+    "bug_numbers": [1334615],
+    "description": "The input method the user used to select a result in the searchbar. 'enter' => The user hit the Enter key without choosing a result in the popup. 'enterSelection' => The user chose a result and then hit the Enter key. 'click' => The user clicked a result with the mouse."
+  },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "expires_in_version": "never",
     "kind": "boolean",
@@ -7247,14 +7268,14 @@
   },
   "MEDIA_RUST_MP4PARSE_SUCCESS": {
     "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "boolean",
     "bug_numbers": [1220885],
-    "description": "(Bug 1220885) Whether the rust mp4 demuxer successfully parsed a stream segment."
+    "description": "Whether the rust mp4 demuxer successfully parsed a stream segment."
   },
   "MEDIA_RUST_MP4PARSE_ERROR_CODE": {
     "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 32,
     "bug_numbers": [1238420],
@@ -7262,14 +7283,14 @@
   },
   "MEDIA_RUST_MP4PARSE_TRACK_MATCH_AUDIO": {
     "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "boolean",
     "bug_numbers": [1231169],
     "description": "Whether rust and stagefight mp4 parser audio track results match."
   },
   "MEDIA_RUST_MP4PARSE_TRACK_MATCH_VIDEO": {
     "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "boolean",
     "bug_numbers": [1231169],
     "description": "Whether rust and stagefight mp4 parser video track results match."
@@ -7289,14 +7310,14 @@
   },
   "MEDIA_HLS_CANPLAY_REQUESTED": {
     "alert_emails": ["ajones@mozilla.com", "giles@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "boolean",
     "description": "Reports a true value when a page requests canPlayType for an HTTP Live Streaming media type (or generic m3u playlist).",
     "bug_numbers": [1262659]
   },
   "MEDIA_HLS_DECODER_SUCCESS": {
     "alert_emails": ["ajones@mozilla.com", "giles@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "boolean",
     "description": "Reports whether a decoder for an HTTP Live Streaming media type was created when requested.",
     "bug_numbers": [1262659]
@@ -9786,7 +9807,7 @@
   },
   "VIDEO_PLAY_TIME_MS" : {
     "alert_emails": ["ajones@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "description": "Total time spent playing video in milliseconds. This reports the total play time for an HTML Media Element whenever it is suspended or resumed, such as when the page is unloaded, or when the mute status changes when the AudioChannelAPI pref is set.",
     "kind": "exponential",
     "high": 7200000,
@@ -9794,8 +9815,8 @@
     "bug_numbers": [1261955, 1127646]
   },
   "VIDEO_HIDDEN_PLAY_TIME_MS" : {
-    "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
+    "expires_in_version": "60",
     "description": "Total time spent playing video while element is hidden, in milliseconds. This reports the total hidden play time for an HTML Media Element whenever it is suspended or resumed, such as when the page is unloaded, or when the mute status changes when the AudioChannelAPI pref is set.",
     "kind": "exponential",
     "high": 7200000,
@@ -9803,8 +9824,8 @@
     "bug_numbers": [1285419]
   },
   "VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE" : {
-    "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
+    "expires_in_version": "60",
     "description": "Percentage of total time spent playing video while element is hidden. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "linear",
@@ -9813,8 +9834,8 @@
     "bug_numbers": [1287987]
   },
   "VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE" : {
-    "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
+    "expires_in_version": "60",
     "description": "Percentage of total time spent *not* fully decoding video while element is hidden (simulated, even when feature is not enabled). Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "linear",
@@ -9823,8 +9844,8 @@
     "bug_numbers": [1293145]
   },
   "VIDEO_INTER_KEYFRAME_AVERAGE_MS" : {
-    "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
+    "expires_in_version": "60",
     "description": "Average interval between video keyframes in played videos, in milliseconds. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "exponential",
@@ -9833,8 +9854,8 @@
     "bug_numbers": [1289668]
   },
   "VIDEO_INTER_KEYFRAME_MAX_MS" : {
-    "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
+    "expires_in_version": "60",
     "description": "Maximum interval between video keyframes in played videos, in milliseconds; '0' means only 1 keyframe found. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "exponential",
@@ -9843,8 +9864,8 @@
     "bug_numbers": [1289668]
   },
   "VIDEO_SUSPEND_RECOVERY_TIME_MS" : {
-    "alert_emails": ["ajones@mozilla.com", "gsquelart@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
+    "expires_in_version": "60",
     "description": "Time taken for a video to resume after decoding was suspended, in milliseconds. Keyed by audio presence, hw acceleration, and by height ranges (boundaries: 240. 480, 720, 1080, 2160), e.g.: 'V,0-240', 'AV(hw),2160+'; and 'All' will accumulate all percentages.",
     "keyed": true,
     "kind": "exponential",
@@ -9870,7 +9891,7 @@
   },
   "VIDEO_UNLOAD_STATE": {
     "alert_emails": ["ajones@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 5,
     "description": "HTML Media Element state when unloading. ended = 0, paused = 1, stalled = 2, seeking = 3, other = 4",
@@ -9878,7 +9899,7 @@
   },
   "VIDEO_VP9_BENCHMARK_FPS": {
     "alert_emails": ["ajones@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "bug_numbers": [1230265],
     "kind": "linear",
     "high": 1000,
@@ -10720,14 +10741,14 @@
     "description": "Note the encoding (e.g. 'UTF-8', 'windows-1252', 'ASCII') of each external <script> element that is successfully loaded and decoded."
   },
   "VIDEO_FASTSEEK_USED": {
-    "alert_emails": ["lchristie@mozilla.com", "cpearce@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["cpearce@mozilla.com", "tkuo@mozilla.com"],
+    "expires_in_version": "60",
     "bug_numbers": [1245982],
     "kind": "count",
     "description": "Uses of HTMLMediaElement.fastSeek"
   },
   "VIDEO_DROPPED_FRAMES_PROPORTION" : {
-    "alert_emails": ["lchristie@mozilla.com", "cpearce@mozilla.com"],
+    "alert_emails": ["cpearce@mozilla.com"],
     "expires_in_version": "55",
     "kind": "linear",
     "high": 100,

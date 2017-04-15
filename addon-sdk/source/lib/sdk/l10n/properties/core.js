@@ -4,14 +4,16 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const { newURI } = require('../../url/utils')
-const { getRulesForLocale } = require("../plural-rules");
-const { getPreferedLocales } = require('../locale');
+lazyRequire(this, '../../url/utils', 'newURI');
+lazyRequire(this, "../plural-rules", 'getRulesForLocale');
+lazyRequire(this, '../locale', 'getPreferedLocales');
 const { rootURI } = require("@loader/options");
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const { Services } = require("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 const baseURI = rootURI + "locale/";
-const preferedLocales = getPreferedLocales(true);
+
+XPCOMUtils.defineLazyGetter(this, "preferedLocales", () => getPreferedLocales(true));
 
 // Make sure we don't get stale data after an update
 // (See Bug 1300735 for rationale).

@@ -24,11 +24,11 @@ var MigrationWizard = { /* exported MigrationWizard */
 
   init() {
     let os = Services.obs;
-    os.addObserver(this, "Migration:Started", false);
-    os.addObserver(this, "Migration:ItemBeforeMigrate", false);
-    os.addObserver(this, "Migration:ItemAfterMigrate", false);
-    os.addObserver(this, "Migration:ItemError", false);
-    os.addObserver(this, "Migration:Ended", false);
+    os.addObserver(this, "Migration:Started");
+    os.addObserver(this, "Migration:ItemBeforeMigrate");
+    os.addObserver(this, "Migration:ItemAfterMigrate");
+    os.addObserver(this, "Migration:ItemError");
+    os.addObserver(this, "Migration:Ended");
 
     this._wiz = document.documentElement;
 

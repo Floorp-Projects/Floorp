@@ -79,8 +79,8 @@ function DataCallInterfaceService() {
     this._dataCallInterfaces.push(new DataCallInterface(i));
   }
 
-  Services.obs.addObserver(this, TOPIC_XPCOM_SHUTDOWN, false);
-  Services.prefs.addObserver(PREF_RIL_DEBUG_ENABLED, this, false);
+  Services.obs.addObserver(this, TOPIC_XPCOM_SHUTDOWN);
+  Services.prefs.addObserver(PREF_RIL_DEBUG_ENABLED, this);
 }
 DataCallInterfaceService.prototype = {
   classID:   DATACALLINTERFACESERVICE_CID,

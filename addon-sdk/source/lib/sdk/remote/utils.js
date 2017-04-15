@@ -5,8 +5,8 @@
 
 const { Class } = require('../core/heritage');
 const { List, addListItem, removeListItem } = require('../util/list');
-const { emit } = require('../event/core');
-const { pipe } = require('../event/utils');
+lazyRequire(this, '../event/core', 'emit');
+lazyRequire(this, '../event/utils', 'pipe');
 
 // A helper class that maintains a list of EventTargets. Any events emitted
 // to an EventTarget are also emitted by the EventParent. Likewise for an

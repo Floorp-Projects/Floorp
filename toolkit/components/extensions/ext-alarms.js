@@ -1,9 +1,5 @@
 "use strict";
 
-var {
-  SingletonEventManager,
-} = ExtensionUtils;
-
 // WeakMap[Extension -> Map[name -> Alarm]]
 let alarmsMap = new WeakMap();
 

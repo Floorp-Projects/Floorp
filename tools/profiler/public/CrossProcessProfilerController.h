@@ -25,7 +25,7 @@ public:
   // aProcess is expected to outlast this CrossProcessProfilerController object.
   explicit CrossProcessProfilerController(ProfilerControllingProcess* aProcess);
   ~CrossProcessProfilerController();
-  void RecvProfile(const nsCString& aProfile);
+  void RecvProfile(const nsCString& aProfile, bool aIsExitProfile);
 
 private:
   void StartProfiler(nsIProfilerStartParams* aParams);
@@ -35,7 +35,6 @@ private:
 
   ProfilerControllingProcess* mProcess;
   RefPtr<ProfilerObserver> mObserver;
-  nsCString mProfile;
 };
 
 } // namespace mozilla

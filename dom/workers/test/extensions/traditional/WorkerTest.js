@@ -89,7 +89,7 @@ WorkerTest.prototype = {
     switch(topic) {
       case "profile-after-change":
         gWorkerAndCallback.start();
-        Services.obs.addObserver(this, "profile-before-change", false);
+        Services.obs.addObserver(this, "profile-before-change");
         break;
       case "profile-before-change":
         gWorkerAndCallback.stop();

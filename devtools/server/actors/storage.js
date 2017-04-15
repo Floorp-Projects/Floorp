@@ -181,7 +181,7 @@ StorageActors.defaults = function (typeName, observationTopics) {
       this.populateStoresForHosts();
       if (observationTopics) {
         observationTopics.forEach((observationTopic) => {
-          Services.obs.addObserver(this, observationTopic, false);
+          Services.obs.addObserver(this, observationTopic);
         });
       }
       this.onWindowReady = this.onWindowReady.bind(this);
@@ -921,7 +921,7 @@ var cookieHelpers = {
   },
 
   addCookieObservers() {
-    Services.obs.addObserver(cookieHelpers, "cookie-changed", false);
+    Services.obs.addObserver(cookieHelpers, "cookie-changed");
     return null;
   },
 
@@ -2469,8 +2469,8 @@ let StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
 
     // Notifications that help us keep track of newly added windows and windows
     // that got removed
-    Services.obs.addObserver(this, "content-document-global-created", false);
-    Services.obs.addObserver(this, "inner-window-destroyed", false);
+    Services.obs.addObserver(this, "content-document-global-created");
+    Services.obs.addObserver(this, "inner-window-destroyed");
     this.onPageChange = this.onPageChange.bind(this);
 
     let handler = tabActor.chromeEventHandler;

@@ -151,7 +151,7 @@ add_task(function* test() {
       Services.obs.removeObserver(obs, "garbage-collection-statistics");
       resolve();
     }
-    Services.obs.addObserver(obs, "garbage-collection-statistics", false);
+    Services.obs.addObserver(obs, "garbage-collection-statistics");
   });
 
   let remotePromise;

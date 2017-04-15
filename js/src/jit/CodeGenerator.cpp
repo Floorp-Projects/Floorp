@@ -70,53 +70,6 @@ using JS::GenericNaN;
 namespace js {
 namespace jit {
 
-// This out-of-line cache is used to do a double dispatch including it-self and
-// the wrapped IonCache.
-class OutOfLineUpdateCache :
-  public OutOfLineCodeBase<CodeGenerator>,
-  public IonCacheVisitor
-{
-  private:
-    LInstruction* lir_;
-    size_t cacheIndex_;
-    RepatchLabel entry_;
-
-  public:
-    OutOfLineUpdateCache(LInstruction* lir, size_t cacheIndex)
-      : lir_(lir),
-        cacheIndex_(cacheIndex)
-    { }
-
-    void bind(MacroAssembler* masm) {
-        // The binding of the initial jump is done in
-        // CodeGenerator::visitOutOfLineCache.
-    }
-
-    size_t getCacheIndex() const {
-        return cacheIndex_;
-    }
-    LInstruction* lir() const {
-        return lir_;
-    }
-    RepatchLabel& entry() {
-        return entry_;
-    }
-
-    void accept(CodeGenerator* codegen) {
-        codegen->visitOutOfLineCache(this);
-    }
-
-    // ICs' visit functions delegating the work to the CodeGen visit funtions.
-#define VISIT_CACHE_FUNCTION(op)                                        \
-    void visit##op##IC(CodeGenerator* codegen) {                        \
-        CodeGenerator::DataPtr<op##IC> ic(codegen, getCacheIndex());    \
-        codegen->visit##op##IC(this, ic);                        \
-    }
-
-    IONCACHE_KIND_LIST(VISIT_CACHE_FUNCTION)
-#undef VISIT_CACHE_FUNCTION
-};
-
 class OutOfLineICFallback : public OutOfLineCodeBase<CodeGenerator>
 {
   private:
@@ -151,33 +104,6 @@ class OutOfLineICFallback : public OutOfLineCodeBase<CodeGenerator>
     }
 };
 
-// This function is declared here because it needs to instantiate an
-// OutOfLineUpdateCache, but we want to keep it visible inside the
-// CodeGeneratorShared such as we can specialize inline caches in function of
-// the architecture.
-void
-CodeGeneratorShared::addCache(LInstruction* lir, size_t cacheIndex)
-{
-    if (cacheIndex == SIZE_MAX) {
-        masm.setOOM();
-        return;
-    }
-
-    DataPtr<IonCache> cache(this, cacheIndex);
-    MInstruction* mir = lir->mirRaw()->toInstruction();
-    if (mir->resumePoint())
-        cache->setScriptedLocation(mir->block()->info().script(),
-                                   mir->resumePoint()->pc());
-    else
-        cache->setIdempotent();
-
-    OutOfLineUpdateCache* ool = new(alloc()) OutOfLineUpdateCache(lir, cacheIndex);
-    addOutOfLineCode(ool, mir);
-
-    cache->emitInitialJump(masm, ool->entry());
-    masm.bind(ool->rejoin());
-}
-
 void
 CodeGeneratorShared::addIC(LInstruction* lir, size_t cacheIndex)
 {
@@ -208,19 +134,6 @@ CodeGeneratorShared::addIC(LInstruction* lir, size_t cacheIndex)
     cache->setRejoinLabel(CodeOffset(ool->rejoin()->offset()));
 }
 
-void
-CodeGenerator::visitOutOfLineCache(OutOfLineUpdateCache* ool)
-{
-    DataPtr<IonCache> cache(this, ool->getCacheIndex());
-
-    // Register the location of the OOL path in the IC.
-    cache->setFallbackLabel(masm.labelForPatch());
-    masm.bind(&ool->entry());
-
-    // Dispatch to ICs' accept functions.
-    cache->accept(this, ool);
-}
-
 typedef bool (*IonGetPropertyICFn)(JSContext*, HandleScript, IonGetPropertyIC*, HandleValue, HandleValue,
                                    MutableHandleValue);
 static const VMFunction IonGetPropertyICInfo =
@@ -235,6 +148,15 @@ typedef bool (*IonGetNameICFn)(JSContext*, HandleScript, IonGetNameIC*, HandleOb
                                MutableHandleValue);
 static const VMFunction IonGetNameICInfo =
     FunctionInfo<IonGetNameICFn>(IonGetNameIC::update, "IonGetNameIC::update");
+
+typedef bool (*IonHasOwnICFn)(JSContext*, HandleScript, IonHasOwnIC*, HandleValue, HandleValue,
+                              int32_t*);
+static const VMFunction IonHasOwnICInfo =
+    FunctionInfo<IonHasOwnICFn>(IonHasOwnIC::update, "IonHasOwnIC::update");
+
+typedef JSObject* (*IonBindNameICFn)(JSContext*, HandleScript, IonBindNameIC*, HandleObject);
+static const VMFunction IonBindNameICInfo =
+    FunctionInfo<IonBindNameICFn>(IonBindNameIC::update, "IonBindNameIC::update");
 
 void
 CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
@@ -304,8 +226,43 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
         masm.jump(ool->rejoin());
         return;
       }
+      case CacheKind::BindName: {
+        IonBindNameIC* bindNameIC = ic->asBindNameIC();
+
+        saveLive(lir);
+
+        pushArg(bindNameIC->environment());
+        icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
+        pushArg(ImmGCPtr(gen->info().script()));
+
+        callVM(IonBindNameICInfo, lir);
+
+        StoreRegisterTo(bindNameIC->output()).generate(this);
+        restoreLiveIgnore(lir, StoreRegisterTo(bindNameIC->output()).clobbered());
+
+        masm.jump(ool->rejoin());
+        return;
+      }
       case CacheKind::In:
         MOZ_CRASH("Baseline-specific for now");
+      case CacheKind::HasOwn: {
+        IonHasOwnIC* hasOwnIC = ic->asHasOwnIC();
+
+        saveLive(lir);
+
+        pushArg(hasOwnIC->id());
+        pushArg(hasOwnIC->value());
+        icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
+        pushArg(ImmGCPtr(gen->info().script()));
+
+        callVM(IonHasOwnICInfo, lir);
+
+        StoreRegisterTo(hasOwnIC->output()).generate(this);
+        restoreLiveIgnore(lir, StoreRegisterTo(hasOwnIC->output()).clobbered());
+
+        masm.jump(ool->rejoin());
+        return;
+      }
     }
     MOZ_CRASH();
 }
@@ -7010,18 +6967,21 @@ CodeGenerator::visitModD(LModD* ins)
 {
     FloatRegister lhs = ToFloatRegister(ins->lhs());
     FloatRegister rhs = ToFloatRegister(ins->rhs());
-    Register temp = ToRegister(ins->temp());
 
     MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
+    MOZ_ASSERT(ins->temp()->isBogusTemp() == gen->compilingWasm());
 
-    masm.setupUnalignedABICall(temp);
-    masm.passABIArg(lhs, MoveOp::DOUBLE);
-    masm.passABIArg(rhs, MoveOp::DOUBLE);
-
-    if (gen->compilingWasm())
-        masm.callWithABI(wasm::SymbolicAddress::ModD, MoveOp::DOUBLE);
-    else
+    if (gen->compilingWasm()) {
+        masm.setupWasmABICall();
+        masm.passABIArg(lhs, MoveOp::DOUBLE);
+        masm.passABIArg(rhs, MoveOp::DOUBLE);
+        masm.callWithABI(ins->mir()->bytecodeOffset(), wasm::SymbolicAddress::ModD, MoveOp::DOUBLE);
+    } else {
+        masm.setupUnalignedABICall(ToRegister(ins->temp()));
+        masm.passABIArg(lhs, MoveOp::DOUBLE);
+        masm.passABIArg(rhs, MoveOp::DOUBLE);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NumberMod), MoveOp::DOUBLE);
+    }
 }
 
 typedef bool (*BinaryFn)(JSContext*, MutableHandleValue, MutableHandleValue, MutableHandleValue);
@@ -9537,7 +9497,7 @@ CodeGenerator::visitRest(LRest* lir)
 }
 
 bool
-CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::TrapOffset trapOffset,
+CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::BytecodeOffset trapOffset,
                             wasm::FuncOffsets* offsets)
 {
     JitSpew(JitSpew_Codegen, "# Emitting wasm code");
@@ -9599,7 +9559,6 @@ CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::TrapOffset trapOffset,
     MOZ_ASSERT(graph.numConstants() == 0);
     MOZ_ASSERT(safepointIndices_.empty());
     MOZ_ASSERT(osiIndices_.empty());
-    MOZ_ASSERT(cacheList_.empty());
     MOZ_ASSERT(icList_.empty());
     MOZ_ASSERT(safepoints_.size() == 0);
     MOZ_ASSERT(!scriptCounts_);
@@ -9821,7 +9780,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
                        snapshots_.listSize(), snapshots_.RVATableSize(),
                        recovers_.size(), bailouts_.length(), graph.numConstants(),
                        safepointIndices_.length(), osiIndices_.length(),
-                       cacheList_.length(), icList_.length(), runtimeData_.length(),
+                       icList_.length(), runtimeData_.length(),
                        safepoints_.size(), patchableBackedges_.length(),
                        sharedStubs_.length(), optimizationLevel);
     if (!ionScript)
@@ -9986,8 +9945,6 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
     // for generating inline caches during the execution.
     if (runtimeData_.length())
         ionScript->copyRuntimeData(&runtimeData_[0]);
-    if (cacheList_.length())
-        ionScript->copyCacheEntries(&cacheList_[0], masm);
     if (icList_.length())
         ionScript->copyICEntries(&icList_[0], masm);
 
@@ -10385,32 +10342,27 @@ CodeGenerator::visitGetPropertyCacheT(LGetPropertyCacheT* ins)
 void
 CodeGenerator::visitBindNameCache(LBindNameCache* ins)
 {
+    LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
     Register envChain = ToRegister(ins->environmentChain());
     Register output = ToRegister(ins->output());
-    BindNameIC cache(envChain, ins->mir()->name(), output);
-    cache.setProfilerLeavePC(ins->mir()->profilerLeavePc());
+    Register temp = ToRegister(ins->temp());
 
-    addCache(ins, allocateCache(cache));
+    IonBindNameIC ic(liveRegs, envChain, output, temp);
+    addIC(ins, allocateIC(ic));
 }
 
-typedef JSObject* (*BindNameICFn)(JSContext*, HandleScript, size_t, HandleObject);
-const VMFunction BindNameIC::UpdateInfo =
-    FunctionInfo<BindNameICFn>(BindNameIC::update, "BindNameIC::update");
-
 void
-CodeGenerator::visitBindNameIC(OutOfLineUpdateCache* ool, DataPtr<BindNameIC>& ic)
+CodeGenerator::visitHasOwnCache(LHasOwnCache* ins)
 {
-    LInstruction* lir = ool->lir();
-    saveLive(lir);
+    LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
+    TypedOrValueRegister value =
+        toConstantOrRegister(ins, LHasOwnCache::Value, ins->mir()->value()->type()).reg();
+    TypedOrValueRegister id =
+        toConstantOrRegister(ins, LHasOwnCache::Id, ins->mir()->idval()->type()).reg();
+    Register output = ToRegister(ins->output());
 
-    pushArg(ic->environmentChainReg());
-    pushArg(Imm32(ool->getCacheIndex()));
-    pushArg(ImmGCPtr(gen->info().script()));
-    callVM(BindNameIC::UpdateInfo, lir);
-    StoreRegisterTo(ic->outputReg()).generate(this);
-    restoreLiveIgnore(lir, StoreRegisterTo(ic->outputReg()).clobbered());
-
-    masm.jump(ool->rejoin());
+    IonHasOwnIC cache(liveRegs, value, id, output);
+    addIC(ins, allocateIC(cache));
 }
 
 typedef bool (*SetPropertyFn)(JSContext*, HandleObject,

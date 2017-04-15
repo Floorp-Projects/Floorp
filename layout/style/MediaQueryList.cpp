@@ -8,10 +8,10 @@
 
 #include "mozilla/dom/MediaQueryList.h"
 #include "mozilla/dom/MediaQueryListEvent.h"
+#include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "nsPresContext.h"
-#include "nsMediaList.h"
 #include "nsCSSParser.h"
 #include "nsIDocument.h"
 
@@ -20,17 +20,16 @@
 namespace mozilla {
 namespace dom {
 
-MediaQueryList::MediaQueryList(nsIDocument *aDocument,
-                               const nsAString &aMediaQueryList)
+MediaQueryList::MediaQueryList(nsIDocument* aDocument,
+                               const nsAString& aMediaQueryList)
   : mDocument(aDocument)
-  , mMediaList(new nsMediaList)
   , mMatchesValid(false)
   , mIsKeptAlive(false)
 {
-  PR_INIT_CLIST(this);
+  mMediaList =
+    MediaList::Create(aDocument->GetStyleBackendType(), aMediaQueryList);
 
-  nsCSSParser parser;
-  parser.ParseMediaList(aMediaQueryList, nullptr, 0, mMediaList);
+  PR_INIT_CLIST(this);
 }
 
 MediaQueryList::~MediaQueryList()
@@ -234,7 +233,7 @@ MediaQueryList::RecomputeMatches()
     return;
   }
 
-  mMatches = mMediaList->Matches(*presContext, nullptr);
+  mMatches = mMediaList->Matches(presContext);
   mMatchesValid = true;
 }
 

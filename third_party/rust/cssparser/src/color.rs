@@ -4,6 +4,7 @@
 
 use std::cmp;
 use std::fmt;
+use std::f32::consts::PI;
 
 use super::{Token, Parser, ToCss};
 use tokenizer::NumericValue;
@@ -398,75 +399,151 @@ fn clamp_f32(val: f32) -> u8 {
 
 #[inline]
 fn parse_color_function(name: &str, arguments: &mut Parser) -> Result<Color, ()> {
-    let (is_rgb, has_alpha) = match_ignore_ascii_case! { name,
-        "rgba" => (true, true),
-        "rgb" => (true, false),
-        "hsl" => (false, false),
-        "hsla" => (false, true),
+    let is_rgb = match_ignore_ascii_case! { name,
+        "rgb" | "rgba" => true,
+        "hsl" | "hsla" => false,
         _ => return Err(())
     };
 
-    let red: u8;
-    let green: u8;
-    let blue: u8;
-    if is_rgb {
-        // Either integers or percentages, but all the same type.
-        // https://drafts.csswg.org/css-color/#rgb-functions
-        match try!(arguments.next()) {
-            Token::Number(NumericValue { int_value: Some(v), .. }) => {
-                red = clamp_i32(v);
-                try!(arguments.expect_comma());
-                green = clamp_i32(try!(arguments.expect_integer()));
-                try!(arguments.expect_comma());
-                blue = clamp_i32(try!(arguments.expect_integer()));
+    let (red, green, blue, uses_commas) = if is_rgb {
+        parse_rgb_components_rgb(arguments)?
+    } else {
+        parse_rgb_components_hsl(arguments)?
+    };
+
+    let alpha = if !arguments.is_exhausted() {
+        if uses_commas {
+            try!(arguments.expect_comma());
+        } else {
+            match try!(arguments.next()) {
+                Token::Delim('/') => {},
+                _ => return Err(())
+            };
+        };
+        let token = try!(arguments.next());
+        match token {
+            Token::Number(NumericValue { value: v, .. }) => {
+                clamp_f32(v)
             }
             Token::Percentage(ref v) => {
-                red = clamp_f32(v.unit_value);
-                try!(arguments.expect_comma());
-                green = clamp_f32(try!(arguments.expect_percentage()));
-                try!(arguments.expect_comma());
-                blue = clamp_f32(try!(arguments.expect_percentage()));
+                clamp_f32(v.unit_value)
             }
-            _ => return Err(())
-        };
-    } else {
-        let hue_degrees = try!(arguments.expect_number());
-        // Subtract an integer before rounding, to avoid some rounding errors:
-        let hue_normalized_degrees = hue_degrees - 360. * (hue_degrees / 360.).floor();
-        let hue = hue_normalized_degrees / 360.;
-        // Saturation and lightness are clamped to 0% ... 100%
-        // https://drafts.csswg.org/css-color/#the-hsl-notation
-        try!(arguments.expect_comma());
-        let saturation = try!(arguments.expect_percentage()).max(0.).min(1.);
-        try!(arguments.expect_comma());
-        let lightness = try!(arguments.expect_percentage()).max(0.).min(1.);
-
-        // https://drafts.csswg.org/css-color/#hsl-color
-        // except with h pre-multiplied by 3, to avoid some rounding errors.
-        fn hue_to_rgb(m1: f32, m2: f32, mut h3: f32) -> f32 {
-            if h3 < 0. { h3 += 3. }
-            if h3 > 3. { h3 -= 3. }
-
-            if h3 * 2. < 1. { m1 + (m2 - m1) * h3 * 2. }
-            else if h3 * 2. < 3. { m2 }
-            else if h3 < 2. { m1 + (m2 - m1) * (2. - h3) * 2. }
-            else { m1 }
+            _ => {
+                return Err(())
+            }
         }
-        let m2 = if lightness <= 0.5 { lightness * (saturation + 1.) }
-                 else { lightness + saturation - lightness * saturation };
-        let m1 = lightness * 2. - m2;
-        let hue_times_3 = hue * 3.;
-        red = clamp_f32(hue_to_rgb(m1, m2, hue_times_3 + 1.));
-        green = clamp_f32(hue_to_rgb(m1, m2, hue_times_3));
-        blue = clamp_f32(hue_to_rgb(m1, m2, hue_times_3 - 1.));
-    }
-
-    let alpha = if has_alpha {
-        try!(arguments.expect_comma());
-        clamp_f32(try!(arguments.expect_number()))
     } else {
         255
     };
+
     try!(arguments.expect_exhausted());
     rgba(red, green, blue, alpha)
+}
+
+
+#[inline]
+fn parse_rgb_components_rgb(arguments: &mut Parser) -> Result<(u8, u8, u8, bool), ()> {
+    let red: u8;
+    let green: u8;
+    let blue: u8;
+    let mut uses_commas = false;
+
+    // Either integers or percentages, but all the same type.
+    // https://drafts.csswg.org/css-color/#rgb-functions
+    match try!(arguments.next()) {
+        Token::Number(NumericValue { value: v, .. }) => {
+            red = clamp_i32(v as i32);
+            green = clamp_i32(match try!(arguments.next()) {
+                Token::Number(NumericValue { value: v, .. }) => v,
+                Token::Comma => {
+                    uses_commas = true;
+                    try!(arguments.expect_number())
+                }
+                _ => return Err(())
+            } as i32);
+            if uses_commas {
+                try!(arguments.expect_comma());
+            }
+            blue = clamp_i32(try!(arguments.expect_number()) as i32);
+        }
+        Token::Percentage(ref v) => {
+            red = clamp_f32(v.unit_value);
+            green = clamp_f32(match try!(arguments.next()) {
+                Token::Percentage(ref v) => v.unit_value,
+                Token::Comma => {
+                    uses_commas = true;
+                    try!(arguments.expect_percentage())
+                }
+                _ => return Err(())
+            });
+            if uses_commas {
+                try!(arguments.expect_comma());
+            }
+            blue = clamp_f32(try!(arguments.expect_percentage()));
+        }
+        _ => return Err(())
+    };
+    return Ok((red, green, blue, uses_commas));
+}
+
+#[inline]
+fn parse_rgb_components_hsl(arguments: &mut Parser) -> Result<(u8, u8, u8, bool), ()> {
+    let mut uses_commas = false;
+    // Hue given as an angle
+    // https://drafts.csswg.org/css-values/#angles
+    let hue_degrees = match try!(arguments.next()) {
+        Token::Number(NumericValue { value: v, .. }) => v,
+        Token::Dimension(NumericValue { value: v, .. }, unit) => {
+            match_ignore_ascii_case! { &*unit,
+                "deg" => v,
+                "grad" => v * 360. / 400.,
+                "rad" => v * 360. / (2. * PI),
+                "turn" => v * 360.,
+                _ => return Err(())
+            }
+        }
+        _ => return Err(())
+    };
+    // Subtract an integer before rounding, to avoid some rounding errors:
+    let hue_normalized_degrees = hue_degrees - 360. * (hue_degrees / 360.).floor();
+    let hue = hue_normalized_degrees / 360.;
+
+    // Saturation and lightness are clamped to 0% ... 100%
+    // https://drafts.csswg.org/css-color/#the-hsl-notation
+    let saturation = match try!(arguments.next()) {
+        Token::Percentage(ref v) => v.unit_value,
+        Token::Comma => {
+            uses_commas = true;
+            try!(arguments.expect_percentage())
+        }
+        _ => return Err(())
+    };
+    let saturation = saturation.max(0.).min(1.);
+
+    if uses_commas {
+        try!(arguments.expect_comma());
+    }
+
+    let lightness = try!(arguments.expect_percentage());
+    let lightness = lightness.max(0.).min(1.);
+
+    // https://drafts.csswg.org/css-color/#hsl-color
+    // except with h pre-multiplied by 3, to avoid some rounding errors.
+    fn hue_to_rgb(m1: f32, m2: f32, mut h3: f32) -> f32 {
+        if h3 < 0. { h3 += 3. }
+        if h3 > 3. { h3 -= 3. }
+
+        if h3 * 2. < 1. { m1 + (m2 - m1) * h3 * 2. }
+        else if h3 * 2. < 3. { m2 }
+        else if h3 < 2. { m1 + (m2 - m1) * (2. - h3) * 2. }
+        else { m1 }
+    }
+    let m2 = if lightness <= 0.5 { lightness * (saturation + 1.) }
+             else { lightness + saturation - lightness * saturation };
+    let m1 = lightness * 2. - m2;
+    let hue_times_3 = hue * 3.;
+    let red = clamp_f32(hue_to_rgb(m1, m2, hue_times_3 + 1.));
+    let green = clamp_f32(hue_to_rgb(m1, m2, hue_times_3));
+    let blue = clamp_f32(hue_to_rgb(m1, m2, hue_times_3 - 1.));
+    return Ok((red, green, blue, uses_commas));
 }

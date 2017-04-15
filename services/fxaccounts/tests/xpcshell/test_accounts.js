@@ -1531,7 +1531,7 @@ function makeObserver(aObserveTopic, aObserveFunc) {
     Services.obs.removeObserver(observer, aObserveTopic);
   }
 
-  Services.obs.addObserver(observer, aObserveTopic, false);
+  Services.obs.addObserver(observer, aObserveTopic);
   return removeMe;
 }
 

@@ -16,6 +16,7 @@
 #include "jsapi.h"
 #include "js/Initialization.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "ProfileJSONWriter.h"
 
 #include <string.h>
 
@@ -353,6 +354,30 @@ TEST(GeckoProfiler, GetProfile)
   ASSERT_TRUE(!profiler_get_profile());
 }
 
+TEST(GeckoProfiler, StreamJSONForThisProcess)
+{
+  const char* features[] = { "stackwalk" };
+  const char* filters[] = { "GeckoMain" };
+
+  SpliceableChunkedJSONWriter w;
+  ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
+
+  profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+                 features, MOZ_ARRAY_LENGTH(features),
+                 filters, MOZ_ARRAY_LENGTH(filters));
+
+  w.Start(SpliceableJSONWriter::SingleLineStyle);
+  ASSERT_TRUE(profiler_stream_json_for_this_process(w));
+  w.End();
+
+  UniquePtr<char[]> profile = w.WriteFunc()->CopyData();
+  ASSERT_TRUE(profile && profile[0] == '{');
+
+  profiler_stop();
+
+  ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
+}
+
 TEST(GeckoProfiler, PseudoStack)
 {
   const char* features[] = { "stackwalk" };
@@ -410,5 +435,27 @@ TEST(GeckoProfiler, SetFrameNumber)
 
   profiler_set_frame_number(6);
   profiler_set_frame_number(7);
+}
+
+TEST(GeckoProfiler, Bug1355807)
+{
+  const char* features[] = { "js" };
+  const char* manyThreadsFilter[] = { "" };
+  const char* fewThreadsFilter[] = { "GeckoMain" };
+
+  profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+                 features, MOZ_ARRAY_LENGTH(features),
+                 manyThreadsFilter, MOZ_ARRAY_LENGTH(manyThreadsFilter));
+
+  profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+                 features, MOZ_ARRAY_LENGTH(features),
+                 fewThreadsFilter, MOZ_ARRAY_LENGTH(fewThreadsFilter));
+
+  // In bug 1355807 this caused an assertion failure in stopJSSampling().
+  profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
+                 features, MOZ_ARRAY_LENGTH(features),
+                 fewThreadsFilter, MOZ_ARRAY_LENGTH(fewThreadsFilter));
+
+  profiler_stop();
 }
 

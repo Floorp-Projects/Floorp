@@ -35,7 +35,7 @@ function waitForNewCookie({host, name, value}) {
         Services.obs.removeObserver(observer, topic);
         resolve();
       }
-    }, "cookie-changed", false);
+    }, "cookie-changed");
   });
 }
 

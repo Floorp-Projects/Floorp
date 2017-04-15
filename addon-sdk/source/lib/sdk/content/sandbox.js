@@ -9,19 +9,22 @@ module.metadata = {
 
 const { Class } = require('../core/heritage');
 const { EventTarget } = require('../event/target');
-const { on, off, emit } = require('../event/core');
-const { events } = require('./sandbox/events');
-const { requiresAddonGlobal } = require('./utils');
-const { delay: async } = require('../lang/functional');
+lazyRequire(this, '../event/core', "on", "off", "emit");
+lazyRequire(this, './sandbox/events', "events");
+lazyRequire(this, './utils', "requiresAddonGlobal");
+lazyRequire(this, '../lang/functional', {"delay": "async"});
 const { Ci, Cu, Cc } = require('chrome');
-const timer = require('../timers');
-const { URL } = require('../url');
-const { sandbox, evaluate, load } = require('../loader/sandbox');
-const { merge } = require('../util/object');
-const { getTabForContentWindowNoShim } = require('../tabs/utils');
-const { getInnerId } = require('../window/utils');
-const { PlainTextConsole } = require('../console/plain-text');
-const { data } = require('../self');const { isChildLoader } = require('../remote/core');
+lazyRequireModule(this, "../timers", "timer");
+lazyRequire(this, '../url', "URL");
+lazyRequire(this, '../loader/sandbox', "sandbox", "evaluate", "load");
+lazyRequire(this, '../util/object', "merge");
+lazyRequire(this, '../tabs/utils', "getTabForContentWindowNoShim");
+lazyRequire(this, '../window/utils', "getInnerId");
+lazyRequire(this, '../console/plain-text', "PlainTextConsole");
+
+lazyRequire(this, '../self', "data");
+lazyRequire(this, '../remote/core', "isChildLoader");
+
 // WeakMap of sandboxes so we can access private values
 const sandboxes = new WeakMap();
 

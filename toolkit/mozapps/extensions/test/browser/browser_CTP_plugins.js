@@ -7,7 +7,7 @@ function updateBlocklist(aCallback) {
     Services.obs.removeObserver(observer, "blocklist-updated");
     SimpleTest.executeSoon(aCallback);
   };
-  Services.obs.addObserver(observer, "blocklist-updated", false);
+  Services.obs.addObserver(observer, "blocklist-updated");
   blocklistNotifier.notify(null);
 }
 

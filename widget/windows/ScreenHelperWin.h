@@ -17,7 +17,6 @@ class ScreenHelperWin final : public ScreenManager::Helper
 public:
   ScreenHelperWin() {};
   ~ScreenHelperWin() override {}
-  float GetSystemDefaultScale() override;
 
   static void RefreshScreens();
 };

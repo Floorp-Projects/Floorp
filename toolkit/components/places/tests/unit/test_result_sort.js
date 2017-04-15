@@ -19,7 +19,7 @@ function promiseOnItemVisited() {
       do_execute_soon(defer.resolve);
     }
   };
-  PlacesUtils.bookmarks.addObserver(bookmarksObserver, false);
+  PlacesUtils.bookmarks.addObserver(bookmarksObserver);
   return defer.promise;
 }
 

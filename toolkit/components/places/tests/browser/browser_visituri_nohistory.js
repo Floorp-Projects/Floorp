@@ -14,7 +14,7 @@ function promiseObserve(name) {
     Services.obs.addObserver(function observer(subject) {
       Services.obs.removeObserver(observer, name);
       resolve(subject);
-    }, name, false);
+    }, name);
   });
 }
 

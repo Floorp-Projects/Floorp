@@ -9,5 +9,6 @@
 # installed to previously defined locations.
 
 EXTRA_JS_MODULES.devtools += [
+    'devtools.js',
     'gDevTools.jsm',
 ]

@@ -105,7 +105,7 @@ class MachCommands(MachCommandBase):
                                          'awsy',
                                          'tp5n-pageset.manifest')
             tooltool_args = {"args": [
-                os.path.join(self.topsrcdir, "taskcluster/docker/recipes/tooltool.py"),
+                os.path.join(self.topsrcdir, "python/mozbuild/mozbuild/action/tooltool.py"),
                 "--manifest=%s" % manifest_file,
                 "--unpack",
                 "--cache-folder=%s" % os.path.join(self.topsrcdir, "tooltool-cache"),

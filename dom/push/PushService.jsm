@@ -483,7 +483,7 @@ this.PushService = {
     this._setState(PUSH_SERVICE_ACTIVATING);
 
     prefs.observe("serverURL", this);
-    Services.obs.addObserver(this, "quit-application", false);
+    Services.obs.addObserver(this, "quit-application");
 
     if (options.serverURI) {
       // this is use for xpcshell test.
@@ -506,22 +506,22 @@ this.PushService = {
       return;
     }
 
-    Services.obs.addObserver(this, "clear-origin-attributes-data", false);
+    Services.obs.addObserver(this, "clear-origin-attributes-data");
 
     // The offline-status-changed event is used to know
     // when to (dis)connect. It may not fire if the underlying OS changes
     // networks; in such a case we rely on timeout.
-    Services.obs.addObserver(this, "network:offline-status-changed", false);
+    Services.obs.addObserver(this, "network:offline-status-changed");
 
     // Used to monitor if the user wishes to disable Push.
     prefs.observe("connection.enabled", this);
 
     // Prunes expired registrations and notifies dormant service workers.
-    Services.obs.addObserver(this, "idle-daily", false);
+    Services.obs.addObserver(this, "idle-daily");
 
     // Prunes registrations for sites for which the user revokes push
     // permissions.
-    Services.obs.addObserver(this, "perm-changed", false);
+    Services.obs.addObserver(this, "perm-changed");
   },
 
   _startService(service, serverURI, options) {

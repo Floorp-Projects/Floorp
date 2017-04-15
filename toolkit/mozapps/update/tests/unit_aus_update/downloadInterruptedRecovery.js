@@ -103,7 +103,7 @@ IncrementalDownload.prototype = {
              getService(Ci.nsIThreadManager);
     // Do the actual operation async to give a chance for observers
     // to add themselves.
-    tm.mainThread.dispatch(function() {
+    tm.dispatchToMainThread(function() {
       this._observer = observer.QueryInterface(Ci.nsIRequestObserver);
       this._ctxt = ctxt;
       this._observer.onStartRequest(this, this._ctxt);
@@ -129,15 +129,15 @@ IncrementalDownload.prototype = {
           // status being changed to online.
           let tm2 = Cc["@mozilla.org/thread-manager;1"].
                     getService(Ci.nsIThreadManager);
-          tm2.mainThread.dispatch(function() {
+          tm2.dispatchToMainThread(function() {
             Services.obs.notifyObservers(gAUS,
                                          "network:offline-status-changed",
                                          "online");
-          }, Ci.nsIThread.DISPATCH_NORMAL);
+          });
           break;
       }
       this._observer.onStopRequest(this, this._ctxt, status);
-    }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
+    }.bind(this));
   },
 
   get URI() {

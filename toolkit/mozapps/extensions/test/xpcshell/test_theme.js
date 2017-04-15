@@ -31,7 +31,7 @@ var LightweightThemeObserver = {
 
 AM_Cc["@mozilla.org/observer-service;1"]
      .getService(Components.interfaces.nsIObserverService)
-     .addObserver(LightweightThemeObserver, "lightweight-theme-styling-update", false);
+     .addObserver(LightweightThemeObserver, "lightweight-theme-styling-update");
 
 
 function run_test() {

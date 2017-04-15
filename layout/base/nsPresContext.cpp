@@ -89,6 +89,7 @@
 #include "nsCSSParser.h"
 #include "nsBidiUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsBidi.h"
 
 #include "mozilla/dom/URL.h"
 
@@ -695,11 +696,6 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
   nsDependentCString prefName(aPrefName);
   if (prefName.EqualsLiteral("layout.css.dpi") ||
       prefName.EqualsLiteral("layout.css.devPixelsPerPx")) {
-
-    // We can't use a separate observer, callback, or var cache
-    // Because they don't guarantee the order of function calls.
-    // We have to update the scale override value first.
-    nsIWidget::ScaleOverrideChanged();
 
     int32_t oldAppUnitsPerDevPixel = AppUnitsPerDevPixel();
     if (mDeviceContext->CheckDPIChange() && mShell) {
@@ -3010,6 +3006,17 @@ nsPresContext::GetRestyleGeneration() const
     return 0;
   }
   return mRestyleManager->GetRestyleGeneration();
+}
+
+nsBidi&
+nsPresContext::GetBidiEngine()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mBidiEngine) {
+    mBidiEngine.reset(new nsBidi());
+  }
+  return *mBidiEngine;
 }
 
 nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,

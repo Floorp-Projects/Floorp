@@ -8192,11 +8192,8 @@ CSSParserImpl::SetValueToURL(nsCSSValue& aValue, const nsString& aURL)
     return false;
   }
 
-  RefPtr<nsStringBuffer> buffer(nsCSSValue::BufferFromString(aURL));
-
-  // Note: urlVal retains its own reference to |buffer|.
   mozilla::css::URLValue *urlVal =
-    new mozilla::css::URLValue(buffer, mBaseURI, mSheetURI, mSheetPrincipal);
+    new mozilla::css::URLValue(aURL, mBaseURI, mSheetURI, mSheetPrincipal);
   aValue.SetURLValue(urlVal);
   return true;
 }
@@ -15571,14 +15568,12 @@ CSSParserImpl::ParseTextDecorationLine(nsCSSValue& aValue)
                  NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE ^
                  NS_STYLE_TEXT_DECORATION_LINE_OVERLINE ^
                  NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH ^
-                 NS_STYLE_TEXT_DECORATION_LINE_BLINK ^
-                 NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS) ==
+                 NS_STYLE_TEXT_DECORATION_LINE_BLINK) ==
                 (NS_STYLE_TEXT_DECORATION_LINE_NONE |
                  NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE |
                  NS_STYLE_TEXT_DECORATION_LINE_OVERLINE |
                  NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH |
-                 NS_STYLE_TEXT_DECORATION_LINE_BLINK |
-                 NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS),
+                 NS_STYLE_TEXT_DECORATION_LINE_BLINK),
                 "text decoration constants need to be bitmasks");
   if (ParseSingleTokenVariant(aValue, VARIANT_HK,
                               nsCSSProps::kTextDecorationLineKTable)) {

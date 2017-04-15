@@ -71,7 +71,7 @@ function countTabs() {
 
 var TabsProgressListener = {
   init() {
-    Services.obs.addObserver(this, "sessionstore-debug-tab-restored", false);
+    Services.obs.addObserver(this, "sessionstore-debug-tab-restored");
   },
 
   uninit() {

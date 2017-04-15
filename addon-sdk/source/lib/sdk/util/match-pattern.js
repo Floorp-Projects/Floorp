@@ -7,7 +7,7 @@ module.metadata = {
   "stability": "unstable"
 };
 
-const { URL } = require('../url');
+lazyRequire(this, '../url', "URL");
 const cache = {};
 
 function MatchPattern(pattern) {

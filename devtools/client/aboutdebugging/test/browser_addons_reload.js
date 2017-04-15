@@ -125,7 +125,7 @@ add_task(function* reloadButtonReloadsAddon() {
       Services.obs.removeObserver(listener, ADDON_NAME);
       info("Add-on was re-installed: " + ADDON_NAME);
       done();
-    }, ADDON_NAME, false);
+    }, ADDON_NAME);
   });
 
   reloadButton.click();

@@ -75,7 +75,7 @@
       observe: () => {
         loggingEnabled = Services.prefs.getBoolPref("devtools.dump.emit");
       }
-    }, false);
+    });
   }
 
   /**

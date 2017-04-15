@@ -230,7 +230,7 @@ function waitForTopic(aTopic, aTimeout, aCallback) {
   });
 
   observing = true;
-  Services.obs.addObserver(observer, aTopic, false);
+  Services.obs.addObserver(observer, aTopic);
 }
 
 /**
@@ -348,7 +348,7 @@ var gProgressListener = {
   _callback: null,
 
   setCallback(callback) {
-    Services.obs.addObserver(this, "sessionstore-debug-tab-restored", false);
+    Services.obs.addObserver(this, "sessionstore-debug-tab-restored");
     this._callback = callback;
   },
 
@@ -460,7 +460,7 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
       Services.obs.removeObserver(observer, aTopic);
       executeSoon(aCallback);
     }
-  }, "browser-delayed-startup-finished", false);
+  }, "browser-delayed-startup-finished");
 }
 function promiseDelayedStartupFinished(aWindow) {
   return new Promise(resolve => whenDelayedStartupFinished(aWindow, resolve));

@@ -15,7 +15,6 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   DefaultWeakMap,
   ExtensionError,
-  SingletonEventManager,
   defineLazyGetter,
 } = ExtensionUtils;
 
@@ -80,10 +79,6 @@ class BrowserProgressListener {
   onStateChange(webProgress, request, stateFlags, status) {
     this.delegate("onStateChange", webProgress, request, stateFlags, status);
   }
-
-  onProgressChange(webProgress, request, curSelfProgress, maxSelfProgress, curTotalProgress, maxTotalProgress) {}
-  onStatusChange(webProgress, request, status, message) {}
-  onSecurityChange(webProgress, request, state) {}
 }
 
 /**
@@ -332,9 +327,9 @@ class TabTracker extends TabTrackerBase {
     let windowId = windowTracker.getId(nativeTab.browser.ownerGlobal);
     let tabId = this.getId(nativeTab);
 
-    Services.tm.mainThread.dispatch(() => {
+    Services.tm.dispatchToMainThread(() => {
       this.emit("tab-removed", {nativeTab, tabId, windowId, isWindowClosing});
-    }, Ci.nsIThread.DISPATCH_NORMAL);
+    });
   }
 
   getBrowserData(browser) {

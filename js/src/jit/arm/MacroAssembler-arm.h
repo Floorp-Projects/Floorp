@@ -104,7 +104,7 @@ class MacroAssemblerARM : public Assembler
                              bool isUnsigned, Label* oolEntry);
     void outOfLineWasmTruncateToIntCheck(FloatRegister input, MIRType fromType,
                                          MIRType toType, bool isUnsigned, Label* rejoin,
-                                         wasm::TrapOffset trapOffs);
+                                         wasm::BytecodeOffset trapOffset);
 
     // Somewhat direct wrappers for the low-level assembler funcitons
     // bitops. Attempt to encode a virtual alu instruction using two real

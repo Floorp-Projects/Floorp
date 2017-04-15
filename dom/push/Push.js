@@ -190,7 +190,7 @@ Push.prototype = {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionType]),
     };
     let typeArray = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-    typeArray.appendElement(type, false);
+    typeArray.appendElement(type);
 
     // create a nsIContentPermissionRequest
     let request = {

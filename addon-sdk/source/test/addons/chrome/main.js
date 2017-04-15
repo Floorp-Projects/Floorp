@@ -9,6 +9,7 @@ const { WindowTracker } = require('sdk/deprecated/window-utils');
 const { close, open } = require('sdk/window/helpers');
 const { data } = require('sdk/self');
 const { Panel } = require('sdk/panel');
+const { getActiveView } = require("sdk/view/core");
 
 const XUL_URL = 'chrome://test/content/new-window.xul'
 
@@ -73,6 +74,8 @@ exports.testChromeInPanel = function*(assert) {
     contentScriptWhen: 'end',
     contentScriptFile: data.url('panel.js')
   });
+
+  getActiveView(panel);
 
   yield new Promise(resolve => panel.port.once('start', resolve));
   assert.pass('start was emitted');

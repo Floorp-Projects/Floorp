@@ -8,7 +8,7 @@ module.metadata = {
 };
 
 const method = require('../../method/core');
-const { uuid } = require('../util/uuid');
+lazyRequire(this, '../util/uuid', "uuid");
 
 // NOTE: use lang/functional memoize when it is updated to use WeakMap
 function memoize(f) {

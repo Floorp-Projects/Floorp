@@ -120,8 +120,8 @@ const BackgroundPageThumbs = {
           Services.obs.removeObserver(observe, "page-thumbnail:error");
         }
       }
-      Services.obs.addObserver(observe, "page-thumbnail:create", false);
-      Services.obs.addObserver(observe, "page-thumbnail:error", false);
+      Services.obs.addObserver(observe, "page-thumbnail:create");
+      Services.obs.addObserver(observe, "page-thumbnail:error");
     });
     try {
       this.capture(url, options);
@@ -264,9 +264,9 @@ const BackgroundPageThumbs = {
         // browser's message manager if it happens on the same stack as the
         // listener.  Trying to send a message to the manager in that case
         // throws NS_ERROR_NOT_INITIALIZED.
-        Services.tm.currentThread.dispatch(() => {
+        Services.tm.dispatchToMainThread(() => {
           curCapture._done(null, TEL_CAPTURE_DONE_CRASHED);
-        }, Ci.nsIEventTarget.DISPATCH_NORMAL);
+        });
       }
       // else: we must have been idle and not currently doing a capture (eg,
       // maybe a GC or similar crashed) - so there's no need to attempt a
@@ -336,8 +336,7 @@ Services.prefs.addObserver(ABOUT_NEWTAB_SEGREGATION_PREF,
     if (aTopic == "nsPref:changed" && aData == ABOUT_NEWTAB_SEGREGATION_PREF) {
       BackgroundPageThumbs.renewThumbnailBrowser();
     }
-  },
-  false);
+  });
 
 Object.defineProperty(this, "BackgroundPageThumbs", {
   value: BackgroundPageThumbs,
@@ -503,5 +502,5 @@ function tel(histogramID, value) {
 }
 
 function schedule(callback) {
-  Services.tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
+  Services.tm.dispatchToMainThread(callback);
 }

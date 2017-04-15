@@ -3209,9 +3209,7 @@ nsDocShell::SetCustomUserAgent(const nsAString& aCustomUserAgent)
   RefPtr<nsGlobalWindow> win = mScriptGlobal ?
     mScriptGlobal->GetCurrentInnerWindowInternal() : nullptr;
   if (win) {
-    ErrorResult ignored;
-    Navigator* navigator = win->GetNavigator(ignored);
-    ignored.SuppressException();
+    Navigator* navigator = win->Navigator();
     if (navigator) {
       navigator->ClearUserAgentCache();
     }

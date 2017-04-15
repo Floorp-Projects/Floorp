@@ -2,7 +2,7 @@ function exitPB()
 {
   var obsvc = Cc["@mozilla.org/observer-service;1"].
     getService(Ci.nsIObserverService);
-  obsvc.notifyObservers(null, "last-pb-context-exited", null);
+  obsvc.notifyObservers(null, "last-pb-context-exited");
 }
 
 function run_test()

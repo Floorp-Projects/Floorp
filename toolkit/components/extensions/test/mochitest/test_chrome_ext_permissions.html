@@ -154,6 +154,13 @@ function makeTest(manifestPermissions, optionalPermissions, checkFetch = true) {
   };
 }
 
+add_task(function setup() {
+  // Don't bother with prompts in this test.
+  return SpecialPowers.pushPrefEnv({
+    set: [["extensions.webextOptionalPermissionPrompts", false]],
+  });
+});
+
 const ORIGIN = "*://example.com/";
 add_task(makeTest([], {
   permissions: ["cookies"],

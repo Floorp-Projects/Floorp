@@ -8,7 +8,8 @@
         <uses-library android:name="android.test.runner" />
 
         <activity android:name="org.mozilla.geckoview_example.GeckoViewActivity"
-                  android:label="GeckoViewActivity">
+                  android:label="GeckoViewActivity"
+                  android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

@@ -684,7 +684,7 @@ Experiments.Experiments.prototype = {
     e.branch = String(branchstr);
     this._log.trace("setExperimentBranch(" + id + ", " + e.branch + ") _dirty=" + this._dirty);
     this._dirty = true;
-    Services.obs.notifyObservers(null, EXPERIMENTS_CHANGED_TOPIC, null);
+    Services.obs.notifyObservers(null, EXPERIMENTS_CHANGED_TOPIC);
     yield this._run();
   }),
   /**
@@ -1296,7 +1296,7 @@ Experiments.Experiments.prototype = {
     gPrefs.set(PREF_ACTIVE_EXPERIMENT, activeExperiment != null);
 
     if (activeChanged || this._firstEvaluate) {
-      Services.obs.notifyObservers(null, EXPERIMENTS_CHANGED_TOPIC, null);
+      Services.obs.notifyObservers(null, EXPERIMENTS_CHANGED_TOPIC);
       this._firstEvaluate = false;
     }
 
@@ -2144,7 +2144,7 @@ this.Experiments.PreviousExperimentProvider.prototype = Object.freeze({
 
   startup() {
     this._log.trace("startup()");
-    Services.obs.addObserver(this, EXPERIMENTS_CHANGED_TOPIC, false);
+    Services.obs.addObserver(this, EXPERIMENTS_CHANGED_TOPIC);
   },
 
   shutdown() {

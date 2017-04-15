@@ -128,7 +128,7 @@ child:
   async NotifyDeviceReset(GPUDeviceData status);
 
   // Called in response to GatherProfile.
-  async Profile(nsCString aProfile);
+  async Profile(nsCString aProfile, bool aIsExitProfile);
   async AddMemoryReport(MemoryReport aReport);
   async FinishMemoryReport(uint32_t aGeneration);
 };

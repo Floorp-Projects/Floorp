@@ -14,6 +14,7 @@ namespace mozilla {
 namespace gfx {
 
 class NativeFontResourceFontconfig;
+class UnscaledFontFontconfig;
 
 class ScaledFontFontconfig : public ScaledFontBase
 {
@@ -31,17 +32,11 @@ public:
 
   bool CanSerialize() override { return true; }
 
-  bool GetFontFileData(FontFileDataOutput aDataCallback, void* aBaton) override;
-
   bool GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton) override;
-
-  bool GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton) override;
-
-  static already_AddRefed<ScaledFont>
-    CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength, Float aSize);
 
 private:
   friend class NativeFontResourceFontconfig;
+  friend class UnscaledFontFontconfig;
 
   struct InstanceData
   {
@@ -68,16 +63,9 @@ private:
     Float mSkew;
   };
 
-  struct FontDescriptor
-  {
-    uint32_t mPathLength;
-    uint32_t mIndex;
-    InstanceData mInstanceData;
-  };
-
   static already_AddRefed<ScaledFont>
     CreateFromInstanceData(const InstanceData& aInstanceData,
-                           FT_Face aFace, const char* aPathname, uint32_t aIndex,
+                           UnscaledFontFontconfig* aUnscaledFont,
                            Float aSize);
 
   FcPattern* mPattern;

@@ -282,7 +282,7 @@ add_task(function* () {
       });
     };
 
-    Services.obs.addObserver(gObserver, "invalidformsubmit", false);
+    Services.obs.addObserver(gObserver, "invalidformsubmit");
 
     executeSoon(function() {
       browser.contentDocument.getElementById("s").click();

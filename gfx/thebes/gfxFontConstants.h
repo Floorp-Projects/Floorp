@@ -47,28 +47,18 @@
 #define NS_FONT_DISPLAY_FALLBACK        3
 #define NS_FONT_DISPLAY_OPTIONAL        4
 
-enum {
-    eFeatureAlternates_historical,
-    eFeatureAlternates_stylistic,
-    eFeatureAlternates_styleset,
-    eFeatureAlternates_character_variant,
-    eFeatureAlternates_swash,
-    eFeatureAlternates_ornaments,
-    eFeatureAlternates_annotation,
-
-    eFeatureAlternates_numFeatures
-};
-
+#define NS_FONT_VARIANT_ALTERNATES_NORMAL             0
 // alternates - simple enumerated values
-#define NS_FONT_VARIANT_ALTERNATES_HISTORICAL        (1 << eFeatureAlternates_historical)
+#define NS_FONT_VARIANT_ALTERNATES_HISTORICAL        (1 << 0)
 
 // alternates - values that use functional syntax
-#define NS_FONT_VARIANT_ALTERNATES_STYLISTIC         (1 << eFeatureAlternates_stylistic)
-#define NS_FONT_VARIANT_ALTERNATES_STYLESET          (1 << eFeatureAlternates_styleset)
-#define NS_FONT_VARIANT_ALTERNATES_CHARACTER_VARIANT (1 << eFeatureAlternates_character_variant)
-#define NS_FONT_VARIANT_ALTERNATES_SWASH             (1 << eFeatureAlternates_swash)
-#define NS_FONT_VARIANT_ALTERNATES_ORNAMENTS         (1 << eFeatureAlternates_ornaments)
-#define NS_FONT_VARIANT_ALTERNATES_ANNOTATION        (1 << eFeatureAlternates_annotation)
+#define NS_FONT_VARIANT_ALTERNATES_STYLISTIC         (1 << 1)
+#define NS_FONT_VARIANT_ALTERNATES_STYLESET          (1 << 2)
+#define NS_FONT_VARIANT_ALTERNATES_CHARACTER_VARIANT (1 << 3)
+#define NS_FONT_VARIANT_ALTERNATES_SWASH             (1 << 4)
+#define NS_FONT_VARIANT_ALTERNATES_ORNAMENTS         (1 << 5)
+#define NS_FONT_VARIANT_ALTERNATES_ANNOTATION        (1 << 6)
+#define NS_FONT_VARIANT_ALTERNATES_COUNT              7
 
 #define NS_FONT_VARIANT_ALTERNATES_ENUMERATED_MASK \
     NS_FONT_VARIANT_ALTERNATES_HISTORICAL
@@ -89,29 +79,17 @@ enum {
 #define NS_FONT_VARIANT_CAPS_TITLING                5
 #define NS_FONT_VARIANT_CAPS_UNICASE                6
 
-enum {
-    eFeatureEastAsian_jis78,
-    eFeatureEastAsian_jis83,
-    eFeatureEastAsian_jis90,
-    eFeatureEastAsian_jis04,
-    eFeatureEastAsian_simplified,
-    eFeatureEastAsian_traditional,
-    eFeatureEastAsian_full_width,
-    eFeatureEastAsian_prop_width,
-    eFeatureEastAsian_ruby,
-
-    eFeatureEastAsian_numFeatures
-};
-
-#define NS_FONT_VARIANT_EAST_ASIAN_JIS78        (1 << eFeatureEastAsian_jis78)
-#define NS_FONT_VARIANT_EAST_ASIAN_JIS83        (1 << eFeatureEastAsian_jis83)
-#define NS_FONT_VARIANT_EAST_ASIAN_JIS90        (1 << eFeatureEastAsian_jis90)
-#define NS_FONT_VARIANT_EAST_ASIAN_JIS04        (1 << eFeatureEastAsian_jis04)
-#define NS_FONT_VARIANT_EAST_ASIAN_SIMPLIFIED   (1 << eFeatureEastAsian_simplified)
-#define NS_FONT_VARIANT_EAST_ASIAN_TRADITIONAL  (1 << eFeatureEastAsian_traditional)
-#define NS_FONT_VARIANT_EAST_ASIAN_FULL_WIDTH   (1 << eFeatureEastAsian_full_width)
-#define NS_FONT_VARIANT_EAST_ASIAN_PROP_WIDTH   (1 << eFeatureEastAsian_prop_width)
-#define NS_FONT_VARIANT_EAST_ASIAN_RUBY         (1 << eFeatureEastAsian_ruby)
+#define NS_FONT_VARIANT_EAST_ASIAN_NORMAL       0
+#define NS_FONT_VARIANT_EAST_ASIAN_JIS78       (1 << 0)
+#define NS_FONT_VARIANT_EAST_ASIAN_JIS83       (1 << 1)
+#define NS_FONT_VARIANT_EAST_ASIAN_JIS90       (1 << 2)
+#define NS_FONT_VARIANT_EAST_ASIAN_JIS04       (1 << 3)
+#define NS_FONT_VARIANT_EAST_ASIAN_SIMPLIFIED  (1 << 4)
+#define NS_FONT_VARIANT_EAST_ASIAN_TRADITIONAL (1 << 5)
+#define NS_FONT_VARIANT_EAST_ASIAN_FULL_WIDTH  (1 << 6)
+#define NS_FONT_VARIANT_EAST_ASIAN_PROP_WIDTH  (1 << 7)
+#define NS_FONT_VARIANT_EAST_ASIAN_RUBY        (1 << 8)
+#define NS_FONT_VARIANT_EAST_ASIAN_COUNT        9
 
 #define NS_FONT_VARIANT_EAST_ASIAN_VARIANT_MASK ( \
     NS_FONT_VARIANT_EAST_ASIAN_JIS78 | \
@@ -125,29 +103,17 @@ enum {
     NS_FONT_VARIANT_EAST_ASIAN_FULL_WIDTH | \
     NS_FONT_VARIANT_EAST_ASIAN_PROP_WIDTH )
 
-enum {
-    eFeatureLigatures_none,
-    eFeatureLigatures_common,
-    eFeatureLigatures_no_common,
-    eFeatureLigatures_discretionary,
-    eFeatureLigatures_no_discretionary,
-    eFeatureLigatures_historical,
-    eFeatureLigatures_no_historical,
-    eFeatureLigatures_contextual,
-    eFeatureLigatures_no_contextual,
-
-    eFeatureLigatures_numFeatures
-};
-
-#define NS_FONT_VARIANT_LIGATURES_NONE              (1 << eFeatureLigatures_none)
-#define NS_FONT_VARIANT_LIGATURES_COMMON            (1 << eFeatureLigatures_common)
-#define NS_FONT_VARIANT_LIGATURES_NO_COMMON         (1 << eFeatureLigatures_no_common)
-#define NS_FONT_VARIANT_LIGATURES_DISCRETIONARY     (1 << eFeatureLigatures_discretionary)
-#define NS_FONT_VARIANT_LIGATURES_NO_DISCRETIONARY  (1 << eFeatureLigatures_no_discretionary)
-#define NS_FONT_VARIANT_LIGATURES_HISTORICAL        (1 << eFeatureLigatures_historical)
-#define NS_FONT_VARIANT_LIGATURES_NO_HISTORICAL     (1 << eFeatureLigatures_no_historical)
-#define NS_FONT_VARIANT_LIGATURES_CONTEXTUAL        (1 << eFeatureLigatures_contextual)
-#define NS_FONT_VARIANT_LIGATURES_NO_CONTEXTUAL     (1 << eFeatureLigatures_no_contextual)
+#define NS_FONT_VARIANT_LIGATURES_NORMAL            0
+#define NS_FONT_VARIANT_LIGATURES_NONE             (1 << 0)
+#define NS_FONT_VARIANT_LIGATURES_COMMON           (1 << 1)
+#define NS_FONT_VARIANT_LIGATURES_NO_COMMON        (1 << 2)
+#define NS_FONT_VARIANT_LIGATURES_DISCRETIONARY    (1 << 3)
+#define NS_FONT_VARIANT_LIGATURES_NO_DISCRETIONARY (1 << 4)
+#define NS_FONT_VARIANT_LIGATURES_HISTORICAL       (1 << 5)
+#define NS_FONT_VARIANT_LIGATURES_NO_HISTORICAL    (1 << 6)
+#define NS_FONT_VARIANT_LIGATURES_CONTEXTUAL       (1 << 7)
+#define NS_FONT_VARIANT_LIGATURES_NO_CONTEXTUAL    (1 << 8)
+#define NS_FONT_VARIANT_LIGATURES_COUNT             9
 
 #define NS_FONT_VARIANT_LIGATURES_COMMON_MASK ( \
     NS_FONT_VARIANT_LIGATURES_COMMON | \
@@ -165,27 +131,16 @@ enum {
     NS_FONT_VARIANT_LIGATURES_CONTEXTUAL | \
     NS_FONT_VARIANT_LIGATURES_NO_CONTEXTUAL
 
-enum {
-    eFeatureNumeric_lining,
-    eFeatureNumeric_oldstyle,
-    eFeatureNumeric_proportional,
-    eFeatureNumeric_tabular,
-    eFeatureNumeric_diagonal_fractions,
-    eFeatureNumeric_stacked_fractions,
-    eFeatureNumeric_slashedzero,
-    eFeatureNumeric_ordinal,
-
-    eFeatureNumeric_numFeatures
-};
-
-#define NS_FONT_VARIANT_NUMERIC_LINING              (1 << eFeatureNumeric_lining)
-#define NS_FONT_VARIANT_NUMERIC_OLDSTYLE            (1 << eFeatureNumeric_oldstyle)
-#define NS_FONT_VARIANT_NUMERIC_PROPORTIONAL        (1 << eFeatureNumeric_proportional)
-#define NS_FONT_VARIANT_NUMERIC_TABULAR             (1 << eFeatureNumeric_tabular)
-#define NS_FONT_VARIANT_NUMERIC_DIAGONAL_FRACTIONS  (1 << eFeatureNumeric_diagonal_fractions)
-#define NS_FONT_VARIANT_NUMERIC_STACKED_FRACTIONS   (1 << eFeatureNumeric_stacked_fractions)
-#define NS_FONT_VARIANT_NUMERIC_SLASHZERO           (1 << eFeatureNumeric_slashedzero)
-#define NS_FONT_VARIANT_NUMERIC_ORDINAL             (1 << eFeatureNumeric_ordinal)
+#define NS_FONT_VARIANT_NUMERIC_NORMAL              0
+#define NS_FONT_VARIANT_NUMERIC_LINING             (1 << 0)
+#define NS_FONT_VARIANT_NUMERIC_OLDSTYLE           (1 << 1)
+#define NS_FONT_VARIANT_NUMERIC_PROPORTIONAL       (1 << 2)
+#define NS_FONT_VARIANT_NUMERIC_TABULAR            (1 << 3)
+#define NS_FONT_VARIANT_NUMERIC_DIAGONAL_FRACTIONS (1 << 4)
+#define NS_FONT_VARIANT_NUMERIC_STACKED_FRACTIONS  (1 << 5)
+#define NS_FONT_VARIANT_NUMERIC_SLASHZERO          (1 << 6)
+#define NS_FONT_VARIANT_NUMERIC_ORDINAL            (1 << 7)
+#define NS_FONT_VARIANT_NUMERIC_COUNT               8
 
 #define NS_FONT_VARIANT_NUMERIC_FIGURE_MASK \
     NS_FONT_VARIANT_NUMERIC_LINING | \

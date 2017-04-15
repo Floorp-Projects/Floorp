@@ -15,7 +15,8 @@ function normalize(stack)
     var wasmFrameTypes = [
         {re:/^entry trampoline \(in wasm\)$/,                        sub:">"},
         {re:/^wasm-function\[(\d+)\] \(.*\)$/,                       sub:"$1"},
-        {re:/^(fast|slow) FFI trampoline (to native |)\(in wasm\)$/, sub:"<"},
+        {re:/^(fast|slow) FFI trampoline (to native )?\(in wasm\)$/, sub:"<"},
+        {re:/^call to[ asm.js]? native (.*) \(in wasm\)$/,           sub:"$1"},
         {re:/ \(in wasm\)$/,                                         sub:""}
     ];
 
@@ -122,6 +123,58 @@ test(`(module
 )`,
 this,
 ["", ">", "1,>", "<,1,>", "1,>", ">", ""]);
+
+if (getBuildConfiguration()["arm-simulator"]) {
+    // On ARM, some int64 operations are calls to C++.
+    for (let op of ['div_s', 'rem_s', 'div_u', 'rem_u']) {
+        test(`(module
+            (func (export "") (param i32) (result i32)
+                get_local 0
+                i64.extend_s/i32
+                i64.const 0x1a2b3c4d5e6f
+                i64.${op}
+                i32.wrap/i64
+            )
+        )`,
+        this,
+        ["", ">", "0,>", "<,0,>", `i64.${op},0,>`, "<,0,>", "0,>", ">", ""]);
+    }
+}
+
+// current_memory is a callout.
+test(`(module
+    (memory 1)
+    (func (export "") (result i32)
+         current_memory
+    )
+)`,
+this,
+["", ">", "0,>", "<,0,>", "current_memory,0,>", "<,0,>", "0,>", ">", ""]);
+
+// grow_memory is a callout.
+test(`(module
+    (memory 1)
+    (func (export "") (result i32)
+         i32.const 1
+         grow_memory
+    )
+)`,
+this,
+["", ">", "0,>", "<,0,>", "grow_memory,0,>", "<,0,>", "0,>", ">", ""]);
+
+// A few math builtins.
+for (let type of ['f32', 'f64']) {
+    for (let func of ['ceil', 'floor', 'nearest', 'trunc']) {
+        test(`(module
+            (func (export "") (param ${type}) (result ${type})
+                get_local 0
+                ${type}.${func}
+            )
+        )`,
+        this,
+        ["", ">", "0,>", "<,0,>", `${type}.${func},0,>`, "<,0,>", "0,>", ">", ""]);
+    }
+}
 
 function testError(code, error, expect)
 {

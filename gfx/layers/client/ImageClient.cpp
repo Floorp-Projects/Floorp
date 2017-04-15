@@ -194,6 +194,10 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
     // This can also happen if all images in the list are invalid.
     // We return true because the caller would attempt to recreate the
     // ImageClient otherwise, and that isn't going to help.
+    for (auto& b : mBuffers) {
+      RemoveTexture(b.mTextureClient);
+    }
+    mBuffers.Clear();
     return true;
   }
 

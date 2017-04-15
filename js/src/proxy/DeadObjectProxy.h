@@ -52,6 +52,9 @@ class DeadObjectProxy : public BaseProxyHandler
     virtual bool regexp_toShared(JSContext* cx, HandleObject proxy,
                                  MutableHandle<RegExpShared*> shared) const override;
 
+    virtual bool isCallable(JSObject* obj) const override;
+    virtual bool isConstructor(JSObject* obj) const override;
+
     static const char family;
     static const DeadObjectProxy singleton;
 };

@@ -418,7 +418,7 @@ public:
    */
   virtual void EndFrame();
 
-  virtual void CancelFrame() { ReadUnlockTextures(); }
+  virtual void CancelFrame(bool aNeedFlush = true) { ReadUnlockTextures(); }
 
   virtual void SetDispAcquireFence(Layer* aLayer);
 
@@ -647,6 +647,15 @@ BlendOpIsMixBlendMode(gfx::CompositionOp aOp)
     return false;
   }
 }
+
+struct TexturedVertex
+{
+  float position[2];
+  float texCoords[2];
+};
+
+nsTArray<TexturedVertex>
+TexturedTrianglesToVertexArray(const nsTArray<gfx::TexturedTriangle>& aTriangles);
 
 } // namespace layers
 } // namespace mozilla

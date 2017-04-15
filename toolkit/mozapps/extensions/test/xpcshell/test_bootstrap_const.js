@@ -9,7 +9,7 @@ add_task(function*() {
   let sawInstall = false;
   Services.obs.addObserver(function() {
     sawInstall = true;
-  }, "addon-install", false);
+  }, "addon-install");
 
   yield promiseInstallAllFiles([do_get_addon("test_bootstrap_const")]);
 

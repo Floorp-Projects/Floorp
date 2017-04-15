@@ -20,8 +20,8 @@ function run_test() {
   
   let publicNotifications = 0;
   let privateNotifications = 0;
-  Services.obs.addObserver(function() {publicNotifications++;}, "cookie-changed", false);
-  Services.obs.addObserver(function() {privateNotifications++;}, "private-cookie-changed", false);
+  Services.obs.addObserver(function() {publicNotifications++;}, "cookie-changed");
+  Services.obs.addObserver(function() {privateNotifications++;}, "private-cookie-changed");
 
   let uri = NetUtil.newURI("http://foo.com/");
   let publicChan = makeChan(uri, false);

@@ -49,9 +49,8 @@ else {
   let listener = function (subject, topic) {
     Services.obs.removeObserver(this, topic);
     Startup.initialized = true;
-    Services.tm.currentThread.dispatch(() => gOnceInitializedDeferred.resolve(),
-                                       Ci.nsIThread.DISPATCH_NORMAL);
+    Services.tm.dispatchToMainThread(() => gOnceInitializedDeferred.resolve());
   }
 
-  Services.obs.addObserver(listener, appStartup, false);
+  Services.obs.addObserver(listener, appStartup);
 }

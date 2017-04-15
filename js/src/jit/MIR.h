@@ -1855,10 +1855,11 @@ class MSimdConvert
     // as signed or unsigned. Note that we don't support int-int conversions -
     // use MSimdReinterpretCast for that.
     SimdSign sign_;
-    wasm::TrapOffset trapOffset_;
+    wasm::BytecodeOffset bytecodeOffset_;
 
-    MSimdConvert(MDefinition* obj, MIRType toType, SimdSign sign, wasm::TrapOffset trapOffset)
-      : MUnaryInstruction(obj), sign_(sign), trapOffset_(trapOffset)
+    MSimdConvert(MDefinition* obj, MIRType toType, SimdSign sign,
+                 wasm::BytecodeOffset bytecodeOffset)
+      : MUnaryInstruction(obj), sign_(sign), bytecodeOffset_(bytecodeOffset)
     {
         MIRType fromType = obj->type();
         MOZ_ASSERT(IsSimdType(fromType));
@@ -1877,9 +1878,9 @@ class MSimdConvert
     }
 
     static MSimdConvert* New(TempAllocator& alloc, MDefinition* obj, MIRType toType, SimdSign sign,
-                             wasm::TrapOffset trapOffset)
+                             wasm::BytecodeOffset bytecodeOffset)
     {
-        return new (alloc) MSimdConvert(obj, toType, sign, trapOffset);
+        return new (alloc) MSimdConvert(obj, toType, sign, bytecodeOffset);
     }
 
   public:
@@ -1891,13 +1892,13 @@ class MSimdConvert
     // Return the inserted MInstruction that computes the converted value.
     static MInstruction* AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition* obj,
                                       MIRType toType, SimdSign sign,
-                                      wasm::TrapOffset trapOffset = wasm::TrapOffset());
+                                      wasm::BytecodeOffset bytecodeOffset = wasm::BytecodeOffset());
 
     SimdSign signedness() const {
         return sign_;
     }
-    wasm::TrapOffset trapOffset() const {
-        return trapOffset_;
+    wasm::BytecodeOffset bytecodeOffset() const {
+        return bytecodeOffset_;
     }
 
     AliasSet getAliasSet() const override {
@@ -5466,12 +5467,12 @@ class MWasmTruncateToInt64
     public NoTypePolicy::Data
 {
     bool isUnsigned_;
-    wasm::TrapOffset trapOffset_;
+    wasm::BytecodeOffset bytecodeOffset_;
 
-    MWasmTruncateToInt64(MDefinition* def, bool isUnsigned, wasm::TrapOffset trapOffset)
+    MWasmTruncateToInt64(MDefinition* def, bool isUnsigned, wasm::BytecodeOffset bytecodeOffset)
       : MUnaryInstruction(def),
         isUnsigned_(isUnsigned),
-        trapOffset_(trapOffset)
+        bytecodeOffset_(bytecodeOffset)
     {
         setResultType(MIRType::Int64);
         setGuard(); // neither removable nor movable because of possible side-effects.
@@ -5482,7 +5483,7 @@ class MWasmTruncateToInt64
     TRIVIAL_NEW_WRAPPERS
 
     bool isUnsigned() const { return isUnsigned_; }
-    wasm::TrapOffset trapOffset() const { return trapOffset_; }
+    wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
 
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins) &&
@@ -5500,10 +5501,11 @@ class MWasmTruncateToInt32
     public NoTypePolicy::Data
 {
     bool isUnsigned_;
-    wasm::TrapOffset trapOffset_;
+    wasm::BytecodeOffset bytecodeOffset_;
 
-    explicit MWasmTruncateToInt32(MDefinition* def, bool isUnsigned, wasm::TrapOffset trapOffset)
-      : MUnaryInstruction(def), isUnsigned_(isUnsigned), trapOffset_(trapOffset)
+    explicit MWasmTruncateToInt32(MDefinition* def, bool isUnsigned,
+                                  wasm::BytecodeOffset bytecodeOffset)
+      : MUnaryInstruction(def), isUnsigned_(isUnsigned), bytecodeOffset_(bytecodeOffset)
     {
         setResultType(MIRType::Int32);
         setGuard(); // neither removable nor movable because of possible side-effects.
@@ -5516,8 +5518,8 @@ class MWasmTruncateToInt32
     bool isUnsigned() const {
         return isUnsigned_;
     }
-    wasm::TrapOffset trapOffset() const {
-        return trapOffset_;
+    wasm::BytecodeOffset bytecodeOffset() const {
+        return bytecodeOffset_;
     }
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
@@ -5537,10 +5539,13 @@ class MInt64ToFloatingPoint
     public NoTypePolicy::Data
 {
     bool isUnsigned_;
+    wasm::BytecodeOffset bytecodeOffset_;
 
-    MInt64ToFloatingPoint(MDefinition* def, MIRType type, bool isUnsigned)
+    MInt64ToFloatingPoint(MDefinition* def, MIRType type, wasm::BytecodeOffset bytecodeOffset,
+                          bool isUnsigned)
       : MUnaryInstruction(def),
-        isUnsigned_(isUnsigned)
+        isUnsigned_(isUnsigned),
+        bytecodeOffset_(bytecodeOffset)
     {
         MOZ_ASSERT(IsFloatingPointType(type));
         setResultType(type);
@@ -5552,6 +5557,7 @@ class MInt64ToFloatingPoint
     TRIVIAL_NEW_WRAPPERS
 
     bool isUnsigned() const { return isUnsigned_; }
+    wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
 
     bool congruentTo(const MDefinition* ins) const override {
         if (!ins->isInt64ToFloatingPoint())
@@ -5635,8 +5641,12 @@ class MTruncateToInt32
   : public MUnaryInstruction,
     public ToInt32Policy::Data
 {
-    explicit MTruncateToInt32(MDefinition* def)
-      : MUnaryInstruction(def)
+    wasm::BytecodeOffset bytecodeOffset_;
+
+    explicit MTruncateToInt32(MDefinition* def,
+                              wasm::BytecodeOffset bytecodeOffset = wasm::BytecodeOffset())
+      : MUnaryInstruction(def),
+        bytecodeOffset_(bytecodeOffset)
     {
         setResultType(MIRType::Int32);
         setMovable();
@@ -5672,6 +5682,8 @@ class MTruncateToInt32
     bool canRecoverOnBailout() const override {
         return input()->type() < MIRType::Symbol;
     }
+
+    wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
 
     ALLOW_CLONE(MTruncateToInt32)
 };
@@ -7062,7 +7074,7 @@ class MDiv : public MBinaryArithInstruction
     bool canBeNegativeDividend_;
     bool unsigned_;             // If false, signedness will be derived from operands
     bool trapOnError_;
-    wasm::TrapOffset trapOffset_;
+    wasm::BytecodeOffset bytecodeOffset_;
 
     MDiv(MDefinition* left, MDefinition* right, MIRType type)
       : MBinaryArithInstruction(left, right),
@@ -7088,13 +7100,13 @@ class MDiv : public MBinaryArithInstruction
     }
     static MDiv* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                      MIRType type, bool unsignd, bool trapOnError = false,
-                     wasm::TrapOffset trapOffset = wasm::TrapOffset(),
+                     wasm::BytecodeOffset bytecodeOffset = wasm::BytecodeOffset(),
                      bool mustPreserveNaN = false)
     {
         auto* div = new(alloc) MDiv(left, right, type);
         div->unsigned_ = unsignd;
         div->trapOnError_ = trapOnError;
-        div->trapOffset_ = trapOffset;
+        div->bytecodeOffset_ = bytecodeOffset;
         if (trapOnError) {
             div->setGuard(); // not removable because of possible side-effects.
             div->setNotMovable();
@@ -7166,9 +7178,9 @@ class MDiv : public MBinaryArithInstruction
     bool trapOnError() const {
         return trapOnError_;
     }
-    wasm::TrapOffset trapOffset() const {
-        MOZ_ASSERT(trapOnError_);
-        return trapOffset_;
+    wasm::BytecodeOffset bytecodeOffset() const {
+        MOZ_ASSERT(bytecodeOffset_.isValid());
+        return bytecodeOffset_;
     }
 
     bool isFloat32Commutative() const override { return true; }
@@ -7203,7 +7215,7 @@ class MMod : public MBinaryArithInstruction
     bool canBePowerOfTwoDivisor_;
     bool canBeDivideByZero_;
     bool trapOnError_;
-    wasm::TrapOffset trapOffset_;
+    wasm::BytecodeOffset bytecodeOffset_;
 
     MMod(MDefinition* left, MDefinition* right, MIRType type)
       : MBinaryArithInstruction(left, right),
@@ -7225,12 +7237,12 @@ class MMod : public MBinaryArithInstruction
     }
     static MMod* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                      MIRType type, bool unsignd, bool trapOnError = false,
-                     wasm::TrapOffset trapOffset = wasm::TrapOffset())
+                     wasm::BytecodeOffset bytecodeOffset = wasm::BytecodeOffset())
     {
         auto* mod = new(alloc) MMod(left, right, type);
         mod->unsigned_ = unsignd;
         mod->trapOnError_ = trapOnError;
-        mod->trapOffset_ = trapOffset;
+        mod->bytecodeOffset_ = bytecodeOffset;
         if (trapOnError) {
             mod->setGuard(); // not removable because of possible side-effects.
             mod->setNotMovable();
@@ -7271,9 +7283,9 @@ class MMod : public MBinaryArithInstruction
     bool trapOnError() const {
         return trapOnError_;
     }
-    wasm::TrapOffset trapOffset() const {
-        MOZ_ASSERT(trapOnError_);
-        return trapOffset_;
+    wasm::BytecodeOffset bytecodeOffset() const {
+        MOZ_ASSERT(bytecodeOffset_.isValid());
+        return bytecodeOffset_;
     }
 
     MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
@@ -7985,11 +7997,11 @@ class MWasmTrap
     public NoTypePolicy::Data
 {
     wasm::Trap trap_;
-    wasm::TrapOffset trapOffset_;
+    wasm::BytecodeOffset bytecodeOffset_;
 
-    explicit MWasmTrap(wasm::Trap trap, wasm::TrapOffset trapOffset)
+    explicit MWasmTrap(wasm::Trap trap, wasm::BytecodeOffset bytecodeOffset)
       : trap_(trap),
-        trapOffset_(trapOffset)
+        bytecodeOffset_(bytecodeOffset)
     {}
 
   public:
@@ -8001,7 +8013,7 @@ class MWasmTrap
     }
 
     wasm::Trap trap() const { return trap_; }
-    wasm::TrapOffset trapOffset() const { return trapOffset_; }
+    wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
 };
 
 // Checks if a value is JS_UNINITIALIZED_LEXICAL, bailout out if so, leaving
@@ -12546,6 +12558,22 @@ class MInArray
     }
 };
 
+class MHasOwnCache
+  : public MBinaryInstruction,
+    public MixPolicy<BoxExceptPolicy<0, MIRType::Object>, CacheIdPolicy<1>>::Data
+{
+    MHasOwnCache(MDefinition* obj, MDefinition* id)
+      : MBinaryInstruction(obj, id)
+    {
+        setResultType(MIRType::Boolean);
+    }
+
+  public:
+    INSTRUCTION_HEADER(HasOwnCache)
+    TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, value), (1, idval))
+};
+
 // Implementation for instanceof operator with specific rhs.
 class MInstanceOf
   : public MUnaryInstruction,
@@ -12825,6 +12853,7 @@ class MTypeBarrier
     BarrierKind barrierKind() const {
         return barrierKind_;
     }
+    MDefinition* foldsTo(TempAllocator& alloc) override;
 
     bool alwaysBails() const {
         // If mirtype of input doesn't agree with mirtype of barrier,
@@ -13749,11 +13778,12 @@ class MWasmBoundsCheck
   : public MBinaryInstruction,
     public NoTypePolicy::Data
 {
-    wasm::TrapOffset trapOffset_;
+    wasm::BytecodeOffset bytecodeOffset_;
 
-    explicit MWasmBoundsCheck(MDefinition* index, MDefinition* boundsCheckLimit, wasm::TrapOffset trapOffset)
+    explicit MWasmBoundsCheck(MDefinition* index, MDefinition* boundsCheckLimit,
+                              wasm::BytecodeOffset bytecodeOffset)
       : MBinaryInstruction(index, boundsCheckLimit),
-        trapOffset_(trapOffset)
+        bytecodeOffset_(bytecodeOffset)
     {
         // Bounds check is effectful: it throws for OOB.
         setGuard();
@@ -13776,8 +13806,8 @@ class MWasmBoundsCheck
         setNotGuard();
     }
 
-    wasm::TrapOffset trapOffset() const {
-        return trapOffset_;
+    wasm::BytecodeOffset bytecodeOffset() const {
+        return bytecodeOffset_;
     }
 };
 
@@ -13786,12 +13816,12 @@ class MWasmAddOffset
     public NoTypePolicy::Data
 {
     uint32_t offset_;
-    wasm::TrapOffset trapOffset_;
+    wasm::BytecodeOffset bytecodeOffset_;
 
-    MWasmAddOffset(MDefinition* base, uint32_t offset, wasm::TrapOffset trapOffset)
+    MWasmAddOffset(MDefinition* base, uint32_t offset, wasm::BytecodeOffset bytecodeOffset)
       : MUnaryInstruction(base),
         offset_(offset),
-        trapOffset_(trapOffset)
+        bytecodeOffset_(bytecodeOffset)
     {
         setGuard();
         setResultType(MIRType::Int32);
@@ -13811,8 +13841,8 @@ class MWasmAddOffset
     uint32_t offset() const {
         return offset_;
     }
-    wasm::TrapOffset trapOffset() const {
-        return trapOffset_;
+    wasm::BytecodeOffset bytecodeOffset() const {
+        return bytecodeOffset_;
     }
 };
 
@@ -14054,11 +14084,14 @@ class MAsmJSCompareExchangeHeap
     public NoTypePolicy::Data
 {
     wasm::MemoryAccessDesc access_;
+    wasm::BytecodeOffset bytecodeOffset_;
 
-    explicit MAsmJSCompareExchangeHeap(const wasm::MemoryAccessDesc& access)
-      : access_(access)
+    explicit MAsmJSCompareExchangeHeap(const wasm::MemoryAccessDesc& access,
+                                       wasm::BytecodeOffset bytecodeOffset)
+      : access_(access),
+        bytecodeOffset_(bytecodeOffset)
     {
-        setGuard();             // Not removable
+        setGuard(); // Not removable
         setResultType(MIRType::Int32);
     }
 
@@ -14066,6 +14099,7 @@ class MAsmJSCompareExchangeHeap
     INSTRUCTION_HEADER(AsmJSCompareExchangeHeap)
 
     static MAsmJSCompareExchangeHeap* New(TempAllocator& alloc,
+                                          wasm::BytecodeOffset bytecodeOffset,
                                           MDefinition* memoryBase,
                                           MDefinition* base,
                                           const wasm::MemoryAccessDesc& access,
@@ -14073,21 +14107,20 @@ class MAsmJSCompareExchangeHeap
                                           MDefinition* newv,
                                           MDefinition* tls)
     {
-        MAsmJSCompareExchangeHeap* cas = new(alloc) MAsmJSCompareExchangeHeap(access);
+        MAsmJSCompareExchangeHeap* cas = new(alloc) MAsmJSCompareExchangeHeap(access, bytecodeOffset);
         if (!cas->init(alloc, 4 + !!memoryBase))
             return nullptr;
-
         cas->initOperand(0, base);
         cas->initOperand(1, oldv);
         cas->initOperand(2, newv);
         cas->initOperand(3, tls);
         if (memoryBase)
             cas->initOperand(4, memoryBase);
-
         return cas;
     }
 
     const wasm::MemoryAccessDesc& access() const { return access_; }
+    wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
 
     MDefinition* base() const { return getOperand(0); }
     MDefinition* oldValue() const { return getOperand(1); }
@@ -14105,9 +14138,12 @@ class MAsmJSAtomicExchangeHeap
     public NoTypePolicy::Data
 {
     wasm::MemoryAccessDesc access_;
+    wasm::BytecodeOffset bytecodeOffset_;
 
-    explicit MAsmJSAtomicExchangeHeap(const wasm::MemoryAccessDesc& access)
-        : access_(access)
+    explicit MAsmJSAtomicExchangeHeap(const wasm::MemoryAccessDesc& access,
+                                      wasm::BytecodeOffset bytecodeOffset)
+        : access_(access),
+          bytecodeOffset_(bytecodeOffset)
     {
         setGuard();             // Not removable
         setResultType(MIRType::Int32);
@@ -14117,13 +14153,14 @@ class MAsmJSAtomicExchangeHeap
     INSTRUCTION_HEADER(AsmJSAtomicExchangeHeap)
 
     static MAsmJSAtomicExchangeHeap* New(TempAllocator& alloc,
+                                         wasm::BytecodeOffset bytecodeOffset,
                                          MDefinition* memoryBase,
                                          MDefinition* base,
                                          const wasm::MemoryAccessDesc& access,
                                          MDefinition* value,
                                          MDefinition* tls)
     {
-        MAsmJSAtomicExchangeHeap* xchg = new(alloc) MAsmJSAtomicExchangeHeap(access);
+        MAsmJSAtomicExchangeHeap* xchg = new(alloc) MAsmJSAtomicExchangeHeap(access, bytecodeOffset);
         if (!xchg->init(alloc, 3 + !!memoryBase))
             return nullptr;
 
@@ -14137,6 +14174,7 @@ class MAsmJSAtomicExchangeHeap
     }
 
     const wasm::MemoryAccessDesc& access() const { return access_; }
+    wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
 
     MDefinition* base() const { return getOperand(0); }
     MDefinition* value() const { return getOperand(1); }
@@ -14154,10 +14192,13 @@ class MAsmJSAtomicBinopHeap
 {
     AtomicOp op_;
     wasm::MemoryAccessDesc access_;
+    wasm::BytecodeOffset bytecodeOffset_;
 
-    explicit MAsmJSAtomicBinopHeap(AtomicOp op, const wasm::MemoryAccessDesc& access)
-        : op_(op),
-          access_(access)
+    explicit MAsmJSAtomicBinopHeap(AtomicOp op, const wasm::MemoryAccessDesc& access,
+                                   wasm::BytecodeOffset bytecodeOffset)
+      : op_(op),
+        access_(access),
+        bytecodeOffset_(bytecodeOffset)
     {
         setGuard();         // Not removable
         setResultType(MIRType::Int32);
@@ -14167,6 +14208,7 @@ class MAsmJSAtomicBinopHeap
     INSTRUCTION_HEADER(AsmJSAtomicBinopHeap)
 
     static MAsmJSAtomicBinopHeap* New(TempAllocator& alloc,
+                                      wasm::BytecodeOffset bytecodeOffset,
                                       AtomicOp op,
                                       MDefinition* memoryBase,
                                       MDefinition* base,
@@ -14174,7 +14216,7 @@ class MAsmJSAtomicBinopHeap
                                       MDefinition* v,
                                       MDefinition* tls)
     {
-        MAsmJSAtomicBinopHeap* binop = new(alloc) MAsmJSAtomicBinopHeap(op, access);
+        MAsmJSAtomicBinopHeap* binop = new(alloc) MAsmJSAtomicBinopHeap(op, access, bytecodeOffset);
         if (!binop->init(alloc, 3 + !!memoryBase))
             return nullptr;
 
@@ -14189,6 +14231,7 @@ class MAsmJSAtomicBinopHeap
 
     AtomicOp operation() const { return op_; }
     const wasm::MemoryAccessDesc& access() const { return access_; }
+    wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
 
     MDefinition* base() const { return getOperand(0); }
     MDefinition* value() const { return getOperand(1); }

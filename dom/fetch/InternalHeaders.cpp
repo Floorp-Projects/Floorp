@@ -88,7 +88,7 @@ InternalHeaders::Get(const nsACString& aName, nsACString& aValue, ErrorResult& a
     return;
   }
 
-  const char* delimiter = ",";
+  const char* delimiter = ", ";
   bool firstValueFound = false;
 
   for (uint32_t i = 0; i < mList.Length(); ++i) {

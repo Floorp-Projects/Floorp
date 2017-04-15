@@ -45,7 +45,7 @@ add_task(function* () {
           resolve();
         });
       }
-    }, false);
+    });
   });
 
   PlacesUtils.history.markPageAsTyped(TEST_URI);

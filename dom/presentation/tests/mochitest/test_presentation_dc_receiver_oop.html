@@ -78,7 +78,7 @@ function setup() {
 
       aResolve(receiverIframe);
     });
-    obs.notifyObservers(promise, 'setup-request-promise', null);
+    obs.notifyObservers(promise, 'setup-request-promise');
 
     // Create a non-receiver OOP iframe.
     var nonReceiverIframe = document.createElement('iframe');

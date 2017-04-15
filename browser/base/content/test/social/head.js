@@ -16,7 +16,7 @@ function promiseObserverNotified(aTopic) {
       dump("notification promised " + topic);
       Services.obs.removeObserver(onNotification, topic);
       TestUtils.executeSoon(() => resolve({subject, data}));
-    }, aTopic, false);
+    }, aTopic);
   });
 }
 
@@ -241,7 +241,7 @@ function toggleOfflineStatus(goOfflineState) {
         info("offline state changed to " + Services.io.offline);
         is(expect, Services.io.offline, "network:offline-status-changed successful toggle");
         resolve();
-      }, "network:offline-status-changed", false);
+      }, "network:offline-status-changed");
       BrowserOffline.toggleOfflineStatus();
     } else {
       resolve();

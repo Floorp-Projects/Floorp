@@ -188,7 +188,7 @@ BrowserElementChild.prototype = {
     });
 
     OBSERVED_EVENTS.forEach((aTopic) => {
-      Services.obs.addObserver(this, aTopic, false);
+      Services.obs.addObserver(this, aTopic);
     });
   },
 
@@ -1714,10 +1714,6 @@ BrowserElementChild.prototype = {
         mixedContent: isMixedContent,
       });
     },
-
-    onStatusChange: function(webProgress, request, status, message) {},
-    onProgressChange: function(webProgress, request, curSelfProgress,
-                               maxSelfProgress, curTotalProgress, maxTotalProgress) {},
   },
 
   // Expose the message manager for WebApps and others.

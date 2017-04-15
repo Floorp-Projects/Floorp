@@ -340,11 +340,11 @@ void Gecko_ResetStyleCoord(nsStyleUnit* unit, nsStyleUnion* value);
 // Set an nsStyleCoord to a computed `calc()` value
 void Gecko_SetStyleCoordCalcValue(nsStyleUnit* unit, nsStyleUnion* value, nsStyleCoord::CalcValue calc);
 
-void Gecko_CopyClipPathValueFrom(mozilla::StyleShapeSource* dst, const mozilla::StyleShapeSource* src);
+void Gecko_CopyShapeSourceFrom(mozilla::StyleShapeSource* dst, const mozilla::StyleShapeSource* src);
 
-void Gecko_DestroyClipPath(mozilla::StyleShapeSource* clip);
+void Gecko_DestroyShapeSource(mozilla::StyleShapeSource* shape);
 mozilla::StyleBasicShape* Gecko_NewBasicShape(mozilla::StyleBasicShapeType type);
-void Gecko_StyleClipPath_SetURLValue(mozilla::StyleShapeSource* clip, ServoBundledURI uri);
+void Gecko_StyleShapeSource_SetURLValue(mozilla::StyleShapeSource* shape, ServoBundledURI uri);
 
 void Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len);
 void Gecko_CopyFiltersFrom(nsStyleEffects* aSrc, nsStyleEffects* aDest);
@@ -422,6 +422,8 @@ void InitializeServo();
 void ShutdownServo();
 
 const nsMediaFeature* Gecko_GetMediaFeatures();
+nsCSSKeyword Gecko_LookupCSSKeyword(const uint8_t* string, uint32_t len);
+const char* Gecko_CSSKeywordString(nsCSSKeyword keyword, uint32_t* len);
 
 // Font face rule
 // Creates and returns a new (already-addrefed) nsCSSFontFaceRule object.

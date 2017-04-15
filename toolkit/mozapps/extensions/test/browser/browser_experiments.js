@@ -207,7 +207,7 @@ add_task(function* testOpenPreferences() {
 
       deferred.resolve();
     });
-  }, "advanced-pane-loaded", false);
+  }, "advanced-pane-loaded");
 
   info("Loading preferences pane.");
   // We need to focus before synthesizing the mouse event (bug 1240052) as

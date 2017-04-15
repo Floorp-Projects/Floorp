@@ -20,6 +20,7 @@ macosx64-clang/opt:
         tooltool-downloads: internal
         resources:
             - 'build/build-clang/**'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
 
 macosx64-clang-tidy/opt:
     description: "Clang-tidy build"
@@ -43,6 +44,7 @@ macosx64-clang-tidy/opt:
         resources:
             - 'build/clang-plugin/**'
             - 'build/build-clang/**'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
 
 macosx64-cctools-port/opt:
     description: "cctools-port toolchain build"

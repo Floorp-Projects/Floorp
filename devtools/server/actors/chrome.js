@@ -120,8 +120,8 @@ ChromeActor.prototype._attach = function () {
   TabActor.prototype._attach.call(this);
 
   // Listen for any new/destroyed chrome docshell
-  Services.obs.addObserver(this, "chrome-webnavigation-create", false);
-  Services.obs.addObserver(this, "chrome-webnavigation-destroy", false);
+  Services.obs.addObserver(this, "chrome-webnavigation-create");
+  Services.obs.addObserver(this, "chrome-webnavigation-destroy");
 
   // Iterate over all top-level windows.
   let e = Services.ww.getWindowEnumerator();

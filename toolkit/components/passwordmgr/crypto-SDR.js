@@ -180,7 +180,7 @@ LoginManagerCrypto_SDR.prototype = {
    */
   _notifyObservers(topic) {
     this.log("Prompted for a master password, notifying for " + topic);
-    Services.obs.notifyObservers(null, topic, null);
+    Services.obs.notifyObservers(null, topic);
   },
 }; // end of nsLoginManagerCrypto_SDR implementation
 

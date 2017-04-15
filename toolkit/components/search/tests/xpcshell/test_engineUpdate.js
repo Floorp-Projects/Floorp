@@ -39,7 +39,7 @@ add_task(function* test_engineUpdate() {
         Services.obs.removeObserver(obs, TOPIC);
         resolve();
       }
-    }, TOPIC, false);
+    }, TOPIC);
 
     // set last update to 8 days ago, since the default interval is 7, then
     // trigger an update

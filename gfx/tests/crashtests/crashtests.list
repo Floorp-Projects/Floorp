@@ -31,7 +31,7 @@ load 385423-1.html
 load 385423-2.html
 load 385719-1.html
 load 389326-1.html
-asserts-if(stylo,1) load 390476.html # bug 1324700
+load 390476.html
 load 393746-1.xhtml
 load 393749-1.html
 load 393822-1.html
@@ -103,7 +103,7 @@ load 693143-1.html
 load 696936-1.html
 load 699563-1.html
 load 710149-1.html
-asserts-if(stylo,1) load 766452-1.html # bug 1324700
+load 766452-1.html
 load 766452-2.html
 load 768079-1.html
 load 783041-1.html
@@ -123,7 +123,7 @@ load 893572-4.html
 pref(layers.force-active,true) load 914457-1.html
 load 944579.svg
 load 944579.html
-asserts-if(stylo,1) pref(security.fileuri.strict_origin_policy,false) load 950000.html # bug 1324700
+pref(security.fileuri.strict_origin_policy,false) load 950000.html
 load 1034403-1.html
 load 1056516.html
 load 1205900.html

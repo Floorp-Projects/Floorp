@@ -415,6 +415,14 @@ Toolbox.prototype = {
       // Load the toolbox-level actor fronts and utilities now
       yield this._target.makeRemote();
 
+      // Start tracking network activity on toolbox open for targets such as tabs.
+      // (Workers and potentially others don't manage the console client in the target.)
+      if (this._target.activeConsole) {
+        yield this._target.activeConsole.startListeners([
+          "NetworkActivity",
+        ]);
+      }
+
       // Attach the thread
       this._threadClient = yield attachThread(this);
       yield domReady.promise;
@@ -422,10 +430,9 @@ Toolbox.prototype = {
       this.isReady = true;
       let framesPromise = this._listFrames();
 
-      Services.prefs.addObserver("devtools.cache.disabled", this._applyCacheSettings,
-                                false);
+      Services.prefs.addObserver("devtools.cache.disabled", this._applyCacheSettings);
       Services.prefs.addObserver("devtools.serviceWorkers.testing.enabled",
-                                 this._applyServiceWorkersTestingSettings, false);
+                                 this._applyServiceWorkersTestingSettings);
 
       this.textBoxContextMenuPopup =
         this.doc.getElementById("toolbox-textbox-context-popup");
@@ -2418,7 +2425,7 @@ Toolbox.prototype = {
     };
 
     let topic = "shutdown-leaks-before-check";
-    Services.obs.addObserver(leakCheckObserver, topic, false);
+    Services.obs.addObserver(leakCheckObserver, topic);
     this._destroyer.then(() => {
       Services.obs.removeObserver(leakCheckObserver, topic);
     });

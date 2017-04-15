@@ -146,7 +146,7 @@ XPCOMUtils.defineLazyGetter(this, "Barriers", () => {
                    "' was not properly closed. Auto-close triggered by garbage collection.\n");
     connectionData.close();
   };
-  Services.obs.addObserver(finalizationObserver, "sqlite-finalization-witness", false);
+  Services.obs.addObserver(finalizationObserver, "sqlite-finalization-witness");
 
   /**
    * Ensure that Sqlite.jsm:
@@ -682,7 +682,9 @@ ConnectionData.prototype = Object.freeze({
     function bindParam(obj, key, val) {
       let isBlob = val && typeof val == "object" &&
                    val.constructor.name == "Uint8Array";
-      let args = [key, val].concat(isBlob ? [val.length] : []);
+      let args = [key, val];
+      if (isBlob)
+        args.push(val.length);
       let methodName =
         `bind${isBlob ? "Blob" : ""}By${typeof key == "number" ? "Index" : "Name"}`;
       obj[methodName](...args);

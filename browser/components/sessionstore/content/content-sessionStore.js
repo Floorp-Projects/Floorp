@@ -473,8 +473,8 @@ var FormDataListener = {
  */
 var PageStyleListener = {
   init() {
-    Services.obs.addObserver(this, "author-style-disabled-changed", false);
-    Services.obs.addObserver(this, "style-sheet-applicable-state-changed", false);
+    Services.obs.addObserver(this, "author-style-disabled-changed");
+    Services.obs.addObserver(this, "style-sheet-applicable-state-changed");
     gFrameTree.addObserver(this);
   },
 
@@ -552,7 +552,7 @@ var DocShellCapabilitiesListener = {
 var SessionStorageListener = {
   init() {
     addEventListener("MozSessionStorageChanged", this, true);
-    Services.obs.addObserver(this, "browser:purge-domain-data", false);
+    Services.obs.addObserver(this, "browser:purge-domain-data");
     gFrameTree.addObserver(this);
   },
 
@@ -766,7 +766,7 @@ var MessageQueue = {
     this.timeoutDisabled =
       Services.prefs.getBoolPref(TIMEOUT_DISABLED_PREF);
 
-    Services.prefs.addObserver(TIMEOUT_DISABLED_PREF, this, false);
+    Services.prefs.addObserver(TIMEOUT_DISABLED_PREF, this);
   },
 
   uninit() {

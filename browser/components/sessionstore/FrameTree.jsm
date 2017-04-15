@@ -243,12 +243,6 @@ FrameTreeInternal.prototype = {
     }
   },
 
-  // Unused nsIWebProgressListener methods.
-  onLocationChange() {},
-  onProgressChange() {},
-  onSecurityChange() {},
-  onStatusChange() {},
-
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
                                          Ci.nsISupportsWeakReference])
 };

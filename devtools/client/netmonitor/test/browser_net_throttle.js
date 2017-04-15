@@ -42,11 +42,11 @@ function* throttleTest(actuallyThrottle) {
   let client = NetMonitorController.webConsoleClient;
 
   info("sending throttle request");
-  let deferred = promise.defer();
-  client.setPreferences(request, response => {
-    deferred.resolve(response);
+  yield new Promise((resolve) => {
+    client.setPreferences(request, response => {
+      resolve(response);
+    });
   });
-  yield deferred.promise;
 
   let eventPromise = monitor.panelWin.once(EVENTS.RECEIVED_EVENT_TIMINGS);
   yield NetMonitorController.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DISABLED);

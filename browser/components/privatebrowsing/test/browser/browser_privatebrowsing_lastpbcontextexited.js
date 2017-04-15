@@ -26,8 +26,8 @@ function test() {
           aCallback();
         }
       };
-      Services.obs.addObserver(observerExiting, "last-pb-context-exiting", false);
-      Services.obs.addObserver(observerExited, "last-pb-context-exited", false);
+      Services.obs.addObserver(observerExiting, "last-pb-context-exiting");
+      Services.obs.addObserver(observerExited, "last-pb-context-exited");
       expectedExiting = true;
       aCloseWindow(newWin);
       newWin = null;

@@ -11,7 +11,7 @@ module.metadata = {
 // NOTE: This file should only export Tab instances
 
 
-const { getTabForBrowser: getRawTabForBrowser } = require('./utils');
+lazyRequire(this, './utils', { "getTabForBrowser": "getRawTabForBrowser" });
 const { modelFor } = require('../model/core');
 
 exports.getTabForRawTab = modelFor;

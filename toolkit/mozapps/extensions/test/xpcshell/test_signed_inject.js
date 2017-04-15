@@ -53,7 +53,7 @@ function clearCache(file) {
   if (TEST_UNPACKED)
     return;
 
-  Services.obs.notifyObservers(file, "flush-cache-entry", null);
+  Services.obs.notifyObservers(file, "flush-cache-entry");
 }
 
 function getActiveVersion() {

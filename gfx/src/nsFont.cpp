@@ -97,8 +97,8 @@ const gfxFontFeature eastAsianDefaults[] = {
 };
 
 static_assert(MOZ_ARRAY_LENGTH(eastAsianDefaults) ==
-              eFeatureEastAsian_numFeatures,
-              "eFeatureEastAsian_numFeatures should be correct");
+              NS_FONT_VARIANT_EAST_ASIAN_COUNT,
+              "eastAsianDefaults[] should be correct");
 
 // NS_FONT_VARIANT_LIGATURES_xxx values
 const gfxFontFeature ligDefaults[] = {
@@ -114,8 +114,8 @@ const gfxFontFeature ligDefaults[] = {
 };
 
 static_assert(MOZ_ARRAY_LENGTH(ligDefaults) ==
-              eFeatureLigatures_numFeatures,
-              "eFeatureLigatures_numFeatures should be correct");
+              NS_FONT_VARIANT_LIGATURES_COUNT,
+              "ligDefaults[] should be correct");
 
 // NS_FONT_VARIANT_NUMERIC_xxx values
 const gfxFontFeature numericDefaults[] = {
@@ -130,8 +130,8 @@ const gfxFontFeature numericDefaults[] = {
 };
 
 static_assert(MOZ_ARRAY_LENGTH(numericDefaults) ==
-              eFeatureNumeric_numFeatures,
-              "eFeatureNumeric_numFeatures should be correct");
+              NS_FONT_VARIANT_NUMERIC_COUNT,
+              "numericDefaults[] should be correct");
 
 static void
 AddFontFeaturesBitmask(uint32_t aValue, uint32_t aMin, uint32_t aMax,

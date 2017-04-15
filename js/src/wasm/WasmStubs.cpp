@@ -537,7 +537,7 @@ wasm::GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint3
     unsigned framePushed = StackDecrementForCall(masm, ABIStackAlignment, argOffset + argBytes);
 
     CallableOffsets offsets;
-    GenerateExitPrologue(masm, framePushed, ExitReason::ImportInterp, &offsets);
+    GenerateExitPrologue(masm, framePushed, ExitReason::Fixed::ImportInterp, &offsets);
 
     // Fill the argument array.
     unsigned offsetToCallerStackArgs = sizeof(Frame) + masm.framePushed();
@@ -632,7 +632,7 @@ wasm::GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint3
     MOZ_ASSERT(NonVolatileRegs.has(HeapReg));
 #endif
 
-    GenerateExitEpilogue(masm, framePushed, ExitReason::ImportInterp, &offsets);
+    GenerateExitEpilogue(masm, framePushed, ExitReason::Fixed::ImportInterp, &offsets);
 
     FinishOffsets(masm, &offsets);
     return offsets;
@@ -660,7 +660,7 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
                               sizeOfRetAddr;
 
     CallableOffsets offsets;
-    GenerateExitPrologue(masm, jitFramePushed, ExitReason::ImportJit, &offsets);
+    GenerateExitPrologue(masm, jitFramePushed, ExitReason::Fixed::ImportJit, &offsets);
 
     // 1. Descriptor
     size_t argOffset = 0;
@@ -727,7 +727,7 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
     AssertStackAlignment(masm, JitStackAlignment, sizeOfRetAddr);
 
     // The JIT callee clobbers all registers, including WasmTlsReg and
-    // FrameRegister, so restore those here.
+    // FramePointer, so restore those here.
     masm.loadWasmTlsRegFromFrame();
     masm.moveStackPtrTo(FramePointer);
     masm.addPtr(Imm32(masm.framePushed()), FramePointer);
@@ -809,7 +809,7 @@ wasm::GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* t
     Label done;
     masm.bind(&done);
 
-    GenerateExitEpilogue(masm, masm.framePushed(), ExitReason::ImportJit, &offsets);
+    GenerateExitEpilogue(masm, masm.framePushed(), ExitReason::Fixed::ImportJit, &offsets);
 
     if (oolConvert.used()) {
         masm.bind(&oolConvert);
@@ -899,7 +899,8 @@ struct ABIFunctionArgs
 };
 
 CallableOffsets
-wasm::GenerateBuiltinImportExit(MacroAssembler& masm, ABIFunctionType abiType, void* func)
+wasm::GenerateBuiltinNativeExit(MacroAssembler& masm, ABIFunctionType abiType,
+                                ExitReason exitReason, void* func)
 {
     masm.setFramePushed(0);
 
@@ -907,7 +908,7 @@ wasm::GenerateBuiltinImportExit(MacroAssembler& masm, ABIFunctionType abiType, v
     uint32_t framePushed = StackDecrementForCall(masm, ABIStackAlignment, args);
 
     CallableOffsets offsets;
-    GenerateExitPrologue(masm, framePushed, ExitReason::ImportNative, &offsets);
+    GenerateExitPrologue(masm, framePushed, exitReason, &offsets);
 
     // Copy out and convert caller arguments, if needed.
     unsigned offsetToCallerStackArgs = sizeof(Frame) + masm.framePushed();
@@ -934,6 +935,7 @@ wasm::GenerateBuiltinImportExit(MacroAssembler& masm, ABIFunctionType abiType, v
         StackCopy(masm, i.mirType(), scratch, src, dst);
     }
 
+    AssertStackAlignment(masm, ABIStackAlignment);
     masm.call(ImmPtr(func, ImmPtr::NoCheckToken()));
 
 #if defined(JS_CODEGEN_X86)
@@ -954,7 +956,7 @@ wasm::GenerateBuiltinImportExit(MacroAssembler& masm, ABIFunctionType abiType, v
         masm.ma_vxfer(r0, r1, d0);
 #endif
 
-    GenerateExitEpilogue(masm, framePushed, ExitReason::ImportNative, &offsets);
+    GenerateExitEpilogue(masm, framePushed, exitReason, &offsets);
     offsets.end = masm.currentOffset();
     return offsets;
 }
@@ -976,7 +978,7 @@ wasm::GenerateTrapExit(MacroAssembler& masm, Trap trap, Label* throwLabel)
     uint32_t framePushed = StackDecrementForCall(masm, ABIStackAlignment, args);
 
     CallableOffsets offsets;
-    GenerateExitPrologue(masm, framePushed, ExitReason::Trap, &offsets);
+    GenerateExitPrologue(masm, framePushed, ExitReason::Fixed::Trap, &offsets);
 
     ABIArgMIRTypeIter i(args);
     if (i->kind() == ABIArg::GPR)
@@ -991,7 +993,7 @@ wasm::GenerateTrapExit(MacroAssembler& masm, Trap trap, Label* throwLabel)
 
     masm.jump(throwLabel);
 
-    GenerateExitEpilogue(masm, framePushed, ExitReason::Trap, &offsets);
+    GenerateExitEpilogue(masm, framePushed, ExitReason::Fixed::Trap, &offsets);
 
     FinishOffsets(masm, &offsets);
     return offsets;
@@ -1052,13 +1054,12 @@ static const LiveRegisterSet AllRegsExceptSP(
 #endif
 
 // The async interrupt-callback exit is called from arbitrarily-interrupted wasm
-// code. That means we must first save *all* registers and restore *all*
-// registers (except the stack pointer) when we resume. The address to resume to
-// (assuming that js::HandleExecutionInterrupt doesn't indicate that the
-// execution should be aborted) is stored in WasmActivation::resumePC_.
-// Unfortunately, loading this requires a scratch register which we don't have
-// after restoring all registers. To hack around this, push the resumePC on the
-// stack so that it can be popped directly into PC.
+// code. It calls into the WasmHandleExecutionInterrupt to determine whether we must
+// really halt execution which can reenter the VM (e.g., to display the slow
+// script dialog). If execution is not interrupted, this stub must carefully
+// preserve *all* register state. If execution is interrupted, the entire
+// activation will be popped by the throw stub, so register state does not need
+// to be restored.
 Offsets
 wasm::GenerateInterruptExit(MacroAssembler& masm, Label* throwLabel)
 {
@@ -1263,7 +1264,7 @@ wasm::GenerateDebugTrapStub(MacroAssembler& masm, Label* throwLabel)
     masm.setFramePushed(0);
 
     CallableOffsets offsets;
-    GenerateExitPrologue(masm, 0, ExitReason::DebugTrap, &offsets);
+    GenerateExitPrologue(masm, 0, ExitReason::Fixed::DebugTrap, &offsets);
 
     // Save all registers used between baseline compiler operations.
     masm.PushRegsInMask(AllAllocatableRegs);
@@ -1293,7 +1294,7 @@ wasm::GenerateDebugTrapStub(MacroAssembler& masm, Label* throwLabel)
     masm.setFramePushed(framePushed);
     masm.PopRegsInMask(AllAllocatableRegs);
 
-    GenerateExitEpilogue(masm, 0, ExitReason::DebugTrap, &offsets);
+    GenerateExitEpilogue(masm, 0, ExitReason::Fixed::DebugTrap, &offsets);
 
     FinishOffsets(masm, &offsets);
     return offsets;

@@ -67,13 +67,13 @@ public:
   static TabGroup*
   GetChromeTabGroup();
 
-  // Checks if the PBrowserChild associated with aWindow already has a TabGroup
-  // assigned to it in IPDL. Returns this TabGroup if it does. This could happen
-  // if the parent process created the PBrowser and we needed to assign a
-  // TabGroup immediately upon receiving the IPDL message. This method is main
-  // thread only.
-  static TabGroup*
-  GetFromWindowActor(mozIDOMWindowProxy* aWindow);
+  // Checks if the TabChild already has a TabGroup assigned to it in
+  // IPDL. Returns this TabGroup if it does. This could happen if the parent
+  // process created the PBrowser and we needed to assign a TabGroup immediately
+  // upon receiving the IPDL message. This method is main thread only.
+  static TabGroup* GetFromActor(TabChild* aTabChild);
+
+  static TabGroup* GetFromWindow(mozIDOMWindowProxy* aWindow);
 
   explicit TabGroup(bool aIsChrome = false);
 

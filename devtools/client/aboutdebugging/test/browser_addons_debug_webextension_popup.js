@@ -52,7 +52,7 @@ add_task(function* testWebExtensionsToolboxSwitchToPopup() {
         Services.obs.removeObserver(listener, "console-api-log-event");
         done();
       }
-    }, "console-api-log-event", false);
+    }, "console-api-log-event");
   });
 
   // Be careful, this JS function is going to be executed in the addon toolbox,
@@ -156,7 +156,7 @@ add_task(function* testWebExtensionsToolboxSwitchToPopup() {
         Services.obs.removeObserver(listener, "console-api-log-event");
         done(apiMessage.arguments);
       }
-    }, "console-api-log-event", false);
+    }, "console-api-log-event");
   });
 
   let onToolboxClose = BrowserToolboxProcess.once("close");

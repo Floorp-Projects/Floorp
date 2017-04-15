@@ -17,6 +17,7 @@
 #include "jit/IonBuilder.h"
 #include "threading/CpuCount.h"
 #include "vm/Debugger.h"
+#include "vm/ErrorReporting.h"
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/Time.h"
 #include "vm/TraceLogging.h"
@@ -230,12 +231,14 @@ js::CancelOffThreadIonCompile(const CompilationSelector& selector, bool discardL
     if (discardLazyLinkList) {
         MOZ_ASSERT(!selector.is<AllCompilations>());
         JSRuntime* runtime = GetSelectorRuntime(selector);
-        jit::IonBuilder* builder = runtime->ionLazyLinkList().getFirst();
-        while (builder) {
-            jit::IonBuilder* next = builder->getNext();
-            if (CompiledScriptMatches(selector, builder->script()))
-                jit::FinishOffThreadBuilder(runtime, builder, lock);
-            builder = next;
+        for (ZoneGroupsIter group(runtime); !group.done(); group.next()) {
+            jit::IonBuilder* builder = group->ionLazyLinkList().getFirst();
+            while (builder) {
+                jit::IonBuilder* next = builder->getNext();
+                if (CompiledScriptMatches(selector, builder->script()))
+                    jit::FinishOffThreadBuilder(runtime, builder, lock);
+                builder = next;
+            }
         }
     }
 }
@@ -246,7 +249,7 @@ js::HasOffThreadIonCompile(JSCompartment* comp)
 {
     AutoLockHelperThreadState lock;
 
-    if (!HelperThreadState().threads)
+    if (!HelperThreadState().threads || comp->isAtomsCompartment())
         return false;
 
     GlobalHelperThreadState::IonBuilderVector& worklist = HelperThreadState().ionWorklist(lock);
@@ -268,7 +271,7 @@ js::HasOffThreadIonCompile(JSCompartment* comp)
             return true;
     }
 
-    jit::IonBuilder* builder = comp->runtimeFromActiveCooperatingThread()->ionLazyLinkList().getFirst();
+    jit::IonBuilder* builder = comp->zone()->group()->ionLazyLinkList().getFirst();
     while (builder) {
         if (builder->script()->compartment() == comp)
             return true;
@@ -298,7 +301,7 @@ ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx, JSObject* parseGlobal,
     alloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     parseGlobal(parseGlobal),
     callback(callback), callbackData(callbackData),
-    script(nullptr), sourceObject(nullptr),
+    script(nullptr), sourceObject(nullptr), sourceCompressionTask(nullptr),
     overRecursed(false), outOfMemory(false)
 {
 }
@@ -310,7 +313,7 @@ ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx, JSObject* parseGlobal,
     alloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     parseGlobal(parseGlobal),
     callback(callback), callbackData(callbackData),
-    script(nullptr), sourceObject(nullptr),
+    script(nullptr), sourceObject(nullptr), sourceCompressionTask(nullptr),
     overRecursed(false), outOfMemory(false)
 {
 }
@@ -337,6 +340,8 @@ ParseTask::finish(JSContext* cx)
         RootedScriptSource sso(cx, sourceObject);
         if (!ScriptSourceObject::initFromOptions(cx, sso, options))
             return false;
+        if (sourceCompressionTask)
+            sourceCompressionTask->fixupMajorGCNumber(cx->runtime());
     }
 
     return true;
@@ -380,8 +385,8 @@ ScriptParseTask::parse(JSContext* cx)
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
     script = frontend::CompileGlobalScript(cx, alloc, ScopeKind::Global,
                                            options, srcBuf,
-                                           /* extraSct = */ nullptr,
-                                           /* sourceObjectOut = */ &sourceObject);
+                                           /* sourceObjectOut = */ &sourceObject,
+                                           /* sourceCompressionTaskOut = */ &sourceCompressionTask);
 }
 
 ModuleParseTask::ModuleParseTask(JSContext* cx, JSObject* parseGlobal,
@@ -396,7 +401,8 @@ void
 ModuleParseTask::parse(JSContext* cx)
 {
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    ModuleObject* module = frontend::CompileModule(cx, options, srcBuf, alloc, &sourceObject);
+    ModuleObject* module = frontend::CompileModule(cx, options, srcBuf, alloc, &sourceObject,
+                                                   &sourceCompressionTask);
     if (module)
         script = module->script();
 }
@@ -928,7 +934,10 @@ GlobalHelperThreadState::maxCompressionThreads() const
 {
     if (IsHelperThreadSimulatingOOM(js::oom::THREAD_TYPE_COMPRESS))
         return 1;
-    return threadCount;
+
+    // Compression is triggered on major GCs to compress ScriptSources. It is
+    // considered low priority work.
+    return 1;
 }
 
 size_t
@@ -1099,6 +1108,30 @@ GlobalHelperThreadState::canStartCompressionTask(const AutoLockHelperThreadState
 {
     return !compressionWorklist(lock).empty() &&
            checkTaskThreadLimit<SourceCompressionTask*>(maxCompressionThreads());
+}
+
+void
+GlobalHelperThreadState::startHandlingCompressionTasks(const AutoLockHelperThreadState& lock)
+{
+    scheduleCompressionTasks(lock);
+    if (canStartCompressionTask(lock))
+        notifyOne(PRODUCER, lock);
+}
+
+void
+GlobalHelperThreadState::scheduleCompressionTasks(const AutoLockHelperThreadState& lock)
+{
+    auto& pending = compressionPendingList(lock);
+    auto& worklist = compressionWorklist(lock);
+    MOZ_ASSERT(worklist.capacity() >= pending.length());
+
+    for (size_t i = 0; i < pending.length(); i++) {
+        SourceCompressionTask* task = pending[i];
+        if (task->shouldStart()) {
+            remove(pending, &i);
+            worklist.infallibleAppend(task);
+        }
+    }
 }
 
 bool
@@ -1627,9 +1660,9 @@ js::PauseCurrentHelperThread()
 }
 
 bool
-JSContext::addPendingCompileError(frontend::CompileError** error)
+JSContext::addPendingCompileError(js::CompileError** error)
 {
-    auto errorPtr = make_unique<frontend::CompileError>();
+    auto errorPtr = make_unique<js::CompileError>();
     if (!errorPtr)
         return false;
     if (!helperThread()->parseTask()->errors.append(errorPtr.get())) {
@@ -1699,7 +1732,6 @@ HelperThread::handleCompressionWorkload(AutoLockHelperThreadState& locked)
 
     currentTask.emplace(HelperThreadState().compressionWorklist(locked).popCopy());
     SourceCompressionTask* task = compressionTask();
-    task->helperThread = this;
 
     {
         AutoUnlockHelperThreadState unlock(locked);
@@ -1707,10 +1739,15 @@ HelperThread::handleCompressionWorkload(AutoLockHelperThreadState& locked)
         TraceLoggerThread* logger = TraceLoggerForCurrentThread();
         AutoTraceLog logCompile(logger, TraceLogger_CompressSource);
 
-        task->result = task->work();
+        task->work();
     }
 
-    task->helperThread = nullptr;
+    {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        if (!HelperThreadState().compressionFinishedList(locked).append(task))
+            oomUnsafe.crash("handleCompressionWorkload");
+    }
+
     currentTask.reset();
 
     // Notify the active thread in case it is waiting for the compression to finish.
@@ -1718,18 +1755,71 @@ HelperThread::handleCompressionWorkload(AutoLockHelperThreadState& locked)
 }
 
 bool
-js::StartOffThreadCompression(JSContext* cx, SourceCompressionTask* task)
+js::EnqueueOffThreadCompression(JSContext* cx, SourceCompressionTask* task)
 {
     AutoLockHelperThreadState lock;
 
-    if (!HelperThreadState().compressionWorklist(lock).append(task)) {
+    auto& pending = HelperThreadState().compressionPendingList(lock);
+    auto& worklist = HelperThreadState().compressionWorklist(lock);
+    if (!pending.append(task)) {
         if (!cx->helperThread())
             ReportOutOfMemory(cx);
+        js_delete(task);
+        return false;
+    }
+    if (!worklist.reserve(pending.length())) {
+        if (!cx->helperThread())
+            ReportOutOfMemory(cx);
+        pending.popBack();
         return false;
     }
 
-    HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
     return true;
+}
+
+template <typename T>
+static void
+ClearCompressionTaskList(T& list, JSRuntime* runtime)
+{
+    for (size_t i = 0; i < list.length(); i++) {
+        SourceCompressionTask* task = list[i];
+        if (task->runtimeMatches(runtime)) {
+            HelperThreadState().remove(list, &i);
+            js_delete(task);
+        }
+    }
+}
+
+void
+js::CancelOffThreadCompressions(JSRuntime* runtime)
+{
+    AutoLockHelperThreadState lock;
+
+    if (!HelperThreadState().threads)
+        return;
+
+    // Cancel all pending compression tasks.
+    ClearCompressionTaskList(HelperThreadState().compressionPendingList(lock), runtime);
+    ClearCompressionTaskList(HelperThreadState().compressionWorklist(lock), runtime);
+
+    // Cancel all in-process compression tasks and wait for them to join so we
+    // clean up the finished tasks.
+    while (true) {
+        bool inProgress = false;
+        for (auto& thread : *HelperThreadState().threads) {
+            SourceCompressionTask* task = thread.compressionTask();
+            if (task && task->runtimeMatches(runtime))
+                inProgress = true;
+        }
+
+        if (!inProgress)
+            break;
+
+        HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+    }
+
+    // Clean up finished tasks.
+    ClearCompressionTaskList(HelperThreadState().compressionFinishedList(lock), runtime);
 }
 
 bool
@@ -1767,64 +1857,6 @@ js::StartPromiseTask(JSContext* cx, UniquePtr<PromiseTask> task)
     return true;
 }
 
-bool
-GlobalHelperThreadState::compressionInProgress(SourceCompressionTask* task,
-                                               const AutoLockHelperThreadState& lock)
-{
-    for (size_t i = 0; i < compressionWorklist(lock).length(); i++) {
-        if (compressionWorklist(lock)[i] == task)
-            return true;
-    }
-    for (auto& thread : *threads) {
-        if (thread.compressionTask() == task)
-            return true;
-    }
-    return false;
-}
-
-bool
-SourceCompressionTask::complete()
-{
-    if (!active())
-        return true;
-
-    {
-        AutoLockHelperThreadState lock;
-        while (HelperThreadState().compressionInProgress(this, lock))
-            HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
-    }
-
-    if (result == Success) {
-        MOZ_ASSERT(resultString);
-        ss->setCompressedSource(mozilla::Move(*resultString), ss->length());
-    } else {
-        if (result == OOM)
-            ReportOutOfMemory(cx);
-    }
-
-    ss = nullptr;
-    MOZ_ASSERT(!active());
-
-    return result != OOM;
-}
-
-SourceCompressionTask*
-GlobalHelperThreadState::compressionTaskForSource(ScriptSource* ss,
-                                                  const AutoLockHelperThreadState& lock)
-{
-    for (size_t i = 0; i < compressionWorklist(lock).length(); i++) {
-        SourceCompressionTask* task = compressionWorklist(lock)[i];
-        if (task->source() == ss)
-            return task;
-    }
-    for (auto& thread : *threads) {
-        SourceCompressionTask* task = thread.compressionTask();
-        if (task && task->source() == ss)
-            return task;
-    }
-    return nullptr;
-}
-
 void
 GlobalHelperThreadState::trace(JSTracer* trc)
 {
@@ -1841,10 +1873,12 @@ GlobalHelperThreadState::trace(JSTracer* trc)
         }
     }
 
-    jit::IonBuilder* builder = trc->runtime()->ionLazyLinkList().getFirst();
-    while (builder) {
-        builder->trace(trc);
-        builder = builder->getNext();
+    for (ZoneGroupsIter group(trc->runtime()); !group.done(); group.next()) {
+        jit::IonBuilder* builder = group->ionLazyLinkList().getFirst();
+        while (builder) {
+            builder->trace(trc);
+            builder = builder->getNext();
+        }
     }
 
     for (auto parseTask : parseWorklist_)

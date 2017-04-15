@@ -50,7 +50,7 @@ add_task(function* test_contentscript_context() {
   // Get the content script context and check that it points to the correct window.
 
   let {DocumentManager} = SpecialPowers.Cu.import("resource://gre/modules/ExtensionContent.jsm", {});
-  let context = DocumentManager.getContentScriptContext(extension, win);
+  let context = DocumentManager.getContext(extension.id, win);
   ok(context != null, "Got content script context");
 
   is(SpecialPowers.unwrap(context.contentWindow), win, "Context's contentWindow property is correct");

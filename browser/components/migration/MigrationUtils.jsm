@@ -235,7 +235,7 @@ this.MigratorPrototype = {
     // Used to periodically give back control to the main-thread loop.
     let unblockMainThread = function() {
       return new Promise(resolve => {
-        Services.tm.mainThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
+        Services.tm.dispatchToMainThread(resolve);
       });
     };
 
@@ -399,7 +399,7 @@ this.MigratorPrototype = {
             Services.obs.removeObserver(onPlacesInited, TOPIC_PLACES_DEFAULTS_FINISHED);
             resolve();
           };
-          Services.obs.addObserver(onPlacesInited, TOPIC_PLACES_DEFAULTS_FINISHED, false);
+          Services.obs.addObserver(onPlacesInited, TOPIC_PLACES_DEFAULTS_FINISHED);
         });
         browserGlue.observe(null, TOPIC_DID_IMPORT_BOOKMARKS, "");
         yield placesInitedPromise;
@@ -865,7 +865,7 @@ this.MigrationUtils = Object.freeze({
               throw new Error("Unexpected parameter type " + (typeof item) + ": " + item);
           }
         }
-        params.appendElement(comtaminatedVal, false);
+        params.appendElement(comtaminatedVal);
       }
     } else {
       params = aParams;

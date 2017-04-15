@@ -8,6 +8,7 @@ const Services = require("Services");
 const appInfo = Services.appinfo;
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const { CurlUtils } = require("devtools/client/shared/curl");
+const { getLongString } = require("../utils/client");
 const {
   getFormDataSections,
   getUrlQuery,
@@ -269,6 +270,7 @@ HarBuilder.prototype = {
           file.requestHeaders,
           file.requestHeadersFromUploadStream,
           file.requestPostData,
+          getLongString,
         ).then(formDataSections => {
           formDataSections.forEach(section => {
             let paramsArray = parseQueryString(section);

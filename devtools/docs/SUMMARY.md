@@ -28,5 +28,5 @@
     * [Writing Actors With protocol.js](backend/protocol.js.md)
     * [Registering A New Actor](backend/actor-registration.md)
     * [Actor Best Practices](backend/actor-best-practices.md)
-* Miscellaneous
-  * [Adding New Files](misc/adding-files.md)
+* [Files and directories](files/README.md)
+  * [Adding New Files](files/adding-files.md)

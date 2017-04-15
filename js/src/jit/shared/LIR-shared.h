@@ -4001,6 +4001,9 @@ class LModD : public LBinaryMath<1>
     bool isCall() const {
         return true;
     }
+    MMod* mir() const {
+        return mir_->toMod();
+    }
 };
 
 // Call a VM function to perform a binary operation.
@@ -6847,16 +6850,20 @@ class LSetPropertyPolymorphicT : public LInstructionHelper<0, 2, 1>
     }
 };
 
-class LBindNameCache : public LInstructionHelper<1, 1, 0>
+class LBindNameCache : public LInstructionHelper<1, 1, 1>
 {
   public:
     LIR_HEADER(BindNameCache)
 
-    explicit LBindNameCache(const LAllocation& envChain) {
+    LBindNameCache(const LAllocation& envChain, const LDefinition& temp) {
         setOperand(0, envChain);
+        setTemp(0, temp);
     }
     const LAllocation* environmentChain() {
         return getOperand(0);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
     }
     const MBindNameCache* mir() const {
         return mir_->toBindNameCache();
@@ -7864,6 +7871,24 @@ class LIn : public LCallInstructionHelper<1, BOX_PIECES+1, 0>
 
     static const size_t LHS = 0;
     static const size_t RHS = BOX_PIECES;
+};
+
+class LHasOwnCache : public LInstructionHelper<1, 2 * BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(HasOwnCache)
+
+    static const size_t Value = 0;
+    static const size_t Id = BOX_PIECES;
+
+    LHasOwnCache(const LBoxAllocation& value, const LBoxAllocation& id) {
+        setBoxOperand(Value, value);
+        setBoxOperand(Id, id);
+    }
+
+    const MHasOwnCache* mir() const {
+        return mir_->toHasOwnCache();
+    }
 };
 
 class LInstanceOfO : public LInstructionHelper<1, 1, 0>

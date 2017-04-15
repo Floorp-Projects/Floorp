@@ -188,7 +188,8 @@ public:
   static TabParent*
   CreateBrowser(const TabContext& aContext,
                 Element* aFrameElement,
-                ContentParent* aOpenerContentParent);
+                ContentParent* aOpenerContentParent,
+                TabParent* aSameTabGroupAs);
 
   static void GetAll(nsTArray<ContentParent*>& aArray);
 
@@ -699,6 +700,7 @@ private:
   virtual PBrowserParent* SendPBrowserConstructor(
       PBrowserParent* actor,
       const TabId& aTabId,
+      const TabId& aSameTabGroupsAs,
       const IPCTabContext& context,
       const uint32_t& chromeFlags,
       const ContentParentId& aCpId,
@@ -831,6 +833,7 @@ private:
   DeallocPRemoteSpellcheckEngineParent(PRemoteSpellcheckEngineParent*) override;
 
   virtual PBrowserParent* AllocPBrowserParent(const TabId& aTabId,
+                                              const TabId& aSameTabGroupAs,
                                               const IPCTabContext& aContext,
                                               const uint32_t& aChromeFlags,
                                               const ContentParentId& aCpId,
@@ -1114,7 +1117,8 @@ private:
   virtual mozilla::ipc::IPCResult RecvUpdateDropEffect(const uint32_t& aDragAction,
                                                        const uint32_t& aDropEffect) override;
 
-  virtual mozilla::ipc::IPCResult RecvProfile(const nsCString& aProfile) override;
+  virtual mozilla::ipc::IPCResult RecvProfile(const nsCString& aProfile,
+                                              const bool& aIsExitProfile) override;
 
   virtual mozilla::ipc::IPCResult RecvGetGraphicsDeviceInitData(ContentDeviceData* aOut) override;
 

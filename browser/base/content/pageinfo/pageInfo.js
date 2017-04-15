@@ -336,7 +336,7 @@ function onLoadPageInfo() {
   loadTab(args);
   Components.classes["@mozilla.org/observer-service;1"]
             .getService(Components.interfaces.nsIObserverService)
-            .notifyObservers(window, "page-info-dialog-loaded", null);
+            .notifyObservers(window, "page-info-dialog-loaded");
 }
 
 function loadPageInfo(frameOuterWindowID, imageElement, browser) {
@@ -599,7 +599,7 @@ function addImage(imageViewRow) {
       document.getElementById("mediaTab").hidden = false;
       Components.classes["@mozilla.org/observer-service;1"]
                 .getService(Components.interfaces.nsIObserverService)
-                .addObserver(imagePermissionObserver, "perm-changed", false);
+                .addObserver(imagePermissionObserver, "perm-changed");
     }
   } else {
     var i = gImageHash[url][type][alt];

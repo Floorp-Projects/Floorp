@@ -11,7 +11,7 @@ const UNFILTERED_URI_COUNT = "browser.engagement.unfiltered_uri_count";
 const TELEMETRY_SUBSESSION_TOPIC = "internal-telemetry-after-subsession-split";
 
 // Reset internal URI counter in case URIs were opened by other tests.
-Services.obs.notifyObservers(null, TELEMETRY_SUBSESSION_TOPIC, "");
+Services.obs.notifyObservers(null, TELEMETRY_SUBSESSION_TOPIC);
 
 /**
  * Waits for the web progress listener associated with this tab to fire an
@@ -165,7 +165,7 @@ add_task(function* test_subsessionSplit() {
   // notifying the subsession split topic.
   Services.telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
                                      true /* clearScalars */);
-  Services.obs.notifyObservers(null, TELEMETRY_SUBSESSION_TOPIC, "");
+  Services.obs.notifyObservers(null, TELEMETRY_SUBSESSION_TOPIC);
 
   // After a subsession split, only the MAX_CONCURRENT_* scalars must be available
   // and have the correct value. No tabs, windows or URIs were opened so other scalars

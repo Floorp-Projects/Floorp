@@ -55,7 +55,7 @@ function waitForFaviconChanged(aExpectedPageURI, aExpectedFaviconURI,
       aCallback();
     }
   };
-  PlacesUtils.history.addObserver(historyObserver, false);
+  PlacesUtils.history.addObserver(historyObserver);
 }
 
 /**

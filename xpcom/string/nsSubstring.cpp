@@ -378,6 +378,10 @@ void Gecko_IncrementStringAdoptCount(void* aData)
 {
   MOZ_LOG_CTOR(aData, "StringAdopt", 1);
 }
+#elif defined(MOZ_DEBUG_RUST)
+void Gecko_IncrementStringAdoptCount(void *aData)
+{
+}
 #endif
 
 void Gecko_FinalizeCString(nsACString* aThis)

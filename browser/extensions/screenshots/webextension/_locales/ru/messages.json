@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Делайте вырезки и скриншоты из Интернета и сохраняйте их временно или навсегда."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Сделать скриншот"
+  },
+  "myShotsLink": {
+    "message": "Мои снимки"
+  },
+  "screenshotInstructions": {
+    "message": "Потяните мышью или щёлкните по странице, чтобы выбрать область. Нажмите ESC для отмены."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Сохранить"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Сохранить видимую область"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Сохранить всю страницу"
+  },
+  "cancelScreenshot": {
+    "message": "Отмена"
+  },
+  "downloadScreenshot": {
+    "message": "Загрузить"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Ссылка скопирована"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "Ссылка на ваш снимок была скопирована в буфер обмена. Нажмите $META_KEY$-V для её вставки.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Произошла ошибка."
+  },
+  "requestErrorDetails": {
+    "message": "Извините! Мы не смогли сохранить ваш снимок. Пожалуйста, попробуйте позже."
+  },
+  "connectionErrorTitle": {
+    "message": "Мы не смогли получить доступ к вашим скриншотам."
+  },
+  "connectionErrorDetails": {
+    "message": "Пожалуйста, проверьте соединение с Интернетом. Если у вам удаётся войти в Интернет, то возможно, возникла временная проблема со службой Скриншотов Firefox."
+  },
+  "loginErrorDetails": {
+    "message": "Мы не можем сохранить ваш снимок, так как возникла проблема с сервисом Скриншотов Firefox. Пожалуйста, попробуйте позже."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Мы не можем сделать скриншот этой страницы."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Так как это не обычная веб-страница, мы не сможем сделать её скриншот."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Вы не можете сделать скриншот страницы Скриншотов Firefox."
+  },
+  "genericErrorTitle": {
+    "message": "Ого! Скриншоты Firefox вышли из строя."
+  },
+  "genericErrorDetails": {
+    "message": "Мы не уверены, в чём проблема. Попробуете ещё раз или сделаете снимок другой страницы?"
+  },
+  "tourBodyOne": {
+    "message": "Делайте, сохраняйте и делитесь скриншотами прямо в Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Делайте снимки чего угодно"
+  },
+  "tourBodyTwo": {
+    "message": "Щелкните и потяните мышью для захвата части страницы. Вы также можете навести курсор мыши для подсветки выбранной области."
+  },
+  "tourHeaderThree": {
+    "message": "Как вам нравится"
+  },
+  "tourBodyThree": {
+    "message": "Сохраняйте свои снимки в Интернете, чтобы легко ими делиться, или загружайте их на свой компьютер. Вы также можете просмотреть все сохранённые снимки, нажав на кнопку Мои снимки."
+  },
+  "tourHeaderFour": {
+    "message": "Захватывайте окна или целые страницы"
+  },
+  "tourBodyFour": {
+    "message": "С помощью кнопок в верхнем правом углу выбирайте захват видимой области окна или страницы целиком."
+  },
+  "tourSkip": {
+    "message": "Пропустить"
+  },
+  "tourNext": {
+    "message": "Следующий слайд"
+  },
+  "tourPrevious": {
+    "message": "Предыдущий слайд"
+  },
+  "tourDone": {
+    "message": "Готово"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Используя Firefox Screenshots, вы соглашаетесь с его $TERMSANDPRIVACYNOTICETERMSLINK$ и $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Условиями использования"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Уведомлением о приватности"
+  }
+}
