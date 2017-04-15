@@ -854,7 +854,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   display: none;
 }
 
-#PanelUI-fxa-icon[syncstatus="active"]:not([disabled]) {
+#PanelUI-fxa-icon[syncstatus="active"] {
   list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar.png);
 }
 
@@ -887,11 +887,6 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 #PanelUI-footer-fxa[fxastatus="signedin"] > #PanelUI-fxa-status > #PanelUI-fxa-label > .toolbarbutton-icon,
 #PanelUI-footer-fxa:not([fxastatus="signedin"]) > #PanelUI-fxa-status > #PanelUI-fxa-avatar {
   display: none;
-}
-
-#PanelUI-fxa-status[disabled],
-#PanelUI-fxa-icon[disabled] {
-  pointer-events: none;
 }
 
 #PanelUI-fxa-avatar {
@@ -929,16 +924,12 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-help[disabled],
-#PanelUI-quit[disabled],
-#PanelUI-fxa-icon[disabled],
-#PanelUI-fxa-avatar[disabled],
-#PanelUI-fxa-label[disabled] > .toolbarbutton-icon,
-#PanelUI-fxa-status::after {
+#PanelUI-quit[disabled] {
   opacity: 0.4;
 }
 
-#PanelUI-fxa-status:not([disabled]):hover,
-#PanelUI-fxa-icon:not([disabled]):hover,
+#PanelUI-fxa-status:hover,
+#PanelUI-fxa-icon:hover,
 #PanelUI-help:not([disabled]):hover,
 #PanelUI-customize:hover,
 #PanelUI-quit:not([disabled]):hover {
@@ -946,8 +937,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   background-color: var(--arrowpanel-dimmed);
 }
 
-#PanelUI-fxa-status:not([disabled]):hover:active,
-#PanelUI-fxa-icon:not([disabled]):hover:active,
+#PanelUI-fxa-status:hover:active,
+#PanelUI-fxa-icon:hover:active,
 #PanelUI-help:not([disabled]):hover:active,
 #PanelUI-customize:hover:active,
 #PanelUI-quit:not([disabled]):hover:active {
@@ -956,10 +947,10 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
-#PanelUI-fxa-status:not([disabled]):hover,
-#PanelUI-fxa-status:not([disabled]):hover:active,
-#PanelUI-fxa-icon:not([disabled]):hover,
-#PanelUI-fxa-icon:not([disabled]):hover:active {
+#PanelUI-fxa-status:hover,
+#PanelUI-fxa-status:hover:active,
+#PanelUI-fxa-icon:hover,
+#PanelUI-fxa-icon:hover:active {
   outline: none;
 }
 
@@ -1713,7 +1704,7 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
     list-style-image: url(chrome://browser/skin/sync-horizontalbar@2x.png);
   }
 
-  #PanelUI-fxa-icon[syncstatus="active"]:not([disabled]) {
+  #PanelUI-fxa-icon[syncstatus="active"] {
     list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar@2x.png);
   }
 
