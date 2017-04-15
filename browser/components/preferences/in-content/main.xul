@@ -139,7 +139,14 @@
 
   <!-- General tab -->
 
-  <!-- Accessibility -->
+  <!-- Accessibility
+   * accessibility.browsewithcaret
+     - true enables keyboard navigation and selection within web pages using a
+       visible caret, false uses normal keyboard navigation with no caret
+   * accessibility.typeaheadfind
+     - when set to true, typing outside text areas and input boxes will
+       automatically start searching for what's typed within the current
+       document; when set to false, no search action happens -->
   <preference id="accessibility.browsewithcaret"
               name="accessibility.browsewithcaret"
               type="bool"/>
@@ -154,7 +161,16 @@
               name="ui.osk.enabled"
               type="bool"/>
 #endif
-  <!-- Browsing -->
+  <!-- Browsing
+   * general.autoScroll
+     - when set to true, clicking the scroll wheel on the mouse activates a
+       mouse mode where moving the mouse down scrolls the document downward with
+       speed correlated with the distance of the cursor from the original
+       position at which the click occurred (and likewise with movement upward);
+       if false, this behavior is disabled
+   * general.smoothScroll
+     - set to true to enable finer page scrolling than line-by-line on page-up,
+       page-down, and other such page movements -->
   <preference id="general.autoScroll"
               name="general.autoScroll"
               type="bool"/>
@@ -239,8 +255,8 @@
   <html:table id="startupTable">
     <html:tr>
       <html:td class="label-cell">
-        <label accesskey="&startupPage.accesskey;"
-               control="browserStartupPage">&startupPage.label;</label>
+        <label accesskey="&startupPage2.accesskey;"
+               control="browserStartupPage">&startupPage2.label;</label>
       </html:td>
       <html:td class="content-cell">
         <menulist id="browserStartupPage"
@@ -262,8 +278,8 @@
     </html:tr>
     <html:tr>
       <html:td class="label-cell">
-        <label accesskey="&homepage.accesskey;"
-               control="browserHomePage">&homepage.label;</label>
+        <label accesskey="&homepage2.accesskey;"
+               control="browserHomePage">&homepage2.label;</label>
       </html:td>
       <html:td class="content-cell">
         <textbox id="browserHomePage"
@@ -355,7 +371,7 @@
   <separator class="thin"/>
 
   <hbox id="addEnginesBox" pack="start">
-    <label id="addEngines" class="text-link" value="&addMoreSearchEngines.label;"/>
+    <label id="addEngines" class="text-link" value="&addMoreSearchEngines2.label;"/>
   </hbox>
 </groupbox>
 
@@ -470,9 +486,9 @@
     <rows id="fontsRows">
       <row id="fontRow">
         <hbox align="center">
-          <label control="defaultFont" accesskey="&defaultFont.accesskey;">&defaultFont.label;</label>
+          <label control="defaultFont" accesskey="&defaultFont2.accesskey;">&defaultFont2.label;</label>
           <menulist id="defaultFont" delayprefsave="true" onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
-          <label id="defaultFontSizeLabel" control="defaultFontSize" accesskey="&defaultSize.accesskey;">&defaultSize.label;</label>
+          <label id="defaultFontSizeLabel" control="defaultFontSize" accesskey="&defaultSize2.accesskey;">&defaultSize2.label;</label>
           <menulist id="defaultFontSize" delayprefsave="true">
             <menupopup>
               <menuitem value="9" label="9"/>

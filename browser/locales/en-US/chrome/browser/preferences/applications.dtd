@@ -2,6 +2,9 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!ENTITY  applications.label       "Applications">
+<!ENTITY  applications.description "Choose how &brandShortName; handles the files you download from the Web or the applications you use while browsing.">
+
 <!ENTITY  typeColumn.label        "Content Type">
 <!ENTITY  typeColumn.accesskey    "T">
 
@@ -11,4 +14,4 @@
 <!ENTITY  focusSearch1.key        "f">
 <!ENTITY  focusSearch2.key        "k">
 
-<!ENTITY  filter.emptytext        "Search">
+<!ENTITY  filter2.emptytext        "Search file types or applications">

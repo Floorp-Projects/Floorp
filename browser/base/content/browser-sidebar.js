@@ -223,6 +223,7 @@ var SidebarUI = {
       this._splitter.hidden = false;
 
       this._box.setAttribute("sidebarcommand", sidebarBroadcaster.id);
+      this.lastOpenedId = sidebarBroadcaster.id;
 
       let title = sidebarBroadcaster.getAttribute("sidebartitle");
       if (!title) {

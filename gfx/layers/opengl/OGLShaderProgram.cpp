@@ -194,7 +194,13 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
     vs << "uniform vec2 uViewportSize;" << endl;
   }
   vs << "uniform vec2 uRenderTargetOffset;" << endl;
-  vs << "attribute vec4 aCoord;" << endl;
+
+  if (!(aConfig.mFeatures & ENABLE_DYNAMIC_GEOMETRY)) {
+    vs << "attribute vec4 aCoord;" << endl;
+  } else {
+    vs << "attribute vec2 aCoord;" << endl;
+  }
+
   result.mAttributes.AppendElement(Pair<nsCString, GLuint> {"aCoord", 0});
 
   if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {

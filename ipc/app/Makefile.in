@@ -26,9 +26,9 @@ ifeq ($(OS_ARCH),WINNT) #{
 # Note the manifest file exists in the tree, so we use the explicit filename
 # here.
 ifdef HAVE_64BIT_BUILD
-EXTRA_DEPS += plugin-container.exe.64.manifest
+$(RESFILE): plugin-container.exe.64.manifest
 else
-EXTRA_DEPS += plugin-container.exe.32.manifest
+$(RESFILE): plugin-container.exe.32.manifest
 endif
 endif #}
 

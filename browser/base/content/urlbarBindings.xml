@@ -377,6 +377,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             return;
           }
 
+          BrowserUsageTelemetry.recordUrlbarSelectedResultMethod(event);
+
           // Determine whether to use the selected one-off search button.  In
           // one-off search buttons parlance, "selected" means that the button
           // has been navigated to via the keyboard.  So we want to use it if

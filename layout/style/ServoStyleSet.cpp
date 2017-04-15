@@ -420,18 +420,26 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
 }
 
 already_AddRefed<nsStyleContext>
-ServoStyleSet::ResolveTransientStyle(Element* aElement, CSSPseudoElementType aType)
+ServoStyleSet::ResolveTransientStyle(Element* aElement,
+                                     nsIAtom* aPseudoTag,
+                                     CSSPseudoElementType aPseudoType)
 {
-  nsIAtom* pseudoTag = nullptr;
-  if (aType != CSSPseudoElementType::NotPseudo) {
-    pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
-  }
-
   RefPtr<ServoComputedValues> computedValues =
-    ResolveStyleLazily(aElement, pseudoTag);
+    ResolveTransientServoStyle(aElement, aPseudoTag);
 
-  return GetContext(computedValues.forget(), nullptr, pseudoTag, aType,
-                    nullptr);
+  return GetContext(computedValues.forget(),
+                    nullptr,
+                    aPseudoTag,
+                    aPseudoType, nullptr);
+}
+
+already_AddRefed<ServoComputedValues>
+ServoStyleSet::ResolveTransientServoStyle(Element* aElement,
+                                          nsIAtom* aPseudoTag)
+{
+  PreTraverseSync();
+
+  return ResolveStyleLazily(aElement, aPseudoTag);
 }
 
 // aFlags is an nsStyleSet flags bitfield
@@ -914,6 +922,16 @@ ServoStyleSet::AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray)
 {
   Servo_StyleSet_GetFontFaceRules(mRawSet.get(), &aArray);
   return true;
+}
+
+already_AddRefed<ServoComputedValues>
+ServoStyleSet::ResolveForDeclarations(
+  ServoComputedValuesBorrowedOrNull aParentOrNull,
+  RawServoDeclarationBlockBorrowed aDeclarations)
+{
+  return Servo_StyleSet_ResolveForDeclarations(mRawSet.get(),
+                                               aParentOrNull,
+                                               aDeclarations).Consume();
 }
 
 bool ServoStyleSet::sInServoTraversal = false;

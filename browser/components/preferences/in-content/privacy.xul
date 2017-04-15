@@ -97,7 +97,14 @@
               name="pref.privacy.disable_button.view_passwords_exceptions"
               type="bool"/>
 
-  <!-- Certificates tab -->
+  <!-- Certificates tab
+   * security.default_personal_cert
+     - a string:
+         "Select Automatically"   select a certificate automatically when a site
+                                  requests one
+         "Ask Every Time"         present a dialog to the user so he can select
+                                  the certificate to use on a site which
+                                  requests one -->
   <preference id="security.default_personal_cert"
               name="security.default_personal_cert"
               type="string"/>
@@ -141,7 +148,7 @@
               name="browser.safebrowsing.downloads.remote.block_uncommon"
               type="bool"/>
 
-   <!-- Network tab -->
+  <!-- Network tab -->
   <preference id="browser.cache.disk.capacity"
               name="browser.cache.disk.capacity"
               type="int"/>
@@ -153,6 +160,13 @@
               name="browser.cache.disk.smart_size.enabled"
               inverted="true"
               type="bool"/>
+
+  <!-- Data Choices tab -->
+#ifdef MOZ_CRASHREPORTER
+  <preference id="browser.crashReports.unsubmittedCheck.autoSubmit"
+              name="browser.crashReports.unsubmittedCheck.autoSubmit"
+              type="bool"/>
+#endif
 
 </preferences>
 
@@ -173,7 +187,7 @@
   <hbox align="center">
     <label id="historyModeLabel"
            control="historyMode"
-           accesskey="&historyHeader.pre.accesskey;">&historyHeader.pre.label;
+           accesskey="&historyHeader2.pre.accesskey;">&historyHeader2.pre.label;
     </label>
     <menulist id="historyMode">
       <menupopup>
@@ -333,14 +347,20 @@
 
 <!-- Tracking -->
 <groupbox id="trackingGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&trackingProtectionHeader2.label;</label></caption>
   <vbox id="trackingprotectionbox" hidden="true">
     <hbox align="start">
-      <vbox>
-        <caption><label>&trackingProtectionHeader2.label;
+      <vbox flex="1">
+        <description>
+          &trackingProtection.description;
           <label id="trackingProtectionLearnMore" class="learnMore text-link"
                  value="&trackingProtectionLearnMore.label;"/>
-        </label></caption>
-        <radiogroup id="trackingProtectionRadioGroup">
+        </description>
+        <description id="trackingProtectionDesc"
+                     control="trackingProtectionRadioGroup">
+          &trackingProtection.radioGroupLabel;
+        </description>
+        <radiogroup id="trackingProtectionRadioGroup" aria-labelledby="trackingProtectionDesc">
           <radio value="always"
                  label="&trackingProtectionAlways.label;"
                  accesskey="&trackingProtectionAlways.accesskey;"/>
@@ -352,8 +372,8 @@
                  accesskey="&trackingProtectionNever.accesskey;"/>
         </radiogroup>
       </vbox>
-      <spacer flex="1" />
-      <vbox>
+      <spacer flex="1"/>
+      <vbox id="trackingProtectionAdvancedSettings">
         <button id="trackingProtectionExceptions"
                 label="&trackingProtectionExceptions.label;"
                 accesskey="&trackingProtectionExceptions.accesskey;"
@@ -452,7 +472,7 @@
           data-category="panePrivacy"
           hidden="true">
   <caption><label>&locationBar.label;</label></caption>
-  <label id="locationBarSuggestionLabel">&locbar.suggest.label;</label>
+  <label id="locationBarSuggestionLabel">&locbar.suggest2.label;</label>
   <checkbox id="historySuggestion" label="&locbar.history.label;"
             accesskey="&locbar.history.accesskey;"
             preference="browser.urlbar.suggest.history"/>
@@ -463,7 +483,7 @@
             accesskey="&locbar.openpage.accesskey;"
             preference="browser.urlbar.suggest.openpage"/>
   <label class="text-link" onclick="gotoPref('general')">
-    &suggestionSettings.label;
+    &suggestionSettings2.label;
   </label>
 </groupbox>
 
@@ -500,9 +520,9 @@
 </groupbox>
 
 <!-- Certificates -->
-<groupbox id="certSelection" align="start" data-category="panePrivacy" hidden="true">
+<groupbox id="certSelection" data-category="panePrivacy" hidden="true">
   <caption><label>&certificateTab.label;</label></caption>
-  <description id="CertSelectionDesc" control="certSelection">&certPersonal.description;</description>
+  <description id="CertSelectionDesc" control="certSelection">&certPersonal2.description;</description>
 
   <!--
     The values on these radio buttons may look like l10n issues, but
@@ -514,31 +534,33 @@
               preference="security.default_personal_cert"
               aria-labelledby="CertSelectionDesc">
     <radio label="&selectCerts.auto;"
-            accesskey="&selectCerts.auto.accesskey;"
-            value="Select Automatically"/>
+           accesskey="&selectCerts.auto.accesskey;"
+           value="Select Automatically"/>
     <radio label="&selectCerts.ask;"
-            accesskey="&selectCerts.ask.accesskey;"
-            value="Ask Every Time"/>
+           accesskey="&selectCerts.ask.accesskey;"
+           value="Ask Every Time"/>
   </radiogroup>
-  <checkbox id="enableOCSP"
-            label="&enableOCSP.label;"
-            accesskey="&enableOCSP.accesskey;"
-            onsyncfrompreference="return gPrivacyPane.readEnableOCSP();"
-            onsynctopreference="return gPrivacyPane.writeEnableOCSP();"
-            preference="security.OCSP.enabled"/>
-  <separator/>
-  <hbox>
-    <button id="viewCertificatesButton"
-            flex="1"
-            label="&viewCerts.label;"
-            accesskey="&viewCerts.accesskey;"
-            preference="security.disable_button.openCertManager"/>
-    <button id="viewSecurityDevicesButton"
-            flex="1"
-            label="&viewSecurityDevices.label;"
-            accesskey="&viewSecurityDevices.accesskey;"
-            preference="security.disable_button.openDeviceManager"/>
-    <hbox flex="10"/>
+  <hbox align="start">
+    <checkbox id="enableOCSP"
+              label="&enableOCSP.label;"
+              accesskey="&enableOCSP.accesskey;"
+              flex="1"
+              onsyncfrompreference="return gPrivacyPane.readEnableOCSP();"
+              onsynctopreference="return gPrivacyPane.writeEnableOCSP();"
+              preference="security.OCSP.enabled"/>
+    <spacer flex="1"/>
+    <vbox>
+      <button id="viewCertificatesButton"
+              flex="1"
+              label="&viewCerts.label;"
+              accesskey="&viewCerts.accesskey;"
+              preference="security.disable_button.openCertManager"/>
+      <button id="viewSecurityDevicesButton"
+              flex="1"
+              label="&viewSecurityDevices.label;"
+              accesskey="&viewSecurityDevices.accesskey;"
+              preference="security.disable_button.openDeviceManager"/>
+    </vbox>
   </hbox>
 </groupbox>
 
@@ -674,3 +696,45 @@
             accesskey="&siteDataSettings.accesskey;"/>
   </vbox>
 </groupbox>
+
+<!-- Data Choices -->
+#ifdef MOZ_TELEMETRY_REPORTING
+<groupbox id="historyGroup" data-category="panePrivacy" data-subcategory="reports" hidden="true">
+<caption><label>&reports.label;</label></caption>
+  <hbox align="center">
+    <checkbox id="submitHealthReportBox" label="&enableHealthReport.label;"
+              accesskey="&enableHealthReport.accesskey;"/>
+    <label id="FHRLearnMore"
+           class="learnMore text-link">&healthReportLearnMore.label;</label>
+  </hbox>
+  <description class="indent">&healthReportDesc.label;</description>
+  <vbox class="indent">
+    <hbox align="center">
+      <checkbox id="submitTelemetryBox" preference="toolkit.telemetry.enabled"
+                label="&enableTelemetryData.label;"
+                accesskey="&enableTelemetryData.accesskey;"/>
+      <label id="telemetryLearnMore"
+             class="learnMore text-link">&telemetryLearnMore.label;</label>
+    </hbox>
+    <description id="telemetryDataDesc"
+                 class="indent">&telemetryDesc.label;</description>
+  </vbox>
+</groupbox>
+#endif
+
+#ifdef MOZ_DATA_REPORTING
+#ifdef MOZ_CRASHREPORTER
+<groupbox id="crashReporterGroup" data-category="panePrivacy" data-subcategory="reports" hidden="true">
+  <hbox align="center">
+    <checkbox id="automaticallySubmitCrashesBox"
+              preference="browser.crashReports.unsubmittedCheck.autoSubmit"
+              label="&alwaysSubmitCrashReports.label;"
+              accesskey="&alwaysSubmitCrashReports.accesskey;"/>
+    <label id="crashReporterLearnMore"
+           class="learnMore text-link">&crashReporterLearnMore.label;</label>
+  </hbox>
+  <description class="indent">&crashReporterDesc2.label;</description>
+</groupbox>
+
+#endif
+#endif

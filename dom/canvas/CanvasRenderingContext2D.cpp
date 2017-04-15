@@ -26,6 +26,7 @@
 #include "nsError.h"
 
 #include "nsCSSParser.h"
+#include "nsCSSPseudoElements.h"
 #include "mozilla/css/StyleRule.h"
 #include "mozilla/css/Declaration.h"
 #include "nsComputedDOMStyle.h"
@@ -95,6 +96,7 @@
 #include "mozilla/layers/PersistentBufferProvider.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -2700,15 +2702,6 @@ GetFontParentStyleContext(Element* aElement, nsIPresShell* aPresShell,
 
   // otherwise inherit from default (10px sans-serif)
 
-  nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
-  if (!styleSet) {
-    // XXXheycam ServoStyleSets do not support resolving style from a list of
-    // rules yet.
-    NS_ERROR("stylo: cannot resolve style for canvas from a ServoStyleSet yet");
-    aError.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
   bool changed;
   RefPtr<css::Declaration> parentRule =
     CreateFontDeclaration(NS_LITERAL_STRING("10px sans-serif"),
@@ -2716,6 +2709,10 @@ GetFontParentStyleContext(Element* aElement, nsIPresShell* aPresShell,
 
   nsTArray<nsCOMPtr<nsIStyleRule>> parentRules;
   parentRules.AppendElement(parentRule);
+
+  nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
+  MOZ_RELEASE_ASSERT(styleSet);
+
   RefPtr<nsStyleContext> result =
     styleSet->ResolveStyleForRules(nullptr, parentRules);
 
@@ -2744,15 +2741,6 @@ GetFontStyleContext(Element* aElement, const nsAString& aFont,
                     nsAString& aOutUsedFont,
                     ErrorResult& aError)
 {
-  nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
-  if (!styleSet) {
-    // XXXheycam ServoStyleSets do not support resolving style from a list of
-    // rules yet.
-    NS_ERROR("stylo: cannot resolve style for canvas from a ServoStyleSet yet");
-    aError.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
   bool fontParsedSuccessfully = false;
   RefPtr<css::Declaration> decl =
     CreateFontDeclaration(aFont, aPresShell->GetDocument(),
@@ -2792,6 +2780,9 @@ GetFontStyleContext(Element* aElement, const nsAString& aFont,
   // add a rule to prevent text zoom from affecting the style
   rules.AppendElement(new nsDisableTextZoomStyleRule);
 
+  nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
+  MOZ_RELEASE_ASSERT(styleSet);
+
   RefPtr<nsStyleContext> sc =
     styleSet->ResolveStyleForRules(parentContext, rules);
 
@@ -2800,6 +2791,112 @@ GetFontStyleContext(Element* aElement, const nsAString& aFont,
   // the spec required font sizes be converted to pixels, but that no
   // longer seems to be required.)
   decl->GetPropertyValueByID(eCSSProperty_font, aOutUsedFont);
+
+  return sc.forget();
+}
+
+static already_AddRefed<RawServoDeclarationBlock>
+CreateDeclarationForServo(nsCSSPropertyID aProperty,
+                          const nsAString& aPropertyValue,
+                          nsIDocument* aDocument)
+{
+  RefPtr<URLExtraData> data =
+    new URLExtraData(aDocument->GetDocBaseURI(),
+                     aDocument->GetDocumentURI(),
+                     aDocument->NodePrincipal());
+
+  NS_ConvertUTF16toUTF8 value(aPropertyValue);
+
+  RefPtr<RawServoDeclarationBlock> servoDeclarations =
+    Servo_ParseProperty(aProperty, &value, data).Consume();
+
+  if (!servoDeclarations) {
+    // We got a syntax error.  The spec says this value must be ignored.
+    return nullptr;
+  }
+
+  // From canvas spec, force to set line-height property to 'normal' font
+  // property.
+  if (aProperty == eCSSProperty_font) {
+    const nsCString normalString = NS_LITERAL_CSTRING("normal");
+    Servo_DeclarationBlock_SetPropertyById(servoDeclarations,
+                                           eCSSProperty_line_height,
+                                           &normalString,
+                                           false,
+                                           data,
+                                           LengthParsingMode::Default);
+  }
+
+  return servoDeclarations.forget();
+}
+
+static already_AddRefed<RawServoDeclarationBlock>
+CreateFontDeclarationForServo(const nsAString& aFont,
+                              nsIDocument* aDocument)
+{
+  return CreateDeclarationForServo(eCSSProperty_font, aFont, aDocument);
+}
+
+static already_AddRefed<ServoComputedValues>
+GetFontStyleForServo(Element* aElement, const nsAString& aFont,
+                     nsIPresShell* aPresShell,
+                     nsAString& aOutUsedFont,
+                     ErrorResult& aError)
+{
+  MOZ_ASSERT(aPresShell->StyleSet()->IsServo());
+
+  RefPtr<RawServoDeclarationBlock> declarations =
+    CreateFontDeclarationForServo(aFont, aPresShell->GetDocument());
+  if (!declarations) {
+    // We got a syntax error.  The spec says this value must be ignored.
+    return nullptr;
+  }
+
+  // In addition to unparseable values, the spec says we need to reject
+  // 'inherit' and 'initial'. The easiest way to check for this is to look
+  // at font-size-adjust, which the font shorthand resets to 'none'.
+  if (Servo_DeclarationBlock_HasCSSWideKeyword(declarations,
+                                               eCSSProperty_font_size_adjust)) {
+    return nullptr;
+  }
+
+  ServoStyleSet* styleSet = aPresShell->StyleSet()->AsServo();
+
+  RefPtr<ServoComputedValues> parentStyle;
+  // have to get a parent style context for inherit-like relative
+  // values (2em, bolder, etc.)
+  if (aElement && aElement->IsInUncomposedDoc()) {
+    // Inherit from the canvas element.
+    aPresShell->FlushPendingNotifications(FlushType::Style);
+    // We need to use ResolveTransientServoStyle, which involves traversal,
+    // instead of ResolveServoStyle() because we need up-to-date style even if
+    // the canvas element is display:none.
+    parentStyle = styleSet->ResolveTransientServoStyle(aElement, nullptr);
+  } else {
+    RefPtr<RawServoDeclarationBlock> declarations =
+      CreateFontDeclarationForServo(NS_LITERAL_STRING("10px sans-serif"),
+                                    aPresShell->GetDocument());
+    MOZ_ASSERT(declarations);
+
+    parentStyle = aPresShell->StyleSet()->AsServo()->
+      ResolveForDeclarations(nullptr, declarations);
+  }
+
+  MOZ_RELEASE_ASSERT(parentStyle, "Should have a valid parent style");
+
+  MOZ_ASSERT(!aPresShell->IsDestroying(),
+             "GetFontParentStyleContext should have returned an error if the presshell is being destroyed.");
+
+  RefPtr<ServoComputedValues> sc =
+    styleSet->ResolveForDeclarations(parentStyle, declarations);
+
+  // The font getter is required to be reserialized based on what we
+  // parsed (including having line-height removed).  (Older drafts of
+  // the spec required font sizes be converted to pixels, but that no
+  // longer seems to be required.)
+  Servo_DeclarationBlock_SerializeOneValue(declarations,
+                                           eCSSProperty_font,
+                                           &aOutUsedFont);
 
   return sc.forget();
 }
@@ -2816,20 +2913,11 @@ CreateFilterDeclaration(const nsAString& aFilter,
 }
 
 static already_AddRefed<nsStyleContext>
-ResolveStyleForFilter(const nsAString& aFilterString,
-                      nsIPresShell* aPresShell,
-                      nsStyleContext* aParentContext,
-                      ErrorResult& aError)
+ResolveFilterStyle(const nsAString& aFilterString,
+                   nsIPresShell* aPresShell,
+                   nsStyleContext* aParentContext,
+                   ErrorResult& aError)
 {
-  nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
-  if (!styleSet) {
-    // XXXheycam ServoStyleSets do not support resolving style from a list of
-    // rules yet.
-    NS_ERROR("stylo: cannot resolve style for canvas from a ServoStyleSet yet");
-    aError.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
   nsIDocument* document = aPresShell->GetDocument();
   bool filterChanged = false;
   RefPtr<css::Declaration> decl =
@@ -2849,10 +2937,49 @@ ResolveStyleForFilter(const nsAString& aFilterString,
   nsTArray<nsCOMPtr<nsIStyleRule>> rules;
   rules.AppendElement(decl);
 
+  nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
+  MOZ_RELEASE_ASSERT(styleSet);
+
   RefPtr<nsStyleContext> sc =
     styleSet->ResolveStyleForRules(aParentContext, rules);
 
   return sc.forget();
+}
+
+static already_AddRefed<RawServoDeclarationBlock>
+CreateFilterDeclarationForServo(const nsAString& aFilter,
+                                nsIDocument* aDocument)
+{
+  return CreateDeclarationForServo(eCSSProperty_filter, aFilter, aDocument);
+}
+
+static already_AddRefed<ServoComputedValues>
+ResolveFilterStyleForServo(const nsAString& aFilterString,
+                           const ServoComputedValues* aParentStyle,
+                           nsIPresShell* aPresShell,
+                           ErrorResult& aError)
+{
+  MOZ_ASSERT(aPresShell->StyleSet()->IsServo());
+
+  RefPtr<RawServoDeclarationBlock> declarations =
+    CreateFilterDeclarationForServo(aFilterString, aPresShell->GetDocument());
+  if (!declarations) {
+    // Refuse to accept the filter, but do not throw an error.
+    return nullptr;
+  }
+
+  // In addition to unparseable values, the spec says we need to reject
+  // 'inherit' and 'initial'.
+  if (Servo_DeclarationBlock_HasCSSWideKeyword(declarations,
+                                               eCSSProperty_filter)) {
+    return nullptr;
+  }
+
+  ServoStyleSet* styleSet = aPresShell->StyleSet()->AsServo();
+  RefPtr<ServoComputedValues> computedValues =
+    styleSet->ResolveForDeclarations(aParentStyle, declarations);
+
+  return computedValues.forget();
 }
 
 bool
@@ -2873,22 +3000,49 @@ CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
   }
 
   nsString usedFont;
-  RefPtr<nsStyleContext> parentContext =
-    GetFontStyleContext(mCanvasElement, GetFont(),
-                        presShell, usedFont, aError);
-  if (!parentContext) {
-    aError.Throw(NS_ERROR_FAILURE);
+  if (presShell->StyleSet()->IsGecko()) {
+    RefPtr<nsStyleContext> parentContext =
+      GetFontStyleContext(mCanvasElement, GetFont(),
+                          presShell, usedFont, aError);
+    if (!parentContext) {
+      aError.Throw(NS_ERROR_FAILURE);
+      return false;
+    }
+    RefPtr<nsStyleContext> sc =
+      ResolveFilterStyle(aString, presShell, parentContext, aError);
+
+    if (!sc) {
+      return false;
+    }
+    aFilterChain = sc->StyleEffects()->mFilters;
+    return true;
+  }
+
+  // For stylo
+  MOZ_ASSERT(presShell->StyleSet()->IsServo());
+
+  RefPtr<ServoComputedValues> parentStyle =
+    GetFontStyleForServo(mCanvasElement,
+                         GetFont(),
+                         presShell,
+                         usedFont,
+                         aError);
+  if (!parentStyle) {
     return false;
   }
 
-  RefPtr<nsStyleContext> sc =
-    ResolveStyleForFilter(aString, presShell, parentContext, aError);
-
-  if (!sc) {
-    return false;
+  RefPtr<ServoComputedValues> computedValues =
+    ResolveFilterStyleForServo(aString,
+                               parentStyle,
+                               presShell,
+                               aError);
+  if (!computedValues) {
+     return false;
   }
 
-  aFilterChain = sc->StyleEffects()->mFilters;
+  const nsStyleEffects* effects = Servo_GetStyleEffects(computedValues);
+  // XXX: This mFilters is a one shot object, we probably could avoid copying.
+  aFilterChain = effects->mFilters;
   return true;
 }
 
@@ -3794,14 +3948,31 @@ CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
     return false;
   }
 
+  RefPtr<nsStyleContext> sc;
+  RefPtr<ServoComputedValues> computedValues;
   nsString usedFont;
-  RefPtr<nsStyleContext> sc =
-    GetFontStyleContext(mCanvasElement, aFont, presShell, usedFont, aError);
-  if (!sc) {
-    return false;
+  const nsStyleFont* fontStyle;
+  if (presShell->StyleSet()->IsServo()) {
+    computedValues = GetFontStyleForServo(mCanvasElement,
+                                          aFont,
+                                          presShell,
+                                          usedFont,
+                                          aError);
+    if (!computedValues) {
+      return false;
+    }
+    fontStyle = Servo_GetStyleFont(computedValues);
+  } else {
+    sc = GetFontStyleContext(mCanvasElement,
+                             aFont,
+                             presShell,
+                             usedFont,
+                             aError);
+    if (!sc) {
+      return false;
+    }
+    fontStyle = sc->StyleFont();
   }
-
-  const nsStyleFont* fontStyle = sc->StyleFont();
 
   nsPresContext* c = presShell->GetPresContext();
 
@@ -3809,7 +3980,8 @@ CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
   // font preference (fontStyle->mFont.size) in favor of the computed
   // size (fontStyle->mSize).  See
   // https://bugzilla.mozilla.org/show_bug.cgi?id=698652.
-  MOZ_ASSERT(!fontStyle->mAllowZoom,
+  // FIXME: Nobody initializes mAllowZoom for servo?
+  MOZ_ASSERT(presShell->StyleSet()->IsServo() || !fontStyle->mAllowZoom,
              "expected text zoom to be disabled on this nsStyleFont");
   nsFont resizedFont(fontStyle->mFont);
   // Create a font group working in units of CSS pixels instead of the usual

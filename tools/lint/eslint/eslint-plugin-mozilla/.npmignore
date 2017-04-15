@@ -1,0 +1,5 @@
+.eslintrc.js
+.npmignore
+node_modules
+scripts
+tests
