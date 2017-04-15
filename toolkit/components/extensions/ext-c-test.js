@@ -1,9 +1,5 @@
 "use strict";
 
-var {
-  SingletonEventManager,
-} = ExtensionUtils;
-
 /**
  * Checks whether the given error matches the given expectations.
  *

@@ -145,9 +145,9 @@ var observer = {
   },
 };
 
-Services.obs.addObserver(observer, "earlyformsubmit", false);
+Services.obs.addObserver(observer, "earlyformsubmit");
 var prefBranch = Services.prefs.getBranch("signon.");
-prefBranch.addObserver("", observer.onPrefChange, false);
+prefBranch.addObserver("", observer.onPrefChange);
 
 observer.onPrefChange(); // read initial values
 
@@ -1275,7 +1275,7 @@ var LoginManagerContent = {
         usernameField.addEventListener("mousedown", observer);
       }
 
-      Services.obs.notifyObservers(form.rootElement, "passwordmgr-processed-form", null);
+      Services.obs.notifyObservers(form.rootElement, "passwordmgr-processed-form");
     }
   },
 

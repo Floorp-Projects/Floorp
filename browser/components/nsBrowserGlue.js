@@ -305,7 +305,7 @@ BrowserGlue.prototype = {
           this._initPlaces(false);
         } else if (data == "smart-bookmarks-init") {
           this.ensurePlacesDefaultQueriesInitialized().then(() => {
-            Services.obs.notifyObservers(null, "test-smart-bookmarks-done", null);
+            Services.obs.notifyObservers(null, "test-smart-bookmarks-done");
           });
         } else if (data == "mock-fxaccounts") {
           Object.defineProperty(this, "fxAccounts", {
@@ -391,38 +391,38 @@ BrowserGlue.prototype = {
   // initialization (called on application startup)
   _init: function BG__init() {
     let os = Services.obs;
-    os.addObserver(this, "notifications-open-settings", false);
-    os.addObserver(this, "prefservice:after-app-defaults", false);
-    os.addObserver(this, "final-ui-startup", false);
-    os.addObserver(this, "browser-delayed-startup-finished", false);
-    os.addObserver(this, "sessionstore-windows-restored", false);
-    os.addObserver(this, "browser:purge-session-history", false);
-    os.addObserver(this, "quit-application-requested", false);
-    os.addObserver(this, "quit-application-granted", false);
+    os.addObserver(this, "notifications-open-settings");
+    os.addObserver(this, "prefservice:after-app-defaults");
+    os.addObserver(this, "final-ui-startup");
+    os.addObserver(this, "browser-delayed-startup-finished");
+    os.addObserver(this, "sessionstore-windows-restored");
+    os.addObserver(this, "browser:purge-session-history");
+    os.addObserver(this, "quit-application-requested");
+    os.addObserver(this, "quit-application-granted");
     if (OBSERVE_LASTWINDOW_CLOSE_TOPICS) {
-      os.addObserver(this, "browser-lastwindow-close-requested", false);
-      os.addObserver(this, "browser-lastwindow-close-granted", false);
+      os.addObserver(this, "browser-lastwindow-close-requested");
+      os.addObserver(this, "browser-lastwindow-close-granted");
     }
-    os.addObserver(this, "weave:service:ready", false);
-    os.addObserver(this, "fxaccounts:onverified", false);
-    os.addObserver(this, "fxaccounts:device_connected", false);
-    os.addObserver(this, "fxaccounts:device_disconnected", false);
-    os.addObserver(this, "weave:engine:clients:display-uris", false);
-    os.addObserver(this, "session-save", false);
-    os.addObserver(this, "places-init-complete", false);
+    os.addObserver(this, "weave:service:ready");
+    os.addObserver(this, "fxaccounts:onverified");
+    os.addObserver(this, "fxaccounts:device_connected");
+    os.addObserver(this, "fxaccounts:device_disconnected");
+    os.addObserver(this, "weave:engine:clients:display-uris");
+    os.addObserver(this, "session-save");
+    os.addObserver(this, "places-init-complete");
     this._isPlacesInitObserver = true;
-    os.addObserver(this, "places-database-locked", false);
+    os.addObserver(this, "places-database-locked");
     this._isPlacesLockedObserver = true;
-    os.addObserver(this, "distribution-customization-complete", false);
-    os.addObserver(this, "handle-xul-text-link", false);
-    os.addObserver(this, "profile-before-change", false);
+    os.addObserver(this, "distribution-customization-complete");
+    os.addObserver(this, "handle-xul-text-link");
+    os.addObserver(this, "profile-before-change");
     if (AppConstants.MOZ_TELEMETRY_REPORTING) {
-      os.addObserver(this, "keyword-search", false);
+      os.addObserver(this, "keyword-search");
     }
-    os.addObserver(this, "browser-search-engine-modified", false);
-    os.addObserver(this, "restart-in-safe-mode", false);
-    os.addObserver(this, "flash-plugin-hang", false);
-    os.addObserver(this, "xpi-signature-changed", false);
+    os.addObserver(this, "browser-search-engine-modified");
+    os.addObserver(this, "restart-in-safe-mode");
+    os.addObserver(this, "flash-plugin-hang");
+    os.addObserver(this, "xpi-signature-changed");
 
     this._flashHangCount = 0;
     this._firstWindowReady = new Promise(resolve => this._firstWindowLoaded = resolve);
@@ -561,7 +561,7 @@ BrowserGlue.prototype = {
       UnsubmittedCrashHandler.init();
     }
 
-    Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
+    Services.obs.notifyObservers(null, "browser-ui-startup-complete");
   },
 
   _checkForOldBuildUpdates() {
@@ -1033,9 +1033,9 @@ BrowserGlue.prototype = {
       } catch (ex) { /* Don't break the default prompt if telemetry is broken. */ }
 
       if (willPrompt) {
-        Services.tm.mainThread.dispatch(function() {
+        Services.tm.dispatchToMainThread(function() {
           DefaultBrowserCheck.prompt(RecentWindow.getMostRecentBrowserWindow());
-        }, Ci.nsIThread.DISPATCH_NORMAL);
+        });
       }
     }
 
@@ -1495,7 +1495,7 @@ BrowserGlue.prototype = {
     }).then(() => {
       // NB: deliberately after the catch so that we always do this, even if
       // we threw halfway through initializing in the Task above.
-      Services.obs.notifyObservers(null, "places-browser-init-complete", "");
+      Services.obs.notifyObservers(null, "places-browser-init-complete");
     });
   },
 

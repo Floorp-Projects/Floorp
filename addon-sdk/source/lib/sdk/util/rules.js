@@ -8,8 +8,8 @@ module.metadata = {
 };
 
 const { Class } = require('../core/heritage');
-const { MatchPattern } = require('./match-pattern');
-const { emit } = require('../event/core');
+lazyRequire(this, './match-pattern', "MatchPattern");
+lazyRequire(this, '../event/core', "emit");
 const { EventTarget } = require('../event/target');
 const { List, addListItem, removeListItem } = require('./list');
 

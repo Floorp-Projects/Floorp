@@ -14,7 +14,7 @@ const ConsoleObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
   init() {
-    Services.obs.addObserver(this, "console-api-log-event", false);
+    Services.obs.addObserver(this, "console-api-log-event");
   },
 
   uninit() {

@@ -65,7 +65,7 @@ add_task(function* test_local_cache_invalidation() {
   extension.sendMessage("set-initial");
   yield extension.awaitMessage("set-initial-done");
 
-  Services.obs.notifyObservers(null, "extension-invalidate-storage-cache", "");
+  Services.obs.notifyObservers(null, "extension-invalidate-storage-cache");
 
   extension.sendMessage("check");
   yield extension.awaitMessage("check-done");

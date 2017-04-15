@@ -12,10 +12,11 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/ExtensionChild.jsm");
 Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionChild",
+                                  "resource://gre/modules/ExtensionChild.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
                                   "resource://gre/modules/Schemas.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "ProxyService",
@@ -37,10 +38,6 @@ const {
   LocalAPIImplementation,
   SchemaAPIManager,
 } = ExtensionCommon;
-
-const {
-  Messenger,
-} = ExtensionChild;
 
 const PROXY_TYPES = Object.freeze({
   DIRECT: "direct",
@@ -277,7 +274,7 @@ class ProxyScriptInjectionContext {
 defineLazyGetter(ProxyScriptContext.prototype, "messenger", function() {
   let sender = {id: this.extension.id, frameId: this.frameId, url: this.url};
   let filter = {extensionId: this.extension.id, toProxyScript: true};
-  return new Messenger(this, [this.messageManager], sender, filter);
+  return new ExtensionChild.Messenger(this, [this.messageManager], sender, filter);
 });
 
 let proxyScriptAPIManager = new ProxyScriptAPIManager();

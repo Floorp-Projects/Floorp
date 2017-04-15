@@ -14,7 +14,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
 
 var {
   ExtensionError,
-  SingletonEventManager,
   defineLazyGetter,
 } = ExtensionUtils;
 
@@ -394,9 +393,9 @@ class TabTracker extends TabTrackerBase {
     // `tabs.onRemoved.addListener`, then the tab would be closed before the
     // event listener is registered. To make sure that the event listener is
     // notified, we dispatch `tabs.onRemoved` asynchronously.
-    Services.tm.mainThread.dispatch(() => {
+    Services.tm.dispatchToMainThread(() => {
       this.emit("tab-removed", {nativeTab, tabId, windowId, isWindowClosing});
-    }, Ci.nsIThread.DISPATCH_NORMAL);
+    });
   }
 
   getBrowserData(browser) {

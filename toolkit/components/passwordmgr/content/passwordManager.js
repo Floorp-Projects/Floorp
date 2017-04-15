@@ -53,7 +53,7 @@ let signonReloadDisplay = {
           }
           break;
       }
-      Services.obs.notifyObservers(null, "passwordmgr-dialog-updated", null);
+      Services.obs.notifyObservers(null, "passwordmgr-dialog-updated");
     }
   }
 };
@@ -67,7 +67,7 @@ let dateAndTimeFormatter = Services.intl.createDateTimeFormat(undefined,
 
 function Startup() {
   // be prepared to reload the display if anything changes
-  Services.obs.addObserver(signonReloadDisplay, "passwordmgr-storage-changed", false);
+  Services.obs.addObserver(signonReloadDisplay, "passwordmgr-storage-changed");
 
   signonsTree = document.getElementById("signonsTree");
   kSignonBundle = document.getElementById("signonBundle");
@@ -450,7 +450,7 @@ function TogglePasswordVisible() {
 
   // Notify observers that the password visibility toggling is
   // completed.  (Mostly useful for tests)
-  Services.obs.notifyObservers(null, "passwordmgr-password-toggle-complete", null);
+  Services.obs.notifyObservers(null, "passwordmgr-password-toggle-complete");
   Services.telemetry.getHistogramById("PWMGR_MANAGE_VISIBILITY_TOGGLED").add(showingPasswords);
 }
 

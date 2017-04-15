@@ -203,7 +203,7 @@ function restartApp() {
            getService(Ci.nsIObserverService);
   var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].
                    createInstance(Ci.nsISupportsPRBool);
-  os.notifyObservers(cancelQuit, "quit-application-requested", null);
+  os.notifyObservers(cancelQuit, "quit-application-requested");
 
   // Something aborted the quit process.
   if (cancelQuit.data)
@@ -281,14 +281,14 @@ function parseRegExp(aStr) {
  */
 
 function Blocklist() {
-  Services.obs.addObserver(this, "xpcom-shutdown", false);
-  Services.obs.addObserver(this, "sessionstore-windows-restored", false);
+  Services.obs.addObserver(this, "xpcom-shutdown");
+  Services.obs.addObserver(this, "sessionstore-windows-restored");
   gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
   gBlocklistEnabled = getPref("getBoolPref", PREF_BLOCKLIST_ENABLED, true);
   gBlocklistLevel = Math.min(getPref("getIntPref", PREF_BLOCKLIST_LEVEL, DEFAULT_LEVEL),
                                      MAX_BLOCK_LEVEL);
-  gPref.addObserver("extensions.blocklist.", this, false);
-  gPref.addObserver(PREF_EM_LOGGING_ENABLED, this, false);
+  gPref.addObserver("extensions.blocklist.", this);
+  gPref.addObserver(PREF_EM_LOGGING_ENABLED, this);
   this.wrappedJSObject = this;
   // requests from child processes come in here, see receiveMessage.
   Services.ppmm.addMessageListener("Blocklist:getPluginBlocklistState", this);
@@ -360,7 +360,7 @@ Blocklist.prototype = {
                                             aMsg.data.appVersion,
                                             aMsg.data.toolkitVersion);
       case "Blocklist:content-blocklist-updated":
-        Services.obs.notifyObservers(null, "content-blocklist-updated", null);
+        Services.obs.notifyObservers(null, "content-blocklist-updated");
         break;
       default:
         throw new Error("Unknown blocklist message received from content: " + aMsg.name);
@@ -1294,7 +1294,7 @@ Blocklist.prototype = {
   },
 
   _notifyObserversBlocklistUpdated() {
-    Services.obs.notifyObservers(this, "blocklist-updated", "");
+    Services.obs.notifyObservers(this, "blocklist-updated");
     Services.ppmm.broadcastAsyncMessage("Blocklist:blocklistInvalidated", {});
   },
 
@@ -1458,7 +1458,7 @@ Blocklist.prototype = {
         Services.obs.removeObserver(applyBlocklistChanges, "addon-blocklist-closed");
       }
 
-      Services.obs.addObserver(applyBlocklistChanges, "addon-blocklist-closed", false);
+      Services.obs.addObserver(applyBlocklistChanges, "addon-blocklist-closed");
 
       if (getPref("getBoolPref", PREF_BLOCKLIST_SUPPRESSUI, false)) {
         applyBlocklistChanges();

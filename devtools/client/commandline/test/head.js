@@ -30,7 +30,7 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
       Services.obs.removeObserver(observer, aTopic);
       executeSoon(aCallback);
     }
-  }, "browser-delayed-startup-finished", false);
+  }, "browser-delayed-startup-finished");
 }
 
 /**

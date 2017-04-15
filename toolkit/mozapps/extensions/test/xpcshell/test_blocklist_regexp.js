@@ -37,7 +37,7 @@ var WindowWatcher = {
     });
 
     // run the code after the blocklist is closed
-    Services.obs.notifyObservers(null, "addon-blocklist-closed", null);
+    Services.obs.notifyObservers(null, "addon-blocklist-closed");
 
   },
 
@@ -58,7 +58,7 @@ function load_blocklist(aFile, aCallback) {
     Services.obs.removeObserver(arguments.callee, "blocklist-updated");
 
     do_execute_soon(aCallback);
-  }, "blocklist-updated", false);
+  }, "blocklist-updated");
 
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
                              gPort + "/data/" + aFile);

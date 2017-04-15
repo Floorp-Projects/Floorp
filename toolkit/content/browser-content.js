@@ -656,7 +656,7 @@ var Printing = {
       // The print preview docshell will be in a different TabGroup,
       // so we run it in a separate runnable to avoid touching a
       // different TabGroup in our own runnable.
-      Services.tm.mainThread.dispatch(() => {
+      Services.tm.dispatchToMainThread(() => {
         try {
           docShell.printPreview.printPreview(printSettings, contentWindow, this);
         } catch (error) {
@@ -665,7 +665,7 @@ var Printing = {
           Components.utils.reportError(error);
           notifyEntered(error);
         }
-      }, Ci.nsIThread.DISPATCH_NORMAL);
+      });
     } catch (error) {
       // This might fail if we, for example, attempt to print a XUL document.
       // In that case, we inform the parent to bail out of print preview.
@@ -970,9 +970,9 @@ var AudioPlaybackListener = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
   init() {
-    Services.obs.addObserver(this, "audio-playback", false);
-    Services.obs.addObserver(this, "AudioFocusChanged", false);
-    Services.obs.addObserver(this, "MediaControl", false);
+    Services.obs.addObserver(this, "audio-playback");
+    Services.obs.addObserver(this, "AudioFocusChanged");
+    Services.obs.addObserver(this, "MediaControl");
 
     addMessageListener("AudioPlayback", this);
     addEventListener("unload", () => {

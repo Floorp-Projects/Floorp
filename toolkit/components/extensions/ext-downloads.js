@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
 var {
   ignoreEvent,
   normalizeTime,
-  SingletonEventManager,
   PlatformInfo,
 } = ExtensionUtils;
 

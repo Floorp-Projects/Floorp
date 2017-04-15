@@ -78,9 +78,9 @@ ExperimentsService.prototype = {
     switch (topic) {
       case "profile-after-change":
         if (gExperimentsEnabled) {
-          Services.obs.addObserver(this, "quit-application", false);
-          Services.obs.addObserver(this, "sessionstore-state-finalized", false);
-          Services.obs.addObserver(this, "EM-loaded", false);
+          Services.obs.addObserver(this, "quit-application");
+          Services.obs.addObserver(this, "sessionstore-state-finalized");
+          Services.obs.addObserver(this, "EM-loaded");
 
           if (gActiveExperiment) {
             this._initialized = true;

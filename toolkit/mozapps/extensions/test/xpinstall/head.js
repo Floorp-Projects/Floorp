@@ -106,14 +106,14 @@ var Harness = {
       Services.prefs.setBoolPref(PREF_INSTALL_REQUIRESECUREORIGIN, false);
 
       Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
-      Services.obs.addObserver(this, "addon-install-started", false);
-      Services.obs.addObserver(this, "addon-install-disabled", false);
+      Services.obs.addObserver(this, "addon-install-started");
+      Services.obs.addObserver(this, "addon-install-disabled");
       // XXX this breaks a bunch of stuff, see comment in onInstallCancelled
       // Services.obs.addObserver(this, "addon-install-cancelled", false);
-      Services.obs.addObserver(this, "addon-install-origin-blocked", false);
-      Services.obs.addObserver(this, "addon-install-blocked", false);
-      Services.obs.addObserver(this, "addon-install-failed", false);
-      Services.obs.addObserver(this, "addon-install-complete", false);
+      Services.obs.addObserver(this, "addon-install-origin-blocked");
+      Services.obs.addObserver(this, "addon-install-blocked");
+      Services.obs.addObserver(this, "addon-install-failed");
+      Services.obs.addObserver(this, "addon-install-complete");
 
       AddonManager.addInstallListener(this);
 

@@ -277,7 +277,7 @@ var gEditItemOverlay = {
 
     // Observe changes.
     if (!this._observersAdded) {
-      PlacesUtils.bookmarks.addObserver(this, false);
+      PlacesUtils.bookmarks.addObserver(this);
       window.addEventListener("unload", this);
       this._observersAdded = true;
     }
@@ -817,7 +817,7 @@ var gEditItemOverlay = {
 
       // Auto-show the bookmarks toolbar when adding / moving an item there.
       if (containerId == PlacesUtils.toolbarFolderId) {
-        Services.obs.notifyObservers(null, "autoshow-bookmarks-toolbar", null);
+        Services.obs.notifyObservers(null, "autoshow-bookmarks-toolbar");
       }
     }
 

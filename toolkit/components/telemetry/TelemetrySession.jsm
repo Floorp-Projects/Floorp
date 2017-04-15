@@ -300,7 +300,7 @@ var TelemetryScheduler = {
     this._rescheduleTimeout();
 
     idleService.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
-    Services.obs.addObserver(this, "wake_notification", false);
+    Services.obs.addObserver(this, "wake_notification");
   },
 
   /**
@@ -1416,7 +1416,7 @@ var Impl = {
 
         // Notify that there was a subsession split in the parent process. This is an
         // internal topic and is only meant for internal Telemetry usage.
-        Services.obs.notifyObservers(null, "internal-telemetry-after-subsession-split", null);
+        Services.obs.notifyObservers(null, "internal-telemetry-after-subsession-split");
       }
     }
 
@@ -1443,9 +1443,9 @@ var Impl = {
   attachObservers: function attachObservers() {
     if (!this._initialized)
       return;
-    Services.obs.addObserver(this, "idle-daily", false);
+    Services.obs.addObserver(this, "idle-daily");
     if (Telemetry.canRecordExtended) {
-      Services.obs.addObserver(this, TOPIC_CYCLE_COLLECTOR_BEGIN, false);
+      Services.obs.addObserver(this, TOPIC_CYCLE_COLLECTOR_BEGIN);
     }
   },
 
@@ -1505,11 +1505,11 @@ var Impl = {
       Preferences.set(PREF_PREVIOUS_BUILDID, thisBuildID);
     }
 
-    Services.obs.addObserver(this, "sessionstore-windows-restored", false);
+    Services.obs.addObserver(this, "sessionstore-windows-restored");
     if (AppConstants.platform === "android") {
-      Services.obs.addObserver(this, "application-background", false);
+      Services.obs.addObserver(this, "application-background");
     }
-    Services.obs.addObserver(this, "xul-window-visible", false);
+    Services.obs.addObserver(this, "xul-window-visible");
     this._hasWindowRestoredObserver = true;
     this._hasXulWindowVisibleObserver = true;
 
@@ -1600,7 +1600,7 @@ var Impl = {
       return;
     }
 
-    Services.obs.addObserver(this, "content-child-shutdown", false);
+    Services.obs.addObserver(this, "content-child-shutdown");
     cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_THREAD_HANGS, this);
     cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_USS, this);
 
@@ -1721,7 +1721,7 @@ var Impl = {
             });
 
             // This notification is for testing only.
-            Services.obs.notifyObservers(null, "gather-memory-telemetry-finished", null);
+            Services.obs.notifyObservers(null, "gather-memory-telemetry-finished");
           }
           this._USSFromChildProcesses = undefined;
         }
@@ -1974,12 +1974,12 @@ var Impl = {
     case "idle-daily":
       // Enqueue to main-thread, otherwise components may be inited by the
       // idle-daily category and miss the gather-telemetry notification.
-      Services.tm.mainThread.dispatch((function() {
+      Services.tm.dispatchToMainThread((function() {
         // Notify that data should be gathered now.
         // TODO: We are keeping this behaviour for now but it will be removed as soon as
         // bug 1127907 lands.
-        Services.obs.notifyObservers(null, "gather-telemetry", null);
-      }), Ci.nsIThread.DISPATCH_NORMAL);
+        Services.obs.notifyObservers(null, "gather-telemetry");
+      }));
       break;
 
     case "application-background":

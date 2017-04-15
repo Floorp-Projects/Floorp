@@ -43,7 +43,7 @@ add_task(async function test_permissions() {
   };
 
   Services.prefs.setBoolPref("extensions.webextOptionalPermissionPrompts", true);
-  Services.obs.addObserver(observer, "webextension-optional-permission-prompt", false);
+  Services.obs.addObserver(observer, "webextension-optional-permission-prompt");
   do_register_cleanup(() => {
     Services.obs.removeObserver(observer, "webextension-optional-permission-prompt");
     Services.prefs.clearUserPref("extensions.webextOptionalPermissionPrompts");

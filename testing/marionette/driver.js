@@ -68,7 +68,7 @@ const globalMessageManager = Cc["@mozilla.org/globalmessagemanager;1"]
 var systemMessageListenerReady = false;
 Services.obs.addObserver(function() {
   systemMessageListenerReady = true;
-}, "system-message-listener-ready", false);
+}, "system-message-listener-ready");
 
 this.Context = {
   CHROME: "chrome",
@@ -2777,8 +2777,7 @@ GeckoDriver.prototype.quit = function* (cmd, resp) {
   let quitApplication = new Promise(resolve => {
     Services.obs.addObserver(
         (subject, topic, data) => resolve(data),
-        "quit-application",
-        false);
+        "quit-application");
   });
 
   Services.startup.quit(mode);

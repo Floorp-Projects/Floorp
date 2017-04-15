@@ -15,7 +15,6 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   DefaultWeakMap,
   ExtensionError,
-  SingletonEventManager,
   defineLazyGetter,
 } = ExtensionUtils;
 
@@ -328,9 +327,9 @@ class TabTracker extends TabTrackerBase {
     let windowId = windowTracker.getId(nativeTab.browser.ownerGlobal);
     let tabId = this.getId(nativeTab);
 
-    Services.tm.mainThread.dispatch(() => {
+    Services.tm.dispatchToMainThread(() => {
       this.emit("tab-removed", {nativeTab, tabId, windowId, isWindowClosing});
-    }, Ci.nsIThread.DISPATCH_NORMAL);
+    });
   }
 
   getBrowserData(browser) {

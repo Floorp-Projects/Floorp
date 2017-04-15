@@ -29,5 +29,5 @@ add_task(function* () {
   Services.obs.addObserver(function observer() {
     Services.obs.removeObserver(observer, "profile-before-change");
     check_bookmarks_html();
-  }, "profile-before-change", false);
+  }, "profile-before-change");
 });

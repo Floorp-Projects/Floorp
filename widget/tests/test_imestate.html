@@ -1310,7 +1310,7 @@ function runTestPasswordFieldOnDialog()
   {
     Components.classes["@mozilla.org/observer-service;1"].
                getService(Components.interfaces.nsIObserverService).
-               addObserver(this, "domwindowopened", false);
+               addObserver(this, "domwindowopened");
   }
 
   WindowObserver.prototype = {

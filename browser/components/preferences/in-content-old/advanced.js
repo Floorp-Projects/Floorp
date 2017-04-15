@@ -39,7 +39,7 @@ var gAdvancedPane = {
         Services.prefs.removeObserver("app.update.", this);
       }.bind(this);
       window.addEventListener("unload", onUnload);
-      Services.prefs.addObserver("app.update.", this, false);
+      Services.prefs.addObserver("app.update.", this);
       this.updateReadPrefs();
     }
     if (AppConstants.MOZ_CRASHREPORTER) {
@@ -54,8 +54,8 @@ var gAdvancedPane = {
     this.updateActualCacheSize();
 
     if (Services.prefs.getBoolPref("browser.storageManager.enabled")) {
-      Services.obs.addObserver(this, "sitedatamanager:sites-updated", false);
-      Services.obs.addObserver(this, "sitedatamanager:updating-sites", false);
+      Services.obs.addObserver(this, "sitedatamanager:sites-updated");
+      Services.obs.addObserver(this, "sitedatamanager:updating-sites");
       let unload = () => {
         window.removeEventListener("unload", unload);
         Services.obs.removeObserver(this, "sitedatamanager:sites-updated");

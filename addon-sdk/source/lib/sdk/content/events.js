@@ -9,7 +9,7 @@ module.metadata = {
 };
 
 const { Ci } = require("chrome");
-const { open } = require("../event/dom");
+lazyRequire(this, "../event/dom", "open");
 const { observe } = require("../event/chrome");
 const { filter, merge, map, expand } = require("../event/utils");
 const { windows } = require("../window/utils");

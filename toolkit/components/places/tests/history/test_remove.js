@@ -84,7 +84,7 @@ add_task(function* test_remove_single() {
         }
       };
     });
-    PlacesUtils.history.addObserver(observer, false);
+    PlacesUtils.history.addObserver(observer);
 
     do_print("Performing removal");
     let removed = false;
@@ -238,7 +238,7 @@ add_task(function* test_remove_many() {
       origin.onDeleteVisitsCalled = true;
     }
   };
-  PlacesUtils.history.addObserver(observer, false);
+  PlacesUtils.history.addObserver(observer);
 
   do_print("Removing the pages and checking the callbacks");
   let removed = yield PlacesUtils.history.remove(keys, page => {

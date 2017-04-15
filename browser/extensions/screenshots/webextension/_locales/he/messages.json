@@ -1,0 +1,94 @@
+{
+  "addonDescription": {
+    "message": "יצירת צילומי מסך של דפי אינטרנט ושמירה שלהם באופן זמני או קבוע."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "צילום מסך"
+  },
+  "myShotsLink": {
+    "message": "צילומי המסך שלי"
+  },
+  "screenshotInstructions": {
+    "message": "נא לגרור או ללחוץ על הדף כדי לבחור תחום או על ESC לביטול."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "שמירה"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "שמירת התחום המוצג"
+  },
+  "saveScreenshotFullPage": {
+    "message": "שמירת הדף במלואו"
+  },
+  "cancelScreenshot": {
+    "message": "ביטול"
+  },
+  "downloadScreenshot": {
+    "message": "הורדה"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "הקישור הועתק"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "הקישור לתמונה שלך הועתק ללוח. נא ללחוץ על $META_KEY$-V כדי להדביק.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "לא תקין."
+  },
+  "requestErrorDetails": {
+    "message": "אנו מצטערים, אך לא ניתן היה לשמור את התמונה. נא לנסות שוב מאוחר יותר."
+  },
+  "connectionErrorTitle": {
+    "message": "לא ניתן היה להתחבר אל מאגר צילומי המסך שלך."
+  },
+  "connectionErrorDetails": {
+    "message": "נא לבדוק את החיבור לאינטרנט. אם הצלחת להתחבר לאינטרנט כנראה שקיימת תקלה זמנית עם שירות Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "אין אפשרות לשמור את צילום המסך שלך כיוון שישנה תקלה עם שירות Firefox Screenshots. נא לנסות שוב מאוחר יותר."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "לא ניתן לצלם דף זה."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "דף זה אינו דף אינטרנט תקני, ולכן לא ניתן היה לצלם אותו."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "לא ניתן לצלם את הדף של Firefox Screenshot עצמו!"
+  },
+  "genericErrorTitle": {
+    "message": "אויש! Firefox Screenshots ירד מהפסים."
+  },
+  "genericErrorDetails": {
+    "message": "אנחנו לא בטוחים מה קרה פה הרגע. אכפת לך לנסות שוב או לצלם דף אחר?"
+  },
+  "tourBodyOne": {
+    "message": "צילום, שמירה ושיתוף של צילומי מסך מבלי לעזוב את Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "לצלם רק את מה שנחוץ לך"
+  },
+  "tourBodyTwo": {
+    "message": "ניתן ללחוץ ולגרור כדי לצלם רק מקטע מהעמוד. ניתן גם לרחף מעל כדי לסמן את הבחירה שלך."
+  },
+  "tourHeaderThree": {
+    "message": "לפי טעמך"
+  },
+  "tourBodyThree": {
+    "message": "שמירת הצילומים החתוכים שלך לאחסון מקוון לצורך שיתוף פשוט יותר, או להוריד אותם למחשב שלך. ניתן גם ללחוץ על כפתור הצילומים שלי כדי למצוא את כל הצילומים שצילמת."
+  },
+  "tourHeaderFour": {
+    "message": "לצלם חלונות או דפים שלמים"
+  },
+  "tourBodyFour": {
+    "message": "נא לבחור בכפתורים שבחלק העליון כדי לצלם את האזור הגלוי בחלון או לצלם את הדף כולו."
+  }
+}

@@ -109,17 +109,17 @@ HandlerService.prototype = {
   _init: function HS__init() {
     // Observe profile-before-change so we can switch to the datasource
     // in the new profile when the user changes profiles.
-    this._observerSvc.addObserver(this, "profile-before-change", false);
+    this._observerSvc.addObserver(this, "profile-before-change");
 
     // Observe xpcom-shutdown so we can remove these observers
     // when the application shuts down.
-    this._observerSvc.addObserver(this, "xpcom-shutdown", false);
+    this._observerSvc.addObserver(this, "xpcom-shutdown");
 
     // Observe profile-do-change so that non-default profiles get upgraded too
-    this._observerSvc.addObserver(this, "profile-do-change", false);
+    this._observerSvc.addObserver(this, "profile-do-change");
 
     // Observe handlersvc-rdf-replace so we can switch to the datasource
-    this._observerSvc.addObserver(this, "handlersvc-rdf-replace", false);
+    this._observerSvc.addObserver(this, "handlersvc-rdf-replace");
   },
 
   _updateDB: function HS__updateDB() {
@@ -267,7 +267,7 @@ HandlerService.prototype = {
         handlerApp.name = handlerPrefs.name;                
 
         if (!this._isInHandlerArray(possibleHandlers, handlerApp)) {
-          possibleHandlers.appendElement(handlerApp, false);
+          possibleHandlers.appendElement(handlerApp);
         }
       }
 
@@ -294,7 +294,7 @@ HandlerService.prototype = {
           this._rdf.UnregisterDataSource(this.__ds);
           this.__ds = null;
         }
-        this._observerSvc.notifyObservers(null, "handlersvc-rdf-replace-complete", null);
+        this._observerSvc.notifyObservers(null, "handlersvc-rdf-replace-complete");
         break;
     }
   },
@@ -515,7 +515,7 @@ HandlerService.prototype = {
     // include the preferred handler, so check if it's included as we build
     // the list of handlers, and, if it's not included, add it to the list.
     if (aPreferredHandler)
-      aPossibleHandlers.appendElement(aPreferredHandler, false);
+      aPossibleHandlers.appendElement(aPreferredHandler);
 
     var possibleHandlerTargets = this._getTargets(aInfoID, NC_POSSIBLE_APP);
 
@@ -528,7 +528,7 @@ HandlerService.prototype = {
       let possibleHandler = this._retrieveHandlerApp(possibleHandlerID);
       if (possibleHandler && (!aPreferredHandler ||
                               !possibleHandler.equals(aPreferredHandler)))
-        aPossibleHandlers.appendElement(possibleHandler, false);
+        aPossibleHandlers.appendElement(possibleHandler);
     }
   },
 
@@ -852,12 +852,13 @@ HandlerService.prototype = {
   _storeExtensions: function HS__storeExtensions(aHandlerInfo) {
     if (aHandlerInfo instanceof Ci.nsIMIMEInfo) {
       var typeID = this._getTypeID(this._getClass(aHandlerInfo), aHandlerInfo.type);
+      let source = this._rdf.GetResource(typeID);
+      let property = this._rdf.GetResource(NC_FILE_EXTENSIONS);
       var extEnum = aHandlerInfo.getFileExtensions();
       while (extEnum.hasMore()) {
         let ext = extEnum.getNext().toLowerCase();
-        if (!this._hasLiteralAssertion(typeID, NC_FILE_EXTENSIONS, ext)) {
-          this._setLiteral(typeID, NC_FILE_EXTENSIONS, ext);
-        }
+        let target = this._rdf.GetLiteral(ext);
+        this._ds.Assert(source, property, target, true);
       }
     }
   },
@@ -1169,7 +1170,7 @@ HandlerService.prototype = {
       else
         handler = this._protocolSvc.getProtocolHandlerInfo(type);
 
-      aHandlers.appendElement(handler, false);
+      aHandlers.appendElement(handler);
     }
   },
 

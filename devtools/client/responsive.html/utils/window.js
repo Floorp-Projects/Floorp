@@ -45,7 +45,7 @@ function startup(window) {
         Services.obs.removeObserver(listener, "browser-delayed-startup-finished");
         resolve(window);
       }
-    }, "browser-delayed-startup-finished", false);
+    }, "browser-delayed-startup-finished");
   });
 }
 exports.startup = startup;

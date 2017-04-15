@@ -13,8 +13,7 @@ function startup(data, reasonCode) {
   gStarted = true;
 
   // delay realstartup to trigger the race condition
-  Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager)
-    .mainThread.dispatch(realstartup, 0);
+  Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager).dispatchToMainThread(realstartup);
 }
 
 function realstartup() {

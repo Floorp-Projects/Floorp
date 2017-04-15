@@ -7,7 +7,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
 
 var {
   promiseDocumentLoaded,
-  SingletonEventManager,
 } = ExtensionUtils;
 
 /**

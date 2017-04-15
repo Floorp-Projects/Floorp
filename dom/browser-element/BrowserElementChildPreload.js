@@ -188,7 +188,7 @@ BrowserElementChild.prototype = {
     });
 
     OBSERVED_EVENTS.forEach((aTopic) => {
-      Services.obs.addObserver(this, aTopic, false);
+      Services.obs.addObserver(this, aTopic);
     });
   },
 

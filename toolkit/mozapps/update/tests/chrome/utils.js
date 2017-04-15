@@ -980,7 +980,7 @@ const errorsPrefObserver = {
 
     let maxErrors = aMaxErrorCount ? aMaxErrorCount : 2;
     Services.prefs.setIntPref(aMaxErrorPref, maxErrors);
-    Services.prefs.addObserver(aObservePref, this, false);
+    Services.prefs.addObserver(aObservePref, this);
   },
 
   /**

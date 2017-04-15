@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "વેબમાંથી ક્લિપ્સ અને સ્ક્રીનશૉટ્સ લો અને તેમને કામચલાઉ અથવા કાયમી રીતે સાચવો."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla<screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "સ્ક્રીનશૉટ લેવા"
+  },
+  "myShotsLink": {
+    "message": "મારા શોટ્સ"
+  },
+  "screenshotInstructions": {
+    "message": "ખેંચો અથવા એક પ્રદેશ પસંદ કરવા માટે પાનાં પર ક્લિક કરો. રદ કરવા માટે ESC દબાવો."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "સાચવો"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "દૃશ્યમાન સાચવો"
+  },
+  "saveScreenshotFullPage": {
+    "message": "સંપૂર્ણ પૃષ્ઠ સાચવો"
+  },
+  "cancelScreenshot": {
+    "message": "રદ"
+  },
+  "downloadScreenshot": {
+    "message": "ડાઉનલોડ"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "લિંક કૉપિ"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "તમારા શોટ માટે લિંક ક્લિપબોર્ડ પર કૉપિ કરવામાં આવ્યું છે. પ્રેસ $META_KEY$ -V પેસ્ટ કરવા માટે.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "હુકમ બહાર."
+  },
+  "requestErrorDetails": {
+    "message": "માફ કરશો! અમે તમારા શોટ સાચવી શક્યા નથી. પછીથી ફરી પ્રયત્ન કરો."
+  },
+  "connectionErrorTitle": {
+    "message": "અમે તમારા સ્ક્રીનશૉટ્સ ને કનેક્ટ થઈ શકતા નથી."
+  },
+  "connectionErrorDetails": {
+    "message": "તમારું ઇન્ટરનેટ કનેક્શન તપાસો. તમે ઇન્ટરનેટથી કનેક્ટ કરવા માટે સક્ષમ છો, તો ત્યાં ફાયરફોક્સ સ્ક્રીનશોટ્સ સેવા સાથે એક અસ્થાયી સમસ્યા હોઈ શકે છે."
+  },
+  "loginErrorDetails": {
+    "message": "અમે તમારા શોટ સાચવી શક્યા નથી કારણ કે Firefox સ્ક્રીનશોટ્સ સેવા સાથે એક સમસ્યા છે. પછીથી ફરી પ્રયત્ન કરો."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "અમે આ પૃષ્ઠ સ્ક્રીનશૉટ ન કરી શકીએ."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "આ એક પ્રમાણભૂત વેબ પૃષ્ઠ, જેથી તમે તેને એક સ્ક્રીનશૉટ ન લઈ શકો."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "તમે પૃષ્ઠના Firefox સ્ક્રીનશોટ્સ શોટ લઇ શકો નહિ!"
+  },
+  "genericErrorTitle": {
+    "message": "થોભો! Firefox સ્ક્રીનશોટ્સ અવ્યવસ્થિત થઈ ગયા."
+  },
+  "genericErrorDetails": {
+    "message": "અમે ખાતરી નથીકે શું માત્ર થયું છે . ફરી પ્રયાસ કરો અથવા એક અલગ પૃષ્ઠ એક શોટ લેવા માટે કાળજી કરો?"
+  },
+  "tourBodyOne": {
+    "message": "લેવા, સાચવેલા, અને વહેંચાયેલ સ્ક્રીનશૉટ્સ Firefox છોડ્યાં વિના."
+  },
+  "tourHeaderTwo": {
+    "message": "કેદ કરો તમને જોઈએ તે"
+  },
+  "tourBodyTwo": {
+    "message": "પાનાંના માત્ર એક ભાગ મેળવવા માટે ક્લિક કરો અને ખેંચો. તમે પણ તમારી પસંદગી પ્રકાશિત કરવા માટે હૉવર કરી શકો છો."
+  },
+  "tourHeaderThree": {
+    "message": "તમને જે ગમે"
+  },
+  "tourBodyThree": {
+    "message": "સરળ શેરિંગ માટે વેબ પર તમારા કપાઈ શોટ સાચવો, અથવા તેમને તમારા કમ્પ્યુટર પર ડાઉનલોડ કરો. તમે બધા શોટ મેળવવા માટે મારું શોટ્સ બટન પર ક્લિક કરી પણ શકો છો બધા શોટ તમે લીધેલા શોધવા માટે."
+  },
+  "tourHeaderFour": {
+    "message": "વિન્ડોઝ અથવા સમગ્ર પાના કેદ કરો"
+  },
+  "tourBodyFour": {
+    "message": "ઉપર જમણા બટનો પસંદ કરો વિન્ડોમાં દૃશ્યમાન વિસ્તાર મેળવવા માટે અથવા આખુ પાનું કેપ્ચર કરવા માટે."
+  },
+  "tourSkip": {
+    "message": "છોડવા"
+  },
+  "tourNext": {
+    "message": "આગલી સ્લાઇડ"
+  },
+  "tourPrevious": {
+    "message": "પહેલાની સ્લાઇડ"
+  },
+  "tourDone": {
+    "message": "થઈ ગયું"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Firefox સ્ક્રીનશોટ્સ વાપરીને, તમે સ્ક્રીનશૉટ્સ થી સંમત છો $TERMSANDPRIVACYNOTICETERMSLINK$ અને $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "શરતો"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "ખાનગી સૂચના"
+  }
+}

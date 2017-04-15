@@ -983,7 +983,7 @@ parent:
     async PContentPermissionRequest(PermissionRequest[] aRequests, Principal aPrincipal,
                                     TabId tabId);
 
-    async Profile(nsCString aProfile);
+    async Profile(nsCString aProfile, bool aIsExitProfile);
 
     /**
      * Request graphics initialization information from the parent.

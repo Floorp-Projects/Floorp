@@ -16,7 +16,6 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
   IconDetails,
-  SingletonEventManager,
 } = ExtensionUtils;
 
 // WeakMap[Extension -> PageAction]

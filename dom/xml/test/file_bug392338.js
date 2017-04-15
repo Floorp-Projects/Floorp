@@ -19,4 +19,4 @@ var modifyObserver = {
   }
 };
 
-Services.obs.addObserver(modifyObserver, 'http-on-modify-request', false);
+Services.obs.addObserver(modifyObserver, 'http-on-modify-request');

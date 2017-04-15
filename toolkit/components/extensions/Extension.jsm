@@ -36,6 +36,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionAPIs",
                                   "resource://gre/modules/ExtensionAPI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionCommon",
+                                  "resource://gre/modules/ExtensionCommon.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionPermissions",
                                   "resource://gre/modules/ExtensionPermissions.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
@@ -67,7 +69,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
-Cu.import("resource://gre/modules/ExtensionContent.jsm");
 Cu.import("resource://gre/modules/ExtensionManagement.jsm");
 Cu.import("resource://gre/modules/ExtensionParent.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
@@ -85,13 +86,47 @@ var {
 const {
   classifyPermission,
   EventEmitter,
-  LocaleData,
   StartupCache,
   getUniqueId,
-  validateThemeManifest,
 } = ExtensionUtils;
 
 XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
+
+XPCOMUtils.defineLazyGetter(this, "LocaleData", () => ExtensionCommon.LocaleData);
+
+
+// The list of properties that themes are allowed to contain.
+XPCOMUtils.defineLazyGetter(this, "allowedThemeProperties", () => {
+  Cu.import("resource://gre/modules/ExtensionParent.jsm");
+  let propertiesInBaseManifest = ExtensionParent.baseManifestProperties;
+
+  // The properties found in the base manifest contain all of the properties that
+  // themes are allowed to have. However, the list also contains several properties
+  // that aren't allowed, so we need to filter them out first before the list can
+  // be used to validate themes.
+  return propertiesInBaseManifest.filter(prop => {
+    const propertiesToRemove = ["background", "content_scripts", "permissions"];
+    return !propertiesToRemove.includes(prop);
+  });
+});
+
+/**
+ * Validates a theme to ensure it only contains static resources.
+ *
+ * @param {Array<string>} manifestProperties The list of top-level keys found in the
+ *    the extension's manifest.
+ * @returns {Array<string>} A list of invalid properties or an empty list
+ *    if none are found.
+ */
+function validateThemeManifest(manifestProperties) {
+  let invalidProps = [];
+  for (let propName of manifestProperties) {
+    if (propName != "theme" && !allowedThemeProperties.includes(propName)) {
+      invalidProps.push(propName);
+    }
+  }
+  return invalidProps;
+}
 
 const LOGGER_ID_BASE = "addons.webextension.";
 const UUID_MAP_PREF = "extensions.webextensions.uuids";
@@ -649,7 +684,7 @@ this.Extension = class extends ExtensionData {
     Services.ppmm.addMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
     if (addonData.cleanupFile) {
-      Services.obs.addObserver(this, "xpcom-shutdown", false);
+      Services.obs.addObserver(this, "xpcom-shutdown");
       this.cleanupFile = addonData.cleanupFile || null;
       delete addonData.cleanupFile;
     }
@@ -856,8 +891,8 @@ this.Extension = class extends ExtensionData {
         }
       };
       ppmm.addMessageListener(msg + "Complete", listener);
-      Services.obs.addObserver(observer, "message-manager-close", false);
-      Services.obs.addObserver(observer, "message-manager-disconnect", false);
+      Services.obs.addObserver(observer, "message-manager-close");
+      Services.obs.addObserver(observer, "message-manager-disconnect");
 
       ppmm.broadcastAsyncMessage(msg, data);
     });

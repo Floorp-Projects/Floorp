@@ -16,7 +16,7 @@ function promiseBrowserStateRestored() {
      Services.obs.addObserver(function observer(aSubject, aTopic) {
        Services.obs.removeObserver(observer, "sessionstore-browser-state-restored");
        resolve();
-     }, "sessionstore-browser-state-restored", false);
+     }, "sessionstore-browser-state-restored");
   });
 }
 

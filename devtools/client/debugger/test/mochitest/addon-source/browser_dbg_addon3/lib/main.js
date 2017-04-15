@@ -10,4 +10,4 @@ var observer = {
 
 once("sdk:loader:destroy", () => observerService.removeObserver(observer, "debuggerAttached"));
 
-observerService.addObserver(observer, "debuggerAttached", false);
+observerService.addObserver(observer, "debuggerAttached");

@@ -27,7 +27,7 @@ let PresentationView = {
 
     // Listen "presentation-receiver:launch" sent from
     // PresentationRequestUIGlue.
-    Services.obs.addObserver(this,TOPIC_PRESENTATION_RECEIVER_LAUNCH, false);
+    Services.obs.addObserver(this,TOPIC_PRESENTATION_RECEIVER_LAUNCH);
 
     // Notify PresentationView is ready.
     Services.obs.notifyObservers(null, TOPIC_PRESENTATION_VIEW_READY, this._id);

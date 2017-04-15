@@ -321,7 +321,7 @@ this.LightweightThemeManager = {
       _prefs.setCharPref("selectedThemeID", "");
 
     _notifyWindows(aData);
-    Services.obs.notifyObservers(null, "lightweight-theme-changed", null);
+    Services.obs.notifyObservers(null, "lightweight-theme-changed");
   },
 
   /**
@@ -338,7 +338,7 @@ this.LightweightThemeManager = {
       Services.prefs.clearUserPref(PREF_LWTHEME_TO_SELECT);
     }
 
-    _prefs.addObserver("", _prefObserver, false);
+    _prefs.addObserver("", _prefObserver);
   },
 
   /**
@@ -787,7 +787,7 @@ function _updateUsedThemes(aList) {
 
   _prefs.setStringPref("usedThemes", JSON.stringify(aList));
 
-  Services.obs.notifyObservers(null, "lightweight-theme-list-changed", null);
+  Services.obs.notifyObservers(null, "lightweight-theme-list-changed");
 }
 
 function _notifyWindows(aThemeData) {

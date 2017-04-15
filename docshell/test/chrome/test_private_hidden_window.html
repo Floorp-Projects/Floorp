@@ -62,7 +62,7 @@ function observer(aSubject, aTopic, aData) {
   mainWindow.Services.obs.removeObserver(observer, "last-pb-context-exited");
   SimpleTest.finish();
 }
-mainWindow.Services.obs.addObserver(observer, "last-pb-context-exited", false);
+mainWindow.Services.obs.addObserver(observer, "last-pb-context-exited");
 
 </script>
 </pre>

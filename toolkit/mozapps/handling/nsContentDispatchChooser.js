@@ -56,11 +56,11 @@ nsContentDispatchChooser.prototype =
     for (let text of arr) {
       let string = new SupportsString;
       string.data = text;
-      params.appendElement(string, false);
+      params.appendElement(string);
     }
-    params.appendElement(aHandler, false);
-    params.appendElement(aURI, false);
-    params.appendElement(aWindowContext, false);
+    params.appendElement(aHandler);
+    params.appendElement(aURI);
+    params.appendElement(aWindowContext);
 
     var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
              getService(Ci.nsIWindowWatcher);

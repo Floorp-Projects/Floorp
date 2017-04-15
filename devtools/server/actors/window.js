@@ -60,7 +60,7 @@ WindowActor.prototype._attach = function () {
 
   // Listen for chrome docshells in addition to content docshells
   if (this.docShell.itemType == Ci.nsIDocShellTreeItem.typeChrome) {
-    Services.obs.addObserver(this, "chrome-webnavigation-destroy", false);
+    Services.obs.addObserver(this, "chrome-webnavigation-destroy");
   }
 
   return true;

@@ -6,17 +6,17 @@
 const { Class } = require('../core/heritage');
 const { Tab, tabEvents } = require('./tab');
 const { EventTarget } = require('../event/target');
-const { emit, setListeners } = require('../event/core');
+lazyRequire(this, '../event/core', "emit", "setListeners");
 const { pipe } = require('../event/utils');
 const { observer: windowObserver } = require('../windows/observer');
 const { List, addListItem, removeListItem } = require('../util/list');
-const { modelFor } = require('../model/core');
-const { viewFor } = require('../view/core');
-const { getTabs, getSelectedTab } = require('./utils');
-const { getMostRecentBrowserWindow, isBrowser } = require('../window/utils');
-const { Options } = require('./common');
-const { isPrivate } = require('../private-browsing');
-const { ignoreWindow, isWindowPBSupported } = require('../private-browsing/utils')
+lazyRequire(this, '../model/core', "modelFor");
+lazyRequire(this, '../view/core', "viewFor");
+lazyRequire(this, './utils', "getTabs", "getSelectedTab");
+lazyRequire(this, '../window/utils', "getMostRecentBrowserWindow", "isBrowser");
+lazyRequire(this, './common', "Options");
+lazyRequire(this, '../private-browsing', "isPrivate");
+lazyRequire(this, '../private-browsing/utils', "ignoreWindow", "isWindowPBSupported")
 const { isPrivateBrowsingSupported } = require('sdk/self');
 
 const supportPrivateTabs = isPrivateBrowsingSupported && isWindowPBSupported;

@@ -12,16 +12,13 @@ module.metadata = {
 
 const { Cu, Ci } = require("chrome");
 const { CustomizableUI } = Cu.import('resource:///modules/CustomizableUI.jsm', {});
-const { subscribe, send, Reactor, foldp, lift, merges, keepIf } = require("../../event/utils");
-const { InputPort } = require("../../input/system");
+const { send, Reactor } = require("../../event/utils");
 const { OutputPort } = require("../../output/system");
-const { LastClosed } = require("../../input/browser");
-const { pairs, keys, object, each } = require("../../util/sequence");
+lazyRequire(this, "../../util/sequence", "pairs", "keys", "object", "each");
 const { curry, compose } = require("../../lang/functional");
-const { getFrameElement, getOuterId,
-        getByOuterId, getOwnerBrowserWindow } = require("../../window/utils");
-const { patch, diff } = require("diffpatcher/index");
-const { encode } = require("../../base64");
+lazyRequire(this, "../../window/utils", "getFrameElement", "getOuterId", "getByOuterId", "getOwnerBrowserWindow");
+lazyRequire(this, "diffpatcher/index", "patch", "diff");
+lazyRequire(this, "../../base64", "encode");
 const { Frames } = require("../../input/frame");
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";

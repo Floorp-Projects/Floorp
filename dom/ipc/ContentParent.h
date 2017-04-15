@@ -1117,7 +1117,8 @@ private:
   virtual mozilla::ipc::IPCResult RecvUpdateDropEffect(const uint32_t& aDragAction,
                                                        const uint32_t& aDropEffect) override;
 
-  virtual mozilla::ipc::IPCResult RecvProfile(const nsCString& aProfile) override;
+  virtual mozilla::ipc::IPCResult RecvProfile(const nsCString& aProfile,
+                                              const bool& aIsExitProfile) override;
 
   virtual mozilla::ipc::IPCResult RecvGetGraphicsDeviceInitData(ContentDeviceData* aOut) override;
 

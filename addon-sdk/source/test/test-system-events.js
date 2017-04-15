@@ -119,7 +119,7 @@ exports["test listeners are GC-ed"] = function(assert, done) {
   });
 };
 
-exports["test alive listeners are removed on unload"] = function(assert) {
+exports["test alive listeners are removed on unload"] = function*(assert) {
   let receivedFromWeak = [];
   let receivedFromStrong = [];
   let loader = Loader(module);
@@ -137,6 +137,8 @@ exports["test alive listeners are removed on unload"] = function(assert) {
   assert.equal(receivedFromWeak.length, 1, "weak listener invoked");
 
   loader.unload();
+  // Give the cleanup code a chance to run.
+  yield Promise.resolve();
   events.emit(type, { data: 2 });
 
   assert.equal(receivedFromWeak.length, 1, "weak listener was removed");
@@ -233,7 +235,7 @@ exports["test emit to nsIObserverService observers"] = function(assert) {
     }
   };
 
-  nsIObserverService.addObserver(nsIObserver, topic, false);
+  nsIObserverService.addObserver(nsIObserver, topic);
 
   events.emit(topic, { subject: uri, data: "some data" });
 
@@ -258,7 +260,7 @@ exports["test emit to nsIObserverService observers"] = function(assert) {
 
   assert.equal(timesCalled, 2, "removed observers no longer invoked");
 
-  nsIObserverService.addObserver(nsIObserver, "*", false);
+  nsIObserverService.addObserver(nsIObserver, "*");
 
   events.emit(topic, { data: "data again" });
 

@@ -58,7 +58,7 @@ module.exports = createClass({
     client.addListener("processListChanged", this.updateWorkers);
     client.addListener("registration-changed", this.updateWorkers);
 
-    Services.prefs.addObserver(PROCESS_COUNT_PREF, this.updateMultiE10S, false);
+    Services.prefs.addObserver(PROCESS_COUNT_PREF, this.updateMultiE10S);
 
     this.updateMultiE10S();
     this.updateWorkers();

@@ -1664,6 +1664,7 @@ WasmActivation::~WasmActivation()
     // Hide this activation from the profiler before is is destroyed.
     unregisterProfiling();
 
+    MOZ_ASSERT(!interrupted());
     MOZ_ASSERT(exitFP_ == nullptr);
     MOZ_ASSERT(exitReason_.isNone());
 
@@ -1676,6 +1677,34 @@ WasmActivation::unwindExitFP(uint8_t* exitFP)
 {
     exitFP_ = exitFP;
     exitReason_ = wasm::ExitReason::Fixed::None;
+}
+
+void
+WasmActivation::startInterrupt(void* pc, uint8_t* fp)
+{
+    MOZ_ASSERT(pc);
+    MOZ_ASSERT(fp);
+
+    // Execution can only be interrupted in function code. Afterwards, control
+    // flow does not reenter function code and thus there should be no
+    // interrupt-during-interrupt.
+    MOZ_ASSERT(!interrupted());
+    MOZ_ASSERT(compartment()->wasm.lookupCode(pc)->lookupRange(pc)->isFunction());
+
+    resumePC_ = pc;
+    exitFP_ = fp;
+
+    MOZ_ASSERT(interrupted());
+}
+
+void
+WasmActivation::finishInterrupt()
+{
+    MOZ_ASSERT(interrupted());
+    MOZ_ASSERT(exitFP_);
+
+    resumePC_ = nullptr;
+    exitFP_ = nullptr;
 }
 
 InterpreterFrameIterator&

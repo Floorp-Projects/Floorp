@@ -25,7 +25,7 @@ this.Adapters = function() {
 
   let resume = function() {
     if (suspended) {
-      Services.obs.addObserver(observer, "cloudsync:user-sync", false);
+      Services.obs.addObserver(observer, "cloudsync:user-sync");
       suspended = false;
     }
   };

@@ -27,6 +27,7 @@ using gfx::SourceSurface;
 using gfx::FilterNode;
 using gfx::GradientStops;
 using gfx::ScaledFont;
+using gfx::UnscaledFont;
 using gfx::NativeFontResource;
 
 class PrintTranslator final : public Translator
@@ -78,6 +79,13 @@ public:
     return result;
   }
 
+  UnscaledFont* LookupUnscaledFont(ReferencePtr aRefPtr) final
+  {
+    UnscaledFont* result = mUnscaledFonts.GetWeak(aRefPtr);
+    MOZ_ASSERT(result);
+    return result;
+  }
+
   NativeFontResource* LookupNativeFontResource(uint64_t aKey) final
   {
     NativeFontResource* result = mNativeFontResources.GetWeak(aKey);
@@ -113,6 +121,11 @@ public:
   void AddScaledFont(ReferencePtr aRefPtr, ScaledFont *aScaledFont) final
   {
     mScaledFonts.Put(aRefPtr, aScaledFont);
+  }
+
+  void AddUnscaledFont(ReferencePtr aRefPtr, UnscaledFont* aUnscaledFont) final
+  {
+    mUnscaledFonts.Put(aRefPtr, aUnscaledFont);
   }
 
   void AddNativeFontResource(uint64_t aKey,
@@ -151,6 +164,11 @@ public:
     mScaledFonts.Remove(aRefPtr);
   }
 
+  void RemoveUnscaledFont(ReferencePtr aRefPtr) final
+  {
+    mUnscaledFonts.Remove(aRefPtr);
+  }
+
   already_AddRefed<DrawTarget> CreateDrawTarget(ReferencePtr aRefPtr,
                                                 const gfx::IntSize &aSize,
                                                 gfx::SurfaceFormat aFormat) final;
@@ -169,6 +187,7 @@ private:
   nsRefPtrHashtable<nsPtrHashKey<void>, FilterNode> mFilterNodes;
   nsRefPtrHashtable<nsPtrHashKey<void>, GradientStops> mGradientStops;
   nsRefPtrHashtable<nsPtrHashKey<void>, ScaledFont> mScaledFonts;
+  nsRefPtrHashtable<nsPtrHashKey<void>, UnscaledFont> mUnscaledFonts;
   nsRefPtrHashtable<nsUint64HashKey, NativeFontResource> mNativeFontResources;
 };
 

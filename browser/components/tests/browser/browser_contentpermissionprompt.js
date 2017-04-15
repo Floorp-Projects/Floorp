@@ -44,7 +44,7 @@ MockContentPermissionType.prototype = {
 function MockContentPermissionRequest(typesArray) {
   this.types = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
   for (let type of typesArray) {
-    this.types.appendElement(type, false);
+    this.types.appendElement(type);
   }
 }
 

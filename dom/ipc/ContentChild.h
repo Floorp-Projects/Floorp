@@ -665,6 +665,8 @@ private:
   virtual already_AddRefed<nsIEventTarget>
   GetConstructedEventTarget(const Message& aMsg) override;
 
+  void GatherProfile(bool aIsExitProfile);
+
   InfallibleTArray<nsAutoPtr<AlertObserver> > mAlertObservers;
   RefPtr<ConsoleListener> mConsoleListener;
 

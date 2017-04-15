@@ -9,8 +9,9 @@ module.metadata = {
 };
 
 const {Cc,Ci,Cr} = require("chrome");
-const byteStreams = require("./byte-streams");
-const textStreams = require("./text-streams");
+
+lazyRequireModule(this, "./byte-streams", "byteStreams");
+lazyRequireModule(this, "./text-streams", "textStreams");
 
 // Flags passed when opening a file.  See nsprpub/pr/include/prio.h.
 const OPEN_FLAGS = {

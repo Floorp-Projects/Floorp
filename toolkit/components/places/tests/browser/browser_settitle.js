@@ -46,7 +46,7 @@ add_task(function* () {
       onDeleteVisits() {},
       QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
     };
-    PlacesUtils.history.addObserver(historyObserver, false);
+    PlacesUtils.history.addObserver(historyObserver);
   });
 
   const url1 = "http://example.com/tests/toolkit/components/places/tests/browser/title1.html";

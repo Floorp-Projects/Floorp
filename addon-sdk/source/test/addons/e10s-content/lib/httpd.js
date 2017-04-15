@@ -457,8 +457,7 @@ nsHttpServer.prototype =
             self._notifyStopped();
           }
         };
-      gThreadManager.currentThread
-                    .dispatch(stopEvent, Ci.nsIThread.DISPATCH_NORMAL);
+      gThreadManager.dispatchToMainThread(stopEvent);
     }
   },
 
@@ -2696,8 +2695,7 @@ ServerHandler.prototype =
 
       let writeMore = function writeMore()
       {
-        gThreadManager.currentThread
-                      .dispatch(writeData, Ci.nsIThread.DISPATCH_NORMAL);
+        gThreadManager.dispatchToMainThread(writeData);
       }
 
       var input = new BinaryInputStream(fis);
@@ -3768,13 +3766,13 @@ Response.prototype =
       // way to handle both cases without removing bodyOutputStream access and
       // moving its effective write(data, length) method onto Response, which
       // would be slower and require more code than this anyway.
-      gThreadManager.currentThread.dispatch({
+      gThreadManager.dispatchToMainThread({
         run: function()
         {
           dumpn("*** canceling copy asynchronously...");
           copier.cancel(Cr.NS_ERROR_UNEXPECTED);
         }
-      }, Ci.nsIThread.DISPATCH_NORMAL);
+      });
     }
     else
     {
@@ -4523,7 +4521,7 @@ WriteThroughCopier.prototype =
         }
       };
 
-    gThreadManager.currentThread.dispatch(event, Ci.nsIThread.DISPATCH_NORMAL);
+    gThreadManager.dispatchToMainThread(event);
   },
 
   /**

@@ -160,7 +160,7 @@ G_Preferences.prototype.addObserver = function(which, callback) {
     var observer = new G_PreferenceObserver(callback);
     this.observers_[which].callbacks.push(callback);
     this.observers_[which].observers.push(observer);
-    this.prefs_.addObserver(which, observer, false /* strong reference */);
+    this.prefs_.addObserver(which, observer /* strong reference */);
   }
 }
 

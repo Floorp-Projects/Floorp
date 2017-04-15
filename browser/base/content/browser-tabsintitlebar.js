@@ -12,7 +12,7 @@ var TabsInTitlebar = {
       return;
     }
     this._readPref();
-    Services.prefs.addObserver(this._prefName, this, false);
+    Services.prefs.addObserver(this._prefName, this);
 
     // We need to update the appearance of the titlebar when the menu changes
     // from the active to the inactive state. We can't, however, rely on

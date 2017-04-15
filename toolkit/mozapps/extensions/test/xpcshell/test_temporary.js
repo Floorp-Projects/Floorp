@@ -55,7 +55,7 @@ function waitForBootstrapEvent(expectedEvent, addonId) {
         }
       },
     };
-    Services.obs.addObserver(observer, "bootstrapmonitor-event", false);
+    Services.obs.addObserver(observer, "bootstrapmonitor-event");
   });
 }
 

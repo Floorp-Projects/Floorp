@@ -8,8 +8,8 @@ module.metadata = {
 };
 
 const { getTargetWindow } = require("../content/mod");
-const { getTabContentWindow, isTab } = require("./utils");
-const { viewFor } = require("../view/core");
+lazyRequire(this, "./utils", "getTabContentWindow", "isTab");
+lazyRequire(this, "../view/core", "viewFor");
 
 if (require('../system/xul-app').name == 'Fennec') {
   module.exports = require('./tab-fennec');

@@ -418,7 +418,7 @@ public:
    */
   virtual void EndFrame();
 
-  virtual void CancelFrame() { ReadUnlockTextures(); }
+  virtual void CancelFrame(bool aNeedFlush = true) { ReadUnlockTextures(); }
 
   virtual void SetDispAcquireFence(Layer* aLayer);
 

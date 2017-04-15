@@ -53,8 +53,8 @@ add_task(function* setup() {
     events.push(["shutdown", data]);
   };
 
-  Services.obs.addObserver(startupObserver, "test-addon-bootstrap-startup", false);
-  Services.obs.addObserver(shutdownObserver, "test-addon-bootstrap-shutdown", false);
+  Services.obs.addObserver(startupObserver, "test-addon-bootstrap-startup");
+  Services.obs.addObserver(shutdownObserver, "test-addon-bootstrap-shutdown");
   do_register_cleanup(() => {
     Services.obs.removeObserver(startupObserver, "test-addon-bootstrap-startup");
     Services.obs.removeObserver(shutdownObserver, "test-addon-bootstrap-shutdown");

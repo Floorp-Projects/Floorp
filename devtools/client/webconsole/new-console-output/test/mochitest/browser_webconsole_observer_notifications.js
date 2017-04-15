@@ -45,6 +45,6 @@ function setupObserver() {
     },
   };
 
-  Services.obs.addObserver(observer, "web-console-created", false);
-  Services.obs.addObserver(observer, "web-console-destroyed", false);
+  Services.obs.addObserver(observer, "web-console-created");
+  Services.obs.addObserver(observer, "web-console-destroyed");
 }

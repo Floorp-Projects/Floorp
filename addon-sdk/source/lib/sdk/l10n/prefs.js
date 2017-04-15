@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { on } = require("../system/events");
-const core = require("./core");
+lazyRequire(this, "../system/events", "on");
+lazyRequireModule(this, "./core", "core");
 const { id: jetpackId } = require('../self');
 
 const OPTIONS_DISPLAYED = "addon-options-displayed";

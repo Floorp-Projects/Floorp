@@ -37,6 +37,7 @@ module.exports = {
     "runSafeSync": true,
     "runSafeSyncWithoutClone": true,
     "Services": true,
+    "SingletonEventManager": true,
     "tabTracker": false,
     "XPCOMUtils": true,
   },

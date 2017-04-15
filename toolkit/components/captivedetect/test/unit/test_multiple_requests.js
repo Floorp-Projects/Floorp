@@ -33,7 +33,7 @@ function fakeUIResponse() {
       loginFinished = true;
       do_check_eq(++step, 2);
     }
-  }, "captive-portal-login", false);
+  }, "captive-portal-login");
 
   Services.obs.addObserver(function observe(subject, topic, data) {
     if (topic === "captive-portal-login-success") {
@@ -43,7 +43,7 @@ function fakeUIResponse() {
       }
       do_check_eq(++step, 4);
     }
-  }, "captive-portal-login-success", false);
+  }, "captive-portal-login-success");
 }
 
 function test_multiple_requests() {

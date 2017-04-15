@@ -163,19 +163,21 @@ on('sdk:loader:destroy', function onunload({ subject, data: reason }) {
     off('sdk:loader:destroy', onunload, false);
 
     // don't bother
-    if (reason === 'shutdown') 
+    if (reason === 'shutdown')
       return;
 
-    stillAlive.forEach( (type, ref) => {
-      let observer = ref.get();
-      if (observer) {
-        if (wasShimmed.get(ref)) {
-          removeObserver(observer, type);
-        } else {
-          removeObserverNoShim(observer, type);
+    // Wait until the next tick to let other shutdown handlers finish first.
+    Promise.resolve().then(() => {
+      stillAlive.forEach((type, ref) => {
+        let observer = ref.get();
+        if (observer) {
+          if (wasShimmed.get(ref)) {
+            removeObserver(observer, type);
+          } else {
+            removeObserverNoShim(observer, type);
+          }
         }
-      }
-    })
+      });
+    });
   }
-  // a strong reference
 }, true, false);

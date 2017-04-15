@@ -2372,7 +2372,7 @@ add_task(function* test_launchWhenSucceeded_deleteTempFileOnExit() {
   do_check_true(yield OS.File.exists(noAutoDeleteTargetPath));
 
   // Simulate leaving private browsing mode
-  Services.obs.notifyObservers(null, "last-pb-context-exited", null);
+  Services.obs.notifyObservers(null, "last-pb-context-exited");
   do_check_false(yield OS.File.exists(autoDeleteTargetPathOne));
 
   // Simulate browser shutdown
