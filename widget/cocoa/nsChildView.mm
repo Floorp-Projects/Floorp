@@ -201,6 +201,7 @@ static bool sIsTabletPointerActivated = false;
 #endif
 
 - (LayoutDeviceIntPoint)convertWindowCoordinates:(NSPoint)aPoint;
+- (LayoutDeviceIntPoint)convertWindowCoordinatesRoundDown:(NSPoint)aPoint;
 - (IAPZCTreeManager*)apzctm;
 
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent;
@@ -4907,8 +4908,12 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
 
   NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(theEvent, [self window]);
 
+  // Use convertWindowCoordinatesRoundDown when converting the position to
+  // integer screen pixels in order to ensure that coordinates which are just
+  // inside the right / bottom edges of the window don't end up outside of the
+  // window after rounding.
   ScreenPoint position = ViewAs<ScreenPixel>(
-    [self convertWindowCoordinates:locationInWindow],
+    [self convertWindowCoordinatesRoundDown:locationInWindow],
     PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
 
   bool usePreciseDeltas = nsCocoaUtils::HasPreciseScrollingDeltas(theEvent) &&
@@ -5663,6 +5668,16 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
 
   NSPoint localPoint = [self convertPoint:aPoint fromView:nil];
   return mGeckoChild->CocoaPointsToDevPixels(localPoint);
+}
+
+- (LayoutDeviceIntPoint)convertWindowCoordinatesRoundDown:(NSPoint)aPoint
+{
+  if (!mGeckoChild) {
+    return LayoutDeviceIntPoint(0, 0);
+  }
+
+  NSPoint localPoint = [self convertPoint:aPoint fromView:nil];
+  return mGeckoChild->CocoaPointsToDevPixelsRoundDown(localPoint);
 }
 
 - (IAPZCTreeManager*)apzctm
