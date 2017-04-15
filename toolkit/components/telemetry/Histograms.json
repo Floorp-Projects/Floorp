@@ -5911,6 +5911,32 @@
     "bug_numbers": [1345834],
     "description": "Firefox: The index of the selected result in the URL bar popup by the type of the selected result in the URL bar popup. See BrowserUsageTelemetry.jsm:URLBAR_SELECTED_RESULT_TYPES for the result types."
   },
+  "FX_URLBAR_SELECTED_RESULT_METHOD": {
+    "alert_emails": ["dzeber@mozilla.com"],
+    "expires_in_version": "63",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "enter",
+      "enterSelection",
+      "click"
+    ],
+    "bug_numbers": [1334615],
+    "description": "The input method the user used to select a result in the urlbar. 'enter' => The user hit the Enter key on the heuristic result at index 0. 'enterSelection' => The user chose a non-heuristic result and then hit the Enter key. 'click' => The user clicked a result with the mouse."
+  },
+  "FX_SEARCHBAR_SELECTED_RESULT_METHOD": {
+    "alert_emails": ["dzeber@mozilla.com"],
+    "expires_in_version": "63",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "enter",
+      "enterSelection",
+      "click"
+    ],
+    "bug_numbers": [1334615],
+    "description": "The input method the user used to select a result in the searchbar. 'enter' => The user hit the Enter key without choosing a result in the popup. 'enterSelection' => The user chose a result and then hit the Enter key. 'click' => The user clicked a result with the mouse."
+  },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "expires_in_version": "never",
     "kind": "boolean",

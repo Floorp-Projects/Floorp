@@ -11,6 +11,9 @@ const ONEOFF_URLBAR_PREF = "browser.urlbar.oneOffSearches";
 XPCOMUtils.defineLazyModuleGetter(this, "URLBAR_SELECTED_RESULT_TYPES",
                                   "resource:///modules/BrowserUsageTelemetry.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "URLBAR_SELECTED_RESULT_METHODS",
+                                  "resource:///modules/BrowserUsageTelemetry.jsm");
+
 function checkHistogramResults(resultIndexes, expected, histogram) {
   for (let i = 0; i < resultIndexes.counts.length; i++) {
     if (i == expected) {
@@ -84,6 +87,10 @@ add_task(function* setup() {
   // Enable event recording for the events tested here.
   Services.telemetry.setEventRecordingEnabled("navigation", true);
 
+  // Clear history so that history added by previous tests doesn't mess up this
+  // test when it selects results in the urlbar.
+  yield PlacesTestUtils.clearHistory();
+
   // Make sure to restore the engine once we're done.
   registerCleanupFunction(function* () {
     Services.telemetry.canRecordExtended = oldCanRecord;
@@ -102,10 +109,12 @@ add_task(function* test_simpleQuery() {
   Services.telemetry.clearEvents();
   let resultIndexHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX");
   let resultTypeHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_TYPE");
+  let resultMethodHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_METHOD");
   let resultIndexByTypeHist = Services.telemetry.getKeyedHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
   resultIndexByTypeHist.clear();
   resultIndexHist.clear();
   resultTypeHist.clear();
+  resultMethodHist.clear();
 
   let search_hist = getSearchCountsHistogram();
 
@@ -145,6 +154,11 @@ add_task(function* test_simpleQuery() {
     0,
     "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
 
+  let resultMethods = resultMethodHist.snapshot();
+  checkHistogramResults(resultMethods,
+    URLBAR_SELECTED_RESULT_METHODS.enter,
+    "FX_URLBAR_SELECTED_RESULT_METHOD");
+
   yield BrowserTestUtils.removeTab(tab);
 });
 
@@ -155,9 +169,11 @@ add_task(function* test_searchAlias() {
   let resultIndexHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX");
   let resultTypeHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_TYPE");
   let resultIndexByTypeHist = Services.telemetry.getKeyedHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
+  let resultMethodHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_METHOD");
   resultIndexByTypeHist.clear();
   resultIndexHist.clear();
   resultTypeHist.clear();
+  resultMethodHist.clear();
 
   let search_hist = getSearchCountsHistogram();
 
@@ -197,19 +213,28 @@ add_task(function* test_searchAlias() {
     0,
     "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
 
+  let resultMethods = resultMethodHist.snapshot();
+  checkHistogramResults(resultMethods,
+    URLBAR_SELECTED_RESULT_METHODS.enter,
+    "FX_URLBAR_SELECTED_RESULT_METHOD");
+
   yield BrowserTestUtils.removeTab(tab);
 });
 
-add_task(function* test_oneOff() {
+// Performs a search using the first result, a one-off button, and the Return
+// (Enter) key.
+add_task(function* test_oneOff_enter() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
   let resultIndexHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX");
   let resultTypeHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_TYPE");
   let resultIndexByTypeHist = Services.telemetry.getKeyedHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
+  let resultMethodHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_METHOD");
   resultIndexByTypeHist.clear();
   resultIndexHist.clear();
   resultTypeHist.clear();
+  resultMethodHist.clear();
 
   let search_hist = getSearchCountsHistogram();
 
@@ -252,19 +277,99 @@ add_task(function* test_oneOff() {
     0,
     "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
 
+  let resultMethods = resultMethodHist.snapshot();
+  checkHistogramResults(resultMethods,
+    URLBAR_SELECTED_RESULT_METHODS.enter,
+    "FX_URLBAR_SELECTED_RESULT_METHOD");
+
   yield BrowserTestUtils.removeTab(tab);
 });
 
-add_task(function* test_suggestion() {
+// Performs a search using the second result, a one-off button, and the Return
+// (Enter) key.  This only tests the FX_URLBAR_SELECTED_RESULT_METHOD histogram
+// since test_oneOff_enter covers everything else.
+add_task(function* test_oneOff_enterSelection() {
+  // Let's reset the counts.
+  Services.telemetry.clearScalars();
+
+  let resultMethodHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_METHOD");
+  resultMethodHist.clear();
+
+  // Create an engine to generate search suggestions and add it as default
+  // for this test.
+  const url = getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
+  let suggestionEngine = yield new Promise((resolve, reject) => {
+    Services.search.addEngine(url, null, "", false, {
+      onSuccess(engine) { resolve(engine) },
+      onError() { reject() }
+    });
+  });
+
+  let previousEngine = Services.search.currentEngine;
+  Services.search.currentEngine = suggestionEngine;
+
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+
+  info("Type a query. Suggestions should be generated by the test engine.");
+  let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  yield searchInAwesomebar("query");
+
+  info("Select the second result, press Alt+Down to take us to the first one-off engine.");
+  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("VK_DOWN", { altKey: true });
+  EventUtils.sendKey("return");
+  yield p;
+
+  let resultMethods = resultMethodHist.snapshot();
+  checkHistogramResults(resultMethods,
+    URLBAR_SELECTED_RESULT_METHODS.enterSelection,
+    "FX_URLBAR_SELECTED_RESULT_METHOD");
+
+  Services.search.currentEngine = previousEngine;
+  Services.search.removeEngine(suggestionEngine);
+  yield BrowserTestUtils.removeTab(tab);
+});
+
+// Performs a search using a click on a one-off button.  This only tests the
+// FX_URLBAR_SELECTED_RESULT_METHOD histogram since test_oneOff_enter covers
+// everything else.
+add_task(function* test_oneOff_click() {
+  // Let's reset the counts.
+  Services.telemetry.clearScalars();
+
+  let resultMethodHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_METHOD");
+  resultMethodHist.clear();
+
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+
+  info("Type a query.");
+  let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  yield searchInAwesomebar("query");
+  info("Click the first one-off button.");
+  gURLBar.popup.oneOffSearchButtons.getSelectableButtons(false)[0].click();
+  yield p;
+
+  let resultMethods = resultMethodHist.snapshot();
+  checkHistogramResults(resultMethods,
+    URLBAR_SELECTED_RESULT_METHODS.click,
+    "FX_URLBAR_SELECTED_RESULT_METHOD");
+
+  yield BrowserTestUtils.removeTab(tab);
+});
+
+// Clicks the first suggestion offered by the test search engine.
+add_task(function* test_suggestion_click() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
   let resultIndexHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX");
   let resultTypeHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_TYPE");
   let resultIndexByTypeHist = Services.telemetry.getKeyedHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
+  let resultMethodHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_METHOD");
   resultIndexByTypeHist.clear();
   resultIndexHist.clear();
   resultTypeHist.clear();
+  resultMethodHist.clear();
 
   let search_hist = getSearchCountsHistogram();
 
@@ -283,7 +388,7 @@ add_task(function* test_suggestion() {
 
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
-  info("Perform a one-off search using the first engine.");
+  info("Type a query. Suggestions should be generated by the test engine.");
   let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   yield searchInAwesomebar("query");
   info("Clicking the urlbar suggestion.");
@@ -318,6 +423,54 @@ add_task(function* test_suggestion() {
   checkHistogramResults(resultIndexByType,
     3,
     "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
+
+  let resultMethods = resultMethodHist.snapshot();
+  checkHistogramResults(resultMethods,
+    URLBAR_SELECTED_RESULT_METHODS.click,
+    "FX_URLBAR_SELECTED_RESULT_METHOD");
+
+  Services.search.currentEngine = previousEngine;
+  Services.search.removeEngine(suggestionEngine);
+  yield BrowserTestUtils.removeTab(tab);
+});
+
+// Selects and presses the Return (Enter) key on the first suggestion offered by
+// the test search engine.  This only tests the FX_URLBAR_SELECTED_RESULT_METHOD
+// histogram since test_suggestion_click covers everything else.
+add_task(function* test_suggestion_enterSelection() {
+  // Let's reset the counts.
+  Services.telemetry.clearScalars();
+
+  let resultMethodHist = Services.telemetry.getHistogramById("FX_URLBAR_SELECTED_RESULT_METHOD");
+  resultMethodHist.clear();
+
+  // Create an engine to generate search suggestions and add it as default
+  // for this test.
+  const url = getRootDirectory(gTestPath) + "usageTelemetrySearchSuggestions.xml";
+  let suggestionEngine = yield new Promise((resolve, reject) => {
+    Services.search.addEngine(url, null, "", false, {
+      onSuccess(engine) { resolve(engine) },
+      onError() { reject() }
+    });
+  });
+
+  let previousEngine = Services.search.currentEngine;
+  Services.search.currentEngine = suggestionEngine;
+
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+
+  info("Type a query. Suggestions should be generated by the test engine.");
+  let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  yield searchInAwesomebar("query");
+  info("Select the second result and press Return.");
+  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.sendKey("return");
+  yield p;
+
+  let resultMethods = resultMethodHist.snapshot();
+  checkHistogramResults(resultMethods,
+    URLBAR_SELECTED_RESULT_METHODS.enterSelection,
+    "FX_URLBAR_SELECTED_RESULT_METHOD");
 
   Services.search.currentEngine = previousEngine;
   Services.search.removeEngine(suggestionEngine);
