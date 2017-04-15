@@ -92,6 +92,7 @@ XPCOMUtils.defineLazyGetter(this, "IconDetails", () => {
   return ExtensionUtils.IconDetails;
 });
 
+Services.ppmm.loadProcessScript("chrome://extensions/content/extension-process-script.js", true);
 
 Cu.importGlobalProperties(["URL"]);
 
