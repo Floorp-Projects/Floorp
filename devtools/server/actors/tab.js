@@ -336,7 +336,7 @@ TabActor.prototype = {
   get webextensionsContentScriptGlobals() {
     // Ignore xpcshell runtime which spawn TabActors without a window.
     if (this.window) {
-      return ExtensionContent.getContentScriptGlobalsForWindow(this.window);
+      return ExtensionContent.getContentScriptGlobals(this.window);
     }
 
     return [];

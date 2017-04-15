@@ -2535,6 +2535,7 @@ this.Schemas = {
       if (schemas) {
         this.schemaJSON = schemas;
       }
+
       Services.cpmm.addMessageListener("Schema:Add", this);
     }
 

@@ -1099,14 +1099,6 @@ ExtensionChild = {
   // Map<innerWindowId, ExtensionPageContextChild>
   extensionContexts: new Map(),
 
-  initOnce() {
-    // This initializes the default message handler for messages targeted at
-    // an addon process, in case the addon process receives a message before
-    // its Messenger has been instantiated. For example, if a content script
-    // sends a message while there is no background page.
-    MessageChannel.setupMessageManagers([Services.cpmm]);
-  },
-
   init(global) {
     if (!ExtensionManagement.isExtensionProcess) {
       throw new Error("Cannot init extension page global in current process");
@@ -1127,7 +1119,7 @@ ExtensionChild = {
    *     The extension for which the context should be created.
    * @param {nsIDOMWindow} contentWindow The global of the page.
    */
-  createExtensionContext(extension, contentWindow) {
+  initExtensionContext(extension, contentWindow) {
     if (!ExtensionManagement.isExtensionProcess) {
       throw new Error("Cannot create an extension page context in current process");
     }
