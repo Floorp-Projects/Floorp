@@ -106,6 +106,12 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() override { return this; }
 
+  virtual void NodeInfoChanged(nsIDocument* aOldDoc) override
+  {
+    ClearHasPendingLinkUpdate();
+    nsMathMLElementBase::NodeInfoChanged(aOldDoc);
+  }
+
 protected:
   virtual ~nsMathMLElement() {}
 

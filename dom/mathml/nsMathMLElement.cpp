@@ -136,11 +136,6 @@ nsMathMLElement::UnbindFromTree(bool aDeep, bool aNullParent)
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState(false, Link::ElementHasHref());
-  
-  nsIDocument* doc = GetUncomposedDoc();
-  if (doc) {
-    doc->UnregisterPendingLinkUpdate(this);
-  }
 
   nsMathMLElementBase::UnbindFromTree(aDeep, aNullParent);
 }
