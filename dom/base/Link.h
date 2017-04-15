@@ -126,6 +126,16 @@ public:
   void TryDNSPrefetchPreconnectOrPrefetchOrPrerender();
   void CancelPrefetch();
 
+  bool HasPendingLinkUpdate() { return mHasPendingLinkUpdate; }
+  void SetHasPendingLinkUpdate() { mHasPendingLinkUpdate = true; }
+  void ClearHasPendingLinkUpdate() { mHasPendingLinkUpdate = false; }
+
+  // To ensure correct mHasPendingLinkUpdate handling, we have this method
+  // similar to the one in Element. Overriders must call
+  // ClearHasPendingLinkUpdate().
+  // If you change this, change also the method in Element.
+  virtual void NodeInfoChanged(nsIDocument* aOldDoc) = 0;
+
 protected:
   virtual ~Link();
 
@@ -164,9 +174,11 @@ private:
 
   uint16_t mLinkState;
 
-  bool mNeedsRegistration;
+  bool mNeedsRegistration : 1;
 
-  bool mRegistered;
+  bool mRegistered : 1;
+
+  bool mHasPendingLinkUpdate : 1;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Link, MOZILLA_DOM_LINK_IMPLEMENTATION_IID)
