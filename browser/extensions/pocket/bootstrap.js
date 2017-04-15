@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
                                   "resource:///modules/RecentWindow.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
                                   "resource://gre/modules/ReaderMode.jsm");
@@ -477,21 +477,20 @@ function prefObserver(aSubject, aTopic, aData) {
 }
 
 function startup(data, reason) {
-  AddonManager.getAddonByID("isreaditlater@ideashower.com", addon => {
-    if (addon && addon.isActive)
-      return;
-    setDefaultPrefs();
-    // migrate enabled pref
-    if (Services.prefs.prefHasUserValue("browser.pocket.enabled")) {
-      Services.prefs.setBoolPref("extensions.pocket.enabled", Services.prefs.getBoolPref("browser.pocket.enabled"));
-      Services.prefs.clearUserPref("browser.pocket.enabled");
-    }
-    // watch pref change and enable/disable if necessary
-    Services.prefs.addObserver("extensions.pocket.enabled", prefObserver);
-    if (!Services.prefs.getBoolPref("extensions.pocket.enabled"))
-      return;
-    PocketOverlay.startup(reason);
-  });
+  if (AddonManagerPrivate.addonIsActive("isreaditlater@ideashower.com"))
+    return;
+
+  setDefaultPrefs();
+  // migrate enabled pref
+  if (Services.prefs.prefHasUserValue("browser.pocket.enabled")) {
+    Services.prefs.setBoolPref("extensions.pocket.enabled", Services.prefs.getBoolPref("browser.pocket.enabled"));
+    Services.prefs.clearUserPref("browser.pocket.enabled");
+  }
+  // watch pref change and enable/disable if necessary
+  Services.prefs.addObserver("extensions.pocket.enabled", prefObserver);
+  if (!Services.prefs.getBoolPref("extensions.pocket.enabled"))
+    return;
+  PocketOverlay.startup(reason);
 }
 
 function shutdown(data, reason) {
