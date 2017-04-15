@@ -1166,7 +1166,7 @@ AppendSharedLibraries(JSONWriter& aWriter)
 
 #ifdef MOZ_TASK_TRACER
 static void
-StreamNameAndThreadId(const char* aName, int aThreadId)
+StreamNameAndThreadId(JSONWriter& aWriter, const char* aName, int aThreadId)
 {
   aWriter.StartObjectElement();
   {
@@ -1201,13 +1201,13 @@ StreamTaskTracer(PS::LockRef aLock, SpliceableJSONWriter& aWriter)
     const PS::ThreadVector& liveThreads = gPS->LiveThreads(aLock);
     for (size_t i = 0; i < liveThreads.size(); i++) {
       ThreadInfo* info = liveThreads.at(i);
-      StreamNameAndThreadId(info->Name(), info->ThreadId());
+      StreamNameAndThreadId(aWriter, info->Name(), info->ThreadId());
     }
 
     const PS::ThreadVector& deadThreads = gPS->DeadThreads(aLock);
     for (size_t i = 0; i < deadThreads.size(); i++) {
       ThreadInfo* info = deadThreads.at(i);
-      StreamNameAndThreadId(info->Name(), info->ThreadId());
+      StreamNameAndThreadId(aWriter, info->Name(), info->ThreadId());
     }
   }
   aWriter.EndArray();
