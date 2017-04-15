@@ -2900,18 +2900,6 @@ pref("layout.frame_rate", -1);
 pref("layout.display-list.dump", false);
 pref("layout.display-list.dump-content", false);
 
-// pref to control precision of the frame rate timer. When true,
-// we use a "precise" timer, which means each notification fires
-// Nms after the start of the last notification. That means if the
-// processing of the notification is slow, the timer can fire immediately
-// after we've just finished processing the last notification, which might
-// lead to starvation problems.
-// When false, we use a "slack" timer which fires Nms after the *end*
-// of the last notification. This can give less tight frame rates
-// but provides more time for other operations when the browser is
-// heavily loaded.
-pref("layout.frame_rate.precise", false);
-
 // pref to control whether layout warnings that are hit quite often are enabled
 pref("layout.spammy_warnings.enabled", false);
 
