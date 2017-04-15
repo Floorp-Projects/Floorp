@@ -168,7 +168,7 @@ Sanitizer.prototype = {
           .then(function() {
             TelemetryStopwatch.finish("FX_SANITIZE_HISTORY", refObj);
             try {
-              Services.obs.notifyObservers(null, "browser:purge-session-history", "");
+              Services.obs.notifyObservers(null, "browser:purge-session-history");
             }
             catch (e) { }
 
@@ -198,7 +198,7 @@ Sanitizer.prototype = {
           .then(function() {
             try {
               // clear "Recently Closed" tabs in Android App
-              Services.obs.notifyObservers(null, "browser:purge-session-tabs", "");
+              Services.obs.notifyObservers(null, "browser:purge-session-tabs");
             }
             catch (e) { }
             TelemetryStopwatch.finish("FX_SANITIZE_OPENWINDOWS", refObj);
@@ -324,7 +324,7 @@ Sanitizer.prototype = {
           sdr.logoutAndTeardown();
 
           // clear FTP and plain HTTP auth sessions
-          Services.obs.notifyObservers(null, "net:clear-active-logins", null);
+          Services.obs.notifyObservers(null, "net:clear-active-logins");
 
           TelemetryStopwatch.finish("FX_SANITIZE_SESSIONS", refObj);
           resolve();

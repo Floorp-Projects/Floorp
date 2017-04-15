@@ -343,9 +343,9 @@ SPConsoleListener.prototype = {
 
     // Run in a separate runnable since console listeners aren't
     // supposed to touch content and this one might.
-    Services.tm.mainThread.dispatch(() => {
+    Services.tm.dispatchToMainThread(() => {
       this.callback.call(undefined, m);
-    }, Ci.nsIThread.DISPATCH_NORMAL);
+    });
 
     if (!m.isScriptError && m.message === "SENTINEL")
       Services.console.unregisterListener(this);
@@ -825,7 +825,7 @@ SpecialPowersAPI.prototype = {
         // main-process) and get signals from it.
         if (this.isMainProcess()) {
           this.permissionObserverProxy._specialPowersAPI = this;
-          Services.obs.addObserver(this.permissionObserverProxy, "perm-changed", false);
+          Services.obs.addObserver(this.permissionObserverProxy, "perm-changed");
         } else {
           this.registerObservers("perm-changed");
           // bind() is used to set 'this' to SpecialPowersAPI itself.
@@ -1173,7 +1173,7 @@ SpecialPowersAPI.prototype = {
         // Now apply any prefs that may have been queued while we were applying
         self._applyPrefs();
       });
-    }, false);
+    });
 
     for (var idx in pendingActions) {
       var pref = pendingActions[idx];
@@ -1191,7 +1191,7 @@ SpecialPowersAPI.prototype = {
       Services.obs.notifyObservers(null, "specialpowers-http-notify-request", uri);
     },
     "specialpowers-browser-fullZoom:zoomReset": function() {
-      Services.obs.notifyObservers(null, "specialpowers-browser-fullZoom:zoomReset", null);
+      Services.obs.notifyObservers(null, "specialpowers-browser-fullZoom:zoomReset");
     },
   },
 
@@ -1237,13 +1237,13 @@ SpecialPowersAPI.prototype = {
       obs.observe = wrapCallback(obs.observe);
     }
     let asyncObs = (...args) => {
-      Services.tm.mainThread.dispatch(() => {
+      Services.tm.dispatchToMainThread(() => {
         if (typeof obs == 'function') {
           obs.call(undefined, ...args);
         } else {
           obs.observe.call(undefined, ...args);
         }
-      }, Ci.nsIThread.DISPATCH_NORMAL);
+      });
     };
     this._asyncObservers.set(obs, asyncObs);
     Services.obs.addObserver(asyncObs, notification, weak);
@@ -2139,13 +2139,13 @@ SpecialPowersAPI.prototype = {
       Cc["@mozilla.org/url-classifier/dbservice;1"].getService(Ci.nsIURIClassifier);
 
     let wrapCallback = (...args) => {
-      Services.tm.mainThread.dispatch(() => {
+      Services.tm.dispatchToMainThread(() => {
         if (typeof callback == 'function') {
           callback.call(undefined, ...args);
         } else {
           callback.onClassifyComplete.call(undefined, ...args);
         }
-      }, Ci.nsIThread.DISPATCH_NORMAL);
+      });
     };
 
     return classifierService.classify(unwrapIfWrapped(principal), eventTarget,
@@ -2158,13 +2158,13 @@ SpecialPowersAPI.prototype = {
       Cc["@mozilla.org/url-classifier/dbservice;1"].getService(Ci.nsIURIClassifier);
 
     let wrapCallback = (...args) => {
-      Services.tm.mainThread.dispatch(() => {
+      Services.tm.dispatchToMainThread(() => {
         if (typeof callback == 'function') {
           callback.call(undefined, ...args);
         } else {
           callback.onClassifyComplete.call(undefined, ...args);
         }
-      }, Ci.nsIThread.DISPATCH_NORMAL);
+      });
     };
 
     return classifierService.asyncClassifyLocalWithTables(unwrapIfWrapped(uri),

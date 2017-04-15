@@ -53,15 +53,15 @@ function backgroundScript() {
     browser.test.sendMessage("received", {url: details.url, event});
 
     if (details.url == URL) {
-      browser.test.assertEq(details.frameId, 0, "root frame ID correct");
-      browser.test.assertEq(details.parentFrameId, -1, "root parent frame ID correct");
+      browser.test.assertEq(0, details.frameId, "root frame ID correct");
+      browser.test.assertEq(-1, details.parentFrameId, "root parent frame ID correct");
     } else {
-      browser.test.assertEq(details.parentFrameId, 0, "parent frame ID correct");
+      browser.test.assertEq(0, details.parentFrameId, "parent frame ID correct");
       browser.test.assertTrue(details.frameId != 0, "frame ID probably okay");
     }
 
-    browser.test.assertTrue(details.frameId !== undefined);
-    browser.test.assertTrue(details.parentFrameId !== undefined);
+    browser.test.assertTrue(details.frameId !== undefined, "frameId != undefined");
+    browser.test.assertTrue(details.parentFrameId !== undefined, "parentFrameId != undefined");
   }
 
   let listeners = {};

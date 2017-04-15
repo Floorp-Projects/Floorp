@@ -10,6 +10,7 @@
 #include "ClientLayerManager.h"
 #include "gfxPlatform.h"
 #include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/TabGroup.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/Hal.h"
 #include "mozilla/IMEStateManager.h"
@@ -309,9 +310,10 @@ PuppetWidget::Invalidate(const LayoutDeviceIntRect& aRect)
 
   mDirtyRegion.Or(mDirtyRegion, aRect);
 
-  if (!mDirtyRegion.IsEmpty() && !mPaintTask.IsPending()) {
+  if (mTabChild && !mDirtyRegion.IsEmpty() && !mPaintTask.IsPending()) {
     mPaintTask = new PaintTask(this);
-    NS_DispatchToCurrentThread(mPaintTask.get());
+    nsCOMPtr<nsIRunnable> event(mPaintTask.get());
+    mTabChild->TabGroup()->Dispatch("PuppetWidget::Invalidate", TaskCategory::Other, event.forget());
     return;
   }
 }
@@ -1425,13 +1427,6 @@ PuppetScreenManager::ScreenForRect(int32_t inLeft,
                                    nsIScreen** outScreen)
 {
   return GetPrimaryScreen(outScreen);
-}
-
-NS_IMETHODIMP
-PuppetScreenManager::GetSystemDefaultScale(float *aDefaultScale)
-{
-  *aDefaultScale = 1.0f;
-  return NS_OK;
 }
 
 nsIWidgetListener*

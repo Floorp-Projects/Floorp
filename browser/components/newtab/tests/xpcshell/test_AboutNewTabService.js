@@ -137,6 +137,6 @@ function nextChangeNotificationPromise(aNewURL, testMessage) {
       Services.obs.removeObserver(observer, aTopic);
       Assert.equal(aData, aNewURL, testMessage);
       resolve();
-    }, "newtab-url-changed", false);
+    }, "newtab-url-changed");
   });
 }

@@ -7,14 +7,17 @@ module.metadata = {
   "stability": "stable"
 };
 
-const json = require("./l10n/json/core");
-const { get: getKey } = require("./l10n/core");
-const properties = require("./l10n/properties/core");
-const { getRulesForLocale } = require("./l10n/plural-rules");
+lazyRequireModule(this, "./l10n/json/core", "json");
+lazyRequire(this, "./l10n/core", {"get": "getKey"});
+lazyRequireModule(this, "./l10n/properties/core", "properties");
+lazyRequire(this, "./l10n/plural-rules", "getRulesForLocale");
+
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 // Retrieve the plural mapping function
-var pluralMappingFunction = getRulesForLocale(json.language()) ||
-                            getRulesForLocale("en");
+XPCOMUtils.defineLazyGetter(this, "pluralMappingFunction",
+                            () => getRulesForLocale(json.language()) ||
+                                  getRulesForLocale("en"));
 
 exports.get = function get(k) {
   // For now, we only accept a "string" as first argument

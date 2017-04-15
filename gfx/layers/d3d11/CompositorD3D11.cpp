@@ -50,12 +50,6 @@ struct Vertex
     float position[2];
 };
 
-struct TexturedVertex
-{
-    float position[2];
-    float texCoords[2];
-};
-
 // {1E4D7BEB-D8EC-4A0B-BF0A-63E6DE129425}
 static const GUID sDeviceAttachmentsD3D11 =
 { 0x1e4d7beb, 0xd8ec, 0x4a0b, { 0xbf, 0xa, 0x63, 0xe6, 0xde, 0x12, 0x94, 0x25 } };
@@ -248,17 +242,8 @@ CompositorD3D11::UpdateDynamicVertexBuffer(const nsTArray<gfx::TexturedTriangle>
     return false;
   }
 
-  const auto vertexFromPoints = [](const gfx::Point& p, const gfx::Point& t) {
-    return TexturedVertex { { p.x, p.y }, { t.x, t.y } };
-  };
-
-  nsTArray<TexturedVertex> vertices;
-
-  for (const gfx::TexturedTriangle& t : aTriangles) {
-    vertices.AppendElement(vertexFromPoints(t.p1, t.textureCoords.p1));
-    vertices.AppendElement(vertexFromPoints(t.p2, t.textureCoords.p2));
-    vertices.AppendElement(vertexFromPoints(t.p3, t.textureCoords.p3));
-  }
+  const nsTArray<TexturedVertex> vertices =
+    TexturedTrianglesToVertexArray(aTriangles);
 
   memcpy(resource.pData, vertices.Elements(),
          vertices.Length() * sizeof(TexturedVertex));
@@ -1534,12 +1519,14 @@ CompositorD3D11::Present()
 }
 
 void
-CompositorD3D11::CancelFrame()
+CompositorD3D11::CancelFrame(bool aNeedFlush)
 {
   ReadUnlockTextures();
   // Flush the context, otherwise the driver might hold some resources alive
   // until the next flush or present.
-  mContext->Flush();
+  if (aNeedFlush) {
+    mContext->Flush();
+  }
 }
 
 void

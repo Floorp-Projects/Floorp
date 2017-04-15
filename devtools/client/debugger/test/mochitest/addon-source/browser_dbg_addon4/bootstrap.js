@@ -21,7 +21,7 @@ function startup(aParams, aReason) {
   // Log objects so makeDebuggeeValue can get the global to use
   console.log({ msg: "Hello from the test add-on" });
 
-  Services.obs.addObserver(notify, "addon-test-ping", false);
+  Services.obs.addObserver(notify, "addon-test-ping");
 }
 
 function shutdown(aParams, aReason) {

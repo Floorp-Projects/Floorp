@@ -170,6 +170,27 @@ public:
     return true;
   }
 
+  // This returns true if scrolling info is equivalent for the purposes of
+  // APZ hit testing.
+  bool HitTestingInfoIsEqual(const SimpleLayerAttributes& aOther) const {
+    if (mIsScrollbarContainer != aOther.mIsScrollbarContainer) {
+      return false;
+    }
+    if (mScrollbarTargetContainerId != aOther.mScrollbarTargetContainerId) {
+      return false;
+    }
+    if (mScrollbarDirection != aOther.mScrollbarDirection) {
+      return false;
+    }
+    if (FixedPositionScrollContainerId() != aOther.FixedPositionScrollContainerId()) {
+      return false;
+    }
+    if (mTransform != aOther.mTransform) {
+      return false;
+    }
+    return true;
+  }
+
   //
   // Getters.
   //

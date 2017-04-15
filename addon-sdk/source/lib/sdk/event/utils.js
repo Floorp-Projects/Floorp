@@ -7,7 +7,7 @@ module.metadata = {
   "stability": "unstable"
 };
 
-var { emit, on, once, off, EVENT_TYPE_PATTERN } = require("./core");
+lazyRequire(this, "./core", "emit", "on", "once", "off", "EVENT_TYPE_PATTERN");
 const { Cu } = require("chrome");
 
 // This module provides set of high order function for working with event

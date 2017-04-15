@@ -315,7 +315,8 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
         ASSERT_TRUE(!!videoInfo);
         EXPECT_TRUE(videoInfo->IsValid());
         EXPECT_TRUE(videoInfo->IsVideo());
-        EXPECT_EQ(tests[test].mVideoDuration, videoInfo->mDuration);
+        EXPECT_EQ(tests[test].mVideoDuration,
+                  videoInfo->mDuration.ToMicroseconds());
         EXPECT_EQ(tests[test].mWidth, videoInfo->mDisplay.width);
         EXPECT_EQ(tests[test].mHeight, videoInfo->mDisplay.height);
 
@@ -339,9 +340,11 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
         ASSERT_TRUE(!!audioInfo);
         EXPECT_TRUE(audioInfo->IsValid());
         EXPECT_TRUE(audioInfo->IsAudio());
-        EXPECT_EQ(tests[test].mAudioDuration, audioInfo->mDuration);
+        EXPECT_EQ(tests[test].mAudioDuration,
+                  audioInfo->mDuration.ToMicroseconds());
         EXPECT_EQ(tests[test].mAudioProfile, audioInfo->mProfile);
-        if (tests[test].mAudioDuration != audioInfo->mDuration) {
+        if (tests[test].mAudioDuration !=
+            audioInfo->mDuration.ToMicroseconds()) {
           MOZ_RELEASE_ASSERT(false);
         }
 

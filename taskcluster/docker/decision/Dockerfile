@@ -5,8 +5,8 @@ MAINTAINER    Greg Arndt <garndt@mozilla.com>
 RUN useradd -d /home/worker -s /bin/bash -m worker
 RUN mkdir /home/worker/artifacts && chown worker:worker /home/worker/artifacts
 
-# %include taskcluster/docker/recipes/tooltool.py
-ADD topsrcdir/taskcluster/docker/recipes/tooltool.py /tmp/tooltool.py
+# %include python/mozbuild/mozbuild/action/tooltool.py
+ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /tmp/tooltool.py
 
 # %include testing/mozharness/external_tools/robustcheckout.py
 ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py

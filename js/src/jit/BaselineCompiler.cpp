@@ -2353,6 +2353,19 @@ BaselineCompiler::emit_JSOP_IN()
 }
 
 bool
+BaselineCompiler::emit_JSOP_HASOWN()
+{
+    frame.popRegsAndSync(2);
+
+    ICHasOwn_Fallback::Compiler stubCompiler(cx);
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
+        return false;
+
+    frame.push(R0);
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_GETGNAME()
 {
     if (script->hasNonSyntacticScope())

@@ -188,16 +188,5 @@ ScreenManager::GetPrimaryScreen(nsIScreen** aPrimaryScreen)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-ScreenManager::GetSystemDefaultScale(float* aDefaultScale)
-{
-  if (mHelper) {
-    *aDefaultScale = mHelper->GetSystemDefaultScale();
-    return NS_OK;
-  }
-  *aDefaultScale = 1;
-  return NS_OK;
-}
-
 } // namespace widget
 } // namespace mozilla

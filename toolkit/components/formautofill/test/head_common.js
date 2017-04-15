@@ -85,7 +85,7 @@ var TestUtils = {
       function observe(aSubject, aTopic, aData) {
         Services.obs.removeObserver(observe, aTopic);
         resolve([aSubject, aData]);
-      }, aTopic, false));
+      }, aTopic));
   },
 
   /**

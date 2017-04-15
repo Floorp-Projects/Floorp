@@ -30,6 +30,7 @@ ServoStyleSet::ServoStyleSet()
   : mPresContext(nullptr)
   , mBatching(0)
   , mAllowResolveStaleStyles(false)
+  , mAuthorStyleDisabled(false)
 {
 }
 
@@ -124,13 +125,28 @@ ServoStyleSet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 bool
 ServoStyleSet::GetAuthorStyleDisabled() const
 {
-  return false;
+  return mAuthorStyleDisabled;
 }
 
 nsresult
 ServoStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled)
 {
-  MOZ_CRASH("stylo: not implemented");
+  if (mAuthorStyleDisabled == aStyleDisabled) {
+    return NS_OK;
+  }
+
+  mAuthorStyleDisabled = aStyleDisabled;
+
+  // If we've just disabled, we have to note the stylesheets have changed and
+  // call flush directly, since the PresShell won't.
+  if (mAuthorStyleDisabled) {
+    NoteStyleSheetsChanged();
+    Servo_StyleSet_FlushStyleSheets(mRawSet.get());
+  }
+  // If we've just enabled, then PresShell will trigger the notification and
+  // later flush when the stylesheet objects are enabled in JS.
+
+  return NS_OK;
 }
 
 void
@@ -404,18 +420,26 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
 }
 
 already_AddRefed<nsStyleContext>
-ServoStyleSet::ResolveTransientStyle(Element* aElement, CSSPseudoElementType aType)
+ServoStyleSet::ResolveTransientStyle(Element* aElement,
+                                     nsIAtom* aPseudoTag,
+                                     CSSPseudoElementType aPseudoType)
 {
-  nsIAtom* pseudoTag = nullptr;
-  if (aType != CSSPseudoElementType::NotPseudo) {
-    pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
-  }
-
   RefPtr<ServoComputedValues> computedValues =
-    ResolveStyleLazily(aElement, pseudoTag);
+    ResolveTransientServoStyle(aElement, aPseudoTag);
 
-  return GetContext(computedValues.forget(), nullptr, pseudoTag, aType,
-                    nullptr);
+  return GetContext(computedValues.forget(),
+                    nullptr,
+                    aPseudoTag,
+                    aPseudoType, nullptr);
+}
+
+already_AddRefed<ServoComputedValues>
+ServoStyleSet::ResolveTransientServoStyle(Element* aElement,
+                                          nsIAtom* aPseudoTag)
+{
+  PreTraverseSync();
+
+  return ResolveStyleLazily(aElement, aPseudoTag);
 }
 
 // aFlags is an nsStyleSet flags bitfield
@@ -796,7 +820,7 @@ ServoStyleSet::StyleSubtreeForReconstruct(Element* aRoot)
 void
 ServoStyleSet::NoteStyleSheetsChanged()
 {
-  Servo_StyleSet_NoteStyleSheetsChanged(mRawSet.get());
+  Servo_StyleSet_NoteStyleSheetsChanged(mRawSet.get(), mAuthorStyleDisabled);
 }
 
 #ifdef DEBUG
@@ -898,6 +922,16 @@ ServoStyleSet::AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray)
 {
   Servo_StyleSet_GetFontFaceRules(mRawSet.get(), &aArray);
   return true;
+}
+
+already_AddRefed<ServoComputedValues>
+ServoStyleSet::ResolveForDeclarations(
+  ServoComputedValuesBorrowedOrNull aParentOrNull,
+  RawServoDeclarationBlockBorrowed aDeclarations)
+{
+  return Servo_StyleSet_ResolveForDeclarations(mRawSet.get(),
+                                               aParentOrNull,
+                                               aDeclarations).Consume();
 }
 
 bool ServoStyleSet::sInServoTraversal = false;

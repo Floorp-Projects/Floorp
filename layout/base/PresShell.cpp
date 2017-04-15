@@ -4608,7 +4608,9 @@ nsIPresShell::RestyleForCSSRuleChanges()
   // Even if we have no frames, we can end up styling those when creating
   // them, and it's important for Servo to know that it needs to use the
   // correct styles.
-  if (mStyleSet->IsServo()) {
+  // We don't do this notification if author styles are disabled, because
+  // the ServoStyleSet has already taken care of it.
+  if (mStyleSet->IsServo() && !mStyleSet->AsServo()->GetAuthorStyleDisabled()) {
     mStyleSet->AsServo()->NoteStyleSheetsChanged();
   }
 

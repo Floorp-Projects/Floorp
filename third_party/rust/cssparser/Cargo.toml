@@ -1,7 +1,7 @@
 [package]
 
 name = "cssparser"
-version = "0.12.1"
+version = "0.12.2"
 authors = [ "Simon Sapin <simon.sapin@exyr.org>" ]
 
 description = "Rust implementation of CSS Syntax Level 3"
@@ -16,7 +16,7 @@ exclude = ["src/css-parsing-tests"]
 
 [dev-dependencies]
 rustc-serialize = "0.3"
-tempdir = "0.3"
+difference = "1.0"
 encoding_rs = "0.5"
 
 [dependencies]

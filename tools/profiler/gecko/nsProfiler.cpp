@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include "GeckoProfiler.h"
+#include "nsIFileStreams.h"
 #include "nsProfiler.h"
 #include "nsProfilerStartParams.h"
 #include "nsMemory.h"
@@ -22,9 +23,13 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"
 #include "ProfileGatherer.h"
+#include "nsLocalFile.h"
+#include "platform.h"
 
-using mozilla::ErrorResult;
-using mozilla::dom::Promise;
+using namespace mozilla;
+
+using dom::AutoJSAPI;
+using dom::Promise;
 using std::string;
 
 NS_IMPL_ISUPPORTS(nsProfiler, nsIProfiler)
@@ -241,7 +246,42 @@ nsProfiler::GetProfileDataAsync(double aSinceTime, JSContext* aCx,
     return result.StealNSResult();
   }
 
-  mGatherer->Start(aSinceTime, promise);
+  mGatherer->Start(aSinceTime)->Then(
+    AbstractThread::MainThread(), __func__,
+    [promise](nsCString aResult) {
+      AutoJSAPI jsapi;
+      if (NS_WARN_IF(!jsapi.Init(promise->GlobalJSObject()))) {
+        // We're really hosed if we can't get a JS context for some reason.
+        promise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
+        return;
+      }
+
+      JSContext* cx = jsapi.cx();
+
+      // Now parse the JSON so that we resolve with a JS Object.
+      JS::RootedValue val(cx);
+      {
+        NS_ConvertUTF8toUTF16 js_string(aResult);
+        if (!JS_ParseJSON(cx, static_cast<const char16_t*>(js_string.get()),
+                          js_string.Length(), &val)) {
+          if (!jsapi.HasException()) {
+            promise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
+          } else {
+            JS::RootedValue exn(cx);
+            DebugOnly<bool> gotException = jsapi.StealException(&exn);
+            MOZ_ASSERT(gotException);
+
+            jsapi.ClearException();
+            promise->MaybeReject(cx, exn);
+          }
+        } else {
+          promise->MaybeResolve(val);
+        }
+      }
+    },
+    [promise](nsresult aRv) {
+      promise->MaybeReject(aRv);
+    });
 
   promise.forget(aPromise);
   return NS_OK;
@@ -257,7 +297,24 @@ nsProfiler::DumpProfileToFileAsync(const nsACString& aFilename,
     return NS_ERROR_FAILURE;
   }
 
-  mGatherer->Start(aSinceTime, aFilename);
+  nsCString filename(aFilename);
+
+  mGatherer->Start(aSinceTime)->Then(
+    AbstractThread::MainThread(), __func__,
+    [filename](const nsCString& aResult) {
+      nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+      nsresult rv = file->InitWithNativePath(filename);
+      if (NS_FAILED(rv)) {
+        MOZ_CRASH();
+      }
+      nsCOMPtr<nsIFileOutputStream> of =
+        do_CreateInstance("@mozilla.org/network/file-output-stream;1");
+      of->Init(file, -1, -1, 0);
+      uint32_t sz;
+      of->Write(aResult.get(), aResult.Length(), &sz);
+      of->Close();
+    },
+    [](nsresult aRv) { });
 
   return NS_OK;
 }
@@ -361,7 +418,7 @@ nsProfiler::WillGatherOOPProfile()
 }
 
 void
-nsProfiler::GatheredOOPProfile()
+nsProfiler::GatheredOOPProfile(const nsACString& aProfile)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -369,7 +426,7 @@ nsProfiler::GatheredOOPProfile()
     return;
   }
 
-  mGatherer->GatheredOOPProfile();
+  mGatherer->GatheredOOPProfile(aProfile);
 }
 
 void

@@ -94,7 +94,7 @@ add_task(function* test_toggleTrackingProtection() {
         resolve();
       },
     };
-    prefBranch.addObserver("enabled", prefObserver, false);
+    prefBranch.addObserver("enabled", prefObserver);
   });
 
   let promisePrefChanged = waitForPrefChanged();

@@ -51,6 +51,7 @@ class Viewport {
     this.onPageChanged = null;
     this.onPasswordRequest = null;
     this.onFullscreenChange = null;
+    this.onBookmarksLoaded = null;
 
     this._viewportController.addEventListener('scroll', this);
     this._viewportController.addEventListener('copy', this);
@@ -670,6 +671,14 @@ class Viewport {
     });
   }
 
+  navigate(url, disposition) {
+    this._doAction({
+      type: 'openLink',
+      url: url,
+      disposition: disposition
+    });
+  }
+
   // A handler for delivering messages to runtime.
   registerActionHandler(handler) {
     if (typeof handler === 'function') {
@@ -765,6 +774,11 @@ class Viewport {
       case 'fullscreenChange':
         this._handleFullscreenChange(message.fullscreen);
         break;
+      case 'metadata':
+        if (typeof this.onBookmarksLoaded === 'function') {
+          this.onBookmarksLoaded(message.bookmarks);
+        }
+        break;
       case 'getPassword':
         this.onPasswordRequest && this.onPasswordRequest();
         break;
@@ -783,11 +797,7 @@ class Viewport {
         this.page = message.page;
         break;
       case 'navigate':
-        this._doAction({
-          type: 'openLink',
-          url: message.url,
-          disposition: message.disposition
-        });
+        this.navigate(message.url, message.disposition);
         break;
     }
   }

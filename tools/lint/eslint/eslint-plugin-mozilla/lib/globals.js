@@ -12,7 +12,6 @@ const path = require("path");
 const fs = require("fs");
 const helpers = require("./helpers");
 const escope = require("escope");
-const estraverse = require("estraverse");
 
 /**
  * Parses a list of "name:boolean_value" or/and "name" options divided by comma
@@ -46,7 +45,7 @@ function parseBooleanConfig(string, comment) {
 
     items[name] = {
       value: (value === "true"),
-      comment: comment
+      comment
     };
   });
 
@@ -78,7 +77,6 @@ var globalDiscoveryInProgressForFiles = new Set();
 function GlobalsForNode(filePath) {
   this.path = filePath;
   this.dirname = path.dirname(this.path);
-  this.root = helpers.getRootDir(this.path);
 }
 
 GlobalsForNode.prototype = {
@@ -100,7 +98,7 @@ GlobalsForNode.prototype = {
 
   ExpressionStatement(node, parents, globalScope) {
     let isGlobal = helpers.getIsGlobalScope(parents);
-    let globals = helpers.convertExpressionToGlobals(node, isGlobal, this.root);
+    let globals = helpers.convertExpressionToGlobals(node, isGlobal);
     // Map these globals now, as getGlobalsForFile is pre-mapped.
     globals = globals.map(name => {
       return { name, writable: true };
@@ -111,7 +109,7 @@ GlobalsForNode.prototype = {
     // the environment directly.
     if (globalScope && globalScope.set.get("importScripts")) {
       let workerDetails = helpers.convertWorkerExpressionToGlobals(node,
-        isGlobal, this.root, this.dirname);
+        isGlobal, this.dirname);
       globals = globals.concat(workerDetails);
     }
 
@@ -125,7 +123,7 @@ module.exports = {
    * import-globals-from directives and also includes globals defined by
    * standard eslint directives.
    *
-   * @param  {String} path
+   * @param  {String} filePath
    *         The absolute path of the file to be parsed.
    * @return {Array}
    *         An array of objects that contain details about the globals:
@@ -134,20 +132,19 @@ module.exports = {
    *         - {Boolean} writable
    *                     If the global is writeable or not.
    */
-  getGlobalsForFile(path) {
-    if (globalCache.has(path)) {
-      return globalCache.get(path);
+  getGlobalsForFile(filePath) {
+    if (globalCache.has(filePath)) {
+      return globalCache.get(filePath);
     }
 
-    if (globalDiscoveryInProgressForFiles.has(path)) {
+    if (globalDiscoveryInProgressForFiles.has(filePath)) {
       // We're already processing this file, so return an empty set for now -
       // the initial processing will pick up on the globals for this file.
       return [];
-    } else {
-      globalDiscoveryInProgressForFiles.add(path);
     }
+    globalDiscoveryInProgressForFiles.add(filePath);
 
-    let content = fs.readFileSync(path, "utf8");
+    let content = fs.readFileSync(filePath, "utf8");
 
     // Parse the content into an AST
     let ast = helpers.getAST(content);
@@ -162,14 +159,14 @@ module.exports = {
     }));
 
     // Walk over the AST to find any of our custom globals
-    let handler = new GlobalsForNode(path);
+    let handler = new GlobalsForNode(filePath);
 
     helpers.walkAST(ast, (type, node, parents) => {
       // We have to discover any globals that ESLint would have defined through
       // comment directives
       if (type == "BlockComment") {
         let value = node.value.trim();
-        value = value.replace(/\n/g, '');
+        value = value.replace(/\n/g, "");
         let match = /^globals?\s+(.+)/.exec(value);
         if (match) {
           let values = parseBooleanConfig(match[1].trim(), node);
@@ -188,9 +185,9 @@ module.exports = {
       }
     });
 
-    globalCache.set(path, globals);
+    globalCache.set(filePath, globals);
 
-    globalDiscoveryInProgressForFiles.delete(path);
+    globalDiscoveryInProgressForFiles.delete(filePath);
     return globals;
   },
 

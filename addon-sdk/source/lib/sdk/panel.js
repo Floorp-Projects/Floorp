@@ -14,28 +14,27 @@ module.metadata = {
 };
 
 const { Cu, Ci } = require("chrome");
-const { setTimeout } = require('./timers');
+lazyRequire(this, './timers', "setTimeout");
 const { Class } = require("./core/heritage");
-const { merge } = require("./util/object");
+const { DefaultWeakMap, merge } = require("./util/object");
 const { WorkerHost } = require("./content/utils");
-const { Worker } = require("./deprecated/sync-worker");
+lazyRequire(this, "./deprecated/sync-worker", "Worker");
 const { Disposable } = require("./core/disposable");
 const { WeakReference } = require('./core/reference');
 const { contract: loaderContract } = require("./content/loader");
 const { contract } = require("./util/contract");
-const { on, off, emit, setListeners } = require("./event/core");
+lazyRequire(this, "./event/core", "on", "off", "emit", "setListeners");
 const { EventTarget } = require("./event/target");
-const domPanel = require("./panel/utils");
-const { getDocShell } = require('./frame/utils');
+lazyRequireModule(this, "./panel/utils", "domPanel");
+lazyRequire(this, './frame/utils', "getDocShell");
 const { events } = require("./panel/events");
-const systemEvents = require("./system/events");
 const { filter, pipe, stripListeners } = require("./event/utils");
-const { getNodeView, getActiveView } = require("./view/core");
-const { isNil, isObject, isNumber } = require("./lang/type");
-const { getAttachEventType } = require("./content/utils");
+lazyRequire(this, "./view/core", "getNodeView", "getActiveView");
+lazyRequire(this, "./lang/type", "isNil", "isObject", "isNumber");
+lazyRequire(this, "./content/utils", "getAttachEventType");
 const { number, boolean, object } = require('./deprecated/api-utils');
-const { Style } = require("./stylesheet/style");
-const { attach, detach } = require("./content/mod");
+lazyRequire(this, "./stylesheet/style", "Style");
+lazyRequire(this, "./content/mod", "attach", "detach");
 
 var isRect = ({top, right, bottom, left}) => [top, right, bottom, left].
   some(value => isNumber(value) && !isNaN(value));
@@ -99,10 +98,36 @@ function isDisposed(panel) {
   return !views.has(panel);
 }
 
+var optionsMap = new WeakMap();
 var panels = new WeakMap();
 var models = new WeakMap();
-var views = new WeakMap();
-var workers = new WeakMap();
+var views = new DefaultWeakMap(panel => {
+  let model = models.get(panel);
+
+  // Setup view
+  let viewOptions = {allowJavascript: !model.allow || (model.allow.script !== false)};
+  let view = domPanel.make(null, viewOptions);
+  panels.set(view, panel);
+
+  // Load panel content.
+  domPanel.setURL(view, model.contentURL);
+
+  // Allow context menu
+  domPanel.allowContextMenu(view, model.contextMenu);
+
+  return view;
+});
+var workers = new DefaultWeakMap(panel => {
+  let options = optionsMap.get(panel);
+
+  let worker = new Worker(stripListeners(options));
+  workers.set(panel, worker);
+
+  // pipe events from worker to a panel.
+  pipe(worker, panel);
+
+  return worker;
+});
 var styles = new WeakMap();
 
 const viewFor = (panel) => views.get(panel);
@@ -207,38 +232,22 @@ const Panel = Class({
       }));
     }
 
-    // Setup view
-    let viewOptions = {allowJavascript: !model.allow || (model.allow.script !== false)};
-    let view = domPanel.make(null, viewOptions);
-    panels.set(view, this);
-    views.set(this, view);
-
-    // Load panel content.
-    domPanel.setURL(view, model.contentURL);
-
-    // Allow context menu
-    domPanel.allowContextMenu(view, model.contextMenu);
+    optionsMap.set(this, options);
 
     // Setup listeners.
     setListeners(this, options);
-    let worker = new Worker(stripListeners(options));
-    workers.set(this, worker);
-
-    // pipe events from worker to a panel.
-    pipe(worker, this);
   },
   dispose: function dispose() {
-    this.hide();
+    if (views.has(this))
+      this.hide();
     off(this);
 
     workerFor(this).destroy();
     detach(styleFor(this));
 
-    domPanel.dispose(viewFor(this));
+    if (views.has(this))
+      domPanel.dispose(viewFor(this));
 
-    // Release circular reference between view and panel instance. This
-    // way view will be GC-ed. And panel as well once all the other refs
-    // will be removed from it.
     views.delete(this);
   },
   /* Public API: Panel.width */
@@ -301,6 +310,7 @@ const Panel = Class({
 
   /* Public API: Panel.show */
   show: function show(options={}, anchor) {
+    let view = viewFor(this);
     SinglePanelManager.requestOpen(this, () => {
       if (options instanceof Ci.nsIDOMElement) {
         [anchor, options] = [options, null];
@@ -315,7 +325,6 @@ const Panel = Class({
       }
 
       let model = modelFor(this);
-      let view = viewFor(this);
       let anchorView = getNodeView(anchor || options.position || model.position);
 
       options = merge({

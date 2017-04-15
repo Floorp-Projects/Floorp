@@ -20,7 +20,7 @@ function obs() {
 
   this.os = Cc["@mozilla.org/observer-service;1"]
               .getService(Ci.nsIObserverService);
-  this.os.addObserver(this, "http-on-modify-request", false);
+  this.os.addObserver(this, "http-on-modify-request");
 }
 
 obs.prototype = {

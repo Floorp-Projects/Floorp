@@ -379,8 +379,8 @@ NetworkEventsHandler.prototype = {
    * @param object marker
    */
   _onDocLoadingMarker: function (marker) {
-    window.emit(EVENTS.TIMELINE_EVENT, marker);
     this.actions.addTimingMarker(marker);
+    window.emit(EVENTS.TIMELINE_EVENT, marker);
   },
 
   /**

@@ -4,7 +4,6 @@
 
 var {
   promiseObserved,
-  SingletonEventManager,
 } = ExtensionUtils;
 
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
@@ -97,7 +96,7 @@ this.sessions = class extends ExtensionAPI {
             fire.async();
           };
 
-          Services.obs.addObserver(observer, SS_ON_CLOSED_OBJECTS_CHANGED, false);
+          Services.obs.addObserver(observer, SS_ON_CLOSED_OBJECTS_CHANGED);
           return () => {
             Services.obs.removeObserver(observer, SS_ON_CLOSED_OBJECTS_CHANGED);
           };

@@ -2479,7 +2479,8 @@ CodeGeneratorX86Shared::visitFloat32x4ToInt32x4(LFloat32x4ToInt32x4* ins)
 
     masm.convertFloat32x4ToInt32x4(in, out);
 
-    auto* ool = new(alloc()) OutOfLineSimdFloatToIntCheck(temp, in, ins, ins->mir()->trapOffset());
+    auto* ool = new(alloc()) OutOfLineSimdFloatToIntCheck(temp, in, ins,
+                                                          ins->mir()->bytecodeOffset());
     addOutOfLineCode(ool, ins->mir());
 
     static const SimdConstant InvalidResult = SimdConstant::SplatX4(int32_t(-2147483648));
@@ -4596,7 +4597,7 @@ CodeGeneratorX86Shared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateChe
     MIRType toType = ool->toType();
     Label* oolRejoin = ool->rejoin();
     bool isUnsigned = ool->isUnsigned();
-    wasm::TrapOffset off = ool->trapOffset();
+    wasm::BytecodeOffset off = ool->bytecodeOffset();
 
     if (fromType == MIRType::Float32) {
         if (toType == MIRType::Int32)

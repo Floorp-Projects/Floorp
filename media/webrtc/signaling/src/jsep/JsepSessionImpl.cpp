@@ -2073,12 +2073,15 @@ JsepSessionImpl::ValidateAnswer(const Sdp& offer, const Sdp& answer)
           if (ansExt.extensionname == offExt.extensionname) {
             if ((ansExt.direction & reverse(offExt.direction))
                   != ansExt.direction) {
-              JSEP_SET_ERROR("Answer has inconsistent direction on extmap "
+              // FIXME we do not return an error here, because Chrome up to
+              // version 57 is actually tripping over this if they are the
+              // answerer. See bug 1355010 for details.
+              MOZ_MTLOG(ML_WARNING, "Answer has inconsistent direction on extmap "
                              "attribute at level " << i << " ("
                              << ansExt.extensionname << "). Offer had "
                              << offExt.direction << ", answer had "
                              << ansExt.direction << ".");
-              return NS_ERROR_INVALID_ARG;
+              // return NS_ERROR_INVALID_ARG;
             }
 
             if (offExt.entry < 4096 && (offExt.entry != ansExt.entry)) {

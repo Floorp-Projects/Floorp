@@ -146,7 +146,7 @@ LIRGeneratorX64::lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock*
 {
     lowerTypedPhiInput(phi, inputPosition, block, lirIndex);
 }
- 
+
 void
 LIRGeneratorX64::defineInt64Phi(MPhi* phi, size_t lirIndex)
 {

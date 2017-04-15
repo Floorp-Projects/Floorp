@@ -1689,15 +1689,15 @@ function buildJarURI(aJarfile, aPath) {
  *        The ZIP/XPI/JAR file as a nsIFile
  */
 function flushJarCache(aJarFile) {
-  Services.obs.notifyObservers(aJarFile, "flush-cache-entry", null);
+  Services.obs.notifyObservers(aJarFile, "flush-cache-entry");
   Services.mm.broadcastAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
 }
 
 function flushChromeCaches() {
   // Init this, so it will get the notification.
-  Services.obs.notifyObservers(null, "startupcache-invalidate", null);
+  Services.obs.notifyObservers(null, "startupcache-invalidate");
   // Flush message manager cached scripts
-  Services.obs.notifyObservers(null, "message-manager-flush-caches", null);
+  Services.obs.notifyObservers(null, "message-manager-flush-caches");
   // Also dispatch this event to child processes
   Services.mm.broadcastAsyncMessage(MSG_MESSAGE_MANAGER_CACHES_FLUSH, null);
 }
@@ -2809,13 +2809,13 @@ this.XPIProvider = {
                                                           null);
       this.enabledAddons = "";
 
-      Services.prefs.addObserver(PREF_EM_MIN_COMPAT_APP_VERSION, this, false);
-      Services.prefs.addObserver(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, this, false);
-      Services.prefs.addObserver(PREF_E10S_ADDON_BLOCKLIST, this, false);
-      Services.prefs.addObserver(PREF_E10S_ADDON_POLICY, this, false);
+      Services.prefs.addObserver(PREF_EM_MIN_COMPAT_APP_VERSION, this);
+      Services.prefs.addObserver(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, this);
+      Services.prefs.addObserver(PREF_E10S_ADDON_BLOCKLIST, this);
+      Services.prefs.addObserver(PREF_E10S_ADDON_POLICY, this);
       if (!REQUIRE_SIGNING)
-        Services.prefs.addObserver(PREF_XPI_SIGNATURES_REQUIRED, this, false);
-      Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS, false);
+        Services.prefs.addObserver(PREF_XPI_SIGNATURES_REQUIRED, this);
+      Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS);
 
       // Cu.isModuleLoaded can fail here for external XUL apps where there is
       // no chrome.manifest that defines resource://devtools.
@@ -2828,7 +2828,7 @@ this.XPIProvider = {
                                    this.onDebugConnectionChange.bind(this));
         } else {
           // Else, wait for it to load
-          Services.obs.addObserver(this, NOTIFICATION_TOOLBOXPROCESS_LOADED, false);
+          Services.obs.addObserver(this, NOTIFICATION_TOOLBOXPROCESS_LOADED);
         }
       }
 
@@ -2850,13 +2850,13 @@ this.XPIProvider = {
       }
 
       if (flushCaches) {
-        Services.obs.notifyObservers(null, "startupcache-invalidate", null);
+        Services.obs.notifyObservers(null, "startupcache-invalidate");
         // UI displayed early in startup (like the compatibility UI) may have
         // caused us to cache parts of the skin or locale in memory. These must
         // be flushed to allow extension provided skins and locales to take full
         // effect
-        Services.obs.notifyObservers(null, "chrome-flush-skin-caches", null);
-        Services.obs.notifyObservers(null, "chrome-flush-caches", null);
+        Services.obs.notifyObservers(null, "chrome-flush-skin-caches");
+        Services.obs.notifyObservers(null, "chrome-flush-caches");
       }
 
       this.enabledAddons = Preferences.get(PREF_EM_ENABLED_ADDONS, "");
@@ -2929,7 +2929,7 @@ this.XPIProvider = {
           }
           Services.obs.removeObserver(this, "quit-application-granted");
         }
-      }, "quit-application-granted", false);
+      }, "quit-application-granted");
 
       // Detect final-ui-startup for telemetry reporting
       Services.obs.addObserver({
@@ -2938,7 +2938,7 @@ this.XPIProvider = {
           XPIProvider.runPhase = XPI_AFTER_UI_STARTUP;
           Services.obs.removeObserver(this, "final-ui-startup");
         }
-      }, "final-ui-startup", false);
+      }, "final-ui-startup");
 
       AddonManagerPrivate.recordTimestamp("XPI_startup_end");
 
@@ -2995,7 +2995,7 @@ this.XPIProvider = {
       done.then(
         ret => {
           logger.debug("Notifying XPI shutdown observers");
-          Services.obs.notifyObservers(null, "xpi-provider-shutdown", null);
+          Services.obs.notifyObservers(null, "xpi-provider-shutdown");
         },
         err => {
           logger.debug("Notifying XPI shutdown observers");
@@ -3006,7 +3006,7 @@ this.XPIProvider = {
       return done;
     }
     logger.debug("Notifying XPI shutdown observers");
-    Services.obs.notifyObservers(null, "xpi-provider-shutdown", null);
+    Services.obs.notifyObservers(null, "xpi-provider-shutdown");
     return undefined;
   },
 
@@ -6307,7 +6307,7 @@ class DownloadAddonInstall extends AddonInstall {
       }
       this.channel.asyncOpen2(listener);
 
-      Services.obs.addObserver(this, "network:offline-about-to-go-offline", false);
+      Services.obs.addObserver(this, "network:offline-about-to-go-offline");
     } catch (e) {
       logger.warn("Failed to start download for addon " + this.sourceURI.spec, e);
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
@@ -7740,7 +7740,7 @@ AddonWrapper.prototype = {
       if (!this.temporarilyInstalled) {
         let addonFile = addon.getResourceURI;
         XPIProvider.updateAddonDisabledState(addon, true);
-        Services.obs.notifyObservers(addonFile, "flush-cache-entry", null);
+        Services.obs.notifyObservers(addonFile, "flush-cache-entry");
         XPIProvider.updateAddonDisabledState(addon, false)
         resolve();
       } else {

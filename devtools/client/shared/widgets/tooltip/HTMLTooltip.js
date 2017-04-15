@@ -174,6 +174,15 @@ function (anchorRect, viewportRect, width, type, offset, isRtl) {
  * is always the element's ownerDocument).
  */
 const getRelativeRect = function (node, relativeTo) {
+  // getBoxQuads is a non-standard WebAPI which will not work on non-firefox
+  // browser when running launchpad on Chrome.
+  if (!node.getBoxQuads) {
+    let {top, left, width, height} = node.getBoundingClientRect();
+    let right = left + width;
+    let bottom = top + height;
+    return {top, right, bottom, left, width, height};
+  }
+
   // Width and Height can be taken from the rect.
   let {width, height} = node.getBoundingClientRect();
 
@@ -483,6 +492,7 @@ HTMLTooltip.prototype = {
     if (this.xulPanelWrapper) {
       this.xulPanelWrapper.remove();
     }
+    this._toggle.destroy();
   },
 
   _createContainer: function () {

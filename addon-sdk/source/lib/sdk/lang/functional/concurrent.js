@@ -13,7 +13,8 @@ module.metadata = {
 };
 
 const { arity, name, derive, invoke } = require("./helpers");
-const { setTimeout, clearTimeout, setImmediate } = require("../../timers");
+
+lazyRequire(this, "sdk/timers", "setTimeout", "clearTimeout", "setImmediate");
 
 /**
  * Takes a function and returns a wrapped one instead, calling which will call

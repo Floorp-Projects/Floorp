@@ -488,7 +488,7 @@ WebConsoleFrame.prototype = {
     // to the toolbox before the web-console-created event is receieved.
     let notifyObservers = () => {
       let id = WebConsoleUtils.supportsString(this.hudId);
-      Services.obs.notifyObservers(id, "web-console-created", null);
+      Services.obs.notifyObservers(id, "web-console-created");
     };
     allReady.then(notifyObservers, notifyObservers);
 
@@ -1533,7 +1533,7 @@ WebConsoleFrame.prototype = {
 
     // Collect telemetry data regarding JavaScript errors
     this._telemetry.logKeyed("DEVTOOLS_JAVASCRIPT_ERROR_DISPLAYED",
-                             scriptError.errorMessageName,
+                             scriptError.errorMessageName || "Unknown",
                              true);
 
     if (objectActors.size > 0) {

@@ -38,7 +38,7 @@ function test() {
           "the permanent checkbox should not be checked when handling the private browsing mode");
         win.close();
         cleanup();
-      }, "cert-exception-ui-ready", false);
+      }, "cert-exception-ui-ready");
     }
     var win = pbWin.openDialog(EXCEPTIONS_DLG_URL, "", EXCEPTIONS_DLG_FEATURES, params);
     win.addEventListener("load", testCheckbox);

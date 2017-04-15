@@ -39,7 +39,6 @@ class Compartment
 {
     InstanceVector instances_;
     volatile bool  mutatingInstances_;
-    size_t         interruptedCount_;
 
     friend class js::WasmActivation;
 
@@ -58,7 +57,6 @@ class Compartment
   public:
     explicit Compartment(Zone* zone);
     ~Compartment();
-    void trace(JSTracer* trc);
 
     // Before a WasmInstanceObject can be considered fully constructed and
     // valid, it must be registered with the Compartment. If this method fails,
@@ -80,11 +78,6 @@ class Compartment
     // exists in the compartment.
 
     Code* lookupCode(const void* pc) const;
-
-    // The wasm::Compartment must be notified when execution is interrupted
-    // while executing in wasm code in this compartment.
-
-    void setInterrupted(bool interrupted);
 
     // Ensure all Instances in this JSCompartment have profiling labels created.
 

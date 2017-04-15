@@ -127,6 +127,10 @@ const HEADERS = [
     canFilter: false,
   },
   {
+    name: "protocol",
+    canFilter: true,
+  },
+  {
     name: "domain",
     boxName: "security-and-domain",
     canFilter: true,

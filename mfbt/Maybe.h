@@ -83,7 +83,7 @@ struct Nothing { };
  * whether or not this is still a problem.
  */
 template<class T>
-class MOZ_NON_PARAM Maybe
+class MOZ_NON_PARAM MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
 {
   alignas(T) unsigned char mStorage[sizeof(T)];
   char mIsSome; // not bool -- guarantees minimal space consumption

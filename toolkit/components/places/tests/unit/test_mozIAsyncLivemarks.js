@@ -165,7 +165,7 @@ add_task(function* test_addLivemark_parentId_succeeds() {
       do_check_eq(aItemType, Ci.nsINavBookmarksService.TYPE_FOLDER);
       do_check_eq(aTitle, "test");
     }
-  }, false);
+  });
 
   yield PlacesUtils.livemarks.addLivemark(
     { title: "test"

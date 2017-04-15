@@ -13,7 +13,6 @@ const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants")
 const EventEmitter = require("devtools/shared/event-emitter");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const {PluralForm} = require("devtools/shared/plural-form");
-const {template} = require("devtools/shared/gcli/templater");
 const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const {scrollIntoViewIfNeeded} = require("devtools/client/shared/scroll");
@@ -463,13 +462,6 @@ MarkupView.prototype = {
     }, NEW_SELECTION_HIGHLIGHTER_TIMER);
 
     return promise.all([onShown, this._briefBoxModelPromise.promise]);
-  },
-
-  template: function (name, dest, options = {stack: "markup.xhtml"}) {
-    let node = this.doc.getElementById("template-" + name).cloneNode(true);
-    node.removeAttribute("id");
-    template(node, dest, options);
-    return node;
   },
 
   /**
@@ -1668,28 +1660,13 @@ MarkupView.prototype = {
           container.children.firstChild.remove();
         }
 
-        if (!(children.hasFirst && children.hasLast)) {
-          let nodesCount = container.node.numChildren;
-          let showAllString = PluralForm.get(nodesCount,
-            INSPECTOR_L10N.getStr("markupView.more.showAll2"));
-          let data = {
-            showing: INSPECTOR_L10N.getStr("markupView.more.showing"),
-            showAll: showAllString.replace("#1", nodesCount),
-            allButtonClick: () => {
-              container.maxChildren = -1;
-              container.childrenDirty = true;
-              this._updateChildren(container);
-            }
-          };
-
-          if (!children.hasFirst) {
-            let span = this.template("more-nodes", data);
-            fragment.insertBefore(span, fragment.firstChild);
-          }
-          if (!children.hasLast) {
-            let span = this.template("more-nodes", data);
-            fragment.appendChild(span);
-          }
+        if (!children.hasFirst) {
+          let topItem = this.buildMoreNodesButtonMarkup(container);
+          fragment.insertBefore(topItem, fragment.firstChild);
+        }
+        if (!children.hasLast) {
+          let bottomItem = this.buildMoreNodesButtonMarkup(container);
+          fragment.appendChild(bottomItem);
         }
 
         container.children.appendChild(fragment);
@@ -1697,6 +1674,30 @@ MarkupView.prototype = {
       }).catch(this._handleRejectionIfNotDestroyed);
     this._queuedChildUpdates.set(container, updatePromise);
     return updatePromise;
+  },
+
+  buildMoreNodesButtonMarkup: function (container) {
+    let elt = this.doc.createElement("li");
+    elt.classList.add("more-nodes", "devtools-class-comment");
+
+    let label = this.doc.createElement("span");
+    label.textContent = INSPECTOR_L10N.getStr("markupView.more.showing");
+    elt.appendChild(label);
+
+    let button = this.doc.createElement("button");
+    button.setAttribute("href", "#");
+    let showAllString = PluralForm.get(container.node.numChildren,
+      INSPECTOR_L10N.getStr("markupView.more.showAll2"));
+    button.textContent = showAllString.replace("#1", container.node.numChildren);
+    elt.appendChild(button);
+
+    button.addEventListener("click", () => {
+      container.maxChildren = -1;
+      container.childrenDirty = true;
+      this._updateChildren(container);
+    });
+
+    return elt;
   },
 
   _waitForChildren: function () {

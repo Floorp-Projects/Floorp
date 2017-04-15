@@ -9,19 +9,19 @@ module.metadata = {
 
 const { Class } = require('./core/heritage');
 const { ns } = require('./core/namespace');
-const { pipe, stripListeners } = require('./event/utils');
+lazyRequire(this, './event/utils', "pipe", "stripListeners");
 const { connect, destroy, WorkerHost } = require('./content/utils');
-const { Worker } = require('./content/worker');
+lazyRequire(this, './content/worker', "Worker");
 const { Disposable } = require('./core/disposable');
 const { EventTarget } = require('./event/target');
-const { setListeners } = require('./event/core');
-const { window } = require('./addon/window');
-const { create: makeFrame, getDocShell } = require('./frame/utils');
+lazyRequire(this, './event/core', "setListeners");
+lazyRequire(this, './addon/window', "window");
+lazyRequire(this, './frame/utils', { "create": "makeFrame" }, "getDocShell");
 const { contract } = require('./util/contract');
 const { contract: loaderContract } = require('./content/loader');
-const { Rules } = require('./util/rules');
+lazyRequire(this, './util/rules', "Rules");
 const { merge } = require('./util/object');
-const { uuid } = require('./util/uuid');
+lazyRequire(this, './util/uuid', "uuid");
 const { useRemoteProcesses, remoteRequire, frames } = require("./remote/parent");
 remoteRequire("sdk/content/page-worker");
 

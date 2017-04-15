@@ -57,39 +57,32 @@ add_task(function* () {
 
   gStore.dispatch(Actions.selectRequest(null));
 
-  yield selectIndexAndWaitForEditor(0);
+  yield selectIndexAndWaitForSourceEditor(0);
   // the hls-m3u8 part
   testEditorContent(REQUESTS[0]);
 
-  yield selectIndexAndWaitForEditor(1);
+  yield selectIndexAndWaitForSourceEditor(1);
   // the mpeg-dash part
   testEditorContent(REQUESTS[1]);
 
   return teardown(monitor);
 
-  function* selectIndexAndWaitForEditor(index) {
-    let editor = document.querySelector("#response-panel .editor-mount iframe");
+  function* selectIndexAndWaitForSourceEditor(index) {
+    let editor = document.querySelector("#response-panel .CodeMirror-code");
     if (!editor) {
-      let waitDOM = waitForDOM(document, "#response-panel .editor-mount iframe");
+      let waitDOM = waitForDOM(document, "#response-panel .CodeMirror-code");
       EventUtils.sendMouseEvent({ type: "mousedown" },
         document.querySelectorAll(".request-list-item")[index]);
       document.querySelector("#response-tab").click();
-      [editor] = yield waitDOM;
-      yield once(editor, "DOMContentLoaded");
+      yield waitDOM;
     } else {
       EventUtils.sendMouseEvent({ type: "mousedown" },
         document.querySelectorAll(".request-list-item")[index]);
     }
-
-    yield waitForDOM(editor.contentDocument, ".CodeMirror-code");
   }
 
   function testEditorContent([ fmt, textRe ]) {
-    let editor = document.querySelector("#response-panel .editor-mount iframe");
-    let text = editor.contentDocument
-          .querySelector(".CodeMirror-line").textContent;
-
-    ok(text.match(textRe),
+    ok(document.querySelector(".CodeMirror-line").textContent.match(textRe),
       "The text shown in the source editor for " + fmt + " is correct.");
   }
 });

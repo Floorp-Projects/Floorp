@@ -69,7 +69,7 @@ function test() {
     }
   }
 
-  Services.obs.addObserver(observer, "browser-search-engine-modified", false);
+  Services.obs.addObserver(observer, "browser-search-engine-modified");
   SpecialPowers.pushPrefEnv({set: [["toolkit.telemetry.enabled", true]]}).then(function() {
     Services.search.addEngine("http://mochi.test:8888/browser/browser/components/search/test/testEngine.xml",
                               null, "data:image/x-icon,%00", false);

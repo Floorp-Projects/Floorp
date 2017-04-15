@@ -16,7 +16,7 @@ function promiseNotification(topic) {
       Services.obs.removeObserver(observe, topic);
       resolve();
     }
-    Services.obs.addObserver(observe, topic, false);
+    Services.obs.addObserver(observe, topic);
   });
 }
 
@@ -92,7 +92,7 @@ function MockFxAccounts(mockGrantClient) {
     _destroyOAuthToken(tokenData) {
       // somewhat sad duplication of _destroyOAuthToken, but hard to avoid.
       return mockGrantClient.destroyToken(tokenData.token).then( () => {
-        Services.obs.notifyObservers(null, "testhelper-fxa-revoke-complete", null);
+        Services.obs.notifyObservers(null, "testhelper-fxa-revoke-complete");
       });
     },
     _getDeviceName() {

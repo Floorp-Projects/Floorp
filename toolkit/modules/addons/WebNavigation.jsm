@@ -37,7 +37,7 @@ var Manager = {
 
     Services.obs.addObserver(this, "autocomplete-did-enter-text", true);
 
-    Services.obs.addObserver(this, "webNavigation-createdNavigationTarget", false);
+    Services.obs.addObserver(this, "webNavigation-createdNavigationTarget");
 
     Services.mm.addMessageListener("Content:Click", this);
     Services.mm.addMessageListener("Extension:DOMContentLoaded", this);
@@ -126,7 +126,7 @@ var Manager = {
 
       this.fire("onCreatedNavigationTarget", createdTabBrowser, {}, {
         sourceTabBrowser,
-        sourceWindowId: sourceFrameOuterWindowID,
+        sourceFrameId: sourceFrameOuterWindowID,
         url,
       });
     }
@@ -306,7 +306,7 @@ var Manager = {
   },
 
   onCreatedNavigationTarget(browser, data) {
-    const {isSourceTab, createdWindowId, sourceWindowId, url} = data;
+    const {isSourceTab, createdWindowId, sourceFrameId, url} = data;
 
     // We are going to potentially received two message manager messages for a single
     // onCreatedNavigationTarget event that is happening in the child process,
@@ -332,7 +332,7 @@ var Manager = {
     }
 
     this.fire("onCreatedNavigationTarget", createdTabBrowser, {}, {
-      sourceTabBrowser, sourceWindowId, url,
+      sourceTabBrowser, sourceFrameId, url,
     });
   },
 
@@ -391,11 +391,11 @@ var Manager = {
 
     let details = {
       browser,
-      windowId: data.windowId,
+      frameId: data.frameId,
     };
 
-    if (data.parentWindowId) {
-      details.parentWindowId = data.parentWindowId;
+    if (data.parentFrameId !== undefined) {
+      details.parentFrameId = data.parentFrameId;
     }
 
     for (let prop in extra) {

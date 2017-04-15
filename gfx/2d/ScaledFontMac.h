@@ -40,20 +40,22 @@ private:
 class ScaledFontMac : public ScaledFontBase
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontMac)
-  ScaledFontMac(CGFontRef aFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize);
-  virtual ~ScaledFontMac();
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontMac, override)
+  ScaledFontMac(CGFontRef aFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize, bool aOwnsFont = false);
+  ~ScaledFontMac();
 
-  virtual FontType GetType() const { return FontType::MAC; }
+  FontType GetType() const override { return FontType::MAC; }
 #ifdef USE_SKIA
-  virtual SkTypeface* GetSkTypeface();
+  SkTypeface* GetSkTypeface() override;
 #endif
-  virtual already_AddRefed<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget);
-  virtual bool GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton);
-  virtual bool CanSerialize() { return true; }
+  already_AddRefed<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget) override;
+
+  bool GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton) override;
+
+  bool CanSerialize() override { return true; }
 
 #ifdef USE_CAIRO_SCALED_FONT
-  cairo_font_face_t* GetCairoFontFace();
+  cairo_font_face_t* GetCairoFontFace() override;
 #endif
 
 private:

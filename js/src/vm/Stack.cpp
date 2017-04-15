@@ -1647,7 +1647,7 @@ WasmActivation::WasmActivation(JSContext* cx)
     entrySP_(nullptr),
     resumePC_(nullptr),
     exitFP_(nullptr),
-    exitReason_(wasm::ExitReason::None)
+    exitReason_(wasm::ExitReason::Fixed::None)
 {
     (void) entrySP_;  // silence "unused private member" warning
 
@@ -1664,11 +1664,47 @@ WasmActivation::~WasmActivation()
     // Hide this activation from the profiler before is is destroyed.
     unregisterProfiling();
 
+    MOZ_ASSERT(!interrupted());
     MOZ_ASSERT(exitFP_ == nullptr);
-    MOZ_ASSERT(exitReason_ == wasm::ExitReason::None);
+    MOZ_ASSERT(exitReason_.isNone());
 
     MOZ_ASSERT(cx_->wasmActivationStack_ == this);
     cx_->wasmActivationStack_ = prevWasm_;
+}
+
+void
+WasmActivation::unwindExitFP(uint8_t* exitFP)
+{
+    exitFP_ = exitFP;
+    exitReason_ = wasm::ExitReason::Fixed::None;
+}
+
+void
+WasmActivation::startInterrupt(void* pc, uint8_t* fp)
+{
+    MOZ_ASSERT(pc);
+    MOZ_ASSERT(fp);
+
+    // Execution can only be interrupted in function code. Afterwards, control
+    // flow does not reenter function code and thus there should be no
+    // interrupt-during-interrupt.
+    MOZ_ASSERT(!interrupted());
+    MOZ_ASSERT(compartment()->wasm.lookupCode(pc)->lookupRange(pc)->isFunction());
+
+    resumePC_ = pc;
+    exitFP_ = fp;
+
+    MOZ_ASSERT(interrupted());
+}
+
+void
+WasmActivation::finishInterrupt()
+{
+    MOZ_ASSERT(interrupted());
+    MOZ_ASSERT(exitFP_);
+
+    resumePC_ = nullptr;
+    exitFP_ = nullptr;
 }
 
 InterpreterFrameIterator&

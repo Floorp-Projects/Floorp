@@ -255,7 +255,7 @@ CacheRegisterAllocator::defineValueRegister(MacroAssembler& masm, ValOperandId v
 }
 
 void
-CacheRegisterAllocator::freeDeadOperandRegisters()
+CacheRegisterAllocator::freeDeadOperandLocations(MacroAssembler& masm)
 {
     // See if any operands are dead so we can reuse their registers. Note that
     // we skip the input operands, as those are also used by failure paths, and
@@ -272,9 +272,13 @@ CacheRegisterAllocator::freeDeadOperandRegisters()
           case OperandLocation::ValueReg:
             availableRegs_.add(loc.valueReg());
             break;
-          case OperandLocation::Uninitialized:
           case OperandLocation::PayloadStack:
+            masm.propagateOOM(freePayloadSlots_.append(loc.payloadStack()));
+            break;
           case OperandLocation::ValueStack:
+            masm.propagateOOM(freeValueSlots_.append(loc.valueStack()));
+            break;
+          case OperandLocation::Uninitialized:
           case OperandLocation::BaselineFrame:
           case OperandLocation::Constant:
           case OperandLocation::DoubleReg:
@@ -297,13 +301,15 @@ CacheRegisterAllocator::discardStack(MacroAssembler& masm)
         masm.addToStackPtr(Imm32(stackPushed_));
         stackPushed_ = 0;
     }
+    freePayloadSlots_.clear();
+    freeValueSlots_.clear();
 }
 
 Register
 CacheRegisterAllocator::allocateRegister(MacroAssembler& masm)
 {
     if (availableRegs_.empty())
-        freeDeadOperandRegisters();
+        freeDeadOperandLocations(masm);
 
     if (availableRegs_.empty()) {
         // Still no registers available, try to spill unused operands to
@@ -356,7 +362,7 @@ CacheRegisterAllocator::allocateFixedRegister(MacroAssembler& masm, Register reg
     // still available.
     MOZ_ASSERT(!currentOpRegs_.has(reg), "Register is in use");
 
-    freeDeadOperandRegisters();
+    freeDeadOperandLocations(masm);
 
     if (availableRegs_.has(reg)) {
         availableRegs_.take(reg);
@@ -562,6 +568,14 @@ CacheRegisterAllocator::spillOperandToStack(MacroAssembler& masm, OperandLocatio
     MOZ_ASSERT(loc >= operandLocations_.begin() && loc < operandLocations_.end());
 
     if (loc->kind() == OperandLocation::ValueReg) {
+        if (!freeValueSlots_.empty()) {
+            uint32_t stackPos = freeValueSlots_.popCopy();
+            MOZ_ASSERT(stackPos <= stackPushed_);
+            masm.storeValue(loc->valueReg(), Address(masm.getStackPointer(),
+                                                     stackPushed_ - stackPos));
+            loc->setValueStack(stackPos);
+            return;
+        }
         stackPushed_ += sizeof(js::Value);
         masm.pushValue(loc->valueReg());
         loc->setValueStack(stackPushed_);
@@ -570,6 +584,14 @@ CacheRegisterAllocator::spillOperandToStack(MacroAssembler& masm, OperandLocatio
 
     MOZ_ASSERT(loc->kind() == OperandLocation::PayloadReg);
 
+    if (!freePayloadSlots_.empty()) {
+        uint32_t stackPos = freePayloadSlots_.popCopy();
+        MOZ_ASSERT(stackPos <= stackPushed_);
+        masm.storePtr(loc->payloadReg(), Address(masm.getStackPointer(),
+                                                 stackPushed_ - stackPos));
+        loc->setPayloadStack(stackPos, loc->payloadType());
+        return;
+    }
     stackPushed_ += sizeof(uintptr_t);
     masm.push(loc->payloadReg());
     loc->setPayloadStack(stackPushed_, loc->payloadType());
@@ -617,6 +639,7 @@ CacheRegisterAllocator::popPayload(MacroAssembler& masm, OperandLocation* loc, R
     } else {
         MOZ_ASSERT(loc->payloadStack() < stackPushed_);
         masm.loadPtr(Address(masm.getStackPointer(), stackPushed_ - loc->payloadStack()), dest);
+        masm.propagateOOM(freePayloadSlots_.append(loc->payloadStack()));
     }
 
     loc->setPayloadReg(dest, loc->payloadType());
@@ -636,6 +659,7 @@ CacheRegisterAllocator::popValue(MacroAssembler& masm, OperandLocation* loc, Val
     } else {
         MOZ_ASSERT(loc->valueStack() < stackPushed_);
         masm.loadValue(Address(masm.getStackPointer(), stackPushed_ - loc->valueStack()), dest);
+        masm.propagateOOM(freeValueSlots_.append(loc->valueStack()));
     }
 
     loc->setValueReg(dest);
@@ -1602,10 +1626,12 @@ CacheIRCompiler::emitLoadBooleanResult()
     if (output.hasValue()) {
         Value val = BooleanValue(reader.readBool());
         masm.moveValue(val, output.valueReg());
+    } else {
+        MOZ_ASSERT(output.type() == JSVAL_TYPE_BOOLEAN);
+        bool b = reader.readBool();
+        masm.movePtr(ImmWord(b), output.typedReg().gpr());
     }
-    else {
-        MOZ_CRASH("NYI: Typed LoadBooleanResult");
-    }
+
     return true;
 }
 
@@ -2083,6 +2109,20 @@ CacheIRCompiler::emitLoadTypedObjectResultShared(const Address& fieldAddr, Regis
     }
 }
 
+bool
+CacheIRCompiler::emitLoadObjectResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+
+    if (output.hasValue())
+        masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
+    else
+        masm.mov(obj, output.typedReg().gpr());
+
+    return true;
+}
+
 void
 CacheIRCompiler::emitStoreTypedObjectReferenceProp(ValueOperand val, ReferenceTypeDescr::Type type,
                                                    const Address& dest, Register scratch)
@@ -2238,6 +2278,54 @@ CacheIRCompiler::emitMegamorphicLoadSlotByValueResult()
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyByValue<true>)));
     else
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataPropertyByValue<false>)));
+    masm.mov(ReturnReg, scratch);
+    masm.PopRegsInMask(volatileRegs);
+
+    masm.Pop(idVal);
+
+    Label ok;
+    uint32_t framePushed = masm.framePushed();
+    masm.branchIfTrueBool(scratch, &ok);
+    masm.adjustStack(sizeof(Value));
+    masm.jump(failure->label());
+
+    masm.bind(&ok);
+    masm.setFramePushed(framePushed);
+    masm.loadTypedOrValue(Address(masm.getStackPointer(), 0), output);
+    masm.adjustStack(sizeof(Value));
+    return true;
+}
+
+bool
+CacheIRCompiler::emitMegamorphicHasOwnResult()
+{
+    AutoOutputRegister output(*this);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
+
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // idVal will be in vp[0], result will be stored in vp[1].
+    masm.reserveStack(sizeof(Value));
+    masm.Push(idVal);
+    masm.moveStackPtrTo(idVal.scratchReg());
+
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    volatileRegs.takeUnchecked(scratch);
+    volatileRegs.takeUnchecked(idVal);
+    masm.PushRegsInMask(volatileRegs);
+
+    masm.setupUnalignedABICall(scratch);
+    masm.loadJSContext(scratch);
+    masm.passABIArg(scratch);
+    masm.passABIArg(obj);
+    masm.passABIArg(idVal.scratchReg());
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, HasOwnNativeDataProperty));
     masm.mov(ReturnReg, scratch);
     masm.PopRegsInMask(volatileRegs);
 

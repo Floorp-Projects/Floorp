@@ -152,13 +152,13 @@ DOMHelpers.prototype = {
         // If in `callback` the URL of the window is changed and a listener to DOMContentLoaded
         // is attached, the event we just received will be also be caught by the new listener.
         // We want to avoid that so we execute the callback in the next queue.
-        Services.tm.mainThread.dispatch(callback, 0);
+        Services.tm.dispatchToMainThread(callback);
       }
     };
     if ((window.document.readyState == "complete" ||
          window.document.readyState == "interactive") &&
          window.location.href == targetURL) {
-      Services.tm.mainThread.dispatch(callback, 0);
+      Services.tm.dispatchToMainThread(callback);
     } else {
       docShell.chromeEventHandler.addEventListener("DOMContentLoaded", onReady);
     }

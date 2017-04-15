@@ -10,6 +10,7 @@
 #include "PolygonTestUtils.h"
 
 #include <deque>
+#include <list>
 
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
@@ -20,7 +21,7 @@ namespace {
 static void RunTest(std::deque<MozPolygon> aPolygons,
                     std::deque<MozPolygon> aExpected)
 {
-  std::deque<LayerPolygon> layers;
+  std::list<LayerPolygon> layers;
   for (MozPolygon& polygon : aPolygons) {
     layers.push_back(LayerPolygon(nullptr, Move(polygon)));
   }
@@ -42,16 +43,16 @@ TEST(BSPTree, SameNode)
 {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(0.0f, 0.0f, 0.0f),
-      Point3D(1.0f, 0.0f, 0.0f),
-      Point3D(1.0f, 1.0f, 0.0f),
-      Point3D(0.0f, 1.0f, 0.0f)
+      Point4D(0.0f, 0.0f, 0.0f, 1.0f),
+      Point4D(1.0f, 0.0f, 0.0f, 1.0f),
+      Point4D(1.0f, 1.0f, 0.0f, 1.0f),
+      Point4D(0.0f, 1.0f, 0.0f, 1.0f)
     },
     MozPolygon {
-      Point3D(0.0f, 0.0f, 0.0f),
-      Point3D(1.0f, 0.0f, 0.0f),
-      Point3D(1.0f, 1.0f, 0.0f),
-      Point3D(0.0f, 1.0f, 0.0f)
+      Point4D(0.0f, 0.0f, 0.0f, 1.0f),
+      Point4D(1.0f, 0.0f, 0.0f, 1.0f),
+      Point4D(1.0f, 1.0f, 0.0f, 1.0f),
+      Point4D(0.0f, 1.0f, 0.0f, 1.0f)
     }
   };
 
@@ -61,17 +62,17 @@ TEST(BSPTree, SameNode)
 TEST(BSPTree, OneChild)
 {
   const MozPolygon p1 {
-    Point3D(0.0f, 0.0f, 0.0f),
-    Point3D(1.0f, 0.0f, 0.0f),
-    Point3D(1.0f, 1.0f, 0.0f),
-    Point3D(0.0f, 1.0f, 0.0f)
+    Point4D(0.0f, 0.0f, 0.0f, 1.0f),
+    Point4D(1.0f, 0.0f, 0.0f, 1.0f),
+    Point4D(1.0f, 1.0f, 0.0f, 1.0f),
+    Point4D(0.0f, 1.0f, 0.0f, 1.0f)
   };
 
   const MozPolygon p2 {
-    Point3D(0.0f, 0.0f, 1.0f),
-    Point3D(1.0f, 0.0f, 1.0f),
-    Point3D(1.0f, 1.0f, 1.0f),
-    Point3D(0.0f, 1.0f, 1.0f)
+    Point4D(0.0f, 0.0f, 1.0f, 1.0f),
+    Point4D(1.0f, 0.0f, 1.0f, 1.0f),
+    Point4D(1.0f, 1.0f, 1.0f, 1.0f),
+    Point4D(0.0f, 1.0f, 1.0f, 1.0f)
   };
 
   ::RunTest({p1, p2}, {p1, p2});
@@ -81,17 +82,17 @@ TEST(BSPTree, OneChild)
 TEST(BSPTree, SharedEdge1)
 {
   MozPolygon p1 {
-    Point3D(1.0f, 0.0f, 1.0f),
-    Point3D(0.0f, 0.0f, 1.0f),
-    Point3D(0.0f, 1.0f, 1.0f),
-    Point3D(1.0f, 1.0f, 1.0f)
+    Point4D(1.0f, 0.0f, 1.0f, 1.0f),
+    Point4D(0.0f, 0.0f, 1.0f, 1.0f),
+    Point4D(0.0f, 1.0f, 1.0f, 1.0f),
+    Point4D(1.0f, 1.0f, 1.0f, 1.0f)
   };
 
   MozPolygon p2 {
-    Point3D(1.0f, 0.0f, 1.0f),
-    Point3D(1.0f, 1.0f, 1.0f),
-    Point3D(2.0f, 2.0f, 1.0f),
-    Point3D(2.0f, 0.0f, 1.0f)
+    Point4D(1.0f, 0.0f, 1.0f, 1.0f),
+    Point4D(1.0f, 1.0f, 1.0f, 1.0f),
+    Point4D(2.0f, 2.0f, 1.0f, 1.0f),
+    Point4D(2.0f, 0.0f, 1.0f, 1.0f)
   };
 
   ::RunTest({p1, p2}, {p1, p2});
@@ -100,17 +101,17 @@ TEST(BSPTree, SharedEdge1)
 TEST(BSPTree, SharedEdge2)
 {
   MozPolygon p1 {
-    Point3D(1.0f, 0.0f, 1.0f),
-    Point3D(0.0f, 0.0f, 1.0f),
-    Point3D(0.0f, 1.0f, 1.0f),
-    Point3D(1.0f, 1.0f, 1.0f)
+    Point4D(1.0f, 0.0f, 1.0f, 1.0f),
+    Point4D(0.0f, 0.0f, 1.0f, 1.0f),
+    Point4D(0.0f, 1.0f, 1.0f, 1.0f),
+    Point4D(1.0f, 1.0f, 1.0f, 1.0f)
   };
 
   MozPolygon p2 {
-    Point3D(1.0f, 0.0f, 1.0f),
-    Point3D(1.0f, 1.0f, 1.0f),
-    Point3D(2.0f, 2.0f, 0.0f),
-    Point3D(2.0f, 0.0f, 0.0f)
+    Point4D(1.0f, 0.0f, 1.0f, 1.0f),
+    Point4D(1.0f, 1.0f, 1.0f, 1.0f),
+    Point4D(2.0f, 2.0f, 0.0f, 1.0f),
+    Point4D(2.0f, 0.0f, 0.0f, 1.0f)
   };
 
   ::RunTest({p1, p2}, {p2, p1});
@@ -119,37 +120,37 @@ TEST(BSPTree, SharedEdge2)
 TEST(BSPTree, SplitSharedEdge)
 {
   MozPolygon p1 {
-    Point3D(1.0f, 0.0f, 1.0f),
-    Point3D(0.0f, 0.0f, 1.0f),
-    Point3D(0.0f, 1.0f, 1.0f),
-    Point3D(1.0f, 1.0f, 1.0f)
+    Point4D(1.0f, 0.0f, 1.0f, 1.0f),
+    Point4D(0.0f, 0.0f, 1.0f, 1.0f),
+    Point4D(0.0f, 1.0f, 1.0f, 1.0f),
+    Point4D(1.0f, 1.0f, 1.0f, 1.0f)
   };
 
   MozPolygon p2 {
-    Point3D(1.0f, 0.0f, 2.0f),
-    Point3D(1.0f, 1.0f, 2.0f),
-    Point3D(1.0f, 1.0f, 0.0f),
-    Point3D(1.0f, 0.0f, 0.0f)
+    Point4D(1.0f, 0.0f, 2.0f, 1.0f),
+    Point4D(1.0f, 1.0f, 2.0f, 1.0f),
+    Point4D(1.0f, 1.0f, 0.0f, 1.0f),
+    Point4D(1.0f, 0.0f, 0.0f, 1.0f)
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(1.0f, 1.0f, 1.0f),
-      Point3D(1.0f, 1.0f, 0.0f),
-      Point3D(1.0f, 0.0f, 0.0f),
-      Point3D(1.0f, 0.0f, 1.0f)
+      Point4D(1.0f, 1.0f, 1.0f, 1.0f),
+      Point4D(1.0f, 1.0f, 0.0f, 1.0f),
+      Point4D(1.0f, 0.0f, 0.0f, 1.0f),
+      Point4D(1.0f, 0.0f, 1.0f, 1.0f)
     },
     MozPolygon {
-      Point3D(1.0f, 0.0f, 1.0f),
-      Point3D(0.0f, 0.0f, 1.0f),
-      Point3D(0.0f, 1.0f, 1.0f),
-      Point3D(1.0f, 1.0f, 1.0f)
+      Point4D(1.0f, 0.0f, 1.0f, 1.0f),
+      Point4D(0.0f, 0.0f, 1.0f, 1.0f),
+      Point4D(0.0f, 1.0f, 1.0f, 1.0f),
+      Point4D(1.0f, 1.0f, 1.0f, 1.0f)
     },
     MozPolygon {
-      Point3D(1.0f, 0.0f, 2.0f),
-      Point3D(1.0f, 1.0f, 2.0f),
-      Point3D(1.0f, 1.0f, 1.0f),
-      Point3D(1.0f, 0.0f, 1.0f)
+      Point4D(1.0f, 0.0f, 2.0f, 1.0f),
+      Point4D(1.0f, 1.0f, 2.0f, 1.0f),
+      Point4D(1.0f, 1.0f, 1.0f, 1.0f),
+      Point4D(1.0f, 0.0f, 1.0f, 1.0f)
     }
   };
 
@@ -159,32 +160,32 @@ TEST(BSPTree, SplitSharedEdge)
 TEST(BSPTree, SplitSimple1)
 {
   MozPolygon p1 {
-    Point3D(0.0f, 0.0f, 1.0f),
-    Point3D(1.0f, 0.0f, 1.0f),
-    Point3D(1.0f, 1.0f, 1.0f),
-    Point3D(0.0f, 1.0f, 1.0f)
+    Point4D(0.0f, 0.0f, 1.0f, 1.0f),
+    Point4D(1.0f, 0.0f, 1.0f, 1.0f),
+    Point4D(1.0f, 1.0f, 1.0f, 1.0f),
+    Point4D(0.0f, 1.0f, 1.0f, 1.0f)
   };
 
   MozPolygon p2 {
-    Point3D(0.0f, 0.0f, 2.0f),
-    Point3D(1.0f, 0.0f, 2.0f),
-    Point3D(1.0f, 1.0f, 0.0f),
-    Point3D(0.0f, 1.0f, 0.0f)
+    Point4D(0.0f, 0.0f, 2.0f, 1.0f),
+    Point4D(1.0f, 0.0f, 2.0f, 1.0f),
+    Point4D(1.0f, 1.0f, 0.0f, 1.0f),
+    Point4D(0.0f, 1.0f, 0.0f, 1.0f)
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(0.0f, 1.0f, 0.0f),
-      Point3D(0.0f, 0.5f, 1.0f),
-      Point3D(1.0f, 0.5f, 1.0f),
-      Point3D(1.0f, 1.0f, 0.0f)
+      Point4D(0.0f, 1.0f, 0.0f, 1.0f),
+      Point4D(0.0f, 0.5f, 1.0f, 1.0f),
+      Point4D(1.0f, 0.5f, 1.0f, 1.0f),
+      Point4D(1.0f, 1.0f, 0.0f, 1.0f)
     },
     p1,
     MozPolygon {
-      Point3D(0.0f, 0.0f, 2.0f),
-      Point3D(1.0f, 0.0f, 2.0f),
-      Point3D(1.0f, 0.5f, 1.0f),
-      Point3D(0.0f, 0.5f, 1.0f)
+      Point4D(0.0f, 0.0f, 2.0f, 1.0f),
+      Point4D(1.0f, 0.0f, 2.0f, 1.0f),
+      Point4D(1.0f, 0.5f, 1.0f, 1.0f),
+      Point4D(0.0f, 0.5f, 1.0f, 1.0f)
     }
   };
 
@@ -194,37 +195,37 @@ TEST(BSPTree, SplitSimple1)
 TEST(BSPTree, SplitSimple2) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-5.00000f, -5.00000f, 0.00000f),
-      Point3D(-5.00000f, 5.00000f, 0.00000f),
-      Point3D(5.00000f, 5.00000f, 0.00000f),
-      Point3D(5.00000f, -5.00000f, 0.00000f)
+      Point4D(-5.00000f, -5.00000f, 0.00000f, 1.0f),
+      Point4D(-5.00000f, 5.00000f, 0.00000f, 1.0f),
+      Point4D(5.00000f, 5.00000f, 0.00000f, 1.0f),
+      Point4D(5.00000f, -5.00000f, 0.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(0.00000f, -5.00000f, -5.00000f),
-      Point3D(0.00000f, 5.00000f, -5.00000f),
-      Point3D(0.00000f, 5.00000f, 5.00000f),
-      Point3D(0.00000f, -5.00000f, 5.00000f)
+      Point4D(0.00000f, -5.00000f, -5.00000f, 1.0f),
+      Point4D(0.00000f, 5.00000f, -5.00000f, 1.0f),
+      Point4D(0.00000f, 5.00000f, 5.00000f, 1.0f),
+      Point4D(0.00000f, -5.00000f, 5.00000f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(0.00000f, -5.00000f, 0.00000f),
-      Point3D(0.00000f, -5.00000f, -5.00000f),
-      Point3D(0.00000f, 5.00000f, -5.00000f),
-      Point3D(0.00000f, 5.00000f, 0.00000f)
+      Point4D(0.00000f, -5.00000f, 0.00000f, 1.0f),
+      Point4D(0.00000f, -5.00000f, -5.00000f, 1.0f),
+      Point4D(0.00000f, 5.00000f, -5.00000f, 1.0f),
+      Point4D(0.00000f, 5.00000f, 0.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(-5.00000f, -5.00000f, 0.00000f),
-      Point3D(-5.00000f, 5.00000f, 0.00000f),
-      Point3D(5.00000f, 5.00000f, 0.00000f),
-      Point3D(5.00000f, -5.00000f, 0.00000f)
+      Point4D(-5.00000f, -5.00000f, 0.00000f, 1.0f),
+      Point4D(-5.00000f, 5.00000f, 0.00000f, 1.0f),
+      Point4D(5.00000f, 5.00000f, 0.00000f, 1.0f),
+      Point4D(5.00000f, -5.00000f, 0.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(0.00000f, 5.00000f, 0.00000f),
-      Point3D(0.00000f, 5.00000f, 5.00000f),
-      Point3D(0.00000f, -5.00000f, 5.00000f),
-      Point3D(0.00000f, -5.00000f, 0.00000f)
+      Point4D(0.00000f, 5.00000f, 0.00000f, 1.0f),
+      Point4D(0.00000f, 5.00000f, 5.00000f, 1.0f),
+      Point4D(0.00000f, -5.00000f, 5.00000f, 1.0f),
+      Point4D(0.00000f, -5.00000f, 0.00000f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -233,43 +234,43 @@ TEST(BSPTree, SplitSimple2) {
 TEST(BSPTree, NoSplit1) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(0.00000f, 10.00000f, 0.00000f),
-      Point3D(0.00000f, 0.00000f, 0.00000f),
-      Point3D(10.00000f, 0.00000f, 0.00000f),
-      Point3D(10.00000f, 10.00000f, 0.00000f)
+      Point4D(0.00000f, 10.00000f, 0.00000f, 1.0f),
+      Point4D(0.00000f, 0.00000f, 0.00000f, 1.0f),
+      Point4D(10.00000f, 0.00000f, 0.00000f, 1.0f),
+      Point4D(10.00000f, 10.00000f, 0.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(0.00000f, 10.00000f, -5.00000f),
-      Point3D(0.00000f, 0.00000f, -5.00000f),
-      Point3D(10.00000f, 0.00000f, -5.00000f),
-      Point3D(10.00000f, 10.00000f, -5.00000f)
+      Point4D(0.00000f, 10.00000f, -5.00000f, 1.0f),
+      Point4D(0.00000f, 0.00000f, -5.00000f, 1.0f),
+      Point4D(10.00000f, 0.00000f, -5.00000f, 1.0f),
+      Point4D(10.00000f, 10.00000f, -5.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(0.00000f, 10.00000f, 5.00000f),
-      Point3D(0.00000f, 0.00000f, 5.00000f),
-      Point3D(10.00000f, 0.00000f, 5.00000f),
-      Point3D(10.00000f, 10.00000f, 5.00000f)
+      Point4D(0.00000f, 10.00000f, 5.00000f, 1.0f),
+      Point4D(0.00000f, 0.00000f, 5.00000f, 1.0f),
+      Point4D(10.00000f, 0.00000f, 5.00000f, 1.0f),
+      Point4D(10.00000f, 10.00000f, 5.00000f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(0.00000f, 10.00000f, -5.00000f),
-      Point3D(0.00000f, 0.00000f, -5.00000f),
-      Point3D(10.00000f, 0.00000f, -5.00000f),
-      Point3D(10.00000f, 10.00000f, -5.00000f)
+      Point4D(0.00000f, 10.00000f, -5.00000f, 1.0f),
+      Point4D(0.00000f, 0.00000f, -5.00000f, 1.0f),
+      Point4D(10.00000f, 0.00000f, -5.00000f, 1.0f),
+      Point4D(10.00000f, 10.00000f, -5.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(0.00000f, 10.00000f, 0.00000f),
-      Point3D(0.00000f, 0.00000f, 0.00000f),
-      Point3D(10.00000f, 0.00000f, 0.00000f),
-      Point3D(10.00000f, 10.00000f, 0.00000f)
+      Point4D(0.00000f, 10.00000f, 0.00000f, 1.0f),
+      Point4D(0.00000f, 0.00000f, 0.00000f, 1.0f),
+      Point4D(10.00000f, 0.00000f, 0.00000f, 1.0f),
+      Point4D(10.00000f, 10.00000f, 0.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(0.00000f, 10.00000f, 5.00000f),
-      Point3D(0.00000f, 0.00000f, 5.00000f),
-      Point3D(10.00000f, 0.00000f, 5.00000f),
-      Point3D(10.00000f, 10.00000f, 5.00000f)
+      Point4D(0.00000f, 10.00000f, 5.00000f, 1.0f),
+      Point4D(0.00000f, 0.00000f, 5.00000f, 1.0f),
+      Point4D(10.00000f, 0.00000f, 5.00000f, 1.0f),
+      Point4D(10.00000f, 10.00000f, 5.00000f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -278,31 +279,31 @@ TEST(BSPTree, NoSplit1) {
 TEST(BSPTree, NoSplit2) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-5.00000f, -5.00000f, 0.00000f),
-      Point3D(-5.00000f, 5.00000f, 0.00000f),
-      Point3D(5.00000f, 5.00000f, 0.00000f),
-      Point3D(5.00000f, -5.00000f, 0.00000f)
+      Point4D(-5.00000f, -5.00000f, 0.00000f, 1.0f),
+      Point4D(-5.00000f, 5.00000f, 0.00000f, 1.0f),
+      Point4D(5.00000f, 5.00000f, 0.00000f, 1.0f),
+      Point4D(5.00000f, -5.00000f, 0.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(0.00000f, 5.00000f, -15.00000f),
-      Point3D(0.00000f, -5.00000f, -15.00000f),
-      Point3D(0.00000f, -5.00000f, -10.00000f),
-      Point3D(0.00000f, 5.00000f, -10.00000f)
+      Point4D(0.00000f, 5.00000f, -15.00000f, 1.0f),
+      Point4D(0.00000f, -5.00000f, -15.00000f, 1.0f),
+      Point4D(0.00000f, -5.00000f, -10.00000f, 1.0f),
+      Point4D(0.00000f, 5.00000f, -10.00000f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(0.00000f, 5.00000f, -15.00000f),
-      Point3D(0.00000f, -5.00000f, -15.00000f),
-      Point3D(0.00000f, -5.00000f, -10.00000f),
-      Point3D(0.00000f, 5.00000f, -10.00000f)
+      Point4D(0.00000f, 5.00000f, -15.00000f, 1.0f),
+      Point4D(0.00000f, -5.00000f, -15.00000f, 1.0f),
+      Point4D(0.00000f, -5.00000f, -10.00000f, 1.0f),
+      Point4D(0.00000f, 5.00000f, -10.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(-5.00000f, -5.00000f, 0.00000f),
-      Point3D(-5.00000f, 5.00000f, 0.00000f),
-      Point3D(5.00000f, 5.00000f, 0.00000f),
-      Point3D(5.00000f, -5.00000f, 0.00000f)
+      Point4D(-5.00000f, -5.00000f, 0.00000f, 1.0f),
+      Point4D(-5.00000f, 5.00000f, 0.00000f, 1.0f),
+      Point4D(5.00000f, 5.00000f, 0.00000f, 1.0f),
+      Point4D(5.00000f, -5.00000f, 0.00000f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -311,31 +312,31 @@ TEST(BSPTree, NoSplit2) {
 TEST(BSPTree, TwoPlaneIntersectRotate0degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, 2.00000f, 2.00000f),
-      Point3D(-0.00000f, -2.00000f, 2.00000f),
-      Point3D(0.00010f, -2.00000f, -2.00000f),
-      Point3D(0.00010f, 2.00000f, -2.00000f)
+      Point4D(-0.00000f, 2.00000f, 2.00000f, 1.0f),
+      Point4D(-0.00000f, -2.00000f, 2.00000f, 1.0f),
+      Point4D(0.00010f, -2.00000f, -2.00000f, 1.0f),
+      Point4D(0.00010f, 2.00000f, -2.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 0.00000f, 2.00000f),
-      Point3D(2.00000f, -0.00000f, -2.00000f),
-      Point3D(-2.00000f, 0.00000f, -2.00000f),
-      Point3D(-2.00000f, 0.00010f, 2.00000f)
+      Point4D(2.00000f, 0.00000f, 2.00000f, 1.0f),
+      Point4D(2.00000f, -0.00000f, -2.00000f, 1.0f),
+      Point4D(-2.00000f, 0.00000f, -2.00000f, 1.0f),
+      Point4D(-2.00000f, 0.00010f, 2.00000f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(2.00000f, 0.00000f, 2.00000f),
-      Point3D(2.00000f, -0.00000f, -2.00000f),
-      Point3D(-2.00000f, 0.00000f, -2.00000f),
-      Point3D(-2.00000f, 0.00010f, 2.00000f)
+      Point4D(2.00000f, 0.00000f, 2.00000f, 1.0f),
+      Point4D(2.00000f, -0.00000f, -2.00000f, 1.0f),
+      Point4D(-2.00000f, 0.00000f, -2.00000f, 1.0f),
+      Point4D(-2.00000f, 0.00010f, 2.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(-0.00000f, 2.00000f, 2.00000f),
-      Point3D(-0.00000f, -2.00000f, 2.00000f),
-      Point3D(0.00010f, -2.00000f, -2.00000f),
-      Point3D(0.00010f, 2.00000f, -2.00000f)
+      Point4D(-0.00000f, 2.00000f, 2.00000f, 1.0f),
+      Point4D(-0.00000f, -2.00000f, 2.00000f, 1.0f),
+      Point4D(0.00010f, -2.00000f, -2.00000f, 1.0f),
+      Point4D(0.00010f, 2.00000f, -2.00000f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -344,31 +345,31 @@ TEST(BSPTree, TwoPlaneIntersectRotate0degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate20degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, 1.19540f, 2.56350f),
-      Point3D(-0.00000f, -2.56340f, 1.19540f),
-      Point3D(0.00010f, -1.19530f, -2.56340f),
-      Point3D(0.00010f, 2.56350f, -1.19530f)
+      Point4D(-0.00000f, 1.19540f, 2.56350f, 1.0f),
+      Point4D(-0.00000f, -2.56340f, 1.19540f, 1.0f),
+      Point4D(0.00010f, -1.19530f, -2.56340f, 1.0f),
+      Point4D(0.00010f, 2.56350f, -1.19530f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(-2.00000f, 0.68410f, -1.87930f),
-      Point3D(-2.00000f, -0.68400f, 1.87940f)
+      Point4D(2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(-2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(-2.00000f, -0.68400f, 1.87940f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(-2.00000f, 0.68410f, -1.87930f),
-      Point3D(-2.00000f, -0.68400f, 1.87940f)
+      Point4D(2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(-2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(-2.00000f, -0.68400f, 1.87940f, 1.0f)
     },
     MozPolygon {
-      Point3D(-0.00000f, 1.19540f, 2.56350f),
-      Point3D(-0.00000f, -2.56340f, 1.19540f),
-      Point3D(0.00010f, -1.19530f, -2.56340f),
-      Point3D(0.00010f, 2.56350f, -1.19530f)
+      Point4D(-0.00000f, 1.19540f, 2.56350f, 1.0f),
+      Point4D(-0.00000f, -2.56340f, 1.19540f, 1.0f),
+      Point4D(0.00010f, -1.19530f, -2.56340f, 1.0f),
+      Point4D(0.00010f, 2.56350f, -1.19530f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -377,31 +378,31 @@ TEST(BSPTree, TwoPlaneIntersectRotate20degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate40degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, -0.73200f, 2.73210f),
-      Point3D(-0.00000f, -2.73200f, -0.73200f),
-      Point3D(0.00010f, 0.73210f, -2.73200f),
-      Point3D(0.00010f, 2.73210f, 0.73210f)
+      Point4D(-0.00000f, -0.73200f, 2.73210f, 1.0f),
+      Point4D(-0.00000f, -2.73200f, -0.73200f, 1.0f),
+      Point4D(0.00010f, 0.73210f, -2.73200f, 1.0f),
+      Point4D(0.00010f, 2.73210f, 0.73210f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, -1.73200f, 1.00000f),
-      Point3D(2.00000f, 1.73210f, -0.99990f),
-      Point3D(-2.00000f, 1.73210f, -0.99990f),
-      Point3D(-2.00000f, -1.73200f, 1.00000f)
+      Point4D(2.00000f, -1.73200f, 1.00000f, 1.0f),
+      Point4D(2.00000f, 1.73210f, -0.99990f, 1.0f),
+      Point4D(-2.00000f, 1.73210f, -0.99990f, 1.0f),
+      Point4D(-2.00000f, -1.73200f, 1.00000f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(2.00000f, -1.73200f, 1.00000f),
-      Point3D(2.00000f, 1.73210f, -0.99990f),
-      Point3D(-2.00000f, 1.73210f, -0.99990f),
-      Point3D(-2.00000f, -1.73200f, 1.00000f)
+      Point4D(2.00000f, -1.73200f, 1.00000f, 1.0f),
+      Point4D(2.00000f, 1.73210f, -0.99990f, 1.0f),
+      Point4D(-2.00000f, 1.73210f, -0.99990f, 1.0f),
+      Point4D(-2.00000f, -1.73200f, 1.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(-0.00000f, -0.73200f, 2.73210f),
-      Point3D(-0.00000f, -2.73200f, -0.73200f),
-      Point3D(0.00010f, 0.73210f, -2.73200f),
-      Point3D(0.00010f, 2.73210f, 0.73210f)
+      Point4D(-0.00000f, -0.73200f, 2.73210f, 1.0f),
+      Point4D(-0.00000f, -2.73200f, -0.73200f, 1.0f),
+      Point4D(0.00010f, 0.73210f, -2.73200f, 1.0f),
+      Point4D(0.00010f, 2.73210f, 0.73210f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -410,37 +411,37 @@ TEST(BSPTree, TwoPlaneIntersectRotate40degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate60degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, -2.73200f, 0.73210f),
-      Point3D(-0.00000f, -0.73200f, -2.73200f),
-      Point3D(0.00010f, 2.73210f, -0.73200f),
-      Point3D(0.00010f, 0.73210f, 2.73210f)
+      Point4D(-0.00000f, -2.73200f, 0.73210f, 1.0f),
+      Point4D(-0.00000f, -0.73200f, -2.73200f, 1.0f),
+      Point4D(0.00010f, 2.73210f, -0.73200f, 1.0f),
+      Point4D(0.00010f, 0.73210f, 2.73210f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, -1.73200f, -1.00000f),
-      Point3D(2.00000f, 1.73210f, 1.00010f),
-      Point3D(-2.00000f, 1.73210f, 1.00010f),
-      Point3D(-2.00000f, -1.73200f, -1.00000f)
+      Point4D(2.00000f, -1.73200f, -1.00000f, 1.0f),
+      Point4D(2.00000f, 1.73210f, 1.00010f, 1.0f),
+      Point4D(-2.00000f, 1.73210f, 1.00010f, 1.0f),
+      Point4D(-2.00000f, -1.73200f, -1.00000f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(-2.00000f, 1.26793f, 0.73210f),
-      Point3D(-2.00000f, -1.73200f, -1.00000f),
-      Point3D(2.00000f, -1.73200f, -1.00000f),
-      Point3D(2.00000f, 1.26793f, 0.73210f)
+      Point4D(-2.00000f, 1.26793f, 0.73210f, 1.0f),
+      Point4D(-2.00000f, -1.73200f, -1.00000f, 1.0f),
+      Point4D(2.00000f, -1.73200f, -1.00000f, 1.0f),
+      Point4D(2.00000f, 1.26793f, 0.73210f, 1.0f)
     },
     MozPolygon {
-      Point3D(-0.00000f, -2.73200f, 0.73210f),
-      Point3D(-0.00000f, -0.73200f, -2.73200f),
-      Point3D(0.00010f, 2.73210f, -0.73200f),
-      Point3D(0.00010f, 0.73210f, 2.73210f)
+      Point4D(-0.00000f, -2.73200f, 0.73210f, 1.0f),
+      Point4D(-0.00000f, -0.73200f, -2.73200f, 1.0f),
+      Point4D(0.00010f, 2.73210f, -0.73200f, 1.0f),
+      Point4D(0.00010f, 0.73210f, 2.73210f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 1.26793f, 0.73210f),
-      Point3D(2.00000f, 1.73210f, 1.00010f),
-      Point3D(-2.00000f, 1.73210f, 1.00010f),
-      Point3D(-2.00000f, 1.26793f, 0.73210f)
+      Point4D(2.00000f, 1.26793f, 0.73210f, 1.0f),
+      Point4D(2.00000f, 1.73210f, 1.00010f, 1.0f),
+      Point4D(-2.00000f, 1.73210f, 1.00010f, 1.0f),
+      Point4D(-2.00000f, 1.26793f, 0.73210f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -449,31 +450,31 @@ TEST(BSPTree, TwoPlaneIntersectRotate60degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate80degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, -1.19530f, -2.56340f),
-      Point3D(-0.00000f, 2.56350f, -1.19530f),
-      Point3D(0.00010f, 1.19540f, 2.56350f),
-      Point3D(0.00010f, -2.56340f, 1.19540f)
+      Point4D(-0.00000f, -1.19530f, -2.56340f, 1.0f),
+      Point4D(-0.00000f, 2.56350f, -1.19530f, 1.0f),
+      Point4D(0.00010f, 1.19540f, 2.56350f, 1.0f),
+      Point4D(0.00010f, -2.56340f, 1.19540f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(-2.00000f, -0.68400f, 1.87940f),
-      Point3D(-2.00000f, 0.68410f, -1.87930f)
+      Point4D(2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(-2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(-2.00000f, 0.68410f, -1.87930f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(-0.00000f, -1.19530f, -2.56340f),
-      Point3D(-0.00000f, 2.56350f, -1.19530f),
-      Point3D(0.00010f, 1.19540f, 2.56350f),
-      Point3D(0.00010f, -2.56340f, 1.19540f)
+      Point4D(-0.00000f, -1.19530f, -2.56340f, 1.0f),
+      Point4D(-0.00000f, 2.56350f, -1.19530f, 1.0f),
+      Point4D(0.00010f, 1.19540f, 2.56350f, 1.0f),
+      Point4D(0.00010f, -2.56340f, 1.19540f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(-2.00000f, -0.68400f, 1.87940f),
-      Point3D(-2.00000f, 0.68410f, -1.87930f)
+      Point4D(2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(-2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(-2.00000f, 0.68410f, -1.87930f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -482,37 +483,37 @@ TEST(BSPTree, TwoPlaneIntersectRotate80degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate100degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, 2.73210f, -0.73200f),
-      Point3D(-0.00000f, 0.73210f, 2.73210f),
-      Point3D(0.00010f, -2.73200f, 0.73210f),
-      Point3D(0.00010f, -0.73200f, -2.73200f)
+      Point4D(-0.00000f, 2.73210f, -0.73200f, 1.0f),
+      Point4D(-0.00000f, 0.73210f, 2.73210f, 1.0f),
+      Point4D(0.00010f, -2.73200f, 0.73210f, 1.0f),
+      Point4D(0.00010f, -0.73200f, -2.73200f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 1.73210f, 1.00010f),
-      Point3D(2.00000f, -1.73200f, -1.00000f),
-      Point3D(-2.00000f, -1.73200f, -1.00000f),
-      Point3D(-2.00000f, 1.73210f, 1.00010f)
+      Point4D(2.00000f, 1.73210f, 1.00010f, 1.0f),
+      Point4D(2.00000f, -1.73200f, -1.00000f, 1.0f),
+      Point4D(-2.00000f, -1.73200f, -1.00000f, 1.0f),
+      Point4D(-2.00000f, 1.73210f, 1.00010f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(2.00000f, -1.26783f, -0.73200f),
-      Point3D(2.00000f, -1.73200f, -1.00000f),
-      Point3D(-2.00000f, -1.73200f, -1.00000f),
-      Point3D(-2.00000f, -1.26783f, -0.73200f)
+      Point4D(2.00000f, -1.26783f, -0.73200f, 1.0f),
+      Point4D(2.00000f, -1.73200f, -1.00000f, 1.0f),
+      Point4D(-2.00000f, -1.73200f, -1.00000f, 1.0f),
+      Point4D(-2.00000f, -1.26783f, -0.73200f, 1.0f)
     },
     MozPolygon {
-      Point3D(-0.00000f, 2.73210f, -0.73200f),
-      Point3D(-0.00000f, 0.73210f, 2.73210f),
-      Point3D(0.00010f, -2.73200f, 0.73210f),
-      Point3D(0.00010f, -0.73200f, -2.73200f)
+      Point4D(-0.00000f, 2.73210f, -0.73200f, 1.0f),
+      Point4D(-0.00000f, 0.73210f, 2.73210f, 1.0f),
+      Point4D(0.00010f, -2.73200f, 0.73210f, 1.0f),
+      Point4D(0.00010f, -0.73200f, -2.73200f, 1.0f)
     },
     MozPolygon {
-      Point3D(-2.00000f, -1.26783f, -0.73200f),
-      Point3D(-2.00000f, 1.73210f, 1.00010f),
-      Point3D(2.00000f, 1.73210f, 1.00010f),
-      Point3D(2.00000f, -1.26783f, -0.73200f)
+      Point4D(-2.00000f, -1.26783f, -0.73200f, 1.0f),
+      Point4D(-2.00000f, 1.73210f, 1.00010f, 1.0f),
+      Point4D(2.00000f, 1.73210f, 1.00010f, 1.0f),
+      Point4D(2.00000f, -1.26783f, -0.73200f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -521,31 +522,31 @@ TEST(BSPTree, TwoPlaneIntersectRotate100degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate120degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, -0.73200f, 2.73210f),
-      Point3D(-0.00000f, -2.73200f, -0.73200f),
-      Point3D(0.00010f, 0.73210f, -2.73200f),
-      Point3D(0.00010f, 2.73210f, 0.73210f)
+      Point4D(-0.00000f, -0.73200f, 2.73210f, 1.0f),
+      Point4D(-0.00000f, -2.73200f, -0.73200f, 1.0f),
+      Point4D(0.00010f, 0.73210f, -2.73200f, 1.0f),
+      Point4D(0.00010f, 2.73210f, 0.73210f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, -1.73200f, 1.00000f),
-      Point3D(2.00000f, 1.73210f, -0.99990f),
-      Point3D(-2.00000f, 1.73210f, -0.99990f),
-      Point3D(-2.00000f, -1.73200f, 1.00000f)
+      Point4D(2.00000f, -1.73200f, 1.00000f, 1.0f),
+      Point4D(2.00000f, 1.73210f, -0.99990f, 1.0f),
+      Point4D(-2.00000f, 1.73210f, -0.99990f, 1.0f),
+      Point4D(-2.00000f, -1.73200f, 1.00000f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(2.00000f, -1.73200f, 1.00000f),
-      Point3D(2.00000f, 1.73210f, -0.99990f),
-      Point3D(-2.00000f, 1.73210f, -0.99990f),
-      Point3D(-2.00000f, -1.73200f, 1.00000f)
+      Point4D(2.00000f, -1.73200f, 1.00000f, 1.0f),
+      Point4D(2.00000f, 1.73210f, -0.99990f, 1.0f),
+      Point4D(-2.00000f, 1.73210f, -0.99990f, 1.0f),
+      Point4D(-2.00000f, -1.73200f, 1.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(-0.00000f, -0.73200f, 2.73210f),
-      Point3D(-0.00000f, -2.73200f, -0.73200f),
-      Point3D(0.00010f, 0.73210f, -2.73200f),
-      Point3D(0.00010f, 2.73210f, 0.73210f)
+      Point4D(-0.00000f, -0.73200f, 2.73210f, 1.0f),
+      Point4D(-0.00000f, -2.73200f, -0.73200f, 1.0f),
+      Point4D(0.00010f, 0.73210f, -2.73200f, 1.0f),
+      Point4D(0.00010f, 2.73210f, 0.73210f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -554,31 +555,31 @@ TEST(BSPTree, TwoPlaneIntersectRotate120degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate140degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, -1.19530f, -2.56340f),
-      Point3D(-0.00000f, 2.56350f, -1.19530f),
-      Point3D(0.00010f, 1.19540f, 2.56350f),
-      Point3D(0.00010f, -2.56340f, 1.19540f)
+      Point4D(-0.00000f, -1.19530f, -2.56340f, 1.0f),
+      Point4D(-0.00000f, 2.56350f, -1.19530f, 1.0f),
+      Point4D(0.00010f, 1.19540f, 2.56350f, 1.0f),
+      Point4D(0.00010f, -2.56340f, 1.19540f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(-2.00000f, -0.68400f, 1.87940f),
-      Point3D(-2.00000f, 0.68410f, -1.87930f)
+      Point4D(2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(-2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(-2.00000f, 0.68410f, -1.87930f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(-0.00000f, -1.19530f, -2.56340f),
-      Point3D(-0.00000f, 2.56350f, -1.19530f),
-      Point3D(0.00010f, 1.19540f, 2.56350f),
-      Point3D(0.00010f, -2.56340f, 1.19540f)
+      Point4D(-0.00000f, -1.19530f, -2.56340f, 1.0f),
+      Point4D(-0.00000f, 2.56350f, -1.19530f, 1.0f),
+      Point4D(0.00010f, 1.19540f, 2.56350f, 1.0f),
+      Point4D(0.00010f, -2.56340f, 1.19540f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(-2.00000f, -0.68400f, 1.87940f),
-      Point3D(-2.00000f, 0.68410f, -1.87930f)
+      Point4D(2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(-2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(-2.00000f, 0.68410f, -1.87930f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -587,31 +588,31 @@ TEST(BSPTree, TwoPlaneIntersectRotate140degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate160degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, 2.00000f, 2.00000f),
-      Point3D(-0.00000f, -2.00000f, 2.00000f),
-      Point3D(0.00010f, -2.00000f, -2.00000f),
-      Point3D(0.00010f, 2.00000f, -2.00000f)
+      Point4D(-0.00000f, 2.00000f, 2.00000f, 1.0f),
+      Point4D(-0.00000f, -2.00000f, 2.00000f, 1.0f),
+      Point4D(0.00010f, -2.00000f, -2.00000f, 1.0f),
+      Point4D(0.00010f, 2.00000f, -2.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, -0.00000f, 2.00000f),
-      Point3D(2.00000f, 0.00010f, -2.00000f),
-      Point3D(-2.00000f, 0.00010f, -2.00000f),
-      Point3D(-2.00000f, -0.00000f, 2.00000f)
+      Point4D(2.00000f, -0.00000f, 2.00000f, 1.0f),
+      Point4D(2.00000f, 0.00010f, -2.00000f, 1.0f),
+      Point4D(-2.00000f, 0.00010f, -2.00000f, 1.0f),
+      Point4D(-2.00000f, -0.00000f, 2.00000f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(2.00000f, -0.00000f, 2.00000f),
-      Point3D(2.00000f, 0.00010f, -2.00000f),
-      Point3D(-2.00000f, 0.00010f, -2.00000f),
-      Point3D(-2.00000f, -0.00000f, 2.00000f)
+      Point4D(2.00000f, -0.00000f, 2.00000f, 1.0f),
+      Point4D(2.00000f, 0.00010f, -2.00000f, 1.0f),
+      Point4D(-2.00000f, 0.00010f, -2.00000f, 1.0f),
+      Point4D(-2.00000f, -0.00000f, 2.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(-0.00000f, 2.00000f, 2.00000f),
-      Point3D(-0.00000f, -2.00000f, 2.00000f),
-      Point3D(0.00010f, -2.00000f, -2.00000f),
-      Point3D(0.00010f, 2.00000f, -2.00000f)
+      Point4D(-0.00000f, 2.00000f, 2.00000f, 1.0f),
+      Point4D(-0.00000f, -2.00000f, 2.00000f, 1.0f),
+      Point4D(0.00010f, -2.00000f, -2.00000f, 1.0f),
+      Point4D(0.00010f, 2.00000f, -2.00000f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -620,31 +621,31 @@ TEST(BSPTree, TwoPlaneIntersectRotate160degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate180degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, -2.00000f, -2.00000f),
-      Point3D(-0.00000f, 2.00000f, -2.00000f),
-      Point3D(0.00010f, 2.00000f, 2.00000f),
-      Point3D(0.00010f, -2.00000f, 2.00000f)
+      Point4D(-0.00000f, -2.00000f, -2.00000f, 1.0f),
+      Point4D(-0.00000f, 2.00000f, -2.00000f, 1.0f),
+      Point4D(0.00010f, 2.00000f, 2.00000f, 1.0f),
+      Point4D(0.00010f, -2.00000f, 2.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 0.00010f, -2.00000f),
-      Point3D(2.00000f, -0.00000f, 2.00000f),
-      Point3D(-2.00000f, -0.00000f, 2.00000f),
-      Point3D(-2.00000f, 0.00010f, -2.00000f)
+      Point4D(2.00000f, 0.00010f, -2.00000f, 1.0f),
+      Point4D(2.00000f, -0.00000f, 2.00000f, 1.0f),
+      Point4D(-2.00000f, -0.00000f, 2.00000f, 1.0f),
+      Point4D(-2.00000f, 0.00010f, -2.00000f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(-0.00000f, -2.00000f, -2.00000f),
-      Point3D(-0.00000f, 2.00000f, -2.00000f),
-      Point3D(0.00010f, 2.00000f, 2.00000f),
-      Point3D(0.00010f, -2.00000f, 2.00000f)
+      Point4D(-0.00000f, -2.00000f, -2.00000f, 1.0f),
+      Point4D(-0.00000f, 2.00000f, -2.00000f, 1.0f),
+      Point4D(0.00010f, 2.00000f, 2.00000f, 1.0f),
+      Point4D(0.00010f, -2.00000f, 2.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 0.00010f, -2.00000f),
-      Point3D(2.00000f, -0.00000f, 2.00000f),
-      Point3D(-2.00000f, -0.00000f, 2.00000f),
-      Point3D(-2.00000f, 0.00010f, -2.00000f)
+      Point4D(2.00000f, 0.00010f, -2.00000f, 1.0f),
+      Point4D(2.00000f, -0.00000f, 2.00000f, 1.0f),
+      Point4D(-2.00000f, -0.00000f, 2.00000f, 1.0f),
+      Point4D(-2.00000f, 0.00010f, -2.00000f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -653,31 +654,31 @@ TEST(BSPTree, TwoPlaneIntersectRotate180degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate200degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, 1.19540f, 2.56350f),
-      Point3D(-0.00000f, -2.56340f, 1.19540f),
-      Point3D(0.00010f, -1.19530f, -2.56340f),
-      Point3D(0.00010f, 2.56350f, -1.19530f)
+      Point4D(-0.00000f, 1.19540f, 2.56350f, 1.0f),
+      Point4D(-0.00000f, -2.56340f, 1.19540f, 1.0f),
+      Point4D(0.00010f, -1.19530f, -2.56340f, 1.0f),
+      Point4D(0.00010f, 2.56350f, -1.19530f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(-2.00000f, 0.68410f, -1.87930f),
-      Point3D(-2.00000f, -0.68400f, 1.87940f)
+      Point4D(2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(-2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(-2.00000f, -0.68400f, 1.87940f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(-2.00000f, 0.68410f, -1.87930f),
-      Point3D(-2.00000f, -0.68400f, 1.87940f)
+      Point4D(2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(-2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(-2.00000f, -0.68400f, 1.87940f, 1.0f)
     },
     MozPolygon {
-      Point3D(-0.00000f, 1.19540f, 2.56350f),
-      Point3D(-0.00000f, -2.56340f, 1.19540f),
-      Point3D(0.00010f, -1.19530f, -2.56340f),
-      Point3D(0.00010f, 2.56350f, -1.19530f)
+      Point4D(-0.00000f, 1.19540f, 2.56350f, 1.0f),
+      Point4D(-0.00000f, -2.56340f, 1.19540f, 1.0f),
+      Point4D(0.00010f, -1.19530f, -2.56340f, 1.0f),
+      Point4D(0.00010f, 2.56350f, -1.19530f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -686,31 +687,31 @@ TEST(BSPTree, TwoPlaneIntersectRotate200degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate220degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, 0.73210f, -2.73200f),
-      Point3D(-0.00000f, 2.73210f, 0.73210f),
-      Point3D(0.00010f, -0.73200f, 2.73210f),
-      Point3D(0.00010f, -2.73200f, -0.73200f)
+      Point4D(-0.00000f, 0.73210f, -2.73200f, 1.0f),
+      Point4D(-0.00000f, 2.73210f, 0.73210f, 1.0f),
+      Point4D(0.00010f, -0.73200f, 2.73210f, 1.0f),
+      Point4D(0.00010f, -2.73200f, -0.73200f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 1.73210f, -0.99990f),
-      Point3D(2.00000f, -1.73200f, 1.00000f),
-      Point3D(-2.00000f, -1.73200f, 1.00000f),
-      Point3D(-2.00000f, 1.73210f, -0.99990f)
+      Point4D(2.00000f, 1.73210f, -0.99990f, 1.0f),
+      Point4D(2.00000f, -1.73200f, 1.00000f, 1.0f),
+      Point4D(-2.00000f, -1.73200f, 1.00000f, 1.0f),
+      Point4D(-2.00000f, 1.73210f, -0.99990f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(-0.00000f, 0.73210f, -2.73200f),
-      Point3D(-0.00000f, 2.73210f, 0.73210f),
-      Point3D(0.00010f, -0.73200f, 2.73210f),
-      Point3D(0.00010f, -2.73200f, -0.73200f)
+      Point4D(-0.00000f, 0.73210f, -2.73200f, 1.0f),
+      Point4D(-0.00000f, 2.73210f, 0.73210f, 1.0f),
+      Point4D(0.00010f, -0.73200f, 2.73210f, 1.0f),
+      Point4D(0.00010f, -2.73200f, -0.73200f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 1.73210f, -0.99990f),
-      Point3D(2.00000f, -1.73200f, 1.00000f),
-      Point3D(-2.00000f, -1.73200f, 1.00000f),
-      Point3D(-2.00000f, 1.73210f, -0.99990f)
+      Point4D(2.00000f, 1.73210f, -0.99990f, 1.0f),
+      Point4D(2.00000f, -1.73200f, 1.00000f, 1.0f),
+      Point4D(-2.00000f, -1.73200f, 1.00000f, 1.0f),
+      Point4D(-2.00000f, 1.73210f, -0.99990f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -719,37 +720,37 @@ TEST(BSPTree, TwoPlaneIntersectRotate220degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate240degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, -2.73200f, 0.73210f),
-      Point3D(-0.00000f, -0.73200f, -2.73200f),
-      Point3D(0.00010f, 2.73210f, -0.73200f),
-      Point3D(0.00010f, 0.73210f, 2.73210f)
+      Point4D(-0.00000f, -2.73200f, 0.73210f, 1.0f),
+      Point4D(-0.00000f, -0.73200f, -2.73200f, 1.0f),
+      Point4D(0.00010f, 2.73210f, -0.73200f, 1.0f),
+      Point4D(0.00010f, 0.73210f, 2.73210f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, -1.73200f, -1.00000f),
-      Point3D(2.00000f, 1.73210f, 1.00010f),
-      Point3D(-2.00000f, 1.73210f, 1.00010f),
-      Point3D(-2.00000f, -1.73200f, -1.00000f)
+      Point4D(2.00000f, -1.73200f, -1.00000f, 1.0f),
+      Point4D(2.00000f, 1.73210f, 1.00010f, 1.0f),
+      Point4D(-2.00000f, 1.73210f, 1.00010f, 1.0f),
+      Point4D(-2.00000f, -1.73200f, -1.00000f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(-2.00000f, 1.26793f, 0.73210f),
-      Point3D(-2.00000f, -1.73200f, -1.00000f),
-      Point3D(2.00000f, -1.73200f, -1.00000f),
-      Point3D(2.00000f, 1.26793f, 0.73210f)
+      Point4D(-2.00000f, 1.26793f, 0.73210f, 1.0f),
+      Point4D(-2.00000f, -1.73200f, -1.00000f, 1.0f),
+      Point4D(2.00000f, -1.73200f, -1.00000f, 1.0f),
+      Point4D(2.00000f, 1.26793f, 0.73210f, 1.0f)
     },
     MozPolygon {
-      Point3D(-0.00000f, -2.73200f, 0.73210f),
-      Point3D(-0.00000f, -0.73200f, -2.73200f),
-      Point3D(0.00010f, 2.73210f, -0.73200f),
-      Point3D(0.00010f, 0.73210f, 2.73210f)
+      Point4D(-0.00000f, -2.73200f, 0.73210f, 1.0f),
+      Point4D(-0.00000f, -0.73200f, -2.73200f, 1.0f),
+      Point4D(0.00010f, 2.73210f, -0.73200f, 1.0f),
+      Point4D(0.00010f, 0.73210f, 2.73210f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 1.26793f, 0.73210f),
-      Point3D(2.00000f, 1.73210f, 1.00010f),
-      Point3D(-2.00000f, 1.73210f, 1.00010f),
-      Point3D(-2.00000f, 1.26793f, 0.73210f)
+      Point4D(2.00000f, 1.26793f, 0.73210f, 1.0f),
+      Point4D(2.00000f, 1.73210f, 1.00010f, 1.0f),
+      Point4D(-2.00000f, 1.73210f, 1.00010f, 1.0f),
+      Point4D(-2.00000f, 1.26793f, 0.73210f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -758,31 +759,31 @@ TEST(BSPTree, TwoPlaneIntersectRotate240degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate260degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, 1.19540f, 2.56350f),
-      Point3D(-0.00000f, -2.56340f, 1.19540f),
-      Point3D(0.00010f, -1.19530f, -2.56340f),
-      Point3D(0.00010f, 2.56350f, -1.19530f)
+      Point4D(-0.00000f, 1.19540f, 2.56350f, 1.0f),
+      Point4D(-0.00000f, -2.56340f, 1.19540f, 1.0f),
+      Point4D(0.00010f, -1.19530f, -2.56340f, 1.0f),
+      Point4D(0.00010f, 2.56350f, -1.19530f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(-2.00000f, 0.68410f, -1.87930f),
-      Point3D(-2.00000f, -0.68400f, 1.87940f)
+      Point4D(2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(-2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(-2.00000f, -0.68400f, 1.87940f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(-2.00000f, 0.68410f, -1.87930f),
-      Point3D(-2.00000f, -0.68400f, 1.87940f)
+      Point4D(2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(-2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(-2.00000f, -0.68400f, 1.87940f, 1.0f)
     },
     MozPolygon {
-      Point3D(-0.00000f, 1.19540f, 2.56350f),
-      Point3D(-0.00000f, -2.56340f, 1.19540f),
-      Point3D(0.00010f, -1.19530f, -2.56340f),
-      Point3D(0.00010f, 2.56350f, -1.19530f)
+      Point4D(-0.00000f, 1.19540f, 2.56350f, 1.0f),
+      Point4D(-0.00000f, -2.56340f, 1.19540f, 1.0f),
+      Point4D(0.00010f, -1.19530f, -2.56340f, 1.0f),
+      Point4D(0.00010f, 2.56350f, -1.19530f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -791,37 +792,37 @@ TEST(BSPTree, TwoPlaneIntersectRotate260degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate280degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, 2.73210f, -0.73200f),
-      Point3D(-0.00000f, 0.73210f, 2.73210f),
-      Point3D(0.00010f, -2.73200f, 0.73210f),
-      Point3D(0.00010f, -0.73200f, -2.73200f)
+      Point4D(-0.00000f, 2.73210f, -0.73200f, 1.0f),
+      Point4D(-0.00000f, 0.73210f, 2.73210f, 1.0f),
+      Point4D(0.00010f, -2.73200f, 0.73210f, 1.0f),
+      Point4D(0.00010f, -0.73200f, -2.73200f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 1.73210f, 1.00010f),
-      Point3D(2.00000f, -1.73200f, -1.00000f),
-      Point3D(-2.00000f, -1.73200f, -1.00000f),
-      Point3D(-2.00000f, 1.73210f, 1.00010f)
+      Point4D(2.00000f, 1.73210f, 1.00010f, 1.0f),
+      Point4D(2.00000f, -1.73200f, -1.00000f, 1.0f),
+      Point4D(-2.00000f, -1.73200f, -1.00000f, 1.0f),
+      Point4D(-2.00000f, 1.73210f, 1.00010f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(2.00000f, -1.26783f, -0.73200f),
-      Point3D(2.00000f, -1.73200f, -1.00000f),
-      Point3D(-2.00000f, -1.73200f, -1.00000f),
-      Point3D(-2.00000f, -1.26783f, -0.73200f)
+      Point4D(2.00000f, -1.26783f, -0.73200f, 1.0f),
+      Point4D(2.00000f, -1.73200f, -1.00000f, 1.0f),
+      Point4D(-2.00000f, -1.73200f, -1.00000f, 1.0f),
+      Point4D(-2.00000f, -1.26783f, -0.73200f, 1.0f)
     },
     MozPolygon {
-      Point3D(-0.00000f, 2.73210f, -0.73200f),
-      Point3D(-0.00000f, 0.73210f, 2.73210f),
-      Point3D(0.00010f, -2.73200f, 0.73210f),
-      Point3D(0.00010f, -0.73200f, -2.73200f)
+      Point4D(-0.00000f, 2.73210f, -0.73200f, 1.0f),
+      Point4D(-0.00000f, 0.73210f, 2.73210f, 1.0f),
+      Point4D(0.00010f, -2.73200f, 0.73210f, 1.0f),
+      Point4D(0.00010f, -0.73200f, -2.73200f, 1.0f)
     },
     MozPolygon {
-      Point3D(-2.00000f, -1.26783f, -0.73200f),
-      Point3D(-2.00000f, 1.73210f, 1.00010f),
-      Point3D(2.00000f, 1.73210f, 1.00010f),
-      Point3D(2.00000f, -1.26783f, -0.73200f)
+      Point4D(-2.00000f, -1.26783f, -0.73200f, 1.0f),
+      Point4D(-2.00000f, 1.73210f, 1.00010f, 1.0f),
+      Point4D(2.00000f, 1.73210f, 1.00010f, 1.0f),
+      Point4D(2.00000f, -1.26783f, -0.73200f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -830,31 +831,31 @@ TEST(BSPTree, TwoPlaneIntersectRotate280degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate300degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, 0.73210f, -2.73200f),
-      Point3D(-0.00000f, 2.73210f, 0.73210f),
-      Point3D(0.00010f, -0.73200f, 2.73210f),
-      Point3D(0.00010f, -2.73200f, -0.73200f)
+      Point4D(-0.00000f, 0.73210f, -2.73200f, 1.0f),
+      Point4D(-0.00000f, 2.73210f, 0.73210f, 1.0f),
+      Point4D(0.00010f, -0.73200f, 2.73210f, 1.0f),
+      Point4D(0.00010f, -2.73200f, -0.73200f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 1.73210f, -0.99990f),
-      Point3D(2.00000f, -1.73200f, 1.00000f),
-      Point3D(-2.00000f, -1.73200f, 1.00000f),
-      Point3D(-2.00000f, 1.73210f, -0.99990f)
+      Point4D(2.00000f, 1.73210f, -0.99990f, 1.0f),
+      Point4D(2.00000f, -1.73200f, 1.00000f, 1.0f),
+      Point4D(-2.00000f, -1.73200f, 1.00000f, 1.0f),
+      Point4D(-2.00000f, 1.73210f, -0.99990f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(-0.00000f, 0.73210f, -2.73200f),
-      Point3D(-0.00000f, 2.73210f, 0.73210f),
-      Point3D(0.00010f, -0.73200f, 2.73210f),
-      Point3D(0.00010f, -2.73200f, -0.73200f)
+      Point4D(-0.00000f, 0.73210f, -2.73200f, 1.0f),
+      Point4D(-0.00000f, 2.73210f, 0.73210f, 1.0f),
+      Point4D(0.00010f, -0.73200f, 2.73210f, 1.0f),
+      Point4D(0.00010f, -2.73200f, -0.73200f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 1.73210f, -0.99990f),
-      Point3D(2.00000f, -1.73200f, 1.00000f),
-      Point3D(-2.00000f, -1.73200f, 1.00000f),
-      Point3D(-2.00000f, 1.73210f, -0.99990f)
+      Point4D(2.00000f, 1.73210f, -0.99990f, 1.0f),
+      Point4D(2.00000f, -1.73200f, 1.00000f, 1.0f),
+      Point4D(-2.00000f, -1.73200f, 1.00000f, 1.0f),
+      Point4D(-2.00000f, 1.73210f, -0.99990f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -863,31 +864,31 @@ TEST(BSPTree, TwoPlaneIntersectRotate300degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate320degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, -1.19530f, -2.56340f),
-      Point3D(-0.00000f, 2.56350f, -1.19530f),
-      Point3D(0.00010f, 1.19540f, 2.56350f),
-      Point3D(0.00010f, -2.56340f, 1.19540f)
+      Point4D(-0.00000f, -1.19530f, -2.56340f, 1.0f),
+      Point4D(-0.00000f, 2.56350f, -1.19530f, 1.0f),
+      Point4D(0.00010f, 1.19540f, 2.56350f, 1.0f),
+      Point4D(0.00010f, -2.56340f, 1.19540f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(-2.00000f, -0.68400f, 1.87940f),
-      Point3D(-2.00000f, 0.68410f, -1.87930f)
+      Point4D(2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(-2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(-2.00000f, 0.68410f, -1.87930f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(-0.00000f, -1.19530f, -2.56340f),
-      Point3D(-0.00000f, 2.56350f, -1.19530f),
-      Point3D(0.00010f, 1.19540f, 2.56350f),
-      Point3D(0.00010f, -2.56340f, 1.19540f)
+      Point4D(-0.00000f, -1.19530f, -2.56340f, 1.0f),
+      Point4D(-0.00000f, 2.56350f, -1.19530f, 1.0f),
+      Point4D(0.00010f, 1.19540f, 2.56350f, 1.0f),
+      Point4D(0.00010f, -2.56340f, 1.19540f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 0.68410f, -1.87930f),
-      Point3D(2.00000f, -0.68400f, 1.87940f),
-      Point3D(-2.00000f, -0.68400f, 1.87940f),
-      Point3D(-2.00000f, 0.68410f, -1.87930f)
+      Point4D(2.00000f, 0.68410f, -1.87930f, 1.0f),
+      Point4D(2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(-2.00000f, -0.68400f, 1.87940f, 1.0f),
+      Point4D(-2.00000f, 0.68410f, -1.87930f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -896,31 +897,31 @@ TEST(BSPTree, TwoPlaneIntersectRotate320degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate340degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, -2.00000f, -2.00000f),
-      Point3D(-0.00000f, 2.00000f, -2.00000f),
-      Point3D(0.00010f, 2.00000f, 2.00000f),
-      Point3D(0.00010f, -2.00000f, 2.00000f)
+      Point4D(-0.00000f, -2.00000f, -2.00000f, 1.0f),
+      Point4D(-0.00000f, 2.00000f, -2.00000f, 1.0f),
+      Point4D(0.00010f, 2.00000f, 2.00000f, 1.0f),
+      Point4D(0.00010f, -2.00000f, 2.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 0.00010f, -2.00000f),
-      Point3D(2.00000f, -0.00000f, 2.00000f),
-      Point3D(-2.00000f, -0.00000f, 2.00000f),
-      Point3D(-2.00000f, 0.00010f, -2.00000f)
+      Point4D(2.00000f, 0.00010f, -2.00000f, 1.0f),
+      Point4D(2.00000f, -0.00000f, 2.00000f, 1.0f),
+      Point4D(-2.00000f, -0.00000f, 2.00000f, 1.0f),
+      Point4D(-2.00000f, 0.00010f, -2.00000f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(-0.00000f, -2.00000f, -2.00000f),
-      Point3D(-0.00000f, 2.00000f, -2.00000f),
-      Point3D(0.00010f, 2.00000f, 2.00000f),
-      Point3D(0.00010f, -2.00000f, 2.00000f)
+      Point4D(-0.00000f, -2.00000f, -2.00000f, 1.0f),
+      Point4D(-0.00000f, 2.00000f, -2.00000f, 1.0f),
+      Point4D(0.00010f, 2.00000f, 2.00000f, 1.0f),
+      Point4D(0.00010f, -2.00000f, 2.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 0.00010f, -2.00000f),
-      Point3D(2.00000f, -0.00000f, 2.00000f),
-      Point3D(-2.00000f, -0.00000f, 2.00000f),
-      Point3D(-2.00000f, 0.00010f, -2.00000f)
+      Point4D(2.00000f, 0.00010f, -2.00000f, 1.0f),
+      Point4D(2.00000f, -0.00000f, 2.00000f, 1.0f),
+      Point4D(-2.00000f, -0.00000f, 2.00000f, 1.0f),
+      Point4D(-2.00000f, 0.00010f, -2.00000f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);
@@ -929,31 +930,31 @@ TEST(BSPTree, TwoPlaneIntersectRotate340degrees) {
 TEST(BSPTree, TwoPlaneIntersectRotate360degrees) {
   const std::deque<MozPolygon> polygons {
     MozPolygon {
-      Point3D(-0.00000f, -2.00000f, -2.00000f),
-      Point3D(-0.00000f, 2.00000f, -2.00000f),
-      Point3D(0.00010f, 2.00000f, 2.00000f),
-      Point3D(0.00010f, -2.00000f, 2.00000f)
+      Point4D(-0.00000f, -2.00000f, -2.00000f, 1.0f),
+      Point4D(-0.00000f, 2.00000f, -2.00000f, 1.0f),
+      Point4D(0.00010f, 2.00000f, 2.00000f, 1.0f),
+      Point4D(0.00010f, -2.00000f, 2.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 0.00010f, -2.00000f),
-      Point3D(2.00000f, -0.00000f, 2.00000f),
-      Point3D(-2.00000f, -0.00000f, 2.00000f),
-      Point3D(-2.00000f, 0.00010f, -2.00000f)
+      Point4D(2.00000f, 0.00010f, -2.00000f, 1.0f),
+      Point4D(2.00000f, -0.00000f, 2.00000f, 1.0f),
+      Point4D(-2.00000f, -0.00000f, 2.00000f, 1.0f),
+      Point4D(-2.00000f, 0.00010f, -2.00000f, 1.0f)
     }
   };
 
   const std::deque<MozPolygon> expected {
     MozPolygon {
-      Point3D(-0.00000f, -2.00000f, -2.00000f),
-      Point3D(-0.00000f, 2.00000f, -2.00000f),
-      Point3D(0.00010f, 2.00000f, 2.00000f),
-      Point3D(0.00010f, -2.00000f, 2.00000f)
+      Point4D(-0.00000f, -2.00000f, -2.00000f, 1.0f),
+      Point4D(-0.00000f, 2.00000f, -2.00000f, 1.0f),
+      Point4D(0.00010f, 2.00000f, 2.00000f, 1.0f),
+      Point4D(0.00010f, -2.00000f, 2.00000f, 1.0f)
     },
     MozPolygon {
-      Point3D(2.00000f, 0.00010f, -2.00000f),
-      Point3D(2.00000f, -0.00000f, 2.00000f),
-      Point3D(-2.00000f, -0.00000f, 2.00000f),
-      Point3D(-2.00000f, 0.00010f, -2.00000f)
+      Point4D(2.00000f, 0.00010f, -2.00000f, 1.0f),
+      Point4D(2.00000f, -0.00000f, 2.00000f, 1.0f),
+      Point4D(-2.00000f, -0.00000f, 2.00000f, 1.0f),
+      Point4D(-2.00000f, 0.00010f, -2.00000f, 1.0f)
     }
   };
   ::RunTest(polygons, expected);

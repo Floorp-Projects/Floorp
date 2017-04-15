@@ -16,8 +16,8 @@ var WebcompatReporter = {
   menuItemEnabled: null,
   init: function() {
     GlobalEventDispatcher.registerListener(this, "DesktopMode:Change");
-    Services.obs.addObserver(this, "chrome-document-global-created", false);
-    Services.obs.addObserver(this, "content-document-global-created", false);
+    Services.obs.addObserver(this, "chrome-document-global-created");
+    Services.obs.addObserver(this, "content-document-global-created");
 
     let visible = true;
     if ("@mozilla.org/parental-controls-service;1" in Cc) {

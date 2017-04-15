@@ -1023,7 +1023,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // Tell anyone who cares of the resume (as of now, that's the xpcshell harness and
       // devtools-startup.js when handling the --wait-for-jsdebugger flag)
       if (Services.obs) {
-        Services.obs.notifyObservers(this, "devtools-thread-resumed", null);
+        Services.obs.notifyObservers(this, "devtools-thread-resumed");
       }
       return packet;
     }, error => {
@@ -2305,7 +2305,7 @@ exports.AddonThreadActor = AddonThreadActor;
  *        An optional prefix for the reported error message.
  */
 var oldReportError = reportError;
-reportError = function (aError, aPrefix = "") {
+this.reportError = function (aError, aPrefix = "") {
   assert(aError instanceof Error, "Must pass Error objects to reportError");
   let msg = aPrefix + aError.message + ":\n" + aError.stack;
   oldReportError(msg);

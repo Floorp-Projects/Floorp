@@ -31,9 +31,9 @@ function run_test() {
 
   do_test_pending();
   Components.classes["@mozilla.org/thread-manager;1"].
-    getService(Ci.nsIThreadManager).mainThread.dispatch(function() {
+    getService(Ci.nsIThreadManager).dispatchToMainThread(function() {
       cs.unregisterListener(kConsoleListener);
       do_check_true(gFound);
       do_test_finished();
-    }, 0);
+    });
 }

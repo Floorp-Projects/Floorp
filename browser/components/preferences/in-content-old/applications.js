@@ -222,7 +222,7 @@ HandlerInfoWrapper.prototype = {
       if (possibleApps.getNext().equals(aNewHandler))
         return;
     }
-    this.possibleApplicationHandlers.appendElement(aNewHandler, false);
+    this.possibleApplicationHandlers.appendElement(aNewHandler);
   },
 
   removePossibleApplicationHandler(aHandler) {
@@ -572,13 +572,13 @@ FeedHandlerInfo.prototype = {
       let preferredApp = getLocalHandlerApp(preferredAppFile);
       let defaultApp = this._defaultApplicationHandler;
       if (!defaultApp || !defaultApp.equals(preferredApp))
-        this._possibleApplicationHandlers.appendElement(preferredApp, false);
+        this._possibleApplicationHandlers.appendElement(preferredApp);
     }
 
     // Add the registered web handlers.  There can be any number of these.
     var webHandlers = this._converterSvc.getContentHandlers(this.type);
     for (let webHandler of webHandlers)
-      this._possibleApplicationHandlers.appendElement(webHandler, false);
+      this._possibleApplicationHandlers.appendElement(webHandler);
 
     return this._possibleApplicationHandlers;
   },
@@ -799,7 +799,7 @@ InternalHandlerInfoWrapper.prototype = {
   // or unregistration of this handler.
   store() {
     HandlerInfoWrapper.prototype.store.call(this);
-    Services.obs.notifyObservers(null, this._handlerChanged, null);
+    Services.obs.notifyObservers(null, this._handlerChanged);
   },
 
   get enabled() {
@@ -885,22 +885,22 @@ var gApplicationsPane = {
 
     // Observe preferences that influence what we display so we can rebuild
     // the view when they change.
-    this._prefSvc.addObserver(PREF_SHOW_PLUGINS_IN_LIST, this, false);
-    this._prefSvc.addObserver(PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS, this, false);
-    this._prefSvc.addObserver(PREF_FEED_SELECTED_APP, this, false);
-    this._prefSvc.addObserver(PREF_FEED_SELECTED_WEB, this, false);
-    this._prefSvc.addObserver(PREF_FEED_SELECTED_ACTION, this, false);
-    this._prefSvc.addObserver(PREF_FEED_SELECTED_READER, this, false);
+    this._prefSvc.addObserver(PREF_SHOW_PLUGINS_IN_LIST, this);
+    this._prefSvc.addObserver(PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS, this);
+    this._prefSvc.addObserver(PREF_FEED_SELECTED_APP, this);
+    this._prefSvc.addObserver(PREF_FEED_SELECTED_WEB, this);
+    this._prefSvc.addObserver(PREF_FEED_SELECTED_ACTION, this);
+    this._prefSvc.addObserver(PREF_FEED_SELECTED_READER, this);
 
-    this._prefSvc.addObserver(PREF_VIDEO_FEED_SELECTED_APP, this, false);
-    this._prefSvc.addObserver(PREF_VIDEO_FEED_SELECTED_WEB, this, false);
-    this._prefSvc.addObserver(PREF_VIDEO_FEED_SELECTED_ACTION, this, false);
-    this._prefSvc.addObserver(PREF_VIDEO_FEED_SELECTED_READER, this, false);
+    this._prefSvc.addObserver(PREF_VIDEO_FEED_SELECTED_APP, this);
+    this._prefSvc.addObserver(PREF_VIDEO_FEED_SELECTED_WEB, this);
+    this._prefSvc.addObserver(PREF_VIDEO_FEED_SELECTED_ACTION, this);
+    this._prefSvc.addObserver(PREF_VIDEO_FEED_SELECTED_READER, this);
 
-    this._prefSvc.addObserver(PREF_AUDIO_FEED_SELECTED_APP, this, false);
-    this._prefSvc.addObserver(PREF_AUDIO_FEED_SELECTED_WEB, this, false);
-    this._prefSvc.addObserver(PREF_AUDIO_FEED_SELECTED_ACTION, this, false);
-    this._prefSvc.addObserver(PREF_AUDIO_FEED_SELECTED_READER, this, false);
+    this._prefSvc.addObserver(PREF_AUDIO_FEED_SELECTED_APP, this);
+    this._prefSvc.addObserver(PREF_AUDIO_FEED_SELECTED_WEB, this);
+    this._prefSvc.addObserver(PREF_AUDIO_FEED_SELECTED_ACTION, this);
+    this._prefSvc.addObserver(PREF_AUDIO_FEED_SELECTED_READER, this);
 
 
     setEventListener("focusSearch1", "command", gApplicationsPane.focusFilterBox);
@@ -942,7 +942,7 @@ var gApplicationsPane = {
 
       // Notify observers that the UI is now ready
       Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService).
-      notifyObservers(window, "app-handler-pane-loaded", null);
+      notifyObservers(window, "app-handler-pane-loaded");
     }
     setTimeout(_delayedPaneLoad, 0, this);
   },

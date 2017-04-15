@@ -71,6 +71,18 @@ enum class UpdateAnimationsTasks : uint8_t {
   CascadeResults   = 1 << 3,
 };
 
+// The mode to use when parsing lengths.
+enum class LengthParsingMode {
+  // In CSS, lengths must have units, except for zero values, where the unit can
+  // be omitted.
+  // https://www.w3.org/TR/css3-values/#lengths
+  Default,
+  // In SVG, a coordinate or length value without a unit identifier (e.g., "25")
+  // is assumed to be in user units (px).
+  // https://www.w3.org/TR/SVG/coords.html#Units
+  SVG,
+};
+
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(UpdateAnimationsTasks)
 
 } // namespace mozilla

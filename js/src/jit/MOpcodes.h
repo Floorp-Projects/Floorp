@@ -267,6 +267,7 @@ namespace jit {
     _(Round)                                                                \
     _(NearbyInt)                                                            \
     _(In)                                                                   \
+    _(HasOwnCache)                                                          \
     _(InstanceOf)                                                           \
     _(CallInstanceOf)                                                       \
     _(InterruptCheck)                                                       \

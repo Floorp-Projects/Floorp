@@ -11,7 +11,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 var {
-  SingletonEventManager,
   promiseObserved,
 } = ExtensionUtils;
 
@@ -123,19 +122,19 @@ this.windows = class extends ExtensionAPI {
             }
             createData.incognito = incognito;
 
-            args.appendElement(tab, /* weak = */ false);
+            args.appendElement(tab);
           } else if (createData.url !== null) {
             if (Array.isArray(createData.url)) {
               let array = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
               for (let url of createData.url) {
-                array.appendElement(mkstr(url), /* weak = */ false);
+                array.appendElement(mkstr(url));
               }
-              args.appendElement(array, /* weak = */ false);
+              args.appendElement(array);
             } else {
-              args.appendElement(mkstr(createData.url), /* weak = */ false);
+              args.appendElement(mkstr(createData.url));
             }
           } else {
-            args.appendElement(mkstr(aboutNewTabService.newTabURL), /* weak = */ false);
+            args.appendElement(mkstr(aboutNewTabService.newTabURL));
           }
 
           let features = ["chrome"];

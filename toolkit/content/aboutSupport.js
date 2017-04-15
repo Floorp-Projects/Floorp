@@ -1025,7 +1025,7 @@ function setupEventListeners() {
   });
   $("restart-in-safe-mode-button").addEventListener("click", function(event) {
     if (Services.obs.enumerateObservers("restart-in-safe-mode").hasMoreElements()) {
-      Services.obs.notifyObservers(null, "restart-in-safe-mode", "");
+      Services.obs.notifyObservers(null, "restart-in-safe-mode");
     } else {
       safeModeRestart();
     }

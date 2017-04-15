@@ -11,24 +11,24 @@ module.metadata = {
 };
 
 const { Class } = require('../../core/heritage');
-const { merge } = require('../../util/object');
+lazyRequire(this, '../../util/object', "merge");
 const { Disposable } = require('../../core/disposable');
-const { on, off, emit, setListeners } = require('../../event/core');
+lazyRequire(this, '../../event/core', "on", "off", "emit", "setListeners");
 const { EventTarget } = require('../../event/target');
-const { getNodeView } = require('../../view/core');
+lazyRequire(this, '../../view/core', "getNodeView");
 
-const view = require('./view');
+lazyRequireModule(this, "./view", "view");
 const { toggleButtonContract, toggleStateContract } = require('./contract');
-const { properties, render, state, register, unregister,
-  setStateFor, getStateFor, getDerivedStateFor } = require('../state');
-const { events: stateEvents } = require('../state/events');
-const { events: viewEvents } = require('./view/events');
-const events = require('../../event/utils');
+lazyRequire(this, '../state', "properties", "render", "state", "register", "unregister",
+            "setStateFor", "getStateFor", "getDerivedStateFor");
+lazyRequire(this, '../state/events', { "events": "stateEvents" });
+lazyRequire(this, './view/events', { "events": "viewEvents" });
+lazyRequireModule(this, '../../event/utils', "events");
 
-const { getActiveTab } = require('../../tabs/utils');
+lazyRequire(this, '../../tabs/utils', "getActiveTab");
 
-const { id: addonID } = require('../../self');
-const { identify } = require('../id');
+lazyRequire(this, '../../self', { "id": "addonID" });
+lazyRequire(this, '../id', "identify");
 
 const buttons = new Map();
 

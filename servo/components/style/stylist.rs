@@ -19,7 +19,7 @@ use properties::{self, CascadeFlags, ComputedValues};
 #[cfg(feature = "servo")]
 use properties::INHERIT_ALL;
 use properties::PropertyDeclarationBlock;
-use restyle_hints::{RestyleHint, DependencySet, SelectorDependencyVisitor};
+use restyle_hints::{RestyleHint, DependencySet};
 use rule_tree::{CascadeLevel, RuleTree, StrongRuleNode, StyleSource};
 use selector_parser::{SelectorImpl, PseudoElement, Snapshot};
 use selectors::Element;
@@ -28,7 +28,6 @@ use selectors::matching::{AFFECTED_BY_ANIMATIONS, AFFECTED_BY_TRANSITIONS};
 use selectors::matching::{AFFECTED_BY_STYLE_ATTRIBUTE, AFFECTED_BY_PRESENTATIONAL_HINTS};
 use selectors::matching::{ElementSelectorFlags, StyleRelations, matches_complex_selector};
 use selectors::parser::{Selector, SimpleSelector, LocalName as LocalNameSelector, ComplexSelector};
-use selectors::parser::SelectorMethods;
 use shared_lock::{Locked, SharedRwLockReadGuard, StylesheetGuards};
 use sink::Push;
 use smallvec::VecLike;
@@ -79,6 +78,9 @@ pub struct Stylist {
     /// If true, the quirks-mode stylesheet is applied.
     quirks_mode: bool,
 
+    /// If true, authored styles are ignored.
+    author_style_disabled: bool,
+
     /// If true, the device has changed, and the stylist needs to be updated.
     is_device_dirty: bool,
 
@@ -110,13 +112,22 @@ pub struct Stylist {
     rules_source_order: usize,
 
     /// Selector dependencies used to compute restyle hints.
-    state_deps: DependencySet,
+    dependencies: DependencySet,
 
     /// Selectors that require explicit cache revalidation (i.e. which depend
     /// on state that is not otherwise visible to the cache, like attributes or
     /// tree-structural state like child index and pseudos).
     #[cfg_attr(feature = "servo", ignore_heap_size_of = "Arc")]
     selectors_for_cache_revalidation: Vec<Selector<SelectorImpl>>,
+
+    /// The total number of selectors.
+    num_selectors: usize,
+
+    /// The total number of declarations.
+    num_declarations: usize,
+
+    /// The total number of times the stylist has been rebuilt.
+    num_rebuilds: usize,
 }
 
 /// This struct holds data which user of Stylist may want to extract
@@ -125,6 +136,10 @@ pub struct ExtraStyleData<'a> {
     /// A list of effective font-face rules and their origin.
     #[cfg(feature = "gecko")]
     pub font_faces: &'a mut Vec<(Arc<Locked<FontFaceRule>>, Origin)>,
+
+    /// A parameter to change a setting to ignore author styles during update.
+    /// A None value indicates that update should use existing settings.
+    pub author_style_disabled: Option<bool>,
 
     #[allow(missing_docs)]
     #[cfg(feature = "servo")]
@@ -159,6 +174,7 @@ impl Stylist {
             device: Arc::new(device),
             is_device_dirty: true,
             quirks_mode: false,
+            author_style_disabled: false,
 
             element_map: PerPseudoElementSelectorMap::new(),
             pseudos_map: Default::default(),
@@ -166,9 +182,11 @@ impl Stylist {
             precomputed_pseudo_element_decls: Default::default(),
             rules_source_order: 0,
             rule_tree: RuleTree::new(),
-            state_deps: DependencySet::new(),
-
+            dependencies: DependencySet::new(),
             selectors_for_cache_revalidation: vec![],
+            num_selectors: 0,
+            num_declarations: 0,
+            num_rebuilds: 0,
         };
 
         SelectorImpl::each_eagerly_cascaded_pseudo_element(|pseudo| {
@@ -178,6 +196,31 @@ impl Stylist {
         // FIXME: Add iso-8859-9.css when the document’s encoding is ISO-8859-8.
 
         stylist
+    }
+
+    /// Returns the number of selectors.
+    pub fn num_selectors(&self) -> usize {
+        self.num_selectors
+    }
+
+    /// Returns the number of declarations.
+    pub fn num_declarations(&self) -> usize {
+        self.num_declarations
+    }
+
+    /// Returns the number of times the stylist has been rebuilt.
+    pub fn num_rebuilds(&self) -> usize {
+        self.num_rebuilds
+    }
+
+    /// Returns the number of dependencies in the DependencySet.
+    pub fn num_dependencies(&self) -> usize {
+        self.dependencies.len()
+    }
+
+    /// Returns the number of revalidation_selectors.
+    pub fn num_revalidation_selectors(&self) -> usize {
+        self.selectors_for_cache_revalidation.len()
     }
 
     /// Update the stylist for the given document stylesheets, and optionally
@@ -195,6 +238,7 @@ impl Stylist {
         if !(self.is_device_dirty || stylesheets_changed) {
             return false;
         }
+        self.num_rebuilds += 1;
 
         let cascaded_rule = ViewportRule {
             declarations: viewport::Cascade::from_stylesheets(
@@ -219,10 +263,11 @@ impl Stylist {
 
         self.precomputed_pseudo_element_decls = Default::default();
         self.rules_source_order = 0;
-        self.state_deps.clear();
+        self.dependencies.clear();
         self.animations.clear();
-
         self.selectors_for_cache_revalidation.clear();
+        self.num_selectors = 0;
+        self.num_declarations = 0;
 
         extra_data.clear_font_faces();
 
@@ -237,15 +282,18 @@ impl Stylist {
             }
         }
 
-        for ref stylesheet in doc_stylesheets.iter() {
-            self.add_stylesheet(stylesheet, guards.author, extra_data);
+        // Absorb changes to author_style_disabled, if supplied.
+        if let Some(author_style_disabled) = extra_data.author_style_disabled {
+            self.author_style_disabled = author_style_disabled;
         }
 
-        debug!("Stylist stats:");
-        debug!(" - Got {} selectors for cache revalidation",
-               self.selectors_for_cache_revalidation.len());
-        debug!(" - Got {} deps for style-hint calculation",
-               self.state_deps.len());
+        // Only use author stylesheets if author styles are enabled.
+        let author_style_enabled = !self.author_style_disabled;
+        let sheets_to_add = doc_stylesheets.iter().filter(
+            |&s| author_style_enabled || s.origin != Origin::Author);
+        for ref stylesheet in sheets_to_add {
+            self.add_stylesheet(stylesheet, guards.author, extra_data);
+        }
 
         SelectorImpl::each_precomputed_pseudo_element(|pseudo| {
             if let Some(map) = self.pseudos_map.remove(&pseudo) {
@@ -274,7 +322,10 @@ impl Stylist {
             match *rule {
                 CssRule::Style(ref locked) => {
                     let style_rule = locked.read_with(&guard);
+                    self.num_declarations += style_rule.block.read_with(&guard).len();
+
                     for selector in &style_rule.selectors.0 {
+                        self.num_selectors += 1;
                         let map = if let Some(ref pseudo) = selector.pseudo_element {
                             self.pseudos_map
                                 .entry(pseudo.clone())
@@ -294,11 +345,9 @@ impl Stylist {
                     self.rules_source_order += 1;
 
                     for selector in &style_rule.selectors.0 {
-                        let mut visitor =
-                            SelectorDependencyVisitor::new(&mut self.state_deps);
-                        selector.visit(&mut visitor);
-
-                        if visitor.needs_cache_revalidation() {
+                        let needs_cache_revalidation =
+                            self.dependencies.note_selector(&selector.complex_selector);
+                        if needs_cache_revalidation {
                             self.selectors_for_cache_revalidation.push(selector.clone());
                         }
                     }
@@ -803,7 +852,34 @@ impl Stylist {
                                    -> RestyleHint
         where E: TElement,
     {
-        self.state_deps.compute_hint(element, snapshot)
+        self.dependencies.compute_hint(element, snapshot)
+    }
+
+    /// Computes styles for a given declaration with parent_style.
+    pub fn compute_for_declarations(&self,
+                                    guards: &StylesheetGuards,
+                                    parent_style: &Arc<ComputedValues>,
+                                    declarations: Arc<Locked<PropertyDeclarationBlock>>)
+                                    -> Arc<ComputedValues> {
+        use font_metrics::get_metrics_provider_for_product;
+
+        let v = vec![
+            ApplicableDeclarationBlock::from_declarations(declarations.clone(),
+                                                          CascadeLevel::StyleAttributeNormal)
+        ];
+        let rule_node =
+            self.rule_tree.insert_ordered_rules(v.into_iter().map(|a| (a.source, a.level)));
+
+        let metrics = get_metrics_provider_for_product();
+        Arc::new(properties::cascade(&self.device,
+                                     &rule_node,
+                                     guards,
+                                     Some(parent_style),
+                                     Some(parent_style),
+                                     None,
+                                     &StdoutErrorReporter,
+                                     &metrics,
+                                     CascadeFlags::empty()))
     }
 }
 

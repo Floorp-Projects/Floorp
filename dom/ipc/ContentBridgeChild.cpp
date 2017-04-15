@@ -77,6 +77,7 @@ ContentBridgeChild::SendPMemoryStreamConstructor(const uint64_t& aSize)
 bool
 ContentBridgeChild::SendPBrowserConstructor(PBrowserChild* aActor,
                                             const TabId& aTabId,
+                                            const TabId& aSameTabGroupAs,
                                             const IPCTabContext& aContext,
                                             const uint32_t& aChromeFlags,
                                             const ContentParentId& aCpID,
@@ -84,6 +85,7 @@ ContentBridgeChild::SendPBrowserConstructor(PBrowserChild* aActor,
 {
   return PContentBridgeChild::SendPBrowserConstructor(aActor,
                                                       aTabId,
+                                                      aSameTabGroupAs,
                                                       aContext,
                                                       aChromeFlags,
                                                       aCpID,
@@ -128,12 +130,14 @@ ContentBridgeChild::DeallocPJavaScriptChild(PJavaScriptChild *child)
 
 PBrowserChild*
 ContentBridgeChild::AllocPBrowserChild(const TabId& aTabId,
+                                       const TabId& aSameTabGroupAs,
                                        const IPCTabContext &aContext,
                                        const uint32_t& aChromeFlags,
                                        const ContentParentId& aCpID,
                                        const bool& aIsForBrowser)
 {
   return nsIContentChild::AllocPBrowserChild(aTabId,
+                                             aSameTabGroupAs,
                                              aContext,
                                              aChromeFlags,
                                              aCpID,
@@ -149,6 +153,7 @@ ContentBridgeChild::DeallocPBrowserChild(PBrowserChild* aChild)
 mozilla::ipc::IPCResult
 ContentBridgeChild::RecvPBrowserConstructor(PBrowserChild* aActor,
                                             const TabId& aTabId,
+                                            const TabId& aSameTabGroupAs,
                                             const IPCTabContext& aContext,
                                             const uint32_t& aChromeFlags,
                                             const ContentParentId& aCpID,
@@ -156,6 +161,7 @@ ContentBridgeChild::RecvPBrowserConstructor(PBrowserChild* aActor,
 {
   return nsIContentChild::RecvPBrowserConstructor(aActor,
                                                   aTabId,
+                                                  aSameTabGroupAs,
                                                   aContext,
                                                   aChromeFlags,
                                                   aCpID,

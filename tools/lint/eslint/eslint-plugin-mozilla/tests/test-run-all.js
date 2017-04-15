@@ -4,7 +4,7 @@
 "use strict";
 
 const RuleTester = require("eslint/lib/testers/rule-tester");
-const fs = require('fs');
+const fs = require("fs");
 
 var ruleTester = new RuleTester();
 

@@ -278,6 +278,10 @@ typedef nsTArray<Link*> LinkArray;
 static LazyLogModule gDocumentLeakPRLog("DocumentLeak");
 static LazyLogModule gCspPRLog("CSP");
 
+static const char kChromeInContentPref[] = "security.allow_chrome_frames_inside_content";
+static bool sChromeInContentAllowed = false;
+static bool sChromeInContentPrefCached = false;
+
 static nsresult
 GetHttpChannelHelper(nsIChannel* aChannel, nsIHttpChannel** aHttpChannel)
 {
@@ -529,7 +533,7 @@ nsIdentifierMapEntry::HasIdElementExposedAsHTMLDocumentProperty()
 size_t
 nsIdentifierMapEntry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
-  return nsStringHashKey::SizeOfExcludingThis(aMallocSizeOf);
+  return mKey.mString.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 }
 
 // Helper structs for the content->subdoc map
@@ -2079,6 +2083,8 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
     }
   }
 
+  principal = MaybeDowngradePrincipal(principal);
+
   ResetToURI(uri, aLoadGroup, principal);
 
   // Note that, since mTiming does not change during a reset, the
@@ -2223,6 +2229,43 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   if (nsPIDOMWindowInner* win = GetInnerWindow()) {
     nsGlobalWindow::Cast(win)->RefreshCompartmentPrincipal();
   }
+}
+
+already_AddRefed<nsIPrincipal>
+nsDocument::MaybeDowngradePrincipal(nsIPrincipal* aPrincipal)
+{
+  if (!aPrincipal) {
+    return nullptr;
+  }
+
+  if (!sChromeInContentPrefCached) {
+    sChromeInContentPrefCached = true;
+    Preferences::AddBoolVarCache(&sChromeInContentAllowed,
+                                 kChromeInContentPref, false);
+  }
+  if (!sChromeInContentAllowed &&
+      nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    // We basically want the parent document here, but because this is very
+    // early in the load, GetParentDocument() returns null, so we use the
+    // docshell hierarchy to get this information instead.
+    if (mDocumentContainer) {
+      nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem;
+      mDocumentContainer->GetParent(getter_AddRefs(parentDocShellItem));
+      nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentDocShellItem);
+      if (parentDocShell) {
+        nsCOMPtr<nsIDocument> parentDoc;
+        parentDoc = parentDocShell->GetDocument();
+        if (!parentDoc ||
+            !nsContentUtils::IsSystemPrincipal(parentDoc->NodePrincipal())) {
+          nsCOMPtr<nsIPrincipal> nullPrincipal =
+            do_CreateInstance("@mozilla.org/nullprincipal;1");
+          return nullPrincipal.forget();
+        }
+      }
+    }
+  }
+  nsCOMPtr<nsIPrincipal> principal(aPrincipal);
+  return principal.forget();
 }
 
 void
@@ -2848,8 +2891,7 @@ nsDocument::AddToNameTable(Element *aElement, nsIAtom* aName)
              "Only put elements that need to be exposed as document['name'] in "
              "the named table.");
 
-  nsIdentifierMapEntry *entry =
-    mIdentifierMap.PutEntry(nsDependentAtomString(aName));
+  nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aName);
 
   // Null for out-of-memory
   if (entry) {
@@ -2868,8 +2910,7 @@ nsDocument::RemoveFromNameTable(Element *aElement, nsIAtom* aName)
   if (mIdentifierMap.Count() == 0)
     return;
 
-  nsIdentifierMapEntry *entry =
-    mIdentifierMap.GetEntry(nsDependentAtomString(aName));
+  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aName);
   if (!entry) // Could be false if the element was anonymous, hence never added
     return;
 
@@ -2883,8 +2924,7 @@ nsDocument::RemoveFromNameTable(Element *aElement, nsIAtom* aName)
 void
 nsDocument::AddToIdTable(Element *aElement, nsIAtom* aId)
 {
-  nsIdentifierMapEntry *entry =
-    mIdentifierMap.PutEntry(nsDependentAtomString(aId));
+  nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aId);
 
   if (entry) { /* True except on OOM */
     if (nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(aElement) &&
@@ -2906,8 +2946,7 @@ nsDocument::RemoveFromIdTable(Element *aElement, nsIAtom* aId)
     return;
   }
 
-  nsIdentifierMapEntry *entry =
-    mIdentifierMap.GetEntry(nsDependentAtomString(aId));
+  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aId);
   if (!entry) // Can be null for XML elements with changing ids.
     return;
 
@@ -5123,7 +5162,7 @@ nsDocument::AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
   if (!CheckGetElementByIdArg(id))
     return nullptr;
 
-  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(id);
+  nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aID);
   NS_ENSURE_TRUE(entry, nullptr);
 
   entry->AddContentChangeCallback(aObserver, aData, aForImage);
@@ -5139,7 +5178,7 @@ nsDocument::RemoveIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
   if (!CheckGetElementByIdArg(id))
     return;
 
-  nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(id);
+  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aID);
   if (!entry) {
     return;
   }
@@ -6436,15 +6475,9 @@ nsDocument::EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
     StyleSheet* sheet = GetStyleSheetAt(index);
     NS_ASSERTION(sheet, "Null sheet in sheet list!");
 
-    // XXXheycam Make this work with ServoStyleSheets.
-    if (sheet->IsServo()) {
-      NS_ERROR("stylo: can't handle alternate ServoStyleSheets yet");
-      continue;
-    }
-
-    sheet->AsGecko()->GetTitle(title);
+    sheet->GetTitle(title);
     if (!title.IsEmpty()) {
-      sheet->AsGecko()->SetEnabled(title.Equals(aSheetSet));
+      sheet->SetEnabled(title.Equals(aSheetSet));
     }
   }
   if (aUpdateCSSLoader) {
@@ -10600,14 +10633,18 @@ public:
 protected:
   virtual ~UnblockParsingPromiseHandler()
   {
-    MaybeUnblockParser();
+    // If we're being cleaned up by the cycle collector, our mDocument reference
+    // may have been unlinked while our mParser weak reference is still alive.
+    if (mDocument) {
+      MaybeUnblockParser();
+    }
   }
 
 private:
   void MaybeUnblockParser() {
     nsCOMPtr<nsIParser> parser = do_QueryReferent(mParser);
     if (parser) {
-      MOZ_ASSERT(mDocument);
+      MOZ_DIAGNOSTIC_ASSERT(mDocument);
       nsCOMPtr<nsIParser> docParser = mDocument->CreatorParserOrNull();
       if (parser == docParser) {
         parser->UnblockParser();

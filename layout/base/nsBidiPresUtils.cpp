@@ -138,7 +138,6 @@ struct MOZ_STACK_CLASS BidiParagraphData
   bool                mIsVisual;
   nsBidiLevel         mParaLevel;
   nsIContent*         mPrevContent;
-  nsBidi              mBidiEngine;
   nsIFrame*           mPrevFrame;
 #ifdef DEBUG
   // Only used for NOISY debug output.
@@ -184,8 +183,9 @@ struct MOZ_STACK_CLASS BidiParagraphData
 
   nsresult SetPara()
   {
-    return mBidiEngine.SetPara(mBuffer.get(), BufferLength(),
-                               mParaLevel);
+    return mPresContext->GetBidiEngine()
+             .SetPara(mBuffer.get(), BufferLength(),
+                      mParaLevel);
   }
 
   /**
@@ -197,7 +197,7 @@ struct MOZ_STACK_CLASS BidiParagraphData
   {
     nsBidiLevel paraLevel = mParaLevel;
     if (paraLevel == NSBIDI_DEFAULT_LTR || paraLevel == NSBIDI_DEFAULT_RTL) {
-      mBidiEngine.GetParaLevel(&paraLevel);
+      mPresContext->GetBidiEngine().GetParaLevel(&paraLevel);
     }
     return paraLevel;
   }
@@ -205,18 +205,22 @@ struct MOZ_STACK_CLASS BidiParagraphData
   nsBidiDirection GetDirection()
   {
     nsBidiDirection dir;
-    mBidiEngine.GetDirection(&dir);
+    mPresContext->GetBidiEngine().GetDirection(&dir);
     return dir;
   }
 
-  nsresult CountRuns(int32_t *runCount){ return mBidiEngine.CountRuns(runCount); }
+  nsresult CountRuns(int32_t *runCount)
+  {
+    return mPresContext->GetBidiEngine().CountRuns(runCount);
+  }
 
   nsresult GetLogicalRun(int32_t aLogicalStart, 
                          int32_t* aLogicalLimit,
                          nsBidiLevel* aLevel)
   {
-    nsresult rv = mBidiEngine.GetLogicalRun(aLogicalStart,
-                                            aLogicalLimit, aLevel);
+    nsresult rv =
+      mPresContext->GetBidiEngine().GetLogicalRun(aLogicalStart,
+                                                   aLogicalLimit, aLevel);
     if (mIsVisual || NS_FAILED(rv))
       *aLevel = GetParaLevel();
     return rv;
@@ -2152,7 +2156,8 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t*       aText,
             const char16_t* visualLeftPart;
             const char16_t* visualRightSide;
             if (dir == NSBIDI_RTL) {
-              // One day, son, this could all be replaced with mBidiEngine.GetVisualIndex ...
+              // One day, son, this could all be replaced with
+              // mPresContext->GetBidiEngine().GetVisualIndex() ...
               posResolve->visualIndex = visualStart + (subRunLength - (posResolve->logicalIndex + 1 - start));
               // Skipping to the "left part".
               visualLeftPart = text + posResolve->logicalIndex + 1;
@@ -2275,9 +2280,9 @@ nsresult nsBidiPresUtils::ProcessTextForRenderingContext(const char16_t*       a
                                              aTextRunConstructionDrawTarget,
                                              &aFontMetrics,
                                              nsPoint(aX, aY));
-  nsBidi bidiEngine;
   return ProcessText(aText, aLength, aBaseLevel, aPresContext, processor,
-                     aMode, aPosResolve, aPosResolveCount, aWidth, &bidiEngine);
+                     aMode, aPosResolve, aPosResolveCount, aWidth,
+                     &aPresContext->GetBidiEngine());
 }
 
 /* static */

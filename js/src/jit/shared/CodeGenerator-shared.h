@@ -27,7 +27,6 @@ namespace jit {
 class OutOfLineCode;
 class CodeGenerator;
 class MacroAssembler;
-class IonCache;
 class IonIC;
 
 template <class ArgSeq, class StoreOutputTo>
@@ -101,9 +100,6 @@ class CodeGeneratorShared : public LElementVisitor
 
     // Allocated data space needed at runtime.
     js::Vector<uint8_t, 0, SystemAllocPolicy> runtimeData_;
-
-    // Vector of information about generated polymorphic inline caches.
-    js::Vector<uint32_t, 0, SystemAllocPolicy> cacheList_;
 
     // Vector mapping each IC index to its offset in runtimeData_.
     js::Vector<uint32_t, 0, SystemAllocPolicy> icList_;
@@ -289,23 +285,6 @@ class CodeGeneratorShared : public LElementVisitor
         return !masm.oom();
     }
 
-    // Ensure the cache is an IonCache while expecting the size of the derived
-    // class. We only need the cache list at GC time. Everyone else can just take
-    // runtimeData offsets.
-    template <typename T>
-    inline size_t allocateCache(const T& cache) {
-        static_assert(mozilla::IsBaseOf<IonCache, T>::value, "T must inherit from IonCache");
-        size_t index;
-        masm.propagateOOM(allocateData(sizeof(mozilla::AlignedStorage2<T>), &index));
-        masm.propagateOOM(cacheList_.append(index));
-        if (masm.oom())
-            return SIZE_MAX;
-        // Use the copy constructor on the allocated space.
-        MOZ_ASSERT(index == cacheList_.back());
-        new (&runtimeData_[index]) T(cache);
-        return index;
-    }
-
     template <typename T>
     inline size_t allocateIC(const T& cache) {
         static_assert(mozilla::IsBaseOf<IonIC, T>::value, "T must inherit from IonIC");
@@ -364,11 +343,15 @@ class CodeGeneratorShared : public LElementVisitor
     //      an invalidation marker.
     void ensureOsiSpace();
 
-    OutOfLineCode* oolTruncateDouble(FloatRegister src, Register dest, MInstruction* mir);
-    void emitTruncateDouble(FloatRegister src, Register dest, MInstruction* mir);
-    void emitTruncateFloat32(FloatRegister src, Register dest, MInstruction* mir);
+    OutOfLineCode* oolTruncateDouble(FloatRegister src, Register dest, MInstruction* mir,
+                                     wasm::BytecodeOffset callOffset = wasm::BytecodeOffset());
+    void emitTruncateDouble(FloatRegister src, Register dest, MTruncateToInt32* mir);
+    void emitTruncateFloat32(FloatRegister src, Register dest, MTruncateToInt32* mir);
 
     void emitWasmCallBase(LWasmCallBase* ins);
+    void visitWasmCall(LWasmCall* ins) { emitWasmCallBase(ins); }
+    void visitWasmCallI64(LWasmCallI64* ins) { emitWasmCallBase(ins); }
+
     void visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins);
     void visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins);
     void visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins);
@@ -493,7 +476,6 @@ class CodeGeneratorShared : public LElementVisitor
     inline OutOfLineCode* oolCallVM(const VMFunction& fun, LInstruction* ins, const ArgSeq& args,
                                     const StoreOutputTo& out);
 
-    void addCache(LInstruction* lir, size_t cacheIndex);
     void addIC(LInstruction* lir, size_t cacheIndex);
 
     ReciprocalMulConstants computeDivisionConstants(uint32_t d, int maxLog);
@@ -525,7 +507,7 @@ class CodeGeneratorShared : public LElementVisitor
 
     template <class T>
     wasm::TrapDesc trap(T* mir, wasm::Trap trap) {
-        return wasm::TrapDesc(mir->trapOffset(), trap, masm.framePushed());
+        return wasm::TrapDesc(mir->bytecodeOffset(), trap, masm.framePushed());
     }
 
   private:
@@ -863,17 +845,17 @@ class OutOfLineWasmTruncateCheck : public OutOfLineCodeBase<CodeGeneratorShared>
     MIRType toType_;
     FloatRegister input_;
     bool isUnsigned_;
-    wasm::TrapOffset trapOffset_;
+    wasm::BytecodeOffset bytecodeOffset_;
 
   public:
     OutOfLineWasmTruncateCheck(MWasmTruncateToInt32* mir, FloatRegister input)
       : fromType_(mir->input()->type()), toType_(MIRType::Int32), input_(input),
-        isUnsigned_(mir->isUnsigned()), trapOffset_(mir->trapOffset())
+        isUnsigned_(mir->isUnsigned()), bytecodeOffset_(mir->bytecodeOffset())
     { }
 
     OutOfLineWasmTruncateCheck(MWasmTruncateToInt64* mir, FloatRegister input)
       : fromType_(mir->input()->type()), toType_(MIRType::Int64), input_(input),
-        isUnsigned_(mir->isUnsigned()), trapOffset_(mir->trapOffset())
+        isUnsigned_(mir->isUnsigned()), bytecodeOffset_(mir->bytecodeOffset())
     { }
 
     void accept(CodeGeneratorShared* codegen) {
@@ -884,7 +866,7 @@ class OutOfLineWasmTruncateCheck : public OutOfLineCodeBase<CodeGeneratorShared>
     MIRType toType() const { return toType_; }
     MIRType fromType() const { return fromType_; }
     bool isUnsigned() const { return isUnsigned_; }
-    wasm::TrapOffset trapOffset() const { return trapOffset_; }
+    wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
 };
 
 } // namespace jit

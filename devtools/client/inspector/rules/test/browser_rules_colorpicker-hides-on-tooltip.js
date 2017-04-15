@@ -28,7 +28,7 @@ add_task(function* () {
   let bgImageSpan = getRuleViewProperty(view, "body", "background-image").valueSpan;
   let uriSpan = bgImageSpan.querySelector(".theme-link");
 
-  let colorPicker = view.tooltips.colorPicker;
+  let colorPicker = view.tooltips.getTooltip("colorPicker");
   info("Showing the color picker tooltip by clicking on the color swatch");
   let onColorPickerReady = colorPicker.once("ready");
   swatch.click();
@@ -38,7 +38,7 @@ add_task(function* () {
   let onHidden = colorPicker.tooltip.once("hidden");
   // Hiding the color picker refreshes the value.
   let onRuleViewChanged = view.once("ruleview-changed");
-  yield assertHoverTooltipOn(view.tooltips.previewTooltip, uriSpan);
+  yield assertHoverTooltipOn(view.tooltips.getTooltip("previewTooltip"), uriSpan);
   yield onHidden;
   yield onRuleViewChanged;
 

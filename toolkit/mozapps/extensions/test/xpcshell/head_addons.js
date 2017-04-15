@@ -201,7 +201,7 @@ this.BootstrapMonitor = {
 
   init() {
     this.inited = true;
-    Services.obs.addObserver(this, "bootstrapmonitor-event", false);
+    Services.obs.addObserver(this, "bootstrapmonitor-event");
   },
 
   shutdownCheck() {
@@ -1071,7 +1071,7 @@ function promiseInstallWebExtension(aData) {
   let addonFile = createTempWebExtensionFile(aData);
 
   return promiseInstallAllFiles([addonFile]).then(installs => {
-    Services.obs.notifyObservers(addonFile, "flush-cache-entry", null);
+    Services.obs.notifyObservers(addonFile, "flush-cache-entry");
     // Since themes are disabled by default, it won't start up.
     if (aData.manifest.theme)
       return installs[0].addon;
@@ -1335,7 +1335,7 @@ function* updateAllSystemAddons(xml, testserver) {
         Services.obs.removeObserver(arguments.callee, "addons-background-update-complete");
 
         resolve();
-      }, "addons-background-update-complete", false);
+      }, "addons-background-update-complete");
 
       // Trigger the background update timer handler
       gInternalManager.notify(null);

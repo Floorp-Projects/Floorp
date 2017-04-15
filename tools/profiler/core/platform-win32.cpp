@@ -158,9 +158,9 @@ SamplerThread::Stop(PS::LockRef aLock)
 
 void
 SamplerThread::SuspendAndSampleAndResumeThread(PS::LockRef aLock,
-                                               TickSample* aSample)
+                                               TickSample& aSample)
 {
-  HANDLE profiled_thread = aSample->mPlatformData->ProfiledThread();
+  HANDLE profiled_thread = aSample.mPlatformData->ProfiledThread();
   if (profiled_thread == nullptr)
     return;
 
@@ -202,16 +202,16 @@ SamplerThread::SuspendAndSampleAndResumeThread(PS::LockRef aLock,
   // platform-linux-android.cpp for details.
 
 #if defined(GP_ARCH_amd64)
-  aSample->mPC = reinterpret_cast<Address>(context.Rip);
-  aSample->mSP = reinterpret_cast<Address>(context.Rsp);
-  aSample->mFP = reinterpret_cast<Address>(context.Rbp);
+  aSample.mPC = reinterpret_cast<Address>(context.Rip);
+  aSample.mSP = reinterpret_cast<Address>(context.Rsp);
+  aSample.mFP = reinterpret_cast<Address>(context.Rbp);
 #else
-  aSample->mPC = reinterpret_cast<Address>(context.Eip);
-  aSample->mSP = reinterpret_cast<Address>(context.Esp);
-  aSample->mFP = reinterpret_cast<Address>(context.Ebp);
+  aSample.mPC = reinterpret_cast<Address>(context.Eip);
+  aSample.mSP = reinterpret_cast<Address>(context.Esp);
+  aSample.mFP = reinterpret_cast<Address>(context.Ebp);
 #endif
 
-  aSample->mContext = &context;
+  aSample.mContext = &context;
 
   Tick(aLock, gPS->Buffer(aLock), aSample);
 

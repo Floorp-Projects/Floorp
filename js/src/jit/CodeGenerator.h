@@ -68,8 +68,8 @@ class CodeGenerator final : public CodeGeneratorSpecific
 
   public:
     MOZ_MUST_USE bool generate();
-    MOZ_MUST_USE bool generateWasm(wasm::SigIdDesc sigId, wasm::TrapOffset trapOffset,
-                                   wasm::FuncOffsets *offsets);
+    MOZ_MUST_USE bool generateWasm(wasm::SigIdDesc sigId, wasm::BytecodeOffset trapOffset,
+                                   wasm::FuncOffsets* offsets);
     MOZ_MUST_USE bool link(JSContext* cx, CompilerConstraintList* constraints);
     MOZ_MUST_USE bool linkSharedStubs(JSContext* cx);
 
@@ -412,8 +412,6 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void loadJSScriptForBlock(MBasicBlock* block, Register reg);
     void loadOutermostJSScript(Register reg);
 
-    // Inline caches visitors.
-    void visitOutOfLineCache(OutOfLineUpdateCache* ool);
     void visitOutOfLineICFallback(OutOfLineICFallback* ool);
 
     void visitGetPropertyCacheV(LGetPropertyCacheV* ins);
@@ -422,8 +420,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitCallSetProperty(LInstruction* ins);
     void visitSetPropertyCache(LSetPropertyCache* ins);
     void visitGetNameCache(LGetNameCache* ins);
-
-    void visitBindNameIC(OutOfLineUpdateCache* ool, DataPtr<BindNameIC>& ic);
+    void visitHasOwnCache(LHasOwnCache* ins);
 
     void visitAssertRangeI(LAssertRangeI* ins);
     void visitAssertRangeD(LAssertRangeD* ins);

@@ -21,19 +21,19 @@ const { events: browserEvents } = require('../browser/events');
 const { events: tabEvents } = require('../tab/events');
 const { events: stateEvents } = require('./state/events');
 
-const { windows, isInteractive, getFocusedBrowser } = require('../window/utils');
-const { getActiveTab, getOwnerWindow } = require('../tabs/utils');
+lazyRequire(this, '../window/utils', "windows", "isInteractive", "getFocusedBrowser");
+lazyRequire(this, '../tabs/utils', "getActiveTab", "getOwnerWindow");
 
-const { ignoreWindow } = require('../private-browsing/utils');
+lazyRequire(this, '../private-browsing/utils', "ignoreWindow");
 
 const { freeze } = Object;
 const { merge } = require('../util/object');
-const { on, off, emit } = require('../event/core');
+lazyRequire(this, '../event/core', "on", "off", "emit");
 
-const { add, remove, has, clear, iterator } = require('../lang/weak-set');
-const { isNil } = require('../lang/type');
+lazyRequire(this, '../lang/weak-set', "add", "remove", "has", "clear", "iterator");
+lazyRequire(this, '../lang/type', "isNil");
 
-const { viewFor } = require('../view/core');
+lazyRequire(this, '../view/core', "viewFor");
 
 const components = new WeakMap();
 

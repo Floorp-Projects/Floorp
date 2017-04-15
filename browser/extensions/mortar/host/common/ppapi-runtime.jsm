@@ -3294,7 +3294,9 @@ dump(`callFromJSON: < ${JSON.stringify(call)}\n`);
     PPB_KeyboardInputEvent_GetCharacterText: function(json) {
       let event = PP_Resource.lookup(json.character_event);
       let charCode = event.domEvent.charCode;
-      if (charCode === 0) {
+      if (charCode === 0 ||
+          event.domEvent.getModifierState("Control") ||
+          event.domEvent.getModifierState("Meta")) {
         return new PP_Var();
       }
       return new String_PP_Var(String.fromCharCode(charCode));

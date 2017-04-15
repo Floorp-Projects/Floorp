@@ -16,9 +16,7 @@
 var path = require("path");
 var helpers = require("../helpers");
 var globals = require("../globals");
-var root = helpers.getRootDir(module.filename);
-var modules = require(path.join(root,
-                                "tools", "lint", "eslint", "modules.json"));
+var modules = helpers.modulesGlobalData;
 
 const placesOverlayFiles = [
   "toolkit/content/globalOverlay.js",
@@ -48,7 +46,7 @@ const placesOverlayModules = [
 function getScriptGlobals() {
   let fileGlobals = [];
   for (let file of placesOverlayFiles) {
-    let fileName = path.join(root, file);
+    let fileName = path.join(helpers.rootDir, file);
     try {
       fileGlobals = fileGlobals.concat(globals.getGlobalsForFile(fileName));
     } catch (e) {
@@ -76,5 +74,7 @@ function mapGlobals(fileGlobals) {
 }
 
 module.exports = {
-  globals: mapGlobals(getScriptGlobals())
+  globals: helpers.isMozillaCentralBased() ?
+    mapGlobals(getScriptGlobals()) :
+    helpers.getSavedEnvironmentItems("places-overlay")
 };

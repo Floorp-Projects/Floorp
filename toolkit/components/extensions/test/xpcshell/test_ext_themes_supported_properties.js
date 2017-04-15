@@ -2,12 +2,11 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 Cu.import("resource://gre/modules/Schemas.jsm");
 
 const {
   validateThemeManifest,
-} = ExtensionUtils;
+} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
 const BASE_SCHEMA_URL = "chrome://extensions/content/schemas/manifest.json";
 const CATEGORY_EXTENSION_SCHEMAS = "webextension-schemas";

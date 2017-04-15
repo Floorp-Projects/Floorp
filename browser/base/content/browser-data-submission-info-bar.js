@@ -71,7 +71,7 @@ var gDataNotificationInfoBar = {
         if (Preferences.get("browser.preferences.useOldOrganization", false)) {
           window.openAdvancedPreferences("dataChoicesTab");
         } else {
-          window.openPreferences("advanced-reports");
+          window.openPreferences("privacy-reports");
         }
       },
     }];
@@ -85,7 +85,7 @@ var gDataNotificationInfoBar = {
       buttons,
       event => {
         if (event == "removed") {
-          Services.obs.notifyObservers(null, "datareporting:notify-data-policy:close", null);
+          Services.obs.notifyObservers(null, "datareporting:notify-data-policy:close");
         }
       }
     );

@@ -37,14 +37,11 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]);
   yield wait;
-  wait = waitForDOM(document, "#response-panel .editor-mount iframe");
+  wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#response-tab"));
-  let [editor] = yield wait;
-  yield once(editor, "DOMContentLoaded");
-  yield waitForDOM(editor.contentDocument, ".CodeMirror-code");
-  let text = editor.contentDocument
-          .querySelector(".CodeMirror-code").textContent;
+  yield wait;
+  let text = document.querySelector(".CodeMirror-lines").textContent;
 
   ok(text.includes("\u0411\u0440\u0430\u0442\u0430\u043d"),
     "The text shown in the source editor is correct.");

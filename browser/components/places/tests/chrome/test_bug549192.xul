@@ -57,7 +57,7 @@
          onDeleteVisits(aURI, aTime) { },
        };
 
-       PlacesUtils.history.addObserver(historyObserver, false);
+       PlacesUtils.history.addObserver(historyObserver);
      });
     }
 

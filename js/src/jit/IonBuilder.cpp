@@ -658,6 +658,7 @@ IonBuilder::analyzeNewLoopTypes(const CFGBlock* loopEntryBlock)
               case JSOP_STRICTNE:
               case JSOP_IN:
               case JSOP_INSTANCEOF:
+              case JSOP_HASOWN:
                 type = MIRType::Boolean;
                 break;
               case JSOP_DOUBLE:
@@ -2267,6 +2268,9 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_IN:
         return jsop_in();
+
+      case JSOP_HASOWN:
+        return jsop_hasown();
 
       case JSOP_SETRVAL:
         MOZ_ASSERT(!script()->noScriptRval());
@@ -6978,7 +6982,7 @@ IonBuilder::testSingletonPropertyTypes(MDefinition* obj, jsid id)
 }
 
 AbortReasonOr<bool>
-IonBuilder::testNotDefinedProperty(MDefinition* obj, jsid id)
+IonBuilder::testNotDefinedProperty(MDefinition* obj, jsid id, bool ownProperty /* = false */)
 {
     TemporaryTypeSet* types = obj->resultTypeSet();
     if (!types || types->unknownObject() || types->getKnownMIRType() != MIRType::Object)
@@ -7013,6 +7017,10 @@ IonBuilder::testNotDefinedProperty(MDefinition* obj, jsid id)
             HeapTypeSetKey property = key->property(id);
             if (property.isOwnProperty(constraints()))
                 return false;
+
+            // If we only care about own properties don't check the proto.
+            if (ownProperty)
+                break;
 
             JSObject* proto = checkNurseryObject(key->proto().toObjectOrNull());
             if (!proto)
@@ -7632,11 +7640,6 @@ IonBuilder::jsop_getelem()
         obj = convertUnboxedObjects(obj);
 
     if (!forceInlineCaches()) {
-        trackOptimizationAttempt(TrackedStrategy::GetElem_TypedObject);
-        MOZ_TRY(getElemTryTypedObject(&emitted, obj, index));
-        if (emitted)
-            return Ok();
-
         // Note: no trackOptimizationAttempt call is needed, getElemTryGetProp
         // will call it.
         MOZ_TRY(getElemTryGetProp(&emitted, obj, index));
@@ -7660,6 +7663,11 @@ IonBuilder::jsop_getelem()
 
         trackOptimizationAttempt(TrackedStrategy::GetElem_String);
         MOZ_TRY(getElemTryString(&emitted, obj, index));
+        if (emitted)
+            return Ok();
+
+        trackOptimizationAttempt(TrackedStrategy::GetElem_TypedObject);
+        MOZ_TRY(getElemTryTypedObject(&emitted, obj, index));
         if (emitted)
             return Ok();
     }
@@ -8759,11 +8767,6 @@ IonBuilder::jsop_setelem()
     }
 
     if (!forceInlineCaches()) {
-        trackOptimizationAttempt(TrackedStrategy::SetElem_TypedObject);
-        MOZ_TRY(setElemTryTypedObject(&emitted, object, index, value));
-        if (emitted)
-            return Ok();
-
         trackOptimizationAttempt(TrackedStrategy::SetElem_TypedStatic);
         MOZ_TRY(setElemTryTypedStatic(&emitted, object, index, value));
         if (emitted)
@@ -8783,6 +8786,11 @@ IonBuilder::jsop_setelem()
 
         trackOptimizationAttempt(TrackedStrategy::SetElem_Arguments);
         MOZ_TRY(setElemTryArguments(&emitted, object, index, value));
+        if (emitted)
+            return Ok();
+
+        trackOptimizationAttempt(TrackedStrategy::SetElem_TypedObject);
+        MOZ_TRY(setElemTryTypedObject(&emitted, object, index, value));
         if (emitted)
             return Ok();
     }
@@ -10215,12 +10223,6 @@ IonBuilder::jsop_getprop(PropertyName* name)
         if (emitted)
             return Ok();
 
-        // Try to emit loads from known binary data blocks
-        trackOptimizationAttempt(TrackedStrategy::GetProp_TypedObject);
-        MOZ_TRY(getPropTryTypedObject(&emitted, obj, name));
-        if (emitted)
-            return Ok();
-
         // Try to emit loads from definite slots.
         trackOptimizationAttempt(TrackedStrategy::GetProp_DefiniteSlot);
         MOZ_TRY(getPropTryDefiniteSlot(&emitted, obj, name, barrier, types));
@@ -10248,6 +10250,12 @@ IonBuilder::jsop_getprop(PropertyName* name)
         // Try to emit loads from a module namespace.
         trackOptimizationAttempt(TrackedStrategy::GetProp_ModuleNamespace);
         MOZ_TRY(getPropTryModuleNamespace(&emitted, obj, name, barrier, types));
+        if (emitted)
+            return Ok();
+
+        // Try to emit loads from known binary data blocks
+        trackOptimizationAttempt(TrackedStrategy::GetProp_TypedObject);
+        MOZ_TRY(getPropTryTypedObject(&emitted, obj, name));
         if (emitted)
             return Ok();
     }
@@ -12600,7 +12608,7 @@ IonBuilder::jsop_in()
     if (emitted)
         return Ok();
 
-    MOZ_TRY(inTryFold(&emitted, obj, id));
+    MOZ_TRY(hasTryNotDefined(&emitted, obj, id, /* ownProperty = */ false));
     if (emitted)
         return Ok();
 
@@ -12664,7 +12672,7 @@ IonBuilder::inTryDense(bool* emitted, MDefinition* obj, MDefinition* id)
 }
 
 AbortReasonOr<Ok>
-IonBuilder::inTryFold(bool* emitted, MDefinition* obj, MDefinition* id)
+IonBuilder::hasTryNotDefined(bool* emitted, MDefinition* obj, MDefinition* id, bool ownProperty)
 {
     // Fold |id in obj| to |false|, if we know the object (or an object on its
     // prototype chain) does not have this property.
@@ -12680,7 +12688,7 @@ IonBuilder::inTryFold(bool* emitted, MDefinition* obj, MDefinition* id)
         return Ok();
 
     bool res;
-    MOZ_TRY_VAR(res, testNotDefinedProperty(obj, propId));
+    MOZ_TRY_VAR(res, testNotDefinedProperty(obj, propId, ownProperty));
     if (!res)
         return Ok();
 
@@ -12689,6 +12697,27 @@ IonBuilder::inTryFold(bool* emitted, MDefinition* obj, MDefinition* id)
     pushConstant(BooleanValue(false));
     obj->setImplicitlyUsedUnchecked();
     id->setImplicitlyUsedUnchecked();
+    return Ok();
+}
+
+AbortReasonOr<Ok>
+IonBuilder::jsop_hasown()
+{
+    MDefinition* obj = convertUnboxedObjects(current->pop());
+    MDefinition* id = current->pop();
+
+    if (!forceInlineCaches()) {
+        bool emitted = false;
+        MOZ_TRY(hasTryNotDefined(&emitted, obj, id, /* ownProperty = */ true));
+        if (emitted)
+            return Ok();
+    }
+
+    MHasOwnCache* ins = MHasOwnCache::New(alloc(), obj, id);
+    current->add(ins);
+    current->push(ins);
+
+    MOZ_TRY(resumeAfter(ins));
     return Ok();
 }
 
@@ -13049,10 +13078,10 @@ IonBuilder::typedObjectPrediction(TemporaryTypeSet* types)
     TypedObjectPrediction out;
     for (uint32_t i = 0; i < types->getObjectCount(); i++) {
         ObjectGroup* group = types->getGroup(i);
-        if (!group || !TypeSet::ObjectKey::get(group)->hasStableClassAndProto(constraints()))
+        if (!group || !IsTypedObjectClass(group->clasp()))
             return TypedObjectPrediction();
 
-        if (!IsTypedObjectClass(group->clasp()))
+        if (!TypeSet::ObjectKey::get(group)->hasStableClassAndProto(constraints()))
             return TypedObjectPrediction();
 
         out.addDescr(group->typeDescr());

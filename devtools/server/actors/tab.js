@@ -336,7 +336,7 @@ TabActor.prototype = {
   get webextensionsContentScriptGlobals() {
     // Ignore xpcshell runtime which spawn TabActors without a window.
     if (this.window) {
-      return ExtensionContent.getContentScriptGlobalsForWindow(this.window);
+      return ExtensionContent.getContentScriptGlobals(this.window);
     }
 
     return [];
@@ -586,9 +586,9 @@ TabActor.prototype = {
   _watchDocshells() {
     // In child processes, we watch all docshells living in the process.
     if (this.listenForNewDocShells) {
-      Services.obs.addObserver(this, "webnavigation-create", false);
+      Services.obs.addObserver(this, "webnavigation-create");
     }
-    Services.obs.addObserver(this, "webnavigation-destroy", false);
+    Services.obs.addObserver(this, "webnavigation-destroy");
 
     // We watch for all child docshells under the current document,
     this._progressListener.watch(this.docShell);
@@ -957,7 +957,7 @@ TabActor.prototype = {
     let force = request && request.options && request.options.force;
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.
-    Services.tm.currentThread.dispatch(DevToolsUtils.makeInfallible(() => {
+    Services.tm.dispatchToMainThread(DevToolsUtils.makeInfallible(() => {
       // This won't work while the browser is shutting down and we don't really
       // care.
       if (Services.startup.shuttingDown) {
@@ -966,7 +966,7 @@ TabActor.prototype = {
       this.webNavigation.reload(force ?
         Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE :
         Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
-    }, "TabActor.prototype.onReload's delayed body"), 0);
+    }, "TabActor.prototype.onReload's delayed body"));
     return {};
   },
 
@@ -976,9 +976,9 @@ TabActor.prototype = {
   onNavigateTo(request) {
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.
-    Services.tm.currentThread.dispatch(DevToolsUtils.makeInfallible(() => {
+    Services.tm.dispatchToMainThread(DevToolsUtils.makeInfallible(() => {
       this.window.location = request.url;
-    }, "TabActor.prototype.onNavigateTo's delayed body"), 0);
+    }, "TabActor.prototype.onNavigateTo's delayed body"));
     return {};
   },
 
@@ -1482,7 +1482,7 @@ function DebuggerProgressListener(tabActor) {
   this._onWindowHidden = this.onWindowHidden.bind(this);
 
   // Watch for windows destroyed (global observer that will need filtering)
-  Services.obs.addObserver(this, "inner-window-destroyed", false);
+  Services.obs.addObserver(this, "inner-window-destroyed");
 
   // XXX: for now we maintain the list of windows we know about in this instance
   // so that we can discriminate windows we care about when observing
@@ -1516,7 +1516,6 @@ DebuggerProgressListener.prototype = {
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(this,
-                                    Ci.nsIWebProgress.NOTIFY_STATUS |
                                     Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
                                     Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
 

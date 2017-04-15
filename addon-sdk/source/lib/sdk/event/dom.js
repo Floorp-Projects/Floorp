@@ -10,7 +10,7 @@ module.metadata = {
 
 const { Ci } = require("chrome");
 
-var { emit } = require("./core");
+lazyRequire(this, "./core", "emit");
 var { when: unload } = require("../system/unload");
 var listeners = new WeakMap();
 

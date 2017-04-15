@@ -18,7 +18,7 @@ namespace gfx {
 class ScaledFontDWrite final : public ScaledFontBase
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontDwrite)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontDWrite, override)
   ScaledFontDWrite(IDWriteFontFace *aFont,
                    const RefPtr<UnscaledFont>& aUnscaledFont,
                    Float aSize)
@@ -35,26 +35,24 @@ public:
                    bool aForceGDIMode,
                    const gfxFontStyle* aStyle);
 
-  virtual FontType GetType() const { return FontType::DWRITE; }
+  FontType GetType() const override { return FontType::DWRITE; }
 
-  virtual already_AddRefed<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget);
-  virtual void CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, const Matrix *aTransformHint);
+  already_AddRefed<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget) override;
+  void CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, const Matrix *aTransformHint) override;
 
   void CopyGlyphsToSink(const GlyphBuffer &aBuffer, ID2D1GeometrySink *aSink);
 
-  virtual void GetGlyphDesignMetrics(const uint16_t* aGlyphIndices, uint32_t aNumGlyphs, GlyphMetrics* aGlyphMetrics);
+  void GetGlyphDesignMetrics(const uint16_t* aGlyphIndices, uint32_t aNumGlyphs, GlyphMetrics* aGlyphMetrics) override;
 
-  virtual bool GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton);
+  bool CanSerialize() override { return true; }
 
-  virtual bool CanSerialize() override { return true; }
-
-  virtual AntialiasMode GetDefaultAAMode() override;
+  AntialiasMode GetDefaultAAMode() override;
 
   bool UseEmbeddedBitmaps() { return mUseEmbeddedBitmap; }
   bool ForceGDIMode() { return mForceGDIMode; }
 
 #ifdef USE_SKIA
-  virtual SkTypeface* GetSkTypeface();
+  SkTypeface* GetSkTypeface() override;
   SkFontStyle mStyle;
 #endif
 
@@ -71,13 +69,13 @@ protected:
 class GlyphRenderingOptionsDWrite : public GlyphRenderingOptions
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GlyphRenderingOptionsDWrite)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GlyphRenderingOptionsDWrite, override)
   explicit GlyphRenderingOptionsDWrite(IDWriteRenderingParams *aParams)
     : mParams(aParams)
   {
   }
 
-  virtual FontType GetType() const { return FontType::DWRITE; }
+  FontType GetType() const override { return FontType::DWRITE; }
 
 private:
   friend class DrawTargetD2D;

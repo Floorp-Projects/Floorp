@@ -1407,10 +1407,15 @@ class OutOfLineTruncateSlow : public OutOfLineCodeBase<CodeGeneratorShared>
     FloatRegister src_;
     Register dest_;
     bool widenFloatToDouble_;
+    wasm::BytecodeOffset bytecodeOffset_;
 
   public:
-    OutOfLineTruncateSlow(FloatRegister src, Register dest, bool widenFloatToDouble = false)
-      : src_(src), dest_(dest), widenFloatToDouble_(widenFloatToDouble)
+    OutOfLineTruncateSlow(FloatRegister src, Register dest, bool widenFloatToDouble = false,
+                          wasm::BytecodeOffset bytecodeOffset = wasm::BytecodeOffset())
+      : src_(src),
+        dest_(dest),
+        widenFloatToDouble_(widenFloatToDouble),
+        bytecodeOffset_(bytecodeOffset)
     { }
 
     void accept(CodeGeneratorShared* codegen) {
@@ -1425,30 +1430,37 @@ class OutOfLineTruncateSlow : public OutOfLineCodeBase<CodeGeneratorShared>
     bool widenFloatToDouble() const {
         return widenFloatToDouble_;
     }
-
+    wasm::BytecodeOffset bytecodeOffset() const {
+        return bytecodeOffset_;
+    }
 };
 
 OutOfLineCode*
-CodeGeneratorShared::oolTruncateDouble(FloatRegister src, Register dest, MInstruction* mir)
+CodeGeneratorShared::oolTruncateDouble(FloatRegister src, Register dest, MInstruction* mir,
+                                       wasm::BytecodeOffset bytecodeOffset)
 {
-    OutOfLineTruncateSlow* ool = new(alloc()) OutOfLineTruncateSlow(src, dest);
+    MOZ_ASSERT_IF(IsCompilingWasm(), bytecodeOffset.isValid());
+
+    OutOfLineTruncateSlow* ool = new(alloc()) OutOfLineTruncateSlow(src, dest, /* float32 */ false,
+                                                                    bytecodeOffset);
     addOutOfLineCode(ool, mir);
     return ool;
 }
 
 void
-CodeGeneratorShared::emitTruncateDouble(FloatRegister src, Register dest, MInstruction* mir)
+CodeGeneratorShared::emitTruncateDouble(FloatRegister src, Register dest, MTruncateToInt32* mir)
 {
-    OutOfLineCode* ool = oolTruncateDouble(src, dest, mir);
+    OutOfLineCode* ool = oolTruncateDouble(src, dest, mir, mir->bytecodeOffset());
 
     masm.branchTruncateDoubleMaybeModUint32(src, dest, ool->entry());
     masm.bind(ool->rejoin());
 }
 
 void
-CodeGeneratorShared::emitTruncateFloat32(FloatRegister src, Register dest, MInstruction* mir)
+CodeGeneratorShared::emitTruncateFloat32(FloatRegister src, Register dest, MTruncateToInt32* mir)
 {
-    OutOfLineTruncateSlow* ool = new(alloc()) OutOfLineTruncateSlow(src, dest, true);
+    OutOfLineTruncateSlow* ool = new(alloc()) OutOfLineTruncateSlow(src, dest, /* float32 */ true,
+                                                                    mir->bytecodeOffset());
     addOutOfLineCode(ool, mir);
 
     masm.branchTruncateFloat32MaybeModUint32(src, dest, ool->entry());
@@ -1462,7 +1474,8 @@ CodeGeneratorShared::visitOutOfLineTruncateSlow(OutOfLineTruncateSlow* ool)
     Register dest = ool->dest();
 
     saveVolatile(dest);
-    masm.outOfLineTruncateSlow(src, dest, ool->widenFloatToDouble(), gen->compilingWasm());
+    masm.outOfLineTruncateSlow(src, dest, ool->widenFloatToDouble(), gen->compilingWasm(),
+                               ool->bytecodeOffset());
     restoreVolatile(dest);
 
     masm.jump(ool->rejoin());
@@ -1520,11 +1533,11 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
         reloadRegs = callee.which() == wasm::CalleeDesc::WasmTable && callee.wasmTableIsExternal();
         break;
       case wasm::CalleeDesc::Builtin:
-        masm.call(callee.builtin());
+        masm.call(desc, callee.builtin());
         reloadRegs = false;
         break;
       case wasm::CalleeDesc::BuiltinInstanceMethod:
-        masm.wasmCallBuiltinInstanceMethod(mir->instanceArg(), callee.builtin());
+        masm.wasmCallBuiltinInstanceMethod(desc, mir->instanceArg(), callee.builtin());
         break;
     }
 
