@@ -8,7 +8,7 @@
  *          getBrowserActionPopup getPageActionPopup
  *          closeBrowserAction closePageAction
  *          promisePopupShown promisePopupHidden
- *          openContextMenu closeContextMenu openContextMenuInSidebar
+ *          openContextMenu closeContextMenu
  *          openExtensionContextMenu closeExtensionContextMenu
  *          openActionContextMenu openSubmenu closeActionContextMenu
  *          openTabContextMenu closeTabContextMenu
@@ -232,16 +232,6 @@ function closeBrowserAction(extension, win = window) {
   return Promise.resolve();
 }
 
-async function openContextMenuInSidebar(selector = "body") {
-  let contentAreaContextMenu = SidebarUI.browser.contentDocument.getElementById("contentAreaContextMenu");
-  let browser = SidebarUI.browser.contentDocument.getElementById("webext-panels-browser");
-  let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-  await BrowserTestUtils.synthesizeMouseAtCenter(selector, {type: "mousedown", button: 2}, browser);
-  await BrowserTestUtils.synthesizeMouseAtCenter(selector, {type: "contextmenu"}, browser);
-  await popupShownPromise;
-  return contentAreaContextMenu;
-}
-
 async function openContextMenuInFrame(frameId) {
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
@@ -261,8 +251,8 @@ async function openContextMenu(selector = "#img1") {
   return contentAreaContextMenu;
 }
 
-async function closeContextMenu(contextMenu) {
-  let contentAreaContextMenu = contextMenu || document.getElementById("contentAreaContextMenu");
+async function closeContextMenu() {
+  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
   contentAreaContextMenu.hidePopup();
   await popupHiddenPromise;

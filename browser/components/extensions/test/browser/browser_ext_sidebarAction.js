@@ -4,7 +4,6 @@
 
 let extData = {
   manifest: {
-    "permissions": ["contextMenus"],
     "sidebar_action": {
       "default_panel": "sidebar.html",
     },
@@ -31,12 +30,6 @@ let extData = {
   },
 
   background: function() {
-    browser.contextMenus.create({
-      id: "clickme-page",
-      title: "Click me!",
-      contexts: ["all"],
-    });
-
     browser.test.onMessage.addListener(msg => {
       if (msg === "set-panel") {
         browser.sidebarAction.setPanel({panel: ""}).then(() => {
@@ -100,20 +93,6 @@ add_task(function* sidebar_empty_panel() {
   ok(!document.getElementById("sidebar-box").hidden, "sidebar box is visible in first window");
   extension.sendMessage("set-panel");
   yield extension.awaitFinish();
-  yield extension.unload();
-});
-
-add_task(function* sidebar_contextmenu() {
-  let extension = ExtensionTestUtils.loadExtension(extData);
-  yield extension.startup();
-  // Test sidebar is opened on install
-  yield extension.awaitMessage("sidebar");
-
-  let contentAreaContextMenu = yield openContextMenuInSidebar();
-  let item = contentAreaContextMenu.getElementsByAttribute("label", "Click me!");
-  is(item.length, 1, "contextMenu item for page was found");
-  yield closeContextMenu(contentAreaContextMenu);
-
   yield extension.unload();
 });
 
