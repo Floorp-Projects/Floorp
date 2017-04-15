@@ -21,9 +21,14 @@ add_task(function* test_contentscript_cache() {
         "js": ["content_script.js"],
         "run_at": "document_start",
       }],
+
+      permissions: ["<all_urls>", "tabs"],
     },
 
-    background() {
+    async background() {
+      // Force our extension instance to be initialized for the current content process.
+      await browser.tabs.insertCSS({code: ""});
+
       browser.test.sendMessage("origin", location.origin);
     },
 
@@ -62,7 +67,9 @@ add_task(function* test_contentscript_cache() {
         let {ExtensionManager} = Components.utils.import("resource://gre/modules/ExtensionContent.jsm", {});
         let ext = ExtensionManager.extensions.get(extensionId);
 
-        assert.equal(ext.staticScripts.size, 0, "Should have no cached scripts in the parent process");
+        if (ext) {
+          assert.equal(ext.staticScripts.size, 0, "Should have no cached scripts in the parent process");
+        }
 
         sendAsyncMessage("done");
       });

@@ -265,11 +265,9 @@ GlobalManager = {
 
   _onExtensionBrowser(type, browser, additionalData = {}) {
     browser.messageManager.loadFrameScript(`data:,
-      Components.utils.import("resource://gre/modules/ExtensionContent.jsm");
-      ExtensionContent.init(this);
-      addEventListener("unload", function() {
-        ExtensionContent.uninit(this);
-      });
+      Components.utils.import("resource://gre/modules/Services.jsm");
+
+      Services.obs.notifyObservers(this, "tab-content-frameloader-created", "");
     `, false);
 
     let viewType = browser.getAttribute("webextension-view-type");

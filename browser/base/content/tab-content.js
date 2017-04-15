@@ -11,7 +11,6 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/ExtensionContent.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
   "resource:///modules/E10SUtils.jsm");
@@ -1045,9 +1044,9 @@ var UserContextIdNotifier = {
 
 UserContextIdNotifier.init();
 
-ExtensionContent.init(this);
+Services.obs.notifyObservers(this, "tab-content-frameloader-created");
+
 addEventListener("unload", () => {
-  ExtensionContent.uninit(this);
   RefreshBlocker.uninit();
 });
 
