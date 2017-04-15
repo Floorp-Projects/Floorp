@@ -23,7 +23,7 @@ use gecko_bindings::sugar::refptr::RefPtr;
 use keyframes::{Keyframe, parse_keyframe_list};
 use media_queries::{Device, MediaList, parse_media_query_list};
 use parking_lot::RwLock;
-use parser::{Parse, ParserContext, log_css_error};
+use parser::{LengthParsingMode, Parse, ParserContext, log_css_error};
 use properties::{PropertyDeclarationBlock, parse_property_declaration_list};
 use selector_parser::{SelectorImpl, SelectorParser};
 use selectors::parser::SelectorList;
@@ -328,7 +328,8 @@ impl ParseErrorReporter for MemoryHoleReporter {
             _: &mut Parser,
             _: SourcePosition,
             _: &str,
-            _: &UrlExtraData) {
+            _: &UrlExtraData,
+            _: u64) {
         // do nothing
     }
 }
@@ -421,7 +422,8 @@ impl CssRule {
         let context = ParserContext::new(parent_stylesheet.origin,
                                          &parent_stylesheet.url_data,
                                          &error_reporter,
-                                         None);
+                                         None,
+                                         LengthParsingMode::Default);
         let mut input = Parser::new(css);
 
         // nested rules are in the body state
@@ -666,7 +668,7 @@ impl Stylesheet {
         let (rules, dirty_on_viewport_size_change) = Stylesheet::parse_rules(
             css, url_data, existing.origin, &mut namespaces,
             &existing.shared_lock, stylesheet_loader, error_reporter,
-        );
+            0u64);
 
         *existing.namespaces.write() = namespaces;
         existing.dirty_on_viewport_size_change
@@ -683,7 +685,8 @@ impl Stylesheet {
                    namespaces: &mut Namespaces,
                    shared_lock: &SharedRwLock,
                    stylesheet_loader: Option<&StylesheetLoader>,
-                   error_reporter: &ParseErrorReporter)
+                   error_reporter: &ParseErrorReporter,
+                   line_number_offset: u64)
                    -> (Vec<CssRule>, bool) {
         let mut rules = Vec::new();
         let mut input = Parser::new(css);
@@ -692,7 +695,8 @@ impl Stylesheet {
             namespaces: namespaces,
             shared_lock: shared_lock,
             loader: stylesheet_loader,
-            context: ParserContext::new(origin, url_data, error_reporter, None),
+            context: ParserContext::new_with_line_number_offset(origin, url_data, error_reporter,
+                                                                line_number_offset, LengthParsingMode::Default),
             state: Cell::new(State::Start),
         };
 
@@ -726,11 +730,12 @@ impl Stylesheet {
                     media: Arc<Locked<MediaList>>,
                     shared_lock: SharedRwLock,
                     stylesheet_loader: Option<&StylesheetLoader>,
-                    error_reporter: &ParseErrorReporter) -> Stylesheet {
+                    error_reporter: &ParseErrorReporter,
+                    line_number_offset: u64) -> Stylesheet {
         let mut namespaces = Namespaces::default();
         let (rules, dirty_on_viewport_size_change) = Stylesheet::parse_rules(
             css, &url_data, origin, &mut namespaces,
-            &shared_lock, stylesheet_loader, error_reporter,
+            &shared_lock, stylesheet_loader, error_reporter, line_number_offset
         );
         Stylesheet {
             origin: origin,

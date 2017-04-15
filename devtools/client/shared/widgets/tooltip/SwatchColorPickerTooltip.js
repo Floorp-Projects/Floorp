@@ -204,6 +204,14 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     return colorObj.toString();
   },
 
+  /**
+   * Overriding the SwatchBasedEditorTooltip.isEditing function to consider the
+   * eyedropper.
+   */
+  isEditing: function () {
+    return this.tooltip.isVisible() || this.eyedropperOpen;
+  },
+
   destroy: function () {
     SwatchBasedEditorTooltip.prototype.destroy.call(this);
     this.inspector = null;

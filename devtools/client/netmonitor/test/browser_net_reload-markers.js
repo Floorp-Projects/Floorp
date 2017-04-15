@@ -12,17 +12,14 @@ add_task(function* () {
   info("Starting test... ");
 
   let { document } = monitor.panelWin;
+
+  let markersDone = waitForTimelineMarkers(monitor);
+
   let button = document.querySelector(".requests-list-reload-notice-button");
   button.click();
 
-  let markers = [];
-
-  monitor.panelWin.on(EVENTS.TIMELINE_EVENT, (_, marker) => {
-    markers.push(marker);
-  });
-
   yield waitForNetworkEvents(monitor, 1);
-  yield waitUntil(() => markers.length == 2);
+  let markers = yield markersDone;
 
   ok(true, "Reloading finished");
 

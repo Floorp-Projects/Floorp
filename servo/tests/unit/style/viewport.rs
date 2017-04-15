@@ -9,7 +9,7 @@ use servo_config::prefs::{PREFS, PrefValue};
 use servo_url::ServoUrl;
 use std::sync::Arc;
 use style::media_queries::{Device, MediaList, MediaType};
-use style::parser::{Parse, ParserContext};
+use style::parser::{LengthParsingMode, Parse, ParserContext};
 use style::shared_lock::SharedRwLock;
 use style::stylesheets::{CssRuleType, Stylesheet, Origin};
 use style::values::specified::LengthOrPercentageOrAuto::{self, Auto};
@@ -31,7 +31,8 @@ macro_rules! stylesheet {
             Arc::new($shared_lock.wrap(MediaList::empty())),
             $shared_lock,
             None,
-            &$error_reporter
+            &$error_reporter,
+            0u64
         ))
     }
 }
@@ -291,7 +292,8 @@ fn multiple_stylesheets_cascading() {
 fn constrain_viewport() {
     let url = ServoUrl::parse("http://localhost").unwrap();
     let reporter = CSSErrorReporterTest;
-    let context = ParserContext::new(Origin::Author, &url, &reporter, Some(CssRuleType::Viewport));
+    let context = ParserContext::new(Origin::Author, &url, &reporter, Some(CssRuleType::Viewport),
+                                     LengthParsingMode::Default);
 
     macro_rules! from_css {
         ($css:expr) => {

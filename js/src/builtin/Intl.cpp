@@ -2978,7 +2978,7 @@ js::SharedIntlData::validateTimeZoneName(JSContext* cx, HandleString timeZone,
 
 bool
 js::SharedIntlData::tryCanonicalizeTimeZoneConsistentWithIANA(JSContext* cx, HandleString timeZone,
-                                                              MutableHandleString result)
+                                                              MutableHandleAtom result)
 {
     if (!ensureTimeZones(cx))
         return false;
@@ -3075,11 +3075,12 @@ js::intl_canonicalizeTimeZone(JSContext* cx, unsigned argc, Value* vp)
     // Some time zone names are canonicalized differently by ICU -- handle
     // those first:
     RootedString timeZone(cx, args[0].toString());
-    RootedString ianaTimeZone(cx);
+    RootedAtom ianaTimeZone(cx);
     if (!sharedIntlData.tryCanonicalizeTimeZoneConsistentWithIANA(cx, timeZone, &ianaTimeZone))
         return false;
 
     if (ianaTimeZone) {
+        cx->markAtom(ianaTimeZone);
         args.rval().setString(ianaTimeZone);
         return true;
     }

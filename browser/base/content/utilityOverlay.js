@@ -309,15 +309,15 @@ function openLinkIn(url, where, params) {
                                  createInstance(Ci.nsISupportsPRUint32);
     userContextIdSupports.data = aUserContextId;
 
-    sa.appendElement(wuri, /* weak =*/ false);
-    sa.appendElement(charset, /* weak =*/ false);
-    sa.appendElement(referrerURISupports, /* weak =*/ false);
-    sa.appendElement(aPostData, /* weak =*/ false);
-    sa.appendElement(allowThirdPartyFixupSupports, /* weak =*/ false);
-    sa.appendElement(referrerPolicySupports, /* weak =*/ false);
-    sa.appendElement(userContextIdSupports, /* weak =*/ false);
-    sa.appendElement(aPrincipal, /* weak =*/ false);
-    sa.appendElement(aTriggeringPrincipal, /* weak =*/ false);
+    sa.appendElement(wuri);
+    sa.appendElement(charset);
+    sa.appendElement(referrerURISupports);
+    sa.appendElement(aPostData);
+    sa.appendElement(allowThirdPartyFixupSupports);
+    sa.appendElement(referrerPolicySupports);
+    sa.appendElement(userContextIdSupports);
+    sa.appendElement(aPrincipal);
+    sa.appendElement(aTriggeringPrincipal);
 
     let features = "chrome,dialog=no,all";
     if (aIsPrivate) {
@@ -326,7 +326,7 @@ function openLinkIn(url, where, params) {
 
     const sourceWindow = (w || window);
     let win;
-    if (params.frameOuterWindowID && sourceWindow) {
+    if (params.frameOuterWindowID != undefined && sourceWindow) {
       // Only notify it as a WebExtensions' webNavigation.onCreatedNavigationTarget
       // event if it contains the expected frameOuterWindowID params.
       // (e.g. we should not notify it as a onCreatedNavigationTarget if the user is
@@ -342,10 +342,10 @@ function openLinkIn(url, where, params) {
               sourceTabBrowser,
               sourceFrameOuterWindowID: params.frameOuterWindowID,
             },
-          }, "webNavigation-createdNavigationTarget", null);
+          }, "webNavigation-createdNavigationTarget");
         }
       };
-      Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished", false);
+      Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished");
     }
     win = Services.ww.openWindow(sourceWindow, getBrowserURL(), null, features, sa);
     return;
@@ -450,7 +450,7 @@ function openLinkIn(url, where, params) {
     });
     targetBrowser = tabUsedForLoad.linkedBrowser;
 
-    if (params.frameOuterWindowID && w) {
+    if (params.frameOuterWindowID != undefined && w) {
       // Only notify it as a WebExtensions' webNavigation.onCreatedNavigationTarget
       // event if it contains the expected frameOuterWindowID params.
       // (e.g. we should not notify it as a onCreatedNavigationTarget if the user is
@@ -462,7 +462,7 @@ function openLinkIn(url, where, params) {
           sourceTabBrowser: w.gBrowser.selectedBrowser,
           sourceFrameOuterWindowID: params.frameOuterWindowID,
         },
-      }, "webNavigation-createdNavigationTarget", null);
+      }, "webNavigation-createdNavigationTarget");
     }
     break;
   }
@@ -747,7 +747,7 @@ function openPreferences(paneID, extraArgs) {
     let supportsStringPrefURL = Cc["@mozilla.org/supports-string;1"]
                                   .createInstance(Ci.nsISupportsString);
     supportsStringPrefURL.data = preferencesURL;
-    windowArguments.appendElement(supportsStringPrefURL, /* weak =*/ false);
+    windowArguments.appendElement(supportsStringPrefURL);
 
     win = Services.ww.openWindow(null, Services.prefs.getCharPref("browser.chromeURL"),
                                  "_blank", "chrome,dialog=no,all", windowArguments);
@@ -767,7 +767,7 @@ function openPreferences(paneID, extraArgs) {
       }
       Services.obs.removeObserver(advancedPaneLoadedObs, "advanced-pane-loaded");
       switchToAdvancedSubPane(browser.contentDocument);
-    }, "advanced-pane-loaded", false);
+    }, "advanced-pane-loaded");
   } else {
     if (paneID) {
       browser.contentWindow.gotoPref(paneID);

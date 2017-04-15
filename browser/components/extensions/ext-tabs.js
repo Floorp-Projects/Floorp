@@ -15,10 +15,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
-var {
-  SingletonEventManager,
-} = ExtensionUtils;
-
 let tabListener = {
   tabReadyInitialized: false,
   tabReadyPromises: new WeakMap(),
@@ -307,7 +303,7 @@ this.tabs = class extends ExtensionAPI {
                 Services.obs.removeObserver(obs, "browser-delayed-startup-finished");
                 resolve(window);
               };
-              Services.obs.addObserver(obs, "browser-delayed-startup-finished", false);
+              Services.obs.addObserver(obs, "browser-delayed-startup-finished");
             } else {
               resolve(window);
             }

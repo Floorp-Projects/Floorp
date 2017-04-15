@@ -50,7 +50,7 @@
 #include "mozilla/Compression.h"
 #include "TreeTraversal.h"              // for ForEachNode
 
-#include <deque>
+#include <list>
 #include <set>
 
 uint8_t gLayerManagerLayerBuilder;
@@ -1158,8 +1158,7 @@ ContainerLayer::Collect3DContextLeaves(nsTArray<Layer*>& aToSort)
 static nsTArray<LayerPolygon>
 SortLayersWithBSPTree(nsTArray<Layer*>& aArray)
 {
-  std::deque<LayerPolygon> inputLayers;
-  nsTArray<LayerPolygon> orderedLayers;
+  std::list<LayerPolygon> inputLayers;
 
   // Build a list of polygons to be sorted.
   for (Layer* layer : aArray) {
@@ -1189,12 +1188,13 @@ SortLayersWithBSPTree(nsTArray<Layer*>& aArray)
   }
 
   if (inputLayers.empty()) {
-    return orderedLayers;
+    return nsTArray<LayerPolygon>();
   }
 
   // Build a BSP tree from the list of polygons.
   BSPTree tree(inputLayers);
-  orderedLayers = Move(tree.GetDrawOrder());
+
+  nsTArray<LayerPolygon> orderedLayers(tree.GetDrawOrder());
 
   // Transform the polygons back to layer space.
   for (LayerPolygon& layerPolygon : orderedLayers) {
@@ -1489,7 +1489,7 @@ RefLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
  * to get valid results (because the cyclic buffer was overwritten since that call).
  *
  * To determine availability of the data upon StopFrameTimeRecording:
- * - mRecording.mNextIndex increases on each PostPresent, and never resets.
+ * - mRecording.mNextIndex increases on each RecordFrame, and never resets.
  * - Cyclic buffer position is realized as mNextIndex % bufferSize.
  * - StartFrameTimeRecording returns mNextIndex. When StopFrameTimeRecording is called,
  *   the required start index is passed as an arg, and we're able to calculate the required
@@ -1545,16 +1545,6 @@ LayerManager::RecordFrame()
 }
 
 void
-LayerManager::PostPresent()
-{
-  if (!mTabSwitchStart.IsNull()) {
-    Telemetry::Accumulate(Telemetry::FX_TAB_SWITCH_TOTAL_MS,
-                          uint32_t((TimeStamp::Now() - mTabSwitchStart).ToMilliseconds()));
-    mTabSwitchStart = TimeStamp();
-  }
-}
-
-void
 LayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
                                      nsTArray<float>& aFrameIntervals)
 {
@@ -1580,12 +1570,6 @@ LayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
     }
     aFrameIntervals[i] = mRecording.mIntervals[cyclicPos];
   }
-}
-
-void
-LayerManager::BeginTabSwitch()
-{
-  mTabSwitchStart = TimeStamp::Now();
 }
 
 static void PrintInfo(std::stringstream& aStream, HostLayer* aLayerComposite);

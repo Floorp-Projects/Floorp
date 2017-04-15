@@ -10,7 +10,6 @@
 #include <set>
 
 #include "compiler/translator/IntermNode.h"
-#include "compiler/translator/LoopInfo.h"
 #include "compiler/translator/ParseContext.h"
 
 namespace sh
@@ -91,9 +90,6 @@ class TOutputGLSLBase : public TIntermTraverser
 
     // This set contains all the ids of the structs from every scope.
     std::set<int> mDeclaredStructs;
-
-    // Stack of loops that need to be unrolled.
-    TLoopStack mLoopUnrollStack;
 
     ShArrayIndexClampingStrategy mClampingStrategy;
 

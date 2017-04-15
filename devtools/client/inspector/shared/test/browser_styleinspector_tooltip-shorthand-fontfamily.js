@@ -26,7 +26,7 @@ add_task(function* () {
 function* testRuleView(ruleView, nodeFront) {
   info("Testing font-family tooltips in the rule view");
 
-  let tooltip = ruleView.tooltips.previewTooltip;
+  let tooltip = ruleView.tooltips.getTooltip("previewTooltip");
   let panel = tooltip.panel;
 
   // Check that the rule view has a tooltip and that a XUL panel has

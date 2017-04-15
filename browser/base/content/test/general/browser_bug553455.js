@@ -55,7 +55,7 @@ function waitForProgressNotification(aPanelOpen = false, aExpectedCount = 1) {
         }
         Services.obs.removeObserver(observer, topic);
         resolve();
-      }, topic, false);
+      }, topic);
     });
 
     let panelEventPromise;
@@ -102,7 +102,7 @@ function waitForNotification(aId, aExpectedCount = 1) {
         }
         Services.obs.removeObserver(observer, topic);
         resolve();
-      }, topic, false);
+      }, topic);
     });
 
     let panelEventPromise = new Promise(resolve => {
@@ -507,7 +507,7 @@ function test_sequential() {
       Services.obs.addObserver(function observer() {
         Services.obs.removeObserver(observer, "addon-install-confirmation");
         resolve();
-      }, "addon-install-confirmation", false);
+      }, "addon-install-confirmation");
     });
 
     // Make sure browser-addons.js executes first
@@ -630,7 +630,7 @@ function test_localFile() {
       Services.obs.addObserver(function observer() {
         Services.obs.removeObserver(observer, "addon-install-failed");
         resolve();
-      }, "addon-install-failed", false);
+      }, "addon-install-failed");
     });
     gBrowser.selectedTab = gBrowser.addTab("about:blank");
     yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
@@ -712,16 +712,32 @@ function test_tabNavigate() {
 
 function test_urlBar() {
   return Task.spawn(function* () {
-    let notificationPromise = waitForNotification("addon-install-origin-blocked");
+    let progressPromise = waitForProgressNotification();
+    let dialogPromise = waitForInstallDialog();
+
     gBrowser.selectedTab = gBrowser.addTab("about:blank");
     yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     gURLBar.value = TESTROOT + "amosigned.xpi";
     gURLBar.focus();
     EventUtils.synthesizeKey("VK_RETURN", {});
+
+    yield progressPromise;
+    let installDialog = yield dialogPromise;
+
+    let notificationPromise = waitForNotification("addon-install-restart");
+    acceptInstallDialog(installDialog);
     let panel = yield notificationPromise;
 
     let notification = panel.childNodes[0];
-    ok(!notification.hasAttribute("buttonlabel"), "Button to allow install should be hidden.");
+    is(notification.button.label, "Restart Now", "Should have seen the right button");
+    is(notification.getAttribute("label"),
+             "XPI Test will be installed after you restart " + gApp + ".",
+             "Should have seen the right message");
+
+    let installs = yield getInstalls();
+    is(installs.length, 1, "Should be one pending install");
+    installs[0].cancel();
+
     yield removeTab();
   });
 },
@@ -1001,7 +1017,7 @@ function test_failedSecurity() {
       Services.obs.addObserver(function observer() {
         Services.obs.removeObserver(observer, "addon-install-failed");
         resolve();
-      }, "addon-install-failed", false);
+      }, "addon-install-failed");
     });
 
     // Allow the browser code to add the failure notification and then wait
@@ -1037,9 +1053,9 @@ add_task(function* () {
   Services.prefs.setBoolPref("extensions.install.requireSecureOrigin", false);
   Services.prefs.setIntPref("security.dialog_enable_delay", 0);
 
-  Services.obs.addObserver(XPInstallObserver, "addon-install-started", false);
-  Services.obs.addObserver(XPInstallObserver, "addon-install-blocked", false);
-  Services.obs.addObserver(XPInstallObserver, "addon-install-failed", false);
+  Services.obs.addObserver(XPInstallObserver, "addon-install-started");
+  Services.obs.addObserver(XPInstallObserver, "addon-install-blocked");
+  Services.obs.addObserver(XPInstallObserver, "addon-install-failed");
 
   registerCleanupFunction(function() {
     // Make sure no more test parts run in case we were timed out

@@ -108,7 +108,7 @@ module.exports = function(context) {
   // ---------------------------------------------------------------------------
 
   return {
-    CallExpression: function(node) {
+    CallExpression(node) {
       if (node.arguments.length === 0) {
         return;
       }

@@ -38,7 +38,6 @@
 CSS_KEY(-moz-activehyperlinktext, _moz_activehyperlinktext)
 CSS_KEY(-moz-all, _moz_all)
 CSS_KEY(-moz-alt-content, _moz_alt_content)
-CSS_KEY(-moz-anchor-decoration, _moz_anchor_decoration)
 CSS_KEY(-moz-available, _moz_available)
 CSS_KEY(-moz-box, _moz_box)
 CSS_KEY(-moz-button, _moz_button)

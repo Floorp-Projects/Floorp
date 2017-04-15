@@ -4,14 +4,14 @@
 
 <!ENTITY startup.label             "Startup">
 
-<!ENTITY startupPage.label         "When &brandShortName; starts:">
-<!ENTITY startupPage.accesskey     "s">
+<!ENTITY startupPage2.label        "When &brandShortName; starts">
+<!ENTITY startupPage2.accesskey    "s">
 <!ENTITY startupUserHomePage.label "Show your home page">
 <!ENTITY startupBlankPage.label    "Show a blank page">
 <!ENTITY startupPrevSession.label  "Show your windows and tabs from last time">
 
-<!ENTITY homepage.label            "Home Page:">
-<!ENTITY homepage.accesskey        "P">
+<!ENTITY homepage2.label           "Home Page">
+<!ENTITY homepage2.accesskey       "P">
 <!ENTITY useCurrentPage.label      "Use Current Page">
 <!ENTITY useCurrentPage.accesskey  "C">
 <!ENTITY useMultiple.label         "Use Current Pages">

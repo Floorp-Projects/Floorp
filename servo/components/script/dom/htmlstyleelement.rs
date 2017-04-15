@@ -25,7 +25,7 @@ use script_layout_interface::message::Msg;
 use std::cell::Cell;
 use std::sync::Arc;
 use style::media_queries::parse_media_query_list;
-use style::parser::ParserContext as CssParserContext;
+use style::parser::{LengthParsingMode, ParserContext as CssParserContext};
 use style::stylesheets::{CssRuleType, Stylesheet, Origin};
 use stylesheet_loader::{StylesheetLoader, StylesheetOwner};
 
@@ -40,6 +40,7 @@ pub struct HTMLStyleElement {
     in_stack_of_open_elements: Cell<bool>,
     pending_loads: Cell<u32>,
     any_failed_load: Cell<bool>,
+    line_number: u64,
 }
 
 impl HTMLStyleElement {
@@ -55,6 +56,7 @@ impl HTMLStyleElement {
             in_stack_of_open_elements: Cell::new(creator.is_parser_created()),
             pending_loads: Cell::new(0),
             any_failed_load: Cell::new(false),
+            line_number: creator.return_line_number(),
         }
     }
 
@@ -85,14 +87,16 @@ impl HTMLStyleElement {
         let url = win.get_url();
         let context = CssParserContext::new_for_cssom(&url,
                                                       win.css_error_reporter(),
-                                                      Some(CssRuleType::Media));
+                                                      Some(CssRuleType::Media),
+                                                      LengthParsingMode::Default);
         let shared_lock = node.owner_doc().style_shared_lock().clone();
         let mq = Arc::new(shared_lock.wrap(
                     parse_media_query_list(&context, &mut CssParser::new(&mq_str))));
         let loader = StylesheetLoader::for_element(self.upcast());
         let sheet = Stylesheet::from_str(&data, win.get_url(), Origin::Author, mq,
                                          shared_lock, Some(&loader),
-                                         win.css_error_reporter());
+                                         win.css_error_reporter(),
+                                         self.line_number);
 
         let sheet = Arc::new(sheet);
 

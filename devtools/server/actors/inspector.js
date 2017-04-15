@@ -3123,12 +3123,12 @@ DocumentWalker.prototype = {
       previous = previous && previous.previousSibling;
       next = next && next.nextSibling;
 
-      if (this.filter(previous) === nodeFilterConstants.FILTER_ACCEPT) {
+      if (previous && this.filter(previous) === nodeFilterConstants.FILTER_ACCEPT) {
         // A valid node was found in the previous siblings of the node.
         return previous;
       }
 
-      if (this.filter(next) === nodeFilterConstants.FILTER_ACCEPT) {
+      if (next && this.filter(next) === nodeFilterConstants.FILTER_ACCEPT) {
         // A valid node was found in the next siblings of the node.
         return next;
       }

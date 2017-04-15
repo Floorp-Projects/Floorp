@@ -31,6 +31,7 @@ i {
   width: 3em;
   border:1px solid blue;
   text-shadow: none;
+  visibility: hidden;
 }
 .rtl {
   direction:rtl;
@@ -62,10 +63,10 @@ s {
 
 </head><body>
 
-<div class="test"><font class="overlap"><s></s>&nbsp;<m>&#x2026;</m>| | | | | | | | | | | | | | | | | | | | | | <i class="n"></i></font></div>
-<div class="test"><font><s></s>| | | | | | | | | | | | | | | | | | | | | | | <i></i></font></div>
-<div class="test rtl"><font class="overlap"><s></s>&nbsp;<m>&#x2026;</m>| | | | | | | | | | | | | | | | | | | | | | <i class="n"></i></font></div>
-<div class="test rtl"><font><s></s>| | | | | | | | | | | | | | | | | | | | | | | <i></i></font></div>
+<div class="test"><font class="overlap"><s></s>&nbsp;<m>&#x2026;</m>| | | | | | | | | | | | | | | | | | | | | | &#x2026;<i class="n"></i></font></div>
+<div class="test"><font><s></s>| | | | | | | | | | | | | | | | | | | | | | | &#x2026;<i></i></font></div>
+<div class="test rtl"><font class="overlap"><s></s>&nbsp;<m>&#x2026;</m>| | | | | | | | | | | | | | | | | | | | | | &#x2026;<i class="n"></i></font></div>
+<div class="test rtl"><font><s></s>| | | | | | | | | | | | | | | | | | | | | | | &#x2026;<i></i></font></div>
 
 
 </body></html>

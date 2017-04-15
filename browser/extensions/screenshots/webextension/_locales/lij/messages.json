@@ -1,0 +1,106 @@
+{
+  "addonDescription": {
+    "message": "Fanni de föto do schermo da-o Web e sarvale in mòddo tenporaneo ò cin mòddo che restan."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Fanni 'na föto do schermo"
+  },
+  "myShotsLink": {
+    "message": "E mæ föto do schermo"
+  },
+  "screenshotInstructions": {
+    "message": "Rebela ò sciacca in sciâ pagina pe seleçionâ 'na region. Sciacca ESC pe anulâ."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Sarva"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Sarva o vixibile"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Sarva tutta a pagina"
+  },
+  "cancelScreenshot": {
+    "message": "Anulla"
+  },
+  "downloadScreenshot": {
+    "message": "Descarega"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Colegamento copiou inti aponti"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "O colegamento a l'inmagine o l'é stæto copiou inti aponti. Sciacca$META_KEY$-V pe incolalo.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Feua serviçio."
+  },
+  "requestErrorDetails": {
+    "message": "Ne spiaxe! No poemmo sarvâ l'inmagine. Pe piaxei preuva torna dòppo."
+  },
+  "connectionErrorTitle": {
+    "message": "No poemmo conetise a-e teu föto do schermo."
+  },
+  "connectionErrorDetails": {
+    "message": "Pe piaxei contròlla a teu conescion a l'Internet. Se ti riesci a conetite a l'Internet, ghe poeiva ese 'n problema tenporaneo co-o serviçio de Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "No poemmo sarvâ a teu inmagine perché gh'é 'n problema co-o serviçio de Firefox Screenshot. Pe piaxei preuva torna dòppo."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "No poemmo fâ 'na föto do schermo de sta pagina."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Sta chi a no l'é 'na pagina Web standard, coscì no peu faghe 'na föto do schermo."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "No ti peu fâ 'na föto do schermo a 'na pagina de Firefox Screenshots!"
+  },
+  "genericErrorTitle": {
+    "message": "Ahime mi! Firefox Screeshot o s'é ciantou."
+  },
+  "genericErrorDetails": {
+    "message": "Niatri no emmo ben acapio cöse l'é sucesso. Ti peu miga preuvâ co-ina pagina dispægia?"
+  },
+  "tourBodyOne": {
+    "message": "Fanni, sarva e condividdi föto do schermo sensa sciortî da Firefox."
+  },
+  "tourHeaderTwo": {
+    "message": "Catua solo quello che t'eu"
+  },
+  "tourBodyTwo": {
+    "message": "Sciacca e rebela pe catuâ solo 'na porçion de 'na pagina. Ti peu anche anâ co-o ratto sorvia l'area seleçionâ pe evidençiala."
+  },
+  "tourHeaderThree": {
+    "message": "Comme te piaxe"
+  },
+  "tourBodyThree": {
+    "message": "Sarva 'n ritaggio de 'na pagina Web pe condividila in mòddo ciù façile ò scaregala into teu computer. Ti peu anche sciacâ into pomello  “E mæ föto do schermo pe atrovâ” quello che t'æ za pigiou."
+  },
+  "tourHeaderFour": {
+    "message": "Catua 'n barcon ò 'na pagina intrega"
+  },
+  "tourBodyFour": {
+    "message": "Seleçionn-a i pomelli de d'ato a drita pe catuâ l'area vixibile into barcon ò a pagina intrega."
+  },
+  "tourSkip": {
+    "message": "Ignòra"
+  },
+  "tourNext": {
+    "message": "Pròscima schermâ"
+  },
+  "tourPrevious": {
+    "message": "Schermâ de primma"
+  },
+  "tourDone": {
+    "message": "Fæto"
+  }
+}

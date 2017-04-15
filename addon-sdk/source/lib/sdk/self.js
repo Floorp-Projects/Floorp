@@ -11,7 +11,7 @@ const { CC } = require('chrome');
 const options = require('@loader/options');
 
 const { get } = require("./preferences/service");
-const { readURISync } = require('./net/url');
+lazyRequire(this, './net/url', "readURISync");
 
 const id = options.id;
 

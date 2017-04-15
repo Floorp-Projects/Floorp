@@ -27,7 +27,7 @@ function fakeUIResponse() {
       let details = JSON.parse(data);
       gCaptivePortalDetector.cancelLogin(details.id);
     }
-  }, "captive-portal-login", false);
+  }, "captive-portal-login");
 }
 
 function test_cancel() {

@@ -22,7 +22,7 @@ function cleanup() {
 
 function run_test() {
   do_register_cleanup(cleanup);
-  Services.obs.addObserver(gObserver, "last-pb-context-exited", false);
+  Services.obs.addObserver(gObserver, "last-pb-context-exited");
 
   add_test(test_part1);
   add_test(test_private_browsing1);
@@ -212,7 +212,7 @@ function test_private_browsing1() {
     ok(!gSSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
                                IS_PRIVATE));
     // Simulate leaving private browsing mode
-    Services.obs.notifyObservers(null, "last-pb-context-exited", null);
+    Services.obs.notifyObservers(null, "last-pb-context-exited");
   });
 }
 

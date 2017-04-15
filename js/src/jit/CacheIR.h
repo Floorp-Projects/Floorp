@@ -139,7 +139,9 @@ class TypedOperandId : public OperandId
     _(GetName)              \
     _(SetProp)              \
     _(SetElem)              \
-    _(In)
+    _(BindName)             \
+    _(In)                   \
+    _(HasOwn)
 
 enum class CacheKind : uint8_t
 {
@@ -176,6 +178,7 @@ extern const char* CacheKindNames[];
     _(GuardAndLoadUnboxedExpando)         \
     _(GuardAndGetIndexFromString)         \
     _(GuardHasGetterSetter)               \
+    _(GuardGroupHasUnanalyzedNewScript)   \
     _(LoadObject)                         \
     _(LoadProto)                          \
     _(LoadEnclosingEnvironment)           \
@@ -184,6 +187,7 @@ extern const char* CacheKindNames[];
     _(MegamorphicLoadSlotResult)          \
     _(MegamorphicLoadSlotByValueResult)   \
     _(MegamorphicStoreSlot)               \
+    _(MegamorphicHasOwnResult)            \
                                           \
     /* See CacheIR.cpp 'DOM proxies' comment. */ \
     _(LoadDOMExpandoValue)                \
@@ -233,6 +237,7 @@ extern const char* CacheKindNames[];
     _(LoadFrameArgumentResult)            \
     _(LoadEnvironmentFixedSlotResult)     \
     _(LoadEnvironmentDynamicSlotResult)   \
+    _(LoadObjectResult)                   \
     _(CallScriptedGetterResult)           \
     _(CallNativeGetterResult)             \
     _(CallProxyGetResult)                 \
@@ -544,6 +549,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::GuardHasGetterSetter, obj);
         addStubField(uintptr_t(shape), StubField::Type::Shape);
     }
+    void guardGroupHasUnanalyzedNewScript(ObjectGroup* group) {
+        writeOp(CacheOp::GuardGroupHasUnanalyzedNewScript);
+        addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
+    }
 
     void loadFrameCalleeResult() {
         writeOp(CacheOp::LoadFrameCalleeResult);
@@ -775,6 +784,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOperandId(rhs);
         buffer_.writeByte(needsTypeBarrier);
     }
+    void megamorphicHasOwnResult(ObjOperandId obj, ValOperandId id) {
+        writeOpWithOperandId(CacheOp::MegamorphicHasOwnResult, obj);
+        writeOperandId(id);
+    }
 
     void loadBooleanResult(bool val) {
         writeOp(CacheOp::LoadBooleanResult);
@@ -879,6 +892,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void loadEnvironmentDynamicSlotResult(ObjOperandId obj, size_t offset) {
         writeOpWithOperandId(CacheOp::LoadEnvironmentDynamicSlotResult, obj);
         addStubField(offset, StubField::Type::RawWord);
+    }
+    void loadObjectResult(ObjOperandId obj) {
+        writeOpWithOperandId(CacheOp::LoadObjectResult, obj);
     }
 
     void typeMonitorResult() {
@@ -1097,6 +1113,22 @@ class MOZ_RAII GetNameIRGenerator : public IRGenerator
     bool tryAttachStub();
 };
 
+// BindNameIRGenerator generates CacheIR for a BindName IC.
+class MOZ_RAII BindNameIRGenerator : public IRGenerator
+{
+    HandleObject env_;
+    HandlePropertyName name_;
+
+    bool tryAttachGlobalName(ObjOperandId objId, HandleId id);
+    bool tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
+
+  public:
+    BindNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
+                        HandleObject env, HandlePropertyName name);
+
+    bool tryAttachStub();
+};
+
 // Information used by SetProp/SetElem stubs to check/update property types.
 class MOZ_RAII PropertyTypeCheckInfo
 {
@@ -1244,6 +1276,27 @@ class MOZ_RAII InIRGenerator : public IRGenerator
   public:
     InIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode, HandleValue key,
                   HandleObject obj);
+
+    bool tryAttachStub();
+};
+
+// HasOwnIRGenerator generates CacheIR for a HasOwn IC.
+class MOZ_RAII HasOwnIRGenerator : public IRGenerator
+{
+    HandleValue key_;
+    HandleValue val_;
+
+    bool tryAttachNativeHasOwn(HandleId key, ValOperandId keyId,
+                           HandleObject obj, ObjOperandId objId);
+    bool tryAttachNativeHasOwnDoesNotExist(HandleId key, ValOperandId keyId,
+                                           HandleObject obj, ObjOperandId objId);
+
+    void trackAttached(const char* name);
+    void trackNotAttached();
+
+  public:
+    HasOwnIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode, HandleValue key,
+                      HandleValue value);
 
     bool tryAttachStub();
 };

@@ -33,7 +33,7 @@ add_task(function* () {
   let propEditor = ruleEditor.rule.textProps[1].editor;
   let swatchSpan = propEditor.valueSpan.querySelectorAll(
     ".ruleview-colorswatch")[3];
-  let colorPicker = view.tooltips.colorPicker;
+  let colorPicker = view.tooltips.getTooltip("colorPicker");
 
   info("Focus the background name span");
   yield focusEditableField(view, propEditor.nameSpan);

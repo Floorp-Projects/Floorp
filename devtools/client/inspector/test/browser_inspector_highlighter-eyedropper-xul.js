@@ -26,7 +26,7 @@ add_task(function* () {
   let swatchEl = ruleViewDocument.querySelector(".ruleview-colorswatch");
 
   info("Open the color picker");
-  let cPicker = ruleView.tooltips.colorPicker;
+  let cPicker = ruleView.tooltips.getTooltip("colorPicker");
   let onColorPickerReady = cPicker.once("ready");
   swatchEl.click();
   yield onColorPickerReady;
@@ -50,7 +50,7 @@ add_task(function* () {
   swatchEl = ruleViewDocument.querySelector(".ruleview-colorswatch");
 
   info("Open the color picker in HTML document");
-  cPicker = ruleView.tooltips.colorPicker;
+  cPicker = ruleView.tooltips.getTooltip("colorPicker");
   onColorPickerReady = cPicker.once("ready");
   swatchEl.click();
   yield onColorPickerReady;

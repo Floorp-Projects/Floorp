@@ -352,7 +352,7 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSPropertyID aPropID,
     [&](ServoDeclarationBlock* decl, URLExtraData* data) {
       NS_ConvertUTF16toUTF8 value(aPropValue);
       return Servo_DeclarationBlock_SetPropertyById(
-        decl->Raw(), aPropID, &value, aIsImportant, data);
+        decl->Raw(), aPropID, &value, aIsImportant, data, LengthParsingMode::Default);
     });
 }
 
@@ -374,7 +374,8 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
       NS_ConvertUTF16toUTF8 property(aPropertyName);
       NS_ConvertUTF16toUTF8 value(aPropValue);
       return Servo_DeclarationBlock_SetProperty(
-        decl->Raw(), &property, &value, aIsImportant, data);
+        decl->Raw(), &property, &value, aIsImportant, data,
+        LengthParsingMode::Default);
     });
 }
 

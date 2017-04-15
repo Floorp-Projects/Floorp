@@ -1719,6 +1719,34 @@ Preferences::RemoveObservers(nsIObserver* aObserver,
   return NS_OK;
 }
 
+static void NotifyObserver(const char* aPref, void* aClosure)
+{
+  nsCOMPtr<nsIObserver> observer = static_cast<nsIObserver*>(aClosure);
+  observer->Observe(nullptr, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID,
+                    NS_ConvertASCIItoUTF16(aPref).get());
+}
+
+static void RegisterPriorityCallback(PrefChangedFunc aCallback,
+                                     const char* aPref,
+                                     void* aClosure)
+{
+  MOZ_ASSERT(Preferences::IsServiceAvailable());
+
+  ValueObserverHashKey hashKey(aPref, aCallback, Preferences::ExactMatch);
+  RefPtr<ValueObserver> observer;
+  gObserverTable->Get(&hashKey, getter_AddRefs(observer));
+  if (observer) {
+    observer->AppendClosure(aClosure);
+    return;
+  }
+
+  observer = new ValueObserver(aPref, aCallback, Preferences::ExactMatch);
+  observer->AppendClosure(aClosure);
+  PREF_RegisterPriorityCallback(aPref, NotifyObserver,
+                                static_cast<nsIObserver*>(observer));
+  gObserverTable->Put(observer, observer);
+}
+
 // static
 nsresult
 Preferences::RegisterCallback(PrefChangedFunc aCallback,
@@ -1786,6 +1814,10 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
   return NS_OK;
 }
 
+// We insert cache observers using RegisterPriorityCallback to ensure they
+// are called prior to ordinary pref observers.  Doing this ensures that
+// ordinary observers will never get stale values from cache variables.
+
 static void BoolVarChanged(const char* aPref, void* aClosure)
 {
   CacheData* cache = static_cast<CacheData*>(aClosure);
@@ -1809,7 +1841,8 @@ Preferences::AddBoolVarCache(bool* aCache,
   data->cacheLocation = aCache;
   data->defaultValueBool = aDefault;
   gCacheData->AppendElement(data);
-  return RegisterCallback(BoolVarChanged, aPref, data, ExactMatch);
+  RegisterPriorityCallback(BoolVarChanged, aPref, data);
+  return NS_OK;
 }
 
 static void IntVarChanged(const char* aPref, void* aClosure)
@@ -1835,7 +1868,8 @@ Preferences::AddIntVarCache(int32_t* aCache,
   data->cacheLocation = aCache;
   data->defaultValueInt = aDefault;
   gCacheData->AppendElement(data);
-  return RegisterCallback(IntVarChanged, aPref, data, ExactMatch);
+  RegisterPriorityCallback(IntVarChanged, aPref, data);
+  return NS_OK;
 }
 
 static void UintVarChanged(const char* aPref, void* aClosure)
@@ -1861,7 +1895,8 @@ Preferences::AddUintVarCache(uint32_t* aCache,
   data->cacheLocation = aCache;
   data->defaultValueUint = aDefault;
   gCacheData->AppendElement(data);
-  return RegisterCallback(UintVarChanged, aPref, data, ExactMatch);
+  RegisterPriorityCallback(UintVarChanged, aPref, data);
+  return NS_OK;
 }
 
 template <MemoryOrdering Order>
@@ -1889,7 +1924,8 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
   data->cacheLocation = aCache;
   data->defaultValueUint = aDefault;
   gCacheData->AppendElement(data);
-  return RegisterCallback(AtomicUintVarChanged<Order>, aPref, data, ExactMatch);
+  RegisterPriorityCallback(AtomicUintVarChanged<Order>, aPref, data);
+  return NS_OK;
 }
 
 // Since the definition of this template function is not in a header file,
@@ -1922,7 +1958,8 @@ Preferences::AddFloatVarCache(float* aCache,
   data->cacheLocation = aCache;
   data->defaultValueFloat = aDefault;
   gCacheData->AppendElement(data);
-  return RegisterCallback(FloatVarChanged, aPref, data, ExactMatch);
+  RegisterPriorityCallback(FloatVarChanged, aPref, data);
+  return NS_OK;
 }
 
 // static

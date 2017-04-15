@@ -84,7 +84,7 @@ load 671799-2.html
 load 690990-1.html
 load 696188-1.html
 load 696869-1.html
-asserts-if(stylo,2) load 700116.html # bug 1324635
+load 700116.html
 load 729126-1.html
 load 729126-2.html
 load 786108-1.html
@@ -102,7 +102,7 @@ load 861489-1.html
 load 862113.html
 load 867487.html
 load 873222.html
-asserts-if(stylo,1) load 880862.html # bug 1324701
+load 880862.html
 load 894245-1.html
 load 915440.html
 load 927734-1.html

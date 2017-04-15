@@ -71,7 +71,7 @@ use style::gecko_properties::{self, style_structs};
 use style::keyframes::KeyframesStepValue;
 use style::media_queries::{MediaList, parse_media_query_list};
 use style::parallel;
-use style::parser::ParserContext;
+use style::parser::{LengthParsingMode, ParserContext};
 use style::properties::{CascadeFlags, ComputedValues, Importance, ParsedDeclaration};
 use style::properties::{PropertyDeclarationBlock, PropertyId};
 use style::properties::SKIP_ROOT_AND_ITEM_BASED_DISPLAY_FIXUP;
@@ -496,7 +496,7 @@ pub extern "C" fn Servo_StyleSheet_Empty(mode: SheetParsingMode) -> RawServoStyl
     Arc::new(Stylesheet::from_str(
         "", unsafe { dummy_url_data() }.clone(), origin,
         Arc::new(shared_lock.wrap(MediaList::empty())),
-        shared_lock, None, &StdoutErrorReporter)
+        shared_lock, None, &StdoutErrorReporter, 0u64)
     ).into_strong()
 }
 
@@ -539,7 +539,7 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(loader: *mut Loader,
 
     Arc::new(Stylesheet::from_str(
         input, url_data.clone(), origin, media,
-        shared_lock, loader, &StdoutErrorReporter)
+        shared_lock, loader, &StdoutErrorReporter, 0u64)
     ).into_strong()
 }
 
@@ -645,9 +645,11 @@ pub extern "C" fn Servo_StyleSet_FlushStyleSheets(raw_data: RawServoStyleSetBorr
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleSet_NoteStyleSheetsChanged(raw_data: RawServoStyleSetBorrowed) {
+pub extern "C" fn Servo_StyleSet_NoteStyleSheetsChanged(raw_data: RawServoStyleSetBorrowed,
+                                                        author_style_disabled: bool) {
     let mut data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
     data.stylesheets_changed = true;
+    data.author_style_disabled = author_style_disabled;
 }
 
 #[no_mangle]
@@ -988,20 +990,17 @@ pub extern "C" fn Servo_StyleSet_Drop(data: RawServoStyleSetOwned) {
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_ParseProperty(property: *const nsACString, value: *const nsACString,
+pub extern "C" fn Servo_ParseProperty(property: nsCSSPropertyID, value: *const nsACString,
                                       data: *mut URLExtraData)
                                       -> RawServoDeclarationBlockStrong {
-    let name = unsafe { property.as_ref().unwrap().as_str_unchecked() };
-    let id = if let Ok(id) = PropertyId::parse(name.into()) {
-        id
-    } else {
-        return RawServoDeclarationBlockStrong::null()
-    };
+    let id = get_property_id_from_nscsspropertyid!(property,
+                                                   RawServoDeclarationBlockStrong::null());
     let value = unsafe { value.as_ref().unwrap().as_str_unchecked() };
 
     let url_data = unsafe { RefPtr::from_ptr_ref(&data) };
     let reporter = StdoutErrorReporter;
-    let context = ParserContext::new(Origin::Author, url_data, &reporter, Some(CssRuleType::Style));
+    let context = ParserContext::new(Origin::Author, url_data, &reporter,
+                                     Some(CssRuleType::Style), LengthParsingMode::Default);
 
     match ParsedDeclaration::parse(id, &context, &mut Parser::new(value)) {
         Ok(parsed) => {
@@ -1023,7 +1022,8 @@ pub extern "C" fn Servo_ParseEasing(easing: *const nsAString,
 
     let url_data = unsafe { RefPtr::from_ptr_ref(&data) };
     let reporter = StdoutErrorReporter;
-    let context = ParserContext::new(Origin::Author, url_data, &reporter, Some(CssRuleType::Style));
+    let context = ParserContext::new(Origin::Author, url_data, &reporter,
+                                     Some(CssRuleType::Style), LengthParsingMode::Default);
     let easing = unsafe { (*easing).to_string() };
     match transition_timing_function::single_value::parse(&context, &mut Parser::new(&easing)) {
         Ok(parsed_easing) => {
@@ -1155,12 +1155,16 @@ pub extern "C" fn Servo_DeclarationBlock_GetPropertyIsImportant(declarations: Ra
 }
 
 fn set_property(declarations: RawServoDeclarationBlockBorrowed, property_id: PropertyId,
-                value: *const nsACString, is_important: bool, data: *mut URLExtraData) -> bool {
+                value: *const nsACString, is_important: bool, data: *mut URLExtraData,
+                length_parsing_mode: structs::LengthParsingMode) -> bool {
     let value = unsafe { value.as_ref().unwrap().as_str_unchecked() };
-
     let url_data = unsafe { RefPtr::from_ptr_ref(&data) };
-    if let Ok(parsed) = parse_one_declaration(property_id, value, url_data,
-                                              &StdoutErrorReporter) {
+    let length_parsing_mode = match length_parsing_mode {
+        structs::LengthParsingMode::Default => LengthParsingMode::Default,
+        structs::LengthParsingMode::SVG => LengthParsingMode::SVG,
+    };
+    if let Ok(parsed) = parse_one_declaration(property_id, value, url_data, &StdoutErrorReporter,
+                                              length_parsing_mode) {
         let importance = if is_important { Importance::Important } else { Importance::Normal };
         write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
             parsed.expand_set_into(decls, importance)
@@ -1173,19 +1177,19 @@ fn set_property(declarations: RawServoDeclarationBlockBorrowed, property_id: Pro
 #[no_mangle]
 pub extern "C" fn Servo_DeclarationBlock_SetProperty(declarations: RawServoDeclarationBlockBorrowed,
                                                      property: *const nsACString, value: *const nsACString,
-                                                     is_important: bool,
-                                                     data: *mut URLExtraData) -> bool {
+                                                     is_important: bool, data: *mut URLExtraData,
+                                                     length_parsing_mode: structs::LengthParsingMode) -> bool {
     set_property(declarations, get_property_id_from_property!(property, false),
-                 value, is_important, data)
+                 value, is_important, data, length_parsing_mode)
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_DeclarationBlock_SetPropertyById(declarations: RawServoDeclarationBlockBorrowed,
                                                          property: nsCSSPropertyID, value: *const nsACString,
-                                                         is_important: bool,
-                                                         data: *mut URLExtraData) -> bool {
+                                                         is_important: bool, data: *mut URLExtraData,
+                                                         length_parsing_mode: structs::LengthParsingMode) -> bool {
     set_property(declarations, get_property_id_from_nscsspropertyid!(property, false),
-                 value, is_important, data)
+                 value, is_important, data, length_parsing_mode)
 }
 
 fn remove_property(declarations: RawServoDeclarationBlockBorrowed, property_id: PropertyId) {
@@ -1232,6 +1236,15 @@ pub extern "C" fn Servo_MediaList_Matches(list: RawServoMediaListBorrowed,
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_DeclarationBlock_HasCSSWideKeyword(declarations: RawServoDeclarationBlockBorrowed,
+                                                           property: nsCSSPropertyID) -> bool {
+    let property_id = get_property_id_from_nscsspropertyid!(property, false);
+    read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
+        decls.has_css_wide_keyword(&property_id)
+    })
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_MediaList_GetText(list: RawServoMediaListBorrowed, result: *mut nsAString) {
     read_locked_arc(list, |list: &MediaList| {
         list.to_css(unsafe { result.as_mut().unwrap() }).unwrap();
@@ -1244,7 +1257,8 @@ pub extern "C" fn Servo_MediaList_SetText(list: RawServoMediaListBorrowed, text:
     let mut parser = Parser::new(&text);
     let url_data = unsafe { dummy_url_data() };
     let reporter = StdoutErrorReporter;
-    let context = ParserContext::new_for_cssom(url_data, &reporter, Some(CssRuleType::Media));
+    let context = ParserContext::new_for_cssom(url_data, &reporter, Some(CssRuleType::Media),
+                                               LengthParsingMode::Default);
      write_locked_arc(list, |list: &mut MediaList| {
         *list = parse_media_query_list(&context, &mut parser);
     })
@@ -1274,7 +1288,8 @@ pub extern "C" fn Servo_MediaList_AppendMedium(list: RawServoMediaListBorrowed,
     let new_medium = unsafe { new_medium.as_ref().unwrap().as_str_unchecked() };
     let url_data = unsafe { dummy_url_data() };
     let reporter = StdoutErrorReporter;
-    let context = ParserContext::new_for_cssom(url_data, &reporter, Some(CssRuleType::Media));
+    let context = ParserContext::new_for_cssom(url_data, &reporter, Some(CssRuleType::Media),
+                                               LengthParsingMode::Default);
     write_locked_arc(list, |list: &mut MediaList| {
         list.append_medium(&context, new_medium);
     })
@@ -1286,7 +1301,8 @@ pub extern "C" fn Servo_MediaList_DeleteMedium(list: RawServoMediaListBorrowed,
     let old_medium = unsafe { old_medium.as_ref().unwrap().as_str_unchecked() };
     let url_data = unsafe { dummy_url_data() };
     let reporter = StdoutErrorReporter;
-    let context = ParserContext::new_for_cssom(url_data, &reporter, Some(CssRuleType::Media));
+    let context = ParserContext::new_for_cssom(url_data, &reporter, Some(CssRuleType::Media),
+                                               LengthParsingMode::Default);
     write_locked_arc(list, |list: &mut MediaList| list.delete_medium(&context, old_medium))
 }
 
@@ -1637,7 +1653,8 @@ pub extern "C" fn Servo_DeclarationBlock_SetBackgroundImage(declarations:
     let url_data = unsafe { RefPtr::from_ptr_ref(&raw_extra_data) };
     let string = unsafe { (*value).to_string() };
     let error_reporter = StdoutErrorReporter;
-    let context = ParserContext::new(Origin::Author, url_data, &error_reporter, Some(CssRuleType::Style));
+    let context = ParserContext::new(Origin::Author, url_data, &error_reporter,
+                                     Some(CssRuleType::Style), LengthParsingMode::Default);
     if let Ok(url) = SpecifiedUrl::parse_from_string(string.into(), &context) {
         let decl = PropertyDeclaration::BackgroundImage(BackgroundImage(
             vec![SingleBackgroundImage(
@@ -1675,7 +1692,7 @@ pub extern "C" fn Servo_CSSSupports2(property: *const nsACString, value: *const 
     let value = unsafe { value.as_ref().unwrap().as_str_unchecked() };
 
     let url_data = unsafe { dummy_url_data() };
-    parse_one_declaration(id, &value, url_data, &StdoutErrorReporter).is_ok()
+    parse_one_declaration(id, &value, url_data, &StdoutErrorReporter, LengthParsingMode::Default).is_ok()
 }
 
 #[no_mangle]
@@ -1686,7 +1703,8 @@ pub extern "C" fn Servo_CSSSupports(cond: *const nsACString) -> bool {
     if let Ok(cond) = cond {
         let url_data = unsafe { dummy_url_data() };
         let reporter = StdoutErrorReporter;
-        let context = ParserContext::new_for_cssom(url_data, &reporter, Some(CssRuleType::Style));
+        let context = ParserContext::new_for_cssom(url_data, &reporter, Some(CssRuleType::Style),
+                                                   LengthParsingMode::Default);
         cond.eval(&context)
     } else {
         false
@@ -2105,3 +2123,27 @@ pub extern "C" fn Servo_StyleSet_GetFontFaceRules(raw_data: RawServoStyleSetBorr
         dest.mSheetType = src.1.into();
     }
 }
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_ResolveForDeclarations(raw_data: RawServoStyleSetBorrowed,
+                                                        parent_style_or_null: ServoComputedValuesBorrowedOrNull,
+                                                        declarations: RawServoDeclarationBlockBorrowed)
+                                                        -> ServoComputedValuesStrong
+{
+    let doc_data = PerDocumentStyleData::from_ffi(raw_data).borrow();
+    let global_style_data = &*GLOBAL_STYLE_DATA;
+    let guard = global_style_data.shared_lock.read();
+    let guards = StylesheetGuards::same(&guard);
+
+    let parent_style = match ComputedValues::arc_from_borrowed(&parent_style_or_null) {
+        Some(parent) => &parent,
+        None => doc_data.default_computed_values(),
+    };
+
+    let declarations = Locked::<PropertyDeclarationBlock>::as_arc(&declarations);
+
+    doc_data.stylist.compute_for_declarations(&guards,
+                                              parent_style,
+                                              declarations.clone()).into_strong()
+}
+

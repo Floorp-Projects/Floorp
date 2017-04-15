@@ -94,6 +94,14 @@ public:
     MOZ_MUST_USE nsresult RescheduleTransaction(nsHttpTransaction *,
                                                 int32_t priority);
 
+    // tells the transaction to stop receiving the response when |throttle|
+    // is true.  to start receiving again, this must be called with |throttle|
+    // set to false.  calling multiple times with the same value of |throttle|
+    // has no effect.  called by nsHttpChannels with the Throttleable class set
+    // and controlled by net::ThrottlingService.
+    // there is nothing to do when this fails, hence the void result.
+    void ThrottleTransaction(nsHttpTransaction *, bool throttle);
+
     // cancels a transaction w/ the given reason.
     MOZ_MUST_USE nsresult CancelTransaction(nsHttpTransaction *,
                                             nsresult reason);
@@ -544,6 +552,7 @@ private:
     void OnMsgShutdownConfirm      (int32_t, ARefBase *);
     void OnMsgNewTransaction       (int32_t, ARefBase *);
     void OnMsgReschedTransaction   (int32_t, ARefBase *);
+    void OnMsgThrottleTransaction  (int32_t, ARefBase *);
     void OnMsgCancelTransaction    (int32_t, ARefBase *);
     void OnMsgCancelTransactions   (int32_t, ARefBase *);
     void OnMsgProcessPendingQ      (int32_t, ARefBase *);

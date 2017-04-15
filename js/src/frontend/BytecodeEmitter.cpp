@@ -3593,7 +3593,7 @@ BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...)
     TokenStream& ts = tokenStream();
     ErrorMetadata metadata;
     if (ts.computeErrorMetadata(&metadata, pos.begin))
-        ts.compileError(Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
+        ReportCompileError(cx, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
 
     va_end(args);
 }
@@ -9170,10 +9170,28 @@ BytecodeEmitter::emitSelfHostedDefineDataProperty(ParseNode* pn)
     // This will leave the object on the stack instead of pushing |undefined|,
     // but that's fine because the self-hosted code doesn't use the return
     // value.
-    if (!emit1(JSOP_INITELEM))
+    return emit1(JSOP_INITELEM);
+}
+
+bool
+BytecodeEmitter::emitSelfHostedHasOwn(ParseNode* pn)
+{
+    if (pn->pn_count != 3) {
+        reportError(pn, JSMSG_MORE_ARGS_NEEDED, "hasOwn", "2", "");
+        return false;
+    }
+
+    ParseNode* funNode = pn->pn_head;  // The hasOwn node.
+
+    ParseNode* idNode = funNode->pn_next;
+    if (!emitTree(idNode))
         return false;
 
-    return true;
+    ParseNode* objNode = idNode->pn_next;
+    if (!emitTree(objNode))
+        return false;
+
+    return emit1(JSOP_HASOWN);
 }
 
 bool
@@ -9296,6 +9314,8 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn, ValueUsage valueUsage /* = ValueUs
                 return emitSelfHostedAllowContentIter(pn);
             if (pn2->name() == cx->names().defineDataPropertyIntrinsic && pn->pn_count == 4)
                 return emitSelfHostedDefineDataProperty(pn);
+            if (pn2->name() == cx->names().hasOwn)
+                return emitSelfHostedHasOwn(pn);
             // Fall through.
         }
         if (!emitGetName(pn2, callop))

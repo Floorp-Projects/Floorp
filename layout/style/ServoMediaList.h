@@ -31,7 +31,7 @@ public:
   void IndexedGetter(uint32_t aIndex, bool& aFound,
                      nsAString& aReturn) final;
 
-  bool Matches(nsPresContext&, nsMediaQueryResultCacheKey*) const final;
+  bool Matches(nsPresContext*) const final;
 
 #ifdef DEBUG
   bool IsServo() const final { return true; }

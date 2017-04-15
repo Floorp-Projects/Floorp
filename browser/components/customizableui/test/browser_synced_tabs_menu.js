@@ -24,7 +24,7 @@ var newTab = null;
 // once the UI has been updated.
 function updateTabsPanel() {
   let promiseTabsUpdated = promiseObserverNotified("synced-tabs-menu:test:tabs-updated");
-  Services.obs.notifyObservers(null, SyncedTabs.TOPIC_TABS_CHANGED, null);
+  Services.obs.notifyObservers(null, SyncedTabs.TOPIC_TABS_CHANGED);
   return promiseTabsUpdated;
 }
 

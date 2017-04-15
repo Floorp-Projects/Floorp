@@ -356,6 +356,7 @@ VRDisplay::VRDisplay(nsPIDOMWindowInner* aWindow, gfx::VRDisplayClient* aClient)
   , mDepthNear(0.01f) // Default value from WebVR Spec
   , mDepthFar(10000.0f) // Default value from WebVR Spec
   , mVRNavigationEventDepth(0)
+  , mShutdown(false)
 {
   const gfx::VRDisplayInfo& info = aClient->GetDisplayInfo();
   mDisplayId = info.GetDisplayID();
@@ -367,11 +368,15 @@ VRDisplay::VRDisplay(nsPIDOMWindowInner* aWindow, gfx::VRDisplayClient* aClient)
                                              info.GetStageSize());
   }
   mozilla::HoldJSObjects(this);
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (MOZ_LIKELY(obs)) {
+    obs->AddObserver(this, "inner-window-destroyed", false);
+  }
 }
 
 VRDisplay::~VRDisplay()
 {
-  ExitPresentInternal();
+  MOZ_ASSERT(mShutdown);
   mozilla::DropJSObjects(this);
 }
 
@@ -380,7 +385,7 @@ VRDisplay::LastRelease()
 {
   // We don't want to wait for the CC to free up the presentation
   // for use in other documents, so we do this in LastRelease().
-  ExitPresentInternal();
+  Shutdown();
 }
 
 already_AddRefed<VREyeParameters>
@@ -494,9 +499,6 @@ VRDisplay::RequestPresent(const nsTArray<VRLayer>& aLayers,
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  NS_ENSURE_TRUE(obs, nullptr);
-
   if (!EventStateManager::IsHandlingUserInput() &&
       aCallerType != CallerType::System &&
       !IsHandlingVRNavigationEvent() &&
@@ -516,14 +518,7 @@ VRDisplay::RequestPresent(const nsTArray<VRLayer>& aLayers,
   } else {
     mPresentation = mClient->BeginPresentation(aLayers);
     mFrameInfo.Clear();
-
-    nsresult rv = obs->AddObserver(this, "inner-window-destroyed", false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      mPresentation = nullptr;
-      promise->MaybeRejectWithUndefined();
-    } else {
-      promise->MaybeResolve(JS::UndefinedHandleValue);
-    }
+    promise->MaybeResolve(JS::UndefinedHandleValue);
   }
   return promise.forget();
 }
@@ -543,7 +538,7 @@ VRDisplay::Observe(nsISupports* aSubject, const char* aTopic,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!GetOwner() || GetOwner()->WindowID() == innerID) {
-      ExitPresentInternal();
+      Shutdown();
     }
 
     return NS_OK;
@@ -585,6 +580,17 @@ VRDisplay::ExitPresentInternal()
 }
 
 void
+VRDisplay::Shutdown()
+{
+  mShutdown = true;
+  ExitPresentInternal();
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (MOZ_LIKELY(obs)) {
+    obs->RemoveObserver(this, "inner-window-destroyed");
+  }
+}
+
+void
 VRDisplay::GetLayers(nsTArray<VRLayer>& result)
 {
   if (mPresentation) {
@@ -607,6 +613,10 @@ int32_t
 VRDisplay::RequestAnimationFrame(FrameRequestCallback& aCallback,
 ErrorResult& aError)
 {
+  if (mShutdown) {
+    return 0;
+  }
+
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
 
   int32_t handle;

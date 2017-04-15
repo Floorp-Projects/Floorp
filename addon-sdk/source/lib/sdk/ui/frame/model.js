@@ -12,19 +12,19 @@ module.metadata = {
 
 const { Class } = require("../../core/heritage");
 const { EventTarget } = require("../../event/target");
-const { emit, off, setListeners } = require("../../event/core");
+lazyRequire(this, "../../event/core", "emit", "off", "setListeners");
 const { Reactor, foldp, send, merges } = require("../../event/utils");
 const { Disposable } = require("../../core/disposable");
 const { OutputPort } = require("../../output/system");
-const { InputPort } = require("../../input/system");
-const { identify } = require("../id");
-const { pairs, object, map, each } = require("../../util/sequence");
-const { patch, diff } = require("diffpatcher/index");
-const { isLocalURL } = require("../../url");
+lazyRequire(this, "../id", "identify");
+const { pairs, object, each } = require("../../util/sequence");
+lazyRequire(this, "diffpatcher/index", "patch", "diff");
+lazyRequire(this, "../../url", "isLocalURL");
 const { compose } = require("../../lang/functional");
 const { contract } = require("../../util/contract");
 const { id: addonID, data: { url: resolve }} = require("../../self");
 const { Frames } = require("../../input/frame");
+require("./view");
 
 
 const output = new OutputPort({ id: "frame-change" });

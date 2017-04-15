@@ -72,10 +72,8 @@
       <constructor><![CDATA[
         if (this.parentNode.parentNode.localName == "toolbarpaletteitem")
           return;
-        // Make sure we rebuild the popup in onpopupshowing
-        this._needToBuildPopup = true;
 
-        Services.obs.addObserver(this, "browser-search-engine-modified", false);
+        Services.obs.addObserver(this, "browser-search-engine-modified");
 
         this._initialized = true;
 
@@ -92,6 +90,14 @@
             Components.utils.reportError("Cannot initialize search service, bailing out: " + aStatus);
           }
         }).bind(this));
+
+        // Some accessibility tests create their own <searchbar> that doesn't
+        // use the popup binding below, so null-check oneOffButtons.
+        if (this.textbox.popup.oneOffButtons) {
+          this.textbox.popup.oneOffButtons.telemetryOrigin = "searchbar";
+          this.textbox.popup.oneOffButtons.popup = this.textbox.popup;
+          this.textbox.popup.oneOffButtons.textbox = this.textbox;
+        }
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -378,6 +384,11 @@
           let selection = this.telemetrySearchDetails;
           let oneOffRecorded = false;
 
+          BrowserUsageTelemetry.recordSearchbarSelectedResultMethod(
+            aEvent,
+            selection ? selection.index : -1
+          );
+
           if (!selection || (selection.index == -1)) {
             oneOffRecorded = this.textbox.popup.oneOffButtons
                                  .maybeRecordTelemetry(aEvent, aWhere, aParams);
@@ -642,7 +653,7 @@
         document.getBindingParent(this)._textboxInitialized = true;
 
         // Add observer for suggest preference
-        Services.prefs.addObserver("browser.search.suggest.enabled", this, false);
+        Services.prefs.addObserver("browser.search.suggest.enabled", this);
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -931,10 +942,6 @@
       <xul:vbox anonid="search-one-off-buttons" class="search-one-offs"/>
     </content>
     <implementation>
-      <field name="AppConstants" readonly="true">
-        (Components.utils.import("resource://gre/modules/AppConstants.jsm", {})).AppConstants;
-      </field>
-
       <method name="openAutocompletePopup">
         <parameter name="aInput"/>
         <parameter name="aElement"/>
@@ -975,6 +982,11 @@
 
           // Check for middle-click or modified clicks on the search bar
           if (popupForSearchBar) {
+            BrowserUsageTelemetry.recordSearchbarSelectedResultMethod(
+              aEvent,
+              this.selectedIndex
+            );
+
             // Handle search bar popup clicks
             var search = controller.getValueAt(this.selectedIndex);
 
@@ -983,7 +995,7 @@
             let params = {};
 
             // But open ctrl/cmd clicks on autocomplete items in a new background tab.
-            let modifier = this.AppConstants.platform == "macosx" ?
+            let modifier = AppConstants.platform == "macosx" ?
                            aEvent.metaKey :
                            aEvent.ctrlKey;
             if (where == "tab" && (aEvent instanceof MouseEvent) &&
@@ -1066,7 +1078,7 @@
 
     <handlers>
       <handler event="popupshowing"><![CDATA[
-        if (!this.oneOffButtons.popup) {
+        if (!this._computedMinWidth) {
           // The panel width only spans to the textbox size, but we also want it
           // to include the magnifier icon's width.
           let ltr = getComputedStyle(this).direction == "ltr";
@@ -1080,12 +1092,7 @@
           );
           this.style.minWidth = minWidth + "px";
 
-          // Set the origin before assigning the popup, as the assignment does
-          // a rebuild and would miss the origin.
-          this.oneOffButtons.telemetryOrigin = "searchbar";
-          // Set popup after setting the minWidth since it builds the buttons.
-          this.oneOffButtons.popup = this;
-          this.oneOffButtons.textbox = this.input;
+          this._computedMinWidth = true;
         }
 
         // First handle deciding if we are showing the reduced version of the
@@ -1427,10 +1434,10 @@
               this._rebuild();
               break;
             case "popuphidden":
-              Services.tm.mainThread.dispatch(() => {
+              Services.tm.dispatchToMainThread(() => {
                 this.selectedButton = null;
                 this._contextEngine = null;
-              }, Ci.nsIThread.DISPATCH_NORMAL);
+              });
               break;
           }
         ]]></body>
@@ -1719,8 +1726,8 @@
                                                        [engine.title], 1);
           button.setAttribute("label", label);
           button.setAttribute("crop", "end");
-          button.setAttribute("tooltiptext", engine.uri);
           button.setAttribute("tooltiptext", engine.title + "\n" + engine.uri);
+          button.setAttribute("uri", engine.uri);
           button.setAttribute("title", engine.title);
           if (engine.icon) {
             button.setAttribute("image", engine.icon);

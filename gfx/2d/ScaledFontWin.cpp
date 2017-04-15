@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScaledFontWin.h"
+#include "UnscaledFontGDI.h"
 
 #include "AutoHelpersWin.h"
 #include "Logging.h"
@@ -31,7 +32,7 @@ ScaledFontWin::ScaledFontWin(const LOGFONT* aFont,
 }
 
 bool
-ScaledFontWin::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
+UnscaledFontGDI::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
 {
   AutoDC dc;
   AutoSelectFont font(dc.GetDC(), &mLogFont);
@@ -56,7 +57,7 @@ ScaledFontWin::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
     return false;
   }
 
-  aDataCallback(fontData.get(), tableSize, 0, mSize, 0, nullptr, aBaton);
+  aDataCallback(fontData.get(), tableSize, 0, aBaton);
   return true;
 }
 
@@ -68,21 +69,41 @@ ScaledFontWin::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
 }
 
 bool
-ScaledFontWin::GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton)
+UnscaledFontGDI::GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton)
 {
-  aCb(reinterpret_cast<uint8_t*>(&mLogFont), sizeof(mLogFont), mSize, aBaton);
+  aCb(reinterpret_cast<uint8_t*>(&mLogFont), sizeof(mLogFont), aBaton);
   return true;
 }
 
-already_AddRefed<ScaledFont>
-ScaledFontWin::CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength, Float aSize)
+already_AddRefed<UnscaledFont>
+UnscaledFontGDI::CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength)
 {
+  if (aDataLength < sizeof(LOGFONT)) {
+    gfxWarning() << "GDI font descriptor is truncated.";
+    return nullptr;
+  }
+
+  const LOGFONT* logFont = reinterpret_cast<const LOGFONT*>(aData);
+  RefPtr<UnscaledFont> unscaledFont = new UnscaledFontGDI(*logFont);
+  return unscaledFont.forget();
+}
+
+already_AddRefed<ScaledFont>
+UnscaledFontGDI::CreateScaledFont(Float aGlyphSize,
+                                  const uint8_t* aInstanceData,
+                                  uint32_t aInstanceDataLength)
+{
+  if (aInstanceDataLength < sizeof(LOGFONT)) {
+    gfxWarning() << "GDI unscaled font instance data is truncated.";
+    return nullptr;
+  }
+
   NativeFont nativeFont;
   nativeFont.mType = NativeFontType::GDI_FONT_FACE;
-  nativeFont.mFont = (void*)aData;
+  nativeFont.mFont = (void*)aInstanceData;
 
   RefPtr<ScaledFont> font =
-    Factory::CreateScaledFontForNativeFont(nativeFont, nullptr, aSize);
+    Factory::CreateScaledFontForNativeFont(nativeFont, this, aGlyphSize);
 
 #ifdef USE_CAIRO_SCALED_FONT
   static_cast<ScaledFontBase*>(font.get())->PopulateCairoScaledFont();

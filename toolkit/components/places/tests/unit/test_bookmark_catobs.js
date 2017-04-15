@@ -14,11 +14,11 @@ add_task(function* test_observers() {
   Services.obs.addObserver(function created() {
     Services.obs.removeObserver(created, "dummy-observer-created");
     dummyCreated = true;
-  }, "dummy-observer-created", false);
+  }, "dummy-observer-created");
   Services.obs.addObserver(function added() {
     Services.obs.removeObserver(added, "dummy-observer-item-added");
     dummyReceivedOnItemAdded = true;
-  }, "dummy-observer-item-added", false);
+  }, "dummy-observer-item-added");
 
   let initialObservers = PlacesUtils.bookmarks.getObservers();
 
@@ -44,7 +44,7 @@ add_task(function* test_observers() {
         Assert.ok(dummyReceivedOnItemAdded);
         resolve();
       }
-    }, false);
+    });
   });
 
   // Add a bookmark

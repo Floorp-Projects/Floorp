@@ -53,8 +53,7 @@ public:
 
   virtual void GetText(nsAString& aMediaText) = 0;
   virtual void SetText(const nsAString& aMediaText) = 0;
-  virtual bool Matches(nsPresContext& aPresContext,
-                       nsMediaQueryResultCacheKey* = nullptr) const = 0;
+  virtual bool Matches(nsPresContext* aPresContext) const = 0;
 
 #ifdef DEBUG
   virtual bool IsServo() const = 0;

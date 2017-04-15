@@ -11,7 +11,7 @@ module.metadata = {
 
 const { Cc, Ci, Cr, Cu } = require("chrome");
 const { Class } = require("./heritage");
-const { isWeak } = require("./reference");
+lazyRequire(this, "./reference", "isWeak");
 const method = require("../../method/core");
 
 const observerService = Cc['@mozilla.org/observer-service;1'].

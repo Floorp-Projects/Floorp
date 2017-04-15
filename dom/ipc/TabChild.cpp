@@ -356,19 +356,24 @@ TabChild::FindTabChild(const TabId& aTabId)
 /*static*/ already_AddRefed<TabChild>
 TabChild::Create(nsIContentChild* aManager,
                  const TabId& aTabId,
+                 const TabId& aSameTabGroupAs,
                  const TabContext &aContext,
                  uint32_t aChromeFlags)
 {
-    RefPtr<TabChild> iframe = new TabChild(aManager, aTabId,
-                                             aContext, aChromeFlags);
-    return iframe.forget();
+  RefPtr<TabChild> groupChild = FindTabChild(aSameTabGroupAs);
+  dom::TabGroup* group = groupChild ? groupChild->TabGroup() : nullptr;
+  RefPtr<TabChild> iframe = new TabChild(aManager, aTabId, group,
+                                         aContext, aChromeFlags);
+  return iframe.forget();
 }
 
 TabChild::TabChild(nsIContentChild* aManager,
                    const TabId& aTabId,
+                   dom::TabGroup* aTabGroup,
                    const TabContext& aContext,
                    uint32_t aChromeFlags)
   : TabContext(aContext)
+  , mTabGroup(aTabGroup)
   , mRemoteFrame(nullptr)
   , mManager(aManager)
   , mChromeFlags(aChromeFlags)
@@ -566,6 +571,10 @@ TabChild::DoUpdateZoomConstraints(const uint32_t& aPresShellId,
 nsresult
 TabChild::Init()
 {
+  if (!mTabGroup) {
+    mTabGroup = TabGroup::GetFromActor(this);
+  }
+
   nsCOMPtr<nsIWebBrowser> webBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
   if (!webBrowser) {
     NS_ERROR("Couldn't create a nsWebBrowser?");
@@ -2657,9 +2666,6 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
       return;
     }
 
-    // Cache the TabGroup so it can be fetched off the main thread.
-    TabGroup();
-
     MOZ_ASSERT(aLayersId != 0);
     mTextureFactoryIdentifier = aTextureFactoryIdentifier;
 
@@ -3344,14 +3350,6 @@ TabChildSHistoryListener::SHistoryDidUpdate(bool aTruncate /* = false */)
 mozilla::dom::TabGroup*
 TabChild::TabGroup()
 {
-  if (mTabGroup) {
-    return mTabGroup;
-  }
-
-  MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(WebNavigation());
-  MOZ_ASSERT(window);
-  mTabGroup = window->TabGroup();
   return mTabGroup;
 }
 

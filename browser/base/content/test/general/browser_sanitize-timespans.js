@@ -23,7 +23,7 @@ function promiseFormHistoryRemoved() {
   Services.obs.addObserver(function onfh() {
     Services.obs.removeObserver(onfh, "satchel-storage-changed");
     deferred.resolve();
-  }, "satchel-storage-changed", false);
+  }, "satchel-storage-changed");
   return deferred.promise;
 }
 

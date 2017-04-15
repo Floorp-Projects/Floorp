@@ -1197,29 +1197,37 @@ VRSystemManagerOculus::HandleInput()
 
     switch (hand) {
       case dom::GamepadHand::Left:
-        HandleButtonPress(i, buttonIdx, ovrButton_LThumb, inputState.Buttons);
+        HandleButtonPress(i, buttonIdx, ovrButton_LThumb, inputState.Buttons,
+                          inputState.Touches);
         ++buttonIdx;
-        HandleTriggerPress(i, buttonIdx, inputState.IndexTrigger[handIdx]);
+        HandleIndexTriggerPress(i, buttonIdx, ovrTouch_LIndexTrigger,
+                                inputState.IndexTrigger[handIdx], inputState.Touches);
         ++buttonIdx;
-        HandleTriggerPress(i, buttonIdx, inputState.HandTrigger[handIdx]);
+        HandleHandTriggerPress(i, buttonIdx, inputState.HandTrigger[handIdx]);
         ++buttonIdx;
-        HandleButtonPress(i, buttonIdx, ovrButton_X, inputState.Buttons);
+        HandleButtonPress(i, buttonIdx, ovrButton_X, inputState.Buttons,
+                          inputState.Touches);
         ++buttonIdx;
-        HandleButtonPress(i, buttonIdx, ovrButton_Y, inputState.Buttons);
+        HandleButtonPress(i, buttonIdx, ovrButton_Y, inputState.Buttons,
+                          inputState.Touches);
         ++buttonIdx;
         HandleTouchEvent(i, buttonIdx, ovrTouch_LThumbRest, inputState.Touches);
         ++buttonIdx;
         break;
       case dom::GamepadHand::Right:
-        HandleButtonPress(i, buttonIdx, ovrButton_RThumb, inputState.Buttons);
+        HandleButtonPress(i, buttonIdx, ovrButton_RThumb, inputState.Buttons,
+                          inputState.Touches);
         ++buttonIdx;
-        HandleTriggerPress(i, buttonIdx, inputState.IndexTrigger[handIdx]);
+        HandleIndexTriggerPress(i, buttonIdx, ovrTouch_RIndexTrigger,
+                                inputState.IndexTrigger[handIdx], inputState.Touches);
         ++buttonIdx;
-        HandleTriggerPress(i, buttonIdx, inputState.HandTrigger[handIdx]);
+        HandleHandTriggerPress(i, buttonIdx, inputState.HandTrigger[handIdx]);
         ++buttonIdx;
-        HandleButtonPress(i, buttonIdx, ovrButton_A, inputState.Buttons);
+        HandleButtonPress(i, buttonIdx, ovrButton_A, inputState.Buttons,
+                          inputState.Touches);
         ++buttonIdx;
-        HandleButtonPress(i, buttonIdx, ovrButton_B, inputState.Buttons);
+        HandleButtonPress(i, buttonIdx, ovrButton_B, inputState.Buttons,
+                          inputState.Touches);
         ++buttonIdx;
         HandleTouchEvent(i, buttonIdx, ovrTouch_RThumbRest, inputState.Touches);
         ++buttonIdx;
@@ -1229,6 +1237,7 @@ VRSystemManagerOculus::HandleInput()
         break;
     }
     controller->SetButtonPressed(inputState.Buttons);
+    controller->SetButtonTouched(inputState.Touches);
 
     axis = static_cast<uint32_t>(OculusControllerAxisType::ThumbstickXAxis);
     HandleAxisMove(i, axis, inputState.Thumbstick[i].x);
@@ -1238,9 +1247,9 @@ VRSystemManagerOculus::HandleInput()
 
     // Start to process pose
     ovrTrackingState state = ovr_GetTrackingState(mSession, 0.0, false);
+
     // HandPoses is ordered by ovrControllerType_LTouch and ovrControllerType_RTouch,
     // therefore, we can't get its state by the index of mOculusController.
-
     ovrPoseStatef& pose(state.HandPoses[handIdx]);
     GamepadPoseState poseState;
 
@@ -1284,58 +1293,76 @@ void
 VRSystemManagerOculus::HandleButtonPress(uint32_t aControllerIdx,
                                          uint32_t aButton,
                                          uint64_t aButtonMask,
-                                         uint64_t aButtonPressed)
+                                         uint64_t aButtonPressed,
+                                         uint64_t aButtonTouched)
 {
   RefPtr<impl::VRControllerOculus> controller(mOculusController[aControllerIdx]);
   MOZ_ASSERT(controller);
-  const uint64_t diff = (controller->GetButtonPressed() ^ aButtonPressed);
+  const uint64_t pressedDiff = (controller->GetButtonPressed() ^ aButtonPressed);
+  const uint64_t touchedDiff = (controller->GetButtonTouched() ^ aButtonTouched);
 
-  if (diff & aButtonMask) {
-    // TODO: Bug 1336003 for button touched support.
+  if (!pressedDiff && !touchedDiff) {
+    return;
+  }
+
+  if (pressedDiff & aButtonMask ||
+      touchedDiff & aButtonMask) {
+    // diff & (aButtonPressed, aButtonTouched) would be true while a new button pressed or
+    // touched event, otherwise it is an old event and needs to notify
+    // the button has been released.
     NewButtonEvent(aControllerIdx, aButton, aButtonMask & aButtonPressed,
-                   aButtonMask & aButtonPressed,
+                   aButtonMask & aButtonTouched,
                    (aButtonMask & aButtonPressed) ? 1.0L : 0.0L);
   }
 }
 
 void
-VRSystemManagerOculus::HandleTriggerPress(uint32_t aControllerIdx, uint32_t aButton,
-                                          float aValue)
+VRSystemManagerOculus::HandleIndexTriggerPress(uint32_t aControllerIdx,
+                                               uint32_t aButton,
+                                               uint64_t aTouchMask,
+                                               float aValue,
+                                               uint64_t aButtonTouched)
 {
   RefPtr<impl::VRControllerOculus> controller(mOculusController[aControllerIdx]);
   MOZ_ASSERT(controller);
-  const uint32_t indexTrigger = static_cast<const uint32_t>
-                                (OculusLeftControllerButtonType::IndexTrigger);
-  const uint32_t handTrigger =  static_cast<const uint32_t>
-                                (OculusLeftControllerButtonType::HandTrigger);
-  float oldValue = 0.0f;
+  const uint64_t touchedDiff = (controller->GetButtonTouched() ^ aButtonTouched);
+  const float oldValue = controller->GetIndexTrigger();
 
   // Avoid sending duplicated events in IPC channels.
-  if (aButton == indexTrigger) {
-    oldValue = controller->GetIndexTrigger();
-    if (oldValue == aValue) {
-      return;
-    }
+  if ((oldValue != aValue) ||
+      (touchedDiff & aTouchMask)) {
+    NewButtonEvent(aControllerIdx, aButton, aValue > 0.1f, aTouchMask & aButtonTouched, aValue);
     controller->SetIndexTrigger(aValue);
-  } else if (aButton == handTrigger) {
-    oldValue = controller->GetHandTrigger();
-    if (oldValue == aValue) {
-      return;
-    }
-    controller->SetHandTrigger(aValue);
-  } else {
-    MOZ_ASSERT(false, "We only support indexTrigger and handTrigger in Oculus.");
   }
+}
 
-  // TODO: Bug 1336003 for button touched support.
-  NewButtonEvent(aControllerIdx, aButton, aValue > 0.1f, aValue > 0.1f, aValue);
+void
+VRSystemManagerOculus::HandleHandTriggerPress(uint32_t aControllerIdx,
+                                              uint32_t aButton,
+                                              float aValue)
+{
+  RefPtr<impl::VRControllerOculus> controller(mOculusController[aControllerIdx]);
+  MOZ_ASSERT(controller);
+  const float oldValue = controller->GetHandTrigger();
+
+  // Avoid sending duplicated events in IPC channels.
+  if (oldValue != aValue) {
+    NewButtonEvent(aControllerIdx, aButton, aValue > 0.1f, aValue > 0.1f, aValue);
+    controller->SetHandTrigger(aValue);
+  }
 }
 
 void
 VRSystemManagerOculus::HandleTouchEvent(uint32_t aControllerIdx, uint32_t aButton,
-                                        uint64_t aTouchMask, uint64_t aTouched)
+                                        uint64_t aTouchMask, uint64_t aButtonTouched)
 {
-  // TODO: Bug 1336003
+  RefPtr<impl::VRControllerOculus> controller(mOculusController[aControllerIdx]);
+  MOZ_ASSERT(controller);
+  const uint64_t touchedDiff = (controller->GetButtonTouched() ^ aButtonTouched);
+
+  if (touchedDiff & aTouchMask) {
+    NewButtonEvent(aControllerIdx, aButton, false, aTouchMask & aButtonTouched, 0.0f);
+  }
 }
 
 void

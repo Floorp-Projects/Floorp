@@ -32,7 +32,7 @@ class AudioSink : private AudioStream::DataSource {
 public:
   AudioSink(AbstractThread* aThread,
             MediaQueue<AudioData>& aAudioQueue,
-            TimeUnit aStartTime,
+            const TimeUnit& aStartTime,
             const AudioInfo& aInfo,
             dom::AudioChannel aChannel);
 

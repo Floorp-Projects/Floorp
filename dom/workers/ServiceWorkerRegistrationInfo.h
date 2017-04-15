@@ -25,7 +25,11 @@ class ServiceWorkerRegistrationInfo final
     NeedUpdate
   } mUpdateState;
 
-  uint64_t mLastUpdateCheckTime;
+  // Timestamp to track SWR's last update time
+  PRTime mCreationTime;
+  TimeStamp mCreationTimeStamp;
+  // The time of update is 0, if SWR've never been updated yet.
+  PRTime mLastUpdateTime;
 
   nsLoadFlags mLoadFlags;
 
@@ -184,6 +188,12 @@ public:
 
   void
   SetLoadFlags(nsLoadFlags aLoadFlags);
+
+  int64_t
+  GetLastUpdateTime() const;
+
+  void
+  SetLastUpdateTime(const int64_t aTime);
 
 private:
   enum TransitionType {

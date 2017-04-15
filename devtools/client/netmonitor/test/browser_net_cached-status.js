@@ -8,7 +8,7 @@
  */
 
 add_task(function* () {
-  let { tab, monitor } = yield initNetMonitor(STATUS_CODES_URL, null, true);
+  let { tab, monitor } = yield initNetMonitor(STATUS_CODES_URL, true);
   info("Starting test... ");
 
   let { document, gStore, windowRequire } = monitor.panelWin;

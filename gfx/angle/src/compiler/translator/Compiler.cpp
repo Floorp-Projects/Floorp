@@ -16,7 +16,6 @@
 #include "compiler/translator/DeferGlobalInitializers.h"
 #include "compiler/translator/EmulateGLFragColorBroadcast.h"
 #include "compiler/translator/EmulatePrecision.h"
-#include "compiler/translator/ForLoopUnroll.h"
 #include "compiler/translator/Initialize.h"
 #include "compiler/translator/InitializeParseContext.h"
 #include "compiler/translator/InitializeVariables.h"
@@ -370,26 +369,6 @@ TIntermBlock *TCompiler::compileTreeImpl(const char *const shaderStrings[],
             }
         }
 
-        // Unroll for-loop markup needs to happen after validateLimitations pass.
-        if (success && (compileOptions & SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX))
-        {
-            ForLoopUnrollMarker marker(ForLoopUnrollMarker::kIntegerIndex,
-                                       shouldRunLoopAndIndexingValidation(compileOptions));
-            root->traverse(&marker);
-        }
-        if (success && (compileOptions & SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX))
-        {
-            ForLoopUnrollMarker marker(ForLoopUnrollMarker::kSamplerArrayIndex,
-                                       shouldRunLoopAndIndexingValidation(compileOptions));
-            root->traverse(&marker);
-            if (marker.samplerArrayIndexIsFloatLoopIndex())
-            {
-                infoSink.info.prefix(EPrefixError);
-                infoSink.info << "sampler array index is float loop index";
-                success = false;
-            }
-        }
-
         // Built-in function emulation needs to happen after validateLimitations pass.
         if (success)
         {
@@ -504,17 +483,6 @@ bool TCompiler::compile(const char *const shaderStrings[],
     {
         // This should be harmless to do in all cases, but for the moment, do it only conditionally.
         compileOptions |= SH_FLATTEN_PRAGMA_STDGL_INVARIANT_ALL;
-    }
-
-    ShCompileOptions unrollFlags =
-        SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX | SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX;
-    if ((compileOptions & SH_ADD_AND_TRUE_TO_LOOP_CONDITION) != 0 &&
-        (compileOptions & unrollFlags) != 0)
-    {
-        infoSink.info.prefix(EPrefixError);
-        infoSink.info
-            << "Unsupported compile flag combination: unroll & ADD_TRUE_TO_LOOP_CONDITION";
-        return false;
     }
 
     TScopedPoolAllocator scopedAlloc(&allocator);

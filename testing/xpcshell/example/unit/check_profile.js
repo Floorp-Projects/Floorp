@@ -31,7 +31,7 @@ function check_do_get_profile(fireProfileAfterChange)
     obs.addObserver(() => {
       let val = observedTopics.get(topic) + 1;
       observedTopics.set(topic, val);
-    }, topic, false);
+    }, topic);
   }
 
   // Trigger profile creation.

@@ -24,6 +24,7 @@ use dom::virtualmethods::VirtualMethods;
 use dom_struct::dom_struct;
 use html5ever_atoms::LocalName;
 use net_traits::ReferrerPolicy;
+use script_layout_interface::message::Msg;
 use script_traits::{MozBrowserEvent, ScriptMsg as ConstellationMsg};
 use std::ascii::AsciiExt;
 use std::borrow::ToOwned;
@@ -32,7 +33,7 @@ use std::default::Default;
 use std::sync::Arc;
 use style::attr::AttrValue;
 use style::media_queries::parse_media_query_list;
-use style::parser::ParserContext as CssParserContext;
+use style::parser::{LengthParsingMode, ParserContext as CssParserContext};
 use style::str::HTML_SPACE_CHARACTERS;
 use style::stylesheets::{CssRuleType, Stylesheet};
 use stylesheet_loader::{StylesheetLoader, StylesheetContextSource, StylesheetOwner};
@@ -97,8 +98,9 @@ impl HTMLLinkElement {
     }
 
     pub fn set_stylesheet(&self, s: Arc<Stylesheet>) {
-        assert!(self.stylesheet.borrow().is_none()); // Useful for catching timing issues.
-        *self.stylesheet.borrow_mut() = Some(s);
+        *self.stylesheet.borrow_mut() = Some(s.clone());
+        window_from_node(self).layout_chan().send(Msg::AddStylesheet(s)).unwrap();
+        document_from_node(self).invalidate_stylesheets();
     }
 
     pub fn get_stylesheet(&self) -> Option<Arc<Stylesheet>> {
@@ -279,7 +281,8 @@ impl HTMLLinkElement {
         let mut css_parser = CssParser::new(&mq_str);
         let win = document.window();
         let doc_url = document.url();
-        let context = CssParserContext::new_for_cssom(&doc_url, win.css_error_reporter(), Some(CssRuleType::Media));
+        let context = CssParserContext::new_for_cssom(&doc_url, win.css_error_reporter(), Some(CssRuleType::Media),
+                                                      LengthParsingMode::Default);
         let media = parse_media_query_list(&context, &mut css_parser);
 
         let im_attribute = element.get_attribute(&ns!(), &local_name!("integrity"));

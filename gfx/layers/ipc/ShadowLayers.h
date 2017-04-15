@@ -64,8 +64,9 @@ private:
 class ActiveResourceTracker : public nsExpirationTracker<ActiveResource, 3>
 {
 public:
-  ActiveResourceTracker(uint32_t aExpirationCycle, const char* aName)
-  : nsExpirationTracker(aExpirationCycle, aName)
+  ActiveResourceTracker(uint32_t aExpirationCycle, const char* aName,
+                        nsIEventTarget* aEventTarget)
+  : nsExpirationTracker(aExpirationCycle, aName, aEventTarget)
   {}
 
   virtual void NotifyExpired(ActiveResource* aResource) override
@@ -447,6 +448,12 @@ private:
   uint64_t mNextLayerHandle;
   nsDataHashtable<nsUint64HashKey, CompositableClient*> mCompositables;
   PaintTiming mPaintTiming;
+  /**
+   * ShadowLayerForwarder might dispatch tasks to main while puppet widget and
+   * tabChild don't exist anymore; therefore we hold the event target since its
+   *  lifecycle is independent of these objects.
+   */
+  nsCOMPtr<nsIEventTarget> mEventTarget;
 };
 
 class CompositableClient;

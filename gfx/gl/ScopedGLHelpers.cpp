@@ -531,6 +531,52 @@ ScopedPackState::UnwrapImpl()
 }
 
 ////////////////////////////////////////////////////////////////////////
+// ResetUnpackState
+
+ResetUnpackState::ResetUnpackState(GLContext* gl)
+    : ScopedGLWrapper<ResetUnpackState>(gl)
+{
+    const auto fnReset = [&](GLenum pname, GLuint val, GLuint* const out_old) {
+        mGL->GetUIntegerv(pname, out_old);
+        if (*out_old != val) {
+            mGL->fPixelStorei(pname, val);
+        }
+    };
+
+    // Default is 4, but 1 is more useful.
+    fnReset(LOCAL_GL_UNPACK_ALIGNMENT, 1, &mAlignment);
+
+    if (!mGL->HasPBOState())
+        return;
+
+    mGL->GetUIntegerv(LOCAL_GL_PIXEL_UNPACK_BUFFER_BINDING, &mPBO);
+    if (mPBO != 0) mGL->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
+
+    fnReset(LOCAL_GL_UNPACK_ROW_LENGTH  , 0, &mRowLength);
+    fnReset(LOCAL_GL_UNPACK_IMAGE_HEIGHT, 0, &mImageHeight);
+    fnReset(LOCAL_GL_UNPACK_SKIP_PIXELS , 0, &mSkipPixels);
+    fnReset(LOCAL_GL_UNPACK_SKIP_ROWS   , 0, &mSkipRows);
+    fnReset(LOCAL_GL_UNPACK_SKIP_IMAGES , 0, &mSkipImages);
+}
+
+void
+ResetUnpackState::UnwrapImpl()
+{
+    mGL->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, mAlignment);
+
+    if (!mGL->HasPBOState())
+        return;
+
+    mGL->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mPBO);
+
+    mGL->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, mRowLength);
+    mGL->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, mImageHeight);
+    mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_PIXELS, mSkipPixels);
+    mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS, mSkipRows);
+    mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, mSkipImages);
+}
+
+////////////////////////////////////////////////////////////////////////
 // ScopedBindPBO
 
 static GLuint

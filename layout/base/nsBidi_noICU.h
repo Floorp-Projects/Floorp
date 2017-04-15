@@ -704,6 +704,9 @@ private:
   void ReorderLine(nsBidiLevel aMinLevel, nsBidiLevel aMaxLevel);
 
   static bool PrepareReorder(const nsBidiLevel *aLevels, int32_t aLength, int32_t *aIndexMap, nsBidiLevel *aMinLevel, nsBidiLevel *aMaxLevel);
+
+  nsBidi(const nsBidi&) = delete;
+  void operator=(const nsBidi&) = delete;
 };
 
 #endif // _nsBidi_noICU_h_

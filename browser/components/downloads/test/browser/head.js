@@ -103,7 +103,7 @@ function promiseWindowClosed(win) {
         Services.obs.removeObserver(obs, topic);
         resolve();
       }
-    }, "domwindowclosed", false);
+    }, "domwindowclosed");
   });
   win.close();
   return promise;
@@ -248,7 +248,7 @@ function task_clearHistory() {
     Services.obs.addObserver(function observeCH(aSubject, aTopic, aData) {
       Services.obs.removeObserver(observeCH, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
       resolve();
-    }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
+    }, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
     PlacesUtils.history.clear();
   });
 }

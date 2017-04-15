@@ -14,27 +14,30 @@ module.exports = {
     "node": true
   },
 
+  "plugins": [
+    "mozilla"
+  ],
+
+  "extends": [
+    "plugin:mozilla/recommended"
+  ],
+
   "rules": {
-    "brace-style": ["error", "1tbs"],
     "camelcase": "error",
     "comma-dangle": ["error", "never"],
-    "comma-spacing": "error",
     "comma-style": ["error", "last"],
     "curly": ["error", "multi-line"],
     "handle-callback-err": ["error", "er"],
     "indent": ["error", 2, {"SwitchCase": 1}],
-    "max-len": ["error", 80, 2],
+    // Longer max-len due to AST selectors
+    "max-len": ["error", 150, 2],
     "no-multiple-empty-lines": ["error", {"max": 1}],
-    "no-undef": "error",
+    "no-shadow": "error",
     "no-undef-init": "error",
-    "no-unexpected-multiline": "error",
     "object-curly-spacing": "off",
     "one-var": ["error", "never"],
     "operator-linebreak": ["error", "after"],
     "semi": ["error", "always"],
-    "space-before-blocks": "error",
-    "space-before-function-paren": ["error", "never"],
-    "keyword-spacing": "error",
     "strict": ["error", "global"],
   },
 

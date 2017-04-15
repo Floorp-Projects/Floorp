@@ -9,51 +9,51 @@ fails == size-1.html size-1.html
 
 fails == size-change-1.html size-change-1.html
 
-asserts-if(stylo,1) == subpixel-1.html subpixel-1.html # bug 1324700
+== subpixel-1.html subpixel-1.html
 
-asserts-if(stylo,1) == text-ltr-left.html text-ltr-left.html # bug 1324700
-asserts-if(stylo,1) == text-ltr-right.html text-ltr-right.html # bug 1324700
-asserts-if(stylo,1) == text-rtl-left.html text-rtl-left.html # bug 1324700
-asserts-if(stylo,1) == text-rtl-right.html text-rtl-right.html # bug 1324700
+== text-ltr-left.html text-ltr-left.html
+== text-ltr-right.html text-ltr-right.html
+== text-rtl-left.html text-rtl-left.html
+== text-rtl-right.html text-rtl-right.html
 
-asserts-if(stylo,1) == text-ltr-start.html text-ltr-start.html # bug 1324700
-asserts-if(stylo,1) == text-ltr-end.html text-ltr-end.html # bug 1324700
-asserts-if(stylo,1) == text-ltr-left.html text-ltr-left.html # bug 1324700
-asserts-if(stylo,1) == text-rtl-start.html text-rtl-start.html # bug 1324700
-asserts-if(stylo,1) == text-rtl-end.html text-rtl-end.html # bug 1324700
-asserts-if(stylo,1) == text-rtl-left.html text-rtl-left.html # bug 1324700
+== text-ltr-start.html text-ltr-start.html
+== text-ltr-end.html text-ltr-end.html
+== text-ltr-left.html text-ltr-left.html
+== text-rtl-start.html text-rtl-start.html
+== text-rtl-end.html text-rtl-end.html
+== text-rtl-left.html text-rtl-left.html
 
-asserts-if(stylo,1) == text-ltr-left.html text-ltr-left.html # bug 1324700
+== text-ltr-left.html text-ltr-left.html
 
-fails asserts-if(stylo,1) == text-ltr-alignment-test.html text-ltr-alignment-test.html # bug 1324700
-fails asserts-if(stylo,1) == text-rtl-alignment-test.html text-rtl-alignment-test.html # bug 1324700
+== text-ltr-alignment-test.html text-ltr-alignment-test.html
+== text-rtl-alignment-test.html text-rtl-alignment-test.html
 
-asserts-if(stylo,1) == text-horzline-with-bottom.html text-horzline-with-bottom.html # bug 1324700
-fails-if(azureSkia&&OSX>=1008) asserts-if(stylo,1) == text-horzline-with-top.html text-horzline-with-top.html # bug 1324700
+== text-horzline-with-bottom.html text-horzline-with-bottom.html
+fails-if(azureSkia&&OSX>=1008) == text-horzline-with-top.html text-horzline-with-top.html
 
-fails asserts-if(stylo,1) == text-big-stroke.html text-big-stroke.html # Bug 1324700
-fails asserts-if(stylo,1) == text-big-stroke.html text-big-stroke.html # Bug 1324700
+== text-big-stroke.html text-big-stroke.html
+== text-big-stroke.html text-big-stroke.html
 
-fails asserts-if(stylo,1) == text-context-state-test.html text-context-state-test.html # bug 1324700
-fails asserts-if(stylo,1) == text-font-inherit.html text-font-inherit.html # bug 1324700
-fails asserts-if(stylo,1) == text-space-replace-test.html text-space-replace-test.html # bug 1324700
+== text-context-state-test.html text-context-state-test.html
+== text-font-inherit.html text-font-inherit.html
+== text-space-replace-test.html text-space-replace-test.html
 
-fails asserts-if(stylo,1) == text-no-frame-test.html text-no-frame-test.html # bug 1324700
-fails asserts-if(stylo,1) == text-no-frame-2-test.html text-no-frame-2-test.html # bug 1324700
-fails asserts-if(stylo,1) == text-not-in-doc-test.html text-not-in-doc-test.html # bug 1324700
+== text-no-frame-test.html text-no-frame-test.html
+== text-no-frame-2-test.html text-no-frame-2-test.html
+== text-not-in-doc-test.html text-not-in-doc-test.html
 
-fails asserts-if(stylo,1) == text-bidi-ltr-test.html text-bidi-ltr-test.html # Bug 1324700
-fails asserts-if(stylo,1) == text-bidi-ltr-test.html text-bidi-ltr-test.html # Bug 1324700
-fails asserts-if(stylo,1) == text-bidi-rtl-test.html text-bidi-rtl-test.html # bug 1324700
+== text-bidi-ltr-test.html text-bidi-ltr-test.html
+== text-bidi-ltr-test.html text-bidi-ltr-test.html
+== text-bidi-rtl-test.html text-bidi-rtl-test.html
 
-fails asserts-if(stylo,4) == text-font-lang.html text-font-lang.html # bug 1324700
+== text-font-lang.html text-font-lang.html
 
-fails asserts-if(stylo,1) == text-measure.html text-measure.html # bug 1324700
-fails asserts-if(stylo,1) == text-small-caps-1.html text-small-caps-1.html # bug 1324700
+== text-measure.html text-measure.html
+== text-small-caps-1.html text-small-caps-1.html
 
-fails asserts-if(stylo,1) == text-subpixel-1.html text-subpixel-1.html # bug 1324700
+== text-subpixel-1.html text-subpixel-1.html
 
-fails asserts-if(stylo,1) == strokeText-path.html strokeText-path.html # bug 1324700
+== strokeText-path.html strokeText-path.html
 
 # check that emoji character renders as something non-blank (for Apple Color Emoji font, bug 715798)
 # apparently fails on some 10.7 systems for unknown reasons, bug 804522.
@@ -62,7 +62,7 @@ fails asserts-if(stylo,1) == strokeText-path.html strokeText-path.html # bug 132
 ## if they have an Emoji font installed when running the tests.)
 ## WAS: random-if(OSX==1007) == text-emoji.html text-emoji.html
 # With Skia canvas on OS X (bug 932958) it fails even on 10.8 and 10.10.
-random-if(cocoaWidget&&azureSkia) random-if(!cocoaWidget||OSX==1006||OSX==1007) asserts-if(stylo,1) == text-emoji.html text-emoji.html # bug 1324700
+random-if(cocoaWidget&&azureSkia) random-if(!cocoaWidget||OSX==1006||OSX==1007) == text-emoji.html text-emoji.html
 
 # azure quartz uses CGDrawLinearGradient instead of DrawShading
 # so we have less control over degenerate behaviour as tested by this
@@ -87,7 +87,7 @@ fails-if((azureSkia&&!azureSkiaGL)||(azureSkiaGL&&Android)) skip-if(stylo) == li
 == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient.html
 == 674003-alpha-radial-gradient-superlum.html 674003-alpha-radial-gradient-superlum.html
 
-fails asserts-if(stylo,1) == 693610-1.html 693610-1.html # bug 1324700
+== 693610-1.html 693610-1.html
 
 == 726951-shadow-clips.html 726951-shadow-clips.html
 
@@ -100,18 +100,18 @@ fuzzy-if(azureSkia,1,15) fuzzy-if(skiaContent,1,20) == transformed-gradient.html
 # You get a little bit of rounding fuzz on OSX from transforming the paths between user space and device space
 == 784573-1.html 784573-1.html
 
-fails asserts-if(stylo,1) == 802658-1.html 802658-1.html # bug 1324700
+== 802658-1.html 802658-1.html
 == 1074733-1.html 1074733-1.html
-fails asserts-if(stylo,1) == 1107096-invisibles.html 1107096-invisibles.html # bug 1324700
+== 1107096-invisibles.html 1107096-invisibles.html
 == 1151821-1.html 1151821-1.html
 == 1201272-1.html 1201272-1.html
 == 1224976-1.html 1224976-1.html
 == 1238795-1.html 1238795-1.html
 == 1303534-1.html 1303534-1.html
 
-fails asserts-if(stylo,1) == 1304353-text-global-alpha-1.html 1304353-text-global-alpha-1.html # bug 1324700
-fails asserts-if(stylo,1) == 1304353-text-global-alpha-2.html 1304353-text-global-alpha-2.html # bug 1324700
-fails asserts-if(stylo,1) == 1304353-text-global-composite-op-1.html 1304353-text-global-composite-op-1.html # bug 1324700
+== 1304353-text-global-alpha-1.html 1304353-text-global-alpha-1.html
+== 1304353-text-global-alpha-2.html 1304353-text-global-alpha-2.html
+== 1304353-text-global-composite-op-1.html 1304353-text-global-composite-op-1.html
 
 skip-if(stylo) == text-indent-1a.html text-indent-1a.html # Bug 1347410
 == text-indent-1b.html text-indent-1b.html

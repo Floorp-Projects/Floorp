@@ -5,7 +5,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=769370
 -->
 <head>
   <title>Test for input.valueAsDate</title>
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
@@ -249,7 +248,7 @@ function checkTimeGet()
   element.type = 'time';
 
   for (let test of tests) {
-    element.value = test.value;  
+    element.value = test.value;
     if (test.result === null) {
       is(element.valueAsDate, null, "element.valueAsDate should return null");
     } else {
@@ -750,4 +749,3 @@ checkDatetimeLocalSet();
 </pre>
 </body>
 </html>
-

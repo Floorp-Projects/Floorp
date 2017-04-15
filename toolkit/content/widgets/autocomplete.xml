@@ -2364,7 +2364,10 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             this._typeIcon.style.removeProperty("margin-inline-start");
             return true;
           }
-          let rect = this._siteIcon.getBoundingClientRect();
+          let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindowUtils);
+          let rect = utils.getBoundsWithoutFlushing(this._siteIcon);
+
           let dir = this.getAttribute("dir");
           let delta = dir == "rtl" ? rect.right - newStart
                                    : newStart - rect.left;

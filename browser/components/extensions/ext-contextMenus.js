@@ -12,7 +12,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 var {
   ExtensionError,
   IconDetails,
-  SingletonEventManager,
 } = ExtensionUtils;
 
 const ACTION_MENU_TOP_LEVEL_LIMIT = 6;
@@ -496,11 +495,6 @@ MenuItem.prototype = {
       mediaType = "image";
     }
 
-    let frameId;
-    if (contextData.windowId) {
-      frameId = ExtensionManagement.getFrameId(contextData.windowId);
-    }
-
     let info = {
       menuItemId: this.id,
       editable: contextData.onEditableArea || contextData.onPassword,
@@ -518,7 +512,7 @@ MenuItem.prototype = {
     setIfDefined("srcUrl", contextData.srcUrl);
     setIfDefined("pageUrl", contextData.pageUrl);
     setIfDefined("frameUrl", contextData.frameUrl);
-    setIfDefined("frameId", frameId);
+    setIfDefined("frameId", contextData.frameId);
     setIfDefined("selectionText", contextData.selectionText);
 
     if ((this.type === "checkbox") || (this.type === "radio")) {
@@ -564,7 +558,7 @@ MenuItem.prototype = {
 // for contex-menu events from both content and chrome.
 const contextMenuTracker = {
   register() {
-    Services.obs.addObserver(this, "on-build-contextmenu", false);
+    Services.obs.addObserver(this, "on-build-contextmenu");
     for (const window of windowTracker.browserWindows()) {
       this.onWindowOpen(window);
     }

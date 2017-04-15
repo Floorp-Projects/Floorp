@@ -31,6 +31,7 @@ namespace jit {
 
 namespace wasm {
 
+class ExitReason;
 class FuncExport;
 class FuncImport;
 
@@ -48,7 +49,8 @@ extern CallableOffsets
 GenerateImportJitExit(jit::MacroAssembler& masm, const FuncImport& fi, jit::Label* throwLabel);
 
 extern CallableOffsets
-GenerateBuiltinImportExit(jit::MacroAssembler& masm, jit::ABIFunctionType abiType, void* func);
+GenerateBuiltinNativeExit(jit::MacroAssembler& masm, jit::ABIFunctionType abiType,
+                          ExitReason exitReason, void* func);
 
 extern CallableOffsets
 GenerateTrapExit(jit::MacroAssembler& masm, Trap trap, jit::Label* throwLabel);

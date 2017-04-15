@@ -698,11 +698,11 @@ class MemoryAccessDesc
     unsigned numSimdElems_;
     jit::MemoryBarrierBits barrierBefore_;
     jit::MemoryBarrierBits barrierAfter_;
-    mozilla::Maybe<wasm::TrapOffset> trapOffset_;
+    mozilla::Maybe<wasm::BytecodeOffset> trapOffset_;
 
   public:
     explicit MemoryAccessDesc(Scalar::Type type, uint32_t align, uint32_t offset,
-                              const mozilla::Maybe<TrapOffset>& trapOffset,
+                              const mozilla::Maybe<BytecodeOffset>& trapOffset,
                               unsigned numSimdElems = 0,
                               jit::MemoryBarrierBits barrierBefore = jit::MembarNobits,
                               jit::MemoryBarrierBits barrierAfter = jit::MembarNobits)
@@ -733,7 +733,7 @@ class MemoryAccessDesc
     jit::MemoryBarrierBits barrierBefore() const { return barrierBefore_; }
     jit::MemoryBarrierBits barrierAfter() const { return barrierAfter_; }
     bool hasTrap() const { return !!trapOffset_; }
-    TrapOffset trapOffset() const { return *trapOffset_; }
+    BytecodeOffset trapOffset() const { return *trapOffset_; }
     bool isAtomic() const { return (barrierBefore_ | barrierAfter_) != jit::MembarNobits; }
     bool isSimd() const { return Scalar::isSimdType(type_); }
     bool isPlainAsmJS() const { return !hasTrap(); }
@@ -780,15 +780,15 @@ typedef Vector<CallFarJump, 0, SystemAllocPolicy> CallFarJumpVector;
 // causing the trap, and the stack depth right before control is transferred to
 // the trap out-of-line path.
 
-struct TrapDesc : TrapOffset
+struct TrapDesc : BytecodeOffset
 {
     enum Kind { Jump, MemoryAccess };
     Kind kind;
     Trap trap;
     uint32_t framePushed;
 
-    TrapDesc(TrapOffset offset, Trap trap, uint32_t framePushed, Kind kind = Jump)
-      : TrapOffset(offset), kind(kind), trap(trap), framePushed(framePushed)
+    TrapDesc(BytecodeOffset offset, Trap trap, uint32_t framePushed, Kind kind = Jump)
+      : BytecodeOffset(offset), kind(kind), trap(trap), framePushed(framePushed)
     {}
 };
 

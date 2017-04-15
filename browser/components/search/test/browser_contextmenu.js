@@ -47,7 +47,7 @@ add_task(function* () {
       }
     }
 
-    Services.obs.addObserver(observer, "browser-search-engine-modified", false);
+    Services.obs.addObserver(observer, "browser-search-engine-modified");
     ss.addEngine("resource://search-plugins/testEngine_mozsearch.xml",
                  null, "data:image/x-icon,%00", false);
   });

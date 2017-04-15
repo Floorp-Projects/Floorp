@@ -53,8 +53,7 @@ class TextOverflow {
   /**
    * @return true if aBlockFrame needs analysis for text overflow.
    */
-  static bool CanHaveTextOverflow(nsDisplayListBuilder* aBuilder,
-                                  nsIFrame*             aBlockFrame);
+  static bool CanHaveTextOverflow(nsIFrame* aBlockFrame);
 
   typedef nsTHashtable<nsPtrHashKey<nsIFrame> > FrameHashtable;
 
@@ -127,10 +126,12 @@ class TextOverflow {
    * @param aFramesToHide frames that should have their display items removed
    * @param aAlignmentEdges the outermost edges of all text and atomic
    *   inline-level frames that are inside the area between the markers
+   * @return the area inside which we should add any markers;
+   *   this is the block's content area narrowed by any floats on this line.
    */
-  void ExamineLineFrames(nsLineBox*      aLine,
-                         FrameHashtable* aFramesToHide,
-                         AlignmentEdges* aAlignmentEdges);
+  LogicalRect ExamineLineFrames(nsLineBox*      aLine,
+                                FrameHashtable* aFramesToHide,
+                                AlignmentEdges* aAlignmentEdges);
 
   /**
    * LineHasOverflowingText calls this to analyze edges, both the block's
@@ -199,10 +200,13 @@ class TextOverflow {
    * @param aCreateIStart if true, create a marker on the inline start side
    * @param aCreateIEnd if true, create a marker on the inline end side
    * @param aInsideMarkersArea is the area inside the markers
+   * @param aContentArea is the area inside which we should add the markers;
+   *   this is the block's content area narrowed by any floats on this line.
    */
   void CreateMarkers(const nsLineBox* aLine,
                      bool aCreateIStart, bool aCreateIEnd,
-                     const LogicalRect& aInsideMarkersArea);
+                     const LogicalRect& aInsideMarkersArea,
+                     const LogicalRect& aContentArea);
 
   LogicalRect            mContentArea;
   nsDisplayListBuilder*  mBuilder;

@@ -66,7 +66,7 @@ const ContextMenuExtension = Class({
     globalMessageManager.addMessageListener("sdk/context-menu/read", messageListener);
     globalMessageManager.addMessageListener("sdk/context-menu/readers?", messageListener);
 
-    preferencesService.addObserver(OVERFLOW_THRESH, this, false);
+    preferencesService.addObserver(OVERFLOW_THRESH, this);
   },
   observe(_, __, name) {
     if (name === OVERFLOW_THRESH) {

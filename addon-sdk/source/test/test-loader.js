@@ -419,7 +419,6 @@ exports["test require#resolve"] = function(assert) {
 
   const localLoader = Loader({
     paths: { "foo/bar": "bizzle",
-             "foo/bar2/": "bizzle2",
              // Just to make sure this doesn't match the first entry,
              // let use resolve this module
              "foo/bar-bar": "foo/bar-bar" }
@@ -428,7 +427,6 @@ exports["test require#resolve"] = function(assert) {
   assert.equal(localRequire.resolve("foo/bar"), "bizzle.js");
   assert.equal(localRequire.resolve("foo/bar/baz"), "bizzle/baz.js");
   assert.equal(localRequire.resolve("foo/bar-bar"), "foo/bar-bar.js");
-  assert.equal(localRequire.resolve("foo/bar2/"), "bizzle2.js");
 };
 
 const modulesURI = require.resolve("toolkit/loader").replace("toolkit/loader.js", "");

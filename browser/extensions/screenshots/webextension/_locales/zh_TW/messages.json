@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "拍攝網頁的擷圖，可暫時儲存或永久儲存。"
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "拍攝畫面擷圖"
+  },
+  "myShotsLink": {
+    "message": "我的擷圖"
+  },
+  "screenshotInstructions": {
+    "message": "拖曳或點擊頁面來選擇區域，按下 ESC 取消。"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "儲存"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "儲存可見範圍"
+  },
+  "saveScreenshotFullPage": {
+    "message": "儲存完整頁面"
+  },
+  "cancelScreenshot": {
+    "message": "取消"
+  },
+  "downloadScreenshot": {
+    "message": "下載"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "已複製鏈結"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "已將您拍攝的圖片鏈結複製到剪貼簿，按下 $META_KEY$+V 即可貼上。",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "系統維護中。"
+  },
+  "requestErrorDetails": {
+    "message": "抱歉！無法儲存您拍攝的圖片，請稍候再試一次。"
+  },
+  "connectionErrorTitle": {
+    "message": "無法連線至您的畫面擷圖。"
+  },
+  "connectionErrorDetails": {
+    "message": "請檢查您的網路連線。若您可以正常上網，可能是 Firefox Screenshots 臨時出了問題。"
+  },
+  "loginErrorDetails": {
+    "message": "Firefox Screenshots 服務發生問題，我們無法儲存您拍攝的擷圖。請稍候再試。"
+  },
+  "unshootablePageErrorTitle": {
+    "message": "無法幫此頁面拍照。"
+  },
+  "unshootablePageErrorDetails": {
+    "message": "這不是標準的網頁，無法拍照。"
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "您不能幫 Firefox Screenshots 的頁面拍照！"
+  },
+  "genericErrorTitle": {
+    "message": "唉呀，Firefox Screenshots 有點秀逗了。"
+  },
+  "genericErrorDetails": {
+    "message": "我們不確定剛剛發生了什麼事，您可以再試一次，或拍攝其他頁面的擷圖嗎？"
+  },
+  "tourBodyOne": {
+    "message": "不用離開 Firefox 就可以拍攝、儲存、分享畫面擷圖。"
+  },
+  "tourHeaderTwo": {
+    "message": "只拍你想拍的"
+  },
+  "tourBodyTwo": {
+    "message": "點擊並拖曳出頁面當中的一部份，您也可以停留下來，強調選擇範圍。"
+  },
+  "tourHeaderThree": {
+    "message": "用您想要的方式分享"
+  },
+  "tourBodyThree": {
+    "message": "直接將裁切過的擷圖傳到網路上方便分享，或者下載到電腦上。您也可以點擊「我的擷圖」按鈕，尋找您拍過的所有擷圖。"
+  },
+  "tourHeaderFour": {
+    "message": "拍攝視窗或整張網頁"
+  },
+  "tourBodyFour": {
+    "message": "透過右上角的不同按鈕來選擇只拍攝視窗中的可見區域，或是整張網頁。"
+  },
+  "tourSkip": {
+    "message": "略過"
+  },
+  "tourNext": {
+    "message": "下一頁"
+  },
+  "tourPrevious": {
+    "message": "上一頁"
+  },
+  "tourDone": {
+    "message": "完成"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "使用 Firefox Screenshots，代表您同意 Screenshots 的 $TERMSANDPRIVACYNOTICETERMSLINK$ 及 $TERMSANDPRIVACYNOTICEPRIVACYLINK$。",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "使用條款"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "隱私權保護政策"
+  }
+}

@@ -68,7 +68,7 @@ CustomizedReload.prototype = {
           if (this.injectedScript) {
             // Listen to the newly created document elements only if there is an
             // injectedScript to evaluate.
-            Services.obs.addObserver(this, "document-element-inserted", false);
+            Services.obs.addObserver(this, "document-element-inserted");
           }
 
           // Watch the loading progress and clear the current CustomizedReload once the
@@ -315,7 +315,7 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
       // Execute the reload in a dispatched runnable, so that we can
       // return the reply to the caller before the reload is actually
       // started.
-      Services.tm.currentThread.dispatch(delayedReload, 0);
+      Services.tm.dispatchToMainThread(delayedReload);
 
       return {};
     },

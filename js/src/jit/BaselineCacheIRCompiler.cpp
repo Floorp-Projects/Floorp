@@ -247,6 +247,22 @@ BaselineCacheIRCompiler::emitGuardGroup()
 }
 
 bool
+BaselineCacheIRCompiler::emitGuardGroupHasUnanalyzedNewScript()
+{
+    Address addr(stubAddress(reader.stubOffset()));
+    AutoScratchRegister scratch1(allocator, masm);
+    AutoScratchRegister scratch2(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.loadPtr(addr, scratch1);
+    masm.guardGroupHasUnanalyzedNewScript(scratch1, scratch2, failure->label());
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitGuardProto()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
@@ -1827,6 +1843,7 @@ BaselineCacheIRCompiler::init(CacheKind kind)
       case CacheKind::GetElem:
       case CacheKind::SetProp:
       case CacheKind::In:
+      case CacheKind::HasOwn:
         MOZ_ASSERT(numInputs == 2);
         allocator.initInputLocation(0, R0);
         allocator.initInputLocation(1, R1);
@@ -1838,10 +1855,11 @@ BaselineCacheIRCompiler::init(CacheKind kind)
         allocator.initInputLocation(2, BaselineFrameSlot(0));
         break;
       case CacheKind::GetName:
+      case CacheKind::BindName:
         MOZ_ASSERT(numInputs == 1);
         allocator.initInputLocation(0, R0.scratchReg(), JSVAL_TYPE_OBJECT);
 #if defined(JS_NUNBOX32)
-        // availableGeneralRegs can't know that GetName is only using
+        // availableGeneralRegs can't know that GetName/BindName is only using
         // the payloadReg and not typeReg on x86.
         available.add(R0.typeReg());
 #endif
@@ -1882,6 +1900,8 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
     CacheIRStubKind stubKind;
     switch (kind) {
       case CacheKind::In:
+      case CacheKind::HasOwn:
+      case CacheKind::BindName:
         stubDataOffset = sizeof(ICCacheIR_Regular);
         stubKind = CacheIRStubKind::Regular;
         break;

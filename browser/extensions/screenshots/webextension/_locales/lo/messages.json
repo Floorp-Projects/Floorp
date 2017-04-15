@@ -1,0 +1,38 @@
+{
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "ບັນທຶກ"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "ບັນທຶກສ່ວນທີ່ເບິງເຫັນໄດ້"
+  },
+  "saveScreenshotFullPage": {
+    "message": "ບັນທຶກຫມົດຫນ້າ"
+  },
+  "cancelScreenshot": {
+    "message": ""
+  },
+  "downloadScreenshot": {
+    "message": "ດາວໂຫລດ"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "ໄດ້ສຳເນົາລີ້ງໄວ້ແລ້ວ"
+  },
+  "unshootablePageErrorTitle": {
+    "message": "ພວກເຮົາບໍ່ສາມາດຖ່າຍຮູບຫນ້າຈໍຂອງຫນ້ານີ້ໄດ້."
+  },
+  "tourSkip": {
+    "message": "ຂ້າມໄປ"
+  },
+  "tourNext": {
+    "message": "ສະໄລດ໌ຕໍ່ໄປ"
+  },
+  "tourPrevious": {
+    "message": "ສະໄລດ໌ກ່ອນຫນ້ານີ້"
+  },
+  "tourDone": {
+    "message": "ສຳເລັດ"
+  }
+}

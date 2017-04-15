@@ -81,7 +81,7 @@
           }
         }
       }
-      os.addObserver(observer, "http-on-modify-request", false);
+      os.addObserver(observer, "http-on-modify-request");
 
       // Now that the observer is set up, trigger a favicon load with navigation
       testWindow = window.open(LOADING_URI);

@@ -222,7 +222,7 @@ function testNotToLeakResponseURLWhileDoingRedirectsInWindow() {
          "responseURL should return empty string before HEADERS_RECEIVED");
     }
   };
-  SpecialPowers.addObserver(requestObserver, "specialpowers-http-notify-request", false);
+  SpecialPowers.addObserver(requestObserver, "specialpowers-http-notify-request");
 
   return new Promise(function (aResolve, aReject) {
     xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text");

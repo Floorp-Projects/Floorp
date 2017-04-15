@@ -36,7 +36,7 @@ function frameScript()
     addEventListener("unload", eventHandler, true);
     addEventListener("pagehide", eventHandler, false);
     addEventListener("pagehide", eventHandler, true);
-    Services.obs.addObserver(onOuterWindowDestroyed, "outer-window-destroyed", false);
+    Services.obs.addObserver(onOuterWindowDestroyed, "outer-window-destroyed");
 
     sendAsyncMessage("Test:Ready");
   }, true);

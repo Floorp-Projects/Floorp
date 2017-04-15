@@ -14,7 +14,7 @@ Cu.import("resource:///modules/sessionstore/FrameTree.jsm", this);
 var gFrameTree = new FrameTree(this);
 
 function executeSoon(callback) {
-  Services.tm.mainThread.dispatch(callback, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+  Services.tm.dispatchToMainThread(callback);
 }
 
 gFrameTree.addObserver({
@@ -112,7 +112,7 @@ addMessageListener("ss-test:enableStyleSheetsForSet", function(msg) {
   if (change) {
     // We don't want to reply until content-sessionStore.js has seen
     // the change.
-    Services.obs.addObserver(observer, "style-sheet-applicable-state-changed", false);
+    Services.obs.addObserver(observer, "style-sheet-applicable-state-changed");
 
     content.document.enableStyleSheetsForSet(msg.data);
   } else {

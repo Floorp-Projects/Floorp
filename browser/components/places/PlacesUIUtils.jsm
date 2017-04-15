@@ -201,7 +201,7 @@ let InternalFaviconLoader = {
     }
     this._initialized = true;
 
-    Services.obs.addObserver(this, "inner-window-destroyed", false);
+    Services.obs.addObserver(this, "inner-window-destroyed");
     Services.ppmm.addMessageListener("Toolkit:inner-window-destroyed", msg => {
       this.removeRequestsForInner(msg.data);
     });
@@ -947,7 +947,7 @@ this.PlacesUIUtils = {
       var uriList = PlacesUtils.toISupportsString(urls.join("|"));
       var args = Cc["@mozilla.org/array;1"].
                   createInstance(Ci.nsIMutableArray);
-      args.appendElement(uriList, /* weak =*/ false);
+      args.appendElement(uriList);
       browserWindow = Services.ww.openWindow(aWindow,
                                              "chrome://browser/content/browser.xul",
                                              null, "chrome,dialog=no,all", args);

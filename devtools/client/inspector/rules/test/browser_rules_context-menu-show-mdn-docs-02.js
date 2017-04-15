@@ -47,7 +47,7 @@ add_task(function* () {
   let menuitemShowMdnDocs = allMenuItems.find(item => item.label ===
     STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.showMdnDocs"));
 
-  let cssDocs = view.tooltips.cssDocs;
+  let cssDocs = view.tooltips.getTooltip("cssDocs");
 
   info("Showing the MDN docs tooltip");
   let onShown = cssDocs.tooltip.once("shown");

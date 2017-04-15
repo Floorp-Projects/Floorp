@@ -11,26 +11,20 @@
 const HTML =
   `<div>
     <p id="container">
-      <span>1</span>      <span id="after-whitespace">2</span>
+      <span id="before-whitespace">1</span>      <span id="after-whitespace">2</span>
     </p>
   </div>`;
 
 const TEST_URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 
-add_task(function* () {
+add_task(function* deleteNodeAfterWhitespace() {
   let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Test deleting a node that will modify the whitespace nodes rendered in the " +
     "markup view.");
 
-  info("Select node #after-whitespace and make sure it is focused");
-  yield selectNode("#after-whitespace", inspector);
-  yield clickContainer("#after-whitespace", inspector);
-
-  info("Delete the node with the delete key");
-  let mutated = inspector.once("markupmutation");
-  EventUtils.sendKey("delete", inspector.panelWin);
-  yield Promise.all([mutated, inspector.once("inspector-updated")]);
+  yield selectAndFocusNode("#after-whitespace", inspector);
+  yield deleteCurrentSelection(inspector);
 
   // TODO: There is still an issue with selection here.  When the span is deleted, the
   // selection goes to text-node. But since the text-node gets removed from the markup
@@ -48,4 +42,32 @@ add_task(function* () {
   yield undoChange(inspector);
   node = yield getNodeFront("#after-whitespace", inspector);
   ok(node, "The node is back");
+
+  info("Test deleting the node before the whitespace and performing an undo preserves " +
+       "the node order");
+
+  yield selectAndFocusNode("#before-whitespace", inspector);
+  yield deleteCurrentSelection(inspector);
+
+  info("Undo the deletion to restore the original markup");
+  yield undoChange(inspector);
+  node = yield getNodeFront("#before-whitespace", inspector);
+  ok(node, "The node is back");
+
+  let nextSibling = yield getNodeFront("#before-whitespace + *", inspector);
+  let afterWhitespace = yield getNodeFront("#after-whitespace", inspector);
+  is(nextSibling, afterWhitespace, "Order has been preserved after restoring the node");
 });
+
+function* selectAndFocusNode(selector, inspector) {
+  info(`Select node ${selector} and make sure it is focused`);
+  yield selectNode(selector, inspector);
+  yield clickContainer(selector, inspector);
+}
+
+function* deleteCurrentSelection(inspector) {
+  info("Delete the node with the delete key");
+  let mutated = inspector.once("markupmutation");
+  EventUtils.sendKey("delete", inspector.panelWin);
+  yield Promise.all([mutated, inspector.once("inspector-updated")]);
+}

@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+extern crate num_cpus;
+
 use std::env;
 use std::process::{Command, Stdio};
 
@@ -11,6 +13,7 @@ fn main() {
 
     let js_src = env::var("CARGO_MANIFEST_DIR").expect("Should have env var CARGO_MANIFEST_DIR");
 
+    env::set_var("MAKEFLAGS", format!("-j{}", num_cpus::get()));
     env::set_current_dir(&js_src).unwrap();
 
     let variant = if cfg!(feature = "debugmozjs") {
@@ -37,6 +40,11 @@ fn main() {
     assert!(result.success(), "autospider should exit OK");
 
     println!("cargo:rustc-link-search=native={}/js/src/build", out_dir);
+    println!("cargo:rustc-link-search=native={}/js/src", out_dir);
+    println!("cargo:rustc-link-lib=static=js_static");
+
+    println!("cargo:rustc-link-search=native={}/dist/bin", out_dir);
+    println!("cargo:rustc-link-lib=nspr4");
 
     if target.contains("windows") {
         println!("cargo:rustc-link-lib=winmm");
@@ -47,6 +55,5 @@ fn main() {
         println!("cargo:rustc-link-lib=stdc++");
     }
 
-    println!("cargo:rustc-link-lib=static=js_static");
     println!("cargo:outdir={}", out_dir);
 }

@@ -1014,8 +1014,6 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
   result.mProperty = aProperty;
 
   if (aDocument->GetStyleBackendType() == StyleBackendType::Servo) {
-    nsCString name = nsCSSProps::GetStringValue(aProperty);
-
     NS_ConvertUTF16toUTF8 value(aStringValue);
 
     // FIXME this is using the wrong base uri (bug 1343919)
@@ -1024,7 +1022,7 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
                                                  aDocument->NodePrincipal());
 
     RefPtr<RawServoDeclarationBlock> servoDeclarationBlock =
-      Servo_ParseProperty(&name, &value, data).Consume();
+      Servo_ParseProperty(aProperty, &value, data).Consume();
 
     if (servoDeclarationBlock) {
       result.mServoDeclarationBlock = servoDeclarationBlock.forget();

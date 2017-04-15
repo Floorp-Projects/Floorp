@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_ContentPrefs_h
 #define mozilla_dom_ContentPrefs_h
 
+// See the comment in ContentPrefs.cpp for more information.
+
 namespace mozilla {
 namespace dom {
 

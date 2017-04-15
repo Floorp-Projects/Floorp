@@ -335,9 +335,9 @@ class IonBuilder
     AbortReasonOr<Ok> newObjectTryTemplateObject(bool* emitted, JSObject* templateObject);
     AbortReasonOr<Ok> newObjectTryVM(bool* emitted, JSObject* templateObject);
 
-    // jsop_in helpers.
+    // jsop_in/jsop_hasown helpers.
     AbortReasonOr<Ok> inTryDense(bool* emitted, MDefinition* obj, MDefinition* id);
-    AbortReasonOr<Ok> inTryFold(bool* emitted, MDefinition* obj, MDefinition* id);
+    AbortReasonOr<Ok> hasTryNotDefined(bool* emitted, MDefinition* obj, MDefinition* id, bool ownProperty);
 
     // binary data lookup helpers.
     TypedObjectPrediction typedObjectPrediction(MDefinition* typedObj);
@@ -578,6 +578,7 @@ class IonBuilder
     AbortReasonOr<Ok> jsop_isnoiter();
     AbortReasonOr<Ok> jsop_iterend();
     AbortReasonOr<Ok> jsop_in();
+    AbortReasonOr<Ok> jsop_hasown();
     AbortReasonOr<Ok> jsop_instanceof();
     AbortReasonOr<Ok> jsop_getaliasedvar(EnvironmentCoordinate ec);
     AbortReasonOr<Ok> jsop_setaliasedvar(EnvironmentCoordinate ec);
@@ -856,7 +857,7 @@ class IonBuilder
     JSObject* testSingletonProperty(JSObject* obj, jsid id);
     JSObject* testSingletonPropertyTypes(MDefinition* obj, jsid id);
 
-    AbortReasonOr<bool> testNotDefinedProperty(MDefinition* obj, jsid id);
+    AbortReasonOr<bool> testNotDefinedProperty(MDefinition* obj, jsid id, bool ownProperty = false);
 
     uint32_t getDefiniteSlot(TemporaryTypeSet* types, PropertyName* name, uint32_t* pnfixed);
     MDefinition* convertUnboxedObjects(MDefinition* obj);

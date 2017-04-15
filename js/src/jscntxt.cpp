@@ -49,6 +49,7 @@
 #include "jit/Ion.h"
 #include "jit/PcScriptCache.h"
 #include "js/CharacterEncoding.h"
+#include "vm/ErrorReporting.h"
 #include "vm/HelperThreads.h"
 #include "vm/Shape.h"
 #include "wasm/WasmSignalHandlers.h"
@@ -930,16 +931,6 @@ js::ReportErrorNumberUCArray(JSContext* cx, unsigned flags, JSErrorCallback call
     ReportError(cx, &report, callback, userRef);
 
     return warning;
-}
-
-void
-js::CallWarningReporter(JSContext* cx, JSErrorReport* reportp)
-{
-    MOZ_ASSERT(reportp);
-    MOZ_ASSERT(JSREPORT_IS_WARNING(reportp->flags));
-
-    if (JS::WarningReporter warningReporter = cx->runtime()->warningReporter)
-        warningReporter(cx, reportp);
 }
 
 bool

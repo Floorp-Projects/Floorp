@@ -115,7 +115,7 @@ function waitForResults() {
       Services.obs.removeObserver(arguments.callee, "sdk:test:results");
 
       resolve(JSON.parse(data));
-    }, "sdk:test:results", false);
+    }, "sdk:test:results");
   });
 }
 

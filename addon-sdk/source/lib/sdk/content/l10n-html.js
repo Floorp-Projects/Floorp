@@ -8,9 +8,10 @@ module.metadata = {
 };
 
 const { Ci, Cc, Cu } = require("chrome");
-const core = require("../l10n/core");
-const { loadSheet, removeSheet } = require("../stylesheet/utils");
+lazyRequireModule(this, "../l10n/core", "core");
+lazyRequire(this, "../stylesheet/utils", "loadSheet", "removeSheet");
 const { process, frames } = require("../remote/child");
+
 var observerService = Cc["@mozilla.org/observer-service;1"]
                       .getService(Ci.nsIObserverService);
 const { ShimWaiver } = Cu.import("resource://gre/modules/ShimWaiver.jsm");

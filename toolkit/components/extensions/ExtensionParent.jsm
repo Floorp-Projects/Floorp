@@ -265,11 +265,9 @@ GlobalManager = {
 
   _onExtensionBrowser(type, browser, additionalData = {}) {
     browser.messageManager.loadFrameScript(`data:,
-      Components.utils.import("resource://gre/modules/ExtensionContent.jsm");
-      ExtensionContent.init(this);
-      addEventListener("unload", function() {
-        ExtensionContent.uninit(this);
-      });
+      Components.utils.import("resource://gre/modules/Services.jsm");
+
+      Services.obs.notifyObservers(this, "tab-content-frameloader-created", "");
     `, false);
 
     let viewType = browser.getAttribute("webextension-view-type");
@@ -475,7 +473,7 @@ ParentAPIManager = {
   proxyContexts: new Map(),
 
   init() {
-    Services.obs.addObserver(this, "message-manager-close", false);
+    Services.obs.addObserver(this, "message-manager-close");
 
     Services.mm.addMessageListener("API:CreateProxyContext", this);
     Services.mm.addMessageListener("API:CloseProxyContext", this, true);

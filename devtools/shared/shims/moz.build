@@ -12,6 +12,9 @@
 # /toolkit modules.  Disable any DIST_SUBDIR from parent files here.
 DIST_SUBDIR = ''
 
+DIRS += [
+    'fronts',
+]
 EXTRA_JS_MODULES.devtools += [
     'Console.jsm',
     'dbg-client.jsm',

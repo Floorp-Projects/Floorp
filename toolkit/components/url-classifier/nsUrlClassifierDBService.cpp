@@ -1194,14 +1194,14 @@ nsUrlClassifierLookupCallback::CompletionV2(const nsACString& aCompleteHash,
 
   MOZ_ASSERT(!StringEndsWith(aTableName, NS_LITERAL_CSTRING("-proto")));
 
-  auto result = new CacheResultV2;
+  nsAutoPtr<CacheResultV2> result(new CacheResultV2);
 
   result->table = aTableName;
   result->prefix.Assign(aCompleteHash);
   result->completion.Assign(aCompleteHash);
   result->addChunk = aChunkId;
 
-  return ProcessComplete(result);
+  return ProcessComplete(result.forget());
 }
 
 NS_IMETHODIMP
@@ -1225,7 +1225,7 @@ nsUrlClassifierLookupCallback::CompletionV4(const nsACString& aPartialHash,
     aNegativeCacheDuration = MAXIMUM_NEGATIVE_CACHE_DURATION_SEC;
   }
 
-  auto result = new CacheResultV4;
+  nsAutoPtr<CacheResultV4> result(new CacheResultV4);
 
   int64_t nowSec = PR_Now() / PR_USEC_PER_SEC;
 
@@ -1252,7 +1252,7 @@ nsUrlClassifierLookupCallback::CompletionV4(const nsACString& aPartialHash,
     result->response.fullHashes.Put(fullHash, nowSec + duration);
   }
 
-  return ProcessComplete(result);
+  return ProcessComplete(result.forget());
 }
 
 nsresult

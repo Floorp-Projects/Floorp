@@ -33,12 +33,12 @@ add_task(function* () {
   let {inspector, view} = yield openRuleView();
 
   for (let color of colors) {
-    let cPicker = view.tooltips.colorPicker;
     let selector = "#" + color.id;
     yield selectNode(selector, inspector);
 
     let swatch = getRuleViewProperty(view, "element", "color").valueSpan
         .querySelector(".ruleview-colorswatch");
+    let cPicker = view.tooltips.getTooltip("colorPicker");
     let onColorPickerReady = cPicker.once("ready");
     swatch.click();
     yield onColorPickerReady;

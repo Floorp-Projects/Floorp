@@ -60,7 +60,7 @@ var CloseObserver = {
   expectedValue: null,
   init: function ()
   {
-    Services.obs.addObserver(this, "browser-lastwindow-close-requested", false);
+    Services.obs.addObserver(this, "browser-lastwindow-close-requested");
   },
 
   observe: function (aSubject)

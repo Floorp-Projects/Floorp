@@ -153,6 +153,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "GCTelemetry",
                                   "resource://gre/modules/GCTelemetry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
                                   "resource://gre/modules/TelemetryEnvironment.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryReportingPolicy",
+                                  "resource://gre/modules/TelemetryReportingPolicy.jsm");
 
 function generateUUID() {
   let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
@@ -298,7 +300,7 @@ var TelemetryScheduler = {
     this._rescheduleTimeout();
 
     idleService.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
-    Services.obs.addObserver(this, "wake_notification", false);
+    Services.obs.addObserver(this, "wake_notification");
   },
 
   /**
@@ -1414,7 +1416,7 @@ var Impl = {
 
         // Notify that there was a subsession split in the parent process. This is an
         // internal topic and is only meant for internal Telemetry usage.
-        Services.obs.notifyObservers(null, "internal-telemetry-after-subsession-split", null);
+        Services.obs.notifyObservers(null, "internal-telemetry-after-subsession-split");
       }
     }
 
@@ -1441,9 +1443,9 @@ var Impl = {
   attachObservers: function attachObservers() {
     if (!this._initialized)
       return;
-    Services.obs.addObserver(this, "idle-daily", false);
+    Services.obs.addObserver(this, "idle-daily");
     if (Telemetry.canRecordExtended) {
-      Services.obs.addObserver(this, TOPIC_CYCLE_COLLECTOR_BEGIN, false);
+      Services.obs.addObserver(this, TOPIC_CYCLE_COLLECTOR_BEGIN);
     }
   },
 
@@ -1503,11 +1505,11 @@ var Impl = {
       Preferences.set(PREF_PREVIOUS_BUILDID, thisBuildID);
     }
 
-    Services.obs.addObserver(this, "sessionstore-windows-restored", false);
+    Services.obs.addObserver(this, "sessionstore-windows-restored");
     if (AppConstants.platform === "android") {
-      Services.obs.addObserver(this, "application-background", false);
+      Services.obs.addObserver(this, "application-background");
     }
-    Services.obs.addObserver(this, "xul-window-visible", false);
+    Services.obs.addObserver(this, "xul-window-visible");
     this._hasWindowRestoredObserver = true;
     this._hasXulWindowVisibleObserver = true;
 
@@ -1598,7 +1600,7 @@ var Impl = {
       return;
     }
 
-    Services.obs.addObserver(this, "content-child-shutdown", false);
+    Services.obs.addObserver(this, "content-child-shutdown");
     cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_THREAD_HANGS, this);
     cpml.addMessageListener(MESSAGE_TELEMETRY_GET_CHILD_USS, this);
 
@@ -1719,7 +1721,7 @@ var Impl = {
             });
 
             // This notification is for testing only.
-            Services.obs.notifyObservers(null, "gather-memory-telemetry-finished", null);
+            Services.obs.notifyObservers(null, "gather-memory-telemetry-finished");
           }
           this._USSFromChildProcesses = undefined;
         }
@@ -1792,10 +1794,15 @@ var Impl = {
     if (IS_UNIFIED_TELEMETRY) {
       let shutdownPayload = this.getSessionPayload(REASON_SHUTDOWN, false);
 
+      // Only send the shutdown ping using the pingsender from the second
+      // browsing session on, to mitigate issues with "bot" profiles (see bug 1354482).
+      let sendWithPingsender = Preferences.get(PREF_SHUTDOWN_PINGSENDER, true) &&
+                               !TelemetryReportingPolicy.isFirstRun();
+
       let options = {
         addClientId: true,
         addEnvironment: true,
-        usePingSender: Preferences.get(PREF_SHUTDOWN_PINGSENDER, false),
+        usePingSender: sendWithPingsender,
       };
       p.push(TelemetryController.submitExternalPing(getPingType(shutdownPayload), shutdownPayload, options)
                                 .catch(e => this._log.error("saveShutdownPings - failed to submit shutdown ping", e)));
@@ -1967,12 +1974,12 @@ var Impl = {
     case "idle-daily":
       // Enqueue to main-thread, otherwise components may be inited by the
       // idle-daily category and miss the gather-telemetry notification.
-      Services.tm.mainThread.dispatch((function() {
+      Services.tm.dispatchToMainThread((function() {
         // Notify that data should be gathered now.
         // TODO: We are keeping this behaviour for now but it will be removed as soon as
         // bug 1127907 lands.
-        Services.obs.notifyObservers(null, "gather-telemetry", null);
-      }), Ci.nsIThread.DISPATCH_NORMAL);
+        Services.obs.notifyObservers(null, "gather-telemetry");
+      }));
       break;
 
     case "application-background":

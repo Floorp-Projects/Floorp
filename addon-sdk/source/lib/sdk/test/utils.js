@@ -7,13 +7,13 @@ module.metadata = {
   'stability': 'unstable'
 };
 
-const { defer } = require('../core/promise');
-const { setInterval, clearInterval } = require('../timers');
-const { getTabs, closeTab } = require("../tabs/utils");
-const { windows: getWindows } = require("../window/utils");
-const { close: closeWindow } = require("../window/helpers");
-const { isGenerator } = require("../lang/type");
-const { env } = require("../system/environment");
+lazyRequire(this, '../core/promise', "defer");
+lazyRequire(this, '../timers', "setInterval", "clearInterval");
+lazyRequire(this, "../tabs/utils", "getTabs", "closeTab");
+lazyRequire(this, "../window/utils", {"windows": "getWindows"});
+lazyRequire(this, "../window/helpers", {"close": "closeWindow"});
+lazyRequire(this, "../lang/type", "isGenerator");
+lazyRequire(this, "../system/environment", "env");
 const { Task } = require("resource://gre/modules/Task.jsm");
 
 const getTestNames = (exports) =>
