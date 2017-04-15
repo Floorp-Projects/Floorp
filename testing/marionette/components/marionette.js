@@ -11,6 +11,9 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(
+    this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
+
 const MARIONETTE_CONTRACT_ID = "@mozilla.org/marionette;1";
 const MARIONETTE_CID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
 
@@ -45,6 +48,11 @@ const LOG_LEVELS = new class extends Map {
   }
 };
 
+// Complements -marionette flag for starting the Marionette server.
+// We also set this if Marionette is running in order to start the server
+// again after a Firefox restart.
+const ENV_ENABLED = "MOZ_MARIONETTE";
+
 // Besides starting based on existing prefs in a profile and a command
 // line flag, we also support inheriting prefs out of an env var, and to
 // start Marionette that way.
@@ -57,7 +65,7 @@ const LOG_LEVELS = new class extends Map {
 // something like {"enabled": true} would result in the marionette.enabled
 // pref being set to true, thus triggering marionette being enabled for
 // that startup.
-const ENV_PREF_VAR = "MOZ_MARIONETTE_PREF_STATE_ACROSS_RESTARTS";
+const ENV_PRESERVE_PREFS = "MOZ_MARIONETTE_PREF_STATE_ACROSS_RESTARTS";
 
 const ServerSocket = CC("@mozilla.org/network/server-socket;1",
     "nsIServerSocket",
@@ -112,8 +120,7 @@ const prefs = {
 };
 
 function MarionetteComponent() {
-  // guards against this component
-  // being initialised multiple times
+  this.enabled = env.exists(ENV_ENABLED);
   this.running = false;
 
   // holds a reference to server.TCPListener
@@ -193,7 +200,7 @@ MarionetteComponent.prototype.observe = function (subject, topic, data) {
       // seem to work, so we wait for that by adding an observer here.
       Services.obs.addObserver(this, "sessionstore-windows-restored");
 
-      prefs.readFromEnvironment(ENV_PREF_VAR);
+      prefs.readFromEnvironment(ENV_PRESERVE_PREFS);
 
       if (this.enabled) {
         // We want to suppress the modal dialog that's shown
