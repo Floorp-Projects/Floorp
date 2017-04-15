@@ -55,12 +55,9 @@ let BASE_MANIFEST = Object.freeze({
 
 
 function frameScript() {
-  Components.utils.import("resource://gre/modules/ExtensionContent.jsm");
+  Components.utils.import("resource://gre/modules/Services.jsm");
 
-  ExtensionContent.init(this);
-  this.addEventListener("unload", () => { // eslint-disable-line mozilla/balanced-listeners
-    ExtensionContent.uninit(this);
-  });
+  Services.obs.notifyObservers(this, "tab-content-frameloader-created");
 }
 
 const FRAME_SCRIPT = `data:text/javascript,(${encodeURI(frameScript)}).call(this)`;

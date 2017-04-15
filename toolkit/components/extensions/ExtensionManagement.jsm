@@ -11,7 +11,6 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -26,6 +25,12 @@ XPCOMUtils.defineLazyGetter(this, "UUIDMap", () => {
   let {UUIDMap} = Cu.import("resource://gre/modules/Extension.jsm", {});
   return UUIDMap;
 });
+
+const {appinfo} = Services;
+const isParentProcess = appinfo.processType === appinfo.PROCESS_TYPE_DEFAULT;
+if (isParentProcess) {
+  Services.ppmm.loadProcessScript("chrome://extensions/content/extension-process-script.js", true);
+}
 
 var ExtensionManagement;
 
@@ -264,9 +269,9 @@ ExtensionManagement = {
 
   get isExtensionProcess() {
     if (this.useRemoteWebExtensions) {
-      return Services.appinfo.remoteType === E10SUtils.EXTENSION_REMOTE_TYPE;
+      return appinfo.remoteType === E10SUtils.EXTENSION_REMOTE_TYPE;
     }
-    return Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
+    return isParentProcess;
   },
 
   startupExtension: Service.startupExtension.bind(Service),

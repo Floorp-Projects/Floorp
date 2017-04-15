@@ -37,19 +37,14 @@ function docShellToWindow(docShell) {
  * A generator function which iterates over a docShell tree, given a root docShell.
  *
  * @param   {nsIDocShell} docShell - the root docShell object
- * @returns {Iterator<DocShell>} the FrameDetail JSON object which represents the docShell.
  */
 function* iterateDocShellTree(docShell) {
   let docShellsEnum = docShell.getDocShellEnumerator(
-    Ci.nsIDocShellTreeItem.typeContent,
-    Ci.nsIDocShell.ENUMERATE_FORWARDS
-  );
+    docShell.typeContent, docShell.ENUMERATE_FORWARDS);
 
   while (docShellsEnum.hasMoreElements()) {
     yield docShellsEnum.getNext();
   }
-
-  return null;
 }
 
 /**
