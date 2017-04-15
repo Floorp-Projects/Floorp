@@ -83,7 +83,7 @@ var SelfSupportBackendInternal = {
 
     this._log.trace("init");
 
-    Services.prefs.addObserver(PREF_BRANCH_LOG, this, false);
+    Services.prefs.addObserver(PREF_BRANCH_LOG, this);
 
     // Only allow to use SelfSupport if Unified Telemetry is enabled.
     let reportingEnabled = IS_UNIFIED_TELEMETRY;
@@ -105,7 +105,7 @@ var SelfSupportBackendInternal = {
       return;
     }
 
-    Services.obs.addObserver(this, "sessionstore-windows-restored", false);
+    Services.obs.addObserver(this, "sessionstore-windows-restored");
   },
 
   /**
@@ -140,7 +140,7 @@ var SelfSupportBackendInternal = {
       this._frame = null;
     }
     if (this._testing) {
-      Services.obs.notifyObservers(this._browser, "self-support-browser-destroyed", "");
+      Services.obs.notifyObservers(this._browser, "self-support-browser-destroyed");
     }
   },
 
@@ -202,7 +202,7 @@ var SelfSupportBackendInternal = {
       this._browser.setAttribute("src", aURL);
 
       if (this._testing) {
-        Services.obs.notifyObservers(this._browser, "self-support-browser-created", "");
+        Services.obs.notifyObservers(this._browser, "self-support-browser-created");
       }
       doc.documentElement.appendChild(this._browser);
     });

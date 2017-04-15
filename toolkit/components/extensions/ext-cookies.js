@@ -7,10 +7,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 
 /* globals DEFAULT_STORE, PRIVATE_STORE */
 
-var {
-  SingletonEventManager,
-} = ExtensionUtils;
-
 function convert({cookie, isPrivate}) {
   let result = {
     name: cookie.name,
@@ -420,8 +416,8 @@ this.cookies = class extends ExtensionAPI {
             }
           };
 
-          Services.obs.addObserver(observer, "cookie-changed", false);
-          Services.obs.addObserver(observer, "private-cookie-changed", false);
+          Services.obs.addObserver(observer, "cookie-changed");
+          Services.obs.addObserver(observer, "private-cookie-changed");
           return () => {
             Services.obs.removeObserver(observer, "cookie-changed");
             Services.obs.removeObserver(observer, "private-cookie-changed");

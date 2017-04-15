@@ -9,7 +9,7 @@ module.metadata = {
 
 const { Ci, components } = require("chrome");
 const { parseStack, sourceURI } = require("toolkit/loader");
-const { readURISync } = require("../net/url");
+lazyRequire(this, "../net/url", "readURISync");
 
 function safeGetFileLine(path, line) {
   try {

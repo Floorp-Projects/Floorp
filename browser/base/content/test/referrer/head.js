@@ -129,7 +129,7 @@ function delayedStartupFinished(aWindow) {
         Services.obs.removeObserver(observer, aTopic);
         resolve();
       }
-    }, "browser-delayed-startup-finished", false);
+    }, "browser-delayed-startup-finished");
   });
 }
 

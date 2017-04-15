@@ -61,7 +61,7 @@ function expectNotifications() {
       return target[name];
     }
   });
-  PlacesUtils.bookmarks.addObserver(observer, false);
+  PlacesUtils.bookmarks.addObserver(observer);
   return observer;
 }
 

@@ -27,7 +27,7 @@ const REMOTE_TIMEOUT_DEFAULT = 500; // maximum time (ms) to wait before giving u
 var gRemoteSuggestionsEnabled = Services.prefs.getBoolPref(BROWSER_SUGGEST_PREF);
 Services.prefs.addObserver(BROWSER_SUGGEST_PREF, function(aSubject, aTopic, aData) {
   gRemoteSuggestionsEnabled = Services.prefs.getBoolPref(BROWSER_SUGGEST_PREF);
-}, false);
+});
 
 /**
  * SearchSuggestionController.jsm exists as a helper module to allow multiple consumers to request and display

@@ -49,6 +49,7 @@ function makeEmptyPrivateBrowserWindow(options) {
 
 exports["test Panel"] = function(assert, done) {
   const { Panel } = require('sdk/panel');
+  const { getActiveView } = require("sdk/view/core");
 
   let panel = Panel({
     contentURL: "about:buildconfig",
@@ -68,10 +69,12 @@ exports["test Panel"] = function(assert, done) {
       }
     }
   });
+  getActiveView(panel);
 };
 
 exports["test Panel Emit"] = function(assert, done) {
   const { Panel } = require('sdk/panel');
+  const { getActiveView } = require("sdk/view/core");
 
   let panel = Panel({
     contentURL: "about:buildconfig",
@@ -88,10 +91,12 @@ exports["test Panel Emit"] = function(assert, done) {
     panel.destroy();
     done();
   });
+  getActiveView(panel);
 };
 
 exports["test Panel Emit Early"] = function(assert, done) {
   const { Panel } = require('sdk/panel');
+  const { getActiveView } = require("sdk/view/core");
 
   let panel = Panel({
     contentURL: "about:buildconfig",
@@ -104,10 +109,12 @@ exports["test Panel Emit Early"] = function(assert, done) {
     done();
   });
   panel.port.emit("addon-to-content");
+  getActiveView(panel);
 };
 
 exports["test Show Hide Panel"] = function(assert, done) {
   const { Panel } = require('sdk/panel');
+  let { getActiveView } = require('sdk/view/core');
 
   let panel = Panel({
     contentScript: "self.postMessage('')",
@@ -130,10 +137,12 @@ exports["test Show Hide Panel"] = function(assert, done) {
       done();
     }
   });
+  getActiveView(panel);
 };
 
 exports["test Document Reload"] = function(assert, done) {
   const { Panel } = require('sdk/panel');
+  const { getActiveView } = require("sdk/view/core");
 
   let url2 = "data:text/html;charset=utf-8,page2";
   let content =
@@ -166,6 +175,7 @@ exports["test Document Reload"] = function(assert, done) {
       }
     }
   });
+  getActiveView(panel);
   assert.pass('Panel was created');
 };
 
@@ -227,6 +237,7 @@ exports["test Parent Resize Hack"] = function(assert, done) {
 
 exports["test Resize Panel"] = function(assert, done) {
   const { Panel } = require('sdk/panel');
+  let { getActiveView } = require('sdk/view/core');
 
   // These tests fail on Linux if the browser window in which the panel
   // is displayed is not active.  And depending on what other tests have run
@@ -272,6 +283,7 @@ exports["test Resize Panel"] = function(assert, done) {
         done();
       }
     });
+    getActiveView(panel);
   }
 
   if (browserWindow === activeWindow) {
@@ -452,6 +464,7 @@ exports["test Panel Focus Not Set"] = function(assert, done) {
 
 exports["test Panel Text Color"] = function(assert, done) {
   const { Panel } = require('sdk/panel');
+  let { getActiveView } = require('sdk/view/core');
 
   let html = "<html><head><style>body {color: yellow}</style></head>" +
              "<body><p>Foo</p></body></html>";
@@ -467,11 +480,13 @@ exports["test Panel Text Color"] = function(assert, done) {
     panel.destroy();
     done();
   });
+  getActiveView(panel);
 };
 
 // Bug 866333
 exports["test watch event name"] = function(assert, done) {
   const { Panel } = require('sdk/panel');
+  let { getActiveView } = require('sdk/view/core');
 
   let html = "<html><head><style>body {color: yellow}</style></head>" +
              "<body><p>Foo</p></body></html>";
@@ -485,16 +500,20 @@ exports["test watch event name"] = function(assert, done) {
     panel.destroy();
     done();
   });
+  getActiveView(panel);
 }
 
 // Bug 696552: Ensure panel.contentURL modification support
 exports["test Change Content URL"] = function(assert, done) {
   const { Panel } = require('sdk/panel');
+  const { getActiveView } = require("sdk/view/core");
 
   let panel = Panel({
     contentURL: "about:blank",
     contentScript: "self.port.emit('ready', document.location.href);"
   });
+
+  getActiveView(panel);
 
   let count = 0;
   panel.port.on("ready", function (location) {
@@ -625,6 +644,8 @@ exports["test ContentScriptOptions Option"] = function(assert, done) {
         done();
       }
     });
+  const { getActiveView } = loader.require("sdk/view/core");
+  getActiveView(panel);
 };
 
 exports["test console.log in Panel"] = function(assert, done) {

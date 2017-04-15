@@ -9,9 +9,10 @@ module.metadata = {
 
 const { Cc, Ci, Cu } = require('chrome');
 const { is } = require('../system/xul-app');
-const { isWindowPrivate } = require('../window/utils');
-const { isPrivateBrowsingSupported } = require('../self');
 const { dispatcher } = require("../util/dispatcher");
+
+lazyRequire(this, '../window/utils', "isWindowPrivate");
+lazyRequire(this, '../self', "isPrivateBrowsingSupported");
 
 var PrivateBrowsingUtils;
 

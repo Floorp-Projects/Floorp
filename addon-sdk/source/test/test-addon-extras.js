@@ -20,6 +20,7 @@ exports["test changing result from addon extras in panel"] = function(assert, do
   });
 
   const { Panel } = loader.require("sdk/panel");
+  const { getActiveView } = loader.require("sdk/view/core");
   const { events } = loader.require("sdk/content/sandbox/events");
   const { on } = loader.require("sdk/event/core");
   const { isAddonContent } = loader.require("sdk/content/utils");
@@ -47,6 +48,9 @@ exports["test changing result from addon extras in panel"] = function(assert, do
   let panel = Panel({
     contentURL: "./test-addon-extras.html"
   });
+
+  // Force the panel view to actually load.
+  getActiveView(panel);
 
   panel.port.once("result1", (result) => {
     assert.equal(result, 1, "result is a number");

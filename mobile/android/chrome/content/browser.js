@@ -175,11 +175,11 @@ lazilyLoadedObserverScripts.forEach(function (aScript) {
   });
   let observer = (s, t, d) => {
     Services.obs.removeObserver(observer, t);
-    Services.obs.addObserver(window[name], t, false);
+    Services.obs.addObserver(window[name], t);
     window[name].observe(s, t, d); // Explicitly notify new observer
   };
   notifications.forEach((notification) => {
-    Services.obs.addObserver(observer, notification, false);
+    Services.obs.addObserver(observer, notification);
   });
 });
 
@@ -382,7 +382,7 @@ var BrowserApp = {
   startup: function startup() {
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
     dump("zerdatime " + Date.now() + " - browser chrome startup finished.");
-    Services.obs.notifyObservers(this.browser, "BrowserChrome:Ready", null);
+    Services.obs.notifyObservers(this.browser, "BrowserChrome:Ready");
 
     this.deck = document.getElementById("browsers");
 
@@ -420,13 +420,13 @@ var BrowserApp = {
     // Provide compatibility for add-ons like QuitNow that send "Browser:Quit"
     // as an observer notification.
     Services.obs.addObserver((subject, topic, data) =>
-        this.quit(data ? JSON.parse(data) : undefined), "Browser:Quit", false);
+        this.quit(data ? JSON.parse(data) : undefined), "Browser:Quit");
 
-    Services.obs.addObserver(this, "android-get-pref", false);
-    Services.obs.addObserver(this, "android-set-pref", false);
-    Services.obs.addObserver(this, "gather-telemetry", false);
-    Services.obs.addObserver(this, "keyword-search", false);
-    Services.obs.addObserver(this, "Vibration:Request", false);
+    Services.obs.addObserver(this, "android-get-pref");
+    Services.obs.addObserver(this, "android-set-pref");
+    Services.obs.addObserver(this, "gather-telemetry");
+    Services.obs.addObserver(this, "keyword-search");
+    Services.obs.addObserver(this, "Vibration:Request");
 
     window.addEventListener("fullscreen", function() {
       WindowEventDispatcher.sendRequest({
@@ -548,7 +548,7 @@ var BrowserApp = {
     this.deck.addEventListener("DOMContentLoaded", function() {
       InitLater(() => Cu.import("resource://gre/modules/NotificationDB.jsm"));
 
-      InitLater(() => Services.obs.notifyObservers(window, "browser-delayed-startup-finished", ""));
+      InitLater(() => Services.obs.notifyObservers(window, "browser-delayed-startup-finished"));
       InitLater(() => GlobalEventDispatcher.sendRequest({ type: "Gecko:DelayedStartup" }));
 
       if (!AppConstants.RELEASE_OR_BETA) {
@@ -1059,7 +1059,7 @@ var BrowserApp = {
           let engine = Services.search.getEngineByName(name);
           if (engine) {
             Services.search.defaultEngine = engine;
-            Services.obs.notifyObservers(null, "default-search-engine-migrated", "");
+            Services.obs.notifyObservers(null, "default-search-engine-migrated");
           }
         });
       }
@@ -1437,14 +1437,14 @@ var BrowserApp = {
   quit: function quit(aClear = { sanitize: {}, dontSaveSession: false }) {
     // Notify all windows that an application quit has been requested.
     let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-    Services.obs.notifyObservers(cancelQuit, "quit-application-requested", null);
+    Services.obs.notifyObservers(cancelQuit, "quit-application-requested");
 
     // Quit aborted.
     if (cancelQuit.data) {
       return;
     }
 
-    Services.obs.notifyObservers(null, "quit-application-proceeding", null);
+    Services.obs.notifyObservers(null, "quit-application-proceeding");
 
     // Tell session store to forget about this window
     if (aClear.dontSaveSession) {
@@ -1529,7 +1529,7 @@ var BrowserApp = {
           break;
         case "openTabs":
           if (aShutdown === true) {
-            Services.obs.notifyObservers(null, "browser:purge-session-tabs", "");
+            Services.obs.notifyObservers(null, "browser:purge-session-tabs");
             break;
           }
           // fall-through if aShutdown is false
@@ -1617,7 +1617,7 @@ var BrowserApp = {
     let paintDone = function() {
       window.removeEventListener("MozAfterPaint", paintDone);
       if (dwu.flushApzRepaints()) {
-        Services.obs.addObserver(apzFlushDone, "apz-repaints-flushed", false);
+        Services.obs.addObserver(apzFlushDone, "apz-repaints-flushed");
       } else {
         apzFlushDone();
       }
@@ -2813,7 +2813,7 @@ var NativeWindow = {
       // If no context-menu for long-press event, it may be meant to trigger text-selection.
       this.menus = null;
       Services.obs.notifyObservers(
-        {target: this._target, x: event.clientX, y: event.clientY}, "context-menu-not-shown", "");
+        {target: this._target, x: event.clientX, y: event.clientY}, "context-menu-not-shown");
     },
 
     // Returns a title for a context menu. If no title attribute exists, will fall back to looking for a url
@@ -3651,9 +3651,9 @@ Tab.prototype = {
     this.browser.addEventListener("VideoBindingAttached", this, true, true);
     this.browser.addEventListener("VideoBindingCast", this, true, true);
 
-    Services.obs.addObserver(this, "before-first-paint", false);
-    Services.obs.addObserver(this, "media-playback", false);
-    Services.obs.addObserver(this, "media-playback-resumed", false);
+    Services.obs.addObserver(this, "before-first-paint");
+    Services.obs.addObserver(this, "media-playback");
+    Services.obs.addObserver(this, "media-playback-resumed");
 
     // Always initialise new tabs with basic session store data to avoid
     // problems with functions that always expect it to be present
@@ -4528,7 +4528,7 @@ Tab.prototype = {
       // browser.contentDocument is changed to the new document we're loading
       this.contentDocumentIsDisplayed = false;
       this.hasTouchListener = false;
-      Services.obs.notifyObservers(this.browser, "Session:NotifyLocationChange", null);
+      Services.obs.notifyObservers(this.browser, "Session:NotifyLocationChange");
     }
   },
 
@@ -4567,36 +4567,36 @@ Tab.prototype = {
   },
 
   OnHistoryNewEntry: function(newURI, oldIndex) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+    Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
   },
 
   OnHistoryGoBack: function(backURI) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+    Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
     return true;
   },
 
   OnHistoryGoForward: function(forwardURI) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+    Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
     return true;
   },
 
   OnHistoryReload: function(reloadURI, reloadFlags) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+    Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
     return true;
   },
 
   OnHistoryGotoIndex: function(index, gotoURI) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+    Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
     return true;
   },
 
   OnHistoryPurge: function(numEntries) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+    Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
     return true;
   },
 
   OnHistoryReplaceEntry: function(index) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+    Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
   },
 
   ShouldNotifyMediaPlaybackChange: function(activeState) {
@@ -4694,8 +4694,8 @@ Tab.prototype = {
 var BrowserEventHandler = {
   init: function init() {
     this._clickInZoomedView = false;
-    Services.obs.addObserver(this, "Gesture:SingleTap", false);
-    Services.obs.addObserver(this, "Gesture:ClickInZoomedView", false);
+    Services.obs.addObserver(this, "Gesture:SingleTap");
+    Services.obs.addObserver(this, "Gesture:ClickInZoomedView");
 
     BrowserApp.deck.addEventListener("touchend", this, true);
 
@@ -5004,8 +5004,8 @@ var FormAssistant = {
       "FormAssist:Remove",
     ]);
 
-    Services.obs.addObserver(this, "invalidformsubmit", false);
-    Services.obs.addObserver(this, "PanZoom:StateChange", false);
+    Services.obs.addObserver(this, "invalidformsubmit");
+    Services.obs.addObserver(this, "PanZoom:StateChange");
 
     // We need to use a capturing listener for focus events
     BrowserApp.deck.addEventListener("focus", this, true);
@@ -5351,12 +5351,12 @@ var FormAssistant = {
 
 var XPInstallObserver = {
   init: function() {
-    Services.obs.addObserver(this, "addon-install-origin-blocked", false);
-    Services.obs.addObserver(this, "addon-install-disabled", false);
-    Services.obs.addObserver(this, "addon-install-blocked", false);
-    Services.obs.addObserver(this, "addon-install-started", false);
-    Services.obs.addObserver(this, "xpi-signature-changed", false);
-    Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
+    Services.obs.addObserver(this, "addon-install-origin-blocked");
+    Services.obs.addObserver(this, "addon-install-disabled");
+    Services.obs.addObserver(this, "addon-install-blocked");
+    Services.obs.addObserver(this, "addon-install-started");
+    Services.obs.addObserver(this, "xpi-signature-changed");
+    Services.obs.addObserver(this, "browser-delayed-startup-finished");
 
     AddonManager.addInstallListener(this);
   },
@@ -5597,7 +5597,7 @@ var XPInstallObserver = {
 
         // If nothing aborted, quit the app
         if (cancelQuit.data == false) {
-          Services.obs.notifyObservers(null, "quit-application-proceeding", null);
+          Services.obs.notifyObservers(null, "quit-application-proceeding");
           SharedPreferences.forApp().setBoolPref("browser.sessionstore.resume_session_once", true);
           let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
           appStartup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
@@ -5727,7 +5727,7 @@ var IndexedDB = {
   _permissionsResponse: "indexedDB-permissions-response",
 
   init: function IndexedDB_init() {
-    Services.obs.addObserver(this, this._permissionsPrompt, false);
+    Services.obs.addObserver(this, this._permissionsPrompt);
   },
 
   observe: function IndexedDB_observe(subject, topic, data) {
@@ -6171,7 +6171,7 @@ var SearchEngines = {
       "SearchEngines:RestoreDefaults",
       "SearchEngines:SetDefault",
     ]);
-    Services.obs.addObserver(this, "browser-search-engine-modified", false);
+    Services.obs.addObserver(this, "browser-search-engine-modified");
   },
 
   // Fetch list of search engines. all ? All engines : Visible engines only.
@@ -6492,8 +6492,8 @@ var SearchEngines = {
 
 var ActivityObserver = {
   init: function ao_init() {
-    Services.obs.addObserver(this, "application-background", false);
-    Services.obs.addObserver(this, "application-foreground", false);
+    Services.obs.addObserver(this, "application-background");
+    Services.obs.addObserver(this, "application-foreground");
   },
 
   observe: function ao_observe(aSubject, aTopic, aData) {
@@ -6734,7 +6734,7 @@ var Distribution = {
       "Distribution:Changed",
       "Distribution:Set",
     ]);
-    Services.obs.addObserver(this, "prefservice:after-app-defaults", false);
+    Services.obs.addObserver(this, "prefservice:after-app-defaults");
 
     // Look for file outside the APK:
     // /data/data/org.mozilla.xxx/distribution.json
@@ -6853,7 +6853,7 @@ var Distribution = {
 
     // Apply a lightweight theme if necessary
     if (prefs && prefs["lightweightThemes.selectedThemeID"]) {
-      Services.obs.notifyObservers(null, "lightweight-theme-apply", "");
+      Services.obs.notifyObservers(null, "lightweight-theme-apply");
     }
 
     let localizedString = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(Ci.nsIPrefLocalizedString);
@@ -6962,7 +6962,7 @@ var Tabs = {
     if (BrowserApp.isOnLowMemoryPlatform) {
       this._enableTabExpiration = true;
     } else {
-      Services.obs.addObserver(this, "memory-pressure", false);
+      Services.obs.addObserver(this, "memory-pressure");
     }
 
     GlobalEventDispatcher.registerListener(this, [
@@ -6972,7 +6972,7 @@ var Tabs = {
 
     // Track the network connection so we can efficiently use the cache
     // for possible offline rendering.
-    Services.obs.addObserver(this, "network:link-status-changed", false);
+    Services.obs.addObserver(this, "network:link-status-changed");
     let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
     this.useCache = !network.isLinkUp;
 

@@ -126,7 +126,7 @@ function* task_setCountRank(aURI, aCount, aRank, aSearch, aBookmark) {
 
   // Bump up the instrumentation feedback.
   for (let i = 0; i < aRank; i++) {
-    Services.obs.notifyObservers(thing, "autocomplete-will-enter-text", null);
+    Services.obs.notifyObservers(thing, "autocomplete-will-enter-text");
   }
 
   // If this is supposed to be a bookmark, add it.
@@ -180,7 +180,7 @@ var observer = {
     ensure_results(this.results, this.search);
   }
 };
-Services.obs.addObserver(observer, PlacesUtils.TOPIC_FEEDBACK_UPDATED, false);
+Services.obs.addObserver(observer, PlacesUtils.TOPIC_FEEDBACK_UPDATED);
 
 /**
  * Make the result object for a given URI that will be passed to ensure_results.

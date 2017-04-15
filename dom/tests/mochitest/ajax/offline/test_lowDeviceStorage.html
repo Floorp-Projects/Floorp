@@ -73,8 +73,8 @@ if (OfflineTest.setup()) {
   var manifest = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest";
   var ioService = Cc["@mozilla.org/network/io-service;1"]
                   .getService(Ci.nsIIOService);
-  var manifestURI = ioService.newURI(manifest, null, null);
-  var documentURI = ioService.newURI(document.documentURI, null, null);
+  var manifestURI = ioService.newURI(manifest);
+  var documentURI = ioService.newURI(document.documentURI);
   var update = updateService.scheduleUpdate(manifestURI, documentURI, systemPrincipal, window);
   update.addObserver(updateObserver, false);
 }

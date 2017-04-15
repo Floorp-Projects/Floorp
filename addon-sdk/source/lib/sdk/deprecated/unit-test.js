@@ -7,12 +7,12 @@ module.metadata = {
   "stability": "deprecated"
 };
 
-const timer = require("../timers");
+lazyRequireModule(this, "../timers", "timer");
 const cfxArgs = require("../test/options");
-const { getTabs, closeTab, getURI, getTabId, getSelectedTab } = require("../tabs/utils");
-const { windows, isBrowser, getMostRecentBrowserWindow } = require("../window/utils");
+lazyRequire(this, "../tabs/utils", "getTabs", "closeTab", "getURI", "getTabId", "getSelectedTab");
+lazyRequire(this, "../window/utils", "windows", "isBrowser", "getMostRecentBrowserWindow");
 const { defer, all, Debugging: PromiseDebugging, resolve } = require("../core/promise");
-const { getInnerId } = require("../window/utils");
+lazyRequire(this, "../window/utils", "getInnerId");
 const { cleanUI } = require("../test/utils");
 
 const findAndRunTests = function findAndRunTests(options) {

@@ -90,7 +90,7 @@ var httpObserver = function (subject, topic, state) {
     assertEvent("request", url);
   }
 };
-Services.obs.addObserver(httpObserver, "http-on-modify-request", false);
+Services.obs.addObserver(httpObserver, "http-on-modify-request");
 
 function onDOMContentLoaded() {
   assertEvent("DOMContentLoaded");
@@ -155,7 +155,7 @@ function cleanup() {
   browser.removeEventListener("DOMContentLoaded", onDOMContentLoaded);
   browser.removeEventListener("load", onLoad);
   client.close().then(function () {
-    Services.obs.addObserver(httpObserver, "http-on-modify-request", false);
+    Services.obs.addObserver(httpObserver, "http-on-modify-request");
     DebuggerServer.destroy();
     finish();
   });

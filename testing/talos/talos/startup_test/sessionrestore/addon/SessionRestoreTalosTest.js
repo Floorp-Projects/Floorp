@@ -68,7 +68,7 @@ nsSessionRestoreTalosTest.prototype = {
         || sessionStartup.sessionType == Ci.nsISessionStartup.DEFER_SESSION) {
           this.onReady(false);
         } else {
-          Services.obs.addObserver(this, StartupPerformance.RESTORED_TOPIC, false);
+          Services.obs.addObserver(this, StartupPerformance.RESTORED_TOPIC);
         }
       });
     }

@@ -17,7 +17,7 @@ function promiseNotification(topic) {
       Services.obs.removeObserver(observe, topic);
       resolve();
     }
-    Services.obs.addObserver(observe, topic, false);
+    Services.obs.addObserver(observe, topic);
   });
 }
 
@@ -134,7 +134,7 @@ add_task(function* testCacheStorage() {
   let origPersistCached = cas._persistCachedTokens.bind(cas)
   cas._persistCachedTokens = function() {
     return origPersistCached().then(() => {
-      Services.obs.notifyObservers(null, "testhelper-fxa-cache-persist-done", null);
+      Services.obs.notifyObservers(null, "testhelper-fxa-cache-persist-done");
     });
   };
 

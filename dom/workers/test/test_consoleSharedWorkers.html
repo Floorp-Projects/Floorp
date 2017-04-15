@@ -14,8 +14,8 @@
     <script type="text/javascript">
 
   function consoleListener() {
-    SpecialPowers.addObserver(this, "console-api-log-event", false);
-    SpecialPowers.addObserver(this, "console-api-profiler", false);
+    SpecialPowers.addObserver(this, "console-api-log-event");
+    SpecialPowers.addObserver(this, "console-api-profiler");
   }
 
   var order = 0;

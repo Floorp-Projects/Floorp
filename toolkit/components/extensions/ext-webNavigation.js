@@ -5,10 +5,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "MatchURLFilters",
 XPCOMUtils.defineLazyModuleGetter(this, "WebNavigation",
                                   "resource://gre/modules/WebNavigation.jsm");
 
-var {
-  SingletonEventManager,
-} = ExtensionUtils;
-
 const defaultTransitionTypes = {
   topFrame: "link",
   subFrame: "auto_subframe",

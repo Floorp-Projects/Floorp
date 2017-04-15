@@ -59,9 +59,8 @@ class FrameIterator
     const CodeRange* codeRange_;
     uint8_t* fp_;
     Unwind unwind_;
-    bool missingFrameMessage_;
 
-    void settle();
+    void popFrame();
 
   public:
     explicit FrameIterator();
@@ -74,7 +73,6 @@ class FrameIterator
     JSAtom* functionDisplayAtom() const;
     unsigned lineOrBytecode() const;
     const CodeRange* codeRange() const { return codeRange_; }
-    bool hasInstance() const;
     Instance* instance() const;
     bool debugEnabled() const;
     DebugFrame* debugFrame() const;

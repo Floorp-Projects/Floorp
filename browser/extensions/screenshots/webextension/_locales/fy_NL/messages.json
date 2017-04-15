@@ -1,0 +1,123 @@
+{
+  "addonDescription": {
+    "message": "Meitsje skermprintsjes of klips fan it web en bewarje se tydlik of permanint."
+  },
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.org>"
+  },
+  "contextMenuLabel": {
+    "message": "Meitsje in skermprintsje"
+  },
+  "myShotsLink": {
+    "message": "Myn skermprintsjes"
+  },
+  "screenshotInstructions": {
+    "message": "Sleep of klik op de side om in gebiet te selektearjen. Druk op ESC om te annulearjen."
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Bewarje"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Sichtbere bewarje"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Folsleine side bewarje"
+  },
+  "cancelScreenshot": {
+    "message": "Annulearje"
+  },
+  "downloadScreenshot": {
+    "message": "Downloade"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Keppeling kopiearre"
+  },
+  "notificationLinkCopiedDetails": {
+    "message": "De keppeling nei jo skermprintsje is nei it klamboerd kopiearre. Brûk $META_KEY$-V om te plakken.",
+    "placeholders": {
+      "meta_key": {
+        "content": "$1"
+      }
+    }
+  },
+  "requestErrorTitle": {
+    "message": "Bûten tsjinst."
+  },
+  "requestErrorDetails": {
+    "message": "Sorry! Wy koene jo skermprintsje net bewarje. Probearje it letter nochris."
+  },
+  "connectionErrorTitle": {
+    "message": "Wy kinne net ferbine nei jo skermprintsjes."
+  },
+  "connectionErrorDetails": {
+    "message": "Kontrolearje jo ynternetferbining. As jo wol ferbining meitsje kinne mei it ynternet, kin it wêze dat der tydlik in probleem is mei de tsjinst Firefox Screenshots."
+  },
+  "loginErrorDetails": {
+    "message": "Wy koene jo skermprintsje net bewarje, omdat der in probleem is mei de tsjinst Firefox Screenshots. Probearje it letter nochris."
+  },
+  "unshootablePageErrorTitle": {
+    "message": "It is net mooglik in skermprintsje fan dizze side te meitsjen."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Dit is net in standert webside, dus jo kinne der net in skermprintsje fan meitsje."
+  },
+  "selfScreenshotErrorTitle": {
+    "message": "Jo kinne net in skermprintsje meitsje fan in Firefox Screenshots-side!"
+  },
+  "genericErrorTitle": {
+    "message": "Oeps! Firefox Screenshots is yn 'e war."
+  },
+  "genericErrorDetails": {
+    "message": "Wy binne net wis wat der krekt bard is. Wolle jo it nochris probearje of in skermprintsje fan in oare side meitsje?"
+  },
+  "tourBodyOne": {
+    "message": "Meitsje, bewarje en diel skermprintsjes sûnder Firefox te ferlitten."
+  },
+  "tourHeaderTwo": {
+    "message": "Fetsje wat jo wolle"
+  },
+  "tourBodyTwo": {
+    "message": "Klik en sleep om in part fan in side te fetsjen. Jo kinne ek oer in gebiet gean om jo seleksje út te ljochtsjen."
+  },
+  "tourHeaderThree": {
+    "message": "Nei jo winsk"
+  },
+  "tourBodyThree": {
+    "message": "Bewarje jo byknippe skermprintsjes nei it web om se maklik te dielen, of download se nei jo kompjûter. Jo kinne ek op de knop Myn skermprintsjes klikke om al jo makke skermprintsjes te finen."
+  },
+  "tourHeaderFour": {
+    "message": "Fetsje finsters of folsleine websiden"
+  },
+  "tourBodyFour": {
+    "message": "Selektearje knoppen rjochts boppe-oan om it sichtbere gebiet yn it finster te fetsjen, of fetsje in folsleine side."
+  },
+  "tourSkip": {
+    "message": "Oerslaan"
+  },
+  "tourNext": {
+    "message": "Folgjende ôfbylding"
+  },
+  "tourPrevious": {
+    "message": "Foarige ôfbylding"
+  },
+  "tourDone": {
+    "message": "Dien"
+  },
+  "termsAndPrivacyNotice": {
+    "message": "Troch Firefox Screenshots te brûken, gean jo akkoard mei de $TERMSANDPRIVACYNOTICETERMSLINK$ en $TERMSANDPRIVACYNOTICEPRIVACYLINK$ fan Screenshots.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
+  "termsAndPrivacyNoticeTermsLink": {
+    "message": "Betingsten"
+  },
+  "termsAndPrivacyNoticyPrivacyLink": {
+    "message": "Privacyferklearring"
+  }
+}

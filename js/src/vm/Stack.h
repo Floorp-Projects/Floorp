@@ -1760,9 +1760,13 @@ class WasmActivation : public Activation
     static unsigned offsetOfExitFP() { return offsetof(WasmActivation, exitFP_); }
     static unsigned offsetOfExitReason() { return offsetof(WasmActivation, exitReason_); }
 
-    // Read/written from SIGSEGV handler:
-    void setResumePC(void* pc) { resumePC_ = pc; }
-    void* resumePC() const { return resumePC_; }
+    // Interrupts are started from the interrupt signal handler (or the ARM
+    // simulator) and cleared by WasmHandleExecutionInterrupt or WasmHandleThrow
+    // when the interrupt is handled.
+    void startInterrupt(void* pc, uint8_t* fp);
+    void finishInterrupt();
+    bool interrupted() const { return !!resumePC_; }
+    void* resumePC() const { MOZ_ASSERT(interrupted()); return resumePC_; }
 
     // Used by wasm::FrameIterator during stack unwinding.
     void unwindExitFP(uint8_t* exitFP);

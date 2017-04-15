@@ -167,7 +167,7 @@ function run_test() {
   gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
   gBlocklistService = Components.classes["@mozilla.org/extensions/blocklist;1"].getService(Components.interfaces.nsIBlocklistService);
   gNotifier = Components.classes["@mozilla.org/extensions/blocklist;1"].getService(Components.interfaces.nsITimerCallback);
-  Services.obs.addObserver(observer, "blocklist-updated", false);
+  Services.obs.addObserver(observer, "blocklist-updated");
 
   do_register_cleanup(function() {
     Services.prefs.clearUserPref("extensions.blocklist.url");

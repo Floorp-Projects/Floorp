@@ -3,7 +3,6 @@
 "use strict";
 
 var {
-  SingletonEventManager,
   PlatformInfo,
 } = ExtensionUtils;
 

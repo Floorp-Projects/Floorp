@@ -113,7 +113,7 @@ var handleContentContextMenu = function(event) {
     addonInfo,
   };
   subject.wrappedJSObject = subject;
-  Services.obs.notifyObservers(subject, "content-contextmenu", null);
+  Services.obs.notifyObservers(subject, "content-contextmenu");
 
   let doc = event.target.ownerDocument;
   let docLocation = doc.mozDocumentURIIfNotForErrorPages;

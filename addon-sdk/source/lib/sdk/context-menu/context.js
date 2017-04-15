@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { Class } = require("../core/heritage");
-const { extend } = require("../util/object");
-const { MatchPattern } = require("../util/match-pattern");
+lazyRequire(this, "../util/match-pattern", "MatchPattern");
 const readers = require("./readers");
 
 // Context class is required to implement a single `isCurrent(target)` method

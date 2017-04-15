@@ -16,7 +16,7 @@ add_task(function* checkCaptivePortalCertErrorUI() {
   let captivePortalStatePropagated = TestUtils.topicObserved("ipc:network:captive-portal-set-state");
 
   info("Checking that the alternate about:certerror UI is shown when we are behind a captive portal.");
-  Services.obs.notifyObservers(null, "captive-portal-login", null);
+  Services.obs.notifyObservers(null, "captive-portal-login");
 
   info("Waiting for captive portal state to be propagated to the content process.");
   yield captivePortalStatePropagated;
@@ -67,7 +67,7 @@ add_task(function* checkCaptivePortalCertErrorUI() {
   let portalTabRemoved = BrowserTestUtils.tabRemoved(portalTab);
   let errorTabReloaded = BrowserTestUtils.waitForErrorPage(browser);
 
-  Services.obs.notifyObservers(null, "captive-portal-login-success", null);
+  Services.obs.notifyObservers(null, "captive-portal-login-success");
   yield portalTabRemoved;
 
   info("Waiting for error tab to be reloaded after the captive portal was freed.");

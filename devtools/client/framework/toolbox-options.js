@@ -98,8 +98,8 @@ OptionsPanel.prototype = {
   }),
 
   _addListeners: function () {
-    Services.prefs.addObserver("devtools.cache.disabled", this._prefChanged, false);
-    Services.prefs.addObserver("devtools.theme", this._prefChanged, false);
+    Services.prefs.addObserver("devtools.cache.disabled", this._prefChanged);
+    Services.prefs.addObserver("devtools.theme", this._prefChanged);
     gDevTools.on("theme-registered", this._themeRegistered);
     gDevTools.on("theme-unregistered", this._themeUnregistered);
   },

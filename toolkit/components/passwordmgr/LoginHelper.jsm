@@ -58,11 +58,11 @@ this.LoginHelper = {
       this.schemeUpgrades = Services.prefs.getBoolPref("signon.schemeUpgrades");
       this.insecureAutofill = Services.prefs.getBoolPref("signon.autofillForms.http");
       logger.maxLogLevel = getMaxLogLevel();
-    }, false);
+    });
 
     Services.prefs.addObserver("security.insecure_field_warning.", () => {
       this.showInsecureFieldWarning = Services.prefs.getBoolPref("security.insecure_field_warning.contextual.enabled");
-    }, false);
+    });
 
     return logger;
   },
@@ -703,7 +703,7 @@ this.LoginHelper = {
       dataObject = Cc["@mozilla.org/array;1"].
                    createInstance(Ci.nsIMutableArray);
       for (let i = 0; i < data.length; i++) {
-        dataObject.appendElement(data[i], false);
+        dataObject.appendElement(data[i]);
       }
     } else if (typeof(data) == "string") {
       dataObject = Cc["@mozilla.org/supports-string;1"].

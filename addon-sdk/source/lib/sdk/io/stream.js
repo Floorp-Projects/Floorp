@@ -9,10 +9,11 @@ module.metadata = {
 
 const { CC, Cc, Ci, Cu, Cr, components } = require("chrome");
 const { EventTarget } = require("../event/target");
-const { emit } = require("../event/core");
-const { Buffer } = require("./buffer");
 const { Class } = require("../core/heritage");
-const { setTimeout } = require("../timers");
+
+lazyRequire(this, "../event/core", "emit");
+lazyRequire(this, "./buffer", "Buffer");
+lazyRequire(this, "../timers", "setTimeout");
 
 
 const MultiplexInputStream = CC("@mozilla.org/io/multiplex-input-stream;1",

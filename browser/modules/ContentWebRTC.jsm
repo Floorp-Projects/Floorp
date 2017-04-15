@@ -72,7 +72,7 @@ this.ContentWebRTC = {
         let allowedDevices = Cc["@mozilla.org/array;1"]
                                .createInstance(Ci.nsIMutableArray);
         for (let deviceIndex of aMessage.data.devices)
-           allowedDevices.appendElement(devices[deviceIndex], /* weak =*/ false);
+           allowedDevices.appendElement(devices[deviceIndex]);
 
         Services.obs.notifyObservers(allowedDevices, "getUserMedia:response:allow", callID);
         break;

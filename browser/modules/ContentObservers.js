@@ -54,8 +54,8 @@ function getMessageManagerForWindow(aContentWindow) {
   }
 }
 
-Services.obs.addObserver(gEMEUIObserver, "mediakeys-request", false);
-Services.obs.addObserver(gDecoderDoctorObserver, "decoder-doctor-notification", false);
+Services.obs.addObserver(gEMEUIObserver, "mediakeys-request");
+Services.obs.addObserver(gDecoderDoctorObserver, "decoder-doctor-notification");
 
 
 // ContentWebRTC observer registration.
@@ -70,11 +70,11 @@ function webRTCObserve(aSubject, aTopic, aData) {
 }
 
 for (let topic of kWebRTCObserverTopics) {
-  Services.obs.addObserver(webRTCObserve, topic, false);
+  Services.obs.addObserver(webRTCObserve, topic);
 }
 
 if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT)
-  Services.obs.addObserver(processShutdown, "content-child-shutdown", false);
+  Services.obs.addObserver(processShutdown, "content-child-shutdown");
 
 function processShutdown() {
   for (let topic of kWebRTCObserverTopics) {

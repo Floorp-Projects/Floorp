@@ -47,7 +47,7 @@ function clearAllPlacesFavicons() {
       }
     };
 
-    Services.obs.addObserver(observer, "places-favicons-expired", false);
+    Services.obs.addObserver(observer, "places-favicons-expired");
     faviconService.expireAllFavicons();
   });
 }
@@ -137,7 +137,7 @@ function waitOnFaviconLoaded(aFaviconURL) {
       },
     };
 
-    PlacesUtils.history.addObserver(observer, false);
+    PlacesUtils.history.addObserver(observer);
   });
 }
 
@@ -176,7 +176,7 @@ function* doTest(aTestPage, aFaviconHost, aFaviconURL) {
   // Add the observer earlier in case we miss it.
   let promiseWaitOnFaviconLoaded = waitOnFaviconLoaded(aFaviconURL);
 
-  Services.obs.addObserver(observer, "http-on-modify-request", false);
+  Services.obs.addObserver(observer, "http-on-modify-request");
 
   // Open the tab with the personal container.
   let tabInfo = yield openTabInUserContext(aTestPage, USER_CONTEXT_ID_PERSONAL);

@@ -41,7 +41,7 @@ var gSearchPane = {
     window.addEventListener("select", this);
     window.addEventListener("blur", this, true);
 
-    Services.obs.addObserver(this, "browser-search-engine-modified", false);
+    Services.obs.addObserver(this, "browser-search-engine-modified");
     window.addEventListener("unload", () => {
       Services.obs.removeObserver(this, "browser-search-engine-modified");
     });

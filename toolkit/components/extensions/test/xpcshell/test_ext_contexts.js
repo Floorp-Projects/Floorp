@@ -5,15 +5,11 @@ const global = this;
 Cu.import("resource://gre/modules/Timer.jsm");
 
 Cu.import("resource://gre/modules/ExtensionCommon.jsm");
-Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
   BaseContext,
-} = ExtensionCommon;
-
-var {
   SingletonEventManager,
-} = ExtensionUtils;
+} = ExtensionCommon;
 
 class StubContext extends BaseContext {
   constructor() {

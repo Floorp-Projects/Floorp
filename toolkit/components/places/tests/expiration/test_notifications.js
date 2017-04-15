@@ -19,7 +19,7 @@ var gObserver = {
     this.notifications++;
   }
 };
-os.addObserver(gObserver, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
+os.addObserver(gObserver, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
 
 function run_test() {
   // Set interval to a large value so we don't expire on it.

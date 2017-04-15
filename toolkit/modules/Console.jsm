@@ -623,7 +623,7 @@ function ConsoleAPI(aConsoleOptions = {}) {
 
   if (aConsoleOptions.maxLogLevelPref) {
     updateMaxLogLevel();
-    Services.prefs.addObserver(aConsoleOptions.maxLogLevelPref, updateMaxLogLevel, false);
+    Services.prefs.addObserver(aConsoleOptions.maxLogLevelPref, updateMaxLogLevel);
   }
 
   // Bind all the functions to this object.
@@ -701,7 +701,7 @@ ConsoleAPI.prototype = {
         action: "profile",
         arguments: [ profileName ]
       }
-    }, "console-api-profiler", null);
+    }, "console-api-profiler");
     dumpMessage(this, "profile", `'${profileName}'`);
   },
 
@@ -714,7 +714,7 @@ ConsoleAPI.prototype = {
         action: "profileEnd",
         arguments: [ profileName ]
       }
-    }, "console-api-profiler", null);
+    }, "console-api-profiler");
     dumpMessage(this, "profileEnd", `'${profileName}'`);
   },
 

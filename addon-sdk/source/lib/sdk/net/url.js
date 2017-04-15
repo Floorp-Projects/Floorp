@@ -10,8 +10,7 @@ module.metadata = {
 
 const { Ci, Cu, components } = require("chrome");
 
-const { defer } = require("../core/promise");
-const { merge } = require("../util/object");
+lazyRequire(this, "../core/promise", "defer");
 
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});

@@ -2084,8 +2084,8 @@ function RegisterProcessCrashObservers()
 {
     var os = CC[NS_OBSERVER_SERVICE_CONTRACTID]
              .getService(CI.nsIObserverService);
-    os.addObserver(OnProcessCrashed, "plugin-crashed", false);
-    os.addObserver(OnProcessCrashed, "ipc:content-shutdown", false);
+    os.addObserver(OnProcessCrashed, "plugin-crashed");
+    os.addObserver(OnProcessCrashed, "ipc:content-shutdown");
 }
 
 function RecvExpectProcessCrash()

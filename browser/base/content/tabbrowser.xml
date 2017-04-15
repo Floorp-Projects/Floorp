@@ -5157,7 +5157,7 @@
           this.mCurrentBrowser = document.getAnonymousElementByAttribute(this, "anonid", "initialBrowser");
           this.mCurrentBrowser.permanentKey = {};
 
-          Services.obs.addObserver(this, "contextual-identity-updated", false);
+          Services.obs.addObserver(this, "contextual-identity-updated");
 
           this.mCurrentTab = this.tabContainer.firstChild;
           const nsIEventListenerService =
@@ -5227,7 +5227,7 @@
           // To correctly handle keypresses for potential FindAsYouType, while
           // the tab's find bar is not yet initialized.
           this._findAsYouType = Services.prefs.getBoolPref("accessibility.typeaheadfind");
-          Services.prefs.addObserver("accessibility.typeaheadfind", this, false);
+          Services.prefs.addObserver("accessibility.typeaheadfind", this);
           messageManager.addMessageListener("Findbar:Keypress", this);
 
           // Add listeners for prerender messages
@@ -5707,7 +5707,7 @@
 
           this._tabAnimationLoggingEnabled = Services.prefs.getBoolPref("browser.tabs.animationLogging.enabled", false);
           this._browserNewtabpageEnabled = Services.prefs.getBoolPref("browser.newtabpage.enabled");
-          Services.prefs.addObserver("privacy.userContext", this, false);
+          Services.prefs.addObserver("privacy.userContext", this);
           this.observe(null, "nsPref:changed", "privacy.userContext.enabled");
         ]]>
       </constructor>

@@ -671,7 +671,7 @@ DevToolsUtils.makeInfallible(function (window) {
    * a nsIWindowMediatorListener's onCloseWindow hook (bug 873589), so
    * handle the close in a different tick.
    */
-  Services.tm.currentThread.dispatch(DevToolsUtils.makeInfallible(() => {
+  Services.tm.dispatchToMainThread(DevToolsUtils.makeInfallible(() => {
     /*
      * Scan the entire map for actors representing tabs that were in this
      * top-level window, and exit them.
@@ -682,7 +682,7 @@ DevToolsUtils.makeInfallible(function (window) {
         this._handleActorClose(actor, browser);
       }
     }
-  }, "BrowserTabList.prototype.onCloseWindow's delayed body"), 0);
+  }, "BrowserTabList.prototype.onCloseWindow's delayed body"));
 }, "BrowserTabList.prototype.onCloseWindow");
 
 exports.BrowserTabList = BrowserTabList;
