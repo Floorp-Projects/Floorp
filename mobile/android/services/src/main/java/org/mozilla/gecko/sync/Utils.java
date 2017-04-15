@@ -31,6 +31,7 @@ import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.nativecode.NativeCrypto;
 import org.mozilla.gecko.sync.setup.Constants;
+import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.StringUtils;
 
 import android.content.Context;
@@ -488,14 +489,10 @@ public class Utils {
       throw new IllegalArgumentException("Passed null filename in readFile.");
     }
 
-    FileInputStream fis = null;
-    InputStreamReader isr = null;
     BufferedReader br = null;
 
     try {
-      fis = context.openFileInput(filename);
-      isr = new InputStreamReader(fis, StringUtils.UTF_8);
-      br = new BufferedReader(isr);
+      br = new BufferedReader(new InputStreamReader(context.openFileInput(filename), StringUtils.UTF_8));
       StringBuilder sb = new StringBuilder();
       String line;
       while ((line = br.readLine()) != null) {
@@ -505,20 +502,7 @@ public class Utils {
     } catch (Exception e) {
       return null;
     } finally {
-      if (isr != null) {
-        try {
-          isr.close();
-        } catch (IOException e) {
-          // Ignore.
-        }
-      }
-      if (fis != null) {
-        try {
-          fis.close();
-        } catch (IOException e) {
-          // Ignore.
-        }
-      }
+      IOUtils.safeStreamClose(br);
     }
   }
 
