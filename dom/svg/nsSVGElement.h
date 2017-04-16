@@ -118,7 +118,7 @@ public:
    * We override the default to unschedule computation of Servo declaration blocks
    * when adopted across documents.
    */
-  virtual void NodeInfoChanged(nsIDocument* aOldDoc) final;
+  virtual void NodeInfoChanged(nsIDocument* aOldDoc) override;
 
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) override;
   void WalkAnimatedContentStyleRules(nsRuleWalker* aRuleWalker);
