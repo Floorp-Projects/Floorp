@@ -25,8 +25,13 @@ profileDir.append("extensions");
 // Deletes a file from the test add-on in the profile
 function breakAddon(file) {
   if (TEST_UNPACKED) {
-    file.append("test.txt");
-    file.remove(true);
+    let f = file.clone();
+    f.append("test.txt");
+    f.remove(true);
+
+    f = file.clone();
+    f.append("install.rdf");
+    f.lastModifiedTime = Date.now();
   } else {
     var zipW = AM_Cc["@mozilla.org/zipwriter;1"].
                createInstance(AM_Ci.nsIZipWriter);

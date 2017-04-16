@@ -148,10 +148,6 @@ add_task(function* detect_touches() {
   let manifest = ueDir.clone();
   manifest.append("install.rdf");
   checkChange(XS, manifest, true);
-  // We also notice changing another file for enabled unpacked add-on.
-  let otherFile = ueDir.clone();
-  otherFile.append("extraFile.js");
-  checkChange(XS, otherFile, true);
 
   // We notice changing install.rdf for a *disabled* unpacked add-on.
   let udDir = profileDir.clone();
@@ -161,7 +157,7 @@ add_task(function* detect_touches() {
   checkChange(XS, manifest, true);
   // Finally, the case we actually care about...
   // We *don't* notice changing another file for disabled unpacked add-on.
-  otherFile = udDir.clone();
+  let otherFile = udDir.clone();
   otherFile.append("extraFile.js");
   checkChange(XS, otherFile, false);
 
