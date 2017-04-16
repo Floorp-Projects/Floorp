@@ -1957,13 +1957,9 @@ this.XPIDatabaseReconcile = {
               // Did time change in the wrong direction?
               if (xpiState.mtime < oldAddon.updateDate) {
                 XPIProvider.setTelemetry(oldAddon.id, "olderFile", {
-                  name: XPIProvider._mostRecentlyModifiedFile[id],
                   mtime: xpiState.mtime,
                   oldtime: oldAddon.updateDate
                 });
-              } else {
-                XPIProvider.setTelemetry(oldAddon.id, "modifiedFile",
-                                         XPIProvider._mostRecentlyModifiedFile[id]);
               }
             }
 
