@@ -123,7 +123,11 @@ protected:
       int32_t aCY);
    NS_IMETHOD ExitModalLoop(nsresult aStatus);
    NS_IMETHOD CreateNewChromeWindow(int32_t aChromeFlags, nsITabParent* aOpeningTab, mozIDOMWindowProxy* aOpenerWindow, nsIXULWindow **_retval);
-   NS_IMETHOD CreateNewContentWindow(int32_t aChromeFlags, nsITabParent* aOpeningTab, mozIDOMWindowProxy* aOpenerWindow, nsIXULWindow **_retval);
+   NS_IMETHOD CreateNewContentWindow(int32_t aChromeFlags,
+                                     nsITabParent* aOpeningTab,
+                                     mozIDOMWindowProxy* aOpenerWindow,
+                                     uint64_t aNextTabParentId,
+                                     nsIXULWindow **_retval);
    NS_IMETHOD GetHasPrimaryContent(bool* aResult);
 
    void       EnableParent(bool aEnable);
@@ -167,6 +171,7 @@ protected:
    uint32_t                mPersistentAttributesDirty; // persistentAttributes
    uint32_t                mPersistentAttributesMask;
    uint32_t                mChromeFlags;
+   uint64_t                mNextTabParentId;
    nsString                mTitle;
    nsIntRect               mOpenerScreenRect; // the screen rect of the opener
 
