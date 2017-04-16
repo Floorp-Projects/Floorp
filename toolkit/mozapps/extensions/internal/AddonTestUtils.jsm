@@ -243,6 +243,9 @@ var AddonTestUtils = {
     // By default don't disable add-ons from any scope
     Services.prefs.setIntPref("extensions.autoDisableScopes", 0);
 
+    // And scan for changes at startup
+    Services.prefs.setIntPref("extensions.startupScanScopes", 15);
+
     // By default, don't cache add-ons in AddonRepository.jsm
     Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", false);
 
