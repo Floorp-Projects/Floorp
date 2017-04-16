@@ -11738,6 +11738,9 @@ nsGlobalWindow::ShowSlowScriptDialog(const nsString& aAddonId)
     if (action == ProcessHangMonitor::Terminate) {
       return KillSlowScript;
     }
+    if (action == ProcessHangMonitor::TerminateGlobal) {
+      return KillScriptGlobal;
+    }
 
     if (action == ProcessHangMonitor::StartDebugger) {
       // Spin a nested event loop so that the debugger in the parent can fetch
@@ -11791,9 +11794,10 @@ nsGlobalWindow::ShowSlowScriptDialog(const nsString& aAddonId)
 
   // Get localizable strings
 
-  nsAutoString title, debugButton, msg;
+  nsAutoString title, checkboxMsg, debugButton, msg;
   if (isAddonScript) {
     title = getString("KillAddonScriptTitle");
+    checkboxMsg = getString("KillAddonScriptGlobalMessage");
 
     auto appName = getString("brandShortName", nsContentUtils::eBRAND_PROPERTIES);
 
@@ -11811,6 +11815,7 @@ nsGlobalWindow::ShowSlowScriptDialog(const nsString& aAddonId)
     failed = failed || NS_FAILED(rv);
   } else {
     title = getString("KillScriptTitle");
+    checkboxMsg = getString("DontAskAgain");
 
     if (showDebugButton) {
       debugButton = getString("DebugScriptButton");
@@ -11820,7 +11825,6 @@ nsGlobalWindow::ShowSlowScriptDialog(const nsString& aAddonId)
     }
   }
 
-  auto neverShowDlg = getString("DontAskAgain");
   auto stopButton = getString("StopScriptButton");
   auto waitButton = getString("WaitForScriptButton");
 
@@ -11872,8 +11876,6 @@ nsGlobalWindow::ShowSlowScriptDialog(const nsString& aAddonId)
     }
   }
 
-  int32_t buttonPressed = 0; // In case the user exits dialog by clicking X.
-  bool neverShowDlgChk = false;
   uint32_t buttonFlags = nsIPrompt::BUTTON_POS_1_DEFAULT +
                          (nsIPrompt::BUTTON_TITLE_IS_STRING *
                           (nsIPrompt::BUTTON_POS_0 + nsIPrompt::BUTTON_POS_1));
@@ -11882,26 +11884,36 @@ nsGlobalWindow::ShowSlowScriptDialog(const nsString& aAddonId)
   if (showDebugButton)
     buttonFlags += nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_2;
 
+  bool checkboxValue = false;
+  int32_t buttonPressed = 0; // In case the user exits dialog by clicking X.
   {
     // Null out the operation callback while we're re-entering JS here.
     AutoDisableJSInterruptCallback disabler(cx);
+
     // Open the dialog.
     rv = prompt->ConfirmEx(title.get(), msg.get(), buttonFlags,
                            waitButton.get(), stopButton.get(),
-                           debugButton.get(), neverShowDlg.get(),
-                           &neverShowDlgChk, &buttonPressed);
+                           debugButton.get(), checkboxMsg.get(),
+                           &checkboxValue, &buttonPressed);
   }
 
-  if (NS_SUCCEEDED(rv) && (buttonPressed == 0)) {
-    return neverShowDlgChk ? AlwaysContinueSlowScript : ContinueSlowScript;
+  if (buttonPressed == 0) {
+    if (checkboxValue && !isAddonScript && NS_SUCCEEDED(rv))
+      return AlwaysContinueSlowScript;
+    return ContinueSlowScript;
   }
+
   if (buttonPressed == 2) {
-    if (debugCallback) {
-      rv = debugCallback->HandleSlowScriptDebug(this);
-      return NS_SUCCEEDED(rv) ? ContinueSlowScript : KillSlowScript;
-    }
+    MOZ_RELEASE_ASSERT(debugCallback);
+
+    rv = debugCallback->HandleSlowScriptDebug(this);
+    return NS_SUCCEEDED(rv) ? ContinueSlowScript : KillSlowScript;
   }
+
   JS_ClearPendingException(cx);
+
+  if (checkboxValue && isAddonScript)
+    return KillScriptGlobal;
   return KillSlowScript;
 }
 
