@@ -144,6 +144,13 @@ public:
                                 NSToIntRound(aPt.y * aBackingScale));
   }
 
+  static LayoutDeviceIntPoint
+  CocoaPointsToDevPixelsRoundDown(const NSPoint& aPt, CGFloat aBackingScale)
+  {
+    return LayoutDeviceIntPoint(NSToIntFloor(aPt.x * aBackingScale),
+                                NSToIntFloor(aPt.y * aBackingScale));
+  }
+
   static LayoutDeviceIntRect
   CocoaPointsToDevPixels(const NSRect& aRect, CGFloat aBackingScale)
   {
