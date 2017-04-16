@@ -100,7 +100,7 @@ class HangMonitorChild
   void ClearHangAsync();
   void ClearForcePaint();
 
-  mozilla::ipc::IPCResult RecvTerminateScript() override;
+  mozilla::ipc::IPCResult RecvTerminateScript(const bool& aTerminateGlobal) override;
   mozilla::ipc::IPCResult RecvBeginStartingDebugger() override;
   mozilla::ipc::IPCResult RecvEndStartingDebugger() override;
 
@@ -133,6 +133,7 @@ class HangMonitorChild
 
   // These fields must be accessed with mMonitor held.
   bool mTerminateScript;
+  bool mTerminateGlobal;
   bool mStartDebugger;
   bool mFinishedStartingDebugger;
   bool mForcePaint;
@@ -169,6 +170,7 @@ public:
   NS_IMETHOD GetPluginName(nsACString& aPluginName) override;
 
   NS_IMETHOD TerminateScript() override;
+  NS_IMETHOD TerminateGlobal() override;
   NS_IMETHOD BeginStartingDebugger() override;
   NS_IMETHOD EndStartingDebugger() override;
   NS_IMETHOD TerminatePlugin() override;
@@ -233,7 +235,7 @@ public:
 
   void ForcePaint(dom::TabParent* aTabParent, uint64_t aLayerObserverEpoch);
 
-  void TerminateScript();
+  void TerminateScript(bool aTerminateGlobal);
   void BeginStartingDebugger();
   void EndStartingDebugger();
   void CleanupPluginHang(uint32_t aPluginId, bool aRemoveFiles);
@@ -298,6 +300,7 @@ HangMonitorChild::HangMonitorChild(ProcessHangMonitor* aMonitor)
    mMonitor("HangMonitorChild lock"),
    mSentReport(false),
    mTerminateScript(false),
+   mTerminateGlobal(false),
    mStartDebugger(false),
    mFinishedStartingDebugger(false),
    mForcePaint(false),
@@ -384,12 +387,16 @@ HangMonitorChild::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 mozilla::ipc::IPCResult
-HangMonitorChild::RecvTerminateScript()
+HangMonitorChild::RecvTerminateScript(const bool& aTerminateGlobal)
 {
   MOZ_RELEASE_ASSERT(IsOnThread());
 
   MonitorAutoLock lock(mMonitor);
-  mTerminateScript = true;
+  if (aTerminateGlobal) {
+    mTerminateGlobal = true;
+  } else {
+    mTerminateScript = true;
+  }
   return IPC_OK();
 }
 
@@ -480,6 +487,11 @@ HangMonitorChild::NotifySlowScript(nsITabChild* aTabChild,
       return SlowScriptAction::Terminate;
     }
 
+    if (mTerminateGlobal) {
+      mTerminateGlobal = false;
+      return SlowScriptAction::TerminateGlobal;
+    }
+
     if (mStartDebugger) {
       mStartDebugger = false;
       return SlowScriptAction::StartDebugger;
@@ -559,6 +571,7 @@ HangMonitorChild::ClearHang()
     MonitorAutoLock lock(mMonitor);
     mSentReport = false;
     mTerminateScript = false;
+    mTerminateGlobal = false;
     mStartDebugger = false;
     mFinishedStartingDebugger = false;
   }
@@ -841,12 +854,12 @@ HangMonitorParent::RecvClearHang()
 }
 
 void
-HangMonitorParent::TerminateScript()
+HangMonitorParent::TerminateScript(bool aTerminateGlobal)
 {
   MOZ_RELEASE_ASSERT(IsOnThread());
 
   if (mIPCOpen) {
-    Unused << SendTerminateScript();
+    Unused << SendTerminateScript(aTerminateGlobal);
   }
 }
 
@@ -1005,9 +1018,28 @@ HangMonitoredProcess::TerminateScript()
   }
 
   ProcessHangMonitor::Get()->Dispatch(
-    NewNonOwningRunnableMethod("HangMonitorParent::TerminateScript",
-                               mActor,
-                               &HangMonitorParent::TerminateScript));
+    NewNonOwningRunnableMethod<bool>("HangMonitorParent::TerminateScript",
+                                     mActor,
+                                     &HangMonitorParent::TerminateScript, false));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HangMonitoredProcess::TerminateGlobal()
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  if (mHangData.type() != HangData::TSlowScriptData) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (!mActor) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  ProcessHangMonitor::Get()->Dispatch(
+    NewNonOwningRunnableMethod<bool>("HangMonitorParent::TerminateScript",
+                                     mActor,
+                                     &HangMonitorParent::TerminateScript, true));
   return NS_OK;
 }
 

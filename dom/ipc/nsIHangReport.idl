@@ -46,6 +46,11 @@ interface nsIHangReport : nsISupports
   // Only valid for SLOW_SCRIPT reports.
   void terminateScript();
 
+  // Terminate all scripts on the global that triggered the slow script
+  // warning.
+  // Only valid for SLOW_SCRIPT reports.
+  void terminateGlobal();
+
   // Terminate the plugin if it is still hung.
   // Only valid for PLUGIN_HANG reports.
   void terminatePlugin();
