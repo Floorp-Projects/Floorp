@@ -45,7 +45,6 @@ config = {
     "virtualenv_path": '%s/venv' % os.getcwd(),
     'tools_dir': "/tools",
     'compiler_manifest': "build/gcc.manifest",
-    'b2g_compiler_manifest': "build/gcc-b2g.manifest",
     'sixgill_manifest': "build/sixgill.manifest",
 
     # Mock.
