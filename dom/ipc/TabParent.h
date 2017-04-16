@@ -778,13 +778,11 @@ public:
 struct MOZ_STACK_CLASS TabParent::AutoUseNewTab final
 {
 public:
-  AutoUseNewTab(TabParent* aNewTab, bool* aWindowIsNew, nsCString* aURLToLoad)
-   : mNewTab(aNewTab), mWindowIsNew(aWindowIsNew), mURLToLoad(aURLToLoad)
+  AutoUseNewTab(TabParent* aNewTab, nsCString* aURLToLoad)
+   : mNewTab(aNewTab), mURLToLoad(aURLToLoad)
   {
-    MOZ_ASSERT(!TabParent::sNextTabParent);
     MOZ_ASSERT(!aNewTab->mCreatingWindow);
 
-    TabParent::sNextTabParent = aNewTab;
     aNewTab->mCreatingWindow = true;
     aNewTab->mDelayedURL.Truncate();
   }
@@ -793,17 +791,10 @@ public:
   {
     mNewTab->mCreatingWindow = false;
     *mURLToLoad = mNewTab->mDelayedURL;
-
-    if (TabParent::sNextTabParent) {
-      MOZ_ASSERT(TabParent::sNextTabParent == mNewTab);
-      TabParent::sNextTabParent = nullptr;
-      *mWindowIsNew = false;
-    }
   }
 
 private:
   TabParent* mNewTab;
-  bool* mWindowIsNew;
   nsCString* mURLToLoad;
 };
 

@@ -102,6 +102,9 @@ interface nsPIWindowWatcher : nsISupports
    * @param aOpenerFullZoom
    *        The current zoom multiplier for the opener tab. This is then
    *        applied to the newly opened window.
+   * @param aNextTabParentId
+   *        The integer ID for the next tab parent actor.
+   *        0 means there is no next tab parent actor to use.
    *
    * @return the nsITabParent of the initial browser for the newly opened
    *         window.
@@ -109,7 +112,8 @@ interface nsPIWindowWatcher : nsISupports
   nsITabParent openWindowWithTabParent(in nsITabParent aOpeningTab,
                                        in ACString aFeatures,
                                        in boolean aCalledFromJS,
-                                       in float aOpenerFullZoom);
+                                       in float aOpenerFullZoom,
+                                       in unsigned long long aNextTabParentId);
 
   /**
    * Find a named docshell tree item amongst all windows registered
