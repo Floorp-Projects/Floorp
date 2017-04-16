@@ -38,10 +38,6 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
   mStackTop = pthread_get_stackaddr_np(self);
 #endif
 
-  if (aIsMainThread) {
-    mResponsiveness.emplace();
-  }
-
   // I don't know if we can assert this. But we should warn.
   MOZ_ASSERT(aThreadId >= 0, "native thread ID is < 0");
   MOZ_ASSERT(aThreadId <= INT32_MAX, "native thread ID is > INT32_MAX");
@@ -59,11 +55,15 @@ ThreadInfo::StartProfiling()
 {
   mIsBeingProfiled = true;
   mPseudoStack->reinitializeOnResume();
+  if (mIsMainThread) {
+    mResponsiveness.emplace();
+  }
 }
 
 void
 ThreadInfo::StopProfiling()
 {
+  mResponsiveness.reset();
   mIsBeingProfiled = false;
 }
 

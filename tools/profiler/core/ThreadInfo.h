@@ -67,11 +67,12 @@ public:
   void FlushSamplesAndMarkers(ProfileBuffer* aBuffer,
                               const mozilla::TimeStamp& aStartTime);
 
-  // Returns nullptr if this is not the main thread.
+  // Returns nullptr if this is not the main thread or if this thread is not
+  // being profiled.
   ThreadResponsiveness* GetThreadResponsiveness()
   {
     ThreadResponsiveness* responsiveness = mResponsiveness.ptrOr(nullptr);
-    MOZ_ASSERT(!!responsiveness == mIsMainThread);
+    MOZ_ASSERT(!!responsiveness == (mIsMainThread && mIsBeingProfiled));
     return responsiveness;
   }
 
