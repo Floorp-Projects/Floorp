@@ -28,10 +28,10 @@ default-preferences pref(layout.css.shape-outside.enabled,true)
 == shape-outside-border-box-border-radius-006.html shape-outside-border-box-border-radius-006.html
 == shape-outside-border-box-border-radius-007.html shape-outside-border-box-border-radius-007.html
 == shape-outside-border-box-border-radius-008.html shape-outside-border-box-border-radius-008.html
-fails == shape-outside-border-box-border-radius-009.html shape-outside-border-box-border-radius-009.html
-fails == shape-outside-border-box-border-radius-010.html shape-outside-border-box-border-radius-010.html
-fails == shape-outside-border-box-border-radius-011.html shape-outside-border-box-border-radius-011.html
-fails == shape-outside-border-box-border-radius-012.html shape-outside-border-box-border-radius-012.html
+== shape-outside-border-box-border-radius-009.html shape-outside-border-box-border-radius-009.html
+== shape-outside-border-box-border-radius-010.html shape-outside-border-box-border-radius-010.html
+== shape-outside-border-box-border-radius-011.html shape-outside-border-box-border-radius-011.html
+== shape-outside-border-box-border-radius-012.html shape-outside-border-box-border-radius-012.html
 == shape-outside-padding-box-border-radius-001.html shape-outside-padding-box-border-radius-001.html
 == shape-outside-padding-box-border-radius-002.html shape-outside-padding-box-border-radius-002.html
 == shape-outside-content-box-border-radius-001.html shape-outside-content-box-border-radius-001.html
