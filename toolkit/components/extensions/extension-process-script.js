@@ -168,10 +168,8 @@ class ScriptMatcher {
   }
 }
 
-function getMessageManager(contentWindow) {
-  let docShell = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDocShell)
-                              .QueryInterface(Ci.nsIInterfaceRequestor);
+function getMessageManager(window) {
+  let docShell = window.document.docShell.QueryInterface(Ci.nsIInterfaceRequestor);
   try {
     return docShell.getInterface(Ci.nsIContentFrameMessageManager);
   } catch (e) {
@@ -448,26 +446,67 @@ DocumentManager = {
     }
   },
 
+  /**
+   * Checks that all parent frames for the given withdow either have the
+   * same add-on ID, or are special chrome-privileged documents such as
+   * about:addons or developer tools panels.
+   *
+   * @param {Window} window
+   *        The window to check.
+   * @param {string} addonId
+   *        The add-on ID to check.
+   * @returns {boolean}
+   */
+  checkParentFrames(window, addonId) {
+    while (window.parent !== window) {
+      let {frameElement} = window;
+      window = window.parent;
+
+      let principal = window.document.nodePrincipal;
+
+      if (Services.scriptSecurityManager.isSystemPrincipal(principal)) {
+        // The add-on manager is a special case, since it contains extension
+        // options pages in same-type <browser> frames.
+        if (window.location.href === "about:addons") {
+          return true;
+        }
+
+        // NOTE: Special handling for devtools panels using a chrome iframe here
+        // for the devtools panel, it is needed because a content iframe breaks
+        // switching between docked and undocked mode (see bug 1075490).
+        if (frameElement &&
+            frameElement.mozMatchesSelector("browser[webextension-view-type='devtools_panel']")) {
+          return true;
+        }
+      }
+
+      if (principal.addonId !== addonId) {
+        return false;
+      }
+    }
+
+    return true;
+  },
+
   loadInto(window) {
-    let extensionId = ExtensionManagement.getAddonIdForWindow(window);
-    if (!extensionId) {
+    let {addonId} = Cu.getObjectPrincipal(window);
+    if (!addonId) {
       return;
     }
 
-    let extension = ExtensionManager.get(extensionId);
+    let extension = ExtensionManager.get(addonId);
     if (!extension) {
-      throw new Error(`No registered extension for ID ${extensionId}`);
+      throw new Error(`No registered extension for ID ${addonId}`);
     }
 
-    let apiLevel = ExtensionManagement.getAPILevelForWindow(window, extensionId);
-    const levels = ExtensionManagement.API_LEVELS;
-
-    if (apiLevel === levels.CONTENTSCRIPT_PRIVILEGES) {
-      ExtensionContent.initExtensionContext(extension.realExtension, window);
-    } else if (apiLevel === levels.FULL_PRIVILEGES) {
+    if (this.checkParentFrames(window, addonId) && ExtensionManagement.isExtensionProcess) {
+      // We're in a top-level extension frame, or a sub-frame thereof,
+      // in the extension process. Inject the full extension page API.
       ExtensionPageChild.initExtensionContext(extension.realExtension, window);
     } else {
-      throw new Error(`Unexpected window with extension ID ${extensionId}`);
+      // We're in a content sub-frame or not in the extension process.
+      // Only inject a minimal content script API.
+      ExtensionContent.initExtensionContext(extension.realExtension, window);
     }
   },
 
