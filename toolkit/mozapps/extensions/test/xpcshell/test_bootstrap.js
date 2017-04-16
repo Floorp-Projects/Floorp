@@ -1053,6 +1053,8 @@ function run_test_22() {
 
   let file = manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir,
                              ID1);
+  if (file.isDirectory())
+    file.append("install.rdf");
 
   // Make it look old so changes are detected
   setExtensionModifiedTime(file, file.lastModifiedTime - 5000);
