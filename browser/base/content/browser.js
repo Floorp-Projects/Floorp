@@ -5103,7 +5103,8 @@ nsBrowserAccess.prototype = {
   _openURIInNewTab(aURI, aReferrer, aReferrerPolicy, aIsPrivate,
                              aIsExternal, aForceNotRemote = false,
                              aUserContextId = Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID,
-                             aOpener = null, aTriggeringPrincipal = null) {
+                             aOpener = null, aTriggeringPrincipal = null,
+                             aNextTabParentId = 0) {
     let win, needToFocusWin;
 
     // try the current window.  if we're in a popup, fall back on the most recent browser window
@@ -5136,6 +5137,7 @@ nsBrowserAccess.prototype = {
                                       inBackground: loadInBackground,
                                       forceNotRemote: aForceNotRemote,
                                       opener: aOpener,
+                                      nextTabParentId: aNextTabParentId,
                                       });
     let browser = win.gBrowser.getBrowserForTab(tab);
 
@@ -5238,7 +5240,8 @@ nsBrowserAccess.prototype = {
     return newWindow;
   },
 
-  openURIInFrame: function browser_openURIInFrame(aURI, aParams, aWhere, aFlags) {
+  openURIInFrame: function browser_openURIInFrame(aURI, aParams, aWhere, aFlags,
+                                                  aNextTabParentId) {
     if (aWhere != Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
       dump("Error: openURIInFrame can only open in new tabs");
       return null;
@@ -5257,7 +5260,8 @@ nsBrowserAccess.prototype = {
                                         aParams.isPrivate,
                                         isExternal, false,
                                         userContextId, null,
-                                        aParams.triggeringPrincipal);
+                                        aParams.triggeringPrincipal,
+                                        aNextTabParentId);
     if (browser)
       return browser.QueryInterface(Ci.nsIFrameLoaderOwner);
 
