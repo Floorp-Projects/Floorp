@@ -218,8 +218,6 @@ HTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent)
   ShadowRoot* oldShadowRoot = GetBindingParent() ?
     GetBindingParent()->GetShadowRoot() : nullptr;
 
-  OwnerDoc()->UnregisterPendingLinkUpdate(this);
-
   CreateAndDispatchEvent(oldDoc, NS_LITERAL_STRING("DOMLinkRemoved"));
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 

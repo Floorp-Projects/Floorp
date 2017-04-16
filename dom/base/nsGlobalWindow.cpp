@@ -10480,7 +10480,9 @@ void
 nsGlobalWindow::SetActive(bool aActive)
 {
   nsPIDOMWindow::SetActive(aActive);
-  NotifyDocumentTree(mDoc, nullptr);
+  if (mDoc) {
+    NotifyDocumentTree(mDoc, nullptr);
+  }
 }
 
 bool

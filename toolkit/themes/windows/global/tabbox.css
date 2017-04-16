@@ -19,41 +19,18 @@
 /* ::::: tabpanels ::::: */
 
 tabpanels {
-  -moz-appearance: tabpanels; 
-  border-right: 2px solid;
-  border-bottom: 2px solid;
-  border-left: 2px solid;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-appearance: tabpanels;
   padding: 8px;
-  background-color: -moz-Dialog;
   color: -moz-DialogText;
 }
 
 /* ::::: tab ::::: */
 
-tab 
-{
+tab {
   -moz-appearance: tab;
   margin-top: 2px;
-  border-top: 2px solid;
-  border-right: 2px solid;
-  border-left: 2px solid;
-  border-bottom: 1px solid ThreeDHighlight;
-  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
-  border-top-left-radius: 2px;
-  border-top-right-radius: 2px;
   padding: 1px 4px 2px 4px;
-  background-color: -moz-Dialog;
   color: -moz-DialogText;
-}
-
-tab:-moz-locale-dir(rtl) {
-  border-bottom-left-radius: 1px;
-  border-bottom-right-radius: 0px;
 }
 
 .tab-text {
@@ -62,25 +39,12 @@ tab:-moz-locale-dir(rtl) {
 
 tab[visuallyselected="true"] {
   margin-top: 0;
-  border-bottom-color: transparent;
   padding: 1px 6px 4px 6px;
 }
 
 tab:-moz-focusring > .tab-middle {
   /* Don't specify the outline-color, we should always use initial value. */
   outline: 1px dotted;
-}
-
-tab[beforeselected="true"]:-moz-locale-dir(ltr),
-tab[visuallyselected="true"]:-moz-locale-dir(rtl) + tab {
-  border-right: none;
-  border-top-right-radius: 0;
-}
-
-tab[visuallyselected="true"]:-moz-locale-dir(ltr) + tab,
-tab[beforeselected="true"]:-moz-locale-dir(rtl) {
-  border-left: none;
-  border-top-left-radius: 0;
 }
 
 tab:first-of-type[visuallyselected="true"] {
@@ -96,31 +60,12 @@ tab:first-of-type[visuallyselected="true"] {
 .tab-bottom {
   margin-top: 0;
   margin-bottom: 2px;
-  border-top: 1px solid;
-  border-bottom: 2px solid;
-  -moz-border-top-colors: ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDShadow ThreeDLightShadow;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 2px;
-  border-bottom-left-radius: 2px;
   padding: 2px 4px 1px 4px;
 }
 
 .tab-bottom[visuallyselected="true"] {
   margin-bottom: 0;
-  -moz-border-top-colors: -moz-Dialog;
   padding: 4px 6px 1px 6px;
-}
-
-.tab-bottom[beforeselected="true"]:-moz-locale-dir(ltr),
-.tab-bottom[visuallyselected="true"]:-moz-locale-dir(rtl) + .tab-bottom {
-  border-bottom-right-radius: 0;
-}
-
-.tab-bottom[visuallyselected="true"]:-moz-locale-dir(ltr) + .tab-bottom,
-.tab-bottom[beforeselected="true"]:-moz-locale-dir(rtl) {
-  border-bottom-left-radius: 0;
 }
 
 /* ::::: tabs-bottom ::::: */
@@ -130,4 +75,3 @@ tab:first-of-type[visuallyselected="true"] {
   border-top: 1px solid ThreeDShadow;
   border-bottom: none;
 }
-
