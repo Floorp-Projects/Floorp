@@ -2061,46 +2061,6 @@ function recursiveRemove(aFile) {
 }
 
 /**
- * Returns the timestamp and leaf file name of the most recently modified
- * entry in a directory,
- * or simply the file's own timestamp if it is not a directory.
- * Also returns the total number of items (directories and files) visited in the scan
- *
- * @param  aFile
- *         A non-null nsIFile object
- * @return [File Name, Epoch time, items visited], as described above.
- */
-function recursiveLastModifiedTime(aFile) {
-  try {
-    let modTime = aFile.lastModifiedTime;
-    let fileName = aFile.leafName;
-    if (aFile.isFile())
-      return [fileName, modTime, 1];
-
-    if (aFile.isDirectory()) {
-      let entries = aFile.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
-      let entry;
-      let totalItems = 1;
-      while ((entry = entries.nextFile)) {
-        let [subName, subTime, items] = recursiveLastModifiedTime(entry);
-        totalItems += items;
-        if (subTime > modTime) {
-          modTime = subTime;
-          fileName = subName;
-        }
-      }
-      entries.close();
-      return [fileName, modTime, totalItems];
-    }
-  } catch (e) {
-    logger.warn("Problem getting last modified time for " + aFile.path, e);
-  }
-
-  // If the file is something else, just ignore it.
-  return ["", 0, 0];
-}
-
-/**
  * Gets a snapshot of directory entries.
  *
  * @param  aDir
@@ -2195,29 +2155,16 @@ XPIState.prototype = {
   getModTime(aFile, aId) {
     let changed = false;
     let scanStarted = Cu.now();
-    // For an unknown or enabled add-on, we do a full recursive scan.
-    if (!("scanTime" in this) || this.enabled) {
-      logger.debug("getModTime: Recursive scan of " + aId);
-      let [modFile, modTime, items] = recursiveLastModifiedTime(aFile);
-      XPIProvider._mostRecentlyModifiedFile[aId] = modFile;
-      XPIProvider.setTelemetry(aId, "scan_items", items);
-      if (modTime != this.scanTime) {
-        this.scanTime = modTime;
-        changed = true;
-      }
-    }
-    // if the add-on is disabled, modified time is the install manifest time, if
-    // any. If no manifest exists, we assume this is a packed .xpi and use
-    // the time stamp of {path}
+    // Modified time is the install manifest time, if any. If no manifest
+    // exists, we assume this is a packed .xpi and use the time stamp of
+    // {path}
     try {
       // Get the install manifest update time, if any.
       let maniFile = getManifestFileForDir(aFile);
-      if (!(aId in XPIProvider._mostRecentlyModifiedFile)) {
-        XPIProvider._mostRecentlyModifiedFile[aId] = maniFile.leafName;
-      }
       let maniTime = maniFile.lastModifiedTime;
       if (maniTime != this.manifestTime) {
         this.manifestTime = maniTime;
+        this.scanTime = maniTime;
         changed = true;
       }
     } catch (e) {
@@ -2541,9 +2488,6 @@ this.XPIProvider = {
   enabledAddons: null,
   // Keep track of startup phases for telemetry
   runPhase: XPI_STARTING,
-  // Keep track of the newest file in each add-on, in case we want to
-  // report it to telemetry.
-  _mostRecentlyModifiedFile: {},
   // Per-addon telemetry information
   _telemetryDetails: {},
   // A Map from an add-on install to its ID
