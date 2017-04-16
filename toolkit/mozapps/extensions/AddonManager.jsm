@@ -105,6 +105,8 @@ XPCOMUtils.defineLazyGetter(this, "CertUtils", function() {
 XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
                                       PREF_WEBEXT_PERM_PROMPTS, false);
 
+Services.ppmm.loadProcessScript("chrome://extensions/content/extension-process-script.js", true);
+
 const INTEGER = /^[1-9]\d*$/;
 
 this.EXPORTED_SYMBOLS = [ "AddonManager", "AddonManagerPrivate" ];

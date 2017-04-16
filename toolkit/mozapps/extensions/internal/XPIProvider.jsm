@@ -92,8 +92,6 @@ XPCOMUtils.defineLazyGetter(this, "IconDetails", () => {
   return ExtensionUtils.IconDetails;
 });
 
-Services.ppmm.loadProcessScript("chrome://extensions/content/extension-process-script.js", true);
-
 Cu.importGlobalProperties(["URL"]);
 
 const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
