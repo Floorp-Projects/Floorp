@@ -13,6 +13,6 @@ fails == text-combine-upright-compression-006.html text-combine-upright-compress
 fails == text-combine-upright-compression-006a.html text-combine-upright-compression-006a.html
 fails == text-combine-upright-compression-007.html text-combine-upright-compression-007.html
 
-fails == text-orientation-upright-directionality-001.html text-orientation-upright-directionality-001.html
+== text-orientation-upright-directionality-001.html text-orientation-upright-directionality-001.html
 
-fails == logical-physical-mapping-001.html logical-physical-mapping-001.html
+== logical-physical-mapping-001.html logical-physical-mapping-001.html
