@@ -7689,7 +7689,7 @@
           if (val) {
             this.setAttribute("label", val);
             this.removeAttribute("inactive");
-            this._calcMouseTargetRect();
+            this._mouseTargetRect = null;
             MousePosTracker.addListener(this);
           } else {
             this.setAttribute("inactive", "true");
@@ -7705,6 +7705,9 @@
 
       <method name="getMouseTargetRect">
         <body><![CDATA[
+          if (!this._mouseTargetRect) {
+            this._calcMouseTargetRect();
+          }
           return this._mouseTargetRect;
         ]]></body>
       </method>
@@ -7729,7 +7732,7 @@
 
           switch (event.type) {
             case "resize":
-              this._calcMouseTargetRect();
+              this._mouseTargetRect = null;
               break;
           }
         ]]></body>
@@ -7760,7 +7763,7 @@
 
           if (!this.hasAttribute("sizelimit")) {
             this.setAttribute("sizelimit", "true");
-            this._calcMouseTargetRect();
+            this._mouseTargetRect = null;
           }
         </body>
       </method>
