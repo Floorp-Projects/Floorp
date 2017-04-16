@@ -33,6 +33,7 @@ Link::Link(Element *aElement)
   , mLinkState(eLinkState_NotLink)
   , mNeedsRegistration(false)
   , mRegistered(false)
+  , mHasPendingLinkUpdate(false)
 {
   MOZ_ASSERT(mElement, "Must have an element");
 }
@@ -43,6 +44,7 @@ Link::Link()
   , mLinkState(eLinkState_NotLink)
   , mNeedsRegistration(false)
   , mRegistered(false)
+  , mHasPendingLinkUpdate(false)
 {
 }
 
