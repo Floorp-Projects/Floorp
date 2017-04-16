@@ -6397,6 +6397,18 @@ nsHttpChannel::ForceIntercepted(uint64_t aInterceptionID)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHttpChannel::SetChannelIsForDownload(bool aChannelIsForDownload)
+{
+  if (aChannelIsForDownload) {
+    AddClassFlags(nsIClassOfService::Throttleable);
+  } else {
+    ClearClassFlags(nsIClassOfService::Throttleable);
+  }
+
+  return HttpBaseChannel::SetChannelIsForDownload(aChannelIsForDownload);
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------
