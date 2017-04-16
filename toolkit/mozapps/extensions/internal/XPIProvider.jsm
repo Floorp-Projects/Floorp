@@ -290,7 +290,9 @@ const TEMP_INSTALL_ID_GEN_SESSION =
 function mustSign(aType) {
   if (!SIGNED_TYPES.has(aType))
     return false;
-  return REQUIRE_SIGNING || Preferences.get(PREF_XPI_SIGNATURES_REQUIRED, false);
+
+  return ((REQUIRE_SIGNING && !Cu.isInAutomation) ||
+          Preferences.get(PREF_XPI_SIGNATURES_REQUIRED, false));
 }
 
 // Keep track of where we are in startup for telemetry
@@ -2822,7 +2824,7 @@ this.XPIProvider = {
       Services.prefs.addObserver(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, this);
       Services.prefs.addObserver(PREF_E10S_ADDON_BLOCKLIST, this);
       Services.prefs.addObserver(PREF_E10S_ADDON_POLICY, this);
-      if (!REQUIRE_SIGNING)
+      if (!REQUIRE_SIGNING || Cu.isInAutomation)
         Services.prefs.addObserver(PREF_XPI_SIGNATURES_REQUIRED, this);
       Services.prefs.addObserver(PREF_ALLOW_NON_MPC, this);
       Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS);
