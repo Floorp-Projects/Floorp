@@ -1976,6 +1976,12 @@ this.DownloadCopySaver.prototype = {
             channel.referrer = NetUtil.newURI(download.source.referrer);
           }
 
+          // This makes the channel be corretly throttled during page loads
+          // and also prevents its caching.
+          if (channel instanceof Ci.nsIHttpChannelInternal) {
+            channel.channelIsForDownload = true;
+          }
+
           // If we have data that we can use to resume the download from where
           // it stopped, try to use it.
           let resumeAttempted = false;
