@@ -40,6 +40,19 @@ public:
 
   explicit BasePrincipal(PrincipalKind aKind);
 
+  template<typename T>
+  bool Is() const
+  {
+    return mKind == T::Kind();
+  }
+
+  template<typename T>
+  T* As()
+  {
+    MOZ_ASSERT(Is<T>());
+    return static_cast<T*>(this);
+  }
+
   enum DocumentDomainConsideration { DontConsiderDocumentDomain, ConsiderDocumentDomain};
   bool Subsumes(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration);
 
