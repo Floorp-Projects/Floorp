@@ -6,7 +6,7 @@ random == bug-364968.html bug-364968.html
 == mozsetimageelement-02.html mozsetimageelement-02.html
 == image-outside-document-invalidate.html image-outside-document-invalidate.html
 == canvas-outside-document-invalidate-01.html canvas-outside-document-invalidate-01.html
-skip-if(stylo) == canvas-outside-document-invalidate-02.html canvas-outside-document-invalidate-02.html # Bug 1341761
+== canvas-outside-document-invalidate-02.html canvas-outside-document-invalidate-02.html
 #fails with Skia due to Skia bug http://code.google.com/p/skia/issues/detail?id=568
 == element-paint-simple.html element-paint-simple.html # Bug 1341761
 == element-paint-repeated.html element-paint-repeated.html
