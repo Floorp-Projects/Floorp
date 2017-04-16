@@ -737,7 +737,8 @@ public:
     ContinueSlowScript = 0,
     ContinueSlowScriptAndKeepNotifying,
     AlwaysContinueSlowScript,
-    KillSlowScript
+    KillSlowScript,
+    KillScriptGlobal
   };
   SlowScriptResponse ShowSlowScriptDialog(const nsString& aAddonId);
 
