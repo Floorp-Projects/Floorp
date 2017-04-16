@@ -61,7 +61,20 @@ HourCycle()
     key = "clock-format";
   }
 
-  GSettings* settings = g_settings_new(schema);
+  // This is a workaround for old GTK versions.
+  // Once we bump the minimum version to 2.40 we should replace
+  // this with g_settings_schme_source_lookup.
+  // See bug 1356718 for details.
+  const char* const* schemas = g_settings_list_schemas();
+  GSettings* settings = nullptr;
+
+  for (uint32_t i = 0; schemas[i] != nullptr; i++) {
+    if (strcmp(schemas[i], schema) == 0) {
+      settings = g_settings_new(schema);
+      break;
+    }
+  }
+
   if (settings) {
     // We really want to use g_settings_get_user_value which will
     // only want to take it if user manually changed the value.
