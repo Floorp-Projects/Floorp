@@ -53,7 +53,8 @@ class ProcessHangMonitor final
   enum SlowScriptAction {
     Continue,
     Terminate,
-    StartDebugger
+    StartDebugger,
+    TerminateGlobal,
   };
   SlowScriptAction NotifySlowScript(nsITabChild* aTabChild,
                                     const char* aFileName,

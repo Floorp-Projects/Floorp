@@ -65,6 +65,14 @@ var ProcessHangMonitor = {
   },
 
   /**
+   * Terminate Sandbox globals associated with the hang being reported
+   * for the selected browser in |win|.
+   */
+  terminateGlobal(win) {
+    this.handleUserInput(win, report => report.terminateGlobal());
+  },
+
+  /**
    * Start devtools debugger for JavaScript associated with the hang
    * being reported for the selected browser in |win|.
    */
@@ -107,6 +115,23 @@ var ProcessHangMonitor = {
         break;
       case report.PLUGIN_HANG:
         this.terminatePlugin(win);
+        break;
+    }
+  },
+
+  /**
+   * Stop all scripts from running in the Sandbox global attached to
+   * this window.
+   */
+  stopGlobal(win) {
+    let report = this.findActiveReport(win.gBrowser.selectedBrowser);
+    if (!report) {
+      return;
+    }
+
+    switch (report.hangType) {
+      case report.SLOW_SCRIPT:
+        this.terminateGlobal(win);
         break;
     }
   },
@@ -328,6 +353,14 @@ var ProcessHangMonitor = {
       message = doc.createDocumentFragment();
       message.appendChild(doc.createTextNode(label + " "));
       message.appendChild(link);
+
+      buttons.unshift({
+        label: bundle.getString("processHang.button_stop_sandbox.label"),
+        accessKey: bundle.getString("processHang.button_stop_sandbox.accessKey"),
+        callback() {
+          ProcessHangMonitor.stopGlobal(win);
+        }
+      });
     }
 
     if (AppConstants.MOZ_DEV_EDITION && report.hangType == report.SLOW_SCRIPT) {
