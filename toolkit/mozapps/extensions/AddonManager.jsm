@@ -643,7 +643,6 @@ var gShutdownBarrier = null;
 var gRepoShutdownState = "";
 var gShutdownInProgress = false;
 var gPluginPageListener = null;
-var gBrowserUpdated = null;
 
 /**
  * This is the real manager, kept here rather than in AddonManager to keep its
@@ -816,7 +815,7 @@ var AddonManagerInternal = {
         appChanged = Services.appinfo.version != oldAppVersion;
       } catch (e) { }
 
-      gBrowserUpdated = appChanged;
+      Extension.browserUpdated = appChanged;
 
       let oldPlatformVersion = Services.prefs.getCharPref(PREF_EM_LAST_PLATFORM_VERSION, "");
 
@@ -3097,10 +3096,6 @@ var AddonManagerInternal = {
 this.AddonManagerPrivate = {
   startup() {
     AddonManagerInternal.startup();
-  },
-
-  get browserUpdated() {
-    return gBrowserUpdated;
   },
 
   registerProvider(aProvider, aTypes) {
