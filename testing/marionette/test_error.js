@@ -209,15 +209,25 @@ add_test(function test_ElementClickInterceptedError() {
         return otherEl;
       },
     },
+    style: {
+      pointerEvents: "auto",
+    }
   };
 
-  let err = new ElementClickInterceptedError(obscuredEl, {x: 1, y: 2});
-  equal("ElementClickInterceptedError", err.name);
+  let err1 = new ElementClickInterceptedError(obscuredEl, {x: 1, y: 2});
+  equal("ElementClickInterceptedError", err1.name);
   equal("Element <b> is not clickable at point (1,2) " +
       "because another element <a> obscures it",
-      err.message);
-  equal("element click intercepted", err.status);
-  ok(err instanceof WebDriverError);
+      err1.message);
+  equal("element click intercepted", err1.status);
+  ok(err1 instanceof WebDriverError);
+
+  obscuredEl.style.pointerEvents = "none";
+  let err2 = new ElementClickInterceptedError(obscuredEl, {x: 1, y: 2});
+  equal("Element <b> is not clickable at point (1,2) " +
+      "because it does not have pointer events enabled, " +
+      "and element <a> would receive the click instead",
+      err2.message);
 
   run_next_test();
 });
