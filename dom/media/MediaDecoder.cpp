@@ -1183,8 +1183,7 @@ MediaDecoder::UpdateLogicalPositionInternal()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
 
-  double currentPosition =
-    static_cast<double>(CurrentPosition()) / static_cast<double>(USECS_PER_S);
+  double currentPosition = CurrentPosition().ToSeconds();
   if (mPlayState == PLAY_STATE_ENDED) {
     currentPosition = std::max(currentPosition, mDuration);
   }
@@ -1234,7 +1233,7 @@ MediaDecoder::DurationChanged()
     GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   }
 
-  if (CurrentPosition() > TimeUnit::FromSeconds(mDuration).ToMicroseconds()) {
+  if (CurrentPosition() > TimeUnit::FromSeconds(mDuration)) {
     Seek(mDuration, SeekTarget::Accurate);
   }
 }
@@ -1772,7 +1771,7 @@ MediaDecoder::NextFrameBufferedStatus()
   MOZ_ASSERT(NS_IsMainThread());
   // Next frame hasn't been decoded yet.
   // Use the buffered range to consider if we have the next frame available.
-  TimeUnit currentPosition = TimeUnit::FromMicroseconds(CurrentPosition());
+  auto currentPosition = CurrentPosition();
   media::TimeInterval interval(
     currentPosition,
     currentPosition + DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED);
