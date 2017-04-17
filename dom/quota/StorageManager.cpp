@@ -287,6 +287,13 @@ ExecuteOpOnMainOrWorkerThread(nsIGlobalObject* aGlobal,
     nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
     MOZ_ASSERT(principal);
 
+    // Storage Standard 7. API
+    // If origin is an opaque origin, then reject promise with a TypeError.
+    if (principal->GetIsNullPrincipal()) {
+      promise->MaybeReject(NS_ERROR_DOM_TYPE_ERR);
+      return promise.forget();
+    }
+
     switch (aType) {
       case RequestResolver::Type::Persisted: {
         RefPtr<RequestResolver> resolver =
