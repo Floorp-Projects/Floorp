@@ -38,7 +38,6 @@ const RequestListColumnFile = createClass({
           className: "requests-list-icon",
           src: responseContentDataUri,
           hidden: !responseContentDataUri,
-          "data-type": responseContentDataUri ? "thumbnail" : undefined,
         }),
         div({
           className: "subitem-label requests-list-file",
