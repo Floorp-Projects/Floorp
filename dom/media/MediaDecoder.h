@@ -252,17 +252,6 @@ public:
 
   already_AddRefed<GMPCrashHelper> GetCrashHelper() override;
 
-protected:
-  // Updates the media duration. This is called while the media is being
-  // played, calls before the media has reached loaded metadata are ignored.
-  // The duration is assumed to be an estimate, and so a degree of
-  // instability is expected; if the incoming duration is not significantly
-  // different from the existing duration, the change request is ignored.
-  // If the incoming duration is significantly different, the duration is
-  // changed, this causes a durationchanged event to fire to the media
-  // element.
-  void UpdateEstimatedMediaDuration(int64_t aDuration) override;
-
 public:
   // Returns true if this media supports random seeking. False for example with
   // chained ogg files.
