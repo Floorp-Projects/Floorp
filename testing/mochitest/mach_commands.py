@@ -139,7 +139,6 @@ class MochitestRunner(MozbuildObject):
             logging.getLogger().removeHandler(handler)
 
         options = Namespace(**kwargs)
-        options.topsrcdir = self.topsrcdir
 
         from manifestparser import TestManifest
         if tests and not options.manifestFile:

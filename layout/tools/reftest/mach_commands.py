@@ -222,7 +222,6 @@ class MachCommands(MachCommandBase):
         return self._run_reftest(**kwargs)
 
     def _run_reftest(self, **kwargs):
-        kwargs["topsrcdir"] = self.topsrcdir
         process_test_objects(kwargs)
         reftest = self._spawn(ReftestRunner)
         if conditions.is_android(self):
