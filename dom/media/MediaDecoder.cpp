@@ -44,12 +44,6 @@ using namespace mozilla::media;
 
 namespace mozilla {
 
-// The amount of instability we tollerate in calls to
-// MediaDecoder::UpdateEstimatedMediaDuration(); changes of duration
-// less than this are ignored, as they're assumed to be the result of
-// instability in the duration estimation.
-static const uint64_t ESTIMATED_DURATION_FUZZ_FACTOR_USECS = USECS_PER_S / 2;
-
 // avoid redefined macro in unified build
 #undef LOG
 #undef DUMP
@@ -1331,29 +1325,6 @@ MediaDecoder::HasSuspendTaint() const
 {
   MOZ_ASSERT(NS_IsMainThread());
   return mHasSuspendTaint;
-}
-
-void
-MediaDecoder::UpdateEstimatedMediaDuration(int64_t aDuration)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mPlayState <= PLAY_STATE_LOADING) {
-    return;
-  }
-
-  // The duration is only changed if its significantly different than the
-  // the current estimate, as the incoming duration is an estimate and so
-  // often is unstable as more data is read and the estimate is updated.
-  // Can result in a durationchangeevent. aDuration is in microseconds.
-  if (mEstimatedDuration.Ref().isSome()
-      && mozilla::Abs(mEstimatedDuration.Ref().ref().ToMicroseconds()
-                      - aDuration)
-         < ESTIMATED_DURATION_FUZZ_FACTOR_USECS) {
-    return;
-  }
-
-  mEstimatedDuration = Some(TimeUnit::FromMicroseconds(aDuration));
 }
 
 bool
