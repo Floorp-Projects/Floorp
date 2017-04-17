@@ -335,7 +335,7 @@ def makensis_progs(target):
 
     return tuple(candidates)
 
-nsis = check_prog('MAKENSISU', makensis_progs)
+nsis = check_prog('MAKENSISU', makensis_progs, allow_missing=True)
 
 # Make sure the version of makensis is up to date.
 @depends_if(nsis)

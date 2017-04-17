@@ -22,6 +22,7 @@ using namespace mozilla::gfx;
 using layers::ImageContainer;
 using layers::PlanarYCbCrImage;
 using layers::PlanarYCbCrData;
+using media::TimeUnit;
 
 const char* AudioData::sTypeName = "audio";
 const char* VideoData::sTypeName = "video";
@@ -173,7 +174,7 @@ VideoData::VideoData(int64_t aOffset,
   , mFrameID(aFrameID)
   , mSentToCompositor(false)
 {
-  NS_ASSERTION(mDuration >= 0, "Frame must have non-negative duration.");
+  MOZ_ASSERT(!mDuration.IsNegative(), "Frame must have non-negative duration.");
   mKeyframe = aKeyframe;
   mTimecode = aTimecode;
 }
@@ -222,10 +223,9 @@ VideoData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 void
-VideoData::UpdateDuration(int64_t aDuration)
+VideoData::UpdateDuration(const TimeUnit& aDuration)
 {
-  MOZ_ASSERT(aDuration >= 0);
-
+  MOZ_ASSERT(!aDuration.IsNegative());
   mDuration = aDuration;
 }
 
@@ -238,7 +238,7 @@ VideoData::UpdateTimestamp(int64_t aTimestamp)
   MOZ_ASSERT(updatedDuration >= 0);
 
   mTime = aTimestamp;
-  mDuration = updatedDuration;
+  mDuration = TimeUnit::FromMicroseconds(updatedDuration);
 }
 
 /* static */
@@ -286,7 +286,7 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
                              ImageContainer* aContainer,
                              int64_t aOffset,
                              int64_t aTime,
-                             int64_t aDuration,
+                             const TimeUnit& aDuration,
                              const YCbCrBuffer& aBuffer,
                              bool aKeyframe,
                              int64_t aTimecode,
@@ -297,7 +297,7 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
     // send to media streams if necessary.
     RefPtr<VideoData> v(new VideoData(aOffset,
                                       aTime,
-                                      aDuration,
+                                      aDuration.ToMicroseconds(),
                                       aKeyframe,
                                       aTimecode,
                                       aInfo.mDisplay,
@@ -311,7 +311,7 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
 
   RefPtr<VideoData> v(new VideoData(aOffset,
                                     aTime,
-                                    aDuration,
+                                    aDuration.ToMicroseconds(),
                                     aKeyframe,
                                     aTimecode,
                                     aInfo.mDisplay,
@@ -370,7 +370,7 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
                              ImageContainer* aContainer,
                              int64_t aOffset,
                              int64_t aTime,
-                             int64_t aDuration,
+                             const TimeUnit& aDuration,
                              const YCbCrBuffer& aBuffer,
                              const YCbCrBuffer::Plane &aAlphaPlane,
                              bool aKeyframe,
@@ -382,7 +382,7 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
     // send to media streams if necessary.
     RefPtr<VideoData> v(new VideoData(aOffset,
                                       aTime,
-                                      aDuration,
+                                      aDuration.ToMicroseconds(),
                                       aKeyframe,
                                       aTimecode,
                                       aInfo.mDisplay,
@@ -396,7 +396,7 @@ VideoData::CreateAndCopyData(const VideoInfo& aInfo,
 
   RefPtr<VideoData> v(new VideoData(aOffset,
                                     aTime,
-                                    aDuration,
+                                    aDuration.ToMicroseconds(),
                                     aKeyframe,
                                     aTimecode,
                                     aInfo.mDisplay,
@@ -436,14 +436,14 @@ already_AddRefed<VideoData>
 VideoData::CreateFromImage(const IntSize& aDisplay,
                            int64_t aOffset,
                            int64_t aTime,
-                           int64_t aDuration,
+                           const TimeUnit& aDuration,
                            const RefPtr<Image>& aImage,
                            bool aKeyframe,
                            int64_t aTimecode)
 {
   RefPtr<VideoData> v(new VideoData(aOffset,
                                     aTime,
-                                    aDuration,
+                                    aDuration.ToMicroseconds(),
                                     aKeyframe,
                                     aTimecode,
                                     aDisplay,
