@@ -440,7 +440,21 @@ IonCacheIRCompiler::init()
         allocator.initInputLocation(0, ic->environment(), JSVAL_TYPE_OBJECT);
         break;
       }
-      case CacheKind::In:
+      case CacheKind::In: {
+        IonInIC* ic = ic_->asInIC();
+        Register output = ic->output();
+
+        available.add(output);
+
+        liveRegs_.emplace(ic->liveRegs());
+        outputUnchecked_.emplace(TypedOrValueRegister(MIRType::Boolean, AnyRegister(output)));
+
+        MOZ_ASSERT(numInputs == 2);
+        allocator.initInputLocation(0, ic->key());
+        allocator.initInputLocation(1, TypedOrValueRegister(MIRType::Object,
+                                                            AnyRegister(ic->object())));
+        break;
+      }
       case CacheKind::TypeOf:
         MOZ_CRASH("Invalid cache");
       case CacheKind::HasOwn: {
