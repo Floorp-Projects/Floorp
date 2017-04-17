@@ -35,6 +35,7 @@ certificatePolicies:[<policy OID>,...]
 nameConstraints:{permitted,excluded}:[<dNSName|directoryName>,...]
 nsCertType:sslServer
 TLSFeature:[<TLSFeature>,...]
+embeddedSCTList:[<key specification>:<YYYYMMDD>,...]
 
 Where:
   [] indicates an optional field or component of a field
@@ -85,12 +86,14 @@ from pyasn1.codec.der import decoder
 from pyasn1.codec.der import encoder
 from pyasn1.type import constraint, namedtype, tag, univ, useful
 from pyasn1_modules import rfc2459
+from struct import pack
 import base64
 import datetime
 import hashlib
 import re
 import sys
 
+import pyct
 import pykey
 
 # The GeneralSubtree definition in pyasn1_modules.rfc2459 is incorrect.
@@ -213,6 +216,17 @@ class UnknownTLSFeature(UnknownBaseError):
     def __init__(self, value):
         UnknownBaseError.__init__(self, value)
         self.category = 'TLSFeature'
+
+
+class InvalidSCTSpecification(Error):
+    """Helper exception type to handle invalid SCT specifications."""
+
+    def __init__(self, value):
+        super(InvalidSCTSpecification, self).__init__()
+        self.value = value
+
+    def __str__(self):
+        return repr('invalid SCT specification "{}"' % self.value)
 
 
 class InvalidSerialNumber(Error):
@@ -356,6 +370,7 @@ class Certificate(object):
         self.notAfter = self.now + aYearAndAWhile
         self.subject = 'Default Subject'
         self.extensions = None
+        self.savedEmbeddedSCTListData = None
         self.subjectKey = pykey.keyFromSpecification('default')
         self.issuerKey = pykey.keyFromSpecification('default')
         self.serialNumber = None
@@ -364,6 +379,10 @@ class Certificate(object):
         # the certificate contents.
         if not self.serialNumber:
             self.serialNumber = self.generateSerialNumber()
+        # This has to be last because the SCT signature depends on the
+        # contents of the certificate.
+        if self.savedEmbeddedSCTListData:
+            self.addEmbeddedSCTListData()
 
     def generateSerialNumber(self):
         """Generates a serial number for this certificate based on its
@@ -380,6 +399,13 @@ class Certificate(object):
         if self.extensions:
             for extension in self.extensions:
                 hasher.update(str(extension))
+        if self.savedEmbeddedSCTListData:
+            # savedEmbeddedSCTListData is
+            # (embeddedSCTListSpecification, critical), where |critical|
+            # may be None
+            hasher.update(self.savedEmbeddedSCTListData[0])
+            if (self.savedEmbeddedSCTListData[1]):
+                hasher.update(self.savedEmbeddedSCTListData[1])
         serialBytes = [ord(c) for c in hasher.digest()[:20]]
         # Ensure that the most significant bit isn't set (which would
         # indicate a negative number, which isn't valid for serial
@@ -466,6 +492,8 @@ class Certificate(object):
             self.addNSCertType(value, critical)
         elif extensionType == 'TLSFeature':
             self.addTLSFeature(value, critical)
+        elif extensionType == 'embeddedSCTList':
+            self.savedEmbeddedSCTListData = (value, critical)
         else:
             raise UnknownExtensionTypeError(extensionType)
 
@@ -614,6 +642,28 @@ class Certificate(object):
         self.addExtension(univ.ObjectIdentifier('1.3.6.1.5.5.7.1.24'), sequence,
                           critical)
 
+    def addEmbeddedSCTListData(self):
+        (scts, critical) = self.savedEmbeddedSCTListData
+        encodedSCTs = []
+        for sctSpec in scts.split(','):
+            match = re.search('(\w+):(\d{8})', sctSpec)
+            if not match:
+                raise InvalidSCTSpecification(sctSpec)
+            keySpec = match.group(1)
+            key = pykey.keyFromSpecification(keySpec)
+            time = datetime.datetime.strptime(match.group(2), '%Y%m%d')
+            tbsCertificate = self.getTBSCertificate()
+            tbsDER = encoder.encode(tbsCertificate)
+            sct = pyct.SCT(key, time, tbsDER, self.issuerKey)
+            signed = sct.signAndEncode()
+            lengthPrefix = pack('!H', len(signed))
+            encodedSCTs.append(lengthPrefix + signed)
+        encodedSCTBytes = "".join(encodedSCTs)
+        lengthPrefix = pack('!H', len(encodedSCTBytes))
+        extensionBytes = lengthPrefix + encodedSCTBytes
+        self.addExtension(univ.ObjectIdentifier('1.3.6.1.4.1.11129.2.4.2'),
+                          univ.OctetString(extensionBytes), critical)
+
     def getVersion(self):
         return rfc2459.Version(self.versionValue).subtype(
             explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 0))
@@ -639,8 +689,8 @@ class Certificate(object):
     def getSubject(self):
         return stringToDN(self.subject)
 
-    def toDER(self):
-        (signatureOID, hashAlgorithm) = stringToAlgorithmIdentifiers(self.signature)
+    def getTBSCertificate(self):
+        (signatureOID, _) = stringToAlgorithmIdentifiers(self.signature)
         tbsCertificate = rfc2459.TBSCertificate()
         tbsCertificate.setComponentByName('version', self.getVersion())
         tbsCertificate.setComponentByName('serialNumber', self.getSerialNumber())
@@ -656,7 +706,12 @@ class Certificate(object):
             for count, extension in enumerate(self.extensions):
                 extensions.setComponentByPosition(count, extension)
             tbsCertificate.setComponentByName('extensions', extensions)
+        return tbsCertificate
+
+    def toDER(self):
+        (signatureOID, hashAlgorithm) = stringToAlgorithmIdentifiers(self.signature)
         certificate = rfc2459.Certificate()
+        tbsCertificate = self.getTBSCertificate()
         certificate.setComponentByName('tbsCertificate', tbsCertificate)
         certificate.setComponentByName('signatureAlgorithm', signatureOID)
         tbsDER = encoder.encode(tbsCertificate)
