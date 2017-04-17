@@ -1778,7 +1778,8 @@ class PackageFrontend(MachCommandBase):
 
         if not downloaded:
             self.log(logging.ERROR, 'artifact', {}, 'Nothing to download')
-            return 1
+            if files:
+                return 1
 
         return 0
 
