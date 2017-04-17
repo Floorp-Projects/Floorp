@@ -51,7 +51,7 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorBridgeChild, override);
 
-  explicit CompositorBridgeChild(LayerManager *aLayerManager);
+  explicit CompositorBridgeChild(LayerManager *aLayerManager, uint32_t aNamespace);
 
   void Destroy();
 
@@ -65,13 +65,14 @@ public:
   /**
    * Initialize the singleton compositor bridge for a content process.
    */
-  static bool InitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint);
-  static bool ReinitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint);
+  static bool InitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint, uint32_t aNamespace);
+  static bool ReinitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint, uint32_t aNamespace);
 
   static RefPtr<CompositorBridgeChild> CreateRemote(
     const uint64_t& aProcessToken,
     LayerManager* aLayerManager,
-    Endpoint<PCompositorBridgeChild>&& aEndpoint);
+    Endpoint<PCompositorBridgeChild>&& aEndpoint,
+    uint32_t aNamespace);
 
   /**
    * Initialize the CompositorBridgeChild, create CompositorBridgeParent, and
@@ -233,6 +234,8 @@ public:
     return mDeviceResetSequenceNumber;
   }
 
+  uint64_t GetNextExternalImageId();
+
 private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~CompositorBridgeChild();
@@ -295,6 +298,9 @@ private:
   };
 
   RefPtr<LayerManager> mLayerManager;
+
+  uint32_t mNamespace;
+
   // When not multi-process, hold a reference to the CompositorBridgeParent to keep it
   // alive. This reference should be null in multi-process.
   RefPtr<CompositorBridgeParent> mCompositorBridgeParent;

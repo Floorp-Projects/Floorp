@@ -82,6 +82,7 @@ GPUProcessManager::Shutdown()
 GPUProcessManager::GPUProcessManager()
  : mTaskFactory(this),
    mNextLayerTreeId(0),
+   mNextNamespace(0),
    mNextResetSequenceNo(0),
    mNumProcessAttempts(0),
    mDeviceResetCount(0),
@@ -204,7 +205,7 @@ GPUProcessManager::EnsureImageBridgeChild()
   }
 
   if (!EnsureGPUReady()) {
-    ImageBridgeChild::InitSameProcess();
+    ImageBridgeChild::InitSameProcess(AllocateNamespace());
     return;
   }
 
@@ -221,7 +222,7 @@ GPUProcessManager::EnsureImageBridgeChild()
   }
 
   mGPUChild->SendInitImageBridge(Move(parentPipe));
-  ImageBridgeChild::InitWithGPUProcess(Move(childPipe));
+  ImageBridgeChild::InitWithGPUProcess(Move(childPipe), AllocateNamespace());
 }
 
 void
@@ -600,7 +601,8 @@ GPUProcessManager::CreateTopLevelCompositor(nsBaseWidget* aWidget,
     aScale,
     aOptions,
     aUseExternalSurfaceSize,
-    aSurfaceSize);
+    aSurfaceSize,
+    AllocateNamespace());
 }
 
 RefPtr<CompositorSession>
@@ -629,7 +631,8 @@ GPUProcessManager::CreateRemoteSession(nsBaseWidget* aWidget,
   RefPtr<CompositorBridgeChild> child = CompositorBridgeChild::CreateRemote(
     mProcessToken,
     aLayerManager,
-    Move(childPipe));
+    Move(childPipe),
+    AllocateNamespace());
   if (!child) {
     gfxCriticalNote << "Failed to create CompositorBridgeChild";
     return nullptr;
@@ -687,7 +690,8 @@ GPUProcessManager::CreateContentBridges(base::ProcessId aOtherProcess,
                                         ipc::Endpoint<PCompositorBridgeChild>* aOutCompositor,
                                         ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
                                         ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
-                                        ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutVideoManager)
+                                        ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutVideoManager,
+                                        nsTArray<uint32_t>* aNamespaces)
 {
   if (!CreateContentCompositorBridge(aOtherProcess, aOutCompositor) ||
       !CreateContentImageBridge(aOtherProcess, aOutImageBridge) ||
@@ -698,6 +702,9 @@ GPUProcessManager::CreateContentBridges(base::ProcessId aOtherProcess,
   // VideoDeocderManager is only supported in the GPU process, so we allow this to be
   // fallible.
   CreateContentVideoDecoderManager(aOtherProcess, aOutVideoManager);
+  // Allocates 2 namaspaces(for CompositorBridgeChild and ImageBridgeChild)
+  aNamespaces->AppendElement(AllocateNamespace());
+  aNamespaces->AppendElement(AllocateNamespace());
   return true;
 }
 
@@ -879,6 +886,13 @@ GPUProcessManager::AllocateLayerTreeId()
 {
   MOZ_ASSERT(NS_IsMainThread());
   return ++mNextLayerTreeId;
+}
+
+uint32_t
+GPUProcessManager::AllocateNamespace()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return ++mNextNamespace;
 }
 
 bool

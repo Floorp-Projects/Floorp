@@ -158,14 +158,16 @@ public:
     Endpoint<PCompositorBridgeChild>&& aCompositor,
     Endpoint<PImageBridgeChild>&& aImageBridge,
     Endpoint<PVRManagerChild>&& aVRBridge,
-    Endpoint<PVideoDecoderManagerChild>&& aVideoManager) override;
+    Endpoint<PVideoDecoderManagerChild>&& aVideoManager,
+    nsTArray<uint32_t>&& namespaces) override;
 
   mozilla::ipc::IPCResult
   RecvReinitRendering(
     Endpoint<PCompositorBridgeChild>&& aCompositor,
     Endpoint<PImageBridgeChild>&& aImageBridge,
     Endpoint<PVRManagerChild>&& aVRBridge,
-    Endpoint<PVideoDecoderManagerChild>&& aVideoManager) override;
+    Endpoint<PVideoDecoderManagerChild>&& aVideoManager,
+    nsTArray<uint32_t>&& namespaces) override;
 
   virtual mozilla::ipc::IPCResult RecvSetProcessSandbox(const MaybeFileDesc& aBroker) override;
 

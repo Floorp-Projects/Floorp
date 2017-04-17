@@ -4753,6 +4753,8 @@ pref("layers.force-active", false);
 // platform and are the optimal surface type.
 pref("layers.gralloc.disable", false);
 
+pref("webrender.highlight-painted-layers", false);
+
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
 
