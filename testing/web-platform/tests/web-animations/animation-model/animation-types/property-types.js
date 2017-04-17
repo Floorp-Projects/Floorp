@@ -955,6 +955,75 @@ const boxShadowListType = {
   },
 };
 
+const positionType = {
+  testInterpolation: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]: ['10px 10px', '50px 50px'] },
+                                     { duration: 1000, fill: 'both' });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 0,    expected: '10px 10px' },
+                            { time: 500,  expected: '30px 30px' },
+                            { time: 1000, expected: '50px 50px' }]);
+    }, property + ' supports animating as a position');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]: ['1rem 1rem', '5rem 5rem'] },
+                                     { duration: 1000, fill: 'both' });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 0,    expected: '10px 10px' },
+                            { time: 500,  expected: '30px 30px' },
+                            { time: 1000, expected: '50px 50px' }]);
+    }, property + ' supports animating as a position of rem');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation = target.animate({ [idlName]: ['10% 10%', '50% 50%'] },
+                                     { duration: 1000, fill: 'both' });
+      testAnimationSamples(
+        animation, idlName,
+        [{ time: 0,    expected: calcFromPercentage(idlName, '10% 10%') },
+         { time: 500,  expected: calcFromPercentage(idlName, '30% 30%') },
+         { time: 1000, expected: calcFromPercentage(idlName, '50% 50%') }]);
+    }, property + ' supports animating as a position of percent');
+  },
+
+  testAddition: function(property, setup) {
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = '10px 10px';
+      var animation = target.animate({ [idlName]: ['10px 10px', '50px 50px'] },
+                                     { duration: 1000, composite: 'add' });
+      testAnimationSamples(animation, idlName, [{ time: 0, expected: '20px 20px' }]);
+    }, property + ': position');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = '1rem 1rem';
+      var animation = target.animate({ [idlName]: ['1rem 1rem', '5rem 5rem'] },
+                                     { duration: 1000, composite: 'add' });
+      testAnimationSamples(animation, idlName, [{ time: 0, expected: '20px 20px' }]);
+    }, property + ': position of rem');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      target.style[idlName] = '60% 60%';
+      var animation = target.animate({ [idlName]: ['70% 70%', '100% 100%'] },
+                                     { duration: 1000, composite: 'add' });
+      testAnimationSamples(
+        animation, idlName,
+        [{ time: 0, expected: calcFromPercentage(idlName, '130% 130%') }]);
+    }, property + ': position of percentage');
+  },
+};
+
 const types = {
   color: colorType,
   discrete: discreteType,
@@ -968,5 +1037,6 @@ const types = {
   visibility: visibilityType,
   boxShadowList: boxShadowListType,
   textShadowList: textShadowListType,
+  position: positionType,
 };
 

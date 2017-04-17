@@ -1130,8 +1130,7 @@ var gCSSProperties = {
   },
   'perspective-origin': {
     // https://drafts.csswg.org/css-transforms-1/#propdef-perspective-origin
-    types: [
-    ]
+    types: [ 'position' ]
   },
   'pointer-events': {
     // https://svgwg.org/svg2-draft/interact.html#PointerEventsProperty
@@ -1520,3 +1519,13 @@ function propertyToIDL(property) {
                             return str.substr(1).toUpperCase(); });
 }
 
+function calcFromPercentage(idlName, percentageValue) {
+  var examElem = document.createElement('div');
+  document.body.appendChild(examElem);
+  examElem.style[idlName] = percentageValue;
+
+  var calcValue = getComputedStyle(examElem)[idlName];
+  document.body.removeChild(examElem);
+
+  return calcValue;
+}
