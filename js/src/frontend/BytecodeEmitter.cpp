@@ -3524,8 +3524,8 @@ BytecodeEmitter::maybeSetSourceMap()
     if (parser.options().sourceMapURL()) {
         // Warn about the replacement, but use the new one.
         if (parser.ss()->hasSourceMapURL()) {
-            if (!parser.reportNoOffset(ParseWarning, false, JSMSG_ALREADY_HAS_PRAGMA,
-                                       parser.ss()->filename(), "//# sourceMappingURL"))
+            if (!parser.warningNoOffset(JSMSG_ALREADY_HAS_PRAGMA,
+                                        parser.ss()->filename(), "//# sourceMappingURL"))
             {
                 return false;
             }
