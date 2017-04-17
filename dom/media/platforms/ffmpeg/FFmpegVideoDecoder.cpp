@@ -241,7 +241,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
   // As such we instead use a map using the dts as key that we will retrieve
   // later.
   // The map will have a typical size of 16 entry.
-  mDurationMap.Insert(aSample->mTimecode, aSample->mDuration);
+  mDurationMap.Insert(aSample->mTimecode, aSample->mDuration.ToMicroseconds());
 
   if (!PrepareFrame()) {
     NS_WARNING("FFmpeg h264 decoder failed to allocate frame.");
@@ -282,7 +282,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
   int64_t duration;
   if (!mDurationMap.Find(mFrame->pkt_dts, duration)) {
     NS_WARNING("Unable to retrieve duration from map");
-    duration = aSample->mDuration;
+    duration = aSample->mDuration.ToMicroseconds();
     // dts are probably incorrectly reported ; so clear the map as we're
     // unlikely to find them in the future anyway. This also guards
     // against the map becoming extremely big.
@@ -340,7 +340,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
                                   mImageContainer,
                                   aSample->mOffset,
                                   pts,
-                                  duration,
+                                  media::TimeUnit::FromMicroseconds(duration),
                                   b,
                                   !!mFrame->key_frame,
                                   -1,

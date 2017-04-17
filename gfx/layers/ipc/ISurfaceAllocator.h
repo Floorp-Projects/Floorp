@@ -29,6 +29,7 @@ class DataSourceSurface;
 namespace layers {
 
 class CompositableForwarder;
+class CompositorBridgeParentBase;
 class TextureForwarder;
 
 class ShmemAllocator;
@@ -88,6 +89,8 @@ public:
 
   virtual LegacySurfaceDescriptorAllocator*
   AsLegacySurfaceDescriptorAllocator() { return nullptr; }
+
+  virtual CompositorBridgeParentBase* AsCompositorBridgeParentBase() { return nullptr; }
 
   // ipc info
 

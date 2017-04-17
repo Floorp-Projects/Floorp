@@ -965,9 +965,7 @@ PresShell::Init(nsIDocument* aDocument,
 
   // Bind the context to the presentation shell.
   mPresContext = aPresContext;
-  StyleBackendType backend = aStyleSet->IsServo() ? StyleBackendType::Servo
-                                                  : StyleBackendType::Gecko;
-  aPresContext->AttachShell(this, backend);
+  mPresContext->AttachShell(this, aStyleSet->BackendType());
 
   // Now we can initialize the style set. Make sure to set the member before
   // calling Init, since various subroutines need to find the style set off

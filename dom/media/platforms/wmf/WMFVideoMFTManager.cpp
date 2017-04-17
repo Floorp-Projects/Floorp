@@ -672,7 +672,7 @@ WMFVideoMFTManager::Input(MediaRawData* aSample)
                                            &inputSample);
   NS_ENSURE_TRUE(SUCCEEDED(hr) && inputSample != nullptr, hr);
 
-  mLastDuration = aSample->mDuration;
+  mLastDuration = aSample->mDuration.ToMicroseconds();
   mLastTime = aSample->mTime;
   mSamplesCount++;
 
@@ -839,7 +839,7 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
                                    mImageContainer,
                                    aStreamOffset,
                                    pts.ToMicroseconds(),
-                                   duration.ToMicroseconds(),
+                                   duration,
                                    b,
                                    false,
                                    -1,
@@ -866,7 +866,7 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
     VideoData::CreateFromImage(mVideoInfo.mDisplay,
                                aStreamOffset,
                                pts.ToMicroseconds(),
-                               duration.ToMicroseconds(),
+                               duration,
                                image.forget(),
                                false,
                                -1);
@@ -904,7 +904,7 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
   RefPtr<VideoData> v = VideoData::CreateFromImage(mVideoInfo.mDisplay,
                                                    aStreamOffset,
                                                    pts.ToMicroseconds(),
-                                                   duration.ToMicroseconds(),
+                                                   duration,
                                                    image.forget(),
                                                    false,
                                                    -1);
@@ -1033,7 +1033,7 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
   aOutData = frame;
   // Set the potentially corrected pts and duration.
   aOutData->mTime = pts.ToMicroseconds();
-  aOutData->mDuration = duration.ToMicroseconds();
+  aOutData->mDuration = duration;
 
   if (mNullOutputCount) {
     mGotValidOutputAfterNullOutput = true;

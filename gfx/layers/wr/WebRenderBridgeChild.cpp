@@ -111,16 +111,7 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder, const gfx::IntSize
 uint64_t
 WebRenderBridgeChild::GetNextExternalImageId()
 {
-  static uint32_t sNextID = 1;
-  ++sNextID;
-  MOZ_RELEASE_ASSERT(sNextID != UINT32_MAX);
-
-  // XXX replace external image id allocation with webrender's id allocation.
-  // Use proc id as IdNamespace for now.
-  uint32_t procId = static_cast<uint32_t>(base::GetCurrentProcId());
-  uint64_t imageId = procId;
-  imageId = imageId << 32 | sNextID;
-  return imageId;
+  return GetCompositorBridgeChild()->GetNextExternalImageId();
 }
 
 uint64_t
@@ -147,7 +138,12 @@ WebRenderBridgeChild::AllocExternalImageIdForCompositable(CompositableClient* aC
 void
 WebRenderBridgeChild::DeallocExternalImageId(uint64_t aImageId)
 {
-  MOZ_ASSERT(!mDestroyed);
+  if (mDestroyed) {
+    // This can happen if the IPC connection was torn down, because, e.g.
+    // the GPU process died.
+    return;
+  }
+
   MOZ_ASSERT(aImageId);
   SendRemoveExternalImageId(aImageId);
 }

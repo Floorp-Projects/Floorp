@@ -76,14 +76,16 @@ static StaticRefPtr<CompositorBridgeChild> sCompositorBridge;
 
 Atomic<int32_t> KnowsCompositor::sSerialCounter(0);
 
-CompositorBridgeChild::CompositorBridgeChild(LayerManager *aLayerManager)
+CompositorBridgeChild::CompositorBridgeChild(LayerManager *aLayerManager, uint32_t aNamespace)
   : mLayerManager(aLayerManager)
+  , mNamespace(aNamespace)
   , mCanSend(false)
   , mFwdTransactionId(0)
   , mDeviceResetSequenceNumber(0)
   , mMessageLoop(MessageLoop::current())
   , mSectionAllocator(nullptr)
 {
+  MOZ_ASSERT(mNamespace);
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -208,12 +210,12 @@ CompositorBridgeChild::LookupCompositorFrameMetrics(const FrameMetrics::ViewID a
 }
 
 /* static */ bool
-CompositorBridgeChild::InitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint)
+CompositorBridgeChild::InitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint, uint32_t aNamespace)
 {
   // There's only one compositor per child process.
   MOZ_ASSERT(!sCompositorBridge);
 
-  RefPtr<CompositorBridgeChild> child(new CompositorBridgeChild(nullptr));
+  RefPtr<CompositorBridgeChild> child(new CompositorBridgeChild(nullptr, aNamespace));
   if (!aEndpoint.Bind(child)) {
     NS_RUNTIMEABORT("Couldn't Open() Compositor channel.");
     return false;
@@ -226,7 +228,7 @@ CompositorBridgeChild::InitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoi
 }
 
 /* static */ bool
-CompositorBridgeChild::ReinitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint)
+CompositorBridgeChild::ReinitForContent(Endpoint<PCompositorBridgeChild>&& aEndpoint, uint32_t aNamespace)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -238,7 +240,7 @@ CompositorBridgeChild::ReinitForContent(Endpoint<PCompositorBridgeChild>&& aEndp
     old->Destroy();
   }
 
-  return InitForContent(Move(aEndpoint));
+  return InitForContent(Move(aEndpoint), aNamespace);
 }
 
 CompositorBridgeParent*
@@ -268,9 +270,10 @@ CompositorBridgeChild::InitSameProcess(widget::CompositorWidget* aWidget,
 /* static */ RefPtr<CompositorBridgeChild>
 CompositorBridgeChild::CreateRemote(const uint64_t& aProcessToken,
                                     LayerManager* aLayerManager,
-                                    Endpoint<PCompositorBridgeChild>&& aEndpoint)
+                                    Endpoint<PCompositorBridgeChild>&& aEndpoint,
+                                    uint32_t aNamespace)
 {
-  RefPtr<CompositorBridgeChild> child = new CompositorBridgeChild(aLayerManager);
+  RefPtr<CompositorBridgeChild> child = new CompositorBridgeChild(aLayerManager, aNamespace);
   if (!aEndpoint.Bind(child)) {
     return nullptr;
   }
@@ -1178,6 +1181,18 @@ CompositorBridgeChild::DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActo
   WebRenderBridgeChild* child = static_cast<WebRenderBridgeChild*>(aActor);
   child->ReleaseIPDLReference();
   return true;
+}
+
+uint64_t
+CompositorBridgeChild::GetNextExternalImageId()
+{
+  static uint32_t sNextID = 1;
+  ++sNextID;
+  MOZ_RELEASE_ASSERT(sNextID != UINT32_MAX);
+
+  uint64_t imageId = mNamespace;
+  imageId = imageId << 32 | sNextID;
+  return imageId;
 }
 
 } // namespace layers

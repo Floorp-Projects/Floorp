@@ -95,7 +95,8 @@ public:
     ipc::Endpoint<PCompositorBridgeChild>* aOutCompositor,
     ipc::Endpoint<PImageBridgeChild>* aOutImageBridge,
     ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
-    ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutVideoManager);
+    ipc::Endpoint<dom::PVideoDecoderManagerChild>* aOutVideoManager,
+    nsTArray<uint32_t>* aNamespaces);
 
   // This returns a reference to the APZCTreeManager to which
   // pan/zoom-related events can be sent.
@@ -118,6 +119,10 @@ public:
   //
   // Must run on the browser main thread.
   uint64_t AllocateLayerTreeId();
+
+  // Allocate an ID that can be used as Namespace and
+  // Must run on the browser main thread.
+  uint32_t AllocateNamespace();
 
   // Allocate a layers ID and connect it to a compositor. If the compositor is null,
   // the connect operation will not be performed, but an ID will still be allocated.
@@ -241,6 +246,7 @@ private:
   ipc::TaskFactory<GPUProcessManager> mTaskFactory;
   RefPtr<VsyncIOThreadHolder> mVsyncIOThread;
   uint64_t mNextLayerTreeId;
+  uint32_t mNextNamespace;
   uint64_t mNextResetSequenceNo;
   uint32_t mNumProcessAttempts;
 
