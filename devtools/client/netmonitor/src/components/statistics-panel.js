@@ -4,8 +4,10 @@
 
 "use strict";
 
+const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const {
   createClass,
+  createFactory,
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
@@ -19,6 +21,10 @@ const {
   getTimeWithDecimals
 } = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
+const { getPerformanceAnalysisURL } = require("../utils/mdn-utils");
+
+// Components
+const MDNLink = createFactory(require("./mdn-link"));
 
 const { button, div } = DOM;
 const MediaQueryList = window.matchMedia("(min-width: 700px)");
@@ -48,6 +54,10 @@ const StatisticsPanel = createClass({
     };
   },
 
+  componentWillMount() {
+    this.mdnLinkContainerNodes = new Map();
+  },
+
   componentDidUpdate(prevProps) {
     MediaQueryList.addListener(this.onLayoutChange);
 
@@ -68,10 +78,35 @@ const StatisticsPanel = createClass({
       title: CHARTS_CACHE_DISABLED,
       data: ready ? this.sanitizeChartDataSource(requests, true) : null,
     });
+
+    this.createMDNLink("primedCacheChart", getPerformanceAnalysisURL());
+    this.createMDNLink("emptyCacheChart", getPerformanceAnalysisURL());
   },
 
   componentWillUnmount() {
     MediaQueryList.removeListener(this.onLayoutChange);
+    this.unmountMDNLinkContainers();
+  },
+
+  createMDNLink(chartId, url) {
+    if (this.mdnLinkContainerNodes.has(chartId)) {
+      ReactDOM.unmountComponentAtNode(this.mdnLinkContainerNodes.get(chartId));
+    }
+
+    // MDNLink is a React component but Chart isn't.  To get the link
+    // into the chart we mount a new ReactDOM at the appropriate
+    // location after the chart has been created.
+    let title = this.refs[chartId].querySelector(".table-chart-title");
+    let containerNode = document.createElement("span");
+    title.appendChild(containerNode);
+    ReactDOM.render(MDNLink({ url }), containerNode);
+    this.mdnLinkContainerNodes.set(chartId, containerNode);
+  },
+
+  unmountMDNLinkContainers() {
+    for (let [, node] of this.mdnLinkContainerNodes) {
+      ReactDOM.unmountComponentAtNode(node);
+    }
   },
 
   createChart({ id, title, data }) {

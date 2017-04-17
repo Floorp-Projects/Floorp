@@ -145,7 +145,7 @@ nsresult
 gfxFontCache::Init()
 {
     NS_ASSERTION(!gGlobalCache, "Where did this come from?");
-    gGlobalCache = new gfxFontCache();
+    gGlobalCache = new gfxFontCache(SystemGroup::EventTargetFor(TaskCategory::Other));
     if (!gGlobalCache) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -172,9 +172,9 @@ gfxFontCache::Shutdown()
 #endif
 }
 
-gfxFontCache::gfxFontCache()
+gfxFontCache::gfxFontCache(nsIEventTarget* aEventTarget)
     : nsExpirationTracker<gfxFont,3>(FONT_TIMEOUT_SECONDS * 1000,
-                                     "gfxFontCache")
+                                     "gfxFontCache", aEventTarget)
 {
     nsCOMPtr<nsIObserverService> obs = GetObserverService();
     if (obs) {
@@ -186,6 +186,9 @@ gfxFontCache::gfxFontCache()
     // during expiration; see bug 717175 & 894798.
     mWordCacheExpirationTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (mWordCacheExpirationTimer) {
+        if (XRE_IsContentProcess() && NS_IsMainThread()) {
+            mWordCacheExpirationTimer->SetTarget(aEventTarget);
+        }
         mWordCacheExpirationTimer->
             InitWithFuncCallback(WordCacheExpirationTimerCallback, this,
                                  SHAPED_WORD_TIMEOUT_SECONDS * 1000,

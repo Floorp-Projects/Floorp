@@ -285,7 +285,7 @@ public:
         SHAPED_WORD_TIMEOUT_SECONDS = 60
     };
 
-    gfxFontCache();
+    explicit gfxFontCache(nsIEventTarget* aEventTarget);
     ~gfxFontCache();
 
     /*
