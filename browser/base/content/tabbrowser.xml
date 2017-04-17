@@ -4898,7 +4898,7 @@
                 tab.linkedBrowser &&
                 tab.linkedBrowser.isRemoteBrowser) {
               label += " - e10s";
-              if (Services.prefs.getIntPref("dom.ipc.processCount") > 1) {
+              if (Services.appinfo.maxWebProcessCount > 1) {
                 label += " (" + tab.linkedBrowser.frameLoader.tabParent.osPid + ")";
               }
             }
