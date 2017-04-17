@@ -375,7 +375,7 @@
     _(RoundF)                       \
     _(NearbyInt)                    \
     _(NearbyIntF)                   \
-    _(In)                           \
+    _(InCache)                      \
     _(InArray)                      \
     _(HasOwnCache)                  \
     _(InstanceOfO)                  \

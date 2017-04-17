@@ -12600,17 +12600,19 @@ IonBuilder::jsop_in()
     MDefinition* obj = convertUnboxedObjects(current->pop());
     MDefinition* id = current->pop();
 
-    bool emitted = false;
+    if (!forceInlineCaches()) {
+        bool emitted = false;
 
-    MOZ_TRY(inTryDense(&emitted, obj, id));
-    if (emitted)
-        return Ok();
+        MOZ_TRY(inTryDense(&emitted, obj, id));
+        if (emitted)
+            return Ok();
 
-    MOZ_TRY(hasTryNotDefined(&emitted, obj, id, /* ownProperty = */ false));
-    if (emitted)
-        return Ok();
+        MOZ_TRY(hasTryNotDefined(&emitted, obj, id, /* ownProperty = */ false));
+        if (emitted)
+            return Ok();
+    }
 
-    MIn* ins = MIn::New(alloc(), id, obj);
+    MInCache* ins = MInCache::New(alloc(), id, obj);
 
     current->add(ins);
     current->push(ins);
