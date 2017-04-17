@@ -1666,8 +1666,8 @@ class PackageFrontend(MachCommandBase):
 
             # TODO: move to the taskcluster package
             def tasks(kind):
-                kind_path = mozpath.join('taskcluster', 'ci', kind)
-                with open(mozpath.join(self.topsrcdir, kind_path, 'kind.yml')) as f:
+                kind_path = mozpath.join(self.topsrcdir, 'taskcluster', 'ci', kind)
+                with open(mozpath.join(kind_path, 'kind.yml')) as f:
                     config = yaml.load(f)
                     tasks = Kind(kind, kind_path, config).load_tasks(params, {})
                     return {
