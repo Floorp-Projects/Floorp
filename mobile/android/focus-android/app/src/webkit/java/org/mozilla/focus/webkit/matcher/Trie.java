@@ -42,7 +42,6 @@ import org.mozilla.focus.webkit.matcher.util.FocusString;
         }
     }
 
-    public final char character;
     public final SparseArray<Trie> children = new SparseArray<>();
     public boolean terminator = false;
 
@@ -96,8 +95,6 @@ import org.mozilla.focus.webkit.matcher.util.FocusString;
     }
 
     private Trie(char character, Trie parent) {
-        this.character = character;
-
         if (parent != null) {
             parent.children.put(character, this);
         }
