@@ -27,7 +27,6 @@
 #include "mozilla/dom/AudioTrack.h"
 #include "mozilla/dom/AudioTrackList.h"
 #include "mozilla/dom/HTMLMediaElement.h"
-#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/VideoTrack.h"
 #include "mozilla/dom/VideoTrackList.h"
 #include "nsPrintfCString.h"
@@ -720,8 +719,7 @@ MediaDecoder::Play()
 }
 
 nsresult
-MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType,
-                   dom::Promise* aPromise /*=nullptr*/)
+MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
@@ -734,7 +732,7 @@ MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType,
 
   mLogicallySeeking = true;
   SeekTarget target = SeekTarget(timeUsecs, aSeekType);
-  CallSeek(target, aPromise);
+  CallSeek(target);
 
   if (mPlayState == PLAY_STATE_ENDED) {
     PinForSeek();
@@ -752,7 +750,7 @@ MediaDecoder::DiscardOngoingSeekIfExists()
 }
 
 void
-MediaDecoder::CallSeek(const SeekTarget& aTarget, dom::Promise* aPromise)
+MediaDecoder::CallSeek(const SeekTarget& aTarget)
 {
   MOZ_ASSERT(NS_IsMainThread());
   DiscardOngoingSeekIfExists();
