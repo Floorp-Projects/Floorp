@@ -527,6 +527,24 @@ Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,
   return collection && !collection->mAnimations.IsEmpty();
 }
 
+bool
+Gecko_ElementHasCSSTransitions(RawGeckoElementBorrowed aElement,
+                               nsIAtom* aPseudoTagOrNull)
+{
+  MOZ_ASSERT(!aPseudoTagOrNull ||
+             aPseudoTagOrNull == nsCSSPseudoElements::before ||
+             aPseudoTagOrNull == nsCSSPseudoElements::after);
+
+  CSSPseudoElementType pseudoType =
+    nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
+                                       CSSEnabledState::eForAllContent);
+  nsTransitionManager::CSSTransitionCollection* collection =
+    nsTransitionManager::CSSTransitionCollection
+                       ::GetAnimationCollection(aElement, pseudoType);
+
+  return collection && !collection->mAnimations.IsEmpty();
+}
+
 double
 Gecko_GetProgressFromComputedTiming(RawGeckoComputedTimingBorrowed aComputedTiming)
 {
