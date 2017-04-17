@@ -46,7 +46,7 @@ public:
 
     // How much time duration of the media would we have decrypted inside the
     // time window if we did decrypt this block?
-    TimeDuration sampleDuration = TimeDuration::FromMicroseconds(aSample->mDuration);
+    TimeDuration sampleDuration = aSample->mDuration.ToTimeDuration();
     TimeDuration durationDecrypted = sampleDuration;
     for (const DecryptedJob& job : mDecrypts) {
       durationDecrypted += job.mSampleDuration;

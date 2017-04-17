@@ -513,18 +513,73 @@ bool
 Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,
                               nsIAtom* aPseudoTagOrNull)
 {
-  MOZ_ASSERT(!aPseudoTagOrNull ||
-             aPseudoTagOrNull == nsCSSPseudoElements::before ||
-             aPseudoTagOrNull == nsCSSPseudoElements::after);
-
-  CSSPseudoElementType pseudoType =
-    nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
-                                       CSSEnabledState::eForAllContent);
   nsAnimationManager::CSSAnimationCollection* collection =
     nsAnimationManager::CSSAnimationCollection
-                      ::GetAnimationCollection(aElement, pseudoType);
+                      ::GetAnimationCollection(aElement, aPseudoTagOrNull);
 
   return collection && !collection->mAnimations.IsEmpty();
+}
+
+bool
+Gecko_ElementHasCSSTransitions(RawGeckoElementBorrowed aElement,
+                               nsIAtom* aPseudoTagOrNull)
+{
+  nsTransitionManager::CSSTransitionCollection* collection =
+    nsTransitionManager::CSSTransitionCollection
+                       ::GetAnimationCollection(aElement, aPseudoTagOrNull);
+
+  return collection && !collection->mAnimations.IsEmpty();
+}
+
+size_t
+Gecko_ElementTransitions_Length(RawGeckoElementBorrowed aElement,
+                                nsIAtom* aPseudoTagOrNull)
+{
+  nsTransitionManager::CSSTransitionCollection* collection =
+    nsTransitionManager::CSSTransitionCollection
+                       ::GetAnimationCollection(aElement, aPseudoTagOrNull);
+
+  return collection ? collection->mAnimations.Length() : 0;
+}
+
+static CSSTransition*
+GetCurrentTransitionAt(RawGeckoElementBorrowed aElement,
+                       nsIAtom* aPseudoTagOrNull,
+                       size_t aIndex)
+{
+  nsTransitionManager::CSSTransitionCollection* collection =
+    nsTransitionManager::CSSTransitionCollection
+                       ::GetAnimationCollection(aElement, aPseudoTagOrNull);
+  if (!collection) {
+    return nullptr;
+  }
+  nsTArray<RefPtr<CSSTransition>>& transitions = collection->mAnimations;
+  return aIndex < transitions.Length()
+         ? transitions[aIndex].get()
+         : nullptr;
+}
+
+nsCSSPropertyID
+Gecko_ElementTransitions_PropertyAt(RawGeckoElementBorrowed aElement,
+                                    nsIAtom* aPseudoTagOrNull,
+                                    size_t aIndex)
+{
+  CSSTransition* transition = GetCurrentTransitionAt(aElement,
+                                                     aPseudoTagOrNull,
+                                                     aIndex);
+  return transition ? transition->TransitionProperty()
+                    : nsCSSPropertyID::eCSSProperty_UNKNOWN;
+}
+
+RawServoAnimationValueBorrowedOrNull
+Gecko_ElementTransitions_EndValueAt(RawGeckoElementBorrowed aElement,
+                                    nsIAtom* aPseudoTagOrNull,
+                                    size_t aIndex)
+{
+  CSSTransition* transition = GetCurrentTransitionAt(aElement,
+                                                     aPseudoTagOrNull,
+                                                     aIndex);
+  return transition ? transition->ToValue().mServo.get() : nullptr;
 }
 
 double

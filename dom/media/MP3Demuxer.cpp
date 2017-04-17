@@ -605,12 +605,12 @@ MP3TrackDemuxer::GetNextFrame(const MediaByteRange& aRange)
   UpdateState(aRange);
 
   frame->mTime = Duration(mFrameIndex - 1).ToMicroseconds();
-  frame->mDuration = Duration(1).ToMicroseconds();
+  frame->mDuration = Duration(1);
   frame->mTimecode = frame->mTime;
   frame->mKeyframe = true;
 
   MOZ_ASSERT(frame->mTime >= 0);
-  MOZ_ASSERT(frame->mDuration > 0);
+  MOZ_ASSERT(frame->mDuration.IsPositive());
 
   if (mNumParsedFrames == 1) {
     // First frame parsed, let's read VBR info if available.

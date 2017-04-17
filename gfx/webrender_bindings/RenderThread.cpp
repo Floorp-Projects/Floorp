@@ -241,11 +241,11 @@ RenderThread::UnregisterExternalImage(uint64_t aExternalImageId)
 }
 
 RenderTextureHost*
-RenderThread::GetRenderTexture(uint64_t aExternalImageId)
+RenderThread::GetRenderTexture(WrExternalImageId aExternalImageId)
 {
   MutexAutoLock lock(mRenderTextureMapLock);
-  MOZ_ASSERT(mRenderTextures.Get(aExternalImageId).get());
-  return mRenderTextures.Get(aExternalImageId).get();
+  MOZ_ASSERT(mRenderTextures.Get(aExternalImageId.mHandle).get());
+  return mRenderTextures.Get(aExternalImageId.mHandle).get();
 }
 
 } // namespace wr

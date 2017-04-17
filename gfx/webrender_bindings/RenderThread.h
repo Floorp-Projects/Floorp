@@ -109,7 +109,7 @@ public:
 
   void UnregisterExternalImage(uint64_t aExternalImageId);
 
-  RenderTextureHost* GetRenderTexture(uint64_t aExternalImageId);
+  RenderTextureHost* GetRenderTexture(WrExternalImageId aExternalImageId);
 
 private:
   explicit RenderThread(base::Thread* aThread);

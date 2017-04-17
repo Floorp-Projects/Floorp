@@ -2301,20 +2301,23 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
       Endpoint<PImageBridgeChild> imageBridge;
       Endpoint<PVRManagerChild> vrBridge;
       Endpoint<PVideoDecoderManagerChild> videoManager;
+      nsTArray<uint32_t> namespaces;
 
       DebugOnly<bool> opened = gpm->CreateContentBridges(
         OtherPid(),
         &compositor,
         &imageBridge,
         &vrBridge,
-        &videoManager);
+        &videoManager,
+        &namespaces);
       MOZ_ASSERT(opened);
 
       Unused << SendInitRendering(
         Move(compositor),
         Move(imageBridge),
         Move(vrBridge),
-        Move(videoManager));
+        Move(videoManager),
+        Move(namespaces));
 
       gpm->AddListener(this);
     }
@@ -2449,20 +2452,23 @@ ContentParent::OnCompositorUnexpectedShutdown()
   Endpoint<PImageBridgeChild> imageBridge;
   Endpoint<PVRManagerChild> vrBridge;
   Endpoint<PVideoDecoderManagerChild> videoManager;
+  nsTArray<uint32_t> namespaces;
 
   DebugOnly<bool> opened = gpm->CreateContentBridges(
     OtherPid(),
     &compositor,
     &imageBridge,
     &vrBridge,
-    &videoManager);
+    &videoManager,
+    &namespaces);
   MOZ_ASSERT(opened);
 
   Unused << SendReinitRendering(
     Move(compositor),
     Move(imageBridge),
     Move(vrBridge),
-    Move(videoManager));
+    Move(videoManager),
+    Move(namespaces));
 }
 
 void
