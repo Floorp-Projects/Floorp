@@ -59,19 +59,21 @@
 # These defines must match HANDLER_CLSID defined in
 # accessible/ipc/win/handler/HandlerData.idl
 
-#ifndef MOZ_OFFICIAL_BRANDING
+!if "@MOZ_UPDATE_CHANNEL@" == "default"
 #ifdef DEBUG
 !define AccessibleHandlerCLSID "{398FFD8D-5382-48F7-9E3B-19012762D39A}"
 #else
 !define AccessibleHandlerCLSID "{CE573FAF-7815-4FC2-A031-B092268ACE9E}"
 #endif
-#elifdef NIGHTLY_BUILD
+!else if "@MOZ_UPDATE_CHANNEL@" == "nightly"
 !define AccessibleHandlerCLSID "{4629216B-8753-41BF-9527-5BFF51401671}"
-#elifdef RELEASE_OR_BETA
+!else if "@MOZ_UPDATE_CHANNEL@" == "beta"
+!define AccessibleHandlerCLSID "{21E9F98D-A6C9-4CB5-B288-AE2FD2A96C58}"
+!else if "@MOZ_UPDATE_CHANNEL@" == "release"
 !define AccessibleHandlerCLSID "{1BAA303D-B4B9-45E5-9CCB-E3FCA3E274B6}"
-#else
+!else
 !define AccessibleHandlerCLSID "{4A195748-DCA2-45FB-9295-0A139E76A9E7}"
-#endif
+!endif
 
 # Due to official and beta using the same branding this is needed to
 # differentiante between the url used by the stub for downloading.
