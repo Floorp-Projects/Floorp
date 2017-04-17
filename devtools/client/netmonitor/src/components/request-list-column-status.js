@@ -9,6 +9,7 @@ const {
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
+const { L10N } = require("../utils/l10n");
 const { propertiesEqual } = require("../utils/request-utils");
 
 const { div, span } = DOM;
@@ -46,12 +47,18 @@ const RequestListColumnStatus = createClass({
       }
 
       if (statusText) {
-        title = `${status} ${statusText}`;
-        if (fromCache) {
-          title += " (cached)";
-        }
-        if (fromServiceWorker) {
-          title += " (service worker)";
+        if (fromCache && fromServiceWorker) {
+          title = L10N.getFormatStr("netmonitor.status.tooltip.cachedworker",
+            status, statusText);
+        } else if (fromCache) {
+          title = L10N.getFormatStr("netmonitor.status.tooltip.cached",
+            status, statusText);
+        } else if (fromServiceWorker) {
+          title = L10N.getFormatStr("netmonitor.status.tooltip.worker",
+            status, statusText);
+        } else {
+          title = L10N.getFormatStr("netmonitor.status.tooltip.simple",
+            status, statusText);
         }
       }
     }
