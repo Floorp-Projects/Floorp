@@ -667,8 +667,6 @@ this.ExtensionData = class {
   }
 };
 
-let _browserUpdated = false;
-
 const PROXIED_EVENTS = new Set(["test-harness-message", "add-permissions", "remove-permissions"]);
 
 // We create one instance of this class per extension. |addonData|
@@ -743,14 +741,6 @@ this.Extension = class extends ExtensionData {
       }
     });
     /* eslint-enable mozilla/balanced-listeners */
-  }
-
-  static set browserUpdated(updated) {
-    _browserUpdated = updated;
-  }
-
-  static get browserUpdated() {
-    return _browserUpdated;
   }
 
   static generateXPI(data) {

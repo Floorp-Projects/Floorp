@@ -242,9 +242,6 @@ to mochitest command.
   * SVG-in-OpenType values not supported servo/servo#15211 bug 1355412
     * test_value_storage.html `context-` [7]
     * test_bug798843_pref.html [7]
-  * writing-mode: sideways-{lr,rl} and SVG values servo/servo#15213
-    * test_logical_properties.html `sideways` [1224]
-    * test_value_storage.html `writing-mode` [8]
   * -moz-box-orient: {block,inline}-axis bug 1355005
     * test_value_storage.html `box-orient` [6]
 * Incorrect parsing
