@@ -455,7 +455,6 @@ VRHMDSensorState
 VRDisplayOculus::GetSensorState(double timeOffset)
 {
   VRHMDSensorState result;
-  result.Clear();
 
   ovrTrackingState state = ovr_GetTrackingState(mSession, timeOffset, true);
   ovrPoseStatef& pose(state.HeadPose);
