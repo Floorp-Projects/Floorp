@@ -702,9 +702,6 @@ private:
   // The buffered range. Mirrored from the decoder thread.
   Mirror<media::TimeIntervals> mBuffered;
 
-  // The duration according to the demuxer's current estimate, mirrored from the main thread.
-  Mirror<media::NullableTimeUnit> mEstimatedDuration;
-
   // The duration explicitly set by JS, mirrored from the main thread.
   Mirror<Maybe<double>> mExplicitDuration;
 

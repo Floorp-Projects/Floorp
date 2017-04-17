@@ -2571,7 +2571,6 @@ ShutdownState::Enter()
 
   // Disconnect canonicals and mirrors before shutting down our task queue.
   master->mBuffered.DisconnectIfConnected();
-  master->mEstimatedDuration.DisconnectIfConnected();
   master->mExplicitDuration.DisconnectIfConnected();
   master->mPlayState.DisconnectIfConnected();
   master->mNextPlayState.DisconnectIfConnected();
@@ -2635,7 +2634,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mVideoDecodeMode(VideoDecodeMode::Normal),
   mIsMSE(aDecoder->IsMSE()),
   INIT_MIRROR(mBuffered, TimeIntervals()),
-  INIT_MIRROR(mEstimatedDuration, NullableTimeUnit()),
   INIT_MIRROR(mExplicitDuration, Maybe<double>()),
   INIT_MIRROR(mPlayState, MediaDecoder::PLAY_STATE_LOADING),
   INIT_MIRROR(mNextPlayState, MediaDecoder::PLAY_STATE_PAUSED),
@@ -2689,7 +2687,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
 
   // Connect mirrors.
   mBuffered.Connect(mReader->CanonicalBuffered());
-  mEstimatedDuration.Connect(aDecoder->CanonicalEstimatedDuration());
   mExplicitDuration.Connect(aDecoder->CanonicalExplicitDuration());
   mPlayState.Connect(aDecoder->CanonicalPlayState());
   mNextPlayState.Connect(aDecoder->CanonicalNextPlayState());
@@ -2707,8 +2704,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mWatchManager.Watch(mVolume, &MediaDecoderStateMachine::VolumeChanged);
   mWatchManager.Watch(mPreservesPitch,
                       &MediaDecoderStateMachine::PreservesPitchChanged);
-  mWatchManager.Watch(mEstimatedDuration,
-                      &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mExplicitDuration,
                       &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mObservedDuration,
@@ -2994,8 +2989,6 @@ void MediaDecoderStateMachine::RecomputeDuration()
     // We don't fire duration changed for this case because it should have
     // already been fired on the main thread when the explicit duration was set.
     duration = TimeUnit::FromSeconds(d);
-  } else if (mEstimatedDuration.Ref().isSome()) {
-    duration = mEstimatedDuration.Ref().ref();
   } else if (mInfo.isSome() && Info().mMetadataDuration.isSome()) {
     // We need to check mInfo.isSome() because that this method might be invoked
     // while mObservedDuration is changed which might before the metadata been
