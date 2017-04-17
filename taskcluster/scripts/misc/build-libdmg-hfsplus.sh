@@ -23,7 +23,7 @@ cd libdmg-hfsplus
 git checkout $LIBDMG_REV
 
 # Make a source archive
-git archive ${LIBDMG_REV} | xz > $UPLOAD_DIR/libdmg-hfsplus.tar.xz
+git archive --prefix=libdmg-hfsplus/ ${LIBDMG_REV} | xz > $UPLOAD_DIR/libdmg-hfsplus.tar.xz
 cmake .
 make -j$(getconf _NPROCESSORS_ONLN)
 
@@ -33,6 +33,7 @@ cp dmg/dmg hfs/hfsplus $STAGE
 
 cat >$STAGE/README<<EOF
 Built from ${LIBDMG_REPOSITORY} rev `git rev-parse ${LIBDMG_REV}`.
-Source is available in tooltool, digest `sha512sum $UPLOAD_DIR/libdmg-hfsplus.tar.xz`.
+Source is available as a taskcluster artifact:
+https://queue.taskcluster.net/v1/task/$TASK_ID/artifacts/public/libdmg-hfsplus.tar.xz
 EOF
 tar cf - -C $WORKSPACE `basename $STAGE` | xz > $UPLOAD_DIR/dmg.tar.xz
