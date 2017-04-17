@@ -29,6 +29,8 @@ typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 
 namespace mozilla {
 
+using media::TimeUnit;
+
 /**
  * FFmpeg calls back to this function with a list of pixel formats it supports.
  * We choose a pixel format that we support and return it.
@@ -342,7 +344,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
                                   mImageContainer,
                                   aSample->mOffset,
                                   pts,
-                                  media::TimeUnit::FromMicroseconds(duration),
+                                  TimeUnit::FromMicroseconds(duration),
                                   b,
                                   !!mFrame->key_frame,
                                   -1,
@@ -364,7 +366,7 @@ RefPtr<MediaDataDecoder::DecodePromise>
 FFmpegVideoDecoder<LIBAV_VER>::ProcessDrain()
 {
   RefPtr<MediaRawData> empty(new MediaRawData());
-  empty->mTimecode = media::TimeUnit::FromMicroseconds(mLastInputDts);
+  empty->mTimecode = TimeUnit::FromMicroseconds(mLastInputDts);
   bool gotFrame = false;
   DecodedData results;
   while (NS_SUCCEEDED(DoDecode(empty, &gotFrame, results)) && gotFrame) {

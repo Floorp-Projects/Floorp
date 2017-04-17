@@ -299,6 +299,8 @@ InitAudioSpecificConfig(const Frame& frame,
 
 } // namespace adts
 
+using media::TimeUnit;
+
 // ADTSDemuxer
 
 ADTSDemuxer::ADTSDemuxer(MediaResource* aSource)
@@ -384,7 +386,7 @@ ADTSTrackDemuxer::~ADTSTrackDemuxer()
 bool
 ADTSTrackDemuxer::Init()
 {
-  FastSeek(media::TimeUnit());
+  FastSeek(TimeUnit::Zero());
   // Read the first frame to fetch sample rate and other meta data.
   RefPtr<MediaRawData> frame(GetNextFrame(FindNextFrame(true)));
 
@@ -396,7 +398,7 @@ ADTSTrackDemuxer::Init()
   }
 
   // Rewind back to the stream begin to avoid dropping the first frame.
-  FastSeek(media::TimeUnit());
+  FastSeek(TimeUnit::Zero());
 
   if (!mInfo) {
     mInfo = MakeUnique<AudioInfo>();
@@ -437,18 +439,18 @@ ADTSTrackDemuxer::GetInfo() const
 }
 
 RefPtr<ADTSTrackDemuxer::SeekPromise>
-ADTSTrackDemuxer::Seek(const media::TimeUnit& aTime)
+ADTSTrackDemuxer::Seek(const TimeUnit& aTime)
 {
   // Efficiently seek to the position.
   FastSeek(aTime);
   // Correct seek position by scanning the next frames.
-  const media::TimeUnit seekTime = ScanUntil(aTime);
+  const TimeUnit seekTime = ScanUntil(aTime);
 
   return SeekPromise::CreateAndResolve(seekTime, __func__);
 }
 
-media::TimeUnit
-ADTSTrackDemuxer::FastSeek(const media::TimeUnit& aTime)
+TimeUnit
+ADTSTrackDemuxer::FastSeek(const TimeUnit& aTime)
 {
   ADTSLOG("FastSeek(%" PRId64 ") avgFrameLen=%f mNumParsedFrames=%" PRIu64
          " mFrameIndex=%" PRId64 " mOffset=%" PRIu64,
@@ -480,8 +482,8 @@ ADTSTrackDemuxer::FastSeek(const media::TimeUnit& aTime)
   return Duration(mFrameIndex);
 }
 
-media::TimeUnit
-ADTSTrackDemuxer::ScanUntil(const media::TimeUnit& aTime)
+TimeUnit
+ADTSTrackDemuxer::ScanUntil(const TimeUnit& aTime)
 {
   ADTSLOG("ScanUntil(%" PRId64 ") avgFrameLen=%f mNumParsedFrames=%" PRIu64
           " mFrameIndex=%" PRId64 " mOffset=%" PRIu64,
@@ -557,12 +559,11 @@ ADTSTrackDemuxer::Reset()
   if (mParser) {
     mParser->Reset();
   }
-  FastSeek(media::TimeUnit());
+  FastSeek(TimeUnit::Zero());
 }
 
 RefPtr<ADTSTrackDemuxer::SkipAccessPointPromise>
-ADTSTrackDemuxer::SkipToNextRandomAccessPoint(
-  const media::TimeUnit& aTimeThreshold)
+ADTSTrackDemuxer::SkipToNextRandomAccessPoint(const TimeUnit& aTimeThreshold)
 {
   // Will not be called for audio-only resources.
   return SkipAccessPointPromise::CreateAndReject(
@@ -578,9 +579,9 @@ ADTSTrackDemuxer::GetResourceOffset() const
 media::TimeIntervals
 ADTSTrackDemuxer::GetBuffered()
 {
-  media::TimeUnit duration = Duration();
+  auto duration = Duration();
 
-  if (duration <= media::TimeUnit()) {
+  if (!duration.IsPositive()) {
     return media::TimeIntervals();
   }
 
@@ -594,28 +595,28 @@ ADTSTrackDemuxer::StreamLength() const
   return mSource.GetLength();
 }
 
-media::TimeUnit
+TimeUnit
 ADTSTrackDemuxer::Duration() const
 {
   if (!mNumParsedFrames) {
-    return media::TimeUnit::FromMicroseconds(-1);
+    return TimeUnit::FromMicroseconds(-1);
   }
 
   const int64_t streamLen = StreamLength();
   if (streamLen < 0) {
     // Unknown length, we can't estimate duration.
-    return media::TimeUnit::FromMicroseconds(-1);
+    return TimeUnit::FromMicroseconds(-1);
   }
   const int64_t firstFrameOffset = mParser->FirstFrame().Offset();
   int64_t numFrames = (streamLen - firstFrameOffset) / AverageFrameLength();
   return Duration(numFrames);
 }
 
-media::TimeUnit
+TimeUnit
 ADTSTrackDemuxer::Duration(int64_t aNumFrames) const
 {
   if (!mSamplesPerSecond) {
-    return media::TimeUnit::FromMicroseconds(-1);
+    return TimeUnit::FromMicroseconds(-1);
   }
 
   return FramesToTimeUnit(aNumFrames * mSamplesPerFrame, mSamplesPerSecond);
@@ -784,7 +785,7 @@ ADTSTrackDemuxer::FrameIndexFromOffset(int64_t aOffset) const
 }
 
 int64_t
-ADTSTrackDemuxer::FrameIndexFromTime(const media::TimeUnit& aTime) const
+ADTSTrackDemuxer::FrameIndexFromTime(const TimeUnit& aTime) const
 {
   int64_t frameIndex = 0;
   if (mSamplesPerSecond > 0 && mSamplesPerFrame > 0) {
