@@ -90,12 +90,14 @@ public:
 };
 
 static bool
-WrapWithWebRenderTextureHost(LayersBackend aBackend,
+WrapWithWebRenderTextureHost(ISurfaceAllocator* aDeallocator,
+                             LayersBackend aBackend,
                              TextureFlags aFlags)
 {
   if (!gfxVars::UseWebRender() ||
       (aFlags & TextureFlags::SNAPSHOT) ||
-      (aBackend != LayersBackend::LAYERS_WR)) {
+      (aBackend != LayersBackend::LAYERS_WR) ||
+      (!aDeallocator->UsesImageBridge() && !aDeallocator->AsCompositorBridgeParentBase())) {
     return false;
   }
   return true;
@@ -240,7 +242,7 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
       MOZ_CRASH("GFX: Unsupported Surface type host");
   }
 
-  if (WrapWithWebRenderTextureHost(aBackend, aFlags)) {
+  if (WrapWithWebRenderTextureHost(aDeallocator, aBackend, aFlags)) {
     result = new WebRenderTextureHost(aDesc, aFlags, result);
   }
 

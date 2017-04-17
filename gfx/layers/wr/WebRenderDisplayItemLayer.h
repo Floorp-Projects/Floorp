@@ -7,9 +7,11 @@
 #define GFX_WEBRENDERDISPLAYITEMLAYER_H
 
 #include "Layers.h"
-#include "WebRenderLayerManager.h"
 #include "mozilla/layers/ImageClient.h"
 #include "mozilla/layers/PWebRenderBridgeChild.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/webrender/WebRenderTypes.h"
+#include "WebRenderLayerManager.h"
 
 namespace mozilla {
 namespace layers {
@@ -24,7 +26,8 @@ public:
     MOZ_COUNT_CTOR(WebRenderDisplayItemLayer);
   }
 
-  uint64_t SendImageContainer(ImageContainer* aContainer);
+  Maybe<wr::ImageKey> SendImageContainer(ImageContainer* aContainer,
+                                         nsTArray<layers::WebRenderParentCommand>& aParentCommands);
 
 protected:
   virtual ~WebRenderDisplayItemLayer()

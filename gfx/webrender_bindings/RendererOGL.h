@@ -80,7 +80,7 @@ public:
 
   WrRenderedEpochs* FlushRenderedEpochs();
 
-  RenderTextureHost* GetRenderTexture(uint64_t aExternalImageId);
+  RenderTextureHost* GetRenderTexture(WrExternalImageId aExternalImageId);
 
   WrRenderer* GetWrRenderer() { return mWrRenderer; }
 

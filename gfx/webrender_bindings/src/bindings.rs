@@ -11,62 +11,60 @@ use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
 use app_units::Au;
-use euclid::{TypedPoint2D, SideOffsets2D};
+use euclid::{TypedPoint2D, TypedSize2D, TypedRect, TypedMatrix4D, SideOffsets2D};
 
 extern crate webrender_traits;
+
+// Enables binary recording that can be used with `wrench replay`
+// Outputs a wr-record-*.bin file for each window that is shown
+// Note: wrench will panic if external images are used, they can
+// be disabled in WebRenderBridgeParent::ProcessWebRenderCommands
+// by commenting out the path that adds an external image ID
+static ENABLE_RECORDING: bool = false;
 
 type WrAPI = RenderApi;
 type WrAuxiliaryListsDescriptor = AuxiliaryListsDescriptor;
 type WrBorderStyle = BorderStyle;
 type WrBoxShadowClipMode = BoxShadowClipMode;
 type WrBuiltDisplayListDescriptor = BuiltDisplayListDescriptor;
-type WrEpoch = Epoch;
-type WrExternalImageId = ExternalImageId;
-type WrFontKey = FontKey;
-type WrGlyphInstance = GlyphInstance;
-type WrIdNamespace = IdNamespace;
 type WrImageFormat = ImageFormat;
 type WrImageRendering = ImageRendering;
-type WrImageKey = ImageKey;
 type WrMixBlendMode = MixBlendMode;
-type WrPipelineId = PipelineId;
-type WrRenderedEpochs = Vec<(WrPipelineId, WrEpoch)>;
 type WrRenderer = Renderer;
 type WrSideOffsets2Du32 = WrSideOffsets2D<u32>;
 type WrSideOffsets2Df32 = WrSideOffsets2D<f32>;
 
-static ENABLE_RECORDING: bool = false;
+/// cbindgen:field-names=[mHandle]
+/// cbindgen:struct-gen-op-lt=true
+/// cbindgen:struct-gen-op-lte=true
+type WrEpoch = Epoch;
+/// cbindgen:field-names=[mHandle]
+/// cbindgen:struct-gen-op-lt=true
+/// cbindgen:struct-gen-op-lte=true
+type WrIdNamespace = IdNamespace;
 
-// This macro adds some checks to make sure we notice when the memory representation of
-// types change.
-macro_rules! check_ffi_type {
-    ($check_sizes_match:ident struct $TypeName:ident as ($T1:ident, $T2:ident)) => (
-        fn $check_sizes_match() {
-            #[repr(C)] struct TestType($T1, $T2);
-            let _ = mem::transmute::<$TypeName, TestType>;
-        }
-    );
-    ($check_sizes_match:ident struct $TypeName:ident as ($T:ident)) => (
-        fn $check_sizes_match() {
-            #[repr(C)] struct TestType($T);
-            let _ = mem::transmute::<$TypeName, TestType>;
-        }
-    );
-    ($check_sizes_match:ident enum $TypeName:ident as $T:ident) => (
-        fn $check_sizes_match() { let _ = mem::transmute::<$TypeName, $T>; }
-    );
+/// cbindgen:field-names=[mNamespace, mHandle]
+type WrPipelineId = PipelineId;
+/// cbindgen:field-names=[mNamespace, mHandle]
+type WrImageKey = ImageKey;
+/// cbindgen:field-names=[mNamespace, mHandle]
+type WrFontKey = FontKey;
+
+/// cbindgen:field-names=[mHandle]
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct WrExternalImageId(pub u64);
+
+impl Into<ExternalImageId> for WrExternalImageId {
+    fn into(self) -> ExternalImageId {
+        ExternalImageId(self.0)
+    }
 }
-
-check_ffi_type!(_pipeline_id_repr struct WrPipelineId as (u32, u32));
-check_ffi_type!(_image_key_repr struct WrImageKey as (u32, u32));
-check_ffi_type!(_font_key_repr struct WrFontKey as (u32, u32));
-check_ffi_type!(_epoch_repr struct WrEpoch as (u32));
-check_ffi_type!(_image_format_repr enum WrImageFormat as u32);
-check_ffi_type!(_border_style_repr enum WrBorderStyle as u32);
-check_ffi_type!(_image_rendering_repr enum WrImageRendering as u32);
-check_ffi_type!(_mix_blend_mode_repr enum WrMixBlendMode as u32);
-check_ffi_type!(_box_shadow_clip_mode_repr enum WrBoxShadowClipMode as u32);
-check_ffi_type!(_namespace_id_repr struct WrIdNamespace as (u32));
+impl Into<WrExternalImageId> for ExternalImageId {
+    fn into(self) -> WrExternalImageId {
+        WrExternalImageId(self.0)
+    }
+}
 
 const GL_FORMAT_BGRA_GL: gl::GLuint = gl::BGRA;
 const GL_FORMAT_BGRA_GLES: gl::GLuint = gl::BGRA_EXT;
@@ -155,13 +153,14 @@ impl From<ItemRange> for WrItemRange {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone)]
 pub struct WrPoint {
     x: f32,
     y: f32,
 }
 
 impl WrPoint {
-    pub fn to_point(&self) -> TypedPoint2D<f32, LayerPixel> {
+    pub fn to_point<U>(&self) -> TypedPoint2D<f32, U> {
         TypedPoint2D::new(self.x, self.y)
     }
 }
@@ -173,8 +172,8 @@ pub struct WrSize {
 }
 
 impl WrSize {
-    pub fn to_size(&self) -> LayoutSize {
-        LayoutSize::new(self.width, self.height)
+    pub fn to_size<U>(&self) -> TypedSize2D<f32, U> {
+        TypedSize2D::new(self.width, self.height)
     }
 }
 
@@ -188,13 +187,13 @@ pub struct WrRect {
 }
 
 impl WrRect {
-    pub fn to_rect(&self) -> LayoutRect {
-        LayoutRect::new(LayoutPoint::new(self.x, self.y),
-                        LayoutSize::new(self.width, self.height))
+    pub fn to_rect<U>(&self) -> TypedRect<f32, U> {
+        TypedRect::new(TypedPoint2D::new(self.x, self.y),
+                       TypedSize2D::new(self.width, self.height))
     }
 }
-impl From<LayoutRect> for WrRect {
-    fn from(rect: LayoutRect) -> Self {
+impl<U> From<TypedRect<f32, U>> for WrRect {
+    fn from(rect: TypedRect<f32, U>) -> Self {
         WrRect {
             x: rect.origin.x,
             y: rect.origin.y,
@@ -211,8 +210,8 @@ pub struct WrMatrix {
 }
 
 impl WrMatrix {
-    pub fn to_layout_transform(&self) -> LayoutTransform {
-        LayoutTransform::row_major(
+    pub fn to_transform<U, E>(&self) -> TypedMatrix4D<f32, U, E> {
+        TypedMatrix4D::row_major(
             self.values[0], self.values[1], self.values[2], self.values[3],
             self.values[4], self.values[5], self.values[6], self.values[7],
             self.values[8], self.values[9], self.values[10], self.values[11],
@@ -231,6 +230,25 @@ pub struct WrColor {
 impl WrColor {
     pub fn to_color(&self) -> ColorF {
         ColorF::new(self.r, self.g, self.b, self.a)
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Clone)]
+pub struct WrGlyphInstance {
+    index: u32,
+    point: WrPoint,
+}
+
+impl WrGlyphInstance {
+    pub fn to_glyph_instance(&self) -> GlyphInstance {
+        GlyphInstance {
+            index: self.index,
+            point: self.point.to_point(),
+        }
+    }
+    pub fn to_glyph_instances(glyphs: &[WrGlyphInstance]) -> Vec<GlyphInstance> {
+        glyphs.iter().map(|x| x.to_glyph_instance()).collect()
     }
 }
 
@@ -496,8 +514,8 @@ pub struct WrExternalImageHandler {
 }
 
 impl ExternalImageHandler for WrExternalImageHandler {
-    fn lock(&mut self, id: WrExternalImageId) -> ExternalImage {
-        let image = (self.lock_func)(self.external_image_obj, id);
+    fn lock(&mut self, id: ExternalImageId) -> ExternalImage {
+        let image = (self.lock_func)(self.external_image_obj, id.into());
 
         match image.image_type {
             WrExternalImageType::NativeTexture => {
@@ -524,15 +542,18 @@ impl ExternalImageHandler for WrExternalImageHandler {
         }
     }
 
-    fn unlock(&mut self, id: WrExternalImageId) {
-        (self.unlock_func)(self.external_image_obj, id);
+    fn unlock(&mut self, id: ExternalImageId) {
+        (self.unlock_func)(self.external_image_obj, id.into());
     }
 
-    fn release(&mut self, id: WrExternalImageId) {
-        (self.release_func)(self.external_image_obj, id);
+    fn release(&mut self, id: ExternalImageId) {
+        (self.release_func)(self.external_image_obj, id.into());
     }
 }
 
+/// cbindgen:field-names=[mHandle]
+/// cbindgen:struct-gen-op-lt=true
+/// cbindgen:struct-gen-op-lte=true
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct WrWindowId(u64);
@@ -715,17 +736,23 @@ pub extern "C" fn wr_renderer_current_epoch(renderer: &mut WrRenderer,
     return false;
 }
 
-/// wr-binding:destructor_safe // This is used by the binding generator
+/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_renderer_delete(renderer: *mut WrRenderer) {
     Box::from_raw(renderer);
+}
+
+pub struct WrRenderedEpochs {
+    data: Vec<(WrPipelineId, WrEpoch)>,
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_renderer_flush_rendered_epochs(renderer: &mut WrRenderer)
                                                            -> *mut WrRenderedEpochs {
     let map = renderer.flush_rendered_epochs();
-    let pipeline_epochs = Box::new(map.into_iter().collect());
+    let pipeline_epochs = Box::new(WrRenderedEpochs {
+        data: map.into_iter().collect()
+    });
     return Box::into_raw(pipeline_epochs);
 }
 
@@ -734,7 +761,7 @@ pub unsafe extern "C" fn wr_rendered_epochs_next(pipeline_epochs: &mut WrRendere
                                                  out_pipeline: &mut WrPipelineId,
                                                  out_epoch: &mut WrEpoch)
                                                  -> bool {
-    if let Some((pipeline, epoch)) = pipeline_epochs.pop() {
+    if let Some((pipeline, epoch)) = pipeline_epochs.data.pop() {
         *out_pipeline = pipeline;
         *out_epoch = epoch;
         return true;
@@ -742,7 +769,7 @@ pub unsafe extern "C" fn wr_rendered_epochs_next(pipeline_epochs: &mut WrRendere
     return false;
 }
 
-/// wr-binding:destructor_safe // This is used by the binding generator
+/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_rendered_epochs_delete(pipeline_epochs: *mut WrRenderedEpochs) {
     Box::from_raw(pipeline_epochs);
@@ -958,7 +985,7 @@ pub extern "C" fn wr_api_generate_frame(api: &mut WrAPI) {
     api.generate_frame(None);
 }
 
-/// wr-binding:destructor_safe // This is used by the binding generator
+/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub extern "C" fn wr_api_send_external_event(api: &mut WrAPI, evt: usize) {
     assert!(unsafe { !is_in_render_thread() });
@@ -1118,7 +1145,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
         .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                bounds,
                                state.z_index,
-                               Some(PropertyBinding::Value(transform.to_layout_transform())),
+                               Some(PropertyBinding::Value(transform.to_transform())),
                                TransformStyle::Flat,
                                None,
                                mix_blend_mode,
@@ -1211,7 +1238,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
 
     let glyph_slice = unsafe { slice::from_raw_parts(glyphs, glyph_count as usize) };
     let mut glyph_vector = Vec::new();
-    glyph_vector.extend_from_slice(&glyph_slice);
+    glyph_vector.extend_from_slice(&WrGlyphInstance::to_glyph_instances(glyph_slice));
 
     let colorf = ColorF::new(color.r, color.g, color.b, color.a);
 

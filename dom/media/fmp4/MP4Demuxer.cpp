@@ -462,7 +462,8 @@ MP4TrackDemuxer::GetNextSample()
                                        "@ pts:%" PRId64 " dur:%" PRId64
                                        " dts:%" PRId64,
                                        keyframe ? "" : "non-", sample->mTime,
-                                       sample->mDuration, sample->mTimecode)
+                                       sample->mDuration.ToMicroseconds(),
+                                       sample->mTimecode)
                          .get());
             sample->mKeyframe = keyframe;
           }
@@ -472,7 +473,8 @@ MP4TrackDemuxer::GetNextSample()
           NS_WARNING(
             nsPrintfCString("Invalid H264 frame @ pts:%" PRId64 " dur:%" PRId64
                             " dts:%" PRId64,
-                            sample->mTime, sample->mDuration, sample->mTimecode)
+                            sample->mTime, sample->mDuration.ToMicroseconds(),
+                            sample->mTimecode)
               .get());
           // We could reject the sample now, however demuxer errors are fatal.
           // So we keep the invalid frame, relying on the H264 decoder to

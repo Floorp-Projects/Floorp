@@ -1724,7 +1724,8 @@ MediaFormatReader::NotifyNewOutput(
   auto& decoder = GetDecoderData(aTrack);
   for (auto& sample : aResults) {
     LOGV("Received new %s sample time:%" PRId64 " duration:%" PRId64,
-        TrackTypeToStr(aTrack), sample->mTime, sample->mDuration);
+         TrackTypeToStr(aTrack), sample->mTime,
+         sample->mDuration.ToMicroseconds());
     decoder.mOutput.AppendElement(sample);
     decoder.mNumSamplesOutput++;
     decoder.mNumOfConsecutiveError = 0;
