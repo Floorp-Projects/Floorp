@@ -61,18 +61,17 @@ var gSyncUI = {
 
     // Remove the observer if the window is closed before the observer
     // was triggered.
-    window.addEventListener("unload", function onUnload() {
-      gSyncUI._unloaded = true;
-      window.removeEventListener("unload", onUnload);
-      Services.obs.removeObserver(gSyncUI, "weave:service:ready");
-      Services.obs.removeObserver(gSyncUI, "quit-application");
+    window.addEventListener("unload", () => {
+      this._unloaded = true;
+      Services.obs.removeObserver(this, "weave:service:ready");
+      Services.obs.removeObserver(this, "quit-application");
 
-      if (Weave.Status.ready) {
-        gSyncUI._obs.forEach(function(topic) {
-          Services.obs.removeObserver(gSyncUI, topic);
+      if (this.weaveService.ready) {
+        this._obs.forEach(topic => {
+          Services.obs.removeObserver(this, topic);
         });
       }
-    });
+    }, { once: true });
   },
 
   initUI: function SUI_initUI() {
