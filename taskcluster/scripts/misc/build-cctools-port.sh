@@ -3,7 +3,6 @@ set -x -e -v
 
 # This script is for building cctools (Apple's binutils) for Linux using
 # cctools-port (https://github.com/tpoechtrager/cctools-port).
-
 WORKSPACE=$HOME/workspace
 UPLOAD_DIR=$WORKSPACE/artifacts
 
