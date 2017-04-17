@@ -172,13 +172,6 @@ HTMLAnchorElement::UnbindFromTree(bool aDeep, bool aNullParent)
   // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState(false, Link::ElementHasHref());
 
-  // Note, we need to use OwnerDoc() here, since GetComposedDoc() might
-  // return null.
-  nsIDocument* doc = OwnerDoc();
-  if (doc) {
-    doc->UnregisterPendingLinkUpdate(this);
-  }
-
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
