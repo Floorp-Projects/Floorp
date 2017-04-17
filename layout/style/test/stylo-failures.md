@@ -125,10 +125,6 @@ to mochitest command.
   * test_initial_storage.html `grid` [*]
   * test_property_syntax_errors.html `grid`: actually there are issues with this [*]
   * test_value_storage.html `'grid` [*]
-* url value from decl setter bug 1330503
-  * test_compute_data_with_start_struct.html `border-image-source` [2]
-  * test_inherit_computation.html `border-image` [2]
-  * test_initial_computation.html `border-image` [4]
 * Unimplemented prefixed properties:
   * -moz-force-broken-image-icon servo/servo#16001
     * test_compute_data_with_start_struct.html `-moz-force-broken-image-icon` [2]
