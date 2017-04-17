@@ -28,6 +28,8 @@ public:
 
   bool GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton) override;
 
+  bool GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton) override;
+
   static already_AddRefed<UnscaledFont>
     CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength);
 
