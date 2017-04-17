@@ -105,6 +105,8 @@ XPCOMUtils.defineLazyGetter(this, "CertUtils", function() {
 XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
                                       PREF_WEBEXT_PERM_PROMPTS, false);
 
+Services.ppmm.loadProcessScript("chrome://extensions/content/extension-process-script.js", true);
+
 const INTEGER = /^[1-9]\d*$/;
 
 this.EXPORTED_SYMBOLS = [ "AddonManager", "AddonManagerPrivate" ];
@@ -643,6 +645,7 @@ var gShutdownBarrier = null;
 var gRepoShutdownState = "";
 var gShutdownInProgress = false;
 var gPluginPageListener = null;
+var gBrowserUpdated = null;
 
 /**
  * This is the real manager, kept here rather than in AddonManager to keep its
@@ -815,7 +818,7 @@ var AddonManagerInternal = {
         appChanged = Services.appinfo.version != oldAppVersion;
       } catch (e) { }
 
-      Extension.browserUpdated = appChanged;
+      gBrowserUpdated = appChanged;
 
       let oldPlatformVersion = Services.prefs.getCharPref(PREF_EM_LAST_PLATFORM_VERSION, "");
 
@@ -3096,6 +3099,10 @@ var AddonManagerInternal = {
 this.AddonManagerPrivate = {
   startup() {
     AddonManagerInternal.startup();
+  },
+
+  get browserUpdated() {
+    return gBrowserUpdated;
   },
 
   registerProvider(aProvider, aTypes) {
