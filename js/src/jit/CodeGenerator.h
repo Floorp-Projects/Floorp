@@ -358,7 +358,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitBitNotV(LBitNotV* lir);
     void visitBitOpV(LBitOpV* lir);
     void emitInstanceOf(LInstruction* ins, JSObject* prototypeObject);
-    void visitIn(LIn* ins);
+    void visitInCache(LInCache* ins);
     void visitInArray(LInArray* ins);
     void visitInstanceOfO(LInstanceOfO* ins);
     void visitInstanceOfV(LInstanceOfV* ins);

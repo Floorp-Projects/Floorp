@@ -11206,16 +11206,18 @@ CodeGenerator::visitClampVToUint8(LClampVToUint8* lir)
     bailoutFrom(&fails, lir->snapshot());
 }
 
-typedef bool (*OperatorInFn)(JSContext*, HandleValue, HandleObject, bool*);
-static const VMFunction OperatorInInfo = FunctionInfo<OperatorInFn>(OperatorIn, "OperatorIn");
-
 void
-CodeGenerator::visitIn(LIn* ins)
+CodeGenerator::visitInCache(LInCache* ins)
 {
-    pushArg(ToRegister(ins->rhs()));
-    pushArg(ToValue(ins, LIn::LHS));
+    LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
 
-    callVM(OperatorInInfo, ins);
+    ConstantOrRegister key = toConstantOrRegister(ins, LInCache::LHS, ins->mir()->key()->type());
+    Register object = ToRegister(ins->rhs());
+    Register output = ToRegister(ins->output());
+    Register temp = ToRegister(ins->temp());
+
+    IonInIC cache(liveRegs, key, object, output, temp);
+    addIC(ins, allocateIC(cache));
 }
 
 typedef bool (*OperatorInIFn)(JSContext*, uint32_t, HandleObject, bool*);
