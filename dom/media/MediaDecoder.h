@@ -641,21 +641,10 @@ private:
   RefPtr<CDMProxyPromise> mCDMProxyPromise;
 
 protected:
-  // The promise resolving/rejection is queued as a "micro-task" which will be
-  // handled immediately after the current JS task and before any pending JS
-  // tasks.
-  // At the time we are going to resolve/reject a promise, the "seeking" event
-  // task should already be queued but might yet be processed, so we queue one
-  // more task to file the promise resolving/rejection micro-tasks
-  // asynchronously to make sure that the micro-tasks are processed after the
-  // "seeking" event task.
-  void AsyncResolveSeekDOMPromiseIfExists();
-  void AsyncRejectSeekDOMPromiseIfExists();
   void DiscardOngoingSeekIfExists();
   virtual void CallSeek(const SeekTarget& aTarget, dom::Promise* aPromise);
 
   MozPromiseRequestHolder<SeekPromise> mSeekRequest;
-  RefPtr<dom::Promise> mSeekDOMPromise;
 
   // True when seeking or otherwise moving the play position around in
   // such a manner that progress event data is inaccurate. This is set
