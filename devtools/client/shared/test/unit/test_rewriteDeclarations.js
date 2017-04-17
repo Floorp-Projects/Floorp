@@ -525,6 +525,15 @@ const TEST_DATA = [
                   index: 0, enabled: true},
     expected: "p: func(1,2);",
   },
+
+  {
+    desc: "function regression test for bug 1355233",
+    input: "",
+    instruction: {type: "create", name: "p", value: "func(", priority: "",
+                  index: 0, enabled: true},
+    expected: "p: func\\(;",
+    changed: {0: "func\\("}
+  },
 ];
 
 function rewriteDeclarations(inputString, instruction, defaultIndentation) {
