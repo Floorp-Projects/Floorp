@@ -13,7 +13,7 @@ UPLOAD_DIR=$WORKSPACE/artifacts
 # backport some patches.
 : LIBDMG_REPOSITORY    ${LIBDMG_REPOSITORY:=https://github.com/mozilla/libdmg-hfsplus}
 # The `mozilla` branch contains our fork.
-: LIBDMG_REV           ${LIBDMG_REV:=mozilla}
+: LIBDMG_REV           ${LIBDMG_REV:=ba04b00435a0853f1499d751617177828ee8ec00}
 
 mkdir -p $UPLOAD_DIR $STAGE
 
