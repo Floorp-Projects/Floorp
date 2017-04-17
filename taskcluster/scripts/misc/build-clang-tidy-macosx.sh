@@ -2,7 +2,6 @@
 set -x -e -v
 
 # This script is for building clang for Mac OS X on Linux.
-
 WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
 UPLOAD_DIR=$WORKSPACE/artifacts
