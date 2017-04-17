@@ -16,11 +16,13 @@ const { propertiesEqual } = require("../utils/request-utils");
 // Components
 const RequestListColumnCause = createFactory(require("./request-list-column-cause"));
 const RequestListColumnContentSize = createFactory(require("./request-list-column-content-size"));
+const RequestListColumnCookies = createFactory(require("./request-list-column-cookies"));
 const RequestListColumnDomain = createFactory(require("./request-list-column-domain"));
 const RequestListColumnFile = createFactory(require("./request-list-column-file"));
 const RequestListColumnMethod = createFactory(require("./request-list-column-method"));
 const RequestListColumnProtocol = createFactory(require("./request-list-column-protocol"));
 const RequestListColumnRemoteIP = createFactory(require("./request-list-column-remote-ip"));
+const RequestListColumnSetCookies = createFactory(require("./request-list-column-set-cookies"));
 const RequestListColumnStatus = createFactory(require("./request-list-column-status"));
 const RequestListColumnTransferredSize = createFactory(require("./request-list-column-transferred-size"));
 const RequestListColumnType = createFactory(require("./request-list-column-type"));
@@ -137,6 +139,8 @@ const RequestListItem = createClass({
         columns.get("remoteip") && RequestListColumnRemoteIP({ item }),
         columns.get("cause") && RequestListColumnCause({ item, onCauseBadgeClick }),
         columns.get("type") && RequestListColumnType({ item }),
+        columns.get("cookies") && RequestListColumnCookies({ item }),
+        columns.get("setCookies") && RequestListColumnSetCookies({ item }),
         columns.get("transferred") && RequestListColumnTransferredSize({ item }),
         columns.get("contentSize") && RequestListColumnContentSize({ item }),
         columns.get("waterfall") &&
