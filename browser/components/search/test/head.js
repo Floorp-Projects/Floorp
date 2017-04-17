@@ -21,7 +21,22 @@ function isSubObjectOf(expectedObj, actualObj, name) {
 }
 
 function getLocale() {
-  return Services.locale.getRequestedLocale() || undefined;
+  const localePref = "general.useragent.locale";
+  return getLocalizedPref(localePref, Services.prefs.getCharPref(localePref));
+}
+
+/**
+ * Wrapper for nsIPrefBranch::getComplexValue.
+ * @param aPrefName
+ *        The name of the pref to get.
+ * @returns aDefault if the requested pref doesn't exist.
+ */
+function getLocalizedPref(aPrefName, aDefault) {
+  try {
+    return Services.prefs.getComplexValue(aPrefName, Ci.nsIPrefLocalizedString).data;
+  } catch (ex) {
+    return aDefault;
+  }
 }
 
 function promiseEvent(aTarget, aEventName, aPreventDefault) {

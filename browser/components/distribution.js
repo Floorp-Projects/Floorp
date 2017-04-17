@@ -57,7 +57,7 @@ DistributionCustomizer.prototype = {
   },
 
   get _locale() {
-    const locale = Services.locale.getRequestedLocale() || "en-US";
+    let locale = this._prefs.getCharPref("general.useragent.locale", "en-US");
     this.__defineGetter__("_locale", () => locale);
     return this._locale;
   },
