@@ -5291,7 +5291,11 @@ pref("browser.safebrowsing.id", "navclient-auto-ffox");
 pref("browser.safebrowsing.id", "Firefox");
 #endif
 
+#ifdef NIGHTLY_BUILD
+pref("browser.safebrowsing.temporary.take_v4_completion_result", true);
+#else
 pref("browser.safebrowsing.temporary.take_v4_completion_result", false);
+#endif
 
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);
