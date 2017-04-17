@@ -42,6 +42,7 @@ import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.widget.AnchoredPopup;
 
 public class WebAppActivity extends GeckoApp {
 
@@ -51,6 +52,8 @@ public class WebAppActivity extends GeckoApp {
     private static final String LOGTAG = "WebAppActivity";
 
     private TextView mUrlView;
+    private View doorhangerOverlay;
+
     private String mManifestPath;
 
     @Override
@@ -78,15 +81,22 @@ public class WebAppActivity extends GeckoApp {
         actionBar.setDisplayShowTitleEnabled(false);
         actionBar.hide();
 
+        doorhangerOverlay = findViewById(R.id.custom_tabs_doorhanger_overlay);
+
         final View customView = actionBar.getCustomView();
         mUrlView = (TextView) customView.findViewById(R.id.webapps_action_bar_url);
 
         EventDispatcher.getInstance().registerUiThreadListener(this,
-                    "Website:AppEntered",
-                    "Website:AppLeft",
-                    null);
+                "Website:AppEntered",
+                "Website:AppLeft",
+                null);
 
         Tabs.registerOnTabsChangedListener(this);
+    }
+
+    @Override
+    public View getDoorhangerOverlay() {
+        return doorhangerOverlay;
     }
 
     @Override
@@ -130,9 +140,9 @@ public class WebAppActivity extends GeckoApp {
     public void onDestroy() {
         super.onDestroy();
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
-              "Website:AppEntered",
-              "Website:AppLeft",
-              null);
+                "Website:AppEntered",
+                "Website:AppLeft",
+                null);
         Tabs.unregisterOnTabsChangedListener(this);
     }
 
@@ -155,7 +165,7 @@ public class WebAppActivity extends GeckoApp {
         final String launchUrl = intent.getDataString();
         final String currentUrl = Tabs.getInstance().getSelectedTab().getURL();
         final boolean isSameDomain = Uri.parse(currentUrl).getHost()
-            .equals(Uri.parse(launchUrl).getHost());
+                .equals(Uri.parse(launchUrl).getHost());
 
         if (!isSameDomain) {
             Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "webapp");
@@ -183,8 +193,8 @@ public class WebAppActivity extends GeckoApp {
             final String name = readNameFromManifest(manifestField);
             final Bitmap icon = readIconFromManifest(manifest);
             final ActivityManager.TaskDescription taskDescription = (color == null)
-                ? new ActivityManager.TaskDescription(name, icon)
-                : new ActivityManager.TaskDescription(name, icon, color);
+                    ? new ActivityManager.TaskDescription(name, icon)
+                    : new ActivityManager.TaskDescription(name, icon, color);
 
             updateStatusBarColor(color);
             setTaskDescription(taskDescription);
@@ -225,8 +235,8 @@ public class WebAppActivity extends GeckoApp {
         final String iconStr = manifest.optString("cached_icon", null);
         if (iconStr != null) {
             return FaviconDecoder
-                .decodeDataURI(getContext(), iconStr)
-                .getBestBitmap(GeckoAppShell.getPreferredIconSize());
+                    .decodeDataURI(getContext(), iconStr)
+                    .getBestBitmap(GeckoAppShell.getPreferredIconSize());
         }
         return null;
     }
