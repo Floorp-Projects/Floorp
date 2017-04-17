@@ -58,4 +58,10 @@
         android:progressDrawable="@drawable/progressbar"
         tools:progress="70"/>
 
+    <View android:id="@+id/custom_tabs_doorhanger_overlay"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:background="@color/dark_transparent_overlay"
+          android:alpha="0"
+          android:layerType="hardware"/>
 </RelativeLayout>
