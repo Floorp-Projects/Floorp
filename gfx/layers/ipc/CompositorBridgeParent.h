@@ -117,6 +117,8 @@ public:
 
   virtual ShmemAllocator* AsShmemAllocator() override { return this; }
 
+  virtual CompositorBridgeParentBase* AsCompositorBridgeParentBase() override { return this; }
+
   virtual mozilla::ipc::IPCResult RecvSyncWithCompositor() override { return IPC_OK(); }
 
   virtual void ObserveLayerUpdate(uint64_t aLayersId, uint64_t aEpoch, bool aActive) = 0;

@@ -287,12 +287,14 @@ ImageBridgeChild::CreateCanvasClientSync(SynchronousTask* aTask,
   *outResult = CreateCanvasClientNow(aType, aFlags);
 }
 
-ImageBridgeChild::ImageBridgeChild()
-  : mCanSend(false)
+ImageBridgeChild::ImageBridgeChild(uint32_t aNamespace)
+  : mNamespace(aNamespace)
+  , mCanSend(false)
   , mDestroyed(false)
   , mFwdTransactionId(0)
   , mContainerMapLock("ImageBridgeChild.mContainerMapLock")
 {
+  MOZ_ASSERT(mNamespace);
   MOZ_ASSERT(NS_IsMainThread());
 
   mTxn = new CompositableTransaction();
@@ -560,7 +562,7 @@ ImageBridgeChild::SendImageBridgeThreadId()
 }
 
 bool
-ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint)
+ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint, uint32_t aNamespace)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -573,7 +575,7 @@ ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint)
     }
   }
 
-  RefPtr<ImageBridgeChild> child = new ImageBridgeChild();
+  RefPtr<ImageBridgeChild> child = new ImageBridgeChild(aNamespace);
 
   RefPtr<Runnable> runnable = NewRunnableMethod<Endpoint<PImageBridgeChild>&&>(
     child,
@@ -591,7 +593,7 @@ ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint)
 }
 
 bool
-ImageBridgeChild::ReinitForContent(Endpoint<PImageBridgeChild>&& aEndpoint)
+ImageBridgeChild::ReinitForContent(Endpoint<PImageBridgeChild>&& aEndpoint, uint32_t aNamespace)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -601,7 +603,7 @@ ImageBridgeChild::ReinitForContent(Endpoint<PImageBridgeChild>&& aEndpoint)
   // false result and a MsgDropped processing error. This is okay.
   ShutdownSingleton();
 
-  return InitForContent(Move(aEndpoint));
+  return InitForContent(Move(aEndpoint), aNamespace);
 }
 
 void
@@ -687,7 +689,7 @@ ImageBridgeChild::WillShutdown()
 }
 
 void
-ImageBridgeChild::InitSameProcess()
+ImageBridgeChild::InitSameProcess(uint32_t aNamespace)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on the main Thread!");
 
@@ -699,7 +701,7 @@ ImageBridgeChild::InitSameProcess()
     sImageBridgeChildThread->Start();
   }
 
-  RefPtr<ImageBridgeChild> child = new ImageBridgeChild();
+  RefPtr<ImageBridgeChild> child = new ImageBridgeChild(aNamespace);
   RefPtr<ImageBridgeParent> parent = ImageBridgeParent::CreateSameProcess();
 
   RefPtr<Runnable> runnable = WrapRunnable(
@@ -716,7 +718,7 @@ ImageBridgeChild::InitSameProcess()
 }
 
 /* static */ void
-ImageBridgeChild::InitWithGPUProcess(Endpoint<PImageBridgeChild>&& aEndpoint)
+ImageBridgeChild::InitWithGPUProcess(Endpoint<PImageBridgeChild>&& aEndpoint, uint32_t aNamespace)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sImageBridgeChildSingleton);
@@ -727,7 +729,7 @@ ImageBridgeChild::InitWithGPUProcess(Endpoint<PImageBridgeChild>&& aEndpoint)
     sImageBridgeChildThread->Start();
   }
 
-  RefPtr<ImageBridgeChild> child = new ImageBridgeChild();
+  RefPtr<ImageBridgeChild> child = new ImageBridgeChild(aNamespace);
 
   MessageLoop* loop = child->GetMessageLoop();
   loop->PostTask(NewRunnableMethod<Endpoint<PImageBridgeChild>&&>(
@@ -1152,6 +1154,18 @@ void
 ImageBridgeChild::HandleFatalError(const char* aName, const char* aMsg) const
 {
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
+}
+
+uint64_t
+ImageBridgeChild::GetNextExternalImageId()
+{
+  static uint32_t sNextID = 1;
+  ++sNextID;
+  MOZ_RELEASE_ASSERT(sNextID != UINT32_MAX);
+
+  uint64_t imageId = mNamespace;
+  imageId = imageId << 32 | sNextID;
+  return imageId;
 }
 
 } // namespace layers

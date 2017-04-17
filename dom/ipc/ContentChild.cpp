@@ -1132,12 +1132,15 @@ mozilla::ipc::IPCResult
 ContentChild::RecvInitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor,
                                 Endpoint<PImageBridgeChild>&& aImageBridge,
                                 Endpoint<PVRManagerChild>&& aVRBridge,
-                                Endpoint<PVideoDecoderManagerChild>&& aVideoManager)
+                                Endpoint<PVideoDecoderManagerChild>&& aVideoManager,
+                                nsTArray<uint32_t>&& namespaces)
 {
-  if (!CompositorBridgeChild::InitForContent(Move(aCompositor))) {
+  MOZ_ASSERT(namespaces.Length() == 2);
+
+  if (!CompositorBridgeChild::InitForContent(Move(aCompositor), namespaces[0])) {
     return IPC_FAIL_NO_REASON(this);
   }
-  if (!ImageBridgeChild::InitForContent(Move(aImageBridge))) {
+  if (!ImageBridgeChild::InitForContent(Move(aImageBridge), namespaces[1])) {
     return IPC_FAIL_NO_REASON(this);
   }
   if (!gfx::VRManagerChild::InitForContent(Move(aVRBridge))) {
@@ -1151,8 +1154,10 @@ mozilla::ipc::IPCResult
 ContentChild::RecvReinitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor,
                                   Endpoint<PImageBridgeChild>&& aImageBridge,
                                   Endpoint<PVRManagerChild>&& aVRBridge,
-                                  Endpoint<PVideoDecoderManagerChild>&& aVideoManager)
+                                  Endpoint<PVideoDecoderManagerChild>&& aVideoManager,
+                                  nsTArray<uint32_t>&& namespaces)
 {
+  MOZ_ASSERT(namespaces.Length() == 2);
   nsTArray<RefPtr<TabChild>> tabs = TabChild::GetAll();
 
   // Zap all the old layer managers we have lying around.
@@ -1163,10 +1168,10 @@ ContentChild::RecvReinitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor
   }
 
   // Re-establish singleton bridges to the compositor.
-  if (!CompositorBridgeChild::ReinitForContent(Move(aCompositor))) {
+  if (!CompositorBridgeChild::ReinitForContent(Move(aCompositor), namespaces[0])) {
     return IPC_FAIL_NO_REASON(this);
   }
-  if (!ImageBridgeChild::ReinitForContent(Move(aImageBridge))) {
+  if (!ImageBridgeChild::ReinitForContent(Move(aImageBridge), namespaces[1])) {
     return IPC_FAIL_NO_REASON(this);
   }
   if (!gfx::VRManagerChild::ReinitForContent(Move(aVRBridge))) {

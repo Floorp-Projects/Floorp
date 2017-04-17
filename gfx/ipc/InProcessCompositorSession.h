@@ -27,7 +27,8 @@ public:
     CSSToLayoutDeviceScale aScale,
     const CompositorOptions& aOptions,
     bool aUseExternalSurfaceSize,
-    const gfx::IntSize& aSurfaceSize);
+    const gfx::IntSize& aSurfaceSize,
+    uint32_t aNamespace);
 
   CompositorBridgeParent* GetInProcessBridge() const override;
   void SetContentController(GeckoContentController* aController) override;
