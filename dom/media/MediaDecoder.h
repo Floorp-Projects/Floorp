@@ -586,7 +586,8 @@ protected:
   // Amount of buffered data ahead of current time required to consider that
   // the next frame is available.
   // An arbitrary value of 250ms is used.
-  static const int DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED = 250000;
+  static constexpr auto DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED =
+    media::TimeUnit::FromMicroseconds(250000);
 
 private:
   nsCString GetDebugInfo();

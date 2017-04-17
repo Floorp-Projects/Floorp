@@ -286,8 +286,7 @@ MediaSourceDecoder::NextFrameBufferedStatus()
   buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ / 2);
   TimeInterval interval(
     currentPosition,
-    currentPosition
-    + TimeUnit::FromMicroseconds(DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED));
+    currentPosition + DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED);
   return buffered.ContainsStrict(ClampIntervalToEnd(interval))
          ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
          : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;

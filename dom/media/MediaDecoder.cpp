@@ -129,6 +129,8 @@ StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
 
 LazyLogModule gMediaTimerLog("MediaTimer");
 
+constexpr TimeUnit MediaDecoder::DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED;
+
 void
 MediaDecoder::InitStatics()
 {
@@ -1773,8 +1775,7 @@ MediaDecoder::NextFrameBufferedStatus()
   TimeUnit currentPosition = TimeUnit::FromMicroseconds(CurrentPosition());
   media::TimeInterval interval(
     currentPosition,
-    currentPosition
-    + TimeUnit::FromMicroseconds(DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED));
+    currentPosition + DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED);
   return GetBuffered().Contains(interval)
          ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
          : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
