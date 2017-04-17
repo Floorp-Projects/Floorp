@@ -47,6 +47,8 @@ public:
     return 0;   // the value shouldn't matter
   }
 
+  virtual void NodeInfoChanged(nsIDocument* aOldDoc) final override {}
+
 protected:
   ~mock_Link() {
     // Run the next test if we are supposed to.

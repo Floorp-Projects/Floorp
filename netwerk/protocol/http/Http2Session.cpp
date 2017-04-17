@@ -89,6 +89,7 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t versio
   , mShouldGoAway(false)
   , mClosed(false)
   , mCleanShutdown(false)
+  , mReceivedSettings(false)
   , mTLSProfileConfirmed(false)
   , mGoAwayReason(NO_HTTP_ERROR)
   , mClientGoAwayReason(UNASSIGNED)
@@ -1503,6 +1504,8 @@ Http2Session::RecvSettings(Http2Session *self)
           self, self->mInputFrameDataSize));
     RETURN_SESSION_ERROR(self, PROTOCOL_ERROR);
   }
+
+  self->mReceivedSettings = true;
 
   uint32_t numEntries = self->mInputFrameDataSize / 6;
   LOG3(("Http2Session::RecvSettings %p SETTINGS Control Frame "
@@ -4153,51 +4156,32 @@ Http2Session::TestOriginFrame(const nsACString &hostname, int32_t port)
 bool
 Http2Session::TestJoinConnection(const nsACString &hostname, int32_t port)
 {
-  if (!mConnection || mClosed || mShouldGoAway) {
-    return false;
-  }
-
-  if (mOriginFrameActivated) {
-    bool originFrameResult = TestOriginFrame(hostname, port);
-    if (!originFrameResult) {
-      return false;
-    }
-  } else {
-    LOG3(("TestJoinConnection %p no origin frame check used.\n", this));
-  }
-
-  nsresult rv;
-  bool isJoined = false;
-
-  nsCOMPtr<nsISupports> securityInfo;
-  nsCOMPtr<nsISSLSocketControl> sslSocketControl;
-
-  mConnection->GetSecurityInfo(getter_AddRefs(securityInfo));
-  sslSocketControl = do_QueryInterface(securityInfo, &rv);
-  if (NS_FAILED(rv) || !sslSocketControl) {
-    return false;
-  }
-
-  // try all the coalescable versions we support.
-  const SpdyInformation *info = gHttpHandler->SpdyInfo();
-  for (uint32_t index = SpdyInformation::kCount; index > 0; --index) {
-    if (info->ProtocolEnabled(index - 1)) {
-      rv = sslSocketControl->TestJoinConnection(info->VersionString[index - 1],
-                                                hostname, port, &isJoined);
-      if (NS_SUCCEEDED(rv) && isJoined) {
-        return true;
-      }
-    }
-  }
-  return false;
+  return RealJoinConnection(hostname, port, true);
 }
 
 bool
 Http2Session::JoinConnection(const nsACString &hostname, int32_t port)
 {
+  return RealJoinConnection(hostname, port, false);
+}
+
+bool
+Http2Session::RealJoinConnection(const nsACString &hostname, int32_t port,
+                                 bool justKidding)
+{
   if (!mConnection || mClosed || mShouldGoAway) {
     return false;
   }
+
+  nsHttpConnectionInfo *ci = ConnectionInfo();
+  if (nsCString(hostname).EqualsIgnoreCase(ci->Origin()) && (port == ci->OriginPort())) {
+    return true;
+ }
+
+  if (!mReceivedSettings) {
+    return false;
+  }
+
   if (mOriginFrameActivated) {
     bool originFrameResult = TestOriginFrame(hostname, port);
     if (!originFrameResult) {
@@ -4207,6 +4191,18 @@ Http2Session::JoinConnection(const nsACString &hostname, int32_t port)
     LOG3(("JoinConnection %p no origin frame check used.\n", this));
   }
 
+  nsAutoCString key(hostname);
+  key.Append(':');
+  key.Append(justKidding ? 'k' : '.');
+  key.AppendInt(port);
+  bool cachedResult;
+  if (mJoinConnectionCache.Get(key, &cachedResult)) {
+    LOG(("joinconnection [%p %s] %s result=%d cache\n",
+         this, ConnectionInfo()->HashKey().get(), key.get(),
+         cachedResult));
+    return cachedResult;
+  }
+
   nsresult rv;
   bool isJoined = false;
 
@@ -4221,16 +4217,35 @@ Http2Session::JoinConnection(const nsACString &hostname, int32_t port)
 
   // try all the coalescable versions we support.
   const SpdyInformation *info = gHttpHandler->SpdyInfo();
-  for (uint32_t index = SpdyInformation::kCount; index > 0; --index) {
-    if (info->ProtocolEnabled(index - 1)) {
-      rv = sslSocketControl->JoinConnection(info->VersionString[index - 1],
+  static_assert(SpdyInformation::kCount == 1, "assume 1 alpn version");
+  bool joinedReturn = false;
+  if (info->ProtocolEnabled(0)) {
+    if (justKidding) {
+      rv = sslSocketControl->TestJoinConnection(info->VersionString[0],
+                                                hostname, port, &isJoined);
+    } else {
+      rv = sslSocketControl->JoinConnection(info->VersionString[0],
                                             hostname, port, &isJoined);
-      if (NS_SUCCEEDED(rv) && isJoined) {
-        return true;
-      }
+    }
+    if (NS_SUCCEEDED(rv) && isJoined) {
+      joinedReturn = true;
     }
   }
-  return false;
+
+  LOG(("joinconnection [%p %s] %s result=%d lookup\n",
+       this, ConnectionInfo()->HashKey().get(), key.get(), joinedReturn));
+  mJoinConnectionCache.Put(key, joinedReturn);
+  if (!justKidding) {
+    // cache a kidding entry too as this one is good for both
+    nsAutoCString key2(hostname);
+    key2.Append(':');
+    key2.Append('k');
+    key2.AppendInt(port);
+    if (!mJoinConnectionCache.Get(key2)) {
+      mJoinConnectionCache.Put(key2, joinedReturn);
+    }
+  }
+  return joinedReturn;
 }
 
 void

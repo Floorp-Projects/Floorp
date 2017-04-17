@@ -228,6 +228,12 @@ public:
     GetHref(aResult);
   }
 
+  virtual void NodeInfoChanged(nsIDocument* aOldDoc) final override
+  {
+    ClearHasPendingLinkUpdate();
+    nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
+  }
+
   static DOMTokenListSupportedToken sSupportedRelValues[];
 
 protected:

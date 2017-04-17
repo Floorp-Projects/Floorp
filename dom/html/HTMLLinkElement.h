@@ -171,6 +171,13 @@ public:
   }
 
   virtual CORSMode GetCORSMode() const override;
+
+  virtual void NodeInfoChanged(nsIDocument* aOldDoc) final override
+  {
+    ClearHasPendingLinkUpdate();
+    nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
+  }
+
 protected:
   virtual ~HTMLLinkElement();
 
