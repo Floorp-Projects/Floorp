@@ -207,6 +207,16 @@ bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,
                                    nsIAtom* aPseudoTagOrNull);
 bool Gecko_ElementHasCSSTransitions(RawGeckoElementBorrowed aElement,
                                     nsIAtom* aPseudoTagOrNull);
+size_t Gecko_ElementTransitions_Length(RawGeckoElementBorrowed aElement,
+                                       nsIAtom* aPseudoTagOrNull);
+nsCSSPropertyID Gecko_ElementTransitions_PropertyAt(
+  RawGeckoElementBorrowed aElement,
+  nsIAtom* aPseudoTagOrNull,
+  size_t aIndex);
+RawServoAnimationValueBorrowedOrNull Gecko_ElementTransitions_EndValueAt(
+  RawGeckoElementBorrowed aElement,
+  nsIAtom* aPseudoTagOrNull,
+  size_t aIndex);
 double Gecko_GetProgressFromComputedTiming(RawGeckoComputedTimingBorrowed aComputedTiming);
 double Gecko_GetPositionInSegment(
   RawGeckoAnimationPropertySegmentBorrowed aSegment,
