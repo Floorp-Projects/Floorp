@@ -1706,8 +1706,9 @@ class PackageFrontend(MachCommandBase):
                     name = name[len('public/'):]
                     if name.startswith('logs/'):
                         continue
+                    name = os.path.basename(name)
                     records[name] = DownloadRecord(
-                        get_artifact_url(task_id, 'public/{}'.format(name)),
+                        get_artifact_url(task_id, artifact['name']),
                         name, None, None, None, unpack=True)
 
         for record in records.itervalues():
