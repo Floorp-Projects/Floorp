@@ -1055,6 +1055,9 @@ ShadowLayerForwarder::ReleaseCompositable(const CompositableHandle& aHandle)
 {
   AssertInForwarderThread();
   if (!DestroyInTransaction(aHandle)) {
+    if (!IPCOpen()) {
+      return;
+    }
     mShadowManager->SendReleaseCompositable(aHandle);
   }
   mCompositables.Remove(aHandle.Value());
