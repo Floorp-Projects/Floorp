@@ -157,6 +157,12 @@ public:
   // Main thread only.
   virtual void DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
                                  const nsAString& aInitDataType) = 0;
+
+  // Called by the media decoder to notify the owner to resolve a seek promise.
+  virtual void AsyncResolveSeekDOMPromiseIfExists() = 0;
+
+  // Called by the media decoder to notify the owner to reject a seek promise.
+  virtual void AsyncRejectSeekDOMPromiseIfExists() = 0;
 };
 
 } // namespace mozilla

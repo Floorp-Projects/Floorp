@@ -748,39 +748,11 @@ MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType,
 }
 
 void
-MediaDecoder::AsyncResolveSeekDOMPromiseIfExists()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mSeekDOMPromise) {
-    RefPtr<dom::Promise> promise = mSeekDOMPromise;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-      promise->MaybeResolveWithUndefined();
-    });
-    mAbstractMainThread->Dispatch(r.forget());
-    mSeekDOMPromise = nullptr;
-  }
-}
-
-void
-MediaDecoder::AsyncRejectSeekDOMPromiseIfExists()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mSeekDOMPromise) {
-    RefPtr<dom::Promise> promise = mSeekDOMPromise;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-    });
-    mAbstractMainThread->Dispatch(r.forget());
-    mSeekDOMPromise = nullptr;
-  }
-}
-
-void
 MediaDecoder::DiscardOngoingSeekIfExists()
 {
   MOZ_ASSERT(NS_IsMainThread());
   mSeekRequest.DisconnectIfExists();
-  AsyncRejectSeekDOMPromiseIfExists();
+  GetOwner()->AsyncRejectSeekDOMPromiseIfExists();
 }
 
 void
@@ -789,7 +761,6 @@ MediaDecoder::CallSeek(const SeekTarget& aTarget, dom::Promise* aPromise)
   MOZ_ASSERT(NS_IsMainThread());
   DiscardOngoingSeekIfExists();
 
-  mSeekDOMPromise = aPromise;
   mDecoderStateMachine->InvokeSeek(aTarget)
   ->Then(mAbstractMainThread, __func__, this,
          &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected)
@@ -1191,7 +1162,7 @@ MediaDecoder::OnSeekResolved()
   UpdateLogicalPositionInternal();
 
   GetOwner()->SeekCompleted();
-  AsyncResolveSeekDOMPromiseIfExists();
+  GetOwner()->AsyncResolveSeekDOMPromiseIfExists();
 }
 
 void
@@ -1200,7 +1171,7 @@ MediaDecoder::OnSeekRejected()
   MOZ_ASSERT(NS_IsMainThread());
   mSeekRequest.Complete();
   mLogicallySeeking = false;
-  AsyncRejectSeekDOMPromiseIfExists();
+  GetOwner()->AsyncRejectSeekDOMPromiseIfExists();
 }
 
 void

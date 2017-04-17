@@ -2701,6 +2701,9 @@ HTMLMediaElement::Seek(double aTime,
   // We changed whether we're seeking so we need to AddRemoveSelfReference.
   AddRemoveSelfReference();
 
+  // Keep the DOM promise.
+  mSeekDOMPromise = promise;
+
   return promise.forget();
 }
 
@@ -7366,6 +7369,34 @@ bool HasDebuggerPrivilege(JSContext* aCx, JSObject* aObj)
   return nsContentUtils::CallerHasPermission(aCx,
                                              NS_LITERAL_STRING("debugger"));
  }
+
+void
+HTMLMediaElement::AsyncResolveSeekDOMPromiseIfExists()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mSeekDOMPromise) {
+    RefPtr<dom::Promise> promise = mSeekDOMPromise.forget();
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+      promise->MaybeResolveWithUndefined();
+    });
+    mAbstractMainThread->Dispatch(r.forget());
+    mSeekDOMPromise = nullptr;
+  }
+}
+
+void
+HTMLMediaElement::AsyncRejectSeekDOMPromiseIfExists()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mSeekDOMPromise) {
+    RefPtr<dom::Promise> promise = mSeekDOMPromise.forget();
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    });
+    mAbstractMainThread->Dispatch(r.forget());
+    mSeekDOMPromise = nullptr;
+  }
+}
 
 } // namespace dom
 } // namespace mozilla

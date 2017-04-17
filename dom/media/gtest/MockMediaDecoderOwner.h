@@ -54,6 +54,8 @@ public:
     // Non-DocGroup version for Mock.
     return AbstractThread::MainThread();
   }
+  void AsyncResolveSeekDOMPromiseIfExists() override {}
+  void AsyncRejectSeekDOMPromiseIfExists() override {}
 };
 }
 
