@@ -5579,15 +5579,18 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
     return;
   }
 
+  // Flush layout updates
+  if (!(aFlags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH)) {
+    nsContentUtils::FlushLayoutForTree(aWindow.AsInner()->GetOuterWindow());
+  }
+
   CompositionOp op = UsedOperation();
   bool discardContent = GlobalAlpha() == 1.0f
     && (op == CompositionOp::OP_OVER || op == CompositionOp::OP_SOURCE);
   const gfx::Rect drawRect(aX, aY, aW, aH);
   EnsureTarget(discardContent ? &drawRect : nullptr);
-
-  // Flush layout updates
-  if (!(aFlags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH)) {
-    nsContentUtils::FlushLayoutForTree(aWindow.AsInner()->GetOuterWindow());
+  if (!IsTargetValid()) {
+    return;
   }
 
   RefPtr<nsPresContext> presContext;
