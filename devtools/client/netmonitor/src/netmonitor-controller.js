@@ -7,10 +7,7 @@
 const { TimelineFront } = require("devtools/shared/fronts/timeline");
 const { CurlUtils } = require("devtools/client/shared/curl");
 const { ACTIVITY_TYPE, EVENTS } = require("./constants");
-const {
-  getRequestById,
-  getDisplayedRequestById,
-} = require("./selectors/index");
+const { getDisplayedRequestById } = require("./selectors/index");
 const {
   fetchHeaders,
   formDataURI,
@@ -307,7 +304,6 @@ function NetworkEventsHandler() {
   this._onRequestPostData = this._onRequestPostData.bind(this);
   this._onResponseHeaders = this._onResponseHeaders.bind(this);
   this._onResponseCookies = this._onResponseCookies.bind(this);
-  this._onResponseContent = this._onResponseContent.bind(this);
   this._onSecurityInfo = this._onSecurityInfo.bind(this);
   this._onEventTimings = this._onEventTimings.bind(this);
 }
@@ -428,45 +424,11 @@ NetworkEventsHandler.prototype = {
     .then(() => window.emit(EVENTS.REQUEST_ADDED, id));
   },
 
-  async updateRequest(id, data) {
-    await this.actions.updateRequest(id, data, true);
-    let {
-      responseContent,
-      responseCookies,
-      responseHeaders,
-      requestCookies,
-      requestHeaders,
-      requestPostData,
-    } = data;
-    let request = getRequestById(window.gStore.getState(), id);
-
-    if (requestHeaders && requestHeaders.headers && requestHeaders.headers.length) {
-      let headers = await fetchHeaders(requestHeaders, getLongString);
-      if (headers) {
-        await this.actions.updateRequest(
-          id,
-          { requestHeaders: headers },
-          true,
-        );
-      }
-    }
-
-    if (responseHeaders && responseHeaders.headers && responseHeaders.headers.length) {
-      let headers = await fetchHeaders(responseHeaders, getLongString);
-      if (headers) {
-        await this.actions.updateRequest(
-          id,
-          { responseHeaders: headers },
-          true,
-        );
-      }
-    }
-
-    if (request && responseContent && responseContent.content) {
-      let { mimeType } = request;
-      let { text, encoding } = responseContent.content;
+  async fetchImage(mimeType, responseContent) {
+    let payload = {};
+    if (mimeType && responseContent && responseContent.content) {
+      let { encoding, text } = responseContent.content;
       let response = await getLongString(text);
-      let payload = {};
 
       if (mimeType.includes("image/")) {
         payload.responseContentDataUri = formDataURI(mimeType, encoding, response);
@@ -474,16 +436,36 @@ NetworkEventsHandler.prototype = {
 
       responseContent.content.text = response;
       payload.responseContent = responseContent;
+    }
+    return payload;
+  },
 
-      await this.actions.updateRequest(id, payload, true);
-
-      if (mimeType.includes("image/")) {
-        window.emit(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
+  async fetchRequestHeaders(requestHeaders) {
+    let payload = {};
+    if (requestHeaders && requestHeaders.headers && requestHeaders.headers.length) {
+      let headers = await fetchHeaders(requestHeaders, getLongString);
+      if (headers) {
+        payload.requestHeaders = headers;
       }
     }
+    return payload;
+  },
 
-    // Search the POST data upload stream for request headers and add
-    // them as a separate property, different from the classic headers.
+  async fetchResponseHeaders(responseHeaders) {
+    let payload = {};
+    if (responseHeaders && responseHeaders.headers && responseHeaders.headers.length) {
+      let headers = await fetchHeaders(responseHeaders, getLongString);
+      if (headers) {
+        payload.responseHeaders = headers;
+      }
+    }
+    return payload;
+  },
+
+  // Search the POST data upload stream for request headers and add
+  // them as a separate property, different from the classic headers.
+  async fetchPostData(requestPostData) {
+    let payload = {};
     if (requestPostData && requestPostData.postData) {
       let { text } = requestPostData.postData;
       let postData = await getLongString(text);
@@ -491,35 +473,15 @@ NetworkEventsHandler.prototype = {
       const headersSize = headers.reduce((acc, { name, value }) => {
         return acc + name.length + value.length + 2;
       }, 0);
-      let payload = {};
       requestPostData.postData.text = postData;
       payload.requestPostData = Object.assign({}, requestPostData);
       payload.requestHeadersFromUploadStream = { headers, headersSize };
-
-      await this.actions.updateRequest(id, payload, true);
     }
+    return payload;
+  },
 
-    // Fetch request and response cookies long value.
-    // Actor does not provide full sized cookie value when the value is too long
-    // To display values correctly, we need fetch them in each request.
-    if (requestCookies) {
-      let reqCookies = [];
-      // request store cookies in requestCookies or requestCookies.cookies
-      let cookies = requestCookies.cookies ?
-        requestCookies.cookies : requestCookies;
-      // make sure cookies is iterable
-      if (typeof cookies[Symbol.iterator] === "function") {
-        for (let cookie of cookies) {
-          reqCookies.push(Object.assign({}, cookie, {
-            value: await getLongString(cookie.value),
-          }));
-        }
-        if (reqCookies.length) {
-          await this.actions.updateRequest(id, { requestCookies: reqCookies }, true);
-        }
-      }
-    }
-
+  async fetchResponseCookies(responseCookies) {
+    let payload = {};
     if (responseCookies) {
       let resCookies = [];
       // response store cookies in responseCookies or responseCookies.cookies
@@ -533,10 +495,70 @@ NetworkEventsHandler.prototype = {
           }));
         }
         if (resCookies.length) {
-          await this.actions.updateRequest(id, { responseCookies: resCookies }, true);
+          payload.responseCookies = resCookies;
         }
       }
     }
+    return payload;
+  },
+
+  // Fetch request and response cookies long value.
+  // Actor does not provide full sized cookie value when the value is too long
+  // To display values correctly, we need fetch them in each request.
+  async fetchRequestCookies(requestCookies) {
+    let payload = {};
+    if (requestCookies) {
+      let reqCookies = [];
+      // request store cookies in requestCookies or requestCookies.cookies
+      let cookies = requestCookies.cookies ?
+        requestCookies.cookies : requestCookies;
+      // make sure cookies is iterable
+      if (typeof cookies[Symbol.iterator] === "function") {
+        for (let cookie of cookies) {
+          reqCookies.push(Object.assign({}, cookie, {
+            value: await getLongString(cookie.value),
+          }));
+        }
+        if (reqCookies.length) {
+          payload.requestCookies = reqCookies;
+        }
+      }
+    }
+    return payload;
+  },
+
+  async updateRequest(id, data) {
+    let {
+      mimeType,
+      responseContent,
+      responseCookies,
+      responseHeaders,
+      requestCookies,
+      requestHeaders,
+      requestPostData,
+    } = data;
+
+    // fetch request detail contents in parallel
+    let [
+      imageObj,
+      requestHeadersObj,
+      responseHeadersObj,
+      postDataObj,
+      requestCookiesObj,
+      responseCookiesObj,
+    ] = await Promise.all([
+      this.fetchImage(mimeType, responseContent),
+      this.fetchRequestHeaders(requestHeaders),
+      this.fetchResponseHeaders(responseHeaders),
+      this.fetchPostData(requestPostData),
+      this.fetchRequestCookies(requestCookies),
+      this.fetchResponseCookies(responseCookies),
+    ]);
+
+    let payload = Object.assign({}, data,
+                                    imageObj, requestHeadersObj, responseHeadersObj,
+                                    postDataObj, requestCookiesObj, responseCookiesObj);
+    await this.actions.updateRequest(id, payload, true);
   },
 
   /**
@@ -568,9 +590,10 @@ NetworkEventsHandler.prototype = {
       case "securityInfo":
         this.updateRequest(actor, {
           securityState: networkInfo.securityInfo,
+        }).then(() => {
+          this.webConsoleClient.getSecurityInfo(actor, this._onSecurityInfo);
+          window.emit(EVENTS.UPDATING_SECURITY_INFO, actor);
         });
-        this.webConsoleClient.getSecurityInfo(actor, this._onSecurityInfo);
-        window.emit(EVENTS.UPDATING_SECURITY_INFO, actor);
         break;
       case "responseHeaders":
         this.webConsoleClient.getResponseHeaders(actor,
@@ -590,25 +613,26 @@ NetworkEventsHandler.prototype = {
           status: networkInfo.response.status,
           statusText: networkInfo.response.statusText,
           headersSize: networkInfo.response.headersSize
+        }).then(() => {
+          window.emit(EVENTS.STARTED_RECEIVING_RESPONSE, actor);
         });
-        window.emit(EVENTS.STARTED_RECEIVING_RESPONSE, actor);
         break;
       case "responseContent":
-        this.updateRequest(actor, {
-          contentSize: networkInfo.response.bodySize,
-          transferredSize: networkInfo.response.transferredSize,
-          mimeType: networkInfo.response.content.mimeType
-        });
         this.webConsoleClient.getResponseContent(actor,
-          this._onResponseContent);
+          this._onResponseContent.bind(this, {
+            contentSize: networkInfo.response.bodySize,
+            transferredSize: networkInfo.response.transferredSize,
+            mimeType: networkInfo.response.content.mimeType
+          }));
         window.emit(EVENTS.UPDATING_RESPONSE_CONTENT, actor);
         break;
       case "eventTimings":
         this.updateRequest(actor, {
           totalTime: networkInfo.totalTime
+        }).then(() => {
+          this.webConsoleClient.getEventTimings(actor, this._onEventTimings);
+          window.emit(EVENTS.UPDATING_EVENT_TIMINGS, actor);
         });
-        this.webConsoleClient.getEventTimings(actor, this._onEventTimings);
-        window.emit(EVENTS.UPDATING_EVENT_TIMINGS, actor);
         break;
     }
   },
@@ -700,13 +724,14 @@ NetworkEventsHandler.prototype = {
   /**
    * Handles additional information received for a "responseContent" packet.
    *
+   * @param object data
+   *        The message received from the server event.
    * @param object response
    *        The message received from the server.
    */
-  _onResponseContent: function (response) {
-    this.updateRequest(response.from, {
-      responseContent: response
-    }).then(() => {
+  _onResponseContent: function (data, response) {
+    let payload = Object.assign({ responseContent: response }, data);
+    this.updateRequest(response.from, payload).then(() => {
       window.emit(EVENTS.RECEIVED_RESPONSE_CONTENT, response.from);
     });
   },
