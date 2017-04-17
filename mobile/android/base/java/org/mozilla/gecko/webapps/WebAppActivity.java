@@ -108,6 +108,11 @@ public class WebAppActivity extends GeckoApp {
     @Override
     public void handleMessage(final String event, final GeckoBundle message,
                               final EventCallback callback) {
+        if (message == null ||
+                !message.containsKey("tabId") || message.getInt("tabId") != mLastSelectedTabId) {
+            return;
+        }
+
         switch (event) {
             case "Website:AppEntered":
                 getSupportActionBar().hide();
