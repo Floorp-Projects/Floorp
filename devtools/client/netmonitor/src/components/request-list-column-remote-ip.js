@@ -9,6 +9,7 @@ const {
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
+const { getFormattedIPAndPort } = require("../utils/format-utils");
 
 const { div } = DOM;
 
@@ -25,7 +26,8 @@ const RequestListColumnRemoteIP = createClass({
 
   render() {
     let { remoteAddress, remotePort } = this.props.item;
-    let remoteIP = remoteAddress ? `${remoteAddress}:${remotePort}` : "unknown";
+    let remoteIP = remoteAddress ?
+      getFormattedIPAndPort(remoteAddress, remotePort) : "unknown";
 
     return (
       div({ className: "requests-list-column requests-list-remoteip", title: remoteIP },
