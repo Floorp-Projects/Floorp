@@ -205,6 +205,8 @@ bool Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElement,
                                 nsIAtom* aPseudoTagOrNull);
 bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,
                                    nsIAtom* aPseudoTagOrNull);
+bool Gecko_ElementHasCSSTransitions(RawGeckoElementBorrowed aElement,
+                                    nsIAtom* aPseudoTagOrNull);
 double Gecko_GetProgressFromComputedTiming(RawGeckoComputedTimingBorrowed aComputedTiming);
 double Gecko_GetPositionInSegment(
   RawGeckoAnimationPropertySegmentBorrowed aSegment,
