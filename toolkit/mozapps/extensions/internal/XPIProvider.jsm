@@ -93,7 +93,6 @@ XPCOMUtils.defineLazyGetter(this, "IconDetails", () => {
   return ExtensionUtils.IconDetails;
 });
 
-
 Cu.importGlobalProperties(["URL"]);
 
 const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
