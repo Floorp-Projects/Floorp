@@ -616,9 +616,12 @@ RuleRewriter.prototype = {
 
     // Push a closing paren on the stack.
     let pushParen = (token, closer) => {
-      result += text.substring(previousOffset, token.startOffset);
-      parenStack.push({closer, offset: result.length});
-      result += text.substring(token.startOffset, token.endOffset);
+      result = result + text.substring(previousOffset, token.startOffset) +
+        text.substring(token.startOffset, token.endOffset);
+      // We set the location of the paren in a funny way, to handle
+      // the case where we've seen a function token, where the paren
+      // appears at the end.
+      parenStack.push({closer, offset: result.length - 1});
       previousOffset = token.endOffset;
     };
 
