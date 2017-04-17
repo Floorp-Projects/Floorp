@@ -201,6 +201,7 @@
 .annotationLayer .underlineAnnotation,
 .annotationLayer .squigglyAnnotation,
 .annotationLayer .strikeoutAnnotation,
+.annotationLayer .lineAnnotation svg line,
 .annotationLayer .fileAttachmentAnnotation {
   cursor: pointer;
 }

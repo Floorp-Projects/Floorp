@@ -456,7 +456,10 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
     return;
   }
 
-  uint64_t externalImageId = layer->SendImageContainer(container);
+  Maybe<wr::ImageKey> key = layer->SendImageContainer(container, aParentCommands);
+  if (key.isNothing()) {
+    return;
+  }
 
   const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   Rect destRect =
@@ -466,17 +469,10 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
 
   WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(dest));
 
-  WrImageKey key;
-  key.mNamespace = layer->WrBridge()->GetNamespace();
-  key.mHandle = layer->WrBridge()->GetNextResourceId();
-  aParentCommands.AppendElement(layers::OpAddExternalImage(
-                                externalImageId,
-                                key));
-  layer->WrManager()->AddImageKeyForDiscard(key);
   aBuilder.PushImage(wr::ToWrRect(dest),
                      clipRegion,
                      WrImageRendering::Auto,
-                     key);
+                     key.value());
 }
 
 void

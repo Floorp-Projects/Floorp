@@ -354,7 +354,8 @@ child:
       Endpoint<PCompositorBridgeChild> compositor,
       Endpoint<PImageBridgeChild> imageBridge,
       Endpoint<PVRManagerChild> vr,
-      Endpoint<PVideoDecoderManagerChild> video);
+      Endpoint<PVideoDecoderManagerChild> video,
+      uint32_t[] namespaces);
 
     // Re-create the rendering stack using the given endpoints. This is sent
     // after the compositor process has crashed. The new endpoints may be to a
@@ -363,7 +364,8 @@ child:
       Endpoint<PCompositorBridgeChild> compositor,
       Endpoint<PImageBridgeChild> bridge,
       Endpoint<PVRManagerChild> vr,
-      Endpoint<PVideoDecoderManagerChild> video);
+      Endpoint<PVideoDecoderManagerChild> video,
+      uint32_t[] namespaces);
 
     /**
      * Enable system-level sandboxing features, if available.  Can
