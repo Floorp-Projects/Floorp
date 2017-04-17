@@ -641,16 +641,19 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     return;
   }
 
-  nsTArray<WrOpacityProperty> opacityArray;
-  nsTArray<WrTransformProperty> transformArray;
-  SampleAnimations(opacityArray, transformArray);
+  if (gfxPrefs::WebRenderOMTAEnabled()) {
+    nsTArray<WrOpacityProperty> opacityArray;
+    nsTArray<WrTransformProperty> transformArray;
+    SampleAnimations(opacityArray, transformArray);
 
-  if (!transformArray.IsEmpty() || !opacityArray.IsEmpty()) {
-    mApi->GenerateFrame(opacityArray, transformArray);
-    ScheduleComposition();
-  } else {
-    mApi->GenerateFrame();
+    if (!transformArray.IsEmpty() || !opacityArray.IsEmpty()) {
+      mApi->GenerateFrame(opacityArray, transformArray);
+      ScheduleComposition();
+      return;
+    }
   }
+
+  mApi->GenerateFrame();
 }
 
 void
