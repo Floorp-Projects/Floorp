@@ -8667,13 +8667,23 @@ NoExceptionPending(JSContext* cx)
 }
 
 static bool
-Warn(AsmJSParser& parser, int errorNumber, const char* str)
+SuccessfulValidation(AsmJSParser& parser, UniqueChars str)
 {
-    ParseReportKind reportKind = parser.options().throwOnAsmJSValidationFailureOption &&
-                                 errorNumber == JSMSG_USE_ASM_TYPE_FAIL
-                                 ? ParseError
-                                 : ParseWarning;
-    parser.reportNoOffset(reportKind, /* strict = */ false, errorNumber, str ? str : "");
+    return parser.warningNoOffset(JSMSG_USE_ASM_TYPE_OK, str.get());
+}
+
+static bool
+TypeFailureWarning(AsmJSParser& parser, const char* str)
+{
+    if (parser.options().throwOnAsmJSValidationFailureOption) {
+        parser.errorNoOffset(JSMSG_USE_ASM_TYPE_FAIL, str ? str : "");
+        return false;
+    }
+
+    // Per the asm.js standard convention, whether failure sets a pending
+    // exception determines whether to attempt non-asm.js reparsing, so ignore
+    // the return value below.
+    Unused << parser.warningNoOffset(JSMSG_USE_ASM_TYPE_FAIL, str ? str : "");
     return false;
 }
 
@@ -8681,29 +8691,29 @@ static bool
 EstablishPreconditions(JSContext* cx, AsmJSParser& parser)
 {
     if (!HasCompilerSupport(cx))
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of compiler support");
+        return TypeFailureWarning(parser, "Disabled by lack of compiler support");
 
     switch (parser.options().asmJSOption) {
       case AsmJSOption::Disabled:
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by 'asmjs' runtime option");
+        return TypeFailureWarning(parser, "Disabled by 'asmjs' runtime option");
       case AsmJSOption::DisabledByDebugger:
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by debugger");
+        return TypeFailureWarning(parser, "Disabled by debugger");
       case AsmJSOption::Enabled:
         break;
     }
 
     if (parser.pc->isGenerator())
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by generator context");
+        return TypeFailureWarning(parser, "Disabled by generator context");
 
     if (parser.pc->isAsync())
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by async context");
+        return TypeFailureWarning(parser, "Disabled by async context");
 
     if (parser.pc->isArrowFunction())
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by arrow function context");
+        return TypeFailureWarning(parser, "Disabled by arrow function context");
 
     // Class constructors are also methods
     if (parser.pc->isMethod() || parser.pc->isGetterOrSetter())
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by class constructor or method context");
+        return TypeFailureWarning(parser, "Disabled by class constructor or method context");
 
     return true;
 }
@@ -8817,7 +8827,7 @@ js::CompileAsmJS(JSContext* cx, AsmJSParser& parser, ParseNode* stmtList, bool* 
 
     // Success! Write to the console with a "warning" message.
     *validated = true;
-    Warn(parser, JSMSG_USE_ASM_TYPE_OK, message.get());
+    SuccessfulValidation(parser, Move(message));
     return NoExceptionPending(cx);
 }
 
