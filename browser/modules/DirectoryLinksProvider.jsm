@@ -49,6 +49,12 @@ XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function() {
 const DIRECTORY_LINKS_FILE = "directoryLinks.json";
 const DIRECTORY_LINKS_TYPE = "application/json";
 
+// The preference that tells whether to match the OS locale
+const PREF_MATCH_OS_LOCALE = "intl.locale.matchOS";
+
+// The preference that tells what locale the user selected
+const PREF_SELECTED_LOCALE = "general.useragent.locale";
+
 // The preference that tells where to obtain directory links
 const PREF_DIRECTORY_SOURCE = "browser.newtabpage.directory.source";
 
@@ -160,6 +166,8 @@ var DirectoryLinksProvider = {
     return Object.freeze({
       enhanced: PREF_NEWTAB_ENHANCED,
       linksURL: PREF_DIRECTORY_SOURCE,
+      matchOSLocale: PREF_MATCH_OS_LOCALE,
+      prefSelectedLocale: PREF_SELECTED_LOCALE,
     });
   },
 
@@ -180,7 +188,26 @@ var DirectoryLinksProvider = {
    * @return  the selected locale or "en-US" if none is selected
    */
   get locale() {
-    return Services.locale.getRequestedLocale() || "en-US";
+    let matchOS = Services.prefs.getBoolPref(PREF_MATCH_OS_LOCALE, false);
+
+    if (matchOS) {
+      return Cc["@mozilla.org/intl/ospreferences;1"].
+             getService(Ci.mozIOSPreferences).systemLocale;
+    }
+
+    try {
+      let locale = Services.prefs.getComplexValue(PREF_SELECTED_LOCALE,
+                                                  Ci.nsIPrefLocalizedString);
+      if (locale) {
+        return locale.data;
+      }
+    } catch (e) {}
+
+    try {
+      return Services.prefs.getCharPref(PREF_SELECTED_LOCALE);
+    } catch (e) {}
+
+    return "en-US";
   },
 
   /**
@@ -209,11 +236,14 @@ var DirectoryLinksProvider = {
 
         case this._observedPrefs.linksURL:
           delete this.__linksURL;
+          // fallthrough
+
+        // Force directory download on changes to fetch related prefs
+        case this._observedPrefs.matchOSLocale:
+        case this._observedPrefs.prefSelectedLocale:
           this._fetchAndCacheLinksIfNecessary(true);
           break;
       }
-    } else if (aTopic === "intl:requested-locales-changed") {
-      this._fetchAndCacheLinksIfNecessary(true);
     }
   },
 
@@ -660,7 +690,6 @@ var DirectoryLinksProvider = {
   init: function DirectoryLinksProvider_init() {
     this._setDefaultEnhanced();
     this._addPrefsObserver();
-    Services.obs.addObserver(this, "intl:requested-locales-changed", false);
     // setup directory file path and last download timestamp
     this._directoryFilePath = OS.Path.join(OS.Constants.Path.localProfileDir, DIRECTORY_LINKS_FILE);
     this._lastDownloadMS = 0;
@@ -1184,7 +1213,6 @@ var DirectoryLinksProvider = {
     delete this.__linksURL;
     this._removePrefsObserver();
     this._removeObservers();
-    Services.obs.removeObserver(this, "intl:requested-locales-changed");
   },
 
   addObserver: function DirectoryLinksProvider_addObserver(aObserver) {
