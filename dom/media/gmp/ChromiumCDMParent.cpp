@@ -191,7 +191,7 @@ ChromiumCDMParent::InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer,
                                 crypto.mKeyId,
                                 crypto.mIV,
                                 aSample->mTime,
-                                aSample->mDuration,
+                                aSample->mDuration.ToMicroseconds(),
                                 crypto.mPlainSizes,
                                 crypto.mEncryptedSizes,
                                 crypto.mValid);
@@ -636,15 +636,16 @@ ChromiumCDMParent::RecvDecoded(const CDMVideoFrame& aFrame)
   b.mPlanes[2].mSkip = 0;
 
   gfx::IntRect pictureRegion(0, 0, aFrame.mImageWidth(), aFrame.mImageHeight());
-  RefPtr<VideoData> v = VideoData::CreateAndCopyData(mVideoInfo,
-                                                     mImageContainer,
-                                                     mLastStreamOffset,
-                                                     aFrame.mTimestamp(),
-                                                     aFrame.mDuration(),
-                                                     b,
-                                                     false,
-                                                     -1,
-                                                     pictureRegion);
+  RefPtr<VideoData> v = VideoData::CreateAndCopyData(
+    mVideoInfo,
+    mImageContainer,
+    mLastStreamOffset,
+    aFrame.mTimestamp(),
+    media::TimeUnit::FromMicroseconds(aFrame.mDuration()),
+    b,
+    false,
+    -1,
+    pictureRegion);
 
   // Return the shmem to the CDM so the shmem can be reused to send us
   // another frame.
