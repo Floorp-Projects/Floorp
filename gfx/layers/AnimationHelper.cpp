@@ -540,21 +540,18 @@ AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
                                                           transformData.appUnitsPerDevPixel(),
                                                           0, &transformData.bounds());
         gfx::Matrix4x4 frameTransform = transform;
-
-        //TODO how do we support this without layer information
-        // If our parent layer is a perspective layer, then the offset into reference
-        // frame coordinates is already on that layer. If not, then we need to ask
+        // If the parent has perspective transform, then the offset into reference
+        // frame coordinates is already on this transform. If not, then we need to ask
         // for it to be added here.
-        // if (!aLayer->GetParent() ||
-        //     !aLayer->GetParent()->GetTransformIsPerspective()) {
-        //   nsLayoutUtils::PostTranslate(transform, origin,
-        //                                transformData.appUnitsPerDevPixel(),
-        //                                true);
-        // }
+        if (!transformData.hasPerspectiveParent()) {
+           nsLayoutUtils::PostTranslate(transform, origin,
+                                        transformData.appUnitsPerDevPixel(),
+                                        true);
+        }
 
-        // if (ContainerLayer* c = aLayer->AsContainerLayer()) {
-        //   transform.PostScale(c->GetInheritedXScale(), c->GetInheritedYScale(), 1);
-        // }
+        transform.PostScale(transformData.inheritedXScale(),
+                            transformData.inheritedYScale(),
+                            1);
 
         aStorage->SetAnimatedValue(iter.Key(),
                                    Move(transform), Move(frameTransform),
