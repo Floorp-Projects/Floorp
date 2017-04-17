@@ -187,6 +187,11 @@ struct TransformData {
   Point3D transformOrigin;
   nsRect bounds;
   int32_t appUnitsPerDevPixel;
+  // The resolution scale inherited from the parent
+  float inheritedXScale;
+  float inheritedYScale;
+  // True if the parent has perspective transform
+  bool hasPerspectiveParent;
 };
 
 union AnimationData {

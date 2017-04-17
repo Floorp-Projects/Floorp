@@ -38,6 +38,8 @@ protected:
     MOZ_COUNT_DTOR(WebRenderContainerLayer);
   }
 
+  void UpdateTransformDataForAnimation();
+
 public:
   Layer* GetLayer() override { return this; }
   void RenderLayer(wr::DisplayListBuilder& aBuilder) override;
