@@ -568,9 +568,9 @@ protected:
   // This corresponds to the "current position" in HTML5.
   // We allow omx subclasses to substitute an alternative current position for
   // usage with the audio offload player.
-  virtual int64_t CurrentPosition()
+  virtual media::TimeUnit CurrentPosition()
   {
-    return mCurrentPosition.Ref().ToMicroseconds();
+    return mCurrentPosition.Ref();
   }
 
   // Official duration of the media resource as observed by script.
