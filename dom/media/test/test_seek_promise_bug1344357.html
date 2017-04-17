@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: bug 1344357</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script>
+
+// This test always succeeds at runtime but should not cause any leaks at the end of mochitests.
+
+let manager = new MediaTestManager;
+
+function initTest(test, token) {
+  manager.started(token);
+
+  var win = window.open();
+  var video = win.document.createElement("video");
+  video.autoplay = true;
+  video.src = "http://example.com/tests/dom/media/test/" + test.name;
+  win.document.body.appendChild(video);
+  video.currentTime = test.duration / 2;
+  video.addEventListener("seeking", () => {
+    win.close();
+    manager.finished(token);
+  }, true);
+}
+
+manager.runTests(gSmallTests, initTest);
+
+</script>
