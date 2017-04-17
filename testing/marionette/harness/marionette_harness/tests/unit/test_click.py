@@ -260,3 +260,20 @@ class TestClick(TestLegacyClick):
         with self.assertRaises(errors.ElementClickInterceptedException):
             obscured.click()
         self.assertFalse(self.marionette.execute_script("return window.clicked", sandbox=None))
+
+    def test_pointer_events_none(self):
+        self.marionette.navigate(inline("""
+            <button style="pointer-events: none">click me</button>
+            <script>
+              window.clicked = false;
+              let button = document.querySelector("button");
+              button.addEventListener("click", () => window.clicked = true);
+            </script>
+        """))
+        button = self.marionette.find_element(By.TAG_NAME, "button")
+        self.assertEqual("none", button.value_of_css_property("pointer-events"))
+
+        with self.assertRaisesRegexp(errors.ElementClickInterceptedException,
+                                     "does not have pointer events enabled"):
+            button.click()
+        self.assertFalse(self.marionette.execute_script("return window.clicked", sandbox=None))

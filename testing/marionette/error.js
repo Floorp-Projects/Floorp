@@ -272,10 +272,23 @@ class ElementClickInterceptedError extends WebDriverError {
     if (obscuredEl && coords) {
       const doc = obscuredEl.ownerDocument;
       const overlayingEl = doc.elementFromPoint(coords.x, coords.y);
-      msg = error.pprint`Element ${obscuredEl} is not clickable ` +
-          `at point (${coords.x},${coords.y}) ` +
-          error.pprint`because another element ${overlayingEl} ` +
-          `obscures it`;
+
+      switch (obscuredEl.style.pointerEvents) {
+        case "none":
+          msg = error.pprint`Element ${obscuredEl} is not clickable ` +
+              `at point (${coords.x},${coords.y}) ` +
+              `because it does not have pointer events enabled, ` +
+              error.pprint`and element ${overlayingEl} ` +
+              `would receive the click instead`;
+          break;
+
+        default:
+          msg = error.pprint`Element ${obscuredEl} is not clickable ` +
+              `at point (${coords.x},${coords.y}) ` +
+              error.pprint`because another element ${overlayingEl} ` +
+              `obscures it`;
+          break;
+      }
     }
 
     super(msg);
