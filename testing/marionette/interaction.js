@@ -291,13 +291,20 @@ interaction.selectOption = function (el) {
  *
  * @return {Promise}
  *     Promise is accepted once event queue is flushed, or rejected if
- *     |win| is unloaded before the queue can be flushed.
+ *     |win| has closed or been unloaded before the queue can be flushed.
  */
 interaction.flushEventLoop = function* (win) {
   let unloadEv;
+
   return new Promise((resolve, reject) => {
+    if (win.closed) {
+      reject();
+      return;
+    }
+
     unloadEv = reject;
     win.addEventListener("unload", unloadEv, {once: true});
+
     win.requestAnimationFrame(resolve);
   }).then(() => {
     win.removeEventListener("unload", unloadEv);
