@@ -922,7 +922,9 @@ bool
 nsBaseWidget::UseAPZ()
 {
   return (gfxPlatform::AsyncPanZoomEnabled() &&
-          (WindowType() == eWindowType_toplevel || WindowType() == eWindowType_child));
+          (WindowType() == eWindowType_toplevel ||
+           WindowType() == eWindowType_child ||
+           (WindowType() == eWindowType_popup && !IsSmallPopup())));
 }
 
 void nsBaseWidget::CreateCompositor()
