@@ -229,7 +229,7 @@ public class BrowserApp extends GeckoApp
     public ActionModeCompatView mActionBar;
     private VideoPlayer mVideoPlayer;
     private BrowserToolbar mBrowserToolbar;
-    private View mDoorhangerOverlay;
+    private View doorhangerOverlay;
     // We can't name the TabStrip class because it's not included on API 9.
     private TabStripInterface mTabStrip;
     private ToolbarProgressView mProgressView;
@@ -729,7 +729,7 @@ public class BrowserApp extends GeckoApp
         mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
         mMediaCastingBar = (MediaCastingBar) findViewById(R.id.media_casting);
 
-        mDoorhangerOverlay = findViewById(R.id.doorhanger_overlay);
+        doorhangerOverlay = findViewById(R.id.doorhanger_overlay);
 
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "Search:Keyword",
@@ -1619,19 +1619,7 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onDoorHangerShow() {
         mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
-
-        final Animator alphaAnimator = ObjectAnimator.ofFloat(mDoorhangerOverlay, "alpha", 1);
-        alphaAnimator.setDuration(250);
-
-        alphaAnimator.start();
-    }
-
-    @Override
-    public void onDoorHangerHide() {
-        final Animator alphaAnimator = ObjectAnimator.ofFloat(mDoorhangerOverlay, "alpha", 0);
-        alphaAnimator.setDuration(200);
-
-        alphaAnimator.start();
+        super.onDoorHangerShow();
     }
 
     private void setToolbarMargin(int margin) {
@@ -4074,6 +4062,11 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public int getLayout() { return R.layout.gecko_app; }
+
+    @Override
+    public View getDoorhangerOverlay() {
+        return doorhangerOverlay;
+    }
 
     public SearchEngineManager getSearchEngineManager() {
         return mSearchEngineManager;

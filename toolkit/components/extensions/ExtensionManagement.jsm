@@ -28,9 +28,6 @@ XPCOMUtils.defineLazyGetter(this, "UUIDMap", () => {
 
 const {appinfo} = Services;
 const isParentProcess = appinfo.processType === appinfo.PROCESS_TYPE_DEFAULT;
-if (isParentProcess) {
-  Services.ppmm.loadProcessScript("chrome://extensions/content/extension-process-script.js", true);
-}
 
 var ExtensionManagement;
 
