@@ -105,12 +105,11 @@ MediaSourceDecoder::GetSeekable()
     }
 
     if (buffered.Length()) {
-      seekable +=
-        media::TimeInterval(media::TimeUnit::FromSeconds(0), buffered.GetEnd());
+      seekable += media::TimeInterval(TimeUnit::Zero(), buffered.GetEnd());
     }
   } else {
-    seekable += media::TimeInterval(media::TimeUnit::FromSeconds(0),
-                                    media::TimeUnit::FromSeconds(duration));
+    seekable += media::TimeInterval(TimeUnit::Zero(),
+                                    TimeUnit::FromSeconds(duration));
   }
   MSE_DEBUG("ranges=%s", DumpTimeRanges(seekable).get());
   return seekable;
@@ -130,7 +129,7 @@ MediaSourceDecoder::GetBuffered()
     // Media source object is shutting down.
     return TimeIntervals();
   }
-  media::TimeUnit highestEndTime;
+  TimeUnit highestEndTime;
   nsTArray<media::TimeIntervals> activeRanges;
   media::TimeIntervals buffered;
 
@@ -144,8 +143,7 @@ MediaSourceDecoder::GetBuffered()
       std::max(highestEndTime, activeRanges.LastElement().GetEnd());
   }
 
-  buffered +=
-    media::TimeInterval(media::TimeUnit::FromMicroseconds(0), highestEndTime);
+  buffered += media::TimeInterval(TimeUnit::Zero(), highestEndTime);
 
   for (auto& range : activeRanges) {
     if (mEnded && range.Length()) {
@@ -289,7 +287,7 @@ MediaSourceDecoder::NextFrameBufferedStatus()
   TimeInterval interval(
     currentPosition,
     currentPosition
-    + media::TimeUnit::FromMicroseconds(DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED));
+    + TimeUnit::FromMicroseconds(DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED));
   return buffered.ContainsStrict(ClampIntervalToEnd(interval))
          ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
          : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;

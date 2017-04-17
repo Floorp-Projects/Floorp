@@ -188,7 +188,7 @@ OggDemuxer::HaveStartTime(TrackInfo::TrackType aType)
 int64_t
 OggDemuxer::StartTime(TrackInfo::TrackType aType)
 {
-  return OggState(aType).mStartTime.refOr(TimeUnit::FromMicroseconds(0)).ToMicroseconds();
+  return OggState(aType).mStartTime.refOr(TimeUnit::Zero()).ToMicroseconds();
 }
 
 RefPtr<OggDemuxer::InitPromise>
