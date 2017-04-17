@@ -28,6 +28,21 @@ WebRenderContainerLayer::ClearAnimations()
 }
 
 void
+WebRenderContainerLayer::UpdateTransformDataForAnimation()
+{
+  for (Animation& animation : mAnimations) {
+    if (animation.property() == eCSSProperty_transform) {
+      TransformData& transformData = animation.data().get_TransformData();
+      transformData.inheritedXScale() = GetInheritedXScale();
+      transformData.inheritedYScale() = GetInheritedYScale();
+      transformData.hasPerspectiveParent() =
+        GetParent() && GetParent()->GetTransformIsPerspective();
+      }
+    }
+  }
+}
+
+void
 WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
   nsTArray<LayerPolygon> children = SortChildrenBy3DZOrder(SortMode::WITHOUT_GEOMETRY);
@@ -42,18 +57,19 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
       !GetAnimations().IsEmpty()) {
     MOZ_ASSERT(GetCompositorAnimationsId());
 
-    animationsId = GetCompositorAnimationsId();
-    CompositorAnimations anim;
-    anim.animations() = GetAnimations();
-    anim.id() = animationsId;
-    WrBridge()->AddWebRenderParentCommand(OpAddCompositorAnimations(anim));
-
     if (!HasOpacityAnimation()) {
       maybeOpacity = nullptr;
     }
     if (!HasTransformAnimation()) {
       maybeTransform = nullptr;
+      UpdateTransformDataForAnimation();
     }
+
+    animationsId = GetCompositorAnimationsId();
+    CompositorAnimations anim;
+    anim.animations() = GetAnimations();
+    anim.id() = animationsId;
+    WrBridge()->AddWebRenderParentCommand(OpAddCompositorAnimations(anim));
   }
 
   StackingContextHelper sc(aBuilder, this, animationsId, maybeOpacity, maybeTransform);
