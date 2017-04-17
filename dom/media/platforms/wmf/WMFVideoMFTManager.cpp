@@ -41,6 +41,7 @@ using mozilla::layers::Image;
 using mozilla::layers::IMFYCbCrImage;
 using mozilla::layers::LayerManager;
 using mozilla::layers::LayersBackend;
+using mozilla::media::TimeUnit;
 
 #if WINVER_MAXVER < 0x0A00
 // Windows 10+ SDK has VP80 and VP90 defines
@@ -826,9 +827,9 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   b.mPlanes[2].mOffset = 0;
   b.mPlanes[2].mSkip = 0;
 
-  media::TimeUnit pts = GetSampleTime(aSample);
+  TimeUnit pts = GetSampleTime(aSample);
   NS_ENSURE_TRUE(pts.IsValid(), E_FAIL);
-  media::TimeUnit duration = GetSampleDuration(aSample);
+  TimeUnit duration = GetSampleDuration(aSample);
   NS_ENSURE_TRUE(duration.IsValid(), E_FAIL);
   nsIntRect pictureRegion = mVideoInfo.ScaledImageRect(videoWidth, videoHeight);
 
@@ -897,9 +898,9 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
   NS_ENSURE_TRUE(image, E_FAIL);
 
-  media::TimeUnit pts = GetSampleTime(aSample);
+  TimeUnit pts = GetSampleTime(aSample);
   NS_ENSURE_TRUE(pts.IsValid(), E_FAIL);
-  media::TimeUnit duration = GetSampleDuration(aSample);
+  TimeUnit duration = GetSampleDuration(aSample);
   NS_ENSURE_TRUE(duration.IsValid(), E_FAIL);
   RefPtr<VideoData> v = VideoData::CreateFromImage(mVideoInfo.mDisplay,
                                                    aStreamOffset,
@@ -931,8 +932,8 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
     mDraining = false;
   }
 
-  media::TimeUnit pts;
-  media::TimeUnit duration;
+  TimeUnit pts;
+  TimeUnit duration;
 
   // Loop until we decode a sample, or an unexpected error that we can't
   // handle occurs.
@@ -993,14 +994,14 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
       if (!pts.IsValid() || !duration.IsValid()) {
         return E_FAIL;
       }
-      if (wasDraining && sampleCount == 1 && pts == media::TimeUnit()) {
+      if (wasDraining && sampleCount == 1 && pts == TimeUnit::Zero()) {
         // WMF is unable to calculate a duration if only a single sample
         // was parsed. Additionally, the pts always comes out at 0 under those
         // circumstances.
         // Seeing that we've only fed the decoder a single frame, the pts
         // and duration are known, it's of the last sample.
-        pts = media::TimeUnit::FromMicroseconds(mLastTime);
-        duration = media::TimeUnit::FromMicroseconds(mLastDuration);
+        pts = TimeUnit::FromMicroseconds(mLastTime);
+        duration = TimeUnit::FromMicroseconds(mLastDuration);
       }
       if (mSeekTargetThreshold.isSome()) {
         if ((pts + duration) < mSeekTargetThreshold.ref()) {
