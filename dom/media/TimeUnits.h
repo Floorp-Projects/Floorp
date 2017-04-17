@@ -39,51 +39,6 @@ namespace media {
 // Number of nanoseconds per second. 1e9.
 static const int64_t NSECS_PER_S = 1000000000;
 
-struct Microseconds {
-  Microseconds()
-    : mValue(0)
-  {}
-
-  explicit Microseconds(int64_t aValue)
-    : mValue(aValue)
-  {}
-
-  double ToSeconds() {
-    return double(mValue) / USECS_PER_S;
-  }
-
-  static Microseconds FromSeconds(double aValue) {
-    MOZ_ASSERT(!IsNaN(aValue));
-
-    double val = aValue * USECS_PER_S;
-    if (val >= double(INT64_MAX)) {
-      return Microseconds(INT64_MAX);
-    } else if (val <= double(INT64_MIN)) {
-      return Microseconds(INT64_MIN);
-    } else {
-      return Microseconds(int64_t(val));
-    }
-  }
-
-  bool operator == (const Microseconds& aOther) const {
-    return mValue == aOther.mValue;
-  }
-  bool operator > (const Microseconds& aOther) const {
-    return mValue > aOther.mValue;
-  }
-  bool operator >= (const Microseconds& aOther) const {
-    return mValue >= aOther.mValue;
-  }
-  bool operator < (const Microseconds& aOther) const {
-    return mValue < aOther.mValue;
-  }
-  bool operator <= (const Microseconds& aOther) const {
-    return mValue <= aOther.mValue;
-  }
-
-  int64_t mValue;
-};
-
 // TimeUnit at present uses a CheckedInt64 as storage.
 // INT64_MAX has the special meaning of being +oo.
 class TimeUnit final {
@@ -108,10 +63,6 @@ public:
 
   static constexpr TimeUnit FromMicroseconds(int64_t aValue) {
     return TimeUnit(aValue);
-  }
-
-  static TimeUnit FromMicroseconds(Microseconds aValue) {
-    return TimeUnit(aValue.mValue);
   }
 
   static constexpr TimeUnit FromNanoseconds(int64_t aValue) {
@@ -235,15 +186,6 @@ public:
   constexpr TimeUnit()
     : mValue(CheckedInt64(0))
   {}
-
-  explicit TimeUnit(const Microseconds& aMicroseconds)
-    : mValue(aMicroseconds.mValue)
-  {}
-  TimeUnit& operator = (const Microseconds& aMicroseconds)
-  {
-    mValue = aMicroseconds.mValue;
-    return *this;
-  }
 
   TimeUnit(const TimeUnit&) = default;
 
