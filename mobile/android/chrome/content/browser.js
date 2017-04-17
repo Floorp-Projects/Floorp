@@ -1647,7 +1647,15 @@ var BrowserApp = {
   },
 
   getUALocalePref: function () {
-    return Services.locale.getRequestedLocale() || undefined;
+    try {
+      return Services.prefs.getComplexValue("general.useragent.locale", Ci.nsIPrefLocalizedString).data;
+    } catch (e) {
+      try {
+        return Services.prefs.getCharPref("general.useragent.locale");
+      } catch (ee) {
+        return undefined;
+      }
+    }
   },
 
   getOSLocalePref: function () {

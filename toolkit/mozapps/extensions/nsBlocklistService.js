@@ -48,6 +48,7 @@ const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
 const PREF_BLOCKLIST_SUPPRESSUI       = "extensions.blocklist.suppressUI";
 const PREF_ONECRL_VIA_AMO             = "security.onecrl.via.amo";
 const PREF_BLOCKLIST_UPDATE_ENABLED   = "services.blocklist.update_enabled";
+const PREF_GENERAL_USERAGENT_LOCALE   = "general.useragent.locale";
 const PREF_APP_DISTRIBUTION           = "distribution.id";
 const PREF_APP_DISTRIBUTION_VERSION   = "distribution.version";
 const PREF_EM_LOGGING_ENABLED         = "extensions.logging.enabled";
@@ -241,7 +242,14 @@ function matchesOSABI(blocklistElement) {
  * exists in nsHttpHandler.cpp when building the UA string.
  */
 function getLocale() {
-  return Services.locale.getRequestedLocales();
+  try {
+      // Get the default branch
+      var defaultPrefs = gPref.getDefaultBranch(null);
+      return defaultPrefs.getComplexValue(PREF_GENERAL_USERAGENT_LOCALE,
+                                          Ci.nsIPrefLocalizedString).data;
+  } catch (e) {}
+
+  return gPref.getCharPref(PREF_GENERAL_USERAGENT_LOCALE);
 }
 
 /* Get the distribution pref values, from defaults only */

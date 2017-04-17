@@ -7,17 +7,14 @@
 #ifndef mozilla_dom_FallbackEncoding_h_
 #define mozilla_dom_FallbackEncoding_h_
 
-#include "nsIObserver.h"
 #include "nsString.h"
 
 namespace mozilla {
 namespace dom {
 
-class FallbackEncoding : public nsIObserver
+class FallbackEncoding
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
 
   /**
    * Whether FromTopLevelDomain() should be used.
@@ -71,7 +68,7 @@ private:
   static FallbackEncoding* sInstance;
 
   FallbackEncoding();
-  virtual ~FallbackEncoding() {};
+  ~FallbackEncoding();
 
   /**
    * Invalidates the cache.
