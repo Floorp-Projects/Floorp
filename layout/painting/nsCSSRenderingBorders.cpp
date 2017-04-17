@@ -3585,8 +3585,6 @@ nsCSSBorderImageRenderer::CreateBorderImageRenderer(nsPresContext* aPresContext,
                                                     uint32_t aFlags,
                                                     DrawResult* aDrawResult)
 {
-  NS_PRECONDITION(aStyleBorder.IsBorderImageLoaded(),
-                  "drawing border image that isn't successfully loaded");
   MOZ_ASSERT(aDrawResult);
 
   if (aDirtyRect.IsEmpty()) {

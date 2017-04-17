@@ -820,24 +820,28 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
     }
   }
 
-  if (aStyleBorder.IsBorderImageLoaded()) {
-    DrawResult result;
+  if (!aStyleBorder.mBorderImageSource.IsEmpty()) {
+    DrawResult result = DrawResult::SUCCESS;
 
     uint32_t irFlags = 0;
     if (aFlags & PaintBorderFlags::SYNC_DECODE_IMAGES) {
       irFlags |= nsImageRenderer::FLAG_SYNC_DECODE_IMAGES;
     }
 
+    // Creating the border image renderer will request a decode, and we rely on
+    // that happening.
     Maybe<nsCSSBorderImageRenderer> renderer =
       nsCSSBorderImageRenderer::CreateBorderImageRenderer(aPresContext, aForFrame, aBorderArea,
                                                           aStyleBorder, aDirtyRect, aSkipSides,
                                                           irFlags, &result);
-    if (!renderer) {
-      return result;
-    }
+    if (aStyleBorder.IsBorderImageLoaded()) {
+      if (!renderer) {
+        return result;
+      }
 
-    return renderer->DrawBorderImage(aPresContext, aRenderingContext,
-                                     aForFrame, aDirtyRect);
+      return renderer->DrawBorderImage(aPresContext, aRenderingContext,
+                                       aForFrame, aDirtyRect);
+    }
   }
 
   DrawResult result = DrawResult::SUCCESS;
