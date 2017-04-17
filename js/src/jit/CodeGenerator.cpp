@@ -158,6 +158,10 @@ typedef JSObject* (*IonBindNameICFn)(JSContext*, HandleScript, IonBindNameIC*, H
 static const VMFunction IonBindNameICInfo =
     FunctionInfo<IonBindNameICFn>(IonBindNameIC::update, "IonBindNameIC::update");
 
+typedef bool (*IonInICFn)(JSContext*, HandleScript, IonInIC*, HandleValue, HandleObject, bool*);
+static const VMFunction IonInICInfo =
+    FunctionInfo<IonInICFn>(IonInIC::update, "IonInIC::update");
+
 void
 CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
 {
@@ -243,7 +247,24 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
         masm.jump(ool->rejoin());
         return;
       }
-      case CacheKind::In:
+      case CacheKind::In: {
+        IonInIC* inIC = ic->asInIC();
+
+        saveLive(lir);
+
+        pushArg(inIC->object());
+        pushArg(inIC->key());
+        icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
+        pushArg(ImmGCPtr(gen->info().script()));
+
+        callVM(IonInICInfo, lir);
+
+        StoreRegisterTo(inIC->output()).generate(this);
+        restoreLiveIgnore(lir, StoreRegisterTo(inIC->output()).clobbered());
+
+        masm.jump(ool->rejoin());
+        return;
+      }
       case CacheKind::TypeOf:
         MOZ_CRASH("Baseline-specific for now");
       case CacheKind::HasOwn: {
