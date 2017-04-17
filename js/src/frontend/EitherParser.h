@@ -255,8 +255,8 @@ class EitherParser
     }
 
     template<typename... Args>
-    MOZ_MUST_USE bool reportNoOffset(Args&&... args) {
-        return parser.match(detail::ParserBaseMatcher()).reportNoOffset(mozilla::Forward<Args>(args)...);
+    MOZ_MUST_USE bool warningNoOffset(Args&&... args) {
+        return parser.match(detail::ParserBaseMatcher()).warningNoOffset(mozilla::Forward<Args>(args)...);
     }
 
     template<typename... Args>

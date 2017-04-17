@@ -744,42 +744,34 @@ Parser<ParseHandler, CharT>::strictModeErrorAt(uint32_t offset, unsigned errorNu
 }
 
 bool
-ParserBase::reportNoOffset(ParseReportKind kind, bool strict, unsigned errorNumber, ...)
+ParserBase::warningNoOffset(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
 
-    bool result = false;
-    switch (kind) {
-      case ParseError:
-      case ParseWarning: {
-        ErrorMetadata metadata;
-        tokenStream.computeErrorMetadataNoOffset(&metadata);
+    ErrorMetadata metadata;
+    tokenStream.computeErrorMetadataNoOffset(&metadata);
 
-        if (kind == ParseError) {
-            ReportCompileError(context, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber,
-                               args);
-            MOZ_ASSERT(!result);
-        } else {
-            result =
-                tokenStream.compileWarning(Move(metadata), nullptr, JSREPORT_WARNING, errorNumber,
-                                           args);
-        }
-
-        break;
-      }
-      case ParseExtraWarning:
-        result = tokenStream.reportExtraWarningErrorNumberVA(nullptr, TokenStream::NoOffset,
-                                                             errorNumber, &args);
-        break;
-      case ParseStrictError:
-        result = tokenStream.reportStrictModeErrorNumberVA(nullptr, TokenStream::NoOffset, strict,
-                                                           errorNumber, &args);
-        break;
-    }
+    bool result =
+        tokenStream.compileWarning(Move(metadata), nullptr, JSREPORT_WARNING, errorNumber,
+                                   args);
 
     va_end(args);
     return result;
+}
+
+void
+ParserBase::errorNoOffset(unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+
+    ErrorMetadata metadata;
+    tokenStream.computeErrorMetadataNoOffset(&metadata);
+
+    ReportCompileError(context, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber, args);
+
+    va_end(args);
 }
 
 #define ABORTED_SYNTAX_PARSE_SENTINEL (SyntaxParser*)(0x1)

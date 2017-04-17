@@ -187,7 +187,8 @@ class ParserBase : public StrictModeGetter
 
     bool isUnexpectedEOF() const { return isUnexpectedEOF_; }
 
-    bool reportNoOffset(ParseReportKind kind, bool strict, unsigned errorNumber, ...);
+    MOZ_MUST_USE bool warningNoOffset(unsigned errorNumber, ...);
+    void errorNoOffset(unsigned errorNumber, ...);
 
     bool isValidStrictBinding(PropertyName* name);
 
