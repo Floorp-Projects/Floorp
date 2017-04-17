@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1352882
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1352882 - RequiresReinitAfterOutput</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  function getEncoder() {
+    const de = SpecialPowers.Ci.nsIDocumentEncoder;
+    const Cc = SpecialPowers.Cc;
+
+    // Create a plaintext encoder without flags.
+    var encoder = Cc["@mozilla.org/layout/documentEncoder;1?type=text/plain"]
+                  .createInstance(de);
+    encoder.init(document, "text/plain", encoder.RequiresReinitAfterOutput);
+    return encoder;
+  }
+
+  function testPlaintextSerializerWithRequiresReinitAfterOutput() {
+    var encoder = getEncoder();
+
+    var str = encoder.encodeToString();
+    ok(str, "encodingToString should be successful");
+
+    SimpleTest.doesThrow(() => {
+      encoder.encodeToString();
+    }, 'encodeToString should throw exception if it has RequiresReinitAfterOutput and it is called twice');
+
+    encoder.init(document, "text/plain", encoder.RequiresReinitAfterOutput);
+    str = encoder.encodeToString();
+    ok(str, "encodingToString should be successful after calling init again");
+
+    encoder = getEncoder();
+
+    str = encoder.encodeToStringWithMaxLength(1000);
+    ok(str, "encodingToString should be successful");
+
+    SimpleTest.doesThrow(() => {
+      encoder.encodeToStringWithMaxLength(1000);
+    }, 'encodeToStringWithMaxLength should throw exception if it has RequiresReinitAfterOutput and it is called twice');
+
+    encoder.init(document, "text/plain", encoder.RequiresReinitAfterOutput);
+    str = encoder.encodeToStringWithMaxLength(1000);
+    ok(str, "encodingToStringWithMaxLength should be successful after calling init again");
+
+    encoder = getEncoder();
+    var stream = {
+      close: function() {
+      },
+
+      flush: function() {
+      },
+
+      write: function(buffer, length) {
+        return length;
+      },
+
+      writeFrom: function(buffer, length) {
+        return length;
+      },
+    };
+
+    encoder.setCharset("utf-8");
+    encoder.encodeToStream(stream);
+    ok(str, "encodingToStream should be successful");
+
+    SimpleTest.doesThrow(() => {
+      encoder.encodeToStream(stream);
+    }, 'encodeToStream should throw exception if it has RequiresReinitAfterOutput and it is called twice');
+
+    encoder.init(document, "text/plain", encoder.RequiresReinitAfterOutput);
+    encoder.encodeToStream(stream);
+    ok(true, "encodingToStream should be successful after calling init again");
+
+    stream.close();
+
+    SimpleTest.finish();
+  }
+
+  addLoadEvent(testPlaintextSerializerWithRequiresReinitAfterOutput);
+  SimpleTest.waitForExplicitFinish();
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1352882">Mozilla Bug 1352882</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+The <em>Mozilla</em> project is a global community of <strong>people</strong> who believe that openness, innovation, and opportunity are key to the continued health of the Internet. We have worked together since 1998 to ensure that the Internet is developed in a way that benefits everyone. We are best known for creating the Mozilla Firefox web browser.
+
+The Mozilla project uses a community-based approach to create world-class open source software and to develop new types of collaborative activities. We create communities of people involved in making the Internet experience better for all of us.
+
+As a result of these efforts, we have distilled a set of principles that we believe are critical for the Internet to continue to benefit the public good as well as commercial aspects of life. We set out these principles below.
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
