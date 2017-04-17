@@ -77,6 +77,26 @@ function cause(first, second) {
   return result || waterfall(first, second);
 }
 
+function setCookies(first, second) {
+  let { responseCookies: firstResponseCookies = { cookies: [] } } = first;
+  let { responseCookies: secondResponseCookies = { cookies: [] } } = second;
+  firstResponseCookies = firstResponseCookies.cookies || firstResponseCookies;
+  secondResponseCookies = secondResponseCookies.cookies || secondResponseCookies;
+  const result =
+    compareValues(firstResponseCookies.length, secondResponseCookies.length);
+  return result || waterfall(first, second);
+}
+
+function cookies(first, second) {
+  let { requestCookies: firstRequestCookies = { cookies: [] } } = first;
+  let { requestCookies: secondRequestCookies = { cookies: [] } } = second;
+  firstRequestCookies = firstRequestCookies.cookies || firstRequestCookies;
+  secondRequestCookies = secondRequestCookies.cookies || secondRequestCookies;
+  const result =
+    compareValues(firstRequestCookies.length, secondRequestCookies.length);
+  return result || waterfall(first, second);
+}
+
 function type(first, second) {
   const firstType = getAbbreviatedMimeType(first.mimeType).toLowerCase();
   const secondType = getAbbreviatedMimeType(second.mimeType).toLowerCase();
@@ -99,6 +119,8 @@ exports.Sorters = {
   method,
   file,
   protocol,
+  cookies,
+  setCookies,
   domain,
   remoteip,
   cause,
