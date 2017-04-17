@@ -499,7 +499,7 @@ internal_GetHistogramByEnumId(mozilla::Telemetry::HistogramID id, Histogram **re
     return NS_ERROR_FAILURE;
   }
 
-  nsCString histogramName;
+  nsAutoCString histogramName;
   histogramName.Append(p.id());
   if (const char* suffix = SuffixForProcessType(aProcessType)) {
     histogramName.AppendASCII(suffix);
@@ -1403,7 +1403,7 @@ internal_AccumulateChildKeyed(GeckoProcessType aProcessType, mozilla::Telemetry:
 
   const HistogramInfo& th = gHistograms[aId];
 
-  nsCString id;
+  nsAutoCString id;
   id.Append(th.id());
   id.AppendASCII(suffix);
 
