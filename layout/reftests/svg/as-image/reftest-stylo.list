@@ -31,8 +31,8 @@ include zoom/reftest-stylo.list
 == background-image-rect-2.html background-image-rect-2.html
 
 # Test for border-image
-fails == border-image-simple-1.html border-image-simple-1.html
-fails == border-image-simple-2.html border-image-simple-2.html
+== border-image-simple-1.html border-image-simple-1.html
+== border-image-simple-2.html border-image-simple-2.html
 
 # Test for canvas "drawImage" method
 == canvas-drawImage-simple-1a.html canvas-drawImage-simple-1a.html

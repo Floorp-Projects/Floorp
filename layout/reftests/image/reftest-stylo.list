@@ -79,8 +79,8 @@ fuzzy(1,1) == image-orientation-explicit.html?345 image-orientation-explicit.htm
 # Tests that image-orientation does not apply to decorative images:
 == image-orientation-background.html?from-image image-orientation-background.html?from-image
 == image-orientation-background.html?90&flip image-orientation-background.html?90&flip
-fails == image-orientation-border-image.html?from-image image-orientation-border-image.html?from-image
-fails == image-orientation-border-image.html?90&flip image-orientation-border-image.html?90&flip
+== image-orientation-border-image.html?from-image image-orientation-border-image.html?from-image
+== image-orientation-border-image.html?90&flip image-orientation-border-image.html?90&flip
 == image-orientation-list-style-image.html?from-image image-orientation-list-style-image.html?from-image
 == image-orientation-list-style-image.html?90&flip image-orientation-list-style-image.html?90&flip
 

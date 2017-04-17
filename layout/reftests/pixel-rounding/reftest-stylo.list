@@ -174,9 +174,9 @@ fuzzy-if(skiaContent,1,145) == rounded-background-color-width-left-6.html rounde
 
 == background-image-tiling.html background-image-tiling.html
 
-fails == border-image-width-0.html border-image-width-0.html
-fails == border-image-width-4.html border-image-width-4.html
-fails == border-image-width-9.html border-image-width-9.html
+== border-image-width-0.html border-image-width-0.html
+== border-image-width-4.html border-image-width-4.html
+== border-image-width-9.html border-image-width-9.html
 
 fails == iframe-1.html iframe-1.html # Bug 1341769
 
