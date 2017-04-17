@@ -40,6 +40,12 @@ public:
 
   // WebIDL
   already_AddRefed<Promise>
+  Persisted(ErrorResult& aRv);
+
+  already_AddRefed<Promise>
+  Persist(ErrorResult& aRv);
+
+  already_AddRefed<Promise>
   Estimate(ErrorResult& aRv);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

@@ -273,6 +273,11 @@ LogCookie(nsCookie *aCookie)
 
     MOZ_LOG(gCookieLog, LogLevel::Debug,("is secure: %s\n", aCookie->IsSecure() ? "true" : "false"));
     MOZ_LOG(gCookieLog, LogLevel::Debug,("is httpOnly: %s\n", aCookie->IsHttpOnly() ? "true" : "false"));
+
+    nsAutoCString suffix;
+    aCookie->OriginAttributesRef().CreateSuffix(suffix);
+    MOZ_LOG(gCookieLog, LogLevel::Debug,("origin attributes: %s\n",
+            suffix.IsEmpty() ? "{empty}" : suffix.get()));
   }
 }
 
