@@ -58,7 +58,6 @@ const LOGGER_PREFIX = "TelemetrySession" + (Utils.isContentProcess ? "#content::
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
-const PREF_ASYNC_PLUGIN_INIT = "dom.ipc.plugins.asyncInit.enabled";
 const PREF_UNIFIED = PREF_BRANCH + "unified";
 const PREF_SHUTDOWN_PINGSENDER = PREF_BRANCH + "shutdownPingSender.enabled";
 
@@ -1074,7 +1073,6 @@ var Impl = {
     let ret = {
       reason,
       revision: AppConstants.SOURCE_REVISION_URL,
-      asyncPluginInit: Preferences.get(PREF_ASYNC_PLUGIN_INIT, false),
 
       // Date.getTimezoneOffset() unintuitively returns negative values if we are ahead of
       // UTC and vice versa (e.g. -60 for UTC+1). We invert the sign here.
