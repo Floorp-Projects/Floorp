@@ -1088,7 +1088,6 @@ interface EXT_disjoint_timer_query {
 interface MOZ_debug {
     const GLenum EXTENSIONS = 0x1F03;
     const GLenum WSI_INFO   = 0x10000;
-    const GLenum UNPACK_REQUIRE_FASTPATH = 0x10001;
 
     [Throws]
     any getParameter(GLenum pname);
