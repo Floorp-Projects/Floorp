@@ -8,7 +8,7 @@ ac_add_options --enable-verify-mar
 # by 2 MBs.
 STRIP_FLAGS="--strip-debug"
 
-ac_add_options --with-branding=browser/branding/aurora
+ac_add_options --with-branding=browser/branding/nightly
 
 . "$topsrcdir/build/mozconfig.common.override"
 . "$topsrcdir/build/mozconfig.cache"
