@@ -369,21 +369,21 @@ function disableHighlighter(toolbox) {
  * Click on an animation in the timeline to select/unselect it.
  * @param {AnimationsPanel} panel The panel instance.
  * @param {Number} index The index of the animation to click on.
- * @param {Boolean} shouldClose Set to true if clicking should close the
- * animation.
+ * @param {Boolean} shouldAlreadySelected Set to true
+ *                  if the clicked animation is already selected.
  * @return {Promise} resolves to the animation whose state has changed.
  */
-function* clickOnAnimation(panel, index, shouldClose) {
+function* clickOnAnimation(panel, index, shouldAlreadySelected) {
   let timeline = panel.animationsTimelineComponent;
 
   // Expect a selection event.
-  let onSelectionChanged = timeline.once(shouldClose
-                                         ? "animation-unselected"
+  let onSelectionChanged = timeline.once(shouldAlreadySelected
+                                         ? "animation-already-selected"
                                          : "animation-selected");
 
   // If we're opening the animation, also wait for
   // the animation-detail-rendering-completed event.
-  let onReady = shouldClose
+  let onReady = shouldAlreadySelected
                 ? Promise.resolve()
                 : timeline.details.once("animation-detail-rendering-completed");
 

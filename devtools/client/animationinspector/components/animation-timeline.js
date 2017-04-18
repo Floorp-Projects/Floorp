@@ -296,30 +296,37 @@ AnimationsTimeline.prototype = {
       return;
     }
 
-    let el = this.rootWrapperEl;
-    let animationEl = el.querySelectorAll(".animation")[index];
-
-    // Toggle the selected state on this animation.
-    animationEl.classList.toggle("selected");
-
-    // Render the details component for this animation if it was shown.
-    if (animationEl.classList.contains("selected")) {
-      // Add class of animation type.
-      if (!this.animatedPropertiesEl.classList.contains(animation.state.type)) {
-        this.animatedPropertiesEl.className =
-          `animated-properties ${ animation.state.type }`;
+    // Unselect an animation which was selected.
+    const animationEls = this.rootWrapperEl.querySelectorAll(".animation");
+    for (let i = 0; i < animationEls.length; i++) {
+      const animationEl = animationEls[i];
+      if (!animationEl.classList.contains("selected")) {
+        continue;
       }
-      this.animationDetailEl.style.display =
-        this.animationDetailEl.dataset.defaultDisplayStyle;
-      this.details.render(animation);
-      this.emit("animation-selected", animation);
-
-      this.animationAnimationNameEl.textContent =
-        getFormattedAnimationTitle(animation);
-    } else {
-      this.emit("animation-unselected", animation);
-      this.animationDetailEl.style.display = "none";
+      if (i === index) {
+        // Already the animation is selected.
+        this.emit("animation-already-selected", this.animations[i]);
+        return;
+      }
+      animationEl.classList.remove("selected");
+      this.emit("animation-unselected", this.animations[i]);
+      break;
     }
+
+    // Add class of animation type to animatedPropertiesEl to display the compositor sign.
+    if (!this.animatedPropertiesEl.classList.contains(animation.state.type)) {
+      this.animatedPropertiesEl.className =
+        `animated-properties ${ animation.state.type }`;
+    }
+
+    // Select and render.
+    const selectedAnimationEl = animationEls[index];
+    selectedAnimationEl.classList.add("selected");
+    this.animationDetailEl.style.display =
+      this.animationDetailEl.dataset.defaultDisplayStyle;
+    this.details.render(animation);
+    this.animationAnimationNameEl.textContent = getFormattedAnimationTitle(animation);
+    this.emit("animation-selected", animation);
   },
 
   /**
