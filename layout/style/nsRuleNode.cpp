@@ -2573,9 +2573,23 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   if (!highestNode)
     highestNode = rootNode;
 
-  if (!ruleData.mConditions.CacheableWithoutDependencies())
-    detail = eRulePartialMixed; // Treat as though some data is specified to avoid
-                                // the optimizations and force data computation.
+  MOZ_ASSERT(!(aSID == eStyleStruct_Variables && startStruct),
+             "if we start caching Variables structs in the rule tree, then "
+             "not forcing detail to eRulePartialMixed just below is no "
+             "longer valid");
+
+  if (!ruleData.mConditions.CacheableWithoutDependencies() &&
+      aSID != eStyleStruct_Variables) {
+    // Treat as though some data is specified to avoid the optimizations and
+    // force data computation.
+    //
+    // We don't need to do this for Variables structs since we know those are
+    // never cached in the rule tree, and it avoids wasteful computation of a
+    // new Variables struct when we have no additional variable declarations,
+    // which otherwise could happen when there is an AnimValuesStyleRule
+    // (which calls SetUncacheable for style contexts with pseudo data).
+    detail = eRulePartialMixed;
+  }
 
   if (detail == eRuleNone && startStruct) {
     // We specified absolutely no rule information, but a parent rule in the tree

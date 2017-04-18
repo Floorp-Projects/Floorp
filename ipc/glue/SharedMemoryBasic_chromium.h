@@ -27,8 +27,8 @@ public:
   {
   }
 
-  virtual bool SetHandle(const Handle& aHandle) override {
-    return mSharedMemory.SetHandle(aHandle, false);
+  virtual bool SetHandle(const Handle& aHandle, OpenRights aRights) override {
+    return mSharedMemory.SetHandle(aHandle, aRights == RightsReadOnly);
   }
 
   virtual bool Create(size_t aNbytes) override

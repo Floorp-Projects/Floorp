@@ -43,7 +43,10 @@ public:
                                            mozilla::DOMEventTargetHelper)
 
   // EventTarget
+  using EventTarget::EventListenerAdded;
   virtual void EventListenerAdded(nsIAtom* aType) override;
+
+  using EventTarget::EventListenerRemoved;
   virtual void EventListenerRemoved(nsIAtom* aType) override;
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)

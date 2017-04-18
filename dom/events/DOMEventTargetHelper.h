@@ -37,12 +37,14 @@ public:
     : mParentObject(nullptr)
     , mOwnerWindow(nullptr)
     , mHasOrHasHadOwnerWindow(false)
+    , mIsKeptAlive(false)
   {
   }
   explicit DOMEventTargetHelper(nsPIDOMWindowInner* aWindow)
     : mParentObject(nullptr)
     , mOwnerWindow(nullptr)
     , mHasOrHasHadOwnerWindow(false)
+    , mIsKeptAlive(false)
   {
     BindToOwner(aWindow);
   }
@@ -50,6 +52,7 @@ public:
     : mParentObject(nullptr)
     , mOwnerWindow(nullptr)
     , mHasOrHasHadOwnerWindow(false)
+    , mIsKeptAlive(false)
   {
     BindToOwner(aGlobalObject);
   }
@@ -57,6 +60,7 @@ public:
     : mParentObject(nullptr)
     , mOwnerWindow(nullptr)
     , mHasOrHasHadOwnerWindow(false)
+    , mIsKeptAlive(false)
   {
     BindToOwner(aOther);
   }
@@ -146,7 +150,7 @@ public:
   void BindToOwner(nsIGlobalObject* aOwner);
   void BindToOwner(nsPIDOMWindowInner* aOwner);
   void BindToOwner(DOMEventTargetHelper* aOther);
-  virtual void DisconnectFromOwner();                   
+  virtual void DisconnectFromOwner();
   nsIGlobalObject* GetParentObject() const
   {
     return GetOwnerGlobal();
@@ -159,7 +163,11 @@ public:
   bool HasOrHasHadOwner() { return mHasOrHasHadOwnerWindow; }
 
   virtual void EventListenerAdded(nsIAtom* aType) override;
+  virtual void EventListenerAdded(const nsAString& aType) override;
+
   virtual void EventListenerRemoved(nsIAtom* aType) override;
+  virtual void EventListenerRemoved(const nsAString& aType) override;
+
   virtual void EventListenerWasAdded(const nsAString& aType,
                                      ErrorResult& aRv,
                                      JSCompartment* aCompartment = nullptr) {}
@@ -174,12 +182,15 @@ protected:
 
   nsresult WantsUntrusted(bool* aRetVal);
 
+  void MaybeUpdateKeepAlive();
+  void MaybeDontKeepAlive();
+
   // If this method returns true your object is kept alive until it returns
   // false. You can use this method instead using
   // NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN macro.
   virtual bool IsCertainlyAliveForCC() const
   {
-    return false;
+    return mIsKeptAlive;
   }
 
   RefPtr<EventListenerManager> mListenerManager;
@@ -187,6 +198,13 @@ protected:
   nsresult DispatchTrustedEvent(nsIDOMEvent* aEvent);
 
   virtual void LastRelease() {}
+
+  void KeepAliveIfHasListenersFor(const nsAString& aType);
+  void KeepAliveIfHasListenersFor(nsIAtom* aType);
+
+  void IgnoreKeepAliveIfHasListenersFor(const nsAString& aType);
+  void IgnoreKeepAliveIfHasListenersFor(nsIAtom* aType);
+
 private:
   // Inner window or sandbox.
   nsWeakPtr                  mParentObject;
@@ -195,6 +213,13 @@ private:
   // It is obtained in BindToOwner and reset in DisconnectFromOwner.
   nsPIDOMWindowInner* MOZ_NON_OWNING_REF mOwnerWindow;
   bool                       mHasOrHasHadOwnerWindow;
+
+  struct {
+    nsTArray<nsString> mStrings;
+    nsTArray<nsCOMPtr<nsIAtom>> mAtoms;
+  } mKeepingAliveTypes;
+
+  bool mIsKeptAlive;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DOMEventTargetHelper,

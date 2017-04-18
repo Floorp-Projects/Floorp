@@ -37,6 +37,7 @@ LogError(const char* what)
 SharedMemoryBasic::SharedMemoryBasic()
   : mShmFd(-1)
   , mMemory(nullptr)
+  , mOpenRights(RightsReadWrite)
 { }
 
 SharedMemoryBasic::~SharedMemoryBasic()
@@ -46,10 +47,11 @@ SharedMemoryBasic::~SharedMemoryBasic()
 }
 
 bool
-SharedMemoryBasic::SetHandle(const Handle& aHandle)
+SharedMemoryBasic::SetHandle(const Handle& aHandle, OpenRights aRights)
 {
   MOZ_ASSERT(-1 == mShmFd, "Already Create()d");
   mShmFd = aHandle.fd;
+  mOpenRights = aRights;
   return true;
 }
 
@@ -81,8 +83,13 @@ SharedMemoryBasic::Map(size_t nBytes)
 {
   MOZ_ASSERT(nullptr == mMemory, "Already Map()d");
 
+  int prot = PROT_READ;
+  if (mOpenRights == RightsReadWrite) {
+    prot |= PROT_WRITE;
+  }
+
   mMemory = mmap(nullptr, nBytes,
-                 PROT_READ | PROT_WRITE,
+                 prot,
                  MAP_SHARED,
                  mShmFd,
                  0);
@@ -132,6 +139,7 @@ SharedMemoryBasic::CloseHandle()
   if (mShmFd != -1) {
     close(mShmFd);
     mShmFd = -1;
+    mOpenRights = RightsReadWrite;
   }
 }
 
