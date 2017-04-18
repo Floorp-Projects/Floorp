@@ -503,6 +503,9 @@ MediaDecoder::Shutdown()
     mResource->Close();
   }
 
+  // Ask the owner to remove its audio/video tracks.
+  GetOwner()->RemoveMediaTracks();
+
   ChangeState(PLAY_STATE_SHUTDOWN);
   mOwner = nullptr;
 }
