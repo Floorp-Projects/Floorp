@@ -7191,7 +7191,7 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
 
   uint32_t noRasterize = aSurfaceFlags & SFE_NO_RASTERIZING_VECTORS;
 
-  uint32_t whichFrame = (aSurfaceFlags & SFE_WANT_FIRST_FRAME_IF_IMAGE)
+  uint32_t whichFrame = (aSurfaceFlags & SFE_WANT_FIRST_FRAME)
                         ? (uint32_t) imgIContainer::FRAME_FIRST
                         : (uint32_t) imgIContainer::FRAME_CURRENT;
   uint32_t frameFlags = imgIContainer::FLAG_SYNC_DECODE
