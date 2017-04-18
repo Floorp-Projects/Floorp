@@ -22,22 +22,22 @@ add_task(function* () {
   yield clickOnAnimation(panel, 0);
 
   info("Click on the first keyframe of the first animated property");
-  yield clickKeyframe(panel, 0, "background-color", 0);
+  yield clickKeyframe(panel, "background-color", 0);
 
   info("Make sure the scrubber stopped moving and is at the right position");
   yield assertScrubberMoving(panel, false);
   checkScrubberPos(scrubberEl, 0);
 
   info("Click on a keyframe in the middle");
-  yield clickKeyframe(panel, 0, "transform", 2);
+  yield clickKeyframe(panel, "transform", 2);
 
   info("Make sure the scrubber is at the right position");
   checkScrubberPos(scrubberEl, 50);
 });
 
-function* clickKeyframe(panel, animIndex, property, index) {
-  let keyframeComponent = getKeyframeComponent(panel, animIndex, property);
-  let keyframeEl = getKeyframeEl(panel, animIndex, property, index);
+function* clickKeyframe(panel, property, index) {
+  let keyframeComponent = getKeyframeComponent(panel, property);
+  let keyframeEl = getKeyframeEl(panel, property, index);
 
   let onSelect = keyframeComponent.once("frame-selected");
   EventUtils.sendMouseEvent({type: "click"}, keyframeEl,

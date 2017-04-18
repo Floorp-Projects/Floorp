@@ -385,7 +385,7 @@ function* clickOnAnimation(panel, index, shouldClose) {
   // the animation-detail-rendering-completed event.
   let onReady = shouldClose
                 ? Promise.resolve()
-                : timeline.details[index].once("animation-detail-rendering-completed");
+                : timeline.details.once("animation-detail-rendering-completed");
 
   info("Click on animation " + index + " in the timeline");
   let timeBlock = timeline.rootWrapperEl.querySelectorAll(".time-block")[index];
@@ -399,13 +399,12 @@ function* clickOnAnimation(panel, index, shouldClose) {
 /**
  * Get an instance of the Keyframes component from the timeline.
  * @param {AnimationsPanel} panel The panel instance.
- * @param {Number} animationIndex The index of the animation in the timeline.
  * @param {String} propertyName The name of the animated property.
  * @return {Keyframes} The Keyframes component instance.
  */
-function getKeyframeComponent(panel, animationIndex, propertyName) {
+function getKeyframeComponent(panel, propertyName) {
   let timeline = panel.animationsTimelineComponent;
-  let detailsComponent = timeline.details[animationIndex];
+  let detailsComponent = timeline.details;
   return detailsComponent.keyframeComponents
                          .find(c => c.propertyName === propertyName);
 }
@@ -413,14 +412,12 @@ function getKeyframeComponent(panel, animationIndex, propertyName) {
 /**
  * Get a keyframe element from the timeline.
  * @param {AnimationsPanel} panel The panel instance.
- * @param {Number} animationIndex The index of the animation in the timeline.
  * @param {String} propertyName The name of the animated property.
  * @param {Index} keyframeIndex The index of the keyframe.
  * @return {DOMNode} The keyframe element.
  */
-function getKeyframeEl(panel, animationIndex, propertyName, keyframeIndex) {
-  let keyframeComponent = getKeyframeComponent(panel, animationIndex,
-                                               propertyName);
+function getKeyframeEl(panel, propertyName, keyframeIndex) {
+  let keyframeComponent = getKeyframeComponent(panel, propertyName);
   return keyframeComponent.keyframesEl
                           .querySelectorAll(".frame")[keyframeIndex];
 }

@@ -7,7 +7,8 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const {createNode, TimeScale} = require("devtools/client/animationinspector/utils");
+const {createNode, TimeScale, getFormattedAnimationTitle} =
+  require("devtools/client/animationinspector/utils");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N =
@@ -353,30 +354,6 @@ AnimationTimeBlock.prototype = {
     return this.containerEl.ownerDocument.defaultView;
   }
 };
-
-/**
- * Get a formatted title for this animation. This will be either:
- * "some-name", "some-name : CSS Transition", "some-name : CSS Animation",
- * "some-name : Script Animation", or "Script Animation", depending
- * if the server provides the type, what type it is and if the animation
- * has a name
- * @param {AnimationPlayerFront} animation
- */
-function getFormattedAnimationTitle({state}) {
-  // Older servers don't send a type, and only know about
-  // CSSAnimations and CSSTransitions, so it's safe to use
-  // just the name.
-  if (!state.type) {
-    return state.name;
-  }
-
-  // Script-generated animations may not have a name.
-  if (state.type === "scriptanimation" && !state.name) {
-    return L10N.getStr("timeline.scriptanimation.unnamedLabel");
-  }
-
-  return L10N.getFormatStr(`timeline.${state.type}.nameLabel`, state.name);
-}
 
 /**
  * Render delay section.
