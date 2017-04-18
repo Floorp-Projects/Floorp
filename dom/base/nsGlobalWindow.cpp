@@ -1013,7 +1013,9 @@ nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
   mWindowID(NextWindowID()), mHasNotifiedGlobalCreated(false),
   mMarkedCCGeneration(0), mServiceWorkersTestingEnabled(false),
   mLargeAllocStatus(LargeAllocStatus::NONE),
-  mShouldResumeOnFirstActiveMediaComponent(false)
+  mShouldResumeOnFirstActiveMediaComponent(false),
+  mHasTriedToCacheTopInnerWindow(false),
+  mNumOfIndexedDBDatabases(0)
 {
   if (aOuterWindow) {
     mTimeoutManager =
@@ -2297,6 +2299,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOuterWindow)
 
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTopInnerWindow)
+
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListenerManager)
 
   if (tmp->mTimeoutManager) {
@@ -2386,6 +2390,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
     tmp->mListenerManager->Disconnect();
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mListenerManager)
   }
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTopInnerWindow)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocation)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHistory)
@@ -3185,6 +3191,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     }
 
     mInnerWindow = newInnerWindow->AsInner();
+    MOZ_ASSERT(mInnerWindow);
+    mInnerWindow->TryToCacheTopInnerWindow();
 
     if (!GetWrapperPreserveColor()) {
       JS::Rooted<JSObject*> outer(cx,
@@ -4419,6 +4427,67 @@ bool
 nsPIDOMWindowInner::IsRunningTimeout()
 {
   return TimeoutManager().IsRunningTimeout();
+}
+
+void
+nsPIDOMWindowInner::TryToCacheTopInnerWindow()
+{
+  if (mHasTriedToCacheTopInnerWindow) {
+    return;
+  }
+
+  MOZ_ASSERT(!mInnerObjectsFreed);
+
+  mHasTriedToCacheTopInnerWindow = true;
+
+  nsGlobalWindow* window = nsGlobalWindow::Cast(AsInner());
+
+  MOZ_ASSERT(window);
+
+  if (nsCOMPtr<nsPIDOMWindowOuter> topOutter = window->GetScriptableTop()) {
+    mTopInnerWindow = topOutter->GetCurrentInnerWindow();
+  }
+}
+
+void
+nsPIDOMWindowInner::UpdateActiveIndexedDBTransactionCount(int32_t aDelta)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (aDelta == 0) {
+    return;
+  }
+
+  TabGroup()->IndexedDBTransactionCounter() += aDelta;
+}
+
+void
+nsPIDOMWindowInner::UpdateActiveIndexedDBDatabaseCount(int32_t aDelta)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (aDelta == 0) {
+    return;
+  }
+
+  // We count databases but not transactions because only active databases
+  // could block throttling.
+  uint32_t& counter = mTopInnerWindow ?
+    mTopInnerWindow->mNumOfIndexedDBDatabases : mNumOfIndexedDBDatabases;
+
+  counter+= aDelta;
+
+  TabGroup()->IndexedDBDatabaseCounter() += aDelta;
+}
+
+bool
+nsPIDOMWindowInner::HasActiveIndexedDBDatabases()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return mTopInnerWindow ?
+    mTopInnerWindow->mNumOfIndexedDBDatabases > 0 :
+    mNumOfIndexedDBDatabases > 0;
 }
 
 void
