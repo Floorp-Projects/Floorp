@@ -43,7 +43,7 @@ class AutoFitTabsGridLayout extends TabsGridLayout {
         }
         spacingDecoration = new GridSpacingDecoration(horizontalItemSpacing, verticalItemPadding);
         addItemDecoration(spacingDecoration);
-        updateSelectedPosition();
+        scrollSelectedTabToTopOfTray();
     }
 
     @Override
