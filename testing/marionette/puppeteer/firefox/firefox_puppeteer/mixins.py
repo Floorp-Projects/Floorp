@@ -60,15 +60,16 @@ class PuppeteerMixin(object):
             self.browser.tabbar.close_all_tabs([self.browser.tabbar.tabs[0]])
             self.browser.tabbar.tabs[0].switch_to()
 
-    def restart(self, **kwargs):
+    def restart(self, *args, **kwargs):
         """Restart Firefox and re-initialize data.
 
         :param flags: Specific restart flags for Firefox
         """
-        if kwargs.get('clean'):
-            self.marionette.restart(clean=True)
-        else:
-            self.marionette.restart(in_app=True)
+        # If no clean restart is requested, always use an in_app one
+        if not kwargs.get('clean'):
+            kwargs.update({"in_app": True})
+
+        self.marionette.restart(*args, **kwargs)
 
         # Ensure that we always have a valid browser instance available
         self.browser = self.puppeteer.windows.switch_to(lambda win: type(win) is BrowserWindow)
