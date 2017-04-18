@@ -73,7 +73,15 @@ public:
   HangStack(HangStack&& aOther)
     : mImpl(mozilla::Move(aOther.mImpl))
     , mBuffer(mozilla::Move(aOther.mBuffer))
+    , mNativeFrames(mozilla::Move(aOther.mNativeFrames))
   {
+  }
+
+  HangStack& operator=(HangStack&& aOther) {
+    mImpl = mozilla::Move(aOther.mImpl);
+    mBuffer = mozilla::Move(aOther.mBuffer);
+    mNativeFrames = mozilla::Move(aOther.mNativeFrames);
+    return *this;
   }
 
   bool operator==(const HangStack& aOther) const {
@@ -231,6 +239,7 @@ private:
 public:
   TimeHistogram mActivity;
   mozilla::Vector<HangHistogram, 4> mHangs;
+  uint32_t mNativeStackCnt;
 
   explicit ThreadHangStats(const char* aName)
     : mName(aName)
@@ -240,6 +249,7 @@ public:
     : mName(mozilla::Move(aOther.mName))
     , mActivity(mozilla::Move(aOther.mActivity))
     , mHangs(mozilla::Move(aOther.mHangs))
+    , mNativeStackCnt(0)
   {
   }
   const char* GetName() const {
