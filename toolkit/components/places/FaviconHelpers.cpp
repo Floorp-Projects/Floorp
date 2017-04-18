@@ -69,7 +69,7 @@ FetchPageInfo(const RefPtr<Database>& aDB,
         "AND EXISTS(SELECT 1 FROM moz_bookmarks b WHERE b.fk = r_place_id) "
         "LIMIT 1 "
       ") "
-    ") "
+    "), fixup_url(get_unreversed_host(h.rev_host)) AS host "
     "FROM moz_places h "
     "LEFT JOIN moz_pages_w_icons pi ON page_url_hash = hash(:page_url) AND page_url = :page_url "
     "WHERE h.url_hash = hash(:page_url) AND h.url = :page_url",
@@ -108,6 +108,11 @@ FetchPageInfo(const RefPtr<Database>& aDB,
   // The page could not be bookmarked.
   if (!isNull) {
     rv = stmt->GetUTF8String(3, _page.bookmarkedSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (_page.host.IsEmpty()) {
+    rv = stmt->GetUTF8String(4, _page.host);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -836,7 +841,9 @@ AsyncAssociateIconToPage::Run()
   // Don't associate pages to root domain icons, since those will be returned
   // regardless.  This saves a lot of work and database space since we don't
   // need to store urls and relations.
-  if (!mIcon.rootIcon) {
+  // Though, this is possible only if both the page and the icon have the same
+  // host, otherwise we couldn't relate them.
+  if (!mIcon.rootIcon || !mIcon.host.Equals(mPage.host)) {
     // The page may have associated payloads already, and those could have to be
     // expired. For example at a certain point a page could decide to stop serving
     // its usual 16px and 32px pngs, and use an svg instead.

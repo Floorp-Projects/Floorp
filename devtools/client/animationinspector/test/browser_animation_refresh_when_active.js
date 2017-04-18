@@ -39,7 +39,7 @@ function* testRefresh(inspector, panel) {
   inspector.sidebar.select("ruleview");
 
   info("Select the non animated node again");
-  yield selectNodeAndWaitForAnimations(".still", inspector);
+  yield selectNode(".still", inspector);
 
   assertAnimationsDisplayed(panel, 1,
     "The panel still shows the previous animation data since it is inactive");

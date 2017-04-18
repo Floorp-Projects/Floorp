@@ -12,6 +12,7 @@
 #include "nsAtomListUtils.h"
 #include "nsStaticAtom.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsDOMString.h"
 
 using namespace mozilla;
 
@@ -115,6 +116,39 @@ nsCSSPseudoElements::GetPseudoAtom(Type aType)
   NS_ASSERTION(aType < Type::Count, "Unexpected type");
   return *CSSPseudoElements_info[
     static_cast<CSSPseudoElementTypeBase>(aType)].mAtom;
+}
+
+/* static */ nsIAtom*
+nsCSSPseudoElements::GetPseudoAtom(const nsAString& aPseudoElement)
+{
+  if (DOMStringIsNull(aPseudoElement) || aPseudoElement.IsEmpty() ||
+      aPseudoElement.First() != char16_t(':')) {
+    return nullptr;
+  }
+
+  // deal with two-colon forms of aPseudoElt
+  nsAString::const_iterator start, end;
+  aPseudoElement.BeginReading(start);
+  aPseudoElement.EndReading(end);
+  NS_ASSERTION(start != end, "aPseudoElement is not empty!");
+  ++start;
+  bool haveTwoColons = true;
+  if (start == end || *start != char16_t(':')) {
+    --start;
+    haveTwoColons = false;
+  }
+  nsCOMPtr<nsIAtom> pseudo = NS_Atomize(Substring(start, end));
+  MOZ_ASSERT(pseudo);
+
+  // There aren't any non-CSS2 pseudo-elements with a single ':'
+  if (!haveTwoColons &&
+      (!IsPseudoElement(pseudo) || !IsCSS2PseudoElement(pseudo))) {
+    // XXXbz I'd really rather we threw an exception or something, but
+    // the DOM spec sucks.
+    return nullptr;
+  }
+
+  return pseudo;
 }
 
 /* static */ bool
