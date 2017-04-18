@@ -6,18 +6,24 @@
 
 // Test for animations that have different starting time.
 // We should check progress indicator working well even if the start time is not zero.
+// Also, check that there is no duplication display.
 
 add_task(function* () {
   yield addTab(URL_ROOT + "doc_delayed_starttime_animations.html");
   const { panel } = yield openAnimationInspector();
-  yield setStyle(null, panel, "animation", "anim 100s", "#target2");
-  yield setStyle(null, panel, "animation", "anim 100s", "#target3");
-  yield setStyle(null, panel, "animation", "anim 100s", "#target4");
-  yield setStyle(null, panel, "animation", "anim 100s", "#target5");
+  yield setStyleAndWaitForAnimationSelecting(panel, "animation", "anim 100s", "#target2");
+  yield setStyleAndWaitForAnimationSelecting(panel, "animation", "anim 100s", "#target3");
+  yield setStyleAndWaitForAnimationSelecting(panel, "animation", "anim 100s", "#target4");
+  yield setStyleAndWaitForAnimationSelecting(panel, "animation", "anim 100s", "#target5");
 
-  yield clickOnAnimation(panel, 1);
   const timelineComponent = panel.animationsTimelineComponent;
   const detailsComponent = timelineComponent.details;
+  const headers =
+    detailsComponent.containerEl.querySelectorAll(".animated-properties-header");
+  is(headers.length, 1, "There should be only one header in the details panel");
+
+  // Check indicator.
+  yield clickOnAnimation(panel, 1);
   const progressIndicatorEl = detailsComponent.progressIndicatorEl;
   const startTime = detailsComponent.animation.state.previousStartTime;
   detailsComponent.indicateProgress(0);
@@ -36,3 +42,9 @@ add_task(function* () {
   is(progressIndicatorEl.style.left, "0%",
      "The progress indicator position should be 0% at end of animation");
 });
+
+function* setStyleAndWaitForAnimationSelecting(panel, name, value, selector) {
+  const onSelecting = waitForAnimationSelecting(panel);
+  yield setStyle(null, panel, name, value, selector);
+  yield onSelecting;
+}

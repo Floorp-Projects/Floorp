@@ -40,8 +40,6 @@ add_task(function* () {
   ok(!btn.classList.contains("paused"),
      "Clicking the button once finite animations are done should restart them");
   yield assertScrubberMoving(panel, true);
-
-  yield waitForAnimationSelecting(panel);
 });
 
 function waitForButtonPaused(btn) {
