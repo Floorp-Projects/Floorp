@@ -96,9 +96,6 @@ public:
     explicit PluginModuleParent(bool aIsChrome);
     virtual ~PluginModuleParent();
 
-    /** @return whether this modules NP_Initialize has successfully completed
-        executing */
-    bool IsInitialized() const { return mNPInitialized; }
     bool IsChrome() const { return mIsChrome; }
 
     virtual void SetPlugin(nsNPAPIPlugin* plugin) override
@@ -343,7 +340,6 @@ protected:
     bool
     GetPluginDetails();
 
-    bool              mNPInitialized;
     bool              mIsNPShutdownPending;
     nsresult          mAsyncNewRv;
     uint32_t          mRunID;
