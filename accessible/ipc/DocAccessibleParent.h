@@ -88,6 +88,13 @@ public:
                                                       const bool& aIsInsert,
                                                       const bool& aFromUser) override;
 
+#if defined(XP_WIN)
+  virtual mozilla::ipc::IPCResult RecvSyncTextChangeEvent(const uint64_t& aID, const nsString& aStr,
+                                                          const int32_t& aStart, const uint32_t& aLen,
+                                                          const bool& aIsInsert,
+                                                          const bool& aFromUser) override;
+#endif // defined(XP_WIN)
+
   virtual mozilla::ipc::IPCResult RecvSelectionEvent(const uint64_t& aID,
                                                      const uint64_t& aWidgetID,
                                                      const uint32_t& aType) override;

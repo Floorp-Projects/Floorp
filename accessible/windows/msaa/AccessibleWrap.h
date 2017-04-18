@@ -192,6 +192,8 @@ public: // construction, destruction
 
   static void SetHandlerControl(DWORD aPid, RefPtr<IHandlerControl> aCtrl);
 
+  bool DispatchTextChangeToHandler(bool aIsInsert, const nsString& aText,
+                                   int32_t aStart, uint32_t aLen);
 protected:
   virtual ~AccessibleWrap();
 
