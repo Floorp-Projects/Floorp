@@ -10,7 +10,7 @@ var fs = require("fs");
 var path = require("path");
 var helpers = require("../lib/helpers");
 
-const eslintDir = path.join(helpers.getRootDir(module.filename),
+const eslintDir = path.join(helpers.rootDir,
                             "tools", "lint", "eslint");
 
 const globalsFile = path.join(eslintDir, "eslint-plugin-mozilla",
