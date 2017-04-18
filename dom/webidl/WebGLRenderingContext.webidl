@@ -1085,7 +1085,7 @@ interface EXT_disjoint_timer_query {
 };
 
 [NoInterfaceObject]
-interface MOZ_debug {
+interface MOZ_debug_get {
     const GLenum EXTENSIONS = 0x1F03;
     const GLenum WSI_INFO   = 0x10000;
 
