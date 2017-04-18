@@ -215,15 +215,30 @@ function continue_test_pageload() {
 
   // This is necessary to learn the origin stuff
   predictor.learn(pageload_toplevel, null, predictor.LEARN_LOAD_TOPLEVEL, origin_attributes);
+  do_timeout(0, () => { // allow the learn() to run on the main thread
   var preconns = [];
-  for (var i = 0; i < subresources.length; i++) {
-    var sruri = newURI(subresources[i]);
-    predictor.learn(sruri, pageload_toplevel, predictor.LEARN_LOAD_SUBRESOURCE, origin_attributes);
-    preconns.push(extract_origin(sruri));
-  }
+
+  var sruri = newURI(subresources[0]);
+  predictor.learn(sruri, pageload_toplevel, predictor.LEARN_LOAD_SUBRESOURCE, origin_attributes);
+  do_timeout(0, () => {
+  preconns.push(extract_origin(sruri));
+
+  sruri = newURI(subresources[1]);
+  predictor.learn(sruri, pageload_toplevel, predictor.LEARN_LOAD_SUBRESOURCE, origin_attributes);
+  do_timeout(0, () => {
+  preconns.push(extract_origin(sruri));
+
+  sruri = newURI(subresources[2]);
+  predictor.learn(sruri, pageload_toplevel, predictor.LEARN_LOAD_SUBRESOURCE, origin_attributes);
+  do_timeout(0, () => {
+  preconns.push(extract_origin(sruri));
 
   var verifier = new Verifier("pageload", [], preconns, []);
   predictor.predict(pageload_toplevel, null, predictor.PREDICT_LOAD, origin_attributes, verifier);
+  });
+  });
+  });
+  });
 }
 
 function test_pageload() {
@@ -247,19 +262,38 @@ function continue_test_redrect() {
   ];
 
   predictor.learn(redirect_inituri, null, predictor.LEARN_LOAD_TOPLEVEL, origin_attributes);
+  do_timeout(0, () => {
   predictor.learn(redirect_targeturi, null, predictor.LEARN_LOAD_TOPLEVEL, origin_attributes);
+  do_timeout(0, () => {
   predictor.learn(redirect_targeturi, redirect_inituri, predictor.LEARN_LOAD_REDIRECT, origin_attributes);
+  do_tiemout(0, () => {
 
   var preconns = [];
   preconns.push(extract_origin(redirect_targeturi));
-  for (var i = 0; i < subresources.length; i++) {
-    var sruri = newURI(subresources[i]);
-    predictor.learn(sruri, redirect_targeturi, predictor.LEARN_LOAD_SUBRESOURCE, origin_attributes);
-    preconns.push(extract_origin(sruri));
-  }
+
+  var sruri = newURI(subresources[0]);
+  predictor.learn(sruri, redirect_targeturi, predictor.LEARN_LOAD_SUBRESOURCE, origin_attributes);
+  do_timeout(0, () => {
+  preconns.push(extract_origin(sruri));
+
+  sruri = newURI(subresources[1]);
+  predictor.learn(sruris[1], redirect_targeturi, predictor.LEARN_LOAD_SUBRESOURCE, origin_attributes);
+  do_timeout(0, () => {
+  preconns.push(extract_origin(sruri));
+
+  sruri = newURI(subresources[2]);
+  predictor.learn(sruris[2], redirect_targeturi, predictor.LEARN_LOAD_SUBRESOURCE, origin_attributes);
+  do_timeout(0, () => {
+  preconns.push(extract_origin(sruri));
 
   var verifier = new Verifier("redirect", [], preconns, []);
   predictor.predict(redirect_inituri, null, predictor.PREDICT_LOAD, origin_attributes, verifier);
+  });
+  });
+  });
+  });
+  });
+  });
 }
 
 function test_redirect() {
@@ -285,14 +319,20 @@ function test_startup() {
     "http://localhost:4443/startup"
   ];
   var preconns = [];
-  for (var i = 0; i < uris.length; i++) {
-    var uri = newURI(uris[i]);
-    predictor.learn(uri, null, predictor.LEARN_STARTUP, origin_attributes);
-    preconns.push(extract_origin(uri));
-  }
+  var uri = newURI(uris[0]);
+  predictor.learn(uri, null, predictor.LEARN_STARTUP, origin_attributes);
+  do_timeout(0, () => {
+  preconns.push(extract_origin(uri));
+
+  uri = newURI(uris[1]);
+  predictor.learn(uri, null, predictor.LEARN_STARTUP, origin_attributes);
+  do_timeout(0, () => {
+  preconns.push(extract_origin(uri));
 
   var verifier = new Verifier("startup", [], preconns, []);
   predictor.predict(null, null, predictor.PREDICT_STARTUP, origin_attributes, verifier);
+  });
+  });
 }
 
 const dns_toplevel = newURI("http://localhost:4444/index.html");
@@ -301,12 +341,16 @@ function continue_test_dns() {
   var subresource = "http://localhost:4443/jquery.js";
 
   predictor.learn(dns_toplevel, null, predictor.LEARN_LOAD_TOPLEVEL, origin_attributes);
+  do_timeout(0, () => {
   var sruri = newURI(subresource);
   predictor.learn(sruri, dns_toplevel, predictor.LEARN_LOAD_SUBRESOURCE, origin_attributes);
+  do_timeout(0, () => {
 
   var preresolves = [extract_origin(sruri)];
   var verifier = new Verifier("dns", [], [], preresolves);
   predictor.predict(dns_toplevel, null, predictor.PREDICT_LOAD, origin_attributes, verifier);
+  });
+  });
 }
 
 function test_dns() {
@@ -330,19 +374,40 @@ function continue_test_origin() {
     "http://localhost:4444/image.png"
   ];
   predictor.learn(origin_toplevel, null, predictor.LEARN_LOAD_TOPLEVEL, origin_attributes);
+  do_timeout(0, () => {
   var preconns = [];
-  for (var i = 0; i < subresources.length; i++) {
-    var sruri = newURI(subresources[i]);
-    predictor.learn(sruri, origin_toplevel, predictor.LEARN_LOAD_SUBRESOURCE, origin_attributes);
-    var origin = extract_origin(sruri);
-    if (preconns.indexOf(origin) === -1) {
-      preconns.push(origin);
-    }
+
+  var sruri = newURI(subresources[0]);
+  predictor.learn(sruri, origin_toplevel, predictor.LEARN_LOAD_SUBRESOURCE, origin_attributes);
+  do_timeout(0, () => {
+  var origin = extract_origin(sruri);
+  if (preconns.indexOf(origin) === -1) {
+    preconns.push(origin);
+  }
+
+  sruri = newURI(subresources[1]);
+  predictor.learn(sruri, origin_toplevel, predictor.LEARN_LOAD_SUBRESOURCE, origin_attributes);
+  do_timeout(0, () => {
+  var origin = extract_origin(sruri);
+  if (preconns.indexOf(origin) === -1) {
+    preconns.push(origin);
+  }
+
+  sruri = newURI(subresources[2]);
+  predictor.learn(sruri, origin_toplevel, predictor.LEARN_LOAD_SUBRESOURCE, origin_attributes);
+  do_timeout(0, () => {
+  var origin = extract_origin(sruri);
+  if (preconns.indexOf(origin) === -1) {
+    preconns.push(origin);
   }
 
   var loaduri = newURI("http://localhost:4444/anotherpage.html");
   var verifier = new Verifier("origin", [], preconns, []);
   predictor.predict(loaduri, null, predictor.PREDICT_LOAD, origin_attributes, verifier);
+  });
+  });
+  });
+  });
 }
 
 function test_origin() {
