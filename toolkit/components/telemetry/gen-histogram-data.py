@@ -6,7 +6,7 @@
 # in a file provided as a command-line argument.
 
 from __future__ import print_function
-from shared_telemetry_utils import StringTable, static_assert
+from shared_telemetry_utils import StringTable, static_assert, ParserError
 
 import sys
 import histogram_tools
@@ -178,7 +178,11 @@ def write_debug_histogram_ranges(output, histograms):
 
 
 def main(output, *filenames):
-    histograms = list(histogram_tools.from_files(filenames))
+    try:
+        histograms = list(histogram_tools.from_files(filenames))
+    except ParserError as ex:
+        print("\nError processing histograms:\n" + str(ex) + "\n")
+        sys.exit(1)
 
     print(banner, file=output)
     write_histogram_table(output, histograms)

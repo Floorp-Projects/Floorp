@@ -22,6 +22,11 @@ KNOWN_PROCESS_FLAGS = {
 PROCESS_ENUM_PREFIX = "mozilla::Telemetry::Common::RecordedProcessType::"
 
 
+# This is thrown by the different probe parsers.
+class ParserError(Exception):
+    pass
+
+
 def is_valid_process_name(name):
     return (name in KNOWN_PROCESS_FLAGS)
 
