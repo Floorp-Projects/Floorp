@@ -863,15 +863,17 @@ function sortBy(array, prop) {
  *        The page's URL
  * @param icon
  *        The URL of the favicon to be set.
+ * @param [optional] forceReload
+ *        Whether to enforce reloading the icon.
  */
-function setFaviconForPage(page, icon) {
+function setFaviconForPage(page, icon, forceReload = true) {
   let pageURI = page instanceof Ci.nsIURI ? page
                                           : NetUtil.newURI(new URL(page).href);
   let iconURI = icon instanceof Ci.nsIURI ? icon
                                           : NetUtil.newURI(new URL(icon).href);
   return new Promise(resolve => {
     PlacesUtils.favicons.setAndFetchFaviconForPage(
-      pageURI, iconURI, true,
+      pageURI, iconURI, forceReload,
       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
       resolve,
       Services.scriptSecurityManager.getSystemPrincipal()
