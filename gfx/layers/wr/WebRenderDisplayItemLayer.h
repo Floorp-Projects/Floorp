@@ -28,6 +28,8 @@ public:
 
   Maybe<wr::ImageKey> SendImageContainer(ImageContainer* aContainer,
                                          nsTArray<layers::WebRenderParentCommand>& aParentCommands);
+  bool PushItemAsImage(wr::DisplayListBuilder& aBuilder,
+                       nsTArray<layers::WebRenderParentCommand>& aParentCommands);
 
 protected:
   virtual ~WebRenderDisplayItemLayer()
@@ -45,7 +47,6 @@ private:
   RefPtr<ImageClient> mImageClient;
   RefPtr<ImageContainer> mImageContainer;
   uint64_t mExternalImageId;
-
 };
 
 } // namespace layers

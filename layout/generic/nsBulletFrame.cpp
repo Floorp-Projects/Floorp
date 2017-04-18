@@ -282,6 +282,7 @@ private:
   void
   CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
                                  wr::DisplayListBuilder& aBuilder,
+                                 nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                  layers::WebRenderDisplayItemLayer* aLayer);
 
   void
@@ -323,7 +324,7 @@ BulletRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
   if (IsImageType()) {
     CreateWebRenderCommandsForImage(aItem, aBuilder, aParentCommands, aLayer);
   } else if (IsPathType()) {
-    CreateWebRenderCommandsForPath(aItem, aBuilder, aLayer);
+    CreateWebRenderCommandsForPath(aItem, aBuilder, aParentCommands, aLayer);
   } else {
     MOZ_ASSERT(IsTextType());
     CreateWebRenderCommandsForText(aItem, aBuilder, aLayer);
@@ -478,11 +479,15 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
 void
 BulletRenderer::CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
                                                wr::DisplayListBuilder& aBuilder,
+                                               nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                                layers::WebRenderDisplayItemLayer* aLayer)
 {
   MOZ_ASSERT(IsPathType());
-  // Not supported yet.
-  MOZ_CRASH("unreachable");
+  MOZ_ASSERT(aLayer->GetDisplayItem() == aItem);
+
+  if (!aLayer->PushItemAsImage(aBuilder, aParentCommands)) {
+    NS_WARNING("Fail to create WebRender commands for Bullet path.");
+  }
 }
 
 void
@@ -608,11 +613,6 @@ nsDisplayBullet::GetLayerState(nsDisplayListBuilder* aBuilder,
     CreateBulletRenderer(ctx, ToReferenceFrame());
 
   if (!br) {
-    return LAYER_NONE;
-  }
-
-  // Only support image and text type.
-  if (!br->IsImageType() && !br->IsTextType()) {
     return LAYER_NONE;
   }
 

@@ -197,6 +197,7 @@ EXPORTS.mozilla.layers += [
     'TextureSourceProvider.h',
     'TextureWrapperImage.h',
     'TransactionIdAllocator.h',
+    'UpdateImageHelper.h',
     'wr/WebRenderBridgeChild.h',
     'wr/WebRenderBridgeParent.h',
     'wr/WebRenderCompositableHolder.h',

@@ -8,8 +8,7 @@
 #include "LayersLogging.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
-#include "mozilla/layers/TextureClientRecycleAllocator.h"
-#include "mozilla/layers/TextureWrapperImage.h"
+#include "mozilla/layers/UpdateImageHelper.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "gfxPrefs.h"
 #include "gfxUtils.h"
@@ -151,23 +150,15 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   }
 
   IntSize imageSize(size.width, size.height);
-  RefPtr<TextureClient> texture = mImageClient->GetTextureClientRecycler()->CreateOrRecycle(SurfaceFormat::B8G8R8A8,
-                                                                                            imageSize,
-                                                                                            BackendSelector::Content,
-                                                                                            TextureFlags::DEFAULT);
-  if (!texture) {
-    return;
-  }
+
+  UpdateImageHelper helper(mImageContainer, mImageClient, imageSize);
 
   {
-    TextureClientAutoLock autoLock(texture, OpenMode::OPEN_WRITE_ONLY);
-    if (!autoLock.Succeeded()) {
-      return;
-    }
-    RefPtr<DrawTarget> target = texture->BorrowDrawTarget();
+    RefPtr<DrawTarget> target = helper.GetDrawTarget();
     if (!target) {
       return;
     }
+
     target->ClearRect(Rect(0, 0, imageSize.width, imageSize.height));
     target->SetTransform(Matrix().PreTranslate(-bounds.x, -bounds.y));
     RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(target);
@@ -178,9 +169,8 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                                          visibleRegion.ToUnknownRegion(), visibleRegion.ToUnknownRegion(),
                                          DrawRegionClip::DRAW, nsIntRegion(), Manager()->GetPaintedLayerCallbackData());
   }
-  RefPtr<TextureWrapperImage> image = new TextureWrapperImage(texture, IntRect(IntPoint(0, 0), imageSize));
-  mImageContainer->SetCurrentImageInTransaction(image);
-  if (!mImageClient->UpdateImage(mImageContainer, /* unused */0)) {
+
+  if (!helper.UpdateImage()) {
     return;
   }
 
@@ -196,9 +186,7 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 
   DumpLayerInfo("PaintedLayer", rect);
 
-  WrImageKey key;
-  key.mNamespace = WrBridge()->GetNamespace();
-  key.mHandle = WrBridge()->GetNextResourceId();
+  WrImageKey key = GetImageKey();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
   Manager()->AddImageKeyForDiscard(key);
 

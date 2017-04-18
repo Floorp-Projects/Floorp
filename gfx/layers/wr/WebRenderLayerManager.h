@@ -45,6 +45,7 @@ public:
 
   WebRenderLayerManager* WrManager();
   WebRenderBridgeChild* WrBridge();
+  WrImageKey GetImageKey();
 
   gfx::Rect RelativeToVisible(gfx::Rect aRect);
   gfx::Rect RelativeToTransformedVisible(gfx::Rect aRect);
