@@ -22,17 +22,17 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   gfx::Matrix4x4 transform = GetTransform();
   float opacity = GetLocalOpacity();
   gfx::Rect relBounds = GetWrRelBounds();
-  gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
+  gfx::Rect clip(0, 0, relBounds.width, relBounds.height);
 
   Maybe<WrImageMask> mask = BuildWrMaskLayer(true);
 
   wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   if (gfxPrefs::LayersDump()) {
-    printf_stderr("ContainerLayer %p using bounds=%s, overflow=%s, transform=%s, mix-blend-mode=%s\n",
+    printf_stderr("ContainerLayer %p using bounds=%s, clip=%s, transform=%s, mix-blend-mode=%s\n",
                   this->GetLayer(),
                   Stringify(relBounds).c_str(),
-                  Stringify(overflow).c_str(),
+                  Stringify(clip).c_str(),
                   Stringify(transform).c_str(),
                   Stringify(mixBlendMode).c_str());
   }
@@ -60,9 +60,8 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                                  mixBlendMode);
   }
 
-  aBuilder.PushScrollLayer(wr::ToWrRect(overflow),
-                           wr::ToWrRect(overflow),
-                           mask.ptrOr(nullptr));
+  aBuilder.PushClip(wr::ToWrRect(clip),
+                    mask.ptrOr(nullptr));
 
   for (LayerPolygon& child : children) {
     if (child.layer->IsBackfaceHidden()) {
@@ -70,7 +69,7 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     }
     ToWebRenderLayer(child.layer)->RenderLayer(aBuilder);
   }
-  aBuilder.PopScrollLayer();
+  aBuilder.PopClip();
   aBuilder.PopStackingContext();
 }
 
