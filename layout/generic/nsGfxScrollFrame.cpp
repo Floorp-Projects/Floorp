@@ -341,6 +341,7 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
       nsLayoutUtils::MarkIntrinsicISizesDirtyIfDependentOnBSize(
           mHelper.mScrolledFrame);
     }
+    aKidMetrics->mOverflowAreas.Clear();
     ReflowScrolledFrame(aState, aAssumeHScroll, aAssumeVScroll, aKidMetrics,
                         false);
   }
@@ -694,6 +695,7 @@ nsHTMLScrollFrame::ReflowContents(ScrollReflowInput* aState,
                                                insideBorderSize);
     if (nsRect(nsPoint(0, 0), insideBorderSize).Contains(scrolledRect)) {
       // Let's pretend we had no scrollbars coming in here
+      kidDesiredSize.mOverflowAreas.Clear();
       ReflowScrolledFrame(aState, false, false, &kidDesiredSize, false);
     }
   }
