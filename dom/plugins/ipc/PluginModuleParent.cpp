@@ -496,13 +496,6 @@ PluginModuleContentParent::OnLoadPluginResult(const uint32_t& aPluginId,
                                             : NPERR_GENERIC_ERROR);
 }
 
-bool
-PluginModuleChromeParent::SendAssociatePluginId()
-{
-    MOZ_ASSERT(mContentParent);
-    return mContentParent->SendAssociatePluginId(mPluginId, OtherPid());
-}
-
 // static
 PluginLibrary*
 PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
@@ -726,7 +719,6 @@ PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
 #endif
     , mInitOnAsyncConnect(false)
     , mAsyncInitRv(NS_ERROR_NOT_INITIALIZED)
-    , mContentParent(nullptr)
 {
     NS_ASSERTION(mSubprocess, "Out of memory!");
     mSandboxLevel = aSandboxLevel;
@@ -2323,20 +2315,7 @@ PluginModuleParent::RecvNP_InitializeResult(const NPError& aError)
 mozilla::ipc::IPCResult
 PluginModuleChromeParent::RecvNP_InitializeResult(const NPError& aError)
 {
-    if (!mContentParent) {
-        return PluginModuleParent::RecvNP_InitializeResult(aError);
-    }
-    bool initOk = aError == NPERR_NO_ERROR;
-    if (initOk) {
-        SetPluginFuncs(mNPPIface);
-    }
-    mNPInitialized = initOk;
-    bool result = mContentParent->SendLoadPluginResult(mPluginId, initOk);
-    mContentParent = nullptr;
-    if (!result) {
-      return IPC_FAIL_NO_REASON(this);
-    }
-    return IPC_OK();
+    return PluginModuleParent::RecvNP_InitializeResult(aError);
 }
 
 #else
@@ -2420,17 +2399,11 @@ mozilla::ipc::IPCResult
 PluginModuleChromeParent::RecvNP_InitializeResult(const NPError& aError)
 {
     bool ok = true;
-    if (mContentParent) {
-        if ((ok = SendAssociatePluginId())) {
-            ok = mContentParent->SendLoadPluginResult(mPluginId,
-                                                      aError == NPERR_NO_ERROR);
-            mContentParent = nullptr;
-        }
-    } else if (aError == NPERR_NO_ERROR) {
+    if (aError == NPERR_NO_ERROR) {
         // Initialization steps for (e10s && !asyncInit) || !e10s
 #if defined XP_WIN
-        // Send the info needed to join the browser process's audio session to the
-        // plugin process.
+        // Send the info needed to join the browser process's audio session to
+        // the plugin process.
         nsID id;
         nsString sessionName;
         nsString iconPath;
