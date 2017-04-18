@@ -37,7 +37,4 @@ if CONFIG['OS_TARGET'] == 'Android' and CONFIG['CPU_ARCH'] == 'x86':
     # The NDK's user.h defines this struct with a different name.
     DEFINES['user_fpxregs_struct'] = 'user_fxsr_struct'
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    DEFINES['getcontext'] = 'breakpad_getcontext'
-
 include('/toolkit/crashreporter/crashreporter.mozbuild')

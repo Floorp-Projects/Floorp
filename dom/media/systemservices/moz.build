@@ -49,16 +49,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
   UNIFIED_SOURCES += ['OSXRunLoopSingleton.cpp']
   EXPORTS += ['OSXRunLoopSingleton.h']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    if CONFIG['ANDROID_VERSION'] >= '17':
-        LOCAL_INCLUDES += [
-            '%' + '%s/frameworks/wilhelm/include' % CONFIG['ANDROID_SOURCE'],
-        ]
-    else:
-        LOCAL_INCLUDES += [
-            '%' + '%s/system/media/wilhelm/include' % CONFIG['ANDROID_SOURCE'],
-        ]
-
 if CONFIG['_MSC_VER']:
     DEFINES['__PRETTY_FUNCTION__'] = '__FUNCSIG__'
 
