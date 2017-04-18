@@ -27,10 +27,8 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   WrImageMask* imageMask = mask.ptrOr(nullptr);
   if (imageMask) {
     gfx::Rect rect = TransformedVisibleBoundsRelativeToParent();
-    gfx::Rect overflow(0.0, 0.0, rect.width, rect.height);
-    aBuilder.PushScrollLayer(wr::ToWrRect(rect),
-                             wr::ToWrRect(overflow),
-                             imageMask);
+    gfx::Rect clip(0.0, 0.0, rect.width, rect.height);
+    aBuilder.PushClip(wr::ToWrRect(clip), imageMask);
   }
 
   if (mItem) {
@@ -47,7 +45,7 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   WrBridge()->AddWebRenderParentCommands(mParentCommands);
 
   if (imageMask) {
-    aBuilder.PopScrollLayer();
+    aBuilder.PopClip();
   }
 }
 
