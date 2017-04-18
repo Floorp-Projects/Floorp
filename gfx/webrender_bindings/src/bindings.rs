@@ -71,12 +71,8 @@ const GL_FORMAT_BGRA_GLES: gl::GLuint = gl::BGRA_EXT;
 
 fn get_gl_format_bgra(gl: &gl::Gl) -> gl::GLuint {
     match gl.get_type() {
-        gl::GlType::Gl => {
-            GL_FORMAT_BGRA_GL
-        }
-        gl::GlType::Gles => {
-            GL_FORMAT_BGRA_GLES
-        }
+        gl::GlType::Gl => GL_FORMAT_BGRA_GL,
+        gl::GlType::Gles => GL_FORMAT_BGRA_GLES,
     }
 }
 
@@ -88,7 +84,10 @@ pub struct WrByteSlice {
 
 impl WrByteSlice {
     pub fn new(slice: &[u8]) -> WrByteSlice {
-        WrByteSlice { buffer: &slice[0], len: slice.len() }
+        WrByteSlice {
+            buffer: &slice[0],
+            len: slice.len(),
+        }
     }
 
     pub fn as_slice(&self) -> &[u8] {
@@ -105,7 +104,10 @@ pub struct MutByteSlice {
 impl MutByteSlice {
     pub fn new(slice: &mut [u8]) -> MutByteSlice {
         let len = slice.len();
-        MutByteSlice { buffer: &mut slice[0], len: len }
+        MutByteSlice {
+            buffer: &mut slice[0],
+            len: len,
+        }
     }
 
     pub fn as_mut_slice(&mut self) -> &mut [u8] {
@@ -212,20 +214,42 @@ pub struct WrMatrix {
 
 impl<'a, U, E> Into<TypedMatrix4D<f32, U, E>> for &'a WrMatrix {
     fn into(self) -> TypedMatrix4D<f32, U, E> {
-        TypedMatrix4D::row_major(
-            self.values[0], self.values[1], self.values[2], self.values[3],
-            self.values[4], self.values[5], self.values[6], self.values[7],
-            self.values[8], self.values[9], self.values[10], self.values[11],
-            self.values[12], self.values[13], self.values[14], self.values[15])
+        TypedMatrix4D::row_major(self.values[0],
+                                 self.values[1],
+                                 self.values[2],
+                                 self.values[3],
+                                 self.values[4],
+                                 self.values[5],
+                                 self.values[6],
+                                 self.values[7],
+                                 self.values[8],
+                                 self.values[9],
+                                 self.values[10],
+                                 self.values[11],
+                                 self.values[12],
+                                 self.values[13],
+                                 self.values[14],
+                                 self.values[15])
     }
 }
 impl<U, E> Into<TypedMatrix4D<f32, U, E>> for WrMatrix {
     fn into(self) -> TypedMatrix4D<f32, U, E> {
-        TypedMatrix4D::row_major(
-            self.values[0], self.values[1], self.values[2], self.values[3],
-            self.values[4], self.values[5], self.values[6], self.values[7],
-            self.values[8], self.values[9], self.values[10], self.values[11],
-            self.values[12], self.values[13], self.values[14], self.values[15])
+        TypedMatrix4D::row_major(self.values[0],
+                                 self.values[1],
+                                 self.values[2],
+                                 self.values[3],
+                                 self.values[4],
+                                 self.values[5],
+                                 self.values[6],
+                                 self.values[7],
+                                 self.values[8],
+                                 self.values[9],
+                                 self.values[10],
+                                 self.values[11],
+                                 self.values[12],
+                                 self.values[13],
+                                 self.values[14],
+                                 self.values[15])
     }
 }
 
@@ -314,8 +338,7 @@ impl Into<BorderRadius> for WrBorderRadius {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct WrBorderWidths
-{
+pub struct WrBorderWidths {
     left: f32,
     top: f32,
     right: f32,
@@ -328,15 +351,14 @@ impl Into<BorderWidths> for WrBorderWidths {
             left: self.left,
             top: self.top,
             right: self.right,
-            bottom: self.bottom
+            bottom: self.bottom,
         }
     }
 }
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct WrNinePatchDescriptor
-{
+pub struct WrNinePatchDescriptor {
     width: u32,
     height: u32,
     slice: WrSideOffsets2Du32,
@@ -354,8 +376,7 @@ impl Into<NinePatchDescriptor> for WrNinePatchDescriptor {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct WrSideOffsets2D<T>
-{
+pub struct WrSideOffsets2D<T> {
     top: T,
     right: T,
     bottom: T,
@@ -369,8 +390,7 @@ impl<T: Copy> Into<SideOffsets2D<T>> for WrSideOffsets2D<T> {
 }
 
 #[repr(u32)]
-pub enum WrRepeatMode
-{
+pub enum WrRepeatMode {
     Stretch,
     Repeat,
     Round,
@@ -379,13 +399,13 @@ pub enum WrRepeatMode
 
 impl Into<RepeatMode> for WrRepeatMode {
     fn into(self) -> RepeatMode {
-       match self {
-           WrRepeatMode::Stretch => RepeatMode::Stretch,
-           WrRepeatMode::Repeat => RepeatMode::Repeat,
-           WrRepeatMode::Round => RepeatMode::Round,
-           WrRepeatMode::Space => RepeatMode::Space,
-       }
-   }
+        match self {
+            WrRepeatMode::Stretch => RepeatMode::Stretch,
+            WrRepeatMode::Repeat => RepeatMode::Repeat,
+            WrRepeatMode::Round => RepeatMode::Round,
+            WrRepeatMode::Space => RepeatMode::Space,
+        }
+    }
 }
 
 #[repr(C)]
@@ -530,7 +550,9 @@ pub struct WrExternalImageHandler {
 }
 
 impl ExternalImageHandler for WrExternalImageHandler {
-    fn lock(&mut self, id: ExternalImageId) -> ExternalImage {
+    fn lock(&mut self,
+            id: ExternalImageId)
+            -> ExternalImage {
         let image = (self.lock_func)(self.external_image_obj, id.into());
 
         match image.image_type {
@@ -542,27 +564,26 @@ impl ExternalImageHandler for WrExternalImageHandler {
                     v1: image.v1,
                     source: ExternalImageSource::NativeTexture(image.handle),
                 }
-            }
+            },
             WrExternalImageType::RawData => {
                 ExternalImage {
                     u0: image.u0,
                     v0: image.v0,
                     u1: image.u1,
                     v1: image.v1,
-                    source: ExternalImageSource::RawData(unsafe {
-                                                             slice::from_raw_parts(image.buff,
-                                                                                   image.size)
-                                                         }),
+                    source: ExternalImageSource::RawData(unsafe { slice::from_raw_parts(image.buff, image.size) }),
                 }
-            }
+            },
         }
     }
 
-    fn unlock(&mut self, id: ExternalImageId) {
+    fn unlock(&mut self,
+              id: ExternalImageId) {
         (self.unlock_func)(self.external_image_obj, id.into());
     }
 
-    fn release(&mut self, id: ExternalImageId) {
+    fn release(&mut self,
+               id: ExternalImageId) {
         (self.release_func)(self.external_image_obj, id.into());
     }
 }
@@ -642,7 +663,9 @@ pub struct WrOpacityProperty {
     pub opacity: f32,
 }
 
-fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void {
+fn get_proc_address(glcontext_ptr: *mut c_void,
+                    name: &str)
+                    -> *const c_void {
 
     extern "C" {
         fn get_proc_address_from_glcontext(glcontext_ptr: *mut c_void,
@@ -678,8 +701,10 @@ unsafe impl Send for CppNotifier {}
 
 extern "C" {
     fn wr_notifier_new_frame_ready(window_id: WrWindowId);
-    fn wr_notifier_new_scroll_frame_ready(window_id: WrWindowId, composite_needed: bool);
-    fn wr_notifier_external_event(window_id: WrWindowId, raw_event: usize);
+    fn wr_notifier_new_scroll_frame_ready(window_id: WrWindowId,
+                                          composite_needed: bool);
+    fn wr_notifier_external_event(window_id: WrWindowId,
+                                  raw_event: usize);
 }
 
 impl webrender_traits::RenderNotifier for CppNotifier {
@@ -689,13 +714,15 @@ impl webrender_traits::RenderNotifier for CppNotifier {
         }
     }
 
-    fn new_scroll_frame_ready(&mut self, composite_needed: bool) {
+    fn new_scroll_frame_ready(&mut self,
+                              composite_needed: bool) {
         unsafe {
             wr_notifier_new_scroll_frame_ready(self.window_id, composite_needed);
         }
     }
 
-    fn external_event(&mut self, event: ExternalEvent) {
+    fn external_event(&mut self,
+                      event: ExternalEvent) {
         unsafe {
             wr_notifier_external_event(self.window_id, event.unwrap());
         }
@@ -706,15 +733,15 @@ impl webrender_traits::RenderNotifier for CppNotifier {
 pub extern "C" fn wr_renderer_set_external_image_handler(renderer: &mut WrRenderer,
                                                          external_image_handler: *mut WrExternalImageHandler) {
     if !external_image_handler.is_null() {
-        renderer.set_external_image_handler(Box::new(
-            unsafe {
-                WrExternalImageHandler {
-                    external_image_obj: (*external_image_handler).external_image_obj,
-                    lock_func: (*external_image_handler).lock_func,
-                    unlock_func: (*external_image_handler).unlock_func,
-                    release_func: (*external_image_handler).release_func,
-                }
-            }));
+        renderer.set_external_image_handler(Box::new(unsafe {
+                                                         WrExternalImageHandler {
+                                                             external_image_obj:
+                                                                 (*external_image_handler).external_image_obj,
+                                                             lock_func: (*external_image_handler).lock_func,
+                                                             unlock_func: (*external_image_handler).unlock_func,
+                                                             release_func: (*external_image_handler).release_func,
+                                                         }
+                                                     }));
     }
 }
 
@@ -724,7 +751,9 @@ pub extern "C" fn wr_renderer_update(renderer: &mut WrRenderer) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_renderer_render(renderer: &mut WrRenderer, width: u32, height: u32) {
+pub extern "C" fn wr_renderer_render(renderer: &mut WrRenderer,
+                                     width: u32,
+                                     height: u32) {
     renderer.render(DeviceUintSize::new(width, height));
 }
 
@@ -740,17 +769,19 @@ pub unsafe extern "C" fn wr_renderer_readback(renderer: &mut WrRenderer,
     renderer.gl().flush();
 
     let mut slice = slice::from_raw_parts_mut(dst_buffer, buffer_size);
-    renderer.gl().read_pixels_into_buffer(0,
-                                          0,
-                                          width as gl::GLsizei,
-                                          height as gl::GLsizei,
-                                          get_gl_format_bgra(renderer.gl()),
-                                          gl::UNSIGNED_BYTE,
-                                          slice);
+    renderer.gl()
+            .read_pixels_into_buffer(0,
+                                     0,
+                                     width as gl::GLsizei,
+                                     height as gl::GLsizei,
+                                     get_gl_format_bgra(renderer.gl()),
+                                     gl::UNSIGNED_BYTE,
+                                     slice);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_renderer_set_profiler_enabled(renderer: &mut WrRenderer, enabled: bool) {
+pub extern "C" fn wr_renderer_set_profiler_enabled(renderer: &mut WrRenderer,
+                                                   enabled: bool) {
     renderer.set_profiler_enabled(enabled);
 }
 
@@ -777,12 +808,11 @@ pub struct WrRenderedEpochs {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_renderer_flush_rendered_epochs(renderer: &mut WrRenderer)
-                                                           -> *mut WrRenderedEpochs {
+pub unsafe extern "C" fn wr_renderer_flush_rendered_epochs(renderer: &mut WrRenderer) -> *mut WrRenderedEpochs {
     let map = renderer.flush_rendered_epochs();
     let pipeline_epochs = Box::new(WrRenderedEpochs {
-        data: map.into_iter().collect()
-    });
+                                       data: map.into_iter().collect(),
+                                   });
     return Box::into_raw(pipeline_epochs);
 }
 
@@ -826,9 +856,9 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
 
     let gl;
     if unsafe { is_glcontext_egl(gl_context) } {
-      gl = unsafe { gl::GlesFns::load_with(|symbol| get_proc_address(gl_context, symbol)) };
+        gl = unsafe { gl::GlesFns::load_with(|symbol| get_proc_address(gl_context, symbol)) };
     } else {
-      gl = unsafe { gl::GlFns::load_with(|symbol| get_proc_address(gl_context, symbol)) };
+        gl = unsafe { gl::GlFns::load_with(|symbol| get_proc_address(gl_context, symbol)) };
     }
     gl.clear_color(0.3, 0.0, 0.0, 1.0);
 
@@ -851,12 +881,16 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         Err(e) => {
             println!(" Failed to create a WrRenderer: {:?}", e);
             let msg = CString::new(format!("wr_window_new: {:?}", e)).unwrap();
-            unsafe { gfx_critical_note(msg.as_ptr()); }
+            unsafe {
+                gfx_critical_note(msg.as_ptr());
+            }
             return false;
-        }
+        },
     };
 
-    renderer.set_render_notifier(Box::new(CppNotifier { window_id: window_id }));
+    renderer.set_render_notifier(Box::new(CppNotifier {
+                                              window_id: window_id,
+                                          }));
 
     *out_api = Box::into_raw(Box::new(sender.create_api()));
     *out_renderer = Box::into_raw(Box::new(renderer));
@@ -905,9 +939,9 @@ pub extern "C" fn wr_api_add_external_image_handle(api: &mut WrAPI,
     api.add_image(image_key,
                   descriptor.into(),
                   ImageData::External(ExternalImageData {
-                      id: ExternalImageId(external_image_id),
-                      image_type: ExternalImageType::Texture2DHandle
-                  }),
+                                          id: ExternalImageId(external_image_id),
+                                          image_type: ExternalImageType::Texture2DHandle,
+                                      }),
                   None);
 }
 
@@ -920,9 +954,9 @@ pub extern "C" fn wr_api_add_external_image_buffer(api: &mut WrAPI,
     api.add_image(image_key,
                   descriptor.into(),
                   ImageData::External(ExternalImageData {
-                      id: ExternalImageId(external_image_id),
-                      image_type: ExternalImageType::ExternalBuffer
-                  }),
+                                          id: ExternalImageId(external_image_id),
+                                          image_type: ExternalImageType::ExternalBuffer,
+                                      }),
                   None);
 }
 
@@ -934,26 +968,27 @@ pub extern "C" fn wr_api_update_image(api: &mut WrAPI,
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
 
-    api.update_image(key,
-                     descriptor.into(),
-                     ImageData::new(copied_bytes),
-                     None);
+    api.update_image(key, descriptor.into(), ImageData::new(copied_bytes), None);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_delete_image(api: &mut WrAPI, key: WrImageKey) {
+pub extern "C" fn wr_api_delete_image(api: &mut WrAPI,
+                                      key: WrImageKey) {
     assert!(unsafe { is_in_compositor_thread() });
     api.delete_image(key)
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_set_root_pipeline(api: &mut WrAPI, pipeline_id: WrPipelineId) {
+pub extern "C" fn wr_api_set_root_pipeline(api: &mut WrAPI,
+                                           pipeline_id: WrPipelineId) {
     api.set_root_pipeline(pipeline_id);
     api.generate_frame(None);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_set_window_parameters(api: &mut WrAPI, width: i32, height: i32) {
+pub extern "C" fn wr_api_set_window_parameters(api: &mut WrAPI,
+                                               width: i32,
+                                               height: i32) {
     let size = DeviceUintSize::new(width as u32, height as u32);
     api.set_window_parameters(size, DeviceUintRect::new(DeviceUintPoint::new(0, 0), size));
 }
@@ -1023,7 +1058,7 @@ pub extern "C" fn wr_api_generate_frame_with_properties(api: &mut WrAPI,
                                                         transform_count: usize) {
     let mut properties = DynamicProperties {
         transforms: Vec::new(),
-        floats: Vec::new()
+        floats: Vec::new(),
     };
 
     if transform_count > 0 {
@@ -1056,7 +1091,8 @@ pub extern "C" fn wr_api_generate_frame_with_properties(api: &mut WrAPI,
 
 /// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
-pub extern "C" fn wr_api_send_external_event(api: &mut WrAPI, evt: usize) {
+pub extern "C" fn wr_api_send_external_event(api: &mut WrAPI,
+                                             evt: usize) {
     assert!(unsafe { !is_in_render_thread() });
 
     api.send_external_event(ExternalEvent::from_raw(evt));
@@ -1077,9 +1113,9 @@ pub extern "C" fn wr_api_add_raw_font(api: &mut WrAPI,
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_delete_font(api: &mut WrAPI, key: WrFontKey)
-{
-    assert!( unsafe { is_in_compositor_thread() });
+pub extern "C" fn wr_api_delete_font(api: &mut WrAPI,
+                                     key: WrFontKey) {
+    assert!(unsafe { is_in_compositor_thread() });
     api.delete_font(key);
 }
 
@@ -1142,27 +1178,26 @@ pub extern "C" fn wr_state_delete(state: *mut WrState) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_begin(state: &mut WrState, width: u32, height: u32) {
+pub extern "C" fn wr_dp_begin(state: &mut WrState,
+                              width: u32,
+                              height: u32) {
     assert!(unsafe { is_in_main_thread() });
-    state.frame_builder
-        .dl_builder
-        .list
-        .clear();
+    state.frame_builder.dl_builder.list.clear();
     state.z_index = 0;
 
     let bounds = LayoutRect::new(LayoutPoint::new(0.0, 0.0),
                                  LayoutSize::new(width as f32, height as f32));
 
     state.frame_builder
-        .dl_builder
-        .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
-                               bounds,
-                               0,
-                               None,
-                               TransformStyle::Flat,
-                               None,
-                               MixBlendMode::Normal,
-                               Vec::new());
+         .dl_builder
+         .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
+                                bounds,
+                                0,
+                                None,
+                                TransformStyle::Flat,
+                                None,
+                                MixBlendMode::Normal,
+                                Vec::new());
 }
 
 #[no_mangle]
@@ -1209,8 +1244,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
             filters.push(FilterOp::Opacity(PropertyBinding::Value(*opacity)));
         }
     } else {
-        filters.push(FilterOp::Opacity(
-            PropertyBinding::Binding(PropertyBindingKey::new(animation_id))));
+        filters.push(FilterOp::Opacity(PropertyBinding::Binding(PropertyBindingKey::new(animation_id))));
     }
 
     let transform = unsafe { transform.as_ref() };
@@ -1220,15 +1254,15 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     };
 
     state.frame_builder
-        .dl_builder
-        .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
-                               bounds,
-                               state.z_index,
-                               Some(transform_binding),
-                               TransformStyle::Flat,
-                               None,
-                               mix_blend_mode,
-                               filters);
+         .dl_builder
+         .push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
+                                bounds,
+                                state.z_index,
+                                Some(transform_binding),
+                                TransformStyle::Flat,
+                                None,
+                                mix_blend_mode,
+                                filters);
 }
 
 #[no_mangle]
@@ -1272,9 +1306,7 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
                                   color: WrColor) {
     assert!(unsafe { is_in_main_thread() });
 
-    state.frame_builder.dl_builder.push_rect(rect.into(),
-                                             clip.into(),
-                                             color.into());
+    state.frame_builder.dl_builder.push_rect(rect.into(), clip.into(), color.into());
 }
 
 #[no_mangle]
@@ -1289,12 +1321,14 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
 
     let bounds = bounds.into();
 
-    state.frame_builder.dl_builder.push_image(bounds,
-                                              clip.into(),
-                                              stretch_size.into(),
-                                              tile_spacing.into(),
-                                              image_rendering,
-                                              key);
+    state.frame_builder
+         .dl_builder
+         .push_image(bounds,
+                     clip.into(),
+                     stretch_size.into(),
+                     tile_spacing.into(),
+                     image_rendering,
+                     key);
 }
 
 #[no_mangle]
@@ -1314,14 +1348,16 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
     let colorf = ColorF::new(color.r, color.g, color.b, color.a);
 
     let glyph_options = None; // TODO
-    state.frame_builder.dl_builder.push_text(bounds.into(),
-                                             clip.into(),
-                                             &glyph_vector,
-                                             font_key,
-                                             colorf,
-                                             Au::from_f32_px(glyph_size),
-                                             Au::from_px(0),
-                                             glyph_options);
+    state.frame_builder
+         .dl_builder
+         .push_text(bounds.into(),
+                    clip.into(),
+                    &glyph_vector,
+                    font_key,
+                    colorf,
+                    Au::from_f32_px(glyph_size),
+                    Au::from_px(0),
+                    glyph_options);
 }
 
 #[no_mangle]
@@ -1337,17 +1373,15 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
     assert!(unsafe { is_in_main_thread() });
 
     let border_details = BorderDetails::Normal(NormalBorder {
-        left: left.into(),
-        right: right.into(),
-        top: top.into(),
-        bottom: bottom.into(),
-        radius: radius.into(),
-    });
-    state.frame_builder.dl_builder.push_border(
-                                    rect.into(),
-                                    clip.into(),
-                                    widths.into(),
-                                    border_details);
+                                                   left: left.into(),
+                                                   right: right.into(),
+                                                   top: top.into(),
+                                                   bottom: bottom.into(),
+                                                   radius: radius.into(),
+                                               });
+    state.frame_builder
+         .dl_builder
+         .push_border(rect.into(), clip.into(), widths.into(), border_details);
 }
 
 #[no_mangle]
@@ -1360,71 +1394,81 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
                                           outset: WrSideOffsets2Df32,
                                           repeat_horizontal: WrRepeatMode,
                                           repeat_vertical: WrRepeatMode) {
-    assert!( unsafe { is_in_main_thread() });
-    let border_details = BorderDetails::Image(ImageBorder {
-        image_key: image,
-        patch: patch.into(),
-        outset: outset.into(),
-        repeat_horizontal: repeat_horizontal.into(),
-        repeat_vertical: repeat_vertical.into(),
-    });
-    state.frame_builder.dl_builder.push_border(
-                                    rect.into(),
-                                    clip.into(),
-                                    widths.into(),
-                                    border_details);
+    assert!(unsafe { is_in_main_thread() });
+    let border_details =
+        BorderDetails::Image(ImageBorder {
+                                 image_key: image,
+                                 patch: patch.into(),
+                                 outset: outset.into(),
+                                 repeat_horizontal: repeat_horizontal.into(),
+                                 repeat_vertical: repeat_vertical.into(),
+                             });
+    state.frame_builder
+         .dl_builder
+         .push_border(rect.into(), clip.into(), widths.into(), border_details);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState, rect: WrRect, clip: WrClipRegion,
+pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
+                                             rect: WrRect,
+                                             clip: WrClipRegion,
                                              widths: WrBorderWidths,
-                                             start_point: WrPoint, end_point: WrPoint,
-                                             stops: *const WrGradientStop, stops_count: usize,
+                                             start_point: WrPoint,
+                                             end_point: WrPoint,
+                                             stops: *const WrGradientStop,
+                                             stops_count: usize,
                                              extend_mode: WrGradientExtendMode,
                                              outset: WrSideOffsets2Df32) {
-    assert!( unsafe { is_in_main_thread() });
+    assert!(unsafe { is_in_main_thread() });
 
     let stops_slice = unsafe { slice::from_raw_parts(stops, stops_count) };
     let stops_vector = stops_slice.iter().map(|x| x.into()).collect();
 
     let border_details = BorderDetails::Gradient(GradientBorder {
-        gradient: state.frame_builder.dl_builder.create_gradient(
-                      start_point.into(), end_point.into(),
-                      stops_vector, extend_mode.into()),
-        outset: outset.into(),
-    });
-    state.frame_builder.dl_builder.push_border(
-                                    rect.into(),
-                                    clip.into(),
-                                    widths.into(),
-                                    border_details);
+                                                     gradient:
+                                                         state.frame_builder
+                                                              .dl_builder
+                                                              .create_gradient(start_point.into(),
+                                                                               end_point.into(),
+                                                                               stops_vector,
+                                                                               extend_mode.into()),
+                                                     outset: outset.into(),
+                                                 });
+    state.frame_builder
+         .dl_builder
+         .push_border(rect.into(), clip.into(), widths.into(), border_details);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState, rect: WrRect, clip: WrClipRegion,
+pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
+                                                    rect: WrRect,
+                                                    clip: WrClipRegion,
                                                     widths: WrBorderWidths,
                                                     center: WrPoint,
                                                     radius: WrSize,
-                                                    stops: *const WrGradientStop, stops_count: usize,
+                                                    stops: *const WrGradientStop,
+                                                    stops_count: usize,
                                                     extend_mode: WrGradientExtendMode,
                                                     outset: WrSideOffsets2Df32) {
-    assert!( unsafe { is_in_main_thread() });
+    assert!(unsafe { is_in_main_thread() });
 
     let stops_slice = unsafe { slice::from_raw_parts(stops, stops_count) };
     let stops_vector = stops_slice.iter().map(|x| x.into()).collect();
 
-    let border_details = BorderDetails::RadialGradient(RadialGradientBorder {
-        gradient: state.frame_builder.dl_builder.create_radial_gradient(center.into(),
-                                                                        radius.into(),
-                                                                        stops_vector,
-                                                                        extend_mode.into()),
-        outset: outset.into(),
-    });
-    state.frame_builder.dl_builder.push_border(
-                                    rect.into(),
-                                    clip.into(),
-                                    widths.into(),
-                                    border_details);
+    let border_details =
+        BorderDetails::RadialGradient(RadialGradientBorder {
+                                          gradient:
+                                              state.frame_builder
+                                                   .dl_builder
+                                                   .create_radial_gradient(center.into(),
+                                                                           radius.into(),
+                                                                           stops_vector,
+                                                                           extend_mode.into()),
+                                          outset: outset.into(),
+                                      });
+    state.frame_builder
+         .dl_builder
+         .push_border(rect.into(), clip.into(), widths.into(), border_details);
 }
 
 #[no_mangle]
@@ -1443,18 +1487,18 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
     let stops_slice = unsafe { slice::from_raw_parts(stops, stops_count) };
     let stops_vector = stops_slice.iter().map(|x| x.into()).collect();
 
-    let gradient = state.frame_builder.dl_builder.create_gradient(start_point.into(),
-                                                                  end_point.into(),
-                                                                  stops_vector,
-                                                                  extend_mode.into());
+    let gradient = state.frame_builder
+                        .dl_builder
+                        .create_gradient(start_point.into(),
+                                         end_point.into(),
+                                         stops_vector,
+                                         extend_mode.into());
     let rect = rect.into();
     let tile_size = tile_size.into();
     let tile_spacing = tile_spacing.into();
-    state.frame_builder.dl_builder.push_gradient(rect,
-                                                 clip.into(),
-                                                 gradient,
-                                                 tile_size,
-                                                 tile_spacing);
+    state.frame_builder
+         .dl_builder
+         .push_gradient(rect, clip.into(), gradient, tile_size, tile_spacing);
 }
 
 #[no_mangle]
@@ -1473,18 +1517,18 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
     let stops_slice = unsafe { slice::from_raw_parts(stops, stops_count) };
     let stops_vector = stops_slice.iter().map(|x| x.into()).collect();
 
-    let gradient = state.frame_builder.dl_builder.create_radial_gradient(center.into(),
-                                                                         radius.into(),
-                                                                         stops_vector,
-                                                                         extend_mode.into());
+    let gradient = state.frame_builder
+                        .dl_builder
+                        .create_radial_gradient(center.into(),
+                                                radius.into(),
+                                                stops_vector,
+                                                extend_mode.into());
     let rect = rect.into();
     let tile_size = tile_size.into();
     let tile_spacing = tile_spacing.into();
-    state.frame_builder.dl_builder.push_radial_gradient(rect,
-                                                        clip.into(),
-                                                        gradient,
-                                                        tile_size,
-                                                        tile_spacing);
+    state.frame_builder
+         .dl_builder
+         .push_radial_gradient(rect, clip.into(), gradient, tile_size, tile_spacing);
 }
 
 #[no_mangle]
@@ -1500,15 +1544,17 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
                                         clip_mode: WrBoxShadowClipMode) {
     assert!(unsafe { is_in_main_thread() });
 
-    state.frame_builder.dl_builder.push_box_shadow(rect.into(),
-                                                   clip.into(),
-                                                   box_bounds.into(),
-                                                   offset.into(),
-                                                   color.into(),
-                                                   blur_radius,
-                                                   spread_radius,
-                                                   border_radius,
-                                                   clip_mode);
+    state.frame_builder
+         .dl_builder
+         .push_box_shadow(rect.into(),
+                          clip.into(),
+                          box_bounds.into(),
+                          offset.into(),
+                          color.into(),
+                          blur_radius,
+                          spread_radius,
+                          border_radius,
+                          clip_mode);
 }
 
 #[no_mangle]
@@ -1545,7 +1591,7 @@ pub unsafe extern "C" fn wr_dp_push_built_display_list(state: &mut WrState,
 }
 
 struct Moz2dImageRenderer {
-    images: HashMap<WrImageKey, BlobImageResult>
+    images: HashMap<WrImageKey, BlobImageResult>,
 }
 
 impl BlobImageRenderer for Moz2dImageRenderer {
@@ -1558,11 +1604,13 @@ impl BlobImageRenderer for Moz2dImageRenderer {
         self.images.insert(key, result);
     }
 
-    fn resolve_blob_image(&mut self, key: WrImageKey) -> BlobImageResult {
+    fn resolve_blob_image(&mut self,
+                          key: WrImageKey)
+                          -> BlobImageResult {
         return match self.images.remove(&key) {
-            Some(result) => result,
-            None => Err(BlobImageError::InvalidKey),
-        }
+                   Some(result) => result,
+                   None => Err(BlobImageError::InvalidKey),
+               };
     }
 }
 
@@ -1573,10 +1621,13 @@ impl Moz2dImageRenderer {
         }
     }
 
-    fn render_blob_image(&mut self, data: Arc<BlobImageData>, descriptor: &BlobImageDescriptor) -> BlobImageResult {
-        let mut output = Vec::with_capacity(
-            (descriptor.width * descriptor.height * descriptor.format.bytes_per_pixel().unwrap()) as usize
-        );
+    fn render_blob_image(&mut self,
+                         data: Arc<BlobImageData>,
+                         descriptor: &BlobImageDescriptor)
+                         -> BlobImageResult {
+        let mut output = Vec::with_capacity((descriptor.width * descriptor.height *
+                                             descriptor.format.bytes_per_pixel().unwrap()) as
+                                            usize);
 
         unsafe {
             if wr_moz2d_render_cb(WrByteSlice::new(&data[..]),
@@ -1585,10 +1636,10 @@ impl Moz2dImageRenderer {
                                   descriptor.format,
                                   MutByteSlice::new(output.as_mut_slice())) {
                 return Ok(RasterizedBlobImage {
-                    width: descriptor.width,
-                    height: descriptor.height,
-                    data: output,
-                });
+                              width: descriptor.width,
+                              height: descriptor.height,
+                              data: output,
+                          });
             }
         }
 
@@ -1602,5 +1653,6 @@ extern "C" {
                           width: u32,
                           height: u32,
                           format: WrImageFormat,
-                          output: MutByteSlice) -> bool;
+                          output: MutByteSlice)
+                          -> bool;
 }
