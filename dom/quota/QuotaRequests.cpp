@@ -164,9 +164,7 @@ UsageRequest::GetResult(nsIVariant** aResult)
     return NS_ERROR_FAILURE;
   }
 
-  MOZ_ASSERT(mResult);
-
-  NS_ADDREF(*aResult = mResult);
+  NS_IF_ADDREF(*aResult = mResult);
   return NS_OK;
 }
 
@@ -261,9 +259,7 @@ Request::GetResult(nsIVariant** aResult)
     return NS_ERROR_FAILURE;
   }
 
-  MOZ_ASSERT(mResult);
-
-  NS_ADDREF(*aResult = mResult);
+  NS_IF_ADDREF(*aResult = mResult);
   return NS_OK;
 }
 

@@ -93,6 +93,7 @@ function* testSteps()
   yield undefined;
 
   ok(request.resultCode == NS_ERROR_UNEXPECTED, "Initialization failed");
+  ok(request.result === null, "The request result is null");
 
   info("Clearing origin");
 
@@ -128,6 +129,7 @@ function* testSteps()
     yield undefined;
 
     ok(request.resultCode == NS_ERROR_UNEXPECTED, "Initialization failed");
+    ok(request.result === null, "The request result is null");
 
     info("Getting usage");
 
@@ -135,6 +137,7 @@ function* testSteps()
     yield undefined;
 
     ok(request.resultCode == NS_ERROR_UNEXPECTED, "Get usage failed");
+    ok(request.result === null, "The request result is null");
 
     file.remove(/* recursive */ false);
 
