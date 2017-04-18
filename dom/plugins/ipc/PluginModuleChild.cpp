@@ -1842,16 +1842,6 @@ PluginModuleChild::AnswerNP_Initialize(const PluginSettings& aSettings, NPError*
     return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-PluginModuleChild::RecvAsyncNP_Initialize(const PluginSettings& aSettings)
-{
-    NPError error = DoNP_Initialize(aSettings);
-    if (!SendNP_InitializeResult(error)) {
-        return IPC_FAIL_NO_REASON(this);
-    }
-    return IPC_OK();
-}
-
 NPError
 PluginModuleChild::DoNP_Initialize(const PluginSettings& aSettings)
 {

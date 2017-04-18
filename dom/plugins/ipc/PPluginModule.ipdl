@@ -62,8 +62,6 @@ child:
   intr NP_Initialize(PluginSettings settings)
     returns (NPError rv);
 
-  async AsyncNP_Initialize(PluginSettings settings);
-
   async PPluginInstance(nsCString aMimeType,
                         nsCString[] aNames,
                         nsCString[] aValues);
