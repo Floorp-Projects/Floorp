@@ -5257,6 +5257,9 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     } else {
       aChild->Properties().Delete(BClampMarginBoxMinSizeProperty());
     }
+    if ((aGridItemInfo->mState[childIAxis] & ItemState::eApplyAutoMinSize)) {
+      flags |= ReflowInput::I_APPLY_AUTO_MIN_SIZE;
+    }
   }
 
   if (!isConstrainedBSize) {
