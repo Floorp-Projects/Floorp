@@ -941,7 +941,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     JS_FRIEND_API(void*) onOutOfMemory(js::AllocFunction allocator, size_t nbytes,
                                        void* reallocPtr = nullptr, JSContext* maybecx = nullptr);
 
-    /*  onOutOfMemory but can call the largeAllocationFailureCallback. */
+    /*  onOutOfMemory but can call OnLargeAllocationFailure. */
     JS_FRIEND_API(void*) onOutOfMemoryCanGC(js::AllocFunction allocator, size_t nbytes,
                                             void* reallocPtr = nullptr);
 
@@ -975,10 +975,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
         MOZ_ASSERT(autoWritableJitCodeActive_ != b, "AutoWritableJitCode should not be nested.");
         autoWritableJitCodeActive_ = b;
     }
-
-    /* See comment for JS::SetLargeAllocationFailureCallback in jsapi.h. */
-    js::ActiveThreadData<JS::LargeAllocationFailureCallback> largeAllocationFailureCallback;
-    js::ActiveThreadData<void*> largeAllocationFailureCallbackData;
 
     /* See comment for JS::SetOutOfMemoryCallback in jsapi.h. */
     js::ActiveThreadData<JS::OutOfMemoryCallback> oomCallback;
@@ -1340,6 +1336,10 @@ ZoneGroup::callAfterMinorGC(void (*thunk)(void* data), void* data)
 {
     nursery().queueSweepAction(thunk, data);
 }
+
+// This callback is set by JS::SetProcessLargeAllocationFailureCallback
+// and may be null. See comment in jsapi.h.
+extern mozilla::Atomic<JS::LargeAllocationFailureCallback> OnLargeAllocationFailure;
 
 } /* namespace js */
 
