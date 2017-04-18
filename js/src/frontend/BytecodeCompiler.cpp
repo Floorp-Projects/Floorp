@@ -61,7 +61,13 @@ class MOZ_STACK_CLASS BytecodeCompiler
     bool canLazilyParse();
     bool createParser();
     bool createSourceAndParser(const Maybe<uint32_t>& parameterListEnd = Nothing());
-    bool createScript(uint32_t preludeStart = 0);
+
+    // If toString{Start,End} are not explicitly passed, assume the script's
+    // offsets in the source used to parse it are the same as what should be
+    // used to compute its Function.prototype.toString() value.
+    bool createScript();
+    bool createScript(uint32_t toStringStart, uint32_t toStringEnd);
+
     bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter, SharedContext* sharedContext);
     bool handleParseFailure(const Directives& newDirectives);
     bool deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObject environment);
@@ -292,11 +298,17 @@ BytecodeCompiler::createSourceAndParser(const Maybe<uint32_t>& parameterListEnd 
 }
 
 bool
-BytecodeCompiler::createScript(uint32_t preludeStart /* = 0 */)
+BytecodeCompiler::createScript()
+{
+    return createScript(0, sourceBuffer.length());
+}
+
+bool
+BytecodeCompiler::createScript(uint32_t toStringStart, uint32_t toStringEnd)
 {
     script = JSScript::Create(cx, options,
                               sourceObject, /* sourceStart = */ 0, sourceBuffer.length(),
-                              preludeStart);
+                              toStringStart, toStringEnd);
     return script != nullptr;
 }
 
@@ -508,7 +520,7 @@ BytecodeCompiler::compileStandaloneFunction(MutableHandleFunction fun,
     if (fn->pn_funbox->function()->isInterpreted()) {
         MOZ_ASSERT(fun == fn->pn_funbox->function());
 
-        if (!createScript(fn->pn_funbox->preludeStart))
+        if (!createScript(fn->pn_funbox->toStringStart, fn->pn_funbox->toStringEnd))
             return false;
 
         Maybe<BytecodeEmitter> emitter;
@@ -729,7 +741,7 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
 
     Rooted<JSScript*> script(cx, JSScript::Create(cx, options, sourceObject,
                                                   lazy->begin(), lazy->end(),
-                                                  lazy->preludeStart()));
+                                                  lazy->toStringStart(), lazy->toStringEnd()));
     if (!script)
         return false;
 

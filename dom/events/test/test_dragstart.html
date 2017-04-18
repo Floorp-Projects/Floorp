@@ -315,6 +315,23 @@ function test_DataTransfer(dt)
   is(dt.mozItemCount, 3, "setDataAt node itemCount");
   checkOneDataItem(dt, ["application/-moz-node"], ["draggable"], 2, "setDataAt node item at index 2");
 
+  // Try to add and then remove a non-string type to the DataTransfer and ensure
+  // that the type appears in DataTransfer.types. These calls need to be called
+  // with SpecialPowers.wrap(), as adding and removing non-string/file types to
+  // DataTransfer is chrome-only.
+  {
+    SpecialPowers.wrap(dt).mozSetDataAt("application/-x-body", document.body, 0);
+    let found = false;
+    for (let i = 0; i < dt.types.length; ++i) {
+      if (dt.types[i] == "application/-x-body") {
+        found = true;
+        break;
+      }
+    }
+    ok(found, "Data should appear in datatransfer.types despite having a non-string type");
+    SpecialPowers.wrap(dt).mozClearDataAt("application/-x-body", 0);
+  }
+
   dt.mozClearDataAt("text/html", 1);
   is(dt.mozItemCount, 3, "clearDataAt itemCount");
   checkOneDataItem(dt, ["text/plain", "text/html"],

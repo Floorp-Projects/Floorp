@@ -7144,7 +7144,7 @@ nsLayoutUtils::GetDeviceContextForScreenInfo(nsPIDOMWindowOuter* aWindow)
       return nullptr;
     }
 
-    win->EnsureSizeUpToDate();
+    win->EnsureSizeAndPositionUpToDate();
 
     RefPtr<nsPresContext> presContext;
     docShell->GetPresContext(getter_AddRefs(presContext));

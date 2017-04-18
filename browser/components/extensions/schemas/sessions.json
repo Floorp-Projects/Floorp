@@ -56,6 +56,37 @@
     ],
     "functions": [
       {
+        "name": "forgetClosedTab",
+        "type": "function",
+        "description": "Forget a recently closed tab.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "windowId",
+            "type": "integer",
+            "description": "The windowId of the window to which the recently closed tab to be forgotten belongs."
+          },
+          {
+            "name": "sessionId",
+            "type": "string",
+            "description": "The sessionId (closedId) of the recently closed tab to be forgotten."
+          }
+        ]
+      },
+      {
+        "name": "forgetClosedWindow",
+        "type": "function",
+        "description": "Forget a recently closed window.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "sessionId",
+            "type": "string",
+            "description": "The sessionId (closedId) of the recently closed window to be forgotten."
+          }
+        ]
+      },
+      {
         "name": "getRecentlyClosed",
         "type": "function",
         "description": "Gets the list of recently closed tabs and/or windows.",

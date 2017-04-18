@@ -62,6 +62,37 @@ this.sessions = class extends ExtensionAPI {
           return Promise.resolve(getRecentlyClosed(maxResults, extension));
         },
 
+        forgetClosedTab: function(windowId, sessionId) {
+          let window = context.extension.windowManager.get(windowId).window;
+          let closedTabData = SessionStore.getClosedTabData(window, false);
+
+          let closedTabIndex = closedTabData.findIndex((closedTab) => {
+            return closedTab.closedId === parseInt(sessionId, 10);
+          });
+
+          if (closedTabIndex < 0) {
+            return Promise.reject({message: `Could not find closed tab using sessionId ${sessionId}.`});
+          }
+
+          SessionStore.forgetClosedTab(window, closedTabIndex);
+          return Promise.resolve();
+        },
+
+        forgetClosedWindow: function(sessionId) {
+          let closedWindowData = SessionStore.getClosedWindowData(false);
+
+          let closedWindowIndex = closedWindowData.findIndex((closedWindow) => {
+            return closedWindow.closedId === parseInt(sessionId, 10);
+          });
+
+          if (closedWindowIndex < 0) {
+            return Promise.reject({message: `Could not find closed window using sessionId ${sessionId}.`});
+          }
+
+          SessionStore.forgetClosedWindow(closedWindowIndex);
+          return Promise.resolve();
+        },
+
         restore: function(sessionId) {
           let session, closedId;
           if (sessionId) {

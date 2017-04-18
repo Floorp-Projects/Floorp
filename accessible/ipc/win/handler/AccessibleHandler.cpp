@@ -12,6 +12,7 @@
 
 #include "AccessibleHandler.h"
 #include "AccessibleHandlerControl.h"
+#include "AccessibleTextTearoff.h"
 
 #include "Factory.h"
 #include "HandlerData.h"
@@ -180,6 +181,12 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
   if (aIid == IID_IServiceProvider) {
     RefPtr<IServiceProvider> svcProv(static_cast<IServiceProvider*>(this));
     svcProv.forget(aOutInterface);
+    return S_OK;
+  }
+
+  if (aIid == IID_IAccessibleText || aIid == IID_IAccessibleHypertext) {
+    RefPtr<IAccessibleHypertext> textTearoff(new AccessibleTextTearoff(this));
+    textTearoff.forget(aOutInterface);
     return S_OK;
   }
 
