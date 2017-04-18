@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.view.ActionMode;
 import android.view.Gravity;
 import android.view.MenuInflater;
@@ -13,6 +15,7 @@ import android.widget.Toast;
 
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
+import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 
 class ActionModeCompat extends ActionMode implements GeckoPopupMenu.OnMenuItemClickListener,
@@ -22,19 +25,12 @@ class ActionModeCompat extends ActionMode implements GeckoPopupMenu.OnMenuItemCl
 
     private final Callback mCallback;
     private final ActionModeCompatView mView;
-    private final Presenter mPresenter;
+    private final ActionModePresenter mPresenter;
 
-    /* Presenters handle the actual showing/hiding of the action mode UI in the app. Its their responsibility
-     * to create an action mode, and assign it Callbacks and ActionModeCompatView's. */
-    public static interface Presenter {
-        /* Called when an action mode should be shown */
-        public void startActionModeCompat(final Callback callback);
+    public ActionModeCompat(@NonNull ActionModePresenter presenter,
+                            @Nullable Callback callback,
+                            @NonNull ActionModeCompatView view) {
 
-        /* Called when whatever action mode is showing should be hidden */
-        public void endActionModeCompat();
-    }
-
-    public ActionModeCompat(Presenter presenter, Callback callback, ActionModeCompatView view) {
         mPresenter = presenter;
         mCallback = callback;
 
@@ -130,7 +126,7 @@ class ActionModeCompat extends ActionMode implements GeckoPopupMenu.OnMenuItemCl
     /* View.OnClickListener*/
     @Override
     public void onClick(View v) {
-        mPresenter.endActionModeCompat();
+        mPresenter.endActionMode();
     }
 
     private void showTooltip(GeckoMenuItem item) {
