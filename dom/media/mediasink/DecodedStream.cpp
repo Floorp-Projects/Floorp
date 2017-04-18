@@ -466,7 +466,7 @@ SendStreamAudio(DecodedStreamData* aStream, const media::TimeUnit& aStartTime,
   if (!audioWrittenOffset.isValid() ||
       !frameOffset.isValid() ||
       // ignore packet that we've already processed
-      audio->GetEndTime() <= aStream->mNextAudioTime.ToMicroseconds()) {
+      audio->GetEndTime() <= aStream->mNextAudioTime) {
     return;
   }
 
@@ -492,7 +492,7 @@ SendStreamAudio(DecodedStreamData* aStream, const media::TimeUnit& aStartTime,
   aOutput->AppendFrames(buffer.forget(), channels, audio->mFrames, aPrincipalHandle);
   aStream->mAudioFramesWritten += audio->mFrames;
 
-  aStream->mNextAudioTime = media::TimeUnit::FromMicroseconds(audio->GetEndTime());
+  aStream->mNextAudioTime = audio->GetEndTime();
 }
 
 void
@@ -613,13 +613,12 @@ DecodedStream::SendVideo(bool aIsSameOrigin, const PrincipalHandle& aPrincipalHa
       mData->mNextVideoTime = FromMicroseconds(v->mTime);
     }
 
-    if (mData->mNextVideoTime.ToMicroseconds() < v->GetEndTime()) {
-      WriteVideoToMediaStream(sourceStream, v->mImage,
-        FromMicroseconds(v->GetEndTime()),
+    if (mData->mNextVideoTime < v->GetEndTime()) {
+      WriteVideoToMediaStream(sourceStream, v->mImage, v->GetEndTime(),
         mData->mNextVideoTime, v->mDisplay,
-        tracksStartTimeStamp + TimeDuration::FromMicroseconds(v->GetEndTime()),
+        tracksStartTimeStamp + v->GetEndTime().ToTimeDuration(),
         &output, aPrincipalHandle);
-      mData->mNextVideoTime = FromMicroseconds(v->GetEndTime());
+      mData->mNextVideoTime = v->GetEndTime();
       mData->mLastVideoImage = v->mImage;
       mData->mLastVideoImageDisplaySize = v->mDisplay;
     }

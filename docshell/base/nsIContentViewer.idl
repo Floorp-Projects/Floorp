@@ -43,6 +43,8 @@ interface nsIContentViewer : nsISupports
   void loadComplete(in nsresult aStatus);
   [noscript] readonly attribute boolean loadCompleted;
 
+  [noscript] readonly attribute boolean isStopped;
+
   /**
    * Checks if the document wants to prevent unloading by firing beforeunload on
    * the document, and if it does, prompts the user. The result is returned.

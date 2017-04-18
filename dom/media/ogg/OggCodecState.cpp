@@ -261,7 +261,7 @@ OggCodecState::PacketOutAsMediaRawData()
 
   sample->mTimecode = packet->granulepos;
   sample->mTime = end_tstamp - duration;
-  sample->mDuration = duration;
+  sample->mDuration = media::TimeUnit::FromMicroseconds(duration);
   sample->mKeyframe = IsKeyframe(packet.get());
   sample->mEOS = packet->e_o_s;
 

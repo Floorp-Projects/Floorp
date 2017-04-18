@@ -6,6 +6,12 @@
 
 "use strict";
 
+const CONTENT_MIME_TYPE_ABBREVIATIONS = {
+  "ecmascript": "js",
+  "javascript": "js",
+  "x-javascript": "js"
+};
+
 /**
  * Extracts any urlencoded form data sections (e.g. "?foo=bar&baz=42") from a
  * POST request.
@@ -112,7 +118,8 @@ function getAbbreviatedMimeType(mimeType) {
   if (!mimeType) {
     return "";
   }
-  return (mimeType.split(";")[0].split("/")[1] || "").split("+")[0];
+  let abbrevType = (mimeType.split(";")[0].split("/")[1] || "").split("+")[0];
+  return CONTENT_MIME_TYPE_ABBREVIATIONS[abbrevType] || abbrevType;
 }
 
 /**

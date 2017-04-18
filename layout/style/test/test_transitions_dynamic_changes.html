@@ -36,7 +36,7 @@ is(cs.textIndent, "50px", "changing delay doesn't change transitioning");
 p.style.transitionProperty = "text-indent";
 is(cs.textIndent, "50px",
    "irrelevant change to transition property doesn't change transitioning");
-p.style.transitionProperty = "font";
+p.style.transitionProperty = "letter-spacing";
 is(cs.textIndent, "0px",
    "relevant change to transition property does change transitioning");
 

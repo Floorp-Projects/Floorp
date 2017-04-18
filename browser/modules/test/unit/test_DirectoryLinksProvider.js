@@ -34,7 +34,6 @@ const kURLData = {"directory": [{"url": "http://example.com", "title": "LocalSou
 const kTestURL = "data:application/json," + JSON.stringify(kURLData);
 
 // DirectoryLinksProvider preferences
-const kLocalePref = DirectoryLinksProvider._observedPrefs.prefSelectedLocale;
 const kSourceUrlPref = DirectoryLinksProvider._observedPrefs.linksURL;
 const kPingUrlPref = "browser.newtabpage.directory.ping";
 const kNewtabEnhancedPref = "browser.newtabpage.enhanced";
@@ -51,7 +50,8 @@ const kFailURL = kBaseUrl + kFailPath;
 const kPingUrl = kBaseUrl + kPingPath;
 
 // app/profile/firefox.js are not avaialble in xpcshell: hence, preset them
-Services.prefs.setCharPref(kLocalePref, "en-US");
+const origReqLocales = Services.locale.getRequestedLocales();
+Services.locale.setRequestedLocales(["en-US"]);
 Services.prefs.setCharPref(kSourceUrlPref, kTestURL);
 Services.prefs.setCharPref(kPingUrlPref, kPingUrl);
 Services.prefs.setBoolPref(kNewtabEnhancedPref, true);
@@ -201,7 +201,7 @@ function promiseSetupDirectoryLinksProvider(options = {}) {
   return Task.spawn(function*() {
     let linksURL = options.linksURL || kTestURL;
     yield DirectoryLinksProvider.init();
-    yield promiseDirectoryDownloadOnPrefChange(kLocalePref, options.locale || "en-US");
+    Services.locale.setRequestedLocales([options.locale || "en-US"]);
     yield promiseDirectoryDownloadOnPrefChange(kSourceUrlPref, linksURL);
     do_check_eq(DirectoryLinksProvider._linksURL, linksURL);
     DirectoryLinksProvider._lastDownloadMS = options.lastDownloadMS || 0;
@@ -210,7 +210,7 @@ function promiseSetupDirectoryLinksProvider(options = {}) {
 
 function promiseCleanDirectoryLinksProvider() {
   return Task.spawn(function*() {
-    yield promiseDirectoryDownloadOnPrefChange(kLocalePref, "en-US");
+    Services.locale.setRequestedLocales(["en-US"]);
     yield promiseDirectoryDownloadOnPrefChange(kSourceUrlPref, kTestURL);
     yield DirectoryLinksProvider._clearFrequencyCap();
     yield DirectoryLinksProvider._loadInadjacentSites();
@@ -233,7 +233,7 @@ function run_test() {
   do_register_cleanup(function() {
     server.stop(function() { });
     DirectoryLinksProvider.reset();
-    Services.prefs.clearUserPref(kLocalePref);
+    Services.locale.setRequestedLocales(origReqLocales);
     Services.prefs.clearUserPref(kSourceUrlPref);
     Services.prefs.clearUserPref(kPingUrlPref);
     Services.prefs.clearUserPref(kNewtabEnhancedPref);

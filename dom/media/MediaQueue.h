@@ -47,7 +47,7 @@ public:
     MOZ_ASSERT(!mEndOfStream);
     MOZ_ASSERT(aItem);
     NS_ADDREF(aItem);
-    MOZ_ASSERT(aItem->GetEndTime() >= aItem->mTime);
+    MOZ_ASSERT(aItem->GetEndTime().ToMicroseconds() >= aItem->mTime);
     nsDeque::Push(aItem);
     mPushEvent.Notify(RefPtr<T>(aItem));
   }
@@ -104,7 +104,7 @@ public:
     }
     T* last = static_cast<T*>(nsDeque::Peek());
     T* first = static_cast<T*>(nsDeque::PeekFront());
-    return last->GetEndTime() - first->mTime;
+    return last->GetEndTime().ToMicroseconds() - first->mTime;
   }
 
   void LockedForEach(nsDequeFunctor& aFunctor) const {
@@ -121,7 +121,7 @@ public:
     size_t i;
     for (i = GetSize() - 1; i > 0; --i) {
       T* v = static_cast<T*>(ObjectAt(i));
-      if (v->GetEndTime() < aTime)
+      if (v->GetEndTime().ToMicroseconds() < aTime)
         break;
     }
     // Elements less than i have a end time before aTime. It's also possible

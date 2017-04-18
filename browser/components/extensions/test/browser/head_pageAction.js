@@ -133,7 +133,8 @@ function* runTests(options) {
     });
   });
 
-  yield SpecialPowers.pushPrefEnv({set: [["general.useragent.locale", "es-ES"]]});
+  let reqLoc = Services.locale.getRequestedLocales();
+  Services.locale.setRequestedLocales(["es-ES"]);
 
   yield extension.startup();
 
@@ -141,7 +142,7 @@ function* runTests(options) {
 
   yield extension.unload();
 
-  yield SpecialPowers.popPrefEnv();
+  Services.locale.setRequestedLocales(reqLoc);
 
   let node = document.getElementById(pageActionId);
   is(node, null, "pageAction image removed from document");

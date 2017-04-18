@@ -44,6 +44,7 @@ use gecko_bindings::bindings::ServoComputedValuesBorrowedOrNull;
 use gecko_bindings::bindings::{Gecko_ResetFilters, Gecko_CopyFiltersFrom};
 use gecko_bindings::bindings::RawGeckoPresContextBorrowed;
 use gecko_bindings::structs::{self, StyleComplexColor};
+use gecko_bindings::structs::nsCSSPropertyID;
 use gecko_bindings::structs::nsStyleVariables;
 use gecko_bindings::sugar::ns_style_coord::{CoordDataValue, CoordData, CoordDataMut};
 use gecko_bindings::sugar::ownership::HasArcFFI;
@@ -679,6 +680,7 @@ impl Debug for ${style_struct.gecko_struct_name} {
         "LengthOrPercentageOrAuto": impl_style_coord,
         "LengthOrPercentageOrNone": impl_style_coord,
         "LengthOrNone": impl_style_coord,
+        "LengthOrNormal": impl_style_coord,
         "MaxLength": impl_style_coord,
         "MinLength": impl_style_coord,
         "Number": impl_simple,
@@ -1985,6 +1987,11 @@ fn static_assert() {
     ${impl_transition_time_value('duration', 'Duration')}
     ${impl_transition_timing_function()}
 
+    pub fn transition_combined_duration_at(&self, index: usize) -> f32 {
+        // https://drafts.csswg.org/css-transitions/#transition-combined-duration
+        self.gecko.mTransitions[index].mDuration.max(0.0) + self.gecko.mTransitions[index].mDelay
+    }
+
     pub fn set_transition_property(&mut self, v: longhands::transition_property::computed_value::T) {
         use gecko_bindings::structs::nsCSSPropertyID::eCSSPropertyExtra_no_properties;
 
@@ -2016,6 +2023,10 @@ fn static_assert() {
     pub fn transition_property_at(&self, index: usize)
         -> longhands::transition_property::computed_value::SingleComputedValue {
         self.gecko.mTransitions[index].mProperty.into()
+    }
+
+    pub fn transition_nscsspropertyid_at(&self, index: usize) -> nsCSSPropertyID {
+        self.gecko.mTransitions[index].mProperty
     }
 
     pub fn copy_transition_property_from(&mut self, other: &Self) {
@@ -3609,6 +3620,17 @@ clip-path
     }
 
     ${impl_simple_copy('column_count', 'mColumnCount')}
+
+    pub fn clone_column_count(&self) -> longhands::column_count::computed_value::T {
+        use gecko_bindings::structs::NS_STYLE_COLUMN_COUNT_AUTO;
+        if self.gecko.mColumnCount != NS_STYLE_COLUMN_COUNT_AUTO {
+            debug_assert!((self.gecko.mColumnCount as i32) >= 0 &&
+                          (self.gecko.mColumnCount as i32) < i32::max_value());
+            Either::First(self.gecko.mColumnCount as i32)
+        } else {
+            Either::Second(Auto)
+        }
+    }
 
     <% impl_app_units("column_rule_width", "mColumnRuleWidth", need_clone=True,
                       round_to_pixels=True) %>

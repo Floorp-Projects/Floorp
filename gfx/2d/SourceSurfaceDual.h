@@ -27,12 +27,22 @@ public:
   virtual IntSize GetSize() const { return mA->GetSize(); }
   virtual SurfaceFormat GetFormat() const { return mA->GetFormat(); }
 
-  // This is implemented for debugging purposes only (used by dumping
-  // client-side textures for paint dumps), for which we don't care about
-  // component alpha, so we just use the first of the two surfaces.
+  // TODO: This is probably wrong as this was originally only
+  // used for debugging purposes, but now has legacy relying on
+  // giving the first type only.
   virtual already_AddRefed<DataSourceSurface> GetDataSurface() {
     return mA->GetDataSurface();
   }
+
+  SourceSurface* GetFirstSurface() {
+    MOZ_ASSERT(mA->GetType() == mB->GetType());
+    return mA;
+  }
+
+  bool SameSurfaceTypes() {
+    return mA->GetType() == mB->GetType();
+  }
+
 private:
   friend class DualSurface;
   friend class DualPattern;

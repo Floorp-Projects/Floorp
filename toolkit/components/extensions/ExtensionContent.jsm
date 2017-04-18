@@ -619,7 +619,7 @@ this.ExtensionContent = {
   getContext(extension, window) {
     let extensions = DocumentManager.getContexts(window);
 
-    let context = extensions.get(this);
+    let context = extensions.get(extension);
     if (!context) {
       context = new ContentScriptContextChild(extension, window);
       extensions.set(extension, context);

@@ -190,6 +190,10 @@ struct VRDisplayInfo
 };
 
 struct VRHMDSensorState {
+  VRHMDSensorState()
+  {
+    Clear();
+  }
   double timestamp;
   int32_t inputFrameID;
   VRDisplayCapabilityFlags flags;

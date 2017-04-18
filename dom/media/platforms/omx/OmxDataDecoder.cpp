@@ -995,7 +995,7 @@ MediaDataHelper::CreateYUV420VideoData(BufferData* aBufferData)
                                  mImageContainer,
                                  0, // Filled later by caller.
                                  0, // Filled later by caller.
-                                 1, // We don't know the duration.
+                                 media::TimeUnit::FromMicroseconds(1), // We don't know the duration.
                                  b,
                                  0, // Filled later by caller.
                                  -1,

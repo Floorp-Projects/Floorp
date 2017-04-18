@@ -18,7 +18,7 @@ public:
     // send to media streams if necessary.
     RefPtr<VideoData> v(new VideoData(aSample->mOffset,
                                       aSample->mTime,
-                                      aSample->mDuration,
+                                      aSample->mDuration.ToMicroseconds(),
                                       aSample->mKeyframe,
                                       aSample->mTimecode,
                                       gfx::IntSize(),

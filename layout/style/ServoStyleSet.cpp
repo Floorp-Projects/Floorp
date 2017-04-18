@@ -291,7 +291,7 @@ ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
   auto root = const_cast<Element*>(aRoot);
 
   // If there are still animation restyles needed, trigger a second traversal to
-  // update CSS animations' styles.
+  // update CSS animations or transitions' styles.
   EffectCompositor* compositor = mPresContext->EffectCompositor();
   if (forReconstruct ? compositor->PreTraverseInSubtree(root)
                      : compositor->PreTraverse()) {

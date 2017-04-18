@@ -117,6 +117,24 @@ add_test(function test_getRequestedLocales_matchOS() {
   run_next_test();
 });
 
+add_test(function test_getRequestedLocale() {
+  Services.prefs.setBoolPref(PREF_MATCH_OS_LOCALE, false);
+  Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "tlh");
+
+  let requestedLocale = localeService.getRequestedLocale();
+  do_check_true(requestedLocale === "tlh", "requestedLocale returns the right value");
+
+  Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "");
+
+  requestedLocale = localeService.getRequestedLocale();
+  do_check_true(requestedLocale === "", "requestedLocale returns empty value value");
+
+  Services.prefs.clearUserPref(PREF_MATCH_OS_LOCALE);
+  Services.prefs.clearUserPref(PREF_SELECTED_LOCALE);
+
+  run_next_test();
+});
+
 add_test(function test_setRequestedLocales() {
   localeService.setRequestedLocales([]);
 

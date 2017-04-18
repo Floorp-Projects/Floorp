@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1312697
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1312697</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1312697">Mozilla Bug 1312697</a>
+<p id="display"></p>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+var loadCount = 0;
+var childWin = window.open('file_SlowPage.sjs', '_blank');
+var targetPos = 0;
+
+// Called by the page in the child window when it's halfway loaded.
+function partiallyLoaded() {
+  if (loadCount == 1) {
+    // Halfway through the first reload, stop loading.
+    childWin.stop();
+    
+    // Force a reflow in the stopped state. This triggers the buggy behaviour. 
+    var newNode = childWin.document.createElement('p');
+    newNode.innerHTML = "Added text.";
+    childWin.document.body.insertBefore(newNode, childWin.document.body.childNodes[0]);
+    
+    childWin.waitForAllPaintsFlushed(function() {
+      // Since we're only partially loaded, we should not have been able to
+      // reach the target scroll position.
+      ok(childWin.scrollY < targetPos, "Expected page to not be fully loaded");
+      
+      // Now re-load again. Continue reading in fullyLoaded(), the 
+      // 'loadCount == 2' case.
+      loadCount++;
+      childWin.location.reload();
+    });
+  }
+}
+
+// Called by the page in the child window when it's fully loaded.
+function fullyLoaded() {
+  if (loadCount == 0) {
+    // Scroll to a target position near the end of the page (past the
+    // half-way point.)
+    targetPos = childWin.scrollMaxY - 100;
+    childWin.scrollTo(0, targetPos);
+    childWin.waitForAllPaintsFlushed(function() {
+      ok(childWin.scrollY == targetPos, "Expected page to have scrolled");
+      
+      // Reload the page.
+      loadCount++;
+      childWin.location.reload();
+      
+      // Next, we'll get into partiallyLoaded(). Read on there.
+    });
+  } else if (loadCount == 2) {
+    // After the second reload is complete, check that the initial target
+    // position was remembered and scrolled to.
+    childWin.waitForAllPaintsFlushed(function() {
+      ok(childWin.scrollY == targetPos, "Expected page to have scrolled to target position");
+      childWin.close();
+      SimpleTest.finish();
+    });
+  }
+}
+
+</script>
+</body>
+</html>

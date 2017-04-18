@@ -69,6 +69,13 @@ ScaledFontWin::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
 }
 
 bool
+UnscaledFontGDI::GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton)
+{
+  aCb(reinterpret_cast<uint8_t*>(&mLogFont), sizeof(mLogFont), aBaton);
+  return true;
+}
+
+bool
 UnscaledFontGDI::GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton)
 {
   aCb(reinterpret_cast<uint8_t*>(&mLogFont), sizeof(mLogFont), aBaton);

@@ -237,7 +237,8 @@ XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun, HandleScript scri
     {
         uint32_t begin = script->sourceStart();
         uint32_t end = script->sourceEnd();
-        uint32_t preludeStart = script->preludeStart();
+        uint32_t toStringStart = script->toStringStart();
+        uint32_t toStringEnd = script->toStringEnd();
         uint32_t lineno = script->lineno();
         uint32_t column = script->column();
 
@@ -245,7 +246,8 @@ XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun, HandleScript scri
             packedFields = lazy->packedFields();
             MOZ_ASSERT(begin == lazy->begin());
             MOZ_ASSERT(end == lazy->end());
-            MOZ_ASSERT(preludeStart == lazy->preludeStart());
+            MOZ_ASSERT(toStringStart == lazy->toStringStart());
+            MOZ_ASSERT(toStringEnd == lazy->toStringEnd());
             MOZ_ASSERT(lineno == lazy->lineno());
             MOZ_ASSERT(column == lazy->column());
             // We can assert we have no inner functions because we don't
@@ -260,7 +262,11 @@ XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun, HandleScript scri
         if (mode == XDR_DECODE) {
             RootedScriptSource sourceObject(cx, &script->scriptSourceUnwrap());
             lazy.set(LazyScript::Create(cx, fun, script, enclosingScope, sourceObject,
-                                        packedFields, begin, end, preludeStart, lineno, column));
+                                        packedFields, begin, end, toStringStart, lineno, column));
+            if (!lazy)
+                return false;
+
+            lazy->setToStringEnd(toStringEnd);
 
             // As opposed to XDRLazyScript, we need to restore the runtime bits
             // of the script, as we are trying to match the fact this function
@@ -545,7 +551,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
             }
         }
 
-        script = JSScript::Create(cx, *options, sourceObject, 0, 0, 0);
+        script = JSScript::Create(cx, *options, sourceObject, 0, 0, 0, 0);
         if (!script)
             return false;
 
@@ -634,7 +640,9 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         return false;
     if (!xdr->codeUint32(&script->sourceEnd_))
         return false;
-    if (!xdr->codeUint32(&script->preludeStart_))
+    if (!xdr->codeUint32(&script->toStringStart_))
+        return false;
+    if (!xdr->codeUint32(&script->toStringEnd_))
         return false;
 
     if (!xdr->codeUint32(&lineno) ||
@@ -955,7 +963,8 @@ js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
     {
         uint32_t begin;
         uint32_t end;
-        uint32_t preludeStart;
+        uint32_t toStringStart;
+        uint32_t toStringEnd;
         uint32_t lineno;
         uint32_t column;
         uint64_t packedFields;
@@ -969,14 +978,16 @@ js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
 
             begin = lazy->begin();
             end = lazy->end();
-            preludeStart = lazy->preludeStart();
+            toStringStart = lazy->toStringStart();
+            toStringEnd = lazy->toStringEnd();
             lineno = lazy->lineno();
             column = lazy->column();
             packedFields = lazy->packedFields();
         }
 
         if (!xdr->codeUint32(&begin) || !xdr->codeUint32(&end) ||
-            !xdr->codeUint32(&preludeStart) ||
+            !xdr->codeUint32(&toStringStart) ||
+            !xdr->codeUint32(&toStringEnd) ||
             !xdr->codeUint32(&lineno) || !xdr->codeUint32(&column) ||
             !xdr->codeUint64(&packedFields))
         {
@@ -985,9 +996,10 @@ js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
 
         if (mode == XDR_DECODE) {
             lazy.set(LazyScript::Create(cx, fun, nullptr, enclosingScope, sourceObject,
-                                        packedFields, begin, end, preludeStart, lineno, column));
+                                        packedFields, begin, end, toStringStart, lineno, column));
             if (!lazy)
                 return false;
+            lazy->setToStringEnd(toStringEnd);
             fun->initLazyScript(lazy);
         }
     }
@@ -1029,6 +1041,15 @@ JSScript::setSourceObject(JSObject* object)
 {
     MOZ_ASSERT(compartment() == object->compartment());
     sourceObject_ = object;
+}
+
+void
+JSScript::setDefaultClassConstructorSpan(JSObject* sourceObject, uint32_t start, uint32_t end)
+{
+    MOZ_ASSERT(isDefaultClassConstructor());
+    setSourceObject(sourceObject);
+    toStringStart_ = start;
+    toStringEnd_ = end;
 }
 
 js::ScriptSourceObject&
@@ -1459,10 +1480,10 @@ JSScript::sourceData(JSContext* cx, HandleScript script)
 }
 
 /* static */ JSFlatString*
-JSScript::sourceDataWithPrelude(JSContext* cx, HandleScript script)
+JSScript::sourceDataForToString(JSContext* cx, HandleScript script)
 {
     MOZ_ASSERT(script->scriptSource()->hasSourceData());
-    return script->scriptSource()->substring(cx, script->preludeStart(), script->sourceEnd());
+    return script->scriptSource()->substring(cx, script->toStringStart(), script->toStringEnd());
 }
 
 UncompressedSourceCache::AutoHoldEntry::AutoHoldEntry()
@@ -2549,9 +2570,15 @@ JSScript::initCompartment(JSContext* cx)
 /* static */ JSScript*
 JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
                  HandleObject sourceObject, uint32_t bufStart, uint32_t bufEnd,
-                 uint32_t preludeStart)
+                 uint32_t toStringStart, uint32_t toStringEnd)
 {
+    // bufStart and bufEnd specify the range of characters parsed by the
+    // Parser to produce this script. toStringStart and toStringEnd specify
+    // the range of characters to be returned for Function.prototype.toString.
     MOZ_ASSERT(bufStart <= bufEnd);
+    MOZ_ASSERT(toStringStart <= toStringEnd);
+    MOZ_ASSERT(toStringStart <= bufStart);
+    MOZ_ASSERT(toStringEnd >= bufEnd);
 
     RootedScript script(cx, Allocate<JSScript>(cx));
     if (!script)
@@ -2571,7 +2598,8 @@ JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
     script->setSourceObject(sourceObject);
     script->sourceStart_ = bufStart;
     script->sourceEnd_ = bufEnd;
-    script->preludeStart_ = preludeStart;
+    script->toStringStart_ = toStringStart;
+    script->toStringEnd_ = toStringEnd;
 
 #ifdef MOZ_VTUNE
     script->vtuneMethodId_ = vtune::GenerateUniqueMethodID();
@@ -3521,7 +3549,7 @@ CreateEmptyScriptForClone(JSContext* cx, HandleScript src)
            .setVersion(src->getVersion());
 
     return JSScript::Create(cx, options, sourceObject, src->sourceStart(), src->sourceEnd(),
-                            src->preludeStart());
+                            src->toStringStart(), src->toStringEnd());
 }
 
 JSScript*
@@ -4074,7 +4102,7 @@ JSScript::formalLivesInArgumentsObject(unsigned argSlot)
 
 LazyScript::LazyScript(JSFunction* fun, void* table, uint64_t packedFields,
                        uint32_t begin, uint32_t end,
-                       uint32_t preludeStart,  uint32_t lineno, uint32_t column)
+                       uint32_t toStringStart, uint32_t lineno, uint32_t column)
   : script_(nullptr),
     function_(fun),
     enclosingScope_(nullptr),
@@ -4083,11 +4111,13 @@ LazyScript::LazyScript(JSFunction* fun, void* table, uint64_t packedFields,
     packedFields_(packedFields),
     begin_(begin),
     end_(end),
-    preludeStart_(preludeStart),
+    toStringStart_(toStringStart),
+    toStringEnd_(end),
     lineno_(lineno),
     column_(column)
 {
     MOZ_ASSERT(begin <= end);
+    MOZ_ASSERT(toStringStart <= begin);
 }
 
 void
@@ -4133,7 +4163,7 @@ LazyScript::maybeForwardedScriptSource() const
 /* static */ LazyScript*
 LazyScript::CreateRaw(JSContext* cx, HandleFunction fun,
                       uint64_t packedFields, uint32_t begin, uint32_t end,
-                      uint32_t preludeStart, uint32_t lineno, uint32_t column)
+                      uint32_t toStringStart, uint32_t lineno, uint32_t column)
 {
     union {
         PackedView p;
@@ -4162,7 +4192,7 @@ LazyScript::CreateRaw(JSContext* cx, HandleFunction fun,
     cx->compartment()->scheduleDelazificationForDebugger();
 
     return new (res) LazyScript(fun, table.forget(), packed, begin, end,
-                                preludeStart, lineno, column);
+                                toStringStart, lineno, column);
 }
 
 /* static */ LazyScript*
@@ -4171,7 +4201,7 @@ LazyScript::Create(JSContext* cx, HandleFunction fun,
                    Handle<GCVector<JSFunction*, 8>> innerFunctions,
                    JSVersion version,
                    uint32_t begin, uint32_t end,
-                   uint32_t preludeStart, uint32_t lineno, uint32_t column)
+                   uint32_t toStringStart, uint32_t lineno, uint32_t column)
 {
     union {
         PackedView p;
@@ -4195,7 +4225,7 @@ LazyScript::Create(JSContext* cx, HandleFunction fun,
     p.isDerivedClassConstructor = false;
     p.needsHomeObject = false;
 
-    LazyScript* res = LazyScript::CreateRaw(cx, fun, packedFields, begin, end, preludeStart,
+    LazyScript* res = LazyScript::CreateRaw(cx, fun, packedFields, begin, end, toStringStart,
                                             lineno, column);
     if (!res)
         return nullptr;
@@ -4217,7 +4247,7 @@ LazyScript::Create(JSContext* cx, HandleFunction fun,
                    HandleScript script, HandleScope enclosingScope,
                    HandleScriptSource sourceObject,
                    uint64_t packedFields, uint32_t begin, uint32_t end,
-                   uint32_t preludeStart, uint32_t lineno, uint32_t column)
+                   uint32_t toStringStart, uint32_t lineno, uint32_t column)
 {
     // Dummy atom which is not a valid property name.
     RootedAtom dummyAtom(cx, cx->names().comma);
@@ -4226,7 +4256,7 @@ LazyScript::Create(JSContext* cx, HandleFunction fun,
     // holding this lazy script.
     HandleFunction dummyFun = fun;
 
-    LazyScript* res = LazyScript::CreateRaw(cx, fun, packedFields, begin, end, preludeStart,
+    LazyScript* res = LazyScript::CreateRaw(cx, fun, packedFields, begin, end, toStringStart,
                                             lineno, column);
     if (!res)
         return nullptr;

@@ -18,6 +18,7 @@
 #include "mozilla/net/DataChannelParent.h"
 #include "mozilla/net/AltDataOutputStreamParent.h"
 #include "mozilla/Unused.h"
+#include "mozilla/net/FileChannelParent.h"
 #ifdef NECKO_PROTOCOL_rtsp
 #include "mozilla/net/RtspControllerParent.h"
 #include "mozilla/net/RtspChannelParent.h"
@@ -520,6 +521,30 @@ NeckoParent::RecvPDataChannelConstructor(PDataChannelParent* actor,
                                          const uint32_t& channelId)
 {
   DataChannelParent* p = static_cast<DataChannelParent*>(actor);
+  DebugOnly<bool> rv = p->Init(channelId);
+  MOZ_ASSERT(rv);
+  return IPC_OK();
+}
+
+PFileChannelParent*
+NeckoParent::AllocPFileChannelParent(const uint32_t &channelId)
+{
+  RefPtr<FileChannelParent> p = new FileChannelParent();
+  return p.forget().take();
+}
+
+bool
+NeckoParent::DeallocPFileChannelParent(PFileChannelParent* actor)
+{
+  RefPtr<FileChannelParent> p = dont_AddRef(static_cast<FileChannelParent*>(actor));
+  return true;
+}
+
+mozilla::ipc::IPCResult
+NeckoParent::RecvPFileChannelConstructor(PFileChannelParent* actor,
+                                         const uint32_t& channelId)
+{
+  FileChannelParent* p = static_cast<FileChannelParent*>(actor);
   DebugOnly<bool> rv = p->Init(channelId);
   MOZ_ASSERT(rv);
   return IPC_OK();

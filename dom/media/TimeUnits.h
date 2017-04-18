@@ -165,6 +165,10 @@ public:
     return mValue.value() > 0;
   }
 
+  bool IsNegative() const {
+    return mValue.value() < 0;
+  }
+
   bool operator == (const TimeUnit& aOther) const {
     MOZ_ASSERT(IsValid() && aOther.IsValid());
     return mValue.value() == aOther.mValue.value();
