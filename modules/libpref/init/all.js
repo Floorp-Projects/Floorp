@@ -1164,7 +1164,11 @@ pref("editor.use_css",                       false);
 pref("editor.css.default_length_unit",       "px");
 pref("editor.resizing.preserve_ratio",       true);
 pref("editor.positioning.offset",            0);
+#ifdef EARLY_BETA_OR_EARLIER
 pref("editor.use_div_for_default_newlines",  true);
+#else
+pref("editor.use_div_for_default_newlines",  false);
+#endif
 
 // Scripts & Windows prefs
 pref("dom.disable_beforeunload",            false);
