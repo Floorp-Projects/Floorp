@@ -27,7 +27,7 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
   , mPseudoStack(mozilla::WrapNotNull(new PseudoStack()))
   , mPlatformData(AllocPlatformData(aThreadId))
   , mStackTop(aStackTop)
-  , mHasProfile(false)
+  , mIsBeingProfiled(false)
   , mLastSample()
 {
   MOZ_COUNT_CTOR(ThreadInfo);
@@ -52,6 +52,19 @@ ThreadInfo::~ThreadInfo()
   MOZ_COUNT_DTOR(ThreadInfo);
 
   delete mPseudoStack;
+}
+
+void
+ThreadInfo::StartProfiling()
+{
+  mIsBeingProfiled = true;
+  mPseudoStack->reinitializeOnResume();
+}
+
+void
+ThreadInfo::StopProfiling()
+{
+  mIsBeingProfiled = false;
 }
 
 void
