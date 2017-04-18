@@ -115,8 +115,6 @@ public:
 
     void ProcessRemoteNativeEventsInInterruptCall() override;
 
-    virtual bool WaitForIPCConnection() { return true; }
-
     nsCString GetHistogramKey() const {
         return mPluginName + mPluginVersion;
     }
@@ -498,8 +496,6 @@ class PluginModuleChromeParent
     void
     EvaluateHangUIState(const bool aReset);
 #endif // XP_WIN
-
-    virtual bool WaitForIPCConnection() override;
 
     void CachedSettingChanged();
 
