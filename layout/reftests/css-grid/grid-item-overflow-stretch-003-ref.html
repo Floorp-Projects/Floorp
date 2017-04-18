@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Reference: margin:auto stretch items</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1348857">
+  <style type="text/css">
+body,html { color:black; background:white; font:16px/1 monospace; padding:0; margin:0; }
+
+.grid {
+  display: inline-grid;
+  width: 100px;
+  height: 50px;
+  grid: 7px 30px 3px / 7px 112px 3px;
+  grid-gap: 5px;
+  border:1px solid;
+}
+.c2 { grid-template-columns: 7px 122px 3px; }
+.h > .grid { grid: 7px 112px 3px / 7px 80px 3px; }
+
+.grid > * {
+  grid-area: 2/2;
+  border:1px solid;
+  margin: 0 auto;
+  justify-self:start;
+  align-self:start;
+  height:28px;
+}
+.c2 > * { height:22px; }
+.h .grid > * {
+  margin: 10px 0 0 10px;
+  justify-self:center;
+  align-self:center;
+  width:5px;
+  height:110px;
+}
+
+.m  { margin: 1px 3px 5px 7px; }
+
+x { display:block; width:110px; height:5px; background:grey; }
+.h .grid x { width:5px; height:110px; }
+
+br { clear:both; }
+  </style>
+</head>
+<body>
+
+<div class="grid"><span class="oa"><x></x></span></div>
+<div class="grid"><span class="os"><x></x></span></div>
+<div class="grid"><span class="oh"><x></x></span></div>
+<div class="grid"><span class="  "><x></x></span></div>
+
+<br>
+
+<div class="grid c2"><span class="m oa"><x></x></span></div>
+<div class="grid c2"><span class="m os"><x></x></span></div>
+<div class="grid c2"><span class="m oh"><x></x></span></div>
+<div class="grid c2"><span class="m   "><x></x></span></div>
+
+<br>
+
+<div class="h">
+
+<div class="grid"><span class="oa"><x></x></span></div>
+<div class="grid"><span class="os"><x></x></span></div>
+<div class="grid"><span class="oh"><x></x></span></div>
+<div class="grid"><span class="  "><x></x></span></div>
+
+<br>
+
+<div class="grid"><span class="m oa"><x></x></span></div>
+<div class="grid"><span class="m os"><x></x></span></div>
+<div class="grid"><span class="m oh"><x></x></span></div>
+<div class="grid"><span class="m   "><x></x></span></div>
+
+<br>
+
+</div>
+
+</body>
+</html>
