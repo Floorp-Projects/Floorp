@@ -73,9 +73,6 @@ child:
   intr SyncNPP_New(PPluginInstance aActor)
     returns (NPError rv);
 
-  // Implements the async plugin init version of NPP_New.
-  async AsyncNPP_New(PPluginInstance aActor);
-
   intr NP_Shutdown()
     returns (NPError rv);
 
