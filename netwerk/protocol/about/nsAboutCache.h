@@ -39,6 +39,7 @@
   NS_IMETHOD GetContentDispositionHeader(nsACString & aContentDispositionHeader) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentDispositionHeader(aContentDispositionHeader); } \
   NS_IMETHOD GetLoadInfo(nsILoadInfo * *aLoadInfo) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLoadInfo(aLoadInfo); } \
   NS_IMETHOD SetLoadInfo(nsILoadInfo *aLoadInfo) override { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLoadInfo(aLoadInfo); } \
+  NS_IMETHOD GetIsDocument(bool *aIsDocument) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetIsDocument(aIsDocument); }; \
 
 class nsAboutCache final : public nsIAboutModule
 {
