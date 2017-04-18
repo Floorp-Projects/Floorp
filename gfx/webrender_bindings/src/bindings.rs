@@ -1226,11 +1226,11 @@ pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState) {
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
-                                          bounds: WrRect,
-                                          overflow: WrRect,
+                                          content_rect: WrRect,
+                                          clip_rect: WrRect,
                                           mask: *const WrImageMask) {
-    let bounds = bounds.to_rect();
-    let overflow = overflow.to_rect();
+    let content_rect = content_rect.to_rect();
+    let clip_rect = clip_rect.to_rect();
     let mask = unsafe { mask.as_ref() };
     let mask = mask.map(|&WrImageMask { image, ref rect, repeat }| {
         ImageMask {
@@ -1239,8 +1239,8 @@ pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
             repeat: repeat,
         }
     });
-    let clip_region = state.frame_builder.dl_builder.new_clip_region(&overflow, vec![], mask);
-    state.frame_builder.dl_builder.push_scroll_layer(clip_region, bounds, None);
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip_rect, vec![], mask);
+    state.frame_builder.dl_builder.push_scroll_layer(clip_region, content_rect, None);
 }
 
 #[no_mangle]

@@ -580,11 +580,11 @@ DisplayListBuilder::PushBuiltDisplayList(BuiltDisplayList dl)
 }
 
 void
-DisplayListBuilder::PushScrollLayer(const WrRect& aBounds,
-                                    const WrRect& aOverflow,
+DisplayListBuilder::PushScrollLayer(const WrRect& aContentRect,
+                                    const WrRect& aClipRect,
                                     const WrImageMask* aMask)
 {
-  wr_dp_push_scroll_layer(mWrState, aBounds, aOverflow, aMask);
+  wr_dp_push_scroll_layer(mWrState, aContentRect, aClipRect, aMask);
 }
 
 void
