@@ -26,7 +26,6 @@ jobs:
             tier: 2
             kind: other
         run-on-projects:
-            - mozilla-aurora
             - mozilla-beta
             - mozilla-release
         deadline-after: 5 days
