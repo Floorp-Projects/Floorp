@@ -178,9 +178,6 @@ protected:
     virtual mozilla::ipc::IPCResult
     RecvNPN_ReloadPlugins(const bool& aReloadPages) override;
 
-    virtual mozilla::ipc::IPCResult
-    RecvNP_InitializeResult(const NPError& aError) override;
-
     static BrowserStreamParent* StreamCast(NPP instance, NPStream* s,
                                            PluginAsyncSurrogate** aSurrogate = nullptr);
 
@@ -515,9 +512,6 @@ class PluginModuleChromeParent
 #endif // XP_WIN
 
     virtual bool WaitForIPCConnection() override;
-
-    virtual mozilla::ipc::IPCResult
-    RecvNP_InitializeResult(const NPError& aError) override;
 
     void CachedSettingChanged();
 
