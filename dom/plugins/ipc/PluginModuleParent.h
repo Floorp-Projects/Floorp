@@ -661,7 +661,6 @@ private:
 
     friend class LaunchedTask;
 
-    bool                mInitOnAsyncConnect;
     nsresult            mAsyncInitRv;
     nsCOMPtr<nsIObserver> mPluginOfflineObserver;
     bool mIsBlocklisted;

@@ -557,33 +557,6 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
     }
 #endif
 
-    if (mInitOnAsyncConnect) {
-        mInitOnAsyncConnect = false;
-        NPError dummyError;
-#if defined(XP_WIN)
-        mAsyncInitRv = NP_GetEntryPoints(mNPPIface,
-                                         &dummyError);
-        if (NS_SUCCEEDED(mAsyncInitRv))
-#endif
-        {
-#if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GONK)
-            mAsyncInitRv = NP_Initialize(mNPNIface,
-                                         mNPPIface,
-                                         &dummyError);
-#else
-            mAsyncInitRv = NP_Initialize(mNPNIface,
-                                         &dummyError);
-#endif
-        }
-
-#if defined(XP_MACOSX)
-        if (NS_SUCCEEDED(mAsyncInitRv)) {
-            mAsyncInitRv = NP_GetEntryPoints(mNPPIface,
-                                             &dummyError);
-        }
-#endif
-    }
-
 #ifdef MOZ_GECKO_PROFILER
     Unused << SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));
 #endif
@@ -692,7 +665,6 @@ PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
     , mFlashProcess2(0)
     , mFinishInitTask(nullptr)
 #endif
-    , mInitOnAsyncConnect(false)
     , mAsyncInitRv(NS_ERROR_NOT_INITIALIZED)
 {
     NS_ASSERTION(mSubprocess, "Out of memory!");
@@ -2193,13 +2165,6 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* 
     mNPNIface = bFuncs;
     mNPPIface = pFuncs;
 
-    if (!mSubprocess->IsConnected()) {
-        // The subprocess isn't connected yet. Defer NP_Initialize until
-        // OnProcessLaunched is invoked.
-        mInitOnAsyncConnect = true;
-        return NS_OK;
-    }
-
     PluginSettings settings;
     GetSettings(&settings);
 
@@ -2261,21 +2226,6 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
     nsresult rv = PluginModuleParent::NP_Initialize(bFuncs, error);
     if (NS_FAILED(rv))
         return rv;
-
-#if defined(XP_MACOSX)
-    if (!mSubprocess->IsConnected()) {
-        // The subprocess isn't connected yet. Defer NP_Initialize until
-        // OnProcessLaunched is invoked.
-        mInitOnAsyncConnect = true;
-        *error = NPERR_NO_ERROR;
-        return NS_OK;
-    }
-#else
-    if (mInitOnAsyncConnect) {
-        *error = NPERR_NO_ERROR;
-        return NS_OK;
-    }
-#endif
 
     PluginSettings settings;
     GetSettings(&settings);
@@ -2414,17 +2364,9 @@ PluginModuleParent::NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error)
 nsresult
 PluginModuleChromeParent::NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error)
 {
-#if defined(XP_MACOSX)
-    if (mInitOnAsyncConnect) {
-        PluginAsyncSurrogate::NP_GetEntryPoints(pFuncs);
-        mNPPIface = pFuncs;
-        *error = NPERR_NO_ERROR;
-        return NS_OK;
-    }
-#else
+#if !defined(XP_MACOSX)
     if (!mSubprocess->IsConnected()) {
         mNPPIface = pFuncs;
-        mInitOnAsyncConnect = true;
         *error = NPERR_NO_ERROR;
         return NS_OK;
     }
