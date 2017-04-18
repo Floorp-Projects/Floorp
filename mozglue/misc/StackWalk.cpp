@@ -222,6 +222,11 @@ struct WalkStackData
 DWORD gStackWalkThread;
 CRITICAL_SECTION gDbgHelpCS;
 
+#ifdef _M_AMD64
+static uint8_t* sJitCodeRegionStart;
+static size_t sJitCodeRegionSize;
+#endif
+
 // Routine to print an error message to standard error.
 static void
 PrintError(const char* aPrefix)
@@ -397,6 +402,14 @@ WalkStackMain64(struct WalkStackData* aData)
     }
 
 #elif defined(_M_AMD64)
+    // If we reach a frame in JIT code, we don't have enough information to
+    // unwind, so we have to give up.
+    if (sJitCodeRegionStart &&
+        (uint8_t*)context.Rip >= sJitCodeRegionStart &&
+        (uint8_t*)context.Rip < sJitCodeRegionStart + sJitCodeRegionSize) {
+      break;
+    }
+
     // 64-bit frame unwinding.
     // Try to look up unwind metadata for the current function.
     ULONG64 imageBase;
@@ -499,6 +512,33 @@ ReleaseStackWalkWorkaroundLock()
   LeaveCriticalSection(&gWorkaroundLock.lock);
 #endif
 }
+
+MFBT_API void
+RegisterJitCodeRegion(uint8_t* aStart, size_t aSize)
+{
+#ifdef _M_AMD64
+  // Currently we can only handle one JIT code region at a time
+  MOZ_RELEASE_ASSERT(!sJitCodeRegionStart);
+
+  sJitCodeRegionStart = aStart;
+  sJitCodeRegionSize = aSize;
+#endif
+}
+
+MFBT_API void
+UnregisterJitCodeRegion(uint8_t* aStart, size_t aSize)
+{
+#ifdef _M_AMD64
+  // Currently we can only handle one JIT code region at a time
+  MOZ_RELEASE_ASSERT(sJitCodeRegionStart &&
+                     sJitCodeRegionStart == aStart &&
+                     sJitCodeRegionSize == aSize);
+
+  sJitCodeRegionStart = nullptr;
+  sJitCodeRegionSize = 0;
+#endif
+}
+
 
 static unsigned int WINAPI
 WalkStackThread(void* aData)
