@@ -3044,6 +3044,7 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
   }
 
   if (nsWindowType::eWindowType_toplevel == window->mWindowType &&
+      mTransparencyMode != aMode &&
       !nsUXThemeData::CheckForCompositor()) {
       NS_WARNING("Cannot set transparency mode on top-level windows.");
       return;
