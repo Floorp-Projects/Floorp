@@ -29,7 +29,7 @@ namespace console {
   // Grouping
   void group(any... data);
   void groupCollapsed(any... data);
-  void groupEnd(any... data); // TODO: fix in the following patch
+  void groupEnd();
 
   // Timing
   void time(optional any time); // TODO: fix in the following patch
