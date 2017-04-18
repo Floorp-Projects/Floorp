@@ -310,6 +310,17 @@ function getJsPropertyName(cssPropertyName) {
 exports.getJsPropertyName = getJsPropertyName;
 
 /**
+ * Turn propertyName into property-name.
+ * @param {String} jsPropertyName A camelcased CSS property name. Typically
+ * something that comes out of computed styles. E.g. borderBottomColor
+ * @return {String} The corresponding CSS property name: border-bottom-color
+ */
+function getCssPropertyName(jsPropertyName) {
+  return jsPropertyName.replace(/[A-Z]/g, "-$&").toLowerCase();
+}
+exports.getCssPropertyName = getCssPropertyName;
+
+/**
  * Get a formatted title for this animation. This will be either:
  * "some-name", "some-name : CSS Transition", "some-name : CSS Animation",
  * "some-name : Script Animation", or "Script Animation", depending
