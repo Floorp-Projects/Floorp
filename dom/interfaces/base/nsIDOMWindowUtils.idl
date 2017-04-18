@@ -1558,6 +1558,13 @@ interface nsIDOMWindowUtils : nsISupports {
                                   in AString value2);
 
   /**
+   * Returns the animation type of the specified property (e.g. 'coord').
+   *
+   * @param aProperty A longhand CSS property (e.g. 'background-color').
+   */
+  AString getAnimationTypeForLonghand(in AString aProperty);
+
+  /**
    * Get the type of the currently focused html input, if any.
    */
   readonly attribute string focusedInputType;
