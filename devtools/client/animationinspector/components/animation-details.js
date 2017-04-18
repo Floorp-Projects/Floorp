@@ -248,11 +248,27 @@ AnimationDetails.prototype = {
       parent: this.containerEl,
       attributes: { "class": "animated-properties-body" }
     });
+
+    // Move unchanged value animation to bottom in the list.
+    const propertyNames = [];
+    const unchangedPropertyNames = [];
     for (let propertyName in this.tracks) {
+      if (!isUnchangedProperty(this.tracks[propertyName])) {
+        propertyNames.push(propertyName);
+      } else {
+        unchangedPropertyNames.push(propertyName);
+      }
+    }
+    Array.prototype.push.apply(propertyNames, unchangedPropertyNames);
+
+    for (let propertyName of propertyNames) {
       let line = createNode({
         parent: bodyEl,
         attributes: {"class": "property"}
       });
+      if (unchangedPropertyNames.includes(propertyName)) {
+        line.classList.add("unchanged");
+      }
       let {warning, className} =
         this.getPerfDataForProperty(this.animation, propertyName);
       createNode({
@@ -329,3 +345,13 @@ AnimationDetails.prototype = {
     return this.containerEl.ownerDocument.defaultView;
   }
 };
+
+function isUnchangedProperty(values) {
+  const firstValue = values[0].value;
+  for (let i = 1; i < values.length; i++) {
+    if (values[i].value !== firstValue) {
+      return false;
+    }
+  }
+  return true;
+}
