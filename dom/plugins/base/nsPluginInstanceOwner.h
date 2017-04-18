@@ -270,7 +270,6 @@ public:
 #endif
 
   void NotifyHostAsyncInitFailed();
-  void NotifyDestroyPending();
 
   bool GetCompositionString(uint32_t aIndex, nsTArray<uint8_t>* aString,
                             int32_t* aLength);
