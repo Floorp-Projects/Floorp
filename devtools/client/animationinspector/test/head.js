@@ -381,11 +381,11 @@ function* clickOnAnimation(panel, index, shouldClose) {
                                          ? "animation-unselected"
                                          : "animation-selected");
 
-  // If we're opening the animation, also wait for the keyframes-retrieved
-  // event.
+  // If we're opening the animation, also wait for
+  // the animation-detail-rendering-completed event.
   let onReady = shouldClose
                 ? Promise.resolve()
-                : timeline.details[index].once("keyframes-retrieved");
+                : timeline.details[index].once("animation-detail-rendering-completed");
 
   info("Click on animation " + index + " in the timeline");
   let timeBlock = timeline.rootWrapperEl.querySelectorAll(".time-block")[index];
