@@ -2675,7 +2675,8 @@ profiler_is_active()
 void
 profiler_set_frame_number(int aFrameNumber)
 {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  // This function runs both on (via tests) and off the main thread.
+
   MOZ_RELEASE_ASSERT(gPS);
 
   PS::AutoLock lock(gPSMutex);
