@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const nsIFilePicker = Components.interfaces.nsIFilePicker;
-const nsFilePicker = "@mozilla.org/filepicker;1";
 const nsIPKCS11Slot = Components.interfaces.nsIPKCS11Slot;
 const nsIPKCS11Module = Components.interfaces.nsIPKCS11Module;
 const nsPKCS11ModuleDB = "@mozilla.org/security/pkcs11moduledb;1";
@@ -396,37 +394,6 @@ function changePassword() {
                     params);
   showSlotInfo();
   enableButtons();
-}
-
-// browse fs for PKCS#11 device
-function doBrowseFiles() {
-  var srbundle = document.getElementById("pippki_bundle");
-  var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
-  fp.init(window,
-          srbundle.getString("loadPK11TokenDialog"),
-          nsIFilePicker.modeOpen);
-  fp.appendFilters(nsIFilePicker.filterAll);
-  if (fp.show() == nsIFilePicker.returnOK) {
-    var pathbox = document.getElementById("device_path");
-    pathbox.setAttribute("value", fp.file.path);
-  }
-}
-
-function doLoadDevice() {
-  var name_box = document.getElementById("device_name");
-  var path_box = document.getElementById("device_path");
-  try {
-    getPKCS11().addModule(name_box.value, path_box.value, 0, 0);
-  } catch (e) {
-    if (e.result == Components.results.NS_ERROR_ILLEGAL_VALUE) {
-      doPrompt(getNSSString("AddModuleDup"));
-    } else {
-      doPrompt(getNSSString("AddModuleFailure"));
-    }
-
-    return false;
-  }
-  return true;
 }
 
 // -------------------------------------   Old code
