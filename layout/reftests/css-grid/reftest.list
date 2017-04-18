@@ -277,3 +277,5 @@ asserts(1-10) == grid-fragmentation-dyn4-021.html grid-fragmentation-021-ref.htm
 == grid-percent-intrinsic-sizing-001.html grid-percent-intrinsic-sizing-001-ref.html
 == grid-measuring-reflow-resize-static-001.html grid-measuring-reflow-resize-001-ref.html
 == grid-measuring-reflow-resize-dynamic-001.html grid-measuring-reflow-resize-001-ref.html
+== bug1349571.html bug1349571-ref.html
+== bug1356820.html bug1356820-ref.html
