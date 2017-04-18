@@ -12,7 +12,6 @@
 #include "mozilla/Preferences.h"
 
 #include "nsError.h"
-#include "nsDOMString.h"
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
@@ -67,10 +66,12 @@ using namespace mozilla::dom;
 
 already_AddRefed<nsComputedDOMStyle>
 NS_NewComputedDOMStyle(dom::Element* aElement, const nsAString& aPseudoElt,
-                       nsIPresShell* aPresShell)
+                       nsIPresShell* aPresShell,
+                       nsComputedDOMStyle::AnimationFlag aFlag)
 {
   RefPtr<nsComputedDOMStyle> computedStyle;
-  computedStyle = new nsComputedDOMStyle(aElement, aPseudoElt, aPresShell);
+  computedStyle = new nsComputedDOMStyle(aElement, aPseudoElt,
+                                         aPresShell, aFlag);
   return computedStyle.forget();
 }
 
@@ -243,7 +244,8 @@ nsComputedStyleMap::Update()
 
 nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
                                        const nsAString& aPseudoElt,
-                                       nsIPresShell* aPresShell)
+                                       nsIPresShell* aPresShell,
+                                       AnimationFlag aFlag)
   : mDocumentWeak(nullptr)
   , mOuterFrame(nullptr)
   , mInnerFrame(nullptr)
@@ -251,38 +253,13 @@ nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
   , mStyleContextGeneration(0)
   , mExposeVisitedStyle(false)
   , mResolvedStyleContext(false)
+  , mAnimationFlag(aFlag)
 {
   MOZ_ASSERT(aElement && aPresShell);
 
   mDocumentWeak = do_GetWeakReference(aPresShell->GetDocument());
-
   mContent = aElement;
-
-  if (!DOMStringIsNull(aPseudoElt) && !aPseudoElt.IsEmpty() &&
-      aPseudoElt.First() == char16_t(':')) {
-    // deal with two-colon forms of aPseudoElt
-    nsAString::const_iterator start, end;
-    aPseudoElt.BeginReading(start);
-    aPseudoElt.EndReading(end);
-    NS_ASSERTION(start != end, "aPseudoElt is not empty!");
-    ++start;
-    bool haveTwoColons = true;
-    if (start == end || *start != char16_t(':')) {
-      --start;
-      haveTwoColons = false;
-    }
-    mPseudo = NS_Atomize(Substring(start, end));
-    MOZ_ASSERT(mPseudo);
-
-    // There aren't any non-CSS2 pseudo-elements with a single ':'
-    if (!haveTwoColons &&
-        (!nsCSSPseudoElements::IsPseudoElement(mPseudo) ||
-         !nsCSSPseudoElements::IsCSS2PseudoElement(mPseudo))) {
-      // XXXbz I'd really rather we threw an exception or something, but
-      // the DOM spec sucks.
-      mPseudo = nullptr;
-    }
-  }
+  mPseudo = nsCSSPseudoElements::GetPseudoAtom(aPseudoElt);
 
   MOZ_ASSERT(aPresShell->GetPresContext());
 }
@@ -845,6 +822,17 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
     SetResolvedStyleContext(Move(resolvedStyleContext));
     NS_ASSERTION(mPseudo || !mStyleContext->HasPseudoElementData(),
                  "should not have pseudo-element data");
+  }
+
+  if (mAnimationFlag == eWithoutAnimation) {
+    // We will support Servo in bug 1311257.
+    MOZ_ASSERT(mPresShell->StyleSet()->IsGecko(),
+               "eWithoutAnimationRules support Gecko only");
+    nsStyleSet* styleSet = mPresShell->StyleSet()->AsGecko();
+    RefPtr<nsStyleContext> unanimatedStyleContext =
+      styleSet->ResolveStyleByRemovingAnimation(
+        mContent->AsElement(), mStyleContext, eRestyle_AllHintsWithAnimations);
+    SetResolvedStyleContext(Move(unanimatedStyleContext));
   }
 
   // mExposeVisitedStyle is set to true only by testing APIs that
