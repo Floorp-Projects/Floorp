@@ -24,7 +24,7 @@
   <script type="application/javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/javascript" src="chrome://browser/content/browser-places.js"/>
   <script type="application/javascript" src="chrome://browser/content/browser-social.js"/>
-  <script type="application/javascript" src="chrome://browser/content/browser-fxaccounts.js"/>
+  <script type="application/javascript" src="chrome://browser/content/browser-sync.js"/>
   <script type="application/javascript" src="chrome://browser/content/nsContextMenu.js"/>
   <script type="application/javascript" src="chrome://browser/content/webext-panels.js"/>
 
