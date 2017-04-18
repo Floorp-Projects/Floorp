@@ -26,8 +26,6 @@ const L10N =
 function AnimationDetails(serverTraits) {
   EventEmitter.decorate(this);
 
-  this.onFrameSelected = this.onFrameSelected.bind(this);
-
   this.keyframeComponents = [];
   this.serverTraits = serverTraits;
 }
@@ -53,7 +51,6 @@ AnimationDetails.prototype = {
 
   unrender: function () {
     for (let component of this.keyframeComponents) {
-      component.off("frame-selected", this.onFrameSelected);
       component.destroy();
     }
     this.keyframeComponents = [];
@@ -207,11 +204,6 @@ AnimationDetails.prototype = {
     this.emit("animation-detail-rendering-completed");
   }),
 
-  onFrameSelected: function (e, args) {
-    // Relay the event up, it's needed in parents too.
-    this.emit(e, args);
-  },
-
   renderAnimatedPropertiesHeader: function () {
     // Add animated property header.
     const headerEl = createNode({
@@ -294,7 +286,6 @@ AnimationDetails.prototype = {
         animation: this.animation,
         animationType: animationTypes[propertyName]
       });
-      keyframesComponent.on("frame-selected", this.onFrameSelected);
       this.keyframeComponents.push(keyframesComponent);
     }
   },

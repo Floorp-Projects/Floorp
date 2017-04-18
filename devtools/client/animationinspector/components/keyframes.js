@@ -21,7 +21,6 @@ let LINEAR_GRADIENT_ID_COUNTER = 0;
  */
 function Keyframes() {
   EventEmitter.decorate(this);
-  this.onClick = this.onClick.bind(this);
 }
 
 exports.Keyframes = Keyframes;
@@ -34,12 +33,9 @@ Keyframes.prototype = {
       parent: this.containerEl,
       attributes: {"class": "keyframes"}
     });
-
-    this.containerEl.addEventListener("click", this.onClick);
   },
 
   destroy: function () {
-    this.containerEl.removeEventListener("click", this.onClick);
     this.keyframesEl.remove();
     this.containerEl = this.keyframesEl = this.animation = null;
   },
@@ -99,22 +95,6 @@ Keyframes.prototype = {
         }
       });
     }
-  },
-
-  onClick: function (e) {
-    // If the click happened on a frame, tell our parent about it.
-    if (!e.target.classList.contains("frame")) {
-      return;
-    }
-
-    e.stopPropagation();
-    this.emit("frame-selected", {
-      animation: this.animation,
-      propertyName: this.propertyName,
-      offset: parseFloat(e.target.dataset.offset),
-      value: e.target.getAttribute("title"),
-      x: e.target.offsetLeft + e.target.closest(".frames").offsetLeft
-    });
   }
 };
 
