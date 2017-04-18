@@ -414,15 +414,6 @@ pref("media.realtime_decoder.enabled", true);
 // TCPSocket
 pref("dom.mozTCPSocket.enabled", true);
 
-// "Preview" landing of bug 710563, which is bogged down in analysis
-// of talos regression.  This is a needed change for higher-framerate
-// CSS animations, and incidentally works around an apparent bug in
-// our handling of requestAnimationFrame() listeners, which are
-// supposed to enable this REPEATING_PRECISE_CAN_SKIP behavior.  The
-// secondary bug isn't really worth investigating since it's obseleted
-// by bug 710563.
-pref("layout.frame_rate.precise", true);
-
 // Handle hardware buttons in the b2g chrome package
 pref("b2g.keys.menu.enabled", true);
 

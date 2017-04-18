@@ -13,6 +13,7 @@
 #include "OCSPCache.h"
 #include "ScopedNSSTypes.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "pkix/pkixtypes.h"
 
@@ -185,8 +186,10 @@ public:
     TelemetryOnly = 1,
   };
 
-  CertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc,
-               OcspGetConfig ogc, uint32_t certShortLifetimeInDays,
+  CertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc, OcspGetConfig ogc,
+               mozilla::TimeDuration ocspTimeoutSoft,
+               mozilla::TimeDuration ocspTimeoutHard,
+               uint32_t certShortLifetimeInDays,
                PinningMode pinningMode, SHA1Mode sha1Mode,
                BRNameMatchingPolicy::Mode nameMatchingMode,
                NetscapeStepUpPolicy netscapeStepUpPolicy,
@@ -198,6 +201,8 @@ public:
   const OcspDownloadConfig mOCSPDownloadConfig;
   const bool mOCSPStrict;
   const bool mOCSPGETEnabled;
+  const mozilla::TimeDuration mOCSPTimeoutSoft;
+  const mozilla::TimeDuration mOCSPTimeoutHard;
   const uint32_t mCertShortLifetimeInDays;
   const PinningMode mPinningMode;
   const SHA1Mode mSHA1Mode;

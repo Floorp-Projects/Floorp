@@ -1182,7 +1182,9 @@ class RunProgram(MachCommandBase):
                 args.append('-profile')
                 args.append(path)
 
-        extra_env = {}
+        extra_env = {
+            'MOZ_DEVELOPER_REPO_DIR': self.topsrcdir,
+        }
 
         if not enable_crash_reporter:
             extra_env['MOZ_CRASHREPORTER_DISABLE'] = '1'
@@ -1664,8 +1666,8 @@ class PackageFrontend(MachCommandBase):
 
             # TODO: move to the taskcluster package
             def tasks(kind):
-                kind_path = mozpath.join('taskcluster', 'ci', kind)
-                with open(mozpath.join(self.topsrcdir, kind_path, 'kind.yml')) as f:
+                kind_path = mozpath.join(self.topsrcdir, 'taskcluster', 'ci', kind)
+                with open(mozpath.join(kind_path, 'kind.yml')) as f:
                     config = yaml.load(f)
                     tasks = Kind(kind, kind_path, config).load_tasks(params, {})
                     return {
@@ -1704,8 +1706,9 @@ class PackageFrontend(MachCommandBase):
                     name = name[len('public/'):]
                     if name.startswith('logs/'):
                         continue
+                    name = os.path.basename(name)
                     records[name] = DownloadRecord(
-                        get_artifact_url(task_id, 'public/{}'.format(name)),
+                        get_artifact_url(task_id, artifact['name']),
                         name, None, None, None, unpack=True)
 
         for record in records.itervalues():
@@ -1776,7 +1779,8 @@ class PackageFrontend(MachCommandBase):
 
         if not downloaded:
             self.log(logging.ERROR, 'artifact', {}, 'Nothing to download')
-            return 1
+            if files:
+                return 1
 
         return 0
 

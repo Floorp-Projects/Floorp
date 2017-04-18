@@ -401,13 +401,14 @@ AsyncScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
 }
 
 nsresult
-mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri, JSObject* targetObjArg,
+mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri,
+                                      HandleObject targetObj,
                                       const nsAString& charset,
-                                      nsIIOService* serv, bool reuseGlobal,
-                                      bool cache, MutableHandleValue retval)
+                                      nsIIOService* serv,
+                                      bool reuseGlobal,
+                                      bool cache,
+                                      MutableHandleValue retval)
 {
-    RootedObject targetObj(RootingCx(), targetObjArg);
-
     nsCOMPtr<nsIGlobalObject> globalObject = xpc::NativeGlobal(targetObj);
     ErrorResult result;
 
@@ -461,16 +462,18 @@ mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri, JSObject* targetObjArg,
 }
 
 bool
-mozJSSubScriptLoader::ReadScript(nsIURI* uri, JSContext* cx, JSObject* targetObjArg,
-                                 const nsAString& charset, const char* uriStr,
-                                 nsIIOService* serv, nsIPrincipal* principal,
-                                 bool reuseGlobal, JS::MutableHandleScript script,
-                                 JS::MutableHandleFunction function)
+mozJSSubScriptLoader::ReadScript(nsIURI* uri,
+                                 JSContext* cx,
+                                 HandleObject targetObj,
+                                 const nsAString& charset,
+                                 const char* uriStr,
+                                 nsIIOService* serv,
+                                 bool reuseGlobal,
+                                 MutableHandleScript script,
+                                 MutableHandleFunction function)
 {
     script.set(nullptr);
     function.set(nullptr);
-
-    RootedObject targetObj(cx, targetObjArg);
 
     // We create a channel and call SetContentType, to avoid expensive MIME type
     // lookups (bug 632490).
@@ -689,7 +692,7 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
     if (!script) {
         if (!ReadScript(uri, cx, targetObj, options.charset,
                         static_cast<const char*>(uriStr.get()), serv,
-                        principal, reusingGlobal, &script, &function))
+                        reusingGlobal, &script, &function))
         {
             return NS_OK;
         }

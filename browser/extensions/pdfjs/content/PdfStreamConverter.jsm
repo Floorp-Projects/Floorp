@@ -314,7 +314,7 @@ class ChromeActions {
   }
 
   getLocale() {
-    return getStringPref("general.useragent.locale", "en-US");
+    return Services.locale.getRequestedLocale() || "en-US";
   }
 
   getStrings(data) {

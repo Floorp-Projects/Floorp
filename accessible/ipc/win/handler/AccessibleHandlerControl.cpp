@@ -22,6 +22,103 @@ namespace a11y {
 
 mscom::SingletonFactory<AccessibleHandlerControl> gControlFactory;
 
+namespace detail {
+
+TextChange::TextChange()
+  : mIA2UniqueId(0)
+  , mIsInsert(false)
+  , mText()
+{
+}
+
+TextChange::TextChange(long aIA2UniqueId, bool aIsInsert,
+                       NotNull<IA2TextSegment*> aText)
+  : mIA2UniqueId(aIA2UniqueId)
+  , mIsInsert(aIsInsert)
+  , mText{BSTRCopy(aText->text), aText->start, aText->end}
+{
+}
+
+TextChange::TextChange(TextChange&& aOther)
+  : mText()
+{
+  *this = Move(aOther);
+}
+
+TextChange::TextChange(const TextChange& aOther)
+  : mText()
+{
+  *this = aOther;
+}
+
+TextChange&
+TextChange::operator=(TextChange&& aOther)
+{
+  mIA2UniqueId = aOther.mIA2UniqueId;
+  mIsInsert = aOther.mIsInsert;
+  aOther.mIA2UniqueId = 0;
+  ::SysFreeString(mText.text);
+  mText = aOther.mText;
+  aOther.mText.text = nullptr;
+  return *this;
+}
+
+TextChange&
+TextChange::operator=(const TextChange& aOther)
+{
+  mIA2UniqueId = aOther.mIA2UniqueId;
+  mIsInsert = aOther.mIsInsert;
+  ::SysFreeString(mText.text);
+  mText = {BSTRCopy(aOther.mText.text), aOther.mText.start, aOther.mText.end};
+  return *this;
+}
+
+TextChange::~TextChange()
+{
+  ::SysFreeString(mText.text);
+}
+
+HRESULT
+TextChange::GetOld(long aIA2UniqueId, NotNull<IA2TextSegment*> aOutOldSegment)
+{
+  if (mIsInsert || aIA2UniqueId != mIA2UniqueId) {
+    return S_OK;
+  }
+
+  return SegCopy(*aOutOldSegment, mText);
+}
+
+HRESULT
+TextChange::GetNew(long aIA2UniqueId, NotNull<IA2TextSegment*> aOutNewSegment)
+{
+  if (!mIsInsert || aIA2UniqueId != mIA2UniqueId) {
+    return S_OK;
+  }
+
+  return SegCopy(*aOutNewSegment, mText);
+}
+
+/* static */ BSTR
+TextChange::BSTRCopy(const BSTR& aIn)
+{
+  return ::SysAllocStringLen(aIn, ::SysStringLen(aIn));
+}
+
+/* static */ HRESULT
+TextChange::SegCopy(IA2TextSegment& aDest, const IA2TextSegment& aSrc)
+{
+  aDest = {BSTRCopy(aSrc.text), aSrc.start, aSrc.end};
+  if (aSrc.text && !aDest.text) {
+    return E_OUTOFMEMORY;
+  }
+  if (!::SysStringLen(aDest.text)) {
+    return S_FALSE;
+  }
+  return S_OK;
+}
+
+} // namespace detail
+
 HRESULT
 AccessibleHandlerControl::Create(AccessibleHandlerControl** aOutObject)
 {
@@ -35,52 +132,50 @@ AccessibleHandlerControl::Create(AccessibleHandlerControl** aOutObject)
 }
 
 AccessibleHandlerControl::AccessibleHandlerControl()
-  : mRefCnt(0)
-  , mCacheGen(0)
+  : mCacheGen(0)
   , mIA2Proxy(mscom::RegisterProxy(L"ia2marshal.dll"))
   , mHandlerProxy(mscom::RegisterProxy())
 {
   MOZ_ASSERT(mIA2Proxy);
 }
 
-HRESULT
-AccessibleHandlerControl::QueryInterface(REFIID aIid, void** aOutInterface)
-{
-  if (!aOutInterface) {
-    return E_INVALIDARG;
-  }
-
-  if (aIid == IID_IUnknown || aIid == IID_IHandlerControl) {
-    RefPtr<IHandlerControl> ctl(this);
-    ctl.forget(aOutInterface);
-    return S_OK;
-  }
-
-  *aOutInterface = nullptr;
-  return E_NOINTERFACE;
-}
-
-ULONG
-AccessibleHandlerControl::AddRef()
-{
-  return ++mRefCnt;
-}
-
-ULONG
-AccessibleHandlerControl::Release()
-{
-  ULONG result = --mRefCnt;
-  if (!result) {
-    delete this;
-  }
-  return result;
-}
+IMPL_IUNKNOWN1(AccessibleHandlerControl, IHandlerControl)
 
 HRESULT
 AccessibleHandlerControl::Invalidate()
 {
   ++mCacheGen;
   return S_OK;
+}
+
+HRESULT
+AccessibleHandlerControl::OnTextChange(long aHwnd, long aIA2UniqueId,
+                                       VARIANT_BOOL aIsInsert,
+                                       IA2TextSegment* aText)
+{
+  if (!aText) {
+    return E_INVALIDARG;
+  }
+
+  mTextChange = detail::TextChange(aIA2UniqueId, aIsInsert, WrapNotNull(aText));
+  NotifyWinEvent(aIsInsert ? IA2_EVENT_TEXT_INSERTED : IA2_EVENT_TEXT_REMOVED,
+                 reinterpret_cast<HWND>(static_cast<uintptr_t>(aHwnd)),
+                 OBJID_CLIENT, aIA2UniqueId);
+  return S_OK;
+}
+
+HRESULT
+AccessibleHandlerControl::GetNewText(long aIA2UniqueId,
+                                     NotNull<IA2TextSegment*> aOutNewText)
+{
+  return mTextChange.GetNew(aIA2UniqueId, aOutNewText);
+}
+
+HRESULT
+AccessibleHandlerControl::GetOldText(long aIA2UniqueId,
+                                     NotNull<IA2TextSegment*> aOutOldText)
+{
+  return mTextChange.GetOld(aIA2UniqueId, aOutOldText);
 }
 
 HRESULT

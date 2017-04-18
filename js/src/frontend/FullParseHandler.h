@@ -323,8 +323,10 @@ class FullParseHandler
         return literal;
     }
 
-    ParseNode* newClass(ParseNode* name, ParseNode* heritage, ParseNode* methodBlock) {
-        return new_<ClassNode>(name, heritage, methodBlock);
+    ParseNode* newClass(ParseNode* name, ParseNode* heritage, ParseNode* methodBlock,
+                        const TokenPos& pos)
+    {
+        return new_<ClassNode>(name, heritage, methodBlock, pos);
     }
     ParseNode* newClassMethodList(uint32_t begin) {
         return new_<ListNode>(PNK_CLASSMETHODLIST, TokenPos(begin, begin + 1));

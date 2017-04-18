@@ -168,6 +168,11 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                                          ctx,
                                          visibleRegion.ToUnknownRegion(), visibleRegion.ToUnknownRegion(),
                                          DrawRegionClip::DRAW, nsIntRegion(), Manager()->GetPaintedLayerCallbackData());
+
+    if (gfxPrefs::WebRenderHighlightPaintedLayers()) {
+      target->SetTransform(Matrix());
+      target->FillRect(Rect(0, 0, imageSize.width, imageSize.height), ColorPattern(Color(1.0, 0.0, 0.0, 0.5)));
+    }
   }
 
   if (!helper.UpdateImage()) {

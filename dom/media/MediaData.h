@@ -19,6 +19,7 @@
 #include "nsTArray.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/PodOperations.h"
+#include "TimeUnits.h"
 
 namespace mozilla {
 
@@ -295,7 +296,7 @@ public:
     , mOffset(aOffset)
     , mTime(aTimestamp)
     , mTimecode(aTimestamp)
-    , mDuration(aDuration)
+    , mDuration(media::TimeUnit::FromMicroseconds(aDuration))
     , mFrames(aFrames)
     , mKeyframe(false)
   {
@@ -315,14 +316,17 @@ public:
   int64_t mTimecode;
 
   // Duration of sample, in microseconds.
-  int64_t mDuration;
+  media::TimeUnit mDuration;
 
   // Amount of frames for contained data.
   const uint32_t mFrames;
 
   bool mKeyframe;
 
-  int64_t GetEndTime() const { return mTime + mDuration; }
+  media::TimeUnit GetEndTime() const
+  {
+    return media::TimeUnit::FromMicroseconds(mTime) + mDuration;
+  }
 
   bool AdjustForStartTime(int64_t aStartTime)
   {
@@ -350,7 +354,6 @@ protected:
     , mOffset(0)
     , mTime(0)
     , mTimecode(0)
-    , mDuration(0)
     , mFrames(aFrames)
     , mKeyframe(false)
   {
@@ -489,7 +492,7 @@ public:
     ImageContainer* aContainer,
     int64_t aOffset,
     int64_t aTime,
-    int64_t aDuration,
+    const media::TimeUnit& aDuration,
     const YCbCrBuffer& aBuffer,
     bool aKeyframe,
     int64_t aTimecode,
@@ -500,7 +503,7 @@ public:
     ImageContainer* aContainer,
     int64_t aOffset,
     int64_t aTime,
-    int64_t aDuration,
+    const media::TimeUnit& aDuration,
     const YCbCrBuffer& aBuffer,
     const YCbCrBuffer::Plane& aAlphaPlane,
     bool aKeyframe,
@@ -511,7 +514,7 @@ public:
     const VideoInfo& aInfo,
     int64_t aOffset,
     int64_t aTime,
-    int64_t aDuration,
+    const media::TimeUnit& aDuration,
     layers::TextureClient* aBuffer,
     bool aKeyframe,
     int64_t aTimecode,
@@ -521,7 +524,7 @@ public:
     const IntSize& aDisplay,
     int64_t aOffset,
     int64_t aTime,
-    int64_t aDuration,
+    const media::TimeUnit& aDuration,
     const RefPtr<Image>& aImage,
     bool aKeyframe,
     int64_t aTimecode);
@@ -558,8 +561,8 @@ public:
   void MarkSentToCompositor();
   bool IsSentToCompositor() { return mSentToCompositor; }
 
-  void UpdateDuration(int64_t aDuration);
-  void UpdateTimestamp(int64_t aTimestamp);
+  void UpdateDuration(const media::TimeUnit& aDuration);
+  void UpdateTimestamp(const media::TimeUnit& aTimestamp);
 
 protected:
   ~VideoData();

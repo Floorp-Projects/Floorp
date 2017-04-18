@@ -11,6 +11,7 @@ complexities of worker implementations, scopes, and treeherder annotations.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import json
+import os
 import time
 from copy import deepcopy
 
@@ -19,6 +20,7 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import validate_schema, Schema
 from taskgraph.util.scriptworker import get_release_config
 from voluptuous import Any, Required, Optional, Extra
+from taskgraph import GECKO
 
 from .gecko_v2_whitelist import JOB_NAME_WHITELIST, JOB_NAME_WHITELIST_ERROR
 
@@ -968,7 +970,7 @@ def build_task(config, tasks):
 # go away once Mozharness builds are no longer performed in Buildbot, and the
 # Mozharness code referencing routes.json is deleted.
 def check_v2_routes():
-    with open("testing/mozharness/configs/routes.json", "rb") as f:
+    with open(os.path.join(GECKO, "testing/mozharness/configs/routes.json"), "rb") as f:
         routes_json = json.load(f)
 
     for key in ('routes', 'nightly', 'l10n'):

@@ -12,7 +12,7 @@
 TEST(ThreadProfile, Initialization) {
   Thread::tid_t tid = 1000;
   ThreadInfo info("testThread", tid, true, nullptr);
-  info.SetHasProfile();
+  info.StartProfiling();
 }
 
 // Make sure we can record one tag and read it

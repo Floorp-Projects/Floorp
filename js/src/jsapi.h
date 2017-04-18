@@ -6429,16 +6429,17 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(ForOfIterator) {
 
 /**
  * If a large allocation fails when calling pod_{calloc,realloc}CanGC, the JS
- * engine may call the large-allocation- failure callback, if set, to allow the
+ * engine may call the large-allocation-failure callback, if set, to allow the
  * embedding to flush caches, possibly perform shrinking GCs, etc. to make some
- * room. The allocation will then be retried (and may still fail.)
+ * room. The allocation will then be retried (and may still fail.) This callback
+ * can be called on any thread and must be set at most once in a process.
  */
 
 typedef void
-(* LargeAllocationFailureCallback)(void* data);
+(* LargeAllocationFailureCallback)();
 
 extern JS_PUBLIC_API(void)
-SetLargeAllocationFailureCallback(JSContext* cx, LargeAllocationFailureCallback afc, void* data);
+SetProcessLargeAllocationFailureCallback(LargeAllocationFailureCallback afc);
 
 /**
  * Unlike the error reporter, which is only called if the exception for an OOM

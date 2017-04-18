@@ -59,6 +59,7 @@
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/CaptivePortalService.h"
+#include "mozilla/Omnijar.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
 #include "mozilla/widget/ScreenManager.h"
@@ -1230,7 +1231,7 @@ GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath, nsCString &aAppDir)
   if (!dirSvc) {
     return false;
   }
-  rv = dirSvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
+  rv = dirSvc->Get(NS_GRE_DIR,
                    NS_GET_IID(nsIFile), getter_AddRefs(appDir));
   if (NS_FAILED(rv)) {
     return false;
@@ -1262,6 +1263,18 @@ GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath, nsCString &aAppDir)
   }
 
   return true;
+}
+
+// Returns whether or not the currently running build is a development build -
+// where development build means "the files in the .app are symlinks to the src
+// directory". This check is implemented by looking for omni.ja in
+// .app/Contents/Resources/.
+static bool
+IsDevelopmentBuild()
+{
+  nsCOMPtr<nsIFile> path = mozilla::Omnijar::GetPath(mozilla::Omnijar::GRE);
+  // If the path doesn't exist, we're a dev build.
+  return path == nullptr;
 }
 
 static bool
@@ -1307,6 +1320,13 @@ StartMacOSContentSandbox()
   }
 
   bool isFileProcess = cc->GetRemoteType().EqualsLiteral(FILE_REMOTE_TYPE);
+  char *developer_repo_dir = nullptr;
+  if (IsDevelopmentBuild()) {
+    // If this is a developer build the resources in the .app are symlinks to
+    // outside of the .app. Therefore in non-release builds we allow reads from
+    // the whole repository. MOZ_DEVELOPER_REPO_DIR is set by mach run.
+    developer_repo_dir = PR_GetEnv("MOZ_DEVELOPER_REPO_DIR");
+  }
 
   MacSandboxInfo info;
   info.type = MacSandboxType_Content;
@@ -1316,7 +1336,11 @@ StartMacOSContentSandbox()
                    PR_GetEnv("MOZ_SANDBOX_LOGGING");
   info.appPath.assign(appPath.get());
   info.appBinaryPath.assign(appBinaryPath.get());
-  info.appDir.assign(appDir.get());
+  if (developer_repo_dir != nullptr) {
+    info.appDir.assign(developer_repo_dir);
+  } else {
+    info.appDir.assign(appDir.get());
+  }
   info.appTempDir.assign(tempDirPath.get());
 
   if (profileDir) {

@@ -51,9 +51,12 @@ function doUpdate(update) {
 }
 
 function doReload() {
-  dbService.reloadDatabase();
-
-  sendAsyncMessage("reloadSuccess");
+  try {
+    dbService.reloadDatabase();
+    sendAsyncMessage("reloadSuccess");
+  } catch(e) {
+    setTimeout(() => { doReload(); }, 1000);
+  }
 }
 
 // SafeBrowsing.jsm is initialized after mozEntries are added. Add observer

@@ -576,9 +576,18 @@
               return true;
             },
 
-            _isForInitialAboutBlank(aWebProgress, aLocation) {
+            _isForInitialAboutBlank(aWebProgress, aStateFlags, aLocation) {
               if (!this.mBlank || !aWebProgress.isTopLevel) {
                 return false;
+              }
+
+              // If the state has STATE_STOP, and no requests were in flight, then this
+              // must be the initial "stop" for the initial about:blank document.
+              const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+              if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
+                  this.mRequestCount == 0 &&
+                  !aLocation) {
+                return true;
               }
 
               let location = aLocation ? aLocation.spec : "";
@@ -623,7 +632,9 @@
                 originalLocation = aRequest.originalURI;
               } catch (ex) {}
 
-              let ignoreBlank = this._isForInitialAboutBlank(aWebProgress, location);
+              let ignoreBlank = this._isForInitialAboutBlank(aWebProgress, aStateFlags,
+                                                             location);
+
               // If we were ignoring some messages about the initial about:blank, and we
               // got the STATE_STOP for it, we'll want to pay attention to those messages
               // from here forward. Similarly, if we conclude that this state change

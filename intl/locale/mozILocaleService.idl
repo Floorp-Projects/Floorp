@@ -144,6 +144,11 @@ interface mozILocaleService : nsISupports
                            [retval, array, size_is(aCount)] out string aLocales);
 
   /**
+   * Returns the top-requested locale from the user, or an empty string if none is set.
+   */
+  ACString getRequestedLocale();
+
+  /**
    * Sets a list of locales that the user requested the app to be
    * localized to.
    *

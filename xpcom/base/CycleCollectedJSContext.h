@@ -160,7 +160,6 @@ protected:
 
   virtual void CustomGCCallback(JSGCStatus aStatus) {}
   virtual void CustomOutOfMemoryCallback() {}
-  virtual void CustomLargeAllocationFailureCallback() {}
 
   std::queue<nsCOMPtr<nsIRunnable>> mPromiseMicroTaskQueue;
   std::queue<nsCOMPtr<nsIRunnable>> mDebuggerPromiseMicroTaskQueue;
@@ -218,7 +217,6 @@ private:
                                           JS::GCNurseryProgress aProgress,
                                           JS::gcreason::Reason aReason);
   static void OutOfMemoryCallback(JSContext* aContext, void* aData);
-  static void LargeAllocationFailureCallback(void* aData);
   /**
    * Callback for reporting external string memory.
    */
@@ -287,11 +285,12 @@ public:
     Recovered
   };
 
+  void SetLargeAllocationFailure(OOMState aNewState);
+
 private:
   void AnnotateAndSetOutOfMemory(OOMState* aStatePtr, OOMState aNewState);
   void OnGC(JSGCStatus aStatus);
   void OnOutOfMemory();
-  void OnLargeAllocationFailure();
 
 public:
   void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);

@@ -1405,17 +1405,19 @@ private:
   {
     MOZ_ASSERT(aVideo);
     SLOG("DropVideoUpToSeekTarget() frame [%" PRId64 ", %" PRId64 "]",
-         aVideo->mTime, aVideo->GetEndTime());
-    const int64_t target = mSeekJob.mTarget->GetTime().ToMicroseconds();
+         aVideo->mTime, aVideo->GetEndTime().ToMicroseconds());
+    const auto target = mSeekJob.mTarget->GetTime();
 
     // If the frame end time is less than the seek target, we won't want
     // to display this frame after the seek, so discard it.
     if (target >= aVideo->GetEndTime()) {
       SLOG("DropVideoUpToSeekTarget() pop video frame [%" PRId64 ", %" PRId64 "] target=%" PRId64,
-           aVideo->mTime, aVideo->GetEndTime(), target);
+           aVideo->mTime, aVideo->GetEndTime().ToMicroseconds(),
+           target.ToMicroseconds());
       mFirstVideoFrameAfterSeek = aVideo;
     } else {
-      if (target >= aVideo->mTime && aVideo->GetEndTime() >= target) {
+      if (target.ToMicroseconds() >= aVideo->mTime &&
+          aVideo->GetEndTime() >= target) {
         // The seek target lies inside this frame's time slice. Adjust the
         // frame's start time to match the seek target.
         aVideo->UpdateTimestamp(target);
@@ -1424,7 +1426,8 @@ private:
 
       SLOG("DropVideoUpToSeekTarget() found video frame [%" PRId64 ", %" PRId64 "] "
            "containing target=%" PRId64,
-           aVideo->mTime, aVideo->GetEndTime(), target);
+           aVideo->mTime, aVideo->GetEndTime().ToMicroseconds(),
+           target.ToMicroseconds());
 
       MOZ_ASSERT(VideoQueue().GetSize() == 0,
                  "Should be the 1st sample after seeking");
@@ -3173,9 +3176,9 @@ MediaDecoderStateMachine::RequestAudioData()
       mAudioDataRequest.Complete();
       // audio->GetEndTime() is not always mono-increasing in chained ogg.
       mDecodedAudioEndTime = std::max(
-        TimeUnit::FromMicroseconds(aAudio->GetEndTime()), mDecodedAudioEndTime);
+        aAudio->GetEndTime(), mDecodedAudioEndTime);
       LOGV("OnAudioDecoded [%" PRId64 ",%" PRId64 "]", aAudio->mTime,
-           aAudio->GetEndTime());
+           aAudio->GetEndTime().ToMicroseconds());
       mStateObj->HandleAudioDecoded(aAudio);
     },
     [this, self] (const MediaResult& aError) {
@@ -3219,9 +3222,9 @@ MediaDecoderStateMachine::RequestVideoData(bool aSkipToNextKeyframe,
       mVideoDataRequest.Complete();
       // Handle abnormal or negative timestamps.
       mDecodedVideoEndTime = std::max(
-        mDecodedVideoEndTime, TimeUnit::FromMicroseconds(aVideo->GetEndTime()));
+        mDecodedVideoEndTime, aVideo->GetEndTime());
       LOGV("OnVideoDecoded [%" PRId64 ",%" PRId64 "]", aVideo->mTime,
-           aVideo->GetEndTime());
+           aVideo->GetEndTime().ToMicroseconds());
       mStateObj->HandleVideoDecoded(aVideo, videoDecodeStartTime);
     },
     [this, self] (const MediaResult& aError) {

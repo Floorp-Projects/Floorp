@@ -338,6 +338,21 @@ DocAccessibleParent::RecvTextChangeEvent(const uint64_t& aID,
   return IPC_OK();
 }
 
+#if defined(XP_WIN)
+
+mozilla::ipc::IPCResult
+DocAccessibleParent::RecvSyncTextChangeEvent(const uint64_t& aID,
+                                             const nsString& aStr,
+                                             const int32_t& aStart,
+                                             const uint32_t& aLen,
+                                             const bool& aIsInsert,
+                                             const bool& aFromUser)
+{
+  return RecvTextChangeEvent(aID, aStr, aStart, aLen, aIsInsert, aFromUser);
+}
+
+#endif // defined(XP_WIN)
+
 mozilla::ipc::IPCResult
 DocAccessibleParent::RecvSelectionEvent(const uint64_t& aID,
                                         const uint64_t& aWidgetID,
@@ -434,6 +449,11 @@ DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   if (outerDoc->ChildrenCount() > 1 ||
       (outerDoc->ChildrenCount() == 1 && !outerDoc->ChildAt(0)->IsDoc())) {
     return IPC_FAIL(this, "binding to proxy that can't be a outerDoc!");
+  }
+
+  if (outerDoc->ChildrenCount() == 1) {
+    MOZ_ASSERT(outerDoc->ChildAt(0)->AsDoc());
+    outerDoc->ChildAt(0)->AsDoc()->Unbind();
   }
 
   aChildDoc->SetParent(outerDoc);

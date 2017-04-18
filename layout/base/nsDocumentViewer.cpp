@@ -1110,6 +1110,13 @@ nsDocumentViewer::GetLoadCompleted(bool *aOutLoadCompleted)
 }
 
 NS_IMETHODIMP
+nsDocumentViewer::GetIsStopped(bool* aOutIsStopped)
+{
+  *aOutIsStopped = mStopped;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocumentViewer::PermitUnload(bool *aPermitUnload)
 {
   bool shouldPrompt = true;

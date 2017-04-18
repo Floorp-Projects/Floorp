@@ -27,7 +27,7 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
   , mPseudoStack(mozilla::WrapNotNull(new PseudoStack()))
   , mPlatformData(AllocPlatformData(aThreadId))
   , mStackTop(aStackTop)
-  , mHasProfile(false)
+  , mIsBeingProfiled(false)
   , mLastSample()
 {
   MOZ_COUNT_CTOR(ThreadInfo);
@@ -37,10 +37,6 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
   pthread_t self = pthread_self();
   mStackTop = pthread_get_stackaddr_np(self);
 #endif
-
-  if (aIsMainThread) {
-    mResponsiveness.emplace();
-  }
 
   // I don't know if we can assert this. But we should warn.
   MOZ_ASSERT(aThreadId >= 0, "native thread ID is < 0");
@@ -52,6 +48,23 @@ ThreadInfo::~ThreadInfo()
   MOZ_COUNT_DTOR(ThreadInfo);
 
   delete mPseudoStack;
+}
+
+void
+ThreadInfo::StartProfiling()
+{
+  mIsBeingProfiled = true;
+  mPseudoStack->reinitializeOnResume();
+  if (mIsMainThread) {
+    mResponsiveness.emplace();
+  }
+}
+
+void
+ThreadInfo::StopProfiling()
+{
+  mResponsiveness.reset();
+  mIsBeingProfiled = false;
 }
 
 void

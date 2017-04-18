@@ -142,7 +142,7 @@ bool AndroidMediaReader::DecodeVideoFrame(bool& aKeyframeSkip,
         int64_t durationUs;
         mPlugin->GetDuration(mPlugin, &durationUs);
         durationUs = std::max<int64_t>(durationUs - mLastVideoFrame->mTime, 0);
-        mLastVideoFrame->UpdateDuration(durationUs);
+        mLastVideoFrame->UpdateDuration(TimeUnit::FromMicroseconds(durationUs));
         mVideoQueue.Push(mLastVideoFrame);
         mLastVideoFrame = nullptr;
       }
@@ -176,7 +176,7 @@ bool AndroidMediaReader::DecodeVideoFrame(bool& aKeyframeSkip,
       v = VideoData::CreateFromImage(mInfo.mVideo.mDisplay,
                                      pos,
                                      frame.mTimeUs,
-                                     1, // We don't know the duration yet.
+                                     TimeUnit::FromMicroseconds(1), // We don't know the duration yet.
                                      currentImage,
                                      frame.mKeyFrame,
                                      -1);
@@ -221,7 +221,7 @@ bool AndroidMediaReader::DecodeVideoFrame(bool& aKeyframeSkip,
                                        mDecoder->GetImageContainer(),
                                        pos,
                                        frame.mTimeUs,
-                                       1, // We don't know the duration yet.
+                                       TimeUnit::FromMicroseconds(1), // We don't know the duration yet.
                                        b,
                                        frame.mKeyFrame,
                                        -1,
@@ -248,12 +248,12 @@ bool AndroidMediaReader::DecodeVideoFrame(bool& aKeyframeSkip,
     // timestamp of the previous frame. We can then return the previously
     // decoded frame, and it will have a valid timestamp.
     int64_t duration = v->mTime - mLastVideoFrame->mTime;
-    mLastVideoFrame->UpdateDuration(duration);
+    mLastVideoFrame->UpdateDuration(TimeUnit::FromMicroseconds(duration));
 
     // We have the start time of the next frame, so we can push the previous
     // frame into the queue, except if the end time is below the threshold,
     // in which case it wouldn't be displayed anyway.
-    if (mLastVideoFrame->GetEndTime() < aTimeThreshold.ToMicroseconds()) {
+    if (mLastVideoFrame->GetEndTime() < aTimeThreshold) {
       mLastVideoFrame = nullptr;
       continue;
     }

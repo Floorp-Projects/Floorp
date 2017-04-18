@@ -109,7 +109,13 @@ this.SiteDataManager = {
   },
 
   _updateAppCache() {
-    let groups = this._appCache.getGroups();
+    let groups = null;
+    try {
+      groups =  this._appCache.getGroups();
+    } catch (e) {
+      return;
+    }
+
     for (let site of this._sites.values()) {
       for (let group of groups) {
         let uri = Services.io.newURI(group);

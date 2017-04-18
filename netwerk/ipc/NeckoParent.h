@@ -183,6 +183,13 @@ protected:
   virtual mozilla::ipc::IPCResult RecvPDataChannelConstructor(PDataChannelParent* aActor,
                                                               const uint32_t& channelId) override;
 
+  virtual PFileChannelParent*
+    AllocPFileChannelParent(const uint32_t& channelId) override;
+  virtual bool DeallocPFileChannelParent(PFileChannelParent* parent) override;
+
+  virtual mozilla::ipc::IPCResult RecvPFileChannelConstructor(PFileChannelParent* aActor,
+                                                              const uint32_t& channelId) override;
+
   virtual PRtspControllerParent* AllocPRtspControllerParent() override;
   virtual bool DeallocPRtspControllerParent(PRtspControllerParent*) override;
 

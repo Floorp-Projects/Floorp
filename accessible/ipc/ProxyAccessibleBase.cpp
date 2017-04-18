@@ -54,15 +54,9 @@ template <class Derived>
 void
 ProxyAccessibleBase<Derived>::SetChildDoc(DocAccessibleParent* aChildDoc)
 {
-  // DocAccessibleParent::AddChildDoc tolerates replacing one document with
-  // another. We must reflect that here.
   MOZ_ASSERT(aChildDoc);
-  MOZ_ASSERT(mChildren.Length() <= 1);
-  if (mChildren.IsEmpty()) {
-    mChildren.AppendElement(aChildDoc);
-  } else {
-    mChildren.ReplaceElementAt(0, aChildDoc);
-  }
+  MOZ_ASSERT(mChildren.Length() == 0);
+  mChildren.AppendElement(aChildDoc);
   mOuterDoc = true;
 }
 

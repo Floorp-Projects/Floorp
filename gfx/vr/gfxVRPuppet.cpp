@@ -90,8 +90,6 @@ VRDisplayPuppet::VRDisplayPuppet()
   mDisplayInfo.mSittingToStandingTransform._42 = 0.75f;
   mDisplayInfo.mSittingToStandingTransform._43 = 0.0f;
 
-  mSensorState.Clear();
-
   gfx::Quaternion rot;
 
   mSensorState.flags |= VRDisplayCapabilityFlags::Cap_Orientation;

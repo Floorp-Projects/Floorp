@@ -3,7 +3,6 @@ set -x -e -v
 
 # This script is for building cctools (Apple's binutils) for Mac OS X on
 # Linux using ctools-port (https://github.com/tpoechtrager/cctools-port).
-
 WORKSPACE=$HOME/workspace
 UPLOAD_DIR=$WORKSPACE/artifacts
 
@@ -58,4 +57,3 @@ $CCTOOLS_DIR/bin/$TARGET_TRIPLE-strip $CROSSTOOLS_BUILD_DIR/bin/*
 # Put a tarball in the artifacts dir
 mkdir -p $UPLOAD_DIR
 tar cjf $UPLOAD_DIR/cctools.tar.bz2 -C $CROSSTOOLS_BUILD_DIR/.. `basename $CROSSTOOLS_BUILD_DIR`
-

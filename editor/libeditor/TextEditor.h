@@ -184,10 +184,10 @@ protected:
   void BeginEditorInit();
   nsresult EndEditorInit();
 
-  nsresult GetAndInitDocEncoder(const nsAString& aFormatType,
-                                uint32_t aFlags,
-                                const nsACString& aCharset,
-                                nsIDocumentEncoder** encoder);
+  already_AddRefed<nsIDocumentEncoder> GetAndInitDocEncoder(
+                                         const nsAString& aFormatType,
+                                         uint32_t aFlags,
+                                         const nsACString& aCharset);
 
   NS_IMETHOD CreateBR(nsIDOMNode* aNode, int32_t aOffset,
                       nsCOMPtr<nsIDOMNode>* outBRNode,
@@ -232,6 +232,8 @@ protected:
 
 protected:
   nsCOMPtr<nsIEditRules> mRules;
+  nsCOMPtr<nsIDocumentEncoder> mCachedDocumentEncoder;
+  nsString mCachedDocumentEncoderType;
   int32_t mWrapColumn;
   int32_t mMaxTextLength;
   int32_t mInitTriggerCounter;

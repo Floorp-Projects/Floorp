@@ -7949,7 +7949,8 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             Rooted<JSObject*> sourceObject(cx, script->sourceObject());
             Rooted<JSScript*> script(cx, JSScript::Create(cx, options, sourceObject,
                                                           funbox->bufStart, funbox->bufEnd,
-                                                          funbox->preludeStart));
+                                                          funbox->toStringStart,
+                                                          funbox->toStringEnd));
             if (!script)
                 return false;
 
@@ -10469,6 +10470,13 @@ BytecodeEmitter::emitClass(ParseNode* pn)
                 return false;
         }
     } else {
+        // In the case of default class constructors, emit the start and end
+        // offsets in the source buffer as source notes so that when we
+        // actually make the constructor during execution, we can give it the
+        // correct toString output.
+        if (!newSrcNote3(SRC_CLASS_SPAN, ptrdiff_t(pn->pn_pos.begin), ptrdiff_t(pn->pn_pos.end)))
+            return false;
+
         JSAtom *name = names ? names->innerBinding()->pn_atom : cx->names().empty;
         if (heritageExpression) {
             if (!emitAtomOp(name, JSOP_DERIVEDCONSTRUCTOR))

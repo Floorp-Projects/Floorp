@@ -140,7 +140,7 @@ add_task(async function test_dupe_bookmark() {
   try {
     // The parent folder and one bookmark in it.
     let {id: folder1_id, guid: folder1_guid } = await createFolder(bms.toolbarFolder, "Folder 1");
-    let {guid: bmk1_guid} = await createBookmark(folder1_id, "http://getfirefox.com/", "Get Firefox!");
+    let {id: localId, guid: bmk1_guid} = await createBookmark(folder1_id, "http://getfirefox.com/", "Get Firefox!");
 
     engine.sync();
 
@@ -158,8 +158,25 @@ add_task(async function test_dupe_bookmark() {
       parentName: "Folder 1",
       parentid: folder1_guid,
     };
-
     collection.insert(newGUID, encryptPayload(to_apply), Date.now() / 1000 + 500);
+
+    let onItemChangedObserved = false;
+    const obs = {
+      onItemChanged(id, prop, isAnno, newVal, lastMod, itemType, parentId, guid, parentGuid, oldVal, source) {
+        equal(id, localId);
+        equal(prop, "guid");
+        equal(newVal, newGUID);
+        equal(itemType, bms.TYPE_BOOKMARK);
+        equal(parentId, folder1_id);
+        equal(guid, newGUID);
+        equal(parentGuid, folder1_guid);
+        equal(oldVal, bmk1_guid);
+        equal(source, PlacesUtils.bookmarks.SOURCE_SYNC);
+        onItemChangedObserved = true;
+      }
+    };
+    PlacesUtils.bookmarks.addObserver(obs, false);
+
     _("Syncing so new dupe record is processed");
     engine.lastSync = engine.lastSync - 5;
     engine.sync();
@@ -176,8 +193,11 @@ add_task(async function test_dupe_bookmark() {
     ok(!serverRecord.children.includes(bmk1_guid));
     ok(serverRecord.children.includes(newGUID));
 
+    ok(onItemChangedObserved);
+
     // and a final sanity check - use the validator
     await validate(collection);
+    PlacesUtils.bookmarks.removeObserver(obs);
   } finally {
     await cleanup(server);
   }
