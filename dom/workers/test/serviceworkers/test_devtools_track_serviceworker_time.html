@@ -106,7 +106,7 @@ function register() {
   })
 }
 
-function verifyServiceWorkTime(aSWRInfo) {
+function verifyServiceWorkTime(aSWRInfo, resolve) {
   let expectedResult = expectedResults.shift();
   ok(!!expectedResult, "We should be able to get test from expectedResults");
 
@@ -123,7 +123,7 @@ function verifyServiceWorkTime(aSWRInfo) {
 
   if (!swInfo) {
     is(expectedResult.state, State.BYTECHECK,
-       "We shouldn't get sw when we are notified for frist time updating");
+       "We shouldn't get sw when we are notified for first time updating");
     return;
   }
 
@@ -147,6 +147,9 @@ function verifyServiceWorkTime(aSWRInfo) {
   // We need to hold sw to avoid losing it since we'll unregister the swr later.
   if (expectedResult.state === State.ACTIVATED) {
     astrayServiceWorkerInfo = aSWRInfo.activeWorker;
+
+    // Resolve the promise for testServiceWorkerInfo after sw is activated.
+    resolve();
   }
 }
 
@@ -156,16 +159,9 @@ function testServiceWorkerInfo() {
   let promise_resolve;
   let promise = new Promise(aResolve => promise_resolve = aResolve);
 
-  let counter = 0;
   swrlistener = {
     onChange: () => {
-      verifyServiceWorkTime(registrationInfo)
-      counter++;
-
-      // Resolve the promise after sw is activated.
-      if (counter >= State.ACTIVATED) {
-        promise_resolve();
-      }
+      verifyServiceWorkTime(registrationInfo, promise_resolve);
     }
   };
 
