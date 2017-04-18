@@ -153,10 +153,9 @@ public:
 
   void PushBuiltDisplayList(wr::BuiltDisplayList dl);
 
-  void PushScrollLayer(const WrRect& aBounds, // TODO: We should work with strongly typed rects
-                       const WrRect& aOverflow,
+  void PushScrollLayer(const WrRect& aContentRect, // TODO: We should work with strongly typed rects
+                       const WrRect& aClipRect,
                        const WrImageMask* aMask); // TODO: needs a wrapper.
-
   void PopScrollLayer();
 
 

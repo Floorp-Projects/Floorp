@@ -776,8 +776,8 @@ WR_FUNC;
 
 WR_INLINE void
 wr_dp_push_scroll_layer(WrState* state,
-    WrRect bounds,
-    WrRect overflow,
+    WrRect content_rect,
+    WrRect clip_rect,
     const WrImageMask* mask)
 WR_FUNC;
 
