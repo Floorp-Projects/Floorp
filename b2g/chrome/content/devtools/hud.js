@@ -260,26 +260,9 @@ Target.prototype = {
     this._logHistogram(data.metric);
   },
 
-  _getAddonHistogram(item) {
-    let appName = this._getAddonHistogramName(item, APPNAME_IDX);
-    let histName = this._getAddonHistogramName(item, HISTNAME_IDX);
-
-    return Services.telemetry.getAddonHistogram(appName, CUSTOM_HISTOGRAM_PREFIX
-      + histName);
-  },
-
-  _getAddonHistogramName(item, index) {
-    let array = item.split('_');
-    return array[index].toUpperCase();
-  },
-
   _clearTelemetryData() {
     developerHUD._histograms.forEach(function(item) {
       Services.telemetry.getKeyedHistogramById(item).clear();
-    });
-
-    developerHUD._customHistograms.forEach(item => {
-      this._getAddonHistogram(item).clear();
     });
   },
 
@@ -291,7 +274,6 @@ Target.prototype = {
     let frame = this.frame;
     let payload = {
       keyedHistograms: {},
-      addonHistograms: {}
     };
     // Package the hud histograms.
     developerHUD._histograms.forEach(function(item) {
@@ -299,20 +281,6 @@ Target.prototype = {
         Services.telemetry.getKeyedHistogramById(item).snapshot();
     });
 
-    // Package the registered hud custom histograms
-    developerHUD._customHistograms.forEach(item => {
-      let appName = this._getAddonHistogramName(item, APPNAME_IDX);
-      let histName = CUSTOM_HISTOGRAM_PREFIX +
-        this._getAddonHistogramName(item, HISTNAME_IDX);
-      let addonHist = Services.telemetry.getAddonHistogram(appName, histName).snapshot();
-      if (!(appName in payload.addonHistograms)) {
-        payload.addonHistograms[appName] = {};
-      }
-      // Do not include histograms with sum of 0.
-      if (addonHist.sum > 0) {
-        payload.addonHistograms[appName][histName] = addonHist;
-      }
-    });
     shell.sendEvent(frame, 'advanced-telemetry-update', Cu.cloneInto(payload, frame));
   },
 
