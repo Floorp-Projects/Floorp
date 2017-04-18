@@ -4,6 +4,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
+                                  "resource://gre/modules/TelemetryStopwatch.jsm");
 
 Cu.import("resource://gre/modules/ExtensionParent.jsm");
 var {
@@ -32,6 +34,7 @@ class BackgroundPage extends HiddenExtensionPage {
   }
 
   async build() {
+    TelemetryStopwatch.start("WEBEXT_BACKGROUND_PAGE_LOAD_MS", this);
     await this.createBrowserElement();
 
     extensions.emit("extension-browser-inserted", this.browser);
@@ -39,6 +42,7 @@ class BackgroundPage extends HiddenExtensionPage {
     this.browser.loadURI(this.url);
 
     let context = await promiseExtensionViewLoaded(this.browser);
+    TelemetryStopwatch.finish("WEBEXT_BACKGROUND_PAGE_LOAD_MS", this);
 
     if (context) {
       // Wait until all event listeners registered by the script so far
