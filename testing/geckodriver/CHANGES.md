@@ -36,6 +36,11 @@ All notable changes to this program is documented in this file.
 
 ### Fixed
 - Fix for the “corrupt deflate stream” exception that sometimes occured when trying to write an empty profile by [@kirhgoph](https://github.com/kirhgoph)
+- Recognise `sslProxy` and `sslProxyPort` entries in the proxy configuration object (fixed by [@juangj](https://github.com/juangj))
+- Fix “`httpProxyPort` was not an integer” error (fixed by [@juangj](https://github.com/juangj))
+- i686-unknown-linux-musl (Linux 32-bit) build fixed
+- Log messages from other Rust modules are now ignored
+- Improved log messages to the HTTPD
 
 ## 0.15.0 (2017-03-08)
 
