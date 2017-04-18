@@ -27,9 +27,6 @@ class LintMeta(type):
             return test
 
         for project in (
-            'b2g',
-            'b2g/dev',
-            'b2g/graphene',
             'browser',
             'embedding/ios',
             'extensions',

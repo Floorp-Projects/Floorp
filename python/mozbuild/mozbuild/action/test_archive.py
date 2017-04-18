@@ -423,7 +423,6 @@ ARCHIVE_FILES = {
                 'node-http2/**',
                 'node-spdy/**',
                 'remotexpcshelltests.py',
-                'runtestsb2g.py',
                 'runxpcshelltests.py',
                 'xpcshellcommandline.py',
             ],
