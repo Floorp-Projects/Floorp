@@ -1850,6 +1850,10 @@ public class BrowserApp extends GeckoApp
             case "Menu:Add":
                 final MenuItemInfo info = new MenuItemInfo();
                 info.label = message.getString("name");
+                if (info.label == null) {
+                    Log.e(LOGTAG, "Invalid menu item name");
+                    return;
+                }
                 info.id = message.getInt("id") + ADDON_MENU_OFFSET;
                 info.checked = message.getBoolean("checked", false);
                 info.enabled = message.getBoolean("enabled", true);
