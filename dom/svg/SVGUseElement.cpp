@@ -16,6 +16,7 @@
 #include "nsContentUtils.h"
 #include "nsIURI.h"
 #include "mozilla/URLExtraData.h"
+#include "nsSVGEffects.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Use)
 
@@ -422,11 +423,15 @@ SVGUseElement::LookupHref()
     return;
   }
 
+  nsCOMPtr<nsIURI> originURI =
+    mOriginal ? mOriginal->GetBaseURI() : GetBaseURI();
+  nsCOMPtr<nsIURI> baseURI = nsContentUtils::IsLocalRefURL(href)
+    ? nsSVGEffects::GetBaseURLForLocalRef(this, originURI)
+    : originURI;
+
   nsCOMPtr<nsIURI> targetURI;
-  nsCOMPtr<nsIURI> baseURI = mOriginal ? mOriginal->GetBaseURI() : GetBaseURI();
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
                                             GetComposedDoc(), baseURI);
-
   mSource.Reset(this, targetURI);
 }
 
