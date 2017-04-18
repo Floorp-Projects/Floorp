@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
   "resource://gre/modules/FileUtils.jsm");
 
-const CHROME_BASE = "chrome://mochitests/content/browser/browser/base/content/test/general/";
+const CHROME_BASE = "chrome://mochitests/content/browser/browser/base/content/test/sync/";
 // Preference helpers.
 var changedPrefs = new Set();
 
@@ -42,7 +42,7 @@ var gTests = [
   },
   *run() {
     setPref("identity.fxaccounts.remote.signup.uri",
-            "https://example.com/browser/browser/base/content/test/general/accounts_testRemoteCommands.html");
+            "https://example.com/browser/browser/base/content/test/sync/accounts_testRemoteCommands.html");
     let tab = yield promiseNewTabLoadEvent("about:accounts");
     let mm = tab.linkedBrowser.messageManager;
 

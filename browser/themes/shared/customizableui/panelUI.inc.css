@@ -575,7 +575,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   display: none;
 }
 
-#PanelUI-footer-fxa[fxastatus="error"] > #PanelUI-fxa-status::after {
+#PanelUI-footer-fxa[fxastatus="login-failed"] > #PanelUI-fxa-status::after,
+#PanelUI-footer-fxa[fxastatus="unverified"] > #PanelUI-fxa-status::after {
   content: url(chrome://browser/skin/warning.svg);
   filter: drop-shadow(0 1px 0 hsla(206,50%,10%,.15));
   width: 47px;
@@ -954,16 +955,19 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   outline: none;
 }
 
-#PanelUI-footer-fxa[fxastatus="error"] {
+#PanelUI-footer-fxa[fxastatus="login-failed"],
+#PanelUI-footer-fxa[fxastatus="unverified"] {
   background-color: hsl(42,94%,88%);
   border-top: 1px solid hsl(42,94%,70%);
 }
 
-#PanelUI-footer-fxa[fxastatus="error"] > #PanelUI-fxa-status:hover {
+#PanelUI-footer-fxa[fxastatus="login-failed"] > #PanelUI-fxa-status:hover,
+#PanelUI-footer-fxa[fxastatus="unverified"] > #PanelUI-fxa-status:hover {
   background-color: hsl(42,94%,85%);
 }
 
-#PanelUI-footer-fxa[fxastatus="error"] > #PanelUI-fxa-status:hover:active {
+#PanelUI-footer-fxa[fxastatus="login-failed"] > #PanelUI-fxa-status:hover:active,
+#PanelUI-footer-fxa[fxastatus="unverified"] > #PanelUI-fxa-status:hover:active {
   background-color: hsl(42,94%,82%);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
