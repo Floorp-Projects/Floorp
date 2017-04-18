@@ -63,6 +63,7 @@ using JS::DoubleNaNValue;
 
 /* static */ MOZ_THREAD_LOCAL(JSContext*) js::TlsContext;
 /* static */ Atomic<size_t> JSRuntime::liveRuntimesCount;
+Atomic<JS::LargeAllocationFailureCallback> js::OnLargeAllocationFailure;
 
 namespace js {
     bool gCanUseExtraThreads = true;
@@ -169,7 +170,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     offthreadIonCompilationEnabled_(true),
     parallelParsingEnabled_(true),
     autoWritableJitCodeActive_(false),
-    largeAllocationFailureCallback(nullptr),
     oomCallback(nullptr),
     debuggerMallocSizeOf(ReturnZeroSize),
     lastAnimationTime(0),
@@ -829,8 +829,8 @@ JSRuntime::onOutOfMemory(AllocFunction allocFunc, size_t nbytes, void* reallocPt
 void*
 JSRuntime::onOutOfMemoryCanGC(AllocFunction allocFunc, size_t bytes, void* reallocPtr)
 {
-    if (largeAllocationFailureCallback && bytes >= LARGE_ALLOCATION)
-        largeAllocationFailureCallback(largeAllocationFailureCallbackData);
+    if (OnLargeAllocationFailure && bytes >= LARGE_ALLOCATION)
+        OnLargeAllocationFailure();
     return onOutOfMemory(allocFunc, bytes, reallocPtr);
 }
 
