@@ -11339,5 +11339,59 @@
     "n_buckets": 100,
     "bug_numbers": [1344893],
     "description": "Time in milliseconds from navigationStart to responseStart."
+  },
+  "INPUT_EVENT_HANDLED_MOUSE_UP_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "bug_numbers": [1345540],
+    "description": "Time (ms) for the mouse up event spent in handlers."
+  },
+  "INPUT_EVENT_HANDLED_MOUSE_DOWN_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "bug_numbers": [1345540],
+    "description": "Time (ms) for the mouse down event spent in handlers."
+  },
+  "INPUT_EVENT_HANDLED_KEYBOARD_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "bug_numbers": [1345540],
+    "description": "Time (ms) for the keyboard event spent in handlers."
+  },
+  "INPUT_EVENT_HANDLED_APZ_TOUCH_MOVE_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "bug_numbers": [1345540],
+    "description": "Time (ms) for the APZ handled touch move event spent in handlers."
+  },
+  "INPUT_EVENT_HANDLED_APZ_MOUSE_MOVE_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "bug_numbers": [1345540],
+    "description": "Time (ms) for the APZ handled mouse move event spent in handlers."
+  },
+  "INPUT_EVENT_HANDLED_APZ_WHEEL_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "bug_numbers": [1345540],
+    "description": "Time (ms) for the APZ handled wheel event spent in handlers."
   }
 }
