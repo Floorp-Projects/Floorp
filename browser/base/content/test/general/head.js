@@ -836,16 +836,16 @@ function getCertExceptionDialog(aLocation) {
 
 function setupRemoteClientsFixture(fixture) {
   let oldRemoteClientsGetter =
-    Object.getOwnPropertyDescriptor(gFxAccounts, "remoteClients").get;
+    Object.getOwnPropertyDescriptor(gSync, "remoteClients").get;
 
-  Object.defineProperty(gFxAccounts, "remoteClients", {
+  Object.defineProperty(gSync, "remoteClients", {
     get() { return fixture; }
   });
   return oldRemoteClientsGetter;
 }
 
 function restoreRemoteClients(getter) {
-  Object.defineProperty(gFxAccounts, "remoteClients", {
+  Object.defineProperty(gSync, "remoteClients", {
     get: getter
   });
 }
