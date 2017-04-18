@@ -59,6 +59,7 @@ function AnimationsTimeline(inspector, serverTraits) {
   this.onAnimationSelected = this.onAnimationSelected.bind(this);
   this.onWindowResize = this.onWindowResize.bind(this);
   this.onTimelineDataChanged = this.onTimelineDataChanged.bind(this);
+  this.onDetailCloseButtonClick = this.onDetailCloseButtonClick.bind(this);
 
   EventEmitter.decorate(this);
 }
@@ -92,9 +93,8 @@ AnimationsTimeline.prototype = {
 
     const splitter = SplitBox({
       className: "animation-root",
-      initialSize: "0 0",
-      maxSize: "calc(100% - (var(--timeline-animation-height) * 2))",
       splitterSize: 1,
+      initialHeight: "50%",
       endPanelControl: true,
       startPanel: React.DOM.div({
         className: "animation-timeline"
@@ -106,6 +106,8 @@ AnimationsTimeline.prototype = {
     });
 
     ReactDOM.render(splitter, this.rootWrapperEl);
+
+    this.animationRootEl = this.rootWrapperEl.querySelector(".animation-root");
   },
 
   setupAnimationTimeline: function () {
@@ -172,14 +174,10 @@ AnimationsTimeline.prototype = {
   },
 
   setupAnimationDetail: function () {
-    this.animationDetailEl = this.rootWrapperEl.querySelector(".animation-detail");
-
-    this.animationDetailEl.dataset.defaultDisplayStyle =
-      this.win.getComputedStyle(this.animationDetailEl).display;
-    this.animationDetailEl.style.display = "none";
+    const animationDetailEl = this.rootWrapperEl.querySelector(".animation-detail");
 
     const animationDetailHeaderEl = createNode({
-      parent: this.animationDetailEl,
+      parent: animationDetailEl,
       attributes: {
         "class": "animation-detail-header"
       }
@@ -201,8 +199,19 @@ AnimationsTimeline.prototype = {
       parent: headerTitleEl
     });
 
+    this.animationDetailCloseButton = createNode({
+      parent: headerTitleEl,
+      nodeType: "button",
+      attributes: {
+        "class": "devtools-button",
+        title: L10N.getStr("detail.header.closeLabel"),
+      }
+    });
+    this.animationDetailCloseButton.addEventListener("click",
+                                                     this.onDetailCloseButtonClick);
+
     const animationDetailBodyEl = createNode({
-      parent: this.animationDetailEl,
+      parent: animationDetailEl,
       attributes: {
         "class": "animation-detail-body"
       }
@@ -230,6 +239,8 @@ AnimationsTimeline.prototype = {
       this.onScrubberMouseDown);
     this.scrubberHandleEl.removeEventListener("mousedown",
       this.onScrubberMouseDown);
+    this.animationDetailCloseButton.removeEventListener("click",
+      this.onDetailCloseButtonClick);
 
     this.rootWrapperEl.remove();
     this.animations = [];
@@ -245,6 +256,8 @@ AnimationsTimeline.prototype = {
     this.animationDetailEl = null;
     this.animationAnimationNameEl = null;
     this.animatedPropertiesEl = null;
+    this.animationDetailCloseButton = null;
+    this.animationRootEl = null;
   },
 
   /**
@@ -323,8 +336,7 @@ AnimationsTimeline.prototype = {
     // Select and render.
     const selectedAnimationEl = animationEls[index];
     selectedAnimationEl.classList.add("selected");
-    this.animationDetailEl.style.display =
-      this.animationDetailEl.dataset.defaultDisplayStyle;
+    this.animationRootEl.classList.add("animation-detail-visible");
     yield this.details.render(animation);
     this.onTimelineDataChanged(null, { time: this.currentTime || 0 });
     this.animationAnimationNameEl.textContent = getFormattedAnimationTitle(animation);
@@ -604,5 +616,10 @@ AnimationsTimeline.prototype = {
     const indicateTime =
       TimeScale.minStartTime === Infinity ? 0 : this.currentTime + TimeScale.minStartTime;
     this.details.indicateProgress(indicateTime);
+  },
+
+  onDetailCloseButtonClick: function (e) {
+    this.animationRootEl.classList.remove("animation-detail-visible");
+    this.emit("animation-detail-closed");
   }
 };
