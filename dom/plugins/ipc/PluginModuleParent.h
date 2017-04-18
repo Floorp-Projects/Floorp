@@ -379,12 +379,6 @@ class PluginModuleContentParent : public PluginModuleParent
 
     static PluginLibrary* LoadModule(uint32_t aPluginId, nsPluginTag* aPluginTag);
 
-    static void OnLoadPluginResult(const uint32_t& aPluginId,
-                                   const bool& aResult,
-                                   Endpoint<PPluginModuleParent>&& aEndpoint);
-
-    static void AssociatePluginId(uint32_t aPluginId, base::ProcessId aProcessId);
-
     virtual ~PluginModuleContentParent();
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
