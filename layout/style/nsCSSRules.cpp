@@ -563,16 +563,16 @@ DocumentRule::List(FILE* out, int32_t aIndent) const
   str.AppendLiteral("@-moz-document ");
   for (URL *url = mURLs; url; url = url->next) {
     switch (url->func) {
-      case eURL:
+      case URLMatchingFunction::eURL:
         str.AppendLiteral("url(\"");
         break;
-      case eURLPrefix:
+      case URLMatchingFunction::eURLPrefix:
         str.AppendLiteral("url-prefix(\"");
         break;
-      case eDomain:
+      case URLMatchingFunction::eDomain:
         str.AppendLiteral("domain(\"");
         break;
-      case eRegExp:
+      case URLMatchingFunction::eRegExp:
         str.AppendLiteral("regexp(\"");
         break;
     }
@@ -680,37 +680,56 @@ DocumentRule::UseForPresentation(nsPresContext* aPresContext)
   }
 
   for (URL *url = mURLs; url; url = url->next) {
-    switch (url->func) {
-      case eURL: {
-        if (docURISpec == url->url)
-          return true;
-      } break;
-      case eURLPrefix: {
-        if (StringBeginsWith(docURISpec, url->url))
-          return true;
-      } break;
-      case eDomain: {
-        nsAutoCString host;
-        if (docURI)
-          docURI->GetHost(host);
-        int32_t lenDiff = host.Length() - url->url.Length();
-        if (lenDiff == 0) {
-          if (host == url->url)
-            return true;
-        } else {
-          if (StringEndsWith(host, url->url) &&
-              host.CharAt(lenDiff - 1) == '.')
-            return true;
-        }
-      } break;
-      case eRegExp: {
-        NS_ConvertUTF8toUTF16 spec(docURISpec);
-        NS_ConvertUTF8toUTF16 regex(url->url);
-        if (nsContentUtils::IsPatternMatching(spec, regex, doc)) {
-          return true;
-        }
-      } break;
+    if (UseForPresentation(doc, docURI, docURISpec, url->url, url->func)) {
+      return true;
     }
+  }
+
+  return false;
+}
+
+bool
+DocumentRule::UseForPresentation(nsIDocument* aDoc,
+                                 nsIURI* aDocURI,
+                                 const nsACString& aDocURISpec,
+                                 const nsACString& aPattern,
+                                 URLMatchingFunction aUrlMatchingFunction)
+{
+  switch (aUrlMatchingFunction) {
+    case URLMatchingFunction::eURL: {
+      if (aDocURISpec == aPattern) {
+        return true;
+      }
+    } break;
+    case URLMatchingFunction::eURLPrefix: {
+      if (StringBeginsWith(aDocURISpec, aPattern)) {
+        return true;
+      }
+    } break;
+    case URLMatchingFunction::eDomain: {
+      nsAutoCString host;
+      if (aDocURI) {
+        aDocURI->GetHost(host);
+      }
+      int32_t lenDiff = host.Length() - aPattern.Length();
+      if (lenDiff == 0) {
+        if (host == aPattern) {
+          return true;
+        }
+      } else {
+        if (StringEndsWith(host, aPattern) &&
+            host.CharAt(lenDiff - 1) == '.') {
+          return true;
+        }
+      }
+    } break;
+    case URLMatchingFunction::eRegExp: {
+      NS_ConvertUTF8toUTF16 spec(aDocURISpec);
+      NS_ConvertUTF8toUTF16 regex(aPattern);
+      if (nsContentUtils::IsPatternMatching(spec, regex, aDoc)) {
+        return true;
+      }
+    } break;
   }
 
   return false;
@@ -746,16 +765,16 @@ DocumentRule::AppendConditionText(nsAString& aCssText) const
 {
   for (URL *url = mURLs; url; url = url->next) {
     switch (url->func) {
-      case eURL:
+      case URLMatchingFunction::eURL:
         aCssText.AppendLiteral("url(");
         break;
-      case eURLPrefix:
+      case URLMatchingFunction::eURLPrefix:
         aCssText.AppendLiteral("url-prefix(");
         break;
-      case eDomain:
+      case URLMatchingFunction::eDomain:
         aCssText.AppendLiteral("domain(");
         break;
-      case eRegExp:
+      case URLMatchingFunction::eRegExp:
         aCssText.AppendLiteral("regexp(");
         break;
     }
@@ -1169,7 +1188,7 @@ nsCSSFontFaceStyleDecl::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenPr
 
 // -------------------------------------------
 // nsCSSFontFaceRule
-// 
+//
 
 /* virtual */ already_AddRefed<css::Rule>
 nsCSSFontFaceRule::Clone() const
