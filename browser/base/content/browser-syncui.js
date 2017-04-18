@@ -67,7 +67,7 @@ var gSyncUI = {
       Services.obs.removeObserver(gSyncUI, "weave:service:ready");
       Services.obs.removeObserver(gSyncUI, "quit-application");
 
-      if (this.weaveService.ready) {
+      if (Weave.Status.ready) {
         gSyncUI._obs.forEach(function(topic) {
           Services.obs.removeObserver(gSyncUI, topic);
         });
