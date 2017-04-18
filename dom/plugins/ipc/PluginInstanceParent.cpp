@@ -2042,42 +2042,6 @@ PluginInstanceParent::GetOwner()
 }
 
 mozilla::ipc::IPCResult
-PluginInstanceParent::RecvAsyncNPP_NewResult(const NPError& aResult)
-{
-    // NB: mUseSurrogate must be cleared before doing anything else, especially
-    //     calling NPP_SetWindow!
-    mUseSurrogate = false;
-
-    mSurrogate->AsyncCallArriving();
-    if (aResult == NPERR_NO_ERROR) {
-        mSurrogate->SetAcceptingCalls(true);
-    }
-
-    // It is possible for a plugin instance to outlive its owner (eg. When a
-    // PluginDestructionGuard was on the stack at the time the owner was being
-    // destroyed). We need to handle that case.
-    nsPluginInstanceOwner* owner = GetOwner();
-    if (!owner) {
-        // We can't do anything at this point, just return. Any pending browser
-        // streams will be cleaned up when the plugin instance is destroyed.
-        return IPC_OK();
-    }
-
-    if (aResult != NPERR_NO_ERROR) {
-        mSurrogate->NotifyAsyncInitFailed();
-        return IPC_OK();
-    }
-
-    // Now we need to do a bunch of exciting post-NPP_New housekeeping.
-    owner->NotifyHostCreateWidget();
-
-    MOZ_ASSERT(mSurrogate);
-    mSurrogate->OnInstanceCreated(this);
-
-    return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 PluginInstanceParent::RecvSetNetscapeWindowAsParent(const NativeWindowHandle& childWindow)
 {
 #if defined(XP_WIN)

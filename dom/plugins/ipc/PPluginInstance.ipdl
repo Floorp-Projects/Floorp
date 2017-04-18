@@ -254,9 +254,6 @@ parent:
 
   async RedrawPlugin();
 
-  // Notifies the parent of its NPP_New result code.
-  async AsyncNPP_NewResult(NPError aResult);
-
   // Sends a native window to be adopted by the native window that would be
   // returned by NPN_GetValue_NPNVnetscapeWindow. Only used on Windows.
   async SetNetscapeWindowAsParent(NativeWindowHandle childWindow);
