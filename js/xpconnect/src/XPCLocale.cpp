@@ -11,17 +11,57 @@
 #include "nsCollationCID.h"
 #include "nsJSUtils.h"
 #include "nsICollation.h"
+#include "nsIObserver.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/Preferences.h"
 
 #include "xpcpublic.h"
 
 using namespace JS;
+using namespace mozilla;
 using mozilla::intl::LocaleService;
+
+class XPCLocaleObserver : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  void Init();
+
+private:
+  virtual ~XPCLocaleObserver() {};
+};
+
+NS_IMPL_ISUPPORTS(XPCLocaleObserver, nsIObserver);
+
+void
+XPCLocaleObserver::Init()
+{
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+
+  observerService->AddObserver(this, "intl:app-locales-changed", false);
+}
+
+NS_IMETHODIMP
+XPCLocaleObserver::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
+{
+  if (!strcmp(aTopic, "intl:app-locales-changed")) {
+    JSContext* cx = CycleCollectedJSContext::Get()->Context();
+    if (!xpc_LocalizeContext(cx)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    return NS_OK;
+  }
+
+  return NS_ERROR_UNEXPECTED;
+}
 
 /**
  * JS locale callbacks implemented by XPCOM modules.  These are theoretically
@@ -42,6 +82,10 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
     localeToLowerCase = LocaleToLowerCase;
     localeCompare = LocaleCompare;
     localeToUnicode = LocaleToUnicode;
+
+    // It's going to be retained by the ObserverService.
+    RefPtr<XPCLocaleObserver> locObs = new XPCLocaleObserver();
+    locObs->Init();
   }
 
   ~XPCLocaleCallbacks()
