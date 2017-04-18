@@ -58,7 +58,6 @@ function AnimationsTimeline(inspector, serverTraits) {
   this.onScrubberMouseMove = this.onScrubberMouseMove.bind(this);
   this.onAnimationSelected = this.onAnimationSelected.bind(this);
   this.onWindowResize = this.onWindowResize.bind(this);
-  this.onFrameSelected = this.onFrameSelected.bind(this);
   this.onTimelineDataChanged = this.onTimelineDataChanged.bind(this);
 
   EventEmitter.decorate(this);
@@ -272,7 +271,6 @@ AnimationsTimeline.prototype = {
     TimeScale.reset();
     this.destroySubComponents("targetNodes");
     this.destroySubComponents("timeBlocks");
-    this.details.off("frame-selected", this.onFrameSelected);
     this.details.unrender();
     this.animationsEl.innerHTML = "";
     this.off("timeline-data-changed", this.onTimelineDataChanged);
@@ -334,12 +332,8 @@ AnimationsTimeline.prototype = {
   }),
 
   /**
-   * When a frame gets selected, move the scrubber to the corresponding position
+   * When move the scrubber to the corresponding position
    */
-  onFrameSelected: function (e, {x}) {
-    this.moveScrubberTo(x, true);
-  },
-
   onScrubberMouseDown: function (e) {
     this.moveScrubberTo(e.pageX);
     this.win.addEventListener("mouseup", this.onScrubberMouseUp);
@@ -473,7 +467,6 @@ AnimationsTimeline.prototype = {
 
       timeBlock.on("selected", this.onAnimationSelected);
     }
-    this.details.on("frame-selected", this.onFrameSelected);
 
     // Use the document's current time to position the scrubber (if the server
     // doesn't provide it, hide the scrubber entirely).
