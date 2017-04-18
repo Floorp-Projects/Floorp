@@ -668,6 +668,8 @@ class ScriptMixin(PlatformMixin):
                 socket.error,
                 FetchedIncorrectFilesize,
             ),
+            sleeptime=30,
+            attempts=5,
             error_message="Can't download from {}".format(url),
             error_level=FATAL,
         )
@@ -1108,7 +1110,8 @@ class ScriptMixin(PlatformMixin):
             except retry_exceptions, e:
                 retry = True
                 error_message = "%s\nCaught exception: %s" % (error_message, str(e))
-                self.log('retry: attempt #%d caught exception: %s' % (n, str(e)), level=INFO)
+                self.log('retry: attempt #%d caught %s exception: %s' %
+                         (n, type(e).__name__, str(e)), level=INFO)
 
             if not retry:
                 return status

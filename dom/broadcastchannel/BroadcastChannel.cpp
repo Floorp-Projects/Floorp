@@ -272,11 +272,12 @@ BroadcastChannel::BroadcastChannel(nsPIDOMWindowInner* aWindow,
   , mPrincipalInfo(new PrincipalInfo(aPrincipalInfo))
   , mOrigin(aOrigin)
   , mChannel(aChannel)
-  , mIsKeptAlive(false)
   , mInnerID(0)
   , mState(StateActive)
 {
   // Window can be null in workers
+
+  KeepAliveIfHasListenersFor(NS_LITERAL_STRING("message"));
 }
 
 BroadcastChannel::~BroadcastChannel()
@@ -496,82 +497,7 @@ BroadcastChannel::Shutdown()
     mActor = nullptr;
   }
 
-  // If shutdown() is called we have to release the reference if we still keep
-  // it.
-  if (mIsKeptAlive) {
-    mIsKeptAlive = false;
-    Release();
-  }
-}
-
-EventHandlerNonNull*
-BroadcastChannel::GetOnmessage()
-{
-  if (NS_IsMainThread()) {
-    return GetEventHandler(nsGkAtoms::onmessage, EmptyString());
-  }
-  return GetEventHandler(nullptr, NS_LITERAL_STRING("message"));
-}
-
-void
-BroadcastChannel::SetOnmessage(EventHandlerNonNull* aCallback)
-{
-  if (NS_IsMainThread()) {
-    SetEventHandler(nsGkAtoms::onmessage, EmptyString(), aCallback);
-  } else {
-    SetEventHandler(nullptr, NS_LITERAL_STRING("message"), aCallback);
-  }
-
-  UpdateMustKeepAlive();
-}
-
-void
-BroadcastChannel::AddEventListener(const nsAString& aType,
-                                   EventListener* aCallback,
-                                   const AddEventListenerOptionsOrBoolean& aOptions,
-                                   const dom::Nullable<bool>& aWantsUntrusted,
-                                   ErrorResult& aRv)
-{
-  DOMEventTargetHelper::AddEventListener(aType, aCallback, aOptions,
-                                         aWantsUntrusted, aRv);
-
-  if (aRv.Failed()) {
-    return;
-  }
-
-  UpdateMustKeepAlive();
-}
-
-void
-BroadcastChannel::RemoveEventListener(const nsAString& aType,
-                                      EventListener* aCallback,
-                                      const EventListenerOptionsOrBoolean& aOptions,
-                                      ErrorResult& aRv)
-{
-  DOMEventTargetHelper::RemoveEventListener(aType, aCallback, aOptions, aRv);
-
-  if (aRv.Failed()) {
-    return;
-  }
-
-  UpdateMustKeepAlive();
-}
-
-void
-BroadcastChannel::UpdateMustKeepAlive()
-{
-  bool toKeepAlive = HasListenersFor(NS_LITERAL_STRING("message"));
-  if (toKeepAlive == mIsKeptAlive) {
-    return;
-  }
-
-  mIsKeptAlive = toKeepAlive;
-
-  if (toKeepAlive) {
-    AddRef();
-  } else {
-    Release();
-  }
+  IgnoreKeepAliveIfHasListenersFor(NS_LITERAL_STRING("message"));
 }
 
 NS_IMETHODIMP

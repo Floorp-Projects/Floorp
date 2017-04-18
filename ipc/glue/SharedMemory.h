@@ -49,6 +49,11 @@ public:
     TYPE_UNKNOWN
   };
 
+  enum OpenRights {
+    RightsReadOnly = RightsRead,
+    RightsReadWrite = RightsRead | RightsWrite,
+  };
+
   size_t Size() const { return mMappedSize; }
 
   virtual void* memory() const = 0;
@@ -124,7 +129,7 @@ public:
 
   virtual bool ShareToProcess(base::ProcessId aProcessId, Handle* aHandle) = 0;
   virtual bool IsHandleValid(const Handle& aHandle) const = 0;
-  virtual bool SetHandle(const Handle& aHandle) = 0;
+  virtual bool SetHandle(const Handle& aHandle, OpenRights aRights) = 0;
 
   virtual bool ShareHandle(base::ProcessId aProcessId, IPC::Message* aMessage) override
   {
@@ -141,7 +146,7 @@ public:
     Handle handle;
     return IPC::ReadParam(aMessage, aIter, &handle) &&
            IsHandleValid(handle) &&
-           SetHandle(handle);
+           SetHandle(handle, RightsReadWrite);
   }
 };
 
