@@ -494,7 +494,7 @@ var dataProviders = {
 
         // //
 
-        let ext = gl.getExtension("MOZ_debug");
+        let ext = gl.getExtension("MOZ_debug_get");
         // This extension is unconditionally available to chrome. No need to check.
         let vendor = ext.getParameter(gl.VENDOR);
         let renderer = ext.getParameter(gl.RENDERER);
