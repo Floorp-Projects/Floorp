@@ -293,9 +293,6 @@ child:
     returns (NPError rv,
              uint16_t stype);
 
-  // Implements the async plugin init version of NPP_NewStream.
-  async AsyncNPP_NewStream(PBrowserStream actor, nsCString mimeType, bool seekable);
-
 parent:
   /* NPN_NewStream */
   intr PPluginStream(nsCString mimeType,
