@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Reference: stretching overflow visible items</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1348857">
+  <style type="text/css">
+body,html { color:black; background:white; font:16px/1 monospace; padding:0; margin:0; }
+
+.grid {
+  display: inline-flex;
+  width: 90px;
+  height: 40px;
+  padding: 7px 3px 3px 7px;
+  border: 1px solid;
+}
+
+.grid > * {
+  border: 1px solid;
+  margin: 5px;
+}
+
+.m  { margin: 6px 8px 10px 12px; }
+.ma { margin: auto; }
+
+x { display:block; width:110px; height:5px; background:grey; }
+.h .grid x { width:5px; height:110px; }
+
+br { clear:both; }
+  </style>
+</head>
+<body>
+
+<div class="grid"><span class=""><x></x></span></div>
+<div class="grid"><span class="m"><x></x></span></div>
+<div class="grid"><span class="ma" style="margin-left:5px"><x></x></span></div>
+
+<br>
+
+<div class="h">
+
+<div class="grid"><span class="" style="flex:1"><x></x></span></div>
+<div class="grid"><span class="m" style="flex:1"><x></x></span></div>
+<div class="grid"><span class="ma" style="margin-top:5px"><x></x></span></div>
+
+<br>
+
+</div>
+
+</body>
+</html>
