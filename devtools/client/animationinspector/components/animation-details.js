@@ -213,11 +213,6 @@ AnimationDetails.prototype = {
         attributes: {"class": "frames"}
       });
 
-      // Scale the list of keyframes according to the current time scale.
-      let {x, w} = TimeScale.getAnimationDimensions(animation);
-      framesEl.style.left = `${x}%`;
-      framesEl.style.width = `${w}%`;
-
       let keyframesComponent = new Keyframes();
       keyframesComponent.init(framesEl);
       keyframesComponent.render({
