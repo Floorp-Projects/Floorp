@@ -5983,10 +5983,7 @@ nsGlobalWindow::GetInnerScreenRect()
     return nsRect();
   }
 
-  nsGlobalWindow* rootWindow = nsGlobalWindow::Cast(GetPrivateRoot());
-  if (rootWindow) {
-    rootWindow->FlushPendingNotifications(FlushType::Layout);
-  }
+  EnsureSizeUpToDate();
 
   if (!mDocShell) {
     return nsRect();
