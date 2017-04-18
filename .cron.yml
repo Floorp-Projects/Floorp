@@ -21,6 +21,16 @@ jobs:
             mozilla-aurora: [{hour: 7, minute: 45}]  # Buildbot uses minute 40
             # No default
 
+    - name: nightly-desktop-osx
+      job:
+          type: decision-task
+          treeherder-symbol: Nd-OSX
+          triggered-by: nightly
+          target-tasks-method: nightly_macosx
+      run-on-projects:
+          - date
+      when: [] # never (hook only)
+
     - name: nightly-android
       job:
           type: decision-task
