@@ -45,6 +45,6 @@ function* testRefreshOnRemove(inspector, panel) {
   });
   yield onPanelUpdated;
   yield waitForAllAnimationTargets(panel);
-
+  yield waitForAnimationSelecting(panel);
   assertAnimationsDisplayed(panel, 1);
 }

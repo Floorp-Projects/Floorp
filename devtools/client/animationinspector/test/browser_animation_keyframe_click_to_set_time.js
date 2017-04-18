@@ -18,9 +18,6 @@ add_task(function* () {
   // So for now, let's hide the scrollbar. Bug 1229340 should fix this.
   timeline.animationsEl.style.overflow = "hidden";
 
-  info("Expand the animation");
-  yield clickOnAnimation(panel, 0);
-
   info("Click on the first keyframe of the first animated property");
   yield clickKeyframe(panel, "background-color", 0);
 

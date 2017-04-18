@@ -19,6 +19,7 @@ add_task(function* () {
   for (let i = 0; i < selectors.length; i++) {
     let selector = selectors[i];
     yield selectNode(selector, inspector);
+    yield waitForAnimationSelecting(panel);
     let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
     let animationEl = timelineEl.querySelector(".animation");
     checkEndDelayAndName(animationEl);

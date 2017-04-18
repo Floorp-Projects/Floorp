@@ -490,6 +490,11 @@ AnimationsTimeline.prototype = {
 
     // To indicate the animation progress in AnimationDetails.
     this.on("timeline-data-changed", this.onTimelineDataChanged);
+
+    // Display animation's detail if there is only one animation.
+    if (this.animations.length === 1) {
+      this.onAnimationSelected(null, this.animations[0]);
+    }
   },
 
   isAtLeastOneAnimationPlaying: function () {

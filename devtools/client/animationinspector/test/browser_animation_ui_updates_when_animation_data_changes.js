@@ -46,6 +46,7 @@ function* setStyle(animation, panel, name, value) {
     propertyValue: value
   });
   yield onAnimationChanged;
+  yield waitForAnimationSelecting(panel);
 
   // Also wait for the target node previews to be loaded if the panel got
   // refreshed as a result of this animation mutation.
