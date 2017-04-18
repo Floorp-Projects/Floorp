@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+<!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd"> %brandDTD;
+<!ENTITY % urlClassifierDTD SYSTEM "chrome://global/locale/aboutUrlClassifier.dtd"> %urlClassifierDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" type="text/css"/>
+  <link rel="stylesheet" href="chrome://global/content/aboutUrlClassifier.css" type="text/css"/>
+  <script type="text/javascript" src="chrome://global/content/aboutUrlClassifier.js"></script>
+</head>
+
+<body onload="onLoad()" class="aboutPageWideContainer">
+  <h1>&aboutUrlClassifier.pageTitle;</h1>
+  <div id="provider">
+    <h2 class="major-section">&aboutUrlClassifier.providerTitle;</h2>
+    <table id="provider-table">
+      <thead>
+        <tr id="provider-head-row">
+          <th id="col-provider">&aboutUrlClassifier.provider;</th>
+          <th id="col-lastupdatetime">&aboutUrlClassifier.providerLastUpdateTime;</th>
+          <th id="col-nextupdatetime">&aboutUrlClassifier.providerNextUpdateTime;</th>
+          <th id="col-lastupdateresult">&aboutUrlClassifier.providerLastUpdateStatus;</th>
+          <th id="col-update">&aboutUrlClassifier.providerUpdateBtn;</th>
+        </tr>
+      </thead>
+      <tbody id="provider-table-body">
+        <!-- data is generated in javascript -->
+      </tbody>
+    </table>
+  </div>
+  <div id="debug">
+    <h2 class="major-section">&aboutUrlClassifier.debugTitle;</h2>
+    <div id="debug-modules" class="options">
+      <input id="log-modules" type="text" value=""/>
+      <button id="set-log-modules">&aboutUrlClassifier.debugModuleBtn;</button>
+      <br></br>
+      <input id="log-file" type="text" value=""/>
+      <button id="set-log-file">&aboutUrlClassifier.debugFileBtn;</button>
+      <br></br>
+      <div class="toggle-container-with-text">
+        <input id="js-log" type="checkbox"/>
+        <label for="js-log">&aboutUrlClassifier.debugJSLogChk;</label>
+      </div>
+    </div>
+    <table id="debug-table">
+    <tbody>
+    <tr>
+      <th class="column">&aboutUrlClassifier.debugSBModules;</th>
+      <td id="sb-log-modules">
+      </td>
+    </tr>
+    <tr>
+      <th class="column">&aboutUrlClassifier.debugModules;</th>
+      <td id="cur-log-modules">
+      </td>
+    </tr>
+    <tr>
+      <th class="column">&aboutUrlClassifier.debugSBJSModules;</th>
+      <td id="cur-js-log">
+      </td>
+    </tr>
+    <tr>
+      <th class="column">&aboutUrlClassifier.debugFile;</th>
+      <td id="cur-log-file">
+      </td>
+    </tr>
+    </tbody>
+    </table>
+  </div>
+</body>
+</html>

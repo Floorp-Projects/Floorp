@@ -27,6 +27,11 @@ interface nsIUrlListManager : nsISupports
     ACString getGethashUrl(in ACString tableName);
 
     /**
+     * Get the update url for this table
+     */
+    ACString getUpdateUrl(in ACString tableName);
+
+    /**
      * Add a table to the list of tables we are managing. The name is a
      * string of the format provider_name-semantic_type-table_type.  For
      * @param tableName A string of the format
@@ -64,4 +69,10 @@ interface nsIUrlListManager : nsISupports
      */
     void safeLookup(in nsIPrincipal key,
                     in nsIUrlListManagerCallback cb);
+
+    /**
+     * This is currently used by about:url-classifier to force an update
+     * for the update url. Update may still fail because of backoff algorithm.
+     */
+    boolean checkForUpdates(in ACString updateUrl);
 };
