@@ -127,7 +127,7 @@ class Proxxy(ScriptMixin, LogMixin):
                               exit_code=3):
         """
         Wrapper around BaseScript.download_file that understands proxies
-        retry dict is set to 3 attempts, sleeping time 30 seconds.
+        retry dict is set to 5 attempts, initial sleeping time 30 seconds.
 
             Args:
                 url (string): url to fetch
@@ -156,8 +156,8 @@ class Proxxy(ScriptMixin, LogMixin):
                 create_parent_dir=create_parent_dir, error_level=ERROR,
                 exit_code=exit_code,
                 retry_config=dict(
-                    attempts=3,
                     sleeptime=30,
+                    attempts=5,
                     error_level=INFO,
                 ))
             if retval:
