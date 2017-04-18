@@ -612,7 +612,6 @@ PluginModuleParent::PluginModuleParent(bool aIsChrome)
     , mTaskFactory(this)
     , mSandboxLevel(0)
     , mIsFlashPlugin(false)
-    , mAsyncNewRv(NS_ERROR_NOT_INITIALIZED)
 #ifdef MOZ_CRASHREPORTER
     , mCrashReporterMutex("PluginModuleChromeParent::mCrashReporterMutex")
 #endif
