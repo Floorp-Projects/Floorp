@@ -208,6 +208,12 @@ AnimationDetails.prototype = {
       attributes: { "class": "animated-properties-header property" }
     });
 
+    // Add progress tick container.
+    const progressTickContainerEl = createNode({
+      parent: headerEl,
+      attributes: { "class": "progress-tick-container track-container" }
+    });
+
     // Add label container.
     const headerLabelContainerEl = createNode({
       parent: headerEl,
@@ -218,6 +224,11 @@ AnimationDetails.prototype = {
     for (let label of [L10N.getFormatStr("detail.propertiesHeader.percentage", 0),
                        L10N.getFormatStr("detail.propertiesHeader.percentage", 50),
                        L10N.getFormatStr("detail.propertiesHeader.percentage", 100)]) {
+      createNode({
+        parent: progressTickContainerEl,
+        nodeType: "span",
+        attributes: { "class": "progress-tick" }
+      });
       createNode({
         parent: headerLabelContainerEl,
         nodeType: "label",
