@@ -33,7 +33,7 @@ process_py := $(topsrcdir)/python/mozbuild/mozbuild/action/xpidl-process.py
 # TODO we should use py_action, but that would require extra directories to be
 # in the virtualenv.
 %.xpt:
-	@echo "$(@F)"
+	$(REPORT_BUILD)
 	$(PYTHON_PATH) $(PLY_INCLUDE) -I$(topsrcdir)/xpcom/idl-parser -I$(DEPTH)/xpcom/idl-parser/xpidl \
 		$(process_py) --cache-dir $(DEPTH)/xpcom/idl-parser/xpidl --depsdir $(idl_deps_dir) \
 		$(dist_idl_dir) $(dist_include_dir) $(@D) $(libxul_sdk_includes) \
