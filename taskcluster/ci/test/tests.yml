@@ -16,7 +16,6 @@ cppunit:
             windows.*: ['mozilla-central', 'try']
             windows10-64-asan/opt: []  # as an exception to windows.*
             linux64-qr/.*: ['graphics']  # not on mozilla-central, even though it's built there
-            linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
             default: built-projects
     mozharness:
         by-test-platform:
@@ -55,7 +54,6 @@ crashtest:
     run-on-projects:
         by-test-platform:
             windows10.*: []
-            linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
             default: built-projects
     chunks:
         by-test-platform:
@@ -946,7 +944,6 @@ mochitest-style:
     loopback-video: true
     docker-image: {"in-tree": "desktop1604-test"}
     e10s: both
-    run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
     mozharness:
         mochitest-flavor: plain
         script: desktop_unittest.py
@@ -965,7 +962,6 @@ mochitest-chrome-style:
     treeherder-symbol: tc-M(cs)
     loopback-video: true
     docker-image: {"in-tree": "desktop1604-test"}
-    run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
     e10s: false
     mozharness:
         mochitest-flavor: chrome
@@ -1075,8 +1071,7 @@ reftest-stylo:
     chunks: 16
     run-on-projects:
         by-test-platform:
-            linux64-stylo/opt: [ 'stylo', 'autoland', 'mozilla-central', 'try' ]
-            linux64-stylo/debug: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
+            linux64-stylo/opt: [ 'stylo', 'autoland', 'mozilla-central', 'try' ] # not on mozilla-inbound
             default: built-projects
     e10s:
         # run only e10s tests for this platform see bug 1343301
