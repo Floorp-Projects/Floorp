@@ -1089,6 +1089,10 @@ RemoteInputStream::SetStream(nsIInputStream* aStream)
 nsresult
 RemoteInputStream::BlockAndWaitForStream()
 {
+  if (mStream) {
+    return NS_OK;
+  }
+
   if (IsOnOwningThread()) {
     if (NS_IsMainThread()) {
       NS_WARNING("Blocking the main thread is not supported!");
