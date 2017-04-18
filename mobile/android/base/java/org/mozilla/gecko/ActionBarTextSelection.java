@@ -10,10 +10,13 @@ import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.widget.ActionModePresenter;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,6 +32,7 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
     private static final int SHUTDOWN_DELAY_MS = 250;
 
     private final Context context;
+    private final ActionModePresenter presenter;
 
     private int selectionID; // Unique ID provided for each selection action.
 
@@ -52,8 +56,10 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
     };
     private ActionModeTimerTask mActionModeTimerTask;
 
-    ActionBarTextSelection(Context context) {
+    ActionBarTextSelection(@NonNull final Context context,
+                           @Nullable final ActionModePresenter presenter) {
         this.context = context;
+        this.presenter = presenter;
     }
 
     @Override
@@ -131,17 +137,15 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
             return;
         }
 
-        if (context instanceof ActionModeCompat.Presenter) {
-            final ActionModeCompat.Presenter presenter = (ActionModeCompat.Presenter) context;
+        if (presenter != null) {
             mCallback = new TextSelectionActionModeCallback(items);
-            presenter.startActionModeCompat(mCallback);
+            presenter.startActionMode(mCallback);
         }
     }
 
     private void endActionMode() {
-        if (context instanceof ActionModeCompat.Presenter) {
-            final ActionModeCompat.Presenter presenter = (ActionModeCompat.Presenter) context;
-            presenter.endActionModeCompat();
+        if (presenter != null) {
+            presenter.endActionMode();
         }
         mCurrentItems = null;
     }
