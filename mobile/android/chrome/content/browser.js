@@ -3643,7 +3643,7 @@ Tab.prototype = {
     this.browser.addEventListener("VideoBindingAttached", this, true, true);
     this.browser.addEventListener("VideoBindingCast", this, true, true);
 
-    Services.obs.addObserver(this, "AudioFocusChanged", false);
+    Services.obs.addObserver(this, "audioFocusChanged", false);
     Services.obs.addObserver(this, "before-first-paint");
     Services.obs.addObserver(this, "media-playback");
 
@@ -3758,7 +3758,7 @@ Tab.prototype = {
     this.browser.removeEventListener("VideoBindingAttached", this, true, true);
     this.browser.removeEventListener("VideoBindingCast", this, true, true);
 
-    Services.obs.removeObserver(this, "AudioFocusChanged");
+    Services.obs.removeObserver(this, "audioFocusChanged");
     Services.obs.removeObserver(this, "before-first-paint");
     Services.obs.removeObserver(this, "media-playback");
 
@@ -4598,10 +4598,10 @@ Tab.prototype = {
     // page, it notifies us that we should change the icon and content in media
     // control interface.
     if (active) {
-      Services.obs.addObserver(this, "MediaControl", false);
+      Services.obs.addObserver(this, "mediaControl", false);
       Services.obs.addObserver(this, "media-playback-resumed", false);
     } else {
-      Services.obs.removeObserver(this, "MediaControl");
+      Services.obs.removeObserver(this, "mediaControl");
       Services.obs.removeObserver(this, "media-playback-resumed");
     }
   },
@@ -4682,8 +4682,8 @@ Tab.prototype = {
         });
         break;
 
-      case "AudioFocusChanged":
-      case "MediaControl":
+      case "audioFocusChanged":
+      case "mediaControl":
         let win = this.browser.contentWindow;
         let utils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         let suspendTypes = Ci.nsISuspendedTypes;
