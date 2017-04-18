@@ -487,12 +487,6 @@ nsJARChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 }
 
 NS_IMETHODIMP
-nsJARChannel::GetIsDocument(bool *aIsDocument)
-{
-    return NS_GetIsDocumentChannel(this, aIsDocument);
-}
-
-NS_IMETHODIMP
 nsJARChannel::GetLoadGroup(nsILoadGroup **aLoadGroup)
 {
     NS_IF_ADDREF(*aLoadGroup = mLoadGroup);

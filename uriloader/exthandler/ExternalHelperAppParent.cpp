@@ -351,12 +351,6 @@ ExternalHelperAppParent::SetLoadFlags(nsLoadFlags aLoadFlags)
 }
 
 NS_IMETHODIMP
-ExternalHelperAppParent::GetIsDocument(bool *aIsDocument)
-{
-  return NS_GetIsDocumentChannel(this, aIsDocument);
-}
-
-NS_IMETHODIMP
 ExternalHelperAppParent::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 {
   *aLoadGroup = nullptr;
