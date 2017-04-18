@@ -357,6 +357,10 @@ WalkStackMain64(struct WalkStackData* aData)
   });
 #endif
 
+#ifdef _M_AMD64
+  bool firstFrame = true;
+#endif
+
   // Skip our own stack walking frames.
   int skip = (aData->walkCallingThread ? 3 : 0) + aData->skipFrames;
 
@@ -416,26 +420,29 @@ WalkStackMain64(struct WalkStackData* aData)
     PRUNTIME_FUNCTION runtimeFunction =
       RtlLookupFunctionEntry(context.Rip, &imageBase, NULL);
 
-    if (!runtimeFunction) {
-      // Alas, this is probably a JIT frame, for which we don't generate unwind
-      // info and so we have to give up.
+    if (runtimeFunction) {
+      PVOID dummyHandlerData;
+      ULONG64 dummyEstablisherFrame;
+      RtlVirtualUnwind(UNW_FLAG_NHANDLER,
+                       imageBase,
+                       context.Rip,
+                       runtimeFunction,
+                       &context,
+                       &dummyHandlerData,
+                       &dummyEstablisherFrame,
+                       nullptr);
+    } else if (firstFrame) {
+      // Leaf functions can be unwound by hand.
+      context.Rip = *reinterpret_cast<DWORD64*>(context.Rsp);
+      context.Rsp += sizeof(void*);
+    } else {
+      // Something went wrong.
       break;
     }
 
-    PVOID dummyHandlerData;
-    ULONG64 dummyEstablisherFrame;
-    RtlVirtualUnwind(UNW_FLAG_NHANDLER,
-                     imageBase,
-                     context.Rip,
-                     runtimeFunction,
-                     &context,
-                     &dummyHandlerData,
-                     &dummyEstablisherFrame,
-                     nullptr);
-
     addr = context.Rip;
     spaddr = context.Rsp;
-
+    firstFrame = false;
 #else
 #error "unknown platform"
 #endif
