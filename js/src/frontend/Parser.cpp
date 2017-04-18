@@ -459,7 +459,7 @@ UsedNameTracker::rewind(RewindToken token)
 }
 
 FunctionBox::FunctionBox(JSContext* cx, LifoAlloc& alloc, ObjectBox* traceListHead,
-                         JSFunction* fun, uint32_t preludeStart,
+                         JSFunction* fun, uint32_t toStringStart,
                          Directives directives, bool extraWarnings,
                          GeneratorKind generatorKind, FunctionAsyncKind asyncKind)
   : ObjectBox(fun, traceListHead),
@@ -473,8 +473,8 @@ FunctionBox::FunctionBox(JSContext* cx, LifoAlloc& alloc, ObjectBox* traceListHe
     bufEnd(0),
     startLine(1),
     startColumn(0),
-    preludeStart(preludeStart),
-    postludeEnd(0),
+    toStringStart(toStringStart),
+    toStringEnd(0),
     length(0),
     generatorKindBits_(GeneratorKindAsBits(generatorKind)),
     asyncKindBits_(AsyncKindAsBits(asyncKind)),
@@ -910,7 +910,7 @@ ParserBase::newObjectBox(JSObject* obj)
 
 template <typename ParseHandler>
 FunctionBox*
-Parser<ParseHandler>::newFunctionBox(Node fn, JSFunction* fun, uint32_t preludeStart,
+Parser<ParseHandler>::newFunctionBox(Node fn, JSFunction* fun, uint32_t toStringStart,
                                      Directives inheritedDirectives,
                                      GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                                      bool tryAnnexB)
@@ -926,7 +926,7 @@ Parser<ParseHandler>::newFunctionBox(Node fn, JSFunction* fun, uint32_t preludeS
      * function.
      */
     FunctionBox* funbox =
-        alloc.new_<FunctionBox>(context, alloc, traceListHead, fun, preludeStart,
+        alloc.new_<FunctionBox>(context, alloc, traceListHead, fun, toStringStart,
                                 inheritedDirectives, options().extraWarningsOption,
                                 generatorKind, asyncKind);
     if (!funbox) {
@@ -2451,7 +2451,7 @@ Parser<SyntaxParseHandler>::finishFunction(bool isStandaloneFunction /* = false 
     LazyScript* lazy = LazyScript::Create(context, fun, pc->closedOverBindingsForLazy(),
                                           pc->innerFunctionsForLazy, versionNumber(),
                                           funbox->bufStart, funbox->bufEnd,
-                                          funbox->preludeStart,
+                                          funbox->toStringStart,
                                           funbox->startLine, funbox->startColumn);
     if (!lazy)
         return false;
@@ -2541,7 +2541,7 @@ Parser<FullParseHandler>::standaloneFunction(HandleFunction fun,
         return null();
     fn->pn_body = argsbody;
 
-    FunctionBox* funbox = newFunctionBox(fn, fun, /* preludeStart = */ 0, inheritedDirectives,
+    FunctionBox* funbox = newFunctionBox(fn, fun, /* toStringStart = */ 0, inheritedDirectives,
                                          generatorKind, asyncKind, /* tryAnnexB = */ false);
     if (!funbox)
         return null();
@@ -3203,7 +3203,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
 
 template <>
 bool
-Parser<FullParseHandler>::skipLazyInnerFunction(ParseNode* pn, uint32_t preludeStart,
+Parser<FullParseHandler>::skipLazyInnerFunction(ParseNode* pn, uint32_t toStringStart,
                                                 FunctionSyntaxKind kind, bool tryAnnexB)
 {
     // When a lazily-parsed function is called, we only fully parse (and emit)
@@ -3213,7 +3213,7 @@ Parser<FullParseHandler>::skipLazyInnerFunction(ParseNode* pn, uint32_t preludeS
 
     RootedFunction fun(context, handler.nextLazyInnerFunction());
     MOZ_ASSERT(!fun->isLegacyGenerator());
-    FunctionBox* funbox = newFunctionBox(pn, fun, preludeStart, Directives(/* strict = */ false),
+    FunctionBox* funbox = newFunctionBox(pn, fun, toStringStart, Directives(/* strict = */ false),
                                          fun->generatorKind(), fun->asyncKind(), tryAnnexB);
     if (!funbox)
         return false;
@@ -3250,7 +3250,7 @@ Parser<FullParseHandler>::skipLazyInnerFunction(ParseNode* pn, uint32_t preludeS
 
 template <>
 bool
-Parser<SyntaxParseHandler>::skipLazyInnerFunction(Node pn, uint32_t preludeStart,
+Parser<SyntaxParseHandler>::skipLazyInnerFunction(Node pn, uint32_t toStringStart,
                                                   FunctionSyntaxKind kind, bool tryAnnexB)
 {
     MOZ_CRASH("Cannot skip lazy inner functions when syntax parsing");
@@ -3327,7 +3327,7 @@ Parser<ParseHandler>::templateLiteral(YieldHandling yieldHandling)
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::functionDefinition(Node pn, uint32_t preludeStart,
+Parser<ParseHandler>::functionDefinition(Node pn, uint32_t toStringStart,
                                          InHandling inHandling,
                                          YieldHandling yieldHandling, HandleAtom funName,
                                          FunctionSyntaxKind kind,
@@ -3340,7 +3340,7 @@ Parser<ParseHandler>::functionDefinition(Node pn, uint32_t preludeStart,
     // functions, which are also lazy. Instead, their free variables and
     // source extents are recorded and may be skipped.
     if (handler.canSkipLazyInnerFunctions()) {
-        if (!skipLazyInnerFunction(pn, preludeStart, kind, tryAnnexB))
+        if (!skipLazyInnerFunction(pn, toStringStart, kind, tryAnnexB))
             return null();
         return pn;
     }
@@ -3373,7 +3373,7 @@ Parser<ParseHandler>::functionDefinition(Node pn, uint32_t preludeStart,
     // reparse a function due to failed syntax parsing and encountering new
     // "use foo" directives.
     while (true) {
-        if (trySyntaxParseInnerFunction(pn, fun, preludeStart, inHandling, yieldHandling, kind,
+        if (trySyntaxParseInnerFunction(pn, fun, toStringStart, inHandling, yieldHandling, kind,
                                         generatorKind, asyncKind, tryAnnexB, directives,
                                         &newDirectives))
         {
@@ -3402,7 +3402,7 @@ Parser<ParseHandler>::functionDefinition(Node pn, uint32_t preludeStart,
 template <>
 bool
 Parser<FullParseHandler>::trySyntaxParseInnerFunction(ParseNode* pn, HandleFunction fun,
-                                                      uint32_t preludeStart,
+                                                      uint32_t toStringStart,
                                                       InHandling inHandling,
                                                       YieldHandling yieldHandling,
                                                       FunctionSyntaxKind kind,
@@ -3436,13 +3436,13 @@ Parser<FullParseHandler>::trySyntaxParseInnerFunction(ParseNode* pn, HandleFunct
         // Make a FunctionBox before we enter the syntax parser, because |pn|
         // still expects a FunctionBox to be attached to it during BCE, and
         // the syntax parser cannot attach one to it.
-        FunctionBox* funbox = newFunctionBox(pn, fun, preludeStart, inheritedDirectives,
+        FunctionBox* funbox = newFunctionBox(pn, fun, toStringStart, inheritedDirectives,
                                              generatorKind, asyncKind, tryAnnexB);
         if (!funbox)
             return false;
         funbox->initWithEnclosingParseContext(pc, kind);
 
-        if (!parser->innerFunction(SyntaxParseHandler::NodeGeneric, pc, funbox, preludeStart,
+        if (!parser->innerFunction(SyntaxParseHandler::NodeGeneric, pc, funbox, toStringStart,
                                    inHandling, yieldHandling, kind,
                                    inheritedDirectives, newDirectives))
         {
@@ -3471,14 +3471,14 @@ Parser<FullParseHandler>::trySyntaxParseInnerFunction(ParseNode* pn, HandleFunct
     } while (false);
 
     // We failed to do a syntax parse above, so do the full parse.
-    return innerFunction(pn, pc, fun, preludeStart, inHandling, yieldHandling, kind,
+    return innerFunction(pn, pc, fun, toStringStart, inHandling, yieldHandling, kind,
                          generatorKind, asyncKind, tryAnnexB, inheritedDirectives, newDirectives);
 }
 
 template <>
 bool
 Parser<SyntaxParseHandler>::trySyntaxParseInnerFunction(Node pn, HandleFunction fun,
-                                                        uint32_t preludeStart,
+                                                        uint32_t toStringStart,
                                                         InHandling inHandling,
                                                         YieldHandling yieldHandling,
                                                         FunctionSyntaxKind kind,
@@ -3489,14 +3489,14 @@ Parser<SyntaxParseHandler>::trySyntaxParseInnerFunction(Node pn, HandleFunction 
                                                         Directives* newDirectives)
 {
     // This is already a syntax parser, so just parse the inner function.
-    return innerFunction(pn, pc, fun, preludeStart, inHandling, yieldHandling, kind,
+    return innerFunction(pn, pc, fun, toStringStart, inHandling, yieldHandling, kind,
                          generatorKind, asyncKind, tryAnnexB, inheritedDirectives, newDirectives);
 }
 
 template <typename ParseHandler>
 bool
 Parser<ParseHandler>::innerFunction(Node pn, ParseContext* outerpc, FunctionBox* funbox,
-                                    uint32_t preludeStart,
+                                    uint32_t toStringStart,
                                     InHandling inHandling, YieldHandling yieldHandling,
                                     FunctionSyntaxKind kind, Directives inheritedDirectives,
                                     Directives* newDirectives)
@@ -3520,7 +3520,7 @@ Parser<ParseHandler>::innerFunction(Node pn, ParseContext* outerpc, FunctionBox*
 template <typename ParseHandler>
 bool
 Parser<ParseHandler>::innerFunction(Node pn, ParseContext* outerpc, HandleFunction fun,
-                                    uint32_t preludeStart,
+                                    uint32_t toStringStart,
                                     InHandling inHandling, YieldHandling yieldHandling,
                                     FunctionSyntaxKind kind,
                                     GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
@@ -3532,13 +3532,13 @@ Parser<ParseHandler>::innerFunction(Node pn, ParseContext* outerpc, HandleFuncti
     // parser. In that case, outerpc is a ParseContext from the full parser
     // instead of the current top of the stack of the syntax parser.
 
-    FunctionBox* funbox = newFunctionBox(pn, fun, preludeStart, inheritedDirectives,
+    FunctionBox* funbox = newFunctionBox(pn, fun, toStringStart, inheritedDirectives,
                                          generatorKind, asyncKind, tryAnnexB);
     if (!funbox)
         return false;
     funbox->initWithEnclosingParseContext(outerpc, kind);
 
-    return innerFunction(pn, outerpc, funbox, preludeStart, inHandling, yieldHandling, kind,
+    return innerFunction(pn, outerpc, funbox, toStringStart, inHandling, yieldHandling, kind,
                          inheritedDirectives, newDirectives);
 }
 
@@ -3574,7 +3574,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, bool strict
         return null();
 
     Directives directives(strict);
-    FunctionBox* funbox = newFunctionBox(pn, fun, /* preludeStart = */ 0, directives,
+    FunctionBox* funbox = newFunctionBox(pn, fun, /* toStringStart = */ 0, directives,
                                          generatorKind, asyncKind, /* tryAnnexB = */ false);
     if (!funbox)
         return null();
@@ -3771,7 +3771,7 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::functionStmt(uint32_t preludeStart, YieldHandling yieldHandling,
+Parser<ParseHandler>::functionStmt(uint32_t toStringStart, YieldHandling yieldHandling,
                                    DefaultHandling defaultHandling, FunctionAsyncKind asyncKind)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_FUNCTION));
@@ -3857,13 +3857,13 @@ Parser<ParseHandler>::functionStmt(uint32_t preludeStart, YieldHandling yieldHan
         return null();
 
     YieldHandling newYieldHandling = GetYieldHandling(generatorKind);
-    return functionDefinition(pn, preludeStart, InAllowed, newYieldHandling, name, Statement,
+    return functionDefinition(pn, toStringStart, InAllowed, newYieldHandling, name, Statement,
                               generatorKind, asyncKind, tryAnnexB);
 }
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::functionExpr(uint32_t preludeStart, InvokedPrediction invoked,
+Parser<ParseHandler>::functionExpr(uint32_t toStringStart, InvokedPrediction invoked,
                                    FunctionAsyncKind asyncKind)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_FUNCTION));
@@ -3904,7 +3904,7 @@ Parser<ParseHandler>::functionExpr(uint32_t preludeStart, InvokedPrediction invo
     if (invoked)
         pn = handler.setLikelyIIFE(pn);
 
-    return functionDefinition(pn, preludeStart, InAllowed, yieldHandling, name, Expression,
+    return functionDefinition(pn, toStringStart, InAllowed, yieldHandling, name, Expression,
                               generatorKind, asyncKind);
 }
 
@@ -5432,7 +5432,7 @@ Parser<ParseHandler>::exportVariableStatement(uint32_t begin)
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::exportFunctionDeclaration(uint32_t begin, uint32_t preludeStart,
+Parser<ParseHandler>::exportFunctionDeclaration(uint32_t begin, uint32_t toStringStart,
                                                 FunctionAsyncKind asyncKind /* = SyncFunction */)
 {
     if (!abortIfSyntaxParser())
@@ -5440,7 +5440,7 @@ Parser<ParseHandler>::exportFunctionDeclaration(uint32_t begin, uint32_t prelude
 
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_FUNCTION));
 
-    Node kid = functionStmt(preludeStart, YieldIsKeyword, NameRequired, asyncKind);
+    Node kid = functionStmt(toStringStart, YieldIsKeyword, NameRequired, asyncKind);
     if (!kid)
         return null();
 
@@ -5512,7 +5512,7 @@ Parser<ParseHandler>::exportLexicalDeclaration(uint32_t begin, DeclarationKind k
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::exportDefaultFunctionDeclaration(uint32_t begin, uint32_t preludeStart,
+Parser<ParseHandler>::exportDefaultFunctionDeclaration(uint32_t begin, uint32_t toStringStart,
                                                        FunctionAsyncKind asyncKind
                                                        /* = SyncFunction */)
 {
@@ -5521,7 +5521,7 @@ Parser<ParseHandler>::exportDefaultFunctionDeclaration(uint32_t begin, uint32_t 
 
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_FUNCTION));
 
-    Node kid = functionStmt(preludeStart, YieldIsKeyword, AllowDefaultName, asyncKind);
+    Node kid = functionStmt(toStringStart, YieldIsKeyword, AllowDefaultName, asyncKind);
     if (!kid)
         return null();
 
@@ -5614,9 +5614,9 @@ Parser<ParseHandler>::exportDefault(uint32_t begin)
             return null();
 
         if (nextSameLine == TOK_FUNCTION) {
-            uint32_t preludeStart = pos().begin;
+            uint32_t toStringStart = pos().begin;
             tokenStream.consumeKnownToken(TOK_FUNCTION);
-            return exportDefaultFunctionDeclaration(begin, preludeStart, AsyncFunction);
+            return exportDefaultFunctionDeclaration(begin, toStringStart, AsyncFunction);
         }
 
         tokenStream.ungetToken();
@@ -5670,9 +5670,9 @@ Parser<ParseHandler>::exportDeclaration()
             return null();
 
         if (nextSameLine == TOK_FUNCTION) {
-            uint32_t preludeStart = pos().begin;
+            uint32_t toStringStart = pos().begin;
             tokenStream.consumeKnownToken(TOK_FUNCTION);
-            return exportFunctionDeclaration(begin, preludeStart, AsyncFunction);
+            return exportFunctionDeclaration(begin, toStringStart, AsyncFunction);
         }
 
         error(JSMSG_DECLARATION_AFTER_EXPORT);
@@ -7209,13 +7209,13 @@ Parser<ParseHandler>::classDefinition(YieldHandling yieldHandling,
             return null();
     }
 
-    // Amend the postlude offset for the constructor now that we've finished
-    // parsing the class.
+    // Amend the toStringEnd offset for the constructor now that we've
+    // finished parsing the class.
     uint32_t classEndOffset = pos().end;
     if (FunctionBox* ctorbox = classStmt.constructorBox()) {
         if (ctorbox->function()->isInterpretedLazy())
-            ctorbox->function()->lazyScript()->setPostludeEnd(classEndOffset);
-        ctorbox->postludeEnd = classEndOffset;
+            ctorbox->function()->lazyScript()->setToStringEnd(classEndOffset);
+        ctorbox->toStringEnd = classEndOffset;
     }
 
     Node nameNode = null();
@@ -7601,9 +7601,9 @@ Parser<ParseHandler>::statementListItem(YieldHandling yieldHandling,
             if (!tokenStream.peekTokenSameLine(&nextSameLine))
                 return null();
             if (nextSameLine == TOK_FUNCTION) {
-                uint32_t preludeStart = pos().begin;
+                uint32_t toStringStart = pos().begin;
                 tokenStream.consumeKnownToken(TOK_FUNCTION);
-                return functionStmt(preludeStart, yieldHandling, NameRequired, AsyncFunction);
+                return functionStmt(toStringStart, yieldHandling, NameRequired, AsyncFunction);
             }
         }
 
@@ -8148,7 +8148,7 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
 
         if (!tokenStream.getToken(&next, TokenStream::Operand))
             return null();
-        uint32_t preludeStart = pos().begin;
+        uint32_t toStringStart = pos().begin;
         tokenStream.ungetToken();
 
         FunctionAsyncKind asyncKind = SyncFunction;
@@ -8173,7 +8173,7 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
         if (!pn)
             return null();
 
-        Node arrowFunc = functionDefinition(pn, preludeStart, inHandling, yieldHandling, nullptr,
+        Node arrowFunc = functionDefinition(pn, toStringStart, inHandling, yieldHandling, nullptr,
                                             Arrow, NotGenerator, asyncKind);
         if (!arrowFunc)
             return null();
@@ -8487,7 +8487,7 @@ Parser<ParseHandler>::generatorComprehensionLambda(unsigned begin)
 
     // Create box for fun->object early to root it.
     Directives directives(/* strict = */ outerpc->sc()->strict());
-    FunctionBox* genFunbox = newFunctionBox(genfn, fun, /* preludeStart = */ 0, directives,
+    FunctionBox* genFunbox = newFunctionBox(genfn, fun, /* toStringStart = */ 0, directives,
                                             StarGenerator, SyncFunction, /* tryAnnexB = */ false);
     if (!genFunbox)
         return null();
@@ -9759,7 +9759,7 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::methodDefinition(uint32_t preludeStart, PropertyType propType,
+Parser<ParseHandler>::methodDefinition(uint32_t toStringStart, PropertyType propType,
                                        HandleAtom funName)
 {
     FunctionSyntaxKind kind;
@@ -9815,7 +9815,7 @@ Parser<ParseHandler>::methodDefinition(uint32_t preludeStart, PropertyType propT
     if (!pn)
         return null();
 
-    return functionDefinition(pn, preludeStart, InAllowed, yieldHandling, funName, kind,
+    return functionDefinition(pn, toStringStart, InAllowed, yieldHandling, funName, kind,
                               generatorKind, asyncKind);
 }
 
@@ -9945,9 +9945,9 @@ Parser<ParseHandler>::primaryExpr(YieldHandling yieldHandling, TripledotHandling
                 return null();
 
             if (nextSameLine == TOK_FUNCTION) {
-                uint32_t preludeStart = pos().begin;
+                uint32_t toStringStart = pos().begin;
                 tokenStream.consumeKnownToken(TOK_FUNCTION);
-                return functionExpr(preludeStart, PredictUninvoked, AsyncFunction);
+                return functionExpr(toStringStart, PredictUninvoked, AsyncFunction);
             }
         }
 

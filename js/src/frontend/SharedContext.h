@@ -451,8 +451,8 @@ class FunctionBox : public ObjectBox, public SharedContext
     uint32_t        bufEnd;
     uint32_t        startLine;
     uint32_t        startColumn;
-    uint32_t        preludeStart;
-    uint32_t        postludeEnd;
+    uint32_t        toStringStart;
+    uint32_t        toStringEnd;
     uint16_t        length;
 
     uint8_t         generatorKindBits_;     /* The GeneratorKind of this function. */
@@ -482,7 +482,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     FunctionContextFlags funCxFlags;
 
     FunctionBox(JSContext* cx, LifoAlloc& alloc, ObjectBox* traceListHead, JSFunction* fun,
-                uint32_t preludeStart, Directives directives, bool extraWarnings,
+                uint32_t toStringStart, Directives directives, bool extraWarnings,
                 GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
     MutableHandle<LexicalScope::Data*> namedLambdaBindings() {
@@ -620,10 +620,10 @@ class FunctionBox : public ObjectBox, public SharedContext
 
     void setEnd(uint32_t end) {
         // For all functions except class constructors, the buffer and
-        // postlude ending positions are the same. Class constructors override
-        // the postlude ending position with the end of the class definition.
+        // toString ending positions are the same. Class constructors override
+        // the toString ending position with the end of the class definition.
         bufEnd = end;
-        postludeEnd = end;
+        toStringEnd = end;
     }
 
     void trace(JSTracer* trc) override;

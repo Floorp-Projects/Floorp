@@ -939,29 +939,36 @@ class JSScript : public js::gc::TenuredCell
 
     uint32_t        bodyScopeIndex_; /* index into the scopes array of the body scope */
 
-    // Range of characters in scriptSource which contains this script's source.
-    // each field points the following location.
+    // Range of characters in scriptSource which contains this script's
+    // source, that is, the range used by the Parser to produce this script.
+    //
+    // Most scripted functions have sourceStart_ == toStringStart_ and
+    // sourceEnd_ == toStringEnd_. However, for functions with extra
+    // qualifiers (e.g. generators, async) and for class constructors (which
+    // need to return the entire class source), their values differ.
+    //
+    // Each field points the following locations.
     //
     //   function * f(a, b) { return a + b; }
     //   ^          ^                        ^
     //   |          |                        |
     //   |          sourceStart_             sourceEnd_
-    //   |
-    //   preludeStart_
+    //   |                                   |
+    //   toStringStart_                      toStringEnd_
     //
-    // And, in the case of class constructors, an additional postlude offset
-    // is used for use with toString.
+    // And, in the case of class constructors, an additional toStringEnd
+    // offset is used.
     //
     //   class C { constructor() { this.field = 42; } }
     //   ^         ^                                 ^ ^
     //   |         |                                 | `---------`
     //   |         sourceStart_                      sourceEnd_  |
     //   |                                                       |
-    //   preludeStart_                                           postludeEnd_
+    //   toStringStart_                                          toStringEnd_
     uint32_t        sourceStart_;
     uint32_t        sourceEnd_;
-    uint32_t        preludeStart_;
-    uint32_t        postludeEnd_;
+    uint32_t        toStringStart_;
+    uint32_t        toStringEnd_;
 
 #ifdef MOZ_VTUNE
     // Unique Method ID passed to the VTune profiler, or 0 if unset.
@@ -1143,7 +1150,7 @@ class JSScript : public js::gc::TenuredCell
                             const JS::ReadOnlyCompileOptions& options,
                             js::HandleObject sourceObject,
                             uint32_t sourceStart, uint32_t sourceEnd,
-                            uint32_t preludeStart, uint32_t postludeEnd);
+                            uint32_t toStringStart, uint32_t toStringEnd);
 
     void initCompartment(JSContext* cx);
 
@@ -1294,12 +1301,12 @@ class JSScript : public js::gc::TenuredCell
         return sourceEnd_;
     }
 
-    uint32_t preludeStart() const {
-        return preludeStart_;
+    uint32_t toStringStart() const {
+        return toStringStart_;
     }
 
-    uint32_t postludeEnd() const {
-        return postludeEnd_;
+    uint32_t toStringEnd() const {
+        return toStringEnd_;
     }
 
     bool noScriptRval() const {
@@ -2124,15 +2131,15 @@ class LazyScript : public gc::TenuredCell
     // See the comment in JSScript for the details
     uint32_t begin_;
     uint32_t end_;
-    uint32_t preludeStart_;
-    uint32_t postludeEnd_;
+    uint32_t toStringStart_;
+    uint32_t toStringEnd_;
     // Line and column of |begin_| position, that is the position where we
     // start parsing.
     uint32_t lineno_;
     uint32_t column_;
 
     LazyScript(JSFunction* fun, void* table, uint64_t packedFields,
-               uint32_t begin, uint32_t end, uint32_t preludeStart,
+               uint32_t begin, uint32_t end, uint32_t toStringStart,
                uint32_t lineno, uint32_t column);
 
     // Create a LazyScript without initializing the closedOverBindings and the
@@ -2140,7 +2147,7 @@ class LazyScript : public gc::TenuredCell
     // with valid atoms and functions.
     static LazyScript* CreateRaw(JSContext* cx, HandleFunction fun,
                                  uint64_t packedData, uint32_t begin, uint32_t end,
-                                 uint32_t preludeStart, uint32_t lineno, uint32_t column);
+                                 uint32_t toStringStart, uint32_t lineno, uint32_t column);
 
   public:
     static const uint32_t NumClosedOverBindingsLimit = 1 << NumClosedOverBindingsBits;
@@ -2152,7 +2159,7 @@ class LazyScript : public gc::TenuredCell
                               const frontend::AtomVector& closedOverBindings,
                               Handle<GCVector<JSFunction*, 8>> innerFunctions,
                               JSVersion version, uint32_t begin, uint32_t end,
-                              uint32_t preludeStart, uint32_t lineno, uint32_t column);
+                              uint32_t toStringStart, uint32_t lineno, uint32_t column);
 
     // Create a LazyScript and initialize the closedOverBindings and the
     // innerFunctions with dummy values to be replaced in a later initialization
@@ -2167,7 +2174,7 @@ class LazyScript : public gc::TenuredCell
                               HandleScript script, HandleScope enclosingScope,
                               HandleScriptSource sourceObject,
                               uint64_t packedData, uint32_t begin, uint32_t end,
-                              uint32_t preludeStart, uint32_t lineno, uint32_t column);
+                              uint32_t toStringStart, uint32_t lineno, uint32_t column);
 
     void initRuntimeFields(uint64_t packedFields);
 
@@ -2348,11 +2355,11 @@ class LazyScript : public gc::TenuredCell
     uint32_t end() const {
         return end_;
     }
-    uint32_t preludeStart() const {
-        return preludeStart_;
+    uint32_t toStringStart() const {
+        return toStringStart_;
     }
-    uint32_t postludeEnd() const {
-        return postludeEnd_;
+    uint32_t toStringEnd() const {
+        return toStringEnd_;
     }
     uint32_t lineno() const {
         return lineno_;
@@ -2361,9 +2368,10 @@ class LazyScript : public gc::TenuredCell
         return column_;
     }
 
-    void setPostludeEnd(uint32_t postludeEnd) {
-        MOZ_ASSERT(postludeEnd_ >= end_);
-        postludeEnd_ = postludeEnd;
+    void setToStringEnd(uint32_t toStringEnd) {
+        MOZ_ASSERT(toStringStart_ <= toStringEnd);
+        MOZ_ASSERT(toStringEnd_ >= end_);
+        toStringEnd_ = toStringEnd;
     }
 
     bool hasUncompiledEnclosingScript() const;
