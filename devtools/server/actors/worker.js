@@ -365,7 +365,8 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
     // This call should be replaced with a proper implementation when
     // ServiceWorker debugging is improved to support multiple content processes
     // correctly.
-    Services.perms.broadcastPermissionsForPrincipalToAllContentProcesses(this._registration.principal);
+    Services.perms.broadcastPermissionsForPrincipalToAllContentProcesses(
+      this._registration.principal);
 
     Services.ppmm.broadcastAsyncMessage("serviceWorkerRegistration:start", {
       scope: this._registration.scope
