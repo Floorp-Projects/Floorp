@@ -28,7 +28,9 @@ public:
 
   mozilla::NotNull<PseudoStack*> Stack() const { return mPseudoStack; }
 
-  void SetHasProfile() { mHasProfile = true; }
+  void StartProfiling();
+  void StopProfiling();
+  bool IsBeingProfiled() { return mIsBeingProfiled; }
 
   PlatformData* GetPlatformData() const { return mPlatformData.get(); }
   void* StackTop() const { return mStackTop; }
@@ -53,12 +55,10 @@ private:
 
   //
   // The following code is only used for threads that are being profiled, i.e.
-  // for which SetHasProfile() has been called.
+  // for which IsBeingProfiled() returns true.
   //
 
 public:
-  bool HasProfile() { return mHasProfile; }
-
   void StreamJSON(ProfileBuffer* aBuffer, SpliceableJSONWriter& aWriter,
                   const mozilla::TimeStamp& aStartTime, double aSinceTime);
 
@@ -67,16 +67,17 @@ public:
   void FlushSamplesAndMarkers(ProfileBuffer* aBuffer,
                               const mozilla::TimeStamp& aStartTime);
 
-  // Returns nullptr if this is not the main thread.
+  // Returns nullptr if this is not the main thread or if this thread is not
+  // being profiled.
   ThreadResponsiveness* GetThreadResponsiveness()
   {
     ThreadResponsiveness* responsiveness = mResponsiveness.ptrOr(nullptr);
-    MOZ_ASSERT(!!responsiveness == mIsMainThread);
+    MOZ_ASSERT(!!responsiveness == (mIsMainThread && mIsBeingProfiled));
     return responsiveness;
   }
 
 private:
-  bool mHasProfile;
+  bool mIsBeingProfiled;
 
   // JS frames in the buffer may require a live JSRuntime to stream (e.g.,
   // stringifying JIT frames). In the case of JSRuntime destruction,

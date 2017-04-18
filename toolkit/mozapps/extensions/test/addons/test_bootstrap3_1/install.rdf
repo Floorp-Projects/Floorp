@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>bootstrap3@tests.mozilla.org</em:id>
+    <em:version>1.0</em:version>
+    <em:bootstrap>true</em:bootstrap>
+
+    <!-- Front End MetaData -->
+    <em:name>Test Bootstrap 3</em:name>
+    <em:description>Test Description</em:description>
+
+    <em:iconURL>chrome://foo/skin/icon.png</em:iconURL>
+    <em:aboutURL>chrome://foo/content/about.xul</em:aboutURL>
+    <em:optionsURL>chrome://foo/content/options.xul</em:optionsURL>
+
+    <em:targetApplication>
+      <Description>
+        <em:id>xpcshell@tests.mozilla.org</em:id>
+        <em:minVersion>1</em:minVersion>
+        <em:maxVersion>1</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+  </Description>
+</RDF>

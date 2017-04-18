@@ -1,8 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
+const { interfaces: Ci, utils: Cu } = Components;
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 function test() {
   waitForExplicitFinish();
@@ -12,16 +13,21 @@ function test() {
     "browser.cache.disk.enable",
     "browser.cache.memory.enable",
   ];
+  for (let pref of prefs) {
+    Services.prefs.setBoolPref(pref, false);
+  }
+
+  // Adding one fake site so that the SiteDataManager would run.
+  // Otherwise, without any site then it would just return so we would end up in not testing SiteDataManager.
+  let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin("https://www.foo.com");
+  Services.perms.addFromPrincipal(principal, "persistent-storage", Ci.nsIPermissionManager.ALLOW_ACTION);
 
   registerCleanupFunction(function() {
     for (let pref of prefs) {
       Services.prefs.clearUserPref(pref);
     }
+    Services.perms.removeFromPrincipal(principal, "persistent-storage");
   });
-
-  for (let pref of prefs) {
-    Services.prefs.setBoolPref(pref, false);
-  }
 
   open_preferences(runTest);
 }
@@ -31,18 +37,26 @@ function runTest(win) {
 
   let tab = win.document;
   let elements = tab.getElementById("mainPrefPane").children;
+  let offlineGroupDisabled = !SpecialPowers.getBoolPref("browser.preferences.offlineGroup.enabled");
 
-  // Test if advanced pane is opened correctly
-  win.gotoPref("paneAdvanced");
+  // Test if privacy pane is opened correctly
+  win.gotoPref("panePrivacy");
   for (let element of elements) {
     if (element.nodeName == "preferences") {
       continue;
     }
+    // The siteDataGroup in the Storage Management project will replace the offlineGroup eventually,
+    // so during the transition period, we have to check the pref to see if the offlineGroup
+    // should be hidden always. See the bug 1354530 for the details.
+    if (element.id == "offlineGroup" && offlineGroupDisabled) {
+      is_element_hidden(element, "Disabled offlineGroup should be hidden");
+      continue;
+    }
     let attributeValue = element.getAttribute("data-category");
-    if (attributeValue == "paneAdvanced") {
-      is_element_visible(element, "Advanced elements should be visible");
+    if (attributeValue == "panePrivacy") {
+      is_element_visible(element, "Privacy elements should be visible");
     } else {
-      is_element_hidden(element, "Non-Advanced elements should be hidden");
+      is_element_hidden(element, "Non-Privacy elements should be hidden");
     }
   }
 

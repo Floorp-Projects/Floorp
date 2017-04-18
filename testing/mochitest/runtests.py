@@ -1577,6 +1577,9 @@ toolbar#nav-bar {
             dmdPath=options.dmdPath,
             lsanPath=lsanPath)
 
+        if hasattr(options, "topsrcdir"):
+            browserEnv["MOZ_DEVELOPER_REPO_DIR"] = options.topsrcdir
+
         # These variables are necessary for correct application startup; change
         # via the commandline at your own risk.
         browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
