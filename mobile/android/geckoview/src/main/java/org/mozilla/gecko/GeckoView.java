@@ -6,6 +6,7 @@
 
 package org.mozilla.gecko;
 
+import java.io.File;
 import java.util.Set;
 
 import org.mozilla.gecko.annotation.ReflectionTarget;
@@ -642,5 +643,358 @@ public class GeckoView extends LayerView
         * @param canGoForward The new value for the ability.
         */
         void onCanGoForward(GeckoView view, boolean canGoForward);
+    }
+
+    /**
+     * GeckoView applications implement this interface to handle prompts triggered by
+     * content in the GeckoView, such as alerts, authentication dialogs, and select list
+     * pickers.
+     **/
+    public interface PromptDelegate {
+        /**
+         * Callback interface for notifying the result of a prompt, and for accessing the
+         * optional features for prompts (e.g. optional checkbox).
+         */
+        interface AlertCallback {
+            /**
+             * Called by the prompt implementation when the prompt is dismissed without a
+             * result, for example if the user presses the "Back" button. All prompts
+             * must call dismiss() or confirm(), if available, when the prompt is dismissed.
+             */
+            void dismiss();
+
+            /**
+             * Return whether the prompt shown should include a checkbox. For example, if
+             * a page shows multiple prompts within a short period of time, the next
+             * prompt will include a checkbox to let the user disable future prompts.
+             * Although the API allows checkboxes for all prompts, in practice, only
+             * alert/button/text/auth prompts will possibly have a checkbox.
+             */
+            boolean hasCheckbox();
+
+            /**
+             * Return the message label for the optional checkbox.
+             */
+            String getCheckboxMessage();
+
+            /**
+             * Return the initial value for the optional checkbox.
+             */
+            boolean getCheckboxValue();
+
+            /**
+             * Set the current value for the optional checkbox.
+             */
+            void setCheckboxValue(boolean value);
+        }
+
+        /**
+         * Display a simple message prompt.
+         *
+         * @param view The GeckoView that triggered the prompt
+         *             or null if the prompt is a global prompt.
+         * @param title Title for the prompt dialog.
+         * @param msg Message for the prompt dialog.
+         * @param callback Callback interface.
+         */
+        void alert(GeckoView view, String title, String msg, AlertCallback callback);
+
+        /**
+         * Callback interface for notifying the result of a button prompt.
+         */
+        interface ButtonCallback extends AlertCallback {
+            /**
+             * Called by the prompt implementation when the button prompt is dismissed by
+             * the user pressing one of the buttons.
+             */
+            void confirm(int button);
+        }
+
+        static final int BUTTON_TYPE_POSITIVE = 0;
+        static final int BUTTON_TYPE_NEUTRAL = 1;
+        static final int BUTTON_TYPE_NEGATIVE = 2;
+
+        /**
+         * Display a prompt with up to three buttons.
+         *
+         * @param view The GeckoView that triggered the prompt
+         *             or null if the prompt is a global prompt.
+         * @param title Title for the prompt dialog.
+         * @param msg Message for the prompt dialog.
+         * @param btnMsg Array of 3 elements indicating labels for the individual buttons.
+         *               btnMsg[BUTTON_TYPE_POSITIVE] is the label for the "positive" button.
+         *               btnMsg[BUTTON_TYPE_NEUTRAL] is the label for the "neutral" button.
+         *               btnMsg[BUTTON_TYPE_NEGATIVE] is the label for the "negative" button.
+         *               The button is hidden if the corresponding label is null.
+         * @param callback Callback interface.
+         */
+        void promptForButton(GeckoView view, String title, String msg,
+                             String[] btnMsg, ButtonCallback callback);
+
+        /**
+         * Callback interface for notifying the result of prompts that have text results,
+         * including color and date/time pickers.
+         */
+        interface TextCallback extends AlertCallback {
+            /**
+             * Called by the prompt implementation when the text prompt is confirmed by
+             * the user, for example by pressing the "OK" button.
+             */
+            void confirm(String text);
+        }
+
+        /**
+         * Display a prompt for inputting text.
+         *
+         * @param view The GeckoView that triggered the prompt
+         *             or null if the prompt is a global prompt.
+         * @param title Title for the prompt dialog.
+         * @param msg Message for the prompt dialog.
+         * @param value Default input text for the prompt.
+         * @param callback Callback interface.
+         */
+        void promptForText(GeckoView view, String title, String msg,
+                           String value, TextCallback callback);
+
+        /**
+         * Callback interface for notifying the result of authentication prompts.
+         */
+        interface AuthCallback extends AlertCallback {
+            /**
+             * Called by the prompt implementation when a password-only prompt is
+             * confirmed by the user.
+             */
+            void confirm(String password);
+
+            /**
+             * Called by the prompt implementation when a username/password prompt is
+             * confirmed by the user.
+             */
+            void confirm(String username, String password);
+        }
+
+        /**
+         * The auth prompt is for a network host.
+         */
+        static final int AUTH_FLAG_HOST = 1;
+        /**
+         * The auth prompt is for a proxy.
+         */
+        static final int AUTH_FLAG_PROXY = 2;
+        /**
+         * The auth prompt should only request a password.
+         */
+        static final int AUTH_FLAG_ONLY_PASSWORD = 8;
+        /**
+         * The auth prompt is the result of a previous failed login.
+         */
+        static final int AUTH_FLAG_PREVIOUS_FAILED = 16;
+        /**
+         * The auth prompt is for a cross-origin sub-resource.
+         */
+        static final int AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE = 32;
+
+        /**
+         * The auth request is unencrypted or the encryption status is unknown.
+         */
+        static final int AUTH_LEVEL_NONE = 0;
+        /**
+         * The auth request only encrypts password but not data.
+         */
+        static final int AUTH_LEVEL_PW_ENCRYPTED = 1;
+        /**
+         * The auth request encrypts both password and data.
+         */
+        static final int AUTH_LEVEL_SECURE = 2;
+
+        /**
+         * Display a prompt for authentication credentials.
+         *
+         * @param view The GeckoView that triggered the prompt
+         *             or null if the prompt is a global prompt.
+         * @param title Title for the prompt dialog.
+         * @param msg Message for the prompt dialog.
+         * @param options Bundle containing options for the prompt with keys,
+         *                "flags": int, bit field of AUTH_FLAG_* flags;
+         *                "uri": String, URI for the auth request or null if unknown;
+         *                "level": int, one of AUTH_LEVEL_* indicating level of encryption;
+         *                "username": String, initial username or null if password-only;
+         *                "password": String, intiial password;
+         * @param callback Callback interface.
+         */
+        void promptForAuth(GeckoView view, String title, String msg,
+                           GeckoBundle options, AuthCallback callback);
+
+        /**
+         * Callback interface for notifying the result of menu or list choice.
+         */
+        interface ChoiceCallback extends AlertCallback {
+            /**
+             * Called by the prompt implementation when the menu or single-choice list is
+             * dismissed by the user.
+             *
+             * @param id ID of the selected item.
+             */
+            void confirm(String id);
+
+            /**
+             * Called by the prompt implementation when the multiple-choice list is
+             * dismissed by the user.
+             *
+             * @param id IDs of the selected items.
+             */
+            void confirm(String[] ids);
+
+            /**
+             * Called by the prompt implementation when the menu or single-choice list is
+             * dismissed by the user.
+             *
+             * @param item Bundle representing the selected item; must be an original
+             *             GeckoBundle object that was passed to the implementation.
+             */
+            void confirm(GeckoBundle item);
+
+            /**
+             * Called by the prompt implementation when the multiple-choice list is
+             * dismissed by the user.
+             *
+             * @param item Bundle array representing the selected items; must be original
+             *             GeckoBundle objects that were passed to the implementation.
+             */
+            void confirm(GeckoBundle[] items);
+        }
+
+        /**
+         * Display choices in a menu that dismisses as soon as an item is chosen.
+         */
+        static final int CHOICE_TYPE_MENU = 1;
+
+        /**
+         * Display choices in a list that allows a single selection.
+         */
+        static final int CHOICE_TYPE_SINGLE = 2;
+
+        /**
+         * Display choices in a list that allows multiple selections.
+         */
+        static final int CHOICE_TYPE_MULTIPLE = 3;
+
+        /**
+         * Display a menu prompt or list prompt.
+         *
+         * @param view The GeckoView that triggered the prompt
+         *             or null if the prompt is a global prompt.
+         * @param title Title for the prompt dialog, or null for no title.
+         * @param msg Message for the prompt dialog, or null for no message.
+         * @param type One of CHOICE_TYPE_* indicating the type of prompt.
+         * @param choices Array of bundles each representing an item or group, with keys,
+         *                "disabled": boolean, true if the item should not be selectable;
+         *                "icon": String, URI of the item icon or null if none
+         *                        (only valid for menus);
+         *                "id": String, ID of the item or group;
+         *                "items": GeckoBundle[], array of sub-items in a group or null
+         *                         if not a group.
+         *                "label": String, label for displaying the item or group;
+         *                "selected": boolean, true if the item should be pre-selected
+         *                            (pre-checked for menu items);
+         *                "separator": boolean, true if the item should be a menu separator
+         *                             (only valid for menus);
+         * @param callback Callback interface.
+         */
+        void promptForChoice(GeckoView view, String title, String msg, int type,
+                             GeckoBundle[] choices, ChoiceCallback callback);
+
+        /**
+         * Display a color prompt.
+         *
+         * @param view The GeckoView that triggered the prompt
+         *             or null if the prompt is a global prompt.
+         * @param title Title for the prompt dialog.
+         * @param value Initial color value in HTML color format.
+         * @param callback Callback interface; the result passed to confirm() must be in
+         *                 HTML color format.
+         */
+        void promptForColor(GeckoView view, String title, String value,
+                            TextCallback callback);
+
+        /**
+         * Prompt for year, month, and day.
+         */
+        static final int DATETIME_TYPE_DATE = 1;
+
+        /**
+         * Prompt for year and month.
+         */
+        static final int DATETIME_TYPE_MONTH = 2;
+
+        /**
+         * Prompt for year and week.
+         */
+        static final int DATETIME_TYPE_WEEK = 3;
+
+        /**
+         * Prompt for hour and minute.
+         */
+        static final int DATETIME_TYPE_TIME = 4;
+
+        /**
+         * Prompt for year, month, day, hour, and minute, without timezone.
+         */
+        static final int DATETIME_TYPE_DATETIME_LOCAL = 5;
+
+        /**
+         * Display a date/time prompt.
+         *
+         * @param view The GeckoView that triggered the prompt
+         *             or null if the prompt is a global prompt.
+         * @param title Title for the prompt dialog; currently always null.
+         * @param type One of DATETIME_TYPE_* indicating the type of prompt.
+         * @param value Initial date/time value in HTML date/time format.
+         * @param min Minimum date/time value in HTML date/time format.
+         * @param max Maximum date/time value in HTML date/time format.
+         * @param callback Callback interface; the result passed to confirm() must be in
+         *                 HTML date/time format.
+         */
+        void promptForDateTime(GeckoView view, String title, int type,
+                               String value, String min, String max, TextCallback callback);
+
+        /**
+         * Callback interface for notifying the result of file prompts.
+         */
+        interface FileCallback extends AlertCallback {
+            /**
+             * Called by the prompt implementation when the user makes a file selection in
+             * single-selection mode.
+             *
+             * @param uri The URI of the selected file.
+             */
+            void confirm(Uri uri);
+
+            /**
+             * Called by the prompt implementation when the user makes file selections in
+             * multiple-selection mode.
+             *
+             * @param uris Array of URI objects for the selected files.
+             */
+            void confirm(Uri[] uris);
+        }
+
+        static final int FILE_TYPE_SINGLE = 1;
+        static final int FILE_TYPE_MULTIPLE = 2;
+
+        /**
+         * Display a file prompt.
+         *
+         * @param view The GeckoView that triggered the prompt
+         *             or null if the prompt is a global prompt.
+         * @param title Title for the prompt dialog.
+         * @param type One of FILE_TYPE_* indicating the prompt type.
+         * @param mimeTypes Array of permissible MIME types for the selected files, in
+         *                  the form "type/subtype", where "type" and/or "subtype" can be
+         *                  "*" to indicate any value.
+         * @param callback Callback interface.
+         */
+        void promptForFile(GeckoView view, String title, int type,
+                           String[] mimeTypes, FileCallback callback);
     }
 }
