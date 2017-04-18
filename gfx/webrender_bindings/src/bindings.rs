@@ -119,8 +119,8 @@ pub enum WrGradientExtendMode {
     Repeat,
 }
 
-impl WrGradientExtendMode {
-    pub fn to_gradient_extend_mode(self) -> ExtendMode {
+impl Into<ExtendMode> for WrGradientExtendMode {
+    fn into(self) -> ExtendMode {
         match self {
             WrGradientExtendMode::Clamp => ExtendMode::Clamp,
             WrGradientExtendMode::Repeat => ExtendMode::Repeat,
@@ -129,20 +129,20 @@ impl WrGradientExtendMode {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy)]
 struct WrItemRange {
     start: usize,
     length: usize,
 }
 
-impl WrItemRange {
-    fn to_item_range(&self) -> ItemRange {
+impl Into<ItemRange> for WrItemRange {
+    fn into(self) -> ItemRange {
         ItemRange {
             start: self.start,
             length: self.length,
         }
     }
 }
-
 impl From<ItemRange> for WrItemRange {
     fn from(item_range: ItemRange) -> Self {
         WrItemRange {
@@ -153,32 +153,33 @@ impl From<ItemRange> for WrItemRange {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct WrPoint {
     x: f32,
     y: f32,
 }
 
-impl WrPoint {
-    pub fn to_point<U>(&self) -> TypedPoint2D<f32, U> {
+impl<U> Into<TypedPoint2D<f32, U>> for WrPoint {
+    fn into(self) -> TypedPoint2D<f32, U> {
         TypedPoint2D::new(self.x, self.y)
     }
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy)]
 pub struct WrSize {
     width: f32,
     height: f32,
 }
 
-impl WrSize {
-    pub fn to_size<U>(&self) -> TypedSize2D<f32, U> {
+impl<U> Into<TypedSize2D<f32, U>> for WrSize {
+    fn into(self) -> TypedSize2D<f32, U> {
         TypedSize2D::new(self.width, self.height)
     }
 }
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct WrRect {
     x: f32,
     y: f32,
@@ -186,8 +187,8 @@ pub struct WrRect {
     height: f32,
 }
 
-impl WrRect {
-    pub fn to_rect<U>(&self) -> TypedRect<f32, U> {
+impl<U> Into<TypedRect<f32, U>> for WrRect {
+    fn into(self) -> TypedRect<f32, U> {
         TypedRect::new(TypedPoint2D::new(self.x, self.y),
                        TypedSize2D::new(self.width, self.height))
     }
@@ -204,13 +205,22 @@ impl<U> From<TypedRect<f32, U>> for WrRect {
 }
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct WrMatrix {
     values: [f32; 16],
 }
 
-impl WrMatrix {
-    pub fn to_transform<U, E>(&self) -> TypedMatrix4D<f32, U, E> {
+impl<'a, U, E> Into<TypedMatrix4D<f32, U, E>> for &'a WrMatrix {
+    fn into(self) -> TypedMatrix4D<f32, U, E> {
+        TypedMatrix4D::row_major(
+            self.values[0], self.values[1], self.values[2], self.values[3],
+            self.values[4], self.values[5], self.values[6], self.values[7],
+            self.values[8], self.values[9], self.values[10], self.values[11],
+            self.values[12], self.values[13], self.values[14], self.values[15])
+    }
+}
+impl<U, E> Into<TypedMatrix4D<f32, U, E>> for WrMatrix {
+    fn into(self) -> TypedMatrix4D<f32, U, E> {
         TypedMatrix4D::row_major(
             self.values[0], self.values[1], self.values[2], self.values[3],
             self.values[4], self.values[5], self.values[6], self.values[7],
@@ -220,6 +230,7 @@ impl WrMatrix {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy)]
 pub struct WrColor {
     r: f32,
     g: f32,
@@ -227,65 +238,62 @@ pub struct WrColor {
     a: f32,
 }
 
-impl WrColor {
-    pub fn to_color(&self) -> ColorF {
+impl Into<ColorF> for WrColor {
+    fn into(self) -> ColorF {
         ColorF::new(self.r, self.g, self.b, self.a)
     }
 }
 
 #[repr(C)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct WrGlyphInstance {
     index: u32,
     point: WrPoint,
 }
 
-impl WrGlyphInstance {
-    pub fn to_glyph_instance(&self) -> GlyphInstance {
+impl<'a> Into<GlyphInstance> for &'a WrGlyphInstance {
+    fn into(self) -> GlyphInstance {
         GlyphInstance {
             index: self.index,
-            point: self.point.to_point(),
+            point: self.point.into(),
         }
-    }
-    pub fn to_glyph_instances(glyphs: &[WrGlyphInstance]) -> Vec<GlyphInstance> {
-        glyphs.iter().map(|x| x.to_glyph_instance()).collect()
     }
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy)]
 pub struct WrGradientStop {
     offset: f32,
     color: WrColor,
 }
 
-impl WrGradientStop {
-    pub fn to_gradient_stop(&self) -> GradientStop {
+impl<'a> Into<GradientStop> for &'a WrGradientStop {
+    fn into(self) -> GradientStop {
         GradientStop {
             offset: self.offset,
-            color: self.color.to_color(),
+            color: self.color.into(),
         }
-    }
-    pub fn to_gradient_stops(stops: &[WrGradientStop]) -> Vec<GradientStop> {
-        stops.iter().map(|x| x.to_gradient_stop()).collect()
     }
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy)]
 pub struct WrBorderSide {
     color: WrColor,
     style: WrBorderStyle,
 }
 
-impl WrBorderSide {
-    pub fn to_border_side(&self) -> BorderSide {
+impl Into<BorderSide> for WrBorderSide {
+    fn into(self) -> BorderSide {
         BorderSide {
-            color: self.color.to_color(),
+            color: self.color.into(),
             style: self.style,
         }
     }
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy)]
 pub struct WrBorderRadius {
     pub top_left: WrSize,
     pub top_right: WrSize,
@@ -293,18 +301,19 @@ pub struct WrBorderRadius {
     pub bottom_right: WrSize,
 }
 
-impl WrBorderRadius {
-    pub fn to_border_radius(&self) -> BorderRadius {
+impl Into<BorderRadius> for WrBorderRadius {
+    fn into(self) -> BorderRadius {
         BorderRadius {
-            top_left: self.top_left.to_size(),
-            top_right: self.top_right.to_size(),
-            bottom_left: self.bottom_left.to_size(),
-            bottom_right: self.bottom_right.to_size(),
+            top_left: self.top_left.into(),
+            top_right: self.top_right.into(),
+            bottom_left: self.bottom_left.into(),
+            bottom_right: self.bottom_right.into(),
         }
     }
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy)]
 pub struct WrBorderWidths
 {
     left: f32,
@@ -313,9 +322,8 @@ pub struct WrBorderWidths
     bottom: f32,
 }
 
-impl WrBorderWidths
-{
-    pub fn to_border_widths(&self) -> BorderWidths {
+impl Into<BorderWidths> for WrBorderWidths {
+    fn into(self) -> BorderWidths {
         BorderWidths {
             left: self.left,
             top: self.top,
@@ -326,6 +334,7 @@ impl WrBorderWidths
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy)]
 pub struct WrNinePatchDescriptor
 {
     width: u32,
@@ -333,18 +342,18 @@ pub struct WrNinePatchDescriptor
     slice: WrSideOffsets2Du32,
 }
 
-impl WrNinePatchDescriptor
-{
-    pub fn to_nine_patch_descriptor(&self) -> NinePatchDescriptor {
+impl Into<NinePatchDescriptor> for WrNinePatchDescriptor {
+    fn into(self) -> NinePatchDescriptor {
         NinePatchDescriptor {
             width: self.width,
             height: self.height,
-            slice: self.slice.to_side_offsets_2d(),
+            slice: self.slice.into(),
         }
     }
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy)]
 pub struct WrSideOffsets2D<T>
 {
     top: T,
@@ -353,9 +362,8 @@ pub struct WrSideOffsets2D<T>
     left: T,
 }
 
-impl<T: Copy> WrSideOffsets2D<T>
-{
-    pub fn to_side_offsets_2d(&self) -> SideOffsets2D<T> {
+impl<T: Copy> Into<SideOffsets2D<T>> for WrSideOffsets2D<T> {
+    fn into(self) -> SideOffsets2D<T> {
         SideOffsets2D::new(self.top, self.right, self.bottom, self.left)
     }
 }
@@ -369,9 +377,8 @@ pub enum WrRepeatMode
     Space,
 }
 
-impl WrRepeatMode
-{
-   pub fn to_repeat_mode(self) -> RepeatMode {
+impl Into<RepeatMode> for WrRepeatMode {
+    fn into(self) -> RepeatMode {
        match self {
            WrRepeatMode::Stretch => RepeatMode::Stretch,
            WrRepeatMode::Repeat => RepeatMode::Repeat,
@@ -382,17 +389,27 @@ impl WrRepeatMode
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy)]
 pub struct WrImageMask {
     image: WrImageKey,
     rect: WrRect,
     repeat: bool,
 }
 
-impl WrImageMask {
-    pub fn to_image_mask(&self) -> ImageMask {
+impl Into<ImageMask> for WrImageMask {
+    fn into(self) -> ImageMask {
         ImageMask {
             image: self.image,
-            rect: self.rect.to_rect(),
+            rect: self.rect.into(),
+            repeat: self.repeat,
+        }
+    }
+}
+impl<'a> Into<ImageMask> for &'a WrImageMask {
+    fn into(self) -> ImageMask {
+        ImageMask {
+            image: self.image,
+            rect: self.rect.into(),
             repeat: self.repeat,
         }
     }
@@ -408,38 +425,37 @@ impl From<ImageMask> for WrImageMask {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy)]
 pub struct WrComplexClipRegion {
     rect: WrRect,
     radii: WrBorderRadius,
 }
 
-impl WrComplexClipRegion {
-    pub fn to_complex_clip_region(&self) -> ComplexClipRegion {
+impl<'a> Into<ComplexClipRegion> for &'a WrComplexClipRegion {
+    fn into(self) -> ComplexClipRegion {
         ComplexClipRegion {
-            rect: self.rect.to_rect(),
-            radii: self.radii.to_border_radius(),
+            rect: self.rect.into(),
+            radii: self.radii.into(),
         }
-    }
-    pub fn to_complex_clip_regions(complex_clips: &[WrComplexClipRegion])
-                                   -> Vec<ComplexClipRegion> {
-        complex_clips.iter().map(|x| x.to_complex_clip_region()).collect()
     }
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy)]
 pub struct WrClipRegion {
     main: WrRect,
     complex: WrItemRange,
     image_mask: WrImageMask,
     has_image_mask: bool,
 }
-impl WrClipRegion {
-    pub fn to_clip_region(&self) -> ClipRegion {
+
+impl Into<ClipRegion> for WrClipRegion {
+    fn into(self) -> ClipRegion {
         ClipRegion {
-            main: self.main.to_rect(),
-            complex: self.complex.to_item_range(),
+            main: self.main.into(),
+            complex: self.complex.into(),
             image_mask: if self.has_image_mask {
-                Some(self.image_mask.to_image_mask())
+                Some(self.image_mask.into())
             } else {
                 None
             },
@@ -568,8 +584,8 @@ pub struct WrImageDescriptor {
     pub is_opaque: bool,
 }
 
-impl WrImageDescriptor {
-    pub fn to_descriptor(&self) -> ImageDescriptor {
+impl<'a> Into<ImageDescriptor> for &'a WrImageDescriptor {
+    fn into(self) -> ImageDescriptor {
         ImageDescriptor {
             width: self.width,
             height: self.height,
@@ -862,7 +878,7 @@ pub extern "C" fn wr_api_add_image(api: &mut WrAPI,
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
     api.add_image(image_key,
-                  descriptor.to_descriptor(),
+                  descriptor.into(),
                   ImageData::new(copied_bytes),
                   None);
 }
@@ -875,7 +891,7 @@ pub extern "C" fn wr_api_add_blob_image(api: &mut WrAPI,
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
     api.add_image(image_key,
-                  descriptor.to_descriptor(),
+                  descriptor.into(),
                   ImageData::new_blob_image(copied_bytes),
                   None);
 }
@@ -887,7 +903,7 @@ pub extern "C" fn wr_api_add_external_image_handle(api: &mut WrAPI,
                                                    external_image_id: u64) {
     assert!(unsafe { is_in_compositor_thread() });
     api.add_image(image_key,
-                  descriptor.to_descriptor(),
+                  descriptor.into(),
                   ImageData::External(ExternalImageData {
                       id: ExternalImageId(external_image_id),
                       image_type: ExternalImageType::Texture2DHandle
@@ -902,7 +918,7 @@ pub extern "C" fn wr_api_add_external_image_buffer(api: &mut WrAPI,
                                                    external_image_id: u64) {
     assert!(unsafe { is_in_compositor_thread() });
     api.add_image(image_key,
-                  descriptor.to_descriptor(),
+                  descriptor.into(),
                   ImageData::External(ExternalImageData {
                       id: ExternalImageId(external_image_id),
                       image_type: ExternalImageType::ExternalBuffer
@@ -919,7 +935,7 @@ pub extern "C" fn wr_api_update_image(api: &mut WrAPI,
     let copied_bytes = bytes.as_slice().to_owned();
 
     api.update_image(key,
-                     descriptor.to_descriptor(),
+                     descriptor.into(),
                      ImageData::new(copied_bytes),
                      None);
 }
@@ -1016,7 +1032,7 @@ pub extern "C" fn wr_api_generate_frame_with_properties(api: &mut WrAPI,
         for element in transform_slice.iter() {
             let prop = PropertyValue {
                 key: PropertyBindingKey::new(element.id),
-                value: element.transform.to_transform(),
+                value: element.transform.into(),
             };
 
             properties.transforms.push(prop);
@@ -1164,15 +1180,12 @@ pub extern "C" fn wr_dp_new_clip_region(state: &mut WrState,
                                         -> WrClipRegion {
     assert!(unsafe { is_in_main_thread() });
 
-    let main = main.to_rect();
-    let complex =
-        WrComplexClipRegion::to_complex_clip_regions(unsafe {
-                                                         slice::from_raw_parts(complex,
-                                                                               complex_count)
-                                                     });
-    let mask = unsafe { image_mask.as_ref().map(|x| x.to_image_mask()) };
+    let main = main.into();
+    let complex_slice = unsafe { slice::from_raw_parts(complex, complex_count) };
+    let complex_vector = complex_slice.iter().map(|x| x.into()).collect();
+    let mask = unsafe { image_mask.as_ref() }.map(|x| x.into());
 
-    let clip_region = state.frame_builder.dl_builder.new_clip_region(&main, complex, mask);
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&main, complex_vector, mask);
 
     clip_region.into()
 }
@@ -1187,7 +1200,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     assert!(unsafe { is_in_main_thread() });
     state.z_index += 1;
 
-    let bounds = bounds.to_rect();
+    let bounds = bounds.into();
 
     let mut filters: Vec<FilterOp> = Vec::new();
     let opacity = unsafe { opacity.as_ref() };
@@ -1202,7 +1215,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
 
     let transform = unsafe { transform.as_ref() };
     let transform_binding = match transform {
-        Some(transform) => PropertyBinding::Value(transform.to_transform()),
+        Some(transform) => PropertyBinding::Value(transform.into()),
         None => PropertyBinding::Binding(PropertyBindingKey::new(animation_id)),
     };
 
@@ -1229,16 +1242,9 @@ pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
                                           content_rect: WrRect,
                                           clip_rect: WrRect,
                                           mask: *const WrImageMask) {
-    let content_rect = content_rect.to_rect();
-    let clip_rect = clip_rect.to_rect();
-    let mask = unsafe { mask.as_ref() };
-    let mask = mask.map(|&WrImageMask { image, ref rect, repeat }| {
-        ImageMask {
-            image: image,
-            rect: rect.to_rect(),
-            repeat: repeat,
-        }
-    });
+    let content_rect = content_rect.into();
+    let clip_rect = clip_rect.into();
+    let mask = unsafe { mask.as_ref() }.map(|x| x.into());
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip_rect, vec![], mask);
     state.frame_builder.dl_builder.push_clip_node(clip_region, content_rect, None);
 }
@@ -1256,7 +1262,7 @@ pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
                                     pipeline_id: WrPipelineId) {
     assert!(unsafe { is_in_main_thread() });
 
-    state.frame_builder.dl_builder.push_iframe(rect.to_rect(), clip.to_clip_region(), pipeline_id);
+    state.frame_builder.dl_builder.push_iframe(rect.into(), clip.into(), pipeline_id);
 }
 
 #[no_mangle]
@@ -1266,9 +1272,9 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
                                   color: WrColor) {
     assert!(unsafe { is_in_main_thread() });
 
-    state.frame_builder.dl_builder.push_rect(rect.to_rect(),
-                                             clip.to_clip_region(),
-                                             color.to_color());
+    state.frame_builder.dl_builder.push_rect(rect.into(),
+                                             clip.into(),
+                                             color.into());
 }
 
 #[no_mangle]
@@ -1281,12 +1287,12 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                                    key: WrImageKey) {
     assert!(unsafe { is_in_main_thread() });
 
-    let bounds = bounds.to_rect();
+    let bounds = bounds.into();
 
     state.frame_builder.dl_builder.push_image(bounds,
-                                              clip.to_clip_region(),
-                                              stretch_size.to_size(),
-                                              tile_spacing.to_size(),
+                                              clip.into(),
+                                              stretch_size.into(),
+                                              tile_spacing.into(),
                                               image_rendering,
                                               key);
 }
@@ -1303,14 +1309,13 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
     assert!(unsafe { is_in_main_thread() });
 
     let glyph_slice = unsafe { slice::from_raw_parts(glyphs, glyph_count as usize) };
-    let mut glyph_vector = Vec::new();
-    glyph_vector.extend_from_slice(&WrGlyphInstance::to_glyph_instances(glyph_slice));
+    let glyph_vector: Vec<_> = glyph_slice.iter().map(|x| x.into()).collect();
 
     let colorf = ColorF::new(color.r, color.g, color.b, color.a);
 
     let glyph_options = None; // TODO
-    state.frame_builder.dl_builder.push_text(bounds.to_rect(),
-                                             clip.to_clip_region(),
+    state.frame_builder.dl_builder.push_text(bounds.into(),
+                                             clip.into(),
                                              &glyph_vector,
                                              font_key,
                                              colorf,
@@ -1332,16 +1337,16 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
     assert!(unsafe { is_in_main_thread() });
 
     let border_details = BorderDetails::Normal(NormalBorder {
-        left: left.to_border_side(),
-        right: right.to_border_side(),
-        top: top.to_border_side(),
-        bottom: bottom.to_border_side(),
-        radius: radius.to_border_radius(),
+        left: left.into(),
+        right: right.into(),
+        top: top.into(),
+        bottom: bottom.into(),
+        radius: radius.into(),
     });
     state.frame_builder.dl_builder.push_border(
-                                    rect.to_rect(),
-                                    clip.to_clip_region(),
-                                    widths.to_border_widths(),
+                                    rect.into(),
+                                    clip.into(),
+                                    widths.into(),
                                     border_details);
 }
 
@@ -1358,15 +1363,15 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
     assert!( unsafe { is_in_main_thread() });
     let border_details = BorderDetails::Image(ImageBorder {
         image_key: image,
-        patch: patch.to_nine_patch_descriptor(),
-        outset: outset.to_side_offsets_2d(),
-        repeat_horizontal: repeat_horizontal.to_repeat_mode(),
-        repeat_vertical: repeat_vertical.to_repeat_mode(),
+        patch: patch.into(),
+        outset: outset.into(),
+        repeat_horizontal: repeat_horizontal.into(),
+        repeat_vertical: repeat_vertical.into(),
     });
     state.frame_builder.dl_builder.push_border(
-                                    rect.to_rect(),
-                                    clip.to_clip_region(),
-                                    widths.to_border_widths(),
+                                    rect.into(),
+                                    clip.into(),
+                                    widths.into(),
                                     border_details);
 }
 
@@ -1378,17 +1383,20 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState, rect: WrRect, 
                                              extend_mode: WrGradientExtendMode,
                                              outset: WrSideOffsets2Df32) {
     assert!( unsafe { is_in_main_thread() });
-    let stops = WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
+
+    let stops_slice = unsafe { slice::from_raw_parts(stops, stops_count) };
+    let stops_vector = stops_slice.iter().map(|x| x.into()).collect();
+
     let border_details = BorderDetails::Gradient(GradientBorder {
         gradient: state.frame_builder.dl_builder.create_gradient(
-                      start_point.to_point(), end_point.to_point(),
-                      stops, extend_mode.to_gradient_extend_mode()),
-        outset: outset.to_side_offsets_2d(),
+                      start_point.into(), end_point.into(),
+                      stops_vector, extend_mode.into()),
+        outset: outset.into(),
     });
     state.frame_builder.dl_builder.push_border(
-                                    rect.to_rect(),
-                                    clip.to_clip_region(),
-                                    widths.to_border_widths(),
+                                    rect.into(),
+                                    clip.into(),
+                                    widths.into(),
                                     border_details);
 }
 
@@ -1401,18 +1409,21 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState, rect: W
                                                     extend_mode: WrGradientExtendMode,
                                                     outset: WrSideOffsets2Df32) {
     assert!( unsafe { is_in_main_thread() });
-    let stops = WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
+
+    let stops_slice = unsafe { slice::from_raw_parts(stops, stops_count) };
+    let stops_vector = stops_slice.iter().map(|x| x.into()).collect();
+
     let border_details = BorderDetails::RadialGradient(RadialGradientBorder {
-        gradient: state.frame_builder.dl_builder.create_radial_gradient(center.to_point(),
-                                                                        radius.to_size(),
-                                                                        stops,
-                                                                        extend_mode.to_gradient_extend_mode()),
-        outset: outset.to_side_offsets_2d(),
+        gradient: state.frame_builder.dl_builder.create_radial_gradient(center.into(),
+                                                                        radius.into(),
+                                                                        stops_vector,
+                                                                        extend_mode.into()),
+        outset: outset.into(),
     });
     state.frame_builder.dl_builder.push_border(
-                                    rect.to_rect(),
-                                    clip.to_clip_region(),
-                                    widths.to_border_widths(),
+                                    rect.into(),
+                                    clip.into(),
+                                    widths.into(),
                                     border_details);
 }
 
@@ -1429,18 +1440,18 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                              tile_spacing: WrSize) {
     assert!(unsafe { is_in_main_thread() });
 
-    let stops =
-        WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
+    let stops_slice = unsafe { slice::from_raw_parts(stops, stops_count) };
+    let stops_vector = stops_slice.iter().map(|x| x.into()).collect();
 
-    let gradient = state.frame_builder.dl_builder.create_gradient(start_point.to_point(),
-                                                                  end_point.to_point(),
-                                                                  stops,
-                                                                  extend_mode.to_gradient_extend_mode());
-    let rect = rect.to_rect();
-    let tile_size = tile_size.to_size();
-    let tile_spacing = tile_spacing.to_size();
+    let gradient = state.frame_builder.dl_builder.create_gradient(start_point.into(),
+                                                                  end_point.into(),
+                                                                  stops_vector,
+                                                                  extend_mode.into());
+    let rect = rect.into();
+    let tile_size = tile_size.into();
+    let tile_spacing = tile_spacing.into();
     state.frame_builder.dl_builder.push_gradient(rect,
-                                                 clip.to_clip_region(),
+                                                 clip.into(),
                                                  gradient,
                                                  tile_size,
                                                  tile_spacing);
@@ -1459,18 +1470,18 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                              tile_spacing: WrSize) {
     assert!(unsafe { is_in_main_thread() });
 
-    let stops =
-        WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
+    let stops_slice = unsafe { slice::from_raw_parts(stops, stops_count) };
+    let stops_vector = stops_slice.iter().map(|x| x.into()).collect();
 
-    let gradient = state.frame_builder.dl_builder.create_radial_gradient(center.to_point(),
-                                                                         radius.to_size(),
-                                                                         stops,
-                                                                         extend_mode.to_gradient_extend_mode());
-    let rect = rect.to_rect();
-    let tile_size = tile_size.to_size();
-    let tile_spacing = tile_spacing.to_size();
+    let gradient = state.frame_builder.dl_builder.create_radial_gradient(center.into(),
+                                                                         radius.into(),
+                                                                         stops_vector,
+                                                                         extend_mode.into());
+    let rect = rect.into();
+    let tile_size = tile_size.into();
+    let tile_spacing = tile_spacing.into();
     state.frame_builder.dl_builder.push_radial_gradient(rect,
-                                                        clip.to_clip_region(),
+                                                        clip.into(),
                                                         gradient,
                                                         tile_size,
                                                         tile_spacing);
@@ -1489,11 +1500,11 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
                                         clip_mode: WrBoxShadowClipMode) {
     assert!(unsafe { is_in_main_thread() });
 
-    state.frame_builder.dl_builder.push_box_shadow(rect.to_rect(),
-                                                   clip.to_clip_region(),
-                                                   box_bounds.to_rect(),
-                                                   offset.to_point(),
-                                                   color.to_color(),
+    state.frame_builder.dl_builder.push_box_shadow(rect.into(),
+                                                   clip.into(),
+                                                   box_bounds.into(),
+                                                   offset.into(),
+                                                   color.into(),
                                                    blur_radius,
                                                    spread_radius,
                                                    border_radius,
