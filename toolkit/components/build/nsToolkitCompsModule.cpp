@@ -44,6 +44,8 @@
 #include "NativeFileWatcherNotSupported.h"
 #endif // (XP_WIN)
 
+#include "nsWebRequestListener.h"
+
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
 #define MOZ_HAS_TERMINATOR
 #endif
@@ -125,6 +127,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NativeFileWatcherService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(AddonContentPolicy)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(AddonPathService, AddonPathService::GetInstance)
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebRequestListener)
+
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_APPSTARTUP_CID);
 #if defined(MOZ_HAS_PERFSTATS)
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_PERFORMANCESTATSSERVICE_CID);
@@ -158,6 +162,7 @@ NS_DEFINE_NAMED_CID(NATIVE_OSFILE_INTERNALS_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_ADDONCONTENTPOLICY_CID);
 NS_DEFINE_NAMED_CID(NS_ADDON_PATH_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NATIVE_FILEWATCHER_SERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_WEBREQUESTLISTENER_CID);
 
 static const Module::CIDEntry kToolkitCIDs[] = {
   { &kNS_TOOLKIT_APPSTARTUP_CID, false, nullptr, nsAppStartupConstructor },
@@ -192,6 +197,7 @@ static const Module::CIDEntry kToolkitCIDs[] = {
   { &kNS_ADDONCONTENTPOLICY_CID, false, nullptr, AddonContentPolicyConstructor },
   { &kNS_ADDON_PATH_SERVICE_CID, false, nullptr, AddonPathServiceConstructor },
   { &kNATIVE_FILEWATCHER_SERVICE_CID, false, nullptr, NativeFileWatcherServiceConstructor },
+  { &kNS_WEBREQUESTLISTENER_CID, false, nullptr, nsWebRequestListenerConstructor },
   { nullptr }
 };
 
@@ -228,6 +234,7 @@ static const Module::ContractIDEntry kToolkitContracts[] = {
   { NS_ADDONCONTENTPOLICY_CONTRACTID, &kNS_ADDONCONTENTPOLICY_CID },
   { NS_ADDONPATHSERVICE_CONTRACTID, &kNS_ADDON_PATH_SERVICE_CID },
   { NATIVE_FILEWATCHER_SERVICE_CONTRACTID, &kNATIVE_FILEWATCHER_SERVICE_CID },
+  { NS_WEBREQUESTLISTENER_CONTRACTID, &kNS_WEBREQUESTLISTENER_CID },
   { nullptr }
 };
 
