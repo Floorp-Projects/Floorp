@@ -10,11 +10,16 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const {
   createNode,
   findOptimalTimeInterval,
+  getFormattedAnimationTitle,
   TimeScale
 } = require("devtools/client/animationinspector/utils");
 const {AnimationDetails} = require("devtools/client/animationinspector/components/animation-details");
 const {AnimationTargetNode} = require("devtools/client/animationinspector/components/animation-target-node");
 const {AnimationTimeBlock} = require("devtools/client/animationinspector/components/animation-time-block");
+
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const L10N =
+  new LocalizationHelper("devtools/client/locales/animationinspector.properties");
 
 // The minimum spacing between 2 time graduation headers in the timeline (px).
 const TIME_GRADUATION_MIN_SPACING = 40;
@@ -42,7 +47,6 @@ function AnimationsTimeline(inspector, serverTraits) {
   this.animations = [];
   this.targetNodes = [];
   this.timeBlocks = [];
-  this.details = [];
   this.inspector = inspector;
   this.serverTraits = serverTraits;
 
@@ -63,16 +67,51 @@ exports.AnimationsTimeline = AnimationsTimeline;
 AnimationsTimeline.prototype = {
   init: function (containerEl) {
     this.win = containerEl.ownerDocument.defaultView;
+    this.rootWrapperEl = containerEl;
 
-    this.rootWrapperEl = createNode({
-      parent: containerEl,
-      attributes: {
-        "class": "animation-timeline"
-      }
+    this.setupSplitBox();
+    this.setupAnimationTimeline();
+    this.setupAnimationDetail();
+
+    this.win.addEventListener("resize",
+      this.onWindowResize);
+  },
+
+  setupSplitBox: function () {
+    const browserRequire = this.win.BrowserLoader({
+      window: this.win,
+      useOnlyShared: true
+    }).require;
+
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+
+    const SplitBox = React.createFactory(
+      browserRequire("devtools/client/shared/components/splitter/split-box"));
+
+    const splitter = SplitBox({
+      className: "animation-root",
+      initialSize: "0 0",
+      maxSize: "calc(100% - (var(--timeline-animation-height) * 2))",
+      splitterSize: 1,
+      endPanelControl: true,
+      startPanel: React.DOM.div({
+        className: "animation-timeline"
+      }),
+      endPanel: React.DOM.div({
+        className: "animation-detail"
+      }),
+      vert: false
     });
 
+    ReactDOM.render(splitter, this.rootWrapperEl);
+  },
+
+  setupAnimationTimeline: function () {
+    const animationTimelineEl = this.rootWrapperEl.querySelector(".animation-timeline");
+
     let scrubberContainer = createNode({
-      parent: this.rootWrapperEl,
+      parent: animationTimelineEl,
       attributes: {"class": "scrubber-wrapper"}
     });
 
@@ -89,11 +128,17 @@ AnimationsTimeline.prototype = {
         "class": "scrubber-handle"
       }
     });
+    createNode({
+      parent: this.scrubberHandleEl,
+      attributes: {
+        "class": "scrubber-line"
+      }
+    });
     this.scrubberHandleEl.addEventListener("mousedown",
-      this.onScrubberMouseDown);
+                                           this.onScrubberMouseDown);
 
     this.headerWrapper = createNode({
-      parent: this.rootWrapperEl,
+      parent: animationTimelineEl,
       attributes: {
         "class": "header-wrapper"
       }
@@ -107,30 +152,76 @@ AnimationsTimeline.prototype = {
     });
 
     this.timeHeaderEl.addEventListener("mousedown",
-      this.onScrubberMouseDown);
+                                       this.onScrubberMouseDown);
 
     this.timeTickEl = createNode({
-      parent: this.rootWrapperEl,
+      parent: animationTimelineEl,
       attributes: {
         "class": "time-body track-container"
       }
     });
 
     this.animationsEl = createNode({
-      parent: this.rootWrapperEl,
+      parent: animationTimelineEl,
       nodeType: "ul",
       attributes: {
         "class": "animations"
       }
     });
+  },
 
-    this.win.addEventListener("resize",
-      this.onWindowResize);
+  setupAnimationDetail: function () {
+    this.animationDetailEl = this.rootWrapperEl.querySelector(".animation-detail");
+
+    this.animationDetailEl.dataset.defaultDisplayStyle =
+      this.win.getComputedStyle(this.animationDetailEl).display;
+    this.animationDetailEl.style.display = "none";
+
+    const animationDetailHeaderEl = createNode({
+      parent: this.animationDetailEl,
+      attributes: {
+        "class": "animation-detail-header"
+      }
+    });
+
+    const headerTitleEl = createNode({
+      parent: animationDetailHeaderEl,
+      attributes: {
+        "class": "devtools-toolbar"
+      }
+    });
+
+    createNode({
+      parent: headerTitleEl,
+      textContent: L10N.getStr("detail.headerTitle")
+    });
+
+    this.animationAnimationNameEl = createNode({
+      parent: headerTitleEl
+    });
+
+    const animationDetailBodyEl = createNode({
+      parent: this.animationDetailEl,
+      attributes: {
+        "class": "animation-detail-body"
+      }
+    });
+
+    this.animatedPropertiesEl = createNode({
+      parent: animationDetailBodyEl,
+      attributes: {
+        "class": "animated-properties"
+      }
+    });
+
+    this.details = new AnimationDetails(this.serverTraits);
+    this.details.init(this.animatedPropertiesEl);
   },
 
   destroy: function () {
     this.stopAnimatingScrubber();
     this.unrender();
+    this.details.destroy();
 
     this.win.removeEventListener("resize",
       this.onWindowResize);
@@ -141,15 +232,18 @@ AnimationsTimeline.prototype = {
 
     this.rootWrapperEl.remove();
     this.animations = [];
-
     this.rootWrapperEl = null;
     this.timeHeaderEl = null;
     this.animationsEl = null;
+    this.animatedPropertiesEl = null;
     this.scrubberEl = null;
     this.scrubberHandleEl = null;
     this.win = null;
     this.inspector = null;
     this.serverTraits = null;
+    this.animationDetailEl = null;
+    this.animationAnimationNameEl = null;
+    this.animatedPropertiesEl = null;
   },
 
   /**
@@ -176,10 +270,8 @@ AnimationsTimeline.prototype = {
     TimeScale.reset();
     this.destroySubComponents("targetNodes");
     this.destroySubComponents("timeBlocks");
-    this.destroySubComponents("details", [{
-      event: "frame-selected",
-      fn: this.onFrameSelected
-    }]);
+    this.details.off("frame-selected", this.onFrameSelected);
+    this.details.unrender();
     this.animationsEl.innerHTML = "";
   },
 
@@ -206,18 +298,27 @@ AnimationsTimeline.prototype = {
 
     let el = this.rootWrapperEl;
     let animationEl = el.querySelectorAll(".animation")[index];
-    let propsEl = el.querySelectorAll(".animated-properties")[index];
 
     // Toggle the selected state on this animation.
     animationEl.classList.toggle("selected");
-    propsEl.classList.toggle("selected");
 
     // Render the details component for this animation if it was shown.
     if (animationEl.classList.contains("selected")) {
-      this.details[index].render(animation);
+      // Add class of animation type.
+      if (!this.animatedPropertiesEl.classList.contains(animation.state.type)) {
+        this.animatedPropertiesEl.className =
+          `animated-properties ${ animation.state.type }`;
+      }
+      this.animationDetailEl.style.display =
+        this.animationDetailEl.dataset.defaultDisplayStyle;
+      this.details.render(animation);
       this.emit("animation-selected", animation);
+
+      this.animationAnimationNameEl.textContent =
+        getFormattedAnimationTitle(animation);
     } else {
       this.emit("animation-unselected", animation);
+      this.animationDetailEl.style.display = "none";
     }
   },
 
@@ -331,21 +432,6 @@ AnimationsTimeline.prototype = {
         }
       });
 
-      // Right below the line is a hidden-by-default line for displaying the
-      // inline keyframes.
-      let detailsEl = createNode({
-        parent: this.animationsEl,
-        nodeType: "li",
-        attributes: {
-          "class": "animated-properties " + animation.state.type
-        }
-      });
-
-      let details = new AnimationDetails(this.serverTraits);
-      details.init(detailsEl);
-      details.on("frame-selected", this.onFrameSelected);
-      this.details.push(details);
-
       // Left sidebar for the animated node.
       let animatedNodeEl = createNode({
         parent: animationEl,
@@ -376,6 +462,7 @@ AnimationsTimeline.prototype = {
 
       timeBlock.on("selected", this.onAnimationSelected);
     }
+    this.details.on("frame-selected", this.onFrameSelected);
 
     // Use the document's current time to position the scrubber (if the server
     // doesn't provide it, hide the scrubber entirely).

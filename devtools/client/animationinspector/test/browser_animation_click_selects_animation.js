@@ -37,8 +37,5 @@ add_task(function* () {
 
 function isTimeBlockSelected(timeline, index) {
   let animation = timeline.rootWrapperEl.querySelectorAll(".animation")[index];
-  let animatedProperties = timeline.rootWrapperEl.querySelectorAll(
-    ".animated-properties")[index];
-  return animation.classList.contains("selected") &&
-         animatedProperties.classList.contains("selected");
+  return animation.classList.contains("selected");
 }

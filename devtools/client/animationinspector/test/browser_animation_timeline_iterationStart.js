@@ -11,7 +11,7 @@ add_task(function* () {
   let {panel} = yield openAnimationInspector();
   let timelineComponent = panel.animationsTimelineComponent;
   let timeBlockComponents = timelineComponent.timeBlocks;
-  let detailsComponents = timelineComponent.details;
+  let detailsComponent = timelineComponent.details;
 
   for (let i = 0; i < timeBlockComponents.length; i++) {
     info(`Expand time block ${i} so its keyframes are visible`);
@@ -26,7 +26,7 @@ add_task(function* () {
     // Get the first set of keyframes (there's only one animated property
     // anyway), and the first frame element from there, we're only interested in
     // its offset.
-    let keyframeComponent = detailsComponents[i].keyframeComponents[0];
+    let keyframeComponent = detailsComponent.keyframeComponents[0];
     let frameEl = keyframeComponent.keyframesEl.querySelector(".frame");
     checkKeyframeOffset(containerEl, frameEl, state);
   }

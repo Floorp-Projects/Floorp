@@ -52,12 +52,6 @@ add_task(function* () {
 
   ok(hasExpectedWarnings(propertiesList),
      "The list of properties panel contains the right warnings");
-
-  info("Click to unselect the animation");
-  yield clickOnAnimation(panel, 0, true);
-
-  ok(!isNodeVisible(propertiesList),
-     "The list of properties panel is hidden again");
 });
 
 function hasExpectedProperties(containerEl) {
