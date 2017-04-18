@@ -624,7 +624,6 @@ body {
   width: 0;
   height: 0;
   background-color: inherit;
-  cursor: pointer;
 }
 
 .keyframes .frame::before {
