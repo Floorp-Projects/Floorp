@@ -187,7 +187,7 @@ public final class CodecProxy {
 
         try {
             return sendInput(mRemote.dequeueInput(info.size).set(bytes, info, cryptoInfo));
-        } catch (RemoteException e) {
+        } catch (RemoteException | NullPointerException e) {
             Log.e(LOGTAG, "fail to dequeue input buffer", e);
             return false;
         } catch (IOException e) {

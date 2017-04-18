@@ -147,15 +147,18 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                     mSamplePool.recycleInput(sample);
                 }
 
-                if (cryptoInfo != null && len > 0) {
-                    mCodec.queueSecureInputBuffer(index, 0, cryptoInfo, pts, flags);
-                } else {
-                    mCodec.queueInputBuffer(index, 0, len, pts, flags);
-                }
                 try {
+                    if (cryptoInfo != null && len > 0) {
+                        mCodec.queueSecureInputBuffer(index, 0, cryptoInfo, pts, flags);
+                    } else {
+                        mCodec.queueInputBuffer(index, 0, len, pts, flags);
+                    }
                     mCallbacks.onInputQueued(pts);
                 } catch (RemoteException e) {
                     e.printStackTrace();
+                } catch (Exception e) {
+                    reportError(Error.FATAL, e);
+                    return;
                 }
             }
             reportPendingInputs();
@@ -511,7 +514,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
     @Override
     public synchronized void queueInput(Sample sample) throws RemoteException {
-        mInputProcessor.onSample(sample);
+        try {
+            mInputProcessor.onSample(sample);
+        } catch (Exception e) {
+            throw new RemoteException(e.getMessage());
+        }
     }
 
     @Override
