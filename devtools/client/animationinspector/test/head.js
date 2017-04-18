@@ -381,18 +381,11 @@ function* clickOnAnimation(panel, index, shouldAlreadySelected) {
                                          ? "animation-already-selected"
                                          : "animation-selected");
 
-  // If we're opening the animation, also wait for
-  // the animation-detail-rendering-completed event.
-  let onReady = shouldAlreadySelected
-                ? Promise.resolve()
-                : timeline.details.once("animation-detail-rendering-completed");
-
   info("Click on animation " + index + " in the timeline");
   let timeBlock = timeline.rootWrapperEl.querySelectorAll(".time-block")[index];
   EventUtils.sendMouseEvent({type: "click"}, timeBlock,
                             timeBlock.ownerDocument.defaultView);
 
-  yield onReady;
   return yield onSelectionChanged;
 }
 
