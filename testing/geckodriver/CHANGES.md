@@ -2,7 +2,7 @@
 
 All notable changes to this program is documented in this file.
 
-## 0.16.0 (2017-04-10)
+## Unreleased
 
 ### Added
 - Support for WebDriver-conforming [New Session](https://w3c.github.io/webdriver/webdriver-spec.html#dfn-new-session) negotiation, with `desiredCapabilities`/`requiredCapabilities` negotiation as fallback
