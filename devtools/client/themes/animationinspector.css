@@ -546,6 +546,10 @@ body {
   position: relative;
 }
 
+.animation-detail .animated-properties .property.unchanged {
+  opacity: 0.6;
+}
+
 .animation-detail .animated-properties .property:nth-child(2n) {
   background-color: var(--even-animation-timeline-background-color);
 }
