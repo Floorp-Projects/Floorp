@@ -10,6 +10,7 @@
   --pause-image: url(chrome://devtools/skin/images/pause.svg);
   --rewind-image: url(chrome://devtools/skin/images/rewind.svg);
   --play-image: url(chrome://devtools/skin/images/play.svg);
+  --close-button-image: url(chrome://devtools/skin/images/close.svg);
   /* The color for animation type 'opacity' */
   --opacity-border-color: var(--theme-highlight-pink);
   --opacity-background-color: #df80ff80;
@@ -29,6 +30,7 @@
   --pause-image: url(chrome://devtools/skin/images/pause.svg);
   --rewind-image: url(chrome://devtools/skin/images/rewind.svg);
   --play-image: url(chrome://devtools/skin/images/play.svg);
+  --close-button-image: url(chrome://devtools/skin/images/close.svg);
 }
 
 .theme-firebug {
@@ -37,6 +39,7 @@
   --pause-image: url(chrome://devtools/skin/images/firebug/pause.svg);
   --rewind-image: url(chrome://devtools/skin/images/firebug/rewind.svg);
   --play-image: url(chrome://devtools/skin/images/firebug/play.svg);
+  --close-button-image: url(chrome://devtools/skin/images/firebug/close.svg);
 }
 
 .theme-light, .theme-firebug {
@@ -688,6 +691,7 @@ body {
 }
 
 .animation-detail .animation-detail-header {
+  position: relative;
   height: var(--toolbar-height);
   width: 100%;
 }
@@ -700,6 +704,7 @@ body {
   height: var(--toolbar-height);
   line-height: var(--toolbar-height);
   background-color: var(--theme-body-background);
+  padding: 0;
   z-index: 5;
 }
 
@@ -712,7 +717,19 @@ body {
 }
 
 .animation-detail .animation-detail-header > div > div:nth-child(2) {
+  flex: 1;
   margin-left: .5em;
+  min-width: 0;
+}
+
+.animation-detail .animation-detail-header .devtools-button {
+  /* We need to tweak the padding
+     since the devtools-button is optimized for toolbox-tab height */
+  padding-top: 0;
+}
+
+.animation-detail .animation-detail-header .devtools-button::before {
+  background-image: var(--close-button-image);
 }
 
 .animation-detail .animation-detail-body {
@@ -784,4 +801,8 @@ body {
   border-top: 5px solid var(--progress-indicator-color);
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
+}
+
+.animation-root:not(.animation-detail-visible) .controlled {
+  display: none;
 }
