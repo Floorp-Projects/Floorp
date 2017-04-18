@@ -1002,6 +1002,9 @@ class AndroidArguments(ArgumentContainer):
         if options.xrePath is None:
             options.xrePath = options.utilityPath
 
+        if build_obj:
+            options.topsrcdir = build_obj.topsrcdir
+
         if options.pidFile != "":
             f = open(options.pidFile, 'w')
             f.write("%s" % os.getpid())

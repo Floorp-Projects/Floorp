@@ -19,10 +19,13 @@
 #include "nsCOMArray.h"
 #include "nsDirectoryServiceUtils.h"
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/intl/LocaleService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsXULAppAPI.h"
 #include "nsIPrefLocalizedString.h"
+
+using mozilla::intl::LocaleService;
 
 namespace mozilla {
 namespace browser {
@@ -125,31 +128,18 @@ AppendDistroSearchDirs(nsIProperties* aDirSvc, nsCOMArray<nsIFile> &array)
     }
 
     // we didn't have a defaultLocale, use the user agent locale
-    nsCString locale;
-    nsCOMPtr<nsIPrefLocalizedString> prefString;
-    rv = prefs->GetComplexValue("general.useragent.locale",
-                                NS_GET_IID(nsIPrefLocalizedString),
-                                getter_AddRefs(prefString));
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoString wLocale;
-      prefString->GetData(getter_Copies(wLocale));
-      CopyUTF16toUTF8(wLocale, locale);
-    } else {
-      rv = prefs->GetCharPref("general.useragent.locale", getter_Copies(locale));
-    }
+    nsAutoCString locale;
+    LocaleService::GetInstance()->GetAppLocaleAsLangTag(locale);
 
+    nsCOMPtr<nsIFile> curLocalePlugins;
+    rv = localePlugins->Clone(getter_AddRefs(curLocalePlugins));
     if (NS_SUCCEEDED(rv)) {
 
-      nsCOMPtr<nsIFile> curLocalePlugins;
-      rv = localePlugins->Clone(getter_AddRefs(curLocalePlugins));
-      if (NS_SUCCEEDED(rv)) {
-
-        curLocalePlugins->AppendNative(locale);
-        rv = curLocalePlugins->Exists(&exists);
-        if (NS_SUCCEEDED(rv) && exists) {
-          array.AppendObject(curLocalePlugins);
-          return; // all done
-        }
+      curLocalePlugins->AppendNative(locale);
+      rv = curLocalePlugins->Exists(&exists);
+      if (NS_SUCCEEDED(rv) && exists) {
+        array.AppendObject(curLocalePlugins);
+        return; // all done
       }
     }
   }

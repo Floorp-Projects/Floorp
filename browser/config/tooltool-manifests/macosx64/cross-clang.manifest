@@ -1,8 +1,8 @@
 [
   {
-    "version": "clang 3.8.0, libgcc 4.9.4 + PR64905",
-    "size": 155933720,
-    "digest": "7a3a9a5ff455554d120596fe4bc06c19e41ecbd1e67b1e95e778c0b8ce6d9472f30fd4a27c66d48d9c047aac7a077f23f87397711dd6f33175f95cf4a2ada862",
+    "version": "clang 3.9.0",
+    "size": 166261192,
+    "digest": "52f3fc23f0f5c98050f8b0ac7c92a6752d067582a16f712a5a58074be98975d594f9e36249fc2be7f1cc2ca6d509c663faaf2bea66f949243cc1f41651638ba6",
     "algorithm": "sha512",
     "filename": "clang.tar.xz",
     "unpack": true
@@ -16,9 +16,9 @@
     "unpack": true
   },
   {
-    "size": 1349196,
+    "size": 6075028,
     "visibility": "public",
-    "digest": "438a36523a74cbc4a58226647e0501fa64a1b63f32931dc364a75d699df8accb45afdf26f4cb61c6ac7f58be530205acb6da22008bec19603c6f6fda3a12a8cc",
+    "digest": "0b962ba55a5a2fbae44218683bdf6ea0dfe8165aba436173a065f7190976184586b9acf4c23478bc5b6d81a3e00f681bf16df0536c9c9718ad0570d064f69027",
     "algorithm": "sha512",
     "unpack": true,
     "filename": "cctools.tar.xz"

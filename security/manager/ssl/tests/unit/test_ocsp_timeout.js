@@ -35,17 +35,23 @@ function run_test() {
   socket.init(8888, true, -1);
   socket.asyncListen(gSocketListener);
 
-  add_tests_in_mode(true);
-  add_tests_in_mode(false);
+  add_one_test(false, "security.OCSP.timeoutMilliseconds.soft", 1000);
+  add_one_test(false, "security.OCSP.timeoutMilliseconds.soft", 2000);
+  add_one_test(false, "security.OCSP.timeoutMilliseconds.soft", 4000);
+
+  add_one_test(true, "security.OCSP.timeoutMilliseconds.hard", 3000);
+  add_one_test(true, "security.OCSP.timeoutMilliseconds.hard", 10000);
+  add_one_test(true, "security.OCSP.timeoutMilliseconds.hard", 15000);
 
   add_test(function() { socket.close(); run_next_test(); });
   run_next_test();
 }
 
-function add_tests_in_mode(useHardFail) {
+function add_one_test(useHardFail, timeoutPrefName, timeoutMilliseconds) {
   let startTime;
   add_test(function () {
     Services.prefs.setBoolPref("security.OCSP.require", useHardFail);
+    Services.prefs.setIntPref(timeoutPrefName, timeoutMilliseconds);
     startTime = new Date();
     run_next_test();
   });
@@ -54,7 +60,6 @@ function add_tests_in_mode(useHardFail) {
                       ? SEC_ERROR_OCSP_SERVER_ERROR
                       : PRErrorCodeSuccess, clearSessionCache);
 
-  // Reset state
   add_test(function() {
     let endTime = new Date();
     let timeDifference = endTime - startTime;
@@ -62,27 +67,24 @@ function add_tests_in_mode(useHardFail) {
     do_print(`startTime = ${startTime.getTime()} (${startTime})`);
     do_print(`endTime = ${endTime.getTime()} (${endTime})`);
     do_print(`timeDifference = ${timeDifference}ms`);
-
-    // With OCSP hard-fail on, we timeout after 10 seconds.
-    // With OCSP soft-fail, we timeout after 2 seconds.
     // Date() is not guaranteed to be monotonic, so add extra fuzz time to
     // prevent intermittent failures (this only appeared to be a problem on
     // Windows XP). See Bug 1121117.
     const FUZZ_MS = 300;
-    if (useHardFail) {
-      ok(timeDifference + FUZZ_MS > 10000,
-         "Automatic OCSP timeout should be about 10s for hard-fail");
-    } else {
-      ok(timeDifference + FUZZ_MS > 2000,
-         "Automatic OCSP timeout should be about 2s for soft-fail");
-    }
+    ok(timeDifference + FUZZ_MS > timeoutMilliseconds,
+       `OCSP timeout should be ~${timeoutMilliseconds}s for ` +
+       `${useHardFail ? "hard" : "soft"}-fail`);
     // Make sure we didn't wait too long.
     // (Unfortunately, we probably can't have a tight upper bound on
     // how long is too long for this test, because we might be running
     // on slow hardware.)
     ok(timeDifference < 60000,
        "Automatic OCSP timeout shouldn't be more than 60s");
+
+    // Reset state
     clearOCSPCache();
+    Services.prefs.clearUserPref("security.OCSP.require");
+    Services.prefs.clearUserPref(timeoutPrefName);
     run_next_test();
   });
 }

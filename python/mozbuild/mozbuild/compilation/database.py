@@ -16,6 +16,7 @@ from mozbuild.frontend.data import (
     Defines,
     Linkable,
     LocalInclude,
+    PerSourceFlag,
     VariablePassthru,
     SimpleProgram,
 )
@@ -46,6 +47,7 @@ class CompileDBBackend(CommonBackend):
         self._includes = defaultdict(list)
         self._defines = defaultdict(list)
         self._local_flags = defaultdict(dict)
+        self._per_source_flags = defaultdict(list)
         self._extra_includes = defaultdict(list)
         self._gyp_dirs = set()
         self._dist_include_testing = '-I%s' % mozpath.join(
@@ -110,6 +112,9 @@ class CompileDBBackend(CommonBackend):
                     'WARNINGS_AS_ERRORS' in self._local_flags[obj.objdir]):
                 del self._local_flags[obj.objdir]['WARNINGS_AS_ERRORS']
 
+        elif isinstance(obj, PerSourceFlag):
+            self._per_source_flags[obj.file_name].extend(obj.flags)
+
         return True
 
     def consume_finished(self):
@@ -157,6 +162,9 @@ class CompileDBBackend(CommonBackend):
                     c.append(a)
                 else:
                     c.extend(a)
+            per_source_flags = self._per_source_flags.get(filename)
+            if per_source_flags is not None:
+                c.extend(per_source_flags)
             db.append({
                 'directory': directory,
                 'command': ' '.join(shell_quote(a) for a in c),
