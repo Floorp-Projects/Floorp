@@ -2250,6 +2250,14 @@ public:
      */
     eIClampMarginBoxMinSize = 1 << 2, // clamp in our inline axis
     eBClampMarginBoxMinSize = 1 << 3, // clamp in our block axis
+    /**
+     * The frame is stretching (per CSS Box Alignment) and doesn't have an
+     * Automatic Minimum Size in the indicated axis.
+     * (may be used for both flex/grid items, but currently only used for Grid)
+     * https://drafts.csswg.org/css-grid/#min-size-auto
+     * https://drafts.csswg.org/css-align-3/#valdef-justify-self-stretch
+     */
+    eIApplyAutoMinSize = 1 << 4, // only has an effect when eShrinkWrap is false
   };
 
   /**
