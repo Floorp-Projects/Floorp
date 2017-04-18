@@ -40,7 +40,15 @@ public final class HardwareCodecCapabilityUtils {
 
   @WrapForJNI
   public static boolean findDecoderCodecInfoForMimeType(String aMimeType) {
-    for (int i = 0; i < MediaCodecList.getCodecCount(); ++i) {
+    int numCodecs = 0;
+    try {
+      numCodecs = MediaCodecList.getCodecCount();
+    } catch (final RuntimeException e) {
+      Log.e(LOGTAG, "Failed to retrieve media codec count", e);
+      return false;
+    }
+
+    for (int i = 0; i < numCodecs; ++i) {
       MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
       if (info.isEncoder()) {
         continue;
