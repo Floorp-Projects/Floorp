@@ -2268,29 +2268,15 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* 
     TimeStamp callNpInitEnd = TimeStamp::Now();
     mTimeBlocked += (callNpInitEnd - callNpInitStart);
 
-    RecvNP_InitializeResult(*error);
-
-    return NS_OK;
-}
-
-mozilla::ipc::IPCResult
-PluginModuleParent::RecvNP_InitializeResult(const NPError& aError)
-{
-    if (aError != NPERR_NO_ERROR) {
+    if (*error != NPERR_NO_ERROR) {
         OnInitFailure();
-        return IPC_OK();
+        return NS_OK;
     }
 
     SetPluginFuncs(mNPPIface);
 
     mNPInitialized = true;
-    return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-PluginModuleChromeParent::RecvNP_InitializeResult(const NPError& aError)
-{
-    return PluginModuleParent::RecvNP_InitializeResult(aError);
+    return NS_OK;
 }
 
 #else
@@ -2354,27 +2340,9 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
     }
     TimeStamp callNpInitEnd = TimeStamp::Now();
     mTimeBlocked += (callNpInitEnd - callNpInitStart);
-    RecvNP_InitializeResult(*error);
-    return NS_OK;
-}
 
-mozilla::ipc::IPCResult
-PluginModuleParent::RecvNP_InitializeResult(const NPError& aError)
-{
-    if (aError != NPERR_NO_ERROR) {
-        OnInitFailure();
-        return IPC_OK();
-    }
-
-    mNPInitialized = true;
-    return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-PluginModuleChromeParent::RecvNP_InitializeResult(const NPError& aError)
-{
     bool ok = true;
-    if (aError == NPERR_NO_ERROR) {
+    if (*error == NPERR_NO_ERROR) {
         // Initialization steps for (e10s && !asyncInit) || !e10s
 #if defined XP_WIN
         // Send the info needed to join the browser process's audio session to
@@ -2395,9 +2363,16 @@ PluginModuleChromeParent::RecvNP_InitializeResult(const NPError& aError)
     }
 
     if (!ok) {
-        return IPC_FAIL_NO_REASON(this);
+        return NS_ERROR_FAILURE;
     }
-    return PluginModuleParent::RecvNP_InitializeResult(aError);
+
+    if (*error != NPERR_NO_ERROR) {
+        OnInitFailure();
+        return NS_OK;
+    }
+
+    mNPInitialized = true;
+    return NS_OK;
 }
 
 #endif
