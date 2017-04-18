@@ -451,11 +451,11 @@ void MediaCacheStream::BlockList::AddAfter(int32_t aBlock, int32_t aBefore)
 void MediaCacheStream::BlockList::RemoveBlock(int32_t aBlock)
 {
   Entry* entry = mEntries.GetEntry(aBlock);
-  NS_ASSERTION(entry, "Block not in list");
+  MOZ_DIAGNOSTIC_ASSERT(entry, "Block not in list");
 
   if (entry->mNextBlock == aBlock) {
-    NS_ASSERTION(entry->mPrevBlock == aBlock, "Linked list inconsistency");
-    NS_ASSERTION(mFirstBlock == aBlock, "Linked list inconsistency");
+    MOZ_DIAGNOSTIC_ASSERT(entry->mPrevBlock == aBlock, "Linked list inconsistency");
+    MOZ_DIAGNOSTIC_ASSERT(mFirstBlock == aBlock, "Linked list inconsistency");
     mFirstBlock = -1;
   } else {
     if (mFirstBlock == aBlock) {
