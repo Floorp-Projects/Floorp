@@ -125,6 +125,7 @@ private:
 private:
   bool mInitialized;
   HANDLE mThreadID;
+  void* mStackTop;
 
 #elif defined(XP_MACOSX)
 private:

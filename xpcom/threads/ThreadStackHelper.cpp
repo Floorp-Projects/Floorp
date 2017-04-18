@@ -134,6 +134,7 @@ ThreadStackHelper::ThreadStackHelper()
     | THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION
 #endif
     , FALSE, 0);
+  mStackTop = profiler_get_stack_top();
   MOZ_ASSERT(mInitialized);
 #elif defined(XP_MACOSX)
   mThreadID = mach_thread_self();
@@ -205,9 +206,14 @@ ThreadStackHelper::GetStackInternal(Stack& aStack, bool aAppendNativeStack)
     return;
   }
 
+  // NOTE: We can only perform frame pointer stack walking on non win64
+  // platforms, because Win64 always omits frame pointers. We don't want to use
+  // MozStackWalk here, so we just skip collecting stacks entirely.
+#ifndef MOZ_THREADSTACKHELPER_X64
   if (aAppendNativeStack) {
     aStack.EnsureNativeFrameCapacity(Telemetry::HangStack::sMaxNativeFrames);
   }
+#endif
 
   if (::SuspendThread(mThreadID) == DWORD(-1)) {
     MOZ_ASSERT(false);
@@ -218,22 +224,48 @@ ThreadStackHelper::GetStackInternal(Stack& aStack, bool aAppendNativeStack)
   // GetThreadContext to ensure it's really suspended.
   // See https://blogs.msdn.microsoft.com/oldnewthing/20150205-00/?p=44743.
   CONTEXT context;
+  memset(&context, 0, sizeof(context));
   context.ContextFlags = CONTEXT_CONTROL;
   if (::GetThreadContext(mThreadID, &context)) {
     FillStackBuffer();
   }
 
+#ifndef MOZ_THREADSTACKHELPER_X64
   if (aAppendNativeStack) {
     auto callback = [](uint32_t, void* aPC, void*, void* aClosure) {
       Stack* stack = static_cast<Stack*>(aClosure);
       stack->AppendNativeFrame(reinterpret_cast<uintptr_t>(aPC));
     };
 
-    MozStackWalk(callback, /* skipFrames */ 0,
-                 /* maxFrames */ Telemetry::HangStack::sMaxNativeFrames,
-                 reinterpret_cast<void*>(&aStack),
-                 reinterpret_cast<uintptr_t>(mThreadID), nullptr);
+    // Now we need to get our frame pointer, our stack pointer, and our stack
+    // top. Rather than registering and storing the stack tops ourselves, we use
+    // the gecko profiler to look it up.
+    void** framePointer = reinterpret_cast<void**>(context.Ebp);
+    void** stackPointer = reinterpret_cast<void**>(context.Esp);
+
+    MOZ_ASSERT(mStackTop, "The thread should be registered by the profiler");
+
+    // Double check that the values we pulled for the thread make sense before
+    // walking the stack.
+    if (mStackTop && framePointer >= stackPointer && framePointer < mStackTop) {
+      // NOTE: In bug 1346415 this was changed to use FramePointerStackWalk.
+      // This was done because lowering the background hang timer threshold
+      // would cause it to fire on infra early during the boot process, causing
+      // a deadlock in MozStackWalk when the target thread was holding the
+      // windows-internal lock on the function table, as it would be suspended
+      // before we tried to grab the lock to walk its stack.
+      //
+      // FramePointerStackWalk is implemented entirely in userspace and thus
+      // doesn't have the same issues with deadlocking. Unfortunately as 64-bit
+      // windows is not guaranteed to have frame pointers, the stack walking
+      // code is only enabled on 32-bit windows builds (bug 1357829).
+      FramePointerStackWalk(callback, /* skipFrames */ 0,
+                            /* maxFrames */ Telemetry::HangStack::sMaxNativeFrames,
+                            reinterpret_cast<void*>(&aStack), framePointer,
+                            mStackTop);
+    }
   }
+#endif
 
   MOZ_ALWAYS_TRUE(::ResumeThread(mThreadID) != DWORD(-1));
 
