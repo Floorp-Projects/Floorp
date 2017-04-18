@@ -299,6 +299,7 @@ body {
   -moz-user-select: none;
 }
 
+.animated-properties-header .header-item,
 .animation-timeline .time-header .header-item {
   position: absolute;
   height: 100%;
@@ -526,12 +527,6 @@ body {
   background-color: var(--theme-selection-background-semitransparent);
 }
 
-.animation-timeline .animated-properties ul {
-  margin: 0;
-  padding: 0;
-  list-style-type: none;
-}
-
 .animation-timeline .animated-properties .property {
   height: var(--timeline-animation-height);
   position: relative;
@@ -674,4 +669,19 @@ body {
 
 .keyframes svg path.color {
   stroke: none;
+}
+
+.animated-properties-header {
+  min-height: var(--timeline-animation-height);
+  -moz-user-select: none;
+}
+
+.animated-properties-header .header-item:nth-child(2) {
+  left: 50%;
+}
+
+.animated-properties-header .header-item:nth-child(3) {
+  right: 0;
+  border-left: none;
+  border-right: 0.5px solid var(--time-graduation-border-color);
 }
