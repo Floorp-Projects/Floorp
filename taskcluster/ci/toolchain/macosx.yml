@@ -62,5 +62,3 @@ macosx64-cctools-port/opt:
         using: toolchain-script
         script: build-cctools-port-macosx.sh
         tooltool-downloads: internal
-        resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
