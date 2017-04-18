@@ -176,83 +176,6 @@ var Service = {
   },
 };
 
-// API Levels Helpers
-
-// Find the add-on associated with this document via the
-// principal's addonId attribute. This value is computed by
-// extensionURIToAddonID, which ensures that we don't inject our
-// API into webAccessibleResources or remote web pages.
-function getAddonIdForWindow(window) {
-  return Cu.getObjectPrincipal(window).addonId;
-}
-
-const API_LEVELS = Object.freeze({
-  NO_PRIVILEGES: 0,
-  CONTENTSCRIPT_PRIVILEGES: 1,
-  FULL_PRIVILEGES: 2,
-});
-
-// Finds the API Level ("FULL_PRIVILEGES", "CONTENTSCRIPT_PRIVILEGES", "NO_PRIVILEGES")
-// with a given a window object.
-function getAPILevelForWindow(window, addonId) {
-  const {NO_PRIVILEGES, CONTENTSCRIPT_PRIVILEGES, FULL_PRIVILEGES} = API_LEVELS;
-
-  // Non WebExtension URLs and WebExtension URLs from a different extension
-  // has no access to APIs.
-  if (!addonId || getAddonIdForWindow(window) != addonId) {
-    return NO_PRIVILEGES;
-  }
-
-  if (!ExtensionManagement.isExtensionProcess) {
-    return CONTENTSCRIPT_PRIVILEGES;
-  }
-
-  let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDocShell);
-
-  // Handling of ExtensionPages running inside sub-frames.
-  if (docShell.sameTypeParent) {
-    let parentWindow = docShell.sameTypeParent.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIDOMWindow);
-
-    // The option page iframe embedded in the about:addons tab should have
-    // full API level privileges. (see Bug 1256282 for rationale)
-    let parentDocument = parentWindow.document;
-    let parentIsSystemPrincipal = Services.scriptSecurityManager
-                                          .isSystemPrincipal(parentDocument.nodePrincipal);
-
-    if (parentDocument.location.href == "about:addons" && parentIsSystemPrincipal) {
-      return FULL_PRIVILEGES;
-    }
-
-    // NOTE: Special handling for devtools panels using a chrome iframe here
-    // for the devtools panel, it is needed because a content iframe breaks
-    // switching between docked and undocked mode (see bug 1075490).
-    let devtoolsBrowser = parentDocument.querySelector(
-      "browser[webextension-view-type='devtools_panel']");
-    if (devtoolsBrowser && devtoolsBrowser.contentWindow === window &&
-        parentIsSystemPrincipal) {
-      return FULL_PRIVILEGES;
-    }
-
-    // The addon iframes embedded in a addon page from with the same addonId
-    // should have the same privileges of the sameTypeParent.
-    // (see Bug 1258347 for rationale)
-    let parentSameAddonPrivileges = getAPILevelForWindow(parentWindow, addonId);
-    if (parentSameAddonPrivileges > NO_PRIVILEGES) {
-      return parentSameAddonPrivileges;
-    }
-
-    // In all the other cases, WebExtension URLs loaded into sub-frame UI
-    // will have "content script API level privileges".
-    // (see Bug 1214658 for rationale)
-    return CONTENTSCRIPT_PRIVILEGES;
-  }
-
-  // WebExtension URLs loaded into top frames UI could have full API level privileges.
-  return FULL_PRIVILEGES;
-}
-
 let cacheInvalidated = 0;
 function onCacheInvalidate() {
   cacheInvalidated++;
@@ -278,11 +201,6 @@ ExtensionManagement = {
   unregisterAPI: APIs.unregister.bind(APIs),
 
   getURLForExtension,
-
-  // exported API Level Helpers
-  getAddonIdForWindow,
-  getAPILevelForWindow,
-  API_LEVELS,
 
   APIs,
 };

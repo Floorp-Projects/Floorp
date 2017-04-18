@@ -248,6 +248,13 @@ interface nsIDocumentEncoder : nsISupports
   const unsigned long OutputDisallowLineBreaking = (1 << 27);
 
   /**
+   * Release reference of nsIDocument after using encodeTo* method to recycle
+   * this encoder without holding nsIDocument. To use this encoder again,
+   * we have to call init again.
+   */
+  const unsigned long RequiresReinitAfterOutput = (1 << 28);
+
+  /**
    * Initialize with a pointer to the document and the mime type.
    * @param aDocument Document to encode.
    * @param aMimeType MimeType to use. May also be set by SetMimeType.

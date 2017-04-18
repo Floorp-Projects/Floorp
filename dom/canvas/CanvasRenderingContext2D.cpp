@@ -3801,9 +3801,8 @@ void
 CanvasRenderingContext2D::EnsureWritablePath()
 {
   EnsureTarget();
-  if (!IsTargetValid()) {
-    return;
-  }
+  // NOTE: IsTargetValid() may be false here (mTarget == sErrorTarget) but we
+  // go ahead and create a path anyway since callers depend on that.
 
   if (mDSPathBuilder) {
     return;
