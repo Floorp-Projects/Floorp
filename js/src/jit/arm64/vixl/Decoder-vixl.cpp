@@ -112,12 +112,12 @@ void Decoder::DecodeInstruction(const Instruction *instr) {
 }
 
 void Decoder::AppendVisitor(DecoderVisitor* new_visitor) {
-  visitors_.append(new_visitor);
+  MOZ_ALWAYS_TRUE(visitors_.append(new_visitor));
 }
 
 
 void Decoder::PrependVisitor(DecoderVisitor* new_visitor) {
-  visitors_.insert(visitors_.begin(), new_visitor);
+  MOZ_ALWAYS_TRUE(visitors_.insert(visitors_.begin(), new_visitor));
 }
 
 
@@ -125,12 +125,12 @@ void Decoder::InsertVisitorBefore(DecoderVisitor* new_visitor,
                                   DecoderVisitor* registered_visitor) {
   for (auto it = visitors_.begin(); it != visitors_.end(); it++) {
     if (*it == registered_visitor) {
-      visitors_.insert(it, new_visitor);
+      MOZ_ALWAYS_TRUE(visitors_.insert(it, new_visitor));
       return;
     }
   }
   // We reached the end of the list without finding registered_visitor.
-  visitors_.append(new_visitor);
+  MOZ_ALWAYS_TRUE(visitors_.append(new_visitor));
 }
 
 
@@ -139,12 +139,12 @@ void Decoder::InsertVisitorAfter(DecoderVisitor* new_visitor,
   for (auto it = visitors_.begin(); it != visitors_.end(); it++) {
     if (*it == registered_visitor) {
       it++;
-      visitors_.insert(it, new_visitor);
+      MOZ_ALWAYS_TRUE(visitors_.insert(it, new_visitor));
       return;
     }
   }
   // We reached the end of the list without finding registered_visitor.
-  visitors_.append(new_visitor);
+  MOZ_ALWAYS_TRUE(visitors_.append(new_visitor));
 }
 
 
