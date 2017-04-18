@@ -19,6 +19,8 @@
   /* The color for other animation type */
   --other-border-color: var(--theme-graphs-bluegrey);
   --other-background-color: #5e88b080;
+  /* The color for progress indicator */
+  --progress-indicator-color: var(--theme-highlight-gray);
 }
 
 .theme-light {
@@ -47,6 +49,8 @@
   /* The color for other animation type */
   --other-border-color: var(--theme-graphs-bluegrey);
   --other-background-color: #0072ab80;
+  /* The color for progress indicator */
+  --progress-indicator-color: gray;
 }
 
 :root {
@@ -621,7 +625,6 @@ body {
   height: 0;
   background-color: inherit;
   cursor: pointer;
-  z-index: 1;
 }
 
 .keyframes .frame::before {
@@ -754,4 +757,32 @@ body {
 .animated-properties-body .property:last-child {
   /* To display animation progress graph clealy when the scroll is bottom. */
   padding-bottom: calc(var(--timeline-animation-height) / 2);
+}
+
+.animated-properties .progress-indicator-wrapper {
+  pointer-events: none;
+  z-index: 5;
+}
+
+.progress-indicator-wrapper .progress-indicator {
+  position: absolute;
+  pointer-events: none;
+}
+
+.progress-indicator-wrapper .progress-indicator .progress-indicator-shape {
+  position: fixed;
+  width: 0;
+  height: 100vh;
+  border-right: 1px solid var(--progress-indicator-color);
+}
+
+.progress-indicator-wrapper .progress-indicator .progress-indicator-shape::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -6px;
+  width: 1px;
+  border-top: 5px solid var(--progress-indicator-color);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
 }

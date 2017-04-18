@@ -6,6 +6,7 @@
 
 "use strict";
 
+const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {
   createNode,
@@ -58,6 +59,7 @@ function AnimationsTimeline(inspector, serverTraits) {
   this.onAnimationSelected = this.onAnimationSelected.bind(this);
   this.onWindowResize = this.onWindowResize.bind(this);
   this.onFrameSelected = this.onFrameSelected.bind(this);
+  this.onTimelineDataChanged = this.onTimelineDataChanged.bind(this);
 
   EventEmitter.decorate(this);
 }
@@ -273,6 +275,7 @@ AnimationsTimeline.prototype = {
     this.details.off("frame-selected", this.onFrameSelected);
     this.details.unrender();
     this.animationsEl.innerHTML = "";
+    this.off("timeline-data-changed", this.onTimelineDataChanged);
   },
 
   onWindowResize: function () {
@@ -290,7 +293,7 @@ AnimationsTimeline.prototype = {
     }, TIMELINE_BACKGROUND_RESIZE_DEBOUNCE_TIMER);
   },
 
-  onAnimationSelected: function (e, animation) {
+  onAnimationSelected: Task.async(function* (e, animation) {
     let index = this.animations.indexOf(animation);
     if (index === -1) {
       return;
@@ -324,10 +327,11 @@ AnimationsTimeline.prototype = {
     selectedAnimationEl.classList.add("selected");
     this.animationDetailEl.style.display =
       this.animationDetailEl.dataset.defaultDisplayStyle;
-    this.details.render(animation);
+    yield this.details.render(animation);
+    this.onTimelineDataChanged(null, { time: this.currentTime || 0 });
     this.animationAnimationNameEl.textContent = getFormattedAnimationTitle(animation);
     this.emit("animation-selected", animation);
-  },
+  }),
 
   /**
    * When a frame gets selected, move the scrubber to the corresponding position
@@ -483,6 +487,9 @@ AnimationsTimeline.prototype = {
                                   ? TimeScale.minStartTime
                                   : documentCurrentTime);
     }
+
+    // To indicate the animation progress in AnimationDetails.
+    this.on("timeline-data-changed", this.onTimelineDataChanged);
   },
 
   isAtLeastOneAnimationPlaying: function () {
@@ -592,5 +599,12 @@ AnimationsTimeline.prototype = {
         }
       });
     }
+  },
+
+  onTimelineDataChanged: function (e, { time }) {
+    this.currentTime = time;
+    const indicateTime =
+      TimeScale.minStartTime === Infinity ? 0 : this.currentTime + TimeScale.minStartTime;
+    this.details.indicateProgress(indicateTime);
   }
 };
