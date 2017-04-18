@@ -158,7 +158,7 @@ add_task(function* test_decode_error() {
     gNavigatorBundle.getString("decoder.decodeError.button"),
     gNavigatorBundle.getString("decoder.decodeError.accesskey"),
     tab_checker_for_webcompat(
-      {url: "DocURL", problem_type: "video_bug",
+      {url: "DocURL", label: "type-media", problem_type: "video_bug",
        details: "Technical Information:\nDecodeIssue\nResource: ResURL"}));
 });
 
@@ -174,6 +174,6 @@ add_task(function* test_decode_warning() {
     gNavigatorBundle.getString("decoder.decodeError.button"),
     gNavigatorBundle.getString("decoder.decodeError.accesskey"),
     tab_checker_for_webcompat(
-      {url: "DocURL", problem_type: "video_bug",
+      {url: "DocURL", label: "type-media", problem_type: "video_bug",
        details: "Technical Information:\nDecodeIssue\nResource: ResURL"}));
 });
