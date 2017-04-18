@@ -33,9 +33,6 @@ class AsyncPanZoomController;
  * the screen. Instead, we generate a PinchGestureInput and send that. If the
  * touch event is not part of a gesture, we just return nsEventStatus_eIgnore
  * and AsyncPanZoomController is expected to handle it.
- *
- * Android doesn't use this class because it has its own built-in gesture event
- * listeners that should generally be preferred.
  */
 class GestureEventListener final {
 public:

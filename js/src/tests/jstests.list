@@ -379,13 +379,6 @@ skip script test262/built-ins/TypedArrays/typedarray-arg-same-ctor-buffer-ctor-s
 skip script test262/built-ins/WeakMap/proto-from-ctor-realm.js
 skip script test262/built-ins/WeakSet/proto-from-ctor-realm.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1216630
-skip script test262/built-ins/Function/prototype/toString/class-declaration-complex-heritage.js
-skip script test262/built-ins/Function/prototype/toString/class-declaration-explicit-ctor.js
-skip script test262/built-ins/Function/prototype/toString/class-declaration-implicit-ctor.js
-skip script test262/built-ins/Function/prototype/toString/class-expression-explicit-ctor.js
-skip script test262/built-ins/Function/prototype/toString/class-expression-implicit-ctor.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317395
 skip script test262/built-ins/ArrayBuffer/prototype/byteLength/detached-buffer.js
 

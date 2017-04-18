@@ -8,6 +8,7 @@
 #include "FilterNodeSoftware.h"
 #include "GradientStopsD2D.h"
 #include "SourceSurfaceD2D1.h"
+#include "SourceSurfaceDual.h"
 #include "RadialGradientEffectD2D1.h"
 
 #include "HelpersD2D.h"
@@ -1870,6 +1871,21 @@ DrawTargetD2D1::GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTrans
       AddDependencyOnSource(surf);
     }
     break;
+  case SurfaceType::DUAL_DT:
+    {
+      // Sometimes we have a dual drawtarget but the underlying targets
+      // are d2d surfaces. Let's not readback and reupload in those cases.
+      SourceSurfaceDual* surface = static_cast<SourceSurfaceDual*>(aSurface);
+      SourceSurface* first = surface->GetFirstSurface();
+      if (first->GetType() == SurfaceType::D2D1_1_IMAGE) {
+        MOZ_ASSERT(surface->SameSurfaceTypes());
+        SourceSurfaceD2D1* d2dSurface = static_cast<SourceSurfaceD2D1*>(first);
+        image = d2dSurface->GetImage();
+        AddDependencyOnSource(d2dSurface); 
+        break;
+      }
+      // Otherwise fall through
+  }
   default:
     {
       RefPtr<DataSourceSurface> dataSurf = aSurface->GetDataSurface();
