@@ -81,6 +81,9 @@ proxy_Construct(JSContext* cx, unsigned argc, Value* vp);
 // These functions are used by JIT code
 
 bool
+ProxyHasOwn(JSContext* cx, HandleObject proxy, HandleValue idVal, MutableHandleValue result);
+
+bool
 ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleValue vp);
 
 bool
