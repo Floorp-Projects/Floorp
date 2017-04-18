@@ -194,41 +194,29 @@ frontend::IsKeyword(JSLinearString* str)
     return false;
 }
 
-bool
-frontend::IsFutureReservedWord(JSLinearString* str)
+TokenKind
+frontend::ReservedWordTokenKind(PropertyName* str)
 {
     if (const ReservedWordInfo* rw = FindReservedWord(str))
-        return TokenKindIsFutureReservedWord(rw->tokentype);
+        return rw->tokentype;
 
-    return false;
-}
-
-bool
-frontend::IsStrictReservedWord(JSLinearString* str)
-{
-    if (const ReservedWordInfo* rw = FindReservedWord(str))
-        return TokenKindIsStrictReservedWord(rw->tokentype);
-
-    return false;
-}
-
-bool
-frontend::IsReservedWordLiteral(JSLinearString* str)
-{
-    if (const ReservedWordInfo* rw = FindReservedWord(str))
-        return TokenKindIsReservedWordLiteral(rw->tokentype);
-
-    return false;
+    return TOK_NAME;
 }
 
 const char*
 frontend::ReservedWordToCharZ(PropertyName* str)
 {
-    const ReservedWordInfo* rw = FindReservedWord(str);
-    if (rw == nullptr)
-        return nullptr;
+    if (const ReservedWordInfo* rw = FindReservedWord(str))
+        return ReservedWordToCharZ(rw->tokentype);
 
-    switch (rw->tokentype) {
+    return nullptr;
+}
+
+const char*
+frontend::ReservedWordToCharZ(TokenKind tt)
+{
+    MOZ_ASSERT(tt != TOK_NAME);
+    switch (tt) {
 #define EMIT_CASE(word, name, type) case type: return js_##word##_str;
       FOR_EACH_JAVASCRIPT_RESERVED_WORD(EMIT_CASE)
 #undef EMIT_CASE
