@@ -7,31 +7,18 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const {createNode, TimeScale} = require("devtools/client/animationinspector/utils");
+const {createNode, createSVGNode, TimeScale, getFormattedAnimationTitle} =
+  require("devtools/client/animationinspector/utils");
+const {createPathSegments, appendPathElement, DEFAULT_MIN_PROGRESS_THRESHOLD} =
+  require("devtools/client/animationinspector/graph-helper");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N =
       new LocalizationHelper("devtools/client/locales/animationinspector.properties");
 
-// In the createPathSegments function, an animation duration is divided by
-// DURATION_RESOLUTION in order to draw the way the animation progresses.
-// But depending on the timing-function, we may be not able to make the graph
-// smoothly progress if this resolution is not high enough.
-// So, if the difference of animation progress between 2 divisions is more than
-// MIN_PROGRESS_THRESHOLD, then createPathSegments re-divides
-// by DURATION_RESOLUTION.
-// DURATION_RESOLUTION shoud be integer and more than 2.
-const DURATION_RESOLUTION = 4;
-// MIN_PROGRESS_THRESHOLD shoud be between more than 0 to 1.
-const MIN_PROGRESS_THRESHOLD = 0.1;
-// BOUND_EXCLUDING_TIME should be less than 1ms and is used to exclude start
-// and end bounds when dividing  duration in createPathSegments.
-const BOUND_EXCLUDING_TIME = 0.001;
 // Show max 10 iterations for infinite animations
 // to give users a clue that the animation does repeat.
 const MAX_INFINITE_ANIMATIONS_ITERATIONS = 10;
-// SVG namespace
-const SVG_NS = "http://www.w3.org/2000/svg";
 
 /**
  * UI component responsible for displaying a single animation timeline, which
@@ -76,9 +63,8 @@ AnimationTimeBlock.prototype = {
       TimeScale.getAnimationDimensions(animation);
 
     // Animation summary graph element.
-    const summaryEl = createNode({
+    const summaryEl = createSVGNode({
       parent: this.containerEl,
-      namespace: "http://www.w3.org/2000/svg",
       nodeType: "svg",
       attributes: {
         "class": "summary",
@@ -107,7 +93,7 @@ AnimationTimeBlock.prototype = {
     const minSegmentDuration =
       totalDisplayedDuration / this.containerEl.clientWidth;
     // Minimum progress threshold.
-    let minProgressThreshold = MIN_PROGRESS_THRESHOLD;
+    let minProgressThreshold = DEFAULT_MIN_PROGRESS_THRESHOLD;
     // If the easing is step function,
     // minProgressThreshold should be changed by the steps.
     const stepFunction = state.easing.match(/steps\((\d+)/);
@@ -353,30 +339,6 @@ AnimationTimeBlock.prototype = {
     return this.containerEl.ownerDocument.defaultView;
   }
 };
-
-/**
- * Get a formatted title for this animation. This will be either:
- * "some-name", "some-name : CSS Transition", "some-name : CSS Animation",
- * "some-name : Script Animation", or "Script Animation", depending
- * if the server provides the type, what type it is and if the animation
- * has a name
- * @param {AnimationPlayerFront} animation
- */
-function getFormattedAnimationTitle({state}) {
-  // Older servers don't send a type, and only know about
-  // CSSAnimations and CSSTransitions, so it's safe to use
-  // just the name.
-  if (!state.type) {
-    return state.name;
-  }
-
-  // Script-generated animations may not have a name.
-  if (state.type === "scriptanimation" && !state.name) {
-    return L10N.getStr("timeline.scriptanimation.unnamedLabel");
-  }
-
-  return L10N.getFormatStr(`timeline.${state.type}.nameLabel`, state.name);
-}
 
 /**
  * Render delay section.
@@ -637,87 +599,4 @@ function getSegmentHelper(state, win) {
       return { x: time, y: Math.max(progress, 0) };
     }
   };
-}
-
-/**
- * Create the path segments from given parameters.
- * @param {Number} startTime - Starting time of animation.
- * @param {Number} endTime - Ending time of animation.
- * @param {Number} minSegmentDuration - Minimum segment duration.
- * @param {Number} minProgressThreshold - Minimum progress threshold.
- * @param {Object} segmentHelper - The object of getSegmentHelper.
- * @return {Array} path segments -
- *                 [{x: {Number} time, y: {Number} progress}, ...]
- */
-function createPathSegments(startTime, endTime, minSegmentDuration,
-                            minProgressThreshold, segmentHelper) {
-  // If the duration is too short, early return.
-  if (endTime - startTime < minSegmentDuration) {
-    return [segmentHelper.getSegment(startTime),
-            segmentHelper.getSegment(endTime)];
-  }
-
-  // Otherwise, start creating segments.
-  let pathSegments = [];
-
-  // Append the segment for the startTime position.
-  const startTimeSegment = segmentHelper.getSegment(startTime);
-  pathSegments.push(startTimeSegment);
-  let previousSegment = startTimeSegment;
-
-  // Split the duration in equal intervals, and iterate over them.
-  // See the definition of DURATION_RESOLUTION for more information about this.
-  const interval = (endTime - startTime) / DURATION_RESOLUTION;
-  for (let index = 1; index <= DURATION_RESOLUTION; index++) {
-    // Create a segment for this interval.
-    const currentSegment =
-      segmentHelper.getSegment(startTime + index * interval);
-
-    // If the distance between the Y coordinate (the animation's progress) of
-    // the previous segment and the Y coordinate of the current segment is too
-    // large, then recurse with a smaller duration to get more details
-    // in the graph.
-    if (Math.abs(currentSegment.y - previousSegment.y) > minProgressThreshold) {
-      // Divide the current interval (excluding start and end bounds
-      // by adding/subtracting BOUND_EXCLUDING_TIME).
-      pathSegments = pathSegments.concat(
-        createPathSegments(previousSegment.x + BOUND_EXCLUDING_TIME,
-                           currentSegment.x - BOUND_EXCLUDING_TIME,
-                           minSegmentDuration, minProgressThreshold,
-                           segmentHelper));
-    }
-
-    pathSegments.push(currentSegment);
-    previousSegment = currentSegment;
-  }
-
-  return pathSegments;
-}
-
-/**
- * Append path element.
- * @param {Element} parentEl - Parent element of this appended path element.
- * @param {Array} pathSegments - Path segments. Please see createPathSegments.
- * @param {String} cls - Class name.
- * @return {Element} path element.
- */
-function appendPathElement(parentEl, pathSegments, cls) {
-  // Create path string.
-  let path = `M${ pathSegments[0].x },0`;
-  pathSegments.forEach(pathSegment => {
-    path += ` L${ pathSegment.x },${ pathSegment.y }`;
-  });
-  path += ` L${ pathSegments[pathSegments.length - 1].x },0 Z`;
-  // Append and return the path element.
-  return createNode({
-    parent: parentEl,
-    namespace: SVG_NS,
-    nodeType: "path",
-    attributes: {
-      "d": path,
-      "class": cls,
-      "vector-effect": "non-scaling-stroke",
-      "transform": "scale(1, -1)"
-    }
-  });
 }

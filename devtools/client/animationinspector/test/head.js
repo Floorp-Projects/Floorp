@@ -93,6 +93,11 @@ var selectNodeAndWaitForAnimations = Task.async(
     // be properly displayed (wait for all target DOM nodes to be previewed).
     let {AnimationsPanel} = inspector.sidebar.getWindowForTab(TAB_NAME);
     yield waitForAllAnimationTargets(AnimationsPanel);
+
+    if (AnimationsPanel.animationsTimelineComponent.animations.length === 1) {
+      // Wait for selecting the animation since there is only one animation.
+      yield waitForAnimationSelecting(AnimationsPanel);
+    }
   }
 );
 
@@ -158,6 +163,11 @@ var openAnimationInspector = Task.async(function* () {
   // nodes to be lazily displayed). This is safe to do even if there are no
   // animations displayed.
   yield waitForAllAnimationTargets(AnimationsPanel);
+
+  if (AnimationsPanel.animationsTimelineComponent.animations.length === 1) {
+    // Wait for selecting the animation since there is only one animation.
+    yield waitForAnimationSelecting(AnimationsPanel);
+  }
 
   return {
     toolbox: toolbox,
@@ -351,6 +361,37 @@ function* changeTimelinePlaybackRate(panel, rate) {
 }
 
 /**
+ * Wait for animation selecting.
+ * @param {AnimationsPanel} panel
+ */
+function* waitForAnimationSelecting(panel) {
+  yield panel.animationsTimelineComponent.once("animation-selected");
+}
+
+/**
+   + * Click the timeline header to update the animation current time.
+   + * @param {AnimationsPanel} panel
+   + * @param {Number} x position rate on timeline header.
+   + *                 This method calculates
+   + *                 `position * offsetWidth + offsetLeft of timeline header`
+   + *                 as the clientX of MouseEvent.
+   + *                 This parameter should be from 0.0 to 1.0.
+   + */
+function* clickOnTimelineHeader(panel, position) {
+  const timeline = panel.animationsTimelineComponent;
+  const onTimelineDataChanged = timeline.once("timeline-data-changed");
+
+  const header = timeline.timeHeaderEl;
+  const clientX = header.offsetLeft + header.offsetWidth * position;
+  EventUtils.sendMouseEvent({ type: "mousedown", clientX: clientX },
+                            header, header.ownerDocument.defaultView);
+  info(`Click at (${ clientX }, 0) on timeline header`);
+  EventUtils.sendMouseEvent({ type: "mouseup", clientX: clientX }, header,
+                            header.ownerDocument.defaultView);
+  return yield onTimelineDataChanged;
+}
+
+/**
  * Prevent the toolbox common highlighter from making backend requests.
  * @param {Toolbox} toolbox
  */
@@ -369,43 +410,35 @@ function disableHighlighter(toolbox) {
  * Click on an animation in the timeline to select/unselect it.
  * @param {AnimationsPanel} panel The panel instance.
  * @param {Number} index The index of the animation to click on.
- * @param {Boolean} shouldClose Set to true if clicking should close the
- * animation.
+ * @param {Boolean} shouldAlreadySelected Set to true
+ *                  if the clicked animation is already selected.
  * @return {Promise} resolves to the animation whose state has changed.
  */
-function* clickOnAnimation(panel, index, shouldClose) {
+function* clickOnAnimation(panel, index, shouldAlreadySelected) {
   let timeline = panel.animationsTimelineComponent;
 
   // Expect a selection event.
-  let onSelectionChanged = timeline.once(shouldClose
-                                         ? "animation-unselected"
+  let onSelectionChanged = timeline.once(shouldAlreadySelected
+                                         ? "animation-already-selected"
                                          : "animation-selected");
-
-  // If we're opening the animation, also wait for the keyframes-retrieved
-  // event.
-  let onReady = shouldClose
-                ? Promise.resolve()
-                : timeline.details[index].once("keyframes-retrieved");
 
   info("Click on animation " + index + " in the timeline");
   let timeBlock = timeline.rootWrapperEl.querySelectorAll(".time-block")[index];
   EventUtils.sendMouseEvent({type: "click"}, timeBlock,
                             timeBlock.ownerDocument.defaultView);
 
-  yield onReady;
   return yield onSelectionChanged;
 }
 
 /**
  * Get an instance of the Keyframes component from the timeline.
  * @param {AnimationsPanel} panel The panel instance.
- * @param {Number} animationIndex The index of the animation in the timeline.
  * @param {String} propertyName The name of the animated property.
  * @return {Keyframes} The Keyframes component instance.
  */
-function getKeyframeComponent(panel, animationIndex, propertyName) {
+function getKeyframeComponent(panel, propertyName) {
   let timeline = panel.animationsTimelineComponent;
-  let detailsComponent = timeline.details[animationIndex];
+  let detailsComponent = timeline.details;
   return detailsComponent.keyframeComponents
                          .find(c => c.propertyName === propertyName);
 }
@@ -413,14 +446,37 @@ function getKeyframeComponent(panel, animationIndex, propertyName) {
 /**
  * Get a keyframe element from the timeline.
  * @param {AnimationsPanel} panel The panel instance.
- * @param {Number} animationIndex The index of the animation in the timeline.
  * @param {String} propertyName The name of the animated property.
  * @param {Index} keyframeIndex The index of the keyframe.
  * @return {DOMNode} The keyframe element.
  */
-function getKeyframeEl(panel, animationIndex, propertyName, keyframeIndex) {
-  let keyframeComponent = getKeyframeComponent(panel, animationIndex,
-                                               propertyName);
+function getKeyframeEl(panel, propertyName, keyframeIndex) {
+  let keyframeComponent = getKeyframeComponent(panel, propertyName);
   return keyframeComponent.keyframesEl
                           .querySelectorAll(".frame")[keyframeIndex];
+}
+
+/**
+ * Set style to test document.
+ * @param {Animation} animation - animation object.
+ * @param {AnimationsPanel} panel - The panel instance.
+ * @param {String} name - property name.
+ * @param {String} value - property value.
+ * @param {String} selector - selector for test document.
+ */
+function* setStyle(animation, panel, name, value, selector) {
+  info("Change the animation style via the content DOM. Setting " +
+       name + " to " + value + " of " + selector);
+
+  const onAnimationChanged = animation ? once(animation, "changed") : Promise.resolve();
+  yield executeInContent("devtools:test:setStyle", {
+    selector: selector,
+    propertyName: name,
+    propertyValue: value
+  });
+  yield onAnimationChanged;
+
+  // Also wait for the target node previews to be loaded if the panel got
+  // refreshed as a result of this animation mutation.
+  yield waitForAllAnimationTargets(panel);
 }

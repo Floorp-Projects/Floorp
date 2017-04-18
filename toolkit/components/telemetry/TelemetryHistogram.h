@@ -76,21 +76,6 @@ RegisteredKeyedHistograms(uint32_t aDataset, uint32_t *aCount,
 nsresult
 GetKeyedHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret);
 
-nsresult
-RegisterAddonHistogram(const nsACString &id, const nsACString &name,
-                       uint32_t histogramType, uint32_t min, uint32_t max,
-                       uint32_t bucketCount, uint8_t optArgCount);
-
-nsresult
-GetAddonHistogram(const nsACString &id, const nsACString &name,
-                  JSContext *cx, JS::MutableHandle<JS::Value> ret);
-
-nsresult
-UnregisterAddonHistograms(const nsACString &id);
-
-nsresult
-GetAddonHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret);
-
 size_t
 GetMapShallowSizesOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 

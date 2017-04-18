@@ -10,8 +10,6 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
-Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/constants.js");
@@ -19,7 +17,7 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/PlacesBackups.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "BookmarkValidator",
                                   "resource://services-sync/bookmark_validator.js");
 XPCOMUtils.defineLazyGetter(this, "PlacesBundle", () => {
@@ -27,6 +25,12 @@ XPCOMUtils.defineLazyGetter(this, "PlacesBundle", () => {
                         .getService(Ci.nsIStringBundleService);
   return bundleService.createBundle("chrome://places/locale/places.properties");
 });
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesSyncUtils",
+                                  "resource://gre/modules/PlacesSyncUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesBackups",
+                                  "resource://gre/modules/PlacesBackups.jsm");
 
 const ANNOS_TO_TRACK = [PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO,
                         PlacesSyncUtils.bookmarks.SIDEBAR_ANNO,
