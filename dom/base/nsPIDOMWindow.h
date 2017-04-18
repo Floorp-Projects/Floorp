@@ -318,7 +318,7 @@ public:
    * a layout flush in the parent (which will in turn, do a layout flush
    * in its parent, etc.).
    */
-  virtual void EnsureSizeUpToDate() = 0;
+  virtual void EnsureSizeAndPositionUpToDate() = 0;
 
   /**
    * Callback for notifying a window about a modal dialog being
