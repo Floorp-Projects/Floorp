@@ -2159,10 +2159,7 @@ HasOwnIRGenerator::tryAttachNativeHasOwn(HandleId key, ValOperandId keyId,
     if (!LookupOwnPropertyPure(cx_, obj, key, &prop))
         return false;
 
-    if (!prop.isFound())
-        return false;
-
-    if (!obj->isNative() && !obj->is<UnboxedPlainObject>())
+    if (!prop.isNativeProperty())
         return false;
 
     if (mode_ == ICState::Mode::Megamorphic) {
@@ -2172,9 +2169,9 @@ HasOwnIRGenerator::tryAttachNativeHasOwn(HandleId key, ValOperandId keyId,
         return true;
     }
 
-    Maybe<ObjOperandId> expandoId;
+    Maybe<ObjOperandId> holderId;
     emitIdGuard(keyId, key);
-    TestMatchingReceiver(writer, obj, nullptr, objId, &expandoId);
+    EmitReadSlotGuard(writer, obj, obj, prop.shape(), objId, &holderId);
     writer.loadBooleanResult(true);
     writer.returnFromIC();
 
@@ -2207,37 +2204,6 @@ HasOwnIRGenerator::tryAttachNativeHasOwnDoesNotExist(HandleId key, ValOperandId 
 }
 
 bool
-HasOwnIRGenerator::tryAttachProxyElement(ValOperandId keyId, HandleObject obj, ObjOperandId objId)
-{
-    if (!obj->is<ProxyObject>())
-        return false;
-
-    writer.guardIsProxy(objId);
-    writer.callProxyHasOwnResult(objId, keyId);
-    writer.returnFromIC();
-
-    trackAttached("ProxyHasOwn");
-    return true;
-}
-
-bool
-HasOwnIRGenerator::tryAttachDenseHasOwn(uint32_t index, Int32OperandId indexId,
-                                        HandleObject obj, ObjOperandId objId)
-{
-    if (!obj->isNative())
-        return false;
-    if (!obj->as<NativeObject>().containsDenseElement(index))
-        return false;
-
-    writer.guardShape(objId, obj->as<NativeObject>().lastProperty());
-    writer.loadDenseElementExistsResult(objId, indexId);
-    writer.returnFromIC();
-
-    trackAttached("DenseHasOwn");
-    return true;
-}
-
-bool
 HasOwnIRGenerator::tryAttachStub()
 {
     MOZ_ASSERT(cacheKind_ == CacheKind::HasOwn);
@@ -2255,9 +2221,6 @@ HasOwnIRGenerator::tryAttachStub()
 
     ObjOperandId objId = writer.guardIsObject(valId);
 
-    if (tryAttachProxyElement(keyId, obj, objId))
-        return true;
-
     RootedId id(cx_);
     bool nameOrSymbol;
     if (!ValueToNameOrSymbolId(cx_, key_, &id, &nameOrSymbol)) {
@@ -2269,16 +2232,6 @@ HasOwnIRGenerator::tryAttachStub()
         if (tryAttachNativeHasOwn(id, keyId, obj, objId))
             return true;
         if (tryAttachNativeHasOwnDoesNotExist(id, keyId, obj, objId))
-            return true;
-
-        trackNotAttached();
-        return false;
-    }
-
-    uint32_t index;
-    Int32OperandId indexId;
-    if (maybeGuardInt32Index(key_, keyId, &index, &indexId)) {
-        if (tryAttachDenseHasOwn(index, indexId, obj, objId))
             return true;
 
         trackNotAttached();

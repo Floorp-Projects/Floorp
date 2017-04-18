@@ -242,7 +242,6 @@ extern const char* CacheKindNames[];
     _(CallNativeGetterResult)             \
     _(CallProxyGetResult)                 \
     _(CallProxyGetByValueResult)          \
-    _(CallProxyHasOwnResult)              \
     _(LoadUndefinedResult)                \
     _(LoadBooleanResult)                  \
                                           \
@@ -886,10 +885,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::CallProxyGetByValueResult, obj);
         writeOperandId(idVal);
     }
-    void callProxyHasOwnResult(ObjOperandId obj, ValOperandId idVal) {
-        writeOpWithOperandId(CacheOp::CallProxyHasOwnResult, obj);
-        writeOperandId(idVal);
-    }
     void loadEnvironmentFixedSlotResult(ObjOperandId obj, size_t offset) {
         writeOpWithOperandId(CacheOp::LoadEnvironmentFixedSlotResult, obj);
         addStubField(offset, StubField::Type::RawWord);
@@ -1291,9 +1286,6 @@ class MOZ_RAII HasOwnIRGenerator : public IRGenerator
     HandleValue key_;
     HandleValue val_;
 
-    bool tryAttachProxyElement(ValOperandId keyId, HandleObject obj, ObjOperandId objId);
-    bool tryAttachDenseHasOwn(uint32_t index, Int32OperandId indexId,
-                              HandleObject obj, ObjOperandId objId);
     bool tryAttachNativeHasOwn(HandleId key, ValOperandId keyId,
                            HandleObject obj, ObjOperandId objId);
     bool tryAttachNativeHasOwnDoesNotExist(HandleId key, ValOperandId keyId,
