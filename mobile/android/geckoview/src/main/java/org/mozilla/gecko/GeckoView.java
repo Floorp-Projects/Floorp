@@ -70,7 +70,6 @@ public class GeckoView extends LayerView
     private final EventDispatcher mEventDispatcher =
         new EventDispatcher(mNativeQueue);
 
-    private ChromeDelegate mChromeDelegate;
     /* package */ ContentListener mContentListener;
     /* package */ NavigationListener mNavigationListener;
     /* package */ ProgressListener mProgressListener;
@@ -505,15 +504,6 @@ public class GeckoView extends LayerView
     }
 
     /**
-    * Set the chrome callback handler.
-    * This will replace the current handler.
-    * @param chrome An implementation of GeckoViewChrome.
-    */
-    public void setChromeDelegate(ChromeDelegate chrome) {
-        mChromeDelegate = chrome;
-    }
-
-    /**
     * Set the content callback handler.
     * This will replace the current handler.
     * @param content An implementation of ContentListener.
@@ -592,72 +582,6 @@ public class GeckoView extends LayerView
 
     public EventDispatcher getEventDispatcher() {
         return mEventDispatcher;
-    }
-
-    /* Provides a means for the client to indicate whether a JavaScript
-     * dialog request should proceed. An instance of this class is passed to
-     * various GeckoViewChrome callback actions.
-     */
-    public class PromptResult {
-        public PromptResult() {
-        }
-
-        /**
-        * Handle a confirmation response from the user.
-        */
-        public void confirm() {
-        }
-
-        /**
-        * Handle a confirmation response from the user.
-        * @param value String value to return to the browser context.
-        */
-        public void confirmWithValue(String value) {
-        }
-
-        /**
-        * Handle a cancellation response from the user.
-        */
-        public void cancel() {
-        }
-    }
-
-    public interface ChromeDelegate {
-        /**
-        * Tell the host application to display an alert dialog.
-        * @param view The GeckoView that initiated the callback.
-        * @param message The string to display in the dialog.
-        * @param result A PromptResult used to send back the result without blocking.
-        * Defaults to cancel requests.
-        */
-        void onAlert(GeckoView view, String message, GeckoView.PromptResult result);
-
-        /**
-        * Tell the host application to display a confirmation dialog.
-        * @param view The GeckoView that initiated the callback.
-        * @param message The string to display in the dialog.
-        * @param result A PromptResult used to send back the result without blocking.
-        * Defaults to cancel requests.
-        */
-        void onConfirm(GeckoView view, String message, GeckoView.PromptResult result);
-
-        /**
-        * Tell the host application to display an input prompt dialog.
-        * @param view The GeckoView that initiated the callback.
-        * @param message The string to display in the dialog.
-        * @param defaultValue The string to use as default input.
-        * @param result A PromptResult used to send back the result without blocking.
-        * Defaults to cancel requests.
-        */
-        void onPrompt(GeckoView view, String message, String defaultValue, GeckoView.PromptResult result);
-
-        /**
-        * Tell the host application to display a remote debugging request dialog.
-        * @param view The GeckoView that initiated the callback.
-        * @param result A PromptResult used to send back the result without blocking.
-        * Defaults to cancel requests.
-        */
-        void onDebugRequest(GeckoView view, GeckoView.PromptResult result);
     }
 
     public interface ProgressListener {
