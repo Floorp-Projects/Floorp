@@ -1492,7 +1492,8 @@ var CustomizableUIInternal = {
       let anchor = aNode;
       if (area != CustomizableUI.AREA_PANEL) {
         let wrapper = this.wrapWidget(aWidget.id).forWindow(ownerWindow);
-        if (wrapper && wrapper.anchor) {
+
+        if (wrapper && !wrapper.overflowed && wrapper.anchor) {
           this.hidePanelForNode(aNode);
           anchor = wrapper.anchor;
         }
