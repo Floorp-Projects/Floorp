@@ -288,9 +288,6 @@ const ignorableWhitelist = new Set([
   // Bug 1351675 - should this file be packaged?
   "resource://app/defaults/pinning/pins.json",
 
-  // Bug 1351682 - should be removed?
-  "resource://app/defaults/profile/prefs.js",
-
   // Bug 1351669 - obsolete test file
   "resource://gre/res/test.properties",
 ]);
