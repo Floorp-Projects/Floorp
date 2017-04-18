@@ -6,13 +6,10 @@
 package org.mozilla.geckoview_example;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.mozilla.gecko.BaseGeckoInterface;
 import org.mozilla.gecko.GeckoProfile;
@@ -25,7 +22,9 @@ public class GeckoViewActivity extends Activity {
     private static final String LOGTAG = "GeckoViewActivity";
     private static final String DEFAULT_URL = "https://mozilla.org";
 
-    GeckoView mGeckoView;
+    /* package */ static final int REQUEST_FILE_PICKER = 1;
+
+    private GeckoView mGeckoView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +37,10 @@ public class GeckoViewActivity extends Activity {
         mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
         mGeckoView.setContentListener(new MyGeckoViewContent());
         mGeckoView.setProgressListener(new MyGeckoViewProgress());
+
+        final BasicGeckoViewPrompt prompt = new BasicGeckoViewPrompt();
+        prompt.filePickerRequestCode = REQUEST_FILE_PICKER;
+        mGeckoView.setPromptDelegate(prompt);
 
         final GeckoProfile profile = GeckoProfile.get(this);
 
@@ -59,6 +62,18 @@ public class GeckoViewActivity extends Activity {
             mGeckoView.loadUri(u.toString());
         } else {
             mGeckoView.loadUri(DEFAULT_URL);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(final int requestCode, final int resultCode,
+                                    final Intent data) {
+        if (requestCode == REQUEST_FILE_PICKER) {
+            final BasicGeckoViewPrompt prompt = (BasicGeckoViewPrompt)
+                    mGeckoView.getPromptDelegate();
+            prompt.onFileCallbackResult(resultCode, data);
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
