@@ -316,12 +316,12 @@ EffectCompositor::PostRestyleForAnimation(dom::Element* aElement,
                "Restyle request during restyling should be requested only on "
                "the main-thread. e.g. after the parallel traversal");
     if (ServoStyleSet::IsInServoTraversal()) {
-      // FIXME: Bug 1302946: We will handle eRestyle_CSSTransitions.
-      MOZ_ASSERT(hint == eRestyle_CSSAnimations);
+      MOZ_ASSERT(hint == eRestyle_CSSAnimations ||
+                 hint == eRestyle_CSSTransitions);
 
       // We can't call Servo_NoteExplicitHints here since AtomicRefCell does not
       // allow us mutate ElementData of the |aElement| in SequentialTask.
-      // Instead we call Servo_NoteExplicitHints for the element in PreTraverse() right
+      // Instead we call Servo_NoteExplicitHints for the element in PreTraverse()
       // which will be called right before the second traversal that we do for
       // updating CSS animations.
       // In that case PreTraverse() will return true so that we know to do the
@@ -982,8 +982,10 @@ EffectCompositor::PreTraverseInSubtree(Element* aRoot)
   MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
 
   bool foundElementsNeedingRestyle = false;
-  for (auto& elementsToRestyle : mElementsToRestyle) {
-    for (auto iter = elementsToRestyle.Iter(); !iter.Done(); iter.Next()) {
+  for (size_t i = 0; i < kCascadeLevelCount; ++i) {
+    CascadeLevel cascadeLevel = CascadeLevel(i);
+    for (auto iter = mElementsToRestyle[cascadeLevel].Iter();
+         !iter.Done(); iter.Next()) {
       bool postedRestyle = iter.Data();
       // Ignore throttled restyle.
       if (!postedRestyle) {
@@ -1003,7 +1005,10 @@ EffectCompositor::PreTraverseInSubtree(Element* aRoot)
       // We can't call PostRestyleEvent directly here since we are still in the
       // middle of the servo traversal.
       mPresContext->RestyleManager()->AsServo()->
-        PostRestyleEventForAnimations(target.mElement, eRestyle_CSSAnimations);
+        PostRestyleEventForAnimations(target.mElement,
+                                      cascadeLevel == CascadeLevel::Transitions
+                                        ? eRestyle_CSSTransitions
+                                        : eRestyle_CSSAnimations);
 
       foundElementsNeedingRestyle = true;
 
@@ -1048,14 +1053,21 @@ EffectCompositor::PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull)
 
   PseudoElementHashEntry::KeyType key = { aElement, pseudoType };
 
-  for (auto& elementsToRestyle : mElementsToRestyle) {
-    if (!elementsToRestyle.Get(key)) {
+
+  for (size_t i = 0; i < kCascadeLevelCount; ++i) {
+    CascadeLevel cascadeLevel = CascadeLevel(i);
+    auto& elementSet = mElementsToRestyle[cascadeLevel];
+
+    if (!elementSet.Get(key)) {
       // Ignore throttled restyle and no restyle request.
       continue;
     }
 
     mPresContext->RestyleManager()->AsServo()->
-      PostRestyleEventForAnimations(aElement, eRestyle_CSSAnimations);
+      PostRestyleEventForAnimations(aElement,
+                                    cascadeLevel == CascadeLevel::Transitions
+                                      ? eRestyle_CSSTransitions
+                                      : eRestyle_CSSAnimations);
 
     EffectSet* effects = EffectSet::GetEffectSet(aElement, pseudoType);
     if (effects) {
@@ -1066,7 +1078,7 @@ EffectCompositor::PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull)
       }
     }
 
-    elementsToRestyle.Remove(key);
+    elementSet.Remove(key);
     found = true;
   }
   return found;

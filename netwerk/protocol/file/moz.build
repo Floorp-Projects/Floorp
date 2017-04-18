@@ -8,6 +8,7 @@ with Files('**'):
     BUG_COMPONENT = ('Core', 'Networking: File')
 
 EXPORTS.mozilla.net += [
+    'FileChannelParent.h',
     'nsFileProtocolHandler.h',
 ]
 
@@ -19,9 +20,13 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'necko_file'
 
 UNIFIED_SOURCES += [
+    'FileChannelChild.cpp',
+    'FileChannelParent.cpp',
     'nsFileChannel.cpp',
     'nsFileProtocolHandler.cpp',
 ]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 

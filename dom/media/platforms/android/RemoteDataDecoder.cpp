@@ -138,7 +138,8 @@ public:
           gl::OriginPos::BottomLeft);
 
         RefPtr<VideoData> v = VideoData::CreateFromImage(
-          inputInfo.mDisplaySize, offset, presentationTimeUs, inputInfo.mDurationUs,
+          inputInfo.mDisplaySize, offset, presentationTimeUs,
+          TimeUnit::FromMicroseconds(inputInfo.mDurationUs),
           img, !!(flags & MediaCodec::BUFFER_FLAG_SYNC_FRAME),
           presentationTimeUs);
 
@@ -223,7 +224,8 @@ public:
                               : &mConfig;
     MOZ_ASSERT(config);
 
-    InputInfo info(aSample->mDuration, config->mImage, config->mDisplay);
+    InputInfo info(
+      aSample->mDuration.ToMicroseconds(), config->mImage, config->mDisplay);
     mInputInfos.Insert(aSample->mTime, info);
     return RemoteDataDecoder::Decode(aSample);
   }

@@ -257,7 +257,13 @@ public:
    */
   void ScrollToRestoredPosition();
 
-  bool PageIsStillLoading();
+  enum class LoadingState {
+    Loading,
+    Stopped,
+    Loaded
+  };
+
+  LoadingState GetPageLoadingState();
 
   /**
    * GetSnapPointForDestination determines which point to snap to after

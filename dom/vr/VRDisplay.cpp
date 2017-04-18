@@ -268,7 +268,6 @@ VRPose::VRPose(nsISupports* aParent)
   : Pose(aParent)
 {
   mFrameId = 0;
-  mVRState.Clear();
   mozilla::HoldJSObjects(this);
 }
 
@@ -861,7 +860,6 @@ VRFrameInfo::Update(const gfx::VRDisplayInfo& aInfo,
 VRFrameInfo::VRFrameInfo()
  : mTimeStampOffset(0.0f)
 {
-  mVRState.Clear();
 }
 
 bool

@@ -449,7 +449,7 @@ AudioSink::NotifyAudioNeeded()
       }
     }
 
-    mLastEndTime = TimeUnit::FromMicroseconds(data->GetEndTime());
+    mLastEndTime = data->GetEndTime();
     mFramesParsed += data->mFrames;
 
     if (mConverter->InputConfig() != mConverter->OutputConfig()) {

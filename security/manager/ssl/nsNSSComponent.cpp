@@ -22,6 +22,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCRT.h"
@@ -130,11 +131,18 @@ bool EnsureNSSInitializedChromeOrContent()
   return true;
 }
 
+static const uint32_t OCSP_TIMEOUT_MILLISECONDS_SOFT_DEFAULT = 2000;
+static const uint32_t OCSP_TIMEOUT_MILLISECONDS_SOFT_MAX = 5000;
+static const uint32_t OCSP_TIMEOUT_MILLISECONDS_HARD_DEFAULT = 10000;
+static const uint32_t OCSP_TIMEOUT_MILLISECONDS_HARD_MAX = 20000;
+
 static void
 GetRevocationBehaviorFromPrefs(/*out*/ CertVerifier::OcspDownloadConfig* odc,
                                /*out*/ CertVerifier::OcspStrictConfig* osc,
                                /*out*/ CertVerifier::OcspGetConfig* ogc,
                                /*out*/ uint32_t* certShortLifetimeInDays,
+                               /*out*/ TimeDuration& softTimeout,
+                               /*out*/ TimeDuration& hardTimeout,
                                const MutexAutoLock& /*proofOfLock*/)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -168,6 +176,20 @@ GetRevocationBehaviorFromPrefs(/*out*/ CertVerifier::OcspDownloadConfig* odc,
   *certShortLifetimeInDays =
     Preferences::GetUint("security.pki.cert_short_lifetime_in_days",
                          static_cast<uint32_t>(0));
+
+  uint32_t softTimeoutMillis =
+    Preferences::GetUint("security.OCSP.timeoutMilliseconds.soft",
+                         OCSP_TIMEOUT_MILLISECONDS_SOFT_DEFAULT);
+  softTimeoutMillis = std::min(softTimeoutMillis,
+                               OCSP_TIMEOUT_MILLISECONDS_SOFT_MAX);
+  softTimeout = TimeDuration::FromMilliseconds(softTimeoutMillis);
+
+  uint32_t hardTimeoutMillis =
+    Preferences::GetUint("security.OCSP.timeoutMilliseconds.hard",
+                         OCSP_TIMEOUT_MILLISECONDS_HARD_DEFAULT);
+  hardTimeoutMillis = std::min(hardTimeoutMillis,
+                               OCSP_TIMEOUT_MILLISECONDS_HARD_MAX);
+  hardTimeout = TimeDuration::FromMilliseconds(hardTimeoutMillis);
 
   SSL_ClearSessionCache();
 }
@@ -1522,10 +1544,13 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
   CertVerifier::OcspStrictConfig osc;
   CertVerifier::OcspGetConfig ogc;
   uint32_t certShortLifetimeInDays;
+  TimeDuration softTimeout;
+  TimeDuration hardTimeout;
 
   GetRevocationBehaviorFromPrefs(&odc, &osc, &ogc, &certShortLifetimeInDays,
-                                 lock);
-  mDefaultCertVerifier = new SharedCertVerifier(odc, osc, ogc,
+                                 softTimeout, hardTimeout, lock);
+  mDefaultCertVerifier = new SharedCertVerifier(odc, osc, ogc, softTimeout,
+                                                hardTimeout,
                                                 certShortLifetimeInDays,
                                                 pinningMode, sha1Mode,
                                                 nameMatchingMode,
@@ -1919,7 +1944,9 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                prefName.EqualsLiteral("security.cert_pinning.enforcement_level") ||
                prefName.EqualsLiteral("security.pki.sha1_enforcement_level") ||
                prefName.EqualsLiteral("security.pki.name_matching_mode") ||
-               prefName.EqualsLiteral("security.pki.netscape_step_up_policy")) {
+               prefName.EqualsLiteral("security.pki.netscape_step_up_policy") ||
+               prefName.EqualsLiteral("security.OCSP.timeoutMilliseconds.soft") ||
+               prefName.EqualsLiteral("security.OCSP.timeoutMilliseconds.hard")) {
       MutexAutoLock lock(mutex);
       setValidationOptions(false, lock);
 #ifdef DEBUG

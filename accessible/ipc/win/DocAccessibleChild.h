@@ -33,7 +33,7 @@ public:
     RecvEmulatedWindow(const WindowsHandle& aEmulatedWindowHandle,
                        const IAccessibleHolder& aEmulatedWindowCOMProxy) override;
 
-  HWND GetEmulatedWindowHandle() const { return mEmulatedWindowHandle; }
+  HWND GetNativeWindowHandle() const;
   IAccessible* GetEmulatedWindowIAccessible() const { return mEmulatedWindowProxy.get(); }
 
   IAccessible* GetParentIAccessible() const { return mParentProxy.get(); }

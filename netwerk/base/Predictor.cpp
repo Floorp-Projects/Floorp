@@ -49,6 +49,7 @@
 #include "mozilla/net/NeckoChild.h"
 
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/ClearOnShutdown.h"
 
 using namespace mozilla;
 
@@ -2203,17 +2204,24 @@ Predictor::Resetter::Complete()
 
 // Helper functions to make using the predictor easier from native code
 
+static StaticRefPtr<nsINetworkPredictor> sPredictor;
+
 static nsresult
 EnsureGlobalPredictor(nsINetworkPredictor **aPredictor)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsresult rv;
-  nsCOMPtr<nsINetworkPredictor> predictor =
-    do_GetService("@mozilla.org/network/predictor;1",
-                  &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!sPredictor) {
+    nsresult rv;
+    nsCOMPtr<nsINetworkPredictor> predictor =
+      do_GetService("@mozilla.org/network/predictor;1",
+                    &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    sPredictor = predictor;
+    ClearOnShutdown(&sPredictor);
+  }
 
+  nsCOMPtr<nsINetworkPredictor> predictor = sPredictor.get();
   predictor.forget(aPredictor);
   return NS_OK;
 }

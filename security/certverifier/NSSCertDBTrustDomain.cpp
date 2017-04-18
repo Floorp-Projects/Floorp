@@ -49,6 +49,8 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
                                            OCSPCache& ocspCache,
              /*optional but shouldn't be*/ void* pinArg,
                                            CertVerifier::OcspGetConfig ocspGETConfig,
+                                           TimeDuration ocspTimeoutSoft,
+                                           TimeDuration ocspTimeoutHard,
                                            uint32_t certShortLifetimeInDays,
                                            CertVerifier::PinningMode pinningMode,
                                            unsigned int minRSABits,
@@ -64,6 +66,8 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
   , mOCSPCache(ocspCache)
   , mPinArg(pinArg)
   , mOCSPGetConfig(ocspGETConfig)
+  , mOCSPTimeoutSoft(ocspTimeoutSoft)
+  , mOCSPTimeoutHard(ocspTimeoutHard)
   , mCertShortLifetimeInDays(certShortLifetimeInDays)
   , mPinningMode(pinningMode)
   , mMinRSABits(minRSABits)
@@ -270,17 +274,17 @@ NSSCertDBTrustDomain::DigestBuf(Input item, DigestAlgorithm digestAlg,
   return DigestBufNSS(item, digestAlg, digestBuf, digestBufLen);
 }
 
-static TimeDuration
-OCSPFetchingTypeToTimeoutTime(NSSCertDBTrustDomain::OCSPFetching ocspFetching)
+TimeDuration
+NSSCertDBTrustDomain::GetOCSPTimeout() const
 {
-  switch (ocspFetching) {
+  switch (mOCSPFetching) {
     case NSSCertDBTrustDomain::FetchOCSPForDVSoftFail:
-      return TimeDuration::FromSeconds(2);
+      return mOCSPTimeoutSoft;
     case NSSCertDBTrustDomain::FetchOCSPForEV:
     case NSSCertDBTrustDomain::FetchOCSPForDVHardFail:
-      return TimeDuration::FromSeconds(10);
+      return mOCSPTimeoutHard;
     // The rest of these are error cases. Assert in debug builds, but return
-    // the default value corresponding to 2 seconds in release builds.
+    // the soft timeout value in release builds.
     case NSSCertDBTrustDomain::NeverFetchOCSP:
     case NSSCertDBTrustDomain::LocalOnlyOCSPForEV:
       MOZ_ASSERT_UNREACHABLE("we should never see this OCSPFetching type here");
@@ -288,7 +292,7 @@ OCSPFetchingTypeToTimeoutTime(NSSCertDBTrustDomain::OCSPFetching ocspFetching)
   }
 
   MOZ_ASSERT_UNREACHABLE("we're not handling every OCSPFetching type");
-  return TimeDuration::FromSeconds(2);
+  return mOCSPTimeoutSoft;
 }
 
 // Copied and modified from CERT_GetOCSPAuthorityInfoAccessLocation and
@@ -565,7 +569,7 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
     SECItem* responseSECItem = nullptr;
     Result tempRV =
       DoOCSPRequest(arena, url, mOriginAttributes, &ocspRequestItem,
-                    OCSPFetchingTypeToTimeoutTime(mOCSPFetching),
+                    GetOCSPTimeout(),
                     mOCSPGetConfig == CertVerifier::ocspGetEnabled,
                     responseSECItem);
     MOZ_ASSERT((tempRV != Success) || responseSECItem);

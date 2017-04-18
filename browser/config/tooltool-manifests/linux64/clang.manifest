@@ -1,8 +1,8 @@
 [
   {
-    "version": "clang 3.8.0, libgcc 4.8.5",
-    "size": 140319580,
-    "digest": "34e219d7e8eaffa81710631c34d21355563d06335b3c00851e94c1f42f9098788fded8463dd0f67dd699f77b47a0245dd7aff754943a7a03fb5fd145a808254f",
+    "version": "clang 3.9.0",
+    "size": 166261192,
+    "digest": "52f3fc23f0f5c98050f8b0ac7c92a6752d067582a16f712a5a58074be98975d594f9e36249fc2be7f1cc2ca6d509c663faaf2bea66f949243cc1f41651638ba6",
     "algorithm": "sha512",
     "filename": "clang.tar.xz",
     "unpack": true
@@ -24,12 +24,12 @@
     "unpack": true
   },
   {
-    "version": "sccache rev b21198a7183a2fe226ff49348b1c0b51bae9f4f8",
+    "version": "sccache rev 7a3847276d05deb564cb84a16b8c551b690aaa3e",
     "algorithm": "sha512",
     "visibility": "public",
     "filename": "sccache2.tar.xz",
     "unpack": true,
-    "digest": "b89c40dbf28c2bd54fadf017c15a8789f6e7611252a623cc3a1507e3dd6fc9e5a50d746e81776ba856e33fdc99b4a6413ba7c3ac0aed5f4835705da2b758ef22",
-    "size": 1020700
+    "digest": "770bec21b71c386a5a89c9dede3b5dfbf47f7b22d395d5e4642d9c309a44fa05bf4a3a7b6d48b0bc737eafe3e3a8ce90005dcbad51a1aba4d326d5216b29dca1",
+    "size": 2173064
   }
 ]

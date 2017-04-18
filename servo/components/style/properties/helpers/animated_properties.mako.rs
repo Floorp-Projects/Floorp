@@ -29,7 +29,7 @@ use std::fmt;
 use style_traits::ToCss;
 use super::ComputedValues;
 use values::CSSFloat;
-use values::{Auto, Either};
+use values::{Auto, Either, Normal};
 use values::computed::{Angle, LengthOrPercentageOrAuto, LengthOrPercentageOrNone};
 use values::computed::{BorderRadiusSize, ClipRect, LengthOrNone};
 use values::computed::{CalcLengthOrPercentage, Context, LengthOrPercentage};
@@ -64,6 +64,19 @@ impl TransitionProperty {
                 cb(TransitionProperty::${prop.camel_case});
             % endif
         % endfor
+    }
+
+    /// Iterates over every property that is not TransitionProperty::All, stopping and returning
+    /// true when the provided callback returns true for the first time.
+    pub fn any<F: FnMut(TransitionProperty) -> bool>(mut cb: F) -> bool {
+        % for prop in data.longhands:
+            % if prop.animatable:
+                if cb(TransitionProperty::${prop.camel_case}) {
+                    return true;
+                }
+            % endif
+        % endfor
+        false
     }
 
     /// Parse a transition-property value.
@@ -512,6 +525,13 @@ impl Interpolate for Auto {
     #[inline]
     fn interpolate(&self, _other: &Self, _progress: f64) -> Result<Self, ()> {
         Ok(Auto)
+    }
+}
+
+impl Interpolate for Normal {
+    #[inline]
+    fn interpolate(&self, _other: &Self, _progress: f64) -> Result<Self, ()> {
+        Ok(Normal)
     }
 }
 

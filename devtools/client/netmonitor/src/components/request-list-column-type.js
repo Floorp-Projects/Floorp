@@ -13,12 +13,6 @@ const { getAbbreviatedMimeType } = require("../utils/request-utils");
 
 const { div, span } = DOM;
 
-const CONTENT_MIME_TYPE_ABBREVIATIONS = {
-  "ecmascript": "js",
-  "javascript": "js",
-  "x-javascript": "js"
-};
-
 const RequestListColumnType = createClass({
   displayName: "RequestListColumnType",
 
@@ -35,7 +29,6 @@ const RequestListColumnType = createClass({
     let abbrevType;
     if (mimeType) {
       abbrevType = getAbbreviatedMimeType(mimeType);
-      abbrevType = CONTENT_MIME_TYPE_ABBREVIATIONS[abbrevType] || abbrevType;
     }
 
     return (

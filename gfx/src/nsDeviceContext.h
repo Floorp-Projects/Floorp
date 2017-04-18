@@ -294,7 +294,6 @@ private:
 
     nscoord  mWidth;
     nscoord  mHeight;
-    uint32_t mDepth;
     int32_t  mAppUnitsPerDevPixel;
     int32_t  mAppUnitsPerDevPixelAtUnitFullZoom;
     int32_t  mAppUnitsPerPhysicalInch;

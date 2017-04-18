@@ -151,6 +151,7 @@ interface nsINavBookmarkObserver : nsISupports
    * @note List of values that may be associated with properties:
    *       aProperty     | aNewValue
    *       =====================================================================
+   *       guid          | The new bookmark guid.
    *       cleartime     | Empty string (all visits to this item were removed).
    *       title         | The new title.
    *       favicon       | The "moz-anno" URL of the new favicon.
@@ -161,6 +162,7 @@ interface nsINavBookmarkObserver : nsISupports
    *
    *       aProperty     | aOldValue
    *       =====================================================================
+   *       guid          | The old bookmark guid.
    *       cleartime     | Empty string (currently unused).
    *       title         | Empty string (currently unused).
    *       favicon       | Empty string (currently unused).

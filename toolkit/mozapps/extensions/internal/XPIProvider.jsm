@@ -132,6 +132,7 @@ const PREF_E10S_BLOCK_ENABLE          = "extensions.e10sBlocksEnabling";
 const PREF_E10S_ADDON_BLOCKLIST       = "extensions.e10s.rollout.blocklist";
 const PREF_E10S_ADDON_POLICY          = "extensions.e10s.rollout.policy";
 const PREF_E10S_HAS_NONEXEMPT_ADDON   = "extensions.e10s.rollout.hasAddon";
+const PREF_ALLOW_NON_MPC              = "extensions.allow-non-mpc-extensions";
 
 const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion";
 const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVersion";
@@ -184,6 +185,8 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 const XPI_SIGNATURE_CHECK_PERIOD      = 24 * 60 * 60;
 
 XPCOMUtils.defineConstant(this, "DB_SCHEMA", 19);
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "ALLOW_NON_MPC", PREF_ALLOW_NON_MPC);
 
 const NOTIFICATION_TOOLBOXPROCESS_LOADED      = "ToolboxProcessLoaded";
 
@@ -803,6 +806,11 @@ function isUsableAddon(aAddon) {
 
     if (aAddon.dependencies.some(id => !isActive(id)))
       return false;
+  }
+
+  if (!ALLOW_NON_MPC && aAddon.multiprocessCompatible !== true) {
+    logger.warn(`disabling ${aAddon.id} since it is not multiprocess compatible`);
+    return false;
   }
 
   if (AddonManager.checkCompatibility) {
@@ -2815,6 +2823,7 @@ this.XPIProvider = {
       Services.prefs.addObserver(PREF_E10S_ADDON_POLICY, this);
       if (!REQUIRE_SIGNING)
         Services.prefs.addObserver(PREF_XPI_SIGNATURES_REQUIRED, this);
+      Services.prefs.addObserver(PREF_ALLOW_NON_MPC, this);
       Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS);
 
       // Cu.isModuleLoaded can fail here for external XUL apps where there is
@@ -4478,6 +4487,7 @@ this.XPIProvider = {
         this.updateAddonAppDisabledStates();
         break;
       case PREF_XPI_SIGNATURES_REQUIRED:
+      case PREF_ALLOW_NON_MPC:
         this.updateAddonAppDisabledStates();
         break;
 

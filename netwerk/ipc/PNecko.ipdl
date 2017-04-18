@@ -25,6 +25,7 @@ include protocol PTransportProvider;
 include protocol PChildToParentStream; //FIXME: bug #792908
 include protocol PParentToChildStream; //FIXME: bug #792908
 include protocol PStunAddrsRequest;
+include protocol PFileChannel;
 
 include protocol PRtspController;
 include protocol PRtspChannel;
@@ -55,6 +56,7 @@ nested(upto inside_cpow) sync protocol PNecko
   manages PUDPSocket;
   manages PDNSRequest;
   manages PDataChannel;
+  manages PFileChannel;
   manages PRtspController;
   manages PRtspChannel;
   manages PChannelDiverter;
@@ -102,6 +104,8 @@ parent:
    * the parent and the child when we're redirecting to a data: URI.
    */
   async PDataChannel(uint32_t channelId);
+
+  async PFileChannel(uint32_t channelId);
 
   async PRtspController();
   async PRtspChannel(RtspChannelConnectArgs args);

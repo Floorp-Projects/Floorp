@@ -59,6 +59,7 @@ add_task(function* test_setup_html() {
     let videoIframe = doc.querySelector("#test-video-in-iframe");
     let video = videoIframe.contentDocument.querySelector("video");
     let awaitPause = ContentTaskUtils.waitForEvent(video, "pause");
+    yield ContentTaskUtils.waitForCondition(() => !video.paused, "Making sure video is playing before calling pause");
     video.pause();
     yield awaitPause;
 
@@ -66,6 +67,7 @@ add_task(function* test_setup_html() {
     // media documents always use a <video> tag.
     let audio = audioIframe.contentDocument.querySelector("video");
     awaitPause = ContentTaskUtils.waitForEvent(audio, "pause");
+    yield ContentTaskUtils.waitForCondition(() => !audio.paused, "Making sure audio is playing before calling pause");
     audio.pause();
     yield awaitPause;
   });
