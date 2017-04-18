@@ -24,7 +24,7 @@ class SharedMemoryBasic final : public SharedMemoryCommon<base::FileDescriptor>
 public:
   SharedMemoryBasic();
 
-  virtual bool SetHandle(const Handle& aHandle) override;
+  virtual bool SetHandle(const Handle& aHandle, OpenRights aRights) override;
 
   virtual bool Create(size_t aNbytes) override;
 
@@ -64,6 +64,8 @@ private:
   int mShmFd;
   // Pointer to mapped region, null if unmapped.
   void *mMemory;
+  // Access rights to map an existing region with.
+  OpenRights mOpenRights;
 };
 
 } // namespace ipc

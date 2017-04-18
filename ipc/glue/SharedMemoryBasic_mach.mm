@@ -499,6 +499,7 @@ SharedMemoryBasic::CleanupForPid(pid_t pid)
 SharedMemoryBasic::SharedMemoryBasic()
   : mPort(MACH_PORT_NULL)
   , mMemory(nullptr)
+  , mOpenRights(RightsReadWrite)
 {
 }
 
@@ -509,11 +510,12 @@ SharedMemoryBasic::~SharedMemoryBasic()
 }
 
 bool
-SharedMemoryBasic::SetHandle(const Handle& aHandle)
+SharedMemoryBasic::SetHandle(const Handle& aHandle, OpenRights aRights)
 {
   MOZ_ASSERT(mPort == MACH_PORT_NULL, "already initialized");
 
   mPort = aHandle;
+  mOpenRights = aRights;
   return true;
 }
 
@@ -532,6 +534,8 @@ toVMAddress(void* pointer)
 bool
 SharedMemoryBasic::Create(size_t size)
 {
+  MOZ_ASSERT(mPort == MACH_PORT_NULL, "already initialized");
+
   mach_vm_address_t address;
 
   kern_return_t kr = mach_vm_allocate(mach_task_self(), &address, round_page(size), VM_FLAGS_ANYWHERE);
@@ -574,7 +578,10 @@ SharedMemoryBasic::Map(size_t size)
   kern_return_t kr;
   mach_vm_address_t address = 0;
 
-  vm_prot_t vmProtection = VM_PROT_READ | VM_PROT_WRITE;
+  vm_prot_t vmProtection = VM_PROT_READ;
+  if (mOpenRights == RightsReadWrite) {
+    vmProtection |= VM_PROT_WRITE;
+  }
 
   kr = mach_vm_map(mach_task_self(), &address, round_page(size), 0, VM_FLAGS_ANYWHERE,
                    mPort, 0, false, vmProtection, vmProtection, VM_INHERIT_NONE);
@@ -665,6 +672,7 @@ SharedMemoryBasic::CloseHandle()
   if (mPort != MACH_PORT_NULL) {
     mach_port_deallocate(mach_task_self(), mPort);
     mPort = MACH_PORT_NULL;
+    mOpenRights = RightsReadWrite;
   }
 }
 
