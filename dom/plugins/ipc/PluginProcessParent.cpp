@@ -131,9 +131,9 @@ PluginProcessParent::Delete()
 }
 
 void
-PluginProcessParent::SetCallRunnableImmediately(bool aCallImmediately)
+PluginProcessParent::SetCallRunnableImmediately()
 {
-    mRunCompleteTaskImmediately = aCallImmediately;
+    mRunCompleteTaskImmediately = true;
 }
 
 /**
