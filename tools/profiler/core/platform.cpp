@@ -3069,5 +3069,16 @@ profiler_call_exit(void* aHandle)
   pseudoStack->pop();
 }
 
+void*
+profiler_get_stack_top()
+{
+  PSAutoLock lock(gPSMutex);
+  ThreadInfo* threadInfo = FindLiveThreadInfo(lock);
+  if (threadInfo) {
+    return threadInfo->StackTop();
+  }
+  return nullptr;
+}
+
 // END externally visible functions
 ////////////////////////////////////////////////////////////////////////
