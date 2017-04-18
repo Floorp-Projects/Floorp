@@ -106,10 +106,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TextEditor, EditorBase)
   if (tmp->mRules)
     tmp->mRules->DetachEditor();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRules)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedDocumentEncoder)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TextEditor, EditorBase)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRules)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCachedDocumentEncoder)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(TextEditor, EditorBase)
@@ -1169,24 +1171,35 @@ TextEditor::CanDelete(bool* aCanDelete)
 }
 
 // Shared between OutputToString and OutputToStream
-nsresult
+already_AddRefed<nsIDocumentEncoder>
 TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
                                  uint32_t aFlags,
-                                 const nsACString& aCharset,
-                                 nsIDocumentEncoder** encoder)
+                                 const nsACString& aCharset)
 {
-  nsresult rv = NS_OK;
-
-  nsAutoCString formatType(NS_DOC_ENCODER_CONTRACTID_BASE);
-  LossyAppendUTF16toASCII(aFormatType, formatType);
-  nsCOMPtr<nsIDocumentEncoder> docEncoder (do_CreateInstance(formatType.get(), &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocumentEncoder> docEncoder;
+  if (!mCachedDocumentEncoder ||
+      !mCachedDocumentEncoderType.Equals(aFormatType)) {
+    nsAutoCString formatType(NS_DOC_ENCODER_CONTRACTID_BASE);
+    LossyAppendUTF16toASCII(aFormatType, formatType);
+    docEncoder = do_CreateInstance(formatType.get());
+    if (NS_WARN_IF(!docEncoder)) {
+      return nullptr;
+    }
+    mCachedDocumentEncoder = docEncoder;
+    mCachedDocumentEncoderType = aFormatType;
+  } else {
+    docEncoder = mCachedDocumentEncoder;
+  }
 
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryReferent(mDocWeak);
   NS_ASSERTION(domDoc, "Need a document");
 
-  rv = docEncoder->Init(domDoc, aFormatType, aFlags);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv =
+    docEncoder->Init(domDoc, aFormatType,
+                     aFlags | nsIDocumentEncoder::RequiresReinitAfterOutput);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
 
   if (!aCharset.IsEmpty() && !aCharset.EqualsLiteral("null")) {
     docEncoder->SetCharset(aCharset);
@@ -1203,23 +1216,30 @@ TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   // in which case we use our existing selection ...
   if (aFlags & nsIDocumentEncoder::OutputSelectionOnly) {
     RefPtr<Selection> selection = GetSelection();
-    NS_ENSURE_STATE(selection);
+    if (NS_WARN_IF(!selection)) {
+      return nullptr;
+    }
     rv = docEncoder->SetSelection(selection);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
   }
   // ... or if the root element is not a body,
   // in which case we set the selection to encompass the root.
   else {
     dom::Element* rootElement = GetRoot();
-    NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
+    if (NS_WARN_IF(!rootElement)) {
+      return nullptr;
+    }
     if (!rootElement->IsHTMLElement(nsGkAtoms::body)) {
       rv = docEncoder->SetNativeContainerNode(rootElement);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return nullptr;
+      }
     }
   }
 
-  docEncoder.forget(encoder);
-  return NS_OK;
+  return docEncoder.forget();
 }
 
 
@@ -1254,9 +1274,12 @@ TextEditor::OutputToString(const nsAString& aFormatType,
     charsetStr.AssignLiteral("ISO-8859-1");
   }
 
-  nsCOMPtr<nsIDocumentEncoder> encoder;
-  rv = GetAndInitDocEncoder(aFormatType, aFlags, charsetStr, getter_AddRefs(encoder));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocumentEncoder> encoder =
+    GetAndInitDocEncoder(aFormatType, aFlags, charsetStr);
+  if (NS_WARN_IF(!encoder)) {
+    return NS_ERROR_FAILURE;
+  }
+
   return encoder->EncodeToString(aOutputString);
 }
 
@@ -1281,11 +1304,11 @@ TextEditor::OutputToStream(nsIOutputStream* aOutputStream,
     }
   }
 
-  nsCOMPtr<nsIDocumentEncoder> encoder;
-  rv = GetAndInitDocEncoder(aFormatType, aFlags, aCharset,
-                            getter_AddRefs(encoder));
-
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocumentEncoder> encoder =
+    GetAndInitDocEncoder(aFormatType, aFlags, aCharset);
+  if (NS_WARN_IF(!encoder)) {
+    return NS_ERROR_FAILURE;
+  }
 
   return encoder->EncodeToStream(aOutputStream);
 }

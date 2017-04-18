@@ -56,13 +56,14 @@ namespace js {
     M(SRC_NEXTCASE,     "nextcase",    1)  /* Distance forward from one CASE in a CONDSWITCH to    \
                                               the next. */                                         \
     M(SRC_ASSIGNOP,     "assignop",    0)  /* += or another assign-op follows. */                  \
+    M(SRC_CLASS_SPAN,   "class",       2)  /* The starting and ending offsets for the class, used  \
+                                              for toString correctness for default ctors. */       \
     M(SRC_TRY,          "try",         1)  /* JSOP_TRY, offset points to goto at the end of the    \
                                               try block. */                                        \
     /* All notes above here are "gettable".  See SN_IS_GETTABLE below. */                          \
     M(SRC_COLSPAN,      "colspan",     1)  /* Number of columns this opcode spans. */              \
     M(SRC_NEWLINE,      "newline",     0)  /* Bytecode follows a source newline. */                \
     M(SRC_SETLINE,      "setline",     1)  /* A file-absolute source line number note. */          \
-    M(SRC_UNUSED20,     "unused20",    0)  /* Unused. */                                           \
     M(SRC_UNUSED21,     "unused21",    0)  /* Unused. */                                           \
     M(SRC_UNUSED22,     "unused22",    0)  /* Unused. */                                           \
     M(SRC_UNUSED23,     "unused23",    0)  /* Unused. */                                           \

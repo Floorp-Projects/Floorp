@@ -210,7 +210,6 @@ VRDisplayOpenVR::GetSensorState(double timeOffset)
   mVRCompositor->WaitGetPoses(poses, ::vr::k_unMaxTrackedDeviceCount, nullptr, 0);
 
   VRHMDSensorState result;
-  result.Clear();
 
   ::vr::Compositor_FrameTiming timing;
   timing.m_nSize = sizeof(::vr::Compositor_FrameTiming);
