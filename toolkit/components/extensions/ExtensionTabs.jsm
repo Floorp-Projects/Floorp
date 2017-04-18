@@ -461,7 +461,6 @@ class TabBase {
       id: this.id,
       index: this.index,
       windowId: this.windowId,
-      selected: this.selected,
       highlighted: this.selected,
       active: this.selected,
       pinned: this.pinned,
