@@ -285,7 +285,7 @@ struct TextLayerAttributes      { IntRect bounds; GlyphArray[] glyphs; uintptr_t
 struct ColorLayerAttributes     { LayerColor color; IntRect bounds; };
 struct CanvasLayerAttributes    { SamplingFilter samplingFilter; IntRect bounds; };
 struct RefLayerAttributes {
-  int64_t id;
+  uint64_t id;
   // TODO: Once bug 1132895 is fixed we shouldn't need to propagate the override
   // explicitly here.
   EventRegionsOverride eventRegionsOverride;
