@@ -1847,6 +1847,10 @@ public:
   void InsertIdleCallback(mozilla::dom::IdleRequest* aRequest);
 
   void RemoveIdleCallback(mozilla::dom::IdleRequest* aRequest);
+  void UpdateActiveIndexedDBTransactionCount(int32_t aDelta);
+  void UpdateActiveIndexedDBDatabaseCount(int32_t aDelta);
+  bool HasActiveIndexedDBTransactions();
+  bool HasActiveIndexedDBDatabases();
 
 protected:
   // These members are only used on outer window objects. Make sure
@@ -2070,6 +2074,11 @@ protected:
   // begin presentation on.
   uint32_t mAutoActivateVRDisplayID; // Outer windows only
   int64_t mBeforeUnloadListenerCount; // Inner windows only
+
+  // The number of IndexedDB transactions/databases per tab counted at the top
+  // of inner window.
+  uint32_t mNumOfIndexedDBTransactions;
+  uint32_t mNumOfIndexedDBDatabases;
 
 #ifdef ENABLE_INTL_API
   RefPtr<mozilla::dom::IntlUtils> mIntlUtils;
