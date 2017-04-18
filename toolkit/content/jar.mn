@@ -33,6 +33,9 @@ toolkit.jar:
    content/global/aboutTelemetry.js
    content/global/aboutTelemetry.xhtml
    content/global/aboutTelemetry.css
+   content/global/aboutUrlClassifier.js
+   content/global/aboutUrlClassifier.xhtml
+   content/global/aboutUrlClassifier.css
    content/global/directionDetector.html
    content/global/plugins.html
    content/global/plugins.css
