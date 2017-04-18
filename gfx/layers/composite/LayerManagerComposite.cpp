@@ -13,7 +13,7 @@
 #include "Diagnostics.h"
 #include "FPSCounter.h"                 // for FPSState, FPSCounter
 #include "FrameMetrics.h"               // for FrameMetrics
-#include "GeckoProfiler.h"              // for profiler_set_frame_number, etc
+#include "GeckoProfiler.h"              // for profiler_*
 #include "ImageLayerComposite.h"        // for ImageLayerComposite
 #include "Layers.h"                     // for Layer, ContainerLayer, etc
 #include "LayerScope.h"                 // for LayerScope Tool
@@ -541,22 +541,13 @@ LayerManagerComposite::RootLayer() const
   return ToLayerComposite(mRoot);
 }
 
-#ifdef MOZ_PROFILING
-// Only build the QR feature when profiling to avoid bloating
-// our data section.
-// This table was generated using qrencode and is a binary
-// encoding of the qrcodes 0-255.
-#include "qrcode_table.h"
-#endif
-
 void
 LayerManagerComposite::InvalidateDebugOverlay(nsIntRegion& aInvalidRegion, const IntRect& aBounds)
 {
   bool drawFps = gfxPrefs::LayersDrawFPS();
-  bool drawFrameCounter = gfxPrefs::DrawFrameCounter();
   bool drawFrameColorBars = gfxPrefs::CompositorDrawColorBars();
 
-  if (drawFps || drawFrameCounter) {
+  if (drawFps) {
     aInvalidRegion.Or(aInvalidRegion, nsIntRect(0, 0, 650, 400));
   }
   if (drawFrameColorBars) {
@@ -589,7 +580,6 @@ void
 LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds)
 {
   bool drawFps = gfxPrefs::LayersDrawFPS();
-  bool drawFrameCounter = gfxPrefs::DrawFrameCounter();
   bool drawFrameColorBars = gfxPrefs::CompositorDrawColorBars();
 
   if (drawFps) {
@@ -684,51 +674,7 @@ LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds)
 
   }
 
-#ifdef MOZ_PROFILING
-  if (drawFrameCounter) {
-    profiler_set_frame_number(sFrameCount);
-    const char* qr = sQRCodeTable[sFrameCount%256];
-
-    int size = 21;
-    int padding = 2;
-    float opacity = 1.0;
-    const uint16_t bitWidth = 5;
-    gfx::IntRect clip(0,0, bitWidth*640, bitWidth*640);
-
-    // Draw the white squares at once
-    gfx::Color bitColor(1.0, 1.0, 1.0, 1.0);
-    EffectChain effects;
-    effects.mPrimaryEffect = new EffectSolidColor(bitColor);
-    int totalSize = (size + padding * 2) * bitWidth;
-    mCompositor->DrawQuad(gfx::Rect(0, 0, totalSize, totalSize),
-                          clip,
-                          effects,
-                          opacity,
-                          gfx::Matrix4x4());
-
-    // Draw a black square for every bit set in qr[index]
-    effects.mPrimaryEffect = new EffectSolidColor(gfx::Color(0, 0, 0, 1.0));
-    for (int y = 0; y < size; y++) {
-      for (int x = 0; x < size; x++) {
-        // Select the right bit from the binary encoding
-        int currBit = 128 >> ((x + y * 21) % 8);
-        int i = (x + y * 21) / 8;
-        if (qr[i] & currBit) {
-          mCompositor->DrawQuad(gfx::Rect(bitWidth * (x + padding),
-                                          bitWidth * (y + padding),
-                                          bitWidth, bitWidth),
-                                clip,
-                                effects,
-                                opacity,
-                                gfx::Matrix4x4());
-        }
-      }
-    }
-
-  }
-#endif
-
-  if (drawFrameColorBars || drawFrameCounter) {
+  if (drawFrameColorBars) {
     // We intentionally overflow at 2^16.
     sFrameCount++;
   }

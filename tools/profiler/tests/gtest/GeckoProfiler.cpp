@@ -415,28 +415,6 @@ TEST(GeckoProfiler, PseudoStack)
   ASSERT_TRUE(!profiler_get_profile());
 }
 
-TEST(GeckoProfiler, SetFrameNumber)
-{
-  const char* features[] = { "stackwalk" };
-  const char* filters[] = { "GeckoMain" };
-
-  profiler_set_frame_number(1);
-  profiler_set_frame_number(2);
-
-  profiler_start(PROFILE_DEFAULT_ENTRIES, PROFILE_DEFAULT_INTERVAL,
-                 features, MOZ_ARRAY_LENGTH(features),
-                 filters, MOZ_ARRAY_LENGTH(filters));
-
-  profiler_set_frame_number(3);
-  profiler_set_frame_number(4);
-  profiler_set_frame_number(5);
-
-  profiler_stop();
-
-  profiler_set_frame_number(6);
-  profiler_set_frame_number(7);
-}
-
 TEST(GeckoProfiler, Bug1355807)
 {
   const char* features[] = { "js" };
