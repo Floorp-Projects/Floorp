@@ -85,7 +85,7 @@ public:
   GroupCollapsed(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
   static void
-  GroupEnd(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
+  GroupEnd(const GlobalObject& aGlobal);
 
   static void
   Time(const GlobalObject& aGlobal, const JS::Handle<JS::Value> aTime);
@@ -200,7 +200,7 @@ private:
   void
   NotifyHandler(JSContext* aCx,
                 const Sequence<JS::Value>& aArguments,
-                ConsoleCallData* aData) const;
+                ConsoleCallData* aData);
 
   // PopulateConsoleNotificationInTheTargetScope receives aCx and aArguments in
   // the same JS compartment and populates the ConsoleEvent object (aValue) in
@@ -218,7 +218,7 @@ private:
                                               const Sequence<JS::Value>& aArguments,
                                               JSObject* aTargetScope,
                                               JS::MutableHandle<JS::Value> aValue,
-                                              ConsoleCallData* aData) const;
+                                              ConsoleCallData* aData);
 
   // If the first JS::Value of the array is a string, this method uses it to
   // format a string. The supported sequences are:
@@ -248,10 +248,15 @@ private:
                    char aCh) const;
 
   // Stringify and Concat all the JS::Value in a single string using ' ' as
-  // separator.
+  // separator. The new group name will be stored in mGroupStack array.
   void
-  ComposeGroupName(JSContext* aCx, const Sequence<JS::Value>& aData,
-                   nsAString& aName) const;
+  ComposeAndStoreGroupName(JSContext* aCx, const Sequence<JS::Value>& aData,
+                           nsAString& aName);
+
+  // Remove the last group name and return that name. It returns false if
+  // mGroupStack is empty.
+  bool
+  UnstoreGroupName(nsAString& aName);
 
   // StartTimer is called on the owning thread and populates aTimerLabel and
   // aTimerValue. It returns false if a JS exception is thrown or if
@@ -372,6 +377,9 @@ private:
   nsTArray<RefPtr<ConsoleCallData>> mCallDataStoragePending;
 
   RefPtr<AnyCallback> mConsoleEventNotifier;
+
+  // This is the stack for groupping.
+  nsTArray<nsString> mGroupStack;
 
 #ifdef DEBUG
   PRThread* mOwningThread;
