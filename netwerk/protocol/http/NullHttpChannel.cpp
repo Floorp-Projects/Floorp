@@ -539,6 +539,12 @@ NullHttpChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+NullHttpChannel::GetIsDocument(bool *aIsDocument)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //-----------------------------------------------------------------------------
 // NullHttpChannel::nsITimedChannel
 //-----------------------------------------------------------------------------
