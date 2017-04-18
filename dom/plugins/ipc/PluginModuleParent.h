@@ -661,7 +661,6 @@ private:
 
     friend class LaunchedTask;
 
-    nsresult            mAsyncInitRv;
     nsCOMPtr<nsIObserver> mPluginOfflineObserver;
     bool mIsBlocklisted;
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
