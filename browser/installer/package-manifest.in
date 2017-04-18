@@ -330,6 +330,7 @@
 @RESPATH@/components/urlformatter.xpt
 @RESPATH@/components/webBrowser_core.xpt
 @RESPATH@/components/webbrowserpersist.xpt
+@RESPATH@/components/webextensions.xpt
 @RESPATH@/components/widget.xpt
 #ifdef XP_MACOSX
 @RESPATH@/components/widget_cocoa.xpt

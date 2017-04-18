@@ -239,7 +239,7 @@ add_task(function* test_webRequest_tabId() {
   };
   extension.sendMessage("set-expected", {expect, origin: location.href});
   yield extension.awaitMessage("continue");
-  let a = addLink("file_WebRequest_page3.html?trigger=a");
+  let a = addLink(`file_WebRequest_page3.html?trigger=a&nocache=${Math.random()}`);
   a.click();
   yield extension.awaitMessage("done");
 });
