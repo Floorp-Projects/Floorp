@@ -99,8 +99,6 @@ child:
   async InitPluginModuleChild(Endpoint<PPluginModuleChild> endpoint);
 
 parent:
-  async NP_InitializeResult(NPError aError);
-
   /**
    * This message is only used on X11 platforms.
    *
