@@ -107,6 +107,12 @@ Gamepad::SetPose(const GamepadPoseState& aPose)
 }
 
 void
+Gamepad::SetHand(GamepadHand aHand)
+{
+  mHand = aHand;
+}
+
+void
 Gamepad::SyncState(Gamepad* aOther)
 {
   const char* kGamepadExtEnabledPref = "dom.gamepad.extensions.enabled";
