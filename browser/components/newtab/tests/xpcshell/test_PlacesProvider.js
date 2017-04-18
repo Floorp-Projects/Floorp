@@ -34,11 +34,11 @@ function run_test() {
 // url prefix for test history population
 const TEST_URL = "https://mozilla.com/";
 // time when the test starts execution
-const TIME_NOW = new Date();
+const TIME_NOW = (new Date()).getTime();
 
 // utility function to compute past timestap
 function timeDaysAgo(numDays) {
-  return new Date(TIME_NOW - (numDays * 24 * 60 * 60 * 1000));
+  return TIME_NOW - (numDays * 24 * 60 * 60 * 1000);
 }
 
 // utility function to make a visit for insetion into places db
