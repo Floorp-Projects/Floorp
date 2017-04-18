@@ -64,6 +64,7 @@ using mozilla::DefaultXDisplay;
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/plugins/PluginAsyncSurrogate.h"
 
 #include "nsContentCID.h"
 #include "nsWidgetsCID.h"
@@ -1689,7 +1690,7 @@ nsPluginInstanceOwner::NotifyDestroyPending()
   if (NS_FAILED(mInstance->GetNPP(&npp)) || !npp) {
     return;
   }
-  PluginAsyncSurrogate::NotifyDestroyPending(npp);
+  mozilla::plugins::PluginAsyncSurrogate::NotifyDestroyPending(npp);
 }
 
 nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)

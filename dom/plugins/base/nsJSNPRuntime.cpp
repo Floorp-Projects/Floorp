@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -29,10 +30,6 @@
 #include "js/TracingAPI.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/plugins/PluginAsyncSurrogate.h"
-
-using mozilla::plugins::AsyncNPObject;
-using mozilla::plugins::PluginAsyncSurrogate;
 
 #define NPRUNTIME_JSCLASS_NAME "NPObject JS wrapper class"
 
@@ -109,24 +106,10 @@ static nsTArray<NPObject*>* sDelayedReleases;
 
 namespace {
 
-inline void
-CastNPObject(NPObject *aObj, PluginScriptableObjectParent*& aActor,
-             PluginAsyncSurrogate*& aSurrogate)
-{
-  aActor = nullptr;
-  aSurrogate = nullptr;
-  if (aObj->_class == PluginScriptableObjectParent::GetClass()) {
-    aActor = static_cast<ParentNPObject*>(aObj)->parent;
-  } else if (aObj->_class == PluginAsyncSurrogate::GetClass()) {
-    aSurrogate = static_cast<AsyncNPObject*>(aObj)->mSurrogate;
-  }
-}
-
 inline bool
 NPObjectIsOutOfProcessProxy(NPObject *obj)
 {
-  return obj->_class == PluginScriptableObjectParent::GetClass() ||
-         obj->_class == PluginAsyncSurrogate::GetClass();
+  return obj->_class == PluginScriptableObjectParent::GetClass();
 }
 
 } // namespace
@@ -1097,17 +1080,6 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JS::Handle<JSObject*> obj)
     return nullptr;
   }
 
-  // If we're running out-of-process and initializing asynchronously, and if
-  // the plugin has been asked to destroy itself during initialization,
-  // don't return any new NPObjects.
-  nsNPAPIPluginInstance* inst = static_cast<nsNPAPIPluginInstance*>(npp->ndata);
-  if (inst->GetPlugin()->GetLibrary()->IsOOP()) {
-    PluginAsyncSurrogate* surrogate = PluginAsyncSurrogate::Cast(npp);
-    if (surrogate && surrogate->IsDestroyPending()) {
-      return nullptr;
-    }
-  }
-
   // No need to enter the right compartment here as we only get the
   // class and private from the JSObject, neither of which cares about
   // compartments.
@@ -1404,22 +1376,15 @@ NPObjWrapper_GetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
   NPIdentifier identifier = JSIdToNPIdentifier(id);
 
   if (NPObjectIsOutOfProcessProxy(npobj)) {
-    PluginScriptableObjectParent* actor = nullptr;
-    PluginAsyncSurrogate* surrogate = nullptr;
-    CastNPObject(npobj, actor, surrogate);
+    PluginScriptableObjectParent* actor =
+      static_cast<ParentNPObject*>(npobj)->parent;
 
-    // actor and surrogate may be null if the plugin crashed.
-    if (!actor && !surrogate)
+    // actor may be null if the plugin crashed.
+    if (!actor)
       return false;
 
-    bool success = false;
-    if (surrogate) {
-      success = surrogate->GetPropertyHelper(npobj, identifier, &hasProperty,
-                                             &hasMethod, &npv);
-    } else if (actor) {
-      success = actor->GetPropertyHelper(identifier, &hasProperty, &hasMethod,
-                                         &npv);
-    }
+    bool success = actor->GetPropertyHelper(identifier, &hasProperty,
+                                            &hasMethod, &npv);
 
     if (!ReportExceptionIfPending(cx)) {
       if (success)
