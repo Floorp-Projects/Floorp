@@ -405,6 +405,20 @@ set_config('MOZ_FFMPEG', ffmpeg)
 set_define('MOZ_FFMPEG', ffmpeg)
 imply_option('--enable-fmp4', ffmpeg, '--enable-ffmpeg')
 
+# Libaom AV1 Video Codec Support
+# ==============================================================
+option('--enable-av1',
+        help='Enable libaom for av1 video support')
+
+@depends('--enable-av1')
+def av1(value):
+    enabled = bool(value)
+    if enabled:
+        return True
+
+set_config('MOZ_AV1', av1)
+set_define('MOZ_AV1', av1)
+
 # Built-in fragmented MP4 support.
 # ==============================================================
 option('--disable-fmp4', env='MOZ_FMP4',
