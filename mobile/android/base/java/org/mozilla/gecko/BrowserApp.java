@@ -4101,6 +4101,7 @@ public class BrowserApp extends GeckoApp
         if (callback.onCreateActionMode(mActionMode, mActionMode.getMenu())) {
             mActionMode.invalidate();
         }
+        mActionMode.animateIn();
     }
 
     /* Implementing ActionModeCompat.Presenter */

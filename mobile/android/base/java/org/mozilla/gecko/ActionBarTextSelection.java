@@ -4,18 +4,18 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.menu.GeckoMenu;
-import org.mozilla.gecko.menu.GeckoMenuItem;
 import org.mozilla.gecko.util.ResourceDrawableUtils;
 import org.mozilla.gecko.text.TextSelection;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.ActionModeCompat.Callback;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.support.v7.view.ActionMode;
+import android.view.Menu;
 import android.view.MenuItem;
 
 import java.util.Arrays;
@@ -135,7 +135,6 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
             final ActionModeCompat.Presenter presenter = (ActionModeCompat.Presenter) context;
             mCallback = new TextSelectionActionModeCallback(items);
             presenter.startActionModeCompat(mCallback);
-            mCallback.animateIn();
         }
     }
 
@@ -147,9 +146,9 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
         mCurrentItems = null;
     }
 
-    private class TextSelectionActionModeCallback implements Callback {
+    private class TextSelectionActionModeCallback implements ActionMode.Callback {
         private GeckoBundle[] mItems;
-        private ActionModeCompat mActionMode;
+        private ActionMode mActionMode;
 
         public TextSelectionActionModeCallback(final GeckoBundle[] items) {
             mItems = items;
@@ -162,14 +161,9 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
             }
         }
 
-        public void animateIn() {
-            if (mActionMode != null) {
-                mActionMode.animateIn();
-            }
-        }
-
+        @SuppressLint("AlwaysShowAction")
         @Override
-        public boolean onPrepareActionMode(final ActionModeCompat mode, final GeckoMenu menu) {
+        public boolean onPrepareActionMode(final ActionMode mode, final Menu menu) {
             // Android would normally expect us to only update the state of menu items
             // here To make the js-java interaction a bit simpler, we just wipe out the
             // menu here and recreate all the javascript menu items in onPrepare instead.
@@ -179,11 +173,11 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
             final int length = mItems.length;
             for (int i = 0; i < length; i++) {
                 final GeckoBundle obj = mItems[i];
-                final GeckoMenuItem menuitem = (GeckoMenuItem)
-                        menu.add(0, i, 0, obj.getString("label", ""));
-                final int actionEnum = obj.getBoolean("showAsAction") ?
-                        GeckoMenuItem.SHOW_AS_ACTION_ALWAYS : GeckoMenuItem.SHOW_AS_ACTION_NEVER;
-                menuitem.setShowAsAction(actionEnum, R.attr.menuItemActionModeStyle);
+                final MenuItem menuitem = menu.add(0, i, 0, obj.getString("label", ""));
+                final int actionEnum = obj.getBoolean("showAsAction")
+                        ? MenuItem.SHOW_AS_ACTION_ALWAYS
+                        : MenuItem.SHOW_AS_ACTION_NEVER;
+                menuitem.setShowAsAction(actionEnum);
 
                 final String iconString = obj.getString("icon", "");
                 ResourceDrawableUtils.getDrawable(context, iconString,
@@ -200,13 +194,13 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
         }
 
         @Override
-        public boolean onCreateActionMode(ActionModeCompat mode, GeckoMenu unused) {
+        public boolean onCreateActionMode(ActionMode mode, Menu unused) {
             mActionMode = mode;
             return true;
         }
 
         @Override
-        public boolean onActionItemClicked(ActionModeCompat mode, MenuItem item) {
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             final GeckoBundle obj = mItems[item.getItemId()];
             final GeckoBundle data = new GeckoBundle(1);
             data.putString("id", obj.getString("id", ""));
@@ -216,7 +210,7 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
 
         // Called when the user exits the action mode
         @Override
-        public void onDestroyActionMode(ActionModeCompat mode) {
+        public void onDestroyActionMode(ActionMode mode) {
             mActionMode = null;
             mCallback = null;
 
