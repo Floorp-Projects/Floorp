@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <style>
+    div {
+      width: 100px;
+      height: 100px;
+      border: 1px solid gray;
+    }
+
+    #target1 {
+      animation: anim 100s;
+    }
+
+    @keyframes anim {
+      from {
+        transform: translate(-50%, 100%);
+      }
+      to {
+        transform: translateX(-50%);
+      }
+    }
+    </style>
+  </head>
+  <body>
+    <div id="target1"></div>
+    <div id="target2"></div>
+    <div id="target3"></div>
+    <div id="target4"></div>
+    <div id="target5"></div>
+  </body>
+</html>
