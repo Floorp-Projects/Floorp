@@ -36,7 +36,6 @@ public class GeckoViewActivity extends Activity {
         setContentView(R.layout.geckoview_activity);
 
         mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
-        mGeckoView.setChromeDelegate(new MyGeckoViewChrome());
         mGeckoView.setContentListener(new MyGeckoViewContent());
         mGeckoView.setProgressListener(new MyGeckoViewProgress());
 
@@ -60,48 +59,6 @@ public class GeckoViewActivity extends Activity {
             mGeckoView.loadUri(u.toString());
         } else {
             mGeckoView.loadUri(DEFAULT_URL);
-        }
-    }
-
-    private class MyGeckoViewChrome implements GeckoView.ChromeDelegate {
-        @Override
-        public void onAlert(GeckoView view, String message, GeckoView.PromptResult result) {
-            Log.i(LOGTAG, "Alert!");
-            result.confirm();
-            Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
-        }
-
-        @Override
-        public void onConfirm(GeckoView view, String message, final GeckoView.PromptResult result) {
-            Log.i(LOGTAG, "Confirm!");
-            new AlertDialog.Builder(GeckoViewActivity.this)
-                .setTitle("javaScript dialog")
-                .setMessage(message)
-                .setPositiveButton(android.R.string.ok,
-                                   new DialogInterface.OnClickListener() {
-                                       public void onClick(DialogInterface dialog, int which) {
-                                           result.confirm();
-                                       }
-                                   })
-                .setNegativeButton(android.R.string.cancel,
-                                   new DialogInterface.OnClickListener() {
-                                       public void onClick(DialogInterface dialog, int which) {
-                                           result.cancel();
-                                       }
-                                   })
-                .create()
-                .show();
-        }
-
-        @Override
-        public void onPrompt(GeckoView view, String message, String defaultValue, GeckoView.PromptResult result) {
-            result.cancel();
-        }
-
-        @Override
-        public void onDebugRequest(GeckoView view, GeckoView.PromptResult result) {
-            Log.i(LOGTAG, "Remote Debug!");
-            result.confirm();
         }
     }
 
