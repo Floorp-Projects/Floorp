@@ -8,7 +8,8 @@
 
 const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
-const {createNode} = require("devtools/client/animationinspector/utils");
+const {createNode, getCssPropertyName} =
+  require("devtools/client/animationinspector/utils");
 const {Keyframes} = require("devtools/client/animationinspector/components/keyframes");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
@@ -328,14 +329,3 @@ AnimationDetails.prototype = {
     return this.containerEl.ownerDocument.defaultView;
   }
 };
-
-/**
- * Turn propertyName into property-name.
- * @param {String} jsPropertyName A camelcased CSS property name. Typically
- * something that comes out of computed styles. E.g. borderBottomColor
- * @return {String} The corresponding CSS property name: border-bottom-color
- */
-function getCssPropertyName(jsPropertyName) {
-  return jsPropertyName.replace(/[A-Z]/g, "-$&").toLowerCase();
-}
-exports.getCssPropertyName = getCssPropertyName;
