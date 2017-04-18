@@ -269,8 +269,6 @@ public:
   static void ExitFullScreen(jobject view);
 #endif
 
-  void NotifyHostAsyncInitFailed();
-
   bool GetCompositionString(uint32_t aIndex, nsTArray<uint8_t>* aString,
                             int32_t* aLength);
   bool SetCandidateWindow(
