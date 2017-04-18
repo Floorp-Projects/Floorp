@@ -18,7 +18,6 @@
 #include "nsIPrefService.h"
 #include "nsIProperties.h"
 #include "nsToolkitCompsCID.h"
-#include "nsIUrlClassifierUtils.h"
 #include "nsIXULRuntime.h"
 #include "nsUrlClassifierDBService.h"
 #include "nsUrlClassifierUtils.h"
@@ -67,8 +66,8 @@ TablesToResponse(const nsACString& tables)
     return NS_OK;
   }
 
-  // We don't check mCheckMalware and friends because BuildTables never
-  // includes a table that is not enabled.
+  // We don't check mCheckMalware and friends because disabled tables are
+  // never included
   if (FindInReadable(NS_LITERAL_CSTRING("-malware-"), tables)) {
     return NS_ERROR_MALWARE_URI;
   }
@@ -98,28 +97,8 @@ LazyLogModule gUrlClassifierDbServiceLog("UrlClassifierDbService");
 #define LOG(args) MOZ_LOG(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug)
 
-// Prefs for implementing nsIURIClassifier to block page loads
-#define CHECK_MALWARE_PREF      "browser.safebrowsing.malware.enabled"
-#define CHECK_MALWARE_DEFAULT   false
-
-#define CHECK_PHISHING_PREF     "browser.safebrowsing.phishing.enabled"
-#define CHECK_PHISHING_DEFAULT  false
-
-#define CHECK_BLOCKED_PREF    "browser.safebrowsing.blockedURIs.enabled"
-#define CHECK_BLOCKED_DEFAULT false
-
 #define GETHASH_NOISE_PREF      "urlclassifier.gethashnoise"
 #define GETHASH_NOISE_DEFAULT   4
-
-// Comma-separated lists
-#define MALWARE_TABLE_PREF              "urlclassifier.malwareTable"
-#define PHISH_TABLE_PREF                "urlclassifier.phishTable"
-#define TRACKING_TABLE_PREF             "urlclassifier.trackingTable"
-#define TRACKING_WHITELIST_TABLE_PREF   "urlclassifier.trackingWhitelistTable"
-#define BLOCKED_TABLE_PREF              "urlclassifier.blockedTable"
-#define DOWNLOAD_BLOCK_TABLE_PREF       "urlclassifier.downloadBlockTable"
-#define DOWNLOAD_ALLOW_TABLE_PREF       "urlclassifier.downloadAllowTable"
-#define DISALLOW_COMPLETION_TABLE_PREF  "urlclassifier.disallow_completions"
 
 #define CONFIRM_AGE_PREF        "urlclassifier.max-complete-age"
 #define CONFIRM_AGE_DEFAULT_SEC (45 * 60)
@@ -143,7 +122,8 @@ nsIThread* nsUrlClassifierDBService::gDbBackgroundThread = nullptr;
 // thread.
 static bool gShuttingDownThread = false;
 
-static mozilla::Atomic<int32_t> gFreshnessGuarantee(CONFIRM_AGE_DEFAULT_SEC);
+static mozilla::Atomic<uint32_t, Relaxed> gFreshnessGuarantee(CONFIRM_AGE_DEFAULT_SEC);
+static uint32_t sGethashNoise = GETHASH_NOISE_DEFAULT;
 
 NS_IMPL_ISUPPORTS(nsUrlClassifierDBServiceWorker,
                   nsIUrlClassifierDBService)
@@ -1592,48 +1572,63 @@ nsUrlClassifierDBService::~nsUrlClassifierDBService()
   sUrlClassifierDBService = nullptr;
 }
 
+void
+AppendTables(const nsCString& aTables, nsCString &outTables)
+{
+  if (!aTables.IsEmpty()) {
+    if (!outTables.IsEmpty()) {
+      outTables.Append(',');
+    }
+    outTables.Append(aTables);
+  }
+}
+
 nsresult
 nsUrlClassifierDBService::ReadTablesFromPrefs()
 {
+  mCheckMalware = Preferences::GetBool(CHECK_MALWARE_PREF,
+    CHECK_MALWARE_DEFAULT);
+  mCheckPhishing = Preferences::GetBool(CHECK_PHISHING_PREF,
+    CHECK_PHISHING_DEFAULT);
+  mCheckBlockedURIs = Preferences::GetBool(CHECK_BLOCKED_PREF,
+    CHECK_BLOCKED_DEFAULT);
+
   nsCString allTables;
   nsCString tables;
+
+  mBaseTables.Truncate();
+  mTrackingProtectionTables.Truncate();
+
   Preferences::GetCString(PHISH_TABLE_PREF, &allTables);
+  if (mCheckPhishing) {
+    AppendTables(allTables, mBaseTables);
+  }
 
   Preferences::GetCString(MALWARE_TABLE_PREF, &tables);
-  if (!tables.IsEmpty()) {
-    allTables.Append(',');
-    allTables.Append(tables);
-  }
-
-  Preferences::GetCString(DOWNLOAD_BLOCK_TABLE_PREF, &tables);
-  if (!tables.IsEmpty()) {
-    allTables.Append(',');
-    allTables.Append(tables);
-  }
-
-  Preferences::GetCString(DOWNLOAD_ALLOW_TABLE_PREF, &tables);
-  if (!tables.IsEmpty()) {
-    allTables.Append(',');
-    allTables.Append(tables);
-  }
-
-  Preferences::GetCString(TRACKING_TABLE_PREF, &tables);
-  if (!tables.IsEmpty()) {
-    allTables.Append(',');
-    allTables.Append(tables);
-  }
-
-  Preferences::GetCString(TRACKING_WHITELIST_TABLE_PREF, &tables);
-  if (!tables.IsEmpty()) {
-    allTables.Append(',');
-    allTables.Append(tables);
+  AppendTables(tables, allTables);
+  if (mCheckMalware) {
+    AppendTables(tables, mBaseTables);
   }
 
   Preferences::GetCString(BLOCKED_TABLE_PREF, &tables);
-  if (!tables.IsEmpty()) {
-    allTables.Append(',');
-    allTables.Append(tables);
+  AppendTables(tables, allTables);
+  if (mCheckBlockedURIs) {
+    AppendTables(tables, mBaseTables);
   }
+
+  Preferences::GetCString(DOWNLOAD_BLOCK_TABLE_PREF, &tables);
+  AppendTables(tables, allTables);
+
+  Preferences::GetCString(DOWNLOAD_ALLOW_TABLE_PREF, &tables);
+  AppendTables(tables, allTables);
+
+  Preferences::GetCString(TRACKING_TABLE_PREF, &tables);
+  AppendTables(tables, allTables);
+  AppendTables(tables, mTrackingProtectionTables);
+
+  Preferences::GetCString(TRACKING_WHITELIST_TABLE_PREF, &tables);
+  AppendTables(tables, allTables);
+  AppendTables(tables, mTrackingProtectionTables);
 
   Classifier::SplitTables(allTables, mGethashTables);
 
@@ -1671,19 +1666,11 @@ nsUrlClassifierDBService::Init()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // Retrieve all the preferences.
-  mCheckMalware = Preferences::GetBool(CHECK_MALWARE_PREF,
-    CHECK_MALWARE_DEFAULT);
-  mCheckPhishing = Preferences::GetBool(CHECK_PHISHING_PREF,
-    CHECK_PHISHING_DEFAULT);
-  mCheckBlockedURIs = Preferences::GetBool(CHECK_BLOCKED_PREF,
-    CHECK_BLOCKED_DEFAULT);
-  uint32_t gethashNoise = Preferences::GetUint(GETHASH_NOISE_PREF,
+  sGethashNoise = Preferences::GetUint(GETHASH_NOISE_PREF,
     GETHASH_NOISE_DEFAULT);
   gFreshnessGuarantee = Preferences::GetInt(CONFIRM_AGE_PREF,
     CONFIRM_AGE_DEFAULT_SEC);
   ReadTablesFromPrefs();
-
   nsresult rv;
 
   {
@@ -1720,7 +1707,7 @@ nsUrlClassifierDBService::Init()
   if (!mWorker)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = mWorker->Init(gethashNoise, cacheDir);
+  rv = mWorker->Init(sGethashNoise, cacheDir);
   if (NS_FAILED(rv)) {
     mWorker = nullptr;
     return rv;
@@ -1747,62 +1734,16 @@ nsUrlClassifierDBService::Init()
   // Note: These observers should only be added when everything else above has
   //       succeeded. Failing to do so can cause long shutdown times in certain
   //       situations. See Bug 1247798 and Bug 1244803.
-  Preferences::AddStrongObserver(this, CHECK_MALWARE_PREF);
-  Preferences::AddStrongObserver(this, CHECK_PHISHING_PREF);
-  Preferences::AddStrongObserver(this, CHECK_BLOCKED_PREF);
-  Preferences::AddStrongObserver(this, GETHASH_NOISE_PREF);
-  Preferences::AddStrongObserver(this, CONFIRM_AGE_PREF);
-  Preferences::AddStrongObserver(this, PHISH_TABLE_PREF);
-  Preferences::AddStrongObserver(this, MALWARE_TABLE_PREF);
-  Preferences::AddStrongObserver(this, TRACKING_TABLE_PREF);
-  Preferences::AddStrongObserver(this, TRACKING_WHITELIST_TABLE_PREF);
-  Preferences::AddStrongObserver(this, BLOCKED_TABLE_PREF);
-  Preferences::AddStrongObserver(this, DOWNLOAD_BLOCK_TABLE_PREF);
-  Preferences::AddStrongObserver(this, DOWNLOAD_ALLOW_TABLE_PREF);
-  Preferences::AddStrongObserver(this, DISALLOW_COMPLETION_TABLE_PREF);
+  Preferences::AddUintVarCache(&sGethashNoise, GETHASH_NOISE_PREF,
+    GETHASH_NOISE_DEFAULT);
+  Preferences::AddAtomicUintVarCache(&gFreshnessGuarantee, CONFIRM_AGE_PREF,
+    CONFIRM_AGE_DEFAULT_SEC);
+
+  for (uint8_t i = 0; i < kObservedPrefs.Length(); i++) {
+    Preferences::AddStrongObserver(this, kObservedPrefs[i].get());
+  }
 
   return NS_OK;
-}
-
-void
-nsUrlClassifierDBService::BuildTables(bool aTrackingProtectionEnabled,
-                                      nsCString &tables)
-{
-  nsAutoCString malware;
-  // LookupURI takes a comma-separated list already.
-  Preferences::GetCString(MALWARE_TABLE_PREF, &malware);
-  if (mCheckMalware && !malware.IsEmpty()) {
-    tables.Append(malware);
-  }
-  nsAutoCString phishing;
-  Preferences::GetCString(PHISH_TABLE_PREF, &phishing);
-  if (mCheckPhishing && !phishing.IsEmpty()) {
-    tables.Append(',');
-    tables.Append(phishing);
-  }
-  if (aTrackingProtectionEnabled) {
-    nsAutoCString tracking, trackingWhitelist;
-    Preferences::GetCString(TRACKING_TABLE_PREF, &tracking);
-    if (!tracking.IsEmpty()) {
-      tables.Append(',');
-      tables.Append(tracking);
-    }
-    Preferences::GetCString(TRACKING_WHITELIST_TABLE_PREF, &trackingWhitelist);
-    if (!trackingWhitelist.IsEmpty()) {
-      tables.Append(',');
-      tables.Append(trackingWhitelist);
-    }
-  }
-  nsAutoCString blocked;
-  Preferences::GetCString(BLOCKED_TABLE_PREF, &blocked);
-  if (mCheckBlockedURIs && !blocked.IsEmpty()) {
-    tables.Append(',');
-    tables.Append(blocked);
-  }
-
-  if (StringBeginsWith(tables, NS_LITERAL_CSTRING(","))) {
-    tables.Cut(0, 1);
-  }
 }
 
 // nsChannelClassifier is the only consumer of this interface.
@@ -1860,8 +1801,10 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
 
   if (!callback) return NS_ERROR_OUT_OF_MEMORY;
 
-  nsAutoCString tables;
-  BuildTables(aTrackingProtectionEnabled, tables);
+  nsCString tables = mBaseTables;
+  if (aTrackingProtectionEnabled) {
+    AppendTables(mTrackingProtectionTables, tables);
+  }
 
   nsresult rv = LookupURI(aPrincipal, tables, callback, false, result);
   if (rv == NS_ERROR_MALFORMED_URI) {
@@ -2338,29 +2281,8 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
     NS_ENSURE_SUCCESS(rv, rv);
     Unused << prefs;
 
-    if (NS_LITERAL_STRING(CHECK_MALWARE_PREF).Equals(aData)) {
-      mCheckMalware = Preferences::GetBool(CHECK_MALWARE_PREF,
-        CHECK_MALWARE_DEFAULT);
-    } else if (NS_LITERAL_STRING(CHECK_PHISHING_PREF).Equals(aData)) {
-      mCheckPhishing = Preferences::GetBool(CHECK_PHISHING_PREF,
-        CHECK_PHISHING_DEFAULT);
-    } else if (NS_LITERAL_STRING(CHECK_BLOCKED_PREF).Equals(aData)) {
-      mCheckBlockedURIs = Preferences::GetBool(CHECK_BLOCKED_PREF,
-        CHECK_BLOCKED_DEFAULT);
-    } else if (
-      NS_LITERAL_STRING(PHISH_TABLE_PREF).Equals(aData) ||
-      NS_LITERAL_STRING(MALWARE_TABLE_PREF).Equals(aData) ||
-      NS_LITERAL_STRING(TRACKING_TABLE_PREF).Equals(aData) ||
-      NS_LITERAL_STRING(TRACKING_WHITELIST_TABLE_PREF).Equals(aData) ||
-      NS_LITERAL_STRING(BLOCKED_TABLE_PREF).Equals(aData) ||
-      NS_LITERAL_STRING(DOWNLOAD_BLOCK_TABLE_PREF).Equals(aData) ||
-      NS_LITERAL_STRING(DOWNLOAD_ALLOW_TABLE_PREF).Equals(aData) ||
-      NS_LITERAL_STRING(DISALLOW_COMPLETION_TABLE_PREF).Equals(aData)) {
-      // Just read everything again.
+    if (kObservedPrefs.Contains(NS_ConvertUTF16toUTF8(aData))) {
       ReadTablesFromPrefs();
-    } else if (NS_LITERAL_STRING(CONFIRM_AGE_PREF).Equals(aData)) {
-      gFreshnessGuarantee = Preferences::GetInt(CONFIRM_AGE_PREF,
-        CONFIRM_AGE_DEFAULT_SEC);
     }
   } else if (!strcmp(aTopic, "quit-application")) {
     // Tell the update thread to finish as soon as possible.
@@ -2392,18 +2314,9 @@ nsUrlClassifierDBService::Shutdown()
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
-    prefs->RemoveObserver(CHECK_MALWARE_PREF, this);
-    prefs->RemoveObserver(CHECK_PHISHING_PREF, this);
-    prefs->RemoveObserver(CHECK_BLOCKED_PREF, this);
-    prefs->RemoveObserver(PHISH_TABLE_PREF, this);
-    prefs->RemoveObserver(MALWARE_TABLE_PREF, this);
-    prefs->RemoveObserver(TRACKING_TABLE_PREF, this);
-    prefs->RemoveObserver(TRACKING_WHITELIST_TABLE_PREF, this);
-    prefs->RemoveObserver(BLOCKED_TABLE_PREF, this);
-    prefs->RemoveObserver(DOWNLOAD_BLOCK_TABLE_PREF, this);
-    prefs->RemoveObserver(DOWNLOAD_ALLOW_TABLE_PREF, this);
-    prefs->RemoveObserver(DISALLOW_COMPLETION_TABLE_PREF, this);
-    prefs->RemoveObserver(CONFIRM_AGE_PREF, this);
+    for (uint8_t i = 0; i < kObservedPrefs.Length(); i++) {
+      prefs->RemoveObserver(kObservedPrefs[i].get(), this);
+    }
   }
 
   // 1. Synchronize with worker thread and update thread by
