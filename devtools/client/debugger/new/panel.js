@@ -4,7 +4,7 @@
 "use strict";
 
 const { Task } = require("devtools/shared/task");
-var {LocalizationHelper} = require("devtools/shared/l10n");
+var { LocalizationHelper } = require("devtools/shared/l10n");
 
 const DBG_STRINGS_URI = "devtools/client/locales/debugger.properties";
 var L10N = new LocalizationHelper(DBG_STRINGS_URI);
@@ -16,38 +16,46 @@ function DebuggerPanel(iframeWindow, toolbox) {
 }
 
 DebuggerPanel.prototype = {
-  open: Task.async(function* () {
+  open: async function() {
     if (!this.toolbox.target.isRemote) {
-      yield this.toolbox.target.makeRemote();
+      await this.toolbox.target.makeRemote();
     }
 
-    yield this.panelWin.Debugger.bootstrap({
+    const {
+      actions,
+      store,
+      selectors,
+      client
+    } = await this.panelWin.Debugger.bootstrap({
       threadClient: this.toolbox.threadClient,
-      tabTarget: this.toolbox.target
+      tabTarget: this.toolbox.target,
+      debuggerClient: this.toolbox.target._client,
+      sourceMaps: this.toolbox.sourceMapService
     });
 
+    this._actions = actions;
+    this._store = store;
+    this._selectors = selectors;
+    this._client = client;
     this.isReady = true;
     return this;
-  }),
-
-  _store: function () {
-    return this.panelWin.Debugger.store;
   },
 
-  _getState: function () {
-    return this._store().getState();
+  getVarsForTests() {
+    return {
+      store: this._store,
+      selectors: this._selectors,
+      actions: this._actions,
+      client: this._client
+    };
   },
 
-  _actions: function () {
-    return this.panelWin.Debugger.actions;
+  _getState: function() {
+    return this._store.getState();
   },
 
-  _selectors: function () {
-    return this.panelWin.Debugger.selectors;
-  },
-
-  getFrames: function () {
-    let frames = this._selectors().getFrames(this._getState());
+  getFrames: function() {
+    let frames = this._selectors.getFrames(this._getState());
 
     // Frames is null when the debugger is not paused.
     if (!frames) {
@@ -58,7 +66,7 @@ DebuggerPanel.prototype = {
     }
 
     frames = frames.toJS();
-    const selectedFrame = this._selectors().getSelectedFrame(this._getState());
+    const selectedFrame = this._selectors.getSelectedFrame(this._getState());
     const selected = frames.findIndex(frame => frame.id == selectedFrame.id);
 
     frames.forEach(frame => {
@@ -68,7 +76,15 @@ DebuggerPanel.prototype = {
     return { frames, selected };
   },
 
-  destroy: function () {
+  selectSource(sourceURL, sourceLine) {
+    this._actions.selectSourceURL(sourceURL, { line: sourceLine });
+  },
+
+  getSource(sourceURL) {
+    return this._selectors.getSourceByURL(this._getState(), sourceURL);
+  },
+
+  destroy: function() {
     this.panelWin.Debugger.destroy();
     this.emit("destroyed");
   }
