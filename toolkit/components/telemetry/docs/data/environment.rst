@@ -213,6 +213,7 @@ Structure:
             updateDay: <number>, // days since UNIX epoch, 0 on failure
             signedState: <integer>, // whether the add-on is signed by AMO, only present for extensions
             isSystem: <bool>, // true if this is a System Add-on
+            isWebExtension: <bool>, // true if this is a WebExtension
           },
           ...
         },
