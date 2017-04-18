@@ -32,7 +32,6 @@ PluginProcessParent::PluginProcessParent(const std::string& aPluginFilePath) :
     , mPluginFilePath(aPluginFilePath)
     , mTaskFactory(this)
     , mMainMsgLoop(MessageLoop::current())
-    , mRunCompleteTaskImmediately(false)
 #ifdef XP_WIN
     , mChildPid(0)
 #endif
@@ -130,12 +129,6 @@ PluginProcessParent::Delete()
                                &PluginProcessParent::Delete));
 }
 
-void
-PluginProcessParent::SetCallRunnableImmediately()
-{
-    mRunCompleteTaskImmediately = true;
-}
-
 /**
  * This function exists so that we may provide an additional level of
  * indirection between the task being posted to main event loop (a
@@ -156,7 +149,7 @@ bool
 PluginProcessParent::WaitUntilConnected(int32_t aTimeoutMs)
 {
     bool result = GeckoChildProcessHost::WaitUntilConnected(aTimeoutMs);
-    if (mRunCompleteTaskImmediately && mLaunchCompleteTask) {
+    if (mLaunchCompleteTask) {
         if (result) {
             mLaunchCompleteTask->SetLaunchSucceeded();
         }
@@ -177,21 +170,12 @@ PluginProcessParent::OnChannelConnected(int32_t peer_pid)
 #endif
 
     GeckoChildProcessHost::OnChannelConnected(peer_pid);
-    if (mLaunchCompleteTask && !mRunCompleteTaskImmediately) {
-        mLaunchCompleteTask->SetLaunchSucceeded();
-        mMainMsgLoop->PostTask(mTaskFactory.NewRunnableMethod(
-                                   &PluginProcessParent::RunLaunchCompleteTask));
-    }
 }
 
 void
 PluginProcessParent::OnChannelError()
 {
     GeckoChildProcessHost::OnChannelError();
-    if (mLaunchCompleteTask && !mRunCompleteTaskImmediately) {
-        mMainMsgLoop->PostTask(mTaskFactory.NewRunnableMethod(
-                                   &PluginProcessParent::RunLaunchCompleteTask));
-    }
 }
 
 bool
