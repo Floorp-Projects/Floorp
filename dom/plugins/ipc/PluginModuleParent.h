@@ -697,7 +697,6 @@ private:
 
     bool                mInitOnAsyncConnect;
     nsresult            mAsyncInitRv;
-    NPError             mAsyncInitError;
     // mContentParent is to be used ONLY during the IPC dance that occurs
     // when ContentParent::RecvLoadPlugin is called under async plugin init!
     // In other contexts it is *unsafe*, as there might be multiple content

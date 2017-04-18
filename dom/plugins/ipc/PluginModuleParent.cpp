@@ -612,26 +612,27 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
 
     if (mInitOnAsyncConnect) {
         mInitOnAsyncConnect = false;
+        NPError dummyError;
 #if defined(XP_WIN)
         mAsyncInitRv = NP_GetEntryPoints(mNPPIface,
-                                         &mAsyncInitError);
+                                         &dummyError);
         if (NS_SUCCEEDED(mAsyncInitRv))
 #endif
         {
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GONK)
             mAsyncInitRv = NP_Initialize(mNPNIface,
                                          mNPPIface,
-                                         &mAsyncInitError);
+                                         &dummyError);
 #else
             mAsyncInitRv = NP_Initialize(mNPNIface,
-                                         &mAsyncInitError);
+                                         &dummyError);
 #endif
         }
 
 #if defined(XP_MACOSX)
         if (NS_SUCCEEDED(mAsyncInitRv)) {
             mAsyncInitRv = NP_GetEntryPoints(mNPPIface,
-                                             &mAsyncInitError);
+                                             &dummyError);
         }
 #endif
     }
@@ -760,7 +761,6 @@ PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
 #endif
     , mInitOnAsyncConnect(false)
     , mAsyncInitRv(NS_ERROR_NOT_INITIALIZED)
-    , mAsyncInitError(NPERR_NO_ERROR)
     , mContentParent(nullptr)
 {
     NS_ASSERTION(mSubprocess, "Out of memory!");
