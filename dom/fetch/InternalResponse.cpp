@@ -127,8 +127,8 @@ InternalResponse::ToIPC(IPCInternalResponse* aIPCResponse,
 
   if (body) {
     aAutoStream.reset(new mozilla::ipc::AutoIPCStream(aIPCResponse->body()));
-    bool ok = aAutoStream->Serialize(body, aManager);
-    MOZ_DIAGNOSTIC_ASSERT(ok);
+    DebugOnly<bool> ok = aAutoStream->Serialize(body, aManager);
+    MOZ_ASSERT(ok);
   } else {
     aIPCResponse->body() = void_t();
   }
