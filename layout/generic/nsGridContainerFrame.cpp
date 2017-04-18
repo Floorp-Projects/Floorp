@@ -3699,8 +3699,11 @@ MeasuringReflow(nsIFrame*           aChild,
   parent->Properties().Set(
     nsContainerFrame::DebugReflowingWithInfiniteISize(), true);
 #endif
-  uint32_t riFlags = ReflowInput::COMPUTE_SIZE_SHRINK_WRAP |
-                     ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE;
+  auto wm = aChild->GetWritingMode();
+  uint32_t riFlags = ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE;
+  if (aAvailableSize.ISize(wm) == INFINITE_ISIZE_COORD) {
+    riFlags |= ReflowInput::COMPUTE_SIZE_SHRINK_WRAP;
+  }
   if (aIMinSizeClamp != NS_MAXSIZE) {
     riFlags |= ReflowInput::I_CLAMP_MARGIN_BOX_MIN_SIZE;
   }
@@ -3725,7 +3728,6 @@ MeasuringReflow(nsIFrame*           aChild,
   ReflowOutput childSize(childRI);
   nsReflowStatus childStatus;
   const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW;
-  WritingMode wm = childRI.GetWritingMode();
   parent->ReflowChild(aChild, pc, childSize, childRI, wm,
                       LogicalPoint(wm), nsSize(), flags, childStatus);
   parent->FinishReflowChild(aChild, pc, childSize, &childRI, wm,
