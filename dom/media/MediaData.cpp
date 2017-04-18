@@ -230,15 +230,15 @@ VideoData::UpdateDuration(const TimeUnit& aDuration)
 }
 
 void
-VideoData::UpdateTimestamp(int64_t aTimestamp)
+VideoData::UpdateTimestamp(const TimeUnit& aTimestamp)
 {
-  MOZ_ASSERT(aTimestamp >= 0);
+  MOZ_ASSERT(!aTimestamp.IsNegative());
 
-  int64_t updatedDuration = GetEndTime() - aTimestamp;
-  MOZ_ASSERT(updatedDuration >= 0);
+  auto updatedDuration = GetEndTime() - aTimestamp;
+  MOZ_ASSERT(!updatedDuration.IsNegative());
 
-  mTime = aTimestamp;
-  mDuration = TimeUnit::FromMicroseconds(updatedDuration);
+  mTime = aTimestamp.ToMicroseconds();
+  mDuration = updatedDuration;
 }
 
 /* static */

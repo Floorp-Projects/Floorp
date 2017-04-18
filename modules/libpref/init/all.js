@@ -2900,18 +2900,6 @@ pref("layout.frame_rate", -1);
 pref("layout.display-list.dump", false);
 pref("layout.display-list.dump-content", false);
 
-// pref to control precision of the frame rate timer. When true,
-// we use a "precise" timer, which means each notification fires
-// Nms after the start of the last notification. That means if the
-// processing of the notification is slow, the timer can fire immediately
-// after we've just finished processing the last notification, which might
-// lead to starvation problems.
-// When false, we use a "slack" timer which fires Nms after the *end*
-// of the last notification. This can give less tight frame rates
-// but provides more time for other operations when the browser is
-// heavily loaded.
-pref("layout.frame_rate.precise", false);
-
 // pref to control whether layout warnings that are hit quite often are enabled
 pref("layout.spammy_warnings.enabled", false);
 
@@ -4789,6 +4777,7 @@ pref("xpinstall.signatures.required", false);
 pref("extensions.alwaysUnpack", false);
 pref("extensions.minCompatiblePlatformVersion", "2.0");
 pref("extensions.webExtensionsMinPlatformVersion", "42.0a1");
+pref("extensions.allow-non-mpc-extensions", true);
 
 // Other webextensions prefs
 pref("extensions.webextensions.keepStorageOnUninstall", false);
@@ -5302,7 +5291,11 @@ pref("browser.safebrowsing.id", "navclient-auto-ffox");
 pref("browser.safebrowsing.id", "Firefox");
 #endif
 
+#ifdef NIGHTLY_BUILD
+pref("browser.safebrowsing.temporary.take_v4_completion_result", true);
+#else
 pref("browser.safebrowsing.temporary.take_v4_completion_result", false);
+#endif
 
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);

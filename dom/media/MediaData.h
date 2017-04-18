@@ -323,7 +323,10 @@ public:
 
   bool mKeyframe;
 
-  int64_t GetEndTime() const { return mTime + mDuration.ToMicroseconds(); }
+  media::TimeUnit GetEndTime() const
+  {
+    return media::TimeUnit::FromMicroseconds(mTime) + mDuration;
+  }
 
   bool AdjustForStartTime(int64_t aStartTime)
   {
@@ -559,7 +562,7 @@ public:
   bool IsSentToCompositor() { return mSentToCompositor; }
 
   void UpdateDuration(const media::TimeUnit& aDuration);
-  void UpdateTimestamp(int64_t aTimestamp);
+  void UpdateTimestamp(const media::TimeUnit& aTimestamp);
 
 protected:
   ~VideoData();

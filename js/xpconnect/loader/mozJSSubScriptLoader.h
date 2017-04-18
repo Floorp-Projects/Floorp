@@ -33,13 +33,13 @@ public:
 private:
     virtual ~mozJSSubScriptLoader();
 
-    bool ReadScript(nsIURI* uri, JSContext* cx, JSObject* targetObj,
+    bool ReadScript(nsIURI* uri, JSContext* cx, JS::HandleObject targetObj,
                     const nsAString& charset, const char* uriStr,
-                    nsIIOService* serv, nsIPrincipal* principal,
+                    nsIIOService* serv,
                     bool reuseGlobal, JS::MutableHandleScript script,
                     JS::MutableHandleFunction function);
 
-    nsresult ReadScriptAsync(nsIURI* uri, JSObject* targetObj,
+    nsresult ReadScriptAsync(nsIURI* uri, JS::HandleObject targetObj,
                              const nsAString& charset,
                              nsIIOService* serv, bool reuseGlobal,
                              bool cache, JS::MutableHandleValue retval);
@@ -47,7 +47,7 @@ private:
     nsresult DoLoadSubScriptWithOptions(const nsAString& url,
                                         LoadSubScriptOptions& options,
                                         JSContext* cx,
-                                        JS::MutableHandle<JS::Value> retval);
+                                        JS::MutableHandleValue retval);
 
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
 };

@@ -23,6 +23,7 @@ IPDL_SOURCES = [
     'NeckoChannelParams.ipdlh',
     'PChannelDiverter.ipdl',
     'PDataChannel.ipdl',
+    'PFileChannel.ipdl',
     'PNecko.ipdl',
     'PRtspChannel.ipdl',
     'PRtspController.ipdl',

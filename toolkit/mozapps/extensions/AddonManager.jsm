@@ -41,8 +41,6 @@ const PREF_EM_HOTFIX_LASTVERSION      = "extensions.hotfix.lastVersion";
 const PREF_EM_HOTFIX_URL              = "extensions.hotfix.url";
 const PREF_EM_CERT_CHECKATTRIBUTES    = "extensions.hotfix.cert.checkAttributes";
 const PREF_EM_HOTFIX_CERTS            = "extensions.hotfix.certs.";
-const PREF_MATCH_OS_LOCALE            = "intl.locale.matchOS";
-const PREF_SELECTED_LOCALE            = "general.useragent.locale";
 const UNKNOWN_XPCOM_ABI               = "unknownABI";
 
 const PREF_MIN_WEBEXT_PLATFORM_VERSION = "extensions.webExtensionsMinPlatformVersion";
@@ -326,26 +324,7 @@ function promiseCallProvider(aProvider, aMethod, ...aArgs) {
  * @return  the selected locale or "en-US" if none is selected
  */
 function getLocale() {
-  try {
-    if (Services.prefs.getBoolPref(PREF_MATCH_OS_LOCALE)) {
-      const osPrefs =
-        Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences);
-      return osPrefs.systemLocale;
-    }
-  } catch (e) { }
-
-  try {
-    let locale = Services.prefs.getComplexValue(PREF_SELECTED_LOCALE,
-                                                Ci.nsIPrefLocalizedString);
-    if (locale)
-      return locale;
-  } catch (e) { }
-
-  try {
-    return Services.prefs.getCharPref(PREF_SELECTED_LOCALE);
-  } catch (e) { }
-
-  return "en-US";
+  return Services.locale.getRequestedLocale() || "en-US";
 }
 
 function webAPIForAddon(addon) {
