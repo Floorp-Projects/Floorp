@@ -2956,7 +2956,6 @@ public:
   NS_IMETHOD SetLoadGroup(nsILoadGroup*) NO_IMPL
   NS_IMETHOD SetLoadFlags(nsLoadFlags) NO_IMPL
   NS_IMETHOD GetLoadFlags(nsLoadFlags*) NO_IMPL
-  NS_IMETHOD GetIsDocument(bool *) NO_IMPL
   NS_IMETHOD GetOriginalURI(nsIURI**) NO_IMPL
   NS_IMETHOD SetOriginalURI(nsIURI*) NO_IMPL
   NS_IMETHOD GetURI(nsIURI** aUri) override
