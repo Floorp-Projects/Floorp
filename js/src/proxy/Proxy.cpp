@@ -284,6 +284,21 @@ Proxy::hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp)
     return handler->hasOwn(cx, proxy, id, bp);
 }
 
+bool
+js::ProxyHasOwn(JSContext* cx, HandleObject proxy, HandleValue idVal, MutableHandleValue result)
+{
+    RootedId id(cx);
+    if (!ValueToId<CanGC>(cx, idVal, &id))
+        return false;
+
+    bool hasOwn;
+    if (!Proxy::hasOwn(cx, proxy, id, &hasOwn))
+        return false;
+
+    result.setBoolean(hasOwn);
+    return true;
+}
+
 static Value
 ValueToWindowProxyIfWindow(const Value& v)
 {
