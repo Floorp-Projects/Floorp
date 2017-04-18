@@ -43,6 +43,15 @@ WebRenderLayer::WrBridge()
   return WrManager()->WrBridge();
 }
 
+WrImageKey
+WebRenderLayer::GetImageKey()
+{
+  WrImageKey key;
+  key.mNamespace = WrBridge()->GetNamespace();
+  key.mHandle = WrBridge()->GetNextResourceId();
+  return key;
+}
+
 Rect
 WebRenderLayer::RelativeToVisible(Rect aRect)
 {

@@ -11,6 +11,7 @@
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "nsDisplayList.h"
 #include "mozilla/gfx/Matrix.h"
+#include "mozilla/layers/UpdateImageHelper.h"
 
 namespace mozilla {
 namespace layers {
@@ -91,6 +92,70 @@ WebRenderDisplayItemLayer::SendImageContainer(ImageContainer* aContainer,
                                 key));
   WrManager()->AddImageKeyForDiscard(key);
   return Some(key);
+}
+
+bool
+WebRenderDisplayItemLayer::PushItemAsImage(wr::DisplayListBuilder& aBuilder,
+                                           nsTArray<layers::WebRenderParentCommand>& aParentCommands)
+{
+  if (!mImageContainer) {
+    mImageContainer = LayerManager::CreateImageContainer();
+  }
+
+  if (!mImageClient) {
+    mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
+                                                  WrBridge(),
+                                                  TextureFlags::DEFAULT);
+    if (!mImageClient) {
+      return false;
+    }
+    mImageClient->Connect();
+  }
+
+  if (!mExternalImageId) {
+    MOZ_ASSERT(mImageClient);
+    mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
+  }
+
+  bool snap;
+  gfx::Rect bounds = mozilla::NSRectToRect(mItem->GetBounds(mBuilder, &snap),
+                                      mItem->Frame()->PresContext()->AppUnitsPerDevPixel());
+  gfx::IntSize imageSize = RoundedToInt(bounds.Size());
+
+  UpdateImageHelper helper(mImageContainer, mImageClient, imageSize);
+  const int32_t appUnitsPerDevPixel = mItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+  gfx::Point offset = NSPointToPoint(mItem->ToReferenceFrame(), appUnitsPerDevPixel);
+
+  {
+    RefPtr<gfx::DrawTarget> target = helper.GetDrawTarget();
+    if (!target) {
+      return false;
+    }
+
+    target->ClearRect(gfx::Rect(0, 0, imageSize.width, imageSize.height));
+    RefPtr<gfxContext> context = gfxContext::CreateOrNull(target, offset);
+    MOZ_ASSERT(context);
+
+    nsRenderingContext ctx(context);
+    mItem->Paint(mBuilder, &ctx);
+  }
+
+  if (!helper.UpdateImage()) {
+    return false;
+  }
+
+  gfx::Rect dest = RelativeToParent(gfx::Rect(0, 0, imageSize.width, imageSize.height)) + offset;
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(dest));
+  WrImageKey key = GetImageKey();
+  aParentCommands.AppendElement(layers::OpAddExternalImage(
+                                mExternalImageId,
+                                key));
+  aBuilder.PushImage(wr::ToWrRect(dest),
+                     clipRegion,
+                     WrImageRendering::Auto,
+                     key);
+
+  return true;
 }
 
 } // namespace layers
