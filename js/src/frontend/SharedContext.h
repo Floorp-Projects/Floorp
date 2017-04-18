@@ -38,6 +38,7 @@ enum class StatementKind : uint8_t
     ForOfLoop,
     DoLoop,
     WhileLoop,
+    Class,
 
     // Used only by BytecodeEmitter.
     Spread
@@ -451,6 +452,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     uint32_t        startLine;
     uint32_t        startColumn;
     uint32_t        preludeStart;
+    uint32_t        postludeEnd;
     uint16_t        length;
 
     uint8_t         generatorKindBits_;     /* The GeneratorKind of this function. */
@@ -501,6 +503,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     void initFromLazyFunction();
     void initStandaloneFunction(Scope* enclosingScope);
     void initWithEnclosingParseContext(ParseContext* enclosing, FunctionSyntaxKind kind);
+    void resetForAbortedSyntaxParse(ParseContext* enclosing, FunctionSyntaxKind kind);
 
     ObjectBox* toObjectBox() override { return this; }
     JSFunction* function() const { return &object->as<JSFunction>(); }
@@ -613,6 +616,14 @@ class FunctionBox : public ObjectBox, public SharedContext
     void setStart(const TokenStream& tokenStream) {
         bufStart = tokenStream.currentToken().pos.begin;
         tokenStream.srcCoords.lineNumAndColumnIndex(bufStart, &startLine, &startColumn);
+    }
+
+    void setEnd(uint32_t end) {
+        // For all functions except class constructors, the buffer and
+        // postlude ending positions are the same. Class constructors override
+        // the postlude ending position with the end of the class definition.
+        bufEnd = end;
+        postludeEnd = end;
     }
 
     void trace(JSTracer* trc) override;
