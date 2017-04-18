@@ -509,7 +509,7 @@ PluginAsyncSurrogate::WaitForInit()
   if (mParent->IsChrome()) {
     PluginProcessParent* process = static_cast<PluginModuleChromeParent*>(mParent)->Process();
     MOZ_ASSERT(process);
-    process->SetCallRunnableImmediately(true);
+    process->SetCallRunnableImmediately();
     if (!process->WaitUntilConnected()) {
       return false;
     }

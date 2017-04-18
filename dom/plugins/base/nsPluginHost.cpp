@@ -758,7 +758,6 @@ nsPluginHost::InstantiatePluginInstance(const nsACString& aMimeType, nsIURI* aUR
     instanceOwner->Destroy();
     return NS_ERROR_FAILURE;
   }
-  const bool isAsyncInit = (rv == NS_PLUGIN_INIT_PENDING);
 
   RefPtr<nsNPAPIPluginInstance> instance;
   rv = instanceOwner->GetInstance(getter_AddRefs(instance));
@@ -767,8 +766,7 @@ nsPluginHost::InstantiatePluginInstance(const nsACString& aMimeType, nsIURI* aUR
     return rv;
   }
 
-  // Async init plugins will initiate their own widget creation.
-  if (!isAsyncInit && instance) {
+  if (instance) {
     CreateWidget(instanceOwner);
   }
 

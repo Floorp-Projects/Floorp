@@ -68,7 +68,7 @@ public:
 
     using mozilla::ipc::GeckoChildProcessHost::GetChannel;
 
-    void SetCallRunnableImmediately(bool aCallImmediately);
+    void SetCallRunnableImmediately();
     virtual bool WaitUntilConnected(int32_t aTimeoutMs = 0) override;
 
     virtual void OnChannelConnected(int32_t peer_pid) override;

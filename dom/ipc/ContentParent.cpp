@@ -1104,8 +1104,7 @@ ContentParent::RecvLoadPlugin(const uint32_t& aPluginId,
                               Endpoint<PPluginModuleParent>* aEndpoint)
 {
   *aRv = NS_OK;
-  if (!mozilla::plugins::SetupBridge(aPluginId, this, false, aRv, aRunID,
-                                     aEndpoint)) {
+  if (!mozilla::plugins::SetupBridge(aPluginId, this, aRv, aRunID, aEndpoint)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -1141,7 +1140,7 @@ ContentParent::RecvConnectPluginBridge(const uint32_t& aPluginId,
   // in the first call to SetupBridge in RecvLoadPlugin, so we pass in a dummy
   // pointer and just throw it away.
   uint32_t dummy = 0;
-  if (!mozilla::plugins::SetupBridge(aPluginId, this, true, aRv, &dummy, aEndpoint)) {
+  if (!mozilla::plugins::SetupBridge(aPluginId, this, aRv, &dummy, aEndpoint)) {
     return IPC_FAIL(this, "SetupBridge failed");
   }
   return IPC_OK();
