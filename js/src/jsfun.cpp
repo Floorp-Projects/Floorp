@@ -882,7 +882,8 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
                                              sourceObject,
                                              begin,
                                              ss->length(),
-                                             0, 0));
+                                             0,
+                                             ss->length()));
     if (!script || !JSScript::initFunctionPrototype(cx, script, functionProto))
         return nullptr;
 

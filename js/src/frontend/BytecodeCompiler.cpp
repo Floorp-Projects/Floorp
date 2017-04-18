@@ -298,11 +298,17 @@ BytecodeCompiler::createSourceAndParser(const Maybe<uint32_t>& parameterListEnd 
 }
 
 bool
-BytecodeCompiler::createScript(uint32_t preludeStart /* = 0 */, uint32_t postludeEnd /* = 0 */)
+BytecodeCompiler::createScript()
+{
+    return createScript(0, sourceBuffer.length());
+}
+
+bool
+BytecodeCompiler::createScript(uint32_t toStringStart, uint32_t toStringEnd)
 {
     script = JSScript::Create(cx, options,
                               sourceObject, /* sourceStart = */ 0, sourceBuffer.length(),
-                              preludeStart, postludeEnd);
+                              toStringStart, toStringEnd);
     return script != nullptr;
 }
 
@@ -514,7 +520,7 @@ BytecodeCompiler::compileStandaloneFunction(MutableHandleFunction fun,
     if (fn->pn_funbox->function()->isInterpreted()) {
         MOZ_ASSERT(fun == fn->pn_funbox->function());
 
-        if (!createScript(fn->pn_funbox->preludeStart, fn->pn_funbox->postludeEnd))
+        if (!createScript(fn->pn_funbox->toStringStart, fn->pn_funbox->toStringEnd))
             return false;
 
         Maybe<BytecodeEmitter> emitter;
@@ -735,7 +741,7 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
 
     Rooted<JSScript*> script(cx, JSScript::Create(cx, options, sourceObject,
                                                   lazy->begin(), lazy->end(),
-                                                  lazy->preludeStart(), lazy->postludeEnd()));
+                                                  lazy->toStringStart(), lazy->toStringEnd()));
     if (!script)
         return false;
 
