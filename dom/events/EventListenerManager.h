@@ -605,7 +605,8 @@ protected:
                                    const EventListenerFlags& aFlags,
                                    bool aAllEvents = false);
   void RemoveAllListeners();
-  void NotifyEventListenerRemoved(nsIAtom* aUserType);
+  void NotifyEventListenerRemoved(nsIAtom* aUserType,
+                                  const nsAString& aTypeString);
   const EventTypeData* GetTypeDataForIID(const nsIID& aIID);
   const EventTypeData* GetTypeDataForEventName(nsIAtom* aName);
   nsPIDOMWindowInner* GetInnerWindowForTarget();
