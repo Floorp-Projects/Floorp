@@ -242,9 +242,6 @@ public:
     RecvRedrawPlugin() override;
 
     virtual mozilla::ipc::IPCResult
-    RecvAsyncNPP_NewResult(const NPError& aResult) override;
-
-    virtual mozilla::ipc::IPCResult
     RecvSetNetscapeWindowAsParent(const NativeWindowHandle& childWindow) override;
 
     NPError NPP_SetWindow(const NPWindow* aWindow);

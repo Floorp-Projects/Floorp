@@ -1676,21 +1676,6 @@ nsPluginInstanceOwner::NotifyHostAsyncInitFailed()
 }
 
 void
-nsPluginInstanceOwner::NotifyHostCreateWidget()
-{
-  mPluginHost->CreateWidget(this);
-#ifdef XP_MACOSX
-  FixUpPluginWindow(ePluginPaintEnable);
-#else
-  if (mPluginFrame) {
-    mPluginFrame->InvalidateFrame();
-  } else {
-    CallSetWindow();
-  }
-#endif
-}
-
-void
 nsPluginInstanceOwner::NotifyDestroyPending()
 {
   if (!mInstance) {
