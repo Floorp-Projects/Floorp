@@ -11,6 +11,15 @@ const LAYOUT_ERRORS_L10N =
 // displayed below it.
 
 const EXPECTED_PROPERTIES = [
+  "border-bottom-left-radius",
+  "border-bottom-right-radius",
+  "border-top-left-radius",
+  "border-top-right-radius",
+  "filter",
+  "height",
+  "transform",
+  "width",
+  // Unchanged value properties
   "background-attachment",
   "background-clip",
   "background-color",
@@ -19,15 +28,7 @@ const EXPECTED_PROPERTIES = [
   "background-position-x",
   "background-position-y",
   "background-repeat",
-  "background-size",
-  "border-bottom-left-radius",
-  "border-bottom-right-radius",
-  "border-top-left-radius",
-  "border-top-right-radius",
-  "filter",
-  "height",
-  "transform",
-  "width"
+  "background-size"
 ].sort();
 
 add_task(function* () {
