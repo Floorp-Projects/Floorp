@@ -7,6 +7,9 @@
 package org.mozilla.gecko;
 
 import java.io.File;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Set;
 
 import org.mozilla.gecko.annotation.ReflectionTarget;
@@ -18,8 +21,11 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
@@ -65,6 +71,20 @@ public class GeckoView extends LayerView
         }
     }
 
+    static {
+        EventDispatcher.getInstance().registerUiThreadListener(new BundleEventListener() {
+            @Override
+            public void handleMessage(final String event, final GeckoBundle message,
+                                      final EventCallback callback) {
+                if ("GeckoView:Prompt".equals(event)) {
+                    handlePromptEvent(/* view */ null, message, callback);
+                }
+            }
+        }, "GeckoView:Prompt");
+    }
+
+    private static PromptDelegate sDefaultPromptDelegate;
+
     private final NativeQueue mNativeQueue =
         new NativeQueue(State.INITIAL, State.READY);
 
@@ -74,6 +94,7 @@ public class GeckoView extends LayerView
     /* package */ ContentListener mContentListener;
     /* package */ NavigationListener mNavigationListener;
     /* package */ ProgressListener mProgressListener;
+    private PromptDelegate mPromptDelegate;
     private InputConnectionListener mInputConnectionListener;
 
     private GeckoViewSettings mSettings;
@@ -173,6 +194,7 @@ public class GeckoView extends LayerView
                 "GeckoView:LocationChange",
                 "GeckoView:PageStart",
                 "GeckoView:PageStop",
+                "GeckoView:Prompt",
                 "GeckoView:SecurityChanged",
                 null);
         }
@@ -205,6 +227,8 @@ public class GeckoView extends LayerView
                 if (mProgressListener != null) {
                     mProgressListener.onPageStop(GeckoView.this, message.getBoolean("success"));
                 }
+            } else if ("GeckoView:Prompt".equals(event)) {
+                handlePromptEvent(GeckoView.this, message, callback);
             } else if ("GeckoView:SecurityChanged".equals(event)) {
                 if (mProgressListener != null) {
                     mProgressListener.onSecurityChange(GeckoView.this, message.getInt("status"));
@@ -562,6 +586,398 @@ public class GeckoView extends LayerView
     */
     public NavigationListener getNavigationListener() {
         return mNavigationListener;
+    }
+
+    /**
+     * Set the default prompt delegate for all GeckoView instances. The default prompt
+     * delegate is used for certain types of prompts and for GeckoViews that do not have
+     * custom prompt delegates.
+     * @param delegate PromptDelegate instance or null to use the built-in delegate.
+     * @see #setPromptDelegate(PromptDelegate)
+     */
+    public static void setDefaultPromptDelegate(PromptDelegate delegate) {
+        sDefaultPromptDelegate = delegate;
+    }
+
+    /**
+     * Get the default prompt delegate for all GeckoView instances.
+     * @return PromptDelegate instance
+     * @see #getPromptDelegate()
+     */
+    public static PromptDelegate getDefaultPromptDelegate() {
+        return sDefaultPromptDelegate;
+    }
+
+    /**
+     * Set the current prompt delegate for this GeckoView.
+     * @param delegate PromptDelegate instance or null to use the default delegate.
+     * @see #setDefaultPromptDelegate(PromptDelegate)
+     */
+    public void setPromptDelegate(PromptDelegate delegate) {
+        mPromptDelegate = delegate;
+    }
+
+    /**
+     * Get the current prompt delegate for this GeckoView.
+     * @return PromptDelegate instance or null if using default delegate.
+     * @see #getDefaultPromptDelegate()
+     */
+    public PromptDelegate getPromptDelegate() {
+        return mPromptDelegate;
+    }
+
+    private static class PromptCallback implements
+        PromptDelegate.AlertCallback, PromptDelegate.ButtonCallback,
+        PromptDelegate.TextCallback, PromptDelegate.AuthCallback,
+        PromptDelegate.ChoiceCallback, PromptDelegate.FileCallback {
+
+        private final String mType;
+        private final String mMode;
+        private final boolean mHasCheckbox;
+        private final String mCheckboxMessage;
+
+        private EventCallback mCallback;
+        private boolean mCheckboxValue;
+        private GeckoBundle mResult;
+
+        public PromptCallback(final String type, final String mode,
+                              final GeckoBundle message, final EventCallback callback) {
+            mType = type;
+            mMode = mode;
+            mCallback = callback;
+            mHasCheckbox = message.getBoolean("hasCheck");
+            mCheckboxMessage = message.getString("checkMsg");
+            mCheckboxValue = message.getBoolean("checkValue");
+        }
+
+        private GeckoBundle ensureResult() {
+            if (mResult == null) {
+                // Usually result object contains two items.
+                mResult = new GeckoBundle(2);
+            }
+            return mResult;
+        }
+
+        private void submit() {
+            if (mHasCheckbox) {
+                ensureResult().putBoolean("checkValue", mCheckboxValue);
+            }
+            if (mCallback != null) {
+                mCallback.sendSuccess(mResult);
+                mCallback = null;
+            }
+        }
+
+        @Override // AlertCallbcak
+        public void dismiss() {
+            // Send a null result.
+            mResult = null;
+            submit();
+        }
+
+        @Override // AlertCallbcak
+        public boolean hasCheckbox() {
+            return mHasCheckbox;
+        }
+
+        @Override // AlertCallbcak
+        public String getCheckboxMessage() {
+            return mCheckboxMessage;
+        }
+
+        @Override // AlertCallbcak
+        public boolean getCheckboxValue() {
+            return mCheckboxValue;
+        }
+
+        @Override // AlertCallbcak
+        public void setCheckboxValue(final boolean value) {
+            mCheckboxValue = value;
+        }
+
+        @Override // ButtonCallback
+        public void confirm(final int value) {
+            if ("button".equals(mType)) {
+                ensureResult().putInt("button", value);
+            } else {
+                throw new UnsupportedOperationException();
+            }
+            submit();
+        }
+
+        @Override // TextCallback, AuthCallback, ChoiceCallback, FileCallback
+        public void confirm(final String value) {
+            if ("text".equals(mType) || "color".equals(mType) || "datetime".equals(mType)) {
+                ensureResult().putString(mType, value);
+            } else if ("auth".equals(mType)) {
+                if (!"password".equals(mMode)) {
+                    throw new IllegalArgumentException();
+                }
+                ensureResult().putString("password", value);
+            } else if ("choice".equals(mType)) {
+                confirm(new String[] { value });
+                return;
+            } else {
+                throw new UnsupportedOperationException();
+            }
+            submit();
+        }
+
+        @Override // AuthCallback
+        public void confirm(final String username, final String password) {
+            if ("auth".equals(mType)) {
+                if (!"auth".equals(mMode)) {
+                    throw new IllegalArgumentException();
+                }
+                ensureResult().putString("username", username);
+                ensureResult().putString("password", password);
+            } else {
+                throw new UnsupportedOperationException();
+            }
+            submit();
+        }
+
+        @Override // ChoiceCallback, FileCallback
+        public void confirm(final String[] values) {
+            if (("menu".equals(mMode) || "single".equals(mMode)) &&
+                (values == null || values.length != 1)) {
+                throw new IllegalArgumentException();
+            }
+            if ("choice".equals(mType)) {
+                ensureResult().putStringArray("choices", values);
+            } else {
+                throw new UnsupportedOperationException();
+            }
+            submit();
+        }
+
+        @Override // ChoiceCallback
+        public void confirm(GeckoBundle item) {
+            if ("choice".equals(mType)) {
+                confirm(item == null ? null : item.getString("id"));
+                return;
+            } else {
+                throw new UnsupportedOperationException();
+            }
+        }
+
+        @Override // ChoiceCallback
+        public void confirm(GeckoBundle[] items) {
+            if (("menu".equals(mMode) || "single".equals(mMode)) &&
+                (items == null || items.length != 1)) {
+                throw new IllegalArgumentException();
+            }
+            if ("choice".equals(mType)) {
+                if (items == null) {
+                    confirm((String[]) null);
+                    return;
+                }
+                final String[] ids = new String[items.length];
+                for (int i = 0; i < ids.length; i++) {
+                    ids[i] = (items[i] == null) ? null : items[i].getString("id");
+                }
+                confirm(ids);
+                return;
+            } else {
+                throw new UnsupportedOperationException();
+            }
+        }
+
+        @Override // FileCallback
+        public void confirm(final Uri uri) {
+            if ("file".equals(mType)) {
+                confirm(uri == null ? null : new Uri[] { uri });
+                return;
+            } else {
+                throw new UnsupportedOperationException();
+            }
+        }
+
+        private static String getFile(final Uri uri) {
+            if (uri == null) {
+                return null;
+            }
+            if ("file".equals(uri.getScheme())) {
+                return uri.getPath();
+            }
+            final ContentResolver cr =
+                    GeckoAppShell.getApplicationContext().getContentResolver();
+            final Cursor cur = cr.query(uri, new String[] { "_data" }, /* selection */ null,
+                                        /* args */ null, /* sort */ null);
+            if (cur == null) {
+                return null;
+            }
+            try {
+                final int idx = cur.getColumnIndex("_data");
+                if (idx < 0 || !cur.moveToFirst()) {
+                    return null;
+                }
+                do {
+                    try {
+                        final String path = cur.getString(idx);
+                        if (path != null && !path.isEmpty()) {
+                            return path;
+                        }
+                    } catch (final Exception e) {
+                    }
+                } while (cur.moveToNext());
+            } finally {
+                cur.close();
+            }
+            return null;
+        }
+
+        @Override // FileCallback
+        public void confirm(final Uri[] uris) {
+            if ("single".equals(mMode) && (uris == null || uris.length != 1)) {
+                throw new IllegalArgumentException();
+            }
+            if ("file".equals(mType)) {
+                final String[] paths = new String[uris != null ? uris.length : 0];
+                for (int i = 0; i < paths.length; i++) {
+                    paths[i] = getFile(uris[i]);
+                    if (paths[i] == null) {
+                        Log.e(LOGTAG, "Only file URI is supported: " + uris[i]);
+                    }
+                }
+                ensureResult().putStringArray("files", paths);
+            } else {
+                throw new UnsupportedOperationException();
+            }
+            submit();
+        }
+    }
+
+    /* package */ static void handlePromptEvent(final GeckoView view,
+                                                final GeckoBundle message,
+                                                final EventCallback callback) {
+        final PromptDelegate delegate;
+        if (view != null && view.mPromptDelegate != null) {
+            delegate = view.mPromptDelegate;
+        } else {
+            delegate = sDefaultPromptDelegate;
+        }
+
+        if (delegate == null) {
+            // Default behavior is same as calling dismiss() on callback.
+            callback.sendSuccess(null);
+            return;
+        }
+
+        final String type = message.getString("type");
+        final String mode = message.getString("mode");
+        final PromptCallback cb = new PromptCallback(type, mode, message, callback);
+        final String title = message.getString("title");
+        final String msg = message.getString("msg");
+        switch (type) {
+            case "alert": {
+                delegate.alert(view, title, msg, cb);
+                break;
+            }
+            case "button": {
+                final String[] btnTitle = message.getStringArray("btnTitle");
+                final String[] btnCustomTitle = message.getStringArray("btnCustomTitle");
+                for (int i = 0; i < btnCustomTitle.length; i++) {
+                    final int resId;
+                    if ("ok".equals(btnTitle[i])) {
+                        resId = android.R.string.ok;
+                    } else if ("cancel".equals(btnTitle[i])) {
+                        resId = android.R.string.cancel;
+                    } else if ("yes".equals(btnTitle[i])) {
+                        resId = android.R.string.yes;
+                    } else if ("no".equals(btnTitle[i])) {
+                        resId = android.R.string.no;
+                    } else {
+                        continue;
+                    }
+                    btnCustomTitle[i] = Resources.getSystem().getString(resId);
+                }
+                delegate.promptForButton(view, title, msg, btnCustomTitle, cb);
+                break;
+            }
+            case "text": {
+                delegate.promptForText(view, title, msg, message.getString("value"), cb);
+                break;
+            }
+            case "auth": {
+                delegate.promptForAuth(view, title, msg, message.getBundle("options"), cb);
+                break;
+            }
+            case "choice": {
+                final int intMode;
+                if ("menu".equals(mode)) {
+                    intMode = PromptDelegate.CHOICE_TYPE_MENU;
+                } else if ("single".equals(mode)) {
+                    intMode = PromptDelegate.CHOICE_TYPE_SINGLE;
+                } else if ("multiple".equals(mode)) {
+                    intMode = PromptDelegate.CHOICE_TYPE_MULTIPLE;
+                } else {
+                    callback.sendError("Invalid mode");
+                    return;
+                }
+                delegate.promptForChoice(view, title, msg, intMode,
+                                         message.getBundleArray("choices"), cb);
+                break;
+            }
+            case "color": {
+                delegate.promptForColor(view, title, message.getString("value"), cb);
+                break;
+            }
+            case "datetime": {
+                final int intMode;
+                if ("date".equals(mode)) {
+                    intMode = PromptDelegate.DATETIME_TYPE_DATE;
+                } else if ("month".equals(mode)) {
+                    intMode = PromptDelegate.DATETIME_TYPE_MONTH;
+                } else if ("week".equals(mode)) {
+                    intMode = PromptDelegate.DATETIME_TYPE_WEEK;
+                } else if ("time".equals(mode)) {
+                    intMode = PromptDelegate.DATETIME_TYPE_TIME;
+                } else if ("datetime-local".equals(mode)) {
+                    intMode = PromptDelegate.DATETIME_TYPE_DATETIME_LOCAL;
+                } else {
+                    callback.sendError("Invalid mode");
+                    return;
+                }
+                delegate.promptForDateTime(view, title, intMode,
+                                           message.getString("value"),
+                                           message.getString("min"),
+                                           message.getString("max"), cb);
+                break;
+            }
+            case "file": {
+                final int intMode;
+                if ("single".equals(mode)) {
+                    intMode = PromptDelegate.FILE_TYPE_SINGLE;
+                } else if ("multiple".equals(mode)) {
+                    intMode = PromptDelegate.FILE_TYPE_MULTIPLE;
+                } else {
+                    callback.sendError("Invalid mode");
+                    return;
+                }
+                String[] mimeTypes = message.getStringArray("mimeTypes");
+                final String[] extensions = message.getStringArray("extension");
+                if (extensions != null) {
+                    final ArrayList<String> combined =
+                            new ArrayList<>(mimeTypes.length + extensions.length);
+                    combined.addAll(Arrays.asList(mimeTypes));
+                    for (final String extension : extensions) {
+                        final String mimeType =
+                                URLConnection.guessContentTypeFromName(extension);
+                        if (mimeType != null) {
+                            combined.add(mimeType);
+                        }
+                    }
+                    mimeTypes = combined.toArray(new String[combined.size()]);
+                }
+                delegate.promptForFile(view, title, intMode, mimeTypes, cb);
+                break;
+            }
+            default: {
+                callback.sendError("Invalid type");
+                break;
+            }
+        }
     }
 
     public static void setGeckoInterface(final BaseGeckoInterface geckoInterface) {
