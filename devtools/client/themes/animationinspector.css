@@ -10,6 +10,15 @@
   --pause-image: url(chrome://devtools/skin/images/pause.svg);
   --rewind-image: url(chrome://devtools/skin/images/rewind.svg);
   --play-image: url(chrome://devtools/skin/images/play.svg);
+  /* The color for animation type 'opacity' */
+  --opacity-border-color: var(--theme-highlight-pink);
+  --opacity-background-color: #df80ff80;
+  /* The color for animation type 'transform' */
+  --transform-border-color: var(--theme-graphs-yellow);
+  --transform-background-color: #d99b2880;
+  /* The color for other animation type */
+  --other-border-color: var(--theme-graphs-bluegrey);
+  --other-background-color: #5e88b080;
 }
 
 .theme-light {
@@ -26,6 +35,18 @@
   --pause-image: url(chrome://devtools/skin/images/firebug/pause.svg);
   --rewind-image: url(chrome://devtools/skin/images/firebug/rewind.svg);
   --play-image: url(chrome://devtools/skin/images/firebug/play.svg);
+}
+
+.theme-light, .theme-firebug {
+  /* The color for animation type 'opacity' */
+  --opacity-border-color: var(--theme-highlight-pink);
+  --opacity-background-color: #b82ee580;
+  /* The color for animation type 'transform' */
+  --transform-border-color: var(--theme-graphs-orange);
+  --transform-background-color: #efc05280;
+  /* The color for other animation type */
+  --other-border-color: var(--theme-graphs-bluegrey);
+  --other-background-color: #0072ab80;
 }
 
 :root {
@@ -582,30 +603,22 @@ body {
   /* Actual keyframe markers are positioned absolutely within this container and
      their position is relative to its size (we know the offset of each frame
      in percentage) */
-  position: relative;
+  position: absolute;
+  left: 0;
+  top: 0;
   width: 100%;
-  height: 0;
-}
+  height: 100%;
 
-.keyframes.cssanimation {
-  background-color: var(--theme-contrast-background);
-}
-
-.keyframes.csstransition {
-  background-color: var(--theme-highlight-blue);
-}
-
-.keyframes.scriptanimation {
-  background-color: var(--theme-graphs-green);
 }
 
 .keyframes .frame {
   position: absolute;
-  top: 0;
+  top: 50%;
   width: 0;
   height: 0;
   background-color: inherit;
   cursor: pointer;
+  z-index: 1;
 }
 
 .keyframes .frame::before {
@@ -619,5 +632,44 @@ body {
   width: var(--keyframes-marker-size);
   height: var(--keyframes-marker-size);
   border-radius: 100%;
+  border: 1px solid var(--theme-highlight-gray);
   background-color: inherit;
+}
+
+.keyframes.cssanimation .frame {
+  background-color: var(--theme-contrast-background);
+}
+
+.keyframes.csstransition .frame {
+  background-color: var(--theme-highlight-blue);
+}
+
+.keyframes.scriptanimation .frame {
+  background-color: var(--theme-graphs-green);
+}
+
+.keyframes svg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.keyframes svg path {
+  fill: var(--other-background-color);
+  stroke: var(--other-border-color);
+}
+
+/* color of path is decided by the animation type */
+.keyframes svg path.opacity {
+  fill: var(--opacity-background-color);
+  stroke: var(--opacity-border-color);
+}
+
+.keyframes svg path.transform {
+  fill: var(--transform-background-color);
+  stroke: var(--transform-border-color);
+}
+
+.keyframes svg path.color {
+  stroke: none;
 }

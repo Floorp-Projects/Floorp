@@ -100,6 +100,8 @@ var getServerTraits = Task.async(function* (target) {
       method: "getProperties" },
     { name: "hasSetWalkerActor", actor: "animations",
       method: "setWalkerActor" },
+    { name: "hasGetAnimationTypes", actor: "animationplayer",
+      method: "getAnimationTypes" },
   ];
 
   let traits = {};
