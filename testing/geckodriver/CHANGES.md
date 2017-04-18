@@ -32,7 +32,7 @@ All notable changes to this program is documented in this file.
 - Preferences passed in a profile now take precedence over set of default preferences defined by geckodriver (fixed by [@DrMarcII](https://github.com/DrMarcII))
   - The exceptions are the `marionette.port` and `marionette.log.level` preferences and their fallbacks, which are set unconditionally and cannot be overriden
 - Remove default preference that disables unsafe CPOW checks
-- WebDriver library updated to 0.25.0
+- WebDriver library updated to 0.25.1
 
 ### Fixed
 - Fix for the “corrupt deflate stream” exception that sometimes occured when trying to write an empty profile by [@kirhgoph](https://github.com/kirhgoph)
