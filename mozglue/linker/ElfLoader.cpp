@@ -256,6 +256,7 @@ LeafName(const char *path)
 LibHandle::~LibHandle()
 {
   free(path);
+  pthread_mutex_destroy(&mutex);
 }
 
 const char *

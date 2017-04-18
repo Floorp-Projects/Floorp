@@ -134,6 +134,7 @@ function* testSteps()
 
   ok(request.resultCode === NS_ERROR_FAILURE,
      "Persist() failed because of the invalid origin");
+  ok(request.result === null, "The request result is null");
 
   originDir = getRelativeFile(origins[1].path);
   exists = originDir.exists();
