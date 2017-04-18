@@ -13,11 +13,11 @@ cppunit:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
             windows.*: ['mozilla-central', 'try']
-            linux64-qr/.*: ['graphics']
+            windows10-64-asan/opt: []  # as an exception to windows.*
+            linux64-qr/.*: ['graphics']  # not on mozilla-central, even though it's built there
             linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
-            default: ['all']
+            default: built-projects
     mozharness:
         by-test-platform:
             android.*:
@@ -55,9 +55,8 @@ crashtest:
     run-on-projects:
         by-test-platform:
             windows10.*: []
-            linux64-qr/.*: ['graphics', 'mozilla-central']
             linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
-            default: ['all']
+            default: built-projects
     chunks:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 10
@@ -106,7 +105,7 @@ external-media-tests-base:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
-            default: ['all']
+            default: built-projects
     mozharness:
         script: firefox_media_tests_taskcluster.py
         config:
@@ -132,7 +131,7 @@ external-media-tests-twitch:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
-            default: ['all']
+            default: built-projects
     mozharness:
         script: firefox_media_tests_taskcluster.py
         config:
@@ -157,7 +156,7 @@ external-media-tests-youtube:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
-            default: ['all']
+            default: built-projects
     mozharness:
         script: firefox_media_tests_taskcluster.py
         config:
@@ -177,10 +176,6 @@ firefox-ui-functional-local:
     max-run-time: 5400
     tier: 1
     docker-image: {"in-tree": "desktop1604-test"}
-    run-on-projects:
-        by-test-platform:
-            windows10-64-asan/opt: []
-            default: ['all']
     mozharness:
         script: firefox_ui_tests/functional.py
         config:
@@ -197,10 +192,6 @@ firefox-ui-functional-remote:
     max-run-time: 5400
     tier: 2
     docker-image: {"in-tree": "desktop1604-test"}
-    run-on-projects:
-        by-test-platform:
-            windows10-64-asan/opt: []
-            default: ['all']
     mozharness:
         script: firefox_ui_tests/functional.py
         config:
@@ -221,7 +212,7 @@ gtest:
         by-test-platform:
             windows10.*: []
             linux64-qr/.*: ['graphics']
-            default: ['all']
+            default: built-projects
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
@@ -246,9 +237,8 @@ jittest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
             linux64-qr/.*: ['graphics']
-            default: ['all']
+            default: built-projects
     chunks:
         by-test-platform:
             windows.*: 1
@@ -309,10 +299,9 @@ jsreftest:
             default: 3600
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
+            windows10-64-asan/opt: built-projects  # exception to windows.*, below
             windows.*: ['mozilla-central', 'try']
-            linux64-qr/.*: ['graphics', 'mozilla-central']
-            default: ['all']
+            default: built-projects
     mozharness:
         by-test-platform:
             android.*:
@@ -371,7 +360,7 @@ marionette:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
-            default: ['all']
+            default: built-projects
     mozharness:
         by-test-platform:
             android.*:
@@ -427,7 +416,7 @@ mochitest:
     run-on-projects:
         by-test-platform:
             windows10.*: []
-            default: ['all']
+            default: built-projects
     mozharness:
         by-test-platform:
             android.*:
@@ -471,7 +460,7 @@ mochitest-a11y:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
             linux64-qr/.*: ['graphics']
-            default: ['all']
+            default: built-projects
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
@@ -520,7 +509,7 @@ mochitest-browser-chrome:
     run-on-projects:
         by-test-platform:
             windows10.*: []
-            default: ['all']
+            default: built-projects
     mozharness:
         mochitest-flavor: browser
         script: desktop_unittest.py
@@ -599,7 +588,7 @@ mochitest-chrome:
     run-on-projects:
         by-test-platform:
             windows10.*: []
-            default: ['all']
+            default: built-projects
     mozharness:
         by-test-platform:
             android.*:
@@ -646,7 +635,7 @@ mochitest-clipboard:
     run-on-projects:
         by-test-platform:
             windows10.*: []
-            default: ['all']
+            default: built-projects
     mozharness:
         by-test-platform:
             android.*:
@@ -694,7 +683,7 @@ mochitest-devtools-chrome:
         by-test-platform:
             windows10.*: []
             windows7.*: ['mozilla-central', 'try']
-            default: ['all']
+            default: built-projects
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
@@ -741,7 +730,7 @@ mochitest-gpu:
         by-test-platform:
             windows10.*: []
             linux64-qr/.*: ['graphics']
-            default: ['all']
+            default: built-projects
     e10s:
         by-test-platform:
             windows.*: both
@@ -787,9 +776,9 @@ mochitest-jetpack:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            windows10-64-asan/opt: []
+            windows10-64-asan/opt: built-projects  # exception to windows.*, below
             windows.*: ['mozilla-central', 'try']
-            default: ['all']
+            default: built-projects
     mozharness:
         mochitest-flavor: jetpack-package
         script: desktop_unittest.py
@@ -833,7 +822,7 @@ mochitest-media:
         by-test-platform:
             windows10.*: []
             linux64-qr/.*: ['graphics']
-            default: ['all']
+            default: built-projects
     mozharness:
         by-test-platform:
             android.*:
@@ -901,7 +890,7 @@ mochitest-webgl:
         by-test-platform:
             windows10.*: []
             linux64-qr/.*: ['graphics', 'mozilla-central']
-            default: ['all']
+            default: built-projects
     chunks:
         by-test-platform:
             android.*: 10
@@ -957,10 +946,7 @@ mochitest-style:
     loopback-video: true
     docker-image: {"in-tree": "desktop1604-test"}
     e10s: both
-    run-on-projects:
-        by-test-platform:
-            linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
-            default: ['all']
+    run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
     mozharness:
         mochitest-flavor: plain
         script: desktop_unittest.py
@@ -979,10 +965,7 @@ mochitest-chrome-style:
     treeherder-symbol: tc-M(cs)
     loopback-video: true
     docker-image: {"in-tree": "desktop1604-test"}
-    run-on-projects:
-        by-test-platform:
-            linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
-            default: ['all']
+    run-on-projects: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
     e10s: false
     mozharness:
         mochitest-flavor: chrome
@@ -1005,7 +988,7 @@ reftest:
         by-test-platform:
             windows10.*: []
             linux64-qr/.*: ['graphics', 'mozilla-central']
-            default: ['all']
+            default: built-projects
     instance-size:
         by-test-platform:
             android.*: xlarge
@@ -1063,7 +1046,7 @@ reftest-no-accel:
         by-test-platform:
             windows10.*: []
             linux64-qr/.*: ['graphics', 'mozilla-central']
-            default: ['all']
+            default: built-projects
     chunks:
         by-test-platform:
             macosx.*: 1
@@ -1094,7 +1077,7 @@ reftest-stylo:
         by-test-platform:
             linux64-stylo/opt: [ 'stylo', 'autoland', 'mozilla-central', 'try' ]
             linux64-stylo/debug: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
-            default: []
+            default: built-projects
     e10s:
         # run only e10s tests for this platform see bug 1343301
         by-test-platform:
@@ -1406,7 +1389,7 @@ web-platform-tests:
         by-test-platform:
             windows10.*: []
             windows7.*: ['mozilla-central', 'try']
-            default: ['all']
+            default: built-projects
     mozharness:
         script: web_platform_tests.py
         no-read-buildbot-config: true
@@ -1439,7 +1422,7 @@ web-platform-tests-reftests:
         by-test-platform:
             windows10.*: []
             windows7.*: ['mozilla-central', 'try']
-            default: ['all']
+            default: built-projects
     mozharness:
         script: web_platform_tests.py
         no-read-buildbot-config: true
@@ -1485,7 +1468,7 @@ xpcshell:
         by-test-platform:
             windows.*: []
             linux64-qr/.*: ['graphics']
-            default: ['all']
+            default: built-projects
     docker-image: {"in-tree": "desktop1604-test"}
     chunks:
         by-test-platform:
