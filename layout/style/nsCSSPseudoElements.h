@@ -92,6 +92,9 @@ public:
   // Get the atom for a given Type.  aType must be < CSSPseudoElementType::Count
   static nsIAtom* GetPseudoAtom(Type aType);
 
+  // Get the atom for a given nsAString. (e.g. "::before")
+  static nsIAtom* GetPseudoAtom(const nsAString& aPseudoElement);
+
   static bool PseudoElementContainsElements(const Type aType) {
     return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_CONTAINS_ELEMENTS);
   }

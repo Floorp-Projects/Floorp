@@ -69,9 +69,15 @@ public:
   using nsICSSDeclaration::GetPropertyCSSValue;
   virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName) override;
 
+  enum AnimationFlag {
+    eWithAnimation,
+    eWithoutAnimation,
+  };
+
   nsComputedDOMStyle(mozilla::dom::Element* aElement,
                      const nsAString& aPseudoElt,
-                     nsIPresShell* aPresShell);
+                     nsIPresShell* aPresShell,
+                     AnimationFlag aFlag = eWithAnimation);
 
   virtual nsINode *GetParentObject() override
   {
@@ -81,11 +87,6 @@ public:
   static already_AddRefed<nsStyleContext>
   GetStyleContext(mozilla::dom::Element* aElement, nsIAtom* aPseudo,
                   nsIPresShell* aPresShell);
-
-  enum AnimationFlag {
-    eWithAnimation,
-    eWithoutAnimation,
-  };
 
   static already_AddRefed<nsStyleContext>
   GetStyleContextNoFlush(mozilla::dom::Element* aElement,
@@ -747,6 +748,11 @@ private:
    */
   bool mResolvedStyleContext;
 
+  /**
+   * Whether we include animation rules in the computed style.
+   */
+  AnimationFlag mAnimationFlag;
+
 #ifdef DEBUG
   bool mFlushedPendingReflows;
 #endif
@@ -755,6 +761,8 @@ private:
 already_AddRefed<nsComputedDOMStyle>
 NS_NewComputedDOMStyle(mozilla::dom::Element* aElement,
                        const nsAString& aPseudoElt,
-                       nsIPresShell* aPresShell);
+                       nsIPresShell* aPresShell,
+                       nsComputedDOMStyle::AnimationFlag aFlag =
+                         nsComputedDOMStyle::eWithAnimation);
 
 #endif /* nsComputedDOMStyle_h__ */
