@@ -52,6 +52,11 @@ add_task(function* () {
 
   ok(hasExpectedWarnings(propertiesList),
      "The list of properties panel contains the right warnings");
+
+  info("Click same animation again");
+  yield clickOnAnimation(panel, 0, true);
+  ok(isNodeVisible(propertiesList),
+     "The list of properties panel keeps");
 });
 
 function hasExpectedProperties(containerEl) {
