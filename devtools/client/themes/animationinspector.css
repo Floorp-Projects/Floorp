@@ -321,6 +321,7 @@ body {
   height: 100%;
 }
 
+.progress-tick-container .progress-tick,
 .animation-timeline .time-body .time-tick {
   -moz-user-select: none;
   position: absolute;
@@ -684,4 +685,12 @@ body {
   right: 0;
   border-left: none;
   border-right: 0.5px solid var(--time-graduation-border-color);
+}
+
+.progress-tick-container .progress-tick:nth-child(2) {
+  left: 50%;
+}
+
+.progress-tick-container .progress-tick:nth-child(3) {
+  left: 100%;
 }
