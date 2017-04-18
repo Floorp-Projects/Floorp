@@ -1740,14 +1740,20 @@ HasOwnNativeDataProperty(JSContext* cx, JSObject* obj, Value* vp)
 {
     JS::AutoCheckCannotGC nogc;
 
-    if (MOZ_UNLIKELY(!obj->isNative()))
-        return false;
-
     // vp[0] contains the id, result will be stored in vp[1].
     Value idVal = vp[0];
     jsid id;
     if (!ValueToAtomOrSymbol(cx, idVal, &id))
         return false;
+
+    if (!obj->isNative()) {
+        if (obj->is<UnboxedPlainObject>()) {
+            bool res = obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id);
+            vp[1].setBoolean(res);
+            return true;
+        }
+        return false;
+    }
 
     NativeObject* nobj = &obj->as<NativeObject>();
     if (nobj->lastProperty()->search(cx, id)) {
