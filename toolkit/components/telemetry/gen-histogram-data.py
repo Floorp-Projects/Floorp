@@ -125,11 +125,14 @@ def write_histogram_static_asserts(output, histograms):
         'categorical': static_asserts_for_enumerated,
         'linear': static_asserts_for_linear,
         'exponential': static_asserts_for_exponential,
-        }
+    }
 
     for histogram in histograms:
-        histogram_tools.table_dispatch(histogram.kind(), table,
-                                       lambda f: f(output, histogram))
+        kind = histogram.kind()
+        if not kind in table:
+            raise Exception('Unknown kind "%s" for histogram "%s".' % (kind, histogram.name()))
+        fn = table[kind]
+        fn(output, histogram)
 
 
 def write_debug_histogram_ranges(output, histograms):
