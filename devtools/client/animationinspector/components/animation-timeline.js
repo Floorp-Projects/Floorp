@@ -6,15 +6,21 @@
 
 "use strict";
 
+const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {
   createNode,
   findOptimalTimeInterval,
+  getFormattedAnimationTitle,
   TimeScale
 } = require("devtools/client/animationinspector/utils");
 const {AnimationDetails} = require("devtools/client/animationinspector/components/animation-details");
 const {AnimationTargetNode} = require("devtools/client/animationinspector/components/animation-target-node");
 const {AnimationTimeBlock} = require("devtools/client/animationinspector/components/animation-time-block");
+
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const L10N =
+  new LocalizationHelper("devtools/client/locales/animationinspector.properties");
 
 // The minimum spacing between 2 time graduation headers in the timeline (px).
 const TIME_GRADUATION_MIN_SPACING = 40;
@@ -42,7 +48,6 @@ function AnimationsTimeline(inspector, serverTraits) {
   this.animations = [];
   this.targetNodes = [];
   this.timeBlocks = [];
-  this.details = [];
   this.inspector = inspector;
   this.serverTraits = serverTraits;
 
@@ -53,7 +58,8 @@ function AnimationsTimeline(inspector, serverTraits) {
   this.onScrubberMouseMove = this.onScrubberMouseMove.bind(this);
   this.onAnimationSelected = this.onAnimationSelected.bind(this);
   this.onWindowResize = this.onWindowResize.bind(this);
-  this.onFrameSelected = this.onFrameSelected.bind(this);
+  this.onTimelineDataChanged = this.onTimelineDataChanged.bind(this);
+  this.onDetailCloseButtonClick = this.onDetailCloseButtonClick.bind(this);
 
   EventEmitter.decorate(this);
 }
@@ -63,16 +69,52 @@ exports.AnimationsTimeline = AnimationsTimeline;
 AnimationsTimeline.prototype = {
   init: function (containerEl) {
     this.win = containerEl.ownerDocument.defaultView;
+    this.rootWrapperEl = containerEl;
 
-    this.rootWrapperEl = createNode({
-      parent: containerEl,
-      attributes: {
-        "class": "animation-timeline"
-      }
+    this.setupSplitBox();
+    this.setupAnimationTimeline();
+    this.setupAnimationDetail();
+
+    this.win.addEventListener("resize",
+      this.onWindowResize);
+  },
+
+  setupSplitBox: function () {
+    const browserRequire = this.win.BrowserLoader({
+      window: this.win,
+      useOnlyShared: true
+    }).require;
+
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+
+    const SplitBox = React.createFactory(
+      browserRequire("devtools/client/shared/components/splitter/split-box"));
+
+    const splitter = SplitBox({
+      className: "animation-root",
+      splitterSize: 1,
+      initialHeight: "50%",
+      endPanelControl: true,
+      startPanel: React.DOM.div({
+        className: "animation-timeline"
+      }),
+      endPanel: React.DOM.div({
+        className: "animation-detail"
+      }),
+      vert: false
     });
 
+    ReactDOM.render(splitter, this.rootWrapperEl);
+
+    this.animationRootEl = this.rootWrapperEl.querySelector(".animation-root");
+  },
+
+  setupAnimationTimeline: function () {
+    const animationTimelineEl = this.rootWrapperEl.querySelector(".animation-timeline");
+
     let scrubberContainer = createNode({
-      parent: this.rootWrapperEl,
+      parent: animationTimelineEl,
       attributes: {"class": "scrubber-wrapper"}
     });
 
@@ -89,11 +131,17 @@ AnimationsTimeline.prototype = {
         "class": "scrubber-handle"
       }
     });
+    createNode({
+      parent: this.scrubberHandleEl,
+      attributes: {
+        "class": "scrubber-line"
+      }
+    });
     this.scrubberHandleEl.addEventListener("mousedown",
-      this.onScrubberMouseDown);
+                                           this.onScrubberMouseDown);
 
     this.headerWrapper = createNode({
-      parent: this.rootWrapperEl,
+      parent: animationTimelineEl,
       attributes: {
         "class": "header-wrapper"
       }
@@ -107,30 +155,83 @@ AnimationsTimeline.prototype = {
     });
 
     this.timeHeaderEl.addEventListener("mousedown",
-      this.onScrubberMouseDown);
+                                       this.onScrubberMouseDown);
 
     this.timeTickEl = createNode({
-      parent: this.rootWrapperEl,
+      parent: animationTimelineEl,
       attributes: {
         "class": "time-body track-container"
       }
     });
 
     this.animationsEl = createNode({
-      parent: this.rootWrapperEl,
+      parent: animationTimelineEl,
       nodeType: "ul",
       attributes: {
         "class": "animations"
       }
     });
+  },
 
-    this.win.addEventListener("resize",
-      this.onWindowResize);
+  setupAnimationDetail: function () {
+    const animationDetailEl = this.rootWrapperEl.querySelector(".animation-detail");
+
+    const animationDetailHeaderEl = createNode({
+      parent: animationDetailEl,
+      attributes: {
+        "class": "animation-detail-header"
+      }
+    });
+
+    const headerTitleEl = createNode({
+      parent: animationDetailHeaderEl,
+      attributes: {
+        "class": "devtools-toolbar"
+      }
+    });
+
+    createNode({
+      parent: headerTitleEl,
+      textContent: L10N.getStr("detail.headerTitle")
+    });
+
+    this.animationAnimationNameEl = createNode({
+      parent: headerTitleEl
+    });
+
+    this.animationDetailCloseButton = createNode({
+      parent: headerTitleEl,
+      nodeType: "button",
+      attributes: {
+        "class": "devtools-button",
+        title: L10N.getStr("detail.header.closeLabel"),
+      }
+    });
+    this.animationDetailCloseButton.addEventListener("click",
+                                                     this.onDetailCloseButtonClick);
+
+    const animationDetailBodyEl = createNode({
+      parent: animationDetailEl,
+      attributes: {
+        "class": "animation-detail-body"
+      }
+    });
+
+    this.animatedPropertiesEl = createNode({
+      parent: animationDetailBodyEl,
+      attributes: {
+        "class": "animated-properties"
+      }
+    });
+
+    this.details = new AnimationDetails(this.serverTraits);
+    this.details.init(this.animatedPropertiesEl);
   },
 
   destroy: function () {
     this.stopAnimatingScrubber();
     this.unrender();
+    this.details.destroy();
 
     this.win.removeEventListener("resize",
       this.onWindowResize);
@@ -138,18 +239,26 @@ AnimationsTimeline.prototype = {
       this.onScrubberMouseDown);
     this.scrubberHandleEl.removeEventListener("mousedown",
       this.onScrubberMouseDown);
+    this.animationDetailCloseButton.removeEventListener("click",
+      this.onDetailCloseButtonClick);
 
     this.rootWrapperEl.remove();
     this.animations = [];
-
     this.rootWrapperEl = null;
     this.timeHeaderEl = null;
     this.animationsEl = null;
+    this.animatedPropertiesEl = null;
     this.scrubberEl = null;
     this.scrubberHandleEl = null;
     this.win = null;
     this.inspector = null;
     this.serverTraits = null;
+    this.animationDetailEl = null;
+    this.animationAnimationNameEl = null;
+    this.animatedPropertiesEl = null;
+    this.animationDetailCloseButton = null;
+    this.animationRootEl = null;
+    this.selectedAnimation = null;
   },
 
   /**
@@ -169,6 +278,11 @@ AnimationsTimeline.prototype = {
   },
 
   unrender: function () {
+    this.unrenderButLeaveDetailsComponent();
+    this.details.unrender();
+  },
+
+  unrenderButLeaveDetailsComponent: function () {
     for (let animation of this.animations) {
       animation.off("changed", this.onAnimationStateChanged);
     }
@@ -176,11 +290,8 @@ AnimationsTimeline.prototype = {
     TimeScale.reset();
     this.destroySubComponents("targetNodes");
     this.destroySubComponents("timeBlocks");
-    this.destroySubComponents("details", [{
-      event: "frame-selected",
-      fn: this.onFrameSelected
-    }]);
     this.animationsEl.innerHTML = "";
+    this.off("timeline-data-changed", this.onTimelineDataChanged);
   },
 
   onWindowResize: function () {
@@ -198,36 +309,52 @@ AnimationsTimeline.prototype = {
     }, TIMELINE_BACKGROUND_RESIZE_DEBOUNCE_TIMER);
   },
 
-  onAnimationSelected: function (e, animation) {
+  onAnimationSelected: Task.async(function* (e, animation) {
     let index = this.animations.indexOf(animation);
     if (index === -1) {
       return;
     }
 
-    let el = this.rootWrapperEl;
-    let animationEl = el.querySelectorAll(".animation")[index];
-    let propsEl = el.querySelectorAll(".animated-properties")[index];
-
-    // Toggle the selected state on this animation.
-    animationEl.classList.toggle("selected");
-    propsEl.classList.toggle("selected");
-
-    // Render the details component for this animation if it was shown.
-    if (animationEl.classList.contains("selected")) {
-      this.details[index].render(animation);
-      this.emit("animation-selected", animation);
-    } else {
-      this.emit("animation-unselected", animation);
+    // Unselect an animation which was selected.
+    const animationEls = this.rootWrapperEl.querySelectorAll(".animation");
+    for (let i = 0; i < animationEls.length; i++) {
+      const animationEl = animationEls[i];
+      if (!animationEl.classList.contains("selected")) {
+        continue;
+      }
+      if (i === index) {
+        // Already the animation is selected.
+        this.emit("animation-already-selected", this.animations[i]);
+        return;
+      }
+      animationEl.classList.remove("selected");
+      this.emit("animation-unselected", this.animations[i]);
+      break;
     }
-  },
+
+    // Add class of animation type to animatedPropertiesEl to display the compositor sign.
+    if (!this.animatedPropertiesEl.classList.contains(animation.state.type)) {
+      this.animatedPropertiesEl.className =
+        `animated-properties ${ animation.state.type }`;
+    }
+
+    // Select and render.
+    const selectedAnimationEl = animationEls[index];
+    selectedAnimationEl.classList.add("selected");
+    this.animationRootEl.classList.add("animation-detail-visible");
+    if (animation !== this.details.animation) {
+      this.selectedAnimation = animation;
+      // Don't render if the detail displays same animation already.
+      yield this.details.render(animation);
+      this.animationAnimationNameEl.textContent = getFormattedAnimationTitle(animation);
+    }
+    this.onTimelineDataChanged(null, { time: this.currentTime || 0 });
+    this.emit("animation-selected", animation);
+  }),
 
   /**
-   * When a frame gets selected, move the scrubber to the corresponding position
+   * When move the scrubber to the corresponding position
    */
-  onFrameSelected: function (e, {x}) {
-    this.moveScrubberTo(x, true);
-  },
-
   onScrubberMouseDown: function (e) {
     this.moveScrubberTo(e.pageX);
     this.win.addEventListener("mouseup", this.onScrubberMouseUp);
@@ -303,7 +430,7 @@ AnimationsTimeline.prototype = {
   },
 
   render: function (animations, documentCurrentTime) {
-    this.unrender();
+    this.unrenderButLeaveDetailsComponent();
 
     this.animations = animations;
     if (!this.animations.length) {
@@ -330,21 +457,6 @@ AnimationsTimeline.prototype = {
                    this.getCompositorStatusClassName(animation.state)
         }
       });
-
-      // Right below the line is a hidden-by-default line for displaying the
-      // inline keyframes.
-      let detailsEl = createNode({
-        parent: this.animationsEl,
-        nodeType: "li",
-        attributes: {
-          "class": "animated-properties " + animation.state.type
-        }
-      });
-
-      let details = new AnimationDetails(this.serverTraits);
-      details.init(detailsEl);
-      details.on("frame-selected", this.onFrameSelected);
-      this.details.push(details);
 
       // Left sidebar for the animated node.
       let animatedNodeEl = createNode({
@@ -389,6 +501,25 @@ AnimationsTimeline.prototype = {
                                   ? TimeScale.minStartTime
                                   : documentCurrentTime);
     }
+
+    // To indicate the animation progress in AnimationDetails.
+    this.on("timeline-data-changed", this.onTimelineDataChanged);
+
+    // Display animation's detail if there is only one animation,
+    // or the previously displayed animation is included in timeline list.
+    if (this.animations.length === 1) {
+      this.onAnimationSelected(null, this.animations[0]);
+      return;
+    }
+    if (!this.animationRootEl.classList.contains("animation-detail-visible")) {
+      // Do nothing since the animation detail pane is closing now.
+      return;
+    }
+    if (this.animations.indexOf(this.selectedAnimation) >= 0) {
+      this.onAnimationSelected(null, this.selectedAnimation);
+      return;
+    }
+    this.onDetailCloseButtonClick();
   },
 
   isAtLeastOneAnimationPlaying: function () {
@@ -498,5 +629,17 @@ AnimationsTimeline.prototype = {
         }
       });
     }
+  },
+
+  onTimelineDataChanged: function (e, { time }) {
+    this.currentTime = time;
+    const indicateTime =
+      TimeScale.minStartTime === Infinity ? 0 : this.currentTime + TimeScale.minStartTime;
+    this.details.indicateProgress(indicateTime);
+  },
+
+  onDetailCloseButtonClick: function (e) {
+    this.animationRootEl.classList.remove("animation-detail-visible");
+    this.emit("animation-detail-closed");
   }
 };

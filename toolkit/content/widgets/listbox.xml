@@ -103,7 +103,15 @@
         <setter>
         <![CDATA[
           if (val >= 0) {
-            this.selectItem(this.getItemAtIndex(val));
+            // This is a micro-optimization so that a call to getIndexOfItem or
+            // getItemAtIndex caused by _fireOnSelect (especially for derived
+            // widgets) won't loop the children.
+            this._selecting = {
+              item: this.getItemAtIndex(val),
+              index: val
+            };
+            this.selectItem(this._selecting.item);
+            delete this._selecting;
           } else {
             this.clearSelection();
             this.currentItem = null;
@@ -746,13 +754,21 @@
       <method name="getIndexOfItem">
         <parameter name="item"/>
         <body>
-          return this.listBoxObject.getIndexOfItem(item);
+          <![CDATA[
+            if (this._selecting && this._selecting.item == item)
+              return this._selecting.index;
+            return this.listBoxObject.getIndexOfItem(item);
+          ]]>
         </body>
       </method>
       <method name="getItemAtIndex">
         <parameter name="index"/>
         <body>
-          return this.listBoxObject.getItemAtIndex(index);
+          <![CDATA[
+            if (this._selecting && this._selecting.index == index)
+              return this._selecting.item;
+            return this.listBoxObject.getItemAtIndex(index);
+          ]]>
         </body>
       </method>
       <method name="ensureIndexIsVisible">

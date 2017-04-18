@@ -1558,6 +1558,24 @@ interface nsIDOMWindowUtils : nsISupports {
                                   in AString value2);
 
   /**
+   * Returns the animation type of the specified property (e.g. 'coord').
+   *
+   * @param aProperty A longhand CSS property (e.g. 'background-color').
+   */
+  AString getAnimationTypeForLonghand(in AString aProperty);
+
+  /**
+   * Returns the computed style for the specified property of given pseudo type
+   * on the given element after removing styles from declarative animations.
+   * @param aElement - A target element
+   * @param aPseudoElement - A pseudo type (e.g. '::before' or null)
+   * @param aProperty - A longhand CSS property (e.g. 'background-color')
+   */
+  AString getUnanimatedComputedStyle(in nsIDOMElement aElement,
+                                     in AString aPseudoElement,
+                                     in AString aProperty);
+
+  /**
    * Get the type of the currently focused html input, if any.
    */
   readonly attribute string focusedInputType;

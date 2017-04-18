@@ -43,8 +43,6 @@ const APP_NAME = "XPCShell";
 
 const IGNORE_HISTOGRAM_TO_CLONE = "MEMORY_HEAP_ALLOCATED";
 const IGNORE_CLONED_HISTOGRAM = "test::ignore_me_also";
-const ADDON_NAME = "Telemetry test addon";
-const ADDON_HISTOGRAM = "addon-histogram";
 // Add some unicode characters here to ensure that sending them works correctly.
 const SHUTDOWN_TIME = 10000;
 const FAILED_PROFILE_LOCK_ATTEMPTS = 2;
@@ -103,11 +101,6 @@ function fakeIdleNotification(topic) {
 function setupTestData() {
 
   Services.startup.interrupted = true;
-  Telemetry.registerAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM,
-                                   Telemetry.HISTOGRAM_LINEAR,
-                                   1, 5, 6);
-  let h1 = Telemetry.getAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM);
-  h1.add(1);
   let h2 = Telemetry.getHistogramById("TELEMETRY_TEST_COUNT");
   h2.add();
 
@@ -421,11 +414,6 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
 
   Assert.ok("MEMORY_JS_GC_HEAP" in payload.histograms); // UNITS_BYTES
   Assert.ok("MEMORY_JS_COMPARTMENTS_SYSTEM" in payload.histograms); // UNITS_COUNT
-
-  // We should have included addon histograms.
-  Assert.ok("addonHistograms" in payload);
-  Assert.ok(ADDON_NAME in payload.addonHistograms);
-  Assert.ok(ADDON_HISTOGRAM in payload.addonHistograms[ADDON_NAME]);
 
   Assert.ok(("mainThread" in payload.slowSQL) &&
                 ("otherThreads" in payload.slowSQL));
@@ -1915,7 +1903,7 @@ add_task(function* test_schedulerNothingDue() {
 add_task(function* test_pingExtendedStats() {
   const EXTENDED_PAYLOAD_FIELDS = [
     "chromeHangs", "threadHangStats", "log", "slowSQL", "fileIOReports", "lateWrites",
-    "addonHistograms", "addonDetails", "webrtc"
+    "addonDetails", "webrtc"
   ];
 
   if (AppConstants.platform == "android") {

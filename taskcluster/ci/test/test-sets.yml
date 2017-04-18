@@ -64,6 +64,7 @@ talos:
     - talos-other
     - talos-svgr
     - talos-tp5o
+    - talos-perf-reftest
 
 awsy:
     - awsy

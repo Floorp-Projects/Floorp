@@ -346,6 +346,7 @@ let gDecoderDoctorHandler = {
 
             let params = new URLSearchParams;
             params.append("url", docURL);
+            params.append("label", "type-media");
             params.append("problem_type", "video_bug");
             params.append("src", "media-decode-error");
             params.append("details",
