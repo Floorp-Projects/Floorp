@@ -8,9 +8,7 @@
 
 #include <algorithm>
 
-#include "mozilla/AbstractThread.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/Unused.h"
 #include "base/compiler_specific.h"
 #include "base/logging.h"
 #include "base/message_pump_default.h"
@@ -37,7 +35,6 @@
 #endif
 
 #include "MessagePump.h"
-#include "MessageLoopAbstractThreadWrapper.h"
 
 using base::Time;
 using base::TimeDelta;
@@ -126,20 +123,16 @@ MessageLoop::MessageLoop(Type type, nsIThread* aThread)
     run_depth_base_ = 2;
     return;
   case TYPE_MOZILLA_NONMAINTHREAD:
-    mozilla::Unused << mozilla::AbstractThread::CreateXPCOMThreadWrapper(aThread, false);
     pump_ = new mozilla::ipc::MessagePumpForNonMainThreads(aThread);
     return;
 #if defined(OS_WIN)
   case TYPE_MOZILLA_NONMAINUITHREAD:
-    MOZ_RELEASE_ASSERT(aThread);
-    mozilla::Unused << mozilla::AbstractThread::CreateXPCOMThreadWrapper(aThread, false);
     pump_ = new mozilla::ipc::MessagePumpForNonMainUIThreads(aThread);
     return;
 #endif
 #if defined(MOZ_WIDGET_ANDROID)
   case TYPE_MOZILLA_ANDROID_UI:
     MOZ_RELEASE_ASSERT(aThread);
-    mozilla::Unused << mozilla::AbstractThread::CreateXPCOMThreadWrapper(aThread, false);
     pump_ = new mozilla::ipc::MessagePumpForAndroidUI(aThread);
     return;
 #endif // defined(MOZ_WIDGET_ANDROID)
@@ -171,8 +164,6 @@ MessageLoop::MessageLoop(Type type, nsIThread* aThread)
     pump_ = new base::MessagePumpDefault();
   }
 #endif  // OS_POSIX
-  mozilla::Unused <<
-    mozilla::ipc::MessageLoopAbstractThreadWrapper::Create(this);
 }
 
 MessageLoop::~MessageLoop() {

@@ -24,7 +24,6 @@
 #include "mozilla/ipc/MessageLink.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/MozPromise.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/UniquePtr.h"
