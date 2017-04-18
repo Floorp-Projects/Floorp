@@ -21,6 +21,7 @@ import android.support.annotation.StyleRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.util.SparseArrayCompat;
 import android.support.v7.app.ActionBar;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
@@ -44,6 +45,7 @@ import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.IntentUtils;
+import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 
 import java.util.List;
@@ -277,6 +279,25 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected ActionModePresenter getTextSelectPresenter() {
+        return new ActionModePresenter() {
+            private ActionMode mMode;
+
+            @Override
+            public void startActionMode(ActionMode.Callback callback) {
+                mMode = startSupportActionMode(callback);
+            }
+
+            @Override
+            public void endActionMode() {
+                if (mMode != null) {
+                    mMode.finish();
+                }
+            }
+        };
     }
 
     private void bindNavigationCallback(@NonNull final Toolbar toolbar) {
