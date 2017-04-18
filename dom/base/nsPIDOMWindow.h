@@ -313,6 +313,11 @@ public:
   virtual void SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
                                bool aOriginalOpener) = 0;
 
+  /**
+   * Ensure the size and position of this window are up-to-date by doing
+   * a layout flush in the parent (which will in turn, do a layout flush
+   * in its parent, etc.).
+   */
   virtual void EnsureSizeUpToDate() = 0;
 
   /**
