@@ -570,6 +570,19 @@ DisplayListBuilder::PopStackingContext()
 }
 
 void
+DisplayListBuilder::PushClip(const WrRect& aClipRect,
+                             const WrImageMask* aMask)
+{
+  wr_dp_push_scroll_layer(mWrState, aClipRect, aClipRect, aMask);
+}
+
+void
+DisplayListBuilder::PopClip()
+{
+  wr_dp_pop_scroll_layer(mWrState);
+}
+
+void
 DisplayListBuilder::PushBuiltDisplayList(BuiltDisplayList dl)
 {
   wr_dp_push_built_display_list(mWrState,

@@ -151,6 +151,10 @@ public:
                            const WrMixBlendMode& aMixBlendMode);
   void PopStackingContext();
 
+  void PushClip(const WrRect& aClipRect,
+                const WrImageMask* aMask);
+  void PopClip();
+
   void PushBuiltDisplayList(wr::BuiltDisplayList dl);
 
   void PushScrollLayer(const WrRect& aContentRect, // TODO: We should work with strongly typed rects
