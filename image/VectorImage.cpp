@@ -31,6 +31,7 @@
 #include "LookupResult.h"
 #include "Orientation.h"
 #include "SVGDocumentWrapper.h"
+#include "SVGDrawingParameters.h"
 #include "nsIDOMEventListener.h"
 #include "SurfaceCache.h"
 #include "nsDocument.h"
@@ -774,45 +775,6 @@ VectorImage::GetImageContainer(LayerManager* aManager, uint32_t aFlags)
 {
   return nullptr;
 }
-
-struct SVGDrawingParameters
-{
-  SVGDrawingParameters(gfxContext* aContext,
-                       const nsIntSize& aSize,
-                       const ImageRegion& aRegion,
-                       SamplingFilter aSamplingFilter,
-                       const Maybe<SVGImageContext>& aSVGContext,
-                       float aAnimationTime,
-                       uint32_t aFlags,
-                       float aOpacity)
-    : context(aContext)
-    , size(aSize.width, aSize.height)
-    , region(aRegion)
-    , samplingFilter(aSamplingFilter)
-    , svgContext(aSVGContext)
-    , viewportSize(aSize)
-    , animationTime(aAnimationTime)
-    , flags(aFlags)
-    , opacity(aOpacity)
-  {
-    if (aSVGContext) {
-      auto sz = aSVGContext->GetViewportSize();
-      if (sz) {
-        viewportSize = nsIntSize(sz->width, sz->height); // XXX losing unit
-      }
-    }
-  }
-
-  gfxContext*                   context;
-  IntSize                       size;
-  ImageRegion                   region;
-  SamplingFilter                samplingFilter;
-  const Maybe<SVGImageContext>& svgContext;
-  nsIntSize                     viewportSize;
-  float                         animationTime;
-  uint32_t                      flags;
-  gfxFloat                      opacity;
-};
 
 //******************************************************************************
 NS_IMETHODIMP_(DrawResult)
