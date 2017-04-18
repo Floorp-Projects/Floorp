@@ -63,15 +63,7 @@ this.PlacesTestUtils = Object.freeze({
       }
       let visitDate = place.visitDate;
       if (visitDate) {
-        if (visitDate.constructor.name != "Date") {
-          // visitDate should be in microseconds. It's easy to do the wrong thing
-          // and pass milliseconds to updatePlaces, so we lazily check for that.
-          // While it's not easily distinguishable, since both are integers, we
-          // can check if the value is very far in the past, and assume it's
-          // probably a mistake.
-          if (visitDate <= Date.now()) {
-            throw new Error("AddVisits expects a Date object or _micro_seconds!");
-          }
+        if (!(visitDate instanceof Date)) {
           visitDate = PlacesUtils.toDate(visitDate);
         }
       } else {
