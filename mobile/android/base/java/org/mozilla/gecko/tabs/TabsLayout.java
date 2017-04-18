@@ -13,6 +13,7 @@ import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.View;
@@ -103,7 +104,7 @@ public abstract class TabsLayout extends RecyclerView
                 tabsAdapter.notifyTabInserted(tab, tabIndex);
                 if (addAtIndexRequiresScroll(tabIndex)) {
                     // (The SELECTED tab is updated *after* this call to ADDED, so don't just call
-                    // updateSelectedPosition().)
+                    // scrollSelectedTabToTopOfTray().)
                     scrollToPosition(tabIndex);
                 }
                 break;
@@ -151,11 +152,16 @@ public abstract class TabsLayout extends RecyclerView
         Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.OPENED_FROM_TABS_TRAY);
     }
 
-    /** Updates the selected position in the list so that it will be scrolled to the right place. */
-    protected void updateSelectedPosition() {
+    /**
+     * Scroll the selected tab to the top of the tray.
+     * One of the motivations for scrolling to the top is so that, as often as possible, if we open
+     * a background tab from the selected tab, when we return to the tabs tray the new tab will be
+     * visible for selecting without requiring additional scrolling.
+     */
+    protected void scrollSelectedTabToTopOfTray() {
         final int selected = getSelectedAdapterPosition();
         if (selected != NO_POSITION) {
-            scrollToPosition(selected);
+            ((LinearLayoutManager)getLayoutManager()).scrollToPositionWithOffset(selected, 0);
         }
     }
 
@@ -172,7 +178,7 @@ public abstract class TabsLayout extends RecyclerView
         }
 
         tabsAdapter.setTabs(tabData);
-        updateSelectedPosition();
+        scrollSelectedTabToTopOfTray();
     }
 
     private void closeTab(View view) {
