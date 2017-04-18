@@ -49,6 +49,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mListenerManager)
+  tmp->MaybeDontKeepAlive();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(DOMEventTargetHelper)
@@ -162,6 +163,8 @@ DOMEventTargetHelper::DisconnectFromOwner()
     mListenerManager->Disconnect();
     mListenerManager = nullptr;
   }
+
+  MaybeDontKeepAlive();
 }
 
 nsPIDOMWindowInner*
@@ -384,7 +387,7 @@ DOMEventTargetHelper::WantsUntrusted(bool* aRetVal)
 {
   nsresult rv = CheckInnerWindowCorrectness();
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   nsCOMPtr<nsIDocument> doc = GetDocumentIfCurrent();
   // We can let listeners on workers to always handle all the events.
   *aRetVal = (doc && !nsContentUtils::IsChromeDoc(doc)) || !NS_IsMainThread();
@@ -394,15 +397,105 @@ DOMEventTargetHelper::WantsUntrusted(bool* aRetVal)
 void
 DOMEventTargetHelper::EventListenerAdded(nsIAtom* aType)
 {
-  ErrorResult rv;
+  IgnoredErrorResult rv;
   EventListenerWasAdded(Substring(nsDependentAtomString(aType), 2), rv);
+  MaybeUpdateKeepAlive();
+}
+
+void
+DOMEventTargetHelper::EventListenerAdded(const nsAString& aType)
+{
+  IgnoredErrorResult rv;
+  EventListenerWasAdded(aType, rv);
+  MaybeUpdateKeepAlive();
 }
 
 void
 DOMEventTargetHelper::EventListenerRemoved(nsIAtom* aType)
 {
-  ErrorResult rv;
+  IgnoredErrorResult rv;
   EventListenerWasRemoved(Substring(nsDependentAtomString(aType), 2), rv);
+  MaybeUpdateKeepAlive();
+}
+
+void
+DOMEventTargetHelper::EventListenerRemoved(const nsAString& aType)
+{
+  IgnoredErrorResult rv;
+  EventListenerWasRemoved(aType, rv);
+  MaybeUpdateKeepAlive();
+}
+
+void
+DOMEventTargetHelper::KeepAliveIfHasListenersFor(const nsAString& aType)
+{
+  mKeepingAliveTypes.mStrings.AppendElement(aType);
+  MaybeUpdateKeepAlive();
+}
+
+void
+DOMEventTargetHelper::KeepAliveIfHasListenersFor(nsIAtom* aType)
+{
+  mKeepingAliveTypes.mAtoms.AppendElement(aType);
+  MaybeUpdateKeepAlive();
+}
+
+void
+DOMEventTargetHelper::IgnoreKeepAliveIfHasListenersFor(const nsAString& aType)
+{
+  mKeepingAliveTypes.mStrings.RemoveElement(aType);
+  MaybeUpdateKeepAlive();
+}
+
+void
+DOMEventTargetHelper::IgnoreKeepAliveIfHasListenersFor(nsIAtom* aType)
+{
+  mKeepingAliveTypes.mAtoms.RemoveElement(aType);
+  MaybeUpdateKeepAlive();
+}
+
+void
+DOMEventTargetHelper::MaybeUpdateKeepAlive()
+{
+  bool shouldBeKeptAlive = false;
+
+  if (!mKeepingAliveTypes.mAtoms.IsEmpty()) {
+    for (uint32_t i = 0; i < mKeepingAliveTypes.mAtoms.Length(); ++i) {
+      if (HasListenersFor(mKeepingAliveTypes.mAtoms[i])) {
+        shouldBeKeptAlive = true;
+        break;
+      }
+    }
+  }
+
+  if (!shouldBeKeptAlive && !mKeepingAliveTypes.mStrings.IsEmpty()) {
+    for (uint32_t i = 0; i < mKeepingAliveTypes.mStrings.Length(); ++i) {
+      if (HasListenersFor(mKeepingAliveTypes.mStrings[i])) {
+        shouldBeKeptAlive = true;
+        break;
+      }
+    }
+  }
+
+  if (shouldBeKeptAlive == mIsKeptAlive) {
+    return;
+  }
+
+  mIsKeptAlive = shouldBeKeptAlive;
+  if (mIsKeptAlive) {
+    AddRef();
+  } else {
+    Release();
+  }
+}
+
+void
+DOMEventTargetHelper::MaybeDontKeepAlive()
+{
+  if (mIsKeptAlive) {
+    mIsKeptAlive = false;
+    Release();
+  }
 }
 
 } // namespace mozilla

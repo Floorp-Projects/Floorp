@@ -67,21 +67,7 @@ public:
 
   void Close();
 
-  EventHandlerNonNull* GetOnmessage();
-  void SetOnmessage(EventHandlerNonNull* aCallback);
-
-  using nsIDOMEventTarget::AddEventListener;
-  using nsIDOMEventTarget::RemoveEventListener;
-
-  virtual void AddEventListener(const nsAString& aType,
-                                EventListener* aCallback,
-                                const AddEventListenerOptionsOrBoolean& aOptions,
-                                const Nullable<bool>& aWantsUntrusted,
-                                ErrorResult& aRv) override;
-  virtual void RemoveEventListener(const nsAString& aType,
-                                   EventListener* aCallback,
-                                   const EventListenerOptionsOrBoolean& aOptions,
-                                   ErrorResult& aRv) override;
+  IMPL_EVENT_HANDLER(message)
 
   void Shutdown();
 
@@ -98,13 +84,6 @@ private:
   void PostMessageInternal(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                            ErrorResult& aRv);
 
-  void UpdateMustKeepAlive();
-
-  bool IsCertainlyAliveForCC() const override
-  {
-    return mIsKeptAlive;
-  }
-
   void RemoveDocFromBFCache();
 
   RefPtr<BroadcastChannelChild> mActor;
@@ -116,8 +95,6 @@ private:
 
   nsCString mOrigin;
   nsString mChannel;
-
-  bool mIsKeptAlive;
 
   uint64_t mInnerID;
 
