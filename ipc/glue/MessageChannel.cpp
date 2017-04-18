@@ -488,27 +488,6 @@ private:
     nsAutoPtr<IPC::Message> mReply;
 };
 
-class PromiseReporter final : public nsIMemoryReporter
-{
-    ~PromiseReporter() {}
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-
-    NS_IMETHOD
-    CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
-                   bool aAnonymize) override
-    {
-        MOZ_COLLECT_REPORT(
-            "unresolved-ipc-promises", KIND_OTHER, UNITS_COUNT, MessageChannel::gUnresolvedPromises,
-            "Outstanding IPC async message promises that is still not resolved.");
-        return NS_OK;
-    }
-};
-
-NS_IMPL_ISUPPORTS(PromiseReporter, nsIMemoryReporter)
-
-Atomic<size_t> MessageChannel::gUnresolvedPromises;
-
 MessageChannel::MessageChannel(const char* aName,
                                IToplevelProtocol *aListener)
   : mName(aName),
@@ -551,11 +530,6 @@ MessageChannel::MessageChannel(const char* aName,
     mEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
     MOZ_RELEASE_ASSERT(mEvent, "CreateEvent failed! Nothing is going to work!");
 #endif
-
-    static Atomic<bool> registered;
-    if (registered.compareExchange(false, true)) {
-        RegisterStrongMemoryReporter(new PromiseReporter());
-    }
 }
 
 MessageChannel::~MessageChannel()
@@ -697,12 +671,6 @@ MessageChannel::Clear()
     if (mWorkerLoop) {
         mWorkerLoop->RemoveDestructionObserver(this);
     }
-
-    gUnresolvedPromises -= mPendingPromises.size();
-    for (auto& pair : mPendingPromises) {
-        pair.second.mRejectFunction(__func__);
-    }
-    mPendingPromises.clear();
 
     mWorkerLoop = nullptr;
     delete mLink;
@@ -881,19 +849,6 @@ MessageChannel::Send(Message* aMsg)
     }
     mLink->SendMessage(msg.forget());
     return true;
-}
-
-already_AddRefed<MozPromiseRefcountable>
-MessageChannel::PopPromise(const Message& aMsg)
-{
-    auto iter = mPendingPromises.find(aMsg.seqno());
-    if (iter != mPendingPromises.end()) {
-        PromiseHolder ret = iter->second;
-        mPendingPromises.erase(iter);
-        gUnresolvedPromises--;
-        return ret.mPromise.forget();
-    }
-    return nullptr;
 }
 
 class BuildIDMessage : public IPC::Message
