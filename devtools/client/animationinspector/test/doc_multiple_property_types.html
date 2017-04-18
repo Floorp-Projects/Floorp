@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+  div {
+    width: 50px;
+    height: 50px;
+  }
+  </style>
+</head>
+<body>
+  <div id=target1>1</div>
+  <div id=target2>2</div>
+  <div id=target3>3</div>
+  <div id=target4>4</div>
+  <div id=target5>5</div>
+
+  <script>
+  "use strict";
+
+  const timing = {
+    duration: 1000,
+    fill: "forwards"
+  };
+
+  document.querySelector("#target1").animate(
+    [{ backgroundColor: "red",
+       fontSize: "10px",
+       marginLeft: "0px",
+       opacity: 0,
+       textAlign: "right",
+       transform: "translate(0px)" },
+    { backgroundColor: "lime",
+      fontSize: "20px",
+      marginLeft: "100px",
+      opacity: 1,
+      textAlign: "center",
+      transform: "translate(100px)" }], timing).pause();
+
+  document.querySelector("#target2").animate(
+    [{ backgroundColor: "lime",
+       fontSize: "20px",
+       marginLeft: "100px",
+       opacity: 1,
+       textAlign: "center",
+       transform: "translate(100px)" },
+    { backgroundColor: "red",
+      fontSize: "10px",
+      marginLeft: "0px",
+      opacity: 0,
+      textAlign: "right",
+      transform: "translate(0px)" }], timing).pause();
+
+  document.querySelector("#target3").animate(
+    [{ backgroundColor: "red",
+       fontSize: "10px",
+       marginLeft: "0px",
+       opacity: 0,
+       textAlign: "right",
+       transform: "translate(0px)" },
+    { backgroundColor: "blue",
+      fontSize: "20px",
+      marginLeft: "100px",
+      opacity: 1,
+      textAlign: "center",
+      transform: "translate(100px)" },
+    { backgroundColor: "lime",
+      fontSize: "10px",
+      marginLeft: "0px",
+      opacity: 0,
+      textAlign: "right",
+      transform: "translate(0px)" }], timing).pause();
+
+  document.querySelector("#target4").animate(
+    [{ backgroundColor: "red",
+       fontSize: "10px",
+       marginLeft: "0px",
+       opacity: 0,
+       textAlign: "right",
+       transform: "translate(0px)",
+       easing: "steps(2)" },
+    { backgroundColor: "lime",
+      fontSize: "20px",
+      marginLeft: "100px",
+      opacity: 1,
+      textAlign: "center",
+      transform: "translate(100px)" }], timing).pause();
+
+  timing.easing = "steps(2)";
+  document.querySelector("#target5").animate(
+    [{ opacity: 0 }, { opacity: 1 }], timing).pause();
+  </script>
+</body>
+</html>

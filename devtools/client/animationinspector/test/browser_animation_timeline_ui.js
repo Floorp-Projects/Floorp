@@ -39,5 +39,12 @@ add_task(function* () {
        "The name on the timeline is correct");
     ok(animationEl.querySelector("svg path"),
        "The timeline has svg and path element as summary graph");
+
+    const expectedBackgroundColor =
+      i % 2 === 0 ? "rgba(128, 128, 128, 0.03)" : "rgba(0, 0, 0, 0)";
+    const backgroundColor =
+      animationEl.ownerDocument.defaultView.getComputedStyle(animationEl).backgroundColor;
+    is(backgroundColor, expectedBackgroundColor,
+       "The background-color shoud be changed to alternate");
   }
 });
