@@ -410,6 +410,33 @@ AllowNotification(const NotificationAndReportStringId& aNotification)
          StringListContains(filter, aNotification.mReportStringId);
 }
 
+static bool
+AllowDecodeIssue(const MediaResult& aDecodeIssue, bool aDecodeIssueIsError)
+{
+  if (aDecodeIssue == NS_OK) {
+    // 'NS_OK' means we are not actually reporting a decode issue, so we
+    // allow the report.
+    return true;
+  }
+
+  // "media.decoder-doctor.decode-{errors,warnings}-allowed" controls which
+  // decode issues may be dispatched to the front-end. It either contains:
+  // - '*' -> Allow everything.
+  // - Comma-separater list of ids -> Allow if the issue name is one of them.
+  // - Nothing (missing or empty) -> Disable everything.
+  nsAdoptingCString filter =
+    Preferences::GetCString(aDecodeIssueIsError
+                            ? "media.decoder-doctor.decode-errors-allowed"
+                            : "media.decoder-doctor.decode-warnings-allowed");
+  if (filter.EqualsLiteral("*")) {
+    return true;
+  }
+
+  nsCString decodeIssueName;
+  GetErrorName(aDecodeIssue.Code(), static_cast<nsACString&>(decodeIssueName));
+  return StringListContains(filter, decodeIssueName);
+}
+
 static void
 ReportAnalysis(nsIDocument* aDocument,
                const NotificationAndReportStringId& aNotification,
@@ -462,7 +489,8 @@ ReportAnalysis(nsIDocument* aDocument,
     ReportToConsole(aDocument, aNotification.mReportStringId, params);
   }
 
-  if (AllowNotification(aNotification)) {
+  if (AllowNotification(aNotification) &&
+      AllowDecodeIssue(aDecodeIssue, aDecodeIssueIsError)) {
     DispatchNotification(
       aDocument->GetInnerWindow(), aNotification, aIsSolved,
       aFormats,
