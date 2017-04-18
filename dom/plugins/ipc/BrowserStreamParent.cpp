@@ -5,7 +5,6 @@
 
 
 #include "BrowserStreamParent.h"
-#include "PluginAsyncSurrogate.h"
 #include "PluginInstanceParent.h"
 #include "nsNPAPIPlugin.h"
 

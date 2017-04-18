@@ -12,7 +12,6 @@
 #include "mozilla/Telemetry.h"
 #include "PluginInstanceParent.h"
 #include "BrowserStreamParent.h"
-#include "PluginAsyncSurrogate.h"
 #include "PluginBackgroundDestroyer.h"
 #include "PluginModuleParent.h"
 #include "PluginStreamParent.h"
@@ -115,7 +114,6 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
                                            const nsCString& aMimeType,
                                            const NPNetscapeFuncs* npniface)
     : mParent(parent)
-    , mSurrogate(PluginAsyncSurrogate::Cast(npp))
     , mNPP(npp)
     , mNPNIface(npniface)
     , mWindowType(NPWindowTypeWindow)
@@ -1222,12 +1220,6 @@ PluginInstanceParent::GetScrollCaptureContainer(ImageContainer** aContainer)
 }
 #endif // XP_WIN
 
-PluginAsyncSurrogate*
-PluginInstanceParent::GetAsyncSurrogate()
-{
-    return mSurrogate;
-}
-
 bool
 PluginInstanceParent::CreateBackground(const nsIntSize& aSize)
 {
@@ -2288,28 +2280,21 @@ PluginInstanceParent::AnswerPluginFocusChange(const bool& gotFocus)
 }
 
 PluginInstanceParent*
-PluginInstanceParent::Cast(NPP aInstance, PluginAsyncSurrogate** aSurrogate)
+PluginInstanceParent::Cast(NPP aInstance)
 {
-    PluginDataResolver* resolver =
-        static_cast<PluginDataResolver*>(aInstance->pdata);
+    auto ip = static_cast<PluginInstanceParent*>(aInstance->pdata);
 
     // If the plugin crashed and the PluginInstanceParent was deleted,
     // aInstance->pdata will be nullptr.
-    if (!resolver) {
+    if (!ip) {
         return nullptr;
     }
 
-    PluginInstanceParent* instancePtr = resolver->GetInstance();
-
-    if (instancePtr && aInstance != instancePtr->mNPP) {
+    if (aInstance != ip->mNPP) {
         MOZ_CRASH("Corrupted plugin data.");
     }
 
-    if (aSurrogate) {
-        *aSurrogate = resolver->GetAsyncSurrogate();
-    }
-
-    return instancePtr;
+    return ip;
 }
 
 mozilla::ipc::IPCResult

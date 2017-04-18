@@ -14,7 +14,6 @@
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/plugins/BrowserStreamParent.h"
-#include "mozilla/plugins/PluginAsyncSurrogate.h"
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/Preferences.h"
@@ -2273,14 +2272,6 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
 
 #endif
 
-bool
-PluginModuleParent::RemovePendingSurrogate(
-                            const RefPtr<PluginAsyncSurrogate>& aSurrogate)
-{
-    // XXX: this function will be removed soon.
-    MOZ_CRASH();
-}
-
 nsresult
 PluginModuleParent::NP_Shutdown(NPError* error)
 {
@@ -2544,7 +2535,7 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
 #endif
     }
 
-    instance->pdata = static_cast<PluginDataResolver*>(parentInstance);
+    instance->pdata = parentInstance;
 
     // Any IPC messages for the PluginInstance actor should be dispatched to the
     // DocGroup for the plugin's document.
