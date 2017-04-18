@@ -13,6 +13,7 @@
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/css/SheetParsingMode.h"
+#include "mozilla/css/URLMatchingFunction.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/ComputedTimingFunction.h"
 #include "nsChangeHint.h"
@@ -492,6 +493,10 @@ void Gecko_Construct_nsStyleVariables(nsStyleVariables* ptr);
 
 void Gecko_RegisterProfilerThread(const char* name);
 void Gecko_UnregisterProfilerThread();
+
+bool Gecko_DocumentRule_UseForPresentation(RawGeckoPresContextBorrowed,
+                                           const nsACString* aPattern,
+                                           mozilla::css::URLMatchingFunction aURLMatchingFunction);
 
 #define SERVO_BINDING_FUNC(name_, return_, ...) return_ name_(__VA_ARGS__);
 #include "mozilla/ServoBindingList.h"
