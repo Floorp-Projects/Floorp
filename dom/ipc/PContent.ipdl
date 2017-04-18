@@ -489,19 +489,6 @@ child:
      */
     async NotifyIdleObserver(uint64_t observerId, nsCString topic, nsString str);
 
-    /**
-     * Called during plugin initialization to map a plugin id to a child process
-     * id.
-     */
-    async AssociatePluginId(uint32_t aPluginId, ProcessId aProcessId);
-
-    /**
-     * This call is used by async plugin initialization to notify the
-     * PluginModuleContentParent that the PluginModuleChromeParent's async
-     * init has completed.
-     */
-    async LoadPluginResult(uint32_t aPluginId, bool aResult);
-
     async InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action);
 
     async EndDragSession(bool aDoneDrag, bool aUserCancelled,

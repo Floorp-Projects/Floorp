@@ -198,9 +198,8 @@ private:
 namespace {
 
 /**
- * Objects of this class remain linked until either an error occurs in the
- * plugin initialization sequence, or until
- * PluginModuleContentParent::OnLoadPluginResult has completed executing.
+ * Objects of this class remain linked until an error occurs in the
+ * plugin initialization sequence.
  */
 class PluginModuleMapping : public PRCList
 {
@@ -446,15 +445,6 @@ PluginModuleContentParent::LoadModule(uint32_t aPluginId,
 }
 
 /* static */ void
-PluginModuleContentParent::AssociatePluginId(uint32_t aPluginId,
-                                             base::ProcessId aOtherPid)
-{
-    DebugOnly<PluginModuleMapping*> mapping =
-        PluginModuleMapping::AssociateWithProcessId(aPluginId, aOtherPid);
-    MOZ_ASSERT(mapping);
-}
-
-/* static */ void
 PluginModuleContentParent::Initialize(Endpoint<PPluginModuleParent>&& aEndpoint)
 {
     nsAutoPtr<PluginModuleMapping> moduleMapping(
@@ -479,21 +469,6 @@ PluginModuleContentParent::Initialize(Endpoint<PPluginModuleParent>&& aEndpoint)
     // needed later, so since this function is returning successfully we
     // forget it here.
     moduleMapping.forget();
-}
-
-/* static */ void
-PluginModuleContentParent::OnLoadPluginResult(const uint32_t& aPluginId,
-                                              const bool& aResult,
-                                              Endpoint<PPluginModuleParent>&& aEndpoint)
-{
-    Initialize(Move(aEndpoint));
-    nsAutoPtr<PluginModuleMapping> moduleMapping(
-        PluginModuleMapping::FindModuleByPluginId(aPluginId));
-    MOZ_ASSERT(moduleMapping);
-    PluginModuleContentParent* parent = moduleMapping->GetModule();
-    MOZ_ASSERT(parent);
-    parent->RecvNP_InitializeResult(aResult ? NPERR_NO_ERROR
-                                            : NPERR_GENERIC_ERROR);
 }
 
 // static
