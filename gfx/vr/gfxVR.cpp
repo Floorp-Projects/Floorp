@@ -115,3 +115,15 @@ VRSystemManager::NewPoseState(uint32_t aIndex,
   VRManager* vm = VRManager::Get();
   vm->NotifyGamepadChange<dom::GamepadPoseInformation>(a);
 }
+
+void
+VRSystemManager::NewHandChangeEvent(uint32_t aIndex,
+                                    const dom::GamepadHand aHand)
+{
+  dom::GamepadHandInformation a(aIndex, dom::GamepadServiceType::VR,
+                                aHand);
+
+  VRManager* vm = VRManager::Get();
+  vm->NotifyGamepadChange<dom::GamepadHandInformation>(a);
+}
+

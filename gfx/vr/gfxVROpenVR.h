@@ -71,6 +71,7 @@ public:
   uint32_t GetTrackedIndex();
   void SetTrigger(float aValue);
   float GetTrigger();
+  void SetHand(dom::GamepadHand aHand);
   void VibrateHaptic(::vr::IVRSystem* aVRSystem,
                      uint32_t aHapticIndex,
                      double aIntensity,

@@ -270,6 +270,7 @@ public:
                       double aValue);
   void NewAxisMove(uint32_t aIndex, uint32_t aAxis, double aValue);
   void NewPoseState(uint32_t aIndex, const dom::GamepadPoseState& aPose);
+  void NewHandChangeEvent(uint32_t aIndex, const dom::GamepadHand aHand);
   void AddGamepad(const VRControllerInfo& controllerInfo);
   void RemoveGamepad(uint32_t aIndex);
 
