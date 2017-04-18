@@ -74,10 +74,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         '/dom/system',
         '/dom/system/android',
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    LOCAL_INCLUDES += [
-        '/dom/system/gonk',
-    ]
 
 if CONFIG['MOZ_WEBSPEECH']:
     LOCAL_INCLUDES += [

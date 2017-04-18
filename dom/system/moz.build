@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # This picks up *hapticfeedback* which is graveyard
-# This picks up gonk/* which is also not supported?
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM")
 
@@ -47,8 +46,6 @@ elif toolkit == 'cocoa':
     DIRS += ['mac']
 elif toolkit == 'android':
     DIRS += ['android']
-elif toolkit == 'gonk':
-    DIRS += ['gonk']
 elif toolkit in ('gtk2', 'gtk3'):
     DIRS += ['linux']
 

@@ -37,7 +37,7 @@ def build_dict(config, env=os.environ):
     known_os = {"Linux": "linux",
                 "WINNT": "win",
                 "Darwin": "mac",
-                "Android": "b2g" if substs.get("MOZ_WIDGET_TOOLKIT") == "gonk" else "android"}
+                "Android": "android"}
     if o in known_os:
         d["os"] = known_os[o]
     else:

@@ -78,7 +78,7 @@ ALL_TESTS = {
             "reason": "bug 820380",
             "relpath": "test_0201_app_launch_apply_update.js",
             "run-sequentially": "Launches application.",
-            "skip-if": "toolkit == 'gonk' || os == 'android'",
+            "skip-if": "os == 'android'",
         },
         {
             "dir_relpath": "toolkit/mozapps/update/test/unit",
@@ -93,7 +93,7 @@ ALL_TESTS = {
             "reason": "bug 820380",
             "relpath": "test_0201_app_launch_apply_update.js",
             "run-sequentially": "Launches application.",
-            "skip-if": "toolkit == 'gonk' || os == 'android'",
+            "skip-if": "os == 'android'",
         }
     ],
     "mobile/android/tests/background/junit3/src/common/TestAndroidLogWriters.java": [

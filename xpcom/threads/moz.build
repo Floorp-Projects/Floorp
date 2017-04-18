@@ -94,11 +94,9 @@ LOCAL_INCLUDES += [
 
 # BHR disabled for Release builds because of bug 965392.
 # BHR disabled for debug builds because of bug 979069.
-# BHR disabled on gonk because of bug 1180533
 # BHR disabled for TSan builds because of bug 1121216.
 if CONFIG['MOZ_UPDATE_CHANNEL'] not in ('release') and \
    not CONFIG['MOZ_DEBUG'] and \
-   not CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and \
    not CONFIG['MOZ_TSAN']:
     DEFINES['MOZ_ENABLE_BACKGROUND_HANG_MONITOR'] = 1
 

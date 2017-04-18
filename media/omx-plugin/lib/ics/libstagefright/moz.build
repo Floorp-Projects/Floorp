@@ -5,14 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 DIST_INSTALL = False
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
-    SOURCES += [
-        'libstagefright.cpp',
-    ]
-    # Some codec-related code uses multi-character constants; allow this.
-    # XXX: could instead use the FOURCC macro to define these constants.
-    if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
-        SOURCES['libstagefright.cpp'].flags += ['-Wno-error=multichar']
+SOURCES += [
+    'libstagefright.cpp',
+]
+# Some codec-related code uses multi-character constants; allow this.
+# XXX: could instead use the FOURCC macro to define these constants.
+if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
+    SOURCES['libstagefright.cpp'].flags += ['-Wno-error=multichar']
 
 SharedLibrary('stagefright')
 
