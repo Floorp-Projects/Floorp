@@ -15,7 +15,7 @@ flat varying mat3 vYuvColorMatrix;
 
 #ifdef WR_FEATURE_TRANSFORM
 varying vec3 vLocalPos;
-flat varying vec4 vLocalRect;
+flat varying RectWithSize vLocalRect;
 #else
 varying vec2 vLocalPos;
 #endif

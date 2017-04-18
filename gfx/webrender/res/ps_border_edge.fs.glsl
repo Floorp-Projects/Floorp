@@ -2,9 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-varying vec4 vColor;
-
+void main(void) {
+    float alpha = 1.0;
 #ifdef WR_FEATURE_TRANSFORM
-varying vec3 vLocalPos;
-flat varying RectWithSize vLocalRect;
+    alpha = 0.0;
+    init_transform_fs(vLocalPos, vLocalRect, alpha);
 #endif
+
+    alpha = min(alpha, do_clip());
+
+    oFragColor = vColor * vec4(1.0, 1.0, 1.0, alpha);
+}

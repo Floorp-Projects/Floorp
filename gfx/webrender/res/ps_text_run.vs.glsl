@@ -17,8 +17,9 @@ void main(void) {
                                                     prim.local_clip_rect,
                                                     prim.z,
                                                     prim.layer,
-                                                    prim.task);
-    vLocalRect = vi.clipped_local_rect;
+                                                    prim.task,
+                                                    local_rect.p0);
+    vLocalRect = local_rect;
     vLocalPos = vi.local_pos;
     vec2 f = (vi.local_pos.xy / vi.local_pos.z - local_rect.p0) / local_rect.size;
 #else
@@ -26,8 +27,9 @@ void main(void) {
                                  prim.local_clip_rect,
                                  prim.z,
                                  prim.layer,
-                                 prim.task);
-    vec2 f = (vi.local_pos - vi.local_rect.p0) / (vi.local_rect.p1 - vi.local_rect.p0);
+                                 prim.task,
+                                 local_rect.p0);
+    vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
 #endif
 
     write_clip(vi.screen_pos, prim.clip_area);

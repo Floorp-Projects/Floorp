@@ -255,8 +255,8 @@ impl RenderBackend {
                                 None => self.notify_compositor_of_new_scroll_frame(false),
                             }
                         }
-                        ApiMsg::ScrollLayerWithId(origin, id) => {
-                            profile_scope!("ScrollLayerWithScrollId");
+                        ApiMsg::ScrollNodeWithId(origin, id) => {
+                            profile_scope!("ScrollNodeWithScrollId");
                             let frame = {
                                 let counters = &mut profile_counters.texture_cache;
                                 profile_counters.total_time.profile(|| {
@@ -292,10 +292,9 @@ impl RenderBackend {
                         ApiMsg::TranslatePointToLayerSpace(..) => {
                             panic!("unused api - remove from webrender_traits");
                         }
-                        ApiMsg::GetScrollLayerState(tx) => {
-                            profile_scope!("GetScrollLayerState");
-                            tx.send(self.frame.get_scroll_node_state())
-                              .unwrap()
+                        ApiMsg::GetScrollNodeState(tx) => {
+                            profile_scope!("GetScrollNodeState");
+                            tx.send(self.frame.get_scroll_node_state()).unwrap()
                         }
                         ApiMsg::RequestWebGLContext(size, attributes, tx) => {
                             if let Some(ref wrapper) = self.webrender_context_handle {

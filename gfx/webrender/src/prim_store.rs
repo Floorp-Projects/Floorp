@@ -191,6 +191,9 @@ impl YuvImagePrimitiveGpu {
 
 #[derive(Debug, Clone)]
 pub struct BorderPrimitiveCpu {
+    // TODO(gw): Remove this when all border kinds are switched
+    //           over to the new border path!
+    pub use_new_border_path: bool,
 }
 
 #[derive(Debug, Clone)]

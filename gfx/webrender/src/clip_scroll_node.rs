@@ -10,10 +10,10 @@ use renderer::VertexDataStore;
 use spring::{DAMPING, STIFFNESS, Spring};
 use tiling::PackedLayerIndex;
 use util::TransformedRect;
-use webrender_traits::{ClipRegion, LayerPixel, LayerPoint, LayerRect, LayerSize};
+use webrender_traits::{ClipId, ClipRegion, LayerPixel, LayerPoint, LayerRect, LayerSize};
 use webrender_traits::{LayerToScrollTransform, LayerToWorldTransform, PipelineId};
-use webrender_traits::{ScrollEventPhase, ScrollLayerId, ScrollLayerRect, ScrollLocation};
-use webrender_traits::{WorldPoint, WorldPoint4D};
+use webrender_traits::{ScrollEventPhase, ScrollLayerRect, ScrollLocation, WorldPoint};
+use webrender_traits::WorldPoint4D;
 
 #[cfg(target_os = "macos")]
 const CAN_OVERSCROLL: bool = true;
@@ -106,10 +106,10 @@ pub struct ClipScrollNode {
     pub pipeline_id: PipelineId,
 
     /// Parent layer. If this is None, we are the root node.
-    pub parent: Option<ScrollLayerId>,
+    pub parent: Option<ClipId>,
 
     /// Child layers
-    pub children: Vec<ScrollLayerId>,
+    pub children: Vec<ClipId>,
 
     /// Whether or not this node is a reference frame.
     pub node_type: NodeType,
@@ -117,7 +117,7 @@ pub struct ClipScrollNode {
 
 impl ClipScrollNode {
     pub fn new(pipeline_id: PipelineId,
-               parent_id: ScrollLayerId,
+               parent_id: ClipId,
                content_rect: &LayerRect,
                clip_rect: &LayerRect,
                clip_info: ClipInfo)
@@ -140,7 +140,7 @@ impl ClipScrollNode {
         }
     }
 
-    pub fn new_reference_frame(parent_id: Option<ScrollLayerId>,
+    pub fn new_reference_frame(parent_id: Option<ClipId>,
                                local_viewport_rect: &LayerRect,
                                content_size: LayerSize,
                                local_transform: &LayerToScrollTransform,
@@ -161,7 +161,7 @@ impl ClipScrollNode {
         }
     }
 
-    pub fn add_child(&mut self, child: ScrollLayerId) {
+    pub fn add_child(&mut self, child: ClipId) {
         self.children.push(child);
     }
 
@@ -222,8 +222,8 @@ impl ClipScrollNode {
     pub fn update_transform(&mut self,
                             parent_reference_frame_transform: &LayerToWorldTransform,
                             parent_combined_viewport_rect: &ScrollLayerRect,
+                            parent_scroll_offset: LayerPoint,
                             parent_accumulated_scroll_offset: LayerPoint) {
-
         let local_transform = match self.node_type {
             NodeType::ReferenceFrame(transform) => transform,
             NodeType::Clip(_) => LayerToScrollTransform::identity(),
@@ -241,11 +241,11 @@ impl ClipScrollNode {
 
         // We are trying to move the combined viewport rectangle of our parent nodes into the
         // coordinate system of this node, so we must invert our transformation (only for
-        // reference frames) and then apply the scroll offset of all the parent layers.
+        // reference frames) and then apply the scroll offset the parent layer. The combined
+        // local viewport rect doesn't include scrolling offsets so the only one that matters
+        // is the relative offset between us and the parent.
         let parent_combined_viewport_in_local_space =
-            inv_transform.pre_translated(-parent_accumulated_scroll_offset.x,
-                                         -parent_accumulated_scroll_offset.y,
-                                         0.0)
+            inv_transform.pre_translated(-parent_scroll_offset.x, -parent_scroll_offset.y, 0.0)
                          .transform_rect(parent_combined_viewport_rect);
 
         // Now that we have the combined viewport rectangle of the parent nodes in local space,

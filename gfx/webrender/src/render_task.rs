@@ -8,8 +8,8 @@ use prim_store::{PrimitiveCacheKey, PrimitiveIndex};
 use std::{cmp, f32, i32, mem, usize};
 use tiling::{ClipScrollGroupIndex, PackedLayerIndex, RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind, StackingContextIndex};
-use webrender_traits::{DeviceIntLength, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use webrender_traits::{MixBlendMode, ScrollLayerId};
+use webrender_traits::{ClipId, DeviceIntLength, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
+use webrender_traits::MixBlendMode;
 
 const FLOATS_PER_RENDER_TASK_INFO: usize = 12;
 
@@ -33,7 +33,7 @@ pub enum RenderTaskKey {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum MaskCacheKey {
     Primitive(PrimitiveIndex),
-    ScrollLayer(ScrollLayerId),
+    ClipNode(ClipId),
 }
 
 #[derive(Debug, Copy, Clone)]

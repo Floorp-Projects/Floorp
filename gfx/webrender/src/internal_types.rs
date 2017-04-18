@@ -15,11 +15,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tiling;
 use renderer::BlendMode;
-use webrender_traits::{Epoch, ColorF, PipelineId};
-use webrender_traits::{ImageFormat, NativeFontHandle};
-use webrender_traits::{ExternalImageData, ExternalImageId, ScrollLayerId};
-use webrender_traits::{ImageData};
-use webrender_traits::{DeviceUintRect};
+use webrender_traits::{ClipId, ColorF, DeviceUintRect, Epoch, ExternalImageData, ExternalImageId};
+use webrender_traits::{ImageData, ImageFormat, NativeFontHandle, PipelineId};
 
 // An ID for a texture that is owned by the
 // texture cache module. This can include atlases
@@ -330,14 +327,14 @@ pub struct RendererFrame {
     /// been rendered, which is necessary for reftests.
     pub pipeline_epoch_map: HashMap<PipelineId, Epoch, BuildHasherDefault<FnvHasher>>,
     /// The layers that are currently affected by the over-scrolling animation.
-    pub layers_bouncing_back: HashSet<ScrollLayerId, BuildHasherDefault<FnvHasher>>,
+    pub layers_bouncing_back: HashSet<ClipId, BuildHasherDefault<FnvHasher>>,
 
     pub frame: Option<tiling::Frame>,
 }
 
 impl RendererFrame {
     pub fn new(pipeline_epoch_map: HashMap<PipelineId, Epoch, BuildHasherDefault<FnvHasher>>,
-               layers_bouncing_back: HashSet<ScrollLayerId, BuildHasherDefault<FnvHasher>>,
+               layers_bouncing_back: HashSet<ClipId, BuildHasherDefault<FnvHasher>>,
                frame: Option<tiling::Frame>)
                -> RendererFrame {
         RendererFrame {

@@ -175,7 +175,7 @@ vec4 draw_dashed_edge(float position, float border_width, float pixels_per_fragm
   }
 }
 
-void draw_dashed_or_dotted_border(vec2 local_pos, float distance_from_mix_line) {
+vec4 draw_dashed_or_dotted_border(vec2 local_pos, float distance_from_mix_line) {
   // This is the conversion factor for transformations and device pixel scaling.
   float pixels_per_fragment = length(fwidth(local_pos.xy));
 
@@ -186,40 +186,31 @@ void draw_dashed_or_dotted_border(vec2 local_pos, float distance_from_mix_line) 
     case PST_BOTTOM_LEFT:
     case PST_BOTTOM_RIGHT:
     {
-      oFragColor = get_fragment_color(distance_from_mix_line, pixels_per_fragment);
+      vec4 color = get_fragment_color(distance_from_mix_line, pixels_per_fragment);
       if (vRadii.x > 0.0) {
-        oFragColor *= vec4(1.0, 1.0, 1.0, alpha_for_solid_border_corner(local_pos,
-                                                                  vRadii.zw,
-                                                                  vRadii.xy,
-                                                                  pixels_per_fragment));
+        color.a *= alpha_for_solid_border_corner(local_pos,
+                                                 vRadii.zw,
+                                                 vRadii.xy,
+                                                 pixels_per_fragment);
       }
-
-      break;
+      return color;
     }
     case PST_BOTTOM:
     case PST_TOP: {
-      if (vBorderStyle == BORDER_STYLE_DASHED) {
-        oFragColor = draw_dashed_edge(vLocalPos.x - vPieceRect.x,
-                                      vPieceRect.w,
-                                      pixels_per_fragment);
-      } else {
-        oFragColor = draw_dotted_edge(local_pos.yx, vPieceRect.yxwz, pixels_per_fragment);
-      }
-      break;
+      return vBorderStyle == BORDER_STYLE_DASHED ?
+        draw_dashed_edge(vLocalPos.x - vPieceRect.x, vPieceRect.w, pixels_per_fragment) :
+        draw_dotted_edge(local_pos.yx, vPieceRect.yxwz, pixels_per_fragment);
     }
     case PST_LEFT:
     case PST_RIGHT:
     {
-      if (vBorderStyle == BORDER_STYLE_DASHED) {
-        oFragColor = draw_dashed_edge(vLocalPos.y - vPieceRect.y,
-                                      vPieceRect.z,
-                                      pixels_per_fragment);
-      } else {
-        oFragColor = draw_dotted_edge(local_pos.xy, vPieceRect.xyzw, pixels_per_fragment);
-      }
-      break;
+      return vBorderStyle == BORDER_STYLE_DASHED ?
+        draw_dashed_edge(vLocalPos.y - vPieceRect.y, vPieceRect.z, pixels_per_fragment) :
+        draw_dotted_edge(local_pos.xy, vPieceRect.xyzw, pixels_per_fragment);
     }
   }
+
+  return vec4(0.0);
 }
 
 vec4 draw_double_edge(float pos,
@@ -297,7 +288,7 @@ vec4 draw_double_edge_corner(vec2 local_pos,
   }
 }
 
-void draw_double_border(float distance_from_mix_line, vec2 local_pos) {
+vec4 draw_double_border(float distance_from_mix_line, vec2 local_pos) {
   float pixels_per_fragment = length(fwidth(local_pos.xy));
   switch (vBorderPart) {
     // These are the layer tile part PrimitivePart as uploaded by the tiling.rs
@@ -305,30 +296,22 @@ void draw_double_border(float distance_from_mix_line, vec2 local_pos) {
     case PST_TOP_RIGHT:
     case PST_BOTTOM_LEFT:
     case PST_BOTTOM_RIGHT:
-    {
-      oFragColor = draw_double_edge_corner(local_pos, distance_from_mix_line, pixels_per_fragment);
-      break;
-    }
+      return draw_double_edge_corner(local_pos, distance_from_mix_line, pixels_per_fragment);
     case PST_BOTTOM:
     case PST_TOP:
-    {
-      oFragColor = draw_double_edge_horizontal(local_pos,
-                                               distance_from_mix_line,
-                                               pixels_per_fragment);
-      break;
-    }
+      return draw_double_edge_horizontal(local_pos,
+                                         distance_from_mix_line,
+                                         pixels_per_fragment);
     case PST_LEFT:
     case PST_RIGHT:
-    {
-      oFragColor = draw_double_edge_vertical(local_pos,
-                                             distance_from_mix_line,
-                                             pixels_per_fragment);
-      break;
-    }
+      return draw_double_edge_vertical(local_pos,
+                                       distance_from_mix_line,
+                                       pixels_per_fragment);
   }
+  return vec4(0.0);
 }
 
-void draw_solid_border(float distanceFromMixLine, vec2 localPos) {
+vec4 draw_solid_border(float distanceFromMixLine, vec2 localPos) {
   switch (vBorderPart) {
     case PST_TOP_LEFT:
     case PST_TOP_RIGHT:
@@ -336,19 +319,17 @@ void draw_solid_border(float distanceFromMixLine, vec2 localPos) {
     case PST_BOTTOM_RIGHT: {
       // This is the conversion factor for transformations and device pixel scaling.
       float pixelsPerFragment = length(fwidth(localPos.xy));
-      oFragColor = get_fragment_color(distanceFromMixLine, pixelsPerFragment);
+      vec4 color = get_fragment_color(distanceFromMixLine, pixelsPerFragment);
 
       if (vRadii.x > 0.0) {
-        float alpha = alpha_for_solid_border_corner(localPos, vRadii.zw, vRadii.xy, pixelsPerFragment);
-        oFragColor *= vec4(1.0, 1.0, 1.0, alpha);
+        color.a *= alpha_for_solid_border_corner(localPos, vRadii.zw, vRadii.xy, pixelsPerFragment);
       }
 
-      break;
+      return color;
     }
     default:
-      oFragColor = vHorizontalColor;
       discard_pixels_in_rounded_borders(localPos);
-      break;
+      return vHorizontalColor;
   }
 }
 
@@ -357,7 +338,7 @@ vec4 draw_mixed_edge(float distance, float border_len, vec4 color, vec2 brightne
   return vec4(color.xyz * modulator, color.a);
 }
 
-void draw_mixed_border(float distanceFromMixLine, float distanceFromMiddle, vec2 localPos, vec2 brightness_mod) {
+vec4 draw_mixed_border(float distanceFromMixLine, float distanceFromMiddle, vec2 localPos, vec2 brightness_mod) {
   switch (vBorderPart) {
     case PST_TOP_LEFT:
     case PST_TOP_RIGHT:
@@ -374,9 +355,9 @@ void draw_mixed_border(float distanceFromMixLine, float distanceFromMiddle, vec2
           distance = length - distance;
         }
 
-        oFragColor = 0.0 <= distance && distance <= length ?
-          draw_mixed_edge(distance, length, color, brightness_mod) : vec4(0.0, 0.0, 0.0, 0.0);
-        break;
+        return 0.0 <= distance && distance <= length ?
+          draw_mixed_edge(distance, length, color, brightness_mod) :
+          vec4(0.0, 0.0, 0.0, 0.0);
       }
 
       bool is_vertical = (vBorderPart == PST_TOP_LEFT) ? distanceFromMixLine < 0.0 :
@@ -387,21 +368,53 @@ void draw_mixed_border(float distanceFromMixLine, float distanceFromMiddle, vec2
           distance = length - distance;
       }
 
-      oFragColor = 0.0 <= distance && distance <= length ?
-        draw_mixed_edge(distance, length, color, brightness_mod) : vec4(0.0, 0.0, 0.0, 0.0);
-      break;
+      return 0.0 <= distance && distance <= length ?
+        draw_mixed_edge(distance, length, color, brightness_mod) :
+        vec4(0.0, 0.0, 0.0, 0.0);
     }
     case PST_BOTTOM:
-    case PST_TOP: {
-      oFragColor = draw_mixed_edge(localPos.y - vPieceRect.y, vPieceRect.w, vVerticalColor, brightness_mod);
-      break;
-    }
+    case PST_TOP:
+      return draw_mixed_edge(localPos.y - vPieceRect.y, vPieceRect.w, vVerticalColor, brightness_mod);
     case PST_LEFT:
-    case PST_RIGHT: {
-      oFragColor = draw_mixed_edge(localPos.x - vPieceRect.x, vPieceRect.z, vHorizontalColor, brightness_mod);
-      break;
-    }
+    case PST_RIGHT:
+      return draw_mixed_edge(localPos.x - vPieceRect.x, vPieceRect.z, vHorizontalColor, brightness_mod);
   }
+  return vec4(0.0);
+}
+
+vec4 draw_complete_border(vec2 local_pos, float distance_from_mix_line, float distance_from_middle) {
+  vec2 brightness_mod = vec2(0.7, 1.3);
+
+  // Note: we can't pass-through in the following cases,
+  // because Angle doesn't support it and fails to compile the shaders.
+  switch (vBorderStyle) {
+    case BORDER_STYLE_DASHED:
+      return draw_dashed_or_dotted_border(local_pos, distance_from_mix_line);
+    case BORDER_STYLE_DOTTED:
+      return draw_dashed_or_dotted_border(local_pos, distance_from_mix_line);
+    case BORDER_STYLE_DOUBLE:
+      return draw_double_border(distance_from_mix_line, local_pos);
+    case BORDER_STYLE_OUTSET:
+      return draw_solid_border(distance_from_mix_line, local_pos);
+    case BORDER_STYLE_INSET:
+      return draw_solid_border(distance_from_mix_line, local_pos);
+    case BORDER_STYLE_SOLID:
+      return draw_solid_border(distance_from_mix_line, local_pos);
+    case BORDER_STYLE_NONE:
+      return draw_solid_border(distance_from_mix_line, local_pos);
+    case BORDER_STYLE_GROOVE:
+      return draw_mixed_border(distance_from_mix_line, distance_from_middle, local_pos, brightness_mod.yx);
+    case BORDER_STYLE_RIDGE:
+      return draw_mixed_border(distance_from_mix_line, distance_from_middle, local_pos, brightness_mod.xy);
+    case BORDER_STYLE_HIDDEN:
+    default:
+      break;
+  }
+
+  // Note: Workaround for Angle on Windows,
+  // because non-empty case statements must have break or return.
+  discard;
+  return vec4(0.0);
 }
 
 // TODO: Investigate performance of this shader and see
@@ -411,6 +424,7 @@ void main(void) {
     float alpha = 0.0;
     vec2 local_pos = init_transform_fs(vLocalPos, vLocalRect, alpha);
 #else
+    float alpha = 1.0;
     vec2 local_pos = vLocalPos;
 #endif
 
@@ -419,60 +433,14 @@ void main(void) {
     float distance_from_mix_line = (local_pos.x - vPieceRect.x) * vPieceRect.w -
                                    (local_pos.y - vPieceRect.y) * vPieceRect.z;
     distance_from_mix_line /= vPieceRectHypotenuseLength;
-    float distance_from_middle = (local_pos.x - vLocalRect.x) +
-                                 (local_pos.y - vLocalRect.y) -
-                                 0.5 * (vLocalRect.z + vLocalRect.w);
+    float distance_from_middle = (local_pos.x - vBorderRect.p0.x) +
+                                 (local_pos.y - vBorderRect.p0.y) -
+                                 0.5 * (vBorderRect.size.x + vBorderRect.size.y);
 #else
     float distance_from_mix_line = vDistanceFromMixLine;
     float distance_from_middle = vDistanceFromMiddle;
 #endif
 
-    vec2 brightness_mod = vec2(0.7, 1.3);
-    bool needs_discard = false;
-
-    // Note: we can't pass-through in the following cases,
-    // because Angle doesn't support it and fails to compile the shaders.
-    switch (vBorderStyle) {
-        case BORDER_STYLE_DASHED:
-          draw_dashed_or_dotted_border(local_pos, distance_from_mix_line);
-          break;
-        case BORDER_STYLE_DOTTED:
-          draw_dashed_or_dotted_border(local_pos, distance_from_mix_line);
-          break;
-        case BORDER_STYLE_DOUBLE:
-          draw_double_border(distance_from_mix_line, local_pos);
-          break;
-        case BORDER_STYLE_OUTSET:
-          draw_solid_border(distance_from_mix_line, local_pos);
-          break;
-        case BORDER_STYLE_INSET:
-          draw_solid_border(distance_from_mix_line, local_pos);
-          break;
-        case BORDER_STYLE_SOLID:
-          draw_solid_border(distance_from_mix_line, local_pos);
-          break;
-        case BORDER_STYLE_NONE:
-          draw_solid_border(distance_from_mix_line, local_pos);
-          break;
-        case BORDER_STYLE_GROOVE:
-          draw_mixed_border(distance_from_mix_line, distance_from_middle, local_pos, brightness_mod.yx);
-          break;
-        case BORDER_STYLE_RIDGE:
-          draw_mixed_border(distance_from_mix_line, distance_from_middle, local_pos, brightness_mod.xy);
-          break;
-        case BORDER_STYLE_HIDDEN:
-        default:
-          needs_discard = true;
-          break;
-    }
-
-    // Note: Workaround for Angle on Windows,
-    // because non-empty case statements must have break or return.
-    if (needs_discard) {
-      discard;
-    }
-
-#ifdef WR_FEATURE_TRANSFORM
-    oFragColor *= vec4(1.0, 1.0, 1.0, alpha);
-#endif
+    oFragColor = draw_complete_border(local_pos, distance_from_mix_line, distance_from_middle);
+    oFragColor.a *= min(alpha, do_clip());
 }
