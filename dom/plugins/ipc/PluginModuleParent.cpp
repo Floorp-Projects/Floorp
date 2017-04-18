@@ -216,9 +216,8 @@ namespace {
 class PluginModuleMapping : public PRCList
 {
 public:
-    explicit PluginModuleMapping(uint32_t aPluginId, bool aAllowAsyncInit)
+    explicit PluginModuleMapping(uint32_t aPluginId)
         : mPluginId(aPluginId)
-        , mAllowAsyncInit(aAllowAsyncInit)
         , mProcessIdValid(false)
         , mModule(nullptr)
         , mChannelOpened(false)
@@ -250,7 +249,7 @@ public:
     GetModule()
     {
         if (!mModule) {
-            mModule = new PluginModuleContentParent(mAllowAsyncInit);
+            mModule = new PluginModuleContentParent();
         }
         return mModule;
     }
@@ -337,7 +336,6 @@ private:
     }
 
     uint32_t mPluginId;
-    bool mAllowAsyncInit;
     bool mProcessIdValid;
     base::ProcessId mProcessId;
     PluginModuleContentParent* mModule;
@@ -418,8 +416,7 @@ PluginModuleContentParent::LoadModule(uint32_t aPluginId,
                                       nsPluginTag* aPluginTag)
 {
     PluginModuleMapping::NotifyLoadingModule loadingModule;
-    nsAutoPtr<PluginModuleMapping> mapping(
-            new PluginModuleMapping(aPluginId, aPluginTag->mSupportsAsyncInit));
+    nsAutoPtr<PluginModuleMapping> mapping(new PluginModuleMapping(aPluginId));
 
     MOZ_ASSERT(XRE_IsContentProcess());
 
@@ -534,8 +531,7 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
 
     nsAutoPtr<PluginModuleChromeParent> parent(
             new PluginModuleChromeParent(aFilePath, aPluginId,
-                                         aPluginTag->mSandboxLevel,
-                                         aPluginTag->mSupportsAsyncInit));
+                                         aPluginTag->mSandboxLevel));
     UniquePtr<LaunchCompleteTask> onLaunchedRunnable(new LaunchedTask(parent));
     parent->mSubprocess->SetCallRunnableImmediately(!parent->mIsStartingAsync);
     TimeStamp launchStart = TimeStamp::Now();
@@ -688,7 +684,7 @@ PluginModuleChromeParent::InitCrashReporter()
     return true;
 }
 
-PluginModuleParent::PluginModuleParent(bool aIsChrome, bool aAllowAsyncInit)
+PluginModuleParent::PluginModuleParent(bool aIsChrome)
     : mQuirks(QUIRKS_NOT_INITIALIZED)
     , mIsChrome(aIsChrome)
     , mShutdown(false)
@@ -730,8 +726,8 @@ PluginModuleParent::~PluginModuleParent()
     }
 }
 
-PluginModuleContentParent::PluginModuleContentParent(bool aAllowAsyncInit)
-    : PluginModuleParent(false, aAllowAsyncInit)
+PluginModuleContentParent::PluginModuleContentParent()
+    : PluginModuleParent(false)
 {
     Preferences::RegisterCallback(TimeoutChanged, kContentTimeoutPref, this);
 }
@@ -745,9 +741,8 @@ bool PluginModuleChromeParent::sInstantiated = false;
 
 PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
                                                    uint32_t aPluginId,
-                                                   int32_t aSandboxLevel,
-                                                   bool aAllowAsyncInit)
-    : PluginModuleParent(true, aAllowAsyncInit)
+                                                   int32_t aSandboxLevel)
+    : PluginModuleParent(true)
     , mSubprocess(new PluginProcessParent(aFilePath))
     , mPluginId(aPluginId)
     , mChromeTaskFactory(this)
