@@ -8,8 +8,12 @@
 
 const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
-const {createNode, TimeScale} = require("devtools/client/animationinspector/utils");
+const {createNode} = require("devtools/client/animationinspector/utils");
 const {Keyframes} = require("devtools/client/animationinspector/components/keyframes");
+
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const L10N =
+  new LocalizationHelper("devtools/client/locales/animationinspector.properties");
 
 /**
  * UI component responsible for displaying detailed information for a given
@@ -182,13 +186,60 @@ AnimationDetails.prototype = {
     // Get animation type for each CSS properties.
     const animationTypes = yield this.getAnimationTypes(Object.keys(this.tracks));
 
+    // Render animated properties header.
+    this.renderAnimatedPropertiesHeader();
+    // Render animated properties body.
+    this.renderAnimatedPropertiesBody(animationTypes);
+
+    // Useful for tests to know when rendering of all animation detail UIs
+    // have been completed.
+    this.emit("animation-detail-rendering-completed");
+  }),
+
+  onFrameSelected: function (e, args) {
+    // Relay the event up, it's needed in parents too.
+    this.emit(e, args);
+  },
+
+  renderAnimatedPropertiesHeader: function () {
+    // Add animated property header.
+    const headerEl = createNode({
+      parent: this.containerEl,
+      attributes: { "class": "animated-properties-header property" }
+    });
+
+    // Add label container.
+    const headerLabelContainerEl = createNode({
+      parent: headerEl,
+      attributes: { "class": "track-container" }
+    });
+
+    // Add labels
+    for (let label of [L10N.getFormatStr("detail.propertiesHeader.percentage", 0),
+                       L10N.getFormatStr("detail.propertiesHeader.percentage", 50),
+                       L10N.getFormatStr("detail.propertiesHeader.percentage", 100)]) {
+      createNode({
+        parent: headerLabelContainerEl,
+        nodeType: "label",
+        attributes: { "class": "header-item" },
+        textContent: label
+      });
+    }
+  },
+
+  renderAnimatedPropertiesBody: function (animationTypes) {
+    // Add animated property body.
+    const bodyEl = createNode({
+      parent: this.containerEl,
+      attributes: { "class": "animated-properties-body" }
+    });
     for (let propertyName in this.tracks) {
       let line = createNode({
-        parent: this.containerEl,
+        parent: bodyEl,
         attributes: {"class": "property"}
       });
       let {warning, className} =
-        this.getPerfDataForProperty(animation, propertyName);
+        this.getPerfDataForProperty(this.animation, propertyName);
       createNode({
         // text-overflow doesn't work in flex items, so we need a second level
         // of container to actually have an ellipsis on the name.
@@ -218,21 +269,12 @@ AnimationDetails.prototype = {
       keyframesComponent.render({
         keyframes: this.tracks[propertyName],
         propertyName: propertyName,
-        animation: animation,
+        animation: this.animation,
         animationType: animationTypes[propertyName]
       });
       keyframesComponent.on("frame-selected", this.onFrameSelected);
       this.keyframeComponents.push(keyframesComponent);
     }
-
-    // Useful for tests to know when rendering of all animation detail UIs
-    // have been completed.
-    this.emit("animation-detail-rendering-completed");
-  }),
-
-  onFrameSelected: function (e, args) {
-    // Relay the event up, it's needed in parents too.
-    this.emit(e, args);
   }
 };
 
