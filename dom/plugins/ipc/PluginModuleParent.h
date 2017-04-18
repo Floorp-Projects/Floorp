@@ -47,7 +47,6 @@ namespace plugins {
 //-----------------------------------------------------------------------------
 
 class BrowserStreamParent;
-class PluginAsyncSurrogate;
 class PluginInstanceParent;
 
 #ifdef XP_WIN
@@ -96,8 +95,6 @@ protected:
 public:
     explicit PluginModuleParent(bool aIsChrome);
     virtual ~PluginModuleParent();
-
-    bool RemovePendingSurrogate(const RefPtr<PluginAsyncSurrogate>& aSurrogate);
 
     /** @return whether this modules NP_Initialize has successfully completed
         executing */
@@ -345,8 +342,6 @@ protected:
 
     bool
     GetPluginDetails();
-
-    friend class mozilla::plugins::PluginAsyncSurrogate;
 
     bool              mNPInitialized;
     bool              mIsNPShutdownPending;
@@ -621,8 +616,6 @@ private:
     void
     FinishHangUI();
 #endif
-
-    friend class mozilla::plugins::PluginAsyncSurrogate;
 
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     friend class mozilla::plugins::FinishInjectorInitTask;

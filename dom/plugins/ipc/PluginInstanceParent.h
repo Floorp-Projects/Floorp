@@ -21,7 +21,6 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsRect.h"
-#include "PluginDataResolver.h"
 
 #include "mozilla/Unused.h"
 #include "mozilla/EventForwards.h"
@@ -43,7 +42,6 @@ class PluginModuleParent;
 class D3D11SurfaceHolder;
 
 class PluginInstanceParent : public PPluginInstanceParent
-                           , public PluginDataResolver
 {
     friend class PluginModuleParent;
     friend class BrowserStreamParent;
@@ -318,12 +316,7 @@ public:
 
     bool IsUsingDirectDrawing();
 
-    virtual PluginAsyncSurrogate* GetAsyncSurrogate() override;
-
-    virtual PluginInstanceParent* GetInstance() override { return this; }
-
-    static PluginInstanceParent* Cast(NPP instance,
-                                      PluginAsyncSurrogate** aSurrogate = nullptr);
+    static PluginInstanceParent* Cast(NPP instance);
 
     // for IME hook
     virtual mozilla::ipc::IPCResult
@@ -373,7 +366,6 @@ private:
 
 private:
     PluginModuleParent* mParent;
-    RefPtr<PluginAsyncSurrogate> mSurrogate;
     NPP mNPP;
     const NPNetscapeFuncs* mNPNIface;
     nsCString mSrcAttribute;
