@@ -294,7 +294,7 @@ describe("Message reducer:", () => {
       currentGroup = getCurrentGroup(getState());
       expect(currentGroup).toBe(messages.first().id);
 
-      const endBarPacket = stubPackets.get("console.groupEnd('foo')");
+      const endBarPacket = stubPackets.get("console.groupEnd('bar')");
       dispatch(actions.messageAdd(endBarPacket));
       messages = getAllMessages(getState());
       currentGroup = getCurrentGroup(getState());
