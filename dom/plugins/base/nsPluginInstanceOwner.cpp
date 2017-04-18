@@ -1668,13 +1668,6 @@ void nsPluginInstanceOwner::ExitFullScreen(jobject view) {
 
 #endif
 
-void
-nsPluginInstanceOwner::NotifyHostAsyncInitFailed()
-{
-  nsCOMPtr<nsIObjectLoadingContent> content = do_QueryReferent(mContent);
-  content->StopPluginInstance();
-}
-
 nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
 {
 #ifdef MOZ_WIDGET_ANDROID
