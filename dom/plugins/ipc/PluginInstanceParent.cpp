@@ -1775,22 +1775,12 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
         timer(Module()->GetHistogramKey());
 
     NPError err = NPERR_NO_ERROR;
-    if (mParent->IsStartingAsync()) {
-        MOZ_ASSERT(mSurrogate);
-        mSurrogate->AsyncCallDeparting();
-        if (SendAsyncNPP_NewStream(bs, NullableString(type), seekable)) {
-            *stype = nsPluginStreamListenerPeer::STREAM_TYPE_UNKNOWN;
-        } else {
-            err = NPERR_GENERIC_ERROR;
-        }
-    } else {
-        bs->SetAlive();
-        if (!CallNPP_NewStream(bs, NullableString(type), seekable, &err, stype)) {
-            err = NPERR_GENERIC_ERROR;
-        }
-        if (NPERR_NO_ERROR != err) {
-            Unused << PBrowserStreamParent::Send__delete__(bs);
-        }
+    bs->SetAlive();
+    if (!CallNPP_NewStream(bs, NullableString(type), seekable, &err, stype)) {
+        err = NPERR_GENERIC_ERROR;
+    }
+    if (NPERR_NO_ERROR != err) {
+        Unused << PBrowserStreamParent::Send__delete__(bs);
     }
 
     return err;
