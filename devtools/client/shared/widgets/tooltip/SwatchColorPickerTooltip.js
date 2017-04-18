@@ -194,7 +194,7 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
 
   _colorToRgba: function (color) {
     color = new colorUtils.CssColor(color, this.cssColor4);
-    let rgba = color._getRGBATuple();
+    let rgba = color.getRGBATuple();
     return [rgba.r, rgba.g, rgba.b, rgba.a];
   },
 

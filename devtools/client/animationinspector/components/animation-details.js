@@ -33,7 +33,8 @@ exports.AnimationDetails = AnimationDetails;
 AnimationDetails.prototype = {
   // These are part of frame objects but are not animated properties. This
   // array is used to skip them.
-  NON_PROPERTIES: ["easing", "composite", "computedOffset", "offset"],
+  NON_PROPERTIES: ["easing", "composite", "computedOffset",
+                   "offset", "simulateComputeValuesFailure"],
 
   init: function (containerEl) {
     this.containerEl = containerEl;
@@ -108,8 +109,9 @@ AnimationDetails.prototype = {
           tracks[name] = [];
         }
 
-        for (let {value, offset} of values) {
-          tracks[name].push({value, offset});
+        for (let {value, offset, easing, distance} of values) {
+          distance = distance ? distance : 0;
+          tracks[name].push({value, offset, easing, distance});
         }
       }
     } else {
@@ -120,19 +122,44 @@ AnimationDetails.prototype = {
             continue;
           }
 
-          if (!tracks[name]) {
-            tracks[name] = [];
+          // We have to change to CSS property name
+          // since GetKeyframes returns JS property name.
+          const propertyCSSName = getCssPropertyName(name);
+          if (!tracks[propertyCSSName]) {
+            tracks[propertyCSSName] = [];
           }
 
-          tracks[name].push({
+          tracks[propertyCSSName].push({
             value: frame[name],
-            offset: frame.computedOffset
+            offset: frame.computedOffset,
+            easing: frame.easing,
+            distance: 0
           });
         }
       }
     }
 
     return tracks;
+  }),
+
+  /**
+   * Get animation types of given CSS property names.
+   * @param {Array} CSS property names.
+   *                e.g. ["background-color", "opacity", ...]
+   * @return {Object} Animation type mapped with CSS property name.
+   *                  e.g. { "background-color": "color", }
+   *                         "opacity": "float", ... }
+   */
+  getAnimationTypes: Task.async(function* (propertyNames) {
+    if (this.serverTraits.hasGetAnimationTypes) {
+      return yield this.animation.getAnimationTypes(propertyNames);
+    }
+    // Set animation type 'none' since does not support getAnimationTypes.
+    const animationTypes = {};
+    propertyNames.forEach(propertyName => {
+      animationTypes[propertyName] = "none";
+    });
+    return Promise.resolve(animationTypes);
   }),
 
   render: Task.async(function* (animation) {
@@ -152,8 +179,8 @@ AnimationDetails.prototype = {
     // Build an element for each animated property track.
     this.tracks = yield this.getTracks(animation, this.serverTraits);
 
-    // Useful for tests to know when the keyframes have been retrieved.
-    this.emit("keyframes-retrieved");
+    // Get animation type for each CSS properties.
+    const animationTypes = yield this.getAnimationTypes(Object.keys(this.tracks));
 
     for (let propertyName in this.tracks) {
       let line = createNode({
@@ -196,12 +223,16 @@ AnimationDetails.prototype = {
       keyframesComponent.render({
         keyframes: this.tracks[propertyName],
         propertyName: propertyName,
-        animation: animation
+        animation: animation,
+        animationType: animationTypes[propertyName]
       });
       keyframesComponent.on("frame-selected", this.onFrameSelected);
-
       this.keyframeComponents.push(keyframesComponent);
     }
+
+    // Useful for tests to know when rendering of all animation detail UIs
+    // have been completed.
+    this.emit("animation-detail-rendering-completed");
   }),
 
   onFrameSelected: function (e, args) {
