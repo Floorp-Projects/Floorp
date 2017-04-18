@@ -339,11 +339,8 @@ nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
   PageData page;
   rv = aPageURI->GetSpec(page.spec);
   NS_ENSURE_SUCCESS(rv, rv);
-  // URIs can arguably lack a host.
-  Unused << aPageURI->GetHost(page.host);
-  if (StringBeginsWith(page.host, NS_LITERAL_CSTRING("www."))) {
-    page.host.Cut(0, 4);
-  }
+  // URIs can arguably miss a host.
+  Unused << GetReversedHostname(aPageURI, page.revHost);
   bool canAddToHistory;
   nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(navHistory, NS_ERROR_OUT_OF_MEMORY);
@@ -362,11 +359,6 @@ nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
     icon.fetchMode = aForceReload ? FETCH_ALWAYS : FETCH_IF_MISSING;
     rv = aFaviconURI->GetSpec(icon.spec);
     NS_ENSURE_SUCCESS(rv, rv);
-    // URIs can arguably lack a host.
-    Unused << aFaviconURI->GetHost(icon.host);
-    if (StringBeginsWith(icon.host, NS_LITERAL_CSTRING("www."))) {
-      icon.host.Cut(0, 4);
-    }
     nsAutoCString path;
     rv = aFaviconURI->GetPath(path);
     if (NS_SUCCEEDED(rv) && path.EqualsLiteral("/favicon.ico")) {
@@ -444,11 +436,6 @@ nsFaviconService::ReplaceFaviconData(nsIURI* aFaviconURI,
   rv = aFaviconURI->GetPath(path);
   if (NS_SUCCEEDED(rv) && path.EqualsLiteral("/favicon.ico")) {
     iconData->rootIcon = 1;
-  }
-  // URIs can arguably lack a host.
-  Unused << aFaviconURI->GetHost(iconData->host);
-  if (StringBeginsWith(iconData->host, NS_LITERAL_CSTRING("www."))) {
-    iconData->host.Cut(0, 4);
   }
 
   IconPayload payload;
