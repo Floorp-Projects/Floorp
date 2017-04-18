@@ -79,11 +79,6 @@ if not CONFIG['JS_STANDALONE']:
             'zlib',
         ]
 
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-        SOURCES += [
-            'cpuacct.c',
-        ]
-
 USE_LIBS += [
     'mfbt',
 ]

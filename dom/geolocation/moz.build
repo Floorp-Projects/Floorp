@@ -33,10 +33,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     LOCAL_INCLUDES += [
         '/dom/system/android',
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    LOCAL_INCLUDES += [
-        '/dom/system/gonk',
-    ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     LOCAL_INCLUDES += [
         '/dom/system/mac',

@@ -7,9 +7,6 @@
 with Files('*'):
     BUG_COMPONENT = ('Core', 'Audio/Video: Recording')
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    DIRS += ['fmp4_muxer']
-
 EXPORTS += [
     'ContainerWriter.h',
     'EncodedFrameContainer.h',
@@ -36,16 +33,6 @@ FINAL_LIBRARY = 'xul'
 
 # These includes are from Android JB, for use of MediaCodec.
 LOCAL_INCLUDES += ['/ipc/chromium/src']
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['ANDROID_VERSION'] > '15':
-    LOCAL_INCLUDES += [
-        '%' + '%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
-            'frameworks/av/include/media',
-            'frameworks/native/include',
-            'frameworks/native/opengl/include',
-        ]
-
-    ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

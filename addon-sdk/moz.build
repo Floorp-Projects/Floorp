@@ -73,108 +73,107 @@ EXTRA_JS_MODULES.sdk.system += [
     'source/modules/system/Startup.js',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != "gonk":
-    EXTRA_JS_MODULES.commonjs.method.test += [
-        'source/lib/method/test/browser.js',
-        'source/lib/method/test/common.js',
-    ]
+EXTRA_JS_MODULES.commonjs.method.test += [
+    'source/lib/method/test/browser.js',
+    'source/lib/method/test/common.js',
+]
 
-    EXTRA_JS_MODULES.commonjs.sdk.deprecated += [
-        'source/lib/sdk/deprecated/api-utils.js',
-        'source/lib/sdk/deprecated/sync-worker.js',
-        'source/lib/sdk/deprecated/unit-test-finder.js',
-        'source/lib/sdk/deprecated/unit-test.js',
-        'source/lib/sdk/deprecated/window-utils.js',
-    ]
+EXTRA_JS_MODULES.commonjs.sdk.deprecated += [
+    'source/lib/sdk/deprecated/api-utils.js',
+    'source/lib/sdk/deprecated/sync-worker.js',
+    'source/lib/sdk/deprecated/unit-test-finder.js',
+    'source/lib/sdk/deprecated/unit-test.js',
+    'source/lib/sdk/deprecated/window-utils.js',
+]
 
-    EXTRA_JS_MODULES.commonjs.sdk.frame += [
-        'source/lib/sdk/frame/hidden-frame.js',
-        'source/lib/sdk/frame/utils.js',
-    ]
+EXTRA_JS_MODULES.commonjs.sdk.frame += [
+    'source/lib/sdk/frame/hidden-frame.js',
+    'source/lib/sdk/frame/utils.js',
+]
 
-    EXTRA_JS_MODULES.commonjs.sdk.panel += [
-        'source/lib/sdk/panel/events.js',
-        'source/lib/sdk/panel/utils.js',
-    ]
+EXTRA_JS_MODULES.commonjs.sdk.panel += [
+    'source/lib/sdk/panel/events.js',
+    'source/lib/sdk/panel/utils.js',
+]
 
-    EXTRA_JS_MODULES.commonjs.sdk.places += [
-        'source/lib/sdk/places/bookmarks.js',
-        'source/lib/sdk/places/contract.js',
-        'source/lib/sdk/places/events.js',
-        'source/lib/sdk/places/favicon.js',
-        'source/lib/sdk/places/history.js',
-        'source/lib/sdk/places/utils.js',
-    ]
+EXTRA_JS_MODULES.commonjs.sdk.places += [
+    'source/lib/sdk/places/bookmarks.js',
+    'source/lib/sdk/places/contract.js',
+    'source/lib/sdk/places/events.js',
+    'source/lib/sdk/places/favicon.js',
+    'source/lib/sdk/places/history.js',
+    'source/lib/sdk/places/utils.js',
+]
 
-    EXTRA_JS_MODULES.commonjs.sdk.places.host += [
-        'source/lib/sdk/places/host/host-bookmarks.js',
-        'source/lib/sdk/places/host/host-query.js',
-        'source/lib/sdk/places/host/host-tags.js',
-    ]
+EXTRA_JS_MODULES.commonjs.sdk.places.host += [
+    'source/lib/sdk/places/host/host-bookmarks.js',
+    'source/lib/sdk/places/host/host-query.js',
+    'source/lib/sdk/places/host/host-tags.js',
+]
 
-    EXTRA_JS_MODULES.commonjs.sdk.tabs += [
-        'source/lib/sdk/tabs/common.js',
-        'source/lib/sdk/tabs/events.js',
-        'source/lib/sdk/tabs/helpers.js',
-        'source/lib/sdk/tabs/namespace.js',
-        'source/lib/sdk/tabs/observer.js',
-        'source/lib/sdk/tabs/tab-fennec.js',
-        'source/lib/sdk/tabs/tab-firefox.js',
-        'source/lib/sdk/tabs/tab.js',
-        'source/lib/sdk/tabs/tabs-firefox.js',
-        'source/lib/sdk/tabs/utils.js',
-        'source/lib/sdk/tabs/worker.js',
-    ]
+EXTRA_JS_MODULES.commonjs.sdk.tabs += [
+    'source/lib/sdk/tabs/common.js',
+    'source/lib/sdk/tabs/events.js',
+    'source/lib/sdk/tabs/helpers.js',
+    'source/lib/sdk/tabs/namespace.js',
+    'source/lib/sdk/tabs/observer.js',
+    'source/lib/sdk/tabs/tab-fennec.js',
+    'source/lib/sdk/tabs/tab-firefox.js',
+    'source/lib/sdk/tabs/tab.js',
+    'source/lib/sdk/tabs/tabs-firefox.js',
+    'source/lib/sdk/tabs/utils.js',
+    'source/lib/sdk/tabs/worker.js',
+]
 
-    EXTRA_JS_MODULES.commonjs.sdk.test += [
-        'source/lib/sdk/test/assert.js',
-        'source/lib/sdk/test/harness.js',
-        'source/lib/sdk/test/httpd.js',
-        'source/lib/sdk/test/loader.js',
-        'source/lib/sdk/test/memory.js',
-        'source/lib/sdk/test/options.js',
-        'source/lib/sdk/test/runner.js',
-        'source/lib/sdk/test/utils.js',
-    ]
+EXTRA_JS_MODULES.commonjs.sdk.test += [
+    'source/lib/sdk/test/assert.js',
+    'source/lib/sdk/test/harness.js',
+    'source/lib/sdk/test/httpd.js',
+    'source/lib/sdk/test/loader.js',
+    'source/lib/sdk/test/memory.js',
+    'source/lib/sdk/test/options.js',
+    'source/lib/sdk/test/runner.js',
+    'source/lib/sdk/test/utils.js',
+]
 
-    EXTRA_JS_MODULES.commonjs.sdk.ui += [
-        'source/lib/sdk/ui/component.js',
-        'source/lib/sdk/ui/frame.js',
-        'source/lib/sdk/ui/id.js',
-        'source/lib/sdk/ui/sidebar.js',
-        'source/lib/sdk/ui/state.js',
-        'source/lib/sdk/ui/toolbar.js',
-    ]
+EXTRA_JS_MODULES.commonjs.sdk.ui += [
+    'source/lib/sdk/ui/component.js',
+    'source/lib/sdk/ui/frame.js',
+    'source/lib/sdk/ui/id.js',
+    'source/lib/sdk/ui/sidebar.js',
+    'source/lib/sdk/ui/state.js',
+    'source/lib/sdk/ui/toolbar.js',
+]
 
-    EXTRA_JS_MODULES.commonjs.sdk.ui.button += [
-        'source/lib/sdk/ui/button/action.js',
-        'source/lib/sdk/ui/button/contract.js',
-        'source/lib/sdk/ui/button/toggle.js',
-        'source/lib/sdk/ui/button/view.js',
-    ]
+EXTRA_JS_MODULES.commonjs.sdk.ui.button += [
+    'source/lib/sdk/ui/button/action.js',
+    'source/lib/sdk/ui/button/contract.js',
+    'source/lib/sdk/ui/button/toggle.js',
+    'source/lib/sdk/ui/button/view.js',
+]
 
-    EXTRA_JS_MODULES.commonjs.sdk.ui.sidebar += [
-        'source/lib/sdk/ui/sidebar/actions.js',
-        'source/lib/sdk/ui/sidebar/contract.js',
-        'source/lib/sdk/ui/sidebar/namespace.js',
-        'source/lib/sdk/ui/sidebar/utils.js',
-        'source/lib/sdk/ui/sidebar/view.js',
-    ]
+EXTRA_JS_MODULES.commonjs.sdk.ui.sidebar += [
+    'source/lib/sdk/ui/sidebar/actions.js',
+    'source/lib/sdk/ui/sidebar/contract.js',
+    'source/lib/sdk/ui/sidebar/namespace.js',
+    'source/lib/sdk/ui/sidebar/utils.js',
+    'source/lib/sdk/ui/sidebar/view.js',
+]
 
-    EXTRA_JS_MODULES.commonjs.sdk.window += [
-        'source/lib/sdk/window/browser.js',
-        'source/lib/sdk/window/events.js',
-        'source/lib/sdk/window/helpers.js',
-        'source/lib/sdk/window/namespace.js',
-        'source/lib/sdk/window/utils.js',
-    ]
+EXTRA_JS_MODULES.commonjs.sdk.window += [
+    'source/lib/sdk/window/browser.js',
+    'source/lib/sdk/window/events.js',
+    'source/lib/sdk/window/helpers.js',
+    'source/lib/sdk/window/namespace.js',
+    'source/lib/sdk/window/utils.js',
+]
 
-    EXTRA_JS_MODULES.commonjs.sdk.windows += [
-        'source/lib/sdk/windows/fennec.js',
-        'source/lib/sdk/windows/firefox.js',
-        'source/lib/sdk/windows/observer.js',
-        'source/lib/sdk/windows/tabs-fennec.js',
-    ]
+EXTRA_JS_MODULES.commonjs.sdk.windows += [
+    'source/lib/sdk/windows/fennec.js',
+    'source/lib/sdk/windows/firefox.js',
+    'source/lib/sdk/windows/observer.js',
+    'source/lib/sdk/windows/tabs-fennec.js',
+]
 
 EXTRA_JS_MODULES.commonjs += [
     'source/lib/index.js',

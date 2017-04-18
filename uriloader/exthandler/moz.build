@@ -24,7 +24,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += ['win']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     osdir = 'mac'
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk', 'uikit'):
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'uikit'):
     osdir = CONFIG['MOZ_WIDGET_TOOLKIT']
 else:
     osdir = 'unix'
