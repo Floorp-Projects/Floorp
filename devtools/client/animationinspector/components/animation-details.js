@@ -48,6 +48,7 @@ AnimationDetails.prototype = {
     this.unrender();
     this.containerEl = null;
     this.serverTraits = null;
+    this.progressIndicatorEl = null;
   },
 
   unrender: function () {
@@ -186,10 +187,20 @@ AnimationDetails.prototype = {
     // Get animation type for each CSS properties.
     const animationTypes = yield this.getAnimationTypes(Object.keys(this.tracks));
 
+    // Render progress indicator.
+    this.renderProgressIndicator();
     // Render animated properties header.
     this.renderAnimatedPropertiesHeader();
     // Render animated properties body.
     this.renderAnimatedPropertiesBody(animationTypes);
+
+    // Create dummy animation to indicate the animation progress.
+    const timing = Object.assign({}, animation.state, {
+      iterations: animation.state.iterationCount
+                  ? animation.state.iterationCount : Infinity
+    });
+    this.dummyAnimation =
+      new this.win.Animation(new this.win.KeyframeEffect(null, null, timing), null);
 
     // Useful for tests to know when rendering of all animation detail UIs
     // have been completed.
@@ -286,6 +297,44 @@ AnimationDetails.prototype = {
       keyframesComponent.on("frame-selected", this.onFrameSelected);
       this.keyframeComponents.push(keyframesComponent);
     }
+  },
+
+  renderProgressIndicator: function () {
+    // The wrapper represents the area which the indicator is displayable.
+    const progressIndicatorWrapperEl = createNode({
+      parent: this.containerEl,
+      attributes: {
+        "class": "track-container progress-indicator-wrapper"
+      }
+    });
+    this.progressIndicatorEl = createNode({
+      parent: progressIndicatorWrapperEl,
+      attributes: {
+        "class": "progress-indicator"
+      }
+    });
+    createNode({
+      parent: this.progressIndicatorEl,
+      attributes: {
+        "class": "progress-indicator-shape"
+      }
+    });
+  },
+
+  indicateProgress: function (time) {
+    if (!this.progressIndicatorEl) {
+      // Not displayed yet.
+      return;
+    }
+    const startTime = this.animation.state.previousStartTime || 0;
+    this.dummyAnimation.currentTime =
+      (time - startTime) * this.animation.state.playbackRate;
+    this.progressIndicatorEl.style.left =
+      `${ this.dummyAnimation.effect.getComputedTiming().progress * 100 }%`;
+  },
+
+  get win() {
+    return this.containerEl.ownerDocument.defaultView;
   }
 };
 
