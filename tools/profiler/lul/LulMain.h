@@ -158,12 +158,13 @@ struct UnwindRegs {
 };
 
 
-// The maximum number of bytes in a stack snapshot.  This can be
-// increased if necessary, but larger values cost performance, since a
-// stack snapshot needs to be copied between sampling and worker
-// threads for each snapshot.  In practice 32k seems to be enough
-// to get good backtraces.
-static const size_t N_STACK_BYTES = 32768;
+// The maximum number of bytes in a stack snapshot.  This value can be increased
+// if necessary, but testing showed that 160k is enough to obtain good
+// backtraces on x86_64 Linux.  Most backtraces fit comfortably into 4-8k of
+// stack space, but we do have some very deep stacks occasionally.  Please see
+// the comments in DoNativeBacktrace as to why it's OK to have this value be so
+// large.
+static const size_t N_STACK_BYTES = 160*1024;
 
 // The stack chunk image that will be unwound.
 struct StackImage {
