@@ -475,8 +475,6 @@ function* setStyle(animation, panel, name, value, selector) {
     propertyValue: value
   });
   yield onAnimationChanged;
-  const onSelected = animation ? waitForAnimationSelecting(panel) : Promise.resolve();
-  yield onSelected;
 
   // Also wait for the target node previews to be loaded if the panel got
   // refreshed as a result of this animation mutation.
