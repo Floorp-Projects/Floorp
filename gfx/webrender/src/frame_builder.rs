@@ -3,17 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
-use batch_builder::BorderSideHelpers;
 use frame::FrameId;
 use gpu_store::GpuStoreAddress;
 use internal_types::{HardwareCompositeOp, SourceTexture};
 use mask_cache::{ClipMode, ClipSource, MaskCacheInfo, RegionMode};
-use prim_store::{BorderPrimitiveCpu, BorderPrimitiveGpu, BoxShadowPrimitiveGpu};
 use prim_store::{GradientPrimitiveCpu, GradientPrimitiveGpu, ImagePrimitiveCpu, ImagePrimitiveGpu};
 use prim_store::{ImagePrimitiveKind, PrimitiveContainer, PrimitiveGeometry, PrimitiveIndex};
 use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu, RadialGradientPrimitiveGpu};
 use prim_store::{RectanglePrimitive, TextRunPrimitiveCpu, TextRunPrimitiveGpu};
-use prim_store::{TexelRect, YuvImagePrimitiveCpu, YuvImagePrimitiveGpu};
+use prim_store::{BoxShadowPrimitiveGpu, TexelRect, YuvImagePrimitiveCpu, YuvImagePrimitiveGpu};
 use profiler::{FrameProfileCounters, TextureCacheProfileCounters};
 use render_task::{AlphaRenderItem, MaskCacheKey, MaskResult, RenderTask, RenderTaskIndex};
 use render_task::RenderTaskLocation;
@@ -28,13 +26,12 @@ use tiling::{PackedLayer, PackedLayerIndex, PrimitiveFlags, PrimitiveRunCmd, Ren
 use tiling::{RenderTargetContext, RenderTaskCollection, ScrollbarPrimitive, StackingContext};
 use util::{self, pack_as_float, subtract_rect};
 use util::RectHelpers;
-use webrender_traits::{BorderDetails, BorderDisplayItem};
-use webrender_traits::{BoxShadowClipMode, ClipRegion, ColorF, DeviceIntPoint, DeviceIntRect};
-use webrender_traits::{DeviceIntSize, DeviceUintRect, DeviceUintSize, ExtendMode, FontKey};
-use webrender_traits::{FontRenderMode, GlyphOptions, ImageKey, ImageRendering, ItemRange};
-use webrender_traits::{LayerPoint, LayerRect, LayerSize, LayerToScrollTransform, PipelineId};
-use webrender_traits::{RepeatMode, ScrollLayerId, TileOffset, WebGLContextId, YuvColorSpace};
-use webrender_traits::{TransformStyle};
+use webrender_traits::{BorderDetails, BorderDisplayItem, BoxShadowClipMode, ClipId, ClipRegion};
+use webrender_traits::{ColorF, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceUintRect};
+use webrender_traits::{DeviceUintSize, ExtendMode, FontKey, FontRenderMode, GlyphOptions};
+use webrender_traits::{ImageKey, ImageRendering, ItemRange, LayerPoint, LayerRect, LayerSize};
+use webrender_traits::{LayerToScrollTransform, PipelineId, RepeatMode, TileOffset, TransformStyle};
+use webrender_traits::{WebGLContextId, YuvColorSpace};
 
 #[derive(Debug, Clone)]
 struct ImageBorderSegment {
@@ -119,7 +116,7 @@ pub struct FrameBuilder {
 
     /// A stack of scroll nodes used during display list processing to properly
     /// parent new scroll nodes.
-    reference_frame_stack: Vec<ScrollLayerId>,
+    reference_frame_stack: Vec<ClipId>,
 
     /// A stack of stacking contexts used for creating ClipScrollGroups as
     /// primitives are added to the frame.
@@ -145,18 +142,16 @@ impl FrameBuilder {
         }
     }
 
-    fn add_primitive(&mut self,
-                     scroll_layer_id: ScrollLayerId,
-                     rect: &LayerRect,
-                     clip_region: &ClipRegion,
-                     extra_clip: Option<ClipSource>,
-                     container: PrimitiveContainer)
-                     -> PrimitiveIndex {
+    pub fn add_primitive(&mut self,
+                         clip_id: ClipId,
+                         rect: &LayerRect,
+                         clip_region: &ClipRegion,
+                         extra_clips: &[ClipSource],
+                         container: PrimitiveContainer)
+                         -> PrimitiveIndex {
         let stacking_context_index = *self.stacking_context_stack.last().unwrap();
-        if !self.stacking_context_store[stacking_context_index.0]
-                .has_clip_scroll_group(scroll_layer_id) {
-            let group_index = self.create_clip_scroll_group(stacking_context_index,
-                                                            scroll_layer_id);
+        if !self.stacking_context_store[stacking_context_index.0] .has_clip_scroll_group(clip_id) {
+            let group_index = self.create_clip_scroll_group(stacking_context_index, clip_id);
             let stacking_context = &mut self.stacking_context_store[stacking_context_index.0];
             stacking_context.clip_scroll_groups.push(group_index);
         }
@@ -169,12 +164,9 @@ impl FrameBuilder {
         if clip_region.is_complex() {
             clip_sources.push(ClipSource::Region(clip_region.clone(), RegionMode::ExcludeRect));
         }
-        // TODO(gw): Perhaps in the future it's worth passing in an array
-        //           so that callers can provide an arbitrary number
-        //           of clips?
-        if let Some(extra_clip) = extra_clip {
-            clip_sources.push(extra_clip);
-        }
+
+        clip_sources.extend(extra_clips.iter().cloned());
+
         let clip_info = MaskCacheInfo::new(&clip_sources,
                                            &mut self.prim_store.gpu_data32);
 
@@ -185,7 +177,7 @@ impl FrameBuilder {
 
         match self.cmds.last_mut().unwrap() {
             &mut PrimitiveRunCmd::PrimitiveRun(_run_prim_index, ref mut count, run_layer_id)
-                if run_layer_id == scroll_layer_id => {
+                if run_layer_id == clip_id => {
                     debug_assert!(_run_prim_index.0 + *count == prim_index.0);
                     *count += 1;
                     return prim_index;
@@ -195,25 +187,25 @@ impl FrameBuilder {
             &mut PrimitiveRunCmd::PopStackingContext => {}
         }
 
-        self.cmds.push(PrimitiveRunCmd::PrimitiveRun(prim_index, 1, scroll_layer_id));
+        self.cmds.push(PrimitiveRunCmd::PrimitiveRun(prim_index, 1, clip_id));
         prim_index
     }
 
     pub fn create_clip_scroll_group(&mut self,
                                     stacking_context_index: StackingContextIndex,
-                                    scroll_layer_id: ScrollLayerId)
+                                    clip_id: ClipId)
                                     -> ClipScrollGroupIndex {
         let packed_layer_index = PackedLayerIndex(self.packed_layers.len());
         self.packed_layers.push(PackedLayer::empty());
 
         self.clip_scroll_group_store.push(ClipScrollGroup {
             stacking_context_index: stacking_context_index,
-            scroll_layer_id: scroll_layer_id,
+            clip_id: clip_id,
             packed_layer_index: packed_layer_index,
             xf_rect: None,
          });
 
-        ClipScrollGroupIndex(self.clip_scroll_group_store.len() - 1, scroll_layer_id)
+        ClipScrollGroupIndex(self.clip_scroll_group_store.len() - 1, clip_id)
     }
 
     pub fn push_stacking_context(&mut self,
@@ -249,18 +241,18 @@ impl FrameBuilder {
     }
 
     pub fn push_reference_frame(&mut self,
-                                parent_id: Option<ScrollLayerId>,
+                                parent_id: Option<ClipId>,
                                 pipeline_id: PipelineId,
                                 rect: &LayerRect,
                                 transform: &LayerToScrollTransform,
                                 clip_scroll_tree: &mut ClipScrollTree)
-                                -> ScrollLayerId {
+                                -> ClipId {
         let new_id = clip_scroll_tree.add_reference_frame(rect, transform, pipeline_id, parent_id);
         self.reference_frame_stack.push(new_id);
         new_id
     }
 
-    pub fn current_reference_frame_id(&self) -> ScrollLayerId {
+    pub fn current_reference_frame_id(&self) -> ClipId {
         *self.reference_frame_stack.last().unwrap()
     }
 
@@ -291,8 +283,8 @@ impl FrameBuilder {
             root_node.local_clip_rect = viewport_clip;
         }
 
-        let scroll_layer_id = clip_scroll_tree.topmost_scroll_layer_id();
-        if let Some(root_node) = clip_scroll_tree.nodes.get_mut(&scroll_layer_id) {
+        let clip_id = clip_scroll_tree.topmost_scrolling_node_id();
+        if let Some(root_node) = clip_scroll_tree.nodes.get_mut(&clip_id) {
             root_node.local_clip_rect = viewport_clip;
         }
     }
@@ -302,25 +294,25 @@ impl FrameBuilder {
                      viewport_size: &LayerSize,
                      content_size: &LayerSize,
                      clip_scroll_tree: &mut ClipScrollTree)
-                     -> ScrollLayerId {
+                     -> ClipId {
         let viewport_rect = LayerRect::new(LayerPoint::zero(), *viewport_size);
         let identity = &LayerToScrollTransform::identity();
         self.push_reference_frame(None, pipeline_id, &viewport_rect, identity, clip_scroll_tree);
 
-        let topmost_scroll_layer_id = ScrollLayerId::root_scroll_layer(pipeline_id);
-        clip_scroll_tree.topmost_scroll_layer_id = topmost_scroll_layer_id;
-        self.add_clip_scroll_node(topmost_scroll_layer_id,
+        let topmost_scrolling_node_id = ClipId::root_scroll_node(pipeline_id);
+        clip_scroll_tree.topmost_scrolling_node_id = topmost_scrolling_node_id;
+        self.add_clip_scroll_node(topmost_scrolling_node_id,
                                    clip_scroll_tree.root_reference_frame_id,
                                    pipeline_id,
                                    &LayerRect::new(LayerPoint::zero(), *content_size),
                                    &ClipRegion::simple(&viewport_rect),
                                    clip_scroll_tree);
-        topmost_scroll_layer_id
+        topmost_scrolling_node_id
     }
 
     pub fn add_clip_scroll_node(&mut self,
-                                new_node_id: ScrollLayerId,
-                                parent_id: ScrollLayerId,
+                                new_node_id: ClipId,
+                                parent_id: ClipId,
                                 pipeline_id: PipelineId,
                                 content_rect: &LayerRect,
                                 clip_region: &ClipRegion,
@@ -343,7 +335,7 @@ impl FrameBuilder {
     }
 
     pub fn add_solid_rectangle(&mut self,
-                               scroll_layer_id: ScrollLayerId,
+                               clip_id: ClipId,
                                rect: &LayerRect,
                                clip_region: &ClipRegion,
                                color: &ColorF,
@@ -356,18 +348,18 @@ impl FrameBuilder {
             color: *color,
         };
 
-        let prim_index = self.add_primitive(scroll_layer_id,
+        let prim_index = self.add_primitive(clip_id,
                                             rect,
                                             clip_region,
-                                            None,
+                                            &[],
                                             PrimitiveContainer::Rectangle(prim));
 
         match flags {
             PrimitiveFlags::None => {}
-            PrimitiveFlags::Scrollbar(scroll_layer_id, border_radius) => {
+            PrimitiveFlags::Scrollbar(clip_id, border_radius) => {
                 self.scrollbar_prims.push(ScrollbarPrimitive {
                     prim_index: prim_index,
-                    scroll_layer_id: scroll_layer_id,
+                    clip_id: clip_id,
                     border_radius: border_radius,
                 });
             }
@@ -375,7 +367,7 @@ impl FrameBuilder {
     }
 
     pub fn add_border(&mut self,
-                      scroll_layer_id: ScrollLayerId,
+                      clip_id: ClipId,
                       rect: LayerRect,
                       clip_region: &ClipRegion,
                       border_item: &BorderDisplayItem) {
@@ -511,7 +503,7 @@ impl FrameBuilder {
                 }
 
                 for segment in segments {
-                    self.add_image(scroll_layer_id,
+                    self.add_image(clip_id,
                                    segment.geom_rect,
                                    clip_region,
                                    &segment.stretch_size,
@@ -523,63 +515,17 @@ impl FrameBuilder {
                 }
             }
             BorderDetails::Normal(ref border) => {
-                // Gradually move border types over to a simplified
-                // shader and code path that can handle all border
-                // cases correctly.
-                if self.add_simple_border(&rect,
-                                          border,
-                                          &border_item.widths,
-                                          scroll_layer_id,
-                                          clip_region) {
-                    return;
-                }
-
-                let radius = &border.radius;
-                let left = &border.left;
-                let right = &border.right;
-                let top = &border.top;
-                let bottom = &border.bottom;
-
-                // These colors are used during inset/outset scaling.
-                let left_color      = left.border_color(1.0, 2.0/3.0, 0.3, 0.7);
-                let top_color       = top.border_color(1.0, 2.0/3.0, 0.3, 0.7);
-                let right_color     = right.border_color(2.0/3.0, 1.0, 0.7, 0.3);
-                let bottom_color    = bottom.border_color(2.0/3.0, 1.0, 0.7, 0.3);
-
-                let prim_cpu = BorderPrimitiveCpu {
-                };
-
-                let prim_gpu = BorderPrimitiveGpu {
-                    colors: [ left_color, top_color, right_color, bottom_color ],
-                    widths: [ border_item.widths.left,
-                              border_item.widths.top,
-                              border_item.widths.right,
-                              border_item.widths.bottom ],
-                    style: [
-                        pack_as_float(left.style as u32),
-                        pack_as_float(top.style as u32),
-                        pack_as_float(right.style as u32),
-                        pack_as_float(bottom.style as u32),
-                    ],
-                    radii: [
-                        radius.top_left,
-                        radius.top_right,
-                        radius.bottom_right,
-                        radius.bottom_left,
-                    ],
-                };
-
-                self.add_primitive(scroll_layer_id,
-                                   &rect,
-                                   clip_region,
-                                   None,
-                                   PrimitiveContainer::Border(prim_cpu, prim_gpu));
+                self.add_normal_border(&rect,
+                                       border,
+                                       &border_item.widths,
+                                       clip_id,
+                                       clip_region);
             }
             BorderDetails::Gradient(ref border) => {
                 for segment in create_segments(border.outset) {
                     let segment_rel = segment.origin - rect.origin;
 
-                    self.add_gradient(scroll_layer_id,
+                    self.add_gradient(clip_id,
                                       segment,
                                       clip_region,
                                       border.gradient.start_point - segment_rel,
@@ -594,7 +540,7 @@ impl FrameBuilder {
                 for segment in create_segments(border.outset) {
                     let segment_rel = segment.origin - rect.origin;
 
-                    self.add_radial_gradient(scroll_layer_id,
+                    self.add_radial_gradient(clip_id,
                                              segment,
                                              clip_region,
                                              border.gradient.start_center - segment_rel,
@@ -612,7 +558,7 @@ impl FrameBuilder {
     }
 
     pub fn add_gradient(&mut self,
-                        scroll_layer_id: ScrollLayerId,
+                        clip_id: ClipId,
                         rect: LayerRect,
                         clip_region: &ClipRegion,
                         start_point: LayerPoint,
@@ -677,15 +623,15 @@ impl FrameBuilder {
             PrimitiveContainer::AngleGradient(gradient_cpu, gradient_gpu)
         };
 
-        self.add_primitive(scroll_layer_id,
+        self.add_primitive(clip_id,
                            &rect,
                            clip_region,
-                           None,
+                           &[],
                            prim);
     }
 
     pub fn add_radial_gradient(&mut self,
-                               scroll_layer_id: ScrollLayerId,
+                               clip_id: ClipId,
                                rect: LayerRect,
                                clip_region: &ClipRegion,
                                start_center: LayerPoint,
@@ -715,15 +661,15 @@ impl FrameBuilder {
             padding: [0.0, 0.0, 0.0, 0.0],
         };
 
-        self.add_primitive(scroll_layer_id,
+        self.add_primitive(clip_id,
                            &rect,
                            clip_region,
-                           None,
+                           &[],
                            PrimitiveContainer::RadialGradient(radial_gradient_cpu, radial_gradient_gpu));
     }
 
     pub fn add_text(&mut self,
-                    scroll_layer_id: ScrollLayerId,
+                    clip_id: ClipId,
                     rect: LayerRect,
                     clip_region: &ClipRegion,
                     font_key: FontKey,
@@ -768,15 +714,56 @@ impl FrameBuilder {
             color: *color,
         };
 
-        self.add_primitive(scroll_layer_id,
+        self.add_primitive(clip_id,
                            &rect,
                            clip_region,
-                           None,
+                           &[],
                            PrimitiveContainer::TextRun(prim_cpu, prim_gpu));
     }
 
+    pub fn add_box_shadow_no_blur(&mut self,
+                                  clip_id: ClipId,
+                                  box_bounds: &LayerRect,
+                                  clip_region: &ClipRegion,
+                                  box_offset: &LayerPoint,
+                                  color: &ColorF,
+                                  spread_radius: f32,
+                                  border_radius: f32,
+                                  clip_mode: BoxShadowClipMode) {
+        assert!(spread_radius == 0.0); // TODO: fix cases where this isn't true.
+        let bs_rect = box_bounds.translate(box_offset);
+
+        // We can draw a rectangle instead with the proper border radius clipping.
+        let (bs_clip_mode, rect_to_draw) = match clip_mode {
+            BoxShadowClipMode::Outset |
+            BoxShadowClipMode::None => (ClipMode::Clip, bs_rect),
+            BoxShadowClipMode::Inset => (ClipMode::ClipOut, *box_bounds),
+        };
+
+        let box_clip_mode = !bs_clip_mode;
+
+        // Clip the inside
+        let extra_clips = [ClipSource::Complex(bs_rect,
+                                               border_radius,
+                                               bs_clip_mode),
+                           // Clip the outside of the box
+                           ClipSource::Complex(*box_bounds,
+                                             border_radius,
+                                             box_clip_mode)];
+
+        let prim = RectanglePrimitive {
+            color: *color,
+        };
+
+        self.add_primitive(clip_id,
+                           &rect_to_draw,
+                           clip_region,
+                           &extra_clips,
+                           PrimitiveContainer::Rectangle(prim));
+    }
+
     pub fn add_box_shadow(&mut self,
-                          scroll_layer_id: ScrollLayerId,
+                          clip_id: ClipId,
                           box_bounds: &LayerRect,
                           clip_region: &ClipRegion,
                           box_offset: &LayerPoint,
@@ -789,16 +776,6 @@ impl FrameBuilder {
             return
         }
 
-        // Fast path.
-        if blur_radius == 0.0 && spread_radius == 0.0 && clip_mode == BoxShadowClipMode::None {
-            self.add_solid_rectangle(scroll_layer_id,
-                                     box_bounds,
-                                     clip_region,
-                                     color,
-                                     PrimitiveFlags::None);
-            return;
-        }
-
         // The local space box shadow rect. It is the element rect
         // translated by the box shadow offset and inflated by the
         // box shadow spread.
@@ -809,6 +786,32 @@ impl FrameBuilder {
 
         let bs_rect = box_bounds.translate(box_offset)
                                 .inflate(inflate_amount, inflate_amount);
+        // If we have negative inflate amounts.
+        // Have to explicitly check this since euclid::TypedRect relies on negative rects
+        let bs_rect_empty = bs_rect.size.width <= 0.0 || bs_rect.size.height <= 0.0;
+
+        // Just draw a rectangle
+        if (blur_radius == 0.0 && spread_radius == 0.0 && clip_mode == BoxShadowClipMode::None)
+           || bs_rect_empty {
+            self.add_solid_rectangle(clip_id,
+                                     box_bounds,
+                                     clip_region,
+                                     color,
+                                     PrimitiveFlags::None);
+            return;
+        }
+
+        if blur_radius == 0.0 && spread_radius == 0.0 && border_radius != 0.0 {
+            self.add_box_shadow_no_blur(clip_id,
+                                        box_bounds,
+                                        clip_region,
+                                        box_offset,
+                                        color,
+                                        spread_radius,
+                                        border_radius,
+                                        clip_mode);
+            return;
+        }
 
         // Get the outer rectangle, based on the blur radius.
         let outside_edge_size = 2.0 * blur_radius;
@@ -874,7 +877,7 @@ impl FrameBuilder {
         match shadow_kind {
             BoxShadowKind::Simple(rects) => {
                 for rect in &rects {
-                    self.add_solid_rectangle(scroll_layer_id,
+                    self.add_solid_rectangle(clip_id,
                                              rect,
                                              clip_region,
                                              color,
@@ -894,13 +897,12 @@ impl FrameBuilder {
                     BoxShadowClipMode::Inset => ClipMode::Clip,
                 };
 
-                let extra_clip = if border_radius > 0.0 {
-                    Some(ClipSource::Complex(*box_bounds,
-                                             border_radius,
-                                             extra_clip_mode))
-                } else {
-                    None
-                };
+                let mut extra_clips = Vec::new();
+                if border_radius >= 0.0 {
+                    extra_clips.push(ClipSource::Complex(*box_bounds,
+                                                border_radius,
+                                                extra_clip_mode));
+                }
 
                 let prim_gpu = BoxShadowPrimitiveGpu {
                     src_rect: *box_bounds,
@@ -912,17 +914,17 @@ impl FrameBuilder {
                     inverted: inverted,
                 };
 
-                self.add_primitive(scroll_layer_id,
+                self.add_primitive(clip_id,
                                    &outer_rect,
                                    clip_region,
-                                   extra_clip,
+                                   extra_clips.as_slice(),
                                    PrimitiveContainer::BoxShadow(prim_gpu, rects));
             }
         }
     }
 
     pub fn add_webgl_rectangle(&mut self,
-                               scroll_layer_id: ScrollLayerId,
+                               clip_id: ClipId,
                                rect: LayerRect,
                                clip_region: &ClipRegion,
                                context_id: WebGLContextId) {
@@ -938,15 +940,15 @@ impl FrameBuilder {
             tile_spacing: LayerSize::zero(),
         };
 
-        self.add_primitive(scroll_layer_id,
+        self.add_primitive(clip_id,
                            &rect,
                            clip_region,
-                           None,
+                           &[],
                            PrimitiveContainer::Image(prim_cpu, prim_gpu));
     }
 
     pub fn add_image(&mut self,
-                     scroll_layer_id: ScrollLayerId,
+                     clip_id: ClipId,
                      rect: LayerRect,
                      clip_region: &ClipRegion,
                      stretch_size: &LayerSize,
@@ -970,15 +972,15 @@ impl FrameBuilder {
             tile_spacing: *tile_spacing,
         };
 
-        self.add_primitive(scroll_layer_id,
+        self.add_primitive(clip_id,
                            &rect,
                            clip_region,
-                           None,
+                           &[],
                            PrimitiveContainer::Image(prim_cpu, prim_gpu));
     }
 
     pub fn add_yuv_image(&mut self,
-                         scroll_layer_id: ScrollLayerId,
+                         clip_id: ClipId,
                          rect: LayerRect,
                          clip_region: &ClipRegion,
                          y_image_key: ImageKey,
@@ -994,10 +996,10 @@ impl FrameBuilder {
 
         let prim_gpu = YuvImagePrimitiveGpu::new(rect.size, color_space);
 
-        self.add_primitive(scroll_layer_id,
+        self.add_primitive(clip_id,
                            &rect,
                            clip_region,
-                           None,
+                           &[],
                            PrimitiveContainer::YuvImage(prim_cpu, prim_gpu));
     }
 
@@ -1025,7 +1027,7 @@ impl FrameBuilder {
 
         for scrollbar_prim in &self.scrollbar_prims {
             let mut geom = (*self.prim_store.gpu_geometry.get(GpuStoreAddress(scrollbar_prim.prim_index.0 as i32))).clone();
-            let clip_scroll_node = &clip_scroll_tree.nodes[&scrollbar_prim.scroll_layer_id];
+            let clip_scroll_node = &clip_scroll_tree.nodes[&scrollbar_prim.clip_id];
 
             let scrollable_distance = clip_scroll_node.scrollable_height();
 
@@ -1165,7 +1167,7 @@ impl FrameBuilder {
                         current_task = prev_task;
                     }
                 }
-                PrimitiveRunCmd::PrimitiveRun(first_prim_index, prim_count, scroll_layer_id) => {
+                PrimitiveRunCmd::PrimitiveRun(first_prim_index, prim_count, clip_id) => {
                     let stacking_context_index = *sc_stack.last().unwrap();
                     let stacking_context = &self.stacking_context_store[stacking_context_index.0];
 
@@ -1175,7 +1177,7 @@ impl FrameBuilder {
 
                     let stacking_context_index = *sc_stack.last().unwrap();
                     let group_index = self.stacking_context_store[stacking_context_index.0]
-                                          .clip_scroll_group(scroll_layer_id);
+                                          .clip_scroll_group(clip_id);
                     if self.clip_scroll_group_store[group_index.0].xf_rect.is_none() {
                         continue
                     }
@@ -1330,7 +1332,7 @@ struct LayerRectCalculationAndCullingPass<'a> {
 
     /// Information about the cached clip stack, which is used to avoid having
     /// to recalculate it for every primitive.
-    current_clip_info: Option<(ScrollLayerId, Option<DeviceIntRect>)>
+    current_clip_info: Option<(ClipId, Option<DeviceIntRect>)>
 }
 
 impl<'a> LayerRectCalculationAndCullingPass<'a> {
@@ -1367,8 +1369,8 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
             match *cmd {
                 PrimitiveRunCmd::PushStackingContext(stacking_context_index) =>
                     self.handle_push_stacking_context(stacking_context_index),
-                PrimitiveRunCmd::PrimitiveRun(prim_index, prim_count, scroll_layer_id) =>
-                    self.handle_primitive_run(prim_index, prim_count, scroll_layer_id),
+                PrimitiveRunCmd::PrimitiveRun(prim_index, prim_count, clip_id) =>
+                    self.handle_primitive_run(prim_index, prim_count, clip_id),
                 PrimitiveRunCmd::PopStackingContext => self.handle_pop_stacking_context(),
             }
         }
@@ -1434,7 +1436,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
             let stacking_context = &mut self.frame_builder
                                             .stacking_context_store[stacking_context_index.0];
 
-            let node = &self.clip_scroll_tree.nodes[&group.scroll_layer_id];
+            let node = &self.clip_scroll_tree.nodes[&group.clip_id];
             let packed_layer = &mut self.frame_builder.packed_layers[group.packed_layer_index.0];
 
             // The world content transform is relative to the containing reference frame,
@@ -1510,7 +1512,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
         stacking_context.bounding_rect = DeviceIntRect::zero();
     }
 
-    fn rebuild_clip_info_stack_if_necessary(&mut self, id: ScrollLayerId) -> Option<DeviceIntRect> {
+    fn rebuild_clip_info_stack_if_necessary(&mut self, id: ClipId) -> Option<DeviceIntRect> {
         if let Some((current_scroll_id, bounding_rect)) = self.current_clip_info {
             if current_scroll_id == id {
                 return bounding_rect;
@@ -1549,7 +1551,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
     fn handle_primitive_run(&mut self,
                             prim_index: PrimitiveIndex,
                             prim_count: usize,
-                            scroll_layer_id: ScrollLayerId) {
+                            clip_id: ClipId) {
         let stacking_context_index = *self.stacking_context_stack.last().unwrap();
         let (packed_layer_index, pipeline_id) = {
             let stacking_context =
@@ -1559,12 +1561,12 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                 return;
             }
 
-            let group_index = stacking_context.clip_scroll_group(scroll_layer_id);
+            let group_index = stacking_context.clip_scroll_group(clip_id);
             let clip_scroll_group = &self.frame_builder.clip_scroll_group_store[group_index.0];
             (clip_scroll_group.packed_layer_index, stacking_context.pipeline_id)
         };
 
-        let node_clip_bounds = self.rebuild_clip_info_stack_if_necessary(scroll_layer_id);
+        let node_clip_bounds = self.rebuild_clip_info_stack_if_necessary(clip_id);
         if node_clip_bounds.map_or(false, |bounds| bounds.is_empty()) {
             return;
         }
@@ -1622,7 +1624,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                     let node_clip_bounds = node_clip_bounds.unwrap_or_else(DeviceIntRect::zero);
                     let (mask_key, mask_rect) = match prim_clip_info {
                         Some(..) => (MaskCacheKey::Primitive(prim_index), prim_bounding_rect),
-                        None => (MaskCacheKey::ScrollLayer(scroll_layer_id), node_clip_bounds)
+                        None => (MaskCacheKey::ClipNode(clip_id), node_clip_bounds)
                     };
                     let mask_opt =
                         RenderTask::new_mask(mask_rect, mask_key, &self.current_clip_stack);

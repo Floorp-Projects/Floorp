@@ -271,6 +271,7 @@ pub struct TextureCacheProfileCounters {
     pub pages_a8: ResourceProfileCounter,
     pub pages_rgb8: ResourceProfileCounter,
     pub pages_rgba8: ResourceProfileCounter,
+    pub pages_rg8: ResourceProfileCounter,
 }
 
 impl TextureCacheProfileCounters {
@@ -279,6 +280,7 @@ impl TextureCacheProfileCounters {
             pages_a8: ResourceProfileCounter::new("Texture A8 cached pages"),
             pages_rgb8: ResourceProfileCounter::new("Texture RGB8 cached pages"),
             pages_rgba8: ResourceProfileCounter::new("Texture RGBA8 cached pages"),
+            pages_rg8: ResourceProfileCounter::new("Texture RG8 cached pages"),
         }
     }
 }
@@ -654,6 +656,13 @@ impl Profiler {
         self.x_right = 400.0;
         self.y_right = 40.0;
 
+        let mut gpu_time = 0;
+        let gpu_samples = mem::replace(&mut renderer_timers.gpu_samples, Vec::new());
+        for sample in &gpu_samples {
+            gpu_time += sample.time_ns;
+        }
+        renderer_timers.gpu_time.set(gpu_time);
+
         self.draw_counters(&[
             &renderer_profile.frame_counter,
             &renderer_profile.frame_time,
@@ -676,6 +685,7 @@ impl Profiler {
             &backend_profile.texture_cache.pages_a8,
             &backend_profile.texture_cache.pages_rgb8,
             &backend_profile.texture_cache.pages_rgba8,
+            &backend_profile.texture_cache.pages_rg8,
         ], debug_renderer, true);
 
         self.draw_counters(&[
@@ -689,11 +699,6 @@ impl Profiler {
             &renderer_timers.gpu_time,
         ], debug_renderer, false);
 
-        let mut gpu_time = 0;
-        let gpu_samples = mem::replace(&mut renderer_timers.gpu_samples, Vec::new());
-        for sample in &gpu_samples {
-            gpu_time += sample.time_ns;
-        }
 
         self.backend_time.push(backend_profile.total_time.nanoseconds);
         self.compositor_time.push(renderer_timers.cpu_time.nanoseconds);

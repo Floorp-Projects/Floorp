@@ -23,12 +23,11 @@ use std::collections::HashMap;
 use std::hash::BuildHasherDefault;
 use texture_cache::TexturePage;
 use util::{TransformedRect, TransformedRectKind};
-use webrender_traits::{AuxiliaryLists, ColorF, DeviceIntPoint, DeviceIntRect};
-use webrender_traits::{DeviceIntSize, DeviceUintPoint};
-use webrender_traits::{DeviceUintSize, FontRenderMode, ImageRendering, LayerPoint, LayerRect};
-use webrender_traits::{LayerToWorldTransform, MixBlendMode, PipelineId, ScrollLayerId};
-use webrender_traits::{TransformStyle, WorldPoint4D, WorldToLayerTransform};
-use webrender_traits::{ExternalImageType};
+use webrender_traits::{AuxiliaryLists, ClipId, ColorF, DeviceIntPoint, DeviceIntRect};
+use webrender_traits::{DeviceIntSize, DeviceUintPoint, DeviceUintSize, ExternalImageType};
+use webrender_traits::{FontRenderMode, ImageRendering, LayerPoint, LayerRect};
+use webrender_traits::{LayerToWorldTransform, MixBlendMode, PipelineId, TransformStyle};
+use webrender_traits::{WorldPoint4D, WorldToLayerTransform};
 
 // Special sentinel value recognized by the shader. It is considered to be
 // a dummy task that doesn't mask out anything.
@@ -108,7 +107,7 @@ impl AlphaBatchHelpers for PrimitiveStore {
 
 #[derive(Debug)]
 pub struct ScrollbarPrimitive {
-    pub scroll_layer_id: ScrollLayerId,
+    pub clip_id: ClipId,
     pub prim_index: PrimitiveIndex,
     pub border_radius: f32,
 }
@@ -117,13 +116,13 @@ pub struct ScrollbarPrimitive {
 pub enum PrimitiveRunCmd {
     PushStackingContext(StackingContextIndex),
     PopStackingContext,
-    PrimitiveRun(PrimitiveIndex, usize, ScrollLayerId),
+    PrimitiveRun(PrimitiveIndex, usize, ClipId),
 }
 
 #[derive(Debug, Copy, Clone)]
 pub enum PrimitiveFlags {
     None,
-    Scrollbar(ScrollLayerId, f32)
+    Scrollbar(ClipId, f32)
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -146,7 +145,7 @@ impl RenderTaskCollection {
     pub fn new(static_render_task_count: usize) -> RenderTaskCollection {
         RenderTaskCollection {
             render_task_data: vec![RenderTaskData::empty(); static_render_task_count],
-            dynamic_tasks: HashMap::with_hasher(Default::default()),
+            dynamic_tasks: HashMap::default(),
         }
     }
 
@@ -222,6 +221,14 @@ impl BatchList {
             alpha_batches: Vec::new(),
             opaque_batches: Vec::new(),
         }
+    }
+
+    fn with_suitable_batch<F>(&mut self,
+                              key: &AlphaBatchKey,
+                              item_bounding_rect: &DeviceIntRect,
+                              f: F) where F: Fn(&mut PrimitiveBatch) {
+        let batch = self.get_suitable_batch(key, item_bounding_rect);
+        f(batch)
     }
 
     fn get_suitable_batch(&mut self,
@@ -414,10 +421,29 @@ impl AlphaRenderItem {
 
                 match prim_metadata.prim_kind {
                     PrimitiveKind::Border => {
-                        let key = AlphaBatchKey::new(AlphaBatchKind::Border, flags, blend_mode, textures);
-                        let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
-                        for border_segment in 0..8 {
-                            batch.add_instance(base_instance.build(border_segment, 0, 0));
+                        let border_cpu = &ctx.prim_store.cpu_borders[prim_metadata.cpu_prim_index.0];
+                        if border_cpu.use_new_border_path {
+                            // TODO(gw): Select correct blend mode for edges and corners!!
+                            let corner_key = AlphaBatchKey::new(AlphaBatchKind::BorderCorner, flags, blend_mode, textures);
+                            let edge_key = AlphaBatchKey::new(AlphaBatchKind::BorderEdge, flags, blend_mode, textures);
+
+                            batch_list.with_suitable_batch(&corner_key, item_bounding_rect, |batch| {
+                                for border_segment in 0..4 {
+                                    batch.add_instance(base_instance.build(border_segment, 0, 0));
+                                }
+                            });
+
+                            batch_list.with_suitable_batch(&edge_key, item_bounding_rect, |batch| {
+                                for border_segment in 0..4 {
+                                    batch.add_instance(base_instance.build(border_segment, 0, 0));
+                                }
+                            });
+                        } else {
+                            let key = AlphaBatchKey::new(AlphaBatchKind::Border, flags, blend_mode, textures);
+                            let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
+                            for border_segment in 0..8 {
+                                batch.add_instance(base_instance.build(border_segment, 0, 0));
+                            }
                         }
                     }
                     PrimitiveKind::Rectangle => {
@@ -1098,6 +1124,8 @@ pub enum AlphaBatchKind {
     RadialGradient,
     BoxShadow,
     CacheImage,
+    BorderCorner,
+    BorderEdge,
 }
 
 bitflags! {
@@ -1284,12 +1312,12 @@ impl StackingContext {
         }
     }
 
-    pub fn clip_scroll_group(&self, scroll_layer_id: ScrollLayerId) -> ClipScrollGroupIndex {
+    pub fn clip_scroll_group(&self, clip_id: ClipId) -> ClipScrollGroupIndex {
         // Currently there is only one scrolled stacking context per context,
         // but eventually this will be selected from the vector based on the
         // scroll layer of this primitive.
         for group in &self.clip_scroll_groups {
-            if group.1 == scroll_layer_id {
+            if group.1 == clip_id {
                 return *group;
             }
         }
@@ -1300,18 +1328,18 @@ impl StackingContext {
         !self.composite_ops.will_make_invisible()
     }
 
-    pub fn has_clip_scroll_group(&self, id: ScrollLayerId) -> bool {
+    pub fn has_clip_scroll_group(&self, id: ClipId) -> bool {
         self.clip_scroll_groups.iter().rev().any(|index| index.1 == id)
     }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-pub struct ClipScrollGroupIndex(pub usize, pub ScrollLayerId);
+pub struct ClipScrollGroupIndex(pub usize, pub ClipId);
 
 #[derive(Debug)]
 pub struct ClipScrollGroup {
     pub stacking_context_index: StackingContextIndex,
-    pub scroll_layer_id: ScrollLayerId,
+    pub clip_id: ClipId,
     pub packed_layer_index: PackedLayerIndex,
     pub xf_rect: Option<TransformedRect>,
 }

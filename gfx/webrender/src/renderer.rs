@@ -76,6 +76,8 @@ const GPU_TAG_PRIM_ANGLE_GRADIENT: GpuProfileTag = GpuProfileTag { label: "Angle
 const GPU_TAG_PRIM_RADIAL_GRADIENT: GpuProfileTag = GpuProfileTag { label: "RadialGradient", color: debug_colors::LIGHTPINK };
 const GPU_TAG_PRIM_BOX_SHADOW: GpuProfileTag = GpuProfileTag { label: "BoxShadow", color: debug_colors::CYAN };
 const GPU_TAG_PRIM_BORDER: GpuProfileTag = GpuProfileTag { label: "Border", color: debug_colors::ORANGE };
+const GPU_TAG_PRIM_BORDER_CORNER: GpuProfileTag = GpuProfileTag { label: "BorderCorner", color: debug_colors::DARKSLATEGREY };
+const GPU_TAG_PRIM_BORDER_EDGE: GpuProfileTag = GpuProfileTag { label: "BorderEdge", color: debug_colors::LAVENDER };
 const GPU_TAG_PRIM_CACHE_IMAGE: GpuProfileTag = GpuProfileTag { label: "CacheImage", color: debug_colors::SILVER };
 const GPU_TAG_BLUR: GpuProfileTag = GpuProfileTag { label: "Blur", color: debug_colors::VIOLET };
 
@@ -470,6 +472,8 @@ pub struct Renderer {
     ps_image_rect: PrimitiveShader,
     ps_yuv_image: PrimitiveShader,
     ps_border: PrimitiveShader,
+    ps_border_corner: PrimitiveShader,
+    ps_border_edge: PrimitiveShader,
     ps_gradient: PrimitiveShader,
     ps_angle_gradient: PrimitiveShader,
     ps_radial_gradient: PrimitiveShader,
@@ -694,6 +698,20 @@ impl Renderer {
                                  options.precache_shaders)
         };
 
+        let ps_border_corner = try!{
+            PrimitiveShader::new("ps_border_corner",
+                                 &mut device,
+                                 &[],
+                                 options.precache_shaders)
+        };
+
+        let ps_border_edge = try!{
+            PrimitiveShader::new("ps_border_edge",
+                                 &mut device,
+                                 &[],
+                                 options.precache_shaders)
+        };
+
         let ps_box_shadow = try!{
             PrimitiveShader::new("ps_box_shadow",
                                  &mut device,
@@ -829,7 +847,6 @@ impl Renderer {
         let x1 = 1.0;
         let y1 = 1.0;
 
-        // TODO(gw): Consider separate VBO for quads vs border corners if VS ever shows up in profile!
         let quad_indices: [u16; 6] = [ 0, 1, 2, 2, 1, 3 ];
         let quad_vertices = [
             PackedVertex {
@@ -925,6 +942,8 @@ impl Renderer {
             ps_image_rect: ps_image_rect,
             ps_yuv_image: ps_yuv_image,
             ps_border: ps_border,
+            ps_border_corner: ps_border_corner,
+            ps_border_edge: ps_border_edge,
             ps_box_shadow: ps_box_shadow,
             ps_gradient: ps_gradient,
             ps_angle_gradient: ps_angle_gradient,
@@ -952,13 +971,13 @@ impl Renderer {
             clip_vao_id: clip_vao_id,
             gdt_index: 0,
             gpu_data_textures: gpu_data_textures,
-            pipeline_epoch_map: HashMap::with_hasher(Default::default()),
+            pipeline_epoch_map: HashMap::default(),
             main_thread_dispatcher: main_thread_dispatcher,
             cache_texture_id_map: Vec::new(),
             dummy_cache_texture_id: dummy_cache_texture_id,
             dither_matrix_texture_id: dither_matrix_texture_id,
             external_image_handler: None,
-            external_images: HashMap::with_hasher(Default::default()),
+            external_images: HashMap::default(),
             vr_compositor_handler: vr_compositor,
             cpu_profiles: VecDeque::new(),
             gpu_profiles: VecDeque::new(),
@@ -1006,7 +1025,7 @@ impl Renderer {
     /// Returns a HashMap containing the pipeline ids that have been received by the renderer and
     /// their respective epochs since the last time the method was called.
     pub fn flush_rendered_epochs(&mut self) -> HashMap<PipelineId, Epoch, BuildHasherDefault<FnvHasher>> {
-        mem::replace(&mut self.pipeline_epoch_map, HashMap::with_hasher(Default::default()))
+        mem::replace(&mut self.pipeline_epoch_map, HashMap::default())
     }
 
     /// Processes the result queue.
@@ -1369,6 +1388,14 @@ impl Renderer {
             AlphaBatchKind::Border => {
                 let shader = self.ps_border.get(&mut self.device, transform_kind);
                 (GPU_TAG_PRIM_BORDER, shader)
+            }
+            AlphaBatchKind::BorderCorner => {
+                let shader = self.ps_border_corner.get(&mut self.device, transform_kind);
+                (GPU_TAG_PRIM_BORDER_CORNER, shader)
+            }
+            AlphaBatchKind::BorderEdge => {
+                let shader = self.ps_border_edge.get(&mut self.device, transform_kind);
+                (GPU_TAG_PRIM_BORDER_EDGE, shader)
             }
             AlphaBatchKind::AlignedGradient => {
                 let shader = self.ps_gradient.get(&mut self.device, transform_kind);

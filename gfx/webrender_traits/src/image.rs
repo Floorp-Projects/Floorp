@@ -18,6 +18,7 @@ impl ImageKey {
 /// An arbitrary identifier for an external image provided by the
 /// application. It must be a unique identifier for each external
 /// image.
+#[repr(C)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct ExternalImageId(pub u64);
 
@@ -29,6 +30,7 @@ pub enum ImageFormat {
     RGB8     = 2,
     RGBA8    = 3,
     RGBAF32  = 4,
+    RG8      = 5,
 }
 
 impl ImageFormat {
@@ -38,6 +40,7 @@ impl ImageFormat {
             ImageFormat::RGB8 => Some(3),
             ImageFormat::RGBA8 => Some(4),
             ImageFormat::RGBAF32 => Some(16),
+            ImageFormat::RG8 => Some(2),
             ImageFormat::Invalid => None,
         }
     }

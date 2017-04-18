@@ -6,14 +6,13 @@ use app_units::Au;
 use std::mem;
 use std::slice;
 use {BorderDetails, BorderDisplayItem, BorderWidths, BoxShadowClipMode, BoxShadowDisplayItem};
-use {ClipDisplayItem, ClipRegion, ColorF, ComplexClipRegion, DisplayItem, ExtendMode, FilterOp};
-use {FontKey, GlyphInstance, GlyphOptions, Gradient, GradientDisplayItem, GradientStop};
+use {ClipDisplayItem, ClipId, ClipRegion, ColorF, ComplexClipRegion, DisplayItem, ExtendMode};
+use {FilterOp, FontKey, GlyphInstance, GlyphOptions, Gradient, GradientDisplayItem, GradientStop};
 use {IframeDisplayItem, ImageDisplayItem, ImageKey, ImageMask, ImageRendering, ItemRange};
-use {LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
-use {TransformStyle, MixBlendMode, PipelineId};
+use {LayoutPoint, LayoutRect, LayoutSize, LayoutTransform, MixBlendMode, PipelineId};
 use {PropertyBinding, PushStackingContextDisplayItem, RadialGradient, RadialGradientDisplayItem};
-use {RectangleDisplayItem, ScrollLayerId, ScrollPolicy, SpecificDisplayItem, StackingContext};
-use {TextDisplayItem, WebGLContextId, WebGLDisplayItem, YuvColorSpace, YuvImageDisplayItem};
+use {RectangleDisplayItem, ScrollPolicy, SpecificDisplayItem, StackingContext, TextDisplayItem};
+use {TransformStyle, WebGLContextId, WebGLDisplayItem, YuvColorSpace, YuvImageDisplayItem};
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct AuxiliaryLists {
@@ -82,7 +81,7 @@ impl BuiltDisplayList {
 
     pub fn all_display_items(&self) -> &[DisplayItem] {
         unsafe {
-            convert_blob_to_pod(&self.data[0..self.descriptor.display_list_items_size])
+            convert_blob_to_pod(&self.data)
         }
     }
 
@@ -99,8 +98,8 @@ pub struct DisplayListBuilder {
     pub list: Vec<DisplayItem>,
     auxiliary_lists_builder: AuxiliaryListsBuilder,
     pub pipeline_id: PipelineId,
-    clip_stack: Vec<ScrollLayerId>,
-    next_scroll_layer_id: u64,
+    clip_stack: Vec<ClipId>,
+    next_clip_id: u64,
 }
 
 impl DisplayListBuilder {
@@ -109,10 +108,10 @@ impl DisplayListBuilder {
             list: Vec::new(),
             auxiliary_lists_builder: AuxiliaryListsBuilder::new(),
             pipeline_id: pipeline_id,
-            clip_stack: vec![ScrollLayerId::root_scroll_layer(pipeline_id)],
+            clip_stack: vec![ClipId::root_scroll_node(pipeline_id)],
 
             // We start at 1 here, because the root scroll id is always 0.
-            next_scroll_layer_id: 1,
+            next_clip_id: 1,
         }
     }
 
@@ -127,7 +126,7 @@ impl DisplayListBuilder {
             item: item,
             rect: rect,
             clip: clip,
-            scroll_layer_id: *self.clip_stack.last().unwrap(),
+            clip_id: *self.clip_stack.last().unwrap(),
         });
     }
 
@@ -136,7 +135,7 @@ impl DisplayListBuilder {
             item: item,
             rect: LayoutRect::zero(),
             clip: ClipRegion::simple(&LayoutRect::zero()),
-            scroll_layer_id: *self.clip_stack.last().unwrap(),
+            clip_id: *self.clip_stack.last().unwrap(),
         });
     }
 
@@ -197,7 +196,7 @@ impl DisplayListBuilder {
     pub fn push_text(&mut self,
                      rect: LayoutRect,
                      clip: ClipRegion,
-                     glyphs: Vec<GlyphInstance>,
+                     glyphs: &[GlyphInstance],
                      font_key: FontKey,
                      color: ColorF,
                      size: Au,
@@ -453,13 +452,13 @@ impl DisplayListBuilder {
     pub fn define_clip(&mut self,
                        content_rect: LayoutRect,
                        clip: ClipRegion,
-                       id: Option<ScrollLayerId>)
-                       -> ScrollLayerId {
+                       id: Option<ClipId>)
+                       -> ClipId {
         let id = match id {
             Some(id) => id,
             None => {
-                self.next_scroll_layer_id += 1;
-                ScrollLayerId::Clip(self.next_scroll_layer_id - 1, self.pipeline_id)
+                self.next_clip_id += 1;
+                ClipId::Clip(self.next_clip_id - 1, self.pipeline_id)
             }
         };
 
@@ -472,15 +471,15 @@ impl DisplayListBuilder {
         id
     }
 
-    pub fn push_scroll_layer(&mut self,
-                             clip: ClipRegion,
-                             content_rect: LayoutRect,
-                             id: Option<ScrollLayerId>) {
+    pub fn push_clip_node(&mut self,
+                          clip: ClipRegion,
+                          content_rect: LayoutRect,
+                          id: Option<ClipId>) {
         let id = self.define_clip(content_rect, clip, id);
         self.clip_stack.push(id);
     }
 
-    pub fn push_clip_id(&mut self, id: ScrollLayerId) {
+    pub fn push_clip_id(&mut self, id: ClipId) {
         self.clip_stack.push(id);
     }
 
@@ -489,7 +488,7 @@ impl DisplayListBuilder {
         assert!(self.clip_stack.len() > 0);
     }
 
-    pub fn pop_scroll_layer(&mut self) {
+    pub fn pop_clip_node(&mut self) {
         self.pop_clip_id();
     }
 
@@ -528,7 +527,7 @@ impl DisplayListBuilder {
                 _ => {}
             }
             i.clip.complex = self.auxiliary_lists_builder.add_complex_clip_regions(aux.complex_clip_regions(&i.clip.complex));
-            i.scroll_layer_id = *self.clip_stack.last().unwrap();
+            i.clip_id = *self.clip_stack.last().unwrap();
             self.list.push(i);
         }
     }
