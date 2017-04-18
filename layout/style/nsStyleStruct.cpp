@@ -479,7 +479,11 @@ nsStyleBorder::CalcDifference(const nsStyleBorder& aNewData) const
     return nsChangeHint_RepaintFrame;
   }
 
-  if (IsBorderImageLoaded() || aNewData.IsBorderImageLoaded()) {
+  // Loading status of the border image can be accessed in main thread only
+  // while CalcDifference might be executed on a background thread. As a
+  // result, we have to check mBorderImage* fields even before border image was
+  // actually loaded.
+  if (!mBorderImageSource.IsEmpty() || !aNewData.mBorderImageSource.IsEmpty()) {
     if (mBorderImageSource  != aNewData.mBorderImageSource  ||
         mBorderImageRepeatH != aNewData.mBorderImageRepeatH ||
         mBorderImageRepeatV != aNewData.mBorderImageRepeatV ||
@@ -508,9 +512,7 @@ nsStyleBorder::CalcDifference(const nsStyleBorder& aNewData) const
     return nsChangeHint_NeutralChange;
   }
 
-  // mBorderImage* fields are checked only when border image was
-  // actualy loaded. But we need to return neutral change even when
-  // they are not actually used.
+  // mBorderImage* fields are checked only when border-image is not 'none'.
   if (mBorderImageSource  != aNewData.mBorderImageSource  ||
       mBorderImageRepeatH != aNewData.mBorderImageRepeatH ||
       mBorderImageRepeatV != aNewData.mBorderImageRepeatV ||
