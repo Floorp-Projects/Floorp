@@ -404,6 +404,11 @@ VRControllerOpenVR::GetTrigger()
 }
 
 void
+VRControllerOpenVR::SetHand(dom::GamepadHand aHand)
+{
+  mControllerInfo.mHand = aHand;
+}
+
 void
 VRControllerOpenVR::UpdateVibrateHaptic(::vr::IVRSystem* aVRSystem,
                                         uint32_t aHapticIndex,
@@ -608,6 +613,19 @@ VRSystemManagerOpenVR::HandleInput()
                mVRSystem->GetTrackedDeviceClass(trackedIndex)
                == ::vr::TrackedDeviceClass_GenericTracker);
 
+    // Sometimes, OpenVR controllers are not located by HMD at the initial time.
+    // That makes us have to update the hand info at runtime although switching controllers
+    // to the other hand does not have new changes at the current OpenVR SDK. But, it makes sense
+    // to detect hand changing at runtime.
+    const ::vr::ETrackedControllerRole role = mVRSystem->
+                                                GetControllerRoleForTrackedDeviceIndex(
+                                                trackedIndex);
+    const dom::GamepadHand hand = GetGamepadHandFromControllerRole(role);
+    if (hand != controller->GetHand()) {
+      controller->SetHand(hand);
+      NewHandChangeEvent(i, hand);
+    }
+
     if (mVRSystem->GetControllerState(trackedIndex, &state, sizeof(state))) {
       for (uint32_t j = 0; j < ::vr::k_unControllerStateAxisCount; ++j) {
         const uint32_t axisType = mVRSystem->GetInt32TrackedDeviceProperty(
@@ -808,6 +826,30 @@ VRSystemManagerOpenVR::HandlePoseTracking(uint32_t aControllerIdx,
     aController->SetPose(aPose);
     NewPoseState(aControllerIdx, aPose);
   }
+}
+
+dom::GamepadHand
+VRSystemManagerOpenVR::GetGamepadHandFromControllerRole(
+                                          ::vr::ETrackedControllerRole aRole)
+{
+  dom::GamepadHand hand;
+
+  switch(aRole) {
+    case ::vr::ETrackedControllerRole::TrackedControllerRole_Invalid:
+      hand = dom::GamepadHand::_empty;
+      break;
+    case ::vr::ETrackedControllerRole::TrackedControllerRole_LeftHand:
+      hand = dom::GamepadHand::Left;
+      break;
+    case ::vr::ETrackedControllerRole::TrackedControllerRole_RightHand:
+      hand = dom::GamepadHand::Right;
+      break;
+    default:
+      MOZ_ASSERT(false);
+      break;
+  }
+
+  return hand;
 }
 
 void
