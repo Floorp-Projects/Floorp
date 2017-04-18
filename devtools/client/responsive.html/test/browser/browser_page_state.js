@@ -22,22 +22,22 @@ add_task(function* () {
 
   // Check session history state
   let history = yield getSessionHistory(browser);
-  is(history.index, 2, "At page 2 in history");
+  is(history.index - 1, 2, "At page 2 in history");
   is(history.entries.length, 3, "3 pages in history");
-  is(history.entries[0].uri, DUMMY_1_URL, "Page 0 URL matches");
-  is(history.entries[1].uri, TEST_URL, "Page 1 URL matches");
-  is(history.entries[2].uri, DUMMY_2_URL, "Page 2 URL matches");
+  is(history.entries[0].url, DUMMY_1_URL, "Page 0 URL matches");
+  is(history.entries[1].url, TEST_URL, "Page 1 URL matches");
+  is(history.entries[2].url, DUMMY_2_URL, "Page 2 URL matches");
 
   // Go back one so we're at the test page
   yield back(browser);
 
   // Check session history state
   history = yield getSessionHistory(browser);
-  is(history.index, 1, "At page 1 in history");
+  is(history.index - 1, 1, "At page 1 in history");
   is(history.entries.length, 3, "3 pages in history");
-  is(history.entries[0].uri, DUMMY_1_URL, "Page 0 URL matches");
-  is(history.entries[1].uri, TEST_URL, "Page 1 URL matches");
-  is(history.entries[2].uri, DUMMY_2_URL, "Page 2 URL matches");
+  is(history.entries[0].url, DUMMY_1_URL, "Page 0 URL matches");
+  is(history.entries[1].url, TEST_URL, "Page 1 URL matches");
+  is(history.entries[2].url, DUMMY_2_URL, "Page 2 URL matches");
 
   // Click on content to set an altered state that would be lost on reload
   yield BrowserTestUtils.synthesizeMouseAtCenter("body", {}, browser);
@@ -66,11 +66,11 @@ add_task(function* () {
 
   // Check session history state
   history = yield getSessionHistory(browser);
-  is(history.index, 1, "At page 1 in history");
+  is(history.index - 1, 1, "At page 1 in history");
   is(history.entries.length, 3, "3 pages in history");
-  is(history.entries[0].uri, DUMMY_1_URL, "Page 0 URL matches");
-  is(history.entries[1].uri, TEST_URL, "Page 1 URL matches");
-  is(history.entries[2].uri, DUMMY_2_URL, "Page 2 URL matches");
+  is(history.entries[0].url, DUMMY_1_URL, "Page 0 URL matches");
+  is(history.entries[1].url, TEST_URL, "Page 1 URL matches");
+  is(history.entries[2].url, DUMMY_2_URL, "Page 2 URL matches");
 
   yield removeTab(tab);
 });
