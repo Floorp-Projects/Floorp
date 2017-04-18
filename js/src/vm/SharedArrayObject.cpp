@@ -123,9 +123,8 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
         // Test >= to guard against the case where multiple extant runtimes
         // race to allocate.
         if (++numLive >= maxLive) {
-            JSRuntime* rt = cx->runtime();
-            if (rt->largeAllocationFailureCallback)
-                rt->largeAllocationFailureCallback(rt->largeAllocationFailureCallbackData);
+            if (OnLargeAllocationFailure)
+                OnLargeAllocationFailure();
             if (numLive >= maxLive) {
                 numLive--;
                 return nullptr;
