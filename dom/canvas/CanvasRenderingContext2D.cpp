@@ -2569,7 +2569,7 @@ CanvasRenderingContext2D::CreatePattern(const CanvasImageSource& aSource,
   // of animated images
   nsLayoutUtils::SurfaceFromElementResult res =
     nsLayoutUtils::SurfaceFromElement(htmlElement,
-      nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE, mTarget);
+      nsLayoutUtils::SFE_WANT_FIRST_FRAME, mTarget);
 
   if (!res.GetSourceSurface()) {
     return nullptr;
