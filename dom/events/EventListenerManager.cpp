@@ -424,8 +424,12 @@ EventListenerManager::AddEventListenerInternal(
     ProcessApzAwareEventListenerAdd();
   }
 
-  if (aTypeAtom && mTarget) {
-    mTarget->EventListenerAdded(aTypeAtom);
+  if (mTarget) {
+    if (aTypeAtom) {
+      mTarget->EventListenerAdded(aTypeAtom);
+    } else if (!aTypeString.IsEmpty()) {
+      mTarget->EventListenerAdded(aTypeString);
+    }
   }
 
   if (mIsMainThreadELM && mTarget) {
@@ -611,14 +615,19 @@ EventListenerManager::DisableDevice(EventMessage aEventMessage)
 }
 
 void
-EventListenerManager::NotifyEventListenerRemoved(nsIAtom* aUserType)
+EventListenerManager::NotifyEventListenerRemoved(nsIAtom* aUserType,
+                                                 const nsAString& aTypeString)
 {
   // If the following code is changed, other callsites of EventListenerRemoved
   // and NotifyAboutMainThreadListenerChange should be changed too.
   mNoListenerForEvent = eVoidEvent;
   mNoListenerForEventAtom = nullptr;
-  if (mTarget && aUserType) {
-    mTarget->EventListenerRemoved(aUserType);
+  if (mTarget) {
+    if (aUserType) {
+      mTarget->EventListenerRemoved(aUserType);
+    } else if (!aTypeString.IsEmpty()) {
+      mTarget->EventListenerRemoved(aTypeString);
+    }
   }
   if (mIsMainThreadELM && mTarget) {
     EventListenerService::NotifyAboutMainThreadListenerChange(mTarget,
@@ -653,7 +662,7 @@ EventListenerManager::RemoveEventListenerInternal(
       if (listener->mListener == aListenerHolder &&
           listener->mFlags.EqualsForRemoval(aFlags)) {
         mListeners.RemoveElementAt(i);
-        NotifyEventListenerRemoved(aUserType);
+        NotifyEventListenerRemoved(aUserType, aTypeString);
         if (!aAllEvents && deviceType) {
           DisableDevice(aEventMessage);
         }
@@ -787,9 +796,14 @@ EventListenerManager::SetEventHandlerInternal(
     bool same = jsEventHandler->GetTypedEventHandler() == aTypedHandler;
     // Possibly the same listener, but update still the context and scope.
     jsEventHandler->SetHandler(aTypedHandler);
-    if (mTarget && !same && aName) {
-      mTarget->EventListenerRemoved(aName);
-      mTarget->EventListenerAdded(aName);
+    if (mTarget && !same) {
+      if (aName) {
+        mTarget->EventListenerRemoved(aName);
+        mTarget->EventListenerAdded(aName);
+      } else if (!aTypeString.IsEmpty()) {
+        mTarget->EventListenerRemoved(aTypeString);
+        mTarget->EventListenerAdded(aTypeString);
+      }
     }
     if (mIsMainThreadELM && mTarget) {
       EventListenerService::NotifyAboutMainThreadListenerChange(mTarget, aName);
@@ -911,7 +925,7 @@ EventListenerManager::RemoveEventHandler(nsIAtom* aName,
 
   if (listener) {
     mListeners.RemoveElementAt(uint32_t(listener - &mListeners.ElementAt(0)));
-    NotifyEventListenerRemoved(aName);
+    NotifyEventListenerRemoved(aName, aTypeString);
     if (IsDeviceType(eventMessage)) {
       DisableDevice(eventMessage);
     }
@@ -1342,7 +1356,8 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
     mListeners.RemoveElementsBy([](const Listener& aListener) {
       return aListener.mListenerType == Listener::eNoListener;
     });
-    NotifyEventListenerRemoved(aEvent->mSpecifiedEventType);
+    NotifyEventListenerRemoved(aEvent->mSpecifiedEventType,
+                               aEvent->mSpecifiedEventTypeString);
     if (IsDeviceType(aEvent->mMessage)) {
       // This is a device-type event, we need to check whether we can
       // disable device after removing the once listeners.

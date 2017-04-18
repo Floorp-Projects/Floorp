@@ -104,7 +104,10 @@ public:
    * of the leaf name.
    */
   LibHandle(const char *path)
-  : directRefCnt(0), path(path ? strdup(path) : nullptr), mappable(nullptr) { }
+  : directRefCnt(0), path(path ? strdup(path) : nullptr), mappable(nullptr)
+  {
+    pthread_mutex_init(&mutex, nullptr);
+  }
 
   /**
    * Destructor.
@@ -151,6 +154,7 @@ public:
    */
   void AddDirectRef()
   {
+    AutoLock lock(&mutex);
     ++directRefCnt;
     mozilla::external::AtomicRefCounted<LibHandle>::AddRef();
   }
@@ -161,6 +165,7 @@ public:
    */
   bool ReleaseDirectRef()
   {
+    AutoLock lock(&mutex);
     bool ret = false;
     if (directRefCnt) {
       MOZ_ASSERT(directRefCnt <=
@@ -236,6 +241,8 @@ private:
 
   /* Mappable object keeping the result of GetMappable() */
   mutable RefPtr<Mappable> mappable;
+
+  mutable pthread_mutex_t mutex;
 };
 
 /**

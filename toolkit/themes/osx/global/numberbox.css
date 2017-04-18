@@ -22,12 +22,4 @@ html|*.numberbox-input {
 .numberbox-input-box {
   -moz-appearance: textfield;
   margin-right: 4px;
-  border: 3px solid;
-  -moz-border-top-colors: transparent #888888 #000000;
-  -moz-border-right-colors: transparent #FFFFFF #000000;
-  -moz-border-bottom-colors: transparent #FFFFFF #000000;
-  -moz-border-left-colors: transparent #888888 #000000;
-  border-top-right-radius: 2px;
-  border-bottom-left-radius: 2px;
-  background-color: -moz-Field;
 }
