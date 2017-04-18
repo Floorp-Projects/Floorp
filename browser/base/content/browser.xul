@@ -106,7 +106,7 @@
       <menu id="context_sendTabToDevice" label="&sendTabToDevice.label;"
             accesskey="&sendTabToDevice.accesskey;" hidden="true">
         <menupopup id="context_sendTabToDevicePopupMenu"
-                   onpopupshowing="gFxAccounts.populateSendTabToDevicesMenu(event.target, TabContextMenu.contextTab.linkedBrowser.currentURI.spec, TabContextMenu.contextTab.linkedBrowser.contentTitle);"/>
+                   onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, TabContextMenu.contextTab.linkedBrowser.currentURI.spec, TabContextMenu.contextTab.linkedBrowser.contentTitle);"/>
       </menu>
       <menuseparator/>
       <menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
@@ -492,7 +492,7 @@
       <menuitem label="&syncedTabs.context.managedevices.label;"
                 accesskey="&syncedTabs.context.managedevices.accesskey;"
                 id="syncedTabsManageDevices"
-                oncommand="gFxAccounts.openDevicesManagementPage('syncedtabs-sidebar');"/>
+                oncommand="gSync.openDevicesManagementPage('syncedtabs-sidebar');"/>
       <menuitem label="&syncSyncNowItem.label;"
                 accesskey="&syncSyncNowItem.accesskey;"
                 id="syncedTabsRefresh"/>

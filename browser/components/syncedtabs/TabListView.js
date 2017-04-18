@@ -213,7 +213,7 @@ TabListView.prototype = {
   _updateClient(item, itemNode) {
     itemNode.setAttribute("id", "item-" + item.id);
     let lastSync = new Date(item.lastModified);
-    let lastSyncTitle = getChromeWindow(this._window).gSyncUI.formatLastSyncDate(lastSync);
+    let lastSyncTitle = getChromeWindow(this._window).gSync.formatLastSyncDate(lastSync);
     itemNode.setAttribute("title", lastSyncTitle);
     if (item.closed) {
       itemNode.classList.add("closed");
