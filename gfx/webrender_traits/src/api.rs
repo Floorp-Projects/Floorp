@@ -9,9 +9,9 @@ use std::cell::Cell;
 use std::fmt;
 use std::marker::PhantomData;
 use {AuxiliaryLists, AuxiliaryListsDescriptor, BuiltDisplayList, BuiltDisplayListDescriptor};
-use {ColorF, DeviceIntPoint, DeviceIntSize, DeviceUintRect, DeviceUintSize, FontKey};
+use {ClipId, ColorF, DeviceIntPoint, DeviceIntSize, DeviceUintRect, DeviceUintSize, FontKey};
 use {GlyphDimensions, GlyphKey, ImageData, ImageDescriptor, ImageKey, LayoutPoint, LayoutSize};
-use {LayoutTransform, NativeFontHandle, ScrollLayerId, WorldPoint};
+use {LayoutTransform, NativeFontHandle, WorldPoint};
 #[cfg(feature = "webgl")]
 use {WebGLCommand, WebGLContextId};
 
@@ -48,10 +48,10 @@ pub enum ApiMsg {
     SetRootPipeline(PipelineId),
     SetWindowParameters(DeviceUintSize, DeviceUintRect),
     Scroll(ScrollLocation, WorldPoint, ScrollEventPhase),
-    ScrollLayerWithId(LayoutPoint, ScrollLayerId),
+    ScrollNodeWithId(LayoutPoint, ClipId),
     TickScrollingBounce,
     TranslatePointToLayerSpace(WorldPoint, MsgSender<(LayoutPoint, PipelineId)>),
-    GetScrollLayerState(MsgSender<Vec<ScrollLayerState>>),
+    GetScrollNodeState(MsgSender<Vec<ScrollLayerState>>),
     RequestWebGLContext(DeviceIntSize, GLContextAttributes, MsgSender<Result<(WebGLContextId, GLLimits), String>>),
     ResizeWebGLContext(WebGLContextId, DeviceIntSize),
     WebGLCommand(WebGLContextId, WebGLCommand),
@@ -79,10 +79,10 @@ impl fmt::Debug for ApiMsg {
             ApiMsg::SetDisplayList(..) => "ApiMsg::SetDisplayList",
             ApiMsg::SetRootPipeline(..) => "ApiMsg::SetRootPipeline",
             ApiMsg::Scroll(..) => "ApiMsg::Scroll",
-            ApiMsg::ScrollLayerWithId(..) => "ApiMsg::ScrollLayerWithId",
+            ApiMsg::ScrollNodeWithId(..) => "ApiMsg::ScrollNodeWithId",
             ApiMsg::TickScrollingBounce => "ApiMsg::TickScrollingBounce",
             ApiMsg::TranslatePointToLayerSpace(..) => "ApiMsg::TranslatePointToLayerSpace",
-            ApiMsg::GetScrollLayerState(..) => "ApiMsg::GetScrollLayerState",
+            ApiMsg::GetScrollNodeState(..) => "ApiMsg::GetScrollNodeState",
             ApiMsg::RequestWebGLContext(..) => "ApiMsg::RequestWebGLContext",
             ApiMsg::ResizeWebGLContext(..) => "ApiMsg::ResizeWebGLContext",
             ApiMsg::WebGLCommand(..) => "ApiMsg::WebGLCommand",
@@ -334,8 +334,8 @@ impl RenderApi {
         self.api_sender.send(msg).unwrap();
     }
 
-    pub fn scroll_layer_with_id(&self, new_scroll_origin: LayoutPoint, id: ScrollLayerId) {
-        let msg = ApiMsg::ScrollLayerWithId(new_scroll_origin, id);
+    pub fn scroll_node_with_id(&self, new_scroll_origin: LayoutPoint, id: ClipId) {
+        let msg = ApiMsg::ScrollNodeWithId(new_scroll_origin, id);
         self.api_sender.send(msg).unwrap();
     }
 
@@ -375,9 +375,9 @@ impl RenderApi {
         rx.recv().unwrap()
     }
 
-    pub fn get_scroll_layer_state(&self) -> Vec<ScrollLayerState> {
+    pub fn get_scroll_node_state(&self) -> Vec<ScrollLayerState> {
         let (tx, rx) = channel::msg_channel().unwrap();
-        let msg = ApiMsg::GetScrollLayerState(tx);
+        let msg = ApiMsg::GetScrollNodeState(tx);
         self.api_sender.send(msg).unwrap();
         rx.recv().unwrap()
     }
@@ -457,7 +457,7 @@ pub enum ScrollEventPhase {
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct ScrollLayerState {
-    pub id: ScrollLayerId,
+    pub id: ClipId,
     pub scroll_offset: LayoutPoint,
 }
 

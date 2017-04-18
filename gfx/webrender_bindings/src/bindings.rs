@@ -1240,13 +1240,13 @@ pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
         }
     });
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip_rect, vec![], mask);
-    state.frame_builder.dl_builder.push_scroll_layer(clip_region, content_rect, None);
+    state.frame_builder.dl_builder.push_clip_node(clip_region, content_rect, None);
 }
 
 #[no_mangle]
 pub extern "C" fn wr_dp_pop_scroll_layer(state: &mut WrState) {
     assert!(unsafe { is_in_main_thread() });
-    state.frame_builder.dl_builder.pop_scroll_layer();
+    state.frame_builder.dl_builder.pop_clip_node();
 }
 
 #[no_mangle]
@@ -1311,7 +1311,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
     let glyph_options = None; // TODO
     state.frame_builder.dl_builder.push_text(bounds.to_rect(),
                                              clip.to_clip_region(),
-                                             glyph_vector,
+                                             &glyph_vector,
                                              font_key,
                                              colorf,
                                              Au::from_f32_px(glyph_size),

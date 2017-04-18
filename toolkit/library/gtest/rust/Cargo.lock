@@ -967,7 +967,7 @@ dependencies = [
 
 [[package]]
 name = "webrender"
-version = "0.31.0"
+version = "0.32.0"
 dependencies = [
  "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0-alpha6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -988,7 +988,7 @@ dependencies = [
  "thread_profiler 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "threadpool 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.36 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender_traits 0.32.0",
+ "webrender_traits 0.33.0",
 ]
 
 [[package]]
@@ -998,13 +998,13 @@ dependencies = [
  "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "euclid 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gleam 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender 0.31.0",
- "webrender_traits 0.32.0",
+ "webrender 0.32.0",
+ "webrender_traits 0.33.0",
 ]
 
 [[package]]
 name = "webrender_traits"
-version = "0.32.0"
+version = "0.33.0"
 dependencies = [
  "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",

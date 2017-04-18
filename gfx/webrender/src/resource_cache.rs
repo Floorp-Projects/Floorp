@@ -129,8 +129,8 @@ pub struct ResourceClassCache<K,V> {
 impl<K,V> ResourceClassCache<K,V> where K: Clone + Hash + Eq + Debug, V: Resource {
     fn new() -> ResourceClassCache<K,V> {
         ResourceClassCache {
-            resources: HashMap::with_hasher(Default::default()),
-            last_access_times: HashMap::with_hasher(Default::default()),
+            resources: HashMap::default(),
+            last_access_times: HashMap::default(),
         }
     }
 
@@ -235,10 +235,10 @@ impl ResourceCache {
         ResourceCache {
             cached_glyphs: Some(ResourceClassCache::new()),
             cached_images: ResourceClassCache::new(),
-            webgl_textures: HashMap::with_hasher(Default::default()),
-            font_templates: HashMap::with_hasher(Default::default()),
-            image_templates: HashMap::with_hasher(Default::default()),
-            cached_glyph_dimensions: HashMap::with_hasher(Default::default()),
+            webgl_textures: HashMap::default(),
+            font_templates: HashMap::default(),
+            image_templates: HashMap::default(),
+            cached_glyph_dimensions: HashMap::default(),
             texture_cache: texture_cache,
             state: State::Idle,
             enable_aa: enable_aa,

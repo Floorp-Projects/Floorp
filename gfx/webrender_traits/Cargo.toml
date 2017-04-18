@@ -1,6 +1,6 @@
 [package]
 name = "webrender_traits"
-version = "0.32.0"
+version = "0.33.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"

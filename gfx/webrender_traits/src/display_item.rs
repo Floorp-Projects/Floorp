@@ -14,7 +14,7 @@ pub struct DisplayItem {
     pub item: SpecificDisplayItem,
     pub rect: LayoutRect,
     pub clip: ClipRegion,
-    pub scroll_layer_id: ScrollLayerId,
+    pub clip_id: ClipId,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -43,8 +43,8 @@ pub struct ItemRange {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ClipDisplayItem {
-    pub id: ScrollLayerId,
-    pub parent_id: ScrollLayerId,
+    pub id: ClipId,
+    pub parent_id: ClipId,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -503,43 +503,43 @@ impl ComplexClipRegion {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub enum ScrollLayerId {
+pub enum ClipId {
     Clip(u64, PipelineId),
     ClipExternalId(u64, PipelineId),
     ReferenceFrame(u64, PipelineId),
 }
 
-impl ScrollLayerId {
-    pub fn root_scroll_layer(pipeline_id: PipelineId) -> ScrollLayerId {
-        ScrollLayerId::Clip(0, pipeline_id)
+impl ClipId {
+    pub fn root_scroll_node(pipeline_id: PipelineId) -> ClipId {
+        ClipId::Clip(0, pipeline_id)
     }
 
-    pub fn root_reference_frame(pipeline_id: PipelineId) -> ScrollLayerId {
-        ScrollLayerId::ReferenceFrame(0, pipeline_id)
+    pub fn root_reference_frame(pipeline_id: PipelineId) -> ClipId {
+        ClipId::ReferenceFrame(0, pipeline_id)
     }
 
-    pub fn new(id: u64, pipeline_id: PipelineId) -> ScrollLayerId {
-        ScrollLayerId::ClipExternalId(id, pipeline_id)
+    pub fn new(id: u64, pipeline_id: PipelineId) -> ClipId {
+        ClipId::ClipExternalId(id, pipeline_id)
     }
 
     pub fn pipeline_id(&self) -> PipelineId {
         match *self {
-            ScrollLayerId::Clip(_, pipeline_id) |
-            ScrollLayerId::ClipExternalId(_, pipeline_id) |
-            ScrollLayerId::ReferenceFrame(_, pipeline_id) => pipeline_id,
+            ClipId::Clip(_, pipeline_id) |
+            ClipId::ClipExternalId(_, pipeline_id) |
+            ClipId::ReferenceFrame(_, pipeline_id) => pipeline_id,
         }
     }
 
     pub fn is_reference_frame(&self) -> bool {
         match *self {
-            ScrollLayerId::ReferenceFrame(..) => true,
+            ClipId::ReferenceFrame(..) => true,
             _ => false,
         }
     }
 
     pub fn external_id(&self) -> Option<u64> {
         match *self {
-            ScrollLayerId::ClipExternalId(id, _) => Some(id),
+            ClipId::ClipExternalId(id, _) => Some(id),
             _ => None,
         }
     }

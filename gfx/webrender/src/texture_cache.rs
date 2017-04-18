@@ -465,6 +465,7 @@ struct TextureCacheArena {
     pages_a8: Vec<TexturePage>,
     pages_rgb8: Vec<TexturePage>,
     pages_rgba8: Vec<TexturePage>,
+    pages_rg8: Vec<TexturePage>,
 }
 
 impl TextureCacheArena {
@@ -473,12 +474,14 @@ impl TextureCacheArena {
             pages_a8: Vec::new(),
             pages_rgb8: Vec::new(),
             pages_rgba8: Vec::new(),
+            pages_rg8: Vec::new(),
         }
     }
 
     fn texture_page_for_id(&mut self, id: CacheTextureId) -> Option<&mut TexturePage> {
         for page in self.pages_a8.iter_mut().chain(self.pages_rgb8.iter_mut())
-                                            .chain(self.pages_rgba8.iter_mut()) {
+                                            .chain(self.pages_rgba8.iter_mut())
+                                            .chain(self.pages_rg8.iter_mut()) {
             if page.texture_id == id {
                 return Some(page)
             }
@@ -546,7 +549,7 @@ impl TextureCache {
 
         TextureCache {
             cache_id_list: CacheTextureIdList::new(),
-            free_texture_levels: HashMap::with_hasher(Default::default()),
+            free_texture_levels: HashMap::default(),
             items: FreeList::new(),
             pending_updates: TextureUpdateList::new(),
             arena: TextureCacheArena::new(),
@@ -607,6 +610,7 @@ impl TextureCache {
             ImageFormat::A8 => (&mut self.arena.pages_a8, &mut profile.pages_a8),
             ImageFormat::RGBA8 => (&mut self.arena.pages_rgba8, &mut profile.pages_rgba8),
             ImageFormat::RGB8 => (&mut self.arena.pages_rgb8, &mut profile.pages_rgb8),
+            ImageFormat::RG8 => (&mut self.arena.pages_rg8, &mut profile.pages_rg8),
             ImageFormat::Invalid | ImageFormat::RGBAF32 => unreachable!(),
         };
 
