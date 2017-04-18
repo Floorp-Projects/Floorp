@@ -49,11 +49,6 @@ Keyframes.prototype = {
     this.propertyName = propertyName;
     this.animation = animation;
 
-    let iterationStartOffset =
-      animation.state.iterationStart % 1 == 0
-      ? 0
-      : 1 - animation.state.iterationStart % 1;
-
     // Create graph element.
     const graphEl = createSVGNode({
       parent: this.keyframesEl,
@@ -93,12 +88,11 @@ Keyframes.prototype = {
     // Append elements to display keyframe values.
     this.keyframesEl.classList.add(animation.state.type);
     for (let frame of this.keyframes) {
-      let offset = frame.offset + iterationStartOffset;
       createNode({
         parent: this.keyframesEl,
         attributes: {
           "class": "frame",
-          "style": `left:${offset * 100}%;`,
+          "style": `left:${frame.offset * 100}%;`,
           "data-offset": frame.offset,
           "data-property": propertyName,
           "title": frame.value

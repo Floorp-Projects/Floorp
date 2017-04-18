@@ -61,11 +61,10 @@ function checkProgressAtStartingTime(el, { iterationStart }) {
 function checkKeyframeOffset(timeBlockEl, frameEl, {iterationStart}) {
   info("Check that the first keyframe is offset correctly");
 
-  let start = getIterationStartFromLeft(frameEl);
-  is(start, iterationStart % 1, "The frame offset for iteration start");
+  let start = getKeyframeOffset(frameEl);
+  is(start, 0, "The frame offset for iteration start");
 }
 
-function getIterationStartFromLeft(el) {
-  let left = 100 - parseFloat(/(\d+)%/.exec(el.style.left)[1]);
-  return left / 100;
+function getKeyframeOffset(el) {
+  return parseFloat(/(\d+)%/.exec(el.style.left)[1]);
 }
