@@ -971,8 +971,6 @@ var AudioPlaybackListener = {
 
   init() {
     Services.obs.addObserver(this, "audio-playback");
-    Services.obs.addObserver(this, "AudioFocusChanged");
-    Services.obs.addObserver(this, "MediaControl");
 
     addMessageListener("AudioPlayback", this);
     addEventListener("unload", () => {
@@ -982,8 +980,6 @@ var AudioPlaybackListener = {
 
   uninit() {
     Services.obs.removeObserver(this, "audio-playback");
-    Services.obs.removeObserver(this, "AudioFocusChanged");
-    Services.obs.removeObserver(this, "MediaControl");
 
     removeMessageListener("AudioPlayback", this);
   },
@@ -1039,8 +1035,6 @@ var AudioPlaybackListener = {
         }
         sendAsyncMessage(name);
       }
-    } else if (topic == "AudioFocusChanged" || topic == "MediaControl") {
-      this.handleMediaControlMessage(data);
     }
   },
 

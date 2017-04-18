@@ -254,12 +254,14 @@ add_task(function* () {
         id: "guid_mobile",
         type: "client",
         name: "My Phone",
+        lastModified: 1492201200,
         tabs: [],
       },
       {
         id: "guid_desktop",
         type: "client",
         name: "My Desktop",
+        lastModified: 1492201200,
         tabs: [
           {
             title: "http://example.com/10",
@@ -278,6 +280,7 @@ add_task(function* () {
       {
         id: "guid_second_desktop",
         name: "My Other Desktop",
+        lastModified: 1492201200,
         tabs: [
           {
             title: "http://example.com/6",
@@ -351,6 +354,7 @@ add_task(function* () {
         id: "guid_desktop",
         type: "client",
         name: "My Desktop",
+        lastModified: 1492201200,
         tabs: function() {
           let allTabsDesktop = [];
           // We choose 77 tabs, because TABS_PER_PAGE is 25, which means
