@@ -496,7 +496,7 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
   }
 #endif
 
-  if (mRustTestMode && info.Ref() && infoRust.Ref()) {
+  if (info.Ref() && infoRust.Ref()) {
     const char* diff = GetDifferentField(*info.Ref(), *infoRust.Ref());
     if (diff) {
       return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
@@ -556,7 +556,11 @@ MP4Metadata::ResultAndIndice
 MP4Metadata::GetTrackIndice(mozilla::TrackID aTrackID)
 {
   FallibleTArray<Index::Indice> indiceSF;
-  if (!mPreferRust || mRustTestMode) {
+  if (!mPreferRust
+#ifndef RELEASE_OR_BETA
+      || mRustTestMode
+#endif
+     ) {
     MediaResult rv = mStagefright->ReadTrackIndex(indiceSF, aTrackID);
     if (NS_FAILED(rv)) {
       return {Move(rv), nullptr};
@@ -564,7 +568,11 @@ MP4Metadata::GetTrackIndice(mozilla::TrackID aTrackID)
   }
 
   mp4parse_byte_data indiceRust = {};
-  if (mPreferRust || mRustTestMode) {
+  if (mPreferRust
+#ifndef RELEASE_OR_BETA
+      || mRustTestMode
+#endif
+     ) {
     MediaResult rvRust = mRust->ReadTrackIndice(&indiceRust, aTrackID);
     if (NS_FAILED(rvRust)) {
       return {Move(rvRust), nullptr};
