@@ -37,19 +37,15 @@ add_task(function* () {
   let propertiesList = timeline.rootWrapperEl
                                .querySelector(".animated-properties");
 
-  ok(!isNodeVisible(propertiesList),
-     "The list of properties panel is hidden by default");
-
-  info("Click to select the animation");
-  yield clickOnAnimation(panel, 0);
-
+  // doc_keyframes.html has only one animation,
+  // so the propertiesList shoud be shown.
   ok(isNodeVisible(propertiesList),
-     "The list of properties panel is shown");
+     "The list of properties panel shoud be shown");
+
   ok(propertiesList.querySelectorAll(".property").length,
      "The list of properties panel actually contains properties");
   ok(hasExpectedProperties(propertiesList),
      "The list of properties panel contains the right properties");
-
   ok(hasExpectedWarnings(propertiesList),
      "The list of properties panel contains the right warnings");
 

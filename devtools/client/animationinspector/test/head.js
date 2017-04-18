@@ -93,6 +93,11 @@ var selectNodeAndWaitForAnimations = Task.async(
     // be properly displayed (wait for all target DOM nodes to be previewed).
     let {AnimationsPanel} = inspector.sidebar.getWindowForTab(TAB_NAME);
     yield waitForAllAnimationTargets(AnimationsPanel);
+
+    if (AnimationsPanel.animationsTimelineComponent.animations.length === 1) {
+      // Wait for selecting the animation since there is only one animation.
+      yield waitForAnimationSelecting(AnimationsPanel);
+    }
   }
 );
 
@@ -158,6 +163,11 @@ var openAnimationInspector = Task.async(function* () {
   // nodes to be lazily displayed). This is safe to do even if there are no
   // animations displayed.
   yield waitForAllAnimationTargets(AnimationsPanel);
+
+  if (AnimationsPanel.animationsTimelineComponent.animations.length === 1) {
+    // Wait for selecting the animation since there is only one animation.
+    yield waitForAnimationSelecting(AnimationsPanel);
+  }
 
   return {
     toolbox: toolbox,
@@ -348,6 +358,14 @@ function* changeTimelinePlaybackRate(panel, rate) {
   // tests from failing because of unwanted mouseover events.
   EventUtils.synthesizeMouseAtCenter(
     win.document.querySelector("#timeline-toolbar"), {type: "mousemove"}, win);
+}
+
+/**
+ * Wait for animation selecting.
+ * @param {AnimationsPanel} panel
+ */
+function* waitForAnimationSelecting(panel) {
+  yield panel.animationsTimelineComponent.once("animation-selected");
 }
 
 /**

@@ -26,8 +26,8 @@ add_task(function* () {
   let {panel} = yield openAnimationInspector();
   let timeline = panel.animationsTimelineComponent;
 
-  info("Expand the animation");
-  yield clickOnAnimation(panel, 0);
+  // doc_keyframes.html has only one animation.
+  // So we don't need to click the animation since already the animation detail shown.
 
   ok(timeline.rootWrapperEl.querySelectorAll(".frames .keyframes").length,
      "There are container elements for displaying keyframes");
