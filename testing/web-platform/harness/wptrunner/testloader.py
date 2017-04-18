@@ -92,8 +92,8 @@ class EqualTimeChunker(TestChunker):
                 by_dir[test_dir] = PathData(test_dir)
 
             data = by_dir[test_dir]
-            time = sum(wpttest.DEFAULT_TIMEOUT if test.timeout !=
-                       "long" else wpttest.LONG_TIMEOUT for test in tests)
+            time = sum(test.default_timeout if test.timeout !=
+                       "long" else test.long_timeout for test in tests)
             data.time += time
             total_time += time
             data.tests.append((test_type, test_path, tests))

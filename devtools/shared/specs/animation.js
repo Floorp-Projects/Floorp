@@ -75,6 +75,14 @@ const animationPlayerSpec = generateActorSpec({
       response: {
         properties: RetVal("array:json")
       }
+    },
+    getAnimationTypes: {
+      request: {
+        propertyNames: Arg(0, "array:string")
+      },
+      response: {
+        animationTypes: RetVal("json")
+      }
     }
   }
 });
@@ -148,4 +156,3 @@ const animationsSpec = generateActorSpec({
 });
 
 exports.animationsSpec = animationsSpec;
-

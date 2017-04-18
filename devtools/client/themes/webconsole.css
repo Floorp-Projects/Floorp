@@ -753,8 +753,8 @@ a.learn-more-link.webconsole-learn-more-link {
   display: none;
 }
 
-.message.startGroup .message-body,
-.message.startGroupCollapsed .message-body {
+.message.startGroup .message-body > .objectBox-string,
+.message.startGroupCollapsed .message-body > .objectBox-string {
   color: var(--theme-body-color);
   font-weight: bold;
 }

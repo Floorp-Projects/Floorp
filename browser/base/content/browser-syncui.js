@@ -39,6 +39,8 @@ var gSyncUI = {
   // once syncing completes (bug 1239042).
   _syncStartTime: 0,
   _syncAnimationTimer: 0,
+  _withinLastWeekFormat: null,
+  _oneWeekOrOlderFormat: null,
 
   init() {
     // Proceed to set up the UI if Sync has already started up.
@@ -59,18 +61,17 @@ var gSyncUI = {
 
     // Remove the observer if the window is closed before the observer
     // was triggered.
-    window.addEventListener("unload", function onUnload() {
-      gSyncUI._unloaded = true;
-      window.removeEventListener("unload", onUnload);
-      Services.obs.removeObserver(gSyncUI, "weave:service:ready");
-      Services.obs.removeObserver(gSyncUI, "quit-application");
+    window.addEventListener("unload", () => {
+      this._unloaded = true;
+      Services.obs.removeObserver(this, "weave:service:ready");
+      Services.obs.removeObserver(this, "quit-application");
 
-      if (Weave.Status.ready) {
-        gSyncUI._obs.forEach(function(topic) {
-          Services.obs.removeObserver(gSyncUI, topic);
+      if (this.weaveService.ready) {
+        this._obs.forEach(topic => {
+          Services.obs.removeObserver(this, topic);
         });
       }
-    });
+    }, { once: true });
   },
 
   initUI: function SUI_initUI() {
@@ -367,21 +368,31 @@ var gSyncUI = {
     }
   }),
 
+  getWithinLastWeekFormat() {
+    return this._withinLastWeekFormat ||
+           (this._withinLastWeekFormat =
+             new Intl.DateTimeFormat(undefined, {weekday: "long", hour: "numeric", minute: "numeric"}));
+  },
+
+  getOneWeekOrOlderFormat() {
+    return this._oneWeekOrOlderFormat ||
+           (this._oneWeekOrOlderFormat =
+             new Intl.DateTimeFormat(undefined, {month: "long", day: "numeric"}));
+  },
+
   formatLastSyncDate(date) {
-    let dateFormat;
     let sixDaysAgo = (() => {
       let tempDate = new Date();
       tempDate.setDate(tempDate.getDate() - 6);
       tempDate.setHours(0, 0, 0, 0);
       return tempDate;
     })();
-    // It may be confusing for the user to see "Last Sync: Monday" when the last sync was a indeed a Monday but 3 weeks ago
-    if (date < sixDaysAgo) {
-      dateFormat = {month: "long", day: "numeric"};
-    } else {
-      dateFormat = {weekday: "long", hour: "numeric", minute: "numeric"};
-    }
-    let lastSyncDateString = date.toLocaleDateString(undefined, dateFormat);
+
+    // It may be confusing for the user to see "Last Sync: Monday" when the last
+    // sync was indeed a Monday, but 3 weeks ago.
+    let dateFormat = date < sixDaysAgo ? this.getOneWeekOrOlderFormat() : this.getWithinLastWeekFormat();
+
+    let lastSyncDateString = dateFormat.format(date);
     return this._stringBundle.formatStringFromName("lastSync2.label", [lastSyncDateString], 1);
   },
 
