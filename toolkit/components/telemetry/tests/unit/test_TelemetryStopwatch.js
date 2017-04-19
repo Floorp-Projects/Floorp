@@ -52,6 +52,13 @@ function run_test() {
   do_check_true(TelemetryStopwatch.start("NON-EXISTENT_HISTOGRAM", refObj));
   do_check_false(TelemetryStopwatch.finish("NON-EXISTENT_HISTOGRAM", refObj));
 
+  do_check_false(TelemetryStopwatch.running(HIST_NAME));
+  do_check_false(TelemetryStopwatch.running(HIST_NAME2));
+  do_check_false(TelemetryStopwatch.running(HIST_NAME, refObj));
+  do_check_false(TelemetryStopwatch.running(HIST_NAME2, refObj));
+  do_check_false(TelemetryStopwatch.running(HIST_NAME, refObj2));
+  do_check_false(TelemetryStopwatch.running(HIST_NAME2, refObj2));
+
   do_check_true(TelemetryStopwatch.start(HIST_NAME));
   do_check_true(TelemetryStopwatch.start(HIST_NAME2));
   do_check_true(TelemetryStopwatch.start(HIST_NAME, refObj));
@@ -59,12 +66,28 @@ function run_test() {
   do_check_true(TelemetryStopwatch.start(HIST_NAME, refObj2));
   do_check_true(TelemetryStopwatch.start(HIST_NAME2, refObj2));
 
+  do_check_true(TelemetryStopwatch.running(HIST_NAME));
+  do_check_true(TelemetryStopwatch.running(HIST_NAME));
+  do_check_true(TelemetryStopwatch.running(HIST_NAME2));
+  do_check_true(TelemetryStopwatch.running(HIST_NAME, refObj));
+  do_check_true(TelemetryStopwatch.running(HIST_NAME2, refObj));
+  do_check_true(TelemetryStopwatch.running(HIST_NAME, refObj2));
+  do_check_true(TelemetryStopwatch.running(HIST_NAME2, refObj2));
+
   do_check_true(TelemetryStopwatch.finish(HIST_NAME));
   do_check_true(TelemetryStopwatch.finish(HIST_NAME2));
   do_check_true(TelemetryStopwatch.finish(HIST_NAME, refObj));
   do_check_true(TelemetryStopwatch.finish(HIST_NAME2, refObj));
   do_check_true(TelemetryStopwatch.finish(HIST_NAME, refObj2));
   do_check_true(TelemetryStopwatch.finish(HIST_NAME2, refObj2));
+
+  do_check_false(TelemetryStopwatch.running(HIST_NAME));
+  do_check_false(TelemetryStopwatch.running(HIST_NAME));
+  do_check_false(TelemetryStopwatch.running(HIST_NAME2));
+  do_check_false(TelemetryStopwatch.running(HIST_NAME, refObj));
+  do_check_false(TelemetryStopwatch.running(HIST_NAME2, refObj));
+  do_check_false(TelemetryStopwatch.running(HIST_NAME, refObj2));
+  do_check_false(TelemetryStopwatch.running(HIST_NAME2, refObj2));
 
   // Verify that TS.finish deleted the timers
   do_check_false(TelemetryStopwatch.finish(HIST_NAME));
@@ -81,8 +104,12 @@ function run_test() {
   do_check_false(TelemetryStopwatch.finish(HIST_NAME, {})); // Known mark on unknown object
 
   // Test cancel
+  do_check_false(TelemetryStopwatch.running(HIST_NAME));
+  do_check_false(TelemetryStopwatch.running(HIST_NAME, refObj));
   do_check_true(TelemetryStopwatch.start(HIST_NAME));
   do_check_true(TelemetryStopwatch.start(HIST_NAME, refObj));
+  do_check_true(TelemetryStopwatch.running(HIST_NAME));
+  do_check_true(TelemetryStopwatch.running(HIST_NAME, refObj));
   do_check_true(TelemetryStopwatch.cancel(HIST_NAME));
   do_check_true(TelemetryStopwatch.cancel(HIST_NAME, refObj));
 
@@ -91,6 +118,8 @@ function run_test() {
   do_check_false(TelemetryStopwatch.cancel(HIST_NAME, refObj));
 
   // Verify that cancel removes the timers
+  do_check_false(TelemetryStopwatch.running(HIST_NAME));
+  do_check_false(TelemetryStopwatch.running(HIST_NAME, refObj));
   do_check_false(TelemetryStopwatch.finish(HIST_NAME));
   do_check_false(TelemetryStopwatch.finish(HIST_NAME, refObj));
 
@@ -100,10 +129,20 @@ function run_test() {
   }
 
   // Verify that keyed histograms can be started.
+  do_check_false(TelemetryStopwatch.runningKeyed("HISTOGRAM", "KEY1"));
+  do_check_false(TelemetryStopwatch.runningKeyed("HISTOGRAM", "KEY2"));
+  do_check_false(TelemetryStopwatch.runningKeyed("HISTOGRAM", "KEY1", refObj));
+  do_check_false(TelemetryStopwatch.runningKeyed("HISTOGRAM", "KEY2", refObj));
+
   do_check_true(TelemetryStopwatch.startKeyed("HISTOGRAM", "KEY1"));
   do_check_true(TelemetryStopwatch.startKeyed("HISTOGRAM", "KEY2"));
   do_check_true(TelemetryStopwatch.startKeyed("HISTOGRAM", "KEY1", refObj));
   do_check_true(TelemetryStopwatch.startKeyed("HISTOGRAM", "KEY2", refObj));
+
+  do_check_true(TelemetryStopwatch.runningKeyed("HISTOGRAM", "KEY1"));
+  do_check_true(TelemetryStopwatch.runningKeyed("HISTOGRAM", "KEY2"));
+  do_check_true(TelemetryStopwatch.runningKeyed("HISTOGRAM", "KEY1", refObj));
+  do_check_true(TelemetryStopwatch.runningKeyed("HISTOGRAM", "KEY2", refObj));
 
   // Restarting keyed histograms should fail.
   do_check_false(TelemetryStopwatch.startKeyed("HISTOGRAM", "KEY1"));
@@ -117,7 +156,7 @@ function run_test() {
   do_check_true(TelemetryStopwatch.startKeyed(KEYED_HIST.id, KEYED_HIST.key));
   do_check_true(TelemetryStopwatch.finishKeyed(KEYED_HIST.id, KEYED_HIST.key));
   // Verify that TS.finish deleted the timers
-  do_check_false(TelemetryStopwatch.finishKeyed(KEYED_HIST.id, KEYED_HIST.key));
+  do_check_false(TelemetryStopwatch.runningKeyed(KEYED_HIST.id, KEYED_HIST.key));
 
   // Verify that they can be used again
   do_check_true(TelemetryStopwatch.startKeyed(KEYED_HIST.id, KEYED_HIST.key));

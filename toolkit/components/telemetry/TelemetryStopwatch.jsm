@@ -137,12 +137,31 @@ this.TelemetryStopwatch = {
   },
 
   /**
+   * Returns whether a timer associated with a telemetry histogram is currently
+   * running. The timer can be directly associated with a histogram, or with a
+   * pair of a histogram and an object.
+   *
+   * @param {String} aHistogram - a string which must be a valid histogram name.
+   *
+   * @param {Object} aObj - Optional parameter. If specified, the timer is
+   *                        associated with this object, meaning that multiple
+   *                        timers for the same histogram may be run
+   *                        concurrently, as long as they are associated with
+   *                        different objects.
+   *
+   * @returns {Boolean} True if the timer exists and is currently running.
+   */
+  running(aHistogram, aObj) {
+    return TelemetryStopwatchImpl.running(aHistogram, aObj, null);
+  },
+
+  /**
    * Deletes the timer associated with a telemetry histogram. The timer can be
    * directly associated with a histogram, or with a pair of a histogram and
    * an object. Important: Only use this method when a legitimate cancellation
    * should be done.
    *
-  * @param {String} aHistogram - a string which must be a valid histogram name.
+   * @param {String} aHistogram - a string which must be a valid histogram name.
    *
    * @param {Object} aObj - Optional parameter. If specified, the timer is
    *                        associated with this object, meaning that multiple
@@ -230,6 +249,28 @@ this.TelemetryStopwatch = {
   },
 
   /**
+   * Returns whether a timer associated with a telemetry histogram is currently
+   * running. Similarly to @see{TelemetryStopwatch.running} the timer and its
+   * key can be associated with an object. Each key may have multiple associated
+   * objects and each object can be associated with multiple keys.
+   *
+   * @param {String} aHistogram - a string which must be a valid histogram name.
+   *
+   * @param {String} aKey - a string which must be a valid histgram key.
+   *
+   * @param {Object} aObj - Optional parameter. If specified, the timer is
+   *                        associated with this object, meaning that multiple
+   *                        timers for the same histogram may be run
+   *                        concurrently, as long as they are associated with
+   *                        different objects.
+   *
+   * @returns {Boolean} True if the timer exists and is currently running.
+   */
+  runningKeyed(aHistogram, aKey, aObj) {
+    return TelemetryStopwatchImpl.running(aHistogram, aObj, aKey);
+  },
+
+  /**
    * Deletes the timer associated with a keyed histogram. Important: Only use
    * this method when a legitimate cancellation should be done.
    *
@@ -302,6 +343,10 @@ this.TelemetryStopwatchImpl = {
     }
 
     return Timers.put(histogram, object, key, Components.utils.now());
+  },
+
+  running(histogram, object, key) {
+    return Timers.has(histogram, object, key);
   },
 
   cancel(histogram, object, key) {
