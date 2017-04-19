@@ -1396,6 +1396,8 @@ imgLoader::FindEntryProperties(nsIURI* uri,
                                nsIDOMDocument* aDOMDoc,
                                nsIProperties** _retval)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   *_retval = nullptr;
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
@@ -1479,6 +1481,8 @@ imgLoader::MinimizeCaches()
 bool
 imgLoader::PutIntoCache(const ImageCacheKey& aKey, imgCacheEntry* entry)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   imgCacheTable& cache = GetCache(aKey);
 
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog,
@@ -1538,6 +1542,8 @@ imgLoader::PutIntoCache(const ImageCacheKey& aKey, imgCacheEntry* entry)
 bool
 imgLoader::SetHasNoProxies(imgRequest* aRequest, imgCacheEntry* aEntry)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog,
                              "imgLoader::SetHasNoProxies", "uri",
                              aRequest->CacheKey().Spec());
@@ -1569,6 +1575,8 @@ imgLoader::SetHasNoProxies(imgRequest* aRequest, imgCacheEntry* aEntry)
 bool
 imgLoader::SetHasProxies(imgRequest* aRequest)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   VerifyCacheSizes();
 
   const ImageCacheKey& key = aRequest->CacheKey();
@@ -1896,6 +1904,8 @@ imgLoader::ValidateEntry(imgCacheEntry* aEntry,
 bool
 imgLoader::RemoveFromCache(const ImageCacheKey& aKey)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog,
                              "imgLoader::RemoveFromCache", "uri", aKey.Spec());
 
@@ -1930,6 +1940,8 @@ imgLoader::RemoveFromCache(const ImageCacheKey& aKey)
 bool
 imgLoader::RemoveFromCache(imgCacheEntry* entry)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   LOG_STATIC_FUNC(gImgLog, "imgLoader::RemoveFromCache entry");
 
   RefPtr<imgRequest> request = entry->GetRequest();
@@ -2089,6 +2101,8 @@ imgLoader::LoadImage(nsIURI* aURI,
                      const nsAString& initiatorType,
                      imgRequestProxy** _retval)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   VerifyCacheSizes();
 
   NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
@@ -2370,6 +2384,8 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
                                 nsIStreamListener** listener,
                                 imgRequestProxy** _retval)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   NS_ASSERTION(channel,
                "imgLoader::LoadImageWithChannel -- NULL channel pointer");
 
