@@ -1858,10 +1858,8 @@ ScriptSource::tryCompressOffThread(JSContext* cx)
     // Heap allocate the task. It will be freed upon compression
     // completing in AttachFinishedCompressedSources.
     auto task = MakeUnique<SourceCompressionTask>(cx->runtime(), this);
-    if (!task) {
-        ReportOutOfMemory(cx);
+    if (!task)
         return false;
-    }
     return EnqueueOffThreadCompression(cx, Move(task));
 }
 
