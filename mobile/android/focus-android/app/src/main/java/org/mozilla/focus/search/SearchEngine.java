@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class SearchEngine {
     // Parameters copied from nsSearchService.js
     private static final String MOZ_PARAM_LOCALE = "\\{moz:locale\\}";
@@ -30,6 +32,10 @@ public class SearchEngine {
     /* package */ String name;
     /* package */ Bitmap icon;
     /* package */ List<Uri> resultsUris;
+    // We don't currently support search suggestions, however that's something that we might
+    // need to support in future, moreover this is already stored in the input files that we're merely
+    // moving into memory - hence we probably want to keep this field for now:
+    @SuppressFBWarnings(value = "URF_UNREAD_FIELD", justification = "Needed for future versions, reflects on-disk format")
     /* package */ Uri suggestUri;
 
     /* package */ SearchEngine(String identifier) {
