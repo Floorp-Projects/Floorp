@@ -81,6 +81,9 @@ public class HomeFragment extends Fragment implements View.OnClickListener, Popu
                 popupMenu.setGravity(Gravity.TOP);
                 popupMenu.show();
                 break;
+
+            default:
+                throw new IllegalStateException("Unhandled view ID in onClick()");
         }
     }
 

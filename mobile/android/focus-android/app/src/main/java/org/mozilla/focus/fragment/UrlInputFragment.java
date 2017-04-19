@@ -183,6 +183,9 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
             case R.id.dismiss:
                 animateAndDismiss();
                 break;
+
+            default:
+                throw new IllegalStateException("Unhandled view in onClick()");
         }
     }
 
