@@ -884,9 +884,12 @@ function setFaviconForPage(page, icon, forceReload = true) {
 function getFaviconUrlForPage(page, width = 0) {
   let pageURI = page instanceof Ci.nsIURI ? page
                                           : NetUtil.newURI(new URL(page).href);
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     PlacesUtils.favicons.getFaviconURLForPage(pageURI, iconURI => {
-      resolve(iconURI.spec);
+      if (iconURI)
+        resolve(iconURI.spec);
+      else
+        reject("Unable to find an icon for " + pageURI.spec);
     }, width);
   });
 }
