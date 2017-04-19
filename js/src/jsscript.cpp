@@ -1821,6 +1821,50 @@ ScriptSource::setSource(SharedImmutableTwoByteString&& string)
     data = SourceType(Uncompressed(mozilla::Move(string)));
 }
 
+bool
+ScriptSource::tryCompressOffThread(JSContext* cx)
+{
+    if (!data.is<Uncompressed>())
+        return true;
+
+    // There are several cases where source compression is not a good idea:
+    //  - If the script is tiny, then compression will save little or no space.
+    //  - If there is only one core, then compression will contend with JS
+    //    execution (which hurts benchmarketing).
+    //
+    // Otherwise, enqueue a compression task to be processed when a major
+    // GC is requested.
+
+    bool canCompressOffThread =
+        HelperThreadState().cpuCount > 1 &&
+        HelperThreadState().threadCount >= 2 &&
+        CanUseExtraThreads();
+    const size_t TINY_SCRIPT = 256;
+    if (TINY_SCRIPT > length() || !canCompressOffThread)
+        return true;
+
+    // The SourceCompressionTask needs to record the major GC number for
+    // scheduling. If we're parsing off thread, this number is not safe to
+    // access.
+    //
+    // When parsing on the main thread, the attempts made to compress off
+    // thread in BytecodeCompiler will succeed.
+    //
+    // When parsing off-thread, the above attempts will fail and the attempt
+    // made in ParseTask::finish will succeed.
+    if (!CurrentThreadCanAccessRuntime(cx->runtime()))
+        return true;
+
+    // Heap allocate the task. It will be freed upon compression
+    // completing in AttachFinishedCompressedSources.
+    auto task = MakeUnique<SourceCompressionTask>(cx->runtime(), this);
+    if (!task) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+    return EnqueueOffThreadCompression(cx, Move(task));
+}
+
 MOZ_MUST_USE bool
 ScriptSource::setCompressedSource(JSContext* cx,
                                   mozilla::UniquePtr<char[], JS::FreePolicy>&& raw,
