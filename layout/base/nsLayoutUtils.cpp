@@ -1585,34 +1585,38 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
   return id;
 }
 
-/*static*/ nsIFrame*
-nsLayoutUtils::GetBeforeFrameForContent(nsIFrame* aFrame,
-                                        const nsIContent* aContent)
+static Element*
+GetPseudo(const nsIContent* aContent, nsIAtom* aPseudoProperty)
 {
-  auto* pseudo =
-    static_cast<Element*>(aContent->GetProperty(nsGkAtoms::beforePseudoProperty));
+  MOZ_ASSERT(aPseudoProperty == nsGkAtoms::beforePseudoProperty ||
+             aPseudoProperty == nsGkAtoms::afterPseudoProperty);
+  return static_cast<Element*>(aContent->GetProperty(aPseudoProperty));
+}
+
+/*static*/ Element*
+nsLayoutUtils::GetBeforePseudo(const nsIContent* aContent)
+{
+  return GetPseudo(aContent, nsGkAtoms::beforePseudoProperty);
+}
+
+/*static*/ nsIFrame*
+nsLayoutUtils::GetBeforeFrame(const nsIContent* aContent)
+{
+  Element* pseudo = GetBeforePseudo(aContent);
   return pseudo ? pseudo->GetPrimaryFrame() : nullptr;
 }
 
-/*static*/ nsIFrame*
-nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame)
+/*static*/ Element*
+nsLayoutUtils::GetAfterPseudo(const nsIContent* aContent)
 {
-  return GetBeforeFrameForContent(aFrame, aFrame->GetContent());
+  return GetPseudo(aContent, nsGkAtoms::afterPseudoProperty);
 }
 
 /*static*/ nsIFrame*
-nsLayoutUtils::GetAfterFrameForContent(nsIFrame* aFrame,
-                                       const nsIContent* aContent)
+nsLayoutUtils::GetAfterFrame(const nsIContent* aContent)
 {
-  auto* pseudo =
-    static_cast<Element*>(aContent->GetProperty(nsGkAtoms::afterPseudoProperty));
+  Element* pseudo = GetAfterPseudo(aContent);
   return pseudo ? pseudo->GetPrimaryFrame() : nullptr;
-}
-
-/*static*/ nsIFrame*
-nsLayoutUtils::GetAfterFrame(nsIFrame* aFrame)
-{
-  return GetAfterFrameForContent(aFrame, aFrame->GetContent());
 }
 
 // static
