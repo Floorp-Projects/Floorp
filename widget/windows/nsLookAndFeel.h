@@ -48,11 +48,7 @@ public:
   virtual void SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache);
 
 private:
-  // Content process cached values that get shipped over from the browser
-  // process.
   int32_t mUseAccessibilityTheme;
-  int32_t mUseDefaultTheme; // is the current theme a known default?
-  int32_t mNativeThemeId; // see LookAndFeel enum 'WindowsTheme'
 };
 
 #endif
