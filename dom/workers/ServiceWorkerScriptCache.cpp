@@ -280,8 +280,6 @@ public:
     : mRegistration(aRegistration)
     , mCallback(aCallback)
     , mState(WaitingForInitialization)
-    , mPendingCount(0)
-    , mAreScriptsEqual(true)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aRegistration);
@@ -343,13 +341,7 @@ public:
       return;
     }
 
-    mAreScriptsEqual = mAreScriptsEqual && aIsEqual;
-    MOZ_DIAGNOSTIC_ASSERT(mPendingCount > 0);
-    if (--mPendingCount) {
-      return;
-    }
-
-    if (mAreScriptsEqual) {
+    if (aIsEqual) {
       mCallback->ComparisonResult(aStatus, aIsEqual, EmptyString(), mMaxScope);
       Cleanup();
       return;
@@ -364,7 +356,7 @@ private:
   ~CompareManager()
   {
     AssertIsOnMainThread();
-    MOZ_ASSERT(mCNs.Length() == 0);
+    MOZ_ASSERT(!mCN);
   }
 
   void
@@ -378,18 +370,15 @@ private:
               bool aIsMainScript,
               Cache* const aCache)
   {
-    RefPtr<CompareNetwork> cn = new CompareNetwork(this);
-    nsresult rv = cn->Initialize(mPrincipal,
-                                 aURL,
-                                 aIsMainScript,
-                                 mLoadGroup,
-                                 aCache);
+    mCN = new CompareNetwork(this);
+    nsresult rv = mCN->Initialize(mPrincipal,
+                                  aURL,
+                                  aIsMainScript,
+                                  mLoadGroup,
+                                  aCache);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       Fail(rv);
     }
-
-    mCNs.AppendElement(cn);
-    mPendingCount += 1;
   }
 
   void
@@ -446,10 +435,7 @@ private:
       return;
     }
 
-    // Fetch the new scripts.
-    MOZ_ASSERT(mPendingCount == 0);
-
-    mState = WaitingForScriptOrComparisonResult;
+    // Populate the script URLs.
     for (uint32_t i = 0; i < len; ++i) {
       JS::Rooted<JS::Value> val(aCx);
       if (NS_WARN_IF(!JS_GetElement(aCx, obj, i, &val)) ||
@@ -469,8 +455,10 @@ private:
 
       nsString URL;
       request->GetUrl(URL);
-      FetchScript(URL, mURL == URL /* aIsMainScript */, mOldCache);
     }
+
+    mState = WaitingForScriptOrComparisonResult;
+    FetchScript(mURL, true /* aIsMainScript */, mOldCache);
     return;
   }
 
@@ -500,11 +488,7 @@ private:
     // Just to be safe.
     RefPtr<Cache> kungfuDeathGrip = cache;
     mState = WaitingForPut;
-
-    MOZ_ASSERT(mPendingCount == 0);
-    for (uint32_t i = 0; i < mCNs.Length(); ++i) {
-      WriteToCache(cache, mCNs[i]);
-    }
+    WriteToCache(cache);
     return;
   }
 
@@ -512,7 +496,7 @@ private:
   WriteNetworkBufferToNewCache()
   {
     AssertIsOnMainThread();
-    MOZ_ASSERT(mCNs.Length() != 0);
+    MOZ_ASSERT(mCN);
     MOZ_ASSERT(mCacheStorage);
     MOZ_ASSERT(mNewCacheName.IsEmpty());
 
@@ -535,17 +519,16 @@ private:
   }
 
   void
-  WriteToCache(Cache* aCache, CompareNetwork* aCN)
+  WriteToCache(Cache* aCache)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aCache);
-    MOZ_ASSERT(aCN);
     MOZ_ASSERT(mState == WaitingForPut);
 
     ErrorResult result;
     nsCOMPtr<nsIInputStream> body;
     result = NS_NewCStringInputStream(getter_AddRefs(body),
-                                      NS_ConvertUTF16toUTF8(aCN->Buffer()));
+                                      NS_ConvertUTF16toUTF8(mCN->Buffer()));
     if (NS_WARN_IF(result.Failed())) {
       MOZ_ASSERT(!result.IsErrorWithMessage());
       Fail(result.StealNSResult());
@@ -554,22 +537,22 @@ private:
 
     RefPtr<InternalResponse> ir =
       new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
-    ir->SetBody(body, aCN->Buffer().Length());
+    ir->SetBody(body, mCN->Buffer().Length());
 
-    ir->InitChannelInfo(aCN->GetChannelInfo());
-    UniquePtr<PrincipalInfo> principalInfo = aCN->TakePrincipalInfo();
+    ir->InitChannelInfo(mCN->GetChannelInfo());
+    UniquePtr<PrincipalInfo> principalInfo = mCN->TakePrincipalInfo();
     if (principalInfo) {
       ir->SetPrincipalInfo(Move(principalInfo));
     }
 
     IgnoredErrorResult ignored;
-    RefPtr<InternalHeaders> internalHeaders = aCN->GetInternalHeaders();
+    RefPtr<InternalHeaders> internalHeaders = mCN->GetInternalHeaders();
     ir->Headers()->Fill(*(internalHeaders.get()), ignored);
 
     RefPtr<Response> response = new Response(aCache->GetGlobalObject(), ir);
 
     RequestOrUSVString request;
-    request.SetAsUSVString().Rebind(aCN->URL().Data(), aCN->URL().Length());
+    request.SetAsUSVString().Rebind(URL().Data(), URL().Length());
 
     // For now we have to wait until the Put Promise is fulfilled before we can
     // continue since Cache does not yet support starting a read that is being
@@ -581,7 +564,6 @@ private:
       return;
     }
 
-    mPendingCount += 1;
     cachePromise->AppendNativeHandler(this);
   }
 
@@ -590,7 +572,7 @@ private:
   JS::PersistentRooted<JSObject*> mSandbox;
   RefPtr<CacheStorage> mCacheStorage;
 
-  nsTArray<RefPtr<CompareNetwork>> mCNs;
+  RefPtr<CompareNetwork> mCN;
 
   nsString mURL;
   RefPtr<nsIPrincipal> mPrincipal;
@@ -614,9 +596,6 @@ private:
     WaitingForPut,
     Redundant
   } mState;
-
-  uint32_t mPendingCount;
-  bool mAreScriptsEqual;
 };
 
 NS_IMPL_ISUPPORTS0(CompareManager)
@@ -1160,7 +1139,6 @@ CompareManager::Initialize(nsIPrincipal* aPrincipal,
   AssertIsOnMainThread();
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(mState == WaitingForInitialization);
-  MOZ_ASSERT(mPendingCount == 0);
 
   mURL = aURL;
   mPrincipal = aPrincipal;
@@ -1227,11 +1205,6 @@ CompareManager::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
   }
 
   MOZ_ASSERT(mState == WaitingForPut);
-  MOZ_DIAGNOSTIC_ASSERT(mPendingCount > 0);
-  if (--mPendingCount) {
-    return;
-  }
-
   mCallback->ComparisonResult(NS_OK, false /* aIsEqual */,
                               mNewCacheName, mMaxScope);
   Cleanup();
@@ -1268,11 +1241,7 @@ CompareManager::Cleanup()
   AssertIsOnMainThread();
   MOZ_ASSERT(mCallback);
   mCallback = nullptr;
-
-  for (uint32_t i = 0; i < mCNs.Length(); ++i) {
-    mCNs[0]->Abort();
-  }
-  mCNs.Clear();
+  mCN = nullptr;
 
   mState = Redundant;
 }
