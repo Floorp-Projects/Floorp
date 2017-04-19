@@ -101,7 +101,14 @@ public:
   Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL, nsILoadGroup* aLoadGroup);
 
   void
-  Abort();
+  Abort()
+  {
+    AssertIsOnMainThread();
+
+    MOZ_ASSERT(mChannel);
+    mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel = nullptr;
+  }
 
   const nsString& Buffer() const
   {
@@ -146,10 +153,40 @@ public:
              const nsAString& aCacheName);
 
   void
-  Abort();
+  Abort()
+  {
+    AssertIsOnMainThread();
+
+    MOZ_ASSERT(!mAborted);
+    mAborted = true;
+
+    if (mPump) {
+      mPump->Cancel(NS_BINDING_ABORTED);
+      mPump = nullptr;
+    }
+  }
+
+  // This class manages 2 promises: 1 is to retrieve cache object, and 2 is for
+  // the value from the cache. For this reason we have mState to know what
+  // reject/resolve callback we are handling.
 
   virtual void
-  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    AssertIsOnMainThread();
+
+    if (mAborted) {
+      return;
+    }
+
+    if (mState == WaitingForCache) {
+      ManageCacheResult(aCx, aValue);
+      return;
+    }
+
+    MOZ_ASSERT(mState == WaitingForValue);
+    ManageValueResult(aCx, aValue);
+  }
 
   virtual void
   RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
@@ -703,16 +740,6 @@ CompareNetwork::Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL, nsIL
   return NS_OK;
 }
 
-void
-CompareNetwork::Abort()
-{
-  AssertIsOnMainThread();
-
-  MOZ_ASSERT(mChannel);
-  mChannel->Cancel(NS_BINDING_ABORTED);
-  mChannel = nullptr;
-}
-
 NS_IMETHODIMP
 CompareNetwork::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
@@ -882,20 +909,6 @@ CompareCache::Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL,
   return NS_OK;
 }
 
-void
-CompareCache::Abort()
-{
-  AssertIsOnMainThread();
-
-  MOZ_ASSERT(!mAborted);
-  mAborted = true;
-
-  if (mPump) {
-    mPump->Cancel(NS_BINDING_ABORTED);
-    mPump = nullptr;
-  }
-}
-
 NS_IMETHODIMP
 CompareCache::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
                                nsresult aStatus, uint32_t aLen,
@@ -927,27 +940,6 @@ CompareCache::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
 
   mManager->CacheFinished(NS_OK, true);
   return NS_OK;
-}
-
-// This class manages 2 promises: 1 is to retrieve cache object, and 2 is for
-// the value from the cache. For this reason we have mState to know what
-// reject/resolve callback we are handling.
-void
-CompareCache::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
-{
-  AssertIsOnMainThread();
-
-  if (mAborted) {
-    return;
-  }
-
-  if (mState == WaitingForCache) {
-    ManageCacheResult(aCx, aValue);
-    return;
-  }
-
-  MOZ_ASSERT(mState == WaitingForValue);
-  ManageValueResult(aCx, aValue);
 }
 
 void
