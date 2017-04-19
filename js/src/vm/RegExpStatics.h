@@ -7,9 +7,11 @@
 #ifndef vm_RegExpStatics_h
 #define vm_RegExpStatics_h
 
+#include "jscntxt.h"
+
 #include "gc/Marking.h"
 #include "vm/MatchPairs.h"
-#include "vm/RegExpObject.h"
+#include "vm/RegExpShared.h"
 #include "vm/Runtime.h"
 
 namespace js {
