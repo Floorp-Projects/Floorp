@@ -117,10 +117,8 @@ var sandboxName = "default";
  */
 var loadListener = {
   command_id: null,
-  seenUnload: null,
   timeout: null,
-  timerPageLoad: null,
-  timerPageUnload: null,
+  timer: null,
 
   /**
    * Start listening for page unload/load events.
@@ -138,44 +136,35 @@ var loadListener = {
     this.command_id = command_id;
     this.timeout = timeout;
 
-    this.seenUnload = false;
-
-    this.timerPageLoad = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this.timerPageUnload = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-
     // In case of a remoteness change, only wait the remaining time
     timeout = startTime + timeout - new Date().getTime();
 
     if (timeout <= 0) {
-      this.notify(this.timerPageLoad);
+      this.notify();
       return;
     }
 
+    this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this.timer.initWithCallback(this, timeout, Ci.nsITimer.TYPE_ONE_SHOT);
+
     if (waitForUnloaded) {
-      addEventListener("beforeunload", this, false);
       addEventListener("hashchange", this, false);
       addEventListener("pagehide", this, false);
     } else {
       addEventListener("DOMContentLoaded", loadListener, false);
       addEventListener("pageshow", loadListener, false);
     }
-
-    this.timerPageLoad.initWithCallback(this, timeout, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
   /**
    * Stop listening for page unload/load events.
    */
   stop: function () {
-    if (this.timerPageLoad) {
-      this.timerPageLoad.cancel();
+    if (this.timer) {
+      this.timer.cancel();
+      this.timer = null;
     }
 
-    if (this.timerPageUnload) {
-      this.timerPageUnload.cancel();
-    }
-
-    removeEventListener("beforeunload", this);
     removeEventListener("hashchange", this);
     removeEventListener("pagehide", this);
     removeEventListener("DOMContentLoaded", this);
@@ -187,13 +176,8 @@ var loadListener = {
    */
   handleEvent: function (event) {
     switch (event.type) {
-      case "beforeunload":
-        this.seenUnload = true;
-        break;
-
       case "pagehide":
         if (event.originalTarget === curContainer.frame.document) {
-          removeEventListener("beforeunload", this);
           removeEventListener("hashchange", this);
           removeEventListener("pagehide", this);
 
@@ -239,22 +223,9 @@ var loadListener = {
    * Callback for navigation timeout timer.
    */
   notify: function (timer) {
-    switch (timer) {
-      // If the page unload timer is raised, ensure to properly stop the load
-      // listener, and return from the currently active command.
-      case this.timerPageUnload:
-        if (!this.seenUnload) {
-          this.stop();
-          sendOk(this.command_id);
-        }
-        break;
-
-    case this.timerPageLoad:
-      this.stop();
-      sendError(new TimeoutError(`Timeout loading page after ${this.timeout}ms`),
-          this.command_id);
-      break;
-    }
+    this.stop();
+    sendError(new TimeoutError("Timeout loading page after " + this.timeout + "ms"),
+              this.command_id);
   },
 
   /**
@@ -281,13 +252,22 @@ var loadListener = {
    *     ID of the currently handled message between the driver and listener.
    * @param {number} pageTimeout
    *     Timeout in milliseconds the method has to wait for the page being finished loading.
-   * @param {boolean=} loadEventExpected
-   *     TODO
    * @param {string=} url
    *     Optional URL, which is used to check if a page load is expected.
    */
-  navigate: function (trigger, command_id, timeout, loadEventExpected = true,
-      useUnloadTimer = false) {
+  navigate: function (trigger, command_id, timeout, url = undefined) {
+    let loadEventExpected = true;
+
+    if (typeof url == "string") {
+      try {
+        let requestedURL = new URL(url).toString();
+        loadEventExpected = navigate.isLoadEventExpected(requestedURL);
+      } catch (e) {
+        sendError(new InvalidArgumentError("Malformed URL: " + e.message), command_id);
+        return;
+      }
+    }
+
     if (loadEventExpected) {
       let startTime = new Date().getTime();
       this.start(command_id, timeout, startTime, true);
@@ -297,13 +277,7 @@ var loadListener = {
       yield trigger();
 
     }).then(val => {
-      if (loadEventExpected) {
-        // Setup timer to detect a possible page load
-        // TODO: Make it optional to wait + time with multiplier
-        if (useUnloadTimer) {
-          this.timerPageUnload.initWithCallback(this, "200", Ci.nsITimer.TYPE_ONE_SHOT);
-        }
-      } else {
+      if (!loadEventExpected) {
         sendOk(command_id);
       }
 
@@ -427,6 +401,7 @@ function removeMessageListenerId(messageName, handler) {
 var getTitleFn = dispatch(getTitle);
 var getPageSourceFn = dispatch(getPageSource);
 var getActiveElementFn = dispatch(getActiveElement);
+var clickElementFn = dispatch(clickElement);
 var getElementAttributeFn = dispatch(getElementAttribute);
 var getElementPropertyFn = dispatch(getElementProperty);
 var getElementTextFn = dispatch(getElementText);
@@ -481,7 +456,7 @@ function startListeners() {
   addMessageListenerId("Marionette:findElementContent", findElementContentFn);
   addMessageListenerId("Marionette:findElementsContent", findElementsContentFn);
   addMessageListenerId("Marionette:getActiveElement", getActiveElementFn);
-  addMessageListenerId("Marionette:clickElement", clickElement);
+  addMessageListenerId("Marionette:clickElement", clickElementFn);
   addMessageListenerId("Marionette:getElementAttribute", getElementAttributeFn);
   addMessageListenerId("Marionette:getElementProperty", getElementPropertyFn);
   addMessageListenerId("Marionette:getElementText", getElementTextFn);
@@ -586,7 +561,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:findElementContent", findElementContentFn);
   removeMessageListenerId("Marionette:findElementsContent", findElementsContentFn);
   removeMessageListenerId("Marionette:getActiveElement", getActiveElementFn);
-  removeMessageListenerId("Marionette:clickElement", clickElement);
+  removeMessageListenerId("Marionette:clickElement", clickElementFn);
   removeMessageListenerId("Marionette:getElementAttribute", getElementAttributeFn);
   removeMessageListenerId("Marionette:getElementProperty", getElementPropertyFn);
   removeMessageListenerId("Marionette:getElementText", getElementTextFn);
@@ -1125,26 +1100,15 @@ function waitForPageLoaded(msg) {
  */
 function get(msg) {
   let {command_id, pageTimeout, url} = msg.json;
-  let loadEventExpected = true;
 
   try {
-    if (typeof url == "string") {
-      try {
-        let requestedURL = new URL(url).toString();
-        loadEventExpected = navigate.isLoadEventExpected(requestedURL);
-      } catch (e) {
-        sendError(new InvalidArgumentError("Malformed URL: " + e.message), command_id);
-        return;
-      }
-    }
-
     // We need to move to the top frame before navigating
     sendSyncMessage("Marionette:switchedToFrame", {frameValue: null});
     curContainer.frame = content;
 
     loadListener.navigate(() => {
       curContainer.frame.location = url;
-    }, command_id, pageTimeout, loadEventExpected);
+    }, command_id, pageTimeout, url);
 
   } catch (e) {
     sendError(e, command_id);
@@ -1290,36 +1254,15 @@ function getActiveElement() {
 /**
  * Send click event to element.
  *
- * @param {number} command_id
- *     ID of the currently handled message between the driver and listener.
  * @param {WebElement} id
  *     Reference to the web element to click.
- * @param {number} pageTimeout
- *     Timeout in milliseconds the method has to wait for the page being finished loading.
  */
-function clickElement(msg) {
-  let {command_id, id, pageTimeout} = msg.json;
-
-  try {
-    let loadEventExpected = true;
-
-    let target = getElementAttribute(id, "target");
-
-    if (target === "_blank") {
-      loadEventExpected = false;
-    }
-
-    loadListener.navigate(() => {
-      return interaction.clickElement(
-        seenEls.get(id, curContainer),
-        capabilities.get("moz:accessibilityChecks"),
-        capabilities.get("specificationLevel") >= 1
-      );
-    }, command_id, pageTimeout, loadEventExpected, true);
-
-  } catch (e) {
-    sendError(e, command_id);
-  }
+function clickElement(id) {
+  let el = seenEls.get(id, curContainer);
+  return interaction.clickElement(
+      el,
+      capabilities.get("moz:accessibilityChecks"),
+      capabilities.get("specificationLevel") >= 1);
 }
 
 function getElementAttribute(id, name) {
