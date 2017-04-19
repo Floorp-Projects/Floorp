@@ -119,7 +119,6 @@
 #include "xpcexception.h"
 #include "xpcjsid.h"
 #include "prenv.h"
-#include "prclist.h"
 #include "prcvar.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -889,7 +888,7 @@ typedef nsTArray<InterpositionWhitelistPair> InterpositionWhitelistArray;
 
 class nsIAddonInterposition;
 class nsXPCComponentsBase;
-class XPCWrappedNativeScope final : public PRCList
+class XPCWrappedNativeScope final
 {
 public:
 
