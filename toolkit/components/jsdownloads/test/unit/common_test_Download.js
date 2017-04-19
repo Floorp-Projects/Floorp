@@ -230,6 +230,43 @@ add_task(function* test_basic_tryToKeepPartialData() {
 });
 
 /**
+ * Tests that the channelIsForDownload property is set for the network request,
+ * and that the request is marked as throttleable.
+ */
+add_task(function* test_channelIsForDownload_classFlags() {
+  let downloadChannel = null;
+
+  // We use a different method based on whether we are testing legacy downloads.
+  if (!gUseLegacySaver) {
+    let download = yield Downloads.createDownload({
+      source: {
+        url: httpUrl("interruptible_resumable.txt"),
+        async adjustChannel(channel) {
+          downloadChannel = channel;
+        },
+      },
+      target: getTempFile(TEST_TARGET_FILE_NAME).path,
+    });
+    yield download.start();
+  } else {
+    // Start a download using nsIExternalHelperAppService, but ensure it cannot
+    // finish before we retrieve the "request" property.
+    mustInterruptResponses();
+    let download = yield promiseStartExternalHelperAppServiceDownload();
+    downloadChannel = download.saver.request;
+    continueResponses();
+    yield promiseDownloadStopped(download);
+  }
+
+  do_check_true(downloadChannel.QueryInterface(Ci.nsIHttpChannelInternal)
+                               .channelIsForDownload);
+
+  // Throttleable is the only class flag assigned to downloads.
+  do_check_eq(downloadChannel.QueryInterface(Ci.nsIClassOfService)
+                             .classFlags, Ci.nsIClassOfService.Throttleable);
+});
+
+/**
  * Tests the permissions of the final target file once the download finished.
  */
 add_task(function* test_unix_permissions() {
