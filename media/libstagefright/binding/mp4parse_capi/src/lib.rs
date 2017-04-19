@@ -991,8 +991,8 @@ fn create_sample_table(track: &Track, track_offset_time: i64) -> Option<Vec<mp4p
 
         let iter = sort_table.iter();
         for i in 0 .. (iter.len() - 1) {
-            let current_index = sort_table[i] as usize;
-            let peek_index = sort_table[i + 1] as usize;
+            let current_index = sort_table[i];
+            let peek_index = sort_table[i + 1];
             let next_start_composition_time = sample_table[peek_index].start_composition;
             let sample = &mut sample_table[current_index];
             sample.end_composition = next_start_composition_time;
@@ -1049,13 +1049,14 @@ pub unsafe extern fn mp4parse_is_fragmented(parser: *mut mp4parse_parser, track_
 
     // check sample tables.
     let mut iter = tracks.iter();
-    match iter.find(|track| track.track_id == Some(track_id)) {
-        Some(track) if track.empty_sample_boxes.all_empty() => (*fragmented) = true as u8,
-        Some(_) => {},
-        None => return mp4parse_status::BAD_ARG,
-    }
-
-    mp4parse_status::OK
+    iter.find(|track| track.track_id == Some(track_id)).map_or(mp4parse_status::BAD_ARG, |track| {
+        match (&track.stsc, &track.stco, &track.stts) {
+            (&Some(ref stsc), &Some(ref stco), &Some(ref stts))
+                if stsc.samples.is_empty() && stco.offsets.is_empty() && stts.samples.is_empty() => (*fragmented) = true as u8,
+            _ => {},
+        };
+        mp4parse_status::OK
+    })
 }
 
 /// Get 'pssh' system id and 'pssh' box content for eme playback.

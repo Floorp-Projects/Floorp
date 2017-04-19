@@ -45,7 +45,7 @@ fn public_api() {
                 // track.data part
                 assert_eq!(match v.codec_specific {
                     mp4::VideoCodecSpecific::AVCConfig(v) => {
-                        assert!(v.len() > 0);
+                        assert!(!v.is_empty());
                         "AVC"
                     }
                     mp4::VideoCodecSpecific::VPxConfig(vpx) => {
@@ -53,7 +53,7 @@ fn public_api() {
                         assert!(vpx.bit_depth > 0);
                         assert!(vpx.color_space > 0);
                         assert!(vpx.chroma_subsampling > 0);
-                        assert!(vpx.codec_init.len() > 0);
+                        assert!(!vpx.codec_init.is_empty());
                         "VPx"
                     }
                 }, "AVC");
@@ -82,7 +82,7 @@ fn public_api() {
                     }
                     mp4::AudioCodecSpecific::FLACSpecificBox(flac) => {
                         // STREAMINFO block must be present and first.
-                        assert!(flac.blocks.len() > 0);
+                        assert!(!flac.blocks.is_empty());
                         assert_eq!(flac.blocks[0].block_type, 0);
                         assert_eq!(flac.blocks[0].data.len(), 34);
                         "FLAC"
@@ -201,7 +201,7 @@ fn public_video_cenc() {
         for kid_id in pssh.kid {
             assert_eq!(kid_id, kid);
         }
-        assert_eq!(pssh.data.len(), 0);
+        assert!(pssh.data.is_empty());
         assert_eq!(pssh.box_content, pssh_box);
     }
 }
