@@ -1,7 +1,8 @@
 use command::Parameters;
-use error::{WebDriverResult, WebDriverError, ErrorStatus};
-use rustc_serialize::json::{ToJson, Json};
+use error::{ErrorStatus, WebDriverError, WebDriverResult};
+use rustc_serialize::json::{Json, ToJson};
 use std::collections::BTreeMap;
+use std::net::Ipv6Addr;
 use url::Url;
 
 pub type Capabilities = BTreeMap<String, Json>;
@@ -205,12 +206,20 @@ impl SpecNewSessionParameters {
                 if x.contains("::/") {
                     return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
-                        format!("{} contains a scheme", name)))
+                        format!("{} contains a scheme", name)));
+                }
+
+                // IPv6 hosts must be enclosed with "[" and "]" in URLs
+                let host = match x.parse::<Ipv6Addr>() {
+                    Ok(ip) => format!("[{}]", ip),
+                    Err(_) => x.to_owned(),
                 };
-                let mut s = String::with_capacity(scheme.len() + x.len() + 3);
+
+                let mut s = String::with_capacity(scheme.len() + host.len() + 3);
                 s.push_str(scheme);
                 s.push_str("://");
-                s.push_str(x);
+                s.push_str(host.as_str());
+
                 let url = try!(Url::parse(&*s).or(Err(WebDriverError::new(
                     ErrorStatus::InvalidArgument,
                     format!("{} was not a valid url", name)))));
@@ -541,6 +550,7 @@ mod tests {
     #[test]
     fn test_validate_host_domain() {
         validate_host("ftpProxy", "ftp", "{}", "example.org").unwrap();
+        validate_host("ftpProxy", "ftp", "{}", "::1").unwrap();
         assert!(validate_host("ftpProxy", "ftp", "{}", "ftp://example.org").is_err());
         assert!(validate_host("ftpProxy", "ftp", "{}", "example.org/foo").is_err());
         assert!(validate_host("ftpProxy", "ftp", "{}", "example.org#bar").is_err());
@@ -548,6 +558,7 @@ mod tests {
         assert!(validate_host("ftpProxy", "ftp", "{}", "foo:bar@example.org").is_err());
         assert!(validate_host("ftpProxy", "ftp", "{}", "foo@example.org").is_err());
         validate_host("httpProxy", "http", "{}", "example.org:8000").unwrap();
+        validate_host("httpProxy", "http", "{}", "::1:8000").unwrap();
         validate_host("httpProxy", "http", "{\"ftpProxyPort\": \"1234\"}", "example.org:8000").unwrap();
         assert!(validate_host("httpProxy", "http", "{\"httpProxyPort\": \"1234\"}", "example.org:8000").is_err());
         validate_host("sslProxy", "http", "{}", "example.org:8000").unwrap();
