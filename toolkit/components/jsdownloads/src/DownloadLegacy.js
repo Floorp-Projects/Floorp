@@ -127,7 +127,7 @@ DownloadLegacyTransfer.prototype = {
             this._cancelable.cancel(Cr.NS_ERROR_ABORT);
             if (this._cancelable instanceof Ci.nsIWebBrowserPersist) {
               // This component will not send the STATE_STOP notification.
-              download.saver.onTransferFinished(aRequest, Cr.NS_ERROR_ABORT);
+              download.saver.onTransferFinished(Cr.NS_ERROR_ABORT);
               this._cancelable = null;
             }
           }
@@ -145,7 +145,7 @@ DownloadLegacyTransfer.prototype = {
           download.saver.setSignatureInfo(this._signatureInfo);
           download.saver.setRedirects(this._redirects);
         }
-        download.saver.onTransferFinished(aRequest, aStatus);
+        download.saver.onTransferFinished(aStatus);
       }).then(null, Cu.reportError);
 
       // Release the reference to the component executing the download.
@@ -175,7 +175,7 @@ DownloadLegacyTransfer.prototype = {
 
       // Wait for the associated Download object to be available.
       this._deferDownload.promise.then(function DLT_OSC_onDownload(aDownload) {
-        aDownload.saver.onTransferFinished(aRequest, aStatus);
+        aDownload.saver.onTransferFinished(aStatus);
       }).then(null, Cu.reportError);
     }
   },
