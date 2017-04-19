@@ -301,7 +301,7 @@ ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx, JSObject* parseGlobal,
     alloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     parseGlobal(parseGlobal),
     callback(callback), callbackData(callbackData),
-    script(nullptr), sourceObject(nullptr), sourceCompressionTask(nullptr),
+    script(nullptr), sourceObject(nullptr),
     overRecursed(false), outOfMemory(false)
 {
 }
@@ -313,7 +313,7 @@ ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx, JSObject* parseGlobal,
     alloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     parseGlobal(parseGlobal),
     callback(callback), callbackData(callbackData),
-    script(nullptr), sourceObject(nullptr), sourceCompressionTask(nullptr),
+    script(nullptr), sourceObject(nullptr),
     overRecursed(false), outOfMemory(false)
 {
 }
@@ -340,8 +340,8 @@ ParseTask::finish(JSContext* cx)
         RootedScriptSource sso(cx, sourceObject);
         if (!ScriptSourceObject::initFromOptions(cx, sso, options))
             return false;
-        if (sourceCompressionTask)
-            sourceCompressionTask->fixupMajorGCNumber(cx->runtime());
+        if (!sso->source()->tryCompressOffThread(cx))
+            return false;
     }
 
     return true;
@@ -385,8 +385,7 @@ ScriptParseTask::parse(JSContext* cx)
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
     script = frontend::CompileGlobalScript(cx, alloc, ScopeKind::Global,
                                            options, srcBuf,
-                                           /* sourceObjectOut = */ &sourceObject,
-                                           /* sourceCompressionTaskOut = */ &sourceCompressionTask);
+                                           /* sourceObjectOut = */ &sourceObject);
 }
 
 ModuleParseTask::ModuleParseTask(JSContext* cx, JSObject* parseGlobal,
@@ -401,8 +400,7 @@ void
 ModuleParseTask::parse(JSContext* cx)
 {
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    ModuleObject* module = frontend::CompileModule(cx, options, srcBuf, alloc, &sourceObject,
-                                                   &sourceCompressionTask);
+    ModuleObject* module = frontend::CompileModule(cx, options, srcBuf, alloc, &sourceObject);
     if (module)
         script = module->script();
 }
@@ -1123,13 +1121,13 @@ GlobalHelperThreadState::scheduleCompressionTasks(const AutoLockHelperThreadStat
 {
     auto& pending = compressionPendingList(lock);
     auto& worklist = compressionWorklist(lock);
-    MOZ_ASSERT(worklist.capacity() >= pending.length());
 
     for (size_t i = 0; i < pending.length(); i++) {
-        SourceCompressionTask* task = pending[i];
-        if (task->shouldStart()) {
+        if (pending[i]->shouldStart()) {
+            // OOMing during appending results in the task not being scheduled
+            // and deleted.
+            Unused << worklist.append(Move(pending[i]));
             remove(pending, &i);
-            worklist.infallibleAppend(task);
         }
     }
 }
@@ -1730,8 +1728,13 @@ HelperThread::handleCompressionWorkload(AutoLockHelperThreadState& locked)
     MOZ_ASSERT(HelperThreadState().canStartCompressionTask(locked));
     MOZ_ASSERT(idle());
 
-    currentTask.emplace(HelperThreadState().compressionWorklist(locked).popCopy());
-    SourceCompressionTask* task = compressionTask();
+    UniquePtr<SourceCompressionTask> task;
+    {
+        auto& worklist = HelperThreadState().compressionWorklist(locked);
+        task = Move(worklist.back());
+        worklist.popBack();
+        currentTask.emplace(task.get());
+    }
 
     {
         AutoUnlockHelperThreadState unlock(locked);
@@ -1744,7 +1747,7 @@ HelperThread::handleCompressionWorkload(AutoLockHelperThreadState& locked)
 
     {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!HelperThreadState().compressionFinishedList(locked).append(task))
+        if (!HelperThreadState().compressionFinishedList(locked).append(Move(task)))
             oomUnsafe.crash("handleCompressionWorkload");
     }
 
@@ -1755,22 +1758,14 @@ HelperThread::handleCompressionWorkload(AutoLockHelperThreadState& locked)
 }
 
 bool
-js::EnqueueOffThreadCompression(JSContext* cx, SourceCompressionTask* task)
+js::EnqueueOffThreadCompression(JSContext* cx, UniquePtr<SourceCompressionTask> task)
 {
     AutoLockHelperThreadState lock;
 
     auto& pending = HelperThreadState().compressionPendingList(lock);
-    auto& worklist = HelperThreadState().compressionWorklist(lock);
-    if (!pending.append(task)) {
+    if (!pending.append(Move(task))) {
         if (!cx->helperThread())
             ReportOutOfMemory(cx);
-        js_delete(task);
-        return false;
-    }
-    if (!worklist.reserve(pending.length())) {
-        if (!cx->helperThread())
-            ReportOutOfMemory(cx);
-        pending.popBack();
         return false;
     }
 
@@ -1782,11 +1777,8 @@ static void
 ClearCompressionTaskList(T& list, JSRuntime* runtime)
 {
     for (size_t i = 0; i < list.length(); i++) {
-        SourceCompressionTask* task = list[i];
-        if (task->runtimeMatches(runtime)) {
+        if (list[i]->runtimeMatches(runtime))
             HelperThreadState().remove(list, &i);
-            js_delete(task);
-        }
     }
 }
 
