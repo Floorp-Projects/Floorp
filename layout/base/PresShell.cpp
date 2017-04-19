@@ -34,6 +34,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -565,6 +566,9 @@ private:
 bool PresShell::sDisableNonTestMouseEvents = false;
 
 mozilla::LazyLogModule PresShell::gLog("PresShell");
+
+mozilla::TimeStamp PresShell::sLastInputCreated;
+mozilla::TimeStamp PresShell::sLastInputProcessed;
 
 #ifdef DEBUG
 static void
@@ -8206,11 +8210,24 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
       !aEvent->mTimeStamp.IsNull() &&
       aEvent->mTimeStamp > mLastOSWake &&
       aEvent->AsInputEvent()) {
-    double millis = (TimeStamp::Now() - aEvent->mTimeStamp).ToMilliseconds();
+    TimeStamp now = TimeStamp::Now();
+    double millis = (now - aEvent->mTimeStamp).ToMilliseconds();
     Telemetry::Accumulate(Telemetry::INPUT_EVENT_RESPONSE_MS, millis);
     if (mDocument && mDocument->GetReadyStateEnum() != nsIDocument::READYSTATE_COMPLETE) {
       Telemetry::Accumulate(Telemetry::LOAD_INPUT_EVENT_RESPONSE_MS, millis);
     }
+
+    if (!sLastInputProcessed || sLastInputProcessed < aEvent->mTimeStamp) {
+      if (sLastInputProcessed) {
+        // This input event was created after we handled the last one.
+        // Accumulate the previous events' coalesced duration.
+        double lastMillis = (sLastInputProcessed - sLastInputCreated).ToMilliseconds();
+        Telemetry::Accumulate(Telemetry::INPUT_EVENT_RESPONSE_COALESCED_MS,
+                              lastMillis);
+      }
+      sLastInputCreated = aEvent->mTimeStamp;
+    }
+    sLastInputProcessed = now;
   }
 
   return rv;
