@@ -2874,6 +2874,11 @@
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="11.2.202.637" minVersion="11.2.202.632" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
+    <pluginItem blockID="c762d84b-9fce-425d-bc60-389a431d4453" os="Linux">
+      <match exp="libflashplayer\.so" name="filename"/>
+      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+      <versionRange maxVersion="25.0.0.127" minVersion="24.0.0.221" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
     <pluginItem blockID="p1121">
       <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
@@ -2951,6 +2956,11 @@
           <versionRange maxVersion="17.*" minVersion="0.1"/>
         </targetApplication>
       </versionRange>
+    </pluginItem>
+    <pluginItem blockID="d20ea67f-d851-4c59-a3aa-f7081248b14e">
+      <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
+      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+      <versionRange maxVersion="25.0.0.127" minVersion="24.0.0.221" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="p428">
       <match exp="np[dD]eployJava1\.dll" name="filename"/>
