@@ -63,7 +63,7 @@ for (let {buffer} of createBuffers()) {
         Reflect.construct(Int32Array, [buffer, poisonedValue, 0], constructor), ExpectedError);
 }
 
-// Ensure step 4 |AllocateTypedArray| is executed before step 8 |IsDetachedBuffer(buffer)|.
+// Ensure step 4 |AllocateTypedArray| is executed before step 9 |IsDetachedBuffer(buffer)|.
 for (let {buffer, detach} of createBuffers()) {
     let constructor = ConstructorWithThrowingPrototype();
 
@@ -72,7 +72,7 @@ for (let {buffer, detach} of createBuffers()) {
         Reflect.construct(Int32Array, [buffer, 0, 0], constructor), ExpectedError);
 }
 
-// Ensure step 4 |AllocateTypedArray| is executed before step 8 |IsDetachedBuffer(buffer)|.
+// Ensure step 4 |AllocateTypedArray| is executed before step 9 |IsDetachedBuffer(buffer)|.
 // - Variant: Detach buffer dynamically.
 for (let {buffer, detach} of createBuffers()) {
     let constructor = ConstructorWithThrowingPrototype(detach);
@@ -81,7 +81,7 @@ for (let {buffer, detach} of createBuffers()) {
         Reflect.construct(Int32Array, [buffer, 0, 0], constructor), ExpectedError);
 }
 
-// Ensure step 4 |AllocateTypedArray| is executed before step 11.a |ToIndex(length)|.
+// Ensure step 4 |AllocateTypedArray| is executed before step 8.a |ToIndex(length)|.
 for (let {buffer} of createBuffers()) {
     let constructor = ConstructorWithThrowingPrototype();
 
@@ -89,7 +89,7 @@ for (let {buffer} of createBuffers()) {
         Reflect.construct(Int32Array, [buffer, 0, poisonedValue], constructor), ExpectedError);
 }
 
-// Ensure step 6 |ToIndex(byteOffset)| is executed before step 8 |IsDetachedBuffer(buffer)|.
+// Ensure step 6 |ToIndex(byteOffset)| is executed before step 9 |IsDetachedBuffer(buffer)|.
 for (let {buffer, detach} of createBuffers()) {
     let byteOffset = ValueThrowing();
 
@@ -97,7 +97,7 @@ for (let {buffer, detach} of createBuffers()) {
     assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset, 0), ExpectedError);
 }
 
-// Ensure step 6 |ToIndex(byteOffset)| is executed before step 8 |IsDetachedBuffer(buffer)|.
+// Ensure step 6 |ToIndex(byteOffset)| is executed before step 9 |IsDetachedBuffer(buffer)|.
 // - Variant: Detach buffer dynamically.
 for (let {buffer, detach} of createBuffers()) {
     let byteOffset = ValueThrowing(detach);
@@ -105,14 +105,14 @@ for (let {buffer, detach} of createBuffers()) {
     assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset, 0), ExpectedError);
 }
 
-// Ensure step 6 |ToIndex(byteOffset)| is executed before step 11.a |ToIndex(length)|.
+// Ensure step 6 |ToIndex(byteOffset)| is executed before step 8.a |ToIndex(length)|.
 for (let {buffer} of createBuffers()) {
     let byteOffset = ValueThrowing();
 
     assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset, poisonedValue), ExpectedError);
 }
 
-// Ensure step 7 |offset modulo elementSize ≠ 0| is executed before step 8 |IsDetachedBuffer(buffer)|.
+// Ensure step 7 |offset modulo elementSize ≠ 0| is executed before step 9 |IsDetachedBuffer(buffer)|.
 for (let {buffer, detach} of createBuffers()) {
     let byteOffset = 1;
 
@@ -120,7 +120,7 @@ for (let {buffer, detach} of createBuffers()) {
     assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset, 0), RangeError);
 }
 
-// Ensure step 7 |offset modulo elementSize ≠ 0| is executed before step 8 |IsDetachedBuffer(buffer)|.
+// Ensure step 7 |offset modulo elementSize ≠ 0| is executed before step 9 |IsDetachedBuffer(buffer)|.
 // - Variant: Detach buffer dynamically.
 for (let {buffer, detach} of createBuffers()) {
     let byteOffset = ValueReturning(1, detach);
@@ -128,12 +128,39 @@ for (let {buffer, detach} of createBuffers()) {
     assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset, 0), RangeError);
 }
 
-// Ensure step 7 |offset modulo elementSize ≠ 0| is executed before step 11.a |ToIndex(length)|.
+// Ensure step 7 |offset modulo elementSize ≠ 0| is executed before step 8.a |ToIndex(length)|.
 for (let {buffer} of createBuffers()) {
     assertThrowsInstanceOf(() => new Int32Array(buffer, 1, poisonedValue), RangeError);
 }
 
-// Ensure step 8 |IsDetachedBuffer(buffer)| is executed before step 10.a |bufferByteLength modulo elementSize ≠ 0|.
+// Ensure step 8.a |ToIndex(length)| is executed before step 9 |IsDetachedBuffer(buffer)|.
+for (let {buffer, detach} of createBuffers()) {
+    let byteOffset = 0;
+    let length = ValueThrowing();
+
+    detach();
+    assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset, length), ExpectedError);
+}
+
+// Ensure step 8.a |ToIndex(length)| is executed before step 9 |IsDetachedBuffer(buffer)|.
+// - Variant: Detach buffer dynamically (1).
+for (let {buffer, detach} of createBuffers()) {
+    let byteOffset = ValueReturning(0, detach);
+    let length = ValueThrowing();
+
+    assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset, length), ExpectedError);
+}
+
+// Ensure step 8.a |ToIndex(length)| is executed before step 9 |IsDetachedBuffer(buffer)|.
+// - Variant: Detach buffer dynamically (2).
+for (let {buffer, detach} of createBuffers()) {
+    let byteOffset = 0;
+    let length = ValueThrowing(detach);
+
+    assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset, length), ExpectedError);
+}
+
+// Ensure step 9 |IsDetachedBuffer(buffer)| is executed before step 11.a |bufferByteLength modulo elementSize ≠ 0|.
 for (let {buffer, detach} of createBuffers([1, 9])) {
     let byteOffset = 0;
 
@@ -141,7 +168,7 @@ for (let {buffer, detach} of createBuffers([1, 9])) {
     assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset), TypeError);
 }
 
-// Ensure step 8 |IsDetachedBuffer(buffer)| is executed before step 10.a |bufferByteLength modulo elementSize ≠ 0|.
+// Ensure step 9 |IsDetachedBuffer(buffer)| is executed before step 11.a |bufferByteLength modulo elementSize ≠ 0|.
 // - Variant: Detach buffer dynamically.
 for (let {buffer, detach} of createBuffers([1, 9])) {
     let byteOffset = ValueReturning(0, detach);
@@ -149,7 +176,7 @@ for (let {buffer, detach} of createBuffers([1, 9])) {
     assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset), TypeError);
 }
 
-// Ensure step 8 |IsDetachedBuffer(buffer)| is executed before step 10.c |newByteLength < 0|.
+// Ensure step 9 |IsDetachedBuffer(buffer)| is executed before step 11.c |newByteLength < 0|.
 for (let {buffer, detach} of createBuffers()) {
     let byteOffset = 64;
 
@@ -157,7 +184,7 @@ for (let {buffer, detach} of createBuffers()) {
     assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset), TypeError);
 }
 
-// Ensure step 8 |IsDetachedBuffer(buffer)| is executed before step 10.c |newByteLength < 0|.
+// Ensure step 9 |IsDetachedBuffer(buffer)| is executed before step 11.c |newByteLength < 0|.
 // - Variant: Detach buffer dynamically.
 for (let {buffer, detach} of createBuffers()) {
     let byteOffset = ValueReturning(64, detach);
@@ -165,37 +192,38 @@ for (let {buffer, detach} of createBuffers()) {
     assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset), TypeError);
 }
 
-// Ensure step 8 |IsDetachedBuffer(buffer)| is executed before step 11.a |ToIndex(length)|.
-for (let {buffer, detach} of createBuffers()) {
-    let byteOffset = 0;
-
-    detach();
-    assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset, poisonedValue), TypeError);
-}
-
-// Ensure step 8 |IsDetachedBuffer(buffer)| is executed before step 11.a |ToIndex(length)|.
-for (let {buffer, detach} of createBuffers()) {
-    let byteOffset = ValueReturning(0, detach);
-
-    assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset, poisonedValue), TypeError);
-}
-
-// Ensure step 11.c |offset+newByteLength > bufferByteLength| is executed when buffer is detached.
+// Ensure step 9 |IsDetachedBuffer(buffer)| is executed before step 12.b |offset+newByteLength > bufferByteLength|.
 // - Case A: The given byteOffset is too large.
 for (let {buffer, detach} of createBuffers()) {
     let byteOffset = 64;
     let length = ValueReturning(0, detach);
 
-    assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset, length), RangeError);
+    assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset, length), TypeError);
 }
 
-// Ensure step 11.c |offset+newByteLength > bufferByteLength| is executed when buffer is detached.
+// Ensure step 9 |IsDetachedBuffer(buffer)| is executed before step 12.b |offset+newByteLength > bufferByteLength|.
 // - Case B: The given length is too large.
 for (let {buffer, detach} of createBuffers()) {
     let byteOffset = 0;
     let length = ValueReturning(64, detach);
 
-    assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset, length), RangeError);
+    assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset, length), TypeError);
+}
+
+// Ensure we handle the case when ToIndex(byteOffset) detaches the array buffer.
+for (let {buffer, detach} of createBuffers()) {
+    let byteOffset = ValueReturning(0, detach);
+    let length = 0;
+
+    assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset, length), TypeError);
+}
+
+// Ensure we handle the case when ToIndex(length) detaches the array buffer.
+for (let {buffer, detach} of createBuffers()) {
+    let byteOffset = 0;
+    let length = ValueReturning(0, detach);
+
+    assertThrowsInstanceOf(() => new Int32Array(buffer, byteOffset, length), TypeError);
 }
 
 if (typeof reportCompare === "function")
