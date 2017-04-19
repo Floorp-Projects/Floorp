@@ -92,17 +92,13 @@ public:
 
   explicit CompareNetwork(CompareManager* aManager)
     : mManager(aManager)
-    , mIsMainScript(true)
   {
     MOZ_ASSERT(aManager);
     AssertIsOnMainThread();
   }
 
   nsresult
-  Initialize(nsIPrincipal* aPrincipal,
-             const nsAString& aURL,
-             bool aIsMainScript,
-             nsILoadGroup* aLoadGroup);
+  Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL, nsILoadGroup* aLoadGroup);
 
   void
   Abort();
@@ -122,8 +118,6 @@ private:
   RefPtr<CompareManager> mManager;
   nsCOMPtr<nsIChannel> mChannel;
   nsString mBuffer;
-
-  bool mIsMainScript;
 };
 
 NS_IMPL_ISUPPORTS(CompareNetwork, nsIStreamLoaderObserver,
@@ -393,12 +387,10 @@ private:
   Cleanup();
 
   void
-  FetchScript(const nsAString& aURL,
-              bool aIsMainScript,
-              Cache* const aCache)
+  FetchScript(Cache* const aCache)
   {
     mCN = new CompareNetwork(this);
-    nsresult rv = mCN->Initialize(mPrincipal, aURL, aIsMainScript, mLoadGroup);
+    nsresult rv = mCN->Initialize(mPrincipal, mURL, mLoadGroup);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       Fail(rv);
     }
@@ -490,7 +482,7 @@ private:
     }
 
     mState = WaitingForScriptOrComparisonResult;
-    FetchScript(mURL, true /* aIsMainScript */, mOldCache);
+    FetchScript(mOldCache);
     return;
   }
 
@@ -641,10 +633,7 @@ private:
 NS_IMPL_ISUPPORTS0(CompareManager)
 
 nsresult
-CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
-                           const nsAString& aURL,
-                           bool aIsMainScript,
-                           nsILoadGroup* aLoadGroup)
+CompareNetwork::Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL, nsILoadGroup* aLoadGroup)
 {
   MOZ_ASSERT(aPrincipal);
   AssertIsOnMainThread();
@@ -654,8 +643,6 @@ CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-
-  mIsMainScript = aIsMainScript;
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   rv = NS_NewLoadGroup(getter_AddRefs(loadGroup), aPrincipal);
@@ -810,15 +797,13 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
     return NS_OK;
   }
 
-  if (mIsMainScript) {
-    nsAutoCString maxScope;
-    // Note: we explicitly don't check for the return value here, because the
-    // absence of the header is not an error condition.
-    Unused << httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Service-Worker-Allowed"),
-        maxScope);
+  nsAutoCString maxScope;
+  // Note: we explicitly don't check for the return value here, because the
+  // absence of the header is not an error condition.
+  Unused << httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Service-Worker-Allowed"),
+                                           maxScope);
 
-    mManager->SetMaxScope(maxScope);
-  }
+  mManager->SetMaxScope(maxScope);
 
   bool isFromCache = false;
   nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(httpChannel));
@@ -1092,7 +1077,7 @@ CompareManager::Initialize(nsIPrincipal* aPrincipal,
 
   // Go fetch the script directly without comparison.
   mState = WaitingForScriptOrComparisonResult;
-  FetchScript(mURL, true /* aIsMainScript */, nullptr);
+  FetchScript(nullptr);
   return NS_OK;
 }
 
