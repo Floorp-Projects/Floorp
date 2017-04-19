@@ -732,6 +732,9 @@ private:
 
     MOZ_ASSERT(argumentsValue.isObject());
     JS::Rooted<JSObject*> argumentsObj(aCx, &argumentsValue.toObject());
+    if (NS_WARN_IF(!argumentsObj)) {
+      return;
+    }
 
     uint32_t length;
     if (!JS_GetArrayLength(aCx, argumentsObj, &length)) {
@@ -1009,6 +1012,8 @@ Console::TimeStamp(const GlobalObject& aGlobal,
                    const JS::Handle<JS::Value> aData)
 {
   JSContext* cx = aGlobal.Context();
+
+  ClearException ce(cx);
 
   Sequence<JS::Value> data;
   SequenceRooter<JS::Value> rooter(cx, &data);
@@ -1306,10 +1311,13 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
           ? JS_GetEmptyStringValue(aCx)
           : aData[0]);
         JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
+        if (!jsString) {
+          return;
+        }
 
         nsAutoJSString key;
-        if (jsString) {
-          key.init(aCx, jsString);
+        if (!key.init(aCx, jsString)) {
+          return;
         }
 
         timelines->AddMarkerForDocShell(docShell, Move(
@@ -1319,16 +1327,19 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
       else if (isTimelineRecording && aData.Length() == 1) {
         JS::Rooted<JS::Value> value(aCx, aData[0]);
         JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
-
-        if (jsString) {
-          nsAutoJSString key;
-          if (key.init(aCx, jsString)) {
-            timelines->AddMarkerForDocShell(docShell, Move(
-              MakeUnique<ConsoleTimelineMarker>(
-                key, aMethodName == MethodTime ? MarkerTracingType::START
-                                               : MarkerTracingType::END)));
-          }
+        if (!jsString) {
+          return;
         }
+
+        nsAutoJSString key;
+        if (!key.init(aCx, jsString)) {
+          return;
+        }
+
+        timelines->AddMarkerForDocShell(docShell, Move(
+          MakeUnique<ConsoleTimelineMarker>(
+            key, aMethodName == MethodTime ? MarkerTracingType::START
+                                           : MarkerTracingType::END)));
       }
     } else {
       WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();

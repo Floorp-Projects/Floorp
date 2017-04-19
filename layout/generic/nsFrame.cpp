@@ -5071,7 +5071,7 @@ nsFrame::ComputeSize(nsRenderingContext* aRenderingContext,
       ComputeISizeValue(aRenderingContext, aCBSize.ISize(aWM),
                         boxSizingAdjust.ISize(aWM), boxSizingToMarginEdgeISize,
                         minISizeCoord, aFlags);
-  } else if (MOZ_UNLIKELY(isGridItem)) {
+  } else if (MOZ_UNLIKELY(aFlags & eIApplyAutoMinSize)) {
     // This implements "Implied Minimum Size of Grid Items".
     // https://drafts.csswg.org/css-grid/#min-size-auto
     minISize = std::min(maxISize, GetMinISize(aRenderingContext));

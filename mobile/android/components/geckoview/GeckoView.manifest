@@ -1,0 +1,10 @@
+# GeckoViewPrompt.js
+component {076ac188-23c1-4390-aa08-7ef1f78ca5d9} GeckoViewPrompt.js
+contract @mozilla.org/embedcomp/prompt-service;1 {076ac188-23c1-4390-aa08-7ef1f78ca5d9}
+contract @mozilla.org/prompter;1 {076ac188-23c1-4390-aa08-7ef1f78ca5d9}
+category app-startup GeckoViewPrompt service,@mozilla.org/prompter;1
+category profile-after-change GeckoViewPrompt @mozilla.org/prompter;1 process=main
+component {aa0dd6fc-73dd-4621-8385-c0b377e02cee} GeckoViewPrompt.js process=main
+contract @mozilla.org/colorpicker;1 {aa0dd6fc-73dd-4621-8385-c0b377e02cee} process=main
+component {e4565e36-f101-4bf5-950b-4be0887785a9} GeckoViewPrompt.js process=main
+contract @mozilla.org/filepicker;1 {e4565e36-f101-4bf5-950b-4be0887785a9} process=main

@@ -6248,7 +6248,7 @@
               if (width != this.mTabstripWidth) {
                 this.adjustTabstrip();
                 this._fillTrailingGap();
-                this._handleTabSelect();
+                this._handleTabSelect(false);
                 this.mTabstripWidth = width;
               }
               break;

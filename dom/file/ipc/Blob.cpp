@@ -627,7 +627,9 @@ SerializeInputStreamInChunks(nsIInputStream* aInputStream, uint64_t aLength,
   MOZ_ASSERT(aInputStream);
 
   PMemoryStreamChild* child = aManager->SendPMemoryStreamConstructor(aLength);
-  MOZ_ASSERT(child);
+  if (NS_WARN_IF(!child)) {
+    return nullptr;
+  }
 
   const uint64_t kMaxChunk = 1024 * 1024;
 
@@ -658,7 +660,9 @@ SerializeInputStreamInChunks(nsIInputStream* aInputStream, uint64_t aLength,
       return nullptr;
     }
 
-    child->SendAddChunk(buffer);
+    if (NS_WARN_IF(!child->SendAddChunk(buffer))) {
+      return nullptr;
+    }
   }
 
   return child;

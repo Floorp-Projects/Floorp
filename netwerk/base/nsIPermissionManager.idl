@@ -315,6 +315,17 @@ interface nsIPermissionManager : nsISupports
    * @param perms  An array with the permissions which match the given key.
    */
   void setPermissionsWithKey(in ACString permissionKey, in IPCPermissionArrayRef perms);
+
+  /**
+   * Broadcasts permissions for the given principal to all content processes.
+   *
+   * DO NOT USE THIS METHOD if you can avoid it. It was added in bug XXX to
+   * handle the current temporary implementation of ServiceWorker debugging. It
+   * will be removed when service worker debugging is fixed.
+   *
+   * @param aPrincipal The principal to broadcast permissions for.
+   */
+  void broadcastPermissionsForPrincipalToAllContentProcesses(in nsIPrincipal aPrincipal);
 };
 
 %{ C++
