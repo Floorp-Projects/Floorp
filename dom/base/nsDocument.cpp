@@ -1884,7 +1884,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   // Unlink the mChildren nsAttrAndChildArray.
   uint32_t childCount = tmp->mChildren.ChildCount();
-  if (childcount) {
+  if (childCount) {
     while (childCount-- > 0) {
       // Hold a strong ref to the node when we remove it, because we may be
       // the last reference to it.  We need to call TakeChildAt() and
