@@ -9,26 +9,8 @@ include LayersSurfaces;
 include LayersMessages;
 include protocol PTexture;
 
-using WrBorderRadius from "mozilla/webrender/webrender_ffi.h";
-using WrBorderSide from "mozilla/webrender/webrender_ffi.h";
-using WrColor from "mozilla/webrender/webrender_ffi.h";
-using WrSize from "mozilla/webrender/webrender_ffi.h";
-using WrRect from "mozilla/webrender/webrender_ffi.h";
-using WrPoint from "mozilla/webrender/webrender_ffi.h";
-using WrGradientStop from "mozilla/webrender/webrender_ffi.h";
-using WrGradientExtendMode from "mozilla/webrender/webrender_ffi.h";
-using WrGlyphArray from "mozilla/webrender/webrender_ffi.h";
-using WrMixBlendMode from "mozilla/webrender/webrender_ffi.h";
-using WrBoxShadowClipMode from "mozilla/webrender/webrender_ffi.h";
-using MaybeImageMask from "mozilla/webrender/WebRenderTypes.h";
-using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
-using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
-using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
-using mozilla::wr::ImageRendering from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
-using mozilla::wr::FontKey from "mozilla/webrender/WebRenderTypes.h";
-using mozilla::LayerIntRegion from "Units.h";
 
 namespace mozilla {
 namespace layers {

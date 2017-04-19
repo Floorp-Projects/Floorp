@@ -23,8 +23,9 @@ add_task(function* () {
 
   for (let testNode of TEST_NODES) {
     let target = yield getImageTooltipTarget(testNode, inspector);
-    yield assertTooltipShownOn(target, inspector);
+    yield assertTooltipShownOnHover(inspector.markup.imagePreviewTooltip, target);
     checkImageTooltip(testNode, inspector);
+    yield assertTooltipHiddenOnMouseOut(inspector.markup.imagePreviewTooltip, target);
   }
 });
 
@@ -39,12 +40,6 @@ function* getImageTooltipTarget({selector}, inspector) {
     target = container.editor.getAttributeElement("src").querySelector(".link");
   }
   return target;
-}
-
-function* assertTooltipShownOn(element, {markup}) {
-  info("Is the element a valid hover target");
-  let isValid = yield isHoverTooltipTarget(markup.imagePreviewTooltip, element);
-  ok(isValid, "The element is a valid hover target for the image tooltip");
 }
 
 function checkImageTooltip({selector, size}, {markup}) {

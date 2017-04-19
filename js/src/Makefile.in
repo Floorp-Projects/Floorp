@@ -148,7 +148,16 @@ javascript-trace.h: $(srcdir)/devtools/javascript-trace.d
 # We can't automatically generate dependencies on auto-generated headers;
 # we have to list them explicitly.
 $(addsuffix .$(OBJ_SUFFIX),Probes jsinterp jsobj): $(CURDIR)/javascript-trace.h
-endif
+
+ifneq ($(OS_ARCH),Darwin)
+DTRACE_PROBE_OBJ = js-dtrace.$(OBJ_SUFFIX)
+$(LIBRARY): $(DTRACE_PROBE_OBJ)
+$(DTRACE_PROBE_OBJ): $(srcdir)/devtools/javascript-trace.d $(OBJS)
+	dtrace -x nolibs -G -C -s $< -o $@ $(filter-out $<, $^)
+
+OBJS += $(DTRACE_PROBE_OBJ) # for "make clean"
+endif # OS_ARCH != Darwin
+endif # HAVE_DTRACE
 
 ###############################################
 # Generating source package tarballs

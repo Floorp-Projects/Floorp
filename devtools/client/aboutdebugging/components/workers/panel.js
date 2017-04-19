@@ -75,7 +75,9 @@ module.exports = createClass({
   },
 
   updateMultiE10S() {
-    let processCount = Services.prefs.getIntPref(PROCESS_COUNT_PREF);
+    // We watch the pref but set the state based on
+    // nsIXULRuntime::maxWebProcessCount.
+    let processCount = Services.appinfo.maxWebProcessCount;
     this.setState({ processCount });
   },
 

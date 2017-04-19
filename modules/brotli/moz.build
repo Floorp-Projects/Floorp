@@ -21,3 +21,24 @@ ALLOW_COMPILER_WARNINGS = True
 CFLAGS += ['-DBROTLI_BUILD_PORTABLE']
 
 Library('brotli')
+
+HostProgram('bro')
+
+HOST_SOURCES += UNIFIED_SOURCES
+
+HOST_SOURCES += [
+    'enc/backward_references.cc',
+    'enc/block_splitter.cc',
+    'enc/brotli_bit_stream.cc',
+    'enc/compress_fragment.cc',
+    'enc/compress_fragment_two_pass.cc',
+    'enc/encode.cc',
+    'enc/entropy_encode.cc',
+    'enc/histogram.cc',
+    'enc/literal_cost.cc',
+    'enc/metablock.cc',
+    'enc/static_dict.cc',
+    'enc/streams.cc',
+    'enc/utf8_util.cc',
+    'tools/bro.cc',
+]

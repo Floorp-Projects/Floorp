@@ -699,6 +699,34 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     }
   }
 
+  /**
+   * Incoming bookmark records might be missing dateAdded field, because clients started to sync it
+   * only in version 55. However, record's lastModified value is a good upper bound. In order to
+   * encourage modern clients to re-upload the record with an earlier local dateAdded value,
+   * we bump record's lastModified value if we perform any substitutions.
+   *
+   * This function is only called while inserting a record which doesn't exist locally.
+   */
+  @Override
+  protected Record processBeforeInsertion(Record toProcess) {
+    // If incoming record is missing dateAdded, use its lastModified value instead.
+    if (((BookmarkRecord) toProcess).dateAdded == null) {
+      ((BookmarkRecord) toProcess).dateAdded = toProcess.lastModified;
+      toProcess.lastModified = now();
+      return toProcess;
+    }
+
+    // If both are present, use the lowest value. We trust server's monotonously increasing timestamps
+    // more than clients' potentially bogus ones.
+    if (toProcess.lastModified < ((BookmarkRecord) toProcess).dateAdded) {
+      ((BookmarkRecord) toProcess).dateAdded = toProcess.lastModified;
+      toProcess.lastModified = now();
+      return toProcess;
+    }
+
+    return toProcess;
+  }
+
   @Override
   protected Record reconcileRecords(Record remoteRecord, Record localRecord,
                                     long lastRemoteRetrieval,
@@ -708,15 +736,40 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
                                                                         lastRemoteRetrieval,
                                                                         lastLocalRetrieval);
 
+    final BookmarkRecord remote = (BookmarkRecord) remoteRecord;
+    final BookmarkRecord local = (BookmarkRecord) localRecord;
+
     // For now we *always* use the remote record's children array as a starting point.
     // We won't write it into the database yet; we'll record it and process as we go.
-    reconciled.children = ((BookmarkRecord) remoteRecord).children;
+    reconciled.children = remote.children;
 
     // *Always* track folders, though: if we decide we need to reposition items, we'll
     // untrack later.
     if (reconciled.isFolder()) {
       trackRecord(reconciled);
     }
+
+    // We should always have:
+    // - local dateAdded
+    // - lastModified values for both records
+    // We might not have the remote dateAdded.
+    // We always pick the lowest value out of what is available.
+    long lowest = remote.lastModified;
+
+    // During a similar operation, desktop clients consider dates before Jan 23, 1993 to be invalid.
+    // We do the same here out of a desire to be consistent.
+    final long releaseOfNCSAMosaicMillis = 727747200000L;
+
+    if (local.dateAdded != null && local.dateAdded < lowest && local.dateAdded > releaseOfNCSAMosaicMillis) {
+      lowest = local.dateAdded;
+    }
+
+    if (remote.dateAdded != null && remote.dateAdded < lowest && remote.dateAdded > releaseOfNCSAMosaicMillis) {
+      lowest = remote.dateAdded;
+    }
+
+    reconciled.dateAdded = lowest;
+
     return reconciled;
   }
 
@@ -1089,6 +1142,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     rec.description = RepoUtils.getStringFromCursor(cur, BrowserContract.Bookmarks.DESCRIPTION);
     rec.tags = RepoUtils.getJSONArrayFromCursor(cur, BrowserContract.Bookmarks.TAGS);
     rec.keyword = RepoUtils.getStringFromCursor(cur, BrowserContract.Bookmarks.KEYWORD);
+    rec.dateAdded = RepoUtils.getLongFromCursor(cur, BrowserContract.SyncColumns.DATE_CREATED);
 
     rec.androidID = RepoUtils.getLongFromCursor(cur, BrowserContract.Bookmarks._ID);
     rec.androidPosition = RepoUtils.getLongFromCursor(cur, BrowserContract.Bookmarks.POSITION);

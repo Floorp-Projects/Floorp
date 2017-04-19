@@ -11,14 +11,15 @@ var Cr = Components.results;
 
 const HISTORY_TTL = 5184000; // 60 days
 
-Cu.import("resource://gre/modules/PlacesUtils.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/async.js");
-Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
+
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
 
 this.HistoryRec = function HistoryRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
@@ -362,7 +363,7 @@ HistoryStore.prototype = {
     for (i = 0, k = 0; i < record.visits.length; i++) {
       let visit = record.visits[k] = record.visits[i];
 
-      if (!visit.date || typeof visit.date != "number") {
+      if (!visit.date || typeof visit.date != "number" || !Number.isInteger(visit.date)) {
         this._log.warn("Encountered record with invalid visit date: "
                        + visit.date);
         continue;

@@ -241,6 +241,7 @@
 @BINPATH@/components/urlformatter.xpt
 @BINPATH@/components/webBrowser_core.xpt
 @BINPATH@/components/webbrowserpersist.xpt
+@BINPATH@/components/webextensions.xpt
 @BINPATH@/components/widget.xpt
 @BINPATH@/components/widget_android.xpt
 @BINPATH@/components/windowcreator.xpt
@@ -530,7 +531,10 @@
 @BINPATH@/chrome/geckoview@JAREXT@
 @BINPATH@/chrome/geckoview.manifest
 
-#ifndef MOZ_GECKOVIEW_JAR
+#ifdef MOZ_GECKOVIEW_JAR
+@BINPATH@/components/GeckoView.manifest
+@BINPATH@/components/GeckoViewPrompt.js
+#else
 @BINPATH@/chrome/chrome@JAREXT@
 @BINPATH@/chrome/chrome.manifest
 @BINPATH@/components/AboutRedirector.js

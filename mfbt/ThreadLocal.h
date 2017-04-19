@@ -9,20 +9,7 @@
 #ifndef mozilla_ThreadLocal_h
 #define mozilla_ThreadLocal_h
 
-#if defined(XP_WIN)
-// This file will get included in any file that wants to add a profiler mark.
-// In order to not bring <windows.h> together we could include windef.h and
-// winbase.h which are sufficient to get the prototypes for the Tls* functions.
-// # include <windef.h>
-// # include <winbase.h>
-// Unfortunately, even including these headers causes us to add a bunch of ugly
-// stuff to our namespace e.g #define CreateEvent CreateEventW
-extern "C" {
-__declspec(dllimport) void* __stdcall TlsGetValue(unsigned long);
-__declspec(dllimport) int __stdcall TlsSetValue(unsigned long, void*);
-__declspec(dllimport) unsigned long __stdcall TlsAlloc();
-}
-#else
+#if !defined(XP_WIN)
 #  include <pthread.h>
 #  include <signal.h>
 #endif
@@ -44,7 +31,7 @@ typedef sig_atomic_t sig_safe_t;
 
 namespace detail {
 
-#if defined(HAVE_THREAD_TLS_KEYWORD)
+#if defined(HAVE_THREAD_TLS_KEYWORD) || defined(XP_WIN) || defined(XP_MACOSX)
 #define MOZ_HAS_THREAD_LOCAL
 #endif
 
@@ -91,11 +78,7 @@ template<typename T>
 class ThreadLocal
 {
 #ifndef MOZ_HAS_THREAD_LOCAL
-#if defined(XP_WIN)
-  typedef unsigned long key_t;
-#else
   typedef pthread_key_t key_t;
-#endif
 
   // Integral types narrower than void* must be extended to avoid
   // warnings from valgrind on some platforms.  This helper type
@@ -161,12 +144,7 @@ ThreadLocal<T>::init()
   return true;
 #else
   if (!initialized()) {
-#ifdef XP_WIN
-    mKey = TlsAlloc();
-    mInited = mKey != 0xFFFFFFFFUL; // TLS_OUT_OF_INDEXES
-#else
     mInited = !pthread_key_create(&mKey, nullptr);
-#endif
   }
   return mInited;
 #endif
@@ -181,11 +159,7 @@ ThreadLocal<T>::get() const
 #else
   MOZ_ASSERT(initialized());
   void* h;
-#ifdef XP_WIN
-  h = TlsGetValue(mKey);
-#else
   h = pthread_getspecific(mKey);
-#endif
   return static_cast<T>(reinterpret_cast<typename Helper<T>::Type>(h));
 #endif
 }
@@ -199,11 +173,7 @@ ThreadLocal<T>::set(const T aValue)
 #else
   MOZ_ASSERT(initialized());
   void* h = reinterpret_cast<void*>(static_cast<typename Helper<T>::Type>(aValue));
-#ifdef XP_WIN
-  bool succeeded = TlsSetValue(mKey, h);
-#else
   bool succeeded = !pthread_setspecific(mKey, h);
-#endif
   if (!succeeded) {
     MOZ_CRASH();
   }
@@ -211,7 +181,11 @@ ThreadLocal<T>::set(const T aValue)
 }
 
 #ifdef MOZ_HAS_THREAD_LOCAL
+#if defined(XP_WIN) || defined(XP_MACOSX)
+#define MOZ_THREAD_LOCAL(TYPE) thread_local mozilla::detail::ThreadLocal<TYPE>
+#else
 #define MOZ_THREAD_LOCAL(TYPE) __thread mozilla::detail::ThreadLocal<TYPE>
+#endif
 #else
 #define MOZ_THREAD_LOCAL(TYPE) mozilla::detail::ThreadLocal<TYPE>
 #endif

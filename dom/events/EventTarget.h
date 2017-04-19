@@ -70,7 +70,10 @@ public:
 
   // Note, for an event 'foo' aType will be 'onfoo'.
   virtual void EventListenerAdded(nsIAtom* aType) {}
+  virtual void EventListenerAdded(const nsAString& aType) {}
+
   virtual void EventListenerRemoved(nsIAtom* aType) {}
+  virtual void EventListenerRemoved(const nsAString& aType) {}
 
   // Returns an outer window that corresponds to the inner window this event
   // target is associated with.  Will return null if the inner window is not the

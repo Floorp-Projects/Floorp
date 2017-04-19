@@ -17,9 +17,9 @@ add_task(function* () {
   yield selectNodeAndWaitForAnimations(".animated", inspector);
 
   let animation = controller.animationPlayers[0];
-  yield setStyle(animation, panel, "animationDuration", "5.5s");
-  yield setStyle(animation, panel, "animationIterationCount", "300");
-  yield setStyle(animation, panel, "animationDelay", "45s");
+  yield setStyle(animation, panel, "animationDuration", "5.5s", ".animated");
+  yield setStyle(animation, panel, "animationIterationCount", "300", ".animated");
+  yield setStyle(animation, panel, "animationDelay", "45s", ".animated");
 
   let animationsEl = panel.animationsTimelineComponent.animationsEl;
   let timeBlockEl = animationsEl.querySelector(".time-block");
@@ -34,20 +34,3 @@ add_task(function* () {
   is(Math.round(delayWidth * expectedTotalDuration / 100), 45 * 1000,
     "The timeline has the right delay");
 });
-
-function* setStyle(animation, panel, name, value) {
-  info("Change the animation style via the content DOM. Setting " +
-    name + " to " + value);
-
-  let onAnimationChanged = once(animation, "changed");
-  yield executeInContent("devtools:test:setStyle", {
-    selector: ".animated",
-    propertyName: name,
-    propertyValue: value
-  });
-  yield onAnimationChanged;
-
-  // Also wait for the target node previews to be loaded if the panel got
-  // refreshed as a result of this animation mutation.
-  yield waitForAllAnimationTargets(panel);
-}

@@ -8,22 +8,22 @@
 <!DOCTYPE dialog [
 <!ENTITY % deviceManangerDTD SYSTEM "chrome://pippki/locale/deviceManager.dtd">
 %deviceManangerDTD;
-<!ENTITY % pippkiDTD SYSTEM "chrome://pippki/locale/pippki.dtd" >
-%pippkiDTD;
 ]>
 
-<dialog id="loaddevice" 
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-        title="&loaddevice.title;"
+<dialog id="loaddevice"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&loaddevice.title2;"
         buttons="accept,cancel"
-        ondialogaccept="return doLoadDevice();">
+        ondialogaccept="return onDialogAccept();">
 
 <stringbundleset id="stringbundleset">
   <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
   <stringbundle id="pipnss_bundle" src="chrome://pipnss/locale/pipnss.properties"/>
 </stringbundleset>
 
-  <script type="application/javascript" src="chrome://pippki/content/device_manager.js"/>
+  <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
+  <script type="application/javascript"
+          src="chrome://pippki/content/load_device.js"/>
 
   <description>&loaddevice.info;</description>
   <hbox align="center">
@@ -35,8 +35,9 @@
     <label value="&loaddevice.filename;" accesskey="&loaddevice.filename.accesskey;"
            control="device_path"/>
     <textbox id="device_path" flex="1"/>
-    <button label="&loaddevice.browse;" flex="1" 
-            accesskey="&loaddevice.browse.accesskey;" oncommand="doBrowseFiles();"/>
+    <button id="browse" label="&loaddevice.browse;" flex="1"
+            accesskey="&loaddevice.browse.accesskey;"
+            oncommand="onBrowseBtnPress();"/>
   </hbox>
 
 </dialog>

@@ -6,13 +6,16 @@
 
 const { interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
-Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/utils.js");
+
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesSyncUtils",
+                                  "resource://gre/modules/PlacesSyncUtils.jsm");
 
 Cu.importGlobalProperties(["URLSearchParams"]);
 
@@ -849,4 +852,3 @@ class BookmarkValidator {
 }
 
 BookmarkValidator.prototype.version = BOOKMARK_VALIDATOR_VERSION;
-

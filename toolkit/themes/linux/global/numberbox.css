@@ -25,11 +25,6 @@ html|*.numberbox-input {
   -moz-box-align: center;
   -moz-appearance: spinner-textfield;
   margin-right: -1px;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
   padding: 3px;
 }
 

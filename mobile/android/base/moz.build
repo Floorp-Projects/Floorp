@@ -123,13 +123,13 @@ GENERATED_FILES += [
     'generated/preprocessed/org/mozilla/gecko/AppConstants.java',
 ]
 w = GENERATED_FILES['../geckoview/generated/preprocessed/org/mozilla/geckoview/BuildConfig.java']
-w.script = 'generate_build_config.py'
+w.script = 'generate_build_config.py:generate_java'
 w.inputs += ['../geckoview/BuildConfig.java.in']
 x = GENERATED_FILES['generated/preprocessed/org/mozilla/gecko/AdjustConstants.java']
-x.script = 'generate_build_config.py'
+x.script = 'generate_build_config.py:generate_java'
 x.inputs += ['AdjustConstants.java.in']
 y = GENERATED_FILES['generated/preprocessed/org/mozilla/gecko/AppConstants.java']
-y.script = 'generate_build_config.py'
+y.script = 'generate_build_config.py:generate_java'
 y.inputs += ['AppConstants.java.in']
 
 include('android-services.mozbuild')
@@ -369,7 +369,6 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'GeckoSharedPrefs.java',
     'GeckoThread.java',
     'GeckoView.java',
-    'GeckoViewChrome.java',
     'GeckoViewFragment.java',
     'GeckoViewSettings.java',
     'gfx/BitmapUtils.java',

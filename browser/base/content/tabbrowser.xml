@@ -4898,7 +4898,7 @@
                 tab.linkedBrowser &&
                 tab.linkedBrowser.isRemoteBrowser) {
               label += " - e10s";
-              if (Services.prefs.getIntPref("dom.ipc.processCount") > 1) {
+              if (Services.appinfo.maxWebProcessCount > 1) {
                 label += " (" + tab.linkedBrowser.frameLoader.tabParent.osPid + ")";
               }
             }
@@ -5909,6 +5909,12 @@
 
       <method name="adjustTabstrip">
         <body><![CDATA[
+          // If we're overflowing, tab widths don't change anymore, so we can
+          // return early to avoid flushing layout.
+          if (this.getAttribute("overflow") == "true") {
+            return;
+          }
+
           let numTabs = this.childNodes.length -
                         this.tabbrowser._removingTabs.length;
           if (numTabs > 2) {
@@ -6242,7 +6248,7 @@
               if (width != this.mTabstripWidth) {
                 this.adjustTabstrip();
                 this._fillTrailingGap();
-                this._handleTabSelect();
+                this._handleTabSelect(false);
                 this.mTabstripWidth = width;
               }
               break;
@@ -7689,7 +7695,7 @@
           if (val) {
             this.setAttribute("label", val);
             this.removeAttribute("inactive");
-            this._calcMouseTargetRect();
+            this._mouseTargetRect = null;
             MousePosTracker.addListener(this);
           } else {
             this.setAttribute("inactive", "true");
@@ -7705,6 +7711,9 @@
 
       <method name="getMouseTargetRect">
         <body><![CDATA[
+          if (!this._mouseTargetRect) {
+            this._calcMouseTargetRect();
+          }
           return this._mouseTargetRect;
         ]]></body>
       </method>
@@ -7729,7 +7738,7 @@
 
           switch (event.type) {
             case "resize":
-              this._calcMouseTargetRect();
+              this._mouseTargetRect = null;
               break;
           }
         ]]></body>
@@ -7760,7 +7769,7 @@
 
           if (!this.hasAttribute("sizelimit")) {
             this.setAttribute("sizelimit", "true");
-            this._calcMouseTargetRect();
+            this._mouseTargetRect = null;
           }
         </body>
       </method>

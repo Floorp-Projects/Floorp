@@ -58,6 +58,8 @@ public:
   void ConstructMediaTracks(const MediaInfo* aInfo) {}
   void RemoveMediaTracks() {}
   already_AddRefed<GMPCrashHelper> CreateGMPCrashHelper() { return nullptr; }
+  void AsyncResolveSeekDOMPromiseIfExists() override {}
+  void AsyncRejectSeekDOMPromiseIfExists() override {}
 };
 }
 

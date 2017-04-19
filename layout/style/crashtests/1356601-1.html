@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+<style>
+div::first-line {
+  --bar: left;
+}
+span {
+  animation: var(--bar) 5s infinite alternate;
+}
+@keyframes left {
+  from {left: 0;}
+  to {left: 30px;}
+}
+</style>
+<div>
+  <span>Crash</span>
+</div>
+</html>
