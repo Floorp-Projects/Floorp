@@ -246,8 +246,7 @@ task findbugs(type: FindBugs) {
     // Flip this switch to fail the build when issues are found
     ignoreFailures = false
 
-    // TODO: investigate boosting this to max
-    effort = "default"
+    effort = "max"
     // This selects what level of bugs to report: low means low priority issues will be reported
     // (in addition to medium+high), which corresponds to warning about everything.
     // TODO: boost this to low once low priority issues are fixed.
