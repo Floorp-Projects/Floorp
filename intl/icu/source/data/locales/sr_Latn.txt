@@ -231,13 +231,24 @@ sr_Latn{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{"."}
+                timeSeparator{":"}
+            }
+        }
+        minimalPairs{
+            ordinal{
+                other{"Skrenite u {0}. desno."}
+            }
+            plural{
+                few{"{0} sata"}
+                many{"{0} sati"}
+                one{"{0} sat"}
+                other{"{0} sati"}
             }
         }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.29.33"}
+    Version{"2.1.32.73"}
     calendar{
         buddhist{
             eras{
@@ -312,8 +323,8 @@ sr_Latn{
                 GyMMMEd{"E, d. MMM y. G"}
                 GyMMMd{"d. MMM y. G"}
                 H{"HH"}
-                Hm{"HH.mm"}
-                Hms{"HH.mm.ss"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
                 M{"L"}
                 MEd{"E, d.M."}
                 MMM{"LLL"}
@@ -326,9 +337,9 @@ sr_Latn{
                 Md{"d.M."}
                 d{"d"}
                 h{"hh a"}
-                hm{"hh.mm a"}
-                hms{"hh.mm.ss a"}
-                ms{"mm.ss"}
+                hm{"hh:mm a"}
+                hms{"hh:mm:ss a"}
+                ms{"mm:ss"}
                 y{"y. G"}
                 yyyy{"y. G"}
                 yyyyM{"M.y. GGGGG"}
@@ -348,12 +359,12 @@ sr_Latn{
                     H{"HH–HH"}
                 }
                 Hm{
-                    H{"HH.mm–HH.mm"}
-                    m{"HH.mm–HH.mm"}
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
                 }
                 Hmv{
-                    H{"HH.mm–HH.mm v"}
-                    m{"HH.mm–HH.mm v"}
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
                 }
                 Hv{
                     H{"HH–HH v"}
@@ -389,14 +400,14 @@ sr_Latn{
                     h{"h–h a"}
                 }
                 hm{
-                    a{"h.mm a – h.mm a"}
-                    h{"h.mm–h.mm a"}
-                    m{"h.mm–h.mm a"}
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
                 }
                 hmv{
-                    a{"h.mm a – h.mm a v"}
-                    h{"h.mm–h.mm a v"}
-                    m{"h.mm–h.mm a v"}
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
                 }
                 hv{
                     a{"h a – h a v"}
@@ -683,12 +694,12 @@ sr_Latn{
                     H{"HH–HH"}
                 }
                 Hm{
-                    H{"HH.mm–HH.mm"}
-                    m{"HH.mm–HH.mm"}
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
                 }
                 Hmv{
-                    H{"HH.mm–HH.mm v"}
-                    m{"HH.mm–HH.mm v"}
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
                 }
                 Hv{
                     H{"HH–HH v"}
@@ -724,14 +735,14 @@ sr_Latn{
                     h{"h–h a"}
                 }
                 hm{
-                    a{"h.mm a – h.mm a"}
-                    h{"h.mm–h.mm a"}
-                    m{"h.mm–h.mm a"}
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
                 }
                 hmv{
-                    a{"h.mm a – h.mm a v"}
-                    h{"h.mm–h.mm a v"}
-                    m{"h.mm–h.mm a v"}
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
                 }
                 hv{
                     a{"h a – h a v"}

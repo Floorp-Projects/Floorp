@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fur{
-    Version{"2.1.28.76"}
+    Version{"2.1.31.33"}
     zoneStrings{
         "meta:Europe_Central"{
             ld{"Ore estive de Europe centrâl"}

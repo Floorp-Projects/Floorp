@@ -271,10 +271,22 @@ be{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                few{"{0}-і дом злева"}
+                other{"{0}-ы дом злева"}
+            }
+            plural{
+                few{"з {0} кніг за {0} дні"}
+                many{"з {0} кніг за {0} дзён"}
+                one{"з {0} кнігі за {0} дзень"}
+                other{"з {0} кніги за {0} дні"}
+            }
+        }
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.29.66"}
+    Version{"2.1.31.86"}
     calendar{
         buddhist{
             DateTimePatterns{

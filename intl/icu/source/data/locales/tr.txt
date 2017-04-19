@@ -203,10 +203,19 @@ tr{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0}. sağdan dönün."}
+            }
+            plural{
+                one{"Sepetinizde {0} X var. Bunu almak istiyor musunuz?"}
+                other{"Sepetinizde {0} X var. Bunları almak istiyor musunuz?"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         buddhist{
             eras{

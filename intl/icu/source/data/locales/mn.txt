@@ -199,10 +199,19 @@ mn{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0}-р баруун эргэлтээр орно уу"}
+            }
+            plural{
+                one{"Картанд {0} Х байна. Үүнийг авах уу?"}
+                other{"Картанд {0} Х байна. Тэднийг авах уу?"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
     calendar{
         generic{
             DateTimePatterns{
