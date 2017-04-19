@@ -45,13 +45,14 @@ public:
    * CrossProcessSemaphore
    * @param name A name which can reference this lock (currently unused)
    **/
-  explicit CrossProcessSemaphore(const char* aName, uint32_t aInitialValue);
+  static CrossProcessSemaphore* Create(const char* aName, uint32_t aInitialValue);
+
   /**
    * CrossProcessSemaphore
    * @param handle A handle of an existing cross process semaphore that can be
    *               opened.
    */
-  explicit CrossProcessSemaphore(CrossProcessSemaphoreHandle aHandle);
+  static CrossProcessSemaphore* Create(CrossProcessSemaphoreHandle aHandle);
 
   ~CrossProcessSemaphore();
 
@@ -85,6 +86,8 @@ private:
   CrossProcessSemaphore &operator=(const CrossProcessSemaphore&);
 
 #if defined(OS_WIN)
+  explicit CrossProcessSemaphore(HANDLE aSemaphore);
+
   HANDLE mSemaphore;
 #elif !defined(OS_MACOSX)
   RefPtr<mozilla::ipc::SharedMemoryBasic> mSharedBuffer;
