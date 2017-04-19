@@ -192,8 +192,12 @@ function AppendTrack(test, ms, track, token, loadParams)
         sb.appendBuffer(new Uint8Array(req.response));
       });
 
-      req.addEventListener("error", function(){info(token + " error fetching " + fragmentFile);});
-      req.addEventListener("abort", function(){info(token + " aborted fetching " + fragmentFile);});
+      req.addEventListener("error", function() {
+        reject(`${token} - ${track.name}: error fetching ${fragmentFile}`);
+      });
+      req.addEventListener("abort", function() {
+        reject(`${token} - ${track.name}: aborted fetching ${fragmentFile}`);
+      });
 
       Log(token, track.name + ": addNextFragment() fetching next fragment " + fragmentFile);
       req.send(null);
