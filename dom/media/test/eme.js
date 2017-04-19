@@ -337,10 +337,19 @@ function SetupEME(test, token, params)
 
   function processInitDataQueue()
   {
-    if (initDataQueue === null) { return; }
+    function maybeResolveInitDataPromise() {
+      if (params && params.initDataPromise) {
+        params.initDataPromise.resolve();
+      }
+    }
+    if (initDataQueue === null) {
+      maybeResolveInitDataPromise();
+      return;
+    }
     // If we're processed all our init data null the queue to indicate encrypted event handled.
     if (initDataQueue.length === 0) {
       initDataQueue = null;
+      maybeResolveInitDataPromise();
       return;
     }
     var ev = initDataQueue.shift();
