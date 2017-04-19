@@ -38,7 +38,7 @@ public:
 protected:
   CompositableType GetImageClientType();
 
-  uint64_t mExternalImageId;
+  Maybe<wr::ExternalImageId> mExternalImageId;
   Maybe<wr::ImageKey> mKey;
   RefPtr<ImageClient> mImageClient;
   CompositableType mImageClientTypeContainer;

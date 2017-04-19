@@ -20,7 +20,6 @@ using namespace gfx;
 
 WebRenderImageLayer::WebRenderImageLayer(WebRenderLayerManager* aLayerManager)
   : ImageLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
-  , mExternalImageId(0)
   , mImageClientTypeContainer(CompositableType::UNKNOWN)
 {
   MOZ_COUNT_CTOR(WebRenderImageLayer);
@@ -32,8 +31,8 @@ WebRenderImageLayer::~WebRenderImageLayer()
   if (mKey.isSome()) {
     WrManager()->AddImageKeyForDiscard(mKey.value());
   }
-  if (mExternalImageId) {
-    WrBridge()->DeallocExternalImageId(mExternalImageId);
+  if (mExternalImageId.isSome()) {
+    WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
   }
 }
 
@@ -106,17 +105,17 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     mImageClient->Connect();
   }
 
-  if (!mExternalImageId) {
+  if (mExternalImageId.isNothing()) {
     if (GetImageClientType() == CompositableType::IMAGE_BRIDGE) {
       MOZ_ASSERT(!mImageClient);
-      mExternalImageId = WrBridge()->AllocExternalImageId(mContainer->GetAsyncContainerHandle());
+      mExternalImageId = Some(WrBridge()->AllocExternalImageId(mContainer->GetAsyncContainerHandle()));
     } else {
       // Handle CompositableType::IMAGE case
       MOZ_ASSERT(mImageClient);
-      mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
+      mExternalImageId = Some(WrBridge()->AllocExternalImageIdForCompositable(mImageClient));
     }
   }
-  MOZ_ASSERT(mExternalImageId);
+  MOZ_ASSERT(mExternalImageId.isSome());
 
   // XXX Not good for async ImageContainer case.
   AutoLockImage autoLock(mContainer);
@@ -129,7 +128,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   if (GetImageClientType() == CompositableType::IMAGE_BRIDGE) {
     // Always allocate key
     WrImageKey key = GetImageKey();
-    WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
+    WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
     Manager()->AddImageKeyForDiscard(key);
     mKey = Some(key);
   } else {
@@ -138,7 +137,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     mKey = UpdateImageKey(mImageClient->AsImageClientSingle(),
                           mContainer,
                           mKey,
-                          mExternalImageId);
+                          mExternalImageId.ref());
   }
 
   if (mKey.isNothing()) {
@@ -206,10 +205,9 @@ WebRenderImageLayer::RenderMaskLayer(const gfx::Matrix4x4& aTransform)
     mImageClient->Connect();
   }
 
-  if (!mExternalImageId) {
-    mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
+  if (mExternalImageId.isNothing()) {
+    mExternalImageId = Some(WrBridge()->AllocExternalImageIdForCompositable(mImageClient));
   }
-  MOZ_ASSERT(mExternalImageId);
 
   AutoLockImage autoLock(mContainer);
   Image* image = autoLock.GetImage();
@@ -221,7 +219,7 @@ WebRenderImageLayer::RenderMaskLayer(const gfx::Matrix4x4& aTransform)
   mKey = UpdateImageKey(mImageClient->AsImageClientSingle(),
                         mContainer,
                         mKey,
-                        mExternalImageId);
+                        mExternalImageId.ref());
   if (mKey.isNothing()) {
     return Nothing();
   }

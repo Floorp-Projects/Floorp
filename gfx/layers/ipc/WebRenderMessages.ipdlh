@@ -23,6 +23,7 @@ using WrBoxShadowClipMode from "mozilla/webrender/webrender_ffi.h";
 using MaybeImageMask from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageRendering from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
@@ -33,7 +34,7 @@ namespace mozilla {
 namespace layers {
 
 struct OpAddExternalImage {
-  uint64_t externalImageId;
+  ExternalImageId externalImageId;
   ImageKey key;
 };
 

@@ -70,9 +70,9 @@ public:
   TextureForwarder* GetTextureForwarder() override;
   LayersIPCActor* GetLayersIPCActor() override;
 
-  uint64_t AllocExternalImageId(const CompositableHandle& aHandle);
-  uint64_t AllocExternalImageIdForCompositable(CompositableClient* aCompositable);
-  void DeallocExternalImageId(uint64_t aImageId);
+  wr::ExternalImageId AllocExternalImageId(const CompositableHandle& aHandle);
+  wr::ExternalImageId AllocExternalImageIdForCompositable(CompositableClient* aCompositable);
+  void DeallocExternalImageId(wr::ExternalImageId& aImageId);
 
   /**
    * Clean this up, finishing with SendShutDown() which will cause __delete__
@@ -102,7 +102,7 @@ private:
 
   ~WebRenderBridgeChild() {}
 
-  uint64_t GetNextExternalImageId();
+  wr::ExternalImageId GetNextExternalImageId();
 
   // CompositableForwarder
   void Connect(CompositableClient* aCompositable,

@@ -134,9 +134,8 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     mImageClient->Connect();
   }
 
-  if (!mExternalImageId) {
-    mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
-    MOZ_ASSERT(mExternalImageId);
+  if (mExternalImageId.isNothing()) {
+    mExternalImageId = Some(WrBridge()->AllocExternalImageIdForCompositable(mImageClient));
   }
 
   LayerIntRegion visibleRegion = GetVisibleRegion();
@@ -192,7 +191,7 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   DumpLayerInfo("PaintedLayer", rect);
 
   WrImageKey key = GetImageKey();
-  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
+  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
   Manager()->AddImageKeyForDiscard(key);
 
   aBuilder.PushStackingContext(wr::ToWrRect(relBounds),

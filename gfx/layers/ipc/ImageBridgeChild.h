@@ -17,6 +17,7 @@
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/PImageBridgeChild.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsIObserver.h"
 #include "nsRegion.h"                   // for nsIntRegion
@@ -339,7 +340,7 @@ public:
 
   virtual void HandleFatalError(const char* aName, const char* aMsg) const override;
 
-  uint64_t GetNextExternalImageId();
+  wr::ExternalImageId GetNextExternalImageId();
 
 protected:
   explicit ImageBridgeChild(uint32_t aNamespace);

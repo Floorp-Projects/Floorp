@@ -1156,7 +1156,7 @@ ImageBridgeChild::HandleFatalError(const char* aName, const char* aMsg) const
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
 }
 
-uint64_t
+wr::ExternalImageId
 ImageBridgeChild::GetNextExternalImageId()
 {
   static uint32_t sNextID = 1;
@@ -1165,7 +1165,7 @@ ImageBridgeChild::GetNextExternalImageId()
 
   uint64_t imageId = mNamespace;
   imageId = imageId << 32 | sNextID;
-  return imageId;
+  return wr::ToExternalImageId(imageId);
 }
 
 } // namespace layers

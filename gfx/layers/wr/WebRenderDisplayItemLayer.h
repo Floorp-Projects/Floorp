@@ -21,7 +21,6 @@ class WebRenderDisplayItemLayer : public WebRenderLayer,
 public:
   explicit WebRenderDisplayItemLayer(WebRenderLayerManager* aLayerManager)
     : DisplayItemLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
-    , mExternalImageId(0)
   {
     MOZ_COUNT_CTOR(WebRenderDisplayItemLayer);
   }
@@ -43,7 +42,7 @@ private:
   nsTArray<WebRenderParentCommand> mParentCommands;
   RefPtr<ImageClient> mImageClient;
   RefPtr<ImageContainer> mImageContainer;
-  uint64_t mExternalImageId;
+  Maybe<wr::ExternalImageId> mExternalImageId;
   Maybe<wr::ImageKey> mKey;
 };
 

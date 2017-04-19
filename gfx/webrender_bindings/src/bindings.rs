@@ -934,12 +934,12 @@ pub extern "C" fn wr_api_add_blob_image(api: &mut WrAPI,
 pub extern "C" fn wr_api_add_external_image_handle(api: &mut WrAPI,
                                                    image_key: WrImageKey,
                                                    descriptor: &WrImageDescriptor,
-                                                   external_image_id: u64) {
+                                                   external_image_id: WrExternalImageId) {
     assert!(unsafe { is_in_compositor_thread() });
     api.add_image(image_key,
                   descriptor.into(),
                   ImageData::External(ExternalImageData {
-                                          id: ExternalImageId(external_image_id),
+                                          id: external_image_id.into(),
                                           image_type: ExternalImageType::Texture2DHandle,
                                       }),
                   None);
@@ -949,12 +949,12 @@ pub extern "C" fn wr_api_add_external_image_handle(api: &mut WrAPI,
 pub extern "C" fn wr_api_add_external_image_buffer(api: &mut WrAPI,
                                                    image_key: WrImageKey,
                                                    descriptor: &WrImageDescriptor,
-                                                   external_image_id: u64) {
+                                                   external_image_id: WrExternalImageId) {
     assert!(unsafe { is_in_compositor_thread() });
     api.add_image(image_key,
                   descriptor.into(),
                   ImageData::External(ExternalImageData {
-                                          id: ExternalImageId(external_image_id),
+                                          id: external_image_id.into(),
                                           image_type: ExternalImageType::ExternalBuffer,
                                       }),
                   None);
