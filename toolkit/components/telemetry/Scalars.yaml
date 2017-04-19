@@ -536,3 +536,45 @@ dom.contentprocess:
     release_channel_collection: opt-in
     record_in_processes:
       - 'main'
+
+devtools.toolbar.eyedropper:
+  opened:
+    bug_numbers:
+      - 1247985
+      - 1352115
+    description: Number of times the DevTools Eyedropper has been opened via the inspector toolbar.
+    expires: never
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+devtools.copy.unique.css.selector:
+  opened:
+    bug_numbers:
+      - 1323700
+      - 1352115
+    description: Number of times the DevTools copy unique CSS selector has been used.
+    expires: "57"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+devtools.copy.full.css.selector:
+  opened:
+    bug_numbers:
+      - 1323700
+      - 1352115
+    description: Number of times the DevTools copy full CSS selector has been used.
+    expires: "57"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
