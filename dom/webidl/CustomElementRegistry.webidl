@@ -5,7 +5,7 @@
 // https://html.spec.whatwg.org/#dom-window-customelements
 [Func="CustomElementRegistry::IsCustomElementEnabled"]
 interface CustomElementRegistry {
-  [Throws]
+  [CEReactions, Throws]
   void define(DOMString name, Function functionConstructor,
               optional ElementDefinitionOptions options);
   any get(DOMString name);
