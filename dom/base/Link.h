@@ -136,6 +136,10 @@ public:
   // If you change this, change also the method in Element.
   virtual void NodeInfoChanged(nsIDocument* aOldDoc) = 0;
 
+  bool IsInDNSPrefetch() { return mInDNSPrefetch; }
+  void SetIsInDNSPrefetch() { mInDNSPrefetch = true; }
+  void ClearIsInDNSPrefetch() { mInDNSPrefetch = false; }
+
 protected:
   virtual ~Link();
 
@@ -179,6 +183,8 @@ private:
   bool mRegistered : 1;
 
   bool mHasPendingLinkUpdate : 1;
+
+  bool mInDNSPrefetch : 1;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Link, MOZILLA_DOM_LINK_IMPLEMENTATION_IID)

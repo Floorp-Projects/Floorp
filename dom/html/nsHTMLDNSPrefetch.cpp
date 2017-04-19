@@ -247,6 +247,15 @@ nsHTMLDNSPrefetch::CancelPrefetchLow(const nsAString &hostname,
                         aReason);
 }
 
+void
+nsHTMLDNSPrefetch::LinkDestroyed(Link* aLink)
+{
+  MOZ_ASSERT(aLink->IsInDNSPrefetch());
+  if (sPrefetches) {
+    // Clean up all the possible links at once.
+    sPrefetches->RemoveUnboundLinks();
+  }
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -291,6 +300,9 @@ void
 nsHTMLDNSPrefetch::nsDeferrals::Flush()
 {
   while (mHead != mTail) {
+    if (mEntries[mTail].mElement) {
+      mEntries[mTail].mElement->ClearIsInDNSPrefetch();
+    }
     mEntries[mTail].mElement = nullptr;
     mTail = (mTail + 1) & sMaxDeferredMask;
   }
@@ -306,9 +318,10 @@ nsHTMLDNSPrefetch::nsDeferrals::Add(uint16_t flags, Link *aElement)
 
   if (((mHead + 1) & sMaxDeferredMask) == mTail)
     return NS_ERROR_DNS_LOOKUP_QUEUE_FULL;
-    
+
+  aElement->SetIsInDNSPrefetch();
   mEntries[mHead].mFlags = flags;
-  mEntries[mHead].mElement = do_GetWeakReference(aElement);
+  mEntries[mHead].mElement = aElement;
   mHead = (mHead + 1) & sMaxDeferredMask;
 
   if (!mActiveLoaderCount && !mTimerArmed && mTimer) {
@@ -328,9 +341,9 @@ nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue()
   if (!sDNSService) return;
 
   while (mHead != mTail) {
-    nsCOMPtr<nsIContent> content = do_QueryReferent(mEntries[mTail].mElement);
-    if (content) {
-      nsCOMPtr<Link> link = do_QueryInterface(content);
+    nsCOMPtr<Link> link = mEntries[mTail].mElement;
+    if (link) {
+      link->ClearIsInDNSPrefetch();
       // Only prefetch here if request was deferred and deferral not cancelled
       if (link && link->HasDeferredDNSPrefetchRequest()) {
         nsCOMPtr<nsIURI> hrefURI(link ? link->GetURI() : nullptr);
@@ -398,6 +411,20 @@ nsHTMLDNSPrefetch::nsDeferrals::Activate()
     mozilla::services::GetObserverService();
   if (observerService)
     observerService->AddObserver(this, "xpcom-shutdown", true);
+}
+
+void
+nsHTMLDNSPrefetch::nsDeferrals::RemoveUnboundLinks()
+{
+  uint16_t tail = mTail;
+  while (mHead != tail) {
+    if (mEntries[tail].mElement &&
+        !mEntries[tail].mElement->GetElement()->IsInComposedDoc()) {
+      mEntries[tail].mElement->ClearIsInDNSPrefetch();
+      mEntries[tail].mElement = nullptr;
+    }
+    tail = (tail + 1) & sMaxDeferredMask;
+  }
 }
 
 // nsITimer related method
