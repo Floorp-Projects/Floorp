@@ -1,6 +1,5 @@
 {
   "AboutHome.jsm": ["AboutHomeUtils", "AboutHome"],
-  "AddonLogging.jsm": ["LogManager"],
   "AddonManager.jsm": ["AddonManager", "AddonManagerPrivate"],
   "addons.js": ["AddonsEngine", "AddonValidator"],
   "addons.jsm": ["Addon", "STATE_ENABLED", "STATE_DISABLED"],
