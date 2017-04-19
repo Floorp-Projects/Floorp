@@ -13579,5 +13579,16 @@
     "n_values":  10,
     "bug_numbers": [1393392],
     "description": "The runtime status, sent when a remote HW video decoder is shutdown, of previously-blacklisted driver: 0:remote HW-decoding and GPU process didn't crash, 1:remote HW-decoding and GPU process crashed. The histogram is keyed by the blacklisted driver name."
+  },
+  "FORM_FILLING_REQUIRED_TIME_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["autofill@lists.mozilla.org", "jcheng@mozilla.com", "chsiang@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 300000,
+    "n_buckets": 22,
+    "keyed": true,
+    "bug_numbers": [1341569],
+    "description": "Milliseconds between starting to fill an autofill-eligible form field and submitting the form"
   }
 }
