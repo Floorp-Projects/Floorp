@@ -504,10 +504,14 @@ This is analogous to passing `--log debug` and `--log trace`, respectively.
 
 ## Building
 
-geckodriver is written in [Rust](https://www.rust-lang.org/),
-a systems programming language from [Mozilla](https://www.mozilla.org/en-US/).
-In order to build this program,
-you will need the [Rust compiler toolchain](https://rustup.rs/).
+geckodriver is written in [Rust], a systems programming language from [Mozilla].
+Crucially, it relies on the [webdriver crate] to provide the HTTPD
+and do most of the heavy lifting of marshalling the WebDriver protocol.
+geckodriver translates WebDriver [commands], [responses], and [errors]
+to the [Marionette protocol],
+and acts as a proxy between [WebDriver] and [Marionette].
+
+In order to build this program, you will need the [Rust compiler toolchain].
 
 To build the project for release,
 ensure you compile with optimisations
@@ -518,3 +522,14 @@ to get the best performance:
 Or if you want a non-optimised binary for debugging:
 
 	% cargo build
+
+[Rust]: https://www.rust-lang.org/
+[Mozilla]: https://www.mozilla.org/en-US/
+[webdriver crate]: https://github.com/mozilla/webdriver-rust
+[commands]: https://docs.rs/webdriver/0.25.0/webdriver/command/index.html
+[responses]: https://docs.rs/webdriver/0.25.0/webdriver/response/index.html
+[errors]: https://docs.rs/webdriver/0.25.0/webdriver/error/enum.ErrorStatus.html
+[Marionette protocol]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/Protocol
+[WebDriver]: https://w3c.github.io/webdriver/webdriver-spec.html
+[Marionette]: http://searchfox.org/mozilla-central/source/testing/marionette/README
+[Rust compiler toolchain]: https://rustup.rs/
