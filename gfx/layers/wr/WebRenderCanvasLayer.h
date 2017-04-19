@@ -22,7 +22,6 @@ class WebRenderCanvasLayer : public WebRenderLayer,
 public:
   explicit WebRenderCanvasLayer(WebRenderLayerManager* aLayerManager)
     : ShareableCanvasLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
-    , mExternalImageId(0)
   {
     MOZ_COUNT_CTOR(WebRenderCanvasLayer);
   }
@@ -45,7 +44,7 @@ public:
   void RenderLayer(wr::DisplayListBuilder& aBuilder) override;
 
 protected:
-  uint64_t mExternalImageId;
+  Maybe<wr::ExternalImageId> mExternalImageId;
 };
 
 } // namespace layers

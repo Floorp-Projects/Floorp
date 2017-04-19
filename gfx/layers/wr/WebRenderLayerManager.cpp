@@ -179,11 +179,10 @@ Maybe<wr::ImageKey>
 WebRenderLayer::UpdateImageKey(ImageClientSingle* aImageClient,
                                ImageContainer* aContainer,
                                Maybe<wr::ImageKey>& aOldKey,
-                               uint64_t aExternalImageId)
+                               wr::ExternalImageId& aExternalImageId)
 {
   MOZ_ASSERT(aImageClient);
   MOZ_ASSERT(aContainer);
-  MOZ_ASSERT(aExternalImageId);
 
   uint32_t oldCounter = aImageClient->GetLastUpdateGenerationCounter();
 

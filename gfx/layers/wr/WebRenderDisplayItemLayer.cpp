@@ -22,8 +22,8 @@ WebRenderDisplayItemLayer::~WebRenderDisplayItemLayer()
   if (mKey.isSome()) {
     WrManager()->AddImageKeyForDiscard(mKey.value());
   }
-  if (mExternalImageId) {
-    WrBridge()->DeallocExternalImageId(mExternalImageId);
+  if (mExternalImageId.isSome()) {
+    WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
   }
 }
 
@@ -83,17 +83,17 @@ WebRenderDisplayItemLayer::SendImageContainer(ImageContainer* aContainer,
       mImageClient->Connect();
     }
 
-    if (!mExternalImageId) {
+    if (mExternalImageId.isNothing()) {
       MOZ_ASSERT(mImageClient);
-      mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
+      mExternalImageId = Some(WrBridge()->AllocExternalImageIdForCompositable(mImageClient));
     }
-    MOZ_ASSERT(mExternalImageId);
+    MOZ_ASSERT(mExternalImageId.isSome());
     MOZ_ASSERT(mImageClient->AsImageClientSingle());
 
     mKey = UpdateImageKey(mImageClient->AsImageClientSingle(),
                           aContainer,
                           mKey,
-                          mExternalImageId);
+                          mExternalImageId.ref());
 
     mImageContainer = aContainer;
   }
@@ -119,9 +119,9 @@ WebRenderDisplayItemLayer::PushItemAsImage(wr::DisplayListBuilder& aBuilder,
     mImageClient->Connect();
   }
 
-  if (!mExternalImageId) {
+  if (mExternalImageId.isNothing()) {
     MOZ_ASSERT(mImageClient);
-    mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
+    mExternalImageId = Some(WrBridge()->AllocExternalImageIdForCompositable(mImageClient));
   }
 
   bool snap;
@@ -155,7 +155,7 @@ WebRenderDisplayItemLayer::PushItemAsImage(wr::DisplayListBuilder& aBuilder,
   WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(dest));
   WrImageKey key = GetImageKey();
   aParentCommands.AppendElement(layers::OpAddExternalImage(
-                                mExternalImageId,
+                                mExternalImageId.value(),
                                 key));
   aBuilder.PushImage(wr::ToWrRect(dest),
                      clipRegion,

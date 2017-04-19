@@ -75,11 +75,11 @@ public:
 
   void AddExternalImageHandle(ImageKey key,
                               const ImageDescriptor& aDescriptor,
-                              uint64_t aHandle);
+                              ExternalImageId aHandle);
 
   void AddExternalImageBuffer(ImageKey key,
                               const ImageDescriptor& aDescriptor,
-                              uint64_t aHandle);
+                              ExternalImageId aHandle);
 
   void UpdateImageBuffer(wr::ImageKey aKey,
                          const ImageDescriptor& aDescriptor,

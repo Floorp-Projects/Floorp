@@ -72,6 +72,22 @@ struct ParamTraits<mozilla::wr::FontKey>
 };
 
 template<>
+struct ParamTraits<mozilla::wr::ExternalImageId>
+{
+  static void
+  Write(Message* aMsg, const mozilla::wr::ExternalImageId& aParam)
+  {
+    WriteParam(aMsg, aParam.mHandle);
+  }
+
+  static bool
+  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::ExternalImageId* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mHandle);
+  }
+};
+
+template<>
 struct ParamTraits<mozilla::wr::PipelineId>
 {
   static void

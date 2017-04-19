@@ -1183,7 +1183,7 @@ CompositorBridgeChild::DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActo
   return true;
 }
 
-uint64_t
+wr::ExternalImageId
 CompositorBridgeChild::GetNextExternalImageId()
 {
   static uint32_t sNextID = 1;
@@ -1192,7 +1192,7 @@ CompositorBridgeChild::GetNextExternalImageId()
 
   uint64_t imageId = mNamespace;
   imageId = imageId << 32 | sNextID;
-  return imageId;
+  return wr::ToExternalImageId(imageId);
 }
 
 } // namespace layers

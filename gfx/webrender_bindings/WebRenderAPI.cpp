@@ -413,7 +413,7 @@ WebRenderAPI::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
 void
 WebRenderAPI::AddExternalImageHandle(ImageKey key,
                                      const ImageDescriptor& aDescriptor,
-                                     uint64_t aHandle)
+                                     ExternalImageId aHandle)
 {
   wr_api_add_external_image_handle(mWrApi,
                                    key,
@@ -424,7 +424,7 @@ WebRenderAPI::AddExternalImageHandle(ImageKey key,
 void
 WebRenderAPI::AddExternalImageBuffer(ImageKey key,
                                      const ImageDescriptor& aDescriptor,
-                                     uint64_t aHandle)
+                                     ExternalImageId aHandle)
 {
   wr_api_add_external_image_buffer(mWrApi,
                                    key,
