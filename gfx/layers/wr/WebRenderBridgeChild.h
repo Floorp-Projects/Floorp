@@ -96,6 +96,7 @@ public:
   wr::FontKey GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont);
 
   void RemoveExpiredFontKeys();
+  void ClearReadLocks();
 
 private:
   friend class CompositorBridgeChild;
