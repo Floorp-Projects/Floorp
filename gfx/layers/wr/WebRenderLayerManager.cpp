@@ -331,7 +331,11 @@ WebRenderLayerManager::BeginTransaction()
 bool
 WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
 {
-  return false;
+  if (!mRoot) {
+    return false;
+  }
+
+  return EndTransactionInternal(nullptr, nullptr, aFlags);
 }
 
 void
@@ -341,9 +345,17 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
 {
   DiscardImages();
   WrBridge()->RemoveExpiredFontKeys();
+  EndTransactionInternal(aCallback, aCallbackData, aFlags);
+}
 
+bool
+WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
+                                              void* aCallbackData,
+                                              EndTransactionFlags aFlags)
+{
   mPaintedLayerCallback = aCallback;
   mPaintedLayerCallbackData = aCallbackData;
+  mTransactionIncomplete = false;
 
   if (gfxPrefs::LayersDump()) {
     this->Dump();
@@ -354,7 +366,7 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
   if (!WrBridge()->DPBegin(size.ToUnknownSize())) {
-    return;
+    return false;
   }
   DiscardCompositorAnimations();
   mRoot->StartPendingAnimations(mAnimationReadyTime);
@@ -375,6 +387,9 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
   // this may result in Layers being deleted, which results in
   // PLayer::Send__delete__() and DeallocShmem()
   mKeepAlive.Clear();
+  ClearMutatedLayers();
+
+  return !mTransactionIncomplete;
 }
 
 void
@@ -469,6 +484,36 @@ WebRenderLayerManager::DiscardCompositorAnimations()
   mDiscardedCompositorAnimationsIds.clear();
 }
 
+WebRenderLayerManager::Mutated(Layer* aLayer)
+{
+  LayerManager::Mutated(aLayer);
+  AddMutatedLayer(aLayer);
+}
+
+void
+WebRenderLayerManager::MutatedSimple(Layer* aLayer)
+{
+  LayerManager::Mutated(aLayer);
+  AddMutatedLayer(aLayer);
+}
+
+void
+WebRenderLayerManager::AddMutatedLayer(Layer* aLayer)
+{
+  mMutatedLayers.AppendElement(aLayer);
+}
+
+void
+WebRenderLayerManager::ClearMutatedLayers()
+{
+  mMutatedLayers.Clear();
+}
+
+bool
+WebRenderLayerManager::IsMutatedLayer(Layer* aLayer)
+{
+  return mMutatedLayers.Contains(aLayer);
+}
 
 void
 WebRenderLayerManager::Hold(Layer* aLayer)
