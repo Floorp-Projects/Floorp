@@ -4514,6 +4514,32 @@ this.XPIProvider = {
   },
 
   /**
+   * Determine if an add-on should be blocking multiple content processes.
+   *
+   * @param  aAddon
+   *         The add-on to test
+   * @return true if enabling the add-on should block multiple content processes.
+   */
+  isBlockingE10sMulti(aAddon) {
+    if (aAddon.type != "extension")
+      return false;
+
+    // The hotfix is exempt
+    let hotfixID = Preferences.get(PREF_EM_HOTFIX_ID, undefined);
+    if (hotfixID && hotfixID == aAddon.id)
+      return false;
+
+    // System add-ons are exempt
+    let locName = aAddon._installLocation ? aAddon._installLocation.name
+                                          : undefined;
+    if (locName == KEY_APP_SYSTEM_DEFAULTS ||
+        locName == KEY_APP_SYSTEM_ADDONS)
+      return false;
+
+    return aAddon.bootstrap;
+  },
+
+  /**
    * In some cases having add-ons active blocks e10s but turning off e10s
    * requires a restart so some add-ons that are normally restartless will
    * require a restart to install or enable.

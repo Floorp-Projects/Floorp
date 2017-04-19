@@ -1453,9 +1453,10 @@ pref("browser.tabs.crashReporting.email", "");
 pref("extensions.interposition.enabled", true);
 pref("extensions.interposition.prefetching", true);
 
-// Enable blocking of e10s for add-on users on beta/release.
+// Enable blocking of e10s and e10s-multi for add-on users on beta/release.
 #ifdef RELEASE_OR_BETA
 pref("extensions.e10sBlocksEnabling", true);
+pref("extensions.e10sMultiBlocksEnabling", true);
 #endif
 
 // How often to check for CPOW timeouts. CPOWs are only timed out by
