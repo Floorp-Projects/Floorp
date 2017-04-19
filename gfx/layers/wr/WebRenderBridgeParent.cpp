@@ -420,7 +420,7 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
         const OpAddCompositorAnimations& op = cmd.get_OpAddCompositorAnimations();
         CompositorAnimations data(Move(op.data()));
         if (data.animations().Length()) {
-          uint64_t id = mWidget ? 0 : mPipelineId.mHandle;
+          uint64_t id = mWidget ? 0 : wr::AsUint64(mPipelineId);
           CompositorAnimationStorage* storage =
             mCompositorBridge->GetAnimationStorage(id);
           if (storage) {
@@ -432,7 +432,7 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
       case WebRenderParentCommand::TOpRemoveCompositorAnimations: {
         const OpRemoveCompositorAnimations& op = cmd.get_OpRemoveCompositorAnimations();
         if (op.id()) {
-          uint64_t id = mWidget ? 0 : mPipelineId.mHandle;
+          uint64_t id = mWidget ? 0 : wr::AsUint64(mPipelineId);
           CompositorAnimationStorage* storage =
             mCompositorBridge->GetAnimationStorage(id);
           if (storage) {
@@ -610,7 +610,7 @@ void
 WebRenderBridgeParent::SampleAnimations(nsTArray<WrOpacityProperty>& aOpacityArray,
                                         nsTArray<WrTransformProperty>& aTransformArray)
 {
-  uint64_t id = mWidget ? 0 : mPipelineId.mHandle;
+  uint64_t id = mWidget ? 0 : wr::AsUint64(mPipelineId);
   CompositorAnimationStorage* storage =
     mCompositorBridge->GetAnimationStorage(id);
 
