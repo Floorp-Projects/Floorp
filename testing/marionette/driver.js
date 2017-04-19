@@ -1897,25 +1897,7 @@ GeckoDriver.prototype.clickElement = function*(cmd, resp) {
       // listen for it and then just send an error back. The person making the
       // call should be aware something isnt right and handle accordingly
       this.addFrameCloseListener("click");
-
-      let click = this.listener.clickElement({id: id, pageTimeout: this.timeouts.pageLoad});
-
-      // If a remoteness update interrupts our page load, this will never return
-      // We need to re-issue this request to correctly poll for readyState and
-      // send errors.
-      this.curBrowser.pendingCommands.push(() => {
-        let parameters = {
-          // TODO(ato): Bug 1242595
-          command_id: this.listener.activeMessageId,
-          pageTimeout: this.timeouts.pageLoad,
-          startTime: new Date().getTime(),
-        };
-        this.mm.broadcastAsyncMessage(
-            "Marionette:waitForPageLoaded" + this.curBrowser.curFrameId,
-            parameters);
-      });
-
-      yield click;
+      yield this.listener.clickElement(id);
       break;
   }
 };
