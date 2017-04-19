@@ -964,6 +964,11 @@ public:
   void NeedsCallerTypeMethod(CallerType);
   bool NeedsCallerTypeAttr(CallerType);
   void SetNeedsCallerTypeAttr(bool, CallerType);
+  void CeReactionsMethod();
+  void CeReactionsMethodOverload();
+  void CeReactionsMethodOverload(const nsAString&);
+  bool CeReactionsAttr() const;
+  void SetCeReactionsAttr(bool);
   int16_t LegacyCall(const JS::Value&, uint32_t, TestInterface&);
   void PassArgsWithDefaults(JSContext*, const Optional<int32_t>&,
                             TestInterface*, const Dict&, double,
@@ -1454,6 +1459,25 @@ class TestHTMLConstructorInterface : public nsGenericHTMLElement
 {
 public:
   virtual nsISupports* GetParentObject();
+};
+
+class TestCEReactionsInterface : public nsISupports,
+                                 public nsWrapperCache
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  // We need a GetParentObject to make binding codegen happy
+  virtual nsISupports* GetParentObject();
+
+  int32_t Item(uint32_t);
+  uint32_t Length() const;
+  int32_t IndexedGetter(uint32_t, bool &);
+  void IndexedSetter(uint32_t, int32_t);
+  void NamedDeleter(const nsAString&, bool &);
+  void NamedGetter(const nsAString&, bool &, nsString&);
+  void NamedSetter(const nsAString&, const nsAString&);
+  void GetSupportedNames(nsTArray<nsString>&);
 };
 
 } // namespace dom

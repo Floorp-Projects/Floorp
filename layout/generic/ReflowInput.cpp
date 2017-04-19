@@ -93,6 +93,9 @@ ReflowInput::ReflowInput(nsPresContext*       aPresContext,
   if (aFlags & B_CLAMP_MARGIN_BOX_MIN_SIZE) {
     mFlags.mBClampMarginBoxMinSize = true;
   }
+  if (aFlags & I_APPLY_AUTO_MIN_SIZE) {
+    mFlags.mApplyAutoMinSize = true;
+  }
 
   if (!(aFlags & CALLER_WILL_INIT)) {
     Init(aPresContext);
@@ -242,6 +245,7 @@ ReflowInput::ReflowInput(
   mFlags.mIOffsetsNeedCSSAlign = mFlags.mBOffsetsNeedCSSAlign = false;
   mFlags.mIClampMarginBoxMinSize = !!(aFlags & I_CLAMP_MARGIN_BOX_MIN_SIZE);
   mFlags.mBClampMarginBoxMinSize = !!(aFlags & B_CLAMP_MARGIN_BOX_MIN_SIZE);
+  mFlags.mApplyAutoMinSize = !!(aFlags & I_APPLY_AUTO_MIN_SIZE);
 
   mDiscoveredClearance = nullptr;
   mPercentBSizeObserver = (aParentReflowInput.mPercentBSizeObserver &&
@@ -1666,6 +1670,10 @@ ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
     computeSizeFlags = ComputeSizeFlags(computeSizeFlags |
                          ComputeSizeFlags::eBClampMarginBoxMinSize);
   }
+  if (mFlags.mApplyAutoMinSize) {
+    computeSizeFlags = ComputeSizeFlags(computeSizeFlags |
+                         ComputeSizeFlags::eIApplyAutoMinSize);
+  }
   if (mFlags.mShrinkWrap) {
     computeSizeFlags =
       ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
@@ -2378,6 +2386,10 @@ ReflowInput::InitConstraints(nsPresContext*     aPresContext,
       if (mFlags.mBClampMarginBoxMinSize) {
         computeSizeFlags = ComputeSizeFlags(computeSizeFlags |
                              ComputeSizeFlags::eBClampMarginBoxMinSize);
+      }
+      if (mFlags.mApplyAutoMinSize) {
+        computeSizeFlags = ComputeSizeFlags(computeSizeFlags |
+                             ComputeSizeFlags::eIApplyAutoMinSize);
       }
       if (mFlags.mShrinkWrap) {
         computeSizeFlags =

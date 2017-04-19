@@ -6,13 +6,10 @@
 package org.mozilla.geckoview_example;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.mozilla.gecko.BaseGeckoInterface;
 import org.mozilla.gecko.GeckoProfile;
@@ -25,7 +22,9 @@ public class GeckoViewActivity extends Activity {
     private static final String LOGTAG = "GeckoViewActivity";
     private static final String DEFAULT_URL = "https://mozilla.org";
 
-    GeckoView mGeckoView;
+    /* package */ static final int REQUEST_FILE_PICKER = 1;
+
+    private GeckoView mGeckoView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,9 +35,12 @@ public class GeckoViewActivity extends Activity {
         setContentView(R.layout.geckoview_activity);
 
         mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
-        mGeckoView.setChromeDelegate(new MyGeckoViewChrome());
         mGeckoView.setContentListener(new MyGeckoViewContent());
         mGeckoView.setProgressListener(new MyGeckoViewProgress());
+
+        final BasicGeckoViewPrompt prompt = new BasicGeckoViewPrompt();
+        prompt.filePickerRequestCode = REQUEST_FILE_PICKER;
+        mGeckoView.setPromptDelegate(prompt);
 
         final GeckoProfile profile = GeckoProfile.get(this);
 
@@ -63,45 +65,15 @@ public class GeckoViewActivity extends Activity {
         }
     }
 
-    private class MyGeckoViewChrome implements GeckoView.ChromeDelegate {
-        @Override
-        public void onAlert(GeckoView view, String message, GeckoView.PromptResult result) {
-            Log.i(LOGTAG, "Alert!");
-            result.confirm();
-            Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
-        }
-
-        @Override
-        public void onConfirm(GeckoView view, String message, final GeckoView.PromptResult result) {
-            Log.i(LOGTAG, "Confirm!");
-            new AlertDialog.Builder(GeckoViewActivity.this)
-                .setTitle("javaScript dialog")
-                .setMessage(message)
-                .setPositiveButton(android.R.string.ok,
-                                   new DialogInterface.OnClickListener() {
-                                       public void onClick(DialogInterface dialog, int which) {
-                                           result.confirm();
-                                       }
-                                   })
-                .setNegativeButton(android.R.string.cancel,
-                                   new DialogInterface.OnClickListener() {
-                                       public void onClick(DialogInterface dialog, int which) {
-                                           result.cancel();
-                                       }
-                                   })
-                .create()
-                .show();
-        }
-
-        @Override
-        public void onPrompt(GeckoView view, String message, String defaultValue, GeckoView.PromptResult result) {
-            result.cancel();
-        }
-
-        @Override
-        public void onDebugRequest(GeckoView view, GeckoView.PromptResult result) {
-            Log.i(LOGTAG, "Remote Debug!");
-            result.confirm();
+    @Override
+    protected void onActivityResult(final int requestCode, final int resultCode,
+                                    final Intent data) {
+        if (requestCode == REQUEST_FILE_PICKER) {
+            final BasicGeckoViewPrompt prompt = (BasicGeckoViewPrompt)
+                    mGeckoView.getPromptDelegate();
+            prompt.onFileCallbackResult(resultCode, data);
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
 

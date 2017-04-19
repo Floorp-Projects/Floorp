@@ -8,6 +8,7 @@
 
 .boxmodel-container {
   overflow: auto;
+  padding-bottom: 4px;
 }
 
 /* Header */
@@ -112,7 +113,8 @@
 
 .boxmodel-main > p > span,
 .boxmodel-main > p > input,
-.boxmodel-content {
+.boxmodel-content,
+.boxmodel-size > span {
   vertical-align: middle;
   pointer-events: auto;
 }
@@ -314,12 +316,16 @@
 /* Box Model Properties: contains a list of relevant box model properties */
 
 .boxmodel-properties-header {
-  display: flex;
-  padding: 2px 0;
+  padding: 2px 3px;
 }
 
-.boxmodel-properties-wrapper {
-  padding: 0 9px;
+.boxmodel-properties-expander {
+  vertical-align: middle;
+  display: inline-block;
+}
+
+.boxmodel-properties-wrapper .property-view {
+  padding-inline-start: 17px;
 }
 
 .boxmodel-properties-wrapper .property-name-container {
