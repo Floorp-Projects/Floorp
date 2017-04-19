@@ -227,8 +227,6 @@ to mochitest command.
   * SVG-in-OpenType values not supported servo/servo#15211 bug 1355412
     * test_value_storage.html `context-` [7]
     * test_bug798843_pref.html [7]
-  * -moz-box-orient: {block,inline}-axis bug 1355005
-    * test_value_storage.html `box-orient` [6]
 * Incorrect parsing
   * Incorrect bounds
     * test_bug664955.html `font size is larger than max font size` [2]
