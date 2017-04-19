@@ -974,11 +974,6 @@ WEBIDL_FILES = [
     'XULElement.webidl',
 ]
 
-if CONFIG['MOZ_AUDIO_CHANNEL_MANAGER']:
-    WEBIDL_FILES += [
-        'AudioChannelManager.webidl',
-    ]
-
 if CONFIG['MOZ_WEBRTC']:
     WEBIDL_FILES += [
         'DataChannel.webidl',
