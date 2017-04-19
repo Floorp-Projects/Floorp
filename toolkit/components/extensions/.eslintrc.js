@@ -1,19 +1,12 @@
 "use strict";
 
 module.exports = {
-  "extends": "../../.eslintrc.js",
-
-  "env": {
-    "browser": false,
-  },
 
   "globals": {
     "Cc": true,
     "Ci": true,
-    "Components": true,
     "Cr": true,
     "Cu": true,
-    "dump": true,
     "TextDecoder": false,
     "TextEncoder": false,
     // Specific to WebExtensions:
@@ -64,15 +57,6 @@ module.exports = {
       "requireReturnDescription": false,
     }],
 
-    // Braces only needed for multi-line arrow function blocks
-    // "arrow-body-style": ["error", "as-needed"],
-
-    // Require spacing around =>
-    "arrow-spacing": "error",
-
-    // Always require spacing around a single line block
-    "block-spacing": "warn",
-
     // Forbid spaces inside the square brackets of array literals.
     "array-bracket-spacing": ["error", "never"],
 
@@ -82,18 +66,8 @@ module.exports = {
     // No space padding in parentheses
     "space-in-parens": ["error", "never"],
 
-    // Enforce one true brace style (opening brace on the same line) and avoid
-    // start and end braces on the same line.
-    "brace-style": ["error", "1tbs", {"allowSingleLine": true}],
-
-    // No space before always a space after a comma
-    "comma-spacing": ["error", {"before": false, "after": true}],
-
     // Commas at the end of the line not the start
     "comma-style": "error",
-
-    // Don't require spaces around computed properties
-    "computed-property-spacing": ["error", "never"],
 
     // Functions are not required to consistently return something or nothing
     "consistent-return": "off",
@@ -101,41 +75,17 @@ module.exports = {
     // Require braces around blocks that start a new line
     "curly": ["error", "all"],
 
-    // Always require a trailing EOL
-    "eol-last": "error",
-
     // Require function* name()
     "generator-star-spacing": ["error", {"before": false, "after": true}],
 
     // Two space indent
     "indent": ["error", 2, {"SwitchCase": 1, "ArrayExpression": "first", "ObjectExpression": "first"}],
 
-    // Space after colon not before in property declarations
-    "key-spacing": ["error", {"beforeColon": false, "afterColon": true, "mode": "minimum"}],
-
-    // Require spaces before and after finally, catch, etc.
-    "keyword-spacing": "error",
-
-    // Unix linebreaks
-    "linebreak-style": ["error", "unix"],
-
     // Always require parenthesis for new calls
     "new-parens": "error",
 
     // Use [] instead of Array()
     "no-array-constructor": "error",
-
-    // No duplicate arguments in function declarations
-    "no-dupe-args": "error",
-
-    // No duplicate keys in object declarations
-    "no-dupe-keys": "error",
-
-    // No duplicate cases in switch statements
-    "no-duplicate-case": "error",
-
-    // If an if block ends with a return no need for an else block
-    // "no-else-return": "error",
 
     // Disallow empty statements. This will report an error for:
     // try { something(); } catch (e) {}
@@ -144,76 +94,16 @@ module.exports = {
     // which is a valid use case.
     "no-empty": "error",
 
-    // No empty character classes in regex
-    "no-empty-character-class": "error",
-
-    // Disallow empty destructuring
-    "no-empty-pattern": "error",
-
-    // No assiging to exception variable
-    "no-ex-assign": "error",
-
-    // No using !! where casting to boolean is already happening
-    "no-extra-boolean-cast": "warn",
-
-    // No double semicolon
-    "no-extra-semi": "error",
-
-    // No overwriting defined functions
-    "no-func-assign": "error",
-
-    // No invalid regular expresions
-    "no-invalid-regexp": "error",
-
-    // No odd whitespace characters
-    "no-irregular-whitespace": "error",
-
-    // No single if block inside an else block
-    "no-lonely-if": "warn",
-
     // No mixing different operators without parens
     "no-mixed-operators": ["error", {"groups": [["&&", "||"], ["==", "!=", "===", "!==", ">", ">=", "<", "<="], ["in", "instanceof"]]}],
-
-    // No mixing spaces and tabs in indent
-    "no-mixed-spaces-and-tabs": ["error", "smart-tabs"],
 
     // Disallow use of multiple spaces (sometimes used to align const values,
     // array or object items, etc.). It's hard to maintain and doesn't add that
     // much benefit.
     "no-multi-spaces": "warn",
 
-    // No reassigning native JS objects
-    "no-native-reassign": "error",
-
-    // Nested ternary statements are confusing
-    "no-nested-ternary": "error",
-
-    // Use {} instead of new Object()
-    "no-new-object": "error",
-
-    // No Math() or JSON()
-    "no-obj-calls": "error",
-
-    // No octal literals
-    "no-octal": "error",
-
-    // No redeclaring variables
-    "no-redeclare": "error",
-
-    // No unnecessary comparisons
-    "no-self-compare": "error",
-
     // No spaces between function name and parentheses
     "no-spaced-func": "warn",
-
-    // No trailing whitespace
-    "no-trailing-spaces": "error",
-
-    // Error on newline where a semicolon is needed
-    "no-unexpected-multiline": "error",
-
-    // No unreachable statements
-    "no-unreachable": "error",
 
     // No expressions where a statement is expected
     "no-unused-expressions": "error",
@@ -224,29 +114,14 @@ module.exports = {
     // No using variables before defined
     "no-use-before-define": "error",
 
-    // No using with
-    "no-with": "error",
-
     // Always require semicolon at end of statement
     "semi": ["error", "always"],
-
-    // Require space before blocks
-    "space-before-blocks": "error",
 
     // Never use spaces before function parentheses
     "space-before-function-paren": ["error", {"anonymous": "never", "named": "never"}],
 
-    // Require spaces around operators, except for a|0.
-    "space-infix-ops": ["error", {"int32Hint": true}],
-
     // ++ and -- should not need spacing
     "space-unary-ops": ["warn", {"nonwords": false, "words": true, "overrides": {"typeof": false}}],
-
-    // No comparisons to NaN
-    "use-isnan": "error",
-
-    // Only check typeof against valid results
-    "valid-typeof": "error",
 
     // Disallow using variables outside the blocks they are defined (especially
     // since only let and const are used, see "no-var").
@@ -287,10 +162,6 @@ module.exports = {
     // Allow use of function declarations and expressions.
     "func-style": "off",
 
-    // Don't enforce the maximum depth that blocks can be nested. The complexity
-    // rule is a better rule to check this.
-    "max-depth": "off",
-
     // Maximum length of a line.
     // Disabled because we exceed this in too many places.
     "max-len": [0, 80],
@@ -320,9 +191,6 @@ module.exports = {
     // the outer scope, to avoid confusion.
     "no-catch-shadow": "off",
 
-    // Disallow assignment in conditional expressions.
-    "no-cond-assign": "error",
-
     // Disallow using the console API.
     "no-console": "error",
 
@@ -335,12 +203,6 @@ module.exports = {
     // Disallow control characters in regular expressions.
     "no-control-regex": "error",
 
-    // Disallow use of debugger.
-    "no-debugger": "error",
-
-    // Disallow deletion of variables (deleting properties is fine).
-    "no-delete-var": "error",
-
     // Allow division operators explicitly at beginning of regular expression.
     "no-div-regex": "off",
 
@@ -349,9 +211,6 @@ module.exports = {
 
     // Disallow adding to native types
     "no-extend-native": "error",
-
-    // Disallow unnecessary function binding.
-    "no-extra-bind": "error",
 
     // Allow unnecessary parentheses, as they may make the code more readable.
     "no-extra-parens": "off",
@@ -392,9 +251,6 @@ module.exports = {
     // Disallow usage of __proto__ property.
     "no-proto": "error",
 
-    // Disallow multiple spaces in a regular expression literal.
-    "no-regex-spaces": "error",
-
     // Allow reserved words being used as object literal keys.
     "no-reserved-keys": "off",
 
@@ -408,9 +264,6 @@ module.exports = {
     // Don't warn about declaration of variables already declared in the outer scope.
     "no-shadow": "off",
 
-    // Disallow shadowing of names such as arguments.
-    "no-shadow-restricted-names": "error",
-
     // Allow use of synchronous methods (not a node environment).
     "no-sync": "off",
 
@@ -420,11 +273,6 @@ module.exports = {
     // Disallow throwing literals (eg. throw "error" instead of
     // throw new Error("error")).
     "no-throw-literal": "error",
-
-    // Disallow use of undeclared variables unless mentioned in a /* global */
-    // block. Note that globals from head.js are automatically imported in tests
-    // by the import-headjs-globals rule form the mozilla eslint plugin.
-    "no-undef": "error",
 
     // Allow dangling underscores in identifiers (for privates).
     "no-underscore-dangle": "off",
@@ -455,9 +303,6 @@ module.exports = {
 
     // Don't require quotes around object literal property names.
     "quote-props": "off",
-
-    // Double quotes should be used.
-    "quotes": ["warn", "double", {"avoidEscape": true, "allowTemplateLiterals": true}],
 
     // Require use of the second argument for parseInt().
     "radix": "error",
@@ -493,9 +338,6 @@ module.exports = {
 
     // Disallow function or variable declarations in nested blocks
     "no-inner-declarations": "error",
-
-    // Disallow usage of __iterator__ property
-    "no-iterator": "error",
 
     // Disallow labels that share a name with a variable
     "no-label-var": "error",
