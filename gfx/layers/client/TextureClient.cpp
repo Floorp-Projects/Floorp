@@ -587,13 +587,14 @@ TextureClient::SerializeReadLock(ReadLockDescriptor& aDescriptor)
     // Take a read lock on behalf of the TextureHost. The latter will unlock
     // after the shared data is available again for drawing.
     mReadLock->ReadLock();
-    mReadLock->Serialize(aDescriptor, GetAllocator()->GetParentPid());
     mUpdated = false;
-    return true;
-  } else {
-    aDescriptor = null_t();
-    return false;
+    if (mReadLock->Serialize(aDescriptor, GetAllocator()->GetParentPid())) {
+      return true;
+    }
   }
+
+  aDescriptor = null_t();
+  return false;
 }
 
 TextureClient::~TextureClient()
@@ -1446,14 +1447,23 @@ public:
 
   virtual bool ReadLock() override
   {
+    if (!IsValid()) {
+      return false;
+    }
     return mSemaphore.Wait();
   }
   virtual bool TryReadLock(TimeDuration aTimeout) override
   {
+    if (!IsValid()) {
+      return false;
+    }
     return mSemaphore.Wait(Some(aTimeout));
   }
   virtual int32_t ReadUnlock() override
   {
+    if (!IsValid()) {
+      return 1;
+    }
     mSemaphore.Signal();
     return 1;
   }
@@ -1645,8 +1655,12 @@ ShmemTextureReadLock::GetReadCount() {
 bool
 CrossProcessSemaphoreReadLock::Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther)
 {
-  aOutput = ReadLockDescriptor(CrossProcessSemaphoreDescriptor(mSemaphore.ShareToProcess(aOther)));
-  return true;
+  if (IsValid()) {
+    aOutput = ReadLockDescriptor(CrossProcessSemaphoreDescriptor(mSemaphore.ShareToProcess(aOther)));
+    return true;
+  } else {
+    return false;
+  }
 }
 
 void
