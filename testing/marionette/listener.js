@@ -186,8 +186,6 @@ var loadListener = {
    * Callback for registered DOM events.
    */
   handleEvent: function (event) {
-    logger.debug(`Handled DOM event "${event.type}" for "${event.originalTarget.baseURI}"`);
-
     switch (event.type) {
       case "beforeunload":
         this.seenUnload = true;
@@ -246,7 +244,6 @@ var loadListener = {
       // listener, and return from the currently active command.
       case this.timerPageUnload:
         if (!this.seenUnload) {
-          logger.debug("Canceled page load listener because no page unload has been detected");
           this.stop();
           sendOk(this.command_id);
         }
@@ -302,6 +299,7 @@ var loadListener = {
     }).then(val => {
       if (loadEventExpected) {
         // Setup timer to detect a possible page load
+        // TODO: Make it optional to wait + time with multiplier
         if (useUnloadTimer) {
           this.timerPageUnload.initWithCallback(this, "200", Ci.nsITimer.TYPE_ONE_SHOT);
         }
