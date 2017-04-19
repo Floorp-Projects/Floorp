@@ -73,6 +73,9 @@ public class NestedGeckoView extends GeckoView implements NestedScrollingChild {
                 eventHandled = super.onTouchEvent(event);
                 stopNestedScroll();
                 break;
+
+            default:
+                // We don't care about other touch events
         }
 
         return eventHandled;

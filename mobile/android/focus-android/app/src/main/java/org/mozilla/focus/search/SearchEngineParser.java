@@ -131,6 +131,8 @@ import java.nio.charset.StandardCharsets;
                 case XmlPullParser.START_TAG:
                     depth++;
                     break;
+                default:
+                    // Do nothing - we're skipping content
             }
         }
     }

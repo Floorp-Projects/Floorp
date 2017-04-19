@@ -78,6 +78,9 @@ public class NestedWebView extends WebView implements NestedScrollingChild {
                 eventHandled = super.onTouchEvent(event);
                 stopNestedScroll();
                 break;
+
+            default:
+                // We don't care about other touch events
         }
 
         return eventHandled;
