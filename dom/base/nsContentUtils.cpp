@@ -1011,7 +1011,7 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(const nsAttrValue* aAttrV
     }
 
     // Normal category
-    if (numTokens > 2) {
+    if (numTokens > 3) {
       return eAutocompleteAttrState_Invalid;
     }
     category = eAutocompleteCategory_NORMAL;
@@ -1022,7 +1022,7 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(const nsAttrValue* aAttrV
     }
 
     result = enumValue.ParseEnumValue(tokenString, kAutocompleteContactFieldNameTable, false);
-    if (!result || numTokens > 3) {
+    if (!result || numTokens > 4) {
       return eAutocompleteAttrState_Invalid;
     }
 
@@ -1068,9 +1068,21 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(const nsAttrValue* aAttrV
       return eAutocompleteAttrState_Valid;
     }
     --index;
+    tokenString = nsDependentAtomString(aAttrVal->AtomAt(index));
+  }
+
+  // Check for section-* token
+  const nsDependentSubstring& section = Substring(tokenString, 0, 8);
+  if (section.LowerCaseEqualsASCII("section-")) {
+    ASCIIToLower(tokenString);
+    aInfo.mSection.Assign(tokenString);
+    if (index == 0) {
+      return eAutocompleteAttrState_Valid;
+    }
   }
 
   // Clear the fields as the autocomplete attribute is invalid.
+  aInfo.mSection.Truncate();
   aInfo.mAddressType.Truncate();
   aInfo.mContactType.Truncate();
   aInfo.mFieldName.Truncate();
