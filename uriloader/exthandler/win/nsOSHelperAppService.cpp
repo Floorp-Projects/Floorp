@@ -504,8 +504,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
    * useless....
    * We'll do extension-based lookup for this type later in this function.
    */
-  if (!aMIMEType.IsEmpty() &&
-      !aMIMEType.LowerCaseEqualsLiteral(APPLICATION_OCTET_STREAM)) {
+  if (!aMIMEType.LowerCaseEqualsLiteral(APPLICATION_OCTET_STREAM)) {
     // (1) try to use the windows mime database to see if there is a mapping to a file extension
     // (2) try to see if we have some left over 4.x registry info we can peek at...
     GetExtensionFromWindowsMimeDatabase(aMIMEType, fileExtension);
