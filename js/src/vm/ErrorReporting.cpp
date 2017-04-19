@@ -12,12 +12,9 @@
 
 #include "jscntxt.h"
 #include "jsexn.h"
-#include "jsfriendapi.h"
 
 using mozilla::Move;
 
-using JS::HandleObject;
-using JS::HandleValue;
 using JS::UniqueTwoByteChars;
 
 void
@@ -120,41 +117,4 @@ js::ReportCompileError(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSErro
 
     if (!cx->helperThread())
         err->throwError(cx);
-}
-
-namespace {
-
-class MOZ_STACK_CLASS ReportExceptionClosure
-  : public ScriptEnvironmentPreparer::Closure
-{
-  public:
-    explicit ReportExceptionClosure(HandleValue& exn)
-      : exn_(exn)
-    {
-    }
-
-    bool operator()(JSContext* cx) override
-    {
-        cx->setPendingException(exn_);
-        return false;
-    }
-
-  private:
-    HandleValue& exn_;
-};
-
-} // anonymous namespace
-
-void
-js::ReportErrorToGlobal(JSContext* cx, HandleObject global, HandleValue error)
-{
-    MOZ_ASSERT(!cx->isExceptionPending());
-#ifdef DEBUG
-    // No assertSameCompartment version that doesn't take JSContext...
-    if (error.isObject()) {
-        AssertSameCompartment(global, &error.toObject());
-    }
-#endif // DEBUG
-    ReportExceptionClosure report(error);
-    PrepareScriptEnvironmentAndInvoke(cx, global, report);
 }
