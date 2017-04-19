@@ -11,7 +11,7 @@ UNIFIED_SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    '/toolkit/crashreporter/jsoncpp/include',
+    '/toolkit/components/jsoncpp/include',
 ]
 
 # This code is only used in the stand-alone minidump analyzer executable so
@@ -31,4 +31,19 @@ DISABLE_STL_WRAPPING = True
 
 Library('jsoncpp')
 
-include('/toolkit/crashreporter/crashreporter.mozbuild')
+# Suppress warnings in third-party code.
+if CONFIG['_MSC_VER']:
+    CXXFLAGS += [
+        '-wd4005', # macro redefinition
+    ]
+elif CONFIG['GNU_CXX']:
+    CXXFLAGS += [
+        '-Wno-unused-local-typedefs',
+        '-Wno-shadow',
+    ]
+
+if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+    CXXFLAGS += [
+        '-Wno-implicit-fallthrough',
+        '-Wno-c++11-narrowing',
+    ]
