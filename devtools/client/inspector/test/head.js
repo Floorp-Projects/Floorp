@@ -644,33 +644,83 @@ function synthesizeKeys(input, win) {
 }
 
 /**
- * Given a tooltip object instance (see Tooltip.js), checks if it is set to
- * toggle and hover and if so, checks if the given target is a valid hover
- * target. This won't actually show the tooltip (the less we interact with XUL
- * panels during test runs, the better).
+ * Given a Tooltip instance, fake a mouse event on the `target` DOM Element
+ * and assert that the `tooltip` is correctly displayed.
  *
- * @return a promise that resolves when the answer is known
+ * @param {Tooltip} tooltip
+ *        The tooltip instance
+ * @param {DOMElement} target
+ *        The DOM Element on which a tooltip should appear
+ *
+ * @return a promise that resolves with the tooltip object
  */
-function isHoverTooltipTarget(tooltip, target) {
-  if (!tooltip._toggle._baseNode || !tooltip.panel) {
-    return promise.reject(new Error(
-      "The tooltip passed isn't set to toggle on hover or is not a tooltip"));
+function* assertTooltipShownOnHover(tooltip, target) {
+  let mouseEvent = new target.ownerDocument.defaultView.MouseEvent("mousemove", {
+    bubbles: true,
+  });
+  target.dispatchEvent(mouseEvent);
+
+  if (!tooltip.isVisible()) {
+    info("Waiting for tooltip to be shown");
+    yield tooltip.once("shown");
   }
-  return tooltip._toggle.isValidHoverTarget(target);
+
+  ok(tooltip.isVisible(), `The tooltip is visible`);
+
+  return tooltip;
 }
 
 /**
- * Same as isHoverTooltipTarget except that it will fail the test if there is no
- * tooltip defined on hover of the given element
+ * Given an inspector `view` object, fake a mouse event on the `target` DOM
+ * Element and assert that the preview tooltip  is correctly displayed.
  *
- * @return a promise
+ * @param {CssRuleView|ComputedView|...} view
+ *        The instance of an inspector panel
+ * @param {DOMElement} target
+ *        The DOM Element on which a tooltip should appear
+ *
+ * @return a promise that resolves with the tooltip object
  */
-function assertHoverTooltipOn(tooltip, element) {
-  return isHoverTooltipTarget(tooltip, element).then(() => {
-    ok(true, "A tooltip is defined on hover of the given element");
-  }, () => {
-    ok(false, "No tooltip is defined on hover of the given element");
+function* assertShowPreviewTooltip(view, target) {
+  let mouseEvent = new target.ownerDocument.defaultView.MouseEvent("mousemove", {
+    bubbles: true,
   });
+  target.dispatchEvent(mouseEvent);
+
+  let name = "previewTooltip";
+  ok(view.tooltips._instances.has(name),
+    `Tooltip '${name}' has been instanciated`);
+  let tooltip = view.tooltips.getTooltip(name);
+
+  if (!tooltip.isVisible()) {
+    info("Waiting for tooltip to be shown");
+    yield tooltip.once("shown");
+  }
+
+  ok(tooltip.isVisible(), `The tooltip '${name}' is visible`);
+
+  return tooltip;
+}
+
+/**
+ * Given a `tooltip` instance, fake a mouse event on `target` DOM element
+ * and check that the tooltip correctly disappear.
+ *
+ * @param {Tooltip} tooltip
+ *        The tooltip instance
+ * @param {DOMElement} target
+ *        The DOM Element on which a tooltip should appear
+ */
+function* assertTooltipHiddenOnMouseOut(tooltip, target) {
+  let mouseEvent = new target.ownerDocument.defaultView.MouseEvent("mouseout", {
+    bubbles: true,
+    relatedTarget: target
+  });
+  target.dispatchEvent(mouseEvent);
+
+  yield tooltip.once("hidden");
+
+  ok(!tooltip.isVisible(), "The tooltip is hidden on mouseout");
 }
 
 /**

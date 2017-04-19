@@ -180,6 +180,7 @@
   margin: 0 !important;
   border-top: 1px solid var(--panel-separator-color);
   line-height: 0;
+  background-color: var(--arrowpanel-dimmed);
 }
 
 .searchbar-engine-one-off-item {
@@ -223,7 +224,6 @@
 }
 
 .searchbar-engine-one-off-item:not([selected]):not(.dummy):hover,
-.search-setting-button:hover,
 .addengine-item:hover {
   background-color: hsla(0, 0%, 0%, 0.06);
   color: inherit;
@@ -246,6 +246,10 @@
 .searchbar-engine-one-off-item > .button-box > .button-icon {
   width: 16px;
   height: 16px;
+}
+
+.search-add-engines {
+  background-color: var(--arrowpanel-dimmed);
 }
 
 .addengine-item {
@@ -339,6 +343,7 @@
   min-height: 32px;
 }
 
+.search-setting-button:hover,
 .search-setting-button[selected] {
   background-color: var(--arrowpanel-dimmed-further);
 }

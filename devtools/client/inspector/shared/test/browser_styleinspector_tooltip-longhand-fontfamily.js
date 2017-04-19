@@ -49,7 +49,7 @@ function* testRuleView(ruleView, nodeFront) {
     "font-family");
 
   // And verify that the tooltip gets shown on this property
-  yield assertHoverTooltipOn(tooltip, valueSpan);
+  let previewTooltip = yield assertShowPreviewTooltip(ruleView, valueSpan);
 
   let images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
@@ -59,6 +59,8 @@ function* testRuleView(ruleView, nodeFront) {
   let dataURL = yield getFontFamilyDataURL(valueSpan.textContent, nodeFront);
   is(images[0].getAttribute("src"), dataURL,
     "Tooltip contains the correct data-uri image");
+
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
 }
 
 function* testComputedView(computedView, nodeFront) {
@@ -68,7 +70,7 @@ function* testComputedView(computedView, nodeFront) {
   let panel = tooltip.panel;
   let {valueSpan} = getComputedViewProperty(computedView, "font-family");
 
-  yield assertHoverTooltipOn(tooltip, valueSpan);
+  let previewTooltip = yield assertShowPreviewTooltip(computedView, valueSpan);
 
   let images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
@@ -78,6 +80,8 @@ function* testComputedView(computedView, nodeFront) {
   let dataURL = yield getFontFamilyDataURL(valueSpan.textContent, nodeFront);
   is(images[0].getAttribute("src"), dataURL,
     "Tooltip contains the correct data-uri image");
+
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
 }
 
 function* testExpandedComputedViewProperty(computedView, nodeFront) {
@@ -95,7 +99,7 @@ function* testExpandedComputedViewProperty(computedView, nodeFront) {
   let tooltip = computedView.tooltips.getTooltip("previewTooltip");
   let panel = tooltip.panel;
 
-  yield assertHoverTooltipOn(tooltip, valueSpan);
+  let previewTooltip = yield assertShowPreviewTooltip(computedView, valueSpan);
 
   let images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
@@ -105,6 +109,8 @@ function* testExpandedComputedViewProperty(computedView, nodeFront) {
   let dataURL = yield getFontFamilyDataURL(valueSpan.textContent, nodeFront);
   is(images[0].getAttribute("src"), dataURL,
     "Tooltip contains the correct data-uri image");
+
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
 }
 
 function getPropertyView(computedView, name) {

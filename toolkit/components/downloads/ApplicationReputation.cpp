@@ -1284,8 +1284,6 @@ PendingLookup::SendRemoteQueryInternal()
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
-#ifdef XP_WIN
-  // The allowlist is only needed to do signature verification on Windows
   {
     nsAutoCString table;
     NS_ENSURE_SUCCESS(Preferences::GetCString(PREF_DOWNLOAD_ALLOW_TABLE,
@@ -1296,7 +1294,6 @@ PendingLookup::SendRemoteQueryInternal()
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
-#endif
 
   LOG(("Sending remote query for application reputation [this = %p]",
        this));

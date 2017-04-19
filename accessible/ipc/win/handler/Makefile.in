@@ -20,7 +20,7 @@ export:: $(MIDL_GENERATED_FILES)
 $(MIDL_GENERATED_FILES): midl_done
 
 midl_done: HandlerData.acf HandlerData.idl
-	$(MIDL) $(MIDL_FLAGS) -I $(IA2DIR) -I $(MSAADIR) -Oicf -acf $(srcdir)/HandlerData.acf $(srcdir)/HandlerData.idl
+	$(MIDL) $(MIDL_FLAGS) $(DEFINES) -I $(IA2DIR) -I $(MSAADIR) -Oicf -acf $(srcdir)/HandlerData.acf $(srcdir)/HandlerData.idl
 	touch $@
 
 INSTALL_TARGETS += midl

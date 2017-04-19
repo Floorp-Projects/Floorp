@@ -323,6 +323,9 @@ nsFormFillController::MarkAsAutofillField(nsIDOMHTMLInputElement *aInput)
   mAutofillInputs.Put(node, true);
   node->AddMutationObserverUnlessExists(this);
 
+  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(aInput);
+  txtCtrl->EnablePreview();
+
   nsFocusManager *fm = nsFocusManager::GetFocusManager();
   if (fm) {
     nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();

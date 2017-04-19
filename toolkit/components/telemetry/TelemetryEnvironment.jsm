@@ -186,7 +186,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["devtools.debugger.remote-enabled", {what: RECORD_PREF_VALUE}],
   ["dom.ipc.plugins.asyncInit.enabled", {what: RECORD_PREF_VALUE}],
   ["dom.ipc.plugins.enabled", {what: RECORD_PREF_VALUE}],
-  ["dom.ipc.processCount", {what: RECORD_PREF_VALUE, requiresRestart: true}],
+  ["dom.ipc.processCount", {what: RECORD_PREF_VALUE}],
   ["dom.max_script_run_time", {what: RECORD_PREF_VALUE}],
   ["experiments.manifest.uri", {what: RECORD_PREF_VALUE}],
   ["extensions.autoDisableScopes", {what: RECORD_PREF_VALUE}],
@@ -1237,6 +1237,7 @@ EnvironmentCache.prototype = {
     this._currentEnvironment.settings = {
       blocklistEnabled: Preferences.get(PREF_BLOCKLIST_ENABLED, true),
       e10sEnabled: Services.appinfo.browserTabsRemoteAutostart,
+      e10sMultiProcesses: Services.appinfo.maxWebProcessCount,
       e10sCohort: Preferences.get(PREF_E10S_COHORT, "unknown"),
       telemetryEnabled: Utils.isTelemetryEnabled,
       locale: getBrowserLocale(),
