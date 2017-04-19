@@ -611,6 +611,7 @@
              value="&browserContainersLearnMore.label;"/>
       <spacer flex="1"/>
       <button id="browserContainersSettings"
+              class="accessory-button"
               label="&browserContainersSettings.label;"
               accesskey="&browserContainersSettings.accesskey;"/>
     </hbox>
