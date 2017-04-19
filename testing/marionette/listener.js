@@ -273,22 +273,19 @@ var loadListener = {
       this.start(command_id, timeout, startTime, true);
     }
 
-    return Task.spawn(function* () {
-      yield trigger();
-
-    }).then(val => {
-      if (!loadEventExpected) {
-        sendOk(command_id);
-      }
-
-    }).catch(err => {
+    try {
+      trigger();
+    } catch (e) {
       if (loadEventExpected) {
         this.stop();
       }
-
-      sendError(err, command_id);
+      sendError(new UnknownCommandError(e.message), command_id);
       return;
-    });
+    }
+
+    if (!loadEventExpected) {
+      sendOk(command_id);
+    }
   },
 }
 
