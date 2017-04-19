@@ -15,6 +15,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
+#include "mozilla/TypeTraits.h"
 
 #include <string.h>
 
@@ -133,30 +134,6 @@ inline UBool
 U_FAILURE(UErrorCode code)
 {
     MOZ_CRASH("U_FAILURE: Intl API disabled");
-}
-
-inline const UChar*
-Char16ToUChar(const char16_t* chars)
-{
-    MOZ_CRASH("Char16ToUChar: Intl API disabled");
-}
-
-inline UChar*
-Char16ToUChar(char16_t* chars)
-{
-    MOZ_CRASH("Char16ToUChar: Intl API disabled");
-}
-
-inline char16_t*
-UCharToChar16(UChar* chars)
-{
-    MOZ_CRASH("UCharToChar16: Intl API disabled");
-}
-
-inline const char16_t*
-UCharToChar16(const UChar* chars)
-{
-    MOZ_CRASH("UCharToChar16: Intl API disabled");
 }
 
 const char*
@@ -987,6 +964,10 @@ class ScopedICUObject
     }
 };
 
+// Starting with ICU 59, UChar defaults to char16_t.
+static_assert(mozilla::IsSame<UChar, char16_t>::value,
+              "We don't support redefining UChar to a different type");
+
 // The inline capacity we use for the char16_t Vectors.
 static const size_t INITIAL_CHAR_BUFFER_SIZE = 32;
 
@@ -998,13 +979,13 @@ Call(JSContext* cx, const ICUStringFunction& strFn)
     MOZ_ALWAYS_TRUE(chars.resize(INITIAL_CHAR_BUFFER_SIZE));
 
     UErrorCode status = U_ZERO_ERROR;
-    int32_t size = strFn(Char16ToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE, &status);
+    int32_t size = strFn(chars.begin(), INITIAL_CHAR_BUFFER_SIZE, &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         MOZ_ASSERT(size >= 0);
         if (!chars.resize(size_t(size)))
             return nullptr;
         status = U_ZERO_ERROR;
-        strFn(Char16ToUChar(chars.begin()), size, &status);
+        strFn(chars.begin(), size, &status);
     }
     if (U_FAILURE(status)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
@@ -1406,8 +1387,8 @@ intl_CompareStrings(JSContext* cx, UCollator* coll, HandleString str1, HandleStr
     mozilla::Range<const char16_t> chars2 = stableChars2.twoByteRange();
 
     UCollationResult uresult = ucol_strcoll(coll,
-                                            Char16ToUChar(chars1.begin().get()), chars1.length(),
-                                            Char16ToUChar(chars2.begin().get()), chars2.length());
+                                            chars1.begin().get(), chars1.length(),
+                                            chars2.begin().get(), chars2.length());
     int32_t res;
     switch (uresult) {
         case UCOL_LESS: res = -1; break;
@@ -1928,7 +1909,7 @@ NewUNumberFormat(JSContext* cx, Handle<NumberFormatObject*> numberFormat)
         if (!stableChars.initTwoByte(cx, currency))
             return nullptr;
         // uCurrency remains owned by stableChars.
-        uCurrency = Char16ToUChar(stableChars.twoByteRange().begin().get());
+        uCurrency = stableChars.twoByteRange().begin().get();
 
         if (!GetProperty(cx, internals, internals, cx->names().currencyDisplay, &value))
             return nullptr;
@@ -3124,7 +3105,7 @@ js::intl_canonicalizeTimeZone(JSContext* cx, unsigned argc, Value* vp)
     mozilla::Range<const char16_t> tzchars = stableChars.twoByteRange();
 
     JSString* str = Call(cx, [&tzchars](UChar* chars, uint32_t size, UErrorCode* status) {
-        return ucal_getCanonicalTimeZoneID(Char16ToUChar(tzchars.begin().get()), tzchars.length(),
+        return ucal_getCanonicalTimeZoneID(tzchars.begin().get(), tzchars.length(),
                                            chars, size, nullptr, status);
     });
     if (!str)
@@ -3206,8 +3187,8 @@ js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp)
     ScopedICUObject<UDateTimePatternGenerator, udatpg_close> toClose(gen);
 
     JSString* str = Call(cx, [gen, &skelChars](UChar* chars, uint32_t size, UErrorCode* status) {
-        return udatpg_getBestPattern(gen, Char16ToUChar(skelChars.begin().get()),
-                                     skelChars.length(), chars, size, status);
+        return udatpg_getBestPattern(gen, skelChars.begin().get(), skelChars.length(),
+                                     chars, size, status);
     });
     if (!str)
         return false;
@@ -3272,8 +3253,8 @@ js::intl_patternForStyle(JSContext* cx, unsigned argc, Value* vp)
 
     UErrorCode status = U_ZERO_ERROR;
     UDateFormat* df = udat_open(timeStyle, dateStyle, icuLocale(locale.ptr()),
-                                Char16ToUChar(timeZoneChars.begin().get()),
-                                timeZoneChars.length(), nullptr, -1, &status);
+                                timeZoneChars.begin().get(), timeZoneChars.length(),
+                                nullptr, -1, &status);
     if (U_FAILURE(status)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
@@ -3333,8 +3314,8 @@ NewUDateFormat(JSContext* cx, Handle<DateTimeFormatObject*> dateTimeFormat)
     UErrorCode status = U_ZERO_ERROR;
     UDateFormat* df =
         udat_open(UDAT_PATTERN, UDAT_PATTERN, icuLocale(locale.ptr()),
-                  Char16ToUChar(timeZoneChars.begin().get()), timeZoneChars.length(),
-                  Char16ToUChar(patternChars.begin().get()), patternChars.length(), &status);
+                  timeZoneChars.begin().get(), timeZoneChars.length(),
+                  patternChars.begin().get(), patternChars.length(), &status);
     if (U_FAILURE(status)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return nullptr;
@@ -3809,7 +3790,7 @@ js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp)
     if (!stableChars.initTwoByte(cx, fmtNumValue.toString()))
         return false;
 
-    const UChar* uFmtNumValue = Char16ToUChar(stableChars.twoByteRange().begin().get());
+    const UChar* uFmtNumValue = stableChars.twoByteRange().begin().get();
 
     UErrorCode status = U_ZERO_ERROR;
 
@@ -4005,7 +3986,7 @@ js::intl_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp)
                   "Case conversion doesn't overflow int32_t indices");
 
     JSString* str = Call(cx, [&input, &locale](UChar* chars, int32_t size, UErrorCode* status) {
-        return u_strToLower(chars, size, Char16ToUChar(input.begin().get()), input.length(),
+        return u_strToLower(chars, size, input.begin().get(), input.length(),
                             CaseMappingLocale(locale), status);
     });
     if (!str)
@@ -4051,7 +4032,7 @@ js::intl_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp)
                   "Case conversion doesn't overflow int32_t indices");
 
     JSString* str = Call(cx, [&input, &locale](UChar* chars, int32_t size, UErrorCode* status) {
-        return u_strToUpper(chars, size, Char16ToUChar(input.begin().get()), input.length(),
+        return u_strToUpper(chars, size, input.begin().get(), input.length(),
                             CaseMappingLocale(locale), status);
     });
     if (!str)
@@ -4257,7 +4238,7 @@ ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt, UDateTimePatternGenera
         const UChar* value = udatpg_getAppendItemName(dtpg, fieldType, &resultSize);
         MOZ_ASSERT(resultSize >= 0);
 
-        return NewStringCopyN<CanGC>(cx, UCharToChar16(value), size_t(resultSize));
+        return NewStringCopyN<CanGC>(cx, value, size_t(resultSize));
     }
 
     if (MatchPart(&iter, end, "gregorian")) {
