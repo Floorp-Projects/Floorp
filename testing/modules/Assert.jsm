@@ -375,6 +375,8 @@ proto.throws = function(block, expected, message) {
  *        (mixed) Test reference to evaluate against the rejection result
  * @param message (optional)
  *        (string) Short explanation of the expected result
+ * @return promise A promise that is resolved with the object the passed
+ *                 promise is rejected with.
  */
 proto.rejects = function(promise, expected, message) {
   return new Promise((resolve, reject) => {
@@ -390,7 +392,7 @@ proto.rejects = function(promise, expected, message) {
           return;
         }
         this.report(false, err, expected, message);
-        resolve();
+        resolve(err);
       }
     ).then(null, reject);
   });
