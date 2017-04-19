@@ -8,6 +8,9 @@
 #include "MediaDecoderStateMachine.h"
 #include "AbstractMediaDecoder.h"
 #include "MediaResource.h"
+#ifdef MOZ_AV1
+#include "AOMDecoder.h"
+#endif
 #include "OpusDecoder.h"
 #include "VPXDecoder.h"
 #include "WebMDemuxer.h"
@@ -326,6 +329,9 @@ WebMDemuxer::ReadMetadata()
           break;
         case NESTEGG_CODEC_VP9:
           mInfo.mVideo.mMimeType = "video/webm; codecs=vp9";
+          break;
+        case NESTEGG_CODEC_AV1:
+          mInfo.mVideo.mMimeType = "video/webm; codecs=av1";
           break;
         default:
           NS_WARNING("Unknown WebM video codec");
@@ -682,6 +688,11 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
         case NESTEGG_CODEC_VP9:
           isKeyframe = VPXDecoder::IsKeyframe(sample, VPXDecoder::Codec::VP9);
           break;
+#ifdef MOZ_AV1
+        case NESTEGG_CODEC_AV1:
+          isKeyframe = AOMDecoder::IsKeyframe(sample);
+          break;
+#endif
         default:
           NS_WARNING("Cannot detect keyframes in unknown WebM video codec");
           return NS_ERROR_FAILURE;
@@ -689,10 +700,20 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
         if (isKeyframe) {
           // For both VP8 and VP9, we only look for resolution changes
           // on keyframes. Other resolution changes are invalid.
-          auto codec = mVideoCodec == NESTEGG_CODEC_VP8
-                       ? VPXDecoder::Codec::VP8
-                       : VPXDecoder::Codec::VP9;
-          auto dimensions = VPXDecoder::GetFrameSize(sample, codec);
+          auto dimensions = nsIntSize(0, 0);
+          switch (mVideoCodec) {
+          case NESTEGG_CODEC_VP8:
+            dimensions = VPXDecoder::GetFrameSize(sample, VPXDecoder::Codec::VP8);
+            break;
+          case NESTEGG_CODEC_VP9:
+            dimensions = VPXDecoder::GetFrameSize(sample, VPXDecoder::Codec::VP9);
+            break;
+#ifdef MOZ_AV1
+          case NESTEGG_CODEC_AV1:
+            dimensions = AOMDecoder::GetFrameSize(sample);
+            break;
+#endif
+          }
           if (mLastSeenFrameSize.isSome()
               && (dimensions != mLastSeenFrameSize.value())) {
             mInfo.mVideo.mDisplay = dimensions;
