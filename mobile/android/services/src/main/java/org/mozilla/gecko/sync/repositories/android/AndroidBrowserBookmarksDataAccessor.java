@@ -292,6 +292,11 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
     cv.put(BrowserContract.Bookmarks.TITLE,       rec.title);
     cv.put(BrowserContract.Bookmarks.URL,         rec.bookmarkURI);
     cv.put(BrowserContract.Bookmarks.DESCRIPTION, rec.description);
+
+    if (rec.dateAdded != null) {
+      cv.put(BrowserContract.Bookmarks.DATE_CREATED, rec.dateAdded);
+    }
+
     if (rec.tags == null) {
       rec.tags = new JSONArray();
     }

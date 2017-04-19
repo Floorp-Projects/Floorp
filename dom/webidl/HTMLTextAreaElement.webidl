@@ -98,3 +98,8 @@ partial interface HTMLTextAreaElement {
   [ChromeOnly]
   void setUserInput(DOMString input);
 };
+
+partial interface HTMLTextAreaElement {
+  [ChromeOnly]
+  attribute DOMString previewValue;
+};

@@ -109,6 +109,7 @@ nsTextControlFrame::nsTextControlFrame(nsStyleContext* aContext)
   , mEditorHasBeenInitialized(false)
   , mIsProcessing(false)
   , mUsePlaceholder(false)
+  , mUsePreview(false)
 #ifdef DEBUG
   , mInEditorInitialization(false)
 #endif
@@ -363,8 +364,18 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
       // For textareas, UpdateValueDisplay doesn't initialize the visibility
       // status of the placeholder because it returns early, so we have to
       // do that manually here.
-      txtCtrl->UpdatePlaceholderVisibility(true);
+      txtCtrl->UpdateOverlayTextVisibility(true);
     }
+  }
+
+  mUsePreview = txtCtrl->IsPreviewEnabled();
+
+  if (mUsePreview) {
+    // Create the preview anonymous content if needed.
+    Element* previewNode = txtCtrl->CreatePreviewNode();
+    NS_ENSURE_TRUE(previewNode, NS_ERROR_OUT_OF_MEMORY);
+
+    aElements.AppendElement(previewNode);
   }
 
   rv = UpdateValueDisplay(false);
@@ -424,9 +435,14 @@ nsTextControlFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
   }
 
   nsIContent* placeholder = txtCtrl->GetPlaceholderNode();
-  if (placeholder && !(aFilter & nsIContent::eSkipPlaceholderContent))
+  if (placeholder && !(aFilter & nsIContent::eSkipPlaceholderContent)) {
     aElements.AppendElement(placeholder);
+  }
 
+  nsIContent* preview = txtCtrl->GetPreviewNode();
+  if (preview) {
+    aElements.AppendElement(preview);
+  }
 }
 
 nscoord
@@ -640,7 +656,7 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
   // If 'dom.placeholeder.show_on_focus' preference is 'false', focusing or
   // blurring the frame can have an impact on the placeholder visibility.
   if (mUsePlaceholder) {
-    txtCtrl->UpdatePlaceholderVisibility(true);
+    txtCtrl->UpdateOverlayTextVisibility(true);
   }
 
   if (!aOn) {
@@ -1167,7 +1183,7 @@ nsTextControlFrame::SetValueChanged(bool aValueChanged)
 
   if (mUsePlaceholder) {
     AutoWeakFrame weakFrame(this);
-    txtCtrl->UpdatePlaceholderVisibility(true);
+    txtCtrl->UpdateOverlayTextVisibility(true);
     if (!weakFrame.IsAlive()) {
       return;
     }
@@ -1217,13 +1233,13 @@ nsTextControlFrame::UpdateValueDisplay(bool aNotify,
     txtCtrl->GetTextEditorValue(value, true);
   }
 
-  // Update the display of the placeholder value if needed.
-  // We don't need to do this if we're about to initialize the
-  // editor, since EnsureEditorInitialized takes care of this.
-  if (mUsePlaceholder && !aBeforeEditorInit)
+  // Update the display of the placeholder value and preview text if needed.
+  // We don't need to do this if we're about to initialize the editor, since
+  // EnsureEditorInitialized takes care of this.
+  if ((mUsePlaceholder || mUsePreview) && !aBeforeEditorInit)
   {
     AutoWeakFrame weakFrame(this);
-    txtCtrl->UpdatePlaceholderVisibility(aNotify);
+    txtCtrl->UpdateOverlayTextVisibility(aNotify);
     NS_ENSURE_STATE(weakFrame.IsAlive());
   }
 
@@ -1339,10 +1355,12 @@ nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsDisplayListSet set(content, content, content, content, content, content);
 
   while (kid) {
-    // If the frame is the placeholder frame, we should only show it if the
-    // placeholder has to be visible.
-    if (kid->GetContent() != txtCtrl->GetPlaceholderNode() ||
-        txtCtrl->GetPlaceholderVisibility()) {
+    // If the frame is the placeholder or preview frame, we should only show
+    // it if it has to be visible.
+    if (!((kid->GetContent() == txtCtrl->GetPlaceholderNode() &&
+           !txtCtrl->GetPlaceholderVisibility()) ||
+          (kid->GetContent() == txtCtrl->GetPreviewNode() &&
+           !txtCtrl->GetPreviewVisibility()))) {
       BuildDisplayListForChild(aBuilder, kid, aDirtyRect, set, 0);
     }
     kid = kid->GetNextSibling();

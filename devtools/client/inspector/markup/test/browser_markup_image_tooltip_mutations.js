@@ -37,9 +37,11 @@ add_task(function* () {
   ok(target, "Found the src attribute in the markup view.");
 
   info("Showing tooltip on the src link.");
-  yield isHoverTooltipTarget(inspector.markup.imagePreviewTooltip, target);
+  yield assertTooltipShownOnHover(inspector.markup.imagePreviewTooltip, target);
 
   checkImageTooltip(INITIAL_SRC_SIZE, inspector);
+
+  yield assertTooltipHiddenOnMouseOut(inspector.markup.imagePreviewTooltip, target);
 
   info("Updating the image src.");
   yield updateImageSrc(img, UPDATED_SRC, inspector);
@@ -48,10 +50,12 @@ add_task(function* () {
   ok(target, "Found the src attribute in the markup view after mutation.");
 
   info("Showing tooltip on the src link.");
-  yield isHoverTooltipTarget(inspector.markup.imagePreviewTooltip, target);
+  yield assertTooltipShownOnHover(inspector.markup.imagePreviewTooltip, target);
 
   info("Checking that the new image was shown.");
   checkImageTooltip(UPDATED_SRC_SIZE, inspector);
+
+  yield assertTooltipHiddenOnMouseOut(inspector.markup.imagePreviewTooltip, target);
 });
 
 /**

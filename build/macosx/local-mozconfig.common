@@ -17,6 +17,8 @@ if [ -d "$topsrcdir/clang" ]; then
     export DSYMUTIL=$topsrcdir/clang/bin/llvm-dsymutil
     # Use an updated linker.
     ldflags="-B$topsrcdir/cctools/bin"
+    export AR=$topsrcdir/cctools/bin/ar
+    export RANLIB=$topsrcdir/cctools/bin/ranlib
 elif [ -d "$topsrcdir/../clang" ]; then
     # comm-central based build
     export CC=$topsrcdir/../clang/bin/clang
@@ -25,6 +27,8 @@ elif [ -d "$topsrcdir/../clang" ]; then
     export DSYMUTIL=$topsrcdir/../clang/bin/llvm-dsymutil
     # Use an updated linker.
     ldflags="-B$topsrcdir/../cctools/bin"
+    export AR=$topsrcdir/../cctools/bin/ar
+    export RANLIB=$topsrcdir/../cctools/bin/ranlib
 fi
 
 # Ensure the updated linker doesn't generate things our older build tools

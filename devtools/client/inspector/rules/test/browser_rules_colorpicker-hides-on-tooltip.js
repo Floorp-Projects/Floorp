@@ -38,9 +38,11 @@ add_task(function* () {
   let onHidden = colorPicker.tooltip.once("hidden");
   // Hiding the color picker refreshes the value.
   let onRuleViewChanged = view.once("ruleview-changed");
-  yield assertHoverTooltipOn(view.tooltips.getTooltip("previewTooltip"), uriSpan);
+  let previewTooltip = yield assertShowPreviewTooltip(view, uriSpan);
   yield onHidden;
   yield onRuleViewChanged;
+
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, uriSpan);
 
   ok(true, "The color picker closed when the image preview tooltip appeared");
 });

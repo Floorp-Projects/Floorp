@@ -1,8 +1,8 @@
 [
   {
-    "version": "clang 3.8.0",
-    "size": 133060926,
-    "digest": "aff5ad3ac2d41db19d1ba0df5f97b189a7d7e1b6af8c56e22c2b0cced84d75fa98394ded6a4ba5713652e6684a0a46f47aeccf87991f9e849bf8d7d82e564f6f",
+    "version": "clang 3.9.0",
+    "size": 184678304,
+    "digest": "cfde9a0f7f59823200f94422b4adb9a2fb5d4d07f240bbd1142c792434f6a1cbb4096d25c9853d77008fc40db0d827daa7003e78016f51241f621d6040ccc635",
     "algorithm": "sha512",
     "filename": "clang.tar.bz2",
     "unpack": true
@@ -16,9 +16,9 @@
     "unpack": true
   },
   {
-    "version": "cctools port from commit hash db1f8d906cb28, ld only",
-    "size": 634496,
-    "digest": "037f31fcf29e7bb7fada0d2bdd5e95c7d4cb2692f2a5c98ed6f6a7561b9d81622d015f0d12b291d3667719655f1369e8ce8a0a4a4773aa0ee4753e04a8821173",
+    "version": "cctools port from commit hash 8e9c3f2506b51",
+    "size": 2233376,
+    "digest": "d632ef587f0253f016aa5323999a3d9576284c04e66b5243a5780af9a55f474ac91ad8dee5bd86a6ee4e2593e2b345e2fd0aa4e8838b3686f84c5c5ac5c9c418",
     "algorithm": "sha512",
     "filename": "cctools.tar.bz2",
     "unpack": true

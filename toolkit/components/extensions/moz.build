@@ -39,7 +39,10 @@ TESTING_JS_MODULES += [
     'ExtensionXPCShellUtils.jsm',
 ]
 
-DIRS += ['schemas']
+DIRS += [
+    'schemas',
+    'webrequest',
+]
 
 JAR_MANIFESTS += ['jar.mn']
 

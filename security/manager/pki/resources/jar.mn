@@ -32,6 +32,7 @@ pippki.jar:
     content/pippki/editcacert.xul            (content/editcacert.xul)
     content/pippki/exceptionDialog.js        (content/exceptionDialog.js)
 *   content/pippki/exceptionDialog.xul       (content/exceptionDialog.xul)
+    content/pippki/load_device.js            (content/load_device.js)
     content/pippki/load_device.xul           (content/load_device.xul)
     content/pippki/pippki.js                 (content/pippki.js)
     content/pippki/protectedAuth.js          (content/protectedAuth.js)
