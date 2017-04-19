@@ -95,24 +95,25 @@ public class HomeFragment extends Fragment implements View.OnClickListener, Popu
             case R.id.settings:
                 Intent settingsIntent = new Intent(getActivity(), SettingsActivity.class);
                 startActivity(settingsIntent);
-                break;
+                return true;
 
             case R.id.about:
                 Intent aboutIntent = InfoActivity.getAboutIntent(getActivity());
                 startActivity(aboutIntent);
-                break;
+                return true;
 
             case R.id.rights:
                 Intent rightsIntent = InfoActivity.getRightsIntent(getActivity());
                 startActivity(rightsIntent);
-                break;
+                return true;
 
             case R.id.help:
                 Intent helpIntent = InfoActivity.getHelpIntent(getActivity());
                 startActivity(helpIntent);
-                break;
-        }
+                return true;
 
-        return false;
+            default:
+                throw new IllegalStateException("Unhandled view ID in onMenuItemClick()");
+        }
     }
 }
