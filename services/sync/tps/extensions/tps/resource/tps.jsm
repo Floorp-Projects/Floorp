@@ -269,7 +269,15 @@ var TPS = {
   },
 
   FinishAsyncOperation: function TPS__FinishAsyncOperation() {
-    this._operations_pending--;
+    // We fire a FinishAsyncOperation at the end of a sync finish (somewhat
+    // dubious, but we're consistent about it), but a sync may or may not be
+    // triggered during login, and it's hard for us to know (without e.g.
+    // auth/fxaccounts.jsm calling back into this module). So we just assume
+    // the FinishAsyncOperation without a StartAsyncOperation is fine, and works
+    // as if a StartAsyncOperation had been called.
+    if (this._operations_pending) {
+      this._operations_pending--;
+    }
     if (!this.operations_pending) {
       this._currentAction++;
       Utils.nextTick(function() {
@@ -1131,13 +1139,14 @@ var TPS = {
       return;
     }
 
+    // This might come during Authentication.signIn
+    this._triggeredSync = true;
     Logger.logInfo("Setting client credentials and login.");
     Authentication.signIn(this.config.fx_account);
     this.waitForSetupComplete();
     Logger.AssertEqual(Weave.Status.service, Weave.STATUS_OK, "Weave status OK");
     this.waitForTracking();
-    // We get an initial sync at login time - let that complete.
-    this._triggeredSync = true;
+    // We might get an initial sync at login time - let that complete.
     this.waitForSyncFinished();
   },
 
@@ -1149,6 +1158,10 @@ var TPS = {
    *
    */
   Sync: function TPS__Sync(wipeAction) {
+    if (this._syncActive) {
+      Logger.logInfo("WARNING: Sync currently active! Waiting, before triggering another");
+      this.waitForSyncFinished();
+    }
     Logger.logInfo("Executing Sync" + (wipeAction ? ": " + wipeAction : ""));
 
     // Force a wipe action if requested. In case of an initial sync the pref
