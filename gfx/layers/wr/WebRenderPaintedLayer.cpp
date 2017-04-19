@@ -81,7 +81,7 @@ WebRenderPaintedLayer::UpdateImageClient()
   }
 
   if (!helper.UpdateImage()) {
-    return;
+    return false;
   }
 
   return true;
