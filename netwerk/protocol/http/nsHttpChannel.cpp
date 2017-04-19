@@ -135,7 +135,7 @@ static uint32_t sRCWNSmallResourceSizeKB = 256;
          (result) == NS_ERROR_OUT_OF_MEMORY)
 
 #define WRONG_RACING_RESPONSE_SOURCE(req)                                                  \
-    (mRacingNetAndCache &&                                                                 \
+    (mRaceCacheWithNetwork &&                                                                 \
         (((mFirstResponseSource == RESPONSE_FROM_CACHE) && (req != mCachePump)) ||         \
          ((mFirstResponseSource == RESPONSE_FROM_NETWORK) && (req != mTransactionPump))))
 
@@ -294,7 +294,7 @@ nsHttpChannel::nsHttpChannel()
     , mWarningReporter(nullptr)
     , mIsReadingFromCache(false)
     , mOnCacheAvailableCalled(false)
-    , mRacingNetAndCache(false)
+    , mRaceCacheWithNetwork(false)
     , mDidReval(false)
 {
     LOG(("Creating nsHttpChannel [this=%p]\n", this));
@@ -2046,7 +2046,7 @@ nsHttpChannel::ProcessResponse()
         MOZ_ASSERT(NS_SUCCEEDED(rv), "ProcessSTSHeader failed, continuing load.");
     }
 
-    MOZ_ASSERT(!mCachedContentIsValid || mRacingNetAndCache,
+    MOZ_ASSERT(!mCachedContentIsValid || mRaceCacheWithNetwork,
                "We should not be hitting the network if we have valid cached "
                "content unless we are racing the network and cache");
 
@@ -3617,7 +3617,7 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
         // attributes (doesn't have alt-data, and has a small size)
         if (sRCWNEnabled && mInterceptCache != INTERCEPTED &&
             NS_SUCCEEDED(rv) && !hasAltData && sizeInKb < sRCWNSmallResourceSizeKB) {
-            MaybeRaceNetworkWithCache();
+            MaybeRaceCacheWithNetwork();
         }
 
         if (!mCacheOpenDelay) {
@@ -3724,7 +3724,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     LOG(("nsHttpChannel::OnCacheEntryCheck enter [channel=%p entry=%p]",
         this, entry));
 
-    if (mRacingNetAndCache && mFirstResponseSource == RESPONSE_FROM_NETWORK) {
+    if (mRaceCacheWithNetwork && mFirstResponseSource == RESPONSE_FROM_NETWORK) {
         LOG(("Not using cached response because we've already got one from the network\n"));
         *aResult = ENTRY_NOT_WANTED;
         return NS_OK;
@@ -5164,7 +5164,7 @@ nsHttpChannel::InstallCacheListener(int64_t offset)
     LOG(("Preparing to write data into the cache [uri=%s]\n", mSpec.get()));
 
     MOZ_ASSERT(mCacheEntry);
-    MOZ_ASSERT(mCacheEntryIsWriteOnly || mCachedContentIsPartial || mRacingNetAndCache);
+    MOZ_ASSERT(mCacheEntryIsWriteOnly || mCachedContentIsPartial || mRaceCacheWithNetwork);
     MOZ_ASSERT(mListener);
 
     nsAutoCString contentEncoding, contentType;
@@ -6754,7 +6754,7 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     LOG(("nsHttpChannel::OnStartRequest [this=%p request=%p status=%" PRIx32 "]\n",
          this, request, static_cast<uint32_t>(mStatus)));
 
-    if (mRacingNetAndCache) {
+    if (mRaceCacheWithNetwork) {
         LOG(("  racingNetAndCache - mFirstResponseSource:%d fromCache:%d fromNet:%d\n",
              mFirstResponseSource, request == mCachePump, request == mTransactionPump));
         if (mFirstResponseSource == RESPONSE_PENDING &&
@@ -6778,7 +6778,7 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     MOZ_ASSERT(request == mCachePump || request == mTransactionPump,
                "Unexpected request");
 
-    MOZ_ASSERT(mRacingNetAndCache || !(mTransactionPump && mCachePump) || mCachedContentIsPartial,
+    MOZ_ASSERT(mRaceCacheWithNetwork || !(mTransactionPump && mCachePump) || mCachedContentIsPartial,
                "If we have both pumps, the cache content must be partial");
 
     mAfterOnStartRequestBegun = true;
@@ -7533,7 +7533,7 @@ nsHttpChannel::IsFromCache(bool *value)
     if (!mIsPending)
         return NS_ERROR_NOT_AVAILABLE;
 
-    if (!mRacingNetAndCache) {
+    if (!mRaceCacheWithNetwork) {
         // return false if reading a partial cache entry; the data isn't
         // entirely from the cache!
         *value = (mCachePump || (mLoadFlags & LOAD_ONLY_IF_MODIFIED)) &&
@@ -8865,7 +8865,7 @@ nsHttpChannel::TriggerNetwork(int32_t aTimeout)
             // If the network was triggered before onCacheEntryAvailable was
             // called, we are either racing network and cache, or the load is
             // bypassing the cache.
-            mRacingNetAndCache = true;
+            mRaceCacheWithNetwork = true;
         }
         if (mNetworkTriggerTimer) {
             mNetworkTriggerTimer->Cancel();
@@ -8894,7 +8894,7 @@ nsHttpChannel::TriggerNetwork(int32_t aTimeout)
 }
 
 nsresult
-nsHttpChannel::MaybeRaceNetworkWithCache()
+nsHttpChannel::MaybeRaceCacheWithNetwork()
 {
     // Don't trigger the network if the load flags say so.
     if (mLoadFlags & (LOAD_ONLY_FROM_CACHE | LOAD_NO_NETWORK_IO)) {
@@ -8911,7 +8911,7 @@ nsHttpChannel::MaybeRaceNetworkWithCache()
     }
 
     MOZ_ASSERT(sRCWNEnabled, "The pref must be truned on.");
-    LOG(("nsHttpChannel::MaybeRaceNetworkWithCache [this=%p]\n", this));
+    LOG(("nsHttpChannel::MaybeRaceCacheWithNetwork [this=%p]\n", this));
     return TriggerNetwork(0);
 }
 
