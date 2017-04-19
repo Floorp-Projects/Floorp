@@ -49,6 +49,10 @@ treecol {
   white-space: nowrap;
 }
 
+.accessory-button {
+  min-width: 145px;
+}
+
 /* Category List */
 
 #categories {

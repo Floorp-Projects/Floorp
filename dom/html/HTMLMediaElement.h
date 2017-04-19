@@ -782,6 +782,17 @@ public:
 
   already_AddRefed<GMPCrashHelper> CreateGMPCrashHelper() override;
 
+  // The promise resolving/rejection is queued as a "micro-task" which will be
+  // handled immediately after the current JS task and before any pending JS
+  // tasks.
+  // At the time we are going to resolve/reject a promise, the "seeking" event
+  // task should already be queued but might yet be processed, so we queue one
+  // more task to file the promise resolving/rejection micro-tasks
+  // asynchronously to make sure that the micro-tasks are processed after the
+  // "seeking" event task.
+  void AsyncResolveSeekDOMPromiseIfExists() override;
+  void AsyncRejectSeekDOMPromiseIfExists() override;
+
 protected:
   virtual ~HTMLMediaElement();
 
@@ -1764,6 +1775,11 @@ private:
   // We keep track of these because the load algorithm resolves/rejects all
   // already-dispatched pending play promises.
   nsTArray<nsResolveOrRejectPendingPlayPromisesRunner*> mPendingPlayPromisesRunners;
+
+  // A pending seek promise which is created at Seek() method call and is
+  // resolved/rejected at AsyncResolveSeekDOMPromiseIfExists()/
+  // AsyncRejectSeekDOMPromiseIfExists() methods.
+  RefPtr<dom::Promise> mSeekDOMPromise;
 };
 
 // Check if the context is chrome or has the debugger permission

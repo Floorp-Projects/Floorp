@@ -251,6 +251,7 @@
                       onsynctopreference="return gPrivacyPane.writeAcceptCookies();"/>
             <spacer flex="1" />
             <button id="cookieExceptions"
+                    class="accessory-button"
                     label="&cookieExceptions.label;" accesskey="&cookieExceptions.accesskey;"
                     preference="pref.privacy.disable_button.cookie_exceptions"/>
           </hbox>
@@ -284,6 +285,7 @@
             </menulist>
             <spacer flex="1"/>
             <button id="showCookiesButton"
+                    class="accessory-button"
                     label="&showCookies.label;" accesskey="&showCookies.accesskey;"
                     preference="pref.privacy.disable_button.view_cookies"/>
           </hbox>
@@ -294,7 +296,9 @@
                       label="&clearOnClose.label;"
                       accesskey="&clearOnClose.accesskey;"/>
             <spacer flex="1"/>
-            <button id="clearDataSettings" label="&clearOnCloseSettings.label;"
+            <button id="clearDataSettings"
+                    class="accessory-button"
+                    label="&clearOnCloseSettings.label;"
                     accesskey="&clearOnCloseSettings.accesskey;"/>
           </hbox>
         </vbox>
@@ -314,6 +318,7 @@
               onsyncfrompreference="return gPrivacyPane.readSavePasswords();"/>
     <spacer flex="1"/>
     <button id="passwordExceptions"
+            class="accessory-button"
             label="&passwordExceptions.label;"
             accesskey="&passwordExceptions.accesskey;"
             preference="pref.privacy.disable_button.view_passwords_exceptions"/>
@@ -332,12 +337,14 @@
           <spacer flex="1"/>
         </hbox>
         <button id="changeMasterPassword"
+                class="accessory-button"
                 label="&changeMasterPassword.label;"
                 accesskey="&changeMasterPassword.accesskey;"/>
       </row>
       <row id="showPasswordRow">
         <hbox id="showPasswordsBox"/>
         <button id="showPasswords"
+                class="accessory-button"
                 label="&savedLogins.label;" accesskey="&savedLogins.accesskey;"
                 preference="pref.privacy.disable_button.view_passwords"/>
       </row>
@@ -375,10 +382,12 @@
       <spacer flex="1"/>
       <vbox id="trackingProtectionAdvancedSettings">
         <button id="trackingProtectionExceptions"
+                class="accessory-button"
                 label="&trackingProtectionExceptions.label;"
                 accesskey="&trackingProtectionExceptions.accesskey;"
                 preference="pref.privacy.disable_button.tracking_protection_exceptions"/>
         <button id="changeBlockList"
+                class="accessory-button"
                 label="&changeBlockList.label;"
                 accesskey="&changeBlockList.accesskey;"
                 preference="pref.privacy.disable_button.change_blocklist"/>
@@ -425,7 +434,9 @@
                                                                         'dom.disable_open_during_load');"/>
         </vbox>
         <hbox pack="end">
-          <button id="popupPolicyButton" label="&popupExceptions.label;"
+          <button id="popupPolicyButton"
+                  class="accessory-button"
+                  label="&popupExceptions.label;"
                   accesskey="&popupExceptions.accesskey;"/>
         </hbox>
       </row>
@@ -450,7 +461,9 @@
                  value="&notificationsPolicyLearnMore.label;"/>
         </hbox>
         <hbox pack="end">
-          <button id="notificationsPolicyButton" label="&notificationsPolicyButton.label;"
+          <button id="notificationsPolicyButton"
+                  class="accessory-button"
+                  label="&notificationsPolicyButton.label;"
                   accesskey="&notificationsPolicyButton.accesskey;"/>
         </hbox>
       </row>
@@ -499,6 +512,7 @@
               onsyncfrompreference="return gPrivacyPane.readWarnAddonInstall();"/>
     <spacer flex="1"/>
     <button id="addonExceptions"
+            class="accessory-button"
             label="&addonExceptions.label;"
             accesskey="&addonExceptions.accesskey;"/>
   </hbox>
@@ -551,12 +565,12 @@
     <spacer flex="1"/>
     <vbox>
       <button id="viewCertificatesButton"
-              flex="1"
+              class="accessory-button"
               label="&viewCerts.label;"
               accesskey="&viewCerts.accesskey;"
               preference="security.disable_button.openCertManager"/>
       <button id="viewSecurityDevicesButton"
-              flex="1"
+              class="accessory-button"
               label="&viewSecurityDevices.label;"
               accesskey="&viewSecurityDevices.accesskey;"
               preference="security.disable_button.openDeviceManager"/>
@@ -611,7 +625,10 @@
 
   <hbox align="center">
     <description flex="1" control="connectionSettings">&connectionDesc.label;</description>
-    <button id="connectionSettings" icon="network" label="&connectionSettings.label;"
+    <button id="connectionSettings"
+            class="accessory-button"
+            icon="network"
+            label="&connectionSettings.label;"
             accesskey="&connectionSettings.accesskey;"/>
   </hbox>
 </groupbox>
@@ -622,7 +639,9 @@
 
   <hbox align="center">
     <label id="actualDiskCacheSize" flex="1"/>
-    <button id="clearCacheButton" icon="clear"
+    <button id="clearCacheButton"
+            class="accessory-button"
+            icon="clear"
             label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"/>
   </hbox>
   <hbox>
@@ -649,7 +668,9 @@
 
   <hbox align="center">
     <label id="actualAppCacheSize" flex="1"/>
-    <button id="clearOfflineAppCacheButton" icon="clear"
+    <button id="clearOfflineAppCacheButton"
+            class="accessory-button"
+            icon="clear"
             label="&clearOfflineAppCacheNow.label;" accesskey="&clearOfflineAppCacheNow.accesskey;"/>
   </hbox>
   <hbox align="center">
@@ -659,6 +680,7 @@
               onsyncfrompreference="return gPrivacyPane.readOfflineNotify();"/>
     <spacer flex="1"/>
     <button id="offlineNotifyExceptions"
+            class="accessory-button"
             label="&offlineStorageNotifyExceptions.label;"
             accesskey="&offlineStorageNotifyExceptions.accesskey;"/>
   </hbox>
@@ -672,6 +694,7 @@
     </vbox>
     <vbox pack="end">
       <button id="offlineAppsListRemove"
+              class="accessory-button"
               disabled="true"
               label="&offlineAppsListRemove.label;"
               accesskey="&offlineAppsListRemove.accesskey;"/>
@@ -687,11 +710,14 @@
     <label id="totalSiteDataSize"></label>
     <label id="siteDataLearnMoreLink" class="learnMore text-link" value="&siteDataLearnMoreLink.label;"></label>
     <spacer flex="1" />
-    <button id="clearSiteDataButton" icon="clear"
+    <button id="clearSiteDataButton"
+            class="accessory-button"
+            icon="clear"
             label="&clearSiteData.label;" accesskey="&clearSiteData.accesskey;"/>
   </hbox>
   <vbox align="end">
     <button id="siteDataSettings"
+            class="accessory-button"
             label="&siteDataSettings.label;"
             accesskey="&siteDataSettings.accesskey;"/>
   </vbox>

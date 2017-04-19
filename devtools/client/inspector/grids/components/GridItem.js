@@ -81,6 +81,8 @@ module.exports = createClass({
       preview: {
         attributes: attributesMap,
         attributesLength: attributes.length,
+        // All the grid containers are assumed to be in the DOM tree.
+        isConnected: true,
         // nodeName is already lowerCased in Node grips
         nodeName: nodeFront.nodeName.toLowerCase(),
         nodeType: nodeFront.nodeType,

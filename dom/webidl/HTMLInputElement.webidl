@@ -265,3 +265,8 @@ partial interface HTMLInputElement {
   [Pref="dom.forms.datetime", Func="IsChromeOrXBL"]
   void setFocusState(boolean aIsFocused);
 };
+
+partial interface HTMLInputElement {
+  [ChromeOnly]
+  attribute DOMString previewValue;
+};

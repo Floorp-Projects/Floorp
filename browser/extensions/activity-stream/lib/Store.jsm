@@ -8,16 +8,19 @@ const {utils: Cu} = Components;
 const {redux} = Cu.import("resource://activity-stream/vendor/Redux.jsm", {});
 const {actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 const {reducers} = Cu.import("resource://activity-stream/common/Reducers.jsm", {});
+const {ActivityStreamMessageChannel} = Cu.import("resource://activity-stream/lib/ActivityStreamMessageChannel.jsm", {});
 
 /**
  * Store - This has a similar structure to a redux store, but includes some extra
- *         functionality. It accepts an array of "Feeds" on inititalization, which
+ *         functionality to allow for routing of actions between the Main processes
+ *         and child processes via a ActivityStreamMessageChannel.
+ *         It also accepts an array of "Feeds" on inititalization, which
  *         can listen for any action that is dispatched through the store.
  */
 this.Store = class Store {
 
   /**
-   * constructor - The redux store is created here,
+   * constructor - The redux store and message manager are created here,
    *               but no listeners are added until "init" is called.
    */
   constructor() {
@@ -30,9 +33,10 @@ this.Store = class Store {
       }.bind(this);
     });
     this.feeds = new Set();
+    this._messageChannel = new ActivityStreamMessageChannel({dispatch: this.dispatch});
     this._store = redux.createStore(
       redux.combineReducers(reducers),
-      redux.applyMiddleware(this._middleware)
+      redux.applyMiddleware(this._middleware, this._messageChannel.middleware)
     );
   }
 
@@ -49,7 +53,7 @@ this.Store = class Store {
   }
 
   /**
-   * init - Initializes the MessageManager channel, and adds feeds.
+   * init - Initializes the ActivityStreamMessageChannel channel, and adds feeds.
    *        After initialization has finished, an INIT action is dispatched.
    *
    * @param  {array} feeds An array of objects with an optional .onAction method
@@ -61,17 +65,20 @@ this.Store = class Store {
         this.feeds.add(subscriber);
       });
     }
+    this._messageChannel.createChannel();
     this.dispatch({type: at.INIT});
   }
 
   /**
-   * uninit - Clears all feeds, dispatches an UNINIT action
+   * uninit - Clears all feeds, dispatches an UNINIT action, and
+   *          destroys the message manager channel.
    *
    * @return {type}  description
    */
   uninit() {
     this.feeds.clear();
     this.dispatch({type: at.UNINIT});
+    this._messageChannel.destroyChannel();
   }
 };
 
