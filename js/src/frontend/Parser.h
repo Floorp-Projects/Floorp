@@ -13,6 +13,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TypeTraits.h"
 
+#include "jscompartment.h"
 #include "jsiter.h"
 #include "jspubtd.h"
 
