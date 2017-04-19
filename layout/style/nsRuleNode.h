@@ -16,7 +16,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedArray.h"
 #include "mozilla/RuleNodeCacheConditions.h"
-#include "mozilla/LookAndFeel.h"
 #include "mozilla/SheetType.h"
 #include "nsPresContext.h"
 #include "nsStyleStruct.h"
@@ -1086,10 +1085,6 @@ public:
 
   static void FillAllMaskLists(nsStyleImageLayers& aLayers,
                                uint32_t aMaxItemCount);
-
-  static void ComputeSystemFont(nsFont* aSystemFont,
-                                mozilla::LookAndFeel::FontID aFontID,
-                                const nsPresContext* aPresContext);
 
 private:
 #ifdef DEBUG
