@@ -66,6 +66,8 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     // Therefore we make a copy in case of this Activity is re-created.
     private Intent startIntent;
 
+    private MenuItem menuItemControl;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -264,8 +266,8 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             case R.id.custom_tabs_menu_forward:
                 onForwardClicked();
                 return true;
-            case R.id.custom_tabs_menu_reload:
-                onReloadClicked();
+            case R.id.custom_tabs_menu_control:
+                onLoadingControlClicked();
                 return true;
             case R.id.custom_tabs_menu_open_in:
                 onOpenInClicked();
@@ -370,6 +372,8 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             openItem.setTitle(getString(R.string.custom_tabs_menu_item_open_in, name));
         }
 
+        menuItemControl = geckoMenu.findItem(R.id.custom_tabs_menu_control);
+
         geckoMenu.addFooterView(
                 getLayoutInflater().inflate(R.layout.customtabs_options_menu_footer, geckoMenu, false),
                 null,
@@ -407,12 +411,24 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         } else {
             mProgressView.setVisibility(View.GONE);
         }
+
+        if (menuItemControl != null) {
+            Drawable icon = menuItemControl.getIcon();
+            icon.setLevel(progress);
+        }
     }
 
-    private void onReloadClicked() {
+    /**
+     * Call this method to reload page, or stop page loading if progress not complete yet.
+     */
+    private void onLoadingControlClicked() {
         final Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null) {
-            tab.doReload(true);
+            if (tab.getLoadProgress() == Tab.LOAD_PROGRESS_STOP) {
+                tab.doReload(true);
+            } else {
+                tab.doStop();
+            }
         }
     }
 
