@@ -17,25 +17,33 @@ using base::ProcessHandle;
 
 namespace mozilla {
 
-CrossProcessSemaphore::CrossProcessSemaphore(const char*, uint32_t aInitialValue)
+/* static */ CrossProcessSemaphore*
+CrossProcessSemaphore::Create(const char*, uint32_t aInitialValue)
 {
   // We explicitly share this using DuplicateHandle, we do -not- want this to
   // be inherited by child processes by default! So no security attributes are
   // given.
-  mSemaphore = ::CreateSemaphoreA(nullptr, aInitialValue, 0x7fffffff, nullptr);
-  if (!mSemaphore) {
-    MOZ_CRASH("This shouldn't happen - failed to create semaphore!");
+  HANDLE semaphore = ::CreateSemaphoreA(nullptr, aInitialValue, 0x7fffffff, nullptr);
+  if (!semaphore) {
+    return nullptr;
   }
-  MOZ_COUNT_CTOR(CrossProcessSemaphore);
+  return new CrossProcessSemaphore(semaphore);
 }
 
-CrossProcessSemaphore::CrossProcessSemaphore(CrossProcessSemaphoreHandle aHandle)
+/* static */ CrossProcessSemaphore*
+CrossProcessSemaphore::Create(CrossProcessSemaphoreHandle aHandle)
 {
   DWORD flags;
   if (!::GetHandleInformation(aHandle, &flags)) {
-    MOZ_CRASH("Attempt to construct a semaphore from an invalid handle!");
+    return nullptr;
   }
-  mSemaphore = aHandle;
+
+  return new CrossProcessSemaphore(aHandle);
+}
+
+CrossProcessSemaphore::CrossProcessSemaphore(HANDLE aSemaphore)
+  : mSemaphore(aSemaphore)
+{
   MOZ_COUNT_CTOR(CrossProcessSemaphore);
 }
 

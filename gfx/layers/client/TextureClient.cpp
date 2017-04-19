@@ -1439,10 +1439,10 @@ class CrossProcessSemaphoreReadLock : public TextureReadLock
 {
 public:
   CrossProcessSemaphoreReadLock()
-    : mSemaphore("TextureReadLock", 1)
+    : mSemaphore(CrossProcessSemaphore::Create("TextureReadLock", 1))
   {}
   explicit CrossProcessSemaphoreReadLock(CrossProcessSemaphoreHandle aHandle)
-    : mSemaphore(aHandle)
+    : mSemaphore(CrossProcessSemaphore::Create(aHandle))
   {}
 
   virtual bool ReadLock() override
@@ -1450,30 +1450,30 @@ public:
     if (!IsValid()) {
       return false;
     }
-    return mSemaphore.Wait();
+    return mSemaphore->Wait();
   }
   virtual bool TryReadLock(TimeDuration aTimeout) override
   {
     if (!IsValid()) {
       return false;
     }
-    return mSemaphore.Wait(Some(aTimeout));
+    return mSemaphore->Wait(Some(aTimeout));
   }
   virtual int32_t ReadUnlock() override
   {
     if (!IsValid()) {
       return 1;
     }
-    mSemaphore.Signal();
+    mSemaphore->Signal();
     return 1;
   }
-  virtual bool IsValid() const override { return true; }
+  virtual bool IsValid() const override { return !!mSemaphore; }
 
   virtual bool Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther) override;
 
   virtual LockType GetType() override { return TYPE_CROSS_PROCESS_SEMAPHORE; }
 
-  CrossProcessSemaphore mSemaphore;
+  UniquePtr<CrossProcessSemaphore> mSemaphore;
 };
 
 // static
@@ -1656,7 +1656,7 @@ bool
 CrossProcessSemaphoreReadLock::Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther)
 {
   if (IsValid()) {
-    aOutput = ReadLockDescriptor(CrossProcessSemaphoreDescriptor(mSemaphore.ShareToProcess(aOther)));
+    aOutput = ReadLockDescriptor(CrossProcessSemaphoreDescriptor(mSemaphore->ShareToProcess(aOther)));
     return true;
   } else {
     return false;
