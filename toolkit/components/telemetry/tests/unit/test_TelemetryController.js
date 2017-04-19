@@ -28,6 +28,7 @@ const PLATFORM_VERSION = "1.9.2";
 const APP_VERSION = "1";
 const APP_NAME = "XPCShell";
 
+const PREF_EXPERIMENTS_ENABLED = "experiments.enabled";
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_ENABLED = PREF_BRANCH + "enabled";
 const PREF_ARCHIVE_ENABLED = PREF_BRANCH + "archive.enabled";
@@ -98,6 +99,9 @@ add_task(function* test_setup() {
   // Make sure we don't generate unexpected pings due to pref changes.
   yield setEmptyPrefWatchlist();
 
+  // Ensure browser experiments are also disabled, to avoid network activity
+  // when toggling PREF_ENABLED.
+  Services.prefs.setBoolPref(PREF_EXPERIMENTS_ENABLED, false);
   Services.prefs.setBoolPref(PREF_ENABLED, true);
   Services.prefs.setBoolPref(PREF_FHR_UPLOAD_ENABLED, true);
 
