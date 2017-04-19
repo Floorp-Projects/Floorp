@@ -16,6 +16,14 @@
 namespace mozilla {
 namespace layers {
 
+WebRenderDisplayItemLayer::~WebRenderDisplayItemLayer()
+{
+  MOZ_COUNT_DTOR(WebRenderDisplayItemLayer);
+  if (mExternalImageId) {
+    WrBridge()->DeallocExternalImageId(mExternalImageId);
+  }
+}
+
 void
 WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
