@@ -758,6 +758,27 @@ BrowserGlue.prototype = {
                           nb.PRIORITY_WARNING_MEDIUM, buttons);
   },
 
+  _notifyDisabledNonMpc() {
+    let win = RecentWindow.getMostRecentBrowserWindow();
+    if (!win)
+      return;
+
+    let message = win.gNavigatorBundle.getString("nonMpcDisabled.message");
+    let buttons = [
+      {
+        label: win.gNavigatorBundle.getString("nonMpcDisabled.manage.label"),
+        accessKey: win.gNavigatorBundle.getString("nonMpcDisabled.manage.accessKey"),
+        callback() {
+          win.BrowserOpenAddonsMgr("addons://list/extension");
+        }
+      },
+    ];
+
+    let nb = win.document.getElementById("high-priority-global-notificationbox");
+    nb.appendNotification(message, "non-mpc-addons-disabled", "",
+                          nb.PRIORITY_WARNING_MEDIUM, buttons);
+  },
+
   _firstWindowTelemetry(aWindow) {
     let SCALING_PROBE_NAME = "";
     switch (AppConstants.platform) {
@@ -962,6 +983,10 @@ BrowserGlue.prototype = {
           }
         }
       });
+    }
+
+    if (AddonManager.nonMpcDisabled) {
+      this._notifyDisabledNonMpc();
     }
 
     // Perform default browser checking.
