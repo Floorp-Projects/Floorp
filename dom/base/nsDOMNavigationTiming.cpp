@@ -9,6 +9,8 @@
 #include "GeckoProfiler.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
+#include "nsDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIScriptSecurityManager.h"
 #include "prtime.h"
 #include "nsIURI.h"
@@ -19,9 +21,11 @@
 
 using namespace mozilla;
 
-nsDOMNavigationTiming::nsDOMNavigationTiming()
+nsDOMNavigationTiming::nsDOMNavigationTiming(nsDocShell* aDocShell)
 {
   Clear();
+
+  mDocShell = aDocShell;
 }
 
 nsDOMNavigationTiming::~nsDOMNavigationTiming()
@@ -118,6 +122,11 @@ nsDOMNavigationTiming::NotifyLoadEventStart()
   if (!mLoadEventStartSet) {
     mLoadEventStart = DurationFromStart();
     mLoadEventStartSet = true;
+
+    if (IsTopLevelContentDocument()) {
+      Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_LOAD_EVENT_START_MS,
+                                     mNavigationStartTimeStamp);
+    }
   }
 }
 
@@ -127,6 +136,11 @@ nsDOMNavigationTiming::NotifyLoadEventEnd()
   if (!mLoadEventEndSet) {
     mLoadEventEnd = DurationFromStart();
     mLoadEventEndSet = true;
+
+    if (IsTopLevelContentDocument()) {
+      Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_LOAD_EVENT_END_MS,
+                                     mNavigationStartTimeStamp);
+    }
   }
 }
 
@@ -147,6 +161,11 @@ nsDOMNavigationTiming::NotifyDOMLoading(nsIURI* aURI)
     mLoadedURI = aURI;
     mDOMLoading = DurationFromStart();
     mDOMLoadingSet = true;
+
+    if (IsTopLevelContentDocument()) {
+      Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_LOADING_MS,
+                                     mNavigationStartTimeStamp);
+    }
   }
 }
 
@@ -157,6 +176,11 @@ nsDOMNavigationTiming::NotifyDOMInteractive(nsIURI* aURI)
     mLoadedURI = aURI;
     mDOMInteractive = DurationFromStart();
     mDOMInteractiveSet = true;
+
+    if (IsTopLevelContentDocument()) {
+      Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_INTERACTIVE_MS,
+                                     mNavigationStartTimeStamp);
+    }
   }
 }
 
@@ -167,6 +191,11 @@ nsDOMNavigationTiming::NotifyDOMComplete(nsIURI* aURI)
     mLoadedURI = aURI;
     mDOMComplete = DurationFromStart();
     mDOMCompleteSet = true;
+
+    if (IsTopLevelContentDocument()) {
+      Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_COMPLETE_MS,
+                                     mNavigationStartTimeStamp);
+    }
   }
 }
 
@@ -177,6 +206,11 @@ nsDOMNavigationTiming::NotifyDOMContentLoadedStart(nsIURI* aURI)
     mLoadedURI = aURI;
     mDOMContentLoadedEventStart = DurationFromStart();
     mDOMContentLoadedEventStartSet = true;
+
+    if (IsTopLevelContentDocument()) {
+      Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_CONTENT_LOADED_START_MS,
+                                     mNavigationStartTimeStamp);
+    }
   }
 }
 
@@ -187,6 +221,11 @@ nsDOMNavigationTiming::NotifyDOMContentLoadedEnd(nsIURI* aURI)
     mLoadedURI = aURI;
     mDOMContentLoadedEventEnd = DurationFromStart();
     mDOMContentLoadedEventEndSet = true;
+
+    if (IsTopLevelContentDocument()) {
+      Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_CONTENT_LOADED_END_MS,
+                                     mNavigationStartTimeStamp);
+    }
   }
 }
 
@@ -248,4 +287,18 @@ nsDOMNavigationTiming::GetUnloadEventEnd()
     return mUnloadEnd;
   }
   return 0;
+}
+
+bool
+nsDOMNavigationTiming::IsTopLevelContentDocument() const
+{
+  if (!mDocShell) {
+    return false;
+  }
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  Unused << mDocShell->GetSameTypeRootTreeItem(getter_AddRefs(rootItem));
+  if (rootItem.get() != static_cast<nsIDocShellTreeItem*>(mDocShell.get())) {
+    return false;
+  }
+  return rootItem->ItemType() == nsIDocShellTreeItem::typeContent;
 }
