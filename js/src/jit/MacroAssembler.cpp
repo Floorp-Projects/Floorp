@@ -2774,6 +2774,10 @@ MacroAssembler::callWithABI(wasm::BytecodeOffset callOffset, wasm::SymbolicAddre
 {
     MOZ_ASSERT(wasm::NeedsBuiltinThunk(imm));
 
+    // We clobber WasmTlsReg below in the loadWasmTlsRegFromFrame(), but Ion
+    // assumes it is non-volatile, so preserve it manually.
+    Push(WasmTlsReg);
+
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust, /* callFromWasm = */ true);
 
@@ -2784,6 +2788,8 @@ MacroAssembler::callWithABI(wasm::BytecodeOffset callOffset, wasm::SymbolicAddre
 
     call(wasm::CallSiteDesc(callOffset.bytecodeOffset, wasm::CallSite::Symbolic), imm);
     callWithABIPost(stackAdjust, result, /* callFromWasm = */ true);
+
+    Pop(WasmTlsReg);
 }
 
 // ===============================================================
