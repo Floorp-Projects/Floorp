@@ -742,18 +742,6 @@ fn read_edts_bogus() {
 }
 
 #[test]
-fn invalid_pascal_string() {
-    // String claims to be 32 bytes long (we provide 33 bytes to account for
-    // the 1 byte length prefix).
-    let pstr = "\x20xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-    let mut stream = Cursor::new(pstr);
-    // Reader wants to limit the total read length to 32 bytes, so any
-    // returned string must be no longer than 31 bytes.
-    let s = super::read_fixed_length_pascal_string(&mut stream, 32).unwrap();
-    assert_eq!(s.len(), 31);
-}
-
-#[test]
 fn skip_padding_in_boxes() {
     // Padding data could be added in the end of these boxes. Parser needs to skip
     // them instead of returning error.
@@ -883,19 +871,28 @@ fn read_esds() {
 }
 
 #[test]
-fn read_null_terminated_string() {
-    let tests = vec![
-        vec![0u8],                         // Short null-terminated string.
-        vec![65u8, 0u8],                   // Normal null-terminated string.
-        vec![],                            // Empty string (no data).
-        vec![4u8, 65u8, 66u8, 67u8, 68u8], // Length-prefixed string, not null-terminated.
-        vec![0u8, 0u8],                    // Doubly null-terminated string.
-    ];
-    for v in tests.iter() {
-        let mut c = Cursor::new(v);
-        super::read_null_terminated_string(&mut c, v.len()).expect("string read failed");
-        assert_eq!(c.position(), v.len() as u64);
-    }
+fn read_esds_one_byte_extension_descriptor() {
+    let esds =
+        vec![
+            0x00, 0x03, 0x80, 0x1b, 0x00, 0x00, 0x00, 0x04,
+            0x80, 0x12, 0x40, 0x15, 0x00, 0x06, 0x00, 0x00,
+            0x01, 0xfe, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x05,
+            0x80, 0x02, 0x11, 0x90, 0x06, 0x01, 0x02,
+        ];
+
+    let mut stream = make_box(BoxSize::Auto, b"esds", |s| {
+        s.B32(0) // reserved
+         .append_bytes(esds.as_slice())
+    });
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+
+    let es = super::read_esds(&mut stream).unwrap();
+
+    assert_eq!(es.audio_codec, super::CodecType::AAC);
+    assert_eq!(es.audio_object_type, Some(2));
+    assert_eq!(es.audio_sample_rate, Some(48000));
+    assert_eq!(es.audio_channel_count, Some(2));
 }
 
 #[test]
