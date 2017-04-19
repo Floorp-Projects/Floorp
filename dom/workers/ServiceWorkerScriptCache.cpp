@@ -252,7 +252,45 @@ public:
 
   nsresult
   Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL,
-             const nsAString& aCacheName, nsILoadGroup* aLoadGroup);
+             const nsAString& aCacheName, nsILoadGroup* aLoadGroup)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(aPrincipal);
+
+    mURL = aURL;
+
+    // Always create a CacheStorage since we want to write the network entry to
+    // the cache even if there isn't an existing one.
+    AutoJSAPI jsapi;
+    jsapi.Init();
+    ErrorResult result;
+    mSandbox.init(jsapi.cx());
+    mCacheStorage = CreateCacheStorage(jsapi.cx(), aPrincipal, result, &mSandbox);
+    if (NS_WARN_IF(result.Failed())) {
+      MOZ_ASSERT(!result.IsErrorWithMessage());
+      Cleanup();
+      return result.StealNSResult();
+    }
+
+    mCN = new CompareNetwork(this);
+    nsresult rv = mCN->Initialize(aPrincipal, aURL, aLoadGroup);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      Cleanup();
+      return rv;
+    }
+
+    if (!aCacheName.IsEmpty()) {
+      mCC = new CompareCache(this);
+      rv = mCC->Initialize(aPrincipal, aURL, aCacheName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        mCN->Abort();
+        Cleanup();
+        return rv;
+      }
+    }
+
+    return NS_OK;
+  }
 
   const nsString&
   URL() const
@@ -337,11 +375,57 @@ public:
     ComparisonFinished(NS_OK, mCC->Buffer().Equals(mCN->Buffer()));
   }
 
+  // This class manages 2 promises: 1 is to retrieve Cache object, and 2 is to
+  // Put the value in the cache. For this reason we have mState to know what
+  // callback we are handling.
   void
-  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(mCallback);
+
+    if (mState == WaitingForOpen) {
+      if (NS_WARN_IF(!aValue.isObject())) {
+        Fail(NS_ERROR_FAILURE);
+        return;
+      }
+
+      JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
+      if (NS_WARN_IF(!obj)) {
+        Fail(NS_ERROR_FAILURE);
+        return;
+      }
+
+      Cache* cache = nullptr;
+      nsresult rv = UNWRAP_OBJECT(Cache, obj, cache);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        Fail(rv);
+        return;
+      }
+
+      // Just to be safe.
+      RefPtr<Cache> kungfuDeathGrip = cache;
+      WriteToCache(cache);
+      return;
+    }
+
+    MOZ_ASSERT(mState == WaitingForPut);
+    mCallback->ComparisonResult(NS_OK, false /* aIsEqual */,
+                                mNewCacheName, mMaxScope);
+    Cleanup();
+  }
 
   void
-  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    AssertIsOnMainThread();
+    if (mState == WaitingForOpen) {
+      NS_WARNING("Could not open cache.");
+    } else {
+      NS_WARNING("Could not write to cache.");
+    }
+    Fail(NS_ERROR_FAILURE);
+  }
 
   CacheStorage*
   CacheStorage_()
@@ -397,10 +481,23 @@ private:
   }
 
   void
-  Fail(nsresult aStatus);
+  Fail(nsresult aStatus)
+  {
+    AssertIsOnMainThread();
+    mCallback->ComparisonResult(aStatus, false /* aIsEqual */,
+                                EmptyString(), EmptyCString());
+    Cleanup();
+  }
 
   void
-  Cleanup();
+  Cleanup()
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(mCallback);
+    mCallback = nullptr;
+    mCN = nullptr;
+    mCC = nullptr;
+  }
 
   void
   ComparisonFinished(nsresult aStatus, bool aIsEqual)
@@ -912,121 +1009,6 @@ CompareCache::ManageValueResult(JSContext* aCx, JS::Handle<JS::Value> aValue)
       return;
     }
   }
-}
-
-nsresult
-CompareManager::Initialize(nsIPrincipal* aPrincipal,
-                           const nsAString& aURL,
-                           const nsAString& aCacheName,
-                           nsILoadGroup* aLoadGroup)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(aPrincipal);
-
-  mURL = aURL;
-
-  // Always create a CacheStorage since we want to write the network entry to
-  // the cache even if there isn't an existing one.
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  ErrorResult result;
-  mSandbox.init(jsapi.cx());
-  mCacheStorage = CreateCacheStorage(jsapi.cx(), aPrincipal, result, &mSandbox);
-  if (NS_WARN_IF(result.Failed())) {
-    MOZ_ASSERT(!result.IsErrorWithMessage());
-    Cleanup();
-    return result.StealNSResult();
-  }
-
-  mCN = new CompareNetwork(this);
-  nsresult rv = mCN->Initialize(aPrincipal, aURL, aLoadGroup);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    Cleanup();
-    return rv;
-  }
-
-  if (!aCacheName.IsEmpty()) {
-    mCC = new CompareCache(this);
-    rv = mCC->Initialize(aPrincipal, aURL, aCacheName);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      mCN->Abort();
-      Cleanup();
-      return rv;
-    }
-  }
-
-  return NS_OK;
-}
-
-// This class manages 2 promises: 1 is to retrieve Cache object, and 2 is to
-// Put the value in the cache. For this reason we have mState to know what
-// callback we are handling.
-void
-CompareManager::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(mCallback);
-
-  if (mState == WaitingForOpen) {
-    if (NS_WARN_IF(!aValue.isObject())) {
-      Fail(NS_ERROR_FAILURE);
-      return;
-    }
-
-    JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
-    if (NS_WARN_IF(!obj)) {
-      Fail(NS_ERROR_FAILURE);
-      return;
-    }
-
-    Cache* cache = nullptr;
-    nsresult rv = UNWRAP_OBJECT(Cache, obj, cache);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      Fail(rv);
-      return;
-    }
-
-    // Just to be safe.
-    RefPtr<Cache> kungfuDeathGrip = cache;
-    WriteToCache(cache);
-    return;
-  }
-
-  MOZ_ASSERT(mState == WaitingForPut);
-  mCallback->ComparisonResult(NS_OK, false /* aIsEqual */,
-                              mNewCacheName, mMaxScope);
-  Cleanup();
-}
-
-void
-CompareManager::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
-{
-  AssertIsOnMainThread();
-  if (mState == WaitingForOpen) {
-    NS_WARNING("Could not open cache.");
-  } else {
-    NS_WARNING("Could not write to cache.");
-  }
-  Fail(NS_ERROR_FAILURE);
-}
-
-void
-CompareManager::Fail(nsresult aStatus)
-{
-  AssertIsOnMainThread();
-  mCallback->ComparisonResult(aStatus, false /* aIsEqual */,
-                              EmptyString(), EmptyCString());
-  Cleanup();
-}
-
-void
-CompareManager::Cleanup()
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(mCallback);
-  mCallback = nullptr;
-  mCN = nullptr;
-  mCC = nullptr;
 }
 
 } // namespace
