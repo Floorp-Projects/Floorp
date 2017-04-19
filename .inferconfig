@@ -1,0 +1,7 @@
+{
+    "infer-blacklist-path-regex": [
+        // This is full of issues, and is a dependency we need to discard
+        // sooner rather than later anyway:
+        "mobile/android/thirdparty/ch/boye/httpclientandroidlib"
+    ]
+}
