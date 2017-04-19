@@ -649,7 +649,16 @@ public class Distribution {
             return null;
         }
 
-        return new JarInputStream(new BufferedInputStream(connection.getInputStream()), true);
+        final BufferedInputStream bufferedInputStream = new BufferedInputStream(connection.getInputStream());
+        try {
+            return new JarInputStream(bufferedInputStream, true);
+        } catch (IOException e) {
+            // Thrown e.g. if JarInputStream can't parse the input as a valid Zip.
+            // In that case we need to ensure the bufferedInputStream gets closed since it won't
+            // be used anywhere (while still passing the Exception up the stack).
+            bufferedInputStream.close();
+            throw e;
+        }
     }
 
     private static void recordFetchTelemetry(final Exception exception) {
