@@ -199,6 +199,9 @@ Telemetry.prototype = {
     if (charts.timerHistogram) {
       this.startTimer(charts.timerHistogram);
     }
+    if (charts.scalar) {
+      this.logScalar(charts.scalar, 1);
+    }
   },
 
   /**
@@ -260,14 +263,44 @@ Telemetry.prototype = {
    *         Value to store.
    */
   log: function (histogramId, value) {
-    if (histogramId) {
-      try {
-        let histogram = Services.telemetry.getHistogramById(histogramId);
-        histogram.add(value);
-      } catch (e) {
-        dump("Warning: An attempt was made to write to the " + histogramId +
-             " histogram, which is not defined in Histograms.json\n");
+    if (!histogramId) {
+      return;
+    }
+
+    try {
+      let histogram = Services.telemetry.getHistogramById(histogramId);
+      histogram.add(value);
+    } catch (e) {
+      dump(`Warning: An attempt was made to write to the ${histogramId} ` +
+           `histogram, which is not defined in Histograms.json\n`);
+    }
+  },
+
+  /**
+   * Log a value to a scalar.
+   *
+   * @param  {String} scalarId
+   *         Scalar in which the data is to be stored.
+   * @param  value
+   *         Value to store.
+   */
+  logScalar: function (scalarId, value) {
+    if (!scalarId) {
+      return;
+    }
+
+    try {
+      if (isNaN(value)) {
+        dump(`Warning: An attempt was made to write a non-numeric value ` +
+             `${value} to the ${scalarId} scalar. Only numeric values are ` +
+             `allowed.`);
+
+        return;
       }
+      Services.telemetry.scalarSet(scalarId, value);
+    } catch (e) {
+      dump(`Warning: An attempt was made to write to the ${scalarId} ` +
+           `scalar, which is not defined in Scalars.yaml\n`);
     }
   },
 
@@ -292,8 +325,8 @@ Telemetry.prototype = {
           histogram.add(key, value);
         }
       } catch (e) {
-        dump("Warning: An attempt was made to write to the " + histogramId +
-             " histogram, which is not defined in Histograms.json\n");
+        dump(`Warning: An attempt was made to write to the ${histogramId} ` +
+             `histogram, which is not defined in Histograms.json\n`);
       }
     }
   },
