@@ -4,6 +4,7 @@
 
 const TEST_URI = "data:text/html;charset=utf-8," +
   "<p>browser_telemetry_button_eyedropper.js</p><div>test</div>";
+const EYEDROPPER_OPENED = "devtools.toolbar.eyedropper.opened";
 
 add_task(function* () {
   yield addTab(TEST_URI);
@@ -27,26 +28,27 @@ function* testButton(toolbox, Telemetry) {
   // only concerned about testing the telemetry probe.
   yield toolbox.getPanel("inspector").showEyeDropper();
 
-  checkResults("_EYEDROPPER_", Telemetry);
+  checkTelemetryResults(Telemetry);
 }
 
-function checkResults(histIdFocus, Telemetry) {
-  let result = Telemetry.prototype.telemetryInfo;
+function checkTelemetryResults(Telemetry) {
+  let data = Telemetry.prototype.telemetryInfo;
+  let results = new Map();
 
-  for (let [histId, value] of Object.entries(result)) {
-    if (histId.startsWith("DEVTOOLS_INSPECTOR_") ||
-        !histId.includes(histIdFocus)) {
-      // Inspector stats are tested in
-      // browser_telemetry_toolboxtabs_{toolname}.js so we skip them here
-      // because we only open the inspector once for this test.
-      continue;
-    }
+  for (let key in data) {
+    if (key.toLowerCase() === key) {
+      let pings = data[key].length;
 
-    if (histId.endsWith("OPENED_COUNT")) {
-      is(value.length, 1, histId + " has one entry");
-
-      let okay = value.every(element => element === true);
-      ok(okay, "All " + histId + " entries are === true");
+      results.set(key, pings);
     }
   }
+
+  is(results.size, 1, "The correct number of scalars were logged");
+
+  let pings = checkPings(EYEDROPPER_OPENED, results);
+  is(pings, 1, `${EYEDROPPER_OPENED} has just 1 ping`);
+}
+
+function checkPings(scalarId, results) {
+  return results.get(scalarId);
 }
