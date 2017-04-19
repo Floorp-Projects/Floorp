@@ -28,6 +28,11 @@ job-template:
       by-build-platform:
          default: browser/locales/all-locales
          android-api-15-l10n: mobile/locales/l10n-changesets.json
+   ignore-locales:
+      by-build-platform:
+         # OSX has a special locale for japanese
+         macosx64.*: [ja]
+         default: [ja-JP-mac]
    run-time:
       by-build-platform:
          default: 36000
