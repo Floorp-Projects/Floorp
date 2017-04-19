@@ -37,10 +37,6 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
         void onCommit();
     }
 
-    public interface OnDismissListener {
-        void onDismiss();
-    }
-
     public interface OnFilterListener {
         void onFilter(String searchText, InlineAutocompleteEditText view);
     }
@@ -59,7 +55,6 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
     private final Context mContext;
 
     private OnCommitListener mCommitListener;
-    private OnDismissListener mDismissListener;
     private OnFilterListener mFilterListener;
     private OnSearchStateChangeListener mSearchStateChangeListener;
     private OnTextChangeListener mTextChangeListener;
@@ -82,10 +77,6 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
 
     public void setOnCommitListener(OnCommitListener listener) {
         mCommitListener = listener;
-    }
-
-    public void setOnDismissListener(OnDismissListener listener) {
-        mDismissListener = listener;
     }
 
     public void setOnFilterListener(OnFilterListener listener) {

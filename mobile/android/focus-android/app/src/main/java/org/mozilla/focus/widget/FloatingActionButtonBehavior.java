@@ -24,7 +24,6 @@ public class FloatingActionButtonBehavior extends CoordinatorLayout.Behavior<Flo
 
     private AppBarLayout layout;
     private FloatingActionButton button;
-    private boolean animating;
     private boolean visible;
 
     public FloatingActionButtonBehavior(Context context, AttributeSet attrs) {
@@ -75,8 +74,6 @@ public class FloatingActionButtonBehavior extends CoordinatorLayout.Behavior<Flo
     }
 
     private void animate(final View child, final boolean hide) {
-        animating = true;
-
         child.animate()
                 .scaleX(hide ? 0 : 1)
                 .scaleY(hide ? 0 : 1)
@@ -93,7 +90,6 @@ public class FloatingActionButtonBehavior extends CoordinatorLayout.Behavior<Flo
 
                     @Override
                     public void onAnimationEnd(Animator animation) {
-                        animating = false;
                         visible = !hide;
 
                         // Hide the FAB: even when it has size=0x0, it still intercept click events,
