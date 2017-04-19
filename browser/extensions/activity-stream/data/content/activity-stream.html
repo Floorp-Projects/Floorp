@@ -7,6 +7,25 @@
   <body>
     <div id="root">
       <h1>New Tab</h1>
+      <ul id="top-sites"></ul>
     </div>
+    <script>
+      const topSitesEl = document.getElementById("top-sites");
+      window.addMessageListener("ActivityStream:MainToContent", msg => {
+        if (msg.data.type === "NEW_TAB_INITIAL_STATE") {
+          const fragment = document.createDocumentFragment()
+          for (const row of msg.data.data.TopSites.rows) {
+            const li = document.createElement("li");
+            const a = document.createElement("a");
+            a.href = row.url;
+            a.textContent = row.title;
+            li.appendChild(a);
+            fragment.appendChild(li);
+          }
+          topSitesEl.appendChild(fragment);
+        }
+      });
+
+    </script>
   </body>
 </html>

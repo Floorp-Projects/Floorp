@@ -7,6 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" href="chrome://devtools/skin/animationinspector.css" type="text/css"/>
+    <link rel="stylesheet" href="resource://devtools/client/shared/components/splitter/split-box.css"/>
     <script type="application/javascript" src="chrome://devtools/content/shared/theme-switching.js"/>
   </head>
   <body class="theme-sidebar devtools-monospace" role="application" empty="true">
@@ -26,6 +27,16 @@
       <p id="error-hint"></p>
       <button id="element-picker" data-standalone="true" class="devtools-button"></button>
     </div>
+    <script type="text/javascript">
+      /* eslint-disable */
+      var isInChrome = window.location.href.includes("chrome:");
+      if (isInChrome) {
+        var exports = {};
+        var Cu = Components.utils;
+        var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+        var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
+      }
+    </script>
     <script type="application/javascript" src="animation-controller.js"></script>
     <script type="application/javascript" src="animation-panel.js"></script>
   </body>

@@ -23,7 +23,7 @@ interface IGeckoBackChannel;
 // channels are present. Note that we do not do this for all UUIDs in this IDL,
 // just the ones that are written to the registry (coclass and interfaces that
 // have the [object] annotation)
-#if !defined(MOZ_OFFICIAL_BRANDING)
+#if defined(USE_LOCAL_UUID)
 
 # if defined(DEBUG)
 
@@ -45,15 +45,23 @@ interface IGeckoBackChannel;
 
 #elif defined(NIGHTLY_BUILD)
 
-// Official Nightly
+// Nightly Builds
 # define IHANDLERCONTROL_IID c57343fc-e011-40c2-b748-da82eabf0f1f
 # define ASYNCIHANDLERCONTROL_IID 648c92a1-ea35-46da-a806-6b55c6247373
 # define HANDLER_CLSID 4629216b-8753-41bf-9527-5bff51401671
 # define IGECKOBACKCHANNEL_IID e61e038d-40dd-464a-9aba-66b206b6911b
 
+#elif defined(USE_BETA_UUID)
+
+// Beta Builds
+# define IHANDLERCONTROL_IID 119149fa-d212-4f22-9517-082eecc1a084
+# define ASYNCIHANDLERCONTROL_IID 4e253d9b-59cf-4b32-a973-38bc85495d61
+# define HANDLER_CLSID 21e9f98d-a6c9-4cb5-b288-ae2fd2a96c58
+# define IGECKOBACKCHANNEL_IID 77b75c7d-d1c2-4469-864d-31aaebb67cc6
+
 #elif defined(RELEASE_OR_BETA)
 
-// Official Beta and Official Release
+// Release Builds
 # define IHANDLERCONTROL_IID ce30f77e-8847-44f0-a648-a9656bd89c0d
 # define ASYNCIHANDLERCONTROL_IID dca8d857-1a63-4045-8f36-8809eb093d04
 # define HANDLER_CLSID 1baa303d-b4b9-45e5-9ccb-e3fca3e274b6
@@ -61,7 +69,7 @@ interface IGeckoBackChannel;
 
 #else
 
-// Official Aurora
+// Catch-all
 # define IHANDLERCONTROL_IID 3316ce35-f892-4832-97c5-06c52c03cdba
 # define ASYNCIHANDLERCONTROL_IID 15b48b76-ad38-4ad3-bd1a-d3c48a5a9947
 # define HANDLER_CLSID 4a195748-dca2-45fb-9295-0a139e76a9e7

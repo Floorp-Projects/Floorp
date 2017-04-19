@@ -355,6 +355,19 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
         "resource://devtools/server/service-worker-child.js", true);
       _serviceWorkerProcessScriptLoaded = true;
     }
+
+    // XXX: Send the permissions down to the content process before starting
+    // the service worker within the content process. As we don't know what
+    // content process we're starting the service worker in (as we're using a
+    // broadcast channel to talk to it), we just broadcast the permissions to
+    // everyone as well.
+    //
+    // This call should be replaced with a proper implementation when
+    // ServiceWorker debugging is improved to support multiple content processes
+    // correctly.
+    Services.perms.broadcastPermissionsForPrincipalToAllContentProcesses(
+      this._registration.principal);
+
     Services.ppmm.broadcastAsyncMessage("serviceWorkerRegistration:start", {
       scope: this._registration.scope
     });

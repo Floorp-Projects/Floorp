@@ -1,0 +1,39 @@
+diff --git a/tools/bro.cc b/tools/bro.cc
+index b254f0ffdb08..30d9858a95b3 100644
+--- a/tools/bro.cc
++++ b/tools/bro.cc
+@@ -282,29 +282,34 @@ int main(int argc, char** argv) {
+     FILE* fin = OpenInputFile(input_path);
+     FILE* fout = OpenOutputFile(output_path, force);
+     if (decompress) {
+       Decompresss(fin, fout);
+     } else {
+       brotli::BrotliParams params;
+       params.lgwin = lgwin;
+       params.quality = quality;
++/* clang-cl doesn't like exceptions */
++#if !defined(_MSC_VER) || !defined(__clang__)
+       try {
++#endif
+         brotli::BrotliFileIn in(fin, 1 << 16);
+         brotli::BrotliFileOut out(fout);
+         if (!BrotliCompress(params, &in, &out)) {
+           fprintf(stderr, "compression failed\n");
+           unlink(output_path);
+           exit(1);
+         }
++#if !defined(_MSC_VER) || !defined(__clang__)
+       } catch (std::bad_alloc&) {
+         fprintf(stderr, "not enough memory\n");
+         unlink(output_path);
+         exit(1);
+       }
++#endif
+     }
+     if (fclose(fin) != 0) {
+       perror("fclose");
+       exit(1);
+     }
+     if (fclose(fout) != 0) {
+       perror("fclose");
+       exit(1);

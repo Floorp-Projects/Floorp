@@ -8,8 +8,13 @@
 
 const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
-const {createNode, TimeScale} = require("devtools/client/animationinspector/utils");
+const {createNode, getCssPropertyName} =
+  require("devtools/client/animationinspector/utils");
 const {Keyframes} = require("devtools/client/animationinspector/components/keyframes");
+
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const L10N =
+  new LocalizationHelper("devtools/client/locales/animationinspector.properties");
 
 /**
  * UI component responsible for displaying detailed information for a given
@@ -22,8 +27,6 @@ const {Keyframes} = require("devtools/client/animationinspector/components/keyfr
 function AnimationDetails(serverTraits) {
   EventEmitter.decorate(this);
 
-  this.onFrameSelected = this.onFrameSelected.bind(this);
-
   this.keyframeComponents = [];
   this.serverTraits = serverTraits;
 }
@@ -33,7 +36,8 @@ exports.AnimationDetails = AnimationDetails;
 AnimationDetails.prototype = {
   // These are part of frame objects but are not animated properties. This
   // array is used to skip them.
-  NON_PROPERTIES: ["easing", "composite", "computedOffset", "offset"],
+  NON_PROPERTIES: ["easing", "composite", "computedOffset",
+                   "offset", "simulateComputeValuesFailure"],
 
   init: function (containerEl) {
     this.containerEl = containerEl;
@@ -43,11 +47,11 @@ AnimationDetails.prototype = {
     this.unrender();
     this.containerEl = null;
     this.serverTraits = null;
+    this.progressIndicatorEl = null;
   },
 
   unrender: function () {
     for (let component of this.keyframeComponents) {
-      component.off("frame-selected", this.onFrameSelected);
       component.destroy();
     }
     this.keyframeComponents = [];
@@ -108,8 +112,9 @@ AnimationDetails.prototype = {
           tracks[name] = [];
         }
 
-        for (let {value, offset} of values) {
-          tracks[name].push({value, offset});
+        for (let {value, offset, easing, distance} of values) {
+          distance = distance ? distance : 0;
+          tracks[name].push({value, offset, easing, distance});
         }
       }
     } else {
@@ -120,19 +125,44 @@ AnimationDetails.prototype = {
             continue;
           }
 
-          if (!tracks[name]) {
-            tracks[name] = [];
+          // We have to change to CSS property name
+          // since GetKeyframes returns JS property name.
+          const propertyCSSName = getCssPropertyName(name);
+          if (!tracks[propertyCSSName]) {
+            tracks[propertyCSSName] = [];
           }
 
-          tracks[name].push({
+          tracks[propertyCSSName].push({
             value: frame[name],
-            offset: frame.computedOffset
+            offset: frame.computedOffset,
+            easing: frame.easing,
+            distance: 0
           });
         }
       }
     }
 
     return tracks;
+  }),
+
+  /**
+   * Get animation types of given CSS property names.
+   * @param {Array} CSS property names.
+   *                e.g. ["background-color", "opacity", ...]
+   * @return {Object} Animation type mapped with CSS property name.
+   *                  e.g. { "background-color": "color", }
+   *                         "opacity": "float", ... }
+   */
+  getAnimationTypes: Task.async(function* (propertyNames) {
+    if (this.serverTraits.hasGetAnimationTypes) {
+      return yield this.animation.getAnimationTypes(propertyNames);
+    }
+    // Set animation type 'none' since does not support getAnimationTypes.
+    const animationTypes = {};
+    propertyNames.forEach(propertyName => {
+      animationTypes[propertyName] = "none";
+    });
+    return Promise.resolve(animationTypes);
   }),
 
   render: Task.async(function* (animation) {
@@ -152,16 +182,95 @@ AnimationDetails.prototype = {
     // Build an element for each animated property track.
     this.tracks = yield this.getTracks(animation, this.serverTraits);
 
-    // Useful for tests to know when the keyframes have been retrieved.
-    this.emit("keyframes-retrieved");
+    // Get animation type for each CSS properties.
+    const animationTypes = yield this.getAnimationTypes(Object.keys(this.tracks));
 
+    // Render progress indicator.
+    this.renderProgressIndicator();
+    // Render animated properties header.
+    this.renderAnimatedPropertiesHeader();
+    // Render animated properties body.
+    this.renderAnimatedPropertiesBody(animationTypes);
+
+    // Create dummy animation to indicate the animation progress.
+    const timing = Object.assign({}, animation.state, {
+      iterations: animation.state.iterationCount
+                  ? animation.state.iterationCount : Infinity
+    });
+    this.dummyAnimation =
+      new this.win.Animation(new this.win.KeyframeEffect(null, null, timing), null);
+
+    // Useful for tests to know when rendering of all animation detail UIs
+    // have been completed.
+    this.emit("animation-detail-rendering-completed");
+  }),
+
+  renderAnimatedPropertiesHeader: function () {
+    // Add animated property header.
+    const headerEl = createNode({
+      parent: this.containerEl,
+      attributes: { "class": "animated-properties-header" }
+    });
+
+    // Add progress tick container.
+    const progressTickContainerEl = createNode({
+      parent: this.containerEl,
+      attributes: { "class": "progress-tick-container track-container" }
+    });
+
+    // Add label container.
+    const headerLabelContainerEl = createNode({
+      parent: headerEl,
+      attributes: { "class": "track-container" }
+    });
+
+    // Add labels
+    for (let label of [L10N.getFormatStr("detail.propertiesHeader.percentage", 0),
+                       L10N.getFormatStr("detail.propertiesHeader.percentage", 50),
+                       L10N.getFormatStr("detail.propertiesHeader.percentage", 100)]) {
+      createNode({
+        parent: progressTickContainerEl,
+        nodeType: "span",
+        attributes: { "class": "progress-tick" }
+      });
+      createNode({
+        parent: headerLabelContainerEl,
+        nodeType: "label",
+        attributes: { "class": "header-item" },
+        textContent: label
+      });
+    }
+  },
+
+  renderAnimatedPropertiesBody: function (animationTypes) {
+    // Add animated property body.
+    const bodyEl = createNode({
+      parent: this.containerEl,
+      attributes: { "class": "animated-properties-body" }
+    });
+
+    // Move unchanged value animation to bottom in the list.
+    const propertyNames = [];
+    const unchangedPropertyNames = [];
     for (let propertyName in this.tracks) {
+      if (!isUnchangedProperty(this.tracks[propertyName])) {
+        propertyNames.push(propertyName);
+      } else {
+        unchangedPropertyNames.push(propertyName);
+      }
+    }
+    Array.prototype.push.apply(propertyNames, unchangedPropertyNames);
+
+    for (let propertyName of propertyNames) {
       let line = createNode({
-        parent: this.containerEl,
+        parent: bodyEl,
         attributes: {"class": "property"}
       });
+      if (unchangedPropertyNames.includes(propertyName)) {
+        line.classList.add("unchanged");
+      }
       let {warning, className} =
-        this.getPerfDataForProperty(animation, propertyName);
+        this.getPerfDataForProperty(this.animation, propertyName);
       createNode({
         // text-overflow doesn't work in flex items, so we need a second level
         // of container to actually have an ellipsis on the name.
@@ -186,37 +295,63 @@ AnimationDetails.prototype = {
         attributes: {"class": "frames"}
       });
 
-      // Scale the list of keyframes according to the current time scale.
-      let {x, w} = TimeScale.getAnimationDimensions(animation);
-      framesEl.style.left = `${x}%`;
-      framesEl.style.width = `${w}%`;
-
       let keyframesComponent = new Keyframes();
       keyframesComponent.init(framesEl);
       keyframesComponent.render({
         keyframes: this.tracks[propertyName],
         propertyName: propertyName,
-        animation: animation
+        animation: this.animation,
+        animationType: animationTypes[propertyName]
       });
-      keyframesComponent.on("frame-selected", this.onFrameSelected);
-
       this.keyframeComponents.push(keyframesComponent);
     }
-  }),
+  },
 
-  onFrameSelected: function (e, args) {
-    // Relay the event up, it's needed in parents too.
-    this.emit(e, args);
+  renderProgressIndicator: function () {
+    // The wrapper represents the area which the indicator is displayable.
+    const progressIndicatorWrapperEl = createNode({
+      parent: this.containerEl,
+      attributes: {
+        "class": "track-container progress-indicator-wrapper"
+      }
+    });
+    this.progressIndicatorEl = createNode({
+      parent: progressIndicatorWrapperEl,
+      attributes: {
+        "class": "progress-indicator"
+      }
+    });
+    createNode({
+      parent: this.progressIndicatorEl,
+      attributes: {
+        "class": "progress-indicator-shape"
+      }
+    });
+  },
+
+  indicateProgress: function (time) {
+    if (!this.progressIndicatorEl) {
+      // Not displayed yet.
+      return;
+    }
+    const startTime = this.animation.state.previousStartTime || 0;
+    this.dummyAnimation.currentTime =
+      (time - startTime) * this.animation.state.playbackRate;
+    this.progressIndicatorEl.style.left =
+      `${ this.dummyAnimation.effect.getComputedTiming().progress * 100 }%`;
+  },
+
+  get win() {
+    return this.containerEl.ownerDocument.defaultView;
   }
 };
 
-/**
- * Turn propertyName into property-name.
- * @param {String} jsPropertyName A camelcased CSS property name. Typically
- * something that comes out of computed styles. E.g. borderBottomColor
- * @return {String} The corresponding CSS property name: border-bottom-color
- */
-function getCssPropertyName(jsPropertyName) {
-  return jsPropertyName.replace(/[A-Z]/g, "-$&").toLowerCase();
+function isUnchangedProperty(values) {
+  const firstValue = values[0].value;
+  for (let i = 1; i < values.length; i++) {
+    if (values[i].value !== firstValue) {
+      return false;
+    }
+  }
+  return true;
 }
-exports.getCssPropertyName = getCssPropertyName;

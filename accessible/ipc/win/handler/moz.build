@@ -50,6 +50,15 @@ RCINCLUDE = 'AccessibleHandler.rc'
 DEFINES['ENTRY_PREFIX'] = 'Proxy'
 DEFINES['REGISTER_PROXY_DLL'] = True
 
+# We want to generate distinct UUIDs on a per-channel basis, so we need
+# finer granularity than the standard preprocessor definitions offer.
+# These defines allow us to separate local builds from automated builds,
+# as well as separate beta from release.
+if CONFIG['MOZ_UPDATE_CHANNEL'] == 'default':
+  DEFINES['USE_LOCAL_UUID'] = True
+elif CONFIG['MOZ_UPDATE_CHANNEL'] == 'beta':
+  DEFINES['USE_BETA_UUID'] = True
+
 # This DLL may be loaded into other processes, so we need static libs for
 # Windows 7 and Windows 8.
 USE_STATIC_LIBS = True

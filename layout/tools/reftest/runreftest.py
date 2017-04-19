@@ -247,7 +247,7 @@ class RefTest(object):
         return os.path.normpath(os.path.join(self.oldcwd, os.path.expanduser(path)))
 
     def createReftestProfile(self, options, manifests, server='localhost', port=0,
-                             profile_to_clone=None):
+                             profile_to_clone=None, startAfter=None):
         """Sets up a profile for reftest.
 
         :param options: Object containing command line options
@@ -285,6 +285,9 @@ class RefTest(object):
         prefs['reftest.focusFilterMode'] = options.focusFilterMode
         prefs['reftest.logLevel'] = options.log_tbpl_level or 'info'
         prefs['reftest.manifests'] = json.dumps(manifests)
+
+        if startAfter is not None:
+            prefs['reftest.startAfter'] = startAfter
 
         if options.e10s:
             prefs['browser.tabs.remote.autostart'] = True
@@ -349,7 +352,8 @@ class RefTest(object):
         else:
             profile = mozprofile.Profile(**kwargs)
 
-        options.extraProfileFiles.append(os.path.join(here, 'chrome'))
+        if os.path.join(here, 'chrome') not in options.extraProfileFiles:
+            options.extraProfileFiles.append(os.path.join(here, 'chrome'))
 
         self.copyExtraFilesToProfile(options, profile)
         return profile
@@ -658,7 +662,7 @@ class RefTest(object):
         runner.cleanup()
         if not status and crashed:
             status = 1
-        return status
+        return status, self.lastTestSeen
 
     def runSerialTests(self, manifests, options, cmdargs=None):
         debuggerInfo = None
@@ -667,37 +671,56 @@ class RefTest(object):
                                                       options.debuggerInteractive)
 
         profileDir = None
-        try:
-            if cmdargs is None:
-                cmdargs = []
+        startAfter = None  # When the previous run crashed, we skip the tests we ran before
+        prevStartAfter = None
+        status = 1  # Just to start the loop
+        while status != 0:
+            try:
+                if cmdargs is None:
+                    cmdargs = []
 
-            if self.use_marionette:
-                cmdargs.append('-marionette')
+                if self.use_marionette:
+                    cmdargs.append('-marionette')
 
-            profile = self.createReftestProfile(options, manifests)
-            profileDir = profile.profile  # name makes more sense
+                profile = self.createReftestProfile(options,
+                                                    manifests,
+                                                    startAfter=startAfter)
+                profileDir = profile.profile  # name makes more sense
 
-            # browser environment
-            browserEnv = self.buildBrowserEnv(options, profileDir)
+                # browser environment
+                browserEnv = self.buildBrowserEnv(options, profileDir)
 
-            self.log.info("Running with e10s: {}".format(options.e10s))
-            status = self.runApp(profile,
-                                 binary=options.app,
-                                 cmdargs=cmdargs,
-                                 # give the JS harness 30 seconds to deal with
-                                 # its own timeouts
-                                 env=browserEnv,
-                                 timeout=options.timeout + 30.0,
-                                 symbolsPath=options.symbolsPath,
-                                 options=options,
-                                 debuggerInfo=debuggerInfo)
-            self.log.info("Process mode: {}".format('e10s' if options.e10s else 'non-e10s'))
-            mozleak.process_leak_log(self.leakLogFile,
-                                     leak_thresholds=options.leakThresholds,
-                                     stack_fixer=get_stack_fixer_function(options.utilityPath,
-                                                                          options.symbolsPath))
-        finally:
-            self.cleanup(profileDir)
+                self.log.info("Running with e10s: {}".format(options.e10s))
+                status, startAfter = self.runApp(profile,
+                                                 binary=options.app,
+                                                 cmdargs=cmdargs,
+                                                 # give the JS harness 30 seconds to deal with
+                                                 # its own timeouts
+                                                 env=browserEnv,
+                                                 timeout=options.timeout + 30.0,
+                                                 symbolsPath=options.symbolsPath,
+                                                 options=options,
+                                                 debuggerInfo=debuggerInfo)
+                self.log.info("Process mode: {}".format('e10s' if options.e10s else 'non-e10s'))
+                mozleak.process_leak_log(self.leakLogFile,
+                                         leak_thresholds=options.leakThresholds,
+                                         stack_fixer=get_stack_fixer_function(options.utilityPath,
+                                                                              options.symbolsPath))
+                self.cleanup(profileDir)
+                if startAfter is not None and options.shuffle:
+                    self.log.error("Can not resume from a crash with --shuffle "
+                                   "enabled. Please consider disabling --shuffle")
+                    break
+                if startAfter == prevStartAfter:
+                    # If the test stuck on the same test, or there the crashed
+                    # test appeared more then once, stop
+                    self.log.error("Force stop because we keep running into "
+                                   "test \"{}\"".format(startAfter))
+                    break
+                prevStartAfter = startAfter
+                # TODO: we need to emit an SUITE-END log if it crashed
+            finally:
+                self.cleanup(profileDir)
         return status
 
     def copyExtraFilesToProfile(self, options, profile):

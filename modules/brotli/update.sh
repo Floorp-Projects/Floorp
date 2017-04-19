@@ -6,14 +6,22 @@
 MY_TEMP_DIR=`mktemp -d -t brotli_update.XXXXXX` || exit 1
 
 git clone https://github.com/google/brotli ${MY_TEMP_DIR}/brotli
+git -C ${MY_TEMP_DIR}/brotli checkout v0.4.0
 
-COMMIT=`(cd ${MY_TEMP_DIR}/brotli && git log | head -n 1)`
-perl -p -i -e "s/\[commit [0-9a-f]{40}\]/[${COMMIT}]/" README.mozilla;
+COMMIT=$(git -C ${MY_TEMP_DIR}/brotli rev-parse HEAD)
+perl -p -i -e "s/\[commit [0-9a-f]{40}\]/[commit ${COMMIT}]/" README.mozilla;
 
-rm -rf dec
-mv ${MY_TEMP_DIR}/brotli/dec dec
+DIRS="dec enc tools"
+
+for d in $DIRS; do
+	rm -rf $d
+	mv ${MY_TEMP_DIR}/brotli/$d $d
+done
 rm -rf ${MY_TEMP_DIR}
-hg add dec
+
+patch -p1 < clang-cl-exceptions.patch
+
+hg addremove $DIRS
 
 echo "###"
 echo "### Updated brotli/dec to $COMMIT."

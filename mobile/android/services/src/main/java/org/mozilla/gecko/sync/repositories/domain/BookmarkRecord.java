@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.sync.repositories.domain;
 
+import android.support.annotation.Nullable;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Map;
@@ -57,6 +59,10 @@ public class BookmarkRecord extends Record {
   public String  type;
   public long    androidPosition;
 
+  // This field started to be synced by clients in v55, so there's a chance it will be `null`
+  // if this instance is initialized from a remote payload.
+  @Nullable public Long dateAdded;
+
   public JSONArray children;
   public JSONArray tags;
 
@@ -104,6 +110,7 @@ public class BookmarkRecord extends Record {
     out.androidParentID = this.androidParentID;
     out.type            = this.type;
     out.androidPosition = this.androidPosition;
+    out.dateAdded       = this.dateAdded;
 
     out.children        = this.copyChildren();
     out.tags            = this.copyTags();
@@ -173,6 +180,21 @@ public class BookmarkRecord extends Record {
     this.description = payload.getString("description");
     this.parentID    = payload.getString("parentid");
     this.parentName  = payload.getString("parentName");
+
+    if (!payload.containsKey("dateAdded")) {
+      // Missing data will be filled later on, during record insertion/reconciliation.
+      this.dateAdded = null;
+    } else {
+      // Oddly enough, in local testing both of these exception paths turned out to be necessary.
+      try {
+        this.dateAdded = payload.getLong("dateAdded");
+      } catch (ClassCastException e) {
+        this.dateAdded = Long.parseLong(payload.getString("dateAdded"));
+      } catch (Exception e) {
+        Logger.error(LOG_TAG, "Cannot parse bookmark's 'dateAdded' value. Setting it to null.", e);
+        this.dateAdded = null;
+      }
+    }
 
     if (isFolder()) {
       try {
@@ -255,6 +277,16 @@ public class BookmarkRecord extends Record {
     putPayload(payload, "parentid", this.parentID);
     putPayload(payload, "parentName", this.parentName);
     putPayload(payload, "keyword", this.keyword);
+
+    // This field is marked as nullable, so we're careful when unboxing it. However, we do not expect
+    // it to be null at this point, since it was constructed from our DB cursor which will always have
+    // a `created` timestamp.
+    // However, very old bookmarks that didn't have a corresponding history item might not have a
+    // creation date. `created` is not a NOT NULL field in the bookmarks table. Either way, it pays
+    // to be cautious here.
+    if (this.dateAdded != null) {
+      putPayload(payload, "dateAdded", Long.toString(this.dateAdded));
+    }
 
     if (isFolder()) {
       payload.put("children", this.children);
@@ -451,6 +483,7 @@ public class BookmarkRecord extends Record {
    type:          "bookmark",
    title:         "Your Flight Status",
    parentName:    "mobile",
+   dateAdded:     1490997969974,
    bmkUri:        "http: //www.flightstats.com/go/Mobile/flightStatusByFlightProcess.do;jsessionid=13A6C8DCC9592AF141A43349040262CE.web3: 8009?utm_medium=cpc&utm_campaign=co-op&utm_source=airlineInformationAndStatus&id=212492593",
    tags:          [],
    keyword:       null,
@@ -469,6 +502,7 @@ public class BookmarkRecord extends Record {
    parentName:  "",
    title:       "mobile",
    description: null,
+   dateAdded:   1490997969974,
    children:    ["1ROdlTuIoddD", "3Z_bMIHPSZQ8", "4mSDUuOo2iVB", "8aEdE9IIrJVr",
                  "9DzPTmkkZRDb", "Qwwb99HtVKsD", "s8tM36aGPKbq", "JMTi61hOO3JV",
                  "JQUDk0wSvYip", "LmVH-J1r3HLz", "NhgQlC5ykYGW", "OVanevUUaqO2",

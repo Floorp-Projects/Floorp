@@ -1344,6 +1344,27 @@ talos-tp5o:
         extra-options:
             - --suite=tp5o
 
+talos-perf-reftest:
+    description: "Talos perf-reftest"
+    suite: talos
+    talos-try-name: perfref
+    treeherder-symbol: tc-T(p)
+    run-on-projects:
+        by-test-platform:
+            linux64-stylo/.*: ['try']
+            default: ['try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                default:
+                    - talos/linux_config.py
+                    - remove_executables.py
+        extra-options:
+            - --suite=perf-reftest
+
 awsy:
     description: "Are we slim yet"
     suite: awsy

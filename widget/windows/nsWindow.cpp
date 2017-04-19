@@ -3053,6 +3053,7 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
   }
 
   if (nsWindowType::eWindowType_toplevel == window->mWindowType &&
+      mTransparencyMode != aMode &&
       !nsUXThemeData::CheckForCompositor()) {
       NS_WARNING("Cannot set transparency mode on top-level windows.");
       return;
@@ -4262,6 +4263,13 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
                              int16_t aButton, uint16_t aInputSource,
                              WinPointerInfo* aPointerInfo)
 {
+  enum
+  {
+    eUnset,
+    ePrecise,
+    eTouch
+  };
+  static int sTouchInputActiveState = eUnset;
   bool result = false;
 
   UserActivity();
@@ -4288,6 +4296,15 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
       Telemetry::Accumulate(Telemetry::FX_TOUCH_USED, 1);
     }
 
+    // Fire an observer when the user initially touches a touch screen. Front end
+    // uses this to modify UX.
+    if (sTouchInputActiveState != eTouch) {
+      sTouchInputActiveState = eTouch;
+      nsCOMPtr<nsIObserverService> obsServ =
+        mozilla::services::GetObserverService();
+      obsServ->NotifyObservers(nullptr, "touch-input-detected", nullptr);
+    }
+
     if (mTouchWindow) {
       // If mTouchWindow is true, then we must have APZ enabled and be
       // feeding it raw touch events. In that case we don't need to
@@ -4300,6 +4317,14 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
       } else {
         return result;
       }
+    }
+  } else {
+    // Fire an observer when the user initially uses a mouse or pen.
+    if (sTouchInputActiveState != ePrecise) {
+      sTouchInputActiveState = ePrecise;
+      nsCOMPtr<nsIObserverService> obsServ =
+        mozilla::services::GetObserverService();
+      obsServ->NotifyObservers(nullptr, "precise-input-detected", nullptr);
     }
   }
 

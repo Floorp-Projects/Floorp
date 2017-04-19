@@ -1162,6 +1162,7 @@ pref("editor.use_css",                       false);
 pref("editor.css.default_length_unit",       "px");
 pref("editor.resizing.preserve_ratio",       true);
 pref("editor.positioning.offset",            0);
+pref("editor.use_div_for_default_newlines",  true);
 
 // Scripts & Windows prefs
 pref("dom.disable_beforeunload",            false);
@@ -5171,24 +5172,12 @@ pref("urlclassifier.phishTable", "googpub-phish-shavar,test-phish-simple");
 
 // Tables for application reputation.
 #ifdef NIGHTLY_BUILD
+pref("urlclassifier.downloadAllowTable", "goog-downloadwhite-digest256,goog-downloadwhite-proto");
 pref("urlclassifier.downloadBlockTable", "goog-badbinurl-shavar,goog-badbinurl-proto");
 #else
-pref("urlclassifier.downloadBlockTable", "goog-badbinurl-shavar");
-#endif
-
-#ifdef XP_WIN
- // Only download the whitelist on Windows, since the whitelist is
- // only useful for suppressing remote lookups for signed binaries which we can
- // only verify on Windows (Bug 974579). Other platforms always do remote lookups.
-#ifdef NIGHTLY_BUILD
-pref("urlclassifier.downloadAllowTable", "goog-downloadwhite-digest256,goog-downloadwhite-proto");
-#else
 pref("urlclassifier.downloadAllowTable", "goog-downloadwhite-digest256");
+pref("urlclassifier.downloadBlockTable", "goog-badbinurl-shavar");
 #endif // NIGHTLY_BUILD
-
-#else
-pref("urlclassifier.downloadAllowTable", "");
-#endif // XP_WIN
 
 pref("urlclassifier.disallow_completions", "test-malware-simple,test-phish-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple,test-block-simple,test-flashallow-simple,testexcept-flashallow-simple,test-flash-simple,testexcept-flash-simple,test-flashsubdoc-simple,testexcept-flashsubdoc-simple,goog-downloadwhite-digest256,base-track-digest256,mozstd-trackwhite-digest256,content-track-digest256,mozplugin-block-digest256,mozplugin2-block-digest256,block-flash-digest256,except-flash-digest256,allow-flashallow-digest256,except-flashallow-digest256,block-flashsubdoc-digest256,except-flashsubdoc-digest256");
 

@@ -25,9 +25,9 @@
     "size": 1603430
   },
   {
-    "version": "cctools port from commit hash 84ce22dbb22a26ce7f392e9de0ee39c2efe6fd68",
-    "size": 2174783,
-    "digest": "8678348faff8f344b377075007975ae77a55a2a73488e36950a43c8ec27a79970cd8e34003e33e756a57d9cbf5c3e2e4461184102c6c03f793377a4d250a7f24",
+    "version": "cctools port from commit hash 8e9c3f2506b51",
+    "size": 2233376,
+    "digest": "d632ef587f0253f016aa5323999a3d9576284c04e66b5243a5780af9a55f474ac91ad8dee5bd86a6ee4e2593e2b345e2fd0aa4e8838b3686f84c5c5ac5c9c418",
     "algorithm": "sha512",
     "filename": "cctools.tar.bz2",
     "unpack": true

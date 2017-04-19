@@ -462,7 +462,7 @@ ColorWidget.prototype = {
       return;
     }
 
-    const { r, g, b, a } = color._getRGBATuple();
+    const { r, g, b, a } = color.getRGBATuple();
     this.rgb = [r, g, b, a];
     this.updateUI();
     this.onChange();
@@ -531,7 +531,7 @@ ColorWidget.prototype = {
     }
 
     const cssString = ColorWidget.hslToCssString(hsl[0], hsl[1], hsl[2], hsl[3]);
-    const { r, g, b, a } = new colorUtils.CssColor(cssString)._getRGBATuple();
+    const { r, g, b, a } = new colorUtils.CssColor(cssString).getRGBATuple();
 
     this.rgb = [r, g, b, a];
 
