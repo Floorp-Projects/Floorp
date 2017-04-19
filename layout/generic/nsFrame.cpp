@@ -10365,19 +10365,16 @@ nsIFrame::IsPseudoStackingContextFromStyle() {
 Element*
 nsIFrame::GetPseudoElement(CSSPseudoElementType aType)
 {
-  nsIFrame* frame = nullptr;
-
-  if (aType == CSSPseudoElementType::before) {
-    frame = nsLayoutUtils::GetBeforeFrame(this);
-  } else if (aType == CSSPseudoElementType::after) {
-    frame = nsLayoutUtils::GetAfterFrame(this);
+  if (!mContent) {
+    return nullptr;
   }
 
-  if (frame) {
-    nsIContent* content = frame->GetContent();
-    if (content->IsElement()) {
-      return content->AsElement();
-    }
+  if (aType == CSSPseudoElementType::before) {
+    return nsLayoutUtils::GetBeforePseudo(mContent);
+  }
+
+  if (aType == CSSPseudoElementType::after) {
+    return nsLayoutUtils::GetAfterPseudo(mContent);
   }
 
   return nullptr;
