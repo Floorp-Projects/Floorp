@@ -75,6 +75,8 @@ public:
 
   bool IsCellCropped(int32_t row, nsITreeColumn* col, ErrorResult& aRv);
 
+  void RemoveImageCacheEntry(int32_t row, nsITreeColumn& col, ErrorResult& aRv);
+
   // Deprecated APIs from old IDL
   void GetCellAt(JSContext* cx,
                  int32_t x, int32_t y,
