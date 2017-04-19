@@ -177,7 +177,6 @@
       hidden="true"
       data-category="panePrivacy">
   <label class="header-name" flex="1">&panePrivacySecurity.title;</label>
-  <html:a class="help-button" target="_blank" aria-label="&helpButton.label;"></html:a>
 </hbox>
 
 

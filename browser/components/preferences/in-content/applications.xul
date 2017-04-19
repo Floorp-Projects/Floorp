@@ -64,7 +64,6 @@
       hidden="true"
       data-category="paneApplications">
   <label class="header-name" flex="1">&paneFilesApplications.title;</label>
-  <html:a class="help-button" target="_blank" aria-label="&helpButton.label;"></html:a>
 </hbox>
 
 <vbox id="applicationsContent"
