@@ -3491,63 +3491,6 @@ EditorBase::IsContainer(nsIDOMNode* aNode)
   return aNode ? true : false;
 }
 
-static inline bool
-IsElementVisible(Element* aElement)
-{
-  if (aElement->GetPrimaryFrame()) {
-    // It's visible, for our purposes
-    return true;
-  }
-
-  nsIContent *cur = aElement;
-  for (;;) {
-    // Walk up the tree looking for the nearest ancestor with a frame.
-    // The state of the child right below it will determine whether
-    // we might possibly have a frame or not.
-    bool haveLazyBitOnChild = cur->HasFlag(NODE_NEEDS_FRAME);
-    cur = cur->GetFlattenedTreeParent();
-    if (!cur) {
-      if (!haveLazyBitOnChild) {
-        // None of our ancestors have lazy bits set, so we shouldn't
-        // have a frame
-        return false;
-      }
-
-      // The root has a lazy frame construction bit.  We need to check
-      // our style.
-      break;
-    }
-
-    if (cur->GetPrimaryFrame()) {
-      if (!haveLazyBitOnChild) {
-        // Our ancestor directly under |cur| doesn't have lazy bits;
-        // that means we won't get a frame
-        return false;
-      }
-
-      if (cur->GetPrimaryFrame()->IsLeaf()) {
-        // Nothing under here will ever get frames
-        return false;
-      }
-
-      // Otherwise, we might end up with a frame when that lazy bit is
-      // processed.  Figure out our actual style.
-      break;
-    }
-  }
-
-  // Now it might be that we have no frame because we're in a
-  // display:none subtree, or it might be that we're just dealing with
-  // lazy frame construction and it hasn't happened yet.  Check which
-  // one it is.
-  RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr, nullptr);
-  if (styleContext) {
-    return styleContext->StyleDisplay()->mDisplay != StyleDisplay::None;
-  }
-  return false;
-}
-
 bool
 EditorBase::IsEditable(nsIDOMNode* aNode)
 {
@@ -3565,18 +3508,10 @@ EditorBase::IsEditable(nsINode* aNode)
     return false;
   }
 
-  // see if it has a frame.  If so, we'll edit it.
-  // special case for textnodes: frame must have width.
-  if (aNode->IsElement() && !IsElementVisible(aNode->AsElement())) {
-    // If the element has no frame, it's not editable.  Note that we
-    // need to check IsElement() here, because some of our tests
-    // rely on frameless textnodes being visible.
-    return false;
-  }
   switch (aNode->NodeType()) {
     case nsIDOMNode::ELEMENT_NODE:
     case nsIDOMNode::TEXT_NODE:
-      return true; // element or text node; not invisible
+      return true;
     default:
       return false;
   }
