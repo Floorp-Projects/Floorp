@@ -58,6 +58,7 @@ const PREF_EM_ENABLED_ADDONS          = "extensions.enabledAddons";
 const PREF_EM_DSS_ENABLED             = "extensions.dss.enabled";
 const PREF_EM_AUTO_DISABLED_SCOPES    = "extensions.autoDisableScopes";
 const PREF_E10S_BLOCKED_BY_ADDONS     = "extensions.e10sBlockedByAddons";
+const PREF_E10S_MULTI_BLOCKED_BY_ADDONS = "extensions.e10sMultiBlockedByAddons";
 const PREF_E10S_HAS_NONEXEMPT_ADDON   = "extensions.e10s.rollout.hasAddon";
 
 const KEY_APP_PROFILE                 = "app-profile";
@@ -438,6 +439,7 @@ this.XPIDatabase = {
     }
 
     this.updateAddonsBlockingE10s();
+    this.updateAddonsBlockingE10sMulti();
     let promise = this._deferredSave.saveChanges();
     if (!this._schemaVersionSet) {
       this._schemaVersionSet = true;
@@ -1371,6 +1373,20 @@ this.XPIDatabase = {
       }
     }
     Preferences.set(PREF_E10S_BLOCKED_BY_ADDONS, blockE10s);
+  },
+
+  updateAddonsBlockingE10sMulti() {
+    let blockMulti = false;
+
+    for (let [, addon] of this.addonDB) {
+      let active = (addon.visible && !addon.disabled && !addon.pendingUninstall);
+
+      if (active && XPIProvider.isBlockingE10sMulti(addon)) {
+        blockMulti = true;
+        break;
+      }
+    }
+    Preferences.set(PREF_E10S_MULTI_BLOCKED_BY_ADDONS, blockMulti);
   },
 
   /**
