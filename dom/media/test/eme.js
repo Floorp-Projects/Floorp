@@ -244,7 +244,7 @@ function LoadTest(test, elem, token, loadParams)
   return new Promise(function (resolve, reject) {
     ms.addEventListener("sourceopen", function () {
       Log(token, "sourceopen");
-      return Promise.all(test.tracks.map(function(track) {
+      Promise.all(test.tracks.map(function(track) {
         return AppendTrack(test, ms, track, token, loadParams);
       })).then(function() {
         if (loadParams && loadParams.noEndOfStream) {
@@ -254,9 +254,7 @@ function LoadTest(test, elem, token, loadParams)
           ms.endOfStream();
         }
         resolve();
-      }).catch(function() {
-        Log(token, "error while loading tracks");
-      });
+      }).catch(reject);
     }, {once: true});
   });
 }
