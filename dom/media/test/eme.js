@@ -242,14 +242,7 @@ function LoadTest(test, elem, token, loadParams)
   elem.src = URL.createObjectURL(ms);
 
   return new Promise(function (resolve, reject) {
-    var firstOpen = true;
     ms.addEventListener("sourceopen", function () {
-      if (!firstOpen) {
-        Log(token, "sourceopen again?");
-        return;
-      }
-
-      firstOpen = false;
       Log(token, "sourceopen");
       return Promise.all(test.tracks.map(function(track) {
         return AppendTrack(test, ms, track, token, loadParams);
@@ -264,7 +257,7 @@ function LoadTest(test, elem, token, loadParams)
       }).catch(function() {
         Log(token, "error while loading tracks");
       });
-    })
+    }, {once: true});
   });
 }
 
