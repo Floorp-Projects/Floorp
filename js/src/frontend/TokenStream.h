@@ -27,7 +27,7 @@
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
 #include "vm/ErrorReporting.h"
-#include "vm/RegExpObject.h"
+#include "vm/RegExpShared.h"
 #include "vm/String.h"
 #include "vm/Unicode.h"
 
@@ -200,7 +200,7 @@ struct Token
         u.atom = atom;
     }
 
-    void setRegExpFlags(js::RegExpFlag flags) {
+    void setRegExpFlags(RegExpFlag flags) {
         MOZ_ASSERT(type == TOK_REGEXP);
         MOZ_ASSERT((flags & AllFlags) == flags);
         u.reflags = flags;
@@ -226,7 +226,7 @@ struct Token
         return u.atom;
     }
 
-    js::RegExpFlag regExpFlags() const {
+    RegExpFlag regExpFlags() const {
         MOZ_ASSERT(type == TOK_REGEXP);
         MOZ_ASSERT((u.reflags & AllFlags) == u.reflags);
         return u.reflags;

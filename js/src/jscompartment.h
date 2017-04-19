@@ -18,7 +18,6 @@
 #include "gc/Barrier.h"
 #include "gc/NurseryAwareHashMap.h"
 #include "gc/Zone.h"
-#include "vm/GlobalObject.h"
 #include "vm/PIC.h"
 #include "vm/SavedStacks.h"
 #include "vm/TemplateRegistry.h"
@@ -35,6 +34,7 @@ namespace gc {
 template <typename Node, typename Derived> class ComponentFinder;
 } // namespace gc
 
+class GlobalObject;
 class LexicalEnvironmentObject;
 class ScriptSourceObject;
 struct NativeIterator;

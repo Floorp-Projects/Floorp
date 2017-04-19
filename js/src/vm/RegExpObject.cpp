@@ -995,7 +995,7 @@ RegExpShared::compile(JSContext* cx, MutableHandleRegExpShared re, HandleAtom pa
         re->canStringMatch = true;
 
     CompileOptions options(cx);
-    TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
+    frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
 
     LifoAllocScope scope(&cx->tempLifoAlloc());
 
