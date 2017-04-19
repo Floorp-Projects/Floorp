@@ -7,7 +7,6 @@
 #define mozilla_EditorBase_h
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
-#include "mozilla/FlushType.h"          // for FlushType enum
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
 #include "mozilla/SelectionState.h"     // for RangeUpdater, etc.
 #include "mozilla/StyleSheet.h"   // for StyleSheet
@@ -983,14 +982,6 @@ public:
    * nsCaret.  Therefore, this is stateless.
    */
   void HideCaret(bool aHide);
-
-  void FlushFrames()
-  {
-    nsCOMPtr<nsIDocument> doc = GetDocument();
-    if (doc) {
-      doc->FlushPendingNotifications(FlushType::Frames);
-    }
-  }
 
 protected:
   enum Tristate
