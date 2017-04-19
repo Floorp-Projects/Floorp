@@ -25,9 +25,9 @@ module.exports = createClass({
   displayName: "multiE10SWarning",
 
   onUpdatePreferenceClick() {
-    // Hardcoded string for Aurora 54
+    // Hardcoded string for Beta 54
     // see (https://bugzilla.mozilla.org/show_bug.cgi?id=1345932#c44)
-    let message = "Set “dom.ipc.processCount” to 1 and restart the browser?";
+    let message = "Opt out of multiple processes?";
     if (window.confirm(message)) {
       // Disable multi until at least the next experiment.
       Services.prefs.setIntPref(MULTI_OPT_OUT_PREF,
@@ -38,13 +38,14 @@ module.exports = createClass({
   },
 
   render() {
-    // Hardcoded strings for Aurora 54
+    // Hardcoded strings for Beta 54
     // see (https://bugzilla.mozilla.org/show_bug.cgi?id=1345932#c44)
     let multiProcessWarningTitle = "Service Worker debugging is not compatible with " +
                                    "multiple content processes at the moment.";
-    let multiProcessWarningMessage = "The preference “dom.ipc.processCount” can be set " +
-                                     "to 1 to force a single content process.";
-    let multiProcessWarningUpdateLink = "Set dom.ipc.processCount to 1";
+    let multiProcessWarningMessage = `The preference “dom.ipc.multiOptOut” can be ` +
+                                     `modified to force a single content process ` +
+                                     `for the current version.`;
+    let multiProcessWarningUpdateLink = "Opt out of multiple content processes";
 
     return dom.div(
       {
