@@ -30,7 +30,6 @@
 #include "builtin/IntlTimeZoneData.h"
 #include "ds/Sort.h"
 #if ENABLE_INTL_API
-#include "unicode/plurrule.h"
 #include "unicode/ucal.h"
 #include "unicode/ucol.h"
 #include "unicode/udat.h"
@@ -95,37 +94,6 @@ enum UErrorCode {
     U_BUFFER_OVERFLOW_ERROR,
 };
 
-}
-
-namespace icu {
-
-class StringEnumeration {
-    public:
-        explicit StringEnumeration();
-};
-
-StringEnumeration::StringEnumeration()
-{
-    MOZ_CRASH("StringEnumeration::StringEnumeration: Intl API disabled");
-}
-
-class PluralRules {
-public:
-
-    StringEnumeration* getKeywords(UErrorCode& status) const;
-
-};
-
-StringEnumeration*
-PluralRules::getKeywords(UErrorCode& status) const
-{
-    MOZ_CRASH("PluralRules::getKeywords: Intl API disabled");
-}
-
-} // icu namespace
-
-namespace {
-
 typedef bool UBool;
 typedef char16_t UChar;
 typedef double UDate;
@@ -186,12 +154,6 @@ void
 uenum_close(UEnumeration* en)
 {
     MOZ_CRASH("uenum_close: Intl API disabled");
-}
-
-UEnumeration*
-uenum_openFromStringEnumeration(icu::StringEnumeration* adopted, UErrorCode* ec)
-{
-    MOZ_CRASH("uenum_openFromStringEnumeration: Intl API disabled");
 }
 
 struct UCollator;
@@ -779,6 +741,12 @@ uplrules_select(const UPluralRules *uplrules, double number, UChar *keyword, int
                 UErrorCode *status)
 {
     MOZ_CRASH("uplrules_select: Intl API disabled");
+}
+
+UEnumeration*
+uplrules_getKeywords(const UPluralRules* uplrules, UErrorCode* status)
+{
+    MOZ_CRASH("uplrules_getKeywords: Intl API disabled");
 }
 
 int32_t
@@ -3830,24 +3798,13 @@ js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp)
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
     }
-
     ScopedICUObject<UPluralRules, uplrules_close> closePluralRules(pr);
 
-    // We should get a C API for that in ICU 59 and switch to it.
-    // https://ssl.icu-project.org/trac/ticket/12772
-    icu::StringEnumeration* kwenum =
-        reinterpret_cast<icu::PluralRules*>(pr)->getKeywords(status);
+    UEnumeration* ue = uplrules_getKeywords(pr, &status);
     if (U_FAILURE(status)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
     }
-
-    UEnumeration* ue = uenum_openFromStringEnumeration(kwenum, &status);
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return false;
-    }
-
     ScopedICUObject<UEnumeration, uenum_close> closeEnum(ue);
 
     RootedObject res(cx, NewDenseEmptyArray(cx));
