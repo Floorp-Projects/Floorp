@@ -351,29 +351,6 @@ public:
     return NS_OK;
   }
 
-  void
-  ComparisonFinished(nsresult aStatus, bool aIsEqual)
-  {
-    AssertIsOnMainThread();
-    MOZ_ASSERT(mCallback);
-    MOZ_ASSERT(mState == WaitingForScriptOrComparisonResult);
-
-    if (NS_WARN_IF(NS_FAILED(aStatus))) {
-      Fail(aStatus);
-      return;
-    }
-
-    if (aIsEqual) {
-      mCallback->ComparisonResult(aStatus, aIsEqual, EmptyString(), mMaxScope);
-      Cleanup();
-      return;
-    }
-
-    // Write to Cache so ScriptLoader reads succeed.
-    mState = WaitingForOpen;
-    WriteNetworkBufferToNewCache();
-  }
-
 private:
   ~CompareManager()
   {
@@ -516,6 +493,29 @@ private:
     mState = WaitingForPut;
     WriteToCache(cache);
     return;
+  }
+
+  void
+  ComparisonFinished(nsresult aStatus, bool aIsEqual)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(mCallback);
+    MOZ_ASSERT(mState == WaitingForScriptOrComparisonResult);
+
+    if (NS_WARN_IF(NS_FAILED(aStatus))) {
+      Fail(aStatus);
+      return;
+    }
+
+    if (aIsEqual) {
+      mCallback->ComparisonResult(aStatus, aIsEqual, EmptyString(), mMaxScope);
+      Cleanup();
+      return;
+    }
+
+    // Write to Cache so ScriptLoader reads succeed.
+    mState = WaitingForOpen;
+    WriteNetworkBufferToNewCache();
   }
 
   void
