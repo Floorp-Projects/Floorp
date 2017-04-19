@@ -832,6 +832,7 @@ sync_java_files = [TOPSRCDIR + '/mobile/android/services/src/main/java/org/mozil
     'fxa/authenticator/FxAccountLoginException.java',
     'fxa/authenticator/FxADefaultLoginStateMachineDelegate.java',
     'fxa/devices/FxAccountDevice.java',
+    'fxa/devices/FxAccountDeviceListUpdater.java',
     'fxa/devices/FxAccountDeviceRegistrator.java',
     'fxa/FirefoxAccounts.java',
     'fxa/FxAccountConstants.java',
