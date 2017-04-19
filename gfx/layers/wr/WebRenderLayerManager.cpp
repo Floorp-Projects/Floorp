@@ -175,6 +175,42 @@ WebRenderLayer::GetWrRelBounds()
   return RelativeToParent(bounds);
 }
 
+Maybe<wr::ImageKey>
+WebRenderLayer::UpdateImageKey(ImageClientSingle* aImageClient,
+                               ImageContainer* aContainer,
+                               Maybe<wr::ImageKey>& aOldKey,
+                               uint64_t aExternalImageId)
+{
+  MOZ_ASSERT(aImageClient);
+  MOZ_ASSERT(aContainer);
+  MOZ_ASSERT(aExternalImageId);
+
+  uint32_t oldCounter = aImageClient->GetLastUpdateGenerationCounter();
+
+  bool ret = aImageClient->UpdateImage(aContainer, /* unused */0);
+  if (!ret || aImageClient->IsEmpty()) {
+    // Delete old key
+    if (aOldKey.isSome()) {
+      WrManager()->AddImageKeyForDiscard(aOldKey.value());
+    }
+    return Nothing();
+  }
+
+  // Reuse old key if generation is not updated.
+  if (oldCounter == aImageClient->GetLastUpdateGenerationCounter() && aOldKey.isSome()) {
+    return aOldKey;
+  }
+
+  // Delete old key, we are generating a new key.
+  if (aOldKey.isSome()) {
+    WrManager()->AddImageKeyForDiscard(aOldKey.value());
+  }
+
+  WrImageKey key = GetImageKey();
+  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(aExternalImageId, key));
+  return Some(key);
+}
+
 void
 WebRenderLayer::DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect)
 {
