@@ -573,8 +573,11 @@ struct nsGridContainerFrame::GridItemInfo
     // Ditto *-content:[last ]baseline. Mutually exclusive w. eSelfBaseline.
     eContentBaseline =       0x10,
     eAllBaselineBits = eIsBaselineAligned | eSelfBaseline | eContentBaseline,
+    // Should apply Automatic Minimum Size per:
+    // https://drafts.csswg.org/css-grid/#min-size-auto
+    eApplyAutoMinSize =      0x20,
     // Clamp per https://drafts.csswg.org/css-grid/#min-size-auto
-    eClampMarginBoxMinSize = 0x20,
+    eClampMarginBoxMinSize = 0x40,
   };
 
   explicit GridItemInfo(nsIFrame* aFrame,
@@ -606,11 +609,11 @@ struct nsGridContainerFrame::GridItemInfo
     return aAlign;
   }
 
-  // Return true if we should we clamp this item's Automatic Minimum Size.
+  // Return true if we should apply Automatic Minimum Size to this item.
   // https://drafts.csswg.org/css-grid/#min-size-auto
-  bool ShouldClampMinSize(WritingMode aContainerWM,
-                          LogicalAxis aContainerAxis,
-                          nscoord aPercentageBasis) const
+  bool ShouldApplyAutoMinSize(WritingMode aContainerWM,
+                              LogicalAxis aContainerAxis,
+                              nscoord aPercentageBasis) const
   {
     const auto pos = mFrame->StylePosition();
     const auto& size = aContainerAxis == eLogicalAxisInline ?
@@ -3454,8 +3457,11 @@ MeasuringReflow(nsIFrame*           aChild,
   parent->Properties().Set(
     nsContainerFrame::DebugReflowingWithInfiniteISize(), true);
 #endif
-  uint32_t riFlags = ReflowInput::COMPUTE_SIZE_SHRINK_WRAP |
-                     ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE;
+  auto wm = aChild->GetWritingMode();
+  uint32_t riFlags = ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE;
+  if (aAvailableSize.ISize(wm) == INFINITE_ISIZE_COORD) {
+    riFlags |= ReflowInput::COMPUTE_SIZE_SHRINK_WRAP;
+  }
   if (aIMinSizeClamp != NS_MAXSIZE) {
     riFlags |= ReflowInput::I_CLAMP_MARGIN_BOX_MIN_SIZE;
   }
@@ -3480,7 +3486,6 @@ MeasuringReflow(nsIFrame*           aChild,
   ReflowOutput childSize(childRI);
   nsReflowStatus childStatus;
   const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW;
-  WritingMode wm = childRI.GetWritingMode();
   parent->ReflowChild(aChild, pc, childSize, childRI, wm,
                       LogicalPoint(wm), nsSize(), flags, childStatus);
   parent->FinishReflowChild(aChild, pc, childSize, &childRI, wm,
@@ -3742,9 +3747,9 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   WritingMode wm = aState.mWM;
   // Calculate data for "Automatic Minimum Size" clamping, if needed.
   bool needed = ((sz.mState & TrackSize::eIntrinsicMinSizing) ||
-                 aConstraint == SizingConstraint::eNoConstraint);
-  if (needed && TrackSize::IsDefiniteMaxSizing(sz.mState) &&
-      aGridItem.ShouldClampMinSize(wm, mAxis, aPercentageBasis)) {
+                 aConstraint == SizingConstraint::eNoConstraint) &&
+                (aGridItem.mState[mAxis] & ItemState::eApplyAutoMinSize);
+  if (needed && TrackSize::IsDefiniteMaxSizing(sz.mState)) {
     if (sz.mState & TrackSize::eIntrinsicMinSizing) {
       auto maxCoord = aFunctions.MaxSizingFor(aRange.mStart);
       cache.mMinSizeClamp =
@@ -4147,6 +4152,14 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
   iter.Reset();
   for (; !iter.AtEnd(); iter.Next()) {
     auto& gridItem = aGridItems[iter.ItemIndex()];
+
+    // Check if we need to apply "Automatic Minimum Size" and cache it.
+    MOZ_ASSERT(!(gridItem.mState[mAxis] & ItemState::eApplyAutoMinSize),
+               "Why is eApplyAutoMinSize set already?");
+    if (gridItem.ShouldApplyAutoMinSize(wm, mAxis, aPercentageBasis)) {
+      gridItem.mState[mAxis] |= ItemState::eApplyAutoMinSize;
+    }
+
     const GridArea& area = gridItem.mArea;
     const LineRange& lineRange = area.*aRange;
     uint32_t span = lineRange.Extent();
@@ -4172,9 +4185,9 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         CachedIntrinsicSizes cache;
         // Calculate data for "Automatic Minimum Size" clamping, if needed.
         bool needed = ((state & TrackSize::eIntrinsicMinSizing) ||
-                       aConstraint == SizingConstraint::eNoConstraint);
-        if (needed && TrackSize::IsDefiniteMaxSizing(state) &&
-            gridItem.ShouldClampMinSize(wm, mAxis, aPercentageBasis)) {
+                       aConstraint == SizingConstraint::eNoConstraint) &&
+                      (gridItem.mState[mAxis] & ItemState::eApplyAutoMinSize);
+        if (needed && TrackSize::IsDefiniteMaxSizing(state)) {
           nscoord minSizeClamp = 0;
           for (auto i = lineRange.mStart, end = lineRange.mEnd; i < end; ++i) {
             auto maxCoord = aFunctions.MaxSizingFor(i);
@@ -4210,11 +4223,14 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
           gridItem.mState[mAxis] |= ItemState::eIsFlexing;
         } else if (aConstraint == SizingConstraint::eNoConstraint &&
                    TrackSize::IsDefiniteMaxSizing(state) &&
-                   gridItem.ShouldClampMinSize(wm, mAxis, aPercentageBasis)) {
+                   (gridItem.mState[mAxis] & ItemState::eApplyAutoMinSize)) {
           gridItem.mState[mAxis] |= ItemState::eClampMarginBoxMinSize;
         }
       }
     }
+    MOZ_ASSERT(!(gridItem.mState[mAxis] & ItemState::eClampMarginBoxMinSize) ||
+               (gridItem.mState[mAxis] & ItemState::eApplyAutoMinSize),
+               "clamping only applies to Automatic Minimum Size");
   }
 
   // Step 2.
@@ -4995,6 +5011,9 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
                                childCBSize.BSize(childWM));
     } else {
       aChild->Properties().Delete(BClampMarginBoxMinSizeProperty());
+    }
+    if ((aGridItemInfo->mState[childIAxis] & ItemState::eApplyAutoMinSize)) {
+      flags |= ReflowInput::I_APPLY_AUTO_MIN_SIZE;
     }
   }
 

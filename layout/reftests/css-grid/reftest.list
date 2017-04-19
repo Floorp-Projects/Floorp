@@ -116,6 +116,12 @@ skip-if(Android) == grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-p
 == grid-item-auto-min-size-clamp-005.html grid-item-auto-min-size-clamp-005-ref.html
 == grid-item-auto-min-size-clamp-006.html grid-item-auto-min-size-clamp-006-ref.html
 == grid-item-auto-min-size-clamp-007.html grid-item-auto-min-size-clamp-007-ref.html
+== grid-item-overflow-stretch-001.html grid-item-overflow-stretch-001-ref.html
+== grid-item-overflow-stretch-002.html grid-item-overflow-stretch-002-ref.html
+== grid-item-overflow-stretch-003.html grid-item-overflow-stretch-003-ref.html
+== grid-item-overflow-stretch-004.html grid-item-overflow-stretch-004-ref.html
+== grid-item-overflow-stretch-005.html grid-item-overflow-stretch-005-ref.html
+== grid-item-overflow-stretch-006.html grid-item-overflow-stretch-006-ref.html
 == grid-item-canvas-001.html grid-item-canvas-001-ref.html
 skip-if(Android) == grid-item-button-001.html grid-item-button-001-ref.html
 == grid-item-table-stretch-001.html grid-item-table-stretch-001-ref.html
@@ -277,3 +283,6 @@ asserts(1-10) == grid-fragmentation-dyn4-021.html grid-fragmentation-021-ref.htm
 == grid-percent-intrinsic-sizing-001.html grid-percent-intrinsic-sizing-001-ref.html
 == grid-measuring-reflow-resize-static-001.html grid-measuring-reflow-resize-001-ref.html
 == grid-measuring-reflow-resize-dynamic-001.html grid-measuring-reflow-resize-001-ref.html
+== bug1349571.html bug1349571-ref.html
+== bug1356820.html bug1356820-ref.html
+== bug1350925.html bug1350925-ref.html

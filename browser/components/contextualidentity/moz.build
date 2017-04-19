@@ -11,4 +11,4 @@ BROWSER_CHROME_MANIFESTS += [
 JAR_MANIFESTS += ['jar.mn']
 
 with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Contextual Identity')
+    BUG_COMPONENT = ('DOM', 'Security')
