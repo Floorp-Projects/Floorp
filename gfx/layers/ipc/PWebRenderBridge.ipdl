@@ -48,6 +48,7 @@ parent:
   sync UpdateImage(ImageKey aImageKey, IntSize aSize,
                    SurfaceFormat aFormat, ByteBuffer aBytes);
   sync DeleteImage(ImageKey aImageKey);
+  async DeleteCompositorAnimations(uint64_t aId);
   async AddRawFont(FontKey aFontKey, ByteBuffer aBytes, uint32_t aFontIndex);
   async DeleteFont(FontKey aFontKey);
   async DPBegin(IntSize aSize);

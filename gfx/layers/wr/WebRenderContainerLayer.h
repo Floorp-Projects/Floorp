@@ -29,7 +29,7 @@ protected:
   {
 
     if (gfxPrefs::WebRenderOMTAEnabled() &&
-        GetAnimations().Length()) {
+        !GetAnimations().IsEmpty()) {
       mManager->AsWebRenderLayerManager()->
         AddCompositorAnimationsIdForDiscard(GetCompositorAnimationsId());
     }
@@ -42,6 +42,7 @@ public:
   Layer* GetLayer() override { return this; }
   void RenderLayer(wr::DisplayListBuilder& aBuilder) override;
 
+  void ClearAnimations() override;
   virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override
   {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
