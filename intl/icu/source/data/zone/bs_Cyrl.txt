@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 bs_Cyrl{
     %%Parent{"root"}
-    Version{"2.1.28.76"}
+    Version{"2.1.32.72"}
     zoneStrings{
         "meta:Acre"{
             ld{"Акре летње рачунање времена"}

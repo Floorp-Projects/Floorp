@@ -164,7 +164,7 @@ uz_Cyrl{
             }
         }
     }
-    Version{"2.1.27.98"}
+    Version{"2.1.31.86"}
     calendar{
         generic{
             DateTimePatterns{

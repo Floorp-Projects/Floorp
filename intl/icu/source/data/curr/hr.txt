@@ -780,11 +780,11 @@ hr{
         }
         PEN{
             "PEN",
-            "peruanski novi sol",
+            "peruanski sol",
         }
         PES{
             "PES",
-            "peruanski sol",
+            "peruanski sol (1863–1965)",
         }
         PGK{
             "PGK",
@@ -2258,14 +2258,14 @@ hr{
             other{"peruanskih inti"}
         }
         PEN{
-            few{"peruanska nova sola"}
-            one{"peruanski novi sol"}
-            other{"peruanskih novih sola"}
-        }
-        PES{
             few{"peruanska sola"}
             one{"peruanski sol"}
             other{"peruanskih sola"}
+        }
+        PES{
+            few{"peruanska sola (1863–1965)"}
+            one{"peruanski sol (1863–1965)"}
+            other{"peruanskih sola (1863–1965)"}
         }
         PGK{
             few{"kine Papue Nove Gvineje"}
@@ -2783,5 +2783,5 @@ hr{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }

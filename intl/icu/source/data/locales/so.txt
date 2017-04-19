@@ -10,7 +10,7 @@ so{
             patternsLong{
                 decimalFormat{
                     1000{
-                        one{"Kun"}
+                        one{"0K"}
                         other{"0K"}
                     }
                     10000{
@@ -29,7 +29,7 @@ so{
             }
         }
     }
-    Version{"2.1.27.78"}
+    Version{"2.1.33.76"}
     calendar{
         generic{
             DateTimePatterns{

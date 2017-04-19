@@ -197,10 +197,20 @@ fil{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                one{"Lumiko sa unang kanan."}
+                other{"Lumiko sa ika-{0} kanan."}
+            }
+            plural{
+                one{"{0} mansanas"}
+                other{"{0} na mansanas"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.31.86"}
     calendar{
         generic{
             DateTimePatterns{

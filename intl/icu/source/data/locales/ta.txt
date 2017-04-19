@@ -202,6 +202,15 @@ ta{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"{0}வது வலது திருப்பத்தை எடு."}
+            }
+            plural{
+                one{"{0} நாள்"}
+                other{"{0} நாட்கள்"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"tamldec"}
         tamldec{
@@ -225,7 +234,7 @@ ta{
         }
         traditional{"taml"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.4"}
     calendar{
         chinese{
             DateTimePatterns{
