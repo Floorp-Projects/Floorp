@@ -254,11 +254,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     // initialize()d to become a real, content-visible ArrayBufferObject.
     static ArrayBufferObject* createEmpty(JSContext* cx);
 
-    template<typename T>
-    static bool createTypedArrayFromBufferImpl(JSContext* cx, const CallArgs& args);
-    template<typename T>
-    static bool createTypedArrayFromBuffer(JSContext* cx, unsigned argc, Value* vp);
-
     static void copyData(Handle<ArrayBufferObject*> toBuffer, uint32_t toIndex,
                          Handle<ArrayBufferObject*> fromBuffer, uint32_t fromIndex,
                          uint32_t count);
