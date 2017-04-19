@@ -536,7 +536,7 @@ WR_FUNC;
 
 WR_INLINE void
 wr_api_delete(WrAPI* api)
-WR_FUNC;
+WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE void
 wr_api_delete_font(WrAPI* api,

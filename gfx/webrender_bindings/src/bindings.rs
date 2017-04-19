@@ -834,6 +834,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     return true;
 }
 
+/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_delete(api: *mut WrAPI) {
     let api = Box::from_raw(api);
