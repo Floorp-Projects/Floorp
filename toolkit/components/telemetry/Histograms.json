@@ -5207,30 +5207,6 @@
     "n_buckets": 50,
     "description": "Firefox: Time taken to run permitUnload on a browser during tab close to see whether or not we're allowed to close the tab (ms)."
   },
-  "FX_TAB_ANIM_OPEN_PREVIEW_FRAME_INTERVAL_MS": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 7,
-    "high": 500,
-    "n_buckets": 50,
-    "description": "Average frame interval during tab open animation of about:newtab (preview=on), when other tabs are unaffected"
-  },
-  "FX_TAB_ANIM_OPEN_FRAME_INTERVAL_MS": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 7,
-    "high": 500,
-    "n_buckets": 50,
-    "description": "Average frame interval during tab open animation of about:newtab (preview=off), when other tabs are unaffected"
-  },
-  "FX_TAB_ANIM_ANY_FRAME_INTERVAL_MS": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 7,
-    "high": 500,
-    "n_buckets": 50,
-    "description": "Average frame interval during any tab open/close animation (excluding tabstrip scroll)"
-  },
   "FX_REFRESH_DRIVER_CHROME_FRAME_DELAY_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
