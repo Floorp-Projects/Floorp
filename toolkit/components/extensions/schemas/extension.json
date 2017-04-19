@@ -31,7 +31,7 @@
       {
         "id": "ViewType",
         "type": "string",
-        "enum": ["tab", "notification", "popup", "sidebar"],
+        "enum": ["tab", "popup", "sidebar"],
         "description": "The type of extension view."
       }
     ],
@@ -66,7 +66,7 @@
               "type": {
                 "$ref": "ViewType",
                 "optional": true,
-                "description": "The type of view to get. If omitted, returns all views (including background pages and tabs). Valid values: 'tab', 'notification', 'popup'."
+                "description": "The type of view to get. If omitted, returns all views (including background pages and tabs). Valid values: 'tab', 'popup', 'sidebar'."
               },
               "windowId": {
                 "type": "integer",
