@@ -2540,39 +2540,21 @@
         <parameter name="aParams"/>
         <body>
           <![CDATA[
-            // We collect Telemetry on how long it takes to close a tab.
-            // Sometimes, tabs animate closed, and sometimes they don't, and
-            // it doesn't really make sense to put timings for both cases in the
-            // same bucket.
-            //
-            // We decide later on whether or not we're actually going to animate
-            // the tab closed. In order to capture as much of the time we care
-            // about with these stopwatches, but also in order to avoid any
-            // unnecessary work (since calculating whether or not we're going
-            // to do the animation might involved a style flush), we start
-            // stopwatches for both the animating and non-animating case. When
-            // we decide that we're animating, we cancel the non-animating case,
-            // and vice-versa. Then, in _endRemoveTab, we "finish" both
-            // stopwatches, which is a no-op for cancelled stopwatches.
-            //
-            // Note that removeTab might be re-entrant, as we currently spin an
-            // event loop while waiting for remote browsers to tell us whether or
-            // not we're allowed to unload them via permitUnload. This means that
-            // subsequent calls to removeTab will also have these stopwatches
-            // on file. There's also the case that the tab was animating closed,
-            // and removeTab was called on it before it completed. In either case,
-            // we skip (re)starting the stopwatches.
-            if (!aTab._pendingPermitUnload && !aTab.closing) {
-              TelemetryStopwatch.start("FX_TAB_CLOSE_TIME_ANIM_MS", aTab);
-              TelemetryStopwatch.start("FX_TAB_CLOSE_TIME_NO_ANIM_MS", aTab);
-            }
-
             if (aParams) {
               var animate = aParams.animate;
               var byMouse = aParams.byMouse;
               var skipPermitUnload = aParams.skipPermitUnload;
             }
 
+            // Telemetry stopwatches may already be running if removeTab gets
+            // called again for an already closing tab.
+            if (!TelemetryStopwatch.running("FX_TAB_CLOSE_TIME_ANIM_MS", aTab) &&
+                !TelemetryStopwatch.running("FX_TAB_CLOSE_TIME_NO_ANIM_MS", aTab)) {
+              // Speculatevely start both stopwatches now. We'll cancel one of
+              // the two later depending on whether we're animating.
+              TelemetryStopwatch.start("FX_TAB_CLOSE_TIME_ANIM_MS", aTab);
+              TelemetryStopwatch.start("FX_TAB_CLOSE_TIME_NO_ANIM_MS", aTab);
+            }
             window.maybeRecordAbandonmentTelemetry(aTab, "tabClosed");
 
             // Handle requests for synchronously removing an already
