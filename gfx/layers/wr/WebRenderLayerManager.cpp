@@ -75,6 +75,7 @@ WebRenderLayerManager::Destroy()
 
   LayerManager::Destroy();
   DiscardImages();
+  DiscardCompositorAnimations();
   WrBridge()->Destroy();
 
   if (mTransactionIdAllocator) {
@@ -317,7 +318,7 @@ void
 WebRenderLayerManager::DiscardCompositorAnimations()
 {
   for (auto id : mDiscardedCompositorAnimationsIds) {
-    WrBridge()->AddWebRenderParentCommand(OpRemoveCompositorAnimations(id));
+    WrBridge()->SendDeleteCompositorAnimations(id);
   }
   mDiscardedCompositorAnimationsIds.clear();
 }

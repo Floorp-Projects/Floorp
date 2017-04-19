@@ -79,6 +79,7 @@ public:
                                           const gfx::SurfaceFormat& aFormat,
                                           const ByteBuffer& aBuffer) override;
   mozilla::ipc::IPCResult RecvDeleteImage(const wr::ImageKey& a1) override;
+  mozilla::ipc::IPCResult RecvDeleteCompositorAnimations(const uint64_t& aId) override;
   mozilla::ipc::IPCResult RecvAddRawFont(const wr::FontKey& aFontKey,
                                          const ByteBuffer& aBuffer,
                                          const uint32_t& aFontIndex) override;
