@@ -84,6 +84,7 @@ BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK = [[
     'all-nightly-tasks', set([
         'nightly_fennec',
         'nightly_linux',
+        'nightly_macosx',
         'mozilla_beta_tasks',
         'mozilla_release_tasks',
     ])

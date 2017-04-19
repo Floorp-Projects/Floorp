@@ -14,6 +14,8 @@ from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Any, Required, Optional
 
+import logging
+logger = logging.getLogger(__name__)
 
 # For developers: if you are adding any new artifacts here that need to be
 # transfered to S3, please be aware you also need to follow-up with patch in
@@ -52,99 +54,18 @@ _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_L10N = [
 _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_L10N = [
     "target.complete.mar",
 ]
-_MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
-    "en-US/target.common.tests.zip",
-    "en-US/target.cppunittest.tests.zip",
-    "en-US/target.crashreporter-symbols.zip",
-    "en-US/target.json",
-    "en-US/target.mochitest.tests.zip",
-    "en-US/target.mozinfo.json",
-    "en-US/target.reftest.tests.zip",
-    "en-US/target.talos.tests.zip",
-    "en-US/target.awsy.tests.zip",
-    "en-US/target.test_packages.json",
-    "en-US/target.txt",
-    "en-US/target.web-platform.tests.zip",
-    "en-US/target.xpcshell.tests.zip",
-    "en-US/target_info.txt",
-    "en-US/bouncer.apk",
-    "en-US/mozharness.zip",
-    "en-US/robocop.apk",
-    "en-US/target.jsshell.zip",
-]
-_MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_MULTI = [
-    "balrog_props.json",
-    "target.common.tests.zip",
-    "target.cppunittest.tests.zip",
-    "target.json",
-    "target.mochitest.tests.zip",
-    "target.mozinfo.json",
-    "target.reftest.tests.zip",
-    "target.talos.tests.zip",
-    "target.awsy.tests.zip",
-    "target.test_packages.json",
-    "target.txt",
-    "target.web-platform.tests.zip",
-    "target.xpcshell.tests.zip",
-    "target_info.txt",
-    "bouncer.apk",
-    "mozharness.zip",
-    "robocop.apk",
-    "target.jsshell.zip",
-]
-_MOBILE_UPSTREAM_ARTIFACTS_SIGNED_EN_US = [
-    "en-US/target.apk",
-]
-_MOBILE_UPSTREAM_ARTIFACTS_SIGNED_MULTI = [
-    "target.apk",
-]
-
 
 UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
-    'linux64-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
-    'linux-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
-    'android-x86-nightly': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
-    'android-api-15-nightly': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
     'macosx64-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
-
-    'linux64-nightly-l10n': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_L10N,
-    'linux-nightly-l10n': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_L10N,
-    'android-x86-nightly-multi': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_MULTI,
-    'android-api-15-nightly-l10n': ["balrog_props.json"],
-    'android-api-15-nightly-multi': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_MULTI,
     'macosx64-nightly-l10n': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_L10N,
 }
 UPSTREAM_ARTIFACT_SIGNED_PATHS = {
-    'linux64-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_EN_US + [
-        "target.tar.bz2",
-        "target.tar.bz2.asc",
-    ],
-    'linux-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_EN_US + [
-        "target.tar.bz2",
-        "target.tar.bz2.asc",
-    ],
-    'android-x86-nightly': ["en-US/target.apk"],
-    'android-api-15-nightly': ["en-US/target.apk"],
-    'macosx64-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_EN_US + [
-        "target.dmg",
-        "target.dmg.asc",
-    ],
-
-    'linux64-nightly-l10n': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_L10N + [
-        "target.tar.bz2",
-        "target.tar.bz2.asc",
-    ],
-    'linux-nightly-l10n': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_L10N + [
-        "target.tar.bz2",
-        "target.tar.bz2.asc",
-    ],
-    'android-x86-nightly-multi': ["target.apk"],
-    'android-api-15-nightly-l10n': ["target.apk"],
-    'android-api-15-nightly-multi': ["target.apk"],
-    'macosx64-nightly-l10n': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_L10N + [
-        "target.dmg",
-        "target.dmg.asc",
-    ],
+    'macosx64-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_EN_US,
+    'macosx64-nightly-l10n': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_L10N,
+}
+UPSTREAM_ARTIFACT_REPACKAGE_PATHS = {
+    'macosx64-nightly': ["target.dmg"],
+    'macosx64-nightly-l10n': ["target.dmg"],
 }
 
 # Voluptuous uses marker objects as dictionary *keys*, but they are not
@@ -193,7 +114,7 @@ def make_task_description(config, jobs):
         dep_job = job['dependent-task']
 
         treeherder = job.get('treeherder', {})
-        treeherder.setdefault('symbol', 'tc(BM-S)')
+        treeherder.setdefault('symbol', 'tc(BM-R)')
         dep_th_platform = dep_job.task.get('extra', {}).get(
             'treeherder', {}).get('machine', {}).get('platform', '')
         treeherder.setdefault('platform',
@@ -204,11 +125,25 @@ def make_task_description(config, jobs):
         dependent_kind = str(dep_job.kind)
         dependencies = {dependent_kind: dep_job.label}
 
-        if len(dep_job.dependencies) > 1:
-            raise NotImplementedError(
-                "Can't beetmove a signing task with multiple dependencies")
-        signing_dependencies = dep_job.dependencies
+        # macosx nightly builds depend on repackage which use in tree docker
+        # images and thus have two dependencies
+        # change the signing_dependencies to be use the ones in
+        docker_dependencies = {"docker-image":
+                                dep_job.dependencies["docker-image"]
+                               }
+        dependencies.update(docker_dependencies)
+        signing_dependencies = {"build-signing":
+                                dep_job.dependencies["build-signing"]
+                               }
         dependencies.update(signing_dependencies)
+        repackage_dependencies = {"repackage":
+                                  dep_job.label
+                                 }
+        dependencies.update(repackage_dependencies)
+        build_dependencies = {"build":
+                              dep_job.dependencies["build-signing"].replace("signing-","build-")
+                             }
+        dependencies.update(build_dependencies)
 
         attributes = {
             'nightly': dep_job.attributes.get('nightly', False),
@@ -236,10 +171,13 @@ def make_task_description(config, jobs):
         yield task
 
 
-def generate_upstream_artifacts(signing_task_ref, build_task_ref, platform,
+def generate_upstream_artifacts(signing_task_ref, build_task_ref,
+                                repackage_task_ref, platform,
                                 locale=None):
-    build_mapping = UPSTREAM_ARTIFACT_UNSIGNED_PATHS
+
     signing_mapping = UPSTREAM_ARTIFACT_SIGNED_PATHS
+    build_mapping = UPSTREAM_ARTIFACT_UNSIGNED_PATHS
+    repackage_mapping = UPSTREAM_ARTIFACT_REPACKAGE_PATHS
 
     artifact_prefix = 'public/build'
     if locale:
@@ -258,24 +196,13 @@ def generate_upstream_artifacts(signing_task_ref, build_task_ref, platform,
         "paths": ["{}/{}".format(artifact_prefix, p)
                   for p in signing_mapping[platform]],
         "locale": locale or "en-US",
+        }, {
+        "taskId": {"task-reference": repackage_task_ref},
+        "taskType": "repackage",
+        "paths": ["{}/{}".format(artifact_prefix, p)
+                  for p in repackage_mapping[platform]],
+        "locale": locale or "en-US",
     }]
-
-    if not locale and "android" in platform:
-        # edge case to support 'multi' locale paths
-        multi_platform = "{}-multi".format(platform)
-        upstream_artifacts.extend([{
-            "taskId": {"task-reference": build_task_ref},
-            "taskType": "build",
-            "paths": ["{}/{}".format(artifact_prefix, p)
-                      for p in build_mapping[multi_platform]],
-            "locale": "multi",
-            }, {
-            "taskId": {"task-reference": signing_task_ref},
-            "taskType": "signing",
-            "paths": ["{}/{}".format(artifact_prefix, p)
-                      for p in signing_mapping[multi_platform]],
-            "locale": "multi",
-        }])
 
     return upstream_artifacts
 
@@ -283,25 +210,29 @@ def generate_upstream_artifacts(signing_task_ref, build_task_ref, platform,
 @transforms.add
 def make_task_worker(config, jobs):
     for job in jobs:
-        valid_beetmover_job = (len(job["dependencies"]) == 2 and
-                               any(['signing' in j for j in job['dependencies']]))
+        valid_beetmover_job = (len(job["dependencies"]) == 4 and
+                               any(['repackage' in j for j in job['dependencies']]))
         if not valid_beetmover_job:
-            raise NotImplementedError("Beetmover must have two dependencies.")
+            raise NotImplementedError("Beetmover_repackage must have four dependencies.")
 
         locale = job["attributes"].get("locale")
         platform = job["attributes"]["build_platform"]
         build_task = None
+        repackage_task = None
         signing_task = None
         for dependency in job["dependencies"].keys():
-            if 'signing' in dependency:
+            if 'repackage' in dependency:
+                repackage_task = dependency
+            elif 'signing' in dependency:
                 signing_task = dependency
             else:
-                build_task = dependency
+                build_task = "build"
 
         signing_task_ref = "<" + str(signing_task) + ">"
         build_task_ref = "<" + str(build_task) + ">"
+        repackage_task_ref = "<" + str(repackage_task) + ">"
         upstream_artifacts = generate_upstream_artifacts(
-            signing_task_ref, build_task_ref, platform, locale
+            signing_task_ref, build_task_ref, repackage_task_ref, platform, locale
         )
 
         worker = {'implementation': 'beetmover',
