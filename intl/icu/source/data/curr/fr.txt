@@ -712,11 +712,11 @@ fr{
         }
         PEN{
             "PEN",
-            "nouveau sol péruvien",
+            "sol péruvien",
         }
         PES{
             "PES",
-            "sol péruvien",
+            "sol péruvien (1863–1985)",
         }
         PGK{
             "PGK",
@@ -1921,8 +1921,8 @@ fr{
             other{"intis péruviens"}
         }
         PEN{
-            one{"nouveau sol péruvien"}
-            other{"nouveaux sols péruviens"}
+            one{"sol péruvien"}
+            other{"sols péruviens"}
         }
         PES{
             one{"sol péruvien (1863–1985)"}
@@ -2321,5 +2321,5 @@ fr{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.59"}
 }

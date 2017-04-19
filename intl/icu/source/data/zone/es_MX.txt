@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_MX{
     %%Parent{"es_419"}
-    Version{"2.1.28.76"}
+    Version{"2.1.31.33"}
     zoneStrings{
         "meta:Africa_Central"{
             ls{"Hora de África Central"}

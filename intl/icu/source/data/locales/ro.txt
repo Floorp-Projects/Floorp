@@ -233,10 +233,21 @@ ro{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                one{"Faceți virajul nr. {0} la dreapta."}
+                other{"Faceți virajul al {0}-lea la dreapta."}
+            }
+            plural{
+                few{"{0} zile"}
+                one{"{0} zi"}
+                other{"{0} de zile"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.28.79"}
+    Version{"2.1.32.60"}
     calendar{
         buddhist{
             eras{

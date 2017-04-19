@@ -1279,6 +1279,14 @@ metadata:table(nofallback){
                 reason{"overlong"}
                 replacement{"yo"}
             }
+            yue_CN{
+                reason{"legacy"}
+                replacement{"yue_Hans_CN"}
+            }
+            yue_HK{
+                reason{"legacy"}
+                replacement{"yue_Hant_HK"}
+            }
             zai{
                 reason{"macrolanguage"}
                 replacement{"zap"}
@@ -1347,163 +1355,311 @@ metadata:table(nofallback){
             }
         }
         subdivision{
-            CN-71{
+            cn71{
                 reason{"overlong"}
                 replacement{"TW"}
             }
-            CN-91{
+            cn91{
                 reason{"overlong"}
                 replacement{"HK"}
             }
-            CN-92{
+            cn92{
                 reason{"overlong"}
                 replacement{"MO"}
             }
-            FR-BL{
+            czjc{
+                reason{"deprecated"}
+                replacement{"cz31"}
+            }
+            czka{
+                reason{"deprecated"}
+                replacement{"cz41"}
+            }
+            czkr{
+                reason{"deprecated"}
+                replacement{"cz52"}
+            }
+            czli{
+                reason{"deprecated"}
+                replacement{"cz51"}
+            }
+            czmo{
+                reason{"deprecated"}
+                replacement{"cz80"}
+            }
+            czol{
+                reason{"deprecated"}
+                replacement{"cz71"}
+            }
+            czpa{
+                reason{"deprecated"}
+                replacement{"cz53"}
+            }
+            czpl{
+                reason{"deprecated"}
+                replacement{"cz32"}
+            }
+            czst{
+                reason{"deprecated"}
+                replacement{"cz20"}
+            }
+            czus{
+                reason{"deprecated"}
+                replacement{"cz42"}
+            }
+            czzl{
+                reason{"deprecated"}
+                replacement{"cz72"}
+            }
+            escn{
+                reason{"overlong"}
+                replacement{"IC"}
+            }
+            fi01{
+                reason{"overlong"}
+                replacement{"AX"}
+            }
+            fra{
+                reason{"deprecated"}
+                replacement{"frges"}
+            }
+            frb{
+                reason{"deprecated"}
+                replacement{"frnaq"}
+            }
+            frbl{
                 reason{"overlong"}
                 replacement{"BL"}
             }
-            FR-GF{
+            frc{
+                reason{"deprecated"}
+                replacement{"frara"}
+            }
+            frcp{
+                reason{"overlong"}
+                replacement{"CP"}
+            }
+            frd{
+                reason{"deprecated"}
+                replacement{"frbfc"}
+            }
+            fre{
+                reason{"deprecated"}
+                replacement{"frbre"}
+            }
+            frf{
+                reason{"deprecated"}
+                replacement{"frcvl"}
+            }
+            frg{
+                reason{"deprecated"}
+                replacement{"frges"}
+            }
+            frgf{
                 reason{"overlong"}
                 replacement{"GF"}
             }
-            FR-GP{
+            frgp{
                 reason{"overlong"}
                 replacement{"GP"}
             }
-            FR-MF{
+            frh{
+                reason{"deprecated"}
+                replacement{"frcor"}
+            }
+            fri{
+                reason{"deprecated"}
+                replacement{"frbfc"}
+            }
+            frj{
+                reason{"deprecated"}
+                replacement{"fridf"}
+            }
+            frk{
+                reason{"deprecated"}
+                replacement{"frocc"}
+            }
+            frl{
+                reason{"deprecated"}
+                replacement{"frnaq"}
+            }
+            frm{
+                reason{"deprecated"}
+                replacement{"frges"}
+            }
+            frmf{
                 reason{"overlong"}
                 replacement{"MF"}
             }
-            FR-MQ{
+            frmq{
                 reason{"overlong"}
                 replacement{"MQ"}
             }
-            FR-NC{
+            frn{
+                reason{"deprecated"}
+                replacement{"frocc"}
+            }
+            frnc{
                 reason{"overlong"}
                 replacement{"NC"}
             }
-            FR-PF{
+            fro{
+                reason{"deprecated"}
+                replacement{"frhdf"}
+            }
+            frp{
+                reason{"deprecated"}
+                replacement{"frnor"}
+            }
+            frpf{
                 reason{"overlong"}
                 replacement{"PF"}
             }
-            FR-PM{
+            frpm{
                 reason{"overlong"}
                 replacement{"PM"}
             }
-            FR-RE{
+            frq{
+                reason{"deprecated"}
+                replacement{"frnor"}
+            }
+            frr{
+                reason{"deprecated"}
+                replacement{"frpdl"}
+            }
+            frre{
                 reason{"overlong"}
                 replacement{"RE"}
             }
-            FR-TF{
+            frs{
+                reason{"deprecated"}
+                replacement{"frhdf"}
+            }
+            frt{
+                reason{"deprecated"}
+                replacement{"frnaq"}
+            }
+            frtf{
                 reason{"overlong"}
                 replacement{"TF"}
             }
-            FR-WF{
+            fru{
+                reason{"deprecated"}
+                replacement{"frpac"}
+            }
+            frv{
+                reason{"deprecated"}
+                replacement{"frara"}
+            }
+            frwf{
                 reason{"overlong"}
                 replacement{"WF"}
             }
-            FR-YT{
+            fryt{
                 reason{"overlong"}
                 replacement{"YT"}
             }
-            LA-XN{
+            laxn{
                 reason{"deprecated"}
-                replacement{"LA-XS"}
+                replacement{"laxs"}
             }
-            LU-D{
+            lud{
                 reason{"deprecated"}
-                replacement{"LU-CL LU-DI LU-RD LU-VD LU-WI"}
+                replacement{"lucl ludi lurd luvd luwi"}
             }
-            LU-G{
+            lug{
                 reason{"deprecated"}
-                replacement{"LU-EC LU-GR LU-RM"}
+                replacement{"luec lugr lurm"}
             }
-            LU-L{
+            lul{
                 reason{"deprecated"}
-                replacement{"LU-CA LU-ES LU-LU LU-ME"}
+                replacement{"luca lues lulu lume"}
             }
-            MR-NKC{
+            mrnkc{
                 reason{"deprecated"}
-                replacement{"MR-13 MR-14 MR-15"}
+                replacement{"mr13 mr14 mr15"}
             }
-            NL-AW{
+            nlaw{
                 reason{"overlong"}
                 replacement{"AW"}
             }
-            NL-CW{
+            nlcw{
                 reason{"overlong"}
                 replacement{"CW"}
             }
-            NL-SX{
+            nlsx{
                 reason{"overlong"}
                 replacement{"SX"}
             }
-            NZ-N{
+            nzn{
                 reason{"deprecated"}
-                replacement{"NZ-AUK NZ-BOP NZ-GIS NZ-HKB NZ-MWT NZ-NTL NZ-TKI NZ-WGN NZ-WKO"}
+                replacement{"nzauk nzbop nzgis nzhkb nzmwt nzntl nztki nzwgn nzwko"}
             }
-            NZ-S{
+            nzs{
                 reason{"deprecated"}
-                replacement{"NZ-CAN NZ-MBH NZ-NSN NZ-OTA NZ-STL NZ-TAS NZ-WTC"}
+                replacement{"nzcan nzmbh nznsn nzota nzstl nztas nzwtc"}
             }
-            OM-BA{
+            omba{
                 reason{"deprecated"}
-                replacement{"OM-BJ OM-BS"}
+                replacement{"ombj ombs"}
             }
-            OM-SH{
+            omsh{
                 reason{"deprecated"}
-                replacement{"OM-SJ OM-SS"}
+                replacement{"omsj omss"}
             }
-            TT-ETO{
+            shta{
+                reason{"overlong"}
+                replacement{"TA"}
+            }
+            tteto{
                 reason{"deprecated"}
-                replacement{"TT-TOB"}
+                replacement{"tttob"}
             }
-            TT-RCM{
+            ttrcm{
                 reason{"deprecated"}
-                replacement{"TT-MRC"}
+                replacement{"ttmrc"}
             }
-            TT-WTO{
+            ttwto{
                 reason{"deprecated"}
-                replacement{"TT-TOB"}
+                replacement{"tttob"}
             }
-            TW-KHQ{
+            twkhq{
                 reason{"deprecated"}
-                replacement{"TW-KHH"}
+                replacement{"twkhh"}
             }
-            TW-TNQ{
+            twtnq{
                 reason{"deprecated"}
-                replacement{"TW-TNN"}
+                replacement{"twtnn"}
             }
-            TW-TPQ{
+            twtpq{
                 reason{"deprecated"}
-                replacement{"TW-NWT"}
+                replacement{"twnwt"}
             }
-            TW-TXQ{
+            twtxq{
                 reason{"deprecated"}
-                replacement{"TW-TXG"}
+                replacement{"twtxg"}
             }
-            US-AS{
+            usas{
                 reason{"overlong"}
                 replacement{"AS"}
             }
-            US-GU{
+            usgu{
                 reason{"overlong"}
                 replacement{"GU"}
             }
-            US-MP{
+            usmp{
                 reason{"overlong"}
                 replacement{"MP"}
             }
-            US-PR{
+            uspr{
                 reason{"overlong"}
                 replacement{"PR"}
             }
-            US-UM{
+            usum{
                 reason{"overlong"}
                 replacement{"UM"}
             }
-            US-VI{
+            usvi{
                 reason{"overlong"}
                 replacement{"VI"}
             }
@@ -4107,6 +4263,7 @@ metadata:table(nofallback){
         "bez_TZ",
         "bg_BG",
         "bgn_PK",
+        "blt_Tavt_VN",
         "bm_ML",
         "bm_Nkoo_ML",
         "bn_BD",
@@ -4120,6 +4277,7 @@ metadata:table(nofallback){
         "byn_ER",
         "ca_ES",
         "cch_NG",
+        "ccp_BD",
         "ce_RU",
         "cgg_UG",
         "chr_US",

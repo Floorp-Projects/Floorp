@@ -9,6 +9,7 @@
 */
 -->
 <deprecates>
+	<alias from="ars" to="ar"/>
 	<alias from="de__PHONEBOOK" to="de"  rbpath="/collations/default" value="phonebook"/>
 	<alias from="es__TRADITIONAL" to="es" rbpath="/collations/default" value="traditional"/>
 	<alias from="in" to="id" />
