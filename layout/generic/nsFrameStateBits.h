@@ -273,6 +273,10 @@ FRAME_STATE_BIT(Generic, 55, NS_FRAME_OWNS_ANON_BOXES)
 // Frame has properties in the nsIFrame::Properties() hash.
 FRAME_STATE_BIT(Generic, 56, NS_FRAME_HAS_PROPERTIES)
 
+// The display list of the frame can be handled by the shortcut for
+// COMMON CASE.
+FRAME_STATE_BIT(Generic, 57, NS_FRAME_SIMPLE_DISPLAYLIST)
+
 // Set for all descendants of MathML sub/supscript elements (other than the
 // base frame) to indicate that the SSTY font feature should be used.
 FRAME_STATE_BIT(Generic, 58, NS_FRAME_MATHML_SCRIPT_DESCENDANT)
