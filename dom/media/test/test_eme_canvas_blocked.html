@@ -17,8 +17,10 @@ function startTest(test, token)
   manager.started(token);
 
   var sessions = [];
+  // Will be resolved when all initData are processed.
+  let initDataPromise = new EMEPromise;
 
-  var v = SetupEME(test, token);
+  var v = SetupEME(test, token, { initDataPromise: initDataPromise });
   v.preload = "auto"; // Required due to "canplay" not firing for MSE unless we do this.
 
   var p1 = new EMEPromise;
@@ -40,7 +42,7 @@ function startTest(test, token)
   });
 
   var p2 = LoadTest(test, v, token, { onlyLoadFirstFragments:2, noEndOfStream:false });
-  EMEPromiseAll(v, token, [p1.promise, p2]);
+  EMEPromiseAll(v, token, [p1.promise, p2, initDataPromise.promise]);
 }
 
 function beginTest() {
