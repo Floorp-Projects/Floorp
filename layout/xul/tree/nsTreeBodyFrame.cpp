@@ -1109,7 +1109,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(int32_t aRow, nsITreeColumn* aCol, const n
   bool isRTL = StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
   nscoord currX = mInnerBox.x - mHorzPosition;
 
-  // The Rect for the requested item. 
+  // The Rect for the requested item.
   nsRect theRect;
 
   nsPresContext* presContext = PresContext();
@@ -4526,6 +4526,22 @@ nsTreeBodyFrame::ClearStyleAndImageCaches()
   mStyleCache.Clear();
   CancelImageRequests();
   mImageCache.Clear();
+  return NS_OK;
+}
+
+nsresult
+nsTreeBodyFrame::RemoveImageCacheEntry(int32_t aRowIndex, nsITreeColumn* aCol)
+{
+  nsAutoString imageSrc;
+  if (NS_SUCCEEDED(mView->GetImageSrc(aRowIndex, aCol, imageSrc))) {
+    nsTreeImageCacheEntry entry;
+    if (mImageCache.Get(imageSrc, &entry)) {
+      nsLayoutUtils::DeregisterImageRequest(PresContext(), entry.request,
+                                            nullptr);
+      entry.request->CancelAndForgetObserver(NS_BINDING_ABORTED);
+      mImageCache.Remove(imageSrc);
+    }
+  }
   return NS_OK;
 }
 

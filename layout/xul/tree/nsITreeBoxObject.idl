@@ -48,7 +48,7 @@ interface nsITreeBoxObject : nsISupports
   readonly attribute long rowWidth;
 
   /**
-   * Get the pixel position of the horizontal scrollbar. 
+   * Get the pixel position of the horizontal scrollbar.
    */
   readonly attribute long horizontalPosition;
 
@@ -186,4 +186,12 @@ interface nsITreeBoxObject : nsISupports
    * Called on a theme switch to flush out the tree's style and image caches.
    */
   void clearStyleAndImageCaches();
+
+  /**
+   * Remove an image source from the image cache to allow its invalidation.
+   *
+   * @note This only affects images supplied by the view, not the ones supplied
+   *       through the styling context, like twisties or checkboxes.
+   */
+  void removeImageCacheEntry(in long row, in nsITreeColumn col);
 };
