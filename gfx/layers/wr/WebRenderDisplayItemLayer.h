@@ -32,10 +32,7 @@ public:
                        nsTArray<layers::WebRenderParentCommand>& aParentCommands);
 
 protected:
-  virtual ~WebRenderDisplayItemLayer()
-  {
-    MOZ_COUNT_DTOR(WebRenderDisplayItemLayer);
-  }
+  virtual ~WebRenderDisplayItemLayer();
 
 public:
   Layer* GetLayer() override { return this; }
