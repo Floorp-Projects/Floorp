@@ -58,16 +58,6 @@ module.exports = {
     // Use [] instead of Array()
     "no-array-constructor": "error",
    
-    // Disallow empty statements. This will report an error for:
-    // try { something(); } catch (e) {}
-    // but will not report it for:
-    // try { something(); } catch (e) { /* Silencing the error because ...*/ }
-    // which is a valid use case.
-    "no-empty": "error",
-
-    // No spaces between function name and parentheses
-    "no-spaced-func": "warn",
-
     // No expressions where a statement is expected
     "no-unused-expressions": "error",
 
@@ -117,9 +107,6 @@ module.exports = {
     // Disallow use of eval(). We have other APIs to evaluate code in content.
     "no-eval": "error",
 
-    // Disallow adding to native types
-    "no-extend-native": "error",
-
     // Disallow fallthrough of case statements, except if there is a comment.
     "no-fallthrough": "error",
 
@@ -163,9 +150,6 @@ module.exports = {
 
     // Disallow function or variable declarations in nested blocks
     "no-inner-declarations": "error",
-
-    // Disallow labels that share a name with a variable
-    "no-label-var": "error",
 
     // Disallow creating new instances of String, Number, and Boolean
     "no-new-wrappers": "error",
