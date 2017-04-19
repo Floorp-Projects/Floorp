@@ -5053,18 +5053,22 @@ SweepCompressionTasksTask::run()
     // Attach finished compression tasks.
     auto& finished = HelperThreadState().compressionFinishedList(lock);
     for (size_t i = 0; i < finished.length(); i++) {
-        if (finished[i]->runtimeMatches(runtime())) {
-            UniquePtr<SourceCompressionTask> task(Move(finished[i]));
+        SourceCompressionTask* task = finished[i];
+        if (task->runtimeMatches(runtime())) {
             HelperThreadState().remove(finished, &i);
             task->complete();
+            js_delete(task);
         }
     }
 
     // Sweep pending tasks that are holding onto should-be-dead ScriptSources.
     auto& pending = HelperThreadState().compressionPendingList(lock);
     for (size_t i = 0; i < pending.length(); i++) {
-        if (pending[i]->shouldCancel())
+        SourceCompressionTask* task = pending[i];
+        if (task->shouldCancel()) {
             HelperThreadState().remove(pending, &i);
+            js_delete(task);
+        }
     }
 }
 
