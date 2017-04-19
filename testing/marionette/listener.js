@@ -74,8 +74,6 @@ var asyncTestTimeoutId;
 var inactivityTimeoutId = null;
 
 var originalOnError;
-//timer for doc changes
-var checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 //timer for readystate
 var readyStateTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 // Send move events about this often
@@ -252,9 +250,11 @@ var loadListener = {
           sendError(new UnknownError("Reached error page: " +
               event.target.baseURI), this.command_id);
 
-        // Special-case about:blocked pages which should be treated as non-error
-        // pages but do not raise a pageshow event.
-        } else if (/about:blocked\?/.exec(event.target.baseURI)) {
+        // Return early with a page load strategy of eager, and also special-case
+        // about:blocked pages which should be treated as non-error pages but do
+        // not raise a pageshow event.
+        } else if (capabilities.get("pageLoadStrategy") === session.PageLoadStrategy.Eager ||
+            /about:blocked\?/.exec(event.target.baseURI)) {
           this.stop();
           sendOk(this.command_id);
         }
@@ -355,6 +355,11 @@ var loadListener = {
    */
   navigate: function (trigger, command_id, timeout, loadEventExpected = true,
       useUnloadTimer = false) {
+
+    // Only wait if the page load strategy is not `none`
+    loadEventExpected = loadEventExpected &&
+        capabilities.get("pageLoadStrategy") !== session.PageLoadStrategy.None;
+
     if (loadEventExpected) {
       let startTime = new Date().getTime();
       this.start(command_id, timeout, startTime, true);
@@ -1113,7 +1118,8 @@ function setDispatch(batches, touches, batchIndex=0) {
   }
 
   if (maxTime != 0) {
-    checkTimer.initWithCallback(function() {
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    timer.initWithCallback(function() {
       setDispatch(batches, touches, batchIndex);
     }, maxTime, Ci.nsITimer.TYPE_ONE_SHOT);
   } else {
@@ -1597,21 +1603,10 @@ function switchToShadowRoot(id) {
  */
 function switchToFrame(msg) {
   let command_id = msg.json.command_id;
-  function checkLoad() {
-    let errorRegex = /about:.+(error)|(blocked)\?/;
-    if (curContainer.frame.document.readyState == "complete") {
-      sendOk(command_id);
-      return;
-    } else if (curContainer.frame.document.readyState == "interactive" &&
-        errorRegex.exec(curContainer.frame.document.baseURI)) {
-      sendError(new UnknownError("Error loading page"), command_id);
-      return;
-    }
-    checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
-  }
   let foundFrame = null;
   let frames = [];
   let parWindow = null;
+
   // Check of the curContainer.frame reference is dead
   try {
     frames = curContainer.frame.frames;
@@ -1636,7 +1631,7 @@ function switchToFrame(msg) {
       curContainer.frame.focus();
     }
 
-    checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+    sendOk(command_id);
     return;
   }
 
@@ -1686,11 +1681,12 @@ function switchToFrame(msg) {
           // context so should treat it accordingly.
           sendSyncMessage("Marionette:switchedToFrame", { frameValue: null});
           curContainer.frame = content;
+
           if(msg.json.focus == true) {
             curContainer.frame.focus();
           }
 
-          checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+          sendOk(command_id);
           return;
         }
       } catch (e) {
@@ -1717,22 +1713,22 @@ function switchToFrame(msg) {
       curContainer.frame.wrappedJSObject, seenEls)[element.Key];
   sendSyncMessage("Marionette:switchedToFrame", {frameValue: frameValue});
 
-  let rv = null;
   if (curContainer.frame.contentWindow === null) {
     // The frame we want to switch to is a remote/OOP frame;
     // notify our parent to handle the switch
     curContainer.frame = content;
-    rv = {win: parWindow, frame: foundFrame};
+    let rv = {win: parWindow, frame: foundFrame};
+    sendResponse(rv, command_id);
+
   } else {
     curContainer.frame = curContainer.frame.contentWindow;
+
     if (msg.json.focus) {
       curContainer.frame.focus();
     }
-    checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
-    return;
-  }
 
-  sendResponse(rv, command_id);
+    sendOk(command_id);
+  }
 }
 
 function addCookie(cookie) {
