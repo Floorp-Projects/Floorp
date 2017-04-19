@@ -153,12 +153,6 @@ public:
     return Move(mPrincipalInfo);
   }
 
-  bool
-  Succeeded() const
-  {
-    return NS_SUCCEEDED(mNetworkResult);
-  }
-
 private:
   ~CompareNetwork()
   {
@@ -548,10 +542,6 @@ private:
     MOZ_ASSERT(aCN);
     MOZ_ASSERT(mState == WaitingForPut);
 
-    if (!aCN->Succeeded()) {
-      return;
-    }
-
     ErrorResult result;
     nsCOMPtr<nsIInputStream> body;
     result = NS_NewCStringInputStream(getter_AddRefs(body),
@@ -734,11 +724,7 @@ CompareNetwork::Finished()
   // mNetworkResult is prior to mCacheResult, since it's needed for reporting
   // various error to the web contenet.
   if (NS_FAILED(mNetworkResult)) {
-    // An imported script could become offline, since it might no longer be
-    // needed by the new importing script. In that case, the importing script
-    // must be different, and thus, it's okay to report same script found here.
-    rv = mIsMainScript ? mNetworkResult : NS_OK;
-    same = true;
+    rv = mNetworkResult;
   } else if (mCC && NS_FAILED(mCacheResult)) {
     rv = mCacheResult;
   } else { // Both passed.
