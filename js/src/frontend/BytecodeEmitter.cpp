@@ -9231,41 +9231,6 @@ BytecodeEmitter::isRestParameter(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitOptimizeSpread(ParseNode* arg0, JumpList* jmp, bool* emitted)
-{
-    // Emit a pereparation code to optimize the spread call with a rest
-    // parameter:
-    //
-    //   function f(...args) {
-    //     g(...args);
-    //   }
-    //
-    // If the spread operand is a rest parameter and it's optimizable array,
-    // skip spread operation and pass it directly to spread call operation.
-    // See the comment in OptimizeSpreadCall in Interpreter.cpp for the
-    // optimizable conditons.
-    if (!isRestParameter(arg0)) {
-        *emitted = false;
-        return true;
-    }
-
-    if (!emitTree(arg0))
-        return false;
-
-    if (!emit1(JSOP_OPTIMIZE_SPREADCALL))
-        return false;
-
-    if (!emitJump(JSOP_IFNE, jmp))
-        return false;
-
-    if (!emit1(JSOP_POP))
-        return false;
-
-    *emitted = true;
-    return true;
-}
-
-bool
 BytecodeEmitter::emitCallOrNew(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::WantValue */)
 {
     bool callop = pn->isKind(PNK_CALL) || pn->isKind(PNK_TAGGED_TEMPLATE);
@@ -9422,18 +9387,43 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn, ValueUsage valueUsage /* = ValueUs
         }
     } else {
         ParseNode* args = pn2->pn_next;
-        JumpList jmp;
-        bool optCodeEmitted = false;
-        if (argc == 1) {
-            if (!emitOptimizeSpread(args->pn_kid, &jmp, &optCodeEmitted))
+        bool emitOptCode = (argc == 1) && isRestParameter(args->pn_kid);
+        IfThenElseEmitter ifNotOptimizable(this);
+
+        if (emitOptCode) {
+            // Emit a preparation code to optimize the spread call with a rest
+            // parameter:
+            //
+            //   function f(...args) {
+            //     g(...args);
+            //   }
+            //
+            // If the spread operand is a rest parameter and it's optimizable
+            // array, skip spread operation and pass it directly to spread call
+            // operation.  See the comment in OptimizeSpreadCall in
+            // Interpreter.cpp for the optimizable conditons.
+
+            if (!emitTree(args->pn_kid))
+                return false;
+
+            if (!emit1(JSOP_OPTIMIZE_SPREADCALL))
+                return false;
+
+            if (!emit1(JSOP_NOT))
+                return false;
+
+            if (!ifNotOptimizable.emitIf())
+                return false;
+
+            if (!emit1(JSOP_POP))
                 return false;
         }
 
         if (!emitArray(args, argc, JSOP_SPREADCALLARRAY))
             return false;
 
-        if (optCodeEmitted) {
-            if (!emitJumpTargetAndPatch(jmp))
+        if (emitOptCode) {
+            if (!ifNotOptimizable.emitEnd())
                 return false;
         }
 
