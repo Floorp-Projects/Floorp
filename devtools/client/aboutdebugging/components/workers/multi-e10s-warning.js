@@ -26,7 +26,7 @@ module.exports = createClass({
   displayName: "multiE10SWarning",
 
   onUpdatePreferenceClick() {
-    let message = Strings.GetStringFromName("multiProcessWarningConfirmUpdate");
+    let message = Strings.GetStringFromName("multiProcessWarningConfirmUpdate2");
     if (window.confirm(message)) {
       // Disable multi until at least the next experiment.
       Services.prefs.setIntPref(MULTI_OPT_OUT_PREF,
@@ -48,14 +48,14 @@ module.exports = createClass({
       ),
       dom.div(
         {},
-        Strings.GetStringFromName("multiProcessWarningMessage")
+        Strings.GetStringFromName("multiProcessWarningMessage2")
       ),
       dom.button(
         {
           className: "update-button",
           onClick: this.onUpdatePreferenceClick,
         },
-        Strings.GetStringFromName("multiProcessWarningUpdateLink")
+        Strings.GetStringFromName("multiProcessWarningUpdateLink2")
       )
     );
   },
