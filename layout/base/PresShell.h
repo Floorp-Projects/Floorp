@@ -906,6 +906,8 @@ protected:
   bool                      mIsLastKeyDownCanceled : 1;
 
   static bool               sDisableNonTestMouseEvents;
+
+  mozilla::TimeStamp        mLastOSWake;
 };
 
 } // namespace mozilla
