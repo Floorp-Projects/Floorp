@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Peut empêcher certaines vidéos et pages web de s’afficher correctement</string>
   <string name="preference_category_performance">Performances</string>
   <string name="preference_performance_block_webfonts">Bloquer les polices web</string>
+  <string name="preference_performance_block_webfonts_summary">Peut empêcher certaines icônes ou images de s’afficher</string>
   <string name="preference_performance_block_images">Bloquer les images</string>
   <string name="preference_default_browser">Définir comme navigateur par défaut</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">Options supplémentaires</string>
   <string name="content_description_forward">Avancer dans l’historique</string>
   <string name="content_description_reload">Actualiser la page web</string>
+  <string name="content_description_back">Précédent</string>
+  <string name="content_description_stop">Arrêter le chargement du site web</string>
+  <string name="context_menu_paste_go">Coller et aller</string>
   <string name="firstrun_title">Naviguez comme si personne ne vous regardait.</string>
   <string name="firstrun_description">Bloquez automatiquement les traqueurs lorsque vous naviguez. Appuyez ensuite sur le bouton Effacer pour supprimer les pages visitées, les recherches, les cookies et les mots de passe.</string>
   <string name="firstrun_button">D’accord, j’ai compris.</string>

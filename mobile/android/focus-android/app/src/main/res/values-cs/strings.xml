@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">Může rozbít některá videa a webové stránky</string>
   <string name="preference_category_performance">Výkon</string>
   <string name="preference_performance_block_webfonts">Blokovat webové fonty</string>
+  <string name="preference_performance_block_webfonts_summary">Některé ikony nebo obrázky se nemusí zobrazovat</string>
   <string name="preference_performance_block_images">Blokovat obrázky</string>
   <string name="preference_default_browser">Nastavit jako výchozí prohlížeč</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">Další možnosti</string>
   <string name="content_description_forward">Přejít vpřed</string>
   <string name="content_description_reload">Obnovit stránku</string>
+  <string name="content_description_back">Návrat zpět</string>
+  <string name="content_description_stop">Zastavit načítání stránky</string>
+  <string name="context_menu_paste_go">Vložit a přejít</string>
   <string name="firstrun_title">Procházejte, jako když se nikdo nedívá.</string>
   <string name="firstrun_description">Automaticky blokuje sledovací prvky, zatímco prohlížíte. Poté stačí klepnout pro vymazání zobrazených stránek, vyhledávání, souborů cookie a hesel z vašeho zařízení.</string>
   <string name="firstrun_button">Ok, rozumím!</string>

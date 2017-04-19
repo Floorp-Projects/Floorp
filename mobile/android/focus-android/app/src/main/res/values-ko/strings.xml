@@ -25,6 +25,7 @@
   <string name="preference_privacy_block_content_summary">동영상이나 웹 페이지가 제대로 표시되지 않을 수 있음</string>
   <string name="preference_category_performance">성능</string>
   <string name="preference_performance_block_webfonts">웹 폰트 차단</string>
+  <string name="preference_performance_block_webfonts_summary">아이콘 또는 이미지가 누락될 수 있음</string>
   <string name="preference_performance_block_images">이미지 차단</string>
   <string name="preference_default_browser">기본 브라우저로 설정</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -40,6 +41,9 @@
   <string name="content_description_menu">옵션 더보기</string>
   <string name="content_description_forward">앞으로 가기</string>
   <string name="content_description_reload">웹 사이트 다시 불러오기</string>
+  <string name="content_description_back">뒤로 가기</string>
+  <string name="content_description_stop">웹사이트 로딩 중지</string>
+  <string name="context_menu_paste_go">붙여넣고 바로 가기</string>
   <string name="firstrun_title">아무도 모르게 탐색합니다.</string>
   <string name="firstrun_description">검색 중 온라인 추적을 자동으로 차단합니다. 클릭만으로 방문한 페이지, 검색 기록, 쿠키, 암호를 단말기에서 삭제할 수 있습니다.</string>
   <string name="firstrun_button">알겠습니다!</string>
