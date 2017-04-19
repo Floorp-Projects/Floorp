@@ -29,7 +29,12 @@ public class FileUtils {
     private static boolean deleteContent(File directory) {
         boolean success = true;
 
-        for (final String name : directory.list()) {
+        final String[] files = directory.list();
+        if (files == null) {
+            return false;
+        }
+
+        for (final String name : files) {
             final File file = new File(directory, name);
             if (file.isDirectory()) {
                 success &= deleteDirectory(file);
