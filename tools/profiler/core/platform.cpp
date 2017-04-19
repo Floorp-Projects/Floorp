@@ -1386,23 +1386,23 @@ locked_profiler_stream_json_for_this_process(PS::LockRef aLock, SpliceableJSONWr
   {
     gPS->SetIsPaused(aLock, true);
 
-      const PS::ThreadVector& liveThreads = gPS->LiveThreads(aLock);
-      for (size_t i = 0; i < liveThreads.size(); i++) {
-        ThreadInfo* info = liveThreads.at(i);
-        if (!info->IsBeingProfiled()) {
-          continue;
-        }
-        info->StreamJSON(gPS->Buffer(aLock), aWriter, gPS->StartTime(aLock),
-                         aSinceTime);
+    const PS::ThreadVector& liveThreads = gPS->LiveThreads(aLock);
+    for (size_t i = 0; i < liveThreads.size(); i++) {
+      ThreadInfo* info = liveThreads.at(i);
+      if (!info->IsBeingProfiled()) {
+        continue;
       }
+      info->StreamJSON(gPS->Buffer(aLock), aWriter, gPS->StartTime(aLock),
+                       aSinceTime);
+    }
 
-      const PS::ThreadVector& deadThreads = gPS->DeadThreads(aLock);
-      for (size_t i = 0; i < deadThreads.size(); i++) {
-        ThreadInfo* info = deadThreads.at(i);
-        MOZ_ASSERT(info->IsBeingProfiled());
-        info->StreamJSON(gPS->Buffer(aLock), aWriter, gPS->StartTime(aLock),
-                         aSinceTime);
-      }
+    const PS::ThreadVector& deadThreads = gPS->DeadThreads(aLock);
+    for (size_t i = 0; i < deadThreads.size(); i++) {
+      ThreadInfo* info = deadThreads.at(i);
+      MOZ_ASSERT(info->IsBeingProfiled());
+      info->StreamJSON(gPS->Buffer(aLock), aWriter, gPS->StartTime(aLock),
+                       aSinceTime);
+    }
 
 #if defined(PROFILE_JAVA)
     if (gPS->FeatureJava(aLock)) {
