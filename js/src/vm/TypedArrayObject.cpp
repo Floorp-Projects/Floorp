@@ -457,11 +457,12 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     }
 
     static TypedArrayObject*
-    makeInstance(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer, uint32_t byteOffset, uint32_t len,
-                 HandleObject proto)
+    makeInstance(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> buffer, uint32_t byteOffset,
+                 uint32_t len, HandleObject proto)
     {
         MOZ_ASSERT_IF(!buffer, byteOffset == 0);
         MOZ_ASSERT_IF(buffer, !buffer->isDetached());
+        MOZ_ASSERT(len < INT32_MAX / sizeof(NativeType));
 
         gc::AllocKind allocKind = buffer
                                   ? GetGCObjectKind(instanceClass())
@@ -842,13 +843,15 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
     // ES2017 draft rev 6390c2f1b34b309895d31d8c0512eac8660a0210
     // 22.2.4.5 TypedArray ( buffer [ , byteOffset [ , length ] ] )
-    // Steps 7, 10.a-c, 11.b-c.
+    // Steps 10.a-c, 11.b-c.
     static bool
     computeAndCheckLength(JSContext* cx, uint32_t bufferByteLength, uint32_t byteOffset,
                           int32_t lengthInt, uint32_t* length)
     {
-        // Steps 7, 10.c, 11.c.
-        if (byteOffset > bufferByteLength || byteOffset % sizeof(NativeType) != 0) {
+        MOZ_ASSERT(byteOffset % sizeof(NativeType) == 0);
+
+        // Steps 10.c, 11.c.
+        if (byteOffset > bufferByteLength) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                       JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
             return false; // invalid byteOffset
@@ -866,25 +869,35 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                                           JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
                 return false; // given byte array doesn't map exactly to sizeof(NativeType) * N
             }
+
+            // ArrayBuffer is too large for TypedArrays:
+            // Standalone ArrayBuffers can hold up to INT32_MAX bytes, whereas
+            // buffers in TypedArrays must have less than or equal to
+            // |INT32_MAX - sizeof(NativeType) - INT32_MAX % sizeof(NativeType)|
+            // bytes.
+            if (len >= INT32_MAX / sizeof(NativeType)) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                          JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
+                return false;
+            }
         } else {
             // Step 11.b (implicit).
             len = uint32_t(lengthInt);
-        }
 
-        // Step 11.c.
-        // Go slowly and check for overflow.
-        uint32_t arrayByteLength = len * sizeof(NativeType);
-        if (len >= INT32_MAX / sizeof(NativeType) || byteOffset >= INT32_MAX - arrayByteLength) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                      JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
-            return false; // overflow when calculating byteOffset + len * sizeof(NativeType)
-        }
+            // Step 11.c.
+            if (len >= INT32_MAX / sizeof(NativeType)) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                          JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
+                return false;
+            }
+            uint32_t newByteLength = len * sizeof(NativeType);
 
-        // Step 11.c.
-        if (arrayByteLength + byteOffset > bufferByteLength) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                      JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
-            return false; // byteOffset + len is too big for the arraybuffer
+            // Step 11.c (|byteOffset| moved to the RHS to avoid overflow).
+            if (newByteLength > bufferByteLength - byteOffset) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                          JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
+                return false; // |byteOffset + newByteLength| is too big for the arraybuffer
+            }
         }
 
         *length = len;
@@ -1001,6 +1014,12 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     static JSObject*
     fromBuffer(JSContext* cx, HandleObject bufobj, uint32_t byteOffset, int32_t lengthInt)
     {
+        if (byteOffset % sizeof(NativeType) != 0) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                      JSMSG_TYPED_ARRAY_CONSTRUCT_BOUNDS);
+            return nullptr; // invalid byteOffset
+        }
+
         if (bufobj->is<ArrayBufferObjectMaybeShared>()) {
             HandleArrayBufferObjectMaybeShared buffer = bufobj.as<ArrayBufferObjectMaybeShared>();
 
