@@ -60,20 +60,14 @@ module.exports = createClass({
           className: "boxmodel-properties-header",
           onDoubleClick: this.onToggleExpander,
         },
-        dom.div(
+        dom.span(
           {
             className: "boxmodel-properties-expander theme-twisty",
             open: this.state.isOpen,
             onClick: this.onToggleExpander,
           }
         ),
-        dom.span(
-          {
-            className: "boxmodel-properties-label",
-            title: BOXMODEL_L10N.getStr("boxmodel.propertiesLabel"),
-          },
-          BOXMODEL_L10N.getStr("boxmodel.propertiesLabel")
-        )
+        BOXMODEL_L10N.getStr("boxmodel.propertiesLabel")
       ),
       dom.div(
         {
