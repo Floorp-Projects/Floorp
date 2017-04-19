@@ -6,6 +6,7 @@ package org.mozilla.focus.webkit;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.net.http.SslError;
 import android.os.AsyncTask;
 import android.support.annotation.WorkerThread;
@@ -53,11 +54,13 @@ public class TrackingProtectionWebViewClient extends WebViewClient {
     }
 
     @Override
-    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+    public WebResourceResponse shouldInterceptRequest(final WebView view, final WebResourceRequest request) {
+        final Uri resourceUri = request.getUrl();
+
         // shouldInterceptRequest() might be called _before_ onPageStarted or shouldOverrideUrlLoading
         // are called (this happens when the webview is first shown). However we are notified of the URL
         // via notifyCurrentURL in that case.
-        final String scheme = request.getUrl().getScheme();
+        final String scheme = resourceUri.getScheme();
 
         if (!request.isForMainFrame() &&
                 !scheme.equals("http") && !scheme.equals("https")) {
@@ -68,13 +71,12 @@ public class TrackingProtectionWebViewClient extends WebViewClient {
             return new WebResourceResponse(null, null, null);
         }
 
-        final String url = request.getUrl().toString();
-
         // WebView always requests a favicon, even though it won't be used anywhere. This check
         // isn't able to block all favicons (some of them will be loaded using <link rel="shortcut icon">
         // with a custom URL which we can't match or detect), but reduces the amount of unnecessary
         // favicon loading that's performed.
-        if (url.endsWith("/favicon.ico")) {
+        final String path = resourceUri.getPath();
+        if (path != null && path.endsWith("/favicon.ico")) {
             return new WebResourceResponse(null, null, null);
         }
 
@@ -83,7 +85,7 @@ public class TrackingProtectionWebViewClient extends WebViewClient {
         // Don't block the main frame from being loaded. This also protects against cases where we
         // open a link that redirects to another app (e.g. to the play store).
         if ((!request.isForMainFrame()) &&
-                matcher.matches(url, currentPageURL)) {
+                matcher.matches(resourceUri, currentPageURL)) {
             return new WebResourceResponse(null, null, null);
         }
 

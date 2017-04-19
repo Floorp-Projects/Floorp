@@ -7,6 +7,7 @@ package org.mozilla.focus.webkit.matcher;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -211,19 +212,24 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
         }
     }
 
-    public boolean matches(final String resourceURLString, final String pageURLString) {
-        // TODO: metrics for lookup time?
-        // TODO: always whitelist current domain - decide on how to handle subdomains / TLDs correctly first though?
+    public boolean matches(final Uri resourceURI, final String pageURLString) {
+        final String path = resourceURI.getPath();
+
+        if (path == null) {
+            return false;
+        }
 
         // We need to handle webfonts first: if they are blocked, then whitelists don't matter.
         // If they aren't blocked we still need to check domain blacklists below.
         if (blockWebfonts) {
             for (final String extension : WEBFONT_EXTENSIONS) {
-                if (resourceURLString.endsWith(extension)) {
+                if (path.endsWith(extension)) {
                     return true;
                 }
             }
         }
+
+        final String resourceURLString = resourceURI.toString();
 
         // Cached whitelisted items can be permitted now (but blacklisted needs to wait for the override / entity list)
         if (previouslyUnmatched.contains(resourceURLString)) {
@@ -241,23 +247,16 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
             return true;
         }
 
-        try {
-            final String host = new URL(resourceURLString).getHost().toString();
-            final FocusString revhost = FocusString.create(host).reverse();
+        final String host = resourceURI.getHost().toString();
+        final FocusString revhost = FocusString.create(host).reverse();
 
-            for (final Map.Entry<String, Trie> category : categories.entrySet()) {
-                if (enabledCategories.contains(category.getKey())) {
-                    if (category.getValue().findNode(revhost) != null) {
-                        previouslyMatched.add(resourceURLString);
-                        return true;
-                    }
+        for (final Map.Entry<String, Trie> category : categories.entrySet()) {
+            if (enabledCategories.contains(category.getKey())) {
+                if (category.getValue().findNode(revhost) != null) {
+                    previouslyMatched.add(resourceURLString);
+                    return true;
                 }
             }
-
-        } catch (MalformedURLException e) {
-            // In reality this should never happen - unless webkit were to pass us an invalid URL.
-            // If we ever hit this in the wild, we might want to think our approach...
-            throw new IllegalArgumentException("Unable to handle malformed resource URL");
         }
 
         previouslyUnmatched.add(resourceURLString);

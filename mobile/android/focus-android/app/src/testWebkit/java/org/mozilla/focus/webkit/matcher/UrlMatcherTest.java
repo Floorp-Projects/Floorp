@@ -6,6 +6,7 @@ package org.mozilla.focus.webkit.matcher;
 
 import android.app.Application;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 
 import junit.framework.Assert;
@@ -30,21 +31,21 @@ public class UrlMatcherTest {
                 "bcd.random"
         });
 
-        assertTrue(matcher.matches("http://bcd.random/something", "http://mozilla.org"));
-        assertTrue(matcher.matches("http://bcd.random", "http://mozilla.org"));
-        assertTrue(matcher.matches("http://www.bcd.random", "http://mozilla.org"));
-        assertTrue(matcher.matches("http://www.bcd.random/something", "http://mozilla.org"));
-        assertTrue(matcher.matches("http://foobar.bcd.random", "http://mozilla.org"));
-        assertTrue(matcher.matches("http://foobar.bcd.random/something", "http://mozilla.org"));
+        assertTrue(matcher.matches(Uri.parse("http://bcd.random/something"), "http://mozilla.org"));
+        assertTrue(matcher.matches(Uri.parse("http://bcd.random"), "http://mozilla.org"));
+        assertTrue(matcher.matches(Uri.parse("http://www.bcd.random"), "http://mozilla.org"));
+        assertTrue(matcher.matches(Uri.parse("http://www.bcd.random/something"), "http://mozilla.org"));
+        assertTrue(matcher.matches(Uri.parse("http://foobar.bcd.random"), "http://mozilla.org"));
+        assertTrue(matcher.matches(Uri.parse("http://foobar.bcd.random/something"), "http://mozilla.org"));
 
-        assertTrue(!matcher.matches("http://other.random", "http://mozilla.org"));
-        assertTrue(!matcher.matches("http://other.random/something", "http://mozilla.org"));
-        assertTrue(!matcher.matches("http://www.other.random", "http://mozilla.org"));
-        assertTrue(!matcher.matches("http://www.other.random/something", "http://mozilla.org"));
-        assertTrue(!matcher.matches("http://bcd.specific", "http://mozilla.org"));
-        assertTrue(!matcher.matches("http://bcd.specific/something", "http://mozilla.org"));
-        assertTrue(!matcher.matches("http://www.bcd.specific", "http://mozilla.org"));
-        assertTrue(!matcher.matches("http://www.bcd.specific/something", "http://mozilla.org"));
+        assertTrue(!matcher.matches(Uri.parse("http://other.random"), "http://mozilla.org"));
+        assertTrue(!matcher.matches(Uri.parse("http://other.random/something"), "http://mozilla.org"));
+        assertTrue(!matcher.matches(Uri.parse("http://www.other.random"), "http://mozilla.org"));
+        assertTrue(!matcher.matches(Uri.parse("http://www.other.random/something"), "http://mozilla.org"));
+        assertTrue(!matcher.matches(Uri.parse("http://bcd.specific"), "http://mozilla.org"));
+        assertTrue(!matcher.matches(Uri.parse("http://bcd.specific/something"), "http://mozilla.org"));
+        assertTrue(!matcher.matches(Uri.parse("http://www.bcd.specific"), "http://mozilla.org"));
+        assertTrue(!matcher.matches(Uri.parse("http://www.bcd.specific/something"), "http://mozilla.org"));
     }
 
     @Test
@@ -126,7 +127,7 @@ public class UrlMatcherTest {
                 final String url = "http://category" + currentCategory + ".com";
 
                 Assert.assertEquals("Incorrect category matched for combo=" + categoryPattern + " url=" + url,
-                        enabled, matcher.matches(url, "http://www.mozilla.org"));
+                        enabled, matcher.matches(Uri.parse(url), "http://www.mozilla.org"));
             }
         }
     }

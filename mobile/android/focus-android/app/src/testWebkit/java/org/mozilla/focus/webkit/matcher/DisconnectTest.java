@@ -5,6 +5,7 @@
 package org.mozilla.focus.webkit.matcher;
 
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 
 import org.junit.Test;
@@ -51,19 +52,19 @@ public class DisconnectTest {
 
         // We check that our google_mapping was loaded correctly. We do these checks per-category, so we have:
         // ads:
-        assertTrue(matcher.matches("http://admeld.com/foobar", "http://mozilla.org"));
+        assertTrue(matcher.matches(Uri.parse("http://admeld.com/foobar"), "http://mozilla.org"));
         // And we check that the entitylist unblocks this on google properties:
-        assertFalse(matcher.matches("http://admeld.com/foobar", "http://google.com"));
+        assertFalse(matcher.matches(Uri.parse("http://admeld.com/foobar"), "http://google.com"));
         // analytics:
-        assertTrue(matcher.matches("http://google-analytics.com/foobar", "http://mozilla.org"));
-        assertFalse(matcher.matches("http://google-analytics.com/foobar", "http://google.com"));
+        assertTrue(matcher.matches(Uri.parse("http://google-analytics.com/foobar"), "http://mozilla.org"));
+        assertFalse(matcher.matches(Uri.parse("http://google-analytics.com/foobar"), "http://google.com"));
         // social:
-        assertTrue(matcher.matches("http://plus.google.com/something", "http://mozilla.org"));
-        assertFalse(matcher.matches("http://plus.google.com/something", "http://google.com"));
+        assertTrue(matcher.matches(Uri.parse("http://plus.google.com/something"), "http://mozilla.org"));
+        assertFalse(matcher.matches(Uri.parse("http://plus.google.com/something"), "http://google.com"));
 
         // Facebook is special in that we move it from "Disconnect" into social:
-        assertTrue(matcher.matches("http://facebook.fr", "http://mozilla.org"));
-        assertFalse(matcher.matches("http://facebook.fr", "http://facebook.com"));
+        assertTrue(matcher.matches(Uri.parse("http://facebook.fr"), "http://mozilla.org"));
+        assertFalse(matcher.matches(Uri.parse("http://facebook.fr"), "http://facebook.com"));
 
         // Now disable social, and check that only social sites have changed:
         prefs.edit()
@@ -74,18 +75,18 @@ public class DisconnectTest {
                 .commit();
 
         // ads:
-        assertTrue(matcher.matches("http://admeld.com/foobar", "http://mozilla.org"));
-        assertFalse(matcher.matches("http://admeld.com/foobar", "http://google.com"));
+        assertTrue(matcher.matches(Uri.parse("http://admeld.com/foobar"), "http://mozilla.org"));
+        assertFalse(matcher.matches(Uri.parse("http://admeld.com/foobar"), "http://google.com"));
         // analytics:
-        assertTrue(matcher.matches("http://google-analytics.com/foobar", "http://mozilla.org"));
-        assertFalse(matcher.matches("http://google-analytics.com/foobar", "http://google.com"));
+        assertTrue(matcher.matches(Uri.parse("http://google-analytics.com/foobar"), "http://mozilla.org"));
+        assertFalse(matcher.matches(Uri.parse("http://google-analytics.com/foobar"), "http://google.com"));
         // social:
-        assertFalse(matcher.matches("http://plus.google.com/something", "http://mozilla.org"));
-        assertFalse(matcher.matches("http://plus.google.com/something", "http://google.com"));
+        assertFalse(matcher.matches(Uri.parse("http://plus.google.com/something"), "http://mozilla.org"));
+        assertFalse(matcher.matches(Uri.parse("http://plus.google.com/something"), "http://google.com"));
 
         // And facebook which has been moved from Disconnect into social
-        assertFalse(matcher.matches("http://facebook.fr", "http://mozilla.org"));
-        assertFalse(matcher.matches("http://facebook.fr", "http://facebook.com"));
+        assertFalse(matcher.matches(Uri.parse("http://facebook.fr"), "http://mozilla.org"));
+        assertFalse(matcher.matches(Uri.parse("http://facebook.fr"), "http://facebook.com"));
 
         // Now disable everything - all sites should work:
         prefs.edit()
@@ -96,17 +97,17 @@ public class DisconnectTest {
                 .commit();
 
         // ads:
-        assertFalse(matcher.matches("http://admeld.com/foobar", "http://mozilla.org"));
-        assertFalse(matcher.matches("http://admeld.com/foobar", "http://google.com"));
+        assertFalse(matcher.matches(Uri.parse("http://admeld.com/foobar"), "http://mozilla.org"));
+        assertFalse(matcher.matches(Uri.parse("http://admeld.com/foobar"), "http://google.com"));
         // analytics:
-        assertFalse(matcher.matches("http://google-analytics.com/foobar", "http://mozilla.org"));
-        assertFalse(matcher.matches("http://google-analytics.com/foobar", "http://google.com"));
+        assertFalse(matcher.matches(Uri.parse("http://google-analytics.com/foobar"), "http://mozilla.org"));
+        assertFalse(matcher.matches(Uri.parse("http://google-analytics.com/foobar"), "http://google.com"));
         // social:
-        assertFalse(matcher.matches("http://plus.google.com/something", "http://mozilla.org"));
-        assertFalse(matcher.matches("http://plus.google.com/something", "http://google.com"));
+        assertFalse(matcher.matches(Uri.parse("http://plus.google.com/something"), "http://mozilla.org"));
+        assertFalse(matcher.matches(Uri.parse("http://plus.google.com/something"), "http://google.com"));
 
         // Facebook is special in that we move it from "Disconnect" into social:
-        assertFalse(matcher.matches("http://facebook.fr", "http://mozilla.org"));
-        assertFalse(matcher.matches("http://facebook.fr", "http://facebook.com"));
+        assertFalse(matcher.matches(Uri.parse("http://facebook.fr"), "http://mozilla.org"));
+        assertFalse(matcher.matches(Uri.parse("http://facebook.fr"), "http://facebook.com"));
     }
 }
