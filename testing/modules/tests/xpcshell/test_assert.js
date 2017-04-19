@@ -351,10 +351,6 @@ add_task(function* test_rejects() {
   // A regex to match against the message.
   yield assert.rejects(Promise.reject(new Error("oh no")), /oh no/, "rejected");
 
-  // Check the promise is resolved with the original rejection.
-  let result = yield assert.rejects(Promise.reject("oh no"));
-  equal(result, "oh no");
-
   // Failure cases:
   // An instance to check against that doesn't match.
   yield checkRejectsFails(new Error("something else"), SomeErrorLikeThing);
