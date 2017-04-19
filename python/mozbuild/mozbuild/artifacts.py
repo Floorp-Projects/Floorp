@@ -112,7 +112,8 @@ PROCESSED_SUFFIX = '.processed.jar'
 CANDIDATE_TREES = (
     'mozilla-central',
     'integration/mozilla-inbound',
-    'releases/mozilla-aurora'
+    'releases/mozilla-aurora',
+    'releases/mozilla-beta'
 )
 
 class ArtifactJob(object):
