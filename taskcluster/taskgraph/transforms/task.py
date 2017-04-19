@@ -439,6 +439,7 @@ GROUP_NAMES = {
     'tc-X': 'Xpcshell tests executed by TaskCluster',
     'tc-X-e10s': 'Xpcshell tests executed by TaskCluster with e10s',
     'tc-L10n': 'Localised Repacks executed by Taskcluster',
+    'tc-L10n-Rpk': 'Localized Repackaged Repacks executed by Taskcluster',
     'tc-BM-L10n': 'Beetmover for locales executed by Taskcluster',
     'tc-Up': 'Balrog submission of updates, executed by Taskcluster',
     'tc-cs': 'Checksum signing executed by Taskcluster',
