@@ -2200,7 +2200,6 @@ MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
 MOZ_INSTALL_TRACKING=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
-MOZ_AUDIO_CHANNEL_MANAGER=
 MOZ_CONTENT_SANDBOX=
 MOZ_GMP_SANDBOX=
 MOZ_SANDBOX=1
@@ -4403,14 +4402,6 @@ if test -n "$MOZ_TIME_MANAGER"; then
     AC_DEFINE(MOZ_TIME_MANAGER)
 fi
 AC_SUBST(MOZ_TIME_MANAGER)
-
-dnl ========================================================
-dnl = Enable Support for AudioChannelManager API
-dnl ========================================================
-if test -n "$MOZ_AUDIO_CHANNEL_MANAGER"; then
-    AC_DEFINE(MOZ_AUDIO_CHANNEL_MANAGER)
-fi
-AC_SUBST(MOZ_AUDIO_CHANNEL_MANAGER)
 
 dnl ========================================================
 dnl = Enable Support for Secure Element API
