@@ -530,7 +530,7 @@ GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
                nsString &aFontName,
                gfxFontStyle &aFontStyle)
 {
-  LOGFONTW* ptrLogFont = nullptr;
+  const LOGFONTW* ptrLogFont = nullptr;
   LOGFONTW logFont;
   NONCLIENTMETRICSW ncm;
   char16_t name[LF_FACESIZE];
