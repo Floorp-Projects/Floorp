@@ -311,6 +311,9 @@ if (runningInParent) {
   // if receive an unexpected ping. Let's globally disable the shutdown ping sender:
   // the relevant tests will enable this pref when needed.
   Services.prefs.setBoolPref("toolkit.telemetry.shutdownPingSender.enabled", false);
+  // Ensure browser experiments are also disabled, to avoid network activity
+  // when toggling PREF_ENABLED.
+  Services.prefs.setBoolPref("experiments.enabled", false);
 
 
   fakePingSendTimer((callback, timeout) => {
