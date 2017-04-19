@@ -223,9 +223,14 @@ class TestCapabilityMatching(MarionetteTestCase):
             self.marionette.start_session({"desiredCapabilities": {"pageLoadStrategy": strategy}})
             self.assertEqual(self.marionette.session_capabilities["pageLoadStrategy"], strategy)
 
+        # A null value should be treatend as "normal"
+        self.delete_session()
+        self.marionette.start_session({"desiredCapabilities": {"pageLoadStrategy": None}})
+        self.assertEqual(self.marionette.session_capabilities["pageLoadStrategy"], "normal")
+
         for value in ["", "EAGER", True, 42, {}, []]:
             print("invalid strategy {}".format(value))
-            with self.assertRaises(SessionNotCreatedException):
+            with self.assertRaisesRegexp(SessionNotCreatedException, "InvalidArgumentError"):
                 self.marionette.start_session({"desiredCapabilities": {"pageLoadStrategy": value}})
 
     def test_proxy_default(self):
