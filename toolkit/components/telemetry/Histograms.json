@@ -13643,5 +13643,16 @@
     "n_buckets": 100,
     "bug_numbers": [1393399],
     "description": "Time in milliseconds to recover a video decoder from a HW video decoder crash, calculated since MFR gets a NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER error. The data is sent when video decoding is recovered from a GPU crash and the first frame is decoded."
+  },
+  "FORM_FILLING_REQUIRED_TIME_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["autofill@lists.mozilla.org", "jcheng@mozilla.com", "chsiang@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 300000,
+    "n_buckets": 22,
+    "keyed": true,
+    "bug_numbers": [1341569],
+    "description": "Milliseconds between starting to fill an autofill-eligible form field and submitting the form, keyed by the combination of form type and filling type."
   }
 }
