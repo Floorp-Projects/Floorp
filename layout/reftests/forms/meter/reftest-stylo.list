@@ -17,7 +17,7 @@ fails == bar-pseudo-element-vertical.html bar-pseudo-element-vertical.html # Bug
 # The following test is disabled but kept in the repository because the
 # transformations will not behave exactly the same for <meter> and two divs.
 # However, it would be possible to manually check those.
-fails == transformations.html transformations.html # Bug 1341785
+== transformations.html transformations.html # Bug 1341785
 
 # default style
 include default-style/reftest-stylo.list

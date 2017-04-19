@@ -37,7 +37,7 @@ fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabl
 fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == textarea-2.html textarea-2.html
 fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == textarea-3.html textarea-3.html
 pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == css-transform-1.html css-transform-1.html
-fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == css-transform-2.html css-transform-2.html
+pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == css-transform-2.html css-transform-2.html
 fails == container-with-clamping.html container-with-clamping.html
 skip pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) load video-1.html
 fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-min-1.html intrinsic-min-1.html

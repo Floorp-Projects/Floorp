@@ -12,12 +12,12 @@ random == bug-364968.html bug-364968.html
 == element-paint-repeated.html element-paint-repeated.html
 == element-paint-recursion.html element-paint-recursion.html
 HTTP(..) == element-paint-continuation.html element-paint-continuation.html
-fails == element-paint-transform-01.html element-paint-transform-01.html
-fails == element-paint-transform-02.html element-paint-transform-02.html
+== element-paint-transform-01.html element-paint-transform-01.html
+== element-paint-transform-02.html element-paint-transform-02.html
 == element-paint-background-size-01.html element-paint-background-size-01.html
 == element-paint-background-size-02.html element-paint-background-size-02.html
-fails == element-paint-transform-repeated.html element-paint-transform-repeated.html
-fails == element-paint-transform-03.html element-paint-transform-03.html
+== element-paint-transform-repeated.html element-paint-transform-repeated.html
+== element-paint-transform-03.html element-paint-transform-03.html
 fails == element-paint-native-widget.html element-paint-native-widget.html
 fails-if(usesRepeatResampling) == element-paint-subimage-sampling-restriction.html element-paint-subimage-sampling-restriction.html
 == element-paint-clippath.html element-paint-clippath.html
@@ -44,5 +44,5 @@ random-if(!cocoaWidget) fuzzy-if(cocoaWidget,2,42305) == gradient-html-07a.html 
 == gradient-html-07c.html gradient-html-07c.html
 HTTP == invalidate-1.html invalidate-1.html
 == pattern-html-01.html pattern-html-01.html
-fails == pattern-html-02.html pattern-html-02.html
+== pattern-html-02.html pattern-html-02.html
 == referenced-from-binding-01.html referenced-from-binding-01.html
