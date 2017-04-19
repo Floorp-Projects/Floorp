@@ -133,7 +133,13 @@ def get_log_info_structs(json_data):
             status = "mozilla::ct::CTLogStatus::Included"
             disqualification_time = 0
             disqualification_time_comment = "no disqualification time"
-        initializers.append(tmpl.substitute(
+        is_test_log = "test_only" in operator and operator["test_only"]
+        prefix = ""
+        suffix = ","
+        if is_test_log:
+            prefix = "#ifdef DEBUG\n"
+            suffix = ",\n#endif // DEBUG"
+        toappend = tmpl.substitute(
             # Use json.dumps for C-escaping strings.
             # Not perfect but close enough.
             description=json.dumps(log["description"]),
@@ -147,7 +153,8 @@ def get_log_info_structs(json_data):
             # Maximum line width is 80.
             indented_log_key="\n".
             join(['    "{0}"'.format(l) for l in get_hex_lines(log_key, 74)]),
-            log_key_len=len(log_key)))
+            log_key_len=len(log_key))
+        initializers.append(prefix + toappend + suffix)
     return initializers
 
 
@@ -156,9 +163,16 @@ def get_log_operator_structs(json_data):
     tmpl = Template("  { $name, $id }")
     initializers = []
     for operator in json_data["operators"]:
-        initializers.append(tmpl.substitute(
+        prefix = ""
+        suffix = ","
+        is_test_log = "test_only" in operator and operator["test_only"]
+        if is_test_log:
+            prefix = "#ifdef DEBUG\n"
+            suffix = ",\n#endif // DEBUG"
+        toappend = tmpl.substitute(
             name=json.dumps(operator["name"]),
-            id=operator["id"]))
+            id=operator["id"])
+        initializers.append(prefix + toappend + suffix)
     return initializers
 
 
@@ -171,9 +185,57 @@ def generate_cpp_header_file(json_data, out_file):
     out_file.write(Template(OUTPUT_TEMPLATE).substitute(
         prog=os.path.basename(sys.argv[0]),
         include_guard=include_guard,
-        logs=",\n".join(log_info_initializers),
-        operators=",\n".join(operator_info_initializers)))
+        logs="\n".join(log_info_initializers),
+        operators="\n".join(operator_info_initializers)))
 
+def patch_in_test_logs(json_data):
+    """ Insert Mozilla-specific test log data. """
+    max_id = 0
+    for operator in json_data["operators"]:
+        if operator["id"] > max_id:
+            max_id = operator["id"]
+    mozilla_test_operator_1 = {"name": "Mozilla Test Org 1", "id": max_id + 1,
+        "test_only": True}
+    mozilla_test_operator_2 = {"name": "Mozilla Test Org 2", "id": max_id + 2,
+        "test_only": True}
+    json_data["operators"].append(mozilla_test_operator_1)
+    json_data["operators"].append(mozilla_test_operator_2)
+    # The easiest way to get this is
+    # `openssl x509 -noout -pubkey -in <path/to/default-ee.pem>`
+    mozilla_rsa_log_1 = {"description": "Mozilla Test RSA Log 1",
+        "key": """
+            MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuohRqESOFtZB/W62iAY2
+            ED08E9nq5DVKtOz1aFdsJHvBxyWo4NgfvbGcBptuGobya+KvWnVramRxCHqlWqdF
+            h/cc1SScAn7NQ/weadA4ICmTqyDDSeTbuUzCa2wO7RWCD/F+rWkasdMCOosqQe6n
+            cOAPDY39ZgsrsCSSpH25iGF5kLFXkD3SO8XguEgfqDfTiEPvJxbYVbdmWqp+ApAv
+            OnsQgAYkzBxsl62WYVu34pYSwHUxowyR3bTK9/ytHSXTCe+5Fw6naOGzey8ib2nj
+            tIqVYR3uJtYlnauRCE42yxwkBCy/Fosv5fGPmRcxuLP+SSP6clHEMdUDrNoYCjXt
+            jQIDAQAB
+        """,
+        "operated_by": [max_id + 1]}
+    # Similarly,
+    # `openssl x509 -noout -pubkey -in <path/to/other-test-ca.pem>`
+    mozilla_rsa_log_2 = {"description": "Mozilla Test RSA Log 2",
+        "key": """
+            MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwXXGUmYJn3cIKmeR8bh2
+            w39c5TiwbErNIrHL1G+mWtoq3UHIwkmKxKOzwfYUh/QbaYlBvYClHDwSAkTFhKTE
+            SDMF5ROMAQbPCL6ahidguuai6PNvI8XZgxO53683g0XazlHU1tzSpss8xwbrzTBw
+            7JjM5AqlkdcpWn9xxb5maR0rLf7ISURZC8Wj6kn9k7HXU0BfF3N2mZWGZiVHl+1C
+            aQiICBFCIGmYikP+5Izmh4HdIramnNKDdRMfkysSjOKG+n0lHAYq0n7wFvGHzdVO
+            gys1uJMPdLqQqovHYWckKrH9bWIUDRjEwLjGj8N0hFcyStfehuZVLx0eGR1xIWjT
+            uwIDAQAB
+        """,
+        "operated_by": [max_id + 2]}
+    # `openssl x509 -noout -pubkey -in <path/to/root_secp256r1_256.pem`
+    mozilla_ec_log = {"description": "Mozilla Test EC Log",
+        "key": """
+            MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAET7+7u2Hg+PmxpgpZrIcE4uwFC0I+
+            PPcukj8sT3lLRVwqadIzRWw2xBGdBwbgDu3I0ZOQ15kbey0HowTqoEqmwA==
+        """,
+        "operated_by": [max_id + 1]}
+    json_data["logs"].append(mozilla_rsa_log_1)
+    json_data["logs"].append(mozilla_rsa_log_2)
+    json_data["logs"].append(mozilla_ec_log)
 
 def run(args):
     """
@@ -195,6 +257,8 @@ def run(args):
     json_data = json.loads(json_text)
 
     print("Writing output: ", args.out)
+
+    patch_in_test_logs(json_data)
 
     with open(args.out, "w") as out_file:
         generate_cpp_header_file(json_data, out_file)
