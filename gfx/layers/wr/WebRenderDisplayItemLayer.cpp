@@ -48,9 +48,19 @@ WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     mParentCommands.Clear();
     mItem->CreateWebRenderCommands(builder, mParentCommands, this);
     mBuiltDisplayList = builder.Finalize();
+  } else {
+    // else we have an empty transaction and just use the
+    // old commands.
+    WebRenderLayerManager* manager = static_cast<WebRenderLayerManager*>(Manager());
+    MOZ_ASSERT(manager);
+
+    // Since our recording relies on our parent layer's transform and stacking context
+    // If this layer or our parent changed, this empty transaction won't work.
+    if (manager->IsMutatedLayer(this) || manager->IsMutatedLayer(GetParent())) {
+      manager->SetTransactionIncomplete();
+      return;
+    }
   }
-  // else we have an empty transaction and just use the
-  // old commands.
 
   aBuilder.PushBuiltDisplayList(Move(mBuiltDisplayList));
   WrBridge()->AddWebRenderParentCommands(mParentCommands);
