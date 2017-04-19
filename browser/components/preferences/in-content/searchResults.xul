@@ -9,7 +9,6 @@
       hidden="true"
       data-category="paneSearchResults">
   <label class="header-name" flex="1">&paneSearchResults.title;</label>
-  <html:a class="help-button" target="_blank" aria-label="&helpButton.label;"></html:a>
 </hbox>
 
 <groupbox class="no-results-message" align="start" data-category="paneSearchResults" hidden="true">
