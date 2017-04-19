@@ -8,7 +8,7 @@ from marionette_driver.expected import element_present
 from marionette_driver.marionette import Alert
 from marionette_driver.wait import Wait
 
-from marionette_harness import MarionetteTestCase, WindowManagerMixin
+from marionette_harness import MarionetteTestCase, skip_if_e10s, WindowManagerMixin
 
 
 class BaseAlertTestCase(WindowManagerMixin, MarionetteTestCase):
@@ -194,6 +194,7 @@ class TestTabModalAlerts(BaseAlertTestCase):
         alert.accept()
         self.wait_for_condition(lambda mn: mn.get_url() == "about:blank")
 
+    @skip_if_e10s("Bug 1325044")
     def test_unrelated_command_when_alert_present(self):
         click_handler = self.marionette.find_element(By.ID, "click-handler")
         text = self.marionette.find_element(By.ID, "click-result").text
