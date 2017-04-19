@@ -11411,5 +11411,14 @@
     "n_buckets": 100,
     "bug_numbers": [1344893],
     "description": "Time in milliseconds from navigationStart to loadEventEnd."
+  },
+  "TIME_TO_RESPONSE_START_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1344893],
+    "description": "Time in milliseconds from navigationStart to responseStart."
   }
 }
