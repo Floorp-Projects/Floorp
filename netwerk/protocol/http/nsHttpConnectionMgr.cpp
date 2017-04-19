@@ -930,31 +930,24 @@ nsHttpConnectionMgr::DispatchPendingQ(nsTArray<RefPtr<nsHttpConnectionMgr::Pendi
 }
 
 uint32_t
-nsHttpConnectionMgr::AvailableNewConnectionCount(nsConnectionEntry * ent)
+nsHttpConnectionMgr::TotalActiveConnections(nsConnectionEntry *ent) const
 {
     // Add in the in-progress tcp connections, we will assume they are
     // keepalive enabled.
     // Exclude half-open's that has already created a usable connection.
     // This prevents the limit being stuck on ipv6 connections that
     // eventually time out after typical 21 seconds of no ACK+SYN reply.
-    uint32_t totalCount =
-        ent->mActiveConns.Length() + ent->UnconnectedHalfOpens();
+    return ent->mActiveConns.Length() + ent->UnconnectedHalfOpens();
+}
 
-    uint16_t maxPersistConns;
-
+uint32_t
+nsHttpConnectionMgr::MaxPersistConnections(nsConnectionEntry *ent) const
+{
     if (ent->mConnInfo->UsingHttpProxy() && !ent->mConnInfo->UsingConnect()) {
-        maxPersistConns = mMaxPersistConnsPerProxy;
-    } else {
-        maxPersistConns = mMaxPersistConnsPerHost;
+        return static_cast<uint32_t>(mMaxPersistConnsPerProxy);
     }
 
-    LOG(("nsHttpConnectionMgr::AvailableNewConnectionCount "
-         "total connection count = %d, limit %d\n",
-         totalCount, maxPersistConns));
-
-    return maxPersistConns > totalCount
-        ? maxPersistConns - totalCount
-        : 0;
+    return static_cast<uint32_t>(mMaxPersistConnsPerHost);
 }
 
 bool
@@ -986,7 +979,12 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool consid
         return dispatchedSuccessfully;
     }
 
-    uint32_t availableConnections = AvailableNewConnectionCount(ent);
+    uint32_t totalCount = TotalActiveConnections(ent);
+    uint32_t maxPersistConns = MaxPersistConnections(ent);
+    uint32_t availableConnections = maxPersistConns > totalCount
+        ? maxPersistConns - totalCount
+        : 0;
+
     // No need to try dispatching if we reach the active connection limit.
     if (!availableConnections) {
         return dispatchedSuccessfully;
@@ -1099,14 +1097,15 @@ bool
 nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, uint32_t caps)
 {
     nsHttpConnectionInfo *ci = ent->mConnInfo;
+    uint32_t totalCount = TotalActiveConnections(ent);
+    uint32_t maxPersistConns = MaxPersistConnections(ent);
 
-    LOG(("nsHttpConnectionMgr::AtActiveConnectionLimit [ci=%s caps=%x]\n",
-        ci->HashKey().get(), caps));
-
-    uint32_t availableConnections = AvailableNewConnectionCount(ent);
+    LOG(("nsHttpConnectionMgr::AtActiveConnectionLimit [ci=%s caps=%x,"
+         "totalCount=%u, maxPersistConns=%u]\n",
+         ci->HashKey().get(), caps, totalCount, maxPersistConns));
 
     if (caps & NS_HTTP_URGENT_START) {
-        if (availableConnections > static_cast<uint32_t>(mMaxUrgentExcessiveConns)) {
+        if (totalCount >= (mMaxUrgentExcessiveConns + maxPersistConns)) {
             LOG(("The number of total connections are greater than or equal to sum of "
                  "max urgent-start queue length and the number of max persistent connections.\n"));
             return true;
@@ -1131,7 +1130,7 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, uint32_t ca
         return true;
     }
 
-    bool result = !availableConnections;
+    bool result = (totalCount >= maxPersistConns);
     LOG(("AtActiveConnectionLimit result: %s", result ? "true" : "false"));
     return result;
 }
