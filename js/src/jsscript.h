@@ -573,8 +573,6 @@ class ScriptSource
                                 size_t length);
     void setSource(SharedImmutableTwoByteString&& string);
 
-    MOZ_MUST_USE bool tryCompressOffThread(JSContext* cx);
-
     MOZ_MUST_USE bool setCompressedSource(JSContext* cx,
                                           UniqueChars&& raw,
                                           size_t rawLength,
