@@ -654,7 +654,7 @@ CompositorBridgeChild::SharedFrameMetricsData::SharedFrameMetricsData(
   , mAPZCId(aAPZCId)
 {
   mBuffer = new ipc::SharedMemoryBasic;
-  mBuffer->SetHandle(metrics);
+  mBuffer->SetHandle(metrics, ipc::SharedMemory::RightsReadOnly);
   mBuffer->Map(sizeof(FrameMetrics));
   mMutex = new CrossProcessMutex(handle);
   MOZ_COUNT_CTOR(SharedFrameMetricsData);
@@ -672,7 +672,8 @@ CompositorBridgeChild::SharedFrameMetricsData::~SharedFrameMetricsData()
 void
 CompositorBridgeChild::SharedFrameMetricsData::CopyFrameMetrics(FrameMetrics* aFrame)
 {
-  FrameMetrics* frame = static_cast<FrameMetrics*>(mBuffer->memory());
+  const FrameMetrics* frame =
+    static_cast<const FrameMetrics*>(mBuffer->memory());
   MOZ_ASSERT(frame);
   mMutex->Lock();
   *aFrame = *frame;
@@ -682,7 +683,8 @@ CompositorBridgeChild::SharedFrameMetricsData::CopyFrameMetrics(FrameMetrics* aF
 FrameMetrics::ViewID
 CompositorBridgeChild::SharedFrameMetricsData::GetViewID()
 {
-  FrameMetrics* frame = static_cast<FrameMetrics*>(mBuffer->memory());
+  const FrameMetrics* frame =
+    static_cast<const FrameMetrics*>(mBuffer->memory());
   MOZ_ASSERT(frame);
   // Not locking to read of mScrollId since it should not change after being
   // initially set.

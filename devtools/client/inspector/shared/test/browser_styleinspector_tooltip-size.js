@@ -35,12 +35,7 @@ function* testImageDimension(ruleView) {
 
   // Make sure there is a hover tooltip for this property, this also will fill
   // the tooltip with its content
-  yield assertHoverTooltipOn(tooltip, uriSpan);
-
-  info("Showing the tooltip");
-  let onShown = tooltip.once("shown");
-  tooltip.show(uriSpan);
-  yield onShown;
+  let previewTooltip = yield assertShowPreviewTooltip(ruleView, uriSpan);
 
   // Let's not test for a specific size, but instead let's make sure it's at
   // least as big as the image
@@ -52,9 +47,7 @@ function* testImageDimension(ruleView) {
   ok(panelRect.height >= imageRect.height,
     "The panel is high enough to show the image");
 
-  let onHidden = tooltip.once("hidden");
-  tooltip.hide();
-  yield onHidden;
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, uriSpan);
 }
 
 function* testPickerDimension(ruleView) {

@@ -21,6 +21,7 @@ add_task(function* test() {
     const origIsSendableURI = gFxAccounts.isSendableURI;
     gFxAccounts.isSendableURI = () => true;
     // Check the send tab to device menu item
+    yield ensureSyncReady();
     const oldGetter = setupRemoteClientsFixture(remoteClientsFixture);
     yield updateTabContextMenu(origTab, function* () {
       yield openMenuItemSubmenu("context_sendTabToDevice");
@@ -75,4 +76,11 @@ add_task(function* test() {
   gBrowser.removeTab(testTab);
   gBrowser.removeTab(pinned);
 });
+
+function ensureSyncReady() {
+  let service = Cc["@mozilla.org/weave/service;1"]
+                  .getService(Components.interfaces.nsISupports)
+                  .wrappedJSObject;
+  return service.whenLoaded();
+}
 

@@ -25,7 +25,7 @@
  *   /dom/webidl/Animation*.webidl
  */
 
-const {Cu} = require("chrome");
+const {Cu, Ci} = require("chrome");
 const promise = require("promise");
 const protocol = require("devtools/shared/protocol");
 const {Actor} = protocol;
@@ -461,12 +461,122 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
   /**
    * Get data about the animated properties of this animation player.
    * @return {Array} Returns a list of animated properties.
-   * Each property contains a list of values and their offsets
+   * Each property contains a list of values, their offsets and distances.
    */
   getProperties: function () {
-    return this.player.effect.getProperties().map(property => {
+    const properties = this.player.effect.getProperties().map(property => {
       return {name: property.property, values: property.values};
     });
+
+    const DOMWindowUtils =
+      this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+          .getInterface(Ci.nsIDOMWindowUtils);
+
+    // Fill missing keyframe with computed value.
+    for (let property of properties) {
+      let underlyingValue = null;
+      // Check only 0% and 100% keyframes.
+      [0, property.values.length - 1].forEach(index => {
+        const values = property.values[index];
+        if (values.value !== undefined) {
+          return;
+        }
+        if (!underlyingValue) {
+          let pseudo = null;
+          let target = this.player.effect.target;
+          if (target.type) {
+            // This target is a pseudo element.
+            pseudo = target.type;
+            target = target.parentElement;
+          }
+          const value =
+            DOMWindowUtils.getUnanimatedComputedStyle(target, pseudo, property.name);
+          const animationType = DOMWindowUtils.getAnimationTypeForLonghand(property.name);
+          underlyingValue = animationType === "float" ? parseFloat(value, 10) : value;
+        }
+        values.value = underlyingValue;
+      });
+    }
+
+    // Calculate the distance.
+    for (let property of properties) {
+      const propertyName = property.name;
+      const maxObject = { distance: -1 };
+      for (let i = 0; i < property.values.length - 1; i++) {
+        const value1 = property.values[i].value;
+        for (let j = i + 1; j < property.values.length; j++) {
+          const value2 = property.values[j].value;
+          const distance = this.getDistance(this.player.effect.target, propertyName,
+                                            value1, value2, DOMWindowUtils);
+          if (maxObject.distance >= distance) {
+            continue;
+          }
+          maxObject.distance = distance;
+          maxObject.value1 = value1;
+          maxObject.value2 = value2;
+        }
+      }
+      if (maxObject.distance === 0) {
+        // Distance is zero means that no values change or can't calculate the distance.
+        // In this case, we use the keyframe offset as the distance.
+        property.values.reduce((previous, current) => {
+          // If the current value is same as previous value, use previous distance.
+          current.distance =
+            current.value === previous.value ? previous.distance : current.offset;
+          return current;
+        }, property.values[0]);
+        continue;
+      }
+      const baseValue =
+        maxObject.value1 < maxObject.value2 ? maxObject.value1 : maxObject.value2;
+      for (let values of property.values) {
+        const value = values.value;
+        const distance = this.getDistance(this.player.effect.target, propertyName,
+                                          baseValue, value, DOMWindowUtils);
+        values.distance = distance / maxObject.distance;
+      }
+    }
+    return properties;
+  },
+
+  /**
+   * Get the animation types for a given list of CSS property names.
+   * @param {Array} propertyNames - CSS property names (e.g. background-color)
+   * @return {Object} Returns animation types (e.g. {"background-color": "rgb(0, 0, 0)"}.
+   */
+  getAnimationTypes: function (propertyNames) {
+    const DOMWindowUtils = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIDOMWindowUtils);
+    const animationTypes = {};
+    for (let propertyName of propertyNames) {
+      animationTypes[propertyName] =
+        DOMWindowUtils.getAnimationTypeForLonghand(propertyName);
+    }
+    return animationTypes;
+  },
+
+  /**
+   * Returns the distance of between value1, value2.
+   * @param {Object} target - dom element
+   * @param {String} propertyName - e.g. transform
+   * @param {String} value1 - e.g. translate(0px)
+   * @param {String} value2 - e.g. translate(10px)
+   * @param {Object} DOMWindowUtils
+   * @param {float} distance
+   */
+  getDistance: function (target, propertyName, value1, value2, DOMWindowUtils) {
+    if (value1 === value2) {
+      return 0;
+    }
+    try {
+      const distance =
+        DOMWindowUtils.computeAnimationDistance(target, propertyName, value1, value2);
+      return distance;
+    } catch (e) {
+      // We can't compute the distance such the 'discrete' animation,
+      // 'auto' keyword and so on.
+      return 0;
+    }
   }
 });
 

@@ -37,6 +37,9 @@
 
 class nsZipFind;
 struct PRFileDesc;
+#ifdef MOZ_JAR_BROTLI
+struct BrotliStateStruct;
+#endif
 
 /**
  * This file defines some of the basic structures used by libjar to
@@ -314,6 +317,9 @@ private:
   uint8_t  *mBuf; 
   uint32_t  mBufSize; 
   z_stream  mZs;
+#ifdef MOZ_JAR_BROTLI
+  BrotliStateStruct* mBrotliState;
+#endif
   uint32_t mCRC;
   bool mDoCRC;
 };

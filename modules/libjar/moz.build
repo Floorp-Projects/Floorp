@@ -44,3 +44,7 @@ UNIFIED_SOURCES += [
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    '/modules/brotli/dec',
+]

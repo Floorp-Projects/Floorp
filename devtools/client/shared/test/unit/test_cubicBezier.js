@@ -9,7 +9,7 @@
 
 var Cu = Components.utils;
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var {CubicBezier, _parseTimingFunction} = require("devtools/client/shared/widgets/CubicBezierWidget");
+var {CubicBezier, parseTimingFunction} = require("devtools/client/shared/widgets/CubicBezierWidget");
 
 function run_test() {
   throwsWhenMissingCoordinates();
@@ -112,22 +112,22 @@ function testParseTimingFunction() {
   do_print("test parseTimingFunction");
 
   for (let test of ["ease", "linear", "ease-in", "ease-out", "ease-in-out"]) {
-    ok(_parseTimingFunction(test), test);
+    ok(parseTimingFunction(test), test);
   }
 
-  ok(!_parseTimingFunction("something"), "non-function token");
-  ok(!_parseTimingFunction("something()"), "non-cubic-bezier function");
-  ok(!_parseTimingFunction("cubic-bezier(something)",
+  ok(!parseTimingFunction("something"), "non-function token");
+  ok(!parseTimingFunction("something()"), "non-cubic-bezier function");
+  ok(!parseTimingFunction("cubic-bezier(something)",
                            "cubic-bezier with non-numeric argument"));
-  ok(!_parseTimingFunction("cubic-bezier(1,2,3:7)",
+  ok(!parseTimingFunction("cubic-bezier(1,2,3:7)",
                            "did not see comma"));
-  ok(!_parseTimingFunction("cubic-bezier(1,2,3,7:",
-                           "did not see close paren"));
-  ok(!_parseTimingFunction("cubic-bezier(1,2", "early EOF after number"));
-  ok(!_parseTimingFunction("cubic-bezier(1,2,", "early EOF after comma"));
-  deepEqual(_parseTimingFunction("cubic-bezier(1,2,3,7)"), [1, 2, 3, 7],
+  ok(!parseTimingFunction("cubic-bezier(1,2,3,7:",
+                          "did not see close paren"));
+  ok(!parseTimingFunction("cubic-bezier(1,2", "early EOF after number"));
+  ok(!parseTimingFunction("cubic-bezier(1,2,", "early EOF after comma"));
+  deepEqual(parseTimingFunction("cubic-bezier(1,2,3,7)"), [1, 2, 3, 7],
             "correct invocation");
-  deepEqual(_parseTimingFunction("cubic-bezier(1,  /* */ 2,3,   7  )"),
+  deepEqual(parseTimingFunction("cubic-bezier(1,  /* */ 2,3,   7  )"),
             [1, 2, 3, 7],
             "correct with comments and whitespace");
 }

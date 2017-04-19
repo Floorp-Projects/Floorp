@@ -56,7 +56,9 @@ module.exports = createClass({
       dom.ul(
         {},
         dom.li(
-          {},
+          {
+            className: "grid-settings-item",
+          },
           dom.label(
             {},
             dom.input(
@@ -70,7 +72,9 @@ module.exports = createClass({
           )
         ),
         dom.li(
-          {},
+          {
+            className: "grid-settings-item",
+          },
           dom.label(
             {},
             dom.input(

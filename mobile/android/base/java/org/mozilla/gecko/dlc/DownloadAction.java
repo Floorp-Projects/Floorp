@@ -215,6 +215,7 @@ public class DownloadAction extends BaseAction {
     protected void extract(File sourceFile, File destinationFile, String checksum)
             throws UnrecoverableDownloadContentException, RecoverableDownloadContentException {
         InputStream inputStream = null;
+        InputStream gzInputStream = null;
         OutputStream outputStream = null;
         File temporaryFile = null;
 
@@ -226,13 +227,15 @@ public class DownloadAction extends BaseAction {
 
             temporaryFile = new File(destinationDirectory, destinationFile.getName() + ".tmp");
 
-            inputStream = new GZIPInputStream(new BufferedInputStream(new FileInputStream(sourceFile)));
+            // We have to have keep a handle to the BufferedInputStream: the GZIPInputStream
+            // constructor can fail e.g. if the stream isn't a GZIP stream. If we didn't keep
+            // a reference to that stream we wouldn't be able to close it if GZInputStream throws.
+            // (The BufferedInputStream constructor doesn't throw, so we don't need to care about it.)
+            inputStream = new BufferedInputStream(new FileInputStream(sourceFile));
+            gzInputStream = new GZIPInputStream(inputStream);
             outputStream = new BufferedOutputStream(new FileOutputStream(temporaryFile));
 
-            IOUtils.copy(inputStream, outputStream);
-
-            inputStream.close();
-            outputStream.close();
+            IOUtils.copy(gzInputStream, outputStream);
 
             if (!verify(temporaryFile, checksum)) {
                 Log.w(LOGTAG, "Checksum of extracted file does not match.");
@@ -244,6 +247,7 @@ public class DownloadAction extends BaseAction {
             // We could not extract to the destination: Keep temporary file and try again next time we run.
             throw new RecoverableDownloadContentException(RecoverableDownloadContentException.DISK_IO, e);
         } finally {
+            IOUtils.safeStreamClose(gzInputStream);
             IOUtils.safeStreamClose(inputStream);
             IOUtils.safeStreamClose(outputStream);
 

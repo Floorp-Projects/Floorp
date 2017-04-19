@@ -24,12 +24,13 @@ MediaQueryList::MediaQueryList(nsIDocument* aDocument,
                                const nsAString& aMediaQueryList)
   : mDocument(aDocument)
   , mMatchesValid(false)
-  , mIsKeptAlive(false)
 {
   mMediaList =
     MediaList::Create(aDocument->GetStyleBackendType(), aMediaQueryList);
 
   PR_INIT_CLIST(this);
+
+  KeepAliveIfHasListenersFor(ONCHANGE_STRING);
 }
 
 MediaQueryList::~MediaQueryList()
@@ -108,12 +109,6 @@ MediaQueryList::AddEventListener(const nsAString& aType,
 
   DOMEventTargetHelper::AddEventListener(aType, aCallback, aOptions,
                                          aWantsUntrusted, aRv);
-
-  if (aRv.Failed()) {
-    return;
-  }
-
-  UpdateMustKeepAlive();
 }
 
 void
@@ -129,63 +124,6 @@ MediaQueryList::RemoveListener(EventListener* aListener, ErrorResult& aRv)
   RemoveEventListener(ONCHANGE_STRING, aListener, options, aRv);
 }
 
-void
-MediaQueryList::RemoveEventListener(const nsAString& aType,
-                                    EventListener* aCallback,
-                                    const EventListenerOptionsOrBoolean& aOptions,
-                                    ErrorResult& aRv)
-{
-  DOMEventTargetHelper::RemoveEventListener(aType, aCallback, aOptions, aRv);
-
-  if (aRv.Failed()) {
-    return;
-  }
-
-  UpdateMustKeepAlive();
-}
-
-EventHandlerNonNull*
-MediaQueryList::GetOnchange()
-{
-  if (NS_IsMainThread()) {
-    return GetEventHandler(nsGkAtoms::onchange, EmptyString());
-  }
-  return GetEventHandler(nullptr, ONCHANGE_STRING);
-}
-
-void
-MediaQueryList::SetOnchange(EventHandlerNonNull* aCallback)
-{
-  if (NS_IsMainThread()) {
-    SetEventHandler(nsGkAtoms::onchange, EmptyString(), aCallback);
-  } else {
-    SetEventHandler(nullptr, ONCHANGE_STRING, aCallback);
-  }
-
-  UpdateMustKeepAlive();
-}
-
-void
-MediaQueryList::UpdateMustKeepAlive()
-{
-  bool toKeepAlive = HasListeners();
-  if (toKeepAlive == mIsKeptAlive) {
-    return;
-  }
-
-  // When we have listeners, the pres context owns a reference to
-  // this.  This is a cyclic reference that can only be broken by
-  // cycle collection.
-
-  mIsKeptAlive = toKeepAlive;
-
-  if (toKeepAlive) {
-    NS_ADDREF_THIS();
-  } else {
-    NS_RELEASE_THIS();
-  }
-}
-
 bool
 MediaQueryList::HasListeners()
 {
@@ -197,11 +135,7 @@ MediaQueryList::Disconnect()
 {
   DisconnectFromOwner();
 
-  if (mIsKeptAlive) {
-    mIsKeptAlive = false;
-    // See NS_ADDREF_THIS() in AddListener.
-    NS_RELEASE_THIS();
-  }
+  IgnoreKeepAliveIfHasListenersFor(ONCHANGE_STRING);
 }
 
 void

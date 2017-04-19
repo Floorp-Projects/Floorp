@@ -34,14 +34,14 @@ add_task(function* () {
   let afterNode = getBodyChildNodeFront(1);
 
   info("Select the ::before pseudo-element in the inspector");
-  yield selectNode(beforeNode, inspector);
+  yield selectNodeAndWaitForAnimations(beforeNode, inspector);
   is(timeline.timeBlocks.length, 1, "There is 1 animation in the timeline");
   is(timeline.targetNodes[0].previewer.nodeFront,
      inspector.selection.nodeFront,
      "The right node front is displayed in the timeline");
 
   info("Select the ::after pseudo-element in the inspector");
-  yield selectNode(afterNode, inspector);
+  yield selectNodeAndWaitForAnimations(afterNode, inspector);
   is(timeline.timeBlocks.length, 1, "There is 1 animation in the timeline");
   is(timeline.targetNodes[0].previewer.nodeFront,
      inspector.selection.nodeFront,

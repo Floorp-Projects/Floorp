@@ -46,7 +46,7 @@ add_task(function* test_removePagesByTimeframe() {
   // Add a visit in the past with no directly associated icon.
   yield PlacesTestUtils.addVisits({uri: "http://www.places.test/old/", visitDate: new Date(Date.now() - 86400000)});
   let pageURI = NetUtil.newURI("http://www.places.test/page/");
-  yield PlacesTestUtils.addVisits(pageURI);
+  yield PlacesTestUtils.addVisits({uri: pageURI, visitDate: new Date(Date.now() - 7200000)});
   let faviconURI = NetUtil.newURI("http://www.places.test/page/favicon.ico");
   let rootIconURI = NetUtil.newURI("http://www.places.test/favicon.ico");
   PlacesUtils.favicons.replaceFaviconDataFromDataURL(
@@ -65,7 +65,7 @@ add_task(function* test_removePagesByTimeframe() {
                rootIconURI.spec, "Should get the root icon");
 
   PlacesUtils.history.removePagesByTimeframe(
-    PlacesUtils.toPRTime(Date.now() - 20000),
+    PlacesUtils.toPRTime(Date.now() - 14400000),
     PlacesUtils.toPRTime(new Date())
   );
 
@@ -82,4 +82,16 @@ add_task(function* test_removePagesByTimeframe() {
   PlacesUtils.history.removePagesByTimeframe(0, PlacesUtils.toPRTime(new Date()));
   rows = yield db.execute("SELECT * FROM moz_icons");
   Assert.equal(rows.length, 0, "There should be no icon entry");
+});
+
+add_task(function* test_different_host() {
+  let pageURI = NetUtil.newURI("http://places.test/page/");
+  yield PlacesTestUtils.addVisits(pageURI);
+  let faviconURI = NetUtil.newURI("http://mozilla.test/favicon.ico");
+  PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+    faviconURI, SMALLPNG_DATA_URI.spec, 0, Services.scriptSecurityManager.getSystemPrincipal());
+  yield setFaviconForPage(pageURI, faviconURI);
+
+  Assert.equal(yield getFaviconUrlForPage(pageURI),
+               faviconURI.spec, "Should get the png icon");
 });

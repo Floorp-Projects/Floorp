@@ -1209,7 +1209,7 @@
                     tooltiptext="&changeSearchSettings.tooltip;"
                     xbl:inherits="compact"/>
       </xul:description>
-      <xul:vbox anonid="add-engines"/>
+      <xul:vbox anonid="add-engines" class="search-add-engines"/>
       <xul:button anonid="search-settings"
                   oncommand="showSettings();"
                   class="search-setting-button search-panel-header"
@@ -1225,7 +1225,7 @@
       </xul:menupopup>
     </content>
 
-    <implementation implements="nsIDOMEventListener">
+    <implementation implements="nsIDOMEventListener,nsIObserver,nsIWeakReference">
 
       <!-- Width in pixels of the one-off buttons.  49px is the min-width of
            each search engine button, adapt this const when changing the css.
@@ -1273,6 +1273,7 @@
       </property>
 
       <field name="_textbox">null</field>
+      <field name="_textboxWidth">0</field>
 
       <!-- The textbox associated with the one-offs.  Set this to a textbox to
            automatically keep the related one-offs UI up to date.  Otherwise you
@@ -1415,6 +1416,10 @@
           this._ignoreMouseEvents = false;
           aEvent.stopPropagation();
         });
+
+        // Add weak referenced observers to invalidate our cached list of engines.
+        Services.prefs.addObserver("browser.search.hiddenOneOffs", this, true);
+        Services.obs.addObserver(this, "browser-search-engine-modified", true);
       ]]></constructor>
 
       <!-- This handles events outside the one-off buttons, like on the popup
@@ -1440,6 +1445,16 @@
               });
               break;
           }
+        ]]></body>
+      </method>
+
+      <method name="observe">
+        <parameter name="aEngine"/>
+        <parameter name="aTopic"/>
+        <parameter name="aData"/>
+        <body><![CDATA[
+          // Make sure the engine list is refetched next time it's needed.
+          this._engines = null;
         ]]></body>
       </method>
 
@@ -1491,20 +1506,60 @@
         ]]></body>
       </method>
 
+      <field name="_engines">null</field>
+      <property name="engines" readonly="true">
+        <getter><![CDATA[
+          if (this._engines)
+            return this._engines;
+          let currentEngineNameToIgnore;
+          if (!this.getAttribute("includecurrentengine"))
+            currentEngineNameToIgnore = Services.search.currentEngine.name;
+
+          let pref = Services.prefs.getStringPref("browser.search.hiddenOneOffs");
+          let hiddenList = pref ? pref.split(",") : [];
+
+          this._engines = Services.search.getVisibleEngines().filter(e => {
+            let name = e.name;
+            return (!currentEngineNameToIgnore ||
+                    name != currentEngineNameToIgnore) &&
+                   !hiddenList.includes(name);
+          });
+
+          return this._engines;
+        ]]></getter>
+      </property>
+
       <!-- Builds all the UI. -->
       <method name="_rebuild">
         <body><![CDATA[
           // Update the 'Search for <keywords> with:" header.
           this._updateAfterQueryChanged();
 
-          let list = document.getAnonymousElementByAttribute(this, "anonid",
-                                                             "search-panel-one-offs");
-
           // Handle opensearch items. This needs to be done before building the
           // list of one off providers, as that code will return early if all the
           // alternative engines are hidden.
-          this._rebuildAddEngineList();
+          // Skip this in compact mode, ie. for the urlbar.
+          if (!this.compact)
+            this._rebuildAddEngineList();
 
+          // Check if the one-off buttons really need to be rebuilt.
+          if (this._textbox) {
+            // We can't get a reliable value for the popup width without flushing,
+            // but the popup width won't change if the textbox width doesn't.
+            let DOMUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIDOMWindowUtils);
+            let textboxWidth =
+              DOMUtils.getBoundsWithoutFlushing(this._textbox).width;
+            // We can return early if neither the list of engines nor the panel
+            // width has changed.
+            if (this._engines && this._textboxWidth == textboxWidth) {
+              return;
+            }
+            this._textboxWidth = textboxWidth;
+          }
+
+          let list = document.getAnonymousElementByAttribute(this, "anonid",
+                                                             "search-panel-one-offs");
           let settingsButton =
             document.getAnonymousElementByAttribute(this, "anonid",
                                                     "search-settings-compact");
@@ -1516,24 +1571,15 @@
           if (settingsButton.nextSibling)
             settingsButton.nextSibling.remove();
 
-          let Preferences =
-            Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
-          let pref = Preferences.get("browser.search.hiddenOneOffs");
-          let hiddenList = pref ? pref.split(",") : [];
-
-          let currentEngineName = Services.search.currentEngine.name;
-          let includeCurrentEngine = this.getAttribute("includecurrentengine");
-          let engines = Services.search.getVisibleEngines().filter(e => {
-            return (includeCurrentEngine || e.name != currentEngineName) &&
-                   !hiddenList.includes(e.name);
-          });
+          let engines = this.engines;
+          let oneOffCount = engines.length;
 
           let header = document.getAnonymousElementByAttribute(this, "anonid",
                                                                "search-panel-one-offs-header")
           // header is a xul:deck so collapsed doesn't work on it, see bug 589569.
-          header.hidden = list.collapsed = !engines.length;
+          header.hidden = list.collapsed = !oneOffCount;
 
-          if (!engines.length)
+          if (!oneOffCount)
             return;
 
           let panelWidth = parseInt(this.popup.clientWidth);
@@ -1547,7 +1593,6 @@
           // If the <description> tag with the list of search engines doesn't have
           // a fixed height, the panel will be sized incorrectly, causing the bottom
           // of the suggestion <tree> to be hidden.
-          let oneOffCount = engines.length;
           if (this.compact)
             ++oneOffCount;
           let rowCount = Math.ceil(oneOffCount / enginesPerRow);
@@ -1647,20 +1692,12 @@
         }
 
         // Add a button for each engine that the page in the selected browser
-        // offers, but with the following exceptions:
-        //
-        // (1) Not when the one-offs are compact.  Compact one-offs are shown in
-        // the urlbar, and the add-engine buttons span the width of the popup,
-        // so if we added all the engines that a page offers, it could break the
-        // urlbar popup by offering a ton of engines.  We should probably make a
-        // smaller version of the buttons for compact one-offs.
-        //
-        // (2) Not when there are too many offered engines.  The popup isn't
-        // designed to handle too many (by scrolling for example), so a page
-        // could break the popup by offering too many.  Instead, add a single
-        // menu button with a submenu of all the engines.
+        // offers, except when there are too many offered engines.
+        // The popup isn't designed to handle too many (by scrolling for
+        // example), so a page could break the popup by offering too many.
+        // Instead, add a single menu button with a submenu of all the engines.
 
-        if (this.compact || !gBrowser.selectedBrowser.engines) {
+        if (!gBrowser.selectedBrowser.engines) {
           return;
         }
 
