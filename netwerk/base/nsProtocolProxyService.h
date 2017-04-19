@@ -400,7 +400,7 @@ private:
                                   nsIProtocolProxyCallback *callback,
                                   nsICancelable **result,
                                   bool isSyncOK);
-
+    bool                          mIsShutdown;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsProtocolProxyService, NS_PROTOCOL_PROXY_SERVICE_IMPL_CID)
