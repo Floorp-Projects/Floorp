@@ -1,6 +1,7 @@
 test-pref(dom.animations-api.core.enabled,true) == 1246046-1.html green-box.html
 test-pref(dom.animations-api.core.enabled,true) == 1267937-1.html 1267937-ref.html
-test-pref(dom.animations-api.core.enabled,true) == 1298742-1.html 1298742-ref.html
+# see bug 1353399. Intermittent with WR enabled
+test-pref(dom.animations-api.core.enabled,true) random-if(webrender) == 1298742-1.html 1298742-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-none-animation-before-appending-element.html stacking-context-animation-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-opacity-changing-keyframe.html stacking-context-animation-ref.html
 test-pref(dom.animations-api.core.enabled,true) == stacking-context-opacity-changing-keyframe-in-delay.html stacking-context-animation-ref.html
