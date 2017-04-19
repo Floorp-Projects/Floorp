@@ -9215,14 +9215,20 @@ CodeGenerator::visitIteratorStartO(LIteratorStartO* lir)
     masm.loadObjProto(temp1, temp1);
     masm.branchTestPtr(Assembler::NonZero, temp1, temp1, ool->entry());
 
-    // Write barrier for stores to the iterator. We only need to take a write
-    // barrier if NativeIterator::obj is actually going to change.
+    // Write barrier for stores to the iterator. The iterator JSObject is never
+    // nursery allocated. Put this in the whole cell buffer when writing a
+    // nursery pointer into it.
     {
-        // Bug 867815: Unconditionally take this out- of-line so that we do not
-        // have to post-barrier the store to NativeIter::obj. This just needs
-        // JIT support for the Cell* buffer.
-        Address objAddr(niTemp, offsetof(NativeIterator, obj));
-        masm.branchPtr(Assembler::NotEqual, objAddr, obj, ool->entry());
+        Label skipBarrier;
+        masm.branchPtrInNurseryChunk(Assembler::NotEqual, obj, temp1, &skipBarrier);
+
+        LiveRegisterSet temps;
+        temps.add(temp1);
+        temps.add(temp2);
+        saveVolatile(temps);
+        emitPostWriteBarrier(output);
+        restoreVolatile(temps);
+        masm.bind(&skipBarrier);
     }
 
     // Mark iterator as active.
