@@ -370,21 +370,19 @@ struct MOZ_STACK_CLASS BidiParagraphData
 
 };
 
-struct BidiLineData {
-  nsTArray<nsIFrame*> mLogicalFrames;
-  nsTArray<nsIFrame*> mVisualFrames;
-  nsTArray<int32_t> mIndexMap;
-  AutoTArray<uint8_t, 18> mLevels;
+struct MOZ_STACK_CLASS BidiLineData {
+  AutoTArray<nsIFrame*, 16> mLogicalFrames;
+  AutoTArray<nsIFrame*, 16> mVisualFrames;
+  AutoTArray<int32_t, 16> mIndexMap;
+  AutoTArray<uint8_t, 16> mLevels;
   bool mIsReordered;
 
-  BidiLineData(nsIFrame* aFirstFrameOnLine, int32_t   aNumFramesOnLine)
+  BidiLineData(nsIFrame* aFirstFrameOnLine, int32_t aNumFramesOnLine)
   {
     /**
      * Initialize the logically-ordered array of frames using the top-level
      * frames of a single line
      */
-    mLogicalFrames.Clear();
-
     bool isReordered = false;
     bool hasRTLFrames = false;
     bool hasVirtualControls = false;
@@ -421,7 +419,8 @@ struct BidiLineData {
     // Strip virtual frames
     if (hasVirtualControls) {
       auto originalCount = mLogicalFrames.Length();
-      nsTArray<int32_t> realFrameMap(originalCount);
+      AutoTArray<int32_t, 16> realFrameMap;
+      realFrameMap.SetCapacity(originalCount);
       size_t count = 0;
       for (auto i : IntegerRange(originalCount)) {
         if (mLogicalFrames[i] == NS_BIDI_CONTROL_FRAME) {
@@ -457,11 +456,20 @@ struct BidiLineData {
     mIsReordered = isReordered || hasRTLFrames;
   }
 
-  int32_t FrameCount(){ return mLogicalFrames.Length(); }
+  int32_t FrameCount() const
+  {
+    return mLogicalFrames.Length();
+  }
 
-  nsIFrame* LogicalFrameAt(int32_t aIndex){ return mLogicalFrames[aIndex]; }
+  nsIFrame* LogicalFrameAt(int32_t aIndex) const
+  {
+    return mLogicalFrames[aIndex];
+  }
 
-  nsIFrame* VisualFrameAt(int32_t aIndex){ return mVisualFrames[aIndex]; }
+  nsIFrame* VisualFrameAt(int32_t aIndex) const
+  {
+    return mVisualFrames[aIndex];
+  }
 };
 
 #ifdef DEBUG
