@@ -19,6 +19,7 @@ namespace mozilla {
 namespace layers {
 
 class CompositorBridgeChild;
+class ImageClientSingle;
 class KnowsCompositor;
 class PCompositorBridgeChild;
 class WebRenderBridgeChild;
@@ -42,6 +43,11 @@ public:
   {
     return static_cast<WebRenderLayer*>(aLayer->ImplData());
   }
+
+  Maybe<wr::ImageKey> UpdateImageKey(ImageClientSingle* aImageClient,
+                                     ImageContainer* aContainer,
+                                     Maybe<wr::ImageKey>& aOldKey,
+                                     uint64_t aExternalImageId);
 
   WebRenderLayerManager* WrManager();
   WebRenderBridgeChild* WrBridge();
