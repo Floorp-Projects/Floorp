@@ -1791,10 +1791,6 @@ BrowserGlue.prototype = {
       xulStore.removeValue(BROWSER_DOCURL, "home-button", "class");
     }
 
-    if (currentUIVersion < 32) {
-      this._notifyNotificationsUpgrade().catch(Cu.reportError);
-    }
-
     if (currentUIVersion < 36) {
       xulStore.removeValue("chrome://passwordmgr/content/passwordManager.xul",
                            "passwordCol",
@@ -1854,49 +1850,6 @@ BrowserGlue.prototype = {
 
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
-  },
-
-  _hasExistingNotificationPermission: function BG__hasExistingNotificationPermission() {
-    let enumerator = Services.perms.enumerator;
-    while (enumerator.hasMoreElements()) {
-      let permission = enumerator.getNext().QueryInterface(Ci.nsIPermission);
-      if (permission.type == "desktop-notification") {
-        return true;
-      }
-    }
-    return false;
-  },
-
-  _notifyNotificationsUpgrade: Task.async(function* () {
-    if (!this._hasExistingNotificationPermission()) {
-      return;
-    }
-    yield this._firstWindowReady;
-    function clickCallback(subject, topic, data) {
-      if (topic != "alertclickcallback")
-        return;
-      let win = RecentWindow.getMostRecentBrowserWindow();
-      win.openUILinkIn(data, "tab");
-    }
-    // Show the application icon for XUL notifications. We assume system-level
-    // notifications will include their own icon.
-    let imageURL = this._hasSystemAlertsService() ? "" :
-                   "chrome://branding/content/about-logo.png";
-    let title = gBrowserBundle.GetStringFromName("webNotifications.upgradeTitle");
-    let text = gBrowserBundle.GetStringFromName("webNotifications.upgradeBody");
-    let url = Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "push#w_upgraded-notifications";
-
-    AlertsService.showAlertNotification(imageURL, title, text,
-                                        true, url, clickCallback);
-  }),
-
-  _hasSystemAlertsService() {
-    try {
-      return !!Cc["@mozilla.org/system-alerts-service;1"].getService(
-        Ci.nsIAlertsService);
-    } catch (e) {}
-    return false;
   },
 
   // ------------------------------
