@@ -3329,14 +3329,14 @@ ElementRestyler::MustReframeForPseudo(CSSPseudoElementType aPseudoType,
     // Check for a ::before pseudo style and the absence of a ::before content,
     // but only if aFrame is null or is the first continuation/ib-split.
     if ((aFrame && !nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(aFrame)) ||
-        nsLayoutUtils::GetBeforeFrameForContent(aGenConParentFrame, aContent)) {
+        nsLayoutUtils::GetBeforeFrame(aContent)) {
       return false;
     }
   } else {
     // Similarly for ::after, but check for being the last continuation/
     // ib-split.
     if ((aFrame && nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame)) ||
-        nsLayoutUtils::GetAfterFrameForContent(aGenConParentFrame, aContent)) {
+        nsLayoutUtils::GetAfterFrame(aContent)) {
       return false;
     }
   }
