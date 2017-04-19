@@ -354,11 +354,11 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
       case WebRenderParentCommand::TOpAddExternalImage: {
         const OpAddExternalImage& op = cmd.get_OpAddExternalImage();
         wr::ImageKey key = op.key();
-        MOZ_ASSERT(mExternalImageIds.Get(op.externalImageId()).get());
+        MOZ_ASSERT(mExternalImageIds.Get(wr::AsUint64(op.externalImageId())).get());
         MOZ_ASSERT(!mActiveKeys.Get(wr::AsUint64(key), nullptr));
         mActiveKeys.Put(wr::AsUint64(key), key);
 
-        RefPtr<CompositableHost> host = mExternalImageIds.Get(op.externalImageId());
+        RefPtr<CompositableHost> host = mExternalImageIds.Get(wr::AsUint64(op.externalImageId()));
         if (!host) {
           NS_ERROR("CompositableHost does not exist");
           break;
@@ -514,14 +514,14 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture)
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
+WebRenderBridgeParent::RecvAddExternalImageId(const ExternalImageId& aImageId,
                                               const CompositableHandle& aHandle)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
 
-  MOZ_ASSERT(!mExternalImageIds.Get(aImageId).get());
+  MOZ_ASSERT(!mExternalImageIds.Get(wr::AsUint64(aImageId)).get());
 
   ImageBridgeParent* imageBridge = ImageBridgeParent::GetInstance(OtherPid());
   if (!imageBridge) {
@@ -538,19 +538,19 @@ WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
     return IPC_OK();
   }
 
-  mExternalImageIds.Put(aImageId, host);
+  mExternalImageIds.Put(wr::AsUint64(aImageId), host);
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const uint64_t& aImageId,
+WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const ExternalImageId& aImageId,
                                                              const CompositableHandle& aHandle)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
-  MOZ_ASSERT(!mExternalImageIds.Get(aImageId).get());
+  MOZ_ASSERT(!mExternalImageIds.Get(wr::AsUint64(aImageId)).get());
 
   RefPtr<CompositableHost> host = FindCompositable(aHandle);
   MOZ_ASSERT(host->AsWebRenderImageHost());
@@ -559,19 +559,19 @@ WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const uint64_t& aIm
     return IPC_OK();
   }
 
-  mExternalImageIds.Put(aImageId, host);
+  mExternalImageIds.Put(wr::AsUint64(aImageId), host);
 
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvRemoveExternalImageId(const uint64_t& aImageId)
+WebRenderBridgeParent::RecvRemoveExternalImageId(const ExternalImageId& aImageId)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
-  MOZ_ASSERT(mExternalImageIds.Get(aImageId).get());
-  mExternalImageIds.Remove(aImageId);
+  MOZ_ASSERT(mExternalImageIds.Get(wr::AsUint64(aImageId)).get());
+  mExternalImageIds.Remove(wr::AsUint64(aImageId));
 
   return IPC_OK();
 }

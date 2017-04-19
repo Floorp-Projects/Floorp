@@ -47,7 +47,7 @@ public:
   Maybe<wr::ImageKey> UpdateImageKey(ImageClientSingle* aImageClient,
                                      ImageContainer* aContainer,
                                      Maybe<wr::ImageKey>& aOldKey,
-                                     uint64_t aExternalImageId);
+                                     wr::ExternalImageId& aExternalImageId);
 
   WebRenderLayerManager* WrManager();
   WebRenderBridgeChild* WrBridge();

@@ -29,6 +29,7 @@ typedef WrPipelineId PipelineId;
 typedef WrImageKey ImageKey;
 typedef WrFontKey FontKey;
 typedef WrEpoch Epoch;
+typedef WrExternalImageId ExternalImageId;
 
 inline WindowId NewWindowId(uint64_t aId) {
   WindowId id;
@@ -379,9 +380,14 @@ static inline WrComplexClipRegion ToWrComplexClipRegion(const gfx::RectTyped<T>&
   return complex_clip;
 }
 
-static inline WrExternalImageId ToWrExternalImageId(uint64_t aID)
+// Whenever possible, use wr::ExternalImageId instead of manipulating uint64_t.
+inline uint64_t AsUint64(const ExternalImageId& aId) {
+  return static_cast<uint64_t>(aId.mHandle);
+}
+
+static inline ExternalImageId ToExternalImageId(uint64_t aID)
 {
-  WrExternalImageId Id;
+  ExternalImageId Id;
   Id.mHandle = aID;
   return Id;
 }

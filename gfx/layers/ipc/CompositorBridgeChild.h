@@ -13,6 +13,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/PCompositorBridgeChild.h"
 #include "mozilla/layers/TextureForwarder.h" // for TextureForwarder
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "nsClassHashtable.h"           // for nsClassHashtable
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsHashKeys.h"                 // for nsUint64HashKey
@@ -234,7 +235,7 @@ public:
     return mDeviceResetSequenceNumber;
   }
 
-  uint64_t GetNextExternalImageId();
+  wr::ExternalImageId GetNextExternalImageId();
 
 private:
   // Private destructor, to discourage deletion outside of Release():

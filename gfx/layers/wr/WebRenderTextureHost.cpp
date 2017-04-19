@@ -25,7 +25,7 @@ WebRenderTextureHost::WebRenderTextureHost(const SurfaceDescriptor& aDesc,
                                            TextureFlags aFlags,
                                            TextureHost* aTexture)
   : TextureHost(aFlags)
-  , mExternalImageId(++sSerialCounter)
+  , mExternalImageId(wr::ToExternalImageId(++sSerialCounter))
   , mIsWrappingNativeHandle(false)
 {
   MOZ_COUNT_CTOR(WebRenderTextureHost);
@@ -37,7 +37,7 @@ WebRenderTextureHost::WebRenderTextureHost(const SurfaceDescriptor& aDesc,
 WebRenderTextureHost::~WebRenderTextureHost()
 {
   MOZ_COUNT_DTOR(WebRenderTextureHost);
-  wr::RenderThread::Get()->UnregisterExternalImage(mExternalImageId);
+  wr::RenderThread::Get()->UnregisterExternalImage(wr::AsUint64(mExternalImageId));
 }
 
 void
@@ -68,7 +68,7 @@ WebRenderTextureHost::CreateRenderTextureHost(const layers::SurfaceDescriptor& a
       gfxCriticalError() << "No WR implement for texture type:" << aDesc.type();
   }
 
-  wr::RenderThread::Get()->RegisterExternalImage(mExternalImageId, texture);
+  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(mExternalImageId), texture);
 }
 
 bool

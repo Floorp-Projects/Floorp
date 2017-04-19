@@ -26,8 +26,8 @@ WebRenderCanvasLayer::~WebRenderCanvasLayer()
 {
   MOZ_COUNT_DTOR(WebRenderCanvasLayer);
 
-  if (mExternalImageId) {
-    WrBridge()->DeallocExternalImageId(mExternalImageId);
+  if (mExternalImageId.isSome()) {
+    WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
   }
 }
 
@@ -50,11 +50,9 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
   UpdateCompositableClient();
 
-  if (!mExternalImageId) {
-    mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mCanvasClient);
+  if (mExternalImageId.isNothing()) {
+    mExternalImageId = Some(WrBridge()->AllocExternalImageIdForCompositable(mCanvasClient));
   }
-
-  MOZ_ASSERT(mExternalImageId);
 
   gfx::Matrix4x4 transform = GetTransform();
   const bool needsYFlip = (mOriginPos == gl::OriginPos::BottomLeft);
@@ -80,7 +78,7 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   }
 
   WrImageKey key = GetImageKey();
-  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
+  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
   Manager()->AddImageKeyForDiscard(key);
 
   aBuilder.PushStackingContext(wr::ToWrRect(relBounds),

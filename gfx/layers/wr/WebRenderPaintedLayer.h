@@ -22,8 +22,7 @@ public:
   typedef RotatedContentBuffer::ContentType ContentType;
 
   explicit WebRenderPaintedLayer(WebRenderLayerManager* aLayerManager)
-    : PaintedLayer(aLayerManager, static_cast<WebRenderLayer*>(this), LayerManager::NONE),
-      mExternalImageId(0)
+    : PaintedLayer(aLayerManager, static_cast<WebRenderLayer*>(this), LayerManager::NONE)
   {
     MOZ_COUNT_CTOR(WebRenderPaintedLayer);
   }
@@ -32,8 +31,8 @@ protected:
   virtual ~WebRenderPaintedLayer()
   {
     MOZ_COUNT_DTOR(WebRenderPaintedLayer);
-    if (mExternalImageId) {
-      WrBridge()->DeallocExternalImageId(mExternalImageId);
+    if (mExternalImageId.isSome()) {
+      WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
     }
   }
   WebRenderLayerManager* Manager()
@@ -41,7 +40,7 @@ protected:
     return static_cast<WebRenderLayerManager*>(mManager);
   }
 
-  uint64_t mExternalImageId;
+  Maybe<wr::ExternalImageId> mExternalImageId;
 
 public:
   virtual void InvalidateRegion(const nsIntRegion& aRegion) override

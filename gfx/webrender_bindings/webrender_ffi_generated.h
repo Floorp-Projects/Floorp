@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* Generated with cbindgen:0.1.5 */
+
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file, clone `https://github.com/rlhunt/cbindgen` or run `cargo install cbindgen`,
  * then run `cbindgen -c wr gfx/webrender_bindings/ gfx/webrender_bindings/webrender_ffi_generated.h` */
@@ -49,6 +51,7 @@ enum class WrImageFormat : uint32_t {
   RGB8 = 2,
   RGBA8 = 3,
   RGBAF32 = 4,
+  RG8 = 5,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -126,6 +129,14 @@ struct WrByteSlice {
   bool operator==(const WrByteSlice& aOther) const {
     return buffer == aOther.buffer &&
       len == aOther.len;
+  }
+};
+
+struct WrExternalImageId {
+  uint64_t mHandle;
+
+  bool operator==(const WrExternalImageId& aOther) const {
+    return mHandle == aOther.mHandle;
   }
 };
 
@@ -463,14 +474,6 @@ struct WrExternalImage {
   }
 };
 
-struct WrExternalImageId {
-  uint64_t mHandle;
-
-  bool operator==(const WrExternalImageId& aOther) const {
-    return mHandle == aOther.mHandle;
-  }
-};
-
 typedef WrExternalImage (*LockExternalImageCallback)(void*, WrExternalImageId);
 
 typedef void (*UnlockExternalImageCallback)(void*, WrExternalImageId);
@@ -522,14 +525,14 @@ WR_INLINE void
 wr_api_add_external_image_buffer(WrAPI* api,
     WrImageKey image_key,
     const WrImageDescriptor* descriptor,
-    uint64_t external_image_id)
+    WrExternalImageId external_image_id)
 WR_FUNC;
 
 WR_INLINE void
 wr_api_add_external_image_handle(WrAPI* api,
     WrImageKey image_key,
     const WrImageDescriptor* descriptor,
-    uint64_t external_image_id)
+    WrExternalImageId external_image_id)
 WR_FUNC;
 
 WR_INLINE void

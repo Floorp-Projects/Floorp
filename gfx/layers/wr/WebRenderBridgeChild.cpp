@@ -108,43 +108,41 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder, const gfx::IntSize
   mIsInTransaction = false;
 }
 
-uint64_t
+wr::ExternalImageId
 WebRenderBridgeChild::GetNextExternalImageId()
 {
   return GetCompositorBridgeChild()->GetNextExternalImageId();
 }
 
-uint64_t
+wr::ExternalImageId
 WebRenderBridgeChild::AllocExternalImageId(const CompositableHandle& aHandle)
 {
   MOZ_ASSERT(!mDestroyed);
 
-  uint64_t imageId = GetNextExternalImageId();
+  wr::ExternalImageId imageId = GetNextExternalImageId();
   SendAddExternalImageId(imageId, aHandle);
   return imageId;
 }
 
-uint64_t
+wr::ExternalImageId
 WebRenderBridgeChild::AllocExternalImageIdForCompositable(CompositableClient* aCompositable)
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(aCompositable->IsConnected());
 
-  uint64_t imageId = GetNextExternalImageId();
+  wr::ExternalImageId imageId = GetNextExternalImageId();
   SendAddExternalImageIdForCompositable(imageId, aCompositable->GetIPCHandle());
   return imageId;
 }
 
 void
-WebRenderBridgeChild::DeallocExternalImageId(uint64_t aImageId)
+WebRenderBridgeChild::DeallocExternalImageId(wr::ExternalImageId& aImageId)
 {
   if (mDestroyed) {
     // This can happen if the IPC connection was torn down, because, e.g.
     // the GPU process died.
     return;
   }
-
-  MOZ_ASSERT(aImageId);
   SendRemoveExternalImageId(aImageId);
 }
 
