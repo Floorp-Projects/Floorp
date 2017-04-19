@@ -624,6 +624,7 @@ EnvironmentAddonBuilder.prototype = {
           updateDay: Utils.millisecondsToDays(updateDate.getTime()),
           signedState: addon.signedState,
           isSystem: addon.isSystem,
+          isWebExtension: addon.isWebExtension,
         };
 
         if (addon.signedState !== undefined)
