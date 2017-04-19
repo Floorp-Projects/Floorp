@@ -1,3 +1,10 @@
+// |reftest| skip-if(!xulRuntime.shell)
+/* -*- Mode: js2; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
+ * Any copyright is dedicated to the Public Domain.
+ * https://creativecommons.org/publicdomain/zero/1.0/
+ */
+
 // Failure to serialize an object containing a SAB should not leave the SAB's
 // rawbuffer's reference count incremented.
 

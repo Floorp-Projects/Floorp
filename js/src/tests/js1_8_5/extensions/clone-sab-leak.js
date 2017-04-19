@@ -1,3 +1,10 @@
+// |reftest| skip-if(!xulRuntime.shell)
+/* -*- Mode: js2; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
+ * Any copyright is dedicated to the Public Domain.
+ * https://creativecommons.org/publicdomain/zero/1.0/
+ */
+
 // Check that a SAB buffer (which is distinct from the SAB object) does not leak
 // when a serialization object that is keeping it alive becomes garbage.
 
