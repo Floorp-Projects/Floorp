@@ -179,34 +179,6 @@ const integerType = {
 
 };
 
-const positiveIntegerType = {
-  testInterpolation: function(property, setup) {
-    test(function(t) {
-      var idlName = propertyToIDL(property);
-      var target = createTestElement(t, setup);
-      var animation = target.animate({ [idlName]: [1, 3] },
-                                     { duration: 1000, fill: 'both' });
-      testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: '1' },
-                            { time: 500,  expected: '2' },
-                            { time: 1000, expected: '3' }]);
-    }, property + ' supports animating as a positive integer');
-  },
-
-  testAddition: function(property, setup) {
-    test(function(t) {
-      var idlName = propertyToIDL(property);
-      var target = createTestElement(t, setup);
-      target.style[idlName] = 1;
-      var animation = target.animate({ [idlName]: [2, 5] },
-                                     { duration: 1000, composite: 'add' });
-      testAnimationSamples(animation, idlName,
-                           [{ time: 0,    expected: '3' }]);
-    }, property + ': positive integer');
-  },
-
-};
-
 const lengthPercentageOrCalcType = {
   testInterpolation: function(property, setup) {
     lengthType.testInterpolation(property, setup);
@@ -1057,7 +1029,6 @@ const types = {
   discrete: discreteType,
   filterList: filterListType,
   integer: integerType,
-  positiveInteger: positiveIntegerType,
   length: lengthType,
   percentage: percentageType,
   lengthPercentageOrCalc: lengthPercentageOrCalcType,
