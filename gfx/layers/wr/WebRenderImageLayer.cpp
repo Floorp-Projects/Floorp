@@ -29,6 +29,9 @@ WebRenderImageLayer::WebRenderImageLayer(WebRenderLayerManager* aLayerManager)
 WebRenderImageLayer::~WebRenderImageLayer()
 {
   MOZ_COUNT_DTOR(WebRenderImageLayer);
+  if (mKey.isSome()) {
+    WrManager()->AddImageKeyForDiscard(mKey.value());
+  }
   if (mExternalImageId) {
     WrBridge()->DeallocExternalImageId(mExternalImageId);
   }
@@ -123,7 +126,22 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   }
   gfx::IntSize size = image->GetSize();
 
-  if (mImageClient && !mImageClient->UpdateImage(mContainer, /* unused */0)) {
+  if (GetImageClientType() == CompositableType::IMAGE_BRIDGE) {
+    // Always allocate key
+    WrImageKey key = GetImageKey();
+    WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
+    Manager()->AddImageKeyForDiscard(key);
+    mKey = Some(key);
+  } else {
+    // Handle CompositableType::IMAGE case
+    MOZ_ASSERT(mImageClient->AsImageClientSingle());
+    mKey = UpdateImageKey(mImageClient->AsImageClientSingle(),
+                          mContainer,
+                          mKey,
+                          mExternalImageId);
+  }
+
+  if (mKey.isNothing()) {
     return;
   }
 
@@ -152,16 +170,12 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                   Stringify(filter).c_str());
   }
 
-  WrImageKey key = GetImageKey();
-  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
-  Manager()->AddImageKeyForDiscard(key);
-
   aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
                             1.0f,
                             //GetAnimations(),
                             transform,
                             mixBlendMode);
-  aBuilder.PushImage(wr::ToWrRect(rect), clip, filter, key);
+  aBuilder.PushImage(wr::ToWrRect(rect), clip, filter, mKey.value());
   aBuilder.PopStackingContext();
 }
 
@@ -202,17 +216,19 @@ WebRenderImageLayer::RenderMaskLayer(const gfx::Matrix4x4& aTransform)
   if (!image) {
     return Nothing();
   }
-  if (!mImageClient->UpdateImage(mContainer, /* unused */0)) {
+
+  MOZ_ASSERT(mImageClient->AsImageClientSingle());
+  mKey = UpdateImageKey(mImageClient->AsImageClientSingle(),
+                        mContainer,
+                        mKey,
+                        mExternalImageId);
+  if (mKey.isNothing()) {
     return Nothing();
   }
 
-  WrImageKey key = GetImageKey();
-  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
-  Manager()->AddImageKeyForDiscard(key);
-
   gfx::IntSize size = image->GetSize();
   WrImageMask imageMask;
-  imageMask.image = key;
+  imageMask.image = mKey.value();
   Rect maskRect = aTransform.TransformBounds(Rect(0, 0, size.width, size.height));
   imageMask.rect = wr::ToWrRect(maskRect);
   imageMask.repeat = false;

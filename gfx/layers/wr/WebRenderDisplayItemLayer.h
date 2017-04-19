@@ -44,6 +44,7 @@ private:
   RefPtr<ImageClient> mImageClient;
   RefPtr<ImageContainer> mImageContainer;
   uint64_t mExternalImageId;
+  Maybe<wr::ImageKey> mKey;
 };
 
 } // namespace layers

@@ -19,6 +19,9 @@ namespace layers {
 WebRenderDisplayItemLayer::~WebRenderDisplayItemLayer()
 {
   MOZ_COUNT_DTOR(WebRenderDisplayItemLayer);
+  if (mKey.isSome()) {
+    WrManager()->AddImageKeyForDiscard(mKey.value());
+  }
   if (mExternalImageId) {
     WrBridge()->DeallocExternalImageId(mExternalImageId);
   }
@@ -61,6 +64,8 @@ Maybe<wr::ImageKey>
 WebRenderDisplayItemLayer::SendImageContainer(ImageContainer* aContainer,
                                               nsTArray<layers::WebRenderParentCommand>& aParentCommands)
 {
+  MOZ_ASSERT(aContainer);
+
   if (mImageContainer != aContainer) {
     AutoLockImage autoLock(aContainer);
     Image* image = autoLock.GetImage();
@@ -83,21 +88,17 @@ WebRenderDisplayItemLayer::SendImageContainer(ImageContainer* aContainer,
       mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
     }
     MOZ_ASSERT(mExternalImageId);
+    MOZ_ASSERT(mImageClient->AsImageClientSingle());
 
-    if (!mImageClient->UpdateImage(aContainer, /* unused */0)) {
-      return Nothing();
-    }
+    mKey = UpdateImageKey(mImageClient->AsImageClientSingle(),
+                          aContainer,
+                          mKey,
+                          mExternalImageId);
+
     mImageContainer = aContainer;
   }
 
-  WrImageKey key;
-  key.mNamespace = WrBridge()->GetNamespace();
-  key.mHandle = WrBridge()->GetNextResourceId();
-  aParentCommands.AppendElement(layers::OpAddExternalImage(
-                                mExternalImageId,
-                                key));
-  WrManager()->AddImageKeyForDiscard(key);
-  return Some(key);
+  return mKey;
 }
 
 bool
