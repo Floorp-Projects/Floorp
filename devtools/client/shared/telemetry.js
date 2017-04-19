@@ -138,13 +138,13 @@ Telemetry.prototype = {
       histogram: "DEVTOOLS_PICKER_EYEDROPPER_OPENED_COUNT",
     },
     toolbareyedropper: {
-      histogram: "DEVTOOLS_TOOLBAR_EYEDROPPER_OPENED_COUNT",
+      scalar: "devtools.toolbar.eyedropper.opened",
     },
     copyuniquecssselector: {
-      histogram: "DEVTOOLS_COPY_UNIQUE_CSS_SELECTOR_OPENED_COUNT",
+      scalar: "devtools.copy.unique.css.selector.opened",
     },
     copyfullcssselector: {
-      histogram: "DEVTOOLS_COPY_FULL_CSS_SELECTOR_OPENED_COUNT",
+      scalar: "devtools.copy.full.css.selector.opened",
     },
     developertoolbar: {
       histogram: "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_COUNT",
