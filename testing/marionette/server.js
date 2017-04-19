@@ -94,9 +94,6 @@ const RECOMMENDED_PREFS = new Map([
   // thumbnails in general cannot hurt
   ["browser.pagethumbnails.capturing_disabled", true],
 
-  // Avoid performing Reader Mode intros during tests
-  ["browser.reader.detectedFirstArticle", true],
-
   // Disable safebrowsing components.
   //
   // These should also be set in the profile prior to starting Firefox,

@@ -125,8 +125,6 @@
   skin/classic/browser/favicon-search-16.svg                   (../shared/favicon-search-16.svg)
   skin/classic/browser/icon-search-64.svg                      (../shared/incontent-icons/icon-search-64.svg)
   skin/classic/browser/welcome-back.svg                        (../shared/incontent-icons/welcome-back.svg)
-  skin/classic/browser/reader-tour.png                         (../shared/reader/reader-tour.png)
-  skin/classic/browser/reader-tour@2x.png                      (../shared/reader/reader-tour@2x.png)
   skin/classic/browser/readerMode.svg                          (../shared/reader/readerMode.svg)
   skin/classic/browser/panic-panel/header.png                  (../shared/panic-panel/header.png)
   skin/classic/browser/panic-panel/header@2x.png               (../shared/panic-panel/header@2x.png)
