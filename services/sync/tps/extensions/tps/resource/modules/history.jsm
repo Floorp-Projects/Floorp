@@ -175,7 +175,7 @@ var HistoryEntry = {
    */
   Delete(item, usSinceEpoch) {
     if ("uri" in item) {
-      PlacesUtils.history.remove(item.uri);
+      Async.promiseSpinningly(PlacesUtils.history.remove(item.uri));
     } else if ("host" in item) {
       PlacesUtils.history.removePagesFromHost(item.host, false);
     } else if ("begin" in item && "end" in item) {
