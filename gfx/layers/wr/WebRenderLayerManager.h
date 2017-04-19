@@ -154,6 +154,7 @@ public:
   // transaction or destruction
   void AddImageKeyForDiscard(wr::ImageKey);
   void DiscardImages();
+  void DiscardLocalImages();
 
   // Before destroying a layer with animations, add its compositorAnimationsId
   // to a list of ids that will be discarded on the next transaction

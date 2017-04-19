@@ -335,6 +335,7 @@ WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
     return false;
   }
 
+  // We might used painted layer images so don't delete them yet.
   return EndTransactionInternal(nullptr, nullptr, aFlags);
 }
 
@@ -373,6 +374,15 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
 
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline());
   WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder);
+  WrBridge()->ClearReadLocks();
+
+  // We can't finish this transaction so return. This usually
+  // happens in an empty transaction where we can't repaint a painted layer.
+  // In this case, leave the transaction open and let a full transaction happen.
+  if (mTransactionIncomplete) {
+    DiscardLocalImages();
+    return false;
+  }
 
   bool sync = mTarget != nullptr;
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId();
@@ -389,7 +399,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   mKeepAlive.Clear();
   ClearMutatedLayers();
 
-  return !mTransactionIncomplete;
+  return true;
 }
 
 void
@@ -484,6 +494,16 @@ WebRenderLayerManager::DiscardCompositorAnimations()
   mDiscardedCompositorAnimationsIds.clear();
 }
 
+void
+WebRenderLayerManager::DiscardLocalImages()
+{
+  // Removes images but doesn't tell the parent side about them
+  // This is useful in empty / failed transactions where we created
+  // image keys but didn't tell the parent about them yet.
+  mImageKeys.clear();
+}
+
+void
 WebRenderLayerManager::Mutated(Layer* aLayer)
 {
   LayerManager::Mutated(aLayer);
