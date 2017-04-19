@@ -16,6 +16,18 @@ namespace mozilla {
 namespace layers {
 
 void
+WebRenderContainerLayer::ClearAnimations()
+{
+
+  if (!GetAnimations().IsEmpty()) {
+    mManager->AsWebRenderLayerManager()->
+      AddCompositorAnimationsIdForDiscard(GetCompositorAnimationsId());
+  }
+
+  Layer::ClearAnimations();
+}
+
+void
 WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
   nsTArray<LayerPolygon> children = SortChildrenBy3DZOrder(SortMode::WITHOUT_GEOMETRY);
@@ -27,7 +39,7 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   uint64_t animationsId = 0;
 
   if (gfxPrefs::WebRenderOMTAEnabled() &&
-      GetAnimations().Length()) {
+      !GetAnimations().IsEmpty()) {
     MOZ_ASSERT(GetCompositorAnimationsId());
 
     animationsId = GetCompositorAnimationsId();

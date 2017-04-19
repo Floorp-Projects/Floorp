@@ -270,6 +270,23 @@ WebRenderBridgeParent::RecvDeleteImage(const wr::ImageKey& aImageKey)
 }
 
 mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvDeleteCompositorAnimations(const uint64_t& aId)
+{
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+  uint64_t id = mWidget ? 0 : mPipelineId.mHandle;
+  CompositorAnimationStorage* storage =
+    mCompositorBridge->GetAnimationStorage(id);
+
+  MOZ_ASSERT(storage);
+  storage->ClearById(aId);
+
+  return IPC_OK();
+}
+
+
+mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvDPBegin(const gfx::IntSize& aSize)
 {
   if (mDestroyed) {
@@ -482,18 +499,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
             mCompositorBridge->GetAnimationStorage(id);
           if (storage) {
             storage->SetAnimations(data.id(), data.animations());
-          }
-        }
-        break;
-      }
-      case WebRenderParentCommand::TOpRemoveCompositorAnimations: {
-        const OpRemoveCompositorAnimations& op = cmd.get_OpRemoveCompositorAnimations();
-        if (op.id()) {
-          uint64_t id = mWidget ? 0 : wr::AsUint64(mPipelineId);
-          CompositorAnimationStorage* storage =
-            mCompositorBridge->GetAnimationStorage(id);
-          if (storage) {
-            storage->ClearById(op.id());
           }
         }
         break;
