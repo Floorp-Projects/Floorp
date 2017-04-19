@@ -476,10 +476,14 @@ private:
                                    nsConnectionEntry *ent,
                                    bool considerAll);
 
-    // Given the connection entry, return the available count for creating
-    // new connections. Return 0 if the active connection count is
-    // exceeded |mMaxPersistConnsPerProxy| or |mMaxPersistConnsPerHost|.
-    uint32_t AvailableNewConnectionCount(nsConnectionEntry * ent);
+    // Return total active connection count, which is the sum of
+    // active connections and unconnected half open connections.
+    uint32_t TotalActiveConnections(nsConnectionEntry *ent) const;
+
+    // Return |mMaxPersistConnsPerProxy| or |mMaxPersistConnsPerHost|,
+    // depending whether the proxy is used.
+    uint32_t MaxPersistConnections(nsConnectionEntry *ent) const;
+
     bool     AtActiveConnectionLimit(nsConnectionEntry *, uint32_t caps);
     MOZ_MUST_USE nsresult TryDispatchTransaction(nsConnectionEntry *ent,
                                                  bool onlyReusedConnection,
