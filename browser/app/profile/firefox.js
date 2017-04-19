@@ -699,6 +699,8 @@ pref("browser.preferences.offlineGroup.enabled", false);
 pref("browser.preferences.offlineGroup.enabled", true);
 #endif
 
+pref("browser.preferences.defaultPerformanceSettings.enabled", true);
+
 pref("browser.download.show_plugins_in_list", true);
 pref("browser.download.hide_plugins_without_extensions", true);
 

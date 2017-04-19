@@ -109,6 +109,7 @@ add_task(function*() {
     || child.id == "languagesGroup"
     || child.id == "fontsGroup"
     || child.id == "browsingGroup"
+    || child.id == "performanceGroup"
     || child.id == "header-general") {
       is_element_visible(child, "Should be in general tab");
     } else if (child.id) {

@@ -65,6 +65,8 @@ var gMainPane = {
     document.getElementById("engineList").view = gEngineView;
     this.buildDefaultEngineDropDown();
 
+    this.buildContentProcessCountMenuList();
+
     let addEnginesLink = document.getElementById("addEngines");
     let searchEnginesURL = Services.wm.getMostRecentWindow("navigator:browser")
                                       .BrowserSearch.searchEnginesURL;
@@ -90,6 +92,25 @@ var gMainPane = {
       this.updateSuggestsCheckbox();
     });
     this.updateSuggestsCheckbox();
+
+    let processCountPref =
+      document.getElementById("dom.ipc.processCount");
+    processCountPref.addEventListener("change", () => {
+      this.updateDefaultPerformanceSettingsPref();
+    });
+    let accelerationPref =
+      document.getElementById("layers.acceleration.disabled");
+    accelerationPref.addEventListener("change", () => {
+      this.updateDefaultPerformanceSettingsPref();
+    });
+    this.updateDefaultPerformanceSettingsPref();
+
+    let defaultPerformancePref =
+      document.getElementById("browser.preferences.defaultPerformanceSettings.enabled");
+    defaultPerformancePref.addEventListener("change", () => {
+      this.updatePerformanceSettingsBox();
+    });
+    this.updatePerformanceSettingsBox();
 
     // set up the "use current page" label-changing listener
     this._updateUseCurrentButton();
@@ -790,6 +811,43 @@ var gMainPane = {
     let permanentPBLabel =
       document.getElementById("urlBarSuggestionPermanentPBLabel");
     permanentPBLabel.hidden = urlbarSuggests.hidden || !permanentPB;
+  },
+
+  updateDefaultPerformanceSettingsPref() {
+    let defaultPerformancePref =
+      document.getElementById("browser.preferences.defaultPerformanceSettings.enabled");
+    let processCountPref = document.getElementById("dom.ipc.processCount");
+    let accelerationPref = document.getElementById("layers.acceleration.disabled");
+    if (processCountPref.value != processCountPref.defaultValue ||
+        accelerationPref.value != accelerationPref.defaultValue) {
+      defaultPerformancePref.value = false;
+    }
+  },
+
+  updatePerformanceSettingsBox() {
+    let defaultPerformancePref =
+      document.getElementById("browser.preferences.defaultPerformanceSettings.enabled");
+    let performanceSettings = document.getElementById("performanceSettings");
+    if (defaultPerformancePref.value) {
+      let processCountPref = document.getElementById("dom.ipc.processCount");
+      let accelerationPref = document.getElementById("layers.acceleration.disabled");
+      processCountPref.value = processCountPref.defaultValue;
+      accelerationPref.value = accelerationPref.defaultValue;
+      performanceSettings.hidden = true;
+    } else {
+      performanceSettings.hidden = false;
+    }
+  },
+
+  buildContentProcessCountMenuList() {
+    let processCountPref = document.getElementById("dom.ipc.processCount");
+    let bundlePreferences = document.getElementById("bundlePreferences");
+    let label = bundlePreferences.getFormattedString("defaultContentProcessCount",
+      [processCountPref.defaultValue]);
+    let contentProcessCount =
+      document.querySelector(`#contentProcessCount > menupopup >
+                              menuitem[value="${processCountPref.defaultValue}"]`);
+    contentProcessCount.label = label;
   },
 
   buildDefaultEngineDropDown() {
