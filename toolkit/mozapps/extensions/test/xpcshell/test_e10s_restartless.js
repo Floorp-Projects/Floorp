@@ -19,7 +19,15 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
 startupManager();
 
-function* check_normal() {
+function check_multi_disabled() {
+  try {
+    return Services.prefs.getBoolPref("extensions.e10sMultiBlockedByAddons");
+  } catch (e) {
+    return false;
+  }
+}
+
+function* check_normal(checkMultiDisabled) {
   let install = yield promiseInstallFile(do_get_addon("test_bootstrap1_1"));
   do_check_eq(install.state, AddonManager.STATE_INSTALLED);
   do_check_false(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
@@ -29,6 +37,10 @@ function* check_normal() {
 
   let addon = yield promiseAddonByID(ID);
   do_check_eq(addon, install.addon);
+
+  if (checkMultiDisabled) {
+    do_check_false(check_multi_disabled());
+  }
 
   do_check_false(hasFlag(addon.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_DISABLE));
   addon.userDisabled = true;
@@ -82,6 +94,7 @@ add_task(function*() {
   let install = yield promiseInstallFile(do_get_addon("test_bootstrap1_1"));
   do_check_eq(install.state, AddonManager.STATE_INSTALLED);
   do_check_true(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
+  do_check_false(check_multi_disabled());
 
   let addon = yield promiseAddonByID(ID);
   do_check_eq(addon, null);
@@ -94,12 +107,14 @@ add_task(function*() {
 
   addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
+  do_check_true(check_multi_disabled());
 
   do_check_false(hasFlag(addon.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_DISABLE));
   addon.userDisabled = true;
   BootstrapMonitor.checkAddonNotStarted(ID);
   do_check_false(addon.isActive);
   do_check_false(hasFlag(addon.pendingOperations, AddonManager.PENDING_DISABLE));
+  do_check_false(check_multi_disabled());
 
   do_check_true(hasFlag(addon.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_ENABLE));
   addon.userDisabled = false;
@@ -116,6 +131,7 @@ add_task(function*() {
   BootstrapMonitor.checkAddonStarted(ID);
 
   do_check_false(hasFlag(addon.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_UNINSTALL));
+  do_check_true(check_multi_disabled());
   addon.uninstall();
   BootstrapMonitor.checkAddonNotStarted(ID);
   BootstrapMonitor.checkAddonNotInstalled(ID);
@@ -130,6 +146,7 @@ add_task(function*() {
   let install = yield promiseInstallFile(do_get_addon("test_bootstrap1_1"));
   do_check_eq(install.state, AddonManager.STATE_INSTALLED);
   do_check_true(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
+  do_check_false(check_multi_disabled());
 
   let addon = yield promiseAddonByID(ID);
   do_check_eq(addon, null);
@@ -139,6 +156,7 @@ add_task(function*() {
   // After install and restart we should block.
   let blocked = Services.prefs.getBoolPref("extensions.e10sBlockedByAddons");
   do_check_true(blocked);
+  do_check_true(check_multi_disabled());
 
   BootstrapMonitor.checkAddonInstalled(ID);
   BootstrapMonitor.checkAddonStarted(ID);
@@ -159,6 +177,7 @@ add_task(function*() {
   // After disable and restart we should not block.
   blocked = Services.prefs.getBoolPref("extensions.e10sBlockedByAddons");
   do_check_false(blocked);
+  do_check_false(check_multi_disabled());
 
   addon = yield promiseAddonByID(ID);
   addon.userDisabled = false;
@@ -171,6 +190,7 @@ add_task(function*() {
   // After re-enable and restart we should block.
   blocked = Services.prefs.getBoolPref("extensions.e10sBlockedByAddons");
   do_check_true(blocked);
+  do_check_true(check_multi_disabled());
 
   addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -191,6 +211,7 @@ add_task(function*() {
   // After uninstall and restart we should not block.
   blocked = Services.prefs.getBoolPref("extensions.e10sBlockedByAddons");
   do_check_false(blocked);
+  do_check_false(check_multi_disabled());
 
   restartManager();
 });
@@ -246,6 +267,7 @@ add_task(function*() {
   // After disable one addon and restart we should block.
   blocked = Services.prefs.getBoolPref("extensions.e10sBlockedByAddons");
   do_check_true(blocked);
+  do_check_true(check_multi_disabled());
 
   addon2 = yield promiseAddonByID(ID2);
 
@@ -261,6 +283,7 @@ add_task(function*() {
   // After disable both addons and restart we should not block.
   blocked = Services.prefs.getBoolPref("extensions.e10sBlockedByAddons");
   do_check_false(blocked);
+  do_check_false(check_multi_disabled());
 
   addon = yield promiseAddonByID(ID);
   addon.userDisabled = false;
@@ -273,6 +296,7 @@ add_task(function*() {
   // After re-enable one addon and restart we should block.
   blocked = Services.prefs.getBoolPref("extensions.e10sBlockedByAddons");
   do_check_true(blocked);
+  do_check_true(check_multi_disabled());
 
   addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -292,6 +316,7 @@ add_task(function*() {
   // After uninstall the only enabled addon and restart we should not block.
   blocked = Services.prefs.getBoolPref("extensions.e10sBlockedByAddons");
   do_check_false(blocked);
+  do_check_false(check_multi_disabled());
 
   addon2 = yield promiseAddonByID(ID2);
   addon2.uninstall();
@@ -426,5 +451,81 @@ add_task(function*() {
   Services.prefs.setCharPref("extensions.hotfix.id", ID);
   Services.prefs.setBoolPref("extensions.hotfix.cert.checkAttributes", false);
 
-  yield check_normal();
+  yield check_normal(true);
+});
+
+// Test non-restarless add-on's should not block multi
+add_task(function*() {
+  yield promiseInstallAllFiles([do_get_addon("test_install1")], true);
+
+  let non_restartless_ID = "addon1@tests.mozilla.org";
+
+  restartManager();
+
+  let addon = yield promiseAddonByID(non_restartless_ID);
+
+  // non-restartless add-on is installed and started
+  do_check_neq(addon, null);
+
+  do_check_false(check_multi_disabled());
+
+  addon.uninstall();
+
+  BootstrapMonitor.checkAddonNotInstalled(non_restartless_ID);
+  BootstrapMonitor.checkAddonNotStarted(non_restartless_ID);
+
+  yield promiseRestartManager();
+});
+
+// Test experiment add-on should not block multi
+add_task(function*() {
+  yield promiseInstallAllFiles([do_get_addon("test_experiment1")], true);
+
+  let experiment_ID = "experiment1@tests.mozilla.org";
+
+  BootstrapMonitor.checkAddonInstalled(experiment_ID, "1.0");
+  BootstrapMonitor.checkAddonNotStarted(experiment_ID);
+
+  let addon = yield promiseAddonByID(experiment_ID);
+
+  // non-restartless add-on is installed and started
+  do_check_neq(addon, null);
+
+  do_check_false(check_multi_disabled());
+
+  addon.uninstall();
+
+  BootstrapMonitor.checkAddonNotInstalled(experiment_ID);
+  BootstrapMonitor.checkAddonNotStarted(experiment_ID);
+
+  yield promiseRestartManager();
+});
+
+const { GlobalManager } = Components.utils.import("resource://gre/modules/Extension.jsm", {});
+
+// Test web extension add-on's should not block multi
+add_task(function*() {
+
+  yield promiseInstallAllFiles([do_get_addon("webextension_1")], true),
+
+  restartManager();
+
+  yield promiseWebExtensionStartup();
+
+  let we_ID = "webextension1@tests.mozilla.org";
+
+  do_check_eq(GlobalManager.extensionMap.size, 1);
+
+  let addon = yield promiseAddonByID(we_ID);
+
+  do_check_neq(addon, null);
+
+  do_check_false(check_multi_disabled());
+
+  addon.uninstall();
+
+  BootstrapMonitor.checkAddonNotInstalled(we_ID);
+  BootstrapMonitor.checkAddonNotStarted(we_ID);
+
+  yield promiseRestartManager();
 });

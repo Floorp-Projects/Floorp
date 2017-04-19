@@ -728,7 +728,9 @@ ContentParent::GetMaxProcessCount(const nsAString& aContentProcessType)
 
   // Let's respect the user's decision to enable multiple content processes
   // despite some add-ons installed that might performing poorly.
-  if (!hasUserValue && Preferences::GetBool("extensions.e10sMultiBlockedByAddons", false)) {
+  if (!hasUserValue &&
+      Preferences::GetBool("extensions.e10sMultiBlocksEnabling", false) &&
+      Preferences::GetBool("extensions.e10sMultiBlockedByAddons", false)) {
     return 1;
   }
 
