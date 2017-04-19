@@ -36,10 +36,6 @@ var whitelist = new Set([
   // security/manager/pki/resources/content/device_manager.js
   {file: "chrome://pippki/content/load_device.xul"},
 
-  // browser/modules/ReaderParent.jsm
-  {file: "chrome://browser/skin/reader-tour.png"},
-  {file: "chrome://browser/skin/reader-tour@2x.png"},
-
   // Used by setting this url as a pref in about:config
   {file: "chrome://browser/content/newtab/alternativeDefaultSites.json"},
 
