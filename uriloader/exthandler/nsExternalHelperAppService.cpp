@@ -2729,12 +2729,14 @@ nsExternalHelperAppService::GetTypeFromExtension(const nsACString& aFileExt,
   }
 
   // Ask OS.
-  if (GetMIMETypeFromOSForExtension(aFileExt, aContentType)) {
-    return NS_OK;
+  bool found = false;
+  nsCOMPtr<nsIMIMEInfo> mi = GetMIMEInfoFromOS(EmptyCString(), aFileExt, &found);
+  if (mi && found) {
+    return mi->GetMIMEType(aContentType);
   }
 
   // Check extras array.
-  bool found = GetTypeFromExtras(aFileExt, aContentType);
+  found = GetTypeFromExtras(aFileExt, aContentType);
   if (found) {
     return NS_OK;
   }
@@ -2932,12 +2934,4 @@ bool nsExternalHelperAppService::GetTypeFromExtras(const nsACString& aExtension,
   }
 
   return false;
-}
-
-bool
-nsExternalHelperAppService::GetMIMETypeFromOSForExtension(const nsACString& aExtension, nsACString& aMIMEType)
-{
-  bool found = false;
-  nsCOMPtr<nsIMIMEInfo> mimeInfo = GetMIMEInfoFromOS(EmptyCString(), aExtension, &found);
-  return found && mimeInfo && NS_SUCCEEDED(mimeInfo->GetMIMEType(aMIMEType));
 }
