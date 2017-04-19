@@ -434,33 +434,73 @@ And to run:
 	^C
 	%
 
-You may also see all flags and options
-available in geckodriver by viewing the help message:
+## Flags
 
-	% geckodriver -h
-	WebDriver implementation for Firefox.
+#### <code>-b <var>BINARY</var></code>/<code>--binary <var>BINARY</var></code>
 
-	USAGE:
-	    geckodriver [FLAGS] [OPTIONS]
+Path to the Firefox binary to use.
+By default geckodriver tries to find and use
+the system installation of Firefox,
+but that behaviour can be changed by using this option.
+Note that the `binary` capability of the `moz:firefoxOptions` object
+that is passed when [creating a new session](https://w3c.github.io/webdriver/webdriver-spec.html#new-session)
+will override this option.
 
-	FLAGS:
-	        --connect-existing    Connect to an existing Firefox instance
-	    -h, --help                Prints help information
-	    -v                        Log level verbosity (-v for debug and -vv for
-	                              trace level)
-	    -V, --version             Prints version and copying information
+On Linux systems it will use the first _firefox_ binary
+found by searching the `PATH` environmental variable,
+which is roughly equivalent to calling [whereis(1)](http://www.manpagez.com/man/1/whereis/)
+and extracting the second column:
 
-	OPTIONS:
-	    -b, --binary <BINARY>           Path to the Firefox binary
-	        --log <LEVEL>
-	            Set Gecko log level [values: fatal, error, warn, info, config,
-	            debug, trace]
-	        --marionette-port <PORT>
-	            Port to use to connect to Gecko (default: random free port)
-	        --host <HOST>
-	            Host ip to use for WebDriver server (default: 127.0.0.1)
-	    -p, --port <PORT>
-	            Port to use for WebDriver server (default: 4444)
+	% whereis firefox
+	firefox: /usr/bin/firefox /usr/local/firefox
+
+On macOS, the binary is found by looking for the first _firefox-bin_ binary
+in the same fashion as on Linux systems.
+This means it is possible to also use `PATH`
+to control where geckodriver should find Firefox on macOS.
+It will then look for _/Applications/Firefox.app_.
+
+On Windows systems, geckodriver looks for the system Firefox
+by scanning the Windows registry.
+
+#### `--connect-existing`
+
+Connecting to an existing Firefox instance.
+The instance must have Marionette enabled.
+
+To enable the Marionette remote protocol
+you can pass the `--marionette` flag to Firefox,
+or (in Firefox 54 or greater)
+flip the `marionette.enabled` preference in _about:config_ at runtime.
+
+#### <code>--host <var>HOST</var></code>
+
+Host to use for the WebDriver server.
+Defaults to 127.0.0.1.
+
+#### <code>--log <var>LEVEL</var></code>
+
+Set the Gecko and geckodriver log level.
+Possible values are `fatal`, `error`, `warn`, `info`, `config`, `debug`, and `trace`.
+
+#### <code>--marionette-port <var>PORT</var></code>
+
+Port to use for connecting to the Marionette remote protocol.
+By default it will pick a free port assigned by the system.
+
+#### <code>-p <var>PORT</var></code>/<code>--port <var>PORT</var></code>
+
+Port to use for the WebDriver server.
+Defaults to 4444.
+
+A helpful trick is that it is possible to bind to 0
+to get the system to assign a free port.
+
+#### <code>-v<var>[v]</var></code>
+
+Increases the logging verbosity by to debug level when passing a single `-v`,
+or to trace level if `-vv` is passed.
+This is analogous to passing `--log debug` and `--log trace`, respectively.
 
 ## Building
 
