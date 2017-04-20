@@ -1134,6 +1134,9 @@
           capture: true,
           mozSystemGroup: true
         });
+        // This is to close the picker when input element blurs.
+        this.mInputElement.addEventListener("blur", this,
+                                            { mozSystemGroup: true });
       ]]>
       </constructor>
 
@@ -1589,10 +1592,15 @@
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
-          this.log("onBlur originalTarget: " + aEvent.originalTarget);
+          this.log("onBlur originalTarget: " + aEvent.originalTarget +
+            " target: " + aEvent.target);
 
           if (document.activeElement == this.mInputElement) {
             return;
+          }
+
+          if (aEvent.target == this.mInputElement && this.mIsPickerOpen) {
+            this.mInputElement.closeDateTimePicker();
           }
 
           let target = aEvent.originalTarget;
@@ -1610,11 +1618,14 @@
           this.log("onKeyPress key: " + aEvent.key);
 
           switch (aEvent.key) {
-            // Close picker on Enter or Space key.
+            // Close picker on Enter, Escape or Space key.
             case "Enter":
+            case "Escape":
             case " ": {
-              this.mInputElement.closeDateTimePicker();
-              aEvent.preventDefault();
+              if (this.mIsPickerOpen) {
+                this.mInputElement.closeDateTimePicker();
+                aEvent.preventDefault();
+              }
               break;
             }
             case "Backspace": {
@@ -1670,7 +1681,7 @@
 
           if (aEvent.originalTarget == this.mResetButton) {
             this.clearInputFields(false);
-          } else {
+          } else if (!this.mIsPickerOpen) {
             this.mInputElement.openDateTimePicker(this.getCurrentValue());
           }
         ]]>
