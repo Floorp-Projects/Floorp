@@ -18,8 +18,9 @@ class IPCBlobInputStreamParent final
   : public mozilla::ipc::PIPCBlobInputStreamParent
 {
 public:
+  template<typename M>
   static IPCBlobInputStreamParent*
-  Create(nsIInputStream* aInputStream, nsresult* aRv);
+  Create(nsIInputStream* aInputStream, nsresult* aRv, M* aManager);
 
   void
   ActorDestroy(IProtocol::ActorDestroyReason aReason) override;
@@ -36,11 +37,23 @@ public:
     return mSize;
   }
 
+  mozilla::ipc::IPCResult
+  RecvStreamNeeded() override;
+
 private:
-  IPCBlobInputStreamParent(const nsID& aID, uint64_t aSize);
+  IPCBlobInputStreamParent(const nsID& aID, uint64_t aSize,
+                           nsIContentParent* aManager);
+
+  IPCBlobInputStreamParent(const nsID& aID, uint64_t aSize,
+                           mozilla::ipc::PBackgroundParent* aManager);
 
   const nsID mID;
   const uint64_t mSize;
+
+  // Only 1 of these 2 is set. Raw pointer because these 2 managers are keeping
+  // the parent actor alive. The pointers will be nullified in ActorDestroyed.
+  nsIContentParent* mContentManager;
+  mozilla::ipc::PBackgroundParent* mPBackgroundManager;
 };
 
 } // namespace dom

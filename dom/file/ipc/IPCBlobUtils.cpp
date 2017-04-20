@@ -76,7 +76,7 @@ SerializeInputStreamParent(nsIInputStream* aInputStream, IPCBlob& aIPCBlob,
 
   nsresult rv;
   IPCBlobInputStreamParent* parentActor =
-    IPCBlobInputStreamParent::Create(aInputStream, &rv);
+    IPCBlobInputStreamParent::Create(aInputStream, &rv, aManager);
   if (!parentActor) {
     return rv;
   }
