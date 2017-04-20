@@ -23,10 +23,15 @@ function debug(aMsg) {
 
 // Handles GeckoView settings including:
 // * tracking protection
+// * multiprocess
 class GeckoViewSettings extends GeckoViewModule {
   init() {
     this._isSafeBrowsingInit = false;
     this._useTrackingProtection = false;
+
+    // We only allow to set this setting during initialization, further updates
+    // will be ignored.
+    this.useMultiprocess = !!this.settings.useMultiprocess;
   }
 
   onSettingsUpdate() {
@@ -51,5 +56,24 @@ class GeckoViewSettings extends GeckoViewModule {
       );
       this._useTrackingProtection = aUse;
     }
+  }
+
+  get useMultiprocess() {
+    return this.browser.getAttribute("remote") == "true";
+  }
+
+  set useMultiprocess(aUse) {
+    if (aUse == this.useMultiprocess) {
+      return;
+    }
+    let parentNode = this.browser.parentNode;
+    parentNode.removeChild(this.browser);
+
+    if (aUse) {
+      this.browser.setAttribute("remote", "true");
+    } else {
+      this.browser.removeAttribute("remote");
+    }
+    parentNode.appendChild(this.browser);
   }
 }

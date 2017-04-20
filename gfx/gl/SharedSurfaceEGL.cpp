@@ -11,7 +11,6 @@
 #include "GLReadTexImageHelper.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 #include "SharedSurface.h"
-#include "TextureGarbageBin.h"
 
 namespace mozilla {
 namespace gl {

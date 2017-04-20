@@ -60,8 +60,6 @@ const URI_UPDATES_PROPERTIES    = "chrome://mozapps/locale/update/updates.proper
 
 const KEY_UPDROOT         = "UpdRootD";
 const KEY_EXECUTABLE      = "XREExeF";
-// Gonk only
-const KEY_UPDATE_ARCHIVE_DIR = "UpdArchD";
 
 const DIR_UPDATES         = "updates";
 
@@ -83,7 +81,6 @@ const STATE_PENDING_SERVICE = "pending-service";
 const STATE_PENDING_ELEVATE = "pending-elevate";
 const STATE_APPLYING        = "applying";
 const STATE_APPLIED         = "applied";
-const STATE_APPLIED_OS      = "applied-os";
 const STATE_APPLIED_SERVICE = "applied-service";
 const STATE_SUCCEEDED       = "succeeded";
 const STATE_DOWNLOAD_FAILED = "download-failed";
@@ -202,17 +199,6 @@ const APPID_TO_TOPIC = {
 };
 
 var gUpdateMutexHandle = null;
-
-// Gonk only
-var gSDCardMountLock = null;
-
-// Gonk only
-XPCOMUtils.defineLazyGetter(this, "gExtStorage", function aus_gExtStorage() {
-  if (AppConstants.platform != "gonk") {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return Services.env.get("EXTERNAL_STORAGE");
-});
 
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
                                   "resource://gre/modules/UpdateUtils.jsm");
@@ -568,13 +554,6 @@ function getCanStageUpdates() {
     return true;
   }
 
-  // For Gonk, the updater will remount the /system partition to move staged
-  // files into place.
-  if (AppConstants.platform == "gonk") {
-    LOG("getCanStageUpdates - able to stage updates because this is gonk");
-    return true;
-  }
-
   if (!hasUpdateMutex()) {
     LOG("getCanStageUpdates - unable to apply updates because another " +
         "instance of the application is already handling updates for this " +
@@ -800,105 +779,6 @@ function writeVersionFile(dir, version) {
 }
 
 /**
- * Gonk only function that reads the link file specified in the update.link file
- * in the specified directory and returns the nsIFile for the corresponding
- * file.
- * @param   dir
- *          The dir to look for an update.link file in
- * @return  A nsIFile for the file path specified in the
- *          update.link file or null if the update.link file
- *          doesn't exist.
- */
-function getFileFromUpdateLink(dir) {
-  if (AppConstants.platform != "gonk") {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  }
-  let linkFile = dir.clone();
-  linkFile.append(FILE_UPDATE_LINK);
-  let link = readStringFromFile(linkFile);
-  LOG("getFileFromUpdateLink linkFile.path: " + linkFile.path + ", link: " + link);
-  if (!link) {
-    return null;
-  }
-  let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-  file.initWithPath(link);
-  return file;
-}
-
-/**
- * Gonk only function to create a link file. This allows the actual patch to
- * live in a directory different from the update directory.
- * @param   dir
- *          The patch directory where the update.link file
- *          should be written.
- * @param   patchFile
- *          The fully qualified filename of the patchfile.
- */
-function writeLinkFile(dir, patchFile) {
-  if (AppConstants.platform != "gonk") {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  }
-  let linkFile = dir.clone();
-  linkFile.append(FILE_UPDATE_LINK);
-  writeStringToFile(linkFile, patchFile.path);
-  if (patchFile.path.indexOf(gExtStorage) == 0) {
-    // The patchfile is being stored on external storage. Try to lock it
-    // so that it doesn't get shared with the PC while we're downloading
-    // to it.
-    acquireSDCardMountLock();
-  }
-}
-
-/**
- * Gonk only function to acquire a VolumeMountLock for the sdcard volume.
- *
- * This prevents the SDCard from being shared with the PC while
- * we're downloading the update.
- */
-function acquireSDCardMountLock() {
-  if (AppConstants.platform != "gonk") {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  }
-  let volsvc = Cc["@mozilla.org/telephony/volume-service;1"].
-                    getService(Ci.nsIVolumeService);
-  if (volsvc) {
-    gSDCardMountLock = volsvc.createMountLock("sdcard");
-  }
-}
-
-/**
- * Gonk only function that determines if the state corresponds to an
- * interrupted update. This could either be because the download was
- * interrupted, or because staging the update was interrupted.
- *
- * @return true if the state corresponds to an interrupted
- *         update.
- */
-function isInterruptedUpdate(status) {
-  if (AppConstants.platform != "gonk") {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return (status == STATE_DOWNLOADING) ||
-         (status == STATE_PENDING) ||
-         (status == STATE_APPLYING);
-}
-
-/**
- * Releases any SDCard mount lock that we might have.
- *
- * This once again allows the SDCard to be shared with the PC.
- */
-function releaseSDCardMountLock() {
-  if (AppConstants.platform != "gonk") {
-    throw Cr.NS_ERROR_UNEXPECTED;
-  }
-  if (gSDCardMountLock) {
-    gSDCardMountLock.unlock();
-    gSDCardMountLock = null;
-  }
-}
-
-/**
  * Determines if the service should be used to attempt an update
  * or not.
  *
@@ -1060,15 +940,6 @@ function cleanUpUpdatesDir(aRemovePatchFiles = true) {
     let dirEntries = updateDir.directoryEntries;
     while (dirEntries.hasMoreElements()) {
       let file = dirEntries.getNext().QueryInterface(Ci.nsIFile);
-      if (AppConstants.platform == "gonk") {
-        if (file.leafName == FILE_UPDATE_LINK) {
-          let linkedFile = getFileFromUpdateLink(updateDir);
-          if (linkedFile && linkedFile.exists()) {
-            linkedFile.remove(false);
-          }
-        }
-      }
-
       // Now, recursively remove this file.  The recursive removal is needed for
       // Mac OSX because this directory will contain a copy of updater.app,
       // which is itself a directory and the MozUpdater directory on platforms
@@ -1079,9 +950,6 @@ function cleanUpUpdatesDir(aRemovePatchFiles = true) {
         LOG("cleanUpUpdatesDir - failed to remove file " + file.path);
       }
     }
-  }
-  if (AppConstants.platform == "gonk") {
-    releaseSDCardMountLock();
   }
 }
 
@@ -1349,9 +1217,6 @@ function pingStateAndStatusCodes(aUpdate, aStartup, aStatus) {
         break;
       case STATE_APPLIED:
         stateCode = 7;
-        break;
-      case STATE_APPLIED_OS:
-        stateCode = 8;
         break;
       case STATE_APPLIED_SERVICE:
         stateCode = 9;
@@ -1830,12 +1695,6 @@ function UpdateService() {
   LOG("Creating UpdateService");
   Services.obs.addObserver(this, "xpcom-shutdown");
   Services.prefs.addObserver(PREF_APP_UPDATE_LOG, this);
-  if (AppConstants.platform == "gonk") {
-    // PowerManagerService::SyncProfile (which is called for Reboot, PowerOff
-    // and Restart) sends the profile-change-net-teardown event. We can then
-    // pause the download in a similar manner to xpcom-shutdown.
-    Services.obs.addObserver(this, "profile-change-net-teardown");
-  }
 }
 
 UpdateService.prototype = {
@@ -1917,7 +1776,6 @@ UpdateService.prototype = {
           gLogEnabled = getPref("getBoolPref", PREF_APP_UPDATE_LOG, false);
         }
         break;
-      case "profile-change-net-teardown": // fall thru
       case "xpcom-shutdown":
         Services.obs.removeObserver(this, topic);
         Services.prefs.removeObserver(PREF_APP_UPDATE_LOG, this);
@@ -1983,23 +1841,6 @@ UpdateService.prototype = {
       return;
     }
 
-    if (AppConstants.platform == "gonk") {
-      // This code is called very early in the boot process, before we've even
-      // had a chance to setup the UI so we can give feedback to the user.
-      //
-      // Since the download may be occuring over a link which has associated
-      // cost, we want to require user-consent before resuming the download.
-      // Also, applying an already downloaded update now is undesireable,
-      // since the phone will look dead while the update is being applied.
-      // Applying the update can take several minutes. Instead we wait until
-      // the UI is initialized so it is possible to give feedback to and get
-      // consent to update from the user.
-      if (isInterruptedUpdate(status)) {
-        LOG("UpdateService:_postUpdateProcessing - interrupted update detected - wait for user consent");
-        return;
-      }
-    }
-
     if (status == STATE_DOWNLOADING) {
       LOG("UpdateService:_postUpdateProcessing - patch found in downloading " +
           "state");
@@ -2039,34 +1880,6 @@ UpdateService.prototype = {
         cleanupActiveUpdate();
       }
       return;
-    }
-
-    if (AppConstants.platform == "gonk") {
-      // The update is only applied but not selected to be installed
-      if (status == STATE_APPLIED && update && update.isOSUpdate) {
-        LOG("UpdateService:_postUpdateProcessing - update staged as applied found");
-        return;
-      }
-
-      if (status == STATE_APPLIED_OS && update && update.isOSUpdate) {
-        // In gonk, we need to check for OS update status after startup, since
-        // the recovery partition won't write to update.status for us
-        let recoveryService = Cc["@mozilla.org/recovery-service;1"].
-                              getService(Ci.nsIRecoveryService);
-        let fotaStatus = recoveryService.getFotaUpdateStatus();
-        switch (fotaStatus) {
-          case Ci.nsIRecoveryService.FOTA_UPDATE_SUCCESS:
-            status = STATE_SUCCEEDED;
-            break;
-          case Ci.nsIRecoveryService.FOTA_UPDATE_FAIL:
-            status = STATE_FAILED + ": " + FOTA_GENERAL_ERROR;
-            break;
-          case Ci.nsIRecoveryService.FOTA_UPDATE_UNKNOWN:
-          default:
-            status = STATE_FAILED + ": " + FOTA_UNKNOWN_ERROR;
-            break;
-        }
-      }
     }
 
     if (!update) {
@@ -2527,11 +2340,6 @@ UpdateService.prototype = {
     var um = Cc["@mozilla.org/updates/update-manager;1"].
              getService(Ci.nsIUpdateManager);
     if (um.activeUpdate) {
-      if (AppConstants.platform == "gonk") {
-        // For gonk, the user isn't necessarily aware of the update, so we need
-        // to show the prompt to make sure.
-        this._showPrompt(um.activeUpdate);
-      }
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_HAS_ACTIVEUPDATE);
       return;
     }
@@ -2734,21 +2542,6 @@ UpdateService.prototype = {
       }
       this._downloader.cancel();
     }
-    if (AppConstants.platform == "gonk") {
-      let um = Cc["@mozilla.org/updates/update-manager;1"].
-               getService(Ci.nsIUpdateManager);
-      let activeUpdate = um.activeUpdate;
-      if (activeUpdate &&
-          (activeUpdate.appVersion != update.appVersion ||
-           activeUpdate.buildID != update.buildID)) {
-        // We have an activeUpdate (which presumably was interrupted), and are
-        // about start downloading a new one. Make sure we remove all traces
-        // of the active one (otherwise we'll start appending the new update.mar
-        // the the one that's been partially downloaded).
-        LOG("UpdateService:downloadUpdate - removing stale active update.");
-        cleanupActiveUpdate();
-      }
-    }
     // Set the previous application version prior to downloading the update.
     update.previousAppVersion = Services.appinfo.version;
     this._downloader = new Downloader(background, this);
@@ -2780,55 +2573,6 @@ UpdateService.prototype = {
    */
   get isDownloading() {
     return this._downloader && this._downloader.isBusy;
-  },
-
-  /**
-   * See nsIUpdateService.idl
-   */
-  applyOsUpdate: function AUS_applyOsUpdate(aUpdate) {
-    if (!aUpdate.isOSUpdate || aUpdate.state != STATE_APPLIED) {
-      aUpdate.statusText = "fota-state-error";
-      throw Cr.NS_ERROR_FAILURE;
-    }
-
-    aUpdate.QueryInterface(Ci.nsIWritablePropertyBag);
-    let osApplyToDir = aUpdate.getProperty("osApplyToDir");
-
-    if (!osApplyToDir) {
-      LOG("UpdateService:applyOsUpdate - Error: osApplyToDir is not defined" +
-          "in the nsIUpdate!");
-      pingStateAndStatusCodes(aUpdate, false,
-                              STATE_FAILED + ": " + FOTA_FILE_OPERATION_ERROR);
-      handleUpdateFailure(aUpdate, FOTA_FILE_OPERATION_ERROR);
-      return;
-    }
-
-    let updateFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    updateFile.initWithPath(osApplyToDir + "/update.zip");
-    if (!updateFile.exists()) {
-      LOG("UpdateService:applyOsUpdate - Error: OS update is not found at " +
-          updateFile.path);
-      pingStateAndStatusCodes(aUpdate, false,
-                              STATE_FAILED + ": " + FOTA_FILE_OPERATION_ERROR);
-      handleUpdateFailure(aUpdate, FOTA_FILE_OPERATION_ERROR);
-      return;
-    }
-
-    writeStatusFile(getUpdatesDir(), aUpdate.state = STATE_APPLIED_OS);
-    LOG("UpdateService:applyOsUpdate - Rebooting into recovery to apply " +
-        "FOTA update: " + updateFile.path);
-    try {
-      let recoveryService = Cc["@mozilla.org/recovery-service;1"]
-                            .getService(Ci.nsIRecoveryService);
-      recoveryService.installFotaUpdate(updateFile.path);
-    } catch (e) {
-      LOG("UpdateService:applyOsUpdate - Error: Couldn't reboot into recovery" +
-          " to apply FOTA update " + updateFile.path);
-      pingStateAndStatusCodes(aUpdate, false,
-                              STATE_FAILED + ": " + FOTA_RECOVERY_ERROR);
-      writeStatusFile(getUpdatesDir(), aUpdate.state = STATE_APPLIED);
-      handleUpdateFailure(aUpdate, FOTA_RECOVERY_ERROR);
-    }
   },
 
   classID: UPDATESERVICE_CID,
@@ -3156,21 +2900,6 @@ UpdateManager.prototype = {
         "the update was staged. topic: update-staged, status: " + update.state);
     Services.obs.notifyObservers(update, "update-staged", update.state);
 
-    if (AppConstants.platform == "gonk") {
-      // Do this after everything else, since it will likely cause the app to
-      // shut down.
-      if (update.state == STATE_APPLIED) {
-        // Notify the user that an update has been staged and is ready for
-        // installation (i.e. that they should restart the application). We do
-        // not notify on failed update attempts.
-        let prompter = Cc["@mozilla.org/updates/update-prompt;1"].
-                       createInstance(Ci.nsIUpdatePrompt);
-        prompter.showUpdateDownloaded(update, true);
-      } else {
-        releaseSDCardMountLock();
-      }
-      return;
-    }
     // Only prompt when the UI isn't already open.
     let windowType = getPref("getCharPref", PREF_APP_UPDATE_ALTWINDOWTYPE, null);
     if (Services.wm.getMostRecentWindow(UPDATE_WINDOW_NAME) ||
@@ -3522,9 +3251,6 @@ Downloader.prototype = {
     if (this._request && this._request instanceof Ci.nsIRequest) {
       this._request.cancel(cancelError);
     }
-    if (AppConstants.platform == "gonk") {
-      releaseSDCardMountLock();
-    }
   },
 
   /**
@@ -3653,19 +3379,10 @@ Downloader.prototype = {
         LOG("Downloader:_selectPatch - resuming download");
         return selectedPatch;
       }
-
-      if (AppConstants.platform == "gonk") {
-        if (state == STATE_PENDING || state == STATE_APPLYING) {
-          LOG("Downloader:_selectPatch - resuming interrupted apply");
-          return selectedPatch;
-        }
-        if (state == STATE_APPLIED) {
-          LOG("Downloader:_selectPatch - already downloaded and staged");
-          return null;
-        }
-      } else if (state == STATE_PENDING || state == STATE_PENDING_SERVICE ||
-                 state == STATE_PENDING_ELEVATE) {
-        LOG("Downloader:_selectPatch - already downloaded and staged");
+      if (state == STATE_PENDING || state == STATE_PENDING_SERVICE ||
+          state == STATE_PENDING_ELEVATE || state == STATE_APPLIED ||
+          state == STATE_APPLIED_SERVICE) {
+        LOG("Downloader:_selectPatch - already downloaded");
         return null;
       }
 
@@ -3722,25 +3439,6 @@ Downloader.prototype = {
   },
 
   /**
-   * Get the nsIFile to use for downloading the active update's selected patch
-   */
-  _getUpdateArchiveFile: function Downloader__getUpdateArchiveFile() {
-    var updateArchive;
-    if (AppConstants.platform == "gonk") {
-      try {
-        updateArchive = FileUtils.getDir(KEY_UPDATE_ARCHIVE_DIR, [], true);
-      } catch (e) {
-        return null;
-      }
-    } else {
-      updateArchive = getUpdatesDir().clone();
-    }
-
-    updateArchive.append(FILE_UPDATE_MAR);
-    return updateArchive;
-  },
-
-  /**
    * Download and stage the given update.
    * @param   update
    *          A nsIUpdate object to download a patch for. Cannot be null.
@@ -3766,96 +3464,8 @@ Downloader.prototype = {
     }
     this.isCompleteUpdate = this._patch.type == "complete";
 
-    let patchFile = null;
-
-    // Only used by gonk
-    let status = STATE_NONE;
-    if (AppConstants.platform == "gonk") {
-      status = readStatusFile(updateDir);
-      if (isInterruptedUpdate(status)) {
-        LOG("Downloader:downloadUpdate - interruptted update");
-        // The update was interrupted. Try to locate the existing patch file.
-        // For an interrupted download, this allows a resume rather than a
-        // re-download.
-        patchFile = getFileFromUpdateLink(updateDir);
-        if (!patchFile) {
-          // No link file. We'll just assume that the update.mar is in the
-          // update directory.
-          patchFile = updateDir.clone();
-          patchFile.append(FILE_UPDATE_MAR);
-        }
-        if (patchFile.exists()) {
-          LOG("Downloader:downloadUpdate - resuming with patchFile " + patchFile.path);
-          if (patchFile.fileSize == this._patch.size) {
-            LOG("Downloader:downloadUpdate - patchFile appears to be fully downloaded");
-            // Bump the status along so that we don't try to redownload again.
-            if (getElevationRequired()) {
-              status = STATE_PENDING_ELEVATE;
-            } else {
-              status = STATE_PENDING;
-            }
-          }
-        } else {
-          LOG("Downloader:downloadUpdate - patchFile " + patchFile.path +
-              " doesn't exist - performing full download");
-          // The patchfile doesn't exist, we might as well treat this like
-          // a new download.
-          patchFile = null;
-        }
-        if (patchFile && status != STATE_DOWNLOADING) {
-          // It looks like the patch was downloaded, but got interrupted while it
-          // was being verified or applied. So we'll fake the downloading portion.
-
-          if (getElevationRequired()) {
-            writeStatusFile(updateDir, STATE_PENDING_ELEVATE);
-          } else {
-            writeStatusFile(updateDir, STATE_PENDING);
-          }
-
-          // Since the code expects the onStopRequest callback to happen
-          // asynchronously (And you have to call AUS_addDownloadListener
-          // after calling AUS_downloadUpdate) we need to defer this.
-
-          this._downloadTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-          this._downloadTimer.initWithCallback(function() {
-            this._downloadTimer = null;
-            // Send a fake onStopRequest. Filling in the destination allows
-            // _verifyDownload to work, and then the update will be applied.
-            this._request = {destination: patchFile};
-            this.onStopRequest(this._request, null, Cr.NS_OK);
-          }.bind(this), 0, Ci.nsITimer.TYPE_ONE_SHOT);
-
-          // Returning STATE_DOWNLOADING makes UpdatePrompt think we're
-          // downloading. The onStopRequest that we spoofed above will make it
-          // look like the download finished.
-          return STATE_DOWNLOADING;
-        }
-      }
-    }
-
-    if (!patchFile) {
-      // Find a place to put the patchfile that we're going to download.
-      patchFile = this._getUpdateArchiveFile();
-    }
-    if (!patchFile) {
-      AUSTLMY.pingDownloadCode(this.isCompleteUpdate,
-                               AUSTLMY.DWNLD_ERR_NO_PATCH_FILE);
-      return STATE_NONE;
-    }
-
-    if (AppConstants.platform == "gonk") {
-      if (patchFile.path.indexOf(updateDir.path) != 0) {
-        // The patchFile is in a directory which is different from the
-        // updateDir, create a link file.
-        writeLinkFile(updateDir, patchFile);
-
-        if (!isInterruptedUpdate(status) && patchFile.exists()) {
-          // Remove stale patchFile
-          patchFile.remove(false);
-        }
-      }
-    }
-
+    let patchFile = getUpdatesDir().clone();
+    patchFile.append(FILE_UPDATE_MAR);
     update.QueryInterface(Ci.nsIPropertyBag);
     let interval = this.background ? update.getProperty("backgroundInterval")
                                    : DOWNLOAD_FOREGROUND_INTERVAL;
@@ -4127,13 +3737,6 @@ Downloader.prototype = {
       this._update.statusText = getStatusTextFromCode(status,
                                                       Cr.NS_BINDING_FAILED);
 
-      if (AppConstants.platform == "gonk") {
-        // bug891009: On FirefoxOS, manaully retry OTA download will reuse
-        // the Update object. We need to remove selected patch so that download
-        // can be triggered again successfully.
-        this._update.selectedPatch.selected = false;
-      }
-
       // Destroy the updates directory, since we're done with it.
       cleanUpUpdatesDir();
 
@@ -4211,13 +3814,6 @@ Downloader.prototype = {
                            createInstance(Ci.nsIUpdatePrompt);
             prompter.showUpdateError(this._update);
           }
-        }
-
-        if (AppConstants.platform == "gonk") {
-          // We always forward errors in B2G, since Gaia controls the update UI
-          let prompter = Cc["@mozilla.org/updates/update-prompt;1"].
-                         createInstance(Ci.nsIUpdatePrompt);
-          prompter.showUpdateError(this._update);
         }
 
         // Prevent leaking the update object (bug 454964).

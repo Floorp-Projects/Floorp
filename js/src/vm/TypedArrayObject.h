@@ -427,23 +427,6 @@ TypedArrayElemSize(Scalar::Type viewType)
 extern void
 SetDisjointTypedElements(TypedArrayObject* target, uint32_t targetOffset,
                          TypedArrayObject* unsafeSrcCrossCompartment);
-static inline bool
-IsAnyArrayBuffer(HandleObject obj)
-{
-    return IsArrayBuffer(obj) || IsSharedArrayBuffer(obj);
-}
-
-static inline bool
-IsAnyArrayBuffer(JSObject* obj)
-{
-    return IsArrayBuffer(obj) || IsSharedArrayBuffer(obj);
-}
-
-static inline bool
-IsAnyArrayBuffer(HandleValue v)
-{
-    return v.isObject() && IsAnyArrayBuffer(&v.toObject());
-}
 
 } // namespace js
 
