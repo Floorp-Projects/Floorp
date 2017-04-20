@@ -2876,8 +2876,13 @@ GeckoDriver.prototype.setScreenOrientation = function (cmd, resp) {
 };
 
 /**
- * Maximizes the user agent window as if the user pressed the maximise
- * button.
+ * Synchronously maximizes the user agent window as if the user pressed
+ * the maximize button, or restores it if it is already maximized.
+ *
+ * Not supported on Fennec.
+ *
+ * @return {Map.<string, number>}
+ *     Window rect.
  *
  * @throws {UnsupportedOperationError}
  *     Not available for current application.
@@ -2886,12 +2891,27 @@ GeckoDriver.prototype.setScreenOrientation = function (cmd, resp) {
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
-GeckoDriver.prototype.maximizeWindow = function (cmd, resp) {
+GeckoDriver.prototype.maximizeWindow = function* (cmd, resp) {
   assert.firefox();
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  win.maximize()
+  yield new Promise(resolve => {
+    win.addEventListener("resize", resolve, {once: true});
+
+    if (win.windowState == win.STATE_MAXIMIZED) {
+      win.restore();
+    } else {
+      win.maximize();
+    }
+  });
+
+  return {
+    x: win.screenX,
+    y: win.screenY,
+    width: win.outerWidth,
+    height: win.outerHeight,
+  };
 };
 
 /**
