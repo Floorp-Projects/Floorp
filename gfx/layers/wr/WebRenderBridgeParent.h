@@ -160,6 +160,7 @@ public:
     return mIdNameSpace;
   }
 
+  void UpdateAPZ();
   const WebRenderScrollData& GetScrollData() const;
 
 private:
