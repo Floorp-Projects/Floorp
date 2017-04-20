@@ -15,7 +15,7 @@ namespace console {
   // Logging
   void assert(optional boolean condition = false, any... data);
   void clear();
-  void count(any... data); // Bug 1346326 already covers this
+  void count(optional DOMString label = "default");
   void debug(any... data);
   void error(any... data);
   void info(any... data);

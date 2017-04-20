@@ -107,7 +107,7 @@ public:
          const Sequence<JS::Value>& aData);
 
   static void
-  Count(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
+  Count(const GlobalObject& aGlobal, const nsAString& aLabel);
 
   static void
   Clear(const GlobalObject& aGlobal);
@@ -181,8 +181,8 @@ private:
                  const nsAString& aString, const Sequence<JS::Value>& aData);
 
   static void
-  TimeMethod(const GlobalObject& aGlobal, const nsAString& aLabel,
-             MethodName aMethodName, const nsAString& aMethodString);
+  StringMethod(const GlobalObject& aGlobal, const nsAString& aLabel,
+               MethodName aMethodName, const nsAString& aMethodString);
 
   // This method must receive aCx and aArguments in the same JSCompartment.
   void
@@ -326,8 +326,11 @@ private:
 
   // This method follows the same pattern as StartTimer: its runs on the owning
   // thread and populate aCountLabel, used by CreateCounterValue. Returns
-  // MAX_PAGE_COUNTERS in case of error, otherwise the incremented counter
-  // value.
+  // 3 possible values:
+  // * MAX_PAGE_COUNTERS in case of error that has to be reported;
+  // * 0 in case of a CX exception. The operation cannot continue;
+  // * the incremented counter value.
+  // Params:
   // * aCx - the JSContext rooting aData.
   // * aData - the arguments received by the console.count() method.
   // * aCountLabel - the label that will be populated by this method.

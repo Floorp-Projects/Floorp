@@ -61,9 +61,6 @@
 // This value is taken from ConsoleAPIStorage.js
 #define STORAGE_MAX_EVENTS 1000
 
-// Default label for console.count.
-#define COUNT_DEFAULT_LABEL "default"
-
 using namespace mozilla::dom::exceptions;
 using namespace mozilla::dom::workers;
 
@@ -989,18 +986,18 @@ Console::GroupEnd(const GlobalObject& aGlobal)
 /* static */ void
 Console::Time(const GlobalObject& aGlobal, const nsAString& aLabel)
 {
-  TimeMethod(aGlobal, aLabel, MethodTime, NS_LITERAL_STRING("time"));
+  StringMethod(aGlobal, aLabel, MethodTime, NS_LITERAL_STRING("time"));
 }
 
 /* static */ void
 Console::TimeEnd(const GlobalObject& aGlobal, const nsAString& aLabel)
 {
-  TimeMethod(aGlobal, aLabel, MethodTimeEnd, NS_LITERAL_STRING("timeEnd"));
+  StringMethod(aGlobal, aLabel, MethodTimeEnd, NS_LITERAL_STRING("timeEnd"));
 }
 
 /* static */ void
-Console::TimeMethod(const GlobalObject& aGlobal, const nsAString& aLabel,
-                    MethodName aMethodName, const nsAString& aMethodString)
+Console::StringMethod(const GlobalObject& aGlobal, const nsAString& aLabel,
+                      MethodName aMethodName, const nsAString& aMethodString)
 {
   JSContext* cx = aGlobal.Context();
 
@@ -1128,7 +1125,11 @@ Console::Assert(const GlobalObject& aGlobal, bool aCondition,
   }
 }
 
-METHOD(Count, "count")
+/* static */ void
+Console::Count(const GlobalObject& aGlobal, const nsAString& aLabel)
+{
+  StringMethod(aGlobal, aLabel, MethodCount, NS_LITERAL_STRING("count"));
+}
 
 /* static */ void
 Console::NoopMethod(const GlobalObject& aGlobal)
@@ -1378,8 +1379,10 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   }
 
   else if (aMethodName == MethodCount) {
-    callData->mCountValue = IncreaseCounter(aCx, aData,
-                                            callData->mCountLabel);
+    callData->mCountValue = IncreaseCounter(aCx, aData, callData->mCountLabel);
+    if (!callData->mCountValue) {
+      return;
+    }
   }
 
   if (NS_IsMainThread()) {
@@ -2154,35 +2157,29 @@ Console::IncreaseCounter(JSContext* aCx, const Sequence<JS::Value>& aArguments,
 
   ClearException ce(aCx);
 
-  nsAutoString label;
+  MOZ_ASSERT(!aArguments.IsEmpty());
 
-  if (aArguments.IsEmpty()) {
-    label.AssignLiteral(COUNT_DEFAULT_LABEL);
-  } else {
-    JS::Rooted<JS::Value> labelValue(aCx, aArguments[0]);
-
-    if (labelValue.isUndefined()) {
-      label.AssignLiteral(COUNT_DEFAULT_LABEL);
-    } else {
-      JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, labelValue));
-
-      nsAutoJSString string;
-      if (jsString && string.init(aCx, jsString)) {
-        label = string;
-      }
-    }
+  JS::Rooted<JS::Value> labelValue(aCx, aArguments[0]);
+  JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, labelValue));
+  if (!jsString) {
+    return 0; // We cannot continue.
   }
 
+  nsAutoJSString string;
+  if (!string.init(aCx, jsString)) {
+    return 0; // We cannot continue.
+  }
+
+  aCountLabel = string;
+
   uint32_t count = 0;
-  if (!mCounterRegistry.Get(label, &count) &&
+  if (!mCounterRegistry.Get(aCountLabel, &count) &&
       mCounterRegistry.Count() >= MAX_PAGE_COUNTERS) {
     return MAX_PAGE_COUNTERS;
   }
 
   ++count;
-  mCounterRegistry.Put(label, count);
-
-  aCountLabel = label;
+  mCounterRegistry.Put(aCountLabel, count);
   return count;
 }
 
