@@ -22,6 +22,7 @@
 #include "mozilla/layers/AsyncDragMetrics.h" // for AsyncDragMetrics
 #include "mozilla/layers/CompositorBridgeParent.h" // for CompositorBridgeParent, etc
 #include "mozilla/layers/LayerMetricsWrapper.h"
+#include "mozilla/layers/WebRenderScrollDataWrapper.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/mozalloc.h"           // for operator new
 #include "mozilla/TouchEvents.h"
@@ -213,7 +214,7 @@ APZCTreeManager::SetAllowedTouchBehavior(uint64_t aInputBlockId,
   mInputQueue->SetAllowedTouchBehavior(aInputBlockId, aValues);
 }
 
-template<class ScrollNode> void // ScrollNode is a LayerMetricsWrapper
+template<class ScrollNode> void // ScrollNode is a LayerMetricsWrapper or a WebRenderScrollDataWrapper
 APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
                                           const ScrollNode& aRoot,
                                           bool aIsFirstPaint,
@@ -345,6 +346,18 @@ APZCTreeManager::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
 {
   LayerMetricsWrapper root(aRoot);
   UpdateHitTestingTreeImpl(aRootLayerTreeId, root, aIsFirstPaint,
+                           aOriginatingLayersId, aPaintSequenceNumber);
+}
+
+void
+APZCTreeManager::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
+                                      const WebRenderScrollData& aScrollData,
+                                      bool aIsFirstPaint,
+                                      uint64_t aOriginatingLayersId,
+                                      uint32_t aPaintSequenceNumber)
+{
+  WebRenderScrollDataWrapper wrapper(&aScrollData);
+  UpdateHitTestingTreeImpl(aRootLayerTreeId, wrapper, aIsFirstPaint,
                            aOriginatingLayersId, aPaintSequenceNumber);
 }
 

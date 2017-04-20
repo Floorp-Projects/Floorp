@@ -36,6 +36,7 @@ class LayerMetricsWrapper;
 class InputQueue;
 class GeckoContentController;
 class HitTestingTreeNode;
+class WebRenderScrollData;
 
 /**
  * ****************** NOTE ON LOCK ORDERING IN APZ **************************
@@ -123,6 +124,18 @@ public:
    */
   void UpdateHitTestingTree(uint64_t aRootLayerTreeId,
                             Layer* aRoot,
+                            bool aIsFirstPaint,
+                            uint64_t aOriginatingLayersId,
+                            uint32_t aPaintSequenceNumber);
+
+  /**
+   * Same as the above UpdateHitTestingTree, except slightly modified to take
+   * the scrolling data passed over PWebRenderBridge instead of the raw layer
+   * tree. This version is used when WebRender is enabled because we don't have
+   * shadow layers in that scenario.
+   */
+  void UpdateHitTestingTree(uint64_t aRootLayerTreeId,
+                            const WebRenderScrollData& aScrollData,
                             bool aIsFirstPaint,
                             uint64_t aOriginatingLayersId,
                             uint32_t aPaintSequenceNumber);

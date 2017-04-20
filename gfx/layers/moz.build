@@ -207,6 +207,7 @@ EXPORTS.mozilla.layers += [
     'wr/WebRenderLayersLogging.h',
     'wr/WebRenderMessageUtils.h',
     'wr/WebRenderScrollData.h',
+    'wr/WebRenderScrollDataWrapper.h',
     'wr/WebRenderTextureHost.h',
 ]
 
