@@ -37,6 +37,7 @@
 #include "mozilla/layout/VsyncChild.h"
 #include "mozilla/net/PUDPSocketChild.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
+#include "mozilla/dom/WebAuthnTransactionChild.h"
 #include "nsID.h"
 #include "nsTraceRefcnt.h"
 
@@ -77,6 +78,8 @@ using mozilla::dom::asmjscache::PAsmJSCacheEntryChild;
 using mozilla::dom::cache::PCacheChild;
 using mozilla::dom::cache::PCacheStorageChild;
 using mozilla::dom::cache::PCacheStreamControlChild;
+
+using mozilla::dom::WebAuthnTransactionChild;
 
 // -----------------------------------------------------------------------------
 // BackgroundChildImpl::ThreadLocal
@@ -559,6 +562,22 @@ BackgroundChildImpl::OnChannelReceivedMessage(const Message& aMsg)
   }
 }
 #endif
+
+dom::PWebAuthnTransactionChild*
+BackgroundChildImpl::AllocPWebAuthnTransactionChild()
+{
+  MOZ_CRASH("PWebAuthnTransaction actor should be manually constructed!");
+  return nullptr;
+}
+
+bool
+BackgroundChildImpl::DeallocPWebAuthnTransactionChild(PWebAuthnTransactionChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+  RefPtr<dom::WebAuthnTransactionChild> child =
+    dont_AddRef(static_cast<dom::WebAuthnTransactionChild*>(aActor));
+  return true;
+}
 
 } // namespace ipc
 } // namespace mozilla
