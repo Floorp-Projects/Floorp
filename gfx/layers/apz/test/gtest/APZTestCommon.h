@@ -268,6 +268,9 @@ public:
     case ScrollDirection::VERTICAL:
       EXPECT_EQ(PANNING_LOCKED_Y, mState);
       break;
+    case ScrollDirection::SENTINEL:
+      MOZ_ASSERT(false, "Invalid value");
+      break;
     }
   }
 
