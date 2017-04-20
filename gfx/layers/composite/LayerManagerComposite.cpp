@@ -1338,7 +1338,7 @@ void
 LayerManagerComposite::ChangeCompositor(Compositor* aNewCompositor)
 {
   if (mCompositor) {
-    mCompositor->CancelFrame();
+    mCompositor->CancelFrame(false);
   }
   mCompositor = aNewCompositor;
   mTextRenderer = new TextRenderer(aNewCompositor);
