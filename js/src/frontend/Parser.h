@@ -13,13 +13,13 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TypeTraits.h"
 
-#include "jscompartment.h"
 #include "jsiter.h"
 #include "jspubtd.h"
 
 #include "ds/Nestable.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FullParseHandler.h"
+#include "frontend/LanguageExtensions.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "frontend/NameCollections.h"
 #include "frontend/SharedContext.h"
@@ -900,7 +900,7 @@ class ParserBase : public StrictModeGetter
 
     bool isValidStrictBinding(PropertyName* name);
 
-    void addTelemetry(JSCompartment::DeprecatedLanguageExtension e);
+    void addTelemetry(DeprecatedLanguageExtension e);
 
     bool warnOnceAboutExprClosure();
     bool warnOnceAboutForEach();
