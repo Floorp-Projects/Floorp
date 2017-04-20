@@ -75,6 +75,7 @@ protected:
     uint32_t OnStateStart();
     uint32_t OnStateTransfer();
     uint32_t OnStateStop();
+    nsresult CreateBufferedStreamIfNeeded();
 
     uint32_t                      mState;
     nsCOMPtr<nsILoadGroup>        mLoadGroup;
@@ -83,6 +84,7 @@ protected:
     nsCOMPtr<nsIEventTarget>      mTargetThread;
     nsCOMPtr<nsIInputStream>      mStream;
     nsCOMPtr<nsIAsyncInputStream> mAsyncStream;
+    nsCOMPtr<nsIInputStream>      mBufferedStream;
     uint64_t                      mStreamOffset;
     uint64_t                      mStreamLength;
     uint32_t                      mSegSize;
