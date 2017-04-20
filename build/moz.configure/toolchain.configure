@@ -441,12 +441,21 @@ def get_vc_paths(topsrcdir):
             'x86': [os.path.join(tools_path, 'x86'), os.path.join(tools_path, 'x64')],
         })
 
+option('--with-visual-studio-version', nargs=1,
+       choices=('2015', '2017'),
+       help='Select a specific Visual Studio version to use')
 
-@depends(host, target, check_build_environment)
+@depends('--with-visual-studio-version')
+def vs_major_version(value):
+    if value:
+        return {'2015': 14,
+                '2017': 15}[value[0]]
+
+@depends(host, target, vs_major_version, check_build_environment, '--with-visual-studio-version')
 @imports(_from='__builtin__', _import='sorted')
 @imports(_from='operator', _import='itemgetter')
 @imports('platform')
-def vc_compiler_path(host, target, env):
+def vc_compiler_path(host, target, vs_major_version, env, vs_release_name):
     if host.kernel != 'WINNT':
         return
     vc_target = {
@@ -460,8 +469,14 @@ def vc_compiler_path(host, target, env):
     all_versions = sorted(get_vc_paths(env.topsrcdir), key=itemgetter(0))
     if not all_versions:
         return
-    # Choose the newest version.
-    data = all_versions[-1][1]
+    if vs_major_version:
+        versions = [d for (v, d) in all_versions if v.major == vs_major_version]
+        if not versions:
+            die('Visual Studio %s could not be found!' % vs_release_name)
+        data = versions[0]
+    else:
+        # Choose the newest version.
+        data = all_versions[-1][1]
     paths = data.get(vc_target)
     if not paths:
         return
