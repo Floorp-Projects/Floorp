@@ -116,6 +116,9 @@ public:
 
   const ScrollMetadata& GetScrollMetadata(size_t aIndex) const;
 
+  void SetIsFirstPaint();
+  bool IsFirstPaint() const;
+
   friend struct IPC::ParamTraits<WebRenderScrollData>;
 
 private:
@@ -138,6 +141,8 @@ private:
   // descendants that layer had, which allows reconstructing the traversal on the
   // other side.
   nsTArray<WebRenderLayerScrollData> mLayerScrollData;
+
+  bool mIsFirstPaint;
 };
 
 } // namespace layers
@@ -197,13 +202,15 @@ struct ParamTraits<mozilla::layers::WebRenderScrollData>
   {
     WriteParam(aMsg, aParam.mScrollMetadatas);
     WriteParam(aMsg, aParam.mLayerScrollData);
+    WriteParam(aMsg, aParam.mIsFirstPaint);
   }
 
   static bool
   Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->mScrollMetadatas)
-        && ReadParam(aMsg, aIter, &aResult->mLayerScrollData);
+        && ReadParam(aMsg, aIter, &aResult->mLayerScrollData)
+        && ReadParam(aMsg, aIter, &aResult->mIsFirstPaint);
   }
 };
 
