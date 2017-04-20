@@ -23,7 +23,6 @@
 
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Telemetry.h"
 #include "nsITabChild.h"
 #include "private/pprio.h"
 #include "nsInputStreamPump.h"
@@ -803,12 +802,6 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
             mCallbacks = nullptr;
             mProgressSink = nullptr;
             return NS_ERROR_UNSAFE_CONTENT_TYPE;
-        }
-
-        static bool reportedRemoteJAR = false;
-        if (!reportedRemoteJAR) {
-            reportedRemoteJAR = true;
-            Telemetry::Accumulate(Telemetry::REMOTE_JAR_PROTOCOL_USED, 1);
         }
 
         // kick off an async download of the base URI...
