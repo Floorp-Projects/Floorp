@@ -23,8 +23,6 @@ function test() {
       "start",
       "default: 1",
       "default: 2",
-      "default: 3",
-      "default: 4",
       "console.count() testcounter: 1",
       "console.count() testcounter: 2",
       "console.count() testcounter: 3",
@@ -36,13 +34,6 @@ function test() {
         category: CATEGORY_WEBDEV,
         severity: SEVERITY_LOG
       });
-    });
-    messages.push({
-      name: "Three local counts with no label and count=1",
-      text: "default: 1",
-      category: CATEGORY_WEBDEV,
-      severity: SEVERITY_LOG,
-      count: 3
     });
     yield waitForMessages({
       webconsole: hud,
@@ -57,6 +48,8 @@ function test() {
       "start",
       "console.count() testcounter: 5",
       "console.count() testcounter: 6",
+      "default: 3",
+      "default: 4",
       "end"
     ].forEach(function (msg) {
       messages.push({
@@ -64,13 +57,6 @@ function test() {
         category: CATEGORY_WEBDEV,
         severity: SEVERITY_LOG
       });
-    });
-    messages.push({
-      name: "Two external counts with no label and count=1",
-      text: "default: 1",
-      category: CATEGORY_WEBDEV,
-      severity: SEVERITY_LOG,
-      count: 2
     });
     yield waitForMessages({
       webconsole: hud,
