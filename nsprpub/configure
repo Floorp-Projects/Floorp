@@ -6560,6 +6560,11 @@ fi
 
     $as_echo "#define HAVE_POINTER_LOCALTIME_R 1" >>confdefs.h
 
+    HOST_DARWIN_MAJOR=`echo "$build_os" | sed -E -e 's/^darwin([0-9]+).*$/\1/'`
+    if test "$HOST_DARWIN_MAJOR" -ge 15 ; then
+        $as_echo "#define HAS_CONNECTX 1" >>confdefs.h
+    fi
+
     AS='$(CC) -x assembler-with-cpp'
     CFLAGS="$CFLAGS -Wall -fno-common"
     case "${target_cpu}" in
