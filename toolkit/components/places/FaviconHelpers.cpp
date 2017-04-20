@@ -159,7 +159,6 @@ SetIconInfo(const RefPtr<Database>& aDB,
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aIcon.payloads.Length() > 0);
   MOZ_ASSERT(!aIcon.spec.IsEmpty());
-  MOZ_ASSERT(aIcon.expiration > 0);
 
   // There are multiple cases possible at this point:
   //   1. We must insert some payloads and no payloads exist in the table. This
@@ -520,7 +519,8 @@ AsyncFetchAndSetIconForPage::Run()
   nsresult rv = FetchIconInfo(DB, 0, mIcon);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool isInvalidIcon = !mIcon.payloads.Length() || PR_Now() > mIcon.expiration;
+  bool isInvalidIcon = !mIcon.payloads.Length() ||
+                       (mIcon.expiration && PR_Now() > mIcon.expiration);
   bool fetchIconFromNetwork = mIcon.fetchMode == FETCH_ALWAYS ||
                               (mIcon.fetchMode == FETCH_IF_MISSING && isInvalidIcon);
 
