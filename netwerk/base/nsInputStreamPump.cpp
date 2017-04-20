@@ -17,6 +17,7 @@
 #include "nsIStreamListener.h"
 #include "nsILoadGroup.h"
 #include "nsNetCID.h"
+#include "nsStreamUtils.h"
 #include <algorithm>
 
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
@@ -101,18 +102,21 @@ nsInputStreamPump::PeekStream(PeekSegmentFun callback, void* closure)
 
   NS_ASSERTION(mAsyncStream, "PeekStream called without stream");
 
+  nsresult rv = CreateBufferedStreamIfNeeded();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // See if the pipe is closed by checking the return of Available.
   uint64_t dummy64;
-  nsresult rv = mAsyncStream->Available(&dummy64);
+  rv = mBufferedStream->Available(&dummy64);
   if (NS_FAILED(rv))
     return rv;
   uint32_t dummy = (uint32_t)std::min(dummy64, (uint64_t)UINT32_MAX);
 
   PeekData data(callback, closure);
-  return mAsyncStream->ReadSegments(CallPeekFunc,
-                                    &data,
-                                    nsIOService::gDefaultSegmentSize,
-                                    &dummy);
+  return mBufferedStream->ReadSegments(CallPeekFunc,
+                                       &data,
+                                       nsIOService::gDefaultSegmentSize,
+                                       &dummy);
 }
 
 nsresult
@@ -550,10 +554,13 @@ nsInputStreamPump::OnStateTransfer()
     if (NS_FAILED(mStatus))
         return STATE_STOP;
 
-    nsresult rv;
+    nsresult rv = CreateBufferedStreamIfNeeded();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return STATE_STOP;
+    }
 
     uint64_t avail;
-    rv = mAsyncStream->Available(&avail);
+    rv = mBufferedStream->Available(&avail);
     LOG(("  Available returned [stream=%p rv=%" PRIx32 " avail=%" PRIu64 "]\n", mAsyncStream.get(),
          static_cast<uint32_t>(rv), avail));
 
@@ -583,7 +590,7 @@ nsInputStreamPump::OnStateTransfer()
             // in most cases this QI will succeed (mAsyncStream is almost always
             // a nsPipeInputStream, which implements nsISeekableStream::Tell).
             int64_t offsetBefore;
-            nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mAsyncStream);
+            nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mBufferedStream);
             if (seekable && NS_FAILED(seekable->Tell(&offsetBefore))) {
                 NS_NOTREACHED("Tell failed on readable stream");
                 offsetBefore = 0;
@@ -602,7 +609,7 @@ nsInputStreamPump::OnStateTransfer()
                 // nsInputStreamPumps are needed (e.g. nsHttpChannel).
                 mMonitor.Exit();
                 rv = mListener->OnDataAvailable(this, mListenerContext,
-                                                mAsyncStream, mStreamOffset,
+                                                mBufferedStream, mStreamOffset,
                                                 odaAvail);
                 mMonitor.Enter();
             }
@@ -647,7 +654,7 @@ nsInputStreamPump::OnStateTransfer()
             // Available may return 0 bytes available at the moment; that
             // would not mean that we are done.
             // XXX async streams should have a GetStatus method!
-            rv = mAsyncStream->Available(&avail);
+            rv = mBufferedStream->Available(&avail);
             if (NS_SUCCEEDED(rv))
                 return STATE_TRANSFER;
             if (rv != NS_BASE_STREAM_CLOSED)
@@ -708,6 +715,7 @@ nsInputStreamPump::OnStateStop()
         mAsyncStream->Close();
 
     mAsyncStream = nullptr;
+    mBufferedStream = nullptr;
     mTargetThread = nullptr;
     mIsPending = false;
     {
@@ -725,6 +733,28 @@ nsInputStreamPump::OnStateStop()
         mLoadGroup->RemoveRequest(this, nullptr, mStatus);
 
     return STATE_IDLE;
+}
+
+nsresult
+nsInputStreamPump::CreateBufferedStreamIfNeeded()
+{
+  if (mBufferedStream) {
+    return NS_OK;
+  }
+
+  // ReadSegments is not available for any nsIAsyncInputStream. In order to use
+  // it, we wrap a nsIBufferedInputStream around it, if needed.
+
+  if (NS_InputStreamIsBuffered(mAsyncStream)) {
+    mBufferedStream = mAsyncStream;
+    return NS_OK;
+  }
+
+  nsresult rv = NS_NewBufferedInputStream(getter_AddRefs(mBufferedStream),
+                                          mAsyncStream, 4096);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
