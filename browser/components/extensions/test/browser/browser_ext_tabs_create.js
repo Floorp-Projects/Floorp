@@ -41,6 +41,9 @@ add_task(function* test_create_options() {
             active: true,
             pinned: false,
             url: "about:newtab",
+            // 'selected' is marked as unsupported in schema, so we've removed it.
+            // For more details, see bug 1337509
+            selected: undefined,
           };
 
           let tests = [

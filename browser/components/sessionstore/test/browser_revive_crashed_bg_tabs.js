@@ -14,7 +14,7 @@ const PAGE_2 = "data:text/html,<html><body>Another%20regular,%20everyday,%20norm
 
 add_task(function* setup() {
   yield pushPrefs(["dom.ipc.processCount", 1],
-                  ["browser.tabs.animate", false],
+                  ["toolkit.cosmeticAnimations.enabled", false],
                   ["browser.sessionstore.restore_on_demand", false]);
 });
 

@@ -1,0 +1,8 @@
+include protocol AsyncCtorReturnsManagee;
+
+protocol AsyncCtorReturns {
+  manages AsyncCtorReturnsManagee;
+
+child:
+  async AsyncCtorReturnsManagee() returns (bool unused);
+};

@@ -6,17 +6,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ipc/MessageChannel.h"
-#include "mozilla/ipc/ProtocolUtils.h"
 
-#include "mozilla/dom/ScriptSettings.h"
-
+#include "MessageLoopAbstractThreadWrapper.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Move.h"
 #include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Logging.h"
 #include "mozilla/TimeStamp.h"
 #include "nsAppRunner.h"
 #include "nsAutoPtr.h"
@@ -488,6 +489,27 @@ private:
     nsAutoPtr<IPC::Message> mReply;
 };
 
+class PromiseReporter final : public nsIMemoryReporter
+{
+    ~PromiseReporter() {}
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+    NS_IMETHOD
+    CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
+                   bool aAnonymize) override
+    {
+        MOZ_COLLECT_REPORT(
+            "unresolved-ipc-promises", KIND_OTHER, UNITS_COUNT, MessageChannel::gUnresolvedPromises,
+            "Outstanding IPC async message promises that is still not resolved.");
+        return NS_OK;
+    }
+};
+
+NS_IMPL_ISUPPORTS(PromiseReporter, nsIMemoryReporter)
+
+Atomic<size_t> MessageChannel::gUnresolvedPromises;
+
 MessageChannel::MessageChannel(const char* aName,
                                IToplevelProtocol *aListener)
   : mName(aName),
@@ -531,6 +553,11 @@ MessageChannel::MessageChannel(const char* aName,
     mEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
     MOZ_RELEASE_ASSERT(mEvent, "CreateEvent failed! Nothing is going to work!");
 #endif
+
+    static Atomic<bool> registered;
+    if (registered.compareExchange(false, true)) {
+        RegisterStrongMemoryReporter(new PromiseReporter());
+    }
 }
 
 MessageChannel::~MessageChannel()
@@ -688,6 +715,12 @@ MessageChannel::Clear()
         mWorkerLoop->RemoveDestructionObserver(this);
     }
 
+    gUnresolvedPromises -= mPendingPromises.size();
+    for (auto& pair : mPendingPromises) {
+        pair.second.mRejectFunction(__func__);
+    }
+    mPendingPromises.clear();
+
     mWorkerLoop = nullptr;
     delete mLink;
     mLink = nullptr;
@@ -721,8 +754,12 @@ MessageChannel::Open(Transport* aTransport, MessageLoop* aIOLoop, Side aSide)
     mMonitor = new RefCountedMonitor();
     mWorkerLoop = MessageLoop::current();
     mWorkerLoopID = mWorkerLoop->id();
-
     mWorkerLoop->AddDestructionObserver(this);
+
+    if (!AbstractThread::GetCurrent()) {
+        mAbstractThread = MessageLoopAbstractThreadWrapper::Create(mWorkerLoop);
+    }
+
 
     ProcessLink *link = new ProcessLink(this);
     link->Open(aTransport, aIOLoop, aSide); // :TODO: n.b.: sets mChild
@@ -801,6 +838,11 @@ MessageChannel::CommonThreadOpenInit(MessageChannel *aTargetChan, Side aSide)
     mWorkerLoop = MessageLoop::current();
     mWorkerLoopID = mWorkerLoop->id();
     mWorkerLoop->AddDestructionObserver(this);
+
+    if (!AbstractThread::GetCurrent()) {
+        mAbstractThread = MessageLoopAbstractThreadWrapper::Create(mWorkerLoop);
+    }
+
     mLink = new ThreadLink(this, aTargetChan);
     mSide = aSide;
 }
@@ -867,6 +909,19 @@ MessageChannel::Send(Message* aMsg)
     }
     mLink->SendMessage(msg.forget());
     return true;
+}
+
+already_AddRefed<MozPromiseRefcountable>
+MessageChannel::PopPromise(const Message& aMsg)
+{
+    auto iter = mPendingPromises.find(aMsg.seqno());
+    if (iter != mPendingPromises.end()) {
+        PromiseHolder ret = iter->second;
+        mPendingPromises.erase(iter);
+        gUnresolvedPromises--;
+        return ret.mPromise.forget();
+    }
+    return nullptr;
 }
 
 class BuildIDMessage : public IPC::Message

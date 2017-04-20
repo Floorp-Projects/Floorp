@@ -14,9 +14,9 @@ UPLOAD_DIR=$WORKSPACE/artifacts
 CROSSTOOLS_SOURCE_DIR=$WORKSPACE/crosstools-port
 CROSSTOOLS_CCTOOLS_DIR=$CROSSTOOLS_SOURCE_DIR/cctools
 CROSSTOOLS_BUILD_DIR=/tmp/cctools
-CLANG_DIR=$WORKSPACE/clang
-CCTOOLS_DIR=$WORKSPACE/cctools
-MACOSX_SDK_DIR=$WORKSPACE/MacOSX10.10.sdk
+CLANG_DIR=$WORKSPACE/build/src/clang
+CCTOOLS_DIR=$WORKSPACE/build/src/cctools
+MACOSX_SDK_DIR=$WORKSPACE/build/src/MacOSX10.10.sdk
 
 TARGET_TRIPLE=x86_64-apple-darwin11
 
@@ -29,15 +29,9 @@ git checkout $CROSSTOOL_PORT_REV
 echo "Building from commit hash `git rev-parse $CROSSTOOL_PORT_REV`..."
 
 # Fetch clang from tooltool
-cd $WORKSPACE
-wget -O tooltool.py https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py
-chmod +x tooltool.py
-: TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/home/worker/tooltool-cache}
-export TOOLTOOL_CACHE
-
-wget ${GECKO_HEAD_REPOSITORY}/raw-file/${GECKO_HEAD_REV}/browser/config/tooltool-manifests/macosx64/cross-clang.manifest
-
-python tooltool.py -v --manifest=cross-clang.manifest --url=http://relengapi/tooltool/ fetch
+cd $WORKSPACE/build/src
+TOOLTOOL_MANIFEST=browser/config/tooltool-manifests/macosx64/cross-clang.manifest
+. taskcluster/scripts/misc/tooltool-download.sh
 
 # Configure crosstools-port
 cd $CROSSTOOLS_CCTOOLS_DIR
@@ -46,6 +40,8 @@ export CXX=$CLANG_DIR/bin/clang++
 export CFLAGS="-mcpu=generic -mtune=generic -O3 -target $TARGET_TRIPLE -isysroot $MACOSX_SDK_DIR"
 export CXXFLAGS="-mcpu=generic -mtune=generic -O3 -target $TARGET_TRIPLE -isysroot $MACOSX_SDK_DIR"
 export LDFLAGS="-Wl,-syslibroot,$MACOSX_SDK_DIR -Wl,-dead_strip"
+# TODO: bug 1357317 to avoid the LD_LIBRARY_PATH.
+export LD_LIBRARY_PATH="$CLANG_DIR/lib"
 export PATH="$CCTOOLS_DIR/bin:$PATH"
 ./autogen.sh
 ./configure --prefix=$CROSSTOOLS_BUILD_DIR --build=$MACHTYPE --host=$TARGET_TRIPLE --with-llvm-config=$CLANG_DIR/bin/llvm-config

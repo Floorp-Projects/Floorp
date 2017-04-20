@@ -1,0 +1,72 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+html {
+  --aboutUrlClassifier-table-background: #ebebeb;
+  background-color: var(--in-content-page-background);
+}
+
+body {
+  margin: 40px 48px;
+}
+
+.major-section {
+  margin-top: 2em;
+  margin-bottom: 1em;
+  font-size: large;
+  text-align: start;
+  font-weight: bold;
+}
+
+table {
+  background-color: var(--aboutUrlClassifier-table-background);
+  color: var(--in-content-text-color);
+  font: message-box;
+  text-align: start;
+  width: 100%;
+  border: 1px solid var(--in-content-border-color);
+  border-spacing: 0px;
+}
+
+th, td {
+  border: 1px solid var(--in-content-border-color);
+  padding: 4px;
+}
+
+thead th {
+  text-align: center;
+}
+
+th {
+  text-align: start;
+  background-color: var(--in-content-table-header-background);
+  color: var(--in-content-selected-text);
+}
+
+th.column {
+  white-space: nowrap;
+  width: 0px;
+}
+
+td {
+  text-align: start;
+  border-color: var(--in-content-table-border-dark-color);
+}
+
+#provider-table > tbody > tr >  td:last-child {
+  text-align: center;
+}
+
+#debug-table {
+  margin-top: 20px;
+}
+
+.options > .toggle-container-with-text {
+  display: inline-flex;
+}
+
+button {
+  margin-inline-start: 0;
+  margin-inline-end: 8px;
+}

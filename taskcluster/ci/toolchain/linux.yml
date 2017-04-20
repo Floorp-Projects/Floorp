@@ -97,6 +97,9 @@ linux64-cctools-port/opt:
     run:
         using: toolchain-script
         script: build-cctools-port.sh
+        tooltool-downloads: public
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
 
 linux64-hfsplus/opt:
     description: "hfsplus toolchain build"

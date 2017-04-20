@@ -451,11 +451,11 @@ void MediaCacheStream::BlockList::AddAfter(int32_t aBlock, int32_t aBefore)
 void MediaCacheStream::BlockList::RemoveBlock(int32_t aBlock)
 {
   Entry* entry = mEntries.GetEntry(aBlock);
-  NS_ASSERTION(entry, "Block not in list");
+  MOZ_DIAGNOSTIC_ASSERT(entry, "Block not in list");
 
   if (entry->mNextBlock == aBlock) {
-    NS_ASSERTION(entry->mPrevBlock == aBlock, "Linked list inconsistency");
-    NS_ASSERTION(mFirstBlock == aBlock, "Linked list inconsistency");
+    MOZ_DIAGNOSTIC_ASSERT(entry->mPrevBlock == aBlock, "Linked list inconsistency");
+    MOZ_DIAGNOSTIC_ASSERT(mFirstBlock == aBlock, "Linked list inconsistency");
     mFirstBlock = -1;
   } else {
     if (mFirstBlock == aBlock) {
@@ -1519,35 +1519,43 @@ MediaCache::AllocateAndWriteBlock(
     LOG("Allocated block %d to stream %p block %d(%" PRId64 ")",
         blockIndex, aStream, streamBlockIndex, streamBlockIndex*BLOCK_SIZE);
 
-    mFreeBlocks.RemoveBlock(blockIndex);
-
-    // Tell each stream using this resource about the new block.
     ResourceStreamIterator iter(aStream->mResourceID);
     while (MediaCacheStream* stream = iter.Next()) {
       BlockOwner* bo = block->mOwners.AppendElement();
-      if (!bo)
+      if (!bo) {
+        // Roll back mOwners if any allocation fails.
+        block->mOwners.Clear();
         return;
-
+      }
       bo->mStream = stream;
-      bo->mStreamBlock = streamBlockIndex;
-      bo->mLastUseTime = now;
-      stream->mBlocks[streamBlockIndex] = blockIndex;
-      if (streamBlockIndex*BLOCK_SIZE < stream->mStreamOffset) {
-        bo->mClass = aMode == MediaCacheStream::MODE_PLAYBACK ? PLAYED_BLOCK
-                                                              : METADATA_BLOCK;
+    }
+
+    // Tell each stream using this resource about the new block.
+    for (auto& bo : block->mOwners) {
+      bo.mStreamBlock = streamBlockIndex;
+      bo.mLastUseTime = now;
+      bo.mStream->mBlocks[streamBlockIndex] = blockIndex;
+      if (streamBlockIndex*BLOCK_SIZE < bo.mStream->mStreamOffset) {
+        bo.mClass = aMode == MediaCacheStream::MODE_PLAYBACK ? PLAYED_BLOCK
+                                                             : METADATA_BLOCK;
         // This must be the most-recently-used block, since we
         // marked it as used now (which may be slightly bogus, but we'll
         // treat it as used for simplicity).
-        GetListForBlock(bo)->AddFirstBlock(blockIndex);
+        GetListForBlock(&bo)->AddFirstBlock(blockIndex);
         Verify();
       } else {
         // This may not be the latest readahead block, although it usually
         // will be. We may have to scan for the right place to insert
         // the block in the list.
-        bo->mClass = READAHEAD_BLOCK;
-        InsertReadaheadBlock(bo, blockIndex);
+        bo.mClass = READAHEAD_BLOCK;
+        InsertReadaheadBlock(&bo, blockIndex);
       }
     }
+
+    // Invariant: block->mOwners.IsEmpty() iff we can find an entry
+    // in mFreeBlocks for a given blockIndex.
+    MOZ_DIAGNOSTIC_ASSERT(!block->mOwners.IsEmpty());
+    mFreeBlocks.RemoveBlock(blockIndex);
 
     nsresult rv = mFileCache->WriteBlock(blockIndex, aData1, aData2);
     if (NS_FAILED(rv)) {

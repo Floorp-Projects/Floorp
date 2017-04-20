@@ -606,6 +606,7 @@ add_task(async function test_events() {
 
   await SyncTestingInfrastructure(server);
   try {
+    let serverTime = AsyncResource.serverTime;
     Service.recordTelemetryEvent("object", "method", "value", { foo: "bar" });
     let ping = await wait_for_ping(() => Service.sync(), true, true);
     equal(ping.events.length, 1);
@@ -615,7 +616,7 @@ add_task(async function test_events() {
     equal(method, "method");
     equal(object, "object");
     equal(value, "value");
-    deepEqual(extra, { foo: "bar" });
+    deepEqual(extra, { foo: "bar", serverTime: String(serverTime) });
     // Test with optional values.
     Service.recordTelemetryEvent("object", "method");
     ping = await wait_for_ping(() => Service.sync(), false, true);

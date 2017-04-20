@@ -6,7 +6,6 @@
  * matching files which have errors:
  */
 const kWhitelist = new Set([
-  /defaults\/profile\/prefs.js$/,
   /browser\/content\/browser\/places\/controller.js$/,
 ]);
 

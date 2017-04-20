@@ -128,11 +128,13 @@
     <style name="GeckoCustomTabs" parent="Theme.AppCompat.NoActionBar">
         <item name="menuItemActionBarStyle">@style/Widget.MenuItemActionBar</item>
         <item name="menuItemDefaultStyle">@style/Widget.MenuItemCustomTabs</item>
+        <item name="windowActionModeOverlay">true</item>
     </style>
 
     <style name="GeckoCustomTabs.Light" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="menuItemActionBarStyle">@style/Widget.MenuItemActionBar</item>
         <item name="menuItemDefaultStyle">@style/Widget.MenuItemCustomTabs</item>
+        <item name="windowActionModeOverlay">true</item>
     </style>
 
 </resources>

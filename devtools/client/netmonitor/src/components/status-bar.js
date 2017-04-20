@@ -32,23 +32,31 @@ function StatusBar({ summary, openStatistics, timingMarkers }) {
     load,
   } = timingMarkers;
 
-  let text = (count === 0) ? L10N.getStr("networkMenu.empty") :
-    PluralForm.get(count, L10N.getStr("networkMenu.summary3"))
-    .replace("#1", count)
-    .replace("#2", getFormattedSize(contentSize))
-    .replace("#3", getFormattedSize(transferredSize))
-    .replace("#4", getFormattedTime(millis));
+  let countText = count === 0 ? L10N.getStr("networkMenu.summary.requestsCountEmpty") :
+    PluralForm.get(
+      count, L10N.getFormatStrWithNumbers("networkMenu.summary.requestsCount", count)
+  );
+  let transferText = L10N.getFormatStrWithNumbers("networkMenu.summary.transferred",
+    getFormattedSize(contentSize), getFormattedSize(transferredSize));
+  let finishText = L10N.getFormatStrWithNumbers("networkMenu.summary.finish",
+    getFormattedTime(millis));
 
   return (
     div({ className: "devtools-toolbar devtools-toolbar-bottom" },
       button({
         className: "devtools-button requests-list-network-summary-button",
-        title: count ? text : L10N.getStr("netmonitor.toolbar.perf"),
         onClick: openStatistics,
       },
         span({ className: "summary-info-icon" }),
-        span({ className: "summary-info-text" }, text),
       ),
+      span({ className: "status-bar-label requests-list-network-summary-count" },
+        countText),
+      count !== 0 &&
+        span({ className: "status-bar-label requests-list-network-summary-transfer" },
+          transferText),
+      count !== 0 &&
+        span({ className: "status-bar-label requests-list-network-summary-finish" },
+          finishText),
 
       DOMContentLoaded > -1 &&
       span({ className: "status-bar-label dom-content-loaded" },

@@ -10,6 +10,7 @@
 #include "nsIClassInfoImpl.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/ThreadLocal.h"
 #ifdef MOZ_CANARY
 #include <fcntl.h>
@@ -109,6 +110,10 @@ nsThreadManager::Init()
   // We need to keep a pointer to the current thread, so we can satisfy
   // GetIsMainThread calls that occur post-Shutdown.
   mMainThread->GetPRThread(&mMainPRThread);
+
+  // Init AbstractThread.
+  AbstractThread::InitTLS();
+  AbstractThread::InitMainThread();
 
   mInitialized = true;
   return NS_OK;

@@ -199,11 +199,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'winspool',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    OS_LIBS += [
-        'dbus',
-    ]
-
 if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
     OS_LIBS += [
         'rt',
@@ -241,35 +236,6 @@ if CONFIG['MOZ_ALSA']:
 
 if CONFIG['HAVE_CLOCK_MONOTONIC']:
     OS_LIBS += CONFIG['REALTIME_LIBS']
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    OS_LIBS += [
-        'ui',
-        'media',
-        'hardware_legacy',
-        'hardware',
-        'utils',
-        'cutils',
-        'sysutils',
-        'camera_client',
-        'sensorservice',
-        'stagefright',
-        'stagefright_foundation',
-        'stagefright_omx',
-        'binder',
-        'gui',
-        'mtp',
-    ]
-
-    if int(CONFIG['ANDROID_VERSION']) >= 17:
-        OS_LIBS += [
-            'sync',
-        ]
-
-    if CONFIG['ANDROID_VERSION'] >= '16':
-        OS_LIBS += [
-            'mdnssd',
-        ]
 
 if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
     OS_LIBS += [
