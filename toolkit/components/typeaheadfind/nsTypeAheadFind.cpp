@@ -1218,11 +1218,13 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
     return false;
 
   nsIFrame *frame = content->GetPrimaryFrame();
-  if (!frame)
+  if (!frame) {
     return false;  // No frame! Not visible then.
+  }
 
-  if (!frame->StyleVisibility()->IsVisible())
+  if (!frame->StyleVisibility()->IsVisible()) {
     return false;
+  }
 
   // Detect if we are _inside_ a text control, or something else with its own
   // selection controller.
@@ -1232,8 +1234,6 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   }
 
   // ---- We have a frame ----
-  if (!aMustBeInViewPort)
-    return true; //  Don't need it to be on screen, just in rendering tree
 
   // Get the next in flow frame that contains the range start
   int32_t startFrameOffset, endFrameOffset;
@@ -1269,12 +1269,22 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
                                     minDistance);
 
     if (rectVisibility != nsRectVisibility_kAboveViewport) {
-      return true;
+      // This is an early exit case, where we return true iff the range
+      // is actually rendered.
+      return IsRangeRendered(aPresShell, aPresContext, aRange);
     }
   }
 
-  // We know that the target range isn't usable because it's not in the
-  // view port. Move range forward to first visible point,
+  // Below this point, we know the range is not in the viewport.
+
+  if (!aMustBeInViewPort) {
+    // This is an early exit case because we don't care that that range
+    // is out of viewport, so we return that the range is "visible".
+    return true;
+  }
+
+  // The range isn't in the viewport, but we could scroll it into view.
+  // Move range forward to first visible point,
   // this speeds us up a lot in long documents
   nsCOMPtr<nsIFrameEnumerator> frameTraversal;
   nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID));
@@ -1288,8 +1298,9 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
                             false  // aSkipPopupChecks
                             );
 
-  if (!frameTraversal)
+  if (!frameTraversal) {
     return false;
+  }
 
   while (rectVisibility == nsRectVisibility_kAboveViewport) {
     frameTraversal->Next();
