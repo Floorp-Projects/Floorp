@@ -59,10 +59,10 @@ exports.viewSourceInDebugger = Task.async(function* (toolbox, sourceURL, sourceL
 
   // New debugger frontend
   if (Services.prefs.getBoolPref("devtools.debugger.new-debugger-frontend")) {
-    const source = dbg._selectors().getSourceByURL(dbg._getState(), sourceURL);
+    const source = dbg.getSource(sourceURL);
     if (source) {
       yield toolbox.selectTool("jsdebugger");
-      dbg._actions().selectSourceURL(sourceURL, { line: sourceLine });
+      dbg.selectSource(sourceURL, sourceLine);
       return true;
     }
 

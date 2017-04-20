@@ -217,6 +217,8 @@ sndio_stream_init(cubeb * context,
     wpar.le = SIO_LE_NATIVE;
     break;
   default:
+    sio_close(s->hdl);
+    free(s);
     DPR("sndio_stream_init() unsupported format\n");
     return CUBEB_ERROR_INVALID_FORMAT;
   }

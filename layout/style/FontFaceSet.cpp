@@ -1116,8 +1116,12 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
 
           face->mLocalName.Truncate();
           face->mFormatFlags = 0;
-          while (i + 1 < numSrc && (val = srcArr->Item(i+1),
-                   val.GetUnit() == eCSSUnit_Font_Format)) {
+
+          while (i + 1 < numSrc) {
+            val = srcArr->Item(i + 1);
+            if (val.GetUnit() != eCSSUnit_Font_Format)
+              break;
+
             nsDependentString valueString(val.GetStringBufferValue());
             if (valueString.LowerCaseEqualsASCII("woff")) {
               face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_WOFF;
@@ -1349,7 +1353,6 @@ FontFaceSet::CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
 
   return NS_OK;
 }
-
 
 // @arg aPrincipal: generally this is mDocument->NodePrincipal() but
 // might also be the original principal which enables user stylesheets

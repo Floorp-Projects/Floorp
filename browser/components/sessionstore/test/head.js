@@ -94,18 +94,24 @@ function waitForBrowserState(aState, aSetStateCallback) {
   let windowObserving = false;
   let restoreHiddenTabs = Services.prefs.getBoolPref(
                           "browser.sessionstore.restore_hidden_tabs");
+  let restoreTabsLazily = Services.prefs.getBoolPref(
+                          "browser.sessionstore.restore_tabs_lazily");
 
   aState.windows.forEach(function(winState) {
     winState.tabs.forEach(function(tabState) {
-      if (restoreHiddenTabs || !tabState.hidden)
+      if (!restoreTabsLazily && (restoreHiddenTabs || !tabState.hidden))
         expectedTabsRestored++;
     });
   });
 
-  // There must be only hidden tabs and restoreHiddenTabs = false. We still
+  // If there are only hidden tabs and restoreHiddenTabs = false, we still
   // expect one of them to be restored because it gets shown automatically.
-  if (!expectedTabsRestored)
+  // Otherwise if lazy tab restore there will only be one tab restored per window.
+  if (!expectedTabsRestored) {
     expectedTabsRestored = 1;
+  } else if (restoreTabsLazily) {
+    expectedTabsRestored = aState.windows.length;
+  }
 
   function onSSTabRestored(aEvent) {
     if (++tabsRestored == expectedTabsRestored) {
@@ -376,11 +382,11 @@ var gProgressListener = {
     for (let win of BrowserWindowIterator()) {
       for (let i = 0; i < win.gBrowser.tabs.length; i++) {
         let browser = win.gBrowser.tabs[i].linkedBrowser;
-        if (!browser.__SS_restoreState)
+        if (browser.isConnected && !browser.__SS_restoreState)
           wasRestored++;
         else if (browser.__SS_restoreState == TAB_STATE_RESTORING)
           isRestoring++;
-        else if (browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE)
+        else if (browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE || !browser.isConnected)
           needsRestore++;
       }
     }
