@@ -32,12 +32,15 @@ All notable changes to this program is documented in this file.
 - Preferences passed in a profile now take precedence over set of default preferences defined by geckodriver (fixed by [@DrMarcII](https://github.com/DrMarcII))
   - The exceptions are the `marionette.port` and `marionette.log.level` preferences and their fallbacks, which are set unconditionally and cannot be overriden
 - Remove default preference that disables unsafe CPOW checks
-- WebDriver library updated to 0.25.1
+- WebDriver library updated to 0.25.2
 
 ### Fixed
 - Fix for the “corrupt deflate stream” exception that sometimes occured when trying to write an empty profile by [@kirhgoph](https://github.com/kirhgoph)
 - Recognise `sslProxy` and `sslProxyPort` entries in the proxy configuration object (fixed by [@juangj](https://github.com/juangj))
 - Fix “`httpProxyPort` was not an integer” error (fixed by [@juangj](https://github.com/juangj))
+- Fix broken unmarshaling of _Get Timeouts_ response format from Firefox 52 and earlier (fixed by [@juangj](https://github.com/juangj))
+- Allow preferences in `moz:firefoxOptions` to be both positive- and negative integers (fixed by [@juangj](https://github.com/juangj))
+- Allow IPv6 hostnames in the proxy configuration object
 - i686-unknown-linux-musl (Linux 32-bit) build fixed
 - Log messages from other Rust modules are now ignored
 - Improved log messages to the HTTPD
