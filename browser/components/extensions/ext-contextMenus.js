@@ -194,6 +194,11 @@ var gMenuBuilder = {
       element.setAttribute("label", label);
     }
 
+    if (item.id && item.extension && item.extension.id) {
+      element.setAttribute("id",
+        `${makeWidgetId(item.extension.id)}_${item.id}`);
+    }
+
     if (item.type == "checkbox") {
       element.setAttribute("type", "checkbox");
       if (item.checked) {
