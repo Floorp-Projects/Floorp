@@ -295,6 +295,14 @@ struct ParamTraits<mozilla::layers::DiagnosticTypes>
              mozilla::layers::DiagnosticTypes::ALL_BITS>
 {};
 
+template <>
+struct ParamTraits<mozilla::layers::ScrollDirection>
+  : public ContiguousEnumSerializer<
+            mozilla::layers::ScrollDirection,
+            mozilla::layers::ScrollDirection::NONE,
+            mozilla::layers::ScrollDirection::SENTINEL>
+{};
+
 /*
 template <>
 struct ParamTraits<mozilla::PixelFormat>
