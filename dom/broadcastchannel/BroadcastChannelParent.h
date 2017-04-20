@@ -26,6 +26,9 @@ class BroadcastChannelParent final : public PBroadcastChannelParent
 
   typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
 
+public:
+  void Deliver(const ClonedMessageData& aData);
+
 private:
   explicit BroadcastChannelParent(const nsAString& aOriginChannelKey);
   ~BroadcastChannelParent();
