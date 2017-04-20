@@ -40,7 +40,7 @@
 #include "nsHtml5ArrayCopy.h"
 #include "nsHtml5NamedCharacters.h"
 #include "nsHtml5NamedCharactersAccel.h"
-#include "nsHtml5Atoms.h"
+#include "nsGkAtoms.h"
 #include "nsAHtml5TreeBuilderState.h"
 #include "nsHtml5Macros.h"
 #include "nsHtml5Highlighter.h"
@@ -4042,7 +4042,7 @@ void
 nsHtml5Tokenizer::initDoctypeFields()
 {
   clearStrBufAfterUse();
-  doctypeName = nsHtml5Atoms::emptystring;
+  doctypeName = nsGkAtoms::_empty;
   if (systemIdentifier) {
     systemIdentifier.Release();
     systemIdentifier = nullptr;
@@ -4208,7 +4208,7 @@ nsHtml5Tokenizer::eof()
           emitComment(0, 0);
         } else {
           errEofInDoctype();
-          doctypeName = nsHtml5Atoms::emptystring;
+          doctypeName = nsGkAtoms::_empty;
           if (systemIdentifier) {
             systemIdentifier.Release();
             systemIdentifier = nullptr;

@@ -42,7 +42,6 @@
 #include "nsDOMCID.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
-#include "nsHtml5Atoms.h"
 #include "nsIContent.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIDocument.h"
@@ -1794,9 +1793,8 @@ EventListenerManager::IsApzAwareListener(Listener* aListener)
 bool
 EventListenerManager::IsApzAwareEvent(nsIAtom* aEvent)
 {
-  if (aEvent == nsGkAtoms::onwheel ||
-      aEvent == nsGkAtoms::onDOMMouseScroll ||
-      aEvent == nsHtml5Atoms::onmousewheel ||
+  if (aEvent == nsGkAtoms::onwheel || aEvent == nsGkAtoms::onDOMMouseScroll ||
+      aEvent == nsGkAtoms::onmousewheel ||
       aEvent == nsGkAtoms::onMozMousePixelScroll) {
     return true;
   }
