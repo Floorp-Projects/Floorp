@@ -13,7 +13,7 @@ add_task(function* test() {
   let tab3 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, testPage3);
 
   // Kill the animation for simpler test.
-  Services.prefs.setBoolPref("browser.tabs.animate", false);
+  Services.prefs.setBoolPref("toolkit.cosmeticAnimations.enabled", false);
 
   gBrowser.selectedTab = tab1;
   browser1.focus();
@@ -152,5 +152,5 @@ add_task(function* test() {
     gBrowser.removeCurrentTab();
   }
 
-    Services.prefs.clearUserPref("browser.tabs.animate");
+    Services.prefs.clearUserPref("toolkit.cosmeticAnimations.enabled");
 });

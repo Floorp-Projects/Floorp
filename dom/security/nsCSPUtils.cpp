@@ -919,10 +919,6 @@ nsCSPHashSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce,
   rv = hasher->Finish(true, hash);
   NS_ENSURE_SUCCESS(rv, false);
 
-  // The NSS Base64 encoder automatically adds linebreaks "\r\n" every 64
-  // characters. We need to remove these so we can properly validate longer
-  // (SHA-512) base64-encoded hashes
-  hash.StripChars("\r\n");
   return NS_ConvertUTF16toUTF8(mHash).Equals(hash);
 }
 

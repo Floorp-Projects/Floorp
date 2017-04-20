@@ -30,6 +30,7 @@ function run_test() {
                        .getService(Ci.mozIJSSubScriptLoader);
   var p = scriptLoader.loadSubScriptWithOptions(uri.spec,
                                                 { target: srvScope,
-                                                  async: true });
+                                                  async: true,
+                                                  wantReturnValue: true });
   p.then(success, error);
 }

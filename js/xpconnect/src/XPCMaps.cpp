@@ -43,7 +43,7 @@ HashNativeKey(const void* data)
 // implement JSObject2WrappedJSMap...
 
 void
-JSObject2WrappedJSMap::UpdateWeakPointersAfterGC(XPCJSContext* context)
+JSObject2WrappedJSMap::UpdateWeakPointersAfterGC()
 {
     // Check all wrappers and update their JSObject pointer if it has been
     // moved. Release any wrappers whose weakly held JSObject has died.

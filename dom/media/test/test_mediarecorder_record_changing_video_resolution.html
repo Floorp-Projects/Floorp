@@ -154,8 +154,10 @@ function startTest() {
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv(
   {
-    "set": [["media.seekToNextFrame.enabled", true ]],
-    "set": [["media.video-queue.send-to-compositor-size", 1]]
+    "set": [
+      ["media.seekToNextFrame.enabled", true ],
+      ["media.video-queue.send-to-compositor-size", 1]
+    ]
   }, startTest);
 
 </script>

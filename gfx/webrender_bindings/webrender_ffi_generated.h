@@ -557,7 +557,7 @@ WR_FUNC;
 
 WR_INLINE void
 wr_api_delete(WrAPI* api)
-WR_FUNC;
+WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE void
 wr_api_delete_font(WrAPI* api,
@@ -858,7 +858,7 @@ WR_FUNC;
 
 WR_INLINE void
 wr_state_delete(WrState* state)
-WR_FUNC;
+WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE WrState*
 wr_state_new(WrPipelineId pipeline_id)

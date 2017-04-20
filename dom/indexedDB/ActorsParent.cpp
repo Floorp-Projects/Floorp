@@ -21,6 +21,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Casting.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Maybe.h"

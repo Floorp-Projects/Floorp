@@ -118,7 +118,7 @@ set_config('L10NBASEDIR', l10n_base)
 # reason.
 option('--enable-default-toolkit', nargs=1,
        choices=('cairo-windows', 'cairo-gtk3', 'cairo-gtk3-wayland',
-                'cairo-cocoa', 'cairo-uikit', 'cairo-android', 'cairo-gonk'),
+                'cairo-cocoa', 'cairo-uikit', 'cairo-android'),
        help='Select default toolkit')
 
 @depends('--enable-default-toolkit', target, '--help')
@@ -250,7 +250,7 @@ set_define(gl_provider_define, True)
 # ==============================================================
 @depends(toolkit)
 def pdf_printing(toolkit):
-    if toolkit in ('windows', 'gtk2', 'gtk3', 'android', 'gonk'):
+    if toolkit in ('windows', 'gtk2', 'gtk3', 'android'):
         return True
 
 @depends(pdf_printing)
@@ -272,8 +272,8 @@ option(env='MOZ_INSTRUMENT_EVENT_LOOP',
 
 @depends('MOZ_INSTRUMENT_EVENT_LOOP', toolkit)
 def instrument_event_loop(value, toolkit):
-    if value or (toolkit in ('windows', 'gtk2', 'gtk3', 'cocoa', 'android',
-                             'gonk') and value.origin == 'default'):
+    if value or (toolkit in ('windows', 'gtk2', 'gtk3', 'cocoa', 'android') and
+                 value.origin == 'default'):
         return True
 
 set_config('MOZ_INSTRUMENT_EVENT_LOOP', instrument_event_loop)
@@ -1005,9 +1005,9 @@ set_config('MOZ_MORTAR', True, when='--enable-mortar')
 # Marionette isn't really a toolkit feature, it's a Gecko engine feature, but
 # it's enabled based on the toolkit (and target), so here it lives.
 
-@depends(target, toolkit)
-def marionette_default(target, toolkit):
-    # By default, enable Marionette if not Android and not gonk.
+@depends(target)
+def marionette_default(target):
+    # By default, enable Marionette if not Android.
     #
     # None means "don't set anything", which allows to override with
     # --enable-marionette.  False means --disable-marionette, which
@@ -1016,13 +1016,10 @@ def marionette_default(target, toolkit):
     if target.os == 'Android':
         return None
 
-    if toolkit == 'gonk':
-        return None
-
     return True
 
 imply_option('--enable-marionette', marionette_default,
-             reason='not Android and not gonk')
+             reason='not Android')
 
 option('--enable-marionette',
        help='Enable internal Marionette command server')

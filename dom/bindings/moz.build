@@ -140,11 +140,6 @@ if CONFIG['MOZ_DEBUG']:
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-if CONFIG['MOZ_AUDIO_CHANNEL_MANAGER']:
-    LOCAL_INCLUDES += [
-        '/dom/system/gonk',
-    ]
-
 FINAL_LIBRARY = 'xul'
 
 SPHINX_TREES['webidl'] = 'docs'

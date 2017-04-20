@@ -21,6 +21,7 @@ CppUnitTests([
     'TestCheckedInt',
     'TestCountPopulation',
     'TestCountZeroes',
+    'TestDoublyLinkedList',
     'TestEndian',
     'TestEnumeratedArray',
     'TestEnumSet',

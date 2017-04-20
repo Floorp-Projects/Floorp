@@ -164,6 +164,11 @@ VideoDecoderParent::ProcessDecodedData(
 {
   MOZ_ASSERT(OnManagerThread());
 
+  // If the video decoder bridge has shut down, stop.
+  if (!mKnowsCompositor->GetTextureForwarder()) {
+    return;
+  }
+
   for (const auto& data : aData) {
     MOZ_ASSERT(data->mType == MediaData::VIDEO_DATA,
                 "Can only decode videos using VideoDecoderParent!");

@@ -30,11 +30,11 @@ const PanelUI = {
   get kElements() {
     return {
       contents: "PanelUI-contents",
-      mainView: "PanelUI-mainView",
-      multiView: "PanelUI-multiView",
+      mainView: gPhotonStructure ? "appMenu-mainView" : "PanelUI-mainView",
+      multiView: gPhotonStructure ? "appMenu-multiView" : "PanelUI-multiView",
       helpView: "PanelUI-helpView",
       menuButton: "PanelUI-menu-button",
-      panel: gPhotonStructure ? "PanelUI-photon-popup" : "PanelUI-popup",
+      panel: gPhotonStructure ? "appMenu-popup" : "PanelUI-popup",
       notificationPanel: "PanelUI-notification-popup",
       scroller: "PanelUI-contents-scroller",
       footer: "PanelUI-footer"

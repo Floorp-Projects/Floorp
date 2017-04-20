@@ -180,11 +180,6 @@ EXPORTS.mozilla.net += [
     'ReferrerPolicy.h',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    EXPORTS += [
-        'NetStatistics.h',
-    ]
-
 UNIFIED_SOURCES += [
     'ArrayBufferInputStream.cpp',
     'BackgroundFileSaver.cpp',

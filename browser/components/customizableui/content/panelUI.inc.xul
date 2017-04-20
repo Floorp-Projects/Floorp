@@ -146,7 +146,7 @@
             </vbox>
             <!-- Sync is ready to Sync but the "tabs" engine isn't enabled-->
             <hbox id="PanelUI-remotetabs-tabsdisabledpane" pack="center" flex="1">
-              <vbox class="PanelUI-remotetabs-instruction-box">
+              <vbox class="PanelUI-remotetabs-instruction-box" align="center">
                 <hbox pack="center">
                   <html:img class="fxaSyncIllustration" src="chrome://browser/skin/fxa/sync-illustration.svg"/>
                 </hbox>
@@ -486,12 +486,26 @@
   </popupnotification>
 </panel>
 
-<panel id="PanelUI-photon-popup"
+<panel id="appMenu-popup"
+       class="cui-widget-panel"
        role="group"
        type="arrow"
        hidden="true"
        flip="slide"
        position="bottomcenter topright"
        noautofocus="true">
-  This space intentionally left blank.
+  <panelmultiview id="appMenu-multiView" mainViewId="appMenu-mainView">
+    <panelview id="appMenu-mainView" class="cui-widget-panelview">
+      <vbox class="panel-subview-body">
+        <toolbarbutton id="appMenu-new-window-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&newNavigatorCmd.label;"
+                       command="cmd_newNavigator"/>
+        <toolbarbutton id="appMenu-private-window-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&newPrivateWindow.label;"
+                       command="Tools:PrivateBrowsing"/>
+      </vbox>
+    </panelview>
+  </panelmultiview>
 </panel>

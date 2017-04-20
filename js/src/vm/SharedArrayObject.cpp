@@ -98,10 +98,24 @@ SharedArrayMappedSize(uint32_t allocSize)
 static mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> numLive;
 static const uint32_t maxLive = 1000;
 
+#ifdef DEBUG
+static mozilla::Atomic<int32_t> liveBuffers_;
+#endif
+
 static uint32_t
 SharedArrayAllocSize(uint32_t length)
 {
     return AlignBytes(length + gc::SystemPageSize(), gc::SystemPageSize());
+}
+
+int32_t
+SharedArrayRawBuffer::liveBuffers()
+{
+#ifdef DEBUG
+    return liveBuffers_;
+#else
+    return 0;
+#endif
 }
 
 SharedArrayRawBuffer*
@@ -161,6 +175,9 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
     uint8_t* base = buffer - sizeof(SharedArrayRawBuffer);
     SharedArrayRawBuffer* rawbuf = new (base) SharedArrayRawBuffer(buffer, length, preparedForAsmJS);
     MOZ_ASSERT(rawbuf->length == length); // Deallocation needs this
+#ifdef DEBUG
+    liveBuffers_++;
+#endif
     return rawbuf;
 }
 
@@ -194,6 +211,10 @@ SharedArrayRawBuffer::dropReference()
         return;
 
     // If this was the final reference, release the buffer.
+
+#ifdef DEBUG
+    liveBuffers_--;
+#endif
 
     SharedMem<uint8_t*> p = this->dataPointerShared() - gc::SystemPageSize();
     MOZ_ASSERT(p.asValue() % gc::SystemPageSize() == 0);

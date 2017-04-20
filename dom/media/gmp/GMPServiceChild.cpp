@@ -426,6 +426,7 @@ GeckoMediaPluginServiceChild::RemoveGMPContentParent(GMPContentParent* aGMPConte
   if (mServiceChild) {
     mServiceChild->RemoveGMPContentParent(aGMPContentParent);
     if (mShuttingDownOnGMPThread && !mServiceChild->HaveContentParents()) {
+      mServiceChild->Close();
       mServiceChild = nullptr;
     }
   }
