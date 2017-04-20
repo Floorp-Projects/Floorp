@@ -91,7 +91,8 @@ public:
                                     const ByteBuffer& dl,
                                     const WrBuiltDisplayListDescriptor& dlDesc,
                                     const ByteBuffer& aux,
-                                    const WrAuxiliaryListsDescriptor& auxDesc) override;
+                                    const WrAuxiliaryListsDescriptor& auxDesc,
+                                    const WebRenderScrollData& aScrollData) override;
   mozilla::ipc::IPCResult RecvDPSyncEnd(const gfx::IntSize& aSize,
                                         InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                         InfallibleTArray<OpDestroy>&& aToDestroy,
@@ -100,7 +101,8 @@ public:
                                         const ByteBuffer& dl,
                                         const WrBuiltDisplayListDescriptor& dlDesc,
                                         const ByteBuffer& aux,
-                                        const WrAuxiliaryListsDescriptor& auxDesc) override;
+                                        const WrAuxiliaryListsDescriptor& auxDesc,
+                                        const WebRenderScrollData& aScrollData) override;
   mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture) override;
 
   mozilla::ipc::IPCResult RecvAddExternalImageId(const ExternalImageId& aImageId,
@@ -179,7 +181,8 @@ private:
                    const ByteBuffer& dl,
                    const WrBuiltDisplayListDescriptor& dlDesc,
                    const ByteBuffer& aux,
-                   const WrAuxiliaryListsDescriptor& auxDesc);
+                   const WrAuxiliaryListsDescriptor& auxDesc,
+                   const WebRenderScrollData& aScrollData);
 
   void SampleAnimations(nsTArray<WrOpacityProperty>& aOpacityArray,
                         nsTArray<WrTransformProperty>& aTransformArray);
