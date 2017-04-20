@@ -601,7 +601,7 @@ bool CallFrameInfo::RuleMap::HandleTransitionTo(
       if (*old_it->second != *new_it->second &&
           !new_it->second->Handle(handler, address, new_it->first))
         return false;
-      new_it++, old_it++;
+      new_it++; old_it++;
     }
   }
   // Finish off entries from this RuleMap with no counterparts in new_rules.

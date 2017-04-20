@@ -329,18 +329,6 @@ TabParent::RemoveWindowListeners()
   }
 }
 
-void
-TabParent::GetAppType(nsAString& aOut)
-{
-  aOut.Truncate();
-  nsCOMPtr<Element> elem = do_QueryInterface(mFrameElement);
-  if (!elem) {
-    return;
-  }
-
-  elem->GetAttr(kNameSpaceID_None, nsGkAtoms::mozapptype, aOut);
-}
-
 bool
 TabParent::IsVisible() const
 {
