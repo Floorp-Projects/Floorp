@@ -479,7 +479,7 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
   }
   RefPtr<SamplesHolder> samples = new SamplesHolder;
   samples->mSamples.AppendElement(sample);
-  if (mNextRandomAccessPoint.ToMicroseconds() <= sample->mTime) {
+  if (mNextRandomAccessPoint <= sample->mTime) {
     MonitorAutoLock mon(mMonitor);
     mNextRandomAccessPoint =
       mManager->GetNextRandomAccessPoint(mType, MediaSourceDemuxer::EOS_FUZZ);

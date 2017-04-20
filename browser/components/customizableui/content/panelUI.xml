@@ -178,6 +178,14 @@
         <body><![CDATA[
           Task.spawn(function*() {
             let viewNode = this.querySelector("#" + aViewId);
+            if (!viewNode) {
+              viewNode = document.getElementById(aViewId);
+              if (viewNode) {
+                this._subViews.appendChild(viewNode);
+              } else {
+                throw new Error(`Subview ${aViewId} doesn't exist!`);
+              }
+            }
             viewNode.setAttribute("current", true);
             // Emit the ViewShowing event so that the widget definition has a chance
             // to lazily populate the subview with things.

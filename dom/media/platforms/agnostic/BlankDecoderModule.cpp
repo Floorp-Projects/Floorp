@@ -75,11 +75,11 @@ BlankVideoDataCreator::Create(MediaRawData* aSample)
   return VideoData::CreateAndCopyData(mInfo,
                                       mImageContainer,
                                       aSample->mOffset,
-                                      aSample->mTime,
+                                      aSample->mTime.ToMicroseconds(),
                                       aSample->mDuration,
                                       buffer,
                                       aSample->mKeyframe,
-                                      aSample->mTime,
+                                      aSample->mTime.ToMicroseconds(),
                                       mPicture);
 }
 
@@ -116,7 +116,7 @@ BlankAudioDataCreator::Create(MediaRawData* aSample)
     mFrameSum++;
   }
   RefPtr<AudioData> data(new AudioData(aSample->mOffset,
-                                       aSample->mTime,
+                                       aSample->mTime.ToMicroseconds(),
                                        aSample->mDuration.ToMicroseconds(),
                                        uint32_t(frames.value()),
                                        Move(samples),

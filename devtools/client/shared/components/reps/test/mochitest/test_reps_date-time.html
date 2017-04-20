@@ -17,8 +17,11 @@ Test DateTime rep
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
 window.onload = Task.async(function* () {
-  const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, DateTime } = REPS;
+  const {
+    REPS,
+    getRep,
+  } = browserRequire("devtools/client/shared/components/reps/reps");
+  let { DateTime } = REPS;
 
   try {
     testValid();
@@ -45,12 +48,11 @@ window.onload = Task.async(function* () {
     };
 
     // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
-    is(renderedRep.type, DateTime.rep, `Rep correctly selects ${DateTime.rep.displayName}`);
+    is(getRep(gripStub), DateTime.rep, "Rep correctly selects DateTime Rep");
 
     // Test rendering
     const renderedComponent = renderComponent(DateTime.rep, { object: gripStub });
-    is(renderedComponent.textContent, "2016-03-30T21:17:24.859Z", "DateTime rep has expected text content for valid date");
+    is(renderedComponent.textContent, "Date 2016-03-30T21:17:24.859Z", "DateTime rep has expected text content for valid date");
   }
 
   function testInvalid() {

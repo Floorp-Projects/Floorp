@@ -461,7 +461,7 @@ SendStreamAudio(DecodedStreamData* aStream, const media::TimeUnit& aStartTime,
   // the exact same silences
   CheckedInt64 audioWrittenOffset = aStream->mAudioFramesWritten
     + TimeUnitToFrames(aStartTime, aRate);
-  CheckedInt64 frameOffset = UsecsToFrames(audio->mTime, aRate);
+  CheckedInt64 frameOffset = TimeUnitToFrames(audio->mTime, aRate);
 
   if (!audioWrittenOffset.isValid() ||
       !frameOffset.isValid() ||
@@ -595,7 +595,7 @@ DecodedStream::SendVideo(bool aIsSameOrigin, const PrincipalHandle& aPrincipalHa
   for (uint32_t i = 0; i < video.Length(); ++i) {
     VideoData* v = video[i];
 
-    if (mData->mNextVideoTime.ToMicroseconds() < v->mTime) {
+    if (mData->mNextVideoTime < v->mTime) {
       // Write last video frame to catch up. mLastVideoImage can be null here
       // which is fine, it just means there's no video.
 
@@ -605,12 +605,11 @@ DecodedStream::SendVideo(bool aIsSameOrigin, const PrincipalHandle& aPrincipalHa
       // video frame). E.g. if we have a video frame that is 30 sec long
       // and capture happens at 15 sec, we'll have to append a black frame
       // that is 15 sec long.
-      WriteVideoToMediaStream(sourceStream, mData->mLastVideoImage,
-        FromMicroseconds(v->mTime),
+      WriteVideoToMediaStream(sourceStream, mData->mLastVideoImage, v->mTime,
         mData->mNextVideoTime, mData->mLastVideoImageDisplaySize,
-        tracksStartTimeStamp + TimeDuration::FromMicroseconds(v->mTime),
+        tracksStartTimeStamp + v->mTime.ToTimeDuration(),
         &output, aPrincipalHandle);
-      mData->mNextVideoTime = FromMicroseconds(v->mTime);
+      mData->mNextVideoTime = v->mTime;
     }
 
     if (mData->mNextVideoTime < v->GetEndTime()) {
@@ -746,7 +745,7 @@ DecodedStream::NotifyOutput(int64_t aTime)
 {
   AssertOwnerThread();
   mLastOutputTime = FromMicroseconds(aTime);
-  int64_t currentTime = GetPosition().ToMicroseconds();
+  auto currentTime = GetPosition();
 
   // Remove audio samples that have been played by MSG from the queue.
   RefPtr<AudioData> a = mAudioQueue.PeekFront();

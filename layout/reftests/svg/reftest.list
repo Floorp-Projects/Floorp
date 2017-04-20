@@ -512,6 +512,7 @@ fuzzy-if(skiaContent,1,100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-re
 == use-localRef-clipPath-01.svg use-localRef-clipPath-01-ref.svg
 == use-localRef-filter-01.svg use-localRef-filter-01-ref.svg
 == use-localRef-fill-01.svg use-localRef-fill-01-ref.svg
+== use-localRef-link.html pass.svg
 == use-localRef-stroke-01.svg use-localRef-stroke-01-ref.svg
 == use-localRef-mask-01.svg use-localRef-mask-01-ref.svg
 

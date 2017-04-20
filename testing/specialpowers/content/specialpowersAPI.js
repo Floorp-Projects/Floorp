@@ -2001,6 +2001,7 @@ SpecialPowersAPI.prototype = {
           resolveStartup();
         } else if (msg.data.type == "extensionSetId") {
           extension.id = msg.data.args[0];
+          extension.uuid = msg.data.args[1];
         } else if (msg.data.type == "extensionFailed") {
           state = "failed";
           rejectStartup("startup failed");

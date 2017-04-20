@@ -20,9 +20,10 @@ window.onload = Task.async(function* () {
   const {
     REPS,
     MODE,
+    getRep,
     getSelectableInInspectorGrips,
   } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, GripArray } = REPS;
+  let { GripArray } = REPS;
 
   let componentUnderTest = GripArray;
   const maxLength = {
@@ -60,8 +61,7 @@ window.onload = Task.async(function* () {
 
     // Test that correct rep is chosen
     const gripStub = getGripStub("testBasic");
-    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
-    is(renderedRep.type, GripArray.rep, `Rep correctly selects ${GripArray.rep.displayName}`);
+    is(getRep(gripStub), GripArray.rep, "Rep correctly selects GripArray Rep");
 
     // Test rendering
     const defaultOutput = `Array []`;
@@ -328,8 +328,6 @@ window.onload = Task.async(function* () {
 
     is(grips.length, 3, "the stub has three node grips");
 
-    const attachedActorIds = getStubAttachedActorIds(grips);
-
     let mouseOverValue;
     let onDOMNodeMouseOver = (object) => {
       mouseOverValue = object;
@@ -337,7 +335,6 @@ window.onload = Task.async(function* () {
     const renderedComponent = renderComponent(GripArray.rep, {
       object: stub,
       onDOMNodeMouseOver,
-      attachedActorIds,
     });
 
     const nodes = renderedComponent.querySelectorAll(".objectBox-node");
@@ -357,8 +354,6 @@ window.onload = Task.async(function* () {
 
     is(grips.length, 3, "the stub has three node grips");
 
-    const attachedActorIds = getStubAttachedActorIds(grips);
-
     let called = 0;
     let onDOMNodeMouseOut = (object) => {
       called++;
@@ -366,7 +361,6 @@ window.onload = Task.async(function* () {
     const renderedComponent = renderComponent(GripArray.rep, {
       object: stub,
       onDOMNodeMouseOut,
-      attachedActorIds,
     });
 
     const nodes = renderedComponent.querySelectorAll(".objectBox-node");
@@ -377,35 +371,30 @@ window.onload = Task.async(function* () {
   }
 
   function testOnDomNodeInspectIconClick() {
-    const stub = getGripStub("testNodeList");
-    const grips = getSelectableInInspectorGrips(stub);
-
-    is(grips.length, 3, "the stub has three node grips");
-
-    const attachedActorIds = getStubAttachedActorIds(grips);
-
     let inspectIconClickedValue = null;
     let onInspectIconClick = (object) => {
       inspectIconClickedValue = object;
     };
 
     let renderedComponentWithoutInspectIcon = renderComponent(GripArray.rep, {
-      object: stub,
+      object: getGripStub("testDisconnectedNodeList"),
       onInspectIconClick,
-      attachedActorIds: ["someOtherId"],
     });
     is(renderedComponentWithoutInspectIcon.querySelector(".open-inspector"), null,
-      "There isn't an inspect icon when the actor is not in attachedActorIds");
+      "There isn't an inspect icon when the nodes are not connected to the DOM tree");
 
+    const stub = getGripStub("testNodeList");
+    const grips = getSelectableInInspectorGrips(stub);
+
+    is(grips.length, 3, "the stub has three node grips");
     const renderedComponent = renderComponent(GripArray.rep, {
       object: stub,
       onInspectIconClick,
-      attachedActorIds,
     });
 
     const icons = renderedComponent.querySelectorAll(".open-inspector");
     is(icons.length, grips.length,
-      "There is an icon for each grip array item with a matching attachedNodeFront");
+      "There is an icon for each node connected to the DOM tree");
 
     icons.forEach((icon, index) => {
       TestUtils.Simulate.click(icon);
@@ -678,6 +667,7 @@ window.onload = Task.async(function* () {
                   "kind": "DOMNode",
                   "nodeType": 1,
                   "nodeName": "button",
+                  "isConnected": true,
                   "attributes": {
                     "id": "btn-1",
                     "class": "btn btn-log",
@@ -698,6 +688,7 @@ window.onload = Task.async(function* () {
                   "kind": "DOMNode",
                   "nodeType": 1,
                   "nodeName": "button",
+                  "isConnected": true,
                   "attributes": {
                     "id": "btn-2",
                     "class": "btn btn-err",
@@ -718,6 +709,87 @@ window.onload = Task.async(function* () {
                   "kind": "DOMNode",
                   "nodeType": 1,
                   "nodeName": "button",
+                  "isConnected": true,
+                  "attributes": {
+                    "id": "btn-3",
+                    "class": "btn btn-count",
+                    "type": "button"
+                  },
+                  "attributesLength": 3
+                }
+              }
+            ]
+          }
+        };
+
+      case "testDisconnectedNodeList":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj51",
+          "class": "NodeList",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 3,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 3,
+            "items": [
+              {
+                "type": "object",
+                "actor": "server1.conn1.child1/obj52",
+                "class": "HTMLButtonElement",
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "ownPropertyLength": 0,
+                "preview": {
+                  "kind": "DOMNode",
+                  "nodeType": 1,
+                  "nodeName": "button",
+                  "isConnected": false,
+                  "attributes": {
+                    "id": "btn-1",
+                    "class": "btn btn-log",
+                    "type": "button"
+                  },
+                  "attributesLength": 3
+                }
+              },
+              {
+                "type": "object",
+                "actor": "server1.conn1.child1/obj53",
+                "class": "HTMLButtonElement",
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "ownPropertyLength": 0,
+                "preview": {
+                  "kind": "DOMNode",
+                  "nodeType": 1,
+                  "nodeName": "button",
+                  "isConnected": false,
+                  "attributes": {
+                    "id": "btn-2",
+                    "class": "btn btn-err",
+                    "type": "button"
+                  },
+                  "attributesLength": 3
+                }
+              },
+              {
+                "type": "object",
+                "actor": "server1.conn1.child1/obj54",
+                "class": "HTMLButtonElement",
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "ownPropertyLength": 0,
+                "preview": {
+                  "kind": "DOMNode",
+                  "nodeType": 1,
+                  "nodeName": "button",
+                  "isConnected": false,
                   "attributes": {
                     "id": "btn-3",
                     "class": "btn btn-count",

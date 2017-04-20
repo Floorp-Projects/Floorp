@@ -20,14 +20,14 @@ window.onload = Task.async(function* () {
   const {
     REPS,
     MODE,
+    getRep,
     getSelectableInInspectorGrips,
   } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, Event } = REPS;
+  let { Event } = REPS;
 
   try {
     // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, { object: getGripStub("testEvent") });
-    is(renderedRep.type, Event.rep, `Rep correctly selects ${Event.rep.displayName}`);
+    is(getRep(getGripStub("testEvent")), Event.rep, "Rep correctly selects Event Rep");
 
     yield testEvent();
     yield testMouseEvent();
@@ -129,8 +129,6 @@ window.onload = Task.async(function* () {
 
     is(grips.length, 1, "the stub has one node grip");
 
-    const attachedActorIds = getStubAttachedActorIds(grips);
-
     let mouseOverValue;
     let onDOMNodeMouseOver = (object) => {
       mouseOverValue = object;
@@ -138,7 +136,6 @@ window.onload = Task.async(function* () {
     const renderedComponent = renderComponent(Event.rep, {
       object: stub,
       onDOMNodeMouseOver,
-      attachedActorIds,
     });
 
     const node = renderedComponent.querySelector(".objectBox-node");
@@ -153,8 +150,6 @@ window.onload = Task.async(function* () {
     const grips = getSelectableInInspectorGrips(stub);
     is(grips.length, 1, "the stub has one node grip");
 
-    const attachedActorIds = getStubAttachedActorIds(grips);
-
     let called = false;
     let onDOMNodeMouseOut = (object) => {
       called = true;
@@ -162,7 +157,6 @@ window.onload = Task.async(function* () {
     const renderedComponent = renderComponent(Event.rep, {
       object: stub,
       onDOMNodeMouseOut,
-      attachedActorIds
     });
 
     const node = renderedComponent.querySelector(".objectBox-node");
@@ -176,34 +170,19 @@ window.onload = Task.async(function* () {
     const grips = getSelectableInInspectorGrips(stub);
     is(grips.length, 1, "the stub has one node grip");
 
-    const attachedActorIds = getStubAttachedActorIds(grips);
-
     let inspectIconClickedValue = null;
     let onInspectIconClick = (object) => {
       inspectIconClickedValue = object;
     };
 
-    let renderedComponentWithoutInspectIcon = renderComponent(Event.rep, {
-      object: stub,
-      onInspectIconClick,
-      attachedActorIds: ["someOtherId"]
-    });
-    is(renderedComponentWithoutInspectIcon.querySelector(".open-inspector"), null,
-      "There isn't an inspect icon when the actor is not in attachedActorIds");
-
-    is(renderedComponentWithoutInspectIcon.querySelector(".open-inspector"), null,
-      "There isn't an inspect icon when attachedActorIds does not have keys " +
-      "matching grip event's target item");
-
     const renderedComponent = renderComponent(Event.rep, {
       object: stub,
       onInspectIconClick,
-      attachedActorIds
     });
 
     const icon = renderedComponent.querySelector(".open-inspector");
-    ok(icon !== null, "There is an icon as expected when passing a matching " +
-      "attachedActorIds item");
+    ok(icon !== null,
+      "There is an inspect icon when the node is connected to the DOM tree");
 
     TestUtils.Simulate.click(icon);
 
@@ -344,6 +323,7 @@ window.onload = Task.async(function* () {
                 "kind": "DOMNode",
                 "nodeType": 1,
                 "nodeName": "div",
+                "isConnected": true,
                 "attributes": {
                   "id": "test"
                 },

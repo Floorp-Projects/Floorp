@@ -22,9 +22,10 @@ window.onload = Task.async(function* () {
   const {
     REPS,
     MODE,
+    getRep,
     getSelectableInInspectorGrips,
   } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, ElementNode } = REPS;
+  let { ElementNode } = REPS;
 
   try {
     yield testBodyNode();
@@ -48,9 +49,8 @@ window.onload = Task.async(function* () {
 
   function testBodyNode() {
     const stub = getGripStub("testBodyNode");
-    const renderedRep = shallowRenderComponent(Rep, { object: stub });
-    is(renderedRep.type, ElementNode.rep,
-      `Rep correctly selects ${ElementNode.rep.displayName} for body node`);
+    is(getRep(stub), ElementNode.rep,
+      "Rep correctly selects ElementNode Rep for body node");
 
     const renderedComponent = renderComponent(ElementNode.rep, { object: stub });
     is(renderedComponent.textContent, `<body id="body-id" class="body-class">`,
@@ -64,9 +64,8 @@ window.onload = Task.async(function* () {
 
   function testDocumentElement() {
     const stub = getGripStub("testDocumentElement");
-    const renderedRep = shallowRenderComponent(Rep, { object: stub });
-    is(renderedRep.type, ElementNode.rep,
-      `Rep correctly selects ${ElementNode.rep.displayName} for document element node`);
+    is(getRep(stub), ElementNode.rep,
+      "Rep correctly selects ElementNode Rep for document element node");
 
     const renderedComponent = renderComponent(ElementNode.rep, { object: stub });
     is(renderedComponent.textContent, `<html dir="ltr" lang="en-US">`,
@@ -80,9 +79,8 @@ window.onload = Task.async(function* () {
 
   function testNode() {
     const stub = getGripStub("testNode");
-    const renderedRep = shallowRenderComponent(Rep, { object: stub });
-    is(renderedRep.type, ElementNode.rep,
-      `Rep correctly selects ${ElementNode.rep.displayName} for element node`);
+    is(getRep(stub), ElementNode.rep,
+      "Rep correctly selects ElementNode Rep for element node");
 
     const renderedComponent = renderComponent(ElementNode.rep, { object: stub });
     is(renderedComponent.textContent,
@@ -99,9 +97,8 @@ window.onload = Task.async(function* () {
 
   function testNodeWithLeadingAndTrailingSpacesClassName() {
     const stub = getGripStub("testNodeWithLeadingAndTrailingSpacesClassName");
-    const renderedRep = shallowRenderComponent(Rep, { object: stub });
-    is(renderedRep.type, ElementNode.rep,
-      `Rep correctly selects ${ElementNode.rep.displayName} for element node`);
+    is(getRep(stub), ElementNode.rep,
+      "Rep correctly selects ElementNode Rep for element node");
 
     const renderedComponent = renderComponent(ElementNode.rep, { object: stub });
     is(renderedComponent.textContent,
@@ -119,8 +116,7 @@ window.onload = Task.async(function* () {
   function testNodeWithoutAttributes() {
     const stub = getGripStub("testNodeWithoutAttributes");
 
-    const renderedComponent = renderComponent(ElementNode.rep, { object: stub });
-    is(renderedComponent.textContent, "<p>",
+    is(getRep(stub), ElementNode.rep,
       "Element node rep has expected text content for element node without attributes");
 
     const tinyRenderedComponent = renderComponent(
@@ -147,8 +143,7 @@ window.onload = Task.async(function* () {
   function testSvgNode() {
     const stub = getGripStub("testSvgNode");
 
-    const renderedRep = shallowRenderComponent(Rep, { object: stub });
-    is(renderedRep.type, ElementNode.rep,
+    is(getRep(stub), ElementNode.rep,
       `Rep correctly selects ${ElementNode.rep.displayName} for SVG element node`);
 
     const renderedComponent = renderComponent(ElementNode.rep, { object: stub });
@@ -165,8 +160,7 @@ window.onload = Task.async(function* () {
   function testSvgNodeInXHTML() {
     const stub = getGripStub("testSvgNodeInXHTML");
 
-    const renderedRep = shallowRenderComponent(Rep, { object: stub });
-    is(renderedRep.type, ElementNode.rep,
+    is(getRep(stub), ElementNode.rep,
       `Rep correctly selects ${ElementNode.rep.displayName} for XHTML SVG element node`);
 
     const renderedComponent = renderComponent(ElementNode.rep, { object: stub });
@@ -182,11 +176,8 @@ window.onload = Task.async(function* () {
 
   function testOnMouseOver() {
     const stub = getGripStub("testNode");
-  debugger;
     const grips = getSelectableInInspectorGrips(stub);
     is(grips.length, 1, "the stub has one node grip");
-
-    const attachedActorIds = getStubAttachedActorIds(grips);
 
     let mouseOverValue;
     let onDOMNodeMouseOver = (object) => {
@@ -195,7 +186,6 @@ window.onload = Task.async(function* () {
     const renderedComponent = renderComponent(ElementNode.rep, {
       object: stub,
       onDOMNodeMouseOver,
-      attachedActorIds,
     });
 
     TestUtils.Simulate.mouseOver(renderedComponent);
@@ -209,8 +199,6 @@ window.onload = Task.async(function* () {
     const grips = getSelectableInInspectorGrips(stub);
     is(grips.length, 1, "the stub has one node grip");
 
-    const attachedActorIds = getStubAttachedActorIds(grips);
-
     let called = false;
     let onDOMNodeMouseOut = (object) => {
       called = true;
@@ -218,7 +206,6 @@ window.onload = Task.async(function* () {
     const renderedComponent = renderComponent(ElementNode.rep, {
       object: stub,
       onDOMNodeMouseOut,
-      attachedActorIds,
     });
 
     TestUtils.Simulate.mouseOut(renderedComponent);
@@ -231,8 +218,6 @@ window.onload = Task.async(function* () {
     const grips = getSelectableInInspectorGrips(stub);
     is(grips.length, 1, "the stub has one node grip");
 
-    const attachedActorIds = getStubAttachedActorIds(grips);
-
     let inspectIconClickedValue = null;
     let inspectIconClickedEvent = null;
 
@@ -242,28 +227,18 @@ window.onload = Task.async(function* () {
     };
 
     const renderedComponentWithoutInspectIcon = renderComponent(ElementNode.rep, {
-      object: stub,
+      object: getGripStub("testDisconnectedNode"),
       onInspectIconClick,
-      attachedActorIds: ["someOtherId"]
     });
     is(renderedComponentWithoutInspectIcon.querySelector(".open-inspector"), null,
-      "There isn't an inspect icon when actor is not in attachedActorIds");
+      "There isn't an inspect icon when the node is not in the DOM tree");
 
-    let renderedComponent = renderComponent(ElementNode.rep, {
+    const renderedComponent = renderComponent(ElementNode.rep, {
       object: stub,
       onInspectIconClick,
     });
-    let inspectIconNode = renderedComponent.querySelector(".open-inspector");
-    ok(inspectIconNode !== null,
-      "There is an inspect icon when attachedActorIds is not specified");
 
-    renderedComponent = renderComponent(ElementNode.rep, {
-      object: stub,
-      onInspectIconClick,
-      attachedActorIds,
-    });
-
-    inspectIconNode = renderedComponent.querySelector(".open-inspector");
+    const inspectIconNode = renderedComponent.querySelector(".open-inspector");
     ok(inspectIconNode !== null, "There is an inspect icon as expected");
     TestUtils.Simulate.click(inspectIconNode);
 
@@ -345,6 +320,32 @@ window.onload = Task.async(function* () {
             "kind": "DOMNode",
             "nodeType": 1,
             "nodeName": "input",
+            "isConnected": true,
+            "attributes": {
+              "id": "newtab-customize-button",
+              "dir": "ltr",
+              "title": "Customize your New Tab page",
+              "class": "bar baz",
+              "value": "foo",
+              "type": "button"
+            },
+            "attributesLength": 6
+          }
+        };
+      case "testDisconnectedNode":
+        return {
+          "type": "object",
+          "actor": "server1.conn2.child1/obj116",
+          "class": "HTMLInputElement",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "DOMNode",
+            "nodeType": 1,
+            "nodeName": "input",
+            "isConnected": false,
             "attributes": {
               "id": "newtab-customize-button",
               "dir": "ltr",

@@ -63,7 +63,7 @@ public:
     RefPtr<MediaTrackDemuxer> track = aTrackDemuxer;
     RefPtr<MP4DemuxerBinding> binding = this;
 
-    int64_t time = -1;
+    auto time = media::TimeUnit::Invalid();
     while (mIndex < mSamples.Length()) {
       uint32_t i = mIndex++;
       if (mSamples[i]->mKeyframe) {
@@ -74,7 +74,7 @@ public:
 
     RefPtr<GenericPromise> p = mCheckTrackKeyFramePromise.Ensure(__func__);
 
-    if (time == -1) {
+    if (!time.IsValid()) {
       mCheckTrackKeyFramePromise.Resolve(true, __func__);
       return p;
     }
@@ -82,7 +82,7 @@ public:
 
     DispatchTask(
       [track, time, binding] () {
-        track->Seek(media::TimeUnit::FromMicroseconds(time))->Then(binding->mTaskQueue, __func__,
+        track->Seek(time)->Then(binding->mTaskQueue, __func__,
           [track, time, binding] () {
             track->GetSamples()->Then(binding->mTaskQueue, __func__,
               [track, time, binding] (RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
@@ -125,7 +125,7 @@ public:
               for (uint32_t i = 0; i < (binding->mSamples.Length() - 1); i++) {
                 EXPECT_LT(binding->mSamples[i]->mTimecode, binding->mSamples[i + 1]->mTimecode);
                 if (binding->mSamples[i]->mKeyframe) {
-                  binding->mKeyFrameTimecodes.AppendElement(binding->mSamples[i]->mTimecode);
+                  binding->mKeyFrameTimecodes.AppendElement(binding->mSamples[i]->mTimecode.ToMicroseconds());
                 }
               }
               binding->mCheckTrackSamples.Resolve(true, __func__);
