@@ -1794,8 +1794,13 @@ function getSignedStatus(aRv, aCert, aAddonID) {
         }
       }
 
-      if (aCert.organizationalUnit == "Mozilla Components")
+      if (aCert.organizationalUnit == "Mozilla Components") {
         return AddonManager.SIGNEDSTATE_SYSTEM;
+      }
+
+      if (aCert.organizationalUnit == "Mozilla Extensions") {
+        return AddonManager.SIGNEDSTATE_PRIVILEGED;
+      }
 
       return /preliminary/i.test(aCert.organizationalUnit)
                ? AddonManager.SIGNEDSTATE_PRELIMINARY
