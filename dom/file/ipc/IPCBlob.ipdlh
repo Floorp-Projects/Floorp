@@ -16,6 +16,9 @@ namespace mozilla {
 namespace dom {
 
 // This contains any extra bit for making a File out of a Blob.
+// For more information about Blobs and IPC, please read the comments in
+// IPCBlobUtils.h
+
 struct IPCFile
 {
   nsString name;
