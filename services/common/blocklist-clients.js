@@ -102,13 +102,8 @@ class BlocklistClient {
     });
   }
 
-  get identifier() {
-    return `${this.bucketName}/${this.collectionName}`;
-  }
-
   get filename() {
-    const identifier = OS.Path.join(...this.identifier.split("/"));
-    return `${identifier}.json`;
+    return `${this.bucketName}/${this.collectionName}.json`;
   }
 
   /**
