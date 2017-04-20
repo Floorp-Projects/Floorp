@@ -13,13 +13,13 @@
 #include "nsIWidget.h"
 
 class nsIContent;
-class nsIEditor;
 class nsINode;
 class nsPresContext;
 class nsISelection;
 
 namespace mozilla {
 
+class EditorBase;
 class EventDispatchingCallback;
 class IMEContentObserver;
 class TextCompositionArray;
@@ -134,7 +134,7 @@ public:
   // widget.  So, the caller must have focus.
   static void UpdateIMEState(const IMEState &aNewIMEState,
                              nsIContent* aContent,
-                             nsIEditor* aEditor);
+                             EditorBase& aEditorBase);
 
   // This method is called when user operates mouse button in focused editor
   // and before the editor handles it.
@@ -265,11 +265,29 @@ protected:
 
   static nsIContent* GetRootContent(nsPresContext* aPresContext);
 
+  /**
+   * CanHandleWith() returns false if aPresContext is nullptr or it's destroyed.
+   */
+  static bool CanHandleWith(nsPresContext* aPresContext);
+
+  // sContent and sPresContext are the focused content and PresContext.  If a
+  // document has focus but there is no focused element, sContent may be
+  // nullptr.
   static StaticRefPtr<nsIContent> sContent;
   static StaticRefPtr<nsPresContext> sPresContext;
+  // sWidget is cache for the root widget of sPresContext.  Even afer
+  // sPresContext has gone, we need to clean up some IME state on the widget
+  // if the widget is available.
+  static nsIWidget* sWidget;
+  // sFocusedIMEWidget is, the widget which was sent to "focus" notification
+  // from IMEContentObserver and not yet sent "blur" notification.
+  // So, if this is not nullptr, the widget needs to receive "blur"
+  // notification.
   static nsIWidget* sFocusedIMEWidget;
   // sActiveInputContextWidget is the last widget whose SetInputContext() is
-  // called.
+  // called.  This is important to reduce sync IPC cost with parent process.
+  // If IMEStateManager set input context to different widget, PuppetWidget can
+  // return cached input context safely.
   static nsIWidget* sActiveInputContextWidget;
   static StaticRefPtr<TabParent> sActiveTabParent;
   // sActiveIMEContentObserver points to the currently active
