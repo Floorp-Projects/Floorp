@@ -32,8 +32,8 @@ namespace console {
   void groupEnd();
 
   // Timing
-  void time(optional any time); // TODO: fix in the following patch
-  void timeEnd(optional any time); // TODO: fix in the following patch
+  void time(optional DOMString label = "default");
+  void timeEnd(optional DOMString label = "default");
 
   // Mozilla only or Webcompat methods
 
