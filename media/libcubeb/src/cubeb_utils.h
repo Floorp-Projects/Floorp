@@ -124,6 +124,11 @@ public:
     return data_;
   }
 
+  T * end() const
+  {
+    return data_ + length_;
+  }
+
   const T& at(size_t index) const
   {
     assert(index < length_ && "out of range");
@@ -257,6 +262,71 @@ private:
   size_t capacity_;
   /** The number of elements the array contains. */
   size_t length_;
+};
+
+struct auto_array_wrapper {
+  virtual void push(void * elements, size_t length) = 0;
+  virtual size_t length() = 0;
+  virtual void push_silence(size_t length) = 0;
+  virtual bool pop(size_t length) = 0;
+  virtual void * data() = 0;
+  virtual void * end() = 0;
+  virtual void clear() = 0;
+  virtual bool reserve(size_t capacity) = 0;
+  virtual void set_length(size_t length) = 0;
+  virtual ~auto_array_wrapper() {}
+};
+
+template <typename T>
+struct auto_array_wrapper_impl : public auto_array_wrapper {
+  auto_array_wrapper_impl() {}
+
+  explicit auto_array_wrapper_impl(uint32_t size)
+    : ar(size)
+  {}
+
+  void push(void * elements, size_t length) override {
+    ar.push(static_cast<T *>(elements), length);
+  }
+
+  size_t length() override {
+    return ar.length();
+  }
+
+  void push_silence(size_t length) override {
+    ar.push_silence(length);
+  }
+
+  bool pop(size_t length) override {
+    return ar.pop(nullptr, length);
+  }
+
+  void * data() override {
+    return ar.data();
+  }
+
+  void * end() override {
+    return ar.end();
+  }
+
+  void clear() override {
+    ar.clear();
+  }
+
+  bool reserve(size_t capacity) override {
+    return ar.reserve(capacity);
+  }
+
+  void set_length(size_t length) override {
+    ar.set_length(length);
+  }
+
+  ~auto_array_wrapper_impl() {
+    ar.clear();
+  }
+
+private:
+  auto_array<T> ar;
 };
 
 using auto_lock = std::lock_guard<owned_critical_section>;
