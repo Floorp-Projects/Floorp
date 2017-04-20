@@ -20,6 +20,16 @@ namespace layers {
  * (Note that not all functions from LayerMetricsWrapper are implemented here,
  * only the ones we've needed in APZ code so far.)
  *
+ * A WebRenderScrollData object is basically a flattened layer tree, with a
+ * number of WebRenderLayerScrollData objects that have a 1:1 correspondence
+ * to layers in a layer tree. Therefore the mLayer pointer in this class can
+ * be considered equivalent to the mLayer pointer in the LayerMetricsWrapper.
+ * There are some extra fields (mData, mLayerIndex, mContainingSubtreeLastIndex)
+ * to move around between these "layers" given the flattened representation.
+ * The mMetadataIndex field in this class corresponds to the mIndex field in
+ * LayerMetricsWrapper, as both classes also need to manage walking through
+ * "virtual" container layers implied by the list of ScrollMetadata objects.
+ *
  * One important note here is that this class holds a pointer to the "owning"
  * WebRenderScrollData. The caller must ensure that this class does not outlive
  * the owning WebRenderScrollData, or this may result in use-after-free errors.
@@ -29,15 +39,88 @@ namespace layers {
  */
 class MOZ_STACK_CLASS WebRenderScrollDataWrapper {
 public:
-  explicit WebRenderScrollDataWrapper(const WebRenderScrollData* aData)
+  // Basic constructor for external callers. Starts the walker at the root of
+  // the tree.
+  explicit WebRenderScrollDataWrapper(const WebRenderScrollData* aData = nullptr)
     : mData(aData)
+    , mLayerIndex(0)
+    , mContainingSubtreeLastIndex(0)
+    , mLayer(nullptr)
+    , mMetadataIndex(0)
   {
+    if (!mData) {
+      return;
+    }
+    mLayer = mData->GetLayerData(mLayerIndex);
+    if (!mLayer) {
+      return;
+    }
+
+    // sanity check on the data
+    MOZ_ASSERT(mData->GetLayerCount() == (size_t)(1 + mLayer->GetDescendantCount()));
+    mContainingSubtreeLastIndex = mData->GetLayerCount();
+
+    // See documentation in LayerMetricsWrapper.h about this. mMetadataIndex
+    // in this class is equivalent to mIndex in that class.
+    mMetadataIndex = mLayer->GetScrollMetadataCount();
+    if (mMetadataIndex > 0) {
+      mMetadataIndex--;
+    }
+  }
+
+private:
+  // Internal constructor for walking from one WebRenderLayerScrollData to
+  // another. In this case we need to recompute the mMetadataIndex to be the
+  // "topmost" scroll metadata on the new layer.
+  WebRenderScrollDataWrapper(const WebRenderScrollData* aData,
+                             size_t aLayerIndex,
+                             size_t aContainingSubtreeLastIndex)
+    : mData(aData)
+    , mLayerIndex(aLayerIndex)
+    , mContainingSubtreeLastIndex(aContainingSubtreeLastIndex)
+    , mLayer(nullptr)
+    , mMetadataIndex(0)
+  {
+    MOZ_ASSERT(mData);
+    mLayer = mData->GetLayerData(mLayerIndex);
+    MOZ_ASSERT(mLayer);
+
+    // See documentation in LayerMetricsWrapper.h about this. mMetadataIndex
+    // in this class is equivalent to mIndex in that class.
+    mMetadataIndex = mLayer->GetScrollMetadataCount();
+    if (mMetadataIndex > 0) {
+      mMetadataIndex--;
+    }
+  }
+
+  // Internal constructor for walking from one metadata to another metadata on
+  // the same WebRenderLayerScrollData.
+  WebRenderScrollDataWrapper(const WebRenderScrollData* aData,
+                             size_t aLayerIndex,
+                             size_t aContainingSubtreeLastIndex,
+                             const WebRenderLayerScrollData* aLayer,
+                             uint32_t aMetadataIndex)
+    : mData(aData)
+    , mLayerIndex(aLayerIndex)
+    , mContainingSubtreeLastIndex(aContainingSubtreeLastIndex)
+    , mLayer(aLayer)
+    , mMetadataIndex(aMetadataIndex)
+  {
+    MOZ_ASSERT(mData);
+    MOZ_ASSERT(mLayer);
+    MOZ_ASSERT(mLayer == mData->GetLayerData(mLayerIndex));
+    MOZ_ASSERT(mMetadataIndex == 0 || mMetadataIndex < mLayer->GetScrollMetadataCount());
+  }
+
+public:
+  bool IsValid() const
+  {
+    return mLayer != nullptr;
   }
 
   explicit operator bool() const
   {
-    // TODO
-    return false;
+    return IsValid();
   }
 
   bool IsScrollInfoLayer() const
@@ -48,20 +131,59 @@ public:
 
   WebRenderScrollDataWrapper GetLastChild() const
   {
-    // TODO
-    return WebRenderScrollDataWrapper(nullptr);
+    MOZ_ASSERT(IsValid());
+
+    if (!AtBottomLayer()) {
+      // If we're still walking around in the virtual container layers created
+      // by the ScrollMetadata array, we just need to update the metadata index
+      // and that's it.
+      return WebRenderScrollDataWrapper(mData, mLayerIndex,
+          mContainingSubtreeLastIndex, mLayer, mMetadataIndex - 1);
+    }
+
+    // Otherwise, we need to walk to a different WebRenderLayerScrollData in
+    // mData.
+
+    // Since mData contains the layer in depth-first, last-to-first order,
+    // the index after mLayerIndex must be mLayerIndex's last child, if it
+    // has any children (indicated by GetDescendantCount() > 0). Furthermore
+    // we compute the first index outside the subtree rooted at this node
+    // (in |subtreeLastIndex|) and pass that in to the child wrapper to use as
+    // its mContainingSubtreeLastIndex.
+    if (mLayer->GetDescendantCount() > 0) {
+      size_t prevSiblingIndex = mLayerIndex + 1 + mLayer->GetDescendantCount();
+      size_t subtreeLastIndex = std::min(mContainingSubtreeLastIndex, prevSiblingIndex);
+      return WebRenderScrollDataWrapper(mData, mLayerIndex + 1, subtreeLastIndex);
+    }
+    return WebRenderScrollDataWrapper();
   }
 
   WebRenderScrollDataWrapper GetPrevSibling() const
   {
-    // TODO
-    return WebRenderScrollDataWrapper(nullptr);
+    MOZ_ASSERT(IsValid());
+
+    if (!AtTopLayer()) {
+      // The virtual container layers don't have siblings
+      return WebRenderScrollDataWrapper();
+    }
+
+    // Skip past the descendants to get to the previous sibling. However, we
+    // might be at the last sibling already.
+    size_t prevSiblingIndex = mLayerIndex + 1 + mLayer->GetDescendantCount();
+    if (prevSiblingIndex < mContainingSubtreeLastIndex) {
+      return WebRenderScrollDataWrapper(mData, prevSiblingIndex, mContainingSubtreeLastIndex);
+    }
+    return WebRenderScrollDataWrapper();
   }
 
   const ScrollMetadata& Metadata() const
   {
-    // TODO
-    return *ScrollMetadata::sNullMetadata;
+    MOZ_ASSERT(IsValid());
+
+    if (mMetadataIndex >= mLayer->GetScrollMetadataCount()) {
+      return *ScrollMetadata::sNullMetadata;
+    }
+    return mLayer->GetScrollMetadata(*mData, mMetadataIndex);
   }
 
   const FrameMetrics& Metrics() const
@@ -164,7 +286,33 @@ public:
   }
 
 private:
+  bool AtBottomLayer() const
+  {
+    return mMetadataIndex == 0;
+  }
+
+  bool AtTopLayer() const
+  {
+    return mLayer->GetScrollMetadataCount() == 0 || mMetadataIndex == mLayer->GetScrollMetadataCount() - 1;
+  }
+
+private:
   const WebRenderScrollData* mData;
+  // The index (in mData->mLayerScrollData) of the WebRenderLayerScrollData this
+  // wrapper is pointing to.
+  size_t mLayerIndex;
+  // The upper bound on the set of valid indices inside the subtree rooted at
+  // the parent of this "layer". That is, any layer index |i| in the range
+  // mLayerIndex <= i < mContainingSubtreeLastIndex is guaranteed to point to
+  // a layer that is a descendant of "parent", where "parent" is the parent
+  // layer of the layer at mLayerIndex. This is needed in order to implement
+  // GetPrevSibling() correctly.
+  size_t mContainingSubtreeLastIndex;
+  // The WebRenderLayerScrollData this wrapper is pointing to.
+  const WebRenderLayerScrollData* mLayer;
+  // The index of the scroll metadata within mLayer that this wrapper is
+  // pointing to.
+  uint32_t mMetadataIndex;
 };
 
 } // namespace layers
