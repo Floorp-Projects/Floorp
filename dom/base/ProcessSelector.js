@@ -7,9 +7,6 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import('resource://gre/modules/Services.jsm');
 
-const BASE_PREF = "dom.ipc.processCount"
-const PREF_BRANCH = BASE_PREF + ".";
-
 // Fills up aProcesses until max and then selects randomly from the available
 // ones.
 function RandomSelector() {
