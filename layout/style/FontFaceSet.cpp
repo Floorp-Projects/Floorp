@@ -1058,21 +1058,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
   }
 
   // set up unicode-range
-  nsAutoPtr<gfxCharacterMap> unicodeRanges;
-  aFontFace->GetDesc(eCSSFontDesc_UnicodeRange, val);
-  unit = val.GetUnit();
-  if (unit == eCSSUnit_Array) {
-    unicodeRanges = new gfxCharacterMap();
-    const nsCSSValue::Array& sources = *val.GetArrayValue();
-    MOZ_ASSERT(sources.Count() % 2 == 0,
-               "odd number of entries in a unicode-range: array");
-
-    for (uint32_t i = 0; i < sources.Count(); i += 2) {
-      uint32_t min = sources[i].GetIntValue();
-      uint32_t max = sources[i+1].GetIntValue();
-      unicodeRanges->SetRange(min, max);
-    }
-  }
+  gfxCharacterMap* unicodeRanges = aFontFace->GetUnicodeRangeAsCharacterMap();
 
   // set up src array
   nsTArray<gfxFontFaceSrc> srcArray;
@@ -1893,7 +1879,7 @@ FontFaceSet::UserFontSet::CreateUserFontEntry(
                                uint8_t aStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                uint32_t aLanguageOverride,
-                               gfxSparseBitSet* aUnicodeRanges,
+                               gfxCharacterMap* aUnicodeRanges,
                                uint8_t aFontDisplay)
 {
   RefPtr<gfxUserFontEntry> entry =

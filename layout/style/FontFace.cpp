@@ -108,6 +108,7 @@ FontFace::FontFace(nsISupports* aParent, FontFaceSet* aFontFaceSet)
   , mSourceBuffer(nullptr)
   , mSourceBufferLength(0)
   , mFontFaceSet(aFontFaceSet)
+  , mUnicodeRangeDirty(true)
   , mInFontFaceSet(false)
 {
 }
@@ -551,6 +552,10 @@ FontFace::SetDescriptor(nsCSSFontDesc aFontDesc,
 
   mDescriptors->Get(aFontDesc) = parsedValue;
 
+  if (aFontDesc == eCSSFontDesc_UnicodeRange) {
+    mUnicodeRangeDirty = true;
+  }
+
   // XXX Setting descriptors doesn't actually have any effect on FontFace
   // objects that have started loading or have already been loaded.
 }
@@ -806,6 +811,35 @@ FontFace::EnsurePromise()
       mLoaded->MaybeReject(mLoadedRejection);
     }
   }
+}
+
+gfxCharacterMap*
+FontFace::GetUnicodeRangeAsCharacterMap()
+{
+  if (!mUnicodeRangeDirty) {
+    return mUnicodeRange;
+  }
+
+  nsCSSValue val;
+  GetDesc(eCSSFontDesc_UnicodeRange, val);
+
+  if (val.GetUnit() == eCSSUnit_Array) {
+    mUnicodeRange = new gfxCharacterMap();
+    const nsCSSValue::Array& sources = *val.GetArrayValue();
+    MOZ_ASSERT(sources.Count() % 2 == 0,
+               "odd number of entries in a unicode-range: array");
+
+    for (uint32_t i = 0; i < sources.Count(); i += 2) {
+      uint32_t min = sources[i].GetIntValue();
+      uint32_t max = sources[i+1].GetIntValue();
+      mUnicodeRange->SetRange(min, max);
+    }
+  } else {
+    mUnicodeRange = nullptr;
+  }
+
+  mUnicodeRangeDirty = false;
+  return mUnicodeRange;
 }
 
 // -- FontFace::Entry --------------------------------------------------------
