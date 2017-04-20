@@ -34,6 +34,27 @@ WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
   }
 }
 
+int32_t
+WebRenderLayerScrollData::GetDescendantCount() const
+{
+  MOZ_ASSERT(mDescendantCount >= 0); // check that it was set
+  return mDescendantCount;
+}
+
+size_t
+WebRenderLayerScrollData::GetScrollMetadataCount() const
+{
+  return mScrollIds.Length();
+}
+
+const ScrollMetadata&
+WebRenderLayerScrollData::GetScrollMetadata(const WebRenderScrollData& aOwner,
+                                            size_t aIndex) const
+{
+  MOZ_ASSERT(aIndex < mScrollIds.Length());
+  return aOwner.GetScrollMetadata(mScrollIds[aIndex]);
+}
+
 WebRenderScrollData::WebRenderScrollData()
 {
 }
@@ -63,6 +84,12 @@ WebRenderScrollData::AddNewLayerData()
   return len;
 }
 
+size_t
+WebRenderScrollData::GetLayerCount() const
+{
+  return mLayerScrollData.Length();
+}
+
 WebRenderLayerScrollData*
 WebRenderScrollData::GetLayerDataMutable(size_t aIndex)
 {
@@ -70,6 +97,22 @@ WebRenderScrollData::GetLayerDataMutable(size_t aIndex)
     return nullptr;
   }
   return &(mLayerScrollData.ElementAt(aIndex));
+}
+
+const WebRenderLayerScrollData*
+WebRenderScrollData::GetLayerData(size_t aIndex) const
+{
+  if (aIndex >= mLayerScrollData.Length()) {
+    return nullptr;
+  }
+  return &(mLayerScrollData.ElementAt(aIndex));
+}
+
+const ScrollMetadata&
+WebRenderScrollData::GetScrollMetadata(size_t aIndex) const
+{
+  MOZ_ASSERT(aIndex < mScrollMetadatas.Length());
+  return mScrollMetadatas[aIndex];
 }
 
 } // namespace layers
