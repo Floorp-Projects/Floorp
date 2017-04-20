@@ -97,22 +97,26 @@ function test_setTabState() {
     ss.setTabValue(tab, "baz", "qux");
   }
 
-  function onSSTabRestored(aEvent) {
-    is(busyEventCount, 1);
-    is(readyEventCount, 1);
-    is(ss.getTabValue(tab, "baz"), "qux");
-    is(tab.linkedBrowser.currentURI.spec, "http://example.org/");
+  function onSSTabRestoring(aEvent) {
+    if (aEvent.target == tab) {
+      is(busyEventCount, 1);
+      is(readyEventCount, 1);
+      is(ss.getTabValue(tab, "baz"), "qux");
+      is(tab.linkedBrowser.currentURI.spec, "http://example.org/");
 
-    window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
-    window.removeEventListener("SSWindowStateReady", onSSWindowStateReady);
-    gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored);
+      window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+      window.removeEventListener("SSWindowStateReady", onSSWindowStateReady);
+      gBrowser.tabContainer.removeEventListener("SSTabRestoring", onSSTabRestoring);
 
-    runNextTest();
+      runNextTest();
+    }
   }
 
   window.addEventListener("SSWindowStateBusy", onSSWindowStateBusy);
   window.addEventListener("SSWindowStateReady", onSSWindowStateReady);
-  gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored);
+  gBrowser.tabContainer.addEventListener("SSTabRestoring", onSSTabRestoring);
+  // Browser must be inserted in order to restore.
+  gBrowser._insertBrowser(tab);
   ss.setTabState(tab, newTabState);
 }
 
@@ -137,23 +141,26 @@ function test_duplicateTab() {
     ss.setTabValue(newTab, "baz", "qux");
   }
 
-  function onSSTabRestored(aEvent) {
-    is(busyEventCount, 1);
-    is(readyEventCount, 1);
-    is(ss.getTabValue(newTab, "baz"), "qux");
-    is(newTab.linkedBrowser.currentURI.spec, "about:rights");
+  function onSSTabRestoring(aEvent) {
+    if (aEvent.target == newTab) {
+      is(busyEventCount, 1);
+      is(readyEventCount, 1);
+      is(ss.getTabValue(newTab, "baz"), "qux");
+      is(newTab.linkedBrowser.currentURI.spec, "about:rights");
 
-    window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
-    window.removeEventListener("SSWindowStateReady", onSSWindowStateReady);
-    gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored);
+      window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+      window.removeEventListener("SSWindowStateReady", onSSWindowStateReady);
+      gBrowser.tabContainer.removeEventListener("SSTabRestoring", onSSTabRestoring);
 
-    runNextTest();
+      runNextTest();
+    }
   }
 
   window.addEventListener("SSWindowStateBusy", onSSWindowStateBusy);
   window.addEventListener("SSWindowStateReady", onSSWindowStateReady);
-  gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored);
+  gBrowser.tabContainer.addEventListener("SSTabRestoring", onSSTabRestoring);
 
+  gBrowser._insertBrowser(tab);
   newTab = ss.duplicateTab(window, tab);
 }
 

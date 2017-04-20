@@ -9,6 +9,8 @@ add_task(function* () {
   // Set the pref to true so we know exactly how many tabs should be restoring at
   // any given time. This guarantees that a finishing load won't start another.
   Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", true);
+  // Don't restore tabs lazily.
+  Services.prefs.setBoolPref("browser.sessionstore.restore_tabs_lazily", false);
 
   let state = { windows: [{ tabs: [
     { entries: [{ url: "http://example.org#1", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
@@ -92,5 +94,7 @@ add_task(function* () {
   yield progressCallback();
 
   // Cleanup.
+  Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
+  Services.prefs.clearUserPref("browser.sessionstore.restore_tabs_lazily");
   yield promiseBrowserState(stateBackup);
 });
