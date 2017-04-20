@@ -179,7 +179,6 @@ public class WebViewDataTest {
 
         assertPathsHaveBeenRequested(webServer,
                 "/copper/truck/destroy?smoke=violet", // Actual URL
-                "/favicon.ico", // Thank you, WebView
                 "/copper/truck/service-worker.js"); // Our service worker is installed
 
         // Now let's assert that there are no surprises in the data directory
