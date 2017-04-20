@@ -31,8 +31,17 @@ public:
   static IPCStreamDestination*
   Cast(PParentToChildStreamChild* aActor);
 
-  virtual already_AddRefed<nsIInputStream>
+  void
+  SetDelayedStart(bool aDelayedStart);
+
+  already_AddRefed<nsIInputStream>
   TakeReader();
+
+  bool
+  IsOnOwningThread() const;
+
+  void
+  DispatchRunnable(already_AddRefed<nsIRunnable>&& aRunnable);
 
 protected:
   IPCStreamDestination();
@@ -51,7 +60,18 @@ protected:
   void
   CloseReceived(nsresult aRv);
 
+#ifdef DEBUG
+  bool
+  HasDelayedStart() const
+  {
+    return mDelayedStart;
+  }
+#endif
+
   // These methods will be implemented by the actor.
+
+  virtual void
+  StartReading() = 0;
 
   virtual void
   RequestClose(nsresult aRv) = 0;
@@ -59,8 +79,18 @@ protected:
   virtual void
   TerminateDestination() = 0;
 
+private:
   nsCOMPtr<nsIAsyncInputStream> mReader;
   nsCOMPtr<nsIAsyncOutputStream> mWriter;
+
+  // This is created by TakeReader() if we need to delay the reading of data.
+  // We keep a reference to the stream in order to inform it when the actor goes
+  // away. If that happens, the reading of data will not be possible anymore.
+  class DelayedStartInputStream;
+  RefPtr<DelayedStartInputStream> mDelayedStartInputStream;
+
+  nsCOMPtr<nsIThread> mOwningThread;
+  bool mDelayedStart;
 };
 
 } // namespace ipc
