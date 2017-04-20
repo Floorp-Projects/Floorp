@@ -33,7 +33,8 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsINode interface methods
-  virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
+                         bool aPreallocateChildren) const override;
 
   virtual nsIDOMNode* AsDOMNode() override { return this; }
 

@@ -167,7 +167,8 @@ public:
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               int32_t aModType) const;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
+                         bool aPreallocateChildren) const override
   {
     nsCOMPtr<nsINode> result = CloneDataNode(aNodeInfo, true);
     result.forget(aResult);

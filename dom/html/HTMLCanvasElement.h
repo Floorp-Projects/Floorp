@@ -307,8 +307,10 @@ public:
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                              bool aNotify) override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
-  nsresult CopyInnerTo(mozilla::dom::Element* aDest);
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
+                         bool aPreallocateChildren) const override;
+  nsresult CopyInnerTo(mozilla::dom::Element* aDest,
+                       bool aPreallocateChildren);
 
   virtual nsresult GetEventTargetParent(
                      mozilla::EventChainPreVisitor& aVisitor) override;

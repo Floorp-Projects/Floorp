@@ -63,9 +63,10 @@ public:
   // nsIContent
   virtual EventStates IntrinsicState() const override;
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
+                         bool aPreallocateChildren) const override;
 
-  nsresult CopyInnerTo(mozilla::dom::Element* aDest);
+  nsresult CopyInnerTo(mozilla::dom::Element* aDest, bool aPreallocateChildren);
 
   virtual bool IsDisabled() const override {
     return HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);

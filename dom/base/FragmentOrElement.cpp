@@ -2058,15 +2058,20 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(FragmentOrElement,
 //----------------------------------------------------------------------
 
 nsresult
-FragmentOrElement::CopyInnerTo(FragmentOrElement* aDst)
+FragmentOrElement::CopyInnerTo(FragmentOrElement* aDst,
+                               bool aPreallocateChildren)
 {
+  nsresult rv = aDst->mAttrsAndChildren.EnsureCapacityToClone(mAttrsAndChildren,
+                                                              aPreallocateChildren);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   uint32_t i, count = mAttrsAndChildren.AttrCount();
   for (i = 0; i < count; ++i) {
     const nsAttrName* name = mAttrsAndChildren.AttrNameAt(i);
     const nsAttrValue* value = mAttrsAndChildren.AttrAt(i);
     nsAutoString valStr;
     value->ToString(valStr);
-    nsresult rv = aDst->SetAttr(name->NamespaceID(), name->LocalName(),
+    rv = aDst->SetAttr(name->NamespaceID(), name->LocalName(),
                                 name->GetPrefix(), valStr, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }

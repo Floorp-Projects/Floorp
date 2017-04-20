@@ -1872,7 +1872,8 @@ XULDocument::RemoveElementFromRefMap(Element* aElement)
 //
 
 nsresult
-XULDocument::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
+XULDocument::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
+                   bool aPreallocateChildren) const
 {
     // We don't allow cloning of a XUL document
     *aResult = nullptr;

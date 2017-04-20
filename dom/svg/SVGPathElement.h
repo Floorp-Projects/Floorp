@@ -58,7 +58,8 @@ public:
   virtual already_AddRefed<Path> GetOrBuildPathForMeasuring() override;
 
   // nsIContent interface
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
+                         bool aPreallocateChildren) const override;
 
   virtual SVGAnimatedPathSegList* GetAnimPathSegList() override {
     return &mD;

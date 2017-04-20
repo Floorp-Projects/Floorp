@@ -44,7 +44,8 @@ public:
           int32_t aNameSpaceID, nsIAtom* aAttribute) const override;
   virtual nsSVGString& GetResultImageName() override { return mStringAttributes[RESULT]; }
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
+                         bool aPreallocateChildren) const override;
 
   // WebIDL
   already_AddRefed<SVGAnimatedNumber> BaseFrequencyX();
