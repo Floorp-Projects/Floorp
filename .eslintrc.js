@@ -18,6 +18,8 @@ module.exports = {
 
     // No (!foo in bar) or (!object instanceof Class)
     "no-unsafe-negation": "error",
+    // No eval() and no strings in the first param of setTimeout or setInterval
+    "no-implied-eval": "error",
   },
   "env": {
     "es6": true
