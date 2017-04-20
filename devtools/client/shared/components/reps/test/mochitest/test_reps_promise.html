@@ -22,9 +22,10 @@ window.onload = Task.async(function* () {
   const {
     REPS,
     MODE,
+    getRep,
     getSelectableInInspectorGrips,
   } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, PromiseRep } = REPS;
+  let { PromiseRep } = REPS;
 
   const componentUnderTest = PromiseRep;
 
@@ -51,9 +52,8 @@ window.onload = Task.async(function* () {
     const stub = getGripStub("testPending");
 
     // Test that correct rep is chosen.
-    const renderedRep = shallowRenderComponent(Rep, { object: stub });
-    is(renderedRep.type, PromiseRep.rep,
-      `Rep correctly selects ${PromiseRep.rep.displayName} for pending Promise`);
+    is(getRep(stub), PromiseRep.rep,
+      "Rep correctly selects PromiseRep Rep for pending Promise");
 
     // Test rendering
     const defaultOutput = `Promise { <state>: "pending" }`;
@@ -84,10 +84,8 @@ window.onload = Task.async(function* () {
     const stub = getGripStub("testFulfilledWithNumber");
 
     // Test that correct rep is chosen.
-    const renderedRep = shallowRenderComponent(Rep, { object: stub });
-    const {displayName} = PromiseRep.rep;
-    is(renderedRep.type, PromiseRep.rep,
-      `Rep correctly selects ${displayName} for Promise fulfilled with a number`);
+    is(getRep(stub), PromiseRep.rep,
+      "Rep correctly selects PromiseRep Rep for Promise fulfilled with a number");
 
     // Test rendering
     const defaultOutput = `Promise { <state>: "fulfilled", <value>: 42 }`;
@@ -118,10 +116,8 @@ window.onload = Task.async(function* () {
     const stub = getGripStub("testFulfilledWithString");
 
     // Test that correct rep is chosen.
-    const renderedRep = shallowRenderComponent(Rep, { object: stub });
-    const {displayName} = PromiseRep.rep;
-    is(renderedRep.type, PromiseRep.rep,
-      `Rep correctly selects ${displayName} for Promise fulfilled with a string`);
+    is(getRep(stub), PromiseRep.rep,
+      "Rep correctly selects PromiseRep Rep for Promise fulfilled with a string");
 
     // Test rendering
     const defaultOutput = `Promise { <state>: "fulfilled", <value>: "foo" }`;
@@ -153,10 +149,8 @@ window.onload = Task.async(function* () {
     const stub = getGripStub("testFulfilledWithObject");
 
     // Test that correct rep is chosen.
-    const renderedRep = shallowRenderComponent(Rep, { object: stub });
-    const {displayName} = PromiseRep.rep;
-    is(renderedRep.type, PromiseRep.rep,
-      `Rep correctly selects ${displayName} for Promise fulfilled with an object`);
+    is(getRep(stub), PromiseRep.rep,
+      "Rep correctly selects PromiseRep Rep for Promise fulfilled with an object");
 
     // Test rendering
     const defaultOutput = `Promise { <state>: "fulfilled", <value>: Object }`;
@@ -188,10 +182,8 @@ window.onload = Task.async(function* () {
     const stub = getGripStub("testFulfilledWithArray");
 
     // Test that correct rep is chosen.
-    const renderedRep = shallowRenderComponent(Rep, { object: stub });
-    const {displayName} = PromiseRep.rep;
-    is(renderedRep.type, PromiseRep.rep,
-      `Rep correctly selects ${displayName} for Promise fulfilled with an array`);
+    is(getRep(stub), PromiseRep.rep,
+      "Rep correctly selects PromiseRep Rep for Promise fulfilled with an array");
 
     // Test rendering
     const defaultOutput = `Promise { <state>: "fulfilled", <value>: [3] }`;
@@ -223,7 +215,6 @@ window.onload = Task.async(function* () {
 
     const grips = getSelectableInInspectorGrips(stub);
     is(grips.length, 1, "the stub has one node grip");
-    const attachedActorIds = getStubAttachedActorIds(grips);
 
     let mouseOverValue;
     let onDOMNodeMouseOver = (object) => {
@@ -233,7 +224,6 @@ window.onload = Task.async(function* () {
     const renderedComponent = renderComponent(PromiseRep.rep, {
       object: stub,
       onDOMNodeMouseOver,
-      attachedActorIds,
     });
 
     const node = renderedComponent.querySelector(".objectBox-node");
@@ -248,7 +238,6 @@ window.onload = Task.async(function* () {
 
     const grips = getSelectableInInspectorGrips(stub);
     is(grips.length, 1, "the stub has one node grip");
-    const attachedActorIds = getStubAttachedActorIds(grips);
 
     let called = false;
     let onDOMNodeMouseOut = (object) => {
@@ -257,7 +246,6 @@ window.onload = Task.async(function* () {
     const renderedComponent = renderComponent(PromiseRep.rep, {
       object: stub,
       onDOMNodeMouseOut,
-      attachedActorIds,
     });
 
     const node = renderedComponent.querySelector(".objectBox-node");
@@ -269,10 +257,8 @@ window.onload = Task.async(function* () {
 
   function testOnDomNodeInspectIconClick() {
     const stub = getGripStub("testFulfilledWithNode");
-
     const grips = getSelectableInInspectorGrips(stub);
     is(grips.length, 1, "the stub has one node grip");
-    const attachedActorIds = getStubAttachedActorIds(grips);
 
     let inspectIconClickedValues = null;
     let onInspectIconClick = (object) => {
@@ -280,17 +266,15 @@ window.onload = Task.async(function* () {
     };
 
     let renderedComponentWithoutInspectIcon = renderComponent(PromiseRep.rep, {
-      object: stub,
+      object: getGripStub("testFulfilledWithDisconnectedNode"),
       onInspectIconClick,
-      attachedActorIds: ["someOtherId"],
     });
     is(renderedComponentWithoutInspectIcon.querySelector(".open-inspector"), null,
-      "There isn't an inspect icon when the actor is not in attachedActorIds");
+      "There isn't an inspect icon when the node is not connected to the DOM tree");
 
     const renderedComponent = renderComponent(PromiseRep.rep, {
       object: stub,
       onInspectIconClick,
-      attachedActorIds,
     });
 
     const icon = renderedComponent.querySelector(".open-inspector");
@@ -474,6 +458,46 @@ window.onload = Task.async(function* () {
                 "kind": "DOMNode",
                 "nodeType": 1,
                 "nodeName": "button",
+                "isConnected": true,
+                "attributes": {
+                  "id": "btn-1",
+                  "class": "btn btn-log",
+                  "type": "button"
+                },
+                "attributesLength": 3
+              }
+            },
+            "creationTimestamp": 1480423091620.3716,
+            "timeToSettle": 0.02842400000372436
+          },
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "Object",
+            "ownProperties": {},
+            "ownPropertiesLength": 0,
+            "safeGetterValues": {}
+          }
+        };
+      case "testFulfilledWithDisconnectedNode":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj217",
+          "class": "Promise",
+          "promiseState": {
+            "state": "fulfilled",
+            "value": {
+              "type": "object",
+              "actor": "server1.conn1.child1/obj218",
+              "class": "HTMLButtonElement",
+              "extensible": true,
+              "frozen": false,
+              "sealed": false,
+              "ownPropertyLength": 0,
+              "preview": {
+                "kind": "DOMNode",
+                "nodeType": 1,
+                "nodeName": "button",
+                "isConnected": false,
                 "attributes": {
                   "id": "btn-1",
                   "class": "btn btn-log",

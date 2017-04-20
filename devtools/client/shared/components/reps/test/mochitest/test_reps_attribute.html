@@ -17,8 +17,11 @@ Test Attribute rep
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
 window.onload = Task.async(function* () {
-  const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, Attribute } = REPS;
+  const {
+    REPS,
+    getRep,
+  } = browserRequire("devtools/client/shared/components/reps/reps");
+  let { Attribute } = REPS;
 
   try {
     testBasic();
@@ -31,8 +34,7 @@ window.onload = Task.async(function* () {
 
   function testBasic() {
     // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, { object: getStub() });
-    is(renderedRep.type, Attribute.rep, `Rep correctly selects ${Attribute.rep.displayName}`);
+    is(getRep(getStub()), Attribute.rep, "Rep correctly selects Attribute Rep");
 
     // Test rendering
     const renderedComponent = renderComponent(Attribute.rep, { object: getStub() });

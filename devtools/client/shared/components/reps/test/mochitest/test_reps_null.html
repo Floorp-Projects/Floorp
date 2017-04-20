@@ -18,16 +18,18 @@ Test Null rep
 <script type="application/javascript">
 window.onload = Task.async(function* () {
   try {
-    const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
-    let { Rep, Null } = REPS;
+    const {
+      REPS,
+      getRep,
+    } = browserRequire("devtools/client/shared/components/reps/reps");
+    let { Null } = REPS;
 
     let gripStub = {
       "type": "null"
     };
 
     // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
-    is(renderedRep.type, Null.rep, `Rep correctly selects ${Null.rep.displayName}`);
+    is(getRep(gripStub), Null.rep, "Rep correctly selects Null Rep");
 
     // Test rendering
     const renderedComponent = renderComponent(Null.rep, { object: gripStub });

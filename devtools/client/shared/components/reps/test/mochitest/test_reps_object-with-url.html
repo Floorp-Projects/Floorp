@@ -21,8 +21,11 @@ window.onload = Task.async(function* () {
     let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     let React = browserRequire("devtools/client/shared/vendor/react");
 
-    const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
-    let { Rep, ObjectWithURL } = REPS;
+    const {
+      REPS,
+      getRep,
+    } = browserRequire("devtools/client/shared/components/reps/reps");
+    let { ObjectWithURL } = REPS;
 
     let gripStub = {
       "type": "object",
@@ -39,8 +42,7 @@ window.onload = Task.async(function* () {
     };
 
     // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
-    is(renderedRep.type, ObjectWithURL.rep, `Rep correctly selects ${ObjectWithURL.rep.displayName}`);
+    is(getRep(gripStub), ObjectWithURL.rep, "Rep correctly selects ObjectWithURL Rep");
 
     // Test rendering
     const renderedComponent = renderComponent(ObjectWithURL.rep, { object: gripStub });
