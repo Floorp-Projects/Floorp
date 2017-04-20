@@ -218,7 +218,7 @@ pub type WebDriverResult<T> = Result<T, WebDriverError>;
 pub struct WebDriverError {
     pub error: ErrorStatus,
     pub message: Cow<'static, str>,
-    pub backtrace: Backtrace,
+    pub stack: Cow<'static, str>,
     pub delete_session: bool,
 }
 
@@ -229,7 +229,18 @@ impl WebDriverError {
         WebDriverError {
             error: error,
             message: message.into(),
-            backtrace: Backtrace::new(),
+            stack: format!("{:?}", Backtrace::new()).into(),
+            delete_session: false,
+        }
+    }
+
+    pub fn new_with_stack<S>(error: ErrorStatus, message: S, stack: S) -> WebDriverError
+        where S: Into<Cow<'static, str>>
+    {
+        WebDriverError {
+            error: error,
+            message: message.into(),
+            stack: stack.into(),
             delete_session: false,
         }
     }
@@ -252,8 +263,8 @@ impl ToJson for WebDriverError {
         let mut data = BTreeMap::new();
         data.insert("error".into(), self.error_code().to_json());
         data.insert("message".into(), self.message.to_json());
-        data.insert("stacktrace".into(),
-                    format!("{:?}", self.backtrace).to_json());
+        data.insert("stacktrace".into(), self.stack.to_json());
+
         let mut wrapper = BTreeMap::new();
         wrapper.insert("value".into(), Json::Object(data));
         Json::Object(wrapper)
