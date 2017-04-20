@@ -238,6 +238,7 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   : mWidget(aWidget)
   , mLatestTransactionId(0)
   , mNeedsComposite(false)
+  , mIsFirstPaint(false)
   , mTarget(nullptr)
 {
   MOZ_COUNT_CTOR(WebRenderLayerManager);
@@ -403,8 +404,14 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   }
 
   WebRenderScrollData scrollData;
-  if (mRoot && mWidget->AsyncPanZoomEnabled()) {
-    PopulateScrollData(scrollData, mRoot.get());
+  if (mWidget->AsyncPanZoomEnabled()) {
+    if (mIsFirstPaint) {
+      scrollData.SetIsFirstPaint();
+      mIsFirstPaint = false;
+    }
+    if (mRoot) {
+      PopulateScrollData(scrollData, mRoot.get());
+    }
   }
 
   bool sync = mTarget != nullptr;
