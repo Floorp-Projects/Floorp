@@ -594,7 +594,7 @@ Experiments.Experiments.prototype = {
   }),
 
   _telemetryStatusChanged() {
-    this._toggleExperimentsEnabled(gPrefs.get(PREF_ENABLED, false));
+    this._toggleExperimentsEnabled(gExperimentsEnabled);
   },
 
   /**
