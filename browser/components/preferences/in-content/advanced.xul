@@ -47,7 +47,6 @@
       hidden="true"
       data-category="paneAdvanced">
   <label class="header-name" flex="1">&paneUpdates.title;</label>
-  <html:a class="help-button" target="_blank" aria-label="&helpButton.label;"></html:a>
 </hbox>
 
 <!-- Update -->

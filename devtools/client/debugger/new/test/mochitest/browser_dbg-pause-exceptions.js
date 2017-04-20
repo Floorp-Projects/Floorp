@@ -20,6 +20,7 @@ add_task(function* () {
   const dbg = yield initDebugger("doc-exceptions.html");
 
   // test skipping an uncaught exception
+  yield togglePauseOnExceptions(dbg, false, false);
   yield uncaughtException();
   ok(!isPaused(dbg));
 
