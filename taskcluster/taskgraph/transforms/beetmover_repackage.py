@@ -129,20 +129,20 @@ def make_task_description(config, jobs):
         # images and thus have two dependencies
         # change the signing_dependencies to be use the ones in
         docker_dependencies = {"docker-image":
-                                dep_job.dependencies["docker-image"]
+                               dep_job.dependencies["docker-image"]
                                }
         dependencies.update(docker_dependencies)
         signing_dependencies = {"build-signing":
                                 dep_job.dependencies["build-signing"]
-                               }
+                                }
         dependencies.update(signing_dependencies)
         repackage_dependencies = {"repackage":
                                   dep_job.label
-                                 }
+                                  }
         dependencies.update(repackage_dependencies)
         build_dependencies = {"build":
-                              dep_job.dependencies["build-signing"].replace("signing-","build-")
-                             }
+                              dep_job.dependencies["build-signing"].replace("signing-", "build-")
+                              }
         dependencies.update(build_dependencies)
 
         attributes = {
