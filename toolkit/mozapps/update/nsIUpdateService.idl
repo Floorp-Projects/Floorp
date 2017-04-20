@@ -184,12 +184,6 @@ interface nsIUpdate : nsISupports
   attribute boolean isSecurityUpdate;
 
   /**
-   * Whether or not the update being downloaded is an OS update. This is
-   * generally only possible in Gonk right now.
-   */
-  attribute boolean isOSUpdate;
-
-  /**
    * When the update was installed.
    */
   attribute long long installDate;
@@ -385,14 +379,6 @@ interface nsIApplicationUpdateService : nsISupports
    *
    */
   AString downloadUpdate(in nsIUpdate update, in boolean background);
-
-  /**
-   * Apply the OS update which has been downloaded and staged as applied.
-   * @param   update 
-   *          The update has been downloaded and staged as applied.
-   * @throws  if the update object is not an OS update.
-   */
-  void applyOsUpdate(in nsIUpdate update);
 
   /**
    * Get the Active Updates directory

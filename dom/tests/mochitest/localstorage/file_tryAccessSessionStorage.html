@@ -1,0 +1,10 @@
+<script>
+  try {
+    sessionStorage.setItem("am_i_blocked", "nope");
+    window.parent.postMessage('sessionStorage=true', '*');
+    document.body.innerHTML += 'yes';
+  } catch (ex) {
+    window.parent.postMessage('sessionStorage=false', '*');
+    document.body.innerHTML += 'no';
+  }
+</script>

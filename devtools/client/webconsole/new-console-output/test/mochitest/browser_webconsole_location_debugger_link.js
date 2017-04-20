@@ -67,7 +67,7 @@ function* checkClickOnNode(hud, toolbox, frameLinkNode) {
 
   let dbg = toolbox.getPanel("jsdebugger");
   is(
-    dbg._selectors.getSelectedSource(dbg._getState()).get("url"),
+    dbg._selectors().getSelectedSource(dbg._getState()).get("url"),
     url,
     "expected source url"
   );
