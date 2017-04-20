@@ -1308,6 +1308,8 @@ public:
         // update mFirstChild before calling UnbindFromTree, since this last
         // can notify various observers and they should really see consistent
         // tree state.
+        // If this code changes, change the corresponding code in
+        // FragmentOrElement's and nsDocument's unlink impls.
         nsCOMPtr<nsIContent> child =
           container->mAttrsAndChildren.TakeChildAt(childCount);
         if (childCount == 0) {
@@ -1421,6 +1423,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
         // update mFirstChild before calling UnbindFromTree, since this last
         // can notify various observers and they should really see consistent
         // tree state.
+        // If this code changes, change the corresponding code in nsDocument's
+        // unlink impl and ContentUnbinder::UnbindSubtree.
         nsCOMPtr<nsIContent> child = tmp->mAttrsAndChildren.TakeChildAt(childCount);
         if (childCount == 0) {
           tmp->mFirstChild = nullptr;

@@ -54,10 +54,16 @@ pub enum TransitionProperty {
             ${prop.camel_case},
         % endif
     % endfor
+    // Shorthand properties may or may not contain any animatable property. Either should still be
+    // parsed properly.
+    % for prop in data.shorthands_except_all():
+        /// ${prop.name}
+        ${prop.camel_case},
+    % endfor
 }
 
 impl TransitionProperty {
-    /// Iterates over each property that is not `All`.
+    /// Iterates over each longhand property.
     pub fn each<F: FnMut(TransitionProperty) -> ()>(mut cb: F) {
         % for prop in data.longhands:
             % if prop.animatable:
@@ -87,6 +93,9 @@ impl TransitionProperty {
                 % if prop.animatable:
                     "${prop.name}" => Ok(TransitionProperty::${prop.camel_case}),
                 % endif
+            % endfor
+            % for prop in data.shorthands_except_all():
+                "${prop.name}" => Ok(TransitionProperty::${prop.camel_case}),
             % endfor
             _ => Err(())
         }
@@ -118,13 +127,43 @@ impl TransitionProperty {
         }
     }
 
-    /// Returns true if this TransitionProperty is one of the discrete animatable properties.
+    /// Returns true if this TransitionProperty is one of the discrete animatable properties and
+    /// this TransitionProperty should be a longhand property.
     pub fn is_discrete(&self) -> bool {
         match *self {
             % for prop in data.longhands:
                 % if prop.animation_type == "discrete":
                     TransitionProperty::${prop.camel_case} => true,
                 % endif
+            % endfor
+            _ => false
+        }
+    }
+
+    /// Return animatable longhands of this shorthand TransitionProperty, except for "all".
+    pub fn longhands(&self) -> &'static [TransitionProperty] {
+        % for prop in data.shorthands_except_all():
+            static ${prop.ident.upper()}: &'static [TransitionProperty] = &[
+                % for sub in prop.sub_properties:
+                    % if sub.animatable:
+                        TransitionProperty::${sub.camel_case},
+                    % endif
+                % endfor
+            ];
+        % endfor
+        match *self {
+            % for prop in data.shorthands_except_all():
+                TransitionProperty::${prop.camel_case} => ${prop.ident.upper()},
+            % endfor
+            _ => panic!("Not allowed to call longhands() for this TransitionProperty")
+        }
+    }
+
+    /// Returns true if this TransitionProperty is a shorthand.
+    pub fn is_shorthand(&self) -> bool {
+        match *self {
+            % for prop in data.shorthands_except_all():
+                TransitionProperty::${prop.camel_case} => true,
             % endfor
             _ => false
         }
@@ -155,6 +194,9 @@ impl ToCss for TransitionProperty {
                     TransitionProperty::${prop.camel_case} => dest.write_str("${prop.name}"),
                 % endif
             % endfor
+            % for prop in data.shorthands_except_all():
+                TransitionProperty::${prop.camel_case} => dest.write_str("${prop.name}"),
+            % endfor
         }
     }
 }
@@ -170,6 +212,10 @@ impl From<TransitionProperty> for nsCSSPropertyID {
                     TransitionProperty::${prop.camel_case}
                         => ${helpers.to_nscsspropertyid(prop.ident)},
                 % endif
+            % endfor
+            % for prop in data.shorthands_except_all():
+                TransitionProperty::${prop.camel_case}
+                    => ${helpers.to_nscsspropertyid(prop.ident)},
             % endfor
             TransitionProperty::All => nsCSSPropertyID::eCSSPropertyExtra_all_properties,
         }
@@ -187,6 +233,10 @@ impl From<nsCSSPropertyID> for TransitionProperty {
                     ${helpers.to_nscsspropertyid(prop.ident)}
                         => TransitionProperty::${prop.camel_case},
                 % endif
+            % endfor
+            % for prop in data.shorthands_except_all():
+                ${helpers.to_nscsspropertyid(prop.ident)}
+                    => TransitionProperty::${prop.camel_case},
             % endfor
             nsCSSPropertyID::eCSSPropertyExtra_all_properties => TransitionProperty::All,
             _ => panic!("Unsupported Servo transition property: {:?}", property),
@@ -206,7 +256,7 @@ impl<'a> From<TransitionProperty> for PropertyDeclarationId<'a> {
                         => PropertyDeclarationId::Longhand(LonghandId::${prop.camel_case}),
                 % endif
             % endfor
-            TransitionProperty::All => panic!(),
+            _ => panic!(),
         }
     }
 }
@@ -304,6 +354,7 @@ impl AnimatedProperty {
                     }
                 % endif
             % endfor
+            other => panic!("Can't use TransitionProperty::{:?} here", other),
         }
     }
 }
@@ -459,6 +510,7 @@ impl AnimationValue {
                     }
                 % endif
             % endfor
+            other => panic!("Can't use TransitionProperty::{:?} here.", other),
         }
     }
 }
@@ -1075,6 +1127,7 @@ fn build_identity_transform_list(list: &[TransformOperation]) -> Vec<TransformOp
                 let identity = ComputedMatrix::identity();
                 result.push(TransformOperation::Matrix(identity));
             }
+            TransformOperation::MatrixWithPercents(..) => {}
             TransformOperation::Skew(..) => {
                 result.push(TransformOperation::Skew(Angle::zero(), Angle::zero()))
             }
@@ -1114,6 +1167,12 @@ fn interpolate_transform_list(from_list: &[TransformOperation],
                  &TransformOperation::Matrix(_to)) => {
                     let interpolated = from.interpolate(&_to, progress).unwrap();
                     result.push(TransformOperation::Matrix(interpolated));
+                }
+                (&TransformOperation::MatrixWithPercents(_),
+                 &TransformOperation::MatrixWithPercents(_)) => {
+                    // We don't interpolate `-moz-transform` matrices yet.
+                    // They contain percentage values.
+                    {}
                 }
                 (&TransformOperation::Skew(fx, fy),
                  &TransformOperation::Skew(tx, ty)) => {

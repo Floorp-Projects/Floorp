@@ -12,6 +12,7 @@
 
 #include "jscntxt.h"
 #include "jsexn.h"
+#include "jsfriendapi.h"
 #include "jsiter.h"
 
 #include "gc/Heap.h"
@@ -810,6 +811,13 @@ RejectMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue re
         if (!promise->compartment()->wrap(cx, &reason))
             return false;
         if (reason.isObject() && !CheckedUnwrap(&reason.toObject())) {
+            // Report the existing reason, so we don't just drop it on the
+            // floor.
+            RootedObject realReason(cx, UncheckedUnwrap(&reason.toObject()));
+            RootedValue realReasonVal(cx, ObjectValue(*realReason));
+            RootedObject realGlobal(cx, &realReason->global());
+            ReportErrorToGlobal(cx, realGlobal, realReasonVal);
+
             // Async stacks are only properly adopted if there's at least one
             // interpreter frame active right now. If a thenable job with a
             // throwing `then` function got us here, that'll not be the case,

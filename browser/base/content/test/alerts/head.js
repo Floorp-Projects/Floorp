@@ -1,22 +1,3 @@
-function promiseAlertWindow() {
-  return new Promise(function(resolve) {
-    let listener = {
-      onOpenWindow(window) {
-        let alertWindow = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
-        alertWindow.addEventListener("load", function() {
-          let windowType = alertWindow.document.documentElement.getAttribute("windowtype");
-          if (windowType != "alert:alert") {
-            return;
-          }
-          Services.wm.removeListener(listener);
-          resolve(alertWindow);
-        }, {once: true});
-      },
-    };
-    Services.wm.addListener(listener);
-  });
-}
-
 /**
  * Similar to `BrowserTestUtils.closeWindow`, but
  * doesn't call `window.close()`.

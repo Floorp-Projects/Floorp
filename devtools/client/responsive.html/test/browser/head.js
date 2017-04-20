@@ -274,23 +274,10 @@ const selectNetworkThrottling = (ui, value) => Promise.all([
 function getSessionHistory(browser) {
   return ContentTask.spawn(browser, {}, function* () {
     /* eslint-disable no-undef */
-    let { interfaces: Ci } = Components;
-    let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-    let sessionHistory = webNav.sessionHistory;
-    let result = {
-      index: sessionHistory.index,
-      entries: []
-    };
-
-    for (let i = 0; i < sessionHistory.count; i++) {
-      let entry = sessionHistory.getEntryAtIndex(i, false);
-      result.entries.push({
-        uri: entry.URI.spec,
-        title: entry.title
-      });
-    }
-
-    return result;
+    let { utils: Cu } = Components;
+    const { SessionHistory } =
+      Cu.import("resource://gre/modules/sessionstore/SessionHistory.jsm", {});
+    return SessionHistory.collect(docShell);
     /* eslint-enable no-undef */
   });
 }

@@ -26,73 +26,84 @@ struct SemaphoreData {
 
 namespace mozilla {
 
-CrossProcessSemaphore::CrossProcessSemaphore(const char*, uint32_t aInitialValue)
-    : mSemaphore(nullptr)
-    , mRefCount(nullptr)
+/* static */ CrossProcessSemaphore*
+CrossProcessSemaphore::Create(const char*, uint32_t aInitialValue)
 {
-  mSharedBuffer = new ipc::SharedMemoryBasic;
-  if (!mSharedBuffer->Create(sizeof(SemaphoreData))) {
-    MOZ_CRASH();
+  RefPtr<ipc::SharedMemoryBasic> sharedBuffer = new ipc::SharedMemoryBasic;
+  if (!sharedBuffer->Create(sizeof(SemaphoreData))) {
+    return nullptr;
   }
 
-  if (!mSharedBuffer->Map(sizeof(SemaphoreData))) {
-    MOZ_CRASH();
+  if (!sharedBuffer->Map(sizeof(SemaphoreData))) {
+    return nullptr;
   }
 
-  SemaphoreData* data = static_cast<SemaphoreData*>(mSharedBuffer->memory());
+  SemaphoreData* data = static_cast<SemaphoreData*>(sharedBuffer->memory());
 
   if (!data) {
-    MOZ_CRASH();
+    return nullptr;
   }
+
+  if (sem_init(&data->mSemaphore, 1, aInitialValue)) {
+    return nullptr;
+  }
+
+  CrossProcessSemaphore* sem = new CrossProcessSemaphore;
+  sem->mSharedBuffer = sharedBuffer;
+  sem->mSemaphore = &data->mSemaphore;
+  sem->mRefCount = &data->mRefCount;
+  *sem->mRefCount = 1;
 
   data->mInitialValue = aInitialValue;
-  mSemaphore = &data->mSemaphore;
-  mRefCount = &data->mRefCount;
 
-  *mRefCount = 1;
-  if (sem_init(mSemaphore, 1, data->mInitialValue)) {
-    MOZ_CRASH();
-  }
-
-  MOZ_COUNT_CTOR(CrossProcessSemaphore);
+  return sem;
 }
 
-CrossProcessSemaphore::CrossProcessSemaphore(CrossProcessSemaphoreHandle aHandle)
-    : mSemaphore(nullptr)
-    , mRefCount(nullptr)
+/* static */ CrossProcessSemaphore*
+CrossProcessSemaphore::Create(CrossProcessSemaphoreHandle aHandle)
 {
-  mSharedBuffer = new ipc::SharedMemoryBasic;
+  RefPtr<ipc::SharedMemoryBasic> sharedBuffer = new ipc::SharedMemoryBasic;
 
-  if (!mSharedBuffer->IsHandleValid(aHandle)) {
-    MOZ_CRASH();
+  if (!sharedBuffer->IsHandleValid(aHandle)) {
+    return nullptr;
   }
 
-  if (!mSharedBuffer->SetHandle(aHandle, ipc::SharedMemory::RightsReadWrite)) {
-    MOZ_CRASH();
+  if (!sharedBuffer->SetHandle(aHandle, ipc::SharedMemory::RightsReadWrite)) {
+    return nullptr;
   }
 
-  if (!mSharedBuffer->Map(sizeof(SemaphoreData))) {
-    MOZ_CRASH();
+  if (!sharedBuffer->Map(sizeof(SemaphoreData))) {
+    return nullptr;
   }
 
-  SemaphoreData* data = static_cast<SemaphoreData*>(mSharedBuffer->memory());
+  SemaphoreData* data = static_cast<SemaphoreData*>(sharedBuffer->memory());
 
   if (!data) {
-    MOZ_CRASH();
+    return nullptr;
   }
 
-  mSemaphore = &data->mSemaphore;
-  mRefCount = &data->mRefCount;
-  int32_t oldCount = (*mRefCount)++;
-
+  int32_t oldCount = data->mRefCount++;
   if (oldCount == 0) {
     // The other side has already let go of their CrossProcessSemaphore, so now
     // mSemaphore is garbage. We need to re-initialize it.
-    if (sem_init(mSemaphore, 1, data->mInitialValue)) {
-      MOZ_CRASH();
+    if (sem_init(&data->mSemaphore, 1, data->mInitialValue)) {
+      data->mRefCount--;
+      return nullptr;
     }
   }
 
+  CrossProcessSemaphore* sem = new CrossProcessSemaphore;
+  sem->mSharedBuffer = sharedBuffer;
+  sem->mSemaphore = &data->mSemaphore;
+  sem->mRefCount = &data->mRefCount;
+  return sem;
+}
+
+
+CrossProcessSemaphore::CrossProcessSemaphore()
+  : mSemaphore(nullptr)
+  , mRefCount(nullptr)
+{
   MOZ_COUNT_CTOR(CrossProcessSemaphore);
 }
 

@@ -37,7 +37,7 @@ def build_dict(config, env=os.environ):
     known_os = {"Linux": "linux",
                 "WINNT": "win",
                 "Darwin": "mac",
-                "Android": "b2g" if substs.get("MOZ_WIDGET_TOOLKIT") == "gonk" else "android"}
+                "Android": "android"}
     if o in known_os:
         d["os"] = known_os[o]
     else:
@@ -111,14 +111,6 @@ def build_dict(config, env=os.environ):
                 p = '{}-asan'.format(p)
 
             return p
-
-        if d['buildapp'] == 'b2g':
-            if d['toolkit'] == 'gonk':
-                return 'emulator'
-
-            if d['bits'] == 64:
-                return 'linux64_gecko'
-            return 'linux32_gecko'
 
         if d['buildapp'] == 'mobile/android':
             if d['processor'] == 'x86':

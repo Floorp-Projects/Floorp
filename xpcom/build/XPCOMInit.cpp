@@ -6,7 +6,6 @@
 
 #include "base/basictypes.h"
 
-#include "mozilla/AbstractThread.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Poison.h"
 #include "mozilla/SharedThreadPool.h"
@@ -681,9 +680,6 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   }
   sInitializedJS = true;
   
-  // Init AbstractThread.
-  AbstractThread::InitStatics();
-
   rv = nsComponentManagerImpl::gComponentManager->Init();
   if (NS_FAILED(rv)) {
     NS_RELEASE(nsComponentManagerImpl::gComponentManager);
@@ -791,7 +787,6 @@ NS_InitMinimalXPCOM()
     return NS_ERROR_UNEXPECTED;
   }
 
-  AbstractThread::InitStatics();
   SharedThreadPool::InitStatics();
   mozilla::Telemetry::Init();
   mozilla::HangMonitor::Startup();

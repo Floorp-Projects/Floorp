@@ -231,12 +231,9 @@ var gSearchResultsPane = {
         let strings = this.strings;
         document.getElementById("sorry-message").textContent =
           strings.getFormattedString("searchResults.sorryMessage", [query]);
-
         let brandName = document.getElementById("bundleBrand").getString("brandShortName");
         document.getElementById("need-help").innerHTML =
           strings.getFormattedString("searchResults.needHelp", [brandName]);
-
-        document.getElementById("need-help-link").setAttribute("href", getHelpLinkURL("search"));
       }
     } else {
       this.searchResultsCategory.hidden = true;

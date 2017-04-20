@@ -31,8 +31,6 @@ if CONFIG['MOZ_PULSEAUDIO']:
         'cubeb_pulse.c',
     ]
     DEFINES['USE_PULSE'] = True
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-        DEFINES['DISABLE_LIBPULSE_DLOPEN'] = True
 
 if CONFIG['MOZ_JACK']:
     SOURCES += [
@@ -78,23 +76,12 @@ if CONFIG['OS_TARGET'] == 'Android':
     SOURCES += ['cubeb_opensl.c']
     SOURCES += ['cubeb_resampler.cpp']
     DEFINES['USE_OPENSL'] = True
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
-        SOURCES += [
-            'cubeb_audiotrack.c',
-        ]
-        DEFINES['USE_AUDIOTRACK'] = True
+    SOURCES += [
+        'cubeb_audiotrack.c',
+    ]
+    DEFINES['USE_AUDIOTRACK'] = True
 
 FINAL_LIBRARY = 'gkmedias'
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    if CONFIG['ANDROID_VERSION'] >= '17':
-        LOCAL_INCLUDES += [
-            '%' + '%s/frameworks/wilhelm/include' % CONFIG['ANDROID_SOURCE'],
-        ]
-    else:
-        LOCAL_INCLUDES += [
-            '%' + '%s/system/media/wilhelm/include' % CONFIG['ANDROID_SOURCE'],
-        ]
 
 CFLAGS += CONFIG['MOZ_ALSA_CFLAGS']
 CFLAGS += CONFIG['MOZ_PULSEAUDIO_CFLAGS']

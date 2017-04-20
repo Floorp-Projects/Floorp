@@ -72,7 +72,6 @@ UNIFIED_SOURCES += [
     'nsHtml5PlainTextUtils.cpp',
     'nsHtml5Portability.cpp',
     'nsHtml5ReleasableAttributeName.cpp',
-    'nsHtml5ReleasableElementName.cpp',
     'nsHtml5Speculation.cpp',
     'nsHtml5SpeculativeLoad.cpp',
     'nsHtml5StackNode.cpp',

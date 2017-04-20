@@ -33,6 +33,7 @@ var values = [
   ["username", {fieldName: "username" }],
   [" username ", {fieldName: "username" }],
   ["foobar", {}],
+  ["section-blue", {}],
 
   // Two tokens
   ["on off", {}],
@@ -48,6 +49,10 @@ var values = [
   ["  MoBiLe  TeL  ", {contactType: "mobile", fieldName: "tel"}],
   ["XXX tel", {}],
   ["XXX username", {}],
+  ["name section-blue", {}],
+  ["scetion-blue cc-name", {}],
+  ["section-blue name", {section: "section-blue", fieldName: "name"}],
+  ["section-blue tel", {section: "section-blue", fieldName: "tel"}],
 
   // Three tokens
   ["billing invalid tel", {}],
@@ -58,12 +63,22 @@ var values = [
   ["billing mobile tel", {addressType: "billing", contactType: "mobile", fieldName: "tel"}],
   ["  BILLing   MoBiLE   tEl  ", {addressType: "billing", contactType: "mobile", fieldName: "tel"}],
   ["billing home tel", {addressType: "billing", contactType: "home", fieldName: "tel"}],
+  ["home section-blue tel", {}],
+  ["setion-blue work email", {}],
+  ["section-blue home address-level2", {}],
+  ["section-blue shipping name", {section: "section-blue", addressType: "shipping", fieldName: "name"}],
+  ["section-blue mobile tel", {section: "section-blue", contactType: "mobile", fieldName: "tel"}],
 
-  // Four tokens (invalid)
+  // Four tokens
   ["billing billing mobile tel", {}],
+  ["name section-blue shipping home", {}],
+  ["secti shipping work address-line1", {}],
+  ["section-blue shipping home name", {}],
+  ["section-blue shipping mobile tel", {section: "section-blue", addressType: "shipping", contactType: "mobile", fieldName: "tel"}],
 
   // Five tokens (invalid)
   ["billing billing billing mobile tel", {}],
+  ["section-blue section-blue billing mobile tel", {}],
 ];
 
 var autocompleteEnabledTypes = ["hidden", "text", "search", "url", "tel",

@@ -21,29 +21,6 @@ LOCAL_INCLUDES += [
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and (CONFIG['ANDROID_VERSION'] == '19' or CONFIG['ANDROID_VERSION'] == '20'):
-    # Suppress some GCC/clang warnings being treated as errors:
-    #  - about attributes on forward declarations for types that are already
-    #    defined, which complains about an important MOZ_EXPORT for android::AString
-    #  - about multi-character constants which are used in codec-related code
-    if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
-        CXXFLAGS += [
-          '-Wno-error=attributes',
-          '-Wno-error=multichar'
-        ]
-    CXXFLAGS += [
-        '-I%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
-            'frameworks/base/include/binder',
-            'frameworks/base/include/utils',
-        ]
-    ]
-    UNIFIED_SOURCES += [
-        'GonkOmxPlatformLayer.cpp',
-    ]
-    EXTRA_DSO_LDOPTS += [
-        '-libbinder',
-    ]
-
 FINAL_LIBRARY = 'xul'
 
 if CONFIG['GNU_CXX']:

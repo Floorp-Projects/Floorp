@@ -251,7 +251,15 @@ AbstractThread::MainThread()
 }
 
 void
-AbstractThread::InitStatics()
+AbstractThread::InitTLS()
+{
+  if (!sCurrentThreadTLS.init()) {
+    MOZ_CRASH();
+  }
+}
+
+void
+AbstractThread::InitMainThread()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sMainThread);

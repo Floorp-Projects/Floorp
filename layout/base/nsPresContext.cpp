@@ -2073,7 +2073,7 @@ nsPresContext::MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
   mPendingViewportChange = false;
 
   if (mDocument->IsBeingUsedAsImage()) {
-    MOZ_ASSERT(PR_CLIST_IS_EMPTY(mDocument->MediaQueryLists()));
+    MOZ_ASSERT(mDocument->MediaQueryLists().isEmpty());
     return;
   }
 
@@ -2088,13 +2088,11 @@ nsPresContext::MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
   // Note that we do this after the new style from media queries in
   // style sheets has been computed.
 
-  if (!PR_CLIST_IS_EMPTY(mDocument->MediaQueryLists())) {
+  if (!mDocument->MediaQueryLists().isEmpty()) {
     // We build a list of all the notifications we're going to send
     // before we send any of them.
-    for (PRCList *l = PR_LIST_HEAD(mDocument->MediaQueryLists());
-         l != mDocument->MediaQueryLists(); l = PR_NEXT_LINK(l)) {
+    for (auto mql : mDocument->MediaQueryLists()) {
       nsAutoMicroTask mt;
-      MediaQueryList *mql = static_cast<MediaQueryList*>(l);
       mql->MaybeNotify();
     }
   }

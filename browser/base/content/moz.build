@@ -1,0 +1,179 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "General")
+
+with Files("aboutaccounts/**"):
+    BUG_COMPONENT = ("Firefox", "Sync")
+
+with Files("abouthealthreport/**"):
+    BUG_COMPONENT = ("Firefox Health Report", "Client: Desktop")
+
+with Files("defaultthemes/**"):
+    BUG_COMPONENT = ("Firefox", "Theme")
+
+with Files("docs/**"):
+    BUG_COMPONENT = ("Core", "Security")
+
+with Files("newtab/**"):
+    BUG_COMPONENT = ("Firefox", "New Tab Page")
+
+with Files("pageinfo/**"):
+    BUG_COMPONENT = ("Firefox", "Page Info Window")
+
+with Files("sync/**"):
+    BUG_COMPONENT = ("Firefox", "Sync")
+
+with Files("test/alerts/**"):
+    BUG_COMPONENT = ("Toolkit", "Notification and Alerts")
+
+with Files("test/appUpdate/**"):
+    BUG_COMPONENT = ("Toolkit", "Application Update")
+
+with Files("test/captivePortal/**"):
+    BUG_COMPONENT = ("Firefox", "General")
+
+with Files("test/chrome/**"):
+    BUG_COMPONENT = ("Firefox", "General")
+
+with Files("test/forms/**"):
+    BUG_COMPONENT = ("Core", "Layout: Form Controls")
+
+with Files("test/newtab/**"):
+    BUG_COMPONENT = ("Firefox", "New Tab Page")
+
+with Files("test/pageinfo/**"):
+    BUG_COMPONENT = ("Firefox", "Page Info Window")
+
+with Files("test/permissions/**"):
+    BUG_COMPONENT = ("Firefox", "Preferences")
+
+with Files("test/plugins/**"):
+    BUG_COMPONENT = ("Core", "Plug-ins")
+
+with Files("test/popupNotifications/**"):
+    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
+
+with Files("test/popups/**"):
+    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
+
+with Files("test/referrer/**"):
+    BUG_COMPONENT = ("Core", "Document Navigation")
+
+with Files("test/siteIdentity/**"):
+    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+
+with Files("test/social/**"):
+    BUG_COMPONENT = ("Firefox", "SocialAPI")
+
+with Files("test/static/**"):
+    BUG_COMPONENT = ("Firefox", "General")
+
+with Files("test/tabPrompts/**"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
+with Files("test/tabcrashed/**"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
+with Files("test/tabs/**"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
+with Files("test/urlbar/**"):
+    BUG_COMPONENT = ("Firefox`", "Location Bar")
+
+with Files("test/webextensions/**"):
+    BUG_COMPONENT = ("Toolkit", "WebExtensions: Untriaged")
+
+with Files("test/webrtc/**"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
+with Files("aboutProviderDirectory.xhtml"):
+    BUG_COMPONENT = ("Firefox", "SocialAPI")
+
+with Files("aboutNetError.xhtml"):
+    BUG_COMPONENT = ("Firefox", "Security")
+
+with Files("aboutSocialError.xhtml"):
+    BUG_COMPONENT = ("Firefox", "SocialAPI")
+
+with Files("blockedSite.xhtml"):
+    BUG_COMPONENT = ("Toolkit", "Safe Browsing")
+
+with Files("browser-addons.js"):
+    BUG_COMPONENT = ("Toolkit", "Add-ons Manager")
+
+with Files("*menu*"):
+    BUG_COMPONENT = ("Firefox", "Menus")
+
+with Files("browser-compacttheme.js"):
+    BUG_COMPONENT = ("Firefox", "Themes")
+
+with Files("browser-customization.js"):
+    BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
+
+with Files("browser-feeds.js"):
+    BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
+
+with Files("browser-fullZoom.js"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browsing")
+
+with Files("browser-fxaccounts.js"):
+    BUG_COMPONENT = ("Core", "FxAccounts")
+
+with Files("browser-gestureSupport.js"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
+with Files("browser-media.js"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("browser-places.js"):
+    BUG_COMPONENT = ("Firefox", "Bookmarks & History")
+
+with Files("browser-plugins.js"):
+    BUG_COMPONENT = ("Core", "Plug-ins")
+
+with Files("browser-refreshblocker.js"):
+    BUG_COMPONENT = ("Firefox", "Disability Access")
+
+with Files("browser-safebrowsing.js"):
+    BUG_COMPONENT = ("Toolkit", "Safe Browsing")
+
+with Files("*social*"):
+    BUG_COMPONENT = ("Firefox", "SocialAPI")
+
+with Files("browser-syncui.js"):
+    BUG_COMPONENT = ("Firefox", "Sync")
+
+with Files("browser-tabPreviews.xml"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
+with Files("contentSearch*"):
+    BUG_COMPONENT = ("Firefox", "Search")
+
+with Files("*.svg"):
+    BUG_COMPONENT = ("Firefox", "Theme")
+
+with Files("gcli*"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("hiddenWindow.xul"):
+    BUG_COMPONENT = ("Firefox", "Device Permissions")
+
+with Files("macBrowserOverlay.xul"):
+    BUG_COMPONENT = ("Firefox", "Shell Integration")
+
+with Files("report-phishing-overlay.xul"):
+    BUG_COMPONENT = ("Toolkit", "Safe Browsing")
+
+with Files("tabbrowser*"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
+with Files("webext-panels*"):
+    BUG_COMPONENT = ("Toolkit", "WebExtensions: Frontend")
+
+with Files("webrtcIndicator*"):
+    BUG_COMPONENT = ("Firefox", "Device Permissions")

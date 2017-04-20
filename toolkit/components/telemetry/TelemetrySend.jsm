@@ -805,10 +805,8 @@ var TelemetrySendImpl = {
         TelemetryReportingPolicy.canUpload() &&
         AppConstants.platform != "android") {
       const url = this._buildSubmissionURL(ping);
-      // Serialize the ping to the disk and spawn the PingSender.
-      let savePromise = savePing(ping);
-      savePromise.then(() => this._sendWithPingSender(ping.id, url));
-      return savePromise;
+      // Serialize the ping to the disk and then spawn the PingSender.
+      return savePing(ping).then(() => this._sendWithPingSender(ping.id, url));
     }
 
     if (!this.canSendNow) {

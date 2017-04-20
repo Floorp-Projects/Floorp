@@ -168,6 +168,9 @@ class Visitor:
     def visitExprSizeof(self, es):
         self.visitExprCall(es)
 
+    def visitExprLambda(self, l):
+        self.visitBlock(l)
+
     def visitStmtBlock(self, sb):
         self.visitBlock(sb)
 
@@ -292,8 +295,12 @@ class Type(Node):
                  ptr=0, ptrconst=0, ptrptr=0, ptrconstptr=0,
                  ref=0,
                  hasimplicitcopyctor=True,
-                 T=None):
+                 T=None,
+                 inner=None):
         """
+Represents the type |name<T>::inner| with the ptr and const
+modifiers as specified.
+
 To avoid getting fancy with recursive types, we limit the kinds
 of pointer types that can be be constructed.
 
@@ -318,6 +325,7 @@ Any type, naked or pointer, can be const (const T) or ref (T&).
         self.ref = ref
         self.hasimplicitcopyctor = hasimplicitcopyctor
         self.T = T
+        self.inner = inner
         # XXX could get serious here with recursive types, but shouldn't 
         # need that for this codegen
     def __deepcopy__(self, memo):
@@ -326,7 +334,8 @@ Any type, naked or pointer, can be const (const T) or ref (T&).
                     ptr=self.ptr, ptrconst=self.ptrconst,
                     ptrptr=self.ptrptr, ptrconstptr=self.ptrconstptr,
                     ref=self.ref,
-                    T=copy.deepcopy(self.T, memo))
+                    T=copy.deepcopy(self.T, memo),
+                    inner=copy.deepcopy(self.inner, memo))
 Type.BOOL = Type('bool')
 Type.INT = Type('int')
 Type.INT32 = Type('int32_t')
@@ -642,12 +651,15 @@ class ExprSelect(Node):
     def __init__(self, obj, op, field):
         assert obj and op and field
         assert not isinstance(obj, str)
-        assert isinstance(field, str)
+        assert isinstance(op, str)
         
         Node.__init__(self)
         self.obj = obj
         self.op = op
-        self.field = field
+        if isinstance(field, str):
+            self.field = ExprVar(field)
+        else:
+            self.field = field
 
 class ExprAssn(Node):
     def __init__(self, lhs, rhs, op='='):
@@ -692,6 +704,15 @@ class ExprMemberInit(ExprCall):
 class ExprSizeof(ExprCall):
     def __init__(self, t):
         ExprCall.__init__(self, ExprVar('sizeof'), [ t ])
+
+class ExprLambda(Block):
+    def __init__(self, captures=[ ], params=[ ], ret=None):
+        Block.__init__(self)
+        assert isinstance(captures, list)
+        assert isinstance(params, list)
+        self.captures = captures
+        self.params = params
+        self.ret = ret
 
 ##------------------------------
 # statements etc.

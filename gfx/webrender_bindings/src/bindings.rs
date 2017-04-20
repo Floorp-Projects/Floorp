@@ -898,6 +898,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     return true;
 }
 
+/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_delete(api: *mut WrAPI) {
     let api = Box::from_raw(api);
@@ -1168,6 +1169,7 @@ pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId) -> *mut WrState {
     Box::into_raw(state)
 }
 
+/// cbindgen:function-postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub extern "C" fn wr_state_delete(state: *mut WrState) {
     assert!(unsafe { is_in_main_thread() });

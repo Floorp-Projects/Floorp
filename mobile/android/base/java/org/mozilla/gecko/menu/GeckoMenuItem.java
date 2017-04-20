@@ -4,10 +4,6 @@
 
 package org.mozilla.gecko.menu;
 
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.ResourceDrawableUtils;
-import org.mozilla.gecko.widget.GeckoActionProvider;
-
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
@@ -16,6 +12,10 @@ import android.view.ContextMenu;
 import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
+
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.ResourceDrawableUtils;
+import org.mozilla.gecko.widget.GeckoActionProvider;
 
 public class GeckoMenuItem implements MenuItem {
     private static final int SHARE_BAR_HISTORY_SIZE = 2;
@@ -31,11 +31,13 @@ public class GeckoMenuItem implements MenuItem {
     // the properties of the MenuItem.
     public static interface Layout {
         public void initialize(GeckoMenuItem item);
+
         public void setShowIcon(boolean show);
     }
 
     public static interface OnShowAsActionChangedListener {
         public boolean hasActionItemBar();
+
         public void onShowAsActionChanged(GeckoMenuItem item);
     }
 
@@ -154,14 +156,7 @@ public class GeckoMenuItem implements MenuItem {
 
     @Override
     public Drawable getIcon() {
-        if (mIcon == null) {
-            if (mIconRes != 0)
-                return ResourceDrawableUtils.getDrawable(mMenu.getContext(), mIconRes);
-            else
-                return null;
-        } else {
-            return mIcon;
-        }
+        return mIcon;
     }
 
     @Override
@@ -335,11 +330,7 @@ public class GeckoMenuItem implements MenuItem {
     public MenuItem setIcon(int iconRes) {
         if (mIconRes != iconRes) {
             mIconRes = iconRes;
-            if (mShouldDispatchChanges) {
-                mMenu.onItemChanged(this);
-            } else {
-                mDidChange = true;
-            }
+            setIcon(ResourceDrawableUtils.getDrawable(mMenu.getContext(), mIconRes));
         }
         return this;
     }

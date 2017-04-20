@@ -14,7 +14,7 @@ random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1d.htm
 
 # Tests for "object-fit" & "object-position"
 == image-object-fit-dyn-1.html image-object-fit-dyn-1.html
-fails skip-if(stylo) == image-object-fit-with-background-1.html image-object-fit-with-background-1.html # Bug 1342188
+fails == image-object-fit-with-background-1.html image-object-fit-with-background-1.html
 fails == image-object-fit-with-background-2.html image-object-fit-with-background-2.html
 == image-object-position-dyn-1.html image-object-position-dyn-1.html
 asserts(0-1) fails == image-object-position-with-background-1.html image-object-position-with-background-1.html

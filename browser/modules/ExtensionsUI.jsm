@@ -247,7 +247,8 @@ this.ExtensionsUI = {
       }
       let match = /^[htps*]+:\/\/([^/]+)\//.exec(permission);
       if (!match) {
-        throw new Error("Unparseable host permission");
+        Cu.reportError(`Unparseable host permission ${permission}`);
+        continue;
       }
       if (match[1] == "*") {
         allUrls = true;

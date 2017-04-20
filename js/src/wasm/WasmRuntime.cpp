@@ -641,7 +641,7 @@ wasm::Runtime::getBuiltinThunk(JSContext* cx, void* funcPtr, ABIFunctionType abi
     if (BinarySearchIf(builtinThunkVector_, 0, size, BuiltinMatcher(thunk->base), &i))
         MOZ_CRASH("clobbering memory");
 
-    *thunkPtr = thunk->base;
+    *thunkPtr = thunk->base + thunk->codeRange.begin();
 
     return builtinThunkVector_.insert(builtinThunkVector_.begin() + i, Move(thunk)) &&
            builtinThunkMap_.add(ptr, lookup, *thunkPtr);

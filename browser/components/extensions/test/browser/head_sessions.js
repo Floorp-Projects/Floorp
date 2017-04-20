@@ -24,7 +24,7 @@ function checkWindow(window) {
 }
 
 function checkTab(tab, windowId, incognito) {
-  for (let prop of ["selected", "highlighted", "active", "pinned"]) {
+  for (let prop of ["highlighted", "active", "pinned"]) {
     is(tab[prop], false, `closed tab has the expected value for ${prop}`);
   }
   is(tab.windowId, windowId, "closed tab has the expected value for windowId");
