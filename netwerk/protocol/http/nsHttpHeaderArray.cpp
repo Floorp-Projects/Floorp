@@ -54,7 +54,7 @@ nsHttpHeaderArray::SetHeader(nsHttpAtom header,
         return SetHeader_internal(header, value, variety);
     } else if (merge && !IsSingletonHeader(header)) {
         return MergeHeader(header, entry, value, variety);
-    } else {
+    } else if (!IsIgnoreMultipleHeader(header)) {
         // Replace the existing string with the new value
         if (entry->variety == eVarietyResponseNetOriginalAndResponse) {
             MOZ_ASSERT(variety == eVarietyResponse);
@@ -151,7 +151,7 @@ nsHttpHeaderArray::SetHeaderFromNet(nsHttpAtom header,
                                     eVarietyResponseNetOriginal);
         }
         return rv;
-    } else {
+    } else if (!IsIgnoreMultipleHeader(header)) {
         // Multiple instances of non-mergeable header received from network
         // - ignore if same value
         if (!entry->value.Equals(value)) {
