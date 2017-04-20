@@ -11,12 +11,26 @@ xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .profile-it
 }
 
 .profile-item-box {
+  --item-padding-vertical: 6px;
+  --item-padding-horizontal: 10px;
+  --col-spacer: 7px;
+  --item-width: calc(50% - (var(--col-spacer) / 2));
+}
+
+.profile-item-box[size="small"] {
+  --item-padding-vertical: 7px;
+  --col-spacer: 0px;
+  --row-spacer: 3px;
+  --item-width: 100%;
+}
+
+.profile-item-box {
   box-sizing: border-box;
+  margin: 0;
   border-bottom: 1px solid rgba(38,38,38,.15);
-  padding-top: 6px;
-  padding-bottom: 6px;
-  padding-inline-start: 16px;
-  padding-inline-end: 10px;
+  padding: var(--item-padding-vertical) 0;
+  padding-inline-start: var(--item-padding-horizontal);
+  padding-inline-end: var(--item-padding-horizontal);
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -33,34 +47,24 @@ xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .profile-it
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 50%;
+  width: var(--item-width);
 }
 
 .profile-item-box > .profile-label-col {
-  padding-inline-end: 10px;
   text-align: start;
 }
 
 .profile-item-box > .profile-comment-col {
+  margin-inline-start: var(--col-spacer);
   text-align: end;
   color: GrayText;
 }
 
 .profile-item-box[size="small"] {
-  padding-top: 10px;
-  padding-bottom: 10px;
   flex-direction: column;
 }
 
-.profile-item-box[size="small"] > .profile-item-col {
-  width: 100%;
-}
-
-.profile-item-box[size="small"] > .profile-label-col {
-  padding-inline-end: 0;
-}
-
 .profile-item-box[size="small"] > .profile-comment-col {
-  margin-top: 7px;
+  margin-top: var(--row-spacer);
   text-align: start;
 }
