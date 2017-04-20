@@ -932,6 +932,13 @@ nsXULAppInfo::GetBrowserTabsRemoteAutostart(bool* aResult)
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetMaxWebProcessCount(uint32_t* aResult)
+{
+  *aResult = mozilla::GetMaxWebProcessCount();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::GetMultiprocessBlockPolicy(uint32_t* aResult)
 {
   *aResult = MultiprocessBlockPolicy();
@@ -4969,8 +4976,10 @@ MultiprocessBlockPolicy() {
   return 0;
 }
 
+namespace mozilla {
+
 bool
-mozilla::BrowserTabsRemoteAutostart()
+BrowserTabsRemoteAutostart()
 {
   if (gBrowserTabsRemoteAutostartInitialized) {
     return gBrowserTabsRemoteAutostart;
@@ -5028,6 +5037,42 @@ mozilla::BrowserTabsRemoteAutostart()
   }
   return gBrowserTabsRemoteAutostart;
 }
+
+uint32_t
+GetMaxWebProcessCount()
+{
+  // multiOptOut is in int to allow us to run multiple experiments without
+  // introducing multiple prefs a la the autostart.N prefs.
+  if (Preferences::GetInt("dom.ipc.multiOptOut", 0) >=
+          nsIXULRuntime::E10S_MULTI_EXPERIMENT) {
+    return 1;
+  }
+
+  const char* optInPref = "dom.ipc.processCount";
+  uint32_t optInPrefValue = Preferences::GetInt(optInPref, 1);
+
+  // If the user has set dom.ipc.processCount, respect their decision
+  // regardless of add-ons that might affect their experience or experiment
+  // cohort.
+  if (Preferences::HasUserValue(optInPref)) {
+    return std::max(1u, optInPrefValue);
+  }
+
+  // If there are add-ons that would make the user's experience poor, don't
+  // use more than one web content process.
+  if (Preferences::GetBool("extensions.e10sMultiBlocksEnabling", false) &&
+      Preferences::GetBool("extensions.e10sMultiBlockedByAddons", false)) {
+    return 1;
+  }
+
+  if (Preferences::HasUserValue("dom.ipc.processCount.web")) {
+    // The user didn't opt in or out so read the .web version of the pref.
+    return std::max(1, Preferences::GetInt("dom.ipc.processCount.web", 1));
+  }
+  return optInPrefValue;
+}
+
+} // namespace mozilla
 
 void
 SetupErrorHandling(const char* progname)
