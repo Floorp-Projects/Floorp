@@ -233,28 +233,13 @@ function test() {
       );
     });
 
-    monitor.panelWin.once(EVENTS.UPDATING_EVENT_TIMINGS, () => {
+    monitor.panelWin.once(EVENTS.RECEIVED_EVENT_TIMINGS, () => {
       let requestItem = getSortedRequests(gStore.getState()).get(0);
 
       is(typeof requestItem.totalTime, "number",
         "The attached totalTime is incorrect.");
       ok(requestItem.totalTime >= 0,
         "The attached totalTime should be positive.");
-
-      verifyRequestItemTarget(
-        document,
-        getDisplayedRequests(gStore.getState()),
-        requestItem,
-        "GET",
-        SIMPLE_SJS,
-        {
-          time: true
-        }
-      );
-    });
-
-    monitor.panelWin.once(EVENTS.RECEIVED_EVENT_TIMINGS, () => {
-      let requestItem = getSortedRequests(gStore.getState()).get(0);
 
       ok(requestItem.eventTimings,
         "There should be a eventTimings data available.");
