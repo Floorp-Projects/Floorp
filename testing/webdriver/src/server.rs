@@ -163,7 +163,7 @@ impl <U: WebDriverExtensionRoute> HttpHandler<U> {
     }
 }
 
-impl <U: WebDriverExtensionRoute> Handler for HttpHandler<U> {
+impl<U: WebDriverExtensionRoute> Handler for HttpHandler<U> {
     fn handle(&self, req: Request, res: Response) {
         let mut req = req;
         let mut res = res;
@@ -172,17 +172,17 @@ impl <U: WebDriverExtensionRoute> Handler for HttpHandler<U> {
         if let Method::Post = req.method {
             req.read_to_string(&mut body).unwrap();
         }
-        debug!("Got request {} {:?}", req.method, req.uri);
+
+        debug!("→ {} {} {}", req.method, req.uri, body);
+
         match req.uri {
             AbsolutePath(path) => {
                 let msg_result = {
                     // The fact that this locks for basically the whole request doesn't
                     // matter as long as we are only handling one request at a time.
                     match self.api.lock() {
-                        Ok(ref api) => {
-                            api.decode_request(req.method, &path[..], &body[..])
-                        },
-                        Err(_) => return
+                        Ok(ref api) => api.decode_request(req.method, &path[..], &body[..]),
+                        Err(_) => return,
                     }
                 };
                 let (status, resp_body) = match msg_result {
@@ -190,45 +190,49 @@ impl <U: WebDriverExtensionRoute> Handler for HttpHandler<U> {
                         let (send_res, recv_res) = channel();
                         match self.chan.lock() {
                             Ok(ref c) => {
-                                let res = c.send(DispatchMessage::HandleWebDriver(message,
-                                                                                  send_res));
+                                let res =
+                                    c.send(DispatchMessage::HandleWebDriver(message, send_res));
                                 match res {
                                     Ok(x) => x,
                                     Err(_) => {
                                         error!("Something terrible happened");
-                                        return
+                                        return;
                                     }
                                 }
-                            },
+                            }
                             Err(_) => {
                                 error!("Something terrible happened");
-                                return
+                                return;
                             }
                         }
                         match recv_res.recv() {
-                            Ok(data) => match data {
-                                Ok(response) => (StatusCode::Ok, response.to_json_string()),
-                                Err(err) => (err.http_status(), err.to_json_string()),
-                            },
-                            Err(e) => panic!("Error reading response: {:?}", e)
+                            Ok(data) => {
+                                match data {
+                                    Ok(response) => (StatusCode::Ok, response.to_json_string()),
+                                    Err(err) => (err.http_status(), err.to_json_string()),
+                                }
+                            }
+                            Err(e) => panic!("Error reading response: {:?}", e),
                         }
-                    },
-                    Err(err) => {
-                        (err.http_status(), err.to_json_string())
                     }
+                    Err(err) => (err.http_status(), err.to_json_string()),
                 };
-                debug!("Returning status {:?}", status);
-                debug!("Returning body {}", resp_body);
+
+                debug!("← {} {}", status, resp_body);
+
                 {
                     let resp_status = res.status_mut();
                     *resp_status = status;
                 }
-                res.headers_mut().set(
-                    ContentType(Mime(TopLevel::Application, SubLevel::Json,
-                                     vec![(Attr::Charset, Value::Utf8)])));
-                res.headers_mut().set(CacheControl(vec![CacheDirective::NoCache]));
+                res.headers_mut()
+                    .set(ContentType(Mime(TopLevel::Application,
+                                          SubLevel::Json,
+                                          vec![(Attr::Charset, Value::Utf8)])));
+                res.headers_mut()
+                    .set(CacheControl(vec![CacheDirective::NoCache]));
+
                 res.send(&resp_body.as_bytes()).unwrap();
-            },
+            }
             _ => {}
         }
     }
