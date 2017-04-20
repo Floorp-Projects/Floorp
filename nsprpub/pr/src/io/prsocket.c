@@ -7,6 +7,12 @@
 
 #include <string.h>
 
+#if defined(_WIN64)
+#ifndef SO_UPDATE_CONNECT_CONTEXT
+#define SO_UPDATE_CONNECT_CONTEXT 0x7010
+#endif
+#endif
+
 /************************************************************************/
 
 /* These two functions are only used in assertions. */
@@ -304,6 +310,48 @@ static PRStatus PR_CALLBACK SocketConnectContinue(
     }
 
     PR_ASSERT(out_flags & PR_POLL_WRITE);
+
+#if defined(_WIN64)
+    if (fd->secret->alreadyConnected) {
+        fd->secret->alreadyConnected = PR_FALSE;
+    }
+    // TCP Fast Open on Windows must use ConnectEx, which uses overlapped
+    // input/output.
+    // To get result we need to use GetOverlappedResult.
+    if (fd->secret->overlappedActive) {
+        PR_ASSERT(fd->secret->nonblocking);
+        PRInt32 rvSent;
+        if (GetOverlappedResult(osfd, &fd->secret->ol, &rvSent, FALSE) == TRUE) {
+            fd->secret->overlappedActive = FALSE;
+            PR_LOG(_pr_io_lm, PR_LOG_MIN,
+               ("SocketConnectContinue GetOverlappedResult succeeded\n"));
+            // When ConnectEx is used, all previously set socket options and
+            // property are not enabled and to enable them
+            // SO_UPDATE_CONNECT_CONTEXT option need to be set.
+            if (setsockopt((SOCKET)osfd, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT, NULL, 0) != 0) {
+                err = WSAGetLastError();
+                PR_LOG(_pr_io_lm, PR_LOG_MIN,
+                       ("SocketConnectContinue setting SO_UPDATE_CONNECT_CONTEXT failed %d\n", err));
+                _PR_MD_MAP_SETSOCKOPT_ERROR(err);
+                return PR_FAILURE;
+            }
+            return PR_SUCCESS;
+        } else {
+            err = WSAGetLastError();
+            PR_LOG(_pr_io_lm, PR_LOG_MIN,
+               ("SocketConnectContinue GetOverlappedResult failed %d\n", err));
+            if (err != ERROR_IO_PENDING) {
+                _PR_MD_MAP_CONNECT_ERROR(err);
+                fd->secret->overlappedActive = FALSE;
+                return PR_FAILURE;
+            } else {
+                PR_SetError(PR_IN_PROGRESS_ERROR, 0);
+                return PR_FAILURE;
+            }
+        }
+    }
+#endif
+
     return PR_SUCCESS;
 
 #elif defined(XP_OS2)
@@ -768,6 +816,56 @@ static PRInt32 PR_CALLBACK SocketSendTo(
 	return count;
 }
 
+#if defined(_WIN64) && defined(WIN95)
+static PRInt32 PR_CALLBACK SocketTCPSendTo(
+    PRFileDesc *fd, const void *buf, PRInt32 amount,
+    PRIntn flags, const PRNetAddr *addr, PRIntervalTime timeout)
+{
+    PRInt32 temp, count;
+    const PRNetAddr *addrp = addr;
+#if defined(_PR_INET6)
+    PRNetAddr addrCopy;
+#endif
+    PRThread *me = _PR_MD_CURRENT_THREAD();
+
+    if (_PR_PENDING_INTERRUPT(me)) {
+        me->flags &= ~_PR_INTERRUPT;
+        PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
+        return -1;
+    }
+    if (_PR_IO_PENDING(me)) {
+        PR_SetError(PR_IO_PENDING_ERROR, 0);
+        return -1;
+    }
+
+    PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
+#if defined(_PR_INET6)
+    if (addr->raw.family == PR_AF_INET6) {
+        addrCopy = *addr;
+        addrCopy.raw.family = AF_INET6;
+        addrp = &addrCopy;
+    }
+#endif
+
+    count = 0;
+    while (amount > 0) {
+        temp = _PR_MD_TCPSENDTO(fd, buf, amount, flags,
+                                addrp, PR_NETADDR_SIZE(addr), timeout);
+        if (temp < 0) {
+            count = -1;
+            break;
+        }
+        count += temp;
+        if (fd->secret->nonblocking) {
+            break;
+        }
+        buf = (const void*) ((const char*)buf + temp);
+        amount -= temp;
+    }
+    return count;
+}
+#endif
+
 static PRInt32 PR_CALLBACK SocketRecvFrom(PRFileDesc *fd, void *buf, PRInt32 amount,
 PRIntn flags, PRNetAddr *addr, PRIntervalTime timeout)
 {
@@ -1066,6 +1164,15 @@ static PRInt16 PR_CALLBACK SocketPoll(
     PRFileDesc *fd, PRInt16 in_flags, PRInt16 *out_flags)
 {
     *out_flags = 0;
+
+#if defined(_WIN64)
+    if (in_flags & PR_POLL_WRITE) {
+        if (fd->secret->alreadyConnected) {
+            out_flags = PR_POLL_WRITE;
+            return PR_POLL_WRITE;
+        }
+    }
+#endif
     return in_flags;
 }  /* SocketPoll */
 
@@ -1090,7 +1197,11 @@ static PRIOMethods tcpMethods = {
 	SocketRecv,
 	SocketSend,
 	(PRRecvfromFN)_PR_InvalidInt,
+#if defined(_WIN64) && defined(WIN95)
+	SocketTCPSendTo, // This is for fast open. We imitate Linux interface.
+#else
 	(PRSendtoFN)_PR_InvalidInt,
+#endif
 	SocketPoll,
 	SocketAcceptRead,
 	SocketTransmitFile,

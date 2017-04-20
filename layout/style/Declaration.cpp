@@ -800,17 +800,26 @@ Declaration::GetPropertyValueInternal(
       MOZ_ASSERT(StringEndsWith(nsCSSProps::GetStringValue(subprops[2]),
                                 NS_LITERAL_CSTRING("-color")),
                  "third subprop must be the color property");
-      const nsCSSValue *colorValue = data->ValueFor(subprops[2]);
-      bool isCurrentColor =
-        colorValue->GetUnit() == eCSSUnit_EnumColor &&
-        colorValue->GetIntValue() == NS_COLOR_CURRENTCOLOR;
-      if (!AppendValueToString(subprops[0], aValue, aSerialization) ||
-          !(aValue.Append(char16_t(' ')),
-            AppendValueToString(subprops[1], aValue, aSerialization)) ||
+
+      bool ok = AppendValueToString(subprops[0], aValue, aSerialization);
+      if (ok) {
+        aValue.Append(u' ');
+        ok = AppendValueToString(subprops[1], aValue, aSerialization);
+        if (ok) {
+          const nsCSSValue *colorValue = data->ValueFor(subprops[2]);
+          bool isCurrentColor =
+            colorValue->GetUnit() == eCSSUnit_EnumColor &&
+            colorValue->GetIntValue() == NS_COLOR_CURRENTCOLOR;
+
           // Don't output a third value when it's currentcolor.
-          !(isCurrentColor ||
-            (aValue.Append(char16_t(' ')),
-             AppendValueToString(subprops[2], aValue, aSerialization)))) {
+          if (!isCurrentColor) {
+            aValue.Append(u' ');
+            ok = AppendValueToString(subprops[2], aValue, aSerialization);
+          }
+        }
+      }
+
+      if (!ok) {
         aValue.Truncate();
       }
       break;
