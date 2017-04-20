@@ -64,9 +64,6 @@ with Files("specialpowers/**"):
 with Files("crashtest/**"):
     BUG_COMPONENT = ("Testing", "Reftest")
 
-with Files("crashtest/autophone-crashtest-webrtc.list"):
-    BUG_COMPONENT = ("Testing", "Autophone")
-
 with Files("config/marionette*"):
     BUG_COMPONENT = ("Testing", "Marionette")
 
