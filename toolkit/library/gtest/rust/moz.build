@@ -11,6 +11,9 @@ if CONFIG['MOZ_STYLO']:
     if CONFIG['MOZ_STYLO_BINDGEN']:
         features += ['bindgen']
 
+    if CONFIG['MOZ_DEBUG']:
+        features += ['gecko_debug']
+
 if CONFIG['MOZ_BUILD_WEBRENDER']:
     features += ['quantum_render']
 
