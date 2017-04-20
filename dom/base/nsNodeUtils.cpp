@@ -473,7 +473,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
 
   nsCOMPtr<nsINode> clone;
   if (aClone) {
-    rv = aNode->Clone(nodeInfo, getter_AddRefs(clone));
+    rv = aNode->Clone(nodeInfo, getter_AddRefs(clone), aDeep);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (clone->IsElement()) {

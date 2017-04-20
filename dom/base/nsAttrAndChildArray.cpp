@@ -794,6 +794,44 @@ nsAttrAndChildArray::GetMapped() const
   return mImpl ? mImpl->mMappedAttrs : nullptr;
 }
 
+nsresult nsAttrAndChildArray::EnsureCapacityToClone(const nsAttrAndChildArray& aOther,
+                                                    bool aAllocateChildren)
+{
+  NS_PRECONDITION(!mImpl, "nsAttrAndChildArray::EnsureCapacityToClone requires the array be empty when called");
+
+  uint32_t attrCount = aOther.NonMappedAttrCount();
+  uint32_t childCount = 0;
+  if (aAllocateChildren) {
+    childCount = aOther.ChildCount();
+  }
+
+  if (attrCount == 0 && childCount == 0) {
+    return NS_OK;
+  }
+
+  // No need to use a CheckedUint32 because we are cloning. We know that we
+  // have already allocated an nsAttrAndChildArray of this size.
+  uint32_t size = attrCount;
+  size *= ATTRSIZE;
+  size += childCount;
+  uint32_t totalSize = size;
+  totalSize += NS_IMPL_EXTRA_SIZE;
+
+  mImpl = static_cast<Impl*>(malloc(totalSize * sizeof(void*)));
+  NS_ENSURE_TRUE(mImpl, NS_ERROR_OUT_OF_MEMORY);
+
+  mImpl->mMappedAttrs = nullptr;
+  mImpl->mBufferSize = size;
+
+  // The array is now the right size, but we should reserve the correct
+  // number of slots for attributes so that children don't get written into
+  // that part of the array (which will then need to be moved later).
+  memset(static_cast<void*>(mImpl->mBuffer), 0, sizeof(InternalAttr) * attrCount);
+  SetAttrSlotAndChildCount(attrCount, 0);
+
+  return NS_OK;
+}
+
 bool
 nsAttrAndChildArray::GrowBy(uint32_t aGrowSize)
 {

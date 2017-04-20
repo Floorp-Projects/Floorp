@@ -29,7 +29,8 @@ public:
   // nsIDOMHTMLMediaElement
   using HTMLMediaElement::GetPaused;
 
-  virtual nsresult Clone(NodeInfo *aNodeInfo, nsINode **aResult) const override;
+  virtual nsresult Clone(NodeInfo *aNodeInfo, nsINode **aResult,
+                         bool aPreallocateChildren) const override;
   virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel) override;
 
   virtual nsIDOMNode* AsDOMNode() override { return this; }
