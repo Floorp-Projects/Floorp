@@ -36,6 +36,7 @@ EXPORTS += [
     'nsHtml5OwningUTF16Buffer.h',
     'nsHtml5Parser.h',
     'nsHtml5PlainTextUtils.h',
+    'nsHtml5Portability.h',
     'nsHtml5RefPtr.h',
     'nsHtml5Speculation.h',
     'nsHtml5SpeculativeLoad.h',

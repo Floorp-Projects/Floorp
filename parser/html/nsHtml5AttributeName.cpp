@@ -41,11 +41,12 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsHtml5Macros.h"
 #include "nsIContentHandle.h"
+#include "nsHtml5Portability.h"
 
+#include "nsHtml5ElementName.h"
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5MetaScanner.h"
-#include "nsHtml5ElementName.h"
 #include "nsHtml5StackNode.h"
 #include "nsHtml5UTF16Buffer.h"
 #include "nsHtml5StateSnapshot.h"
@@ -101,23 +102,6 @@ nsHtml5AttributeName::SAME_LOCAL(nsIAtom* name)
   return arr;
 }
 
-nsHtml5AttributeName* 
-nsHtml5AttributeName::nameByBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner)
-{
-  uint32_t hash = nsHtml5AttributeName::bufToHash(buf, length);
-  int32_t index = nsHtml5AttributeName::ATTRIBUTE_HASHES.binarySearch(hash);
-  if (index < 0) {
-    return nullptr;
-  }
-  nsHtml5AttributeName* attributeName =
-    nsHtml5AttributeName::ATTRIBUTE_NAMES[index];
-  nsIAtom* name = attributeName->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML);
-  if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
-    return nullptr;
-  }
-  return attributeName;
-}
-
 nsHtml5AttributeName::nsHtml5AttributeName(int32_t* uri,
                                            nsIAtom** local,
                                            nsIAtom** prefix)
@@ -136,21 +120,6 @@ nsHtml5AttributeName::nsHtml5AttributeName()
   , custom(true)
 {
   MOZ_COUNT_CTOR(nsHtml5AttributeName);
-}
-
-bool
-nsHtml5AttributeName::isInterned()
-{
-  return !custom;
-}
-
-void
-nsHtml5AttributeName::setNameForNonInterned(nsIAtom* name)
-{
-  MOZ_ASSERT(custom);
-  local[0] = name;
-  local[1] = name;
-  local[2] = name;
 }
 
 nsHtml5AttributeName*
@@ -189,7 +158,8 @@ nsHtml5AttributeName::getPrefix(int32_t mode)
 bool 
 nsHtml5AttributeName::equalsAnother(nsHtml5AttributeName* another)
 {
-  return this->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML) == another->getLocal(NS_HTML5ATTRIBUTE_NAME_HTML);
+  return this->getLocal(nsHtml5AttributeName::HTML) ==
+         another->getLocal(nsHtml5AttributeName::HTML);
 }
 
 nsHtml5AttributeName* nsHtml5AttributeName::ATTR_ALT = nullptr;
