@@ -9,7 +9,6 @@ description = "Testing code for libgkrust"
 bindgen = ["gkrust-shared/bindgen"]
 servo = ["gkrust-shared/servo"]
 quantum_render = ["gkrust-shared/quantum_render"]
-gecko_debug = ["gkrust-shared/gecko_debug"]
 
 [dependencies]
 mp4parse-gtest = { path = "../../../../dom/media/gtest" }
