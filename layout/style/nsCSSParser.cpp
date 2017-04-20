@@ -24,6 +24,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
 #include "nsCSSScanner.h"
+#include "nsXULAppAPI.h"
 #include "mozilla/css/ErrorReporter.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/css/StyleRule.h"
@@ -17916,8 +17917,14 @@ static CSSParserImpl* gFreeList = nullptr;
 /* static */ void
 nsCSSParser::Startup()
 {
-  Preferences::AddBoolVarCache(&sOpentypeSVGEnabled,
-                               "gfx.font_rendering.opentype_svg.enabled");
+  const bool isE10sParent = XRE_IsParentProcess() && BrowserTabsRemoteAutostart();
+
+  if (isE10sParent) {
+    sOpentypeSVGEnabled = true;
+  } else {
+    Preferences::AddBoolVarCache(&sOpentypeSVGEnabled,
+                                 "gfx.font_rendering.opentype_svg.enabled");
+  }
   Preferences::AddBoolVarCache(&sWebkitPrefixedAliasesEnabled,
                                "layout.css.prefixes.webkit");
   Preferences::AddBoolVarCache(&sWebkitDevicePixelRatioEnabled,
