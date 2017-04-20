@@ -10,7 +10,7 @@
         windowtype="navigator:browser"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <browser id="content" type="content" primary="true" src="about:blank" flex="1" remote="true"/>
+  <browser id="content" type="content" primary="true" src="about:blank" flex="1"/>
 
   <script type="application/javascript" src="chrome://geckoview/content/geckoview.js"/>
 </window>

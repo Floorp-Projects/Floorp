@@ -13,7 +13,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "prclist.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/Attributes.h"
 #include "nsWrapperCache.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -27,7 +27,7 @@ namespace dom {
 class MediaList;
 
 class MediaQueryList final : public DOMEventTargetHelper,
-                             public PRCList
+                             public mozilla::LinkedListElement<MediaQueryList>
 {
 public:
   // The caller who constructs is responsible for calling Evaluate
