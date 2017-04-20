@@ -66,11 +66,6 @@ struct SlicedInputStreamParams
   bool closed;
 };
 
-struct IPCBlobInputStreamParams
-{
-  nsID id;
-};
-
 union InputStreamParams
 {
   StringInputStreamParams;
@@ -82,7 +77,6 @@ union InputStreamParams
   RemoteInputStreamParams;
   SameProcessInputStreamParams;
   SlicedInputStreamParams;
-  IPCBlobInputStreamParams;
 };
 
 union OptionalInputStreamParams
