@@ -180,7 +180,6 @@ private:
   bool mTimerIsActive;
 
   nsCOMPtr<nsIAsyncInputStream> mAsyncStream;
-  nsCOMPtr<nsIInputStream> mBufferedStream;
 
   RefPtr<DOMError> mError;
 
