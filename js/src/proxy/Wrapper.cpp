@@ -12,6 +12,7 @@
 #include "js/Proxy.h"
 #include "vm/ErrorObject.h"
 #include "vm/ProxyObject.h"
+#include "vm/RegExpObject.h"
 #include "vm/WrapperObject.h"
 
 #include "jsobjinlines.h"
