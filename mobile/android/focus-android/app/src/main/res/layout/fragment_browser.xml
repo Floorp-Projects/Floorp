@@ -4,7 +4,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <View
         android:id="@+id/background"
@@ -13,7 +14,7 @@
         android:background="@drawable/animated_background" />
 
     <org.mozilla.focus.widget.ResizableKeyboardLayout
-        xmlns:app="http://schemas.android.com/apk/res-auto"
+        app:viewToHideWhenActivated="@+id/erase"
         android:layout_marginTop="25dp"
         android:id="@+id/main_content"
         android:layout_width="match_parent"
