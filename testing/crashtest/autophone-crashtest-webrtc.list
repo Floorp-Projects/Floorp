@@ -1,4 +1,0 @@
-# Add your lines including crashtest manifests below here.
-# DO NOT ADD CRASHTESTS INDIVIDUALLY HERE!
-
-include ../../dom/media/tests/crashtests/crashtests.list
