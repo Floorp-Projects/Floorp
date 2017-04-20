@@ -16,12 +16,12 @@
 
 #include <stddef.h>
 
-#include "builtin/RegExp.h"
 #include "frontend/LanguageExtensions.h"
 #include "gc/Barrier.h"
 #include "gc/NurseryAwareHashMap.h"
 #include "gc/Zone.h"
 #include "vm/PIC.h"
+#include "vm/RegExpShared.h"
 #include "vm/SavedStacks.h"
 #include "vm/TemplateRegistry.h"
 #include "vm/Time.h"
