@@ -34,6 +34,12 @@ public:
   void
   ForgetStream(IPCBlobInputStream* aStream);
 
+  const nsID&
+  ID() const
+  {
+    return mID;
+  }
+
   uint64_t
   Size() const
   {
