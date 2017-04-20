@@ -9,8 +9,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.mozilla.gecko.EditBookmarkDialog;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.bookmarks.BookmarkEditFragment;
+import org.mozilla.gecko.bookmarks.BookmarkUtils;
+import org.mozilla.gecko.bookmarks.EditBookmarkTask;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB;
@@ -32,7 +36,9 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
@@ -42,7 +48,7 @@ import android.widget.TextView;
 /**
  * A page in about:home that displays a ListView of bookmarks.
  */
-public class BookmarksPanel extends HomeFragment {
+public class BookmarksPanel extends HomeFragment implements BookmarkEditFragment.Callbacks {
     public static final String LOGTAG = "GeckoBookmarksPanel";
 
     // Cursor loader ID for list of bookmarks.
@@ -162,6 +168,38 @@ public class BookmarksPanel extends HomeFragment {
     }
 
     @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        if (super.onContextItemSelected(item)) {
+            // HomeFragment was able to handle to selected item.
+            return true;
+        }
+
+        final ContextMenuInfo menuInfo = item.getMenuInfo();
+        if (!(menuInfo instanceof HomeContextMenuInfo)) {
+            return false;
+        }
+
+        final HomeContextMenuInfo info = (HomeContextMenuInfo) menuInfo;
+
+        final int itemId = item.getItemId();
+        final Context context = getContext();
+
+        if (itemId == R.id.home_edit_bookmark) {
+            if (BookmarkUtils.isEnabled(getContext())) {
+                final BookmarkEditFragment dialog = BookmarkEditFragment.newInstance(info.bookmarkId);
+                dialog.setTargetFragment(this, 0);
+                dialog.show(getFragmentManager(), "edit-bookmark");
+            } else {
+                // UI Dialog associates to the activity context, not the applications'.
+                new EditBookmarkDialog(context).show(info.url);
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
     public void onDestroyView() {
         mList = null;
         mListAdapter = null;
@@ -192,6 +230,11 @@ public class BookmarksPanel extends HomeFragment {
         }
 
         getLoaderManager().initLoader(LOADER_ID_BOOKMARKS_LIST, bundle, mLoaderCallbacks);
+    }
+
+    @Override
+    public void onEditBookmark(@NonNull Bundle bundle) {
+        new EditBookmarkTask(getActivity(), bundle).execute();
     }
 
     private void updateUiFromCursor(Cursor c) {
@@ -305,7 +348,7 @@ public class BookmarksPanel extends HomeFragment {
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
-            BookmarksLoader bl = (BookmarksLoader) loader;
+            final BookmarksLoader bl = (BookmarksLoader) loader;
             mListAdapter.swapCursor(c, bl.getFolderInfo(), bl.getRefreshType());
 
             if (mPanelStateChangeListener != null) {
@@ -324,7 +367,7 @@ public class BookmarksPanel extends HomeFragment {
             // BrowserDB updates (e.g. through sync, or when opening a new tab) will trigger
             // a refresh which reuses the same loader - in that case we don't want to reset
             // the scroll position again.
-            int currentLoaderHash = bl.hashCode();
+            final int currentLoaderHash = bl.hashCode();
             if (mList != null && currentLoaderHash != mLastLoaderHash) {
                 mList.setSelection(bl.getTargetPosition());
                 mLastLoaderHash = currentLoaderHash;
