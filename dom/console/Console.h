@@ -88,10 +88,10 @@ public:
   GroupEnd(const GlobalObject& aGlobal);
 
   static void
-  Time(const GlobalObject& aGlobal, const JS::Handle<JS::Value> aTime);
+  Time(const GlobalObject& aGlobal, const nsAString& aLabel);
 
   static void
-  TimeEnd(const GlobalObject& aGlobal, const JS::Handle<JS::Value> aTime);
+  TimeEnd(const GlobalObject& aGlobal, const nsAString& aLabel);
 
   static void
   TimeStamp(const GlobalObject& aGlobal, const JS::Handle<JS::Value> aData);
@@ -178,7 +178,11 @@ private:
 
   void
   MethodInternal(JSContext* aCx, MethodName aName,
-         const nsAString& aString, const Sequence<JS::Value>& aData);
+                 const nsAString& aString, const Sequence<JS::Value>& aData);
+
+  static void
+  TimeMethod(const GlobalObject& aGlobal, const nsAString& aLabel,
+             MethodName aMethodName, const nsAString& aMethodString);
 
   // This method must receive aCx and aArguments in the same JSCompartment.
   void
