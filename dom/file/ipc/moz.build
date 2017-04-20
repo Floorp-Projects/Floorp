@@ -7,6 +7,9 @@
 EXPORTS.mozilla.dom.ipc += [
     'BlobChild.h',
     'BlobParent.h',
+    'IPCBlobInputStream.h',
+    'IPCBlobInputStreamChild.h',
+    'IPCBlobInputStreamParent.h',
     'MemoryStreamChild.h',
     'MemoryStreamParent.h',
     'nsIRemoteBlob.h',
@@ -18,6 +21,9 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     'Blob.cpp',
+    'IPCBlobInputStream.cpp',
+    'IPCBlobInputStreamChild.cpp',
+    'IPCBlobInputStreamParent.cpp',
     'IPCBlobUtils.cpp',
     'MemoryStreamParent.cpp',
 ]
@@ -27,6 +33,7 @@ IPDL_SOURCES += [
     'IPCBlob.ipdlh',
     'PBlob.ipdl',
     'PBlobStream.ipdl',
+    'PIPCBlobInputStream.ipdl',
     'PMemoryStream.ipdl',
 ]
 
