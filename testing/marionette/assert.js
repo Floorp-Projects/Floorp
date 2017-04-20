@@ -142,7 +142,24 @@ assert.window = function (win, msg = "") {
       return null;
     }
   }, msg, NoSuchWindowError)(win);
-}
+};
+
+/**
+ * Asserts that there is no current user prompt.
+ *
+ * @param {modal.Dialog} dialog
+ *     Reference to current dialogue.
+ * @param {string=} msg
+ *     Custom error message.
+ *
+ * @throws {UnexpectedAlertOpenError}
+ *     If there is a user prompt.
+ */
+assert.noUserPrompt = function (dialog, msg = "") {
+  assert.that(d => d === null || typeof d == "undefined",
+      msg,
+      UnexpectedAlertOpenError)(dialog);
+};
 
 /**
  * Asserts that |obj| is defined.
