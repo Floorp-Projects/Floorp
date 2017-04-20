@@ -4,10 +4,8 @@
 
 include protocol PChildToParentStream;
 include protocol PParentToChildStream;
-
 include BlobTypes;
 include InputStreamParams;
-include ProtocolTypes;
 
 namespace mozilla {
 namespace ipc {
@@ -19,24 +17,14 @@ struct InputStreamParamsWithFds
   OptionalFileDescriptorSet optionalFds;
 };
 
-union IPCRemoteStreamType
-{
-  PChildToParentStream;
-  PParentToChildStream;
-};
-
-struct IPCRemoteStream
-{
-  IPCRemoteStreamType stream;
-};
-
 // Use IPCStream or OptionalIPCStream in your ipdl to represent serialized
 // nsIInputStreams.  Then use AutoIPCStream from IPCStreamUtils.h to perform
 // the serialization.
 union IPCStream
 {
   InputStreamParamsWithFds;
-  IPCRemoteStream;
+  PChildToParentStream;
+  PParentToChildStream;
 };
 
 union OptionalIPCStream
