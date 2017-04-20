@@ -213,10 +213,10 @@ MP4AudioInfo::Update(const mp4parse_track_info* track,
     // The Opus decoder expects the container's codec delay or
     // pre-skip value, in microseconds, as a 64-bit int at the
     // start of the codec-specific config blob.
-    MOZ_ASSERT(audio->codec_specific_config.data);
-    MOZ_ASSERT(audio->codec_specific_config.length >= 12);
+    MOZ_ASSERT(audio->extra_data.data);
+    MOZ_ASSERT(audio->extra_data.length >= 12);
     uint16_t preskip =
-      LittleEndian::readUint16(audio->codec_specific_config.data + 10);
+      LittleEndian::readUint16(audio->extra_data.data + 10);
     OpusDataDecoder::AppendCodecDelay(mCodecSpecificConfig,
         mozilla::FramesToUsecs(preskip, 48000).value());
   } else if (track->codec == mp4parse_codec_AAC) {
@@ -241,14 +241,14 @@ MP4AudioInfo::Update(const mp4parse_track_info* track,
     mProfile = audio->profile;
   }
 
-  if (audio->codec_specific_config.length > 0) {
-    mExtraData->AppendElements(audio->codec_specific_config.data,
-                               audio->codec_specific_config.length);
+  if (audio->extra_data.length > 0) {
+    mExtraData->AppendElements(audio->extra_data.data,
+                               audio->extra_data.length);
   }
 
-  if (audio->codec_specific_data.length > 0) {
-    mCodecSpecificConfig->AppendElements(audio->codec_specific_data.data,
-                                         audio->codec_specific_data.length);
+  if (audio->codec_specific_config.length > 0) {
+    mCodecSpecificConfig->AppendElements(audio->codec_specific_config.data,
+                                         audio->codec_specific_config.length);
   }
 }
 
