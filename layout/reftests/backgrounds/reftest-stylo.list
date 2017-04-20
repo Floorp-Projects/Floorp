@@ -132,7 +132,7 @@ fails == background-size-monster-rem.html background-size-monster-rem.html
 # -moz-default-background-color and -moz-default-color (bug 591341)
 == background-moz-default-background-color.html background-moz-default-background-color.html
 
-fails == fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-1.html
+== fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-1.html
 fuzzy(2,83) == fixed-bg-border-radius.html fixed-bg-border-radius.html
 
 HTTP == root-background-1.html root-background-1.html

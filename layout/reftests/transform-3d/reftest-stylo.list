@@ -1,62 +1,62 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == scalez-1a.html scalez-1a.html
-fails == rotatey-1a.html rotatey-1a.html
-fails == rotatex-1a.html rotatex-1a.html
+== scalez-1a.html scalez-1a.html
+== rotatey-1a.html rotatey-1a.html
+== rotatex-1a.html rotatex-1a.html
 # Check that scaleZ(-1) rotateX(180deg) is the same as rotateY(180deg)
-fails == scalezrotatex-1.html scalezrotatex-1.html
+== scalezrotatex-1.html scalezrotatex-1.html
 # Check that the perspectve() transform function results in some visual changes
-fails == rotatex-perspective-1a.html rotatex-perspective-1a.html
+== rotatex-perspective-1a.html rotatex-perspective-1a.html
 # Check that -moz-perspective results in visual changes to child transformed elements
-fails == rotatex-perspective-1b.html rotatex-perspective-1b.html
+== rotatex-perspective-1b.html rotatex-perspective-1b.html
 # -moz-perspective should only apply to child elements
-fails == rotatex-perspective-1c.html rotatex-perspective-1c.html
-fails == rotatex-perspective-3a.html rotatex-perspective-3a.html
-fails == scalez-1a.html scalez-1a.html
-fails == preserve3d-1a.html preserve3d-1a.html
-fails == preserve3d-1b.html preserve3d-1b.html
-fails == preserve3d-clipped.html preserve3d-clipped.html
-fails == preserve3d-2a.html preserve3d-2a.html
-fails == preserve3d-2b.html preserve3d-2b.html
-fails == preserve3d-2c.html preserve3d-2c.html
+== rotatex-perspective-1c.html rotatex-perspective-1c.html
+== rotatex-perspective-3a.html rotatex-perspective-3a.html
+== scalez-1a.html scalez-1a.html
+== preserve3d-1a.html preserve3d-1a.html
+== preserve3d-1b.html preserve3d-1b.html
+== preserve3d-clipped.html preserve3d-clipped.html
+== preserve3d-2a.html preserve3d-2a.html
+== preserve3d-2b.html preserve3d-2b.html
+== preserve3d-2c.html preserve3d-2c.html
 == preserve3d-2d.html preserve3d-2d.html
-fails == preserve3d-3a.html preserve3d-3a.html
-fails == preserve3d-4a.html preserve3d-4a.html
-fails == preserve3d-5a.html preserve3d-5a.html
+== preserve3d-3a.html preserve3d-3a.html
+== preserve3d-4a.html preserve3d-4a.html
+== preserve3d-5a.html preserve3d-5a.html
 == preserve3d-6a.html preserve3d-6a.html
-fails == scale3d-z.html scale3d-z.html
-fails == scale3d-all.html scale3d-all.html
-fails == scale3d-all-separate.html scale3d-all-separate.html
-fails == scale3d-xz.html scale3d-xz.html
-fails == translatez-1a.html translatez-1a.html
-fails == translatez-1b.html translatez-1b.html
-fails == translate3d-1a.html translate3d-1a.html
-fails == matrix3d-1a.html matrix3d-1a.html
-fails == matrix3d-2a.html matrix3d-2a.html
-fails == rotate3d-1a.html rotate3d-1a.html
-fails == rotate3d-2a.html rotate3d-2a.html
-fails == backface-visibility-1a.html backface-visibility-1a.html
-fails == backface-visibility-1b.html backface-visibility-1b.html
-fails == backface-visibility-1c.html backface-visibility-1c.html
-fails == backface-visibility-2.html backface-visibility-2.html
+== scale3d-z.html scale3d-z.html
+== scale3d-all.html scale3d-all.html
+== scale3d-all-separate.html scale3d-all-separate.html
+== scale3d-xz.html scale3d-xz.html
+== translatez-1a.html translatez-1a.html
+== translatez-1b.html translatez-1b.html
+== translate3d-1a.html translate3d-1a.html
+== matrix3d-1a.html matrix3d-1a.html
+== matrix3d-2a.html matrix3d-2a.html
+== rotate3d-1a.html rotate3d-1a.html
+== rotate3d-2a.html rotate3d-2a.html
+== backface-visibility-1a.html backface-visibility-1a.html
+== backface-visibility-1b.html backface-visibility-1b.html
+== backface-visibility-1c.html backface-visibility-1c.html
+== backface-visibility-2.html backface-visibility-2.html
 == backface-visibility-3.html backface-visibility-3.html
 == perspective-clipping-1.html perspective-clipping-1.html
-fails == perspective-origin-1a.html perspective-origin-1a.html
-fails == perspective-origin-1b.html perspective-origin-1b.html
-fails == perspective-origin-2a.html perspective-origin-2a.html
+== perspective-origin-1a.html perspective-origin-1a.html
+== perspective-origin-1b.html perspective-origin-1b.html
+== perspective-origin-2a.html perspective-origin-2a.html
 == perspective-origin-3a.html perspective-origin-3a.html
-fails == perspective-origin-4a.html perspective-origin-4a.html
+== perspective-origin-4a.html perspective-origin-4a.html
 == perspective-zindex.html perspective-zindex.html
 == perspective-zindex-2.html perspective-zindex-2.html
 fails == sorting-1a.html sorting-1a.html
 # Parallel planes, different z depth
-fails == sorting-2a.html sorting-2a.html
+== sorting-2a.html sorting-2a.html
 # Parallel planes, same z depth (shouldn't be sorted!)
-fails == sorting-2b.html sorting-2b.html
-fails == sorting-3a.html sorting-3a.html
+== sorting-2b.html sorting-2b.html
+== sorting-3a.html sorting-3a.html
 # Different, but equivalent (for the given transform) transform origins
-fails == rotatex-transformorigin-1a.html rotatex-transformorigin-1a.html
-fails == overflow-hidden-1a.html overflow-hidden-1a.html
-fails == transform-style-flat-1a.html transform-style-flat-1a.html
+== rotatex-transformorigin-1a.html rotatex-transformorigin-1a.html
+== overflow-hidden-1a.html overflow-hidden-1a.html
+== transform-style-flat-1a.html transform-style-flat-1a.html
 fails == willchange-containing-block.html?willchange willchange-containing-block.html?willchange
 fails == willchange-containing-block.html?willchange willchange-containing-block.html?willchange
 fails == scroll-perspective-1.html scroll-perspective-1.html
