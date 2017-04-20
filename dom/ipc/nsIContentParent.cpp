@@ -14,7 +14,6 @@
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/ipc/BlobParent.h"
-#include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
 #include "mozilla/dom/ipc/MemoryStreamParent.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
@@ -200,21 +199,6 @@ nsIContentParent::AllocPMemoryStreamParent(const uint64_t& aSize)
 
 bool
 nsIContentParent::DeallocPMemoryStreamParent(PMemoryStreamParent* aActor)
-{
-  delete aActor;
-  return true;
-}
-
-PIPCBlobInputStreamParent*
-nsIContentParent::AllocPIPCBlobInputStreamParent(const nsID& aID,
-                                                 const uint64_t& aSize)
-{
-  MOZ_CRASH("PIPCBlobInputStreamParent actors should be manually constructed!");
-  return nullptr;
-}
-
-bool
-nsIContentParent::DeallocPIPCBlobInputStreamParent(PIPCBlobInputStreamParent* aActor)
 {
   delete aActor;
   return true;

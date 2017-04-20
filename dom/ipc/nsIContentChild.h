@@ -111,12 +111,6 @@ protected:
 
   virtual bool DeallocPMemoryStreamChild(mozilla::ipc::PMemoryStreamChild* aActor);
 
-  virtual mozilla::ipc::PIPCBlobInputStreamChild*
-  AllocPIPCBlobInputStreamChild(const nsID& aID, const uint64_t& aSize);
-
-  virtual bool
-  DeallocPIPCBlobInputStreamChild(mozilla::ipc::PIPCBlobInputStreamChild* aActor);
-
   virtual mozilla::ipc::PChildToParentStreamChild* AllocPChildToParentStreamChild();
 
   virtual bool
