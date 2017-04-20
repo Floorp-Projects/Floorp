@@ -739,20 +739,14 @@ public final class AttributeName
     public static final AttributeName REV = new AttributeName(ALL_NO_NS, SAME_LOCAL("rev"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SRC = new AttributeName(ALL_NO_NS, SAME_LOCAL("src"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName D = new AttributeName(ALL_NO_NS, SAME_LOCAL("d"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName K = new AttributeName(ALL_NO_NS, SAME_LOCAL("k"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName R = new AttributeName(ALL_NO_NS, SAME_LOCAL("r"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName X = new AttributeName(ALL_NO_NS, SAME_LOCAL("x"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName Y = new AttributeName(ALL_NO_NS, SAME_LOCAL("y"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName Z = new AttributeName(ALL_NO_NS, SAME_LOCAL("z"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName CAP_HEIGHT = new AttributeName(ALL_NO_NS, SAME_LOCAL("cap-height"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName G1 = new AttributeName(ALL_NO_NS, SAME_LOCAL("g1"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName K1 = new AttributeName(ALL_NO_NS, SAME_LOCAL("k1"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName U1 = new AttributeName(ALL_NO_NS, SAME_LOCAL("u1"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName X1 = new AttributeName(ALL_NO_NS, SAME_LOCAL("x1"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName Y1 = new AttributeName(ALL_NO_NS, SAME_LOCAL("y1"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName G2 = new AttributeName(ALL_NO_NS, SAME_LOCAL("g2"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName K2 = new AttributeName(ALL_NO_NS, SAME_LOCAL("k2"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName U2 = new AttributeName(ALL_NO_NS, SAME_LOCAL("u2"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName X2 = new AttributeName(ALL_NO_NS, SAME_LOCAL("x2"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName Y2 = new AttributeName(ALL_NO_NS, SAME_LOCAL("y2"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName K3 = new AttributeName(ALL_NO_NS, SAME_LOCAL("k3"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -797,11 +791,8 @@ public final class AttributeName
     public static final AttributeName ARIA_HASPOPUP = new AttributeName(ALL_NO_NS, SAME_LOCAL("aria-haspopup"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ARIA_SETSIZE = new AttributeName(ALL_NO_NS, SAME_LOCAL("aria-setsize"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName CLEAR = new AttributeName(ALL_NO_NS, SAME_LOCAL("clear"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED);
-    public static final AttributeName DATAFORMATAS = new AttributeName(ALL_NO_NS, SAME_LOCAL("dataformatas"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED);
     public static final AttributeName DISABLED = new AttributeName(ALL_NO_NS, SAME_LOCAL("disabled"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED | BOOLEAN);
-    public static final AttributeName DATAFLD = new AttributeName(ALL_NO_NS, SAME_LOCAL("datafld"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName DEFAULT = new AttributeName(ALL_NO_NS, SAME_LOCAL("default"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED | BOOLEAN);
-    public static final AttributeName DATASRC = new AttributeName(ALL_NO_NS, SAME_LOCAL("datasrc"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName DATA = new AttributeName(ALL_NO_NS, SAME_LOCAL("data"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName EQUALCOLUMNS = new AttributeName(ALL_NO_NS, SAME_LOCAL("equalcolumns"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName EQUALROWS = new AttributeName(ALL_NO_NS, SAME_LOCAL("equalrows"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -811,27 +802,21 @@ public final class AttributeName
     public static final AttributeName LSPACE = new AttributeName(ALL_NO_NS, SAME_LOCAL("lspace"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName MOVABLELIMITS = new AttributeName(ALL_NO_NS, SAME_LOCAL("movablelimits"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName NOTATION = new AttributeName(ALL_NO_NS, SAME_LOCAL("notation"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONDATASETCHANGED = new AttributeName(ALL_NO_NS, SAME_LOCAL("ondatasetchanged"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONDATAAVAILABLE = new AttributeName(ALL_NO_NS, SAME_LOCAL("ondataavailable"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONPASTE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onpaste"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONDATASETCOMPLETE = new AttributeName(ALL_NO_NS, SAME_LOCAL("ondatasetcomplete"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName RSPACE = new AttributeName(ALL_NO_NS, SAME_LOCAL("rspace"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ROWALIGN = new AttributeName(ALL_NO_NS, SAME_LOCAL("rowalign"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ROTATE = new AttributeName(ALL_NO_NS, SAME_LOCAL("rotate"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SEPARATOR = new AttributeName(ALL_NO_NS, SAME_LOCAL("separator"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SEPARATORS = new AttributeName(ALL_NO_NS, SAME_LOCAL("separators"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName V_MATHEMATICAL = new AttributeName(ALL_NO_NS, SAME_LOCAL("v-mathematical"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName VSPACE = new AttributeName(ALL_NO_NS, SAME_LOCAL("vspace"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName V_HANGING = new AttributeName(ALL_NO_NS, SAME_LOCAL("v-hanging"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName XCHANNELSELECTOR = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("xchannelselector", "xChannelSelector"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName YCHANNELSELECTOR = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("ychannelselector", "yChannelSelector"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ARABIC_FORM = new AttributeName(ALL_NO_NS, SAME_LOCAL("arabic-form"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ENABLE_BACKGROUND = new AttributeName(ALL_NO_NS, SAME_LOCAL("enable-background"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONDBLCLICK = new AttributeName(ALL_NO_NS, SAME_LOCAL("ondblclick"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONABORT = new AttributeName(ALL_NO_NS, SAME_LOCAL("onabort"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName CALCMODE = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("calcmode", "calcMode"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName CHECKED = new AttributeName(ALL_NO_NS, SAME_LOCAL("checked"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED | BOOLEAN);
-    public static final AttributeName DESCENT = new AttributeName(ALL_NO_NS, SAME_LOCAL("descent"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName FENCE = new AttributeName(ALL_NO_NS, SAME_LOCAL("fence"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONSCROLL = new AttributeName(ALL_NO_NS, SAME_LOCAL("onscroll"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONACTIVATE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onactivate"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -839,11 +824,6 @@ public final class AttributeName
     public static final AttributeName SPACING = new AttributeName(ALL_NO_NS, SAME_LOCAL("spacing"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SPECULAREXPONENT = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("specularexponent", "specularExponent"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SPECULARCONSTANT = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("specularconstant", "specularConstant"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName SPECIFICATION = new AttributeName(ALL_NO_NS, SAME_LOCAL("specification"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName THICKMATHSPACE = new AttributeName(ALL_NO_NS, SAME_LOCAL("thickmathspace"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName UNICODE = new AttributeName(ALL_NO_NS, SAME_LOCAL("unicode"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName UNICODE_BIDI = new AttributeName(ALL_NO_NS, SAME_LOCAL("unicode-bidi"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName UNICODE_RANGE = new AttributeName(ALL_NO_NS, SAME_LOCAL("unicode-range"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName BORDER = new AttributeName(ALL_NO_NS, SAME_LOCAL("border"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ID = new AttributeName(ALL_NO_NS, SAME_LOCAL("id"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName GRADIENTTRANSFORM = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("gradienttransform", "gradientTransform"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -856,14 +836,11 @@ public final class AttributeName
     public static final AttributeName SRCDOC = new AttributeName(ALL_NO_NS, SAME_LOCAL("srcdoc"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName STDDEVIATION = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("stddeviation", "stdDeviation"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SANDBOX = new AttributeName(ALL_NO_NS, SAME_LOCAL("sandbox"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName V_IDEOGRAPHIC = new AttributeName(ALL_NO_NS, SAME_LOCAL("v-ideographic"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName WORD_SPACING = new AttributeName(ALL_NO_NS, SAME_LOCAL("word-spacing"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ACCENTUNDER = new AttributeName(ALL_NO_NS, SAME_LOCAL("accentunder"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ACCEPT_CHARSET = new AttributeName(ALL_NO_NS, SAME_LOCAL("accept-charset"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ACCESSKEY = new AttributeName(ALL_NO_NS, SAME_LOCAL("accesskey"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ACCENT_HEIGHT = new AttributeName(ALL_NO_NS, SAME_LOCAL("accent-height"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ACCENT = new AttributeName(ALL_NO_NS, SAME_LOCAL("accent"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ASCENT = new AttributeName(ALL_NO_NS, SAME_LOCAL("ascent"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ACCEPT = new AttributeName(ALL_NO_NS, SAME_LOCAL("accept"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName BEVELLED = new AttributeName(ALL_NO_NS, SAME_LOCAL("bevelled"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName BASEFREQUENCY = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("basefrequency", "baseFrequency"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -881,9 +858,7 @@ public final class AttributeName
     public static final AttributeName EDGEMODE = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("edgemode", "edgeMode"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName EDGE = new AttributeName(ALL_NO_NS, SAME_LOCAL("edge"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName FACE = new AttributeName(ALL_NO_NS, SAME_LOCAL("face"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName HIDEFOCUS = new AttributeName(ALL_NO_NS, SAME_LOCAL("hidefocus"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName INDEX = new AttributeName(ALL_NO_NS, SAME_LOCAL("index"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName IRRELEVANT = new AttributeName(ALL_NO_NS, SAME_LOCAL("irrelevant"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName INTERCEPT = new AttributeName(ALL_NO_NS, SAME_LOCAL("intercept"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName INTEGRITY = new AttributeName(ALL_NO_NS, SAME_LOCAL("integrity"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName LINEBREAK = new AttributeName(ALL_NO_NS, SAME_LOCAL("linebreak"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -899,39 +874,27 @@ public final class AttributeName
     public static final AttributeName ORDER = new AttributeName(ALL_NO_NS, SAME_LOCAL("order"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName OTHER = new AttributeName(ALL_NO_NS, SAME_LOCAL("other"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONRESET = new AttributeName(ALL_NO_NS, SAME_LOCAL("onreset"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONCELLCHANGE = new AttributeName(ALL_NO_NS, SAME_LOCAL("oncellchange"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONREADYSTATECHANGE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onreadystatechange"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONMESSAGE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onmessage"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONBEGIN = new AttributeName(ALL_NO_NS, SAME_LOCAL("onbegin"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONHELP = new AttributeName(ALL_NO_NS, SAME_LOCAL("onhelp"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONBEFOREPRINT = new AttributeName(ALL_NO_NS, SAME_LOCAL("onbeforeprint"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ORIENT = new AttributeName(ALL_NO_NS, SAME_LOCAL("orient"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ORIENTATION = new AttributeName(ALL_NO_NS, SAME_LOCAL("orientation"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONBEFORECOPY = new AttributeName(ALL_NO_NS, SAME_LOCAL("onbeforecopy"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONSELECTSTART = new AttributeName(ALL_NO_NS, SAME_LOCAL("onselectstart"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONBEFOREPASTE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onbeforepaste"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONBEFOREUPDATE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onbeforeupdate"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONDEACTIVATE = new AttributeName(ALL_NO_NS, SAME_LOCAL("ondeactivate"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONBEFOREACTIVATE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onbeforeactivate"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONBEFORDEACTIVATE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onbefordeactivate"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONKEYPRESS = new AttributeName(ALL_NO_NS, SAME_LOCAL("onkeypress"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONKEYUP = new AttributeName(ALL_NO_NS, SAME_LOCAL("onkeyup"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONBEFOREEDITFOCUS = new AttributeName(ALL_NO_NS, SAME_LOCAL("onbeforeeditfocus"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONBEFORECUT = new AttributeName(ALL_NO_NS, SAME_LOCAL("onbeforecut"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONKEYDOWN = new AttributeName(ALL_NO_NS, SAME_LOCAL("onkeydown"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONRESIZE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onresize"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName REPEAT = new AttributeName(ALL_NO_NS, SAME_LOCAL("repeat"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName REPEAT_MAX = new AttributeName(ALL_NO_NS, SAME_LOCAL("repeat-max"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName REFERRERPOLICY = new AttributeName(ALL_NO_NS, SAME_LOCAL("referrerpolicy"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName RULES = new AttributeName(ALL_NO_NS, SAME_LOCAL("rules"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED);
-    public static final AttributeName REPEAT_MIN = new AttributeName(ALL_NO_NS, SAME_LOCAL("repeat-min"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ROLE = new AttributeName(ALL_NO_NS, SAME_LOCAL("role"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName REPEATCOUNT = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("repeatcount", "repeatCount"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName REPEAT_START = new AttributeName(ALL_NO_NS, SAME_LOCAL("repeat-start"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName REPEAT_TEMPLATE = new AttributeName(ALL_NO_NS, SAME_LOCAL("repeat-template"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName REPEATDUR = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("repeatdur", "repeatDur"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SELECTED = new AttributeName(ALL_NO_NS, SAME_LOCAL("selected"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED | BOOLEAN);
-    public static final AttributeName SPEED = new AttributeName(ALL_NO_NS, SAME_LOCAL("speed"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SIZES = new AttributeName(ALL_NO_NS, SAME_LOCAL("sizes"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SUPERSCRIPTSHIFT = new AttributeName(ALL_NO_NS, SAME_LOCAL("superscriptshift"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName STRETCHY = new AttributeName(ALL_NO_NS, SAME_LOCAL("stretchy"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -940,15 +903,10 @@ public final class AttributeName
     public static final AttributeName SELECTION = new AttributeName(ALL_NO_NS, SAME_LOCAL("selection"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SIZE = new AttributeName(ALL_NO_NS, SAME_LOCAL("size"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName TYPE = new AttributeName(ALL_NO_NS, SAME_LOCAL("type"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED);
-    public static final AttributeName UNSELECTABLE = new AttributeName(ALL_NO_NS, SAME_LOCAL("unselectable"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName UNDERLINE_POSITION = new AttributeName(ALL_NO_NS, SAME_LOCAL("underline-position"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName UNDERLINE_THICKNESS = new AttributeName(ALL_NO_NS, SAME_LOCAL("underline-thickness"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName X_HEIGHT = new AttributeName(ALL_NO_NS, SAME_LOCAL("x-height"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName DIFFUSECONSTANT = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("diffuseconstant", "diffuseConstant"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName HREF = new AttributeName(ALL_NO_NS, SAME_LOCAL("href"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName HREFLANG = new AttributeName(ALL_NO_NS, SAME_LOCAL("hreflang"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONAFTERPRINT = new AttributeName(ALL_NO_NS, SAME_LOCAL("onafterprint"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONAFTERUPDATE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onafterupdate"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName PROFILE = new AttributeName(ALL_NO_NS, SAME_LOCAL("profile"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SURFACESCALE = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("surfacescale", "surfaceScale"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName XREF = new AttributeName(ALL_NO_NS, SAME_LOCAL("xref"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -957,7 +915,6 @@ public final class AttributeName
     public static final AttributeName ALIGNMENTSCOPE = new AttributeName(ALL_NO_NS, SAME_LOCAL("alignmentscope"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName DRAGGABLE = new AttributeName(ALL_NO_NS, SAME_LOCAL("draggable"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName HEIGHT = new AttributeName(ALL_NO_NS, SAME_LOCAL("height"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName HANGING = new AttributeName(ALL_NO_NS, SAME_LOCAL("hanging"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName IMAGE_RENDERING = new AttributeName(ALL_NO_NS, SAME_LOCAL("image-rendering"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName LANGUAGE = new AttributeName(ALL_NO_NS, SAME_LOCAL("language"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName LANG = new AttributeName(LANG_NS, SAME_LOCAL("lang"), LANG_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -966,17 +923,14 @@ public final class AttributeName
     public static final AttributeName LENGTHADJUST = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("lengthadjust", "lengthAdjust"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName MARGINHEIGHT = new AttributeName(ALL_NO_NS, SAME_LOCAL("marginheight"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName MARGINWIDTH = new AttributeName(ALL_NO_NS, SAME_LOCAL("marginwidth"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName NARGS = new AttributeName(ALL_NO_NS, SAME_LOCAL("nargs"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ORIGIN = new AttributeName(ALL_NO_NS, SAME_LOCAL("origin"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName PING = new AttributeName(ALL_NO_NS, SAME_LOCAL("ping"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName TARGET = new AttributeName(ALL_NO_NS, SAME_LOCAL("target"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName TARGETX = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("targetx", "targetX"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName TARGETY = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("targety", "targetY"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ALPHABETIC = new AttributeName(ALL_NO_NS, SAME_LOCAL("alphabetic"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ARCHIVE = new AttributeName(ALL_NO_NS, SAME_LOCAL("archive"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName HIGH = new AttributeName(ALL_NO_NS, SAME_LOCAL("high"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName LIGHTING_COLOR = new AttributeName(ALL_NO_NS, SAME_LOCAL("lighting-color"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName MATHEMATICAL = new AttributeName(ALL_NO_NS, SAME_LOCAL("mathematical"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName MATHBACKGROUND = new AttributeName(ALL_NO_NS, SAME_LOCAL("mathbackground"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName METHOD = new AttributeName(ALL_NO_NS, SAME_LOCAL("method"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED);
     public static final AttributeName MATHVARIANT = new AttributeName(ALL_NO_NS, SAME_LOCAL("mathvariant"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -995,23 +949,15 @@ public final class AttributeName
     public static final AttributeName DOMINANT_BASELINE = new AttributeName(ALL_NO_NS, SAME_LOCAL("dominant-baseline"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName DIVISOR = new AttributeName(ALL_NO_NS, SAME_LOCAL("divisor"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName DEFINITIONURL = new AttributeName(ALL_NO_NS, MATH_DIFFERENT("definitionurl", "definitionURL"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName HORIZ_ADV_X = new AttributeName(ALL_NO_NS, SAME_LOCAL("horiz-adv-x"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName HORIZ_ORIGIN_X = new AttributeName(ALL_NO_NS, SAME_LOCAL("horiz-origin-x"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName HORIZ_ORIGIN_Y = new AttributeName(ALL_NO_NS, SAME_LOCAL("horiz-origin-y"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName LIMITINGCONEANGLE = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("limitingconeangle", "limitingConeAngle"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName MEDIUMMATHSPACE = new AttributeName(ALL_NO_NS, SAME_LOCAL("mediummathspace"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName MEDIA = new AttributeName(ALL_NO_NS, SAME_LOCAL("media"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName MANIFEST = new AttributeName(ALL_NO_NS, SAME_LOCAL("manifest"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONFILTERCHANGE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onfilterchange"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONFINISH = new AttributeName(ALL_NO_NS, SAME_LOCAL("onfinish"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName OPTIMUM = new AttributeName(ALL_NO_NS, SAME_LOCAL("optimum"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName RADIOGROUP = new AttributeName(ALL_NO_NS, SAME_LOCAL("radiogroup"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName RADIUS = new AttributeName(ALL_NO_NS, SAME_LOCAL("radius"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SCRIPTLEVEL = new AttributeName(ALL_NO_NS, SAME_LOCAL("scriptlevel"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SCRIPTSIZEMULTIPLIER = new AttributeName(ALL_NO_NS, SAME_LOCAL("scriptsizemultiplier"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName STRING = new AttributeName(ALL_NO_NS, SAME_LOCAL("string"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName STRIKETHROUGH_POSITION = new AttributeName(ALL_NO_NS, SAME_LOCAL("strikethrough-position"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName STRIKETHROUGH_THICKNESS = new AttributeName(ALL_NO_NS, SAME_LOCAL("strikethrough-thickness"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SCRIPTMINSIZE = new AttributeName(ALL_NO_NS, SAME_LOCAL("scriptminsize"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName TABINDEX = new AttributeName(ALL_NO_NS, SAME_LOCAL("tabindex"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName VALIGN = new AttributeName(ALL_NO_NS, SAME_LOCAL("valign"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED);
@@ -1043,7 +989,6 @@ public final class AttributeName
     public static final AttributeName STYLE = new AttributeName(ALL_NO_NS, SAME_LOCAL("style"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName TABLEVALUES = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("tablevalues", "tableValues"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName TITLE = new AttributeName(ALL_NO_NS, SAME_LOCAL("title"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName V_ALPHABETIC = new AttributeName(ALL_NO_NS, SAME_LOCAL("v-alphabetic"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName AZIMUTH = new AttributeName(ALL_NO_NS, SAME_LOCAL("azimuth"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName FORMAT = new AttributeName(ALL_NO_NS, SAME_LOCAL("format"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName FRAMEBORDER = new AttributeName(ALL_NO_NS, SAME_LOCAL("frameborder"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1054,9 +999,6 @@ public final class AttributeName
     public static final AttributeName PROMPT = new AttributeName(ALL_NO_NS, SAME_LOCAL("prompt"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName PRIMITIVEUNITS = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("primitiveunits", "primitiveUnits"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SYMMETRIC = new AttributeName(ALL_NO_NS, SAME_LOCAL("symmetric"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName STEMH = new AttributeName(ALL_NO_NS, SAME_LOCAL("stemh"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName STEMV = new AttributeName(ALL_NO_NS, SAME_LOCAL("stemv"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName SEAMLESS = new AttributeName(ALL_NO_NS, SAME_LOCAL("seamless"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SUMMARY = new AttributeName(ALL_NO_NS, SAME_LOCAL("summary"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName USEMAP = new AttributeName(ALL_NO_NS, SAME_LOCAL("usemap"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ZOOMANDPAN = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("zoomandpan", "zoomAndPan"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1079,7 +1021,6 @@ public final class AttributeName
     public static final AttributeName POINTSATZ = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("pointsatz", "pointsAtZ"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SPAN = new AttributeName(ALL_NO_NS, SAME_LOCAL("span"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName STANDBY = new AttributeName(ALL_NO_NS, SAME_LOCAL("standby"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName THINMATHSPACE = new AttributeName(ALL_NO_NS, SAME_LOCAL("thinmathspace"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName TRANSFORM = new AttributeName(ALL_NO_NS, SAME_LOCAL("transform"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName VLINK = new AttributeName(ALL_NO_NS, SAME_LOCAL("vlink"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName WHEN = new AttributeName(ALL_NO_NS, SAME_LOCAL("when"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1093,7 +1034,6 @@ public final class AttributeName
     public static final AttributeName XLINK_SHOW = new AttributeName(XLINK_NS, COLONIFIED_LOCAL("xlink:show", "show"), XLINK_PREFIX, NCNAME_FOREIGN);
     public static final AttributeName XLINK_ACTUATE = new AttributeName(XLINK_NS, COLONIFIED_LOCAL("xlink:actuate", "actuate"), XLINK_PREFIX, NCNAME_FOREIGN);
     public static final AttributeName AUTOPLAY = new AttributeName(ALL_NO_NS, SAME_LOCAL("autoplay"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName AUTOSUBMIT = new AttributeName(ALL_NO_NS, SAME_LOCAL("autosubmit"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED | BOOLEAN);
     public static final AttributeName AUTOCOMPLETE = new AttributeName(ALL_NO_NS, SAME_LOCAL("autocomplete"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED);
     public static final AttributeName AUTOFOCUS = new AttributeName(ALL_NO_NS, SAME_LOCAL("autofocus"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED | BOOLEAN);
     public static final AttributeName BGCOLOR = new AttributeName(ALL_NO_NS, SAME_LOCAL("bgcolor"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1106,41 +1046,26 @@ public final class AttributeName
     public static final AttributeName EXPONENT = new AttributeName(ALL_NO_NS, SAME_LOCAL("exponent"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName FLOOD_COLOR = new AttributeName(ALL_NO_NS, SAME_LOCAL("flood-color"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName FLOOD_OPACITY = new AttributeName(ALL_NO_NS, SAME_LOCAL("flood-opacity"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName IDEOGRAPHIC = new AttributeName(ALL_NO_NS, SAME_LOCAL("ideographic"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName LQUOTE = new AttributeName(ALL_NO_NS, SAME_LOCAL("lquote"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName PANOSE_1 = new AttributeName(ALL_NO_NS, SAME_LOCAL("panose-1"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName NUMOCTAVES = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("numoctaves", "numOctaves"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONLOAD = new AttributeName(ALL_NO_NS, SAME_LOCAL("onload"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONBOUNCE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onbounce"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONCONTROLSELECT = new AttributeName(ALL_NO_NS, SAME_LOCAL("oncontrolselect"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONROWSINSERTED = new AttributeName(ALL_NO_NS, SAME_LOCAL("onrowsinserted"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONMOUSEWHEEL = new AttributeName(ALL_NO_NS, SAME_LOCAL("onmousewheel"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONROWENTER = new AttributeName(ALL_NO_NS, SAME_LOCAL("onrowenter"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONMOUSEENTER = new AttributeName(ALL_NO_NS, SAME_LOCAL("onmouseenter"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONMOUSEOVER = new AttributeName(ALL_NO_NS, SAME_LOCAL("onmouseover"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONFORMCHANGE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onformchange"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONFOCUSIN = new AttributeName(ALL_NO_NS, SAME_LOCAL("onfocusin"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONROWEXIT = new AttributeName(ALL_NO_NS, SAME_LOCAL("onrowexit"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONMOVEEND = new AttributeName(ALL_NO_NS, SAME_LOCAL("onmoveend"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONCONTEXTMENU = new AttributeName(ALL_NO_NS, SAME_LOCAL("oncontextmenu"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONZOOM = new AttributeName(ALL_NO_NS, SAME_LOCAL("onzoom"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONLOSECAPTURE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onlosecapture"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONCOPY = new AttributeName(ALL_NO_NS, SAME_LOCAL("oncopy"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONMOVESTART = new AttributeName(ALL_NO_NS, SAME_LOCAL("onmovestart"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONROWSDELETE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onrowsdelete"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONMOUSELEAVE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onmouseleave"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONMOVE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onmove"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONMOUSEMOVE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onmousemove"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONMOUSEUP = new AttributeName(ALL_NO_NS, SAME_LOCAL("onmouseup"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONFOCUS = new AttributeName(ALL_NO_NS, SAME_LOCAL("onfocus"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONMOUSEOUT = new AttributeName(ALL_NO_NS, SAME_LOCAL("onmouseout"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONFORMINPUT = new AttributeName(ALL_NO_NS, SAME_LOCAL("onforminput"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONFOCUSOUT = new AttributeName(ALL_NO_NS, SAME_LOCAL("onfocusout"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONMOUSEDOWN = new AttributeName(ALL_NO_NS, SAME_LOCAL("onmousedown"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName TO = new AttributeName(ALL_NO_NS, SAME_LOCAL("to"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName RQUOTE = new AttributeName(ALL_NO_NS, SAME_LOCAL("rquote"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName STROKE_LINECAP = new AttributeName(ALL_NO_NS, SAME_LOCAL("stroke-linecap"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName SCROLLDELAY = new AttributeName(ALL_NO_NS, SAME_LOCAL("scrolldelay"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName STROKE_DASHARRAY = new AttributeName(ALL_NO_NS, SAME_LOCAL("stroke-dasharray"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName STROKE_DASHOFFSET = new AttributeName(ALL_NO_NS, SAME_LOCAL("stroke-dashoffset"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName STROKE_LINEJOIN = new AttributeName(ALL_NO_NS, SAME_LOCAL("stroke-linejoin"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1159,7 +1084,6 @@ public final class AttributeName
     public static final AttributeName GLYPH_ORIENTATION_VERTICAL = new AttributeName(ALL_NO_NS, SAME_LOCAL("glyph-orientation-vertical"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName GLYPH_ORIENTATION_HORIZONTAL = new AttributeName(ALL_NO_NS, SAME_LOCAL("glyph-orientation-horizontal"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName GLYPHREF = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("glyphref", "glyphRef"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName GLYPH_NAME = new AttributeName(ALL_NO_NS, SAME_LOCAL("glyph-name"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName HTTP_EQUIV = new AttributeName(ALL_NO_NS, SAME_LOCAL("http-equiv"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName KEYPOINTS = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("keypoints", "keyPoints"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName LOOP = new AttributeName(ALL_NO_NS, SAME_LOCAL("loop"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1181,23 +1105,18 @@ public final class AttributeName
     public static final AttributeName COORDS = new AttributeName(ALL_NO_NS, SAME_LOCAL("coords"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName CHAROFF = new AttributeName(ALL_NO_NS, SAME_LOCAL("charoff"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName CHARSET = new AttributeName(ALL_NO_NS, SAME_LOCAL("charset"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName MACROS = new AttributeName(ALL_NO_NS, SAME_LOCAL("macros"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName NOWRAP = new AttributeName(ALL_NO_NS, SAME_LOCAL("nowrap"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED | BOOLEAN);
     public static final AttributeName NOHREF = new AttributeName(ALL_NO_NS, SAME_LOCAL("nohref"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED | BOOLEAN);
     public static final AttributeName ONDRAG = new AttributeName(ALL_NO_NS, SAME_LOCAL("ondrag"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONDRAGENTER = new AttributeName(ALL_NO_NS, SAME_LOCAL("ondragenter"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONDRAGOVER = new AttributeName(ALL_NO_NS, SAME_LOCAL("ondragover"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONPROPERTYCHANGE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onpropertychange"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONDRAGEND = new AttributeName(ALL_NO_NS, SAME_LOCAL("ondragend"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONDROP = new AttributeName(ALL_NO_NS, SAME_LOCAL("ondrop"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONDRAGDROP = new AttributeName(ALL_NO_NS, SAME_LOCAL("ondragdrop"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName OVERLINE_POSITION = new AttributeName(ALL_NO_NS, SAME_LOCAL("overline-position"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONERROR = new AttributeName(ALL_NO_NS, SAME_LOCAL("onerror"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName OPERATOR = new AttributeName(ALL_NO_NS, SAME_LOCAL("operator"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName OVERFLOW = new AttributeName(ALL_NO_NS, SAME_LOCAL("overflow"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONDRAGSTART = new AttributeName(ALL_NO_NS, SAME_LOCAL("ondragstart"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName ONERRORUPDATE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onerrorupdate"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName OVERLINE_THICKNESS = new AttributeName(ALL_NO_NS, SAME_LOCAL("overline-thickness"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONDRAGLEAVE = new AttributeName(ALL_NO_NS, SAME_LOCAL("ondragleave"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName STARTOFFSET = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("startoffset", "startOffset"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName START = new AttributeName(ALL_NO_NS, SAME_LOCAL("start"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1261,16 +1180,11 @@ public final class AttributeName
     public static final AttributeName STITCHTILES = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("stitchtiles", "stitchTiles"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName SYSTEMLANGUAGE = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("systemlanguage", "systemLanguage"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName TEXT_RENDERING = new AttributeName(ALL_NO_NS, SAME_LOCAL("text-rendering"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName VERT_ORIGIN_X = new AttributeName(ALL_NO_NS, SAME_LOCAL("vert-origin-x"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName VERT_ADV_Y = new AttributeName(ALL_NO_NS, SAME_LOCAL("vert-adv-y"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName VERT_ORIGIN_Y = new AttributeName(ALL_NO_NS, SAME_LOCAL("vert-origin-y"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName TEXT_DECORATION = new AttributeName(ALL_NO_NS, SAME_LOCAL("text-decoration"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName TEXT_ANCHOR = new AttributeName(ALL_NO_NS, SAME_LOCAL("text-anchor"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName TEXTLENGTH = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("textlength", "textLength"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName TEXT = new AttributeName(ALL_NO_NS, SAME_LOCAL("text"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName UNITS_PER_EM = new AttributeName(ALL_NO_NS, SAME_LOCAL("units-per-em"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName WRITING_MODE = new AttributeName(ALL_NO_NS, SAME_LOCAL("writing-mode"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName WIDTHS = new AttributeName(ALL_NO_NS, SAME_LOCAL("widths"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName WIDTH = new AttributeName(ALL_NO_NS, SAME_LOCAL("width"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ACCUMULATE = new AttributeName(ALL_NO_NS, SAME_LOCAL("accumulate"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName COLUMNSPAN = new AttributeName(ALL_NO_NS, SAME_LOCAL("columnspan"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1280,7 +1194,6 @@ public final class AttributeName
     public static final AttributeName COLUMNWIDTH = new AttributeName(ALL_NO_NS, SAME_LOCAL("columnwidth"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName GROUPALIGN = new AttributeName(ALL_NO_NS, SAME_LOCAL("groupalign"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName INPUTMODE = new AttributeName(ALL_NO_NS, SAME_LOCAL("inputmode"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName OCCURRENCE = new AttributeName(ALL_NO_NS, SAME_LOCAL("occurrence"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONSUBMIT = new AttributeName(ALL_NO_NS, SAME_LOCAL("onsubmit"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONCUT = new AttributeName(ALL_NO_NS, SAME_LOCAL("oncut"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName REQUIRED = new AttributeName(ALL_NO_NS, SAME_LOCAL("required"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG | CASE_FOLDED | BOOLEAN);
@@ -1296,7 +1209,6 @@ public final class AttributeName
     public static final AttributeName CX = new AttributeName(ALL_NO_NS, SAME_LOCAL("cx"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName DX = new AttributeName(ALL_NO_NS, SAME_LOCAL("dx"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName FX = new AttributeName(ALL_NO_NS, SAME_LOCAL("fx"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName BBOX = new AttributeName(ALL_NO_NS, SAME_LOCAL("bbox"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName RX = new AttributeName(ALL_NO_NS, SAME_LOCAL("rx"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName REFX = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("refx", "refX"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName BY = new AttributeName(ALL_NO_NS, SAME_LOCAL("by"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1305,10 +1217,6 @@ public final class AttributeName
     public static final AttributeName FY = new AttributeName(ALL_NO_NS, SAME_LOCAL("fy"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName RY = new AttributeName(ALL_NO_NS, SAME_LOCAL("ry"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName REFY = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("refy", "refY"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName VERYTHINMATHSPACE = new AttributeName(ALL_NO_NS, SAME_LOCAL("verythinmathspace"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName VERYTHICKMATHSPACE = new AttributeName(ALL_NO_NS, SAME_LOCAL("verythickmathspace"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName VERYVERYTHINMATHSPACE = new AttributeName(ALL_NO_NS, SAME_LOCAL("veryverythinmathspace"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
-    public static final AttributeName VERYVERYTHICKMATHSPACE = new AttributeName(ALL_NO_NS, SAME_LOCAL("veryverythickmathspace"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     private final static @NoLength AttributeName[] ATTRIBUTE_NAMES = {
     ALT,
     DIR,
@@ -1323,20 +1231,14 @@ public final class AttributeName
     REV,
     SRC,
     D,
-    K,
     R,
     X,
     Y,
     Z,
-    CAP_HEIGHT,
-    G1,
     K1,
-    U1,
     X1,
     Y1,
-    G2,
     K2,
-    U2,
     X2,
     Y2,
     K3,
@@ -1381,11 +1283,8 @@ public final class AttributeName
     ARIA_HASPOPUP,
     ARIA_SETSIZE,
     CLEAR,
-    DATAFORMATAS,
     DISABLED,
-    DATAFLD,
     DEFAULT,
-    DATASRC,
     DATA,
     EQUALCOLUMNS,
     EQUALROWS,
@@ -1395,27 +1294,21 @@ public final class AttributeName
     LSPACE,
     MOVABLELIMITS,
     NOTATION,
-    ONDATASETCHANGED,
     ONDATAAVAILABLE,
     ONPASTE,
-    ONDATASETCOMPLETE,
     RSPACE,
     ROWALIGN,
     ROTATE,
     SEPARATOR,
     SEPARATORS,
-    V_MATHEMATICAL,
     VSPACE,
-    V_HANGING,
     XCHANNELSELECTOR,
     YCHANNELSELECTOR,
-    ARABIC_FORM,
     ENABLE_BACKGROUND,
     ONDBLCLICK,
     ONABORT,
     CALCMODE,
     CHECKED,
-    DESCENT,
     FENCE,
     ONSCROLL,
     ONACTIVATE,
@@ -1423,11 +1316,6 @@ public final class AttributeName
     SPACING,
     SPECULAREXPONENT,
     SPECULARCONSTANT,
-    SPECIFICATION,
-    THICKMATHSPACE,
-    UNICODE,
-    UNICODE_BIDI,
-    UNICODE_RANGE,
     BORDER,
     ID,
     GRADIENTTRANSFORM,
@@ -1440,14 +1328,11 @@ public final class AttributeName
     SRCDOC,
     STDDEVIATION,
     SANDBOX,
-    V_IDEOGRAPHIC,
     WORD_SPACING,
     ACCENTUNDER,
     ACCEPT_CHARSET,
     ACCESSKEY,
-    ACCENT_HEIGHT,
     ACCENT,
-    ASCENT,
     ACCEPT,
     BEVELLED,
     BASEFREQUENCY,
@@ -1465,9 +1350,7 @@ public final class AttributeName
     EDGEMODE,
     EDGE,
     FACE,
-    HIDEFOCUS,
     INDEX,
-    IRRELEVANT,
     INTERCEPT,
     INTEGRITY,
     LINEBREAK,
@@ -1483,39 +1366,27 @@ public final class AttributeName
     ORDER,
     OTHER,
     ONRESET,
-    ONCELLCHANGE,
     ONREADYSTATECHANGE,
     ONMESSAGE,
     ONBEGIN,
-    ONHELP,
     ONBEFOREPRINT,
     ORIENT,
     ORIENTATION,
     ONBEFORECOPY,
     ONSELECTSTART,
     ONBEFOREPASTE,
-    ONBEFOREUPDATE,
-    ONDEACTIVATE,
-    ONBEFOREACTIVATE,
-    ONBEFORDEACTIVATE,
     ONKEYPRESS,
     ONKEYUP,
-    ONBEFOREEDITFOCUS,
     ONBEFORECUT,
     ONKEYDOWN,
     ONRESIZE,
     REPEAT,
-    REPEAT_MAX,
     REFERRERPOLICY,
     RULES,
-    REPEAT_MIN,
     ROLE,
     REPEATCOUNT,
-    REPEAT_START,
-    REPEAT_TEMPLATE,
     REPEATDUR,
     SELECTED,
-    SPEED,
     SIZES,
     SUPERSCRIPTSHIFT,
     STRETCHY,
@@ -1524,15 +1395,10 @@ public final class AttributeName
     SELECTION,
     SIZE,
     TYPE,
-    UNSELECTABLE,
-    UNDERLINE_POSITION,
-    UNDERLINE_THICKNESS,
-    X_HEIGHT,
     DIFFUSECONSTANT,
     HREF,
     HREFLANG,
     ONAFTERPRINT,
-    ONAFTERUPDATE,
     PROFILE,
     SURFACESCALE,
     XREF,
@@ -1541,7 +1407,6 @@ public final class AttributeName
     ALIGNMENTSCOPE,
     DRAGGABLE,
     HEIGHT,
-    HANGING,
     IMAGE_RENDERING,
     LANGUAGE,
     LANG,
@@ -1550,17 +1415,14 @@ public final class AttributeName
     LENGTHADJUST,
     MARGINHEIGHT,
     MARGINWIDTH,
-    NARGS,
     ORIGIN,
     PING,
     TARGET,
     TARGETX,
     TARGETY,
-    ALPHABETIC,
     ARCHIVE,
     HIGH,
     LIGHTING_COLOR,
-    MATHEMATICAL,
     MATHBACKGROUND,
     METHOD,
     MATHVARIANT,
@@ -1579,23 +1441,15 @@ public final class AttributeName
     DOMINANT_BASELINE,
     DIVISOR,
     DEFINITIONURL,
-    HORIZ_ADV_X,
-    HORIZ_ORIGIN_X,
-    HORIZ_ORIGIN_Y,
     LIMITINGCONEANGLE,
-    MEDIUMMATHSPACE,
     MEDIA,
     MANIFEST,
-    ONFILTERCHANGE,
     ONFINISH,
     OPTIMUM,
     RADIOGROUP,
     RADIUS,
     SCRIPTLEVEL,
     SCRIPTSIZEMULTIPLIER,
-    STRING,
-    STRIKETHROUGH_POSITION,
-    STRIKETHROUGH_THICKNESS,
     SCRIPTMINSIZE,
     TABINDEX,
     VALIGN,
@@ -1627,7 +1481,6 @@ public final class AttributeName
     STYLE,
     TABLEVALUES,
     TITLE,
-    V_ALPHABETIC,
     AZIMUTH,
     FORMAT,
     FRAMEBORDER,
@@ -1638,9 +1491,6 @@ public final class AttributeName
     PROMPT,
     PRIMITIVEUNITS,
     SYMMETRIC,
-    STEMH,
-    STEMV,
-    SEAMLESS,
     SUMMARY,
     USEMAP,
     ZOOMANDPAN,
@@ -1663,7 +1513,6 @@ public final class AttributeName
     POINTSATZ,
     SPAN,
     STANDBY,
-    THINMATHSPACE,
     TRANSFORM,
     VLINK,
     WHEN,
@@ -1677,7 +1526,6 @@ public final class AttributeName
     XLINK_SHOW,
     XLINK_ACTUATE,
     AUTOPLAY,
-    AUTOSUBMIT,
     AUTOCOMPLETE,
     AUTOFOCUS,
     BGCOLOR,
@@ -1690,41 +1538,26 @@ public final class AttributeName
     EXPONENT,
     FLOOD_COLOR,
     FLOOD_OPACITY,
-    IDEOGRAPHIC,
     LQUOTE,
-    PANOSE_1,
     NUMOCTAVES,
     ONLOAD,
-    ONBOUNCE,
-    ONCONTROLSELECT,
-    ONROWSINSERTED,
     ONMOUSEWHEEL,
-    ONROWENTER,
     ONMOUSEENTER,
     ONMOUSEOVER,
-    ONFORMCHANGE,
     ONFOCUSIN,
-    ONROWEXIT,
-    ONMOVEEND,
     ONCONTEXTMENU,
     ONZOOM,
-    ONLOSECAPTURE,
     ONCOPY,
-    ONMOVESTART,
-    ONROWSDELETE,
     ONMOUSELEAVE,
-    ONMOVE,
     ONMOUSEMOVE,
     ONMOUSEUP,
     ONFOCUS,
     ONMOUSEOUT,
-    ONFORMINPUT,
     ONFOCUSOUT,
     ONMOUSEDOWN,
     TO,
     RQUOTE,
     STROKE_LINECAP,
-    SCROLLDELAY,
     STROKE_DASHARRAY,
     STROKE_DASHOFFSET,
     STROKE_LINEJOIN,
@@ -1743,7 +1576,6 @@ public final class AttributeName
     GLYPH_ORIENTATION_VERTICAL,
     GLYPH_ORIENTATION_HORIZONTAL,
     GLYPHREF,
-    GLYPH_NAME,
     HTTP_EQUIV,
     KEYPOINTS,
     LOOP,
@@ -1765,23 +1597,18 @@ public final class AttributeName
     COORDS,
     CHAROFF,
     CHARSET,
-    MACROS,
     NOWRAP,
     NOHREF,
     ONDRAG,
     ONDRAGENTER,
     ONDRAGOVER,
-    ONPROPERTYCHANGE,
     ONDRAGEND,
     ONDROP,
     ONDRAGDROP,
-    OVERLINE_POSITION,
     ONERROR,
     OPERATOR,
     OVERFLOW,
     ONDRAGSTART,
-    ONERRORUPDATE,
-    OVERLINE_THICKNESS,
     ONDRAGLEAVE,
     STARTOFFSET,
     START,
@@ -1845,16 +1672,11 @@ public final class AttributeName
     STITCHTILES,
     SYSTEMLANGUAGE,
     TEXT_RENDERING,
-    VERT_ORIGIN_X,
-    VERT_ADV_Y,
-    VERT_ORIGIN_Y,
     TEXT_DECORATION,
     TEXT_ANCHOR,
     TEXTLENGTH,
     TEXT,
-    UNITS_PER_EM,
     WRITING_MODE,
-    WIDTHS,
     WIDTH,
     ACCUMULATE,
     COLUMNSPAN,
@@ -1864,7 +1686,6 @@ public final class AttributeName
     COLUMNWIDTH,
     GROUPALIGN,
     INPUTMODE,
-    OCCURRENCE,
     ONSUBMIT,
     ONCUT,
     REQUIRED,
@@ -1880,7 +1701,6 @@ public final class AttributeName
     CX,
     DX,
     FX,
-    BBOX,
     RX,
     REFX,
     BY,
@@ -1889,10 +1709,6 @@ public final class AttributeName
     FY,
     RY,
     REFY,
-    VERYTHINMATHSPACE,
-    VERYTHICKMATHSPACE,
-    VERYVERYTHINMATHSPACE,
-    VERYVERYTHICKMATHSPACE,
     };
     private final static int[] ATTRIBUTE_HASHES = {
     50917059,
@@ -1908,20 +1724,14 @@ public final class AttributeName
     59830867,
     60345635,
     60817409,
-    64487425,
     68157441,
     71303169,
     71827457,
     72351745,
-    808872090,
-    876085250,
     878182402,
-    883425282,
     884998146,
     885522434,
-    892862466,
     894959618,
-    900202498,
     901775362,
     902299650,
     911736834,
@@ -1966,11 +1776,8 @@ public final class AttributeName
     1680452349,
     1680511804,
     1681174213,
-    1681694748,
     1681733672,
-    1681844247,
     1681879063,
-    1681940503,
     1681969220,
     1682440540,
     1682587945,
@@ -1980,27 +1787,21 @@ public final class AttributeName
     1685902598,
     1686731997,
     1687164232,
-    1687503600,
     1687620127,
     1687751191,
-    1687751377,
     1689048326,
     1689130184,
     1689324870,
     1689788441,
     1689839946,
-    1691091102,
     1691145478,
-    1691293817,
     1692408896,
     1692933184,
-    1697174123,
     1699185409,
     1704262346,
     1704526375,
     1714745560,
     1714763319,
-    1715466295,
     1716303957,
     1721189160,
     1721305962,
@@ -2008,11 +1809,6 @@ public final class AttributeName
     1723309623,
     1723336432,
     1723336528,
-    1723340621,
-    1723645710,
-    1724189239,
-    1724197420,
-    1724238365,
     1731048742,
     1732771842,
     1733874289,
@@ -2025,14 +1821,11 @@ public final class AttributeName
     1740096054,
     1740119884,
     1740130375,
-    1741535501,
     1742183484,
     1747295467,
     1747299630,
     1747309881,
-    1747348637,
     1747446838,
-    1747455030,
     1747479606,
     1747792072,
     1747800157,
@@ -2050,9 +1843,7 @@ public final class AttributeName
     1749350104,
     1749399124,
     1749856356,
-    1751232761,
     1751507685,
-    1751649130,
     1751679545,
     1751755561,
     1752985897,
@@ -2068,39 +1859,27 @@ public final class AttributeName
     1754643237,
     1754644293,
     1754645079,
-    1754647068,
     1754647074,
     1754647353,
     1754698327,
-    1754751622,
     1754792749,
     1754794646,
     1754798923,
     1754835516,
     1754858317,
     1754860061,
-    1754860110,
-    1754860396,
-    1754860400,
-    1754860401,
     1754872618,
     1754899031,
-    1754905345,
     1754907227,
     1754927689,
     1754958648,
     1756147974,
-    1756155098,
     1756190926,
     1756219733,
-    1756265690,
     1756302628,
     1756360955,
-    1756426572,
-    1756428495,
     1756471625,
     1756704824,
-    1756710661,
     1756737685,
     1756762256,
     1756804936,
@@ -2109,15 +1888,10 @@ public final class AttributeName
     1756889417,
     1757053236,
     1757421892,
-    1757874716,
-    1757942610,
-    1758018291,
-    1759379608,
     1765800271,
     1767725700,
     1767875272,
     1771569964,
-    1771637325,
     1772032615,
     1773606972,
     1776114564,
@@ -2126,7 +1900,6 @@ public final class AttributeName
     1781007934,
     1782518297,
     1784574102,
-    1784643703,
     1785174319,
     1786622296,
     1786740932,
@@ -2135,17 +1908,14 @@ public final class AttributeName
     1786851500,
     1787193500,
     1787365531,
-    1787699221,
     1788254870,
     1788842244,
     1790814502,
     1791068279,
     1791070327,
-    1797666394,
     1797886599,
     1801312388,
     1803561214,
-    1803839644,
     1804036350,
     1804054854,
     1804069019,
@@ -2164,23 +1934,15 @@ public final class AttributeName
     1816104145,
     1816144023,
     1816178925,
-    1817175115,
-    1817175198,
-    1817177246,
     1820262641,
-    1820637455,
     1820727381,
     1820928104,
-    1821755934,
     1821958888,
     1822002839,
     1823574314,
     1823580230,
     1823829083,
     1823841492,
-    1823975206,
-    1824005974,
-    1824081655,
     1824159037,
     1824377064,
     1825437894,
@@ -2212,7 +1974,6 @@ public final class AttributeName
     1874270021,
     1874698443,
     1874788501,
-    1875753052,
     1881750231,
     1884079398,
     1884142379,
@@ -2223,9 +1984,6 @@ public final class AttributeName
     1889569526,
     1889633006,
     1890996553,
-    1891069765,
-    1891098437,
-    1891182792,
     1891186903,
     1891937366,
     1894552650,
@@ -2248,7 +2006,6 @@ public final class AttributeName
     1906423097,
     1907660596,
     1907701479,
-    1908195085,
     1908462185,
     1909438149,
     1909819252,
@@ -2262,7 +2019,6 @@ public final class AttributeName
     1910527802,
     1910572893,
     1915025672,
-    1915146282,
     1915295948,
     1915341049,
     1915757815,
@@ -2275,41 +2031,26 @@ public final class AttributeName
     1917327080,
     1917857531,
     1917953597,
-    1919297291,
     1921061206,
-    1921880376,
     1921894426,
     1922319046,
-    1922354008,
-    1922384591,
-    1922384686,
     1922400908,
-    1922413290,
     1922413292,
     1922413307,
-    1922419228,
     1922470745,
-    1922482777,
-    1922531929,
     1922566877,
     1922567078,
-    1922599757,
     1922607670,
-    1922630475,
-    1922632396,
     1922665052,
-    1922665174,
     1922665179,
     1922671417,
     1922677495,
     1922679386,
-    1922679531,
     1922679610,
     1922699851,
     1923088386,
     1924206934,
     1924443742,
-    1924453467,
     1924462384,
     1924517489,
     1924570799,
@@ -2328,7 +2069,6 @@ public final class AttributeName
     1934917290,
     1934917372,
     1934970504,
-    1935099626,
     1935597338,
     1937336473,
     1937777860,
@@ -2350,23 +2090,18 @@ public final class AttributeName
     1966439670,
     1966442279,
     1966454567,
-    1971855414,
     1972151670,
     1972196486,
     1972656710,
     1972744939,
     1972744954,
-    1972750880,
     1972863609,
     1972904518,
     1972904522,
-    1972904785,
     1972908839,
     1972909592,
     1972922984,
     1972962123,
-    1972963917,
-    1972980466,
     1972996699,
     1974849131,
     1975062341,
@@ -2430,16 +2165,11 @@ public final class AttributeName
     2008401563,
     2008408414,
     2009041198,
-    2009059485,
-    2009061450,
-    2009061533,
     2009071951,
     2009079867,
     2009141482,
     2009231684,
-    2009434924,
     2010452700,
-    2010542150,
     2010716309,
     2015950026,
     2016711994,
@@ -2449,7 +2179,6 @@ public final class AttributeName
     2017010843,
     2018908874,
     2019887833,
-    2023011418,
     2023146024,
     2023342821,
     2024616088,
@@ -2465,7 +2194,6 @@ public final class AttributeName
     2065170434,
     2065694722,
     2066743298,
-    2066762276,
     2073034754,
     2075005220,
     2081423362,
@@ -2474,9 +2202,5 @@ public final class AttributeName
     2083520514,
     2089811970,
     2091784484,
-    2093791505,
-    2093791506,
-    2093791509,
-    2093791510,
     };
 }
