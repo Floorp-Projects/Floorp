@@ -9,6 +9,8 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
+#include <stddef.h>
+
 #include "jscntxt.h"
 #include "jsfriendapi.h"
 #include "jsgc.h"
@@ -1380,7 +1382,7 @@ JSCompartment::reportTelemetry()
              : JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT;
 
     // Call back into Firefox's Telemetry reporter.
-    for (size_t i = 0; i < DeprecatedLanguageExtensionCount; i++) {
+    for (size_t i = 0; i < size_t(DeprecatedLanguageExtension::Count); i++) {
         if (sawDeprecatedLanguageExtension[i])
             runtime_->addTelemetry(id, i);
     }
@@ -1395,7 +1397,7 @@ JSCompartment::addTelemetry(const char* filename, DeprecatedLanguageExtension e)
     if (!creationOptions_.addonIdOrNull() && (!filename || strncmp(filename, "http", 4) != 0))
         return;
 
-    sawDeprecatedLanguageExtension[e] = true;
+    sawDeprecatedLanguageExtension[size_t(e)] = true;
 }
 
 HashNumber
