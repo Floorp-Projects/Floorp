@@ -19,7 +19,7 @@ loader.lazyImporter(this, "PrivateBrowsingUtils",
 loader.lazyRequireGetter(this, "DebuggerClient",
   "devtools/shared/client/main", true);
 
-const PROCESS_COUNT_PREF = "dom.ipc.processCount";
+const MULTI_OPT_OUT_PREF = "dom.ipc.multiOptOut";
 
 module.exports = createClass({
   displayName: "multiE10SWarning",
@@ -29,7 +29,9 @@ module.exports = createClass({
     // see (https://bugzilla.mozilla.org/show_bug.cgi?id=1345932#c44)
     let message = "Set “dom.ipc.processCount” to 1 and restart the browser?";
     if (window.confirm(message)) {
-      Services.prefs.setIntPref(PROCESS_COUNT_PREF, 1);
+      // Disable multi until at least the next experiment.
+      Services.prefs.setIntPref(MULTI_OPT_OUT_PREF,
+                                Services.appinfo.E10S_MULTI_EXPERIMENT);
       // Restart the browser.
       Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
     }
