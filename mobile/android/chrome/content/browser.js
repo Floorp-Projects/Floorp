@@ -2262,7 +2262,6 @@ var NativeWindow = {
 
   menu: {
     _callbacks: [],
-    _menuId: 1,
     toolsMenuID: -1,
     add: function() {
       let options;
@@ -2279,25 +2278,26 @@ var NativeWindow = {
       }
 
       options.type = "Menu:Add";
-      options.id = this._menuId;
+
+      let uuid = uuidgen.generateUUID().toString();
+      options.id = uuid;
 
       GlobalEventDispatcher.sendRequest(options);
-      this._callbacks[this._menuId] = options.callback;
-      this._menuId++;
-      return this._menuId - 1;
+      this._callbacks[uuid] = options.callback;
+      return uuid;
     },
 
-    remove: function(aId) {
-      GlobalEventDispatcher.sendRequest({ type: "Menu:Remove", id: aId });
+    remove: function(uuid) {
+      GlobalEventDispatcher.sendRequest({ type: "Menu:Remove", id: uuid });
     },
 
-    update: function(aId, aOptions) {
+    update: function(uuid, aOptions) {
       if (!aOptions)
         return;
 
       GlobalEventDispatcher.sendRequest({
         type: "Menu:Update",
-        id: aId,
+        id: uuid,
         options: aOptions
       });
     }

@@ -141,19 +141,21 @@ VorbisDataDecoder::ProcessDecode(MediaRawData* aSample)
   const unsigned char* aData = aSample->Data();
   size_t aLength = aSample->Size();
   int64_t aOffset = aSample->mOffset;
-  int64_t aTstampUsecs = aSample->mTime;
+  int64_t aTstampUsecs = aSample->mTime.ToMicroseconds();
   int64_t aTotalFrames = 0;
 
   MOZ_ASSERT(mPacketCount >= 3);
 
-  if (!mLastFrameTime || mLastFrameTime.ref() != aSample->mTime) {
+  if (!mLastFrameTime ||
+      mLastFrameTime.ref() != aSample->mTime.ToMicroseconds()) {
     // We are starting a new block.
     mFrames = 0;
-    mLastFrameTime = Some(aSample->mTime);
+    mLastFrameTime = Some(aSample->mTime.ToMicroseconds());
   }
 
-  ogg_packet pkt = InitVorbisPacket(aData, aLength, false, aSample->mEOS,
-                                    aSample->mTimecode, mPacketCount++);
+  ogg_packet pkt = InitVorbisPacket(
+    aData, aLength, false, aSample->mEOS,
+    aSample->mTimecode.ToMicroseconds(), mPacketCount++);
 
   int err = vorbis_synthesis(&mVorbisBlock, &pkt);
   if (err) {

@@ -598,7 +598,7 @@ input[type="checkbox"]:disabled:hover:active {
   cursor: inherit;
 }
 
-%if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+%if defined(MOZ_WIDGET_ANDROID)
 /*
  * These platforms doesn't have any theming support and thus appearance:none
  * is the same as any other appearance value.
@@ -677,7 +677,7 @@ input[type="checkbox"]:indeterminate:disabled {
   background-image: url(indeterminate-checkmark.svg#disabled);
 }
 
-%endif /* defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK) */
+%endif /* defined(MOZ_WIDGET_ANDROID) */
 
 % On Mac, the native theme takes care of this.
 % See nsNativeThemeCocoa::ThemeDrawsFocusForWidget.

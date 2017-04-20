@@ -1492,7 +1492,8 @@ var CustomizableUIInternal = {
       let anchor = aNode;
       if (area != CustomizableUI.AREA_PANEL) {
         let wrapper = this.wrapWidget(aWidget.id).forWindow(ownerWindow);
-        if (wrapper && wrapper.anchor) {
+
+        if (wrapper && !wrapper.overflowed && wrapper.anchor) {
           this.hidePanelForNode(aNode);
           anchor = wrapper.anchor;
         }
@@ -4118,7 +4119,9 @@ OverflowableToolbar.prototype = {
     return new Promise(resolve => {
       let doc = this._panel.ownerDocument;
       this._panel.hidden = false;
-      let contextMenu = doc.getElementById(this._panel.getAttribute("context"));
+      let mainViewId = this._panel.querySelector("panelmultiview").getAttribute("mainViewId");
+      let mainView = doc.getElementById(mainViewId);
+      let contextMenu = doc.getElementById(mainView.getAttribute("context"));
       gELS.addSystemEventListener(contextMenu, "command", this, true);
       let anchor = doc.getAnonymousElementByAttribute(this._chevron, "class", "toolbarbutton-icon");
       this._panel.openPopup(anchor || this._chevron);

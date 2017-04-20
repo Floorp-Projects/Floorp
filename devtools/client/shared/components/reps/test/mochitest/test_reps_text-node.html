@@ -22,9 +22,10 @@ window.onload = Task.async(function* () {
   const {
     REPS,
     MODE,
+    getRep,
     getSelectableInInspectorGrips,
   } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, TextNode } = REPS;
+  let { TextNode } = REPS;
 
   let gripStubs = new Map();
   gripStubs.set("testRendering", {
@@ -34,7 +35,19 @@ window.onload = Task.async(function* () {
       "kind": "DOMNode",
       "nodeType": 3,
       "nodeName": "#text",
-      "textContent": "hello world"
+      "textContent": "hello world",
+      "isConnected": true,
+    }
+  });
+  gripStubs.set("testRenderingDisconnected", {
+    "class": "Text",
+    "actor": "server1.conn1.child1/obj50",
+    "preview": {
+      "kind": "DOMNode",
+      "nodeType": 3,
+      "nodeName": "#text",
+      "textContent": "hello world",
+      "isConnected": false,
     }
   });
   gripStubs.set("testRenderingWithEOL", {
@@ -50,12 +63,8 @@ window.onload = Task.async(function* () {
 
   try {
     // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, {
-      object: gripStubs.get("testRendering")
-    });
-
-    is(renderedRep.type, TextNode.rep,
-      `Rep correctly selects ${TextNode.rep.displayName}`);
+    is(getRep(gripStubs.get("testRendering")), TextNode.rep,
+      "Rep correctly selects TextNode Rep");
 
     yield testRendering();
     yield testRenderingWithEOL();
@@ -128,7 +137,6 @@ window.onload = Task.async(function* () {
 
     const grips = getSelectableInInspectorGrips(stub);
     is(grips.length, 1, "the stub has one text node grip");
-    const attachedActorIds = getStubAttachedActorIds(grips);
 
     let mouseOverValue;
     let onDOMNodeMouseOver = (object) => {
@@ -137,7 +145,6 @@ window.onload = Task.async(function* () {
     const renderedComponent = renderComponent(TextNode.rep, {
       object: stub,
       onDOMNodeMouseOver,
-      attachedActorIds,
     });
 
     TestUtils.Simulate.mouseOver(renderedComponent);
@@ -150,7 +157,6 @@ window.onload = Task.async(function* () {
 
     const grips = getSelectableInInspectorGrips(stub);
     is(grips.length, 1, "the stub has one text node grip");
-    const attachedActorIds = getStubAttachedActorIds(grips);
 
     let called = false;
     let onDOMNodeMouseOut = (object) => {
@@ -159,7 +165,6 @@ window.onload = Task.async(function* () {
     const renderedComponent = renderComponent(TextNode.rep, {
       object: stub,
       onDOMNodeMouseOut,
-      attachedActorIds,
     });
 
     TestUtils.Simulate.mouseOut(renderedComponent);
@@ -171,7 +176,6 @@ window.onload = Task.async(function* () {
 
     const grips = getSelectableInInspectorGrips(stub);
     is(grips.length, 1, "the stub has one text node grip");
-    const attachedActorIds = getStubAttachedActorIds(grips);
 
     let inspectIconClickedValue = null;
     let inspectIconClickedEvent = null;
@@ -182,17 +186,15 @@ window.onload = Task.async(function* () {
     };
 
     const renderedComponentWithoutInspectIcon = renderComponent(TextNode.rep, {
-      object: stub,
+      object: gripStubs.get("testRenderingDisconnected"),
       onInspectIconClick,
-      attachedActorIds: ["someOtherId"]
     });
     is(renderedComponentWithoutInspectIcon.querySelector(".open-inspector"), null,
-      "There isn't an inspect icon when the actor is not in attachedActorIds");
+      "There isn't an inspect icon when the node is not connected to the DOM tree");
 
     const renderedComponent = renderComponent(TextNode.rep, {
       object: stub,
       onInspectIconClick,
-      attachedActorIds,
     });
 
     const inspectIconNode = renderedComponent.querySelector(".open-inspector");

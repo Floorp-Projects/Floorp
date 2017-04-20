@@ -28,6 +28,7 @@
 #include "nsProxyRelease.h"
 #include "nsContentSecurityManager.h"
 #include "nsContentUtils.h"
+#include "nsNetUtil.h"
 
 // we need windows.h to read out registry information...
 #include <windows.h>
@@ -155,6 +156,12 @@ NS_IMETHODIMP
 nsIconChannel::SetLoadFlags(uint32_t aLoadAttributes)
 {
   return mPump->SetLoadFlags(aLoadAttributes);
+}
+
+NS_IMETHODIMP
+nsIconChannel::GetIsDocument(bool *aIsDocument)
+{
+  return NS_GetIsDocumentChannel(this, aIsDocument);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

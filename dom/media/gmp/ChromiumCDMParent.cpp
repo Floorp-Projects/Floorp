@@ -190,7 +190,7 @@ ChromiumCDMParent::InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer,
   aBuffer = gmp::CDMInputBuffer(shmem,
                                 crypto.mKeyId,
                                 crypto.mIV,
-                                aSample->mTime,
+                                aSample->mTime.ToMicroseconds(),
                                 aSample->mDuration.ToMicroseconds(),
                                 crypto.mPlainSizes,
                                 crypto.mEncryptedSizes,
@@ -835,7 +835,7 @@ ChromiumCDMParent::DecryptAndDecodeFrame(MediaRawData* aSample)
   }
 
   GMP_LOG("ChromiumCDMParent::DecryptAndDecodeFrame t=%" PRId64,
-          aSample->mTime);
+          aSample->mTime.ToMicroseconds());
 
   CDMInputBuffer buffer;
 

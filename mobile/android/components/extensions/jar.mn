@@ -6,6 +6,7 @@ chrome.jar:
     content/ext-android.js
     content/ext-c-android.js
     content/ext-c-tabs.js
+    content/ext-browserAction.js
     content/ext-pageAction.js
     content/ext-tabs.js
     content/ext-utils.js

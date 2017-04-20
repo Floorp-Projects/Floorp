@@ -245,6 +245,11 @@ NS_IMETHODIMP nsExtProtocolChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsExtProtocolChannel::GetIsDocument(bool *aIsDocument)
+{
+  return NS_GetIsDocumentChannel(this, aIsDocument);
+}
+
 NS_IMETHODIMP nsExtProtocolChannel::GetContentType(nsACString &aContentType)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

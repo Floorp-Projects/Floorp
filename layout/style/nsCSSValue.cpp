@@ -30,22 +30,6 @@ using namespace mozilla;
 using namespace mozilla::css;
 
 static bool
-IsLocalRefURL(const nsString& aString)
-{
-  // Find the first non-"C0 controls + space" character.
-  const char16_t* current = aString.get();
-  for (; *current != '\0'; current++) {
-    if (*current > 0x20) {
-      // if the first non-"C0 controls + space" character is '#', this is a
-      // local-ref URL.
-      return *current == '#';
-    }
-  }
-
-  return false;
-}
-
-static bool
 MightHaveRef(const nsString& aString)
 {
   const char16_t* current = aString.get();
@@ -2875,7 +2859,7 @@ css::URLValueData::IsLocalRef() const
 {
   if (mIsLocalRef.isNothing()) {
     // IsLocalRefURL is O(N), use it only when IsLocalRef is called.
-    mIsLocalRef.emplace(IsLocalRefURL(mString));
+    mIsLocalRef.emplace(nsContentUtils::IsLocalRefURL(mString));
   }
 
   return mIsLocalRef.value();

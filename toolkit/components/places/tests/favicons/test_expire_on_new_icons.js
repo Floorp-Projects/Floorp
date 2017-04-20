@@ -5,6 +5,8 @@
 add_task(function* test_replaceFaviconData_validHistoryURI() {
   const TEST_URL = "http://mozilla.com/"
   yield PlacesTestUtils.addVisits(TEST_URL);
+  const TEST_URL2 = "http://test.mozilla.com/"
+  yield PlacesTestUtils.addVisits(TEST_URL2);
 
   let favicons = [
     {
@@ -31,6 +33,13 @@ add_task(function* test_replaceFaviconData_validHistoryURI() {
                                             icon.mimeType,
                                             icon.expire);
     yield setFaviconForPage(TEST_URL, TEST_URL + icon.name);
+    if (icon.expire != 0) {
+      PlacesUtils.favicons.replaceFaviconData(NetUtil.newURI(TEST_URL + icon.name),
+                                              data, data.length,
+                                              icon.mimeType,
+                                              icon.expire);
+      yield setFaviconForPage(TEST_URL2, TEST_URL + icon.name);
+    }
   }
 
   // Only the second and the third icons should have survived.
@@ -40,4 +49,9 @@ add_task(function* test_replaceFaviconData_validHistoryURI() {
   Assert.equal(yield getFaviconUrlForPage(TEST_URL, 64),
                TEST_URL + favicons[2].name,
                "Should retrieve the 64px icon");
+
+  // The expired icon for page 2 should have survived.
+  Assert.equal(yield getFaviconUrlForPage(TEST_URL2, 16),
+               TEST_URL + favicons[0].name,
+               "Should retrieve the expired 16px icon");
 });

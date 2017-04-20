@@ -5917,6 +5917,13 @@
     "kind": "boolean",
     "description": "Deleted or to-be-reused innerwindow which has had mutation event listeners."
   },
+  "FORM_ISINDEX_USED": {
+    "alert_emails": ["hsivonen@mozilla.com"],
+    "expires_in_version": "56",
+    "kind": "flag",
+    "bug_numbers": [1356181],
+    "description": "Whether there has been an isindex form submission in this session."
+  },
   "CHARSET_OVERRIDE_SITUATION": {
     "expires_in_version": "never",
     "kind": "enumerated",

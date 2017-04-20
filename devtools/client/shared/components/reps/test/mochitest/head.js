@@ -69,7 +69,3 @@ function testRepRenderModes(modeTests, testName, componentUnderTest, gripStub,
     is(rendered.textContent, expectedOutput, message);
   });
 }
-
-function getStubAttachedActorIds(gripStubs) {
-  return gripStubs.map(gripStub => gripStub.actor);
-}

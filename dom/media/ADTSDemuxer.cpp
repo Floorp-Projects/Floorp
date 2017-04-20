@@ -752,12 +752,12 @@ ADTSTrackDemuxer::GetNextFrame(const adts::Frame& aFrame)
 
   UpdateState(aFrame);
 
-  frame->mTime = Duration(mFrameIndex - 1).ToMicroseconds();
+  frame->mTime = Duration(mFrameIndex - 1);
   frame->mDuration = Duration(1);
   frame->mTimecode = frame->mTime;
   frame->mKeyframe = true;
 
-  MOZ_ASSERT(frame->mTime >= 0);
+  MOZ_ASSERT(!frame->mTime.IsNegative());
   MOZ_ASSERT(frame->mDuration.IsPositive());
 
   ADTSLOGV("GetNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64

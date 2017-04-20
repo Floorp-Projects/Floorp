@@ -79,7 +79,7 @@ WaveDataDecoder::ProcessDecode(MediaRawData* aSample)
   size_t aLength = aSample->Size();
   ByteReader aReader(aSample->Data(), aLength);
   int64_t aOffset = aSample->mOffset;
-  uint64_t aTstampUsecs = aSample->mTime;
+  uint64_t aTstampUsecs = aSample->mTime.ToMicroseconds();
 
   int32_t frames = aLength * 8 / mInfo.mBitDepth / mInfo.mChannels;
 

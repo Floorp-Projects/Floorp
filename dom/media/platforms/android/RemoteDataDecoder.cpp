@@ -226,7 +226,7 @@ public:
 
     InputInfo info(
       aSample->mDuration.ToMicroseconds(), config->mImage, config->mDisplay);
-    mInputInfos.Insert(aSample->mTime, info);
+    mInputInfos.Insert(aSample->mTime.ToMicroseconds(), info);
     return RemoteDataDecoder::Decode(aSample);
   }
 
@@ -537,7 +537,7 @@ RemoteDataDecoder::Decode(MediaRawData* aSample)
       return DecodePromise::CreateAndReject(
         MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
     }
-    bufferInfo->Set(0, sample->Size(), sample->mTime, 0);
+    bufferInfo->Set(0, sample->Size(), sample->mTime.ToMicroseconds(), 0);
 
     mDrainStatus = DrainStatus::DRAINABLE;
     return mJavaDecoder->Input(bytes, bufferInfo, GetCryptoInfoFromSample(sample))
