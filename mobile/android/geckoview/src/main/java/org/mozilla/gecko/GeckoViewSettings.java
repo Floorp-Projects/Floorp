@@ -22,10 +22,23 @@ public final class GeckoViewSettings {
         }
     }
 
+    /*
+     * Key to enabled and disable tracking protection.
+     */
     public static final Key<Boolean> USE_TRACKING_PROTECTION =
         new Key<Boolean>("useTrackingProtection");
+    /*
+     * Key to enabled and disable private mode browsing.
+     */
     public static final Key<Boolean> USE_PRIVATE_MODE =
         new Key<Boolean>("usePrivateMode");
+    /*
+     * Key to enabled and disable multiprocess browsing (e10s).
+     * Note: can only be set during GeckoView initialization, changes during an
+     * active GeckoView session will be ignored.
+     */
+    public static final Key<Boolean> USE_MULTIPROCESS =
+        new Key<Boolean>("useMultiprocess");
 
     private final EventDispatcher mEventDispatcher;
     private final GeckoBundle mBundle;
@@ -40,6 +53,7 @@ public final class GeckoViewSettings {
 
         setBoolean(USE_TRACKING_PROTECTION, false);
         setBoolean(USE_PRIVATE_MODE, false);
+        setBoolean(USE_MULTIPROCESS, true);
     }
 
     /* package */ GeckoViewSettings(GeckoViewSettings settings, EventDispatcher eventDispatcher) {

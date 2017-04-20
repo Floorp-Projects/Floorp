@@ -758,10 +758,6 @@
           // See bug 341047 and comments in overflow handler as to why
           // try..catch is needed here
           this._updateScrollButtonsDisabledState();
-
-          let childNodes = this._getScrollableElements();
-          if (childNodes && childNodes.length)
-            this.ensureElementIsVisible(childNodes[0], false);
         } catch (e) {
           this.removeAttribute("notoverflowing");
         }
