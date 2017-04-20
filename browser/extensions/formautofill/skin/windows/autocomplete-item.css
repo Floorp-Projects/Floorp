@@ -6,10 +6,6 @@
 @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 
-.profile-item-box > .profile-item-col > .profile-label {
-  font-size: 1.08em;
-}
-
 .profile-item-box > .profile-item-col > .profile-comment {
   font-size: .83em;
 }
