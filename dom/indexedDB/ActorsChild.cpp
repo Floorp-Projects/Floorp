@@ -19,6 +19,7 @@
 #include "IndexedDatabase.h"
 #include "IndexedDatabaseInlines.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/dom/Element.h"

@@ -331,7 +331,9 @@ ContentClientRemoteBuffer::CreateBackBuffer(const IntRect& aBufferRect)
       AbortTextureClientCreation();
       return;
     }
-    mTextureClientOnWhite->EnableBlockingReadLock();
+    // We don't enable the readlock for the white buffer since we always
+    // use them together and waiting on the lock for the black
+    // should be sufficient.
   }
 }
 

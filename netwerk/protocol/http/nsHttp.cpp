@@ -246,6 +246,18 @@ nsHttp::GetProtocolVersion(uint32_t pv)
 }
 
 // static
+void
+nsHttp::TrimHTTPWhitespace(const nsACString& aSource, nsACString& aDest)
+{
+  nsAutoCString str(aSource);
+
+  // HTTP whitespace 0x09: '\t', 0x0A: '\n', 0x0D: '\r', 0x20: ' '
+  static const char kHTTPWhitespace[] = "\t\n\r ";
+  str.Trim(kHTTPWhitespace);
+  aDest.Assign(str);
+}
+
+// static
 bool
 nsHttp::IsReasonableHeaderValue(const nsACString &s)
 {

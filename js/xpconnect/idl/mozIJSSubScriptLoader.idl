@@ -42,6 +42,11 @@ interface mozIJSSubScriptLoader : nsISupports
      *                      - async: if set to true, the script will be loaded
      *                        asynchronously, and a Promise is returned which
      *                        resolves to its result when execution is complete.
+     *                      - wantReturnValue: If true, the script will return
+     *                        the value of the last statement that it evaluated.
+     *                        This option disables most optimizations in the
+     *                        top-level scope, and should be avoided if at all
+     *                        possible. Defaults to false.
      * @retval rv the value returned by the sub-script
      */
     [implicit_jscontext]

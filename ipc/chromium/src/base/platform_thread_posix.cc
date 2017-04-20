@@ -53,7 +53,7 @@ PlatformThreadId PlatformThread::CurrentId() {
 #else
   return syscall(__NR_gettid);
 #endif
-#elif defined(OS_OPENBSD) || defined(__GLIBC__)
+#elif defined(OS_OPENBSD) || defined(OS_SOLARIS) || defined(__GLIBC__)
   return (intptr_t) (pthread_self());
 #elif defined(OS_NETBSD)
   return _lwp_self();
@@ -107,6 +107,8 @@ void PlatformThread::SetName(const char* name) {
   pthread_setname_np(pthread_self(), "%s", (void *)name);
 #elif defined(OS_BSD) && !defined(__GLIBC__)
   pthread_set_name_np(pthread_self(), name);
+#elif defined(OS_SOLARIS)
+  pthread_setname_np(pthread_self(), name);
 #else
 #endif
 }

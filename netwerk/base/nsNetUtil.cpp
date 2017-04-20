@@ -718,6 +718,12 @@ bool NS_IsValidHTTPToken(const nsACString &aToken)
   return mozilla::net::nsHttp::IsValidToken(aToken);
 }
 
+void
+NS_TrimHTTPWhitespace(const nsACString& aSource, nsACString& aDest)
+{
+  mozilla::net::nsHttp::TrimHTTPWhitespace(aSource, aDest);
+}
+
 nsresult
 NS_NewLoadGroup(nsILoadGroup **aResult, nsIPrincipal *aPrincipal)
 {

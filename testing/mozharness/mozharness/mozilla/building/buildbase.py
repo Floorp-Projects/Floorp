@@ -2019,13 +2019,22 @@ or run without that action (ie: --no-{action})"
             },
             "suites": [],
         }
-        if installer_size or size_measurements:
-            perfherder_data["suites"].append({
-                "name": "installer size",
-                "value": installer_size,
-                "alertThreshold": 0.25,
-                "subtests": size_measurements
-            })
+        if (installer_size or size_measurements) and not c.get('debug_build'):
+            if installer.endswith('.apk'): # Android
+                perfherder_data["suites"].append({
+                    "name": "installer size",
+                    "value": installer_size,
+                    "alertChangeType": "absolute",
+                    "alertThreshold": (200 * 1024),
+                    "subtests": size_measurements
+                })
+            else:
+                perfherder_data["suites"].append({
+                    "name": "installer size",
+                    "value": installer_size,
+                    "alertThreshold": 1.0,
+                    "subtests": size_measurements
+                })
 
         build_metrics = self._load_build_resources()
         if build_metrics:

@@ -643,6 +643,8 @@ imgRequestProxy::PerformClone(imgINotificationObserver* aObserver,
                               imgRequestProxy* (aAllocFn)(imgRequestProxy*),
                               imgRequestProxy** aClone)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
   NS_PRECONDITION(aClone, "Null out param");
 
   LOG_SCOPE(gImgLog, "imgRequestProxy::Clone");

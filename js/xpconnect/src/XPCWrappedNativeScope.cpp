@@ -487,7 +487,7 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
 
 // static
 void
-XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(JSTracer* trc, XPCJSContext* cx)
+XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(JSTracer* trc)
 {
     // Do JS::TraceEdge for all wrapped natives with external references, as
     // well as any DOM expando objects.
@@ -516,8 +516,7 @@ SuspectDOMExpandos(JSObject* obj, nsCycleCollectionNoteRootCallback& cb)
 
 // static
 void
-XPCWrappedNativeScope::SuspectAllWrappers(XPCJSContext* cx,
-                                          nsCycleCollectionNoteRootCallback& cb)
+XPCWrappedNativeScope::SuspectAllWrappers(nsCycleCollectionNoteRootCallback& cb)
 {
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
         for (auto i = cur->mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
@@ -533,7 +532,7 @@ XPCWrappedNativeScope::SuspectAllWrappers(XPCJSContext* cx,
 
 // static
 void
-XPCWrappedNativeScope::UpdateWeakPointersAfterGC(XPCJSContext* cx)
+XPCWrappedNativeScope::UpdateWeakPointersAfterGC()
 {
     // If this is called from the finalization callback in JSGC_MARK_END then
     // JSGC_FINALIZE_END must always follow it calling

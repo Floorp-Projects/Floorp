@@ -63,6 +63,8 @@ public:
   static nsresult CancelPrefetchLow(mozilla::dom::Link *aElement,
                                     nsresult aReason);
 
+  static void LinkDestroyed(mozilla::dom::Link* aLink);
+
 private:
   static nsresult Prefetch(const nsAString &host,
                            const mozilla::OriginAttributes &aOriginAttributes,
@@ -103,6 +105,8 @@ public:
     void Activate();
     nsresult Add(uint16_t flags, mozilla::dom::Link *aElement);
     
+    void RemoveUnboundLinks();
+
   private:
     ~nsDeferrals();
     void Flush();
@@ -123,7 +127,8 @@ public:
     struct deferred_entry
     {
       uint16_t                         mFlags;
-      nsWeakPtr                        mElement;
+      // Link implementation clears this raw pointer in its destructor.
+      mozilla::dom::Link*              mElement;
     } mEntries[sMaxDeferred];
   };
 

@@ -4,6 +4,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files("tests/**"):
+    BUG_COMPONENT = ("Firefox", "General")
+
+with Files("tests/browser/browser_bug538331.js"):
+    BUG_COMPONENT = ("Toolkit", "Application Update")
+
+with Files("tests/browser/browser_contentpermissionprompt.js"):
+    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+
+with Files("tests/unit/test_browserGlue_migration_loop_cleanup.js"):
+    BUG_COMPONENT = ("Firefox", "General")
+
+with Files("tests/unit/test_distribution.js"):
+    BUG_COMPONENT = ("Firefox", "Distributions")
+
+with Files("safebrowsing/**"):
+    BUG_COMPONENT = ("Toolkit", "Safe Browsing")
+
+
 DIRS += [
     'about',
     'contextualidentity',
