@@ -1520,7 +1520,7 @@ MediaResource::Create(MediaResourceCallback* aCallback,
 
   nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(aChannel);
   RefPtr<MediaResource> resource;
-  if (fc || IsBlobURI(uri)) {
+  if (fc || (IsBlobURI(uri) && XRE_IsParentProcess())) {
     resource = new FileMediaResource(aCallback, aChannel, uri, *containerType);
   } else {
     resource = new ChannelMediaResource(
