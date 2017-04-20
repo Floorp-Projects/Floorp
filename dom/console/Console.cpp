@@ -987,33 +987,38 @@ Console::GroupEnd(const GlobalObject& aGlobal)
 }
 
 /* static */ void
-Console::Time(const GlobalObject& aGlobal, const JS::Handle<JS::Value> aTime)
+Console::Time(const GlobalObject& aGlobal, const nsAString& aLabel)
 {
-  JSContext* cx = aGlobal.Context();
-
-  Sequence<JS::Value> data;
-  SequenceRooter<JS::Value> rooter(cx, &data);
-
-  if (!aTime.isUndefined() && !data.AppendElement(aTime, fallible)) {
-    return;
-  }
-
-  Method(aGlobal, MethodTime, NS_LITERAL_STRING("time"), data);
+  TimeMethod(aGlobal, aLabel, MethodTime, NS_LITERAL_STRING("time"));
 }
 
 /* static */ void
-Console::TimeEnd(const GlobalObject& aGlobal, const JS::Handle<JS::Value> aTime)
+Console::TimeEnd(const GlobalObject& aGlobal, const nsAString& aLabel)
+{
+  TimeMethod(aGlobal, aLabel, MethodTimeEnd, NS_LITERAL_STRING("timeEnd"));
+}
+
+/* static */ void
+Console::TimeMethod(const GlobalObject& aGlobal, const nsAString& aLabel,
+                    MethodName aMethodName, const nsAString& aMethodString)
 {
   JSContext* cx = aGlobal.Context();
+
+  ClearException ce(cx);
 
   Sequence<JS::Value> data;
   SequenceRooter<JS::Value> rooter(cx, &data);
 
-  if (!aTime.isUndefined() && !data.AppendElement(aTime, fallible)) {
+  JS::Rooted<JS::Value> value(cx);
+  if (!dom::ToJSValue(cx, aLabel, &value)) {
     return;
   }
 
-  Method(aGlobal, MethodTimeEnd, NS_LITERAL_STRING("timeEnd"), data);
+  if (!data.AppendElement(value, fallible)) {
+    return;
+  }
+
+  Method(aGlobal, aMethodName, aMethodString, data);
 }
 
 /* static */ void
