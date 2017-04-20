@@ -160,6 +160,8 @@ public:
     return mIdNameSpace;
   }
 
+  const WebRenderScrollData& GetScrollData() const;
+
 private:
   virtual ~WebRenderBridgeParent();
 
@@ -222,6 +224,9 @@ private:
 
   bool mPaused;
   bool mDestroyed;
+
+  // Can only be accessed on the compositor thread.
+  WebRenderScrollData mScrollData;
 
   static uint32_t sIdNameSpace;
 };
