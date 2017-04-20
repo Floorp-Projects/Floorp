@@ -43,6 +43,59 @@ public class FocusWebViewClient extends TrackingProtectionWebViewClient {
         this.callback = callback;
     }
 
+    /**
+     * Always ensure the following is wrapped in an anonymous function before execution.
+     * (We don't wrap here, since this code might be run as part of a larger function, see
+     * e.g. onLoadResource().)
+     */
+    private static final String CLEAR_VISITED_CSS =
+            "let nSheets = document.styleSheets.length;" +
+            "for (s=0; s < nSheets; s++) {" +
+            "  let stylesheet = document.styleSheets[s];" +
+            "  let nRules = stylesheet.cssRules ? stylesheet.cssRules.length : 0;" +
+            // rules need to be removed by index. That modifies the whole list - it's easiest
+            // to therefore process the list from the back, so that we don't need to care about
+            // indexes changing after deletion (all indexes before the removed item are unchanged,
+            // so by moving towards the start we'll always process all previously unprocessed items -
+            // moving in the other direction we'd need to remember to process a given index
+            // again which is more complicated).
+            "  for (i = nRules - 1; i >= 0; i--) {" +
+            "    let cssRule = stylesheet.cssRules[i];" +
+            // Depending on style type, there might be no selector
+            "    if (cssRule.selectorText && cssRule.selectorText.includes(':visited')) {" +
+            "      stylesheet.deleteRule(i);" +
+            "    }" +
+            "  }" +
+            "}";
+
+    @Override
+    public void onLoadResource(WebView view, String url) {
+        // We can't access the webview during shouldInterceptRequest(), however onLoadResource()
+        // is called on the UI thread so we're allowed to do this now:
+        view.evaluateJavascript(
+                "(function() {" +
+
+                "function cleanupVisited() {" +
+                CLEAR_VISITED_CSS +
+                "}" +
+
+                // Add an onLoad() listener so that we run the cleanup script every time
+                // a <link>'d css stylesheet is loaded:
+                "let links = document.getElementsByTagName('link');" +
+                "for (i = 0; i < links.length; i++) {" +
+                "  link = links[i];" +
+                "  if (link.rel == 'stylesheet') {" +
+                "    link.addEventListener('load', cleanupVisited, false);" +
+                "  }" +
+                "}" +
+
+                "})();",
+
+                null);
+
+        super.onLoadResource(view, url);
+    }
+
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
         // Only update the user visible URL if:
@@ -99,6 +152,15 @@ public class FocusWebViewClient extends TrackingProtectionWebViewClient {
             callback.onURLChanged(view.getUrl());
         }
         super.onPageFinished(view, url);
+
+        view.evaluateJavascript(
+                "(function() {" +
+
+                CLEAR_VISITED_CSS +
+
+                "})();",
+
+                null);
     }
 
     @Override
