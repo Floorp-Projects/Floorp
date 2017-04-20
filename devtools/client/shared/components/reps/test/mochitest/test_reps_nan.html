@@ -19,8 +19,11 @@ Test NaN rep
 "use strict";
 
 window.onload = Task.async(function* () {
-  const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, NaNRep } = REPS;
+  const {
+    REPS,
+    getRep,
+  } = browserRequire("devtools/client/shared/components/reps/reps");
+  let { NaNRep } = REPS;
 
   try {
     yield testNaN();
@@ -34,9 +37,7 @@ window.onload = Task.async(function* () {
     const stub = {
       type: "NaN"
     };
-    const renderedRep = shallowRenderComponent(Rep, {object: stub});
-    is(renderedRep.type, NaNRep.rep,
-      `Rep correctly selects ${NaNRep.rep.displayName} for NaN value`);
+    is(getRep(stub), NaNRep.rep, "Rep correctly selects NaN Rep");
 
     const renderedComponent = renderComponent(NaNRep.rep, {object: stub});
     is(renderedComponent.textContent, "NaN", "NaN rep has expected text content");

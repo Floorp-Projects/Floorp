@@ -21,7 +21,11 @@ window.onload = Task.async(function* () {
     let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     let React = browserRequire("devtools/client/shared/vendor/react");
 
-    const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/reps");
+    const {
+      REPS,
+      MODE,
+      getRep,
+    } = browserRequire("devtools/client/shared/components/reps/reps");
     let { Rep, Window } = REPS;
 
     let gripStub = {
@@ -39,11 +43,10 @@ window.onload = Task.async(function* () {
     };
 
     // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
-    is(renderedRep.type, Window.rep, `Rep correctly selects ${Window.rep.displayName}`);
+    is(getRep(gripStub), Window.rep, "Rep correctly selects Window Rep");
 
     // Test rendering
-    const renderedComponent = renderComponent(Window.rep, { object: gripStub });
+    const renderedComponent = renderComponent(Rep, { object: gripStub });
     ok(renderedComponent.className.includes("objectBox-Window"), "Window rep has expected class name");
     is(renderedComponent.textContent, "Window about:newtab", "Window rep has expected text content");
     const innerNode = renderedComponent.querySelector(".objectPropValue");

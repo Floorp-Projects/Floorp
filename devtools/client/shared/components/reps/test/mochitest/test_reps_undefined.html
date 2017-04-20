@@ -20,16 +20,18 @@ window.onload = Task.async(function* () {
   try {
     let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     let React = browserRequire("devtools/client/shared/vendor/react");
-    const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
-    let { Rep, Undefined } = REPS;
+    const {
+      REPS,
+      getRep,
+    } = browserRequire("devtools/client/shared/components/reps/reps");
+    let { Undefined } = REPS;
 
     let gripStub = {
       "type": "undefined"
     };
 
     // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
-    is(renderedRep.type, Undefined.rep, `Rep correctly selects ${Undefined.rep.displayName}`);
+    is(getRep(gripStub), Undefined.rep, "Rep correctly selects Undefined Rep");
 
     // Test rendering
     const renderedComponent = renderComponent(Undefined.rep, {});
