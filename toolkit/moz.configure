@@ -594,9 +594,9 @@ option('--disable-stylo-build-bindgen',
        help='Enable build-time bindgen for Stylo')
 
 option('--with-libclang-path', nargs=1,
-       help='Absolute path to Clang/LLVM libraries for Stylo (at least version 3.9.0')
+       help='Absolute path to Clang/LLVM libraries for Stylo (version 3.9.x')
 option('--with-clang-path', nargs=1,
-       help='Absolute path to a Clang binary for Stylo bindgen (at least version 3.9.0)')
+       help='Absolute path to a Clang binary for Stylo bindgen (version 3.9.x)')
 
 def invoke_llvm_config(llvm_config, *options):
     '''Invoke llvm_config with the given options and return the first line of
@@ -608,11 +608,13 @@ def invoke_llvm_config(llvm_config, *options):
 def check_minimum_llvm_config_version(llvm_config):
     version = Version(invoke_llvm_config(llvm_config, '--version'))
     min_version = Version('3.9.0')
-    if version < min_version:
+    # For various reasons, bindgen only works with LLVM 3.9.x for right now.
+    non_working_version = Version('4.0.0')
+    if version < min_version or version >= non_working_version:
         die(dedent('''\
-        llvm installation {} is too old.
+        llvm installation {} is incompatible with Stylo bindgen.
 
-        To compile Stylo, please install at least version {} of
+        To compile Stylo, please install version {} of
         Clang + LLVM and ensure that the 'llvm-config' from that
         installation is first on your path.
 

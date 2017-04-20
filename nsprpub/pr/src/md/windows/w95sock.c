@@ -330,6 +330,167 @@ _PR_MD_SENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
     return bytesSent;
 }
 
+#if defined(_WIN64)
+
+static PRCallOnceType _pr_has_connectex_once;
+typedef BOOL (WINAPI *_pr_win_connectex_ptr)(SOCKET, const struct sockaddr *, int, PVOID, DWORD, LPDWORD, LPOVERLAPPED);
+#ifndef WSAID_CONNECTEX
+#define WSAID_CONNECTEX \
+  {0x25a207b9,0xddf3,0x4660,{0x8e,0xe9,0x76,0xe5,0x8c,0x74,0x06,0x3e}}
+#endif
+#ifndef SIO_GET_EXTENSION_FUNCTION_POINTER
+#define SIO_GET_EXTENSION_FUNCTION_POINTER 0xC8000006
+#endif
+#ifndef TCP_FASTOPEN
+#define TCP_FASTOPEN 15
+#endif
+
+#ifndef SO_UPDATE_CONNECT_CONTEXT
+#define SO_UPDATE_CONNECT_CONTEXT 0x7010
+#endif
+
+static _pr_win_connectex_ptr _pr_win_connectex;
+
+static PRStatus PR_CALLBACK _pr_set_connectex(void)
+{
+    _pr_win_connectex = NULL;
+    SOCKET sock;
+    PRInt32 dwBytes;
+    int rc;
+
+    /* Dummy socket needed for WSAIoctl */
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock == INVALID_SOCKET)
+        return PR_SUCCESS;
+
+    GUID guid = WSAID_CONNECTEX;
+    rc = WSAIoctl(sock, SIO_GET_EXTENSION_FUNCTION_POINTER,
+                  &guid, sizeof(guid),
+                  &_pr_win_connectex, sizeof(_pr_win_connectex),
+                  &dwBytes, NULL, NULL);
+    if (rc != 0) {
+        _pr_win_connectex = NULL;
+        return PR_SUCCESS;
+    }
+
+    rc = closesocket(sock);
+    return PR_SUCCESS;
+}
+
+PRInt32
+_PR_MD_TCPSENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
+                 const PRNetAddr *addr, PRUint32 addrlen, PRIntervalTime timeout)
+{
+    if (PR_CallOnce(&_pr_has_connectex_once, _pr_set_connectex) != PR_SUCCESS) {
+        PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+        return PR_FAILURE;
+    }
+
+    if (_pr_win_connectex == NULL) {
+        PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+        return PR_FAILURE;
+    }
+
+    PROsfd osfd = fd->secret->md.osfd;
+    PRInt32 rv, err;
+    PRInt32 bytesSent = 0;
+    DWORD rvSent;
+
+    BOOL option = 1;
+    rv = setsockopt((SOCKET)osfd, IPPROTO_TCP, TCP_FASTOPEN, (char*)&option, sizeof(option));
+    if (rv != 0) {
+        err = WSAGetLastError();
+        PR_LOG(_pr_io_lm, PR_LOG_MIN,
+               ("_PR_MD_TCPSENDTO error set opt TCP_FASTOPEN failed %d\n", err));
+        if (err == WSAENOPROTOOPT) {
+            PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+        } else {
+            _PR_MD_MAP_SETSOCKOPT_ERROR(err);
+        }
+        return -1;
+    }
+
+    // ConnectEx requires the socket to be initially bound. We will use INADDR_ANY
+    PRNetAddr bindAddr;
+    memset(&bindAddr, 0, sizeof(bindAddr));
+    if (addr->raw.family == PR_AF_INET) {
+        bindAddr.inet.family = PR_AF_INET;
+    } else if (addr->raw.family == PR_AF_INET6) {
+        bindAddr.ipv6.family = PR_AF_INET6;
+    }
+    rv = bind((SOCKET)osfd, (SOCKADDR*) &bindAddr, sizeof(bindAddr));
+    if (rv != 0) {
+        err = WSAGetLastError();
+        PR_LOG(_pr_io_lm, PR_LOG_MIN,
+               ("_PR_MD_TCPSENDTO error bind failed %d\n", err));
+        _PR_MD_MAP_SETSOCKOPT_ERROR(err);
+        return -1;
+    }
+
+    PR_LOG(_pr_io_lm, PR_LOG_MIN,
+           ("_PR_MD_TCPSENDTO calling _pr_win_connectex  %d %p\n", amount, (char*)buf));
+
+    rvSent = 0;
+    memset(&fd->secret->ol, 0, sizeof(fd->secret->ol));
+    // ConnectEx return TRUE on a success and FALSE on an error.
+    if (_pr_win_connectex( (SOCKET)osfd, (struct sockaddr *) addr,
+                           addrlen, buf, amount,
+                           &rvSent, &fd->secret->ol) == TRUE) {
+        // When ConnectEx is used, all previously set socket options and
+        // property are not enabled and to enable them
+        // SO_UPDATE_CONNECT_CONTEXT option need to be set.
+        rv = setsockopt((SOCKET)osfd, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT, NULL, 0);
+        if (rv != 0) {
+            err = WSAGetLastError();
+            PR_LOG(_pr_io_lm, PR_LOG_MIN,
+               ("_PR_MD_TCPSENDTO setting SO_UPDATE_CONNECT_CONTEXT failed %d\n", err));
+            _PR_MD_MAP_SETSOCKOPT_ERROR(err);
+            return -1;
+        }
+        // We imitate Linux here. SendTo will return number of bytes send but
+        // it can not return connection success at the same time, so we return
+        // number of bytes send and "connection success" will be return on the
+        // connectcontinue.
+        fd->secret->alreadyConnected = PR_TRUE;
+        return rvSent;
+    } else {
+        err = WSAGetLastError();
+        PR_LOG(_pr_io_lm, PR_LOG_MIN,
+               ("_PR_MD_TCPSENDTO error _pr_win_connectex failed %d\n", err));
+        if (err != ERROR_IO_PENDING) {
+            _PR_MD_MAP_CONNECT_ERROR(err);
+            return -1;
+        } else if (fd->secret->nonblocking) {
+            // Remember that overlapped structure is set. We will neede to get
+            // the final result of ConnectEx call.
+            fd->secret->overlappedActive = PR_TRUE;
+            _PR_MD_MAP_CONNECT_ERROR(WSAEWOULDBLOCK);
+            // ConnectEx will copy supplied data to a internal buffer and send
+            // them during Fast Open or after connect. Therefore we can assumed
+            // this data already send.
+            return amount;
+        }
+        while (err == ERROR_IO_PENDING) {
+            rv = socket_io_wait(osfd, WRITE_FD, timeout);
+            if ( rv < 0 ) {
+                return -1;
+            }
+            rv = GetOverlappedResult(osfd, &fd->secret->ol, &rvSent, FALSE);
+            if ( rv == TRUE ) {
+                return rvSent;
+            } else {
+                err = WSAGetLastError();
+                if (err != ERROR_IO_PENDING) {
+                    _PR_MD_MAP_CONNECT_ERROR(err);
+                    return -1;
+                }
+            }
+        }
+    }
+    return -1;
+}
+#endif
+
 PRInt32
 _PR_MD_RECVFROM(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
                 PRNetAddr *addr, PRUint32 *addrlen, PRIntervalTime timeout)

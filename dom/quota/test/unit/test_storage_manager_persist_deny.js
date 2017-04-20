@@ -4,9 +4,7 @@ var testGenerator = testSteps();
 function* testSteps()
 {
   SpecialPowers.pushPrefEnv({
-    "set": [["dom.storageManager.enabled", true],
-            ["dom.storageManager.prompt.testing", true],
-            ["dom.storageManager.prompt.testing.allow", false]]
+    "set": [["dom.storageManager.prompt.testing.allow", false]]
   }, continueToNextStep);
   yield undefined;
 
