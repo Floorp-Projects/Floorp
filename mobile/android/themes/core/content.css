@@ -113,7 +113,7 @@ select[size],
 select[multiple],
 select[size][multiple],
 textarea,
-* > input:not([type="image"]) {
+* > input:not(:-moz-any([type="image"], [type="checkbox"], [type="radio"])) {
   border-style: solid;
   border-color: var(--form_border);
   color: var(--form_text);
