@@ -110,7 +110,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
 
 XPCNativeInterface::~XPCNativeInterface()
 {
-    XPCJSContext::Get()->GetIID2NativeInterfaceMap()->Remove(this);
+    XPCJSRuntime::Get()->GetIID2NativeInterfaceMap()->Remove(this);
 }
 
 // static
@@ -118,9 +118,9 @@ already_AddRefed<XPCNativeInterface>
 XPCNativeInterface::GetNewOrUsed(const nsIID* iid)
 {
     RefPtr<XPCNativeInterface> iface;
-    XPCJSContext* cx = XPCJSContext::Get();
+    XPCJSRuntime* rt = XPCJSRuntime::Get();
 
-    IID2NativeInterfaceMap* map = cx->GetIID2NativeInterfaceMap();
+    IID2NativeInterfaceMap* map = rt->GetIID2NativeInterfaceMap();
     if (!map)
         return nullptr;
 
@@ -159,9 +159,9 @@ XPCNativeInterface::GetNewOrUsed(nsIInterfaceInfo* info)
     if (NS_FAILED(info->GetIIDShared(&iid)) || !iid)
         return nullptr;
 
-    XPCJSContext* cx = XPCJSContext::Get();
+    XPCJSRuntime* rt = XPCJSRuntime::Get();
 
-    IID2NativeInterfaceMap* map = cx->GetIID2NativeInterfaceMap();
+    IID2NativeInterfaceMap* map = rt->GetIID2NativeInterfaceMap();
     if (!map)
         return nullptr;
 
@@ -467,7 +467,7 @@ XPCNativeSet::~XPCNativeSet()
 {
     // Remove |this| before we clear the interfaces to ensure that the
     // hashtable look up is correct.
-    XPCJSContext::Get()->GetNativeSetMap()->Remove(this);
+    XPCJSRuntime::Get()->GetNativeSetMap()->Remove(this);
 
     for (int i = 0; i < mInterfaceCount; i++) {
         NS_RELEASE(mInterfaces[i]);
@@ -485,8 +485,8 @@ XPCNativeSet::GetNewOrUsed(const nsIID* iid)
 
     XPCNativeSetKey key(iface);
 
-    XPCJSContext* xpccx = XPCJSContext::Get();
-    NativeSetMap* map = xpccx->GetNativeSetMap();
+    XPCJSRuntime* xpcrt = XPCJSRuntime::Get();
+    NativeSetMap* map = xpcrt->GetNativeSetMap();
     if (!map)
         return nullptr;
 
@@ -511,8 +511,8 @@ XPCNativeSet::GetNewOrUsed(const nsIID* iid)
 already_AddRefed<XPCNativeSet>
 XPCNativeSet::GetNewOrUsed(nsIClassInfo* classInfo)
 {
-    XPCJSContext* xpccx = XPCJSContext::Get();
-    ClassInfo2NativeSetMap* map = xpccx->GetClassInfo2NativeSetMap();
+    XPCJSRuntime* xpcrt = XPCJSRuntime::Get();
+    ClassInfo2NativeSetMap* map = xpcrt->GetClassInfo2NativeSetMap();
     if (!map)
         return nullptr;
 
@@ -563,7 +563,7 @@ XPCNativeSet::GetNewOrUsed(nsIClassInfo* classInfo)
         if (interfaceArray.Length() > 0) {
             set = NewInstance(Move(interfaceArray));
             if (set) {
-                NativeSetMap* map2 = xpccx->GetNativeSetMap();
+                NativeSetMap* map2 = xpcrt->GetNativeSetMap();
                 if (!map2)
                     goto out;
 
@@ -606,8 +606,8 @@ out:
 void
 XPCNativeSet::ClearCacheEntryForClassInfo(nsIClassInfo* classInfo)
 {
-    XPCJSContext* xpccx = nsXPConnect::GetContextInstance();
-    ClassInfo2NativeSetMap* map = xpccx->GetClassInfo2NativeSetMap();
+    XPCJSRuntime* xpcrt = nsXPConnect::GetRuntimeInstance();
+    ClassInfo2NativeSetMap* map = xpcrt->GetClassInfo2NativeSetMap();
     if (map)
         map->Remove(classInfo);
 }
@@ -616,7 +616,7 @@ XPCNativeSet::ClearCacheEntryForClassInfo(nsIClassInfo* classInfo)
 already_AddRefed<XPCNativeSet>
 XPCNativeSet::GetNewOrUsed(XPCNativeSetKey* key)
 {
-    NativeSetMap* map = XPCJSContext::Get()->GetNativeSetMap();
+    NativeSetMap* map = XPCJSRuntime::Get()->GetNativeSetMap();
     if (!map)
         return nullptr;
 

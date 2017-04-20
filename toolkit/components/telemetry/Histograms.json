@@ -11324,5 +11324,77 @@
     "kind": "enumerated",
     "n_values": 99,
     "description": "Count of which display items are being used by type id"
+  },
+  "TIME_TO_DOM_LOADING_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1344893],
+    "description": "Time in milliseconds from navigationStart to domLoading."
+  },
+  "TIME_TO_DOM_INTERACTIVE_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1344893],
+    "description": "Time in milliseconds from navigationStart to domInteractive."
+  },
+  "TIME_TO_DOM_CONTENT_LOADED_START_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1344893],
+    "description": "Time in milliseconds from navigationStart to domContentLoadedEventStart."
+  },
+  "TIME_TO_DOM_CONTENT_LOADED_END_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1344893],
+    "description": "Time in milliseconds from navigationStart to domContentLoadedEventEnd."
+  },
+  "TIME_TO_DOM_COMPLETE_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1344893],
+    "description": "Time in milliseconds from navigationStart to domComplete."
+  },
+  "TIME_TO_LOAD_EVENT_START_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1344893],
+    "description": "Time in milliseconds from navigationStart to loadEventStart."
+  },
+  "TIME_TO_LOAD_EVENT_END_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1344893],
+    "description": "Time in milliseconds from navigationStart to loadEventEnd."
+  },
+  "TIME_TO_RESPONSE_START_MS": {
+    "alert_emails": ["wpan@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1344893],
+    "description": "Time in milliseconds from navigationStart to responseStart."
   }
 }

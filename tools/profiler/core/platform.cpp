@@ -946,6 +946,32 @@ DoNativeBacktrace(PS::LockRef aLock, ProfileBuffer* aBuffer,
   // assumes that the TaggedUWord holding the stack pointer value is valid, but
   // it should be, since it was constructed that way in the code just above.
 
+  // We could construct |stackImg| so that LUL reads directly from the stack in
+  // question, rather than from a copy of it.  That would reduce overhead and
+  // space use a bit.  However, it gives a problem with dynamic analysis tools
+  // (ASan, TSan, Valgrind) which is that such tools will report invalid or
+  // racing memory accesses, and such accesses will be reported deep inside LUL.
+  // By taking a copy here, we can either sanitise the copy (for Valgrind) or
+  // copy it using an unchecked memcpy (for ASan, TSan).  That way we don't have
+  // to try and suppress errors inside LUL.
+  //
+  // N_STACK_BYTES is set to 160KB.  This is big enough to hold all stacks
+  // observed in some minutes of testing, whilst keeping the size of this
+  // function (DoNativeBacktrace)'s frame reasonable.  Most stacks observed in
+  // practice are small, 4KB or less, and so the copy costs are insignificant
+  // compared to other profiler overhead.
+  //
+  // |stackImg| is allocated on this (the sampling thread's) stack.  That
+  // implies that the frame for this function is at least N_STACK_BYTES large.
+  // In general it would be considered unacceptable to have such a large frame
+  // on a stack, but it only exists for the unwinder thread, and so is not
+  // expected to be a problem.  Allocating it on the heap is troublesome because
+  // this function runs whilst the sampled thread is suspended, so any heap
+  // allocation risks deadlock.  Allocating it as a global variable is not
+  // thread safe, which would be a problem if we ever allow multiple sampler
+  // threads.  Hence allocating it on the stack seems to be the least-worst
+  // option.
+
   lul::StackImage stackImg;
 
   {

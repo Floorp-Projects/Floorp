@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* Generated with cbindgen:0.1.5 */
+
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file, clone `https://github.com/rlhunt/cbindgen` or run `cargo install cbindgen`,
  * then run `cbindgen -c wr gfx/webrender_bindings/ gfx/webrender_bindings/webrender_ffi_generated.h` */
@@ -534,7 +536,7 @@ WR_FUNC;
 
 WR_INLINE void
 wr_api_delete(WrAPI* api)
-WR_FUNC;
+WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE void
 wr_api_delete_font(WrAPI* api,
@@ -826,7 +828,7 @@ WR_FUNC;
 
 WR_INLINE void
 wr_state_delete(WrState* state)
-WR_FUNC;
+WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE WrState*
 wr_state_new(WrPipelineId pipeline_id)

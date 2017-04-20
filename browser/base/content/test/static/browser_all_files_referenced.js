@@ -10,6 +10,7 @@ var gExceptionPaths = [
   "chrome://browser/content/defaultthemes/",
   "chrome://browser/locale/searchplugins/",
   "resource://app/defaults/blocklists/",
+  "resource://app/defaults/pinning/",
   "resource://app/defaults/preferences/",
   "resource://gre/modules/commonjs/",
   "resource://gre/defaults/pref/",
@@ -284,9 +285,6 @@ const ignorableWhitelist = new Set([
 
   // dom/media/gmp/GMPParent.cpp
   "resource://gre/gmp-clearkey/0.1/manifest.json",
-
-  // Bug 1351675 - should this file be packaged?
-  "resource://app/defaults/pinning/pins.json",
 
   // Bug 1351669 - obsolete test file
   "resource://gre/res/test.properties",

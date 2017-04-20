@@ -4,6 +4,133 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "General")
+
+with Files("test/browser/*Telemetry*"):
+    BUG_COMPONENT = ("Toolkit", "Telemetry")
+
+with Files("test/browser/*ContentSearch*"):
+    BUG_COMPONENT = ("Firefox", "Search")
+
+with Files("test/browser/*NetworkPrioritizer*"):
+    BUG_COMPONENT = ("Core", "Networking")
+
+with Files("test/browser/*PermissionUI*"):
+    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+
+with Files("test/browser/browser_SelfSupportBackend.js"):
+    BUG_COMPONENT = ("Toolkit", "Telemetry")
+
+with Files("test/browser/*SitePermissions*"):
+    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+
+with Files("test/browser/browser_UnsubmittedCrashHandler.js"):
+    BUG_COMPONENT = ("Toolkit", "Breakpad Integration")
+
+with Files("test/browser/browser_bug1319078.js"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("test/browser/browser_taskbar_preview.js"):
+    BUG_COMPONENT = ("Firefox", "Shell Integration")
+
+with Files("test/browser/browser_urlBar_zoom.js"):
+    BUG_COMPONENT = ("Firefox", "General")
+
+with Files("test/unit/test_AttributionCode.js"):
+    BUG_COMPONENT = ("Toolkit", "Telemetry")
+
+with Files("test/unit/test_DirectoryLinksProvider.js"):
+    BUG_COMPONENT = ("Firefox", "New Tab Page")
+
+with Files("test/unit/test_E10SUtils_nested_URIs.js"):
+    BUG_COMPONENT = ("Core", "Security: Process Sandboxing")
+
+with Files("test/unit/test_LaterRun.js"):
+    BUG_COMPONENT = ("Firefox", "Tours")
+
+with Files("test/unit/test_SitePermissions.js"):
+    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+
+with Files("AboutNewTab.jsm"):
+    BUG_COMPONENT = ("Firefox", "New Tab Page")
+
+with Files("AttributionCode.jsm"):
+    BUG_COMPONENT = ("Toolkit", "Telemetry")
+
+with Files("*Telemetry.jsm"):
+    BUG_COMPONENT = ("Toolkit", "Telemetry")
+
+with Files("ContentCrashHandlers.jsm"):
+    BUG_COMPONENT = ("Toolkit", "Breakpad Integration")
+
+with Files("ContentSearch.jsm"):
+    BUG_COMPONENT = ("Firefox", "Search")
+
+with Files("ContentWebRTC.jsm"):
+    BUG_COMPONENT = ("Firefox", "Device Permissions")
+
+with Files("DirectoryLinksProvider.jsm"):
+    BUG_COMPONENT = ("Firefox", "New Tab Page")
+
+with Files("E10SUtils.jsm"):
+    BUG_COMPONENT = ("Core", "Security: Process Sandboxing")
+
+with Files("ExtensionsUI.jsm"):
+    BUG_COMPONENT = ("Toolkit", "WebExtensions: General")
+
+with Files("FullZoomUI.jsm"):
+    BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
+
+with Files("LaterRun.jsm"):
+    BUG_COMPONENT = ("Firefox", "Tours")
+
+with Files("NetworkPrioritizer.jsm"):
+    BUG_COMPONENT = ("Core", "Networking")
+
+with Files("PermissionUI.jsm"):
+   BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+
+with Files("PluginContent.jsm"):
+    BUG_COMPONENT = ("Core", "Plug-ins")
+
+with Files("ProcessHangMonitor.jsm"):
+    BUG_COMPONENT = ("Core", "DOM: Content Processes")
+
+with Files("ReaderParent.jsm"):
+    BUG_COMPONENT = ("Toolkit", "Reader Mode")
+
+with Files("Sanitizer.jsm"):
+    BUG_COMPONENT = ("Firefox", "Preferences")
+
+with Files("SelfSupportBackend.jsm"):
+    BUG_COMPONENT = ("Toolkit", "Telemetry")
+
+with Files("SitePermissions.jsm"):
+    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+
+with Files("Social*"):
+    BUG_COMPONENT = ("Firefox", "SocialAPI")
+
+with Files("TransientPrefs.jsm"):
+    BUG_COMPONENT = ("Firefox", "Preferences")
+
+with Files("Windows8WindowFrameColor.jsm"):
+    BUG_COMPONENT = ("Firefox", "Theme")
+
+with Files("WindowsJumpLists.jsm"):
+    BUG_COMPONENT = ("Firefox", "Shell Integration")
+
+with Files("WindowsPreviewPerTab.jsm"):
+    BUG_COMPONENT = ("Core", "Widget: Win32")
+
+with Files("offlineAppCache.jsm"):
+    BUG_COMPONENT = ("Firefox", "Preferences")
+
+with Files("webrtcUI.jsm"):
+    BUG_COMPONENT = ("Firefox", "Device Permissions")
+
+
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 XPCSHELL_TESTS_MANIFESTS += [
     'test/unit/social/xpcshell.ini',

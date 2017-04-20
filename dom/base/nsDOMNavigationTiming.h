@@ -9,8 +9,10 @@
 
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/TimeStamp.h"
 
+class nsDocShell;
 class nsIURI;
 
 typedef unsigned long long DOMTimeMilliSec;
@@ -26,7 +28,7 @@ public:
     TYPE_RESERVED = 255,
   };
 
-  nsDOMNavigationTiming();
+  explicit nsDOMNavigationTiming(nsDocShell* aDocShell);
 
   NS_INLINE_DECL_REFCOUNTING(nsDOMNavigationTiming)
 
@@ -119,6 +121,10 @@ private:
   ~nsDOMNavigationTiming();
 
   void Clear();
+
+  bool IsTopLevelContentDocument() const;
+
+  mozilla::WeakPtr<nsDocShell> mDocShell;
 
   nsCOMPtr<nsIURI> mUnloadedURI;
   nsCOMPtr<nsIURI> mLoadedURI;

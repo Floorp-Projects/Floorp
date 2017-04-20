@@ -1883,10 +1883,22 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   nsINode::Unlink(tmp);
 
   // Unlink the mChildren nsAttrAndChildArray.
-  for (int32_t indx = int32_t(tmp->mChildren.ChildCount()) - 1;
-       indx >= 0; --indx) {
-    tmp->mChildren.ChildAt(indx)->UnbindFromTree();
-    tmp->mChildren.RemoveChildAt(indx);
+  uint32_t childCount = tmp->mChildren.ChildCount();
+  if (childCount) {
+    while (childCount-- > 0) {
+      // Hold a strong ref to the node when we remove it, because we may be
+      // the last reference to it.  We need to call TakeChildAt() and
+      // update mFirstChild before calling UnbindFromTree, since this last
+      // can notify various observers and they should really see consistent
+      // tree state.
+      // If this code changes, change the corresponding code in
+      // FragmentOrElement's unlink impl and ContentUnbinder::UnbindSubtree.
+      nsCOMPtr<nsIContent> child = tmp->mChildren.TakeChildAt(childCount);
+      if (childCount == 0) {
+        tmp->mFirstChild = nullptr;
+      }
+      child->UnbindFromTree();
+    }
   }
   tmp->mFirstChild = nullptr;
 
