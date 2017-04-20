@@ -142,17 +142,36 @@ sending it: we only want to send consistent values.
 
 searches
 ~~~~~~~~
-In the case a search engine is added by a user, the engine identifier "other" is used, e.g. "other.<source>".
+This describes the search engine usage(count). The format is { "<engine identifier>.<source>"" : count }
+This is optional because the users may have never used the search feature.
+There's no difference if extended telemetry is enabled (prerelease builds) or not.
 
-Sources in Android are based on the existing UI telemetry values and are as
-follows:
+Possible value :
 
+.. code-block:: js
+
+    {
+       "yahoo.listitem":2,
+       "duckduckgo.listitem":1,
+       "google-nocodes.suggestion":1
+    }
+
+<engine identifier>:
+The identifier of the the search engine. The identifier is collected the way same as desktop.
+we only record the search engine name when :
+* builtin or suggested search engines with an ID (includes partner search engines in various distribution scenarios).
+  If it's not a built-in engine, we show "null" or "other".
+* If the user has "Health Report" and core ping enabled.
+
+<sources>
+It's from one of the 'method's in UI telemetry. Possible values:
 * actionbar: the user types in the url bar and hits enter to use the default
   search engine
 * listitem: the user selects a search engine from the list of secondary search
   engines at the bottom of the screen
 * suggestion: the user clicks on a search suggestion or, in the case that
   suggestions are disabled, the row corresponding with the main engine
+
 
 Other parameters
 ----------------
