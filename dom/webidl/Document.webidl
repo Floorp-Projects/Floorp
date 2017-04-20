@@ -73,7 +73,7 @@ interface Document : Node {
   [Throws]
   Node adoptNode(Node node);
 
-  [NewObject, Throws]
+  [NewObject, Throws, NeedsCallerType]
   Event createEvent(DOMString interface);
 
   [NewObject, Throws]

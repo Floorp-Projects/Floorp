@@ -148,7 +148,7 @@ function testCreateEvent()
 {
   var evt;
   try {
-    evt = document.createEvent("TimeEvents");
+    evt = document.createEvent("TimeEvent");
   } catch (e) {
     ok(false, "Failed to create TimeEvent via script: " + e);
     return;

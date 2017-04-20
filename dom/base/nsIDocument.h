@@ -2627,7 +2627,9 @@ public:
     ImportNode(nsINode& aNode, bool aDeep, mozilla::ErrorResult& rv) const;
   nsINode* AdoptNode(nsINode& aNode, mozilla::ErrorResult& rv);
   already_AddRefed<mozilla::dom::Event>
-    CreateEvent(const nsAString& aEventType, mozilla::ErrorResult& rv) const;
+    CreateEvent(const nsAString& aEventType,
+                mozilla::dom::CallerType aCallerType,
+                mozilla::ErrorResult& rv) const;
   already_AddRefed<nsRange> CreateRange(mozilla::ErrorResult& rv);
   already_AddRefed<mozilla::dom::NodeIterator>
     CreateNodeIterator(nsINode& aRoot, uint32_t aWhatToShow,
