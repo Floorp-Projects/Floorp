@@ -7,7 +7,7 @@ console.assert(false, "Failing mozscreenshots assertion");
 
 console.group("Grouped Message");
 console.log("group message 1");
-console.groupEnd("Grouped Message");
+console.groupEnd();
 
 console.count("counter");
 console.count("counter");

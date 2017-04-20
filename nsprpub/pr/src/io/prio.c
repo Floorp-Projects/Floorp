@@ -119,6 +119,10 @@ PR_IMPLEMENT(PRFileDesc*) PR_AllocFileDesc(
         fd->methods = methods;
         fd->secret->state = _PR_FILEDESC_OPEN;
 	fd->secret->md.osfd = osfd;
+#if defined(_WIN64)
+        fd->secret->alreadyConnected = PR_FALSE;
+        fd->secret->overlappedActive = PR_FALSE;
+#endif
         _PR_MD_INIT_FILEDESC(fd);
     } else {
 	    PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);

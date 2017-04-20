@@ -722,7 +722,7 @@ nsLocalFile::CopyDirectoryTo(nsIFile* aNewParent)
   }
 
   bool hasMore = false;
-  while (dirIterator->HasMoreElements(&hasMore), hasMore) {
+  while (NS_SUCCEEDED(dirIterator->HasMoreElements(&hasMore)) && hasMore) {
     nsCOMPtr<nsISupports> supports;
     nsCOMPtr<nsIFile> entry;
     rv = dirIterator->GetNext(getter_AddRefs(supports));
@@ -1050,7 +1050,7 @@ nsLocalFile::Remove(bool aRecursive)
     }
 
     bool more;
-    while (dir->HasMoreElements(&more), more) {
+    while (NS_SUCCEEDED(dir->HasMoreElements(&more)) && more) {
       nsCOMPtr<nsISupports> item;
       rv = dir->GetNext(getter_AddRefs(item));
       if (NS_FAILED(rv)) {

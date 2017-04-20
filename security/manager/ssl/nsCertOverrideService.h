@@ -7,7 +7,7 @@
 #ifndef nsCertOverrideService_h
 #define nsCertOverrideService_h
 
-#include "mozilla/ReentrantMonitor.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/TypedEnumBits.h"
 #include "nsICertOverrideService.h"
 #include "nsIFile.h"
@@ -160,25 +160,26 @@ public:
 protected:
     ~nsCertOverrideService();
 
-    mozilla::ReentrantMonitor monitor;
+    mozilla::Mutex mMutex;
     nsCOMPtr<nsIFile> mSettingsFile;
     nsTHashtable<nsCertOverrideEntry> mSettingsTable;
 
     SECOidTag mOidTagForStoringNewHashes;
     nsCString mDottedOidForStoringNewHashes;
 
-    void CountPermanentOverrideTelemetry();
+    void CountPermanentOverrideTelemetry(const mozilla::MutexAutoLock& aProofOfLock);
 
     void RemoveAllFromMemory();
-    nsresult Read();
-    nsresult Write();
+    nsresult Read(const mozilla::MutexAutoLock& aProofOfLock);
+    nsresult Write(const mozilla::MutexAutoLock& aProofOfLock);
     nsresult AddEntryToList(const nsACString &host, int32_t port,
                             nsIX509Cert *aCert,
                             const bool aIsTemporary,
                             const nsACString &algo_oid, 
                             const nsACString &fingerprint,
                             nsCertOverride::OverrideBits ob,
-                            const nsACString &dbKey);
+                            const nsACString &dbKey,
+                            const mozilla::MutexAutoLock& aProofOfLock);
 };
 
 #define NS_CERTOVERRIDE_CID { /* 67ba681d-5485-4fff-952c-2ee337ffdcd6 */ \
