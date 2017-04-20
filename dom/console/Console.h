@@ -70,7 +70,7 @@ public:
   Table(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
   static void
-  Trace(const GlobalObject& aGlobal);
+  Trace(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
   static void
   Dir(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
