@@ -34,6 +34,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/TokenStream.h"
+#include "vm/RegExpObject.h"
 #include "wasm/AsmJS.h"
 
 #include "jsatominlines.h"
