@@ -222,6 +222,11 @@ struct WalkStackData
 DWORD gStackWalkThread;
 CRITICAL_SECTION gDbgHelpCS;
 
+#ifdef _M_AMD64
+static uint8_t* sJitCodeRegionStart;
+static size_t sJitCodeRegionSize;
+#endif
+
 // Routine to print an error message to standard error.
 static void
 PrintError(const char* aPrefix)
@@ -352,6 +357,10 @@ WalkStackMain64(struct WalkStackData* aData)
   });
 #endif
 
+#ifdef _M_AMD64
+  bool firstFrame = true;
+#endif
+
   // Skip our own stack walking frames.
   int skip = (aData->walkCallingThread ? 3 : 0) + aData->skipFrames;
 
@@ -397,32 +406,43 @@ WalkStackMain64(struct WalkStackData* aData)
     }
 
 #elif defined(_M_AMD64)
+    // If we reach a frame in JIT code, we don't have enough information to
+    // unwind, so we have to give up.
+    if (sJitCodeRegionStart &&
+        (uint8_t*)context.Rip >= sJitCodeRegionStart &&
+        (uint8_t*)context.Rip < sJitCodeRegionStart + sJitCodeRegionSize) {
+      break;
+    }
+
     // 64-bit frame unwinding.
     // Try to look up unwind metadata for the current function.
     ULONG64 imageBase;
     PRUNTIME_FUNCTION runtimeFunction =
       RtlLookupFunctionEntry(context.Rip, &imageBase, NULL);
 
-    if (!runtimeFunction) {
-      // Alas, this is probably a JIT frame, for which we don't generate unwind
-      // info and so we have to give up.
+    if (runtimeFunction) {
+      PVOID dummyHandlerData;
+      ULONG64 dummyEstablisherFrame;
+      RtlVirtualUnwind(UNW_FLAG_NHANDLER,
+                       imageBase,
+                       context.Rip,
+                       runtimeFunction,
+                       &context,
+                       &dummyHandlerData,
+                       &dummyEstablisherFrame,
+                       nullptr);
+    } else if (firstFrame) {
+      // Leaf functions can be unwound by hand.
+      context.Rip = *reinterpret_cast<DWORD64*>(context.Rsp);
+      context.Rsp += sizeof(void*);
+    } else {
+      // Something went wrong.
       break;
     }
 
-    PVOID dummyHandlerData;
-    ULONG64 dummyEstablisherFrame;
-    RtlVirtualUnwind(UNW_FLAG_NHANDLER,
-                     imageBase,
-                     context.Rip,
-                     runtimeFunction,
-                     &context,
-                     &dummyHandlerData,
-                     &dummyEstablisherFrame,
-                     nullptr);
-
     addr = context.Rip;
     spaddr = context.Rsp;
-
+    firstFrame = false;
 #else
 #error "unknown platform"
 #endif
@@ -499,6 +519,33 @@ ReleaseStackWalkWorkaroundLock()
   LeaveCriticalSection(&gWorkaroundLock.lock);
 #endif
 }
+
+MFBT_API void
+RegisterJitCodeRegion(uint8_t* aStart, size_t aSize)
+{
+#ifdef _M_AMD64
+  // Currently we can only handle one JIT code region at a time
+  MOZ_RELEASE_ASSERT(!sJitCodeRegionStart);
+
+  sJitCodeRegionStart = aStart;
+  sJitCodeRegionSize = aSize;
+#endif
+}
+
+MFBT_API void
+UnregisterJitCodeRegion(uint8_t* aStart, size_t aSize)
+{
+#ifdef _M_AMD64
+  // Currently we can only handle one JIT code region at a time
+  MOZ_RELEASE_ASSERT(sJitCodeRegionStart &&
+                     sJitCodeRegionStart == aStart &&
+                     sJitCodeRegionSize == aSize);
+
+  sJitCodeRegionStart = nullptr;
+  sJitCodeRegionSize = 0;
+#endif
+}
+
 
 static unsigned int WINAPI
 WalkStackThread(void* aData)

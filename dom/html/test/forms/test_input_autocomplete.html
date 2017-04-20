@@ -25,6 +25,7 @@ var values = [
   ["username", "username"],
   [" username ", "username"],
   ["foobar", ""],
+  ["section-blue", ""],
 
   // Two tokens
   ["on off", ""],
@@ -40,6 +41,10 @@ var values = [
   ["  MoBiLe  TeL  ", "mobile tel"],
   ["XXX tel", ""],
   ["XXX username", ""],
+  ["name section-blue", ""],
+  ["scetion-blue cc-name", ""],
+  ["section-blue name", "section-blue name"],
+  ["section-blue tel", "section-blue tel"],
 
   // Three tokens
   ["billing invalid tel", ""],
@@ -50,12 +55,22 @@ var values = [
   ["billing mobile tel", "billing mobile tel"],
   ["  BILLing   MoBiLE   tEl  ", "billing mobile tel"],
   ["billing home tel", "billing home tel"],
+  ["home section-blue tel", ""],
+  ["setion-blue work email", ""],
+  ["section-blue home address-level2", ""],
+  ["section-blue shipping name", "section-blue shipping name"],
+  ["section-blue mobile tel", "section-blue mobile tel"],
 
-  // Four tokens (invalid)
+  // Four tokens
   ["billing billing mobile tel", ""],
+  ["name section-blue shipping home", ""],
+  ["secti shipping work address-line1", ""],
+  ["section-blue shipping home name", ""],
+  ["section-blue shipping mobile tel", "section-blue shipping mobile tel"],
 
   // Five tokens (invalid)
   ["billing billing billing mobile tel", ""],
+  ["section-blue section-blue billing mobile tel", ""],
 ];
 
 var types = [undefined, "hidden", "text", "search"]; // Valid types for all non-multiline hints.

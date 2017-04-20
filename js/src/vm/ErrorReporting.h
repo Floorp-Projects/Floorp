@@ -86,6 +86,14 @@ extern MOZ_MUST_USE bool
 ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSErrorNotes> notes,
                      unsigned flags, unsigned errorNumber, va_list args);
 
+/**
+ * Report the given error Value to the given global.  The JSContext is not
+ * assumed to be in any particular compartment, but the global and error are
+ * expected to be same-compartment.
+ */
+extern void
+ReportErrorToGlobal(JSContext* cx, JS::HandleObject global, JS::HandleValue error);
+
 } // namespace js
 
 #endif /* vm_ErrorReporting_h */

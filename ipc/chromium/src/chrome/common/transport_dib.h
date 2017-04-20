@@ -15,7 +15,7 @@
 
 #if defined(OS_WIN)
 #include <windows.h>
-#elif defined(OS_LINUX)
+#elif defined(OS_LINUX) || defined(OS_SOLARIS)
 #include "chrome/common/x11_util.h"
 #endif
 
@@ -68,7 +68,7 @@ class TransportDIB {
   typedef base::SharedMemoryHandle Handle;
   // On Mac, the inode number of the backing file is used as an id.
   typedef base::SharedMemoryId Id;
-#elif defined(OS_LINUX)
+#elif defined(OS_LINUX) || defined(OS_SOLARIS)
   typedef int Handle;  // These two ints are SysV IPC shared memory keys
   typedef int Id;
 #endif
@@ -98,7 +98,7 @@ class TransportDIB {
   // wire to give this transport DIB to another process.
   Handle handle() const;
 
-#if defined(OS_LINUX)
+#if defined(OS_LINUX) || defined(OS_SOLARIS)
   // Map the shared memory into the X server and return an id for the shared
   // segment.
   XID MapToX(Display* connection);
@@ -109,7 +109,7 @@ class TransportDIB {
 #if defined(OS_WIN) || defined(OS_MACOSX) || defined(OS_BSD)
   explicit TransportDIB(base::SharedMemoryHandle dib);
   base::SharedMemory shared_memory_;
-#elif defined(OS_LINUX)
+#elif defined(OS_LINUX) || defined(OS_SOLARIS)
   int key_;  // SysV shared memory id
   void* address_;  // mapped address
   XID x_shm_;  // X id for the shared segment

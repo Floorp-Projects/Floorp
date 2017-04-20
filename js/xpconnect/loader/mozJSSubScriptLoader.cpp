@@ -50,19 +50,22 @@ public:
         , charset(NullString())
         , ignoreCache(false)
         , async(false)
+        , wantReturnValue(false)
     { }
 
     virtual bool Parse() {
       return ParseObject("target", &target) &&
              ParseString("charset", charset) &&
              ParseBoolean("ignoreCache", &ignoreCache) &&
-             ParseBoolean("async", &async);
+             ParseBoolean("async", &async) &&
+             ParseBoolean("wantReturnValue", &wantReturnValue);
     }
 
     RootedObject target;
     nsString charset;
     bool ignoreCache;
     bool async;
+    bool wantReturnValue;
 };
 
 
@@ -129,6 +132,7 @@ PrepareScript(nsIURI* uri,
               const char* buf,
               int64_t len,
               bool reuseGlobal,
+              bool wantReturnValue,
               MutableHandleScript script,
               MutableHandleFunction function)
 {
@@ -136,7 +140,8 @@ PrepareScript(nsIURI* uri,
     // Use line 0 to make the function body starts from line 1 when
     // |reuseGlobal == true|.
     options.setFileAndLine(uriStr, reuseGlobal ? 0 : 1)
-           .setVersion(JSVERSION_LATEST);
+           .setVersion(JSVERSION_LATEST)
+           .setNoScriptRval(!wantReturnValue);
     if (!charset.IsVoid()) {
         char16_t* scriptBuf = nullptr;
         size_t scriptLength = 0;
@@ -255,7 +260,7 @@ public:
 
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AsyncScriptLoader)
 
-    AsyncScriptLoader(nsIChannel* aChannel, bool aReuseGlobal,
+    AsyncScriptLoader(nsIChannel* aChannel, bool aReuseGlobal, bool aWantReturnValue,
                       JSObject* aTargetObj, const nsAString& aCharset,
                       bool aCache, Promise* aPromise)
         : mChannel(aChannel)
@@ -263,6 +268,7 @@ public:
         , mPromise(aPromise)
         , mCharset(aCharset)
         , mReuseGlobal(aReuseGlobal)
+        , mWantReturnValue(aWantReturnValue)
         , mCache(aCache)
     {
         // Needed for the cycle collector to manage mTargetObj.
@@ -279,6 +285,7 @@ private:
     RefPtr<Promise> mPromise;
     nsString mCharset;
     bool mReuseGlobal;
+    bool mWantReturnValue;
     bool mCache;
 };
 
@@ -387,7 +394,7 @@ AsyncScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
 
     if (!PrepareScript(uri, cx, targetObj, spec.get(), mCharset,
                        reinterpret_cast<const char*>(aBuf), aLength,
-                       mReuseGlobal, &script, &function))
+                       mReuseGlobal, mWantReturnValue, &script, &function))
     {
         return NS_OK;
     }
@@ -406,6 +413,7 @@ mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri,
                                       const nsAString& charset,
                                       nsIIOService* serv,
                                       bool reuseGlobal,
+                                      bool wantReturnValue,
                                       bool cache,
                                       MutableHandleValue retval)
 {
@@ -448,6 +456,7 @@ mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri,
     RefPtr<AsyncScriptLoader> loadObserver =
         new AsyncScriptLoader(channel,
                               reuseGlobal,
+                              wantReturnValue,
                               targetObj,
                               charset,
                               cache,
@@ -469,6 +478,7 @@ mozJSSubScriptLoader::ReadScript(nsIURI* uri,
                                  const char* uriStr,
                                  nsIIOService* serv,
                                  bool reuseGlobal,
+                                 bool wantReturnValue,
                                  MutableHandleScript script,
                                  MutableHandleFunction function)
 {
@@ -519,7 +529,7 @@ mozJSSubScriptLoader::ReadScript(nsIURI* uri,
 
     return PrepareScript(uri, cx, targetObj, uriStr, charset,
                          buf.get(), len,
-                         reuseGlobal,
+                         reuseGlobal, wantReturnValue,
                          script, function);
 }
 
@@ -686,13 +696,15 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
     // If we are doing an async load, trigger it and bail out.
     if (!script && options.async) {
         return ReadScriptAsync(uri, targetObj, options.charset, serv,
-                               reusingGlobal, !!cache, retval);
+                               reusingGlobal, options.wantReturnValue,
+                               !!cache, retval);
     }
 
     if (!script) {
         if (!ReadScript(uri, cx, targetObj, options.charset,
                         static_cast<const char*>(uriStr.get()), serv,
-                        reusingGlobal, &script, &function))
+                        reusingGlobal, options.wantReturnValue, &script,
+                        &function))
         {
             return NS_OK;
         }

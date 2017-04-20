@@ -6,6 +6,11 @@
 
 #include "PerformanceTiming.h"
 #include "mozilla/dom/PerformanceTimingBinding.h"
+#include "mozilla/Telemetry.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocument.h"
+#include "nsITimedChannel.h"
 
 namespace mozilla {
 namespace dom {
@@ -47,6 +52,15 @@ PerformanceTiming::PerformanceTiming(Performance* aPerformance,
   }
 
   InitializeTimingInfo(aChannel);
+
+  // Non-null aHttpChannel implies that this PerformanceTiming object is being
+  // used for subresources, which is irrelevant to this probe.
+  if (!aHttpChannel &&
+      nsContentUtils::IsPerformanceTimingEnabled() &&
+      IsTopLevelContentDocument()) {
+    Telemetry::Accumulate(Telemetry::TIME_TO_RESPONSE_START_MS,
+                          ResponseStartHighRes() - mZeroTime);
+  }
 }
 
 // Copy the timing info from the channel so we don't need to keep the channel
@@ -355,6 +369,25 @@ JSObject*
 PerformanceTiming::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
   return PerformanceTimingBinding::Wrap(cx, this, aGivenProto);
+}
+
+bool
+PerformanceTiming::IsTopLevelContentDocument() const
+{
+  nsCOMPtr<nsIDocument> document = mPerformance->GetDocumentIfCurrent();
+  if (!document) {
+    return false;
+  }
+  nsCOMPtr<nsIDocShell> docShell = document->GetDocShell();
+  if (!docShell) {
+    return false;
+  }
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  Unused << docShell->GetSameTypeRootTreeItem(getter_AddRefs(rootItem));
+  if (rootItem.get() != static_cast<nsIDocShellTreeItem*>(docShell.get())) {
+    return false;
+  }
+  return rootItem->ItemType() == nsIDocShellTreeItem::typeContent;
 }
 
 } // dom namespace

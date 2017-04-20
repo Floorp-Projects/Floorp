@@ -6,7 +6,10 @@
 
 // This source map does not have source contents, so it's fetched separately
 
-add_task(function* () {
+add_task(function*() {
+  // NOTE: the CORS call makes the test run times inconsistent
+  requestLongerTimeout(2);
+
   const dbg = yield initDebugger("doc-sourcemaps2.html");
   const { selectors: { getBreakpoint, getBreakpoints }, getState } = dbg;
 
@@ -20,8 +23,10 @@ add_task(function* () {
   // Test that breakpoint is not off by a line.
   yield addBreakpoint(dbg, mainSrc, 4);
   is(getBreakpoints(getState()).size, 1, "One breakpoint exists");
-  ok(getBreakpoint(getState(), { sourceId: mainSrc.id, line: 4 }),
-     "Breakpoint has correct line");
+  ok(
+    getBreakpoint(getState(), { sourceId: mainSrc.id, line: 4 }),
+    "Breakpoint has correct line"
+  );
 
   invokeInTab("logMessage");
 
