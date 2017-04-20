@@ -28,7 +28,6 @@ import nu.validator.htmlparser.annotation.Inline;
 import nu.validator.htmlparser.annotation.Local;
 import nu.validator.htmlparser.annotation.NoLength;
 import nu.validator.htmlparser.annotation.Unsigned;
-import nu.validator.htmlparser.annotation.Virtual;
 import nu.validator.htmlparser.common.Interner;
 
 public final class ElementName
@@ -45,7 +44,7 @@ public final class ElementName
      * Indicates that the element is not a pre-interned element. Forbidden
      * on preinterned elements.
      */
-    public static final int CUSTOM = (1 << 30);
+    public static final int NOT_INTERNED = (1 << 30);
 
     /**
      * Indicates that the element is in the "special" category. This bit
@@ -85,16 +84,22 @@ public final class ElementName
      */
     public static final int OPTIONAL_END_TAG = (1 << 23);
 
-    public static final ElementName NULL_ELEMENT_NAME = new ElementName(null);
+    private @Local String name;
 
-    public final @Local String name;
-
-    public final @Local String camelCaseName;
+    private @Local String camelCaseName;
 
     /**
      * The lowest 7 bits are the dispatch group. The high bits are flags.
      */
     public final int flags;
+
+    @Inline public @Local String getName() {
+        return name;
+    }
+
+    @Inline public @Local String getCamelCaseName() {
+        return camelCaseName;
+    }
 
     @Inline public int getFlags() {
         return flags;
@@ -104,21 +109,20 @@ public final class ElementName
         return flags & GROUP_MASK;
     }
 
-    public boolean isCustom() {
-        return (flags & CUSTOM) != 0;
+    public boolean isInterned() {
+        return (flags & NOT_INTERNED) == 0;
     }
 
     static ElementName elementNameByBuffer(@NoLength char[] buf, int offset, int length, Interner interner) {
         @Unsigned int hash = ElementName.bufToHash(buf, length);
         int index = Arrays.binarySearch(ElementName.ELEMENT_HASHES, hash);
         if (index < 0) {
-            return new ElementName(Portability.newLocalNameFromBuffer(buf, offset, length, interner));
+            return null;
         } else {
             ElementName elementName = ElementName.ELEMENT_NAMES[index];
             @Local String name = elementName.name;
             if (!Portability.localEqualsBuffer(name, buf, offset, length)) {
-                return new ElementName(Portability.newLocalNameFromBuffer(buf,
-                        offset, length, interner));
+                return null;
             }
             return elementName;
         }
@@ -168,24 +172,25 @@ public final class ElementName
         this.flags = flags;
     }
 
-    protected ElementName(@Local String name) {
+    public ElementName() {
+        this.name = null;
+        this.camelCaseName = null;
+        this.flags = TreeBuilder.OTHER | NOT_INTERNED;
+    }
+
+    public void destructor() {
+        // The translator adds refcount debug code here.
+    }
+
+    public void setNameForNonInterned(@Local String name) {
+        // No need to worry about refcounting the local name, because in the
+        // C++ case the scoped atom table remembers its own atoms.
         this.name = name;
         this.camelCaseName = name;
-        this.flags = TreeBuilder.OTHER | CUSTOM;
+        assert this.flags == (TreeBuilder.OTHER | NOT_INTERNED);
     }
 
-    @Virtual void release() {
-        // No-op in Java.
-        // Implement as delete this in subclass.
-        // Be sure to release the local name
-    }
-
-    @SuppressWarnings("unused") @Virtual private void destructor() {
-    }
-
-    @Virtual public ElementName cloneElementName(Interner interner) {
-        return this;
-    }
+    public static final ElementName ANNOTATION_XML = new ElementName("annotation-xml", "annotation-xml", TreeBuilder.ANNOTATION_XML | SCOPING_AS_MATHML);
 
     // START CODE ONLY USED FOR GENERATING CODE uncomment and run to regenerate
 
@@ -225,6 +230,9 @@ public final class ElementName
 //        for (int i = 0; i < name.length(); i++) {
 //            char c = name.charAt(i);
 //            if (c == '-') {
+//                if (!"annotation-xml".equals(name)) {
+//                    throw new RuntimeException("Non-annotation-xml element name with hyphen: " + name);
+//                }
 //                buf[i] = '_';
 //            } else if (c >= '0' && c <= '9') {
 //                buf[i] = c;
@@ -544,7 +552,6 @@ public final class ElementName
     public static final ElementName MASK = new ElementName("mask", "mask", TreeBuilder.OTHER);
     public static final ElementName TRACK = new ElementName("track", "track", TreeBuilder.PARAM_OR_SOURCE_OR_TRACK | SPECIAL);
     public static final ElementName DL = new ElementName("dl", "dl", TreeBuilder.UL_OR_OL_OR_DL | SPECIAL);
-    public static final ElementName ANNOTATION_XML = new ElementName("annotation-xml", "annotation-xml", TreeBuilder.ANNOTATION_XML | SCOPING_AS_MATHML);
     public static final ElementName HTML = new ElementName("html", "html", TreeBuilder.HTML | SPECIAL | SCOPING | OPTIONAL_END_TAG);
     public static final ElementName OL = new ElementName("ol", "ol", TreeBuilder.UL_OR_OL_OR_DL | SPECIAL);
     public static final ElementName LABEL = new ElementName("label", "label", TreeBuilder.OTHER);
@@ -750,7 +757,6 @@ public final class ElementName
     MASK,
     TRACK,
     DL,
-    ANNOTATION_XML,
     HTML,
     OL,
     LABEL,
@@ -957,7 +963,6 @@ public final class ElementName
     1854245076,
     1857653029,
     1864368130,
-    1864643294,
     1868312196,
     1870135298,
     1870268949,

@@ -503,7 +503,7 @@ mochitest-browser-chrome:
             linux64-jsdcov/opt: 35
             linux64/debug: 16
             linux32/debug: 16
-            linux64-asan/opt: 10
+            linux64-asan/opt: 16
             default: 7
     e10s:
         by-test-platform:

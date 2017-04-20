@@ -16,7 +16,7 @@ const PAGE_2 = "data:text/html,<html><body>Another%20regular,%20everyday,%20norm
 add_task(function* test_initialize() {
   yield SpecialPowers.pushPrefEnv({
     set: [
-      [ "browser.tabs.animate", false]
+      [ "toolkit.cosmeticAnimations.enabled", false]
   ] });
 });
 

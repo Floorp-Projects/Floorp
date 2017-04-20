@@ -321,6 +321,9 @@ class WebGLContext
     enum {
         UNPACK_FLIP_Y_WEBGL = 0x9240,
         UNPACK_PREMULTIPLY_ALPHA_WEBGL = 0x9241,
+        // We throw InvalidOperation in TexImage if we fail to use GPU fast-path
+        // for texture copy when it is set to true, only for debug purpose.
+        UNPACK_REQUIRE_FASTPATH = 0x10001,
         CONTEXT_LOST_WEBGL = 0x9242,
         UNPACK_COLORSPACE_CONVERSION_WEBGL = 0x9243,
         BROWSER_DEFAULT_WEBGL = 0x9244,
@@ -1871,6 +1874,7 @@ protected:
     GLenum mPixelStore_ColorspaceConversion;
     bool mPixelStore_FlipY;
     bool mPixelStore_PremultiplyAlpha;
+    bool mPixelStore_RequireFastPath;
 
     ////////////////////////////////////
     class FakeBlackTexture {

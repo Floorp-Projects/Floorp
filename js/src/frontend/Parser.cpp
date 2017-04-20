@@ -1014,12 +1014,15 @@ Parser<ParseHandler>::parse()
 bool
 ParserBase::isValidStrictBinding(PropertyName* name)
 {
-    return name != context->names().eval &&
-           name != context->names().arguments &&
-           name != context->names().let &&
-           name != context->names().static_ &&
-           name != context->names().yield &&
-           !IsStrictReservedWord(name);
+    TokenKind tt = ReservedWordTokenKind(name);
+    if (tt == TOK_NAME) {
+        return name != context->names().eval &&
+               name != context->names().arguments;
+    }
+    return tt != TOK_LET &&
+           tt != TOK_STATIC &&
+           tt != TOK_YIELD &&
+           !TokenKindIsStrictReservedWord(tt);
 }
 
 /*
@@ -9086,75 +9089,80 @@ Parser<ParseHandler>::newName(PropertyName* name, TokenPos pos)
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::checkLabelOrIdentifierReference(HandlePropertyName ident,
+Parser<ParseHandler>::checkLabelOrIdentifierReference(PropertyName* ident,
                                                       uint32_t offset,
-                                                      YieldHandling yieldHandling)
+                                                      YieldHandling yieldHandling,
+                                                      TokenKind hint /* = TOK_LIMIT */)
 {
-    if (ident == context->names().yield) {
-        if (yieldHandling == YieldIsKeyword ||
-            versionNumber() >= JSVERSION_1_7)
-        {
-            errorAt(offset, JSMSG_RESERVED_ID, "yield");
-            return false;
+    TokenKind tt;
+    if (hint == TOK_LIMIT) {
+        tt = ReservedWordTokenKind(ident);
+    } else {
+        MOZ_ASSERT(hint == ReservedWordTokenKind(ident), "hint doesn't match actual token kind");
+        tt = hint;
+    }
+
+    if (tt == TOK_NAME)
+        return true;
+    if (TokenKindIsContextualKeyword(tt)) {
+        if (tt == TOK_YIELD) {
+            if (yieldHandling == YieldIsKeyword || versionNumber() >= JSVERSION_1_7) {
+                errorAt(offset, JSMSG_RESERVED_ID, "yield");
+                return false;
+            }
+            if (pc->sc()->needStrictChecks()) {
+                if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, "yield"))
+                    return false;
+            }
+            return true;
+        }
+        if (tt == TOK_AWAIT) {
+            if (awaitIsKeyword()) {
+                errorAt(offset, JSMSG_RESERVED_ID, "await");
+                return false;
+            }
+            return true;
         }
         if (pc->sc()->needStrictChecks()) {
-            if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, "yield"))
-                return false;
+            if (tt == TOK_LET) {
+                if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, "let"))
+                    return false;
+                return true;
+            }
+            if (tt == TOK_STATIC) {
+                if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, "static"))
+                    return false;
+                return true;
+            }
         }
-
         return true;
     }
-
-    if (ident == context->names().await) {
-        if (awaitIsKeyword()) {
-            errorAt(offset, JSMSG_RESERVED_ID, "await");
-            return false;
+    if (TokenKindIsStrictReservedWord(tt)) {
+        if (pc->sc()->needStrictChecks()) {
+            if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, ReservedWordToCharZ(tt)))
+                return false;
         }
         return true;
     }
-
-    if (IsKeyword(ident) || IsReservedWordLiteral(ident)) {
-        errorAt(offset, JSMSG_INVALID_ID, ReservedWordToCharZ(ident));
+    if (TokenKindIsKeyword(tt) || TokenKindIsReservedWordLiteral(tt)) {
+        errorAt(offset, JSMSG_INVALID_ID, ReservedWordToCharZ(tt));
         return false;
     }
-
-    if (IsFutureReservedWord(ident)) {
-        errorAt(offset, JSMSG_RESERVED_ID, ReservedWordToCharZ(ident));
+    if (TokenKindIsFutureReservedWord(tt)) {
+        errorAt(offset, JSMSG_RESERVED_ID, ReservedWordToCharZ(tt));
         return false;
     }
-
-    if (pc->sc()->needStrictChecks()) {
-        if (IsStrictReservedWord(ident)) {
-            if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, ReservedWordToCharZ(ident)))
-                return false;
-            return true;
-        }
-
-        if (ident == context->names().let) {
-            if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, "let"))
-                return false;
-            return true;
-        }
-
-        if (ident == context->names().static_) {
-            if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, "static"))
-                return false;
-            return true;
-        }
-    }
-
-    return true;
+    MOZ_ASSERT_UNREACHABLE("Unexpected reserved word kind.");
+    return false;
 }
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::checkBindingIdentifier(HandlePropertyName ident,
+Parser<ParseHandler>::checkBindingIdentifier(PropertyName* ident,
                                              uint32_t offset,
-                                             YieldHandling yieldHandling)
+                                             YieldHandling yieldHandling,
+                                             TokenKind hint /* = TOK_LIMIT */)
 {
-    if (!checkLabelOrIdentifierReference(ident, offset, yieldHandling))
-        return false;
-
     if (pc->sc()->needStrictChecks()) {
         if (ident == context->names().arguments) {
             if (!strictModeErrorAt(offset, JSMSG_BAD_STRICT_ASSIGN, "arguments"))
@@ -9169,7 +9177,7 @@ Parser<ParseHandler>::checkBindingIdentifier(HandlePropertyName ident,
         }
     }
 
-    return true;
+    return checkLabelOrIdentifierReference(ident, offset, yieldHandling, hint);
 }
 
 template <typename ParseHandler>
@@ -9183,8 +9191,13 @@ Parser<ParseHandler>::labelOrIdentifierReference(YieldHandling yieldHandling)
     //
     // Use PropertyName* instead of TokenKind to reflect the normalization.
 
+    // Unless the name contains escapes, we can reuse the current TokenKind
+    // to determine if the name is a restricted identifier.
+    TokenKind hint = !tokenStream.currentNameHasEscapes()
+                     ? tokenStream.currentToken().type
+                     : TOK_LIMIT;
     RootedPropertyName ident(context, tokenStream.currentName());
-    if (!checkLabelOrIdentifierReference(ident, pos().begin, yieldHandling))
+    if (!checkLabelOrIdentifierReference(ident, pos().begin, yieldHandling, hint))
         return nullptr;
     return ident;
 }
@@ -9193,8 +9206,11 @@ template <typename ParseHandler>
 PropertyName*
 Parser<ParseHandler>::bindingIdentifier(YieldHandling yieldHandling)
 {
+    TokenKind hint = !tokenStream.currentNameHasEscapes()
+                     ? tokenStream.currentToken().type
+                     : TOK_LIMIT;
     RootedPropertyName ident(context, tokenStream.currentName());
-    if (!checkBindingIdentifier(ident, pos().begin, yieldHandling))
+    if (!checkBindingIdentifier(ident, pos().begin, yieldHandling, hint))
         return nullptr;
     return ident;
 }

@@ -377,7 +377,7 @@ BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI,
   nsAutoCString originNoSuffix;
   nsresult rv =
     ContentPrincipal::GenerateOriginNoSuffixFromURI(aURI, originNoSuffix);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
     // If the generation of the origin fails, we still want to have a valid
     // principal. Better to return a null principal here.
     return NullPrincipal::Create(aAttrs);

@@ -132,6 +132,13 @@ PROT_ListManager.prototype.getGethashUrl = function(tableName) {
   return "";
 }
 
+PROT_ListManager.prototype.getUpdateUrl = function(tableName) {
+  if (this.tablesData[tableName] && this.tablesData[tableName].updateUrl) {
+    return this.tablesData[tableName].updateUrl;
+  }
+  return "";
+}
+
 /**
  * Enable updates for some tables
  * @param tables - an array of table names that need updating
@@ -483,6 +490,12 @@ PROT_ListManager.prototype.makeUpdateRequestForEntry_ = function(updateUrl,
         BindToObject(this.downloadError_, this, tableList, updateUrl))) {
     // Our alarm gets reset in one of the 3 callbacks.
     log("pending update, queued request until later");
+  } else {
+    let table = Object.keys(this.tablesData).find(key => {
+      return this.tablesData[key].updateUrl === updateUrl;
+    });
+    let provider = this.tablesData[table].provider;
+    Services.obs.notifyObservers(null, "safebrowsing-update-begin", provider);
   }
 }
 
@@ -550,6 +563,8 @@ PROT_ListManager.prototype.updateSuccess_ = function(tableList, updateUrl,
   log("Setting next update of " + provider + " to " + targetTime
       + " (" + delay + "ms from now)");
   this.prefs_.setPref(nextUpdatePref, targetTime.toString());
+
+  Services.obs.notifyObservers(null, "safebrowsing-update-finished", "success");
 }
 
 /**
@@ -563,6 +578,9 @@ PROT_ListManager.prototype.updateError_ = function(table, updateUrl, result) {
   this.updateCheckers_[updateUrl] =
     new G_Alarm(BindToObject(this.checkForUpdates, this, updateUrl),
                 this.updateInterval, false);
+
+  Services.obs.notifyObservers(null, "safebrowsing-update-finished",
+                               "update error(" + result + ")");
 }
 
 /**
@@ -589,6 +607,8 @@ PROT_ListManager.prototype.downloadError_ = function(table, updateUrl, status) {
     new G_Alarm(BindToObject(this.checkForUpdates, this, updateUrl),
                 delay, false);
 
+  Services.obs.notifyObservers(null, "safebrowsing-update-finished",
+                               "download error(" + status + ")");
 }
 
 PROT_ListManager.prototype.QueryInterface = function(iid) {

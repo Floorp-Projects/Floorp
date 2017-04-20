@@ -81,12 +81,6 @@ if CONFIG['_MSC_VER']:
 if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
     LDFLAGS += ['/HEAP:0x40000']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    OS_LIBS += [
-        'binder',
-        'utils',
-    ]
-
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wshadow']
 

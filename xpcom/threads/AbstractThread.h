@@ -95,7 +95,8 @@ public:
   static AbstractThread* MainThread();
 
   // Must be called exactly once during startup.
-  static void InitStatics();
+  static void InitTLS();
+  static void InitMainThread();
 
   void DispatchStateChange(already_AddRefed<nsIRunnable> aRunnable);
 

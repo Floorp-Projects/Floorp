@@ -77,18 +77,11 @@ gyp_vars.update({
 })
 
 if os == 'Android':
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-        gyp_vars['build_with_gonk'] = 1
-        gyp_vars['moz_widget_toolkit_gonk'] = 1
-        gyp_vars['opus_complexity'] = 1
-        if int(CONFIG['ANDROID_VERSION']) >= 18:
-          gyp_vars['moz_webrtc_omx'] = 1
-    else:
-        gyp_vars.update(
-            gtest_target_type='executable',
-            moz_webrtc_mediacodec=1,
-            android_toolchain=CONFIG.get('ANDROID_TOOLCHAIN', ''),
-        )
+    gyp_vars.update(
+        gtest_target_type='executable',
+        moz_webrtc_mediacodec=1,
+        android_toolchain=CONFIG.get('ANDROID_TOOLCHAIN', ''),
+    )
 
 if CONFIG['ARM_ARCH']:
     if int(CONFIG['ARM_ARCH']) < 7:

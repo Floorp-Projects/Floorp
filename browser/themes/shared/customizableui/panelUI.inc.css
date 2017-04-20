@@ -241,13 +241,17 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
   flex-direction: column;
 }
 
+#appMenu-popup > arrowscrollbox > autorepeatbutton,
 #PanelUI-popup > arrowscrollbox > autorepeatbutton {
   display: none;
 }
+
+#appMenu-popup > arrowscrollbox > scrollbox,
 #PanelUI-popup > arrowscrollbox > scrollbox {
   overflow: visible;
 }
 
+#appMenu-popup > .panel-arrowcontainer > .panel-arrowcontent,
 #PanelUI-popup > .panel-arrowcontainer > .panel-arrowcontent {
   overflow: hidden;
 }
@@ -1789,4 +1793,16 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   #PanelUI-panic-actionlist-newwindow {
     background-image: -moz-image-rect(url(chrome://browser/skin/panic-panel/icons@2x.png), 0, 128, 32, 96);
   }
+}
+
+.subviewbutton-iconic > .toolbarbutton-text {
+  padding-inline-start: 5px;
+}
+
+#appMenu-new-window-button {
+  list-style-image: url(chrome://browser/skin/menu-icons/new-window.svg);
+}
+
+#appMenu-private-window-button {
+  list-style-image: url(chrome://browser/skin/menu-icons/private-window.svg);
 }

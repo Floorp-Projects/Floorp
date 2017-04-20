@@ -15,6 +15,7 @@ EXPORTS.mozilla._ipdltest += [
 
 SOURCES += [
     'TestActorPunning.cpp',
+    'TestAsyncReturns.cpp',
     'TestBadActor.cpp',
     'TestCancel.cpp',
     'TestCrashCleanup.cpp',
@@ -62,6 +63,7 @@ IPDL_SOURCES += [
     'PTestActorPunning.ipdl',
     'PTestActorPunningPunned.ipdl',
     'PTestActorPunningSub.ipdl',
+    'PTestAsyncReturns.ipdl',
     'PTestBadActor.ipdl',
     'PTestBadActorSub.ipdl',
     'PTestCancel.ipdl',

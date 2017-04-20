@@ -36,7 +36,7 @@ to mochitest command.
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
   * browser_bug453896.js [8]
 * Animation support:
-  * test_animations.html [22]
+  * test_animations.html [19]
   * test_animations_dynamic_changes.html [1]
   * test_bug716226.html [1]
   * OMTA
@@ -72,9 +72,8 @@ to mochitest command.
   * test_bug413958.html `monitorConsole` [3]
   * test_parser_diagnostics_unprintables.html [550]
 * Transition support:
-  * test_bug621351.html: shorthand properties [4]
   * test_compute_data_with_start_struct.html `transition` [2]
-  * test_transitions.html: pseudo elements and shorthand properties [*]
+  * test_transitions.html: pseudo elements [10]
   * test_transitions_computed_value_combinations.html [145]
   * test_value_storage.html `transition` [596]
   * Events:
@@ -151,13 +150,7 @@ to mochitest command.
     * test_initial_storage.html `-moz-force-broken-image-icon` [4]
     * test_value_storage.html `-moz-force-broken-image-icon` [4]
   * -moz-transform: need different parsing rules servo/servo#16003
-    * test_inherit_computation.html `-moz-transform`: need different parsing rules [2]
-    * test_inherit_storage.html `transform`: for -moz-transform [3]
-    * test_initial_computation.html `-moz-transform`: need different parsing rules [4]
-    * test_initial_storage.html `transform`: for -moz-transform [6]
-    * test_value_storage.html `-moz-transform`: need different parsing rules [280]
-    * test_specified_value_serialization.html `bug-721136` [26]
-    * test_units_angle.html [3]
+    * test_value_storage.html `-moz-transform`: need different parsing rules bug 1357906 [72]
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
   * place-{content,items,self} shorthands servo/servo#16391
@@ -167,6 +160,7 @@ to mochitest command.
   * font-variant-{alternates,east-asian,ligatures,numeric} properties servo/servo#15957
     * test_property_syntax_errors.html `font-variant-alternates` [2]
     * test_value_storage.html `font-variant` [176]
+    * test_specified_value_serialization.html `bug-721136` [1]
   * touch-action property servo/servo#16372
     * test_compute_data_with_start_struct.html `touch-action` [2]
     * test_inherit_computation.html `touch-action` [2]

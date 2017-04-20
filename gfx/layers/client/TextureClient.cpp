@@ -587,13 +587,14 @@ TextureClient::SerializeReadLock(ReadLockDescriptor& aDescriptor)
     // Take a read lock on behalf of the TextureHost. The latter will unlock
     // after the shared data is available again for drawing.
     mReadLock->ReadLock();
-    mReadLock->Serialize(aDescriptor, GetAllocator()->GetParentPid());
     mUpdated = false;
-    return true;
-  } else {
-    aDescriptor = null_t();
-    return false;
+    if (mReadLock->Serialize(aDescriptor, GetAllocator()->GetParentPid())) {
+      return true;
+    }
   }
+
+  aDescriptor = null_t();
+  return false;
 }
 
 TextureClient::~TextureClient()
@@ -1446,32 +1447,41 @@ class CrossProcessSemaphoreReadLock : public TextureReadLock
 {
 public:
   CrossProcessSemaphoreReadLock()
-    : mSemaphore("TextureReadLock", 1)
+    : mSemaphore(CrossProcessSemaphore::Create("TextureReadLock", 1))
   {}
   explicit CrossProcessSemaphoreReadLock(CrossProcessSemaphoreHandle aHandle)
-    : mSemaphore(aHandle)
+    : mSemaphore(CrossProcessSemaphore::Create(aHandle))
   {}
 
   virtual bool ReadLock() override
   {
-    return mSemaphore.Wait();
+    if (!IsValid()) {
+      return false;
+    }
+    return mSemaphore->Wait();
   }
   virtual bool TryReadLock(TimeDuration aTimeout) override
   {
-    return mSemaphore.Wait(Some(aTimeout));
+    if (!IsValid()) {
+      return false;
+    }
+    return mSemaphore->Wait(Some(aTimeout));
   }
   virtual int32_t ReadUnlock() override
   {
-    mSemaphore.Signal();
+    if (!IsValid()) {
+      return 1;
+    }
+    mSemaphore->Signal();
     return 1;
   }
-  virtual bool IsValid() const override { return true; }
+  virtual bool IsValid() const override { return !!mSemaphore; }
 
   virtual bool Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther) override;
 
   virtual LockType GetType() override { return TYPE_CROSS_PROCESS_SEMAPHORE; }
 
-  CrossProcessSemaphore mSemaphore;
+  UniquePtr<CrossProcessSemaphore> mSemaphore;
 };
 
 // static
@@ -1653,8 +1663,12 @@ ShmemTextureReadLock::GetReadCount() {
 bool
 CrossProcessSemaphoreReadLock::Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther)
 {
-  aOutput = ReadLockDescriptor(CrossProcessSemaphoreDescriptor(mSemaphore.ShareToProcess(aOther)));
-  return true;
+  if (IsValid()) {
+    aOutput = ReadLockDescriptor(CrossProcessSemaphoreDescriptor(mSemaphore->ShareToProcess(aOther)));
+    return true;
+  } else {
+    return false;
+  }
 }
 
 void

@@ -529,6 +529,7 @@ nsStringBundleService::Init()
     os->AddObserver(this, "profile-do-change", true);
     os->AddObserver(this, "chrome-flush-caches", true);
     os->AddObserver(this, "xpcom-category-entry-added", true);
+    os->AddObserver(this, "intl:app-locales-changed", true);
   }
 
   // instantiate the override service, if there is any.
@@ -546,7 +547,8 @@ nsStringBundleService::Observe(nsISupports* aSubject,
 {
   if (strcmp("memory-pressure", aTopic) == 0 ||
       strcmp("profile-do-change", aTopic) == 0 ||
-      strcmp("chrome-flush-caches", aTopic) == 0)
+      strcmp("chrome-flush-caches", aTopic) == 0 ||
+      strcmp("intl:app-locales-changed", aTopic) == 0)
   {
     flushBundleCache();
   }

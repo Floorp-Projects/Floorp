@@ -146,6 +146,10 @@ struct nsHttp
         return IsValidToken(s.BeginReading(), s.EndReading());
     }
 
+    // Strip the leading or trailing HTTP whitespace per fetch spec section 2.2.
+    static void TrimHTTPWhitespace(const nsACString& aSource,
+                                   nsACString& aDest);
+
     // Returns true if the specified value is reasonable given the defintion
     // in RFC 2616 section 4.2.  Full strict validation is not performed
     // currently as it would require full parsing of the value.

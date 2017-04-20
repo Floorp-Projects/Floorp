@@ -31,24 +31,24 @@ fails == object-fit-cover-png-001p.html object-fit-cover-png-001p.html
 # fails == object-fit-cover-png-002o.html object-fit-cover-png-002o.html
 fails == object-fit-cover-png-002p.html object-fit-cover-png-002p.html
 == object-fit-none-png-001c.html object-fit-none-png-001c.html
-skip-if(stylo) == object-fit-none-png-001e.html object-fit-none-png-001e.html # Bug 1342188.
+== object-fit-none-png-001e.html object-fit-none-png-001e.html
 == object-fit-none-png-001i.html object-fit-none-png-001i.html
-skip-if(stylo) == object-fit-none-png-001o.html object-fit-none-png-001o.html # Bug 1342188.
+== object-fit-none-png-001o.html object-fit-none-png-001o.html
 fails == object-fit-none-png-001p.html object-fit-none-png-001p.html
 == object-fit-none-png-002c.html object-fit-none-png-002c.html
-skip-if(stylo) == object-fit-none-png-002e.html object-fit-none-png-002e.html # Bug 1342188.
+== object-fit-none-png-002e.html object-fit-none-png-002e.html
 == object-fit-none-png-002i.html object-fit-none-png-002i.html
-skip-if(stylo) == object-fit-none-png-002o.html object-fit-none-png-002o.html # Bug 1342188.
+== object-fit-none-png-002o.html object-fit-none-png-002o.html
 fails == object-fit-none-png-002p.html object-fit-none-png-002p.html
 == object-fit-scale-down-png-001c.html object-fit-scale-down-png-001c.html
-skip-if(stylo) == object-fit-scale-down-png-001e.html object-fit-scale-down-png-001e.html # Bug 1342188.
+== object-fit-scale-down-png-001e.html object-fit-scale-down-png-001e.html
 == object-fit-scale-down-png-001i.html object-fit-scale-down-png-001i.html
-skip-if(stylo) == object-fit-scale-down-png-001o.html object-fit-scale-down-png-001o.html # Bug 1342188.
+== object-fit-scale-down-png-001o.html object-fit-scale-down-png-001o.html
 fails == object-fit-scale-down-png-001p.html object-fit-scale-down-png-001p.html
 == object-fit-scale-down-png-002c.html object-fit-scale-down-png-002c.html
-skip-if(stylo) == object-fit-scale-down-png-002e.html object-fit-scale-down-png-002e.html # Bug 1342188.
+== object-fit-scale-down-png-002e.html object-fit-scale-down-png-002e.html
 == object-fit-scale-down-png-002i.html object-fit-scale-down-png-002i.html
-skip-if(stylo) == object-fit-scale-down-png-002o.html object-fit-scale-down-png-002o.html # Bug 1342188.
+== object-fit-scale-down-png-002o.html object-fit-scale-down-png-002o.html
 fails == object-fit-scale-down-png-002p.html object-fit-scale-down-png-002p.html
 
 # Tests for 'object-fit' / 'object-position' with an SVG image

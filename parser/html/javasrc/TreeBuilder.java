@@ -632,7 +632,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 }
                 // This is the SVG variant of the StackNode constructor.
                 StackNode<T> node = new StackNode<T>(elementName,
-                        elementName.camelCaseName, elt
+                        elementName.getCamelCaseName(), elt
                         // [NOCPP[
                         , errorHandler == null ? null
                                 : new TaintableLocatorImpl(tokenizer)
@@ -663,7 +663,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 }
                 // This is the MathML variant of the StackNode constructor.
                 StackNode<T> node = new StackNode<T>(elementName, elt,
-                        elementName.name, false
+                        elementName.getName(), false
                         // [NOCPP[
                         , errorHandler == null ? null
                                 : new TaintableLocatorImpl(tokenizer)
@@ -1670,7 +1670,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         needToDropLF = false;
         starttagloop: for (;;) {
             int group = elementName.getGroup();
-            @Local String name = elementName.name;
+            @Local String name = elementName.getName();
             if (isInForeign()) {
                 StackNode<T> currentNode = stack[currentPtr];
                 @NsUri String currNs = currentNode.ns;
@@ -2229,7 +2229,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             case B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
                             case FONT:
                                 reconstructTheActiveFormattingElements();
-                                maybeForgetEarlierDuplicateFormattingElement(elementName.name, attributes);
+                                maybeForgetEarlierDuplicateFormattingElement(elementName.getName(), attributes);
                                 appendToCurrentNodeAndPushFormattingElementMayFoster(
                                         elementName,
                                         attributes);
@@ -3381,7 +3381,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         needToDropLF = false;
         int eltPos;
         int group = elementName.getGroup();
-        @Local String name = elementName.name;
+        @Local String name = elementName.getName();
         endtagloop: for (;;) {
             if (isInForeign()) {
                 if (stack[currentPtr].name != name) {
@@ -5306,9 +5306,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         StackNode<T> current = stack[currentPtr];
         if (current.isFosterParenting()) {
             fatal();
-            elt = createAndInsertFosterParentedElement("http://www.w3.org/1999/xhtml", elementName.name, attributes);
+            elt = createAndInsertFosterParentedElement("http://www.w3.org/1999/xhtml", elementName.getName(), attributes);
         } else {
-            elt = createElement("http://www.w3.org/1999/xhtml", elementName.name, attributes, current.node);
+            elt = createElement("http://www.w3.org/1999/xhtml", elementName.getName(), attributes, current.node);
             appendElement(elt, current.node);
         }
         StackNode<T> node = new StackNode<T>(elementName, elt, clone
@@ -5329,7 +5329,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         // ]NOCPP]
         // This method can't be called for custom elements
         T currentNode = stack[currentPtr].node;
-        T elt = createElement("http://www.w3.org/1999/xhtml", elementName.name, attributes, currentNode);
+        T elt = createElement("http://www.w3.org/1999/xhtml", elementName.getName(), attributes, currentNode);
         appendElement(elt, currentNode);
         if (ElementName.TEMPLATE == elementName) {
             elt = getDocumentFragmentForTemplate(elt);
@@ -5345,10 +5345,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void appendToCurrentNodeAndPushElementMayFoster(ElementName elementName,
             HtmlAttributes attributes)
             throws SAXException {
-        @Local String popName = elementName.name;
+        @Local String popName = elementName.getName();
         // [NOCPP[
         checkAttributes(attributes, "http://www.w3.org/1999/xhtml");
-        if (elementName.isCustom()) {
+        if (!elementName.isInterned()) {
             popName = checkPopName(popName);
         }
         // ]NOCPP]
@@ -5372,10 +5372,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void appendToCurrentNodeAndPushElementMayFosterMathML(
             ElementName elementName, HtmlAttributes attributes)
             throws SAXException {
-        @Local String popName = elementName.name;
+        @Local String popName = elementName.getName();
         // [NOCPP[
         checkAttributes(attributes, "http://www.w3.org/1998/Math/MathML");
-        if (elementName.isCustom()) {
+        if (!elementName.isInterned()) {
             popName = checkPopName(popName);
         }
         // ]NOCPP]
@@ -5428,10 +5428,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void appendToCurrentNodeAndPushElementMayFosterSVG(
             ElementName elementName, HtmlAttributes attributes)
             throws SAXException {
-        @Local String popName = elementName.camelCaseName;
+        @Local String popName = elementName.getCamelCaseName();
         // [NOCPP[
         checkAttributes(attributes, "http://www.w3.org/2000/svg");
-        if (elementName.isCustom()) {
+        if (!elementName.isInterned()) {
             popName = checkPopName(popName);
         }
         // ]NOCPP]
@@ -5464,10 +5464,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         StackNode<T> current = stack[currentPtr];
         if (current.isFosterParenting()) {
             fatal();
-            elt = createAndInsertFosterParentedElement("http://www.w3.org/1999/xhtml", elementName.name,
+            elt = createAndInsertFosterParentedElement("http://www.w3.org/1999/xhtml", elementName.getName(),
                     attributes, formOwner);
         } else {
-            elt = createElement("http://www.w3.org/1999/xhtml", elementName.name,
+            elt = createElement("http://www.w3.org/1999/xhtml", elementName.getName(),
                     attributes, formOwner, current.node);
             appendElement(elt, current.node);
         }
@@ -5504,10 +5504,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void appendVoidElementToCurrentMayFoster(
             ElementName elementName, HtmlAttributes attributes)
             throws SAXException {
-        @Local String popName = elementName.name;
+        @Local String popName = elementName.getName();
         // [NOCPP[
         checkAttributes(attributes, "http://www.w3.org/1999/xhtml");
-        if (elementName.isCustom()) {
+        if (!elementName.isInterned()) {
             popName = checkPopName(popName);
         }
         // ]NOCPP]
@@ -5527,10 +5527,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void appendVoidElementToCurrentMayFosterSVG(
             ElementName elementName, HtmlAttributes attributes)
             throws SAXException {
-        @Local String popName = elementName.camelCaseName;
+        @Local String popName = elementName.getCamelCaseName();
         // [NOCPP[
         checkAttributes(attributes, "http://www.w3.org/2000/svg");
-        if (elementName.isCustom()) {
+        if (!elementName.isInterned()) {
             popName = checkPopName(popName);
         }
         // ]NOCPP]
@@ -5550,10 +5550,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void appendVoidElementToCurrentMayFosterMathML(
             ElementName elementName, HtmlAttributes attributes)
             throws SAXException {
-        @Local String popName = elementName.name;
+        @Local String popName = elementName.getName();
         // [NOCPP[
         checkAttributes(attributes, "http://www.w3.org/1998/Math/MathML");
-        if (elementName.isCustom()) {
+        if (!elementName.isInterned()) {
             popName = checkPopName(popName);
         }
         // ]NOCPP]
