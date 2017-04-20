@@ -112,9 +112,9 @@ function createDocumentType01() {
             newType = domImpl.createDocumentType(malformedName,publicId,systemId);
         }
 		catch(ex) {
-      success = (typeof(ex.code) != 'undefined' && ex.code == 14);
+      success = ex.code === DOMException.INVALID_CHARACTER_ERR;
 		}
-		assertTrue("throw_NAMESPACE_ERR",success);
+		assertTrue("throw INVALID_CHARACTER_ERR", success);
 	}
 
 }
