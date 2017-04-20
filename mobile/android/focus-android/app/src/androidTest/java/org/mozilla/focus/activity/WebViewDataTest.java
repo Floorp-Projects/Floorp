@@ -169,8 +169,6 @@ public class WebViewDataTest {
 
         // Erase browsing session
 
-        Thread.sleep(5000);
-
         TestHelper.floatingEraseButton.perform(click());
         TestHelper.erasedMsg.waitForExists(waitingTime);
         Assert.assertTrue(TestHelper.erasedMsg.exists());
