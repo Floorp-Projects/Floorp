@@ -194,7 +194,8 @@ nsDeviceContext::nsDeviceContext()
     : mWidth(0), mHeight(0),
       mAppUnitsPerDevPixel(-1), mAppUnitsPerDevPixelAtUnitFullZoom(-1),
       mAppUnitsPerPhysicalInch(-1),
-      mFullZoom(1.0f), mPrintingScale(1.0f)
+      mFullZoom(1.0f), mPrintingScale(1.0f),
+      mIsCurrentlyPrintingDoc(false)
 #ifdef DEBUG
     , mIsInitialized(false)
 #endif
@@ -489,12 +490,18 @@ nsDeviceContext::BeginDocument(const nsAString& aTitle,
                                int32_t          aStartPage,
                                int32_t          aEndPage)
 {
+    MOZ_ASSERT(!mIsCurrentlyPrintingDoc,
+               "Mismatched BeginDocument/EndDocument calls");
+
     nsresult rv = mPrintTarget->BeginPrinting(aTitle, aPrintToFileName,
                                               aStartPage, aEndPage);
 
-    if (NS_SUCCEEDED(rv) && mDeviceContextSpec) {
-      rv = mDeviceContextSpec->BeginDocument(aTitle, aPrintToFileName,
-                                             aStartPage, aEndPage);
+    if (NS_SUCCEEDED(rv)) {
+        if (mDeviceContextSpec) {
+           rv = mDeviceContextSpec->BeginDocument(aTitle, aPrintToFileName,
+                                                  aStartPage, aEndPage);
+        }
+        mIsCurrentlyPrintingDoc = true;
     }
 
     return rv;
@@ -504,7 +511,12 @@ nsDeviceContext::BeginDocument(const nsAString& aTitle,
 nsresult
 nsDeviceContext::EndDocument(void)
 {
+    MOZ_ASSERT(mIsCurrentlyPrintingDoc,
+               "Mismatched BeginDocument/EndDocument calls");
+
     nsresult rv = NS_OK;
+
+    mIsCurrentlyPrintingDoc = false;
 
     rv = mPrintTarget->EndPrinting();
     if (NS_SUCCEEDED(rv)) {
@@ -523,7 +535,12 @@ nsDeviceContext::EndDocument(void)
 nsresult
 nsDeviceContext::AbortDocument(void)
 {
+    MOZ_ASSERT(mIsCurrentlyPrintingDoc,
+               "Mismatched BeginDocument/EndDocument calls");
+
     nsresult rv = mPrintTarget->AbortPrinting();
+
+    mIsCurrentlyPrintingDoc = false;
 
     if (mDeviceContextSpec)
         mDeviceContextSpec->EndDocument();
