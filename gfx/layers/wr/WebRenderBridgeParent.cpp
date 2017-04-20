@@ -11,6 +11,7 @@
 #include "GLContextProvider.h"
 #include "mozilla/Range.h"
 #include "mozilla/layers/AnimationHelper.h"
+#include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -308,8 +309,49 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
   HoldPendingTransactionId(mWrEpoch, aTransactionId);
 
   mScrollData = aScrollData;
-  // TODO: pass the WebRenderScrollData to APZ (this will happen in a future
-  // patch)
+  UpdateAPZ();
+}
+
+void
+WebRenderBridgeParent::UpdateAPZ()
+{
+  if (!mCompositorBridge) {
+    return;
+  }
+
+  CompositorBridgeParent* cbp;
+  uint64_t rootLayersId;
+  WebRenderBridgeParent* rootWrbp;
+  if (mWidget) {
+    // This WebRenderBridgeParent is attached to the root
+    // CompositorBridgeParent.
+    cbp = static_cast<CompositorBridgeParent*>(mCompositorBridge);
+    rootLayersId = wr::AsUint64(mPipelineId);
+    rootWrbp = this;
+  } else {
+    // This WebRenderBridgeParent is attached to a
+    // CrossProcessCompositorBridgeParent so we have an extra level of
+    // indirection to unravel.
+    uint64_t layersId = wr::AsUint64(mPipelineId);
+    CompositorBridgeParent::LayerTreeState* lts =
+        CompositorBridgeParent::GetIndirectShadowTree(layersId);
+    MOZ_ASSERT(lts);
+    cbp = lts->mParent;
+    rootLayersId = cbp->RootLayerTreeId();
+    lts = CompositorBridgeParent::GetIndirectShadowTree(rootLayersId);
+    MOZ_ASSERT(lts);
+    rootWrbp = lts->mWrBridge.get();
+  }
+
+  MOZ_ASSERT(cbp);
+  if (!rootWrbp) {
+    return;
+  }
+  if (RefPtr<APZCTreeManager> apzc = cbp->GetAPZCTreeManager()) {
+    apzc->UpdateHitTestingTree(rootLayersId, rootWrbp->GetScrollData(),
+        mScrollData.IsFirstPaint(), wr::AsUint64(mPipelineId),
+        /* TODO: propagate paint sequence number */ 0);
+  }
 }
 
 const WebRenderScrollData&
