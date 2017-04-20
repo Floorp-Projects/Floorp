@@ -128,21 +128,24 @@ IPCStreamSource::Initialize()
   }
 
   // A source can be used on any thread, but we only support IPCStream on
-  // main thread and Worker threads right now.  This is due to the requirement
-  // that the thread be guaranteed to live long enough to receive messages.
-  // We can enforce this guarantee with a feature on worker threads, but not
-  // other threads.
+  // main thread, Workers and PBackground thread right now.  This is due
+  // to the requirement  that the thread be guaranteed to live long enough to
+  // receive messages. We can enforce this guarantee with a WorkerHolder on
+  // worker threads, but not other threads. Main-thread and PBackground thread
+  // do not need anything special in order to be kept alive.
   WorkerPrivate* workerPrivate = nullptr;
   if (!NS_IsMainThread()) {
     workerPrivate = GetCurrentThreadWorkerPrivate();
-    MOZ_RELEASE_ASSERT(workerPrivate);
+    if (workerPrivate) {
+      bool result = HoldWorker(workerPrivate, Canceling);
+      if (!result) {
+        return false;
+      }
 
-    bool result = HoldWorker(workerPrivate, Canceling);
-    if (!result) {
-      return false;
+      mWorkerPrivate = workerPrivate;
+    } else {
+      AssertIsOnBackgroundThread();
     }
-
-    mWorkerPrivate = workerPrivate;
   }
 
   return true;
@@ -186,7 +189,6 @@ void
 IPCStreamSource::Start()
 {
   NS_ASSERT_OWNINGTHREAD(IPCStreamSource);
-  MOZ_ASSERT_IF(!NS_IsMainThread(), mWorkerPrivate);
   DoRead();
 }
 
