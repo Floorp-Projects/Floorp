@@ -42,13 +42,14 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsHtml5Macros.h"
 #include "nsIContentHandle.h"
+#include "nsHtml5Portability.h"
 
 class nsHtml5StreamParser;
 
+class nsHtml5ElementName;
 class nsHtml5Tokenizer;
 class nsHtml5TreeBuilder;
 class nsHtml5MetaScanner;
-class nsHtml5ElementName;
 class nsHtml5UTF16Buffer;
 class nsHtml5StateSnapshot;
 class nsHtml5Portability;
@@ -73,7 +74,25 @@ class nsHtml5AttributeName
     static nsIAtom** COLONIFIED_LOCAL(nsIAtom* name, nsIAtom* suffix);
   public:
     static nsIAtom** SAME_LOCAL(nsIAtom* name);
-    static nsHtml5AttributeName* nameByBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner);
+    inline static nsHtml5AttributeName* nameByBuffer(char16_t* buf,
+                                                     int32_t offset,
+                                                     int32_t length,
+                                                     nsHtml5AtomTable* interner)
+    {
+      uint32_t hash = nsHtml5AttributeName::bufToHash(buf, length);
+      int32_t index = nsHtml5AttributeName::ATTRIBUTE_HASHES.binarySearch(hash);
+      if (index < 0) {
+        return nullptr;
+      }
+      nsHtml5AttributeName* attributeName =
+        nsHtml5AttributeName::ATTRIBUTE_NAMES[index];
+      nsIAtom* name = attributeName->getLocal(0);
+      if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
+        return nullptr;
+      }
+      return attributeName;
+    }
+
   private:
     inline static uint32_t bufToHash(char16_t* buf, int32_t length)
     {
@@ -108,6 +127,14 @@ class nsHtml5AttributeName
       return len + first + second + third + fourth + fifth + sixth;
     }
 
+  public:
+    static const int32_t HTML = 0;
+
+    static const int32_t MATHML = 1;
+
+    static const int32_t SVG = 2;
+
+  private:
     int32_t* uri;
     nsIAtom** local;
     nsIAtom** prefix;
@@ -115,8 +142,16 @@ class nsHtml5AttributeName
     nsHtml5AttributeName(int32_t* uri, nsIAtom** local, nsIAtom** prefix);
   public:
     nsHtml5AttributeName();
-    bool isInterned();
-    void setNameForNonInterned(nsIAtom* name);
+    inline bool isInterned() { return !custom; }
+
+    inline void setNameForNonInterned(nsIAtom* name)
+    {
+      MOZ_ASSERT(custom);
+      local[0] = name;
+      local[1] = name;
+      local[2] = name;
+    }
+
     static nsHtml5AttributeName* createAttributeName(nsIAtom* name);
     ~nsHtml5AttributeName();
     int32_t getUri(int32_t mode);
@@ -713,11 +748,6 @@ class nsHtml5AttributeName
     static void initializeStatics();
     static void releaseStatics();
 };
-
-#define NS_HTML5ATTRIBUTE_NAME_HTML 0
-#define NS_HTML5ATTRIBUTE_NAME_MATHML 1
-#define NS_HTML5ATTRIBUTE_NAME_SVG 2
-
 
 #endif
 

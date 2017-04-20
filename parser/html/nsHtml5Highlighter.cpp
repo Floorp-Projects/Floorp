@@ -48,7 +48,7 @@ char16_t nsHtml5Highlighter::sPi[] =
   { 'p', 'i', 0 };
 
 nsHtml5Highlighter::nsHtml5Highlighter(nsAHtml5TreeOpSink* aOpSink)
- : mState(NS_HTML5TOKENIZER_DATA)
+ : mState(nsHtml5Tokenizer::DATA)
  , mCStart(INT32_MAX)
  , mPos(0)
  , mLineNumber(1)
@@ -119,13 +119,13 @@ nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
 {
   mPos = aPos;
   switch (mState) {
-    case NS_HTML5TOKENIZER_SCRIPT_DATA:
-    case NS_HTML5TOKENIZER_RAWTEXT:
-    case NS_HTML5TOKENIZER_RCDATA:
-    case NS_HTML5TOKENIZER_DATA:
+    case nsHtml5Tokenizer::SCRIPT_DATA:
+    case nsHtml5Tokenizer::RAWTEXT:
+    case nsHtml5Tokenizer::RCDATA:
+    case nsHtml5Tokenizer::DATA:
       // We can transition on < and on &. Either way, we don't yet know the
       // role of the token, so open a span without class.
-      if (aState == NS_HTML5TOKENIZER_CONSUME_CHARACTER_REFERENCE) {
+      if (aState == nsHtml5Tokenizer::CONSUME_CHARACTER_REFERENCE) {
         StartSpan();
         // Start another span for highlighting the ampersand
         StartSpan();
@@ -134,26 +134,26 @@ nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
         EndCharactersAndStartMarkupRun();
       }
       break;
-    case NS_HTML5TOKENIZER_TAG_OPEN:
+    case nsHtml5Tokenizer::TAG_OPEN:
       switch (aState) {
-        case NS_HTML5TOKENIZER_TAG_NAME:
+        case nsHtml5Tokenizer::TAG_NAME:
           StartSpan(sStartTag);
           break;
-        case NS_HTML5TOKENIZER_DATA:
+        case nsHtml5Tokenizer::DATA:
           FinishTag(); // DATA
           break;
-        case NS_HTML5TOKENIZER_PROCESSING_INSTRUCTION:
+        case nsHtml5Tokenizer::PROCESSING_INSTRUCTION:
           AddClass(sPi);
           break;
       }
       break;
-    case NS_HTML5TOKENIZER_TAG_NAME:
+    case nsHtml5Tokenizer::TAG_NAME:
       switch (aState) {
-        case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME:
-          EndSpanOrA(); // NS_HTML5TOKENIZER_TAG_NAME
+        case nsHtml5Tokenizer::BEFORE_ATTRIBUTE_NAME:
+          EndSpanOrA(); // nsHtml5Tokenizer::TAG_NAME
           break;
-        case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
-          EndSpanOrA(); // NS_HTML5TOKENIZER_TAG_NAME
+        case nsHtml5Tokenizer::SELF_CLOSING_START_TAG:
+          EndSpanOrA(); // nsHtml5Tokenizer::TAG_NAME
           StartSpan(); // for highlighting the slash
           mSlash = CurrentNode();
           break;
@@ -162,12 +162,12 @@ nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
           break;
       }
       break;
-    case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME:
+    case nsHtml5Tokenizer::BEFORE_ATTRIBUTE_NAME:
       switch (aState) {
-        case NS_HTML5TOKENIZER_ATTRIBUTE_NAME:
+        case nsHtml5Tokenizer::ATTRIBUTE_NAME:
           StartSpan(sAttributeName);
           break;
-        case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
+        case nsHtml5Tokenizer::SELF_CLOSING_START_TAG:
           StartSpan(); // for highlighting the slash
           mSlash = CurrentNode();
           break;
@@ -176,14 +176,14 @@ nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
           break;
       }
       break;
-    case NS_HTML5TOKENIZER_ATTRIBUTE_NAME:
+    case nsHtml5Tokenizer::ATTRIBUTE_NAME:
       switch (aState) {
-        case NS_HTML5TOKENIZER_AFTER_ATTRIBUTE_NAME:
-        case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_VALUE:
-          EndSpanOrA(); // NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME
+        case nsHtml5Tokenizer::AFTER_ATTRIBUTE_NAME:
+        case nsHtml5Tokenizer::BEFORE_ATTRIBUTE_VALUE:
+          EndSpanOrA(); // nsHtml5Tokenizer::BEFORE_ATTRIBUTE_NAME
           break;
-        case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
-          EndSpanOrA(); // NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME
+        case nsHtml5Tokenizer::SELF_CLOSING_START_TAG:
+          EndSpanOrA(); // nsHtml5Tokenizer::BEFORE_ATTRIBUTE_NAME
           StartSpan(); // for highlighting the slash
           mSlash = CurrentNode();
           break;
@@ -192,14 +192,14 @@ nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
           break;
       }
       break;
-    case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_VALUE:
+    case nsHtml5Tokenizer::BEFORE_ATTRIBUTE_VALUE:
       switch (aState) {
-        case NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_DOUBLE_QUOTED:
-        case NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_SINGLE_QUOTED:
+        case nsHtml5Tokenizer::ATTRIBUTE_VALUE_DOUBLE_QUOTED:
+        case nsHtml5Tokenizer::ATTRIBUTE_VALUE_SINGLE_QUOTED:
           FlushCurrent();
           StartA();
           break;
-        case NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_UNQUOTED:
+        case nsHtml5Tokenizer::ATTRIBUTE_VALUE_UNQUOTED:
           StartA();
           break;
         default:
@@ -207,13 +207,13 @@ nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
           break;
       }
       break;
-    case NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_DOUBLE_QUOTED:
-    case NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_SINGLE_QUOTED:
+    case nsHtml5Tokenizer::ATTRIBUTE_VALUE_DOUBLE_QUOTED:
+    case nsHtml5Tokenizer::ATTRIBUTE_VALUE_SINGLE_QUOTED:
       switch (aState) {
-        case NS_HTML5TOKENIZER_AFTER_ATTRIBUTE_VALUE_QUOTED:
+        case nsHtml5Tokenizer::AFTER_ATTRIBUTE_VALUE_QUOTED:
           EndSpanOrA();
           break;
-        case NS_HTML5TOKENIZER_CONSUME_CHARACTER_REFERENCE:
+        case nsHtml5Tokenizer::CONSUME_CHARACTER_REFERENCE:
           StartSpan();
           StartSpan(); // for ampersand itself
           mAmpersand = CurrentNode();
@@ -223,11 +223,11 @@ nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
           break;
       }
       break;
-    case NS_HTML5TOKENIZER_AFTER_ATTRIBUTE_VALUE_QUOTED:
+    case nsHtml5Tokenizer::AFTER_ATTRIBUTE_VALUE_QUOTED:
       switch (aState) {
-        case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME:
+        case nsHtml5Tokenizer::BEFORE_ATTRIBUTE_NAME:
           break;
-        case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
+        case nsHtml5Tokenizer::SELF_CLOSING_START_TAG:
           StartSpan(); // for highlighting the slash
           mSlash = CurrentNode();
           break;
@@ -236,22 +236,22 @@ nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
           break;
       }
       break;
-    case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
+    case nsHtml5Tokenizer::SELF_CLOSING_START_TAG:
       EndSpanOrA(); // end the slash highlight
       switch (aState) {
-        case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME:
+        case nsHtml5Tokenizer::BEFORE_ATTRIBUTE_NAME:
           break;
         default:
           FinishTag();
           break;
       }
       break;
-    case NS_HTML5TOKENIZER_ATTRIBUTE_VALUE_UNQUOTED:
+    case nsHtml5Tokenizer::ATTRIBUTE_VALUE_UNQUOTED:
       switch (aState) {
-        case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME:
+        case nsHtml5Tokenizer::BEFORE_ATTRIBUTE_NAME:
           EndSpanOrA();
           break;
-        case NS_HTML5TOKENIZER_CONSUME_CHARACTER_REFERENCE:
+        case nsHtml5Tokenizer::CONSUME_CHARACTER_REFERENCE:
           StartSpan();
           StartSpan(); // for ampersand itself
           mAmpersand = CurrentNode();
@@ -261,15 +261,15 @@ nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
           break;
       }
       break;
-    case NS_HTML5TOKENIZER_AFTER_ATTRIBUTE_NAME:
+    case nsHtml5Tokenizer::AFTER_ATTRIBUTE_NAME:
       switch (aState) {
-        case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
+        case nsHtml5Tokenizer::SELF_CLOSING_START_TAG:
           StartSpan(); // for highlighting the slash
           mSlash = CurrentNode();
           break;
-        case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_VALUE:
+        case nsHtml5Tokenizer::BEFORE_ATTRIBUTE_VALUE:
           break;
-        case NS_HTML5TOKENIZER_ATTRIBUTE_NAME:
+        case nsHtml5Tokenizer::ATTRIBUTE_NAME:
           StartSpan(sAttributeName);
           break;
         default:
@@ -279,30 +279,30 @@ nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
       break;
       // most comment states are omitted, because they don't matter to
       // highlighting
-    case NS_HTML5TOKENIZER_COMMENT_START:
-    case NS_HTML5TOKENIZER_COMMENT_END:
-    case NS_HTML5TOKENIZER_COMMENT_END_BANG:
-    case NS_HTML5TOKENIZER_COMMENT_START_DASH:
-    case NS_HTML5TOKENIZER_BOGUS_COMMENT:
-    case NS_HTML5TOKENIZER_BOGUS_COMMENT_HYPHEN:
-      if (aState == NS_HTML5TOKENIZER_DATA) {
+    case nsHtml5Tokenizer::COMMENT_START:
+    case nsHtml5Tokenizer::COMMENT_END:
+    case nsHtml5Tokenizer::COMMENT_END_BANG:
+    case nsHtml5Tokenizer::COMMENT_START_DASH:
+    case nsHtml5Tokenizer::BOGUS_COMMENT:
+    case nsHtml5Tokenizer::BOGUS_COMMENT_HYPHEN:
+      if (aState == nsHtml5Tokenizer::DATA) {
         AddClass(sComment);
         FinishTag();
       }
       break;
       // most cdata states are omitted, because they don't matter to
       // highlighting
-    case NS_HTML5TOKENIZER_CDATA_RSQB_RSQB:
-      if (aState == NS_HTML5TOKENIZER_DATA) {
+    case nsHtml5Tokenizer::CDATA_RSQB_RSQB:
+      if (aState == nsHtml5Tokenizer::DATA) {
         AddClass(sCdata);
         FinishTag();
       }
       break;
-    case NS_HTML5TOKENIZER_CONSUME_CHARACTER_REFERENCE:
+    case nsHtml5Tokenizer::CONSUME_CHARACTER_REFERENCE:
       EndSpanOrA(); // the span for the ampersand
       switch (aState) {
-        case NS_HTML5TOKENIZER_CONSUME_NCR:
-        case NS_HTML5TOKENIZER_CHARACTER_REFERENCE_HILO_LOOKUP:
+        case nsHtml5Tokenizer::CONSUME_NCR:
+        case nsHtml5Tokenizer::CHARACTER_REFERENCE_HILO_LOOKUP:
           break;
         default:
           // not actually a character reference
@@ -310,44 +310,44 @@ nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
           break;
       }
       break;
-    case NS_HTML5TOKENIZER_CHARACTER_REFERENCE_HILO_LOOKUP:
-      if (aState == NS_HTML5TOKENIZER_CHARACTER_REFERENCE_TAIL) {
+    case nsHtml5Tokenizer::CHARACTER_REFERENCE_HILO_LOOKUP:
+      if (aState == nsHtml5Tokenizer::CHARACTER_REFERENCE_TAIL) {
         break;
       }
       // not actually a character reference
       EndSpanOrA();
       break;
-    case NS_HTML5TOKENIZER_CHARACTER_REFERENCE_TAIL:
+    case nsHtml5Tokenizer::CHARACTER_REFERENCE_TAIL:
       if (!aReconsume) {
         FlushCurrent();
       }
       EndSpanOrA();
       break;
-    case NS_HTML5TOKENIZER_DECIMAL_NRC_LOOP:
-    case NS_HTML5TOKENIZER_HEX_NCR_LOOP:
+    case nsHtml5Tokenizer::DECIMAL_NRC_LOOP:
+    case nsHtml5Tokenizer::HEX_NCR_LOOP:
       switch (aState) {
-        case NS_HTML5TOKENIZER_HANDLE_NCR_VALUE:
+        case nsHtml5Tokenizer::HANDLE_NCR_VALUE:
           AddClass(sEntity);
           FlushCurrent();
           break;
-        case NS_HTML5TOKENIZER_HANDLE_NCR_VALUE_RECONSUME:
+        case nsHtml5Tokenizer::HANDLE_NCR_VALUE_RECONSUME:
           AddClass(sEntity);
           break;
       }
       EndSpanOrA();
       break;
-    case NS_HTML5TOKENIZER_CLOSE_TAG_OPEN:
+    case nsHtml5Tokenizer::CLOSE_TAG_OPEN:
       switch (aState) {
-        case NS_HTML5TOKENIZER_DATA:
+        case nsHtml5Tokenizer::DATA:
           FinishTag();
           break;
-        case NS_HTML5TOKENIZER_TAG_NAME:
+        case nsHtml5Tokenizer::TAG_NAME:
           StartSpan(sEndTag);
           break;
       }
       break;
-    case NS_HTML5TOKENIZER_RAWTEXT_RCDATA_LESS_THAN_SIGN:
-      if (aState == NS_HTML5TOKENIZER_NON_DATA_END_TAG_NAME) {
+    case nsHtml5Tokenizer::RAWTEXT_RCDATA_LESS_THAN_SIGN:
+      if (aState == nsHtml5Tokenizer::NON_DATA_END_TAG_NAME) {
         FlushCurrent();
         StartSpan(); // don't know if it is "end-tag" yet :-(
         break;
@@ -355,19 +355,19 @@ nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
       EndSpanOrA();
       StartCharacters();
       break;
-    case NS_HTML5TOKENIZER_NON_DATA_END_TAG_NAME:
+    case nsHtml5Tokenizer::NON_DATA_END_TAG_NAME:
       switch (aState) {
-        case NS_HTML5TOKENIZER_BEFORE_ATTRIBUTE_NAME:
+        case nsHtml5Tokenizer::BEFORE_ATTRIBUTE_NAME:
           AddClass(sEndTag);
           EndSpanOrA();
           break;
-        case NS_HTML5TOKENIZER_SELF_CLOSING_START_TAG:
+        case nsHtml5Tokenizer::SELF_CLOSING_START_TAG:
           AddClass(sEndTag);
           EndSpanOrA();
           StartSpan(); // for highlighting the slash
           mSlash = CurrentNode();
           break;
-        case NS_HTML5TOKENIZER_DATA: // yes, as a result of emitting the token
+        case nsHtml5Tokenizer::DATA: // yes, as a result of emitting the token
           AddClass(sEndTag);
           FinishTag();
           break;
@@ -376,47 +376,47 @@ nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
           break;
       }
       break;
-    case NS_HTML5TOKENIZER_SCRIPT_DATA_LESS_THAN_SIGN:
-    case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN:
-      if (aState == NS_HTML5TOKENIZER_NON_DATA_END_TAG_NAME) {
+    case nsHtml5Tokenizer::SCRIPT_DATA_LESS_THAN_SIGN:
+    case nsHtml5Tokenizer::SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN:
+      if (aState == nsHtml5Tokenizer::NON_DATA_END_TAG_NAME) {
         FlushCurrent();
         StartSpan(); // don't know if it is "end-tag" yet :-(
         break;
       }
       FinishTag();
       break;
-    case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_DASH_DASH:
-    case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED:
-    case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_DASH:
-      if (aState == NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN) {
+    case nsHtml5Tokenizer::SCRIPT_DATA_ESCAPED_DASH_DASH:
+    case nsHtml5Tokenizer::SCRIPT_DATA_ESCAPED:
+    case nsHtml5Tokenizer::SCRIPT_DATA_ESCAPED_DASH:
+      if (aState == nsHtml5Tokenizer::SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN) {
         EndCharactersAndStartMarkupRun();
       }
       break;
       // Lots of double escape states omitted, because they don't highlight.
       // Likewise, only doctype states that can emit the doctype are of
       // interest. Otherwise, the transition out of bogus comment deals.
-    case NS_HTML5TOKENIZER_BEFORE_DOCTYPE_NAME:
-    case NS_HTML5TOKENIZER_DOCTYPE_NAME:
-    case NS_HTML5TOKENIZER_AFTER_DOCTYPE_NAME:
-    case NS_HTML5TOKENIZER_AFTER_DOCTYPE_PUBLIC_KEYWORD:
-    case NS_HTML5TOKENIZER_BEFORE_DOCTYPE_PUBLIC_IDENTIFIER:
-    case NS_HTML5TOKENIZER_DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED:
-    case NS_HTML5TOKENIZER_AFTER_DOCTYPE_PUBLIC_IDENTIFIER:
-    case NS_HTML5TOKENIZER_BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS:
-    case NS_HTML5TOKENIZER_DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED:
-    case NS_HTML5TOKENIZER_AFTER_DOCTYPE_SYSTEM_IDENTIFIER:
-    case NS_HTML5TOKENIZER_BOGUS_DOCTYPE:
-    case NS_HTML5TOKENIZER_AFTER_DOCTYPE_SYSTEM_KEYWORD:
-    case NS_HTML5TOKENIZER_BEFORE_DOCTYPE_SYSTEM_IDENTIFIER:
-    case NS_HTML5TOKENIZER_DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED:
-    case NS_HTML5TOKENIZER_DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED:
-      if (aState == NS_HTML5TOKENIZER_DATA) {
+    case nsHtml5Tokenizer::BEFORE_DOCTYPE_NAME:
+    case nsHtml5Tokenizer::DOCTYPE_NAME:
+    case nsHtml5Tokenizer::AFTER_DOCTYPE_NAME:
+    case nsHtml5Tokenizer::AFTER_DOCTYPE_PUBLIC_KEYWORD:
+    case nsHtml5Tokenizer::BEFORE_DOCTYPE_PUBLIC_IDENTIFIER:
+    case nsHtml5Tokenizer::DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED:
+    case nsHtml5Tokenizer::AFTER_DOCTYPE_PUBLIC_IDENTIFIER:
+    case nsHtml5Tokenizer::BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS:
+    case nsHtml5Tokenizer::DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED:
+    case nsHtml5Tokenizer::AFTER_DOCTYPE_SYSTEM_IDENTIFIER:
+    case nsHtml5Tokenizer::BOGUS_DOCTYPE:
+    case nsHtml5Tokenizer::AFTER_DOCTYPE_SYSTEM_KEYWORD:
+    case nsHtml5Tokenizer::BEFORE_DOCTYPE_SYSTEM_IDENTIFIER:
+    case nsHtml5Tokenizer::DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED:
+    case nsHtml5Tokenizer::DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED:
+      if (aState == nsHtml5Tokenizer::DATA) {
         AddClass(sDoctype);
         FinishTag();
       }
       break;
-    case NS_HTML5TOKENIZER_PROCESSING_INSTRUCTION_QUESTION_MARK:
-      if (aState == NS_HTML5TOKENIZER_DATA) {
+    case nsHtml5Tokenizer::PROCESSING_INSTRUCTION_QUESTION_MARK:
+      if (aState == nsHtml5Tokenizer::DATA) {
         FinishTag();
       }
       break;
@@ -431,35 +431,35 @@ void
 nsHtml5Highlighter::End()
 {
   switch (mState) {
-    case NS_HTML5TOKENIZER_COMMENT_END:
-    case NS_HTML5TOKENIZER_COMMENT_END_BANG:
-    case NS_HTML5TOKENIZER_COMMENT_START_DASH:
-    case NS_HTML5TOKENIZER_BOGUS_COMMENT:
-    case NS_HTML5TOKENIZER_BOGUS_COMMENT_HYPHEN:
+    case nsHtml5Tokenizer::COMMENT_END:
+    case nsHtml5Tokenizer::COMMENT_END_BANG:
+    case nsHtml5Tokenizer::COMMENT_START_DASH:
+    case nsHtml5Tokenizer::BOGUS_COMMENT:
+    case nsHtml5Tokenizer::BOGUS_COMMENT_HYPHEN:
       AddClass(sComment);
       break;
-    case NS_HTML5TOKENIZER_CDATA_RSQB_RSQB:
+    case nsHtml5Tokenizer::CDATA_RSQB_RSQB:
       AddClass(sCdata);
       break;
-    case NS_HTML5TOKENIZER_DECIMAL_NRC_LOOP:
-    case NS_HTML5TOKENIZER_HEX_NCR_LOOP:
+    case nsHtml5Tokenizer::DECIMAL_NRC_LOOP:
+    case nsHtml5Tokenizer::HEX_NCR_LOOP:
       // XXX need tokenizer help here
       break;
-    case NS_HTML5TOKENIZER_BEFORE_DOCTYPE_NAME:
-    case NS_HTML5TOKENIZER_DOCTYPE_NAME:
-    case NS_HTML5TOKENIZER_AFTER_DOCTYPE_NAME:
-    case NS_HTML5TOKENIZER_AFTER_DOCTYPE_PUBLIC_KEYWORD:
-    case NS_HTML5TOKENIZER_BEFORE_DOCTYPE_PUBLIC_IDENTIFIER:
-    case NS_HTML5TOKENIZER_DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED:
-    case NS_HTML5TOKENIZER_AFTER_DOCTYPE_PUBLIC_IDENTIFIER:
-    case NS_HTML5TOKENIZER_BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS:
-    case NS_HTML5TOKENIZER_DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED:
-    case NS_HTML5TOKENIZER_AFTER_DOCTYPE_SYSTEM_IDENTIFIER:
-    case NS_HTML5TOKENIZER_BOGUS_DOCTYPE:
-    case NS_HTML5TOKENIZER_AFTER_DOCTYPE_SYSTEM_KEYWORD:
-    case NS_HTML5TOKENIZER_BEFORE_DOCTYPE_SYSTEM_IDENTIFIER:
-    case NS_HTML5TOKENIZER_DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED:
-    case NS_HTML5TOKENIZER_DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED:
+    case nsHtml5Tokenizer::BEFORE_DOCTYPE_NAME:
+    case nsHtml5Tokenizer::DOCTYPE_NAME:
+    case nsHtml5Tokenizer::AFTER_DOCTYPE_NAME:
+    case nsHtml5Tokenizer::AFTER_DOCTYPE_PUBLIC_KEYWORD:
+    case nsHtml5Tokenizer::BEFORE_DOCTYPE_PUBLIC_IDENTIFIER:
+    case nsHtml5Tokenizer::DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED:
+    case nsHtml5Tokenizer::AFTER_DOCTYPE_PUBLIC_IDENTIFIER:
+    case nsHtml5Tokenizer::BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS:
+    case nsHtml5Tokenizer::DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED:
+    case nsHtml5Tokenizer::AFTER_DOCTYPE_SYSTEM_IDENTIFIER:
+    case nsHtml5Tokenizer::BOGUS_DOCTYPE:
+    case nsHtml5Tokenizer::AFTER_DOCTYPE_SYSTEM_KEYWORD:
+    case nsHtml5Tokenizer::BEFORE_DOCTYPE_SYSTEM_IDENTIFIER:
+    case nsHtml5Tokenizer::DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED:
+    case nsHtml5Tokenizer::DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED:
       AddClass(sDoctype);
       break;
     default:

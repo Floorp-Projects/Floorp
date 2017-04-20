@@ -56,10 +56,10 @@
 #include "nsIContentHandle.h"
 #include "nsHtml5OplessBuilder.h"
 
-#include "nsHtml5Tokenizer.h"
-#include "nsHtml5MetaScanner.h"
 #include "nsHtml5AttributeName.h"
 #include "nsHtml5ElementName.h"
+#include "nsHtml5Tokenizer.h"
+#include "nsHtml5MetaScanner.h"
 #include "nsHtml5StackNode.h"
 #include "nsHtml5UTF16Buffer.h"
 #include "nsHtml5StateSnapshot.h"
@@ -78,7 +78,7 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
   templateModeStack = jArray<int32_t,int32_t>::newJArray(64);
   listOfActiveFormattingElements = jArray<nsHtml5StackNode*,int32_t>::newJArray(64);
   needToDropLF = false;
-  originalMode = NS_HTML5TREE_BUILDER_INITIAL;
+  originalMode = INITIAL;
   templateModePtr = -1;
   currentPtr = -1;
   listPtr = -1;
@@ -105,8 +105,9 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
         new nsHtml5StackNode(elementName, elementName->getCamelCaseName(), elt);
       currentPtr++;
       stack[currentPtr] = node;
-      tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_DATA, contextName);
-      mode = NS_HTML5TREE_BUILDER_FRAMESET_OK;
+      tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::DATA,
+                                              contextName);
+      mode = FRAMESET_OK;
     } else if (contextNamespace == kNameSpaceID_MathML) {
       nsHtml5ElementName* elementName = nsHtml5ElementName::ELT_MATH;
       if (nsHtml5Atoms::mi == contextName || nsHtml5Atoms::mo == contextName || nsHtml5Atoms::mn == contextName || nsHtml5Atoms::ms == contextName || nsHtml5Atoms::mtext == contextName) {
@@ -118,33 +119,39 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
         new nsHtml5StackNode(elementName, elt, elementName->getName(), false);
       currentPtr++;
       stack[currentPtr] = node;
-      tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_DATA, contextName);
-      mode = NS_HTML5TREE_BUILDER_FRAMESET_OK;
+      tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::DATA,
+                                              contextName);
+      mode = FRAMESET_OK;
     } else {
       nsHtml5StackNode* node = new nsHtml5StackNode(nsHtml5ElementName::ELT_HTML, elt);
       currentPtr++;
       stack[currentPtr] = node;
       if (nsHtml5Atoms::template_ == contextName) {
-        pushTemplateMode(NS_HTML5TREE_BUILDER_IN_TEMPLATE);
+        pushTemplateMode(IN_TEMPLATE);
       }
       resetTheInsertionMode();
       formPointer = getFormPointerForContext(contextNode);
       if (nsHtml5Atoms::title == contextName || nsHtml5Atoms::textarea == contextName) {
-        tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RCDATA, contextName);
+        tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::RCDATA,
+                                                contextName);
       } else if (nsHtml5Atoms::style == contextName || nsHtml5Atoms::xmp == contextName || nsHtml5Atoms::iframe == contextName || nsHtml5Atoms::noembed == contextName || nsHtml5Atoms::noframes == contextName || (scriptingEnabled && nsHtml5Atoms::noscript == contextName)) {
-        tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, contextName);
+        tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::RAWTEXT,
+                                                contextName);
       } else if (nsHtml5Atoms::plaintext == contextName) {
-        tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_PLAINTEXT, contextName);
+        tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::PLAINTEXT,
+                                                contextName);
       } else if (nsHtml5Atoms::script == contextName) {
-        tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_SCRIPT_DATA, contextName);
+        tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::SCRIPT_DATA,
+                                                contextName);
       } else {
-        tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_DATA, contextName);
+        tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::DATA,
+                                                contextName);
       }
     }
     contextName = nullptr;
     contextNode = nullptr;
   } else {
-    mode = NS_HTML5TREE_BUILDER_INITIAL;
+    mode = INITIAL;
     if (tokenizer->isViewingXmlSource()) {
       nsIContentHandle* elt = createElement(kNameSpaceID_SVG, nsHtml5Atoms::svg, tokenizer->emptyAttributes(), nullptr);
       nsHtml5StackNode* node = new nsHtml5StackNode(nsHtml5ElementName::ELT_SVG, nsHtml5Atoms::svg, elt);
@@ -161,7 +168,7 @@ nsHtml5TreeBuilder::doctype(nsIAtom* name,
                             bool forceQuirks)
 {
   needToDropLF = false;
-  if (!isInForeign() && mode == NS_HTML5TREE_BUILDER_INITIAL) {
+  if (!isInForeign() && mode == INITIAL) {
     nsHtml5String emptyString = nsHtml5Portability::newEmptyString();
     appendDoctypeToDocument(!name ? nsHtml5Atoms::emptystring : name, !publicIdentifier ? emptyString : publicIdentifier, !systemIdentifier ? emptyString : systemIdentifier);
     emptyString.Release();
@@ -174,7 +181,7 @@ nsHtml5TreeBuilder::doctype(nsIAtom* name,
     } else {
       documentModeInternal(STANDARDS_MODE, publicIdentifier, systemIdentifier, false);
     }
-    mode = NS_HTML5TREE_BUILDER_BEFORE_HTML;
+    mode = BEFORE_HTML;
     return;
   }
   errStrayDoctype();
@@ -187,14 +194,14 @@ nsHtml5TreeBuilder::comment(char16_t* buf, int32_t start, int32_t length)
   needToDropLF = false;
   if (!isInForeign()) {
     switch(mode) {
-      case NS_HTML5TREE_BUILDER_INITIAL:
-      case NS_HTML5TREE_BUILDER_BEFORE_HTML:
-      case NS_HTML5TREE_BUILDER_AFTER_AFTER_BODY:
-      case NS_HTML5TREE_BUILDER_AFTER_AFTER_FRAMESET: {
+      case INITIAL:
+      case BEFORE_HTML:
+      case AFTER_AFTER_BODY:
+      case AFTER_AFTER_FRAMESET: {
         appendCommentToDocument(buf, start, length);
         return;
       }
-      case NS_HTML5TREE_BUILDER_AFTER_BODY: {
+      case AFTER_BODY: {
         flushCharacters();
         appendComment(stack[0]->node, buf, start, length);
         return;
@@ -226,20 +233,20 @@ nsHtml5TreeBuilder::characters(const char16_t* buf, int32_t start, int32_t lengt
     }
   }
   switch(mode) {
-    case NS_HTML5TREE_BUILDER_IN_BODY:
-    case NS_HTML5TREE_BUILDER_IN_CELL:
-    case NS_HTML5TREE_BUILDER_IN_CAPTION: {
+    case IN_BODY:
+    case IN_CELL:
+    case IN_CAPTION: {
       if (!isInForeignButNotHtmlOrMathTextIntegrationPoint()) {
         reconstructTheActiveFormattingElements();
       }
     }
-    case NS_HTML5TREE_BUILDER_TEXT: {
+    case TEXT: {
       accumulateCharacters(buf, start, length);
       return;
     }
-    case NS_HTML5TREE_BUILDER_IN_TABLE:
-    case NS_HTML5TREE_BUILDER_IN_TABLE_BODY:
-    case NS_HTML5TREE_BUILDER_IN_ROW: {
+    case IN_TABLE:
+    case IN_TABLE_BODY:
+    case IN_ROW: {
       accumulateCharactersForced(buf, start, length);
       return;
     }
@@ -253,25 +260,25 @@ nsHtml5TreeBuilder::characters(const char16_t* buf, int32_t start, int32_t lengt
           case '\r':
           case '\f': {
             switch(mode) {
-              case NS_HTML5TREE_BUILDER_INITIAL:
-              case NS_HTML5TREE_BUILDER_BEFORE_HTML:
-              case NS_HTML5TREE_BUILDER_BEFORE_HEAD: {
+              case INITIAL:
+              case BEFORE_HTML:
+              case BEFORE_HEAD: {
                 start = i + 1;
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_IN_HEAD:
-              case NS_HTML5TREE_BUILDER_IN_HEAD_NOSCRIPT:
-              case NS_HTML5TREE_BUILDER_AFTER_HEAD:
-              case NS_HTML5TREE_BUILDER_IN_COLUMN_GROUP:
-              case NS_HTML5TREE_BUILDER_IN_FRAMESET:
-              case NS_HTML5TREE_BUILDER_AFTER_FRAMESET: {
+              case IN_HEAD:
+              case IN_HEAD_NOSCRIPT:
+              case AFTER_HEAD:
+              case IN_COLUMN_GROUP:
+              case IN_FRAMESET:
+              case AFTER_FRAMESET: {
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_FRAMESET_OK:
-              case NS_HTML5TREE_BUILDER_IN_TEMPLATE:
-              case NS_HTML5TREE_BUILDER_IN_BODY:
-              case NS_HTML5TREE_BUILDER_IN_CELL:
-              case NS_HTML5TREE_BUILDER_IN_CAPTION: {
+              case FRAMESET_OK:
+              case IN_TEMPLATE:
+              case IN_BODY:
+              case IN_CELL:
+              case IN_CAPTION: {
                 if (start < i) {
                   accumulateCharacters(buf, start, i - start);
                   start = i;
@@ -282,20 +289,20 @@ nsHtml5TreeBuilder::characters(const char16_t* buf, int32_t start, int32_t lengt
                 }
                 NS_HTML5_BREAK(charactersloop);
               }
-              case NS_HTML5TREE_BUILDER_IN_SELECT:
-              case NS_HTML5TREE_BUILDER_IN_SELECT_IN_TABLE: {
+              case IN_SELECT:
+              case IN_SELECT_IN_TABLE: {
                 NS_HTML5_BREAK(charactersloop);
               }
-              case NS_HTML5TREE_BUILDER_IN_TABLE:
-              case NS_HTML5TREE_BUILDER_IN_TABLE_BODY:
-              case NS_HTML5TREE_BUILDER_IN_ROW: {
+              case IN_TABLE:
+              case IN_TABLE_BODY:
+              case IN_ROW: {
                 accumulateCharactersForced(buf, i, 1);
                 start = i + 1;
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_AFTER_BODY:
-              case NS_HTML5TREE_BUILDER_AFTER_AFTER_BODY:
-              case NS_HTML5TREE_BUILDER_AFTER_AFTER_FRAMESET: {
+              case AFTER_BODY:
+              case AFTER_AFTER_BODY:
+              case AFTER_AFTER_FRAMESET: {
                 if (start < i) {
                   accumulateCharacters(buf, start, i - start);
                   start = i;
@@ -308,41 +315,41 @@ nsHtml5TreeBuilder::characters(const char16_t* buf, int32_t start, int32_t lengt
           }
           default: {
             switch(mode) {
-              case NS_HTML5TREE_BUILDER_INITIAL: {
+              case INITIAL: {
                 documentModeInternal(QUIRKS_MODE, nullptr, nullptr, false);
-                mode = NS_HTML5TREE_BUILDER_BEFORE_HTML;
+                mode = BEFORE_HTML;
                 i--;
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_BEFORE_HTML: {
+              case BEFORE_HTML: {
                 appendHtmlElementToDocumentAndPush();
-                mode = NS_HTML5TREE_BUILDER_BEFORE_HEAD;
+                mode = BEFORE_HEAD;
                 i--;
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_BEFORE_HEAD: {
+              case BEFORE_HEAD: {
                 if (start < i) {
                   accumulateCharacters(buf, start, i - start);
                   start = i;
                 }
                 flushCharacters();
                 appendToCurrentNodeAndPushHeadElement(nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
-                mode = NS_HTML5TREE_BUILDER_IN_HEAD;
+                mode = IN_HEAD;
                 i--;
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_IN_HEAD: {
+              case IN_HEAD: {
                 if (start < i) {
                   accumulateCharacters(buf, start, i - start);
                   start = i;
                 }
                 flushCharacters();
                 pop();
-                mode = NS_HTML5TREE_BUILDER_AFTER_HEAD;
+                mode = AFTER_HEAD;
                 i--;
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_IN_HEAD_NOSCRIPT: {
+              case IN_HEAD_NOSCRIPT: {
                 if (start < i) {
                   accumulateCharacters(buf, start, i - start);
                   start = i;
@@ -350,31 +357,31 @@ nsHtml5TreeBuilder::characters(const char16_t* buf, int32_t start, int32_t lengt
                 errNonSpaceInNoscriptInHead();
                 flushCharacters();
                 pop();
-                mode = NS_HTML5TREE_BUILDER_IN_HEAD;
+                mode = IN_HEAD;
                 i--;
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_AFTER_HEAD: {
+              case AFTER_HEAD: {
                 if (start < i) {
                   accumulateCharacters(buf, start, i - start);
                   start = i;
                 }
                 flushCharacters();
                 appendToCurrentNodeAndPushBodyElement();
-                mode = NS_HTML5TREE_BUILDER_FRAMESET_OK;
+                mode = FRAMESET_OK;
                 i--;
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_FRAMESET_OK: {
+              case FRAMESET_OK: {
                 framesetOk = false;
-                mode = NS_HTML5TREE_BUILDER_IN_BODY;
+                mode = IN_BODY;
                 i--;
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_IN_TEMPLATE:
-              case NS_HTML5TREE_BUILDER_IN_BODY:
-              case NS_HTML5TREE_BUILDER_IN_CELL:
-              case NS_HTML5TREE_BUILDER_IN_CAPTION: {
+              case IN_TEMPLATE:
+              case IN_BODY:
+              case IN_CELL:
+              case IN_CAPTION: {
                 if (start < i) {
                   accumulateCharacters(buf, start, i - start);
                   start = i;
@@ -385,41 +392,42 @@ nsHtml5TreeBuilder::characters(const char16_t* buf, int32_t start, int32_t lengt
                 }
                 NS_HTML5_BREAK(charactersloop);
               }
-              case NS_HTML5TREE_BUILDER_IN_TABLE:
-              case NS_HTML5TREE_BUILDER_IN_TABLE_BODY:
-              case NS_HTML5TREE_BUILDER_IN_ROW: {
+              case IN_TABLE:
+              case IN_TABLE_BODY:
+              case IN_ROW: {
                 accumulateCharactersForced(buf, i, 1);
                 start = i + 1;
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_IN_COLUMN_GROUP: {
+              case IN_COLUMN_GROUP: {
                 if (start < i) {
                   accumulateCharacters(buf, start, i - start);
                   start = i;
                 }
-                if (!currentPtr || stack[currentPtr]->getGroup() == NS_HTML5TREE_BUILDER_TEMPLATE) {
+                if (!currentPtr || stack[currentPtr]->getGroup() ==
+                                     nsHtml5TreeBuilder::TEMPLATE) {
                   errNonSpaceInColgroupInFragment();
                   start = i + 1;
                   continue;
                 }
                 flushCharacters();
                 pop();
-                mode = NS_HTML5TREE_BUILDER_IN_TABLE;
+                mode = IN_TABLE;
                 i--;
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_IN_SELECT:
-              case NS_HTML5TREE_BUILDER_IN_SELECT_IN_TABLE: {
+              case IN_SELECT:
+              case IN_SELECT_IN_TABLE: {
                 NS_HTML5_BREAK(charactersloop);
               }
-              case NS_HTML5TREE_BUILDER_AFTER_BODY: {
+              case AFTER_BODY: {
                 errNonSpaceAfterBody();
 
-                mode = framesetOk ? NS_HTML5TREE_BUILDER_FRAMESET_OK : NS_HTML5TREE_BUILDER_IN_BODY;
+                mode = framesetOk ? FRAMESET_OK : IN_BODY;
                 i--;
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_IN_FRAMESET: {
+              case IN_FRAMESET: {
                 if (start < i) {
                   accumulateCharacters(buf, start, i - start);
                 }
@@ -427,7 +435,7 @@ nsHtml5TreeBuilder::characters(const char16_t* buf, int32_t start, int32_t lengt
                 start = i + 1;
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_AFTER_FRAMESET: {
+              case AFTER_FRAMESET: {
                 if (start < i) {
                   accumulateCharacters(buf, start, i - start);
                 }
@@ -435,13 +443,13 @@ nsHtml5TreeBuilder::characters(const char16_t* buf, int32_t start, int32_t lengt
                 start = i + 1;
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_AFTER_AFTER_BODY: {
+              case AFTER_AFTER_BODY: {
                 errNonSpaceInTrailer();
-                mode = framesetOk ? NS_HTML5TREE_BUILDER_FRAMESET_OK : NS_HTML5TREE_BUILDER_IN_BODY;
+                mode = framesetOk ? FRAMESET_OK : IN_BODY;
                 i--;
                 continue;
               }
-              case NS_HTML5TREE_BUILDER_AFTER_AFTER_FRAMESET: {
+              case AFTER_AFTER_FRAMESET: {
                 if (start < i) {
                   accumulateCharacters(buf, start, i - start);
                 }
@@ -464,7 +472,7 @@ nsHtml5TreeBuilder::characters(const char16_t* buf, int32_t start, int32_t lengt
 void 
 nsHtml5TreeBuilder::zeroOriginatingReplacementCharacter()
 {
-  if (mode == NS_HTML5TREE_BUILDER_TEXT) {
+  if (mode == TEXT) {
     accumulateCharacters(REPLACEMENT_CHARACTER, 0, 1);
     return;
   }
@@ -482,57 +490,57 @@ nsHtml5TreeBuilder::eof()
   flushCharacters();
   for (; ; ) {
     switch(mode) {
-      case NS_HTML5TREE_BUILDER_INITIAL: {
+      case INITIAL: {
         documentModeInternal(QUIRKS_MODE, nullptr, nullptr, false);
-        mode = NS_HTML5TREE_BUILDER_BEFORE_HTML;
+        mode = BEFORE_HTML;
         continue;
       }
-      case NS_HTML5TREE_BUILDER_BEFORE_HTML: {
+      case BEFORE_HTML: {
         appendHtmlElementToDocumentAndPush();
-        mode = NS_HTML5TREE_BUILDER_BEFORE_HEAD;
+        mode = BEFORE_HEAD;
         continue;
       }
-      case NS_HTML5TREE_BUILDER_BEFORE_HEAD: {
+      case BEFORE_HEAD: {
         appendToCurrentNodeAndPushHeadElement(nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
-        mode = NS_HTML5TREE_BUILDER_IN_HEAD;
+        mode = IN_HEAD;
         continue;
       }
-      case NS_HTML5TREE_BUILDER_IN_HEAD: {
+      case IN_HEAD: {
         while (currentPtr > 0) {
           popOnEof();
         }
-        mode = NS_HTML5TREE_BUILDER_AFTER_HEAD;
+        mode = AFTER_HEAD;
         continue;
       }
-      case NS_HTML5TREE_BUILDER_IN_HEAD_NOSCRIPT: {
+      case IN_HEAD_NOSCRIPT: {
         while (currentPtr > 1) {
           popOnEof();
         }
-        mode = NS_HTML5TREE_BUILDER_IN_HEAD;
+        mode = IN_HEAD;
         continue;
       }
-      case NS_HTML5TREE_BUILDER_AFTER_HEAD: {
+      case AFTER_HEAD: {
         appendToCurrentNodeAndPushBodyElement();
-        mode = NS_HTML5TREE_BUILDER_IN_BODY;
+        mode = IN_BODY;
         continue;
       }
-      case NS_HTML5TREE_BUILDER_IN_TABLE_BODY:
-      case NS_HTML5TREE_BUILDER_IN_ROW:
-      case NS_HTML5TREE_BUILDER_IN_TABLE:
-      case NS_HTML5TREE_BUILDER_IN_SELECT_IN_TABLE:
-      case NS_HTML5TREE_BUILDER_IN_SELECT:
-      case NS_HTML5TREE_BUILDER_IN_COLUMN_GROUP:
-      case NS_HTML5TREE_BUILDER_FRAMESET_OK:
-      case NS_HTML5TREE_BUILDER_IN_CAPTION:
-      case NS_HTML5TREE_BUILDER_IN_CELL:
-      case NS_HTML5TREE_BUILDER_IN_BODY: {
+      case IN_TABLE_BODY:
+      case IN_ROW:
+      case IN_TABLE:
+      case IN_SELECT_IN_TABLE:
+      case IN_SELECT:
+      case IN_COLUMN_GROUP:
+      case FRAMESET_OK:
+      case IN_CAPTION:
+      case IN_CELL:
+      case IN_BODY: {
         if (isTemplateModeStackEmpty()) {
           NS_HTML5_BREAK(eofloop);
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_TEMPLATE: {
+      case IN_TEMPLATE: {
         int32_t eltPos = findLast(nsHtml5Atoms::template_);
-        if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+        if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
           MOZ_ASSERT(fragment);
           NS_HTML5_BREAK(eofloop);
         }
@@ -547,21 +555,21 @@ nsHtml5TreeBuilder::eof()
         resetTheInsertionMode();
         continue;
       }
-      case NS_HTML5TREE_BUILDER_TEXT: {
-        if (originalMode == NS_HTML5TREE_BUILDER_AFTER_HEAD) {
+      case TEXT: {
+        if (originalMode == AFTER_HEAD) {
           popOnEof();
         }
         popOnEof();
         mode = originalMode;
         continue;
       }
-      case NS_HTML5TREE_BUILDER_IN_FRAMESET: {
+      case IN_FRAMESET: {
         NS_HTML5_BREAK(eofloop);
       }
-      case NS_HTML5TREE_BUILDER_AFTER_BODY:
-      case NS_HTML5TREE_BUILDER_AFTER_FRAMESET:
-      case NS_HTML5TREE_BUILDER_AFTER_AFTER_BODY:
-      case NS_HTML5TREE_BUILDER_AFTER_AFTER_FRAMESET:
+      case AFTER_BODY:
+      case AFTER_FRAMESET:
+      case AFTER_AFTER_BODY:
+      case AFTER_AFTER_FRAMESET:
       default: {
         NS_HTML5_BREAK(eofloop);
       }
@@ -615,28 +623,35 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
     if (isInForeign()) {
       nsHtml5StackNode* currentNode = stack[currentPtr];
       int32_t currNs = currentNode->ns;
-      if (!(currentNode->isHtmlIntegrationPoint() || (currNs == kNameSpaceID_MathML && ((currentNode->getGroup() == NS_HTML5TREE_BUILDER_MI_MO_MN_MS_MTEXT && group != NS_HTML5TREE_BUILDER_MGLYPH_OR_MALIGNMARK) || (currentNode->getGroup() == NS_HTML5TREE_BUILDER_ANNOTATION_XML && group == NS_HTML5TREE_BUILDER_SVG))))) {
+      if (!(currentNode->isHtmlIntegrationPoint() ||
+            (currNs == kNameSpaceID_MathML &&
+             ((currentNode->getGroup() == MI_MO_MN_MS_MTEXT &&
+               group != MGLYPH_OR_MALIGNMARK) ||
+              (currentNode->getGroup() == ANNOTATION_XML && group == SVG))))) {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
-          case NS_HTML5TREE_BUILDER_DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU:
-          case NS_HTML5TREE_BUILDER_BODY:
-          case NS_HTML5TREE_BUILDER_BR:
-          case NS_HTML5TREE_BUILDER_RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR:
-          case NS_HTML5TREE_BUILDER_DD_OR_DT:
-          case NS_HTML5TREE_BUILDER_UL_OR_OL_OR_DL:
-          case NS_HTML5TREE_BUILDER_EMBED:
-          case NS_HTML5TREE_BUILDER_IMG:
-          case NS_HTML5TREE_BUILDER_H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6:
-          case NS_HTML5TREE_BUILDER_HEAD:
-          case NS_HTML5TREE_BUILDER_HR:
-          case NS_HTML5TREE_BUILDER_LI:
-          case NS_HTML5TREE_BUILDER_META:
-          case NS_HTML5TREE_BUILDER_NOBR:
-          case NS_HTML5TREE_BUILDER_P:
-          case NS_HTML5TREE_BUILDER_PRE_OR_LISTING:
-          case NS_HTML5TREE_BUILDER_TABLE:
-          case NS_HTML5TREE_BUILDER_FONT: {
-            if (!(group == NS_HTML5TREE_BUILDER_FONT && !(attributes->contains(nsHtml5AttributeName::ATTR_COLOR) || attributes->contains(nsHtml5AttributeName::ATTR_FACE) || attributes->contains(nsHtml5AttributeName::ATTR_SIZE)))) {
+          case B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
+          case DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU:
+          case BODY:
+          case BR:
+          case RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR:
+          case DD_OR_DT:
+          case UL_OR_OL_OR_DL:
+          case EMBED:
+          case IMG:
+          case H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6:
+          case HEAD:
+          case HR:
+          case LI:
+          case META:
+          case NOBR:
+          case P:
+          case PRE_OR_LISTING:
+          case TABLE:
+          case FONT: {
+            if (!(group == FONT &&
+                  !(attributes->contains(nsHtml5AttributeName::ATTR_COLOR) ||
+                    attributes->contains(nsHtml5AttributeName::ATTR_FACE) ||
+                    attributes->contains(nsHtml5AttributeName::ATTR_SIZE)))) {
               errHtmlStartTagInForeignContext(name);
               if (!fragment) {
                 while (!isSpecialParentInForeign(stack[currentPtr])) {
@@ -673,93 +688,93 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
       }
     }
     switch(mode) {
-      case NS_HTML5TREE_BUILDER_IN_TEMPLATE: {
+      case IN_TEMPLATE: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_COL: {
+          case COL: {
             popTemplateMode();
-            pushTemplateMode(NS_HTML5TREE_BUILDER_IN_COLUMN_GROUP);
-            mode = NS_HTML5TREE_BUILDER_IN_COLUMN_GROUP;
+            pushTemplateMode(IN_COLUMN_GROUP);
+            mode = IN_COLUMN_GROUP;
             continue;
           }
-          case NS_HTML5TREE_BUILDER_CAPTION:
-          case NS_HTML5TREE_BUILDER_COLGROUP:
-          case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT: {
+          case CAPTION:
+          case COLGROUP:
+          case TBODY_OR_THEAD_OR_TFOOT: {
             popTemplateMode();
-            pushTemplateMode(NS_HTML5TREE_BUILDER_IN_TABLE);
-            mode = NS_HTML5TREE_BUILDER_IN_TABLE;
+            pushTemplateMode(IN_TABLE);
+            mode = IN_TABLE;
             continue;
           }
-          case NS_HTML5TREE_BUILDER_TR: {
+          case TR: {
             popTemplateMode();
-            pushTemplateMode(NS_HTML5TREE_BUILDER_IN_TABLE_BODY);
-            mode = NS_HTML5TREE_BUILDER_IN_TABLE_BODY;
+            pushTemplateMode(IN_TABLE_BODY);
+            mode = IN_TABLE_BODY;
             continue;
           }
-          case NS_HTML5TREE_BUILDER_TD_OR_TH: {
+          case TD_OR_TH: {
             popTemplateMode();
-            pushTemplateMode(NS_HTML5TREE_BUILDER_IN_ROW);
-            mode = NS_HTML5TREE_BUILDER_IN_ROW;
+            pushTemplateMode(IN_ROW);
+            mode = IN_ROW;
             continue;
           }
-          case NS_HTML5TREE_BUILDER_META: {
+          case META: {
             checkMetaCharset(attributes);
             appendVoidElementToCurrentMayFoster(elementName, attributes);
             selfClosing = false;
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_TITLE: {
+          case TITLE: {
             startTagTitleInHead(elementName, attributes);
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_BASE:
-          case NS_HTML5TREE_BUILDER_LINK_OR_BASEFONT_OR_BGSOUND: {
+          case BASE:
+          case LINK_OR_BASEFONT_OR_BGSOUND: {
             appendVoidElementToCurrentMayFoster(elementName, attributes);
             selfClosing = false;
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_SCRIPT: {
+          case SCRIPT: {
             startTagScriptInHead(elementName, attributes);
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_NOFRAMES:
-          case NS_HTML5TREE_BUILDER_STYLE: {
+          case NOFRAMES:
+          case STYLE: {
             startTagGenericRawText(elementName, attributes);
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_TEMPLATE: {
+          case TEMPLATE: {
             startTagTemplateInHead(elementName, attributes);
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
           default: {
             popTemplateMode();
-            pushTemplateMode(NS_HTML5TREE_BUILDER_IN_BODY);
-            mode = NS_HTML5TREE_BUILDER_IN_BODY;
+            pushTemplateMode(IN_BODY);
+            mode = IN_BODY;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_ROW: {
+      case IN_ROW: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_TD_OR_TH: {
-            clearStackBackTo(findLastOrRoot(NS_HTML5TREE_BUILDER_TR));
+          case TD_OR_TH: {
+            clearStackBackTo(findLastOrRoot(nsHtml5TreeBuilder::TR));
             appendToCurrentNodeAndPushElement(elementName, attributes);
-            mode = NS_HTML5TREE_BUILDER_IN_CELL;
+            mode = IN_CELL;
             insertMarker();
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_CAPTION:
-          case NS_HTML5TREE_BUILDER_COL:
-          case NS_HTML5TREE_BUILDER_COLGROUP:
-          case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT:
-          case NS_HTML5TREE_BUILDER_TR: {
-            eltPos = findLastOrRoot(NS_HTML5TREE_BUILDER_TR);
+          case CAPTION:
+          case COL:
+          case COLGROUP:
+          case TBODY_OR_THEAD_OR_TFOOT:
+          case TR: {
+            eltPos = findLastOrRoot(nsHtml5TreeBuilder::TR);
             if (!eltPos) {
               MOZ_ASSERT(fragment || isTemplateContents());
               errNoTableRowToClose();
@@ -767,42 +782,42 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             }
             clearStackBackTo(eltPos);
             pop();
-            mode = NS_HTML5TREE_BUILDER_IN_TABLE_BODY;
+            mode = IN_TABLE_BODY;
             continue;
           }
           default:
             ; // fall through
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_TABLE_BODY: {
+      case IN_TABLE_BODY: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_TR: {
+          case TR: {
             clearStackBackTo(findLastInTableScopeOrRootTemplateTbodyTheadTfoot());
             appendToCurrentNodeAndPushElement(elementName, attributes);
-            mode = NS_HTML5TREE_BUILDER_IN_ROW;
+            mode = IN_ROW;
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_TD_OR_TH: {
+          case TD_OR_TH: {
             errStartTagInTableBody(name);
             clearStackBackTo(findLastInTableScopeOrRootTemplateTbodyTheadTfoot());
             appendToCurrentNodeAndPushElement(nsHtml5ElementName::ELT_TR, nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
-            mode = NS_HTML5TREE_BUILDER_IN_ROW;
+            mode = IN_ROW;
             continue;
           }
-          case NS_HTML5TREE_BUILDER_CAPTION:
-          case NS_HTML5TREE_BUILDER_COL:
-          case NS_HTML5TREE_BUILDER_COLGROUP:
-          case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT: {
+          case CAPTION:
+          case COL:
+          case COLGROUP:
+          case TBODY_OR_THEAD_OR_TFOOT: {
             eltPos = findLastInTableScopeOrRootTemplateTbodyTheadTfoot();
-            if (!eltPos || stack[eltPos]->getGroup() == NS_HTML5TREE_BUILDER_TEMPLATE) {
+            if (!eltPos || stack[eltPos]->getGroup() == TEMPLATE) {
               MOZ_ASSERT(fragment || isTemplateContents());
               errStrayStartTag(name);
               NS_HTML5_BREAK(starttagloop);
             } else {
               clearStackBackTo(eltPos);
               pop();
-              mode = NS_HTML5TREE_BUILDER_IN_TABLE;
+              mode = IN_TABLE;
               continue;
             }
           }
@@ -810,51 +825,51 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             ; // fall through
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_TABLE: {
+      case IN_TABLE: {
         for (; ; ) {
           switch(group) {
-            case NS_HTML5TREE_BUILDER_CAPTION: {
-              clearStackBackTo(findLastOrRoot(NS_HTML5TREE_BUILDER_TABLE));
+            case CAPTION: {
+              clearStackBackTo(findLastOrRoot(nsHtml5TreeBuilder::TABLE));
               insertMarker();
               appendToCurrentNodeAndPushElement(elementName, attributes);
-              mode = NS_HTML5TREE_BUILDER_IN_CAPTION;
+              mode = IN_CAPTION;
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_COLGROUP: {
-              clearStackBackTo(findLastOrRoot(NS_HTML5TREE_BUILDER_TABLE));
+            case COLGROUP: {
+              clearStackBackTo(findLastOrRoot(nsHtml5TreeBuilder::TABLE));
               appendToCurrentNodeAndPushElement(elementName, attributes);
-              mode = NS_HTML5TREE_BUILDER_IN_COLUMN_GROUP;
+              mode = IN_COLUMN_GROUP;
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_COL: {
-              clearStackBackTo(findLastOrRoot(NS_HTML5TREE_BUILDER_TABLE));
+            case COL: {
+              clearStackBackTo(findLastOrRoot(nsHtml5TreeBuilder::TABLE));
               appendToCurrentNodeAndPushElement(nsHtml5ElementName::ELT_COLGROUP, nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
-              mode = NS_HTML5TREE_BUILDER_IN_COLUMN_GROUP;
+              mode = IN_COLUMN_GROUP;
               NS_HTML5_CONTINUE(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT: {
-              clearStackBackTo(findLastOrRoot(NS_HTML5TREE_BUILDER_TABLE));
+            case TBODY_OR_THEAD_OR_TFOOT: {
+              clearStackBackTo(findLastOrRoot(nsHtml5TreeBuilder::TABLE));
               appendToCurrentNodeAndPushElement(elementName, attributes);
-              mode = NS_HTML5TREE_BUILDER_IN_TABLE_BODY;
+              mode = IN_TABLE_BODY;
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_TR:
-            case NS_HTML5TREE_BUILDER_TD_OR_TH: {
-              clearStackBackTo(findLastOrRoot(NS_HTML5TREE_BUILDER_TABLE));
+            case TR:
+            case TD_OR_TH: {
+              clearStackBackTo(findLastOrRoot(nsHtml5TreeBuilder::TABLE));
               appendToCurrentNodeAndPushElement(nsHtml5ElementName::ELT_TBODY, nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
-              mode = NS_HTML5TREE_BUILDER_IN_TABLE_BODY;
+              mode = IN_TABLE_BODY;
               NS_HTML5_CONTINUE(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_TEMPLATE: {
+            case TEMPLATE: {
               NS_HTML5_BREAK(intableloop);
             }
-            case NS_HTML5TREE_BUILDER_TABLE: {
+            case TABLE: {
               errTableSeenWhileTableOpen();
               eltPos = findLastInTableScope(name);
-              if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+              if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
                 MOZ_ASSERT(fragment || isTemplateContents());
                 NS_HTML5_BREAK(starttagloop);
               }
@@ -868,23 +883,25 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               resetTheInsertionMode();
               NS_HTML5_CONTINUE(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_SCRIPT: {
+            case SCRIPT: {
               appendToCurrentNodeAndPushElement(elementName, attributes);
               originalMode = mode;
-              mode = NS_HTML5TREE_BUILDER_TEXT;
-              tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_SCRIPT_DATA, elementName);
+              mode = TEXT;
+              tokenizer->setStateAndEndTagExpectation(
+                nsHtml5Tokenizer::SCRIPT_DATA, elementName);
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_STYLE: {
+            case STYLE: {
               appendToCurrentNodeAndPushElement(elementName, attributes);
               originalMode = mode;
-              mode = NS_HTML5TREE_BUILDER_TEXT;
-              tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, elementName);
+              mode = TEXT;
+              tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::RAWTEXT,
+                                                      elementName);
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_INPUT: {
+            case INPUT: {
               errStartTagInTable(name);
               if (!nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString("hidden", attributes->getValue(nsHtml5AttributeName::ATTR_TYPE))) {
                 NS_HTML5_BREAK(intableloop);
@@ -894,7 +911,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_FORM: {
+            case FORM: {
               if (!!formPointer || isTemplateContents()) {
                 errFormWhenFormOpen();
                 NS_HTML5_BREAK(starttagloop);
@@ -913,17 +930,17 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
         }
         intableloop_end: ;
       }
-      case NS_HTML5TREE_BUILDER_IN_CAPTION: {
+      case IN_CAPTION: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_CAPTION:
-          case NS_HTML5TREE_BUILDER_COL:
-          case NS_HTML5TREE_BUILDER_COLGROUP:
-          case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT:
-          case NS_HTML5TREE_BUILDER_TR:
-          case NS_HTML5TREE_BUILDER_TD_OR_TH: {
+          case CAPTION:
+          case COL:
+          case COLGROUP:
+          case TBODY_OR_THEAD_OR_TFOOT:
+          case TR:
+          case TD_OR_TH: {
             errStrayStartTag(name);
             eltPos = findLastInTableScope(nsHtml5Atoms::caption);
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               NS_HTML5_BREAK(starttagloop);
             }
             generateImpliedEndTags();
@@ -934,23 +951,23 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               pop();
             }
             clearTheListOfActiveFormattingElementsUpToTheLastMarker();
-            mode = NS_HTML5TREE_BUILDER_IN_TABLE;
+            mode = IN_TABLE;
             continue;
           }
           default:
             ; // fall through
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_CELL: {
+      case IN_CELL: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_CAPTION:
-          case NS_HTML5TREE_BUILDER_COL:
-          case NS_HTML5TREE_BUILDER_COLGROUP:
-          case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT:
-          case NS_HTML5TREE_BUILDER_TR:
-          case NS_HTML5TREE_BUILDER_TD_OR_TH: {
+          case CAPTION:
+          case COL:
+          case COLGROUP:
+          case TBODY_OR_THEAD_OR_TFOOT:
+          case TR:
+          case TD_OR_TH: {
             eltPos = findLastInTableScopeTdTh();
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               errNoCellToClose();
               NS_HTML5_BREAK(starttagloop);
             } else {
@@ -962,11 +979,11 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             ; // fall through
         }
       }
-      case NS_HTML5TREE_BUILDER_FRAMESET_OK: {
+      case FRAMESET_OK: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_FRAMESET: {
-            if (mode == NS_HTML5TREE_BUILDER_FRAMESET_OK) {
-              if (!currentPtr || stack[1]->getGroup() != NS_HTML5TREE_BUILDER_BODY) {
+          case FRAMESET: {
+            if (mode == FRAMESET_OK) {
+              if (!currentPtr || stack[1]->getGroup() != BODY) {
                 MOZ_ASSERT(fragment || isTemplateContents());
                 errStrayStartTag(name);
                 NS_HTML5_BREAK(starttagloop);
@@ -977,7 +994,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   pop();
                 }
                 appendToCurrentNodeAndPushElement(elementName, attributes);
-                mode = NS_HTML5TREE_BUILDER_IN_FRAMESET;
+                mode = IN_FRAMESET;
                 attributes = nullptr;
                 NS_HTML5_BREAK(starttagloop);
               }
@@ -986,37 +1003,42 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               NS_HTML5_BREAK(starttagloop);
             }
           }
-          case NS_HTML5TREE_BUILDER_PRE_OR_LISTING:
-          case NS_HTML5TREE_BUILDER_LI:
-          case NS_HTML5TREE_BUILDER_DD_OR_DT:
-          case NS_HTML5TREE_BUILDER_BUTTON:
-          case NS_HTML5TREE_BUILDER_MARQUEE_OR_APPLET:
-          case NS_HTML5TREE_BUILDER_OBJECT:
-          case NS_HTML5TREE_BUILDER_TABLE:
-          case NS_HTML5TREE_BUILDER_AREA_OR_WBR:
-          case NS_HTML5TREE_BUILDER_BR:
-          case NS_HTML5TREE_BUILDER_EMBED:
-          case NS_HTML5TREE_BUILDER_IMG:
-          case NS_HTML5TREE_BUILDER_INPUT:
-          case NS_HTML5TREE_BUILDER_KEYGEN:
-          case NS_HTML5TREE_BUILDER_HR:
-          case NS_HTML5TREE_BUILDER_TEXTAREA:
-          case NS_HTML5TREE_BUILDER_XMP:
-          case NS_HTML5TREE_BUILDER_IFRAME:
-          case NS_HTML5TREE_BUILDER_SELECT: {
-            if (mode == NS_HTML5TREE_BUILDER_FRAMESET_OK && !(group == NS_HTML5TREE_BUILDER_INPUT && nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString("hidden", attributes->getValue(nsHtml5AttributeName::ATTR_TYPE)))) {
+          case PRE_OR_LISTING:
+          case LI:
+          case DD_OR_DT:
+          case BUTTON:
+          case MARQUEE_OR_APPLET:
+          case OBJECT:
+          case TABLE:
+          case AREA_OR_WBR:
+          case BR:
+          case EMBED:
+          case IMG:
+          case INPUT:
+          case KEYGEN:
+          case HR:
+          case TEXTAREA:
+          case XMP:
+          case IFRAME:
+          case SELECT: {
+            if (mode == FRAMESET_OK &&
+                !(group == INPUT &&
+                  nsHtml5Portability::
+                    lowerCaseLiteralEqualsIgnoreAsciiCaseString(
+                      "hidden",
+                      attributes->getValue(nsHtml5AttributeName::ATTR_TYPE)))) {
               framesetOk = false;
-              mode = NS_HTML5TREE_BUILDER_IN_BODY;
+              mode = IN_BODY;
             }
           }
           default:
             ; // fall through
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_BODY: {
+      case IN_BODY: {
         for (; ; ) {
           switch(group) {
-            case NS_HTML5TREE_BUILDER_HTML: {
+            case HTML: {
               errStrayStartTag(name);
               if (!fragment && !isTemplateContents()) {
                 addAttributesToHtml(attributes);
@@ -1024,43 +1046,45 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               }
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_BASE:
-            case NS_HTML5TREE_BUILDER_LINK_OR_BASEFONT_OR_BGSOUND:
-            case NS_HTML5TREE_BUILDER_META:
-            case NS_HTML5TREE_BUILDER_STYLE:
-            case NS_HTML5TREE_BUILDER_SCRIPT:
-            case NS_HTML5TREE_BUILDER_TITLE:
-            case NS_HTML5TREE_BUILDER_TEMPLATE: {
+            case BASE:
+            case LINK_OR_BASEFONT_OR_BGSOUND:
+            case META:
+            case STYLE:
+            case SCRIPT:
+            case TITLE:
+            case TEMPLATE: {
               NS_HTML5_BREAK(inbodyloop);
             }
-            case NS_HTML5TREE_BUILDER_BODY: {
-              if (!currentPtr || stack[1]->getGroup() != NS_HTML5TREE_BUILDER_BODY || isTemplateContents()) {
+            case BODY: {
+              if (!currentPtr || stack[1]->getGroup() != BODY ||
+                  isTemplateContents()) {
                 MOZ_ASSERT(fragment || isTemplateContents());
                 errStrayStartTag(name);
                 NS_HTML5_BREAK(starttagloop);
               }
               errFooSeenWhenFooOpen(name);
               framesetOk = false;
-              if (mode == NS_HTML5TREE_BUILDER_FRAMESET_OK) {
-                mode = NS_HTML5TREE_BUILDER_IN_BODY;
+              if (mode == FRAMESET_OK) {
+                mode = IN_BODY;
               }
               if (addAttributesToBody(attributes)) {
                 attributes = nullptr;
               }
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_P:
-            case NS_HTML5TREE_BUILDER_DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU:
-            case NS_HTML5TREE_BUILDER_UL_OR_OL_OR_DL:
-            case NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY: {
+            case P:
+            case DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU:
+            case UL_OR_OL_OR_DL:
+            case ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY: {
               implicitlyCloseP();
               appendToCurrentNodeAndPushElementMayFoster(elementName, attributes);
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6: {
+            case H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6: {
               implicitlyCloseP();
-              if (stack[currentPtr]->getGroup() == NS_HTML5TREE_BUILDER_H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6) {
+              if (stack[currentPtr]->getGroup() ==
+                  H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6) {
                 errHeadingWhenHeadingOpen();
                 pop();
               }
@@ -1068,20 +1092,20 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_FIELDSET: {
+            case FIELDSET: {
               implicitlyCloseP();
               appendToCurrentNodeAndPushElementMayFoster(elementName, attributes, formPointer);
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_PRE_OR_LISTING: {
+            case PRE_OR_LISTING: {
               implicitlyCloseP();
               appendToCurrentNodeAndPushElementMayFoster(elementName, attributes);
               needToDropLF = true;
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_FORM: {
+            case FORM: {
               if (!!formPointer && !isTemplateContents()) {
                 errFormWhenFormOpen();
                 NS_HTML5_BREAK(starttagloop);
@@ -1092,8 +1116,8 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 NS_HTML5_BREAK(starttagloop);
               }
             }
-            case NS_HTML5TREE_BUILDER_LI:
-            case NS_HTML5TREE_BUILDER_DD_OR_DT: {
+            case LI:
+            case DD_OR_DT: {
               eltPos = currentPtr;
               for (; ; ) {
                 nsHtml5StackNode* node = stack[eltPos];
@@ -1116,14 +1140,15 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_PLAINTEXT: {
+            case PLAINTEXT: {
               implicitlyCloseP();
               appendToCurrentNodeAndPushElementMayFoster(elementName, attributes);
-              tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_PLAINTEXT, elementName);
+              tokenizer->setStateAndEndTagExpectation(
+                nsHtml5Tokenizer::PLAINTEXT, elementName);
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_A: {
+            case A: {
               int32_t activeAPos = findInListOfActiveFormattingElementsContainsBetweenEndAndLastMarker(nsHtml5Atoms::a);
               if (activeAPos != -1) {
                 errFooSeenWhenFooOpen(name);
@@ -1142,8 +1167,8 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
-            case NS_HTML5TREE_BUILDER_FONT: {
+            case B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
+            case FONT: {
               reconstructTheActiveFormattingElements();
               maybeForgetEarlierDuplicateFormattingElement(
                 elementName->getName(), attributes);
@@ -1151,9 +1176,10 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_NOBR: {
+            case NOBR: {
               reconstructTheActiveFormattingElements();
-              if (NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK != findLastInScope(nsHtml5Atoms::nobr)) {
+              if (nsHtml5TreeBuilder::NOT_FOUND_ON_STACK !=
+                  findLastInScope(nsHtml5Atoms::nobr)) {
                 errFooSeenWhenFooOpen(name);
                 adoptionAgencyEndTag(nsHtml5Atoms::nobr);
                 reconstructTheActiveFormattingElements();
@@ -1162,9 +1188,9 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_BUTTON: {
+            case BUTTON: {
               eltPos = findLastInScope(name);
-              if (eltPos != NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+              if (eltPos != nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
                 errFooSeenWhenFooOpen(name);
                 generateImpliedEndTags();
                 if (!!MOZ_UNLIKELY(mViewSource) && !isCurrent(name)) {
@@ -1181,65 +1207,65 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 NS_HTML5_BREAK(starttagloop);
               }
             }
-            case NS_HTML5TREE_BUILDER_OBJECT: {
+            case OBJECT: {
               reconstructTheActiveFormattingElements();
               appendToCurrentNodeAndPushElementMayFoster(elementName, attributes, formPointer);
               insertMarker();
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_MARQUEE_OR_APPLET: {
+            case MARQUEE_OR_APPLET: {
               reconstructTheActiveFormattingElements();
               appendToCurrentNodeAndPushElementMayFoster(elementName, attributes);
               insertMarker();
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_TABLE: {
+            case TABLE: {
               if (!quirks) {
                 implicitlyCloseP();
               }
               appendToCurrentNodeAndPushElementMayFoster(elementName, attributes);
-              mode = NS_HTML5TREE_BUILDER_IN_TABLE;
+              mode = IN_TABLE;
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_BR:
-            case NS_HTML5TREE_BUILDER_EMBED:
-            case NS_HTML5TREE_BUILDER_AREA_OR_WBR: {
+            case BR:
+            case EMBED:
+            case AREA_OR_WBR: {
               reconstructTheActiveFormattingElements();
             }
 #ifdef ENABLE_VOID_MENUITEM
-            case NS_HTML5TREE_BUILDER_MENUITEM:
+            case MENUITEM:
 #endif
-            case NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE_OR_TRACK: {
+            case PARAM_OR_SOURCE_OR_TRACK: {
               appendVoidElementToCurrentMayFoster(elementName, attributes);
               selfClosing = false;
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_HR: {
+            case HR: {
               implicitlyCloseP();
               appendVoidElementToCurrentMayFoster(elementName, attributes);
               selfClosing = false;
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_IMAGE: {
+            case IMAGE: {
               errImage();
               elementName = nsHtml5ElementName::ELT_IMG;
               NS_HTML5_CONTINUE(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_IMG:
-            case NS_HTML5TREE_BUILDER_KEYGEN:
-            case NS_HTML5TREE_BUILDER_INPUT: {
+            case IMG:
+            case KEYGEN:
+            case INPUT: {
               reconstructTheActiveFormattingElements();
               appendVoidElementToCurrentMayFoster(name, attributes, formPointer);
               selfClosing = false;
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_ISINDEX: {
+            case ISINDEX: {
               errIsindex();
               if (!!formPointer && !isTemplateContents()) {
                 NS_HTML5_BREAK(starttagloop);
@@ -1286,26 +1312,28 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               selfClosing = false;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_TEXTAREA: {
+            case TEXTAREA: {
               appendToCurrentNodeAndPushElementMayFoster(elementName, attributes, formPointer);
-              tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RCDATA, elementName);
+              tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::RCDATA,
+                                                      elementName);
               originalMode = mode;
-              mode = NS_HTML5TREE_BUILDER_TEXT;
+              mode = TEXT;
               needToDropLF = true;
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_XMP: {
+            case XMP: {
               implicitlyCloseP();
               reconstructTheActiveFormattingElements();
               appendToCurrentNodeAndPushElementMayFoster(elementName, attributes);
               originalMode = mode;
-              mode = NS_HTML5TREE_BUILDER_TEXT;
-              tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, elementName);
+              mode = TEXT;
+              tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::RAWTEXT,
+                                                      elementName);
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_NOSCRIPT: {
+            case NOSCRIPT: {
               if (!scriptingEnabled) {
                 reconstructTheActiveFormattingElements();
                 appendToCurrentNodeAndPushElementMayFoster(elementName, attributes);
@@ -1314,36 +1342,36 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               } else {
               }
             }
-            case NS_HTML5TREE_BUILDER_NOFRAMES:
-            case NS_HTML5TREE_BUILDER_IFRAME:
-            case NS_HTML5TREE_BUILDER_NOEMBED: {
+            case NOFRAMES:
+            case IFRAME:
+            case NOEMBED: {
               startTagGenericRawText(elementName, attributes);
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_SELECT: {
+            case SELECT: {
               reconstructTheActiveFormattingElements();
               appendToCurrentNodeAndPushElementMayFoster(elementName, attributes, formPointer);
               switch(mode) {
-                case NS_HTML5TREE_BUILDER_IN_TABLE:
-                case NS_HTML5TREE_BUILDER_IN_CAPTION:
-                case NS_HTML5TREE_BUILDER_IN_COLUMN_GROUP:
-                case NS_HTML5TREE_BUILDER_IN_TABLE_BODY:
-                case NS_HTML5TREE_BUILDER_IN_ROW:
-                case NS_HTML5TREE_BUILDER_IN_CELL: {
-                  mode = NS_HTML5TREE_BUILDER_IN_SELECT_IN_TABLE;
+                case IN_TABLE:
+                case IN_CAPTION:
+                case IN_COLUMN_GROUP:
+                case IN_TABLE_BODY:
+                case IN_ROW:
+                case IN_CELL: {
+                  mode = IN_SELECT_IN_TABLE;
                   break;
                 }
                 default: {
-                  mode = NS_HTML5TREE_BUILDER_IN_SELECT;
+                  mode = IN_SELECT;
                   break;
                 }
               }
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_OPTGROUP:
-            case NS_HTML5TREE_BUILDER_OPTION: {
+            case OPTGROUP:
+            case OPTION: {
               if (isCurrent(nsHtml5Atoms::option)) {
                 pop();
               }
@@ -1352,13 +1380,13 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_RB_OR_RTC: {
+            case RB_OR_RTC: {
               eltPos = findLastInScope(nsHtml5Atoms::ruby);
-              if (eltPos != NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+              if (eltPos != NOT_FOUND_ON_STACK) {
                 generateImpliedEndTags();
               }
               if (eltPos != currentPtr) {
-                if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+                if (eltPos == NOT_FOUND_ON_STACK) {
                   errStartTagSeenWithoutRuby(name);
                 } else {
                   errUnclosedChildrenInRuby();
@@ -1368,14 +1396,14 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_RT_OR_RP: {
+            case RT_OR_RP: {
               eltPos = findLastInScope(nsHtml5Atoms::ruby);
-              if (eltPos != NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+              if (eltPos != NOT_FOUND_ON_STACK) {
                 generateImpliedEndTagsExceptFor(nsHtml5Atoms::rtc);
               }
               if (eltPos != currentPtr) {
                 if (!isCurrent(nsHtml5Atoms::rtc)) {
-                  if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+                  if (eltPos == NOT_FOUND_ON_STACK) {
                     errStartTagSeenWithoutRuby(name);
                   } else {
                     errUnclosedChildrenInRuby();
@@ -1386,7 +1414,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_MATH: {
+            case MATH: {
               reconstructTheActiveFormattingElements();
               attributes->adjustForMath();
               if (selfClosing) {
@@ -1398,7 +1426,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_SVG: {
+            case SVG: {
               reconstructTheActiveFormattingElements();
               attributes->adjustForSvg();
               if (selfClosing) {
@@ -1410,19 +1438,19 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_CAPTION:
-            case NS_HTML5TREE_BUILDER_COL:
-            case NS_HTML5TREE_BUILDER_COLGROUP:
-            case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT:
-            case NS_HTML5TREE_BUILDER_TR:
-            case NS_HTML5TREE_BUILDER_TD_OR_TH:
-            case NS_HTML5TREE_BUILDER_FRAME:
-            case NS_HTML5TREE_BUILDER_FRAMESET:
-            case NS_HTML5TREE_BUILDER_HEAD: {
+            case CAPTION:
+            case COL:
+            case COLGROUP:
+            case TBODY_OR_THEAD_OR_TFOOT:
+            case TR:
+            case TD_OR_TH:
+            case FRAME:
+            case FRAMESET:
+            case HEAD: {
               errStrayStartTag(name);
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_OUTPUT: {
+            case OUTPUT: {
               reconstructTheActiveFormattingElements();
               appendToCurrentNodeAndPushElementMayFoster(elementName, attributes, formPointer);
               attributes = nullptr;
@@ -1438,10 +1466,10 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
         }
         inbodyloop_end: ;
       }
-      case NS_HTML5TREE_BUILDER_IN_HEAD: {
+      case IN_HEAD: {
         for (; ; ) {
           switch(group) {
-            case NS_HTML5TREE_BUILDER_HTML: {
+            case HTML: {
               errStrayStartTag(name);
               if (!fragment && !isTemplateContents()) {
                 addAttributesToHtml(attributes);
@@ -1449,66 +1477,67 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               }
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_BASE:
-            case NS_HTML5TREE_BUILDER_LINK_OR_BASEFONT_OR_BGSOUND: {
+            case BASE:
+            case LINK_OR_BASEFONT_OR_BGSOUND: {
               appendVoidElementToCurrentMayFoster(elementName, attributes);
               selfClosing = false;
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_META: {
+            case META: {
               NS_HTML5_BREAK(inheadloop);
             }
-            case NS_HTML5TREE_BUILDER_TITLE: {
+            case TITLE: {
               startTagTitleInHead(elementName, attributes);
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_NOSCRIPT: {
+            case NOSCRIPT: {
               if (scriptingEnabled) {
                 appendToCurrentNodeAndPushElement(elementName, attributes);
                 originalMode = mode;
-                mode = NS_HTML5TREE_BUILDER_TEXT;
-                tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, elementName);
+                mode = TEXT;
+                tokenizer->setStateAndEndTagExpectation(
+                  nsHtml5Tokenizer::RAWTEXT, elementName);
               } else {
                 appendToCurrentNodeAndPushElementMayFoster(elementName, attributes);
-                mode = NS_HTML5TREE_BUILDER_IN_HEAD_NOSCRIPT;
+                mode = IN_HEAD_NOSCRIPT;
               }
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_SCRIPT: {
+            case SCRIPT: {
               startTagScriptInHead(elementName, attributes);
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_STYLE:
-            case NS_HTML5TREE_BUILDER_NOFRAMES: {
+            case STYLE:
+            case NOFRAMES: {
               startTagGenericRawText(elementName, attributes);
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_HEAD: {
+            case HEAD: {
               errFooSeenWhenFooOpen(name);
               NS_HTML5_BREAK(starttagloop);
             }
-            case NS_HTML5TREE_BUILDER_TEMPLATE: {
+            case TEMPLATE: {
               startTagTemplateInHead(elementName, attributes);
               attributes = nullptr;
               NS_HTML5_BREAK(starttagloop);
             }
             default: {
               pop();
-              mode = NS_HTML5TREE_BUILDER_AFTER_HEAD;
+              mode = AFTER_HEAD;
               NS_HTML5_CONTINUE(starttagloop);
             }
           }
         }
         inheadloop_end: ;
       }
-      case NS_HTML5TREE_BUILDER_IN_HEAD_NOSCRIPT: {
+      case IN_HEAD_NOSCRIPT: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_HTML: {
+          case HTML: {
             errStrayStartTag(name);
             if (!fragment && !isTemplateContents()) {
               addAttributesToHtml(attributes);
@@ -1516,47 +1545,48 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             }
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_LINK_OR_BASEFONT_OR_BGSOUND: {
+          case LINK_OR_BASEFONT_OR_BGSOUND: {
             appendVoidElementToCurrentMayFoster(elementName, attributes);
             selfClosing = false;
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_META: {
+          case META: {
             checkMetaCharset(attributes);
             appendVoidElementToCurrentMayFoster(elementName, attributes);
             selfClosing = false;
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_STYLE:
-          case NS_HTML5TREE_BUILDER_NOFRAMES: {
+          case STYLE:
+          case NOFRAMES: {
             appendToCurrentNodeAndPushElement(elementName, attributes);
             originalMode = mode;
-            mode = NS_HTML5TREE_BUILDER_TEXT;
-            tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, elementName);
+            mode = TEXT;
+            tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::RAWTEXT,
+                                                    elementName);
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_HEAD: {
+          case HEAD: {
             errFooSeenWhenFooOpen(name);
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_NOSCRIPT: {
+          case NOSCRIPT: {
             errFooSeenWhenFooOpen(name);
             NS_HTML5_BREAK(starttagloop);
           }
           default: {
             errBadStartTagInHead(name);
             pop();
-            mode = NS_HTML5TREE_BUILDER_IN_HEAD;
+            mode = IN_HEAD;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_COLUMN_GROUP: {
+      case IN_COLUMN_GROUP: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_HTML: {
+          case HTML: {
             errStrayStartTag(name);
             if (!fragment && !isTemplateContents()) {
               addAttributesToHtml(attributes);
@@ -1564,39 +1594,39 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             }
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_COL: {
+          case COL: {
             appendVoidElementToCurrentMayFoster(elementName, attributes);
             selfClosing = false;
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_TEMPLATE: {
+          case TEMPLATE: {
             startTagTemplateInHead(elementName, attributes);
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
           default: {
-            if (!currentPtr || stack[currentPtr]->getGroup() == NS_HTML5TREE_BUILDER_TEMPLATE) {
+            if (!currentPtr || stack[currentPtr]->getGroup() == TEMPLATE) {
               MOZ_ASSERT(fragment || isTemplateContents());
               errGarbageInColgroup();
               NS_HTML5_BREAK(starttagloop);
             }
             pop();
-            mode = NS_HTML5TREE_BUILDER_IN_TABLE;
+            mode = IN_TABLE;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_SELECT_IN_TABLE: {
+      case IN_SELECT_IN_TABLE: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_CAPTION:
-          case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT:
-          case NS_HTML5TREE_BUILDER_TR:
-          case NS_HTML5TREE_BUILDER_TD_OR_TH:
-          case NS_HTML5TREE_BUILDER_TABLE: {
+          case CAPTION:
+          case TBODY_OR_THEAD_OR_TFOOT:
+          case TR:
+          case TD_OR_TH:
+          case TABLE: {
             errStartTagWithSelectOpen(name);
             eltPos = findLastInTableScope(nsHtml5Atoms::select);
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               MOZ_ASSERT(fragment);
               NS_HTML5_BREAK(starttagloop);
             }
@@ -1610,9 +1640,9 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             ; // fall through
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_SELECT: {
+      case IN_SELECT: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_HTML: {
+          case HTML: {
             errStrayStartTag(name);
             if (!fragment) {
               addAttributesToHtml(attributes);
@@ -1620,7 +1650,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             }
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_OPTION: {
+          case OPTION: {
             if (isCurrent(nsHtml5Atoms::option)) {
               pop();
             }
@@ -1628,7 +1658,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_OPTGROUP: {
+          case OPTGROUP: {
             if (isCurrent(nsHtml5Atoms::option)) {
               pop();
             }
@@ -1639,10 +1669,10 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_SELECT: {
+          case SELECT: {
             errStartSelectWhereEndSelectExpected();
             eltPos = findLastInTableScope(name);
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               MOZ_ASSERT(fragment);
               errNoSelectInTableScope();
               NS_HTML5_BREAK(starttagloop);
@@ -1654,12 +1684,12 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               NS_HTML5_BREAK(starttagloop);
             }
           }
-          case NS_HTML5TREE_BUILDER_INPUT:
-          case NS_HTML5TREE_BUILDER_TEXTAREA:
-          case NS_HTML5TREE_BUILDER_KEYGEN: {
+          case INPUT:
+          case TEXTAREA:
+          case KEYGEN: {
             errStartTagWithSelectOpen(name);
             eltPos = findLastInTableScope(nsHtml5Atoms::select);
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               MOZ_ASSERT(fragment);
               NS_HTML5_BREAK(starttagloop);
             }
@@ -1669,12 +1699,12 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             resetTheInsertionMode();
             continue;
           }
-          case NS_HTML5TREE_BUILDER_SCRIPT: {
+          case SCRIPT: {
             startTagScriptInHead(elementName, attributes);
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_TEMPLATE: {
+          case TEMPLATE: {
             startTagTemplateInHead(elementName, attributes);
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
@@ -1685,9 +1715,9 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_AFTER_BODY: {
+      case AFTER_BODY: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_HTML: {
+          case HTML: {
             errStrayStartTag(name);
             if (!fragment && !isTemplateContents()) {
               addAttributesToHtml(attributes);
@@ -1697,19 +1727,19 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
           }
           default: {
             errStrayStartTag(name);
-            mode = framesetOk ? NS_HTML5TREE_BUILDER_FRAMESET_OK : NS_HTML5TREE_BUILDER_IN_BODY;
+            mode = framesetOk ? FRAMESET_OK : IN_BODY;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_FRAMESET: {
+      case IN_FRAMESET: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_FRAMESET: {
+          case FRAMESET: {
             appendToCurrentNodeAndPushElement(elementName, attributes);
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_FRAME: {
+          case FRAME: {
             appendVoidElementToCurrentMayFoster(elementName, attributes);
             selfClosing = false;
             attributes = nullptr;
@@ -1719,9 +1749,9 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             ; // fall through
         }
       }
-      case NS_HTML5TREE_BUILDER_AFTER_FRAMESET: {
+      case AFTER_FRAMESET: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_HTML: {
+          case HTML: {
             errStrayStartTag(name);
             if (!fragment && !isTemplateContents()) {
               addAttributesToHtml(attributes);
@@ -1729,11 +1759,12 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             }
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_NOFRAMES: {
+          case NOFRAMES: {
             appendToCurrentNodeAndPushElement(elementName, attributes);
             originalMode = mode;
-            mode = NS_HTML5TREE_BUILDER_TEXT;
-            tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, elementName);
+            mode = TEXT;
+            tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::RAWTEXT,
+                                                    elementName);
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
@@ -1743,34 +1774,34 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_INITIAL: {
+      case INITIAL: {
         errStartTagWithoutDoctype();
         documentModeInternal(QUIRKS_MODE, nullptr, nullptr, false);
-        mode = NS_HTML5TREE_BUILDER_BEFORE_HTML;
+        mode = BEFORE_HTML;
         continue;
       }
-      case NS_HTML5TREE_BUILDER_BEFORE_HTML: {
+      case BEFORE_HTML: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_HTML: {
+          case HTML: {
             if (attributes == nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES) {
               appendHtmlElementToDocumentAndPush();
             } else {
               appendHtmlElementToDocumentAndPush(attributes);
             }
-            mode = NS_HTML5TREE_BUILDER_BEFORE_HEAD;
+            mode = BEFORE_HEAD;
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
           default: {
             appendHtmlElementToDocumentAndPush();
-            mode = NS_HTML5TREE_BUILDER_BEFORE_HEAD;
+            mode = BEFORE_HEAD;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_BEFORE_HEAD: {
+      case BEFORE_HEAD: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_HTML: {
+          case HTML: {
             errStrayStartTag(name);
             if (!fragment && !isTemplateContents()) {
               addAttributesToHtml(attributes);
@@ -1778,22 +1809,22 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             }
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_HEAD: {
+          case HEAD: {
             appendToCurrentNodeAndPushHeadElement(attributes);
-            mode = NS_HTML5TREE_BUILDER_IN_HEAD;
+            mode = IN_HEAD;
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
           default: {
             appendToCurrentNodeAndPushHeadElement(nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
-            mode = NS_HTML5TREE_BUILDER_IN_HEAD;
+            mode = IN_HEAD;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_AFTER_HEAD: {
+      case AFTER_HEAD: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_HTML: {
+          case HTML: {
             errStrayStartTag(name);
             if (!fragment && !isTemplateContents()) {
               addAttributesToHtml(attributes);
@@ -1801,24 +1832,24 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             }
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_BODY: {
+          case BODY: {
             if (!attributes->getLength()) {
               appendToCurrentNodeAndPushBodyElement();
             } else {
               appendToCurrentNodeAndPushBodyElement(attributes);
             }
             framesetOk = false;
-            mode = NS_HTML5TREE_BUILDER_IN_BODY;
+            mode = IN_BODY;
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_FRAMESET: {
+          case FRAMESET: {
             appendToCurrentNodeAndPushElement(elementName, attributes);
-            mode = NS_HTML5TREE_BUILDER_IN_FRAMESET;
+            mode = IN_FRAMESET;
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_TEMPLATE: {
+          case TEMPLATE: {
             errFooBetweenHeadAndBody(name);
             pushHeadPointerOntoStack();
             nsHtml5StackNode* headOnStack = stack[currentPtr];
@@ -1827,8 +1858,8 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_BASE:
-          case NS_HTML5TREE_BUILDER_LINK_OR_BASEFONT_OR_BGSOUND: {
+          case BASE:
+          case LINK_OR_BASEFONT_OR_BGSOUND: {
             errFooBetweenHeadAndBody(name);
             pushHeadPointerOntoStack();
             appendVoidElementToCurrentMayFoster(elementName, attributes);
@@ -1837,7 +1868,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_META: {
+          case META: {
             errFooBetweenHeadAndBody(name);
             checkMetaCharset(attributes);
             pushHeadPointerOntoStack();
@@ -1847,51 +1878,54 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_SCRIPT: {
+          case SCRIPT: {
             errFooBetweenHeadAndBody(name);
             pushHeadPointerOntoStack();
             appendToCurrentNodeAndPushElement(elementName, attributes);
             originalMode = mode;
-            mode = NS_HTML5TREE_BUILDER_TEXT;
-            tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_SCRIPT_DATA, elementName);
+            mode = TEXT;
+            tokenizer->setStateAndEndTagExpectation(
+              nsHtml5Tokenizer::SCRIPT_DATA, elementName);
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_STYLE:
-          case NS_HTML5TREE_BUILDER_NOFRAMES: {
+          case STYLE:
+          case NOFRAMES: {
             errFooBetweenHeadAndBody(name);
             pushHeadPointerOntoStack();
             appendToCurrentNodeAndPushElement(elementName, attributes);
             originalMode = mode;
-            mode = NS_HTML5TREE_BUILDER_TEXT;
-            tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, elementName);
+            mode = TEXT;
+            tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::RAWTEXT,
+                                                    elementName);
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_TITLE: {
+          case TITLE: {
             errFooBetweenHeadAndBody(name);
             pushHeadPointerOntoStack();
             appendToCurrentNodeAndPushElement(elementName, attributes);
             originalMode = mode;
-            mode = NS_HTML5TREE_BUILDER_TEXT;
-            tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RCDATA, elementName);
+            mode = TEXT;
+            tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::RCDATA,
+                                                    elementName);
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_HEAD: {
+          case HEAD: {
             errStrayStartTag(name);
             NS_HTML5_BREAK(starttagloop);
           }
           default: {
             appendToCurrentNodeAndPushBodyElement();
-            mode = NS_HTML5TREE_BUILDER_FRAMESET_OK;
+            mode = FRAMESET_OK;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_AFTER_AFTER_BODY: {
+      case AFTER_AFTER_BODY: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_HTML: {
+          case HTML: {
             errStrayStartTag(name);
             if (!fragment && !isTemplateContents()) {
               addAttributesToHtml(attributes);
@@ -1902,14 +1936,14 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
           default: {
             errStrayStartTag(name);
 
-            mode = framesetOk ? NS_HTML5TREE_BUILDER_FRAMESET_OK : NS_HTML5TREE_BUILDER_IN_BODY;
+            mode = framesetOk ? FRAMESET_OK : IN_BODY;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_AFTER_AFTER_FRAMESET: {
+      case AFTER_AFTER_FRAMESET: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_HTML: {
+          case HTML: {
             errStrayStartTag(name);
             if (!fragment && !isTemplateContents()) {
               addAttributesToHtml(attributes);
@@ -1917,7 +1951,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             }
             NS_HTML5_BREAK(starttagloop);
           }
-          case NS_HTML5TREE_BUILDER_NOFRAMES: {
+          case NOFRAMES: {
             startTagGenericRawText(elementName, attributes);
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
@@ -1928,7 +1962,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_TEXT: {
+      case TEXT: {
         MOZ_ASSERT(false);
         NS_HTML5_BREAK(starttagloop);
       }
@@ -1948,8 +1982,9 @@ nsHtml5TreeBuilder::startTagTitleInHead(nsHtml5ElementName* elementName, nsHtml5
 {
   appendToCurrentNodeAndPushElementMayFoster(elementName, attributes);
   originalMode = mode;
-  mode = NS_HTML5TREE_BUILDER_TEXT;
-  tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RCDATA, elementName);
+  mode = TEXT;
+  tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::RCDATA,
+                                          elementName);
 }
 
 void 
@@ -1957,8 +1992,9 @@ nsHtml5TreeBuilder::startTagGenericRawText(nsHtml5ElementName* elementName, nsHt
 {
   appendToCurrentNodeAndPushElementMayFoster(elementName, attributes);
   originalMode = mode;
-  mode = NS_HTML5TREE_BUILDER_TEXT;
-  tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, elementName);
+  mode = TEXT;
+  tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::RAWTEXT,
+                                          elementName);
 }
 
 void 
@@ -1966,8 +2002,9 @@ nsHtml5TreeBuilder::startTagScriptInHead(nsHtml5ElementName* elementName, nsHtml
 {
   appendToCurrentNodeAndPushElementMayFoster(elementName, attributes);
   originalMode = mode;
-  mode = NS_HTML5TREE_BUILDER_TEXT;
-  tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_SCRIPT_DATA, elementName);
+  mode = TEXT;
+  tokenizer->setStateAndEndTagExpectation(nsHtml5Tokenizer::SCRIPT_DATA,
+                                          elementName);
 }
 
 void 
@@ -1977,14 +2014,15 @@ nsHtml5TreeBuilder::startTagTemplateInHead(nsHtml5ElementName* elementName, nsHt
   insertMarker();
   framesetOk = false;
   originalMode = mode;
-  mode = NS_HTML5TREE_BUILDER_IN_TEMPLATE;
-  pushTemplateMode(NS_HTML5TREE_BUILDER_IN_TEMPLATE);
+  mode = IN_TEMPLATE;
+  pushTemplateMode(IN_TEMPLATE);
 }
 
 bool 
 nsHtml5TreeBuilder::isTemplateContents()
 {
-  return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK != findLast(nsHtml5Atoms::template_);
+  return nsHtml5TreeBuilder::NOT_FOUND_ON_STACK !=
+         findLast(nsHtml5Atoms::template_);
 }
 
 bool 
@@ -1997,25 +2035,27 @@ bool
 nsHtml5TreeBuilder::isSpecialParentInForeign(nsHtml5StackNode* stackNode)
 {
   int32_t ns = stackNode->ns;
-  return (kNameSpaceID_XHTML == ns) || (stackNode->isHtmlIntegrationPoint()) || ((kNameSpaceID_MathML == ns) && (stackNode->getGroup() == NS_HTML5TREE_BUILDER_MI_MO_MN_MS_MTEXT));
+  return (kNameSpaceID_XHTML == ns) || (stackNode->isHtmlIntegrationPoint()) ||
+         ((kNameSpaceID_MathML == ns) &&
+          (stackNode->getGroup() == MI_MO_MN_MS_MTEXT));
 }
 
 nsHtml5String
 nsHtml5TreeBuilder::extractCharsetFromContent(nsHtml5String attributeValue,
                                               nsHtml5TreeBuilder* tb)
 {
-  int32_t charsetState = NS_HTML5TREE_BUILDER_CHARSET_INITIAL;
+  int32_t charsetState = CHARSET_INITIAL;
   int32_t start = -1;
   int32_t end = -1;
   autoJArray<char16_t,int32_t> buffer = nsHtml5Portability::newCharArrayFromString(attributeValue);
   for (int32_t i = 0; i < buffer.length; i++) {
     char16_t c = buffer[i];
     switch(charsetState) {
-      case NS_HTML5TREE_BUILDER_CHARSET_INITIAL: {
+      case CHARSET_INITIAL: {
         switch(c) {
           case 'c':
           case 'C': {
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_C;
+            charsetState = CHARSET_C;
             continue;
           }
           default: {
@@ -2023,85 +2063,85 @@ nsHtml5TreeBuilder::extractCharsetFromContent(nsHtml5String attributeValue,
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_CHARSET_C: {
+      case CHARSET_C: {
         switch(c) {
           case 'h':
           case 'H': {
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_H;
+            charsetState = CHARSET_H;
             continue;
           }
           default: {
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_INITIAL;
+            charsetState = CHARSET_INITIAL;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_CHARSET_H: {
+      case CHARSET_H: {
         switch(c) {
           case 'a':
           case 'A': {
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_A;
+            charsetState = CHARSET_A;
             continue;
           }
           default: {
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_INITIAL;
+            charsetState = CHARSET_INITIAL;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_CHARSET_A: {
+      case CHARSET_A: {
         switch(c) {
           case 'r':
           case 'R': {
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_R;
+            charsetState = CHARSET_R;
             continue;
           }
           default: {
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_INITIAL;
+            charsetState = CHARSET_INITIAL;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_CHARSET_R: {
+      case CHARSET_R: {
         switch(c) {
           case 's':
           case 'S': {
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_S;
+            charsetState = CHARSET_S;
             continue;
           }
           default: {
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_INITIAL;
+            charsetState = CHARSET_INITIAL;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_CHARSET_S: {
+      case CHARSET_S: {
         switch(c) {
           case 'e':
           case 'E': {
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_E;
+            charsetState = CHARSET_E;
             continue;
           }
           default: {
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_INITIAL;
+            charsetState = CHARSET_INITIAL;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_CHARSET_E: {
+      case CHARSET_E: {
         switch(c) {
           case 't':
           case 'T': {
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_T;
+            charsetState = CHARSET_T;
             continue;
           }
           default: {
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_INITIAL;
+            charsetState = CHARSET_INITIAL;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_CHARSET_T: {
+      case CHARSET_T: {
         switch(c) {
           case '\t':
           case '\n':
@@ -2111,7 +2151,7 @@ nsHtml5TreeBuilder::extractCharsetFromContent(nsHtml5String attributeValue,
             continue;
           }
           case '=': {
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_EQUALS;
+            charsetState = CHARSET_EQUALS;
             continue;
           }
           default: {
@@ -2119,7 +2159,7 @@ nsHtml5TreeBuilder::extractCharsetFromContent(nsHtml5String attributeValue,
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_CHARSET_EQUALS: {
+      case CHARSET_EQUALS: {
         switch(c) {
           case '\t':
           case '\n':
@@ -2130,22 +2170,22 @@ nsHtml5TreeBuilder::extractCharsetFromContent(nsHtml5String attributeValue,
           }
           case '\'': {
             start = i + 1;
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_SINGLE_QUOTED;
+            charsetState = CHARSET_SINGLE_QUOTED;
             continue;
           }
           case '\"': {
             start = i + 1;
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_DOUBLE_QUOTED;
+            charsetState = CHARSET_DOUBLE_QUOTED;
             continue;
           }
           default: {
             start = i;
-            charsetState = NS_HTML5TREE_BUILDER_CHARSET_UNQUOTED;
+            charsetState = CHARSET_UNQUOTED;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_CHARSET_SINGLE_QUOTED: {
+      case CHARSET_SINGLE_QUOTED: {
         switch(c) {
           case '\'': {
             end = i;
@@ -2156,7 +2196,7 @@ nsHtml5TreeBuilder::extractCharsetFromContent(nsHtml5String attributeValue,
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_CHARSET_DOUBLE_QUOTED: {
+      case CHARSET_DOUBLE_QUOTED: {
         switch(c) {
           case '\"': {
             end = i;
@@ -2167,7 +2207,7 @@ nsHtml5TreeBuilder::extractCharsetFromContent(nsHtml5String attributeValue,
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_CHARSET_UNQUOTED: {
+      case CHARSET_UNQUOTED: {
         switch(c) {
           case '\t':
           case '\n':
@@ -2261,9 +2301,9 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
       }
     }
     switch(mode) {
-      case NS_HTML5TREE_BUILDER_IN_TEMPLATE: {
+      case IN_TEMPLATE: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_TEMPLATE: {
+          case TEMPLATE: {
             break;
           }
           default: {
@@ -2272,10 +2312,10 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_ROW: {
+      case IN_ROW: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_TR: {
-            eltPos = findLastOrRoot(NS_HTML5TREE_BUILDER_TR);
+          case TR: {
+            eltPos = findLastOrRoot(nsHtml5TreeBuilder::TR);
             if (!eltPos) {
               MOZ_ASSERT(fragment || isTemplateContents());
               errNoTableRowToClose();
@@ -2283,11 +2323,11 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             }
             clearStackBackTo(eltPos);
             pop();
-            mode = NS_HTML5TREE_BUILDER_IN_TABLE_BODY;
+            mode = IN_TABLE_BODY;
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_TABLE: {
-            eltPos = findLastOrRoot(NS_HTML5TREE_BUILDER_TR);
+          case TABLE: {
+            eltPos = findLastOrRoot(nsHtml5TreeBuilder::TR);
             if (!eltPos) {
               MOZ_ASSERT(fragment || isTemplateContents());
               errNoTableRowToClose();
@@ -2295,15 +2335,16 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             }
             clearStackBackTo(eltPos);
             pop();
-            mode = NS_HTML5TREE_BUILDER_IN_TABLE_BODY;
+            mode = IN_TABLE_BODY;
             continue;
           }
-          case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT: {
-            if (findLastInTableScope(name) == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+          case TBODY_OR_THEAD_OR_TFOOT: {
+            if (findLastInTableScope(name) ==
+                nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               errStrayEndTag(name);
               NS_HTML5_BREAK(endtagloop);
             }
-            eltPos = findLastOrRoot(NS_HTML5TREE_BUILDER_TR);
+            eltPos = findLastOrRoot(nsHtml5TreeBuilder::TR);
             if (!eltPos) {
               MOZ_ASSERT(fragment || isTemplateContents());
               errNoTableRowToClose();
@@ -2311,15 +2352,15 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             }
             clearStackBackTo(eltPos);
             pop();
-            mode = NS_HTML5TREE_BUILDER_IN_TABLE_BODY;
+            mode = IN_TABLE_BODY;
             continue;
           }
-          case NS_HTML5TREE_BUILDER_BODY:
-          case NS_HTML5TREE_BUILDER_CAPTION:
-          case NS_HTML5TREE_BUILDER_COL:
-          case NS_HTML5TREE_BUILDER_COLGROUP:
-          case NS_HTML5TREE_BUILDER_HTML:
-          case NS_HTML5TREE_BUILDER_TD_OR_TH: {
+          case BODY:
+          case CAPTION:
+          case COL:
+          case COLGROUP:
+          case HTML:
+          case TD_OR_TH: {
             errStrayEndTag(name);
             NS_HTML5_BREAK(endtagloop);
           }
@@ -2327,9 +2368,9 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             ; // fall through
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_TABLE_BODY: {
+      case IN_TABLE_BODY: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT: {
+          case TBODY_OR_THEAD_OR_TFOOT: {
             eltPos = findLastOrRoot(name);
             if (!eltPos) {
               errStrayEndTag(name);
@@ -2337,28 +2378,28 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             }
             clearStackBackTo(eltPos);
             pop();
-            mode = NS_HTML5TREE_BUILDER_IN_TABLE;
+            mode = IN_TABLE;
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_TABLE: {
+          case TABLE: {
             eltPos = findLastInTableScopeOrRootTemplateTbodyTheadTfoot();
-            if (!eltPos || stack[eltPos]->getGroup() == NS_HTML5TREE_BUILDER_TEMPLATE) {
+            if (!eltPos || stack[eltPos]->getGroup() == TEMPLATE) {
               MOZ_ASSERT(fragment || isTemplateContents());
               errStrayEndTag(name);
               NS_HTML5_BREAK(endtagloop);
             }
             clearStackBackTo(eltPos);
             pop();
-            mode = NS_HTML5TREE_BUILDER_IN_TABLE;
+            mode = IN_TABLE;
             continue;
           }
-          case NS_HTML5TREE_BUILDER_BODY:
-          case NS_HTML5TREE_BUILDER_CAPTION:
-          case NS_HTML5TREE_BUILDER_COL:
-          case NS_HTML5TREE_BUILDER_COLGROUP:
-          case NS_HTML5TREE_BUILDER_HTML:
-          case NS_HTML5TREE_BUILDER_TD_OR_TH:
-          case NS_HTML5TREE_BUILDER_TR: {
+          case BODY:
+          case CAPTION:
+          case COL:
+          case COLGROUP:
+          case HTML:
+          case TD_OR_TH:
+          case TR: {
             errStrayEndTag(name);
             NS_HTML5_BREAK(endtagloop);
           }
@@ -2366,11 +2407,11 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             ; // fall through
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_TABLE: {
+      case IN_TABLE: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_TABLE: {
+          case TABLE: {
             eltPos = findLast(nsHtml5Atoms::table);
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               MOZ_ASSERT(fragment || isTemplateContents());
               errStrayEndTag(name);
               NS_HTML5_BREAK(endtagloop);
@@ -2381,18 +2422,18 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             resetTheInsertionMode();
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_BODY:
-          case NS_HTML5TREE_BUILDER_CAPTION:
-          case NS_HTML5TREE_BUILDER_COL:
-          case NS_HTML5TREE_BUILDER_COLGROUP:
-          case NS_HTML5TREE_BUILDER_HTML:
-          case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT:
-          case NS_HTML5TREE_BUILDER_TD_OR_TH:
-          case NS_HTML5TREE_BUILDER_TR: {
+          case BODY:
+          case CAPTION:
+          case COL:
+          case COLGROUP:
+          case HTML:
+          case TBODY_OR_THEAD_OR_TFOOT:
+          case TD_OR_TH:
+          case TR: {
             errStrayEndTag(name);
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_TEMPLATE: {
+          case TEMPLATE: {
             break;
           }
           default: {
@@ -2400,11 +2441,11 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_CAPTION: {
+      case IN_CAPTION: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_CAPTION: {
+          case CAPTION: {
             eltPos = findLastInTableScope(nsHtml5Atoms::caption);
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               NS_HTML5_BREAK(endtagloop);
             }
             generateImpliedEndTags();
@@ -2415,13 +2456,13 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
               pop();
             }
             clearTheListOfActiveFormattingElementsUpToTheLastMarker();
-            mode = NS_HTML5TREE_BUILDER_IN_TABLE;
+            mode = IN_TABLE;
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_TABLE: {
+          case TABLE: {
             errTableClosedWhileCaptionOpen();
             eltPos = findLastInTableScope(nsHtml5Atoms::caption);
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               NS_HTML5_BREAK(endtagloop);
             }
             generateImpliedEndTags();
@@ -2432,16 +2473,16 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
               pop();
             }
             clearTheListOfActiveFormattingElementsUpToTheLastMarker();
-            mode = NS_HTML5TREE_BUILDER_IN_TABLE;
+            mode = IN_TABLE;
             continue;
           }
-          case NS_HTML5TREE_BUILDER_BODY:
-          case NS_HTML5TREE_BUILDER_COL:
-          case NS_HTML5TREE_BUILDER_COLGROUP:
-          case NS_HTML5TREE_BUILDER_HTML:
-          case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT:
-          case NS_HTML5TREE_BUILDER_TD_OR_TH:
-          case NS_HTML5TREE_BUILDER_TR: {
+          case BODY:
+          case COL:
+          case COLGROUP:
+          case HTML:
+          case TBODY_OR_THEAD_OR_TFOOT:
+          case TD_OR_TH:
+          case TR: {
             errStrayEndTag(name);
             NS_HTML5_BREAK(endtagloop);
           }
@@ -2449,11 +2490,11 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             ; // fall through
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_CELL: {
+      case IN_CELL: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_TD_OR_TH: {
+          case TD_OR_TH: {
             eltPos = findLastInTableScope(name);
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               errStrayEndTag(name);
               NS_HTML5_BREAK(endtagloop);
             }
@@ -2465,13 +2506,14 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
               pop();
             }
             clearTheListOfActiveFormattingElementsUpToTheLastMarker();
-            mode = NS_HTML5TREE_BUILDER_IN_ROW;
+            mode = IN_ROW;
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_TABLE:
-          case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT:
-          case NS_HTML5TREE_BUILDER_TR: {
-            if (findLastInTableScope(name) == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+          case TABLE:
+          case TBODY_OR_THEAD_OR_TFOOT:
+          case TR: {
+            if (findLastInTableScope(name) ==
+                nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               MOZ_ASSERT(name == nsHtml5Atoms::tbody || name == nsHtml5Atoms::tfoot || name == nsHtml5Atoms::thead || fragment || isTemplateContents());
               errStrayEndTag(name);
               NS_HTML5_BREAK(endtagloop);
@@ -2479,11 +2521,11 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             closeTheCell(findLastInTableScopeTdTh());
             continue;
           }
-          case NS_HTML5TREE_BUILDER_BODY:
-          case NS_HTML5TREE_BUILDER_CAPTION:
-          case NS_HTML5TREE_BUILDER_COL:
-          case NS_HTML5TREE_BUILDER_COLGROUP:
-          case NS_HTML5TREE_BUILDER_HTML: {
+          case BODY:
+          case CAPTION:
+          case COL:
+          case COLGROUP:
+          case HTML: {
             errStrayEndTag(name);
             NS_HTML5_BREAK(endtagloop);
           }
@@ -2491,10 +2533,10 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             ; // fall through
         }
       }
-      case NS_HTML5TREE_BUILDER_FRAMESET_OK:
-      case NS_HTML5TREE_BUILDER_IN_BODY: {
+      case FRAMESET_OK:
+      case IN_BODY: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_BODY: {
+          case BODY: {
             if (!isSecondOnStackBody()) {
               MOZ_ASSERT(fragment || isTemplateContents());
               errStrayEndTag(name);
@@ -2504,15 +2546,15 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             if (MOZ_UNLIKELY(mViewSource)) {
               for (int32_t i = 2; i <= currentPtr; i++) {
                 switch(stack[i]->getGroup()) {
-                  case NS_HTML5TREE_BUILDER_DD_OR_DT:
-                  case NS_HTML5TREE_BUILDER_LI:
-                  case NS_HTML5TREE_BUILDER_OPTGROUP:
-                  case NS_HTML5TREE_BUILDER_OPTION:
-                  case NS_HTML5TREE_BUILDER_P:
-                  case NS_HTML5TREE_BUILDER_RB_OR_RTC:
-                  case NS_HTML5TREE_BUILDER_RT_OR_RP:
-                  case NS_HTML5TREE_BUILDER_TD_OR_TH:
-                  case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT: {
+                  case DD_OR_DT:
+                  case LI:
+                  case OPTGROUP:
+                  case OPTION:
+                  case P:
+                  case RB_OR_RTC:
+                  case RT_OR_RP:
+                  case TD_OR_TH:
+                  case TBODY_OR_THEAD_OR_TFOOT: {
                     break;
                   }
                   default: {
@@ -2523,10 +2565,10 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
               }
               uncloseloop1_end: ;
             }
-            mode = NS_HTML5TREE_BUILDER_AFTER_BODY;
+            mode = AFTER_BODY;
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_HTML: {
+          case HTML: {
             if (!isSecondOnStackBody()) {
               MOZ_ASSERT(fragment || isTemplateContents());
               errStrayEndTag(name);
@@ -2535,15 +2577,15 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             if (MOZ_UNLIKELY(mViewSource)) {
               for (int32_t i = 0; i <= currentPtr; i++) {
                 switch(stack[i]->getGroup()) {
-                  case NS_HTML5TREE_BUILDER_DD_OR_DT:
-                  case NS_HTML5TREE_BUILDER_LI:
-                  case NS_HTML5TREE_BUILDER_P:
-                  case NS_HTML5TREE_BUILDER_RB_OR_RTC:
-                  case NS_HTML5TREE_BUILDER_RT_OR_RP:
-                  case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT:
-                  case NS_HTML5TREE_BUILDER_TD_OR_TH:
-                  case NS_HTML5TREE_BUILDER_BODY:
-                  case NS_HTML5TREE_BUILDER_HTML: {
+                  case DD_OR_DT:
+                  case LI:
+                  case P:
+                  case RB_OR_RTC:
+                  case RT_OR_RP:
+                  case TBODY_OR_THEAD_OR_TFOOT:
+                  case TD_OR_TH:
+                  case BODY:
+                  case HTML: {
                     break;
                   }
                   default: {
@@ -2554,17 +2596,17 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
               }
               uncloseloop2_end: ;
             }
-            mode = NS_HTML5TREE_BUILDER_AFTER_BODY;
+            mode = AFTER_BODY;
             continue;
           }
-          case NS_HTML5TREE_BUILDER_DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU:
-          case NS_HTML5TREE_BUILDER_UL_OR_OL_OR_DL:
-          case NS_HTML5TREE_BUILDER_PRE_OR_LISTING:
-          case NS_HTML5TREE_BUILDER_FIELDSET:
-          case NS_HTML5TREE_BUILDER_BUTTON:
-          case NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY: {
+          case DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU:
+          case UL_OR_OL_OR_DL:
+          case PRE_OR_LISTING:
+          case FIELDSET:
+          case BUTTON:
+          case ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIALOG_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY: {
             eltPos = findLastInScope(name);
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               errStrayEndTag(name);
             } else {
               generateImpliedEndTags();
@@ -2577,7 +2619,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             }
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_FORM: {
+          case FORM: {
             if (!isTemplateContents()) {
               if (!formPointer) {
                 errStrayEndTag(name);
@@ -2585,7 +2627,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
               }
               formPointer = nullptr;
               eltPos = findLastInScope(name);
-              if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+              if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
                 errStrayEndTag(name);
                 NS_HTML5_BREAK(endtagloop);
               }
@@ -2597,7 +2639,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
               NS_HTML5_BREAK(endtagloop);
             } else {
               eltPos = findLastInScope(name);
-              if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+              if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
                 errStrayEndTag(name);
                 NS_HTML5_BREAK(endtagloop);
               }
@@ -2611,9 +2653,9 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
               NS_HTML5_BREAK(endtagloop);
             }
           }
-          case NS_HTML5TREE_BUILDER_P: {
+          case P: {
             eltPos = findLastInButtonScope(nsHtml5Atoms::p);
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               errNoElementToCloseButEndTagSeen(nsHtml5Atoms::p);
               if (isInForeign()) {
                 errHtmlStartTagInForeignContext(name);
@@ -2625,7 +2667,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
               NS_HTML5_BREAK(endtagloop);
             }
             generateImpliedEndTagsExceptFor(nsHtml5Atoms::p);
-            MOZ_ASSERT(eltPos != NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK);
+            MOZ_ASSERT(eltPos != nsHtml5TreeBuilder::NOT_FOUND_ON_STACK);
             if (!!MOZ_UNLIKELY(mViewSource) && eltPos != currentPtr) {
               errUnclosedElements(eltPos, name);
             }
@@ -2634,9 +2676,9 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             }
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_LI: {
+          case LI: {
             eltPos = findLastInListScope(name);
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               errNoElementToCloseButEndTagSeen(name);
             } else {
               generateImpliedEndTagsExceptFor(name);
@@ -2649,9 +2691,9 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             }
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_DD_OR_DT: {
+          case DD_OR_DT: {
             eltPos = findLastInScope(name);
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               errNoElementToCloseButEndTagSeen(name);
             } else {
               generateImpliedEndTagsExceptFor(name);
@@ -2664,9 +2706,9 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             }
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6: {
+          case H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6: {
             eltPos = findLastInScopeHn();
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               errStrayEndTag(name);
             } else {
               generateImpliedEndTags();
@@ -2679,10 +2721,10 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             }
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_OBJECT:
-          case NS_HTML5TREE_BUILDER_MARQUEE_OR_APPLET: {
+          case OBJECT:
+          case MARQUEE_OR_APPLET: {
             eltPos = findLastInScope(name);
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               errStrayEndTag(name);
             } else {
               generateImpliedEndTags();
@@ -2696,7 +2738,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             }
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_BR: {
+          case BR: {
             errEndTagBr();
             if (isInForeign()) {
               errHtmlStartTagInForeignContext(name);
@@ -2708,41 +2750,41 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             appendVoidElementToCurrentMayFoster(elementName, nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_TEMPLATE: {
+          case TEMPLATE: {
             break;
           }
-          case NS_HTML5TREE_BUILDER_AREA_OR_WBR:
+          case AREA_OR_WBR:
 #ifdef ENABLE_VOID_MENUITEM
-          case NS_HTML5TREE_BUILDER_MENUITEM:
+          case MENUITEM:
 #endif
-          case NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE_OR_TRACK:
-          case NS_HTML5TREE_BUILDER_EMBED:
-          case NS_HTML5TREE_BUILDER_IMG:
-          case NS_HTML5TREE_BUILDER_IMAGE:
-          case NS_HTML5TREE_BUILDER_INPUT:
-          case NS_HTML5TREE_BUILDER_KEYGEN:
-          case NS_HTML5TREE_BUILDER_HR:
-          case NS_HTML5TREE_BUILDER_ISINDEX:
-          case NS_HTML5TREE_BUILDER_IFRAME:
-          case NS_HTML5TREE_BUILDER_NOEMBED:
-          case NS_HTML5TREE_BUILDER_NOFRAMES:
-          case NS_HTML5TREE_BUILDER_SELECT:
-          case NS_HTML5TREE_BUILDER_TABLE:
-          case NS_HTML5TREE_BUILDER_TEXTAREA: {
+          case PARAM_OR_SOURCE_OR_TRACK:
+          case EMBED:
+          case IMG:
+          case IMAGE:
+          case INPUT:
+          case KEYGEN:
+          case HR:
+          case ISINDEX:
+          case IFRAME:
+          case NOEMBED:
+          case NOFRAMES:
+          case SELECT:
+          case TABLE:
+          case TEXTAREA: {
             errStrayEndTag(name);
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_NOSCRIPT: {
+          case NOSCRIPT: {
             if (scriptingEnabled) {
               errStrayEndTag(name);
               NS_HTML5_BREAK(endtagloop);
             } else {
             }
           }
-          case NS_HTML5TREE_BUILDER_A:
-          case NS_HTML5TREE_BUILDER_B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
-          case NS_HTML5TREE_BUILDER_FONT:
-          case NS_HTML5TREE_BUILDER_NOBR: {
+          case A:
+          case B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
+          case FONT:
+          case NOBR: {
             if (adoptionAgencyEndTag(name)) {
               NS_HTML5_BREAK(endtagloop);
             }
@@ -2773,21 +2815,21 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_HEAD: {
+      case IN_HEAD: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_HEAD: {
+          case HEAD: {
             pop();
-            mode = NS_HTML5TREE_BUILDER_AFTER_HEAD;
+            mode = AFTER_HEAD;
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_BR:
-          case NS_HTML5TREE_BUILDER_HTML:
-          case NS_HTML5TREE_BUILDER_BODY: {
+          case BR:
+          case HTML:
+          case BODY: {
             pop();
-            mode = NS_HTML5TREE_BUILDER_AFTER_HEAD;
+            mode = AFTER_HEAD;
             continue;
           }
-          case NS_HTML5TREE_BUILDER_TEMPLATE: {
+          case TEMPLATE: {
             endTagTemplateInHead();
             NS_HTML5_BREAK(endtagloop);
           }
@@ -2797,17 +2839,17 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_HEAD_NOSCRIPT: {
+      case IN_HEAD_NOSCRIPT: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_NOSCRIPT: {
+          case NOSCRIPT: {
             pop();
-            mode = NS_HTML5TREE_BUILDER_IN_HEAD;
+            mode = IN_HEAD;
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_BR: {
+          case BR: {
             errStrayEndTag(name);
             pop();
-            mode = NS_HTML5TREE_BUILDER_IN_HEAD;
+            mode = IN_HEAD;
             continue;
           }
           default: {
@@ -2816,49 +2858,52 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_COLUMN_GROUP: {
+      case IN_COLUMN_GROUP: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_COLGROUP: {
-            if (!currentPtr || stack[currentPtr]->getGroup() == NS_HTML5TREE_BUILDER_TEMPLATE) {
+          case COLGROUP: {
+            if (!currentPtr ||
+                stack[currentPtr]->getGroup() == nsHtml5TreeBuilder::TEMPLATE) {
               MOZ_ASSERT(fragment || isTemplateContents());
               errGarbageInColgroup();
               NS_HTML5_BREAK(endtagloop);
             }
             pop();
-            mode = NS_HTML5TREE_BUILDER_IN_TABLE;
+            mode = IN_TABLE;
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_COL: {
+          case COL: {
             errStrayEndTag(name);
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_TEMPLATE: {
+          case TEMPLATE: {
             endTagTemplateInHead();
             NS_HTML5_BREAK(endtagloop);
           }
           default: {
-            if (!currentPtr || stack[currentPtr]->getGroup() == NS_HTML5TREE_BUILDER_TEMPLATE) {
+            if (!currentPtr ||
+                stack[currentPtr]->getGroup() == nsHtml5TreeBuilder::TEMPLATE) {
               MOZ_ASSERT(fragment || isTemplateContents());
               errGarbageInColgroup();
               NS_HTML5_BREAK(endtagloop);
             }
             pop();
-            mode = NS_HTML5TREE_BUILDER_IN_TABLE;
+            mode = IN_TABLE;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_SELECT_IN_TABLE: {
+      case IN_SELECT_IN_TABLE: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_CAPTION:
-          case NS_HTML5TREE_BUILDER_TABLE:
-          case NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT:
-          case NS_HTML5TREE_BUILDER_TR:
-          case NS_HTML5TREE_BUILDER_TD_OR_TH: {
+          case CAPTION:
+          case TABLE:
+          case TBODY_OR_THEAD_OR_TFOOT:
+          case TR:
+          case TD_OR_TH: {
             errEndTagSeenWithSelectOpen(name);
-            if (findLastInTableScope(name) != NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (findLastInTableScope(name) !=
+                nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               eltPos = findLastInTableScope(nsHtml5Atoms::select);
-              if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+              if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
                 MOZ_ASSERT(fragment);
                 NS_HTML5_BREAK(endtagloop);
               }
@@ -2875,9 +2920,9 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             ; // fall through
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_SELECT: {
+      case IN_SELECT: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_OPTION: {
+          case OPTION: {
             if (isCurrent(nsHtml5Atoms::option)) {
               pop();
               NS_HTML5_BREAK(endtagloop);
@@ -2886,7 +2931,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
               NS_HTML5_BREAK(endtagloop);
             }
           }
-          case NS_HTML5TREE_BUILDER_OPTGROUP: {
+          case OPTGROUP: {
             if (isCurrent(nsHtml5Atoms::option) && nsHtml5Atoms::optgroup == stack[currentPtr - 1]->name) {
               pop();
             }
@@ -2897,9 +2942,9 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             }
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_SELECT: {
+          case SELECT: {
             eltPos = findLastInTableScope(nsHtml5Atoms::select);
-            if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+            if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
               MOZ_ASSERT(fragment);
               errStrayEndTag(name);
               NS_HTML5_BREAK(endtagloop);
@@ -2910,7 +2955,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             resetTheInsertionMode();
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_TEMPLATE: {
+          case TEMPLATE: {
             endTagTemplateInHead();
             NS_HTML5_BREAK(endtagloop);
           }
@@ -2920,27 +2965,27 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_AFTER_BODY: {
+      case AFTER_BODY: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_HTML: {
+          case HTML: {
             if (fragment) {
               errStrayEndTag(name);
               NS_HTML5_BREAK(endtagloop);
             } else {
-              mode = NS_HTML5TREE_BUILDER_AFTER_AFTER_BODY;
+              mode = AFTER_AFTER_BODY;
               NS_HTML5_BREAK(endtagloop);
             }
           }
           default: {
             errEndTagAfterBody();
-            mode = framesetOk ? NS_HTML5TREE_BUILDER_FRAMESET_OK : NS_HTML5TREE_BUILDER_IN_BODY;
+            mode = framesetOk ? FRAMESET_OK : IN_BODY;
             continue;
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_IN_FRAMESET: {
+      case IN_FRAMESET: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_FRAMESET: {
+          case FRAMESET: {
             if (!currentPtr) {
               MOZ_ASSERT(fragment);
               errStrayEndTag(name);
@@ -2948,7 +2993,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
             }
             pop();
             if ((!fragment) && !isCurrent(nsHtml5Atoms::frameset)) {
-              mode = NS_HTML5TREE_BUILDER_AFTER_FRAMESET;
+              mode = AFTER_FRAMESET;
             }
             NS_HTML5_BREAK(endtagloop);
           }
@@ -2958,10 +3003,10 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_AFTER_FRAMESET: {
+      case AFTER_FRAMESET: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_HTML: {
-            mode = NS_HTML5TREE_BUILDER_AFTER_AFTER_FRAMESET;
+          case HTML: {
+            mode = AFTER_AFTER_FRAMESET;
             NS_HTML5_BREAK(endtagloop);
           }
           default: {
@@ -2970,20 +3015,20 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_INITIAL: {
+      case INITIAL: {
         errEndTagSeenWithoutDoctype();
         documentModeInternal(QUIRKS_MODE, nullptr, nullptr, false);
-        mode = NS_HTML5TREE_BUILDER_BEFORE_HTML;
+        mode = BEFORE_HTML;
         continue;
       }
-      case NS_HTML5TREE_BUILDER_BEFORE_HTML: {
+      case BEFORE_HTML: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_HEAD:
-          case NS_HTML5TREE_BUILDER_BR:
-          case NS_HTML5TREE_BUILDER_HTML:
-          case NS_HTML5TREE_BUILDER_BODY: {
+          case HEAD:
+          case BR:
+          case HTML:
+          case BODY: {
             appendHtmlElementToDocumentAndPush();
-            mode = NS_HTML5TREE_BUILDER_BEFORE_HEAD;
+            mode = BEFORE_HEAD;
             continue;
           }
           default: {
@@ -2992,14 +3037,14 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_BEFORE_HEAD: {
+      case BEFORE_HEAD: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_HEAD:
-          case NS_HTML5TREE_BUILDER_BR:
-          case NS_HTML5TREE_BUILDER_HTML:
-          case NS_HTML5TREE_BUILDER_BODY: {
+          case HEAD:
+          case BR:
+          case HTML:
+          case BODY: {
             appendToCurrentNodeAndPushHeadElement(nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
-            mode = NS_HTML5TREE_BUILDER_IN_HEAD;
+            mode = IN_HEAD;
             continue;
           }
           default: {
@@ -3008,17 +3053,17 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_AFTER_HEAD: {
+      case AFTER_HEAD: {
         switch(group) {
-          case NS_HTML5TREE_BUILDER_TEMPLATE: {
+          case TEMPLATE: {
             endTagTemplateInHead();
             NS_HTML5_BREAK(endtagloop);
           }
-          case NS_HTML5TREE_BUILDER_HTML:
-          case NS_HTML5TREE_BUILDER_BODY:
-          case NS_HTML5TREE_BUILDER_BR: {
+          case HTML:
+          case BODY:
+          case BR: {
             appendToCurrentNodeAndPushBodyElement();
-            mode = NS_HTML5TREE_BUILDER_FRAMESET_OK;
+            mode = FRAMESET_OK;
             continue;
           }
           default: {
@@ -3027,18 +3072,18 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
           }
         }
       }
-      case NS_HTML5TREE_BUILDER_AFTER_AFTER_BODY: {
+      case AFTER_AFTER_BODY: {
         errStrayEndTag(name);
-        mode = framesetOk ? NS_HTML5TREE_BUILDER_FRAMESET_OK : NS_HTML5TREE_BUILDER_IN_BODY;
+        mode = framesetOk ? FRAMESET_OK : IN_BODY;
         continue;
       }
-      case NS_HTML5TREE_BUILDER_AFTER_AFTER_FRAMESET: {
+      case AFTER_AFTER_FRAMESET: {
         errStrayEndTag(name);
         NS_HTML5_BREAK(endtagloop);
       }
-      case NS_HTML5TREE_BUILDER_TEXT: {
+      case TEXT: {
         pop();
-        if (originalMode == NS_HTML5TREE_BUILDER_AFTER_HEAD) {
+        if (originalMode == AFTER_HEAD) {
           silentPop();
         }
         mode = originalMode;
@@ -3053,7 +3098,7 @@ void
 nsHtml5TreeBuilder::endTagTemplateInHead()
 {
   int32_t eltPos = findLast(nsHtml5Atoms::template_);
-  if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+  if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
     errStrayEndTag(nsHtml5Atoms::template_);
     return;
   }
@@ -3073,7 +3118,8 @@ int32_t
 nsHtml5TreeBuilder::findLastInTableScopeOrRootTemplateTbodyTheadTfoot()
 {
   for (int32_t i = currentPtr; i > 0; i--) {
-    if (stack[i]->getGroup() == NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT || stack[i]->getGroup() == NS_HTML5TREE_BUILDER_TEMPLATE) {
+    if (stack[i]->getGroup() == nsHtml5TreeBuilder::TBODY_OR_THEAD_OR_TFOOT ||
+        stack[i]->getGroup() == nsHtml5TreeBuilder::TEMPLATE) {
       return i;
     }
   }
@@ -3088,7 +3134,7 @@ nsHtml5TreeBuilder::findLast(nsIAtom* name)
       return i;
     }
   }
-  return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+  return nsHtml5TreeBuilder::NOT_FOUND_ON_STACK;
 }
 
 int32_t 
@@ -3099,11 +3145,11 @@ nsHtml5TreeBuilder::findLastInTableScope(nsIAtom* name)
       if (stack[i]->name == name) {
         return i;
       } else if (stack[i]->name == nsHtml5Atoms::table || stack[i]->name == nsHtml5Atoms::template_) {
-        return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+        return nsHtml5TreeBuilder::NOT_FOUND_ON_STACK;
       }
     }
   }
-  return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+  return nsHtml5TreeBuilder::NOT_FOUND_ON_STACK;
 }
 
 int32_t 
@@ -3114,14 +3160,14 @@ nsHtml5TreeBuilder::findLastInButtonScope(nsIAtom* name)
       if (stack[i]->name == name) {
         return i;
       } else if (stack[i]->name == nsHtml5Atoms::button) {
-        return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+        return nsHtml5TreeBuilder::NOT_FOUND_ON_STACK;
       }
     }
     if (stack[i]->isScoping()) {
-      return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+      return nsHtml5TreeBuilder::NOT_FOUND_ON_STACK;
     }
   }
-  return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+  return nsHtml5TreeBuilder::NOT_FOUND_ON_STACK;
 }
 
 int32_t 
@@ -3131,10 +3177,10 @@ nsHtml5TreeBuilder::findLastInScope(nsIAtom* name)
     if (stack[i]->ns == kNameSpaceID_XHTML && stack[i]->name == name) {
       return i;
     } else if (stack[i]->isScoping()) {
-      return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+      return nsHtml5TreeBuilder::NOT_FOUND_ON_STACK;
     }
   }
-  return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+  return nsHtml5TreeBuilder::NOT_FOUND_ON_STACK;
 }
 
 int32_t 
@@ -3145,27 +3191,28 @@ nsHtml5TreeBuilder::findLastInListScope(nsIAtom* name)
       if (stack[i]->name == name) {
         return i;
       } else if (stack[i]->name == nsHtml5Atoms::ul || stack[i]->name == nsHtml5Atoms::ol) {
-        return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+        return nsHtml5TreeBuilder::NOT_FOUND_ON_STACK;
       }
     }
     if (stack[i]->isScoping()) {
-      return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+      return nsHtml5TreeBuilder::NOT_FOUND_ON_STACK;
     }
   }
-  return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+  return nsHtml5TreeBuilder::NOT_FOUND_ON_STACK;
 }
 
 int32_t 
 nsHtml5TreeBuilder::findLastInScopeHn()
 {
   for (int32_t i = currentPtr; i > 0; i--) {
-    if (stack[i]->getGroup() == NS_HTML5TREE_BUILDER_H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6) {
+    if (stack[i]->getGroup() ==
+        nsHtml5TreeBuilder::H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6) {
       return i;
     } else if (stack[i]->isScoping()) {
-      return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+      return nsHtml5TreeBuilder::NOT_FOUND_ON_STACK;
     }
   }
-  return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+  return nsHtml5TreeBuilder::NOT_FOUND_ON_STACK;
 }
 
 void 
@@ -3174,13 +3221,13 @@ nsHtml5TreeBuilder::generateImpliedEndTagsExceptFor(nsIAtom* name)
   for (; ; ) {
     nsHtml5StackNode* node = stack[currentPtr];
     switch(node->getGroup()) {
-      case NS_HTML5TREE_BUILDER_P:
-      case NS_HTML5TREE_BUILDER_LI:
-      case NS_HTML5TREE_BUILDER_DD_OR_DT:
-      case NS_HTML5TREE_BUILDER_OPTION:
-      case NS_HTML5TREE_BUILDER_OPTGROUP:
-      case NS_HTML5TREE_BUILDER_RB_OR_RTC:
-      case NS_HTML5TREE_BUILDER_RT_OR_RP: {
+      case P:
+      case LI:
+      case DD_OR_DT:
+      case OPTION:
+      case OPTGROUP:
+      case RB_OR_RTC:
+      case RT_OR_RP: {
         if (node->ns == kNameSpaceID_XHTML && node->name == name) {
           return;
         }
@@ -3199,13 +3246,13 @@ nsHtml5TreeBuilder::generateImpliedEndTags()
 {
   for (; ; ) {
     switch(stack[currentPtr]->getGroup()) {
-      case NS_HTML5TREE_BUILDER_P:
-      case NS_HTML5TREE_BUILDER_LI:
-      case NS_HTML5TREE_BUILDER_DD_OR_DT:
-      case NS_HTML5TREE_BUILDER_OPTION:
-      case NS_HTML5TREE_BUILDER_OPTGROUP:
-      case NS_HTML5TREE_BUILDER_RB_OR_RTC:
-      case NS_HTML5TREE_BUILDER_RT_OR_RP: {
+      case P:
+      case LI:
+      case DD_OR_DT:
+      case OPTION:
+      case OPTGROUP:
+      case RB_OR_RTC:
+      case RT_OR_RP: {
         pop();
         continue;
       }
@@ -3219,7 +3266,7 @@ nsHtml5TreeBuilder::generateImpliedEndTags()
 bool 
 nsHtml5TreeBuilder::isSecondOnStackBody()
 {
-  return currentPtr >= 1 && stack[1]->getGroup() == NS_HTML5TREE_BUILDER_BODY;
+  return currentPtr >= 1 && stack[1]->getGroup() == nsHtml5TreeBuilder::BODY;
 }
 
 void
@@ -3304,7 +3351,7 @@ nsHtml5TreeBuilder::closeTheCell(int32_t eltPos)
     pop();
   }
   clearTheListOfActiveFormattingElementsUpToTheLastMarker();
-  mode = NS_HTML5TREE_BUILDER_IN_ROW;
+  mode = IN_ROW;
   return;
 }
 
@@ -3317,11 +3364,11 @@ nsHtml5TreeBuilder::findLastInTableScopeTdTh()
       if (nsHtml5Atoms::td == name || nsHtml5Atoms::th == name) {
         return i;
       } else if (name == nsHtml5Atoms::table || name == nsHtml5Atoms::template_) {
-        return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+        return nsHtml5TreeBuilder::NOT_FOUND_ON_STACK;
       }
     }
   }
-  return NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK;
+  return nsHtml5TreeBuilder::NOT_FOUND_ON_STACK;
 }
 
 void 
@@ -3329,7 +3376,10 @@ nsHtml5TreeBuilder::clearStackBackTo(int32_t eltPos)
 {
   int32_t eltGroup = stack[eltPos]->getGroup();
   while (currentPtr > eltPos) {
-    if (stack[currentPtr]->ns == kNameSpaceID_XHTML && stack[currentPtr]->getGroup() == NS_HTML5TREE_BUILDER_TEMPLATE && (eltGroup == NS_HTML5TREE_BUILDER_TABLE || eltGroup == NS_HTML5TREE_BUILDER_TBODY_OR_THEAD_OR_TFOOT || eltGroup == NS_HTML5TREE_BUILDER_TR || !eltPos)) {
+    if (stack[currentPtr]->ns == kNameSpaceID_XHTML &&
+        stack[currentPtr]->getGroup() == TEMPLATE &&
+        (eltGroup == TABLE || eltGroup == TBODY_OR_THEAD_OR_TFOOT ||
+         eltGroup == TR || !eltPos)) {
       return;
     }
     pop();
@@ -3353,7 +3403,7 @@ nsHtml5TreeBuilder::resetTheInsertionMode()
           ns = contextNamespace;
         }
       } else {
-        mode = framesetOk ? NS_HTML5TREE_BUILDER_FRAMESET_OK : NS_HTML5TREE_BUILDER_IN_BODY;
+        mode = framesetOk ? FRAMESET_OK : IN_BODY;
         return;
       }
     }
@@ -3366,33 +3416,33 @@ nsHtml5TreeBuilder::resetTheInsertionMode()
             break;
           }
           if (nsHtml5Atoms::table == ancestor->name) {
-            mode = NS_HTML5TREE_BUILDER_IN_SELECT_IN_TABLE;
+            mode = IN_SELECT_IN_TABLE;
             return;
           }
         }
       }
-      mode = NS_HTML5TREE_BUILDER_IN_SELECT;
+      mode = IN_SELECT;
       return;
     } else if (nsHtml5Atoms::td == name || nsHtml5Atoms::th == name) {
-      mode = NS_HTML5TREE_BUILDER_IN_CELL;
+      mode = IN_CELL;
       return;
     } else if (nsHtml5Atoms::tr == name) {
-      mode = NS_HTML5TREE_BUILDER_IN_ROW;
+      mode = IN_ROW;
       return;
     } else if (nsHtml5Atoms::tbody == name || nsHtml5Atoms::thead == name || nsHtml5Atoms::tfoot == name) {
-      mode = NS_HTML5TREE_BUILDER_IN_TABLE_BODY;
+      mode = IN_TABLE_BODY;
       return;
     } else if (nsHtml5Atoms::caption == name) {
-      mode = NS_HTML5TREE_BUILDER_IN_CAPTION;
+      mode = IN_CAPTION;
       return;
     } else if (nsHtml5Atoms::colgroup == name) {
-      mode = NS_HTML5TREE_BUILDER_IN_COLUMN_GROUP;
+      mode = IN_COLUMN_GROUP;
       return;
     } else if (nsHtml5Atoms::table == name) {
-      mode = NS_HTML5TREE_BUILDER_IN_TABLE;
+      mode = IN_TABLE;
       return;
     } else if (kNameSpaceID_XHTML != ns) {
-      mode = framesetOk ? NS_HTML5TREE_BUILDER_FRAMESET_OK : NS_HTML5TREE_BUILDER_IN_BODY;
+      mode = framesetOk ? FRAMESET_OK : IN_BODY;
       return;
     } else if (nsHtml5Atoms::template_ == name) {
       MOZ_ASSERT(templateModePtr >= 0);
@@ -3400,26 +3450,26 @@ nsHtml5TreeBuilder::resetTheInsertionMode()
       return;
     } else if (nsHtml5Atoms::head == name) {
       if (name == contextName) {
-        mode = framesetOk ? NS_HTML5TREE_BUILDER_FRAMESET_OK : NS_HTML5TREE_BUILDER_IN_BODY;
+        mode = framesetOk ? FRAMESET_OK : IN_BODY;
       } else {
-        mode = NS_HTML5TREE_BUILDER_IN_HEAD;
+        mode = IN_HEAD;
       }
       return;
     } else if (nsHtml5Atoms::body == name) {
-      mode = framesetOk ? NS_HTML5TREE_BUILDER_FRAMESET_OK : NS_HTML5TREE_BUILDER_IN_BODY;
+      mode = framesetOk ? FRAMESET_OK : IN_BODY;
       return;
     } else if (nsHtml5Atoms::frameset == name) {
-      mode = NS_HTML5TREE_BUILDER_IN_FRAMESET;
+      mode = IN_FRAMESET;
       return;
     } else if (nsHtml5Atoms::html == name) {
       if (!headPointer) {
-        mode = NS_HTML5TREE_BUILDER_BEFORE_HEAD;
+        mode = BEFORE_HEAD;
       } else {
-        mode = NS_HTML5TREE_BUILDER_AFTER_HEAD;
+        mode = AFTER_HEAD;
       }
       return;
     } else if (!i) {
-      mode = framesetOk ? NS_HTML5TREE_BUILDER_FRAMESET_OK : NS_HTML5TREE_BUILDER_IN_BODY;
+      mode = framesetOk ? FRAMESET_OK : IN_BODY;
       return;
     }
   }
@@ -3429,7 +3479,7 @@ void
 nsHtml5TreeBuilder::implicitlyCloseP()
 {
   int32_t eltPos = findLastInButtonScope(nsHtml5Atoms::p);
-  if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+  if (eltPos == nsHtml5TreeBuilder::NOT_FOUND_ON_STACK) {
     return;
   }
   generateImpliedEndTagsExceptFor(nsHtml5Atoms::p);
@@ -3799,7 +3849,7 @@ nsHtml5TreeBuilder::addAttributesToBody(nsHtml5HtmlAttributes* attributes)
 {
   if (currentPtr >= 1) {
     nsHtml5StackNode* body = stack[1];
-    if (body->getGroup() == NS_HTML5TREE_BUILDER_BODY) {
+    if (body->getGroup() == nsHtml5TreeBuilder::BODY) {
       addAttributesToElement(body->node, attributes);
       return true;
     }
@@ -3817,7 +3867,7 @@ void
 nsHtml5TreeBuilder::pushHeadPointerOntoStack()
 {
   MOZ_ASSERT(!!headPointer);
-  MOZ_ASSERT(mode == NS_HTML5TREE_BUILDER_AFTER_HEAD);
+  MOZ_ASSERT(mode == AFTER_HEAD);
 
   silentPush(new nsHtml5StackNode(nsHtml5ElementName::ELT_HEAD, headPointer));
 }
@@ -3868,8 +3918,8 @@ nsHtml5TreeBuilder::reconstructTheActiveFormattingElements()
 void 
 nsHtml5TreeBuilder::insertIntoFosterParent(nsIContentHandle* child)
 {
-  int32_t tablePos = findLastOrRoot(NS_HTML5TREE_BUILDER_TABLE);
-  int32_t templatePos = findLastOrRoot(NS_HTML5TREE_BUILDER_TEMPLATE);
+  int32_t tablePos = findLastOrRoot(nsHtml5TreeBuilder::TABLE);
+  int32_t templatePos = findLastOrRoot(nsHtml5TreeBuilder::TEMPLATE);
   if (templatePos >= tablePos) {
     appendElement(child, stack[templatePos]->node);
     return;
@@ -3887,8 +3937,8 @@ nsHtml5TreeBuilder::createAndInsertFosterParentedElement(int32_t ns, nsIAtom* na
 nsIContentHandle* 
 nsHtml5TreeBuilder::createAndInsertFosterParentedElement(int32_t ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContentHandle* form)
 {
-  int32_t tablePos = findLastOrRoot(NS_HTML5TREE_BUILDER_TABLE);
-  int32_t templatePos = findLastOrRoot(NS_HTML5TREE_BUILDER_TEMPLATE);
+  int32_t tablePos = findLastOrRoot(nsHtml5TreeBuilder::TABLE);
+  int32_t templatePos = findLastOrRoot(nsHtml5TreeBuilder::TEMPLATE);
   if (templatePos >= tablePos) {
     nsIContentHandle* child = createElement(ns, name, attributes, form, stack[templatePos]->node);
     appendElement(child, stack[templatePos]->node);
@@ -4272,7 +4322,8 @@ void
 nsHtml5TreeBuilder::flushCharacters()
 {
   if (charBufferLen > 0) {
-    if ((mode == NS_HTML5TREE_BUILDER_IN_TABLE || mode == NS_HTML5TREE_BUILDER_IN_TABLE_BODY || mode == NS_HTML5TREE_BUILDER_IN_ROW) && charBufferContainsNonWhitespace()) {
+    if ((mode == IN_TABLE || mode == IN_TABLE_BODY || mode == IN_ROW) &&
+        charBufferContainsNonWhitespace()) {
       errNonSpaceInTable();
       reconstructTheActiveFormattingElements();
       if (!stack[currentPtr]->isFosterParenting()) {
@@ -4280,8 +4331,8 @@ nsHtml5TreeBuilder::flushCharacters()
         charBufferLen = 0;
         return;
       }
-      int32_t tablePos = findLastOrRoot(NS_HTML5TREE_BUILDER_TABLE);
-      int32_t templatePos = findLastOrRoot(NS_HTML5TREE_BUILDER_TEMPLATE);
+      int32_t tablePos = findLastOrRoot(nsHtml5TreeBuilder::TABLE);
+      int32_t templatePos = findLastOrRoot(nsHtml5TreeBuilder::TEMPLATE);
       if (templatePos >= tablePos) {
         appendCharacters(stack[templatePos]->node, charBuffer, 0, charBufferLen);
         charBufferLen = 0;
