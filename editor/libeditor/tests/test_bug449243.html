@@ -71,12 +71,8 @@ function SameTypeAsPreviousSibling(element) {
   return (element.nodeName == sibling.nodeName);
 }
 
-function isDiv(element) {
-  return element.nodeName.toLowerCase() == "div";
-}
-
-function isParagraph(element) {
-  return element.nodeName.toLowerCase() == "p";
+function isType(element, type) {
+  return element.nodeName.toLowerCase() == type;
 }
 
 function runTests() {
@@ -116,36 +112,29 @@ function runTests() {
     "should create another list item.");
   undo(3);
 
-  // end of selection: create a new paragraph
-  split(header, CARET_END, 1);
-  ok(isDiv(content.querySelector("h2+*")),
-    "Pressing [Return] at the end of a header " +
-    "should create a new div.");
-  split(ulItem, CARET_END, 2);
-  ok(isDiv(content.querySelector("ul+*")),
-    "Pressing [Return] twice at the end of an unordered list item " +
-    "should create a new div.");
-  split(olItem, CARET_END, 2);
-  ok(isDiv(content.querySelector("ol+*")),
-    "Pressing [Return] twice at the end of an ordered list item " +
-    "should create a new div.");
-  undo(3);
+  // end of selection: create a new div/paragraph
+  function testEndOfSelection(expected) {
+    split(header, CARET_END, 1);
+    ok(isType(content.querySelector("h2+*"), expected),
+      "Pressing [Return] at the end of a header " +
+      "should create a new " + expected);
+    split(ulItem, CARET_END, 2);
+    ok(isType(content.querySelector("ul+*"), expected),
+      "Pressing [Return] twice at the end of an unordered list item " +
+      "should create a new " + expected);
+    split(olItem, CARET_END, 2);
+    ok(isType(content.querySelector("ol+*"), expected),
+      "Pressing [Return] twice at the end of an ordered list item " +
+      "should create a new " + expected);
+    undo(3);
+  }
 
-  // now with defaultParagraphSeparator = p
+  document.execCommand("defaultParagraphSeparator", false, "div");
+  testEndOfSelection("div");
   document.execCommand("defaultParagraphSeparator", false, "p");
-  split(header, CARET_END, 1);
-  ok(isParagraph(content.querySelector("h2+*")),
-    "Pressing [Return] at the end of a header " + 
-    "should create a new paragraph.");
-  split(ulItem, CARET_END, 2);
-  ok(isParagraph(content.querySelector("ul+*")),
-    "Pressing [Return] twice at the end of an unordered list item " + 
-    "should create a new paragraph.");
-  split(olItem, CARET_END, 2);
-  ok(isParagraph(content.querySelector("ol+*")),
-    "Pressing [Return] twice at the end of an ordered list item " + 
-    "should create a new paragraph.");
-  undo(3);
+  testEndOfSelection("p");
+  document.execCommand("defaultParagraphSeparator", false, "br");
+  testEndOfSelection("p");
 
   // done
   SimpleTest.finish();
