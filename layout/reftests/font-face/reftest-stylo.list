@@ -87,7 +87,7 @@ skip-if(stylo) == sheet-set-switch-1.html sheet-set-switch-1.html # times out?
 skip-if(stylo) HTTP(..) == insert-rule-1a.html insert-rule-1a.html # Bug 1290237
 skip-if(stylo) HTTP(..) == insert-rule-1b.html insert-rule-1b.html # Bug 1290237
 skip-if(stylo) HTTP(..) == delete-rule-1.html delete-rule-1.html # Bug 1290237
-HTTP(..) == media-query-add-1.html media-query-add-1.html
+skip-if(stylo) HTTP(..) == media-query-add-1.html media-query-add-1.html
 fails HTTP(..) == media-query-remove-1.html media-query-remove-1.html
 HTTP(..) == media-query-add-1-ref.html media-query-add-1-ref.html
 
