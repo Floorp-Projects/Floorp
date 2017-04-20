@@ -63,11 +63,11 @@ private:
   bool    mInitialized;
 
   // These internal helper methods must be called while mMonitor is held.
-  // AddTimerInternal returns the position where the timer was added in the
-  // list, or -1 if it failed.
-  int32_t AddTimerInternal(nsTimerImpl* aTimer);
+  // AddTimerInternal returns false if the insertion failed.
+  bool    AddTimerInternal(nsTimerImpl* aTimer);
   bool    RemoveTimerInternal(nsTimerImpl* aTimer);
   void    RemoveLeadingCanceledTimersInternal();
+  void    RemoveFirstTimerInternal();
 
   already_AddRefed<nsTimerImpl> PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef);
 
@@ -81,7 +81,7 @@ private:
 
   struct Entry
   {
-    const TimeStamp mTimeout;
+    TimeStamp mTimeout;
     RefPtr<nsTimerImpl> mTimerImpl;
 
     Entry(const TimeStamp& aMinTimeout, const TimeStamp& aTimeout,
@@ -90,9 +90,14 @@ private:
       mTimerImpl(aTimerImpl)
     { }
 
+    Entry(Entry&& aRight) = default;
+    Entry& operator=(Entry&& aRight) = default;
+
     bool operator<(const Entry& aRight) const
     {
-      return mTimeout < aRight.mTimeout;
+      // Reverse logic since we are inserting into a max heap
+      // that sorts the "largest" value to index 0.
+      return mTimeout > aRight.mTimeout;
     }
 
     bool operator==(const Entry& aRight) const
