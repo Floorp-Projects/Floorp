@@ -38,6 +38,10 @@
     <string name="menu_help">Help</string>
     <string name="menu_rights">Your Rights</string>
 
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Share via</string>
+
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
     <string name="about_content"><![CDATA[

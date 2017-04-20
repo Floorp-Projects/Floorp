@@ -303,7 +303,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 final Intent shareIntent = new Intent(Intent.ACTION_SEND);
                 shareIntent.setType("text/plain");
                 shareIntent.putExtra(Intent.EXTRA_TEXT, webView.getUrl());
-                startActivity(shareIntent);
+                startActivity(Intent.createChooser(shareIntent, getString(R.string.share_dialog_title)));
 
                 TelemetryWrapper.shareEvent();
                 break;
