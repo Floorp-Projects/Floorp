@@ -43,7 +43,7 @@
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5ArrayCopy.h"
 #include "nsHtml5Parser.h"
-#include "nsHtml5Atoms.h"
+#include "nsGkAtoms.h"
 #include "nsHtml5TreeOperation.h"
 #include "nsHtml5StateSnapshot.h"
 #include "nsHtml5StackNode.h"
@@ -72,7 +72,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 {
   private:
     static char16_t REPLACEMENT_CHARACTER[];
-
   public:
     static const int32_t OTHER = 0;
 

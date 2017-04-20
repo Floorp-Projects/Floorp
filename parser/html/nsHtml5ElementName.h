@@ -37,7 +37,7 @@
 #include "jArray.h"
 #include "nsHtml5ArrayCopy.h"
 #include "nsAHtml5TreeBuilderState.h"
-#include "nsHtml5Atoms.h"
+#include "nsGkAtoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsHtml5Macros.h"
@@ -114,37 +114,37 @@ public:
       }
       return elementName;
     }
-  }
-
-private:
-  inline static uint32_t bufToHash(char16_t* buf, int32_t length)
-  {
-    uint32_t len = length;
-    uint32_t first = buf[0];
-    first <<= 19;
-    uint32_t second = 1 << 23;
-    uint32_t third = 0;
-    uint32_t fourth = 0;
-    uint32_t fifth = 0;
-    if (length >= 4) {
-      second = buf[length - 4];
-      second <<= 4;
-      third = buf[length - 3];
-      third <<= 9;
-      fourth = buf[length - 2];
-      fourth <<= 14;
-      fifth = buf[length - 1];
-      fifth <<= 24;
-    } else if (length == 3) {
-      second = buf[1];
-      second <<= 4;
-      third = buf[2];
-      third <<= 9;
-    } else if (length == 2) {
-      second = buf[1];
-      second <<= 24;
     }
-    return len + first + second + third + fourth + fifth;
+
+  private:
+    inline static uint32_t bufToHash(char16_t* buf, int32_t length)
+    {
+      uint32_t len = length;
+      uint32_t first = buf[0];
+      first <<= 19;
+      uint32_t second = 1 << 23;
+      uint32_t third = 0;
+      uint32_t fourth = 0;
+      uint32_t fifth = 0;
+      if (length >= 4) {
+        second = buf[length - 4];
+        second <<= 4;
+        third = buf[length - 3];
+        third <<= 9;
+        fourth = buf[length - 2];
+        fourth <<= 14;
+        fifth = buf[length - 1];
+        fifth <<= 24;
+      } else if (length == 3) {
+        second = buf[1];
+        second <<= 4;
+        third = buf[2];
+        third <<= 9;
+      } else if (length == 2) {
+        second = buf[1];
+        second <<= 24;
+      }
+      return len + first + second + third + fourth + fifth;
     }
 
     nsHtml5ElementName(nsIAtom* name, nsIAtom* camelCaseName, int32_t flags);

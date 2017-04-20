@@ -30,7 +30,6 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsFrameList.h"
 #include "nsGkAtoms.h"
-#include "nsHtml5Atoms.h"
 #include "nsIAtom.h"
 #include "nsCaret.h"
 #include "nsCSSPseudoElements.h"

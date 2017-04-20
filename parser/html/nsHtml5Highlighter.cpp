@@ -48,20 +48,21 @@ char16_t nsHtml5Highlighter::sPi[] =
   { 'p', 'i', 0 };
 
 nsHtml5Highlighter::nsHtml5Highlighter(nsAHtml5TreeOpSink* aOpSink)
- : mState(nsHtml5Tokenizer::DATA)
- , mCStart(INT32_MAX)
- , mPos(0)
- , mLineNumber(1)
- , mInlinesOpen(0)
- , mInCharacters(false)
- , mBuffer(nullptr)
- , mOpSink(aOpSink)
- , mCurrentRun(nullptr)
- , mAmpersand(nullptr)
- , mSlash(nullptr)
- , mHandles(MakeUnique<nsIContent*[]>(NS_HTML5_HIGHLIGHTER_HANDLE_ARRAY_LENGTH))
- , mHandlesUsed(0)
- , mSeenBase(false)
+  : mState(nsHtml5Tokenizer::DATA)
+  , mCStart(INT32_MAX)
+  , mPos(0)
+  , mLineNumber(1)
+  , mInlinesOpen(0)
+  , mInCharacters(false)
+  , mBuffer(nullptr)
+  , mOpSink(aOpSink)
+  , mCurrentRun(nullptr)
+  , mAmpersand(nullptr)
+  , mSlash(nullptr)
+  , mHandles(
+      MakeUnique<nsIContent* []>(NS_HTML5_HIGHLIGHTER_HANDLE_ARRAY_LENGTH))
+  , mHandlesUsed(0)
+  , mSeenBase(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
@@ -79,7 +80,7 @@ nsHtml5Highlighter::Start(const nsAutoString& aTitle)
 
   mOpQueue.AppendElement()->Init(STANDARDS_MODE);
 
-  nsIContent** root = CreateElement(nsHtml5Atoms::html, nullptr, nullptr);
+  nsIContent** root = CreateElement(nsGkAtoms::html, nullptr, nullptr);
   mOpQueue.AppendElement()->Init(eTreeOpAppendToDocument, root);
   mStack.AppendElement(root);
 
@@ -290,8 +291,8 @@ nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
         FinishTag();
       }
       break;
-      // most cdata states are omitted, because they don't matter to
-      // highlighting
+    // most cdata states are omitted, because they don't matter to
+    // highlighting
     case nsHtml5Tokenizer::CDATA_RSQB_RSQB:
       if (aState == nsHtml5Tokenizer::DATA) {
         AddClass(sCdata);
@@ -392,9 +393,9 @@ nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume, int32_t aPos)
         EndCharactersAndStartMarkupRun();
       }
       break;
-      // Lots of double escape states omitted, because they don't highlight.
-      // Likewise, only doctype states that can emit the doctype are of
-      // interest. Otherwise, the transition out of bogus comment deals.
+    // Lots of double escape states omitted, because they don't highlight.
+    // Likewise, only doctype states that can emit the doctype are of
+    // interest. Otherwise, the transition out of bogus comment deals.
     case nsHtml5Tokenizer::BEFORE_DOCTYPE_NAME:
     case nsHtml5Tokenizer::DOCTYPE_NAME:
     case nsHtml5Tokenizer::AFTER_DOCTYPE_NAME:
