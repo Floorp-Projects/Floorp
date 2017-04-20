@@ -132,6 +132,7 @@ using namespace mozilla::system;
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPresData.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
+#include "mozilla/dom/ipc/IPCBlobInputStreamStorage.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -319,6 +320,9 @@ nsLayoutStatics::Initialize()
   // On Android, we instantiate it when constructing AndroidBridge.
   MediaPrefs::GetSingleton();
 #endif
+
+  // This must be initialized on the main-thread.
+  mozilla::dom::IPCBlobInputStreamStorage::Initialize();
 
   return NS_OK;
 }
