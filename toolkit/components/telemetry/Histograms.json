@@ -2057,6 +2057,14 @@
       "n_buckets": 100,
       "description": "Time in milliseconds that http channel spent suspended between AsyncOpen and OnStartRequest."
   },
+  "NETWORK_RACE_CACHE_WITH_NETWORK_USAGE": {
+    "expires_in_version": "58",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1354409],
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "Whether we raced network with the cache. (0=network & no racing, 1=cache & no racing, 2=network & raced, 3=cache & raced)"
+  },
   "HTTP_AUTH_DIALOG_STATS": {
     "expires_in_version": "never",
     "kind": "enumerated",
