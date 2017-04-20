@@ -108,7 +108,7 @@ XPCWrappedNativeProto::JSProtoObjectFinalized(js::FreeOp* fop, JSObject* obj)
     if (map->Find(mClassInfo) == this)
         map->Remove(mClassInfo);
 
-    GetContext()->GetDyingWrappedNativeProtoMap()->Add(this);
+    GetRuntime()->GetDyingWrappedNativeProtoMap()->Add(this);
 
     mJSProtoObject.finalize(js::CastToJSFreeOp(fop)->runtime());
 }

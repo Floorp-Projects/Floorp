@@ -23,7 +23,7 @@ static const char* kBrowserThreadNames[BrowserProcessSubThread::ID_COUNT] = {
 //  "Chrome_FileThread",  // FILE
 //  "Chrome_DBThread",  // DB
 //  "Chrome_HistoryThread",  // HISTORY
-#if defined(OS_LINUX)
+#if defined(OS_LINUX) || defined(OS_SOLARIS)
   "Gecko_Background_X11Thread",  // BACKGROUND_X11
 #endif
 };
@@ -34,7 +34,7 @@ BrowserProcessSubThread* BrowserProcessSubThread::sBrowserThreads[ID_COUNT] = {
 //  nullptr,  // FILE
 //  nullptr,  // DB
 //  nullptr,  // HISTORY
-#if defined(OS_LINUX)
+#if defined(OS_LINUX) || defined(OS_SOLARIS)
   nullptr,  // BACKGROUND_X11
 #endif
 };

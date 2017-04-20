@@ -312,13 +312,6 @@ JSObject::makeLazyGroup(JSContext* cx, HandleObject obj)
     MOZ_ASSERT(obj->hasLazyGroup());
     MOZ_ASSERT(cx->compartment() == obj->compartment());
 
-    /* De-lazification of functions can GC, so we need to do it up here. */
-    if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpretedLazy()) {
-        RootedFunction fun(cx, &obj->as<JSFunction>());
-        if (!JSFunction::getOrCreateScript(cx, fun))
-            return nullptr;
-    }
-
     // Find flags which need to be specified immediately on the object.
     // Don't track whether singletons are packed.
     ObjectGroupFlags initialFlags = OBJECT_FLAG_SINGLETON | OBJECT_FLAG_NON_PACKED;

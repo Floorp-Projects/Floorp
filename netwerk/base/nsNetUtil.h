@@ -924,6 +924,11 @@ bool NS_IsReasonableHTTPHeaderValue(const nsACString &aValue);
 bool NS_IsValidHTTPToken(const nsACString &aToken);
 
 /**
+ * Strip the leading or trailing HTTP whitespace per fetch spec section 2.2.
+ */
+void NS_TrimHTTPWhitespace(const nsACString& aSource, nsACString& aDest);
+
+/**
  * Return true if the given request must be upgraded to HTTPS.
  */
 nsresult NS_ShouldSecureUpgrade(nsIURI* aURI,

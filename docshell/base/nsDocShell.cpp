@@ -1788,7 +1788,7 @@ nsDocShell::MaybeInitTiming()
   }
 
   if (!mTiming) {
-    mTiming = new nsDOMNavigationTiming();
+    mTiming = new nsDOMNavigationTiming(this);
     canBeReset = true;
   }
 

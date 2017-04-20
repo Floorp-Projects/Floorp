@@ -330,7 +330,7 @@ body.compact .newtab-cell {
   display: -moz-box;
   position: relative;
   -moz-box-pack: center;
-  margin: 40px 0 15px;
+  margin: 55px 0 15px;
 }
 
 body.compact #newtab-search-container {

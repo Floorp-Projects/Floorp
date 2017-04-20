@@ -4,6 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "General")
+
+with Files("controlCenter/**"):
+    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+
+with Files("devtools/**"):
+    BUG_COMPONENT = ("Firefox", "Developer Tools")
+
+with Files("permissionPrompts/**"):
+    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+
+with Files("preferences/**"):
+    BUG_COMPONENT = ("Firefox", "preferences")
+
 BROWSER_CHROME_MANIFESTS += [
     # Each test is in it's own directory so it gets run in a clean profile with
     # run-by-dir.

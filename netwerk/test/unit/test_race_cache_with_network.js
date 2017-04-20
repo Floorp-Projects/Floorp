@@ -127,7 +127,7 @@ function *testSteps() {
 
   // Sets a high delay for the cache fetch, and triggers the network activity.
   // While the network response is produced, we trigger the cache fetch.
-  // Because the network response was the first
+  // Because the network response was the first, a non-conditional request is sent.
   var channel = make_channel("http://localhost:" + PORT + "/rcwn");
   channel.QueryInterface(Components.interfaces.nsIRaceCacheWithNetwork).test_delayCacheEntryOpeningBy(100000);
   channel.asyncOpen2(new ChannelListener(checkContent, null));
