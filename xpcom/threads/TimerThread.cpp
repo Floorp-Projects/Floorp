@@ -345,7 +345,7 @@ TimerThread::Shutdown()
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsTArray<nsTimerImpl*> timers;
+  nsTArray<RefPtr<nsTimerImpl>> timers;
   {
     // lock scope
     MonitorAutoLock lock(mMonitor);
@@ -364,15 +364,13 @@ TimerThread::Shutdown()
     // might potentially call some code reentering the same lock
     // that leads to unexpected behavior or deadlock.
     // See bug 422472.
-    timers.AppendElements(mTimers);
-    mTimers.Clear();
+    mTimers.SwapElements(timers);
   }
 
   uint32_t timersCount = timers.Length();
   for (uint32_t i = 0; i < timersCount; i++) {
-    nsTimerImpl* timer = timers[i];
+    RefPtr<nsTimerImpl> timer = timers[i].forget();
     timer->Cancel();
-    ReleaseTimerInternal(timer);
   }
 
   mThread->Shutdown();    // wait for the thread to die
@@ -616,13 +614,11 @@ TimerThread::AddTimerInternal(nsTimerImpl* aTimer)
   TimeStamp now = TimeStamp::Now();
 
   TimerAdditionComparator c(now, aTimer);
-  nsTimerImpl** insertSlot = mTimers.InsertElementSorted(aTimer, c);
+  RefPtr<nsTimerImpl>* insertSlot = mTimers.InsertElementSorted(aTimer, c);
 
   if (!insertSlot) {
     return -1;
   }
-
-  NS_ADDREF(aTimer);
 
 #ifdef MOZ_TASK_TRACER
   // Caller of AddTimer is the parent task of its timer event, so we store the
@@ -637,22 +633,7 @@ bool
 TimerThread::RemoveTimerInternal(nsTimerImpl* aTimer)
 {
   mMonitor.AssertCurrentThreadOwns();
-  if (!mTimers.RemoveElement(aTimer)) {
-    return false;
-  }
-
-  ReleaseTimerInternal(aTimer);
-  return true;
-}
-
-void
-TimerThread::ReleaseTimerInternal(nsTimerImpl* aTimer)
-{
-  if (!mShutdown) {
-    // copied to a local array before releasing in shutdown
-    mMonitor.AssertCurrentThreadOwns();
-  }
-  NS_RELEASE(aTimer);
+  mTimers.RemoveElement(aTimer);
 }
 
 already_AddRefed<nsTimerImpl>
