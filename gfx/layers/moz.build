@@ -206,6 +206,7 @@ EXPORTS.mozilla.layers += [
     'wr/WebRenderLayerManager.h',
     'wr/WebRenderLayersLogging.h',
     'wr/WebRenderMessageUtils.h',
+    'wr/WebRenderScrollData.h',
     'wr/WebRenderTextureHost.h',
 ]
 
@@ -397,6 +398,7 @@ UNIFIED_SOURCES += [
     'wr/WebRenderLayerManager.cpp',
     'wr/WebRenderLayersLogging.cpp',
     'wr/WebRenderPaintedLayer.cpp',
+    'wr/WebRenderScrollData.cpp',
     'wr/WebRenderTextLayer.cpp',
     # XXX here are some unified build error.
     #'wr/WebRenderTextureHost.cpp'

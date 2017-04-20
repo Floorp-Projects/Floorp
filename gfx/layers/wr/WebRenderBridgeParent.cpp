@@ -286,7 +286,8 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
                                  const ByteBuffer& dl,
                                  const WrBuiltDisplayListDescriptor& dlDesc,
                                  const ByteBuffer& aux,
-                                 const WrAuxiliaryListsDescriptor& auxDesc)
+                                 const WrAuxiliaryListsDescriptor& auxDesc,
+                                 const WebRenderScrollData& aScrollData)
 {
   UpdateFwdTransactionId(aFwdTransactionId);
   AutoClearReadLocks clearLocks(mReadLocks);
@@ -305,6 +306,9 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
   ProcessWebRenderCommands(aSize, aCommands, wr::NewEpoch(mWrEpoch),
                            dl, dlDesc, aux, auxDesc);
   HoldPendingTransactionId(mWrEpoch, aTransactionId);
+
+  // TODO: pass the WebRenderScrollData to APZ (this will happen in a future
+  // patch)
 }
 
 mozilla::ipc::IPCResult
@@ -316,10 +320,11 @@ WebRenderBridgeParent::RecvDPEnd(const gfx::IntSize& aSize,
                                  const ByteBuffer& dl,
                                  const WrBuiltDisplayListDescriptor& dlDesc,
                                  const ByteBuffer& aux,
-                                 const WrAuxiliaryListsDescriptor& auxDesc)
+                                 const WrAuxiliaryListsDescriptor& auxDesc,
+                                 const WebRenderScrollData& aScrollData)
 {
   HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId,
-              dl, dlDesc, aux, auxDesc);
+              dl, dlDesc, aux, auxDesc, aScrollData);
   return IPC_OK();
 }
 
@@ -332,10 +337,11 @@ WebRenderBridgeParent::RecvDPSyncEnd(const gfx::IntSize &aSize,
                                      const ByteBuffer& dl,
                                      const WrBuiltDisplayListDescriptor& dlDesc,
                                      const ByteBuffer& aux,
-                                     const WrAuxiliaryListsDescriptor& auxDesc)
+                                     const WrAuxiliaryListsDescriptor& auxDesc,
+                                     const WebRenderScrollData& aScrollData)
 {
   HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId,
-              dl, dlDesc, aux, auxDesc);
+              dl, dlDesc, aux, auxDesc, aScrollData);
   return IPC_OK();
 }
 

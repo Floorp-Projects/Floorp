@@ -339,6 +339,24 @@ WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
   return EndTransactionInternal(nullptr, nullptr, aFlags);
 }
 
+/*static*/ int32_t
+PopulateScrollData(WebRenderScrollData& aTarget, Layer* aLayer)
+{
+  MOZ_ASSERT(aLayer);
+
+  // We want to allocate a WebRenderLayerScrollData object for this layer,
+  // but don't keep a pointer to it since it might get memmove'd during the
+  // recursion below. Instead keep the index and get the pointer later.
+  size_t index = aTarget.AddNewLayerData();
+
+  int32_t descendants = 0;
+  for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
+    descendants += PopulateScrollData(aTarget, child);
+  }
+  aTarget.GetLayerDataMutable(index)->Initialize(aTarget, aLayer, descendants);
+  return descendants + 1;
+}
+
 void
 WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
                                       void* aCallbackData,
@@ -384,10 +402,15 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
     return false;
   }
 
+  WebRenderScrollData scrollData;
+  if (mRoot && mWidget->AsyncPanZoomEnabled()) {
+    PopulateScrollData(scrollData, mRoot.get());
+  }
+
   bool sync = mTarget != nullptr;
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId();
 
-  WrBridge()->DPEnd(builder, size.ToUnknownSize(), sync, mLatestTransactionId);
+  WrBridge()->DPEnd(builder, size.ToUnknownSize(), sync, mLatestTransactionId, scrollData);
 
   MakeSnapshotIfRequired(size);
   mNeedsComposite = false;
