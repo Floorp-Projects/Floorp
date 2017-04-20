@@ -21,7 +21,6 @@
 #include "mozilla/ipc/PChildToParentStreamChild.h"
 #include "mozilla/ipc/PParentToChildStreamChild.h"
 #include "mozilla/dom/ipc/MemoryStreamChild.h"
-#include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
 
 #include "nsPrintfCString.h"
 #include "xpcpublic.h"
@@ -117,26 +116,6 @@ bool
 nsIContentChild::DeallocPMemoryStreamChild(PMemoryStreamChild* aActor)
 {
   delete aActor;
-  return true;
-}
-
-PIPCBlobInputStreamChild*
-nsIContentChild::AllocPIPCBlobInputStreamChild(const nsID& aID,
-                                               const uint64_t& aSize)
-{
-  // IPCBlobInputStreamChild is refcounted. Here it's created and in
-  // DeallocPIPCBlobInputStreamChild is released.
-
-  RefPtr<IPCBlobInputStreamChild> actor =
-    new IPCBlobInputStreamChild(aID, aSize);
-  return actor.forget().take();
-}
-
-bool
-nsIContentChild::DeallocPIPCBlobInputStreamChild(PIPCBlobInputStreamChild* aActor)
-{
-  RefPtr<IPCBlobInputStreamChild> actor =
-    dont_AddRef(static_cast<IPCBlobInputStreamChild*>(aActor));
   return true;
 }
 

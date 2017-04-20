@@ -6,7 +6,6 @@ include protocol PBackground;
 include protocol PBlob;
 include protocol PChildToParentStream;
 include protocol PFileDescriptorSet;
-include protocol PIPCBlobInputStream;
 include protocol PParentToChildStream;
 include DOMTypes;
 
