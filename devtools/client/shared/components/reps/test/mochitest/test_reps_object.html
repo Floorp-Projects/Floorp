@@ -17,8 +17,12 @@ Test Obj rep
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
 window.onload = Task.async(function* () {
-  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, Obj } = REPS;
+  const {
+    REPS,
+    MODE,
+    getRep,
+  } = browserRequire("devtools/client/shared/components/reps/reps");
+  let { Obj } = REPS;
 
   const componentUnderTest = Obj;
 
@@ -54,8 +58,7 @@ window.onload = Task.async(function* () {
     const stub = {};
 
     // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, { object: stub });
-    is(renderedRep.type, Obj.rep, `Rep correctly selects ${Obj.rep.displayName}`);
+    is(getRep(stub), Obj.rep, "Rep correctly selects Obj Rep");
 
     // Test rendering
     const defaultOutput = `Object`;

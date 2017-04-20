@@ -19,8 +19,11 @@ Test Infinity rep
 "use strict";
 
 window.onload = Task.async(function* () {
-  const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
-  let { Rep, InfinityRep } = REPS;
+  const {
+    REPS,
+    getRep,
+  } = browserRequire("devtools/client/shared/components/reps/reps");
+  let { InfinityRep } = REPS;
 
   try {
     yield testInfinity();
@@ -33,9 +36,7 @@ window.onload = Task.async(function* () {
 
   function testInfinity() {
     const stub = getGripStub("testInfinity");
-    const renderedRep = shallowRenderComponent(Rep, { object: stub });
-    is(renderedRep.type, InfinityRep.rep,
-      `Rep correctly selects ${InfinityRep.rep.displayName} for Infinity value`);
+    is(getRep(stub), InfinityRep.rep, "Rep correctly selects Infinity Rep");
 
     const renderedComponent = renderComponent(InfinityRep.rep, { object: stub });
     is(renderedComponent.textContent, "Infinity",
@@ -44,9 +45,7 @@ window.onload = Task.async(function* () {
 
   function testNegativeInfinity() {
     const stub = getGripStub("testNegativeInfinity");
-    const renderedRep = shallowRenderComponent(Rep, { object: stub });
-    is(renderedRep.type, InfinityRep.rep,
-      `Rep correctly selects ${InfinityRep.rep.displayName} for negative Infinity value`);
+    is(getRep(stub), InfinityRep.rep, "Rep correctly selects Infinity Rep");
 
     const renderedComponent = renderComponent(InfinityRep.rep, { object: stub });
     is(renderedComponent.textContent, "-Infinity",
