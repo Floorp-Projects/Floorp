@@ -36,6 +36,16 @@ public:
                   Layer* aLayer,
                   int32_t aDescendantCount);
 
+  int32_t GetDescendantCount() const;
+  size_t GetScrollMetadataCount() const;
+
+  // Return the ScrollMetadata object that used to be on the original Layer
+  // at the given index. Since we deduplicate the ScrollMetadata objects into
+  // the array in the owning WebRenderScrollData object, we need to be passed
+  // in a reference to that owner as well.
+  const ScrollMetadata& GetScrollMetadata(const WebRenderScrollData& aOwner,
+                                          size_t aIndex) const;
+
   friend struct IPC::ParamTraits<WebRenderLayerScrollData>;
 
 private:
@@ -69,9 +79,14 @@ public:
   // used to look it up via GetLayerData.
   size_t AddNewLayerData();
 
+  size_t GetLayerCount() const;
+
   // Return a pointer to the scroll data at the given index. Use with caution,
   // as the pointer may be invalidated if this WebRenderScrollData is mutated.
   WebRenderLayerScrollData* GetLayerDataMutable(size_t aIndex);
+  const WebRenderLayerScrollData* GetLayerData(size_t aIndex) const;
+
+  const ScrollMetadata& GetScrollMetadata(size_t aIndex) const;
 
   friend struct IPC::ParamTraits<WebRenderScrollData>;
 
