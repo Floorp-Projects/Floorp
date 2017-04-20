@@ -7,7 +7,6 @@
 include protocol PBlob;
 include protocol PMemoryStream;
 
-include IPCBlob;
 include IPCStream;
 include ProtocolTypes;
 
@@ -42,7 +41,7 @@ struct MessagePortIdentifier
 struct ClonedMessageData
 {
   SerializedStructuredCloneBuffer data;
-  IPCBlob[] blobs;
+  PBlob[] blobs;
   IPCStream[] inputStreams;
   MessagePortIdentifier[] identfiers;
 };
