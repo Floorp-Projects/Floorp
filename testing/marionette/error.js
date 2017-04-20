@@ -26,6 +26,7 @@ const ERRORS = new Set([
   "StaleElementReferenceError",
   "TimeoutError",
   "UnableToSetCookieError",
+  "UnexpectedAlertOpenError",
   "UnknownCommandError",
   "UnknownError",
   "UnsupportedOperationError",
@@ -450,6 +451,13 @@ class UnableToSetCookieError extends WebDriverError {
   }
 }
 
+class UnexpectedAlertOpenError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "unexpected alert open";
+  }
+}
+
 class UnknownCommandError extends WebDriverError {
   constructor (message) {
     super(message);
@@ -472,9 +480,9 @@ class UnsupportedOperationError extends WebDriverError {
 }
 
 const STATUSES = new Map([
+  ["element click intercepted", ElementClickInterceptedError],
   ["element not accessible", ElementNotAccessibleError],
   ["element not interactable", ElementNotInteractableError],
-  ["element click intercepted", ElementClickInterceptedError],
   ["insecure certificate", InsecureCertificateError],
   ["invalid argument", InvalidArgumentError],
   ["invalid element state", InvalidElementStateError],
@@ -491,6 +499,7 @@ const STATUSES = new Map([
   ["stale element reference", StaleElementReferenceError],
   ["timeout", TimeoutError],
   ["unable to set cookie", UnableToSetCookieError],
+  ["unexpected alert open", UnexpectedAlertOpenError],
   ["unknown command", UnknownCommandError],
   ["unknown error", UnknownError],
   ["unsupported operation", UnsupportedOperationError],
