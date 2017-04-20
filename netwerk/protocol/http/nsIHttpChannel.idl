@@ -286,7 +286,7 @@ interface nsIHttpChannel : nsIChannel
 
    /** Indicates whether channel should be treated as the main one for the
     *  current document.  If manually set to true, will always remain true.  Otherwise,
-    *  will be true iff LOAD_DOCUMENT_URI is set in the channel's loadflags.
+    *  will be true if LOAD_DOCUMENT_URI is set in the channel's loadflags.
     */
     [must_use] attribute boolean isMainDocumentChannel;
 

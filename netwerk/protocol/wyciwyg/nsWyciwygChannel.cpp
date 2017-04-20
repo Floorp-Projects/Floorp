@@ -166,6 +166,12 @@ nsWyciwygChannel::GetLoadFlags(uint32_t * aLoadFlags)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWyciwygChannel::GetIsDocument(bool *aIsDocument)
+{
+  return NS_GetIsDocumentChannel(this, aIsDocument);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIChannel methods:
 ///////////////////////////////////////////////////////////////////////////////
