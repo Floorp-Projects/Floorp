@@ -436,6 +436,13 @@ private:
   typedef bool (*GuidComparator)(const ScrollableLayerGuid&, const ScrollableLayerGuid&);
 
   /* Helpers */
+  template<class ScrollNode>
+  void UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
+                                const ScrollNode& aRoot,
+                                bool aIsFirstPaint,
+                                uint64_t aOriginatingLayersId,
+                                uint32_t aPaintSequenceNumber);
+
   void AttachNodeToTree(HitTestingTreeNode* aNode,
                         HitTestingTreeNode* aParent,
                         HitTestingTreeNode* aNextSibling);
@@ -466,7 +473,8 @@ private:
   already_AddRefed<HitTestingTreeNode> RecycleOrCreateNode(TreeBuildingState& aState,
                                                            AsyncPanZoomController* aApzc,
                                                            uint64_t aLayersId);
-  HitTestingTreeNode* PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
+  template<class ScrollNode>
+  HitTestingTreeNode* PrepareNodeForLayer(const ScrollNode& aLayer,
                                           const FrameMetrics& aMetrics,
                                           uint64_t aLayersId,
                                           const gfx::Matrix4x4& aAncestorTransform,
@@ -474,7 +482,8 @@ private:
                                           HitTestingTreeNode* aNextSibling,
                                           TreeBuildingState& aState);
 
-  void PrintAPZCInfo(const LayerMetricsWrapper& aLayer,
+  template<class ScrollNode>
+  void PrintAPZCInfo(const ScrollNode& aLayer,
                      const AsyncPanZoomController* apzc);
 
   void NotifyScrollbarDragRejected(const ScrollableLayerGuid& aGuid) const;
