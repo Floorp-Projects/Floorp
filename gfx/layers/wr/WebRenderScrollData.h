@@ -10,6 +10,7 @@
 
 #include "chrome/common/ipc_message_utils.h"
 #include "FrameMetrics.h"
+#include "LayersTypes.h"
 #include "mozilla/Maybe.h"
 #include "nsTArrayForwardDeclare.h"
 
@@ -46,6 +47,18 @@ public:
   const ScrollMetadata& GetScrollMetadata(const WebRenderScrollData& aOwner,
                                           size_t aIndex) const;
 
+  bool IsScrollInfoLayer() const { return mIsScrollInfoLayer; }
+  gfx::Matrix4x4 GetTransform() const { return mTransform; }
+  bool GetTransformIsPerspective() const { return mTransformIsPerspective; }
+  EventRegions GetEventRegions() const { return mEventRegions; }
+  Maybe<uint64_t> GetReferentId() const { return mReferentId; }
+  EventRegionsOverride GetEventRegionsOverride() const { return mEventRegionsOverride; }
+  ScrollDirection GetScrollbarDirection() const { return mScrollbarDirection; }
+  FrameMetrics::ViewID GetScrollbarTargetContainerId() const { return mScrollbarTargetContainerId; }
+  int32_t GetScrollThumbLength() const { return mScrollThumbLength; }
+  bool IsScrollbarContainer() const { return mIsScrollbarContainer; }
+  FrameMetrics::ViewID GetFixedPositionScrollContainerId() const { return mFixedPosScrollContainerId; }
+
   friend struct IPC::ParamTraits<WebRenderLayerScrollData>;
 
 private:
@@ -60,6 +73,21 @@ private:
   // ScrollMetadata objects, since there is usually heavy duplication of them
   // within a layer tree.
   nsTArray<size_t> mScrollIds;
+
+  // Various data that we collect from the Layer in Initialize(), serialize
+  // over IPC, and use on the parent side in APZ.
+
+  bool mIsScrollInfoLayer;
+  gfx::Matrix4x4 mTransform;
+  bool mTransformIsPerspective;
+  EventRegions mEventRegions;
+  Maybe<uint64_t> mReferentId;
+  EventRegionsOverride mEventRegionsOverride;
+  ScrollDirection mScrollbarDirection;
+  FrameMetrics::ViewID mScrollbarTargetContainerId;
+  int32_t mScrollThumbLength;
+  bool mIsScrollbarContainer;
+  FrameMetrics::ViewID mFixedPosScrollContainerId;
 };
 
 // Data needed by APZ, for the whole layer tree. One instance of this class
@@ -127,13 +155,35 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData>
   {
     WriteParam(aMsg, aParam.mDescendantCount);
     WriteParam(aMsg, aParam.mScrollIds);
+    WriteParam(aMsg, aParam.mIsScrollInfoLayer);
+    WriteParam(aMsg, aParam.mTransform);
+    WriteParam(aMsg, aParam.mTransformIsPerspective);
+    WriteParam(aMsg, aParam.mEventRegions);
+    WriteParam(aMsg, aParam.mReferentId);
+    WriteParam(aMsg, aParam.mEventRegionsOverride);
+    WriteParam(aMsg, aParam.mScrollbarDirection);
+    WriteParam(aMsg, aParam.mScrollbarTargetContainerId);
+    WriteParam(aMsg, aParam.mScrollThumbLength);
+    WriteParam(aMsg, aParam.mIsScrollbarContainer);
+    WriteParam(aMsg, aParam.mFixedPosScrollContainerId);
   }
 
   static bool
   Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->mDescendantCount)
-        && ReadParam(aMsg, aIter, &aResult->mScrollIds);
+        && ReadParam(aMsg, aIter, &aResult->mScrollIds)
+        && ReadParam(aMsg, aIter, &aResult->mIsScrollInfoLayer)
+        && ReadParam(aMsg, aIter, &aResult->mTransform)
+        && ReadParam(aMsg, aIter, &aResult->mTransformIsPerspective)
+        && ReadParam(aMsg, aIter, &aResult->mEventRegions)
+        && ReadParam(aMsg, aIter, &aResult->mReferentId)
+        && ReadParam(aMsg, aIter, &aResult->mEventRegionsOverride)
+        && ReadParam(aMsg, aIter, &aResult->mScrollbarDirection)
+        && ReadParam(aMsg, aIter, &aResult->mScrollbarTargetContainerId)
+        && ReadParam(aMsg, aIter, &aResult->mScrollThumbLength)
+        && ReadParam(aMsg, aIter, &aResult->mIsScrollbarContainer)
+        && ReadParam(aMsg, aIter, &aResult->mFixedPosScrollContainerId);
   }
 };
 

@@ -125,8 +125,10 @@ public:
 
   bool IsScrollInfoLayer() const
   {
-    // TODO
-    return false;
+    MOZ_ASSERT(IsValid());
+
+    return Metrics().IsScrollable()
+        && mLayer->IsScrollInfoLayer();
   }
 
   WebRenderScrollDataWrapper GetLastChild() const
@@ -193,24 +195,25 @@ public:
 
   AsyncPanZoomController* GetApzc() const
   {
-    // TODO
     return nullptr;
   }
 
   void SetApzc(AsyncPanZoomController* aApzc) const
   {
-    // TODO
   }
 
   const char* Name() const
   {
-    // TODO
-    return nullptr;
+    return "WebRenderScrollDataWrapper";
   }
 
   gfx::Matrix4x4 GetTransform() const
   {
-    // TODO
+    MOZ_ASSERT(IsValid());
+
+    if (AtBottomLayer()) {
+      return mLayer->GetTransform();
+    }
     return gfx::Matrix4x4();
   }
 
@@ -221,19 +224,31 @@ public:
 
   bool TransformIsPerspective() const
   {
-    // TODO
+    MOZ_ASSERT(IsValid());
+
+    if (AtBottomLayer()) {
+      return mLayer->GetTransformIsPerspective();
+    }
     return false;
   }
 
   EventRegions GetEventRegions() const
   {
-    // TODO
+    MOZ_ASSERT(IsValid());
+
+    if (AtBottomLayer()) {
+      return mLayer->GetEventRegions();
+    }
     return EventRegions();
   }
 
   Maybe<uint64_t> GetReferentId() const
   {
-    // TODO
+    MOZ_ASSERT(IsValid());
+
+    if (AtBottomLayer()) {
+      return mLayer->GetReferentId();
+    }
     return Nothing();
   }
 
@@ -245,44 +260,44 @@ public:
 
   EventRegionsOverride GetEventRegionsOverride() const
   {
-    // TODO
-    return EventRegionsOverride::NoOverride;
+    MOZ_ASSERT(IsValid());
+    return mLayer->GetEventRegionsOverride();
   }
 
   ScrollDirection GetScrollbarDirection() const
   {
-    // TODO
-    return ScrollDirection::NONE;
+    MOZ_ASSERT(IsValid());
+    return mLayer->GetScrollbarDirection();
   }
 
   FrameMetrics::ViewID GetScrollbarTargetContainerId() const
   {
-    // TODO
-    return 0;
+    MOZ_ASSERT(IsValid());
+    return mLayer->GetScrollbarTargetContainerId();
   }
 
   int32_t GetScrollThumbLength() const
   {
-    // TODO
-    return 0;
+    MOZ_ASSERT(IsValid());
+    return mLayer->GetScrollThumbLength();
   }
 
   bool IsScrollbarContainer() const
   {
-    // TODO
-    return false;
+    MOZ_ASSERT(IsValid());
+    return mLayer->IsScrollbarContainer();
   }
 
   FrameMetrics::ViewID GetFixedPositionScrollContainerId() const
   {
-    // TODO
-    return 0;
+    MOZ_ASSERT(IsValid());
+    return mLayer->GetFixedPositionScrollContainerId();
   }
 
   const void* GetLayer() const
   {
-    // TODO
-    return nullptr;
+    MOZ_ASSERT(IsValid());
+    return mLayer;
   }
 
 private:
