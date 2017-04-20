@@ -18,7 +18,10 @@ EXPORTS.mozilla.dom += [
     'WebAuthentication.h',
     'WebAuthnAssertion.h',
     'WebAuthnAttestation.h',
+    'WebAuthnManager.h',
     'WebAuthnRequest.h',
+    'WebAuthnTransactionChild.h',
+    'WebAuthnUtil.h'
 ]
 
 UNIFIED_SOURCES += [
@@ -28,6 +31,9 @@ UNIFIED_SOURCES += [
     'WebAuthentication.cpp',
     'WebAuthnAssertion.cpp',
     'WebAuthnAttestation.cpp',
+    'WebAuthnManager.cpp',
+    'WebAuthnTransactionChild.cpp',
+    'WebAuthnUtil.cpp'
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
