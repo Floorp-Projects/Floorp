@@ -57,6 +57,8 @@
 #include "mozilla/jni/Utils.h"
 #endif //  defined(MOZ_WIDGET_ANDROID)
 
+#include "mozilla/AbstractThread.h"
+
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/IOThreadChild.h"
@@ -419,6 +421,10 @@ XRE_InitChildProcess(int aArgc,
   PROFILER_LABEL("Startup", "XRE_InitChildProcess",
     js::ProfileEntry::Category::OTHER);
 
+  // Ensure AbstractThread is minimally setup, so async IPC messages
+  // work properly.
+  AbstractThread::InitTLS();
+
   // Complete 'task_t' exchange for Mac OS X. This structure has the same size
   // regardless of architecture so we don't have any cross-arch issues here.
 #ifdef XP_MACOSX
@@ -772,6 +778,8 @@ XRE_InitParentProcess(int aArgc,
 
   // Set main thread before we initialize the profiler
   NS_SetMainThread();
+
+  mozilla::LogModule::Init();
 
   char aLocal;
   GeckoProfilerInitRAII profiler(&aLocal);

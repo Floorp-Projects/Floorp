@@ -303,14 +303,6 @@ mozJSComponentLoader::ReallyInit()
 
     mReuseLoaderGlobal = Preferences::GetBool("jsloader.reuseGlobal");
 
-    // XXXkhuey B2G child processes have some sort of preferences race that
-    // results in getting the wrong value.
-    // But we don't want that on Firefox Mulet as it break most Firefox JSMs...
-    // Also disable on debug builds to break js components that rely on this.
-#if defined(MOZ_B2G) && !defined(MOZ_MULET) && !defined(DEBUG)
-    mReuseLoaderGlobal = true;
-#endif
-
     nsCOMPtr<nsIScriptSecurityManager> secman =
         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
     if (!secman)

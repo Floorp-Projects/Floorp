@@ -106,9 +106,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
     if CONFIG['ENABLE_TESTS']:
         DIRS += ['tests/gtest']
 
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and (CONFIG['ANDROID_VERSION'] <= '17' or CONFIG['ANDROID_VERSION'] >= '21'):
-        DEFINES['ELFSIZE'] = 32
-
     FINAL_LIBRARY = 'xul'
 
 IPDL_SOURCES += [

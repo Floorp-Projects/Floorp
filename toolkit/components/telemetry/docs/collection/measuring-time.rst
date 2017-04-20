@@ -16,16 +16,20 @@ API:
 .. code-block:: js
 
     TelemetryStopwatch = {
-      // Start, cancel & finish recording elapsed time into a histogram.
+      // Start, check if running, cancel & finish recording elapsed time into a
+      // histogram.
       // |aObject| is optional. If specificied, the timer is associated with this
       // object, so multiple time measurements can be done concurrently.
       start(histogramId, aObject);
+      running(histogramId, aObject);
       cancel(histogramId, aObject);
       finish(histogramId, aObject);
-      // Start, cancel & finished recording elapsed time into a keyed histogram.
+      // Start, check if running, cancel & finish recording elapsed time into a
+      // keyed histogram.
       // |key| specificies the key to record into.
       // |aObject| is optional and used as above.
       startKeyed(histogramId, key, aObject);
+      runningKeyed(histogramId, key, aObject);
       cancelKeyed(histogramId, key, aObject);
       finishKeyed(histogramId, key, aObject);
     };
@@ -43,6 +47,12 @@ Example:
     }
     // ... do more work.
     TelemetryStopwatch.finish("SAMPLE_FILE_LOAD_TIME_MS");
+
+    // Another loading attempt? Start stopwatch again if
+    // not already running.
+    if (!TelemetryStopwatch.running("SAMPLE_FILE_LOAD_TIME_MS")) {
+      TelemetryStopwatch.start("SAMPLE_FILE_LOAD_TIME_MS");
+    }
 
     // Periodically, it's necessary to attempt to finish a
     // TelemetryStopwatch that's already been canceled or

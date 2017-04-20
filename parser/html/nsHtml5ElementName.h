@@ -57,57 +57,62 @@ class nsHtml5Portability;
 
 class nsHtml5ElementName
 {
-  public:
-    static nsHtml5ElementName* ELT_NULL_ELEMENT_NAME;
-    nsIAtom* name;
-    nsIAtom* camelCaseName;
-    int32_t flags;
-    inline int32_t getFlags()
-    {
-      return flags;
-    }
+private:
+  nsIAtom* name;
+  nsIAtom* camelCaseName;
 
-    int32_t getGroup();
-    bool isCustom();
-    static nsHtml5ElementName* elementNameByBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner);
-  private:
-    inline static uint32_t bufToHash(char16_t* buf, int32_t length)
-    {
-      uint32_t len = length;
-      uint32_t first = buf[0];
-      first <<= 19;
-      uint32_t second = 1 << 23;
-      uint32_t third = 0;
-      uint32_t fourth = 0;
-      uint32_t fifth = 0;
-      if (length >= 4) {
-        second = buf[length - 4];
-        second <<= 4;
-        third = buf[length - 3];
-        third <<= 9;
-        fourth = buf[length - 2];
-        fourth <<= 14;
-        fifth = buf[length - 1];
-        fifth <<= 24;
-      } else if (length == 3) {
-        second = buf[1];
-        second <<= 4;
-        third = buf[2];
-        third <<= 9;
-      } else if (length == 2) {
-        second = buf[1];
-        second <<= 24;
-      }
-      return len + first + second + third + fourth + fifth;
+public:
+  int32_t flags;
+  inline nsIAtom* getName() { return name; }
+
+  inline nsIAtom* getCamelCaseName() { return camelCaseName; }
+
+  inline int32_t getFlags() { return flags; }
+
+  int32_t getGroup();
+  bool isInterned();
+  static nsHtml5ElementName* elementNameByBuffer(char16_t* buf,
+                                                 int32_t offset,
+                                                 int32_t length,
+                                                 nsHtml5AtomTable* interner);
+
+private:
+  inline static uint32_t bufToHash(char16_t* buf, int32_t length)
+  {
+    uint32_t len = length;
+    uint32_t first = buf[0];
+    first <<= 19;
+    uint32_t second = 1 << 23;
+    uint32_t third = 0;
+    uint32_t fourth = 0;
+    uint32_t fifth = 0;
+    if (length >= 4) {
+      second = buf[length - 4];
+      second <<= 4;
+      third = buf[length - 3];
+      third <<= 9;
+      fourth = buf[length - 2];
+      fourth <<= 14;
+      fifth = buf[length - 1];
+      fifth <<= 24;
+    } else if (length == 3) {
+      second = buf[1];
+      second <<= 4;
+      third = buf[2];
+      third <<= 9;
+    } else if (length == 2) {
+      second = buf[1];
+      second <<= 24;
+    }
+    return len + first + second + third + fourth + fifth;
     }
 
     nsHtml5ElementName(nsIAtom* name, nsIAtom* camelCaseName, int32_t flags);
-  protected:
-    explicit nsHtml5ElementName(nsIAtom* name);
   public:
-    virtual void release();
-    virtual ~nsHtml5ElementName();
-    virtual nsHtml5ElementName* cloneElementName(nsHtml5AtomTable* interner);
+    nsHtml5ElementName();
+    ~nsHtml5ElementName();
+    void setNameForNonInterned(nsIAtom* name);
+    static nsHtml5ElementName* ELT_ANNOTATION_XML;
     static nsHtml5ElementName* ELT_BIG;
     static nsHtml5ElementName* ELT_BDO;
     static nsHtml5ElementName* ELT_COL;
@@ -217,7 +222,6 @@ class nsHtml5ElementName
     static nsHtml5ElementName* ELT_MASK;
     static nsHtml5ElementName* ELT_TRACK;
     static nsHtml5ElementName* ELT_DL;
-    static nsHtml5ElementName* ELT_ANNOTATION_XML;
     static nsHtml5ElementName* ELT_HTML;
     static nsHtml5ElementName* ELT_OL;
     static nsHtml5ElementName* ELT_LABEL;
@@ -313,7 +317,6 @@ class nsHtml5ElementName
     static nsHtml5ElementName* ELT_RUBY;
     static nsHtml5ElementName* ELT_SUMMARY;
     static nsHtml5ElementName* ELT_TBODY;
-
   private:
     static nsHtml5ElementName** ELEMENT_NAMES;
     static staticJArray<int32_t,int32_t> ELEMENT_HASHES;
@@ -323,7 +326,7 @@ class nsHtml5ElementName
 };
 
 #define NS_HTML5ELEMENT_NAME_GROUP_MASK 127
-#define NS_HTML5ELEMENT_NAME_CUSTOM (1 << 30)
+#define NS_HTML5ELEMENT_NAME_NOT_INTERNED (1 << 30)
 #define NS_HTML5ELEMENT_NAME_SPECIAL (1 << 29)
 #define NS_HTML5ELEMENT_NAME_FOSTER_PARENTING (1 << 28)
 #define NS_HTML5ELEMENT_NAME_SCOPING (1 << 27)

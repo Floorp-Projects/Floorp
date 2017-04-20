@@ -72,9 +72,8 @@ to mochitest command.
   * test_bug413958.html `monitorConsole` [3]
   * test_parser_diagnostics_unprintables.html [550]
 * Transition support:
-  * test_bug621351.html: shorthand properties [4]
   * test_compute_data_with_start_struct.html `transition` [2]
-  * test_transitions.html: pseudo elements and shorthand properties [*]
+  * test_transitions.html: pseudo elements [10]
   * test_transitions_computed_value_combinations.html [145]
   * test_value_storage.html `transition` [596]
   * Events:

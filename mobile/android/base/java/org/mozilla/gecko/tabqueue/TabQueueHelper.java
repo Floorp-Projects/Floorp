@@ -50,6 +50,7 @@ public class TabQueueHelper {
 
     public static final int MAX_TIMES_TO_SHOW_PROMPT = 3;
     public static final int EXTERNAL_LAUNCHES_BEFORE_SHOWING_PROMPT = 3;
+    private static final int MAX_NOTIFICATION_DISPLAY_COUNT = 8;
 
     // result codes for returning from the prompt
     public static final int TAB_QUEUE_YES = 201;
@@ -196,9 +197,10 @@ public class TabQueueHelper {
     public static List<String> getLastURLs(final Context context, final String filename) {
         final GeckoProfile profile = GeckoProfile.get(context);
         final JSONArray jsonArray = profile.readJSONArrayFromFile(filename);
-        final List<String> urls = new ArrayList<>(8);
+        final int tabCount = Math.min(MAX_NOTIFICATION_DISPLAY_COUNT, jsonArray.length());
+        final List<String> urls = new ArrayList<>(tabCount);
 
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < tabCount; i++) {
             try {
                 urls.add(jsonArray.getString(i));
             } catch (JSONException e) {

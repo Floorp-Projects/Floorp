@@ -557,7 +557,6 @@ class Tab extends TabBase {
       sessionId: String(tabData.closedId),
       index: tabData.pos ? tabData.pos : 0,
       windowId: window && windowTracker.getId(window),
-      selected: false,
       highlighted: false,
       active: false,
       pinned: false,

@@ -287,14 +287,6 @@ partial interface Navigator {
 };
 #endif // MOZ_TIME_MANAGER
 
-#ifdef MOZ_AUDIO_CHANNEL_MANAGER
-// nsIMozNavigatorAudioChannelManager
-partial interface Navigator {
-  [Throws]
-  readonly attribute AudioChannelManager mozAudioChannelManager;
-};
-#endif // MOZ_AUDIO_CHANNEL_MANAGER
-
 callback NavigatorUserMediaSuccessCallback = void (MediaStream stream);
 callback NavigatorUserMediaErrorCallback = void (MediaStreamError error);
 

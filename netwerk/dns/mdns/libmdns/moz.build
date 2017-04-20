@@ -4,8 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa' or \
-        (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['ANDROID_VERSION'] >= '16'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
         'MDNSResponderOperator.cpp',
         'MDNSResponderReply.cpp',
@@ -15,13 +14,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa' or \
     LOCAL_INCLUDES += [
       '/netwerk/base',
     ]
-
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-        LOCAL_INCLUDES += [
-            '%' + '%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
-                'external/mdnsresponder/mDNSShared',
-            ]
-        ]
 
 else:
     EXTRA_COMPONENTS += [

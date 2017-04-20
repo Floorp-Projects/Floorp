@@ -13,7 +13,6 @@ use std::env;
 use std::fmt::Write;
 use std::ptr;
 use std::sync::{Arc, Mutex};
-use style::arc_ptr_eq;
 use style::context::{QuirksMode, SharedStyleContext, StyleContext};
 use style::context::{ThreadLocalStyleContext, ThreadLocalStyleContextCreationInfo};
 use style::data::{ElementData, ElementStyles, RestyleData};
@@ -578,9 +577,7 @@ pub extern "C" fn Servo_StyleSet_AppendStyleSheet(raw_data: RawServoStyleSetBorr
     let guard = global_style_data.shared_lock.read();
     let mut data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
     let sheet = HasArcFFI::as_arc(&raw_sheet);
-    data.stylesheets.retain(|x| !arc_ptr_eq(x, sheet));
-    data.stylesheets.push(sheet.clone());
-    data.stylesheets_changed = true;
+    data.stylesheets.append_stylesheet(sheet);
     if flush {
         data.flush_stylesheets(&guard);
     }
@@ -594,9 +591,7 @@ pub extern "C" fn Servo_StyleSet_PrependStyleSheet(raw_data: RawServoStyleSetBor
     let guard = global_style_data.shared_lock.read();
     let mut data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
     let sheet = HasArcFFI::as_arc(&raw_sheet);
-    data.stylesheets.retain(|x| !arc_ptr_eq(x, sheet));
-    data.stylesheets.insert(0, sheet.clone());
-    data.stylesheets_changed = true;
+    data.stylesheets.prepend_stylesheet(sheet);
     if flush {
         data.flush_stylesheets(&guard);
     }
@@ -612,10 +607,7 @@ pub extern "C" fn Servo_StyleSet_InsertStyleSheetBefore(raw_data: RawServoStyleS
     let mut data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
     let sheet = HasArcFFI::as_arc(&raw_sheet);
     let reference = HasArcFFI::as_arc(&raw_reference);
-    data.stylesheets.retain(|x| !arc_ptr_eq(x, sheet));
-    let index = data.stylesheets.iter().position(|x| arc_ptr_eq(x, reference)).unwrap();
-    data.stylesheets.insert(index, sheet.clone());
-    data.stylesheets_changed = true;
+    data.stylesheets.insert_stylesheet_before(sheet, reference);
     if flush {
         data.flush_stylesheets(&guard);
     }
@@ -629,8 +621,7 @@ pub extern "C" fn Servo_StyleSet_RemoveStyleSheet(raw_data: RawServoStyleSetBorr
     let guard = global_style_data.shared_lock.read();
     let mut data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
     let sheet = HasArcFFI::as_arc(&raw_sheet);
-    data.stylesheets.retain(|x| !arc_ptr_eq(x, sheet));
-    data.stylesheets_changed = true;
+    data.stylesheets.remove_stylesheet(sheet);
     if flush {
         data.flush_stylesheets(&guard);
     }
@@ -648,8 +639,8 @@ pub extern "C" fn Servo_StyleSet_FlushStyleSheets(raw_data: RawServoStyleSetBorr
 pub extern "C" fn Servo_StyleSet_NoteStyleSheetsChanged(raw_data: RawServoStyleSetBorrowed,
                                                         author_style_disabled: bool) {
     let mut data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
-    data.stylesheets_changed = true;
-    data.author_style_disabled = author_style_disabled;
+    data.stylesheets.force_dirty();
+    data.stylesheets.set_author_style_disabled(author_style_disabled);
 }
 
 #[no_mangle]
@@ -2023,90 +2014,90 @@ pub extern "C" fn Servo_StyleSet_FillKeyframesForName(raw_data: RawServoStyleSet
     let style = ComputedValues::as_arc(&style);
 
     if let Some(ref animation) = data.stylist.animations().get(&name) {
-       let global_style_data = &*GLOBAL_STYLE_DATA;
-       let guard = global_style_data.shared_lock.read();
-       for step in &animation.steps {
-          // Override timing_function if the keyframe has animation-timing-function.
-          let timing_function = if let Some(val) = step.get_animation_timing_function(&guard) {
-              val.into()
-          } else {
-              *timing_function
-          };
+        let global_style_data = &*GLOBAL_STYLE_DATA;
+        let guard = global_style_data.shared_lock.read();
+        for step in &animation.steps {
+            // Override timing_function if the keyframe has animation-timing-function.
+            let timing_function = if let Some(val) = step.get_animation_timing_function(&guard) {
+                val.into()
+            } else {
+                *timing_function
+            };
 
-          let keyframe = unsafe {
-              Gecko_AnimationAppendKeyframe(keyframes,
-                                            step.start_percentage.0 as f32,
-                                            &timing_function)
-          };
+            let keyframe = unsafe {
+                Gecko_AnimationAppendKeyframe(keyframes,
+                                              step.start_percentage.0 as f32,
+                                              &timing_function)
+            };
 
-          fn add_computed_property_value(keyframe: *mut Keyframe,
-                                         index: usize,
-                                         style: &ComputedValues,
-                                         property: &TransitionProperty,
-                                         shared_lock: &SharedRwLock) {
-              let block = style.to_declaration_block(property.clone().into());
-              unsafe {
-                  (*keyframe).mPropertyValues.set_len((index + 1) as u32);
-                  (*keyframe).mPropertyValues[index].mProperty = property.clone().into();
-                  // FIXME. Do not set computed values once we handles missing keyframes
-                  // with additive composition.
-                  (*keyframe).mPropertyValues[index].mServoDeclarationBlock.set_arc_leaky(
-                      Arc::new(shared_lock.wrap(block)));
-              }
-          }
+            fn add_computed_property_value(keyframe: *mut Keyframe,
+                                           index: usize,
+                                           style: &ComputedValues,
+                                           property: &TransitionProperty,
+                                           shared_lock: &SharedRwLock) {
+                let block = style.to_declaration_block(property.clone().into());
+                unsafe {
+                    (*keyframe).mPropertyValues.set_len((index + 1) as u32);
+                    (*keyframe).mPropertyValues[index].mProperty = property.clone().into();
+                    // FIXME. Do not set computed values once we handles missing keyframes
+                    // with additive composition.
+                    (*keyframe).mPropertyValues[index].mServoDeclarationBlock.set_arc_leaky(
+                        Arc::new(shared_lock.wrap(block)));
+                }
+            }
 
-          match step.value {
-              KeyframesStepValue::ComputedValues => {
-                  for (index, property) in animation.properties_changed.iter().enumerate() {
-                      add_computed_property_value(
-                          keyframe, index, style, property, &global_style_data.shared_lock);
-                  }
-              },
-              KeyframesStepValue::Declarations { ref block } => {
-                  let guard = block.read_with(&guard);
-                  // Filter out non-animatable properties.
-                  let animatable =
-                      guard.declarations()
-                           .iter()
-                           .filter(|&&(ref declaration, _)| {
-                               declaration.is_animatable()
-                           });
+            match step.value {
+                KeyframesStepValue::ComputedValues => {
+                    for (index, property) in animation.properties_changed.iter().enumerate() {
+                        add_computed_property_value(
+                            keyframe, index, style, property, &global_style_data.shared_lock);
+                    }
+                },
+                KeyframesStepValue::Declarations { ref block } => {
+                    let guard = block.read_with(&guard);
+                    // Filter out non-animatable properties.
+                    let animatable =
+                        guard.declarations()
+                             .iter()
+                             .filter(|&&(ref declaration, _)| {
+                                 declaration.is_animatable()
+                             });
 
-                  let mut seen = LonghandIdSet::new();
+                    let mut seen = LonghandIdSet::new();
 
-                  for (index, &(ref declaration, _)) in animatable.enumerate() {
-                      unsafe {
-                          let property = TransitionProperty::from_declaration(declaration).unwrap();
-                          (*keyframe).mPropertyValues.set_len((index + 1) as u32);
-                          (*keyframe).mPropertyValues[index].mProperty = property.into();
-                          (*keyframe).mPropertyValues[index].mServoDeclarationBlock.set_arc_leaky(
-                              Arc::new(global_style_data.shared_lock.wrap(
-                                PropertyDeclarationBlock::with_one(
-                                    declaration.clone(), Importance::Normal
-                              ))));
-                          if step.start_percentage.0 == 0. ||
-                             step.start_percentage.0 == 1. {
-                              seen.set_transition_property_bit(&property);
-                          }
-                      }
-                  }
+                    for (index, &(ref declaration, _)) in animatable.enumerate() {
+                        unsafe {
+                            let property = TransitionProperty::from_declaration(declaration).unwrap();
+                            (*keyframe).mPropertyValues.set_len((index + 1) as u32);
+                            (*keyframe).mPropertyValues[index].mProperty = property.into();
+                            (*keyframe).mPropertyValues[index].mServoDeclarationBlock.set_arc_leaky(
+                                Arc::new(global_style_data.shared_lock.wrap(
+                                  PropertyDeclarationBlock::with_one(
+                                      declaration.clone(), Importance::Normal
+                                ))));
+                            if step.start_percentage.0 == 0. ||
+                               step.start_percentage.0 == 1. {
+                                seen.set_transition_property_bit(&property);
+                            }
+                        }
+                    }
 
-                  // Append missing property values in the initial or the finial keyframes.
-                  if step.start_percentage.0 == 0. ||
-                     step.start_percentage.0 == 1. {
-                      let mut index = unsafe { (*keyframe).mPropertyValues.len() };
-                      for property in animation.properties_changed.iter() {
-                          if !seen.has_transition_property_bit(&property) {
-                              add_computed_property_value(
-                                  keyframe, index, style, property, &global_style_data.shared_lock);
-                              index += 1;
-                          }
-                      }
-                  }
-              },
-          }
-       }
-       return true
+                    // Append missing property values in the initial or the finial keyframes.
+                    if step.start_percentage.0 == 0. ||
+                       step.start_percentage.0 == 1. {
+                        let mut index = unsafe { (*keyframe).mPropertyValues.len() };
+                        for property in animation.properties_changed.iter() {
+                            if !seen.has_transition_property_bit(&property) {
+                                add_computed_property_value(
+                                    keyframe, index, style, property, &global_style_data.shared_lock);
+                                index += 1;
+                            }
+                        }
+                    }
+                },
+            }
+        }
+        return true
     }
     false
 }
