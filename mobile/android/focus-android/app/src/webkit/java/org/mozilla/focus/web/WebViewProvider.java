@@ -7,9 +7,11 @@ package org.mozilla.focus.web;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -58,9 +60,11 @@ public class WebViewProvider {
 
     public static View create(Context context, AttributeSet attrs) {
         final WebkitView webkitView = new WebkitView(context, attrs);
+        final WebSettings settings = webkitView.getSettings();
 
         setupView(webkitView);
-        configureSettings(context, webkitView.getSettings());
+        configureDefaultSettings(context, settings);
+        applyAppSettings(context, settings);
 
         return webkitView;
     }
@@ -71,9 +75,7 @@ public class WebViewProvider {
     }
 
     @SuppressLint("SetJavaScriptEnabled") // We explicitly want to enable JavaScript
-    private static void configureSettings(Context context, WebSettings settings) {
-        final Settings appSettings = new Settings(context);
-
+    private static void configureDefaultSettings(Context context, WebSettings settings) {
         settings.setJavaScriptEnabled(true);
 
         // Enabling built in zooming shows the controls by default
@@ -87,9 +89,6 @@ public class WebViewProvider {
         settings.setAllowFileAccess(false);
         settings.setAllowFileAccessFromFileURLs(false);
         settings.setAllowUniversalAccessFromFileURLs(false);
-
-        // We could consider calling setLoadsImagesAutomatically() here too (This will block images not laoded over the network too)
-        settings.setBlockNetworkImage(appSettings.shouldBlockImages());
 
         settings.setUserAgentString(buildUserAgentString(context, settings));
 
@@ -109,6 +108,13 @@ public class WebViewProvider {
         settings.setSaveFormData(false);
         //noinspection deprecation - This method is deprecated but let's call it in case WebView implementations still obey it.
         settings.setSavePassword(false);
+    }
+
+    private static void applyAppSettings(Context context, WebSettings settings) {
+        final Settings appSettings = new Settings(context);
+
+        // We could consider calling setLoadsImagesAutomatically() here too (This will block images not loaded over the network too)
+        settings.setBlockNetworkImage(appSettings.shouldBlockImages());
     }
 
     /**
@@ -176,7 +182,7 @@ public class WebViewProvider {
         return uaBuilder.toString();
     }
 
-    private static class WebkitView extends NestedWebView implements IWebView {
+    private static class WebkitView extends NestedWebView implements IWebView, SharedPreferences.OnSharedPreferenceChangeListener {
         private Callback callback;
         private FocusWebViewClient client;
 
@@ -211,6 +217,25 @@ public class WebViewProvider {
                     return false;
                 }
             });
+        }
+
+        @Override
+        protected void onAttachedToWindow() {
+            super.onAttachedToWindow();
+
+            PreferenceManager.getDefaultSharedPreferences(getContext()).registerOnSharedPreferenceChangeListener(this);
+        }
+
+        @Override
+        protected void onDetachedFromWindow() {
+            super.onDetachedFromWindow();
+
+            PreferenceManager.getDefaultSharedPreferences(getContext()).unregisterOnSharedPreferenceChangeListener(this);
+        }
+
+        @Override
+        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+            applyAppSettings(getContext(), getSettings());
         }
 
         @Override
