@@ -304,7 +304,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
           MOZ_ASSERT(!node->GetFirstChild());
           parent = node;
           next = nullptr;
-          layersId = (aLayerMetrics.AsRefLayer() ? aLayerMetrics.AsRefLayer()->GetReferentId() : layersId);
+          layersId = aLayerMetrics.GetReferentId().valueOr(layersId);
           indents.push(gfx::TreeAutoIndent(mApzcTreeLog));
         },
         [&](ScrollNode aLayerMetrics)
