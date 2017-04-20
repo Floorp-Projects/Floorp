@@ -31,6 +31,8 @@ typedef WrFontKey FontKey;
 typedef WrEpoch Epoch;
 typedef WrExternalImageId ExternalImageId;
 
+typedef Maybe<ExternalImageId> MaybeExternalImageId;
+
 inline WindowId NewWindowId(uint64_t aId) {
   WindowId id;
   id.mHandle = aId;

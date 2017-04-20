@@ -147,8 +147,9 @@ CreateTextureHostWithBackend(TextureClient* aClient,
 
   aClient->ToSurfaceDescriptor(descriptor);
 
+  wr::MaybeExternalImageId id = Nothing();
   return TextureHost::Create(descriptor, nullptr, aLayersBackend,
-                             aClient->GetFlags());
+                             aClient->GetFlags(), id);
 }
 
 } // namespace layers

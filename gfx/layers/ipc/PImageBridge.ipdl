@@ -10,10 +10,12 @@ include ProtocolTypes;
 include protocol PMediaSystemResourceManager;
 
 include "mozilla/GfxMessageUtils.h";
+include "mozilla/layers/WebRenderMessageUtils.h";
 
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
+using mozilla::wr::MaybeExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 
 using PlatformThreadId from "base/platform_thread.h";
 
@@ -54,7 +56,7 @@ parent:
   // before sending closing the channel.
   sync WillClose();
 
-  async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend, TextureFlags aTextureFlags, uint64_t aSerial);
+  async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend, TextureFlags aTextureFlags, uint64_t aSerial, MaybeExternalImageId aExternalImageId);
   async PMediaSystemResourceManager();
 
   sync NewCompositable(CompositableHandle aHandle, TextureInfo aInfo);

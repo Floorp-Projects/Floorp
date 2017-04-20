@@ -47,7 +47,7 @@ VRManagerParent::AllocPTextureParent(const SurfaceDescriptor& aSharedData,
                                      const TextureFlags& aFlags,
                                      const uint64_t& aSerial)
 {
-  return layers::TextureHost::CreateIPDLActor(this, aSharedData, aLayersBackend, aFlags, aSerial);
+  return layers::TextureHost::CreateIPDLActor(this, aSharedData, aLayersBackend, aFlags, aSerial, Nothing());
 }
 
 bool

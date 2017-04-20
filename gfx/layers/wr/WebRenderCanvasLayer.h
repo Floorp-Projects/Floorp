@@ -44,7 +44,7 @@ public:
   void RenderLayer(wr::DisplayListBuilder& aBuilder) override;
 
 protected:
-  Maybe<wr::ExternalImageId> mExternalImageId;
+  wr::MaybeExternalImageId mExternalImageId;
 };
 
 } // namespace layers

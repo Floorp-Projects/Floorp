@@ -509,7 +509,8 @@ CrossProcessCompositorBridgeParent::AllocPTextureParent(const SurfaceDescriptor&
                                                         const LayersBackend& aLayersBackend,
                                                         const TextureFlags& aFlags,
                                                         const uint64_t& aId,
-                                                        const uint64_t& aSerial)
+                                                        const uint64_t& aSerial,
+                                                        const wr::MaybeExternalImageId& aExternalImageId)
 {
   CompositorBridgeParent::LayerTreeState* state = nullptr;
 
@@ -532,7 +533,7 @@ CrossProcessCompositorBridgeParent::AllocPTextureParent(const SurfaceDescriptor&
     gfxDevCrash(gfx::LogReason::PAllocTextureBackendMismatch) << "Texture backend is wrong";
   }
 
-  return TextureHost::CreateIPDLActor(this, aSharedData, aLayersBackend, aFlags, aSerial);
+  return TextureHost::CreateIPDLActor(this, aSharedData, aLayersBackend, aFlags, aSerial, aExternalImageId);
 }
 
 bool
